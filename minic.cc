@@ -1032,6 +1032,7 @@ int pvs(int alpha, int beta, const Position & p, DepthType depth, bool pvnode, u
         // LMR
         if ( !mateFinder 
             && depth >= 3 
+            && !isInCheck
             && validMoveCount >= 6 
             && std::abs(alpha) < MATE-MAX_PLY 
             && std::abs(beta) < MATE-MAX_PLY 
@@ -1323,7 +1324,7 @@ struct PerftAccumulator{
    }
 };
 
-int perft(const Position & p, DepthType depth, PerftAccumulator & acc, bool divide = false){
+Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc, bool divide = false){
    if ( depth == 0) return 0;
    std::vector<Move> moves;
    generate(p,moves);
@@ -1338,7 +1339,7 @@ int perft(const Position & p, DepthType depth, PerftAccumulator & acc, bool divi
      if ( divide && depth == 2 ){
         std::cout << "#" << ToString(p2) << std::endl;
      } 
-     int nNodes = perft(p2,depth-1,acc,divide);
+     Counter nNodes = perft(p2,depth-1,acc,divide);
      if ( divide && depth == 2 ){
         std::cout << "#=> after " << ToString(*it) << " " << nNodes << std::endl;
      }
