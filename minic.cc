@@ -1025,13 +1025,13 @@ int pvs(int alpha, int beta, const Position & p, DepthType depth, bool pvnode, u
         // LMP
         if ( !mateFinder 
             && futility 
-            && depth >= 6 
+            && depth <= 6 
             && validMoveCount >= 3*depth 
             && std::abs(alpha) < MATE-MAX_PLY 
             && std::abs(beta) < MATE-MAX_PLY ) continue;
         // LMR
         if ( !mateFinder 
-            && depth >= 3 
+            && depth <= 11 
             && !isInCheck
             && validMoveCount >= 6 
             && std::abs(alpha) < MATE-MAX_PLY 
