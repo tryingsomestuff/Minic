@@ -1025,6 +1025,7 @@ int pvs(int alpha, int beta, const Position & p, DepthType depth, bool pvnode, u
         // LMP
         if ( !mateFinder 
             && futility 
+            && Move2Type(*it) == T_std
             && depth <= 6 
             && validMoveCount >= 3*depth 
             && std::abs(alpha) < MATE-MAX_PLY 
