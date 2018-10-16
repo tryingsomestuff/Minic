@@ -1033,7 +1033,7 @@ int pvs(int alpha, int beta, const Position & p, DepthType depth, bool pvnode, u
         if ( !mateFinder 
             && depth <= 11 
             && !isInCheck
-            && validMoveCount >= 6 
+            && validMoveCount >= 2 
             && std::abs(alpha) < MATE-MAX_PLY 
             && std::abs(beta) < MATE-MAX_PLY 
             && ! isInCheck ) reduction = int(1+sqrt(depth*validMoveCount/8));
