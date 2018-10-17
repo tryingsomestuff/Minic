@@ -189,7 +189,11 @@ void initHash(){
 }
 
 Hash computeHash(const Position &p){
+
+    //std::cout << "hash is " << p.h << std::endl;
+
    if (p.h != 0) return p.h;
+
    Hash h = 0;
    for (int k = 0; k < 64; ++k){
       Piece pp = p.b[k];
@@ -753,8 +757,6 @@ bool apply(Position & p, const Move & m){
     
    if ( m == INVALIDMOVE ) return false;
     
-   //p.h = 0; // invalidate hash
-
    const Square from  = Move2From(m);
    const Square to    = Move2To(m);
    const MType  type  = Move2Type(m);
@@ -767,37 +769,46 @@ bool apply(Position & p, const Move & m){
       case T_check:
       p.b[from] = P_none;
       p.b[to]   = fromP;
+
       p.h ^= ZT[from][fromP + PieceShift]; // remove fromP at from
       if (type == T_capture) p.h ^= ZT[to][toP + PieceShift]; // if capture remove toP at to
       p.h ^= ZT[to][fromP + PieceShift]; // add fromP at to
+
       // update castling rigths and king position
       if ( fromP == P_wk ){
          p.wk = to;
          p.castling &= ~(C_wks | C_wqs);
+
          p.h ^= ZT[7][13];
          p.h ^= ZT[0][13];
       }
       else if ( fromP == P_bk ){
          p.bk = to;
          p.castling &= ~(C_bks | C_bqs);
+
          p.h ^= ZT[63][13];
          p.h ^= ZT[56][13];
       }
-      if ( fromP == P_wr && from == Sq_a1 ){
+
+      if ( fromP == P_wr && from == Sq_a1 && (p.castling & C_wqs)){
          p.castling &= ~C_wqs;
+
          p.h ^= ZT[0][13];
       }
-      else if ( fromP == P_wr && from == Sq_h1 ){
+      else if ( fromP == P_wr && from == Sq_h1 && (p.castling & C_wks) ){
          p.castling &= ~C_wks;
-         p.h ^= ZT[0][7];
+
+         p.h ^= ZT[7][13];
       }
-      else if ( fromP == P_br && from == Sq_a8 ){
+      else if ( fromP == P_br && from == Sq_a8 && (p.castling & C_bqs)){
          p.castling &= ~C_bqs;
-         p.h ^= ZT[0][56];
+
+         p.h ^= ZT[56][13];
       }
-      else if ( fromP == P_br && from == Sq_h8 ){
+      else if ( fromP == P_br && from == Sq_h8 && (p.castling & C_bks) ){
          p.castling &= ~C_bks;
-         p.h ^= ZT[0][63];
+
+         p.h ^= ZT[63][13];
       }
       break;
 
@@ -805,42 +816,50 @@ bool apply(Position & p, const Move & m){
          p.b[from] = P_none;
          p.b[to] = fromP;
          p.b[p.ep + (p.c==Co_White?-8:+8)] = P_none;
+
+         p.h ^= ZT[from][fromP + PieceShift]; // remove fromP at from
+         p.h ^= ZT[p.ep + (p.c == Co_White ? -8 : +8)][(p.c == Co_White ? P_bp : P_wp) + PieceShift];
+         p.h ^= ZT[to][fromP + PieceShift]; // add fromP at to
       break;
 
       case T_promq:
       case T_cappromq:
-      p.h ^= ZT[from][fromP + PieceShift];
-      p.h ^= ZT[to][(p.c == Co_White ? P_wq : P_bq) + PieceShift];
       if (type == T_capture) p.h ^= ZT[to][toP + PieceShift];
       p.b[to]   = (p.c==Co_White?P_wq:P_bq);
       p.b[from] = P_none;
+
+      p.h ^= ZT[from][fromP + PieceShift];
+      p.h ^= ZT[to][(p.c == Co_White ? P_wq : P_bq) + PieceShift];
       break;
 
       case T_promr:
       case T_cappromr:
-      p.h ^= ZT[from][fromP + PieceShift];
-      p.h ^= ZT[to][(p.c == Co_White ? P_wr : P_br) + PieceShift];
       if (type == T_capture) p.h ^= ZT[to][toP + PieceShift];
       p.b[to]   = (p.c==Co_White?P_wr:P_br);
       p.b[from] = P_none;
+      
+      p.h ^= ZT[from][fromP + PieceShift];
+      p.h ^= ZT[to][(p.c == Co_White ? P_wr : P_br) + PieceShift];
       break;
 
       case T_promb:
       case T_cappromb:
-      p.h ^= ZT[from][fromP + PieceShift];
-      p.h ^= ZT[to][(p.c == Co_White ? P_wb : P_bb) + PieceShift];
       if (type == T_capture) p.h ^= ZT[to][toP + PieceShift];
       p.b[to]   = (p.c==Co_White?P_wb:P_bb);
       p.b[from] = P_none;
+
+      p.h ^= ZT[from][fromP + PieceShift];
+      p.h ^= ZT[to][(p.c == Co_White ? P_wb : P_bb) + PieceShift];
       break;
 
       case T_promn:
       case T_cappromn:
-      p.h ^= ZT[from][fromP + PieceShift];
-      p.h ^= ZT[to][(p.c == Co_White ? P_wn : P_bn) + PieceShift];
       if (type == T_capture) p.h ^= ZT[to][toP + PieceShift];
       p.b[to]   = (p.c==Co_White?P_wn:P_bn);
       p.b[from] = P_none;
+
+      p.h ^= ZT[from][fromP + PieceShift];
+      p.h ^= ZT[to][(p.c == Co_White ? P_wn : P_bn) + PieceShift];
       break;
 
       case T_wks:
@@ -850,6 +869,7 @@ bool apply(Position & p, const Move & m){
       p.wk = Sq_g1;
       p.b[Sq_h1] = P_none;
       p.castling &= ~(C_wks | C_wqs);
+
       p.h ^= ZT[Sq_h1][P_wr + PieceShift]; // remove rook
       p.h ^= ZT[Sq_e1][P_wk + PieceShift]; // remove king
       p.h ^= ZT[Sq_f1][P_wr + PieceShift]; // add rook
@@ -865,11 +885,12 @@ bool apply(Position & p, const Move & m){
       p.wk = Sq_c1;
       p.b[Sq_d1] = P_wr;
       p.b[Sq_e1] = P_none;
+      p.castling &= ~(C_wks | C_wqs);
+
       p.h ^= ZT[Sq_a1][P_wr + PieceShift]; // remove rook
       p.h ^= ZT[Sq_e1][P_wk + PieceShift]; // remove king
       p.h ^= ZT[Sq_d1][P_wr + PieceShift]; // add rook
       p.h ^= ZT[Sq_c1][P_wk + PieceShift]; // add king
-      p.castling &= ~(C_wks | C_wqs);
       p.h ^= ZT[0][13];
       p.h ^= ZT[7][13];
       break;
@@ -881,6 +902,7 @@ bool apply(Position & p, const Move & m){
       p.bk = Sq_g8;
       p.b[Sq_h8] = P_none;
       p.castling &= ~(C_bks | C_bqs);
+
       p.h ^= ZT[Sq_h8][P_br + PieceShift]; // remove rook
       p.h ^= ZT[Sq_e8][P_bk + PieceShift]; // remove king
       p.h ^= ZT[Sq_f8][P_br + PieceShift]; // add rook
@@ -897,6 +919,7 @@ bool apply(Position & p, const Move & m){
       p.b[Sq_d8] = P_br;
       p.b[Sq_e8] = P_none;
       p.castling &= ~(C_bks | C_bqs);
+
       p.h ^= ZT[Sq_a8][P_br + PieceShift]; // remove rook
       p.h ^= ZT[Sq_e8][P_bk + PieceShift]; // remove king
       p.h ^= ZT[Sq_d8][P_br + PieceShift]; // add rook
@@ -910,20 +933,24 @@ bool apply(Position & p, const Move & m){
    if ( isAttacked(p,kingSquare(p)) ) return false;
 
    // Update castling right if rook captured
-   if ( toP == P_wr && to == Sq_a1 ){
+   if ( toP == P_wr && to == Sq_a1 && (p.castling & C_wqs) ){
       p.castling &= ~C_wqs;
+
       p.h ^= ZT[0][13];
    }
-   else if ( toP == P_wr && to == Sq_h1 ){
+   else if ( toP == P_wr && to == Sq_h1 && (p.castling & C_wks) ){
       p.castling &= ~C_wks;
+
       p.h ^= ZT[7][13];
    }
-   else if ( toP == P_br && to == Sq_a8 ){
+   else if ( toP == P_br && to == Sq_a8 && (p.castling & C_bqs)){
       p.castling &= ~C_bqs;
+
       p.h ^= ZT[56][13];
    }
-   else if ( toP == P_br && to == Sq_h8 ){
+   else if ( toP == P_br && to == Sq_h8 && (p.castling & C_bks)){
       p.castling &= ~C_bks;
+
       p.h ^= ZT[63][13];
    }
 
@@ -939,8 +966,6 @@ bool apply(Position & p, const Move & m){
 
    p.h ^= ZT[3][13];
    p.h ^= ZT[4][13];
-
-   //p.h = computeHash(p);
 
    return true;
 }
@@ -1086,8 +1111,8 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
 
   TT::Entry e;
   if ( TT::getEntry(computeHash(p),depth,e) ){
-     /*
-     if ( e.h != 0 && !rootnode && !pvnode && (   (e.b == TT::B_alpha && e.score <= alpha)
+     if ( e.h != 0 && !rootnode && !pvnode && std::abs(e.score) < MATE -MAX_PLY &&
+                                 (   (e.b == TT::B_alpha && e.score <= alpha)
                                   || (e.b == TT::B_beta  && e.score >= beta )
                                   || (e.b == TT::B_exact) ) ){
         KillerT::killers[1][ply] = KillerT::killers[0][ply];
@@ -1095,7 +1120,6 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         pv.push_back(e.m);
         return e.score;
      }
-     */
   }
 
   std::vector<Move> moves;
@@ -1398,6 +1422,7 @@ bool ReadFEN(const std::string & fen, Position & p){
         p.moves = 1;
     }
 
+    p.h = 0;
     p.h = computeHash(p);
 
     return true;
