@@ -33,6 +33,8 @@ bool mateFinder = false;
 #define SQFILE(s) s%8
 #define SQRANK(s) s/8
 
+Hash hashStack[MAX_PLY] = { 0 };
+
 std::string startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 std::string fine70 = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - -";
 
@@ -154,7 +156,7 @@ struct Position{
   Square ep;
   Square wk;
   Square bk;
-  Hash h;
+  mutable Hash h;
   Color c;
 };
 
@@ -182,6 +184,7 @@ void initHash(){
 }
 
 Hash computeHash(const Position &p){
+   if (p.h != 0) return p.h;
    Hash h = 0;
    for (int k = 0; k < 64; ++k){
       Piece pp = p.b[k];
@@ -189,6 +192,7 @@ Hash computeHash(const Position &p){
         h ^= ZT[k][pp+PieceShift];
       }
    }
+   p.h = h;
    return h;
 } 
 
@@ -449,8 +453,8 @@ const int PST[6][64] = {
 const int PSTEG[6][64] = {
     {
     0,    0,    0,    0,    0,    0,    0,    0,
-    1,   -3,    0,    7,    7,    0,   -3,    1,
-    3,   -2,    0,    1,    1,    0,   -2,    3,
+    7,    3,    4,    7,    7,    4,    3,    7,
+    3,    3,    2,    1,    1,    3,    3,    3,
     3,    3,    2,   -2,   -2,    2,    3,    3,
     1,    1,   -3,   -1,   -1,   -3,    1,    1,
    -1,   -2,    2,    1,    1,    2,   -2,   -1,
@@ -708,6 +712,12 @@ void sort(std::vector<Move> & moves, const Position & p, DepthType ply, const TT
 
 bool isDraw(const Position & p, unsigned int ply){
    ///@todo
+   int count = 0;
+   for (int k = 0; k < MAX_PLY; ++k) {
+       if (hashStack[k] == p.h) ++count;
+       if (count > 2) return true;
+       if (hashStack[k] == 0) break;
+   }
    if ( p.fifty >= 100 ) return true;
    return false;
 }
@@ -720,6 +730,8 @@ bool apply(Position & p, const Move & m){
     
    if ( m == INVALIDMOVE ) return false;
     
+   p.h = 0; // invalidate hash
+
    const Square from  = Move2From(m);
    const Square to    = Move2To(m);
    const MType  type  = Move2Type(m);
@@ -850,6 +862,9 @@ bool apply(Position & p, const Move & m){
    p.c = Color((p.c+1)%2);
    if ( toP != P_none || abs(fromP) == P_wp ) p.fifty = 0;
    if ( p.c == Co_Black ) ++p.moves;
+
+   p.h = computeHash(p);
+
    return true;
 }
 
@@ -966,18 +981,19 @@ int pvs(int alpha, int beta, const Position & p, DepthType depth, bool pvnode, u
       && ! isInCheck ){
 
      // static null move
-     if (depth <= 3 && val >= beta + 80*depth ) return val;
+     if (depth <= 6 && val >= beta + 80*depth ) return val;
   
      // razoring
      int rAlpha = alpha - 200;
      if ( depth <= 3 && val <= rAlpha ){
          val = qsearch(rAlpha,rAlpha+1,p,ply);
-         if ( ! stopFlag && val <= rAlpha ) return alpha;
+         if ( ! stopFlag && val <= alpha ) return val;
      }
   
      // null move
      if ( pv.size() > 1 ){
        Position pN = p;
+       pN.h = 0;
        pN.c = Color((pN.c+1)%2);
        int R = depth/4 + 3;
        std::vector<Move> nullPV;
@@ -1016,6 +1032,7 @@ int pvs(int alpha, int beta, const Position & p, DepthType depth, bool pvnode, u
      if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply;
      if (p.c == Co_Black && Move2To(*it) == p.wk) return MATE - ply;
      validMoveCount++;
+     hashStack[ply] = p.h;
      std::vector<Move> childPV;
      if ( validMoveCount == 1 ){
         val = -pvs(-beta,-alpha,p2,depth-1,true,ply+1,childPV);
@@ -1026,18 +1043,19 @@ int pvs(int alpha, int beta, const Position & p, DepthType depth, bool pvnode, u
         if ( !mateFinder 
             && futility 
             && Move2Type(*it) == T_std
-            && depth <= 6 
+            && depth <= 10
             && validMoveCount >= 3*depth 
             && std::abs(alpha) < MATE-MAX_PLY 
             && std::abs(beta) < MATE-MAX_PLY ) continue;
         // LMR
         if ( !mateFinder 
-            && depth <= 11 
+            && depth >= 3
             && !isInCheck
             && validMoveCount >= 2 
             && std::abs(alpha) < MATE-MAX_PLY 
             && std::abs(beta) < MATE-MAX_PLY 
             && ! isInCheck ) reduction = int(1+sqrt(depth*validMoveCount/8));
+        if (pvnode && reduction > 0) --reduction;
         // PVS
         val = -pvs(-alpha-1,-alpha,p2,depth-1-reduction,false,ply+1,childPV);
         if ( reduction > 0 && val > alpha ){
@@ -1101,6 +1119,8 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, int & sc){
   int bestScore = 0;
   m = INVALIDMOVE;
   
+  hashStack[0] = p.h;
+
   for(DepthType depth = 1 ; depth <= d && !stopFlag ; ++depth ){
     std::cout << "# Iterative deepening " << (int)depth << std::endl;
     std::vector<Move> pvLoc;
@@ -1295,6 +1315,8 @@ bool ReadFEN(const std::string & fen, Position & p){
     else{
         p.moves = 1;
     }
+
+    p.h = computeHash(p);
 
     return true;
 }
