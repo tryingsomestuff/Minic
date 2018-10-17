@@ -22,7 +22,6 @@ typedef unsigned long long int Hash; // invalid if == 0
 typedef unsigned long long int Counter;
 typedef short int ScoreType;
 
-
 bool mateFinder = false;
 
 #define STOPSCORE   ScoreType(20000)
