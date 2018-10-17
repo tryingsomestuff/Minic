@@ -20,12 +20,14 @@ typedef int Move; // invalid if < 0
 typedef char Square; // invalid if < 0
 typedef unsigned long long int Hash; // invalid if == 0
 typedef unsigned long long int Counter;
+typedef short int ScoreType;
+
 
 bool mateFinder = false;
 
-#define STOPSCORE   20000
-#define INFSCORE    10000
-#define MATE         9000
+#define STOPSCORE   ScoreType(20000)
+#define INFSCORE    ScoreType(10000)
+#define MATE        ScoreType(9000)
 #define INVALIDMOVE    -1
 #define INVALIDSQUARE  -1
 #define MAX_PLY       512
@@ -69,7 +71,7 @@ enum Piece : char{
 
 const int PieceShift = 6;
 
-int  Values[13]  = { -8000, -950, -500, -335, -325, -100, 0, 100, 325, 335, 500, 950, 8000 };
+ScoreType  Values[13]  = { -8000, -950, -500, -335, -325, -100, 0, 100, 325, 335, 500, 950, 8000 };
 char Names[13]   = { 'k', 'q', 'r', 'b', 'n', 'p', ' ', 'P', 'N', 'B', 'R', 'Q', 'K' };
 
 std::string Squares[64] = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
@@ -142,7 +144,7 @@ enum Color : char{
    Co_Black = 1
 };
 
-int MoveScoring[16] = { 0, 1000, 1100, 300, 950, 500, 350, 300, 1950, 1500, 1350, 1300, 100, 100, 100, 100 };
+ScoreType MoveScoring[16] = { 0, 1000, 1100, 300, 950, 500, 350, 300, 1950, 1500, 1350, 1300, 100, 100, 100, 100 };
 
 Color Colors[13] = { Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_None, Co_White, Co_White, Co_White, Co_White, Co_White, Co_White};
 
@@ -160,11 +162,15 @@ struct Position{
   Color c;
 };
 
-Square Move2From(Move h) { return (h >> 10) & 0x3F ;}
-Square Move2To  (Move h) { return (h >>  4) & 0x3F ;}
-MType  Move2Type(Move h) { return MType(h & 0xF);}
-Move   ToMove(Square from, Square to, MType type){
+ScoreType Move2Score(Move h) { return (h >> 16) & 0xFFFF; }
+Square    Move2From (Move h) { return (h >> 10) & 0x3F  ; }
+Square    Move2To   (Move h) { return (h >>  4) & 0x3F  ; }
+MType     Move2Type (Move h) { return MType(h & 0xF)    ; }
+Move      ToMove(Square from, Square to, MType type){
    return (from << 10) | (to << 4) | type;
+}
+Move   ToMove(Square from, Square to, MType type, ScoreType score) {
+    return (score << 16) | (from << 10) | (to << 4) | type;
 }
 
 Hash randomInt(){
@@ -265,7 +271,7 @@ namespace KillerT{
 };
 
 namespace HistoryT{
-   int history[13][64]; 
+    ScoreType history[13][64];
    void initHistory(){
       for(int i = 0; i < 13; ++i){
           for(int k = 0 ; k < 64; ++k){
@@ -403,7 +409,7 @@ int Offset[6][8] = {
    { -11, -10,  -9, -1, 1,  9, 10, 11 }  /* king */
 };
 
-const int PST[6][64] = {
+const ScoreType PST[6][64] = {
     {
     0,    0,    0,    0,    0,    0,    0,    0,
    -2,   11,   -4,   -2,   -2,   -4,   11,   -2,
@@ -460,7 +466,7 @@ const int PST[6][64] = {
    156,  187,  157,  114,  114,  157,  187,  156 }
 };
 
-const int PSTEG[6][64] = {
+const ScoreType PSTEG[6][64] = {
     {
     0,    0,    0,    0,    0,    0,    0,    0,
     7,    3,    4,    7,    7,    4,    3,    7,
@@ -548,7 +554,7 @@ namespace TimeMan{
 }
 
 void addMove(Square from, Square to, MType type, std::vector<Move> & moves){
-   moves.push_back(ToMove(from,to,type));
+   moves.push_back(ToMove(from,to,type,0));
 }
 
 bool isAttacked(const Position & p, const Square k){
@@ -690,25 +696,33 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
 struct MoveSorter{
    MoveSorter(const Position & p, DepthType ply, const TT::Entry * e = NULL):p(p),ply(ply),e(e){
    }
-   bool operator()(const Move & a, const Move & b){
+   bool operator()(Move & a, Move & b){
       const MType t1 = Move2Type(a);
       const MType t2 = Move2Type(b);
-      int s1 = MoveScoring[t1];
-      int s2 = MoveScoring[t2];
-      if ( isCapture(t1) ){
-         s1 += MvvLvaScores[p.b[Move2To(a)]+PieceShift][p.b[Move2From(a)]+PieceShift];
+      ScoreType s1 = Move2Score(a);
+      ScoreType s2 = Move2Score(b);
+      if (s1 == 0) {
+          s1 = MoveScoring[t1];
+          if (isCapture(t1)) {
+              s1 += MvvLvaScores[p.b[Move2To(a)] + PieceShift][p.b[Move2From(a)] + PieceShift];
+          }
+          if (e && e->m == a) s1 += 3000;
+          if (a == KillerT::killers[0][ply]) s1 += 150;
+          if (a == KillerT::killers[1][ply]) s1 += 130;
+          if (t1 == T_std) s1 += HistoryT::history[p.b[Move2From(a)] + PieceShift][Move2To(a)];
+          a = ToMove(Move2From(a), Move2To(a), Move2Type(a), s1);
       }
-      if ( isCapture(t2) ){
-         s2 += MvvLvaScores[p.b[Move2To(b)]+PieceShift][p.b[Move2From(b)]+PieceShift];
+      if (s2 == 0) {
+          s2 = MoveScoring[t2];
+          if (isCapture(t2)) {
+              s2 += MvvLvaScores[p.b[Move2To(b)] + PieceShift][p.b[Move2From(b)] + PieceShift];
+          }
+          if (e && e->m == b) s2 += 3000;
+          if (b == KillerT::killers[0][ply]) s2 += 150;
+          if (b == KillerT::killers[1][ply]) s2 += 130;
+          if (t2 == T_std) s2 += HistoryT::history[p.b[Move2From(b)] + PieceShift][Move2To(b)];
+          b = ToMove(Move2From(b), Move2To(b), Move2Type(b), s2);
       }
-      if ( e && e->m == a ) s1 += 3000;
-      if ( e && e->m == b ) s2 += 3000;
-      if ( a == KillerT::killers[0][ply] ) s1 += 150;
-      if ( b == KillerT::killers[0][ply] ) s2 += 150;
-      if ( a == KillerT::killers[1][ply] ) s1 += 130;
-      if ( b == KillerT::killers[1][ply] ) s2 += 130;
-      if ( t1 == T_std ) s1 += HistoryT::history[p.b[Move2From(a)]+PieceShift][Move2To(a)];
-      if ( t2 == T_std ) s2 += HistoryT::history[p.b[Move2From(b)]+PieceShift][Move2To(b)];
       return s1 > s2;
    }
    const Position & p;
@@ -830,8 +844,6 @@ bool apply(Position & p, const Move & m){
       p.b[from] = P_none;
       break;
 
-      ///@todo hash from to for castling
-
       case T_wks:
       p.b[Sq_e1] = P_none;
       p.b[Sq_f1] = P_wr;
@@ -839,6 +851,10 @@ bool apply(Position & p, const Move & m){
       p.wk = Sq_g1;
       p.b[Sq_h1] = P_none;
       p.castling &= ~(C_wks | C_wqs);
+      p.h ^= ZT[Sq_h1][P_wr + PieceShift]; // remove rook
+      p.h ^= ZT[Sq_e1][P_wk + PieceShift]; // remove king
+      p.h ^= ZT[Sq_f1][P_wr + PieceShift]; // add rook
+      p.h ^= ZT[Sq_g1][P_wk + PieceShift]; // add king
       p.h ^= ZT[0][13];
       p.h ^= ZT[7][13];
       break;
@@ -850,6 +866,10 @@ bool apply(Position & p, const Move & m){
       p.wk = Sq_c1;
       p.b[Sq_d1] = P_wr;
       p.b[Sq_e1] = P_none;
+      p.h ^= ZT[Sq_a1][P_wr + PieceShift]; // remove rook
+      p.h ^= ZT[Sq_e1][P_wk + PieceShift]; // remove king
+      p.h ^= ZT[Sq_d1][P_wr + PieceShift]; // add rook
+      p.h ^= ZT[Sq_c1][P_wk + PieceShift]; // add king
       p.castling &= ~(C_wks | C_wqs);
       p.h ^= ZT[0][13];
       p.h ^= ZT[7][13];
@@ -862,6 +882,10 @@ bool apply(Position & p, const Move & m){
       p.bk = Sq_g8;
       p.b[Sq_h8] = P_none;
       p.castling &= ~(C_bks | C_bqs);
+      p.h ^= ZT[Sq_h8][P_br + PieceShift]; // remove rook
+      p.h ^= ZT[Sq_e8][P_bk + PieceShift]; // remove king
+      p.h ^= ZT[Sq_f8][P_br + PieceShift]; // add rook
+      p.h ^= ZT[Sq_g8][P_bk + PieceShift]; // add king
       p.h ^= ZT[56][13];
       p.h ^= ZT[63][13];
       break;
@@ -874,6 +898,10 @@ bool apply(Position & p, const Move & m){
       p.b[Sq_d8] = P_br;
       p.b[Sq_e8] = P_none;
       p.castling &= ~(C_bks | C_bqs);
+      p.h ^= ZT[Sq_a8][P_br + PieceShift]; // remove rook
+      p.h ^= ZT[Sq_e8][P_bk + PieceShift]; // remove king
+      p.h ^= ZT[Sq_d8][P_br + PieceShift]; // add rook
+      p.h ^= ZT[Sq_c8][P_bk + PieceShift]; // add king
       p.h ^= ZT[56][13];
       p.h ^= ZT[63][13];
       break;
@@ -936,8 +964,8 @@ int gamePhase(const Position & p){
    return int(absscore*0.4+nbPiece*0.3+nbPawn*0.3);
 }
 
-int eval(const Position & p, float & gp){
-   int sc = 0;
+ScoreType eval(const Position & p, float & gp){
+    ScoreType sc = 0;
    gp = gamePhase(p)/100.f;
    //std::cout << "phase: " << gp << std::endl;
    const bool white2Play = p.c == Co_White;
@@ -950,20 +978,20 @@ int eval(const Position & p, float & gp){
             kk = 63-k;
          }
          //std::cout << Names[p.b[k]+PieceShift] << " " << PST[abs(p.b[k])-1][kk] << " " << PSTEG[abs(p.b[k])-1][kk] << std::endl;
-         sc += int(s * (gp*PST[abs(p.b[k])-1][kk] + (1.f-gp)*PSTEG[abs(p.b[k])-1][kk] ) );
+         sc += ScoreType(s * (gp*PST[abs(p.b[k])-1][kk] + (1.f-gp)*PSTEG[abs(p.b[k])-1][kk] ) );
       }
    }
    return (white2Play?+1:-1)*sc;
 }
 
-int qsearch(int alpha, int beta, const Position & p, unsigned int ply){
+ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply){
 
-  alpha = std::max(alpha, -MATE + (int)ply);
-  beta  = std::min(beta ,  MATE - (int)ply + 1);
+  alpha = std::max(alpha, (ScoreType)(-MATE + ply));
+  beta  = std::min(beta , (ScoreType)(MATE - ply + 1));
   if (alpha >= beta) return alpha;
    
   float gp = 0;
-  int val = eval(p,gp);
+  ScoreType val = eval(p,gp);
   if ( val >= beta ) return val;
   if ( val > alpha) alpha = val;
 
@@ -993,7 +1021,7 @@ int qsearch(int alpha, int beta, const Position & p, unsigned int ply){
   return val;
 }
 
-int pvs(int alpha, int beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv){
+ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv){
 
   if ( std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()) > TimeMan::GetNextMSecPerMove() ){
     stopFlag = true;
@@ -1008,12 +1036,12 @@ int pvs(int alpha, int beta, const Position & p, DepthType depth, bool pvnode, u
 
   ++stats.nodes;
 
-  alpha = std::max(alpha, -MATE + (int)ply);
-  beta  = std::min(beta,   MATE - (int)ply + 1);
+  alpha = std::max(alpha, (ScoreType)(-MATE + ply));
+  beta  = std::min(beta,  (ScoreType)(MATE  - ply + 1));
   if (alpha >= beta) return alpha;
 
   float gp = 0;
-  int val = eval(p,gp);
+  ScoreType val = eval(p,gp);
   
   bool futility = false;
 
@@ -1049,7 +1077,7 @@ int pvs(int alpha, int beta, const Position & p, DepthType depth, bool pvnode, u
        p.h ^= ZT[4][13];
        int R = depth/4 + 3;
        std::vector<Move> nullPV;
-       int nullscore = -pvs(-beta,-beta+1,pN,depth-R-1,true,ply+1,nullPV);
+       ScoreType nullscore = -pvs(-beta,-beta+1,pN,depth-R-1,true,ply+1,nullPV);
        if ( !stopFlag && nullscore >= beta ) return nullscore;
      }
      
@@ -1158,7 +1186,7 @@ int pvs(int alpha, int beta, const Position & p, DepthType depth, bool pvnode, u
   return stopFlag?STOPSCORE:alpha;
 }
 
-std::vector<Move> search(const Position & p, Move & m, DepthType & d, int & sc){
+std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType & sc){
   std::cout << "# Search called" << std::endl;
   stopFlag = false;
 
@@ -1171,7 +1199,7 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, int & sc){
   
   DepthType reachedDepth = 0;
   std::vector<Move> pv;
-  int bestScore = 0;
+  ScoreType bestScore = 0;
   m = INVALIDMOVE;
   
   hashStack[0] = p.h;
@@ -1179,10 +1207,10 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, int & sc){
   for(DepthType depth = 1 ; depth <= d && !stopFlag ; ++depth ){
     std::cout << "# Iterative deepening " << (int)depth << std::endl;
     std::vector<Move> pvLoc;
-    int delta = (depth>4)?25:MATE;
-    int alpha = std::max(bestScore - delta,-INFSCORE);
-    int beta  = std::min(bestScore + delta, INFSCORE);
-    int score = 0;
+    ScoreType delta = (depth>4)?25:MATE;
+    ScoreType alpha = std::max(ScoreType(bestScore - delta), ScoreType (-INFSCORE));
+    ScoreType beta  = std::min(ScoreType(bestScore + delta), INFSCORE);
+    ScoreType score = 0;
     while( delta <= MATE ){
        pvLoc.clear();
        score = pvs(alpha,beta,p,depth,true,1,pvLoc);
@@ -1190,11 +1218,11 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, int & sc){
        delta *=2;
        if (score <= alpha){
            std::cout << "# Windows research alpha " << alpha << ", score : " << score << ", delta " << delta << std::endl;
-           alpha = std::max(score - delta, -MATE );
+           alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) );
        }
        else if (score >= beta ){
            std::cout << "# Windows research beta" << ", score : " << score << ", delta " << delta << std::endl;
-           beta  = std::min(score + delta,  MATE );
+           beta  = std::min(ScoreType(score + delta),  MATE );
        }
        else break;
     }
@@ -1503,7 +1531,7 @@ namespace XBoard{
 
    Move ThinkUntilTimeUp(){
       std::cout << "#Thinking... " << std::endl;
-      int score = 0;
+      ScoreType score = 0;
       Move m;
       if ( depth < 0 ) depth = 64;
       std::cout << "#depth " << (int)depth << std::endl;
@@ -1524,7 +1552,7 @@ namespace XBoard{
 
    void PonderUntilInput(){
       std::cout << "#Pondering... " << std::endl;
-      int score = 0;
+      ScoreType score = 0;
       Move m;
       DepthType d = 1;
       std::vector<Move> pv = search(position,m,d,score);
@@ -2076,7 +2104,7 @@ int main(int argc, char ** argv){
          d = atoi(argv[3]);
       };
       Move bestMove = INVALIDMOVE;
-      int s;
+      ScoreType s;
       TimeMan::isDynamic                = false;
       TimeMan::nbMoveInTC               = -1;
       TimeMan::msecPerMove              = 60*60*1000*24; // 1 day == infinity ...
@@ -2094,7 +2122,7 @@ int main(int argc, char ** argv){
          d = atoi(argv[3]);
       };
       Move bestMove = INVALIDMOVE;
-      int s;
+      ScoreType s;
       TimeMan::isDynamic                = false;
       TimeMan::nbMoveInTC               = -1;
       TimeMan::msecPerMove              = 60*60*1000*24; // 1 day == infinity ...
