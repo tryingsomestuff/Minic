@@ -223,12 +223,13 @@ struct TT{
    };
    struct Entry{
       Entry():m(INVALIDMOVE),score(0),b(B_alpha),d(-1),h(0){}
-      Entry(Move m, int s,Bound b, DepthType d, Hash h):m(m),score(m),b(b),d(d),h(h){}
+      Entry(Move m, int s,Bound b, DepthType d, Hash h, const std::string & fen ):m(m),score(m),b(b),d(d),h(h),fen(fen){}
       Move m;
       int score;
       Bound b;
       DepthType d;
       Hash h;
+      std::string fen;
    };
    static Entry * table;
    static int ttSize;
@@ -236,12 +237,17 @@ struct TT{
    static void initTable(int n){
       ttSize = n;
       table = new Entry[ttSize];
+      std::cout << "Size of TT " << ttSize * sizeof(Entry) / 1024 / 1024 << "Mb" << std::endl;
    }
    
-   static bool getEntry(Hash h, DepthType d, Entry & e){
+   static bool getEntry(Hash h, DepthType d, Entry & e, const std::string & fen){
       const Entry & _e = table[h%ttSize];
       if ( _e.h != h ){
           e.h = 0;
+          return false;
+      }
+      if (_e.fen != fen) {
+          std::cout << "bad fen \n" << _e.fen << "\n" << fen << std::endl;
           return false;
       }
       if ( _e.d >= d ){
@@ -300,6 +306,95 @@ bool isCapture(const MType & mt){
 
 bool isCapture(const Move & m){
    return isCapture(Move2Type(m));
+}
+
+
+std::string GetFENShort(const Position &p ){
+
+    // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR"
+
+    std::stringstream ss;
+    int count = 0;
+    for (int i = 7; i >= 0; --i) {
+        for (int j = 0; j < 8; j++) {
+            int k = 8 * i + j;
+            if (p.b[k] == P_none) {
+                ++count;
+            }
+            else {
+                if (count != 0) {
+                    ss << count;
+                    count = 0;
+                }
+                ss << Names[p.b[k]+PieceShift];
+            }
+            if (j == 7) {
+                if (count != 0) {
+                    ss << count;
+                    count = 0;
+                }
+                if (i != 0) {
+                    ss << "/";
+                }
+            }
+        }
+    }
+
+    return ss.str();
+}
+
+std::string GetFENShort2(const Position &p) {
+
+    // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d5"
+
+    std::stringstream ss;
+
+    ss << GetFENShort(p);
+
+    ss << " " << (p.c == Co_White ? "w" : "b") << " ";
+
+    bool withCastling = false;
+    if (p.castling & C_wks) {
+        ss << "K";
+        withCastling = true;
+    }
+    if (p.castling & C_wqs) {
+        ss << "Q";
+        withCastling = true;
+    }
+    if (p.castling & C_bks) {
+        ss << "k";
+        withCastling = true;
+    }
+    if (p.castling & C_bqs) {
+        ss << "q";
+        withCastling = true;
+    }
+
+    if (!withCastling) ss << "-";
+
+    if (p.ep != INVALIDSQUARE) {
+        ss << " " << Squares[p.ep];
+    }
+    else {
+        ss << " -";
+    }
+
+    return ss.str();
+}
+
+
+std::string GetFEN(const Position &p) {
+
+    // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d5 0 2"
+
+    std::stringstream ss;
+
+    ss << GetFENShort2(p);
+
+    ss << " " << (int)p.fifty << " " << (int)p.moves;
+
+    return ss.str();
 }
 
 std::string ToString(const Move & m){
@@ -779,15 +874,15 @@ bool apply(Position & p, const Move & m){
          p.wk = to;
          p.castling &= ~(C_wks | C_wqs);
 
-         p.h ^= ZT[7][13];
-         p.h ^= ZT[0][13];
+         if (p.castling & C_wks) p.h ^= ZT[7][13];
+         if (p.castling & C_wqs) p.h ^= ZT[0][13];
       }
       else if ( fromP == P_bk ){
          p.bk = to;
          p.castling &= ~(C_bks | C_bqs);
 
-         p.h ^= ZT[63][13];
-         p.h ^= ZT[56][13];
+         if (p.castling & C_bks) p.h ^= ZT[63][13];
+         if (p.castling & C_bqs) p.h ^= ZT[56][13];
       }
 
       if ( fromP == P_wr && from == Sq_a1 && (p.castling & C_wqs)){
@@ -874,8 +969,8 @@ bool apply(Position & p, const Move & m){
       p.h ^= ZT[Sq_e1][P_wk + PieceShift]; // remove king
       p.h ^= ZT[Sq_f1][P_wr + PieceShift]; // add rook
       p.h ^= ZT[Sq_g1][P_wk + PieceShift]; // add king
-      p.h ^= ZT[0][13];
-      p.h ^= ZT[7][13];
+      if (p.castling & C_wqs) p.h ^= ZT[0][13];
+      if (p.castling & C_wks) p.h ^= ZT[7][13];
       break;
 
       case T_wqs:
@@ -891,8 +986,8 @@ bool apply(Position & p, const Move & m){
       p.h ^= ZT[Sq_e1][P_wk + PieceShift]; // remove king
       p.h ^= ZT[Sq_d1][P_wr + PieceShift]; // add rook
       p.h ^= ZT[Sq_c1][P_wk + PieceShift]; // add king
-      p.h ^= ZT[0][13];
-      p.h ^= ZT[7][13];
+      if (p.castling & C_wqs) p.h ^= ZT[0][13];
+      if (p.castling & C_wks) p.h ^= ZT[7][13];
       break;
 
       case T_bks:
@@ -907,8 +1002,8 @@ bool apply(Position & p, const Move & m){
       p.h ^= ZT[Sq_e8][P_bk + PieceShift]; // remove king
       p.h ^= ZT[Sq_f8][P_br + PieceShift]; // add rook
       p.h ^= ZT[Sq_g8][P_bk + PieceShift]; // add king
-      p.h ^= ZT[56][13];
-      p.h ^= ZT[63][13];
+      if (p.castling & C_bqs) p.h ^= ZT[56][13];
+      if (p.castling & C_bks) p.h ^= ZT[63][13];
       break;
 
       case T_bqs:
@@ -924,8 +1019,8 @@ bool apply(Position & p, const Move & m){
       p.h ^= ZT[Sq_e8][P_bk + PieceShift]; // remove king
       p.h ^= ZT[Sq_d8][P_br + PieceShift]; // add rook
       p.h ^= ZT[Sq_c8][P_bk + PieceShift]; // add king
-      p.h ^= ZT[56][13];
-      p.h ^= ZT[63][13];
+      if (p.castling & C_bqs) p.h ^= ZT[56][13];
+      if (p.castling & C_bks) p.h ^= ZT[63][13];
       break;
 
    }
@@ -1110,7 +1205,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   }
 
   TT::Entry e;
-  if ( TT::getEntry(computeHash(p),depth,e) ){
+  if ( TT::getEntry(computeHash(p),depth,e,GetFENShort2(p)) ){
      if ( e.h != 0 && !rootnode && !pvnode && std::abs(e.score) < MATE -MAX_PLY &&
                                  (   (e.b == TT::B_alpha && e.score <= alpha)
                                   || (e.b == TT::B_beta  && e.score >= beta )
@@ -1190,7 +1285,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
                   }
               }
            }
-           TT::setEntry({*it,val,TT::B_beta,DepthType(depth-1),computeHash(p)});
+           TT::setEntry({*it,val,TT::B_beta,DepthType(depth-1),computeHash(p),GetFENShort2(p)});
            return val;
         }
         alpha = val;
@@ -1203,7 +1298,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   }
 
   if ( bestMove != INVALIDMOVE && !stopFlag){
-     TT::setEntry({bestMove,alpha,alphaUpdated?TT::B_exact:TT::B_alpha,DepthType(depth-1),computeHash(p)});
+     TT::setEntry({bestMove,alpha,alphaUpdated?TT::B_exact:TT::B_alpha,DepthType(depth-1),computeHash(p),GetFENShort2(p)});
   }
 
   return stopFlag?STOPSCORE:alpha;
@@ -2001,7 +2096,7 @@ int main(int argc, char ** argv){
    if ( argc < 2 ) return 1;
 
    initHash();
-   TT::initTable(32*1024*1024);
+   TT::initTable(1024*1024);
    stats.init();
 
    std::string cli = argv[1];
@@ -2084,6 +2179,10 @@ int main(int argc, char ** argv){
       return 1;
    }
    std::cout << ToString(p) << std::endl;
+
+   if (cli == "-test_hash") {
+       ///@todo
+   }
 
    if ( cli == "-eval" ){
       float gp = 0;
