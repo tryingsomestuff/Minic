@@ -36,6 +36,8 @@ bool mateFinder = false;
 
 Hash hashStack[MAX_PLY] = { 0 };
 
+//#define DEBUG_ZHASH
+
 std::string startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 std::string fine70 = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - -";
 
@@ -223,13 +225,19 @@ struct TT{
    };
    struct Entry{
       Entry():m(INVALIDMOVE),score(0),b(B_alpha),d(-1),h(0){}
+#ifdef DEBUG_ZHASH
       Entry(Move m, int s,Bound b, DepthType d, Hash h, const std::string & fen ):m(m),score(m),b(b),d(d),h(h),fen(fen){}
+#else
+      Entry(Move m, int s, Bound b, DepthType d, Hash h) : m(m), score(m), b(b), d(d), h(h){}
+#endif
       Move m;
       int score;
       Bound b;
       DepthType d;
       Hash h;
+#ifdef DEBUG_ZHASH
       std::string fen;
+#endif
    };
    static Entry * table;
    static int ttSize;
@@ -239,17 +247,23 @@ struct TT{
       table = new Entry[ttSize];
       std::cout << "Size of TT " << ttSize * sizeof(Entry) / 1024 / 1024 << "Mb" << std::endl;
    }
-   
+
+#ifdef DEBUG_ZHASH
    static bool getEntry(Hash h, DepthType d, Entry & e, const std::string & fen){
+#else
+   static bool getEntry(Hash h, DepthType d, Entry & e) {
+#endif
       const Entry & _e = table[h%ttSize];
       if ( _e.h != h ){
           e.h = 0;
           return false;
       }
+#ifdef DEBUG_ZHASH
       if (_e.fen != fen) {
           std::cout << "bad fen \n" << _e.fen << "\n" << fen << std::endl;
           return false;
       }
+#endif
       if ( _e.d >= d ){
          e=_e;
          ++stats.tthits;
@@ -1149,13 +1163,28 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   beta  = std::min(beta,  (ScoreType)(MATE  - ply + 1));
   if (alpha >= beta) return alpha;
 
-  float gp = 0;
-  ScoreType val = eval(p,gp);
-  
-  bool futility = false;
-
   bool rootnode = ply == 1;
   
+  TT::Entry e;
+#ifdef DEBUG_ZHASH
+  if (TT::getEntry(computeHash(p), depth, e, GetFENShort2(p))) {
+#else
+  if (TT::getEntry(computeHash(p), depth, e)) {
+#endif
+      if (e.h != 0 && !rootnode && !pvnode && std::abs(e.score) < MATE - MAX_PLY &&
+          ((e.b == TT::B_alpha && e.score <= alpha)
+              || (e.b == TT::B_beta  && e.score >= beta)
+              || (e.b == TT::B_exact))) {
+          KillerT::killers[1][ply] = KillerT::killers[0][ply];
+          KillerT::killers[0][ply] = e.m;
+          pv.push_back(e.m);
+          return e.score;
+      }
+  }
+
+  float gp = 0;
+  ScoreType val = eval(p, gp);
+  bool futility = false;
   bool isInCheck = isAttacked(p,kingSquare(p));
   
   // prunings
@@ -1168,7 +1197,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
       && ! isInCheck ){
 
      // static null move
-     if (depth <= 6 && val >= beta + 80*depth ) return val;
+     if (depth <= 3 && val >= beta + 80*depth ) return val;
   
      // razoring
      int rAlpha = alpha - 200;
@@ -1178,7 +1207,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      }
   
      // null move
-     if ( pv.size() > 1 ){
+     if ( pv.size() > 1 && depth >=4 ){
        Position pN = p;
        pN.h = 0;
        pN.c = Color((pN.c+1)%2);
@@ -1192,19 +1221,6 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      
      // LMP
      if ( val <= alpha - 130*depth ) futility = true;
-  }
-
-  TT::Entry e;
-  if ( TT::getEntry(computeHash(p),depth,e,GetFENShort2(p)) ){
-     if ( e.h != 0 && !rootnode && !pvnode && std::abs(e.score) < MATE -MAX_PLY &&
-                                 (   (e.b == TT::B_alpha && e.score <= alpha)
-                                  || (e.b == TT::B_beta  && e.score >= beta )
-                                  || (e.b == TT::B_exact) ) ){
-        KillerT::killers[1][ply] = KillerT::killers[0][ply];
-        KillerT::killers[0][ply] = e.m;
-        pv.push_back(e.m);
-        return e.score;
-     }
   }
 
   std::vector<Move> moves;
@@ -1234,9 +1250,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
             && !isAdvancedPawnPush
             && Move2Type(*it) == T_std
             && depth <= 10
-            && validMoveCount >= 3*depth 
-            && std::abs(alpha) < MATE-MAX_PLY 
-            && std::abs(beta) < MATE-MAX_PLY ) continue;
+            && validMoveCount >= 3*depth ) continue;
         // LMR
         if ( !mateFinder 
             && depth >= 3
@@ -1251,7 +1265,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         val = -pvs(-alpha-1,-alpha,p2,depth-1-reduction,false,ply+1,childPV);
         if ( reduction > 0 && val > alpha ){
            childPV.clear();
-           val = -pvs(-beta,-alpha,p2,depth-1,false,ply+1,childPV);
+           val = -pvs(-alpha-1,-alpha,p2,depth-1,false,ply+1,childPV);
         }
         if ( val > alpha && val < beta ){
            childPV.clear();
@@ -1275,7 +1289,11 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
                   }
               }
            }
+#ifdef DEBUG_ZHASH
            TT::setEntry({*it,val,TT::B_beta,DepthType(depth-1),computeHash(p),GetFENShort2(p)});
+#else
+           TT::setEntry({ *it,val,TT::B_beta,DepthType(depth - 1),computeHash(p) });
+#endif
            return val;
         }
         alpha = val;
@@ -1288,7 +1306,11 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   }
 
   if ( bestMove != INVALIDMOVE && !stopFlag){
+#ifdef DEBUG_ZHASH
      TT::setEntry({bestMove,alpha,alphaUpdated?TT::B_exact:TT::B_alpha,DepthType(depth-1),computeHash(p),GetFENShort2(p)});
+#else
+     TT::setEntry({ bestMove,alpha,alphaUpdated ? TT::B_exact : TT::B_alpha,DepthType(depth - 1),computeHash(p) });
+#endif
   }
 
   return stopFlag?STOPSCORE:alpha;
@@ -1822,7 +1844,7 @@ void XBoard::xboard(){
     std::cout << "#Starting XBoard main loop" << std::endl;
 
     ///@todo more feature disable !!
-    std::cout << "feature ping=1 setboard=1 colors=0 usermove=1 memory=0 sigint=0 sigterm=0 otime=0 time=0 nps=0 myname=\"Minic 0.0\"" << std::endl;
+    std::cout << "feature ping=1 setboard=1 colors=0 usermove=1 memory=0 sigint=0 sigterm=0 otime=0 time=0 nps=0 myname=\"Minic 0.1\"" << std::endl;
     std::cout << "feature done=1" << std::endl;
 
     while(true) {
