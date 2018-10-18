@@ -872,37 +872,31 @@ bool apply(Position & p, const Move & m){
       // update castling rigths and king position
       if ( fromP == P_wk ){
          p.wk = to;
-         p.castling &= ~(C_wks | C_wqs);
-
          if (p.castling & C_wks) p.h ^= ZT[7][13];
          if (p.castling & C_wqs) p.h ^= ZT[0][13];
+         p.castling &= ~(C_wks | C_wqs);
       }
       else if ( fromP == P_bk ){
          p.bk = to;
-         p.castling &= ~(C_bks | C_bqs);
-
          if (p.castling & C_bks) p.h ^= ZT[63][13];
          if (p.castling & C_bqs) p.h ^= ZT[56][13];
+         p.castling &= ~(C_bks | C_bqs);
       }
 
       if ( fromP == P_wr && from == Sq_a1 && (p.castling & C_wqs)){
          p.castling &= ~C_wqs;
-
          p.h ^= ZT[0][13];
       }
       else if ( fromP == P_wr && from == Sq_h1 && (p.castling & C_wks) ){
          p.castling &= ~C_wks;
-
          p.h ^= ZT[7][13];
       }
       else if ( fromP == P_br && from == Sq_a8 && (p.castling & C_bqs)){
          p.castling &= ~C_bqs;
-
          p.h ^= ZT[56][13];
       }
       else if ( fromP == P_br && from == Sq_h8 && (p.castling & C_bks) ){
          p.castling &= ~C_bks;
-
          p.h ^= ZT[63][13];
       }
       break;
@@ -963,14 +957,14 @@ bool apply(Position & p, const Move & m){
       p.b[Sq_g1] = P_wk;
       p.wk = Sq_g1;
       p.b[Sq_h1] = P_none;
+      if (p.castling & C_wqs) p.h ^= ZT[0][13];
+      if (p.castling & C_wks) p.h ^= ZT[7][13];
       p.castling &= ~(C_wks | C_wqs);
 
       p.h ^= ZT[Sq_h1][P_wr + PieceShift]; // remove rook
       p.h ^= ZT[Sq_e1][P_wk + PieceShift]; // remove king
       p.h ^= ZT[Sq_f1][P_wr + PieceShift]; // add rook
       p.h ^= ZT[Sq_g1][P_wk + PieceShift]; // add king
-      if (p.castling & C_wqs) p.h ^= ZT[0][13];
-      if (p.castling & C_wks) p.h ^= ZT[7][13];
       break;
 
       case T_wqs:
@@ -980,14 +974,14 @@ bool apply(Position & p, const Move & m){
       p.wk = Sq_c1;
       p.b[Sq_d1] = P_wr;
       p.b[Sq_e1] = P_none;
+      if (p.castling & C_wqs) p.h ^= ZT[0][13];
+      if (p.castling & C_wks) p.h ^= ZT[7][13];
       p.castling &= ~(C_wks | C_wqs);
 
       p.h ^= ZT[Sq_a1][P_wr + PieceShift]; // remove rook
       p.h ^= ZT[Sq_e1][P_wk + PieceShift]; // remove king
       p.h ^= ZT[Sq_d1][P_wr + PieceShift]; // add rook
       p.h ^= ZT[Sq_c1][P_wk + PieceShift]; // add king
-      if (p.castling & C_wqs) p.h ^= ZT[0][13];
-      if (p.castling & C_wks) p.h ^= ZT[7][13];
       break;
 
       case T_bks:
@@ -996,14 +990,14 @@ bool apply(Position & p, const Move & m){
       p.b[Sq_g8] = P_bk;
       p.bk = Sq_g8;
       p.b[Sq_h8] = P_none;
+      if (p.castling & C_bqs) p.h ^= ZT[56][13];
+      if (p.castling & C_bks) p.h ^= ZT[63][13];
       p.castling &= ~(C_bks | C_bqs);
 
       p.h ^= ZT[Sq_h8][P_br + PieceShift]; // remove rook
       p.h ^= ZT[Sq_e8][P_bk + PieceShift]; // remove king
       p.h ^= ZT[Sq_f8][P_br + PieceShift]; // add rook
       p.h ^= ZT[Sq_g8][P_bk + PieceShift]; // add king
-      if (p.castling & C_bqs) p.h ^= ZT[56][13];
-      if (p.castling & C_bks) p.h ^= ZT[63][13];
       break;
 
       case T_bqs:
@@ -1013,14 +1007,14 @@ bool apply(Position & p, const Move & m){
       p.bk = Sq_c8;
       p.b[Sq_d8] = P_br;
       p.b[Sq_e8] = P_none;
+      if (p.castling & C_bqs) p.h ^= ZT[56][13];
+      if (p.castling & C_bks) p.h ^= ZT[63][13];
       p.castling &= ~(C_bks | C_bqs);
 
       p.h ^= ZT[Sq_a8][P_br + PieceShift]; // remove rook
       p.h ^= ZT[Sq_e8][P_bk + PieceShift]; // remove king
       p.h ^= ZT[Sq_d8][P_br + PieceShift]; // add rook
       p.h ^= ZT[Sq_c8][P_bk + PieceShift]; // add king
-      if (p.castling & C_bqs) p.h ^= ZT[56][13];
-      if (p.castling & C_bks) p.h ^= ZT[63][13];
       break;
 
    }
@@ -1030,22 +1024,18 @@ bool apply(Position & p, const Move & m){
    // Update castling right if rook captured
    if ( toP == P_wr && to == Sq_a1 && (p.castling & C_wqs) ){
       p.castling &= ~C_wqs;
-
       p.h ^= ZT[0][13];
    }
    else if ( toP == P_wr && to == Sq_h1 && (p.castling & C_wks) ){
       p.castling &= ~C_wks;
-
       p.h ^= ZT[7][13];
    }
    else if ( toP == P_br && to == Sq_a8 && (p.castling & C_bqs)){
       p.castling &= ~C_bqs;
-
       p.h ^= ZT[56][13];
    }
    else if ( toP == P_br && to == Sq_h8 && (p.castling & C_bks)){
       p.castling &= ~C_bks;
-
       p.h ^= ZT[63][13];
    }
 
