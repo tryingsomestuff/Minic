@@ -657,10 +657,10 @@ namespace TimeMan{
          return msecPerMove;
       }
       if ( nbMoveInTC > 0){ // mps is given
-         return int(0.95 * (msecWholeGame+(msecInc>0)?nbMoveInTC*msecInc:0) / nbMoveInTC);
+         return int(0.95 * (msecWholeGame+(msecInc>0)?nbMoveInTC*msecInc:0) / (float)nbMoveInTC);
       }
       else{ // mps is not given
-         return int(0.95 * (msecWholeGame+(msecInc>0)?60*msecInc:0) / 60); ///@todo better
+         return int(0.95 * (msecWholeGame+(msecInc>0)?60*msecInc:0) / 60.f); ///@todo better
       }
    }
 }
@@ -1386,7 +1386,12 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
       std::cout << "# Forced mate found ..." << std::endl;
   }  
   
-  m = pv[0];
+  if (pv.empty()) {
+      m = INVALIDMOVE;
+  }
+  else {
+      m = pv[0];
+  }
   d = reachedDepth;
   sc = bestScore;
   return pv;
