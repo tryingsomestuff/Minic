@@ -633,10 +633,14 @@ namespace TimeMan{
 
    int GetNextMSecPerMove(const Position & p){
       int ms = -1;
+      std::cout << "msecPerMove   " << msecPerMove << std::endl;
+      std::cout << "msecWholeGame " << msecWholeGame << std::endl;
+      std::cout << "msecInc       " << msecInc << std::endl;
+      std::cout << "nbMoveInTC    " << nbMoveInTC << std::endl;
       if ( msecPerMove > 0 ){ // fixed msecPerMove already given (some forced mode depth or time)
          ms =  msecPerMove;
       }
-      if ( nbMoveInTC > 0){ // mps is given
+      else if ( nbMoveInTC > 0){ // mps is given
          ms = int(0.95 * (msecWholeGame+((msecInc>0)?nbMoveInTC*msecInc:0)) / (float)nbMoveInTC);
       }
       else{ // mps is not given
@@ -644,7 +648,7 @@ namespace TimeMan{
          int nmoves = 60; // let's start for a 60 ply game
          if (p.moves > 20) nmoves = 100; // if the game is long, let's go for a 100 ply game
          if (p.moves > 40) nmoves = 200; // if the game is very long, let's go for a 200 ply game
-         ms = int(0.95 * (msecWholeGame+((msecInc>0)?60*msecInc:0)) / 60.f); ///@todo better
+         ms = int(0.95 * (msecWholeGame+((msecInc>0)?p.moves*msecInc:0))/ (float)nmoves); ///@todo better
       }
       return ms;
    }
@@ -1280,6 +1284,8 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
 
 std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType & sc){
   std::cout << "# Search called" << std::endl;
+  std::cout << "# currentMoveMs " << currentMoveMs << std::endl;
+  std::cout << "# requested depth " << (int) d << std::endl;
   stopFlag = false;
   stats.init();
   KillerT::initKillers();
@@ -1974,11 +1980,6 @@ void XBoard::xboard(){
                 TimeMan::msecWholeGame            = -1;
                 TimeMan::msecInc                  = -1;
                 depth                             = 64; // infinity
-                std::cout << "msecPerMove   " << TimeMan::msecPerMove << std::endl;
-                std::cout << "msecWholeGame " << TimeMan::msecWholeGame << std::endl;
-                std::cout << "msecInc       " << TimeMan::msecInc << std::endl;
-                std::cout << "nbMoveInTC    " << TimeMan::nbMoveInTC << std::endl;
-                std::cout << "depth         " << depth << std::endl;
             }
             else if ( strncmp(command.c_str(), "sd", 2) == 0) {
                 int d = 0;
@@ -1991,11 +1992,6 @@ void XBoard::xboard(){
                 TimeMan::msecPerMove              = 60*60*1000*24; // 1 day == infinity ...
                 TimeMan::msecWholeGame            = -1;
                 TimeMan::msecInc                  = -1;
-                std::cout << "msecPerMove   " << TimeMan::msecPerMove << std::endl;
-                std::cout << "msecWholeGame " << TimeMan::msecWholeGame << std::endl;
-                std::cout << "msecInc       " << TimeMan::msecInc << std::endl;
-                std::cout << "nbMoveInTC    " << TimeMan::nbMoveInTC << std::endl;
-                std::cout << "depth         " << depth << std::endl;
             }
             else if(strncmp(command.c_str(), "level",5) == 0) {
                 int timeLeft = 0;
@@ -2014,11 +2010,6 @@ void XBoard::xboard(){
                 TimeMan::msecWholeGame            = timeLeft;
                 TimeMan::msecInc                  = msecinc;
                 depth                             = 64; // infinity
-                std::cout << "msecPerMove   " << TimeMan::msecPerMove << std::endl;
-                std::cout << "msecWholeGame " << TimeMan::msecWholeGame << std::endl;
-                std::cout << "msecInc       " << TimeMan::msecInc << std::endl;
-                std::cout << "nbMoveInTC    " << TimeMan::nbMoveInTC << std::endl;
-                std::cout << "depth         " << depth << std::endl;
             }
             else if ( command == "edit"){
                 ///@todo xboard edit
