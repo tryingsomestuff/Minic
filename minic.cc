@@ -657,10 +657,10 @@ namespace TimeMan{
          return msecPerMove;
       }
       if ( nbMoveInTC > 0){ // mps is given
-         return int(0.8 * (msecWholeGame+nbMoveInTC*msecInc) / nbMoveInTC);
+         return int(0.95 * (msecWholeGame+(msecInc>0)?nbMoveInTC*msecInc:0) / nbMoveInTC);
       }
       else{ // mps is not given
-         return int(0.8 * (msecWholeGame+60*msecInc) / 60); ///@todo better
+         return int(0.95 * (msecWholeGame+(msecInc>0)?60*msecInc:0) / 60); ///@todo better
       }
    }
 }
@@ -1256,6 +1256,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
             && depth >= 3
             && !isInCheck
             && !isAdvancedPawnPush
+            && Move2Type(*it) == T_std
             && validMoveCount >= 2 
             && std::abs(alpha) < MATE-MAX_PLY 
             && std::abs(beta) < MATE-MAX_PLY 
@@ -2042,6 +2043,11 @@ void XBoard::xboard(){
                 TimeMan::msecWholeGame            = -1;
                 TimeMan::msecInc                  = -1;
                 depth                             = 64; // infinity
+                std::cout << "msecPerMove   " << TimeMan::msecPerMove << std::endl;
+                std::cout << "msecWholeGame " << TimeMan::msecWholeGame << std::endl;
+                std::cout << "msecInc       " << TimeMan::msecInc << std::endl;
+                std::cout << "nbMoveInTC    " << TimeMan::nbMoveInTC << std::endl;
+                std::cout << "depth         " << depth << std::endl;
             }
             else if ( strncmp(command.c_str(), "sd", 2) == 0) {
                 int d = 0;
@@ -2054,6 +2060,11 @@ void XBoard::xboard(){
                 TimeMan::msecPerMove              = 60*60*1000*24; // 1 day == infinity ...
                 TimeMan::msecWholeGame            = -1;
                 TimeMan::msecInc                  = -1;
+                std::cout << "msecPerMove   " << TimeMan::msecPerMove << std::endl;
+                std::cout << "msecWholeGame " << TimeMan::msecWholeGame << std::endl;
+                std::cout << "msecInc       " << TimeMan::msecInc << std::endl;
+                std::cout << "nbMoveInTC    " << TimeMan::nbMoveInTC << std::endl;
+                std::cout << "depth         " << depth << std::endl;
             }
             else if(strncmp(command.c_str(), "level",5) == 0) {
                 int timeLeft = 0;
@@ -2072,6 +2083,11 @@ void XBoard::xboard(){
                 TimeMan::msecWholeGame            = timeLeft;
                 TimeMan::msecInc                  = msecinc;
                 depth                             = 64; // infinity
+                std::cout << "msecPerMove   " << TimeMan::msecPerMove << std::endl;
+                std::cout << "msecWholeGame " << TimeMan::msecWholeGame << std::endl;
+                std::cout << "msecInc       " << TimeMan::msecInc << std::endl;
+                std::cout << "nbMoveInTC    " << TimeMan::nbMoveInTC << std::endl;
+                std::cout << "depth         " << depth << std::endl;
             }
             else if ( command == "edit"){
                 ///@todo xboard edit
