@@ -653,15 +653,17 @@ namespace TimeMan{
    }
 
    int GetNextMSecPerMove(){
+      int ms = -1;
       if ( msecPerMove > 0 ){ // fixed msecPerMove already given (some forced mode depth or time)
-         return msecPerMove;
+         ms =  msecPerMove;
       }
       if ( nbMoveInTC > 0){ // mps is given
-         return int(0.95 * (msecWholeGame+(msecInc>0)?nbMoveInTC*msecInc:0) / (float)nbMoveInTC);
+         ms = int(0.95 * (msecWholeGame+((msecInc>0)?nbMoveInTC*msecInc:0)) / (float)nbMoveInTC);
       }
       else{ // mps is not given
-         return int(0.95 * (msecWholeGame+(msecInc>0)?60*msecInc:0) / 60.f); ///@todo better
+         ms = int(0.95 * (msecWholeGame+((msecInc>0)?60*msecInc:0)) / 60.f); ///@todo better
       }
+      return ms;
    }
 }
 
