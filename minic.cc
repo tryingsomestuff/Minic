@@ -41,6 +41,8 @@ Hash hashStack[MAX_PLY] = { 0 };
 std::string startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 std::string fine70 = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - -";
 
+int currentMoveMs = 777;
+
 struct Stats{
    Counter nodes;
    Counter qnodes;
@@ -629,7 +631,7 @@ namespace TimeMan{
       isDynamic     = false;
    }
 
-   int GetNextMSecPerMove(){
+   int GetNextMSecPerMove(const Position & p){
       int ms = -1;
       if ( msecPerMove > 0 ){ // fixed msecPerMove already given (some forced mode depth or time)
          ms =  msecPerMove;
@@ -638,6 +640,10 @@ namespace TimeMan{
          ms = int(0.95 * (msecWholeGame+((msecInc>0)?nbMoveInTC*msecInc:0)) / (float)nbMoveInTC);
       }
       else{ // mps is not given
+         ///@todo something better using the real time command
+         int nmoves = 60; // let's start for a 60 ply game
+         if (p.moves > 20) nmoves = 100; // if the game is long, let's go for a 100 ply game
+         if (p.moves > 40) nmoves = 200; // if the game is very long, let's go for a 200 ply game
          ms = int(0.95 * (msecWholeGame+((msecInc>0)?60*msecInc:0)) / 60.f); ///@todo better
       }
       return ms;
@@ -1101,7 +1107,7 @@ ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned 
 }
 
 ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv){
-  if ( std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()) > TimeMan::GetNextMSecPerMove() ){
+  if ( std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()) > currentMoveMs ){
     stopFlag = true;
     return STOPSCORE;
   }
@@ -1275,9 +1281,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
 std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType & sc){
   std::cout << "# Search called" << std::endl;
   stopFlag = false;
-
   stats.init();
-  
   KillerT::initKillers();
   HistoryT::initHistory();
   
@@ -1614,7 +1618,8 @@ namespace XBoard{
       Move m;
       if ( depth < 0 ) depth = 64;
       std::cout << "#depth " << (int)depth << std::endl;
-      std::cout << "#time  " << TimeMan::GetNextMSecPerMove() << std::endl;
+      currentMoveMs = TimeMan::GetNextMSecPerMove(position);
+      std::cout << "#time  " << currentMoveMs << std::endl;
       std::cout << ToString(position) << std::endl;
       DepthType reachedDepth = depth;
       std::vector<Move> pv = search(position,m,reachedDepth,score);
@@ -2144,7 +2149,8 @@ int main(int argc, char ** argv){
       TimeMan::nbMoveInTC               = -1;
       TimeMan::msecPerMove              = 60*60*1000*24; // 1 day == infinity ...
       TimeMan::msecWholeGame            = -1;
-      TimeMan::msecInc                  = -1;      
+      TimeMan::msecInc                  = -1;
+      currentMoveMs = TimeMan::GetNextMSecPerMove(p);
       std::vector<Move> pv = search(p,bestMove,d,s);
       std::cout << "#best move is " << ToString(bestMove) << " " << (int)d << " " << s << " pv : " << ToString(pv) << std::endl;
       return 0;
@@ -2162,7 +2168,8 @@ int main(int argc, char ** argv){
       TimeMan::nbMoveInTC               = -1;
       TimeMan::msecPerMove              = 60*60*1000*24; // 1 day == infinity ...
       TimeMan::msecWholeGame            = -1;
-      TimeMan::msecInc                  = -1;      
+      TimeMan::msecInc                  = -1;    
+      currentMoveMs = TimeMan::GetNextMSecPerMove(p);
       std::vector<Move> pv = search(p,bestMove,d,s);
       std::cout << "#best move is " << ToString(bestMove) << " " << (int)d << " " << s << " pv : " << ToString(pv) << std::endl;
       return 0;
