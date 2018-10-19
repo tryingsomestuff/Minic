@@ -236,24 +236,32 @@ struct TT{
       std::string fen;
 #endif
    };
-   static Entry * table;
+
+   static const int nbBucket = 2;
+
+   struct Bucket {
+       Entry e[nbBucket]; // first is replace always, second is replace by depth
+   };
+
+   static Bucket * table;
    static int ttSize;
    
    static void initTable(int n){
       ttSize = n;
-      table = new Entry[ttSize];
-      std::cout << "Size of TT " << ttSize * sizeof(Entry) / 1024 / 1024 << "Mb" << std::endl;
+      table = new Bucket[ttSize];
+      std::cout << "Size of TT " << ttSize * sizeof(Bucket) / 1024 / 1024 << "Mb" << std::endl;
    }
 
 #ifdef DEBUG_ZHASH
    static bool getEntry(Hash h, DepthType d, Entry & e, const std::string & fen){
 #else
-   static bool getEntry(Hash h, DepthType d, Entry & e) {
+   static bool getEntry(Hash h, DepthType d, Entry & e, int nbuck = 0) {
 #endif
-      const Entry & _e = table[h%ttSize];
+      const Entry & _e = table[h%ttSize].e[nbuck];
       if ( _e.h != h ){
           e.h = 0;
-          return false;
+          if (nbuck >= nbBucket - 1) return false;
+          return getEntry(h,d,e,nbuck+1);
       }
 #ifdef DEBUG_ZHASH
       if (_e.fen != fen) {
@@ -266,16 +274,19 @@ struct TT{
          ++stats.tthits;
          return true;
       }
-      return false;
+      if (nbuck >= nbBucket - 1) return false;
+      return getEntry(h, d, e, nbuck + 1);
    }
    
    static void setEntry(const Entry & e){
-      Entry & _e = table[e.h%ttSize];
-      _e = e; // always replace
+      Entry & _eAlways = table[e.h%ttSize].e[0];
+      _eAlways = e; // always replace
+      Entry & _eDepth = table[e.h%ttSize].e[1];
+      if ( e.d >= _eDepth.d ) _eDepth = e; // replace if better depth
    }
 };
 
-TT::Entry * TT::table = 0;
+TT::Bucket * TT::table = 0;
 int TT::ttSize = 0;
 
 namespace KillerT{
@@ -1136,10 +1147,11 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
 #else
   if (TT::getEntry(computeHash(p), depth, e)) {
 #endif
-      if (e.h != 0 && !rootnode && !pvnode && std::abs(e.score) < MATE - MAX_PLY &&
+      if (e.h != 0 && !rootnode && std::abs(e.score) < MATE - MAX_PLY &&
+          ( !pvnode ||
           ((e.b == TT::B_alpha && e.score <= alpha)
               || (e.b == TT::B_beta  && e.score >= beta)
-              || (e.b == TT::B_exact))) {
+              || (e.b == TT::B_exact)))) {
           KillerT::killers[1][ply] = KillerT::killers[0][ply];
           KillerT::killers[0][ply] = e.m;
           pv.push_back(e.m);
