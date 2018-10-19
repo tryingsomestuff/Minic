@@ -1070,7 +1070,7 @@ int gamePhase(const Position & p){
 }
 
 ScoreType eval(const Position & p, float & gp){
-    ScoreType sc = 0;
+   ScoreType sc = 0;
    gp = gamePhase(p)/100.f;
    const bool white2Play = p.c == Co_White;
    for( Square k = 0 ; k < 64 ; ++k){
@@ -1096,10 +1096,6 @@ ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned 
   ScoreType val = eval(p,gp);
   if ( val >= beta ) return val;
   if ( val > alpha) alpha = val;
-
-  // delta pruning
-  if ( val-1000 > beta ) return val;
-  if ( val+1000 < alpha) return val;
 
   ++stats.qnodes;
 
@@ -1192,7 +1188,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      }
   
      // null move
-     if ( pv.size() > 1 && depth >=4 ){
+     if ( pv.size() > 1 ){
        Position pN = p;
        pN.h = 0;
        pN.c = Color((pN.c+1)%2);
