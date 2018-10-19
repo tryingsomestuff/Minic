@@ -191,11 +191,7 @@ void initHash(){
 }
 
 Hash computeHash(const Position &p){
-
-    //std::cout << "hash is " << p.h << std::endl;
-
    if (p.h != 0) return p.h;
-
    Hash h = 0;
    for (int k = 0; k < 64; ++k){
       Piece pp = p.b[k];
@@ -213,7 +209,6 @@ Hash computeHash(const Position &p){
    if ( p.c == Co_Black) h ^= ZT[4][13];
 
    p.h = h;
-
    return h;
 } 
 
@@ -283,7 +278,6 @@ int TT::ttSize = 0;
 
 namespace KillerT{
    Move killers[2][MAX_PLY];
-   
    void initKillers(){
       for(int i = 0; i < 2; ++i){
           for(int k = 0 ; k < MAX_PLY; ++k){
@@ -322,11 +316,8 @@ bool isCapture(const Move & m){
    return isCapture(Move2Type(m));
 }
 
-
 std::string GetFENShort(const Position &p ){
-
     // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR"
-
     std::stringstream ss;
     int count = 0;
     for (int i = 7; i >= 0; --i) {
@@ -353,20 +344,14 @@ std::string GetFENShort(const Position &p ){
             }
         }
     }
-
     return ss.str();
 }
 
 std::string GetFENShort2(const Position &p) {
-
-    // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d5"
-
+    // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d5
     std::stringstream ss;
-
     ss << GetFENShort(p);
-
     ss << " " << (p.c == Co_White ? "w" : "b") << " ";
-
     bool withCastling = false;
     if (p.castling & C_wks) {
         ss << "K";
@@ -384,30 +369,22 @@ std::string GetFENShort2(const Position &p) {
         ss << "q";
         withCastling = true;
     }
-
     if (!withCastling) ss << "-";
-
     if (p.ep != INVALIDSQUARE) {
         ss << " " << Squares[p.ep];
     }
     else {
         ss << " -";
     }
-
     return ss.str();
 }
 
 
 std::string GetFEN(const Position &p) {
-
     // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d5 0 2"
-
     std::stringstream ss;
-
     ss << GetFENShort2(p);
-
     ss << " " << (int)p.fifty << " " << (int)p.moves;
-
     return ss.str();
 }
 
@@ -678,20 +655,12 @@ bool isAttacked(const Position & p, const Square k){
       if (Colors[p.b[i]+PieceShift] == opponent) {
          if (abs(p.b[i]) == P_wp) {
             if (side == Co_White) {
-               if ( SQFILE(i) != 0 && i - 9 == k){
-                  return true;
-               }
-               if ( SQFILE(i) != 7 && i - 7 == k){
-                  return true;
-               }
+               if ( SQFILE(i) != 0 && i - 9 == k) return true;
+               if ( SQFILE(i) != 7 && i - 7 == k) return true;
             }
             else {
-               if ( SQFILE(i) != 0 && i + 7 == k){
-                  return true;
-               }
-               if ( SQFILE(i) != 7 && i + 9 == k){
-                  return true;
-               }
+               if ( SQFILE(i) != 0 && i + 7 == k) return true;
+               if ( SQFILE(i) != 7 && i + 9 == k) return true;
             }
          }
          else{
@@ -849,7 +818,7 @@ void sort(std::vector<Move> & moves, const Position & p, DepthType ply, const TT
 }
 
 bool isDraw(const Position & p, unsigned int ply){
-   ///@todo
+   ///@todo FIDE draws
    int count = 0;
    for (int k = ply-1; k >=0; --k) {
        if (hashStack[k] == 0) break;
@@ -921,7 +890,6 @@ bool apply(Position & p, const Move & m){
          p.b[from] = P_none;
          p.b[to] = fromP;
          p.b[p.ep + (p.c==Co_White?-8:+8)] = P_none;
-
          p.h ^= ZT[from][fromP + PieceShift]; // remove fromP at from
          p.h ^= ZT[p.ep + (p.c == Co_White ? -8 : +8)][(p.c == Co_White ? P_bp : P_wp) + PieceShift];
          p.h ^= ZT[to][fromP + PieceShift]; // add fromP at to
@@ -932,7 +900,6 @@ bool apply(Position & p, const Move & m){
       if (type == T_capture) p.h ^= ZT[to][toP + PieceShift];
       p.b[to]   = (p.c==Co_White?P_wq:P_bq);
       p.b[from] = P_none;
-
       p.h ^= ZT[from][fromP + PieceShift];
       p.h ^= ZT[to][(p.c == Co_White ? P_wq : P_bq) + PieceShift];
       break;
@@ -942,7 +909,6 @@ bool apply(Position & p, const Move & m){
       if (type == T_capture) p.h ^= ZT[to][toP + PieceShift];
       p.b[to]   = (p.c==Co_White?P_wr:P_br);
       p.b[from] = P_none;
-      
       p.h ^= ZT[from][fromP + PieceShift];
       p.h ^= ZT[to][(p.c == Co_White ? P_wr : P_br) + PieceShift];
       break;
@@ -952,7 +918,6 @@ bool apply(Position & p, const Move & m){
       if (type == T_capture) p.h ^= ZT[to][toP + PieceShift];
       p.b[to]   = (p.c==Co_White?P_wb:P_bb);
       p.b[from] = P_none;
-
       p.h ^= ZT[from][fromP + PieceShift];
       p.h ^= ZT[to][(p.c == Co_White ? P_wb : P_bb) + PieceShift];
       break;
@@ -962,7 +927,6 @@ bool apply(Position & p, const Move & m){
       if (type == T_capture) p.h ^= ZT[to][toP + PieceShift];
       p.b[to]   = (p.c==Co_White?P_wn:P_bn);
       p.b[from] = P_none;
-
       p.h ^= ZT[from][fromP + PieceShift];
       p.h ^= ZT[to][(p.c == Co_White ? P_wn : P_bn) + PieceShift];
       break;
@@ -976,7 +940,6 @@ bool apply(Position & p, const Move & m){
       if (p.castling & C_wqs) p.h ^= ZT[0][13];
       if (p.castling & C_wks) p.h ^= ZT[7][13];
       p.castling &= ~(C_wks | C_wqs);
-
       p.h ^= ZT[Sq_h1][P_wr + PieceShift]; // remove rook
       p.h ^= ZT[Sq_e1][P_wk + PieceShift]; // remove king
       p.h ^= ZT[Sq_f1][P_wr + PieceShift]; // add rook
@@ -993,7 +956,6 @@ bool apply(Position & p, const Move & m){
       if (p.castling & C_wqs) p.h ^= ZT[0][13];
       if (p.castling & C_wks) p.h ^= ZT[7][13];
       p.castling &= ~(C_wks | C_wqs);
-
       p.h ^= ZT[Sq_a1][P_wr + PieceShift]; // remove rook
       p.h ^= ZT[Sq_e1][P_wk + PieceShift]; // remove king
       p.h ^= ZT[Sq_d1][P_wr + PieceShift]; // add rook
@@ -1009,7 +971,6 @@ bool apply(Position & p, const Move & m){
       if (p.castling & C_bqs) p.h ^= ZT[56][13];
       if (p.castling & C_bks) p.h ^= ZT[63][13];
       p.castling &= ~(C_bks | C_bqs);
-
       p.h ^= ZT[Sq_h8][P_br + PieceShift]; // remove rook
       p.h ^= ZT[Sq_e8][P_bk + PieceShift]; // remove king
       p.h ^= ZT[Sq_f8][P_br + PieceShift]; // add rook
@@ -1026,7 +987,6 @@ bool apply(Position & p, const Move & m){
       if (p.castling & C_bqs) p.h ^= ZT[56][13];
       if (p.castling & C_bks) p.h ^= ZT[63][13];
       p.castling &= ~(C_bks | C_bqs);
-
       p.h ^= ZT[Sq_a8][P_br + PieceShift]; // remove rook
       p.h ^= ZT[Sq_e8][P_bk + PieceShift]; // remove king
       p.h ^= ZT[Sq_d8][P_br + PieceShift]; // add rook
@@ -1085,24 +1045,19 @@ int gamePhase(const Position & p){
    absscore = 100*(absscore-16000)    / (24140-16000);
    nbPawn   = 100*nbPawn      / 16;
    nbPiece  = 100*(nbPiece-2) / 14;
-   //std::cout << absscore << " " << nbPawn << " " << nbPiece << std::endl;
    return int(absscore*0.4+nbPiece*0.3+nbPawn*0.3);
 }
 
 ScoreType eval(const Position & p, float & gp){
     ScoreType sc = 0;
    gp = gamePhase(p)/100.f;
-   //std::cout << "phase: " << gp << std::endl;
    const bool white2Play = p.c == Co_White;
    for( Square k = 0 ; k < 64 ; ++k){
       if ( p.b[k] != P_none ){
          sc += Values[p.b[k]+PieceShift];
          const int s = Signs[p.b[k]+PieceShift];
          Square kk = k;
-         if ( s > 0 ){
-            kk = 63-k;
-         }
-         //std::cout << Names[p.b[k]+PieceShift] << " " << PST[abs(p.b[k])-1][kk] << " " << PSTEG[abs(p.b[k])-1][kk] << std::endl;
+         if ( s > 0 ) kk = 63-k;
          sc += ScoreType(s * (gp*PST[abs(p.b[k])-1][kk] + (1.f-gp)*PSTEG[abs(p.b[k])-1][kk] ) );
       }
    }
@@ -1110,7 +1065,6 @@ ScoreType eval(const Position & p, float & gp){
 }
 
 ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply){
-
   alpha = std::max(alpha, (ScoreType)(-MATE + ply));
   beta  = std::min(beta , (ScoreType)(MATE - ply + 1));
   if (alpha >= beta) return alpha;
@@ -1147,7 +1101,6 @@ ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned 
 }
 
 ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv){
-
   if ( std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()) > TimeMan::GetNextMSecPerMove() ){
     stopFlag = true;
     return STOPSCORE;
@@ -1364,18 +1317,13 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
        pv = pvLoc;
        reachedDepth = depth;
        bestScore    = score;
-       
        int ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count());
        std::cout << int(depth) << " " << bestScore << " " << ms/10 << " " << stats.nodes + stats.qnodes << " " << ToString(pv) << " " << int((stats.nodes + stats.qnodes)/(ms/1000.f)/1000.) << "knps " << stats.tthits/1000 << "ktbhits" << std::endl;
     }
     
-    if (bestScore <= -MATE+1) {
-        break;
-    }
+    if (bestScore <= -MATE+1) break;
     
-    if ( mateFinder && bestScore >= MATE - MAX_PLY ){
-        break;
-    }
+    if ( mateFinder && bestScore >= MATE - MAX_PLY ) break;
   }
   
   if (bestScore <= -MATE+1) {
@@ -1388,12 +1336,8 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
       std::cout << "# Forced mate found ..." << std::endl;
   }  
   
-  if (pv.empty()) {
-      m = INVALIDMOVE;
-  }
-  else {
-      m = pv[0];
-  }
+  if (pv.empty()) m = INVALIDMOVE;
+  else m = pv[0];
   d = reachedDepth;
   sc = bestScore;
   return pv;
@@ -1451,12 +1395,8 @@ bool ReadFEN(const std::string & fen, Position & p){
     // set the turn; default is white
     p.c = Co_White;
     if (strList.size() >= 2){
-        if (strList[1] == "w") {
-            p.c = Co_White;
-        }
-        else if (strList[1] == "b") {
-            p.c = Co_Black;
-        }
+        if (strList[1] == "w")      p.c = Co_White;
+        else if (strList[1] == "b") p.c = Co_Black;
         else {
             std::cout << "#FEN ERROR 1" << std::endl;
             return false;
@@ -1757,20 +1697,12 @@ bool ReadMove(const Color c, const std::string & ss, Square & from, Square & to,
 
     // detect special move
     if (strList[0] == "0-0" || strList[0] == "O-O"){
-        if ( c == Co_White ){
-            moveType = T_wks;
-        }
-        else{
-            moveType = T_bks;
-        }
+        if ( c == Co_White ) moveType = T_wks;
+        else moveType = T_bks;
     }
     else if (strList[0] == "0-0-0" || strList[0] == "O-O-O"){
-        if ( c == Co_White){
-            moveType = T_wqs;
-        }
-        else{
-            moveType = T_bqs;
-        }
+        if ( c == Co_White) moveType = T_wqs;
+        else moveType = T_bqs;
     }
     else{
         if ( strList.size() == 1 ){
@@ -1807,18 +1739,10 @@ bool ReadMove(const Color c, const std::string & ss, Square & from, Square & to,
                    prom = strListTo[1];
                 }
 
-                if ( prom == "Q" || prom == "q"){
-                    moveType = T_promq;
-                }
-                else if ( prom == "R" || prom == "r"){
-                    moveType = T_promr;
-                }
-                else if ( prom == "B" || prom == "b"){
-                    moveType = T_promb;
-                }
-                else if ( prom == "N" || prom == "n"){
-                    moveType = T_promn;
-                }
+                if      ( prom == "Q" || prom == "q") moveType = T_promq;
+                else if ( prom == "R" || prom == "r") moveType = T_promr;
+                else if ( prom == "B" || prom == "b") moveType = T_promb;
+                else if ( prom == "N" || prom == "n") moveType = T_promn;
                 else{
                     std::cout << "#Trying to read bad move, invalid to square " << str << std::endl;
                     return false;
@@ -1840,17 +1764,14 @@ bool ReadMove(const Color c, const std::string & ss, Square & from, Square & to,
 
 std::string Trim(const std::string& str, const std::string& whitespace = " \t"){
     const auto strBegin = str.find_first_not_of(whitespace);
-    if (strBegin == std::string::npos)
-        return ""; // no content
+    if (strBegin == std::string::npos) return ""; // no content
     const auto strEnd = str.find_last_not_of(whitespace);
     const auto strRange = strEnd - strBegin + 1;
     return str.substr(strBegin, strRange);
 }
 
 void XBoard::xboard(){
-
     std::cout << "#Starting XBoard main loop" << std::endl;
-
     ///@todo more feature disable !!
     std::cout << "feature ping=1 setboard=1 colors=0 usermove=1 memory=0 sigint=0 sigterm=0 otime=0 time=0 nps=0 myname=\"Minic 0.1\"" << std::endl;
     std::cout << "feature done=1" << std::endl;
@@ -1885,9 +1806,7 @@ void XBoard::xboard(){
         int once = 0;
 
         while(once++ == 0 || !commandOK){ // loop until a good command is found
-
             commandOK = true;
-
             // read next command !
             ReadLine();
 
@@ -2117,14 +2036,23 @@ void XBoard::xboard(){
             }
             //************ end of Xboard command ********//
             else{
-                // old move syntax
                 std::cout << "#Xboard does not know this command " << command << std::endl;
             }
-
         } // readline
-
     } // while true
 
+}
+
+void perft_test(const std::string & fen, DepthType d, unsigned long long int expected) {
+    Position p;
+    ReadFEN(fen, p);
+    std::cout << ToString(p) << std::endl;
+    PerftAccumulator acc;
+    if (perft(p, d, acc, false) != expected) {
+        std::cout << "Error !! " << fen << " " << expected << std::endl;
+    }
+    acc.Display();
+    std::cout << "##########################" << std::endl;
 }
 
 int main(int argc, char ** argv){
@@ -2144,61 +2072,10 @@ int main(int argc, char ** argv){
    }
 
    if ( cli == "-perft_test" ){
-      {
-         Position p;
-         int expected = 4865609;
-         std::string fen = startPosition;
-         ReadFEN(fen,p);
-         std::cout << ToString(p) << std::endl;
-         DepthType d = 5;
-         PerftAccumulator acc;
-         if ( perft(p,d,acc,false) != expected ){
-            std::cout << "Error !! " << fen << " " << expected << std::endl;
-         }
-         acc.Display();
-      }
-      std::cout << "##########################" << std::endl;
-      {
-         Position p;
-         int expected = 4085603;
-         std::string fen = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ";
-         ReadFEN(fen,p);
-         std::cout << ToString(p) << std::endl;
-         DepthType d = 4;
-         PerftAccumulator acc;
-         if ( perft(p,d,acc,false) != expected ){
-            std::cout << "Error !! " << fen << " " << expected << std::endl;
-         }
-         acc.Display();
-      }
-      std::cout << "##########################" << std::endl;
-      {
-         Position p;
-         int expected = 11030083;
-         std::string fen = "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ";
-         ReadFEN(fen,p);
-         std::cout << ToString(p) << std::endl;
-         DepthType d = 6;
-         PerftAccumulator acc;
-         if ( perft(p,d,acc,false) != expected ){
-            std::cout << "Error !! " << fen << " " << expected << std::endl;
-         }
-         acc.Display();
-      }
-      std::cout << "##########################" << std::endl;
-      {
-         Position p;
-         int expected = 15833292;
-         std::string fen = "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1";
-         ReadFEN(fen,p);
-         std::cout << ToString(p) << std::endl;
-         DepthType d = 5;
-         PerftAccumulator acc;
-         if ( perft(p,d,acc,false) != expected ){
-            std::cout << "Error !! " << fen << " " << expected << std::endl;
-         }
-         acc.Display();
-      }
+       perft_test(startPosition, 5, 4865609);
+       perft_test("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ", 4, 4085603);
+       perft_test("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ", 6, 11030083);
+       perft_test("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", 5, 15833292);
    }   
    
    if ( argc < 3 ) return 1;
@@ -2293,5 +2170,4 @@ int main(int argc, char ** argv){
    
    std::cout << "Error : unknown command line" << std::endl;
    return 1;
-   
 }
