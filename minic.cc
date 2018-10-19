@@ -1085,11 +1085,13 @@ ScoreType eval(const Position & p, float & gp){
    return (white2Play?+1:-1)*sc;
 }
 
-ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply){
+ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth){
   alpha = std::max(alpha, (ScoreType)(-MATE + ply));
   beta  = std::min(beta , (ScoreType)(MATE - ply + 1));
   if (alpha >= beta) return alpha;
    
+  if ((int)ply > seldepth) seldepth = ply;
+
   float gp = 0;
   ScoreType val = eval(p,gp);
   if ( val >= beta ) return val;
@@ -1101,16 +1103,20 @@ ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned 
 
   ++stats.qnodes;
 
+  bool isInCheck = isAttacked(p, kingSquare(p));
+
   std::vector<Move> moves;
   generate(p,moves,true);
   sort(moves,p,ply);
 
   for(auto it = moves.begin() ; it != moves.end() ; ++it){
+     // qfutility
+     if (!isInCheck && val + 128 + std::abs(p.b[Move2To(*it)] + PieceShift) <= alpha) continue;
      Position p2 = p;
      if ( ! apply(p2,*it) ) continue;
      if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply;
      if (p.c == Co_Black && Move2To(*it) == p.wk) return MATE - ply;
-     val = -qsearch(-beta,-alpha,p2,ply+1);
+     val = -qsearch(-beta,-alpha,p2,ply+1,seldepth);
      if ( val > alpha ){
         if ( val >= beta ){
            return val;
@@ -1121,14 +1127,16 @@ ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned 
   return val;
 }
 
-ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv){
+ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth){
   if ( std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()) > currentMoveMs ){
     stopFlag = true;
     return STOPSCORE;
   }
 
+  if ((int)ply > seldepth) seldepth = ply;
+
   if ( depth <= 0 ){
-     return qsearch(alpha,beta,p,ply);
+     return qsearch(alpha,beta,p,ply,seldepth);
   }
 
   if ( isDraw(p,ply) ) return 0;
@@ -1179,7 +1187,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      // razoring
      int rAlpha = alpha - 200;
      if ( depth <= 3 && val <= rAlpha ){
-         val = qsearch(rAlpha,rAlpha+1,p,ply);
+         val = qsearch(rAlpha,rAlpha+1,p,ply,seldepth);
          if ( ! stopFlag && val <= alpha ) return val;
      }
   
@@ -1192,7 +1200,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
        p.h ^= ZT[4][13];
        int R = depth/4 + 3;
        std::vector<Move> nullPV;
-       ScoreType nullscore = -pvs(-beta,-beta+1,pN,depth-R-1,true,ply+1,nullPV);
+       ScoreType nullscore = -pvs(-beta,-beta+1,pN,depth-R-1,true,ply+1,nullPV,seldepth);
        if ( !stopFlag && nullscore >= beta ) return nullscore;
      }
      
@@ -1216,13 +1224,19 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      hashStack[ply] = p.h;
      bool isAdvancedPawnPush = std::abs(p.b[Move2From(*it)]) == P_wp && (SQRANK(Move2To(*it)) > 5 || SQRANK(Move2To(*it)) < 2);
      std::vector<Move> childPV;
+     // extensions
+     int extension = 0;
+     if (isInCheck) ++extension;
      if ( validMoveCount == 1 ){
-        val = -pvs(-beta,-alpha,p2,depth-1,true,ply+1,childPV);
+        val = -pvs(-beta,-alpha,p2,depth-1+extension,true,ply+1,childPV,seldepth);
      }
      else{
+        // reductions
         int reduction = 0;
+        bool isCheck = isAttacked(p2, kingSquare(p2));
         // LMP
         if ( !mateFinder 
+            && !isCheck
             && futility 
             && !isAdvancedPawnPush
             && Move2Type(*it) == T_std
@@ -1232,6 +1246,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         if ( !mateFinder 
             && depth >= 3
             && !isInCheck
+            && !isCheck
             && !isAdvancedPawnPush
             && Move2Type(*it) == T_std
             && validMoveCount >= 2 
@@ -1240,14 +1255,14 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
             && ! isInCheck ) reduction = int(1+sqrt(depth*validMoveCount/8));
         if (pvnode && reduction > 0) --reduction;
         // PVS
-        val = -pvs(-alpha-1,-alpha,p2,depth-1-reduction,false,ply+1,childPV);
+        val = -pvs(-alpha-1,-alpha,p2,depth-1-reduction+extension,false,ply+1,childPV,seldepth);
         if ( reduction > 0 && val > alpha ){
            childPV.clear();
-           val = -pvs(-alpha-1,-alpha,p2,depth-1,false,ply+1,childPV);
+           val = -pvs(-alpha-1,-alpha,p2,depth-1+extension,false,ply+1,childPV,seldepth);
         }
         if ( val > alpha && val < beta ){
            childPV.clear();
-           val = -pvs(-beta,-alpha,p2,depth-1,true,ply+1,childPV); // potential new pv node
+           val = -pvs(-beta,-alpha,p2,depth-1+extension,true,ply+1,childPV,seldepth); // potential new pv node
         }
      }
      
@@ -1294,7 +1309,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   return stopFlag?STOPSCORE:alpha;
 }
 
-std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType & sc){
+std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
   std::cout << "# Search called" << std::endl;
   std::cout << "# currentMoveMs " << currentMoveMs << std::endl;
   std::cout << "# requested depth " << (int) d << std::endl;
@@ -1321,7 +1336,7 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
     ScoreType score = 0;
     while( delta <= MATE ){
        pvLoc.clear();
-       score = pvs(alpha,beta,p,depth,true,1,pvLoc);
+       score = pvs(alpha,beta,p,depth,true,1,pvLoc,seldepth);
        if ( stopFlag ) break;
        delta *=2;
        if (score <= alpha){
@@ -1340,7 +1355,7 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
        reachedDepth = depth;
        bestScore    = score;
        int ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count());
-       std::cout << int(depth) << " " << bestScore << " " << ms/10 << " " << stats.nodes + stats.qnodes << " " << ToString(pv) << " " << int((stats.nodes + stats.qnodes)/(ms/1000.f)/1000.) << "knps " << stats.tthits/1000 << "ktbhits" << std::endl;
+       std::cout << int(depth) << " " << bestScore << " " << ms/10 << " " << stats.nodes + stats.qnodes << " " << ToString(pv) << " " << int((stats.nodes + stats.qnodes)/(ms/1000.f)/1000.) << "knps " << stats.tthits/1000 << "ktbhits (" << (int)depth << "/" << (int)seldepth << ")" << std::endl;
     }
     
     if (bestScore <= -MATE+1) break;
@@ -1640,7 +1655,8 @@ namespace XBoard{
       std::cout << "#time  " << currentMoveMs << std::endl;
       std::cout << ToString(position) << std::endl;
       DepthType reachedDepth = depth;
-      std::vector<Move> pv = search(position,m,reachedDepth,score);
+      DepthType seldepth = 0;
+      std::vector<Move> pv = search(position,m,reachedDepth,score,seldepth);
       std::cout << "#...done returning move " << ToString(m) << std::endl;
       return m;
    }
@@ -1657,7 +1673,8 @@ namespace XBoard{
       ScoreType score = 0;
       Move m;
       DepthType d = 1;
-      std::vector<Move> pv = search(position,m,d,score);
+      DepthType seldepth = 0;
+      std::vector<Move> pv = search(position,m,d,score,seldepth);
    }
 
    void Stop(){
@@ -2154,7 +2171,8 @@ int main(int argc, char ** argv){
       TimeMan::msecWholeGame            = -1;
       TimeMan::msecInc                  = -1;
       currentMoveMs = TimeMan::GetNextMSecPerMove(p);
-      std::vector<Move> pv = search(p,bestMove,d,s);
+      DepthType seldepth = 0;
+      std::vector<Move> pv = search(p,bestMove,d,s,seldepth);
       std::cout << "#best move is " << ToString(bestMove) << " " << (int)d << " " << s << " pv : " << ToString(pv) << std::endl;
       return 0;
    }
@@ -2173,7 +2191,8 @@ int main(int argc, char ** argv){
       TimeMan::msecWholeGame            = -1;
       TimeMan::msecInc                  = -1;    
       currentMoveMs = TimeMan::GetNextMSecPerMove(p);
-      std::vector<Move> pv = search(p,bestMove,d,s);
+      DepthType seldepth = 0;
+      std::vector<Move> pv = search(p,bestMove,d,s,seldepth);
       std::cout << "#best move is " << ToString(bestMove) << " " << (int)d << " " << s << " pv : " << ToString(pv) << std::endl;
       return 0;
    }   
