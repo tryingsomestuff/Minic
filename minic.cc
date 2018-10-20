@@ -50,7 +50,7 @@ struct Stats{
    void init(){
       nodes  = 0;
       qnodes = 0;
-      tthits = 0;       
+      tthits = 0;
    }
 };
 
@@ -74,9 +74,10 @@ enum Piece : char{
 
 const int PieceShift = 6;
 
-ScoreType  Values[13]  = { -8000, -950, -500, -335, -325, -100, 0, 100, 325, 335, 500, 950, 8000 };
-ScoreType  ValuesEG[13]  = { -8000, -1200, -550, -305, -275, -100, 0, 100, 275, 305, 550, 1200, 8000 };
-char Names[13]   = { 'k', 'q', 'r', 'b', 'n', 'p', ' ', 'P', 'N', 'B', 'R', 'Q', 'K' };
+ScoreType   IValues[6]    = { 1, 2, 3, 5, 9, 20 };
+ScoreType   Values[13]    = { -8000, -950, -500, -335, -325, -100, 0, 100, 325, 335, 500, 950, 8000 };
+ScoreType   ValuesEG[13]  = { -8000, -1200, -550, -305, -275, -100, 0, 100, 275, 305, 550, 1200, 8000 };
+std::string Names[13]     = { "k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K" };
 
 std::string Squares[64] = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
                             "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
@@ -97,7 +98,7 @@ enum Sq : char {
     Sq_a7 = 48,Sq_b7,Sq_c7,Sq_d7,Sq_e7,Sq_f7,Sq_g7,Sq_h7,
     Sq_a8 = 56,Sq_b8,Sq_c8,Sq_d8,Sq_e8,Sq_f8,Sq_g8,Sq_h8
 };
-                            
+
 enum Castling : char{
    C_none= 0,
    C_wks = 1,
@@ -106,22 +107,15 @@ enum Castling : char{
    C_bqs = 8
 };
 
-const int MvvLvaScores[13][13] = {
-        //      K, Q, R, B, N, P, 0, P, N, B, R, Q, K
-        /*K*/ { 0, 9, 9, 9, 9, 9, 0, 9, 9, 9, 9, 9, 0},
-        /*Q*/ { 3, 4, 5, 6, 7, 8, 0, 8, 7, 6, 5, 4, 3},
-        /*R*/ { 1,-5, 2, 3, 4, 5, 0, 5, 4, 3, 2,-5, 1},
-        /*B*/ { 1,-6,-2, 1, 1, 3, 0, 3, 1, 1,-2,-6, 1},
-        /*N*/ { 1,-6,-2, 0, 1, 2, 0, 2, 1, 0,-2,-6, 1},
-        /*P*/ { 1,-9,-5,-3,-2, 0, 0, 0,-2,-3,-5,-9, 1},
-        /*0*/ { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        /*P*/ { 1,-9,-5,-3,-2, 0, 0, 0,-2,-3,-5,-9, 1},
-        /*N*/ { 1,-6,-2, 0, 1, 2, 0, 2, 1, 0,-2,-6, 1},
-        /*B*/ { 1,-6,-2, 1, 1, 3, 0, 3, 1, 1,-2,-6, 1},
-        /*R*/ { 1,-5, 2, 3, 4, 5, 0, 5, 4, 3, 2,-5, 1},
-        /*Q*/ { 3, 4, 5, 6, 7, 8, 0, 8, 7, 6, 5, 4, 3},
-        /*K*/ { 0, 9, 9, 9, 9, 9, 0, 9, 9, 9, 9, 9, 0}
-   };
+int MvvLvaScores[6][6];
+
+void initMvvLva(){
+    for(int v = 0; v < 6 ; ++v){
+        for(int a = 0; a < 6 ; ++a){
+           MvvLvaScores[v][a] = IValues[v] * 20 - IValues[a];
+        }
+    }
+}
 
 enum MType : char{
    T_std        = 0,
@@ -166,22 +160,46 @@ struct Position{
   Color c;
 };
 
-ScoreType Move2Score(Move h) { return (h >> 16) & 0xFFFF; }
-Square    Move2From (Move h) { return (h >> 10) & 0x3F  ; }
-Square    Move2To   (Move h) { return (h >>  4) & 0x3F  ; }
-MType     Move2Type (Move h) { return MType(h & 0xF)    ; }
-Move      ToMove(Square from, Square to, MType type){
-   return (from << 10) | (to << 4) | type;
+inline Piece getPieceIndex(const Position & p, Square k){
+   return Piece(p.b[k] + PieceShift);
 }
-Move   ToMove(Square from, Square to, MType type, ScoreType score) {
-    return (score << 16) | (from << 10) | (to << 4) | type;
+
+inline Piece getPieceType(const Position & p, Square k){
+   return (Piece)std::abs(p.b[k]);
 }
+
+inline Color getColor(const Position & p, Square k){
+   return Colors[getPieceIndex(p,k)];
+}
+
+inline std::string getName(const Position &p, Square k){
+   return Names[getPieceIndex(p,k)];
+}
+
+inline ScoreType getValue(const Position &p, Square k){
+   return Values[getPieceIndex(p,k)];
+}
+
+inline ScoreType getValueEG(const Position &p, Square k){
+   return ValuesEG[getPieceIndex(p,k)];
+}
+
+inline ScoreType getSign(const Position &p, Square k){
+   return Signs[getPieceIndex(p,k)];
+}
+
+inline ScoreType Move2Score(Move h) { return (h >> 16) & 0xFFFF; }
+inline Square    Move2From (Move h) { return (h >> 10) & 0x3F  ; }
+inline Square    Move2To   (Move h) { return (h >>  4) & 0x3F  ; }
+inline MType     Move2Type (Move h) { return MType(h & 0xF)    ; }
+inline Move      ToMove(Square from, Square to, MType type)                  { return                 (from << 10) | (to << 4) | type; }
+inline Move      ToMove(Square from, Square to, MType type, ScoreType score) { return (score << 16) | (from << 10) | (to << 4) | type; }
 
 Hash randomInt(){
     static std::mt19937 mt(42);
     static std::uniform_int_distribution<unsigned long long int> dist(0, UINT64_MAX);
     return dist(mt);
-} 
+}
 
 Hash ZT[64][14]; // should be 13 but last ray is for castling[0 7 56 63][13] and ep [k][13] and color [3 4][13]
 
@@ -197,7 +215,7 @@ Hash computeHash(const Position &p){
    if (p.h != 0) return p.h;
    Hash h = 0;
    for (int k = 0; k < 64; ++k){
-      Piece pp = p.b[k];
+      const Piece pp = p.b[k];
       if ( pp != P_none){
         h ^= ZT[k][pp+PieceShift];
       }
@@ -213,7 +231,7 @@ Hash computeHash(const Position &p){
 
    p.h = h;
    return h;
-} 
+}
 
 struct TT{
    enum Bound{
@@ -246,7 +264,7 @@ struct TT{
 
    static Bucket * table;
    static int ttSize;
-   
+
    static void initTable(int n){
       ttSize = n;
       table = new Bucket[ttSize];
@@ -278,7 +296,7 @@ struct TT{
       if (nbuck >= nbBucket - 1) return false;
       return getEntry(h, d, e, nbuck + 1);
    }
-   
+
    static void setEntry(const Entry & e){
       Entry & _eAlways = table[e.h%ttSize].e[0];
       _eAlways = e; // always replace
@@ -312,7 +330,7 @@ namespace HistoryT{
    }
    void update(DepthType depth, Move m, const Position & p, bool plus){
        if ( Move2Type(m) == T_std ){
-          history[p.b[Move2From(m)] + PieceShift ][Move2To(m)] += ScoreType((plus?+1:-1) * (depth*depth/6.f) - (history[p.b[Move2From(m)] + PieceShift ][Move2To(m)] * depth*depth/6.f / 200.f));
+          history[getPieceIndex(p,Move2From(m))][Move2To(m)] += ScoreType( (plus?+1:-1) * (depth*depth/6.f) - (history[getPieceIndex(p,Move2From(m))][Move2To(m)] * depth*depth/6.f / 200.f));
        }
    }
 };
@@ -336,7 +354,7 @@ std::string GetFENShort(const Position &p ){
     int count = 0;
     for (int i = 7; i >= 0; --i) {
         for (int j = 0; j < 8; j++) {
-            int k = 8 * i + j;
+            const Square k = 8 * i + j;
             if (p.b[k] == P_none) {
                 ++count;
             }
@@ -345,7 +363,7 @@ std::string GetFENShort(const Position &p ){
                     ss << count;
                     count = 0;
                 }
-                ss << Names[p.b[k]+PieceShift];
+                ss << getName(p,k);
             }
             if (j == 7) {
                 if (count != 0) {
@@ -461,7 +479,7 @@ std::string ToString(const Position & p){
         ss << "+-+-+-+-+-+-+-+-+" << std::endl;
         ss << "|";
         for (Square i = 0; i < 8; ++i) {
-            ss << Names[p.b[i+j*8]+PieceShift] << '|';
+            ss << getName(p,i+j*8) << '|';
         }
         ss << std::endl; ;
     }
@@ -548,7 +566,7 @@ const ScoreType PST[6][64] = {
     -12,   -3,    0,    1,    1,    0,   -3,  -12,
     -12,   -5,   -2,    1,    1,   -2,   -5,  -12,
     -12,   -4,   -1,    0,    0,   -1,   -4,  -12,
-    -14,   -9,   -9,   -5,   -5,   -9,   -9,  -14  }, 
+    -14,   -9,   -9,   -5,   -5,   -9,   -9,  -14  },
     {
     0,   -2,    0,    0,    0,    0,   -2,    0,
    -1,    4,    4,    3,    3,    4,    4,   -1,
@@ -605,7 +623,7 @@ const ScoreType PSTEG[6][64] = {
     0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,    0,    0 }, 
+    0,    0,    0,    0,    0,    0,    0,    0 },
     {
     -30,  -22,  -17,  -12,  -12,  -17,  -22,  -30,
     -22,  -12,   -8,   -2,   -2,   -8,  -12,  -22,
@@ -671,11 +689,11 @@ void addMove(Square from, Square to, MType type, std::vector<Move> & moves){
 }
 
 bool isAttacked(const Position & p, const Square k){
-   Color side = p.c;
-   Color opponent = Color((p.c+1)%2);
+   const Color side = p.c;
+   const Color opponent = Color((p.c+1)%2);
    for (Square i = 0; i < 64; ++i){
-      if (Colors[p.b[i]+PieceShift] == opponent) {
-         if (abs(p.b[i]) == P_wp) {
+      if (getColor(p,i) == opponent) {
+         if (getPieceType(p,i) == P_wp) {
             if (side == Co_White) {
                if ( SQFILE(i) != 0 && i - 9 == k) return true;
                if ( SQFILE(i) != 7 && i - 7 == k) return true;
@@ -686,13 +704,14 @@ bool isAttacked(const Position & p, const Square k){
             }
          }
          else{
-            for (int j = 0; j < Offsets[abs(p.b[i])-1]; ++j){
+            const Piece ptype = getPieceType(p,i);
+            for (int j = 0; j < Offsets[ptype-1]; ++j){
                for (Square n = i;;) {
-                  n = mailbox[mailbox64[n] + Offset[abs(p.b[i])-1][j]];
+                  n = mailbox[mailbox64[n] + Offset[ptype-1][j]];
                   if (n == -1) break;
                   if (n == k) return true;
                   if (p.b[n] != P_none) break;
-                  if ( !Slide[abs(p.b[i])-1]) break;
+                  if ( !Slide[ptype-1]) break;
                }
             }
          }
@@ -703,17 +722,18 @@ bool isAttacked(const Position & p, const Square k){
 
 void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = false){
    moves.clear();
-   Color side = p.c;
-   Color opponent = Color((p.c+1)%2);
+   const Color side = p.c;
+   const Color opponent = Color((p.c+1)%2);
    for(Square from = 0 ; from < 64 ; ++from){
-     Piece piece = p.b[from];
+     const Piece piece = p.b[from];
+     const Piece ptype = (Piece)std::abs(piece);
      if (Colors[piece+PieceShift] == side) {
-       if (abs(piece) != P_wp) {
-         for (Square j = 0; j < Offsets[abs(piece)-1]; ++j) {
+       if (ptype != P_wp) {
+         for (Square j = 0; j < Offsets[ptype-1]; ++j) {
            for (Square to = from;;) {
-             to = mailbox[mailbox64[to] + Offset[abs(piece)-1][j]];
+             to = mailbox[mailbox64[to] + Offset[ptype-1][j]];
              if (to < 0) break;
-             Color targetC = Colors[p.b[to]+PieceShift];
+             const Color targetC = getColor(p,to);
              if (targetC != Co_None) {
                if (targetC == opponent) {
                  addMove(from, to, T_capture, moves); // capture
@@ -721,10 +741,10 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
                break; // as soon as a capture or an own piece is found
              }
              if ( !onlyCap) addMove(from, to, T_std, moves); // not a capture
-             if (!Slide[abs(piece)-1]) break; // next direction
+             if (!Slide[ptype-1]) break; // next direction
            }
          }
-         if ( abs(piece) == P_wk && !onlyCap ){ // castling
+         if ( ptype == P_wk && !onlyCap ){ // castling
            if ( side == Co_White) {
               if ( (p.castling & C_wqs) && p.b[Sq_b1] == P_none && p.b[Sq_c1] == P_none && p.b[Sq_d1] == P_none
                 && !isAttacked(p,Sq_c1) && !isAttacked(p,Sq_d1) && !isAttacked(p,Sq_e1)){
@@ -750,10 +770,10 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
        else {
           int pawnOffsetTrick = side==Co_White?4:0;
           for (Square j = 0; j < 4; ++j) {
-             int offset = Offset[abs(piece)-1][j+pawnOffsetTrick];
-             Square to = mailbox[mailbox64[from] + offset];
+             int offset = Offset[ptype-1][j+pawnOffsetTrick];
+             const Square to = mailbox[mailbox64[from] + offset];
              if (to < 0) continue;
-             Color targetC = Colors[p.b[to]+PieceShift];
+             const Color targetC = getColor(p,to);
              if (targetC != Co_None) {
                if (targetC == opponent
                    && ( abs(offset) == 11 || abs(offset) == 9 ) ) {
@@ -773,7 +793,7 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
                if ( abs(offset) == 11 || abs(offset) == 9 ) {
                   if ( p.ep == to ){
                       addMove(from, to, T_ep, moves); // en passant
-                  } 
+                  }
                }
                else if ( abs(offset) == 20 && !onlyCap
                     && ( SQRANK(from) == 1 || SQRANK(from) == 6 )
@@ -784,7 +804,7 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
                    if ( SQRANK(to) == 0 || SQRANK(to) == 7 ){
                       addMove(from, to, T_promq, moves); // promotion Q
                       addMove(from, to, T_promr, moves); // promotion R
-                      addMove(from, to, T_promb, moves); // promotion B 
+                      addMove(from, to, T_promb, moves); // promotion B
                       addMove(from, to, T_promn, moves); // promotion N
                    }
                    else{
@@ -804,29 +824,33 @@ struct MoveSorter{
    bool operator()(Move & a, Move & b){
       const MType t1 = Move2Type(a);
       const MType t2 = Move2Type(b);
+      const Square from1 = Move2From(a);
+      const Square from2 = Move2From(b);
+      const Square to1 = Move2To(a);
+      const Square to2 = Move2To(b);
       ScoreType s1 = Move2Score(a);
       ScoreType s2 = Move2Score(b);
       if (s1 == 0) {
           s1 = MoveScoring[t1];
           if (isCapture(t1)) {
-              s1 += MvvLvaScores[p.b[Move2To(a)] + PieceShift][p.b[Move2From(a)] + PieceShift];
+              s1 += MvvLvaScores[getPieceType(p,to1)-1][getPieceType(p,from1)-1];
           }
           if (e && e->m == a) s1 += 3000;
           if (a == KillerT::killers[0][ply]) s1 += 150;
           if (a == KillerT::killers[1][ply]) s1 += 130;
-          if (t1 == T_std) s1 += HistoryT::history[p.b[Move2From(a)] + PieceShift][Move2To(a)];
-          a = ToMove(Move2From(a), Move2To(a), Move2Type(a), s1);
+          if (t1 == T_std) s1 += HistoryT::history[getPieceIndex(p,from1)][to1];
+          a = ToMove(from1, to1, t1, s1);
       }
       if (s2 == 0) {
           s2 = MoveScoring[t2];
           if (isCapture(t2)) {
-              s2 += MvvLvaScores[p.b[Move2To(b)] + PieceShift][p.b[Move2From(b)] + PieceShift];
+              s2 += MvvLvaScores[getPieceType(p,to2)-1][getPieceType(p,from2)-1];
           }
           if (e && e->m == b) s2 += 3000;
           if (b == KillerT::killers[0][ply]) s2 += 150;
           if (b == KillerT::killers[1][ply]) s2 += 130;
-          if (t2 == T_std) s2 += HistoryT::history[p.b[Move2From(b)] + PieceShift][Move2To(b)];
-          b = ToMove(Move2From(b), Move2To(b), Move2Type(b), s2);
+          if (t2 == T_std) s2 += HistoryT::history[getPieceIndex(p,from2)][to2];
+          b = ToMove(from2, to2, t2, s2);
       }
       return s1 > s2;
    }
@@ -856,15 +880,18 @@ Square kingSquare(const Position & p){
 }
 
 bool apply(Position & p, const Move & m){
-    
+
    if ( m == INVALIDMOVE ) return false;
-    
+
    const Square from  = Move2From(m);
    const Square to    = Move2To(m);
    const MType  type  = Move2Type(m);
    const Piece  fromP = p.b[from];
    const Piece  toP   = p.b[to];
-   
+
+   const int fromId   = fromP + PieceShift;
+   const int toId     = toP + PieceShift;
+
    switch(type){
       case T_std:
       case T_capture:
@@ -872,9 +899,9 @@ bool apply(Position & p, const Move & m){
       p.b[from] = P_none;
       p.b[to]   = fromP;
 
-      p.h ^= ZT[from][fromP + PieceShift]; // remove fromP at from
-      if (type == T_capture) p.h ^= ZT[to][toP + PieceShift]; // if capture remove toP at to
-      p.h ^= ZT[to][fromP + PieceShift]; // add fromP at to
+      p.h ^= ZT[from][fromId]; // remove fromP at from
+      if (type == T_capture) p.h ^= ZT[to][toId]; // if capture remove toP at to
+      p.h ^= ZT[to][fromId]; // add fromP at to
 
       // update castling rigths and king position
       if ( fromP == P_wk ){
@@ -912,44 +939,44 @@ bool apply(Position & p, const Move & m){
          p.b[from] = P_none;
          p.b[to] = fromP;
          p.b[p.ep + (p.c==Co_White?-8:+8)] = P_none;
-         p.h ^= ZT[from][fromP + PieceShift]; // remove fromP at from
+         p.h ^= ZT[from][fromId]; // remove fromP at from
          p.h ^= ZT[p.ep + (p.c == Co_White ? -8 : +8)][(p.c == Co_White ? P_bp : P_wp) + PieceShift];
-         p.h ^= ZT[to][fromP + PieceShift]; // add fromP at to
+         p.h ^= ZT[to][fromId]; // add fromP at to
       break;
 
       case T_promq:
       case T_cappromq:
-      if (type == T_capture) p.h ^= ZT[to][toP + PieceShift];
+      if (type == T_capture) p.h ^= ZT[to][toId];
       p.b[to]   = (p.c==Co_White?P_wq:P_bq);
       p.b[from] = P_none;
-      p.h ^= ZT[from][fromP + PieceShift];
+      p.h ^= ZT[from][fromId];
       p.h ^= ZT[to][(p.c == Co_White ? P_wq : P_bq) + PieceShift];
       break;
 
       case T_promr:
       case T_cappromr:
-      if (type == T_capture) p.h ^= ZT[to][toP + PieceShift];
+      if (type == T_capture) p.h ^= ZT[to][toId];
       p.b[to]   = (p.c==Co_White?P_wr:P_br);
       p.b[from] = P_none;
-      p.h ^= ZT[from][fromP + PieceShift];
+      p.h ^= ZT[from][fromId];
       p.h ^= ZT[to][(p.c == Co_White ? P_wr : P_br) + PieceShift];
       break;
 
       case T_promb:
       case T_cappromb:
-      if (type == T_capture) p.h ^= ZT[to][toP + PieceShift];
+      if (type == T_capture) p.h ^= ZT[to][toId];
       p.b[to]   = (p.c==Co_White?P_wb:P_bb);
       p.b[from] = P_none;
-      p.h ^= ZT[from][fromP + PieceShift];
+      p.h ^= ZT[from][fromId];
       p.h ^= ZT[to][(p.c == Co_White ? P_wb : P_bb) + PieceShift];
       break;
 
       case T_promn:
       case T_cappromn:
-      if (type == T_capture) p.h ^= ZT[to][toP + PieceShift];
+      if (type == T_capture) p.h ^= ZT[to][toId];
       p.b[to]   = (p.c==Co_White?P_wn:P_bn);
       p.b[from] = P_none;
-      p.h ^= ZT[from][fromP + PieceShift];
+      p.h ^= ZT[from][fromId];
       p.h ^= ZT[to][(p.c == Co_White ? P_wn : P_bn) + PieceShift];
       break;
 
@@ -1016,7 +1043,7 @@ bool apply(Position & p, const Move & m){
       break;
 
    }
-   
+
    if ( isAttacked(p,kingSquare(p)) ) return false;
 
    // Update castling right if rook captured
@@ -1042,7 +1069,7 @@ bool apply(Position & p, const Move & m){
    p.ep = INVALIDSQUARE;
    if ( abs(fromP) == P_wp && abs(to-from) == 16 ) p.ep = (from + to)/2;
    if (p.ep != INVALIDSQUARE) p.h ^= ZT[p.ep][13];
-   
+
    p.c = Color((p.c+1)%2);
    if ( toP != P_none || abs(fromP) == P_wp ) p.fifty = 0;
    if ( p.c == Co_Black ) ++p.moves;
@@ -1059,7 +1086,7 @@ int gamePhase(const Position & p){
    int nbPawn = 0;
    for( Square k = 0 ; k < 64 ; ++k){
       if ( p.b[k] != P_none ){
-         absscore += std::abs(Values[p.b[k]+PieceShift]);
+         absscore += std::abs(getValue(p,k));
          if ( std::abs(p.b[k]) != P_wp ) ++nbPiece;
          else ++nbPawn;
       }
@@ -1076,11 +1103,12 @@ ScoreType eval(const Position & p, float & gp){
    const bool white2Play = p.c == Co_White;
    for( Square k = 0 ; k < 64 ; ++k){
       if ( p.b[k] != P_none ){
-         sc += ScoreType( gp*Values[p.b[k]+PieceShift] + (1.f-gp)*ValuesEG[p.b[k]+PieceShift] );
-         const int s = Signs[p.b[k]+PieceShift];
+         sc += ScoreType( gp*getValue(p,k) + (1.f-gp)*getValue(p,k) );
+         const int s = getSign(p,k);
          Square kk = k;
          if ( s > 0 ) kk = 63-k;
-         sc += ScoreType(s * (gp*PST[abs(p.b[k])-1][kk] + (1.f-gp)*PSTEG[abs(p.b[k])-1][kk] ) );
+         const Piece ptype = getPieceType(p,k);
+         sc += ScoreType(s * (gp*PST[ptype-1][kk] + (1.f-gp)*PSTEG[ptype-1][kk] ) );
       }
    }
    return (white2Play?+1:-1)*sc;
@@ -1090,7 +1118,7 @@ ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned 
   alpha = std::max(alpha, (ScoreType)(-MATE + ply));
   beta  = std::min(beta , (ScoreType)(MATE - ply + 1));
   if (alpha >= beta) return alpha;
-   
+
   if ((int)ply > seldepth) seldepth = ply;
 
   float gp = 0;
@@ -1100,7 +1128,7 @@ ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned 
 
   ++stats.qnodes;
 
-  bool isInCheck = isAttacked(p, kingSquare(p));
+  const bool isInCheck = isAttacked(p, kingSquare(p));
 
   std::vector<Move> moves;
   generate(p,moves,true);
@@ -1108,7 +1136,7 @@ ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned 
 
   for(auto it = moves.begin() ; it != moves.end() ; ++it){
      // qfutility
-     if (!isInCheck && val + 128 + std::abs(p.b[Move2To(*it)] + PieceShift) <= alpha) continue;
+     if (!isInCheck && val + 128 + std::abs(getValue(p,Move2To(*it))) <= alpha) continue;
      Position p2 = p;
      if ( ! apply(p2,*it) ) continue;
      if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply;
@@ -1144,8 +1172,8 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   beta  = std::min(beta,  (ScoreType)(MATE  - ply + 1));
   if (alpha >= beta) return alpha;
 
-  bool rootnode = ply == 1;
-  
+  const bool rootnode = ply == 1;
+
   TT::Entry e;
 #ifdef DEBUG_ZHASH
   if (TT::getEntry(computeHash(p), depth, e, GetFENShort2(p))) {
@@ -1153,12 +1181,14 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   if (TT::getEntry(computeHash(p), depth, e)) {
 #endif
       if (e.h != 0 && !rootnode && std::abs(e.score) < MATE - MAX_PLY &&
-          ( !pvnode ||
+          ( !pvnode &&
           ((e.b == TT::B_alpha && e.score <= alpha)
               || (e.b == TT::B_beta  && e.score >= beta)
               || (e.b == TT::B_exact)))) {
-          KillerT::killers[1][ply] = KillerT::killers[0][ply];
-          KillerT::killers[0][ply] = e.m;
+          if ( Move2Type(e.m) == T_std ){
+             KillerT::killers[1][ply] = KillerT::killers[0][ply];
+             KillerT::killers[0][ply] = e.m;
+          }
           pv.push_back(e.m);
           return e.score;
       }
@@ -1168,27 +1198,27 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   ScoreType val = eval(p, gp);
   bool futility = false;
   bool doLMP = false;
-  bool isInCheck = isAttacked(p,kingSquare(p));
-  
+  const bool isInCheck = isAttacked(p,kingSquare(p));
+
   // prunings
-  if ( !mateFinder 
-      && !rootnode 
-      && gp > 0.2 
-      && !pvnode 
-      && std::abs(alpha) < MATE-MAX_PLY 
-      && std::abs(beta) < MATE-MAX_PLY 
+  if ( !mateFinder
+      && !rootnode
+      && gp > 0.2
+      && !pvnode
+      && std::abs(alpha) < MATE-MAX_PLY
+      && std::abs(beta) < MATE-MAX_PLY
       && ! isInCheck ){
 
      // static null move
      if (depth <= 3 && val >= beta + 80*depth ) return val;
-  
+
      // razoring
      int rAlpha = alpha - 200;
      if ( depth <= 3 && val <= rAlpha ){
          val = qsearch(rAlpha,rAlpha+1,p,ply,seldepth);
          if ( ! stopFlag && val <= alpha ) return val;
      }
-  
+
      // null move
      if ( pv.size() > 1 && depth >= 2){
        Position pN = p;
@@ -1201,12 +1231,12 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
        ScoreType nullscore = -pvs(-beta,-beta+1,pN,depth-R-1,true,ply+1,nullPV,seldepth);
        if ( !stopFlag && nullscore >= beta ) return nullscore;
      }
-     
+
      // LMP
      if ( depth <= 10 ) doLMP = true;
-     
+
      // futility
-     if ( val <= alpha - 130*depth ) doLMP = true;  
+     if ( val <= alpha - 130*depth ) doLMP = true;
   }
 
   std::vector<Move> moves;
@@ -1219,8 +1249,9 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
      Position p2 = p;
      if ( ! apply(p2,*it) ) continue;
-     if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply;
-     if (p.c == Co_Black && Move2To(*it) == p.wk) return MATE - ply;
+     const Square to = Move2To(*it);
+     if (p.c == Co_White && to == p.bk) return MATE - ply;
+     if (p.c == Co_Black && to == p.wk) return MATE - ply;
      validMoveCount++;
      hashStack[ply] = p.h;
      std::vector<Move> childPV;
@@ -1234,30 +1265,30 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         // reductions & prunings
         int reduction = 0;
         bool isCheck = isAttacked(p2, kingSquare(p2));
-        bool isAdvancedPawnPush = std::abs(p.b[Move2From(*it)]) == P_wp && (SQRANK(Move2To(*it)) > 5 || SQRANK(Move2To(*it)) < 2);
+        bool isAdvancedPawnPush = getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
         // futility
-        if ( futility 
+        if ( futility
             && !isAdvancedPawnPush
-            && Move2Type(*it) == T_std 
+            && Move2Type(*it) == T_std
             && !isCheck){
-            continue;            
+            continue;
         }
         // LMP
         if ( !isCheck
-            && doLMP 
+            && doLMP
             && !isAdvancedPawnPush
             && Move2Type(*it) == T_std
             && validMoveCount >= 3*depth ) continue;
         // LMR
-        if ( !mateFinder 
+        if ( !mateFinder
             && depth >= 3
             && !isInCheck
             && !isCheck
             && !isAdvancedPawnPush
             && Move2Type(*it) == T_std
-            && validMoveCount >= 2 
-            && std::abs(alpha) < MATE-MAX_PLY 
-            && std::abs(beta) < MATE-MAX_PLY 
+            && validMoveCount >= 2
+            && std::abs(alpha) < MATE-MAX_PLY
+            && std::abs(beta) < MATE-MAX_PLY
             && ! isInCheck ) reduction = int(1+sqrt(depth*validMoveCount/8));
         if (pvnode && reduction > 0) --reduction;
         // PVS
@@ -1271,7 +1302,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
            val = -pvs(-beta,-alpha,p2,depth-1+extension,true,ply+1,childPV,seldepth); // potential new pv node
         }
      }
-     
+
      if ( !stopFlag && val > alpha ){
         alphaUpdated = true;
         pv.clear();
@@ -1323,14 +1354,14 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
   stats.init();
   KillerT::initKillers();
   HistoryT::initHistory();
-  
+
   TimeMan::startTime = Clock::now();
-  
+
   DepthType reachedDepth = 0;
   std::vector<Move> pv;
   ScoreType bestScore = 0;
   m = INVALIDMOVE;
-  
+
   hashStack[0] = p.h;
 
   for(DepthType depth = 1 ; depth <= d && !stopFlag ; ++depth ){
@@ -1360,15 +1391,22 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
        pv = pvLoc;
        reachedDepth = depth;
        bestScore    = score;
-       int ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count());
-       std::cout << int(depth) << " " << bestScore << " " << ms/10 << " " << stats.nodes + stats.qnodes << " " << ToString(pv) << " " << int((stats.nodes + stats.qnodes)/(ms/1000.f)/1000.) << "knps " << stats.tthits/1000 << "ktbhits (" << (int)depth << "/" << (int)seldepth << ")" << std::endl;
+       const int ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count());
+       std::cout << int(depth)   << " "
+                 << bestScore    << " "
+                 << ms/10        << " "
+                 << stats.nodes + stats.qnodes << " "
+                 << (int)seldepth     << " "
+                 << int((stats.nodes + stats.qnodes)/(ms/1000.f)/1000.) << " "
+                 << stats.tthits/1000 << "\t"
+                 << ToString(pv)    << std::endl;
     }
-    
+
     if (bestScore <= -MATE+1) break;
-    
+
     if ( mateFinder && bestScore >= MATE - MAX_PLY ) break;
   }
-  
+
   if (bestScore <= -MATE+1) {
       std::cout << "# Mated ..." << std::endl;
       pv.clear();
@@ -1377,8 +1415,8 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
 
   if (bestScore >= MATE-MAX_PLY) {
       std::cout << "# Forced mate found ..." << std::endl;
-  }  
-  
+  }
+
   if (pv.empty()) m = INVALIDMOVE;
   else m = pv[0];
   d = reachedDepth;
@@ -1386,7 +1424,7 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
   return pv;
 }
 
-bool ReadFEN(const std::string & fen, Position & p){
+bool readFEN(const std::string & fen, Position & p){
     std::vector<std::string> strList;
     std::stringstream iss(fen);
     std::copy(std::istream_iterator<std::string>(iss),
@@ -1394,7 +1432,7 @@ bool ReadFEN(const std::string & fen, Position & p){
               back_inserter(strList));
 
     std::cout << "# Reading fen " << fen << std::endl;
-    
+
     for(Square k = 0 ; k < 64 ; ++k){
        p.b[k] = P_none;
     }
@@ -1534,7 +1572,7 @@ struct PerftAccumulator{
       epNodes(0),
       checkNode(0),
       checkMateNode(0){}
-      
+
    Counter pseudoNodes;
    Counter validNodes;
    Counter captureNodes;
@@ -1566,14 +1604,14 @@ Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc, bool 
      ++validMoves;
      if ( divide && depth == 2 ){
         std::cout << "#" << ToString(p2) << std::endl;
-     } 
+     }
      Counter nNodes = perft(p2,depth-1,acc,divide);
      if ( divide && depth == 2 ){
         std::cout << "#=> after " << ToString(*it) << " " << nNodes << std::endl;
      }
      if ( divide && depth == 1 ){
         std::cout << "#" << (int)depth << " " <<  ToString(*it) << std::endl;
-     }     
+     }
    }
    if ( depth == 1 ){
       acc.validNodes += validMoves;
@@ -1607,7 +1645,7 @@ namespace XBoard{
         p_on = 1
    };
    Ponder ponder;
-   
+
    std::string command;
    Position position;
    Move move;
@@ -1620,14 +1658,14 @@ namespace XBoard{
       depth     = -1;
       display   = false;
       pondering = false;
-      ReadFEN(startPosition,position);
+      readFEN(startPosition,position);
    }
-   
-   SideToMove Opponent(SideToMove & s) {
+
+   SideToMove opponent(SideToMove & s) {
      return s == stm_white ? stm_black : stm_white;
    }
 
-   void ReadLine() {
+   void readLine() {
    #define CPP_STYLE_READ_LINE
    #ifdef CPP_STYLE_READ_LINE
        command.clear();
@@ -1645,13 +1683,13 @@ namespace XBoard{
        std::cout << "#Receive command : " << command << std::endl;
    }
 
-   bool SideToMoveFromFEN(const std::string & fen) {
-     bool b = ReadFEN(fen,position);
+   bool sideToMoveFromFEN(const std::string & fen) {
+     bool b = readFEN(fen,position);
      stm = position.c == Co_White ? stm_white : stm_black;
      return b;
    }
 
-   Move ThinkUntilTimeUp(){
+   Move thinkUntilTimeUp(){
       std::cout << "#Thinking... " << std::endl;
       ScoreType score = 0;
       Move m;
@@ -1667,14 +1705,14 @@ namespace XBoard{
       return m;
    }
 
-   bool MakeMove(Move m,bool disp){
+   bool makeMove(Move m,bool disp){
       if ( disp && m != INVALIDMOVE) std::cout << "move " << ToString(m) << std::endl;
-      
+
       std::cout << ToString(position) << std::endl;
       return apply(position,m);
    }
 
-   void PonderUntilInput(){
+   void ponderUntilInput(){
       std::cout << "#Pondering... " << std::endl;
       ScoreType score = 0;
       Move m;
@@ -1683,22 +1721,22 @@ namespace XBoard{
       std::vector<Move> pv = search(position,m,d,score,seldepth);
    }
 
-   void Stop(){
+   void stop(){
       stopFlag = true;
    }
 
-   void StopPonder(){
-      if ((int)mode == (int)Opponent(stm) && ponder == p_on && pondering) {
+   void stopPonder(){
+      if ((int)mode == (int)opponent(stm) && ponder == p_on && pondering) {
         pondering = false;
-        Stop();
+        stop();
       }
    }
 
    void xboard();
-   
+
 };
 
-void Tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters = " " ){
+void tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters = " " ){
   std::string::size_type lastPos = str.find_first_not_of(delimiters, 0);
   std::string::size_type pos = str.find_first_of(delimiters, lastPos);
   while (std::string::npos != pos || std::string::npos != lastPos) {
@@ -1708,13 +1746,13 @@ void Tokenize(const std::string& str, std::vector<std::string>& tokens, const st
   }
 }
 
-Square StringToSquare(const std::string & str){
+Square stringToSquare(const std::string & str){
    Square file = str.at(0) - 97; // ASCII 'a' = 97
    Square rank = str.at(1) - 49; // ASCII '1' = 49
    return rank * 8 + file;
 }
 
-bool ReadMove(const Color c, const std::string & ss, Square & from, Square & to, MType & moveType ) {
+bool readMove(const Color c, const std::string & ss, Square & from, Square & to, MType & moveType ) {
 
     if ( ss.empty()){
         std::cout << "#Trying to read empty move ! " << std::endl;
@@ -1762,7 +1800,7 @@ bool ReadMove(const Color c, const std::string & ss, Square & from, Square & to,
 
         if (strList[0].size() == 2 && (strList[0].at(0) >= 'a') && (strList[0].at(0) <= 'h') &&
                 ((strList[0].at(1) >= 1) && (strList[0].at(1) <= '8'))) {
-            from = StringToSquare(strList[0]);
+            from = stringToSquare(strList[0]);
         }
         else {
             std::cout << "#Trying to read bad move, invalid from square " << str << std::endl;
@@ -1776,12 +1814,12 @@ bool ReadMove(const Color c, const std::string & ss, Square & from, Square & to,
                 std::string prom;
                 if ( strList[1].size() == 3 ){ // probably e7 e8q notation
                    prom = strList[1][2];
-                   to = StringToSquare(strList[1].substr(0,2));
+                   to = stringToSquare(strList[1].substr(0,2));
                 }
                 else{ // probably e7 e8=q notation
                    std::vector<std::string> strListTo;
-                   Tokenize(strList[1],strListTo,"=");
-                   to = StringToSquare(strListTo[0]);
+                   tokenize(strList[1],strListTo,"=");
+                   to = stringToSquare(strListTo[0]);
                    prom = strListTo[1];
                 }
 
@@ -1795,7 +1833,7 @@ bool ReadMove(const Color c, const std::string & ss, Square & from, Square & to,
                 }
             }
             else{
-               to = StringToSquare(strList[1]);
+               to = stringToSquare(strList[1]);
             }
         }
         else {
@@ -1808,7 +1846,7 @@ bool ReadMove(const Color c, const std::string & ss, Square & from, Square & to,
     return true;
 }
 
-std::string Trim(const std::string& str, const std::string& whitespace = " \t"){
+std::string trim(const std::string& str, const std::string& whitespace = " \t"){
     const auto strBegin = str.find_first_not_of(whitespace);
     if (strBegin == std::string::npos) return ""; // no content
     const auto strEnd = str.find_last_not_of(whitespace);
@@ -1830,22 +1868,22 @@ void XBoard::xboard(){
         }
         // move as computer if mode is equal to stm
         if((int)mode == (int)stm) { // mouarfff
-            move = ThinkUntilTimeUp();
+            move = thinkUntilTimeUp();
             if(move == INVALIDMOVE){ // game ends
                 mode = m_force;
             }
             else{
-                if ( ! MakeMove(move,true) ){
+                if ( ! makeMove(move,true) ){
                     std::cout << "#Bad computer move !" << std::endl;
                     std::cout << ToString(position) << std::endl;
                 }
-                stm = Opponent(stm);
+                stm = opponent(stm);
             }
         }
 
         // if not our turn, and ponder on, let's think ...
-        if(move != INVALIDMOVE && (int)mode == (int)Opponent(stm) && ponder == p_on && !pondering){
-           PonderUntilInput();
+        if(move != INVALIDMOVE && (int)mode == (int)opponent(stm) && ponder == p_on && !pondering){
+           ponderUntilInput();
         }
 
         bool commandOK = true;
@@ -1854,7 +1892,7 @@ void XBoard::xboard(){
         while(once++ == 0 || !commandOK){ // loop until a good command is found
             commandOK = true;
             // read next command !
-            ReadLine();
+            readLine();
 
             if ( command == "force"){
                 mode = m_force;
@@ -1884,15 +1922,15 @@ void XBoard::xboard(){
                 std::string str(command);
                 size_t p = command.find("ping");
                 str = str.substr(p+4);
-                str = Trim(str);
+                str = trim(str);
                 std::cout << "pong " << str << std::endl;
             }
             else if ( command == "new"){
-                StopPonder();
-                Stop();
+                stopPonder();
+                stop();
 
                 mode = (Mode)((int)stm); ///@todo should not be here !!! I thought start mode shall be analysis ...
-                ReadFEN(startPosition,position);
+                readFEN(startPosition,position);
                 move = INVALIDMOVE;
                 if(mode != m_analyze){
                     mode = m_play_black;
@@ -1900,43 +1938,43 @@ void XBoard::xboard(){
                 }
             }
             else if ( command == "white"){ // deprecated
-                StopPonder();
-                Stop();
+                stopPonder();
+                stop();
 
                 mode = m_play_black;
                 stm = stm_white;
             }
             else if ( command == "black"){ // deprecated
-                StopPonder();
-                Stop();
+                stopPonder();
+                stop();
 
                 mode = m_play_white;
                 stm = stm_black;
             }
             else if ( command == "go"){
-                StopPonder();
-                Stop();
+                stopPonder();
+                stop();
 
                 mode = (Mode)((int)stm);
             }
             else if ( command == "playother"){
-                StopPonder();
-                Stop();
+                stopPonder();
+                stop();
 
-                mode = (Mode)((int)Opponent(stm));
+                mode = (Mode)((int)opponent(stm));
             }
             else if ( strncmp(command.c_str(),"usermove",8) == 0){
-                StopPonder();
-                Stop();
+                stopPonder();
+                stop();
 
                 std::string mstr(command);
                 size_t p = command.find("usermove");
                 mstr = mstr.substr(p + 8);
-                mstr = Trim(mstr);
+                mstr = trim(mstr);
                 Square from = INVALIDSQUARE;
                 Square to   = INVALIDSQUARE;
                 MType mtype = T_std;
-                ReadMove(position.c,mstr,from,to,mtype);
+                readMove(position.c,mstr,from,to,mtype);
                 Move m = ToMove(from,to,mtype);
                 bool whiteToMove = position.c==Co_White;
                 // convert castling Xboard notation to internal castling style if needed
@@ -1949,45 +1987,45 @@ void XBoard::xboard(){
                   else if ( to == (whiteToMove?Sq_g1:Sq_g8)){
                     m = ToMove(from,to,whiteToMove?T_wks:T_bks);
                   }
-                }    
-                if(!MakeMove(m,false)){ // make move
+                }
+                if(!makeMove(m,false)){ // make move
                     commandOK = false;
                     std::cout << "#Bad opponent move !" << std::endl;
                     std::cout << ToString(position) << std::endl;
                 }
                 else{
-                    stm = Opponent(stm);
+                    stm = opponent(stm);
                 }
             }
             else if (  strncmp(command.c_str(),"setboard",8) == 0){
-                StopPonder();
-                Stop();
+                stopPonder();
+                stop();
 
                 std::string fen(command);
                 size_t p = command.find("setboard");
                 fen = fen.substr(p+8);
-                if (!SideToMoveFromFEN(fen)){
+                if (!sideToMoveFromFEN(fen)){
                     std::cout << "#Illegal FEN" << std::endl;
                     commandOK = false;
                 }
             }
             else if ( strncmp(command.c_str(),"result",6) == 0){
-                StopPonder();
-                Stop();
+                stopPonder();
+                stop();
                 mode = m_force;
             }
             else if ( command == "analyze"){
-                StopPonder();
-                Stop();
+                stopPonder();
+                stop();
                 mode = m_analyze;
             }
             else if ( command == "exit"){
-                StopPonder();
-                Stop();
+                stopPonder();
+                stop();
                 mode = m_force;
             }
             else if ( command == "easy"){
-                StopPonder();
+                stopPonder();
                 ponder = p_off;
             }
             else if ( command == "hard"){
@@ -1997,11 +2035,11 @@ void XBoard::xboard(){
                 _exit(0);
             }
             else if ( command == "pause"){
-                StopPonder();
-                ReadLine();
+                stopPonder();
+                readLine();
                 while( command != "resume"){
                     std::cout << "#Error (paused): " << command << std::endl;
-                    ReadLine();
+                    readLine();
                 }
             }
             else if ( strncmp(command.c_str(), "st", 2) == 0) {
@@ -2051,7 +2089,7 @@ void XBoard::xboard(){
                 ;
             }
             else if ( command == "?"){
-                Stop();
+                stop();
             }
             else if ( command == "draw"){
                 ///@todo xboard draw
@@ -2076,7 +2114,7 @@ void XBoard::xboard(){
 
 void perft_test(const std::string & fen, DepthType d, unsigned long long int expected) {
     Position p;
-    ReadFEN(fen, p);
+    readFEN(fen, p);
     std::cout << ToString(p) << std::endl;
     PerftAccumulator acc;
     if (perft(p, d, acc, false) != expected) {
@@ -2093,6 +2131,8 @@ int main(int argc, char ** argv){
    TT::initTable(1024*1024);
    stats.init();
 
+   initMvvLva();
+
    std::string cli = argv[1];
 
    if ( cli == "-xboard" ){
@@ -2107,17 +2147,17 @@ int main(int argc, char ** argv){
        perft_test("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ", 4, 4085603);
        perft_test("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ", 6, 11030083);
        perft_test("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", 5, 15833292);
-   }   
-   
+   }
+
    if ( argc < 3 ) return 1;
 
    std::string fen = argv[2];
-   
+
    if ( fen == "start") fen = startPosition;
    if ( fen == "fine70") fen = fine70;
-   
+
    Position p;
-   if ( ! ReadFEN(fen,p) ){
+   if ( ! readFEN(fen,p) ){
       std::cout << "#Error reading fen" << std::endl;
       return 1;
    }
@@ -2133,7 +2173,7 @@ int main(int argc, char ** argv){
       std::cout << "#eval " << score << " phase " << gp << std::endl;
       return 0;
    }
-   
+
    if ( cli == "-gen" ){
       std::vector<Move> moves;
       generate(p,moves);
@@ -2195,14 +2235,14 @@ int main(int argc, char ** argv){
       TimeMan::nbMoveInTC               = -1;
       TimeMan::msecPerMove              = 60*60*1000*24; // 1 day == infinity ...
       TimeMan::msecWholeGame            = -1;
-      TimeMan::msecInc                  = -1;    
+      TimeMan::msecInc                  = -1;
       currentMoveMs = TimeMan::GetNextMSecPerMove(p);
       DepthType seldepth = 0;
       std::vector<Move> pv = search(p,bestMove,d,s,seldepth);
       std::cout << "#best move is " << ToString(bestMove) << " " << (int)d << " " << s << " pv : " << ToString(pv) << std::endl;
       return 0;
-   }   
-   
+   }
+
    std::cout << "Error : unknown command line" << std::endl;
    return 1;
 }
