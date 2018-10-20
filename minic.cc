@@ -1206,7 +1206,8 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      if ( depth <= 10 ) doLMP = true;
      
      // futility
-     if ( val <= alpha - 130*depth ) doLMP = true;  }
+     if ( val <= alpha - 130*depth ) doLMP = true;  
+  }
 
   std::vector<Move> moves;
   generate(p,moves);
@@ -1222,7 +1223,6 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      if (p.c == Co_Black && Move2To(*it) == p.wk) return MATE - ply;
      validMoveCount++;
      hashStack[ply] = p.h;
-     bool isAdvancedPawnPush = std::abs(p.b[Move2From(*it)]) == P_wp && (SQRANK(Move2To(*it)) > 5 || SQRANK(Move2To(*it)) < 2);
      std::vector<Move> childPV;
      // extensions
      int extension = 0;
@@ -1234,6 +1234,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         // reductions & prunings
         int reduction = 0;
         bool isCheck = isAttacked(p2, kingSquare(p2));
+        bool isAdvancedPawnPush = std::abs(p.b[Move2From(*it)]) == P_wp && (SQRANK(Move2To(*it)) > 5 || SQRANK(Move2To(*it)) < 2);
         // futility
         if ( futility 
             && !isAdvancedPawnPush
@@ -1242,8 +1243,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
             continue;            
         }
         // LMP
-        if ( !mateFinder 
-            && !isCheck
+        if ( !isCheck
             && doLMP 
             && !isAdvancedPawnPush
             && Move2Type(*it) == T_std
