@@ -1222,7 +1222,6 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      // null move
      if ( pv.size() > 1 && depth >= 2){
        Position pN = p;
-       pN.h = 0;
        pN.c = Color((pN.c+1)%2);
        p.h ^= ZT[3][13];
        p.h ^= ZT[4][13];
