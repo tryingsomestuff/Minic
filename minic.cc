@@ -1236,7 +1236,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      if ( depth <= 10 ) doLMP = true;
 
      // futility
-     if ( val <= alpha - 130*depth ) doLMP = true;
+     if ( val <= alpha - 130*depth ) futility = true;
   }
 
   std::vector<Move> moves;
