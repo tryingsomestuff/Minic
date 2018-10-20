@@ -75,6 +75,7 @@ enum Piece : char{
 const int PieceShift = 6;
 
 ScoreType  Values[13]  = { -8000, -950, -500, -335, -325, -100, 0, 100, 325, 335, 500, 950, 8000 };
+ScoreType  ValuesEG[13]  = { -8000, -1200, -550, -305, -275, -100, 0, 100, 275, 305, 550, 1200, 8000 };
 char Names[13]   = { 'k', 'q', 'r', 'b', 'n', 'p', ' ', 'P', 'N', 'B', 'R', 'Q', 'K' };
 
 std::string Squares[64] = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
@@ -301,7 +302,7 @@ namespace KillerT{
 };
 
 namespace HistoryT{
-    ScoreType history[13][64];
+   ScoreType history[13][64];
    void initHistory(){
       for(int i = 0; i < 13; ++i){
           for(int k = 0 ; k < 64; ++k){
@@ -311,7 +312,7 @@ namespace HistoryT{
    }
    void update(DepthType depth, Move m, const Position & p, bool plus){
        if ( Move2Type(m) == T_std ){
-          history[p.b[Move2From(m)] + PieceShift ][Move2To(m)] += (plus?+1:-1) * (depth*depth*4 - history[p.b[Move2From(m)] + PieceShift ][Move2To(m)] * depth*depth/2 / 200);
+          history[p.b[Move2From(m)] + PieceShift ][Move2To(m)] += ScoreType((plus?+1:-1) * (depth*depth/6.f) - (history[p.b[Move2From(m)] + PieceShift ][Move2To(m)] * depth*depth/6.f / 200.f));
        }
    }
 };
@@ -1075,7 +1076,7 @@ ScoreType eval(const Position & p, float & gp){
    const bool white2Play = p.c == Co_White;
    for( Square k = 0 ; k < 64 ; ++k){
       if ( p.b[k] != P_none ){
-         sc += Values[p.b[k]+PieceShift];
+         sc += ScoreType( gp*Values[p.b[k]+PieceShift] + (1.f-gp)*ValuesEG[p.b[k]+PieceShift] );
          const int s = Signs[p.b[k]+PieceShift];
          Square kk = k;
          if ( s > 0 ) kk = 63-k;
@@ -1166,6 +1167,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   float gp = 0;
   ScoreType val = eval(p, gp);
   bool futility = false;
+  bool doLMP = false;
   bool isInCheck = isAttacked(p,kingSquare(p));
   
   // prunings
@@ -1188,7 +1190,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      }
   
      // null move
-     if ( pv.size() > 1 ){
+     if ( pv.size() > 1 && depth >= 2){
        Position pN = p;
        pN.h = 0;
        pN.c = Color((pN.c+1)%2);
@@ -1201,8 +1203,10 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      }
      
      // LMP
-     if ( val <= alpha - 130*depth ) futility = true;
-  }
+     if ( depth <= 10 ) doLMP = true;
+     
+     // futility
+     if ( val <= alpha - 130*depth ) doLMP = true;  }
 
   std::vector<Move> moves;
   generate(p,moves);
@@ -1227,16 +1231,22 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         val = -pvs(-beta,-alpha,p2,depth-1+extension,true,ply+1,childPV,seldepth);
      }
      else{
-        // reductions
+        // reductions & prunings
         int reduction = 0;
         bool isCheck = isAttacked(p2, kingSquare(p2));
+        // futility
+        if ( futility 
+            && !isAdvancedPawnPush
+            && Move2Type(*it) == T_std 
+            && !isCheck){
+            continue;            
+        }
         // LMP
         if ( !mateFinder 
             && !isCheck
-            && futility 
+            && doLMP 
             && !isAdvancedPawnPush
             && Move2Type(*it) == T_std
-            && depth <= 10
             && validMoveCount >= 3*depth ) continue;
         // LMR
         if ( !mateFinder 
