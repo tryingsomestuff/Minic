@@ -14,6 +14,8 @@
 #include <unistd.h>
 #endif
 
+const std::string MinicVersion = "0.2";
+
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
 typedef int Move;    // invalid if < 0
@@ -1870,7 +1872,7 @@ std::string trim(const std::string& str, const std::string& whitespace = " \t"){
 void XBoard::xboard(){
     std::cout << "#Starting XBoard main loop" << std::endl;
     ///@todo more feature disable !!
-    std::cout << "feature ping=1 setboard=1 colors=0 usermove=1 memory=0 sigint=0 sigterm=0 otime=0 time=0 nps=0 myname=\"Minic 0.1\"" << std::endl;
+    std::cout << "feature ping=1 setboard=1 colors=0 usermove=1 memory=0 sigint=0 sigterm=0 otime=0 time=0 nps=0 myname=\"Minic " << MinicVersion << "\"" << std::endl;
     std::cout << "feature done=1" << std::endl;
 
     while(true) {
