@@ -16,7 +16,7 @@
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
-typedef int Move; // invalid if < 0
+typedef int Move;    // invalid if < 0
 typedef char Square; // invalid if < 0
 typedef unsigned long long int Hash; // invalid if == 0
 typedef unsigned long long int Counter;
@@ -121,7 +121,7 @@ enum MType : char{
    T_std        = 0,
    T_capture    = 1,
    T_ep         = 2,
-   T_check      = 3,
+   T_check      = 3, // not used yet
    T_promq      = 4,
    T_promr      = 5,
    T_promb      = 6,
@@ -142,7 +142,7 @@ enum Color : char{
    Co_Black = 1
 };
 
-ScoreType MoveScoring[16] = { 0, 1000, 1100, 300, 950, 500, 350, 300, 1950, 1500, 1350, 1300, 100, 100, 100, 100 };
+ScoreType MoveScoring[16] = { 0, 1000, 1100, 300, 950, 500, 350, 300, 1950, 1500, 1350, 1300, 250, 250, 250, 250 };
 
 Color Colors[13] = { Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_None, Co_White, Co_White, Co_White, Co_White, Co_White, Co_White};
 
@@ -836,8 +836,8 @@ struct MoveSorter{
               s1 += MvvLvaScores[getPieceType(p,to1)-1][getPieceType(p,from1)-1];
           }
           if (e && e->m == a) s1 += 3000;
-          if (a == KillerT::killers[0][ply]) s1 += 150;
-          if (a == KillerT::killers[1][ply]) s1 += 130;
+          if (a == KillerT::killers[0][ply]) s1 += 290;
+          if (a == KillerT::killers[1][ply]) s1 += 260;
           if (t1 == T_std) s1 += HistoryT::history[getPieceIndex(p,from1)][to1];
           a = ToMove(from1, to1, t1, s1);
       }
@@ -847,8 +847,8 @@ struct MoveSorter{
               s2 += MvvLvaScores[getPieceType(p,to2)-1][getPieceType(p,from2)-1];
           }
           if (e && e->m == b) s2 += 3000;
-          if (b == KillerT::killers[0][ply]) s2 += 150;
-          if (b == KillerT::killers[1][ply]) s2 += 130;
+          if (b == KillerT::killers[0][ply]) s2 += 290;
+          if (b == KillerT::killers[1][ply]) s2 += 260;
           if (t2 == T_std) s2 += HistoryT::history[getPieceIndex(p,from2)][to2];
           b = ToMove(from2, to2, t2, s2);
       }
