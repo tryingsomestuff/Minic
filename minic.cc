@@ -267,10 +267,18 @@ struct TT{
    static Bucket * table;
    static int ttSize;
 
+   static void reset() {
+      for (int k = 0; k < ttSize; ++k) {
+          table[k].e[0] = { INVALIDMOVE,0,B_exact,0,0 };
+          table[k].e[1] = { INVALIDMOVE,0,B_exact,0,0 };
+      }
+   }
+
    static void initTable(int n){
       ttSize = n;
       table = new Bucket[ttSize];
       std::cout << "Size of TT " << ttSize * sizeof(Bucket) / 1024 / 1024 << "Mb" << std::endl;
+      reset();
    }
 
 #ifdef DEBUG_ZHASH
@@ -422,18 +430,19 @@ std::string GetFEN(const Position &p) {
     return ss.str();
 }
 
-std::string ToString(const Move & m){
+std::string ToString(const Move & m, bool withScore = false){
    if ( m == INVALIDMOVE ) return "invalid move";
    std::stringstream ss;
    std::string prom;
+   std::string score = (withScore ? " (" + std::to_string(Move2Score(m)) + ")" : "");
    switch (Move2Type(m)) {
    case T_bks:
    case T_wks:
-       return "0-0";
+       return "0-0" + score;
        break;
    case T_bqs:
    case T_wqs:
-       return "0-0-0";
+       return "0-0-0" + score;
        break;
    case T_promq:
        prom = "q";
@@ -463,7 +472,7 @@ std::string ToString(const Move & m){
        break;
    }
    ss << Squares[Move2From(m)] << Squares[Move2To(m)];
-   return ss.str() + prom;
+   return ss.str() + prom + score;
 }
 
 std::string ToString(const std::vector<Move> & moves){
@@ -834,6 +843,10 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
    }
 }
 
+bool sameMove(const Move & a, const Move & b) {
+    return (a & 0x0000FFFF) == (b & 0x0000FFFF);
+}
+
 struct MoveSorter{
    MoveSorter(const Position & p, DepthType ply, const TT::Entry * e = NULL):p(p),ply(ply),e(e){
    }
@@ -851,9 +864,9 @@ struct MoveSorter{
           if (isCapture(t1)) {
               s1 += MvvLvaScores[getPieceType(p,to1)-1][getPieceType(p,from1)-1];
           }
-          if (e && e->m == a) s1 += 3000;
-          if (a == KillerT::killers[0][ply]) s1 += 290;
-          if (a == KillerT::killers[1][ply]) s1 += 260;
+          if (e && sameMove(e->m,a)) s1 += 3000;
+          if (sameMove(a,KillerT::killers[0][ply])) s1 += 290;
+          if (sameMove(a,KillerT::killers[1][ply])) s1 += 260;
           if (t1 == T_std) s1 += HistoryT::history[getPieceIndex(p,from1)][to1];
           a = ToMove(from1, to1, t1, s1);
       }
@@ -862,9 +875,9 @@ struct MoveSorter{
           if (isCapture(t2)) {
               s2 += MvvLvaScores[getPieceType(p,to2)-1][getPieceType(p,from2)-1];
           }
-          if (e && e->m == b) s2 += 3000;
-          if (b == KillerT::killers[0][ply]) s2 += 290;
-          if (b == KillerT::killers[1][ply]) s2 += 260;
+          if (e && sameMove(e->m,b)) s2 += 3000;
+          if (sameMove(b,KillerT::killers[0][ply])) s2 += 290;
+          if (sameMove(b,KillerT::killers[1][ply])) s2 += 260;
           if (t2 == T_std) s2 += HistoryT::history[getPieceIndex(p,from2)][to2];
           b = ToMove(from2, to2, t2, s2);
       }
@@ -1155,8 +1168,8 @@ ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned 
      if (!isInCheck && val + 128 + std::abs(getValue(p,Move2To(*it))) <= alpha) continue;
      Position p2 = p;
      if ( ! apply(p2,*it) ) continue;
-     if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply;
-     if (p.c == Co_Black && Move2To(*it) == p.wk) return MATE - ply;
+     //if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply;
+     //if (p.c == Co_Black && Move2To(*it) == p.wk) return MATE - ply;
      val = -qsearch(-beta,-alpha,p2,ply+1,seldepth);
      if ( val > alpha ){
         if ( val >= beta ){
@@ -1226,11 +1239,11 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
       && ! isInCheck ){
 
      // static null move
-     if (depth <= 3 && val >= beta + 80*depth ) return val;
+     if ( false && depth <= 3 && val >= beta + 80*depth ) return val;
 
      // razoring
      int rAlpha = alpha - 200;
-     if ( depth <= 3 && val <= rAlpha ){
+     if ( false && depth <= 3 && val <= rAlpha ){
          val = qsearch(rAlpha,rAlpha+1,p,ply,seldepth);
          if ( ! stopFlag && val <= alpha ) return val;
      }
@@ -1248,10 +1261,10 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      }
 
      // LMP
-     if ( depth <= 10 ) doLMP = true;
+     if (false && depth <= 10 ) doLMP = true;
 
      // futility
-     if ( val <= alpha - 130*depth ) futility = true;
+     if (false && val <= alpha - 130*depth ) futility = true;
   }
 
   std::vector<Move> moves;
@@ -1260,13 +1273,13 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   sort(moves,p,ply,&e);
   int validMoveCount = 0;
   bool alphaUpdated = false;
-  Move bestMove = e.m;
+  Move bestMove = INVALIDMOVE;
   for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
      Position p2 = p;
      if ( ! apply(p2,*it) ) continue;
      const Square to = Move2To(*it);
-     if (p.c == Co_White && to == p.bk) return MATE - ply;
-     if (p.c == Co_Black && to == p.wk) return MATE - ply;
+     //if (p.c == Co_White && to == p.bk) return MATE - ply;
+     //if (p.c == Co_Black && to == p.wk) return MATE - ply;
      validMoveCount++;
      hashStack[ply] = p.h;
      std::vector<Move> childPV;
@@ -1301,7 +1314,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
             && !isCheck
             && !isAdvancedPawnPush
             && Move2Type(*it) == T_std
-            && validMoveCount >= 2
+            && validMoveCount > 4
             && std::abs(alpha) < MATE-MAX_PLY
             && std::abs(beta) < MATE-MAX_PLY
             && ! isInCheck ) reduction = int(1+sqrt(depth*validMoveCount/8));
@@ -1337,7 +1350,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
 #ifdef DEBUG_ZHASH
            TT::setEntry({*it,val,TT::B_beta,DepthType(depth-1),computeHash(p),GetFENShort2(p)});
 #else
-           TT::setEntry({ *it,val,TT::B_beta,DepthType(depth - 1),computeHash(p) });
+           TT::setEntry({*it,val,TT::B_beta,DepthType(depth-1),computeHash(p)});
 #endif
            return val;
         }
@@ -1354,7 +1367,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
 #ifdef DEBUG_ZHASH
      TT::setEntry({bestMove,alpha,alphaUpdated?TT::B_exact:TT::B_alpha,DepthType(depth-1),computeHash(p),GetFENShort2(p)});
 #else
-     TT::setEntry({ bestMove,alpha,alphaUpdated ? TT::B_exact : TT::B_alpha,DepthType(depth - 1),computeHash(p) });
+     TT::setEntry({bestMove,alpha,alphaUpdated?TT::B_exact:TT::B_alpha,DepthType(depth-1),computeHash(p)});
 #endif
   }
 
@@ -2195,7 +2208,7 @@ int main(int argc, char ** argv){
       sort(moves,p,0);
       std::cout << "#nb moves : " << moves.size() << std::endl;
       for(auto it = moves.begin(); it != moves.end(); ++it){
-         std::cout << ToString(*it) << std::endl;
+         std::cout << ToString(*it,true) << std::endl;
       }
       return 0;
    }
