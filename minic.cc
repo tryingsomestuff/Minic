@@ -278,18 +278,10 @@ struct TT{
    static Bucket * table;
    static int ttSize;
 
-   static void reset() {
-      for (int k = 0; k < ttSize; ++k) {
-          table[k].e[0] = { INVALIDMOVE,0,B_exact,0,0 };
-          table[k].e[1] = { INVALIDMOVE,0,B_exact,0,0 };
-      }
-   }
-
    static void initTable(int n){
       ttSize = n;
       table = new Bucket[ttSize];
       std::cout << "Size of TT " << ttSize * sizeof(Bucket) / 1024 / 1024 << "Mb" << std::endl;
-      reset();
    }
 
 #ifdef DEBUG_ZHASH
@@ -1312,7 +1304,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      int extension = 0;
      if (isInCheck) ++extension;
      if ( validMoveCount == 1 || !doPVS){
-        val = -pvs(-beta,-alpha,p2,depth-1+extension,true,ply+1,childPV,seldepth);
+        val = -pvs(-beta,-alpha,p2,depth-1+extension,pvnode,ply+1,childPV,seldepth);
      }
      else{
         // reductions & prunings
