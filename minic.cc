@@ -1244,11 +1244,11 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      int rAlpha = alpha - 200;
      if ( depth <= 3 && val <= rAlpha ){
          val = qsearch(rAlpha,rAlpha+1,p,ply,seldepth);
-         if ( ! stopFlag && val <= alpha ) return val;
+         if ( ! stopFlag && val <= rAlpha ) return val;
      }
 
      // null move
-     if ( pv.size() > 1 && depth >= 2){
+     if ( pv.size() > 1 && depth >= 2 && val > beta){
        Position pN = p;
        pN.c = Color((pN.c+1)%2);
        p.h ^= ZT[3][13];
