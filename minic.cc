@@ -1168,8 +1168,8 @@ ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned 
      if (!isInCheck && val + 128 + std::abs(getValue(p,Move2To(*it))) <= alpha) continue;
      Position p2 = p;
      if ( ! apply(p2,*it) ) continue;
-     //if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply;
-     //if (p.c == Co_Black && Move2To(*it) == p.wk) return MATE - ply;
+     if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply;
+     if (p.c == Co_Black && Move2To(*it) == p.wk) return MATE - ply;
      val = -qsearch(-beta,-alpha,p2,ply+1,seldepth);
      if ( val > alpha ){
         if ( val >= beta ){
@@ -1278,8 +1278,8 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      Position p2 = p;
      if ( ! apply(p2,*it) ) continue;
      const Square to = Move2To(*it);
-     //if (p.c == Co_White && to == p.bk) return MATE - ply;
-     //if (p.c == Co_Black && to == p.wk) return MATE - ply;
+     if (p.c == Co_White && to == p.bk) return MATE - ply;
+     if (p.c == Co_Black && to == p.wk) return MATE - ply;
      validMoveCount++;
      hashStack[ply] = p.h;
      std::vector<Move> childPV;
