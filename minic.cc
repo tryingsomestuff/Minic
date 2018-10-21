@@ -1209,11 +1209,10 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
 #else
   if (TT::getEntry(computeHash(p), depth, e)) {
 #endif
-      if (e.h != 0 && !rootnode && std::abs(e.score) < MATE - MAX_PLY &&
-          ( !pvnode &&
-          ((e.b == TT::B_alpha && e.score <= alpha)
+      if (e.h != 0 && !rootnode && std::abs(e.score) < MATE - MAX_PLY && !pvnode &&
+            (    (e.b == TT::B_alpha && e.score <= alpha)
               || (e.b == TT::B_beta  && e.score >= beta)
-              || (e.b == TT::B_exact)))) {
+              || (e.b == TT::B_exact) ) ) {
           if ( Move2Type(e.m) == T_std ){
              KillerT::killers[1][ply] = KillerT::killers[0][ply];
              KillerT::killers[0][ply] = e.m;
@@ -1239,11 +1238,11 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
       && ! isInCheck ){
 
      // static null move
-     if ( false && depth <= 3 && val >= beta + 80*depth ) return val;
+     if ( depth <= 3 && val >= beta + 80*depth ) return val;
 
      // razoring
      int rAlpha = alpha - 200;
-     if ( false && depth <= 3 && val <= rAlpha ){
+     if ( depth <= 3 && val <= rAlpha ){
          val = qsearch(rAlpha,rAlpha+1,p,ply,seldepth);
          if ( ! stopFlag && val <= alpha ) return val;
      }
@@ -1261,10 +1260,10 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      }
 
      // LMP
-     if (false && depth <= 10 ) doLMP = true;
+     if (depth <= 10 ) doLMP = true;
 
      // futility
-     if (false && val <= alpha - 130*depth ) futility = true;
+     if (val <= alpha - 130*depth ) futility = true;
   }
 
   std::vector<Move> moves;
