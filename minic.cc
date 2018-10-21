@@ -14,7 +14,7 @@
 #include <unistd.h>
 #endif
 
-const std::string MinicVersion = "0.2";
+const std::string MinicVersion = "0.3";
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
@@ -144,6 +144,7 @@ enum Color : char{
    Co_Black = 1
 };
 
+// ttmove 3000, promcap >1000, cap, checks, killers, castling, other by history < 200.
 ScoreType MoveScoring[16] = { 0, 1000, 1100, 300, 950, 500, 350, 300, 1950, 1500, 1350, 1300, 250, 250, 250, 250 };
 
 Color Colors[13] = { Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_None, Co_White, Co_White, Co_White, Co_White, Co_White, Co_White};
