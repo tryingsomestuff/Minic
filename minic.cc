@@ -1150,12 +1150,12 @@ ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned 
 
   if ((int)ply > seldepth) seldepth = ply;
 
+  ++stats.qnodes;
+
   float gp = 0;
   ScoreType val = eval(p,gp);
   if ( val >= beta ) return val;
   if ( val > alpha) alpha = val;
-
-  ++stats.qnodes;
 
   const bool isInCheck = isAttacked(p, kingSquare(p));
 
@@ -1193,9 +1193,9 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      return qsearch(alpha,beta,p,ply,seldepth);
   }
 
-  if ( isDraw(p,ply) ) return 0;
-
   ++stats.nodes;
+
+  if ( isDraw(p,ply) ) return 0;
 
   alpha = std::max(alpha, (ScoreType)(-MATE + ply));
   beta  = std::min(beta,  (ScoreType)(MATE  - ply + 1));
