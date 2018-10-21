@@ -1301,7 +1301,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
             continue;
         }
         // LMP
-        if ( !isCheck
+        if ( false && !isCheck
             && doLMP
             && !isAdvancedPawnPush
             && Move2Type(*it) == T_std
