@@ -16,6 +16,16 @@
 
 const std::string MinicVersion = "0.3";
 
+const bool doWindow         = true;
+const bool doPVS            = true;
+const bool doNullMove       = true;
+const bool doFutility       = true;
+const bool doLMR            = true;
+const bool doLMP            = false;
+const bool doStaticNullMove = true;
+const bool doRazoring       = true;
+const bool doQFutility      = true;
+
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
 typedef int Move;    // invalid if < 0
@@ -33,8 +43,8 @@ bool mateFinder = false;
 #define INVALIDSQUARE  -1
 #define MAX_PLY       512
 
-#define SQFILE(s) s%8
-#define SQRANK(s) s/8
+#define SQFILE(s) (s%8)
+#define SQRANK(s) (s/8)
 
 Hash hashStack[MAX_PLY] = { 0 };
 
@@ -1166,7 +1176,7 @@ ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned 
 
   for(auto it = moves.begin() ; it != moves.end() ; ++it){
      // qfutility
-     if (!isInCheck && val + 128 + std::abs(getValue(p,Move2To(*it))) <= alpha) continue;
+     if ( doQFutility && !isInCheck && val + 128 + std::abs(getValue(p,Move2To(*it))) <= alpha) continue;
      Position p2 = p;
      if ( ! apply(p2,*it) ) continue;
      if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply;
@@ -1239,32 +1249,36 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
       && ! isInCheck ){
 
      // static null move
-     if ( depth <= 3 && val >= beta + 80*depth ) return val;
+     if ( doStaticNullMove && depth <= 3 && val >= beta + 160*depth ) return val;
 
      // razoring
      int rAlpha = alpha - 200;
-     if ( depth <= 3 && val <= rAlpha ){
+     if ( doRazoring && depth <= 3 && val <= rAlpha ){
          val = qsearch(rAlpha,rAlpha+1,p,ply,seldepth);
          if ( ! stopFlag && val <= rAlpha ) return val;
      }
 
      // null move
-     if ( pv.size() > 1 && depth >= 2 && val > beta){
+     if ( doNullMove 
+         && pv.size() > 1 
+         && depth >= 2 
+         && p.ep == INVALIDSQUARE
+         && val > beta){
        Position pN = p;
        pN.c = Color((pN.c+1)%2);
        p.h ^= ZT[3][13];
        p.h ^= ZT[4][13];
        int R = depth/4 + 3;
        std::vector<Move> nullPV;
-       ScoreType nullscore = -pvs(-beta,-beta+1,pN,depth-R-1,true,ply+1,nullPV,seldepth);
+       ScoreType nullscore = -pvs(-beta,-beta+1,pN,depth-R,true,ply+1,nullPV,seldepth);
        if ( !stopFlag && nullscore >= beta ) return nullscore;
      }
 
      // LMP
-     if (depth <= 10 ) doLMP = true;
+     if (doLMP && depth <= 10 ) doLMP = true;
 
      // futility
-     if (val <= alpha - 130*depth ) futility = true;
+     if (doFutility && val <= alpha - 160*depth ) futility = true;
   }
 
   std::vector<Move> moves;
@@ -1286,7 +1300,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      // extensions
      int extension = 0;
      if (isInCheck) ++extension;
-     if ( validMoveCount == 1 ){
+     if ( validMoveCount == 1 || !doPVS){
         val = -pvs(-beta,-alpha,p2,depth-1+extension,true,ply+1,childPV,seldepth);
      }
      else{
@@ -1302,13 +1316,14 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
             continue;
         }
         // LMP
-        if ( false && !isCheck
+        if ( !isCheck
             && doLMP
             && !isAdvancedPawnPush
             && Move2Type(*it) == T_std
             && validMoveCount >= 3*depth ) continue;
         // LMR
-        if ( !mateFinder
+        if ( doLMR 
+            && !mateFinder
             && depth >= 3
             && !isInCheck
             && !isCheck
@@ -1395,7 +1410,7 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
   for(DepthType depth = 1 ; depth <= d && !stopFlag ; ++depth ){
     std::cout << "# Iterative deepening " << (int)depth << std::endl;
     std::vector<Move> pvLoc;
-    ScoreType delta = (depth>4)?25:MATE;
+    ScoreType delta = (doWindow && depth>4)?25:MATE; // MATE not INFSCORE in order to enter the loop below once
     ScoreType alpha = std::max(ScoreType(bestScore - delta), ScoreType (-INFSCORE));
     ScoreType beta  = std::min(ScoreType(bestScore + delta), INFSCORE);
     ScoreType score = 0;
@@ -1403,7 +1418,7 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
        pvLoc.clear();
        score = pvs(alpha,beta,p,depth,true,1,pvLoc,seldepth);
        if ( stopFlag ) break;
-       delta *=2;
+       delta *= 2;
        if (score <= alpha){
            std::cout << "# Windows research alpha " << alpha << ", score : " << score << ", delta " << delta << std::endl;
            alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) );
