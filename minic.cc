@@ -1255,7 +1255,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      int rAlpha = alpha - 200;
      if ( doRazoring && depth <= 3 && val <= rAlpha ){
          val = qsearch(rAlpha,rAlpha+1,p,ply,seldepth);
-         if ( ! stopFlag && val <= rAlpha ) return val;
+         if ( ! stopFlag && val <= alpha ) return val;
      }
 
      // null move
@@ -1263,14 +1263,14 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
          && pv.size() > 1 
          && depth >= 2 
          && p.ep == INVALIDSQUARE
-         && val > beta){
+         && val >= beta){
        Position pN = p;
        pN.c = Color((pN.c+1)%2);
        p.h ^= ZT[3][13];
        p.h ^= ZT[4][13];
        int R = depth/4 + 3;
        std::vector<Move> nullPV;
-       ScoreType nullscore = -pvs(-beta,-beta+1,pN,depth-R,true,ply+1,nullPV,seldepth);
+       ScoreType nullscore = -pvs(-beta,-beta+1,pN,depth-R,false,ply+1,nullPV,seldepth);
        if ( !stopFlag && nullscore >= beta ) return nullscore;
      }
 
@@ -1279,6 +1279,17 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
 
      // futility
      if (doFutility && val <= alpha - 160*depth ) futility = true;
+  }
+  
+  // IID
+  if ( e.h == 0 && pvnode && depth >= 5 ){
+    std::vector<Move> iidPV;
+     pvs(alpha,beta,p,depth/2,true,ply,iidPV,seldepth);
+#ifdef DEBUG_ZHASH
+     TT::getEntry(computeHash(p), depth, e, GetFENShort2(p));
+#else
+     TT::getEntry(computeHash(p), depth, e);
+#endif     
   }
 
   std::vector<Move> moves;
