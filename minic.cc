@@ -1348,9 +1348,9 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
               }
            }
 #ifdef DEBUG_ZHASH
-           TT::setEntry({*it,val,TT::B_beta,DepthType(depth-1),computeHash(p),GetFENShort2(p)});
+           TT::setEntry({*it,val,TT::B_beta,depth,computeHash(p),GetFENShort2(p)});
 #else
-           TT::setEntry({*it,val,TT::B_beta,DepthType(depth-1),computeHash(p)});
+           TT::setEntry({*it,val,TT::B_beta,depth,computeHash(p)});
 #endif
            return val;
         }
@@ -1365,9 +1365,9 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
 
   if ( bestMove != INVALIDMOVE && !stopFlag){
 #ifdef DEBUG_ZHASH
-     TT::setEntry({bestMove,alpha,alphaUpdated?TT::B_exact:TT::B_alpha,DepthType(depth-1),computeHash(p),GetFENShort2(p)});
+     TT::setEntry({bestMove,alpha,alphaUpdated?TT::B_exact:TT::B_alpha,depth,computeHash(p),GetFENShort2(p)});
 #else
-     TT::setEntry({bestMove,alpha,alphaUpdated?TT::B_exact:TT::B_alpha,DepthType(depth-1),computeHash(p)});
+     TT::setEntry({bestMove,alpha,alphaUpdated?TT::B_exact:TT::B_alpha,depth,computeHash(p)});
 #endif
   }
 
