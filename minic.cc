@@ -1355,7 +1355,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         pv.push_back(*it);
         std::copy(childPV.begin(),childPV.end(),std::back_inserter(pv));
         if ( val >= beta ){
-           if ( Move2Type(*it) == T_std ){
+           if ( Move2Type(*it) == T_std && !isInCheck){
               KillerT::killers[1][ply] = KillerT::killers[0][ply];
               KillerT::killers[0][ply] = *it;
               HistoryT::update(depth,*it,p,true);
