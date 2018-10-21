@@ -438,11 +438,11 @@ std::string ToString(const Move & m, bool withScore = false){
    switch (Move2Type(m)) {
    case T_bks:
    case T_wks:
-       return "0-0" + score;
+       return "O-O" + score;
        break;
    case T_bqs:
    case T_wqs:
-       return "0-0-0" + score;
+       return "O-O-O" + score;
        break;
    case T_promq:
        prom = "q";
