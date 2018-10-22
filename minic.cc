@@ -1169,10 +1169,6 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
             (    (e.b == TT::B_alpha && e.score <= alpha)
               || (e.b == TT::B_beta  && e.score >= beta)
               || (e.b == TT::B_exact) ) ) {
-          if ( Move2Type(e.m) == T_std ){
-             KillerT::killers[1][ply] = KillerT::killers[0][ply];
-             KillerT::killers[0][ply] = e.m;
-          }
           pv.push_back(e.m);
           return e.score;
       }
@@ -1221,7 +1217,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      // futility
      if (doFutility && val <= alpha - 160*depth ) futility = true;
   }
-  
+
   // IID
   if ( e.h == 0 && pvnode && depth >= 5 ){
     std::vector<Move> iidPV;
@@ -1261,7 +1257,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         // LMP
         if ( lmp && !isCheck && !isAdvancedPawnPush && Move2Type(*it) == T_std && validMoveCount >= 3*depth ) continue;
         // LMR
-        if ( doLMR 
+        if ( doLMR
             && !mateFinder
             && depth >= 3
             && !isInCheck
