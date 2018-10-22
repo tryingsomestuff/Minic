@@ -14,19 +14,19 @@
 #include <unistd.h>
 #endif
 
-const std::string MinicVersion = "0.4";
+const std::string MinicVersion = "0.5";
 
 const bool doWindow         = true;
 const bool doPVS            = true;
 const bool doNullMove       = true;
 const bool doFutility       = true;
 const bool doLMR            = true;
-const bool doLMP            = false;
+const bool doLMP            = false; // to activate when SEE will be used for sorting
 const bool doStaticNullMove = true;
 const bool doRazoring       = true;
 const bool doQFutility      = true;
 
-const unsigned int ttSize = 1024 * 1024;
+const unsigned int ttSizeMb = 128; // here in Mb, will be converted to real size next
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
@@ -252,9 +252,17 @@ struct TT{
        Entry e[nbBucket]; // first is replace always, second is replace by depth
    };
 
+   static unsigned int powerFloor(unsigned int x) {
+       unsigned int power = 1;
+       while (power < x) power *= 2;
+       return power/2;
+   }
+
+   static unsigned int ttSize;
    static Bucket * table;
 
    static void initTable(){
+      ttSize = powerFloor(ttSizeMb * 1024 * 1024 / (unsigned int)sizeof(Bucket));
       table = new Bucket[ttSize];
       std::cout << "Size of TT " << ttSize * sizeof(Bucket) / 1024 / 1024 << "Mb" << std::endl;
    }
@@ -262,7 +270,6 @@ struct TT{
    static bool getEntry(Hash h, DepthType d, Entry & e, int nbuck = 0) {
       const Entry & _e = table[h%ttSize].e[nbuck];
       if ( _e.h != h ){
-          e.h = 0;
           if (nbuck >= nbBucket - 1) return false;
           return getEntry(h,d,e,nbuck+1);
       }
@@ -284,6 +291,7 @@ struct TT{
 };
 
 TT::Bucket * TT::table = 0;
+unsigned int TT::ttSize = 0;
 
 namespace KillerT{
    Move killers[2][MAX_PLY];
@@ -722,9 +730,7 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
              if (to < 0) break;
              const Color targetC = getColor(p,to);
              if (targetC != Co_None) {
-               if (targetC == opponent) {
-                 addMove(from, to, T_capture, moves); // capture
-               }
+               if (targetC == opponent) addMove(from, to, T_capture, moves); // capture
                break; // as soon as a capture or an own piece is found
              }
              if ( !onlyCap) addMove(from, to, T_std, moves); // not a capture
@@ -762,8 +768,7 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
              if (to < 0) continue;
              const Color targetC = getColor(p,to);
              if (targetC != Co_None) {
-               if (targetC == opponent
-                   && ( abs(offset) == 11 || abs(offset) == 9 ) ) {
+               if (targetC == opponent && ( abs(offset) == 11 || abs(offset) == 9 ) ) {
                  if ( SQRANK(to) == 0 || SQRANK(to) == 7) {
                     addMove(from, to, T_cappromq, moves); // pawn capture with promotion
                     addMove(from, to, T_cappromr, moves); // pawn capture with promotion
@@ -777,14 +782,8 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
              }
              else{
                // ep pawn capture
-               if ( abs(offset) == 11 || abs(offset) == 9 ) {
-                  if ( p.ep == to ){
-                      addMove(from, to, T_ep, moves); // en passant
-                  }
-               }
-               else if ( abs(offset) == 20 && !onlyCap
-                    && ( SQRANK(from) == 1 || SQRANK(from) == 6 )
-                    && p.b[(from + to)/2] == P_none){
+               if ( (abs(offset) == 11 || abs(offset) == 9 ) && (p.ep == to) ) addMove(from, to, T_ep, moves); // en passant
+               else if ( abs(offset) == 20 && !onlyCap && ( SQRANK(from) == 1 || SQRANK(from) == 6 ) && p.b[(from + to)/2] == P_none){
                   addMove(from, to, T_std, moves); // double push
                }
                else if ( abs(offset) == 10 && !onlyCap){
@@ -794,9 +793,7 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
                       addMove(from, to, T_promb, moves); // promotion B
                       addMove(from, to, T_promn, moves); // promotion N
                    }
-                   else{
-                      addMove(from, to, T_std, moves); // simple pawn push
-                   }
+                   else addMove(from, to, T_std, moves); // simple pawn push
                }
             }
           }
@@ -805,13 +802,10 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
    }
 }
 
-bool sameMove(const Move & a, const Move & b) {
-    return (a & 0x0000FFFF) == (b & 0x0000FFFF);
-}
+bool sameMove(const Move & a, const Move & b) { return (a & 0x0000FFFF) == (b & 0x0000FFFF);}
 
 struct MoveSorter{
-   MoveSorter(const Position & p, DepthType ply, const TT::Entry * e = NULL):p(p),ply(ply),e(e){
-   }
+   MoveSorter(const Position & p, DepthType ply, const TT::Entry * e = NULL):p(p),ply(ply),e(e){ }
    bool operator()(Move & a, Move & b){
       const MType t1 = Move2Type(a);
       const MType t2 = Move2Type(b);
@@ -823,9 +817,7 @@ struct MoveSorter{
       ScoreType s2 = Move2Score(b);
       if (s1 == 0) {
           s1 = MoveScoring[t1];
-          if (isCapture(t1)) {
-              s1 += MvvLvaScores[getPieceType(p,to1)-1][getPieceType(p,from1)-1];
-          }
+          if (isCapture(t1)) s1 += MvvLvaScores[getPieceType(p,to1)-1][getPieceType(p,from1)-1];
           if (e && sameMove(e->m,a)) s1 += 3000;
           if (sameMove(a,KillerT::killers[0][ply])) s1 += 290;
           if (sameMove(a,KillerT::killers[1][ply])) s1 += 260;
@@ -834,9 +826,7 @@ struct MoveSorter{
       }
       if (s2 == 0) {
           s2 = MoveScoring[t2];
-          if (isCapture(t2)) {
-              s2 += MvvLvaScores[getPieceType(p,to2)-1][getPieceType(p,from2)-1];
-          }
+          if (isCapture(t2)) s2 += MvvLvaScores[getPieceType(p,to2)-1][getPieceType(p,from2)-1];
           if (e && sameMove(e->m,b)) s2 += 3000;
           if (sameMove(b,KillerT::killers[0][ply])) s2 += 290;
           if (sameMove(b,KillerT::killers[1][ply])) s2 += 260;
@@ -1134,9 +1124,7 @@ ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned 
      if (p.c == Co_Black && Move2To(*it) == p.wk) return MATE - ply;
      val = -qsearch(-beta,-alpha,p2,ply+1,seldepth);
      if ( val > alpha ){
-        if ( val >= beta ){
-           return val;
-        }
+        if ( val >= beta ) return val;
         alpha = val;
      }
   }
@@ -1181,13 +1169,8 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   const bool isInCheck = isAttacked(p,kingSquare(p));
 
   // prunings
-  if ( !mateFinder
-      && !rootnode
-      && gp > 0.2
-      && !pvnode
-      && std::abs(alpha) < MATE-MAX_PLY
-      && std::abs(beta) < MATE-MAX_PLY
-      && ! isInCheck ){
+  if ( !mateFinder && !rootnode && gp > 0.2 && !pvnode && !isInCheck
+      && std::abs(alpha) < MATE-MAX_PLY && std::abs(beta) < MATE-MAX_PLY ){
 
      // static null move
      if ( doStaticNullMove && depth <= 3 && val >= beta + 160*depth ) return val;
@@ -1221,7 +1204,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   // IID
   if ( e.h == 0 && pvnode && depth >= 5 ){
     std::vector<Move> iidPV;
-     pvs(alpha,beta,p,depth/2,true,ply,iidPV,seldepth);
+     pvs(alpha,beta,p,depth/2,pvnode,ply,iidPV,seldepth);
      TT::getEntry(computeHash(p), depth, e);
   }
 
@@ -1257,17 +1240,10 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         // LMP
         if ( lmp && !isCheck && !isAdvancedPawnPush && Move2Type(*it) == T_std && validMoveCount >= 3*depth ) continue;
         // LMR
-        if ( doLMR
-            && !mateFinder
-            && depth >= 3
-            && !isInCheck
-            && !isCheck
-            && !isAdvancedPawnPush
-            && Move2Type(*it) == T_std
-            && validMoveCount > 4
-            && std::abs(alpha) < MATE-MAX_PLY
-            && std::abs(beta) < MATE-MAX_PLY
-            && ! isInCheck ) reduction = int(1+sqrt(depth*validMoveCount/8));
+        if ( doLMR && !mateFinder && depth >= 3 && !isInCheck && !isCheck && !isAdvancedPawnPush
+            && Move2Type(*it) == T_std && validMoveCount > 4
+            && std::abs(alpha) < MATE-MAX_PLY && std::abs(beta) < MATE-MAX_PLY ) 
+            reduction = int(1+sqrt(depth*validMoveCount/8));
         if (pvnode && reduction > 0) --reduction;
         // PVS
         val = -pvs(-alpha-1,-alpha,p2,depth-1-reduction+extension,false,ply+1,childPV,seldepth);
@@ -1636,20 +1612,8 @@ namespace XBoard{
    }
 
    void readLine() {
-   #define CPP_STYLE_READ_LINE
-   #ifdef CPP_STYLE_READ_LINE
        command.clear();
        std::getline(std::cin, command);
-   #else
-       static char com[4096];
-       char *np;
-       if ((fgets(com, sizeof com, stdin)) != NULL) {
-           if (np = strchr(com, '\n')) { // replace \n with \0 ...
-               *np = '\0';
-           }
-       }
-       command = com;
-   #endif
        std::cout << "#Receive command : " << command << std::endl;
    }
 
@@ -1708,7 +1672,7 @@ namespace XBoard{
 
 void tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters = " " ){
   std::string::size_type lastPos = str.find_first_not_of(delimiters, 0);
-  std::string::size_type pos = str.find_first_of(delimiters, lastPos);
+  std::string::size_type pos     = str.find_first_of(delimiters, lastPos);
   while (std::string::npos != pos || std::string::npos != lastPos) {
     tokens.push_back(str.substr(lastPos, pos - lastPos));
     lastPos = str.find_first_not_of(delimiters, pos);
@@ -1717,8 +1681,8 @@ void tokenize(const std::string& str, std::vector<std::string>& tokens, const st
 }
 
 Square stringToSquare(const std::string & str){
-   Square file = str.at(0) - 97; // ASCII 'a' = 97
-   Square rank = str.at(1) - 49; // ASCII '1' = 49
+   const Square file = str.at(0) - 97; // ASCII 'a' = 97
+   const Square rank = str.at(1) - 49; // ASCII '1' = 49
    return rank * 8 + file;
 }
 
