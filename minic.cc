@@ -173,33 +173,19 @@ struct Position{
   Color c;
 };
 
-inline Piece getPieceIndex(const Position & p, Square k){
-   return Piece(p.b[k] + PieceShift);
-}
+inline Piece getPieceIndex (const Position &p, Square k){ return Piece(p.b[k] + PieceShift);}
 
-inline Piece getPieceType(const Position & p, Square k){
-   return (Piece)std::abs(p.b[k]);
-}
+inline Piece getPieceType  (const Position &p, Square k){ return (Piece)std::abs(p.b[k]);}
 
-inline Color getColor(const Position & p, Square k){
-   return Colors[getPieceIndex(p,k)];
-}
+inline Color getColor      (const Position &p, Square k){ return Colors[getPieceIndex(p,k)];}
 
-inline std::string getName(const Position &p, Square k){
-   return Names[getPieceIndex(p,k)];
-}
+inline std::string getName (const Position &p, Square k){ return Names[getPieceIndex(p,k)];}
 
-inline ScoreType getValue(const Position &p, Square k){
-   return Values[getPieceIndex(p,k)];
-}
+inline ScoreType getValue  (const Position &p, Square k){ return Values[getPieceIndex(p,k)];}
 
-inline ScoreType getValueEG(const Position &p, Square k){
-   return ValuesEG[getPieceIndex(p,k)];
-}
+inline ScoreType getValueEG(const Position &p, Square k){ return ValuesEG[getPieceIndex(p,k)];}
 
-inline ScoreType getSign(const Position &p, Square k){
-   return Signs[getPieceIndex(p,k)];
-}
+inline ScoreType getSign   (const Position &p, Square k){ return Signs[getPieceIndex(p,k)];}
 
 inline ScoreType Move2Score(Move h) { return (h >> 16) & 0xFFFF; }
 inline Square    Move2From (Move h) { return (h >> 10) & 0x3F  ; }
@@ -252,19 +238,12 @@ struct TT{
    };
    struct Entry{
       Entry():m(INVALIDMOVE),score(0),b(B_alpha),d(-1),h(0){}
-#ifdef DEBUG_ZHASH
-      Entry(Move m, int s,Bound b, DepthType d, Hash h, const std::string & fen ):m(m),score(m),b(b),d(d),h(h),fen(fen){}
-#else
       Entry(Move m, int s, Bound b, DepthType d, Hash h) : m(m), score(m), b(b), d(d), h(h){}
-#endif
       Move m;
       int score;
       Bound b;
       DepthType d;
       Hash h;
-#ifdef DEBUG_ZHASH
-      std::string fen;
-#endif
    };
 
    static const int nbBucket = 2;
@@ -280,23 +259,13 @@ struct TT{
       std::cout << "Size of TT " << ttSize * sizeof(Bucket) / 1024 / 1024 << "Mb" << std::endl;
    }
 
-#ifdef DEBUG_ZHASH
-   static bool getEntry(Hash h, DepthType d, Entry & e, const std::string & fen){
-#else
    static bool getEntry(Hash h, DepthType d, Entry & e, int nbuck = 0) {
-#endif
       const Entry & _e = table[h%ttSize].e[nbuck];
       if ( _e.h != h ){
           e.h = 0;
           if (nbuck >= nbBucket - 1) return false;
           return getEntry(h,d,e,nbuck+1);
       }
-#ifdef DEBUG_ZHASH
-      if (_e.fen != fen) {
-          std::cout << "bad fen \n" << _e.fen << "\n" << fen << std::endl;
-          return false;
-      }
-#endif
       if ( _e.d >= d ){
          e=_e;
          ++stats.tthits;
@@ -1195,11 +1164,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   const bool rootnode = ply == 1;
 
   TT::Entry e;
-#ifdef DEBUG_ZHASH
-  if (TT::getEntry(computeHash(p), depth, e, GetFENShort2(p))) {
-#else
   if (TT::getEntry(computeHash(p), depth, e)) {
-#endif
       if (e.h != 0 && !rootnode && std::abs(e.score) < MATE - MAX_PLY && !pvnode &&
             (    (e.b == TT::B_alpha && e.score <= alpha)
               || (e.b == TT::B_beta  && e.score >= beta)
@@ -1261,11 +1226,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   if ( e.h == 0 && pvnode && depth >= 5 ){
     std::vector<Move> iidPV;
      pvs(alpha,beta,p,depth/2,true,ply,iidPV,seldepth);
-#ifdef DEBUG_ZHASH
-     TT::getEntry(computeHash(p), depth, e, GetFENShort2(p));
-#else
      TT::getEntry(computeHash(p), depth, e);
-#endif     
   }
 
   std::vector<Move> moves;
@@ -1340,11 +1301,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
                   }
               }
            }
-#ifdef DEBUG_ZHASH
-           TT::setEntry({*it,val,TT::B_beta,depth,computeHash(p),GetFENShort2(p)});
-#else
            TT::setEntry({*it,val,TT::B_beta,depth,computeHash(p)});
-#endif
            return val;
         }
         alpha = val;
@@ -1357,11 +1314,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   }
 
   if ( bestMove != INVALIDMOVE && !stopFlag){
-#ifdef DEBUG_ZHASH
-     TT::setEntry({bestMove,alpha,alphaUpdated?TT::B_exact:TT::B_alpha,depth,computeHash(p),GetFENShort2(p)});
-#else
      TT::setEntry({bestMove,alpha,alphaUpdated?TT::B_exact:TT::B_alpha,depth,computeHash(p)});
-#endif
   }
 
   return stopFlag?STOPSCORE:alpha;
