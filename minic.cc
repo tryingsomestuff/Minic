@@ -26,6 +26,8 @@ const bool doStaticNullMove = true;
 const bool doRazoring       = true;
 const bool doQFutility      = true;
 
+const unsigned int ttSize = 1024 * 1024;
+
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
 typedef int Move;    // invalid if < 0
@@ -47,8 +49,6 @@ bool mateFinder = false;
 #define SQRANK(s) (s/8)
 
 Hash hashStack[MAX_PLY] = { 0 };
-
-//#define DEBUG_ZHASH
 
 std::string startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 std::string fine70 = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - -";
@@ -233,15 +233,13 @@ Hash computeHash(const Position &p){
         h ^= ZT[k][pp+PieceShift];
       }
    }
-
    if ( p.ep != INVALIDSQUARE ) h ^= ZT[p.ep][13];
-   if ( p.castling & C_wks) h ^= ZT[7][13];
-   if ( p.castling & C_wqs) h ^= ZT[0][13];
-   if ( p.castling & C_bks) h ^= ZT[63][13];
-   if ( p.castling & C_bqs) h ^= ZT[56][13];
-   if ( p.c == Co_White) h ^= ZT[3][13];
-   if ( p.c == Co_Black) h ^= ZT[4][13];
-
+   if ( p.castling & C_wks)     h ^= ZT[7][13];
+   if ( p.castling & C_wqs)     h ^= ZT[0][13];
+   if ( p.castling & C_bks)     h ^= ZT[63][13];
+   if ( p.castling & C_bqs)     h ^= ZT[56][13];
+   if ( p.c == Co_White)        h ^= ZT[3][13];
+   if ( p.c == Co_Black)        h ^= ZT[4][13];
    p.h = h;
    return h;
 }
@@ -276,10 +274,8 @@ struct TT{
    };
 
    static Bucket * table;
-   static int ttSize;
 
-   static void initTable(int n){
-      ttSize = n;
+   static void initTable(){
       table = new Bucket[ttSize];
       std::cout << "Size of TT " << ttSize * sizeof(Bucket) / 1024 / 1024 << "Mb" << std::endl;
    }
@@ -319,7 +315,6 @@ struct TT{
 };
 
 TT::Bucket * TT::table = 0;
-int TT::ttSize = 0;
 
 namespace KillerT{
    Move killers[2][MAX_PLY];
@@ -341,23 +336,18 @@ namespace HistoryT{
           }
       }
    }
-   void update(DepthType depth, Move m, const Position & p, bool plus){
+   inline void update(DepthType depth, Move m, const Position & p, bool plus){
        if ( Move2Type(m) == T_std ){
           history[getPieceIndex(p,Move2From(m))][Move2To(m)] += ScoreType( (plus?+1:-1) * (depth*depth/6.f) - (history[getPieceIndex(p,Move2From(m))][Move2To(m)] * depth*depth/6.f / 200.f));
        }
    }
 };
 
-bool isCapture(const MType & mt){
-   return mt == T_capture
-       || mt == T_ep
-       || mt == T_cappromq
-       || mt == T_cappromr
-       || mt == T_cappromb
-       || mt == T_cappromn;
+inline bool isCapture(const MType & mt){
+   return mt == T_capture || mt == T_ep || mt == T_cappromq || mt == T_cappromr || mt == T_cappromb || mt == T_cappromn;
 }
 
-bool isCapture(const Move & m){
+inline bool isCapture(const Move & m){
    return isCapture(Move2Type(m));
 }
 
@@ -1192,9 +1182,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
 
   if ((int)ply > seldepth) seldepth = ply;
 
-  if ( depth <= 0 ){
-     return qsearch(alpha,beta,p,ply,seldepth);
-  }
+  if ( depth <= 0 ) return qsearch(alpha,beta,p,ply,seldepth);
 
   ++stats.nodes;
 
@@ -1228,7 +1216,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   float gp = 0;
   ScoreType val = eval(p, gp);
   bool futility = false;
-  bool doLMP = false;
+  bool lmp = false;
   const bool isInCheck = isAttacked(p,kingSquare(p));
 
   // prunings
@@ -1251,11 +1239,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      }
 
      // null move
-     if ( doNullMove 
-         && pv.size() > 1 
-         && depth >= 2 
-         && p.ep == INVALIDSQUARE
-         && val >= beta){
+     if ( doNullMove && pv.size() > 1 && depth >= 2 && p.ep == INVALIDSQUARE && val >= beta){
        Position pN = p;
        pN.c = Color((pN.c+1)%2);
        p.h ^= ZT[3][13];
@@ -1267,7 +1251,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      }
 
      // LMP
-     if (doLMP && depth <= 10 ) doLMP = true;
+     if (doLMP && depth <= 10 ) lmp = true;
 
      // futility
      if (doFutility && val <= alpha - 160*depth ) futility = true;
@@ -1312,18 +1296,9 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         bool isCheck = isAttacked(p2, kingSquare(p2));
         bool isAdvancedPawnPush = getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
         // futility
-        if ( futility
-            && !isAdvancedPawnPush
-            && Move2Type(*it) == T_std
-            && !isCheck){
-            continue;
-        }
+        if ( futility && !isAdvancedPawnPush  && Move2Type(*it) == T_std && !isCheck) continue;
         // LMP
-        if ( !isCheck
-            && doLMP
-            && !isAdvancedPawnPush
-            && Move2Type(*it) == T_std
-            && validMoveCount >= 3*depth ) continue;
+        if ( lmp && !isCheck && !isAdvancedPawnPush && Move2Type(*it) == T_std && validMoveCount >= 3*depth ) continue;
         // LMR
         if ( doLMR 
             && !mateFinder
@@ -2174,7 +2149,7 @@ int main(int argc, char ** argv){
    if ( argc < 2 ) return 1;
 
    initHash();
-   TT::initTable(1024*1024);
+   TT::initTable();
    stats.init();
 
    initMvvLva();
