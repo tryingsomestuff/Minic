@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <assert.h>
 #include <cmath>
 #include <stdio.h>
 #include <string.h>
@@ -173,26 +174,32 @@ struct Position{
   Color c;
 };
 
-inline Piece getPieceIndex (const Position &p, Square k){ return Piece(p.b[k] + PieceShift);}
+inline Piece getPieceIndex(const Position &p, Square k) { assert(k >= 0 && k < 64); return Piece(p.b[k] + PieceShift); }
 
-inline Piece getPieceType  (const Position &p, Square k){ return (Piece)std::abs(p.b[k]);}
+inline Piece getPieceType  (const Position &p, Square k){ assert(k >= 0 && k < 64); return (Piece)std::abs(p.b[k]);}
 
-inline Color getColor      (const Position &p, Square k){ return Colors[getPieceIndex(p,k)];}
+inline Color getColor      (const Position &p, Square k){ assert(k >= 0 && k < 64); return Colors[getPieceIndex(p,k)];}
 
-inline std::string getName (const Position &p, Square k){ return Names[getPieceIndex(p,k)];}
+inline std::string getName (const Position &p, Square k){ assert(k >= 0 && k < 64); return Names[getPieceIndex(p,k)];}
 
-inline ScoreType getValue  (const Position &p, Square k){ return Values[getPieceIndex(p,k)];}
+inline ScoreType getValue  (const Position &p, Square k){ assert(k >= 0 && k < 64); return Values[getPieceIndex(p,k)];}
 
-inline ScoreType getValueEG(const Position &p, Square k){ return ValuesEG[getPieceIndex(p,k)];}
+inline ScoreType getValueEG(const Position &p, Square k){ assert(k >= 0 && k < 64); return ValuesEG[getPieceIndex(p,k)];}
 
-inline ScoreType getSign   (const Position &p, Square k){ return Signs[getPieceIndex(p,k)];}
+inline ScoreType getSign   (const Position &p, Square k){ assert(k >= 0 && k < 64); return Signs[getPieceIndex(p,k)];}
 
-inline ScoreType Move2Score(Move h) { return (h >> 16) & 0xFFFF; }
-inline Square    Move2From (Move h) { return (h >> 10) & 0x3F  ; }
-inline Square    Move2To   (Move h) { return (h >>  4) & 0x3F  ; }
-inline MType     Move2Type (Move h) { return MType(h & 0xF)    ; }
-inline Move      ToMove(Square from, Square to, MType type)                  { return                 (from << 10) | (to << 4) | type; }
-inline Move      ToMove(Square from, Square to, MType type, ScoreType score) { return (score << 16) | (from << 10) | (to << 4) | type; }
+inline ScoreType Move2Score(Move h) { assert(h != INVALIDMOVE); return (h >> 16) & 0xFFFF; }
+inline Square    Move2From (Move h) { assert(h != INVALIDMOVE); return (h >> 10) & 0x3F  ; }
+inline Square    Move2To   (Move h) { assert(h != INVALIDMOVE); return (h >>  4) & 0x3F  ; }
+inline MType     Move2Type (Move h) { assert(h != INVALIDMOVE); return MType(h & 0xF)    ; }
+inline Move      ToMove(Square from, Square to, MType type) { 
+    assert(from >= 0 && from < 64); 
+    assert(to >= 0 && to < 64); 
+    return (from << 10) | (to << 4) | type; }
+inline Move      ToMove(Square from, Square to, MType type, ScoreType score) { 
+    assert(from >= 0 && from < 64); 
+    assert(to >= 0 && to < 64); 
+    return (score << 16) | (from << 10) | (to << 4) | type; }
 
 Hash randomInt(){
     static std::mt19937 mt(42);
@@ -268,6 +275,7 @@ struct TT{
    }
 
    static bool getEntry(Hash h, DepthType d, Entry & e, int nbuck = 0) {
+      assert(h > 0);
       const Entry & _e = table[h%ttSize].e[nbuck];
       if ( _e.h != h ){
           if (nbuck >= nbBucket - 1) return false;
