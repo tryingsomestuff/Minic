@@ -694,6 +694,8 @@ namespace TimeMan{
          ms =  msecPerMove;
       }
       else if ( nbMoveInTC > 0){ // mps is given
+	 assert(msecWholeGame > 0);
+	 assert(nbMoveInTC > 0);
          ms = int(0.95 * (msecWholeGame+((msecInc>0)?nbMoveInTC*msecInc:0)) / (float)nbMoveInTC);
       }
       else{ // mps is not given
@@ -708,10 +710,13 @@ namespace TimeMan{
 }
 
 void addMove(Square from, Square to, MType type, std::vector<Move> & moves){
+   assert( from >= 0 && from < 64);
+   assert( to >=0 && to < 64);   
    moves.push_back(ToMove(from,to,type,0));
 }
 
 bool isAttacked(const Position & p, const Square k){
+   assert( k >= 0 && k < 64);
    const Color side = p.c;
    const Color opponent = Color((p.c+1)%2);
    for (Square i = 0; i < 64; ++i){
@@ -833,8 +838,10 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
 bool sameMove(const Move & a, const Move & b) { return (a & 0x0000FFFF) == (b & 0x0000FFFF);}
 
 struct MoveSorter{
-   MoveSorter(const Position & p, DepthType ply, const TT::Entry * e = NULL):p(p),ply(ply),e(e){ }
+   MoveSorter(const Position & p, DepthType ply, const TT::Entry * e = NULL):p(p),ply(ply),e(e){ assert(e==0||e->h!=0||e->m==INVALIDMOVE); }
    bool operator()(Move & a, Move & b){
+      assert( a != INVALIDMOVE);
+      assert( b != INVALIDMOVE); 
       const MType t1 = Move2Type(a);
       const MType t2 = Move2Type(b);
       const Square from1 = Move2From(a);
