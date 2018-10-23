@@ -1313,6 +1313,8 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
 
   hashStack[0] = p.h;
 
+  Counter previousNodeCount = 1;
+
   for(DepthType depth = 1 ; depth <= d && !stopFlag ; ++depth ){
     std::cout << "# Iterative deepening " << (int)depth << std::endl;
     std::vector<Move> pvLoc;
@@ -1348,7 +1350,9 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
                  << (int)seldepth     << " "
                  << int((stats.nodes + stats.qnodes)/(ms/1000.f)/1000.) << " "
                  << stats.tthits/1000 << "\t"
-                 << ToString(pv)    << std::endl;
+                 << ToString(pv)    << " "
+                 << "EBF: " << float(stats.nodes + stats.qnodes)/previousNodeCount << std::endl;
+       previousNodeCount = stats.nodes + stats.qnodes;
     }
 
     if (bestScore <= -MATE+1) break;
