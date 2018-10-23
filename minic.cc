@@ -445,6 +445,23 @@ std::string ToString(const Move & m, bool withScore = false){
    return ss.str() + prom + score;
 }
 
+int gamePhase(const Position & p){
+   int absscore = 0;
+   int nbPiece = 0;
+   int nbPawn = 0;
+   for( Square k = 0 ; k < 64 ; ++k){
+      if ( p.b[k] != P_none ){
+         absscore += std::abs(getValue(p,k));
+         if ( std::abs(p.b[k]) != P_wp ) ++nbPiece;
+         else ++nbPawn;
+      }
+   }
+   absscore = 100*(absscore-16000)    / (24140-16000);
+   nbPawn   = 100*nbPawn      / 16;
+   nbPiece  = 100*(nbPiece-2) / 14;
+   return int(absscore*0.4+nbPiece*0.3+nbPawn*0.3);
+}
+
 std::string ToString(const std::vector<Move> & moves){
    std::stringstream ss;
    for(size_t k = 0 ; k < moves.size(); ++k){
@@ -1064,23 +1081,6 @@ bool apply(Position & p, const Move & m){
    return true;
 }
 
-int gamePhase(const Position & p){
-   int absscore = 0;
-   int nbPiece = 0;
-   int nbPawn = 0;
-   for( Square k = 0 ; k < 64 ; ++k){
-      if ( p.b[k] != P_none ){
-         absscore += std::abs(getValue(p,k));
-         if ( std::abs(p.b[k]) != P_wp ) ++nbPiece;
-         else ++nbPawn;
-      }
-   }
-   absscore = 100*(absscore-16000)    / (24140-16000);
-   nbPawn   = 100*nbPawn      / 16;
-   nbPiece  = 100*(nbPiece-2) / 14;
-   return int(absscore*0.4+nbPiece*0.3+nbPawn*0.3);
-}
-
 ScoreType eval(const Position & p, float & gp){
    ScoreType sc = 0;
    gp = gamePhase(p)/100.f;
@@ -1245,7 +1245,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         // LMR
         if ( doLMR && !mateFinder && depth >= 3 && !isInCheck && !isCheck && !isAdvancedPawnPush
             && Move2Type(*it) == T_std && validMoveCount > 4
-            && std::abs(alpha) < MATE-MAX_PLY && std::abs(beta) < MATE-MAX_PLY ) 
+            && std::abs(alpha) < MATE-MAX_PLY && std::abs(beta) < MATE-MAX_PLY )
             reduction = int(1+sqrt(depth*validMoveCount/8));
         if (pvnode && reduction > 0) --reduction;
         // PVS
