@@ -469,6 +469,9 @@ std::string ToString(const Position & p){
     if ( p.ep >=0 ) ss << "ep " << Squares[p.ep]<< std::endl;
     ss << "wk " << Squares[p.wk] << std::endl;
     ss << "bk " << Squares[p.bk] << std::endl;
+    ss << "Turn " << (p.c == Co_White ? "white" : "black") << std::endl;
+    ss << "Phase " << gamePhase(p) << std::endl;
+    ss << "Hash " << computeHash(p) << std::endl;
     return ss.str();
 }
 
