@@ -1243,7 +1243,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   Move bestMove = INVALIDMOVE;
 
   // try the tt move 
-  if (e.h != 0) { // should be the cas thanks to iid at pvnode
+  if (false && e.h != 0) { // should be the cas thanks to iid at pvnode
       Position p2 = p;
       if (apply(p2, e.m)) {
           std::vector<Move> childPV;
@@ -1268,10 +1268,10 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   if ( moves.empty() ) return isInCheck?-MATE + ply : 0;
   sort(moves,p,ply,&e);
 
-  if (bestMove == INVALIDMOVE)  bestMove = moves[0]; // so that B_alpha are stored in TT
+  //if (bestMove == INVALIDMOVE)  bestMove = moves[0]; // so that B_alpha are stored in TT
 
   for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
-     if (e.h != 0 && sameMove(e.m, *it)) continue; // already tried
+     if (false && e.h != 0 && sameMove(e.m, *it)) continue; // already tried
      Position p2 = p;
      if ( ! apply(p2,*it) ) continue;
      const Square to = Move2To(*it);
