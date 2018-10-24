@@ -15,7 +15,7 @@
 #include <unistd.h>
 #endif
 
-const std::string MinicVersion = "0.5";
+const std::string MinicVersion = "0.6";
 
 const bool doWindow         = true;
 const bool doPVS            = true;
