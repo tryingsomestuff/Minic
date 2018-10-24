@@ -87,7 +87,6 @@ enum Piece : char{
 
 const int PieceShift = 6;
 
-ScoreType   IValues[6]    = { 1, 2, 3, 5, 9, 20 };
 ScoreType   Values[13]    = { -8000, -950, -500, -335, -325, -100, 0, 100, 325, 335, 500, 950, 8000 };
 ScoreType   ValuesEG[13]  = { -8000, -1200, -550, -305, -275, -100, 0, 100, 275, 305, 550, 1200, 8000 };
 std::string Names[13]     = { "k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K" };
@@ -123,6 +122,7 @@ enum Castling : char{
 int MvvLvaScores[6][6];
 
 void initMvvLva(){
+    static ScoreType IValues[6] = { 1, 2, 3, 5, 9, 20 };
     for(int v = 0; v < 6 ; ++v){
         for(int a = 0; a < 6 ; ++a){
            MvvLvaScores[v][a] = IValues[v] * 20 - IValues[a];
@@ -202,7 +202,7 @@ inline Move      ToMove(Square from, Square to, MType type, ScoreType score) {
     return (score << 16) | (from << 10) | (to << 4) | type; }
 
 Hash randomInt(){
-    static std::mt19937 mt(42);
+    static std::mt19937 mt(42); // fixed seed
     static std::uniform_int_distribution<unsigned long long int> dist(0, UINT64_MAX);
     return dist(mt);
 }
@@ -253,9 +253,8 @@ struct TT{
       Hash h;
    };
 
-   static const int nbBucket = 2;
-
    struct Bucket {
+       static const int nbBucket = 2;
        Entry e[nbBucket]; // first is replace always, second is replace by depth
    };
 
@@ -278,7 +277,7 @@ struct TT{
       assert(h > 0);
       const Entry & _e = table[h%ttSize].e[nbuck];
       if ( _e.h != h ){
-          if (nbuck >= nbBucket - 1) return false;
+          if (nbuck >= Bucket::nbBucket - 1) return false;
           return getEntry(h,d,e,nbuck+1);
       }
       if ( _e.d >= d ){
@@ -286,13 +285,14 @@ struct TT{
          ++stats.tthits;
          return true;
       }
-      if (nbuck >= nbBucket - 1) return false;
+      if (nbuck >= Bucket::nbBucket - 1) return false;
       return getEntry(h, d, e, nbuck + 1);
    }
 
    static void setEntry(const Entry & e){
-      Entry & _eAlways = table[e.h%ttSize].e[0];
-      _eAlways = e; // always replace
+      assert(e.h > 0);
+      assert(e.m != INVALIDMOVE);
+      table[e.h%ttSize].e[0] = e; // always replace
       Entry & _eDepth = table[e.h%ttSize].e[1];
       if ( e.d >= _eDepth.d ) _eDepth = e; // replace if better depth
    }
@@ -328,13 +328,9 @@ namespace HistoryT{
    }
 };
 
-inline bool isCapture(const MType & mt){
-   return mt == T_capture || mt == T_ep || mt == T_cappromq || mt == T_cappromr || mt == T_cappromb || mt == T_cappromn;
-}
+inline bool isCapture(const MType & mt){ return mt == T_capture || mt == T_ep || mt == T_cappromq || mt == T_cappromr || mt == T_cappromb || mt == T_cappromn; }
 
-inline bool isCapture(const Move & m){
-   return isCapture(Move2Type(m));
-}
+inline bool isCapture(const Move & m){ return isCapture(Move2Type(m)); }
 
 std::string GetFENShort(const Position &p ){
     // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR"
@@ -343,9 +339,7 @@ std::string GetFENShort(const Position &p ){
     for (int i = 7; i >= 0; --i) {
         for (int j = 0; j < 8; j++) {
             const Square k = 8 * i + j;
-            if (p.b[k] == P_none) {
-                ++count;
-            }
+            if (p.b[k] == P_none)  ++count;
             else {
                 if (count != 0) {
                     ss << count;
@@ -358,9 +352,7 @@ std::string GetFENShort(const Position &p ){
                     ss << count;
                     count = 0;
                 }
-                if (i != 0) {
-                    ss << "/";
-                }
+                if (i != 0) ss << "/";
             }
         }
     }
@@ -393,9 +385,7 @@ std::string GetFENShort2(const Position &p) {
     if (p.ep != INVALIDSQUARE) {
         ss << " " << Squares[p.ep];
     }
-    else {
-        ss << " -";
-    }
+    else ss << " -";
     return ss.str();
 }
 
@@ -408,7 +398,7 @@ std::string GetFEN(const Position &p) {
     return ss.str();
 }
 
-std::string ToString(const Move & m, bool withScore = false){
+std::string ToString(const Move & m, bool withScore = false){ ///@todo use less lines using a string array instead of the prom switch
    if ( m == INVALIDMOVE ) return "invalid move";
    std::stringstream ss;
    std::string prom;
@@ -455,8 +445,8 @@ std::string ToString(const Move & m, bool withScore = false){
 
 int gamePhase(const Position & p){
    int absscore = 0;
-   int nbPiece = 0;
-   int nbPawn = 0;
+   int nbPiece  = 0;
+   int nbPawn   = 0;
    for( Square k = 0 ; k < 64 ; ++k){
       if ( p.b[k] != P_none ){
          absscore += std::abs(getValue(p,k));
@@ -465,38 +455,35 @@ int gamePhase(const Position & p){
       }
    }
    absscore = 100*(absscore-16000)    / (24140-16000);
-   nbPawn   = 100*nbPawn      / 16;
-   nbPiece  = 100*(nbPiece-2) / 14;
+   nbPawn   = 100*nbPawn              / 16;
+   nbPiece  = 100*(nbPiece-2)         / 14;
    return int(absscore*0.4+nbPiece*0.3+nbPawn*0.3);
 }
 
 std::string ToString(const std::vector<Move> & moves){
    std::stringstream ss;
-   for(size_t k = 0 ; k < moves.size(); ++k){
-      ss << ToString(moves[k]) << " ";
-   }
+   for(size_t k = 0 ; k < moves.size(); ++k) ss << ToString(moves[k]) << " ";
    return ss.str();
 }
 
 std::string ToString(const Position & p){
     std::stringstream ss;
-    ss << std::endl;
+    ss << "#" << std::endl;
     for (Square j = 7; j >= 0; --j) {
-        ss << "+-+-+-+-+-+-+-+-+" << std::endl;
-        ss << "|";
-        for (Square i = 0; i < 8; ++i) {
-            ss << getName(p,i+j*8) << '|';
-        }
+        ss << "# +-+-+-+-+-+-+-+-+" << std::endl;
+        ss << "# |";
+        for (Square i = 0; i < 8; ++i) ss << getName(p,i+j*8) << '|';
         ss << std::endl; ;
     }
-    ss << "+-+-+-+-+-+-+-+-+" ;
-    ss << std::endl;
-    if ( p.ep >=0 ) ss << "ep " << Squares[p.ep]<< std::endl;
-    ss << "wk " << Squares[p.wk] << std::endl;
-    ss << "bk " << Squares[p.bk] << std::endl;
-    ss << "Turn " << (p.c == Co_White ? "white" : "black") << std::endl;
-    ss << "Phase " << gamePhase(p) << std::endl;
-    ss << "Hash " << computeHash(p) << std::endl;
+    ss << "# +-+-+-+-+-+-+-+-+" ;
+    ss << "#" << std::endl;
+    if ( p.ep >=0 ) ss << "# ep " << Squares[p.ep]<< std::endl;
+    ss << "# wk " << Squares[p.wk] << std::endl;
+    ss << "# bk " << Squares[p.bk] << std::endl;
+    ss << "# Turn " << (p.c == Co_White ? "white" : "black") << std::endl;
+    ss << "# Phase " << gamePhase(p) << std::endl;
+    ss << "# Hash " << computeHash(p) << std::endl;
+    ss << "# FEN " << GetFEN(p) << std::endl;
     return ss.str();
 }
 
@@ -530,14 +517,12 @@ const int mailbox64[64] = {
 
 bool Slide[6] = {false, false, true, true, true, false};
 int Offsets[6] = {8, 8, 4, 4, 8, 8};
-int Offset[6][8] = {
-   { -20, -10, -11, -9, 9, 11, 10, 20 },
-   { -21, -19, -12, -8, 8, 12, 19, 21 }, /* knight */
-   { -11,  -9,   9, 11, 0,  0,  0,  0 }, /* bishop */
-   { -10,  -1,   1, 10, 0,  0,  0,  0 }, /* rook */
-   { -11, -10,  -9, -1, 1,  9, 10, 11 }, /* queen */
-   { -11, -10,  -9, -1, 1,  9, 10, 11 }  /* king */
-};
+int Offset[6][8] = { { -20, -10, -11, -9, 9, 11, 10, 20 },
+                         { -21, -19, -12, -8, 8, 12, 19, 21 },    /* knight */
+                         { -11,  -9,   9, 11, 0,  0,  0,  0 },    /* bishop */
+                         { -10,  -1,   1, 10, 0,  0,  0,  0 },    /* rook */
+                         { -11, -10,  -9, -1, 1,  9, 10, 11 },    /* queen */
+                         { -11, -10,  -9, -1, 1,  9, 10, 11 } };  /* king */
 
 const ScoreType PST[6][64] = {
  {
@@ -694,8 +679,8 @@ namespace TimeMan{
          ms =  msecPerMove;
       }
       else if ( nbMoveInTC > 0){ // mps is given
-	 assert(msecWholeGame > 0);
-	 assert(nbMoveInTC > 0);
+ 	  assert(msecWholeGame > 0);
+	  assert(nbMoveInTC > 0);
          ms = int(0.95 * (msecWholeGame+((msecInc>0)?nbMoveInTC*msecInc:0)) / (float)nbMoveInTC);
       }
       else{ // mps is not given
@@ -897,7 +882,8 @@ Square kingSquare(const Position & p){
 
 bool apply(Position & p, const Move & m){
 
-   if ( m == INVALIDMOVE ) return false;
+   assert(m != INVALIDMOVE);
+   //if ( m == INVALIDMOVE ) return false;
 
    const Square from  = Move2From(m);
    const Square to    = Move2To(m);
@@ -1243,9 +1229,10 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   Move bestMove = INVALIDMOVE;
 
   // try the tt move 
-  if (false && e.h != 0) { // should be the cas thanks to iid at pvnode
+  if (e.h != 0) { // should be the case thanks to iid at pvnode
       Position p2 = p;
       if (apply(p2, e.m)) {
+          validMoveCount++;
           std::vector<Move> childPV;
           hashStack[ply] = p.h;
           ScoreType val = -pvs(-beta, -alpha, p2, depth - 1, pvnode, ply + 1, childPV, seldepth);
@@ -1268,10 +1255,10 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   if ( moves.empty() ) return isInCheck?-MATE + ply : 0;
   sort(moves,p,ply,&e);
 
-  //if (bestMove == INVALIDMOVE)  bestMove = moves[0]; // so that B_alpha are stored in TT
+  if (bestMove == INVALIDMOVE)  bestMove = moves[0]; // so that B_alpha are stored in TT
 
   for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
-     if (false && e.h != 0 && sameMove(e.m, *it)) continue; // already tried
+     if ( e.h != 0 && sameMove(e.m, *it)) continue; // already tried
      Position p2 = p;
      if ( ! apply(p2,*it) ) continue;
      const Square to = Move2To(*it);
@@ -1831,6 +1818,7 @@ void XBoard::xboard(){
                 if ( ! makeMove(move,true) ){
                     std::cout << "#Bad computer move !" << std::endl;
                     std::cout << ToString(position) << std::endl;
+                    mode = m_force;
                 }
                 stm = opponent(stm);
             }
@@ -1939,6 +1927,7 @@ void XBoard::xboard(){
                     commandOK = false;
                     std::cout << "#Bad opponent move !" << std::endl;
                     std::cout << ToString(position) << std::endl;
+                    mode = m_force;
                 }
                 else{
                     stm = opponent(stm);
