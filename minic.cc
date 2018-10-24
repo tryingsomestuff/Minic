@@ -1253,9 +1253,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
               alphaUpdated = true;
               updatePV(pv, e.m, childPV);
               if (val >= beta) {
-                  if (Move2Type(e.m) == T_std && !isInCheck) {
-                      updateHistoryKillers(p, depth, ply, e.m);
-                  }
+                  if (Move2Type(e.m) == T_std && !isInCheck) updateHistoryKillers(p, depth, ply, e.m);
                   TT::setEntry({ e.m,val,TT::B_beta,depth,computeHash(p) });
                   return val;
               }
@@ -1335,13 +1333,8 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      }
   }
 
-  if ( validMoveCount == 0 ){
-     return isInCheck?-MATE + ply : 0;
-  }
-
-  if ( bestMove != INVALIDMOVE && !stopFlag){
-     TT::setEntry({bestMove,alpha,alphaUpdated?TT::B_exact:TT::B_alpha,depth,computeHash(p)});
-  }
+  if ( validMoveCount == 0 ) return isInCheck?-MATE + ply : 0;
+  if ( bestMove != INVALIDMOVE && !stopFlag) TT::setEntry({bestMove,alpha,alphaUpdated?TT::B_exact:TT::B_alpha,depth,computeHash(p)});
 
   return stopFlag?STOPSCORE:alpha;
 }
@@ -1407,7 +1400,6 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
     }
 
     if (bestScore <= -MATE+1) break;
-
     if ( mateFinder && bestScore >= MATE - MAX_PLY ) break;
   }
 
@@ -1437,9 +1429,7 @@ bool readFEN(const std::string & fen, Position & p){
 
     std::cout << "# Reading fen " << fen << std::endl;
 
-    for(Square k = 0 ; k < 64 ; ++k){
-       p.b[k] = P_none;
-    }
+    for(Square k = 0 ; k < 64 ; ++k) p.b[k] = P_none;
 
     Square j = 1;
     Square i = 0;
@@ -1512,9 +1502,7 @@ bool readFEN(const std::string & fen, Position & p){
             std::cout << "#No castling right given" << std::endl;
         }
     }
-    else{
-        std::cout << "#No castling right given" << std::endl;
-    }
+    else std::cout << "#No castling right given" << std::endl;
 
     // read en passant and save it (default is invalid)
     p.ep = -1;
@@ -1536,9 +1524,7 @@ bool readFEN(const std::string & fen, Position & p){
             return false;
         }
     }
-    else{
-        std::cout << "#No en passant square given" << std::endl;
-    }
+    else std::cout << "#No en passant square given" << std::endl;
 
     // read 50 moves rules
     if (strList.size() >= 5){
@@ -1547,9 +1533,7 @@ bool readFEN(const std::string & fen, Position & p){
         ss >> tmp;
         p.fifty = tmp;
     }
-    else{
-        p.fifty = 0;
-    }
+    else p.fifty = 0;
 
     // read number of move
     if (strList.size() >= 6){
@@ -1558,9 +1542,7 @@ bool readFEN(const std::string & fen, Position & p){
         ss >> tmp;
         p.moves = tmp;
     }
-    else{
-        p.moves = 1;
-    }
+    else p.moves = 1;
 
     p.h = 0;
     p.h = computeHash(p);
@@ -1598,31 +1580,19 @@ Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc, bool 
    if ( depth == 0) return 0;
    std::vector<Move> moves;
    generate(p,moves);
-   if ( depth == 1 ){
-      acc.pseudoNodes += moves.size();
-   }
+   if ( depth == 1 ) acc.pseudoNodes += moves.size();
    int validMoves = 0;
    for(auto it = moves.begin() ; it != moves.end() ; ++it){
      Position p2 = p;
      if ( ! apply(p2,*it) ) continue;
      ++validMoves;
-     if ( divide && depth == 2 ){
-        std::cout << "#" << ToString(p2) << std::endl;
-     }
+     if ( divide && depth == 2 ) std::cout << "#" << ToString(p2) << std::endl;
      Counter nNodes = perft(p2,depth-1,acc,divide);
-     if ( divide && depth == 2 ){
-        std::cout << "#=> after " << ToString(*it) << " " << nNodes << std::endl;
-     }
-     if ( divide && depth == 1 ){
-        std::cout << "#" << (int)depth << " " <<  ToString(*it) << std::endl;
-     }
+     if ( divide && depth == 2 ) std::cout << "#=> after " << ToString(*it) << " " << nNodes << std::endl;
+     if ( divide && depth == 1 ) std::cout << "#" << (int)depth << " " <<  ToString(*it) << std::endl;
    }
-   if ( depth == 1 ){
-      acc.validNodes += validMoves;
-   }
-   if ( divide && depth == 2 ){
-      std::cout << "#********************" << std::endl;
-   }
+   if ( depth == 1 ) acc.validNodes += validMoves;
+   if ( divide && depth == 2 ) std::cout << "#********************" << std::endl;
    return acc.validNodes;
 }
 
@@ -1699,7 +1669,6 @@ namespace XBoard{
 
    bool makeMove(Move m,bool disp){
       if ( disp && m != INVALIDMOVE) std::cout << "move " << ToString(m) << std::endl;
-
       std::cout << ToString(position) << std::endl;
       return apply(position,m);
    }
@@ -1755,15 +1724,11 @@ bool readMove(const Color c, const std::string & ss, Square & from, Square & to,
     std::string str(ss);
 
     // add space to go to own internal notation
-    if ( str != "0-0" && str != "0-0-0" && str != "O-O" && str != "O-O-O" ){
-        str.insert(2," ");
-    }
+    if ( str != "0-0" && str != "0-0-0" && str != "O-O" && str != "O-O-O" ) str.insert(2," ");
 
     std::vector<std::string> strList;
     std::stringstream iss(str);
-    std::copy(std::istream_iterator<std::string>(iss),
-              std::istream_iterator<std::string>(),
-              back_inserter(strList));
+    std::copy(std::istream_iterator<std::string>(iss), std::istream_iterator<std::string>(), back_inserter(strList));
 
     moveType = T_std;
     if ( strList.empty()){
@@ -1832,9 +1797,7 @@ bool readMove(const Color c, const std::string & ss, Square & from, Square & to,
             std::cout << "#Trying to read bad move, invalid to square " << str << std::endl;
             return false;
         }
-
     }
-
     return true;
 }
 
@@ -1886,18 +1849,10 @@ void XBoard::xboard(){
             // read next command !
             readLine();
 
-            if ( command == "force"){
-                mode = m_force;
-            }
-            else if ( command == "xboard"){
-                std::cout << "#This is minic!" << std::endl;
-            }
-            else if ( command == "post"){
-                display = true;
-            }
-            else if ( command == "nopost"){
-                display = false;
-            }
+            if ( command == "force")        mode = m_force;
+            else if ( command == "xboard")  std::cout << "#This is minic!" << std::endl;
+            else if ( command == "post")    display = true;
+            else if ( command == "nopost")  display = false;
             else if ( command == "computer"){
                 // nothing !
             }
