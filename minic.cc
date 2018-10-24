@@ -1226,13 +1226,43 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      TT::getEntry(computeHash(p), depth, e);
   }
 
+  int validMoveCount = 0;
+  bool alphaUpdated = false;
+  Move bestMove = INVALIDMOVE;
+
+  // try the tt move 
+  if (e.h != 0) { // should be the cas thanks to iid at pvnode
+      Position p2 = p;
+      if (apply(p2, e.m)) {
+          std::vector<Move> childPV;
+          hashStack[ply] = p.h;
+          ScoreType val = -pvs(-beta, -alpha, p2, depth - 1, pvnode, ply + 1, childPV, seldepth);
+          if (!stopFlag && val > alpha) {
+              alphaUpdated = true;
+              pv.clear();
+              pv.push_back(e.m);
+              std::copy(childPV.begin(), childPV.end(), std::back_inserter(pv));
+              if (val >= beta) {
+                  if (Move2Type(e.m) == T_std && !isInCheck) {
+                      KillerT::killers[1][ply] = KillerT::killers[0][ply];
+                      KillerT::killers[0][ply] = e.m;
+                      HistoryT::update(depth, e.m, p, true);
+                  }
+                  TT::setEntry({ e.m,val,TT::B_beta,depth,computeHash(p) });
+                  return val;
+              }
+              alpha = val;
+          }
+      }
+  }
+
   std::vector<Move> moves;
   generate(p,moves);
   if ( moves.empty() ) return isInCheck?-MATE + ply : 0;
   sort(moves,p,ply,&e);
-  int validMoveCount = 0;
-  bool alphaUpdated = false;
-  Move bestMove = INVALIDMOVE;
+
+  if (bestMove == INVALIDMOVE)  bestMove = moves[0]; // so that B_alpha are stored in TT
+
   for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
      Position p2 = p;
      if ( ! apply(p2,*it) ) continue;
