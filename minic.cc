@@ -1149,6 +1149,18 @@ ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned 
   return val;
 }
 
+inline void updatePV(std::vector<Move> & pv, const Move & m, const std::vector<Move> & childPV) {
+    pv.clear();
+    pv.push_back(m);
+    std::copy(childPV.begin(), childPV.end(), std::back_inserter(pv));
+}
+
+inline void updateHistoryKillers(const Position & p, DepthType depth, int ply, const Move m) {
+    KillerT::killers[1][ply] = KillerT::killers[0][ply];
+    KillerT::killers[0][ply] = m;
+    HistoryT::update(depth, m, p, true);
+}
+
 ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth){
   if ( std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()) > currentMoveMs ){
     stopFlag = true;
@@ -1239,19 +1251,16 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
           ScoreType val = -pvs(-beta, -alpha, p2, depth - 1, pvnode, ply + 1, childPV, seldepth);
           if (!stopFlag && val > alpha) {
               alphaUpdated = true;
-              pv.clear();
-              pv.push_back(e.m);
-              std::copy(childPV.begin(), childPV.end(), std::back_inserter(pv));
+              updatePV(pv, e.m, childPV);
               if (val >= beta) {
                   if (Move2Type(e.m) == T_std && !isInCheck) {
-                      KillerT::killers[1][ply] = KillerT::killers[0][ply];
-                      KillerT::killers[0][ply] = e.m;
-                      HistoryT::update(depth, e.m, p, true);
+                      updateHistoryKillers(p, depth, ply, e.m);
                   }
                   TT::setEntry({ e.m,val,TT::B_beta,depth,computeHash(p) });
                   return val;
               }
               alpha = val;
+              bestMove = e.m;
           }
       }
   }
@@ -1264,6 +1273,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   if (bestMove == INVALIDMOVE)  bestMove = moves[0]; // so that B_alpha are stored in TT
 
   for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
+     if (e.h != 0 && sameMove(e.m, *it)) continue; // already tried
      Position p2 = p;
      if ( ! apply(p2,*it) ) continue;
      const Square to = Move2To(*it);
@@ -1307,14 +1317,10 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
 
      if ( !stopFlag && val > alpha ){
         alphaUpdated = true;
-        pv.clear();
-        pv.push_back(*it);
-        std::copy(childPV.begin(),childPV.end(),std::back_inserter(pv));
+        updatePV(pv, *it, childPV);
         if ( val >= beta ){
            if ( Move2Type(*it) == T_std && !isInCheck){
-              KillerT::killers[1][ply] = KillerT::killers[0][ply];
-              KillerT::killers[0][ply] = *it;
-              HistoryT::update(depth,*it,p,true);
+              updateHistoryKillers(p, depth, ply, *it);
               for(auto it2 = moves.begin() ; *it2!=*it; ++it2){
                   if ( Move2Type(*it2) == T_std ){
                      HistoryT::update(depth,*it2,p,false);
