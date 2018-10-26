@@ -3,7 +3,7 @@ A simple chess engine to learn and play with.
 Code size shall not go above 2000sloc  
 Minic stands for "Minimal Chess"  
 
-# Strenght :
+## Strenght 
 Quite poor for a chess engine but already way to strong for me !
 
 Rank Name                          Elo     +/-   Games   Score   Draws
