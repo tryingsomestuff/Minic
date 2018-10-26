@@ -6,11 +6,12 @@ Minic stands for "Minimal Chess"
 ## Strenght 
 Quite poor for a chess engine but already way to strong for me !
 
+`
 Rank Name                          Elo     +/-   Games   Score   Draws  
    1 fairymax                      104      18    1178   64.5%   21.8%  
    2 Minic                         -41      16    1178   44.2%   33.0%  
    3 tscp181                       -61      18    1178   41.3%   23.3%  
-
+`
 
 ## How to compile:  
 * Linux : use the given build script (or make your own ...)  
