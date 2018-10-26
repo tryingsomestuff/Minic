@@ -2,7 +2,7 @@
 A simple chess engine to learn and play with.  
 Code size shall not go above 2000sloc.  
 Minic stands for "Minimal Chess".
-Minic is smaller than tspc but at least as strong.
+Minic is smaller than tscp but at least as strong.
 
 ## Strenght 
 Quite poor for a chess engine but already way to strong for me !
