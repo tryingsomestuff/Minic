@@ -65,19 +65,15 @@ const int lmpLimit[][lmpMaxDepth + 1] = {
 int lmrReduction[MAX_DEPTH][MAX_MOVE];
 
 void init_lmr(){
-    int d, m;
-    for (d = 0; d < MAX_DEPTH; d++)
-        for (m = 0; m < MAX_MOVE; m++)
-            lmrReduction[d][m] = (int)sqrt(d * m / 8);
+    for (int d = 0; d < MAX_DEPTH; d++)
+        for (int m = 0; m < MAX_MOVE; m++)
+            lmrReduction[d][m] = (int)sqrt(float(d) * m / 8.f);
 }
 
-const unsigned int ttSizeMb = 128; // here in Mb, will be converted to real size next
-
+const unsigned int ttSizeMb  = 128; // here in Mb, will be converted to real size next
 const unsigned int ttESizeMb = 128; // here in Mb, will be converted to real size next 
 
 bool mateFinder = false;
-
-
 
 Hash hashStack[MAX_PLY] = { 0 };
 ScoreType scoreStack[MAX_PLY] = { 0 };
@@ -101,19 +97,9 @@ struct Stats{
 Stats stats;
 
 enum Piece : char{
-   P_bk = -6,
-   P_bq = -5,
-   P_br = -4,
-   P_bb = -3,
-   P_bn = -2,
-   P_bp = -1,
+   P_bk = -6,   P_bq = -5,   P_br = -4,   P_bb = -3,   P_bn = -2,   P_bp = -1,
    P_none = 0,
-   P_wp = 1,
-   P_wn = 2,
-   P_wb = 3,
-   P_wr = 4,
-   P_wq = 5,
-   P_wk = 6
+   P_wp = 1,    P_wn = 2,    P_wb = 3,    P_wr = 4,    P_wq = 5,    P_wk = 6
 };
 
 const int PieceShift = 6;
@@ -142,13 +128,7 @@ enum Sq : char {
     Sq_a8 = 56,Sq_b8,Sq_c8,Sq_d8,Sq_e8,Sq_f8,Sq_g8,Sq_h8
 };
 
-enum Castling : char{
-   C_none= 0,
-   C_wks = 1,
-   C_wqs = 2,
-   C_bks = 4,
-   C_bqs = 8
-};
+enum Castling : char{  C_none= 0,   C_wks = 1,   C_wqs = 2,   C_bks = 4,   C_bqs = 8 };
 
 int MvvLvaScores[6][6];
 
@@ -166,25 +146,12 @@ enum MType : char{
    T_capture    = 1,
    T_ep         = 2,
    T_check      = 3, // not used yet
-   T_promq      = 4,
-   T_promr      = 5,
-   T_promb      = 6,
-   T_promn      = 7,
-   T_cappromq   = 8,
-   T_cappromr   = 9,
-   T_cappromb   = 10,
-   T_cappromn   = 11,
-   T_wks        = 12,
-   T_wqs        = 13,
-   T_bks        = 14,
-   T_bqs        = 15
+   T_promq      = 4,   T_promr      = 5,   T_promb      = 6,   T_promn      = 7,   
+   T_cappromq   = 8,   T_cappromr   = 9,   T_cappromb   = 10,  T_cappromn   = 11, 
+   T_wks        = 12,   T_wqs       = 13,  T_bks        = 14,  T_bqs        = 15
 };
 
-enum Color : char{
-   Co_None  = -1,
-   Co_White = 0,
-   Co_Black = 1
-};
+enum Color : char{ Co_None  = -1,   Co_White = 0,   Co_Black = 1 };
 
 // ttmove 3000, promcap >1000, cap, checks, killers, castling, other by history < 200.
 ScoreType MoveScoring[16] = { 0, 1000, 1100, 300, 950, 500, 350, 300, 1950, 1500, 1350, 1300, 250, 250, 250, 250 };
@@ -205,7 +172,7 @@ struct Position{
   Color c;
 };
 
-inline Piece getPieceIndex(const Position &p, Square k) { assert(k >= 0 && k < 64); return Piece(p.b[k] + PieceShift); }
+inline Piece getPieceIndex (const Position &p, Square k){ assert(k >= 0 && k < 64); return Piece(p.b[k] + PieceShift); }
 
 inline Piece getPieceType  (const Position &p, Square k){ assert(k >= 0 && k < 64); return (Piece)std::abs(p.b[k]);}
 
@@ -241,11 +208,9 @@ Hash randomInt(){
 Hash ZT[64][14]; // should be 13 but last ray is for castling[0 7 56 63][13] and ep [k][13] and color [3 4][13]
 
 void initHash(){
-   for(int k = 0 ; k < 64 ; ++k){
-      for(int j = 0 ; j < 14 ; ++j){
+   for(int k = 0 ; k < 64 ; ++k)
+      for(int j = 0 ; j < 14 ; ++j)
          ZT[k][j] = randomInt();
-      }
-   }
 }
 
 Hash computeHash(const Position &p){
@@ -253,9 +218,7 @@ Hash computeHash(const Position &p){
    Hash h = 0;
    for (int k = 0; k < 64; ++k){
       const Piece pp = p.b[k];
-      if ( pp != P_none){
-        h ^= ZT[k][pp+PieceShift];
-      }
+      if ( pp != P_none) h ^= ZT[k][pp+PieceShift];
    }
    if ( p.ep != INVALIDSQUARE ) h ^= ZT[p.ep][13];
    if ( p.castling & C_wks)     h ^= ZT[7][13];
@@ -269,11 +232,7 @@ Hash computeHash(const Position &p){
 }
 
 struct TT{
-   enum Bound{
-      B_exact = 0,
-      B_alpha = 1,
-      B_beta  = 2
-   };
+   enum Bound{ B_exact = 0,      B_alpha = 1,      B_beta  = 2 };
    struct Entry{
       Entry():m(INVALIDMOVE),score(0),b(B_alpha),d(-1),h(0){}
       Entry(Move m, int s, Bound b, DepthType d, Hash h) : m(m), score(m), b(b), d(d), h(h){}
@@ -302,6 +261,13 @@ struct TT{
       ttSize = powerFloor(ttSizeMb * 1024 * 1024 / (unsigned int)sizeof(Bucket));
       table = new Bucket[ttSize];
       std::cout << "Size of TT " << ttSize * sizeof(Bucket) / 1024 / 1024 << "Mb" << std::endl;
+   }
+
+   static void clearTT() {
+       for (unsigned int k = 0; k < ttSize; ++k) {
+           table[k].e[0] = { INVALIDMOVE, 0, B_alpha, 0, 0 };
+           table[k].e[1] = { INVALIDMOVE, 0, B_alpha, 0, 0 };
+       }
    }
 
    static bool getEntry(Hash h, DepthType d, Entry & e, int nbuck = 0) {
@@ -343,6 +309,12 @@ struct TT{
        std::cout << "Size of ETT " << ttESize * sizeof(EvalEntry) / 1024 / 1024 << "Mb" << std::endl;
    }
 
+   static void clearETT() {
+       for (unsigned int k = 0; k < ttESize; ++k) {
+           evalTable[k] = { 0, 0., 0 };
+       }
+   }
+
    static bool getEvalEntry(Hash h, ScoreType & score, float & gp) {
        assert(h > 0);
        const EvalEntry & _e = evalTable[h%ttESize];
@@ -367,27 +339,21 @@ unsigned int    TT::ttESize   = 0;
 namespace KillerT{
    Move killers[2][MAX_PLY];
    void initKillers(){
-      for(int i = 0; i < 2; ++i){
-          for(int k = 0 ; k < MAX_PLY; ++k){
+      for(int i = 0; i < 2; ++i)
+          for(int k = 0 ; k < MAX_PLY; ++k)
               killers[i][k] = INVALIDMOVE;
-          }
-      }
    }
 };
 
 namespace HistoryT{
    ScoreType history[13][64];
    void initHistory(){
-      for(int i = 0; i < 13; ++i){
-          for(int k = 0 ; k < 64; ++k){
+      for(int i = 0; i < 13; ++i)
+          for(int k = 0 ; k < 64; ++k)
               history[i][k] = 0;
-          }
-      }
    }
    inline void update(DepthType depth, Move m, const Position & p, bool plus){
-       if ( Move2Type(m) == T_std ){
-          history[getPieceIndex(p,Move2From(m))][Move2To(m)] += ScoreType( (plus?+1:-1) * (depth*depth/6.f) - (history[getPieceIndex(p,Move2From(m))][Move2To(m)] * depth*depth/6.f / 200.f));
-       }
+       if ( Move2Type(m) == T_std ) history[getPieceIndex(p,Move2From(m))][Move2To(m)] += ScoreType( (plus?+1:-1) * (depth*depth/6.f) - (history[getPieceIndex(p,Move2From(m))][Move2To(m)] * depth*depth/6.f / 200.f));
    }
 };
 
@@ -465,7 +431,7 @@ std::string ToString(const Move & m, bool withScore = false){ ///@todo use less 
    if ( m == INVALIDMOVE ) return "invalid move";
    std::stringstream ss;
    std::string prom;
-   std::string score = (withScore ? " (" + std::to_string(Move2Score(m)) + ")" : "");
+   const std::string score = (withScore ? " (" + std::to_string(Move2Score(m)) + ")" : "");
    switch (Move2Type(m)) {
    case T_bks:
    case T_wks:
@@ -475,31 +441,9 @@ std::string ToString(const Move & m, bool withScore = false){ ///@todo use less 
    case T_wqs:
        return "O-O-O" + score;
        break;
-   case T_promq:
-       prom = "q";
-       break;
-   case T_promr:
-       prom = "r";
-       break;
-   case T_promb:
-       prom = "b";
-       break;
-   case T_promn:
-       prom = "n";
-       break;
-   case T_cappromq:
-       prom = "q";
-       break;
-   case T_cappromr:
-       prom = "r";
-       break;
-   case T_cappromb:
-       prom = "b";
-       break;
-   case T_cappromn:
-       prom = "n";
-       break;
    default:
+       static const std::string suffixe[] = { "","","","","q","r","b","n","q","r","b","n" };
+       prom = suffixe[Move2Type(m)];
        break;
    }
    ss << Squares[Move2From(m)] << Squares[Move2To(m)];
@@ -580,12 +524,12 @@ const int mailbox64[64] = {
 
 bool Slide[6] = {false, false, true, true, true, false};
 int Offsets[6] = {8, 8, 4, 4, 8, 8};
-int Offset[6][8] = { { -20, -10, -11, -9, 9, 11, 10, 20 },
-                         { -21, -19, -12, -8, 8, 12, 19, 21 },    /* knight */
-                         { -11,  -9,   9, 11, 0,  0,  0,  0 },    /* bishop */
-                         { -10,  -1,   1, 10, 0,  0,  0,  0 },    /* rook */
-                         { -11, -10,  -9, -1, 1,  9, 10, 11 },    /* queen */
-                         { -11, -10,  -9, -1, 1,  9, 10, 11 } };  /* king */
+int Offset[6][8] = { { -20, -10, -11, -9, 9, 11, 10, 20 },    /* pawn */
+                     { -21, -19, -12, -8, 8, 12, 19, 21 },    /* knight */
+                     { -11,  -9,   9, 11, 0,  0,  0,  0 },    /* bishop */
+                     { -10,  -1,   1, 10, 0,  0,  0,  0 },    /* rook */
+                     { -11, -10,  -9, -1, 1,  9, 10, 11 },    /* queen */
+                     { -11, -10,  -9, -1, 1,  9, 10, 11 } };  /* king */
 
 const ScoreType PST[6][64] = {
  {
@@ -1407,6 +1351,9 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
   stats.init();
   KillerT::initKillers();
   HistoryT::initHistory();
+
+  TT::clearTT();
+  TT::clearETT();
 
   TimeMan::startTime = Clock::now();
 
