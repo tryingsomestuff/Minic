@@ -15,7 +15,27 @@
 #include <unistd.h>
 #endif
 
-const std::string MinicVersion = "0.6";
+const std::string MinicVersion = "0.7";
+
+typedef std::chrono::high_resolution_clock Clock;
+typedef char DepthType;
+typedef int Move;    // invalid if < 0
+typedef char Square; // invalid if < 0
+typedef unsigned long long int Hash; // invalid if == 0
+typedef unsigned long long int Counter;
+typedef short int ScoreType;
+
+#define STOPSCORE   ScoreType(20000)
+#define INFSCORE    ScoreType(10000)
+#define MATE        ScoreType(9000)
+#define INVALIDMOVE    -1
+#define INVALIDSQUARE  -1
+#define MAX_PLY       512
+#define MAX_MOVE      512
+#define MAX_DEPTH     64
+
+#define SQFILE(s) (s%8)
+#define SQRANK(s) (s/8)
 
 const bool doWindow         = true;
 const bool doPVS            = true;
@@ -27,29 +47,40 @@ const bool doStaticNullMove = true;
 const bool doRazoring       = true;
 const bool doQFutility      = true;
 
+const ScoreType qfutilityMargin          = 128;
+const int       staticNullMoveMaxDepth   = 3;
+const ScoreType staticNullMoveDepthCoeff = 160;
+const ScoreType razoringMargin           = 200;
+const int       razoringMaxDepth         = 3;
+const int       nullMoveMinDepth         = 2;
+const int       lmpMaxDepth              = 10;
+const ScoreType futilityDepthCoeff       = 160;
+const int       iidMinDepth              = 5;
+const int       lmrMinDepth              = 3;
+
+const int lmpLimit[][lmpMaxDepth + 1] = {
+    { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 } , // improved
+    { 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };// not improving
+
+int lmrReduction[MAX_DEPTH][MAX_MOVE];
+
+void init_lmr(){
+    int d, m;
+    for (d = 0; d < MAX_DEPTH; d++)
+        for (m = 0; m < MAX_MOVE; m++)
+            lmrReduction[d][m] = (int)sqrt(d * m / 8);
+}
+
 const unsigned int ttSizeMb = 128; // here in Mb, will be converted to real size next
 
-typedef std::chrono::high_resolution_clock Clock;
-typedef char DepthType;
-typedef int Move;    // invalid if < 0
-typedef char Square; // invalid if < 0
-typedef unsigned long long int Hash; // invalid if == 0
-typedef unsigned long long int Counter;
-typedef short int ScoreType;
+const unsigned int ttESizeMb = 128; // here in Mb, will be converted to real size next 
 
 bool mateFinder = false;
 
-#define STOPSCORE   ScoreType(20000)
-#define INFSCORE    ScoreType(10000)
-#define MATE        ScoreType(9000)
-#define INVALIDMOVE    -1
-#define INVALIDSQUARE  -1
-#define MAX_PLY       512
 
-#define SQFILE(s) (s%8)
-#define SQRANK(s) (s/8)
 
 Hash hashStack[MAX_PLY] = { 0 };
+ScoreType scoreStack[MAX_PLY] = { 0 };
 
 std::string startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 std::string fine70 = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - -";
@@ -296,10 +327,42 @@ struct TT{
       Entry & _eDepth = table[e.h%ttSize].e[1];
       if ( e.d >= _eDepth.d ) _eDepth = e; // replace if better depth
    }
+
+   struct EvalEntry {
+       ScoreType score;
+       float gp;
+       Hash h;
+   };
+
+   static unsigned int ttESize;
+   static EvalEntry * evalTable;
+
+   static void initETable() {
+       ttESize = powerFloor(ttESizeMb * 1024 * 1024 / (unsigned int)sizeof(EvalEntry));
+       evalTable = new EvalEntry[ttESize];
+       std::cout << "Size of ETT " << ttESize * sizeof(EvalEntry) / 1024 / 1024 << "Mb" << std::endl;
+   }
+
+   static bool getEvalEntry(Hash h, ScoreType & score, float & gp) {
+       assert(h > 0);
+       const EvalEntry & _e = evalTable[h%ttESize];
+       if (_e.h != h) return false;
+       score = _e.score;
+       gp = _e.gp;
+       return true;
+   }
+
+   static void setEvalEntry(const EvalEntry & e) {
+       assert(e.h > 0);
+       evalTable[e.h%ttESize] = e; // always replace
+   }
+   
 };
 
-TT::Bucket * TT::table = 0;
-unsigned int TT::ttSize = 0;
+TT::Bucket *    TT::table     = 0;
+TT::EvalEntry * TT::evalTable = 0;
+unsigned int    TT::ttSize    = 0;
+unsigned int    TT::ttESize   = 0;
 
 namespace KillerT{
    Move killers[2][MAX_PLY];
@@ -1121,7 +1184,7 @@ ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned 
 
   for(auto it = moves.begin() ; it != moves.end() ; ++it){
      // qfutility
-     if ( doQFutility && !isInCheck && val + 128 + std::abs(getValue(p,Move2To(*it))) <= alpha) continue;
+     if ( doQFutility && !isInCheck && val + qfutilityMargin + std::abs(getValue(p,Move2To(*it))) <= alpha) continue;
      Position p2 = p;
      if ( ! apply(p2,*it) ) continue;
      if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply;
@@ -1178,28 +1241,35 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
       }
   }
 
+  const bool isInCheck = isAttacked(p, kingSquare(p));
   float gp = 0;
-  ScoreType val = eval(p, gp);
+  ScoreType val;
+  if (isInCheck) val = -MATE + ply;
+  else if (!TT::getEvalEntry(computeHash(p), val, gp)) {
+      val = eval(p, gp);
+      TT::setEvalEntry({ val, gp, computeHash(p) });
+  }
+  scoreStack[ply] = val;
+
   bool futility = false;
   bool lmp = false;
-  const bool isInCheck = isAttacked(p,kingSquare(p));
-
+  
   // prunings
   if ( !mateFinder && !rootnode && gp > 0.2 && !pvnode && !isInCheck
       && std::abs(alpha) < MATE-MAX_PLY && std::abs(beta) < MATE-MAX_PLY ){
 
      // static null move
-     if ( doStaticNullMove && depth <= 3 && val >= beta + 160*depth ) return val;
+     if ( doStaticNullMove && depth <= staticNullMoveMaxDepth && val >= beta + staticNullMoveDepthCoeff *depth ) return val;
 
      // razoring
-     int rAlpha = alpha - 200;
-     if ( doRazoring && depth <= 3 && val <= rAlpha ){
-         val = qsearch(rAlpha,rAlpha+1,p,ply,seldepth);
-         if ( ! stopFlag && val <= alpha ) return val;
+     int rAlpha = alpha - razoringMargin;
+     if ( doRazoring && depth <= razoringMaxDepth && val <= rAlpha ){
+         ScoreType qval = qsearch(rAlpha,rAlpha+1,p,ply,seldepth);
+         if ( ! stopFlag && qval <= alpha ) return qval;
      }
 
      // null move
-     if ( doNullMove && pv.size() > 1 && depth >= 2 && p.ep == INVALIDSQUARE && val >= beta){
+     if ( doNullMove && pv.size() > 1 && depth >= nullMoveMinDepth && p.ep == INVALIDSQUARE && val >= beta){
        Position pN = p;
        pN.c = Color((pN.c+1)%2);
        p.h ^= ZT[3][13];
@@ -1211,14 +1281,14 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      }
 
      // LMP
-     if (doLMP && depth <= 10 ) lmp = true;
+     if (doLMP && depth <= lmpMaxDepth) lmp = true;
 
      // futility
-     if (doFutility && val <= alpha - 160*depth ) futility = true;
+     if (doFutility && val <= alpha - futilityDepthCoeff *depth ) futility = true;
   }
 
   // IID
-  if ( e.h == 0 && pvnode && depth >= 5 ){
+  if ( e.h == 0 && pvnode && depth >= iidMinDepth){
     std::vector<Move> iidPV;
      pvs(alpha,beta,p,depth/2,pvnode,ply,iidPV,seldepth);
      TT::getEntry(computeHash(p), depth, e);
@@ -1235,16 +1305,16 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
           validMoveCount++;
           std::vector<Move> childPV;
           hashStack[ply] = p.h;
-          ScoreType val = -pvs(-beta, -alpha, p2, depth - 1, pvnode, ply + 1, childPV, seldepth);
-          if (!stopFlag && val > alpha) {
+          ScoreType ttval = -pvs(-beta, -alpha, p2, depth - 1, pvnode, ply + 1, childPV, seldepth);
+          if (!stopFlag && ttval > alpha) {
               alphaUpdated = true;
               updatePV(pv, e.m, childPV);
-              if (val >= beta) {
+              if (ttval >= beta) {
                   if (Move2Type(e.m) == T_std && !isInCheck) updateHistoryKillers(p, depth, ply, e.m);
-                  TT::setEntry({ e.m,val,TT::B_beta,depth,computeHash(p) });
-                  return val;
+                  TT::setEntry({ e.m,ttval,TT::B_beta,depth,computeHash(p) });
+                  return ttval;
               }
-              alpha = val;
+              alpha = ttval;
               bestMove = e.m;
           }
       }
@@ -1256,6 +1326,8 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   sort(moves,p,ply,&e);
 
   if (bestMove == INVALIDMOVE)  bestMove = moves[0]; // so that B_alpha are stored in TT
+
+  bool improving = (!isInCheck && ply >= 2 && val >= scoreStack[ply - 2]);
 
   for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
      if ( e.h != 0 && sameMove(e.m, *it)) continue; // already tried
@@ -1278,16 +1350,17 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         int reduction = 0;
         bool isCheck = isAttacked(p2, kingSquare(p2));
         bool isAdvancedPawnPush = getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
+        bool isPrunable = !isInCheck && !isCheck && !isAdvancedPawnPush && Move2Type(*it) == T_std && !sameMove(*it, KillerT::killers[0][ply]) && !sameMove(*it, KillerT::killers[1][ply]);
         // futility
-        if ( futility && !isAdvancedPawnPush  && Move2Type(*it) == T_std && !isCheck) continue;
+        if ( futility && isPrunable) continue;
         // LMP
-        if ( lmp && !isCheck && !isAdvancedPawnPush && Move2Type(*it) == T_std && validMoveCount >= 3*depth ) continue;
+        if ( lmp && isPrunable && validMoveCount >= lmpLimit[0][depth] ) continue;
         // LMR
-        if ( doLMR && !mateFinder && depth >= 3 && !isInCheck && !isCheck && !isAdvancedPawnPush
-            && Move2Type(*it) == T_std && validMoveCount > 4
+        if ( doLMR && !mateFinder && depth >= lmrMinDepth && isPrunable
             && std::abs(alpha) < MATE-MAX_PLY && std::abs(beta) < MATE-MAX_PLY )
-            reduction = int(1+sqrt(depth*validMoveCount/8));
+            reduction = lmrReduction[std::min((int)depth,MAX_DEPTH-1)][validMoveCount];
         if (pvnode && reduction > 0) --reduction;
+        if (!improving) ++reduction;
         // PVS
         val = -pvs(-alpha-1,-alpha,p2,depth-1-reduction+extension,false,ply+1,childPV,seldepth);
         if ( reduction > 0 && val > alpha ){
@@ -1700,7 +1773,7 @@ Square stringToSquare(const std::string & str){
    return rank * 8 + file;
 }
 
-bool readMove(const Color c, const std::string & ss, Square & from, Square & to, MType & moveType ) {
+bool readMove(const Position & p, const std::string & ss, Square & from, Square & to, MType & moveType ) {
 
     if ( ss.empty()){
         std::cout << "#Trying to read empty move ! " << std::endl;
@@ -1725,11 +1798,11 @@ bool readMove(const Color c, const std::string & ss, Square & from, Square & to,
 
     // detect special move
     if (strList[0] == "0-0" || strList[0] == "O-O"){
-        if ( c == Co_White ) moveType = T_wks;
+        if ( p.c == Co_White ) moveType = T_wks;
         else moveType = T_bks;
     }
     else if (strList[0] == "0-0-0" || strList[0] == "O-O-O"){
-        if ( c == Co_White) moveType = T_wqs;
+        if ( p.c == Co_White) moveType = T_wqs;
         else moveType = T_bqs;
     }
     else{
@@ -1751,6 +1824,8 @@ bool readMove(const Color c, const std::string & ss, Square & from, Square & to,
             return false;
         }
 
+        bool isCapture = false;
+
         // be carefull, promotion possible !
         if (strList[1].size() >= 2 && (strList[1].at(0) >= 'a') && (strList[1].at(0) <= 'h') &&
                 ((strList[1].at(1) >= '1') && (strList[1].at(1) <= '8'))) {
@@ -1767,10 +1842,12 @@ bool readMove(const Color c, const std::string & ss, Square & from, Square & to,
                    prom = strListTo[1];
                 }
 
-                if      ( prom == "Q" || prom == "q") moveType = T_promq;
-                else if ( prom == "R" || prom == "r") moveType = T_promr;
-                else if ( prom == "B" || prom == "b") moveType = T_promb;
-                else if ( prom == "N" || prom == "n") moveType = T_promn;
+                isCapture = p.b[to] != P_none;
+
+                if      ( prom == "Q" || prom == "q") moveType = isCapture ? T_cappromq : T_promq;
+                else if ( prom == "R" || prom == "r") moveType = isCapture ? T_cappromr : T_promr;
+                else if ( prom == "B" || prom == "b") moveType = isCapture ? T_cappromb : T_promb;
+                else if ( prom == "N" || prom == "n") moveType = isCapture ? T_cappromn : T_promn;
                 else{
                     std::cout << "#Trying to read bad move, invalid to square " << str << std::endl;
                     return false;
@@ -1778,6 +1855,7 @@ bool readMove(const Color c, const std::string & ss, Square & from, Square & to,
             }
             else{
                to = stringToSquare(strList[1]);
+               isCapture = p.b[to] != P_none;
             }
         }
         else {
@@ -1785,6 +1863,9 @@ bool readMove(const Color c, const std::string & ss, Square & from, Square & to,
             return false;
         }
     }
+
+    if (getPieceType(p,from) == P_wp && to == p.ep) moveType = T_ep;
+
     return true;
 }
 
@@ -1909,7 +1990,7 @@ void XBoard::xboard(){
                 Square from = INVALIDSQUARE;
                 Square to   = INVALIDSQUARE;
                 MType mtype = T_std;
-                readMove(position.c,mstr,from,to,mtype);
+                readMove(position,mstr,from,to,mtype);
                 Move m = ToMove(from,to,mtype);
                 bool whiteToMove = position.c==Co_White;
                 // convert castling Xboard notation to internal castling style if needed
@@ -2065,8 +2146,9 @@ int main(int argc, char ** argv){
 
    initHash();
    TT::initTable();
+   TT::initETable();
    stats.init();
-
+   init_lmr();
    initMvvLva();
 
    std::string cli = argv[1];
