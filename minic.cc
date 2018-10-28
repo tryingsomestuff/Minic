@@ -192,13 +192,13 @@ inline ScoreType Move2Score(Move h) { assert(h != INVALIDMOVE); return (h >> 16)
 inline Square    Move2From (Move h) { assert(h != INVALIDMOVE); return (h >> 10) & 0x3F  ; }
 inline Square    Move2To   (Move h) { assert(h != INVALIDMOVE); return (h >>  4) & 0x3F  ; }
 inline MType     Move2Type (Move h) { assert(h != INVALIDMOVE); return MType(h & 0xF)    ; }
-inline Move      ToMove(Square from, Square to, MType type) { 
-    assert(from >= 0 && from < 64); 
-    assert(to >= 0 && to < 64); 
+inline Move      ToMove(Square from, Square to, MType type) {
+    assert(from >= 0 && from < 64);
+    assert(to >= 0 && to < 64);
     return (from << 10) | (to << 4) | type; }
-inline Move      ToMove(Square from, Square to, MType type, ScoreType score) { 
-    assert(from >= 0 && from < 64); 
-    assert(to >= 0 && to < 64); 
+inline Move      ToMove(Square from, Square to, MType type, ScoreType score) {
+    assert(from >= 0 && from < 64);
+    assert(to >= 0 && to < 64);
     return (score << 16) | (from << 10) | (to << 4) | type; }
 
 Hash randomInt(){
@@ -487,6 +487,8 @@ std::string ToString(const Position & p){
     return ss.str();
 }
 
+inline Color opponentColor(const Color c){ return Color((c+1)%2);}
+
 bool stopFlag;
 
 const int mailbox[120] = {
@@ -679,8 +681,8 @@ namespace TimeMan{
          ms =  msecPerMove;
       }
       else if ( nbMoveInTC > 0){ // mps is given
- 	  assert(msecWholeGame > 0);
-	  assert(nbMoveInTC > 0);
+      assert(msecWholeGame > 0);
+      assert(nbMoveInTC > 0);
          ms = int(0.95 * (msecWholeGame+((msecInc>0)?nbMoveInTC*msecInc:0)) / (float)nbMoveInTC);
       }
       else{ // mps is not given
@@ -696,14 +698,48 @@ namespace TimeMan{
 
 void addMove(Square from, Square to, MType type, std::vector<Move> & moves){
    assert( from >= 0 && from < 64);
-   assert( to >=0 && to < 64);   
+   assert( to >=0 && to < 64);
    moves.push_back(ToMove(from,to,type,0));
+}
+
+bool getAttackers(const Position & p, const Square k, std::vector<Square> & attakers){
+   assert( k >= 0 && k < 64);
+   const Color side = p.c;
+   const Color opponent = opponentColor(p.c);
+   attakers.clear();
+   for (Square i = 0; i < 64; ++i){
+      if (getColor(p,i) == opponent) {
+         if (getPieceType(p,i) == P_wp) {
+            if (side == Co_White) {
+               if ( SQFILE(i) != 0 && i - 9 == k) attakers.push_back(i);
+               if ( SQFILE(i) != 7 && i - 7 == k) attakers.push_back(i);
+            }
+            else {
+               if ( SQFILE(i) != 0 && i + 7 == k) attakers.push_back(i);
+               if ( SQFILE(i) != 7 && i + 9 == k) attakers.push_back(i);
+            }
+         }
+         else{
+            const Piece ptype = getPieceType(p,i);
+            for (int j = 0; j < Offsets[ptype-1]; ++j){
+               for (Square n = i;;) {
+                  n = mailbox[mailbox64[n] + Offset[ptype-1][j]];
+                  if (n == -1) break;
+                  if (n == k) attakers.push_back(i);
+                  if (p.b[n] != P_none) break;
+                  if ( !Slide[ptype-1]) break;
+               }
+            }
+         }
+      }
+   }
+   return !attakers.empty();
 }
 
 bool isAttacked(const Position & p, const Square k){
    assert( k >= 0 && k < 64);
    const Color side = p.c;
-   const Color opponent = Color((p.c+1)%2);
+   const Color opponent = opponentColor(p.c);
    for (Square i = 0; i < 64; ++i){
       if (getColor(p,i) == opponent) {
          if (getPieceType(p,i) == P_wp) {
@@ -736,7 +772,7 @@ bool isAttacked(const Position & p, const Square k){
 void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = false){
    moves.clear();
    const Color side = p.c;
-   const Color opponent = Color((p.c+1)%2);
+   const Color opponent = opponentColor(p.c);
    for(Square from = 0 ; from < 64 ; ++from){
      const Piece piece = p.b[from];
      const Piece ptype = (Piece)std::abs(piece);
@@ -818,62 +854,6 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
        }
      }
    }
-}
-
-bool sameMove(const Move & a, const Move & b) { return (a & 0x0000FFFF) == (b & 0x0000FFFF);}
-
-struct MoveSorter{
-   MoveSorter(const Position & p, DepthType ply, const TT::Entry * e = NULL):p(p),ply(ply),e(e){ assert(e==0||e->h!=0||e->m==INVALIDMOVE); }
-   bool operator()(Move & a, Move & b){
-      assert( a != INVALIDMOVE);
-      assert( b != INVALIDMOVE); 
-      const MType t1 = Move2Type(a);
-      const MType t2 = Move2Type(b);
-      const Square from1 = Move2From(a);
-      const Square from2 = Move2From(b);
-      const Square to1 = Move2To(a);
-      const Square to2 = Move2To(b);
-      ScoreType s1 = Move2Score(a);
-      ScoreType s2 = Move2Score(b);
-      if (s1 == 0) {
-          s1 = MoveScoring[t1];
-          if (isCapture(t1)) s1 += MvvLvaScores[getPieceType(p,to1)-1][getPieceType(p,from1)-1];
-          if (e && sameMove(e->m,a)) s1 += 3000;
-          if (sameMove(a,KillerT::killers[0][ply])) s1 += 290;
-          if (sameMove(a,KillerT::killers[1][ply])) s1 += 260;
-          if (t1 == T_std) s1 += HistoryT::history[getPieceIndex(p,from1)][to1];
-          a = ToMove(from1, to1, t1, s1);
-      }
-      if (s2 == 0) {
-          s2 = MoveScoring[t2];
-          if (isCapture(t2)) s2 += MvvLvaScores[getPieceType(p,to2)-1][getPieceType(p,from2)-1];
-          if (e && sameMove(e->m,b)) s2 += 3000;
-          if (sameMove(b,KillerT::killers[0][ply])) s2 += 290;
-          if (sameMove(b,KillerT::killers[1][ply])) s2 += 260;
-          if (t2 == T_std) s2 += HistoryT::history[getPieceIndex(p,from2)][to2];
-          b = ToMove(from2, to2, t2, s2);
-      }
-      return s1 > s2;
-   }
-   const Position & p;
-   const TT::Entry * e;
-   const DepthType ply;
-};
-
-void sort(std::vector<Move> & moves, const Position & p, DepthType ply, const TT::Entry * e = NULL){
-   std::sort(moves.begin(),moves.end(),MoveSorter(p,ply,e));
-}
-
-bool isDraw(const Position & p, unsigned int ply){
-   ///@todo FIDE draws
-   int count = 0;
-   for (int k = ply-1; k >=0; --k) {
-       if (hashStack[k] == 0) break;
-       if (hashStack[k] == p.h) ++count;
-       if (count > 2) return true;
-   }
-   if ( p.fifty >= 100 ) return true;
-   return false;
 }
 
 Square kingSquare(const Position & p){
@@ -1072,7 +1052,7 @@ bool apply(Position & p, const Move & m){
    if ( abs(fromP) == P_wp && abs(to-from) == 16 ) p.ep = (from + to)/2;
    if (p.ep != INVALIDSQUARE) p.h ^= ZT[p.ep][13];
 
-   p.c = Color((p.c+1)%2);
+   p.c = opponentColor(p.c);
    if ( toP != P_none || abs(fromP) == P_wp ) p.fifty = 0;
    if ( p.c == Co_Black ) ++p.moves;
 
@@ -1080,6 +1060,160 @@ bool apply(Position & p, const Move & m){
    p.h ^= ZT[4][13];
 
    return true;
+}
+
+struct SortThreatsFunctor {
+    const Position & _p;
+    SortThreatsFunctor(const Position & p):_p(p){}
+    bool operator()(const Square s1,const Square s2) { return std::abs(getValue(_p,s1)) < std::abs(getValue(_p,s2));}
+};
+
+// Static Exchange Evaluation (from stockfish)
+bool SEE(const Position & p, const Move & m, ScoreType threshold){
+    // Only deal with normal moves
+
+    //std::cout << "See " << ToString(p) << " " << ToString(m) << std::endl;
+
+    if (! isCapture(m)) return true;
+
+    //std::cout << "See go" <<  std::endl;
+
+    Square from       = Move2From(m);
+    Square to         = Move2To(m);
+    Piece nextVictim  = p.b[from];
+    Color us          = getColor(p,from);
+
+    //std::cout << "from " << Squares[from] << " to " << Squares[to] << " next " << Names[nextVictim+PieceShift] << std::endl;
+
+
+    ScoreType balance = std::abs(getValue(p,to)) - threshold; // The opponent may be able to recapture so this is the best result we can hope for.
+
+    //std::cout << "balance is " << balance << std::endl;
+
+    if (balance < 0) return false;
+    balance -= std::abs(Values[nextVictim+PieceShift]); // Now assume the worst possible result: that the opponent can capture our piece for free.
+
+    //std::cout << "balance is " << balance << std::endl;
+
+    if (balance >= 0) return true; // If it is enough (like in PxQ) then return immediately.
+    if ( getPieceType(p,to) == P_wk ) return false; // we shall not capture king !
+    Position p2 = p;
+
+    if ( ! apply(p2,m) ) return false;
+    std::vector<Square> stmAttackers;
+    bool endOfSEE = false;
+    while (!endOfSEE){
+        // get threats
+        p2.c = opponentColor(p2.c);
+        bool threatsFound = getAttackers(p2, to, stmAttackers);
+        p2.c = opponentColor(p2.c);
+        if (!threatsFound) { // If no more attackers then give up: current stm loses
+            //std::cout << "no more threats" << std::endl;
+            break;
+        }
+
+        /*
+        for(int k = 0 ; k < stmAttackers.size() ; ++k){
+            std::cout << Squares[stmAttackers[k]] << " ";
+        }
+        */
+        //std::cout << std::endl;
+
+        std::sort(stmAttackers.begin(),stmAttackers.end(),SortThreatsFunctor(p2));
+
+        /*
+        for(int k = 0 ; k < stmAttackers.size() ; ++k){
+            std::cout << Squares[stmAttackers[k]] << " ";
+        }
+        */
+        //std::cout << std::endl;
+
+        bool validThreatFound = false;
+        int threatId = 0;
+        while (!validThreatFound && threatId < stmAttackers.size()) {
+            Move mm = ToMove(stmAttackers[threatId], to, T_capture); ///@todo prom ????
+            nextVictim = p2.b[stmAttackers[threatId]];
+            ++threatId;
+            if ( ! apply(p2,mm) ) continue;
+            validThreatFound = true;
+            balance = -balance - 1 - std::abs(Values[nextVictim+PieceShift]);
+            if (balance >= 0) {
+                if (std::abs(nextVictim) == P_wk) p2.c = opponentColor(p2.c);
+                endOfSEE = true;
+            }
+        }
+        if (!validThreatFound) {
+            endOfSEE = true;
+        }
+    }
+    //std::cout << "result " << (us != p2.c) << std::endl;
+    return us != p2.c; // We break the above loop when stm loses
+}
+
+bool sameMove(const Move & a, const Move & b) { return (a & 0x0000FFFF) == (b & 0x0000FFFF);}
+
+struct MoveSorter{
+   MoveSorter(const Position & p, DepthType ply, const TT::Entry * e = NULL):p(p),ply(ply),e(e){ assert(e==0||e->h!=0||e->m==INVALIDMOVE); }
+   bool operator()(Move & a, Move & b){
+      assert( a != INVALIDMOVE);
+      assert( b != INVALIDMOVE);
+
+      ScoreType s1 = Move2Score(a);
+      ScoreType s2 = Move2Score(b);
+
+      if (s1 == 0) {
+          const MType t1 = Move2Type(a);
+          const Square from1 = Move2From(a);
+          const Square to1 = Move2To(a);
+          const int sign1 = getSign(p,from1);
+
+          s1 = MoveScoring[t1];
+          if (isCapture(t1)) s1 += MvvLvaScores[getPieceType(p,to1)-1][getPieceType(p,from1)-1];
+          if (isCapture(t1) && !SEE(p,a,0)) s1 -= 2000;
+          if (e && sameMove(e->m,a)) s1 += 3000;
+          if (sameMove(a,KillerT::killers[0][ply])) s1 += 290;
+          if (sameMove(a,KillerT::killers[1][ply])) s1 += 260;
+          if (t1 == T_std) s1 += HistoryT::history[getPieceIndex(p,from1)][to1];
+          if (t1 == T_std) s1 += PST[getPieceType(p,from1)-1][sign1>0?(to1^56):to1] - PST[getPieceType(p,from1)-1][sign1>0?(from1^56):from1];
+          a = ToMove(from1, to1, t1, s1);
+      }
+      if (s2 == 0) {
+          const MType t2 = Move2Type(b);
+          const Square from2 = Move2From(b);
+          const Square to2 = Move2To(b);
+          const int sign2 = getSign(p,from2);
+
+          s2 = MoveScoring[t2];
+          if (isCapture(t2)) s2 += MvvLvaScores[getPieceType(p,to2)-1][getPieceType(p,from2)-1];
+          if (isCapture(t2) && !SEE(p,b,0)) s2 -= 2000;
+          if (e && sameMove(e->m,b)) s2 += 3000;
+          if (sameMove(b,KillerT::killers[0][ply])) s2 += 290;
+          if (sameMove(b,KillerT::killers[1][ply])) s2 += 260;
+          if (t2 == T_std) s2 += HistoryT::history[getPieceIndex(p,from2)][to2];
+          if (t2 == T_std) s1 += PST[getPieceType(p,from2)-1][sign2>0?(to2^56):to2] - PST[getPieceType(p,from2)-1][sign2>0?(from2^56):from2];
+          b = ToMove(from2, to2, t2, s2);
+      }
+      return s1 > s2;
+   }
+   const Position & p;
+   const TT::Entry * e;
+   const DepthType ply;
+};
+
+void sort(std::vector<Move> & moves, const Position & p, DepthType ply, const TT::Entry * e = NULL){
+   std::sort(moves.begin(),moves.end(),MoveSorter(p,ply,e));
+}
+
+bool isDraw(const Position & p, unsigned int ply){
+   ///@todo FIDE draws
+   int count = 0;
+   for (int k = ply-1; k >=0; --k) {
+       if (hashStack[k] == 0) break;
+       if (hashStack[k] == p.h) ++count;
+       if (count > 2) return true;
+   }
+   if ( p.fifty >= 100 ) return true;
+   return false;
 }
 
 ScoreType eval(const Position & p, float & gp){
@@ -1201,7 +1335,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      // null move
      if ( doNullMove && pv.size() > 1 && depth >= 2 && p.ep == INVALIDSQUARE && val >= beta){
        Position pN = p;
-       pN.c = Color((pN.c+1)%2);
+       pN.c = opponentColor(pN.c);
        p.h ^= ZT[3][13];
        p.h ^= ZT[4][13];
        int R = depth/4 + 3;
@@ -1228,7 +1362,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   bool alphaUpdated = false;
   Move bestMove = INVALIDMOVE;
 
-  // try the tt move 
+  // try the tt move
   if (e.h != 0) { // should be the case thanks to iid at pvnode
       Position p2 = p;
       if (apply(p2, e.m)) {
@@ -2061,6 +2195,10 @@ void perft_test(const std::string & fen, DepthType d, unsigned long long int exp
 }
 
 int main(int argc, char ** argv){
+
+   std::cout << "dev version DO NOT USE" << std::endl;
+   exit(1);
+
    if ( argc < 2 ) return 1;
 
    initHash();
