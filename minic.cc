@@ -15,6 +15,8 @@
 #include <unistd.h>
 #endif
 
+//#define DO_NOT_USE
+
 const std::string MinicVersion = "0.7";
 
 typedef std::chrono::high_resolution_clock Clock;
@@ -42,7 +44,7 @@ const bool doPVS            = true;
 const bool doNullMove       = true;
 const bool doFutility       = true;
 const bool doLMR            = true;
-const bool doLMP            = false; // to activate when SEE will be used for sorting
+const bool doLMP            = true;
 const bool doStaticNullMove = true;
 const bool doRazoring       = true;
 const bool doQFutility      = true;
@@ -1078,63 +1080,26 @@ struct SortThreatsFunctor {
 // Static Exchange Evaluation (from stockfish)
 bool SEE(const Position & p, const Move & m, ScoreType threshold){
     // Only deal with normal moves
-
-    //std::cout << "See " << ToString(p) << " " << ToString(m) << std::endl;
-
     if (! isCapture(m)) return true;
-
-    //std::cout << "See go" <<  std::endl;
-
     Square from       = Move2From(m);
     Square to         = Move2To(m);
     Piece nextVictim  = p.b[from];
     Color us          = getColor(p,from);
-
-    //std::cout << "from " << Squares[from] << " to " << Squares[to] << " next " << Names[nextVictim+PieceShift] << std::endl;
-
-
     ScoreType balance = std::abs(getValue(p,to)) - threshold; // The opponent may be able to recapture so this is the best result we can hope for.
-
-    //std::cout << "balance is " << balance << std::endl;
-
     if (balance < 0) return false;
     balance -= std::abs(Values[nextVictim+PieceShift]); // Now assume the worst possible result: that the opponent can capture our piece for free.
-
-    //std::cout << "balance is " << balance << std::endl;
-
-    if (balance >= 0) return true; // If it is enough (like in PxQ) then return immediately.
-    if ( getPieceType(p,to) == P_wk ) return false; // we shall not capture king !
+    if (balance >= 0) return true;
+    if (getPieceType(p, to) == P_wk) return false; // we shall not capture king !
     Position p2 = p;
-
-    if ( ! apply(p2,m) ) return false;
+    if (!apply(p2, m)) return false;
     std::vector<Square> stmAttackers;
     bool endOfSEE = false;
     while (!endOfSEE){
-        // get threats
         p2.c = opponentColor(p2.c);
         bool threatsFound = getAttackers(p2, to, stmAttackers);
         p2.c = opponentColor(p2.c);
-        if (!threatsFound) { // If no more attackers then give up: current stm loses
-            //std::cout << "no more threats" << std::endl;
-            break;
-        }
-
-        /*
-        for(int k = 0 ; k < stmAttackers.size() ; ++k){
-            std::cout << Squares[stmAttackers[k]] << " ";
-        }
-        */
-        //std::cout << std::endl;
-
+        if (!threatsFound) break;
         std::sort(stmAttackers.begin(),stmAttackers.end(),SortThreatsFunctor(p2));
-
-        /*
-        for(int k = 0 ; k < stmAttackers.size() ; ++k){
-            std::cout << Squares[stmAttackers[k]] << " ";
-        }
-        */
-        //std::cout << std::endl;
-
         bool validThreatFound = false;
         int threatId = 0;
         while (!validThreatFound && threatId < stmAttackers.size()) {
@@ -1153,7 +1118,6 @@ bool SEE(const Position & p, const Move & m, ScoreType threshold){
             endOfSEE = true;
         }
     }
-    //std::cout << "result " << (us != p2.c) << std::endl;
     return us != p2.c; // We break the above loop when stm loses
 }
 
@@ -1169,10 +1133,9 @@ struct MoveSorter{
       ScoreType s2 = Move2Score(b);
 
       if (s1 == 0) {
-          const MType t1 = Move2Type(a);
+          const MType t1     = Move2Type(a);
           const Square from1 = Move2From(a);
-          const Square to1 = Move2To(a);
-          const int sign1 = getSign(p,from1);
+          const Square to1   = Move2To(a);
 
           s1 = MoveScoring[t1];
           if (isCapture(t1)) s1 += MvvLvaScores[getPieceType(p,to1)-1][getPieceType(p,from1)-1];
@@ -1181,14 +1144,16 @@ struct MoveSorter{
           if (sameMove(a,KillerT::killers[0][ply])) s1 += 290;
           if (sameMove(a,KillerT::killers[1][ply])) s1 += 260;
           if (t1 == T_std) s1 += HistoryT::history[getPieceIndex(p,from1)][to1];
-          if (t1 == T_std) s1 += PST[getPieceType(p,from1)-1][sign1>0?(to1^56):to1] - PST[getPieceType(p,from1)-1][sign1>0?(from1^56):from1];
+          if (t1 == T_std) {
+              const int sign1 = getSign(p, from1);
+              s1 += PST[getPieceType(p, from1) - 1][sign1 > 0 ? (to1 ^ 56) : to1] - PST[getPieceType(p, from1) - 1][sign1 > 0 ? (from1 ^ 56) : from1];
+          }
           a = ToMove(from1, to1, t1, s1);
       }
       if (s2 == 0) {
-          const MType t2 = Move2Type(b);
+          const MType t2     = Move2Type(b);
           const Square from2 = Move2From(b);
-          const Square to2 = Move2To(b);
-          const int sign2 = getSign(p,from2);
+          const Square to2   = Move2To(b);
 
           s2 = MoveScoring[t2];
           if (isCapture(t2)) s2 += MvvLvaScores[getPieceType(p,to2)-1][getPieceType(p,from2)-1];
@@ -1197,7 +1162,10 @@ struct MoveSorter{
           if (sameMove(b,KillerT::killers[0][ply])) s2 += 290;
           if (sameMove(b,KillerT::killers[1][ply])) s2 += 260;
           if (t2 == T_std) s2 += HistoryT::history[getPieceIndex(p,from2)][to2];
-          if (t2 == T_std) s1 += PST[getPieceType(p,from2)-1][sign2>0?(to2^56):to2] - PST[getPieceType(p,from2)-1][sign2>0?(from2^56):from2];
+          if (t2 == T_std) {
+              const int sign2 = getSign(p, from2);
+              s2 += PST[getPieceType(p, from2) - 1][sign2 > 0 ? (to2 ^ 56) : to2] - PST[getPieceType(p, from2) - 1][sign2 > 0 ? (from2 ^ 56) : from2];
+          }
           b = ToMove(from2, to2, t2, s2);
       }
       return s1 > s2;
@@ -1263,6 +1231,8 @@ ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned 
   for(auto it = moves.begin() ; it != moves.end() ; ++it){
      // qfutility
      if ( doQFutility && !isInCheck && val + qfutilityMargin + std::abs(getValue(p,Move2To(*it))) <= alpha) continue;
+     // SEE
+     if (!SEE(p, *it, 0)) continue;
      Position p2 = p;
      if ( ! apply(p2,*it) ) continue;
      if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply;
@@ -1433,6 +1403,8 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         if ( futility && isPrunable) continue;
         // LMP
         if ( lmp && isPrunable && validMoveCount >= lmpLimit[0][depth] ) continue;
+        // SEE
+        if (!SEE(p, *it, -100*depth)) continue;
         // LMR
         if ( doLMR && !mateFinder && depth >= lmrMinDepth && isPrunable
             && std::abs(alpha) < MATE-MAX_PLY && std::abs(beta) < MATE-MAX_PLY )
@@ -2224,8 +2196,10 @@ void perft_test(const std::string & fen, DepthType d, unsigned long long int exp
 
 int main(int argc, char ** argv){
 
+#ifdef DO_NOT_USE
    std::cout << "dev version DO NOT USE" << std::endl;
    exit(1);
+#endif
 
    if ( argc < 2 ) return 1;
 
