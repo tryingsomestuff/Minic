@@ -17,7 +17,7 @@
 
 //#define DO_NOT_USE
 
-const std::string MinicVersion = "0.7";
+const std::string MinicVersion = "0.8";
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
