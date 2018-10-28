@@ -692,14 +692,14 @@ namespace TimeMan{
       else if ( nbMoveInTC > 0){ // mps is given
       assert(msecWholeGame > 0);
       assert(nbMoveInTC > 0);
-         ms = int(0.95 * (msecWholeGame+((msecInc>0)?nbMoveInTC*msecInc:0)) / (float)nbMoveInTC);
+         ms = int(0.85 * (msecWholeGame+((msecInc>0)?nbMoveInTC*msecInc:0)) / (float)(nbMoveInTC+0.5));
       }
       else{ // mps is not given
          ///@todo something better using the real time command
          int nmoves = 60; // let's start for a 60 ply game
          if (p.moves > 20) nmoves = 100; // if the game is long, let's go for a 100 ply game
          if (p.moves > 40) nmoves = 200; // if the game is very long, let's go for a 200 ply game
-         ms = int(0.95 * (msecWholeGame+((msecInc>0)?p.moves*msecInc:0))/ (float)nmoves); ///@todo better
+         ms = int(0.85 * (msecWholeGame+((msecInc>0)?p.moves*msecInc:0))/ (float)nmoves); ///@todo better
       }
       return ms;
    }
