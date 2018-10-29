@@ -18,6 +18,8 @@
 #include <unistd.h>
 #endif
 
+//#define IMPORTBOOK
+
 const std::string MinicVersion = "0.8";
 
 typedef std::chrono::high_resolution_clock Clock;
@@ -1291,7 +1293,9 @@ namespace Book {
         return true;
     }
 
+#ifdef IMPORTBOOK
     #include "bookGenerationTools.h"
+#endif
 
     template<typename Iter, typename RandomGenerator>
     Iter select_randomly(Iter start, Iter end, RandomGenerator& g) {
@@ -2152,10 +2156,12 @@ int main(int argc, char ** argv){
 
    if ( argc < 3 ) return 1;
 
+#ifdef IMPORTBOOK
    if ( cli == "-buildBook"){
       Book::readBook(argv[2]);
       return 0;
    }
+#endif
 
    std::string fen = argv[2];
 
