@@ -18,8 +18,6 @@
 #include <unistd.h>
 #endif
 
-//#define DO_NOT_USE
-
 const std::string MinicVersion = "0.8";
 
 typedef std::chrono::high_resolution_clock Clock;
@@ -358,11 +356,19 @@ namespace HistoryT{
    inline void update(DepthType depth, Move m, const Position & p, bool plus){
        if ( Move2Type(m) == T_std ) history[getPieceIndex(p,Move2From(m))][Move2To(m)] += ScoreType( (plus?+1:-1) * (depth*depth/6.f) - (history[getPieceIndex(p,Move2From(m))][Move2To(m)] * depth*depth/6.f / 200.f));
    }
-};
+}
 
 inline bool isCapture(const MType & mt){ return mt == T_capture || mt == T_ep || mt == T_cappromq || mt == T_cappromr || mt == T_cappromb || mt == T_cappromn; }
 
 inline bool isCapture(const Move & m){ return isCapture(Move2Type(m)); }
+
+std::string trim(const std::string& str, const std::string& whitespace = " \t"){
+    const auto strBegin = str.find_first_not_of(whitespace);
+    if (strBegin == std::string::npos) return ""; // no content
+    const auto strEnd = str.find_last_not_of(whitespace);
+    const auto strRange = strEnd - strBegin + 1;
+    return str.substr(strBegin, strRange);
+}
 
 std::string GetFENShort(const Position &p ){
     // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR"
@@ -394,24 +400,19 @@ std::string GetFENShort(const Position &p ){
 std::string GetFENShort2(const Position &p) {
     // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d5
     std::stringstream ss;
-    ss << GetFENShort(p);
-    ss << " " << (p.c == Co_White ? "w" : "b") << " ";
+    ss << GetFENShort(p) << " " << (p.c == Co_White ? "w" : "b") << " ";
     bool withCastling = false;
     if (p.castling & C_wks) {
-        ss << "K";
-        withCastling = true;
+        ss << "K"; withCastling = true;
     }
     if (p.castling & C_wqs) {
-        ss << "Q";
-        withCastling = true;
+        ss << "Q"; withCastling = true;
     }
     if (p.castling & C_bks) {
-        ss << "k";
-        withCastling = true;
+        ss << "k"; withCastling = true;
     }
     if (p.castling & C_bqs) {
-        ss << "q";
-        withCastling = true;
+        ss << "q"; withCastling = true;
     }
     if (!withCastling) ss << "-";
     if (p.ep != INVALIDSQUARE) ss << " " << Squares[p.ep];
@@ -423,8 +424,7 @@ std::string GetFENShort2(const Position &p) {
 std::string GetFEN(const Position &p) {
     // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d5 0 2"
     std::stringstream ss;
-    ss << GetFENShort2(p);
-    ss << " " << (int)p.fifty << " " << (int)p.moves;
+    ss << GetFENShort2(p) << " " << (int)p.fifty << " " << (int)p.moves;
     return ss.str();
 }
 
@@ -671,8 +671,7 @@ bool readFEN(const std::string & fen, Position & p){
 
     for(Square k = 0 ; k < 64 ; ++k) p.b[k] = P_none;
 
-    Square j = 1;
-    Square i = 0;
+    Square j = 1, i = 0;
     while ((j <= 64) && (i <= (char)strList[0].length())){
         char letter = strList[0].at(i);
         ++i;
@@ -722,20 +721,16 @@ bool readFEN(const std::string & fen, Position & p){
     if (strList.size() >= 3){
         bool found = false;
         if (strList[2].find('K') != std::string::npos){
-            p.castling |= C_wks;
-            found = true;
+            p.castling |= C_wks; found = true;
         }
         if (strList[2].find('Q') != std::string::npos){
-            p.castling |= C_wqs;
-            found = true;
+            p.castling |= C_wqs; found = true;
         }
         if (strList[2].find('k') != std::string::npos){
-            p.castling |= C_bks;
-            found = true;
+            p.castling |= C_bks; found = true;
         }
         if (strList[2].find('q') != std::string::npos){
-            p.castling |= C_bqs;
-            found = true;
+            p.castling |= C_bqs; found = true;
         }
         if ( ! found ){
             std::cout << "#No castling right given" << std::endl;
@@ -748,9 +743,7 @@ bool readFEN(const std::string & fen, Position & p){
     if ((strList.size() >= 4) && strList[3] != "-" ){
         if (strList[3].length() >= 2){
             if ((strList[3].at(0) >= 'a') && (strList[3].at(0) <= 'h') && ((strList[3].at(1) == '3') || (strList[3].at(1) == '6'))){
-                int f = strList[3].at(0)-97;
-                int r = strList[3].at(1);
-                p.ep = f + 8*r;
+                p.ep = (strList[3].at(0)-97) + 8*(strList[3].at(1));
             }
             else {
                 std::cout << "#FEN ERROR 3-1 : bad en passant square : " << strList[3] << std::endl;
@@ -782,8 +775,7 @@ bool readFEN(const std::string & fen, Position & p){
     }
     else p.moves = 1;
 
-    p.h = 0;
-    p.h = computeHash(p);
+    p.h = 0; p.h = computeHash(p);
 
     return true;
 }
@@ -798,11 +790,7 @@ void tokenize(const std::string& str, std::vector<std::string>& tokens, const st
   }
 }
 
-Square stringToSquare(const std::string & str){
-   const Square file = str.at(0) - 97; // ASCII 'a' = 97
-   const Square rank = str.at(1) - 49; // ASCII '1' = 49
-   return rank * 8 + file;
-}
+Square stringToSquare(const std::string & str){ return (str.at(1) - 49) * 8 + (str.at(0) - 97); }
 
 bool readMove(const Position & p, const std::string & ss, Square & from, Square & to, MType & moveType ) {
 
@@ -1187,11 +1175,8 @@ bool apply(Position & p, const Move & m){
       break;
 
       case T_wks:
-      p.b[Sq_e1] = P_none;
-      p.b[Sq_f1] = P_wr;
-      p.b[Sq_g1] = P_wk;
+      p.b[Sq_e1] = P_none; p.b[Sq_f1] = P_wr; p.b[Sq_g1] = P_wk; p.b[Sq_h1] = P_none;
       p.wk = Sq_g1;
-      p.b[Sq_h1] = P_none;
       if (p.castling & C_wqs) p.h ^= ZT[0][13];
       if (p.castling & C_wks) p.h ^= ZT[7][13];
       p.castling &= ~(C_wks | C_wqs);
@@ -1202,12 +1187,8 @@ bool apply(Position & p, const Move & m){
       break;
 
       case T_wqs:
-      p.b[Sq_a1] = P_none;
-      p.b[Sq_b1] = P_none;
-      p.b[Sq_c1] = P_wk;
+      p.b[Sq_a1] = P_none; p.b[Sq_b1] = P_none; p.b[Sq_c1] = P_wk; p.b[Sq_d1] = P_wr; p.b[Sq_e1] = P_none;
       p.wk = Sq_c1;
-      p.b[Sq_d1] = P_wr;
-      p.b[Sq_e1] = P_none;
       if (p.castling & C_wqs) p.h ^= ZT[0][13];
       if (p.castling & C_wks) p.h ^= ZT[7][13];
       p.castling &= ~(C_wks | C_wqs);
@@ -1218,11 +1199,8 @@ bool apply(Position & p, const Move & m){
       break;
 
       case T_bks:
-      p.b[Sq_e8] = P_none;
-      p.b[Sq_f8] = P_br;
-      p.b[Sq_g8] = P_bk;
+      p.b[Sq_e8] = P_none; p.b[Sq_f8] = P_br; p.b[Sq_g8] = P_bk; p.b[Sq_h8] = P_none;
       p.bk = Sq_g8;
-      p.b[Sq_h8] = P_none;
       if (p.castling & C_bqs) p.h ^= ZT[56][13];
       if (p.castling & C_bks) p.h ^= ZT[63][13];
       p.castling &= ~(C_bks | C_bqs);
@@ -1233,12 +1211,8 @@ bool apply(Position & p, const Move & m){
       break;
 
       case T_bqs:
-      p.b[Sq_a8] = P_none;
-      p.b[Sq_b8] = P_none;
-      p.b[Sq_c8] = P_bk;
+      p.b[Sq_a8] = P_none; p.b[Sq_b8] = P_none; p.b[Sq_c8] = P_bk; p.b[Sq_d8] = P_br; p.b[Sq_e8] = P_none;
       p.bk = Sq_c8;
-      p.b[Sq_d8] = P_br;
-      p.b[Sq_e8] = P_none;
       if (p.castling & C_bqs) p.h ^= ZT[56][13];
       if (p.castling & C_bks) p.h ^= ZT[63][13];
       p.castling &= ~(C_bks | C_bqs);
@@ -1280,8 +1254,7 @@ bool apply(Position & p, const Move & m){
    else ++p.fifty;
    if ( p.c == Co_Black ) ++p.moves;
 
-   p.h ^= ZT[3][13];
-   p.h ^= ZT[4][13];
+   p.h ^= ZT[3][13]; p.h ^= ZT[4][13];
 
    return true;
 }
@@ -1335,7 +1308,7 @@ namespace Book {
     }
 
     const Move Get(const Hash h){
-       std::unordered_map<Hash, std::set<Move> > ::iterator it = book.find(h);
+       std::unordered_map<Hash, std::set<Move> >::iterator it = book.find(h);
        if ( it == book.end() ) return INVALIDMOVE;
        return *select_randomly(it->second.begin(),it->second.end());
     }
@@ -1564,11 +1537,9 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
       val = eval(p, gp);
       TT::setEvalEntry({ val, gp, computeHash(p) });
   }
-  ///@todo can e.score be used as val here ???
-  scoreStack[ply] = val;
+  scoreStack[ply] = val; ///@todo can e.score be used as val here ???
 
-  bool futility = false;
-  bool lmp = false;
+  bool futility = false, lmp = false;
 
   // prunings
   if ( !mateFinder && !rootnode && gp > 0.2 && !pvnode && !isInCheck
@@ -1797,13 +1768,7 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
 
 struct PerftAccumulator{
    PerftAccumulator(): pseudoNodes(0), validNodes(0), captureNodes(0), epNodes(0), checkNode(0), checkMateNode(0){}
-
-   Counter pseudoNodes;
-   Counter validNodes;
-   Counter captureNodes;
-   Counter epNodes;
-   Counter checkNode;
-   Counter checkMateNode;
+   Counter pseudoNodes,validNodes,captureNodes,epNodes,checkNode,checkMateNode;
 
    void Display(){
       std::cout << "#pseudoNodes   " << pseudoNodes   << std::endl;
@@ -1863,9 +1828,7 @@ namespace XBoard{
       readFEN(startPosition,position);
    }
 
-   SideToMove opponent(SideToMove & s) {
-     return s == stm_white ? stm_black : stm_white;
-   }
+   SideToMove opponent(SideToMove & s) { return s == stm_white ? stm_black : stm_white; }
 
    void readLine() {
        command.clear();
@@ -1921,14 +1884,6 @@ namespace XBoard{
 
    void xboard();
 
-}
-
-std::string trim(const std::string& str, const std::string& whitespace = " \t"){
-    const auto strBegin = str.find_first_not_of(whitespace);
-    if (strBegin == std::string::npos) return ""; // no content
-    const auto strEnd = str.find_last_not_of(whitespace);
-    const auto strRange = strEnd - strBegin + 1;
-    return str.substr(strBegin, strRange);
 }
 
 void XBoard::xboard(){
@@ -2165,11 +2120,6 @@ void perft_test(const std::string & fen, DepthType d, unsigned long long int exp
 
 int main(int argc, char ** argv){
 
-#ifdef DO_NOT_USE
-   std::cout << "dev version DO NOT USE" << std::endl;
-   exit(1);
-#endif
-
    if ( argc < 2 ) return 1;
 
    initHash();
@@ -2218,14 +2168,6 @@ int main(int argc, char ** argv){
       return 1;
    }
    std::cout << ToString(p) << std::endl;
-
-   if (cli == "-test_hash") {
-       ///@todo
-   }
-
-   if (cli == "-test_see") {
-       ///@todo
-   }
 
    if ( cli == "-eval" ){
       float gp = 0;
