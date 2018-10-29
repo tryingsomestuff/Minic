@@ -25,14 +25,6 @@ size_t countLine(std::istream &is){
     return line_cnt;
 }
 
-std::string trim(const std::string& str, const std::string& whitespace = " \t"){
-    const auto strBegin = str.find_first_not_of(whitespace);
-    if (strBegin == std::string::npos) return ""; // no content
-    const auto strEnd = str.find_last_not_of(whitespace);
-    const auto strRange = strEnd - strBegin + 1;
-    return str.substr(strBegin, strRange);
-}
-
 bool add(const std::string & move, Position & p, std::ofstream & binFile){
    std::string moveStr;
    if ( move == "0-0" || move == "0-0-0" || move == "O-O" || move == "O-O-O") moveStr = move;
