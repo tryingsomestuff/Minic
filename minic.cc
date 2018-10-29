@@ -4,11 +4,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <iostream>
+#include <fstream>
 #include <iterator>
 #include <vector>
 #include <sstream>
+#include <set>
 #include <chrono>
 #include <random>
+#include <unordered_map>
 #ifdef _WIN32
 #include <stdlib.h>
 #else
@@ -343,7 +346,7 @@ namespace KillerT{
           for(int k = 0 ; k < MAX_PLY; ++k)
               killers[i][k] = INVALIDMOVE;
    }
-};
+}
 
 namespace HistoryT{
    ScoreType history[13][64];
@@ -658,6 +661,243 @@ const ScoreType PSTEG[6][64] = {
    -53, -34, -21, -11, -28, -14, -24, -43
  }
 };
+
+bool readFEN(const std::string & fen, Position & p){
+    std::vector<std::string> strList;
+    std::stringstream iss(fen);
+    std::copy(std::istream_iterator<std::string>(iss), std::istream_iterator<std::string>(), back_inserter(strList));
+
+    std::cout << "# Reading fen " << fen << std::endl;
+
+    for(Square k = 0 ; k < 64 ; ++k) p.b[k] = P_none;
+
+    Square j = 1;
+    Square i = 0;
+    while ((j <= 64) && (i <= (char)strList[0].length())){
+        char letter = strList[0].at(i);
+        ++i;
+        Square r = 7-(j-1)/8;
+        Square f = (j-1)%8;
+        Square k = r*8+f;
+        switch (letter) {
+        case 'p': p.b[k]= P_bp; break;
+        case 'r': p.b[k]= P_br; break;
+        case 'n': p.b[k]= P_bn; break;
+        case 'b': p.b[k]= P_bb; break;
+        case 'q': p.b[k]= P_bq; break;
+        case 'k': p.b[k]= P_bk; p.bk = k; break;
+        case 'P': p.b[k]= P_wp; break;
+        case 'R': p.b[k]= P_wr; break;
+        case 'N': p.b[k]= P_wn; break;
+        case 'B': p.b[k]= P_wb; break;
+        case 'Q': p.b[k]= P_wq; break;
+        case 'K': p.b[k]= P_wk; p.wk = k; break;
+        case '/': j--; break;
+        case '1': break;
+        case '2': j++; break;
+        case '3': j += 2; break;
+        case '4': j += 3; break;
+        case '5': j += 4; break;
+        case '6': j += 5; break;
+        case '7': j += 6; break;
+        case '8': j += 7; break;
+        default: std::cout << "#FEN ERROR 0 : " << letter << std::endl;
+        }
+        j++;
+    }
+
+    // set the turn; default is white
+    p.c = Co_White;
+    if (strList.size() >= 2){
+        if (strList[1] == "w")      p.c = Co_White;
+        else if (strList[1] == "b") p.c = Co_Black;
+        else {
+            std::cout << "#FEN ERROR 1" << std::endl;
+            return false;
+        }
+    }
+
+    // Initialize all castle possibilities (default is none)
+    p.castling = C_none;
+    if (strList.size() >= 3){
+        bool found = false;
+        if (strList[2].find('K') != std::string::npos){
+            p.castling |= C_wks;
+            found = true;
+        }
+        if (strList[2].find('Q') != std::string::npos){
+            p.castling |= C_wqs;
+            found = true;
+        }
+        if (strList[2].find('k') != std::string::npos){
+            p.castling |= C_bks;
+            found = true;
+        }
+        if (strList[2].find('q') != std::string::npos){
+            p.castling |= C_bqs;
+            found = true;
+        }
+        if ( ! found ){
+            std::cout << "#No castling right given" << std::endl;
+        }
+    }
+    else std::cout << "#No castling right given" << std::endl;
+
+    // read en passant and save it (default is invalid)
+    p.ep = -1;
+    if ((strList.size() >= 4) && strList[3] != "-" ){
+        if (strList[3].length() >= 2){
+            if ((strList[3].at(0) >= 'a') && (strList[3].at(0) <= 'h') && ((strList[3].at(1) == '3') || (strList[3].at(1) == '6'))){
+                int f = strList[3].at(0)-97;
+                int r = strList[3].at(1);
+                p.ep = f + 8*r;
+            }
+            else {
+                std::cout << "#FEN ERROR 3-1 : bad en passant square : " << strList[3] << std::endl;
+                return false;
+            }
+        }
+        else{
+            std::cout << "#FEN ERROR 3-2 : bad en passant square : " << strList[3] << std::endl;
+            return false;
+        }
+    }
+    else std::cout << "#No en passant square given" << std::endl;
+
+    // read 50 moves rules
+    if (strList.size() >= 5){
+        std::stringstream ss(strList[4]);
+        int tmp;
+        ss >> tmp;
+        p.fifty = tmp;
+    }
+    else p.fifty = 0;
+
+    // read number of move
+    if (strList.size() >= 6){
+        std::stringstream ss(strList[5]);
+        int tmp;
+        ss >> tmp;
+        p.moves = tmp;
+    }
+    else p.moves = 1;
+
+    p.h = 0;
+    p.h = computeHash(p);
+
+    return true;
+}
+
+void tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters = " " ){
+  std::string::size_type lastPos = str.find_first_not_of(delimiters, 0);
+  std::string::size_type pos     = str.find_first_of(delimiters, lastPos);
+  while (std::string::npos != pos || std::string::npos != lastPos) {
+    tokens.push_back(str.substr(lastPos, pos - lastPos));
+    lastPos = str.find_first_not_of(delimiters, pos);
+    pos = str.find_first_of(delimiters, lastPos);
+  }
+}
+
+Square stringToSquare(const std::string & str){
+   const Square file = str.at(0) - 97; // ASCII 'a' = 97
+   const Square rank = str.at(1) - 49; // ASCII '1' = 49
+   return rank * 8 + file;
+}
+
+bool readMove(const Position & p, const std::string & ss, Square & from, Square & to, MType & moveType ) {
+
+    if ( ss.empty()){
+        std::cout << "#Trying to read empty move ! " << std::endl;
+        moveType = T_std;
+        return false;
+    }
+
+    std::string str(ss);
+
+    // add space to go to own internal notation
+    if ( str != "0-0" && str != "0-0-0" && str != "O-O" && str != "O-O-O" ) str.insert(2," ");
+
+    std::vector<std::string> strList;
+    std::stringstream iss(str);
+    std::copy(std::istream_iterator<std::string>(iss), std::istream_iterator<std::string>(), back_inserter(strList));
+
+    moveType = T_std;
+    if ( strList.empty()){
+        std::cout << "#Trying to read bad move, seems empty " << str << std::endl;
+        return false;
+    }
+
+    // detect special move
+    if (strList[0] == "0-0" || strList[0] == "O-O"){
+        if ( p.c == Co_White ) moveType = T_wks;
+        else moveType = T_bks;
+    }
+    else if (strList[0] == "0-0-0" || strList[0] == "O-O-O"){
+        if ( p.c == Co_White) moveType = T_wqs;
+        else moveType = T_bqs;
+    }
+    else{
+        if ( strList.size() == 1 ){
+            std::cout << "#Trying to read bad move, malformed (=1) " << str << std::endl;
+            return false;
+        }
+        if ( strList.size() > 2 && strList[2] != "ep"){
+            std::cout << "#Trying to read bad move, malformed (>2)" << str << std::endl;
+            return false;
+        }
+
+        if (strList[0].size() == 2 && (strList[0].at(0) >= 'a') && (strList[0].at(0) <= 'h') &&
+                ((strList[0].at(1) >= 1) && (strList[0].at(1) <= '8'))) {
+            from = stringToSquare(strList[0]);
+        }
+        else {
+            std::cout << "#Trying to read bad move, invalid from square " << str << std::endl;
+            return false;
+        }
+
+        bool isCapture = false;
+
+        // be carefull, promotion possible !
+        if (strList[1].size() >= 2 && (strList[1].at(0) >= 'a') && (strList[1].at(0) <= 'h') &&  ((strList[1].at(1) >= '1') && (strList[1].at(1) <= '8'))) {
+            if ( strList[1].size() > 2 ){ // promotion
+                std::string prom;
+                if ( strList[1].size() == 3 ){ // probably e7 e8q notation
+                   prom = strList[1][2];
+                   to = stringToSquare(strList[1].substr(0,2));
+                }
+                else{ // probably e7 e8=q notation
+                   std::vector<std::string> strListTo;
+                   tokenize(strList[1],strListTo,"=");
+                   to = stringToSquare(strListTo[0]);
+                   prom = strListTo[1];
+                }
+
+                isCapture = p.b[to] != P_none;
+
+                if      ( prom == "Q" || prom == "q") moveType = isCapture ? T_cappromq : T_promq;
+                else if ( prom == "R" || prom == "r") moveType = isCapture ? T_cappromr : T_promr;
+                else if ( prom == "B" || prom == "b") moveType = isCapture ? T_cappromb : T_promb;
+                else if ( prom == "N" || prom == "n") moveType = isCapture ? T_cappromn : T_promn;
+                else{
+                    std::cout << "#Trying to read bad move, invalid to square " << str << std::endl;
+                    return false;
+                }
+            }
+            else{
+               to = stringToSquare(strList[1]);
+               isCapture = p.b[to] != P_none;
+            }
+        }
+        else {
+            std::cout << "#Trying to read bad move, invalid to square " << str << std::endl;
+            return false;
+        }
+    }
+
+    if (getPieceType(p,from) == P_wp && to == p.ep) moveType = T_ep;
+
+    return true;
+}
 
 namespace TimeMan{
    int msecPerMove;
@@ -1037,12 +1277,69 @@ bool apply(Position & p, const Move & m){
 
    p.c = opponentColor(p.c);
    if ( toP != P_none || abs(fromP) == P_wp ) p.fifty = 0;
+   else ++p.fifty;
    if ( p.c == Co_Black ) ++p.moves;
 
    p.h ^= ZT[3][13];
    p.h ^= ZT[4][13];
 
    return true;
+}
+
+namespace Book {
+    //struct to hold the value:
+    template<typename T> struct bits_t { T t; };
+    template<typename T> bits_t<T&> bits(T &t) { return bits_t<T&>{t}; }
+    template<typename T> bits_t<const T&> bits(const T& t) { return bits_t<const T&>{t};}
+    template<typename S, typename T> S& operator<<(S &s, bits_t<T>  b) { s.write((char*)&b.t, sizeof(T)); return s;}
+    template<typename S, typename T> S& operator>>(S& s, bits_t<T&> b) { s.read ((char*)&b.t, sizeof(T)); return s;}
+
+    std::unordered_map<Hash, std::set<Move> > book;
+
+    bool fileExists(const std::string& name){ return std::ifstream(name.c_str()).good(); }
+
+    bool readBinaryBook(std::ifstream & stream) {
+        Position ps;
+        readFEN(startPosition,ps);
+        Position p = ps;
+        Move hash = 0;
+        while (!stream.eof()) {
+            hash = 0;
+            stream >> bits(hash);
+            if (hash == INVALIDMOVE) {
+                p = ps;
+                stream >> bits(hash);
+                if (stream.eof()) break;
+            }
+            const Hash h = computeHash(p);
+            if ( ! apply(p,hash)) return false;
+            book[h].insert(hash);
+        }
+        return true;
+    }
+
+    #include "bookGenerationTools.h"
+
+    template<typename Iter, typename RandomGenerator>
+    Iter select_randomly(Iter start, Iter end, RandomGenerator& g) {
+        std::uniform_int_distribution<> dis(0, (int)std::distance(start, end) - 1);
+        std::advance(start, dis(g));
+        return start;
+    }
+
+    template<typename Iter>
+    Iter select_randomly(Iter start, Iter end) {
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+        return select_randomly(start, end, gen);
+    }
+
+    const Move Get(const Hash h){
+       std::unordered_map<Hash, std::set<Move> > ::iterator it = book.find(h);
+       if ( it == book.end() ) return INVALIDMOVE;
+       return *select_randomly(it->second.begin(),it->second.end());
+    }
+
 }
 
 struct SortThreatsFunctor {
@@ -1149,13 +1446,14 @@ struct MoveSorter{
 
 void sort(std::vector<Move> & moves, const Position & p, DepthType ply, const TT::Entry * e = NULL){ std::sort(moves.begin(),moves.end(),MoveSorter(p,ply,e));}
 
-bool isDraw(const Position & p, unsigned int ply){
+bool isDraw(const Position & p, unsigned int ply, bool isPV = true){
    ///@todo FIDE draws
    int count = 0;
+   const int limit = isPV?3:1;
    for (int k = ply-1; k >=0; --k) {
        if (hashStack[k] == 0) break;
        if (hashStack[k] == p.h) ++count;
-       if (count > 2) return true;
+       if (count >= limit) return true;
    }
    if ( p.fifty >= 100 ) return true;
    return false;
@@ -1179,6 +1477,7 @@ ScoreType eval(const Position & p, float & gp){
 }
 
 ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth){
+  if ( ply >= MAX_PLY-1 ) return 0;
   alpha = std::max(alpha, (ScoreType)(-MATE + ply));
   beta  = std::min(beta , (ScoreType)(MATE - ply + 1));
   if (alpha >= beta) return alpha;
@@ -1240,7 +1539,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
 
   ++stats.nodes;
 
-  if ( isDraw(p,ply) ) return 0;
+  if ( ply >= MAX_PLY-1 || isDraw(p,ply,pvnode) ) return 0;
 
   alpha = std::max(alpha, (ScoreType)(-MATE + ply));
   beta  = std::min(beta,  (ScoreType)(MATE  - ply + 1));
@@ -1250,7 +1549,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
 
   TT::Entry e;
   if (TT::getEntry(computeHash(p), depth, e)) {
-      if (e.h != 0 && !rootnode && std::abs(e.score) < MATE - MAX_PLY && !pvnode &&
+      if (e.h != 0 && !rootnode && std::abs(e.score) < MATE - MAX_DEPTH && !pvnode &&
           ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
           pv.push_back(e.m);
           return e.score;
@@ -1265,6 +1564,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
       val = eval(p, gp);
       TT::setEvalEntry({ val, gp, computeHash(p) });
   }
+  ///@todo can e.score be used as val here ???
   scoreStack[ply] = val;
 
   bool futility = false;
@@ -1272,7 +1572,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
 
   // prunings
   if ( !mateFinder && !rootnode && gp > 0.2 && !pvnode && !isInCheck
-      && std::abs(alpha) < MATE-MAX_PLY && std::abs(beta) < MATE-MAX_PLY ){
+      && std::abs(alpha) < MATE-MAX_DEPTH && std::abs(beta) < MATE-MAX_DEPTH ){
 
      // static null move
      if ( doStaticNullMove && depth <= staticNullMoveMaxDepth && val >= beta + staticNullMoveDepthCoeff *depth ) return val;
@@ -1290,7 +1590,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
        pN.c = opponentColor(pN.c);
        p.h ^= ZT[3][13];
        p.h ^= ZT[4][13];
-       int R = depth/4 + 3;
+       int R = depth/4 + 3 + std::min((val-beta)/80,3); // adaptative
        std::vector<Move> nullPV;
        ScoreType nullscore = -pvs(-beta,-beta+1,pN,depth-R,false,ply+1,nullPV,seldepth);
        if ( !stopFlag && nullscore >= beta ) return nullscore;
@@ -1300,7 +1600,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      if (doLMP && depth <= lmpMaxDepth) lmp = true;
 
      // futility
-     if (doFutility && val <= alpha - futilityDepthCoeff *depth ) futility = true;
+     if (doFutility && val <= alpha - futilityDepthCoeff*depth ) futility = true;
   }
 
   // IID
@@ -1321,6 +1621,9 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
           validMoveCount++;
           std::vector<Move> childPV;
           hashStack[ply] = p.h;
+          // extensions
+          int extension = 0;
+          if (isInCheck) ++extension;
           ScoreType ttval = -pvs(-beta, -alpha, p2, depth - 1, pvnode, ply + 1, childPV, seldepth);
           if (!stopFlag && ttval > alpha) {
               alphaUpdated = true;
@@ -1373,7 +1676,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         //if (!SEE(p, *it, -100*depth)) continue;
         if ( futility && Move2Score(*it) < -900 ) continue;
         // LMR
-        if ( doLMR && !mateFinder && depth >= lmrMinDepth && isPrunable && std::abs(alpha) < MATE-MAX_PLY && std::abs(beta) < MATE-MAX_PLY ) reduction = lmrReduction[std::min((int)depth,MAX_DEPTH-1)][validMoveCount];
+        if ( doLMR && !mateFinder && depth >= lmrMinDepth && isPrunable && std::abs(alpha) < MATE-MAX_DEPTH && std::abs(beta) < MATE-MAX_DEPTH ) reduction = lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
         if (pvnode && reduction > 0) --reduction;
         if (!improving) ++reduction;
         // PVS
@@ -1418,9 +1721,10 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
   std::cout << "# requested depth " << (int) d << std::endl;
   stopFlag = false;
   stats.init();
+  ///@todo do not reset that
   KillerT::initKillers();
   HistoryT::initHistory();
-
+  ///@todo do not reset this either
   TT::clearTT();
   TT::clearETT();
 
@@ -1435,6 +1739,15 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
 
   Counter previousNodeCount = 1;
 
+  const Move bookMove = Book::Get(computeHash(p));
+  if ( bookMove != INVALIDMOVE){
+      pv .push_back(bookMove);
+      m = pv[0];
+      d = reachedDepth;
+      sc = bestScore;
+      return pv;
+  }
+
   for(DepthType depth = 1 ; depth <= d && !stopFlag ; ++depth ){
     std::cout << "# Iterative deepening " << (int)depth << std::endl;
     std::vector<Move> pvLoc;
@@ -1444,7 +1757,7 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
     ScoreType score = 0;
     while( delta <= MATE ){
        pvLoc.clear();
-       score = pvs(alpha,beta,p,depth,true,1,pvLoc,seldepth);
+       score = pvs(alpha,beta,p,depth,true,(p.moves-1)*2+1+p.c==Co_Black?1:0,pvLoc,seldepth);
        if ( stopFlag ) break;
        delta *= 2;
        if (score <= alpha) alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) );
@@ -1464,7 +1777,7 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
     }
 
     if (bestScore <= -MATE+1) break;
-    if ( mateFinder && bestScore >= MATE - MAX_PLY ) break;
+    if ( mateFinder && bestScore >= MATE - MAX_DEPTH ) break;
   }
 
   if (bestScore <= -MATE+1) {
@@ -1473,139 +1786,13 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
       pv.push_back(INVALIDMOVE);
   }
 
-  if (bestScore >= MATE-MAX_PLY) std::cout << "# Forced mate found ..." << std::endl;
+  if (bestScore >= MATE-MAX_DEPTH) std::cout << "# Forced mate found ..." << std::endl;
 
   if (pv.empty()) m = INVALIDMOVE;
   else m = pv[0];
   d = reachedDepth;
   sc = bestScore;
   return pv;
-}
-
-bool readFEN(const std::string & fen, Position & p){
-    std::vector<std::string> strList;
-    std::stringstream iss(fen);
-    std::copy(std::istream_iterator<std::string>(iss), std::istream_iterator<std::string>(), back_inserter(strList));
-
-    std::cout << "# Reading fen " << fen << std::endl;
-
-    for(Square k = 0 ; k < 64 ; ++k) p.b[k] = P_none;
-
-    Square j = 1;
-    Square i = 0;
-    while ((j <= 64) && (i <= (char)strList[0].length())){
-        char letter = strList[0].at(i);
-        ++i;
-        Square r = 7-(j-1)/8;
-        Square f = (j-1)%8;
-        Square k = r*8+f;
-        switch (letter) {
-        case 'p': p.b[k]= P_bp; break;
-        case 'r': p.b[k]= P_br; break;
-        case 'n': p.b[k]= P_bn; break;
-        case 'b': p.b[k]= P_bb; break;
-        case 'q': p.b[k]= P_bq; break;
-        case 'k': p.b[k]= P_bk; p.bk = k; break;
-        case 'P': p.b[k]= P_wp; break;
-        case 'R': p.b[k]= P_wr; break;
-        case 'N': p.b[k]= P_wn; break;
-        case 'B': p.b[k]= P_wb; break;
-        case 'Q': p.b[k]= P_wq; break;
-        case 'K': p.b[k]= P_wk; p.wk = k; break;
-        case '/': j--; break;
-        case '1': break;
-        case '2': j++; break;
-        case '3': j += 2; break;
-        case '4': j += 3; break;
-        case '5': j += 4; break;
-        case '6': j += 5; break;
-        case '7': j += 6; break;
-        case '8': j += 7; break;
-        default: std::cout << "#FEN ERROR 0 : " << letter << std::endl;
-        }
-        j++;
-    }
-
-    // set the turn; default is white
-    p.c = Co_White;
-    if (strList.size() >= 2){
-        if (strList[1] == "w")      p.c = Co_White;
-        else if (strList[1] == "b") p.c = Co_Black;
-        else {
-            std::cout << "#FEN ERROR 1" << std::endl;
-            return false;
-        }
-    }
-
-    // Initialize all castle possibilities (default is none)
-    p.castling = C_none;
-    if (strList.size() >= 3){
-        bool found = false;
-        if (strList[2].find('K') != std::string::npos){
-            p.castling |= C_wks;
-            found = true;
-        }
-        if (strList[2].find('Q') != std::string::npos){
-            p.castling |= C_wqs;
-            found = true;
-        }
-        if (strList[2].find('k') != std::string::npos){
-            p.castling |= C_bks;
-            found = true;
-        }
-        if (strList[2].find('q') != std::string::npos){
-            p.castling |= C_bqs;
-            found = true;
-        }
-        if ( ! found ){
-            std::cout << "#No castling right given" << std::endl;
-        }
-    }
-    else std::cout << "#No castling right given" << std::endl;
-
-    // read en passant and save it (default is invalid)
-    p.ep = -1;
-    if ((strList.size() >= 4) && strList[3] != "-" ){
-        if (strList[3].length() >= 2){
-            if ((strList[3].at(0) >= 'a') && (strList[3].at(0) <= 'h') && ((strList[3].at(1) == '3') || (strList[3].at(1) == '6'))){
-                int f = strList[3].at(0)-97;
-                int r = strList[3].at(1);
-                p.ep = f + 8*r;
-            }
-            else {
-                std::cout << "#FEN ERROR 3-1 : bad en passant square : " << strList[3] << std::endl;
-                return false;
-            }
-        }
-        else{
-            std::cout << "#FEN ERROR 3-2 : bad en passant square : " << strList[3] << std::endl;
-            return false;
-        }
-    }
-    else std::cout << "#No en passant square given" << std::endl;
-
-    // read 50 moves rules
-    if (strList.size() >= 5){
-        std::stringstream ss(strList[4]);
-        int tmp;
-        ss >> tmp;
-        p.fifty = tmp;
-    }
-    else p.fifty = 0;
-
-    // read number of move
-    if (strList.size() >= 6){
-        std::stringstream ss(strList[5]);
-        int tmp;
-        ss >> tmp;
-        p.moves = tmp;
-    }
-    else p.moves = 1;
-
-    p.h = 0;
-    p.h = computeHash(p);
-
-    return true;
 }
 
 struct PerftAccumulator{
@@ -1734,117 +1921,6 @@ namespace XBoard{
 
    void xboard();
 
-};
-
-void tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters = " " ){
-  std::string::size_type lastPos = str.find_first_not_of(delimiters, 0);
-  std::string::size_type pos     = str.find_first_of(delimiters, lastPos);
-  while (std::string::npos != pos || std::string::npos != lastPos) {
-    tokens.push_back(str.substr(lastPos, pos - lastPos));
-    lastPos = str.find_first_not_of(delimiters, pos);
-    pos = str.find_first_of(delimiters, lastPos);
-  }
-}
-
-Square stringToSquare(const std::string & str){
-   const Square file = str.at(0) - 97; // ASCII 'a' = 97
-   const Square rank = str.at(1) - 49; // ASCII '1' = 49
-   return rank * 8 + file;
-}
-
-bool readMove(const Position & p, const std::string & ss, Square & from, Square & to, MType & moveType ) {
-
-    if ( ss.empty()){
-        std::cout << "#Trying to read empty move ! " << std::endl;
-        moveType = T_std;
-        return false;
-    }
-
-    std::string str(ss);
-
-    // add space to go to own internal notation
-    if ( str != "0-0" && str != "0-0-0" && str != "O-O" && str != "O-O-O" ) str.insert(2," ");
-
-    std::vector<std::string> strList;
-    std::stringstream iss(str);
-    std::copy(std::istream_iterator<std::string>(iss), std::istream_iterator<std::string>(), back_inserter(strList));
-
-    moveType = T_std;
-    if ( strList.empty()){
-        std::cout << "#Trying to read bad move, seems empty " << str << std::endl;
-        return false;
-    }
-
-    // detect special move
-    if (strList[0] == "0-0" || strList[0] == "O-O"){
-        if ( p.c == Co_White ) moveType = T_wks;
-        else moveType = T_bks;
-    }
-    else if (strList[0] == "0-0-0" || strList[0] == "O-O-O"){
-        if ( p.c == Co_White) moveType = T_wqs;
-        else moveType = T_bqs;
-    }
-    else{
-        if ( strList.size() == 1 ){
-            std::cout << "#Trying to read bad move, malformed (=1) " << str << std::endl;
-            return false;
-        }
-        if ( strList.size() > 2 && strList[2] != "ep"){
-            std::cout << "#Trying to read bad move, malformed (>2)" << str << std::endl;
-            return false;
-        }
-
-        if (strList[0].size() == 2 && (strList[0].at(0) >= 'a') && (strList[0].at(0) <= 'h') &&
-                ((strList[0].at(1) >= 1) && (strList[0].at(1) <= '8'))) {
-            from = stringToSquare(strList[0]);
-        }
-        else {
-            std::cout << "#Trying to read bad move, invalid from square " << str << std::endl;
-            return false;
-        }
-
-        bool isCapture = false;
-
-        // be carefull, promotion possible !
-        if (strList[1].size() >= 2 && (strList[1].at(0) >= 'a') && (strList[1].at(0) <= 'h') &&  ((strList[1].at(1) >= '1') && (strList[1].at(1) <= '8'))) {
-            if ( strList[1].size() > 2 ){ // promotion
-                std::string prom;
-                if ( strList[1].size() == 3 ){ // probably e7 e8q notation
-                   prom = strList[1][2];
-                   to = stringToSquare(strList[1].substr(0,2));
-                }
-                else{ // probably e7 e8=q notation
-                   std::vector<std::string> strListTo;
-                   tokenize(strList[1],strListTo,"=");
-                   to = stringToSquare(strListTo[0]);
-                   prom = strListTo[1];
-                }
-
-                isCapture = p.b[to] != P_none;
-
-                if      ( prom == "Q" || prom == "q") moveType = isCapture ? T_cappromq : T_promq;
-                else if ( prom == "R" || prom == "r") moveType = isCapture ? T_cappromr : T_promr;
-                else if ( prom == "B" || prom == "b") moveType = isCapture ? T_cappromb : T_promb;
-                else if ( prom == "N" || prom == "n") moveType = isCapture ? T_cappromn : T_promn;
-                else{
-                    std::cout << "#Trying to read bad move, invalid to square " << str << std::endl;
-                    return false;
-                }
-            }
-            else{
-               to = stringToSquare(strList[1]);
-               isCapture = p.b[to] != P_none;
-            }
-        }
-        else {
-            std::cout << "#Trying to read bad move, invalid to square " << str << std::endl;
-            return false;
-        }
-    }
-
-    if (getPieceType(p,from) == P_wp && to == p.ep) moveType = T_ep;
-
-    return true;
 }
 
 std::string trim(const std::string& str, const std::string& whitespace = " \t"){
@@ -2105,6 +2181,11 @@ int main(int argc, char ** argv){
 
    std::string cli = argv[1];
 
+   if ( Book::fileExists("book.bin") ) {
+       std::ifstream bbook = std::ifstream("book.bin",std::ios::in | std::ios::binary);
+       Book::readBinaryBook(bbook);
+   }
+
    if ( cli == "-xboard" ){
       XBoard::init();
       TimeMan::init();
@@ -2120,6 +2201,11 @@ int main(int argc, char ** argv){
    }
 
    if ( argc < 3 ) return 1;
+
+   if ( cli == "-buildBook"){
+      Book::readBook(argv[2]);
+      return 0;
+   }
 
    std::string fen = argv[2];
 
