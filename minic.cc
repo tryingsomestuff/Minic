@@ -113,25 +113,9 @@ ScoreType   Values[13]    = { -8000, -950, -500, -335, -325, -100, 0, 100, 325, 
 ScoreType   ValuesEG[13]  = { -8000, -1200, -550, -305, -275, -100, 0, 100, 275, 305, 550, 1200, 8000 };
 std::string Names[13]     = { "k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K" };
 
-std::string Squares[64] = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
-                            "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
-                            "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
-                            "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
-                            "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
-                            "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
-                            "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
-                            "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" };
+std::string Squares[64] = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2", "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4", "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5", "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6", "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" };
 
-enum Sq : char {
-    Sq_a1 =  0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1,
-    Sq_a2 =  8,Sq_b2,Sq_c2,Sq_d2,Sq_e2,Sq_f2,Sq_g2,Sq_h2,
-    Sq_a3 = 16,Sq_b3,Sq_c3,Sq_d3,Sq_e3,Sq_f3,Sq_g3,Sq_h3,
-    Sq_a4 = 24,Sq_b4,Sq_c4,Sq_d4,Sq_e4,Sq_f4,Sq_g4,Sq_h4,
-    Sq_a5 = 32,Sq_b5,Sq_c5,Sq_d5,Sq_e5,Sq_f5,Sq_g5,Sq_h5,
-    Sq_a6 = 40,Sq_b6,Sq_c6,Sq_d6,Sq_e6,Sq_f6,Sq_g6,Sq_h6,
-    Sq_a7 = 48,Sq_b7,Sq_c7,Sq_d7,Sq_e7,Sq_f7,Sq_g7,Sq_h7,
-    Sq_a8 = 56,Sq_b8,Sq_c8,Sq_d8,Sq_e8,Sq_f8,Sq_g8,Sq_h8
-};
+enum Sq : char { Sq_a1 =  0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1, Sq_a2 =  8,Sq_b2,Sq_c2,Sq_d2,Sq_e2,Sq_f2,Sq_g2,Sq_h2, Sq_a3 = 16,Sq_b3,Sq_c3,Sq_d3,Sq_e3,Sq_f3,Sq_g3,Sq_h3, Sq_a4 = 24,Sq_b4,Sq_c4,Sq_d4,Sq_e4,Sq_f4,Sq_g4,Sq_h4, Sq_a5 = 32,Sq_b5,Sq_c5,Sq_d5,Sq_e5,Sq_f5,Sq_g5,Sq_h5, Sq_a6 = 40,Sq_b6,Sq_c6,Sq_d6,Sq_e6,Sq_f6,Sq_g6,Sq_h6, Sq_a7 = 48,Sq_b7,Sq_c7,Sq_d7,Sq_e7,Sq_f7,Sq_g7,Sq_h7, Sq_a8 = 56,Sq_b8,Sq_c8,Sq_d8,Sq_e8,Sq_f8,Sq_g8,Sq_h8 };
 
 enum Castling : char{  C_none= 0,   C_wks = 1,   C_wqs = 2,   C_bks = 4,   C_bqs = 8 };
 
@@ -145,13 +129,10 @@ void initMvvLva(){
 }
 
 enum MType : char{
-   T_std        = 0,
-   T_capture    = 1,
-   T_ep         = 2,
-   T_check      = 3, // not used yet
+   T_std        = 0,   T_capture    = 1,   T_ep         = 2,   T_check      = 3, // not used yet
    T_promq      = 4,   T_promr      = 5,   T_promb      = 6,   T_promn      = 7,
    T_cappromq   = 8,   T_cappromr   = 9,   T_cappromb   = 10,  T_cappromn   = 11,
-   T_wks        = 12,   T_wqs       = 13,  T_bks        = 14,  T_bqs        = 15
+   T_wks        = 12,  T_wqs        = 13,  T_bks        = 14,  T_bqs        = 15
 };
 
 enum Color : char{ Co_None  = -1,   Co_White = 0,   Co_Black = 1 };
@@ -235,7 +216,7 @@ Hash computeHash(const Position &p){
 }
 
 struct TT{
-   enum Bound{ B_exact = 0,      B_alpha = 1,      B_beta  = 2 };
+   enum Bound{ B_exact = 0, B_alpha = 1, B_beta  = 2 };
    struct Entry{
       Entry():m(INVALIDMOVE),score(0),b(B_alpha),d(-1),h(0){}
       Entry(Move m, int s, Bound b, DepthType d, Hash h) : m(m), score(m), b(b), d(d), h(h){}
@@ -313,9 +294,7 @@ struct TT{
    }
 
    static void clearETT() {
-       for (unsigned int k = 0; k < ttESize; ++k) {
-           evalTable[k] = { 0, 0., 0 };
-       }
+       for (unsigned int k = 0; k < ttESize; ++k) evalTable[k] = { 0, 0., 0 };
    }
 
    static bool getEvalEntry(Hash h, ScoreType & score, float & gp) {
@@ -382,15 +361,13 @@ std::string GetFENShort(const Position &p ){
             if (p.b[k] == P_none)  ++count;
             else {
                 if (count != 0) {
-                    ss << count;
-                    count = 0;
+                    ss << count; count = 0;
                 }
                 ss << getName(p,k);
             }
             if (j == 7) {
                 if (count != 0) {
-                    ss << count;
-                    count = 0;
+                    ss << count; count = 0;
                 }
                 if (i != 0) ss << "/";
             }
@@ -422,7 +399,6 @@ std::string GetFENShort2(const Position &p) {
     return ss.str();
 }
 
-
 std::string GetFEN(const Position &p) {
     // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d5 0 2"
     std::stringstream ss;
@@ -439,11 +415,9 @@ std::string ToString(const Move & m, bool withScore = false){ ///@todo use less 
    case T_bks:
    case T_wks:
        return "O-O" + score;
-       break;
    case T_bqs:
    case T_wqs:
        return "O-O-O" + score;
-       break;
    default:
        static const std::string suffixe[] = { "","","","","q","r","b","n","q","r","b","n" };
        prom = suffixe[Move2Type(m)];
@@ -485,56 +459,25 @@ std::string ToString(const Position & p){
         for (Square i = 0; i < 8; ++i) ss << getName(p,i+j*8) << '|';
         ss << std::endl; ;
     }
-    ss << "# +-+-+-+-+-+-+-+-+" ;
-    ss << "#" << std::endl;
+    ss << "# +-+-+-+-+-+-+-+-+" << "#" << std::endl;
     if ( p.ep >=0 ) ss << "# ep " << Squares[p.ep]<< std::endl;
-    ss << "# wk " << Squares[p.wk] << std::endl;
-    ss << "# bk " << Squares[p.bk] << std::endl;
+    ss << "# wk " << Squares[p.wk] << std::endl << "# bk " << Squares[p.bk] << std::endl;
     ss << "# Turn " << (p.c == Co_White ? "white" : "black") << std::endl;
-    ss << "# Phase " << gamePhase(p) << std::endl;
-    ss << "# Hash " << computeHash(p) << std::endl;
-    ss << "# FEN " << GetFEN(p) << std::endl;
+    ss << "# Phase " << gamePhase(p) << std::endl << "# Hash " << computeHash(p) << std::endl << "# FEN " << GetFEN(p) << std::endl;
     return ss.str();
 }
 
 inline Color opponentColor(const Color c){ return Color((c+1)%2);}
 
-bool stopFlag;
+bool stopFlag = false;
 
-const int mailbox[120] = {
-     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-     -1,  0,  1,  2,  3,  4,  5,  6,  7, -1,
-     -1,  8,  9, 10, 11, 12, 13, 14, 15, -1,
-     -1, 16, 17, 18, 19, 20, 21, 22, 23, -1,
-     -1, 24, 25, 26, 27, 28, 29, 30, 31, -1,
-     -1, 32, 33, 34, 35, 36, 37, 38, 39, -1,
-     -1, 40, 41, 42, 43, 44, 45, 46, 47, -1,
-     -1, 48, 49, 50, 51, 52, 53, 54, 55, -1,
-     -1, 56, 57, 58, 59, 60, 61, 62, 63, -1,
-     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
-};
+const int mailbox[120] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  0,  1,  2,  3,  4,  5,  6,  7, -1, -1,  8,  9, 10, 11, 12, 13, 14, 15, -1, -1, 16, 17, 18, 19, 20, 21, 22, 23, -1, -1, 24, 25, 26, 27, 28, 29, 30, 31, -1, -1, 32, 33, 34, 35, 36, 37, 38, 39, -1, -1, 40, 41, 42, 43, 44, 45, 46, 47, -1, -1, 48, 49, 50, 51, 52, 53, 54, 55, -1, -1, 56, 57, 58, 59, 60, 61, 62, 63, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
-const int mailbox64[64] = {
-    21, 22, 23, 24, 25, 26, 27, 28,
-    31, 32, 33, 34, 35, 36, 37, 38,
-    41, 42, 43, 44, 45, 46, 47, 48,
-    51, 52, 53, 54, 55, 56, 57, 58,
-    61, 62, 63, 64, 65, 66, 67, 68,
-    71, 72, 73, 74, 75, 76, 77, 78,
-    81, 82, 83, 84, 85, 86, 87, 88,
-    91, 92, 93, 94, 95, 96, 97, 98
-};
+const int mailbox64[64] = { 21, 22, 23, 24, 25, 26, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38, 41, 42, 43, 44, 45, 46, 47, 48, 51, 52, 53, 54, 55, 56, 57, 58, 61, 62, 63, 64, 65, 66, 67, 68, 71, 72, 73, 74, 75, 76, 77, 78, 81, 82, 83, 84, 85, 86, 87, 88, 91, 92, 93, 94, 95, 96, 97, 98};
 
 bool Slide[6] = {false, false, true, true, true, false};
 int Offsets[6] = {8, 8, 4, 4, 8, 8};
-int Offset[6][8] = { { -20, -10, -11, -9, 9, 11, 10, 20 },    /* pawn */
-                     { -21, -19, -12, -8, 8, 12, 19, 21 },    /* knight */
-                     { -11,  -9,   9, 11, 0,  0,  0,  0 },    /* bishop */
-                     { -10,  -1,   1, 10, 0,  0,  0,  0 },    /* rook */
-                     { -11, -10,  -9, -1, 1,  9, 10, 11 },    /* queen */
-                     { -11, -10,  -9, -1, 1,  9, 10, 11 } };  /* king */
+int Offset[6][8] = { { -20, -10, -11, -9, 9, 11, 10, 20 }, { -21, -19, -12, -8, 8, 12, 19, 21 }, { -11,  -9,   9, 11, 0,  0,  0,  0 }, { -10,  -1,   1, 10, 0,  0,  0,  0 }, { -11, -10,  -9, -1, 1,  9, 10, 11 }, { -11, -10,  -9, -1, 1,  9, 10, 11 } };
 
 const ScoreType PST[6][64] = {
  {
@@ -677,9 +620,7 @@ bool readFEN(const std::string & fen, Position & p){
     while ((j <= 64) && (i <= (char)strList[0].length())){
         char letter = strList[0].at(i);
         ++i;
-        Square r = 7-(j-1)/8;
-        Square f = (j-1)%8;
-        Square k = r*8+f;
+        Square k = (7 - (j - 1) / 8) * 8 + ((j - 1) % 8);
         switch (letter) {
         case 'p': p.b[k]= P_bp; break;
         case 'r': p.b[k]= P_br; break;
@@ -788,7 +729,7 @@ void tokenize(const std::string& str, std::vector<std::string>& tokens, const st
   while (std::string::npos != pos || std::string::npos != lastPos) {
     tokens.push_back(str.substr(lastPos, pos - lastPos));
     lastPos = str.find_first_not_of(delimiters, pos);
-    pos = str.find_first_of(delimiters, lastPos);
+    pos     = str.find_first_of(delimiters, lastPos);
   }
 }
 
@@ -890,10 +831,7 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
 }
 
 namespace TimeMan{
-   int msecPerMove;
-   int msecWholeGame;
-   int nbMoveInTC;
-   int msecInc;
+   int msecPerMove, msecWholeGame, nbMoveInTC, msecInc;
    bool isDynamic;
 
    std::chrono::time_point<Clock> startTime;
@@ -914,8 +852,8 @@ namespace TimeMan{
       std::cout << "nbMoveInTC    " << nbMoveInTC << std::endl;
       if ( msecPerMove > 0 ) ms =  msecPerMove;
       else if ( nbMoveInTC > 0){ // mps is given
-      assert(msecWholeGame > 0);
-      assert(nbMoveInTC > 0);
+         assert(msecWholeGame > 0);
+         assert(nbMoveInTC > 0);
          ms = int(0.85 * (msecWholeGame+((msecInc>0)?nbMoveInTC*msecInc:0)) / (float)(nbMoveInTC+0.5));
       }
       else{ // mps is not given
@@ -1297,18 +1235,13 @@ namespace Book {
     #include "bookGenerationTools.h"
 #endif
 
-    template<typename Iter, typename RandomGenerator>
-    Iter select_randomly(Iter start, Iter end, RandomGenerator& g) {
-        std::uniform_int_distribution<> dis(0, (int)std::distance(start, end) - 1);
-        std::advance(start, dis(g));
-        return start;
-    }
-
     template<typename Iter>
     Iter select_randomly(Iter start, Iter end) {
         static std::random_device rd;
         static std::mt19937 gen(rd());
-        return select_randomly(start, end, gen);
+        std::uniform_int_distribution<> dis(0, (int)std::distance(start, end) - 1);
+        std::advance(start, dis(gen));
+        return start;
     }
 
     const Move Get(const Hash h){
@@ -1316,8 +1249,7 @@ namespace Book {
        if ( it == book.end() ) return INVALIDMOVE;
        return *select_randomly(it->second.begin(),it->second.end());
     }
-
-}
+ }
 
 struct SortThreatsFunctor {
     const Position & _p;
