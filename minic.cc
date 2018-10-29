@@ -73,7 +73,7 @@ void init_lmr(){
 }
 
 const unsigned int ttSizeMb  = 128; // here in Mb, will be converted to real size next
-const unsigned int ttESizeMb = 128; // here in Mb, will be converted to real size next 
+const unsigned int ttESizeMb = 128; // here in Mb, will be converted to real size next
 
 bool mateFinder = false;
 
@@ -146,8 +146,8 @@ enum MType : char{
    T_capture    = 1,
    T_ep         = 2,
    T_check      = 3, // not used yet
-   T_promq      = 4,   T_promr      = 5,   T_promb      = 6,   T_promn      = 7,   
-   T_cappromq   = 8,   T_cappromr   = 9,   T_cappromb   = 10,  T_cappromn   = 11, 
+   T_promq      = 4,   T_promr      = 5,   T_promb      = 6,   T_promn      = 7,
+   T_cappromq   = 8,   T_cappromr   = 9,   T_cappromb   = 10,  T_cappromn   = 11,
    T_wks        = 12,   T_wqs       = 13,  T_bks        = 14,  T_bqs        = 15
 };
 
@@ -328,7 +328,7 @@ struct TT{
        assert(e.h > 0);
        evalTable[e.h%ttESize] = e; // always replace
    }
-   
+
 };
 
 TT::Bucket *    TT::table     = 0;
@@ -1269,7 +1269,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
 
   bool futility = false;
   bool lmp = false;
-  
+
   // prunings
   if ( !mateFinder && !rootnode && gp > 0.2 && !pvnode && !isInCheck
       && std::abs(alpha) < MATE-MAX_PLY && std::abs(beta) < MATE-MAX_PLY ){
@@ -1304,7 +1304,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   }
 
   // IID
-  if ( e.h == 0 && pvnode && depth >= iidMinDepth){
+  if ( (e.h == 0 /*|| e.d < depth/3*/) && pvnode && depth >= iidMinDepth){
      std::vector<Move> iidPV;
      pvs(alpha,beta,p,depth/2,pvnode,ply,iidPV,seldepth);
      TT::getEntry(computeHash(p), depth, e);
@@ -1370,7 +1370,8 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         // LMP
         if ( lmp && isPrunable && validMoveCount >= lmpLimit[0][depth] ) continue;
         // SEE
-        if (!SEE(p, *it, -100*depth)) continue;
+        //if (!SEE(p, *it, -100*depth)) continue;
+        if ( futility && Move2Score(*it) < -900 ) continue;
         // LMR
         if ( doLMR && !mateFinder && depth >= lmrMinDepth && isPrunable && std::abs(alpha) < MATE-MAX_PLY && std::abs(beta) < MATE-MAX_PLY ) reduction = lmrReduction[std::min((int)depth,MAX_DEPTH-1)][validMoveCount];
         if (pvnode && reduction > 0) --reduction;
