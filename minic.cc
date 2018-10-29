@@ -62,6 +62,7 @@ const int       lmpMaxDepth              = 10;
 const ScoreType futilityDepthCoeff       = 160;
 const int       iidMinDepth              = 5;
 const int       lmrMinDepth              = 3;
+const int       singularExtensionDepth   = 8;
 
 const int lmpLimit[][lmpMaxDepth + 1] = {
     { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 } , // improved
@@ -1436,7 +1437,20 @@ inline void updateHistoryKillers(const Position & p, DepthType depth, int ply, c
     HistoryT::update(depth, m, p, true);
 }
 
-ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth){
+ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove = INVALIDMOVE);
+
+inline bool singularExtension(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, const TT::Entry & e, const Move m, bool rootnode, int ply) {
+    if (depth >= singularExtensionDepth && sameMove(m, e.m) && !rootnode && std::abs(e.score) < MATE - MAX_DEPTH && e.b == TT::B_beta && e.d >= depth - 3) {
+        ScoreType betaC = e.score - depth;
+        std::vector<Move> sePV;
+        DepthType seSeldetph;
+        ScoreType score = pvs(betaC - 1, betaC, p, depth/2, false, ply, sePV, seSeldetph, m);
+        if (score < betaC) return true;
+    }
+    return false;
+}
+
+ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove){
   if ( std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()) > currentMoveMs ){
     stopFlag = true;
     return STOPSCORE;
@@ -1457,7 +1471,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   const bool rootnode = ply == 1;
 
   TT::Entry e;
-  if (TT::getEntry(computeHash(p), depth, e)) {
+  if (skipMove==INVALIDMOVE && TT::getEntry(computeHash(p), depth, e)) { // if not skipmove
       if (e.h != 0 && !rootnode && std::abs(e.score) < MATE - MAX_DEPTH && !pvnode &&
           ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
           pv.push_back(e.m);
@@ -1521,8 +1535,8 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   bool alphaUpdated = false;
   Move bestMove = INVALIDMOVE;
 
-  // try the tt move first
-  if (e.h != 0) { // should be the case thanks to iid at pvnode
+  // try the tt move first (if not skipped move)
+  if (e.h != 0 && !sameMove(e.m,skipMove)) { // should be the case thanks to iid at pvnode
       Position p2 = p;
       if (apply(p2, e.m)) {
           validMoveCount++;
@@ -1531,13 +1545,14 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
           // extensions
           int extension = 0;
           if (isInCheck) ++extension;
+          if (singularExtension(alpha, beta, p, depth, e, e.m, rootnode, ply)) ++extension;
           ScoreType ttval = -pvs(-beta, -alpha, p2, depth - 1, pvnode, ply + 1, childPV, seldepth);
           if (!stopFlag && ttval > alpha) {
               alphaUpdated = true;
               updatePV(pv, e.m, childPV);
               if (ttval >= beta) {
                   //if (Move2Type(e.m) == T_std && !isInCheck) updateHistoryKillers(p, depth, ply, e.m);
-                  TT::setEntry({ e.m,ttval,TT::B_beta,depth,computeHash(p) });
+                  if ( skipMove==INVALIDMOVE) TT::setEntry({ e.m,ttval,TT::B_beta,depth,computeHash(p) });
                   return ttval;
               }
               alpha = ttval;
@@ -1556,6 +1571,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   bool improving = (!isInCheck && ply >= 2 && val >= scoreStack[ply - 2]);
 
   for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
+     if (sameMove(skipMove, *it)) continue; // skipmove
      if ( e.h != 0 && sameMove(e.m, *it)) continue; // already tried
      Position p2 = p;
      if ( ! apply(p2,*it) ) continue;
@@ -1608,7 +1624,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
                   if ( Move2Type(*it2) == T_std ) HistoryT::update(depth,*it2,p,false);
               }
            }
-           TT::setEntry({*it,val,TT::B_beta,depth,computeHash(p)});
+           if (skipMove == INVALIDMOVE) TT::setEntry({*it,val,TT::B_beta,depth,computeHash(p)});
            return val;
         }
         alpha = val;
@@ -1617,7 +1633,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   }
 
   if ( validMoveCount == 0 ) return isInCheck?-MATE + ply : 0;
-  if ( bestMove != INVALIDMOVE && !stopFlag) TT::setEntry({bestMove,alpha,alphaUpdated?TT::B_exact:TT::B_alpha,depth,computeHash(p)});
+  if ( bestMove != INVALIDMOVE && skipMove == INVALIDMOVE && !stopFlag) TT::setEntry({bestMove,alpha,alphaUpdated?TT::B_exact:TT::B_alpha,depth,computeHash(p)});
 
   return stopFlag?STOPSCORE:alpha;
 }
