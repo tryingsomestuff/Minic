@@ -1445,7 +1445,7 @@ inline bool singularExtension(ScoreType alpha, ScoreType beta, const Position & 
         std::vector<Move> sePV;
         DepthType seSeldetph;
         ScoreType score = pvs(betaC - 1, betaC, p, depth/2, false, ply, sePV, seSeldetph, m);
-        if (score < betaC) return true;
+        if (!stopFlag && score < betaC) return true;
     }
     return false;
 }
@@ -1515,6 +1515,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
        std::vector<Move> nullPV;
        ScoreType nullscore = -pvs(-beta,-beta+1,pN,depth-R,false,ply+1,nullPV,seldepth);
        if ( !stopFlag && nullscore >= beta ) return nullscore;
+       if ( stopFlag ) return STOPSCORE;
      }
 
      // LMP
@@ -1528,7 +1529,8 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   if ( (e.h == 0 /*|| e.d < depth/3*/) && pvnode && depth >= iidMinDepth){
      std::vector<Move> iidPV;
      pvs(alpha,beta,p,depth/2,pvnode,ply,iidPV,seldepth);
-     TT::getEntry(computeHash(p), depth, e);
+     if ( !stopFlag) TT::getEntry(computeHash(p), depth, e);
+     if (stopFlag) return STOPSCORE;
   }
 
   int validMoveCount = 0;
@@ -1558,6 +1560,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
               alpha = ttval;
               bestMove = e.m;
           }
+          if (stopFlag) return STOPSCORE;
       }
   }
 
