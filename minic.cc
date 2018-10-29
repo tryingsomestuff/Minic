@@ -136,11 +136,9 @@ int MvvLvaScores[6][6];
 
 void initMvvLva(){
     static ScoreType IValues[6] = { 1, 2, 3, 5, 9, 20 };
-    for(int v = 0; v < 6 ; ++v){
-        for(int a = 0; a < 6 ; ++a){
+    for(int v = 0; v < 6 ; ++v)
+        for(int a = 0; a < 6 ; ++a)
            MvvLvaScores[v][a] = IValues[v] * 20 - IValues[a];
-        }
-    }
 }
 
 enum MType : char{
@@ -279,8 +277,8 @@ struct TT{
           if (nbuck >= Bucket::nbBucket - 1) return false;
           return getEntry(h,d,e,nbuck+1);
       }
+      e = _e;
       if ( _e.d >= d ){
-         e=_e;
          ++stats.tthits;
          return true;
       }
@@ -413,9 +411,7 @@ std::string GetFENShort2(const Position &p) {
         withCastling = true;
     }
     if (!withCastling) ss << "-";
-    if (p.ep != INVALIDSQUARE) {
-        ss << " " << Squares[p.ep];
-    }
+    if (p.ep != INVALIDSQUARE) ss << " " << Squares[p.ep];
     else ss << " -";
     return ss.str();
 }
@@ -686,9 +682,7 @@ namespace TimeMan{
       std::cout << "msecWholeGame " << msecWholeGame << std::endl;
       std::cout << "msecInc       " << msecInc << std::endl;
       std::cout << "nbMoveInTC    " << nbMoveInTC << std::endl;
-      if ( msecPerMove > 0 ){ // fixed msecPerMove already given (some forced mode depth or time)
-         ms =  msecPerMove;
-      }
+      if ( msecPerMove > 0 ) ms =  msecPerMove;
       else if ( nbMoveInTC > 0){ // mps is given
       assert(msecWholeGame > 0);
       assert(nbMoveInTC > 0);
@@ -802,24 +796,12 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
          }
          if ( ptype == P_wk && !onlyCap ){ // castling
            if ( side == Co_White) {
-              if ( (p.castling & C_wqs) && p.b[Sq_b1] == P_none && p.b[Sq_c1] == P_none && p.b[Sq_d1] == P_none
-                && !isAttacked(p,Sq_c1) && !isAttacked(p,Sq_d1) && !isAttacked(p,Sq_e1)){
-                addMove(from, Sq_c1, T_wqs, moves); // wqs
-              }
-              if ( (p.castling & C_wks) && p.b[Sq_f1] == P_none && p.b[Sq_g1] == P_none
-                && !isAttacked(p,Sq_e1) && !isAttacked(p,Sq_f1) && !isAttacked(p,Sq_g1)){
-                addMove(from, Sq_g1, T_wks, moves); // wks
-              }
+              if ( (p.castling & C_wqs) && p.b[Sq_b1] == P_none && p.b[Sq_c1] == P_none && p.b[Sq_d1] == P_none && !isAttacked(p,Sq_c1) && !isAttacked(p,Sq_d1) && !isAttacked(p,Sq_e1)) addMove(from, Sq_c1, T_wqs, moves); // wqs
+              if ( (p.castling & C_wks) && p.b[Sq_f1] == P_none && p.b[Sq_g1] == P_none && !isAttacked(p,Sq_e1) && !isAttacked(p,Sq_f1) && !isAttacked(p,Sq_g1)) addMove(from, Sq_g1, T_wks, moves); // wks
            }
            else{
-              if ( (p.castling & C_bqs) && p.b[Sq_b8] == P_none && p.b[Sq_c8] == P_none && p.b[Sq_d8] == P_none
-                && !isAttacked(p,Sq_c8) && !isAttacked(p,Sq_d8) && !isAttacked(p,Sq_e8)){
-                addMove(from, Sq_c8, T_bqs, moves); // bqs
-              }
-              if ( (p.castling & C_bks) && p.b[Sq_f8] == P_none && p.b[Sq_g8] == P_none
-                && !isAttacked(p,Sq_e8) && !isAttacked(p,Sq_f8) && !isAttacked(p,Sq_g8)){
-                addMove(from, Sq_g8, T_bks, moves); // bks
-              }
+              if ( (p.castling & C_bqs) && p.b[Sq_b8] == P_none && p.b[Sq_c8] == P_none && p.b[Sq_d8] == P_none && !isAttacked(p,Sq_c8) && !isAttacked(p,Sq_d8) && !isAttacked(p,Sq_e8)) addMove(from, Sq_c8, T_bqs, moves); // bqs
+              if ( (p.castling & C_bks) && p.b[Sq_f8] == P_none && p.b[Sq_g8] == P_none && !isAttacked(p,Sq_e8) && !isAttacked(p,Sq_f8) && !isAttacked(p,Sq_g8)) addMove(from, Sq_g8, T_bks, moves); // bks
            }
          }
        }
@@ -838,17 +820,13 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
                     addMove(from, to, T_cappromb, moves); // pawn capture with promotion
                     addMove(from, to, T_cappromn, moves); // pawn capture with promotion
                  }
-                 else{
-                    addMove(from, to, T_capture, moves); // simple pawn capture
-                 }
+                 else addMove(from, to, T_capture, moves); // simple pawn capture
                }
              }
              else{
                // ep pawn capture
                if ( (abs(offset) == 11 || abs(offset) == 9 ) && (p.ep == to) ) addMove(from, to, T_ep, moves); // en passant
-               else if ( abs(offset) == 20 && !onlyCap && ( SQRANK(from) == 1 || SQRANK(from) == 6 ) && p.b[(from + to)/2] == P_none){
-                  addMove(from, to, T_std, moves); // double push
-               }
+               else if ( abs(offset) == 20 && !onlyCap && ( SQRANK(from) == 1 || SQRANK(from) == 6 ) && p.b[(from + to)/2] == P_none) addMove(from, to, T_std, moves); // double push
                else if ( abs(offset) == 10 && !onlyCap){
                    if ( SQRANK(to) == 0 || SQRANK(to) == 7 ){
                       addMove(from, to, T_promq, moves); // promotion Q
@@ -865,14 +843,11 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
    }
 }
 
-Square kingSquare(const Position & p){
-   return (p.c == Co_White) ? p.wk : p.bk;
-}
+Square kingSquare(const Position & p){ return (p.c == Co_White) ? p.wk : p.bk; }
 
 bool apply(Position & p, const Move & m){
 
    assert(m != INVALIDMOVE);
-   //if ( m == INVALIDMOVE ) return false;
 
    const Square from  = Move2From(m);
    const Square to    = Move2To(m);
@@ -1032,7 +1007,6 @@ bool apply(Position & p, const Move & m){
       p.h ^= ZT[Sq_d8][P_br + PieceShift]; // add rook
       p.h ^= ZT[Sq_c8][P_bk + PieceShift]; // add king
       break;
-
    }
 
    if ( isAttacked(p,kingSquare(p)) ) return false;
@@ -1114,9 +1088,7 @@ bool SEE(const Position & p, const Move & m, ScoreType threshold){
                 endOfSEE = true;
             }
         }
-        if (!validThreatFound) {
-            endOfSEE = true;
-        }
+        if (!validThreatFound) endOfSEE = true;
     }
     return us != p2.c; // We break the above loop when stm loses
 }
@@ -1175,9 +1147,7 @@ struct MoveSorter{
    const DepthType ply;
 };
 
-void sort(std::vector<Move> & moves, const Position & p, DepthType ply, const TT::Entry * e = NULL){
-   std::sort(moves.begin(),moves.end(),MoveSorter(p,ply,e));
-}
+void sort(std::vector<Move> & moves, const Position & p, DepthType ply, const TT::Entry * e = NULL){ std::sort(moves.begin(),moves.end(),MoveSorter(p,ply,e));}
 
 bool isDraw(const Position & p, unsigned int ply){
    ///@todo FIDE draws
@@ -1281,9 +1251,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   TT::Entry e;
   if (TT::getEntry(computeHash(p), depth, e)) {
       if (e.h != 0 && !rootnode && std::abs(e.score) < MATE - MAX_PLY && !pvnode &&
-            (    (e.b == TT::B_alpha && e.score <= alpha)
-              || (e.b == TT::B_beta  && e.score >= beta)
-              || (e.b == TT::B_exact) ) ) {
+          ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
           pv.push_back(e.m);
           return e.score;
       }
@@ -1337,7 +1305,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
 
   // IID
   if ( e.h == 0 && pvnode && depth >= iidMinDepth){
-    std::vector<Move> iidPV;
+     std::vector<Move> iidPV;
      pvs(alpha,beta,p,depth/2,pvnode,ply,iidPV,seldepth);
      TT::getEntry(computeHash(p), depth, e);
   }
@@ -1346,7 +1314,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   bool alphaUpdated = false;
   Move bestMove = INVALIDMOVE;
 
-  // try the tt move
+  // try the tt move first
   if (e.h != 0) { // should be the case thanks to iid at pvnode
       Position p2 = p;
       if (apply(p2, e.m)) {
@@ -1358,7 +1326,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
               alphaUpdated = true;
               updatePV(pv, e.m, childPV);
               if (ttval >= beta) {
-                  if (Move2Type(e.m) == T_std && !isInCheck) updateHistoryKillers(p, depth, ply, e.m);
+                  //if (Move2Type(e.m) == T_std && !isInCheck) updateHistoryKillers(p, depth, ply, e.m);
                   TT::setEntry({ e.m,ttval,TT::B_beta,depth,computeHash(p) });
                   return ttval;
               }
@@ -1390,9 +1358,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      // extensions
      int extension = 0;
      if (isInCheck) ++extension;
-     if ( validMoveCount == 1 || !doPVS){
-        val = -pvs(-beta,-alpha,p2,depth-1+extension,pvnode,ply+1,childPV,seldepth);
-     }
+     if ( validMoveCount == 1 || !doPVS) val = -pvs(-beta,-alpha,p2,depth-1+extension,pvnode,ply+1,childPV,seldepth);
      else{
         // reductions & prunings
         int reduction = 0;
@@ -1406,9 +1372,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         // SEE
         if (!SEE(p, *it, -100*depth)) continue;
         // LMR
-        if ( doLMR && !mateFinder && depth >= lmrMinDepth && isPrunable
-            && std::abs(alpha) < MATE-MAX_PLY && std::abs(beta) < MATE-MAX_PLY )
-            reduction = lmrReduction[std::min((int)depth,MAX_DEPTH-1)][validMoveCount];
+        if ( doLMR && !mateFinder && depth >= lmrMinDepth && isPrunable && std::abs(alpha) < MATE-MAX_PLY && std::abs(beta) < MATE-MAX_PLY ) reduction = lmrReduction[std::min((int)depth,MAX_DEPTH-1)][validMoveCount];
         if (pvnode && reduction > 0) --reduction;
         if (!improving) ++reduction;
         // PVS
@@ -1430,9 +1394,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
            if ( Move2Type(*it) == T_std && !isInCheck){
               updateHistoryKillers(p, depth, ply, *it);
               for(auto it2 = moves.begin() ; *it2!=*it; ++it2){
-                  if ( Move2Type(*it2) == T_std ){
-                     HistoryT::update(depth,*it2,p,false);
-                  }
+                  if ( Move2Type(*it2) == T_std ) HistoryT::update(depth,*it2,p,false);
               }
            }
            TT::setEntry({*it,val,TT::B_beta,depth,computeHash(p)});
@@ -1484,14 +1446,8 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
        score = pvs(alpha,beta,p,depth,true,1,pvLoc,seldepth);
        if ( stopFlag ) break;
        delta *= 2;
-       if (score <= alpha){
-           std::cout << "# Windows research alpha " << alpha << ", score : " << score << ", delta " << delta << std::endl;
-           alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) );
-       }
-       else if (score >= beta ){
-           std::cout << "# Windows research beta" << ", score : " << score << ", delta " << delta << std::endl;
-           beta  = std::min(ScoreType(score + delta),  MATE );
-       }
+       if (score <= alpha) alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) );
+       else if (score >= beta ) beta  = std::min(ScoreType(score + delta),  MATE );
        else break;
     }
 
@@ -1500,15 +1456,9 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
        reachedDepth = depth;
        bestScore    = score;
        const int ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count());
-       std::cout << int(depth)   << " "
-                 << bestScore    << " "
-                 << ms/10        << " "
-                 << stats.nodes + stats.qnodes << " "
-                 << (int)seldepth     << " "
-                 << int((stats.nodes + stats.qnodes)/(ms/1000.f)/1000.) << " "
-                 << stats.tthits/1000 << "\t"
-                 << ToString(pv)    << " "
-                 << "EBF: " << float(stats.nodes + stats.qnodes)/previousNodeCount << std::endl;
+       std::cout << int(depth)     << " " << bestScore << " " << ms/10 << " " << stats.nodes + stats.qnodes << " "
+                 << (int)seldepth  << " " << int((stats.nodes + stats.qnodes)/(ms/1000.f)/1000.) << " " << stats.tthits/1000 << "\t"
+                 << ToString(pv)   << " " << "EBF: " << float(stats.nodes + stats.qnodes)/previousNodeCount << std::endl;
        previousNodeCount = stats.nodes + stats.qnodes;
     }
 
@@ -1522,9 +1472,7 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
       pv.push_back(INVALIDMOVE);
   }
 
-  if (bestScore >= MATE-MAX_PLY) {
-      std::cout << "# Forced mate found ..." << std::endl;
-  }
+  if (bestScore >= MATE-MAX_PLY) std::cout << "# Forced mate found ..." << std::endl;
 
   if (pv.empty()) m = INVALIDMOVE;
   else m = pv[0];
@@ -1536,9 +1484,7 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
 bool readFEN(const std::string & fen, Position & p){
     std::vector<std::string> strList;
     std::stringstream iss(fen);
-    std::copy(std::istream_iterator<std::string>(iss),
-              std::istream_iterator<std::string>(),
-              back_inserter(strList));
+    std::copy(std::istream_iterator<std::string>(iss), std::istream_iterator<std::string>(), back_inserter(strList));
 
     std::cout << "# Reading fen " << fen << std::endl;
 
@@ -1552,8 +1498,7 @@ bool readFEN(const std::string & fen, Position & p){
         Square r = 7-(j-1)/8;
         Square f = (j-1)%8;
         Square k = r*8+f;
-        switch (letter)
-        {
+        switch (letter) {
         case 'p': p.b[k]= P_bp; break;
         case 'r': p.b[k]= P_br; break;
         case 'n': p.b[k]= P_bn; break;
@@ -1621,8 +1566,7 @@ bool readFEN(const std::string & fen, Position & p){
     p.ep = -1;
     if ((strList.size() >= 4) && strList[3] != "-" ){
         if (strList[3].length() >= 2){
-            if ((strList[3].at(0) >= 'a') && (strList[3].at(0) <= 'h') &&
-                    ((strList[3].at(1) == '3') || (strList[3].at(1) == '6'))){
+            if ((strList[3].at(0) >= 'a') && (strList[3].at(0) <= 'h') && ((strList[3].at(1) == '3') || (strList[3].at(1) == '6'))){
                 int f = strList[3].at(0)-97;
                 int r = strList[3].at(1);
                 p.ep = f + 8*r;
@@ -1664,13 +1608,7 @@ bool readFEN(const std::string & fen, Position & p){
 }
 
 struct PerftAccumulator{
-   PerftAccumulator():
-      pseudoNodes(0),
-      validNodes(0),
-      captureNodes(0),
-      epNodes(0),
-      checkNode(0),
-      checkMateNode(0){}
+   PerftAccumulator(): pseudoNodes(0), validNodes(0), captureNodes(0), epNodes(0), checkNode(0), checkMateNode(0){}
 
    Counter pseudoNodes;
    Counter validNodes;
@@ -1713,24 +1651,13 @@ namespace XBoard{
    bool display;
    bool pondering;
 
-   enum Mode : unsigned char {
-        m_play_white = 0,
-        m_play_black = 1,
-        m_force = 2,
-        m_analyze = 3
-   };
+   enum Mode : unsigned char { m_play_white = 0, m_play_black = 1, m_force = 2, m_analyze = 3 };
    Mode mode;
 
-   enum SideToMove : unsigned char {
-        stm_white = 0,
-        stm_black = 1
-   };
+   enum SideToMove : unsigned char { stm_white = 0, stm_black = 1 };
    SideToMove stm;
 
-   enum Ponder : unsigned char {
-        p_off = 0,
-        p_on = 1
-   };
+   enum Ponder : unsigned char { p_off = 0, p_on = 1 };
    Ponder ponder;
 
    std::string command;
@@ -1795,9 +1722,7 @@ namespace XBoard{
       std::vector<Move> pv = search(position,m,d,score,seldepth);
    }
 
-   void stop(){
-      stopFlag = true;
-   }
+   void stop(){ stopFlag = true; }
 
    void stopPonder(){
       if ((int)mode == (int)opponent(stm) && ponder == p_on && pondering) {
@@ -1880,8 +1805,7 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
         bool isCapture = false;
 
         // be carefull, promotion possible !
-        if (strList[1].size() >= 2 && (strList[1].at(0) >= 'a') && (strList[1].at(0) <= 'h') &&
-                ((strList[1].at(1) >= '1') && (strList[1].at(1) <= '8'))) {
+        if (strList[1].size() >= 2 && (strList[1].at(0) >= 'a') && (strList[1].at(0) <= 'h') &&  ((strList[1].at(1) >= '1') && (strList[1].at(1) <= '8'))) {
             if ( strList[1].size() > 2 ){ // promotion
                 std::string prom;
                 if ( strList[1].size() == 3 ){ // probably e7 e8q notation
@@ -1959,9 +1883,7 @@ void XBoard::xboard(){
         }
 
         // if not our turn, and ponder on, let's think ...
-        if(move != INVALIDMOVE && (int)mode == (int)opponent(stm) && ponder == p_on && !pondering){
-           ponderUntilInput();
-        }
+        if(move != INVALIDMOVE && (int)mode == (int)opponent(stm) && ponder == p_on && !pondering)  ponderUntilInput();
 
         bool commandOK = true;
         int once = 0;
@@ -1975,18 +1897,10 @@ void XBoard::xboard(){
             else if ( command == "xboard")  std::cout << "#This is minic!" << std::endl;
             else if ( command == "post")    display = true;
             else if ( command == "nopost")  display = false;
-            else if ( command == "computer"){
-                // nothing !
-            }
-            else if ( strncmp(command.c_str(),"protover",8) == 0){
-                // nothing !
-            }
-            else if ( strncmp(command.c_str(),"accepted",8) == 0){
-                // nothing !
-            }
-            else if ( strncmp(command.c_str(),"rejected",8) == 0){
-                // nothing !
-            }
+            else if ( command == "computer"){ }
+            else if ( strncmp(command.c_str(),"protover",8) == 0){ }
+            else if ( strncmp(command.c_str(),"accepted",8) == 0){ }
+            else if ( strncmp(command.c_str(),"rejected",8) == 0){ }
             else if ( strncmp(command.c_str(),"ping",4) == 0){
                 std::string str(command);
                 size_t p = command.find("ping");
@@ -2050,12 +1964,8 @@ void XBoard::xboard(){
                 if ( mtype == T_std &&
                   from == (whiteToMove?Sq_e1:Sq_e8) &&
                   position.b[from] == (whiteToMove?P_wk:P_bk) ){
-                  if ( to == (whiteToMove?Sq_c1:Sq_c8)){
-                    m = ToMove(from,to,whiteToMove?T_wqs:T_bqs);
-                  }
-                  else if ( to == (whiteToMove?Sq_g1:Sq_g8)){
-                    m = ToMove(from,to,whiteToMove?T_wks:T_bks);
-                  }
+                  if ( to == (whiteToMove?Sq_c1:Sq_c8)) m = ToMove(from,to,whiteToMove?T_wqs:T_bqs);
+                  else if ( to == (whiteToMove?Sq_g1:Sq_g8)) m = ToMove(from,to,whiteToMove?T_wks:T_bks);
                 }
                 if(!makeMove(m,false)){ // make move
                     commandOK = false;
@@ -2141,9 +2051,7 @@ void XBoard::xboard(){
                 int sec = 0;
                 int inc = 0;
                 int mps = 0;
-                if( sscanf(command.c_str(), "level %d %d %d", &mps, &timeLeft, &inc) != 3) {
-                  sscanf(command.c_str(), "level %d %d:%d %d", &mps, &timeLeft, &sec, &inc);
-                }
+                if( sscanf(command.c_str(), "level %d %d %d", &mps, &timeLeft, &inc) != 3) sscanf(command.c_str(), "level %d %d:%d %d", &mps, &timeLeft, &sec, &inc);
                 timeLeft *= 60000;
                 timeLeft += sec * 1000;
                 int msecinc = inc * 1000;
@@ -2154,29 +2062,15 @@ void XBoard::xboard(){
                 TimeMan::msecInc                  = msecinc;
                 depth                             = 64; // infinity
             }
-            else if ( command == "edit"){
-                ///@todo xboard edit
-                ;
-            }
+            else if ( command == "edit"){ }
             else if ( command == "?"){
                 stop();
             }
-            else if ( command == "draw"){
-                ///@todo xboard draw
-                ;
-            }
-            else if ( command == "undo"){
-                ///@todo xboard undo
-                ;
-            }
-            else if ( command == "remove"){
-                ///@todo xboard remove
-                ;
-            }
+            else if ( command == "draw")  { }
+            else if ( command == "undo")  { }
+            else if ( command == "remove"){ }
             //************ end of Xboard command ********//
-            else{
-                std::cout << "#Xboard does not know this command " << command << std::endl;
-            }
+            else std::cout << "#Xboard does not know this command " << command << std::endl;
         } // readline
     } // while true
 
@@ -2187,9 +2081,7 @@ void perft_test(const std::string & fen, DepthType d, unsigned long long int exp
     readFEN(fen, p);
     std::cout << ToString(p) << std::endl;
     PerftAccumulator acc;
-    if (perft(p, d, acc, false) != expected) {
-        std::cout << "Error !! " << fen << " " << expected << std::endl;
-    }
+    if (perft(p, d, acc, false) != expected) std::cout << "Error !! " << fen << " " << expected << std::endl;
     acc.Display();
     std::cout << "##########################" << std::endl;
 }
@@ -2244,6 +2136,10 @@ int main(int argc, char ** argv){
        ///@todo
    }
 
+   if (cli == "-test_see") {
+       ///@todo
+   }
+
    if ( cli == "-eval" ){
       float gp = 0;
       int score = eval(p,gp);
@@ -2272,9 +2168,7 @@ int main(int argc, char ** argv){
 
    if ( cli == "-perft" ){
       DepthType d = 5;
-      if ( argc >= 3 ){
-         d = atoi(argv[3]);
-      };
+      if ( argc >= 3 ) d = atoi(argv[3]);
       PerftAccumulator acc;
       perft(p,d,acc,false);
       acc.Display();
@@ -2283,9 +2177,7 @@ int main(int argc, char ** argv){
 
    if ( cli == "-analyze" ){
       DepthType d = 5;
-      if ( argc >= 3 ){
-         d = atoi(argv[3]);
-      };
+      if ( argc >= 3 ) d = atoi(argv[3]);
       Move bestMove = INVALIDMOVE;
       ScoreType s;
       TimeMan::isDynamic                = false;
@@ -2303,9 +2195,7 @@ int main(int argc, char ** argv){
    if ( cli == "-mateFinder" ){
       mateFinder = true;
       DepthType d = 5;
-      if ( argc >= 3 ){
-         d = atoi(argv[3]);
-      };
+      if ( argc >= 3 ) d = atoi(argv[3]);
       Move bestMove = INVALIDMOVE;
       ScoreType s;
       TimeMan::isDynamic                = false;
