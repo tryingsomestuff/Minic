@@ -683,7 +683,7 @@ bool readFEN(const std::string & fen, Position & p){
     else std::cout << "#No castling right given" << std::endl;
 
     // read en passant and save it (default is invalid)
-    p.ep = -1;
+    p.ep = INVALIDSQUARE;
     if ((strList.size() >= 4) && strList[3] != "-" ){
         if (strList[3].length() >= 2){
             if ((strList[3].at(0) >= 'a') && (strList[3].at(0) <= 'h') && ((strList[3].at(1) == '3') || (strList[3].at(1) == '6'))){
@@ -959,7 +959,7 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
                if (targetC == opponent) addMove(from, to, T_capture, moves); // capture
                break; // as soon as a capture or an own piece is found
              }
-             if ( !onlyCap) addMove(from, to, T_std, moves); // not a capture
+             if (!onlyCap) addMove(from, to, T_std, moves); // not a capture
              if (!Slide[ptype-1]) break; // next direction
            }
          }
@@ -977,9 +977,9 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
          }
        }
        else {
-          int pawnOffsetTrick = side==Co_White?4:0;
+          const int pawnOffsetTrick = side==Co_White?4:0;
           for (Square j = 0; j < 4; ++j) {
-             int offset = Offset[ptype-1][j+pawnOffsetTrick];
+             const int offset = Offset[ptype-1][j+pawnOffsetTrick];
              const Square to = mailbox[mailbox64[from] + offset];
              if (to < 0) continue;
              const Color targetC = getColor(p,to);
@@ -1264,10 +1264,10 @@ struct SortThreatsFunctor {
 bool SEE(const Position & p, const Move & m, ScoreType threshold){
     // Only deal with normal moves
     if (! isCapture(m)) return true;
-    Square from       = Move2From(m);
-    Square to         = Move2To(m);
+    const Square from       = Move2From(m);
+    const Square to         = Move2To(m);
     Piece nextVictim  = p.b[from];
-    Color us          = getColor(p,from);
+    const Color us          = getColor(p,from);
     ScoreType balance = std::abs(getValue(p,to)) - threshold; // The opponent may be able to recapture so this is the best result we can hope for.
     if (balance < 0) return false;
     balance -= std::abs(Values[nextVictim+PieceShift]); // Now assume the worst possible result: that the opponent can capture our piece for free.
@@ -1286,7 +1286,7 @@ bool SEE(const Position & p, const Move & m, ScoreType threshold){
         bool validThreatFound = false;
         int threatId = 0;
         while (!validThreatFound && threatId < stmAttackers.size()) {
-            Move mm = ToMove(stmAttackers[threatId], to, T_capture); ///@todo prom ????
+            const Move mm = ToMove(stmAttackers[threatId], to, T_capture); ///@todo prom ????
             nextVictim = p2.b[stmAttackers[threatId]];
             ++threatId;
             if ( ! apply(p2,mm) ) continue;
@@ -1365,10 +1365,11 @@ void sort(std::vector<Move> & moves, const Position & p, DepthType ply, const TT
 bool isDraw(const Position & p, unsigned int ply, bool isPV = true){
    ///@todo FIDE draws
    int count = 0;
+   const Hash h = computeHash(p);
    const int limit = isPV?3:1;
    for (int k = ply-1; k >=0; --k) {
        if (hashStack[k] == 0) break;
-       if (hashStack[k] == p.h) ++count;
+       if (hashStack[k] == h) ++count;
        if (count >= limit) return true;
    }
    if ( p.fifty >= 100 ) return true;
@@ -1449,7 +1450,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
 
 inline bool singularExtension(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, const TT::Entry & e, const Move m, bool rootnode, int ply) {
     if (depth >= singularExtensionDepth && sameMove(m, e.m) && !rootnode && std::abs(e.score) < MATE - MAX_DEPTH && e.b == TT::B_beta && e.d >= depth - 3) {
-        ScoreType betaC = e.score - depth;
+        const ScoreType betaC = e.score - depth;
         std::vector<Move> sePV;
         DepthType seSeldetph;
         ScoreType score = pvs(betaC - 1, betaC, p, depth/2, false, ply, sePV, seSeldetph, m);
@@ -1521,7 +1522,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
        p.h ^= ZT[4][13];
        int R = depth/4 + 3 + std::min((val-beta)/80,3); // adaptative
        std::vector<Move> nullPV;
-       ScoreType nullscore = -pvs(-beta,-beta+1,pN,depth-R,false,ply+1,nullPV,seldepth);
+       const ScoreType nullscore = -pvs(-beta,-beta+1,pN,depth-R,false,ply+1,nullPV,seldepth);
        if ( !stopFlag && nullscore >= beta ) return nullscore;
        if ( stopFlag ) return STOPSCORE;
      }
@@ -1669,7 +1670,9 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
   ScoreType bestScore = 0;
   m = INVALIDMOVE;
 
-  hashStack[0] = p.h;
+  const int ply = (p.moves-1)*2+1+p.c==Co_Black?1:0;
+
+  hashStack[ply] = p.h;
 
   Counter previousNodeCount = 1;
 
@@ -1691,7 +1694,7 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
     ScoreType score = 0;
     while( delta <= MATE ){
        pvLoc.clear();
-       score = pvs(alpha,beta,p,depth,true,(p.moves-1)*2+1+p.c==Co_Black?1:0,pvLoc,seldepth);
+       score = pvs(alpha,beta,p,depth,true,ply,pvLoc,seldepth);
        if ( stopFlag ) break;
        delta *= 2;
        if (score <= alpha) alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) );
