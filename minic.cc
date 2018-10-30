@@ -20,7 +20,7 @@
 
 //#define IMPORTBOOK
 
-const std::string MinicVersion = "0.9";
+const std::string MinicVersion = "0.10";
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
