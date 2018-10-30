@@ -20,7 +20,7 @@
 
 //#define IMPORTBOOK
 
-const std::string MinicVersion = "0.10";
+const std::string MinicVersion = "0.11";
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
@@ -965,12 +965,14 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
          }
          if ( ptype == P_wk && !onlyCap ){ // castling
            if ( side == Co_White) {
-              if ( (p.castling & C_wqs) && p.b[Sq_b1] == P_none && p.b[Sq_c1] == P_none && p.b[Sq_d1] == P_none && !isAttacked(p,Sq_c1) && !isAttacked(p,Sq_d1) && !isAttacked(p,Sq_e1)) addMove(from, Sq_c1, T_wqs, moves); // wqs
-              if ( (p.castling & C_wks) && p.b[Sq_f1] == P_none && p.b[Sq_g1] == P_none && !isAttacked(p,Sq_e1) && !isAttacked(p,Sq_f1) && !isAttacked(p,Sq_g1)) addMove(from, Sq_g1, T_wks, moves); // wks
+              bool e1Attacked = isAttacked(p,Sq_e1);
+              if ( (p.castling & C_wqs) && p.b[Sq_b1] == P_none && p.b[Sq_c1] == P_none && p.b[Sq_d1] == P_none && !isAttacked(p,Sq_c1) && !isAttacked(p,Sq_d1) && !e1Attacked) addMove(from, Sq_c1, T_wqs, moves); // wqs
+              if ( (p.castling & C_wks) && p.b[Sq_f1] == P_none && p.b[Sq_g1] == P_none && !e1Attacked && !isAttacked(p,Sq_f1) && !isAttacked(p,Sq_g1)) addMove(from, Sq_g1, T_wks, moves); // wks
            }
            else{
-              if ( (p.castling & C_bqs) && p.b[Sq_b8] == P_none && p.b[Sq_c8] == P_none && p.b[Sq_d8] == P_none && !isAttacked(p,Sq_c8) && !isAttacked(p,Sq_d8) && !isAttacked(p,Sq_e8)) addMove(from, Sq_c8, T_bqs, moves); // bqs
-              if ( (p.castling & C_bks) && p.b[Sq_f8] == P_none && p.b[Sq_g8] == P_none && !isAttacked(p,Sq_e8) && !isAttacked(p,Sq_f8) && !isAttacked(p,Sq_g8)) addMove(from, Sq_g8, T_bks, moves); // bks
+              const bool e8Attacked = isAttacked(p,Sq_e8);
+              if ( (p.castling & C_bqs) && p.b[Sq_b8] == P_none && p.b[Sq_c8] == P_none && p.b[Sq_d8] == P_none && !isAttacked(p,Sq_c8) && !isAttacked(p,Sq_d8) && !e8Attacked) addMove(from, Sq_c8, T_bqs, moves); // bqs
+              if ( (p.castling & C_bks) && p.b[Sq_f8] == P_none && p.b[Sq_g8] == P_none && !e8Attacked && !isAttacked(p,Sq_f8) && !isAttacked(p,Sq_g8)) addMove(from, Sq_g8, T_bks, moves); // bks
            }
          }
        }
@@ -1317,13 +1319,15 @@ struct MoveSorter{
           const Square to1   = Move2To(a);
 
           s1 = MoveScoring[t1];
-          if (isCapture(t1)) s1 += MvvLvaScores[getPieceType(p,to1)-1][getPieceType(p,from1)-1];
-          if (isCapture(t1) && !SEE(p,a,0)) s1 -= 2000;
           if (e && sameMove(e->m,a)) s1 += 3000;
-          if (sameMove(a,KillerT::killers[0][ply])) s1 += 290;
-          if (sameMove(a,KillerT::killers[1][ply])) s1 += 260;
-          if (t1 == T_std) s1 += HistoryT::history[getPieceIndex(p,from1)][to1];
-          if (t1 == T_std) {
+          else if (sameMove(a,KillerT::killers[0][ply])) s1 += 290;
+          else if (sameMove(a,KillerT::killers[1][ply])) s1 += 260;
+          if (isCapture(t1)){
+              s1 += MvvLvaScores[getPieceType(p,to1)-1][getPieceType(p,from1)-1];
+              if ( !SEE(p,a,0)) s1 -= 2000;
+          }
+          else if ( t1 == T_std){
+              s1 += HistoryT::history[getPieceIndex(p,from1)][to1];
               const int sign1 = getSign(p, from1);
               s1 += PST[getPieceType(p, from1) - 1][sign1 > 0 ? (to1 ^ 56) : to1] - PST[getPieceType(p, from1) - 1][sign1 > 0 ? (from1 ^ 56) : from1];
           }
@@ -1335,13 +1339,15 @@ struct MoveSorter{
           const Square to2   = Move2To(b);
 
           s2 = MoveScoring[t2];
-          if (isCapture(t2)) s2 += MvvLvaScores[getPieceType(p,to2)-1][getPieceType(p,from2)-1];
-          if (isCapture(t2) && !SEE(p,b,0)) s2 -= 2000;
           if (e && sameMove(e->m,b)) s2 += 3000;
-          if (sameMove(b,KillerT::killers[0][ply])) s2 += 290;
-          if (sameMove(b,KillerT::killers[1][ply])) s2 += 260;
-          if (t2 == T_std) s2 += HistoryT::history[getPieceIndex(p,from2)][to2];
-          if (t2 == T_std) {
+          else if (sameMove(b,KillerT::killers[0][ply])) s2 += 290;
+          else if (sameMove(b,KillerT::killers[1][ply])) s2 += 260;
+          if (isCapture(t2)){
+              s2 += MvvLvaScores[getPieceType(p,to2)-1][getPieceType(p,from2)-1];
+              if ( !SEE(p,b,0)) s2 -= 2000;
+          }
+          else if ( t2 == T_std){
+              s2 += HistoryT::history[getPieceIndex(p,from2)][to2];
               const int sign2 = getSign(p, from2);
               s2 += PST[getPieceType(p, from2) - 1][sign2 > 0 ? (to2 ^ 56) : to2] - PST[getPieceType(p, from2) - 1][sign2 > 0 ? (from2 ^ 56) : from2];
           }
@@ -1401,21 +1407,23 @@ ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned 
   if ( val >= beta ) return val;
   if ( val > alpha) alpha = val;
 
-  const bool isInCheck = isAttacked(p, kingSquare(p));
+  //const bool isInCheck = isAttacked(p, kingSquare(p));
 
   std::vector<Move> moves;
   generate(p,moves,true);
   sort(moves,p,ply);
 
+  ScoreType alphaInit = alpha;
+
   for(auto it = moves.begin() ; it != moves.end() ; ++it){
-     // qfutility
-     if ( doQFutility && !isInCheck && val + qfutilityMargin + std::abs(getValue(p,Move2To(*it))) <= alpha) continue;
      // SEE
-     if (!SEE(p, *it, 0)) continue;
+     //if (!SEE(p, *it, 0)) continue;
+     if ( Move2Score(*it) < -900) continue;     // qfutility
+     if ( doQFutility /*&& !isInCheck*/ && val + qfutilityMargin + std::abs(getValue(p,Move2To(*it))) <= alphaInit) continue;
      Position p2 = p;
      if ( ! apply(p2,*it) ) continue;
-     if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply;
-     if (p.c == Co_Black && Move2To(*it) == p.wk) return MATE - ply;
+     if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply + 1;
+     if (p.c == Co_Black && Move2To(*it) == p.wk) return MATE - ply + 1;
      val = -qsearch(-beta,-alpha,p2,ply+1,seldepth);
      if ( val > alpha ){
         if ( val >= beta ) return val;
@@ -1579,8 +1587,8 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      Position p2 = p;
      if ( ! apply(p2,*it) ) continue;
      const Square to = Move2To(*it);
-     if (p.c == Co_White && to == p.bk) return MATE - ply;
-     if (p.c == Co_Black && to == p.wk) return MATE - ply;
+     if (p.c == Co_White && to == p.bk) return MATE - ply + 1;
+     if (p.c == Co_Black && to == p.wk) return MATE - ply + 1;
      validMoveCount++;
      hashStack[ply] = p.h;
      std::vector<Move> childPV;
@@ -1591,9 +1599,9 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      else{
         // reductions & prunings
         int reduction = 0;
-        bool isCheck = isAttacked(p2, kingSquare(p2));
-        bool isAdvancedPawnPush = getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
-        bool isPrunable = !isInCheck && !isCheck && !isAdvancedPawnPush && Move2Type(*it) == T_std && !sameMove(*it, KillerT::killers[0][ply]) && !sameMove(*it, KillerT::killers[1][ply]);
+        const bool isCheck = isAttacked(p2, kingSquare(p2));
+        const bool isAdvancedPawnPush = getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
+        const bool isPrunable = !isInCheck && !isCheck && !isAdvancedPawnPush && Move2Type(*it) == T_std && !sameMove(*it, KillerT::killers[0][ply]) && !sameMove(*it, KillerT::killers[1][ply]);
         // futility
         if ( futility && isPrunable) continue;
         // LMP
