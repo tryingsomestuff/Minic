@@ -908,7 +908,87 @@ bool getAttackers(const Position & p, const Square k, std::vector<Square> & atta
    return !attakers.empty();
 }
 
-bool isAttacked(const Position & p, const Square k){
+Square kingSquare(const Position & p) { return (p.c == Co_White) ? p.wk : p.bk; }
+
+bool isAttacked(const Position & p, const Square k) {
+    assert(k >= 0 && k < 64);
+    const Color side = p.c;
+    if (side == Co_White) {
+        if (SQRANK(k) < 6) {
+            if (SQFILE(k) != 0 && p.b[k + 7] == P_bp) return true;
+            if (SQFILE(k) != 7 && p.b[k + 9] == P_bp) return true;
+        }
+        int ptype = 1; // knight
+        for (int j = 0; j < Offsets[ptype]; ++j) {
+            const Square n = mailbox[mailbox64[k] + Offset[ptype][j]];
+            if (n == -1) continue;
+            if (p.b[n] == P_bn) return true;
+        }
+        ptype = 2; // bishop or queen
+        for (int j = 0; j < Offsets[ptype]; ++j) {
+            for (Square n = k;;) {
+                n = mailbox[mailbox64[n] + Offset[ptype][j]];
+                if (n == -1) break;
+                if (p.b[n] == P_bb || p.b[n] == P_bq) return true;
+                if (p.b[n] != P_none) break;
+            }
+        }
+        ptype = 3; // rook or queen
+        for (int j = 0; j < Offsets[ptype]; ++j) {
+            for (Square n = k;;) {
+                n = mailbox[mailbox64[n] + Offset[ptype][j]];
+                if (n == -1) break;
+                if (p.b[n] == P_br || p.b[n] == P_bq) return true;
+                if (p.b[n] != P_none) break;
+            }
+        }
+        ptype = 5; // king
+        for (int j = 0; j < Offsets[ptype]; ++j) {
+            const Square n = mailbox[mailbox64[k] + Offset[ptype][j]];
+            if (n == -1) continue;
+            if (p.b[n] == P_bk) return true;
+        }
+    }
+    else {
+        if (SQRANK(k) > 1) {
+            if (SQFILE(k) != 0 && p.b[k - 9] == P_wp) return true;
+            if (SQFILE(k) != 7 && p.b[k - 7] == P_wp) return true;
+        }
+        int ptype = 1; // knight
+        for (int j = 0; j < Offsets[ptype]; ++j) {
+            const Square n = mailbox[mailbox64[k] + Offset[ptype][j]];
+            if (n == -1) continue;
+            if (p.b[n] == P_wn) return true;
+        }
+        ptype = 2; // bishop or queen
+        for (int j = 0; j < Offsets[ptype]; ++j) {
+            for (Square n = k;;) {
+                n = mailbox[mailbox64[n] + Offset[ptype][j]];
+                if (n == -1) break;
+                if (p.b[n] == P_wb || p.b[n] == P_wq) return true;
+                if (p.b[n] != P_none) break;
+            }
+        }
+        ptype = 3; // rook or queen
+        for (int j = 0; j < Offsets[ptype]; ++j) {
+            for (Square n = k;;) {
+                n = mailbox[mailbox64[n] + Offset[ptype][j]];
+                if (n == -1) break;
+                if (p.b[n] == P_wr || p.b[n] == P_wq) return true;
+                if (p.b[n] != P_none) break;
+            }
+        }
+        ptype = 5; // king
+        for (int j = 0; j < Offsets[ptype]; ++j) {
+            const Square n = mailbox[mailbox64[k] + Offset[ptype][j]];
+            if (n == -1) continue;
+            if (p.b[n] == P_wk) return true;
+        }
+    }
+    return false;
+}
+
+bool isAttacked_slow(const Position & p, const Square k){
    assert( k >= 0 && k < 64);
    const Color side = p.c;
    const Color opponent = opponentColor(p.c);
@@ -1013,8 +1093,6 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
      }
    }
 }
-
-Square kingSquare(const Position & p){ return (p.c == Co_White) ? p.wk : p.bk; }
 
 bool apply(Position & p, const Move & m){
 
