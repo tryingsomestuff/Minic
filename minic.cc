@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <assert.h>
+#include <bitset>
 #include <cmath>
 #include <stdio.h>
 #include <string.h>
@@ -14,21 +15,23 @@
 #include <unordered_map>
 #ifdef _WIN32
 #include <stdlib.h>
+typedef uint64_t u_int64_t;
 #else
 #include <unistd.h>
 #endif
 
 //#define IMPORTBOOK
 
-const std::string MinicVersion = "0.11";
+const std::string MinicVersion = "0.12";
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
 typedef int Move;    // invalid if < 0
 typedef char Square; // invalid if < 0
-typedef unsigned long long int Hash; // invalid if == 0
-typedef unsigned long long int Counter;
+typedef uint64_t Hash; // invalid if == 0
+typedef uint64_t Counter;
 typedef short int ScoreType;
+typedef uint64_t BitBoard;
 
 #define STOPSCORE   ScoreType(20000)
 #define INFSCORE    ScoreType(10000)
@@ -145,8 +148,90 @@ Color Colors[13] = { Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_Black,
 
 int Signs[13] = { -1, -1, -1, -1, -1, -1, 0, 1, 1, 1, 1, 1, 1 };
 
+#ifdef _WIN32
+inline int popcount64(uint64_t x) {
+    static const uint64_t m1 = 0x5555555555555555; //binary: 0101...
+    static const uint64_t m2 = 0x3333333333333333; //binary: 00110011..
+    static const uint64_t m4 = 0x0f0f0f0f0f0f0f0f; //binary:  4 zeros,  4 ones ...
+    static const uint64_t m8 = 0x00ff00ff00ff00ff; //binary:  8 zeros,  8 ones ...
+    static const uint64_t m16 = 0x0000ffff0000ffff; //binary: 16 zeros, 16 ones ...
+    static const uint64_t m32 = 0x00000000ffffffff; //binary: 32 zeros, 32 ones
+    static const uint64_t hff = 0xffffffffffffffff; //binary: all ones
+    static const uint64_t h01 = 0x0101010101010101; //the sum of 256 to the power of 0,1,2,3...
+    x -= (x >> 1) & m1;             //put count of each 2 bits into those 2 bits
+    x = (x & m2) + ((x >> 2) & m2); //put count of each 4 bits into those 4 bits
+    x = (x + (x >> 4)) & m4;        //put count of each 8 bits into those 8 bits
+    return (x * h01) >> 56;  //returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24) + ...
+}
+#define POPCOUNT(x) popcount64(x)
+inline int BitScanForward(u_int64_t bb) {
+    static const u_int64_t debruijn64 = 0x03f79d71b4cb0a89;
+    static const int index64[64] = { 0, 47,  1, 56, 48, 27,  2, 60, 57, 49, 41, 37, 28, 16,  3, 61, 54, 58, 35, 52, 50, 42, 21, 44, 38, 32, 29, 23, 17, 11,  4, 62, 46, 55, 26, 59, 40, 36, 15, 53, 34, 51, 20, 43, 31, 22, 10, 45, 25, 39, 14, 33, 19, 30,  9, 24, 13, 18,  8, 12,  7,  6,  5, 63 };
+    assert(bb != 0);
+    return index64[((bb ^ (bb - 1)) * debruijn64) >> 58];
+}
+#else // linux
+#define POPCOUNT(x) int(__builtin_popcountll(x))
+inline int BitScanForward(u_int64_t bb) {
+    assert(bb != 0);
+    return __builtin_ctzll(bb);
+}
+#endif
+#define SquareToBitboard(k) (1ull<<k)
+inline int  CountBit(const BitBoard & b) { return POPCOUNT(b);}
+inline void SetBit  (BitBoard & b, Square k) { b |= SquareToBitboard(k);}
+inline void UnsetBit(BitBoard & b, Square k) { b &= ~SquareToBitboard(k);}
+inline bool IsSet   (const BitBoard & b, Square k) { return (SquareToBitboard(k) & b) != 0;}
+
+const BitBoard whiteSquare     = 0x55AA55AA55AA55AA;
+const BitBoard blackSquare     = 0xAA55AA55AA55AA55;
+const BitBoard whiteSideSquare = 0x00000000FFFFFFFF;
+const BitBoard blackSideSquare = 0xFFFFFFFF00000000;
+const BitBoard white7thRank    = 0x000000000000FF00;
+const BitBoard black7thRank    = 0x00FF000000000000;
+
+const BitBoard whiteKingQueenSide = 0x0000000000000007;
+const BitBoard whiteKingKingSide  = 0x00000000000000E0;
+const BitBoard blackKingQueenSide = 0x0700000000000000;
+const BitBoard blackKingKingSide  = 0xe000000000000000;
+
+const BitBoard fileA = 0x0;
+const BitBoard fileH = 0x0;
+const BitBoard rank0 = 0x0;
+const BitBoard rank7 = 0x0;
+
+std::string showBitBoard(const BitBoard & b) {
+    std::bitset<64> bs(b);
+    std::stringstream ss;
+    ss << std::endl;
+    for (int j = 7; j >= 0; --j) {
+        ss << "# +-+-+-+-+-+-+-+-+" << std::endl;
+        ss << "# |";
+        for (int i = 0; i < 8; ++i) ss << (bs[i + j * 8] ? "X" : " ") << '|';
+        ss << std::endl;
+    }
+    ss << "# +-+-+-+-+-+-+-+-+";
+    return ss.str();
+}
+
 struct Position{
   Piece b[64];
+  BitBoard whitePawn;
+  BitBoard whiteKnight;
+  BitBoard whiteBishop;
+  BitBoard whiteRook;
+  BitBoard whiteQueen;
+  BitBoard whiteKing;
+  BitBoard blackPawn;
+  BitBoard blackKnight;
+  BitBoard blackBishop;
+  BitBoard blackRook;
+  BitBoard blackQueen;
+  BitBoard blackKing;
+  BitBoard whitePiece;
+  BitBoard blackPiece;
+  BitBoard occupancy;
+
   unsigned char fifty;
   unsigned char moves;
   unsigned int castling;
@@ -156,6 +241,75 @@ struct Position{
   mutable Hash h;
   Color c;
 };
+
+void initBitBoards(Position & p) {
+    p.whitePawn = 0ull;
+    p.whiteKnight = 0ull;
+    p.whiteBishop = 0ull;
+    p.whiteRook = 0ull;
+    p.whiteQueen = 0ull;
+    p.whiteKing = 0ull;
+    p.blackPawn = 0ull;
+    p.blackKnight = 0ull;
+    p.blackBishop = 0ull;
+    p.blackRook = 0ull;
+    p.blackQueen = 0ull;
+    p.blackKing = 0ull;
+    p.whitePiece = 0ull;
+    p.blackPiece = 0ull;
+    p.occupancy = 0ull;
+}
+
+void setBitBoards(Position & p) {
+    initBitBoards(p);
+    for (Square k = 0; k < 64; ++k) {
+        switch (p.b[k]){
+        case P_none:
+            break;
+        case P_wp:
+            p.whitePawn |= SquareToBitboard(k);
+            break;
+        case P_wn:
+            p.whiteKnight |= SquareToBitboard(k);
+            break;
+        case P_wb:
+            p.whiteBishop |= SquareToBitboard(k);
+            break;
+        case P_wr:
+            p.whiteRook |= SquareToBitboard(k);
+            break;
+        case P_wq:
+            p.whiteQueen |= SquareToBitboard(k);
+            break;
+        case P_wk:
+            p.whiteKing |= SquareToBitboard(k);
+            break;
+        case P_bp:
+            p.blackPawn |= SquareToBitboard(k);
+            break;
+        case P_bn:
+            p.blackKnight |= SquareToBitboard(k);
+            break;
+        case P_bb:
+            p.blackBishop |= SquareToBitboard(k);
+            break;
+        case P_br:
+            p.blackRook |= SquareToBitboard(k);
+            break;
+        case P_bq:
+            p.blackQueen |= SquareToBitboard(k);
+            break;
+        case P_bk:
+            p.blackKing |= SquareToBitboard(k);
+            break;
+        default:
+            assert(false);
+        }
+   }
+   p.whitePiece = p.whitePawn | p.whiteKnight | p.whiteBishop | p.whiteRook | p.whiteQueen | p.whiteKing;
+   p.blackPiece = p.blackPawn | p.blackKnight | p.blackBishop | p.blackRook | p.blackQueen | p.blackKing;
+   p.occupancy = p.whitePiece | p.blackPiece;
+}
 
 inline Piece getPieceIndex (const Position &p, Square k){ assert(k >= 0 && k < 64); return Piece(p.b[k] + PieceShift); }
 
@@ -465,6 +619,9 @@ std::string ToString(const Position & p){
     ss << "# wk " << Squares[p.wk] << std::endl << "# bk " << Squares[p.bk] << std::endl;
     ss << "# Turn " << (p.c == Co_White ? "white" : "black") << std::endl;
     ss << "# Phase " << gamePhase(p) << std::endl << "# Hash " << computeHash(p) << std::endl << "# FEN " << GetFEN(p) << std::endl;
+
+    ss << showBitBoard(p.occupancy) << std::endl;
+
     return ss.str();
 }
 
@@ -720,6 +877,8 @@ bool readFEN(const std::string & fen, Position & p){
     else p.moves = 1;
 
     p.h = 0; p.h = computeHash(p);
+
+    setBitBoards(p);
 
     return true;
 }

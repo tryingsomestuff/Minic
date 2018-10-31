@@ -10,10 +10,9 @@ Quite poor for a chess engine but already way to strong for me !
 
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
-   1 minic_0.10_linux_x64_see4.2      98      34     218   63.8%   45.0%
-   2 minic_0.9_linux_x64_see4.2      83      33     217   61.8%   48.8%
-   3 fairymax                       34      38     217   54.8%   33.2%
-   4 tscp                         -244      49     218   19.7%   19.3%
+1 Minic                         166      40     200   72.3%   35.5%
+2 fairymax                      -21      43     200   47.0%   21.0%
+3 tscp181                      -141      44     200   30.8%   26.5%
 ```
 
 ## How to compile:
