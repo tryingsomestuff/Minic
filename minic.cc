@@ -988,39 +988,6 @@ bool isAttacked(const Position & p, const Square k) {
     return false;
 }
 
-bool isAttacked_slow(const Position & p, const Square k){
-   assert( k >= 0 && k < 64);
-   const Color side = p.c;
-   const Color opponent = opponentColor(p.c);
-   for (Square i = 0; i < 64; ++i){
-      if (getColor(p,i) == opponent) {
-         if (getPieceType(p,i) == P_wp) {
-            if (side == Co_White) {
-               if ( SQFILE(i) != 0 && i - 9 == k) return true;
-               if ( SQFILE(i) != 7 && i - 7 == k) return true;
-            }
-            else {
-               if ( SQFILE(i) != 0 && i + 7 == k) return true;
-               if ( SQFILE(i) != 7 && i + 9 == k) return true;
-            }
-         }
-         else{
-            const Piece ptype = getPieceType(p,i);
-            for (int j = 0; j < Offsets[ptype-1]; ++j){
-               for (Square n = i;;) {
-                  n = mailbox[mailbox64[n] + Offset[ptype-1][j]];
-                  if (n == -1) break;
-                  if (n == k) return true;
-                  if (p.b[n] != P_none) break;
-                  if ( !Slide[ptype-1]) break;
-               }
-            }
-         }
-      }
-   }
-   return false;
-}
-
 void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = false){
    moves.clear();
    const Color side = p.c;
