@@ -178,10 +178,10 @@ inline int BitScanForward(u_int64_t bb) {
 }
 #endif
 #define SquareToBitboard(k) (1ull<<k)
-inline int  CountBit(const BitBoard & b) { return POPCOUNT(b);}
-inline void SetBit  (BitBoard & b, Square k) { b |= SquareToBitboard(k);}
-inline void UnsetBit(BitBoard & b, Square k) { b &= ~SquareToBitboard(k);}
-inline bool IsSet   (const BitBoard & b, Square k) { return (SquareToBitboard(k) & b) != 0;}
+inline int  countBit(const BitBoard & b) { return POPCOUNT(b);}
+inline void setBit  (BitBoard & b, Square k) { b |= SquareToBitboard(k);}
+inline void unSetBit(BitBoard & b, Square k) { b &= ~SquareToBitboard(k);}
+inline bool isSet   (const BitBoard & b, Square k) { return (SquareToBitboard(k) & b) != 0;}
 
 const BitBoard whiteSquare     = 0x55AA55AA55AA55AA;
 const BitBoard blackSquare     = 0xAA55AA55AA55AA55;
@@ -199,6 +199,8 @@ const BitBoard fileA = 0x0;
 const BitBoard fileH = 0x0;
 const BitBoard rank0 = 0x0;
 const BitBoard rank7 = 0x0;
+
+BitBoard dummy = 0x0;
 
 std::string showBitBoard(const BitBoard & b) {
     std::bitset<64> bs(b);
@@ -308,7 +310,7 @@ void setBitBoards(Position & p) {
    }
    p.whitePiece = p.whitePawn | p.whiteKnight | p.whiteBishop | p.whiteRook | p.whiteQueen | p.whiteKing;
    p.blackPiece = p.blackPawn | p.blackKnight | p.blackBishop | p.blackRook | p.blackQueen | p.blackKing;
-   p.occupancy = p.whitePiece | p.blackPiece;
+   p.occupancy  = p.whitePiece | p.blackPiece;
 }
 
 inline Piece getPieceIndex (const Position &p, Square k){ assert(k >= 0 && k < 64); return Piece(p.b[k] + PieceShift); }
@@ -324,6 +326,22 @@ inline ScoreType getValue  (const Position &p, Square k){ assert(k >= 0 && k < 6
 inline ScoreType getValueEG(const Position &p, Square k){ assert(k >= 0 && k < 64); return ValuesEG[getPieceIndex(p,k)];}
 
 inline ScoreType getSign   (const Position &p, Square k){ assert(k >= 0 && k < 64); return Signs[getPieceIndex(p,k)];}
+
+inline void unSetBit(Position & p, Square k) { ///@todo keep this lookup table in position and implemente copy CTOR and operator
+    assert(k >= 0 && k < 64);
+    BitBoard* allB[13] = { &(p.blackKing),&(p.blackQueen),&(p.blackRook),&(p.blackBishop),&(p.blackKnight),&(p.blackPawn),&dummy,&(p.whitePawn),&(p.whiteKnight),&(p.whiteBishop),&(p.whiteRook),&(p.whiteQueen),&(p.whiteKing) };
+    unSetBit(*allB[getPieceIndex(p, k)], k);
+}
+inline void unSetBit(Position &p, Square k, Piece pp) { ///@todo keep this lookup table in position and implemente copy CTOR and operator
+    assert(k >= 0 && k < 64);
+    BitBoard* allB[13] = { &(p.blackKing),&(p.blackQueen),&(p.blackRook),&(p.blackBishop),&(p.blackKnight),&(p.blackPawn),&dummy,&(p.whitePawn),&(p.whiteKnight),&(p.whiteBishop),&(p.whiteRook),&(p.whiteQueen),&(p.whiteKing) };
+    unSetBit(*allB[pp + PieceShift], k);
+}
+inline void setBit(Position &p, Square k, Piece pp) { ///@todo keep this lookup table in position and implemente copy CTOR and operator
+    assert(k >= 0 && k < 64);
+    BitBoard* allB[13] = { &(p.blackKing),&(p.blackQueen),&(p.blackRook),&(p.blackBishop),&(p.blackKnight),&(p.blackPawn),&dummy,&(p.whitePawn),&(p.whiteKnight),&(p.whiteBishop),&(p.whiteRook),&(p.whiteQueen),&(p.whiteKing) };
+    setBit(*allB[pp + PieceShift], k);
+}
 
 inline ScoreType Move2Score(Move h) { assert(h != INVALIDMOVE); return (h >> 16) & 0xFFFF; }
 inline Square    Move2From (Move h) { assert(h != INVALIDMOVE); return (h >> 10) & 0x3F  ; }
@@ -1239,6 +1257,9 @@ bool apply(Position & p, const Move & m){
       case T_check:
       p.b[from] = P_none;
       p.b[to]   = fromP;
+      unSetBit(p, from, fromP);
+      unSetBit(p, to, toP); // usefull only if move is a capture
+      setBit(p, to, fromP);
 
       p.h ^= ZT[from][fromId]; // remove fromP at from
       if (type == T_capture) p.h ^= ZT[to][toId]; // if capture remove toP at to
@@ -1277,48 +1298,78 @@ bool apply(Position & p, const Move & m){
       break;
 
       case T_ep:
-         p.b[from] = P_none;
-         p.b[to] = fromP;
-         p.b[p.ep + (p.c==Co_White?-8:+8)] = P_none;
-         p.h ^= ZT[from][fromId]; // remove fromP at from
-         p.h ^= ZT[p.ep + (p.c == Co_White ? -8 : +8)][(p.c == Co_White ? P_bp : P_wp) + PieceShift];
-         p.h ^= ZT[to][fromId]; // add fromP at to
+      {
+          const Square epCapSq = p.ep + (p.c == Co_White ? -8 : +8);
+          unSetBit(p, epCapSq); // BEFORE setting p.b new shape !!!
+          unSetBit(p, from);
+          setBit(p, to, fromP);
+          p.b[from] = P_none;
+          p.b[to] = fromP;
+          p.b[epCapSq] = P_none;
+          p.h ^= ZT[from][fromId]; // remove fromP at from
+          p.h ^= ZT[p.ep + (p.c == Co_White ? -8 : +8)][(p.c == Co_White ? P_bp : P_wp) + PieceShift];
+          p.h ^= ZT[to][fromId]; // add fromP at to
+      }
       break;
 
       case T_promq:
       case T_cappromq:
-      if (type == T_capture) p.h ^= ZT[to][toId];
-      p.b[to]   = (p.c==Co_White?P_wq:P_bq);
-      p.b[from] = P_none;
-      p.h ^= ZT[from][fromId];
-      p.h ^= ZT[to][(p.c == Co_White ? P_wq : P_bq) + PieceShift];
+      {
+          if (type == T_capture) p.h ^= ZT[to][toId];
+          const Piece promP = (p.c == Co_White ? P_wq : P_bq);
+          p.b[to] = promP;
+          p.b[from] = P_none;
+          p.h ^= ZT[from][fromId];
+          p.h ^= ZT[to][promP + PieceShift];
+          unSetBit(p, from, fromP);
+          unSetBit(p, to, toP); // usefull only if move is a capture
+          setBit(p, to, promP);
+      }
       break;
 
       case T_promr:
       case T_cappromr:
-      if (type == T_capture) p.h ^= ZT[to][toId];
-      p.b[to]   = (p.c==Co_White?P_wr:P_br);
-      p.b[from] = P_none;
-      p.h ^= ZT[from][fromId];
-      p.h ^= ZT[to][(p.c == Co_White ? P_wr : P_br) + PieceShift];
+      {
+          if (type == T_capture) p.h ^= ZT[to][toId];
+          const Piece promP = (p.c == Co_White ? P_wr : P_br);
+          p.b[to] = promP;
+          p.b[from] = P_none;
+          p.h ^= ZT[from][fromId];
+          p.h ^= ZT[to][promP + PieceShift];
+          unSetBit(p, from, fromP);
+          unSetBit(p, to, toP); // usefull only if move is a capture
+          setBit(p, to, promP);
+      }
       break;
 
       case T_promb:
       case T_cappromb:
-      if (type == T_capture) p.h ^= ZT[to][toId];
-      p.b[to]   = (p.c==Co_White?P_wb:P_bb);
-      p.b[from] = P_none;
-      p.h ^= ZT[from][fromId];
-      p.h ^= ZT[to][(p.c == Co_White ? P_wb : P_bb) + PieceShift];
+      {
+          if (type == T_capture) p.h ^= ZT[to][toId];
+          const Piece promP = (p.c == Co_White ? P_wb : P_bb);
+          p.b[to] = promP;
+          p.b[from] = P_none;
+          p.h ^= ZT[from][fromId];
+          p.h ^= ZT[to][promP + PieceShift];
+          unSetBit(p, from, fromP);
+          unSetBit(p, to, toP); // usefull only if move is a capture
+          setBit(p, to, promP);
+      }
       break;
 
       case T_promn:
       case T_cappromn:
-      if (type == T_capture) p.h ^= ZT[to][toId];
-      p.b[to]   = (p.c==Co_White?P_wn:P_bn);
-      p.b[from] = P_none;
-      p.h ^= ZT[from][fromId];
-      p.h ^= ZT[to][(p.c == Co_White ? P_wn : P_bn) + PieceShift];
+      {
+          if (type == T_capture) p.h ^= ZT[to][toId];
+          const Piece promP = (p.c == Co_White ? P_wn : P_bn);
+          p.b[to] = promP;
+          p.b[from] = P_none;
+          p.h ^= ZT[from][fromId];
+          p.h ^= ZT[to][promP + PieceShift];
+          unSetBit(p, from, fromP);
+          unSetBit(p, to, toP); // usefull only if move is a capture
+          setBit(p, to, promP);
+      }
       break;
 
       case T_wks:
@@ -1331,6 +1382,10 @@ bool apply(Position & p, const Move & m){
       p.h ^= ZT[Sq_e1][P_wk + PieceShift]; // remove king
       p.h ^= ZT[Sq_f1][P_wr + PieceShift]; // add rook
       p.h ^= ZT[Sq_g1][P_wk + PieceShift]; // add king
+      unSetBit(p, Sq_e1, P_wk);
+      setBit(p, Sq_f1, P_wr);
+      setBit(p, Sq_g1, P_wk);
+      unSetBit(p, Sq_h1, P_wr); 
       break;
 
       case T_wqs:
@@ -1343,6 +1398,10 @@ bool apply(Position & p, const Move & m){
       p.h ^= ZT[Sq_e1][P_wk + PieceShift]; // remove king
       p.h ^= ZT[Sq_d1][P_wr + PieceShift]; // add rook
       p.h ^= ZT[Sq_c1][P_wk + PieceShift]; // add king
+      unSetBit(p, Sq_a1, P_wr);
+      setBit(p, Sq_c1, P_wk);
+      setBit(p, Sq_d1, P_wr);
+      unSetBit(p, Sq_e1, P_wk);
       break;
 
       case T_bks:
@@ -1355,6 +1414,10 @@ bool apply(Position & p, const Move & m){
       p.h ^= ZT[Sq_e8][P_bk + PieceShift]; // remove king
       p.h ^= ZT[Sq_f8][P_br + PieceShift]; // add rook
       p.h ^= ZT[Sq_g8][P_bk + PieceShift]; // add king
+      unSetBit(p, Sq_e8, P_bk);
+      setBit(p, Sq_f8, P_br);
+      setBit(p, Sq_g8, P_bk);
+      unSetBit(p, Sq_h8, P_br);
       break;
 
       case T_bqs:
@@ -1367,10 +1430,18 @@ bool apply(Position & p, const Move & m){
       p.h ^= ZT[Sq_e8][P_bk + PieceShift]; // remove king
       p.h ^= ZT[Sq_d8][P_br + PieceShift]; // add rook
       p.h ^= ZT[Sq_c8][P_bk + PieceShift]; // add king
+      unSetBit(p, Sq_a8, P_br);
+      setBit(p, Sq_c8, P_bk);
+      setBit(p, Sq_d8, P_br);
+      unSetBit(p, Sq_e8, P_bk);
       break;
    }
 
    if ( isAttacked(p,kingSquare(p)) ) return false;
+
+   p.whitePiece = p.whitePawn | p.whiteKnight | p.whiteBishop | p.whiteRook | p.whiteQueen | p.whiteKing;
+   p.blackPiece = p.blackPawn | p.blackKnight | p.blackBishop | p.blackRook | p.blackQueen | p.blackKing;
+   p.occupancy  = p.whitePiece | p.blackPiece;
 
    // Update castling right if rook captured
    if ( toP == P_wr && to == Sq_a1 && (p.castling & C_wqs) ){
