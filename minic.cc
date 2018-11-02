@@ -1127,27 +1127,24 @@ inline bool isAttacked(const Position & p, const Square k) { return BB::isAttack
 
 inline bool getAttackers(const Position & p, const Square k, std::vector<Square> & attakers) { return BB::getAttackers(p, k, attakers);}
 
-void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = false){ ///@todo use bitboards here also !
+void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = false){ ///@todo use bitboards in a better way here !
    moves.clear();
    const Color side = p.c;
    const Color opponent = opponentColor(p.c);
-   for(Square from = 0 ; from < 64 ; ++from){
-     const Piece piece = p.b[from];
-     const Piece ptype = (Piece)std::abs(piece);
-     if (Colors[piece+PieceShift] == side) {
+   BitBoard myPieceBB = (p.c == Co_White ? p.whitePiece : p.blackPiece);
+   BitBoard myPieceBBiterator = myPieceBB;
+   while (myPieceBBiterator) {
+       const Square from = BB::popBit(myPieceBBiterator);
+       const Piece piece = p.b[from];
+       const Piece ptype = (Piece)std::abs(piece);
+       static BitBoard(*const pf[])(const Square, const BitBoard, const  Color) = { &BB::coverage<P_wp>, &BB::coverage<P_wn>, &BB::coverage<P_wb>, &BB::coverage<P_wr>, &BB::coverage<P_wq>, &BB::coverage<P_wk> };
        if (ptype != P_wp) {
-         for (Square j = 0; j < Offsets[ptype-1]; ++j) {
-           for (Square to = from;;) {
-             to = mailbox[mailbox64[to] + Offset[ptype-1][j]];
-             if (to < 0) break;
-             const Color targetC = getColor(p,to);
-             if (targetC != Co_None) {
-               if (targetC == opponent) addMove(from, to, T_capture, moves); // capture
-               break; // as soon as a capture or an own piece is found
-             }
-             if (!onlyCap) addMove(from, to, T_std, moves); // not a capture
-             if (!Slide[ptype-1]) break; // next direction
-           }
+         ///@todo generate only capture directly when requiered
+         BitBoard bb = pf[ptype-1](from, p.occupancy, p.c) & ~myPieceBB;
+         while (bb) {
+           const Square to = BB::popBit(bb);
+           const bool isCap = (p.occupancy&SquareToBitboard(to)) != 0ull;
+           if ( !onlyCap || isCap) addMove(from,to,isCap?T_capture:T_std,moves);
          }
          if ( ptype == P_wk && !onlyCap ){ // castling
            if ( side == Co_White) {
@@ -1163,6 +1160,8 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
          }
        }
        else {
+          ///@todo use bitboard !!!
+          //case P_wp: bb = (BB::coverage<P_wp>(from, p.occupancy, p.c) + BB::mask[from].push[p.c]) & ~p.whitePiece; break;
           const int pawnOffsetTrick = side==Co_White?4:0;
           for (Square j = 0; j < 4; ++j) {
              const int offset = Offset[ptype-1][j+pawnOffsetTrick];
@@ -1196,7 +1195,6 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
             }
           }
        }
-     }
    }
 }
 
@@ -2331,6 +2329,52 @@ int main(int argc, char ** argv){
        Square k = Sq_e4;
        if (argc >= 3) k = atoi(argv[3]);       
        std::cout << showBitBoard(BB::isAttackedBB(p, k));
+       return 0;
+   }
+
+   if (cli == "-cov") {
+       Square k = Sq_e4;
+       if (argc >= 3) k = atoi(argv[3]);
+       switch (p.b[k]) {
+       case P_wp:
+           std::cout << showBitBoard((BB::coverage<P_wp>(k, p.occupancy, p.c) + BB::mask[k].push[p.c]) & ~p.whitePiece);
+           break;
+       case P_wn:
+           std::cout << showBitBoard(BB::coverage<P_wn>(k, p.occupancy, p.c) & ~p.whitePiece);
+           break;
+       case P_wb:
+           std::cout << showBitBoard(BB::coverage<P_wb>(k, p.occupancy, p.c) & ~p.whitePiece);
+           break;
+       case P_wr:
+           std::cout << showBitBoard(BB::coverage<P_wr>(k, p.occupancy, p.c) & ~p.whitePiece);
+           break;
+       case P_wq:
+           std::cout << showBitBoard(BB::coverage<P_wq>(k, p.occupancy, p.c) & ~p.whitePiece);
+           break;
+       case P_wk:
+           std::cout << showBitBoard(BB::coverage<P_wk>(k, p.occupancy, p.c) & ~p.whitePiece);
+           break;
+       case P_bk:
+           std::cout << showBitBoard(BB::coverage<P_wk>(k, p.occupancy, p.c) & ~p.blackPiece);
+           break;
+       case P_bq:
+           std::cout << showBitBoard(BB::coverage<P_wq>(k, p.occupancy, p.c )& ~p.blackPiece);
+           break;
+       case P_br:
+           std::cout << showBitBoard(BB::coverage<P_wr>(k, p.occupancy, p.c) & ~p.blackPiece);
+           break;
+       case P_bb:
+           std::cout << showBitBoard(BB::coverage<P_wb>(k, p.occupancy, p.c) & ~p.blackPiece);
+           break;
+       case P_bn:
+           std::cout << showBitBoard(BB::coverage<P_wn>(k, p.occupancy, p.c) & ~p.blackPiece);
+           break;
+       case P_bp:
+           std::cout << showBitBoard((BB::coverage<P_wp>(k, p.occupancy, p.c) + BB::mask[k].push[p.c])& ~p.blackPiece);
+           break;
+       default:
+           std::cout << showBitBoard(0ull);
+       }
        return 0;
    }
 
