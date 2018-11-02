@@ -152,10 +152,7 @@ int Signs[13] = { -1, -1, -1, -1, -1, -1, 0, 1, 1, 1, 1, 1, 1 };
 #define swapbits(x)   (_byteswap_uint64 (x))
 #else // linux
 #define POPCOUNT(x)   int(__builtin_popcountll(x))
-inline int BitScanForward(u_int64_t bb) {
-    assert(bb != 0);
-    return __builtin_ctzll(bb);
-}
+inline int BitScanForward(u_int64_t bb) { assert(bb != 0); return __builtin_ctzll(bb);}
 #define bsf(x,i)      (i=BitScanForward(x))
 #define swapbits(x)   (__builtin_bswap64 (x))
 #endif
@@ -227,18 +224,18 @@ void setBitBoards(Position & p) {
     for (Square k = 0; k < 64; ++k) {
         switch (p.b[k]){
         case P_none: break;
-        case P_wp: p.whitePawn |= SquareToBitboard(k);   break;
+        case P_wp: p.whitePawn   |= SquareToBitboard(k); break;
         case P_wn: p.whiteKnight |= SquareToBitboard(k); break;
         case P_wb: p.whiteBishop |= SquareToBitboard(k); break;
-        case P_wr: p.whiteRook |= SquareToBitboard(k);   break;
-        case P_wq: p.whiteQueen |= SquareToBitboard(k);  break;
-        case P_wk: p.whiteKing |= SquareToBitboard(k);   break;
-        case P_bp: p.blackPawn |= SquareToBitboard(k);   break;
+        case P_wr: p.whiteRook   |= SquareToBitboard(k); break;
+        case P_wq: p.whiteQueen  |= SquareToBitboard(k); break;
+        case P_wk: p.whiteKing   |= SquareToBitboard(k); break;
+        case P_bp: p.blackPawn   |= SquareToBitboard(k); break;
         case P_bn: p.blackKnight |= SquareToBitboard(k); break;
         case P_bb: p.blackBishop |= SquareToBitboard(k); break;
-        case P_br: p.blackRook |= SquareToBitboard(k);   break;
-        case P_bq: p.blackQueen |= SquareToBitboard(k);  break;
-        case P_bk: p.blackKing |= SquareToBitboard(k);   break;
+        case P_br: p.blackRook   |= SquareToBitboard(k); break;
+        case P_bq: p.blackQueen  |= SquareToBitboard(k); break;
+        case P_bk: p.blackKing   |= SquareToBitboard(k); break;
         default: assert(false);
         }
    }
@@ -247,7 +244,7 @@ void setBitBoards(Position & p) {
    p.occupancy  = p.whitePiece | p.blackPiece;
 }
 
-inline Piece getPieceIndex (const Position &p, Square k){ assert(k >= 0 && k < 64); return Piece(p.b[k] + PieceShift); }
+inline Piece getPieceIndex (const Position &p, Square k){ assert(k >= 0 && k < 64); return Piece(p.b[k] + PieceShift);}
 
 inline Piece getPieceType  (const Position &p, Square k){ assert(k >= 0 && k < 64); return (Piece)std::abs(p.b[k]);}
 
@@ -281,15 +278,11 @@ inline ScoreType Move2Score(Move h) { assert(h != INVALIDMOVE); return (h >> 16)
 inline Square    Move2From (Move h) { assert(h != INVALIDMOVE); return (h >> 10) & 0x3F  ; }
 inline Square    Move2To   (Move h) { assert(h != INVALIDMOVE); return (h >>  4) & 0x3F  ; }
 inline MType     Move2Type (Move h) { assert(h != INVALIDMOVE); return MType(h & 0xF)    ; }
-inline Move      ToMove(Square from, Square to, MType type) {
-    assert(from >= 0 && from < 64); assert(to >= 0 && to < 64);
-    return (from << 10) | (to << 4) | type; }
-inline Move      ToMove(Square from, Square to, MType type, ScoreType score) {
-    assert(from >= 0 && from < 64); assert(to >= 0 && to < 64);
-    return (score << 16) | (from << 10) | (to << 4) | type; }
+inline Move      ToMove(Square from, Square to, MType type)                  { assert(from >= 0 && from < 64); assert(to >= 0 && to < 64); return                 (from << 10) | (to << 4) | type; }
+inline Move      ToMove(Square from, Square to, MType type, ScoreType score) { assert(from >= 0 && from < 64); assert(to >= 0 && to < 64); return (score << 16) | (from << 10) | (to << 4) | type; }
 
 Hash randomInt(){
-    static std::mt19937 mt(42); // fixed seed
+    static std::mt19937 mt(42); // fixed seed for ZHash !!!
     static std::uniform_int_distribution<unsigned long long int> dist(0, UINT64_MAX);
     return dist(mt);
 }
@@ -305,23 +298,21 @@ void initHash(){
 
 Hash computeHash(const Position &p){
    if (p.h != 0) return p.h;
-   Hash h = 0;
    for (int k = 0; k < 64; ++k){
       const Piece pp = p.b[k];
-      if ( pp != P_none) h ^= ZT[k][pp+PieceShift];
+      if ( pp != P_none) p.h ^= ZT[k][pp+PieceShift];
    }
-   if ( p.ep != INVALIDSQUARE ) h ^= ZT[p.ep][13];
-   if ( p.castling & C_wks)     h ^= ZT[7][13];
-   if ( p.castling & C_wqs)     h ^= ZT[0][13];
-   if ( p.castling & C_bks)     h ^= ZT[63][13];
-   if ( p.castling & C_bqs)     h ^= ZT[56][13];
-   if ( p.c == Co_White)        h ^= ZT[3][13];
-   if ( p.c == Co_Black)        h ^= ZT[4][13];
-   p.h = h;
-   return h;
+   if ( p.ep != INVALIDSQUARE ) p.h ^= ZT[p.ep][13];
+   if ( p.castling & C_wks)     p.h ^= ZT[7][13];
+   if ( p.castling & C_wqs)     p.h ^= ZT[0][13];
+   if ( p.castling & C_bks)     p.h ^= ZT[63][13];
+   if ( p.castling & C_bqs)     p.h ^= ZT[56][13];
+   if ( p.c == Co_White)        p.h ^= ZT[3][13];
+   if ( p.c == Co_Black)        p.h ^= ZT[4][13];
+   return p.h;
 }
 
-struct TT{
+struct TT{ ///@todo make this a namespace will get some lines back
    enum Bound{ B_exact = 0, B_alpha = 1, B_beta  = 2 };
    struct Entry{
       Entry():m(INVALIDMOVE),score(0),b(B_alpha),d(-1),h(0){}
@@ -768,18 +759,10 @@ bool readFEN(const std::string & fen, Position & p){
     p.ep = INVALIDSQUARE;
     if ((strList.size() >= 4) && strList[3] != "-" ){
         if (strList[3].length() >= 2){
-            if ((strList[3].at(0) >= 'a') && (strList[3].at(0) <= 'h') && ((strList[3].at(1) == '3') || (strList[3].at(1) == '6'))){
-                p.ep = (strList[3].at(0)-97) + 8*(strList[3].at(1));
-            }
-            else {
-                std::cout << "#FEN ERROR 3-1 : bad en passant square : " << strList[3] << std::endl;
-                return false;
-            }
+            if ((strList[3].at(0) >= 'a') && (strList[3].at(0) <= 'h') && ((strList[3].at(1) == '3') || (strList[3].at(1) == '6'))) p.ep = (strList[3].at(0)-97) + 8*(strList[3].at(1));
+            else { std::cout << "#FEN ERROR 3-1 : bad en passant square : " << strList[3] << std::endl; return false; }
         }
-        else{
-            std::cout << "#FEN ERROR 3-2 : bad en passant square : " << strList[3] << std::endl;
-            return false;
-        }
+        else{ std::cout << "#FEN ERROR 3-2 : bad en passant square : " << strList[3] << std::endl; return false; }
     }
     else std::cout << "#No en passant square given" << std::endl;
 
@@ -838,10 +821,7 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
     std::copy(std::istream_iterator<std::string>(iss), std::istream_iterator<std::string>(), back_inserter(strList));
 
     moveType = T_std;
-    if ( strList.empty()){
-        std::cout << "#Trying to read bad move, seems empty " << str << std::endl;
-        return false;
-    }
+    if ( strList.empty()){ std::cout << "#Trying to read bad move, seems empty " << str << std::endl; return false; }
 
     // detect special move
     if (strList[0] == "0-0" || strList[0] == "O-O"){
@@ -853,23 +833,11 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
         else moveType = T_bqs;
     }
     else{
-        if ( strList.size() == 1 ){
-            std::cout << "#Trying to read bad move, malformed (=1) " << str << std::endl;
-            return false;
-        }
-        if ( strList.size() > 2 && strList[2] != "ep"){
-            std::cout << "#Trying to read bad move, malformed (>2)" << str << std::endl;
-            return false;
-        }
+        if ( strList.size() == 1 ){ std::cout << "#Trying to read bad move, malformed (=1) " << str << std::endl; return false; }
+        if ( strList.size() > 2 && strList[2] != "ep"){ std::cout << "#Trying to read bad move, malformed (>2)" << str << std::endl; return false; }
 
-        if (strList[0].size() == 2 && (strList[0].at(0) >= 'a') && (strList[0].at(0) <= 'h') &&
-                ((strList[0].at(1) >= 1) && (strList[0].at(1) <= '8'))) {
-            from = stringToSquare(strList[0]);
-        }
-        else {
-            std::cout << "#Trying to read bad move, invalid from square " << str << std::endl;
-            return false;
-        }
+        if (strList[0].size() == 2 && (strList[0].at(0) >= 'a') && (strList[0].at(0) <= 'h') && ((strList[0].at(1) >= 1) && (strList[0].at(1) <= '8'))) from = stringToSquare(strList[0]);
+        else { std::cout << "#Trying to read bad move, invalid from square " << str << std::endl; return false; }
 
         bool isCapture = false;
 
@@ -904,10 +872,7 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
                isCapture = p.b[to] != P_none;
             }
         }
-        else {
-            std::cout << "#Trying to read bad move, invalid to square " << str << std::endl;
-            return false;
-        }
+        else { std::cout << "#Trying to read bad move, invalid to square " << str << std::endl; return false; }
     }
 
     if (getPieceType(p,from) == P_wp && to == p.ep) moveType = T_ep;
@@ -932,10 +897,10 @@ namespace TimeMan{
 
    int GetNextMSecPerMove(const Position & p){
       int ms = -1;
-      std::cout << "msecPerMove   " << msecPerMove << std::endl;
+      std::cout << "msecPerMove   " << msecPerMove   << std::endl;
       std::cout << "msecWholeGame " << msecWholeGame << std::endl;
-      std::cout << "msecInc       " << msecInc << std::endl;
-      std::cout << "nbMoveInTC    " << nbMoveInTC << std::endl;
+      std::cout << "msecInc       " << msecInc       << std::endl;
+      std::cout << "nbMoveInTC    " << nbMoveInTC    << std::endl;
       if ( msecPerMove > 0 ) ms =  msecPerMove;
       else if ( nbMoveInTC > 0){ // mps is given
          assert(msecWholeGame > 0);
@@ -953,11 +918,7 @@ namespace TimeMan{
    }
 }
 
-void addMove(Square from, Square to, MType type, std::vector<Move> & moves){
-   assert( from >= 0 && from < 64);
-   assert( to >=0 && to < 64);
-   moves.push_back(ToMove(from,to,type,0));
-}
+inline void addMove(Square from, Square to, MType type, std::vector<Move> & moves){ assert( from >= 0 && from < 64); assert( to >=0 && to < 64); moves.push_back(ToMove(from,to,type,0));}
 
 Square kingSquare(const Position & p) { return (p.c == Co_White) ? p.wk : p.bk; }
 
@@ -990,10 +951,10 @@ namespace BB {
             //mask[x].bit = 1UL << x;
 
             for (int y = x - 9; y >= 0 && d[x][y] == -9; y -= 9) mask[x].diagonal |= 1ull << y;
-            for (int y = x + 9; y < 64 && d[x][y] == 9; y += 9) mask[x].diagonal |= 1ull << y;
+            for (int y = x + 9; y < 64 && d[x][y] ==  9; y += 9) mask[x].diagonal |= 1ull << y;
 
             for (int y = x - 7; y >= 0 && d[x][y] == -7; y -= 7) mask[x].antidiagonal |= 1ull << y;
-            for (int y = x + 7; y < 64 && d[x][y] == 7; y += 7) mask[x].antidiagonal |= 1ull << y;
+            for (int y = x + 7; y < 64 && d[x][y] ==  7; y += 7) mask[x].antidiagonal |= 1ull << y;
 
             for (int y = x - 8; y >= 0; y -= 8) mask[x].file |= 1ull << y;
             for (int y = x + 8; y < 64; y += 8) mask[x].file |= 1ull << y;
@@ -1002,15 +963,9 @@ namespace BB {
             int r = x >> 3;
             for (int i = -1, c = 1; i <= 1; i += 2, c = 0) {
                 for (int j = -1; j <= 1; j += 2) {
-                    if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) {
-                        int y = (r + i) * 8 + (f + j);
-                        mask[x].pawnAttack[c] |= 1ull << y;
-                    }
+                    if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) {  mask[x].pawnAttack[c] |= 1ull << ((r + i) * 8 + (f + j)); }
                 }
-                if (0 <= r + i && r + i < 8) {
-                    int y = (r + i) * 8 + f;
-                    mask[x].push[c] = 1ull << y;
-                }
+                if (0 <= r + i && r + i < 8) { mask[x].push[c] = 1ull << ((r + i) * 8 + f); }
             }
             if (r == 3 || r == 4) {
                 if (f > 0) mask[x].enpassant |= 1ull << (x - 1);
@@ -1020,20 +975,14 @@ namespace BB {
             for (int i = -2; i <= 2; i = (i == -1 ? 1 : i + 1)) {
                 for (int j = -2; j <= 2; ++j) {
                     if (i == j || i == -j || j == 0) continue;
-                    if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) {
-                        int y = 8 * (r + i) + (f + j);
-                        mask[x].knight |= 1ull << y;
-                    }
+                    if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) { mask[x].knight |= 1ull << (8 * (r + i) + (f + j)); }
                 }
             }
 
             for (int i = -1; i <= 1; ++i) {
                 for (int j = -1; j <= 1; ++j) {
                     if (i == 0 && j == 0) continue;
-                    if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) {
-                        int y = 8 * (r + i) + (f + j);
-                        mask[x].king |= 1ull << y;
-                    }
+                    if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) { mask[x].king |= 1ull << (8 * (r + i) + (f + j)); }
                 }
             }
             //mask[x].castling = 15;
@@ -1108,18 +1057,8 @@ namespace BB {
     bool getAttackers(const Position & p, const Square k, std::vector<Square> & attakers) {
         attakers.clear();
         BitBoard attack = isAttackedBB(p, k);
-        while (attack) {
-            const Square to = popBit(attack);
-            attakers.push_back(to);
-        }
+        while (attack) { attakers.push_back(popBit(attack)); }
         return !attakers.empty();
-    }
-
-    void generate(std::vector<Move> moves, BitBoard attack, const Square from) {
-        while (attack) {
-            Square to = popBit(attack);
-            moves.push_back(ToMove( from, to, T_std));
-        }
     }
 }
 
@@ -1199,15 +1138,15 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
 }
 
 inline void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, bool isCapture = false, Piece prom = P_none) {
-    const int fromId = fromP + PieceShift;
-    const int toId = toP + PieceShift;
+    const int fromId   = fromP + PieceShift;
+    const int toId     = toP + PieceShift;
     const Piece toPnew = prom != P_none ? prom : fromP;
-    const int toIdnew = prom != P_none ? (prom + PieceShift) : fromId;
+    const int toIdnew  = prom != P_none ? (prom + PieceShift) : fromId;
     p.b[from] = P_none;
-    p.b[to] = toPnew;
+    p.b[to]   = toPnew;
     unSetBit(p, from, fromP);
-    unSetBit(p, to, toP); // usefull only if move is a capture
-    setBit(p, to, toPnew);
+    unSetBit(p, to,   toP); // usefull only if move is a capture
+    setBit  (p, to,   toPnew);
 
     p.h ^= ZT[from][fromId]; // remove fromP at from
     if (isCapture) p.h ^= ZT[to][toId]; // if capture remove toP at to
