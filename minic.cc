@@ -94,24 +94,16 @@ std::string fine70 = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - -";
 int currentMoveMs = 777;
 
 struct Stats{
-   Counter nodes;
-   Counter qnodes;
-   Counter tthits;
+   Counter nodes, qnodes, tthits;
    void init(){
       std::cout << "# Init stat" << std::endl;
-      nodes  = 0;
-      qnodes = 0;
-      tthits = 0;
+      nodes  = 0;  qnodes = 0;   tthits = 0;
    }
 };
 
 Stats stats;
 
-enum Piece : char{
-   P_bk = -6,   P_bq = -5,   P_br = -4,   P_bb = -3,   P_bn = -2,   P_bp = -1,
-   P_none = 0,
-   P_wp = 1,    P_wn = 2,    P_wb = 3,    P_wr = 4,    P_wq = 5,    P_wk = 6
-};
+enum Piece : char{ P_bk = -6,   P_bq = -5,   P_br = -4,   P_bb = -3,   P_bn = -2,   P_bp = -1,   P_none = 0,   P_wp = 1,    P_wn = 2,    P_wb = 3,    P_wr = 4,    P_wq = 5,    P_wk = 6 };
 
 const int PieceShift = 6;
 
