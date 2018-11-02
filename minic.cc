@@ -518,17 +518,20 @@ int gamePhase(const Position & p){
    int absscore = 0;
    int nbPiece  = 0;
    int nbPawn   = 0;
-   for( Square k = 0 ; k < 64 ; ++k){
-      if ( p.b[k] != P_none ){
-         absscore += std::abs(getValue(p,k));
-         if ( std::abs(p.b[k]) != P_wp ) ++nbPiece;
-         else ++nbPawn;
-      }
-   }
+   static const int absValues[7] = { 0, Values[P_wp + PieceShift], Values[P_wn + PieceShift], Values[P_wb + PieceShift], Values[P_wr + PieceShift], Values[P_wq + PieceShift], Values[P_wk + PieceShift] };
+
+   const int nk = (int)countBit(p.whiteKing   | p.blackKing);
+   const int nq = (int)countBit(p.whiteQueen  | p.blackQueen);
+   const int nr = (int)countBit(p.whiteRook   | p.blackRook);
+   const int nb = (int)countBit(p.whiteBishop | p.blackBishop);
+   const int nn = (int)countBit(p.whiteKnight | p.blackKnight);
+   const int np = (int)countBit(p.whitePawn   | p.blackPawn);
+
+   absscore = nk * absValues[P_wk] + nq * absValues[P_wq] + nr * absValues[P_wr] + nb * absValues[P_wb] + nn * absValues[P_wn] + np * absValues[P_wp];
    absscore = 100*(absscore-16000)    / (24140-16000);
-   nbPawn   = 100*nbPawn              / 16;
-   nbPiece  = 100*(nbPiece-2)         / 14;
-   return int(absscore*0.4+nbPiece*0.3+nbPawn*0.3);
+   nbPawn   = 100*np                  / 16;
+   nbPiece  = 100*(nq+nr+nb+nn)       / 14;
+   return int(absscore*0.4+nbPiece*0.3+ nbPawn*0.3);
 }
 
 std::string ToString(const std::vector<Move> & moves){
