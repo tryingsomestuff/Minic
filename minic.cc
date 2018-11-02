@@ -74,6 +74,7 @@ const int lmpLimit[][lmpMaxDepth + 1] = {
 int lmrReduction[MAX_DEPTH][MAX_MOVE];
 
 void init_lmr(){
+    std::cout << "# Init lmr" << std::endl;
     for (int d = 0; d < MAX_DEPTH; d++)
         for (int m = 0; m < MAX_MOVE; m++)
             lmrReduction[d][m] = (int)sqrt(float(d) * m / 8.f);
@@ -97,6 +98,7 @@ struct Stats{
    Counter qnodes;
    Counter tthits;
    void init(){
+      std::cout << "# Init stat" << std::endl;
       nodes  = 0;
       qnodes = 0;
       tthits = 0;
@@ -126,6 +128,7 @@ enum Castling : char{  C_none= 0,   C_wks = 1,   C_wqs = 2,   C_bks = 4,   C_bqs
 int MvvLvaScores[6][6];
 
 void initMvvLva(){
+    std::cout << "# Init mvv-lva" << std::endl;
     static ScoreType IValues[6] = { 1, 2, 3, 5, 9, 20 };
     for(int v = 0; v < 6 ; ++v)
         for(int a = 0; a < 6 ; ++a)
@@ -170,37 +173,41 @@ inline int BitScanForward(u_int64_t bb) {
     assert(bb != 0);
     return index64[((bb ^ (bb - 1)) * debruijn64) >> 58];
 }
+#define swapbits(x) (_byteswap_uint64 (x))
 #else // linux
 #define POPCOUNT(x) int(__builtin_popcountll(x))
 inline int BitScanForward(u_int64_t bb) {
     assert(bb != 0);
     return __builtin_ctzll(bb);
 }
+#define swapbits(x) (__builtin_bswap64 (x))
 #endif
+
 #define SquareToBitboard(k) (1ull<<k)
 inline int  countBit(const BitBoard & b) { return POPCOUNT(b);}
 inline void setBit  (BitBoard & b, Square k) { b |= SquareToBitboard(k);}
 inline void unSetBit(BitBoard & b, Square k) { b &= ~SquareToBitboard(k);}
 inline bool isSet   (const BitBoard & b, Square k) { return (SquareToBitboard(k) & b) != 0;}
 
-const BitBoard whiteSquare     = 0x55AA55AA55AA55AA;
-const BitBoard blackSquare     = 0xAA55AA55AA55AA55;
-const BitBoard whiteSideSquare = 0x00000000FFFFFFFF;
-const BitBoard blackSideSquare = 0xFFFFFFFF00000000;
-const BitBoard white7thRank    = 0x000000000000FF00;
-const BitBoard black7thRank    = 0x00FF000000000000;
-
+const BitBoard whiteSquare        = 0x55AA55AA55AA55AA;
+const BitBoard blackSquare        = 0xAA55AA55AA55AA55;
+const BitBoard whiteSideSquare    = 0x00000000FFFFFFFF;
+const BitBoard blackSideSquare    = 0xFFFFFFFF00000000;
 const BitBoard whiteKingQueenSide = 0x0000000000000007;
 const BitBoard whiteKingKingSide  = 0x00000000000000E0;
 const BitBoard blackKingQueenSide = 0x0700000000000000;
 const BitBoard blackKingKingSide  = 0xe000000000000000;
-
-const BitBoard fileA = 0x0;
-const BitBoard fileH = 0x0;
-const BitBoard rank0 = 0x0;
-const BitBoard rank7 = 0x0;
-
-BitBoard dummy = 0x0;
+const BitBoard fileA = 0x0101010101010101;
+const BitBoard fileH = 0x8080808080808080;
+const BitBoard rank1 = 0x00000000000000ff;
+const BitBoard rank2 = 0x000000000000ff00;
+const BitBoard rank3 = 0x0000000000ff0000;
+const BitBoard rank4 = 0x00000000ff000000;
+const BitBoard rank5 = 0x000000ff00000000;
+const BitBoard rank6 = 0x0000ff0000000000;
+const BitBoard rank7 = 0x00ff000000000000;
+const BitBoard rank8 = 0xff00000000000000;
+BitBoard dummy = 0x0ull;
 
 std::string showBitBoard(const BitBoard & b) {
     std::bitset<64> bs(b);
@@ -218,48 +225,23 @@ std::string showBitBoard(const BitBoard & b) {
 
 struct Position{
   Piece b[64];
-  BitBoard whitePawn;
-  BitBoard whiteKnight;
-  BitBoard whiteBishop;
-  BitBoard whiteRook;
-  BitBoard whiteQueen;
-  BitBoard whiteKing;
-  BitBoard blackPawn;
-  BitBoard blackKnight;
-  BitBoard blackBishop;
-  BitBoard blackRook;
-  BitBoard blackQueen;
-  BitBoard blackKing;
-  BitBoard whitePiece;
-  BitBoard blackPiece;
-  BitBoard occupancy;
+  BitBoard whitePawn,whiteKnight,whiteBishop,whiteRook,whiteQueen,whiteKing;
+  BitBoard blackPawn,blackKnight,blackBishop,blackRook,blackQueen,blackKing;
+  BitBoard whitePiece, blackPiece, occupancy;
 
   unsigned char fifty;
   unsigned char moves;
   unsigned int castling;
-  Square ep;
-  Square wk;
-  Square bk;
-  mutable Hash h;
+  Square ep, wk, bk;
   Color c;
+  mutable Hash h;
+  Move lastMove;
 };
 
 void initBitBoards(Position & p) {
-    p.whitePawn = 0ull;
-    p.whiteKnight = 0ull;
-    p.whiteBishop = 0ull;
-    p.whiteRook = 0ull;
-    p.whiteQueen = 0ull;
-    p.whiteKing = 0ull;
-    p.blackPawn = 0ull;
-    p.blackKnight = 0ull;
-    p.blackBishop = 0ull;
-    p.blackRook = 0ull;
-    p.blackQueen = 0ull;
-    p.blackKing = 0ull;
-    p.whitePiece = 0ull;
-    p.blackPiece = 0ull;
-    p.occupancy = 0ull;
+    p.whitePawn = p.whiteKnight = p.whiteBishop = p.whiteRook = p.whiteQueen = p.whiteKing = 0ull;
+    p.blackPawn = p.blackKnight = p.blackBishop = p.blackRook = p.blackQueen = p.blackKing = 0ull;
+    p.whitePiece = p.blackPiece = p.occupancy = 0ull;
 }
 
 void setBitBoards(Position & p) {
@@ -365,6 +347,7 @@ Hash randomInt(){
 Hash ZT[64][14]; // should be 13 but last ray is for castling[0 7 56 63][13] and ep [k][13] and color [3 4][13]
 
 void initHash(){
+   std::cout << "#Init hash" << std::endl;
    for(int k = 0 ; k < 64 ; ++k)
       for(int j = 0 ; j < 14 ; ++j)
          ZT[k][j] = randomInt();
@@ -415,6 +398,7 @@ struct TT{
    static Bucket * table;
 
    static void initTable(){
+      std::cout << "# Init TT" << std::endl;
       ttSize = powerFloor(ttSizeMb * 1024 * 1024 / (unsigned int)sizeof(Bucket));
       table = new Bucket[ttSize];
       std::cout << "Size of TT " << ttSize * sizeof(Bucket) / 1024 / 1024 << "Mb" << std::endl;
@@ -461,6 +445,7 @@ struct TT{
    static EvalEntry * evalTable;
 
    static void initETable() {
+       std::cout << "# Init eval TT" << std::endl;
        ttESize = powerFloor(ttESizeMb * 1024 * 1024 / (unsigned int)sizeof(EvalEntry));
        evalTable = new EvalEntry[ttESize];
        std::cout << "Size of ETT " << ttESize * sizeof(EvalEntry) / 1024 / 1024 << "Mb" << std::endl;
@@ -494,6 +479,7 @@ unsigned int    TT::ttESize   = 0;
 namespace KillerT{
    Move killers[2][MAX_PLY];
    void initKillers(){
+      std::cout << "# Init killers" << std::endl;
       for(int i = 0; i < 2; ++i)
           for(int k = 0 ; k < MAX_PLY; ++k)
               killers[i][k] = INVALIDMOVE;
@@ -503,6 +489,7 @@ namespace KillerT{
 namespace HistoryT{
    ScoreType history[13][64];
    void initHistory(){
+      std::cout << "# Init history" << std::endl;
       for(int i = 0; i < 13; ++i)
           for(int k = 0 ; k < 64; ++k)
               history[i][k] = 0;
@@ -637,9 +624,6 @@ std::string ToString(const Position & p){
     ss << "# wk " << Squares[p.wk] << std::endl << "# bk " << Squares[p.bk] << std::endl;
     ss << "# Turn " << (p.c == Co_White ? "white" : "black") << std::endl;
     ss << "# Phase " << gamePhase(p) << std::endl << "# Hash " << computeHash(p) << std::endl << "# FEN " << GetFEN(p) << std::endl;
-
-    ss << showBitBoard(p.occupancy) << std::endl;
-
     return ss.str();
 }
 
@@ -1015,6 +999,7 @@ namespace TimeMan{
    std::chrono::time_point<Clock> startTime;
 
    void init(){
+      std::cout << "# Init timemane" << std::endl;
       msecPerMove   = 777;
       msecWholeGame = -1;
       nbMoveInTC    = -1;
@@ -1051,121 +1036,177 @@ void addMove(Square from, Square to, MType type, std::vector<Move> & moves){
    moves.push_back(ToMove(from,to,type,0));
 }
 
-bool getAttackers(const Position & p, const Square k, std::vector<Square> & attakers){
-   assert( k >= 0 && k < 64);
-   const Color side = p.c;
-   const Color opponent = opponentColor(p.c);
-   attakers.clear();
-   for (Square i = 0; i < 64; ++i){
-      if (getColor(p,i) == opponent) {
-         if (getPieceType(p,i) == P_wp) {
-            if (side == Co_White) {
-               if ( SQFILE(i) != 0 && i - 9 == k) attakers.push_back(i);
-               if ( SQFILE(i) != 7 && i - 7 == k) attakers.push_back(i);
-            }
-            else {
-               if ( SQFILE(i) != 0 && i + 7 == k) attakers.push_back(i);
-               if ( SQFILE(i) != 7 && i + 9 == k) attakers.push_back(i);
-            }
-         }
-         else{
-            const Piece ptype = getPieceType(p,i);
-            for (int j = 0; j < Offsets[ptype-1]; ++j){
-               for (Square n = i;;) {
-                  n = mailbox[mailbox64[n] + Offset[ptype-1][j]];
-                  if (n == -1) break;
-                  if (n == k) attakers.push_back(i);
-                  if (p.b[n] != P_none) break;
-                  if ( !Slide[ptype-1]) break;
-               }
-            }
-         }
-      }
-   }
-   return !attakers.empty();
-}
-
 Square kingSquare(const Position & p) { return (p.c == Co_White) ? p.wk : p.bk; }
 
-bool isAttacked(const Position & p, const Square k) {
-    assert(k >= 0 && k < 64);
-    const Color side = p.c;
-    if (side == Co_White) {
-        if (SQRANK(k) < 6) {
-            if (SQFILE(k) != 0 && p.b[k + 7] == P_bp) return true;
-            if (SQFILE(k) != 7 && p.b[k + 9] == P_bp) return true;
-        }
-        int ptype = 1; // knight
-        for (int j = 0; j < Offsets[ptype]; ++j) {
-            const Square n = mailbox[mailbox64[k] + Offset[ptype][j]];
-            if (n == -1) continue;
-            if (p.b[n] == P_bn) return true;
-        }
-        ptype = 2; // bishop or queen
-        for (int j = 0; j < Offsets[ptype]; ++j) {
-            for (Square n = k;;) {
-                n = mailbox[mailbox64[n] + Offset[ptype][j]];
-                if (n == -1) break;
-                if (p.b[n] == P_bb || p.b[n] == P_bq) return true;
-                if (p.b[n] != P_none) break;
+namespace BB {
+    int ranks[512];
+    struct Mask {
+        BitBoard diagonal, antidiagonal, file;
+        BitBoard pawnAttack[2], push[2]; // one for each colors
+        BitBoard enpassant, knight, king;
+        Mask() :diagonal(0ull), antidiagonal(0ull), file(0ull), pawnAttack{ 0ull,0ull }, push{ 0ull,0ull }, enpassant(0ull), knight(0ull), king(0ull){}
+    };
+    Mask mask[64];
+
+    inline void initMask() {
+        std::cout << "# Init mask" << std::endl;
+        int d[64][64] = { 0 };
+        for (Square x = 0; x < 64; ++x) {
+            for (int i = -1; i <= 1; ++i) {
+                for (int j = -1; j <= 1; ++j) {
+                    if (i == 0 && j == 0) continue;
+                    for (int r = (x >> 3) + i, f = (x & 7) + j; 0 <= r && r < 8 && 0 <= f && f < 8; r += i, f += j) {
+                        int y = 8 * r + f;
+                        d[x][y] = (8 * i + j);
+                        //mask[x].direction[y] = abs(d[x][y]);
+                        //for (int z = x + d[x][y]; z != y; z += d[x][y]) mask[x].between[y] |= 1UL << z;
+                    }
+                }
             }
-        }
-        ptype = 3; // rook or queen
-        for (int j = 0; j < Offsets[ptype]; ++j) {
-            for (Square n = k;;) {
-                n = mailbox[mailbox64[n] + Offset[ptype][j]];
-                if (n == -1) break;
-                if (p.b[n] == P_br || p.b[n] == P_bq) return true;
-                if (p.b[n] != P_none) break;
+
+            //mask[x].bit = 1UL << x;
+
+            for (int y = x - 9; y >= 0 && d[x][y] == -9; y -= 9) mask[x].diagonal |= 1ull << y;
+            for (int y = x + 9; y < 64 && d[x][y] == 9; y += 9) mask[x].diagonal |= 1ull << y;
+
+            for (int y = x - 7; y >= 0 && d[x][y] == -7; y -= 7) mask[x].antidiagonal |= 1ull << y;
+            for (int y = x + 7; y < 64 && d[x][y] == 7; y += 7) mask[x].antidiagonal |= 1ull << y;
+
+            for (int y = x - 8; y >= 0; y -= 8) mask[x].file |= 1ull << y;
+            for (int y = x + 8; y < 64; y += 8) mask[x].file |= 1ull << y;
+
+            int f = x & 07;
+            int r = x >> 3;
+            for (int i = -1, c = 1; i <= 1; i += 2, c = 0) {
+                for (int j = -1; j <= 1; j += 2) {
+                    if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) {
+                        int y = (r + i) * 8 + (f + j);
+                        mask[x].pawnAttack[c] |= 1ull << y;
+                    }
+                }
+                if (0 <= r + i && r + i < 8) {
+                    int y = (r + i) * 8 + f;
+                    mask[x].push[c] = 1ull << y;
+                }
             }
+            if (r == 3 || r == 4) {
+                if (f > 0) mask[x].enpassant |= 1ull << (x - 1);
+                if (f < 7) mask[x].enpassant |= 1ull << (x + 1);
+            }
+
+            for (int i = -2; i <= 2; i = (i == -1 ? 1 : i + 1)) {
+                for (int j = -2; j <= 2; ++j) {
+                    if (i == j || i == -j || j == 0) continue;
+                    if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) {
+                        int y = 8 * (r + i) + (f + j);
+                        mask[x].knight |= 1ull << y;
+                    }
+                }
+            }
+
+            for (int i = -1; i <= 1; ++i) {
+                for (int j = -1; j <= 1; ++j) {
+                    if (i == 0 && j == 0) continue;
+                    if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) {
+                        int y = 8 * (r + i) + (f + j);
+                        mask[x].king |= 1ull << y;
+                    }
+                }
+            }
+            //mask[x].castling = 15;
         }
-        ptype = 5; // king
-        for (int j = 0; j < Offsets[ptype]; ++j) {
-            const Square n = mailbox[mailbox64[k] + Offset[ptype][j]];
-            if (n == -1) continue;
-            if (p.b[n] == P_bk) return true;
+
+        //foreach(k; 0 .. 6) mask[castlingX[k]].castling = castling[k];
+
+        for (Square o = 0; o < 64; ++o) {
+            for (int k = 0; k < 8; ++k) {
+                int y = 0;
+                for (int x = k - 1; x >= 0; --x) {
+                    BitBoard b = 1ull << x;
+                    y |= b;
+                    if (((o << 1) & b) == b) break;
+                }
+                for (int x = k + 1; x < 8; ++x) {
+                    BitBoard b = 1ull << x;
+                    y |= b;
+                    if (((o << 1) & b) == b) break;
+                }
+                ranks[o * 8 + k] = y;
+            }
         }
     }
-    else {
-        if (SQRANK(k) > 1) {
-            if (SQFILE(k) != 0 && p.b[k - 9] == P_wp) return true;
-            if (SQFILE(k) != 7 && p.b[k - 7] == P_wp) return true;
+
+    inline BitBoard attack(const BitBoard occupancy, const Square x, const BitBoard m) {
+        BitBoard forward = occupancy & m;
+        BitBoard reverse = swapbits(forward);
+        forward -= (1ull << x);
+        reverse -= (1ull << (x ^ 63));
+        forward ^= swapbits(reverse);
+        forward &= m;
+        return forward;
+    }
+
+    inline BitBoard rankAttack(const BitBoard occupancy, const Square x) {
+        const int f = x & 7;
+        const int r = x & 56;
+        const BitBoard o = (occupancy >> r) & 126;
+        return BitBoard(ranks[o * 4 + f]) << r;
+    }
+
+    inline BitBoard fileAttack(const BitBoard occupancy, const Square x) { return attack(occupancy, x, mask[x].file); }
+
+    inline BitBoard diagonalAttack(const BitBoard occupancy, const Square x) { return attack(occupancy, x, mask[x].diagonal); }
+
+    inline BitBoard antidiagonalAttack(const BitBoard occupancy, const Square x) { return attack(occupancy, x, mask[x].antidiagonal); }
+
+    template < Piece > BitBoard coverage(const Square x, const BitBoard occupancy = 0, const Color c = Co_white) { assert(false); }
+    template <       > BitBoard coverage<P_wp>(const Square x, const BitBoard occupancy, const Color c) { return mask[x].pawnAttack[c]; }
+    template <       > BitBoard coverage<P_wn>(const Square x, const BitBoard occupancy, const Color c) { return mask[x].knight; }
+    template <       > BitBoard coverage<P_wb>(const Square x, const BitBoard occupancy, const Color c) { return diagonalAttack(occupancy, x) + antidiagonalAttack(occupancy, x); }
+    template <       > BitBoard coverage<P_wr>(const Square x, const BitBoard occupancy, const Color c) { return fileAttack(occupancy, x) + rankAttack(occupancy, x); }
+    template <       > BitBoard coverage<P_wq>(const Square x, const BitBoard occupancy, const Color c) { return diagonalAttack(occupancy, x) + antidiagonalAttack(occupancy, x) + fileAttack(occupancy, x) + rankAttack(occupancy, x); }
+    template <       > BitBoard coverage<P_wk>(const Square x, const BitBoard occupancy, const Color c) { return mask[x].king; }
+
+    template < Piece pp >
+    inline BitBoard attack(const Square x, const BitBoard target, const BitBoard occupancy = 0, const Color c = Co_White) { return coverage<pp>(x, occupancy, c) & target; }
+
+#define bsf(x,i) _BitScanForward64(&i,x)
+
+    int popBit(BitBoard & b) {
+        unsigned long i = 0;
+        bsf(b, i);
+        b &= b - 1;
+        return i;
+    }
+
+    BitBoard isAttackedBB(const Position &p, const Square x) {
+        if (p.c == Co_White) return attack<P_wb>(x, p.blackBishop | p.blackQueen, p.occupancy) | attack<P_wr>(x, p.blackRook | p.blackQueen, p.occupancy) | attack<P_wn>(x, p.blackKnight) | attack<P_wp>(x, p.blackPawn, p.occupancy, Co_White) | attack<P_wk>(x, p.blackKing);
+        else return attack<P_wb>(x, p.whiteBishop | p.whiteQueen, p.occupancy) | attack<P_wr>(x, p.whiteRook | p.whiteQueen, p.occupancy) | attack<P_wn>(x, p.whiteKnight) | attack<P_wp>(x, p.whitePawn, p.occupancy, Co_Black) | attack<P_wk>(x, p.whiteKing);
+    }
+
+    bool getAttackers(const Position & p, const Square k, std::vector<Square> & attakers) {
+        attakers.clear();
+        BitBoard attack = isAttackedBB(p, k);
+        while (attack) {
+            const Square to = popBit(attack);
+            attakers.push_back(to);
         }
-        int ptype = 1; // knight
-        for (int j = 0; j < Offsets[ptype]; ++j) {
-            const Square n = mailbox[mailbox64[k] + Offset[ptype][j]];
-            if (n == -1) continue;
-            if (p.b[n] == P_wn) return true;
-        }
-        ptype = 2; // bishop or queen
-        for (int j = 0; j < Offsets[ptype]; ++j) {
-            for (Square n = k;;) {
-                n = mailbox[mailbox64[n] + Offset[ptype][j]];
-                if (n == -1) break;
-                if (p.b[n] == P_wb || p.b[n] == P_wq) return true;
-                if (p.b[n] != P_none) break;
-            }
-        }
-        ptype = 3; // rook or queen
-        for (int j = 0; j < Offsets[ptype]; ++j) {
-            for (Square n = k;;) {
-                n = mailbox[mailbox64[n] + Offset[ptype][j]];
-                if (n == -1) break;
-                if (p.b[n] == P_wr || p.b[n] == P_wq) return true;
-                if (p.b[n] != P_none) break;
-            }
-        }
-        ptype = 5; // king
-        for (int j = 0; j < Offsets[ptype]; ++j) {
-            const Square n = mailbox[mailbox64[k] + Offset[ptype][j]];
-            if (n == -1) continue;
-            if (p.b[n] == P_wk) return true;
+        return !attakers.empty();
+    }
+
+    void generate(std::vector<Move> moves, BitBoard attack, const Square from) {
+        while (attack) {
+            Square to = popBit(attack);
+            moves.push_back(ToMove( from, to, T_std));
         }
     }
-    return false;
 }
 
-void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = false){
+inline bool isAttacked(const Position & p, const Square k) { return BB::isAttackedBB(p, k) != 0ull;}
+
+inline bool getAttackers(const Position & p, const Square k, std::vector<Square> & attakers) { return BB::getAttackers(p, k, attakers);}
+
+void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = false){ ///@todo use bitboards here also !
    moves.clear();
    const Color side = p.c;
    const Color opponent = opponentColor(p.c);
@@ -1307,7 +1348,7 @@ bool apply(Position & p, const Move & m){
           p.b[to] = fromP;
           p.b[epCapSq] = P_none;
           p.h ^= ZT[from][fromId]; // remove fromP at from
-          p.h ^= ZT[p.ep + (p.c == Co_White ? -8 : +8)][(p.c == Co_White ? P_bp : P_wp) + PieceShift];
+          p.h ^= ZT[p.ep + epCapSq][(p.c == Co_White ? P_bp : P_wp) + PieceShift];
           p.h ^= ZT[to][fromId]; // add fromP at to
       }
       break;
@@ -1437,11 +1478,11 @@ bool apply(Position & p, const Move & m){
       break;
    }
 
-   if ( isAttacked(p,kingSquare(p)) ) return false;
-
    p.whitePiece = p.whitePawn | p.whiteKnight | p.whiteBishop | p.whiteRook | p.whiteQueen | p.whiteKing;
    p.blackPiece = p.blackPawn | p.blackKnight | p.blackBishop | p.blackRook | p.blackQueen | p.blackKing;
-   p.occupancy  = p.whitePiece | p.blackPiece;
+   p.occupancy = p.whitePiece | p.blackPiece;
+
+   if ( isAttacked(p,kingSquare(p)) ) return false;
 
    // Update castling right if rook captured
    if ( toP == P_wr && to == Sq_a1 && (p.castling & C_wqs) ){
@@ -1473,6 +1514,8 @@ bool apply(Position & p, const Move & m){
    if ( p.c == Co_Black ) ++p.moves;
 
    p.h ^= ZT[3][13]; p.h ^= ZT[4][13];
+
+   p.lastMove = m;
 
    return true;
 }
@@ -1721,7 +1764,7 @@ inline void updateHistoryKillers(const Position & p, DepthType depth, int ply, c
     HistoryT::update(depth, m, p, true);
 }
 
-ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove = INVALIDMOVE);
+ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove = INVALIDMOVE); //forward decl
 
 inline bool singularExtension(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, const TT::Entry & e, const Move m, bool rootnode, int ply) {
     if (depth >= singularExtensionDepth && sameMove(m, e.m) && !rootnode && std::abs(e.score) < MATE - MAX_DEPTH && e.b == TT::B_beta && e.d >= depth - 3) {
@@ -2060,6 +2103,7 @@ namespace XBoard{
    DepthType depth;
 
    void init(){
+      std::cout << "# Init xboard" << std::endl;
       ponder    = p_off;
       mode      = m_analyze;
       stm       = stm_white;
@@ -2369,6 +2413,7 @@ int main(int argc, char ** argv){
    stats.init();
    init_lmr();
    initMvvLva();
+   BB::initMask();
 
    std::string cli = argv[1];
 
@@ -2410,7 +2455,15 @@ int main(int argc, char ** argv){
       std::cout << "#Error reading fen" << std::endl;
       return 1;
    }
+
    std::cout << ToString(p) << std::endl;
+
+   if (cli == "-attacked") {
+       Square k = Sq_e4;
+       if (argc >= 3) k = atoi(argv[3]);       
+       std::cout << showBitBoard(BB::isAttackedBB(p, k));
+       return 0;
+   }
 
    if ( cli == "-eval" ){
       float gp = 0;
