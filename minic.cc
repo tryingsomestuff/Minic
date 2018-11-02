@@ -151,40 +151,26 @@ Color Colors[13] = { Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_Black,
 
 int Signs[13] = { -1, -1, -1, -1, -1, -1, 0, 1, 1, 1, 1, 1, 1 };
 
+#ifdef __MINGW32__
+///@todo
+#else
 #ifdef _WIN32
-inline int popcount64(uint64_t x) {
-    static const uint64_t m1 = 0x5555555555555555; //binary: 0101...
-    static const uint64_t m2 = 0x3333333333333333; //binary: 00110011..
-    static const uint64_t m4 = 0x0f0f0f0f0f0f0f0f; //binary:  4 zeros,  4 ones ...
-    static const uint64_t m8 = 0x00ff00ff00ff00ff; //binary:  8 zeros,  8 ones ...
-    static const uint64_t m16 = 0x0000ffff0000ffff; //binary: 16 zeros, 16 ones ...
-    static const uint64_t m32 = 0x00000000ffffffff; //binary: 32 zeros, 32 ones
-    static const uint64_t hff = 0xffffffffffffffff; //binary: all ones
-    static const uint64_t h01 = 0x0101010101010101; //the sum of 256 to the power of 0,1,2,3...
-    x -= (x >> 1) & m1;             //put count of each 2 bits into those 2 bits
-    x = (x & m2) + ((x >> 2) & m2); //put count of each 4 bits into those 4 bits
-    x = (x + (x >> 4)) & m4;        //put count of each 8 bits into those 8 bits
-    return (x * h01) >> 56;  //returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24) + ...
-}
-#define POPCOUNT(x) popcount64(x)
-inline int BitScanForward(u_int64_t bb) {
-    static const u_int64_t debruijn64 = 0x03f79d71b4cb0a89;
-    static const int index64[64] = { 0, 47,  1, 56, 48, 27,  2, 60, 57, 49, 41, 37, 28, 16,  3, 61, 54, 58, 35, 52, 50, 42, 21, 44, 38, 32, 29, 23, 17, 11,  4, 62, 46, 55, 26, 59, 40, 36, 15, 53, 34, 51, 20, 43, 31, 22, 10, 45, 25, 39, 14, 33, 19, 30,  9, 24, 13, 18,  8, 12,  7,  6,  5, 63 };
-    assert(bb != 0);
-    return index64[((bb ^ (bb - 1)) * debruijn64) >> 58];
-}
-#define swapbits(x) (_byteswap_uint64 (x))
+#define POPCOUNT(x)   __popcnt64(x)
+#define bsf(x,i)      _BitScanForward64(&i,x)
+#define swapbits(x)   (_byteswap_uint64 (x))
 #else // linux
-#define POPCOUNT(x) int(__builtin_popcountll(x))
+#define POPCOUNT(x)   int(__builtin_popcountll(x))
 inline int BitScanForward(u_int64_t bb) {
     assert(bb != 0);
     return __builtin_ctzll(bb);
 }
-#define swapbits(x) (__builtin_bswap64 (x))
+#define bsf(x,i)      (i=BitScanForward(x))
+#define swapbits(x)   (__builtin_bswap64 (x))
+#endif
 #endif
 
 #define SquareToBitboard(k) (1ull<<k)
-inline int  countBit(const BitBoard & b) { return POPCOUNT(b);}
+inline uint64_t  countBit(const BitBoard & b) { return POPCOUNT(b);}
 inline void setBit  (BitBoard & b, Square k) { b |= SquareToBitboard(k);}
 inline void unSetBit(BitBoard & b, Square k) { b &= ~SquareToBitboard(k);}
 inline bool isSet   (const BitBoard & b, Square k) { return (SquareToBitboard(k) & b) != 0;}
@@ -197,17 +183,17 @@ const BitBoard whiteKingQueenSide = 0x0000000000000007;
 const BitBoard whiteKingKingSide  = 0x00000000000000E0;
 const BitBoard blackKingQueenSide = 0x0700000000000000;
 const BitBoard blackKingKingSide  = 0xe000000000000000;
-const BitBoard fileA = 0x0101010101010101;
-const BitBoard fileH = 0x8080808080808080;
-const BitBoard rank1 = 0x00000000000000ff;
-const BitBoard rank2 = 0x000000000000ff00;
-const BitBoard rank3 = 0x0000000000ff0000;
-const BitBoard rank4 = 0x00000000ff000000;
-const BitBoard rank5 = 0x000000ff00000000;
-const BitBoard rank6 = 0x0000ff0000000000;
-const BitBoard rank7 = 0x00ff000000000000;
-const BitBoard rank8 = 0xff00000000000000;
-BitBoard dummy = 0x0ull;
+const BitBoard fileA              = 0x0101010101010101;
+const BitBoard fileH              = 0x8080808080808080;
+const BitBoard rank1              = 0x00000000000000ff;
+const BitBoard rank2              = 0x000000000000ff00;
+const BitBoard rank3              = 0x0000000000ff0000;
+const BitBoard rank4              = 0x00000000ff000000;
+const BitBoard rank5              = 0x000000ff00000000;
+const BitBoard rank6              = 0x0000ff0000000000;
+const BitBoard rank7              = 0x00ff000000000000;
+const BitBoard rank8              = 0xff00000000000000;
+BitBoard dummy                    = 0x0ull;
 
 std::string showBitBoard(const BitBoard & b) {
     std::bitset<64> bs(b);
@@ -248,46 +234,20 @@ void setBitBoards(Position & p) {
     initBitBoards(p);
     for (Square k = 0; k < 64; ++k) {
         switch (p.b[k]){
-        case P_none:
-            break;
-        case P_wp:
-            p.whitePawn |= SquareToBitboard(k);
-            break;
-        case P_wn:
-            p.whiteKnight |= SquareToBitboard(k);
-            break;
-        case P_wb:
-            p.whiteBishop |= SquareToBitboard(k);
-            break;
-        case P_wr:
-            p.whiteRook |= SquareToBitboard(k);
-            break;
-        case P_wq:
-            p.whiteQueen |= SquareToBitboard(k);
-            break;
-        case P_wk:
-            p.whiteKing |= SquareToBitboard(k);
-            break;
-        case P_bp:
-            p.blackPawn |= SquareToBitboard(k);
-            break;
-        case P_bn:
-            p.blackKnight |= SquareToBitboard(k);
-            break;
-        case P_bb:
-            p.blackBishop |= SquareToBitboard(k);
-            break;
-        case P_br:
-            p.blackRook |= SquareToBitboard(k);
-            break;
-        case P_bq:
-            p.blackQueen |= SquareToBitboard(k);
-            break;
-        case P_bk:
-            p.blackKing |= SquareToBitboard(k);
-            break;
-        default:
-            assert(false);
+        case P_none: break;
+        case P_wp: p.whitePawn |= SquareToBitboard(k);   break;
+        case P_wn: p.whiteKnight |= SquareToBitboard(k); break;
+        case P_wb: p.whiteBishop |= SquareToBitboard(k); break;
+        case P_wr: p.whiteRook |= SquareToBitboard(k);   break;
+        case P_wq: p.whiteQueen |= SquareToBitboard(k);  break;
+        case P_wk: p.whiteKing |= SquareToBitboard(k);   break;
+        case P_bp: p.blackPawn |= SquareToBitboard(k);   break;
+        case P_bn: p.blackKnight |= SquareToBitboard(k); break;
+        case P_bb: p.blackBishop |= SquareToBitboard(k); break;
+        case P_br: p.blackRook |= SquareToBitboard(k);   break;
+        case P_bq: p.blackQueen |= SquareToBitboard(k);  break;
+        case P_bk: p.blackKing |= SquareToBitboard(k);   break;
+        default: assert(false);
         }
    }
    p.whitePiece = p.whitePawn | p.whiteKnight | p.whiteBishop | p.whiteRook | p.whiteQueen | p.whiteKing;
@@ -330,12 +290,10 @@ inline Square    Move2From (Move h) { assert(h != INVALIDMOVE); return (h >> 10)
 inline Square    Move2To   (Move h) { assert(h != INVALIDMOVE); return (h >>  4) & 0x3F  ; }
 inline MType     Move2Type (Move h) { assert(h != INVALIDMOVE); return MType(h & 0xF)    ; }
 inline Move      ToMove(Square from, Square to, MType type) {
-    assert(from >= 0 && from < 64);
-    assert(to >= 0 && to < 64);
+    assert(from >= 0 && from < 64); assert(to >= 0 && to < 64);
     return (from << 10) | (to << 4) | type; }
 inline Move      ToMove(Square from, Square to, MType type, ScoreType score) {
-    assert(from >= 0 && from < 64);
-    assert(to >= 0 && to < 64);
+    assert(from >= 0 && from < 64); assert(to >= 0 && to < 64);
     return (score << 16) | (from << 10) | (to << 4) | type; }
 
 Hash randomInt(){
@@ -520,15 +478,11 @@ std::string GetFENShort(const Position &p ){
             const Square k = 8 * i + j;
             if (p.b[k] == P_none)  ++count;
             else {
-                if (count != 0) {
-                    ss << count; count = 0;
-                }
+                if (count != 0) { ss << count; count = 0; }
                 ss << getName(p,k);
             }
             if (j == 7) {
-                if (count != 0) {
-                    ss << count; count = 0;
-                }
+                if (count != 0) { ss << count; count = 0; }
                 if (i != 0) ss << "/";
             }
         }
@@ -541,18 +495,10 @@ std::string GetFENShort2(const Position &p) {
     std::stringstream ss;
     ss << GetFENShort(p) << " " << (p.c == Co_White ? "w" : "b") << " ";
     bool withCastling = false;
-    if (p.castling & C_wks) {
-        ss << "K"; withCastling = true;
-    }
-    if (p.castling & C_wqs) {
-        ss << "Q"; withCastling = true;
-    }
-    if (p.castling & C_bks) {
-        ss << "k"; withCastling = true;
-    }
-    if (p.castling & C_bqs) {
-        ss << "q"; withCastling = true;
-    }
+    if (p.castling & C_wks) { ss << "K"; withCastling = true; }
+    if (p.castling & C_wqs) { ss << "Q"; withCastling = true; }
+    if (p.castling & C_bks) { ss << "k"; withCastling = true; }
+    if (p.castling & C_bqs) { ss << "q"; withCastling = true; }
     if (!withCastling) ss << "-";
     if (p.ep != INVALIDSQUARE) ss << " " << Squares[p.ep];
     else ss << " -";
@@ -572,11 +518,9 @@ std::string ToString(const Move & m, bool withScore = false){ ///@todo use less 
    std::string prom;
    const std::string score = (withScore ? " (" + std::to_string(Move2Score(m)) + ")" : "");
    switch (Move2Type(m)) {
-   case T_bks:
-   case T_wks:
+   case T_bks: case T_wks:
        return "O-O" + score;
-   case T_bqs:
-   case T_wqs:
+   case T_bqs: case T_wqs:
        return "O-O-O" + score;
    default:
        static const std::string suffixe[] = { "","","","","q","r","b","n","q","r","b","n" };
@@ -813,31 +757,18 @@ bool readFEN(const std::string & fen, Position & p){
     if (strList.size() >= 2){
         if (strList[1] == "w")      p.c = Co_White;
         else if (strList[1] == "b") p.c = Co_Black;
-        else {
-            std::cout << "#FEN ERROR 1" << std::endl;
-            return false;
-        }
+        else { std::cout << "#FEN ERROR 1" << std::endl; return false; }
     }
 
     // Initialize all castle possibilities (default is none)
     p.castling = C_none;
     if (strList.size() >= 3){
         bool found = false;
-        if (strList[2].find('K') != std::string::npos){
-            p.castling |= C_wks; found = true;
-        }
-        if (strList[2].find('Q') != std::string::npos){
-            p.castling |= C_wqs; found = true;
-        }
-        if (strList[2].find('k') != std::string::npos){
-            p.castling |= C_bks; found = true;
-        }
-        if (strList[2].find('q') != std::string::npos){
-            p.castling |= C_bqs; found = true;
-        }
-        if ( ! found ){
-            std::cout << "#No castling right given" << std::endl;
-        }
+        if (strList[2].find('K') != std::string::npos){ p.castling |= C_wks; found = true; }
+        if (strList[2].find('Q') != std::string::npos){ p.castling |= C_wqs; found = true; }
+        if (strList[2].find('k') != std::string::npos){ p.castling |= C_bks; found = true; }
+        if (strList[2].find('q') != std::string::npos){ p.castling |= C_bqs; found = true; }
+        if ( ! found ){ std::cout << "#No castling right given" << std::endl; }
     }
     else std::cout << "#No castling right given" << std::endl;
 
@@ -1170,8 +1101,6 @@ namespace BB {
     template < Piece pp >
     inline BitBoard attack(const Square x, const BitBoard target, const BitBoard occupancy = 0, const Color c = Co_White) { return coverage<pp>(x, occupancy, c) & target; }
 
-#define bsf(x,i) _BitScanForward64(&i,x)
-
     int popBit(BitBoard & b) {
         unsigned long i = 0;
         bsf(b, i);
@@ -1181,7 +1110,7 @@ namespace BB {
 
     BitBoard isAttackedBB(const Position &p, const Square x) {
         if (p.c == Co_White) return attack<P_wb>(x, p.blackBishop | p.blackQueen, p.occupancy) | attack<P_wr>(x, p.blackRook | p.blackQueen, p.occupancy) | attack<P_wn>(x, p.blackKnight) | attack<P_wp>(x, p.blackPawn, p.occupancy, Co_White) | attack<P_wk>(x, p.blackKing);
-        else return attack<P_wb>(x, p.whiteBishop | p.whiteQueen, p.occupancy) | attack<P_wr>(x, p.whiteRook | p.whiteQueen, p.occupancy) | attack<P_wn>(x, p.whiteKnight) | attack<P_wp>(x, p.whitePawn, p.occupancy, Co_Black) | attack<P_wk>(x, p.whiteKing);
+        else                 return attack<P_wb>(x, p.whiteBishop | p.whiteQueen, p.occupancy) | attack<P_wr>(x, p.whiteRook | p.whiteQueen, p.occupancy) | attack<P_wn>(x, p.whiteKnight) | attack<P_wp>(x, p.whitePawn, p.occupancy, Co_Black) | attack<P_wk>(x, p.whiteKing);
     }
 
     bool getAttackers(const Position & p, const Square k, std::vector<Square> & attakers) {
@@ -1279,6 +1208,22 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
    }
 }
 
+inline void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, bool isCapture = false, Piece prom = P_none) {
+    const int fromId = fromP + PieceShift;
+    const int toId = toP + PieceShift;
+    const Piece toPnew = prom != P_none ? prom : fromP;
+    const int toIdnew = prom != P_none ? (prom + PieceShift) : fromId;
+    p.b[from] = P_none;
+    p.b[to] = toPnew;
+    unSetBit(p, from, fromP);
+    unSetBit(p, to, toP); // usefull only if move is a capture
+    setBit(p, to, toPnew);
+
+    p.h ^= ZT[from][fromId]; // remove fromP at from
+    if (isCapture) p.h ^= ZT[to][toId]; // if capture remove toP at to
+    p.h ^= ZT[to][toIdnew]; // add fromP (or prom) at to
+}
+
 bool apply(Position & p, const Move & m){
 
    assert(m != INVALIDMOVE);
@@ -1296,15 +1241,7 @@ bool apply(Position & p, const Move & m){
       case T_std:
       case T_capture:
       case T_check:
-      p.b[from] = P_none;
-      p.b[to]   = fromP;
-      unSetBit(p, from, fromP);
-      unSetBit(p, to, toP); // usefull only if move is a capture
-      setBit(p, to, fromP);
-
-      p.h ^= ZT[from][fromId]; // remove fromP at from
-      if (type == T_capture) p.h ^= ZT[to][toId]; // if capture remove toP at to
-      p.h ^= ZT[to][fromId]; // add fromP at to
+      movePiece(p, from, to, fromP, toP, type == T_capture);
 
       // update castling rigths and king position
       if ( fromP == P_wk ){
@@ -1338,8 +1275,7 @@ bool apply(Position & p, const Move & m){
       }
       break;
 
-      case T_ep:
-      {
+      case T_ep: {
           const Square epCapSq = p.ep + (p.c == Co_White ? -8 : +8);
           unSetBit(p, epCapSq); // BEFORE setting p.b new shape !!!
           unSetBit(p, from);
@@ -1354,127 +1290,68 @@ bool apply(Position & p, const Move & m){
       break;
 
       case T_promq:
-      case T_cappromq:
-      {
-          if (type == T_capture) p.h ^= ZT[to][toId];
+      case T_cappromq: {
           const Piece promP = (p.c == Co_White ? P_wq : P_bq);
-          p.b[to] = promP;
-          p.b[from] = P_none;
-          p.h ^= ZT[from][fromId];
-          p.h ^= ZT[to][promP + PieceShift];
-          unSetBit(p, from, fromP);
-          unSetBit(p, to, toP); // usefull only if move is a capture
-          setBit(p, to, promP);
+          movePiece(p, from, to, fromP, toP, type == T_cappromq,promP);
       }
       break;
 
       case T_promr:
-      case T_cappromr:
-      {
-          if (type == T_capture) p.h ^= ZT[to][toId];
+      case T_cappromr: {
           const Piece promP = (p.c == Co_White ? P_wr : P_br);
-          p.b[to] = promP;
-          p.b[from] = P_none;
-          p.h ^= ZT[from][fromId];
-          p.h ^= ZT[to][promP + PieceShift];
-          unSetBit(p, from, fromP);
-          unSetBit(p, to, toP); // usefull only if move is a capture
-          setBit(p, to, promP);
+          movePiece(p, from, to, fromP, toP, type == T_cappromq, promP);
       }
       break;
 
       case T_promb:
-      case T_cappromb:
-      {
-          if (type == T_capture) p.h ^= ZT[to][toId];
+      case T_cappromb: {
           const Piece promP = (p.c == Co_White ? P_wb : P_bb);
-          p.b[to] = promP;
-          p.b[from] = P_none;
-          p.h ^= ZT[from][fromId];
-          p.h ^= ZT[to][promP + PieceShift];
-          unSetBit(p, from, fromP);
-          unSetBit(p, to, toP); // usefull only if move is a capture
-          setBit(p, to, promP);
+          movePiece(p, from, to, fromP, toP, type == T_cappromq, promP);
       }
       break;
 
       case T_promn:
-      case T_cappromn:
-      {
-          if (type == T_capture) p.h ^= ZT[to][toId];
+      case T_cappromn: {
           const Piece promP = (p.c == Co_White ? P_wn : P_bn);
-          p.b[to] = promP;
-          p.b[from] = P_none;
-          p.h ^= ZT[from][fromId];
-          p.h ^= ZT[to][promP + PieceShift];
-          unSetBit(p, from, fromP);
-          unSetBit(p, to, toP); // usefull only if move is a capture
-          setBit(p, to, promP);
+          movePiece(p, from, to, fromP, toP, type == T_cappromq, promP);
       }
       break;
 
       case T_wks:
-      p.b[Sq_e1] = P_none; p.b[Sq_f1] = P_wr; p.b[Sq_g1] = P_wk; p.b[Sq_h1] = P_none;
-      p.wk = Sq_g1;
-      if (p.castling & C_wqs) p.h ^= ZT[0][13];
-      if (p.castling & C_wks) p.h ^= ZT[7][13];
-      p.castling &= ~(C_wks | C_wqs);
-      p.h ^= ZT[Sq_h1][P_wr + PieceShift]; // remove rook
-      p.h ^= ZT[Sq_e1][P_wk + PieceShift]; // remove king
-      p.h ^= ZT[Sq_f1][P_wr + PieceShift]; // add rook
-      p.h ^= ZT[Sq_g1][P_wk + PieceShift]; // add king
-      unSetBit(p, Sq_e1, P_wk);
-      setBit(p, Sq_f1, P_wr);
-      setBit(p, Sq_g1, P_wk);
-      unSetBit(p, Sq_h1, P_wr); 
+          movePiece(p, Sq_e1, Sq_g1, P_wk, P_none);
+          movePiece(p, Sq_h1, Sq_f1, P_wr, P_none);
+          p.wk = Sq_g1;
+          if (p.castling & C_wqs) p.h ^= ZT[0][13];
+          if (p.castling & C_wks) p.h ^= ZT[7][13];
+          p.castling &= ~(C_wks | C_wqs);
       break;
 
       case T_wqs:
-      p.b[Sq_a1] = P_none; p.b[Sq_b1] = P_none; p.b[Sq_c1] = P_wk; p.b[Sq_d1] = P_wr; p.b[Sq_e1] = P_none;
-      p.wk = Sq_c1;
-      if (p.castling & C_wqs) p.h ^= ZT[0][13];
-      if (p.castling & C_wks) p.h ^= ZT[7][13];
-      p.castling &= ~(C_wks | C_wqs);
-      p.h ^= ZT[Sq_a1][P_wr + PieceShift]; // remove rook
-      p.h ^= ZT[Sq_e1][P_wk + PieceShift]; // remove king
-      p.h ^= ZT[Sq_d1][P_wr + PieceShift]; // add rook
-      p.h ^= ZT[Sq_c1][P_wk + PieceShift]; // add king
-      unSetBit(p, Sq_a1, P_wr);
-      setBit(p, Sq_c1, P_wk);
-      setBit(p, Sq_d1, P_wr);
-      unSetBit(p, Sq_e1, P_wk);
+          movePiece(p, Sq_e1, Sq_c1, P_wk, P_none);
+          movePiece(p, Sq_a1, Sq_d1, P_wr, P_none);
+          p.wk = Sq_c1;
+          if (p.castling & C_wqs) p.h ^= ZT[0][13];
+          if (p.castling & C_wks) p.h ^= ZT[7][13];
+          p.castling &= ~(C_wks | C_wqs);
       break;
 
       case T_bks:
-      p.b[Sq_e8] = P_none; p.b[Sq_f8] = P_br; p.b[Sq_g8] = P_bk; p.b[Sq_h8] = P_none;
-      p.bk = Sq_g8;
-      if (p.castling & C_bqs) p.h ^= ZT[56][13];
-      if (p.castling & C_bks) p.h ^= ZT[63][13];
-      p.castling &= ~(C_bks | C_bqs);
-      p.h ^= ZT[Sq_h8][P_br + PieceShift]; // remove rook
-      p.h ^= ZT[Sq_e8][P_bk + PieceShift]; // remove king
-      p.h ^= ZT[Sq_f8][P_br + PieceShift]; // add rook
-      p.h ^= ZT[Sq_g8][P_bk + PieceShift]; // add king
-      unSetBit(p, Sq_e8, P_bk);
-      setBit(p, Sq_f8, P_br);
-      setBit(p, Sq_g8, P_bk);
-      unSetBit(p, Sq_h8, P_br);
+          movePiece(p, Sq_e8, Sq_g8, P_bk, P_none);
+          movePiece(p, Sq_h8, Sq_f8, P_br, P_none);
+          p.b[Sq_e8] = P_none; p.b[Sq_f8] = P_br; p.b[Sq_g8] = P_bk; p.b[Sq_h8] = P_none;
+          p.bk = Sq_g8;
+          if (p.castling & C_bqs) p.h ^= ZT[56][13];
+          if (p.castling & C_bks) p.h ^= ZT[63][13];
+          p.castling &= ~(C_bks | C_bqs);
       break;
 
       case T_bqs:
-      p.b[Sq_a8] = P_none; p.b[Sq_b8] = P_none; p.b[Sq_c8] = P_bk; p.b[Sq_d8] = P_br; p.b[Sq_e8] = P_none;
-      p.bk = Sq_c8;
-      if (p.castling & C_bqs) p.h ^= ZT[56][13];
-      if (p.castling & C_bks) p.h ^= ZT[63][13];
-      p.castling &= ~(C_bks | C_bqs);
-      p.h ^= ZT[Sq_a8][P_br + PieceShift]; // remove rook
-      p.h ^= ZT[Sq_e8][P_bk + PieceShift]; // remove king
-      p.h ^= ZT[Sq_d8][P_br + PieceShift]; // add rook
-      p.h ^= ZT[Sq_c8][P_bk + PieceShift]; // add king
-      unSetBit(p, Sq_a8, P_br);
-      setBit(p, Sq_c8, P_bk);
-      setBit(p, Sq_d8, P_br);
-      unSetBit(p, Sq_e8, P_bk);
+          movePiece(p, Sq_e8, Sq_c8, P_bk, P_none);
+          movePiece(p, Sq_a8, Sq_d8, P_br, P_none);
+          p.bk = Sq_c8;
+          if (p.castling & C_bqs) p.h ^= ZT[56][13];
+          if (p.castling & C_bks) p.h ^= ZT[63][13];
+          p.castling &= ~(C_bks | C_bqs);
       break;
    }
 
