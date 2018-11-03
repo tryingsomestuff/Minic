@@ -342,7 +342,7 @@ struct TT{ ///@todo make this a namespace will get some lines back
       std::cout << "# Init TT" << std::endl;
       ttSize = powerFloor(ttSizeMb * 1024 * 1024 / (unsigned int)sizeof(Bucket));
       table = new Bucket[ttSize];
-      std::cout << "Size of TT " << ttSize * sizeof(Bucket) / 1024 / 1024 << "Mb" << std::endl;
+      std::cout << "# Size of TT " << ttSize * sizeof(Bucket) / 1024 / 1024 << "Mb" << std::endl;
    }
 
    static void clearTT() {
@@ -389,7 +389,7 @@ struct TT{ ///@todo make this a namespace will get some lines back
        std::cout << "# Init eval TT" << std::endl;
        ttESize = powerFloor(ttESizeMb * 1024 * 1024 / (unsigned int)sizeof(EvalEntry));
        evalTable = new EvalEntry[ttESize];
-       std::cout << "Size of ETT " << ttESize * sizeof(EvalEntry) / 1024 / 1024 << "Mb" << std::endl;
+       std::cout << "# Size of ETT " << ttESize * sizeof(EvalEntry) / 1024 / 1024 << "Mb" << std::endl;
    }
 
    static void clearETT() {
@@ -514,31 +514,13 @@ std::string ToString(const Move & m, bool withScore = false){ ///@todo use less 
    return ss.str() + prom + score;
 }
 
-int gamePhase(const Position & p){
-   int absscore = 0;
-   int nbPiece  = 0;
-   int nbPawn   = 0;
-   static const int absValues[7] = { 0, Values[P_wp + PieceShift], Values[P_wn + PieceShift], Values[P_wb + PieceShift], Values[P_wr + PieceShift], Values[P_wq + PieceShift], Values[P_wk + PieceShift] };
-
-   const int nk = (int)countBit(p.whiteKing   | p.blackKing);
-   const int nq = (int)countBit(p.whiteQueen  | p.blackQueen);
-   const int nr = (int)countBit(p.whiteRook   | p.blackRook);
-   const int nb = (int)countBit(p.whiteBishop | p.blackBishop);
-   const int nn = (int)countBit(p.whiteKnight | p.blackKnight);
-   const int np = (int)countBit(p.whitePawn   | p.blackPawn);
-
-   absscore = nk * absValues[P_wk] + nq * absValues[P_wq] + nr * absValues[P_wr] + nb * absValues[P_wb] + nn * absValues[P_wn] + np * absValues[P_wp];
-   absscore = 100*(absscore-16000)    / (24140-16000);
-   nbPawn   = 100*np                  / 16;
-   nbPiece  = 100*(nq+nr+nb+nn)       / 14;
-   return int(absscore*0.4+nbPiece*0.3+ nbPawn*0.3);
-}
-
 std::string ToString(const std::vector<Move> & moves){
    std::stringstream ss;
    for(size_t k = 0 ; k < moves.size(); ++k) ss << ToString(moves[k]) << " ";
    return ss.str();
 }
+
+ScoreType eval(const Position & p, float & gp); //forward decl
 
 std::string ToString(const Position & p){
     std::stringstream ss;
@@ -553,7 +535,10 @@ std::string ToString(const Position & p){
     if ( p.ep >=0 ) ss << "# ep " << Squares[p.ep]<< std::endl;
     ss << "# wk " << Squares[p.wk] << std::endl << "# bk " << Squares[p.bk] << std::endl;
     ss << "# Turn " << (p.c == Co_White ? "white" : "black") << std::endl;
-    ss << "# Phase " << gamePhase(p) << std::endl << "# Hash " << computeHash(p) << std::endl << "# FEN " << GetFEN(p) << std::endl;
+    ScoreType sc = 0; 
+    float gp = 0;
+    sc = eval(p, gp);
+    ss << "# Phase " << gp << std::endl << "# Static score " << sc << std::endl << "# Hash " << computeHash(p) << std::endl << "# FEN " << GetFEN(p) << std::endl;
     return ss.str();
 }
 
@@ -1490,7 +1475,6 @@ struct MoveSorter{
 void sort(std::vector<Move> & moves, const Position & p, DepthType ply, const TT::Entry * e = NULL){ std::sort(moves.begin(),moves.end(),MoveSorter(p,ply,e));}
 
 bool isDraw(const Position & p, unsigned int ply, bool isPV = true){
-   ///@todo FIDE draws
    int count = 0;
    const Hash h = computeHash(p);
    const int limit = isPV?3:1;
@@ -1500,22 +1484,64 @@ bool isDraw(const Position & p, unsigned int ply, bool isPV = true){
        if (count >= limit) return true;
    }
    if ( p.fifty >= 100 ) return true;
+
+   const int nwk = (int)countBit(p.whiteKing); const int nwq = (int)countBit(p.whiteQueen); const int nwr = (int)countBit(p.whiteRook); const int nwb = (int)countBit(p.whiteBishop); const int nwn = (int)countBit(p.whiteKnight); const int nwp = (int)countBit(p.whitePawn);
+   const int nbk = (int)countBit(p.blackKing); const int nbq = (int)countBit(p.blackQueen); const int nbr = (int)countBit(p.blackRook); const int nbb = (int)countBit(p.blackBishop); const int nbn = (int)countBit(p.blackKnight); const int nbp = (int)countBit(p.blackPawn);
+   const int nk = nwk + nbk; const int nq = nwq + nbq; const int nr = nwr + nbr; const int nb = nwb + nbb; const int nn = nwn + nbn;  const int np = nwp + nbp;
+   const int nwt = nwq + nwr + nwb + nwn;
+   const int nbt = nbq + nbr + nbb + nbn;
+   const int nwM = nwq + nwr;
+   const int nbM = nbq + nbr;
+   const int nwm = nwb + nwn;
+   const int nbm = nbb + nbn;
+   if (np == 0 ) {
+       if (nwt + nbt == 0) return true;
+       else if (nwm == 1 && nwM == 0 && nbt == 0) return true;
+       else if (nbm == 1 && nbM == 0 && nwt == 0) return true;
+       else if (nwn == 2 && nwb == 0 && nwM == 0 && nbt == 0) return true;
+       else if (nbn == 2 && nbb == 0 && nbM == 0 && nwt == 0) return true;
+       else if (nwt == 1 && nwm == 1 && nbt == 1 && nbm == 1) return true;
+       else if (nwM == 0 && nwm == 2 && nwb != 2 && nbM == 0 && nbm == 1) return true;
+       else if (nbM == 0 && nbm == 2 && nbb != 2 && nwM == 0 && nwm == 1) return true;
+       ///@todo others ...
+   }
+   else { // some pawn are present
+          ///@todo ... KPK
+   }
+   
    return false;
 }
 
 ScoreType eval(const Position & p, float & gp){
-   ScoreType sc = 0;
-   gp = gamePhase(p)/100.f;
+   static const int absValues[7]   = { 0, Values[P_wp + PieceShift], Values[P_wn + PieceShift], Values[P_wb + PieceShift], Values[P_wr + PieceShift], Values[P_wq + PieceShift], Values[P_wk + PieceShift] };
+   static const int absValuesEG[7] = { 0, ValuesEG[P_wp + PieceShift], ValuesEG[P_wn + PieceShift], ValuesEG[P_wb + PieceShift], ValuesEG[P_wr + PieceShift], ValuesEG[P_wq + PieceShift], ValuesEG[P_wk + PieceShift] };
+   const int nwk = (int)countBit(p.whiteKing); const int nwq = (int)countBit(p.whiteQueen); const int nwr = (int)countBit(p.whiteRook); const int nwb = (int)countBit(p.whiteBishop); const int nwn = (int)countBit(p.whiteKnight); const int nwp = (int)countBit(p.whitePawn);
+   const int nbk = (int)countBit(p.blackKing); const int nbq = (int)countBit(p.blackQueen); const int nbr = (int)countBit(p.blackRook); const int nbb = (int)countBit(p.blackBishop); const int nbn = (int)countBit(p.blackKnight); const int nbp = (int)countBit(p.blackPawn);
+   const int nk = nwk + nbk; const int nq = nwq + nbq; const int nr = nwr + nbr; const int nb = nwb + nbb; const int nn = nwn + nbn;  const int np = nwp + nbp;
+   int absscore = (nwk+nbk) * absValues[P_wk] + (nwq+nbq) * absValues[P_wq] + (nwr+nbr) * absValues[P_wr] + (nwb+nbb) * absValues[P_wb] + (nwn+nbn) * absValues[P_wn] + (nwp+nbp) * absValues[P_wp];
+   absscore = 100 * (absscore - 16000) / (24140 - 16000);
+   int pawnScore = 100 * np / 16;
+   int pieceScore = 100 * (nq + nr + nb + nn) / 14;
+   gp = (absscore*0.4f + pieceScore*0.3f + pawnScore*0.3f)/100.f;
+   ScoreType sc = (nwk - nbk) * ScoreType(gp*absValues[P_wk] + (1.f - gp)*absValuesEG[P_wk])
+                + (nwq - nbq) * ScoreType(gp*absValues[P_wq] + (1.f - gp)*absValuesEG[P_wq])
+                + (nwr - nbr) * ScoreType(gp*absValues[P_wr] + (1.f - gp)*absValuesEG[P_wr])
+                + (nwb - nbb) * ScoreType(gp*absValues[P_wb] + (1.f - gp)*absValuesEG[P_wb])
+                + (nwn - nbn) * ScoreType(gp*absValues[P_wn] + (1.f - gp)*absValuesEG[P_wn])
+                + (nwp - nbp) * ScoreType(gp*absValues[P_wp] + (1.f - gp)*absValuesEG[P_wp]);
    const bool white2Play = p.c == Co_White;
-   for( Square k = 0 ; k < 64 ; ++k){
-      if ( p.b[k] != P_none ){
-         sc += ScoreType( gp*getValue(p,k) + (1.f-gp)*getValue(p,k) );
-         const int s = getSign(p,k);
-         Square kk = k;
-         if ( s > 0 ) kk = kk^56;
-         const Piece ptype = getPieceType(p,k);
-         sc += ScoreType(s * (gp*PST[ptype-1][kk] + (1.f-gp)*PSTEG[ptype-1][kk] ) );
-      }
+   BitBoard pieceBBiterator = p.whitePiece;
+   while (pieceBBiterator) {
+      const Square k = BB::popBit(pieceBBiterator);
+      Square kk = k^56;
+      const Piece ptype = getPieceType(p,k);
+      sc += ScoreType((gp*PST[ptype-1][kk] + (1.f-gp)*PSTEG[ptype-1][kk] ) );
+   }
+   pieceBBiterator = p.blackPiece;
+   while (pieceBBiterator) {
+       const Square k = BB::popBit(pieceBBiterator);
+       const Piece ptype = getPieceType(p, k);
+       sc -= ScoreType((gp*PST[ptype - 1][k] + (1.f - gp)*PSTEG[ptype - 1][k]));
    }
    return (white2Play?+1:-1)*sc;
 }
