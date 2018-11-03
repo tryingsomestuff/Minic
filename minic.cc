@@ -1867,9 +1867,10 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
        previousNodeCount = stats.nodes + stats.qnodes;
     }
 
-    if (bestScore <= -MATE+1) break;
-    if (mateFinder && bestScore >= MATE - MAX_DEPTH) break;
-    if (depth >= MAX_DEPTH - 2 && bestScore >= MATE - MAX_DEPTH) break;
+    if (bestScore <= -MATE+1) break; // already mated
+    if (mateFinder && bestScore >= MATE - MAX_DEPTH) break; // forced mate found
+    if (depth >= MAX_DEPTH - 2 && bestScore >=  MATE - MAX_DEPTH) break; // mate found
+    if (depth >= MAX_DEPTH - 2 && bestScore <= -MATE + MAX_DEPTH) break; // mated
   }
 
   if (bestScore <= -MATE+1) {
