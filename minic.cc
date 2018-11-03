@@ -1631,7 +1631,6 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   const bool rootnode = ply == 1;
 
   float gp = 0;
-  if (ply >= MAX_PLY - 1 || depth >= MAX_DEPTH - 1) return eval(p, gp);
   if (isDraw(p, pvnode)) {
       if (!rootnode) return 0;
       std::vector<Move> moves;
@@ -1641,6 +1640,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
       sort(moves, p, NULL);
       pv.push_back(moves[0]); // return first move, all are leading to a draw
   }
+  if (ply >= MAX_PLY - 1 || depth >= MAX_DEPTH - 1) return eval(p, gp);
 
   alpha = std::max(alpha, (ScoreType)(-MATE + ply));
   beta  = std::min(beta,  (ScoreType)(MATE  - ply + 1));
