@@ -144,7 +144,10 @@ Color Colors[13] = { Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_Black,
 int Signs[13] = { -1, -1, -1, -1, -1, -1, 0, 1, 1, 1, 1, 1, 1 };
 
 #ifdef __MINGW32__
-///@todo
+#define POPCOUNT(x)   int(__builtin_popcountll(x))
+inline int BitScanForward(u_int64_t bb) { assert(bb != 0); return __builtin_ctzll(bb);}
+#define bsf(x,i)      (i=BitScanForward(x))
+#define swapbits(x)   (__builtin_bswap64 (x))
 #else
 #ifdef _WIN32
 #define POPCOUNT(x)   __popcnt64(x)
@@ -535,7 +538,7 @@ std::string ToString(const Position & p){
     if ( p.ep >=0 ) ss << "# ep " << Squares[p.ep]<< std::endl;
     ss << "# wk " << Squares[p.wk] << std::endl << "# bk " << Squares[p.bk] << std::endl;
     ss << "# Turn " << (p.c == Co_White ? "white" : "black") << std::endl;
-    ScoreType sc = 0; 
+    ScoreType sc = 0;
     float gp = 0;
     sc = eval(p, gp);
     ss << "# Phase " << gp << std::endl << "# Static score " << sc << std::endl << "# Hash " << computeHash(p) << std::endl << "# FEN " << GetFEN(p) << std::endl;
@@ -1019,7 +1022,7 @@ namespace BB {
 
     inline BitBoard antidiagonalAttack(const BitBoard occupancy, const Square x) { return attack(occupancy, x, mask[x].antidiagonal); }
 
-    template < Piece > BitBoard coverage(const Square x, const BitBoard occupancy = 0, const Color c = Co_white) { assert(false); }
+    template < Piece > BitBoard coverage(const Square x, const BitBoard occupancy = 0, const Color c = Co_White) { assert(false); }
     template <       > BitBoard coverage<P_wp>(const Square x, const BitBoard occupancy, const Color c) { return mask[x].pawnAttack[c]; }
     template <       > BitBoard coverage<P_wn>(const Square x, const BitBoard occupancy, const Color c) { return mask[x].knight; }
     template <       > BitBoard coverage<P_wb>(const Square x, const BitBoard occupancy, const Color c) { return diagonalAttack(occupancy, x) + antidiagonalAttack(occupancy, x); }
@@ -1508,7 +1511,7 @@ bool isDraw(const Position & p, unsigned int ply, bool isPV = true){
    else { // some pawn are present
           ///@todo ... KPK
    }
-   
+
    return false;
 }
 
@@ -2295,7 +2298,7 @@ int main(int argc, char ** argv){
 
    if (cli == "-attacked") {
        Square k = Sq_e4;
-       if (argc >= 3) k = atoi(argv[3]);       
+       if (argc >= 3) k = atoi(argv[3]);
        std::cout << showBitBoard(BB::isAttackedBB(p, k));
        return 0;
    }
