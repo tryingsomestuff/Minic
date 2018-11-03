@@ -1573,9 +1573,7 @@ ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned 
   ScoreType alphaInit = alpha;
 
   for(auto it = moves.begin() ; it != moves.end() ; ++it){
-     // SEE
-     //if (!SEE(p, *it, 0)) continue;
-     if ( Move2Score(*it) < -900) continue;     // qfutility
+     if ( Move2Score(*it) < -900) continue; // see
      if ( doQFutility /*&& !isInCheck*/ && val + qfutilityMargin + std::abs(getValue(p,Move2To(*it))) <= alphaInit) continue;
      Position p2 = p;
      if ( ! apply(p2,*it) ) continue;
@@ -1627,7 +1625,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
 
   ++stats.nodes;
 
-  if ( ply >= MAX_PLY-1 || isDraw(p,ply,pvnode) ) return 0;
+  if ( ply >= MAX_PLY-1 || depth >= MAX_DEPTH-1 || isDraw(p,ply,pvnode) ) return 0;
 
   alpha = std::max(alpha, (ScoreType)(-MATE + ply));
   beta  = std::min(beta,  (ScoreType)(MATE  - ply + 1));
