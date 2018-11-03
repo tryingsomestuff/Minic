@@ -38,4 +38,7 @@ Other available options are :
 * 0.7 : try TT move first hoping for cut-off
 * 0.8 : SEE and LMP
 * 0.9 : little internal book
-* 0.10 : singular extension for TT move
+* 0.10 : singular extension for TT move  
+* 0.11 : on the road to bitboard (only attack), use of "Dumb" HQBB code.  
+* 0.12 : better use of bitboard, in generation and eval also  
+
