@@ -4,8 +4,8 @@ dir=$(readlink -f $(dirname $0)/..)
 
 engines=""
 
-engines="$engines -engine name=plus cmd=$dir/Dist/minic_0.8_linux_x64_see4.2 arg=-xboard dir=$dir"
-engines="$engines -engine name=plus cmd=$dir/Dist/minic_dev_linux_x64_see4.2 arg=-xboard dir=$dir"
+engines="$engines -engine name=minic0.9 cmd=$dir/Dist/minic_0.9_linux_x64_see4.2 arg=-xboard dir=$dir"
+engines="$engines -engine name=minic cmd=$dir/Dist/minic_dev_linux_x64_see4.2 arg=-xboard dir=$dir"
 
 echo $engines
 
