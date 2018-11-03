@@ -10,9 +10,9 @@ Quite poor for a chess engine but already way to strong for me !
 
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
-1 Minic                         166      40     200   72.3%   35.5%
-2 fairymax                      -21      43     200   47.0%   21.0%
-3 tscp181                      -141      44     200   30.8%   26.5%
+   1 minic                         204      39     167   76.3%   43.7%
+   2 minic0.9                      -40      38     167   44.3%   47.9%
+   3 fairymax                     -152      44     168   29.5%   35.1%
 ```
 
 ## How to compile:
