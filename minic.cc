@@ -22,7 +22,7 @@ typedef uint64_t u_int64_t;
 
 //#define IMPORTBOOK
 
-const std::string MinicVersion = "0.12";
+const std::string MinicVersion = "0.13";
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
@@ -89,7 +89,7 @@ Hash hashStack[MAX_PLY] = { 0 };
 ScoreType scoreStack[MAX_PLY] = { 0 };
 
 std::string startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-std::string fine70 = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - -";
+std::string fine70        = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - -";
 
 int currentMoveMs = 777;
 
@@ -209,6 +209,7 @@ struct Position{
 
   unsigned char fifty;
   unsigned char moves;
+  unsigned char ply; // this is not the "same" play as the one used to get seldepth
   unsigned int castling;
   Square ep, wk, bk;
   Color c;
@@ -775,6 +776,8 @@ bool readFEN(const std::string & fen, Position & p){
     }
     else p.moves = 1;
 
+    p.ply = (p.moves - 1) * 2 + 1 + p.c == Co_Black ? 1 : 0;
+
     p.h = 0; p.h = computeHash(p);
 
     setBitBoards(p);
@@ -888,10 +891,10 @@ namespace TimeMan{
 
    int GetNextMSecPerMove(const Position & p){
       int ms = -1;
-      std::cout << "msecPerMove   " << msecPerMove   << std::endl;
-      std::cout << "msecWholeGame " << msecWholeGame << std::endl;
-      std::cout << "msecInc       " << msecInc       << std::endl;
-      std::cout << "nbMoveInTC    " << nbMoveInTC    << std::endl;
+      std::cout << "# msecPerMove   " << msecPerMove   << std::endl;
+      std::cout << "# msecWholeGame " << msecWholeGame << std::endl;
+      std::cout << "# msecInc       " << msecInc       << std::endl;
+      std::cout << "# nbMoveInTC    " << nbMoveInTC    << std::endl;
       if ( msecPerMove > 0 ) ms =  msecPerMove;
       else if ( nbMoveInTC > 0){ // mps is given
          assert(msecWholeGame > 0);
@@ -1309,6 +1312,7 @@ bool apply(Position & p, const Move & m){
    if ( toP != P_none || abs(fromP) == P_wp ) p.fifty = 0;
    else ++p.fifty;
    if ( p.c == Co_Black ) ++p.moves;
+   ++p.ply;
 
    p.h ^= ZT[3][13]; p.h ^= ZT[4][13];
 
@@ -1420,7 +1424,7 @@ bool SEE(const Position & p, const Move & m, ScoreType threshold){
 bool sameMove(const Move & a, const Move & b) { return (a & 0x0000FFFF) == (b & 0x0000FFFF);}
 
 struct MoveSorter{
-   MoveSorter(const Position & p, DepthType ply, const TT::Entry * e = NULL):p(p),ply(ply),e(e){ assert(e==0||e->h!=0||e->m==INVALIDMOVE); }
+   MoveSorter(const Position & p, const TT::Entry * e = NULL):p(p),e(e){ assert(e==0||e->h!=0||e->m==INVALIDMOVE); }
    bool operator()(Move & a, Move & b){
       assert( a != INVALIDMOVE);
       assert( b != INVALIDMOVE);
@@ -1435,8 +1439,8 @@ struct MoveSorter{
 
           s1 = MoveScoring[t1];
           if (e && sameMove(e->m,a)) s1 += 3000;
-          else if (sameMove(a,KillerT::killers[0][ply])) s1 += 290;
-          else if (sameMove(a,KillerT::killers[1][ply])) s1 += 260;
+          else if (sameMove(a,KillerT::killers[0][p.ply])) s1 += 290;
+          else if (sameMove(a,KillerT::killers[1][p.ply])) s1 += 260;
           if (isCapture(t1)){
               s1 += MvvLvaScores[getPieceType(p,to1)-1][getPieceType(p,from1)-1];
               if ( !SEE(p,a,0)) s1 -= 2000;
@@ -1455,8 +1459,8 @@ struct MoveSorter{
 
           s2 = MoveScoring[t2];
           if (e && sameMove(e->m,b)) s2 += 3000;
-          else if (sameMove(b,KillerT::killers[0][ply])) s2 += 290;
-          else if (sameMove(b,KillerT::killers[1][ply])) s2 += 260;
+          else if (sameMove(b,KillerT::killers[0][p.ply])) s2 += 290;
+          else if (sameMove(b,KillerT::killers[1][p.ply])) s2 += 260;
           if (isCapture(t2)){
               s2 += MvvLvaScores[getPieceType(p,to2)-1][getPieceType(p,from2)-1];
               if ( !SEE(p,b,0)) s2 -= 2000;
@@ -1472,16 +1476,15 @@ struct MoveSorter{
    }
    const Position & p;
    const TT::Entry * e;
-   const DepthType ply;
 };
 
-void sort(std::vector<Move> & moves, const Position & p, DepthType ply, const TT::Entry * e = NULL){ std::sort(moves.begin(),moves.end(),MoveSorter(p,ply,e));}
+void sort(std::vector<Move> & moves, const Position & p, const TT::Entry * e = NULL){ std::sort(moves.begin(),moves.end(),MoveSorter(p,e));}
 
-bool isDraw(const Position & p, unsigned int ply, bool isPV = true){
+bool isDraw(const Position & p, bool isPV = true){
    int count = 0;
    const Hash h = computeHash(p);
    const int limit = isPV?3:1;
-   for (int k = ply-1; k >=0; --k) {
+   for (int k = p.ply-1; k >=0; --k) {
        if (hashStack[k] == 0) break;
        if (hashStack[k] == h) ++count;
        if (count >= limit) return true;
@@ -1568,7 +1571,7 @@ ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned 
 
   std::vector<Move> moves;
   generate(p,moves,true);
-  sort(moves,p,ply);
+  sort(moves,p);
 
   ScoreType alphaInit = alpha;
 
@@ -1594,9 +1597,9 @@ inline void updatePV(std::vector<Move> & pv, const Move & m, const std::vector<M
     std::copy(childPV.begin(), childPV.end(), std::back_inserter(pv));
 }
 
-inline void updateHistoryKillers(const Position & p, DepthType depth, int ply, const Move m) {
-    KillerT::killers[1][ply] = KillerT::killers[0][ply];
-    KillerT::killers[0][ply] = m;
+inline void updateHistoryKillers(const Position & p, DepthType depth, const Move m) {
+    KillerT::killers[1][p.ply] = KillerT::killers[0][p.ply];
+    KillerT::killers[0][p.ply] = m;
     HistoryT::update(depth, m, p, true);
 }
 
@@ -1625,14 +1628,24 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
 
   ++stats.nodes;
 
-  if ( ply >= MAX_PLY-1 || depth >= MAX_DEPTH-1 || isDraw(p,ply,pvnode) ) return 0;
+  const bool rootnode = ply == 1;
+
+  float gp = 0;
+  if (ply >= MAX_PLY - 1 || depth >= MAX_DEPTH - 1) return eval(p, gp);
+  if (isDraw(p, pvnode)) {
+      if (!rootnode) return 0;
+      std::vector<Move> moves;
+      generate(p, moves);
+      const bool isInCheck = isAttacked(p, kingSquare(p));
+      if (moves.empty()) return isInCheck ? -MATE + ply : 0;
+      sort(moves, p, NULL);
+      pv.push_back(moves[0]); // return first move, all are leading to a draw
+  }
 
   alpha = std::max(alpha, (ScoreType)(-MATE + ply));
   beta  = std::min(beta,  (ScoreType)(MATE  - ply + 1));
   if (alpha >= beta) return alpha;
-
-  const bool rootnode = ply == 1;
-
+  
   TT::Entry e;
   if (skipMove==INVALIDMOVE && TT::getEntry(computeHash(p), depth, e)) { // if not skipmove
       if (e.h != 0 && !rootnode && std::abs(e.score) < MATE - MAX_DEPTH && !pvnode &&
@@ -1643,14 +1656,13 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   }
 
   const bool isInCheck = isAttacked(p, kingSquare(p));
-  float gp = 0;
   ScoreType val;
   if (isInCheck) val = -MATE + ply;
   else if (!TT::getEvalEntry(computeHash(p), val, gp)) {
       val = eval(p, gp);
       TT::setEvalEntry({ val, gp, computeHash(p) });
   }
-  scoreStack[ply] = val; ///@todo can e.score be used as val here ???
+  scoreStack[p.ply] = val; ///@todo can e.score be used as val here ???
 
   bool futility = false, lmp = false;
 
@@ -1706,7 +1718,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
       if (apply(p2, e.m)) {
           validMoveCount++;
           std::vector<Move> childPV;
-          hashStack[ply] = p.h;
+          hashStack[p.ply] = p.h;
           // extensions
           int extension = 0;
           if (isInCheck) ++extension;
@@ -1716,7 +1728,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
               alphaUpdated = true;
               updatePV(pv, e.m, childPV);
               if (ttval >= beta) {
-                  //if (Move2Type(e.m) == T_std && !isInCheck) updateHistoryKillers(p, depth, ply, e.m);
+                  //if (Move2Type(e.m) == T_std && !isInCheck) updateHistoryKillers(p, depth, e.m);
                   if ( skipMove==INVALIDMOVE) TT::setEntry({ e.m,ttval,TT::B_beta,depth,computeHash(p) });
                   return ttval;
               }
@@ -1730,11 +1742,11 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   std::vector<Move> moves;
   generate(p,moves);
   if ( moves.empty() ) return isInCheck?-MATE + ply : 0;
-  sort(moves,p,ply,&e);
+  sort(moves,p,&e);
 
   if (bestMove == INVALIDMOVE)  bestMove = moves[0]; // so that B_alpha are stored in TT
 
-  bool improving = (!isInCheck && ply >= 2 && val >= scoreStack[ply - 2]);
+  bool improving = (!isInCheck && ply >= 2 && val >= scoreStack[p.ply - 2]);
 
   for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
      if (sameMove(skipMove, *it)) continue; // skipmove
@@ -1745,7 +1757,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      if (p.c == Co_White && to == p.bk) return MATE - ply + 1;
      if (p.c == Co_Black && to == p.wk) return MATE - ply + 1;
      validMoveCount++;
-     hashStack[ply] = p.h;
+     hashStack[p.ply] = p.h;
      std::vector<Move> childPV;
      // extensions
      int extension = 0;
@@ -1756,7 +1768,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         int reduction = 0;
         const bool isCheck = isAttacked(p2, kingSquare(p2));
         const bool isAdvancedPawnPush = getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
-        const bool isPrunable = !isInCheck && !isCheck && !isAdvancedPawnPush && Move2Type(*it) == T_std && !sameMove(*it, KillerT::killers[0][ply]) && !sameMove(*it, KillerT::killers[1][ply]);
+        const bool isPrunable = !isInCheck && !isCheck && !isAdvancedPawnPush && Move2Type(*it) == T_std && !sameMove(*it, KillerT::killers[0][p.ply]) && !sameMove(*it, KillerT::killers[1][p.ply]);
         // futility
         if ( futility && isPrunable) continue;
         // LMP
@@ -1785,7 +1797,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         updatePV(pv, *it, childPV);
         if ( val >= beta ){
            if ( Move2Type(*it) == T_std && !isInCheck){
-              updateHistoryKillers(p, depth, ply, *it);
+              updateHistoryKillers(p, depth, *it);
               for(auto it2 = moves.begin() ; *it2!=*it; ++it2){
                   if ( Move2Type(*it2) == T_std ) HistoryT::update(depth,*it2,p,false);
               }
@@ -1824,9 +1836,7 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
   ScoreType bestScore = 0;
   m = INVALIDMOVE;
 
-  const int ply = (p.moves-1)*2+1+p.c==Co_Black?1:0;
-
-  hashStack[ply] = p.h;
+  hashStack[p.ply] = p.h;
 
   Counter previousNodeCount = 1;
 
@@ -1848,7 +1858,7 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
     ScoreType score = 0;
     while( delta <= MATE ){
        pvLoc.clear();
-       score = pvs(alpha,beta,p,depth,true,ply,pvLoc,seldepth);
+       score = pvs(alpha,beta,p,depth,true,1,pvLoc,seldepth);
        if ( stopFlag ) break;
        delta *= 2;
        if (score <= alpha) alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) );
