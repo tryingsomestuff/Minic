@@ -1864,7 +1864,7 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
       return pv;
   }
 
-  for(DepthType depth = 1 ; depth <= std::min(d,DepthType(MAX_DEPTH-1)) && !stopFlag ; ++depth ){
+  for(DepthType depth = 1 ; depth <= std::min(d,DepthType(MAX_DEPTH-6)) && !stopFlag ; ++depth ){ // -6 so that draw can be found for sure
     std::cout << "# Iterative deepening " << (int)depth << std::endl;
     std::vector<Move> pvLoc;
     ScoreType delta = (doWindow && depth>4)?25:MATE; // MATE not INFSCORE in order to enter the loop below once
