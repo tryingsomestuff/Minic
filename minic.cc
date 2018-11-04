@@ -1573,7 +1573,7 @@ ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned 
   if ((int)ply > seldepth) seldepth = ply;
 
   ++stats.qnodes;
-  
+
   ScoreType val = eval(p,gp);
   if ( val >= beta ) return val;
   if ( val > alpha) alpha = val;
@@ -1651,7 +1651,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
       sort(moves, p, NULL);
       Position p2 = p;
       auto it = moves.begin();
-      while (!apply(p2, *it) && it != moves.end()) { ++it; }
+      while (!apply(p2, *it)) { ++it; if ( it == moves.end() ) break; }
       if ( it != moves.end()) pv.push_back(*it); // return first valid move, all are leading to a draw
       return 0;
   }
@@ -1660,7 +1660,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   alpha = std::max(alpha, (ScoreType)(-MATE + ply));
   beta  = std::min(beta,  (ScoreType)(MATE  - ply + 1));
   if (alpha >= beta) return alpha;
-  
+
   TT::Entry e;
   if (skipMove==INVALIDMOVE && TT::getEntry(computeHash(p), depth, e)) { // if not skipmove
       if (e.h != 0 && !rootnode && std::abs(e.score) < MATE - MAX_DEPTH && !pvnode &&
