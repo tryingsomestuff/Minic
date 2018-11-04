@@ -1064,7 +1064,8 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
    moves.clear();
    const Color side = p.c;
    const Color opponent = opponentColor(p.c);
-   BitBoard myPieceBB = (p.c == Co_White ? p.whitePiece : p.blackPiece);
+   BitBoard myPieceBB  = (p.c == Co_White ? p.whitePiece : p.blackPiece);
+   BitBoard oppPieceBB = (p.c != Co_White ? p.whitePiece : p.blackPiece);
    BitBoard myPieceBBiterator = myPieceBB;
    while (myPieceBBiterator) {
        const Square from = BB::popBit(myPieceBBiterator);
@@ -1074,10 +1075,12 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
        if (ptype != P_wp) {
          ///@todo generate only capture directly when requiered
          BitBoard bb = pf[ptype-1](from, p.occupancy, p.c) & ~myPieceBB;
+         if (onlyCap) bb &= oppPieceBB;
          while (bb) {
            const Square to = BB::popBit(bb);
            const bool isCap = (p.occupancy&SquareToBitboard(to)) != 0ull;
-           if ( !onlyCap || isCap) addMove(from,to,isCap?T_capture:T_std,moves);
+           if (isCap) addMove(from,to,T_capture,moves);
+           else addMove(from,to,T_std,moves);
          }
          if ( ptype == P_wk && !onlyCap ){ // castling
            if ( side == Co_White) {
@@ -1518,6 +1521,12 @@ bool isDraw(const Position & p, bool isPV = true){
    return false;
 }
 
+int manhattanDistance(Square sq1, Square sq2) {
+    Square file1 = sq1 & 7; Square file2 = sq2 & 7;
+    Square rank1 = sq1 >> 3; Square rank2 = sq2 >> 3;
+    return std::abs(rank2 - rank1) + std::abs(file2 - file1);
+}
+
 ScoreType eval(const Position & p, float & gp){
    static const int absValues[7]   = { 0, Values[P_wp + PieceShift], Values[P_wn + PieceShift], Values[P_wb + PieceShift], Values[P_wr + PieceShift], Values[P_wq + PieceShift], Values[P_wk + PieceShift] };
    static const int absValuesEG[7] = { 0, ValuesEG[P_wp + PieceShift], ValuesEG[P_wn + PieceShift], ValuesEG[P_wb + PieceShift], ValuesEG[P_wr + PieceShift], ValuesEG[P_wq + PieceShift], ValuesEG[P_wk + PieceShift] };
@@ -1549,11 +1558,14 @@ ScoreType eval(const Position & p, float & gp){
        const Piece ptype = getPieceType(p, k);
        sc -= ScoreType((gp*PST[ptype - 1][k] + (1.f - gp)*PSTEG[ptype - 1][k]));
    }
+   // in very end game winning king must be near the other king
+   if (gp < 0.2) sc -= (sc>0?+1:-1)*manhattanDistance(p.wk, p.bk)*15;
    return (white2Play?+1:-1)*sc;
 }
 
 ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth){
-  if ( ply >= MAX_PLY-1 ) return 0;
+  float gp = 0;
+  if ( ply >= MAX_PLY-1 ) return eval(p,gp);
   alpha = std::max(alpha, (ScoreType)(-MATE + ply));
   beta  = std::min(beta , (ScoreType)(MATE - ply + 1));
   if (alpha >= beta) return alpha;
@@ -1561,8 +1573,7 @@ ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned 
   if ((int)ply > seldepth) seldepth = ply;
 
   ++stats.qnodes;
-
-  float gp = 0;
+  
   ScoreType val = eval(p,gp);
   if ( val >= beta ) return val;
   if ( val > alpha) alpha = val;
@@ -1638,7 +1649,11 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
       const bool isInCheck = isAttacked(p, kingSquare(p));
       if (moves.empty()) return isInCheck ? -MATE + ply : 0;
       sort(moves, p, NULL);
-      pv.push_back(moves[0]); // return first move, all are leading to a draw
+      Position p2 = p;
+      auto it = moves.begin();
+      while (!apply(p2, *it) && it != moves.end()) { ++it; }
+      if ( it != moves.end()) pv.push_back(*it); // return first valid move, all are leading to a draw
+      return 0;
   }
   if (ply >= MAX_PLY - 1 || depth >= MAX_DEPTH - 1) return eval(p, gp);
 
