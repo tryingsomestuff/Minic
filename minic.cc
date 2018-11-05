@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <iostream>
-#include <intrin.h>
 #include <fstream>
 #include <iterator>
 #include <vector>
@@ -16,6 +15,7 @@
 #include <unordered_map>
 #ifdef _WIN32
 #include <stdlib.h>
+#include <intrin.h>
 typedef uint64_t u_int64_t;
 #else
 #include <unistd.h>
@@ -1428,61 +1428,42 @@ bool SEE(const Position & p, const Move & m, ScoreType threshold){
 bool sameMove(const Move & a, const Move & b) { return (a & 0x0000FFFF) == (b & 0x0000FFFF);}
 
 struct MoveSorter{
+
    MoveSorter(const Position & p, const TT::Entry * e = NULL):p(p),e(e){ assert(e==0||e->h!=0||e->m==INVALIDMOVE); }
-   bool operator()(Move & a, Move & b){
-      assert( a != INVALIDMOVE);
-      assert( b != INVALIDMOVE);
 
-      ScoreType s1 = Move2Score(a);
-      ScoreType s2 = Move2Score(b);
-
-      if (s1 == 0) {
-          const MType t1     = Move2Type(a);
-          const Square from1 = Move2From(a);
-          const Square to1   = Move2To(a);
-
-          s1 = MoveScoring[t1];
-          if (e && sameMove(e->m,a)) s1 += 3000;
-          else if (sameMove(a,KillerT::killers[0][p.ply])) s1 += 290;
-          else if (sameMove(a,KillerT::killers[1][p.ply])) s1 += 260;
-          if (isCapture(t1)){
-              s1 += MvvLvaScores[getPieceType(p,to1)-1][getPieceType(p,from1)-1];
-              if ( !SEE(p,a,0)) s1 -= 2000;
-          }
-          else if ( t1 == T_std){
-              s1 += HistoryT::history[getPieceIndex(p,from1)][to1];
-              const int sign1 = getSign(p, from1);
-              s1 += PST[getPieceType(p, from1) - 1][sign1 > 0 ? (to1 ^ 56) : to1] - PST[getPieceType(p, from1) - 1][sign1 > 0 ? (from1 ^ 56) : from1];
-          }
-          a = ToMove(from1, to1, t1, s1);
+   void computeScore(Move & m){
+      const MType  t    = Move2Type(m);
+      const Square from = Move2From(m);
+      const Square to   = Move2To(m);
+      int s = MoveScoring[t];
+      if (e && sameMove(e->m,m)) s += 3000;
+      else if (sameMove(m,KillerT::killers[0][p.ply])) s += 290;
+      else if (sameMove(m,KillerT::killers[1][p.ply])) s += 260;
+      if (isCapture(t)){
+          s += MvvLvaScores[getPieceType(p,to)-1][getPieceType(p,from)-1];
+          if ( !SEE(p,m,0)) s -= 2000;
       }
-      if (s2 == 0) {
-          const MType t2     = Move2Type(b);
-          const Square from2 = Move2From(b);
-          const Square to2   = Move2To(b);
-
-          s2 = MoveScoring[t2];
-          if (e && sameMove(e->m,b)) s2 += 3000;
-          else if (sameMove(b,KillerT::killers[0][p.ply])) s2 += 290;
-          else if (sameMove(b,KillerT::killers[1][p.ply])) s2 += 260;
-          if (isCapture(t2)){
-              s2 += MvvLvaScores[getPieceType(p,to2)-1][getPieceType(p,from2)-1];
-              if ( !SEE(p,b,0)) s2 -= 2000;
-          }
-          else if ( t2 == T_std){
-              s2 += HistoryT::history[getPieceIndex(p,from2)][to2];
-              const int sign2 = getSign(p, from2);
-              s2 += PST[getPieceType(p, from2) - 1][sign2 > 0 ? (to2 ^ 56) : to2] - PST[getPieceType(p, from2) - 1][sign2 > 0 ? (from2 ^ 56) : from2];
-          }
-          b = ToMove(from2, to2, t2, s2);
+      else if ( t == T_std){
+          s += HistoryT::history[getPieceIndex(p,from)][to];
+          const bool isWhite = p.whitePiece & (SquareToBitboard(from)) != 0ull;
+          s += PST[getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - PST[getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from];
       }
-      return s1 > s2;
+      m = ToMove(from, to, t, s);
+   }
+   
+   bool operator()(const Move & a, const Move & b){
+      assert( a != INVALIDMOVE); assert( b != INVALIDMOVE);
+      return Move2Score(a) > Move2Score(b);
    }
    const Position & p;
    const TT::Entry * e;
 };
 
-void sort(std::vector<Move> & moves, const Position & p, const TT::Entry * e = NULL){ std::sort(moves.begin(),moves.end(),MoveSorter(p,e));}
+void sort(std::vector<Move> & moves, const Position & p, const TT::Entry * e = NULL){
+   MoveSorter ms(p,e);
+   for(auto it = moves.begin() ; it != moves.end() ; ++it){ ms.computeScore(*it); }
+   std::sort(moves.begin(),moves.end(),ms);
+}
 
 bool isDraw(const Position & p, bool isPV = true){
    int count = 0;
@@ -2282,7 +2263,7 @@ int main(int argc, char ** argv){
    std::string cli = argv[1];
 
    if ( Book::fileExists("book.bin") ) {
-       std::ifstream bbook = std::ifstream("book.bin",std::ios::in | std::ios::binary);
+       std::ifstream bbook("book.bin",std::ios::in | std::ios::binary);
        Book::readBinaryBook(bbook);
    }
 
