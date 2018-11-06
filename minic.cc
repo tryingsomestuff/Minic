@@ -69,8 +69,8 @@ const int       lmrMinDepth              = 3;
 const int       singularExtensionDepth   = 8;
 
 const int lmpLimit[][lmpMaxDepth + 1] = {
-    { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 } , // improved
-    { 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };// not improving
+    { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 } ,
+    { 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };
 
 int lmrReduction[MAX_DEPTH][MAX_MOVE];
 
@@ -1764,7 +1764,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         // futility
         if ( futility && isPrunable) continue;
         // LMP
-        if ( lmp && isPrunable && validMoveCount >= lmpLimit[0][depth] ) continue;
+        if ( lmp && isPrunable && validMoveCount >= lmpLimit[improving][depth] ) continue;
         // SEE
         //if (!SEE(p, *it, -100*depth)) continue;
         if ( futility && Move2Score(*it) < -900 ) continue;
