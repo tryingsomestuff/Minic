@@ -1445,7 +1445,7 @@ struct MoveSorter{
       }
       else if ( t == T_std){
           s += HistoryT::history[getPieceIndex(p,from)][to];
-          const bool isWhite = p.whitePiece & (SquareToBitboard(from)) != 0ull;
+          const bool isWhite = (p.whitePiece & (SquareToBitboard(from))) != 0ull;
           s += PST[getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - PST[getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from];
       }
       m = ToMove(from, to, t, s);
