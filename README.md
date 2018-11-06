@@ -9,10 +9,19 @@ Minic is smaller than TSCP but stronger than Micro-Max.
 Quite poor for a chess engine but already way to strong for me !
 
 ```
-Rank Name                          Elo     +/-   Games   Score   Draws
-   1 minic                         204      39     167   76.3%   43.7%
-   2 minic0.9                      -40      38     167   44.3%   47.9%
-   3 fairymax                     -152      44     168   29.5%   35.1%
+     Name                          Elo     +/-   Games   Score   Draws
+   0 Minic                         -24      12    2670   46.6%   18.7%
+   1 sungorus64                    162      43     243   71.8%   17.7%
+   2 Bitfoot                       159      43     243   71.4%   18.5%
+   3 dorpsgek                      105      38     243   64.6%   27.2%
+   4 zevra                          90      39     242   62.6%   26.0%
+   5 Horizon_4_4                    77      41     243   60.9%   15.6%
+   6 rattatechess_nosferatu         68      40     243   59.7%   17.3%
+   7 ct800_v1.11_x64                62      41     243   58.8%   16.5%
+   8 asymptote                      46      39     243   56.6%   22.6%
+   9 weini1                        -19      39     242   47.3%   20.2%
+  10 fairymax                     -239      48     243   20.2%   14.8%
+  11 tscp181                      -324      59     242   13.4%    9.5%
 ```
 
 ## How to compile:
