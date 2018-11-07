@@ -1431,7 +1431,7 @@ struct MoveSorter{
 
    MoveSorter(const Position & p, const TT::Entry * e = NULL):p(p),e(e){ assert(e==0||e->h!=0||e->m==INVALIDMOVE); }
 
-   void computeScore(Move & m){
+   void computeScore(Move & m)const{
       const MType  t    = Move2Type(m);
       const Square from = Move2From(m);
       const Square to   = Move2To(m);
@@ -1451,7 +1451,7 @@ struct MoveSorter{
       m = ToMove(from, to, t, s);
    }
    
-   bool operator()(const Move & a, const Move & b){
+   bool operator()(const Move & a, const Move & b)const{
       assert( a != INVALIDMOVE); assert( b != INVALIDMOVE);
       return Move2Score(a) > Move2Score(b);
    }
@@ -1460,7 +1460,7 @@ struct MoveSorter{
 };
 
 void sort(std::vector<Move> & moves, const Position & p, const TT::Entry * e = NULL){
-   MoveSorter ms(p,e);
+   const MoveSorter ms(p,e);
    for(auto it = moves.begin() ; it != moves.end() ; ++it){ ms.computeScore(*it); }
    std::sort(moves.begin(),moves.end(),ms);
 }
