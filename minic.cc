@@ -69,8 +69,8 @@ const int       lmrMinDepth              = 3;
 const int       singularExtensionDepth   = 8;
 
 const int lmpLimit[][lmpMaxDepth + 1] = {
-    { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 } , // improved
-    { 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };// not improving
+    { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 } ,
+    { 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };
 
 int lmrReduction[MAX_DEPTH][MAX_MOVE];
 
@@ -114,9 +114,9 @@ std::string Names[13]     = { "k", "q", "r", "b", "n", "p", " ", "P", "N", "B", 
 
 std::string Squares[64] = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2", "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4", "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5", "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6", "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" };
 
-enum Sq : char { Sq_a1 =  0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1, Sq_a2 =  8,Sq_b2,Sq_c2,Sq_d2,Sq_e2,Sq_f2,Sq_g2,Sq_h2, Sq_a3 = 16,Sq_b3,Sq_c3,Sq_d3,Sq_e3,Sq_f3,Sq_g3,Sq_h3, Sq_a4 = 24,Sq_b4,Sq_c4,Sq_d4,Sq_e4,Sq_f4,Sq_g4,Sq_h4, Sq_a5 = 32,Sq_b5,Sq_c5,Sq_d5,Sq_e5,Sq_f5,Sq_g5,Sq_h5, Sq_a6 = 40,Sq_b6,Sq_c6,Sq_d6,Sq_e6,Sq_f6,Sq_g6,Sq_h6, Sq_a7 = 48,Sq_b7,Sq_c7,Sq_d7,Sq_e7,Sq_f7,Sq_g7,Sq_h7, Sq_a8 = 56,Sq_b8,Sq_c8,Sq_d8,Sq_e8,Sq_f8,Sq_g8,Sq_h8 };
+enum Sq : char { Sq_a1 =  0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1,Sq_a2,Sq_b2,Sq_c2,Sq_d2,Sq_e2,Sq_f2,Sq_g2,Sq_h2,Sq_a3,Sq_b3,Sq_c3,Sq_d3,Sq_e3,Sq_f3,Sq_g3,Sq_h3,Sq_a4,Sq_b4,Sq_c4,Sq_d4,Sq_e4,Sq_f4,Sq_g4,Sq_h4,Sq_a5,Sq_b5,Sq_c5,Sq_d5,Sq_e5,Sq_f5,Sq_g5,Sq_h5,Sq_a6,Sq_b6,Sq_c6,Sq_d6,Sq_e6,Sq_f6,Sq_g6,Sq_h6,Sq_a7,Sq_b7,Sq_c7,Sq_d7,Sq_e7,Sq_f7,Sq_g7,Sq_h7,Sq_a8,Sq_b8,Sq_c8,Sq_d8,Sq_e8,Sq_f8,Sq_g8,Sq_h8};
 
-enum Castling : char{  C_none= 0,   C_wks = 1,   C_wqs = 2,   C_bks = 4,   C_bqs = 8 };
+enum Castling : char{ C_none= 0, C_wks = 1, C_wqs = 2, C_bks = 4, C_bqs = 8 };
 
 int MvvLvaScores[6][6];
 
@@ -142,8 +142,6 @@ ScoreType MoveScoring[16] = { 0, 1000, 1100, 300, 950, 500, 350, 300, 1950, 1500
 
 Color Colors[13] = { Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_None, Co_White, Co_White, Co_White, Co_White, Co_White, Co_White};
 
-int Signs[13] = { -1, -1, -1, -1, -1, -1, 0, 1, 1, 1, 1, 1, 1 };
-
 #ifdef __MINGW32__
 #define POPCOUNT(x)   int(__builtin_popcountll(x))
 inline int BitScanForward(u_int64_t bb) { assert(bb != 0); return __builtin_ctzll(bb);}
@@ -164,9 +162,9 @@ inline int BitScanForward(u_int64_t bb) { assert(bb != 0); return __builtin_ctzl
 
 #define SquareToBitboard(k) (1ull<<k)
 inline uint64_t  countBit(const BitBoard & b) { return POPCOUNT(b);}
-inline void setBit  (BitBoard & b, Square k) { b |= SquareToBitboard(k);}
-inline void unSetBit(BitBoard & b, Square k) { b &= ~SquareToBitboard(k);}
-inline bool isSet   (const BitBoard & b, Square k) { return (SquareToBitboard(k) & b) != 0;}
+inline void      setBit  (BitBoard & b, Square k) { b |= SquareToBitboard(k);}
+inline void      unSetBit(BitBoard & b, Square k) { b &= ~SquareToBitboard(k);}
+inline bool      isSet   (const BitBoard & b, Square k) { return (SquareToBitboard(k) & b) != 0;}
 
 const BitBoard whiteSquare        = 0x55AA55AA55AA55AA;
 const BitBoard blackSquare        = 0xAA55AA55AA55AA55;
@@ -260,8 +258,6 @@ inline std::string getName (const Position &p, Square k){ assert(k >= 0 && k < 6
 inline ScoreType getValue  (const Position &p, Square k){ assert(k >= 0 && k < 64); return Values[getPieceIndex(p,k)];}
 
 inline ScoreType getValueEG(const Position &p, Square k){ assert(k >= 0 && k < 64); return ValuesEG[getPieceIndex(p,k)];}
-
-inline ScoreType getSign   (const Position &p, Square k){ assert(k >= 0 && k < 64); return Signs[getPieceIndex(p,k)];}
 
 inline void unSetBit(Position & p, Square k) { ///@todo keep this lookup table in position and implemente copy CTOR and operator
     assert(k >= 0 && k < 64);
@@ -1074,7 +1070,6 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
        const Piece ptype = (Piece)std::abs(piece);
        static BitBoard(*const pf[])(const Square, const BitBoard, const  Color) = { &BB::coverage<P_wp>, &BB::coverage<P_wn>, &BB::coverage<P_wb>, &BB::coverage<P_wr>, &BB::coverage<P_wq>, &BB::coverage<P_wk> };
        if (ptype != P_wp) {
-         ///@todo generate only capture directly when requiered
          BitBoard bb = pf[ptype-1](from, p.occupancy, p.c) & ~myPieceBB;
          if (onlyCap) bb &= oppPieceBB;
          while (bb) {
@@ -1450,7 +1445,7 @@ struct MoveSorter{
       }
       m = ToMove(from, to, t, s);
    }
-   
+
    bool operator()(const Move & a, const Move & b)const{
       assert( a != INVALIDMOVE); assert( b != INVALIDMOVE);
       return Move2Score(a) > Move2Score(b);
@@ -1769,7 +1764,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         // futility
         if ( futility && isPrunable) continue;
         // LMP
-        if ( lmp && isPrunable && validMoveCount >= lmpLimit[0][depth] ) continue;
+        if ( lmp && isPrunable && validMoveCount >= lmpLimit[improving][depth] ) continue;
         // SEE
         //if (!SEE(p, *it, -100*depth)) continue;
         if ( futility && Move2Score(*it) < -900 ) continue;
