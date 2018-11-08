@@ -23,7 +23,7 @@ typedef uint64_t u_int64_t;
 
 //#define IMPORTBOOK
 
-const std::string MinicVersion = "0.13";
+const std::string MinicVersion = "0.14";
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
@@ -1621,6 +1621,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   float gp = 0;
   if (isDraw(p, pvnode)) {
       if (!rootnode) return 0;
+      std::cout << "Draw at root node" << std::endl;
       std::vector<Move> moves;
       generate(p, moves);
       const bool isInCheck = isAttacked(p, kingSquare(p));
@@ -1630,6 +1631,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
       auto it = moves.begin();
       while (!apply(p2, *it)) { ++it; if ( it == moves.end() ) break; }
       if ( it != moves.end()) pv.push_back(*it); // return first valid move, all are leading to a draw
+      else std::cout << "No valid moves for draw" << std::endl;
       return 0;
   }
   if (ply >= MAX_PLY - 1 || depth >= MAX_DEPTH - 1) return eval(p, gp);
@@ -1883,7 +1885,10 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
 
   if (bestScore >= MATE-MAX_DEPTH) std::cout << "# Forced mate found ..." << std::endl;
 
-  if (pv.empty()) m = INVALIDMOVE;
+  if (pv.empty()){
+      std::cout << "# Empty pv" << std::endl;
+      m = INVALIDMOVE;
+  }
   else m = pv[0];
   d = reachedDepth;
   sc = bestScore;
