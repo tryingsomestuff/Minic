@@ -10,18 +10,20 @@ Quite poor for a chess engine but already way to strong for me !
 
 ```
      Name                          Elo     +/-   Games   Score   Draws
-   0 Minic                         -24      12    2670   46.6%   18.7%
-   1 sungorus64                    162      43     243   71.8%   17.7%
-   2 Bitfoot                       159      43     243   71.4%   18.5%
-   3 dorpsgek                      105      38     243   64.6%   27.2%
-   4 zevra                          90      39     242   62.6%   26.0%
-   5 Horizon_4_4                    77      41     243   60.9%   15.6%
-   6 rattatechess_nosferatu         68      40     243   59.7%   17.3%
-   7 ct800_v1.11_x64                62      41     243   58.8%   16.5%
-   8 asymptote                      46      39     243   56.6%   22.6%
-   9 weini1                        -19      39     242   47.3%   20.2%
-  10 fairymax                     -239      48     243   20.2%   14.8%
-  11 tscp181                      -324      59     242   13.4%    9.5%
+   0 Minic                          21       8    5275   53.0%   18.7%
+   1 Bitfoot                       128      31     440   67.6%   19.8%
+   2 sungorus64                    103      30     439   64.5%   21.9%
+   3 dorpsgek                       71      27     440   60.1%   32.0%
+   4 Horizon_4_4                    64      30     440   59.1%   15.0%
+   5 zevra                          62      29     439   58.9%   23.9%
+   6 ct800_v1.11_x64                15      30     440   52.2%   17.5%
+   7 rattatechess_nosferatu         -9      29     440   48.8%   18.4%
+   8 asymptote                     -27      29     440   46.1%   19.5%
+   9 weini1                        -54      30     439   42.3%   16.2%
+  10 simplex                       -84      30     439   38.2%   17.1%
+  11 fairymax                     -281      38     440   16.6%   15.0%
+  12 tscp181                      -397      50     439    9.2%    7.5%
+
 ```
 
 ## How to compile:
