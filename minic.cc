@@ -208,7 +208,7 @@ struct Position{
 
   unsigned char fifty;
   unsigned char moves;
-  unsigned char ply; // this is not the "same" play as the one used to get seldepth
+  unsigned char ply; // this is not the "same" ply as the one used to get seldepth
   unsigned int castling;
   Square ep, wk, bk;
   Color c;
@@ -261,12 +261,12 @@ void initMaterial(Position & p){
     p.nb = p.nwb + p.nbb;
     p.nn = p.nwn + p.nbn;
     p.np = p.nwp + p.nbp;
-    p.nwt = p.nwq + p.nwr + p.nwb + p.nwn;
-    p.nbt = p.nbq + p.nbr + p.nbb + p.nbn;
     p.nwM = p.nwq + p.nwr;
     p.nbM = p.nbq + p.nbr;
     p.nwm = p.nwb + p.nwn;
     p.nbm = p.nbb + p.nbn;
+    p.nwt = p.nwM + p.nwm;
+    p.nbt = p.nbm + p.nbm;
 }
 
 void initBitBoards(Position & p) {
@@ -366,7 +366,7 @@ Hash computeHash(const Position &p){
    return p.h;
 }
 
-namespace TT{ ///@todo make this a namespace will get some lines back
+namespace TT{
    enum Bound{ B_exact = 0, B_alpha = 1, B_beta  = 2 };
    struct Entry{
       Entry():m(INVALIDMOVE),score(0),b(B_alpha),d(-1),h(0){}
@@ -969,9 +969,9 @@ namespace BB {
     int ranks[512];
     struct Mask {
         BitBoard diagonal, antidiagonal, file;
-        BitBoard pawnAttack[2], push[2]; // one for each colors
+        BitBoard pawnAttack[2], push[2], dpush[2]; // one for each colors
         BitBoard enpassant, knight, king;
-        Mask() :diagonal(0ull), antidiagonal(0ull), file(0ull), pawnAttack{ 0ull,0ull }, push{ 0ull,0ull }, enpassant(0ull), knight(0ull), king(0ull){}
+        Mask() :diagonal(0ull), antidiagonal(0ull), file(0ull), pawnAttack{ 0ull,0ull }, push{ 0ull,0ull }, dpush{ 0ull,0ull }, enpassant(0ull), knight(0ull), king(0ull){}
     };
     Mask mask[64];
 
@@ -985,13 +985,9 @@ namespace BB {
                     for (int r = (x >> 3) + i, f = (x & 7) + j; 0 <= r && r < 8 && 0 <= f && f < 8; r += i, f += j) {
                         int y = 8 * r + f;
                         d[x][y] = (8 * i + j);
-                        //mask[x].direction[y] = abs(d[x][y]);
-                        //for (int z = x + d[x][y]; z != y; z += d[x][y]) mask[x].between[y] |= 1UL << z;
                     }
                 }
             }
-
-            //mask[x].bit = 1UL << x;
 
             for (int y = x - 9; y >= 0 && d[x][y] == -9; y -= 9) mask[x].diagonal |= 1ull << y;
             for (int y = x + 9; y < 64 && d[x][y] ==  9; y += 9) mask[x].diagonal |= 1ull << y;
@@ -1004,11 +1000,14 @@ namespace BB {
 
             int f = x & 07;
             int r = x >> 3;
-            for (int i = -1, c = 1; i <= 1; i += 2, c = 0) {
+            for (int i = -1, c = 1, dp = 6; i <= 1; i += 2, c = 0, dp = 1) {
                 for (int j = -1; j <= 1; j += 2) {
                     if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) {  mask[x].pawnAttack[c] |= 1ull << ((r + i) * 8 + (f + j)); }
                 }
-                if (0 <= r + i && r + i < 8) { mask[x].push[c] = 1ull << ((r + i) * 8 + f); }
+                if (0 <= r + i && r + i < 8) {
+                    mask[x].push[c] = 1ull << ((r + i) * 8 + f);
+                    if ( r == dp ) mask[x].dpush[c] = 1ull << ((r + 2*i) * 8 + f); // double push
+                }
             }
             if (r == 3 || r == 4) {
                 if (f > 0) mask[x].enpassant |= 1ull << (x - 1);
@@ -1028,10 +1027,7 @@ namespace BB {
                     if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) { mask[x].king |= 1ull << (8 * (r + i) + (f + j)); }
                 }
             }
-            //mask[x].castling = 15;
         }
-
-        //foreach(k; 0 .. 6) mask[castlingX[k]].castling = castling[k];
 
         for (Square o = 0; o < 64; ++o) {
             for (int k = 0; k < 8; ++k) {
@@ -1113,8 +1109,9 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
    moves.clear();
    const Color side = p.c;
    const Color opponent = opponentColor(p.c);
-   BitBoard myPieceBB  = (p.c == Co_White ? p.whitePiece : p.blackPiece);
-   BitBoard oppPieceBB = (p.c != Co_White ? p.whitePiece : p.blackPiece);
+   bool whiteToPlay = p.c == Co_White;
+   BitBoard myPieceBB  = ( whiteToPlay ? p.whitePiece : p.blackPiece);
+   BitBoard oppPieceBB = (!whiteToPlay ? p.whitePiece : p.blackPiece);
    BitBoard myPieceBBiterator = myPieceBB;
    while (myPieceBBiterator) {
        const Square from = BB::popBit(myPieceBBiterator);
@@ -1126,11 +1123,11 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
          if (onlyCap) bb &= oppPieceBB;
          while (bb) {
            const Square to = BB::popBit(bb);
-           const bool isCap = (p.occupancy&SquareToBitboard(to)) != 0ull;
+           const bool isCap = onlyCap || ((p.occupancy&SquareToBitboard(to)) != 0ull);
            if (isCap) addMove(from,to,T_capture,moves);
            else addMove(from,to,T_std,moves);
          }
-         if ( ptype == P_wk && !onlyCap ){ // castling
+         if ( !onlyCap && ptype == P_wk ){ // castling
            if ( side == Co_White) {
               bool e1Attacked = isAttacked(p,Sq_e1);
               if ( (p.castling & C_wqs) && p.b[Sq_b1] == P_none && p.b[Sq_c1] == P_none && p.b[Sq_d1] == P_none && !isAttacked(p,Sq_c1) && !isAttacked(p,Sq_d1) && !e1Attacked) addMove(from, Sq_c1, T_wqs, moves); // wqs
@@ -1145,38 +1142,49 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
        }
        else {
           ///@todo use bitboard !!!
-          //case P_wp: bb = (BB::coverage<P_wp>(from, p.occupancy, p.c) + BB::mask[from].push[p.c]) & ~p.whitePiece; break;
-          const int pawnOffsetTrick = side==Co_White?4:0;
-          for (Square j = 0; j < 4; ++j) {
-             const int offset = Offset[ptype-1][j+pawnOffsetTrick];
-             const Square to = mailbox[mailbox64[from] + offset];
-             if (to < 0) continue;
-             const Color targetC = getColor(p,to);
-             if (targetC != Co_None) {
-               if (targetC == opponent && ( abs(offset) == 11 || abs(offset) == 9 ) ) {
-                 if ( SQRANK(to) == 0 || SQRANK(to) == 7) {
-                    addMove(from, to, T_cappromq, moves); // pawn capture with promotion
-                    addMove(from, to, T_cappromr, moves); // pawn capture with promotion
-                    addMove(from, to, T_cappromb, moves); // pawn capture with promotion
-                    addMove(from, to, T_cappromn, moves); // pawn capture with promotion
-                 }
-                 else addMove(from, to, T_capture, moves); // simple pawn capture
-               }
-             }
-             else{
-               // ep pawn capture
-               if ( (abs(offset) == 11 || abs(offset) == 9 ) && (p.ep == to) ) addMove(from, to, T_ep, moves); // en passant
-               else if ( abs(offset) == 20 && !onlyCap && ( SQRANK(from) == 1 || SQRANK(from) == 6 ) && p.b[(from + to)/2] == P_none) addMove(from, to, T_std, moves); // double push
-               else if ( abs(offset) == 10 && !onlyCap){
-                   if ( SQRANK(to) == 0 || SQRANK(to) == 7 ){
+          BitBoard pawnmoves = 0ull;
+          // push (and prom)
+          if (! onlyCap) pawnmoves = BB::mask[from].push[p.c] & ~myPieceBB & ~oppPieceBB;
+          // double push
+          if (! onlyCap && (BB::mask[from].push[p.c] & p.occupancy) == 0ull) pawnmoves += BB::mask[from].dpush[p.c] & ~myPieceBB & ~oppPieceBB ;
+          // cap (and prom)
+          pawnmoves += BB::mask[from].pawnAttack[p.c] & ~myPieceBB & oppPieceBB;
+
+          /*
+          std::cout << "*******************************************" << std::endl;
+          std::cout << Squares[from] << std::endl;
+          std::cout << ToString(p) << std::endl;
+          std::cout << showBitBoard(pawnmoves) << std::endl;
+          std::cout << "*******************************************" << std::endl;
+          */
+
+          while (pawnmoves) {
+              const Square to = BB::popBit(pawnmoves);
+              const bool isCap = onlyCap || ((p.occupancy&SquareToBitboard(to)) != 0ull);
+              if (isCap){
+                  if ( SQRANK(to) == 0 || SQRANK(to) == 7) {
+                      addMove(from, to, T_cappromq, moves); // pawn capture with promotion
+                      addMove(from, to, T_cappromr, moves); // pawn capture with promotion
+                      addMove(from, to, T_cappromb, moves); // pawn capture with promotion
+                      addMove(from, to, T_cappromn, moves); // pawn capture with promotion
+                  }
+                  else addMove(from,to,T_capture,moves);
+              }
+              else{
+                  if ( SQRANK(to) == 0 || SQRANK(to) == 7) {
                       addMove(from, to, T_promq, moves); // promotion Q
                       addMove(from, to, T_promr, moves); // promotion R
                       addMove(from, to, T_promb, moves); // promotion B
                       addMove(from, to, T_promn, moves); // promotion N
-                   }
-                   else addMove(from, to, T_std, moves); // simple pawn push
-               }
-            }
+                  }
+                  else addMove(from,to,T_std,moves);
+              }
+          }
+          // ep
+          if ( p.ep != INVALIDSQUARE ) pawnmoves += BB::mask[from].pawnAttack[p.c] & ~myPieceBB & SquareToBitboard(p.ep);
+          while (pawnmoves) {
+              const Square to = BB::popBit(pawnmoves);
+              addMove(from,to,T_ep,moves);
           }
        }
    }
