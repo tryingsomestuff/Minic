@@ -571,7 +571,7 @@ std::string ToString(const std::vector<Move> & moves){
 
 ScoreType eval(const Position & p, float & gp); //forward decl
 
-std::string ToString(const Position & p){
+std::string ToString(const Position & p, bool noEval = false){
     std::stringstream ss;
     ss << "#" << std::endl;
     for (Square j = 7; j >= 0; --j) {
@@ -585,9 +585,11 @@ std::string ToString(const Position & p){
     ss << "# wk " << Squares[p.wk] << std::endl << "# bk " << Squares[p.bk] << std::endl;
     ss << "# Turn " << (p.c == Co_White ? "white" : "black") << std::endl;
     ScoreType sc = 0;
-    float gp = 0;
-    sc = eval(p, gp);
-    ss << "# Phase " << gp << std::endl << "# Static score " << sc << std::endl << "# Hash " << computeHash(p) << std::endl << "# FEN " << GetFEN(p) << std::endl;
+    if ( ! noEval ){
+       float gp = 0;
+       sc = eval(p, gp);
+       ss << "# Phase " << gp << std::endl << "# Static score " << sc << std::endl << "# Hash " << computeHash(p) << std::endl << "# FEN " << GetFEN(p) << std::endl;
+    }
     return ss.str();
 }
 
@@ -968,10 +970,10 @@ Square kingSquare(const Position & p) { return (p.c == Co_White) ? p.wk : p.bk; 
 namespace BB {
     int ranks[512];
     struct Mask {
-        BitBoard diagonal, antidiagonal, file;
+        BitBoard diagonal, antidiagonal, file, kingZone;
         BitBoard pawnAttack[2], push[2], dpush[2]; // one for each colors
         BitBoard enpassant, knight, king;
-        Mask() :diagonal(0ull), antidiagonal(0ull), file(0ull), pawnAttack{ 0ull,0ull }, push{ 0ull,0ull }, dpush{ 0ull,0ull }, enpassant(0ull), knight(0ull), king(0ull){}
+        Mask() :diagonal(0ull), antidiagonal(0ull), file(0ull), kingZone(0ull), pawnAttack{ 0ull,0ull }, push{ 0ull,0ull }, dpush{ 0ull,0ull }, enpassant(0ull), knight(0ull), king(0ull){}
     };
     Mask mask[64];
 
@@ -986,6 +988,9 @@ namespace BB {
                         int y = 8 * r + f;
                         d[x][y] = (8 * i + j);
                     }
+                    int r = x >> 3;
+                    int f = x & 7;
+                    if ( 0 <= r+i && r+i < 8 && 0 <= f+j && f+j < 8) mask[x].kingZone |= 1ull << (((x >> 3) + i)*8+(x & 7) + j);
                 }
             }
 
@@ -1088,20 +1093,20 @@ namespace BB {
         return i;
     }
 
-    BitBoard isAttackedBB(const Position &p, const Square x) {
-        if (p.c == Co_White) return attack<P_wb>(x, p.blackBishop | p.blackQueen, p.occupancy) | attack<P_wr>(x, p.blackRook | p.blackQueen, p.occupancy) | attack<P_wn>(x, p.blackKnight) | attack<P_wp>(x, p.blackPawn, p.occupancy, Co_White) | attack<P_wk>(x, p.blackKing);
-        else                 return attack<P_wb>(x, p.whiteBishop | p.whiteQueen, p.occupancy) | attack<P_wr>(x, p.whiteRook | p.whiteQueen, p.occupancy) | attack<P_wn>(x, p.whiteKnight) | attack<P_wp>(x, p.whitePawn, p.occupancy, Co_Black) | attack<P_wk>(x, p.whiteKing);
+    BitBoard isAttackedBB(const Position &p, const Square x, Color c) {
+        if (c == Co_White) return attack<P_wb>(x, p.blackBishop | p.blackQueen, p.occupancy) | attack<P_wr>(x, p.blackRook | p.blackQueen, p.occupancy) | attack<P_wn>(x, p.blackKnight) | attack<P_wp>(x, p.blackPawn, p.occupancy, Co_White) | attack<P_wk>(x, p.blackKing);
+        else               return attack<P_wb>(x, p.whiteBishop | p.whiteQueen, p.occupancy) | attack<P_wr>(x, p.whiteRook | p.whiteQueen, p.occupancy) | attack<P_wn>(x, p.whiteKnight) | attack<P_wp>(x, p.whitePawn, p.occupancy, Co_Black) | attack<P_wk>(x, p.whiteKing);
     }
 
     bool getAttackers(const Position & p, const Square k, std::vector<Square> & attakers) {
         attakers.clear();
-        BitBoard attack = isAttackedBB(p, k);
+        BitBoard attack = isAttackedBB(p, k, p.c);
         while (attack) { attakers.push_back(popBit(attack)); }
         return !attakers.empty();
     }
 }
 
-inline bool isAttacked(const Position & p, const Square k) { return BB::isAttackedBB(p, k) != 0ull;}
+inline bool isAttacked(const Position & p, const Square k) { return BB::isAttackedBB(p, k, p.c) != 0ull;}
 
 inline bool getAttackers(const Position & p, const Square k, std::vector<Square> & attakers) { return BB::getAttackers(p, k, attakers);}
 
@@ -1589,6 +1594,31 @@ ScoreType eval(const Position & p, float & gp){
    }
    // in very end game winning king must be near the other king
    if (gp < 0.2) sc -= (sc>0?+1:-1)*manhattanDistance(p.wk, p.bk)*15;
+
+   /*
+   // king attack
+   ScoreType attSc = 0;
+   BitBoard wKingZone = BB::mask[p.wk].kingZone;
+   while(wKingZone){
+      Square z = BB::popBit(wKingZone);
+      BitBoard attack = BB::isAttackedBB(p, z, Co_White);
+      while(attack){
+          Square from = BB::popBit(attack);
+          attSc += getValue(p,from);
+      }
+   }
+   BitBoard bKingZone = BB::mask[p.bk].kingZone;
+   while(bKingZone){
+      Square z = BB::popBit(bKingZone);
+      BitBoard attack = BB::isAttackedBB(p, z, Co_Black);
+      while(attack){
+          Square from = BB::popBit(attack);
+          attSc += getValue(p,from);
+      }
+   }
+   sc+=attSc/50;
+   */
+
    return (white2Play?+1:-1)*sc;
 }
 
@@ -2357,7 +2387,7 @@ int main(int argc, char ** argv){
    if (cli == "-attacked") {
        Square k = Sq_e4;
        if (argc >= 3) k = atoi(argv[3]);
-       std::cout << showBitBoard(BB::isAttackedBB(p, k));
+       std::cout << showBitBoard(BB::isAttackedBB(p, k, p.c));
        return 0;
    }
 
