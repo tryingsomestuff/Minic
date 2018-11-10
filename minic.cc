@@ -23,7 +23,7 @@ typedef uint64_t u_int64_t;
 
 //#define IMPORTBOOK
 
-const std::string MinicVersion = "0.15";
+const std::string MinicVersion = "0.16";
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
