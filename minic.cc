@@ -109,7 +109,7 @@ enum Piece : char{ P_bk = -6,   P_bq = -5,   P_br = -4,   P_bb = -3,   P_bn = -2
 const int PieceShift = 6;
 
 ScoreType   Values[13]    = { -8000, -1025, -477, -365, -337, -82, 0, 82, 337, 365, 477, 1025, 8000 };
-ScoreType   ValuesEG[13]  = { -8000, -936, -512, -297, -281, -94, 0, 94, 281, 297, 512, 936, 8000 };
+ScoreType   ValuesEG[13]  = { -8000,  -936, -512, -297, -281, -94, 0, 94, 281, 297, 512,  936, 8000 };
 std::string Names[13]     = { "k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K" };
 
 std::string Squares[64] = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2", "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4", "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5", "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6", "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" };
@@ -214,7 +214,60 @@ struct Position{
   Color c;
   mutable Hash h;
   Move lastMove;
+
+  unsigned char nwk = 0;
+  unsigned char nwq = 0;
+  unsigned char nwr = 0;
+  unsigned char nwb = 0;
+  unsigned char nwn = 0;
+  unsigned char nwp = 0;
+  unsigned char nbk = 0;
+  unsigned char nbq = 0;
+  unsigned char nbr = 0;
+  unsigned char nbb = 0;
+  unsigned char nbn = 0;
+  unsigned char nbp = 0;
+  unsigned char nk  = 0;
+  unsigned char nq  = 0;
+  unsigned char nr  = 0;
+  unsigned char nb  = 0;
+  unsigned char nn  = 0;
+  unsigned char np  = 0;
+  unsigned char nwM = 0;
+  unsigned char nbM = 0;
+  unsigned char nwm = 0;
+  unsigned char nbm = 0;
+  unsigned char nwt = 0;
+  unsigned char nbt = 0;
+
 };
+
+void initMaterial(Position & p){
+    p.nwk = (unsigned char)countBit(p.whiteKing);
+    p.nwq = (unsigned char)countBit(p.whiteQueen);
+    p.nwr = (unsigned char)countBit(p.whiteRook);
+    p.nwb = (unsigned char)countBit(p.whiteBishop);
+    p.nwn = (unsigned char)countBit(p.whiteKnight);
+    p.nwp = (unsigned char)countBit(p.whitePawn);
+    p.nbk = (unsigned char)countBit(p.blackKing);
+    p.nbq = (unsigned char)countBit(p.blackQueen);
+    p.nbr = (unsigned char)countBit(p.blackRook);
+    p.nbb = (unsigned char)countBit(p.blackBishop);
+    p.nbn = (unsigned char)countBit(p.blackKnight);
+    p.nbp = (unsigned char)countBit(p.blackPawn);
+    p.nk = p.nwk + p.nbk;
+    p.nq = p.nwq + p.nbq;
+    p.nr = p.nwr + p.nbr;
+    p.nb = p.nwb + p.nbb;
+    p.nn = p.nwn + p.nbn;
+    p.np = p.nwp + p.nbp;
+    p.nwt = p.nwq + p.nwr + p.nwb + p.nwn;
+    p.nbt = p.nbq + p.nbr + p.nbb + p.nbn;
+    p.nwM = p.nwq + p.nwr;
+    p.nbM = p.nbq + p.nbr;
+    p.nwm = p.nwb + p.nwn;
+    p.nbm = p.nbb + p.nbn;
+}
 
 void initBitBoards(Position & p) {
     p.whitePawn = p.whiteKnight = p.whiteBishop = p.whiteRook = p.whiteQueen = p.whiteKing = 0ull;
@@ -313,7 +366,7 @@ Hash computeHash(const Position &p){
    return p.h;
 }
 
-struct TT{ ///@todo make this a namespace will get some lines back
+namespace TT{ ///@todo make this a namespace will get some lines back
    enum Bound{ B_exact = 0, B_alpha = 1, B_beta  = 2 };
    struct Entry{
       Entry():m(INVALIDMOVE),score(0),b(B_alpha),d(-1),h(0){}
@@ -330,30 +383,30 @@ struct TT{ ///@todo make this a namespace will get some lines back
        Entry e[nbBucket]; // first is replace always, second is replace by depth
    };
 
-   static unsigned int powerFloor(unsigned int x) {
+   unsigned int powerFloor(unsigned int x) {
        unsigned int power = 1;
        while (power < x) power *= 2;
        return power/2;
    }
 
-   static unsigned int ttSize;
-   static Bucket * table;
+   static unsigned int ttSize = 0;
+   static Bucket * table = 0;
 
-   static void initTable(){
+   void initTable(){
       std::cout << "# Init TT" << std::endl;
       ttSize = powerFloor(ttSizeMb * 1024 * 1024 / (unsigned int)sizeof(Bucket));
       table = new Bucket[ttSize];
       std::cout << "# Size of TT " << ttSize * sizeof(Bucket) / 1024 / 1024 << "Mb" << std::endl;
    }
 
-   static void clearTT() {
+   void clearTT() {
        for (unsigned int k = 0; k < ttSize; ++k) {
            table[k].e[0] = { INVALIDMOVE, 0, B_alpha, 0, 0 };
            table[k].e[1] = { INVALIDMOVE, 0, B_alpha, 0, 0 };
        }
    }
 
-   static bool getEntry(Hash h, DepthType d, Entry & e, int nbuck = 0) {
+   bool getEntry(Hash h, DepthType d, Entry & e, int nbuck = 0) {
       assert(h > 0);
       const Entry & _e = table[h%ttSize].e[nbuck];
       if ( _e.h != h ){
@@ -369,7 +422,7 @@ struct TT{ ///@todo make this a namespace will get some lines back
       return getEntry(h, d, e, nbuck + 1);
    }
 
-   static void setEntry(const Entry & e){
+   void setEntry(const Entry & e){
       assert(e.h > 0);
       assert(e.m != INVALIDMOVE);
       table[e.h%ttSize].e[0] = e; // always replace
@@ -383,21 +436,21 @@ struct TT{ ///@todo make this a namespace will get some lines back
        Hash h;
    };
 
-   static unsigned int ttESize;
-   static EvalEntry * evalTable;
+   unsigned int ttESize = 0;
+   EvalEntry * evalTable = 0;
 
-   static void initETable() {
+   void initETable() {
        std::cout << "# Init eval TT" << std::endl;
        ttESize = powerFloor(ttESizeMb * 1024 * 1024 / (unsigned int)sizeof(EvalEntry));
        evalTable = new EvalEntry[ttESize];
        std::cout << "# Size of ETT " << ttESize * sizeof(EvalEntry) / 1024 / 1024 << "Mb" << std::endl;
    }
 
-   static void clearETT() {
+   void clearETT() {
        for (unsigned int k = 0; k < ttESize; ++k) evalTable[k] = { 0, 0., 0 };
    }
 
-   static bool getEvalEntry(Hash h, ScoreType & score, float & gp) {
+   bool getEvalEntry(Hash h, ScoreType & score, float & gp) {
        assert(h > 0);
        const EvalEntry & _e = evalTable[h%ttESize];
        if (_e.h != h) return false;
@@ -406,17 +459,12 @@ struct TT{ ///@todo make this a namespace will get some lines back
        return true;
    }
 
-   static void setEvalEntry(const EvalEntry & e) {
+   void setEvalEntry(const EvalEntry & e) {
        assert(e.h > 0);
        evalTable[e.h%ttESize] = e; // always replace
    }
 
-};
-
-TT::Bucket *    TT::table     = 0;
-TT::EvalEntry * TT::evalTable = 0;
-unsigned int    TT::ttSize    = 0;
-unsigned int    TT::ttESize   = 0;
+}
 
 namespace KillerT{
    Move killers[2][MAX_PLY];
@@ -496,7 +544,7 @@ std::string GetFEN(const Position &p) {
     return ss.str();
 }
 
-std::string ToString(const Move & m, bool withScore = false){ ///@todo use less lines using a string array instead of the prom switch
+std::string ToString(const Move & m, bool withScore = false){
    if ( m == INVALIDMOVE ) return "invalid move";
    std::stringstream ss;
    std::string prom;
@@ -690,6 +738,8 @@ bool readFEN(const std::string & fen, Position & p){
 
     std::cout << "# Reading fen " << fen << std::endl;
 
+    // reset position
+    p.h = 0;
     for(Square k = 0 ; k < 64 ; ++k) p.b[k] = P_none;
 
     Square j = 1, i = 0;
@@ -775,9 +825,11 @@ bool readFEN(const std::string & fen, Position & p){
 
     p.ply = (p.moves - 1) * 2 + 1 + p.c == Co_Black ? 1 : 0;
 
-    p.h = 0; p.h = computeHash(p);
+    p.h = computeHash(p);
 
     setBitBoards(p);
+
+    initMaterial(p);
 
     return true;
 }
@@ -903,7 +955,7 @@ namespace TimeMan{
          int nmoves = 60; // let's start for a 60 ply game
          if (p.moves > 20) nmoves = 100; // if the game is long, let's go for a 100 ply game
          if (p.moves > 40) nmoves = 200; // if the game is very long, let's go for a 200 ply game
-         ms = int(0.85 * (msecWholeGame+((msecInc>0)?p.moves*msecInc:0))/ (float)nmoves); ///@todo better
+         ms = int(0.85 * (msecWholeGame+((msecInc>0)?p.moves*msecInc:0))/ (float)nmoves);
       }
       return ms;
    }
@@ -1142,7 +1194,9 @@ inline void movePiece(Position & p, Square from, Square to, Piece fromP, Piece t
     setBit  (p, to,   toPnew);
 
     p.h ^= ZT[from][fromId]; // remove fromP at from
-    if (isCapture) p.h ^= ZT[to][toId]; // if capture remove toP at to
+    if (isCapture){
+        p.h ^= ZT[to][toId]; // if capture remove toP at to
+    }
     p.h ^= ZT[to][toIdnew]; // add fromP (or prom) at to
 }
 
@@ -1317,6 +1371,8 @@ bool apply(Position & p, const Move & m){
 
    p.lastMove = m;
 
+   initMaterial(p);
+
    return true;
 }
 
@@ -1464,31 +1520,22 @@ bool isDraw(const Position & p, bool isPV = true){
    int count = 0;
    const Hash h = computeHash(p);
    const int limit = isPV?3:1;
-   for (int k = p.ply-1; k >=0; --k) {
+   for (int k = p.ply-1; k >= 0; --k) {
        if (hashStack[k] == 0) break;
        if (hashStack[k] == h) ++count;
        if (count >= limit) return true;
    }
    if ( p.fifty >= 100 ) return true;
 
-   const int nwk = (int)countBit(p.whiteKing); const int nwq = (int)countBit(p.whiteQueen); const int nwr = (int)countBit(p.whiteRook); const int nwb = (int)countBit(p.whiteBishop); const int nwn = (int)countBit(p.whiteKnight); const int nwp = (int)countBit(p.whitePawn);
-   const int nbk = (int)countBit(p.blackKing); const int nbq = (int)countBit(p.blackQueen); const int nbr = (int)countBit(p.blackRook); const int nbb = (int)countBit(p.blackBishop); const int nbn = (int)countBit(p.blackKnight); const int nbp = (int)countBit(p.blackPawn);
-   const int nk = nwk + nbk; const int nq = nwq + nbq; const int nr = nwr + nbr; const int nb = nwb + nbb; const int nn = nwn + nbn;  const int np = nwp + nbp;
-   const int nwt = nwq + nwr + nwb + nwn;
-   const int nbt = nbq + nbr + nbb + nbn;
-   const int nwM = nwq + nwr;
-   const int nbM = nbq + nbr;
-   const int nwm = nwb + nwn;
-   const int nbm = nbb + nbn;
-   if (np == 0 ) {
-       if (nwt + nbt == 0) return true;
-       else if (nwm == 1 && nwM == 0 && nbt == 0) return true;
-       else if (nbm == 1 && nbM == 0 && nwt == 0) return true;
-       else if (nwn == 2 && nwb == 0 && nwM == 0 && nbt == 0) return true;
-       else if (nbn == 2 && nbb == 0 && nbM == 0 && nwt == 0) return true;
-       else if (nwt == 1 && nwm == 1 && nbt == 1 && nbm == 1) return true;
-       else if (nwM == 0 && nwm == 2 && nwb != 2 && nbM == 0 && nbm == 1) return true;
-       else if (nbM == 0 && nbm == 2 && nbb != 2 && nwM == 0 && nwm == 1) return true;
+   if (p.np == 0 ) {
+       if (p.nwt + p.nbt == 0) return true;
+       else if (p.nwm == 1 && p.nwM == 0 && p.nbt == 0) return true;
+       else if (p.nbm == 1 && p.nbM == 0 && p.nwt == 0) return true;
+       else if (p.nwn == 2 && p.nwb == 0 && p.nwM == 0 && p.nbt == 0) return true;
+       else if (p.nbn == 2 && p.nbb == 0 && p.nbM == 0 && p.nwt == 0) return true;
+       else if (p.nwt == 1 && p.nwm == 1 && p.nbt == 1 && p.nbm == 1) return true;
+       else if (p.nwM == 0 && p.nwm == 2 && p.nwb != 2 && p.nbM == 0 && p.nbm == 1) return true;
+       else if (p.nbM == 0 && p.nbm == 2 && p.nbb != 2 && p.nwM == 0 && p.nwm == 1) return true;
        ///@todo others ...
    }
    else { // some pawn are present
@@ -1507,27 +1554,24 @@ int manhattanDistance(Square sq1, Square sq2) {
 ScoreType eval(const Position & p, float & gp){
    static const int absValues[7]   = { 0, Values[P_wp + PieceShift], Values[P_wn + PieceShift], Values[P_wb + PieceShift], Values[P_wr + PieceShift], Values[P_wq + PieceShift], Values[P_wk + PieceShift] };
    static const int absValuesEG[7] = { 0, ValuesEG[P_wp + PieceShift], ValuesEG[P_wn + PieceShift], ValuesEG[P_wb + PieceShift], ValuesEG[P_wr + PieceShift], ValuesEG[P_wq + PieceShift], ValuesEG[P_wk + PieceShift] };
-   const int nwk = (int)countBit(p.whiteKing); const int nwq = (int)countBit(p.whiteQueen); const int nwr = (int)countBit(p.whiteRook); const int nwb = (int)countBit(p.whiteBishop); const int nwn = (int)countBit(p.whiteKnight); const int nwp = (int)countBit(p.whitePawn);
-   const int nbk = (int)countBit(p.blackKing); const int nbq = (int)countBit(p.blackQueen); const int nbr = (int)countBit(p.blackRook); const int nbb = (int)countBit(p.blackBishop); const int nbn = (int)countBit(p.blackKnight); const int nbp = (int)countBit(p.blackPawn);
-   const int nk = nwk + nbk; const int nq = nwq + nbq; const int nr = nwr + nbr; const int nb = nwb + nbb; const int nn = nwn + nbn;  const int np = nwp + nbp;
-   int absscore = (nwk+nbk) * absValues[P_wk] + (nwq+nbq) * absValues[P_wq] + (nwr+nbr) * absValues[P_wr] + (nwb+nbb) * absValues[P_wb] + (nwn+nbn) * absValues[P_wn] + (nwp+nbp) * absValues[P_wp];
+   int absscore = (p.nwk+p.nbk) * absValues[P_wk] + (p.nwq+p.nbq) * absValues[P_wq] + (p.nwr+p.nbr) * absValues[P_wr] + (p.nwb+p.nbb) * absValues[P_wb] + (p.nwn+p.nbn) * absValues[P_wn] + (p.nwp+p.nbp) * absValues[P_wp];
    absscore = 100 * (absscore - 16000) / (24140 - 16000);
-   int pawnScore = 100 * np / 16;
-   int pieceScore = 100 * (nq + nr + nb + nn) / 14;
+   int pawnScore = 100 * p.np / 16;
+   int pieceScore = 100 * (p.nq + p.nr + p.nb + p.nn) / 14;
    gp = (absscore*0.4f + pieceScore*0.3f + pawnScore*0.3f)/100.f;
-   ScoreType sc = (nwk - nbk) * ScoreType(gp*absValues[P_wk] + (1.f - gp)*absValuesEG[P_wk])
-                + (nwq - nbq) * ScoreType(gp*absValues[P_wq] + (1.f - gp)*absValuesEG[P_wq])
-                + (nwr - nbr) * ScoreType(gp*absValues[P_wr] + (1.f - gp)*absValuesEG[P_wr])
-                + (nwb - nbb) * ScoreType(gp*absValues[P_wb] + (1.f - gp)*absValuesEG[P_wb])
-                + (nwn - nbn) * ScoreType(gp*absValues[P_wn] + (1.f - gp)*absValuesEG[P_wn])
-                + (nwp - nbp) * ScoreType(gp*absValues[P_wp] + (1.f - gp)*absValuesEG[P_wp]);
+   ScoreType sc = (p.nwk - p.nbk) * ScoreType(gp*absValues[P_wk] + (1.f - gp)*absValuesEG[P_wk])
+                + (p.nwq - p.nbq) * ScoreType(gp*absValues[P_wq] + (1.f - gp)*absValuesEG[P_wq])
+                + (p.nwr - p.nbr) * ScoreType(gp*absValues[P_wr] + (1.f - gp)*absValuesEG[P_wr])
+                + (p.nwb - p.nbb) * ScoreType(gp*absValues[P_wb] + (1.f - gp)*absValuesEG[P_wb])
+                + (p.nwn - p.nbn) * ScoreType(gp*absValues[P_wn] + (1.f - gp)*absValuesEG[P_wn])
+                + (p.nwp - p.nbp) * ScoreType(gp*absValues[P_wp] + (1.f - gp)*absValuesEG[P_wp]);
    const bool white2Play = p.c == Co_White;
    BitBoard pieceBBiterator = p.whitePiece;
    while (pieceBBiterator) {
       const Square k = BB::popBit(pieceBBiterator);
       Square kk = k^56;
       const Piece ptype = getPieceType(p,k);
-      sc += ScoreType((gp*PST[ptype-1][kk] + (1.f-gp)*PSTEG[ptype-1][kk] ) );
+      sc += ScoreType((gp*PST[ptype - 1][kk] + (1.f - gp)*PSTEG[ptype - 1][kk] ) );
    }
    pieceBBiterator = p.blackPiece;
    while (pieceBBiterator) {
@@ -1755,7 +1799,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
      std::vector<Move> childPV;
      // extensions
      int extension = 0;
-     if (isInCheck) ++extension;
+     if (isInCheck && Move2Score(*it) > -100) ++extension;
      if ( validMoveCount == 1 || !doPVS) val = -pvs(-beta,-alpha,p2,depth-1+extension,pvnode,ply+1,childPV,seldepth);
      else{
         // reductions & prunings
@@ -1768,7 +1812,6 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         // LMP
         if ( lmp && isPrunable && validMoveCount >= lmpLimit[improving][depth] ) continue;
         // SEE
-        //if (!SEE(p, *it, -100*depth)) continue;
         if ( futility && Move2Score(*it) < -900 ) continue;
         // LMR
         if ( doLMR && !mateFinder && depth >= lmrMinDepth && isPrunable && std::abs(alpha) < MATE-MAX_DEPTH && std::abs(beta) < MATE-MAX_DEPTH ) reduction = lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
