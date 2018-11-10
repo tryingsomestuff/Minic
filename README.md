@@ -49,9 +49,10 @@ Other available options are :
 * 0.7 : try TT move first hoping for cut-off
 * 0.8 : SEE and LMP
 * 0.9 : little internal book
-* 0.10 : singular extension for TT move  
-* 0.11 : on the road to bitboard (only attack), use of "Dumb" HQBB code.  
-* 0.12 : better use of bitboard, in generation and eval also  
+* 0.10 : singular extension for TT move
+* 0.11 : on the road to bitboard (only attack), use of "Dumb" HQBB code.
+* 0.12 : better use of bitboard, in generation and eval also
 * 0.13 : some draw issue fix
 * 0.14 : better lmp (use of "improving bool")
 * 0.15 : keep track of material count directly in position
+* 0.16 : use bitboard for pawn move generation also
