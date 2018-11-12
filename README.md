@@ -10,19 +10,19 @@ Quite poor for a chess engine (around 2250) but already way to strong for me !
 
 ```
      Name                          Elo     +/-   Games   Score   Draws
-   0 Minic                          21       8    5275   53.0%   18.7%
-   1 Bitfoot                       128      31     440   67.6%   19.8%
-   2 sungorus64                    103      30     439   64.5%   21.9%
-   3 dorpsgek                       71      27     440   60.1%   32.0%
-   4 Horizon_4_4                    64      30     440   59.1%   15.0%
-   5 zevra                          62      29     439   58.9%   23.9%
-   6 ct800_v1.11_x64                15      30     440   52.2%   17.5%
-   7 rattatechess_nosferatu         -9      29     440   48.8%   18.4%
-   8 asymptote                     -27      29     440   46.1%   19.5%
-   9 weini1                        -54      30     439   42.3%   16.2%
-  10 simplex                       -84      30     439   38.2%   17.1%
-  11 fairymax                     -281      38     440   16.6%   15.0%
-  12 tscp181                      -397      50     439    9.2%    7.5%
+   0 Minic                          33      10    3890   54.7%   18.2%
+   1 sungorus64                    108      35     324   65.1%   19.8%
+   2 Bitfoot                        92      35     325   62.9%   16.9%
+   3 Horizon_4_4                    80      36     324   61.3%   15.7%
+   4 zevra                          27      31     324   53.9%   34.9%
+   5 dorpsgek                       20      32     324   52.9%   27.5%
+   6 asymptote                      -9      35     325   48.8%   16.9%
+   7 ct800_v1.11_x64               -18      35     324   47.4%   16.4%
+   8 rattatechess_nosferatu        -41      35     324   44.1%   13.6%
+   9 weini1                        -57      35     324   41.8%   17.0%
+  10 simplex                       -74      35     324   39.5%   17.9%
+  11 fairymax                     -274      43     324   17.1%   15.7%
+  12 tscp181                      -417      63     324    8.3%    6.2%
 
 ```
 
