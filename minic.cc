@@ -954,7 +954,8 @@ namespace TimeMan{
       }
       else{ // mps is not given
          ///@todo something better using the real time command
-         int nmoves = 40 + p.moves*2; // let's start for a 40 moves and decrease time after that
+         // sum(0.85/(40+3.5*(i-8)),i=1..200) = 0.95
+         int nmoves = int(40 + (p.moves-8)*3.5f); // let's start for a 40 moves and decrease time after that
          ms = int(0.85 * (msecWholeGame+((msecInc>0)?p.moves*msecInc:0))/ (float)nmoves);
       }
       return ms;
