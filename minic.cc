@@ -81,8 +81,8 @@ void init_lmr(){
             lmrReduction[d][m] = (int)sqrt(float(d) * m / 8.f);
 }
 
-const unsigned int ttSizeMb  = 128; // here in Mb, will be converted to real size next
-const unsigned int ttESizeMb = 128; // here in Mb, will be converted to real size next
+const unsigned int ttSizeMb  = 512; // here in Mb, will be converted to real size next
+const unsigned int ttESizeMb = 512; // here in Mb, will be converted to real size next
 
 bool mateFinder = false;
 
@@ -955,9 +955,8 @@ namespace TimeMan{
       }
       else{ // mps is not given
          ///@todo something better using the real time command
-         int nmoves = 60; // let's start for a 60 ply game
-         if (p.moves > 20) nmoves = 100; // if the game is long, let's go for a 100 ply game
-         if (p.moves > 40) nmoves = 200; // if the game is very long, let's go for a 200 ply game
+         // sum(0.85/(40+3.5*(i-8)),i=1..200) = 0.95
+         int nmoves = int(40 + (p.moves-8)*3.5f); // let's start for a 40 moves and decrease time after that
          ms = int(0.85 * (msecWholeGame+((msecInc>0)?p.moves*msecInc:0))/ (float)nmoves);
       }
       return ms;
