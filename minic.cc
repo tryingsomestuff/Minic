@@ -954,9 +954,10 @@ namespace TimeMan{
       }
       else{ // mps is not given
          ///@todo something better using the real time command
-         int nmoves = 60; // let's start for a 60 ply game
-         if (p.moves > 20) nmoves = 100; // if the game is long, let's go for a 100 ply game
-         if (p.moves > 40) nmoves = 200; // if the game is very long, let's go for a 200 ply game
+         int nmoves = 40; // let's start for a 40 ply game
+         if (p.moves > 30) nmoves = 80; // if the game is long, let's go for a 80 ply game
+         if (p.moves > 50) nmoves = 100; // if the game is very long, let's go for a 100 ply game
+         if (p.moves > 70) nmoves = 200; // if the game is very long, let's go for a 200 ply game
          ms = int(0.85 * (msecWholeGame+((msecInc>0)?p.moves*msecInc:0))/ (float)nmoves);
       }
       return ms;
