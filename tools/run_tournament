@@ -4,15 +4,12 @@ dir=$(readlink -f $(dirname $0)/..)
 
 engines=""
 
-engines="$engines -engine name=minic0.8 cmd=$dir/Dist/minic_0.8_linux_x64_see4.2 arg=-xboard dir=$dir"
-engines="$engines -engine name=minic0.9 cmd=$dir/Dist/minic_0.9_linux_x64_see4.2 arg=-xboard dir=$dir"
-engines="$engines -engine name=minic0.10 cmd=$dir/Dist/minic_0.10_linux_x64_see4.2 arg=-xboard dir=$dir"
-engines="$engines -engine name=minic0.12 cmd=$dir/Dist/minic_0.12_linux_x64_see4.2 arg=-xboard dir=$dir"
-engines="$engines -engine name=minic0.13 cmd=$dir/Dist/minic_0.13_linux_x64_see4.2 arg=-xboard dir=$dir"
-engines="$engines -engine name=minic0.14 cmd=$dir/Dist/minic_0.14_linux_x64_see4.2 arg=-xboard dir=$dir"
-engines="$engines -engine name=minic0.15 cmd=$dir/Dist/minic_0.15_linux_x64_see4.2 arg=-xboard dir=$dir"
-engines="$engines -engine name=minic cmd=$dir/Dist/minic_dev_linux_x64_see4.2 arg=-xboard dir=$dir"
-
+for i in `seq 1 30`; do
+   if [ -e "$dir/Dist/minic_0.${i}_linux_x64_see4.2" ]; then
+      engines="$engines -engine name=minic_${i} cmd=$dir/Dist/minic_0.${i}_linux_x64_see4.2 arg=-xboard dir=$dir"
+   fi
+done
+engines="$engines -engine name=minic_dev cmd=$dir/Dist/minic_dev_linux_x64_see4.2 arg=-xboard dir=$dir"
 echo $engines
 
 engines="$engines -engine name=fairymax cmd=/usr/games/fairymax"

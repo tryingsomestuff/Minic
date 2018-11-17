@@ -91,6 +91,7 @@ ScoreType scoreStack[MAX_PLY] = { 0 };
 
 std::string startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 std::string fine70        = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - -";
+std::string shirov        = "6r1/2rp1kpp/2qQp3/p3Pp1P/1pP2P2/1P2KP2/P5R1/6R1 w - - 0 1";
 
 int currentMoveMs = 777;
 
@@ -154,7 +155,7 @@ inline int BitScanForward(u_int64_t bb) { assert(bb != 0); return __builtin_ctzl
 #define swapbits(x)   (_byteswap_uint64 (x))
 #else // linux
 #define POPCOUNT(x)   int(__builtin_popcountll(x))
-inline int BitScanForward(u_int64_t bb) { assert(bb != 0); return __builtin_ctzll(bb);}
+inline int BitScanForward(u_int64_t bb) { assert(bb != 0ull); return __builtin_ctzll(bb);}
 #define bsf(x,i)      (i=BitScanForward(x))
 #define swapbits(x)   (__builtin_bswap64 (x))
 #endif
@@ -413,7 +414,7 @@ namespace TT{
           if (nbuck >= Bucket::nbBucket - 1) return false;
           return getEntry(h,d,e,nbuck+1);
       }
-      e = _e;
+      e = _e; // only if no collision is detected !
       if ( _e.d >= d ){
          ++stats.tthits;
          return true;
@@ -582,7 +583,7 @@ std::string ToString(const Position & p, bool noEval = false){
     }
     ss << "# +-+-+-+-+-+-+-+-+" << "#" << std::endl;
     if ( p.ep >=0 ) ss << "# ep " << Squares[p.ep]<< std::endl;
-    ss << "# wk " << Squares[p.wk] << std::endl << "# bk " << Squares[p.bk] << std::endl;
+    ss << "# wk " << (p.wk!=INVALIDSQUARE?Squares[p.wk]:"none") << std::endl << "# bk " << (p.bk!=INVALIDSQUARE?Squares[p.bk]:"none") << std::endl;
     ss << "# Turn " << (p.c == Co_White ? "white" : "black") << std::endl;
     ScoreType sc = 0;
     if ( ! noEval ){
@@ -973,7 +974,8 @@ namespace BB {
         BitBoard diagonal, antidiagonal, file, kingZone;
         BitBoard pawnAttack[2], push[2], dpush[2]; // one for each colors
         BitBoard enpassant, knight, king;
-        Mask() :diagonal(0ull), antidiagonal(0ull), file(0ull), kingZone(0ull), pawnAttack{ 0ull,0ull }, push{ 0ull,0ull }, dpush{ 0ull,0ull }, enpassant(0ull), knight(0ull), king(0ull){}
+        BitBoard between[64];
+        Mask() :diagonal(0ull), antidiagonal(0ull), file(0ull), kingZone(0ull), pawnAttack{ 0ull,0ull }, push{ 0ull,0ull }, dpush{ 0ull,0ull }, enpassant(0ull), knight(0ull), king(0ull), between{0ull} {}
     };
     Mask mask[64];
 
@@ -987,6 +989,7 @@ namespace BB {
                     for (int r = (x >> 3) + i, f = (x & 7) + j; 0 <= r && r < 8 && 0 <= f && f < 8; r += i, f += j) {
                         int y = 8 * r + f;
                         d[x][y] = (8 * i + j);
+                        for (int z = x + d[x][y]; z != y; z += d[x][y]) mask[x].between[y] |= 1ull << z;
                     }
                     int r = x >> 3;
                     int f = x & 7;
@@ -1088,6 +1091,7 @@ namespace BB {
 
     int popBit(BitBoard & b) {
         unsigned long i = 0;
+        assert( b != 0ull);
         bsf(b, i);
         b &= b - 1;
         return i;
@@ -1106,33 +1110,42 @@ namespace BB {
     }
 }
 
-inline bool isAttacked(const Position & p, const Square k) { return BB::isAttackedBB(p, k, p.c) != 0ull;}
+inline bool isAttacked(const Position & p, const Square k) { return k!=INVALIDSQUARE && BB::isAttackedBB(p, k, p.c) != 0ull;}
 
-inline bool getAttackers(const Position & p, const Square k, std::vector<Square> & attakers) { return BB::getAttackers(p, k, attakers);}
+inline bool getAttackers(const Position & p, const Square k, std::vector<Square> & attakers) { return k!=INVALIDSQUARE && BB::getAttackers(p, k, attakers);}
 
-void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = false){ ///@todo use bitboards in a better way here !
+enum GenPhase{
+   GP_all   = 0,
+   GP_cap   = 1,
+   GP_quiet = 2
+};
+
+void generate(const Position & p, std::vector<Move> & moves, GenPhase phase = GP_all){
    moves.clear();
    const Color side = p.c;
-   const Color opponent = opponentColor(p.c);
    bool whiteToPlay = p.c == Co_White;
    BitBoard myPieceBB  = ( whiteToPlay ? p.whitePiece : p.blackPiece);
    BitBoard oppPieceBB = (!whiteToPlay ? p.whitePiece : p.blackPiece);
    BitBoard myPieceBBiterator = myPieceBB;
    while (myPieceBBiterator) {
+       assert ( myPieceBBiterator != 0ull);
        const Square from = BB::popBit(myPieceBBiterator);
+       assert(from != INVALIDSQUARE);
        const Piece piece = p.b[from];
        const Piece ptype = (Piece)std::abs(piece);
+       assert ( ptype != P_none ) ;
        static BitBoard(*const pf[])(const Square, const BitBoard, const  Color) = { &BB::coverage<P_wp>, &BB::coverage<P_wn>, &BB::coverage<P_wb>, &BB::coverage<P_wr>, &BB::coverage<P_wq>, &BB::coverage<P_wk> };
        if (ptype != P_wp) {
          BitBoard bb = pf[ptype-1](from, p.occupancy, p.c) & ~myPieceBB;
-         if (onlyCap) bb &= oppPieceBB;
+         if      (phase == GP_cap)   bb &= oppPieceBB;  // only target opponent piece
+         else if (phase == GP_quiet) bb &= ~oppPieceBB; // do not target opponent piece
          while (bb) {
            const Square to = BB::popBit(bb);
-           const bool isCap = onlyCap || ((p.occupancy&SquareToBitboard(to)) != 0ull);
+           const bool isCap = (phase == GP_cap) || ((p.occupancy&SquareToBitboard(to)) != 0ull);
            if (isCap) addMove(from,to,T_capture,moves);
            else addMove(from,to,T_std,moves);
          }
-         if ( !onlyCap && ptype == P_wk ){ // castling
+         if ( phase != GP_cap && ptype == P_wk ){ // castling
            if ( side == Co_White) {
               bool e1Attacked = isAttacked(p,Sq_e1);
               if ( (p.castling & C_wqs) && p.b[Sq_b1] == P_none && p.b[Sq_c1] == P_none && p.b[Sq_d1] == P_none && !isAttacked(p,Sq_c1) && !isAttacked(p,Sq_d1) && !e1Attacked) addMove(from, Sq_c1, T_wqs, moves); // wqs
@@ -1146,26 +1159,13 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
          }
        }
        else {
-          ///@todo use bitboard !!!
           BitBoard pawnmoves = 0ull;
-          // push (and prom)
-          if (! onlyCap) pawnmoves = BB::mask[from].push[p.c] & ~myPieceBB & ~oppPieceBB;
-          // double push
-          if (! onlyCap && (BB::mask[from].push[p.c] & p.occupancy) == 0ull) pawnmoves += BB::mask[from].dpush[p.c] & ~myPieceBB & ~oppPieceBB ;
-          // cap (and prom)
-          pawnmoves += BB::mask[from].pawnAttack[p.c] & ~myPieceBB & oppPieceBB;
-
-          /*
-          std::cout << "*******************************************" << std::endl;
-          std::cout << Squares[from] << std::endl;
-          std::cout << ToString(p) << std::endl;
-          std::cout << showBitBoard(pawnmoves) << std::endl;
-          std::cout << "*******************************************" << std::endl;
-          */
-
+          if ( phase != GP_cap) pawnmoves = BB::mask[from].push[p.c] & ~myPieceBB & ~oppPieceBB;
+          if ((phase != GP_cap) && (BB::mask[from].push[p.c] & p.occupancy) == 0ull) pawnmoves += BB::mask[from].dpush[p.c] & ~myPieceBB & ~oppPieceBB ;
+          if ( phase != GP_quiet) pawnmoves += BB::mask[from].pawnAttack[p.c] & ~myPieceBB & oppPieceBB;
           while (pawnmoves) {
               const Square to = BB::popBit(pawnmoves);
-              const bool isCap = onlyCap || ((p.occupancy&SquareToBitboard(to)) != 0ull);
+              const bool isCap = (phase == GP_cap) || ((p.occupancy&SquareToBitboard(to)) != 0ull);
               if (isCap){
                   if ( SQRANK(to) == 0 || SQRANK(to) == 7) {
                       addMove(from, to, T_cappromq, moves); // pawn capture with promotion
@@ -1186,7 +1186,7 @@ void generate(const Position & p, std::vector<Move> & moves, bool onlyCap = fals
               }
           }
           // ep
-          if ( p.ep != INVALIDSQUARE ) pawnmoves += BB::mask[from].pawnAttack[p.c] & ~myPieceBB & SquareToBitboard(p.ep);
+          if ( p.ep != INVALIDSQUARE && phase != GP_quiet ) pawnmoves += BB::mask[from].pawnAttack[p.c] & ~myPieceBB & SquareToBitboard(p.ep);
           while (pawnmoves) {
               const Square to = BB::popBit(pawnmoves);
               addMove(from,to,T_ep,moves);
@@ -1211,6 +1211,23 @@ inline void movePiece(Position & p, Square from, Square to, Piece fromP, Piece t
         p.h ^= ZT[to][toId]; // if capture remove toP at to
     }
     p.h ^= ZT[to][toIdnew]; // add fromP (or prom) at to
+}
+
+bool validate(const Position &p, const Move &m){
+    if ( m == INVALIDMOVE ) return false;
+    BitBoard side = p.whitePiece;
+    BitBoard opponent = p.blackPiece;
+    if ( p.c == Co_Black ) std::swap(side,opponent);
+    const Square from = Move2From(m);
+    if ( (SquareToBitboard(from) & side) == 0ull ) return false; // from piece is not ours
+    const Piece ptype = (Piece)std::abs(p.b[from]);
+    assert(ptype != P_none);
+    static BitBoard(*const pf[])(const Square, const BitBoard, const  Color) = { &BB::coverage<P_wp>, &BB::coverage<P_wn>, &BB::coverage<P_wb>, &BB::coverage<P_wr>, &BB::coverage<P_wq>, &BB::coverage<P_wk> };
+    const Square to = Move2To(m);
+    if ( (SquareToBitboard(to) & side) != 0ull ) return false; // to piece is ours
+    const BitBoard bb = pf[ptype-1](from, p.occupancy, p.c) & ~side;
+    if ( (SquareToBitboard(to) & bb) == 0ull ) return false; // to square is not reachable with this kind of piece, or there is something between from and to for sliders
+    return true;
 }
 
 bool apply(Position & p, const Move & m){
@@ -1245,6 +1262,9 @@ bool apply(Position & p, const Move & m){
          if (p.castling & C_bqs) p.h ^= ZT[56][13];
          p.castling &= ~(C_bks | C_bqs);
       }
+      // king capture : is that necessary ???
+      if ( toP == P_wk ) p.wk = INVALIDSQUARE;
+      if ( toP == P_bk ) p.bk = INVALIDSQUARE;
 
       if ( fromP == P_wr && from == Sq_a1 && (p.castling & C_wqs)){
          p.castling &= ~C_wqs;
@@ -1475,6 +1495,7 @@ bool SEE(const Position & p, const Move & m, ScoreType threshold){
         while (!validThreatFound && threatId < stmAttackers.size()) {
             const Move mm = ToMove(stmAttackers[threatId], to, T_capture); ///@todo prom ????
             nextVictim = p2.b[stmAttackers[threatId]];
+            if (std::abs(nextVictim) == P_wk) return false; // we shall not capture king !
             ++threatId;
             if ( ! apply(p2,mm) ) continue;
             validThreatFound = true;
@@ -1528,6 +1549,101 @@ void sort(std::vector<Move> & moves, const Position & p, const TT::Entry * e = N
    for(auto it = moves.begin() ; it != moves.end() ; ++it){ ms.computeScore(*it); }
    std::sort(moves.begin(),moves.end(),ms);
 }
+
+
+struct StagedMoveGenerator{
+    enum Stage{
+        St_TT       = 0,
+        St_genCap   = 1,
+        St_goodCap  = 2,
+        St_killers  = 3,
+        St_badCap   = 4,
+        St_genQuiet = 5,
+        St_quiet    = 6
+    };
+
+    const Position _p;
+    const TT::Entry _e;
+    Stage _st;
+
+    std::vector<Move> _movesCap;
+    std::vector<Move> _movesQuiet;
+
+    int _idCap = 0;
+    int _idQuiet = 0;
+    int _kid = -1;
+
+    StagedMoveGenerator(const Position & p, const TT::Entry e):_p(p),_e(e),_st(St_TT){}
+
+    Move next(){
+       //std::cout << "next called " << _st << std::endl;
+       switch(_st){
+       case St_TT:
+           //std::cout << "Stage TT" << std::endl;
+           _st = St_genCap;
+           if ( validate(_p,_e.m)) return _e.m;
+       case St_genCap:
+           //std::cout << "Stage gen cap" << std::endl;
+           _st = St_goodCap;
+           generate(_p,_movesCap,GP_cap);
+           sort(_movesCap,_p,&_e);
+       case St_goodCap:
+           //std::cout << "Stage good cap " << _id << std::endl;
+           if ( _idCap >= _movesCap.size()) _st = St_killers;
+           else{
+              if ( sameMove(_movesCap[_idCap],_e.m) ) ++_idCap;
+              if ( _idCap >= _movesCap.size()) _st = St_killers;
+              else if ( Move2Score(_movesCap[_idCap]) > 0 ) return _movesCap[_idCap++];
+              else _st = St_killers;
+           }
+       case St_killers:
+           //std::cout << "Stage killers" << std::endl;
+           _kid++;
+           if ( _kid > 1 ) _st = St_badCap;
+           else if ( validate(_p,KillerT::killers[_kid][_p.ply])) return KillerT::killers[_kid][_p.ply];
+       case St_genQuiet:
+           //std::cout << "Stage gen quiet" << std::endl;
+           _st = St_quiet;
+           generate(_p,_movesQuiet,GP_quiet);
+           sort(_movesQuiet,_p,&_e);
+       case St_quiet:
+           //std::cout << "Stage quiet " << _id << std::endl;
+           if ( _idQuiet >= _movesQuiet.size()) _st = St_badCap;
+           else{
+              while ( _idQuiet < _movesQuiet.size() && isCapture(Move2Type(_movesQuiet[_idQuiet])) ) ++_idQuiet; ///@todo should not be usefull !
+              if ( _idQuiet >= _movesQuiet.size()) _st = St_badCap;
+              else{
+                 if ( sameMove(_movesQuiet[_idQuiet],_e.m) ) ++_idQuiet;
+                 if ( _idQuiet >= _movesQuiet.size()) _st = St_badCap;
+                 else{
+                    if ( sameMove(KillerT::killers[0][_p.ply],_movesQuiet[_idQuiet])) ++_idQuiet;
+                    if ( _idQuiet >= _movesQuiet.size()) _st = St_badCap;
+                    else{
+                       if ( sameMove(KillerT::killers[1][_p.ply],_movesQuiet[_idQuiet])) ++_idQuiet;
+                       if ( _idQuiet >= _movesQuiet.size()) _st = St_badCap;
+                       else{
+                          //std::cout << ToString(_moves[_id]) << " " << _moves.size() << " " << _id << std::endl;
+                          return _movesQuiet[_idQuiet++];
+                       }
+                    }
+                 }
+              }
+           }
+       case St_badCap:
+           //std::cout << "Stage bad cap " << _id << std::endl;
+           if ( _idCap >= _movesCap.size()) break;
+           else{
+              if ( sameMove(_movesCap[_idCap],_e.m) ) ++_idCap;
+              if ( _idCap >= _movesCap.size()) break;
+              else if ( Move2Score(_movesCap[_idCap]) < 0 ) return _movesCap[_idCap++];
+           }
+       default:
+           ;
+           // no more moves...
+       }
+       return INVALIDMOVE;
+    }
+};
 
 bool isDraw(const Position & p, bool isPV = true){
    int count = 0;
@@ -1593,27 +1709,31 @@ ScoreType eval(const Position & p, float & gp){
        sc -= ScoreType((gp*PST[ptype - 1][k] + (1.f - gp)*PSTEG[ptype - 1][k]));
    }
    // in very end game winning king must be near the other king
-   if (gp < 0.2) sc -= (sc>0?+1:-1)*manhattanDistance(p.wk, p.bk)*15;
+   if (gp < 0.2 && p.wk != INVALIDSQUARE && p.bk != INVALIDSQUARE) sc -= (sc>0?+1:-1)*manhattanDistance(p.wk, p.bk)*15;
 
    /*
    // king attack
    ScoreType attSc = 0;
-   BitBoard wKingZone = BB::mask[p.wk].kingZone;
-   while(wKingZone){
-      Square z = BB::popBit(wKingZone);
-      BitBoard attack = BB::isAttackedBB(p, z, Co_White);
-      while(attack){
-          Square from = BB::popBit(attack);
-          attSc += getValue(p,from);
+   if ( p.wk != INVALIDSQUARE ){
+      BitBoard wKingZone = BB::mask[p.wk].kingZone;
+      while(wKingZone){
+         Square z = BB::popBit(wKingZone);
+         BitBoard attack = BB::isAttackedBB(p, z, Co_White);
+         while(attack){
+             Square from = BB::popBit(attack);
+             attSc += getValue(p,from);
+         }
       }
    }
-   BitBoard bKingZone = BB::mask[p.bk].kingZone;
-   while(bKingZone){
-      Square z = BB::popBit(bKingZone);
-      BitBoard attack = BB::isAttackedBB(p, z, Co_Black);
-      while(attack){
-          Square from = BB::popBit(attack);
-          attSc += getValue(p,from);
+   if ( p.bk != INVALIDSQUARE ){
+      BitBoard bKingZone = BB::mask[p.bk].kingZone;
+      while(bKingZone){
+         Square z = BB::popBit(bKingZone);
+         BitBoard attack = BB::isAttackedBB(p, z, Co_Black);
+         while(attack){
+             Square from = BB::popBit(attack);
+             attSc += getValue(p,from);
+         }
       }
    }
    sc+=attSc/50;
@@ -1640,7 +1760,7 @@ ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned 
   //const bool isInCheck = isAttacked(p, kingSquare(p));
 
   std::vector<Move> moves;
-  generate(p,moves,true);
+  generate(p,moves,GP_cap);
   sort(moves,p);
 
   ScoreType alphaInit = alpha;
@@ -1815,16 +1935,28 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
       }
   }
 
+//#define USE_STAGED_MOVE_GENERATOR
+#ifdef USE_STAGED_MOVE_GENERATOR
+  StagedMoveGenerator smg(p,e);
+  Move smgm = bestMove = smg.next();
+#else
   std::vector<Move> moves;
   generate(p,moves);
   if ( moves.empty() ) return isInCheck?-MATE + ply : 0;
   sort(moves,p,&e);
-
   if (bestMove == INVALIDMOVE)  bestMove = moves[0]; // so that B_alpha are stored in TT
-
+#endif
   bool improving = (!isInCheck && ply >= 2 && val >= scoreStack[p.ply - 2]);
 
+
+#ifdef USE_STAGED_MOVE_GENERATOR
+  while ( smgm != INVALIDMOVE && !stopFlag ){
+      Move current = smgm;
+      Move * it = &current;
+      smgm = smg.next();
+#else
   for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
+#endif
      if (sameMove(skipMove, *it)) continue; // skipmove
      if ( e.h != 0 && sameMove(e.m, *it)) continue; // already tried
      Position p2 = p;
@@ -1873,7 +2005,11 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         if ( val >= beta ){
            if ( Move2Type(*it) == T_std && !isInCheck){
               updateHistoryKillers(p, depth, *it);
-              for(auto it2 = moves.begin() ; *it2!=*it; ++it2){
+#ifdef USE_STAGED_MOVE_GENERATOR
+              for(auto it2 = smg._movesQuiet.begin() ; it2 != smg._movesQuiet.end() && !sameMove(*it2,*it); ++it2){
+#else
+              for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2){
+#endif
                   if ( Move2Type(*it2) == T_std ) HistoryT::update(depth,*it2,p,false);
               }
            }
@@ -1992,20 +2128,42 @@ struct PerftAccumulator{
 
 Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc, bool divide = false){
    if ( depth == 0) return 0;
+   static TT::Entry e;
+#define VALIDATE_STAGED_MOVE_GENERATOR // this is slow because of sorting on-the-fly
+#ifdef VALIDATE_STAGED_MOVE_GENERATOR
+   StagedMoveGenerator smg(p,e);
+   Move m = smg.next();
+#else
    std::vector<Move> moves;
    generate(p,moves);
-   if ( depth == 1 ) acc.pseudoNodes += moves.size();
+   //sort(moves,p); // to check of staged move generator is too slow ?? ==> yes it is ... pertf 6 in 10sec(gen), 12sec(gen+sort), 15sec(staged)
+#endif
    int validMoves = 0;
-   for(auto it = moves.begin() ; it != moves.end() ; ++it){
+   int allMoves = 0;
+#ifdef VALIDATE_STAGED_MOVE_GENERATOR
+   while (m != INVALIDMOVE){
+#else
+   for (auto it = moves.begin() ; it != moves.end(); ++it){
+     const Move m = *it;
+#endif
+     ++allMoves;
      Position p2 = p;
-     if ( ! apply(p2,*it) ) continue;
+     if ( ! apply(p2,m) ){
+#ifdef VALIDATE_STAGED_MOVE_GENERATOR
+         m = smg.next();
+#endif
+         continue;
+     }
      ++validMoves;
      if ( divide && depth == 2 ) std::cout << "#" << ToString(p2) << std::endl;
      Counter nNodes = perft(p2,depth-1,acc,divide);
-     if ( divide && depth == 2 ) std::cout << "#=> after " << ToString(*it) << " " << nNodes << std::endl;
-     if ( divide && depth == 1 ) std::cout << "#" << (int)depth << " " <<  ToString(*it) << std::endl;
+     if ( divide && depth == 2 ) std::cout << "#=> after " << ToString(m) << " " << nNodes << std::endl;
+     if ( divide && depth == 1 ) std::cout << "#" << (int)depth << " " <<  ToString(m) << std::endl;
+#ifdef VALIDATE_STAGED_MOVE_GENERATOR
+     m = smg.next();
+#endif
    }
-   if ( depth == 1 ) acc.validNodes += validMoves;
+   if ( depth == 1 ) { acc.pseudoNodes += allMoves; acc.validNodes += validMoves; }
    if ( divide && depth == 2 ) std::cout << "#********************" << std::endl;
    return acc.validNodes;
 }
@@ -2373,8 +2531,9 @@ int main(int argc, char ** argv){
 
    std::string fen = argv[2];
 
-   if ( fen == "start") fen = startPosition;
+   if ( fen == "start")  fen = startPosition;
    if ( fen == "fine70") fen = fine70;
+   if ( fen == "shirov") fen = shirov;
 
    Position p;
    if ( ! readFEN(fen,p) ){
