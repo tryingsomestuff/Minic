@@ -13,6 +13,10 @@
 #include <chrono>
 #include <random>
 #include <unordered_map>
+#include <atomic>
+#include <condition_variable>
+#include <mutex>
+#include <thread>
 #ifdef _WIN32
 #include <stdlib.h>
 #include <intrin.h>
@@ -85,9 +89,6 @@ const unsigned int ttSizeMb  = 512; // here in Mb, will be converted to real siz
 const unsigned int ttESizeMb = 512; // here in Mb, will be converted to real size next
 
 bool mateFinder = false;
-
-Hash hashStack[MAX_PLY] = { 0 };
-ScoreType scoreStack[MAX_PLY] = { 0 };
 
 std::string startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 std::string fine70        = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - -";
@@ -315,17 +316,17 @@ inline ScoreType getValueEG(const Position &p, Square k){ assert(k >= 0 && k < 6
 
 inline void unSetBit(Position & p, Square k) { ///@todo keep this lookup table in position and implemente copy CTOR and operator
     assert(k >= 0 && k < 64);
-    BitBoard* allB[13] = { &(p.blackKing),&(p.blackQueen),&(p.blackRook),&(p.blackBishop),&(p.blackKnight),&(p.blackPawn),&dummy,&(p.whitePawn),&(p.whiteKnight),&(p.whiteBishop),&(p.whiteRook),&(p.whiteQueen),&(p.whiteKing) };
+    BitBoard * const allB[13] = { &(p.blackKing),&(p.blackQueen),&(p.blackRook),&(p.blackBishop),&(p.blackKnight),&(p.blackPawn),&dummy,&(p.whitePawn),&(p.whiteKnight),&(p.whiteBishop),&(p.whiteRook),&(p.whiteQueen),&(p.whiteKing) };
     unSetBit(*allB[getPieceIndex(p, k)], k);
 }
 inline void unSetBit(Position &p, Square k, Piece pp) { ///@todo keep this lookup table in position and implemente copy CTOR and operator
     assert(k >= 0 && k < 64);
-    BitBoard* allB[13] = { &(p.blackKing),&(p.blackQueen),&(p.blackRook),&(p.blackBishop),&(p.blackKnight),&(p.blackPawn),&dummy,&(p.whitePawn),&(p.whiteKnight),&(p.whiteBishop),&(p.whiteRook),&(p.whiteQueen),&(p.whiteKing) };
+    BitBoard * const allB[13] = { &(p.blackKing),&(p.blackQueen),&(p.blackRook),&(p.blackBishop),&(p.blackKnight),&(p.blackPawn),&dummy,&(p.whitePawn),&(p.whiteKnight),&(p.whiteBishop),&(p.whiteRook),&(p.whiteQueen),&(p.whiteKing) };
     unSetBit(*allB[pp + PieceShift], k);
 }
 inline void setBit(Position &p, Square k, Piece pp) { ///@todo keep this lookup table in position and implemente copy CTOR and operator
     assert(k >= 0 && k < 64);
-    BitBoard* allB[13] = { &(p.blackKing),&(p.blackQueen),&(p.blackRook),&(p.blackBishop),&(p.blackKnight),&(p.blackPawn),&dummy,&(p.whitePawn),&(p.whiteKnight),&(p.whiteBishop),&(p.whiteRook),&(p.whiteQueen),&(p.whiteKing) };
+    BitBoard * const allB[13] = { &(p.blackKing),&(p.blackQueen),&(p.blackRook),&(p.blackBishop),&(p.blackKnight),&(p.blackPawn),&dummy,&(p.whitePawn),&(p.whiteKnight),&(p.whiteBishop),&(p.whiteRook),&(p.whiteQueen),&(p.whiteKing) };
     setBit(*allB[pp + PieceShift], k);
 }
 
@@ -467,27 +468,185 @@ namespace TT{
 
 }
 
-namespace KillerT{
-   Move killers[2][MAX_PLY];
-   void initKillers(){
-      std::cout << "# Init killers" << std::endl;
-      for(int i = 0; i < 2; ++i)
-          for(int k = 0 ; k < MAX_PLY; ++k)
-              killers[i][k] = INVALIDMOVE;
-   }
-}
+struct ThreadContext{
 
-namespace HistoryT{
-   ScoreType history[13][64];
-   void initHistory(){
-      std::cout << "# Init history" << std::endl;
-      for(int i = 0; i < 13; ++i)
-          for(int k = 0 ; k < 64; ++k)
-              history[i][k] = 0;
-   }
-   inline void update(DepthType depth, Move m, const Position & p, bool plus){
-       if ( Move2Type(m) == T_std ) history[getPieceIndex(p,Move2From(m))][Move2To(m)] += ScoreType( (plus?+1:-1) * (depth*depth/6.f) - (history[getPieceIndex(p,Move2From(m))][Move2To(m)] * depth*depth/6.f / 200.f));
-   }
+    static bool stopFlag;
+
+    Hash hashStack[MAX_PLY] = { 0 };
+    ScoreType scoreStack[MAX_PLY] = { 0 };
+
+    struct KillerT{
+       Move killers[2][MAX_PLY];
+       inline void initKillers(){
+          std::cout << "# Init killers" << std::endl;
+          for(int i = 0; i < 2; ++i)
+              for(int k = 0 ; k < MAX_PLY; ++k)
+                  killers[i][k] = INVALIDMOVE;
+       }
+    };
+
+    struct HistoryT{
+       ScoreType history[13][64];
+       inline void initHistory(){
+          std::cout << "# Init history" << std::endl;
+          for(int i = 0; i < 13; ++i)
+              for(int k = 0 ; k < 64; ++k)
+                  history[i][k] = 0;
+       }
+       inline void update(DepthType depth, Move m, const Position & p, bool plus){
+           if ( Move2Type(m) == T_std ) history[getPieceIndex(p,Move2From(m))][Move2To(m)] += ScoreType( (plus?+1:-1) * (depth*depth/6.f) - (history[getPieceIndex(p,Move2From(m))][Move2To(m)] * depth*depth/6.f / 200.f));
+       }
+    };
+
+    KillerT killerT;
+    HistoryT historyT;
+
+    struct Data{
+       DepthType depth;
+       DepthType seldepth;
+       ScoreType sc;
+       Position p;
+       Move best;
+       std::vector<Move> pv;
+    };
+
+    ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove = INVALIDMOVE);
+    ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
+    bool SEE(const Position & p, const Move & m, ScoreType threshold)const;
+    std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth);
+    bool isDraw(const Position & p, bool isPV = true)const;
+
+    void idleLoop(){
+        while (true){
+            std::unique_lock<std::mutex> lock(_mutex);
+            _searching = false;
+            _cv.notify_one(); // Wake up anyone waiting for search finished
+            _cv.wait(lock, [&]{ return _searching; });
+            if (_exit){
+               return;
+            }
+            lock.unlock();
+            search();
+        }
+    }
+
+    void start(){
+        std::lock_guard<std::mutex> lock(_mutex);
+        _searching = true;
+        _cv.notify_one(); // Wake up the thread in IdleLoop()
+    }
+
+    void wait(){
+        std::unique_lock<std::mutex> lock(_mutex);
+        _cv.wait(lock, [&]{ return !_searching; });
+    }
+
+    void search(){
+        _data.pv = search(_data.p, _data.best, _data.depth, _data.sc, _data.seldepth);
+    }
+
+    size_t id()const { return _index;}
+    bool   isMainThread()const { return id() == 0 ; }
+
+    ThreadContext(size_t n):_index(n),_exit(false),_searching(true),_stdThread(&ThreadContext::idleLoop, this){
+       wait();
+    }
+
+    ~ThreadContext(){
+        _exit = true;
+        start();
+        _stdThread.join();
+    }
+
+    void setData(const Data & d){ _data = d;}
+    const Data & getData()const{ return _data;}
+
+private:
+    Data                    _data;
+    size_t                  _index;
+    std::mutex              _mutex;
+    static std::mutex       _mutexDisplay;
+    std::condition_variable _cv;
+    // MUST be initialized BEFORE _stdThread (can be here to be sure ...)
+    bool                    _exit;
+    bool                    _searching;
+    std::thread             _stdThread;
+};
+
+bool ThreadContext::stopFlag = false;
+
+// singleton pool of threads
+class ThreadPool : public std::vector<ThreadContext*> {
+public:
+    static ThreadPool & instance(){
+        static ThreadPool pool;
+        return pool;
+    }
+
+    ~ThreadPool(){
+        while (size()) {
+            delete back();
+            pop_back();
+        }
+    }
+
+    void setup(unsigned int n){
+        assert(n > 0);
+        while (size() < (unsigned int)n) {
+            push_back(new ThreadContext(size()));
+        }
+    }
+
+    ThreadContext & main() { return *(front()); }
+
+    Move searchSync(const ThreadContext::Data & d){
+        for (auto s : *this) {
+           (*s).wait();
+        }
+        for (auto s : *this) {
+            (*s).setData(d);
+        }
+
+        // Launch main thread
+        main().search();
+
+        // when main thread is done tells everybody else to stop
+        ThreadContext::stopFlag = true;
+
+        // wait for other threads to return
+        for(auto s : *this){
+            if (!(*s).isMainThread()) {
+                (*s).wait();
+            }
+        }
+
+        // return main thread result
+        return main().getData().best;
+    }
+
+    //void searchASync(const ThreadContext::Data & d); ///@todo for pondering
+
+    void startOthers(){
+        for (auto s : *this) {
+            if (!(*s).isMainThread()) {
+                (*s).start();
+            }
+        }
+    }
+
+    bool stop;
+
+private:
+    ThreadPool():stop(false){
+        push_back(new ThreadContext(size())); // this one will be called "Main" thread
+    }
+};
+
+ScoreType eval(const Position & p, float & gp); // forward decl
+
+void initThreading(int n = 1 ){
+    assert(n>=1);
+    ThreadPool::instance().setup(n);
 }
 
 inline bool isCapture(const MType & mt){ return mt == T_capture || mt == T_ep || mt == T_cappromq || mt == T_cappromr || mt == T_cappromb || mt == T_cappromn; }
@@ -570,8 +729,6 @@ std::string ToString(const std::vector<Move> & moves){
    return ss.str();
 }
 
-ScoreType eval(const Position & p, float & gp); //forward decl
-
 std::string ToString(const Position & p, bool noEval = false){
     std::stringstream ss;
     ss << "#" << std::endl;
@@ -596,8 +753,6 @@ std::string ToString(const Position & p, bool noEval = false){
 
 inline Color opponentColor(const Color c){ return Color((c+1)%2);}
 
-bool stopFlag = false;
-
 const int mailbox[120] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  0,  1,  2,  3,  4,  5,  6,  7, -1, -1,  8,  9, 10, 11, 12, 13, 14, 15, -1, -1, 16, 17, 18, 19, 20, 21, 22, 23, -1, -1, 24, 25, 26, 27, 28, 29, 30, 31, -1, -1, 32, 33, 34, 35, 36, 37, 38, 39, -1, -1, 40, 41, 42, 43, 44, 45, 46, 47, -1, -1, 48, 49, 50, 51, 52, 53, 54, 55, -1, -1, 56, 57, 58, 59, 60, 61, 62, 63, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
 const int mailbox64[64] = { 21, 22, 23, 24, 25, 26, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38, 41, 42, 43, 44, 45, 46, 47, 48, 51, 52, 53, 54, 55, 56, 57, 58, 61, 62, 63, 64, 65, 66, 67, 68, 71, 72, 73, 74, 75, 76, 77, 78, 81, 82, 83, 84, 85, 86, 87, 88, 91, 92, 93, 94, 95, 96, 97, 98};
@@ -606,6 +761,7 @@ bool Slide[6] = {false, false, true, true, true, false};
 int Offsets[6] = {8, 8, 4, 4, 8, 8};
 int Offset[6][8] = { { -20, -10, -11, -9, 9, 11, 10, 20 }, { -21, -19, -12, -8, 8, 12, 19, 21 }, { -11,  -9,   9, 11, 0,  0,  0,  0 }, { -10,  -1,   1, 10, 0,  0,  0,  0 }, { -11, -10,  -9, -1, 1,  9, 10, 11 }, { -11, -10,  -9, -1, 1,  9, 10, 11 } };
 
+// Rofchade
 const ScoreType PST[6][64] = {
  {
  //pawn
@@ -1467,7 +1623,7 @@ struct SortThreatsFunctor {
 };
 
 // Static Exchange Evaluation (from stockfish)
-bool SEE(const Position & p, const Move & m, ScoreType threshold){
+bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold) const{
     // Only deal with normal moves
     if (! isCapture(m)) return true;
     const Square from       = Move2From(m);
@@ -1513,7 +1669,7 @@ bool sameMove(const Move & a, const Move & b) { return (a & 0x0000FFFF) == (b & 
 
 struct MoveSorter{
 
-   MoveSorter(const Position & p, const TT::Entry * e = NULL):p(p),e(e){ assert(e==0||e->h!=0||e->m==INVALIDMOVE); }
+   MoveSorter(const ThreadContext & context, const Position & p, const TT::Entry * e = NULL):context(context),p(p),e(e){ assert(e==0||e->h!=0||e->m==INVALIDMOVE); }
 
    void computeScore(Move & m)const{
       const MType  t    = Move2Type(m);
@@ -1521,14 +1677,14 @@ struct MoveSorter{
       const Square to   = Move2To(m);
       int s = MoveScoring[t];
       if (e && sameMove(e->m,m)) s += 3000;
-      else if (sameMove(m,KillerT::killers[0][p.ply])) s += 290;
-      else if (sameMove(m,KillerT::killers[1][p.ply])) s += 260;
+      else if (sameMove(m,context.killerT.killers[0][p.ply])) s += 290;
+      else if (sameMove(m,context.killerT.killers[1][p.ply])) s += 260;
       if (isCapture(t)){
           s += MvvLvaScores[getPieceType(p,to)-1][getPieceType(p,from)-1];
-          if ( !SEE(p,m,0)) s -= 2000;
+          if ( !context.SEE(p,m,0)) s -= 2000;
       }
       else if ( t == T_std){
-          s += HistoryT::history[getPieceIndex(p,from)][to];
+          s += context.historyT.history[getPieceIndex(p,from)][to];
           const bool isWhite = (p.whitePiece & (SquareToBitboard(from))) != 0ull;
           s += PST[getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - PST[getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from];
       }
@@ -1541,110 +1697,16 @@ struct MoveSorter{
    }
    const Position & p;
    const TT::Entry * e;
+   const ThreadContext & context;
 };
 
-void sort(std::vector<Move> & moves, const Position & p, const TT::Entry * e = NULL){
-   const MoveSorter ms(p,e);
+void sort(const ThreadContext & context, std::vector<Move> & moves, const Position & p, const TT::Entry * e = NULL){
+   const MoveSorter ms(context,p,e);
    for(auto it = moves.begin() ; it != moves.end() ; ++it){ ms.computeScore(*it); }
    std::sort(moves.begin(),moves.end(),ms);
 }
 
-
-struct StagedMoveGenerator{
-    enum Stage{
-        St_TT       = 0,
-        St_genCap   = 1,
-        St_goodCap  = 2,
-        St_killers  = 3,
-        St_badCap   = 4,
-        St_genQuiet = 5,
-        St_quiet    = 6
-    };
-
-    const Position _p;
-    const TT::Entry _e;
-    Stage _st;
-
-    std::vector<Move> _movesCap;
-    std::vector<Move> _movesQuiet;
-
-    int _idCap = 0;
-    int _idQuiet = 0;
-    int _kid = -1;
-
-    StagedMoveGenerator(const Position & p, const TT::Entry e):_p(p),_e(e),_st(St_TT){}
-
-    Move next(){
-       //std::cout << "next called " << _st << std::endl;
-       switch(_st){
-       case St_TT:
-           //std::cout << "Stage TT" << std::endl;
-           _st = St_genCap;
-           if ( validate(_p,_e.m)) return _e.m;
-       case St_genCap:
-           //std::cout << "Stage gen cap" << std::endl;
-           _st = St_goodCap;
-           generate(_p,_movesCap,GP_cap);
-           sort(_movesCap,_p,&_e);
-       case St_goodCap:
-           //std::cout << "Stage good cap " << _id << std::endl;
-           if ( _idCap >= _movesCap.size()) _st = St_killers;
-           else{
-              if ( sameMove(_movesCap[_idCap],_e.m) ) ++_idCap;
-              if ( _idCap >= _movesCap.size()) _st = St_killers;
-              else if ( Move2Score(_movesCap[_idCap]) > 0 ) return _movesCap[_idCap++];
-              else _st = St_killers;
-           }
-       case St_killers:
-           //std::cout << "Stage killers" << std::endl;
-           _kid++;
-           if ( _kid > 1 ) _st = St_badCap;
-           else if ( validate(_p,KillerT::killers[_kid][_p.ply])) return KillerT::killers[_kid][_p.ply];
-       case St_genQuiet:
-           //std::cout << "Stage gen quiet" << std::endl;
-           _st = St_quiet;
-           generate(_p,_movesQuiet,GP_quiet);
-           sort(_movesQuiet,_p,&_e);
-       case St_quiet:
-           //std::cout << "Stage quiet " << _id << std::endl;
-           if ( _idQuiet >= _movesQuiet.size()) _st = St_badCap;
-           else{
-              while ( _idQuiet < _movesQuiet.size() && isCapture(Move2Type(_movesQuiet[_idQuiet])) ) ++_idQuiet; ///@todo should not be usefull !
-              if ( _idQuiet >= _movesQuiet.size()) _st = St_badCap;
-              else{
-                 if ( sameMove(_movesQuiet[_idQuiet],_e.m) ) ++_idQuiet;
-                 if ( _idQuiet >= _movesQuiet.size()) _st = St_badCap;
-                 else{
-                    if ( sameMove(KillerT::killers[0][_p.ply],_movesQuiet[_idQuiet])) ++_idQuiet;
-                    if ( _idQuiet >= _movesQuiet.size()) _st = St_badCap;
-                    else{
-                       if ( sameMove(KillerT::killers[1][_p.ply],_movesQuiet[_idQuiet])) ++_idQuiet;
-                       if ( _idQuiet >= _movesQuiet.size()) _st = St_badCap;
-                       else{
-                          //std::cout << ToString(_moves[_id]) << " " << _moves.size() << " " << _id << std::endl;
-                          return _movesQuiet[_idQuiet++];
-                       }
-                    }
-                 }
-              }
-           }
-       case St_badCap:
-           //std::cout << "Stage bad cap " << _id << std::endl;
-           if ( _idCap >= _movesCap.size()) break;
-           else{
-              if ( sameMove(_movesCap[_idCap],_e.m) ) ++_idCap;
-              if ( _idCap >= _movesCap.size()) break;
-              else if ( Move2Score(_movesCap[_idCap]) < 0 ) return _movesCap[_idCap++];
-           }
-       default:
-           ;
-           // no more moves...
-       }
-       return INVALIDMOVE;
-    }
-};
-
-bool isDraw(const Position & p, bool isPV = true){
+bool ThreadContext::isDraw(const Position & p, bool isPV)const{
    int count = 0;
    const Hash h = computeHash(p);
    const int limit = isPV?3:1;
@@ -1680,6 +1742,10 @@ int manhattanDistance(Square sq1, Square sq2) {
 }
 
 ScoreType eval(const Position & p, float & gp){
+
+   ScoreType sc = 0;
+   if (TT::getEvalEntry(computeHash(p), sc, gp)) return sc;
+
    static const int absValues[7]   = { 0, Values[P_wp + PieceShift], Values[P_wn + PieceShift], Values[P_wb + PieceShift], Values[P_wr + PieceShift], Values[P_wq + PieceShift], Values[P_wk + PieceShift] };
    static const int absValuesEG[7] = { 0, ValuesEG[P_wp + PieceShift], ValuesEG[P_wn + PieceShift], ValuesEG[P_wb + PieceShift], ValuesEG[P_wr + PieceShift], ValuesEG[P_wq + PieceShift], ValuesEG[P_wk + PieceShift] };
    int absscore = (p.nwk+p.nbk) * absValues[P_wk] + (p.nwq+p.nbq) * absValues[P_wq] + (p.nwr+p.nbr) * absValues[P_wr] + (p.nwb+p.nbb) * absValues[P_wb] + (p.nwn+p.nbn) * absValues[P_wn] + (p.nwp+p.nbp) * absValues[P_wp];
@@ -1687,12 +1753,12 @@ ScoreType eval(const Position & p, float & gp){
    int pawnScore = 100 * p.np / 16;
    int pieceScore = 100 * (p.nq + p.nr + p.nb + p.nn) / 14;
    gp = (absscore*0.4f + pieceScore*0.3f + pawnScore*0.3f)/100.f;
-   ScoreType sc = (p.nwk - p.nbk) * ScoreType(gp*absValues[P_wk] + (1.f - gp)*absValuesEG[P_wk])
-                + (p.nwq - p.nbq) * ScoreType(gp*absValues[P_wq] + (1.f - gp)*absValuesEG[P_wq])
-                + (p.nwr - p.nbr) * ScoreType(gp*absValues[P_wr] + (1.f - gp)*absValuesEG[P_wr])
-                + (p.nwb - p.nbb) * ScoreType(gp*absValues[P_wb] + (1.f - gp)*absValuesEG[P_wb])
-                + (p.nwn - p.nbn) * ScoreType(gp*absValues[P_wn] + (1.f - gp)*absValuesEG[P_wn])
-                + (p.nwp - p.nbp) * ScoreType(gp*absValues[P_wp] + (1.f - gp)*absValuesEG[P_wp]);
+   sc = (p.nwk - p.nbk) * ScoreType(gp*absValues[P_wk] + (1.f - gp)*absValuesEG[P_wk])
+      + (p.nwq - p.nbq) * ScoreType(gp*absValues[P_wq] + (1.f - gp)*absValuesEG[P_wq])
+      + (p.nwr - p.nbr) * ScoreType(gp*absValues[P_wr] + (1.f - gp)*absValuesEG[P_wr])
+      + (p.nwb - p.nbb) * ScoreType(gp*absValues[P_wb] + (1.f - gp)*absValuesEG[P_wb])
+      + (p.nwn - p.nbn) * ScoreType(gp*absValues[P_wn] + (1.f - gp)*absValuesEG[P_wn])
+      + (p.nwp - p.nbp) * ScoreType(gp*absValues[P_wp] + (1.f - gp)*absValuesEG[P_wp]);
    const bool white2Play = p.c == Co_White;
    BitBoard pieceBBiterator = p.whitePiece;
    while (pieceBBiterator) {
@@ -1738,10 +1804,12 @@ ScoreType eval(const Position & p, float & gp){
    sc+=attSc/50;
    */
 
-   return (white2Play?+1:-1)*sc;
+   sc = (white2Play?+1:-1)*sc;
+   TT::setEvalEntry({ sc, gp, computeHash(p) });
+   return sc;
 }
 
-ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth){
+ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth){
   float gp = 0;
   if ( ply >= MAX_PLY-1 ) return eval(p,gp);
   alpha = std::max(alpha, (ScoreType)(-MATE + ply));
@@ -1760,7 +1828,7 @@ ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned 
 
   std::vector<Move> moves;
   generate(p,moves,GP_cap);
-  sort(moves,p);
+  sort(*this,moves,p);
 
   ScoreType alphaInit = alpha;
 
@@ -1786,26 +1854,24 @@ inline void updatePV(std::vector<Move> & pv, const Move & m, const std::vector<M
     std::copy(childPV.begin(), childPV.end(), std::back_inserter(pv));
 }
 
-inline void updateHistoryKillers(const Position & p, DepthType depth, const Move m) {
-    KillerT::killers[1][p.ply] = KillerT::killers[0][p.ply];
-    KillerT::killers[0][p.ply] = m;
-    HistoryT::update(depth, m, p, true);
+inline void updateHistoryKillers(ThreadContext & context, const Position & p, DepthType depth, const Move m) {
+    context.killerT.killers[1][p.ply] = context.killerT.killers[0][p.ply];
+    context.killerT.killers[0][p.ply] = m;
+    context.historyT.update(depth, m, p, true);
 }
 
-ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove = INVALIDMOVE); //forward decl
-
-inline bool singularExtension(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, const TT::Entry & e, const Move m, bool rootnode, int ply) {
+inline bool singularExtension(ThreadContext & context, ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, const TT::Entry & e, const Move m, bool rootnode, int ply) {
     if (depth >= singularExtensionDepth && sameMove(m, e.m) && !rootnode && std::abs(e.score) < MATE - MAX_DEPTH && e.b == TT::B_beta && e.d >= depth - 3) {
         const ScoreType betaC = e.score - depth;
         std::vector<Move> sePV;
         DepthType seSeldetph;
-        ScoreType score = pvs(betaC - 1, betaC, p, depth/2, false, ply, sePV, seSeldetph, m);
-        if (!stopFlag && score < betaC) return true;
+        ScoreType score = context.pvs(betaC - 1, betaC, p, depth/2, false, ply, sePV, seSeldetph, m);
+        if (!ThreadContext::stopFlag && score < betaC) return true;
     }
     return false;
 }
 
-ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove){
+ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove){
   if ( std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()) > currentMoveMs ){
     stopFlag = true;
     return STOPSCORE;
@@ -1827,7 +1893,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
       generate(p, moves);
       const bool isInCheck = isAttacked(p, kingSquare(p));
       if (moves.empty()) return isInCheck ? -MATE + ply : 0;
-      sort(moves, p, NULL);
+      sort(*this,moves, p, NULL);
       Position p2 = p;
       auto it = moves.begin();
       while (!apply(p2, *it)) { ++it; if ( it == moves.end() ) break; }
@@ -1853,10 +1919,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   const bool isInCheck = isAttacked(p, kingSquare(p));
   ScoreType val;
   if (isInCheck) val = -MATE + ply;
-  else if (!TT::getEvalEntry(computeHash(p), val, gp)) {
-      val = eval(p, gp);
-      TT::setEvalEntry({ val, gp, computeHash(p) });
-  }
+  else val = eval(p, gp);
   scoreStack[p.ply] = val; ///@todo can e.score be used as val here ???
 
   bool futility = false, lmp = false;
@@ -1917,13 +1980,13 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
           // extensions
           int extension = 0;
           if (isInCheck) ++extension;
-          if (singularExtension(alpha, beta, p, depth, e, e.m, rootnode, ply)) ++extension;
+          if (singularExtension(*this,alpha, beta, p, depth, e, e.m, rootnode, ply)) ++extension;
           ScoreType ttval = -pvs(-beta, -alpha, p2, depth - 1, pvnode, ply + 1, childPV, seldepth);
           if (!stopFlag && ttval > alpha) {
               alphaUpdated = true;
               updatePV(pv, e.m, childPV);
               if (ttval >= beta) {
-                  //if (Move2Type(e.m) == T_std && !isInCheck) updateHistoryKillers(p, depth, e.m);
+                  //if (Move2Type(e.m) == T_std && !isInCheck) updateHistoryKillers(*this, p, depth, e.m);
                   if ( skipMove==INVALIDMOVE) TT::setEntry({ e.m,ttval,TT::B_beta,depth,computeHash(p) });
                   return ttval;
               }
@@ -1934,28 +1997,14 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
       }
   }
 
-//#define USE_STAGED_MOVE_GENERATOR
-#ifdef USE_STAGED_MOVE_GENERATOR
-  StagedMoveGenerator smg(p,e);
-  Move smgm = bestMove = smg.next();
-#else
   std::vector<Move> moves;
   generate(p,moves);
   if ( moves.empty() ) return isInCheck?-MATE + ply : 0;
-  sort(moves,p,&e);
+  sort(*this,moves,p,&e);
   if (bestMove == INVALIDMOVE)  bestMove = moves[0]; // so that B_alpha are stored in TT
-#endif
   bool improving = (!isInCheck && ply >= 2 && val >= scoreStack[p.ply - 2]);
 
-
-#ifdef USE_STAGED_MOVE_GENERATOR
-  while ( smgm != INVALIDMOVE && !stopFlag ){
-      Move current = smgm;
-      Move * it = &current;
-      smgm = smg.next();
-#else
   for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
-#endif
      if (sameMove(skipMove, *it)) continue; // skipmove
      if ( e.h != 0 && sameMove(e.m, *it)) continue; // already tried
      Position p2 = p;
@@ -1975,7 +2024,7 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         int reduction = 0;
         const bool isCheck = isAttacked(p2, kingSquare(p2));
         const bool isAdvancedPawnPush = getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
-        const bool isPrunable = !isInCheck && !isCheck && !isAdvancedPawnPush && Move2Type(*it) == T_std && !sameMove(*it, KillerT::killers[0][p.ply]) && !sameMove(*it, KillerT::killers[1][p.ply]);
+        const bool isPrunable = !isInCheck && !isCheck && !isAdvancedPawnPush && Move2Type(*it) == T_std && !sameMove(*it, killerT.killers[0][p.ply]) && !sameMove(*it, killerT.killers[1][p.ply]);
         // futility
         if ( futility && isPrunable) continue;
         // LMP
@@ -2003,13 +2052,13 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
         updatePV(pv, *it, childPV);
         if ( val >= beta ){
            if ( Move2Type(*it) == T_std && !isInCheck){
-              updateHistoryKillers(p, depth, *it);
+              updateHistoryKillers(*this, p, depth, *it);
 #ifdef USE_STAGED_MOVE_GENERATOR
               for(auto it2 = smg._movesQuiet.begin() ; it2 != smg._movesQuiet.end() && !sameMove(*it2,*it); ++it2){
 #else
               for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2){
 #endif
-                  if ( Move2Type(*it2) == T_std ) HistoryT::update(depth,*it2,p,false);
+                  if ( Move2Type(*it2) == T_std ) historyT.update(depth,*it2,p,false);
               }
            }
            if (skipMove == INVALIDMOVE) TT::setEntry({*it,val,TT::B_beta,depth,computeHash(p)});
@@ -2026,18 +2075,15 @@ ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType dep
   return stopFlag?STOPSCORE:alpha;
 }
 
-std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
+std::vector<Move> ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
   std::cout << "# Search called" << std::endl;
   std::cout << "# currentMoveMs " << currentMoveMs << std::endl;
   std::cout << "# requested depth " << (int) d << std::endl;
   stopFlag = false;
   stats.init();
   ///@todo do not reset that
-  KillerT::initKillers();
-  HistoryT::initHistory();
-  ///@todo do not reset this either
-  TT::clearTT();
-  TT::clearETT();
+  killerT.initKillers();
+  historyT.initHistory();
 
   TimeMan::startTime = Clock::now();
 
@@ -2110,6 +2156,25 @@ std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType 
   return pv;
 }
 
+///@todo SMP
+/*
+std::vector<Move> go(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
+    ///@todo do not reset this
+    TT::clearTT();
+    TT::clearETT();
+    std::vector<Move> ret;
+    for(int i = 0 ; i < nbThread ; ++i){
+        // give data to all thread
+    }
+    // launch main thread
+    for(int i = 1 ; i < nbThread ; ++i){
+        //yield other thread
+    }
+    //wait for all stopped
+    return ret; // from main thread
+}
+*/
+
 struct PerftAccumulator{
    PerftAccumulator(): pseudoNodes(0), validNodes(0), captureNodes(0), epNodes(0), checkNode(0), checkMateNode(0){}
    Counter pseudoNodes,validNodes,captureNodes,epNodes,checkNode,checkMateNode;
@@ -2127,39 +2192,20 @@ struct PerftAccumulator{
 Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc, bool divide = false){
    if ( depth == 0) return 0;
    static TT::Entry e;
-#define VALIDATE_STAGED_MOVE_GENERATOR // this is slow because of sorting on-the-fly
-#ifdef VALIDATE_STAGED_MOVE_GENERATOR
-   StagedMoveGenerator smg(p,e);
-   Move m = smg.next();
-#else
    std::vector<Move> moves;
    generate(p,moves);
-   //sort(moves,p); // to check of staged move generator is too slow ?? ==> yes it is ... pertf 6 in 10sec(gen), 12sec(gen+sort), 15sec(staged)
-#endif
    int validMoves = 0;
    int allMoves = 0;
-#ifdef VALIDATE_STAGED_MOVE_GENERATOR
-   while (m != INVALIDMOVE){
-#else
    for (auto it = moves.begin() ; it != moves.end(); ++it){
      const Move m = *it;
-#endif
      ++allMoves;
      Position p2 = p;
-     if ( ! apply(p2,m) ){
-#ifdef VALIDATE_STAGED_MOVE_GENERATOR
-         m = smg.next();
-#endif
-         continue;
-     }
+     if ( ! apply(p2,m) ) continue;
      ++validMoves;
      if ( divide && depth == 2 ) std::cout << "#" << ToString(p2) << std::endl;
      Counter nNodes = perft(p2,depth-1,acc,divide);
      if ( divide && depth == 2 ) std::cout << "#=> after " << ToString(m) << " " << nNodes << std::endl;
      if ( divide && depth == 1 ) std::cout << "#" << (int)depth << " " <<  ToString(m) << std::endl;
-#ifdef VALIDATE_STAGED_MOVE_GENERATOR
-     m = smg.next();
-#endif
    }
    if ( depth == 1 ) { acc.pseudoNodes += allMoves; acc.validNodes += validMoves; }
    if ( divide && depth == 2 ) std::cout << "#********************" << std::endl;
@@ -2220,7 +2266,8 @@ namespace XBoard{
       std::cout << ToString(position) << std::endl;
       DepthType reachedDepth = depth;
       DepthType seldepth = 0;
-      std::vector<Move> pv = search(position,m,reachedDepth,score,seldepth);
+      ///@todo SMP use data and call theadpool searchSync
+      std::vector<Move> pv = ThreadPool::instance().main().search(position,m,reachedDepth,score,seldepth); ///@todo SMP
       std::cout << "#...done returning move " << ToString(m) << std::endl;
       return m;
    }
@@ -2237,10 +2284,11 @@ namespace XBoard{
       Move m;
       DepthType d = 1;
       DepthType seldepth = 0;
-      std::vector<Move> pv = search(position,m,d,score,seldepth);
+      ///@todo SMP use data and call theadpool searchAsync
+      std::vector<Move> pv = ThreadPool::instance().main().search(position,m,d,score,seldepth); ///@todo SMP
    }
 
-   void stop(){ stopFlag = true; }
+   void stop(){ ThreadContext::stopFlag = true; }
 
    void stopPonder(){
       if ((int)mode == (int)opponent(stm) && ponder == p_on && pondering) {
@@ -2496,6 +2544,7 @@ int main(int argc, char ** argv){
    init_lmr();
    initMvvLva();
    BB::initMask();
+   initThreading(1);
 
    std::string cli = argv[1];
 
@@ -2604,7 +2653,7 @@ int main(int argc, char ** argv){
    if ( cli == "-gen" ){
       std::vector<Move> moves;
       generate(p,moves);
-      sort(moves,p,0);
+      sort(ThreadPool::instance().main(),moves,p,0);
       std::cout << "#nb moves : " << moves.size() << std::endl;
       for(auto it = moves.begin(); it != moves.end(); ++it){
          std::cout << ToString(*it,true) << std::endl;
@@ -2641,7 +2690,7 @@ int main(int argc, char ** argv){
       TimeMan::msecInc                  = -1;
       currentMoveMs = TimeMan::GetNextMSecPerMove(p);
       DepthType seldepth = 0;
-      std::vector<Move> pv = search(p,bestMove,d,s,seldepth);
+      std::vector<Move> pv = ThreadPool::instance().main().search(p,bestMove,d,s,seldepth); ///@todo SMP
       std::cout << "#best move is " << ToString(bestMove) << " " << (int)d << " " << s << " pv : " << ToString(pv) << std::endl;
       return 0;
    }
@@ -2659,7 +2708,7 @@ int main(int argc, char ** argv){
       TimeMan::msecInc                  = -1;
       currentMoveMs = TimeMan::GetNextMSecPerMove(p);
       DepthType seldepth = 0;
-      std::vector<Move> pv = search(p,bestMove,d,s,seldepth);
+      std::vector<Move> pv = ThreadPool::instance().main().search(p,bestMove,d,s,seldepth); ///@todo SMP
       std::cout << "#best move is " << ToString(bestMove) << " " << (int)d << " " << s << " pv : " << ToString(pv) << std::endl;
       return 0;
    }
