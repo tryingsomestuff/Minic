@@ -456,7 +456,7 @@ namespace TT{
 
     struct Bucket {
         static const int nbBucket = 2;
-        Entry e[nbBucket]; // first is replace always, second is replace by depth
+        Entry e[nbBucket]; // first is replace always, others is replace by depth
     };
 
     unsigned int powerFloor(unsigned int x) {
@@ -476,10 +476,9 @@ namespace TT{
     }
 
     void clearTT() {
-        for (unsigned int k = 0; k < ttSize; ++k) {
-            table[k].e[0] = { INVALIDMOVE, 0, B_alpha, 0, 0 };
-            table[k].e[1] = { INVALIDMOVE, 0, B_alpha, 0, 0 };
-        }
+        for (unsigned int k = 0; k < ttSize; ++k)
+           for (unsigned int i = 0 ; i < Bucket::nbBucket ; ++i)
+              table[k].e[i] = { INVALIDMOVE, 0, B_alpha, 0, 0 };
     }
 
     bool getEntry(Hash h, DepthType d, Entry & e, int nbuck = 0) {
@@ -502,8 +501,13 @@ namespace TT{
         assert(e.h > 0);
         assert(e.m != INVALIDMOVE);
         table[e.h%ttSize].e[0] = e; // always replace
-        Entry & _eDepth = table[e.h%ttSize].e[1];
-        if ( e.d >= _eDepth.d ) _eDepth = e; // replace if better depth
+        for (unsigned int i = 1 ; i < Bucket::nbBucket ; ++i){
+           Entry & _eDepth = table[e.h%ttSize].e[i];
+           if ( e.d >= _eDepth.d ) {
+              _eDepth = e; // replace if better depth
+              break;
+           }
+        }
     }
 
     struct EvalEntry {
@@ -1857,7 +1861,7 @@ ScoreType eval(const Position & p, float & gp){
     BitBoard pieceBBiterator = p.whitePiece;
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
-        Square kk = k^56;
+        const Square kk = k^56;
         const Piece ptype = getPieceType(p,k);
         sc += ScoreType((gp*PST[ptype - 1][kk] + (1.f - gp)*PSTEG[ptype - 1][kk] ) );
     }
