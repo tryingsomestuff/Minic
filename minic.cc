@@ -27,6 +27,7 @@ typedef uint64_t u_int64_t;
 #endif
 
 //#define IMPORTBOOK
+#define DEBUG_TOOL
 
 const std::string MinicVersion = "0.16";
 
@@ -103,7 +104,6 @@ inline std::string showDate() {
     char buffer[64];
     std::strftime(buffer,63,"%Y-%m-%d %H:%M:%S",timeInfo);
     str << buffer << "-";
-
     str << std::setw(3) << std::setfill('0') << msecEpoch.count()%1000;
     return str.str();
 }
@@ -118,39 +118,25 @@ enum LogLevel : unsigned char{
    logGUI   = 6
 };
 
+std::string backtrace(){} ///@todo
+
 class LogIt{
 public:
     LogIt(LogLevel loglevel):_level(loglevel){}
 
-    template <typename T>
-    LogIt & operator<<(T const & value)    {
+    template <typename T> LogIt & operator<<(T const & value) {
         _buffer << value;
         return *this;
     }
 
     ~LogIt(){
-
         static const std::string _levelNames[7] = { "# Trace ", "# Debug ", "# Info  ", "# Warn  ", "# Error ", "# Fatal ", "" };
-
         std::lock_guard<std::mutex> lock(_mutex);
-
-        if ( _level != logGUI){
-           std::cout << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
-        }
-        else{
-           std::cout << _buffer.str()  << std::flush << std::endl;
-        }
-
-        if (_level == logFatal) {
-            //(*_os) << backtrace() ;
-        }
-        else if (_level == logError) {
-            //(*_os) << backtrace() ;
-        }
-
-        if ( _level == logFatal){
-            exit(1);
-        }
+        if ( _level != logGUI) std::cout << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
+        else std::cout << _buffer.str()  << std::flush << std::endl;
+        if (_level == logFatal) std::cout << backtrace() << std::endl;
+        else if (_level == logError) std::cout << backtrace() << std::endl;
+        if ( _level == logFatal) exit(1);
     }
 
 private:
@@ -267,12 +253,12 @@ std::string showBitBoard(const BitBoard & b) {
     std::stringstream ss;
     ss ;
     for (int j = 7; j >= 0; --j) {
-        ss << " +-+-+-+-+-+-+-+-+" ;
-        ss << " |";
+        ss << "# +-+-+-+-+-+-+-+-+" << std::endl;
+        ss << "# |";
         for (int i = 0; i < 8; ++i) ss << (bs[i + j * 8] ? "X" : " ") << '|';
-        ss ;
+        ss << std::endl;
     }
-    ss << " +-+-+-+-+-+-+-+-+";
+    ss << "# +-+-+-+-+-+-+-+-+";
     return ss.str();
 }
 
@@ -291,30 +277,10 @@ struct Position{
     mutable Hash h;
     Move lastMove;
 
-    unsigned char nwk = 0;
-    unsigned char nwq = 0;
-    unsigned char nwr = 0;
-    unsigned char nwb = 0;
-    unsigned char nwn = 0;
-    unsigned char nwp = 0;
-    unsigned char nbk = 0;
-    unsigned char nbq = 0;
-    unsigned char nbr = 0;
-    unsigned char nbb = 0;
-    unsigned char nbn = 0;
-    unsigned char nbp = 0;
-    unsigned char nk  = 0;
-    unsigned char nq  = 0;
-    unsigned char nr  = 0;
-    unsigned char nb  = 0;
-    unsigned char nn  = 0;
-    unsigned char np  = 0;
-    unsigned char nwM = 0;
-    unsigned char nbM = 0;
-    unsigned char nwm = 0;
-    unsigned char nbm = 0;
-    unsigned char nwt = 0;
-    unsigned char nbt = 0;
+    unsigned char nwk = 0; unsigned char nwq = 0; unsigned char nwr = 0; unsigned char nwb = 0; unsigned char nwn = 0; unsigned char nwp = 0;
+    unsigned char nbk = 0; unsigned char nbq = 0; unsigned char nbr = 0; unsigned char nbb = 0; unsigned char nbn = 0; unsigned char nbp = 0;
+    unsigned char nk  = 0; unsigned char nq  = 0; unsigned char nr  = 0; unsigned char nb  = 0; unsigned char nn  = 0; unsigned char np  = 0;
+    unsigned char nwM = 0; unsigned char nbM = 0; unsigned char nwm = 0; unsigned char nbm = 0; unsigned char nwt = 0; unsigned char nbt = 0;
 
 };
 
@@ -331,18 +297,8 @@ void initMaterial(Position & p){
     p.nbb = (unsigned char)countBit(p.blackBishop);
     p.nbn = (unsigned char)countBit(p.blackKnight);
     p.nbp = (unsigned char)countBit(p.blackPawn);
-    p.nk = p.nwk + p.nbk;
-    p.nq = p.nwq + p.nbq;
-    p.nr = p.nwr + p.nbr;
-    p.nb = p.nwb + p.nbb;
-    p.nn = p.nwn + p.nbn;
-    p.np = p.nwp + p.nbp;
-    p.nwM = p.nwq + p.nwr;
-    p.nbM = p.nbq + p.nbr;
-    p.nwm = p.nwb + p.nwn;
-    p.nbm = p.nbb + p.nbn;
-    p.nwt = p.nwM + p.nwm;
-    p.nbt = p.nbm + p.nbm;
+    p.nk = p.nwk + p.nbk; p.nq = p.nwq + p.nbq; p.nr = p.nwr + p.nbr; p.nb = p.nwb + p.nbb; p.nn = p.nwn + p.nbn; p.np = p.nwp + p.nbp;
+    p.nwM = p.nwq + p.nwr; p.nbM = p.nbq + p.nbr; p.nwm = p.nwb + p.nwn; p.nbm = p.nbb + p.nbn; p.nwt = p.nwM + p.nwm; p.nbt = p.nbm + p.nbm;
 }
 
 void initBitBoards(Position & p) {
@@ -426,7 +382,16 @@ void initHash(){
             ZT[k][j] = randomInt();
 }
 
+std::string ToString(const Move & m, bool withScore = false);
+std::string ToString(const Position & p, bool noEval = false);
+
+//#define DEBUG_HASH
+
 Hash computeHash(const Position &p){
+#ifdef DEBUG_HASH
+    Hash h = p.h;
+    p.h = 0ull;
+#endif
     if (p.h != 0) return p.h;
     for (int k = 0; k < 64; ++k){
         const Piece pp = p.b[k];
@@ -439,6 +404,13 @@ Hash computeHash(const Position &p){
     if ( p.castling & C_bqs)     p.h ^= ZT[56][13];
     if ( p.c == Co_White)        p.h ^= ZT[3][13];
     if ( p.c == Co_Black)        p.h ^= ZT[4][13];
+#ifdef DEBUG_HASH
+    if ( h != 0ull && h != p.h ){
+       std::cout << "Hash error " << ToString(p.lastMove) << std::endl;
+       std::cout << ToString(p) << std::endl;
+       exit(1);
+    }
+#endif
     return p.h;
 }
 
@@ -557,7 +529,6 @@ struct ThreadData{
     std::vector<Move> pv;
 };
 
-
 // singleton pool of threads
 class ThreadPool : public std::vector<ThreadContext*> {
     public:
@@ -619,9 +590,7 @@ struct ThreadContext{
             _searching = false;
             _cv.notify_one(); // Wake up anyone waiting for search finished
             _cv.wait(lock, [&]{ return _searching; });
-            if (_exit){
-                return;
-            }
+            if (_exit) return;
             lock.unlock();
             search();
         }
@@ -695,9 +664,7 @@ ThreadPool::~ThreadPool(){
 
 void ThreadPool::setup(unsigned int n){
     assert(n > 0);
-    while (size() < (unsigned int)n) {
-        push_back(new ThreadContext(size()));
-    }
+    while (size() < (unsigned int)n) push_back(new ThreadContext(size()));
 }
 
 ThreadContext & ThreadPool::main() { return *(front()); }
@@ -705,22 +672,16 @@ ThreadContext & ThreadPool::main() { return *(front()); }
 Move ThreadPool::searchSync(const ThreadData & d){
     LogIt(logInfo) << "Search Sync" ;
     LogIt(logInfo) << "Wait for workers to be ready" ;
-    for (auto s : *this) {
-        (*s).wait();
-    }
+    for (auto s : *this) (*s).wait();
     ThreadContext::startLock.store(true);
     LogIt(logInfo) << "...ok" ;
-    for (auto s : *this) {
-        (*s).setData(d); // this is a copy
-    }
+    for (auto s : *this) (*s).setData(d); // this is a copy
     LogIt(logInfo) << "Calling main thread search" ;
     main().search();
     ThreadContext::stopFlag = true;
     LogIt(logInfo) << "Wait for workers to finish" ;
     for(auto s : *this){
-        if (!(*s).isMainThread()) {
-            (*s).wait();
-        }
+        if (!(*s).isMainThread()) (*s).wait();
     }
     LogIt(logInfo) << "...ok" ;
     return main().getData().best;
@@ -730,8 +691,7 @@ void ThreadPool::searchASync(const ThreadData & d){} ///@todo for pondering
 
 void ThreadPool::startOthers(){
     for (auto s : *this)
-        if (!(*s).isMainThread())
-            (*s).start();
+        if (!(*s).isMainThread()) (*s).start();
 }
 
 ThreadPool::ThreadPool():stop(false){
@@ -800,7 +760,7 @@ std::string GetFEN(const Position &p) {
     return ss.str();
 }
 
-std::string ToString(const Move & m, bool withScore = false){
+std::string ToString(const Move & m, bool withScore){
     if ( m == INVALIDMOVE ) return "invalid move";
     std::stringstream ss;
     std::string prom;
@@ -825,7 +785,7 @@ std::string ToString(const std::vector<Move> & moves){
     return ss.str();
 }
 
-std::string ToString(const Position & p, bool noEval = false){
+std::string ToString(const Position & p, bool noEval){
     std::stringstream ss;
     ss << std::endl;
     for (Square j = 7; j >= 0; --j) {
@@ -1334,13 +1294,12 @@ namespace BB {
     template < Piece > BitBoard coverage(const Square x, const BitBoard occupancy = 0, const Color c = Co_White) { assert(false); return 0ull; }
     template <       > BitBoard coverage<P_wp>(const Square x, const BitBoard occupancy, const Color c) { return mask[x].pawnAttack[c]; }
     template <       > BitBoard coverage<P_wn>(const Square x, const BitBoard occupancy, const Color c) { return mask[x].knight; }
-    template <       > BitBoard coverage<P_wb>(const Square x, const BitBoard occupancy, const Color c) { return diagonalAttack(occupancy, x) + antidiagonalAttack(occupancy, x); }
-    template <       > BitBoard coverage<P_wr>(const Square x, const BitBoard occupancy, const Color c) { return fileAttack(occupancy, x) + rankAttack(occupancy, x); }
-    template <       > BitBoard coverage<P_wq>(const Square x, const BitBoard occupancy, const Color c) { return diagonalAttack(occupancy, x) + antidiagonalAttack(occupancy, x) + fileAttack(occupancy, x) + rankAttack(occupancy, x); }
+    template <       > BitBoard coverage<P_wb>(const Square x, const BitBoard occupancy, const Color c) { return diagonalAttack(occupancy, x) | antidiagonalAttack(occupancy, x); }
+    template <       > BitBoard coverage<P_wr>(const Square x, const BitBoard occupancy, const Color c) { return fileAttack(occupancy, x) | rankAttack(occupancy, x); }
+    template <       > BitBoard coverage<P_wq>(const Square x, const BitBoard occupancy, const Color c) { return diagonalAttack(occupancy, x) | antidiagonalAttack(occupancy, x) | fileAttack(occupancy, x) | rankAttack(occupancy, x); }
     template <       > BitBoard coverage<P_wk>(const Square x, const BitBoard occupancy, const Color c) { return mask[x].king; }
 
-    template < Piece pp >
-        inline BitBoard attack(const Square x, const BitBoard target, const BitBoard occupancy = 0, const Color c = Co_White) { return coverage<pp>(x, occupancy, c) & target; }
+    template < Piece pp > inline BitBoard attack(const Square x, const BitBoard target, const BitBoard occupancy = 0, const Color c = Co_White) { return coverage<pp>(x, occupancy, c) & target; }
 
     int popBit(BitBoard & b) {
         unsigned long i = 0;
@@ -1413,12 +1372,12 @@ void generate(const Position & p, std::vector<Move> & moves, GenPhase phase = GP
         }
         else {
             BitBoard pawnmoves = 0ull;
-            if ( phase != GP_cap) pawnmoves = BB::mask[from].push[p.c] & ~myPieceBB & ~oppPieceBB;
-            if ((phase != GP_cap) && (BB::mask[from].push[p.c] & p.occupancy) == 0ull) pawnmoves += BB::mask[from].dpush[p.c] & ~myPieceBB & ~oppPieceBB ;
-            if ( phase != GP_quiet) pawnmoves += BB::mask[from].pawnAttack[p.c] & ~myPieceBB & oppPieceBB;
+            if ( phase != GP_cap) pawnmoves |= BB::mask[from].push[p.c] & ~p.occupancy;
+            if ((phase != GP_cap) && (BB::mask[from].push[p.c] & p.occupancy) == 0ull) pawnmoves |= BB::mask[from].dpush[p.c] & ~p.occupancy;
+            if ( phase != GP_quiet) pawnmoves |= BB::mask[from].pawnAttack[p.c] & ~myPieceBB & oppPieceBB;
             while (pawnmoves) {
                 const Square to = BB::popBit(pawnmoves);
-                const bool isCap = (phase == GP_cap) || ((p.occupancy&SquareToBitboard(to)) != 0ull);
+                const bool isCap = (phase == GP_cap) || ((oppPieceBB&SquareToBitboard(to)) != 0ull);
                 if (isCap){
                     if ( SQRANK(to) == 0 || SQRANK(to) == 7) {
                         addMove(from, to, T_cappromq, moves); // pawn capture with promotion
@@ -1439,7 +1398,7 @@ void generate(const Position & p, std::vector<Move> & moves, GenPhase phase = GP
                 }
             }
             // ep
-            if ( p.ep != INVALIDSQUARE && phase != GP_quiet ) pawnmoves += BB::mask[from].pawnAttack[p.c] & ~myPieceBB & SquareToBitboard(p.ep);
+            if ( p.ep != INVALIDSQUARE && phase != GP_quiet ) pawnmoves |= BB::mask[from].pawnAttack[p.c] & ~myPieceBB & SquareToBitboard(p.ep);
             while (pawnmoves) {
                 const Square to = BB::popBit(pawnmoves);
                 addMove(from,to,T_ep,moves);
@@ -1546,7 +1505,7 @@ bool apply(Position & p, const Move & m){
                        p.b[to] = fromP;
                        p.b[epCapSq] = P_none;
                        p.h ^= ZT[from][fromId]; // remove fromP at from
-                       p.h ^= ZT[p.ep + epCapSq][(p.c == Co_White ? P_bp : P_wp) + PieceShift];
+                       p.h ^= ZT[epCapSq][(p.c == Co_White ? P_bp : P_wp) + PieceShift]; // remove captured pawn
                        p.h ^= ZT[to][fromId]; // add fromP at to
                    }
                    break;
@@ -1561,21 +1520,21 @@ bool apply(Position & p, const Move & m){
         case T_promr:
         case T_cappromr: {
                              const Piece promP = (p.c == Co_White ? P_wr : P_br);
-                             movePiece(p, from, to, fromP, toP, type == T_cappromq, promP);
+                             movePiece(p, from, to, fromP, toP, type == T_cappromr, promP);
                          }
                          break;
 
         case T_promb:
         case T_cappromb: {
                              const Piece promP = (p.c == Co_White ? P_wb : P_bb);
-                             movePiece(p, from, to, fromP, toP, type == T_cappromq, promP);
+                             movePiece(p, from, to, fromP, toP, type == T_cappromb, promP);
                          }
                          break;
 
         case T_promn:
         case T_cappromn: {
                              const Piece promP = (p.c == Co_White ? P_wn : P_bn);
-                             movePiece(p, from, to, fromP, toP, type == T_cappromq, promP);
+                             movePiece(p, from, to, fromP, toP, type == T_cappromn, promP);
                          }
                          break;
 
@@ -2625,6 +2584,10 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         LogIt(logInfo) << "#########################" ;
     }
 
+#ifdef DEBUG_TOOL
+#include "debug.h"
+#endif
+
     int main(int argc, char ** argv){
 
         hellooo();
@@ -2648,179 +2611,15 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
         if ( Book::fileExists("book.bin") ) {
             std::ifstream bbook("book.bin",std::ios::in | std::ios::binary);
-            Book::readBinaryBook(bbook);
+            //Book::readBinaryBook(bbook);
         }
 
-        if ( cli == "-xboard" ){
-            XBoard::init();
-            TimeMan::init();
-            XBoard::xboard();
-            return 0;
-        }
-
-        if ( cli == "-perft_test" ){
-            perft_test(startPosition, 5, 4865609);
-            perft_test("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ", 4, 4085603);
-            perft_test("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ", 6, 11030083);
-            perft_test("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", 5, 15833292);
-        }
-
-        if ( argc < 3 ) return 1;
-
-#ifdef IMPORTBOOK
-        if ( cli == "-buildBook"){
-            Book::readBook(argv[2]);
-            return 0;
-        }
+#ifdef DEBUG_TOOL
+        return debug(cli,argc,argv);
+#else
+        XBoard::init();
+        TimeMan::init();
+        XBoard::xboard();
+        return 0;
 #endif
-
-        std::string fen = argv[2];
-
-        if ( fen == "start")  fen = startPosition;
-        if ( fen == "fine70") fen = fine70;
-        if ( fen == "shirov") fen = shirov;
-
-        Position p;
-        if ( ! readFEN(fen,p) ){
-            LogIt(logInfo) << "Error reading fen" ;
-            return 1;
-        }
-
-        LogIt(logInfo) << ToString(p) ;
-
-        if (cli == "-attacked") {
-            Square k = Sq_e4;
-            if (argc >= 3) k = atoi(argv[3]);
-            LogIt(logInfo) << showBitBoard(BB::isAttackedBB(p, k, p.c));
-            return 0;
-        }
-
-        if (cli == "-cov") {
-            Square k = Sq_e4;
-            if (argc >= 3) k = atoi(argv[3]);
-            switch (p.b[k]) {
-                case P_wp:
-                    LogIt(logInfo) << showBitBoard((BB::coverage<P_wp>(k, p.occupancy, p.c) + BB::mask[k].push[p.c]) & ~p.whitePiece);
-                    break;
-                case P_wn:
-                    LogIt(logInfo) << showBitBoard(BB::coverage<P_wn>(k, p.occupancy, p.c) & ~p.whitePiece);
-                    break;
-                case P_wb:
-                    LogIt(logInfo) << showBitBoard(BB::coverage<P_wb>(k, p.occupancy, p.c) & ~p.whitePiece);
-                    break;
-                case P_wr:
-                    LogIt(logInfo) << showBitBoard(BB::coverage<P_wr>(k, p.occupancy, p.c) & ~p.whitePiece);
-                    break;
-                case P_wq:
-                    LogIt(logInfo) << showBitBoard(BB::coverage<P_wq>(k, p.occupancy, p.c) & ~p.whitePiece);
-                    break;
-                case P_wk:
-                    LogIt(logInfo) << showBitBoard(BB::coverage<P_wk>(k, p.occupancy, p.c) & ~p.whitePiece);
-                    break;
-                case P_bk:
-                    LogIt(logInfo) << showBitBoard(BB::coverage<P_wk>(k, p.occupancy, p.c) & ~p.blackPiece);
-                    break;
-                case P_bq:
-                    LogIt(logInfo) << showBitBoard(BB::coverage<P_wq>(k, p.occupancy, p.c )& ~p.blackPiece);
-                    break;
-                case P_br:
-                    LogIt(logInfo) << showBitBoard(BB::coverage<P_wr>(k, p.occupancy, p.c) & ~p.blackPiece);
-                    break;
-                case P_bb:
-                    LogIt(logInfo) << showBitBoard(BB::coverage<P_wb>(k, p.occupancy, p.c) & ~p.blackPiece);
-                    break;
-                case P_bn:
-                    LogIt(logInfo) << showBitBoard(BB::coverage<P_wn>(k, p.occupancy, p.c) & ~p.blackPiece);
-                    break;
-                case P_bp:
-                    LogIt(logInfo) << showBitBoard((BB::coverage<P_wp>(k, p.occupancy, p.c) + BB::mask[k].push[p.c])& ~p.blackPiece);
-                    break;
-                default:
-                    LogIt(logInfo) << showBitBoard(0ull);
-            }
-            return 0;
-        }
-
-        if ( cli == "-eval" ){
-            float gp = 0;
-            int score = eval(p,gp);
-            LogIt(logInfo) << "eval " << score << " phase " << gp ;
-            return 0;
-        }
-
-        if ( cli == "-gen" ){
-            std::vector<Move> moves;
-            generate(p,moves);
-            sort(ThreadPool::instance().main(),moves,p,0);
-            LogIt(logInfo) << "nb moves : " << moves.size() ;
-            for(auto it = moves.begin(); it != moves.end(); ++it){
-                LogIt(logInfo) << ToString(*it,true) ;
-            }
-            return 0;
-        }
-
-        if ( cli == "-testmove" ){
-            Move m = ToMove(8,16,T_std);
-            Position p2 = p;
-            apply(p2,m);
-            LogIt(logInfo) << ToString(p2) ;
-            return 0;
-        }
-
-        if ( cli == "-perft" ){
-            DepthType d = 5;
-            if ( argc >= 3 ) d = atoi(argv[3]);
-            PerftAccumulator acc;
-            perft(p,d,acc,false);
-            acc.Display();
-            return 0;
-        }
-
-        if ( cli == "-analyze" ){
-            DepthType depth = 5;
-            if ( argc >= 3 ) depth = atoi(argv[3]);
-            Move bestMove = INVALIDMOVE;
-            ScoreType s;
-            TimeMan::isDynamic                = false;
-            TimeMan::nbMoveInTC               = -1;
-            TimeMan::msecPerMove              = 60*60*1000*24; // 1 day == infinity ...
-            TimeMan::msecWholeGame            = -1;
-            TimeMan::msecInc                  = -1;
-            currentMoveMs = TimeMan::GetNextMSecPerMove(p);
-            DepthType seldepth = 0;
-            std::vector<Move> pv;
-            ThreadData d = {depth,seldepth/*dummy*/,s/*dummy*/,p,bestMove/*dummy*/,pv/*dummy*/}; // only input coef
-            ThreadPool::instance().searchSync(d);
-            bestMove = ThreadPool::instance().main().getData().best; // here output results
-            s = ThreadPool::instance().main().getData().sc; // here output results
-            pv = ThreadPool::instance().main().getData().pv; // here output results
-            LogIt(logInfo) << "Best move is " << ToString(bestMove) << " " << (int)depth << " " << s << " pv : " << ToString(pv) ;
-            return 0;
-        }
-
-        if ( cli == "-mateFinder" ){
-            mateFinder = true;
-            DepthType depth = 5;
-            if ( argc >= 3 ) depth = atoi(argv[3]);
-            Move bestMove = INVALIDMOVE;
-            ScoreType s;
-            TimeMan::isDynamic                = false;
-            TimeMan::nbMoveInTC               = -1;
-            TimeMan::msecPerMove              = 60*60*1000*24; // 1 day == infinity ...
-            TimeMan::msecWholeGame            = -1;
-            TimeMan::msecInc                  = -1;
-            currentMoveMs = TimeMan::GetNextMSecPerMove(p);
-            DepthType seldepth = 0;
-            std::vector<Move> pv;
-            ThreadData d = {depth,seldepth/*dummy*/,s/*dummy*/,p,bestMove/*dummy*/,pv/*dummy*/}; // only input coef
-            ThreadPool::instance().searchSync(d);
-            bestMove = ThreadPool::instance().main().getData().best; // here output results
-            s = ThreadPool::instance().main().getData().sc; // here output results
-            pv = ThreadPool::instance().main().getData().pv; // here output results
-            LogIt(logInfo) << "Best move is " << ToString(bestMove) << " " << (int)depth << " " << s << " pv : " << ToString(pv) ;
-            return 0;
-        }
-
-        LogIt(logInfo) << "Error : unknown command line" ;
-        return 1;
     }
