@@ -1,3 +1,50 @@
+struct PerftAccumulator{
+    PerftAccumulator(): pseudoNodes(0), validNodes(0), captureNodes(0), epNodes(0), checkNode(0), checkMateNode(0){}
+    Counter pseudoNodes,validNodes,captureNodes,epNodes,checkNode,checkMateNode;
+
+    void Display(){
+        LogIt(logInfo) << "pseudoNodes   " << pseudoNodes   ;
+        LogIt(logInfo) << "validNodes    " << validNodes    ;
+        LogIt(logInfo) << "captureNodes  " << captureNodes  ;
+        LogIt(logInfo) << "epNodes       " << epNodes       ;
+        LogIt(logInfo) << "checkNode     " << checkNode     ;
+        LogIt(logInfo) << "checkMateNode " << checkMateNode ;
+    }
+};
+
+Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc, bool divide = false){
+    if ( depth == 0) return 0;
+    static TT::Entry e;
+    std::vector<Move> moves;
+    generate(p,moves);
+    int validMoves = 0;
+    int allMoves = 0;
+    for (auto it = moves.begin() ; it != moves.end(); ++it){
+        const Move m = *it;
+        ++allMoves;
+        Position p2 = p;
+        if ( ! apply(p2,m) ) continue;
+        ++validMoves;
+        if ( divide && depth == 2 ) LogIt(logInfo) << ToString(p2) ;
+        Counter nNodes = perft(p2,depth-1,acc,divide);
+        if ( divide && depth == 2 ) LogIt(logInfo) << "=> after " << ToString(m) << " " << nNodes ;
+        if ( divide && depth == 1 ) LogIt(logInfo) << (int)depth << " " <<  ToString(m) ;
+    }
+    if ( depth == 1 ) { acc.pseudoNodes += allMoves; acc.validNodes += validMoves; }
+    if ( divide && depth == 2 ) LogIt(logInfo) << "********************" ;
+    return acc.validNodes;
+}
+
+void perft_test(const std::string & fen, DepthType d, unsigned long long int expected) {
+    Position p;
+    readFEN(fen, p);
+    LogIt(logInfo) << ToString(p) ;
+    PerftAccumulator acc;
+    if (perft(p, d, acc, false) != expected) LogIt(logInfo) << "Error !! " << fen << " " << expected ;
+    acc.Display();
+    LogIt(logInfo) << "#########################" ;
+}
+
 int debug(std::string cli, int argc, char ** argv){
 
     if ( cli == "-xboard" ){
