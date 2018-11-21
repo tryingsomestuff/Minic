@@ -147,7 +147,7 @@ private:
 
 std::mutex LogIt::_mutex;
 
-void init_lmr(){
+void initLMR(){
     LogIt(logInfo) << "Init lmr" ;
     for (int d = 0; d < MAX_DEPTH; d++)
         for (int m = 0; m < MAX_MOVE; m++)
@@ -2224,43 +2224,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         return pv;
     }
 
-    struct PerftAccumulator{
-        PerftAccumulator(): pseudoNodes(0), validNodes(0), captureNodes(0), epNodes(0), checkNode(0), checkMateNode(0){}
-        Counter pseudoNodes,validNodes,captureNodes,epNodes,checkNode,checkMateNode;
-
-        void Display(){
-            LogIt(logInfo) << "pseudoNodes   " << pseudoNodes   ;
-            LogIt(logInfo) << "validNodes    " << validNodes    ;
-            LogIt(logInfo) << "captureNodes  " << captureNodes  ;
-            LogIt(logInfo) << "epNodes       " << epNodes       ;
-            LogIt(logInfo) << "checkNode     " << checkNode     ;
-            LogIt(logInfo) << "checkMateNode " << checkMateNode ;
-        }
-    };
-
-    Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc, bool divide = false){
-        if ( depth == 0) return 0;
-        static TT::Entry e;
-        std::vector<Move> moves;
-        generate(p,moves);
-        int validMoves = 0;
-        int allMoves = 0;
-        for (auto it = moves.begin() ; it != moves.end(); ++it){
-            const Move m = *it;
-            ++allMoves;
-            Position p2 = p;
-            if ( ! apply(p2,m) ) continue;
-            ++validMoves;
-            if ( divide && depth == 2 ) LogIt(logInfo) << ToString(p2) ;
-            Counter nNodes = perft(p2,depth-1,acc,divide);
-            if ( divide && depth == 2 ) LogIt(logInfo) << "=> after " << ToString(m) << " " << nNodes ;
-            if ( divide && depth == 1 ) LogIt(logInfo) << (int)depth << " " <<  ToString(m) ;
-        }
-        if ( depth == 1 ) { acc.pseudoNodes += allMoves; acc.validNodes += validMoves; }
-        if ( divide && depth == 2 ) LogIt(logInfo) << "********************" ;
-        return acc.validNodes;
-    }
-
     namespace XBoard{
         bool display;
         bool pondering;
@@ -2574,16 +2537,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     }
 
-    void perft_test(const std::string & fen, DepthType d, unsigned long long int expected) {
-        Position p;
-        readFEN(fen, p);
-        LogIt(logInfo) << ToString(p) ;
-        PerftAccumulator acc;
-        if (perft(p, d, acc, false) != expected) LogIt(logInfo) << "Error !! " << fen << " " << expected ;
-        acc.Display();
-        LogIt(logInfo) << "#########################" ;
-    }
-
 #ifdef DEBUG_TOOL
 #include "debug.h"
 #endif
@@ -2591,8 +2544,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     int main(int argc, char ** argv){
 
         hellooo();
-
-        if ( argc < 2 ) return 1;
 
         int nthreads = 1;
         if(std::getenv("MINIC_NUM_THREADS")){ nthreads = atoi(std::getenv("MINIC_NUM_THREADS")); }
@@ -2602,19 +2553,19 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         TT::initTable();
         TT::initETable();
         stats.init();
-        init_lmr();
+        initLMR();
         initMvvLva();
         BB::initMask();
         initThreading(nthreads);
 
-        std::string cli = argv[1];
-
         if ( Book::fileExists("book.bin") ) {
             std::ifstream bbook("book.bin",std::ios::in | std::ios::binary);
-            //Book::readBinaryBook(bbook);
+            Book::readBinaryBook(bbook);
         }
 
 #ifdef DEBUG_TOOL
+        if ( argc < 2 ) return 1;
+        std::string cli = argv[1];
         return debug(cli,argc,argv);
 #else
         XBoard::init();
