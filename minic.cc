@@ -116,7 +116,7 @@ enum LogLevel : unsigned char{
    logGUI   = 6
 };
 
-std::string backtrace(){} ///@todo
+std::string backtrace(){return "";} ///@todo
 
 class LogIt{
 public:
@@ -380,10 +380,10 @@ void initHash(){
             ZT[k][j] = randomInt();
 }
 
-std::string ToString(const Move & m, bool withScore = false);
+std::string ToString(const Move & m    , bool withScore = false);
 std::string ToString(const Position & p, bool noEval = false);
 
-//#define DEBUG_HASH
+#define DEBUG_HASH
 
 Hash computeHash(const Position &p){
 #ifdef DEBUG_HASH
@@ -404,8 +404,8 @@ Hash computeHash(const Position &p){
     if ( p.c == Co_Black)        p.h ^= ZT[4][13];
 #ifdef DEBUG_HASH
     if ( h != 0ull && h != p.h ){
-       LogIt(logError) << "Hash error " << ToString(p.lastMove) << std::endl;
-       LogIt(logError) << ToString(p) << std::endl;
+       LogIt(logError) << "Hash error " << ToString(p.lastMove);
+       LogIt(logError) << ToString(p);
        exit(1);
     }
 #endif
@@ -1998,8 +1998,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if ( doNullMove && pv.size() > 1 && depth >= nullMoveMinDepth && p.ep == INVALIDSQUARE && val >= beta){
             Position pN = p;
             pN.c = opponentColor(pN.c);
-            p.h ^= ZT[3][13];
-            p.h ^= ZT[4][13];
+            pN.h ^= ZT[3][13];
+            pN.h ^= ZT[4][13];
             int R = depth/4 + 3 + std::min((val-beta)/80,3); // adaptative
             std::vector<Move> nullPV;
             const ScoreType nullscore = -pvs(-beta,-beta+1,pN,depth-R,false,ply+1,nullPV,seldepth);
@@ -2558,7 +2558,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
         if ( Book::fileExists("book.bin") ) {
             std::ifstream bbook("book.bin",std::ios::in | std::ios::binary);
-            Book::readBinaryBook(bbook);
+            //Book::readBinaryBook(bbook);
         }
 
 #ifdef DEBUG_TOOL
