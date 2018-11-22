@@ -1127,6 +1127,7 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
             else{
                 to = stringToSquare(strList[1]);
                 isCapture = p.b[to] != P_none;
+                if(isCapture) moveType = T_capture;
             }
         }
         else { LogIt(logFatal) << "Trying to read bad move, invalid to square " << str ; return false; }
@@ -1351,9 +1352,19 @@ void generate(const Position & p, std::vector<Move> & moves, GenPhase phase = GP
             else if (phase == GP_quiet) bb &= ~oppPieceBB; // do not target opponent piece
             while (bb) {
                 const Square to = BB::popBit(bb);
-                const bool isCap = (phase == GP_cap) || ((p.occupancy&SquareToBitboard(to)) != 0ull);
+                if ((oppPieceBB&SquareToBitboard(to)) != 0ull && p.b[to] == P_none ){
+                    LogIt(logError) << "False cap ?" << ToString(p) << ToString(ToMove(from,to,T_std));
+                    exit(1);
+                }
+                const bool isCap = (phase == GP_cap) || ((oppPieceBB&SquareToBitboard(to)) != 0ull);
                 if (isCap) addMove(from,to,T_capture,moves);
-                else addMove(from,to,T_std,moves);
+                else {
+                    addMove(from,to,T_std,moves);
+                    if ( p.b[to] != P_none ){
+                       LogIt(logError) << "Miised cap ?" << ToString(p) << ToString(ToMove(from,to,T_std));
+                       exit(1);
+                    }
+                }
             }
             if ( phase != GP_cap && ptype == P_wk ){ // castling
                 if ( side == Co_White) {
@@ -1375,6 +1386,9 @@ void generate(const Position & p, std::vector<Move> & moves, GenPhase phase = GP
             if ( phase != GP_quiet) pawnmoves |= BB::mask[from].pawnAttack[p.c] & ~myPieceBB & oppPieceBB;
             while (pawnmoves) {
                 const Square to = BB::popBit(pawnmoves);
+                if ((oppPieceBB&SquareToBitboard(to)) != 0ull && p.b[to] == P_none ){
+                    LogIt(logError) << "False cap ?" << ToString(p) << ToString(ToMove(from,to,T_std));
+                }
                 const bool isCap = (phase == GP_cap) || ((oppPieceBB&SquareToBitboard(to)) != 0ull);
                 if (isCap){
                     if ( SQRANK(to) == 0 || SQRANK(to) == 7) {
@@ -1452,6 +1466,15 @@ bool apply(Position & p, const Move & m){
 
     const int fromId   = fromP + PieceShift;
     const int toId     = toP + PieceShift;
+
+    if ( (type == T_capture) && toP == P_none){
+        LogIt(logError) << Squares[from] << " " << Squares[to];
+        LogIt(logError) << "cap Err 1" << ToString(p);
+    }
+    if ( !isCapture(type) && toP != P_none){
+        LogIt(logError) << Squares[from] << " " << Squares[to];
+        LogIt(logError) << "cap Err 2" << ToString(p);
+    }
 
     switch(type){
         case T_std:
@@ -2421,8 +2444,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                     bool whiteToMove = position.c==Co_White;
                     // convert castling Xboard notation to internal castling style if needed
                     if ( mtype == T_std &&
-                            from == (whiteToMove?Sq_e1:Sq_e8) &&
-                            position.b[from] == (whiteToMove?P_wk:P_bk) ){
+                         from == (whiteToMove?Sq_e1:Sq_e8) &&
+                         position.b[from] == (whiteToMove?P_wk:P_bk) ){
                         if ( to == (whiteToMove?Sq_c1:Sq_c8)) m = ToMove(from,to,whiteToMove?T_wqs:T_bqs);
                         else if ( to == (whiteToMove?Sq_g1:Sq_g8)) m = ToMove(from,to,whiteToMove?T_wks:T_bks);
                     }
