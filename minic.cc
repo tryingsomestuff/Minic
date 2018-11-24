@@ -26,8 +26,10 @@ typedef uint64_t u_int64_t;
 #include <unistd.h>
 #endif
 
+#include "json.hpp"
+
 //#define IMPORTBOOK
-#define DEBUG_TOOL
+//#define DEBUG_TOOL
 
 const std::string MinicVersion = "0.17";
 
@@ -74,6 +76,8 @@ const int       iidMinDepth              = 5;
 const int       lmrMinDepth              = 3;
 const int       singularExtensionDepth   = 8;
 
+int nbThreads = 1;
+
 const int lmpLimit[][lmpMaxDepth + 1] = { { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 } , { 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };
 
 int lmrReduction[MAX_DEPTH][MAX_MOVE];
@@ -116,7 +120,7 @@ enum LogLevel : unsigned char{
     logGUI   = 6
 };
 
-std::string backtrace(){return "";} ///@todo
+std::string backtrace(){return "@todo:: backtrace";} ///@todo
 
 class LogIt{
 public:
@@ -453,9 +457,9 @@ void clearTT() {
 
 bool getEntry(Hash h, DepthType d, Entry & e, int nbuck = 0) {
     assert(h > 0);
+    if (nbuck >= Bucket::nbBucket) return false;
     const Entry & _e = table[h%ttSize].e[nbuck];
     if ( _e.h != h ){
-        if (nbuck >= Bucket::nbBucket - 1) return false;
         return getEntry(h,d,e,nbuck+1);
     }
     e = _e; // only if no collision is detected !
@@ -463,7 +467,6 @@ bool getEntry(Hash h, DepthType d, Entry & e, int nbuck = 0) {
         ++stats.tthits;
         return true;
     }
-    if (nbuck >= Bucket::nbBucket - 1) return false;
     return getEntry(h,d,e,nbuck+1);
 }
 
@@ -670,6 +673,7 @@ ThreadPool::~ThreadPool(){
 
 void ThreadPool::setup(unsigned int n){
     assert(n > 0);
+    LogIt(logInfo) << "Using " << n << " threads";
     while (size() < (unsigned int)n) push_back(new ThreadContext(size()));
 }
 
@@ -705,11 +709,6 @@ ThreadPool::ThreadPool():stop(false){
 }
 
 ScoreType eval(const Position & p, float & gp); // forward decl
-
-void initThreading(int n = 1 ){
-    assert(n>=1);
-    ThreadPool::instance().setup(n);
-}
 
 inline bool isCapture(const MType & mt){ return mt == T_capture || mt == T_ep || mt == T_cappromq || mt == T_cappromr || mt == T_cappromb || mt == T_cappromn; }
 
@@ -2550,14 +2549,51 @@ void XBoard::xboard(){
 #include "debug.h"
 #endif
 
+nlohmann::json json;
+
+void initOptions() {
+    std::ifstream str("minic.json");
+    if (!str.is_open()) LogIt(logError) << "Cannot open minic.json";
+    else {
+        str >> json;
+        if (!json.is_object()) LogIt(logError) << "JSON is not an object";
+    }
+}
+
+template<typename T> struct OptionValue {};
+template<> struct OptionValue<bool> { 
+    const bool value = false; 
+    const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_boolean;
+};
+template<> struct OptionValue<int> { 
+    const int value = 0; 
+    const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_number_integer;
+};
+template<> struct OptionValue<float> {
+    const float value = 0.f;
+    const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_number_float;
+};
+
+template<typename T>
+T getOption(const std::string & key, T defaultValue = OptionValue<T>().value) {
+    auto it = json.find(key);
+    if (it == json.end()) {
+        LogIt(logError) << "JSON value not found, " << it.key();
+        return defaultValue;
+    }
+    if (!OptionValue<T>().validator(it.value())) {
+        LogIt(logError) << "JSON does not have expected type, " << it.key() << " : " << it.value();
+        return defaultValue;
+    }
+    else {
+        LogIt(logInfo) << "From config file, " << it.key() << " : " << it.value();
+        return it.value();
+    }
+}
+
 int main(int argc, char ** argv){
-
     hellooo();
-
-    int nthreads = 1;
-    if(std::getenv("MINIC_NUM_THREADS")){ nthreads = atoi(std::getenv("MINIC_NUM_THREADS")); }
-    LogIt(logInfo) << "Using " << nthreads << " threads";
-
+    initOptions();
     initHash();
     TT::initTable();
     TT::initETable();
@@ -2565,11 +2601,12 @@ int main(int argc, char ** argv){
     initLMR();
     initMvvLva();
     BB::initMask();
-    initThreading(nthreads);
+    ThreadPool::instance().setup(std::min(std::max(getOption<int>("threads",1),1),64));
+    mateFinder = getOption<bool>("mateFinder");
 
     if ( Book::fileExists("book.bin") ) {
         std::ifstream bbook("book.bin",std::ios::in | std::ios::binary);
-        //Book::readBinaryBook(bbook);
+        Book::readBinaryBook(bbook);
     }
 
 #ifdef DEBUG_TOOL
