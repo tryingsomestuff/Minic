@@ -1,7 +1,8 @@
 # Minic
 A simple chess engine to learn and play with.
 Compatible with xboard/winboard.
-Code size shall not go above 2000sloc.
+Initially, the code size was supposed not go above 2000sloc.
+Now that more features (especially SMP) has come up, I try to keep it under 2500sloc.
 Minic stands for "Minimal Chess".
 Minic is smaller than TSCP but stronger than Micro-Max.
 
