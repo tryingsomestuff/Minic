@@ -383,7 +383,7 @@ void initHash(){
 std::string ToString(const Move & m    , bool withScore = false);
 std::string ToString(const Position & p, bool noEval = false);
 
-#define DEBUG_HASH
+//#define DEBUG_HASH
 
 Hash computeHash(const Position &p){
 #ifdef DEBUG_HASH
@@ -426,7 +426,7 @@ struct Entry{
 
 struct Bucket {
     static const int nbBucket = 2;
-    Entry e[nbBucket]; // first is replace always, others is replace by depth
+    Entry e[nbBucket]; // first are replace always, last is replace by depth
 };
 
 unsigned int powerFloor(unsigned int x) {
@@ -464,19 +464,22 @@ bool getEntry(Hash h, DepthType d, Entry & e, int nbuck = 0) {
         return true;
     }
     if (nbuck >= Bucket::nbBucket - 1) return false;
-    return getEntry(h, d, e, nbuck + 1);
+    return getEntry(h,d,e,nbuck+1);
 }
 
 void setEntry(const Entry & e){
     assert(e.h > 0);
     assert(e.m != INVALIDMOVE);
-    table[e.h%ttSize].e[0] = e; // always replace
-    for (unsigned int i = 1 ; i < Bucket::nbBucket ; ++i){
-        Entry & _eDepth = table[e.h%ttSize].e[i];
-        if ( e.d >= _eDepth.d ) {
-            _eDepth = e; // replace if better depth
-            break;
-        }
+    for (unsigned int i = 0 ; i < Bucket::nbBucket-1 ; ++i){
+        Entry & _eAlways = table[e.h%ttSize].e[i];
+        //if ( _eAlways.h != e.h ){ // always replace (if hash is not the same)
+           _eAlways = e;
+        //   break;
+        //}
+    }
+    Entry & _eDepth = table[e.h%ttSize].e[Bucket::nbBucket-1];
+    if ( false && e.d >= _eDepth.d ) {
+        _eDepth = e; // replace if better depth
     }
 }
 
