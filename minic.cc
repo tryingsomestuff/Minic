@@ -2270,7 +2270,7 @@ bool sideToMoveFromFEN(const std::string & fen) {
 Move thinkUntilTimeUp(){
     LogIt(logInfo) << "Thinking... " ;
     ScoreType score = 0;
-    Move m;
+    Move m = INVALIDMOVE;
     if ( depth < 0 ) depth = 64;
     LogIt(logInfo) << "depth " << (int)depth ;
     currentMoveMs = TimeMan::GetNextMSecPerMove(position);
@@ -2294,7 +2294,7 @@ bool makeMove(Move m,bool disp){
 void ponderUntilInput(){
     LogIt(logInfo) << "Pondering... " ;
     ScoreType score = 0;
-    Move m;
+    Move m = INVALIDMOVE;
     depth = 64;
     DepthType seldepth = 0;
     std::vector<Move> pv;
