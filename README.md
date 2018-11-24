@@ -4,10 +4,9 @@ Compatible with xboard/winboard.
 Initially, the code size was supposed not go above 2000sloc.
 Now that more features (especially SMP) has come up, I try to keep it under 2500sloc.
 Minic stands for "Minimal Chess".
-Minic is smaller than TSCP but stronger than Micro-Max.
 
 ## Strenght
-Quite poor for a chess engine (around 2250) but already way to strong for me !
+Quite poor for a chess engine (around 2300) but already way to strong for me !
 
 ```
      Name                          Elo     +/-   Games   Score   Draws
