@@ -56,4 +56,5 @@ Other available options are :
 * 0.14 : better lmp (use of "improving bool")
 * 0.15 : keep track of material count directly in position
 * 0.16 : use bitboard for pawn move generation also
-* 0.17 : Minic goes SMP ! use the config file to specify number of thread
+* 0.17 : Minic goes SMP ! 
+* 0.18 : configuration file (json) and threads management
