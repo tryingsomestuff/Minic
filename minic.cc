@@ -517,9 +517,9 @@ void setEvalEntry(const EvalEntry & e) {
     evalTable[e.h%ttESize] = e; // always replace
 }
 
-}
+} // TT
 
-struct ThreadContext;
+struct ThreadContext; // forward decl
 
 struct ThreadData{
     DepthType depth;
@@ -530,9 +530,14 @@ struct ThreadData{
     std::vector<Move> pv;
 };
 
+// Sizes and phases of the skip-blocks, used for distributing search depths across the threads, from stockfish
+const int SkipSize[20]  = { 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4 };
+const int SkipPhase[20] = { 0, 1, 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 6, 7 };
+
 // singleton pool of threads
 class ThreadPool : public std::vector<ThreadContext*> {
 public:
+
     static ThreadPool & instance();
     ~ThreadPool();
     void setup(unsigned int n);
@@ -2172,6 +2177,10 @@ std::vector<Move> ThreadContext::search(const Position & p, Move & m, DepthType 
     }
 
     for(DepthType depth = 1 ; depth <= std::min(d,DepthType(MAX_DEPTH-6)) && !stopFlag ; ++depth ){ // -6 so that draw can be found for sure
+        if (!isMainThread()){ // stockfish like thread  management
+            const int i = (id()-1)%20;
+            if (((depth + SkipPhase[i]) / SkipSize[i]) % 2) continue;
+        }
         std::vector<Move> pvLoc;
         ScoreType delta = (doWindow && depth>4)?25:MATE; // MATE not INFSCORE in order to enter the loop below once
         ScoreType alpha = std::max(ScoreType(bestScore - delta), ScoreType (-INFSCORE));

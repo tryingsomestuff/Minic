@@ -4,7 +4,7 @@ dir=$(readlink -f $(dirname $0)/..)
 
 engines=""
 
-export MINIC_NUM_THREADS=1
+export MINIC_NUM_THREADS=4
 
 for i in `seq 1 30`; do
    if [ -e "$dir/Dist/minic_0.${i}_linux_x64_see4.2" ]; then
