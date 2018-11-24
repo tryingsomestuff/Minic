@@ -178,7 +178,7 @@ int debug(std::string cli, int argc, char ** argv){
         DepthType depth = 5;
         if ( argc >= 3 ) depth = atoi(argv[3]);
         Move bestMove = INVALIDMOVE;
-        ScoreType s;
+        ScoreType s = 0;
         TimeMan::isDynamic                = false;
         TimeMan::nbMoveInTC               = -1;
         TimeMan::msecPerMove              = 60*60*1000*24; // 1 day == infinity ...
@@ -201,7 +201,7 @@ int debug(std::string cli, int argc, char ** argv){
         DepthType depth = 5;
         if ( argc >= 3 ) depth = atoi(argv[3]);
         Move bestMove = INVALIDMOVE;
-        ScoreType s;
+        ScoreType s = 0;
         TimeMan::isDynamic                = false;
         TimeMan::nbMoveInTC               = -1;
         TimeMan::msecPerMove              = 60*60*1000*24; // 1 day == infinity ...
