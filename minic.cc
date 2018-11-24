@@ -29,9 +29,9 @@ typedef uint64_t u_int64_t;
 #include "json.hpp"
 
 //#define IMPORTBOOK
-//#define DEBUG_TOOL
+#define DEBUG_TOOL
 
-const std::string MinicVersion = "0.17";
+const std::string MinicVersion = "0.18";
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
@@ -2561,12 +2561,12 @@ void initOptions() {
 }
 
 template<typename T> struct OptionValue {};
-template<> struct OptionValue<bool> { 
-    const bool value = false; 
+template<> struct OptionValue<bool> {
+    const bool value = false;
     const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_boolean;
 };
-template<> struct OptionValue<int> { 
-    const int value = 0; 
+template<> struct OptionValue<int> {
+    const int value = 0;
     const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_number_integer;
 };
 template<> struct OptionValue<float> {
