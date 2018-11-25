@@ -4,18 +4,18 @@ dir=$(readlink -f $(dirname $0)/..)
 
 engines=""
 
-export MINIC_NUM_THREADS=4
+engines="$engines -engine name=minic_dev cmd=$dir/Dist/minic_dev_linux_x64_see4.2 arg=-xboard dir=$dir"
 
 for i in `seq 1 30`; do
    if [ -e "$dir/Dist/minic_0.${i}_linux_x64_see4.2" ]; then
       engines="$engines -engine name=minic_${i} cmd=$dir/Dist/minic_0.${i}_linux_x64_see4.2 arg=-xboard dir=$dir"
    fi
 done
-engines="$engines -engine name=minic_dev cmd=$dir/Dist/minic_dev_linux_x64_see4.2 arg=-xboard dir=$dir"
-echo $engines
 
 engines="$engines -engine name=fairymax cmd=/usr/games/fairymax"
 engines="$engines -engine name=weini cmd=$dir/../chessEngine/weini/bin/weini arg=-x dir=$dir/../chessEngine/weini"
 
-$dir/../chessEngine/weini/cutechess/cutechess-cli/cutechess-cli.sh $engines -each proto=xboard tc=40/20 timemargin=200 -rounds 100 -pgnout pgn_$(date +"%Y_%m_%d"_%H%M%S).out -resign movecount=4 score=1050 -draw movenumber=40 movecount=3 score=90 -ratinginterval 1 -repeat -openings file=$dir/../chessEngine/weini/BookPgn/Silver-Suite-Large.pgn format=pgn order=random plies=24 -recover > tournament.log 2>&1 &
+echo $engines
+
+$dir/../chessEngine/weini/cutechess/cutechess-cli/cutechess-cli.sh $engines -each proto=xboard tc=40/20 timemargin=200 -rounds 100 -pgnout pgn_$(date +"%Y_%m_%d"_%H%M%S).out -resign movecount=4 score=1050 -draw movenumber=40 movecount=12 score=30 -ratinginterval 1 -repeat -openings file=$dir/../chessEngine/weini/BookPgn/Silver-Suite-Large.pgn format=pgn order=random plies=24 -recover -tournament gauntlet > tournament.log 2>&1 &
 

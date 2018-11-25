@@ -43,8 +43,8 @@ typedef short int ScoreType;
 typedef uint64_t BitBoard;
 
 #define STOPSCORE   ScoreType(20000)
-#define INFSCORE    ScoreType(10000)
-#define MATE        ScoreType(9000)
+#define INFSCORE    ScoreType(15000)
+#define MATE        ScoreType(10000)
 #define INVALIDMOVE    -1
 #define INVALIDSQUARE  -1
 #define MAX_PLY       512
@@ -300,7 +300,7 @@ void initMaterial(Position & p){
     p.nbn = (unsigned char)countBit(p.blackKnight);
     p.nbp = (unsigned char)countBit(p.blackPawn);
     p.nk = p.nwk + p.nbk; p.nq = p.nwq + p.nbq; p.nr = p.nwr + p.nbr; p.nb = p.nwb + p.nbb; p.nn = p.nwn + p.nbn; p.np = p.nwp + p.nbp;
-    p.nwM = p.nwq + p.nwr; p.nbM = p.nbq + p.nbr; p.nwm = p.nwb + p.nwn; p.nbm = p.nbb + p.nbn; p.nwt = p.nwM + p.nwm; p.nbt = p.nbm + p.nbm;
+    p.nwM = p.nwq + p.nwr; p.nbM = p.nbq + p.nbr; p.nwm = p.nwb + p.nwn; p.nbm = p.nbb + p.nbn; p.nwt = p.nwM + p.nwm; p.nbt = p.nbM + p.nbm;
 }
 
 void initBitBoards(Position & p) {
@@ -419,7 +419,7 @@ Hash computeHash(const Position &p){
 namespace TT{
 enum Bound{ B_exact = 0, B_alpha = 1, B_beta  = 2 };
 struct Entry{
-    Entry():m(INVALIDMOVE),score(0),b(B_alpha),d(-1),h(0){}
+    Entry():m(INVALIDMOVE),score(0),b(B_alpha),d(-1),h(0ull){}
     Entry(Move m, int s, Bound b, DepthType d, Hash h) : m(m), score(m), b(b), d(d), h(h){}
     Move m;
     int score;
@@ -452,7 +452,7 @@ void initTable(){
 void clearTT() {
     for (unsigned int k = 0; k < ttSize; ++k)
         for (unsigned int i = 0 ; i < Bucket::nbBucket ; ++i)
-            table[k].e[i] = { INVALIDMOVE, 0, B_alpha, 0, 0 };
+            table[k].e[i] = { INVALIDMOVE, 0, B_alpha, 0, 0ull };
 }
 
 bool getEntry(Hash h, DepthType d, Entry & e, int nbuck = 0) {
@@ -472,7 +472,6 @@ bool getEntry(Hash h, DepthType d, Entry & e, int nbuck = 0) {
 
 void setEntry(const Entry & e){
     assert(e.h > 0);
-    assert(e.m != INVALIDMOVE);
     for (unsigned int i = 0 ; i < Bucket::nbBucket-1 ; ++i){
         Entry & _eAlways = table[e.h%ttSize].e[i];
         //if ( _eAlways.h != e.h ){ // always replace (if hash is not the same)
@@ -1170,7 +1169,7 @@ int GetNextMSecPerMove(const Position & p){
     else if ( nbMoveInTC > 0){ // mps is given
         assert(msecWholeGame > 0);
         assert(nbMoveInTC > 0);
-        ms = int(0.85 * (msecWholeGame+((msecInc>0)?nbMoveInTC*msecInc:0)) / (float)(nbMoveInTC+0.5));
+        ms = int(0.95 * (msecWholeGame+((msecInc>0)?nbMoveInTC*msecInc:0)) / (float)(nbMoveInTC+0.5));
     }
     else{ // mps is not given
         ///@todo something better using the real time command
@@ -1874,7 +1873,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     float gp = 0;
     if ( ply >= MAX_PLY-1 ) return eval(p,gp);
     alpha = std::max(alpha, (ScoreType)(-MATE + ply));
-    beta  = std::min(beta , (ScoreType)(MATE - ply + 1));
+    beta  = std::min(beta , (ScoreType)(MATE - ply - 1));
     if (alpha >= beta) return alpha;
 
     if ((int)ply > seldepth) seldepth = ply;
@@ -1960,20 +1959,20 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         auto it = moves.begin();
         while (!apply(p2, *it)) { ++it; if ( it == moves.end() ) break; }
         if ( it != moves.end()) pv.push_back(*it); // return first valid move, all are leading to a draw
-        else LogIt(logInfo) << "No valid moves for draw" ;
+        else LogIt(logError) << "No valid moves for draw" ;
         return 0;
     }
     if (ply >= MAX_PLY - 1 || depth >= MAX_DEPTH - 1) return eval(p, gp);
 
     alpha = std::max(alpha, (ScoreType)(-MATE + ply));
-    beta  = std::min(beta,  (ScoreType)(MATE  - ply + 1));
+    beta  = std::min(beta,  (ScoreType)( MATE - ply - 1));
     if (alpha >= beta) return alpha;
 
     TT::Entry e;
     if (skipMove==INVALIDMOVE && TT::getEntry(computeHash(p), depth, e)) { // if not skipmove
         if (e.h != 0 && !rootnode && std::abs(e.score) < MATE - MAX_DEPTH && !pvnode &&
                 ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
-            pv.push_back(e.m);
+            if ( e.m != INVALIDMOVE) pv.push_back(e.m); // here e.m might be INVALIDMOVE if B_alpha
             return e.score;
         }
     }
@@ -2030,10 +2029,11 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     int validMoveCount = 0;
     bool alphaUpdated = false;
+    int bestScore = -INFSCORE;
     Move bestMove = INVALIDMOVE;
 
     // try the tt move first (if not skipped move)
-    if (e.h != 0 && !sameMove(e.m,skipMove)) { // should be the case thanks to iid at pvnode
+    if (e.h != 0 && e.m != INVALIDMOVE && !sameMove(e.m,skipMove)) { // should be the case thanks to iid at pvnode
         Position p2 = p;
         if (apply(p2, e.m)) {
             validMoveCount++;
@@ -2043,19 +2043,20 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             int extension = 0;
             if (isInCheck) ++extension;
             if (singularExtension(*this,alpha, beta, p, depth, e, e.m, rootnode, ply)) ++extension;
-            ScoreType ttval = -pvs(-beta, -alpha, p2, depth - 1, pvnode, ply + 1, childPV, seldepth);
-            if (!stopFlag && ttval > alpha) {
-                alphaUpdated = true;
+            ScoreType ttval = -pvs(-beta, -alpha, p2, depth-1+extension, pvnode, ply + 1, childPV, seldepth);
+            if (stopFlag) return STOPSCORE;
+            bestScore = ttval;
+            if (ttval > alpha) {
                 updatePV(pv, e.m, childPV);
                 if (ttval >= beta) {
                     //if (Move2Type(e.m) == T_std && !isInCheck) updateHistoryKillers(*this, p, depth, e.m);
                     if ( skipMove==INVALIDMOVE) TT::setEntry({ e.m,ttval,TT::B_beta,depth,computeHash(p) });
                     return ttval;
                 }
+                alphaUpdated = true;
                 alpha = ttval;
                 bestMove = e.m;
             }
-            if (stopFlag) return STOPSCORE;
         }
     }
 
@@ -2063,7 +2064,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     generate(p,moves);
     if ( moves.empty() ) return isInCheck?-MATE + ply : 0;
     sort(*this,moves,p,&e);
-    if (bestMove == INVALIDMOVE)  bestMove = moves[0]; // so that B_alpha are stored in TT
     bool improving = (!isInCheck && ply >= 2 && val >= scoreStack[p.ply - 2]);
 
     for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
@@ -2108,33 +2108,31 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 val = -pvs(-beta,-alpha,p2,depth-1+extension,true,ply+1,childPV,seldepth); // potential new pv node
             }
         }
-
-        if ( !stopFlag && val > alpha ){
-            alphaUpdated = true;
-            updatePV(pv, *it, childPV);
-            if ( val >= beta ){
-                if ( Move2Type(*it) == T_std && !isInCheck){
-                    updateHistoryKillers(*this, p, depth, *it);
-#ifdef USE_STAGED_MOVE_GENERATOR
-                    for(auto it2 = smg._movesQuiet.begin() ; it2 != smg._movesQuiet.end() && !sameMove(*it2,*it); ++it2){
-#else
-                    for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2){
-#endif
-                        if ( Move2Type(*it2) == T_std ) historyT.update(depth,*it2,p,false);
-                    }
-                }
-                if (skipMove == INVALIDMOVE) TT::setEntry({*it,val,TT::B_beta,depth,computeHash(p)});
-                return val;
-            }
-            alpha = val;
+        if (stopFlag) return STOPSCORE;
+        if ( val > bestScore ){
+            bestScore = val;
             bestMove = *it;
+            if ( val > alpha ){
+                updatePV(pv, *it, childPV);
+                if ( val >= beta ){
+                    if ( Move2Type(*it) == T_std && !isInCheck){
+                        updateHistoryKillers(*this, p, depth, *it);
+                        for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2)
+                            if ( Move2Type(*it2) == T_std ) historyT.update(depth,*it2,p,false);
+                    }
+                    if ( skipMove==INVALIDMOVE ) TT::setEntry({*it,val,TT::B_beta,depth,computeHash(p)});
+                    return val;
+                }
+                alphaUpdated = true;
+                alpha = val;
+            }
         }
     }
 
-    if ( validMoveCount == 0 ) return isInCheck?-MATE + ply : 0;
-    if ( bestMove != INVALIDMOVE && skipMove == INVALIDMOVE && !stopFlag) TT::setEntry({bestMove,alpha,alphaUpdated?TT::B_exact:TT::B_alpha,depth,computeHash(p)});
+    if ( validMoveCount==0 ) return isInCheck?-MATE + ply : 0;
+    if ( skipMove==INVALIDMOVE ) TT::setEntry({bestMove,alpha,alphaUpdated?TT::B_exact:TT::B_alpha,depth,computeHash(p)});
 
-    return stopFlag?STOPSCORE:alpha;
+    return alpha;
 }
 
 std::vector<Move> ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
@@ -2550,8 +2548,10 @@ void XBoard::xboard(){
 #endif
 
 nlohmann::json json;
+std::vector<std::string> args;
 
-void initOptions() {
+void initOptions(int argc, char ** argv) {
+    for(int i = 1 ; i < argc ; ++i) args.push_back(argv[i]);
     std::ifstream str("minic.json");
     if (!str.is_open()) LogIt(logError) << "Cannot open minic.json";
     else {
@@ -2574,15 +2574,37 @@ template<> struct OptionValue<float> {
     const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_number_float;
 };
 
-template<typename T>
-T getOption(const std::string & key, T defaultValue = OptionValue<T>().value) {
+// from argv (override json)
+template<typename T> T getOptionCLI(const std::string & key, T defaultValue = OptionValue<T>().value){
+   auto it = std::find(args.begin(),args.end(),std::string("-")+key);
+    if (it == args.end()) {
+        LogIt(logWarn) << "ARG key not given, " << key;
+        return defaultValue;
+    }
+    std::stringstream str;
+    ++it;
+    if (it == args.end()) {
+        LogIt(logError) << "ARG value not given, " << key;
+        return defaultValue;
+    }
+    str << *it;
+    T ret = defaultValue;
+    str >> ret;
+    LogIt(logInfo) << "From ARG, " << key << " : " << ret;
+    return ret;
+}
+
+// from json
+template<typename T> T getOption(const std::string & key, T defaultValue = OptionValue<T>().value) {
+    T cliValue = getOptionCLI(key,defaultValue);
+    if ( cliValue != defaultValue ) return cliValue;
     auto it = json.find(key);
     if (it == json.end()) {
-        LogIt(logError) << "JSON value not found, " << it.key();
+        LogIt(logError) << "JSON key not given, " << key;
         return defaultValue;
     }
     if (!OptionValue<T>().validator(it.value())) {
-        LogIt(logError) << "JSON does not have expected type, " << it.key() << " : " << it.value();
+        LogIt(logError) << "JSON value does not have expected type, " << it.key() << " : " << it.value();
         return defaultValue;
     }
     else {
@@ -2593,7 +2615,7 @@ T getOption(const std::string & key, T defaultValue = OptionValue<T>().value) {
 
 int main(int argc, char ** argv){
     hellooo();
-    initOptions();
+    initOptions(argc,argv);
     initHash();
     TT::initTable();
     TT::initETable();
