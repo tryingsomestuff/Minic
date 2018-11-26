@@ -1939,7 +1939,8 @@ ScoreType adjustHashScore(ScoreType score, DepthType ply){
 
 // pvs inspired by Xiphos
 ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove){
-    if ( std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()) > currentMoveMs ){
+    
+    if ( stopFlag || std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()) > currentMoveMs ){
         stopFlag = true;
         return STOPSCORE;
     }
@@ -1950,30 +1951,16 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     ++stats.nodes;
 
+    alpha = std::max(alpha, (ScoreType)(-MATE + ply));
+    beta = std::min(beta, (ScoreType)(MATE - ply + 1));
+    if (alpha >= beta) return alpha;
+
     const bool rootnode = ply == 1;
 
     float gp = 0;
-    if (isDraw(p, pvnode)) {
-        if (!rootnode) return 0;
-        LogIt(logInfo) << "Draw at root node" ;
-        std::vector<Move> moves;
-        generate(p, moves);
-        const bool isInCheck = isAttacked(p, kingSquare(p));
-        if (moves.empty()) return isInCheck ? -MATE + ply : 0;
-        sort(*this,moves, p, NULL);
-        Position p2 = p;
-        auto it = moves.begin();
-        while (!apply(p2, *it)) { ++it; if ( it == moves.end() ) break; }
-        if ( it != moves.end()) pv.push_back(*it); // return first valid move, all are leading to a draw
-        else LogIt(logError) << "No valid moves for draw" ;
-        return 0;
-    }
+    if (!rootnode && isDraw(p, pvnode)) return 0;
     if (ply >= MAX_PLY - 1 || depth >= MAX_DEPTH - 1) return eval(p, gp);
-
-    alpha = std::max(alpha, (ScoreType)(-MATE + ply));
-    beta  = std::min(beta,  (ScoreType)( MATE - ply + 1));
-    if (alpha >= beta) return alpha;
-
+    
     TT::Entry e;
     if (skipMove==INVALIDMOVE && TT::getEntry(computeHash(p), depth, e)) { // if not skipmove
         if (e.h != 0 && !rootnode && std::abs(e.score) < MATE - MAX_DEPTH && !pvnode && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
@@ -2197,41 +2184,25 @@ std::vector<Move> ThreadContext::search(const Position & p, Move & m, DepthType 
             pvLoc.clear();
             score = pvs(alpha,beta,p,depth,true,1,pvLoc,seldepth);
             if ( stopFlag ) break;
-            delta *= 2;
-            if (score <= alpha) alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) );
-            else if (score >= beta ) beta  = std::min(ScoreType(score + delta),  MATE );
+            delta += 2 + delta/2; // from xiphos ...
+            if      (score <= alpha) alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) );
+            else if (score >= beta ) beta  = std::min(ScoreType(score + delta), ScoreType( MATE) );
             else break;
         }
-
-        if ( !stopFlag ){
-            pv = pvLoc;
-            reachedDepth = depth;
-            bestScore    = score;
-            const int ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count());
-            if ( isMainThread() ){
-                LogIt(logGUI) << int(depth) << " " << bestScore << " " << ms/10 << " " << stats.nodes + stats.qnodes << " "
-                              << (int)seldepth  << " " << int((stats.nodes + stats.qnodes)/(ms/1000.f)/1000.) << " " << stats.tthits/1000 << "\t"
-                              << ToString(pv)   << " " << "EBF: " << float(stats.nodes + stats.qnodes)/previousNodeCount ;
-                previousNodeCount = stats.nodes + stats.qnodes;
-            }
+        if (stopFlag) break;
+        pv = pvLoc;
+        reachedDepth = depth;
+        bestScore    = score;
+        const int ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count());
+        if ( isMainThread() ){
+            LogIt(logGUI) << int(depth) << " " << bestScore << " " << ms/10 << " " << stats.nodes + stats.qnodes << " "
+                          << (int)seldepth << " " << int((stats.nodes + stats.qnodes)/(ms/1000.f)/1000.) << " " << stats.tthits/1000 << "\t"
+                          << ToString(pv)  << " " << "EBF: " << float(stats.nodes + stats.qnodes)/previousNodeCount ;
+            previousNodeCount = stats.nodes + stats.qnodes;
         }
-
-        if (bestScore <= -MATE+1) break; // already mated
-        if (mateFinder && bestScore >= MATE - MAX_DEPTH) break; // forced mate found
-        if (depth >= MAX_DEPTH - 2 && bestScore >=  MATE - MAX_DEPTH) break; // mate found
-        if (depth >= MAX_DEPTH - 2 && bestScore <= -MATE + MAX_DEPTH) break; // mated
     }
-
-    if (bestScore <= -MATE+1) {
-        LogIt(logInfo) << "Mated ..." ;
-        pv.clear();
-        pv.push_back(INVALIDMOVE);
-    }
-
-    if (bestScore >= MATE-MAX_DEPTH) LogIt(logInfo) << "Forced mate found ..." ;
-
     if (pv.empty()){
-        LogIt(logInfo) << "Empty pv" ;
+        LogIt(logWarn) << "Empty pv" ;
         m = INVALIDMOVE;
     }
     else m = pv[0];
