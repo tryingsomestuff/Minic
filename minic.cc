@@ -212,10 +212,10 @@ inline int BitScanForward(u_int64_t bb) { assert(bb != 0ull); return __builtin_c
 #endif
 #endif
 
-#define SquareToBitboard(k) (1ull<<k)
-inline uint64_t  countBit(const BitBoard & b) { return POPCOUNT(b);}
-inline void      setBit  (BitBoard & b, Square k) { b |= SquareToBitboard(k);}
-inline void      unSetBit(BitBoard & b, Square k) { b &= ~SquareToBitboard(k);}
+#define SquareToBitboard(k) (1ull<<(k))
+inline uint64_t  countBit(const BitBoard & b)           { return POPCOUNT(b);}
+inline void      setBit  (      BitBoard & b, Square k) { b |= SquareToBitboard(k);}
+inline void      unSetBit(      BitBoard & b, Square k) { b &= ~SquareToBitboard(k);}
 inline bool      isSet   (const BitBoard & b, Square k) { return (SquareToBitboard(k) & b) != 0;}
 
 const BitBoard whiteSquare        = 0x55AA55AA55AA55AA;
@@ -1137,50 +1137,50 @@ inline void initMask() {
             for (int j = -1; j <= 1; ++j) {
                 if (i == 0 && j == 0) continue;
                 for (int r = (x >> 3) + i, f = (x & 7) + j; 0 <= r && r < 8 && 0 <= f && f < 8; r += i, f += j) {
-                    int y = 8 * r + f;
+                    const int y = 8 * r + f;
                     d[x][y] = (8 * i + j);
-                    for (int z = x + d[x][y]; z != y; z += d[x][y]) mask[x].between[y] |= 1ull << z;
+                    for (int z = x + d[x][y]; z != y; z += d[x][y]) mask[x].between[y] |= SquareToBitboard(z);
                 }
                 int r = x >> 3;
                 int f = x & 7;
-                if ( 0 <= r+i && r+i < 8 && 0 <= f+j && f+j < 8) mask[x].kingZone |= 1ull << (((x >> 3) + i)*8+(x & 7) + j);
+                if ( 0 <= r+i && r+i < 8 && 0 <= f+j && f+j < 8) mask[x].kingZone |= SquareToBitboard(((x >> 3) + i)*8+(x & 7) + j);
             }
         }
 
-        for (int y = x - 9; y >= 0 && d[x][y] == -9; y -= 9) mask[x].diagonal |= 1ull << y;
-        for (int y = x + 9; y < 64 && d[x][y] ==  9; y += 9) mask[x].diagonal |= 1ull << y;
+        for (int y = x - 9; y >= 0 && d[x][y] == -9; y -= 9) mask[x].diagonal |= SquareToBitboard(y);
+        for (int y = x + 9; y < 64 && d[x][y] ==  9; y += 9) mask[x].diagonal |= SquareToBitboard(y);
 
-        for (int y = x - 7; y >= 0 && d[x][y] == -7; y -= 7) mask[x].antidiagonal |= 1ull << y;
-        for (int y = x + 7; y < 64 && d[x][y] ==  7; y += 7) mask[x].antidiagonal |= 1ull << y;
+        for (int y = x - 7; y >= 0 && d[x][y] == -7; y -= 7) mask[x].antidiagonal |= SquareToBitboard(y);
+        for (int y = x + 7; y < 64 && d[x][y] ==  7; y += 7) mask[x].antidiagonal |= SquareToBitboard(y);
 
-        for (int y = x - 8; y >= 0; y -= 8) mask[x].file |= 1ull << y;
-        for (int y = x + 8; y < 64; y += 8) mask[x].file |= 1ull << y;
+        for (int y = x - 8; y >= 0; y -= 8) mask[x].file |= SquareToBitboard(y);
+        for (int y = x + 8; y < 64; y += 8) mask[x].file |= SquareToBitboard(y);
 
         int f = x & 07;
         int r = x >> 3;
         for (int i = -1, c = 1, dp = 6; i <= 1; i += 2, c = 0, dp = 1) {
-            for (int j = -1; j <= 1; j += 2) if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) {  mask[x].pawnAttack[c] |= 1ull << ((r + i) * 8 + (f + j)); }
+            for (int j = -1; j <= 1; j += 2) if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) {  mask[x].pawnAttack[c] |= SquareToBitboard((r + i) * 8 + (f + j)); }
             if (0 <= r + i && r + i < 8) {
-                mask[x].push[c] = 1ull << ((r + i) * 8 + f);
-                if ( r == dp ) mask[x].dpush[c] = 1ull << ((r + 2*i) * 8 + f); // double push
+                mask[x].push[c] = SquareToBitboard((r + i) * 8 + f);
+                if ( r == dp ) mask[x].dpush[c] = SquareToBitboard((r + 2*i) * 8 + f); // double push
             }
         }
         if (r == 3 || r == 4) {
-            if (f > 0) mask[x].enpassant |= 1ull << (x - 1);
-            if (f < 7) mask[x].enpassant |= 1ull << (x + 1);
+            if (f > 0) mask[x].enpassant |= SquareToBitboard(x - 1);
+            if (f < 7) mask[x].enpassant |= SquareToBitboard(x + 1);
         }
 
         for (int i = -2; i <= 2; i = (i == -1 ? 1 : i + 1)) {
             for (int j = -2; j <= 2; ++j) {
                 if (i == j || i == -j || j == 0) continue;
-                if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) { mask[x].knight |= 1ull << (8 * (r + i) + (f + j)); }
+                if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) { mask[x].knight |= SquareToBitboard(8 * (r + i) + (f + j)); }
             }
         }
 
         for (int i = -1; i <= 1; ++i) {
             for (int j = -1; j <= 1; ++j) {
                 if (i == 0 && j == 0) continue;
-                if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) { mask[x].king |= 1ull << (8 * (r + i) + (f + j)); }
+                if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) { mask[x].king |= SquareToBitboard(8 * (r + i) + (f + j)); }
             }
         }
     }
@@ -1189,12 +1189,12 @@ inline void initMask() {
         for (int k = 0; k < 8; ++k) {
             int y = 0;
             for (int x = k - 1; x >= 0; --x) {
-                BitBoard b = 1ull << x;
+                const BitBoard b = SquareToBitboard(x);
                 y |= b;
                 if (((o << 1) & b) == b) break;
             }
             for (int x = k + 1; x < 8; ++x) {
-                BitBoard b = 1ull << x;
+                const BitBoard b = SquareToBitboard(x);
                 y |= b;
                 if (((o << 1) & b) == b) break;
             }
@@ -1206,8 +1206,8 @@ inline void initMask() {
 inline BitBoard attack(const BitBoard occupancy, const Square x, const BitBoard m) {
     BitBoard forward = occupancy & m;
     BitBoard reverse = swapbits(forward);
-    forward -= (1ull << x);
-    reverse -= (1ull << (x ^ 63));
+    forward -= SquareToBitboard(x);
+    reverse -= SquareToBitboard(x ^ 63);
     forward ^= swapbits(reverse);
     forward &= m;
     return forward;
@@ -1255,13 +1255,14 @@ bool getAttackers(const Position & p, const Square k, std::vector<Square> & atta
     while (attack) { attakers.push_back(popBit(attack)); }
     return !attakers.empty();
 }
+
 } // BB
 
 inline bool isAttacked(const Position & p, const Square k) { return k!=INVALIDSQUARE && BB::isAttackedBB(p, k, p.c) != 0ull;}
 
 inline bool getAttackers(const Position & p, const Square k, std::vector<Square> & attakers) { return k!=INVALIDSQUARE && BB::getAttackers(p, k, attakers);}
 
-enum GenPhase{ GP_all   = 0, GP_cap   = 1, GP_quiet = 2};
+enum GenPhase{ GP_all = 0, GP_cap = 1, GP_quiet = 2};
 
 void generate(const Position & p, std::vector<Move> & moves, GenPhase phase = GP_all){
     moves.clear();
@@ -1328,7 +1329,6 @@ void generate(const Position & p, std::vector<Move> & moves, GenPhase phase = GP
                     else addMove(from,to,T_std,moves);
                 }
             }
-            // ep
             if ( p.ep != INVALIDSQUARE && phase != GP_quiet ) pawnmoves |= BB::mask[from].pawnAttack[p.c] & ~myPieceBB & SquareToBitboard(p.ep);
             while (pawnmoves) {
                 const Square to = BB::popBit(pawnmoves);
@@ -1439,33 +1439,21 @@ bool apply(Position & p, const Move & m){
         break;
 
     case T_promq:
-    case T_cappromq: {
-        const Piece promP = (p.c == Co_White ? P_wq : P_bq);
-        movePiece(p, from, to, fromP, toP, type == T_cappromq,promP);
-    }
+    case T_cappromq:
+        movePiece(p, from, to, fromP, toP, type == T_cappromq,(p.c == Co_White ? P_wq : P_bq));
         break;
-
     case T_promr:
-    case T_cappromr: {
-        const Piece promP = (p.c == Co_White ? P_wr : P_br);
-        movePiece(p, from, to, fromP, toP, type == T_cappromr, promP);
-    }
+    case T_cappromr:
+        movePiece(p, from, to, fromP, toP, type == T_cappromr, (p.c == Co_White ? P_wr : P_br));
         break;
-
     case T_promb:
-    case T_cappromb: {
-        const Piece promP = (p.c == Co_White ? P_wb : P_bb);
-        movePiece(p, from, to, fromP, toP, type == T_cappromb, promP);
-    }
+    case T_cappromb:
+        movePiece(p, from, to, fromP, toP, type == T_cappromb, (p.c == Co_White ? P_wb : P_bb));
         break;
-
     case T_promn:
-    case T_cappromn: {
-        const Piece promP = (p.c == Co_White ? P_wn : P_bn);
-        movePiece(p, from, to, fromP, toP, type == T_cappromn, promP);
-    }
+    case T_cappromn:
+        movePiece(p, from, to, fromP, toP, type == T_cappromn, (p.c == Co_White ? P_wn : P_bn));
         break;
-
     case T_wks:
         movePiece(p, Sq_e1, Sq_g1, P_wk, P_none);
         movePiece(p, Sq_h1, Sq_f1, P_wr, P_none);
@@ -1474,7 +1462,6 @@ bool apply(Position & p, const Move & m){
         if (p.castling & C_wks) p.h ^= ZT[7][13];
         p.castling &= ~(C_wks | C_wqs);
         break;
-
     case T_wqs:
         movePiece(p, Sq_e1, Sq_c1, P_wk, P_none);
         movePiece(p, Sq_a1, Sq_d1, P_wr, P_none);
@@ -1483,7 +1470,6 @@ bool apply(Position & p, const Move & m){
         if (p.castling & C_wks) p.h ^= ZT[7][13];
         p.castling &= ~(C_wks | C_wqs);
         break;
-
     case T_bks:
         movePiece(p, Sq_e8, Sq_g8, P_bk, P_none);
         movePiece(p, Sq_h8, Sq_f8, P_br, P_none);
@@ -1493,7 +1479,6 @@ bool apply(Position & p, const Move & m){
         if (p.castling & C_bks) p.h ^= ZT[63][13];
         p.castling &= ~(C_bks | C_bqs);
         break;
-
     case T_bqs:
         movePiece(p, Sq_e8, Sq_c8, P_bk, P_none);
         movePiece(p, Sq_a8, Sq_d8, P_br, P_none);
@@ -1508,7 +1493,7 @@ bool apply(Position & p, const Move & m){
     p.blackPiece = p.blackPawn | p.blackKnight | p.blackBishop | p.blackRook | p.blackQueen | p.blackKing;
     p.occupancy = p.whitePiece | p.blackPiece;
 
-    if ( isAttacked(p,kingSquare(p)) ) return false;
+    if ( isAttacked(p,kingSquare(p)) ) return false; // this is the only legal move validation needed
 
     // Update castling right if rook captured
     if ( toP == P_wr && to == Sq_a1 && (p.castling & C_wqs) ){
@@ -1588,7 +1573,7 @@ bool readBinaryBook(std::ifstream & stream) {
 template<typename Iter>
 Iter select_randomly(Iter start, Iter end) {
     static std::random_device rd;
-    static std::mt19937 gen(rd());
+    static std::mt19937 gen(rd()); // here really random
     std::uniform_int_distribution<> dis(0, (int)std::distance(start, end) - 1);
     std::advance(start, dis(gen));
     return start;
@@ -1599,7 +1584,8 @@ const Move Get(const Hash h){
     if ( it == book.end() ) return INVALIDMOVE;
     return *select_randomly(it->second.begin(),it->second.end());
 }
-}
+
+} // Book
 
 struct SortThreatsFunctor {
     const Position & _p;
@@ -1607,7 +1593,7 @@ struct SortThreatsFunctor {
     bool operator()(const Square s1,const Square s2) { return std::abs(getValue(_p,s1)) < std::abs(getValue(_p,s2));}
 };
 
-// Static Exchange Evaluation (from stockfish)
+// Static Exchange Evaluation (algorithm from stockfish)
 bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold) const{
     // Only deal with normal moves
     if (! isCapture(m)) return true;
@@ -1647,7 +1633,7 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
         }
         if (!validThreatFound) endOfSEE = true;
     }
-    return us != p2.c; // We break the above loop when stm loses
+    return us != p2.c; // we break the above loop when stm loses
 }
 
 bool sameMove(const Move & a, const Move & b) { return (a & 0x0000FFFF) == (b & 0x0000FFFF);}
@@ -1718,11 +1704,7 @@ bool ThreadContext::isDraw(const Position & p, bool isPV)const{
     return false;
 }
 
-int manhattanDistance(Square sq1, Square sq2) {
-    Square file1 = sq1 & 7; Square file2 = sq2 & 7;
-    Square rank1 = sq1 >> 3; Square rank2 = sq2 >> 3;
-    return std::abs(rank2 - rank1) + std::abs(file2 - file1);
-}
+int manhattanDistance(Square sq1, Square sq2) { return std::abs((sq2 >> 3) - (sq1 >> 3)) + std::abs((sq2 & 7) - (sq1 & 7));}
 
 ScoreType eval(const Position & p, float & gp){
 
@@ -1733,8 +1715,8 @@ ScoreType eval(const Position & p, float & gp){
     static const int absValuesEG[7] = { 0, ValuesEG[P_wp + PieceShift], ValuesEG[P_wn + PieceShift], ValuesEG[P_wb + PieceShift], ValuesEG[P_wr + PieceShift], ValuesEG[P_wq + PieceShift], ValuesEG[P_wk + PieceShift] };
     int absscore = (p.nwk+p.nbk) * absValues[P_wk] + (p.nwq+p.nbq) * absValues[P_wq] + (p.nwr+p.nbr) * absValues[P_wr] + (p.nwb+p.nbb) * absValues[P_wb] + (p.nwn+p.nbn) * absValues[P_wn] + (p.nwp+p.nbp) * absValues[P_wp];
     absscore = 100 * (absscore - 16000) / (24140 - 16000);
-    int pawnScore = 100 * p.np / 16;
-    int pieceScore = 100 * (p.nq + p.nr + p.nb + p.nn) / 14;
+    const int pawnScore = 100 * p.np / 16;
+    const int pieceScore = 100 * (p.nq + p.nr + p.nb + p.nn) / 14;
     gp = (absscore*0.4f + pieceScore*0.3f + pawnScore*0.3f)/100.f;
     sc = (p.nwk - p.nbk) * ScoreType(gp*absValues[P_wk] + (1.f - gp)*absValuesEG[P_wk])
        + (p.nwq - p.nbq) * ScoreType(gp*absValues[P_wq] + (1.f - gp)*absValuesEG[P_wq])
@@ -1796,7 +1778,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     float gp = 0;
     if ( ply >= MAX_PLY-1 ) return eval(p,gp);
     alpha = std::max(alpha, (ScoreType)(-MATE + ply));
-    beta  = std::min(beta , (ScoreType)(MATE - ply + 1));
+    beta  = std::min(beta , (ScoreType)( MATE - ply + 1));
     if (alpha >= beta) return alpha;
 
     if ((int)ply > seldepth) seldepth = ply;
@@ -1813,7 +1795,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     generate(p,moves,GP_cap);
     sort(*this,moves,p);
 
-    ScoreType alphaInit = alpha;
+    const ScoreType alphaInit = alpha;
 
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         if ( Move2Score(*it) < -900) continue; // see
@@ -1848,7 +1830,7 @@ inline bool singularExtension(ThreadContext & context, ScoreType alpha, ScoreTyp
         const ScoreType betaC = e.score - depth;
         std::vector<Move> sePV;
         DepthType seSeldetph;
-        ScoreType score = context.pvs(betaC - 1, betaC, p, depth/2, false, ply, sePV, seSeldetph, m);
+        const ScoreType score = context.pvs(betaC - 1, betaC, p, depth/2, false, ply, sePV, seSeldetph, m);
         if (!ThreadContext::stopFlag && score < betaC) return true;
     }
     return false;
@@ -1907,7 +1889,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         // razoring
         int rAlpha = alpha - razoringMargin;
         if ( doRazoring && depth <= razoringMaxDepth && val <= rAlpha ){
-            ScoreType qval = qsearch(rAlpha,rAlpha+1,p,ply,seldepth);
+            const ScoreType qval = qsearch(rAlpha,rAlpha+1,p,ply,seldepth);
             if ( ! stopFlag && qval <= alpha ) return qval;
             if ( stopFlag ) return STOPSCORE;
         }
@@ -2169,7 +2151,7 @@ void readLine() {
 }
 
 bool sideToMoveFromFEN(const std::string & fen) {
-    bool b = readFEN(fen,position);
+    const bool b = readFEN(fen,position);
     stm = position.c == Co_White ? stm_white : stm_black;
     return b;
 }
@@ -2264,7 +2246,7 @@ void XBoard::xboard(){
             else if ( strncmp(command.c_str(),"rejected",8) == 0){ }
             else if ( strncmp(command.c_str(),"ping",4) == 0){
                 std::string str(command);
-                size_t p = command.find("ping");
+                const size_t p = command.find("ping");
                 str = str.substr(p+4);
                 str = trim(str);
                 LogIt(logGUI) << "pong " << str ;
@@ -2306,7 +2288,7 @@ void XBoard::xboard(){
                 stopPonder();
                 stop();
                 std::string mstr(command);
-                size_t p = command.find("usermove");
+                const size_t p = command.find("usermove");
                 mstr = mstr.substr(p + 8);
                 mstr = trim(mstr);
                 Square from = INVALIDSQUARE;
@@ -2334,7 +2316,7 @@ void XBoard::xboard(){
                 stopPonder();
                 stop();
                 std::string fen(command);
-                size_t p = command.find("setboard");
+                const size_t p = command.find("setboard");
                 fen = fen.substr(p+8);
                 if (!sideToMoveFromFEN(fen)){
                     LogIt(logInfo) << "Illegal FEN" ;
@@ -2479,7 +2461,7 @@ template<typename T> T getOptionCLI(const std::string & key, T defaultValue = Op
 
 // from json
 template<typename T> T getOption(const std::string & key, T defaultValue = OptionValue<T>().value) {
-    T cliValue = getOptionCLI(key,defaultValue);
+    const T cliValue = getOptionCLI(key,defaultValue);
     if ( cliValue != defaultValue ) return cliValue;
     auto it = json.find(key);
     if (it == json.end()) {
