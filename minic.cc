@@ -76,7 +76,8 @@ const int       iidMinDepth              = 5;
 const int       lmrMinDepth              = 3;
 const int       singularExtensionDepth   = 8;
 
-int nbThreads = 1;
+int nbThreads = 1; // can be set from config file
+bool mateFinder = false; // can be set from config file
 
 const int lmpLimit[][lmpMaxDepth + 1] = { { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 } , { 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };
 
@@ -85,26 +86,22 @@ int lmrReduction[MAX_DEPTH][MAX_MOVE];
 const unsigned int ttSizeMb  = 512; // here in Mb, will be converted to real size next
 const unsigned int ttESizeMb = 512; // here in Mb, will be converted to real size next
 
-bool mateFinder = false;
-
 std::string startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 std::string fine70        = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - -";
 std::string shirov        = "6r1/2rp1kpp/2qQp3/p3Pp1P/1pP2P2/1P2KP2/P5R1/6R1 w - - 0 1";
 
-int currentMoveMs = 777;
+int currentMoveMs = 777; // a dummy initial value, useful for debug
 
 inline void hellooo(){ std::cout << "# This is Minic version " << MinicVersion << std::endl; }
 
 inline std::string showDate() {
     using Clock = std::chrono::high_resolution_clock;
     std::stringstream str;
-    time_t rawtime;
-    time(&rawtime);
-    auto msecEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch());
-    struct tm * timeInfo;
-    timeInfo = localtime(&rawtime);
+    auto time = Clock::now().time_since_epoch();
+    auto msecEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(time);
+    auto secEpoch = std::chrono::duration_cast<std::chrono::seconds>(time).count();
     char buffer[64];
-    std::strftime(buffer,63,"%Y-%m-%d %H:%M:%S",timeInfo);
+    std::strftime(buffer,63,"%Y-%m-%d %H:%M:%S",localtime(&secEpoch));
     str << buffer << "-";
     str << std::setw(3) << std::setfill('0') << msecEpoch.count()%1000;
     return str.str();
