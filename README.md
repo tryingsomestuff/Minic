@@ -5,24 +5,29 @@ Initially, the code size was supposed not go above 2000sloc.
 Now that more features (especially SMP) has come up, I try to keep it under 2500sloc.
 Minic stands for "Minimal Chess".
 
+## Release
+
+Have a look in the Dist directory for releases. Some more stable/official ones will also be made available as github release.
+
 ## Strenght
 Quite poor for a chess engine (around 2300) but already way to strong for me !
 
 ```
      Name                          Elo     +/-   Games   Score   Draws
-   0 Minic                          52      16    1605   57.5%   18.1%
-   1 sungorus64                    121      56     134   66.8%   18.7%
-   2 Bitfoot                        52      53     134   57.5%   22.4%
-   3 Horizon_4_4                    44      55     134   56.3%   15.7%
-   4 dorpsgek                       29      51     134   54.1%   24.6%
-   5 zevra                          -3      50     133   49.6%   28.6%
-   6 asymptote                      -5      54     134   49.3%   17.9%
-   7 ct800_v1.11_x64               -29      54     134   45.9%   17.2%
-   8 rattatechess_nosferatu        -60      56     134   41.4%   14.2%
-   9 simplex                       -93      53     134   36.9%   24.6%
-  10 weini1                       -114      58     133   34.2%   14.3%
-  11 fairymax                     -347      80     134   11.9%   11.9%
-  12 tscp181                      -478     113     133    6.0%    7.5%
+   0 Minic                          71      12    2593   60.1%   18.4%
+   1 sungorus64                    103      44     216   64.4%   17.6%
+   2 Bitfoot                       103      43     216   64.4%   20.4%
+   3 dorpsgek                       29      40     216   54.2%   25.9%
+   4 Horizon_4_4                    14      42     216   52.1%   18.1%
+   5 zevra                         -18      39     216   47.5%   30.1%
+   6 asymptote                     -66      42     217   40.6%   20.3%
+   7 ct800_v1.11_x64               -75      44     216   39.4%   15.7%
+   8 weini1                       -103      45     216   35.6%   14.8%
+   9 rattatechess_nosferatu       -120      44     216   33.3%   18.5%
+  10 simplex                      -182      48     216   25.9%   13.9%
+  11 fairymax                     -338      55     216   12.5%   17.6%
+  12 tscp181                      -396      74     216    9.3%    7.4%
+
 
 ```
 
