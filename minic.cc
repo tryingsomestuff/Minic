@@ -31,7 +31,7 @@ typedef uint64_t u_int64_t;
 //#define IMPORTBOOK
 #define DEBUG_TOOL
 
-const std::string MinicVersion = "0.19";
+const std::string MinicVersion = "0.20";
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
@@ -1939,7 +1939,7 @@ ScoreType adjustHashScore(ScoreType score, DepthType ply){
 
 // pvs inspired by Xiphos
 ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove){
-    
+
     if ( stopFlag || std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()) > currentMoveMs ){
         stopFlag = true;
         return STOPSCORE;
@@ -1960,7 +1960,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     float gp = 0;
     if (!rootnode && isDraw(p, pvnode)) return 0;
     if (ply >= MAX_PLY - 1 || depth >= MAX_DEPTH - 1) return eval(p, gp);
-    
+
     TT::Entry e;
     if (skipMove==INVALIDMOVE && TT::getEntry(computeHash(p), depth, e)) { // if not skipmove
         if (e.h != 0 && !rootnode && std::abs(e.score) < MATE - MAX_DEPTH && !pvnode && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
