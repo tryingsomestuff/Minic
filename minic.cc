@@ -107,17 +107,9 @@ inline std::string showDate() {
     return str.str();
 }
 
-enum LogLevel : unsigned char{
-    logTrace = 0,
-    logDebug = 1,
-    logInfo  = 2,
-    logWarn  = 3,
-    logError = 4,
-    logFatal = 5,
-    logGUI   = 6
-};
+enum LogLevel : unsigned char{ logTrace = 0, logDebug = 1, logInfo  = 2, logWarn  = 3, logError = 4, logFatal = 5, logGUI   = 6};
 
-std::string backtrace(){return "@todo:: backtrace";} ///@todo
+std::string backtrace(){return "@todo:: backtrace";} ///@todo find a sinple portable implementation
 
 class LogIt{
 public:
@@ -133,9 +125,8 @@ public:
         std::lock_guard<std::mutex> lock(_mutex);
         if ( _level != logGUI) std::cout << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
         else std::cout << _buffer.str()  << std::flush << std::endl;
-        if (_level == logFatal) std::cout << backtrace() << std::endl;
+        if (_level == logFatal){ std::cout << backtrace() << std::endl; exit(1);}
         else if (_level == logError) std::cout << backtrace() << std::endl;
-        if ( _level == logFatal) exit(1);
     }
 
 private:
@@ -159,7 +150,7 @@ struct Stats{
         static std::mutex statsMutex;
         std::lock_guard<std::mutex> lock(statsMutex);
         LogIt(logInfo) << "Init stat" ;
-        nodes  = 0;  qnodes = 0;   tthits = 0;
+        nodes = qnodes = tthits = 0;
     }
 };
 
@@ -252,8 +243,7 @@ std::string showBitBoard(const BitBoard & b) {
     std::stringstream ss;
     ss ;
     for (int j = 7; j >= 0; --j) {
-        ss << "# +-+-+-+-+-+-+-+-+" << std::endl;
-        ss << "# |";
+        ss << "# +-+-+-+-+-+-+-+-+" << std::endl << "# |";
         for (int i = 0; i < 8; ++i) ss << (bs[i + j * 8] ? "X" : " ") << '|';
         ss << std::endl;
     }
@@ -456,14 +446,9 @@ bool getEntry(Hash h, DepthType d, Entry & e, int nbuck = 0) {
     assert(h > 0);
     if (nbuck >= Bucket::nbBucket) return false;
     const Entry & _e = table[h%ttSize].e[nbuck];
-    if ( _e.h != h ){
-        return getEntry(h,d,e,nbuck+1);
-    }
+    if ( _e.h != h ) return getEntry(h,d,e,nbuck+1);
     e = _e; // only if no collision is detected !
-    if ( _e.d >= d ){
-        ++stats.tthits;
-        return true;
-    }
+    if ( _e.d >= d ){ ++stats.tthits; return true; }
     return getEntry(h,d,e,nbuck+1);
 }
 
@@ -477,9 +462,7 @@ void setEntry(const Entry & e){
         //}
     }
     Entry & _eDepth = table[e.h%ttSize].e[Bucket::nbBucket-1];
-    if ( false && e.d >= _eDepth.d ) {
-        _eDepth = e; // replace if better depth
-    }
+    if ( false && e.d >= _eDepth.d ) _eDepth = e; // replace if better depth
 }
 
 struct EvalEntry {
@@ -499,7 +482,7 @@ void initETable() {
 }
 
 void clearETT() {
-    for (unsigned int k = 0; k < ttESize; ++k) evalTable[k] = { 0, 0., 0 };
+    for (unsigned int k = 0; k < ttESize; ++k) evalTable[k] = { 0, 0., 0ull };
 }
 
 bool getEvalEntry(Hash h, ScoreType & score, float & gp) {
@@ -536,7 +519,6 @@ const int SkipPhase[20] = { 0, 1, 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5
 // singleton pool of threads
 class ThreadPool : public std::vector<ThreadContext*> {
 public:
-
     static ThreadPool & instance();
     ~ThreadPool();
     void setup(unsigned int n);
@@ -583,7 +565,7 @@ struct ThreadContext{
     KillerT killerT;
     HistoryT historyT;
 
-    ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove = INVALIDMOVE);
+    ScoreType pvs    (ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove = INVALIDMOVE);
     ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
     bool SEE(const Position & p, const Move & m, ScoreType threshold)const;
     std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth);
@@ -622,9 +604,7 @@ struct ThreadContext{
     size_t id()const { return _index;}
     bool   isMainThread()const { return id() == 0 ; }
 
-    ThreadContext(size_t n):_index(n),_exit(false),_searching(true),_stdThread(&ThreadContext::idleLoop, this){
-        wait();
-    }
+    ThreadContext(size_t n):_index(n),_exit(false),_searching(true),_stdThread(&ThreadContext::idleLoop, this){ wait(); }
 
     ~ThreadContext(){
         _exit = true;
@@ -644,7 +624,7 @@ private:
     std::mutex              _mutex;
     static std::mutex       _mutexDisplay;
     std::condition_variable _cv;
-    // MUST be initialized BEFORE _stdThread (can be here to be sure ...)
+    // next two MUST be initialized BEFORE _stdThread (can be here to be sure ...)
     bool                    _exit;
     bool                    _searching;
     std::thread             _stdThread;
@@ -654,16 +634,10 @@ bool ThreadContext::stopFlag = false;
 
 std::atomic<bool> ThreadContext::startLock;
 
-ThreadPool & ThreadPool::instance(){
-    static ThreadPool pool;
-    return pool;
-}
+ThreadPool & ThreadPool::instance(){ static ThreadPool pool; return pool;}
 
 ThreadPool::~ThreadPool(){
-    while (size()) {
-        delete back();
-        pop_back();
-    }
+    while (size()) { delete back(); pop_back(); }
     LogIt(logInfo) << "... ok threadPool deleted";
 }
 
@@ -686,23 +660,16 @@ Move ThreadPool::searchSync(const ThreadData & d){
     main().search();
     ThreadContext::stopFlag = true;
     LogIt(logInfo) << "Wait for workers to finish" ;
-    for(auto s : *this){
-        if (!(*s).isMainThread()) (*s).wait();
-    }
+    for(auto s : *this) if (!(*s).isMainThread()) (*s).wait();
     LogIt(logInfo) << "...ok" ;
     return main().getData().best;
 }
 
 void ThreadPool::searchASync(const ThreadData & d){} ///@todo for pondering
 
-void ThreadPool::startOthers(){
-    for (auto s : *this)
-        if (!(*s).isMainThread()) (*s).start();
-}
+void ThreadPool::startOthers(){ for (auto s : *this) if (!(*s).isMainThread()) (*s).start();}
 
-ThreadPool::ThreadPool():stop(false){
-    push_back(new ThreadContext(size())); // this one will be called "Main" thread
-}
+ThreadPool::ThreadPool():stop(false){ push_back(new ThreadContext(size()));} // this one will be called "Main" thread
 
 ScoreType eval(const Position & p, float & gp); // forward decl
 
@@ -790,8 +757,7 @@ std::string ToString(const Position & p, bool noEval){
     std::stringstream ss;
     ss << std::endl;
     for (Square j = 7; j >= 0; --j) {
-        ss << "# +-+-+-+-+-+-+-+-+" << std::endl;
-        ss << "# |";
+        ss << "# +-+-+-+-+-+-+-+-+" << std::endl << "# |";
         for (Square i = 0; i < 8; ++i) ss << getName(p,i+j*8) << '|';
         ss << std::endl;
     }
@@ -811,92 +777,76 @@ std::string ToString(const Position & p, bool noEval){
 
 inline Color opponentColor(const Color c){ return Color((c+1)%2);}
 
-const int mailbox[120] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  0,  1,  2,  3,  4,  5,  6,  7, -1, -1,  8,  9, 10, 11, 12, 13, 14, 15, -1, -1, 16, 17, 18, 19, 20, 21, 22, 23, -1, -1, 24, 25, 26, 27, 28, 29, 30, 31, -1, -1, 32, 33, 34, 35, 36, 37, 38, 39, -1, -1, 40, 41, 42, 43, 44, 45, 46, 47, -1, -1, 48, 49, 50, 51, 52, 53, 54, 55, -1, -1, 56, 57, 58, 59, 60, 61, 62, 63, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
-
-const int mailbox64[64] = { 21, 22, 23, 24, 25, 26, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38, 41, 42, 43, 44, 45, 46, 47, 48, 51, 52, 53, 54, 55, 56, 57, 58, 61, 62, 63, 64, 65, 66, 67, 68, 71, 72, 73, 74, 75, 76, 77, 78, 81, 82, 83, 84, 85, 86, 87, 88, 91, 92, 93, 94, 95, 96, 97, 98};
-
-bool Slide[6] = {false, false, true, true, true, false};
-int Offsets[6] = {8, 8, 4, 4, 8, 8};
-int Offset[6][8] = { { -20, -10, -11, -9, 9, 11, 10, 20 }, { -21, -19, -12, -8, 8, 12, 19, 21 }, { -11,  -9,   9, 11, 0,  0,  0,  0 }, { -10,  -1,   1, 10, 0,  0,  0,  0 }, { -11, -10,  -9, -1, 1,  9, 10, 11 }, { -11, -10,  -9, -1, 1,  9, 10, 11 } };
-
 // from Rofchade
 const ScoreType PST[6][64] = {
-    {
-        //pawn
-        0,   0,   0,   0,   0,   0,  0,   0,
-        98, 134,  61,  95,  68, 126, 34, -11,
-        -6,   7,  26,  31,  65,  56, 25, -20,
+    {   //pawn
+          0,   0,   0,   0,   0,   0,  0,   0,
+         98, 134,  61,  95,  68, 126, 34, -11,
+         -6,   7,  26,  31,  65,  56, 25, -20,
         -14,  13,   6,  21,  23,  12, 17, -23,
         -27,  -2,  -5,  12,  17,   6, 10, -25,
         -26,  -4,  -4, -10,   3,   3, 33, -12,
         -35,  -1, -20, -23, -15,  24, 38, -22,
         0,   0,   0,   0,   0,   0,  0,   0
-    },{
-        //knight
+    },{ //knight
         -167, -89, -34, -49,  61, -97, -15, -107,
-        -73, -41,  72,  36,  23,  62,   7,  -17,
-        -47,  60,  37,  65,  84, 129,  73,   44,
-        -9,  17,  19,  53,  37,  69,  18,   22,
-        -13,   4,  16,  13,  28,  19,  21,   -8,
-        -23,  -9,  12,  10,  19,  17,  25,  -16,
-        -29, -53, -12,  -3,  -1,  18, -14,  -19,
+         -73, -41,  72,  36,  23,  62,   7,  -17,
+         -47,  60,  37,  65,  84, 129,  73,   44,
+          -9,  17,  19,  53,  37,  69,  18,   22,
+         -13,   4,  16,  13,  28,  19,  21,   -8,
+         -23,  -9,  12,  10,  19,  17,  25,  -16,
+         -29, -53, -12,  -3,  -1,  18, -14,  -19,
         -105, -21, -58, -33, -17, -28, -19,  -23
-    },{
-        //bishop
+    },{ //bishop
         -29,   4, -82, -37, -25, -42,   7,  -8,
         -26,  16, -18, -13,  30,  59,  18, -47,
         -16,  37,  43,  40,  35,  50,  37,  -2,
-        -4,   5,  19,  50,  37,  37,   7,  -2,
-        -6,  13,  13,  26,  34,  12,  10,   4,
-        0,  15,  15,  15,  14,  27,  18,  10,
-        4,  15,  16,   0,   7,  21,  33,   1,
+         -4,   5,  19,  50,  37,  37,   7,  -2,
+         -6,  13,  13,  26,  34,  12,  10,   4,
+          0,  15,  15,  15,  14,  27,  18,  10,
+          4,  15,  16,   0,   7,  21,  33,   1,
         -33,  -3, -14, -21, -13, -12, -39, -21
-    },{
-        //rook
-        32,  42,  32,  51, 63,  9,  31,  43,
-        27,  32,  58,  62, 80, 67,  26,  44,
-        -5,  19,  26,  36, 17, 45,  61,  16,
+    },{ //rook
+         32,  42,  32,  51, 63,  9,  31,  43,
+         27,  32,  58,  62, 80, 67,  26,  44,
+         -5,  19,  26,  36, 17, 45,  61,  16,
         -24, -11,   7,  26, 24, 35,  -8, -20,
         -36, -26, -12,  -1,  9, -7,   6, -23,
         -45, -25, -16, -17,  3,  0,  -5, -33,
         -44, -16, -20,  -9, -1, 11,  -6, -71,
         -19, -13,   1,  17, 16,  7, -37, -26
-    },{
-        //queen
+    },{ //queen
         -28,   0,  29,  12,  59,  44,  43,  45,
         -24, -39,  -5,   1, -16,  57,  28,  54,
         -13, -17,   7,   8,  29,  56,  47,  57,
         -27, -27, -16, -16,  -1,  17,  -2,   1,
-        -9, -26,  -9, -10,  -2,  -4,   3,  -3,
+         -9, -26,  -9, -10,  -2,  -4,   3,  -3,
         -14,   2, -11,  -2,  -5,   2,  14,   5,
         -35,  -8,  11,   2,   8,  15,  -3,   1,
-        -1, -18,  -9,  10, -15, -25, -31, -50
-    },{
-        //king
+         -1, -18,  -9,  10, -15, -25, -31, -50
+    },{ //king
         -65,  23,  16, -15, -56, -34,   2,  13,
-        29,  -1, -20,  -7,  -8,  -4, -38, -29,
-        -9,  24,   2, -16, -20,   6,  22, -22,
+         29,  -1, -20,  -7,  -8,  -4, -38, -29,
+         -9,  24,   2, -16, -20,   6,  22, -22,
         -17, -20, -12, -27, -30, -25, -14, -36,
         -49,  -1, -27, -39, -46, -44, -33, -51,
         -14, -14, -22, -46, -44, -30, -15, -27,
-        1,   7,  -8, -64, -43, -16,   9,   8,
+          1,   7,  -8, -64, -43, -16,   9,   8,
         -15,  36,  12, -54,   8, -28,  24,  14
     }
 };
 
 const ScoreType PSTEG[6][64] = {
-    {
-        //pawn
-        0,   0,   0,   0,   0,   0,   0,   0,
+    {   //pawn
+          0,   0,   0,   0,   0,   0,   0,   0,
         178, 173, 158, 134, 147, 132, 165, 187,
-        94, 100,  85,  67,  56,  53,  82,  84,
-        32,  24,  13,   5,  -2,   4,  17,  17,
-        13,   9,  -3,  -7,  -7,  -8,   3,  -1,
-        4,   7,  -6,   1,   0,  -5,  -1,  -8,
-        13,   8,   8,  10,  13,   0,   2,  -7,
-        0,   0,   0,   0,   0,   0,   0,   0
-    },{
-        //knight
+         94, 100,  85,  67,  56,  53,  82,  84,
+         32,  24,  13,   5,  -2,   4,  17,  17,
+         13,   9,  -3,  -7,  -7,  -8,   3,  -1,
+          4,   7,  -6,   1,   0,  -5,  -1,  -8,
+         13,   8,   8,  10,  13,   0,   2,  -7,
+          0,   0,   0,   0,   0,   0,   0,   0
+    },{ //knight
         -58, -38, -13, -28, -31, -27, -63, -99,
         -25,  -8, -25,  -2,  -9, -25, -24, -52,
         -24, -20,  10,   9,  -1,  -9, -19, -41,
@@ -905,48 +855,46 @@ const ScoreType PSTEG[6][64] = {
         -23,  -3,  -1,  15,  10,  -3, -20, -22,
         -42, -20, -10,  -5,  -2, -20, -23, -44,
         -29, -51, -23, -15, -22, -18, -50, -64
-    },{
-        //bishop
+    },{ //bishop
         -14, -21, -11,  -8, -7,  -9, -17, -24,
-        -8,  -4,   7, -12, -3, -13,  -4, -14,
-        2,  -8,   0,  -1, -2,   6,   0,   4,
-        -3,   9,  12,   9, 14,  10,   3,   2,
-        -6,   3,  13,  19,  7,  10,  -3,  -9,
+         -8,  -4,   7, -12, -3, -13,  -4, -14,
+          2,  -8,   0,  -1, -2,   6,   0,   4,
+         -3,   9,  12,   9, 14,  10,   3,   2,
+         -6,   3,  13,  19,  7,  10,  -3,  -9,
         -12,  -3,   8,  10, 13,   3,  -7, -15,
         -14, -18,  -7,  -1,  4,  -9, -15, -27,
         -23,  -9, -23,  -5, -9, -16,  -5, -17
-    },{
-        //rook
+    },{ //rook
         13, 10, 18, 15, 12,  12,   8,   5,
         11, 13, 13, 11, -3,   3,   8,   3,
-        7,  7,  7,  5,  4,  -3,  -5,  -3,
-        4,  3, 13,  1,  2,   1,  -1,   2,
-        3,  5,  8,  4, -5,  -6,  -8, -11,
+         7,  7,  7,  5,  4,  -3,  -5,  -3,
+         4,  3, 13,  1,  2,   1,  -1,   2,
+         3,  5,  8,  4, -5,  -6,  -8, -11,
         -4,  0, -5, -1, -7, -12,  -8, -16,
         -6, -6,  0,  2, -9,  -9, -11,  -3,
         -9,  2,  3, -1, -5, -13,   4, -20
-    },{
-        //queen
-        -9,  22,  22,  27,  27,  19,  10,  20,
+    },{ //queen
+         -9,  22,  22,  27,  27,  19,  10,  20,
         -17,  20,  32,  41,  58,  25,  30,   0,
         -20,   6,   9,  49,  47,  35,  19,   9,
-        3,  22,  24,  45,  57,  40,  57,  36,
+          3,  22,  24,  45,  57,  40,  57,  36,
         -18,  28,  19,  47,  31,  34,  39,  23,
         -16, -27,  15,   6,   9,  17,  10,   5,
         -22, -23, -30, -16, -16, -23, -36, -32,
         -33, -28, -22, -43,  -5, -32, -20, -41
-    },{
-        //king
+    },{ //king
         -74, -35, -18, -18, -11,  15,   4, -17,
         -12,  17,  14,  17,  17,  38,  23,  11,
-        10,  17,  23,  15,  20,  45,  44,  13,
-        -8,  22,  24,  27,  26,  33,  26,   3,
+         10,  17,  23,  15,  20,  45,  44,  13,
+         -8,  22,  24,  27,  26,  33,  26,   3,
         -18,  -4,  21,  24,  27,  23,   9, -11,
         -19,  -3,  11,  21,  23,  16,   7,  -9,
         -27, -11,   4,  13,  14,   4,  -5, -17,
         -53, -34, -21, -11, -28, -14, -24, -43
     }
 };
+
+template < typename T > T readFromString(const std::string & s){ std::stringstream ss(s); T tmp; ss >> tmp; return tmp;}
 
 bool readFEN(const std::string & fen, Position & p){
     std::vector<std::string> strList;
@@ -1023,21 +971,11 @@ bool readFEN(const std::string & fen, Position & p){
     else LogIt(logInfo) << "No en passant square given" ;
 
     // read 50 moves rules
-    if (strList.size() >= 5){
-        std::stringstream ss(strList[4]);
-        int tmp;
-        ss >> tmp;
-        p.fifty = tmp;
-    }
+    if (strList.size() >= 5) p.fifty = readFromString<unsigned char>(strList[4]);
     else p.fifty = 0;
 
     // read number of move
-    if (strList.size() >= 6){
-        std::stringstream ss(strList[5]);
-        int tmp;
-        ss >> tmp;
-        p.moves = tmp;
-    }
+    if (strList.size() >= 6) p.moves = readFromString<unsigned char>(strList[5]);
     else p.moves = 1;
 
     p.ply = (p.moves - 1) * 2 + 1 + p.c == Co_Black ? 1 : 0;
@@ -1122,10 +1060,7 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
                 else if ( prom == "R" || prom == "r") moveType = isCapture ? T_cappromr : T_promr;
                 else if ( prom == "B" || prom == "b") moveType = isCapture ? T_cappromb : T_promb;
                 else if ( prom == "N" || prom == "n") moveType = isCapture ? T_cappromn : T_promn;
-                else{
-                    LogIt(logFatal) << "Trying to read bad move, invalid to square " << str ;
-                    return false;
-                }
+                else{ LogIt(logFatal) << "Trying to read bad move, invalid to square " << str ; return false; }
             }
             else{
                 to = stringToSquare(strList[1]);
@@ -1176,7 +1111,7 @@ int GetNextMSecPerMove(const Position & p){
     }
     return ms;
 }
-}
+} // TimeMan
 
 inline void addMove(Square from, Square to, MType type, std::vector<Move> & moves){ assert( from >= 0 && from < 64); assert( to >=0 && to < 64); moves.push_back(ToMove(from,to,type,0));}
 
@@ -1224,9 +1159,7 @@ inline void initMask() {
         int f = x & 07;
         int r = x >> 3;
         for (int i = -1, c = 1, dp = 6; i <= 1; i += 2, c = 0, dp = 1) {
-            for (int j = -1; j <= 1; j += 2) {
-                if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) {  mask[x].pawnAttack[c] |= 1ull << ((r + i) * 8 + (f + j)); }
-            }
+            for (int j = -1; j <= 1; j += 2) if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) {  mask[x].pawnAttack[c] |= 1ull << ((r + i) * 8 + (f + j)); }
             if (0 <= r + i && r + i < 8) {
                 mask[x].push[c] = 1ull << ((r + i) * 8 + f);
                 if ( r == dp ) mask[x].dpush[c] = 1ull << ((r + 2*i) * 8 + f); // double push
@@ -1322,17 +1255,13 @@ bool getAttackers(const Position & p, const Square k, std::vector<Square> & atta
     while (attack) { attakers.push_back(popBit(attack)); }
     return !attakers.empty();
 }
-}
+} // BB
 
 inline bool isAttacked(const Position & p, const Square k) { return k!=INVALIDSQUARE && BB::isAttackedBB(p, k, p.c) != 0ull;}
 
 inline bool getAttackers(const Position & p, const Square k, std::vector<Square> & attakers) { return k!=INVALIDSQUARE && BB::getAttackers(p, k, attakers);}
 
-enum GenPhase{
-    GP_all   = 0,
-    GP_cap   = 1,
-    GP_quiet = 2
-};
+enum GenPhase{ GP_all   = 0, GP_cap   = 1, GP_quiet = 2};
 
 void generate(const Position & p, std::vector<Move> & moves, GenPhase phase = GP_all){
     moves.clear();
@@ -1419,7 +1348,6 @@ inline void movePiece(Position & p, Square from, Square to, Piece fromP, Piece t
     unSetBit(p, from, fromP);
     unSetBit(p, to,   toP); // usefull only if move is a capture
     setBit  (p, to,   toPnew);
-
     p.h ^= ZT[from][fromId]; // remove fromP at from
     if (isCapture) p.h ^= ZT[to][toId]; // if capture remove toP at to
     p.h ^= ZT[to][toIdnew]; // add fromP (or prom) at to
@@ -1496,7 +1424,7 @@ bool apply(Position & p, const Move & m){
         }
         break;
 
-    case T_ep:       {
+    case T_ep: {
         const Square epCapSq = p.ep + (p.c == Co_White ? -8 : +8);
         unSetBit(p, epCapSq); // BEFORE setting p.b new shape !!!
         unSetBit(p, from);
@@ -1773,7 +1701,6 @@ bool ThreadContext::isDraw(const Position & p, bool isPV)const{
         if (count >= limit) return true;
     }
     if ( p.fifty >= 100 ) return true;
-
     if (p.np == 0 ) {
         if (p.nwt + p.nbt == 0) return true;
         else if (p.nwm == 1 && p.nwM == 0 && p.nbt == 0) return true;
@@ -1788,7 +1715,6 @@ bool ThreadContext::isDraw(const Position & p, bool isPV)const{
     else { // some pawn are present
         ///@todo ... KPK
     }
-
     return false;
 }
 
@@ -1811,11 +1737,11 @@ ScoreType eval(const Position & p, float & gp){
     int pieceScore = 100 * (p.nq + p.nr + p.nb + p.nn) / 14;
     gp = (absscore*0.4f + pieceScore*0.3f + pawnScore*0.3f)/100.f;
     sc = (p.nwk - p.nbk) * ScoreType(gp*absValues[P_wk] + (1.f - gp)*absValuesEG[P_wk])
-            + (p.nwq - p.nbq) * ScoreType(gp*absValues[P_wq] + (1.f - gp)*absValuesEG[P_wq])
-            + (p.nwr - p.nbr) * ScoreType(gp*absValues[P_wr] + (1.f - gp)*absValuesEG[P_wr])
-            + (p.nwb - p.nbb) * ScoreType(gp*absValues[P_wb] + (1.f - gp)*absValuesEG[P_wb])
-            + (p.nwn - p.nbn) * ScoreType(gp*absValues[P_wn] + (1.f - gp)*absValuesEG[P_wn])
-            + (p.nwp - p.nbp) * ScoreType(gp*absValues[P_wp] + (1.f - gp)*absValuesEG[P_wp]);
+       + (p.nwq - p.nbq) * ScoreType(gp*absValues[P_wq] + (1.f - gp)*absValuesEG[P_wq])
+       + (p.nwr - p.nbr) * ScoreType(gp*absValues[P_wr] + (1.f - gp)*absValuesEG[P_wr])
+       + (p.nwb - p.nbb) * ScoreType(gp*absValues[P_wb] + (1.f - gp)*absValuesEG[P_wb])
+       + (p.nwn - p.nbn) * ScoreType(gp*absValues[P_wn] + (1.f - gp)*absValuesEG[P_wn])
+       + (p.nwp - p.nbp) * ScoreType(gp*absValues[P_wp] + (1.f - gp)*absValuesEG[P_wp]);
     const bool white2Play = p.c == Co_White;
     BitBoard pieceBBiterator = p.whitePiece;
     while (pieceBBiterator) {
@@ -1937,10 +1863,7 @@ ScoreType adjustHashScore(ScoreType score, DepthType ply){
 // pvs inspired by Xiphos
 ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove){
 
-    if ( stopFlag || std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()) > currentMoveMs ){
-        stopFlag = true;
-        return STOPSCORE;
-    }
+    if ( stopFlag || std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()) > currentMoveMs ){ stopFlag = true; return STOPSCORE; }
 
     if ((int)ply > seldepth) seldepth = ply;
 
@@ -1949,7 +1872,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     ++stats.nodes;
 
     alpha = std::max(alpha, (ScoreType)(-MATE + ply));
-    beta = std::min(beta, (ScoreType)(MATE - ply + 1));
+    beta  = std::min(beta,  (ScoreType)( MATE - ply + 1));
     if (alpha >= beta) return alpha;
 
     const bool rootnode = ply == 1;
@@ -2288,16 +2211,11 @@ void ponderUntilInput(){
 
 void stop(){ ThreadContext::stopFlag = true; }
 
-void stopPonder(){
-    if ((int)mode == (int)opponent(stm) && ponder == p_on && pondering) {
-        pondering = false;
-        stop();
-    }
-}
+void stopPonder(){ if ((int)mode == (int)opponent(stm) && ponder == p_on && pondering) { pondering = false; stop(); } }
 
 void xboard();
 
-}
+} // XBoard
 
 void XBoard::xboard(){
     LogIt(logInfo) << "Starting XBoard main loop" ;
@@ -2314,9 +2232,7 @@ void XBoard::xboard(){
         // move as computer if mode is equal to stm
         if((int)mode == (int)stm) { // mouarfff
             move = thinkUntilTimeUp();
-            if(move == INVALIDMOVE){ // game ends
-                mode = m_force;
-            }
+            if(move == INVALIDMOVE){ mode = m_force; }// game ends
             else{
                 if ( ! makeMove(move,true) ){
                     LogIt(logInfo) << "Bad computer move !" ;
@@ -2356,7 +2272,6 @@ void XBoard::xboard(){
             else if ( command == "new"){
                 stopPonder();
                 stop();
-
                 mode = (Mode)((int)stm); ///@todo should not be here !!! I thought start mode shall be analysis ...
                 readFEN(startPosition,position);
                 move = INVALIDMOVE;
@@ -2368,33 +2283,28 @@ void XBoard::xboard(){
             else if ( command == "white"){ // deprecated
                 stopPonder();
                 stop();
-
                 mode = m_play_black;
                 stm = stm_white;
             }
             else if ( command == "black"){ // deprecated
                 stopPonder();
                 stop();
-
                 mode = m_play_white;
                 stm = stm_black;
             }
             else if ( command == "go"){
                 stopPonder();
                 stop();
-
                 mode = (Mode)((int)stm);
             }
             else if ( command == "playother"){
                 stopPonder();
                 stop();
-
                 mode = (Mode)((int)opponent(stm));
             }
             else if ( strncmp(command.c_str(),"usermove",8) == 0){
                 stopPonder();
                 stop();
-
                 std::string mstr(command);
                 size_t p = command.find("usermove");
                 mstr = mstr.substr(p + 8);
@@ -2418,14 +2328,11 @@ void XBoard::xboard(){
                     LogIt(logInfo) << ToString(position) ;
                     mode = m_force;
                 }
-                else{
-                    stm = opponent(stm);
-                }
+                else stm = opponent(stm);
             }
             else if (  strncmp(command.c_str(),"setboard",8) == 0){
                 stopPonder();
                 stop();
-
                 std::string fen(command);
                 size_t p = command.find("setboard");
                 fen = fen.substr(p+8);
@@ -2508,9 +2415,7 @@ void XBoard::xboard(){
                 depth                             = 64; // infinity
             }
             else if ( command == "edit"){ }
-            else if ( command == "?"){
-                stop();
-            }
+            else if ( command == "?"){ stop(); }
             else if ( command == "draw")  { }
             else if ( command == "undo")  { }
             else if ( command == "remove"){ }
