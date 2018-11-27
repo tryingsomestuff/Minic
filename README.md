@@ -5,6 +5,10 @@ Initially, the code size was supposed not go above 2000sloc.
 Now that more features (especially SMP) has come up, I try to keep it under 2500sloc.
 Minic stands for "Minimal Chess".
 
+## Release
+
+Have a look in the Dist directory for releases. Some more stable/official ones will also be made available as github release.
+
 ## Strenght
 Quite poor for a chess engine (around 2300) but already way to strong for me !
 
