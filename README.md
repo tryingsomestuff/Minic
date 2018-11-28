@@ -63,4 +63,6 @@ Other available options are :
 * 0.16 : use bitboard for pawn move generation also
 * 0.17 : Minic goes SMP ! 
 * 0.18 : configuration file (json) and threads management
-* 0.19 : option from command line and fix a TT issue
+* 0.19 : option from command line and fix a TT issue  
+* 0.20 : clean up code, especially draw management  
+
