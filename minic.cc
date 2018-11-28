@@ -31,7 +31,7 @@ typedef uint64_t u_int64_t;
 //#define IMPORTBOOK
 #define DEBUG_TOOL
 
-const std::string MinicVersion = "0.20";
+const std::string MinicVersion = "0.21";
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
