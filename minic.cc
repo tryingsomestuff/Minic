@@ -1946,7 +1946,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 updatePV(pv, e.m, childPV);
                 if (ttval >= beta) {
                     //if (Move2Type(e.m) == T_std && !isInCheck) updateHistoryKillers(*this, p, depth, e.m);
-                    if ( skipMove==INVALIDMOVE) TT::setEntry({ e.m,ttval,TT::B_beta,depth,computeHash(p) });
+                    //if ( skipMove==INVALIDMOVE) TT::setEntry({ e.m,ttval,TT::B_beta,depth,computeHash(p) }); // this can only decrease depth ????
                     return ttval;
                 }
                 alphaUpdated = true;
