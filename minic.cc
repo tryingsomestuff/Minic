@@ -54,6 +54,7 @@ typedef uint64_t BitBoard;
 #define SQFILE(s) (s%8)
 #define SQRANK(s) (s/8)
 
+namespace StaticConfig{
 const bool doWindow         = true;
 const bool doPVS            = true;
 const bool doNullMove       = true;
@@ -75,16 +76,17 @@ const ScoreType futilityDepthCoeff       = 160;
 const int       iidMinDepth              = 5;
 const int       lmrMinDepth              = 3;
 const int       singularExtensionDepth   = 8;
+}
 
-int nbThreads = 1; // can be set from config file
-bool mateFinder = false; // can be set from config file
+namespace DynamicConfig{
+bool mateFinder = false;
+unsigned int ttSizeMb  = 512; // here in Mb, will be converted to real size next
+unsigned int ttESizeMb = 512; // here in Mb, will be converted to real size next
+}
 
-const int lmpLimit[][lmpMaxDepth + 1] = { { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 } , { 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };
+const int lmpLimit[][StaticConfig::lmpMaxDepth + 1] = { { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 } , { 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };
 
 int lmrReduction[MAX_DEPTH][MAX_MOVE];
-
-const unsigned int ttSizeMb  = 512; // here in Mb, will be converted to real size next
-const unsigned int ttESizeMb = 512; // here in Mb, will be converted to real size next
 
 std::string startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 std::string fine70        = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - -";
@@ -95,7 +97,6 @@ int currentMoveMs = 777; // a dummy initial value, useful for debug
 inline void hellooo(){ std::cout << "# This is Minic version " << MinicVersion << std::endl; }
 
 inline std::string showDate() {
-    using Clock = std::chrono::high_resolution_clock;
     std::stringstream str;
     auto time = Clock::now().time_since_epoch();
     auto msecEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(time);
@@ -156,8 +157,7 @@ struct Stats{
 
 Stats stats;
 
-enum Piece : char{ P_bk = -6,   P_bq = -5,   P_br = -4,   P_bb = -3,   P_bn = -2,   P_bp = -1,   P_none = 0,   P_wp = 1,    P_wn = 2,    P_wb = 3,    P_wr = 4,    P_wq = 5,    P_wk = 6 };
-
+enum Piece : char{ P_bk = -6, P_bq = -5, P_br = -4, P_bb = -3, P_bn = -2, P_bp = -1, P_none = 0, P_wp = 1, P_wn = 2, P_wb = 3, P_wr = 4, P_wq = 5, P_wk = 6 };
 const int PieceShift = 6;
 
 ScoreType   Values[13]    = { -8000, -1025, -477, -365, -337, -82, 0, 82, 337, 365, 477, 1025, 8000 };
@@ -165,13 +165,11 @@ ScoreType   ValuesEG[13]  = { -8000,  -936, -512, -297, -281, -94, 0, 94, 281, 2
 std::string Names[13]     = { "k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K" };
 
 std::string Squares[64] = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2", "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4", "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5", "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6", "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" };
-
 enum Sq : char { Sq_a1 =  0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1,Sq_a2,Sq_b2,Sq_c2,Sq_d2,Sq_e2,Sq_f2,Sq_g2,Sq_h2,Sq_a3,Sq_b3,Sq_c3,Sq_d3,Sq_e3,Sq_f3,Sq_g3,Sq_h3,Sq_a4,Sq_b4,Sq_c4,Sq_d4,Sq_e4,Sq_f4,Sq_g4,Sq_h4,Sq_a5,Sq_b5,Sq_c5,Sq_d5,Sq_e5,Sq_f5,Sq_g5,Sq_h5,Sq_a6,Sq_b6,Sq_c6,Sq_d6,Sq_e6,Sq_f6,Sq_g6,Sq_h6,Sq_a7,Sq_b7,Sq_c7,Sq_d7,Sq_e7,Sq_f7,Sq_g7,Sq_h7,Sq_a8,Sq_b8,Sq_c8,Sq_d8,Sq_e8,Sq_f8,Sq_g8,Sq_h8};
 
 enum Castling : char{ C_none= 0, C_wks = 1, C_wqs = 2, C_bks = 4, C_bqs = 8 };
 
 int MvvLvaScores[6][6];
-
 void initMvvLva(){
     LogIt(logInfo) << "Init mvv-lva" ;
     static ScoreType IValues[6] = { 1, 2, 3, 5, 9, 20 };
@@ -252,19 +250,19 @@ std::string showBitBoard(const BitBoard & b) {
 }
 
 struct Position{
-    Piece b[64];
-    BitBoard whitePawn,whiteKnight,whiteBishop,whiteRook,whiteQueen,whiteKing;
-    BitBoard blackPawn,blackKnight,blackBishop,blackRook,blackQueen,blackKing;
-    BitBoard whitePiece, blackPiece, occupancy;
+    Piece b[64] = {P_none};
+    BitBoard whitePawn=0ull,whiteKnight=0ull,whiteBishop=0ull,whiteRook=0ull,whiteQueen=0ull,whiteKing=0ull;
+    BitBoard blackPawn=0ull,blackKnight=0ull,blackBishop=0ull,blackRook=0ull,blackQueen=0ull,blackKing=0ull;
+    BitBoard whitePiece=0ull, blackPiece=0ull, occupancy=0ull;
 
-    unsigned char fifty;
-    unsigned char moves;
+    unsigned char fifty = 0;
+    unsigned char moves = 0;
     unsigned char ply; // this is not the "same" ply as the one used to get seldepth
-    unsigned int castling;
-    Square ep, wk, bk;
-    Color c;
-    mutable Hash h;
-    Move lastMove;
+    unsigned int castling = 0;
+    Square ep = INVALIDSQUARE, wk = INVALIDSQUARE, bk = INVALIDSQUARE;
+    Color c = Co_White;
+    mutable Hash h = 0ull;
+    Move lastMove = INVALIDMOVE;
 
     unsigned char nwk = 0; unsigned char nwq = 0; unsigned char nwr = 0; unsigned char nwb = 0; unsigned char nwn = 0; unsigned char nwp = 0;
     unsigned char nbk = 0; unsigned char nbq = 0; unsigned char nbr = 0; unsigned char nbb = 0; unsigned char nbn = 0; unsigned char nbp = 0;
@@ -431,7 +429,7 @@ static Bucket * table = 0;
 
 void initTable(){
     LogIt(logInfo) << "Init TT" ;
-    ttSize = powerFloor(ttSizeMb * 1024 * 1024 / (unsigned int)sizeof(Bucket));
+    ttSize = powerFloor(DynamicConfig::ttSizeMb * 1024 * 1024 / (unsigned int)sizeof(Bucket));
     table = new Bucket[ttSize];
     LogIt(logInfo) << "Size of TT " << ttSize * sizeof(Bucket) / 1024 / 1024 << "Mb" ;
 }
@@ -476,7 +474,7 @@ EvalEntry * evalTable = 0;
 
 void initETable() {
     LogIt(logInfo) << "Init eval TT" ;
-    ttESize = powerFloor(ttESizeMb * 1024 * 1024 / (unsigned int)sizeof(EvalEntry));
+    ttESize = powerFloor(DynamicConfig::ttESizeMb * 1024 * 1024 / (unsigned int)sizeof(EvalEntry));
     evalTable = new EvalEntry[ttESize];
     LogIt(logInfo) << "Size of ETT " << ttESize * sizeof(EvalEntry) / 1024 / 1024 << "Mb" ;
 }
@@ -1799,7 +1797,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         if ( Move2Score(*it) < -900) continue; // see
-        if ( doQFutility /*&& !isInCheck*/ && val + qfutilityMargin + std::abs(getValue(p,Move2To(*it))) <= alphaInit) continue;
+        if ( StaticConfig::doQFutility /*&& !isInCheck*/ && val + StaticConfig::qfutilityMargin + std::abs(getValue(p,Move2To(*it))) <= alphaInit) continue;
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
         if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply + 1;
@@ -1826,7 +1824,7 @@ inline void updateHistoryKillers(ThreadContext & context, const Position & p, De
 }
 
 inline bool singularExtension(ThreadContext & context, ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, const TT::Entry & e, const Move m, bool rootnode, int ply) {
-    if (depth >= singularExtensionDepth && sameMove(m, e.m) && !rootnode && std::abs(e.score) < MATE - MAX_DEPTH && e.b == TT::B_beta && e.d >= depth - 3) {
+    if (depth >= StaticConfig::singularExtensionDepth && sameMove(m, e.m) && !rootnode && std::abs(e.score) < MATE - MAX_DEPTH && e.b == TT::B_beta && e.d >= depth - 3) {
         const ScoreType betaC = e.score - depth;
         std::vector<Move> sePV;
         DepthType seSeldetph;
@@ -1881,21 +1879,21 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     bool futility = false, lmp = false;
 
     // prunings
-    if ( !mateFinder && !rootnode && gp > 0.2 && !pvnode && !isInCheck && std::abs(alpha) < MATE-MAX_DEPTH && std::abs(beta) < MATE-MAX_DEPTH ){
+    if ( !DynamicConfig::mateFinder && !rootnode && gp > 0.2 && !pvnode && !isInCheck && std::abs(alpha) < MATE-MAX_DEPTH && std::abs(beta) < MATE-MAX_DEPTH ){
 
         // static null move
-        if ( doStaticNullMove && depth <= staticNullMoveMaxDepth && val >= beta + staticNullMoveDepthCoeff *depth ) return val;
+        if ( StaticConfig::doStaticNullMove && depth <= StaticConfig::staticNullMoveMaxDepth && val >= beta + StaticConfig::staticNullMoveDepthCoeff *depth ) return val;
 
         // razoring
-        int rAlpha = alpha - razoringMargin;
-        if ( doRazoring && depth <= razoringMaxDepth && val <= rAlpha ){
+        int rAlpha = alpha - StaticConfig::razoringMargin;
+        if ( StaticConfig::doRazoring && depth <= StaticConfig::razoringMaxDepth && val <= rAlpha ){
             const ScoreType qval = qsearch(rAlpha,rAlpha+1,p,ply,seldepth);
             if ( ! stopFlag && qval <= alpha ) return qval;
             if ( stopFlag ) return STOPSCORE;
         }
 
         // null move
-        if ( doNullMove && pv.size() > 1 && depth >= nullMoveMinDepth && p.ep == INVALIDSQUARE && val >= beta){
+        if ( StaticConfig::doNullMove && pv.size() > 1 && depth >= StaticConfig::nullMoveMinDepth && p.ep == INVALIDSQUARE && val >= beta){
             Position pN = p;
             pN.c = opponentColor(pN.c);
             pN.h ^= ZT[3][13];
@@ -1908,14 +1906,14 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         }
 
         // LMP
-        if (doLMP && depth <= lmpMaxDepth) lmp = true;
+        if (StaticConfig::doLMP && depth <= StaticConfig::lmpMaxDepth) lmp = true;
 
         // futility
-        if (doFutility && val <= alpha - futilityDepthCoeff*depth ) futility = true;
+        if (StaticConfig::doFutility && val <= alpha - StaticConfig::futilityDepthCoeff*depth ) futility = true;
     }
 
     // IID
-    if ( (e.h == 0 /*|| e.d < depth/3*/) && pvnode && depth >= iidMinDepth){
+    if ( (e.h == 0 /*|| e.d < depth/3*/) && pvnode && depth >= StaticConfig::iidMinDepth){
         std::vector<Move> iidPV;
         pvs(alpha,beta,p,depth/2,pvnode,ply,iidPV,seldepth);
         if ( !stopFlag) TT::getEntry(computeHash(p), depth, e);
@@ -1977,7 +1975,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         // extensions
         int extension = 0;
         if (isInCheck && Move2Score(*it) > -100) ++extension;
-        if ( validMoveCount == 1 || !doPVS) val = -pvs(-beta,-alpha,p2,depth-1+extension,pvnode,ply+1,childPV,seldepth);
+        if ( validMoveCount == 1 || !StaticConfig::doPVS) val = -pvs(-beta,-alpha,p2,depth-1+extension,pvnode,ply+1,childPV,seldepth);
         else{
             // reductions & prunings
             int reduction = 0;
@@ -1991,7 +1989,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             // SEE
             if ( futility && Move2Score(*it) < -900 ) continue;
             // LMR
-            if ( doLMR && !mateFinder && depth >= lmrMinDepth && isPrunable && std::abs(alpha) < MATE-MAX_DEPTH && std::abs(beta) < MATE-MAX_DEPTH ) reduction = lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
+            if ( StaticConfig::doLMR && !DynamicConfig::mateFinder && depth >= StaticConfig::lmrMinDepth && isPrunable && std::abs(alpha) < MATE-MAX_DEPTH && std::abs(beta) < MATE-MAX_DEPTH ) reduction = lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
             if (pvnode && reduction > 0) --reduction;
             if (!improving) ++reduction;
             // PVS
@@ -2078,7 +2076,7 @@ std::vector<Move> ThreadContext::search(const Position & p, Move & m, DepthType 
             if (((depth + SkipPhase[i]) / SkipSize[i]) % 2) continue;
         }
         std::vector<Move> pvLoc;
-        ScoreType delta = (doWindow && depth>4)?25:MATE; // MATE not INFSCORE in order to enter the loop below once
+        ScoreType delta = (StaticConfig::doWindow && depth>4)?25:MATE; // MATE not INFSCORE in order to enter the loop below once
         ScoreType alpha = std::max(ScoreType(bestScore - delta), ScoreType (-INFSCORE));
         ScoreType beta  = std::min(ScoreType(bestScore + delta), INFSCORE);
         ScoreType score = 0;
@@ -2482,6 +2480,8 @@ int main(int argc, char ** argv){
     hellooo();
     initOptions(argc,argv);
     initHash();
+    DynamicConfig::ttSizeMb  = getOption<int>("ttSizeMb",128);
+    DynamicConfig::ttESizeMb = getOption<int>("ttESizeMb",128);
     TT::initTable();
     TT::initETable();
     stats.init();
@@ -2489,7 +2489,7 @@ int main(int argc, char ** argv){
     initMvvLva();
     BB::initMask();
     ThreadPool::instance().setup(std::min(std::max(getOption<int>("threads",1),1),64));
-    mateFinder = getOption<bool>("mateFinder");
+    DynamicConfig::mateFinder = getOption<bool>("mateFinder");
 
     if ( Book::fileExists("book.bin") ) {
         std::ifstream bbook("book.bin",std::ios::in | std::ios::binary);
