@@ -909,7 +909,7 @@ bool readFEN(const std::string & fen, Position & p){
     while ((j <= 64) && (i <= (char)strList[0].length())){
         char letter = strList[0].at(i);
         ++i;
-        Square k = (7 - (j - 1) / 8) * 8 + ((j - 1) % 8);
+        const Square k = (7 - (j - 1) / 8) * 8 + ((j - 1) % 8);
         switch (letter) {
         case 'p': p.b[k]= P_bp; break;
         case 'r': p.b[k]= P_br; break;
@@ -1104,7 +1104,7 @@ int GetNextMSecPerMove(const Position & p){
     else{ // mps is not given
         ///@todo something better using the real time command
         // sum(0.85/(40+3.5*(i-8)),i=1..200) = 0.95
-        int nmoves = int(40 + (p.moves-8)*3.5f); // let's start for a 40 moves and decrease time after that
+        const int nmoves = int(40 + (p.moves-8)*3.5f); // let's start for a 40 moves and decrease time after that
         ms = int(0.85 * (msecWholeGame+((msecInc>0)?p.moves*msecInc:0))/ (float)nmoves);
     }
     return ms;
@@ -1139,8 +1139,8 @@ inline void initMask() {
                     d[x][y] = (8 * i + j);
                     for (int z = x + d[x][y]; z != y; z += d[x][y]) mask[x].between[y] |= SquareToBitboard(z);
                 }
-                int r = x >> 3;
-                int f = x & 7;
+                const int r = x >> 3;
+                const int f = x & 7;
                 if ( 0 <= r+i && r+i < 8 && 0 <= f+j && f+j < 8) mask[x].kingZone |= SquareToBitboard(((x >> 3) + i)*8+(x & 7) + j);
             }
         }
@@ -1266,8 +1266,8 @@ void generate(const Position & p, std::vector<Move> & moves, GenPhase phase = GP
     moves.clear();
     const Color side = p.c;
     bool whiteToPlay = p.c == Co_White;
-    BitBoard myPieceBB  = ( whiteToPlay ? p.whitePiece : p.blackPiece);
-    BitBoard oppPieceBB = (!whiteToPlay ? p.whitePiece : p.blackPiece);
+    const BitBoard myPieceBB  = ( whiteToPlay ? p.whitePiece : p.blackPiece);
+    const BitBoard oppPieceBB = (!whiteToPlay ? p.whitePiece : p.blackPiece);
     BitBoard myPieceBBiterator = myPieceBB;
     while (myPieceBBiterator) {
         assert ( myPieceBBiterator != 0ull);
@@ -1328,10 +1328,7 @@ void generate(const Position & p, std::vector<Move> & moves, GenPhase phase = GP
                 }
             }
             if ( p.ep != INVALIDSQUARE && phase != GP_quiet ) pawnmoves |= BB::mask[from].pawnAttack[p.c] & ~myPieceBB & SquareToBitboard(p.ep);
-            while (pawnmoves) {
-                const Square to = BB::popBit(pawnmoves);
-                addMove(from,to,T_ep,moves);
-            }
+            while (pawnmoves) addMove(from,BB::popBit(pawnmoves),T_ep,moves);
         }
     }
 }
@@ -1351,10 +1348,11 @@ inline void movePiece(Position & p, Square from, Square to, Piece fromP, Piece t
     p.h ^= ZT[to][toIdnew]; // add fromP (or prom) at to
 }
 
+/*
 bool validate(const Position &p, const Move &m){
     if ( m == INVALIDMOVE ) return false;
-    BitBoard side = p.whitePiece;
-    BitBoard opponent = p.blackPiece;
+    const BitBoard side = p.whitePiece;
+    const BitBoard opponent = p.blackPiece;
     if ( p.c == Co_Black ) std::swap(side,opponent);
     const Square from = Move2From(m);
     if ( (SquareToBitboard(from) & side) == 0ull ) return false; // from piece is not ours
@@ -1367,6 +1365,7 @@ bool validate(const Position &p, const Move &m){
     if ( (SquareToBitboard(to) & bb) == 0ull ) return false; // to square is not reachable with this kind of piece, or there is something between from and to for sliders
     return true;
 }
+*/
 
 bool apply(Position & p, const Move & m){
 
@@ -1660,10 +1659,8 @@ struct MoveSorter{
         m = ToMove(from, to, t, s);
     }
 
-    bool operator()(const Move & a, const Move & b)const{
-        assert( a != INVALIDMOVE); assert( b != INVALIDMOVE);
-        return Move2Score(a) > Move2Score(b);
-    }
+    bool operator()(const Move & a, const Move & b)const{ assert( a != INVALIDMOVE); assert( b != INVALIDMOVE); return Move2Score(a) > Move2Score(b); }
+
     const Position & p;
     const TT::Entry * e;
     const ThreadContext & context;
@@ -1898,7 +1895,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             pN.c = opponentColor(pN.c);
             pN.h ^= ZT[3][13];
             pN.h ^= ZT[4][13];
-            int R = depth/4 + 3 + std::min((val-beta)/80,3); // adaptative
+            const int R = depth/4 + 3 + std::min((val-beta)/80,3); // adaptative
             std::vector<Move> nullPV;
             const ScoreType nullscore = -pvs(-beta,-beta+1,pN,depth-R,false,ply+1,nullPV,seldepth);
             if ( !stopFlag && nullscore >= beta ) return nullscore;
@@ -1936,7 +1933,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             int extension = 0;
             if (isInCheck) ++extension;
             //if (singularExtension(*this,alpha, beta, p, depth, e, e.m, rootnode, ply)) ++extension;
-            ScoreType ttval = -pvs(-beta, -alpha, p2, depth-1+extension, pvnode, ply + 1, childPV, seldepth);
+            const ScoreType ttval = -pvs(-beta, -alpha, p2, depth-1+extension, pvnode, ply + 1, childPV, seldepth);
             if (stopFlag) return STOPSCORE;
             bestScore = ttval;
             bestMove = e.m;
@@ -1957,7 +1954,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     generate(p,moves);
     if ( moves.empty() ) return isInCheck?-MATE + ply : 0;
     sort(*this,moves,p,&e);
-    bool improving = (!isInCheck && ply >= 2 && val >= scoreStack[p.ply - 2]);
+    const bool improving = (!isInCheck && ply >= 2 && val >= scoreStack[p.ply - 2]);
 
     TT::Bound hashBound = TT::B_alpha;
 
@@ -2165,7 +2162,7 @@ Move thinkUntilTimeUp(){
     LogIt(logInfo) << ToString(position) ;
     DepthType seldepth = 0;
     std::vector<Move> pv;
-    ThreadData d = {depth,seldepth/*dummy*/,score/*dummy*/,position,m/*dummy*/,pv/*dummy*/}; // only input coef
+    const ThreadData d = {depth,seldepth/*dummy*/,score/*dummy*/,position,m/*dummy*/,pv/*dummy*/}; // only input coef
     ThreadPool::instance().searchSync(d);
     m = ThreadPool::instance().main().getData().best; // here output results
     LogIt(logInfo) << "...done returning move " << ToString(m) ;
@@ -2185,7 +2182,7 @@ void ponderUntilInput(){
     depth = 64;
     DepthType seldepth = 0;
     std::vector<Move> pv;
-    ThreadData d = {depth,seldepth,score,position,m,pv};
+    const ThreadData d = {depth,seldepth,score,position,m,pv};
     ThreadPool::instance().searchASync(d);
 }
 
@@ -2299,7 +2296,7 @@ void XBoard::xboard(){
                 if ( mtype == T_std &&
                      from == (whiteToMove?Sq_e1:Sq_e8) &&
                      position.b[from] == (whiteToMove?P_wk:P_bk) ){
-                    if ( to == (whiteToMove?Sq_c1:Sq_c8)) m = ToMove(from,to,whiteToMove?T_wqs:T_bqs);
+                    if      ( to == (whiteToMove?Sq_c1:Sq_c8)) m = ToMove(from,to,whiteToMove?T_wqs:T_bqs);
                     else if ( to == (whiteToMove?Sq_g1:Sq_g8)) m = ToMove(from,to,whiteToMove?T_wks:T_bks);
                 }
                 if(!makeMove(m,false)){ // make move
