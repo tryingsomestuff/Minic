@@ -197,7 +197,7 @@ int debug(std::string cli, int argc, char ** argv){
     }
 
     if ( cli == "-mateFinder" ){
-        mateFinder = true;
+        DynamicConfig::mateFinder = true;
         DepthType depth = 5;
         if ( argc >= 3 ) depth = atoi(argv[3]);
         Move bestMove = INVALIDMOVE;
