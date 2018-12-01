@@ -164,6 +164,8 @@ ScoreType   Values[13]    = { -8000, -1025, -477, -365, -337, -82, 0, 82, 337, 3
 ScoreType   ValuesEG[13]  = { -8000,  -936, -512, -297, -281, -94, 0, 94, 281, 297, 512,  936, 8000 };
 std::string Names[13]     = { "k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K" };
 
+ScoreType   passerBonus[8]= { 0, 10, 20, 30, 40, 60, 80, 0};
+
 std::string Squares[64] = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2", "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4", "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5", "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6", "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" };
 enum Sq : char { Sq_a1 =  0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1,Sq_a2,Sq_b2,Sq_c2,Sq_d2,Sq_e2,Sq_f2,Sq_g2,Sq_h2,Sq_a3,Sq_b3,Sq_c3,Sq_d3,Sq_e3,Sq_f3,Sq_g3,Sq_h3,Sq_a4,Sq_b4,Sq_c4,Sq_d4,Sq_e4,Sq_f4,Sq_g4,Sq_h4,Sq_a5,Sq_b5,Sq_c5,Sq_d5,Sq_e5,Sq_f5,Sq_g5,Sq_h5,Sq_a6,Sq_b6,Sq_c6,Sq_d6,Sq_e6,Sq_f6,Sq_g6,Sq_h6,Sq_a7,Sq_b7,Sq_c7,Sq_d7,Sq_e7,Sq_f7,Sq_g7,Sq_h7,Sq_a8,Sq_b8,Sq_c8,Sq_d8,Sq_e8,Sq_f8,Sq_g8,Sq_h8};
 
@@ -1117,13 +1119,23 @@ Square kingSquare(const Position & p) { return (p.c == Co_White) ? p.wk : p.bk; 
 
 // HQ BB code from Amoeba
 namespace BB {
+inline BitBoard shiftSouth    (BitBoard bitBoard) { return bitBoard >> 8; }
+inline BitBoard shiftNorth    (BitBoard bitBoard) { return bitBoard << 8; }
+inline BitBoard shiftWest     (BitBoard bitBoard) { return bitBoard >> 1 & ~fileH; }
+inline BitBoard shiftEast     (BitBoard bitBoard) { return bitBoard << 1 & ~fileA; }
+inline BitBoard shiftNorthEast(BitBoard bitBoard) { return bitBoard << 9 & ~fileA; }
+inline BitBoard shiftNorthWest(BitBoard bitBoard) { return bitBoard << 7 & ~fileH; }
+inline BitBoard shiftSouthEast(BitBoard bitBoard) { return bitBoard >> 7 & ~fileA; }
+inline BitBoard shiftSouthWest(BitBoard bitBoard) { return bitBoard >> 9 & ~fileH; }
+
 int ranks[512];
 struct Mask {
     BitBoard diagonal, antidiagonal, file, kingZone;
     BitBoard pawnAttack[2], push[2], dpush[2]; // one for each colors
     BitBoard enpassant, knight, king;
     BitBoard between[64];
-    Mask() :diagonal(0ull), antidiagonal(0ull), file(0ull), kingZone(0ull), pawnAttack{ 0ull,0ull }, push{ 0ull,0ull }, dpush{ 0ull,0ull }, enpassant(0ull), knight(0ull), king(0ull), between{0ull} {}
+    BitBoard frontSpan[2], rearSpan[2], passerSpan[2], attackFrontSpan[2];
+    Mask():diagonal(0ull), antidiagonal(0ull), file(0ull), kingZone(0ull), pawnAttack{ 0ull,0ull }, push{ 0ull,0ull }, dpush{ 0ull,0ull }, enpassant(0ull), knight(0ull), king(0ull), between{0ull}, frontSpan{0ull}, rearSpan{0ull}, passerSpan{0ull}, attackFrontSpan{0ull}{}
 };
 Mask mask[64];
 
@@ -1181,6 +1193,33 @@ inline void initMask() {
                 if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) { mask[x].king |= SquareToBitboard(8 * (r + i) + (f + j)); }
             }
         }
+
+        BitBoard wspan = SquareToBitboard(x);
+        wspan |= wspan << 8;
+        wspan |= wspan << 16;
+        wspan |= wspan << 32;
+        wspan = shiftNorth(wspan);
+        BitBoard bspan = SquareToBitboard(x);
+        bspan |= bspan >> 8;
+        bspan |= bspan >> 16;
+        bspan |= bspan >> 32;
+        bspan = shiftSouth(bspan);
+
+        mask[x].frontSpan[Co_White] = mask[x].rearSpan[Co_Black] = wspan;
+        mask[x].frontSpan[Co_Black] = mask[x].rearSpan[Co_White] = bspan;
+
+        mask[x].passerSpan[Co_White] = wspan;
+        mask[x].passerSpan[Co_White] |= shiftWest(wspan);
+        mask[x].passerSpan[Co_White] |= shiftEast(wspan);
+        mask[x].passerSpan[Co_Black] = bspan;
+        mask[x].passerSpan[Co_Black] |= shiftWest(bspan);
+        mask[x].passerSpan[Co_Black] |= shiftEast(bspan);
+
+        mask[x].attackFrontSpan[Co_White] = shiftWest(wspan);
+        mask[x].attackFrontSpan[Co_White] |= shiftEast(wspan);
+        mask[x].attackFrontSpan[Co_Black] = shiftWest(bspan);
+        mask[x].attackFrontSpan[Co_Black] |= shiftEast(bspan);
+
     }
 
     for (Square o = 0; o < 64; ++o) {
@@ -1735,6 +1774,18 @@ ScoreType eval(const Position & p, float & gp){
     }
     // in very end game winning king must be near the other king
     if (gp < 0.2 && p.wk != INVALIDSQUARE && p.bk != INVALIDSQUARE) sc -= (sc>0?+1:-1)*manhattanDistance(p.wk, p.bk)*15;
+
+    // passer
+    pieceBBiterator = p.whitePawn;
+    while (pieceBBiterator) {
+        const Square k = BB::popBit(pieceBBiterator);
+        sc += ((BB::mask[k].passerSpan[Co_White] & p.blackPawn) == 0ull)?passerBonus[SQRANK(k)]:0;
+    }
+    pieceBBiterator = p.blackPawn;
+    while (pieceBBiterator) {
+        const Square k = BB::popBit(pieceBBiterator);
+        sc -= ((BB::mask[k].passerSpan[Co_Black] & p.whitePawn) == 0ull)?passerBonus[7-SQRANK(k)]:0;
+    }
 
     /*
     // king attack
