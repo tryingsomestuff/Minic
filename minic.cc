@@ -31,7 +31,7 @@ typedef uint64_t u_int64_t;
 //#define IMPORTBOOK
 #define DEBUG_TOOL
 
-const std::string MinicVersion = "0.21";
+const std::string MinicVersion = "0.22";
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
@@ -2023,7 +2023,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     }
 
     if ( validMoveCount==0 ) return (isInCheck || skipMove!=INVALIDMOVE)?-MATE + ply : 0;
-    if ( skipMove==INVALIDMOVE && alphaUpdated) TT::setEntry({bestMove,bestScore,hashBound,depth,computeHash(p)});
+    if ( skipMove==INVALIDMOVE && alphaUpdated ) TT::setEntry({bestMove,bestScore,hashBound,depth,computeHash(p)});
 
     return bestScore;
 }
@@ -2435,8 +2435,9 @@ template<> struct OptionValue<float> {
 };
 
 // from argv (override json)
-template<typename T> T getOptionCLI(const std::string & key, T defaultValue = OptionValue<T>().value){
-   auto it = std::find(args.begin(),args.end(),std::string("-")+key);
+template<typename T> T getOptionCLI(bool & found, const std::string & key, T defaultValue = OptionValue<T>().value){
+    found = false;
+    auto it = std::find(args.begin(),args.end(),std::string("-")+key);
     if (it == args.end()) {
         LogIt(logWarn) << "ARG key not given, " << key;
         return defaultValue;
@@ -2451,13 +2452,15 @@ template<typename T> T getOptionCLI(const std::string & key, T defaultValue = Op
     T ret = defaultValue;
     str >> ret;
     LogIt(logInfo) << "From ARG, " << key << " : " << ret;
+    found = true;
     return ret;
 }
 
 // from json
 template<typename T> T getOption(const std::string & key, T defaultValue = OptionValue<T>().value) {
-    const T cliValue = getOptionCLI(key,defaultValue);
-    if ( cliValue != defaultValue ) return cliValue;
+    bool found = false;
+    const T cliValue = getOptionCLI(found,key,defaultValue);
+    if ( found ) return cliValue;
     auto it = json.find(key);
     if (it == json.end()) {
         LogIt(logError) << "JSON key not given, " << key;
@@ -2488,7 +2491,7 @@ int main(int argc, char ** argv){
     ThreadPool::instance().setup(std::min(std::max(getOption<int>("threads",1),1),64));
     DynamicConfig::mateFinder = getOption<bool>("mateFinder");
 
-    if ( Book::fileExists("book.bin") ) {
+    if ( getOption<bool>("book") && Book::fileExists("book.bin") ) {
         std::ifstream bbook("book.bin",std::ios::in | std::ios::binary);
         Book::readBinaryBook(bbook);
     }

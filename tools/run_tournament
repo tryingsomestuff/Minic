@@ -6,6 +6,10 @@ engines=""
 
 engines="$engines -engine name=minic_dev cmd=$dir/Dist/minic_dev_linux_x64_see4.2 arg=-xboard dir=$dir"
 
+if [ -e "$dir/Dist/minic_test_linux_x64_see4.2" ]; then
+   engines="$engines -engine name=minic_test cmd=$dir/Dist/minic_test_linux_x64_see4.2 arg=-xboard dir=$dir"
+fi
+
 for i in `seq 1 30`; do
    if [ -e "$dir/Dist/minic_0.${i}_linux_x64_see4.2" ]; then
       engines="$engines -engine name=minic_${i} cmd=$dir/Dist/minic_0.${i}_linux_x64_see4.2 arg=-xboard dir=$dir"

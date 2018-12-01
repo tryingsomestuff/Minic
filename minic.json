@@ -2,5 +2,6 @@
    "threads": 1,
    "mateFinder": false,
    "ttSizeMb": 512,
-   "ttESizeMb": 512
+   "ttESizeMb": 512,
+   "book":true
 }
