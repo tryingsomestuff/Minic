@@ -80,6 +80,7 @@ const int       singularExtensionDepth   = 8;
 
 namespace DynamicConfig{
 bool mateFinder = false;
+bool disableTT = false;
 unsigned int ttSizeMb  = 512; // here in Mb, will be converted to real size next
 unsigned int ttESizeMb = 512; // here in Mb, will be converted to real size next
 }
@@ -111,6 +112,8 @@ inline std::string showDate() {
 enum LogLevel : unsigned char{ logTrace = 0, logDebug = 1, logInfo  = 2, logWarn  = 3, logError = 4, logFatal = 5, logGUI   = 6};
 
 std::string backtrace(){return "@todo:: backtrace";} ///@todo find a sinple portable implementation
+
+Square stringToSquare(const std::string & str){ return (str.at(1) - 49) * 8 + (str.at(0) - 97); }
 
 class LogIt{
 public:
@@ -165,6 +168,12 @@ ScoreType   ValuesEG[13]  = { -8000,  -936, -512, -297, -281, -94, 0, 94, 281, 2
 std::string Names[13]     = { "k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K" };
 
 ScoreType   passerBonus[8]= { 0, 10, 20, 30, 40, 60, 80, 0};
+ScoreType   adjKnight[9]  = { -20, -16, -12, -8, -4,  0,  4,  8, 12 };
+ScoreType   adjRook[9]    = {  15,  12,   9,  6,  3,  0, -3, -6, -9 };
+
+ScoreType   bishopPairBonus = 20;
+ScoreType   knightPairMalus = -8;
+ScoreType   rookPairMalus   = -16;
 
 std::string Squares[64] = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2", "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4", "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5", "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6", "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" };
 enum Sq : char { Sq_a1 =  0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1,Sq_a2,Sq_b2,Sq_c2,Sq_d2,Sq_e2,Sq_f2,Sq_g2,Sq_h2,Sq_a3,Sq_b3,Sq_c3,Sq_d3,Sq_e3,Sq_f3,Sq_g3,Sq_h3,Sq_a4,Sq_b4,Sq_c4,Sq_d4,Sq_e4,Sq_f4,Sq_g4,Sq_h4,Sq_a5,Sq_b5,Sq_c5,Sq_d5,Sq_e5,Sq_f5,Sq_g5,Sq_h5,Sq_a6,Sq_b6,Sq_c6,Sq_d6,Sq_e6,Sq_f6,Sq_g6,Sq_h6,Sq_a7,Sq_b7,Sq_c7,Sq_d7,Sq_e7,Sq_f7,Sq_g7,Sq_h7,Sq_a8,Sq_b8,Sq_c8,Sq_d8,Sq_e8,Sq_f8,Sq_g8,Sq_h8};
@@ -444,6 +453,7 @@ void clearTT() {
 
 bool getEntry(Hash h, DepthType d, Entry & e, int nbuck = 0) {
     assert(h > 0);
+    if ( DynamicConfig::disableTT ) return false;
     if (nbuck >= Bucket::nbBucket) return false;
     const Entry & _e = table[h%ttSize].e[nbuck];
     if ( _e.h != h ) return getEntry(h,d,e,nbuck+1);
@@ -454,6 +464,7 @@ bool getEntry(Hash h, DepthType d, Entry & e, int nbuck = 0) {
 
 void setEntry(const Entry & e){
     assert(e.h > 0);
+    if ( DynamicConfig::disableTT ) return;
     for (unsigned int i = 0 ; i < Bucket::nbBucket-1 ; ++i){
         Entry & _eAlways = table[e.h%ttSize].e[i];
         //if ( _eAlways.h != e.h ){ // always replace (if hash is not the same)
@@ -487,6 +498,7 @@ void clearETT() {
 
 bool getEvalEntry(Hash h, ScoreType & score, float & gp) {
     assert(h > 0);
+    if ( DynamicConfig::disableTT ) return false;
     const EvalEntry & _e = evalTable[h%ttESize];
     if (_e.h != h) return false;
     score = _e.score;
@@ -496,6 +508,7 @@ bool getEvalEntry(Hash h, ScoreType & score, float & gp) {
 
 void setEvalEntry(const EvalEntry & e) {
     assert(e.h > 0);
+    if ( DynamicConfig::disableTT ) return;
     evalTable[e.h%ttESize] = e; // always replace
 }
 
@@ -896,12 +909,12 @@ const ScoreType PSTEG[6][64] = {
 
 template < typename T > T readFromString(const std::string & s){ std::stringstream ss(s); T tmp; ss >> tmp; return tmp;}
 
-bool readFEN(const std::string & fen, Position & p){
+bool readFEN(const std::string & fen, Position & p, bool silent = false){
     std::vector<std::string> strList;
     std::stringstream iss(fen);
     std::copy(std::istream_iterator<std::string>(iss), std::istream_iterator<std::string>(), back_inserter(strList));
 
-    LogIt(logInfo) << "Reading fen " << fen ;
+    if ( !silent) LogIt(logInfo) << "Reading fen " << fen ;
 
     // reset position
     p.h = 0;
@@ -955,20 +968,22 @@ bool readFEN(const std::string & fen, Position & p){
         if (strList[2].find('Q') != std::string::npos){ p.castling |= C_wqs; found = true; }
         if (strList[2].find('k') != std::string::npos){ p.castling |= C_bks; found = true; }
         if (strList[2].find('q') != std::string::npos){ p.castling |= C_bqs; found = true; }
-        if ( ! found ){ LogIt(logWarn) << "No castling right given" ; }
+        if ( ! found ){ if ( !silent) LogIt(logWarn) << "No castling right given" ; }
     }
-    else LogIt(logInfo) << "No castling right given" ;
+    else if ( !silent) LogIt(logInfo) << "No castling right given" ;
 
     // read en passant and save it (default is invalid)
     p.ep = INVALIDSQUARE;
     if ((strList.size() >= 4) && strList[3] != "-" ){
         if (strList[3].length() >= 2){
-            if ((strList[3].at(0) >= 'a') && (strList[3].at(0) <= 'h') && ((strList[3].at(1) == '3') || (strList[3].at(1) == '6'))) p.ep = (strList[3].at(0)-97) + 8*(strList[3].at(1));
+            if ((strList[3].at(0) >= 'a') && (strList[3].at(0) <= 'h') && ((strList[3].at(1) == '3') || (strList[3].at(1) == '6'))) p.ep = stringToSquare(strList[3]);
             else { LogIt(logFatal) << "FEN ERROR 3-1 : bad en passant square : " << strList[3] ; return false; }
         }
         else{ LogIt(logFatal) << "FEN ERROR 3-2 : bad en passant square : " << strList[3] ; return false; }
     }
-    else LogIt(logInfo) << "No en passant square given" ;
+    else if ( !silent) LogIt(logInfo) << "No en passant square given" ;
+
+    assert(p.ep == INVALIDSQUARE || (SQRANK(p.ep) == 2 || SQRANK(p.ep) == 5));
 
     // read 50 moves rules
     if (strList.size() >= 5) p.fifty = readFromString<unsigned char>(strList[4]);
@@ -998,8 +1013,6 @@ void tokenize(const std::string& str, std::vector<std::string>& tokens, const st
         pos     = str.find_first_of(delimiters, lastPos);
     }
 }
-
-Square stringToSquare(const std::string & str){ return (str.at(1) - 49) * 8 + (str.at(0) - 97); }
 
 bool readMove(const Position & p, const std::string & ss, Square & from, Square & to, MType & moveType ) {
 
@@ -1377,6 +1390,8 @@ inline void movePiece(Position & p, Square from, Square to, Piece fromP, Piece t
     const int toId     = toP + PieceShift;
     const Piece toPnew = prom != P_none ? prom : fromP;
     const int toIdnew  = prom != P_none ? (prom + PieceShift) : fromId;
+    assert(from>=0 && from <64);
+    assert(to>=0 && to <64);
     p.b[from] = P_none;
     p.b[to]   = toPnew;
     unSetBit(p, from, fromP);
@@ -1461,7 +1476,10 @@ bool apply(Position & p, const Move & m){
         break;
 
     case T_ep: {
+        assert(p.ep != INVALIDSQUARE);
+        assert(SQRANK(p.ep) == 2 || SQRANK(p.ep) == 5);
         const Square epCapSq = p.ep + (p.c == Co_White ? -8 : +8);
+        assert(epCapSq>=0 && epCapSq<64);
         unSetBit(p, epCapSq); // BEFORE setting p.b new shape !!!
         unSetBit(p, from);
         setBit(p, to, fromP);
@@ -1553,6 +1571,7 @@ bool apply(Position & p, const Move & m){
     if (p.ep != INVALIDSQUARE) p.h ^= ZT[p.ep][13];
     p.ep = INVALIDSQUARE;
     if ( abs(fromP) == P_wp && abs(to-from) == 16 ) p.ep = (from + to)/2;
+    assert(p.ep == INVALIDSQUARE || (SQRANK(p.ep) == 2 || SQRANK(p.ep) == 5));
     if (p.ep != INVALIDSQUARE) p.h ^= ZT[p.ep][13];
 
     p.c = opponentColor(p.c);
@@ -1786,6 +1805,20 @@ ScoreType eval(const Position & p, float & gp){
         const Square k = BB::popBit(pieceBBiterator);
         sc -= ((BB::mask[k].passerSpan[Co_Black] & p.whitePawn) == 0ull)?passerBonus[7-SQRANK(k)]:0;
     }
+    // number of pawn and piece type
+    sc += p.nwr * adjRook  [p.nwp];
+    sc -= p.nbr * adjRook  [p.nbp];
+    sc += p.nwn * adjKnight[p.nwp];
+    sc -= p.nbn * adjKnight[p.nbp];
+
+    // bishop pair
+    sc += ( (p.nwb > 1 ? bishopPairBonus : 0)-(p.nbb > 1 ? bishopPairBonus : 0) );
+
+    // knight pair
+    sc += ( (p.nwn > 1 ? knightPairMalus : 0)-(p.nbn > 1 ? knightPairMalus : 0) );
+
+    // rook pair
+    sc += ( (p.nwr > 1 ? rookPairMalus   : 0)-(p.nbr > 1 ? rookPairMalus   : 0) );
 
     /*
     // king attack
@@ -2527,6 +2560,309 @@ template<typename T> T getOption(const std::string & key, T defaultValue = Optio
     }
 }
 
+namespace Texel {
+
+    struct TexelInput {
+        Position * p;
+        int result;
+    };
+
+    template < typename T >
+    struct TexelParam {
+    public:
+        TexelParam(T & accessor, const T& inf, const T& sup, const std::string & name, const std::function<void(const T&)> & hook = [](const T&){}) :accessor(&accessor), inf(inf), sup(sup), name(name), hook(hook) {}
+        T * accessor;
+        T inf;
+        T sup;
+        std::string name;
+        std::function<void(const T&)> hook;
+        T& operator()() { return *accessor; }
+        void Set(const T & value) { *accessor = std::min(std::max(inf,value),sup); hook(value); }
+    };
+
+    double K = 1.165;
+
+    double Sigmoid(Position * p) {
+        assert(p);
+        DepthType seldepth = 0;
+        //const double s = (p->c == Co_White ? 1:-1)*ThreadPool::instance().main().qsearch(-INFSCORE,INFSCORE,*p,0,seldepth);
+        float gp;
+        const double s = eval(*p,gp);
+        return 1. / (1. + std::pow(10, -K * s / 400.));
+    }
+
+    double E(const std::vector<Texel::TexelInput> &data, size_t miniBatchSize) {
+        double e = 0;
+        int goodW = 0;
+        int goodL = 0;
+        int badW = 0;
+        int badL = 0;
+        for (size_t k = 0; k < miniBatchSize; ++k) {
+           const double r = (data[k].result+1)*0.5;
+           const double s = Sigmoid(data[k].p);
+           e += std::pow(r - s,2);
+           if ( k % 10000 == 0) LogIt(logInfo) << "*";
+           //LogIt(logInfo) << r << " " << s;
+           /*
+           if ( r > 0.5 ){
+              if ( s > 0.5 ) goodW++;
+              else badW++;
+           }
+           else if (r < 0.5){
+              if ( s < 0.5 ) goodL++;
+              else badL++;
+           }
+           */
+        }
+        //LogIt(logInfo) << "goodW " << goodW;
+        //LogIt(logInfo) << "badW " << badW;
+        //LogIt(logInfo) << "goodL " << goodL;
+        //LogIt(logInfo) << "badL " << badL;
+        e /= miniBatchSize;
+        return e;
+    }
+
+    void Randomize(std::vector<Texel::TexelInput> & data, size_t miniBatchSize){ std::shuffle(data.begin(), data.end(), std::default_random_engine(0)); }
+
+    double computeOptimalK(const std::vector<Texel::TexelInput> & data) {
+       double Kstart = 0.05, Kend = 3.0, Kdelta = 0.15;
+       double thisError, bestError = 100;
+       for (int i = 0; i < 3; ++i) {
+          LogIt(logInfo) << "Computing K Iteration " << i;
+          K = Kstart - Kdelta;
+          while (K < Kend) {
+              LogIt(logInfo) << "...";
+              K += Kdelta;
+              thisError = E(data,data.size());
+              if (thisError <= bestError) {
+                 bestError = thisError, Kstart = K;
+                 LogIt(logInfo) << "new best K = " << K << " E = " << bestError;
+              }
+          }
+          LogIt(logInfo) << "iteration " << i << " K = " << Kstart << " E = " << bestError;
+          Kend = Kstart + Kdelta;
+          Kstart -= Kdelta;
+          Kdelta /= 10.0;
+      }
+      K = Kstart;
+      return Kstart;
+    }
+
+
+    std::vector<double> ComputeGradient(std::vector<TexelParam<ScoreType> > & x0, std::vector<Texel::TexelInput> &data, size_t gradientBatchSize, bool normalized = true) {
+        LogIt(logInfo) << "Computing gradient";
+        std::vector<double> g;
+        const ScoreType dx = 2;
+        for (size_t k = 0; k < x0.size(); ++k) {
+            LogIt(logInfo) << "... " << k;
+            double grad = 0;
+            const ScoreType oldvalue = x0[k]();
+            x0[k].Set(oldvalue + dx);
+            grad = E(data, gradientBatchSize);
+            x0[k].Set(oldvalue - dx);
+            grad -= E(data, gradientBatchSize);
+            x0[k].Set(oldvalue);
+            g.push_back(grad/(2*dx));
+            LogIt(logInfo) << "Gradient " << k << " " << grad;
+        }
+        if ( normalized){
+           double norm = 0;
+           for (size_t k = 0; k < x0.size(); ++k) norm += g[k] * g[k];
+           norm = sqrt(norm);
+           for (size_t k = 0; k < x0.size(); ++k) {
+              g[k] /= norm;
+              LogIt(logInfo) << "Gradient normalized " << k << " " << g[k];
+           }
+        }
+        return g;
+    }
+
+    std::vector<TexelParam<ScoreType> > TexelOptimizeSecante(const std::vector<TexelParam<ScoreType> >& initialGuess, std::vector<Texel::TexelInput> & data, size_t batchSize){
+
+        DynamicConfig::disableTT = true;
+
+        std::ofstream str("tuning.csv");
+        int it = 0;
+
+        Randomize(data, batchSize);
+
+        std::vector<TexelParam<ScoreType> > bestParam = initialGuess;
+
+        ScoreType dx = 2;
+
+        double curEim1 = E(data, batchSize);
+        while (true) {
+            std::vector<double> g_i = ComputeGradient(bestParam, data, batchSize, false);
+            double gmax = -1;
+            for (size_t k = 0; k < bestParam.size(); ++k) {
+                const ScoreType oldValue = bestParam[k]();
+                bestParam[k].Set(oldValue - dx);
+                gmax = std::max(gmax,std::fabs(g_i[k]));
+            }
+            LogIt(logInfo) << "gmax " << gmax;
+            if ( gmax < 1e-14 ) break;
+            std::vector<double> g_im1 = ComputeGradient(bestParam, data, batchSize, false);
+            for (size_t k = 0; k < bestParam.size(); ++k) {
+                const ScoreType oldValue = bestParam[k]();
+                bestParam[k].Set(oldValue + dx);
+            }
+
+            for (size_t k = 0; k < bestParam.size(); ++k) {
+                const ScoreType oldValue = bestParam[k]();
+                if ( std::fabs(g_i[k] - g_im1[k] >= 1e-16 )) bestParam[k].Set(oldValue - dx * g_i[k] / (g_i[k]-g_im1[k]));
+            }
+            LogIt(logInfo) << "Computing new error";
+            double curE = E(data, batchSize);
+            LogIt(logInfo) << "Current error " << curE << " best was : " << curEim1;
+            LogIt(logInfo) << "Current values :";
+            str << it << ";";
+            for (size_t k = 0; k < bestParam.size(); ++k) {
+               LogIt(logInfo) << bestParam[k].name << " " << bestParam[k]();
+               str << bestParam[k]() << ";";
+            }
+            str << curE << ";" << curEim1 << ";  ";
+            for (size_t k = 0; k < bestParam.size(); ++k) {
+               str << g_i[k] << ";" << g_im1[k] << ";  ";
+            }
+            str << std::endl;
+            curEim1 = curE;
+            // randomize for next iteration
+            Randomize(data, batchSize);
+            ++it;
+        }
+        return bestParam;
+    }
+
+    std::vector<TexelParam<ScoreType> > TexelOptimizeGD(const std::vector<TexelParam<ScoreType> >& initialGuess, std::vector<Texel::TexelInput> &data, size_t batchSize) {
+
+        DynamicConfig::disableTT = true;
+
+        std::ofstream str("tuning.csv");
+        int it = 0;
+
+        Randomize(data, batchSize);
+
+        std::vector<TexelParam<ScoreType> > bestParam = initialGuess;
+        bool improved = true;
+
+        while (improved) {
+            improved = false;
+            std::vector<double> g = ComputeGradient(bestParam, data, batchSize);
+
+            double alpha = 5; // line search param
+
+            LogIt(logInfo) << "Line search";
+
+            double curE = E(data, batchSize);
+            double bestELS = curE;
+            while (alpha >= 2) {
+                LogIt(logInfo) << "Applying gradient, alpha = " << alpha;
+                for (size_t k = 0; k < bestParam.size(); ++k) {
+                    const ScoreType oldValue = bestParam[k]();
+                    bestParam[k].Set(oldValue - ScoreType(alpha * g[k]));
+                }
+                LogIt(logInfo) << "Computing new error";
+                curE = E(data, batchSize);
+
+                LogIt(logInfo) << "LS : " << alpha << " " << curE << " best was : " << bestELS;
+
+                if (curE <= bestELS) {
+                    improved = true;
+                    break;
+                }
+                else {
+                    // reseting last iteration
+                    for (size_t k = 0; k < bestParam.size(); ++k) {
+                        const ScoreType oldValue = bestParam[k]();
+                        bestParam[k].Set(oldValue + ScoreType(alpha * g[k]));
+                    }
+                    //break;
+                }
+                alpha *= 0.8;
+            }
+
+            // randomize for next iteration
+            Randomize(data, batchSize);
+
+            str << it << ";";
+            for (size_t k = 0; k < bestParam.size(); ++k) {
+               LogIt(logInfo) << bestParam[k].name << " " << bestParam[k]();
+               str << bestParam[k]() << ";";
+            }
+            str << curE << ";" << bestELS << std::endl;
+
+            ++it;
+        }
+        return bestParam;
+    }
+
+
+}
+
+void TexelTuning(const std::string & filename) {
+    std::ifstream stream(filename);
+    std::string line;
+    std::vector<Texel::TexelInput> data;
+    LogIt(logInfo) << "Running texel tuning with file " << filename;
+    int count = 0;
+    while (std::getline(stream, line)){
+        nlohmann::json o;
+        try { o = nlohmann::json::parse(line); }
+        catch (...) { LogIt(logFatal) << "Cannot parse json " << line; }
+        std::string fen = o["fen"];
+        Position * p = new Position;
+        readFEN(fen,*p,true);
+        if (std::abs(o["result"].get<int>()) < 800) data.push_back({p, o["result"]});
+        ++count;
+        if (count % 10000 == 0) LogIt(logInfo) << count << " position read";
+    }
+
+    LogIt(logInfo) << "Data size : " << data.size();
+
+    size_t batchSize = data.size();
+    //size_t batchSize = 1024 * 32; ;
+    //size_t batchSize = 1; // stochastic
+
+    for(int k=0 ; k<13; ++k){Values[k] = 450; ValuesEG[k] = 450;}
+
+    std::vector<Texel::TexelParam<ScoreType> > guess;
+    guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wp+PieceShift], 20,  2000,   "pawn",     [](const ScoreType& s){Values[P_bp+PieceShift] = -s;}));
+    //guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wn+PieceShift], 20,  2000,   "knight",   [](const ScoreType& s){Values[P_bn+PieceShift] = -s;}));
+    //guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wb+PieceShift], 20,  2000,   "bishop",   [](const ScoreType& s){Values[P_bb+PieceShift] = -s;}));
+    //guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wr+PieceShift], 20,  2000,   "rook",     [](const ScoreType& s){Values[P_br+PieceShift] = -s;}));
+    //guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wq+PieceShift], 20,  2000,   "queen",    [](const ScoreType& s){Values[P_bq+PieceShift] = -s;}));
+    guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wp+PieceShift], 20,  2000, "EGpawn",   [](const ScoreType& s){ValuesEG[P_bp+PieceShift] = -s;}));
+    //guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wn+PieceShift], 20,  2000, "EGknight", [](const ScoreType& s){ValuesEG[P_bn+PieceShift] = -s;}));
+    //guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wb+PieceShift], 20,  2000, "EGbishop", [](const ScoreType& s){ValuesEG[P_bb+PieceShift] = -s;}));
+    //guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wr+PieceShift], 20,  2000, "EGrook",   [](const ScoreType& s){ValuesEG[P_br+PieceShift] = -s;}));
+    //guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wq+PieceShift], 20,  2000, "EGqueen",  [](const ScoreType& s){ValuesEG[P_bq+PieceShift] = -s;}));
+/*
+    guess.push_back(Texel::TexelParam<ScoreType>(bishopPairBonus, -50,  50,"bishop pair"));
+    guess.push_back(Texel::TexelParam<ScoreType>(knightPairMalus, -50,  50,"knight pair"));
+    guess.push_back(Texel::TexelParam<ScoreType>(rookPairMalus  , -50,  50,"rook pair"));
+    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[1], -150, 150,"passer 1"));
+    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[2], -150, 150,"passer 2"));
+    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[3], -150, 150,"passer 3"));
+    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[4], -150, 150,"passer 4"));
+    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[5], -150, 150,"passer 5"));
+    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[6], -150, 150,"passer 6"));
+*/
+
+    //computeOptimalK(data);
+
+    LogIt(logInfo) << "Optimal K " << Texel::K;
+
+    LogIt(logInfo) << "Initial values :";
+    for (size_t k = 0; k < guess.size(); ++k) LogIt(logInfo) << guess[k].name << " " << guess[k]();
+    std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeGD(guess, data, batchSize);
+    //std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeSecante(guess, data, batchSize);
+
+    LogIt(logInfo) << "Optimized values :";
+    for (size_t k = 0; k < optim.size(); ++k) LogIt(logInfo) << optim[k].name << " " << optim[k]();
+    for (size_t k = 0; k < data.size(); ++k) delete data[k].p;
+}
+
+
 int main(int argc, char ** argv){
     hellooo();
     initOptions(argc,argv);
@@ -2546,6 +2882,8 @@ int main(int argc, char ** argv){
         std::ifstream bbook("book.bin",std::ios::in | std::ios::binary);
         Book::readBinaryBook(bbook);
     }
+
+    if ( std::string(argv[1]) == "-texel" ) TexelTuning("tuning/Ethereal.fens.json");
 
 #ifdef DEBUG_TOOL
     if ( argc < 2 ) return 1;
