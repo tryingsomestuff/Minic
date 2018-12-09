@@ -29,9 +29,10 @@ typedef uint64_t u_int64_t;
 #include "json.hpp"
 
 //#define IMPORTBOOK
+//#define WITH_TEXEL_TUNING
 #define DEBUG_TOOL
 
-const std::string MinicVersion = "0.22";
+const std::string MinicVersion = "0.23";
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
@@ -163,17 +164,17 @@ Stats stats;
 enum Piece : char{ P_bk = -6, P_bq = -5, P_br = -4, P_bb = -3, P_bn = -2, P_bp = -1, P_none = 0, P_wp = 1, P_wn = 2, P_wb = 3, P_wr = 4, P_wq = 5, P_wk = 6 };
 const int PieceShift = 6;
 
-ScoreType   Values[13]    = { -8000, -1025, -477, -365, -337, -82, 0, 82, 337, 365, 477, 1025, 8000 };
-ScoreType   ValuesEG[13]  = { -8000,  -936, -512, -297, -281, -94, 0, 94, 281, 297, 512,  936, 8000 };
+ScoreType   Values[13]    = { -8000, -975, -500, -335, -325, -100, 0, 100, 325, 335, 500, 975, 8000 };
+ScoreType   ValuesEG[13]  = { -8000,-1025, -550, -280, -280, -100, 0, 100, 280, 280, 550,1025, 8000 };
 std::string Names[13]     = { "k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K" };
 
 ScoreType   passerBonus[8]= { 0, 10, 20, 30, 40, 60, 80, 0};
-ScoreType   adjKnight[9]  = { -20, -16, -12, -8, -4,  0,  4,  8, 12 };
-ScoreType   adjRook[9]    = {  15,  12,   9,  6,  3,  0, -3, -6, -9 };
+ScoreType   adjKnight[9]  = { -24, -18, -12, -6,  0,  6,  12, 18, 24 };
+ScoreType   adjRook[9]    = {  48,  36,  24, 12,  0,-12, -24,-36,-48 };
 
-ScoreType   bishopPairBonus = 20;
-ScoreType   knightPairMalus = -8;
-ScoreType   rookPairMalus   = -16;
+ScoreType   bishopPairBonus =  50;
+ScoreType   knightPairMalus = -16;
+ScoreType   rookPairMalus   = -32;
 
 std::string Squares[64] = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2", "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4", "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5", "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6", "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" };
 enum Sq : char { Sq_a1 =  0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1,Sq_a2,Sq_b2,Sq_c2,Sq_d2,Sq_e2,Sq_f2,Sq_g2,Sq_h2,Sq_a3,Sq_b3,Sq_c3,Sq_d3,Sq_e3,Sq_f3,Sq_g3,Sq_h3,Sq_a4,Sq_b4,Sq_c4,Sq_d4,Sq_e4,Sq_f4,Sq_g4,Sq_h4,Sq_a5,Sq_b5,Sq_c5,Sq_d5,Sq_e5,Sq_f5,Sq_g5,Sq_h5,Sq_a6,Sq_b6,Sq_c6,Sq_d6,Sq_e6,Sq_f6,Sq_g6,Sq_h6,Sq_a7,Sq_b7,Sq_c7,Sq_d7,Sq_e7,Sq_f7,Sq_g7,Sq_h7,Sq_a8,Sq_b8,Sq_c8,Sq_d8,Sq_e8,Sq_f8,Sq_g8,Sq_h8};
@@ -793,117 +794,117 @@ inline Color opponentColor(const Color c){ return Color((c+1)%2);}
 // from Rofchade
 const ScoreType PST[6][64] = {
     {   //pawn
-          0,   0,   0,   0,   0,   0,  0,   0,
-         98, 134,  61,  95,  68, 126, 34, -11,
-         -6,   7,  26,  31,  65,  56, 25, -20,
-        -14,  13,   6,  21,  23,  12, 17, -23,
-        -27,  -2,  -5,  12,  17,   6, 10, -25,
-        -26,  -4,  -4, -10,   3,   3, 33, -12,
-        -35,  -1, -20, -23, -15,  24, 38, -22,
-        0,   0,   0,   0,   0,   0,  0,   0
+           0,   0,   0,   0,   0,   0,   0,   0,
+          83, 119,  46,  80,  53, 111,  19, -26,
+         -21,  -8,  11,  16,  50,  41,  10, -35,
+         -29,  -2,  -9,   6,   8,  -3,   2, -38,
+         -42, -17, -20,  -3,   2,  -9,  -5, -40,
+         -41, -19, -19, -25, -12, -12,  18, -27,
+         -50, -16, -35, -38, -30,   9,  23, -37,
+           0,   0,   0,   0,   0,   0,   0,   0
     },{ //knight
-        -167, -89, -34, -49,  61, -97, -15, -107,
-         -73, -41,  72,  36,  23,  62,   7,  -17,
-         -47,  60,  37,  65,  84, 129,  73,   44,
-          -9,  17,  19,  53,  37,  69,  18,   22,
-         -13,   4,  16,  13,  28,  19,  21,   -8,
-         -23,  -9,  12,  10,  19,  17,  25,  -16,
-         -29, -53, -12,  -3,  -1,  18, -14,  -19,
-        -105, -21, -58, -33, -17, -28, -19,  -23
+        -167, -89, -34, -49,  61, -97, -15,-107,
+         -73, -41,  72,  36,  23,  62,   7, -17,
+         -47,  60,  37,  65,  84, 129,  73,  44,
+          -9,  17,  19,  53,  37,  69,  18,  22,
+         -13,   4,  16,  13,  28,  19,  21,  -8,
+         -23,  -9,  12,  10,  19,  17,  25, -16,
+         -29, -53, -12,  -3,  -1,  18, -14, -19,
+        -105, -21, -58, -33, -17, -28, -19, -23
     },{ //bishop
-        -29,   4, -82, -37, -25, -42,   7,  -8,
-        -26,  16, -18, -13,  30,  59,  18, -47,
-        -16,  37,  43,  40,  35,  50,  37,  -2,
-         -4,   5,  19,  50,  37,  37,   7,  -2,
-         -6,  13,  13,  26,  34,  12,  10,   4,
-          0,  15,  15,  15,  14,  27,  18,  10,
-          4,  15,  16,   0,   7,  21,  33,   1,
-        -33,  -3, -14, -21, -13, -12, -39, -21
+         -34,  -1, -87, -42, -30, -47,   2, -13,
+         -31,  11, -23, -18,  25,  54,  13, -52,
+         -21,  32,  38,  35,  30,  45,  32,  -7,
+          -9,   0,  14,  45,  32,  32,   2,  -7,
+         -11,   8,   8,  21,  29,   7,   5,  -1,
+          -5,  10,  10,  10,   9,  22,  13,   5,
+          -1,  10,  11,  -5,   2,  16,  28,  -4,
+         -38,  -8, -19, -26, -18, -17, -44, -26
     },{ //rook
-         32,  42,  32,  51, 63,  9,  31,  43,
-         27,  32,  58,  62, 80, 67,  26,  44,
-         -5,  19,  26,  36, 17, 45,  61,  16,
-        -24, -11,   7,  26, 24, 35,  -8, -20,
-        -36, -26, -12,  -1,  9, -7,   6, -23,
-        -45, -25, -16, -17,  3,  0,  -5, -33,
-        -44, -16, -20,  -9, -1, 11,  -6, -71,
-        -19, -13,   1,  17, 16,  7, -37, -26
+          25,  35,  25,  44,  56,   2,  24,  36,
+          20,  25,  51,  55,  73,  60,  19,  37,
+         -12,  12,  19,  29,  10,  38,  54,   9,
+         -31, -18,   0,  19,  17,  28, -15, -27,
+         -43, -33, -19,  -8,   2, -14,  -1, -30,
+         -52, -32, -23, -24,  -4,  -7, -12, -40,
+         -51, -23, -27, -16,  -8,   4, -13, -78,
+         -26, -20,  -6,  10,   9,   0, -44, -33
     },{ //queen
-        -28,   0,  29,  12,  59,  44,  43,  45,
-        -24, -39,  -5,   1, -16,  57,  28,  54,
-        -13, -17,   7,   8,  29,  56,  47,  57,
-        -27, -27, -16, -16,  -1,  17,  -2,   1,
-         -9, -26,  -9, -10,  -2,  -4,   3,  -3,
-        -14,   2, -11,  -2,  -5,   2,  14,   5,
-        -35,  -8,  11,   2,   8,  15,  -3,   1,
-         -1, -18,  -9,  10, -15, -25, -31, -50
+         -30,  -2,  27,  10,  57,  42,  41,  43,
+         -26, -41,  -7,  -1, -18,  55,  26,  52,
+         -15, -19,   5,   6,  27,  54,  45,  55,
+         -29, -29, -18, -18,  -3,  15,  -4,  -1,
+         -11, -28, -11, -12,  -4,  -6,   1,  -5,
+         -16,   0, -13,  -4,  -7,   0,  12,   3,
+         -37, -10,   9,   0,   6,  13,  -5,  -1,
+          -3, -20, -11,   8, -17, -27, -33, -52
     },{ //king
-        -65,  23,  16, -15, -56, -34,   2,  13,
-         29,  -1, -20,  -7,  -8,  -4, -38, -29,
-         -9,  24,   2, -16, -20,   6,  22, -22,
-        -17, -20, -12, -27, -30, -25, -14, -36,
-        -49,  -1, -27, -39, -46, -44, -33, -51,
-        -14, -14, -22, -46, -44, -30, -15, -27,
-          1,   7,  -8, -64, -43, -16,   9,   8,
-        -15,  36,  12, -54,   8, -28,  24,  14
+         -50,  38,  31,   0, -41, -19,  17,  28,
+          44,  14,  -5,   8,   7,  11, -23, -14,
+           6,  39,  17,  -1,  -5,  21,  37,  -7,
+          -2,  -5,   3, -12, -15, -10,   1, -21,
+         -34,  14, -12, -24, -31, -29, -18, -36,
+           1,   1,  -7, -31, -29, -15,   0, -12,
+          16,  22,   7, -49, -28,  -1,  24,  23,
+           0,  51,  27, -39,  23, -13,  39,  29
     }
 };
 
 const ScoreType PSTEG[6][64] = {
     {   //pawn
-          0,   0,   0,   0,   0,   0,   0,   0,
-        178, 173, 158, 134, 147, 132, 165, 187,
-         94, 100,  85,  67,  56,  53,  82,  84,
-         32,  24,  13,   5,  -2,   4,  17,  17,
-         13,   9,  -3,  -7,  -7,  -8,   3,  -1,
-          4,   7,  -6,   1,   0,  -5,  -1,  -8,
-         13,   8,   8,  10,  13,   0,   2,  -7,
-          0,   0,   0,   0,   0,   0,   0,   0
+           0,   0,   0,   0,   0,   0,   0,   0,
+         136, 131, 116,  92, 105,  90, 123, 145,
+          52,  58,  43,  25,  14,  11,  40,  42,
+         -10, -18, -29, -37, -44, -38, -25, -25,
+         -29, -33, -45, -49, -49, -50, -39, -43,
+         -38, -35, -48, -41, -42, -47, -43, -50,
+         -29, -34, -34, -32, -29, -42, -40, -49,
+           0,   0,   0,   0,   0,   0,   0,   0
     },{ //knight
-        -58, -38, -13, -28, -31, -27, -63, -99,
-        -25,  -8, -25,  -2,  -9, -25, -24, -52,
-        -24, -20,  10,   9,  -1,  -9, -19, -41,
-        -17,   3,  22,  22,  22,  11,   8, -18,
-        -18,  -6,  16,  25,  16,  17,   4, -18,
-        -23,  -3,  -1,  15,  10,  -3, -20, -22,
-        -42, -20, -10,  -5,  -2, -20, -23, -44,
-        -29, -51, -23, -15, -22, -18, -50, -64
+         -43, -23,   2, -13, -16, -12, -48, -84,
+         -10,   7, -10,  13,   6, -10,  -9, -37,
+          -9,  -5,  25,  24,  14,   6,  -4, -26,
+          -2,  18,  37,  37,  37,  26,  23,  -3,
+          -3,   9,  31,  40,  31,  32,  19,  -3,
+          -8,  12,  14,  30,  25,  12,  -5,  -7,
+         -27,  -5,   5,  10,  13,  -5,  -8, -29,
+         -14, -36,  -8,   0,  -7,  -3, -35, -49
     },{ //bishop
-        -14, -21, -11,  -8, -7,  -9, -17, -24,
-         -8,  -4,   7, -12, -3, -13,  -4, -14,
-          2,  -8,   0,  -1, -2,   6,   0,   4,
-         -3,   9,  12,   9, 14,  10,   3,   2,
-         -6,   3,  13,  19,  7,  10,  -3,  -9,
-        -12,  -3,   8,  10, 13,   3,  -7, -15,
-        -14, -18,  -7,  -1,  4,  -9, -15, -27,
-        -23,  -9, -23,  -5, -9, -16,  -5, -17
+         -10, -17,  -7,  -4,  -3,  -5, -13, -20,
+          -4,   0,  11,  -8,   1,  -9,   0, -10,
+           6,  -4,   4,   3,   2,  10,   4,   8,
+           1,  13,  16,  13,  18,  14,   7,   6,
+          -2,   7,  17,  23,  11,  14,   1,  -5,
+          -8,   1,  12,  14,  17,   7,  -3, -11,
+         -10, -14,  -3,   3,   8,  -5, -11, -23,
+         -19,  -5, -19,  -1,  -5,  -12, -1, -13
     },{ //rook
-        13, 10, 18, 15, 12,  12,   8,   5,
-        11, 13, 13, 11, -3,   3,   8,   3,
-         7,  7,  7,  5,  4,  -3,  -5,  -3,
-         4,  3, 13,  1,  2,   1,  -1,   2,
-         3,  5,  8,  4, -5,  -6,  -8, -11,
-        -4,  0, -5, -1, -7, -12,  -8, -16,
-        -6, -6,  0,  2, -9,  -9, -11,  -3,
-        -9,  2,  3, -1, -5, -13,   4, -20
+          13,  10,  18,  15,  12,  12,   8,   5,
+          11,  13,  13,  11,  -3,   3,   8,   3,
+           7,   7,   7,   5,   4,  -3,  -5,  -3,
+           4,   3,  13,   1,   2,   1,  -1,   2,
+           3,   5,   8,   4,  -5,  -6,  -8, -11,
+          -4,   0,  -5,  -1,  -7, -12,  -8, -16,
+          -6,  -6,   0,   2,  -9,  -9, -11,  -3,
+          -9,   2,   3,  -1,  -5, -13,   4, -20
     },{ //queen
-         -9,  22,  22,  27,  27,  19,  10,  20,
-        -17,  20,  32,  41,  58,  25,  30,   0,
-        -20,   6,   9,  49,  47,  35,  19,   9,
-          3,  22,  24,  45,  57,  40,  57,  36,
-        -18,  28,  19,  47,  31,  34,  39,  23,
-        -16, -27,  15,   6,   9,  17,  10,   5,
-        -22, -23, -30, -16, -16, -23, -36, -32,
-        -33, -28, -22, -43,  -5, -32, -20, -41
+         -17,  14,  14,  19,  19,  11,   2,  12,
+         -25,  12,  24,  33,  50,  17,  22,  -8,
+         -28,  -2,   1,  41,  39,  27,  11,   1,
+          -5,  14,  16,  37,  49,  32,  49,  28,
+         -26,  20,  11,  39,  23,  26,  31,  15,
+         -24, -35,   7,  -2,   1,   9,   2,  -3,
+         -30, -31, -38, -24, -24, -31, -44, -40,
+         -41, -36, -30, -51, -13, -40, -28, -49
     },{ //king
-        -74, -35, -18, -18, -11,  15,   4, -17,
-        -12,  17,  14,  17,  17,  38,  23,  11,
-         10,  17,  23,  15,  20,  45,  44,  13,
-         -8,  22,  24,  27,  26,  33,  26,   3,
-        -18,  -4,  21,  24,  27,  23,   9, -11,
-        -19,  -3,  11,  21,  23,  16,   7,  -9,
-        -27, -11,   4,  13,  14,   4,  -5, -17,
-        -53, -34, -21, -11, -28, -14, -24, -43
+         -76, -37, -20, -20, -13,  13,   2, -19,
+         -14,  15,  12,  15,  15,  36,  21,   9,
+           8,  15,  21,  13,  18,  43,  42,  11,
+         -10,  20,  22,  25,  24,  31,  24,   1,
+         -20,  -6,  19,  22,  25,  21,   7, -13,
+         -21,  -5,   9,  19,  21,  14,   5, -11,
+         -29, -13,   2,  11,  12,   2,  -7, -19,
+         -55, -36, -23, -13, -30, -16, -26, -45
     }
 };
 
@@ -1764,19 +1765,20 @@ ScoreType eval(const Position & p, float & gp){
     ScoreType sc = 0;
     if (TT::getEvalEntry(computeHash(p), sc, gp)) return sc;
 
-    static const int absValues[7]   = { 0, Values[P_wp + PieceShift], Values[P_wn + PieceShift], Values[P_wb + PieceShift], Values[P_wr + PieceShift], Values[P_wq + PieceShift], Values[P_wk + PieceShift] };
-    static const int absValuesEG[7] = { 0, ValuesEG[P_wp + PieceShift], ValuesEG[P_wn + PieceShift], ValuesEG[P_wb + PieceShift], ValuesEG[P_wr + PieceShift], ValuesEG[P_wq + PieceShift], ValuesEG[P_wk + PieceShift] };
-    int absscore = (p.nwk+p.nbk) * absValues[P_wk] + (p.nwq+p.nbq) * absValues[P_wq] + (p.nwr+p.nbr) * absValues[P_wr] + (p.nwb+p.nbb) * absValues[P_wb] + (p.nwn+p.nbn) * absValues[P_wn] + (p.nwp+p.nbp) * absValues[P_wp];
+    static ScoreType dummyScore = 0;
+    static ScoreType *absValues[7]   = { &dummyScore, &Values[P_wp + PieceShift], &Values[P_wn + PieceShift], &Values[P_wb + PieceShift], &Values[P_wr + PieceShift], &Values[P_wq + PieceShift], &Values[P_wk + PieceShift] };
+    static ScoreType *absValuesEG[7] = { &dummyScore, &ValuesEG[P_wp + PieceShift], &ValuesEG[P_wn + PieceShift], &ValuesEG[P_wb + PieceShift], &ValuesEG[P_wr + PieceShift], &ValuesEG[P_wq + PieceShift], &ValuesEG[P_wk + PieceShift] };
+    ScoreType absscore = (p.nwk+p.nbk) * *absValues[P_wk] + (p.nwq+p.nbq) * *absValues[P_wq] + (p.nwr+p.nbr) * *absValues[P_wr] + (p.nwb+p.nbb) * *absValues[P_wb] + (p.nwn+p.nbn) * *absValues[P_wn] + (p.nwp+p.nbp) * *absValues[P_wp];
     absscore = 100 * (absscore - 16000) / (24140 - 16000);
     const int pawnScore = 100 * p.np / 16;
     const int pieceScore = 100 * (p.nq + p.nr + p.nb + p.nn) / 14;
     gp = (absscore*0.4f + pieceScore*0.3f + pawnScore*0.3f)/100.f;
-    sc = (p.nwk - p.nbk) * ScoreType(gp*absValues[P_wk] + (1.f - gp)*absValuesEG[P_wk])
-       + (p.nwq - p.nbq) * ScoreType(gp*absValues[P_wq] + (1.f - gp)*absValuesEG[P_wq])
-       + (p.nwr - p.nbr) * ScoreType(gp*absValues[P_wr] + (1.f - gp)*absValuesEG[P_wr])
-       + (p.nwb - p.nbb) * ScoreType(gp*absValues[P_wb] + (1.f - gp)*absValuesEG[P_wb])
-       + (p.nwn - p.nbn) * ScoreType(gp*absValues[P_wn] + (1.f - gp)*absValuesEG[P_wn])
-       + (p.nwp - p.nbp) * ScoreType(gp*absValues[P_wp] + (1.f - gp)*absValuesEG[P_wp]);
+    sc = (p.nwk - p.nbk) * ScoreType(gp* *absValues[P_wk] + (1.f - gp)* *absValuesEG[P_wk])
+       + (p.nwq - p.nbq) * ScoreType(gp* *absValues[P_wq] + (1.f - gp)* *absValuesEG[P_wq])
+       + (p.nwr - p.nbr) * ScoreType(gp* *absValues[P_wr] + (1.f - gp)* *absValuesEG[P_wr])
+       + (p.nwb - p.nbb) * ScoreType(gp* *absValues[P_wb] + (1.f - gp)* *absValuesEG[P_wb])
+       + (p.nwn - p.nbn) * ScoreType(gp* *absValues[P_wn] + (1.f - gp)* *absValuesEG[P_wn])
+       + (p.nwp - p.nbp) * ScoreType(gp* *absValues[P_wp] + (1.f - gp)* *absValuesEG[P_wp]);
     const bool white2Play = p.c == Co_White;
     BitBoard pieceBBiterator = p.whitePiece;
     while (pieceBBiterator) {
@@ -2560,308 +2562,9 @@ template<typename T> T getOption(const std::string & key, T defaultValue = Optio
     }
 }
 
-namespace Texel {
-
-    struct TexelInput {
-        Position * p;
-        int result;
-    };
-
-    template < typename T >
-    struct TexelParam {
-    public:
-        TexelParam(T & accessor, const T& inf, const T& sup, const std::string & name, const std::function<void(const T&)> & hook = [](const T&){}) :accessor(&accessor), inf(inf), sup(sup), name(name), hook(hook) {}
-        T * accessor;
-        T inf;
-        T sup;
-        std::string name;
-        std::function<void(const T&)> hook;
-        T& operator()() { return *accessor; }
-        void Set(const T & value) { *accessor = std::min(std::max(inf,value),sup); hook(value); }
-    };
-
-    double K = 1.165;
-
-    double Sigmoid(Position * p) {
-        assert(p);
-        DepthType seldepth = 0;
-        //const double s = (p->c == Co_White ? 1:-1)*ThreadPool::instance().main().qsearch(-INFSCORE,INFSCORE,*p,0,seldepth);
-        float gp;
-        const double s = eval(*p,gp);
-        return 1. / (1. + std::pow(10, -K * s / 400.));
-    }
-
-    double E(const std::vector<Texel::TexelInput> &data, size_t miniBatchSize) {
-        double e = 0;
-        int goodW = 0;
-        int goodL = 0;
-        int badW = 0;
-        int badL = 0;
-        for (size_t k = 0; k < miniBatchSize; ++k) {
-           const double r = (data[k].result+1)*0.5;
-           const double s = Sigmoid(data[k].p);
-           e += std::pow(r - s,2);
-           if ( k % 10000 == 0) LogIt(logInfo) << "*";
-           //LogIt(logInfo) << r << " " << s;
-           /*
-           if ( r > 0.5 ){
-              if ( s > 0.5 ) goodW++;
-              else badW++;
-           }
-           else if (r < 0.5){
-              if ( s < 0.5 ) goodL++;
-              else badL++;
-           }
-           */
-        }
-        //LogIt(logInfo) << "goodW " << goodW;
-        //LogIt(logInfo) << "badW " << badW;
-        //LogIt(logInfo) << "goodL " << goodL;
-        //LogIt(logInfo) << "badL " << badL;
-        e /= miniBatchSize;
-        return e;
-    }
-
-    void Randomize(std::vector<Texel::TexelInput> & data, size_t miniBatchSize){ std::shuffle(data.begin(), data.end(), std::default_random_engine(0)); }
-
-    double computeOptimalK(const std::vector<Texel::TexelInput> & data) {
-       double Kstart = 0.05, Kend = 3.0, Kdelta = 0.15;
-       double thisError, bestError = 100;
-       for (int i = 0; i < 3; ++i) {
-          LogIt(logInfo) << "Computing K Iteration " << i;
-          K = Kstart - Kdelta;
-          while (K < Kend) {
-              LogIt(logInfo) << "...";
-              K += Kdelta;
-              thisError = E(data,data.size());
-              if (thisError <= bestError) {
-                 bestError = thisError, Kstart = K;
-                 LogIt(logInfo) << "new best K = " << K << " E = " << bestError;
-              }
-          }
-          LogIt(logInfo) << "iteration " << i << " K = " << Kstart << " E = " << bestError;
-          Kend = Kstart + Kdelta;
-          Kstart -= Kdelta;
-          Kdelta /= 10.0;
-      }
-      K = Kstart;
-      return Kstart;
-    }
-
-
-    std::vector<double> ComputeGradient(std::vector<TexelParam<ScoreType> > & x0, std::vector<Texel::TexelInput> &data, size_t gradientBatchSize, bool normalized = true) {
-        LogIt(logInfo) << "Computing gradient";
-        std::vector<double> g;
-        const ScoreType dx = 2;
-        for (size_t k = 0; k < x0.size(); ++k) {
-            LogIt(logInfo) << "... " << k;
-            double grad = 0;
-            const ScoreType oldvalue = x0[k]();
-            x0[k].Set(oldvalue + dx);
-            grad = E(data, gradientBatchSize);
-            x0[k].Set(oldvalue - dx);
-            grad -= E(data, gradientBatchSize);
-            x0[k].Set(oldvalue);
-            g.push_back(grad/(2*dx));
-            LogIt(logInfo) << "Gradient " << k << " " << grad;
-        }
-        if ( normalized){
-           double norm = 0;
-           for (size_t k = 0; k < x0.size(); ++k) norm += g[k] * g[k];
-           norm = sqrt(norm);
-           for (size_t k = 0; k < x0.size(); ++k) {
-              g[k] /= norm;
-              LogIt(logInfo) << "Gradient normalized " << k << " " << g[k];
-           }
-        }
-        return g;
-    }
-
-    std::vector<TexelParam<ScoreType> > TexelOptimizeSecante(const std::vector<TexelParam<ScoreType> >& initialGuess, std::vector<Texel::TexelInput> & data, size_t batchSize){
-
-        DynamicConfig::disableTT = true;
-
-        std::ofstream str("tuning.csv");
-        int it = 0;
-
-        Randomize(data, batchSize);
-
-        std::vector<TexelParam<ScoreType> > bestParam = initialGuess;
-
-        ScoreType dx = 2;
-
-        double curEim1 = E(data, batchSize);
-        while (true) {
-            std::vector<double> g_i = ComputeGradient(bestParam, data, batchSize, false);
-            double gmax = -1;
-            for (size_t k = 0; k < bestParam.size(); ++k) {
-                const ScoreType oldValue = bestParam[k]();
-                bestParam[k].Set(oldValue - dx);
-                gmax = std::max(gmax,std::fabs(g_i[k]));
-            }
-            LogIt(logInfo) << "gmax " << gmax;
-            if ( gmax < 1e-14 ) break;
-            std::vector<double> g_im1 = ComputeGradient(bestParam, data, batchSize, false);
-            for (size_t k = 0; k < bestParam.size(); ++k) {
-                const ScoreType oldValue = bestParam[k]();
-                bestParam[k].Set(oldValue + dx);
-            }
-
-            for (size_t k = 0; k < bestParam.size(); ++k) {
-                const ScoreType oldValue = bestParam[k]();
-                if ( std::fabs(g_i[k] - g_im1[k] >= 1e-16 )) bestParam[k].Set(oldValue - dx * g_i[k] / (g_i[k]-g_im1[k]));
-            }
-            LogIt(logInfo) << "Computing new error";
-            double curE = E(data, batchSize);
-            LogIt(logInfo) << "Current error " << curE << " best was : " << curEim1;
-            LogIt(logInfo) << "Current values :";
-            str << it << ";";
-            for (size_t k = 0; k < bestParam.size(); ++k) {
-               LogIt(logInfo) << bestParam[k].name << " " << bestParam[k]();
-               str << bestParam[k]() << ";";
-            }
-            str << curE << ";" << curEim1 << ";  ";
-            for (size_t k = 0; k < bestParam.size(); ++k) {
-               str << g_i[k] << ";" << g_im1[k] << ";  ";
-            }
-            str << std::endl;
-            curEim1 = curE;
-            // randomize for next iteration
-            Randomize(data, batchSize);
-            ++it;
-        }
-        return bestParam;
-    }
-
-    std::vector<TexelParam<ScoreType> > TexelOptimizeGD(const std::vector<TexelParam<ScoreType> >& initialGuess, std::vector<Texel::TexelInput> &data, size_t batchSize) {
-
-        DynamicConfig::disableTT = true;
-
-        std::ofstream str("tuning.csv");
-        int it = 0;
-
-        Randomize(data, batchSize);
-
-        std::vector<TexelParam<ScoreType> > bestParam = initialGuess;
-        bool improved = true;
-
-        while (improved) {
-            improved = false;
-            std::vector<double> g = ComputeGradient(bestParam, data, batchSize);
-
-            double alpha = 5; // line search param
-
-            LogIt(logInfo) << "Line search";
-
-            double curE = E(data, batchSize);
-            double bestELS = curE;
-            while (alpha >= 2) {
-                LogIt(logInfo) << "Applying gradient, alpha = " << alpha;
-                for (size_t k = 0; k < bestParam.size(); ++k) {
-                    const ScoreType oldValue = bestParam[k]();
-                    bestParam[k].Set(oldValue - ScoreType(alpha * g[k]));
-                }
-                LogIt(logInfo) << "Computing new error";
-                curE = E(data, batchSize);
-
-                LogIt(logInfo) << "LS : " << alpha << " " << curE << " best was : " << bestELS;
-
-                if (curE <= bestELS) {
-                    improved = true;
-                    break;
-                }
-                else {
-                    // reseting last iteration
-                    for (size_t k = 0; k < bestParam.size(); ++k) {
-                        const ScoreType oldValue = bestParam[k]();
-                        bestParam[k].Set(oldValue + ScoreType(alpha * g[k]));
-                    }
-                    //break;
-                }
-                alpha *= 0.8;
-            }
-
-            // randomize for next iteration
-            Randomize(data, batchSize);
-
-            str << it << ";";
-            for (size_t k = 0; k < bestParam.size(); ++k) {
-               LogIt(logInfo) << bestParam[k].name << " " << bestParam[k]();
-               str << bestParam[k]() << ";";
-            }
-            str << curE << ";" << bestELS << std::endl;
-
-            ++it;
-        }
-        return bestParam;
-    }
-
-
-}
-
-void TexelTuning(const std::string & filename) {
-    std::ifstream stream(filename);
-    std::string line;
-    std::vector<Texel::TexelInput> data;
-    LogIt(logInfo) << "Running texel tuning with file " << filename;
-    int count = 0;
-    while (std::getline(stream, line)){
-        nlohmann::json o;
-        try { o = nlohmann::json::parse(line); }
-        catch (...) { LogIt(logFatal) << "Cannot parse json " << line; }
-        std::string fen = o["fen"];
-        Position * p = new Position;
-        readFEN(fen,*p,true);
-        if (std::abs(o["result"].get<int>()) < 800) data.push_back({p, o["result"]});
-        ++count;
-        if (count % 10000 == 0) LogIt(logInfo) << count << " position read";
-    }
-
-    LogIt(logInfo) << "Data size : " << data.size();
-
-    size_t batchSize = data.size();
-    //size_t batchSize = 1024 * 32; ;
-    //size_t batchSize = 1; // stochastic
-
-    for(int k=0 ; k<13; ++k){Values[k] = 450; ValuesEG[k] = 450;}
-
-    std::vector<Texel::TexelParam<ScoreType> > guess;
-    guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wp+PieceShift], 20,  2000,   "pawn",     [](const ScoreType& s){Values[P_bp+PieceShift] = -s;}));
-    //guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wn+PieceShift], 20,  2000,   "knight",   [](const ScoreType& s){Values[P_bn+PieceShift] = -s;}));
-    //guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wb+PieceShift], 20,  2000,   "bishop",   [](const ScoreType& s){Values[P_bb+PieceShift] = -s;}));
-    //guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wr+PieceShift], 20,  2000,   "rook",     [](const ScoreType& s){Values[P_br+PieceShift] = -s;}));
-    //guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wq+PieceShift], 20,  2000,   "queen",    [](const ScoreType& s){Values[P_bq+PieceShift] = -s;}));
-    guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wp+PieceShift], 20,  2000, "EGpawn",   [](const ScoreType& s){ValuesEG[P_bp+PieceShift] = -s;}));
-    //guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wn+PieceShift], 20,  2000, "EGknight", [](const ScoreType& s){ValuesEG[P_bn+PieceShift] = -s;}));
-    //guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wb+PieceShift], 20,  2000, "EGbishop", [](const ScoreType& s){ValuesEG[P_bb+PieceShift] = -s;}));
-    //guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wr+PieceShift], 20,  2000, "EGrook",   [](const ScoreType& s){ValuesEG[P_br+PieceShift] = -s;}));
-    //guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wq+PieceShift], 20,  2000, "EGqueen",  [](const ScoreType& s){ValuesEG[P_bq+PieceShift] = -s;}));
-/*
-    guess.push_back(Texel::TexelParam<ScoreType>(bishopPairBonus, -50,  50,"bishop pair"));
-    guess.push_back(Texel::TexelParam<ScoreType>(knightPairMalus, -50,  50,"knight pair"));
-    guess.push_back(Texel::TexelParam<ScoreType>(rookPairMalus  , -50,  50,"rook pair"));
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[1], -150, 150,"passer 1"));
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[2], -150, 150,"passer 2"));
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[3], -150, 150,"passer 3"));
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[4], -150, 150,"passer 4"));
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[5], -150, 150,"passer 5"));
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[6], -150, 150,"passer 6"));
-*/
-
-    //computeOptimalK(data);
-
-    LogIt(logInfo) << "Optimal K " << Texel::K;
-
-    LogIt(logInfo) << "Initial values :";
-    for (size_t k = 0; k < guess.size(); ++k) LogIt(logInfo) << guess[k].name << " " << guess[k]();
-    std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeGD(guess, data, batchSize);
-    //std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeSecante(guess, data, batchSize);
-
-    LogIt(logInfo) << "Optimized values :";
-    for (size_t k = 0; k < optim.size(); ++k) LogIt(logInfo) << optim[k].name << " " << optim[k]();
-    for (size_t k = 0; k < data.size(); ++k) delete data[k].p;
-}
-
+#ifdef WITH_TEXEL_TUNING
+#include "texelTuning.h"
+#endif
 
 int main(int argc, char ** argv){
     hellooo();
@@ -2883,7 +2586,9 @@ int main(int argc, char ** argv){
         Book::readBinaryBook(bbook);
     }
 
+#ifdef WITH_TEXEL_TUNING
     if ( std::string(argv[1]) == "-texel" ) TexelTuning("tuning/Ethereal.fens.json");
+#endif
 
 #ifdef DEBUG_TOOL
     if ( argc < 2 ) return 1;

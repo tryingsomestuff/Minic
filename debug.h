@@ -12,6 +12,32 @@ struct PerftAccumulator{
     }
 };
 
+void pstMean(){
+    for (int i = 0 ; i < 6; ++i){
+        int divisor = (i==0)?48:64;
+        ScoreType sum = 0;
+        for(int k = 0 ; k < 64 ; ++k){
+           sum += PST[i][k];
+        }
+        LogIt(logInfo) << Names[i+1+PieceShift] << " " << sum/divisor;
+        for(int k = ((i==0)?8:0) ; k < ((i==0)?56:64) ; ++k){
+            if (k%8==0) std::cout << std::endl;
+            std::cout << PST[i][k]-sum/divisor << ",";
+        }
+        std::cout << std::endl;
+        sum = 0;
+        for(int k = 0 ; k < 64 ; ++k){
+           sum += PSTEG[i][k];
+        }
+        LogIt(logInfo) << Names[i+1+PieceShift] << "EG " << sum/divisor;
+        for(int k = ((i==0)?8:0) ; k < ((i==0)?56:64) ; ++k){
+            if (k%8==0) std::cout << std::endl;
+            std::cout << PSTEG[i][k]-sum/divisor << ",";
+        }
+        std::cout << std::endl;
+    }
+}
+
 Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc, bool divide = false){
     if ( depth == 0) return 0;
     static TT::Entry e;

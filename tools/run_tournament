@@ -4,11 +4,13 @@ dir=$(readlink -f $(dirname $0)/..)
 
 engines=""
 
-engines="$engines -engine name=minic_dev cmd=$dir/Dist/minic_dev_linux_x64_see4.2 arg=-xboard dir=$dir"
-
-if [ -e "$dir/Dist/minic_test_linux_x64_see4.2" ]; then
-   engines="$engines -engine name=minic_test cmd=$dir/Dist/minic_test_linux_x64_see4.2 arg=-xboard dir=$dir"
+if [ "$1" != "nodev" ]; then
+   engines="$engines -engine name=minic_dev cmd=$dir/Dist/minic_dev_linux_x64_see4.2 arg=-xboard dir=$dir"
 fi
+
+#if [ -e "$dir/Dist/minic_test_linux_x64_see4.2" ]; then
+#   engines="$engines -engine name=minic_test cmd=$dir/Dist/minic_test_linux_x64_see4.2 arg=-xboard dir=$dir"
+#fi
 
 for i in `seq 1 30`; do
    if [ -e "$dir/Dist/minic_0.${i}_linux_x64_see4.2" ]; then
@@ -21,5 +23,6 @@ engines="$engines -engine name=weini cmd=$dir/../chessEngine/weini/bin/weini arg
 
 echo $engines
 
-$dir/../chessEngine/weini/cutechess/cutechess-cli/cutechess-cli.sh $engines -each proto=xboard tc=40/20 timemargin=200 -rounds 100 -pgnout pgn_$(date +"%Y_%m_%d"_%H%M%S).out -resign movecount=4 score=1050 -draw movenumber=40 movecount=12 score=30 -ratinginterval 1 -repeat -openings file=$dir/../chessEngine/weini/BookPgn/Silver-Suite-Large.pgn format=pgn order=random plies=24 -recover -tournament gauntlet > tournament.log 2>&1 &
+#$dir/../chessEngine/weini/cutechess/cutechess-cli/cutechess-cli.sh $engines -each proto=xboard tc=40/20 timemargin=200 -rounds 100 -pgnout pgn_$(date +"%Y_%m_%d"_%H%M%S).out -resign movecount=4 score=1050 -draw movenumber=40 movecount=12 score=30 -ratinginterval 1 -repeat -openings file=$dir/../chessEngine/weini/BookPgn/Silver-Suite-Large.pgn format=pgn order=random plies=24 -recover -tournament gauntlet > tournament.log 2>&1 &
+$dir/../chessEngine/weini/cutechess/cutechess-cli/cutechess-cli.sh $engines -each proto=xboard tc=40/20 timemargin=200 -rounds 100 -pgnout pgn_$(date +"%Y_%m_%d"_%H%M%S).out -resign movecount=4 score=1050 -draw movenumber=40 movecount=12 score=30 -ratinginterval 1 -repeat -openings file=$dir/../chessEngine/weini/BookPgn/Silver-Suite-Large.pgn format=pgn order=random plies=24 -recover  > tournament.log 2>&1 &
 
