@@ -4,13 +4,14 @@ import matplotlib.pyplot as plt
 import matplotlib.cbook as cbook
 
 def read_datafile(file_name):
-    data = np.genfromtxt(file_name, delimiter=';', names=['it','p','n','b','r','q','pe','ne','be','re','qe','e'])
+    #data = np.genfromtxt(file_name, delimiter=';', names=['it','p','n','b','r','q','pe','ne','be','re','qe','e'])
+    data = np.genfromtxt(file_name, delimiter=';', names=['it','n','b','r','q','pe','ne','be','re','qe','e'])
     return data
 
 data = read_datafile('tuning.csv')
 
 x = data['it']
-p = data['p']
+#p = data['p']
 n = data['n']
 b = data['b']
 r = data['r']

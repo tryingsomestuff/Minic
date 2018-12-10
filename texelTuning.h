@@ -49,7 +49,7 @@ namespace Texel {
         */
         // eval
         float gp;
-        const double s = (p->c == Co_White ? 1:-1)*eval(*p,gp);
+        const double s = eval(*p,gp);
         return 1. / (1. + std::pow(10, -K * s / 400.));
     }
 
@@ -204,11 +204,12 @@ namespace Texel {
         std::vector<double> previousGradient = {0};
         while (it < 100000 ) {
             std::vector<double> g = ComputeGradient(bestParam, data, batchSize);
-            double learningRate = 100;
+            double learningRate = 20;
             double alpha = 0.9;
+            double bestCoeff = 1;
+            /*
             // line search
             double coeff = 1;
-            double bestCoeff = -1;
             LogIt(logInfo) << "Computing initial error (batch size)";
             double initE = E(data, batchSize);
             LogIt(logInfo) << initE;
@@ -239,6 +240,7 @@ namespace Texel {
             if ( bestCoeff < 0 ){
                 continue; // skip this sample
             }
+            */
             LogIt(logInfo) << "Applying gradient, learningRate = " << learningRate*bestCoeff << ", alpha " << alpha;
             for (size_t k = 0; k < bestParam.size(); ++k) {
                 const ScoreType oldValue = bestParam[k];
@@ -292,7 +294,7 @@ void TexelTuning(const std::string & filename) {
     for(int k=0 ; k<13; ++k){Values[k] = 450; ValuesEG[k] = 450;}
 
     std::vector<Texel::TexelParam<ScoreType> > guess;
-    guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wp+PieceShift], 20,  2000,   "pawn",     [](const ScoreType& s){Values[P_bp+PieceShift] = -s;}));
+    //guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wp+PieceShift], 20,  2000,   "pawn",     [](const ScoreType& s){Values[P_bp+PieceShift] = -s;}));
     guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wn+PieceShift], 20,  2000,   "knight",   [](const ScoreType& s){Values[P_bn+PieceShift] = -s;}));
     guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wb+PieceShift], 20,  2000,   "bishop",   [](const ScoreType& s){Values[P_bb+PieceShift] = -s;}));
     guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wr+PieceShift], 20,  2000,   "rook",     [](const ScoreType& s){Values[P_br+PieceShift] = -s;}));
