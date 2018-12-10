@@ -29,7 +29,7 @@ typedef uint64_t u_int64_t;
 #include "json.hpp"
 
 //#define IMPORTBOOK
-//#define WITH_TEXEL_TUNING
+#define WITH_TEXEL_TUNING
 #define DEBUG_TOOL
 
 const std::string MinicVersion = "0.23";
@@ -1766,13 +1766,14 @@ ScoreType eval(const Position & p, float & gp){
     if (TT::getEvalEntry(computeHash(p), sc, gp)) return sc;
 
     static ScoreType dummyScore = 0;
-    static ScoreType *absValues[7]   = { &dummyScore, &Values[P_wp + PieceShift], &Values[P_wn + PieceShift], &Values[P_wb + PieceShift], &Values[P_wr + PieceShift], &Values[P_wq + PieceShift], &Values[P_wk + PieceShift] };
+    static ScoreType *absValues[7]   = { &dummyScore, &Values  [P_wp + PieceShift], &Values  [P_wn + PieceShift], &Values  [P_wb + PieceShift], &Values  [P_wr + PieceShift], &Values  [P_wq + PieceShift], &Values  [P_wk + PieceShift] };
     static ScoreType *absValuesEG[7] = { &dummyScore, &ValuesEG[P_wp + PieceShift], &ValuesEG[P_wn + PieceShift], &ValuesEG[P_wb + PieceShift], &ValuesEG[P_wr + PieceShift], &ValuesEG[P_wq + PieceShift], &ValuesEG[P_wk + PieceShift] };
     ScoreType absscore = (p.nwk+p.nbk) * *absValues[P_wk] + (p.nwq+p.nbq) * *absValues[P_wq] + (p.nwr+p.nbr) * *absValues[P_wr] + (p.nwb+p.nbb) * *absValues[P_wb] + (p.nwn+p.nbn) * *absValues[P_wn] + (p.nwp+p.nbp) * *absValues[P_wp];
     absscore = 100 * (absscore - 16000) / (24140 - 16000);
     const int pawnScore = 100 * p.np / 16;
     const int pieceScore = 100 * (p.nq + p.nr + p.nb + p.nn) / 14;
     gp = (absscore*0.4f + pieceScore*0.3f + pawnScore*0.3f)/100.f;
+    // material
     sc = (p.nwk - p.nbk) * ScoreType(gp* *absValues[P_wk] + (1.f - gp)* *absValuesEG[P_wk])
        + (p.nwq - p.nbq) * ScoreType(gp* *absValues[P_wq] + (1.f - gp)* *absValuesEG[P_wq])
        + (p.nwr - p.nbr) * ScoreType(gp* *absValues[P_wr] + (1.f - gp)* *absValuesEG[P_wr])
@@ -1780,6 +1781,7 @@ ScoreType eval(const Position & p, float & gp){
        + (p.nwn - p.nbn) * ScoreType(gp* *absValues[P_wn] + (1.f - gp)* *absValuesEG[P_wn])
        + (p.nwp - p.nbp) * ScoreType(gp* *absValues[P_wp] + (1.f - gp)* *absValuesEG[P_wp]);
     const bool white2Play = p.c == Co_White;
+    // pst
     BitBoard pieceBBiterator = p.whitePiece;
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
@@ -1795,7 +1797,6 @@ ScoreType eval(const Position & p, float & gp){
     }
     // in very end game winning king must be near the other king
     if (gp < 0.2 && p.wk != INVALIDSQUARE && p.bk != INVALIDSQUARE) sc -= (sc>0?+1:-1)*manhattanDistance(p.wk, p.bk)*15;
-
     // passer
     pieceBBiterator = p.whitePawn;
     while (pieceBBiterator) {
@@ -1812,13 +1813,10 @@ ScoreType eval(const Position & p, float & gp){
     sc -= p.nbr * adjRook  [p.nbp];
     sc += p.nwn * adjKnight[p.nwp];
     sc -= p.nbn * adjKnight[p.nbp];
-
     // bishop pair
     sc += ( (p.nwb > 1 ? bishopPairBonus : 0)-(p.nbb > 1 ? bishopPairBonus : 0) );
-
     // knight pair
     sc += ( (p.nwn > 1 ? knightPairMalus : 0)-(p.nbn > 1 ? knightPairMalus : 0) );
-
     // rook pair
     sc += ( (p.nwr > 1 ? rookPairMalus   : 0)-(p.nbr > 1 ? rookPairMalus   : 0) );
 
@@ -1848,7 +1846,7 @@ ScoreType eval(const Position & p, float & gp){
     }
     }
     sc+=attSc/50;
-     */
+    */
 
     sc = (white2Play?+1:-1)*sc;
     TT::setEvalEntry({ sc, gp, computeHash(p) });
