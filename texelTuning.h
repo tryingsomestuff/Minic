@@ -192,13 +192,13 @@ namespace Texel {
         return bestParam;
     }
 
-    std::vector<TexelParam<ScoreType> > TexelOptimizeGD(const std::vector<TexelParam<ScoreType> >& initialGuess, std::vector<Texel::TexelInput> &data, size_t batchSize) {
+    std::vector<TexelParam<ScoreType> > TexelOptimizeGD(const std::vector<TexelParam<ScoreType> >& initialGuess, std::vector<Texel::TexelInput> &data, const size_t batchSize) {
         DynamicConfig::disableTT = true;
         std::ofstream str("tuning.csv");
         int it = 0;
         Randomize(data, batchSize);
         std::vector<TexelParam<ScoreType> > bestParam = initialGuess;
-        double previousUpdate[batchSize] = {0};
+        std::vector<double> previousUpdate(batchSize,0);
         //ScoreType previousValue[batchSize] = {0};
         //std::vector<double> previousGradient = {0};
         while (it < 100000 ) {
@@ -244,7 +244,7 @@ namespace Texel {
             for (size_t k = 0; k < bestParam.size(); ++k) {
                 const ScoreType oldValue = bestParam[k];
                 double currentUpdate = ScoreType((1-alpha)*bestCoeff*learningRate * g[k] + alpha * previousUpdate[k]);
-                bestParam[k] = oldValue - currentUpdate;
+                bestParam[k] = ScoreType(oldValue - currentUpdate);
                 previousUpdate[k] = currentUpdate;
                 //previousValue[k] = bestParam[k];
             }
