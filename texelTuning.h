@@ -36,9 +36,9 @@ namespace Texel {
         }
         */
         assert(p);
-        //DepthType seldepth = 0;
+        DepthType seldepth = 0;
         // qsearch
-        //const double s = (p->c == Co_White ? 1:-1)*ThreadPool::instance().main().qsearch(-1000,1000,*p,0,seldepth);
+        const double s = ThreadPool::instance().main().qsearch(-1000,1000,*p,0,seldepth);
         /*
         // search
         Move m = INVALIDMOVE;
@@ -48,8 +48,8 @@ namespace Texel {
         s *= (p->c == Co_White ? 1:-1);
         */
         // eval
-        float gp;
-        const double s = eval(*p,gp);
+        //float gp;
+        //const double s = eval(*p,gp);
         return 1. / (1. + std::pow(10, -K * s / 400.));
     }
 
@@ -65,8 +65,7 @@ namespace Texel {
            //LogIt(logInfo) << r << " " << s;
            e += std::pow(r - s,2);
            //if ( k % 10000 == 0) LogIt(logInfo) << "*";
-           //LogIt(logInfo) << r << " " << s;
-           /*
+
            if ( r > 0.5 ){
               if ( s > 0.5 ) goodW++;
               else badW++;
@@ -75,12 +74,12 @@ namespace Texel {
               if ( s < 0.5 ) goodL++;
               else badL++;
            }
-           */
+
         }
-        //LogIt(logInfo) << "goodW " << goodW;
-        //LogIt(logInfo) << "badW " << badW;
-        //LogIt(logInfo) << "goodL " << goodL;
-        //LogIt(logInfo) << "badL " << badL;
+        LogIt(logInfo) << "goodW " << goodW;
+        LogIt(logInfo) << "badW " << badW;
+        LogIt(logInfo) << "goodL " << goodL;
+        LogIt(logInfo) << "badL " << badL;
         e /= miniBatchSize;
         return e;
     }
@@ -200,8 +199,8 @@ namespace Texel {
         Randomize(data, batchSize);
         std::vector<TexelParam<ScoreType> > bestParam = initialGuess;
         double previousUpdate[batchSize] = {0};
-        ScoreType previousValue[batchSize] = {0};
-        std::vector<double> previousGradient = {0};
+        //ScoreType previousValue[batchSize] = {0};
+        //std::vector<double> previousGradient = {0};
         while (it < 100000 ) {
             std::vector<double> g = ComputeGradient(bestParam, data, batchSize);
             double learningRate = 20;
@@ -247,15 +246,17 @@ namespace Texel {
                 double currentUpdate = ScoreType((1-alpha)*bestCoeff*learningRate * g[k] + alpha * previousUpdate[k]);
                 bestParam[k] = oldValue - currentUpdate;
                 previousUpdate[k] = currentUpdate;
-                previousValue[k] = bestParam[k];
+                //previousValue[k] = bestParam[k];
             }
-            previousGradient = g;
-            LogIt(logInfo) << "Computing new error (full data size)";
-            double curE = E(data, data.size());
+            //previousGradient = g;
+            LogIt(logInfo) << "Computing new error";// (full data size)";
+            double curE = E(data, batchSize/*data.size()*/);
             LogIt(logInfo) << curE;
             // randomize for next iteration
             Randomize(data, batchSize);
+            // display
             for (size_t k = 0; k < bestParam.size(); ++k) LogIt(logInfo) << bestParam[k].name << " " << bestParam[k];
+            // write
             if ( it % 10 == 0 ){
                 str << it << ";";
                 for (size_t k = 0; k < bestParam.size(); ++k) str << bestParam[k] << ";";
@@ -291,7 +292,7 @@ void TexelTuning(const std::string & filename) {
     size_t batchSize = 1024 ; // mini
     //size_t batchSize = 1; // stochastic
 
-    for(int k=0 ; k<13; ++k){Values[k] = 450; ValuesEG[k] = 450;}
+    //for(int k=0 ; k<13; ++k){Values[k] = 450; ValuesEG[k] = 450;}
 
     std::vector<Texel::TexelParam<ScoreType> > guess;
     //guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wp+PieceShift], 20,  2000,   "pawn",     [](const ScoreType& s){Values[P_bp+PieceShift] = -s;}));
