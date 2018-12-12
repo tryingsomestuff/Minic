@@ -1,7 +1,9 @@
 import matplotlib as mpl
+mpl.use('Agg')
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cbook as cbook
+
 
 def read_datafile(file_name):
     #data = np.genfromtxt(file_name, delimiter=';', names=['it','p','n','b','r','q','pe','ne','be','re','qe','e'])
@@ -27,4 +29,5 @@ fig = plt.figure()
 ax1 = fig.add_subplot(111)
 ax1.plot(x,e)
 leg = ax1.legend(['e'])
-plt.show()
+plt.savefig("tuning_e.png")
+#plt.show()
