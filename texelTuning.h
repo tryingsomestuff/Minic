@@ -292,7 +292,7 @@ void TexelTuning(const std::string & filename) {
     size_t batchSize = 1024 ; // mini
     //size_t batchSize = 1; // stochastic
 
-    //for(int k=0 ; k<13; ++k){Values[k] = 450; ValuesEG[k] = 450;}
+    for(int k=0 ; k<13; ++k){Values[k] = 450; ValuesEG[k] = 450;}
 
     std::vector<Texel::TexelParam<ScoreType> > guess;
     //guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wp+PieceShift], 20,  2000,   "pawn",     [](const ScoreType& s){Values[P_bp+PieceShift] = -s;}));

@@ -1,5 +1,5 @@
 import matplotlib as mpl
-mpl.use('Agg')
+#mpl.use('Agg')
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cbook as cbook
@@ -39,4 +39,4 @@ ax1.plot(x,qe)
 #leg = ax1.legend(['p','n','b','r','q','pe','ne','be','re','qe'])
 leg = ax1.legend(['n','b','r','q','pe','ne','be','re','qe'])
 plt.savefig("tuning.png")
-#plt.show()
+plt.show()
