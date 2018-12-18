@@ -27,8 +27,6 @@ Quite poor for a chess engine (around 2300) but already way to strong for me !
   10 simplex                      -182      48     216   25.9%   13.9%
   11 fairymax                     -338      55     216   12.5%   17.6%
   12 tscp181                      -396      74     216    9.3%    7.4%
-
-
 ```
 
 ## How to compile:
@@ -45,6 +43,20 @@ Other available options are :
 * -perft <"fen"> depth : perft on the given position and depth
 * -analyze <"fen"> depth : analysis on the given position and depth
 * -mateFinder <"fen"> depth : same as analysis but without prunings in search.
+
+## Options
+
+Minic now comes with both a json configuration file where some parameters can be set
+```
+{
+   "threads": 1,
+   "mateFinder": false,
+   "ttSizeMb": 512,
+   "ttESizeMb": 512,
+   "book": true
+}
+```
+and a command line interface, using the same key word. For instance, forcing mateFinder mode can be done by adding "-mateFinder 1" when calling Minic.
 
 ## History
 
