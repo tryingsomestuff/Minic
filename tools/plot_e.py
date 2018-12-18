@@ -1,5 +1,5 @@
 import matplotlib as mpl
-mpl.use('Agg')
+#mpl.use('Agg')
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cbook as cbook
@@ -30,4 +30,4 @@ ax1 = fig.add_subplot(111)
 ax1.plot(x,e)
 leg = ax1.legend(['e'])
 plt.savefig("tuning_e.png")
-#plt.show()
+plt.show()

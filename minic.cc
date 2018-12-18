@@ -29,10 +29,10 @@ typedef uint64_t u_int64_t;
 #include "json.hpp"
 
 //#define IMPORTBOOK
-#define WITH_TEXEL_TUNING
+//#define WITH_TEXEL_TUNING
 #define DEBUG_TOOL
 
-const std::string MinicVersion = "0.23";
+const std::string MinicVersion = "0.24";
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
@@ -65,6 +65,7 @@ const bool doLMP            = true;
 const bool doStaticNullMove = true;
 const bool doRazoring       = true;
 const bool doQFutility      = true;
+const bool doProbcut        = false;
 
 const ScoreType qfutilityMargin          = 128;
 const int       staticNullMoveMaxDepth   = 3;
@@ -75,6 +76,9 @@ const int       nullMoveMinDepth         = 2;
 const int       lmpMaxDepth              = 10;
 const ScoreType futilityDepthCoeff       = 160;
 const int       iidMinDepth              = 5;
+const int       probCutMinDepth          = 5;
+const int       probCutMaxMoves          = 3;
+const ScoreType probCutMargin            = 200;
 const int       lmrMinDepth              = 3;
 const int       singularExtensionDepth   = 8;
 }
@@ -164,8 +168,8 @@ Stats stats;
 enum Piece : char{ P_bk = -6, P_bq = -5, P_br = -4, P_bb = -3, P_bn = -2, P_bp = -1, P_none = 0, P_wp = 1, P_wn = 2, P_wb = 3, P_wr = 4, P_wq = 5, P_wk = 6 };
 const int PieceShift = 6;
 
-ScoreType   Values[13]    = { -8000, -975, -500, -335, -325, -100, 0, 100, 325, 335, 500, 975, 8000 };
-ScoreType   ValuesEG[13]  = { -8000,-1025, -550, -280, -280, -100, 0, 100, 280, 280, 550,1025, 8000 };
+ScoreType   Values[13]    = { -8000, -1025, -477, -365, -337, -82, 0, 82, 337, 365, 477, 1025, 8000 };
+ScoreType   ValuesEG[13]  = { -8000,  -936, -512, -297, -281, -94, 0, 94, 281, 297, 512,  936, 8000 };
 std::string Names[13]     = { "k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K" };
 
 ScoreType   passerBonus[8]= { 0, 10, 20, 30, 40, 60, 80, 0};
@@ -794,117 +798,117 @@ inline Color opponentColor(const Color c){ return Color((c+1)%2);}
 // from Rofchade
 const ScoreType PST[6][64] = {
     {   //pawn
-           0,   0,   0,   0,   0,   0,   0,   0,
-          83, 119,  46,  80,  53, 111,  19, -26,
-         -21,  -8,  11,  16,  50,  41,  10, -35,
-         -29,  -2,  -9,   6,   8,  -3,   2, -38,
-         -42, -17, -20,  -3,   2,  -9,  -5, -40,
-         -41, -19, -19, -25, -12, -12,  18, -27,
-         -50, -16, -35, -38, -30,   9,  23, -37,
-           0,   0,   0,   0,   0,   0,   0,   0
+          0,   0,   0,   0,   0,   0,  0,   0,
+         98, 134,  61,  95,  68, 126, 34, -11,
+         -6,   7,  26,  31,  65,  56, 25, -20,
+        -14,  13,   6,  21,  23,  12, 17, -23,
+        -27,  -2,  -5,  12,  17,   6, 10, -25,
+        -26,  -4,  -4, -10,   3,   3, 33, -12,
+        -35,  -1, -20, -23, -15,  24, 38, -22,
+        0,   0,   0,   0,   0,   0,  0,   0
     },{ //knight
-        -167, -89, -34, -49,  61, -97, -15,-107,
-         -73, -41,  72,  36,  23,  62,   7, -17,
-         -47,  60,  37,  65,  84, 129,  73,  44,
-          -9,  17,  19,  53,  37,  69,  18,  22,
-         -13,   4,  16,  13,  28,  19,  21,  -8,
-         -23,  -9,  12,  10,  19,  17,  25, -16,
-         -29, -53, -12,  -3,  -1,  18, -14, -19,
-        -105, -21, -58, -33, -17, -28, -19, -23
+        -167, -89, -34, -49,  61, -97, -15, -107,
+         -73, -41,  72,  36,  23,  62,   7,  -17,
+         -47,  60,  37,  65,  84, 129,  73,   44,
+          -9,  17,  19,  53,  37,  69,  18,   22,
+         -13,   4,  16,  13,  28,  19,  21,   -8,
+         -23,  -9,  12,  10,  19,  17,  25,  -16,
+         -29, -53, -12,  -3,  -1,  18, -14,  -19,
+        -105, -21, -58, -33, -17, -28, -19,  -23
     },{ //bishop
-         -34,  -1, -87, -42, -30, -47,   2, -13,
-         -31,  11, -23, -18,  25,  54,  13, -52,
-         -21,  32,  38,  35,  30,  45,  32,  -7,
-          -9,   0,  14,  45,  32,  32,   2,  -7,
-         -11,   8,   8,  21,  29,   7,   5,  -1,
-          -5,  10,  10,  10,   9,  22,  13,   5,
-          -1,  10,  11,  -5,   2,  16,  28,  -4,
-         -38,  -8, -19, -26, -18, -17, -44, -26
+        -29,   4, -82, -37, -25, -42,   7,  -8,
+        -26,  16, -18, -13,  30,  59,  18, -47,
+        -16,  37,  43,  40,  35,  50,  37,  -2,
+         -4,   5,  19,  50,  37,  37,   7,  -2,
+         -6,  13,  13,  26,  34,  12,  10,   4,
+          0,  15,  15,  15,  14,  27,  18,  10,
+          4,  15,  16,   0,   7,  21,  33,   1,
+        -33,  -3, -14, -21, -13, -12, -39, -21
     },{ //rook
-          25,  35,  25,  44,  56,   2,  24,  36,
-          20,  25,  51,  55,  73,  60,  19,  37,
-         -12,  12,  19,  29,  10,  38,  54,   9,
-         -31, -18,   0,  19,  17,  28, -15, -27,
-         -43, -33, -19,  -8,   2, -14,  -1, -30,
-         -52, -32, -23, -24,  -4,  -7, -12, -40,
-         -51, -23, -27, -16,  -8,   4, -13, -78,
-         -26, -20,  -6,  10,   9,   0, -44, -33
+         32,  42,  32,  51, 63,  9,  31,  43,
+         27,  32,  58,  62, 80, 67,  26,  44,
+         -5,  19,  26,  36, 17, 45,  61,  16,
+        -24, -11,   7,  26, 24, 35,  -8, -20,
+        -36, -26, -12,  -1,  9, -7,   6, -23,
+        -45, -25, -16, -17,  3,  0,  -5, -33,
+        -44, -16, -20,  -9, -1, 11,  -6, -71,
+        -19, -13,   1,  17, 16,  7, -37, -26
     },{ //queen
-         -30,  -2,  27,  10,  57,  42,  41,  43,
-         -26, -41,  -7,  -1, -18,  55,  26,  52,
-         -15, -19,   5,   6,  27,  54,  45,  55,
-         -29, -29, -18, -18,  -3,  15,  -4,  -1,
-         -11, -28, -11, -12,  -4,  -6,   1,  -5,
-         -16,   0, -13,  -4,  -7,   0,  12,   3,
-         -37, -10,   9,   0,   6,  13,  -5,  -1,
-          -3, -20, -11,   8, -17, -27, -33, -52
+        -28,   0,  29,  12,  59,  44,  43,  45,
+        -24, -39,  -5,   1, -16,  57,  28,  54,
+        -13, -17,   7,   8,  29,  56,  47,  57,
+        -27, -27, -16, -16,  -1,  17,  -2,   1,
+         -9, -26,  -9, -10,  -2,  -4,   3,  -3,
+        -14,   2, -11,  -2,  -5,   2,  14,   5,
+        -35,  -8,  11,   2,   8,  15,  -3,   1,
+         -1, -18,  -9,  10, -15, -25, -31, -50
     },{ //king
-         -50,  38,  31,   0, -41, -19,  17,  28,
-          44,  14,  -5,   8,   7,  11, -23, -14,
-           6,  39,  17,  -1,  -5,  21,  37,  -7,
-          -2,  -5,   3, -12, -15, -10,   1, -21,
-         -34,  14, -12, -24, -31, -29, -18, -36,
-           1,   1,  -7, -31, -29, -15,   0, -12,
-          16,  22,   7, -49, -28,  -1,  24,  23,
-           0,  51,  27, -39,  23, -13,  39,  29
+        -65,  23,  16, -15, -56, -34,   2,  13,
+         29,  -1, -20,  -7,  -8,  -4, -38, -29,
+         -9,  24,   2, -16, -20,   6,  22, -22,
+        -17, -20, -12, -27, -30, -25, -14, -36,
+        -49,  -1, -27, -39, -46, -44, -33, -51,
+        -14, -14, -22, -46, -44, -30, -15, -27,
+          1,   7,  -8, -64, -43, -16,   9,   8,
+        -15,  36,  12, -54,   8, -28,  24,  14
     }
 };
 
 const ScoreType PSTEG[6][64] = {
     {   //pawn
-           0,   0,   0,   0,   0,   0,   0,   0,
-         136, 131, 116,  92, 105,  90, 123, 145,
-          52,  58,  43,  25,  14,  11,  40,  42,
-         -10, -18, -29, -37, -44, -38, -25, -25,
-         -29, -33, -45, -49, -49, -50, -39, -43,
-         -38, -35, -48, -41, -42, -47, -43, -50,
-         -29, -34, -34, -32, -29, -42, -40, -49,
-           0,   0,   0,   0,   0,   0,   0,   0
+          0,   0,   0,   0,   0,   0,   0,   0,
+        178, 173, 158, 134, 147, 132, 165, 187,
+         94, 100,  85,  67,  56,  53,  82,  84,
+         32,  24,  13,   5,  -2,   4,  17,  17,
+         13,   9,  -3,  -7,  -7,  -8,   3,  -1,
+          4,   7,  -6,   1,   0,  -5,  -1,  -8,
+         13,   8,   8,  10,  13,   0,   2,  -7,
+          0,   0,   0,   0,   0,   0,   0,   0
     },{ //knight
-         -43, -23,   2, -13, -16, -12, -48, -84,
-         -10,   7, -10,  13,   6, -10,  -9, -37,
-          -9,  -5,  25,  24,  14,   6,  -4, -26,
-          -2,  18,  37,  37,  37,  26,  23,  -3,
-          -3,   9,  31,  40,  31,  32,  19,  -3,
-          -8,  12,  14,  30,  25,  12,  -5,  -7,
-         -27,  -5,   5,  10,  13,  -5,  -8, -29,
-         -14, -36,  -8,   0,  -7,  -3, -35, -49
+        -58, -38, -13, -28, -31, -27, -63, -99,
+        -25,  -8, -25,  -2,  -9, -25, -24, -52,
+        -24, -20,  10,   9,  -1,  -9, -19, -41,
+        -17,   3,  22,  22,  22,  11,   8, -18,
+        -18,  -6,  16,  25,  16,  17,   4, -18,
+        -23,  -3,  -1,  15,  10,  -3, -20, -22,
+        -42, -20, -10,  -5,  -2, -20, -23, -44,
+        -29, -51, -23, -15, -22, -18, -50, -64
     },{ //bishop
-         -10, -17,  -7,  -4,  -3,  -5, -13, -20,
-          -4,   0,  11,  -8,   1,  -9,   0, -10,
-           6,  -4,   4,   3,   2,  10,   4,   8,
-           1,  13,  16,  13,  18,  14,   7,   6,
-          -2,   7,  17,  23,  11,  14,   1,  -5,
-          -8,   1,  12,  14,  17,   7,  -3, -11,
-         -10, -14,  -3,   3,   8,  -5, -11, -23,
-         -19,  -5, -19,  -1,  -5,  -12, -1, -13
+        -14, -21, -11,  -8, -7,  -9, -17, -24,
+         -8,  -4,   7, -12, -3, -13,  -4, -14,
+          2,  -8,   0,  -1, -2,   6,   0,   4,
+         -3,   9,  12,   9, 14,  10,   3,   2,
+         -6,   3,  13,  19,  7,  10,  -3,  -9,
+        -12,  -3,   8,  10, 13,   3,  -7, -15,
+        -14, -18,  -7,  -1,  4,  -9, -15, -27,
+        -23,  -9, -23,  -5, -9, -16,  -5, -17
     },{ //rook
-          13,  10,  18,  15,  12,  12,   8,   5,
-          11,  13,  13,  11,  -3,   3,   8,   3,
-           7,   7,   7,   5,   4,  -3,  -5,  -3,
-           4,   3,  13,   1,   2,   1,  -1,   2,
-           3,   5,   8,   4,  -5,  -6,  -8, -11,
-          -4,   0,  -5,  -1,  -7, -12,  -8, -16,
-          -6,  -6,   0,   2,  -9,  -9, -11,  -3,
-          -9,   2,   3,  -1,  -5, -13,   4, -20
+        13, 10, 18, 15, 12,  12,   8,   5,
+        11, 13, 13, 11, -3,   3,   8,   3,
+         7,  7,  7,  5,  4,  -3,  -5,  -3,
+         4,  3, 13,  1,  2,   1,  -1,   2,
+         3,  5,  8,  4, -5,  -6,  -8, -11,
+        -4,  0, -5, -1, -7, -12,  -8, -16,
+        -6, -6,  0,  2, -9,  -9, -11,  -3,
+        -9,  2,  3, -1, -5, -13,   4, -20
     },{ //queen
-         -17,  14,  14,  19,  19,  11,   2,  12,
-         -25,  12,  24,  33,  50,  17,  22,  -8,
-         -28,  -2,   1,  41,  39,  27,  11,   1,
-          -5,  14,  16,  37,  49,  32,  49,  28,
-         -26,  20,  11,  39,  23,  26,  31,  15,
-         -24, -35,   7,  -2,   1,   9,   2,  -3,
-         -30, -31, -38, -24, -24, -31, -44, -40,
-         -41, -36, -30, -51, -13, -40, -28, -49
+         -9,  22,  22,  27,  27,  19,  10,  20,
+        -17,  20,  32,  41,  58,  25,  30,   0,
+        -20,   6,   9,  49,  47,  35,  19,   9,
+          3,  22,  24,  45,  57,  40,  57,  36,
+        -18,  28,  19,  47,  31,  34,  39,  23,
+        -16, -27,  15,   6,   9,  17,  10,   5,
+        -22, -23, -30, -16, -16, -23, -36, -32,
+        -33, -28, -22, -43,  -5, -32, -20, -41
     },{ //king
-         -76, -37, -20, -20, -13,  13,   2, -19,
-         -14,  15,  12,  15,  15,  36,  21,   9,
-           8,  15,  21,  13,  18,  43,  42,  11,
-         -10,  20,  22,  25,  24,  31,  24,   1,
-         -20,  -6,  19,  22,  25,  21,   7, -13,
-         -21,  -5,   9,  19,  21,  14,   5, -11,
-         -29, -13,   2,  11,  12,   2,  -7, -19,
-         -55, -36, -23, -13, -30, -16, -26, -45
+        -74, -35, -18, -18, -11,  15,   4, -17,
+        -12,  17,  14,  17,  17,  38,  23,  11,
+         10,  17,  23,  15,  20,  45,  44,  13,
+         -8,  22,  24,  27,  26,  33,  26,   3,
+        -18,  -4,  21,  24,  27,  23,   9, -11,
+        -19,  -3,  11,  21,  23,  16,   7,  -9,
+        -27, -11,   4,  13,  14,   4,  -5, -17,
+        -53, -34, -21, -11, -28, -14, -24, -43
     }
 };
 
@@ -1797,6 +1801,7 @@ ScoreType eval(const Position & p, float & gp){
     }
     // in very end game winning king must be near the other king
     if (gp < 0.2 && p.wk != INVALIDSQUARE && p.bk != INVALIDSQUARE) sc -= (sc>0?+1:-1)*manhattanDistance(p.wk, p.bk)*15;
+
     // passer
     pieceBBiterator = p.whitePawn;
     while (pieceBBiterator) {
@@ -1808,6 +1813,8 @@ ScoreType eval(const Position & p, float & gp){
         const Square k = BB::popBit(pieceBBiterator);
         sc -= ((BB::mask[k].passerSpan[Co_Black] & p.whitePawn) == 0ull)?passerBonus[7-SQRANK(k)]:0;
     }
+
+    /*
     // number of pawn and piece type
     sc += p.nwr * adjRook  [p.nwp];
     sc -= p.nbr * adjRook  [p.nbp];
@@ -1819,31 +1826,31 @@ ScoreType eval(const Position & p, float & gp){
     sc += ( (p.nwn > 1 ? knightPairMalus : 0)-(p.nbn > 1 ? knightPairMalus : 0) );
     // rook pair
     sc += ( (p.nwr > 1 ? rookPairMalus   : 0)-(p.nbr > 1 ? rookPairMalus   : 0) );
-
+    */
     /*
     // king attack
     ScoreType attSc = 0;
     if ( p.wk != INVALIDSQUARE ){
-    BitBoard wKingZone = BB::mask[p.wk].kingZone;
-    while(wKingZone){
-    Square z = BB::popBit(wKingZone);
-    BitBoard attack = BB::isAttackedBB(p, z, Co_White);
-    while(attack){
-    Square from = BB::popBit(attack);
-    attSc += getValue(p,from);
-    }
-    }
+      BitBoard wKingZone = BB::mask[p.wk].kingZone;
+      while(wKingZone){
+        Square z = BB::popBit(wKingZone);
+        BitBoard attack = BB::isAttackedBB(p, z, Co_White);
+        while(attack){
+           Square from = BB::popBit(attack);
+           attSc += getValue(p,from);
+        }
+      }
     }
     if ( p.bk != INVALIDSQUARE ){
-    BitBoard bKingZone = BB::mask[p.bk].kingZone;
-    while(bKingZone){
-    Square z = BB::popBit(bKingZone);
-    BitBoard attack = BB::isAttackedBB(p, z, Co_Black);
-    while(attack){
-    Square from = BB::popBit(attack);
-    attSc += getValue(p,from);
-    }
-    }
+      BitBoard bKingZone = BB::mask[p.bk].kingZone;
+      while(bKingZone){
+        Square z = BB::popBit(bKingZone);
+        BitBoard attack = BB::isAttackedBB(p, z, Co_Black);
+        while(attack){
+          Square from = BB::popBit(attack);
+          attSc += getValue(p,from);
+        }
+      }
     }
     sc+=attSc/50;
     */
@@ -1957,7 +1964,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     else val = hashUsable?e.score:eval(p, gp);
     scoreStack[p.ply] = val;
 
-    bool futility = false, lmp = false;
+    bool futility = false, lmp = false, moveGenerated = false;
+    std::vector<Move> moves;
 
     // prunings
     if ( !DynamicConfig::mateFinder && !rootnode && gp > 0.2 && !pvnode && !isInCheck && std::abs(alpha) < MATE-MAX_DEPTH && std::abs(beta) < MATE-MAX_DEPTH ){
@@ -1991,6 +1999,28 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
         // futility
         if (StaticConfig::doFutility && val <= alpha - StaticConfig::futilityDepthCoeff*depth ) futility = true;
+
+        // ProbCut
+        if ( StaticConfig::doProbcut && depth >= StaticConfig::probCutMinDepth ){
+          int probCutCount = 0;
+          const ScoreType betaPC = beta + StaticConfig::probCutMargin;
+          if (!moveGenerated){
+             generate(p,moves);
+             moveGenerated = true;
+             if ( moves.empty() ) return isInCheck?-MATE + ply : 0;
+             sort(*this,moves,p,&e);
+          }
+          for (auto it = moves.begin() ; it != moves.end() && probCutCount < StaticConfig::probCutMaxMoves; ++it){
+            if ( (e.h != 0 && sameMove(e.m, *it) && Move2Score(*it) < 100) || Move2Score(*it) < 0) continue;
+            Position p2 = p;
+            if ( ! apply(p2,*it) ) continue;
+            ++probCutCount;
+            ScoreType scorePC = -qsearch(-betaPC,-betaPC+1,p2,ply+1,seldepth);
+            std::vector<Move> pvPC;
+            if (std::abs(scorePC) != STOPSCORE && scorePC >= betaPC) scorePC = -pvs(-betaPC,-betaPC+1,p2,depth-StaticConfig::probCutMinDepth,pvnode,ply+1,pvPC,seldepth);
+            if (std::abs(scorePC) != STOPSCORE && scorePC >= betaPC) return scorePC;
+          }
+        }
     }
 
     // IID
@@ -2025,7 +2055,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 updatePV(pv, e.m, childPV);
                 if (ttval >= beta) {
                     //if (Move2Type(e.m) == T_std && !isInCheck) updateHistoryKillers(*this, p, depth, e.m);
-                    //if ( skipMove==INVALIDMOVE) TT::setEntry({ e.m,ttval,TT::B_beta,depth,computeHash(p) }); // this can only decrease depth ????
+                    if ( skipMove==INVALIDMOVE) TT::setEntry({ e.m,ttval,TT::B_beta,depth,computeHash(p) }); // this can only decrease depth ????
                     return ttval;
                 }
                 alphaUpdated = true;
@@ -2034,10 +2064,12 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         }
     }
 
-    std::vector<Move> moves;
-    generate(p,moves);
-    if ( moves.empty() ) return isInCheck?-MATE + ply : 0;
-    sort(*this,moves,p,&e);
+    if (!moveGenerated){
+       generate(p,moves);
+       moveGenerated = true;
+       if ( moves.empty() ) return isInCheck?-MATE + ply : 0;
+       sort(*this,moves,p,&e);
+    }
     const bool improving = (!isInCheck && ply >= 2 && val >= scoreStack[p.ply - 2]);
 
     TT::Bound hashBound = TT::B_alpha;
@@ -2585,7 +2617,7 @@ int main(int argc, char ** argv){
     }
 
 #ifdef WITH_TEXEL_TUNING
-    if ( std::string(argv[1]) == "-texel" ) TexelTuning("tuning/Ethereal.fens.json");
+    if ( std::string(argv[1]) == "-texel" ) TexelTuning("tuning/minic.fens.json");
 #endif
 
 #ifdef DEBUG_TOOL
