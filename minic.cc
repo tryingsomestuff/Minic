@@ -32,7 +32,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEXEL_TUNING
 #define DEBUG_TOOL
 
-const std::string MinicVersion = "0.24";
+const std::string MinicVersion = "dev";
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
@@ -68,8 +68,8 @@ const bool doQFutility      = true;
 const bool doProbcut        = false;
 
 const ScoreType qfutilityMargin          = 128;
-const int       staticNullMoveMaxDepth   = 3;
-const ScoreType staticNullMoveDepthCoeff = 160;
+const int       staticNullMoveMaxDepth   = 6;
+const ScoreType staticNullMoveDepthCoeff = 80;
 const ScoreType razoringMargin           = 200;
 const int       razoringMaxDepth         = 3;
 const int       nullMoveMinDepth         = 2;
@@ -78,7 +78,7 @@ const ScoreType futilityDepthCoeff       = 160;
 const int       iidMinDepth              = 5;
 const int       probCutMinDepth          = 5;
 const int       probCutMaxMoves          = 3;
-const ScoreType probCutMargin            = 200;
+const ScoreType probCutMargin            = 80;
 const int       lmrMinDepth              = 3;
 const int       singularExtensionDepth   = 8;
 }
@@ -116,7 +116,7 @@ inline std::string showDate() {
 
 enum LogLevel : unsigned char{ logTrace = 0, logDebug = 1, logInfo  = 2, logWarn  = 3, logError = 4, logFatal = 5, logGUI   = 6};
 
-std::string backtrace(){return "@todo:: backtrace";} ///@todo find a sinple portable implementation
+std::string backtrace(){return "@todo:: backtrace";} ///@todo find a very simple portable implementation
 
 Square stringToSquare(const std::string & str){ return (str.at(1) - 49) * 8 + (str.at(0) - 97); }
 
@@ -2005,7 +2005,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
           int probCutCount = 0;
           const ScoreType betaPC = beta + StaticConfig::probCutMargin;
           if (!moveGenerated){
-             generate(p,moves);
+             generate(p,moves,GP_cap);
              moveGenerated = true;
              if ( moves.empty() ) return isInCheck?-MATE + ply : 0;
              sort(*this,moves,p,&e);
@@ -2017,7 +2017,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             ++probCutCount;
             ScoreType scorePC = -qsearch(-betaPC,-betaPC+1,p2,ply+1,seldepth);
             std::vector<Move> pvPC;
-            if (std::abs(scorePC) != STOPSCORE && scorePC >= betaPC) scorePC = -pvs(-betaPC,-betaPC+1,p2,depth-StaticConfig::probCutMinDepth,pvnode,ply+1,pvPC,seldepth);
+            if (std::abs(scorePC) != STOPSCORE && scorePC >= betaPC) scorePC = -pvs(-betaPC,-betaPC+1,p2,depth-StaticConfig::probCutMinDepth+1,pvnode,ply+1,pvPC,seldepth);
             if (std::abs(scorePC) != STOPSCORE && scorePC >= betaPC) return scorePC;
           }
         }
@@ -2572,11 +2572,20 @@ template<typename T> T getOptionCLI(bool & found, const std::string & key, T def
     return ret;
 }
 
+template<typename T> struct Validator{
+   Validator():hasMin(false),hasMax(false){}
+   Validator & setMin(const T & v){ minValue=v; hasMin=true; return *this;}
+   Validator & setMax(const T & v){ maxValue=v; hasMax=true; return *this;}
+   bool hasMin,hasMax;
+   T minValue, maxValue;
+   T get(const T & v)const {return std::min(hasMax?maxValue:v,std::max(hasMin?minValue:v,v));}
+};
+
 // from json
-template<typename T> T getOption(const std::string & key, T defaultValue = OptionValue<T>().value) {
+template<typename T> T getOption(const std::string & key, T defaultValue = OptionValue<T>().value, const Validator<T> & v = Validator<T>()) {
     bool found = false;
     const T cliValue = getOptionCLI(found,key,defaultValue);
-    if ( found ) return cliValue;
+    if ( found ) return v.get(cliValue);
     auto it = json.find(key);
     if (it == json.end()) {
         LogIt(logError) << "JSON key not given, " << key;
@@ -2588,9 +2597,13 @@ template<typename T> T getOption(const std::string & key, T defaultValue = Optio
     }
     else {
         LogIt(logInfo) << "From config file, " << it.key() << " : " << it.value();
-        return it.value();
+        return v.get((T)it.value());
     }
 }
+
+#define GETOPT(  name,type)                 DynamicConfig::name = getOption<type>(#name);
+#define GETOPT_D(name,type,def)             DynamicConfig::name = getOption<type>(#name,def);
+#define GETOPT_M(name,type,def,mini,maxi)   DynamicConfig::name = getOption<type>(#name,def,Validator<type>().setMin(mini).setMax(maxi));
 
 #ifdef WITH_TEXEL_TUNING
 #include "texelTuning.h"
@@ -2600,16 +2613,16 @@ int main(int argc, char ** argv){
     hellooo();
     initOptions(argc,argv);
     initHash();
-    DynamicConfig::ttSizeMb  = getOption<int>("ttSizeMb",128);
-    DynamicConfig::ttESizeMb = getOption<int>("ttESizeMb",128);
+    GETOPT_D(ttSizeMb,int,128)
+    GETOPT_D(ttESizeMb,int,128)
     TT::initTable();
     TT::initETable();
     stats.init();
     initLMR();
     initMvvLva();
     BB::initMask();
-    ThreadPool::instance().setup(std::min(std::max(getOption<int>("threads",1),1),64));
-    DynamicConfig::mateFinder = getOption<bool>("mateFinder");
+    ThreadPool::instance().setup(getOption<int>("threads",1,Validator<int>().setMin(1).setMax(64)));
+    GETOPT(mateFinder,bool)
 
     if ( getOption<bool>("book") && Book::fileExists("book.bin") ) {
         std::ifstream bbook("book.bin",std::ios::in | std::ios::binary);
