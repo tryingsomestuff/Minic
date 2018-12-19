@@ -80,4 +80,5 @@ and a command line interface, using the same key word. For instance, forcing mat
 * 0.21 : add a little more evaluation (basic material bonus/malus)
 * 0.22 : not much ...
 * 0.23 : try to texel tune pieces value, not sure it is a success 
+* 0.24 : passer eval
 
