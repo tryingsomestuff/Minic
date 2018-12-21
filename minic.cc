@@ -2046,7 +2046,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             // extensions
             int extension = 0;
             if (isInCheck) ++extension;
-            //if (singularExtension(*this,alpha, beta, p, depth, e, e.m, rootnode, ply)) ++extension;
+            if (!extension && singularExtension(*this,alpha, beta, p, depth, e, e.m, rootnode, ply)) ++extension;
             const ScoreType ttval = -pvs(-beta, -alpha, p2, depth-1+extension, pvnode, ply + 1, childPV, seldepth);
             if (stopFlag) return STOPSCORE;
             bestScore = ttval;
