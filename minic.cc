@@ -991,14 +991,14 @@ bool readFEN(const std::string & fen, Position & p, bool silent = false){
     assert(p.ep == INVALIDSQUARE || (SQRANK(p.ep) == 2 || SQRANK(p.ep) == 5));
 
     // read 50 moves rules
-    if (strList.size() >= 5) p.fifty = readFromString<unsigned char>(strList[4]);
+    if (strList.size() >= 5) p.fifty = (unsigned char)readFromString<int>(strList[4]);
     else p.fifty = 0;
 
     // read number of move
-    if (strList.size() >= 6) p.moves = readFromString<unsigned char>(strList[5]);
+    if (strList.size() >= 6) p.moves = (unsigned char)readFromString<int>(strList[5]);
     else p.moves = 1;
 
-    p.ply = (p.moves - 1) * 2 + 1 + p.c == Co_Black ? 1 : 0;
+    p.ply = (int(p.moves) - 1) * 2 + 1 + p.c == Co_Black ? 1 : 0;
 
     p.h = computeHash(p);
 
@@ -1119,13 +1119,18 @@ int GetNextMSecPerMove(const Position & p){
     else if ( nbMoveInTC > 0){ // mps is given
         assert(msecWholeGame > 0);
         assert(nbMoveInTC > 0);
+        LogIt(logInfo) << "TC mode";
         ms = int(0.95 * (msecWholeGame+((msecInc>0)?nbMoveInTC*msecInc:0)) / (float)(nbMoveInTC+0.5));
     }
     else{ // mps is not given
         ///@todo something better using the real time command
         // sum(0.85/(40+3.5*(i-8)),i=1..200) = 0.95
-        const int nmoves = int(40 + (p.moves-8)*3.5f); // let's start for a 40 moves and decrease time after that
-        ms = int(0.85 * (msecWholeGame+((msecInc>0)?p.moves*msecInc:0))/ (float)nmoves);
+        LogIt(logInfo) << "Fix time mode";
+        const int nmoves = int(40 + (int(p.moves)-8)*3.5f); // let's start for a 40 moves and decrease time after that
+        LogIt(logInfo) << "nmoves    " << nmoves;
+        LogIt(logInfo) << "p.moves   " << int(p.moves);
+        assert(nmoves > 0);
+        ms = int(0.85 * (msecWholeGame+((msecInc>0)?int(p.moves)*msecInc:0))/ (float)nmoves);
     }
     return ms;
 }
