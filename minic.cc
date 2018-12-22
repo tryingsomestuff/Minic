@@ -32,7 +32,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEXEL_TUNING
 #define DEBUG_TOOL
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "0.26";
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
