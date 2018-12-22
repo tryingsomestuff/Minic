@@ -13,20 +13,21 @@ Have a look in the Dist directory for releases. Some more stable/official ones w
 Quite poor for a chess engine (around 2300) but already way to strong for me !
 
 ```
-     Name                          Elo     +/-   Games   Score   Draws
-   0 Minic                          71      12    2593   60.1%   18.4%
-   1 sungorus64                    103      44     216   64.4%   17.6%
-   2 Bitfoot                       103      43     216   64.4%   20.4%
-   3 dorpsgek                       29      40     216   54.2%   25.9%
-   4 Horizon_4_4                    14      42     216   52.1%   18.1%
-   5 zevra                         -18      39     216   47.5%   30.1%
-   6 asymptote                     -66      42     217   40.6%   20.3%
-   7 ct800_v1.11_x64               -75      44     216   39.4%   15.7%
-   8 weini1                       -103      45     216   35.6%   14.8%
-   9 rattatechess_nosferatu       -120      44     216   33.3%   18.5%
-  10 simplex                      -182      48     216   25.9%   13.9%
-  11 fairymax                     -338      55     216   12.5%   17.6%
-  12 tscp181                      -396      74     216    9.3%    7.4%
+Rank Name                          Elo     +/-   Games   Score   Draws
+   0 Minic                          47       7    7122   56.8%   15.9%
+   1 fruit_21                      351      39     548   88.3%   11.3%
+   2 sungorus64                     89      27     548   62.6%   18.2%
+   3 Bitfoot                        73      27     548   60.4%   15.3%
+   4 dorpsgek                       20      25     548   52.9%   28.5%
+   5 Horizon_4_4                     4      27     548   50.5%   13.5%
+   6 zevra                         -30      25     547   45.7%   27.4%
+   7 rattatechess_nosferatu        -68      28     548   40.3%   13.1%
+   8 weini1                        -68      28     547   40.3%   11.9%
+   9 ct800_v1.11_x64               -77      27     548   39.1%   17.2%
+  10 asymptote                     -91      27     548   37.2%   19.0%
+  11 simplex                      -169      30     548   27.5%   14.4%
+  12 fairymax                     -351      39     548   11.7%   10.9%
+  13 tscp181                      -498      57     548    5.4%    5.3%
 ```
 
 ## How to compile:
