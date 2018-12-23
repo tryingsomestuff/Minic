@@ -33,7 +33,7 @@ Rank Name                          Elo     +/-   Games   Score   Draws
 ## What about SMP ?  
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
-   1 Minic 3 trheads                60      34     200   58.5%   49.0%
+   1 Minic 3 threads                60      34     200   58.5%   49.0%
    2 Minic 2 threads               -16      33     200   47.8%   52.5%
    3 Minic                         -44      32     200   43.8%   54.5%
 ```
