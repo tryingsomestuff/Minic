@@ -205,11 +205,12 @@ int debug(std::string cli, int argc, char ** argv){
         if ( argc >= 3 ) depth = atoi(argv[3]);
         Move bestMove = INVALIDMOVE;
         ScoreType s = 0;
-        TimeMan::isDynamic                = false;
-        TimeMan::nbMoveInTC               = -1;
-        TimeMan::msecPerMove              = 60*60*1000*24; // 1 day == infinity ...
-        TimeMan::msecWholeGame            = -1;
-        TimeMan::msecInc                  = -1;
+        TimeMan::isDynamic       = false;
+        TimeMan::nbMoveInTC      = -1;
+        TimeMan::msecPerMove     = 60*60*1000*24; // 1 day == infinity ...
+        TimeMan::msecInTC        = -1;
+        TimeMan::msecInc         = -1;
+        TimeMan::msecUntilNextTC = -1;
         currentMoveMs = TimeMan::GetNextMSecPerMove(p);
         DepthType seldepth = 0;
         std::vector<Move> pv;
@@ -228,11 +229,12 @@ int debug(std::string cli, int argc, char ** argv){
         if ( argc >= 3 ) depth = atoi(argv[3]);
         Move bestMove = INVALIDMOVE;
         ScoreType s = 0;
-        TimeMan::isDynamic                = false;
-        TimeMan::nbMoveInTC               = -1;
-        TimeMan::msecPerMove              = 60*60*1000*24; // 1 day == infinity ...
-        TimeMan::msecWholeGame            = -1;
-        TimeMan::msecInc                  = -1;
+        TimeMan::isDynamic       = false;
+        TimeMan::nbMoveInTC      = -1;
+        TimeMan::msecPerMove     = 60*60*1000*24; // 1 day == infinity ...
+        TimeMan::msecInTC        = -1;
+        TimeMan::msecInc         = -1;
+        TimeMan::msecUntilNextTC = -1;
         currentMoveMs = TimeMan::GetNextMSecPerMove(p);
         DepthType seldepth = 0;
         std::vector<Move> pv;
