@@ -32,7 +32,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEXEL_TUNING
 #define DEBUG_TOOL
 
-const std::string MinicVersion = "0.27";
+const std::string MinicVersion = "dev";
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
@@ -182,6 +182,15 @@ ScoreType   isolatedPawnMalus = 15;
 ScoreType   bishopPairBonus =  50;
 ScoreType   knightPairMalus = -16;
 ScoreType   rookPairMalus   = -32;
+
+ScoreType   blockedBishopByPawn  = -24;
+ScoreType   blockedKnight        = -150;
+ScoreType   blockedKnight2       = -100;
+ScoreType   blockedBishop        = -150;
+ScoreType   blockedBishop2       = -100;
+ScoreType   blockedBishop3       = -50;
+ScoreType   returningBishopBonus =  16;
+ScoreType   blockedRookByKing    = -22;
 
 std::string Squares[64] = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2", "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4", "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5", "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6", "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" };
 enum Sq : char { Sq_a1 =  0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1,Sq_a2,Sq_b2,Sq_c2,Sq_d2,Sq_e2,Sq_f2,Sq_g2,Sq_h2,Sq_a3,Sq_b3,Sq_c3,Sq_d3,Sq_e3,Sq_f3,Sq_g3,Sq_h3,Sq_a4,Sq_b4,Sq_c4,Sq_d4,Sq_e4,Sq_f4,Sq_g4,Sq_h4,Sq_a5,Sq_b5,Sq_c5,Sq_d5,Sq_e5,Sq_f5,Sq_g5,Sq_h5,Sq_a6,Sq_b6,Sq_c6,Sq_d6,Sq_e6,Sq_f6,Sq_g6,Sq_h6,Sq_a7,Sq_b7,Sq_c7,Sq_d7,Sq_e7,Sq_f7,Sq_g7,Sq_h7,Sq_a8,Sq_b8,Sq_c8,Sq_d8,Sq_e8,Sq_f8,Sq_g8,Sq_h8};
@@ -782,7 +791,7 @@ std::string ToString(const std::vector<Move> & moves){
 
 std::string ToString(const Position & p, bool noEval){
     std::stringstream ss;
-    ss << std::endl;
+    ss << "Position" << std::endl;
     for (Square j = 7; j >= 0; --j) {
         ss << "# +-+-+-+-+-+-+-+-+" << std::endl << "# |";
         for (Square i = 0; i < 8; ++i) ss << getName(p,i+j*8) << '|';
@@ -1104,32 +1113,43 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
 }
 
 namespace TimeMan{
-int msecPerMove, msecWholeGame, nbMoveInTC, msecInc;
+int msecPerMove, msecInTC, nbMoveInTC, msecInc, msecUntilNextTC;
 bool isDynamic;
 
 std::chrono::time_point<Clock> startTime;
 
 void init(){
     LogIt(logInfo) << "Init timemane" ;
-    msecPerMove   = 777;
-    msecWholeGame = -1;
-    nbMoveInTC    = -1;
-    msecInc       = -1;
-    isDynamic     = false;
+    msecPerMove     = 777;
+    msecInTC        = -1;
+    nbMoveInTC      = -1;
+    msecInc         = -1;
+    msecUntilNextTC = -1;
+    isDynamic       = false;
 }
 
 int GetNextMSecPerMove(const Position & p){
+    static const int msecMargin = 200;
     int ms = -1;
-    LogIt(logInfo) << "msecPerMove   " << msecPerMove   ;
-    LogIt(logInfo) << "msecWholeGame " << msecWholeGame ;
-    LogIt(logInfo) << "msecInc       " << msecInc       ;
-    LogIt(logInfo) << "nbMoveInTC    " << nbMoveInTC    ;
+    LogIt(logInfo) << "msecPerMove     " << msecPerMove;
+    LogIt(logInfo) << "msecInTC        " << msecInTC   ;
+    LogIt(logInfo) << "msecInc         " << msecInc    ;
+    LogIt(logInfo) << "nbMoveInTC      " << nbMoveInTC ;
+    LogIt(logInfo) << "msecUntilNextTC " << msecUntilNextTC;
+    LogIt(logInfo) << "currentNbMoves  " << int(p.moves);
     if ( msecPerMove > 0 ) ms =  msecPerMove;
     else if ( nbMoveInTC > 0){ // mps is given
-        assert(msecWholeGame > 0);
+        assert(msecInTC > 0);
         assert(nbMoveInTC > 0);
         LogIt(logInfo) << "TC mode";
-        ms = int(0.95 * (msecWholeGame+((msecInc>0)?nbMoveInTC*msecInc:0)) / (float)(nbMoveInTC+0.5));
+        if (!isDynamic){
+           // msecUntilNextTC is NOT available
+           ms = int(0.95 * (msecInTC+((msecInc>0)?nbMoveInTC*msecInc:0)) / (float)(nbMoveInTC+0.5));
+        }
+        else{
+           // msecUntilNextTC IS available
+           ms = int(msecUntilNextTC-msecMargin+((msecInc>0)?p.moves*msecInc:0)) / (float)(nbMoveInTC-((p.moves-1)%nbMoveInTC));
+        }
     }
     else{ // mps is not given
         ///@todo something better using the real time command
@@ -1139,7 +1159,14 @@ int GetNextMSecPerMove(const Position & p){
         LogIt(logInfo) << "nmoves    " << nmoves;
         LogIt(logInfo) << "p.moves   " << int(p.moves);
         assert(nmoves > 0);
-        ms = int(0.85 * (msecWholeGame+((msecInc>0)?int(p.moves)*msecInc:0))/ (float)nmoves);
+        if (!isDynamic){
+           // msecUntilNextTC is NOT available
+           ms = int(0.85 * (msecInTC+((msecInc>0)?int(p.moves)*msecInc:0))/ (float)nmoves);
+        }
+        else{
+           // msecUntilNextTC IS available
+           ms = int(0.85 * (msecUntilNextTC+((msecInc>0)?int(p.moves)*msecInc:0))/ (float)(nmoves-p.moves));
+        }
     }
     return ms;
 }
@@ -1596,7 +1623,7 @@ bool apply(Position & p, const Move & m){
     p.c = opponentColor(p.c);
     if ( toP != P_none || abs(fromP) == P_wp ) p.fifty = 0;
     else ++p.fifty;
-    if ( p.c == Co_Black ) ++p.moves;
+    if ( p.c == Co_White ) ++p.moves;
     ++p.ply;
 
     p.h ^= ZT[3][13]; p.h ^= ZT[4][13];
@@ -1818,6 +1845,7 @@ ScoreType eval(const Position & p, float & gp){
 
     // passer
     ///@todo protected passed
+    ///@todo candidate passed
     pieceBBiterator = p.whitePawn;
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
@@ -1850,6 +1878,115 @@ ScoreType eval(const Position & p, float & gp){
     */
 
     ///@todo isolated
+
+    /*
+    // blocked piece
+    // white
+    // bishop blocked by own pawn
+    if (    (p.whiteBishop & SquareToBitboard(Sq_c1))
+         && (p.whitePawn   & SquareToBitboard(Sq_d2))
+         && (p.occupancy   & SquareToBitboard(Sq_d3)) ) sc += blockedBishopByPawn;
+    if (    (p.whiteBishop & SquareToBitboard(Sq_f1))
+         && (p.whitePawn   & SquareToBitboard(Sq_e2))
+         && (p.occupancy   & SquareToBitboard(Sq_e3)) ) sc += blockedBishopByPawn;
+
+    // trapped knight
+    if (     (p.whiteKnight & SquareToBitboard(Sq_a8))
+         && ((p.blackPawn   & SquareToBitboard(Sq_a7))
+         ||  (p.blackPawn   & SquareToBitboard(Sq_c7)) ) ) sc += blockedKnight;
+    if (     (p.whiteKnight & SquareToBitboard(Sq_h8))
+         && ((p.blackPawn   & SquareToBitboard(Sq_h7))
+         ||  (p.blackPawn   & SquareToBitboard(Sq_f7)) ) ) sc += blockedKnight;
+    if (     (p.whiteKnight & SquareToBitboard(Sq_a7))
+         && ((p.blackPawn   & SquareToBitboard(Sq_a6))
+         ||  (p.blackPawn   & SquareToBitboard(Sq_b7)) ) ) sc += blockedKnight2;
+    if (     (p.whiteKnight & SquareToBitboard(Sq_h7))
+         && ((p.blackPawn   & SquareToBitboard(Sq_h6))
+         ||  (p.blackPawn   & SquareToBitboard(Sq_g7)) ) ) sc += blockedKnight2;
+
+    // trapped bishop
+    if (    (p.whiteBishop & SquareToBitboard(Sq_a7))
+         && (p.blackPawn   & SquareToBitboard(Sq_b6)) )  sc += blockedBishop;
+    if (    (p.whiteBishop & SquareToBitboard(Sq_h7))
+         && (p.blackPawn   & SquareToBitboard(Sq_g6)) )  sc += blockedBishop;
+    if (    (p.whiteBishop & SquareToBitboard(Sq_b8))
+         && (p.blackPawn   & SquareToBitboard(Sq_c7)) )  sc += blockedBishop2;
+    if (    (p.whiteBishop & SquareToBitboard(Sq_g8))
+         && (p.blackPawn   & SquareToBitboard(Sq_f7)) )  sc += blockedBishop2;
+    if (    (p.whiteBishop & SquareToBitboard(Sq_a6))
+         && (p.blackPawn   & SquareToBitboard(Sq_b5)) )  sc += blockedBishop3;
+    if (    (p.whiteBishop & SquareToBitboard(Sq_h6))
+         && (p.blackPawn   & SquareToBitboard(Sq_g5)) )  sc += blockedBishop3;
+
+    // bishop near castled king (bonus)
+    if (    (p.whiteBishop & SquareToBitboard(Sq_f1))
+         && (p.whiteKing   & SquareToBitboard(Sq_g1)) )  sc += returningBishopBonus;
+    if (    (p.whiteBishop & SquareToBitboard(Sq_c1))
+         && (p.whiteKing   & SquareToBitboard(Sq_b1)) )  sc += returningBishopBonus;
+
+    // king blocking rook
+    if ( (  (p.whiteKing & SquareToBitboard(Sq_f1))
+         || (p.whiteKing & SquareToBitboard(Sq_g1)) )
+         &&((p.whiteRook & SquareToBitboard(Sq_h1))
+         || (p.whiteRook & SquareToBitboard(Sq_g1)) )) sc += blockedRookByKing;
+    if ( (  (p.whiteKing & SquareToBitboard(Sq_c1))
+         || (p.whiteKing & SquareToBitboard(Sq_b1)) )
+         &&((p.whiteRook & SquareToBitboard(Sq_a1))
+         || (p.whiteRook & SquareToBitboard(Sq_b1)) )) sc += blockedRookByKing;
+
+    // black
+    // bishop blocked by own pawn
+    if (    (p.blackBishop & SquareToBitboard(Sq_c8))
+         && (p.blackPawn   & SquareToBitboard(Sq_d7))
+         && (p.occupancy   & SquareToBitboard(Sq_d6)) ) sc += blockedBishopByPawn;
+    if (    (p.blackBishop & SquareToBitboard(Sq_f8))
+         && (p.blackPawn   & SquareToBitboard(Sq_e7))
+         && (p.occupancy   & SquareToBitboard(Sq_e6)) ) sc += blockedBishopByPawn;
+
+    // trapped knight
+    if (     (p.blackKnight & SquareToBitboard(Sq_a1))
+         && ((p.whitePawn   & SquareToBitboard(Sq_a2))
+         ||  (p.whitePawn   & SquareToBitboard(Sq_c2)) ) ) sc += blockedKnight;
+    if (     (p.blackKnight & SquareToBitboard(Sq_h1))
+         && ((p.whitePawn   & SquareToBitboard(Sq_h2))
+         ||  (p.whitePawn   & SquareToBitboard(Sq_f2)) ) ) sc += blockedKnight;
+    if (     (p.blackKnight & SquareToBitboard(Sq_a2))
+         && ((p.whitePawn   & SquareToBitboard(Sq_a3))
+         ||  (p.whitePawn   & SquareToBitboard(Sq_b2)) ) ) sc += blockedKnight2;
+    if (     (p.blackKnight & SquareToBitboard(Sq_h2))
+         && ((p.whitePawn   & SquareToBitboard(Sq_h3))
+         ||  (p.whitePawn   & SquareToBitboard(Sq_g2)) ) ) sc += blockedKnight2;
+
+    // trapped bishop
+    if (    (p.blackBishop & SquareToBitboard(Sq_a2))
+         && (p.whitePawn   & SquareToBitboard(Sq_b3)) )  sc += blockedBishop;
+    if (    (p.blackBishop & SquareToBitboard(Sq_h2))
+         && (p.whitePawn   & SquareToBitboard(Sq_g3)) )  sc += blockedBishop;
+    if (    (p.blackBishop & SquareToBitboard(Sq_b1))
+         && (p.whitePawn   & SquareToBitboard(Sq_c2)) )  sc += blockedBishop2;
+    if (    (p.blackBishop & SquareToBitboard(Sq_g1))
+         && (p.whitePawn   & SquareToBitboard(Sq_f2)) )  sc += blockedBishop2;
+    if (    (p.blackBishop & SquareToBitboard(Sq_a3))
+         && (p.whitePawn   & SquareToBitboard(Sq_b4)) )  sc += blockedBishop3;
+    if (    (p.blackBishop & SquareToBitboard(Sq_h3))
+         && (p.whitePawn   & SquareToBitboard(Sq_g4)) )  sc += blockedBishop3;
+
+    // bishop near castled king (bonus)
+    if (    (p.blackBishop & SquareToBitboard(Sq_f8))
+         && (p.blackKing   & SquareToBitboard(Sq_g8)) )  sc += returningBishopBonus;
+    if (    (p.blackBishop & SquareToBitboard(Sq_c8))
+         && (p.blackKing   & SquareToBitboard(Sq_b8)) )  sc += returningBishopBonus;
+
+    // king blocking rook
+    if ( (  (p.blackKing   & SquareToBitboard(Sq_f8))
+         || (p.blackKing   & SquareToBitboard(Sq_g8)) )
+         &&((p.blackRook   & SquareToBitboard(Sq_h8))
+         || (p.blackRook   & SquareToBitboard(Sq_g8)) )) sc += blockedRookByKing;
+    if ( (  (p.blackKing   & SquareToBitboard(Sq_c8))
+         || (p.blackKing   & SquareToBitboard(Sq_b8)) )
+         &&((p.blackRook   & SquareToBitboard(Sq_a8))
+         || (p.blackRook   & SquareToBitboard(Sq_b8)) )) sc += blockedRookByKing;
+    */
 
     /*
     // number of pawn and piece type
@@ -2187,7 +2324,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 std::vector<Move> ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
     if ( isMainThread() ){
         LogIt(logInfo) << "Search called" ;
-        LogIt(logInfo) << "currentMoveMs " << currentMoveMs ;
+        LogIt(logInfo) << "requested time  " << currentMoveMs ;
         LogIt(logInfo) << "requested depth " << (int) d ;
         stats.init();
         stopFlag = false;
@@ -2312,9 +2449,9 @@ Move thinkUntilTimeUp(){
     ScoreType score = 0;
     Move m = INVALIDMOVE;
     if ( depth < 0 ) depth = 64;
-    LogIt(logInfo) << "depth " << (int)depth ;
+    LogIt(logInfo) << "depth          " << (int)depth ;
     currentMoveMs = TimeMan::GetNextMSecPerMove(position);
-    LogIt(logInfo) << "time  " << currentMoveMs ;
+    LogIt(logInfo) << "currentMoveMs  " << currentMoveMs ;
     LogIt(logInfo) << ToString(position) ;
     DepthType seldepth = 0;
     std::vector<Move> pv;
@@ -2353,7 +2490,7 @@ void xboard();
 void XBoard::xboard(){
     LogIt(logInfo) << "Starting XBoard main loop" ;
     ///@todo more feature disable !!
-    LogIt(logGUI) << "feature ping=1 setboard=1 colors=0 usermove=1 memory=0 sigint=0 sigterm=0 otime=0 time=0 nps=0 myname=\"Minic " << MinicVersion << "\"" ;
+    LogIt(logGUI) << "feature ping=1 setboard=1 colors=0 usermove=1 memory=0 sigint=0 sigterm=0 otime=0 time=1 nps=0 myname=\"Minic " << MinicVersion << "\"" ;
     LogIt(logGUI) << "feature done=1" ;
 
     while(true) {
@@ -2507,17 +2644,30 @@ void XBoard::xboard(){
                     readLine();
                 }
             }
+            else if( strncmp(command.c_str(), "time",4) == 0) {
+                int centisec = 0;
+                sscanf(command.c_str(), "time %d", &centisec);
+                // just updating remaining time in curren TC (shall be classic TC or sudden death)
+                TimeMan::isDynamic        = true;
+                //TimeMan::nbMoveInTC       = -1;
+                //TimeMan::msecPerMove      = -1;
+                //TimeMan::msecInTC         = -1;
+                //TimeMan::msecInc          = -1;
+                TimeMan::msecUntilNextTC  = centisec*10;
+                //depth                     = 64; // infinity
+            }
             else if ( strncmp(command.c_str(), "st", 2) == 0) {
                 int msecPerMove = 0;
                 sscanf(command.c_str(), "st %d", &msecPerMove);
                 msecPerMove *= 1000;
                 // forced move time
-                TimeMan::isDynamic                = false;
-                TimeMan::nbMoveInTC               = -1;
-                TimeMan::msecPerMove              = msecPerMove;
-                TimeMan::msecWholeGame            = -1;
-                TimeMan::msecInc                  = -1;
-                depth                             = 64; // infinity
+                TimeMan::isDynamic        = false;
+                TimeMan::nbMoveInTC       = -1;
+                TimeMan::msecPerMove      = msecPerMove;
+                TimeMan::msecInTC         = -1;
+                TimeMan::msecInc          = -1;
+                TimeMan::msecUntilNextTC  = -1;
+                depth                     = 64; // infinity
             }
             else if ( strncmp(command.c_str(), "sd", 2) == 0) {
                 int d = 0;
@@ -2525,27 +2675,30 @@ void XBoard::xboard(){
                 depth = d;
                 if(depth<0) depth = 8;
                 // forced move depth
-                TimeMan::isDynamic                = false;
-                TimeMan::nbMoveInTC               = -1;
-                TimeMan::msecPerMove              = 60*60*1000*24; // 1 day == infinity ...
-                TimeMan::msecWholeGame            = -1;
-                TimeMan::msecInc                  = -1;
+                TimeMan::isDynamic        = false;
+                TimeMan::nbMoveInTC       = -1;
+                TimeMan::msecPerMove      = 60*60*1000*24; // 1 day == infinity ...
+                TimeMan::msecInTC         = -1;
+                TimeMan::msecInc          = -1;
+                TimeMan::msecUntilNextTC  = -1;
             }
             else if(strncmp(command.c_str(), "level",5) == 0) {
-                int timeLeft = 0;
-                int sec = 0;
+                int timeTC = 0;
+                int secTC = 0;
                 int inc = 0;
                 int mps = 0;
-                if( sscanf(command.c_str(), "level %d %d %d", &mps, &timeLeft, &inc) != 3) sscanf(command.c_str(), "level %d %d:%d %d", &mps, &timeLeft, &sec, &inc);
-                timeLeft *= 60000;
-                timeLeft += sec * 1000;
+                if( sscanf(command.c_str(), "level %d %d %d", &mps, &timeTC, &inc) != 3) sscanf(command.c_str(), "level %d %d:%d %d", &mps, &timeTC, &secTC, &inc);
+                timeTC *= 60000;
+                timeTC += secTC * 1000;
                 int msecinc = inc * 1000;
-                TimeMan::isDynamic                = false;
-                TimeMan::nbMoveInTC               = mps;
-                TimeMan::msecPerMove              = -1;
-                TimeMan::msecWholeGame            = timeLeft;
-                TimeMan::msecInc                  = msecinc;
-                depth                             = 64; // infinity
+                // classic TC is mps>0, else sudden death
+                TimeMan::isDynamic        = false;
+                TimeMan::nbMoveInTC       = mps;
+                TimeMan::msecPerMove      = -1;
+                TimeMan::msecInTC         = timeTC;
+                TimeMan::msecInc          = msecinc;
+                TimeMan::msecUntilNextTC  = timeTC; // just an init here, with be managed using "time" command later
+                depth                     = 64; // infinity
             }
             else if ( command == "edit"){ }
             else if ( command == "?"){ stop(); }
