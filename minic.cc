@@ -32,7 +32,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEXEL_TUNING
 #define DEBUG_TOOL
 
-const std::string MinicVersion = "0.26";
+const std::string MinicVersion = "dev";
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
@@ -176,6 +176,9 @@ ScoreType   passerBonus[8]= { 0, 10, 20, 30, 40, 60, 80, 0};
 ScoreType   adjKnight[9]  = { -24, -18, -12, -6,  0,  6,  12, 18, 24 };
 ScoreType   adjRook[9]    = {  48,  36,  24, 12,  0,-12, -24,-36,-48 };
 
+ScoreType   doublePawnMalus   = 15;
+ScoreType   isolatedPawnMalus = 15;
+
 ScoreType   bishopPairBonus =  50;
 ScoreType   knightPairMalus = -16;
 ScoreType   rookPairMalus   = -32;
@@ -241,6 +244,12 @@ const BitBoard whiteKingKingSide  = 0x00000000000000E0;
 const BitBoard blackKingQueenSide = 0x0700000000000000;
 const BitBoard blackKingKingSide  = 0xe000000000000000;
 const BitBoard fileA              = 0x0101010101010101;
+const BitBoard fileB              = 0x0202020202020202;
+const BitBoard fileC              = 0x0404040404040404;
+const BitBoard fileD              = 0x0808080808080808;
+const BitBoard fileE              = 0x1010101010101010;
+const BitBoard fileF              = 0x2020202020202020;
+const BitBoard fileG              = 0x4040404040404040;
 const BitBoard fileH              = 0x8080808080808080;
 const BitBoard rank1              = 0x00000000000000ff;
 const BitBoard rank2              = 0x000000000000ff00;
@@ -1662,10 +1671,10 @@ struct SortThreatsFunctor {
 bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold) const{
     // Only deal with normal moves
     if (! isCapture(m)) return true;
-    const Square from       = Move2From(m);
-    const Square to         = Move2To(m);
+    const Square from = Move2From(m);
+    const Square to   = Move2To(m);
     Piece nextVictim  = p.b[from];
-    const Color us          = getColor(p,from);
+    const Color us    = getColor(p,from);
     ScoreType balance = std::abs(getValue(p,to)) - threshold; // The opponent may be able to recapture so this is the best result we can hope for.
     if (balance < 0) return false;
     balance -= std::abs(Values[nextVictim+PieceShift]); // Now assume the worst possible result: that the opponent can capture our piece for free.
@@ -1808,6 +1817,7 @@ ScoreType eval(const Position & p, float & gp){
     if (gp < 0.2 && p.wk != INVALIDSQUARE && p.bk != INVALIDSQUARE) sc -= (sc>0?+1:-1)*manhattanDistance(p.wk, p.bk)*15;
 
     // passer
+    ///@todo protected passed
     pieceBBiterator = p.whitePawn;
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
@@ -1818,6 +1828,28 @@ ScoreType eval(const Position & p, float & gp){
         const Square k = BB::popBit(pieceBBiterator);
         sc -= ((BB::mask[k].passerSpan[Co_Black] & p.whitePawn) == 0ull)?passerBonus[7-SQRANK(k)]:0;
     }
+
+    // double pawn
+    /*
+    sc -= (countBit(p.whitePawn & fileA)>>1)*doublePawnMalus;
+    sc -= (countBit(p.whitePawn & fileB)>>1)*doublePawnMalus;
+    sc -= (countBit(p.whitePawn & fileC)>>1)*doublePawnMalus;
+    sc -= (countBit(p.whitePawn & fileD)>>1)*doublePawnMalus;
+    sc -= (countBit(p.whitePawn & fileE)>>1)*doublePawnMalus;
+    sc -= (countBit(p.whitePawn & fileF)>>1)*doublePawnMalus;
+    sc -= (countBit(p.whitePawn & fileG)>>1)*doublePawnMalus;
+    sc -= (countBit(p.whitePawn & fileH)>>1)*doublePawnMalus;
+    sc += (countBit(p.blackPawn & fileA)>>1)*doublePawnMalus;
+    sc += (countBit(p.blackPawn & fileB)>>1)*doublePawnMalus;
+    sc += (countBit(p.blackPawn & fileC)>>1)*doublePawnMalus;
+    sc += (countBit(p.blackPawn & fileD)>>1)*doublePawnMalus;
+    sc += (countBit(p.blackPawn & fileE)>>1)*doublePawnMalus;
+    sc += (countBit(p.blackPawn & fileF)>>1)*doublePawnMalus;
+    sc += (countBit(p.blackPawn & fileG)>>1)*doublePawnMalus;
+    sc += (countBit(p.blackPawn & fileH)>>1)*doublePawnMalus;
+    */
+
+    ///@todo isolated
 
     /*
     // number of pawn and piece type
@@ -2051,7 +2083,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             // extensions
             int extension = 0;
             if (isInCheck) ++extension;
-            if (!extension && singularExtension(*this,alpha, beta, p, depth, e, e.m, rootnode, ply)) ++extension;
+            if (!extension && skipMove==INVALIDMOVE && singularExtension(*this,alpha, beta, p, depth, e, e.m, rootnode, ply)) ++extension;
             const ScoreType ttval = -pvs(-beta, -alpha, p2, depth-1+extension, pvnode, ply + 1, childPV, seldepth);
             if (stopFlag) return STOPSCORE;
             bestScore = ttval;
@@ -2092,22 +2124,25 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         std::vector<Move> childPV;
         // extensions
         int extension = 0;
-        if (isInCheck && Move2Score(*it) > -100) ++extension;
-        if ( validMoveCount == 1 || !StaticConfig::doPVS) val = -pvs(-beta,-alpha,p2,depth-1+extension,pvnode,ply+1,childPV,seldepth);
+        //if (isInCheck) extension = 1; // we are in check (extension)
+        //if (isCapture(Move2Type(p.lastMove)) && Move2To(*it) == Move2To(p.lastMove)) extension = 1; // recapture extension
+        if (validMoveCount == 1 || !StaticConfig::doPVS) val = -pvs(-beta,-alpha,p2,depth-1+extension,pvnode,ply+1,childPV,seldepth);
         else{
             // reductions & prunings
             int reduction = 0;
             const bool isCheck = isAttacked(p2, kingSquare(p2));
             const bool isAdvancedPawnPush = getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
+            //if (isCheck && Move2Score(*it) > -100) extension = 1; // we give check with a non risky move
+            //if (isAdvancedPawnPush && depth < 5)   extension = 1; // a pawn is near promotion
             const bool isPrunable = !isInCheck && !isCheck && !isAdvancedPawnPush && Move2Type(*it) == T_std && !sameMove(*it, killerT.killers[0][p.ply]) && !sameMove(*it, killerT.killers[1][p.ply]);
             // futility
-            if ( futility && isPrunable) continue;
+            if (futility && isPrunable) continue;
             // LMP
-            if ( lmp && isPrunable && validMoveCount >= lmpLimit[improving][depth] ) continue;
+            if (lmp && isPrunable && validMoveCount >= lmpLimit[improving][depth] ) continue;
             // SEE
-            if ( futility && Move2Score(*it) < -900 ) continue;
+            if (futility && Move2Score(*it) < -900 ) continue;
             // LMR
-            if ( StaticConfig::doLMR && !DynamicConfig::mateFinder && depth >= StaticConfig::lmrMinDepth && isPrunable && std::abs(alpha) < MATE-MAX_DEPTH && std::abs(beta) < MATE-MAX_DEPTH ) reduction = lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
+            if (StaticConfig::doLMR && !DynamicConfig::mateFinder && depth >= StaticConfig::lmrMinDepth && isPrunable && std::abs(alpha) < MATE-MAX_DEPTH && std::abs(beta) < MATE-MAX_DEPTH ) reduction = lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
             if (pvnode && reduction > 0) --reduction;
             if (!improving) ++reduction;
             // PVS
@@ -2194,7 +2229,7 @@ std::vector<Move> ThreadContext::search(const Position & p, Move & m, DepthType 
             if (((depth + SkipPhase[i]) / SkipSize[i]) % 2) continue;
         }
         std::vector<Move> pvLoc;
-        ScoreType delta = (StaticConfig::doWindow && depth>4)?25:MATE; // MATE not INFSCORE in order to enter the loop below once
+        ScoreType delta = (StaticConfig::doWindow && depth>4)?8:MATE; // MATE not INFSCORE in order to enter the loop below once
         ScoreType alpha = std::max(ScoreType(bestScore - delta), ScoreType (-INFSCORE));
         ScoreType beta  = std::min(ScoreType(bestScore + delta), INFSCORE);
         ScoreType score = 0;
