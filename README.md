@@ -91,4 +91,7 @@ and a command line interface, using the same key word. For instance, forcing mat
 * 0.23 : try to texel tune pieces value, not sure it is a success 
 * 0.24 : passer eval
 * 0.25 : more aggressive pruning
+* 0.26 : fix a TC bug
+* 0.27 : smaller window, better singular extension
+* 0.28 : xboard time command is used now
 
