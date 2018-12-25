@@ -1148,7 +1148,7 @@ int GetNextMSecPerMove(const Position & p){
         }
         else{
            // msecUntilNextTC IS available
-           ms = int(msecUntilNextTC-msecMargin+((msecInc>0)?p.moves*msecInc:0)) / (float)(nbMoveInTC-((p.moves-1)%nbMoveInTC));
+           ms = int((msecUntilNextTC-msecMargin+((msecInc>0)?p.moves*msecInc:0)) / (float)(nbMoveInTC-((p.moves-1)%nbMoveInTC)));
         }
     }
     else{ // mps is not given
