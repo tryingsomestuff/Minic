@@ -1,4 +1,3 @@
-
 namespace Texel {
 
     struct TexelInput {
