@@ -30,9 +30,10 @@ typedef uint64_t u_int64_t;
 
 //#define IMPORTBOOK
 //#define WITH_TEXEL_TUNING
-#define DEBUG_TOOL
+//#define DEBUG_TOOL
+//#define WITH_TEST_SUITE
 
-const std::string MinicVersion = "0.28";
+const std::string MinicVersion = "0.29";
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef char DepthType;
@@ -172,16 +173,20 @@ ScoreType   Values[13]    = { -8000, -1025, -477, -365, -337, -82, 0, 82, 337, 3
 ScoreType   ValuesEG[13]  = { -8000,  -936, -512, -297, -281, -94, 0, 94, 281, 297, 512,  936, 8000 };
 std::string Names[13]     = { "k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K" };
 
-ScoreType   passerBonus[8]= { 0, 10, 20, 30, 40, 60, 80, 0};
+ScoreType   passerBonus[8]        = { 0,  2,  5, 10, 20, 30, 40, 0};
+ScoreType   passerBonusEG[8]      = { 0, 10, 20, 30, 60, 90,140, 0};
+ScoreType   kingNearPassedPawnEG  = 14;
+ScoreType   doublePawnMalus       = 15;
+ScoreType   isolatedPawnMalus     = 15;
+ScoreType   protectedPasserFactor = 0.25;
+ScoreType   freePasserFactor      = 0.75;
+
 ScoreType   adjKnight[9]  = { -24, -18, -12, -6,  0,  6,  12, 18, 24 };
 ScoreType   adjRook[9]    = {  48,  36,  24, 12,  0,-12, -24,-36,-48 };
 
-ScoreType   doublePawnMalus   = 15;
-ScoreType   isolatedPawnMalus = 15;
-
-ScoreType   bishopPairBonus =  50;
-ScoreType   knightPairMalus = -16;
-ScoreType   rookPairMalus   = -32;
+ScoreType   bishopPairBonus =  20;
+ScoreType   knightPairMalus = -8;
+ScoreType   rookPairMalus   = -16;
 
 ScoreType   blockedBishopByPawn  = -24;
 ScoreType   blockedKnight        = -150;
@@ -193,6 +198,8 @@ ScoreType   returningBishopBonus =  16;
 ScoreType   blockedRookByKing    = -22;
 
 std::string Squares[64] = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2", "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4", "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5", "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6", "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" };
+std::string Files[8] = { "a", "b", "c", "d", "e", "f", "g", "h" };
+std::string Ranks[8] = { "1", "2", "3", "4", "5", "6", "7", "8" };
 enum Sq : char { Sq_a1 =  0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1,Sq_a2,Sq_b2,Sq_c2,Sq_d2,Sq_e2,Sq_f2,Sq_g2,Sq_h2,Sq_a3,Sq_b3,Sq_c3,Sq_d3,Sq_e3,Sq_f3,Sq_g3,Sq_h3,Sq_a4,Sq_b4,Sq_c4,Sq_d4,Sq_e4,Sq_f4,Sq_g4,Sq_h4,Sq_a5,Sq_b5,Sq_c5,Sq_d5,Sq_e5,Sq_f5,Sq_g5,Sq_h5,Sq_a6,Sq_b6,Sq_c6,Sq_d6,Sq_e6,Sq_f6,Sq_g6,Sq_h6,Sq_a7,Sq_b7,Sq_c7,Sq_d7,Sq_e7,Sq_f7,Sq_g7,Sq_h7,Sq_a8,Sq_b8,Sq_c8,Sq_d8,Sq_e8,Sq_f8,Sq_g8,Sq_h8};
 
 enum Castling : char{ C_none= 0, C_wks = 1, C_wqs = 2, C_bks = 4, C_bqs = 8 };
@@ -222,7 +229,7 @@ Color Colors[13] = { Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_Black,
 
 #ifdef __MINGW32__
 #define POPCOUNT(x)   int(__builtin_popcountll(x))
-inline int BitScanForward(u_int64_t bb) { assert(bb != 0); return __builtin_ctzll(bb);}
+inline int BitScanForward(BitBoard bb) { assert(bb != 0); return __builtin_ctzll(bb);}
 #define bsf(x,i)      (i=BitScanForward(x))
 #define swapbits(x)   (__builtin_bswap64 (x))
 #else
@@ -232,17 +239,27 @@ inline int BitScanForward(u_int64_t bb) { assert(bb != 0); return __builtin_ctzl
 #define swapbits(x)   (_byteswap_uint64 (x))
 #else // linux
 #define POPCOUNT(x)   int(__builtin_popcountll(x))
-inline int BitScanForward(u_int64_t bb) { assert(bb != 0ull); return __builtin_ctzll(bb);}
+inline int BitScanForward(BitBoard bb) { assert(bb != 0ull); return __builtin_ctzll(bb);}
 #define bsf(x,i)      (i=BitScanForward(x))
 #define swapbits(x)   (__builtin_bswap64 (x))
 #endif
 #endif
 
 #define SquareToBitboard(k) (1ull<<(k))
+#define SquareToBitboardTable(k) BB::mask[k].bbsquare
 inline uint64_t  countBit(const BitBoard & b)           { return POPCOUNT(b);}
 inline void      setBit  (      BitBoard & b, Square k) { b |= SquareToBitboard(k);}
 inline void      unSetBit(      BitBoard & b, Square k) { b &= ~SquareToBitboard(k);}
 inline bool      isSet   (const BitBoard & b, Square k) { return (SquareToBitboard(k) & b) != 0;}
+
+enum BBSq : BitBoard { BBSq_a1 = SquareToBitboard(Sq_a1),BBSq_b1 = SquareToBitboard(Sq_b1),BBSq_c1 = SquareToBitboard(Sq_c1),BBSq_d1 = SquareToBitboard(Sq_d1),BBSq_e1 = SquareToBitboard(Sq_e1),BBSq_f1 = SquareToBitboard(Sq_f1),BBSq_g1 = SquareToBitboard(Sq_g1),BBSq_h1 = SquareToBitboard(Sq_h1),
+                       BBSq_a2 = SquareToBitboard(Sq_a2),BBSq_b2 = SquareToBitboard(Sq_b2),BBSq_c2 = SquareToBitboard(Sq_c2),BBSq_d2 = SquareToBitboard(Sq_d2),BBSq_e2 = SquareToBitboard(Sq_e2),BBSq_f2 = SquareToBitboard(Sq_f2),BBSq_g2 = SquareToBitboard(Sq_g2),BBSq_h2 = SquareToBitboard(Sq_h2),
+                       BBSq_a3 = SquareToBitboard(Sq_a3),BBSq_b3 = SquareToBitboard(Sq_b3),BBSq_c3 = SquareToBitboard(Sq_c3),BBSq_d3 = SquareToBitboard(Sq_d3),BBSq_e3 = SquareToBitboard(Sq_e3),BBSq_f3 = SquareToBitboard(Sq_f3),BBSq_g3 = SquareToBitboard(Sq_g3),BBSq_h3 = SquareToBitboard(Sq_h3),
+                       BBSq_a4 = SquareToBitboard(Sq_a4),BBSq_b4 = SquareToBitboard(Sq_b4),BBSq_c4 = SquareToBitboard(Sq_c4),BBSq_d4 = SquareToBitboard(Sq_d4),BBSq_e4 = SquareToBitboard(Sq_e4),BBSq_f4 = SquareToBitboard(Sq_f4),BBSq_g4 = SquareToBitboard(Sq_g4),BBSq_h4 = SquareToBitboard(Sq_h4),
+                       BBSq_a5 = SquareToBitboard(Sq_a5),BBSq_b5 = SquareToBitboard(Sq_b5),BBSq_c5 = SquareToBitboard(Sq_c5),BBSq_d5 = SquareToBitboard(Sq_d5),BBSq_e5 = SquareToBitboard(Sq_e5),BBSq_f5 = SquareToBitboard(Sq_f5),BBSq_g5 = SquareToBitboard(Sq_g5),BBSq_h5 = SquareToBitboard(Sq_h5),
+                       BBSq_a6 = SquareToBitboard(Sq_a6),BBSq_b6 = SquareToBitboard(Sq_b6),BBSq_c6 = SquareToBitboard(Sq_c6),BBSq_d6 = SquareToBitboard(Sq_d6),BBSq_e6 = SquareToBitboard(Sq_e6),BBSq_f6 = SquareToBitboard(Sq_f6),BBSq_g6 = SquareToBitboard(Sq_g6),BBSq_h6 = SquareToBitboard(Sq_h6),
+                       BBSq_a7 = SquareToBitboard(Sq_a7),BBSq_b7 = SquareToBitboard(Sq_b7),BBSq_c7 = SquareToBitboard(Sq_c7),BBSq_d7 = SquareToBitboard(Sq_d7),BBSq_e7 = SquareToBitboard(Sq_e7),BBSq_f7 = SquareToBitboard(Sq_f7),BBSq_g7 = SquareToBitboard(Sq_g7),BBSq_h7 = SquareToBitboard(Sq_h7),
+                       BBSq_a8 = SquareToBitboard(Sq_a8),BBSq_b8 = SquareToBitboard(Sq_b8),BBSq_c8 = SquareToBitboard(Sq_c8),BBSq_d8 = SquareToBitboard(Sq_d8),BBSq_e8 = SquareToBitboard(Sq_e8),BBSq_f8 = SquareToBitboard(Sq_f8),BBSq_g8 = SquareToBitboard(Sq_g8),BBSq_h8 = SquareToBitboard(Sq_h8)};
 
 const BitBoard whiteSquare        = 0x55AA55AA55AA55AA;
 const BitBoard blackSquare        = 0xAA55AA55AA55AA55;
@@ -283,11 +300,17 @@ std::string showBitBoard(const BitBoard & b) {
     return ss.str();
 }
 
+struct Position; // forward decl
+bool readFEN(const std::string & fen, Position & p, bool silent = false); // forward decl
+
 struct Position{
     Piece b[64] = {P_none};
     BitBoard whitePawn=0ull,whiteKnight=0ull,whiteBishop=0ull,whiteRook=0ull,whiteQueen=0ull,whiteKing=0ull;
     BitBoard blackPawn=0ull,blackKnight=0ull,blackBishop=0ull,blackRook=0ull,blackQueen=0ull,blackKing=0ull;
     BitBoard whitePiece=0ull, blackPiece=0ull, occupancy=0ull;
+
+    Position(){}
+    Position(const std::string & fen){readFEN(fen,*this);}
 
     unsigned char fifty = 0;
     unsigned char moves = 0;
@@ -713,6 +736,10 @@ inline bool isCapture(const MType & mt){ return mt == T_capture || mt == T_ep ||
 
 inline bool isCapture(const Move & m){ return isCapture(Move2Type(m)); }
 
+inline bool isPromotion(const MType & mt){ return mt >= T_promq && mt <= T_cappromn;}
+
+inline bool isPromotion(const Move & m){ return isPromotion(Move2Type(m));}
+
 std::string trim(const std::string& str, const std::string& whitespace = " \t"){
     const auto strBegin = str.find_first_not_of(whitespace);
     if (strBegin == std::string::npos) return ""; // no content
@@ -805,7 +832,7 @@ std::string ToString(const Position & p, bool noEval){
     if ( ! noEval ){
         float gp = 0;
         sc = eval(p, gp);
-        ss << "# Phase " << gp  << "# Static score " << sc << std::endl << "# Hash " << computeHash(p) << std::endl << "# FEN " << GetFEN(p) << std::endl;
+        ss << "# Phase " << gp  << std::endl << "# Static score " << sc << std::endl << "# Hash " << computeHash(p) << std::endl << "# FEN " << GetFEN(p) << std::endl;
     }
     ss << "#";
     return ss.str();
@@ -932,7 +959,7 @@ const ScoreType PSTEG[6][64] = {
 
 template < typename T > T readFromString(const std::string & s){ std::stringstream ss(s); T tmp; ss >> tmp; return tmp;}
 
-bool readFEN(const std::string & fen, Position & p, bool silent = false){
+bool readFEN(const std::string & fen, Position & p, bool silent){
     std::vector<std::string> strList;
     std::stringstream iss(fen);
     std::copy(std::istream_iterator<std::string>(iss), std::istream_iterator<std::string>(), back_inserter(strList));
@@ -1016,7 +1043,7 @@ bool readFEN(const std::string & fen, Position & p, bool silent = false){
     if (strList.size() >= 6) p.moves = (unsigned char)readFromString<int>(strList[5]);
     else p.moves = 1;
 
-    p.ply = (int(p.moves) - 1) * 2 + 1 + p.c == Co_Black ? 1 : 0;
+    p.ply = (int(p.moves) - 1) * 2 + 1 + (p.c == Co_Black ? 1 : 0);
 
     p.h = computeHash(p);
 
@@ -1189,12 +1216,12 @@ inline BitBoard shiftSouthWest(BitBoard bitBoard) { return bitBoard >> 9 & ~file
 
 int ranks[512];
 struct Mask {
-    BitBoard diagonal, antidiagonal, file, kingZone;
+    BitBoard bbsquare, diagonal, antidiagonal, file, kingZone;
     BitBoard pawnAttack[2], push[2], dpush[2]; // one for each colors
     BitBoard enpassant, knight, king;
     BitBoard between[64];
     BitBoard frontSpan[2], rearSpan[2], passerSpan[2], attackFrontSpan[2];
-    Mask():diagonal(0ull), antidiagonal(0ull), file(0ull), kingZone(0ull), pawnAttack{ 0ull,0ull }, push{ 0ull,0ull }, dpush{ 0ull,0ull }, enpassant(0ull), knight(0ull), king(0ull), between{0ull}, frontSpan{0ull}, rearSpan{0ull}, passerSpan{0ull}, attackFrontSpan{0ull}{}
+    Mask():bbsquare(0ull), diagonal(0ull), antidiagonal(0ull), file(0ull), kingZone(0ull), pawnAttack{ 0ull,0ull }, push{ 0ull,0ull }, dpush{ 0ull,0ull }, enpassant(0ull), knight(0ull), king(0ull), between{0ull}, frontSpan{0ull}, rearSpan{0ull}, passerSpan{0ull}, attackFrontSpan{0ull}{}
 };
 Mask mask[64];
 
@@ -1202,6 +1229,7 @@ inline void initMask() {
     LogIt(logInfo) << "Init mask" ;
     int d[64][64] = { 0 };
     for (Square x = 0; x < 64; ++x) {
+        mask[x].bbsquare = SquareToBitboard(x);
         for (int i = -1; i <= 1; ++i) {
             for (int j = -1; j <= 1; ++j) {
                 if (i == 0 && j == 0) continue;
@@ -1253,12 +1281,12 @@ inline void initMask() {
             }
         }
 
-        BitBoard wspan = SquareToBitboard(x);
+        BitBoard wspan = SquareToBitboardTable(x);
         wspan |= wspan << 8;
         wspan |= wspan << 16;
         wspan |= wspan << 32;
         wspan = shiftNorth(wspan);
-        BitBoard bspan = SquareToBitboard(x);
+        BitBoard bspan = SquareToBitboardTable(x);
         bspan |= bspan >> 8;
         bspan |= bspan >> 16;
         bspan |= bspan >> 32;
@@ -1303,7 +1331,7 @@ inline BitBoard attack(const BitBoard occupancy, const Square x, const BitBoard 
     BitBoard forward = occupancy & m;
     BitBoard reverse = swapbits(forward);
     forward -= SquareToBitboard(x);
-    reverse -= SquareToBitboard(x ^ 63);
+    reverse -= SquareToBitboard(x^63);
     forward ^= swapbits(reverse);
     forward &= m;
     return forward;
@@ -1348,7 +1376,7 @@ BitBoard isAttackedBB(const Position &p, const Square x, Color c) {
 bool getAttackers(const Position & p, const Square k, std::vector<Square> & attakers) {
     attakers.clear();
     BitBoard attack = isAttackedBB(p, k, p.c);
-    while (attack) { attakers.push_back(popBit(attack)); }
+    while (attack) attakers.push_back(popBit(attack));
     return !attakers.empty();
 }
 
@@ -1360,75 +1388,74 @@ inline bool getAttackers(const Position & p, const Square k, std::vector<Square>
 
 enum GenPhase{ GP_all = 0, GP_cap = 1, GP_quiet = 2};
 
-void generate(const Position & p, std::vector<Move> & moves, GenPhase phase = GP_all){
-    moves.clear();
+void generateSquare(const Position & p, std::vector<Move> & moves, Square from, GenPhase phase = GP_all){
+    assert(from != INVALIDSQUARE);
     const Color side = p.c;
-    bool whiteToPlay = p.c == Co_White;
-    const BitBoard myPieceBB  = ( whiteToPlay ? p.whitePiece : p.blackPiece);
-    const BitBoard oppPieceBB = (!whiteToPlay ? p.whitePiece : p.blackPiece);
-    BitBoard myPieceBBiterator = myPieceBB;
-    while (myPieceBBiterator) {
-        assert ( myPieceBBiterator != 0ull);
-        const Square from = BB::popBit(myPieceBBiterator);
-        assert(from != INVALIDSQUARE);
-        const Piece piece = p.b[from];
-        const Piece ptype = (Piece)std::abs(piece);
-        assert ( ptype != P_none ) ;
-        static BitBoard(*const pf[])(const Square, const BitBoard, const  Color) = { &BB::coverage<P_wp>, &BB::coverage<P_wn>, &BB::coverage<P_wb>, &BB::coverage<P_wr>, &BB::coverage<P_wq>, &BB::coverage<P_wk> };
-        if (ptype != P_wp) {
-            BitBoard bb = pf[ptype-1](from, p.occupancy, p.c) & ~myPieceBB;
-            if      (phase == GP_cap)   bb &= oppPieceBB;  // only target opponent piece
-            else if (phase == GP_quiet) bb &= ~oppPieceBB; // do not target opponent piece
-            while (bb) {
-                const Square to = BB::popBit(bb);
-                const bool isCap = (phase == GP_cap) || ((oppPieceBB&SquareToBitboard(to)) != 0ull);
-                if (isCap) addMove(from,to,T_capture,moves);
-                else addMove(from,to,T_std,moves);
-            }
-            if ( phase != GP_cap && ptype == P_wk ){ // castling
-                if ( side == Co_White) {
-                    bool e1Attacked = isAttacked(p,Sq_e1);
-                    if ( (p.castling & C_wqs) && p.b[Sq_b1] == P_none && p.b[Sq_c1] == P_none && p.b[Sq_d1] == P_none && !isAttacked(p,Sq_c1) && !isAttacked(p,Sq_d1) && !e1Attacked) addMove(from, Sq_c1, T_wqs, moves); // wqs
-                    if ( (p.castling & C_wks) && p.b[Sq_f1] == P_none && p.b[Sq_g1] == P_none && !e1Attacked && !isAttacked(p,Sq_f1) && !isAttacked(p,Sq_g1)) addMove(from, Sq_g1, T_wks, moves); // wks
-                }
-                else{
-                    const bool e8Attacked = isAttacked(p,Sq_e8);
-                    if ( (p.castling & C_bqs) && p.b[Sq_b8] == P_none && p.b[Sq_c8] == P_none && p.b[Sq_d8] == P_none && !isAttacked(p,Sq_c8) && !isAttacked(p,Sq_d8) && !e8Attacked) addMove(from, Sq_c8, T_bqs, moves); // bqs
-                    if ( (p.castling & C_bks) && p.b[Sq_f8] == P_none && p.b[Sq_g8] == P_none && !e8Attacked && !isAttacked(p,Sq_f8) && !isAttacked(p,Sq_g8)) addMove(from, Sq_g8, T_bks, moves); // bks
-                }
-            }
+    const BitBoard myPieceBB  = ((p.c == Co_White) ? p.whitePiece : p.blackPiece);
+    const BitBoard oppPieceBB = ((p.c != Co_White) ? p.whitePiece : p.blackPiece);
+    const Piece piece = p.b[from];
+    const Piece ptype = (Piece)std::abs(piece);
+    assert ( ptype != P_none ) ;
+    static BitBoard(*const pf[])(const Square, const BitBoard, const  Color) = { &BB::coverage<P_wp>, &BB::coverage<P_wn>, &BB::coverage<P_wb>, &BB::coverage<P_wr>, &BB::coverage<P_wq>, &BB::coverage<P_wk> };
+    if (ptype != P_wp) {
+        BitBoard bb = pf[ptype-1](from, p.occupancy, p.c) & ~myPieceBB;
+        if      (phase == GP_cap)   bb &= oppPieceBB;  // only target opponent piece
+        else if (phase == GP_quiet) bb &= ~oppPieceBB; // do not target opponent piece
+        while (bb) {
+            const Square to = BB::popBit(bb);
+            const bool isCap = (phase == GP_cap) || ((oppPieceBB&SquareToBitboard(to)) != 0ull);
+            if (isCap) addMove(from,to,T_capture,moves);
+            else addMove(from,to,T_std,moves);
         }
-        else {
-            BitBoard pawnmoves = 0ull;
-            if ( phase != GP_cap) pawnmoves |= BB::mask[from].push[p.c] & ~p.occupancy;
-            if ((phase != GP_cap) && (BB::mask[from].push[p.c] & p.occupancy) == 0ull) pawnmoves |= BB::mask[from].dpush[p.c] & ~p.occupancy;
-            if ( phase != GP_quiet) pawnmoves |= BB::mask[from].pawnAttack[p.c] & ~myPieceBB & oppPieceBB;
-            while (pawnmoves) {
-                const Square to = BB::popBit(pawnmoves);
-                const bool isCap = (phase == GP_cap) || ((oppPieceBB&SquareToBitboard(to)) != 0ull);
-                if (isCap){
-                    if ( SQRANK(to) == 0 || SQRANK(to) == 7) {
-                        addMove(from, to, T_cappromq, moves); // pawn capture with promotion
-                        addMove(from, to, T_cappromr, moves); // pawn capture with promotion
-                        addMove(from, to, T_cappromb, moves); // pawn capture with promotion
-                        addMove(from, to, T_cappromn, moves); // pawn capture with promotion
-                    }
-                    else addMove(from,to,T_capture,moves);
-                }
-                else{
-                    if ( SQRANK(to) == 0 || SQRANK(to) == 7) {
-                        addMove(from, to, T_promq, moves); // promotion Q
-                        addMove(from, to, T_promr, moves); // promotion R
-                        addMove(from, to, T_promb, moves); // promotion B
-                        addMove(from, to, T_promn, moves); // promotion N
-                    }
-                    else addMove(from,to,T_std,moves);
-                }
+        if ( phase != GP_cap && ptype == P_wk ){ // castling
+            if ( side == Co_White) {
+                bool e1Attacked = isAttacked(p,Sq_e1);
+                if ( (p.castling & C_wqs) && p.b[Sq_b1] == P_none && p.b[Sq_c1] == P_none && p.b[Sq_d1] == P_none && !isAttacked(p,Sq_c1) && !isAttacked(p,Sq_d1) && !e1Attacked) addMove(from, Sq_c1, T_wqs, moves); // wqs
+                if ( (p.castling & C_wks) && p.b[Sq_f1] == P_none && p.b[Sq_g1] == P_none && !e1Attacked && !isAttacked(p,Sq_f1) && !isAttacked(p,Sq_g1)) addMove(from, Sq_g1, T_wks, moves); // wks
             }
-            if ( p.ep != INVALIDSQUARE && phase != GP_quiet ) pawnmoves |= BB::mask[from].pawnAttack[p.c] & ~myPieceBB & SquareToBitboard(p.ep);
-            while (pawnmoves) addMove(from,BB::popBit(pawnmoves),T_ep,moves);
+            else{
+                const bool e8Attacked = isAttacked(p,Sq_e8);
+                if ( (p.castling & C_bqs) && p.b[Sq_b8] == P_none && p.b[Sq_c8] == P_none && p.b[Sq_d8] == P_none && !isAttacked(p,Sq_c8) && !isAttacked(p,Sq_d8) && !e8Attacked) addMove(from, Sq_c8, T_bqs, moves); // bqs
+                if ( (p.castling & C_bks) && p.b[Sq_f8] == P_none && p.b[Sq_g8] == P_none && !e8Attacked && !isAttacked(p,Sq_f8) && !isAttacked(p,Sq_g8)) addMove(from, Sq_g8, T_bks, moves); // bks
+            }
         }
     }
+    else {
+        BitBoard pawnmoves = 0ull;
+        if ( phase != GP_cap) pawnmoves |= BB::mask[from].push[p.c] & ~p.occupancy;
+        if ((phase != GP_cap) && (BB::mask[from].push[p.c] & p.occupancy) == 0ull) pawnmoves |= BB::mask[from].dpush[p.c] & ~p.occupancy;
+        if ( phase != GP_quiet) pawnmoves |= BB::mask[from].pawnAttack[p.c] & ~myPieceBB & oppPieceBB;
+        while (pawnmoves) {
+            const Square to = BB::popBit(pawnmoves);
+            const bool isCap = (phase == GP_cap) || ((oppPieceBB&SquareToBitboard(to)) != 0ull);
+            if (isCap){
+                if ( SQRANK(to) == 0 || SQRANK(to) == 7) {
+                    addMove(from, to, T_cappromq, moves); // pawn capture with promotion
+                    addMove(from, to, T_cappromr, moves); // pawn capture with promotion
+                    addMove(from, to, T_cappromb, moves); // pawn capture with promotion
+                    addMove(from, to, T_cappromn, moves); // pawn capture with promotion
+                }
+                else addMove(from,to,T_capture,moves);
+            }
+            else{
+                if ( SQRANK(to) == 0 || SQRANK(to) == 7) {
+                    addMove(from, to, T_promq, moves); // promotion Q
+                    addMove(from, to, T_promr, moves); // promotion R
+                    addMove(from, to, T_promb, moves); // promotion B
+                    addMove(from, to, T_promn, moves); // promotion N
+                }
+                else addMove(from,to,T_std,moves);
+            }
+        }
+        if ( p.ep != INVALIDSQUARE && phase != GP_quiet ) pawnmoves |= BB::mask[from].pawnAttack[p.c] & ~myPieceBB & SquareToBitboard(p.ep);
+        while (pawnmoves) addMove(from,BB::popBit(pawnmoves),T_ep,moves);
+    }
+}
+
+void generate(const Position & p, std::vector<Move> & moves, GenPhase phase = GP_all){
+    moves.clear();
+    BitBoard myPieceBBiterator = ( (p.c == Co_White) ? p.whitePiece : p.blackPiece);
+    while (myPieceBBiterator) generateSquare(p,moves,BB::popBit(myPieceBBiterator),phase);
 }
 
 inline void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, bool isCapture = false, Piece prom = P_none) {
@@ -1667,10 +1694,6 @@ bool readBinaryBook(std::ifstream & stream) {
     return true;
 }
 
-#ifdef IMPORTBOOK
-#include "bookGenerationTools.h"
-#endif
-
 template<typename Iter>
 Iter select_randomly(Iter start, Iter end) {
     static std::random_device rd;
@@ -1706,7 +1729,7 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
     if (balance < 0) return false;
     balance -= std::abs(Values[nextVictim+PieceShift]); // Now assume the worst possible result: that the opponent can capture our piece for free.
     if (balance >= 0) return true;
-    if (getPieceType(p, to) == P_wk) return false; // we shall not capture king !
+    if (getPieceType(p, to) == P_wk) return false; // capture king !
     Position p2 = p;
     if (!apply(p2, m)) return false;
     std::vector<Square> stmAttackers;
@@ -1722,7 +1745,7 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
         while (!validThreatFound && threatId < stmAttackers.size()) {
             const Move mm = ToMove(stmAttackers[threatId], to, T_capture); ///@todo prom ????
             nextVictim = p2.b[stmAttackers[threatId]];
-            if (std::abs(nextVictim) == P_wk) return false; // we shall not capture king !
+            if (std::abs(nextVictim) == P_wk) return false; // capture king !
             ++threatId;
             if ( ! apply(p2,mm) ) continue;
             validThreatFound = true;
@@ -1757,7 +1780,7 @@ struct MoveSorter{
         }
         else if ( t == T_std){
             s += context.historyT.history[getPieceIndex(p,from)][to];
-            const bool isWhite = (p.whitePiece & (SquareToBitboard(from))) != 0ull;
+            const bool isWhite = (p.whitePiece & SquareToBitboard(from)) != 0ull;
             s += PST[getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - PST[getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from];
         }
         m = ToMove(from, to, t, s);
@@ -1819,12 +1842,12 @@ ScoreType eval(const Position & p, float & gp){
     const int pieceScore = 100 * (p.nq + p.nr + p.nb + p.nn) / 14;
     gp = (absscore*0.4f + pieceScore*0.3f + pawnScore*0.3f)/100.f;
     // material
-    sc = (p.nwk - p.nbk) * ScoreType(gp* *absValues[P_wk] + (1.f - gp)* *absValuesEG[P_wk])
-       + (p.nwq - p.nbq) * ScoreType(gp* *absValues[P_wq] + (1.f - gp)* *absValuesEG[P_wq])
-       + (p.nwr - p.nbr) * ScoreType(gp* *absValues[P_wr] + (1.f - gp)* *absValuesEG[P_wr])
-       + (p.nwb - p.nbb) * ScoreType(gp* *absValues[P_wb] + (1.f - gp)* *absValuesEG[P_wb])
-       + (p.nwn - p.nbn) * ScoreType(gp* *absValues[P_wn] + (1.f - gp)* *absValuesEG[P_wn])
-       + (p.nwp - p.nbp) * ScoreType(gp* *absValues[P_wp] + (1.f - gp)* *absValuesEG[P_wp]);
+    sc += (p.nwk - p.nbk) * ScoreType(gp* *absValues[P_wk] + (1.f - gp)* *absValuesEG[P_wk])
+        + (p.nwq - p.nbq) * ScoreType(gp* *absValues[P_wq] + (1.f - gp)* *absValuesEG[P_wq])
+        + (p.nwr - p.nbr) * ScoreType(gp* *absValues[P_wr] + (1.f - gp)* *absValuesEG[P_wr])
+        + (p.nwb - p.nbb) * ScoreType(gp* *absValues[P_wb] + (1.f - gp)* *absValuesEG[P_wb])
+        + (p.nwn - p.nbn) * ScoreType(gp* *absValues[P_wn] + (1.f - gp)* *absValuesEG[P_wn])
+        + (p.nwp - p.nbp) * ScoreType(gp* *absValues[P_wp] + (1.f - gp)* *absValuesEG[P_wp]);
     const bool white2Play = p.c == Co_White;
     // pst
     BitBoard pieceBBiterator = p.whitePiece;
@@ -1838,156 +1861,194 @@ ScoreType eval(const Position & p, float & gp){
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
         const Piece ptype = getPieceType(p, k);
-        sc -= ScoreType((gp*PST[ptype - 1][k] + (1.f - gp)*PSTEG[ptype - 1][k]));
+         sc -= ScoreType((gp*PST[ptype - 1][k] + (1.f - gp)*PSTEG[ptype - 1][k]));
     }
     // in very end game winning king must be near the other king
     if (gp < 0.2 && p.wk != INVALIDSQUARE && p.bk != INVALIDSQUARE) sc -= (sc>0?+1:-1)*manhattanDistance(p.wk, p.bk)*15;
 
     // passer
     ///@todo protected passed
+    ///@todo free passed
+    ///@todo king near passed pawn
     ///@todo candidate passed
+    ///@todo unstoppable passed (king too far)
     pieceBBiterator = p.whitePawn;
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
-        sc += ((BB::mask[k].passerSpan[Co_White] & p.blackPawn) == 0ull)?passerBonus[SQRANK(k)]:0;
+        const ScoreType factorProtected = 1;//+((BB::shiftSouthWest(SquareToBitboard(k)) & p.whitePawn)||(BB::shiftSouthEast(SquareToBitboard(k)) & p.whitePawn)) * protectedPasserFactor;
+        const ScoreType factorFree = 1;//+(BB::mask[k].passerSpan[Co_White] & p.blackPiece) * freePasserFactor * (1.f - gp);
+        const ScoreType kingNearBonus = 0;//kingNearPassedPawnEG * (1.f - gp) * (manhattanDistance(p.bk,k)-manhattanDistance(p.wk,k));
+        sc += kingNearBonus + factorProtected * factorFree * ((BB::mask[k].passerSpan[Co_White] & p.blackPawn) == 0ull)?gp*passerBonus[SQRANK(k)]+(1.f - gp)*passerBonusEG[SQRANK(k)]:0;
     }
     pieceBBiterator = p.blackPawn;
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
-        sc -= ((BB::mask[k].passerSpan[Co_Black] & p.whitePawn) == 0ull)?passerBonus[7-SQRANK(k)]:0;
+        const ScoreType factorProtected = 1;//+((BB::shiftNorthWest(SquareToBitboard(k)) & p.blackPawn)||(BB::shiftNorthEast(SquareToBitboard(k)) & p.blackPawn)) * protectedPasserFactor;
+        const ScoreType factorFree = 1;//+(BB::mask[k].passerSpan[Co_White] & p.whitePiece) * freePasserFactor * (1.f - gp);
+        const ScoreType kingNearBonus = 0;//kingNearPassedPawnEG * (1.f - gp) * (manhattanDistance(p.wk,k)-manhattanDistance(p.bk,k));
+        sc -= kingNearBonus + factorProtected * factorFree * ((BB::mask[k].passerSpan[Co_Black] & p.whitePawn) == 0ull)?gp*passerBonus[7-SQRANK(k)]+(1.f - gp)*passerBonusEG[7-SQRANK(k)]:0;
     }
 
     // double pawn
     /*
-    sc -= (countBit(p.whitePawn & fileA)>>1)*doublePawnMalus;
-    sc -= (countBit(p.whitePawn & fileB)>>1)*doublePawnMalus;
-    sc -= (countBit(p.whitePawn & fileC)>>1)*doublePawnMalus;
-    sc -= (countBit(p.whitePawn & fileD)>>1)*doublePawnMalus;
-    sc -= (countBit(p.whitePawn & fileE)>>1)*doublePawnMalus;
-    sc -= (countBit(p.whitePawn & fileF)>>1)*doublePawnMalus;
-    sc -= (countBit(p.whitePawn & fileG)>>1)*doublePawnMalus;
-    sc -= (countBit(p.whitePawn & fileH)>>1)*doublePawnMalus;
-    sc += (countBit(p.blackPawn & fileA)>>1)*doublePawnMalus;
-    sc += (countBit(p.blackPawn & fileB)>>1)*doublePawnMalus;
-    sc += (countBit(p.blackPawn & fileC)>>1)*doublePawnMalus;
-    sc += (countBit(p.blackPawn & fileD)>>1)*doublePawnMalus;
-    sc += (countBit(p.blackPawn & fileE)>>1)*doublePawnMalus;
-    sc += (countBit(p.blackPawn & fileF)>>1)*doublePawnMalus;
-    sc += (countBit(p.blackPawn & fileG)>>1)*doublePawnMalus;
-    sc += (countBit(p.blackPawn & fileH)>>1)*doublePawnMalus;
-    */
+    unsigned char nbWPA=countBit(p.whitePawn & fileA);
+    unsigned char nbWPB=countBit(p.whitePawn & fileB);
+    unsigned char nbWPC=countBit(p.whitePawn & fileC);
+    unsigned char nbWPD=countBit(p.whitePawn & fileD);
+    unsigned char nbWPE=countBit(p.whitePawn & fileE);
+    unsigned char nbWPF=countBit(p.whitePawn & fileF);
+    unsigned char nbWPG=countBit(p.whitePawn & fileG);
+    unsigned char nbWPH=countBit(p.whitePawn & fileH);
+    unsigned char nbBPA=countBit(p.blackPawn & fileA);
+    unsigned char nbBPB=countBit(p.blackPawn & fileB);
+    unsigned char nbBPC=countBit(p.blackPawn & fileC);
+    unsigned char nbBPD=countBit(p.blackPawn & fileD);
+    unsigned char nbBPE=countBit(p.blackPawn & fileE);
+    unsigned char nbBPF=countBit(p.blackPawn & fileF);
+    unsigned char nbBPG=countBit(p.blackPawn & fileG);
+    unsigned char nbBPH=countBit(p.blackPawn & fileH);
+    sc -= (nbWPA>>1)*doublePawnMalus;
+    sc -= (nbWPB>>1)*doublePawnMalus;
+    sc -= (nbWPC>>1)*doublePawnMalus;
+    sc -= (nbWPD>>1)*doublePawnMalus;
+    sc -= (nbWPE>>1)*doublePawnMalus;
+    sc -= (nbWPF>>1)*doublePawnMalus;
+    sc -= (nbWPG>>1)*doublePawnMalus;
+    sc -= (nbWPH>>1)*doublePawnMalus;
+    sc += (nbBPA>>1)*doublePawnMalus;
+    sc += (nbBPB>>1)*doublePawnMalus;
+    sc += (nbBPC>>1)*doublePawnMalus;
+    sc += (nbBPD>>1)*doublePawnMalus;
+    sc += (nbBPE>>1)*doublePawnMalus;
+    sc += (nbBPF>>1)*doublePawnMalus;
+    sc += (nbBPG>>1)*doublePawnMalus;
+    sc += (nbBPH>>1)*doublePawnMalus;
 
-    ///@todo isolated
+    // isolated
+    sc -= (       nbWPA&!nbWPB)*isolatedPawnMalus;
+    sc -= (!nbWPA&nbWPB&!nbWPC)*isolatedPawnMalus;
+    sc -= (!nbWPB&nbWPC&!nbWPD)*isolatedPawnMalus;
+    sc -= (!nbWPC&nbWPD&!nbWPE)*isolatedPawnMalus;
+    sc -= (!nbWPD&nbWPE&!nbWPF)*isolatedPawnMalus;
+    sc -= (!nbWPE&nbWPF&!nbWPG)*isolatedPawnMalus;
+    sc -= (!nbWPG&nbWPH       )*isolatedPawnMalus;
+    sc += (       nbBPA&!nbBPB)*isolatedPawnMalus;
+    sc += (!nbBPA&nbBPB&!nbBPC)*isolatedPawnMalus;
+    sc += (!nbBPB&nbBPC&!nbBPD)*isolatedPawnMalus;
+    sc += (!nbBPC&nbBPD&!nbBPE)*isolatedPawnMalus;
+    sc += (!nbBPD&nbBPE&!nbBPF)*isolatedPawnMalus;
+    sc += (!nbBPE&nbBPF&!nbBPG)*isolatedPawnMalus;
+    sc += (!nbBPG&nbBPH       )*isolatedPawnMalus;
+    */
 
     /*
     // blocked piece
     // white
     // bishop blocked by own pawn
-    if (    (p.whiteBishop & SquareToBitboard(Sq_c1))
-         && (p.whitePawn   & SquareToBitboard(Sq_d2))
-         && (p.occupancy   & SquareToBitboard(Sq_d3)) ) sc += blockedBishopByPawn;
-    if (    (p.whiteBishop & SquareToBitboard(Sq_f1))
-         && (p.whitePawn   & SquareToBitboard(Sq_e2))
-         && (p.occupancy   & SquareToBitboard(Sq_e3)) ) sc += blockedBishopByPawn;
+    if (    (p.whiteBishop & BBSq_c1)
+         && (p.whitePawn   & BBSq_d2)
+         && (p.occupancy   & BBSq_d3) ) sc += blockedBishopByPawn;
+    if (    (p.whiteBishop & BBSq_f1)
+         && (p.whitePawn   & BBSq_e2)
+         && (p.occupancy   & BBSq_e3) ) sc += blockedBishopByPawn;
 
     // trapped knight
-    if (     (p.whiteKnight & SquareToBitboard(Sq_a8))
-         && ((p.blackPawn   & SquareToBitboard(Sq_a7))
-         ||  (p.blackPawn   & SquareToBitboard(Sq_c7)) ) ) sc += blockedKnight;
-    if (     (p.whiteKnight & SquareToBitboard(Sq_h8))
-         && ((p.blackPawn   & SquareToBitboard(Sq_h7))
-         ||  (p.blackPawn   & SquareToBitboard(Sq_f7)) ) ) sc += blockedKnight;
-    if (     (p.whiteKnight & SquareToBitboard(Sq_a7))
-         && ((p.blackPawn   & SquareToBitboard(Sq_a6))
-         ||  (p.blackPawn   & SquareToBitboard(Sq_b7)) ) ) sc += blockedKnight2;
-    if (     (p.whiteKnight & SquareToBitboard(Sq_h7))
-         && ((p.blackPawn   & SquareToBitboard(Sq_h6))
-         ||  (p.blackPawn   & SquareToBitboard(Sq_g7)) ) ) sc += blockedKnight2;
+    if (     (p.whiteKnight & BBSq_a8)
+         && ((p.blackPawn   & BBSq_a7)
+         ||  (p.blackPawn   & BBSq_c7) ) ) sc += blockedKnight;
+    if (     (p.whiteKnight & BBSq_h8)
+         && ((p.blackPawn   & BBSq_h7)
+         ||  (p.blackPawn   & BBSq_f7) ) ) sc += blockedKnight;
+    if (     (p.whiteKnight & BBSq_a7)
+         && ((p.blackPawn   & BBSq_a6)
+         ||  (p.blackPawn   & BBSq_b7) ) ) sc += blockedKnight2;
+    if (     (p.whiteKnight & BBSq_h7)
+         && ((p.blackPawn   & BBSq_h6)
+         ||  (p.blackPawn   & BBSq_g7) ) ) sc += blockedKnight2;
 
     // trapped bishop
-    if (    (p.whiteBishop & SquareToBitboard(Sq_a7))
-         && (p.blackPawn   & SquareToBitboard(Sq_b6)) )  sc += blockedBishop;
-    if (    (p.whiteBishop & SquareToBitboard(Sq_h7))
-         && (p.blackPawn   & SquareToBitboard(Sq_g6)) )  sc += blockedBishop;
-    if (    (p.whiteBishop & SquareToBitboard(Sq_b8))
-         && (p.blackPawn   & SquareToBitboard(Sq_c7)) )  sc += blockedBishop2;
-    if (    (p.whiteBishop & SquareToBitboard(Sq_g8))
-         && (p.blackPawn   & SquareToBitboard(Sq_f7)) )  sc += blockedBishop2;
-    if (    (p.whiteBishop & SquareToBitboard(Sq_a6))
-         && (p.blackPawn   & SquareToBitboard(Sq_b5)) )  sc += blockedBishop3;
-    if (    (p.whiteBishop & SquareToBitboard(Sq_h6))
-         && (p.blackPawn   & SquareToBitboard(Sq_g5)) )  sc += blockedBishop3;
+    if (    (p.whiteBishop & BBSq_a7)
+         && (p.blackPawn   & BBSq_b6) )  sc += blockedBishop;
+    if (    (p.whiteBishop & BBSq_h7)
+         && (p.blackPawn   & BBSq_g6) )  sc += blockedBishop;
+    if (    (p.whiteBishop & BBSq_b8)
+         && (p.blackPawn   & BBSq_c7) )  sc += blockedBishop2;
+    if (    (p.whiteBishop & BBSq_g8)
+         && (p.blackPawn   & BBSq_f7) )  sc += blockedBishop2;
+    if (    (p.whiteBishop & BBSq_a6)
+         && (p.blackPawn   & BBSq_b5) )  sc += blockedBishop3;
+    if (    (p.whiteBishop & BBSq_h6)
+         && (p.blackPawn   & BBSq_g5) )  sc += blockedBishop3;
 
     // bishop near castled king (bonus)
-    if (    (p.whiteBishop & SquareToBitboard(Sq_f1))
-         && (p.whiteKing   & SquareToBitboard(Sq_g1)) )  sc += returningBishopBonus;
-    if (    (p.whiteBishop & SquareToBitboard(Sq_c1))
-         && (p.whiteKing   & SquareToBitboard(Sq_b1)) )  sc += returningBishopBonus;
+    if (    (p.whiteBishop & BBSq_f1)
+         && (p.whiteKing   & BBSq_g1) )  sc += returningBishopBonus;
+    if (    (p.whiteBishop & BBSq_c1)
+         && (p.whiteKing   & BBSq_b1) )  sc += returningBishopBonus;
 
     // king blocking rook
-    if ( (  (p.whiteKing & SquareToBitboard(Sq_f1))
-         || (p.whiteKing & SquareToBitboard(Sq_g1)) )
-         &&((p.whiteRook & SquareToBitboard(Sq_h1))
-         || (p.whiteRook & SquareToBitboard(Sq_g1)) )) sc += blockedRookByKing;
-    if ( (  (p.whiteKing & SquareToBitboard(Sq_c1))
-         || (p.whiteKing & SquareToBitboard(Sq_b1)) )
-         &&((p.whiteRook & SquareToBitboard(Sq_a1))
-         || (p.whiteRook & SquareToBitboard(Sq_b1)) )) sc += blockedRookByKing;
+    if ( (  (p.whiteKing & BBSq_f1)
+         || (p.whiteKing & BBSq_g1) )
+         &&((p.whiteRook & BBSq_h1)
+         || (p.whiteRook & BBSq_g1) )) sc += blockedRookByKing;
+    if ( (  (p.whiteKing & BBSq_c1)
+         || (p.whiteKing & BBSq_b1) )
+         &&((p.whiteRook & BBSq_a1)
+         || (p.whiteRook & BBSq_b1) )) sc += blockedRookByKing;
 
     // black
     // bishop blocked by own pawn
-    if (    (p.blackBishop & SquareToBitboard(Sq_c8))
-         && (p.blackPawn   & SquareToBitboard(Sq_d7))
-         && (p.occupancy   & SquareToBitboard(Sq_d6)) ) sc += blockedBishopByPawn;
-    if (    (p.blackBishop & SquareToBitboard(Sq_f8))
-         && (p.blackPawn   & SquareToBitboard(Sq_e7))
-         && (p.occupancy   & SquareToBitboard(Sq_e6)) ) sc += blockedBishopByPawn;
+    if (    (p.blackBishop & BBSq_c8)
+         && (p.blackPawn   & BBSq_d7)
+         && (p.occupancy   & BBSq_d6) ) sc += blockedBishopByPawn;
+    if (    (p.blackBishop & BBSq_f8)
+         && (p.blackPawn   & BBSq_e7)
+         && (p.occupancy   & BBSq_e6) ) sc += blockedBishopByPawn;
 
     // trapped knight
-    if (     (p.blackKnight & SquareToBitboard(Sq_a1))
-         && ((p.whitePawn   & SquareToBitboard(Sq_a2))
-         ||  (p.whitePawn   & SquareToBitboard(Sq_c2)) ) ) sc += blockedKnight;
-    if (     (p.blackKnight & SquareToBitboard(Sq_h1))
-         && ((p.whitePawn   & SquareToBitboard(Sq_h2))
-         ||  (p.whitePawn   & SquareToBitboard(Sq_f2)) ) ) sc += blockedKnight;
-    if (     (p.blackKnight & SquareToBitboard(Sq_a2))
-         && ((p.whitePawn   & SquareToBitboard(Sq_a3))
-         ||  (p.whitePawn   & SquareToBitboard(Sq_b2)) ) ) sc += blockedKnight2;
-    if (     (p.blackKnight & SquareToBitboard(Sq_h2))
-         && ((p.whitePawn   & SquareToBitboard(Sq_h3))
-         ||  (p.whitePawn   & SquareToBitboard(Sq_g2)) ) ) sc += blockedKnight2;
+    if (     (p.blackKnight & BBSq_a1)
+         && ((p.whitePawn   & BBSq_a2)
+         ||  (p.whitePawn   & BBSq_c2) ) ) sc += blockedKnight;
+    if (     (p.blackKnight & BBSq_h1)
+         && ((p.whitePawn   & BBSq_h2)
+         ||  (p.whitePawn   & BBSq_f2) ) ) sc += blockedKnight;
+    if (     (p.blackKnight & BBSq_a2)
+         && ((p.whitePawn   & BBSq_a3)
+         ||  (p.whitePawn   & BBSq_b2) ) ) sc += blockedKnight2;
+    if (     (p.blackKnight & BBSq_h2)
+         && ((p.whitePawn   & BBSq_h3)
+         ||  (p.whitePawn   & BBSq_g2) ) ) sc += blockedKnight2;
 
     // trapped bishop
-    if (    (p.blackBishop & SquareToBitboard(Sq_a2))
-         && (p.whitePawn   & SquareToBitboard(Sq_b3)) )  sc += blockedBishop;
-    if (    (p.blackBishop & SquareToBitboard(Sq_h2))
-         && (p.whitePawn   & SquareToBitboard(Sq_g3)) )  sc += blockedBishop;
-    if (    (p.blackBishop & SquareToBitboard(Sq_b1))
-         && (p.whitePawn   & SquareToBitboard(Sq_c2)) )  sc += blockedBishop2;
-    if (    (p.blackBishop & SquareToBitboard(Sq_g1))
-         && (p.whitePawn   & SquareToBitboard(Sq_f2)) )  sc += blockedBishop2;
-    if (    (p.blackBishop & SquareToBitboard(Sq_a3))
-         && (p.whitePawn   & SquareToBitboard(Sq_b4)) )  sc += blockedBishop3;
-    if (    (p.blackBishop & SquareToBitboard(Sq_h3))
-         && (p.whitePawn   & SquareToBitboard(Sq_g4)) )  sc += blockedBishop3;
+    if (    (p.blackBishop & BBSq_a2)
+         && (p.whitePawn   & BBSq_b3) )  sc += blockedBishop;
+    if (    (p.blackBishop & BBSq_h2)
+         && (p.whitePawn   & BBSq_g3) )  sc += blockedBishop;
+    if (    (p.blackBishop & BBSq_b1)
+         && (p.whitePawn   & BBSq_c2) )  sc += blockedBishop2;
+    if (    (p.blackBishop & BBSq_g1)
+         && (p.whitePawn   & BBSq_f2) )  sc += blockedBishop2;
+    if (    (p.blackBishop & BBSq_a3)
+         && (p.whitePawn   & BBSq_b4) )  sc += blockedBishop3;
+    if (    (p.blackBishop & BBSq_h3)
+         && (p.whitePawn   & BBSq_g4) )  sc += blockedBishop3;
 
     // bishop near castled king (bonus)
-    if (    (p.blackBishop & SquareToBitboard(Sq_f8))
-         && (p.blackKing   & SquareToBitboard(Sq_g8)) )  sc += returningBishopBonus;
-    if (    (p.blackBishop & SquareToBitboard(Sq_c8))
-         && (p.blackKing   & SquareToBitboard(Sq_b8)) )  sc += returningBishopBonus;
+    if (    (p.blackBishop & BBSq_f8)
+         && (p.blackKing   & BBSq_g8) )  sc += returningBishopBonus;
+    if (    (p.blackBishop & BBSq_c8)
+         && (p.blackKing   & BBSq_b8) )  sc += returningBishopBonus;
 
     // king blocking rook
-    if ( (  (p.blackKing   & SquareToBitboard(Sq_f8))
-         || (p.blackKing   & SquareToBitboard(Sq_g8)) )
-         &&((p.blackRook   & SquareToBitboard(Sq_h8))
-         || (p.blackRook   & SquareToBitboard(Sq_g8)) )) sc += blockedRookByKing;
-    if ( (  (p.blackKing   & SquareToBitboard(Sq_c8))
-         || (p.blackKing   & SquareToBitboard(Sq_b8)) )
-         &&((p.blackRook   & SquareToBitboard(Sq_a8))
-         || (p.blackRook   & SquareToBitboard(Sq_b8)) )) sc += blockedRookByKing;
+    if ( (  (p.blackKing   & BBSq_f8)
+         || (p.blackKing   & BBSq_g8) )
+         &&((p.blackRook   & BBSq_h8)
+         || (p.blackRook   & BBSq_g8) )) sc += blockedRookByKing;
+    if ( (  (p.blackKing   & BBSq_c8)
+         || (p.blackKing   & BBSq_b8) )
+         &&((p.blackRook   & BBSq_a8)
+         || (p.blackRook   & BBSq_b8) )) sc += blockedRookByKing;
     */
-
     /*
     // number of pawn and piece type
     sc += p.nwr * adjRook  [p.nwp];
@@ -2712,10 +2773,6 @@ void XBoard::xboard(){
 
 }
 
-#ifdef DEBUG_TOOL
-#include "debug.h"
-#endif
-
 nlohmann::json json;
 std::vector<std::string> args;
 
@@ -2798,8 +2855,20 @@ template<typename T> T getOption(const std::string & key, T defaultValue = Optio
 #define GETOPT_D(name,type,def)             DynamicConfig::name = getOption<type>(#name,def);
 #define GETOPT_M(name,type,def,mini,maxi)   DynamicConfig::name = getOption<type>(#name,def,Validator<type>().setMin(mini).setMax(maxi));
 
+#ifdef DEBUG_TOOL
+#include "cli.cc"
+#endif
+
 #ifdef WITH_TEXEL_TUNING
-#include "texelTuning.h"
+#include "texelTuning.cc"
+#endif
+
+#ifdef IMPORTBOOK
+#include "bookGenerationTools.cc"
+#endif
+
+#ifdef WITH_TEST_SUITE
+#include "testSuite.cc"
 #endif
 
 int main(int argc, char ** argv){
@@ -2822,14 +2891,17 @@ int main(int argc, char ** argv){
         Book::readBinaryBook(bbook);
     }
 
+#ifdef WITH_TEST_SUITE
+    if ( argc > 1 && test(argv[1])) return 0;
+#endif
+
 #ifdef WITH_TEXEL_TUNING
-    if ( std::string(argv[1]) == "-texel" ) TexelTuning("tuning/minic.fens.json");
+    if ( argc > 1 && std::string(argv[1]) == "-texel" ) TexelTuning("tuning/minic.fens.json");
 #endif
 
 #ifdef DEBUG_TOOL
-    if ( argc < 2 ) return 1;
-    std::string cli = argv[1];
-    return debug(cli,argc,argv);
+    if ( argc < 2 ) LogIt(logFatal) << "Hint: You can use -xboard command line option to enter xboard mode";
+    return cliManagement(argv[1],argc,argv);
 #else
     XBoard::init();
     TimeMan::init();
