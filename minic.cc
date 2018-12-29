@@ -31,7 +31,7 @@ typedef uint64_t u_int64_t;
 //#define IMPORTBOOK
 //#define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
-//#define WITH_TEST_SUITE
+#define WITH_TEST_SUITE
 
 const std::string MinicVersion = "0.29";
 
@@ -178,8 +178,8 @@ ScoreType   passerBonusEG[8]      = { 0, 10, 20, 30, 60, 90,140, 0};
 ScoreType   kingNearPassedPawnEG  = 14;
 ScoreType   doublePawnMalus       = 15;
 ScoreType   isolatedPawnMalus     = 15;
-ScoreType   protectedPasserFactor = 0.25;
-ScoreType   freePasserFactor      = 0.75;
+float   protectedPasserFactor     = 0.25;
+float   freePasserFactor          = 0.75;
 
 ScoreType   adjKnight[9]  = { -24, -18, -12, -6,  0,  6,  12, 18, 24 };
 ScoreType   adjRook[9]    = {  48,  36,  24, 12,  0,-12, -24,-36,-48 };
@@ -1878,7 +1878,7 @@ ScoreType eval(const Position & p, float & gp){
         const ScoreType factorProtected = 1;//+((BB::shiftSouthWest(SquareToBitboard(k)) & p.whitePawn)||(BB::shiftSouthEast(SquareToBitboard(k)) & p.whitePawn)) * protectedPasserFactor;
         const ScoreType factorFree = 1;//+(BB::mask[k].passerSpan[Co_White] & p.blackPiece) * freePasserFactor * (1.f - gp);
         const ScoreType kingNearBonus = 0;//kingNearPassedPawnEG * (1.f - gp) * (manhattanDistance(p.bk,k)-manhattanDistance(p.wk,k));
-        sc += kingNearBonus + factorProtected * factorFree * ((BB::mask[k].passerSpan[Co_White] & p.blackPawn) == 0ull)?gp*passerBonus[SQRANK(k)]+(1.f - gp)*passerBonusEG[SQRANK(k)]:0;
+        sc += ScoreType(kingNearBonus + factorProtected * factorFree * ((BB::mask[k].passerSpan[Co_White] & p.blackPawn) == 0ull)?gp*passerBonus[SQRANK(k)]+(1.f - gp)*passerBonusEG[SQRANK(k)]:0);
     }
     pieceBBiterator = p.blackPawn;
     while (pieceBBiterator) {
@@ -1886,7 +1886,7 @@ ScoreType eval(const Position & p, float & gp){
         const ScoreType factorProtected = 1;//+((BB::shiftNorthWest(SquareToBitboard(k)) & p.blackPawn)||(BB::shiftNorthEast(SquareToBitboard(k)) & p.blackPawn)) * protectedPasserFactor;
         const ScoreType factorFree = 1;//+(BB::mask[k].passerSpan[Co_White] & p.whitePiece) * freePasserFactor * (1.f - gp);
         const ScoreType kingNearBonus = 0;//kingNearPassedPawnEG * (1.f - gp) * (manhattanDistance(p.wk,k)-manhattanDistance(p.bk,k));
-        sc -= kingNearBonus + factorProtected * factorFree * ((BB::mask[k].passerSpan[Co_Black] & p.whitePawn) == 0ull)?gp*passerBonus[7-SQRANK(k)]+(1.f - gp)*passerBonusEG[7-SQRANK(k)]:0;
+        sc -= ScoreType(kingNearBonus + factorProtected * factorFree * ((BB::mask[k].passerSpan[Co_Black] & p.whitePawn) == 0ull)?gp*passerBonus[7-SQRANK(k)]+(1.f - gp)*passerBonusEG[7-SQRANK(k)]:0);
     }
 
     // double pawn

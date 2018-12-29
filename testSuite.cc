@@ -1,3 +1,7 @@
+#include <cctype>
+#include <locale>
+#include <functional>
+#include <algorithm>
 
 //#include "minic.cc"
 
@@ -29,10 +33,11 @@ std::vector<std::string> split2(const std::string & line, char sep, char delim){
    return v;
 }
 
-std::string & ltrim(std::string &s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+std::string ltrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !std::isspace(ch); }));
     return s;
 }
+
 
 class ExtendedPosition : public Position{
 public:
@@ -117,7 +122,7 @@ BitBoard getPieceBitboard(const Position & p, Piece t){
     return *allB[t+PieceShift];
 }
 
-int numberOf(const Position & p, Piece t){ return countBit(getPieceBitboard(p,t));}
+uint64_t numberOf(const Position & p, Piece t){ return countBit(getPieceBitboard(p,t));}
 
 std::string showAlgAbr(Move m, const Position & p) {
     Square from  = Move2From(m);
@@ -425,7 +430,7 @@ bool test(const std::string & option){
         std::vector<int> timeControls = { 3000 }; //mseconds
         std::vector<int> scores = { 1 };
 
-        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return 2630-35*(30-score);},false);
+        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return score;},false);
         return true;
     }
 
@@ -877,5 +882,6 @@ bool test(const std::string & option){
         return true;
     }
 
+    LogIt(logInfo) << "No test requested ...";
     return false;
 }
