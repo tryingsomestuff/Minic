@@ -1,9 +1,7 @@
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <bitset>
 #include <cmath>
-#include <stdio.h>
-#include <string.h>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -35,7 +33,7 @@ typedef uint64_t u_int64_t;
 
 const std::string MinicVersion = "0.29";
 
-typedef std::chrono::high_resolution_clock Clock;
+typedef std::chrono::system_clock Clock;
 typedef char DepthType;
 typedef int Move;    // invalid if < 0
 typedef char Square; // invalid if < 0
@@ -105,11 +103,11 @@ inline void hellooo(){ std::cout << "# This is Minic version " << MinicVersion <
 
 inline std::string showDate() {
     std::stringstream str;
-    auto time = Clock::now().time_since_epoch();
-    auto msecEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(time);
-    auto secEpoch = std::chrono::duration_cast<std::chrono::seconds>(time).count();
+    auto now = Clock::now();
+    auto msecEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
     char buffer[64];
-    std::strftime(buffer,63,"%Y-%m-%d %H:%M:%S",localtime(&secEpoch));
+    auto tt = std::chrono::system_clock::to_time_t(std::chrono::system_clock::time_point(msecEpoch));
+    std::strftime(buffer,63,"%Y-%m-%d %H:%M:%S",localtime(&tt));
     str << buffer << "-";
     str << std::setw(3) << std::setfill('0') << msecEpoch.count()%1000;
     return str.str();
@@ -173,13 +171,15 @@ ScoreType   Values[13]    = { -8000, -1025, -477, -365, -337, -82, 0, 82, 337, 3
 ScoreType   ValuesEG[13]  = { -8000,  -936, -512, -297, -281, -94, 0, 94, 281, 297, 512,  936, 8000 };
 std::string Names[13]     = { "k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K" };
 
-ScoreType   passerBonus[8]        = { 0,  2,  5, 10, 20, 30, 40, 0};
-ScoreType   passerBonusEG[8]      = { 0, 10, 20, 30, 60, 90,140, 0};
-ScoreType   kingNearPassedPawnEG  = 14;
-ScoreType   doublePawnMalus       = 15;
-ScoreType   isolatedPawnMalus     = 15;
+ScoreType   passerBonus[8]        = { 0,  0,  3,  8, 15, 24, 34, 0};
+ScoreType   passerBonusEG[8]      = { 0,  4, 18, 42, 75,118,170, 0};
+ScoreType   kingNearPassedPawnEG  = 11;
+ScoreType   doublePawnMalus       = 5;
+ScoreType   doublePawnMalusEG     = 15;
+ScoreType   isolatedPawnMalus     = -5; // yes negative ...
+ScoreType   isolatedPawnMalusEG   = 15;
 float   protectedPasserFactor     = 0.25;
-float   freePasserFactor          = 0.75;
+float   freePasserFactor          = 0.9;
 
 ScoreType   adjKnight[9]  = { -24, -18, -12, -6,  0,  6,  12, 18, 24 };
 ScoreType   adjRook[9]    = {  48,  36,  24, 12,  0,-12, -24,-36,-48 };
@@ -1864,82 +1864,80 @@ ScoreType eval(const Position & p, float & gp){
          sc -= ScoreType((gp*PST[ptype - 1][k] + (1.f - gp)*PSTEG[ptype - 1][k]));
     }
     // in very end game winning king must be near the other king
-    if (gp < 0.2 && p.wk != INVALIDSQUARE && p.bk != INVALIDSQUARE) sc -= (sc>0?+1:-1)*manhattanDistance(p.wk, p.bk)*15;
+    if (gp < 0.25 && p.wk != INVALIDSQUARE && p.bk != INVALIDSQUARE) sc -= (sc>0?+1:-1)*manhattanDistance(p.wk, p.bk)*15;
 
     // passer
-    ///@todo protected passed
-    ///@todo free passed
-    ///@todo king near passed pawn
     ///@todo candidate passed
     ///@todo unstoppable passed (king too far)
     pieceBBiterator = p.whitePawn;
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
-        const ScoreType factorProtected = 1;//+((BB::shiftSouthWest(SquareToBitboard(k)) & p.whitePawn)||(BB::shiftSouthEast(SquareToBitboard(k)) & p.whitePawn)) * protectedPasserFactor;
-        const ScoreType factorFree = 1;//+(BB::mask[k].passerSpan[Co_White] & p.blackPiece) * freePasserFactor * (1.f - gp);
-        const ScoreType kingNearBonus = 0;//kingNearPassedPawnEG * (1.f - gp) * (manhattanDistance(p.bk,k)-manhattanDistance(p.wk,k));
-        sc += ScoreType(kingNearBonus + factorProtected * factorFree * ((BB::mask[k].passerSpan[Co_White] & p.blackPawn) == 0ull)?gp*passerBonus[SQRANK(k)]+(1.f - gp)*passerBonusEG[SQRANK(k)]:0);
+        const double factorProtected = 1+((BB::shiftSouthWest(SquareToBitboard(k)) & p.whitePawn) || (BB::shiftSouthEast(SquareToBitboard(k)) & p.whitePawn)) * protectedPasserFactor;
+        const double factorFree = 1+(BB::mask[k].passerSpan[Co_White] & p.blackPiece) * freePasserFactor * (1.f - gp);
+        const double kingNearBonus = kingNearPassedPawnEG * (1.f - gp) * (manhattanDistance(p.bk, k) - manhattanDistance(p.wk, k));
+        sc += ScoreType(factorProtected * factorFree * ((BB::mask[k].passerSpan[Co_White] & p.blackPawn) == 0ull)?gp*passerBonus[SQRANK(k)]+(1.f - gp)*passerBonusEG[SQRANK(k)]+kingNearBonus:0);
     }
     pieceBBiterator = p.blackPawn;
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
-        const ScoreType factorProtected = 1;//+((BB::shiftNorthWest(SquareToBitboard(k)) & p.blackPawn)||(BB::shiftNorthEast(SquareToBitboard(k)) & p.blackPawn)) * protectedPasserFactor;
-        const ScoreType factorFree = 1;//+(BB::mask[k].passerSpan[Co_White] & p.whitePiece) * freePasserFactor * (1.f - gp);
-        const ScoreType kingNearBonus = 0;//kingNearPassedPawnEG * (1.f - gp) * (manhattanDistance(p.wk,k)-manhattanDistance(p.bk,k));
-        sc -= ScoreType(kingNearBonus + factorProtected * factorFree * ((BB::mask[k].passerSpan[Co_Black] & p.whitePawn) == 0ull)?gp*passerBonus[7-SQRANK(k)]+(1.f - gp)*passerBonusEG[7-SQRANK(k)]:0);
+        const double factorProtected = 1+((BB::shiftNorthWest(SquareToBitboard(k)) & p.blackPawn) || (BB::shiftNorthEast(SquareToBitboard(k)) & p.blackPawn)) * protectedPasserFactor;
+        const double factorFree = 1+(BB::mask[k].passerSpan[Co_White] & p.whitePiece) * freePasserFactor * (1.f - gp);
+        const double kingNearBonus = kingNearPassedPawnEG * (1.f - gp) * (manhattanDistance(p.wk, k) - manhattanDistance(p.bk, k));
+        sc -= ScoreType(factorProtected * factorFree * ((BB::mask[k].passerSpan[Co_Black] & p.whitePawn) == 0ull)?gp*passerBonus[7-SQRANK(k)]+(1.f - gp)*passerBonusEG[7-SQRANK(k)]+kingNearBonus:0);
     }
 
-    // double pawn
-    /*
-    unsigned char nbWPA=countBit(p.whitePawn & fileA);
-    unsigned char nbWPB=countBit(p.whitePawn & fileB);
-    unsigned char nbWPC=countBit(p.whitePawn & fileC);
-    unsigned char nbWPD=countBit(p.whitePawn & fileD);
-    unsigned char nbWPE=countBit(p.whitePawn & fileE);
-    unsigned char nbWPF=countBit(p.whitePawn & fileF);
-    unsigned char nbWPG=countBit(p.whitePawn & fileG);
-    unsigned char nbWPH=countBit(p.whitePawn & fileH);
-    unsigned char nbBPA=countBit(p.blackPawn & fileA);
-    unsigned char nbBPB=countBit(p.blackPawn & fileB);
-    unsigned char nbBPC=countBit(p.blackPawn & fileC);
-    unsigned char nbBPD=countBit(p.blackPawn & fileD);
-    unsigned char nbBPE=countBit(p.blackPawn & fileE);
-    unsigned char nbBPF=countBit(p.blackPawn & fileF);
-    unsigned char nbBPG=countBit(p.blackPawn & fileG);
-    unsigned char nbBPH=countBit(p.blackPawn & fileH);
-    sc -= (nbWPA>>1)*doublePawnMalus;
-    sc -= (nbWPB>>1)*doublePawnMalus;
-    sc -= (nbWPC>>1)*doublePawnMalus;
-    sc -= (nbWPD>>1)*doublePawnMalus;
-    sc -= (nbWPE>>1)*doublePawnMalus;
-    sc -= (nbWPF>>1)*doublePawnMalus;
-    sc -= (nbWPG>>1)*doublePawnMalus;
-    sc -= (nbWPH>>1)*doublePawnMalus;
-    sc += (nbBPA>>1)*doublePawnMalus;
-    sc += (nbBPB>>1)*doublePawnMalus;
-    sc += (nbBPC>>1)*doublePawnMalus;
-    sc += (nbBPD>>1)*doublePawnMalus;
-    sc += (nbBPE>>1)*doublePawnMalus;
-    sc += (nbBPF>>1)*doublePawnMalus;
-    sc += (nbBPG>>1)*doublePawnMalus;
-    sc += (nbBPH>>1)*doublePawnMalus;
+    // count pawn per file
+    ///@todo use a cache for that !
+    const unsigned char nbWPA=countBit(p.whitePawn & fileA);
+    const unsigned char nbWPB=countBit(p.whitePawn & fileB);
+    const unsigned char nbWPC=countBit(p.whitePawn & fileC);
+    const unsigned char nbWPD=countBit(p.whitePawn & fileD);
+    const unsigned char nbWPE=countBit(p.whitePawn & fileE);
+    const unsigned char nbWPF=countBit(p.whitePawn & fileF);
+    const unsigned char nbWPG=countBit(p.whitePawn & fileG);
+    const unsigned char nbWPH=countBit(p.whitePawn & fileH);
+    const unsigned char nbBPA=countBit(p.blackPawn & fileA);
+    const unsigned char nbBPB=countBit(p.blackPawn & fileB);
+    const unsigned char nbBPC=countBit(p.blackPawn & fileC);
+    const unsigned char nbBPD=countBit(p.blackPawn & fileD);
+    const unsigned char nbBPE=countBit(p.blackPawn & fileE);
+    const unsigned char nbBPF=countBit(p.blackPawn & fileF);
+    const unsigned char nbBPG=countBit(p.blackPawn & fileG);
+    const unsigned char nbBPH=countBit(p.blackPawn & fileH);
 
-    // isolated
-    sc -= (       nbWPA&!nbWPB)*isolatedPawnMalus;
-    sc -= (!nbWPA&nbWPB&!nbWPC)*isolatedPawnMalus;
-    sc -= (!nbWPB&nbWPC&!nbWPD)*isolatedPawnMalus;
-    sc -= (!nbWPC&nbWPD&!nbWPE)*isolatedPawnMalus;
-    sc -= (!nbWPD&nbWPE&!nbWPF)*isolatedPawnMalus;
-    sc -= (!nbWPE&nbWPF&!nbWPG)*isolatedPawnMalus;
-    sc -= (!nbWPG&nbWPH       )*isolatedPawnMalus;
-    sc += (       nbBPA&!nbBPB)*isolatedPawnMalus;
-    sc += (!nbBPA&nbBPB&!nbBPC)*isolatedPawnMalus;
-    sc += (!nbBPB&nbBPC&!nbBPD)*isolatedPawnMalus;
-    sc += (!nbBPC&nbBPD&!nbBPE)*isolatedPawnMalus;
-    sc += (!nbBPD&nbBPE&!nbBPF)*isolatedPawnMalus;
-    sc += (!nbBPE&nbBPF&!nbBPG)*isolatedPawnMalus;
-    sc += (!nbBPG&nbBPH       )*isolatedPawnMalus;
-    */
+    // double pawn malus
+    sc -= ScoreType((nbWPA>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
+    sc -= ScoreType((nbWPB>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
+    sc -= ScoreType((nbWPC>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
+    sc -= ScoreType((nbWPD>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
+    sc -= ScoreType((nbWPE>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
+    sc -= ScoreType((nbWPF>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
+    sc -= ScoreType((nbWPG>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
+    sc -= ScoreType((nbWPH>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
+    sc += ScoreType((nbBPA>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
+    sc += ScoreType((nbBPB>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
+    sc += ScoreType((nbBPC>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
+    sc += ScoreType((nbBPD>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
+    sc += ScoreType((nbBPE>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
+    sc += ScoreType((nbBPF>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
+    sc += ScoreType((nbBPG>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
+    sc += ScoreType((nbBPH>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
+
+    // isolated pawn malus
+    sc -= ScoreType((        nbWPA&&!nbWPB)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
+    sc -= ScoreType((!nbWPA&&nbWPB&&!nbWPC)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
+    sc -= ScoreType((!nbWPB&&nbWPC&&!nbWPD)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
+    sc -= ScoreType((!nbWPC&&nbWPD&&!nbWPE)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
+    sc -= ScoreType((!nbWPD&&nbWPE&&!nbWPF)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
+    sc -= ScoreType((!nbWPE&&nbWPF&&!nbWPG)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
+    sc -= ScoreType((!nbWPG&&nbWPH        )*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
+    sc += ScoreType((        nbBPA&&!nbBPB)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
+    sc += ScoreType((!nbBPA&&nbBPB&&!nbBPC)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
+    sc += ScoreType((!nbBPB&&nbBPC&&!nbBPD)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
+    sc += ScoreType((!nbBPC&&nbBPD&&!nbBPE)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
+    sc += ScoreType((!nbBPD&&nbBPE&&!nbBPF)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
+    sc += ScoreType((!nbBPE&&nbBPF&&!nbBPG)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
+    sc += ScoreType((!nbBPG&&nbBPH        )*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
 
     /*
     // blocked piece
@@ -2049,6 +2047,7 @@ ScoreType eval(const Position & p, float & gp){
          &&((p.blackRook   & BBSq_a8)
          || (p.blackRook   & BBSq_b8) )) sc += blockedRookByKing;
     */
+
     /*
     // number of pawn and piece type
     sc += p.nwr * adjRook  [p.nwp];
@@ -2062,6 +2061,7 @@ ScoreType eval(const Position & p, float & gp){
     // rook pair
     sc += ( (p.nwr > 1 ? rookPairMalus   : 0)-(p.nbr > 1 ? rookPairMalus   : 0) );
     */
+    
     /*
     // king attack
     ScoreType attSc = 0;
@@ -2217,7 +2217,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         }
 
         // null move
-        if ( StaticConfig::doNullMove && pv.size() > 1 && depth >= StaticConfig::nullMoveMinDepth && p.ep == INVALIDSQUARE && val >= beta){
+        if ( StaticConfig::doNullMove && pv.size() > 1 && depth > StaticConfig::nullMoveMinDepth && p.ep == INVALIDSQUARE && val >= beta){
             Position pN = p;
             pN.c = opponentColor(pN.c);
             pN.h ^= ZT[3][13];
@@ -2322,7 +2322,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         std::vector<Move> childPV;
         // extensions
         int extension = 0;
-        //if (isInCheck) extension = 1; // we are in check (extension)
+        if (isInCheck && depth <= 4) extension = 1; // we are in check (extension)
         //if (isCapture(Move2Type(p.lastMove)) && Move2To(*it) == Move2To(p.lastMove)) extension = 1; // recapture extension
         if (validMoveCount == 1 || !StaticConfig::doPVS) val = -pvs(-beta,-alpha,p2,depth-1+extension,pvnode,ply+1,childPV,seldepth);
         else{
@@ -2332,17 +2332,17 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             const bool isAdvancedPawnPush = getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
             //if (isCheck && Move2Score(*it) > -100) extension = 1; // we give check with a non risky move
             //if (isAdvancedPawnPush && depth < 5)   extension = 1; // a pawn is near promotion
-            const bool isPrunable = !isInCheck && !isCheck && !isAdvancedPawnPush && Move2Type(*it) == T_std && !sameMove(*it, killerT.killers[0][p.ply]) && !sameMove(*it, killerT.killers[1][p.ply]);
+            const bool isPrunable = !isInCheck && !isCheck && !isAdvancedPawnPush && Move2Type(*it) == T_std && !sameMove(*it, killerT.killers[0][p.ply]) && !sameMove(*it, killerT.killers[1][p.ply]) && std::abs(alpha) < MATE - MAX_DEPTH && std::abs(beta) < MATE - MAX_DEPTH;
             // futility
             if (futility && isPrunable) continue;
             // LMP
             if (lmp && isPrunable && validMoveCount >= lmpLimit[improving][depth] ) continue;
             // SEE
-            if (futility && Move2Score(*it) < -900 ) continue;
+            if (futility && isPrunable && Move2Score(*it) < -100*depth ) continue;
             // LMR
-            if (StaticConfig::doLMR && !DynamicConfig::mateFinder && depth >= StaticConfig::lmrMinDepth && isPrunable && std::abs(alpha) < MATE-MAX_DEPTH && std::abs(beta) < MATE-MAX_DEPTH ) reduction = lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
+            if (StaticConfig::doLMR && !DynamicConfig::mateFinder && isPrunable && depth >= StaticConfig::lmrMinDepth ) reduction = lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
             if (pvnode && reduction > 0) --reduction;
-            if (!improving) ++reduction;
+            if (isPrunable && !DynamicConfig::mateFinder && !improving) ++reduction;
             // PVS
             val = -pvs(-alpha-1,-alpha,p2,depth-1-reduction+extension,false,ply+1,childPV,seldepth);
             if ( reduction > 0 && val > alpha ){

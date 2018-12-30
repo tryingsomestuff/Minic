@@ -61,17 +61,21 @@ private:
 };
 
 ExtendedPosition::ExtendedPosition(const std::string & extFEN, bool withMoveCount) : Position(extFEN){
+    if (!withMoveCount) {
+        ply = 0; moves = 1; fifty = 0;
+    }
+    LogIt(logInfo) << ToString(*this);
     std::vector<std::string> strList;
     std::stringstream iss(extFEN);
     std::copy(std::istream_iterator<std::string>(iss), std::istream_iterator<std::string>(), back_inserter(strList));
     if ( strList.size() < (withMoveCount?7u:5u)) LogIt(logFatal) << "Not an extended position";
     std::vector<std::string>(strList.begin()+(withMoveCount?6:4), strList.end()).swap(strList);
     const std::string extendedParamsStr = std::accumulate(strList.begin(), strList.end(), std::string(""),[](const std::string & a, const std::string & b) {return a + ' ' + b;});
-    LogIt(logInfo) << "extended parameters : " << extendedParamsStr;
+    //LogIt(logInfo) << "extended parameters : " << extendedParamsStr;
     std::vector<std::string> strParamList;
     split(strParamList,extendedParamsStr,";");
     for(size_t k = 0 ; k < strParamList.size() ; ++k){
-        LogIt(logInfo) << "extended parameters : " << k << " " << strParamList[k];
+        //LogIt(logInfo) << "extended parameters : " << k << " " << strParamList[k];
         strParamList[k] = ltrim(strParamList[k]);
         if ( strParamList[k].empty()) continue;
         std::vector<std::string> pair;
@@ -80,7 +84,7 @@ ExtendedPosition::ExtendedPosition(const std::string & extFEN, bool withMoveCoun
         std::vector<std::string> values = pair;
         values.erase(values.begin());
         _extendedParams[pair[0]] = values;
-        LogIt(logInfo) << "extended parameters pair : " << pair[0] << " => " << values[0];
+        //LogIt(logInfo) << "extended parameters pair : " << pair[0] << " => " << values[0];
     }
 }
 
@@ -153,12 +157,15 @@ std::string showAlgAbr(Move m, const Position & p) {
             for(auto mit = l.begin() ; mit != l.end() ; ++mit){
                 if ( *mit == m ) continue; // to not compare to myself ... should no happend thanks to previous verification
                 if ( Move2To(*mit) == to ){
+                    isAmbiguousRank = true;
                     if ( ! isAmbiguousFile && SQFILE(Move2From(*mit)) == SQFILE(from)){
                         isAmbiguousFile = true;
                     }
+                    /*
                     if ( ! isAmbiguousRank && SQRANK(Move2From(*mit)) == SQRANK(from)){
                        isAmbiguousRank = true;
                     }
+                    */
                 }
             }
         }
@@ -427,7 +434,7 @@ bool test(const std::string & option){
             return 1;
         }
 
-        std::vector<int> timeControls = { 3000 }; //mseconds
+        std::vector<int> timeControls = { 10000 }; //mseconds
         std::vector<int> scores = { 1 };
 
         ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return score;},false);
