@@ -395,21 +395,6 @@ bool test(const std::string & option){
         LogIt(logInfo) << " LCTest";
         LogIt(logInfo) << " sbdTest";
         LogIt(logInfo) << " STS";
-        LogIt(logInfo) << "Available unitary tests";
-        LogIt(logInfo) << " xortest zhash_1 zhash_2 ... zhash_n : test zobrist hashing";
-        LogIt(logInfo) << " gameplay : very old test that forces a game";
-        LogIt(logInfo) << " zhash : another hash test";
-        LogIt(logInfo) << " movegenerator : test move generator";
-        LogIt(logInfo) << " threats : test threat detection";
-        LogIt(logInfo) << " see : test static exchange evaluation";
-        LogIt(logInfo) << " ordering fen : test move ordering";
-        LogIt(logInfo) << " generator fen depth display : test move generator";
-        LogIt(logInfo) << " divide (not working yet)";
-        LogIt(logInfo) << " staticanalysis fen : test static evaluation of a position";
-        LogIt(logInfo) << " analysis fen depth display : test analysis of a position";
-        LogIt(logInfo) << " playUI fen depth : console mode game against the UI";
-        LogIt(logInfo) << " playAI fen depth : console mode test match AI vs AI";
-        LogIt(logInfo) << " texel_tuning inputfile : ru texel tuning based on given file";
         return 0;
     }
 
