@@ -112,6 +112,28 @@ int cliManagement(std::string cli, int argc, char ** argv){
 
     LogIt(logInfo) << ToString(p) ;
 
+    if (cli == "-seeval") {
+        // K3r3/4r3/k2n1nb1/8/R1q1P2R/8/2QN1N2/1B6 b - - 0 1
+        /*
+        #
+        # Info  2018-12-31 16:43:00-624: Capture from d2
+        # Info  2018-12-31 16:43:00-624: Capture from d6
+        # Info  2018-12-31 16:43:00-624: Capture from f2
+        # Info  2018-12-31 16:43:00-624: Capture from f6
+        # Info  2018-12-31 16:43:00-624: Capture from h4
+        # Info  2018-12-31 16:43:00-624: Capture from g6
+        # Info  2018-12-31 16:43:00-624: Capture from a4
+        # Info  2018-12-31 16:43:00-624: Capture from e7
+        # Info  2018-12-31 16:43:00-624: Capture from c2
+        # Info  2018-12-31 16:43:00-624: Capture from e8
+        # Info  2018-12-31 16:43:00-624: Capture from b1
+        # Info  2018-12-31 16:43:00-624: see value : c4e4 -606
+        */
+        Move m = ToMove(Sq_c4, Sq_e4, T_capture);
+        LogIt(logInfo) << "see value : " << ToString(m) << " " << ThreadPool::instance().main().SEEVal<true>(p,m);
+        return 0;
+    }
+
     if (cli == "-attacked") {
         Square k = Sq_e4;
         if (argc >= 3) k = atoi(argv[3]);
