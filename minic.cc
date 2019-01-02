@@ -64,7 +64,7 @@ const bool doLMP            = true;
 const bool doStaticNullMove = true;
 const bool doRazoring       = true;
 const bool doQFutility      = true;
-const bool doProbcut        = false;
+const bool doProbcut        = false; ///@todo
 
 const ScoreType qfutilityMargin          = 128;
 const int       staticNullMoveMaxDepth   = 6;
@@ -325,7 +325,6 @@ struct Position{
     unsigned char nbk = 0; unsigned char nbq = 0; unsigned char nbr = 0; unsigned char nbb = 0; unsigned char nbn = 0; unsigned char nbp = 0;
     unsigned char nk  = 0; unsigned char nq  = 0; unsigned char nr  = 0; unsigned char nb  = 0; unsigned char nn  = 0; unsigned char np  = 0;
     unsigned char nwM = 0; unsigned char nbM = 0; unsigned char nwm = 0; unsigned char nbm = 0; unsigned char nwt = 0; unsigned char nbt = 0;
-
 };
 
 void initMaterial(Position & p){
@@ -341,7 +340,7 @@ void initMaterial(Position & p){
     p.nbb = (unsigned char)countBit(p.blackBishop);
     p.nbn = (unsigned char)countBit(p.blackKnight);
     p.nbp = (unsigned char)countBit(p.blackPawn);
-    p.nk = p.nwk + p.nbk; p.nq = p.nwq + p.nbq; p.nr = p.nwr + p.nbr; p.nb = p.nwb + p.nbb; p.nn = p.nwn + p.nbn; p.np = p.nwp + p.nbp;
+    p.nk  = p.nwk + p.nbk; p.nq  = p.nwq + p.nbq; p.nr  = p.nwr + p.nbr; p.nb  = p.nwb + p.nbb; p.nn  = p.nwn + p.nbn; p.np  = p.nwp + p.nbp;
     p.nwM = p.nwq + p.nwr; p.nbM = p.nbq + p.nbr; p.nwm = p.nwb + p.nwn; p.nbm = p.nbb + p.nbn; p.nwt = p.nwM + p.nwm; p.nbt = p.nbM + p.nbm;
 }
 
@@ -386,7 +385,7 @@ inline std::string getName  (const Position &p, Square k){ assert(k >= 0 && k < 
 
 inline ScoreType getValue   (const Position &p, Square k){ assert(k >= 0 && k < 64); return Values[getPieceIndex(p,k)];}
 
-inline ScoreType getAbsValue(const Position &p, Square k){ assert(k >= 0 && k < 64); return std::abs(Values[getPieceIndex(p, k)]); }
+inline ScoreType getAbsValue(const Position &p, Square k){ assert(k >= 0 && k < 64); return std::abs(Values[getPieceIndex(p,k)]); }
 
 inline void unSetBit(Position & p, Square k) { ///@todo keep this lookup table in position and implemente copy CTOR and operator
     assert(k >= 0 && k < 64);
@@ -462,9 +461,9 @@ namespace TT{
 enum Bound{ B_exact = 0, B_alpha = 1, B_beta  = 2 };
 struct Entry{
     Entry():m(INVALIDMOVE),score(0),b(B_alpha),d(-1),h(0ull){}
-    Entry(Move m, int s, Bound b, DepthType d, Hash h) : m(m), score(s), b(b), d(d), h(h){}
+    Entry(Move m, ScoreType s, Bound b, DepthType d, Hash h) : m(m), score(s), b(b), d(d), h(h){}
     Move m;
-    int score;
+    ScoreType score;
     Bound b;
     DepthType d;
     Hash h;
@@ -755,7 +754,7 @@ inline bool isSafe(const Move m, const Position & p) {
     if (isUnderPromotion(m)) return false;
     Piece pp = getPieceType(p, Move2From(m));
     if (pp == P_wk) return true;
-    if (isCapture(m) && std::abs(getValue(p, Move2To(m))) >= Values[pp + PieceShift]) return true;
+    if (isCapture(m) && getAbsValue(p, Move2To(m)) >= Values[pp + PieceShift]) return true;
     return Move2Score(m) > -900; // see
 }
 
@@ -1191,14 +1190,8 @@ int GetNextMSecPerMove(const Position & p){
         assert(msecInTC > 0);
         assert(nbMoveInTC > 0);
         LogIt(logInfo) << "TC mode";
-        if (!isDynamic){
-           // msecUntilNextTC is NOT available
-           ms = int((msecInTC - msecMargin) / (float)nbMoveInTC) + msecIncLoc ;
-        }
-        else{
-           // msecUntilNextTC IS available
-           ms = int((msecUntilNextTC - msecMargin) / (float)(nbMoveInTC-((p.moves-1)%nbMoveInTC))) + msecIncLoc;
-        }
+        if (!isDynamic) ms = int((msecInTC - msecMargin) / (float)nbMoveInTC) + msecIncLoc ;
+        else ms = int((msecUntilNextTC - msecMargin) / (float)(nbMoveInTC-((p.moves-1)%nbMoveInTC))) + msecIncLoc;
     }
     else{ // mps is not given
         ///@todo something better using the real time command
@@ -1207,16 +1200,8 @@ int GetNextMSecPerMove(const Position & p){
         LogIt(logInfo) << "nmoves    " << nmoves;
         LogIt(logInfo) << "p.moves   " << int(p.moves);
         assert(nmoves > 0);
-        if (!isDynamic){
-           // msecUntilNextTC is NOT available
-           ms = int((msecInTC+p.moves*msecIncLoc) / (float)(nmoves+p.moves)) - msecMargin;
-           ms = std::min(ms, msecInTC - msecMargin);
-        }
-        else{
-           // msecUntilNextTC IS available
-           ms = int(msecUntilNextTC / (float)nmoves + 0.75*msecIncLoc) - msecMargin;
-           ms = std::min(ms, msecInTC - msecMargin);
-        }
+        if (!isDynamic) ms = std::min(msecInTC - msecMargin, int((msecInTC+p.moves*msecIncLoc) / (float)(nmoves+p.moves)) - msecMargin);
+        else ms = std::min(msecInTC - msecMargin, int(msecUntilNextTC / (float)nmoves + 0.75*msecIncLoc) - msecMargin);
     }
     return ms;
 }
@@ -1854,7 +1839,7 @@ struct MoveSorter{
         const MType  t    = Move2Type(m);
         const Square from = Move2From(m);
         const Square to   = Move2To(m);
-        int s = MoveScoring[t];
+        ScoreType s = MoveScoring[t];
         if (e && sameMove(e->m,m)) s += 3000;
         else if (sameMove(m,context.killerT.killers[0][p.ply])) s += 290;
         else if (sameMove(m,context.killerT.killers[1][p.ply])) s += 260;
@@ -1923,11 +1908,14 @@ ScoreType eval(const Position & p, float & gp){
     static ScoreType *absValues[7]   = { &dummyScore, &Values  [P_wp + PieceShift], &Values  [P_wn + PieceShift], &Values  [P_wb + PieceShift], &Values  [P_wr + PieceShift], &Values  [P_wq + PieceShift], &Values  [P_wk + PieceShift] };
     static ScoreType *absValuesEG[7] = { &dummyScore, &ValuesEG[P_wp + PieceShift], &ValuesEG[P_wn + PieceShift], &ValuesEG[P_wb + PieceShift], &ValuesEG[P_wr + PieceShift], &ValuesEG[P_wq + PieceShift], &ValuesEG[P_wk + PieceShift] };
 
-    ScoreType absscore = (p.nwk+p.nbk) * *absValues[P_wk] + (p.nwq+p.nbq) * *absValues[P_wq] + (p.nwr+p.nbr) * *absValues[P_wr] + (p.nwb+p.nbb) * *absValues[P_wb] + (p.nwn+p.nbn) * *absValues[P_wn] + (p.nwp+p.nbp) * *absValues[P_wp];
-    absscore = 100 * (absscore - 16000) / (24140 - 16000);
-    const int pawnScore = 100 * p.np / 16;
-    const int pieceScore = 100 * (p.nq + p.nr + p.nb + p.nn) / 14;
-    gp = (absscore*0.4f + pieceScore*0.3f + pawnScore*0.3f)/100.f;
+    // game phase
+    //gp = (p.nn + p.nb + 3.f * p.nr + 6.f * p.nq)/32.f;
+    const float totalAbsScore = 2.f * *absValues[P_wq] + 4.f * *absValues[P_wr] + 4.f * *absValues[P_wb] + 4.f * *absValues[P_wn] + 16.f * *absValues[P_wp];
+    const float absscore = ((p.nwq + p.nbq) * *absValues[P_wq] + (p.nwr + p.nbr) * *absValues[P_wr] + (p.nwb + p.nbb) * *absValues[P_wb] + (p.nwn + p.nbn) * *absValues[P_wn] + (p.nwp + p.nbp) * *absValues[P_wp]) / totalAbsScore;
+    const float pawnScore = p.np / 16.f;
+    const float pieceScore = (p.nq + p.nr + p.nb + p.nn) / 14.f;
+    gp = (absscore*0.4f + pieceScore * 0.3f + pawnScore * 0.3f);
+
     // material
     sc += (p.nwk - p.nbk) * ScoreType(gp* *absValues[P_wk] + (1.f - gp)* *absValuesEG[P_wk])
         + (p.nwq - p.nbq) * ScoreType(gp* *absValues[P_wq] + (1.f - gp)* *absValuesEG[P_wq])
@@ -2370,7 +2358,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     int validMoveCount = 0;
     bool alphaUpdated = false;
-    int bestScore = -INFSCORE;
+    ScoreType bestScore = -INFSCORE;
     Move bestMove = INVALIDMOVE;
 
     // try the tt move before move generation (if not skipped move)
