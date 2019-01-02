@@ -31,7 +31,7 @@ typedef uint64_t u_int64_t;
 //#define DEBUG_TOOL
 #define WITH_TEST_SUITE
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "devTC";
 
 typedef std::chrono::system_clock Clock;
 typedef char DepthType;
@@ -1147,7 +1147,7 @@ bool isDynamic;
 std::chrono::time_point<Clock> startTime;
 
 void init(){
-    LogIt(logInfo) << "Init timemane" ;
+    LogIt(logInfo) << "Init timeman" ;
     msecPerMove     = 777;
     msecInTC        = -1;
     nbMoveInTC      = -1;
@@ -1165,6 +1165,7 @@ int GetNextMSecPerMove(const Position & p){
     LogIt(logInfo) << "nbMoveInTC      " << nbMoveInTC ;
     LogIt(logInfo) << "msecUntilNextTC " << msecUntilNextTC;
     LogIt(logInfo) << "currentNbMoves  " << int(p.moves);
+    int msecIncLoc = (msecInc > 0) ? msecInc : 0;
     if ( msecPerMove > 0 ) ms =  msecPerMove;
     else if ( nbMoveInTC > 0){ // mps is given
         assert(msecInTC > 0);
@@ -1172,28 +1173,29 @@ int GetNextMSecPerMove(const Position & p){
         LogIt(logInfo) << "TC mode";
         if (!isDynamic){
            // msecUntilNextTC is NOT available
-           ms = int(0.95 * (msecInTC+((msecInc>0)?nbMoveInTC*msecInc:0)) / (float)(nbMoveInTC+0.5));
+           ms = int((msecInTC - msecMargin) / (float)nbMoveInTC) + msecIncLoc ;
         }
         else{
            // msecUntilNextTC IS available
-           ms = int((msecUntilNextTC-msecMargin+((msecInc>0)?p.moves*msecInc:0)) / (float)(nbMoveInTC-((p.moves-1)%nbMoveInTC)));
+           ms = int((msecUntilNextTC - msecMargin) / (float)(nbMoveInTC-((p.moves-1)%nbMoveInTC))) + msecIncLoc;
         }
     }
     else{ // mps is not given
         ///@todo something better using the real time command
-        // sum(0.85/(40+3.5*(i-8)),i=1..200) = 0.95
         LogIt(logInfo) << "Fix time mode";
-        const int nmoves = int(40 + (int(p.moves)-8)*3.5f); // let's start for a 40 moves and decrease time after that
+        const int nmoves = 24; // always be able to play this more moves !
         LogIt(logInfo) << "nmoves    " << nmoves;
         LogIt(logInfo) << "p.moves   " << int(p.moves);
         assert(nmoves > 0);
         if (!isDynamic){
            // msecUntilNextTC is NOT available
-           ms = int(0.85 * (msecInTC+((msecInc>0)?int(p.moves)*msecInc:0))/ (float)nmoves);
+           ms = int((msecInTC+p.moves*msecIncLoc) / (float)(nmoves+p.moves)) - msecMargin;
+           ms = std::min(ms, msecInTC - msecMargin);
         }
         else{
            // msecUntilNextTC IS available
-           ms = int(0.85 * (msecUntilNextTC+((msecInc>0)?int(p.moves)*msecInc:0))/ (float)(nmoves-p.moves));
+           ms = int(msecUntilNextTC / (float)nmoves + 0.75*msecIncLoc) - msecMargin;
+           ms = std::min(ms, msecInTC - msecMargin);
         }
     }
     return ms;
