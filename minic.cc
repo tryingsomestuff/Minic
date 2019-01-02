@@ -2198,9 +2198,9 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         if ( StaticConfig::doQFutility /*&& !isInCheck*/ && val + StaticConfig::qfutilityMargin + std::abs(getValue(p,Move2To(*it))) <= alphaInit) continue;
-        //if ( SEEVal(p,*it) < -100 /* && !isCheck*/) continue; // see
-        if ( Move2Score(*it) < -900 /* && !isCheck*/) continue; // see
-        //if ( !SEE(p,*it) /* && !isCheck*/) continue; // see
+        //if ( SEEVal(p,*it) < -100 /* && !isCheck*/) continue; // see (prune bad capture except pawn)
+        if ( Move2Score(*it) < -200 /* && !isCheck*/) continue; // see (from move sorter, see add -2000 if bad capture)
+        //if ( !SEE(p,*it) /* && !isCheck*/) continue; // see (prune all bad capture)
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
         if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply + 1;
@@ -2326,7 +2326,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
              sort(*this,moves,p,&e);
           }
           for (auto it = moves.begin() ; it != moves.end() && probCutCount < StaticConfig::probCutMaxMoves; ++it){
-            if ( (e.h != 0 && sameMove(e.m, *it) && Move2Score(*it) < 100) || Move2Score(*it) < 0) continue;
+            if ( e.h != 0 && sameMove(e.m, *it) && (Move2Score(*it) < 100 || Move2Score(*it) < -100)) continue; // see
             Position p2 = p;
             if ( ! apply(p2,*it) ) continue;
             ++probCutCount;
