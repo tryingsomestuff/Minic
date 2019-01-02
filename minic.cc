@@ -31,7 +31,7 @@ typedef uint64_t u_int64_t;
 //#define DEBUG_TOOL
 #define WITH_TEST_SUITE
 
-const std::string MinicVersion = "devTC";
+const std::string MinicVersion = "0.29";
 
 typedef std::chrono::system_clock Clock;
 typedef char DepthType;
