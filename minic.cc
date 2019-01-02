@@ -376,17 +376,17 @@ void setBitBoards(Position & p) {
     p.occupancy  = p.whitePiece | p.blackPiece;
 }
 
-inline Piece getPieceIndex (const Position &p, Square k){ assert(k >= 0 && k < 64); return Piece(p.b[k] + PieceShift);}
+inline Piece getPieceIndex  (const Position &p, Square k){ assert(k >= 0 && k < 64); return Piece(p.b[k] + PieceShift);}
 
-inline Piece getPieceType  (const Position &p, Square k){ assert(k >= 0 && k < 64); return (Piece)std::abs(p.b[k]);}
+inline Piece getPieceType   (const Position &p, Square k){ assert(k >= 0 && k < 64); return (Piece)std::abs(p.b[k]);}
 
-inline Color getColor      (const Position &p, Square k){ assert(k >= 0 && k < 64); return Colors[getPieceIndex(p,k)];}
+inline Color getColor       (const Position &p, Square k){ assert(k >= 0 && k < 64); return Colors[getPieceIndex(p,k)];}
 
-inline std::string getName (const Position &p, Square k){ assert(k >= 0 && k < 64); return Names[getPieceIndex(p,k)];}
+inline std::string getName  (const Position &p, Square k){ assert(k >= 0 && k < 64); return Names[getPieceIndex(p,k)];}
 
-inline ScoreType getValue  (const Position &p, Square k){ assert(k >= 0 && k < 64); return Values[getPieceIndex(p,k)];}
+inline ScoreType getValue   (const Position &p, Square k){ assert(k >= 0 && k < 64); return Values[getPieceIndex(p,k)];}
 
-inline ScoreType getValueEG(const Position &p, Square k){ assert(k >= 0 && k < 64); return ValuesEG[getPieceIndex(p,k)];}
+inline ScoreType getAbsValue(const Position &p, Square k){ assert(k >= 0 && k < 64); return std::abs(Values[getPieceIndex(p, k)]); }
 
 inline void unSetBit(Position & p, Square k) { ///@todo keep this lookup table in position and implemente copy CTOR and operator
     assert(k >= 0 && k < 64);
@@ -462,7 +462,7 @@ namespace TT{
 enum Bound{ B_exact = 0, B_alpha = 1, B_beta  = 2 };
 struct Entry{
     Entry():m(INVALIDMOVE),score(0),b(B_alpha),d(-1),h(0ull){}
-    Entry(Move m, int s, Bound b, DepthType d, Hash h) : m(m), score(m), b(b), d(d), h(h){}
+    Entry(Move m, int s, Bound b, DepthType d, Hash h) : m(m), score(s), b(b), d(d), h(h){}
     Move m;
     int score;
     Bound b;
@@ -733,6 +733,10 @@ ThreadPool::ThreadPool():stop(false){ push_back(new ThreadContext(size()));} // 
 
 ScoreType eval(const Position & p, float & gp); // forward decl
 
+inline bool isMatingScore (ScoreType s) { return (s >=  MATE - MAX_DEPTH); }
+inline bool isMatedScore  (ScoreType s) { return (s <= -MATE + MAX_DEPTH); }
+inline bool isMateScore   (ScoreType s) { return (std::abs(s) >= MATE - MAX_DEPTH); }
+
 inline bool isCapture(const MType & mt){ return mt == T_capture || mt == T_ep || mt == T_cappromq || mt == T_cappromr || mt == T_cappromb || mt == T_cappromn; }
 
 inline bool isCapture(const Move & m){ return isCapture(Move2Type(m)); }
@@ -740,6 +744,22 @@ inline bool isCapture(const Move & m){ return isCapture(Move2Type(m)); }
 inline bool isPromotion(const MType & mt){ return mt >= T_promq && mt <= T_cappromn;}
 
 inline bool isPromotion(const Move & m){ return isPromotion(Move2Type(m));}
+
+inline bool isUnderPromotion(const MType & mt) { return mt >= T_promr && mt <= T_cappromn && mt != T_cappromq; }
+
+inline bool isUnderPromotion(const Move & m) { return isUnderPromotion(Move2Type(m)); }
+
+inline bool isTactical(const Move m) { return isCapture(m) || isPromotion(m); }
+
+inline bool isSafe(const Move m, const Position & p) {
+    if (isUnderPromotion(m)) return false;
+    Piece pp = getPieceType(p, Move2From(m));
+    if (pp == P_wk) return true;
+    if (isCapture(m) && std::abs(getValue(p, Move2To(m))) >= Values[pp + PieceShift]) return true;
+    return Move2Score(m) > -900; // see
+}
+
+inline bool isDangerous(const Move m, bool isInCheck, bool isCheck) { return isTactical(m) || isCheck || isInCheck; }
 
 std::string trim(const std::string& str, const std::string& whitespace = " \t"){
     const auto strBegin = str.find_first_not_of(whitespace);
@@ -1902,6 +1922,7 @@ ScoreType eval(const Position & p, float & gp){
     static ScoreType dummyScore = 0;
     static ScoreType *absValues[7]   = { &dummyScore, &Values  [P_wp + PieceShift], &Values  [P_wn + PieceShift], &Values  [P_wb + PieceShift], &Values  [P_wr + PieceShift], &Values  [P_wq + PieceShift], &Values  [P_wk + PieceShift] };
     static ScoreType *absValuesEG[7] = { &dummyScore, &ValuesEG[P_wp + PieceShift], &ValuesEG[P_wn + PieceShift], &ValuesEG[P_wb + PieceShift], &ValuesEG[P_wr + PieceShift], &ValuesEG[P_wq + PieceShift], &ValuesEG[P_wk + PieceShift] };
+
     ScoreType absscore = (p.nwk+p.nbk) * *absValues[P_wk] + (p.nwq+p.nbq) * *absValues[P_wq] + (p.nwr+p.nbr) * *absValues[P_wr] + (p.nwb+p.nbb) * *absValues[P_wb] + (p.nwn+p.nbn) * *absValues[P_wn] + (p.nwp+p.nbp) * *absValues[P_wp];
     absscore = 100 * (absscore - 16000) / (24140 - 16000);
     const int pawnScore = 100 * p.np / 16;
@@ -2197,9 +2218,9 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     const ScoreType alphaInit = alpha;
 
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
-        if ( StaticConfig::doQFutility /*&& !isInCheck*/ && val + StaticConfig::qfutilityMargin + std::abs(getValue(p,Move2To(*it))) <= alphaInit) continue;
-        //if ( SEEVal(p,*it) < -100 /* && !isCheck*/) continue; // see (prune bad capture except pawn)
-        if ( Move2Score(*it) < -200 /* && !isCheck*/) continue; // see (from move sorter, see add -2000 if bad capture)
+        if ( StaticConfig::doQFutility /*&& !isInCheck*/ && val + StaticConfig::qfutilityMargin + getAbsValue(p,Move2To(*it)) <= alphaInit) continue;
+        //if ( SEEVal(p,*it) < -0 /* && !isCheck*/) continue; // see (prune bad capture)
+        if ( Move2Score(*it) < -900 /* && !isCheck*/) continue; // see (from move sorter, SEE<0 add -2000 if bad capture)
         //if ( !SEE(p,*it) /* && !isCheck*/) continue; // see (prune all bad capture)
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
@@ -2227,7 +2248,7 @@ inline void updateHistoryKillers(ThreadContext & context, const Position & p, De
 }
 
 inline bool singularExtension(ThreadContext & context, ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, const TT::Entry & e, const Move m, bool rootnode, int ply) {
-    if (depth >= StaticConfig::singularExtensionDepth && sameMove(m, e.m) && !rootnode && std::abs(e.score) < MATE - MAX_DEPTH && e.b == TT::B_beta && e.d >= depth - 3) {
+    if ( depth >= StaticConfig::singularExtensionDepth && sameMove(m, e.m) && !rootnode && !isMateScore(e.score) && e.b == TT::B_beta && e.d >= depth - 3) {
         const ScoreType betaC = e.score - depth;
         std::vector<Move> sePV;
         DepthType seSeldetph;
@@ -2238,8 +2259,8 @@ inline bool singularExtension(ThreadContext & context, ScoreType alpha, ScoreTyp
 }
 
 ScoreType adjustHashScore(ScoreType score, DepthType ply){
-  if      (score >=  MATE - MAX_DEPTH) score -= ply;
-  else if (score <= -MATE + MAX_DEPTH) score += ply;
+  if      (isMatingScore(score)) score -= ply;
+  else if (isMatedScore (score)) score += ply;
   return score;
 }
 
@@ -2266,9 +2287,9 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     TT::Entry e;
     if (skipMove==INVALIDMOVE && TT::getEntry(computeHash(p), depth, e)) { // if not skipmove
-        if (e.h != 0 && !rootnode && std::abs(e.score) < MATE - MAX_DEPTH && !pvnode && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
+        if ( e.h != 0 && !rootnode && !isMateScore(e.score) && !pvnode && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
             if ( e.m != INVALIDMOVE) pv.push_back(e.m); // here e.m might be INVALIDMOVE if B_alpha
-            return adjustHashScore(e.score,ply);
+            return adjustHashScore(e.score, ply);
         }
     }
 
@@ -2283,7 +2304,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     std::vector<Move> moves;
 
     // prunings
-    if ( !DynamicConfig::mateFinder && !rootnode && gp > 0.2 && !pvnode && !isInCheck && std::abs(alpha) < MATE-MAX_DEPTH && std::abs(beta) < MATE-MAX_DEPTH ){
+    if ( !DynamicConfig::mateFinder && !rootnode && gp > 0.2 && !pvnode && !isInCheck && !isMateScore(alpha) && !isMateScore(beta) ){
 
         // static null move
         if ( StaticConfig::doStaticNullMove && depth <= StaticConfig::staticNullMoveMaxDepth && val >= beta + StaticConfig::staticNullMoveDepthCoeff *depth ) return val;
@@ -2326,14 +2347,15 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
              sort(*this,moves,p,&e);
           }
           for (auto it = moves.begin() ; it != moves.end() && probCutCount < StaticConfig::probCutMaxMoves; ++it){
-            if ( e.h != 0 && sameMove(e.m, *it) && (Move2Score(*it) < 100 || Move2Score(*it) < -100)) continue; // see
+            if ( e.h != 0 && sameMove(e.m, *it) && (Move2Score(*it) < 100) ) continue; // quiet moves and bad captures
             Position p2 = p;
             if ( ! apply(p2,*it) ) continue;
             ++probCutCount;
             ScoreType scorePC = -qsearch(-betaPC,-betaPC+1,p2,ply+1,seldepth);
             std::vector<Move> pvPC;
-            if (std::abs(scorePC) != STOPSCORE && scorePC >= betaPC) scorePC = -pvs(-betaPC,-betaPC+1,p2,depth-StaticConfig::probCutMinDepth+1,pvnode,ply+1,pvPC,seldepth);
-            if (std::abs(scorePC) != STOPSCORE && scorePC >= betaPC) return scorePC;
+            if (!stopFlag && scorePC >= betaPC) scorePC = -pvs(-betaPC,-betaPC+1,p2,depth-StaticConfig::probCutMinDepth+1,pvnode,ply+1,pvPC,seldepth);
+            if (!stopFlag && scorePC >= betaPC) return scorePC;
+            if (stopFlag) return STOPSCORE;
           }
         }
     }
@@ -2403,30 +2425,34 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         // extensions
         int extension = 0;
         if (isInCheck && depth <= 4) extension = 1; // we are in check (extension)
-        //if (depth <=3 && p.lastMove != INVALIDMOVE && (Move2Type(p.lastMove) == T_capture) && Move2To(*it) == Move2To(p.lastMove)) extension = 1; // recapture extension
+        //if (depth <=3 && p.lastMove != INVALIDMOVE && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) extension = 1; // recapture extension
         if (validMoveCount == 1 || !StaticConfig::doPVS) val = -pvs(-beta,-alpha,p2,depth-1+extension,pvnode,ply+1,childPV,seldepth);
         else{
             // reductions & prunings
             int reduction = 0;
             const bool isCheck = isAttacked(p2, kingSquare(p2));
             const bool isAdvancedPawnPush = getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
-            //if (isCheck && Move2Score(*it) > -100) extension = 1; // we give check with a non risky move
+            //if (isCheck && Move2Score(*it) > -900) extension = 1; // we give check with a non risky move
             //if (isAdvancedPawnPush && depth < 5)   extension = 1; // a pawn is near promotion
-            const bool isPrunable = !isInCheck && !isCheck && !isAdvancedPawnPush && !sameMove(*it, killerT.killers[0][p.ply]) && !sameMove(*it, killerT.killers[1][p.ply]) && std::abs(alpha) < MATE - MAX_DEPTH && std::abs(beta) < MATE - MAX_DEPTH;
+            const bool isPrunable = !isInCheck && !isCheck && !isAdvancedPawnPush && !sameMove(*it, killerT.killers[0][p.ply]) && !sameMove(*it, killerT.killers[1][p.ply]) && !isMateScore(alpha) && !isMateScore(beta);
             const bool isPrunableStd = isPrunable && Move2Type(*it) == T_std;
             const bool isPrunableCap = isPrunable && Move2Type(*it) == T_capture;
+            const bool isBadCap = isPrunableCap && Move2Score(*it) < -900;
+            //const bool isBadCap = isPrunableCap && !SEE(p2, *it);
+            //const bool isBadCap = isPrunableCap && SEEVal(p2, *it) < -100*depth;
             // futility
             if (futility && isPrunableStd) continue;
             // LMP
             if (lmp && isPrunableStd && validMoveCount >= lmpLimit[improving][depth] ) continue;
             // SEE
-            //if (futility && isPrunableCap && SEEVal(p2, *it) < -200*depth ) continue;
-            if (futility && isPrunableCap && Move2Score(*it) < -900) continue;
-            //if (futility && isPrunableCap && !SEE(p2, *it)) continue;
+            if ((futility/*||depth<=4*/) && isBadCap) continue;
             // LMR
-            if (StaticConfig::doLMR && !DynamicConfig::mateFinder && isPrunableStd && depth >= StaticConfig::lmrMinDepth ) reduction = lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
-            if (pvnode && reduction > 0) --reduction;
+            if (StaticConfig::doLMR && !DynamicConfig::mateFinder && (isPrunableStd /*|| isBadCap*/) && depth >= StaticConfig::lmrMinDepth ) reduction = lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
             if (isPrunableStd && !DynamicConfig::mateFinder && !improving) ++reduction;
+            if (pvnode && reduction > 0) --reduction;
+            //if (isPrunableStd) reduction -= 2*int(Move2Score(*it) / 250.f); // history reduction/extension
+            //if (reduction < 0) reduction = 0;
+            //if (reduction >= depth) reduction = depth - 1;
             // PVS
             val = -pvs(-alpha-1,-alpha,p2,depth-1-reduction+extension,false,ply+1,childPV,seldepth);
             if ( reduction > 0 && val > alpha ){
