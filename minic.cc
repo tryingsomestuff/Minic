@@ -31,7 +31,7 @@ typedef uint64_t u_int64_t;
 //#define DEBUG_TOOL
 #define WITH_TEST_SUITE
 
-const std::string MinicVersion = "0.29";
+const std::string MinicVersion = "mat";
 
 typedef std::chrono::system_clock Clock;
 typedef char DepthType;
@@ -321,27 +321,300 @@ struct Position{
     mutable Hash h = 0ull;
     Move lastMove = INVALIDMOVE;
 
-    unsigned char nwk = 0; unsigned char nwq = 0; unsigned char nwr = 0; unsigned char nwb = 0; unsigned char nwn = 0; unsigned char nwp = 0;
-    unsigned char nbk = 0; unsigned char nbq = 0; unsigned char nbr = 0; unsigned char nbb = 0; unsigned char nbn = 0; unsigned char nbp = 0;
-    unsigned char nk  = 0; unsigned char nq  = 0; unsigned char nr  = 0; unsigned char nb  = 0; unsigned char nn  = 0; unsigned char np  = 0;
-    unsigned char nwM = 0; unsigned char nbM = 0; unsigned char nwm = 0; unsigned char nbm = 0; unsigned char nwt = 0; unsigned char nbt = 0;
+    struct Material {
+        unsigned char nwk = 0; unsigned char nwq = 0; unsigned char nwr = 0; unsigned char nwb = 0; unsigned char nwbl = 0; unsigned char nwbd = 0; unsigned char nwn = 0; unsigned char nwp = 0;
+        unsigned char nbk = 0; unsigned char nbq = 0; unsigned char nbr = 0; unsigned char nbb = 0; unsigned char nbbl = 0; unsigned char nbbd = 0; unsigned char nbn = 0; unsigned char nbp = 0;
+        unsigned char nk  = 0; unsigned char nq  = 0; unsigned char nr  = 0; unsigned char nb  = 0; unsigned char nn   = 0; unsigned char np   = 0;
+        unsigned char nwM = 0; unsigned char nbM = 0; unsigned char nwm = 0; unsigned char nbm = 0; unsigned char nwt  = 0; unsigned char nbt  = 0;
+    };
+
+    Material mat;
 };
+ 
+namespace MaterialHash { // from Gull
+    const int MatWQ = 1;
+    const int MatBQ = 3;
+    const int MatWR = (3 * 3);
+    const int MatBR = (3 * 3 * 3);
+    const int MatWL = (3 * 3 * 3 * 3);
+    const int MatBL = (3 * 3 * 3 * 3 * 2);
+    const int MatWD = (3 * 3 * 3 * 3 * 2 * 2);
+    const int MatBD = (3 * 3 * 3 * 3 * 2 * 2 * 2);
+    const int MatWN = (3 * 3 * 3 * 3 * 2 * 2 * 2 * 2);
+    const int MatBN = (3 * 3 * 3 * 3 * 2 * 2 * 2 * 2 * 3);
+    const int MatWP = (3 * 3 * 3 * 3 * 2 * 2 * 2 * 2 * 3 * 3);
+    const int MatBP = (3 * 3 * 3 * 3 * 2 * 2 * 2 * 2 * 3 * 3 * 9);
+    const int TotalMat = ((2 * (MatWQ + MatBQ) + MatWL + MatBL + MatWD + MatBD + 2 * (MatWR + MatBR + MatWN + MatBN) + 8 * (MatWP + MatBP)) + 1);
+    const int UnknownMaterialHash = -1;
+
+    Hash getMaterialHash(const Position::Material & mat) {
+        if (mat.nwq > 2 || mat.nbq > 2 || mat.nwr > 2 || mat.nbr > 2 || mat.nwbl > 1 || mat.nbbl > 1 || mat.nwbd > 1 || mat.nbbd > 1 || mat.nwn > 2 || mat.nbn > 2 || mat.nwp > 8 || mat.nbp > 8) return -1;
+        return mat.nwp * MatWP + mat.nbp * MatBP + mat.nwn * MatWN + mat.nbn * MatBN + mat.nwbl * MatWL + mat.nbbl * MatBL + mat.nwbd * MatWD + mat.nbbd * MatBD + mat.nwr * MatWR + mat.nbr * MatBR + mat.nwq * MatWQ + mat.nbq * MatBQ;
+    }
+
+    Position::Material getMatFromHash(Hash index) {
+        Position::Material mat;
+        mat.nwq = (int)(index % 3); index /= 3;        mat.nbq = (int)(index % 3); index /= 3;
+        mat.nwr = (int)(index % 3); index /= 3;        mat.nbr = (int)(index % 3); index /= 3;
+        mat.nwbl = (int)(index % 2); index /= 2;        mat.nbbl = (int)(index % 2); index /= 2;
+        mat.nwbd = (int)(index % 2); index /= 2;        mat.nbbd = (int)(index % 2); index /= 2;
+        mat.nwn = (int)(index % 3); index /= 3;        mat.nbn = (int)(index % 3); index /= 3;
+        mat.nwp = (int)(index % 9); index /= 9;        mat.nbp = (int)(index);
+        return mat;
+    }
+
+    Position::Material getMatReverseColor(const Position::Material & mat) {
+        Position::Material rev;
+        rev.nwk = mat.nbk;        rev.nbk = mat.nwk;
+        rev.nwq = mat.nbq;        rev.nbq = mat.nwq;
+        rev.nwr = mat.nbr;        rev.nbr = mat.nwr;
+        rev.nwb = mat.nbb;        rev.nbb = mat.nwb;        rev.nwbl = mat.nbbl;      rev.nbbl = mat.nwbl;        rev.nwbd = mat.nbbd;      rev.nbbd = mat.nwbd;
+        rev.nwn = mat.nbn;        rev.nbn = mat.nwn;
+        rev.nwp = mat.nbp;        rev.nbp = mat.nwp;
+        rev.nwM = mat.nbM;        rev.nbM = mat.nwM;        rev.nwm = mat.nbm;        rev.nbm = mat.nwm;          rev.nwt = mat.nbt;        rev.nbt = mat.nwt;
+        return rev;
+    }
+
+    std::string ToString(const Position::Material & mat) {
+        std::stringstream str;
+        str << "\n" << "Q  :" << (int)mat.nwq << "\n" << "R  :" << (int)mat.nwr << "\n" << "B  :" << (int)mat.nwb << "\n" << "L  :" << (int)mat.nwbl << "\n" << "D  :" << (int)mat.nwbd << "\n" << "N  :" << (int)mat.nwn << "\n" << "Ma :" << (int)mat.nwM << "\n" << "Mi :" << (int)mat.nwm << "\n" << "T  :" << (int)mat.nwt << "\n";
+        str << "\n" << "q  :" << (int)mat.nbq << "\n" << "r  :" << (int)mat.nbr << "\n" << "b  :" << (int)mat.nbb << "\n" << "l  :" << (int)mat.nbbl << "\n" << "d  :" << (int)mat.nbbd << "\n" << "n  :" << (int)mat.nbn << "\n" << "ma :" << (int)mat.nbM << "\n" << "mi :" << (int)mat.nbm << "\n" << "t  :" << (int)mat.nbt << "\n";
+        return str.str();
+    }
+
+    Position::Material materialFromString(const std::string & strMat) {
+        Position::Material mat;
+        bool isWhite = false;
+        for (auto it = strMat.begin(); it != strMat.end(); ++it) {
+            switch (*it) {
+            case 'K':
+                isWhite = !isWhite;
+                (isWhite ? mat.nwk : mat.nbk) += 1;
+                break;
+            case 'Q':
+                (isWhite ? mat.nwq : mat.nbq) += 1;
+                (isWhite ? mat.nwM : mat.nbM) += 1;
+                (isWhite ? mat.nwt : mat.nbt) += 1;
+                break;
+            case 'R':
+                (isWhite ? mat.nwr : mat.nbr) += 1;
+                (isWhite ? mat.nwM : mat.nbM) += 1;
+                (isWhite ? mat.nwt : mat.nbt) += 1;
+                break;
+            case 'L':
+                (isWhite ? mat.nwbl : mat.nbbl) += 1;
+                (isWhite ? mat.nwb : mat.nbb) += 1;
+                (isWhite ? mat.nwm : mat.nbm) += 1;
+                (isWhite ? mat.nwt : mat.nbt) += 1;
+                break;
+            case 'D':
+                (isWhite ? mat.nwbd : mat.nbbd) += 1;
+                (isWhite ? mat.nwb : mat.nbb) += 1;
+                (isWhite ? mat.nwm : mat.nbm) += 1;
+                (isWhite ? mat.nwt : mat.nbt) += 1;
+                break;
+            case 'N':
+                (isWhite ? mat.nwn : mat.nbn) += 1;
+                (isWhite ? mat.nwm : mat.nbm) += 1;
+                (isWhite ? mat.nwt : mat.nbt) += 1;
+                break;
+            default:
+                LogIt(logFatal) << "Bad char in material definition";
+            }
+        }
+        return mat;
+    }
+
+    enum Terminaison : unsigned char { Ter_Unknown = 0, Ter_WhiteWin, Ter_BlackWin, Ter_Draw, Ter_LikelyDraw, Ter_HardToWin };
+
+    Terminaison reverseTerminaison(Terminaison t) {
+        switch (t) {
+        case Ter_Unknown:
+        case Ter_Draw:
+        case Ter_LikelyDraw:
+            return t;
+        case Ter_WhiteWin:
+            return Ter_BlackWin;
+        case Ter_BlackWin:
+            return Ter_WhiteWin;
+        default:
+            return Ter_Unknown;
+        }
+    }
+
+    Terminaison materialHashTable[TotalMat];
+
+    struct MaterialHashInitializer {
+        MaterialHashInitializer(const Position::Material & mat, Terminaison t) {
+            materialHashTable[getMaterialHash(mat)] = t;
+        }
+        static void init() { std::memset(materialHashTable, Ter_Unknown, sizeof(Terminaison)*TotalMat); }
+    };
+
+#define TO_STR2(x) #x
+#define TO_STR(x) TO_STR2(x)
+#define LINE_NAME(prefix) JOIN(prefix,__LINE__)
+#define JOIN(symbol1,symbol2) _DO_JOIN(symbol1,symbol2 )
+#define _DO_JOIN(symbol1,symbol2) symbol1##symbol2
+#define DEF_MAT(x,t) const Position::Material MAT##x = materialFromString( TO_STR(x) ); \
+                     MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t);
+#define DEF_MAT_REV(rev,x) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); \
+                           MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)]));
+
+    // sym (and pseudo sym) : all should be draw
+    DEF_MAT(KK, Ter_Draw)
+    DEF_MAT(KQQKQQ, Ter_Draw)
+    DEF_MAT(KQKQ, Ter_Draw)
+    DEF_MAT(KRRKRR, Ter_Draw)
+    DEF_MAT(KRKR, Ter_Draw)
+    DEF_MAT(KLDKLD, Ter_Draw)
+    DEF_MAT(KLLKLL, Ter_Draw)
+    DEF_MAT(KDDKDD, Ter_Draw)
+    DEF_MAT(KLDKLL, Ter_Draw)
+    DEF_MAT(KLDKDD, Ter_Draw)
+    DEF_MAT(KLKL, Ter_Draw)
+    DEF_MAT(KDKD, Ter_Draw)
+    DEF_MAT(KLKD, Ter_Draw)
+    DEF_MAT(KNNKNN, Ter_Draw)
+    DEF_MAT(KNKN, Ter_Draw)
+    
+    DEF_MAT_REV(KDKL, KLKD)
+    DEF_MAT_REV(KLLKLD, KLDKLL)
+    DEF_MAT_REV(KDDKLD, KLDKDD)
+    
+    // M m ///@todo 
+
+    // 2M M
+    DEF_MAT(KQQKQ, Ter_WhiteWin)
+    DEF_MAT(KQQKR, Ter_WhiteWin)
+    DEF_MAT(KRRKQ, Ter_LikelyDraw)
+    DEF_MAT(KRRKR, Ter_WhiteWin)
+    DEF_MAT(KQRKQ, Ter_WhiteWin)
+    DEF_MAT(KQRKR, Ter_WhiteWin)
+    
+    DEF_MAT_REV(KQKQQ,KQQKQ)
+    DEF_MAT_REV(KRKRR,KRRKR)
+    DEF_MAT_REV(KQKRR,KRRKQ)
+    DEF_MAT_REV(KRKQQ,KQQKR)
+    DEF_MAT_REV(KQKQR,KQRKQ)
+    DEF_MAT_REV(KRKQR,KQRKR)
+    
+    // 2M m ///@todo Win
+    // 2m M ///@todo Draw
+
+    // 2m m : all draw
+    DEF_MAT(KLDKL, Ter_Draw)
+    DEF_MAT(KLDKD, Ter_Draw)
+    DEF_MAT(KLDKN, Ter_Draw)
+    DEF_MAT(KLLKL, Ter_Draw)
+    DEF_MAT(KLLKD, Ter_Draw)
+    DEF_MAT(KLLKN, Ter_Draw)
+    DEF_MAT(KDDKL, Ter_Draw)
+    DEF_MAT(KDDKD, Ter_Draw)
+    DEF_MAT(KDDKN, Ter_Draw)
+    DEF_MAT(KNNKN, Ter_Draw)
+    DEF_MAT(KLNKN, Ter_Draw)
+    DEF_MAT(KDNKN, Ter_Draw)
+    
+    DEF_MAT_REV(KLKLD,KLDKL)
+    DEF_MAT_REV(KDKLD,KLDKD)
+    DEF_MAT_REV(KNKLD,KLDKN)
+    DEF_MAT_REV(KLKLL,KLLKL)
+    DEF_MAT_REV(KDKLL,KLLKD)
+    DEF_MAT_REV(KNKLL,KLLKN)
+    DEF_MAT_REV(KLKDD,KDDKL)
+    DEF_MAT_REV(KDKDD,KDDKD)
+    DEF_MAT_REV(KNKDD,KDDKN)
+    DEF_MAT_REV(KNKNN,KNNKN)
+    DEF_MAT_REV(KNKLN,KLNKN)
+    DEF_MAT_REV(KNKDN,KDNKN)
+    
+    // Q x : all should be win
+    DEF_MAT(KQKR, Ter_WhiteWin)
+    DEF_MAT(KQKL, Ter_WhiteWin)
+    DEF_MAT(KQKD, Ter_WhiteWin)
+    DEF_MAT(KQKN, Ter_WhiteWin)
+    
+    DEF_MAT_REV(KRKQ,KQKR)
+    DEF_MAT_REV(KLKQ,KQKL)
+    DEF_MAT_REV(KDKQ,KQKD)
+    DEF_MAT_REV(KNKQ,KQKN)
+    
+    // R x : all should be draw
+    DEF_MAT(KRKL, Ter_LikelyDraw)
+    DEF_MAT(KRKD, Ter_LikelyDraw)
+    DEF_MAT(KRKN, Ter_LikelyDraw)
+    
+    DEF_MAT_REV(KLKR,KRKL)
+    DEF_MAT_REV(KDKR,KRKD)
+    DEF_MAT_REV(KNKR,KRKN)
+    
+    // B x : all are draw
+    DEF_MAT(KLKN, Ter_Draw)
+    DEF_MAT(KDKN, Ter_Draw)
+    
+    DEF_MAT_REV(KNKL,KLKN)
+    DEF_MAT_REV(KNKD,KDKN)
+    
+    // X 0 : QR win, BN draw
+    DEF_MAT(KQK, Ter_WhiteWin)
+    DEF_MAT(KRK, Ter_WhiteWin)
+    DEF_MAT(KLK, Ter_Draw)
+    DEF_MAT(KDK, Ter_Draw)
+    DEF_MAT(KNK, Ter_Draw)
+    
+   DEF_MAT_REV(KKQ,KQK)
+   DEF_MAT_REV(KKR,KRK)
+   DEF_MAT_REV(KKL,KLK)
+   DEF_MAT_REV(KKD,KDK)
+   DEF_MAT_REV(KKN,KNK)
+    
+    // 2X 0 : all win except LL, DD, NN
+    DEF_MAT(KQQK, Ter_WhiteWin)
+    DEF_MAT(KRRK, Ter_WhiteWin)
+    DEF_MAT(KLDK, Ter_WhiteWin)
+    DEF_MAT(KLLK, Ter_Draw)
+    DEF_MAT(KDDK, Ter_Draw)
+    DEF_MAT(KNNK, Ter_Draw)
+    DEF_MAT(KLNK, Ter_WhiteWin)
+    DEF_MAT(KDNK, Ter_WhiteWin)
+    
+    DEF_MAT_REV(KKQQ,KQQK)
+    DEF_MAT_REV(KKRR,KRRK)
+    DEF_MAT_REV(KKLD,KLDK)
+    DEF_MAT_REV(KKLL,KLLK)
+    DEF_MAT_REV(KKDD,KDDK)
+    DEF_MAT_REV(KKNN,KNNK)
+    DEF_MAT_REV(KKLN,KLNK)
+    DEF_MAT_REV(KKDN,KDNK)
+    
+    ///@todo other
+
+    inline Terminaison probeMaterialHashTable(const Position::Material & mat) {
+        return materialHashTable[getMaterialHash(mat)];
+    }
+
+}
 
 void initMaterial(Position & p){
-    p.nwk = (unsigned char)countBit(p.whiteKing);
-    p.nwq = (unsigned char)countBit(p.whiteQueen);
-    p.nwr = (unsigned char)countBit(p.whiteRook);
-    p.nwb = (unsigned char)countBit(p.whiteBishop);
-    p.nwn = (unsigned char)countBit(p.whiteKnight);
-    p.nwp = (unsigned char)countBit(p.whitePawn);
-    p.nbk = (unsigned char)countBit(p.blackKing);
-    p.nbq = (unsigned char)countBit(p.blackQueen);
-    p.nbr = (unsigned char)countBit(p.blackRook);
-    p.nbb = (unsigned char)countBit(p.blackBishop);
-    p.nbn = (unsigned char)countBit(p.blackKnight);
-    p.nbp = (unsigned char)countBit(p.blackPawn);
-    p.nk  = p.nwk + p.nbk; p.nq  = p.nwq + p.nbq; p.nr  = p.nwr + p.nbr; p.nb  = p.nwb + p.nbb; p.nn  = p.nwn + p.nbn; p.np  = p.nwp + p.nbp;
-    p.nwM = p.nwq + p.nwr; p.nbM = p.nbq + p.nbr; p.nwm = p.nwb + p.nwn; p.nbm = p.nbb + p.nbn; p.nwt = p.nwM + p.nwm; p.nbt = p.nbM + p.nbm;
+    p.mat.nwk = (unsigned char)countBit(p.whiteKing);
+    p.mat.nwq = (unsigned char)countBit(p.whiteQueen);
+    p.mat.nwr = (unsigned char)countBit(p.whiteRook);
+    p.mat.nwb = (unsigned char)countBit(p.whiteBishop);
+    p.mat.nwbl= (unsigned char)countBit(p.whiteBishop&whiteSquare);
+    p.mat.nwbd= (unsigned char)countBit(p.whiteBishop&blackSquare);
+    p.mat.nwn = (unsigned char)countBit(p.whiteKnight);
+    p.mat.nwp = (unsigned char)countBit(p.whitePawn);
+    p.mat.nbk = (unsigned char)countBit(p.blackKing);
+    p.mat.nbq = (unsigned char)countBit(p.blackQueen);
+    p.mat.nbr = (unsigned char)countBit(p.blackRook);
+    p.mat.nbb = (unsigned char)countBit(p.blackBishop);
+    p.mat.nbbl= (unsigned char)countBit(p.blackBishop&whiteSquare);
+    p.mat.nbbd= (unsigned char)countBit(p.blackBishop&blackSquare);
+    p.mat.nbn = (unsigned char)countBit(p.blackKnight);
+    p.mat.nbp = (unsigned char)countBit(p.blackPawn);
+    p.mat.nk  = p.mat.nwk + p.mat.nbk; p.mat.nq  = p.mat.nwq + p.mat.nbq; p.mat.nr  = p.mat.nwr + p.mat.nbr; p.mat.nb  = p.mat.nwb + p.mat.nbb; p.mat.nn  = p.mat.nwn + p.mat.nbn; p.mat.np  = p.mat.nwp + p.mat.nbp;
+    p.mat.nwM = p.mat.nwq + p.mat.nwr; p.mat.nbM = p.mat.nbq + p.mat.nbr; p.mat.nwm = p.mat.nwb + p.mat.nwn; p.mat.nbm = p.mat.nbb + p.mat.nbn; p.mat.nwt = p.mat.nwM + p.mat.nwm; p.mat.nbt = p.mat.nbM + p.mat.nbm;
 }
 
 void initBitBoards(Position & p) {
@@ -628,7 +901,7 @@ struct ThreadContext{
     bool SEE(const Position & p, const Move & m, ScoreType threshold)const;
     template< bool display = false> ScoreType SEEVal(const Position & p, const Move & m)const;
     std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth);
-    bool isDraw(const Position & p, bool isPV = true)const;
+    MaterialHash::Terminaison interorNodeRecognizer(const Position & p, bool withRep = true, bool isPV = true)const;
 
     void idleLoop(){
         while (true){
@@ -1869,31 +2142,23 @@ void sort(const ThreadContext & context, std::vector<Move> & moves, const Positi
     std::sort(moves.begin(),moves.end(),ms);
 }
 
-bool ThreadContext::isDraw(const Position & p, bool isPV)const{
+MaterialHash::Terminaison ThreadContext::interorNodeRecognizer(const Position & p, bool withRep, bool isPV)const{
     int count = 0;
     const Hash h = computeHash(p);
-    const int limit = isPV?3:1;
-    for (int k = p.ply-1; k >= 0; --k) {
-        if (hashStack[k] == 0) break;
-        if (hashStack[k] == h) ++count;
-        if (count >= limit) return true;
+    if (withRep) {
+        const int limit = isPV ? 3 : 1;
+        for (int k = p.ply - 1; k >= 0; --k) {
+            if (hashStack[k] == 0) break;
+            if (hashStack[k] == h) ++count;
+            if (count >= limit) return MaterialHash::Ter_Draw;
+        }
     }
-    if ( p.fifty >= 100 ) return true;
-    if (p.np == 0 ) {
-        if (p.nwt + p.nbt == 0) return true;
-        else if (p.nwm == 1 && p.nwM == 0 && p.nbt == 0) return true;
-        else if (p.nbm == 1 && p.nbM == 0 && p.nwt == 0) return true;
-        else if (p.nwn == 2 && p.nwb == 0 && p.nwM == 0 && p.nbt == 0) return true;
-        else if (p.nbn == 2 && p.nbb == 0 && p.nbM == 0 && p.nwt == 0) return true;
-        else if (p.nwt == 1 && p.nwm == 1 && p.nbt == 1 && p.nbm == 1) return true;
-        else if (p.nwM == 0 && p.nwm == 2 && p.nwb != 2 && p.nbM == 0 && p.nbm == 1) return true;
-        else if (p.nbM == 0 && p.nbm == 2 && p.nbb != 2 && p.nwM == 0 && p.nwm == 1) return true;
-        ///@todo others ...
-    }
+    if ( p.fifty >= 100 ) return MaterialHash::Ter_Draw;
+    if (p.mat.np == 0 )   return MaterialHash::probeMaterialHashTable(p.mat);
     else { // some pawn are present
         ///@todo ... KPK
     }
-    return false;
+    return MaterialHash::Ter_Unknown;
 }
 
 //int manhattanDistance(Square sq1, Square sq2) { return std::abs((sq2 >> 3) - (sq1 >> 3)) + std::abs((sq2 & 7) - (sq1 & 7));}
@@ -1909,20 +2174,20 @@ ScoreType eval(const Position & p, float & gp){
     static ScoreType *absValuesEG[7] = { &dummyScore, &ValuesEG[P_wp + PieceShift], &ValuesEG[P_wn + PieceShift], &ValuesEG[P_wb + PieceShift], &ValuesEG[P_wr + PieceShift], &ValuesEG[P_wq + PieceShift], &ValuesEG[P_wk + PieceShift] };
 
     // game phase
-    //gp = (p.nn + p.nb + 3.f * p.nr + 6.f * p.nq)/32.f;
+    //gp = (p.mat.nn + p.mat.nb + 3.f * p.mat.nr + 6.f * p.mat.nq)/32.f;
     const float totalAbsScore = 2.f * *absValues[P_wq] + 4.f * *absValues[P_wr] + 4.f * *absValues[P_wb] + 4.f * *absValues[P_wn] + 16.f * *absValues[P_wp];
-    const float absscore = ((p.nwq + p.nbq) * *absValues[P_wq] + (p.nwr + p.nbr) * *absValues[P_wr] + (p.nwb + p.nbb) * *absValues[P_wb] + (p.nwn + p.nbn) * *absValues[P_wn] + (p.nwp + p.nbp) * *absValues[P_wp]) / totalAbsScore;
-    const float pawnScore = p.np / 16.f;
-    const float pieceScore = (p.nq + p.nr + p.nb + p.nn) / 14.f;
+    const float absscore = ((p.mat.nwq + p.mat.nbq) * *absValues[P_wq] + (p.mat.nwr + p.mat.nbr) * *absValues[P_wr] + (p.mat.nwb + p.mat.nbb) * *absValues[P_wb] + (p.mat.nwn + p.mat.nbn) * *absValues[P_wn] + (p.mat.nwp + p.mat.nbp) * *absValues[P_wp]) / totalAbsScore;
+    const float pawnScore = p.mat.np / 16.f;
+    const float pieceScore = (p.mat.nq + p.mat.nr + p.mat.nb + p.mat.nn) / 14.f;
     gp = (absscore*0.4f + pieceScore * 0.3f + pawnScore * 0.3f);
 
     // material
-    sc += (p.nwk - p.nbk) * ScoreType(gp* *absValues[P_wk] + (1.f - gp)* *absValuesEG[P_wk])
-        + (p.nwq - p.nbq) * ScoreType(gp* *absValues[P_wq] + (1.f - gp)* *absValuesEG[P_wq])
-        + (p.nwr - p.nbr) * ScoreType(gp* *absValues[P_wr] + (1.f - gp)* *absValuesEG[P_wr])
-        + (p.nwb - p.nbb) * ScoreType(gp* *absValues[P_wb] + (1.f - gp)* *absValuesEG[P_wb])
-        + (p.nwn - p.nbn) * ScoreType(gp* *absValues[P_wn] + (1.f - gp)* *absValuesEG[P_wn])
-        + (p.nwp - p.nbp) * ScoreType(gp* *absValues[P_wp] + (1.f - gp)* *absValuesEG[P_wp]);
+    sc += (p.mat.nwk - p.mat.nbk) * ScoreType(gp* *absValues[P_wk] + (1.f - gp)* *absValuesEG[P_wk])
+        + (p.mat.nwq - p.mat.nbq) * ScoreType(gp* *absValues[P_wq] + (1.f - gp)* *absValuesEG[P_wq])
+        + (p.mat.nwr - p.mat.nbr) * ScoreType(gp* *absValues[P_wr] + (1.f - gp)* *absValuesEG[P_wr])
+        + (p.mat.nwb - p.mat.nbb) * ScoreType(gp* *absValues[P_wb] + (1.f - gp)* *absValuesEG[P_wb])
+        + (p.mat.nwn - p.mat.nbn) * ScoreType(gp* *absValues[P_wn] + (1.f - gp)* *absValuesEG[P_wn])
+        + (p.mat.nwp - p.mat.nbp) * ScoreType(gp* *absValues[P_wp] + (1.f - gp)* *absValuesEG[P_wp]);
     const bool white2Play = p.c == Co_White;
     // pst
     BitBoard pieceBBiterator = p.whitePiece;
@@ -2194,6 +2459,8 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     ++stats.qnodes;
 
     ScoreType val = eval(p,gp);
+    MaterialHash::Terminaison drawStatus = interorNodeRecognizer(p, false, false);
+    if (drawStatus == MaterialHash::Ter_HardToWin || drawStatus == MaterialHash::Ter_LikelyDraw) val = ScoreType(val/3.f);
     if ( val >= beta ) return val;
     if ( val > alpha) alpha = val;
 
@@ -2270,7 +2537,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     const bool rootnode = ply == 1;
 
     float gp = 0;
-    if (!rootnode && isDraw(p, pvnode)) return 0;
+    MaterialHash::Terminaison drawStatus = interorNodeRecognizer(p, true, pvnode);
+    if (!rootnode && drawStatus == MaterialHash::Ter_Draw) return 0;
     if (ply >= MAX_PLY - 1 || depth >= MAX_DEPTH - 1) return eval(p, gp);
 
     TT::Entry e;
@@ -2306,6 +2574,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         }
 
         // null move
+        ///@todo use null move to detect mate treats
         if ( StaticConfig::doNullMove && pv.size() > 1 && depth >= StaticConfig::nullMoveMinDepth && p.ep == INVALIDSQUARE && val >= beta){
             Position pN = p;
             pN.c = opponentColor(pN.c);
@@ -2982,8 +3251,11 @@ int main(int argc, char ** argv){
     initLMR();
     initMvvLva();
     BB::initMask();
+    MaterialHash::MaterialHashInitializer::init();
     ThreadPool::instance().setup(getOption<int>("threads",1,Validator<int>().setMin(1).setMax(64)));
-    GETOPT(mateFinder,bool)
+    GETOPT(mateFinder, bool)
+
+    //std::cout << MaterialHash::ToString(MaterialHash::MATKQRLKRRNN) << std::endl;
 
     if ( getOption<bool>("book") && Book::fileExists("book.bin") ) {
         std::ifstream bbook("book.bin",std::ios::in | std::ios::binary);
