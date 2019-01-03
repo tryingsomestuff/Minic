@@ -94,4 +94,5 @@ and a command line interface, using the same key word. For instance, forcing mat
 * 0.26 : fix a TC bug
 * 0.27 : smaller window, better singular extension
 * 0.28 : xboard time command is used now
-
+* 0.29 : refactoring, very bad TT bug fix, better timeman, better gamephase, work on SEE ... huuuuuge progress. Also preparing for a better eval (pawn structure)...
+ 
