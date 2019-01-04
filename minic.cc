@@ -31,7 +31,7 @@ typedef uint64_t u_int64_t;
 //#define DEBUG_TOOL
 #define WITH_TEST_SUITE
 
-const std::string MinicVersion = "mat";
+const std::string MinicVersion = "dev";
 
 typedef std::chrono::system_clock Clock;
 typedef char DepthType;
@@ -176,7 +176,7 @@ ScoreType   passerBonusEG[8]      = { 0,  4, 18, 42, 75,118,170, 0};
 ScoreType   kingNearPassedPawnEG  = 11;
 ScoreType   doublePawnMalus       = 5;
 ScoreType   doublePawnMalusEG     = 15;
-ScoreType   isolatedPawnMalus     = -5; // yes negative ...
+ScoreType   isolatedPawnMalus     = 5;
 ScoreType   isolatedPawnMalusEG   = 15;
 float   protectedPasserFactor     = 0.25;
 float   freePasserFactor          = 0.9;
@@ -1464,7 +1464,7 @@ int GetNextMSecPerMove(const Position & p){
         assert(nbMoveInTC > 0);
         LogIt(logInfo) << "TC mode";
         if (!isDynamic) ms = int((msecInTC - msecMargin) / (float)nbMoveInTC) + msecIncLoc ;
-        else ms = int((msecUntilNextTC - msecMargin) / (float)(nbMoveInTC-((p.moves-1)%nbMoveInTC))) + msecIncLoc;
+        else ms = std::min(msecUntilNextTC - msecMargin, int((msecUntilNextTC - msecMargin) / (float)(nbMoveInTC-((p.moves-1)%nbMoveInTC))) + msecIncLoc);
     }
     else{ // mps is not given
         ///@todo something better using the real time command
@@ -1473,8 +1473,8 @@ int GetNextMSecPerMove(const Position & p){
         LogIt(logInfo) << "nmoves    " << nmoves;
         LogIt(logInfo) << "p.moves   " << int(p.moves);
         assert(nmoves > 0);
-        if (!isDynamic) ms = std::min(msecInTC - msecMargin, int((msecInTC+p.moves*msecIncLoc) / (float)(nmoves+p.moves)) - msecMargin);
-        else ms = std::min(msecInTC - msecMargin, int(msecUntilNextTC / (float)nmoves + 0.75*msecIncLoc) - msecMargin);
+        if (!isDynamic) ms = int((msecInTC+p.moves*msecIncLoc) / (float)(nmoves+p.moves)) - msecMargin;
+        else ms = std::min(msecUntilNextTC - msecMargin, int(msecUntilNextTC / (float)nmoves + 0.75*msecIncLoc) - msecMargin);
     }
     return ms;
 }
@@ -2175,7 +2175,7 @@ ScoreType eval(const Position & p, float & gp){
 
     // game phase
     //gp = (p.mat.nn + p.mat.nb + 3.f * p.mat.nr + 6.f * p.mat.nq)/32.f;
-    const float totalAbsScore = 2.f * *absValues[P_wq] + 4.f * *absValues[P_wr] + 4.f * *absValues[P_wb] + 4.f * *absValues[P_wn] + 16.f * *absValues[P_wp];
+    /*static*/ const float totalAbsScore = 2.f * *absValues[P_wq] + 4.f * *absValues[P_wr] + 4.f * *absValues[P_wb] + 4.f * *absValues[P_wn] + 16.f * *absValues[P_wp];
     const float absscore = ((p.mat.nwq + p.mat.nbq) * *absValues[P_wq] + (p.mat.nwr + p.mat.nbr) * *absValues[P_wr] + (p.mat.nwb + p.mat.nbb) * *absValues[P_wb] + (p.mat.nwn + p.mat.nbn) * *absValues[P_wn] + (p.mat.nwp + p.mat.nbp) * *absValues[P_wp]) / totalAbsScore;
     const float pawnScore = p.mat.np / 16.f;
     const float pieceScore = (p.mat.nq + p.mat.nr + p.mat.nb + p.mat.nn) / 14.f;
@@ -2273,7 +2273,9 @@ ScoreType eval(const Position & p, float & gp){
     sc += ScoreType((nbBPF>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
     sc += ScoreType((nbBPG>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
     sc += ScoreType((nbBPH>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
+    */
 
+    /*
     // isolated pawn malus
     sc -= ScoreType((        nbWPA&&!nbWPB)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
     sc -= ScoreType((!nbWPA&&nbWPB&&!nbWPC)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
@@ -2460,7 +2462,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     ScoreType val = eval(p,gp);
     MaterialHash::Terminaison drawStatus = interorNodeRecognizer(p, false, false);
-    if (drawStatus == MaterialHash::Ter_HardToWin || drawStatus == MaterialHash::Ter_LikelyDraw) val = ScoreType(val/3.f);
+    if (drawStatus == MaterialHash::Ter_HardToWin || drawStatus == MaterialHash::Ter_LikelyDraw) val = ScoreType(val/3.f); // eval scaling 
     if ( val >= beta ) return val;
     if ( val > alpha) alpha = val;
 
