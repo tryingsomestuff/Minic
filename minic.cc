@@ -76,7 +76,7 @@ const int       lmpMaxDepth              = 10;
 const ScoreType futilityDepthCoeff       = 160;
 const int       iidMinDepth              = 5;
 const int       probCutMinDepth          = 5;
-const int       probCutMaxMoves          = 3;
+const int       probCutMaxMoves          = 5;
 const ScoreType probCutMargin            = 80;
 const int       lmrMinDepth              = 3;
 const int       singularExtensionDepth   = 8;
@@ -482,8 +482,6 @@ namespace MaterialHash { // from Gull
     DEF_MAT_REV(KLLKLD, KLDKLL)
     DEF_MAT_REV(KDDKLD, KLDKDD)
     
-    // M m ///@todo 
-
     // 2M M
     DEF_MAT(KQQKQ, Ter_WhiteWin)
     DEF_MAT(KQQKR, Ter_WhiteWin)
@@ -499,8 +497,53 @@ namespace MaterialHash { // from Gull
     DEF_MAT_REV(KQKQR,KQRKQ)
     DEF_MAT_REV(KRKQR,KQRKR)
     
-    // 2M m ///@todo Win
-    // 2m M ///@todo Draw
+    // 2M m
+    DEF_MAT(KQQKL, Ter_WhiteWin)
+    DEF_MAT(KRRKL, Ter_WhiteWin)
+    DEF_MAT(KQRKL, Ter_WhiteWin)
+    DEF_MAT(KQQKD, Ter_WhiteWin)
+    DEF_MAT(KRRKD, Ter_WhiteWin)
+    DEF_MAT(KQRKD, Ter_WhiteWin)
+    DEF_MAT(KQQKN, Ter_WhiteWin)
+    DEF_MAT(KRRKN, Ter_WhiteWin)
+    DEF_MAT(KQRKN, Ter_WhiteWin)
+
+    DEF_MAT_REV(KLKQQ, KQQKL)
+    DEF_MAT_REV(KLKRR, KRRKL)
+    DEF_MAT_REV(KLKQR, KQRKL)
+    DEF_MAT_REV(KDKQQ, KQQKD)
+    DEF_MAT_REV(KDKRR, KRRKD)
+    DEF_MAT_REV(KDKQR, KQRKD)
+    DEF_MAT_REV(KNKQQ, KQQKN)
+    DEF_MAT_REV(KNKRR, KRRKN)
+    DEF_MAT_REV(KNKQR, KQRKN)
+
+    // 2m M
+    DEF_MAT(KLDKQ, Ter_Draw)
+    DEF_MAT(KLDKR, Ter_Draw)
+    DEF_MAT(KLLKQ, Ter_Draw)
+    DEF_MAT(KLLKR, Ter_Draw)
+    DEF_MAT(KDDKQ, Ter_Draw)
+    DEF_MAT(KDDKR, Ter_Draw)
+    DEF_MAT(KNNKQ, Ter_Draw)
+    DEF_MAT(KNNKR, Ter_Draw)
+    DEF_MAT(KLNKQ, Ter_Draw)
+    DEF_MAT(KLNKR, Ter_Draw)
+    DEF_MAT(KDNKQ, Ter_Draw)
+    DEF_MAT(KDNKR, Ter_Draw)
+    
+    DEF_MAT_REV(KQKLD,KLDKQ)
+    DEF_MAT_REV(KRKLD,KLDKR)
+    DEF_MAT_REV(KQKLL,KLLKQ)
+    DEF_MAT_REV(KRKLL,KLLKR)
+    DEF_MAT_REV(KQKDD,KDDKQ)
+    DEF_MAT_REV(KRKDD,KDDKR)
+    DEF_MAT_REV(KQKNN,KNNKQ)
+    DEF_MAT_REV(KRKNN,KNNKR)
+    DEF_MAT_REV(KQKLN,KLNKQ)
+    DEF_MAT_REV(KRKLN,KLNKR)
+    DEF_MAT_REV(KQKDN,KDNKQ)
+    DEF_MAT_REV(KRKDN,KDNKR)
 
     // 2m m : all draw
     DEF_MAT(KLDKL, Ter_Draw)
@@ -512,10 +555,16 @@ namespace MaterialHash { // from Gull
     DEF_MAT(KDDKL, Ter_Draw)
     DEF_MAT(KDDKD, Ter_Draw)
     DEF_MAT(KDDKN, Ter_Draw)
+    DEF_MAT(KNNKL, Ter_Draw)
+    DEF_MAT(KNNKD, Ter_Draw)
     DEF_MAT(KNNKN, Ter_Draw)
+    DEF_MAT(KLNKL, Ter_Draw)
+    DEF_MAT(KLNKD, Ter_Draw)
     DEF_MAT(KLNKN, Ter_Draw)
+    DEF_MAT(KDNKL, Ter_Draw)
+    DEF_MAT(KDNKD, Ter_Draw)
     DEF_MAT(KDNKN, Ter_Draw)
-    
+
     DEF_MAT_REV(KLKLD,KLDKL)
     DEF_MAT_REV(KDKLD,KLDKD)
     DEF_MAT_REV(KNKLD,KLDKN)
@@ -525,8 +574,14 @@ namespace MaterialHash { // from Gull
     DEF_MAT_REV(KLKDD,KDDKL)
     DEF_MAT_REV(KDKDD,KDDKD)
     DEF_MAT_REV(KNKDD,KDDKN)
+    DEF_MAT_REV(KLKNN,KNNKL)
+    DEF_MAT_REV(KDKNN,KNNKD)
     DEF_MAT_REV(KNKNN,KNNKN)
+    DEF_MAT_REV(KLKLN,KLNKL)
+    DEF_MAT_REV(KDKLN,KLNKD)
     DEF_MAT_REV(KNKLN,KLNKN)
+    DEF_MAT_REV(KLKDN,KDNKL)
+    DEF_MAT_REV(KDKDN,KDNKD)
     DEF_MAT_REV(KNKDN,KDNKN)
     
     // Q x : all should be win
@@ -588,7 +643,7 @@ namespace MaterialHash { // from Gull
     DEF_MAT_REV(KKLN,KLNK)
     DEF_MAT_REV(KKDN,KDNK)
     
-    ///@todo other
+    ///@todo other (with pawn ...)
 
     inline Terminaison probeMaterialHashTable(const Position::Material & mat) {
         return materialHashTable[getMaterialHash(mat)];
@@ -2165,6 +2220,22 @@ MaterialHash::Terminaison ThreadContext::interorNodeRecognizer(const Position & 
 //int manhattanDistance(Square sq1, Square sq2) { return std::abs((sq2 >> 3) - (sq1 >> 3)) + std::abs((sq2 & 7) - (sq1 & 7));}
 int chebyshevDistance(Square sq1, Square sq2) { return std::max(std::abs((sq2 >> 3) - (sq1 >> 3)) , std::abs((sq2 & 7) - (sq1 & 7))); }
 
+/*
+const ScoreType MOB[6][28] = { {0,0,0,0},
+                                 {-22,-15,-10,5,0,5,8,12,14,15},
+                                 {-18,-8,0,5,10,15,20,25,28,30,32,34,36,38},
+                                 {-20,-16,-12,-8,4,0,0,4,8,12,16,20,24,27,30},
+                                 {-19,-18,-16,-14,-12,-10,0,3,6,9,12,15,18,21,24,27,30,33,35,38,41,43,46,48,49,50,51},
+                                 {-20,0,5,10,11,12,13,14} };
+ 
+const ScoreType MOBEG[6][28] = { {0,0,0,0},
+                                 {-22,-15,-10,5,0,5,8,12,14,15},
+                                 {-18,-8,0,5,10,15,20,25,28,30,32,34,36,38},
+                                 {-20,-16,-12,-8,4,0,0,4,8,12,16,20,24,27,30},
+                                 {-19,-18,-16,-14,-12,-10,0,3,6,9,12,15,18,21,24,27,30,33,35,38,41,43,46,48,49,50,51},
+                                 {-20,0,5,10,11,12,13,14} };
+*/
+
 ScoreType eval(const Position & p, float & gp){
 
     ScoreType sc = 0;
@@ -2190,19 +2261,32 @@ ScoreType eval(const Position & p, float & gp){
         + (p.mat.nwn - p.mat.nbn) * ScoreType(gp* *absValues[P_wn] + (1.f - gp)* *absValuesEG[P_wn])
         + (p.mat.nwp - p.mat.nbp) * ScoreType(gp* *absValues[P_wp] + (1.f - gp)* *absValuesEG[P_wp]);
     const bool white2Play = p.c == Co_White;
-    // pst
+    // pst (///@todo & mobility)
+    static BitBoard(*const pf[])(const Square, const BitBoard, const  Color) = { &BB::coverage<P_wp>, &BB::coverage<P_wn>, &BB::coverage<P_wb>, &BB::coverage<P_wr>, &BB::coverage<P_wq>, &BB::coverage<P_wk> };
     BitBoard pieceBBiterator = p.whitePiece;
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
         const Square kk = k^56;
         const Piece ptype = getPieceType(p,k);
         sc += ScoreType((gp*PST[ptype - 1][kk] + (1.f - gp)*PSTEG[ptype - 1][kk] ) );
+        /*
+        if (ptype != P_wp) {
+             const uint64_t n = countBit(pf[ptype-1](k, p.occupancy, p.c) & ~p.whitePiece);
+             sc += ScoreType((gp*MOB[ptype - 1][n] + (1.f - gp)*MOBEG[ptype - 1][n]));
+        }
+        */
     }
     pieceBBiterator = p.blackPiece;
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
         const Piece ptype = getPieceType(p, k);
          sc -= ScoreType((gp*PST[ptype - 1][k] + (1.f - gp)*PSTEG[ptype - 1][k]));
+         /*
+         if (ptype != P_bp) {
+             const uint64_t n = countBit(pf[ptype-1](k, p.occupancy, p.c) & ~p.blackPiece);
+             sc -= ScoreType((gp*MOB[ptype - 1][n] + (1.f - gp)*MOBEG[ptype - 1][n]));
+         }
+         */
     }
     // in very end game winning king must be near the other king
     if (gp < 0.25 && p.wk != INVALIDSQUARE && p.bk != INVALIDSQUARE) sc -= (sc>0?+1:-1)*chebyshevDistance(p.wk, p.bk)*15;
@@ -2210,6 +2294,7 @@ ScoreType eval(const Position & p, float & gp){
     // passer
     ///@todo candidate passed
     ///@todo unstoppable passed (king too far)
+    ///@todo rook on open file
     pieceBBiterator = p.whitePawn;
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
@@ -2405,16 +2490,16 @@ ScoreType eval(const Position & p, float & gp){
 
     /*
     // number of pawn and piece type
-    sc += p.nwr * adjRook  [p.nwp];
-    sc -= p.nbr * adjRook  [p.nbp];
-    sc += p.nwn * adjKnight[p.nwp];
-    sc -= p.nbn * adjKnight[p.nbp];
+    sc += p.mat.nwr * adjRook  [p.mat.nwp];
+    sc -= p.mat.nbr * adjRook  [p.mat.nbp];
+    sc += p.mat.nwn * adjKnight[p.mat.nwp];
+    sc -= p.mat.nbn * adjKnight[p.mat.nbp];
     // bishop pair
-    sc += ( (p.nwb > 1 ? bishopPairBonus : 0)-(p.nbb > 1 ? bishopPairBonus : 0) );
+    sc += ( (p.mat.nwb > 1 ? bishopPairBonus : 0)-(p.mat.nbb > 1 ? bishopPairBonus : 0) );
     // knight pair
-    sc += ( (p.nwn > 1 ? knightPairMalus : 0)-(p.nbn > 1 ? knightPairMalus : 0) );
+    sc += ( (p.mat.nwn > 1 ? knightPairMalus : 0)-(p.mat.nbn > 1 ? knightPairMalus : 0) );
     // rook pair
-    sc += ( (p.nwr > 1 ? rookPairMalus   : 0)-(p.nbr > 1 ? rookPairMalus   : 0) );
+    sc += ( (p.mat.nwr > 1 ? rookPairMalus   : 0)-(p.mat.nbr > 1 ? rookPairMalus   : 0) );
     */
     
     /*
@@ -2600,18 +2685,14 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if ( StaticConfig::doProbcut && depth >= StaticConfig::probCutMinDepth ){
           int probCutCount = 0;
           const ScoreType betaPC = beta + StaticConfig::probCutMargin;
-          if (!moveGenerated){
-             generate(p,moves,GP_cap);
-             moveGenerated = true;
-             if ( moves.empty() ) return isInCheck?-MATE + ply : 0;
-             sort(*this,moves,p,&e);
-          }
+          generate(p,moves,GP_cap);
+          sort(*this,moves,p,&e);
           for (auto it = moves.begin() ; it != moves.end() && probCutCount < StaticConfig::probCutMaxMoves; ++it){
-            if ( e.h != 0 && sameMove(e.m, *it) && (Move2Score(*it) < 100) ) continue; // quiet moves and bad captures
+            if ( e.h != 0 && sameMove(e.m, *it) && (Move2Score(*it) < 100) ) continue; // skip TT move if quiet or bad captures
             Position p2 = p;
             if ( ! apply(p2,*it) ) continue;
             ++probCutCount;
-            ScoreType scorePC = -qsearch(-betaPC,-betaPC+1,p2,ply+1,seldepth);
+            ScoreType scorePC = betaPC; // -qsearch(-betaPC, -betaPC + 1, p2, ply + 1, seldepth);
             std::vector<Move> pvPC;
             if (!stopFlag && scorePC >= betaPC) scorePC = -pvs(-betaPC,-betaPC+1,p2,depth-StaticConfig::probCutMinDepth+1,pvnode,ply+1,pvPC,seldepth);
             if (!stopFlag && scorePC >= betaPC) return scorePC;
@@ -2623,7 +2704,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     // IID
     if ( (e.h == 0 /*|| e.d < depth/3*/) && pvnode && depth >= StaticConfig::iidMinDepth){
         std::vector<Move> iidPV;
-        pvs(alpha,beta,p,depth/2,pvnode,ply,iidPV,seldepth);
+        pvs(alpha,beta,p,depth-2,pvnode,ply,iidPV,seldepth);
         if ( !stopFlag) TT::getEntry(computeHash(p), depth, e);
         else return STOPSCORE;
     }
