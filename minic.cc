@@ -178,6 +178,7 @@ ScoreType   doublePawnMalus       = 5;
 ScoreType   doublePawnMalusEG     = 15;
 ScoreType   isolatedPawnMalus     = 5;
 ScoreType   isolatedPawnMalusEG   = 15;
+ScoreType   pawnShieldBonus       = 18;
 float   protectedPasserFactor     = 0.25;
 float   freePasserFactor          = 0.9;
 
@@ -261,31 +262,39 @@ enum BBSq : BitBoard { BBSq_a1 = SquareToBitboard(Sq_a1),BBSq_b1 = SquareToBitbo
                        BBSq_a7 = SquareToBitboard(Sq_a7),BBSq_b7 = SquareToBitboard(Sq_b7),BBSq_c7 = SquareToBitboard(Sq_c7),BBSq_d7 = SquareToBitboard(Sq_d7),BBSq_e7 = SquareToBitboard(Sq_e7),BBSq_f7 = SquareToBitboard(Sq_f7),BBSq_g7 = SquareToBitboard(Sq_g7),BBSq_h7 = SquareToBitboard(Sq_h7),
                        BBSq_a8 = SquareToBitboard(Sq_a8),BBSq_b8 = SquareToBitboard(Sq_b8),BBSq_c8 = SquareToBitboard(Sq_c8),BBSq_d8 = SquareToBitboard(Sq_d8),BBSq_e8 = SquareToBitboard(Sq_e8),BBSq_f8 = SquareToBitboard(Sq_f8),BBSq_g8 = SquareToBitboard(Sq_g8),BBSq_h8 = SquareToBitboard(Sq_h8)};
 
-const BitBoard whiteSquare        = 0x55AA55AA55AA55AA;
-const BitBoard blackSquare        = 0xAA55AA55AA55AA55;
-const BitBoard whiteSideSquare    = 0x00000000FFFFFFFF;
-const BitBoard blackSideSquare    = 0xFFFFFFFF00000000;
-const BitBoard whiteKingQueenSide = 0x0000000000000007;
-const BitBoard whiteKingKingSide  = 0x00000000000000E0;
-const BitBoard blackKingQueenSide = 0x0700000000000000;
-const BitBoard blackKingKingSide  = 0xe000000000000000;
-const BitBoard fileA              = 0x0101010101010101;
-const BitBoard fileB              = 0x0202020202020202;
-const BitBoard fileC              = 0x0404040404040404;
-const BitBoard fileD              = 0x0808080808080808;
-const BitBoard fileE              = 0x1010101010101010;
-const BitBoard fileF              = 0x2020202020202020;
-const BitBoard fileG              = 0x4040404040404040;
-const BitBoard fileH              = 0x8080808080808080;
-const BitBoard rank1              = 0x00000000000000ff;
-const BitBoard rank2              = 0x000000000000ff00;
-const BitBoard rank3              = 0x0000000000ff0000;
-const BitBoard rank4              = 0x00000000ff000000;
-const BitBoard rank5              = 0x000000ff00000000;
-const BitBoard rank6              = 0x0000ff0000000000;
-const BitBoard rank7              = 0x00ff000000000000;
-const BitBoard rank8              = 0xff00000000000000;
-BitBoard dummy                    = 0x0ull;
+const BitBoard whiteSquare               = 0x55AA55AA55AA55AA;
+const BitBoard blackSquare               = 0xAA55AA55AA55AA55;
+const BitBoard whiteSideSquare           = 0x00000000FFFFFFFF;
+const BitBoard blackSideSquare           = 0xFFFFFFFF00000000;
+const BitBoard whiteKingQueenSide        = 0x0000000000000007;
+const BitBoard whiteKingKingSide         = 0x00000000000000e0;
+const BitBoard blackKingQueenSide        = 0x0700000000000000;
+const BitBoard blackKingKingSide         = 0xe000000000000000;
+const BitBoard whiteQueenSidePawnShield1 = 0x0000000000000700;
+const BitBoard whiteKingSidePawnShield1  = 0x000000000000e000;
+const BitBoard blackQueenSidePawnShield1 = 0x0007000000000000;
+const BitBoard blackKingSidePawnShield1  = 0x00e0000000000000;
+const BitBoard whiteQueenSidePawnShield2 = 0x0000000000070000;
+const BitBoard whiteKingSidePawnShield2  = 0x0000000000e00000;
+const BitBoard blackQueenSidePawnShield2 = 0x0000070000000000;
+const BitBoard blackKingSidePawnShield2  = 0x0000e00000000000;
+const BitBoard fileA                     = 0x0101010101010101;
+const BitBoard fileB                     = 0x0202020202020202;
+const BitBoard fileC                     = 0x0404040404040404;
+const BitBoard fileD                     = 0x0808080808080808;
+const BitBoard fileE                     = 0x1010101010101010;
+const BitBoard fileF                     = 0x2020202020202020;
+const BitBoard fileG                     = 0x4040404040404040;
+const BitBoard fileH                     = 0x8080808080808080;
+const BitBoard rank1                     = 0x00000000000000ff;
+const BitBoard rank2                     = 0x000000000000ff00;
+const BitBoard rank3                     = 0x0000000000ff0000;
+const BitBoard rank4                     = 0x00000000ff000000;
+const BitBoard rank5                     = 0x000000ff00000000;
+const BitBoard rank6                     = 0x0000ff0000000000;
+const BitBoard rank7                     = 0x00ff000000000000;
+const BitBoard rank8                     = 0xff00000000000000;
+BitBoard dummy                           = 0x0ull;
 
 std::string showBitBoard(const BitBoard & b) {
     std::bitset<64> bs(b);
@@ -2239,6 +2248,7 @@ const ScoreType MOBEG[6][28] = { {0,0,0,0},
 ScoreType eval(const Position & p, float & gp){
 
     ScoreType sc = 0;
+    //SCoreType scEG = 0; ///@todo avoid all the multiplication here !
     if (TT::getEvalEntry(computeHash(p), sc, gp)) return sc;
 
     static ScoreType dummyScore = 0;
@@ -2252,14 +2262,15 @@ ScoreType eval(const Position & p, float & gp){
     const float pawnScore = p.mat.np / 16.f;
     const float pieceScore = (p.mat.nq + p.mat.nr + p.mat.nb + p.mat.nn) / 14.f;
     gp = (absscore*0.4f + pieceScore * 0.3f + pawnScore * 0.3f);
+    const float gpCompl = 1.f - gp;
 
     // material
-    sc += (p.mat.nwk - p.mat.nbk) * ScoreType(gp* *absValues[P_wk] + (1.f - gp)* *absValuesEG[P_wk])
-        + (p.mat.nwq - p.mat.nbq) * ScoreType(gp* *absValues[P_wq] + (1.f - gp)* *absValuesEG[P_wq])
-        + (p.mat.nwr - p.mat.nbr) * ScoreType(gp* *absValues[P_wr] + (1.f - gp)* *absValuesEG[P_wr])
-        + (p.mat.nwb - p.mat.nbb) * ScoreType(gp* *absValues[P_wb] + (1.f - gp)* *absValuesEG[P_wb])
-        + (p.mat.nwn - p.mat.nbn) * ScoreType(gp* *absValues[P_wn] + (1.f - gp)* *absValuesEG[P_wn])
-        + (p.mat.nwp - p.mat.nbp) * ScoreType(gp* *absValues[P_wp] + (1.f - gp)* *absValuesEG[P_wp]);
+    sc += (p.mat.nwk - p.mat.nbk) * ScoreType(gp* *absValues[P_wk] + gpCompl * *absValuesEG[P_wk])
+        + (p.mat.nwq - p.mat.nbq) * ScoreType(gp* *absValues[P_wq] + gpCompl * *absValuesEG[P_wq])
+        + (p.mat.nwr - p.mat.nbr) * ScoreType(gp* *absValues[P_wr] + gpCompl * *absValuesEG[P_wr])
+        + (p.mat.nwb - p.mat.nbb) * ScoreType(gp* *absValues[P_wb] + gpCompl * *absValuesEG[P_wb])
+        + (p.mat.nwn - p.mat.nbn) * ScoreType(gp* *absValues[P_wn] + gpCompl * *absValuesEG[P_wn])
+        + (p.mat.nwp - p.mat.nbp) * ScoreType(gp* *absValues[P_wp] + gpCompl * *absValuesEG[P_wp]);
     const bool white2Play = p.c == Co_White;
     // pst (///@todo & mobility)
     static BitBoard(*const pf[])(const Square, const BitBoard, const  Color) = { &BB::coverage<P_wp>, &BB::coverage<P_wn>, &BB::coverage<P_wb>, &BB::coverage<P_wr>, &BB::coverage<P_wq>, &BB::coverage<P_wk> };
@@ -2268,11 +2279,11 @@ ScoreType eval(const Position & p, float & gp){
         const Square k = BB::popBit(pieceBBiterator);
         const Square kk = k^56;
         const Piece ptype = getPieceType(p,k);
-        sc += ScoreType((gp*PST[ptype - 1][kk] + (1.f - gp)*PSTEG[ptype - 1][kk] ) );
+        sc += ScoreType((gp*PST[ptype - 1][kk] + gpCompl*PSTEG[ptype - 1][kk] ) );
         /*
         if (ptype != P_wp) {
              const uint64_t n = countBit(pf[ptype-1](k, p.occupancy, p.c) & ~p.whitePiece);
-             sc += ScoreType((gp*MOB[ptype - 1][n] + (1.f - gp)*MOBEG[ptype - 1][n]));
+             sc += ScoreType((gp*MOB[ptype - 1][n] + gpCompl*MOBEG[ptype - 1][n]));
         }
         */
     }
@@ -2280,16 +2291,16 @@ ScoreType eval(const Position & p, float & gp){
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
         const Piece ptype = getPieceType(p, k);
-         sc -= ScoreType((gp*PST[ptype - 1][k] + (1.f - gp)*PSTEG[ptype - 1][k]));
+         sc -= ScoreType((gp*PST[ptype - 1][k] + gpCompl *PSTEG[ptype - 1][k]));
          /*
          if (ptype != P_bp) {
              const uint64_t n = countBit(pf[ptype-1](k, p.occupancy, p.c) & ~p.blackPiece);
-             sc -= ScoreType((gp*MOB[ptype - 1][n] + (1.f - gp)*MOBEG[ptype - 1][n]));
+             sc -= ScoreType((gp*MOB[ptype - 1][n] + gpCompl*MOBEG[ptype - 1][n]));
          }
          */
     }
     // in very end game winning king must be near the other king
-    if (gp < 0.25 && p.wk != INVALIDSQUARE && p.bk != INVALIDSQUARE) sc -= (sc>0?+1:-1)*chebyshevDistance(p.wk, p.bk)*15;
+    if (gp < 0.3 && p.wk != INVALIDSQUARE && p.bk != INVALIDSQUARE) sc -= ScoreType((sc>0?+1:-1)*chebyshevDistance(p.wk, p.bk)*15*gpCompl);
 
     // passer
     ///@todo candidate passed
@@ -2300,10 +2311,10 @@ ScoreType eval(const Position & p, float & gp){
         const Square k = BB::popBit(pieceBBiterator);
         const bool passed = (BB::mask[k].passerSpan[Co_White] & p.blackPawn) == 0ull;
         if (passed) {
-            const double factorProtected = 1;// +((BB::shiftSouthWest(SquareToBitboard(k)) & p.whitePawn) || (BB::shiftSouthEast(SquareToBitboard(k)) & p.whitePawn)) * protectedPasserFactor;
-            const double factorFree = 1;// +((BB::mask[k].passerSpan[Co_White] & p.blackPiece) == 0ull) * freePasserFactor * (1.f - gp);
-            const double kingNearBonus = 0;// kingNearPassedPawnEG * (1.f - gp) * (chebyshevDistance(p.bk, k) - chebyshevDistance(p.wk, k));
-            const bool unstoppable = false;// (p.nbq + p.nbr + p.nbb + p.nbn == 0)*((chebyshevDistance(p.bk, SQFILE(k) + 56) - (!white2Play)) > std::min(5, chebyshevDistance(SQFILE(k) + 56, k)));
+            const double factorProtected = 1;// +((BB::shiftSouthWest(SquareToBitboard(k)) & p.whitePawn != 0ull) || (BB::shiftSouthEast(SquareToBitboard(k)) & p.whitePawn != 0ull)) * protectedPasserFactor;
+            const double factorFree      = 1;// +((BB::mask[k].passerSpan[Co_White] & p.blackPiece) == 0ull) * freePasserFactor * gpCompl;
+            const double kingNearBonus   = 0;// kingNearPassedPawnEG * (1.f - gp) * (chebyshevDistance(p.bk, k) - chebyshevDistance(p.wk, k));
+            const bool unstoppable       = false;// (p.nbq + p.nbr + p.nbb + p.nbn == 0)*((chebyshevDistance(p.bk, SQFILE(k) + 56) - (!white2Play)) > std::min(5, chebyshevDistance(SQFILE(k) + 56, k)));
             if (unstoppable) sc += *absValues[P_wq] - *absValues[P_wp];
             else             sc += ScoreType( factorProtected * factorFree * (gp*passerBonus[SQRANK(k)] + (1.f - gp)*passerBonusEG[SQRANK(k)] + kingNearBonus));
         }
@@ -2313,10 +2324,10 @@ ScoreType eval(const Position & p, float & gp){
         const Square k = BB::popBit(pieceBBiterator);
         const bool passed = (BB::mask[k].passerSpan[Co_Black] & p.whitePawn) == 0ull;
         if (passed) {
-            const double factorProtected = 1;// +((BB::shiftNorthWest(SquareToBitboard(k)) & p.blackPawn) || (BB::shiftNorthEast(SquareToBitboard(k)) & p.blackPawn)) * protectedPasserFactor;
-            const double factorFree = 1;// +((BB::mask[k].passerSpan[Co_White] & p.whitePiece) == 0ull) * freePasserFactor * (1.f - gp);
-            const double kingNearBonus = 0;// kingNearPassedPawnEG * (1.f - gp) * (chebyshevDistance(p.wk, k) - chebyshevDistance(p.bk, k));
-            const bool unstoppable = false;// (p.nwq + p.nwr + p.nwb + p.nwn == 0)*((chebyshevDistance(p.wk, SQFILE(k)) - white2Play) > std::min(5, chebyshevDistance(SQFILE(k), k)));
+            const double factorProtected = 1;// +((BB::shiftNorthWest(SquareToBitboard(k)) & p.blackPawn != 0ull) || (BB::shiftNorthEast(SquareToBitboard(k)) & p.blackPawn != 0ull)) * protectedPasserFactor;
+            const double factorFree      = 1;// +((BB::mask[k].passerSpan[Co_White] & p.whitePiece) == 0ull) * freePasserFactor * gpCompl;
+            const double kingNearBonus   = 0;// kingNearPassedPawnEG * (1.f - gp) * (chebyshevDistance(p.wk, k) - chebyshevDistance(p.bk, k));
+            const bool unstoppable       = false;// (p.nwq + p.nwr + p.nwb + p.nwn == 0)*((chebyshevDistance(p.wk, SQFILE(k)) - white2Play) > std::min(5, chebyshevDistance(SQFILE(k), k)));
             if (unstoppable) sc -= *absValues[P_wq] - *absValues[P_wp];
             else             sc -= ScoreType( factorProtected * factorFree * (gp*passerBonus[7 - SQRANK(k)] + (1.f - gp)*passerBonusEG[7 - SQRANK(k)] + kingNearBonus));
         }
@@ -2343,40 +2354,40 @@ ScoreType eval(const Position & p, float & gp){
     const uint64_t nbBPH=countBit(p.blackPawn & fileH);
 
     // double pawn malus
-    sc -= ScoreType((nbWPA>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
-    sc -= ScoreType((nbWPB>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
-    sc -= ScoreType((nbWPC>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
-    sc -= ScoreType((nbWPD>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
-    sc -= ScoreType((nbWPE>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
-    sc -= ScoreType((nbWPF>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
-    sc -= ScoreType((nbWPG>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
-    sc -= ScoreType((nbWPH>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
-    sc += ScoreType((nbBPA>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
-    sc += ScoreType((nbBPB>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
-    sc += ScoreType((nbBPC>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
-    sc += ScoreType((nbBPD>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
-    sc += ScoreType((nbBPE>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
-    sc += ScoreType((nbBPF>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
-    sc += ScoreType((nbBPG>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
-    sc += ScoreType((nbBPH>>1)*(gp*doublePawnMalus+(1.f - gp)*doublePawnMalusEG));
+    sc -= ScoreType((nbWPA>>1)*(gp*doublePawnMalus+gpCompl*doublePawnMalusEG));
+    sc -= ScoreType((nbWPB>>1)*(gp*doublePawnMalus+gpCompl*doublePawnMalusEG));
+    sc -= ScoreType((nbWPC>>1)*(gp*doublePawnMalus+gpCompl*doublePawnMalusEG));
+    sc -= ScoreType((nbWPD>>1)*(gp*doublePawnMalus+gpCompl*doublePawnMalusEG));
+    sc -= ScoreType((nbWPE>>1)*(gp*doublePawnMalus+gpCompl*doublePawnMalusEG));
+    sc -= ScoreType((nbWPF>>1)*(gp*doublePawnMalus+gpCompl*doublePawnMalusEG));
+    sc -= ScoreType((nbWPG>>1)*(gp*doublePawnMalus+gpCompl*doublePawnMalusEG));
+    sc -= ScoreType((nbWPH>>1)*(gp*doublePawnMalus+gpCompl*doublePawnMalusEG));
+    sc += ScoreType((nbBPA>>1)*(gp*doublePawnMalus+gpCompl*doublePawnMalusEG));
+    sc += ScoreType((nbBPB>>1)*(gp*doublePawnMalus+gpCompl*doublePawnMalusEG));
+    sc += ScoreType((nbBPC>>1)*(gp*doublePawnMalus+gpCompl*doublePawnMalusEG));
+    sc += ScoreType((nbBPD>>1)*(gp*doublePawnMalus+gpCompl*doublePawnMalusEG));
+    sc += ScoreType((nbBPE>>1)*(gp*doublePawnMalus+gpCompl*doublePawnMalusEG));
+    sc += ScoreType((nbBPF>>1)*(gp*doublePawnMalus+gpCompl*doublePawnMalusEG));
+    sc += ScoreType((nbBPG>>1)*(gp*doublePawnMalus+gpCompl*doublePawnMalusEG));
+    sc += ScoreType((nbBPH>>1)*(gp*doublePawnMalus+gpCompl*doublePawnMalusEG));
     */
 
     /*
     // isolated pawn malus
-    sc -= ScoreType((        nbWPA&&!nbWPB)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
-    sc -= ScoreType((!nbWPA&&nbWPB&&!nbWPC)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
-    sc -= ScoreType((!nbWPB&&nbWPC&&!nbWPD)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
-    sc -= ScoreType((!nbWPC&&nbWPD&&!nbWPE)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
-    sc -= ScoreType((!nbWPD&&nbWPE&&!nbWPF)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
-    sc -= ScoreType((!nbWPE&&nbWPF&&!nbWPG)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
-    sc -= ScoreType((!nbWPG&&nbWPH        )*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
-    sc += ScoreType((        nbBPA&&!nbBPB)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
-    sc += ScoreType((!nbBPA&&nbBPB&&!nbBPC)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
-    sc += ScoreType((!nbBPB&&nbBPC&&!nbBPD)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
-    sc += ScoreType((!nbBPC&&nbBPD&&!nbBPE)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
-    sc += ScoreType((!nbBPD&&nbBPE&&!nbBPF)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
-    sc += ScoreType((!nbBPE&&nbBPF&&!nbBPG)*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
-    sc += ScoreType((!nbBPG&&nbBPH        )*(gp*isolatedPawnMalus+(1.f - gp)*isolatedPawnMalusEG));
+    sc -= ScoreType((        nbWPA&&!nbWPB)*(gp*isolatedPawnMalus+gpCompl*isolatedPawnMalusEG));
+    sc -= ScoreType((!nbWPA&&nbWPB&&!nbWPC)*(gp*isolatedPawnMalus+gpCompl*isolatedPawnMalusEG));
+    sc -= ScoreType((!nbWPB&&nbWPC&&!nbWPD)*(gp*isolatedPawnMalus+gpCompl*isolatedPawnMalusEG));
+    sc -= ScoreType((!nbWPC&&nbWPD&&!nbWPE)*(gp*isolatedPawnMalus+gpCompl*isolatedPawnMalusEG));
+    sc -= ScoreType((!nbWPD&&nbWPE&&!nbWPF)*(gp*isolatedPawnMalus+gpCompl*isolatedPawnMalusEG));
+    sc -= ScoreType((!nbWPE&&nbWPF&&!nbWPG)*(gp*isolatedPawnMalus+gpCompl*isolatedPawnMalusEG));
+    sc -= ScoreType((!nbWPG&&nbWPH        )*(gp*isolatedPawnMalus+gpCompl*isolatedPawnMalusEG));
+    sc += ScoreType((        nbBPA&&!nbBPB)*(gp*isolatedPawnMalus+gpCompl*isolatedPawnMalusEG));
+    sc += ScoreType((!nbBPA&&nbBPB&&!nbBPC)*(gp*isolatedPawnMalus+gpCompl*isolatedPawnMalusEG));
+    sc += ScoreType((!nbBPB&&nbBPC&&!nbBPD)*(gp*isolatedPawnMalus+gpCompl*isolatedPawnMalusEG));
+    sc += ScoreType((!nbBPC&&nbBPD&&!nbBPE)*(gp*isolatedPawnMalus+gpCompl*isolatedPawnMalusEG));
+    sc += ScoreType((!nbBPD&&nbBPE&&!nbBPF)*(gp*isolatedPawnMalus+gpCompl*isolatedPawnMalusEG));
+    sc += ScoreType((!nbBPE&&nbBPF&&!nbBPG)*(gp*isolatedPawnMalus+gpCompl*isolatedPawnMalusEG));
+    sc += ScoreType((!nbBPG&&nbBPH        )*(gp*isolatedPawnMalus+gpCompl*isolatedPawnMalusEG));
     */
     
     /*
@@ -2528,6 +2539,18 @@ ScoreType eval(const Position & p, float & gp){
       }
     }
     sc+=attSc/50;
+    */
+
+    // pawn shield
+    /*
+    sc += ScoreType(((p.whiteKing & whiteKingQueenSide ) != 0ull)*countBit(p.whitePawn & whiteQueenSidePawnShield1)*pawnShieldBonus     * gp);
+    sc += ScoreType(((p.whiteKing & whiteKingQueenSide ) != 0ull)*countBit(p.whitePawn & whiteQueenSidePawnShield2)*pawnShieldBonus / 2 * gp);
+    sc += ScoreType(((p.whiteKing & whiteKingKingSide  ) != 0ull)*countBit(p.whitePawn & whiteKingSidePawnShield1 )*pawnShieldBonus     * gp);
+    sc += ScoreType(((p.whiteKing & whiteKingKingSide  ) != 0ull)*countBit(p.whitePawn & whiteKingSidePawnShield2 )*pawnShieldBonus / 2 * gp);
+    sc -= ScoreType(((p.blackKing & blackKingQueenSide ) != 0ull)*countBit(p.blackPawn & blackQueenSidePawnShield1)*pawnShieldBonus     * gp);
+    sc -= ScoreType(((p.blackKing & blackKingQueenSide ) != 0ull)*countBit(p.blackPawn & blackQueenSidePawnShield2)*pawnShieldBonus / 2 * gp);
+    sc -= ScoreType(((p.blackKing & blackKingKingSide  ) != 0ull)*countBit(p.blackPawn & blackKingSidePawnShield1 )*pawnShieldBonus     * gp);
+    sc -= ScoreType(((p.blackKing & blackKingKingSide  ) != 0ull)*countBit(p.blackPawn & blackKingSidePawnShield2 )*pawnShieldBonus / 2 * gp);
     */
 
     sc = (white2Play?+1:-1)*sc;
