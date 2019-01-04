@@ -1449,7 +1449,7 @@ void init(){
 }
 
 int GetNextMSecPerMove(const Position & p){
-    static const int msecMargin = 200;
+    static const int msecMargin = 30;
     int ms = -1;
     LogIt(logInfo) << "msecPerMove     " << msecPerMove;
     LogIt(logInfo) << "msecInTC        " << msecInTC   ;
@@ -1476,6 +1476,7 @@ int GetNextMSecPerMove(const Position & p){
         if (!isDynamic) ms = int((msecInTC+p.moves*msecIncLoc) / (float)(nmoves+p.moves)) - msecMargin;
         else ms = std::min(msecUntilNextTC - msecMargin, int(msecUntilNextTC / (float)nmoves + 0.75*msecIncLoc) - msecMargin);
     }
+    if (ms < 0) ms = 10; // let's try that ...
     return ms;
 }
 } // TimeMan
