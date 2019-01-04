@@ -10,24 +10,22 @@ Minic stands for "Minimal Chess".
 Have a look in the Dist directory for releases. Some more stable/official ones will also be made available as github release.
 
 ## Strength
-Quite poor for a chess engine (around 2300) but already way to strong for me !
+Quite poor for a chess engine (around 2400) but already way to strong for me !
 
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
-   0 Minic                          47       7    7122   56.8%   15.9%
-   1 fruit_21                      351      39     548   88.3%   11.3%
-   2 sungorus64                     89      27     548   62.6%   18.2%
-   3 Bitfoot                        73      27     548   60.4%   15.3%
-   4 dorpsgek                       20      25     548   52.9%   28.5%
-   5 Horizon_4_4                     4      27     548   50.5%   13.5%
-   6 zevra                         -30      25     547   45.7%   27.4%
-   7 rattatechess_nosferatu        -68      28     548   40.3%   13.1%
-   8 weini1                        -68      28     547   40.3%   11.9%
-   9 ct800_v1.11_x64               -77      27     548   39.1%   17.2%
-  10 asymptote                     -91      27     548   37.2%   19.0%
-  11 simplex                      -169      30     548   27.5%   14.4%
-  12 fairymax                     -351      39     548   11.7%   10.9%
-  13 tscp181                      -498      57     548    5.4%    5.3%
+   0 Minic                          84      15    1673   61.9%   20.8%
+   1 Bitfoot                        25      50     152   53.6%   20.4%
+   2 myrddin                        21      50     152   53.0%   19.1%
+   3 sungorus64                    -18      50     152   47.4%   18.4%
+   4 Horizon_4_4                   -55      52     152   42.1%   13.2%
+   5 zevra                         -91      49     152   37.2%   25.7%
+   6 Minic 0.28                    -94      43     152   36.8%   40.8%
+   7 dorpsgek                     -101      49     152   35.9%   25.7%
+   8 ct800_v1.11_x64              -148      55     152   29.9%   16.4%
+   9 weini1                       -162      58     152   28.3%   10.5%
+  10 asymptote                    -163      54     153   28.1%   19.6%
+  11 rattatechess_nosferatu       -170      55     152   27.3%   19.1%
 ```
 
 ## What about SMP ?  
