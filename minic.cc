@@ -363,32 +363,25 @@ namespace MaterialHash { // from Gull
 
     Position::Material getMatFromHash(Hash index) {
         Position::Material mat;
-        mat.nwq = (int)(index % 3); index /= 3;        mat.nbq = (int)(index % 3); index /= 3;
-        mat.nwr = (int)(index % 3); index /= 3;        mat.nbr = (int)(index % 3); index /= 3;
+        mat.nwq  = (int)(index % 3); index /= 3;        mat.nbq  = (int)(index % 3); index /= 3;
+        mat.nwr  = (int)(index % 3); index /= 3;        mat.nbr  = (int)(index % 3); index /= 3;
         mat.nwbl = (int)(index % 2); index /= 2;        mat.nbbl = (int)(index % 2); index /= 2;
         mat.nwbd = (int)(index % 2); index /= 2;        mat.nbbd = (int)(index % 2); index /= 2;
-        mat.nwn = (int)(index % 3); index /= 3;        mat.nbn = (int)(index % 3); index /= 3;
-        mat.nwp = (int)(index % 9); index /= 9;        mat.nbp = (int)(index);
+        mat.nwn  = (int)(index % 3); index /= 3;        mat.nbn  = (int)(index % 3); index /= 3;
+        mat.nwp  = (int)(index % 9); index /= 9;        mat.nbp  = (int)(index);
         return mat;
     }
 
     Position::Material getMatReverseColor(const Position::Material & mat) {
         Position::Material rev;
-        rev.nwk = mat.nbk;        rev.nbk = mat.nwk;
-        rev.nwq = mat.nbq;        rev.nbq = mat.nwq;
-        rev.nwr = mat.nbr;        rev.nbr = mat.nwr;
-        rev.nwb = mat.nbb;        rev.nbb = mat.nwb;        rev.nwbl = mat.nbbl;      rev.nbbl = mat.nwbl;        rev.nwbd = mat.nbbd;      rev.nbbd = mat.nwbd;
-        rev.nwn = mat.nbn;        rev.nbn = mat.nwn;
-        rev.nwp = mat.nbp;        rev.nbp = mat.nwp;
-        rev.nwM = mat.nbM;        rev.nbM = mat.nwM;        rev.nwm = mat.nbm;        rev.nbm = mat.nwm;          rev.nwt = mat.nbt;        rev.nbt = mat.nwt;
+        rev.nwk = mat.nbk;  rev.nbk = mat.nwk;
+        rev.nwq = mat.nbq;  rev.nbq = mat.nwq;
+        rev.nwr = mat.nbr;  rev.nbr = mat.nwr;
+        rev.nwb = mat.nbb;  rev.nbb = mat.nwb;   rev.nwbl = mat.nbbl;  rev.nbbl = mat.nwbl;   rev.nwbd = mat.nbbd;  rev.nbbd = mat.nwbd;
+        rev.nwn = mat.nbn;  rev.nbn = mat.nwn;
+        rev.nwp = mat.nbp;  rev.nbp = mat.nwp;
+        rev.nwM = mat.nbM;  rev.nbM = mat.nwM;   rev.nwm = mat.nbm;    rev.nbm = mat.nwm;     rev.nwt = mat.nbt;    rev.nbt = mat.nwt;
         return rev;
-    }
-
-    std::string ToString(const Position::Material & mat) {
-        std::stringstream str;
-        str << "\n" << "Q  :" << (int)mat.nwq << "\n" << "R  :" << (int)mat.nwr << "\n" << "B  :" << (int)mat.nwb << "\n" << "L  :" << (int)mat.nwbl << "\n" << "D  :" << (int)mat.nwbd << "\n" << "N  :" << (int)mat.nwn << "\n" << "Ma :" << (int)mat.nwM << "\n" << "Mi :" << (int)mat.nwm << "\n" << "T  :" << (int)mat.nwt << "\n";
-        str << "\n" << "q  :" << (int)mat.nbq << "\n" << "r  :" << (int)mat.nbr << "\n" << "b  :" << (int)mat.nbb << "\n" << "l  :" << (int)mat.nbbl << "\n" << "d  :" << (int)mat.nbbd << "\n" << "n  :" << (int)mat.nbn << "\n" << "ma :" << (int)mat.nbM << "\n" << "mi :" << (int)mat.nbm << "\n" << "t  :" << (int)mat.nbt << "\n";
-        return str.str();
     }
 
     Position::Material materialFromString(const std::string & strMat) {
@@ -440,23 +433,17 @@ namespace MaterialHash { // from Gull
         switch (t) {
         case Ter_Unknown:
         case Ter_Draw:
-        case Ter_LikelyDraw:
-            return t;
-        case Ter_WhiteWin:
-            return Ter_BlackWin;
-        case Ter_BlackWin:
-            return Ter_WhiteWin;
-        default:
-            return Ter_Unknown;
+        case Ter_LikelyDraw: return t;
+        case Ter_WhiteWin:   return Ter_BlackWin;
+        case Ter_BlackWin:   return Ter_WhiteWin;
+        default:             return Ter_Unknown;
         }
     }
 
     Terminaison materialHashTable[TotalMat];
 
     struct MaterialHashInitializer {
-        MaterialHashInitializer(const Position::Material & mat, Terminaison t) {
-            materialHashTable[getMaterialHash(mat)] = t;
-        }
+        MaterialHashInitializer(const Position::Material & mat, Terminaison t) { materialHashTable[getMaterialHash(mat)] = t; }
         static void init() { std::memset(materialHashTable, Ter_Unknown, sizeof(Terminaison)*TotalMat); }
     };
 
@@ -465,29 +452,27 @@ namespace MaterialHash { // from Gull
 #define LINE_NAME(prefix) JOIN(prefix,__LINE__)
 #define JOIN(symbol1,symbol2) _DO_JOIN(symbol1,symbol2 )
 #define _DO_JOIN(symbol1,symbol2) symbol1##symbol2
-#define DEF_MAT(x,t) const Position::Material MAT##x = materialFromString( TO_STR(x) ); \
-                     MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t);
-#define DEF_MAT_REV(rev,x) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); \
-                           MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)]));
+#define DEF_MAT(x,t) const Position::Material MAT##x = materialFromString( TO_STR(x) ); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t);
+#define DEF_MAT_REV(rev,x) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)]));
 
     // sym (and pseudo sym) : all should be draw
-    DEF_MAT(KK, Ter_Draw)
+    DEF_MAT(KK,     Ter_Draw)
     DEF_MAT(KQQKQQ, Ter_Draw)
-    DEF_MAT(KQKQ, Ter_Draw)
+    DEF_MAT(KQKQ,   Ter_Draw)
     DEF_MAT(KRRKRR, Ter_Draw)
-    DEF_MAT(KRKR, Ter_Draw)
+    DEF_MAT(KRKR,   Ter_Draw)
     DEF_MAT(KLDKLD, Ter_Draw)
     DEF_MAT(KLLKLL, Ter_Draw)
     DEF_MAT(KDDKDD, Ter_Draw)
     DEF_MAT(KLDKLL, Ter_Draw)
     DEF_MAT(KLDKDD, Ter_Draw)
-    DEF_MAT(KLKL, Ter_Draw)
-    DEF_MAT(KDKD, Ter_Draw)
-    DEF_MAT(KLKD, Ter_Draw)
+    DEF_MAT(KLKL,   Ter_Draw)
+    DEF_MAT(KDKD,   Ter_Draw)
+    DEF_MAT(KLKD,   Ter_Draw)
     DEF_MAT(KNNKNN, Ter_Draw)
-    DEF_MAT(KNKN, Ter_Draw)
+    DEF_MAT(KNKN,   Ter_Draw)
 
-    DEF_MAT_REV(KDKL, KLKD)
+    DEF_MAT_REV(KDKL,   KLKD)
     DEF_MAT_REV(KLLKLD, KLDKLL)
     DEF_MAT_REV(KDDKLD, KLDKDD)
 
@@ -654,9 +639,7 @@ namespace MaterialHash { // from Gull
 
     ///@todo other (with pawn ...)
 
-    inline Terminaison probeMaterialHashTable(const Position::Material & mat) {
-        return materialHashTable[getMaterialHash(mat)];
-    }
+    inline Terminaison probeMaterialHashTable(const Position::Material & mat) { return materialHashTable[getMaterialHash(mat)]; }
 
 }
 
@@ -849,7 +832,7 @@ void setEntry(const Entry & e){
     if ( DynamicConfig::disableTT ) return;
     for (unsigned int i = 0 ; i < Bucket::nbBucket-1 ; ++i){
         Entry & _eAlways = table[e.h%ttSize].e[i];
-        //if ( _eAlways.h != e.h ){ // always replace (if hash is not the same)
+        //if ( _eAlways.h != e.h ){ // always replace (if hash is not the same) ///@todo
            _eAlways = e;
         //   break;
         //}
@@ -883,8 +866,7 @@ bool getEvalEntry(Hash h, ScoreType & score, float & gp) {
     if ( DynamicConfig::disableTT ) return false;
     const EvalEntry & _e = evalTable[h%ttESize];
     if (_e.h != h) return false;
-    score = _e.score;
-    gp = _e.gp;
+    score = _e.score; gp = _e.gp;
     return true;
 }
 
@@ -1085,6 +1067,7 @@ inline bool isUnderPromotion(const MType & mt) { return mt >= T_promr && mt <= T
 
 inline bool isUnderPromotion(const Move & m) { return isUnderPromotion(Move2Type(m)); }
 
+/*
 inline bool isTactical(const Move m) { return isCapture(m) || isPromotion(m); }
 
 inline bool isSafe(const Move m, const Position & p) {
@@ -1092,10 +1075,11 @@ inline bool isSafe(const Move m, const Position & p) {
     Piece pp = getPieceType(p, Move2From(m));
     if (pp == P_wk) return true;
     if (isCapture(m) && getAbsValue(p, Move2To(m)) >= Values[pp + PieceShift]) return true;
-    return Move2Score(m) > -900; // see
+    return Move2Score(m) > -800; // see
 }
 
 inline bool isDangerous(const Move m, bool isInCheck, bool isCheck) { return isTactical(m) || isCheck || isInCheck; }
+*/
 
 std::string trim(const std::string& str, const std::string& whitespace = " \t"){
     const auto strBegin = str.find_first_not_of(whitespace);
@@ -1112,7 +1096,7 @@ std::string GetFENShort(const Position &p ){
     for (int i = 7; i >= 0; --i) {
         for (int j = 0; j < 8; j++) {
             const Square k = 8 * i + j;
-            if (p.b[k] == P_none)  ++count;
+            if (p.b[k] == P_none) ++count;
             else {
                 if (count != 0) { ss << count; count = 0; }
                 ss << getName(p,k);
@@ -1154,13 +1138,11 @@ std::string ToString(const Move & m, bool withScore){
     std::string prom;
     const std::string score = (withScore ? " (" + std::to_string(Move2Score(m)) + ")" : "");
     switch (Move2Type(m)) {
-    case T_bks: case T_wks:
-        return "O-O" + score;
-    case T_bqs: case T_wqs:
-        return "O-O-O" + score;
+    case T_bks: case T_wks: return "O-O" + score;
+    case T_bqs: case T_wqs: return "O-O-O" + score;
     default:
-        static const std::string suffixe[] = { "","","","","q","r","b","n","q","r","b","n" };
-        prom = suffixe[Move2Type(m)];
+        static const std::string promSuffixe[] = { "","","","","q","r","b","n","q","r","b","n" };
+        prom = promSuffixe[Move2Type(m)];
         break;
     }
     ss << Squares[Move2From(m)] << Squares[Move2To(m)];
@@ -1193,6 +1175,13 @@ std::string ToString(const Position & p, bool noEval){
     }
     ss << "#";
     return ss.str();
+}
+
+std::string ToString(const Position::Material & mat) {
+    std::stringstream str;
+    str << "\n" << "Q  :" << (int)mat.nwq << "\n" << "R  :" << (int)mat.nwr << "\n" << "B  :" << (int)mat.nwb << "\n" << "L  :" << (int)mat.nwbl << "\n" << "D  :" << (int)mat.nwbd << "\n" << "N  :" << (int)mat.nwn << "\n" << "Ma :" << (int)mat.nwM << "\n" << "Mi :" << (int)mat.nwm << "\n" << "T  :" << (int)mat.nwt << "\n";
+    str << "\n" << "q  :" << (int)mat.nbq << "\n" << "r  :" << (int)mat.nbr << "\n" << "b  :" << (int)mat.nbb << "\n" << "l  :" << (int)mat.nbbl << "\n" << "d  :" << (int)mat.nbbd << "\n" << "n  :" << (int)mat.nbn << "\n" << "ma :" << (int)mat.nbM << "\n" << "mi :" << (int)mat.nbm << "\n" << "t  :" << (int)mat.nbt << "\n";
+    return str.str();
 }
 
 inline Color opponentColor(const Color c){ return Color((c+1)%2);}
@@ -1524,19 +1513,17 @@ int GetNextMSecPerMove(const Position & p){
     int msecIncLoc = (msecInc > 0) ? msecInc : 0;
     if ( msecPerMove > 0 ) ms =  msecPerMove;
     else if ( nbMoveInTC > 0){ // mps is given
-        assert(msecInTC > 0);
-        assert(nbMoveInTC > 0);
+        assert(msecInTC > 0); assert(nbMoveInTC > 0);
         LogIt(logInfo) << "TC mode";
         if (!isDynamic) ms = int((msecInTC - msecMargin) / (float)nbMoveInTC) + msecIncLoc ;
         else ms = std::min(msecUntilNextTC - msecMargin, int((msecUntilNextTC - msecMargin) / (float)(nbMoveInTC-((p.moves-1)%nbMoveInTC))) + msecIncLoc);
     }
     else{ // mps is not given
-        ///@todo something better using the real time command
         LogIt(logInfo) << "Fix time mode";
         const int nmoves = 24; // always be able to play this more moves !
         LogIt(logInfo) << "nmoves    " << nmoves;
         LogIt(logInfo) << "p.moves   " << int(p.moves);
-        assert(nmoves > 0);
+        assert(nmoves > 0); assert(msecInTC >= 0);
         if (!isDynamic) ms = int((msecInTC+p.moves*msecIncLoc) / (float)(nmoves+p.moves)) - msecMargin;
         else ms = std::min(msecUntilNextTC - msecMargin, int(msecUntilNextTC / (float)nmoves + 0.75*msecIncLoc) - msecMargin);
     }
@@ -1707,8 +1694,8 @@ template <       > BitBoard coverage<P_wk>(const Square x, const BitBoard occupa
 template < Piece pp > inline BitBoard attack(const Square x, const BitBoard target, const BitBoard occupancy = 0, const Color c = Co_White) { return coverage<pp>(x, occupancy, c) & target; }
 
 int popBit(BitBoard & b) {
-    unsigned long i = 0;
     assert( b != 0ull);
+    unsigned long i = 0;
     bsf(b, i);
     b &= b - 1;
     return i;
@@ -2063,7 +2050,7 @@ struct SortThreatsFunctor {
     bool operator()(const Square s1,const Square s2) { return std::abs(getValue(_p,s1)) < std::abs(getValue(_p,s2));}
 };
 
-// see value from xiphos (and CPW...)
+// see value (from xiphos and CPW...)
 template< bool display>
 ScoreType ThreadContext::SEEVal(const Position & pos, const Move & move)const{
   ScoreType gain[64]; // 64 shall be bullet proof here...
@@ -2103,7 +2090,7 @@ ScoreType ThreadContext::SEEVal(const Position & pos, const Move & move)const{
   while(att){
     //std::cout << showBitBoard(att) << std::endl;
     side = opponentColor(side);
-    BitBoard side_att = att & occCol[side]; // attack bitboard relative to side
+    const BitBoard side_att = att & occCol[side]; // attack bitboard relative to side
     if (side_att == 0) break; // no more threat
     int pp = 0;
     long long int pb = 0ll;
@@ -2248,15 +2235,14 @@ const ScoreType MOBEG[6][28] = { {0,0,0,0},
 ScoreType eval(const Position & p, float & gp){
 
     ScoreType sc = 0;
-    //SCoreType scEG = 0; ///@todo avoid all the multiplication here !
+    //SCoreType scEG = 0; ///@todo avoid all the multiplications here !
     if (TT::getEvalEntry(computeHash(p), sc, gp)) return sc;
 
     static ScoreType dummyScore = 0;
     static ScoreType *absValues[7]   = { &dummyScore, &Values  [P_wp + PieceShift], &Values  [P_wn + PieceShift], &Values  [P_wb + PieceShift], &Values  [P_wr + PieceShift], &Values  [P_wq + PieceShift], &Values  [P_wk + PieceShift] };
     static ScoreType *absValuesEG[7] = { &dummyScore, &ValuesEG[P_wp + PieceShift], &ValuesEG[P_wn + PieceShift], &ValuesEG[P_wb + PieceShift], &ValuesEG[P_wr + PieceShift], &ValuesEG[P_wq + PieceShift], &ValuesEG[P_wk + PieceShift] };
 
-    // game phase
-    //gp = (p.mat.nn + p.mat.nb + 3.f * p.mat.nr + 6.f * p.mat.nq)/32.f;
+    // game phase ///@todo tune this, but care it seems to have a huge impact
     /*static*/ const float totalAbsScore = 2.f * *absValues[P_wq] + 4.f * *absValues[P_wr] + 4.f * *absValues[P_wb] + 4.f * *absValues[P_wn] + 16.f * *absValues[P_wp];
     const float absscore = ((p.mat.nwq + p.mat.nbq) * *absValues[P_wq] + (p.mat.nwr + p.mat.nbr) * *absValues[P_wr] + (p.mat.nwb + p.mat.nbb) * *absValues[P_wb] + (p.mat.nwn + p.mat.nbn) * *absValues[P_wn] + (p.mat.nwp + p.mat.nbp) * *absValues[P_wp]) / totalAbsScore;
     const float pawnScore = p.mat.np / 16.f;
@@ -2272,8 +2258,9 @@ ScoreType eval(const Position & p, float & gp){
         + (p.mat.nwn - p.mat.nbn) * ScoreType(gp* *absValues[P_wn] + gpCompl * *absValuesEG[P_wn])
         + (p.mat.nwp - p.mat.nbp) * ScoreType(gp* *absValues[P_wp] + gpCompl * *absValuesEG[P_wp]);
     const bool white2Play = p.c == Co_White;
+
     // pst (///@todo & mobility)
-    static BitBoard(*const pf[])(const Square, const BitBoard, const  Color) = { &BB::coverage<P_wp>, &BB::coverage<P_wn>, &BB::coverage<P_wb>, &BB::coverage<P_wr>, &BB::coverage<P_wq>, &BB::coverage<P_wk> };
+    //static BitBoard(*const pf[])(const Square, const BitBoard, const  Color) = { &BB::coverage<P_wp>, &BB::coverage<P_wn>, &BB::coverage<P_wb>, &BB::coverage<P_wr>, &BB::coverage<P_wq>, &BB::coverage<P_wk> };
     BitBoard pieceBBiterator = p.whitePiece;
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
@@ -2299,6 +2286,7 @@ ScoreType eval(const Position & p, float & gp){
          }
          */
     }
+
     // in very end game winning king must be near the other king
     if (gp < 0.3 && p.wk != INVALIDSQUARE && p.bk != INVALIDSQUARE) sc -= ScoreType((sc>0?+1:-1)*chebyshevDistance(p.wk, p.bk)*15*gpCompl);
 
@@ -2313,10 +2301,10 @@ ScoreType eval(const Position & p, float & gp){
         if (passed) {
             const double factorProtected = 1;// +((BB::shiftSouthWest(SquareToBitboard(k)) & p.whitePawn != 0ull) || (BB::shiftSouthEast(SquareToBitboard(k)) & p.whitePawn != 0ull)) * protectedPasserFactor;
             const double factorFree      = 1;// +((BB::mask[k].passerSpan[Co_White] & p.blackPiece) == 0ull) * freePasserFactor * gpCompl;
-            const double kingNearBonus   = 0;// kingNearPassedPawnEG * (1.f - gp) * (chebyshevDistance(p.bk, k) - chebyshevDistance(p.wk, k));
+            const double kingNearBonus   = 0;// kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.bk, k) - chebyshevDistance(p.wk, k));
             const bool unstoppable       = false;// (p.nbq + p.nbr + p.nbb + p.nbn == 0)*((chebyshevDistance(p.bk, SQFILE(k) + 56) - (!white2Play)) > std::min(5, chebyshevDistance(SQFILE(k) + 56, k)));
             if (unstoppable) sc += *absValues[P_wq] - *absValues[P_wp];
-            else             sc += ScoreType( factorProtected * factorFree * (gp*passerBonus[SQRANK(k)] + (1.f - gp)*passerBonusEG[SQRANK(k)] + kingNearBonus));
+            else             sc += ScoreType( factorProtected * factorFree * (gp*passerBonus[SQRANK(k)] + gpCompl*passerBonusEG[SQRANK(k)] + kingNearBonus));
         }
     }
     pieceBBiterator = p.blackPawn;
@@ -2326,10 +2314,10 @@ ScoreType eval(const Position & p, float & gp){
         if (passed) {
             const double factorProtected = 1;// +((BB::shiftNorthWest(SquareToBitboard(k)) & p.blackPawn != 0ull) || (BB::shiftNorthEast(SquareToBitboard(k)) & p.blackPawn != 0ull)) * protectedPasserFactor;
             const double factorFree      = 1;// +((BB::mask[k].passerSpan[Co_White] & p.whitePiece) == 0ull) * freePasserFactor * gpCompl;
-            const double kingNearBonus   = 0;// kingNearPassedPawnEG * (1.f - gp) * (chebyshevDistance(p.wk, k) - chebyshevDistance(p.bk, k));
+            const double kingNearBonus   = 0;// kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.wk, k) - chebyshevDistance(p.bk, k));
             const bool unstoppable       = false;// (p.nwq + p.nwr + p.nwb + p.nwn == 0)*((chebyshevDistance(p.wk, SQFILE(k)) - white2Play) > std::min(5, chebyshevDistance(SQFILE(k), k)));
             if (unstoppable) sc -= *absValues[P_wq] - *absValues[P_wp];
-            else             sc -= ScoreType( factorProtected * factorFree * (gp*passerBonus[7 - SQRANK(k)] + (1.f - gp)*passerBonusEG[7 - SQRANK(k)] + kingNearBonus));
+            else             sc -= ScoreType( factorProtected * factorFree * (gp*passerBonus[7 - SQRANK(k)] + gpCompl*passerBonusEG[7 - SQRANK(k)] + kingNearBonus));
         }
     }
 
@@ -2394,109 +2382,57 @@ ScoreType eval(const Position & p, float & gp){
     // blocked piece
     // white
     // bishop blocked by own pawn
-    if (    (p.whiteBishop & BBSq_c1)
-         && (p.whitePawn   & BBSq_d2)
-         && (p.occupancy   & BBSq_d3) ) sc += blockedBishopByPawn;
-    if (    (p.whiteBishop & BBSq_f1)
-         && (p.whitePawn   & BBSq_e2)
-         && (p.occupancy   & BBSq_e3) ) sc += blockedBishopByPawn;
+    if ( (p.whiteBishop & BBSq_c1) && (p.whitePawn & BBSq_d2) && (p.occupancy & BBSq_d3) ) sc += blockedBishopByPawn;
+    if ( (p.whiteBishop & BBSq_f1) && (p.whitePawn & BBSq_e2) && (p.occupancy & BBSq_e3) ) sc += blockedBishopByPawn;
 
     // trapped knight
-    if (     (p.whiteKnight & BBSq_a8)
-         && ((p.blackPawn   & BBSq_a7)
-         ||  (p.blackPawn   & BBSq_c7) ) ) sc += blockedKnight;
-    if (     (p.whiteKnight & BBSq_h8)
-         && ((p.blackPawn   & BBSq_h7)
-         ||  (p.blackPawn   & BBSq_f7) ) ) sc += blockedKnight;
-    if (     (p.whiteKnight & BBSq_a7)
-         && ((p.blackPawn   & BBSq_a6)
-         ||  (p.blackPawn   & BBSq_b7) ) ) sc += blockedKnight2;
-    if (     (p.whiteKnight & BBSq_h7)
-         && ((p.blackPawn   & BBSq_h6)
-         ||  (p.blackPawn   & BBSq_g7) ) ) sc += blockedKnight2;
+    if ( (p.whiteKnight & BBSq_a8) && ( (p.blackPawn & BBSq_a7) || (p.blackPawn & BBSq_c7) ) ) sc += blockedKnight;
+    if ( (p.whiteKnight & BBSq_h8) && ( (p.blackPawn & BBSq_h7) || (p.blackPawn & BBSq_f7) ) ) sc += blockedKnight;
+    if ( (p.whiteKnight & BBSq_a7) && ( (p.blackPawn & BBSq_a6) || (p.blackPawn & BBSq_b7) ) ) sc += blockedKnight2;
+    if ( (p.whiteKnight & BBSq_h7) && ( (p.blackPawn & BBSq_h6) || (p.blackPawn & BBSq_g7) ) ) sc += blockedKnight2;
 
     // trapped bishop
-    if (    (p.whiteBishop & BBSq_a7)
-         && (p.blackPawn   & BBSq_b6) )  sc += blockedBishop;
-    if (    (p.whiteBishop & BBSq_h7)
-         && (p.blackPawn   & BBSq_g6) )  sc += blockedBishop;
-    if (    (p.whiteBishop & BBSq_b8)
-         && (p.blackPawn   & BBSq_c7) )  sc += blockedBishop2;
-    if (    (p.whiteBishop & BBSq_g8)
-         && (p.blackPawn   & BBSq_f7) )  sc += blockedBishop2;
-    if (    (p.whiteBishop & BBSq_a6)
-         && (p.blackPawn   & BBSq_b5) )  sc += blockedBishop3;
-    if (    (p.whiteBishop & BBSq_h6)
-         && (p.blackPawn   & BBSq_g5) )  sc += blockedBishop3;
+    if ( (p.whiteBishop & BBSq_a7) && (p.blackPawn & BBSq_b6) ) sc += blockedBishop;
+    if ( (p.whiteBishop & BBSq_h7) && (p.blackPawn & BBSq_g6) ) sc += blockedBishop;
+    if ( (p.whiteBishop & BBSq_b8) && (p.blackPawn & BBSq_c7) ) sc += blockedBishop2;
+    if ( (p.whiteBishop & BBSq_g8) && (p.blackPawn & BBSq_f7) ) sc += blockedBishop2;
+    if ( (p.whiteBishop & BBSq_a6) && (p.blackPawn & BBSq_b5) ) sc += blockedBishop3;
+    if ( (p.whiteBishop & BBSq_h6) && (p.blackPawn & BBSq_g5) ) sc += blockedBishop3;
 
     // bishop near castled king (bonus)
-    if (    (p.whiteBishop & BBSq_f1)
-         && (p.whiteKing   & BBSq_g1) )  sc += returningBishopBonus;
-    if (    (p.whiteBishop & BBSq_c1)
-         && (p.whiteKing   & BBSq_b1) )  sc += returningBishopBonus;
+    if ( (p.whiteBishop & BBSq_f1) && (p.whiteKing & BBSq_g1) ) sc += returningBishopBonus;
+    if ( (p.whiteBishop & BBSq_c1) && (p.whiteKing & BBSq_b1) ) sc += returningBishopBonus;
 
     // king blocking rook
-    if ( (  (p.whiteKing & BBSq_f1)
-         || (p.whiteKing & BBSq_g1) )
-         &&((p.whiteRook & BBSq_h1)
-         || (p.whiteRook & BBSq_g1) )) sc += blockedRookByKing;
-    if ( (  (p.whiteKing & BBSq_c1)
-         || (p.whiteKing & BBSq_b1) )
-         &&((p.whiteRook & BBSq_a1)
-         || (p.whiteRook & BBSq_b1) )) sc += blockedRookByKing;
+    if ( ( (p.whiteKing & BBSq_f1) || (p.whiteKing & BBSq_g1) ) && ( (p.whiteRook & BBSq_h1) || (p.whiteRook & BBSq_g1) ) ) sc += blockedRookByKing;
+    if ( ( (p.whiteKing & BBSq_c1) || (p.whiteKing & BBSq_b1) ) && ( (p.whiteRook & BBSq_a1) || (p.whiteRook & BBSq_b1) ) ) sc += blockedRookByKing;
 
     // black
     // bishop blocked by own pawn
-    if (    (p.blackBishop & BBSq_c8)
-         && (p.blackPawn   & BBSq_d7)
-         && (p.occupancy   & BBSq_d6) ) sc += blockedBishopByPawn;
-    if (    (p.blackBishop & BBSq_f8)
-         && (p.blackPawn   & BBSq_e7)
-         && (p.occupancy   & BBSq_e6) ) sc += blockedBishopByPawn;
+    if ( (p.blackBishop & BBSq_c8) && (p.blackPawn & BBSq_d7) && (p.occupancy & BBSq_d6) ) sc += blockedBishopByPawn;
+    if ( (p.blackBishop & BBSq_f8) && (p.blackPawn & BBSq_e7) && (p.occupancy & BBSq_e6) ) sc += blockedBishopByPawn;
 
     // trapped knight
-    if (     (p.blackKnight & BBSq_a1)
-         && ((p.whitePawn   & BBSq_a2)
-         ||  (p.whitePawn   & BBSq_c2) ) ) sc += blockedKnight;
-    if (     (p.blackKnight & BBSq_h1)
-         && ((p.whitePawn   & BBSq_h2)
-         ||  (p.whitePawn   & BBSq_f2) ) ) sc += blockedKnight;
-    if (     (p.blackKnight & BBSq_a2)
-         && ((p.whitePawn   & BBSq_a3)
-         ||  (p.whitePawn   & BBSq_b2) ) ) sc += blockedKnight2;
-    if (     (p.blackKnight & BBSq_h2)
-         && ((p.whitePawn   & BBSq_h3)
-         ||  (p.whitePawn   & BBSq_g2) ) ) sc += blockedKnight2;
+    if ( (p.blackKnight & BBSq_a1) && ((p.whitePawn & BBSq_a2) || (p.whitePawn & BBSq_c2) ) ) sc += blockedKnight;
+    if ( (p.blackKnight & BBSq_h1) && ((p.whitePawn & BBSq_h2) || (p.whitePawn & BBSq_f2) ) ) sc += blockedKnight;
+    if ( (p.blackKnight & BBSq_a2) && ((p.whitePawn & BBSq_a3) || (p.whitePawn & BBSq_b2) ) ) sc += blockedKnight2;
+    if ( (p.blackKnight & BBSq_h2) && ((p.whitePawn & BBSq_h3) || (p.whitePawn & BBSq_g2) ) ) sc += blockedKnight2;
 
     // trapped bishop
-    if (    (p.blackBishop & BBSq_a2)
-         && (p.whitePawn   & BBSq_b3) )  sc += blockedBishop;
-    if (    (p.blackBishop & BBSq_h2)
-         && (p.whitePawn   & BBSq_g3) )  sc += blockedBishop;
-    if (    (p.blackBishop & BBSq_b1)
-         && (p.whitePawn   & BBSq_c2) )  sc += blockedBishop2;
-    if (    (p.blackBishop & BBSq_g1)
-         && (p.whitePawn   & BBSq_f2) )  sc += blockedBishop2;
-    if (    (p.blackBishop & BBSq_a3)
-         && (p.whitePawn   & BBSq_b4) )  sc += blockedBishop3;
-    if (    (p.blackBishop & BBSq_h3)
-         && (p.whitePawn   & BBSq_g4) )  sc += blockedBishop3;
+    if ( (p.blackBishop & BBSq_a2) && (p.whitePawn & BBSq_b3) ) sc += blockedBishop;
+    if ( (p.blackBishop & BBSq_h2) && (p.whitePawn & BBSq_g3) ) sc += blockedBishop;
+    if ( (p.blackBishop & BBSq_b1) && (p.whitePawn & BBSq_c2) ) sc += blockedBishop2;
+    if ( (p.blackBishop & BBSq_g1) && (p.whitePawn & BBSq_f2) ) sc += blockedBishop2;
+    if ( (p.blackBishop & BBSq_a3) && (p.whitePawn & BBSq_b4) ) sc += blockedBishop3;
+    if ( (p.blackBishop & BBSq_h3) && (p.whitePawn & BBSq_g4) ) sc += blockedBishop3;
 
     // bishop near castled king (bonus)
-    if (    (p.blackBishop & BBSq_f8)
-         && (p.blackKing   & BBSq_g8) )  sc += returningBishopBonus;
-    if (    (p.blackBishop & BBSq_c8)
-         && (p.blackKing   & BBSq_b8) )  sc += returningBishopBonus;
+    if ( (p.blackBishop & BBSq_f8) && (p.blackKing & BBSq_g8) ) sc += returningBishopBonus;
+    if ( (p.blackBishop & BBSq_c8) && (p.blackKing & BBSq_b8) ) sc += returningBishopBonus;
 
     // king blocking rook
-    if ( (  (p.blackKing   & BBSq_f8)
-         || (p.blackKing   & BBSq_g8) )
-         &&((p.blackRook   & BBSq_h8)
-         || (p.blackRook   & BBSq_g8) )) sc += blockedRookByKing;
-    if ( (  (p.blackKing   & BBSq_c8)
-         || (p.blackKing   & BBSq_b8) )
-         &&((p.blackRook   & BBSq_a8)
-         || (p.blackRook   & BBSq_b8) )) sc += blockedRookByKing;
+    if ( ( (p.blackKing & BBSq_f8) || (p.blackKing & BBSq_g8) ) && ( (p.blackRook & BBSq_h8) || (p.blackRook & BBSq_g8) ) ) sc += blockedRookByKing;
+    if ( ( (p.blackKing & BBSq_c8) || (p.blackKing & BBSq_b8) ) && ( (p.blackRook & BBSq_a8) || (p.blackRook & BBSq_b8) ) ) sc += blockedRookByKing;
     */
 
     /*
@@ -2684,8 +2620,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if ( stopFlag ) return STOPSCORE;
         }
 
-        // null move
-        ///@todo use null move to detect mate treats
+        // null move ///@todo use null move to detect mate treats
         if ( StaticConfig::doNullMove && pv.size() > 1 && depth >= StaticConfig::nullMoveMinDepth && p.ep == INVALIDSQUARE && val >= beta){
             Position pN = p;
             pN.c = opponentColor(pN.c);
@@ -2727,7 +2662,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     // IID
     if ( (e.h == 0 /*|| e.d < depth/3*/) && pvnode && depth >= StaticConfig::iidMinDepth){
         std::vector<Move> iidPV;
-        pvs(alpha,beta,p,depth-2,pvnode,ply,iidPV,seldepth);
+        pvs(alpha,beta,p,depth-2,pvnode,ply,iidPV,seldepth); ///@todo here -2 or /2 seems to gives the same strength ...
         if ( !stopFlag) TT::getEntry(computeHash(p), depth, e);
         else return STOPSCORE;
     }
@@ -2755,8 +2690,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if (ttval > alpha) {
                 updatePV(pv, e.m, childPV);
                 if (ttval >= beta) {
-                    //if (Move2Type(e.m) == T_std && !isInCheck) updateHistoryKillers(*this, p, depth, e.m);
-                    if ( skipMove==INVALIDMOVE) TT::setEntry({ e.m,ttval,TT::B_beta,depth,computeHash(p) }); // this can only decrease depth ????
+                    //if (Move2Type(e.m) == T_std && !isInCheck) updateHistoryKillers(*this, p, depth, e.m); ///@todo ?
+                    if ( skipMove==INVALIDMOVE) TT::setEntry({ e.m,ttval,TT::B_beta,depth,computeHash(p) }); ///@todo this can only decrease depth ????
                     return ttval;
                 }
                 alphaUpdated = true;
@@ -2789,15 +2724,15 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         // extensions
         int extension = 0;
         if (isInCheck && depth <= 4) extension = 1; // we are in check (extension)
-        //if (depth <=3 && p.lastMove != INVALIDMOVE && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) extension = 1; // recapture extension
+        //if (depth <=3 && p.lastMove != INVALIDMOVE && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) extension = 1; ///@todo recapture extension
         if (validMoveCount == 1 || !StaticConfig::doPVS) val = -pvs(-beta,-alpha,p2,depth-1+extension,pvnode,ply+1,childPV,seldepth);
         else{
             // reductions & prunings
             int reduction = 0;
             const bool isCheck = isAttacked(p2, kingSquare(p2));
             const bool isAdvancedPawnPush = getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
-            //if (isCheck && Move2Score(*it) > -900) extension = 1; // we give check with a non risky move
-            //if (isAdvancedPawnPush && depth < 5)   extension = 1; // a pawn is near promotion
+            //if (isCheck && Move2Score(*it) > -900) extension = 1; ///@todo we give check with a non risky move
+            //if (isAdvancedPawnPush && depth < 5)   extension = 1; ///@todo a pawn is near promotion
             const bool isPrunable = !isInCheck && !isCheck && !isAdvancedPawnPush && !sameMove(*it, killerT.killers[0][p.ply]) && !sameMove(*it, killerT.killers[1][p.ply]) && !isMateScore(alpha) && !isMateScore(beta);
             const bool isPrunableStd = isPrunable && Move2Type(*it) == T_std;
             const bool isPrunableCap = isPrunable && Move2Type(*it) == T_capture;
@@ -2814,7 +2749,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if (StaticConfig::doLMR && !DynamicConfig::mateFinder && (isPrunableStd /*|| isBadCap*/) && depth >= StaticConfig::lmrMinDepth ) reduction = lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
             if (isPrunableStd && !DynamicConfig::mateFinder && !improving) ++reduction;
             if (pvnode && reduction > 0) --reduction;
-            //if (isPrunableStd) reduction -= 2*int(Move2Score(*it) / 250.f); // history reduction/extension
+            //if (isPrunableStd) reduction -= 2*int(Move2Score(*it) / 250.f); ///@todo history reduction/extension
             //if (reduction < 0) reduction = 0;
             //if (reduction >= depth) reduction = depth - 1;
             // PVS
@@ -3185,12 +3120,7 @@ void XBoard::xboard(){
                 sscanf(command.c_str(), "time %d", &centisec);
                 // just updating remaining time in curren TC (shall be classic TC or sudden death)
                 TimeMan::isDynamic        = true;
-                //TimeMan::nbMoveInTC       = -1;
-                //TimeMan::msecPerMove      = -1;
-                //TimeMan::msecInTC         = -1;
-                //TimeMan::msecInc          = -1;
                 TimeMan::msecUntilNextTC  = centisec*10;
-                //depth                     = 64; // infinity
             }
             else if ( strncmp(command.c_str(), "st", 2) == 0) {
                 int msecPerMove = 0;
@@ -3279,16 +3209,10 @@ template<> struct OptionValue<float> {
 template<typename T> T getOptionCLI(bool & found, const std::string & key, T defaultValue = OptionValue<T>().value){
     found = false;
     auto it = std::find(args.begin(),args.end(),std::string("-")+key);
-    if (it == args.end()) {
-        LogIt(logWarn) << "ARG key not given, " << key;
-        return defaultValue;
-    }
+    if (it == args.end()) { LogIt(logWarn) << "ARG key not given, " << key; return defaultValue; }
     std::stringstream str;
     ++it;
-    if (it == args.end()) {
-        LogIt(logError) << "ARG value not given, " << key;
-        return defaultValue;
-    }
+    if (it == args.end()) { LogIt(logError) << "ARG value not given, " << key; return defaultValue; }
     str << *it;
     T ret = defaultValue;
     str >> ret;
@@ -3312,14 +3236,8 @@ template<typename T> T getOption(const std::string & key, T defaultValue = Optio
     const T cliValue = getOptionCLI(found,key,defaultValue);
     if ( found ) return v.get(cliValue);
     auto it = json.find(key);
-    if (it == json.end()) {
-        LogIt(logError) << "JSON key not given, " << key;
-        return defaultValue;
-    }
-    if (!OptionValue<T>().validator(it.value())) {
-        LogIt(logError) << "JSON value does not have expected type, " << it.key() << " : " << it.value();
-        return defaultValue;
-    }
+    if (it == json.end()) { LogIt(logError) << "JSON key not given, " << key; return defaultValue; }
+    if (!OptionValue<T>().validator(it.value())) { LogIt(logError) << "JSON value does not have expected type, " << it.key() << " : " << it.value(); return defaultValue; }
     else {
         LogIt(logInfo) << "From config file, " << it.key() << " : " << it.value();
         return v.get((T)it.value());
@@ -3361,8 +3279,6 @@ int main(int argc, char ** argv){
     MaterialHash::MaterialHashInitializer::init();
     ThreadPool::instance().setup(getOption<int>("threads",1,Validator<int>().setMin(1).setMax(64)));
     GETOPT(mateFinder, bool)
-
-    //std::cout << MaterialHash::ToString(MaterialHash::MATKQRLKRRNN) << std::endl;
 
     if ( getOption<bool>("book") && Book::fileExists("book.bin") ) {
         std::ifstream bbook("book.bin",std::ios::in | std::ios::binary);
