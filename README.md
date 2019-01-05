@@ -10,22 +10,18 @@ Minic stands for "Minimal Chess".
 Have a look in the Dist directory for releases. Some more stable/official ones will also be made available as github release.
 
 ## Strength
-Quite poor for a chess engine (around 2400) but already way to strong for me !
+Quite poor for a chess engine (around 2350) but already way to strong for me !
 
 ```
-Rank Name                          Elo     +/-   Games   Score   Draws
-   0 Minic                          84      15    1673   61.9%   20.8%
-   1 Bitfoot                        25      50     152   53.6%   20.4%
-   2 myrddin                        21      50     152   53.0%   19.1%
-   3 sungorus64                    -18      50     152   47.4%   18.4%
-   4 Horizon_4_4                   -55      52     152   42.1%   13.2%
-   5 zevra                         -91      49     152   37.2%   25.7%
-   6 Minic 0.28                    -94      43     152   36.8%   40.8%
-   7 dorpsgek                     -101      49     152   35.9%   25.7%
-   8 ct800_v1.11_x64              -148      55     152   29.9%   16.4%
-   9 weini1                       -162      58     152   28.3%   10.5%
-  10 asymptote                    -163      54     153   28.1%   19.6%
-  11 rattatechess_nosferatu       -170      55     152   27.3%   19.1%
+   0 Minic                         -24      19    1116   46.5%   17.6%
+   1 fruit_21                      261      70     140   81.8%    9.3%
+   2 drosophila-win64              130      55     140   67.9%   20.0%
+   3 sungorus64                     20      52     139   52.9%   19.4%
+   4 myrddin                         5      51     139   50.7%   22.3%
+   5 Bitfoot                        -2      54     140   49.6%   13.6%
+   6 MadChess 2.2                  -18      52     139   47.5%   18.7%
+   7 Horizon_4_4                   -53      55     139   42.4%   11.5%
+   8 dorpsgek                     -108      52     140   35.0%   25.7%
 ```
 
 ## What about SMP ?  
