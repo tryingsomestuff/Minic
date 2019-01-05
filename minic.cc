@@ -31,7 +31,7 @@ typedef uint64_t u_int64_t;
 //#define DEBUG_TOOL
 #define WITH_TEST_SUITE
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "0.29";
 
 typedef std::chrono::system_clock Clock;
 typedef char DepthType;
@@ -339,7 +339,7 @@ struct Position{
 
     Material mat;
 };
- 
+
 namespace MaterialHash { // from Gull
     const int MatWQ = 1;
     const int MatBQ = 3;
@@ -486,11 +486,11 @@ namespace MaterialHash { // from Gull
     DEF_MAT(KLKD, Ter_Draw)
     DEF_MAT(KNNKNN, Ter_Draw)
     DEF_MAT(KNKN, Ter_Draw)
-    
+
     DEF_MAT_REV(KDKL, KLKD)
     DEF_MAT_REV(KLLKLD, KLDKLL)
     DEF_MAT_REV(KDDKLD, KLDKDD)
-    
+
     // 2M M
     DEF_MAT(KQQKQ, Ter_WhiteWin)
     DEF_MAT(KQQKR, Ter_WhiteWin)
@@ -498,14 +498,14 @@ namespace MaterialHash { // from Gull
     DEF_MAT(KRRKR, Ter_WhiteWin)
     DEF_MAT(KQRKQ, Ter_WhiteWin)
     DEF_MAT(KQRKR, Ter_WhiteWin)
-    
+
     DEF_MAT_REV(KQKQQ,KQQKQ)
     DEF_MAT_REV(KRKRR,KRRKR)
     DEF_MAT_REV(KQKRR,KRRKQ)
     DEF_MAT_REV(KRKQQ,KQQKR)
     DEF_MAT_REV(KQKQR,KQRKQ)
     DEF_MAT_REV(KRKQR,KQRKR)
-    
+
     // 2M m
     DEF_MAT(KQQKL, Ter_WhiteWin)
     DEF_MAT(KRRKL, Ter_WhiteWin)
@@ -540,7 +540,7 @@ namespace MaterialHash { // from Gull
     DEF_MAT(KLNKR, Ter_Draw)
     DEF_MAT(KDNKQ, Ter_Draw)
     DEF_MAT(KDNKR, Ter_Draw)
-    
+
     DEF_MAT_REV(KQKLD,KLDKQ)
     DEF_MAT_REV(KRKLD,KLDKR)
     DEF_MAT_REV(KQKLL,KLLKQ)
@@ -592,47 +592,47 @@ namespace MaterialHash { // from Gull
     DEF_MAT_REV(KLKDN,KDNKL)
     DEF_MAT_REV(KDKDN,KDNKD)
     DEF_MAT_REV(KNKDN,KDNKN)
-    
+
     // Q x : all should be win
     DEF_MAT(KQKR, Ter_WhiteWin)
     DEF_MAT(KQKL, Ter_WhiteWin)
     DEF_MAT(KQKD, Ter_WhiteWin)
     DEF_MAT(KQKN, Ter_WhiteWin)
-    
+
     DEF_MAT_REV(KRKQ,KQKR)
     DEF_MAT_REV(KLKQ,KQKL)
     DEF_MAT_REV(KDKQ,KQKD)
     DEF_MAT_REV(KNKQ,KQKN)
-    
+
     // R x : all should be draw
     DEF_MAT(KRKL, Ter_LikelyDraw)
     DEF_MAT(KRKD, Ter_LikelyDraw)
     DEF_MAT(KRKN, Ter_LikelyDraw)
-    
+
     DEF_MAT_REV(KLKR,KRKL)
     DEF_MAT_REV(KDKR,KRKD)
     DEF_MAT_REV(KNKR,KRKN)
-    
+
     // B x : all are draw
     DEF_MAT(KLKN, Ter_Draw)
     DEF_MAT(KDKN, Ter_Draw)
-    
+
     DEF_MAT_REV(KNKL,KLKN)
     DEF_MAT_REV(KNKD,KDKN)
-    
+
     // X 0 : QR win, BN draw
     DEF_MAT(KQK, Ter_WhiteWin)
     DEF_MAT(KRK, Ter_WhiteWin)
     DEF_MAT(KLK, Ter_Draw)
     DEF_MAT(KDK, Ter_Draw)
     DEF_MAT(KNK, Ter_Draw)
-    
+
    DEF_MAT_REV(KKQ,KQK)
    DEF_MAT_REV(KKR,KRK)
    DEF_MAT_REV(KKL,KLK)
    DEF_MAT_REV(KKD,KDK)
    DEF_MAT_REV(KKN,KNK)
-    
+
     // 2X 0 : all win except LL, DD, NN
     DEF_MAT(KQQK, Ter_WhiteWin)
     DEF_MAT(KRRK, Ter_WhiteWin)
@@ -642,7 +642,7 @@ namespace MaterialHash { // from Gull
     DEF_MAT(KNNK, Ter_Draw)
     DEF_MAT(KLNK, Ter_WhiteWin)
     DEF_MAT(KDNK, Ter_WhiteWin)
-    
+
     DEF_MAT_REV(KKQQ,KQQK)
     DEF_MAT_REV(KKRR,KRRK)
     DEF_MAT_REV(KKLD,KLDK)
@@ -651,7 +651,7 @@ namespace MaterialHash { // from Gull
     DEF_MAT_REV(KKNN,KNNK)
     DEF_MAT_REV(KKLN,KLNK)
     DEF_MAT_REV(KKDN,KDNK)
-    
+
     ///@todo other (with pawn ...)
 
     inline Terminaison probeMaterialHashTable(const Position::Material & mat) {
@@ -2114,7 +2114,7 @@ ScoreType ThreadContext::SEEVal(const Position & pos, const Move & move)const{
     occ ^= pb; // remove this piece from occ
     if (pp == P_wp || pp == P_wb || pp == P_wq) att |= BB::attack<P_wb>(sq, bq, occ); // new sliders might be behind
     if (pp == P_wr || pp == P_wq) att |= BB::attack<P_wr>(sq, rq, occ); // new sliders might be behind
-    att &= occ; 
+    att &= occ;
     gain[cnt] = pv - gain[cnt - 1];
     pv = Values[pp+PieceShift];
     if (isProm && p == P_wp) { pv += pqv; gain[cnt] += pqv; }
@@ -2236,7 +2236,7 @@ const ScoreType MOB[6][28] = { {0,0,0,0},
                                  {-20,-16,-12,-8,4,0,0,4,8,12,16,20,24,27,30},
                                  {-19,-18,-16,-14,-12,-10,0,3,6,9,12,15,18,21,24,27,30,33,35,38,41,43,46,48,49,50,51},
                                  {-20,0,5,10,11,12,13,14} };
- 
+
 const ScoreType MOBEG[6][28] = { {0,0,0,0},
                                  {-22,-15,-10,5,0,5,8,12,14,15},
                                  {-18,-8,0,5,10,15,20,25,28,30,32,34,36,38},
@@ -2389,7 +2389,7 @@ ScoreType eval(const Position & p, float & gp){
     sc += ScoreType((!nbBPE&&nbBPF&&!nbBPG)*(gp*isolatedPawnMalus+gpCompl*isolatedPawnMalusEG));
     sc += ScoreType((!nbBPG&&nbBPH        )*(gp*isolatedPawnMalus+gpCompl*isolatedPawnMalusEG));
     */
-    
+
     /*
     // blocked piece
     // white
@@ -2512,7 +2512,7 @@ ScoreType eval(const Position & p, float & gp){
     // rook pair
     sc += ( (p.mat.nwr > 1 ? rookPairMalus   : 0)-(p.mat.nbr > 1 ? rookPairMalus   : 0) );
     */
-    
+
     /*
     // king attack
     ScoreType attSc = 0;
@@ -2571,7 +2571,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     ScoreType val = eval(p,gp);
     MaterialHash::Terminaison drawStatus = interorNodeRecognizer(p, false, false);
-    if (drawStatus == MaterialHash::Ter_HardToWin || drawStatus == MaterialHash::Ter_LikelyDraw) val = ScoreType(val/3.f); // eval scaling 
+    if (drawStatus == MaterialHash::Ter_HardToWin || drawStatus == MaterialHash::Ter_LikelyDraw) val = ScoreType(val/3.f); // eval scaling
     if ( val >= beta ) return val;
     if ( val > alpha) alpha = val;
 
