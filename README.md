@@ -24,6 +24,8 @@ Quite poor for a chess engine (around 2350) but already way to strong for me !
    8 dorpsgek                     -108      52     140   35.0%   25.7%
 ```
 
+Actual WAC score is 274 (10sec per position on an old i7-2600K).
+
 ## What about SMP ?  
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
