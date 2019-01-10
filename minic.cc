@@ -31,7 +31,7 @@ typedef uint64_t u_int64_t;
 //#define DEBUG_TOOL
 #define WITH_TEST_SUITE
 
-const std::string MinicVersion = "0.29";
+const std::string MinicVersion = "dev";
 
 typedef std::chrono::system_clock Clock;
 typedef char DepthType;
@@ -178,9 +178,9 @@ ScoreType   doublePawnMalus       = 5;
 ScoreType   doublePawnMalusEG     = 15;
 ScoreType   isolatedPawnMalus     = 5;
 ScoreType   isolatedPawnMalusEG   = 15;
-ScoreType   pawnShieldBonus       = 18;
-float   protectedPasserFactor     = 0.25;
-float   freePasserFactor          = 0.9;
+ScoreType   pawnShieldBonus       = 15;
+float   protectedPasserFactor     = 0.25; // 125%
+float   freePasserFactor          = 0.9; // 190%
 
 ScoreType   adjKnight[9]  = { -24, -18, -12, -6,  0,  6,  12, 18, 24 };
 ScoreType   adjRook[9]    = {  48,  36,  24, 12,  0,-12, -24,-36,-48 };
@@ -1502,7 +1502,7 @@ void init(){
 }
 
 int GetNextMSecPerMove(const Position & p){
-    static const int msecMargin = 30;
+    static const int msecMargin = 50;
     int ms = -1;
     LogIt(logInfo) << "msecPerMove     " << msecPerMove;
     LogIt(logInfo) << "msecInTC        " << msecInTC   ;
@@ -1527,7 +1527,7 @@ int GetNextMSecPerMove(const Position & p){
         if (!isDynamic) ms = int((msecInTC+p.moves*msecIncLoc) / (float)(nmoves+p.moves)) - msecMargin;
         else ms = std::min(msecUntilNextTC - msecMargin, int(msecUntilNextTC / (float)nmoves + 0.75*msecIncLoc) - msecMargin);
     }
-    if (ms < 0) ms = 10; // let's try that ...
+    if (ms <= 5) ms = 20; // let's try that ...
     return ms;
 }
 } // TimeMan
@@ -2216,7 +2216,6 @@ MaterialHash::Terminaison ThreadContext::interorNodeRecognizer(const Position & 
 //int manhattanDistance(Square sq1, Square sq2) { return std::abs((sq2 >> 3) - (sq1 >> 3)) + std::abs((sq2 & 7) - (sq1 & 7));}
 int chebyshevDistance(Square sq1, Square sq2) { return std::max(std::abs((sq2 >> 3) - (sq1 >> 3)) , std::abs((sq2 & 7) - (sq1 & 7))); }
 
-/*
 const ScoreType MOB[6][28] = { {0,0,0,0},
                                  {-22,-15,-10,5,0,5,8,12,14,15},
                                  {-18,-8,0,5,10,15,20,25,28,30,32,34,36,38},
@@ -2230,7 +2229,6 @@ const ScoreType MOBEG[6][28] = { {0,0,0,0},
                                  {-20,-16,-12,-8,4,0,0,4,8,12,16,20,24,27,30},
                                  {-19,-18,-16,-14,-12,-10,0,3,6,9,12,15,18,21,24,27,30,33,35,38,41,43,46,48,49,50,51},
                                  {-20,0,5,10,11,12,13,14} };
-*/
 
 ScoreType eval(const Position & p, float & gp){
 
@@ -2260,31 +2258,27 @@ ScoreType eval(const Position & p, float & gp){
     const bool white2Play = p.c == Co_White;
 
     // pst (///@todo & mobility)
-    //static BitBoard(*const pf[])(const Square, const BitBoard, const  Color) = { &BB::coverage<P_wp>, &BB::coverage<P_wn>, &BB::coverage<P_wb>, &BB::coverage<P_wr>, &BB::coverage<P_wq>, &BB::coverage<P_wk> };
+    static BitBoard(*const pf[])(const Square, const BitBoard, const  Color) = { &BB::coverage<P_wp>, &BB::coverage<P_wn>, &BB::coverage<P_wb>, &BB::coverage<P_wr>, &BB::coverage<P_wq>, &BB::coverage<P_wk> };
     BitBoard pieceBBiterator = p.whitePiece;
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
         const Square kk = k^56;
         const Piece ptype = getPieceType(p,k);
-        sc += ScoreType((gp*PST[ptype - 1][kk] + gpCompl*PSTEG[ptype - 1][kk] ) );
-        /*
+        sc += ScoreType((gp*PST[ptype - 1][kk] + gpCompl * PSTEG[ptype - 1][kk] ) );
         if (ptype != P_wp) {
              const uint64_t n = countBit(pf[ptype-1](k, p.occupancy, p.c) & ~p.whitePiece);
              sc += ScoreType((gp*MOB[ptype - 1][n] + gpCompl*MOBEG[ptype - 1][n]));
         }
-        */
     }
     pieceBBiterator = p.blackPiece;
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
         const Piece ptype = getPieceType(p, k);
-         sc -= ScoreType((gp*PST[ptype - 1][k] + gpCompl *PSTEG[ptype - 1][k]));
-         /*
+         sc -= ScoreType((gp*PST[ptype - 1][k] + gpCompl * PSTEG[ptype - 1][k]));
          if (ptype != P_bp) {
              const uint64_t n = countBit(pf[ptype-1](k, p.occupancy, p.c) & ~p.blackPiece);
              sc -= ScoreType((gp*MOB[ptype - 1][n] + gpCompl*MOBEG[ptype - 1][n]));
          }
-         */
     }
 
     // in very end game winning king must be near the other king
@@ -2358,9 +2352,7 @@ ScoreType eval(const Position & p, float & gp){
     sc += ScoreType((nbBPF>>1)*(gp*doublePawnMalus+gpCompl*doublePawnMalusEG));
     sc += ScoreType((nbBPG>>1)*(gp*doublePawnMalus+gpCompl*doublePawnMalusEG));
     sc += ScoreType((nbBPH>>1)*(gp*doublePawnMalus+gpCompl*doublePawnMalusEG));
-    */
 
-    /*
     // isolated pawn malus
     sc -= ScoreType((        nbWPA&&!nbWPB)*(gp*isolatedPawnMalus+gpCompl*isolatedPawnMalusEG));
     sc -= ScoreType((!nbWPA&&nbWPB&&!nbWPC)*(gp*isolatedPawnMalus+gpCompl*isolatedPawnMalusEG));
@@ -2436,6 +2428,7 @@ ScoreType eval(const Position & p, float & gp){
     */
 
     /*
+    ///@todo this seems to LOSE elo !
     // number of pawn and piece type
     sc += p.mat.nwr * adjRook  [p.mat.nwp];
     sc -= p.mat.nbr * adjRook  [p.mat.nbp];
@@ -2451,7 +2444,7 @@ ScoreType eval(const Position & p, float & gp){
 
     /*
     // king attack
-    ScoreType attSc = 0;
+    float attSc = 0;
     if ( p.wk != INVALIDSQUARE ){
       BitBoard wKingZone = BB::mask[p.wk].kingZone;
       while(wKingZone){
@@ -2459,7 +2452,7 @@ ScoreType eval(const Position & p, float & gp){
         BitBoard attack = BB::isAttackedBB(p, z, Co_White);
         while(attack){
            Square from = BB::popBit(attack);
-           attSc += getValue(p,from);
+           if ( p.b[from] != P_bp) attSc += getValue(p,from) * (7.5f-chebyshevDistance(from,z));
         }
       }
     }
@@ -2470,15 +2463,14 @@ ScoreType eval(const Position & p, float & gp){
         BitBoard attack = BB::isAttackedBB(p, z, Co_Black);
         while(attack){
           Square from = BB::popBit(attack);
-          attSc += getValue(p,from);
+          if ( p.b[from] != P_wp) attSc += getValue(p,from) * (7.5f-chebyshevDistance(from,z));
         }
       }
     }
-    sc+=attSc/50;
+    sc+=ScoreType(attSc/50.f);
     */
 
     // pawn shield
-    /*
     sc += ScoreType(((p.whiteKing & whiteKingQueenSide ) != 0ull)*countBit(p.whitePawn & whiteQueenSidePawnShield1)*pawnShieldBonus     * gp);
     sc += ScoreType(((p.whiteKing & whiteKingQueenSide ) != 0ull)*countBit(p.whitePawn & whiteQueenSidePawnShield2)*pawnShieldBonus / 2 * gp);
     sc += ScoreType(((p.whiteKing & whiteKingKingSide  ) != 0ull)*countBit(p.whitePawn & whiteKingSidePawnShield1 )*pawnShieldBonus     * gp);
@@ -2487,7 +2479,6 @@ ScoreType eval(const Position & p, float & gp){
     sc -= ScoreType(((p.blackKing & blackKingQueenSide ) != 0ull)*countBit(p.blackPawn & blackQueenSidePawnShield2)*pawnShieldBonus / 2 * gp);
     sc -= ScoreType(((p.blackKing & blackKingKingSide  ) != 0ull)*countBit(p.blackPawn & blackKingSidePawnShield1 )*pawnShieldBonus     * gp);
     sc -= ScoreType(((p.blackKing & blackKingKingSide  ) != 0ull)*countBit(p.blackPawn & blackKingSidePawnShield2 )*pawnShieldBonus / 2 * gp);
-    */
 
     sc = (white2Play?+1:-1)*sc;
     TT::setEvalEntry({ sc, gp, computeHash(p) });
