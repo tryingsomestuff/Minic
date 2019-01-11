@@ -265,6 +265,44 @@ namespace Texel {
         }
         return bestParam;
     }
+
+    std::vector<TexelParam<ScoreType> > TexelOptimizeNaive(const std::vector<TexelParam<ScoreType> >& initialGuess, std::vector<Texel::TexelInput> &data, const size_t batchSize) {
+        DynamicConfig::disableTT = true;
+        std::ofstream str("tuning.csv");
+        std::vector<TexelParam<ScoreType> > bestParam = initialGuess;
+        for (int loop = 0; loop < 50; ++loop) {
+            for (size_t k = 0; k < bestParam.size(); ++k) {
+                Randomize(data, batchSize);
+                double initE = E(data, batchSize);
+                double curE = initE;
+                while ( curE <= initE) {
+                    LogIt(logInfo) << curE;
+                    const ScoreType oldValue = bestParam[k];
+                    bestParam[k] = ScoreType(oldValue - 1);
+                    if (bestParam[k] == oldValue) break;
+                    curE = E(data, batchSize);
+                    LogIt(logInfo) << bestParam[k].name << " " << bestParam[k];
+                }
+                const ScoreType oldValue = bestParam[k];
+                bestParam[k] = ScoreType(oldValue + 1);
+                curE = E(data, batchSize);
+                while (curE <= initE) {
+                    LogIt(logInfo) << curE;
+                    const ScoreType oldValue = bestParam[k];
+                    bestParam[k] = ScoreType(oldValue + 1);
+                    if (bestParam[k] == oldValue) break;
+                    curE = E(data, batchSize);
+                    LogIt(logInfo) << bestParam[k].name << " " << bestParam[k];
+                }
+                // write
+                str << loop << ";" << k << ";";
+                for (size_t k = 0; k < bestParam.size(); ++k) str << bestParam[k] << ";";
+                str << curE << std::endl;
+            }
+        }
+        return bestParam;
+    }
+
 } // Texel
 
 void TexelTuning(const std::string & filename) {
@@ -322,8 +360,9 @@ void TexelTuning(const std::string & filename) {
 
     LogIt(logInfo) << "Initial values :";
     for (size_t k = 0; k < guess.size(); ++k) LogIt(logInfo) << guess[k].name << " " << guess[k];
-    std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeGD(guess, data, batchSize);
+    //std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeGD(guess, data, batchSize);
     //std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeSecante(guess, data, batchSize);
+    std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeNaive(guess, data, batchSize);
 
     LogIt(logInfo) << "Optimized values :";
     for (size_t k = 0; k < optim.size(); ++k) LogIt(logInfo) << optim[k].name << " " << optim[k];
