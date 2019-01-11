@@ -88,7 +88,7 @@ namespace Texel {
     double computeOptimalK(const std::vector<Texel::TexelInput> & data) {
        double Kstart = 0.05, Kend = 3.0, Kdelta = 0.15;
        double thisError, bestError = 100;
-       for (int i = 0; i < 3; ++i) {
+       for (int i = 0; i < 5; ++i) {
           LogIt(logInfo) << "Computing K Iteration " << i;
           K = Kstart - Kdelta;
           while (K < Kend) {
@@ -291,7 +291,7 @@ void TexelTuning(const std::string & filename) {
     size_t batchSize = 1024 ; // mini
     //size_t batchSize = 1; // stochastic
 
-    for(int k=0 ; k<13; ++k){Values[k] = 450; ValuesEG[k] = 450;}
+    //for(int k=0 ; k<13; ++k){Values[k] = 450; ValuesEG[k] = 450;}
 
     std::vector<Texel::TexelParam<ScoreType> > guess;
     //guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wp+PieceShift], 20,  2000,   "pawn",     [](const ScoreType& s){Values[P_bp+PieceShift] = -s;}));
