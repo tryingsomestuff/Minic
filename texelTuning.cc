@@ -37,8 +37,9 @@ namespace Texel {
         assert(p);
 
         // qsearch
-        //DepthType seldepth = 0;
-        //const double s = ThreadPool::instance().main().qsearchNoPruning(-10000,10000,*p,0,seldepth);
+        DepthType seldepth = 0;
+        double s = ThreadPool::instance().main().qsearchNoPruning(-10000,10000,*p,1,seldepth);
+        s *= (p->c == Co_White ? 1:-1);
 
         /*
         // search
@@ -49,10 +50,13 @@ namespace Texel {
         s *= (p->c == Co_White ? 1:-1);
         */
 
+        /*
         // eval
         float gp;
-        const double s = eval(*p,gp);
-        return 1. / (1. + std::pow(10, -K * s / 400.));
+        double s = eval(*p,gp);
+        s *= (p->c == Co_White ? 1:-1);
+        */
+        return 1. / (1. + std::pow(10, -/*K **/ s / 200.));
     }
 
     double E(const std::vector<Texel::TexelInput> &data, size_t miniBatchSize) {
@@ -322,43 +326,57 @@ void TexelTuning(const std::string & filename) {
     LogIt(logInfo) << "Data size : " << data.size();
 
     //size_t batchSize = data.size(); // batch
-    size_t batchSize = 1024 ; // mini
-    //size_t batchSize = 1; // stochastic
+    //size_t batchSize = 1024 ; // mini
+    size_t batchSize = 1; // stochastic
 
     //for(int k=0 ; k<13; ++k){Values[k] = 450; ValuesEG[k] = 450;}
 
     std::vector<Texel::TexelParam<ScoreType> > guess;
-    //guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wp+PieceShift], 20,  2000,   "pawn",     [](const ScoreType& s){Values[P_bp+PieceShift] = -s;}));
-    guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wn+PieceShift], 20,  2000,   "knight",   [](const ScoreType& s){Values[P_bn+PieceShift] = -s;}));
-    guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wb+PieceShift], 20,  2000,   "bishop",   [](const ScoreType& s){Values[P_bb+PieceShift] = -s;}));
-    guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wr+PieceShift], 20,  2000,   "rook",     [](const ScoreType& s){Values[P_br+PieceShift] = -s;}));
-    guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wq+PieceShift], 20,  2000,   "queen",    [](const ScoreType& s){Values[P_bq+PieceShift] = -s;}));
-    guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wp+PieceShift], 20,  2000, "EGpawn",   [](const ScoreType& s){ValuesEG[P_bp+PieceShift] = -s;}));
-    guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wn+PieceShift], 20,  2000, "EGknight", [](const ScoreType& s){ValuesEG[P_bn+PieceShift] = -s;}));
-    guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wb+PieceShift], 20,  2000, "EGbishop", [](const ScoreType& s){ValuesEG[P_bb+PieceShift] = -s;}));
-    guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wr+PieceShift], 20,  2000, "EGrook",   [](const ScoreType& s){ValuesEG[P_br+PieceShift] = -s;}));
-    guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wq+PieceShift], 20,  2000, "EGqueen",  [](const ScoreType& s){ValuesEG[P_bq+PieceShift] = -s;}));
+    //guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wp+PieceShift], 20,  2000, "pawn",     [](const ScoreType& s){Values[P_bp+PieceShift] = -s;}));
+    guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wn+PieceShift],   150,  400, "knight",   [](const ScoreType& s){Values[P_bn+PieceShift] = -s;}));
+    guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wb+PieceShift],   150,  400, "bishop",   [](const ScoreType& s){Values[P_bb+PieceShift] = -s;}));
+    guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wr+PieceShift],   200,  700, "rook",     [](const ScoreType& s){Values[P_br+PieceShift] = -s;}));
+    guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wq+PieceShift],   600, 1200, "queen",    [](const ScoreType& s){Values[P_bq+PieceShift] = -s;}));
+    guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wp+PieceShift],  50,  200, "EGpawn",   [](const ScoreType& s){ValuesEG[P_bp+PieceShift] = -s;}));
+    guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wn+PieceShift], 150,  400, "EGknight", [](const ScoreType& s){ValuesEG[P_bn+PieceShift] = -s;}));
+    guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wb+PieceShift], 150,  400, "EGbishop", [](const ScoreType& s){ValuesEG[P_bb+PieceShift] = -s;}));
+    guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wr+PieceShift], 200,  700, "EGrook",   [](const ScoreType& s){ValuesEG[P_br+PieceShift] = -s;}));
+    guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wq+PieceShift], 600, 1400, "EGqueen",  [](const ScoreType& s){ValuesEG[P_bq+PieceShift] = -s;}));
 /*
-    guess.push_back(Texel::TexelParam<ScoreType>(bishopPairBonus, -50,  50,"bishop pair"));
-    guess.push_back(Texel::TexelParam<ScoreType>(knightPairMalus, -50,  50,"knight pair"));
-    guess.push_back(Texel::TexelParam<ScoreType>(rookPairMalus  , -50,  50,"rook pair"));
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[1], -150, 150,"passer 1"));
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[2], -150, 150,"passer 2"));
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[3], -150, 150,"passer 3"));
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[4], -150, 150,"passer 4"));
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[5], -150, 150,"passer 5"));
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[6], -150, 150,"passer 6"));
+    guess.push_back(Texel::TexelParam<ScoreType>(bishopPairBonus , -50,  50,"bishop pair"));
+    guess.push_back(Texel::TexelParam<ScoreType>(knightPairMalus , -50,  50,"knight pair"));
+    guess.push_back(Texel::TexelParam<ScoreType>(rookPairMalus   , -50,  50,"rook pair"));
+
+    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[1]  , -150, 150,"passer 1"));
+    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[2]  , -150, 150,"passer 2"));
+    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[3]  , -150, 150,"passer 3"));
+    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[4]  , -150, 150,"passer 4"));
+    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[5]  , -150, 150,"passer 5"));
+    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[6]  , -150, 150,"passer 6"));
+    guess.push_back(Texel::TexelParam<ScoreType>(passerBonusEG[1], -150, 150,"passer 1"));
+    guess.push_back(Texel::TexelParam<ScoreType>(passerBonusEG[2], -150, 150,"passer 2"));
+    guess.push_back(Texel::TexelParam<ScoreType>(passerBonusEG[3], -150, 150,"passer 3"));
+    guess.push_back(Texel::TexelParam<ScoreType>(passerBonusEG[4], -150, 150,"passer 4"));
+    guess.push_back(Texel::TexelParam<ScoreType>(passerBonusEG[5], -150, 150,"passer 5"));
+    guess.push_back(Texel::TexelParam<ScoreType>(passerBonusEG[6], -150, 150,"passer 6"));
+
+    guess.push_back(Texel::TexelParam<ScoreType>(kingNearPassedPawnEG,-15,55,"kingNearPassedPawnEG"));
+    guess.push_back(Texel::TexelParam<ScoreType>(doublePawnMalus     ,-15,55,"doublePawnMalus"));
+    guess.push_back(Texel::TexelParam<ScoreType>(doublePawnMalusEG   ,-15,55,"doublePawnMalusEG"));
+    guess.push_back(Texel::TexelParam<ScoreType>(isolatedPawnMalus   ,-15,55,"isolatedPawnMalus"));
+    guess.push_back(Texel::TexelParam<ScoreType>(isolatedPawnMalusEG ,-15,55,"isolatedPawnMalusEG"));
+    guess.push_back(Texel::TexelParam<ScoreType>(pawnShieldBonus     ,-15,55,"pawnShieldBonus"));
 */
 
-    computeOptimalK(data);
+    //computeOptimalK(data);
 
     LogIt(logInfo) << "Optimal K " << Texel::K;
 
     LogIt(logInfo) << "Initial values :";
     for (size_t k = 0; k < guess.size(); ++k) LogIt(logInfo) << guess[k].name << " " << guess[k];
-    //std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeGD(guess, data, batchSize);
+    std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeGD(guess, data, batchSize);
     //std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeSecante(guess, data, batchSize);
-    std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeNaive(guess, data, batchSize);
+    //std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeNaive(guess, data, batchSize);
 
     LogIt(logInfo) << "Optimized values :";
     for (size_t k = 0; k < optim.size(); ++k) LogIt(logInfo) << optim[k].name << " " << optim[k];
