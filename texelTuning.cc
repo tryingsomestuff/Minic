@@ -35,9 +35,11 @@ namespace Texel {
         }
         */
         assert(p);
-        DepthType seldepth = 0;
+
         // qsearch
-        const double s = ThreadPool::instance().main().qsearch(-1000,1000,*p,0,seldepth);
+        //DepthType seldepth = 0;
+        //const double s = ThreadPool::instance().main().qsearchNoPruning(-10000,10000,*p,0,seldepth);
+
         /*
         // search
         Move m = INVALIDMOVE;
@@ -46,39 +48,20 @@ namespace Texel {
         ThreadPool::instance().main().search(*p,m,4,s,seldepth);
         s *= (p->c == Co_White ? 1:-1);
         */
+
         // eval
-        //float gp;
-        //const double s = eval(*p,gp);
+        float gp;
+        const double s = eval(*p,gp);
         return 1. / (1. + std::pow(10, -K * s / 400.));
     }
 
     double E(const std::vector<Texel::TexelInput> &data, size_t miniBatchSize) {
         double e = 0;
-        int goodW = 0;
-        int goodL = 0;
-        int badW = 0;
-        int badL = 0;
         for (size_t k = 0; k < miniBatchSize; ++k) {
            const double r = (data[k].result+1)*0.5;
            const double s = Sigmoid(data[k].p);
-           //LogIt(logInfo) << r << " " << s;
            e += std::pow(r - s,2);
-           //if ( k % 10000 == 0) LogIt(logInfo) << "*";
-
-           if ( r > 0.5 ){
-              if ( s > 0.5 ) goodW++;
-              else badW++;
-           }
-           else if (r < 0.5){
-              if ( s < 0.5 ) goodL++;
-              else badL++;
-           }
-
         }
-        LogIt(logInfo) << "goodW " << goodW;
-        LogIt(logInfo) << "badW " << badW;
-        LogIt(logInfo) << "goodL " << goodL;
-        LogIt(logInfo) << "badL " << badL;
         e /= miniBatchSize;
         return e;
     }
@@ -270,29 +253,42 @@ namespace Texel {
         DynamicConfig::disableTT = true;
         std::ofstream str("tuning.csv");
         std::vector<TexelParam<ScoreType> > bestParam = initialGuess;
-        for (int loop = 0; loop < 50; ++loop) {
+        for (int loop = 0; loop < 5000; ++loop) {
             for (size_t k = 0; k < bestParam.size(); ++k) {
                 Randomize(data, batchSize);
                 double initE = E(data, batchSize);
-                double curE = initE;
-                while ( curE <= initE) {
-                    LogIt(logInfo) << curE;
+                double curE = -1;
+                while ( true ) {
                     const ScoreType oldValue = bestParam[k];
                     bestParam[k] = ScoreType(oldValue - 1);
                     if (bestParam[k] == oldValue) break;
                     curE = E(data, batchSize);
-                    LogIt(logInfo) << bestParam[k].name << " " << bestParam[k];
+                    if ( curE < initE ){
+                        LogIt(logInfo) << curE << " " << initE << " " << bestParam[k].name << " " << bestParam[k];
+                        initE = curE;
+                    }
+                    else{
+                        ScoreType oldValue = bestParam[k];
+                        bestParam[k] = ScoreType(oldValue + 1);
+                        curE = E(data, batchSize);
+                        break;
+                    }
                 }
-                const ScoreType oldValue = bestParam[k];
-                bestParam[k] = ScoreType(oldValue + 1);
-                curE = E(data, batchSize);
-                while (curE <= initE) {
-                    LogIt(logInfo) << curE;
+                while ( true ) {
                     const ScoreType oldValue = bestParam[k];
                     bestParam[k] = ScoreType(oldValue + 1);
                     if (bestParam[k] == oldValue) break;
                     curE = E(data, batchSize);
-                    LogIt(logInfo) << bestParam[k].name << " " << bestParam[k];
+                    if ( curE < initE ){
+                        LogIt(logInfo) << curE << " " << initE << " " << bestParam[k].name << " " << bestParam[k];
+                        initE = curE;
+                    }
+                    else{
+                        ScoreType oldValue = bestParam[k];
+                        bestParam[k] = ScoreType(oldValue - 1);
+                        curE = E(data, batchSize);
+                        break;
+                    }
                 }
                 // write
                 str << loop << ";" << k << ";";
@@ -318,7 +314,7 @@ void TexelTuning(const std::string & filename) {
         std::string fen = o["fen"];
         Position * p = new Position;
         readFEN(fen,*p,true);
-        if (std::abs(o["result"].get<int>()) < 800) data.push_back({p, o["result"]});
+        /*if (std::abs(o["result"].get<int>()) == 1)*/ data.push_back({p, o["result"]});
         ++count;
         if (count % 50000 == 0) LogIt(logInfo) << count << " position read";
     }
@@ -354,7 +350,7 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[6], -150, 150,"passer 6"));
 */
 
-    //computeOptimalK(data);
+    computeOptimalK(data);
 
     LogIt(logInfo) << "Optimal K " << Texel::K;
 

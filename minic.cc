@@ -944,6 +944,7 @@ struct ThreadContext{
 
     ScoreType pvs    (ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove = INVALIDMOVE);
     ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
+    ScoreType qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
     bool SEE(const Position & p, const Move & m, ScoreType threshold)const;
     template< bool display = false> ScoreType SEEVal(const Position & p, const Move & m)const;
     std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth);
@@ -2257,8 +2258,24 @@ ScoreType eval(const Position & p, float & gp){
         + (p.mat.nwp - p.mat.nbp) * ScoreType(gp* *absValues[P_wp] + gpCompl * *absValuesEG[P_wp]);
     const bool white2Play = p.c == Co_White;
 
-    // pst (///@todo & mobility)
+    // pst & mobility & ///@todo attack
     static BitBoard(*const pf[])(const Square, const BitBoard, const  Color) = { &BB::coverage<P_wp>, &BB::coverage<P_wn>, &BB::coverage<P_wb>, &BB::coverage<P_wr>, &BB::coverage<P_wq>, &BB::coverage<P_wk> };
+
+    /*
+    BitBoard wKingZone = 0ull;
+    if ( p.wk != INVALIDSQUARE ){
+       wKingZone = BB::mask[p.wk].kingZone;
+    }
+    BitBoard bKingZone = 0ull;
+    if ( p.bk != INVALIDSQUARE ){
+       bKingZone = BB::mask[p.bk].kingZone;
+    }
+    float attSc = 0.f;
+
+    static const float attackValue[6] = { 1, 1.5f, 1.5f, 2, 3, 2 };
+    */
+
+    //BitBoard whiteAttack[6] = {0ull};
     BitBoard pieceBBiterator = p.whitePiece;
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
@@ -2266,20 +2283,31 @@ ScoreType eval(const Position & p, float & gp){
         const Piece ptype = getPieceType(p,k);
         sc += ScoreType((gp*PST[ptype - 1][kk] + gpCompl * PSTEG[ptype - 1][kk] ) );
         if (ptype != P_wp) {
-             const uint64_t n = countBit(pf[ptype-1](k, p.occupancy, p.c) & ~p.whitePiece);
-             sc += ScoreType((gp*MOB[ptype - 1][n] + gpCompl*MOBEG[ptype - 1][n]));
+            const BitBoard curAtt = pf[ptype-1](k, p.occupancy, p.c) & ~p.whitePiece;
+            //whiteAttack[ptype-1] |= curAtt;
+            const uint64_t n = countBit(curAtt);
+            sc += ScoreType((gp*MOB[ptype - 1][n] + gpCompl*MOBEG[ptype - 1][n]));
+            //attSc += countBit(curAtt & bKingZone) * attackValue[ptype - 1];
         }
     }
+
+    //BitBoard blackAttack[6] = {0ull};
     pieceBBiterator = p.blackPiece;
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
         const Piece ptype = getPieceType(p, k);
-         sc -= ScoreType((gp*PST[ptype - 1][k] + gpCompl * PSTEG[ptype - 1][k]));
-         if (ptype != P_bp) {
-             const uint64_t n = countBit(pf[ptype-1](k, p.occupancy, p.c) & ~p.blackPiece);
-             sc -= ScoreType((gp*MOB[ptype - 1][n] + gpCompl*MOBEG[ptype - 1][n]));
-         }
+        sc -= ScoreType((gp*PST[ptype - 1][k] + gpCompl * PSTEG[ptype - 1][k]));
+        if (ptype != P_bp) {
+            const BitBoard curAtt = pf[ptype-1](k, p.occupancy, p.c) & ~p.blackPiece;
+            //blackAttack[ptype-1] |= curAtt;
+            const uint64_t n = countBit(curAtt);
+            sc -= ScoreType((gp*MOB[ptype - 1][n] + gpCompl*MOBEG[ptype - 1][n]));
+            //attSc -= countBit(curAtt & wKingZone) * attackValue[ptype - 1];
+        }
     }
+
+    // use attack score
+    //sc+=ScoreType(attSc*5);
 
     // in very end game winning king must be near the other king
     if (gp < 0.3 && p.wk != INVALIDSQUARE && p.bk != INVALIDSQUARE) sc -= ScoreType((sc>0?+1:-1)*chebyshevDistance(p.wk, p.bk)*15*gpCompl);
@@ -2442,34 +2470,6 @@ ScoreType eval(const Position & p, float & gp){
     sc += ( (p.mat.nwr > 1 ? rookPairMalus   : 0)-(p.mat.nbr > 1 ? rookPairMalus   : 0) );
     */
 
-    /*
-    // king attack
-    float attSc = 0;
-    if ( p.wk != INVALIDSQUARE ){
-      BitBoard wKingZone = BB::mask[p.wk].kingZone;
-      while(wKingZone){
-        Square z = BB::popBit(wKingZone);
-        BitBoard attack = BB::isAttackedBB(p, z, Co_White);
-        while(attack){
-           Square from = BB::popBit(attack);
-           if ( p.b[from] != P_bp) attSc += getValue(p,from) * (7.5f-chebyshevDistance(from,z));
-        }
-      }
-    }
-    if ( p.bk != INVALIDSQUARE ){
-      BitBoard bKingZone = BB::mask[p.bk].kingZone;
-      while(bKingZone){
-        Square z = BB::popBit(bKingZone);
-        BitBoard attack = BB::isAttackedBB(p, z, Co_Black);
-        while(attack){
-          Square from = BB::popBit(attack);
-          if ( p.b[from] != P_wp) attSc += getValue(p,from) * (7.5f-chebyshevDistance(from,z));
-        }
-      }
-    }
-    sc+=ScoreType(attSc/50.f);
-    */
-
     // pawn shield
     sc += ScoreType(((p.whiteKing & whiteKingQueenSide ) != 0ull)*countBit(p.whitePawn & whiteQueenSidePawnShield1)*pawnShieldBonus     * gp);
     sc += ScoreType(((p.whiteKing & whiteKingQueenSide ) != 0ull)*countBit(p.whitePawn & whiteQueenSidePawnShield2)*pawnShieldBonus / 2 * gp);
@@ -2483,6 +2483,33 @@ ScoreType eval(const Position & p, float & gp){
     sc = (white2Play?+1:-1)*sc;
     TT::setEvalEntry({ sc, gp, computeHash(p) });
     return sc;
+}
+
+ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth){
+    float gp = 0;
+
+    ++stats.qnodes;
+
+    ScoreType val = eval(p,gp);
+    if ( val >= beta ) return val;
+    if ( val > alpha) alpha = val;
+
+    std::vector<Move> moves;
+    generate(p,moves,GP_cap);
+    sort(*this,moves,p);
+
+    for(auto it = moves.begin() ; it != moves.end() ; ++it){
+        Position p2 = p;
+        if ( ! apply(p2,*it) ) continue;
+        if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply + 1;
+        if (p.c == Co_Black && Move2To(*it) == p.wk) return MATE - ply + 1;
+        val = -qsearchNoPruning(-beta,-alpha,p2,ply+1,seldepth);
+        if ( val > alpha ){
+            if ( val >= beta ) return val;
+            alpha = val;
+        }
+    }
+    return val;
 }
 
 ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth){
@@ -3281,7 +3308,7 @@ int main(int argc, char ** argv){
 #endif
 
 #ifdef WITH_TEXEL_TUNING
-    if ( argc > 1 && std::string(argv[1]) == "-texel" ) TexelTuning("tuning/minic.fens.json");
+    if ( argc > 1 && std::string(argv[1]) == "-texel" ) { TexelTuning("tuning/minic.fens.json"); return 0;}
 #endif
 
 #ifdef DEBUG_TOOL
