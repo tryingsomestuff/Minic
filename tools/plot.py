@@ -7,6 +7,7 @@ import matplotlib.cbook as cbook
 
 def read_datafile(file_name):
     #data = np.genfromtxt(file_name, delimiter=';', names=['it','p','n','b','r','q','pe','ne','be','re','qe'])
+    #data = np.genfromtxt(file_name, delimiter=';', names=['it','it2','n','b','r','q','pe','ne','be','re','qe','err'])
     data = np.genfromtxt(file_name, delimiter=';', names=['it','n','b','r','q','pe','ne','be','re','qe'])
     return data
 

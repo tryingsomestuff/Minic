@@ -112,6 +112,13 @@ int cliManagement(std::string cli, int argc, char ** argv){
 
     LogIt(logInfo) << ToString(p) ;
 
+    if (cli == "-qsearch"){
+        DepthType seldepth = 0;
+        double s = ThreadPool::instance().main().qsearchNoPruning(-10000,10000,p,1,seldepth);
+        LogIt(logInfo) << "Score " << s;
+        return 1;
+    }
+
     if (cli == "-seeval") {
         // K3r3/4r3/k2n1nb1/8/R1q1P2R/8/2QN1N2/1B6 b - - 0 1
         /*

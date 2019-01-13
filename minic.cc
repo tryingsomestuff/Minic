@@ -179,8 +179,8 @@ ScoreType   doublePawnMalusEG     = 15;
 ScoreType   isolatedPawnMalus     = 5;
 ScoreType   isolatedPawnMalusEG   = 15;
 ScoreType   pawnShieldBonus       = 15;
-float   protectedPasserFactor     = 0.25; // 125%
-float   freePasserFactor          = 0.9; // 190%
+float       protectedPasserFactor = 0.25; // 125%
+float       freePasserFactor      = 0.9; // 190%
 
 ScoreType   adjKnight[9]  = { -24, -18, -12, -6,  0,  6,  12, 18, 24 };
 ScoreType   adjRook[9]    = {  48,  36,  24, 12,  0,-12, -24,-36,-48 };
@@ -2233,6 +2233,9 @@ const ScoreType MOBEG[6][28] = { {0,0,0,0},
 
 ScoreType eval(const Position & p, float & gp){
 
+    ///@todo  make a KPK table !
+    ///@todo  make a fence detection in draw eval
+
     ScoreType sc = 0;
     //SCoreType scEG = 0; ///@todo avoid all the multiplications here !
     if (TT::getEvalEntry(computeHash(p), sc, gp)) return sc;
@@ -2249,13 +2252,14 @@ ScoreType eval(const Position & p, float & gp){
     gp = (absscore*0.4f + pieceScore * 0.3f + pawnScore * 0.3f);
     const float gpCompl = 1.f - gp;
 
-    // material
+    // material (symetric version)
     sc += (p.mat.nwk - p.mat.nbk) * ScoreType(gp* *absValues[P_wk] + gpCompl * *absValuesEG[P_wk])
         + (p.mat.nwq - p.mat.nbq) * ScoreType(gp* *absValues[P_wq] + gpCompl * *absValuesEG[P_wq])
         + (p.mat.nwr - p.mat.nbr) * ScoreType(gp* *absValues[P_wr] + gpCompl * *absValuesEG[P_wr])
         + (p.mat.nwb - p.mat.nbb) * ScoreType(gp* *absValues[P_wb] + gpCompl * *absValuesEG[P_wb])
         + (p.mat.nwn - p.mat.nbn) * ScoreType(gp* *absValues[P_wn] + gpCompl * *absValuesEG[P_wn])
         + (p.mat.nwp - p.mat.nbp) * ScoreType(gp* *absValues[P_wp] + gpCompl * *absValuesEG[P_wp]);
+
     const bool white2Play = p.c == Co_White;
 
     // pst & mobility & ///@todo attack
@@ -2309,8 +2313,8 @@ ScoreType eval(const Position & p, float & gp){
     // use attack score
     //sc+=ScoreType(attSc*5);
 
-    // in very end game winning king must be near the other king
-    if (gp < 0.3 && p.wk != INVALIDSQUARE && p.bk != INVALIDSQUARE) sc -= ScoreType((sc>0?+1:-1)*chebyshevDistance(p.wk, p.bk)*15*gpCompl);
+    // in very end game winning king must be near the other king (helps in KQK or KRK)
+    if (p.mat.np == 0 && p.wk != INVALIDSQUARE && p.bk != INVALIDSQUARE) sc -= ScoreType((sc>0?+1:-1)*chebyshevDistance(p.wk, p.bk)*35);
 
     // passer
     ///@todo candidate passed
@@ -2491,6 +2495,8 @@ ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const
     ++stats.qnodes;
 
     ScoreType val = eval(p,gp);
+    ScoreType bestScore = val;
+
     if ( val >= beta ) return val;
     if ( val > alpha) alpha = val;
 
@@ -2504,12 +2510,15 @@ ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const
         if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply + 1;
         if (p.c == Co_Black && Move2To(*it) == p.wk) return MATE - ply + 1;
         val = -qsearchNoPruning(-beta,-alpha,p2,ply+1,seldepth);
-        if ( val > alpha ){
-            if ( val >= beta ) return val;
-            alpha = val;
+        if ( val > bestScore){
+           bestScore = val;
+           if ( val > alpha ){
+              if ( val >= beta ) return val;
+              alpha = val;
+           }
         }
     }
-    return val;
+    return bestScore;
 }
 
 ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth){
@@ -2524,6 +2533,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     ++stats.qnodes;
 
     ScoreType val = eval(p,gp);
+    ScoreType bestScore = val;
     MaterialHash::Terminaison drawStatus = interorNodeRecognizer(p, false, false);
     if (drawStatus == MaterialHash::Ter_HardToWin || drawStatus == MaterialHash::Ter_LikelyDraw) val = ScoreType(val/3.f); // eval scaling
     if ( val >= beta ) return val;
@@ -2547,12 +2557,15 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
         if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply + 1;
         if (p.c == Co_Black && Move2To(*it) == p.wk) return MATE - ply + 1;
         val = -qsearch(-beta,-alpha,p2,ply+1,seldepth);
-        if ( val > alpha ){
-            if ( val >= beta ) return val;
-            alpha = val;
+        if ( val > bestScore){
+           bestScore = val;
+           if ( val > alpha ){
+              if ( val >= beta ) return val;
+              alpha = val;
+           }
         }
     }
-    return val;
+    return bestScore;
 }
 
 inline void updatePV(std::vector<Move> & pv, const Move & m, const std::vector<Move> & childPV) {
@@ -2624,8 +2637,10 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     bool futility = false, lmp = false, moveGenerated = false;
     std::vector<Move> moves;
 
+    const bool isNotEndGame = gp > 0.2 && p.mat.np > 0 && (p.mat.nwt+p.mat.nbt > 2);
+
     // prunings
-    if ( !DynamicConfig::mateFinder && !rootnode && gp > 0.2 && !pvnode && !isInCheck && !isMateScore(alpha) && !isMateScore(beta) ){
+    if ( !DynamicConfig::mateFinder && !rootnode && isNotEndGame && !pvnode && !isInCheck && !isMateScore(alpha) && !isMateScore(beta) ){
 
         // static null move
         if ( StaticConfig::doStaticNullMove && depth <= StaticConfig::staticNullMoveMaxDepth && val >= beta + StaticConfig::staticNullMoveDepthCoeff *depth ) return val;
@@ -3308,7 +3323,7 @@ int main(int argc, char ** argv){
 #endif
 
 #ifdef WITH_TEXEL_TUNING
-    if ( argc > 1 && std::string(argv[1]) == "-texel" ) { TexelTuning("tuning/minic.fens.json"); return 0;}
+    if ( argc > 1 && std::string(argv[1]) == "-texel" ) { TexelTuning("tuning/Ethereal.fens.json"); return 0;}
 #endif
 
 #ifdef DEBUG_TOOL
