@@ -27,11 +27,11 @@ typedef uint64_t u_int64_t;
 #include "json.hpp"
 
 //#define IMPORTBOOK
-#define WITH_TEXEL_TUNING
+//#define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
 #define WITH_TEST_SUITE
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "0.31";
 
 typedef std::chrono::system_clock Clock;
 typedef char DepthType;
@@ -2218,11 +2218,11 @@ MaterialHash::Terminaison ThreadContext::interorNodeRecognizer(const Position & 
 int chebyshevDistance(Square sq1, Square sq2) { return std::max(std::abs((sq2 >> 3) - (sq1 >> 3)) , std::abs((sq2 & 7) - (sq1 & 7))); }
 
 const ScoreType MOB[6][28] = { {0,0,0,0},
-                                 {-22,-15,-10,5,0,5,8,12,14,15},
-                                 {-18,-8,0,5,10,15,20,25,28,30,32,34,36,38},
-                                 {-20,-16,-12,-8,4,0,0,4,8,12,16,20,24,27,30},
-                                 {-19,-18,-16,-14,-12,-10,0,3,6,9,12,15,18,21,24,27,30,33,35,38,41,43,46,48,49,50,51},
-                                 {-20,0,5,10,11,12,13,14} };
+                               {-22,-15,-10,5,0,5,8,12,14,15},
+                               {-18,-8,0,5,10,15,20,25,28,30,32,34,36,38},
+                               {-20,-16,-12,-8,4,0,0,4,8,12,16,20,24,27,30},
+                               {-19,-18,-16,-14,-12,-10,0,3,6,9,12,15,18,21,24,27,30,33,35,38,41,43,46,48,49,50,51},
+                               {-20,0,5,10,11,12,13,14} };
 
 const ScoreType MOBEG[6][28] = { {0,0,0,0},
                                  {-22,-15,-10,5,0,5,8,12,14,15},
