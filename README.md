@@ -13,16 +13,16 @@ Have a look in the Dist directory for releases. Some more stable/official ones w
 Quite poor for a chess engine (around 2350) but already way to strong for me !
 
 ```
-   1 fruit_21                      278      51     250   83.2%   13.6%
-   2 drosophila-win64              117      41     250   66.2%   18.8%
-   3 Minic                          55      39     250   57.8%   21.2%
-   4 Minic 0.29                     -8      37     250   48.8%   27.2%
-   5 myrddin                       -13      39     250   48.2%   18.0%
-   6 MadChess.Engine               -55      38     250   42.2%   23.6%
-   7 Bitfoot                       -69      39     250   40.2%   20.4%
-   8 sungorus64                    -78      40     250   39.0%   16.4%
-   9 Minic 0.28                    -88      39     250   37.6%   21.6%
-  10 Horizon_4_4                   -94      40     250   36.8%   18.4%
+   1 fruit_21                      289      19    1782   84.1%   12.6%
+   2 drosophila-win64              118      15    1782   66.4%   17.0%
+   3 Minic                          26      14    1782   53.7%   21.3%
+   4 myrddin                        -2      15    1782   49.7%   16.7%
+   5 Minic 0.29                     -9      14    1782   48.7%   23.9%
+   6 MadChess.Engine               -38      15    1782   44.6%   18.6%
+   7 sungorus64                    -63      15    1782   41.0%   19.1%
+   8 Bitfoot                       -72      15    1782   39.8%   16.6%
+   9 Minic 0.28                    -98      15    1782   36.3%   20.9%
+  10 Horizon_4_4                  -101      15    1782   35.8%   15.8%
 ```
 
 Actual WAC score is 274 (10sec per position on an old i7-2600K).
