@@ -13,6 +13,7 @@ Have a look in the Dist directory for releases. Some more stable/official ones w
 Quite poor for a chess engine (around 2350) but already way to strong for me !
 
 ```
+Rank Name                          Elo     +/-   Games   Score   Draws
    1 fruit_21                      289      19    1782   84.1%   12.6%
    2 drosophila-win64              118      15    1782   66.4%   17.0%
    3 Minic                          26      14    1782   53.7%   21.3%
