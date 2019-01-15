@@ -31,7 +31,7 @@ typedef uint64_t u_int64_t;
 //#define DEBUG_TOOL
 #define WITH_TEST_SUITE
 
-const std::string MinicVersion = "0.31";
+const std::string MinicVersion = "0.32";
 
 typedef std::chrono::system_clock Clock;
 typedef char DepthType;
@@ -2301,7 +2301,7 @@ ScoreType eval(const Position & p, float & gp){
         const Square k = BB::popBit(pieceBBiterator);
         const Piece ptype = getPieceType(p, k);
         sc -= ScoreType((gp*PST[ptype - 1][k] + gpCompl * PSTEG[ptype - 1][k]));
-        if (ptype != P_bp) {
+        if (ptype != P_wp) {
             const BitBoard curAtt = pf[ptype-1](k, p.occupancy, p.c) & ~p.blackPiece;
             //blackAttack[ptype-1] |= curAtt;
             const uint64_t n = countBit(curAtt);
