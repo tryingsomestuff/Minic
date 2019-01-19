@@ -31,16 +31,7 @@ typedef uint64_t u_int64_t;
 //#define DEBUG_TOOL
 #define WITH_TEST_SUITE
 
-const std::string MinicVersion = "0.32";
-
-typedef std::chrono::system_clock Clock;
-typedef char DepthType;
-typedef int Move;    // invalid if < 0
-typedef char Square; // invalid if < 0
-typedef uint64_t Hash; // invalid if == 0
-typedef uint64_t Counter;
-typedef short int ScoreType;
-typedef uint64_t BitBoard;
+const std::string MinicVersion = "dev";
 
 #define STOPSCORE   ScoreType(20000)
 #define INFSCORE    ScoreType(15000)
@@ -54,6 +45,15 @@ typedef uint64_t BitBoard;
 #define SQFILE(s) (s%8)
 #define SQRANK(s) (s/8)
 
+typedef std::chrono::system_clock Clock;
+typedef char DepthType;
+typedef int Move;    // invalid if < 0
+typedef char Square; // invalid if < 0
+typedef uint64_t Hash; // invalid if == 0
+typedef uint64_t Counter;
+typedef short int ScoreType;
+typedef uint64_t BitBoard;
+
 namespace StaticConfig{
 const bool doWindow         = true;
 const bool doPVS            = true;
@@ -64,7 +64,7 @@ const bool doLMP            = true;
 const bool doStaticNullMove = true;
 const bool doRazoring       = true;
 const bool doQFutility      = true;
-const bool doProbcut        = false; ///@todo
+const bool doProbcut        = true;
 
 const ScoreType qfutilityMargin          = 128;
 const int       staticNullMoveMaxDepth   = 6;
@@ -2634,7 +2634,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     else val = hashUsable?e.score:eval(p, gp);
     scoreStack[p.ply] = val;
 
-    bool futility = false, lmp = false, moveGenerated = false;
+    bool futility = false, lmp = false;
     std::vector<Move> moves;
 
     const bool isNotEndGame = gp > 0.2 && p.mat.np > 0 && (p.mat.nwt+p.mat.nbt > 2);
@@ -2733,12 +2733,9 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         }
     }
 
-    if (!moveGenerated){
-       generate(p,moves);
-       moveGenerated = true;
-       if ( moves.empty() ) return isInCheck?-MATE + ply : 0;
-       sort(*this,moves,p,&e);
-    }
+    generate(p,moves);
+    if ( moves.empty() ) return isInCheck?-MATE + ply : 0;
+    sort(*this,moves,p,&e);
     const bool improving = (!isInCheck && ply >= 2 && val >= scoreStack[p.ply - 2]);
 
     TT::Bound hashBound = TT::B_alpha;
