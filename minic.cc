@@ -64,7 +64,7 @@ const bool doLMP            = true;
 const bool doStaticNullMove = true;
 const bool doRazoring       = true;
 const bool doQFutility      = true;
-const bool doProbcut        = true;
+const bool doProbcut        = false;
 
 const ScoreType qfutilityMargin          = 128;
 const int       staticNullMoveMaxDepth   = 6;
@@ -939,11 +939,13 @@ struct ThreadContext{
         }
     };
 
+    ///@todo counter move
+
     KillerT killerT;
     HistoryT historyT;
 
     ScoreType pvs    (ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove = INVALIDMOVE);
-    ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
+    ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth, DepthType qDepth);
     ScoreType qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
     bool SEE(const Position & p, const Move & m, ScoreType threshold)const;
     template< bool display = false> ScoreType SEEVal(const Position & p, const Move & m)const;
@@ -2489,6 +2491,12 @@ ScoreType eval(const Position & p, float & gp){
     return sc;
 }
 
+ScoreType adjustHashScore(ScoreType score, DepthType ply){
+  if      (isMatingScore(score)) score -= ply;
+  else if (isMatedScore (score)) score += ply;
+  return score;
+}
+
 ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth){
     float gp = 0;
 
@@ -2521,7 +2529,7 @@ ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const
     return bestScore;
 }
 
-ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth){
+ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth, DepthType qDepth){
     float gp = 0;
     if ( ply >= MAX_PLY-1 ) return eval(p,gp);
     alpha = std::max(alpha, (ScoreType)(-MATE + ply));
@@ -2539,11 +2547,18 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     if ( val >= beta ) return val;
     if ( val > alpha) alpha = val;
 
+    TT::Entry e;
+    if (qDepth == 0 && TT::getEntry(computeHash(p), 0, e)) {
+        if ( e.h != 0 && !isMateScore(e.score) && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
+           return adjustHashScore(e.score, ply);
+        }
+    }
+
     //const bool isInCheck = isAttacked(p, kingSquare(p));
 
     std::vector<Move> moves;
     generate(p,moves,GP_cap);
-    sort(*this,moves,p);
+    sort(*this,moves,p,qDepth==0?&e:0);
 
     const ScoreType alphaInit = alpha;
 
@@ -2556,7 +2571,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
         if ( ! apply(p2,*it) ) continue;
         if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply + 1;
         if (p.c == Co_Black && Move2To(*it) == p.wk) return MATE - ply + 1;
-        val = -qsearch(-beta,-alpha,p2,ply+1,seldepth);
+        val = -qsearch(-beta,-alpha,p2,ply+1,seldepth,qDepth-1);
         if ( val > bestScore){
            bestScore = val;
            if ( val > alpha ){
@@ -2591,12 +2606,6 @@ inline bool singularExtension(ThreadContext & context, ScoreType alpha, ScoreTyp
     return false;
 }
 
-ScoreType adjustHashScore(ScoreType score, DepthType ply){
-  if      (isMatingScore(score)) score -= ply;
-  else if (isMatedScore (score)) score += ply;
-  return score;
-}
-
 // pvs inspired by Xiphos
 ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove){
 
@@ -2604,7 +2613,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     if ((int)ply > seldepth) seldepth = ply;
 
-    if ( depth <= 0 ) return qsearch(alpha,beta,p,ply,seldepth);
+    if ( depth <= 0 ) return qsearch(alpha,beta,p,ply,seldepth,0);
 
     ++stats.nodes;
 
@@ -2648,7 +2657,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         // razoring
         int rAlpha = alpha - StaticConfig::razoringMargin;
         if ( StaticConfig::doRazoring && depth <= StaticConfig::razoringMaxDepth && val <= rAlpha ){
-            const ScoreType qval = qsearch(rAlpha,rAlpha+1,p,ply,seldepth);
+            const ScoreType qval = qsearch(rAlpha,rAlpha+1,p,ply,seldepth,0);
             if ( ! stopFlag && qval <= alpha ) return qval;
             if ( stopFlag ) return STOPSCORE;
         }
@@ -2683,7 +2692,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             Position p2 = p;
             if ( ! apply(p2,*it) ) continue;
             ++probCutCount;
-            ScoreType scorePC = betaPC; // -qsearch(-betaPC, -betaPC + 1, p2, ply + 1, seldepth);
+            ScoreType scorePC = betaPC; // -qsearch(-betaPC, -betaPC + 1, p2, ply + 1, seldepth,0);
             std::vector<Move> pvPC;
             if (!stopFlag && scorePC >= betaPC) scorePC = -pvs(-betaPC,-betaPC+1,p2,depth-StaticConfig::probCutMinDepth+1,pvnode,ply+1,pvPC,seldepth);
             if (!stopFlag && scorePC >= betaPC) return scorePC;
