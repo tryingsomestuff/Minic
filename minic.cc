@@ -29,7 +29,7 @@ typedef uint64_t u_int64_t;
 //#define IMPORTBOOK
 //#define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
-#define WITH_TEST_SUITE
+//#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 
 const std::string MinicVersion = "dev";
@@ -341,6 +341,13 @@ struct Position{
     Material mat;
 };
 
+//int manhattanDistance(Square sq1, Square sq2) { return std::abs((sq2 >> 3) - (sq1 >> 3)) + std::abs((sq2 & 7) - (sq1 & 7));}
+int chebyshevDistance(Square sq1, Square sq2) { return std::max(std::abs((sq2 >> 3) - (sq1 >> 3)) , std::abs((sq2 & 7) - (sq1 & 7))); }
+
+enum GenPhase{ GP_all = 0, GP_cap = 1, GP_quiet = 2};
+
+void generate(const Position & p, std::vector<Move> & moves, GenPhase phase = GP_all);
+
 namespace MaterialHash { // from Gull
     const int MatWQ = 1;
     const int MatBQ = 3;
@@ -428,24 +435,85 @@ namespace MaterialHash { // from Gull
         return mat;
     }
 
-    enum Terminaison : unsigned char { Ter_Unknown = 0, Ter_WhiteWin, Ter_BlackWin, Ter_Draw, Ter_LikelyDraw, Ter_HardToWin };
+    enum Terminaison : unsigned char { Ter_Unknown = 0, Ter_WhiteWinWithHelper, Ter_WhiteWin, Ter_BlackWinWithHelper, Ter_BlackWin, Ter_Draw, Ter_LikelyDraw, Ter_HardToWin };
 
     Terminaison reverseTerminaison(Terminaison t) {
         switch (t) {
         case Ter_Unknown:
         case Ter_Draw:
-        case Ter_LikelyDraw: return t;
-        case Ter_WhiteWin:   return Ter_BlackWin;
-        case Ter_BlackWin:   return Ter_WhiteWin;
-        default:             return Ter_Unknown;
+        case Ter_LikelyDraw:           return t;
+        case Ter_WhiteWin:             return Ter_BlackWin;
+        case Ter_WhiteWinWithHelper:   return Ter_BlackWinWithHelper;
+        case Ter_BlackWin:             return Ter_WhiteWin;
+        case Ter_BlackWinWithHelper:   return Ter_WhiteWinWithHelper;
+        default:                       return Ter_Unknown;
         }
     }
 
-    Terminaison materialHashTable[TotalMat];
+    const int pushToEdges[64] = {
+      100, 90, 80, 70, 70, 80, 90, 100,
+       90, 70, 60, 50, 50, 60, 70,  90,
+       80, 60, 40, 30, 30, 40, 60,  80,
+       70, 50, 30, 20, 20, 30, 50,  70,
+       70, 50, 30, 20, 20, 30, 50,  70,
+       80, 60, 40, 30, 30, 40, 60,  80,
+       90, 70, 60, 50, 50, 60, 70,  90,
+      100, 90, 80, 70, 70, 80, 90, 100
+    };
+
+    const int pushToCorners[64] = {
+      200, 190, 180, 170, 160, 150, 140, 130,
+      190, 180, 170, 160, 150, 140, 130, 140,
+      180, 170, 155, 140, 140, 125, 140, 150,
+      170, 160, 140, 120, 110, 140, 150, 160,
+      160, 150, 140, 110, 120, 140, 160, 170,
+      150, 140, 125, 140, 140, 155, 170, 180,
+      140, 130, 140, 150, 160, 170, 180, 190,
+      130, 140, 150, 160, 170, 180, 190, 200
+    };
+
+    const int pushClose[8] = { 0, 0, 100, 80, 60, 40, 20,  10 };
+    const int pushAway [8] = { 0, 5,  20, 40, 60, 80, 90, 100 };
+
+    ScoreType (* helperTable[TotalMat])(const Position &) = {0};
+    Terminaison materialHashTable[TotalMat] = {Ter_Unknown};
+
+    ScoreType helperKXK(const Position &p){
+        const Color winningSide = (countBit(p.whiteQueen|p.whiteRook)!=0 ? Co_White : Co_Black);
+        if (p.c != winningSide ){ // stale mate detection for losing side
+            std::vector<Move> moves;
+            generate(p,moves,GP_all);
+            if ( moves.empty()) return 0;
+        }
+        const bool whiteWins = winningSide == Co_White;
+        const Square winningK = (whiteWins ? p.wk : p.bk);
+        const Square losingK  = (whiteWins ? p.bk : p.wk);
+        const ScoreType sc = pushToEdges[losingK] + pushClose[chebyshevDistance(winningK,losingK)];
+        return whiteWins?sc:-sc;
+    }
+    ScoreType helperKmmK(const Position &p){
+        const Color winningSide = (countBit(p.whiteBishop|p.whiteKnight)!=0 ? Co_White : Co_Black);
+        const bool whiteWins = winningSide == Co_White;
+        Square winningK = (whiteWins ? p.wk : p.bk);
+        Square losingK  = (whiteWins ? p.bk : p.wk);
+        if ( ((p.whiteBishop|p.blackBishop) & whiteSquare) != 0 ){
+            winningK = ~winningK;
+            losingK  = ~losingK;
+        }
+        const ScoreType sc = pushToCorners[losingK] + pushClose[chebyshevDistance(winningK,losingK)];
+        return whiteWins?sc:-sc;
+    }
+    ScoreType helperDummy(const Position &p){
+        return 0;
+    }
 
     struct MaterialHashInitializer {
         MaterialHashInitializer(const Position::Material & mat, Terminaison t) { materialHashTable[getMaterialHash(mat)] = t; }
-        static void init() { std::memset(materialHashTable, Ter_Unknown, sizeof(Terminaison)*TotalMat); }
+        MaterialHashInitializer(const Position::Material & mat, Terminaison t, ScoreType (*helper)(const Position &) ) { materialHashTable[getMaterialHash(mat)] = t; helperTable[getMaterialHash(mat)] = helper; }
+        static void init() {
+            //std::memset(materialHashTable, Ter_Unknown, sizeof(Terminaison)*TotalMat);
+            //for(size_t k = 0 ; k < TotalMat ; ++k) helperTable[k] = &helperDummy;
+        }
     };
 
 #define TO_STR2(x) #x
@@ -454,7 +522,9 @@ namespace MaterialHash { // from Gull
 #define JOIN(symbol1,symbol2) _DO_JOIN(symbol1,symbol2 )
 #define _DO_JOIN(symbol1,symbol2) symbol1##symbol2
 #define DEF_MAT(x,t) const Position::Material MAT##x = materialFromString( TO_STR(x) ); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t);
+#define DEF_MAT_H(x,t,h) const Position::Material MAT##x = materialFromString( TO_STR(x) ); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t,h);
 #define DEF_MAT_REV(rev,x) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)]));
+#define DEF_MAT_REV_H(rev,x,h) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)]),h);
 
     // sym (and pseudo sym) : all should be draw
     DEF_MAT(KK,     Ter_Draw)
@@ -607,14 +677,14 @@ namespace MaterialHash { // from Gull
     DEF_MAT_REV(KNKD,KDKN)
 
     // X 0 : QR win, BN draw
-    DEF_MAT(KQK, Ter_WhiteWin)
-    DEF_MAT(KRK, Ter_WhiteWin)
+    DEF_MAT_H(KQK, Ter_WhiteWinWithHelper,&helperKXK)
+    DEF_MAT_H(KRK, Ter_WhiteWinWithHelper,&helperKXK)
     DEF_MAT(KLK, Ter_Draw)
     DEF_MAT(KDK, Ter_Draw)
     DEF_MAT(KNK, Ter_Draw)
 
-   DEF_MAT_REV(KKQ,KQK)
-   DEF_MAT_REV(KKR,KRK)
+   DEF_MAT_REV_H(KKQ,KQK,&helperKXK)
+   DEF_MAT_REV_H(KKR,KRK,&helperKXK)
    DEF_MAT_REV(KKL,KLK)
    DEF_MAT_REV(KKD,KDK)
    DEF_MAT_REV(KKN,KNK)
@@ -622,21 +692,21 @@ namespace MaterialHash { // from Gull
     // 2X 0 : all win except LL, DD, NN
     DEF_MAT(KQQK, Ter_WhiteWin)
     DEF_MAT(KRRK, Ter_WhiteWin)
-    DEF_MAT(KLDK, Ter_WhiteWin)
+    DEF_MAT_H(KLDK, Ter_WhiteWinWithHelper,&helperKmmK)
     DEF_MAT(KLLK, Ter_Draw)
     DEF_MAT(KDDK, Ter_Draw)
     DEF_MAT(KNNK, Ter_Draw)
-    DEF_MAT(KLNK, Ter_WhiteWin)
-    DEF_MAT(KDNK, Ter_WhiteWin)
+    DEF_MAT_H(KLNK, Ter_WhiteWinWithHelper,&helperKmmK)
+    DEF_MAT_H(KDNK, Ter_WhiteWinWithHelper,&helperKmmK)
 
     DEF_MAT_REV(KKQQ,KQQK)
     DEF_MAT_REV(KKRR,KRRK)
-    DEF_MAT_REV(KKLD,KLDK)
+    DEF_MAT_REV_H(KKLD,KLDK,&helperKmmK)
     DEF_MAT_REV(KKLL,KLLK)
     DEF_MAT_REV(KKDD,KDDK)
     DEF_MAT_REV(KKNN,KNNK)
-    DEF_MAT_REV(KKLN,KLNK)
-    DEF_MAT_REV(KKDN,KDNK)
+    DEF_MAT_REV_H(KKLN,KLNK,&helperKmmK)
+    DEF_MAT_REV_H(KKDN,KDNK,&helperKmmK)
 
     ///@todo other (with pawn ...)
 
@@ -1735,8 +1805,6 @@ inline bool isAttacked(const Position & p, const Square k) { return k!=INVALIDSQ
 
 inline bool getAttackers(const Position & p, const Square k, std::vector<Square> & attakers) { return k!=INVALIDSQUARE && BB::getAttackers(p, k, attakers);}
 
-enum GenPhase{ GP_all = 0, GP_cap = 1, GP_quiet = 2};
-
 void generateSquare(const Position & p, std::vector<Move> & moves, Square from, GenPhase phase = GP_all){
     assert(from != INVALIDSQUARE);
     const Color side = p.c;
@@ -1801,7 +1869,7 @@ void generateSquare(const Position & p, std::vector<Move> & moves, Square from, 
     }
 }
 
-void generate(const Position & p, std::vector<Move> & moves, GenPhase phase = GP_all){
+void generate(const Position & p, std::vector<Move> & moves, GenPhase phase){
     moves.clear();
     BitBoard myPieceBBiterator = ( (p.c == Co_White) ? p.whitePiece : p.blackPiece);
     while (myPieceBBiterator) generateSquare(p,moves,BB::popBit(myPieceBBiterator),phase);
@@ -2233,9 +2301,6 @@ MaterialHash::Terminaison ThreadContext::interiorNodeRecognizer(const Position &
     return MaterialHash::Ter_Unknown;
 }
 
-//int manhattanDistance(Square sq1, Square sq2) { return std::abs((sq2 >> 3) - (sq1 >> 3)) + std::abs((sq2 & 7) - (sq1 & 7));}
-int chebyshevDistance(Square sq1, Square sq2) { return std::max(std::abs((sq2 >> 3) - (sq1 >> 3)) , std::abs((sq2 & 7) - (sq1 & 7))); }
-
 const ScoreType MOB[6][28] = { {0,0,0,0},
                                {-22,-15,-10,5,0,5,8,12,14,15},
                                {-18,-8,0,5,10,15,20,25,28,30,32,34,36,38},
@@ -2252,8 +2317,9 @@ const ScoreType MOBEG[6][28] = { {0,0,0,0},
 
 ScoreType eval(const Position & p, float & gp){
 
-    ///@todo  make a KPK table !
     ///@todo  make a fence detection in draw eval
+
+    gp = 0.1; // in case an helper is used for a known win, this value will be returned
 
     ScoreType sc = 0;
     //SCoreType scEG = 0; ///@todo avoid all the multiplications here !
@@ -2263,7 +2329,8 @@ ScoreType eval(const Position & p, float & gp){
     static ScoreType *absValues[7]   = { &dummyScore, &Values  [P_wp + PieceShift], &Values  [P_wn + PieceShift], &Values  [P_wb + PieceShift], &Values  [P_wr + PieceShift], &Values  [P_wq + PieceShift], &Values  [P_wk + PieceShift] };
     static ScoreType *absValuesEG[7] = { &dummyScore, &ValuesEG[P_wp + PieceShift], &ValuesEG[P_wn + PieceShift], &ValuesEG[P_wb + PieceShift], &ValuesEG[P_wr + PieceShift], &ValuesEG[P_wq + PieceShift], &ValuesEG[P_wk + PieceShift] };
 
-    // game phase ///@todo tune this, but care it seems to have a huge impact
+    // game phase
+    ///@todo tune this, but care it seems to have a huge impact
     /*static*/ const float totalAbsScore = 2.f * *absValues[P_wq] + 4.f * *absValues[P_wr] + 4.f * *absValues[P_wb] + 4.f * *absValues[P_wn] + 16.f * *absValues[P_wp];
     const float absscore = ((p.mat.nwq + p.mat.nbq) * *absValues[P_wq] + (p.mat.nwr + p.mat.nbr) * *absValues[P_wr] + (p.mat.nwb + p.mat.nbb) * *absValues[P_wb] + (p.mat.nwn + p.mat.nbn) * *absValues[P_wn] + (p.mat.nwp + p.mat.nbp) * *absValues[P_wp]) / totalAbsScore;
     const float pawnScore = p.mat.np / 16.f;
@@ -2280,6 +2347,17 @@ ScoreType eval(const Position & p, float & gp){
         + (p.mat.nwp - p.mat.nbp) * ScoreType(gp* *absValues[P_wp] + gpCompl * *absValuesEG[P_wp]);
 
     const bool white2Play = p.c == Co_White;
+
+    /*
+    const Hash matHash = MaterialHash::getMaterialHash(p.mat);
+    const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
+    if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ){
+       sc += MaterialHash::helperTable[matHash](p);
+       sc = (white2Play?+1:-1)*sc;
+       TT::setEvalEntry({ sc, gp, computeHash(p) });
+       return sc;
+    }
+    */
 
     // pst & mobility & ///@todo attack
     static BitBoard(*const pf[])(const Square, const BitBoard, const  Color) = { &BB::coverage<P_wp>, &BB::coverage<P_wn>, &BB::coverage<P_wb>, &BB::coverage<P_wr>, &BB::coverage<P_wq>, &BB::coverage<P_wk> };
@@ -2331,9 +2409,6 @@ ScoreType eval(const Position & p, float & gp){
 
     // use attack score
     //sc+=ScoreType(attSc*5);
-
-    // in very end game winning king must be near the other king (helps in KQK or KRK)
-    if (p.mat.np == 0 && p.wk != INVALIDSQUARE && p.bk != INVALIDSQUARE) sc -= ScoreType((sc>0?+1:-1)*chebyshevDistance(p.wk, p.bk)*35);
 
     // passer
     ///@todo candidate passed
@@ -2502,6 +2577,9 @@ ScoreType eval(const Position & p, float & gp){
     sc -= ScoreType(((p.blackKing & blackKingQueenSide ) != 0ull)*countBit(p.blackPawn & blackQueenSidePawnShield2)*pawnShieldBonus / 2 * gp);
     sc -= ScoreType(((p.blackKing & blackKingKingSide  ) != 0ull)*countBit(p.blackPawn & blackKingSidePawnShield1 )*pawnShieldBonus     * gp);
     sc -= ScoreType(((p.blackKing & blackKingKingSide  ) != 0ull)*countBit(p.blackPawn & blackKingSidePawnShield2 )*pawnShieldBonus / 2 * gp);
+
+    // tempo
+    sc += ScoreType(30*gp);
 
     sc = (white2Play?+1:-1)*sc;
     TT::setEvalEntry({ sc, gp, computeHash(p) });
