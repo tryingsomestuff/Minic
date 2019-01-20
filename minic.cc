@@ -30,6 +30,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
 #define WITH_TEST_SUITE
+//#define WITH_SYZYGY
 
 const std::string MinicVersion = "dev";
 
@@ -939,10 +940,21 @@ struct ThreadContext{
         }
     };
 
-    ///@todo counter move
-
+    struct CounterT{
+        ScoreType counter[64][64];
+        inline void initCounter(){
+            LogIt(logInfo) << "Init counter" ;
+            for(int i = 0; i < 64; ++i)
+                for(int k = 0 ; k < 64; ++k)
+                    counter[i][k] = 0;
+        }
+        inline void update(Move m, const Position & p){
+            if ( Move2Type(m) == T_std ) counter[Move2From(p.lastMove)][Move2To(p.lastMove)] = m;
+        }
+    };
     KillerT killerT;
     HistoryT historyT;
+    CounterT counterT;
 
     ScoreType pvs    (ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove = INVALIDMOVE);
     ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth, DepthType qDepth);
@@ -950,7 +962,8 @@ struct ThreadContext{
     bool SEE(const Position & p, const Move & m, ScoreType threshold)const;
     template< bool display = false> ScoreType SEEVal(const Position & p, const Move & m)const;
     std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth);
-    MaterialHash::Terminaison interorNodeRecognizer(const Position & p, bool withRep = true, bool isPV = true)const;
+    MaterialHash::Terminaison interiorNodeRecognizer(const Position & p, bool withRep = true, bool isPV = true)const;
+    bool isRep(const Position & p, bool isPv)const;
 
     void idleLoop(){
         while (true){
@@ -2178,6 +2191,7 @@ struct MoveSorter{
         }
         else if ( t == T_std){
             s += context.historyT.history[getPieceIndex(p,from)][to];
+            if ( sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 250;
             const bool isWhite = (p.whitePiece & SquareToBitboard(from)) != 0ull;
             s += PST[getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - PST[getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from];
         }
@@ -2197,19 +2211,22 @@ void sort(const ThreadContext & context, std::vector<Move> & moves, const Positi
     std::sort(moves.begin(),moves.end(),ms);
 }
 
-MaterialHash::Terminaison ThreadContext::interorNodeRecognizer(const Position & p, bool withRep, bool isPV)const{
+bool ThreadContext::isRep(const Position & p, bool isPV)const{
+    const int limit = isPV ? 3 : 1;
     int count = 0;
     const Hash h = computeHash(p);
-    if (withRep) {
-        const int limit = isPV ? 3 : 1;
-        for (int k = p.ply - 1; k >= 0; --k) {
-            if (hashStack[k] == 0) break;
-            if (hashStack[k] == h) ++count;
-            if (count >= limit) return MaterialHash::Ter_Draw;
-        }
+    for (int k = p.ply - 1; k >= 0; --k) {
+        if (hashStack[k] == 0) break;
+        if (hashStack[k] == h) ++count;
+        if (count >= limit) return true;
     }
-    if ( p.fifty >= 100 ) return MaterialHash::Ter_Draw;
-    if (p.mat.np == 0 )   return MaterialHash::probeMaterialHashTable(p.mat);
+    return false;
+}
+
+MaterialHash::Terminaison ThreadContext::interiorNodeRecognizer(const Position & p, bool withRep, bool isPV)const{
+    if (withRep && isRep(p,isPV)) return MaterialHash::Ter_Draw;
+    if ( p.fifty >= 100 )         return MaterialHash::Ter_Draw;
+    if (p.mat.np == 0 )           return MaterialHash::probeMaterialHashTable(p.mat);
     else { // some pawn are present
         ///@todo ... KPK
     }
@@ -2497,6 +2514,10 @@ ScoreType adjustHashScore(ScoreType score, DepthType ply){
   return score;
 }
 
+#ifdef WITH_SYZYGY
+#include "syzygyInterface.cc"
+#endif
+
 ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth){
     float gp = 0;
 
@@ -2542,7 +2563,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     ScoreType val = eval(p,gp);
     ScoreType bestScore = val;
-    MaterialHash::Terminaison drawStatus = interorNodeRecognizer(p, false, false);
+    MaterialHash::Terminaison drawStatus = interiorNodeRecognizer(p, false, false);
     if (drawStatus == MaterialHash::Ter_HardToWin || drawStatus == MaterialHash::Ter_LikelyDraw) val = ScoreType(val/3.f); // eval scaling
     if ( val >= beta ) return val;
     if ( val > alpha) alpha = val;
@@ -2589,10 +2610,11 @@ inline void updatePV(std::vector<Move> & pv, const Move & m, const std::vector<M
     std::copy(childPV.begin(), childPV.end(), std::back_inserter(pv));
 }
 
-inline void updateHistoryKillers(ThreadContext & context, const Position & p, DepthType depth, const Move m) {
+inline void updateTables(ThreadContext & context, const Position & p, DepthType depth, const Move m) {
     context.killerT.killers[1][p.ply] = context.killerT.killers[0][p.ply];
     context.killerT.killers[0][p.ply] = m;
     context.historyT.update(depth, m, p, true);
+    context.counterT.update(m,p);
 }
 
 inline bool singularExtension(ThreadContext & context, ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, const TT::Entry & e, const Move m, bool rootnode, int ply) {
@@ -2624,7 +2646,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     const bool rootnode = ply == 1;
 
     float gp = 0;
-    MaterialHash::Terminaison drawStatus = interorNodeRecognizer(p, true, pvnode);
+    MaterialHash::Terminaison drawStatus = interiorNodeRecognizer(p, true, pvnode);
     if (!rootnode && drawStatus == MaterialHash::Ter_Draw) return 0;
     if (ply >= MAX_PLY - 1 || depth >= MAX_DEPTH - 1) return eval(p, gp);
 
@@ -2635,6 +2657,14 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             return adjustHashScore(e.score, ply);
         }
     }
+
+#ifdef WITH_SYZYGY
+    ScoreType tbScore = 0;
+    if ( !rootnode && countBit(p.whitePiece|p.blackPiece) <= SyzygyTb::MAX_TB_MEN && SyzygyTb::probe_wdl(p, tbScore, false) > 0){
+       TT::setEntry({INVALIDMOVE,tbScore,TT::B_exact,DepthType(200),computeHash(p)});
+       return tbScore;
+    }
+#endif
 
     const bool isInCheck = isAttacked(p, kingSquare(p));
     ScoreType val;
@@ -2732,7 +2762,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if (ttval > alpha) {
                 updatePV(pv, e.m, childPV);
                 if (ttval >= beta) {
-                    //if (Move2Type(e.m) == T_std && !isInCheck) updateHistoryKillers(*this, p, depth, e.m); ///@todo ?
+                    //if (Move2Type(e.m) == T_std && !isInCheck) updateTables(*this, p, depth, e.m); ///@todo ?
                     if ( skipMove==INVALIDMOVE) TT::setEntry({ e.m,ttval,TT::B_beta,depth,computeHash(p) }); ///@todo this can only decrease depth ????
                     return ttval;
                 }
@@ -2742,6 +2772,14 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         }
     }
 
+#ifdef WITH_SYZYGY
+    if ( rootnode && countBit(p.whitePiece|p.blackPiece) <= SyzygyTb::MAX_TB_MEN){
+        ScoreType tbScore = 0;
+        if ( SyzygyTb::probe_root(*this,p,tbScore,moves) < 0 ) generate(p,moves);
+        //else LogIt(logInfo) << "tb hit root " << tbScore;
+    }
+    else
+#endif
     generate(p,moves);
     if ( moves.empty() ) return isInCheck?-MATE + ply : 0;
     sort(*this,moves,p,&e);
@@ -2813,7 +2851,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 hashBound = TT::B_exact;
                 if ( val >= beta ){
                     if ( Move2Type(*it) == T_std && !isInCheck){
-                        updateHistoryKillers(*this, p, depth, *it);
+                        updateTables(*this, p, depth, *it);
                         for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2)
                             if ( Move2Type(*it2) == T_std ) historyT.update(depth,*it2,p,false);
                     }
@@ -2848,6 +2886,7 @@ std::vector<Move> ThreadContext::search(const Position & p, Move & m, DepthType 
     //TT::clearTT(); // to be used for reproductible results
     killerT.initKillers();
     historyT.initHistory();
+    counterT.initCounter();
 
     TimeMan::startTime = Clock::now();
 
@@ -3323,6 +3362,10 @@ int main(int argc, char ** argv){
         std::ifstream bbook("book.bin",std::ios::in | std::ios::binary);
         Book::readBinaryBook(bbook);
     }
+
+#ifdef WITH_SYZYGY
+    SyzygyTb::initTB("syzygy");
+#endif
 
 #ifdef WITH_TEST_SUITE
     if ( argc > 1 && test(argv[1])) return 0;
