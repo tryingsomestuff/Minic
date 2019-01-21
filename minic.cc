@@ -104,17 +104,15 @@ inline void hellooo(){ std::cout << "# This is Minic version " << MinicVersion <
 
 inline std::string showDate() {
     std::stringstream str;
-    auto now = Clock::now();
-    auto msecEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
+    auto msecEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch());
     char buffer[64];
     auto tt = std::chrono::system_clock::to_time_t(std::chrono::system_clock::time_point(msecEpoch));
     std::strftime(buffer,63,"%Y-%m-%d %H:%M:%S",localtime(&tt));
-    str << buffer << "-";
-    str << std::setw(3) << std::setfill('0') << msecEpoch.count()%1000;
+    str << buffer << "-" << std::setw(3) << std::setfill('0') << msecEpoch.count()%1000;
     return str.str();
 }
 
-enum LogLevel : unsigned char{ logTrace = 0, logDebug = 1, logInfo  = 2, logWarn  = 3, logError = 4, logFatal = 5, logGUI   = 6};
+enum LogLevel : unsigned char{ logTrace = 0, logDebug = 1, logInfo = 2, logWarn = 3, logError = 4, logFatal = 5, logGUI = 6};
 
 std::string backtrace(){return "@todo:: backtrace";} ///@todo find a very simple portable implementation
 
@@ -124,10 +122,7 @@ class LogIt{
 public:
     LogIt(LogLevel loglevel):_level(loglevel){}
 
-    template <typename T> LogIt & operator<<(T const & value) {
-        _buffer << value;
-        return *this;
-    }
+    template <typename T> LogIt & operator<<(T const & value) { _buffer << value; return *this; }
 
     ~LogIt(){
         static const std::string _levelNames[7] = { "# Trace ", "# Debug ", "# Info  ", "# Warn  ", "# Error ", "# Fatal ", "" };
@@ -300,9 +295,8 @@ BitBoard dummy                           = 0x0ull;
 std::string showBitBoard(const BitBoard & b) {
     std::bitset<64> bs(b);
     std::stringstream ss;
-    ss ;
     for (int j = 7; j >= 0; --j) {
-        ss << "# +-+-+-+-+-+-+-+-+" << std::endl << "# |";
+        ss << "\n# +-+-+-+-+-+-+-+-+" << std::endl << "# |";
         for (int i = 0; i < 8; ++i) ss << (bs[i + j * 8] ? "X" : " ") << '|';
         ss << std::endl;
     }
@@ -365,10 +359,11 @@ namespace MaterialHash { // from Gull
     const int UnknownMaterialHash = -1;
 
     Hash getMaterialHash(const Position::Material & mat) {
-        if (mat.nwq > 2 || mat.nbq > 2 || mat.nwr > 2 || mat.nbr > 2 || mat.nwbl > 1 || mat.nbbl > 1 || mat.nwbd > 1 || mat.nbbd > 1 || mat.nwn > 2 || mat.nbn > 2 || mat.nwp > 8 || mat.nbp > 8) return -1;
+        if (mat.nwq > 2 || mat.nbq > 2 || mat.nwr > 2 || mat.nbr > 2 || mat.nwbl > 1 || mat.nbbl > 1 || mat.nwbd > 1 || mat.nbbd > 1 || mat.nwn > 2 || mat.nbn > 2 || mat.nwp > 8 || mat.nbp > 8) return 0;
         return mat.nwp * MatWP + mat.nbp * MatBP + mat.nwn * MatWN + mat.nbn * MatBN + mat.nwbl * MatWL + mat.nbbl * MatBL + mat.nwbd * MatWD + mat.nbbd * MatBD + mat.nwr * MatWR + mat.nbr * MatBR + mat.nwq * MatWQ + mat.nbq * MatBQ;
     }
 
+    /*
     Position::Material getMatFromHash(Hash index) {
         Position::Material mat;
         mat.nwq  = (int)(index % 3); index /= 3;        mat.nbq  = (int)(index % 3); index /= 3;
@@ -379,6 +374,7 @@ namespace MaterialHash { // from Gull
         mat.nwp  = (int)(index % 9); index /= 9;        mat.nbp  = (int)(index);
         return mat;
     }
+    */
 
     Position::Material getMatReverseColor(const Position::Material & mat) {
         Position::Material rev;
@@ -450,6 +446,7 @@ namespace MaterialHash { // from Gull
         }
     }
 
+    /*
     const int pushToEdges[64] = {
       100, 90, 80, 70, 70, 80, 90, 100,
        90, 70, 60, 50, 50, 60, 70,  90,
@@ -474,9 +471,6 @@ namespace MaterialHash { // from Gull
 
     const int pushClose[8] = { 0, 0, 100, 80, 60, 40, 20,  10 };
     const int pushAway [8] = { 0, 5,  20, 40, 60, 80, 90, 100 };
-
-    ScoreType (* helperTable[TotalMat])(const Position &) = {0};
-    Terminaison materialHashTable[TotalMat] = {Ter_Unknown};
 
     ScoreType helperKXK(const Position &p){
         const Color winningSide = (countBit(p.whiteQueen|p.whiteRook)!=0 ? Co_White : Co_Black);
@@ -506,11 +500,16 @@ namespace MaterialHash { // from Gull
     ScoreType helperDummy(const Position &p){
         return 0;
     }
+    */
+
+    //ScoreType (* helperTable[TotalMat])(const Position &) = {0};
+    Terminaison materialHashTable[TotalMat] = {Ter_Unknown};
 
     struct MaterialHashInitializer {
         MaterialHashInitializer(const Position::Material & mat, Terminaison t) { materialHashTable[getMaterialHash(mat)] = t; }
-        MaterialHashInitializer(const Position::Material & mat, Terminaison t, ScoreType (*helper)(const Position &) ) { materialHashTable[getMaterialHash(mat)] = t; helperTable[getMaterialHash(mat)] = helper; }
+        //MaterialHashInitializer(const Position::Material & mat, Terminaison t, ScoreType (*helper)(const Position &) ) { materialHashTable[getMaterialHash(mat)] = t; helperTable[getMaterialHash(mat)] = helper; }
         static void init() {
+            LogIt(logInfo) << "Material hash total : " << TotalMat;
             //std::memset(materialHashTable, Ter_Unknown, sizeof(Terminaison)*TotalMat);
             //for(size_t k = 0 ; k < TotalMat ; ++k) helperTable[k] = &helperDummy;
         }
@@ -522,9 +521,9 @@ namespace MaterialHash { // from Gull
 #define JOIN(symbol1,symbol2) _DO_JOIN(symbol1,symbol2 )
 #define _DO_JOIN(symbol1,symbol2) symbol1##symbol2
 #define DEF_MAT(x,t) const Position::Material MAT##x = materialFromString( TO_STR(x) ); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t);
-#define DEF_MAT_H(x,t,h) const Position::Material MAT##x = materialFromString( TO_STR(x) ); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t,h);
+#define DEF_MAT_H(x,t,h) const Position::Material MAT##x = materialFromString( TO_STR(x) ); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t/*,h*/);
 #define DEF_MAT_REV(rev,x) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)]));
-#define DEF_MAT_REV_H(rev,x,h) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)]),h);
+#define DEF_MAT_REV_H(rev,x,h) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)])/*,h*/);
 
     // sym (and pseudo sym) : all should be draw
     DEF_MAT(KK,     Ter_Draw)
@@ -683,11 +682,11 @@ namespace MaterialHash { // from Gull
     DEF_MAT(KDK, Ter_Draw)
     DEF_MAT(KNK, Ter_Draw)
 
-   DEF_MAT_REV_H(KKQ,KQK,&helperKXK)
-   DEF_MAT_REV_H(KKR,KRK,&helperKXK)
-   DEF_MAT_REV(KKL,KLK)
-   DEF_MAT_REV(KKD,KDK)
-   DEF_MAT_REV(KKN,KNK)
+    DEF_MAT_REV_H(KKQ,KQK,&helperKXK)
+    DEF_MAT_REV_H(KKR,KRK,&helperKXK)
+    DEF_MAT_REV(KKL,KLK)
+    DEF_MAT_REV(KKD,KDK)
+    DEF_MAT_REV(KKN,KNK)
 
     // 2X 0 : all win except LL, DD, NN
     DEF_MAT(KQQK, Ter_WhiteWin)
@@ -2279,7 +2278,7 @@ void sort(const ThreadContext & context, std::vector<Move> & moves, const Positi
     std::sort(moves.begin(),moves.end(),ms);
 }
 
-bool ThreadContext::isRep(const Position & p, bool isPV)const{
+inline bool ThreadContext::isRep(const Position & p, bool isPV)const{
     const int limit = isPV ? 3 : 1;
     int count = 0;
     const Hash h = computeHash(p);
@@ -2409,6 +2408,9 @@ ScoreType eval(const Position & p, float & gp){
 
     // use attack score
     //sc+=ScoreType(attSc*5);
+
+    // in very end game winning king must be near the other king (helps in KQK or KRK)
+    if (p.mat.np == 0 && p.wk != INVALIDSQUARE && p.bk != INVALIDSQUARE) sc -= ScoreType((sc>0?+1:-1)*chebyshevDistance(p.wk, p.bk)*35);
 
     // passer
     ///@todo candidate passed
@@ -2579,7 +2581,7 @@ ScoreType eval(const Position & p, float & gp){
     sc -= ScoreType(((p.blackKing & blackKingKingSide  ) != 0ull)*countBit(p.blackPawn & blackKingSidePawnShield2 )*pawnShieldBonus / 2 * gp);
 
     // tempo
-    sc += ScoreType(30*gp);
+    //sc += ScoreType(30*gp);
 
     sc = (white2Play?+1:-1)*sc;
     TT::setEvalEntry({ sc, gp, computeHash(p) });
@@ -2646,18 +2648,20 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     if ( val >= beta ) return val;
     if ( val > alpha) alpha = val;
 
+    /*
     TT::Entry e;
     if (qDepth == 0 && TT::getEntry(computeHash(p), 0, e)) {
         if ( e.h != 0 && !isMateScore(e.score) && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
            return adjustHashScore(e.score, ply);
         }
     }
+    */
 
     //const bool isInCheck = isAttacked(p, kingSquare(p));
 
     std::vector<Move> moves;
     generate(p,moves,GP_cap);
-    sort(*this,moves,p,qDepth==0?&e:0);
+    sort(*this,moves,p/*,qDepth==0?&e:0*/);
 
     const ScoreType alphaInit = alpha;
 
