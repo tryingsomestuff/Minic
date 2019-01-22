@@ -31,7 +31,7 @@ typedef uint64_t u_int64_t;
 //#define DEBUG_TOOL
 #define WITH_TEST_SUITE
 
-const std::string MinicVersion = "0.32";
+const std::string MinicVersion = "dev";
 
 typedef std::chrono::system_clock Clock;
 typedef char DepthType;
@@ -2777,7 +2777,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             // LMP
             if (lmp && isPrunableStd && validMoveCount >= lmpLimit[improving][depth] ) continue;
             // SEE
-            if ((futility/*||depth<=4*/) && isBadCap) continue;
+            if ((futility||depth<=4) && isBadCap) continue;
             // LMR
             if (StaticConfig::doLMR && !DynamicConfig::mateFinder && (isPrunableStd /*|| isBadCap*/) && depth >= StaticConfig::lmrMinDepth ) reduction = lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
             if (isPrunableStd && !DynamicConfig::mateFinder && !improving) ++reduction;
