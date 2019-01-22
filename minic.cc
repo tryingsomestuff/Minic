@@ -335,8 +335,8 @@ struct Position{
     Material mat;
 };
 
-//int manhattanDistance(Square sq1, Square sq2) { return std::abs((sq2 >> 3) - (sq1 >> 3)) + std::abs((sq2 & 7) - (sq1 & 7));}
-int chebyshevDistance(Square sq1, Square sq2) { return std::max(std::abs((sq2 >> 3) - (sq1 >> 3)) , std::abs((sq2 & 7) - (sq1 & 7))); }
+//inline int manhattanDistance(Square sq1, Square sq2) { return std::abs((sq2 >> 3) - (sq1 >> 3)) + std::abs((sq2 & 7) - (sq1 & 7));}
+inline int chebyshevDistance(Square sq1, Square sq2) { return std::max(std::abs((sq2 >> 3) - (sq1 >> 3)) , std::abs((sq2 & 7) - (sq1 & 7))); }
 
 enum GenPhase{ GP_all = 0, GP_cap = 1, GP_quiet = 2};
 
@@ -358,7 +358,7 @@ namespace MaterialHash { // from Gull
     const int TotalMat = ((2 * (MatWQ + MatBQ) + MatWL + MatBL + MatWD + MatBD + 2 * (MatWR + MatBR + MatWN + MatBN) + 8 * (MatWP + MatBP)) + 1);
     const int UnknownMaterialHash = -1;
 
-    Hash getMaterialHash(const Position::Material & mat) {
+    inline Hash getMaterialHash(const Position::Material & mat) {
         if (mat.nwq > 2 || mat.nbq > 2 || mat.nwr > 2 || mat.nbr > 2 || mat.nwbl > 1 || mat.nbbl > 1 || mat.nwbd > 1 || mat.nbbd > 1 || mat.nwn > 2 || mat.nbn > 2 || mat.nwp > 8 || mat.nbp > 8) return 0;
         return mat.nwp * MatWP + mat.nbp * MatBP + mat.nwn * MatWN + mat.nbn * MatBN + mat.nwbl * MatWL + mat.nbbl * MatBL + mat.nwbd * MatWD + mat.nbbd * MatBD + mat.nwr * MatWR + mat.nbr * MatBR + mat.nwq * MatWQ + mat.nbq * MatBQ;
     }
@@ -376,7 +376,7 @@ namespace MaterialHash { // from Gull
     }
     */
 
-    Position::Material getMatReverseColor(const Position::Material & mat) {
+    inline Position::Material getMatReverseColor(const Position::Material & mat) {
         Position::Material rev;
         rev.nwk = mat.nbk;  rev.nbk = mat.nwk;
         rev.nwq = mat.nbq;  rev.nbq = mat.nwq;
@@ -433,7 +433,7 @@ namespace MaterialHash { // from Gull
 
     enum Terminaison : unsigned char { Ter_Unknown = 0, Ter_WhiteWinWithHelper, Ter_WhiteWin, Ter_BlackWinWithHelper, Ter_BlackWin, Ter_Draw, Ter_LikelyDraw, Ter_HardToWin };
 
-    Terminaison reverseTerminaison(Terminaison t) {
+    inline Terminaison reverseTerminaison(Terminaison t) {
         switch (t) {
         case Ter_Unknown:
         case Ter_Draw:
@@ -503,14 +503,14 @@ namespace MaterialHash { // from Gull
     */
 
     //ScoreType (* helperTable[TotalMat])(const Position &) = {0};
-    Terminaison materialHashTable[TotalMat] = {Ter_Unknown};
+    Terminaison materialHashTable[TotalMat];// = {Ter_Unknown};
 
     struct MaterialHashInitializer {
         MaterialHashInitializer(const Position::Material & mat, Terminaison t) { materialHashTable[getMaterialHash(mat)] = t; }
         //MaterialHashInitializer(const Position::Material & mat, Terminaison t, ScoreType (*helper)(const Position &) ) { materialHashTable[getMaterialHash(mat)] = t; helperTable[getMaterialHash(mat)] = helper; }
         static void init() {
             LogIt(logInfo) << "Material hash total : " << TotalMat;
-            //std::memset(materialHashTable, Ter_Unknown, sizeof(Terminaison)*TotalMat);
+            std::memset(materialHashTable, Ter_Unknown, sizeof(Terminaison)*TotalMat);
             //for(size_t k = 0 ; k < TotalMat ; ++k) helperTable[k] = &helperDummy;
         }
     };
@@ -2317,8 +2317,6 @@ const ScoreType MOBEG[6][28] = { {0,0,0,0},
 ScoreType eval(const Position & p, float & gp){
 
     ///@todo  make a fence detection in draw eval
-
-    gp = 0.1; // in case an helper is used for a known win, this value will be returned
 
     ScoreType sc = 0;
     //SCoreType scEG = 0; ///@todo avoid all the multiplications here !
