@@ -94,6 +94,6 @@ and a command line interface, using the same key word. For instance, forcing mat
 * 0.28 : xboard time command is used now
 * 0.29 : refactoring, very bad TT bug fix, better timeman, better gamephase, work on SEE ... huuuuuge progress. Also preparing for a better eval (pawn structure)...
 * 0.30 : add a simple mobility term inside evaluation
-* 0.31 : nnot much
+* 0.31 : not much
 * 0.32 : fix bug in eval
- 
+* 0.33 : move aggressive SEE, better move sorting, better time control. Preparing for Syzygy endgame table and end-game helpers KQK, KRK and KBNK.
