@@ -2,7 +2,7 @@
 A simple chess engine to learn and play with.
 Compatible with xboard/winboard.
 Initially, the code size was supposed not go above 2000sloc.
-Now that more features (especially SMP) has come up, I try to keep it under 2500sloc.
+Now that more features (especially SMP) has come up, I'll try to keep it under 2500sloc.
 Minic stands for "Minimal Chess".
 
 ## Release
@@ -10,7 +10,7 @@ Minic stands for "Minimal Chess".
 Have a look in the Dist directory for releases. Some more stable/official ones will also be made available as github release.
 
 ## Strength
-Quite poor for a chess engine (around 2350) but already way to strong for me !
+Quite poor for a chess engine (around 2400) but already way to strong for me !
 
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
@@ -94,6 +94,6 @@ and a command line interface, using the same key word. For instance, forcing mat
 * 0.28 : xboard time command is used now
 * 0.29 : refactoring, very bad TT bug fix, better timeman, better gamephase, work on SEE ... huuuuuge progress. Also preparing for a better eval (pawn structure)...
 * 0.30 : add a simple mobility term inside evaluation
-* 0.31 : nnot much
+* 0.31 : not much
 * 0.32 : fix bug in eval
- 
+* 0.33 : more aggressive SEE, better move sorting, better time control. Preparing for Syzygy endgame table and end-game helpers KQK, KRK and KBNK.
