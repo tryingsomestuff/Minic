@@ -1575,6 +1575,10 @@ int msecPerMove, msecInTC, nbMoveInTC, msecInc, msecUntilNextTC;
 bool isDynamic;
 
 std::chrono::time_point<Clock> startTime;
+const DepthType emergencyMinDepth = 7;
+const ScoreType emergencyMargin = 50;
+const int   emergencyFactor  = 5;
+const float maxStealFraction = 0.3f; // of remaining time
 
 void init(){
     LogIt(logInfo) << "Init timeman" ;
@@ -2989,6 +2993,8 @@ std::vector<Move> ThreadContext::search(const Position & p, Move & m, DepthType 
         return pv;
     }
 
+    ScoreType previousBest = bestScore;
+
     for(DepthType depth = 1 ; depth <= std::min(d,DepthType(MAX_DEPTH-6)) && !stopFlag ; ++depth ){ // -6 so that draw can be found for sure
         if (!isMainThread()){ // stockfish like thread  management
             const int i = (id()-1)%20;
@@ -3019,6 +3025,10 @@ std::vector<Move> ThreadContext::search(const Position & p, Move & m, DepthType 
                           << ToString(pv)  << " " << "EBF: " << float(stats.nodes + stats.qnodes)/previousNodeCount ;
             previousNodeCount = stats.nodes + stats.qnodes;
         }
+        if (TimeMan::isDynamic && depth > TimeMan::emergencyMinDepth && bestScore < previousBest - TimeMan::emergencyMargin) {
+            currentMoveMs = std::min(int(TimeMan::msecUntilNextTC*TimeMan::maxStealFraction), currentMoveMs*TimeMan::emergencyFactor);
+        }
+        previousBest = bestScore;
     }
     if (pv.empty()){
         LogIt(logWarn) << "Empty pv" ;
@@ -3321,7 +3331,7 @@ void XBoard::xboard(){
                 TimeMan::msecPerMove      = -1;
                 TimeMan::msecInTC         = timeTC;
                 TimeMan::msecInc          = msecinc;
-                TimeMan::msecUntilNextTC  = timeTC; // just an init here, with be managed using "time" command later
+                TimeMan::msecUntilNextTC  = timeTC; // just an init here, will be managed using "time" command later
                 depth                     = 64; // infinity
             }
             else if ( command == "edit"){ }
