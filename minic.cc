@@ -2253,16 +2253,16 @@ struct MoveSorter{
         const Square to   = Move2To(m);
         ScoreType s = MoveScoring[t];
         if (e && sameMove(e->m,m)) s += 3000;
-        else if (sameMove(m,context.killerT.killers[0][p.ply])) s += 290;
-        else if (sameMove(m,context.killerT.killers[1][p.ply])) s += 260;
         if (isCapture(t)){
             s += MvvLvaScores[getPieceType(p,to)-1][getPieceType(p,from)-1];
             if ( !context.SEE(p,m,0)) s -= 2000;
             //s += context.SEEVal(p, m);
         }
         else if ( t == T_std){
-            s += context.historyT.history[getPieceIndex(p,from)][to];
-            if ( sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 250;
+            if (sameMove(m, context.killerT.killers[0][p.ply])) s += 290;
+            else if (sameMove(m, context.killerT.killers[1][p.ply])) s += 270;
+            else if ( sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 250;
+            else s += context.historyT.history[getPieceIndex(p, from)][to];
             const bool isWhite = (p.whitePiece & SquareToBitboard(from)) != 0ull;
             s += PST[getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - PST[getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from];
         }
