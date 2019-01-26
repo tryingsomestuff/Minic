@@ -23,6 +23,6 @@ engines="$engines -engine name=weini cmd=$dir/../chessEngine/weini/bin/weini arg
 
 echo $engines
 
-$dir/../chessEngine/weini/cutechess/cutechess-cli/cutechess-cli.sh $engines -each proto=xboard tc=40/20 timemargin=200 -rounds 1000 -pgnout pgn_$(date +"%Y_%m_%d"_%H%M%S).out -resign movecount=4 score=1050 -draw movenumber=40 movecount=12 score=30 -ratinginterval 1 -repeat -openings file=$dir/../chessEngine/weini/BookPgn/Silver-Suite-Large.pgn format=pgn order=random plies=24 -recover -tournament gauntlet > tournament.log 2>&1 &
+$dir/../chessEngine/weini/cutechess/cutechess-cli/cutechess-cli.sh $engines -each proto=xboard tc=40/5 timemargin=200 -rounds 1000 -pgnout pgn_$(date +"%Y_%m_%d"_%H%M%S).out -resign movecount=4 score=1050 -draw movenumber=40 movecount=12 score=30 -ratinginterval 1 -repeat -openings file=$dir/../chessEngine/weini/BookPgn/Silver-Suite-Large.pgn format=pgn order=random plies=24 -recover -tournament gauntlet > tournament.log 2>&1 &
 #$dir/../chessEngine/weini/cutechess/cutechess-cli/cutechess-cli.sh $engines -each proto=xboard tc=40/20 timemargin=200 -rounds 100 -pgnout pgn_$(date +"%Y_%m_%d"_%H%M%S).out -resign movecount=4 score=1050 -draw movenumber=40 movecount=12 score=30 -ratinginterval 1 -repeat -openings file=$dir/../chessEngine/weini/BookPgn/Silver-Suite-Large.pgn format=pgn order=random plies=24 -recover  > tournament.log 2>&1 &
 
