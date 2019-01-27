@@ -175,8 +175,8 @@ ScoreType   doublePawnMalusEG     = 15;
 ScoreType   isolatedPawnMalus     = 5;
 ScoreType   isolatedPawnMalusEG   = 15;
 ScoreType   pawnShieldBonus       = 15;
-float       protectedPasserFactor = 0.25; // 125%
-float       freePasserFactor      = 0.9; // 190%
+float       protectedPasserFactor = 0.25f; // 125%
+float       freePasserFactor      = 0.9f; // 190%
 
 ScoreType   adjKnight[9]  = { -24, -18, -12, -6,  0,  6,  12, 18, 24 };
 ScoreType   adjRook[9]    = {  48,  36,  24, 12,  0,-12, -24,-36,-48 };
@@ -231,9 +231,39 @@ inline int BitScanForward(BitBoard bb) { assert(bb != 0); return __builtin_ctzll
 #define swapbits(x)   (__builtin_bswap64 (x))
 #else
 #ifdef _WIN32
+#ifdef _WIN64
 #define POPCOUNT(x)   __popcnt64(x)
 #define bsf(x,i)      _BitScanForward64(&i,x)
 #define swapbits(x)   (_byteswap_uint64 (x))
+#else
+int popcount(uint64_t b){
+    b = (b & 0x5555555555555555LU) + (b >> 1 & 0x5555555555555555LU);
+    b = (b & 0x3333333333333333LU) + (b >> 2 & 0x3333333333333333LU);
+    b = b + (b >> 4) & 0x0F0F0F0F0F0F0F0FLU;
+    b = b + (b >> 8);
+    b = b + (b >> 16);
+    b = b + (b >> 32) & 0x0000007F;
+    return (int)b;
+}
+const int index64[64] = {
+    0,  1, 48,  2, 57, 49, 28,  3,
+   61, 58, 50, 42, 38, 29, 17,  4,
+   62, 55, 59, 36, 53, 51, 43, 22,
+   45, 39, 33, 30, 24, 18, 12,  5,
+   63, 47, 56, 27, 60, 41, 37, 16,
+   54, 35, 52, 21, 44, 32, 23, 11,
+   46, 26, 40, 15, 34, 20, 31, 10,
+   25, 14, 19,  9, 13,  8,  7,  6
+};
+int bitScanForward(int64_t bb) {
+    const uint64_t debruijn64 = 0x03f79d71b4cb0a89;
+    assert(bb != 0);
+    return index64[((bb & -bb) * debruijn64) >> 58];
+}
+#define POPCOUNT(x)   popcount(x)
+#define bsf(x,i)      (i=bitScanForward(x))
+#define swapbits(x)   (_byteswap_uint64 (x))
+#endif
 #else // linux
 #define POPCOUNT(x)   int(__builtin_popcountll(x))
 inline int BitScanForward(BitBoard bb) { assert(bb != 0ull); return __builtin_ctzll(bb);}
@@ -2222,7 +2252,7 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
         if (!threatsFound) break;
         std::sort(stmAttackers.begin(),stmAttackers.end(),SortThreatsFunctor(p2)); ///@todo this costs a lot ...
         bool validThreatFound = false;
-        int threatId = 0;
+        unsigned int threatId = 0;
         while (!validThreatFound && threatId < stmAttackers.size()) {
             const Move mm = ToMove(stmAttackers[threatId], to, T_capture); ///@todo prom ????
             nextVictim = p2.b[stmAttackers[threatId]];
