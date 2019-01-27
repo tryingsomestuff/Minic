@@ -97,3 +97,4 @@ and a command line interface, using the same key word. For instance, forcing mat
 * 0.31 : not much
 * 0.32 : fix bug in eval
 * 0.33 : more aggressive SEE, better move sorting, better time control. Preparing for Syzygy endgame table and end-game helpers KQK, KRK and KBNK.
+* 0.34 : just another TC management improvement
