@@ -32,7 +32,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "0.34";
 
 #define STOPSCORE   ScoreType(20000)
 #define INFSCORE    ScoreType(15000)
