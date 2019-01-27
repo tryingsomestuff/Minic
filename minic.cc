@@ -32,7 +32,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 
-const std::string MinicVersion = "0.34";
+const std::string MinicVersion = "dev";
 
 #define STOPSCORE   ScoreType(20000)
 #define INFSCORE    ScoreType(15000)
@@ -2296,8 +2296,8 @@ inline bool ThreadContext::isRep(const Position & p, bool isPV)const{
 
 MaterialHash::Terminaison ThreadContext::interiorNodeRecognizer(const Position & p, bool withRep, bool isPV)const{
     if (withRep && isRep(p,isPV)) return MaterialHash::Ter_Draw;
-    if ( p.fifty >= 100 )         return MaterialHash::Ter_Draw;
-    if (p.mat.np == 0 )           return MaterialHash::probeMaterialHashTable(p.mat);
+    if (p.fifty >= 100)           return MaterialHash::Ter_Draw;
+    if (p.mat.np == 0)            return MaterialHash::probeMaterialHashTable(p.mat);
     else { // some pawn are present
         ///@todo ... KPK
     }
@@ -2321,6 +2321,10 @@ const ScoreType MOBEG[6][28] = { {0,0,0,0},
 ScoreType eval(const Position & p, float & gp){
 
     ///@todo  make a fence detection in draw eval
+
+    const Hash matHash = MaterialHash::getMaterialHash(p.mat);
+    const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
+    if ( ter == MaterialHash::Ter_Draw) return 0;
 
     ScoreType sc = 0;
     //SCoreType scEG = 0; ///@todo avoid all the multiplications here !
@@ -2350,8 +2354,8 @@ ScoreType eval(const Position & p, float & gp){
     const bool white2Play = p.c == Co_White;
 
     /*
-    const Hash matHash = MaterialHash::getMaterialHash(p.mat);
-    const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
+    //const Hash matHash = MaterialHash::getMaterialHash(p.mat);
+    //const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
     if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ){
        sc += MaterialHash::helperTable[matHash](p);
        sc = (white2Play?+1:-1)*sc;
