@@ -32,7 +32,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 
-const std::string MinicVersion = "0.33";
+const std::string MinicVersion = "dev";
 
 #define STOPSCORE   ScoreType(20000)
 #define INFSCORE    ScoreType(15000)
@@ -3022,12 +3022,11 @@ std::vector<Move> ThreadContext::search(const Position & p, Move & m, DepthType 
         if ( isMainThread() ){
             LogIt(logGUI) << int(depth) << " " << bestScore << " " << ms/10 << " " << stats.nodes + stats.qnodes << " "
                           << (int)seldepth << " " << int((stats.nodes + stats.qnodes)/(ms/1000.f)/1000.) << " " << stats.tthits/1000 << "\t"
-                          << ToString(pv)  << " " << "EBF: " << float(stats.nodes + stats.qnodes)/previousNodeCount ;
+                          << ToString(pv)  ;//<< " " << "EBF: " << float(stats.nodes + stats.qnodes)/previousNodeCount ;
             previousNodeCount = stats.nodes + stats.qnodes;
         }
-        if (TimeMan::isDynamic && depth > TimeMan::emergencyMinDepth && bestScore < previousBest - TimeMan::emergencyMargin) {
-            currentMoveMs = std::min(int(TimeMan::msecUntilNextTC*TimeMan::maxStealFraction), currentMoveMs*TimeMan::emergencyFactor);
-        }
+        if (TimeMan::isDynamic && depth > TimeMan::emergencyMinDepth && bestScore < previousBest - TimeMan::emergencyMargin) currentMoveMs = std::min(int(TimeMan::msecUntilNextTC*TimeMan::maxStealFraction), currentMoveMs*TimeMan::emergencyFactor);
+        if (std::max(1,int(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()*1.8)) > currentMoveMs) break; // not enought time
         previousBest = bestScore;
     }
     if (pv.empty()){
