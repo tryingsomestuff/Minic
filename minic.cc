@@ -476,7 +476,6 @@ namespace MaterialHash { // from Gull
         }
     }
 
-    /*
     const int pushToEdges[64] = {
       100, 90, 80, 70, 70, 80, 90, 100,
        90, 70, 60, 50, 50, 60, 70,  90,
@@ -530,20 +529,17 @@ namespace MaterialHash { // from Gull
     ScoreType helperDummy(const Position &p){
         return 0;
     }
-    */
 
-    //ScoreType (* helperTable[TotalMat])(const Position &) = {0};
-    Terminaison materialHashTable[TotalMat];// = {Ter_Unknown};
+    ScoreType (* helperTable[TotalMat])(const Position &);
+    Terminaison materialHashTable[TotalMat];
 
     struct MaterialHashInitializer {
         MaterialHashInitializer(const Position::Material & mat, Terminaison t) { materialHashTable[getMaterialHash(mat)] = t; }
-        //MaterialHashInitializer(const Position::Material & mat, Terminaison t, ScoreType (*helper)(const Position &) ) { materialHashTable[getMaterialHash(mat)] = t; helperTable[getMaterialHash(mat)] = helper; }
+        MaterialHashInitializer(const Position::Material & mat, Terminaison t, ScoreType (*helper)(const Position &) ) { materialHashTable[getMaterialHash(mat)] = t; helperTable[getMaterialHash(mat)] = helper; }
         static void init() {
             LogIt(logInfo) << "Material hash total : " << TotalMat;
             std::memset(materialHashTable, Ter_Unknown, sizeof(Terminaison)*TotalMat);
-            //for(size_t k = 0 ; k < TotalMat ; ++k) helperTable[k] = &helperDummy;
-        }
-    };
+            for(size_t k = 0 ; k < TotalMat ; ++k) helperTable[k] = &helperDummy;
 
 #define TO_STR2(x) #x
 #define TO_STR(x) TO_STR2(x)
@@ -551,193 +547,195 @@ namespace MaterialHash { // from Gull
 #define JOIN(symbol1,symbol2) _DO_JOIN(symbol1,symbol2 )
 #define _DO_JOIN(symbol1,symbol2) symbol1##symbol2
 #define DEF_MAT(x,t) const Position::Material MAT##x = materialFromString( TO_STR(x) ); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t);
-#define DEF_MAT_H(x,t,h) const Position::Material MAT##x = materialFromString( TO_STR(x) ); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t/*,h*/);
+#define DEF_MAT_H(x,t,h) const Position::Material MAT##x = materialFromString( TO_STR(x) ); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t,h);
 #define DEF_MAT_REV(rev,x) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)]));
-#define DEF_MAT_REV_H(rev,x,h) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)])/*,h*/);
+#define DEF_MAT_REV_H(rev,x,h) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)]),h);
 
-    // sym (and pseudo sym) : all should be draw
-    DEF_MAT(KK,     Ter_Draw)
-    DEF_MAT(KQQKQQ, Ter_Draw)
-    DEF_MAT(KQKQ,   Ter_Draw)
-    DEF_MAT(KRRKRR, Ter_Draw)
-    DEF_MAT(KRKR,   Ter_Draw)
-    DEF_MAT(KLDKLD, Ter_Draw)
-    DEF_MAT(KLLKLL, Ter_Draw)
-    DEF_MAT(KDDKDD, Ter_Draw)
-    DEF_MAT(KLDKLL, Ter_Draw)
-    DEF_MAT(KLDKDD, Ter_Draw)
-    DEF_MAT(KLKL,   Ter_Draw)
-    DEF_MAT(KDKD,   Ter_Draw)
-    DEF_MAT(KLKD,   Ter_Draw)
-    DEF_MAT(KNNKNN, Ter_Draw)
-    DEF_MAT(KNKN,   Ter_Draw)
+            // sym (and pseudo sym) : all should be draw
+            DEF_MAT(KK,     Ter_Draw)
+            DEF_MAT(KQQKQQ, Ter_Draw)
+            DEF_MAT(KQKQ,   Ter_Draw)
+            DEF_MAT(KRRKRR, Ter_Draw)
+            DEF_MAT(KRKR,   Ter_Draw)
+            DEF_MAT(KLDKLD, Ter_Draw)
+            DEF_MAT(KLLKLL, Ter_Draw)
+            DEF_MAT(KDDKDD, Ter_Draw)
+            DEF_MAT(KLDKLL, Ter_Draw)
+            DEF_MAT(KLDKDD, Ter_Draw)
+            DEF_MAT(KLKL,   Ter_Draw)
+            DEF_MAT(KDKD,   Ter_Draw)
+            DEF_MAT(KLKD,   Ter_Draw)
+            DEF_MAT(KNNKNN, Ter_Draw)
+            DEF_MAT(KNKN,   Ter_Draw)
 
-    DEF_MAT_REV(KDKL,   KLKD)
-    DEF_MAT_REV(KLLKLD, KLDKLL)
-    DEF_MAT_REV(KDDKLD, KLDKDD)
+            DEF_MAT_REV(KDKL,   KLKD)
+            DEF_MAT_REV(KLLKLD, KLDKLL)
+            DEF_MAT_REV(KDDKLD, KLDKDD)
 
-    // 2M M
-    DEF_MAT(KQQKQ, Ter_WhiteWin)
-    DEF_MAT(KQQKR, Ter_WhiteWin)
-    DEF_MAT(KRRKQ, Ter_LikelyDraw)
-    DEF_MAT(KRRKR, Ter_WhiteWin)
-    DEF_MAT(KQRKQ, Ter_WhiteWin)
-    DEF_MAT(KQRKR, Ter_WhiteWin)
+            // 2M M
+            DEF_MAT(KQQKQ, Ter_WhiteWin)
+            DEF_MAT(KQQKR, Ter_WhiteWin)
+            DEF_MAT(KRRKQ, Ter_LikelyDraw)
+            DEF_MAT(KRRKR, Ter_WhiteWin)
+            DEF_MAT(KQRKQ, Ter_WhiteWin)
+            DEF_MAT(KQRKR, Ter_WhiteWin)
 
-    DEF_MAT_REV(KQKQQ,KQQKQ)
-    DEF_MAT_REV(KRKRR,KRRKR)
-    DEF_MAT_REV(KQKRR,KRRKQ)
-    DEF_MAT_REV(KRKQQ,KQQKR)
-    DEF_MAT_REV(KQKQR,KQRKQ)
-    DEF_MAT_REV(KRKQR,KQRKR)
+            DEF_MAT_REV(KQKQQ,KQQKQ)
+            DEF_MAT_REV(KRKRR,KRRKR)
+            DEF_MAT_REV(KQKRR,KRRKQ)
+            DEF_MAT_REV(KRKQQ,KQQKR)
+            DEF_MAT_REV(KQKQR,KQRKQ)
+            DEF_MAT_REV(KRKQR,KQRKR)
 
-    // 2M m
-    DEF_MAT(KQQKL, Ter_WhiteWin)
-    DEF_MAT(KRRKL, Ter_WhiteWin)
-    DEF_MAT(KQRKL, Ter_WhiteWin)
-    DEF_MAT(KQQKD, Ter_WhiteWin)
-    DEF_MAT(KRRKD, Ter_WhiteWin)
-    DEF_MAT(KQRKD, Ter_WhiteWin)
-    DEF_MAT(KQQKN, Ter_WhiteWin)
-    DEF_MAT(KRRKN, Ter_WhiteWin)
-    DEF_MAT(KQRKN, Ter_WhiteWin)
+            // 2M m
+            DEF_MAT(KQQKL, Ter_WhiteWin)
+            DEF_MAT(KRRKL, Ter_WhiteWin)
+            DEF_MAT(KQRKL, Ter_WhiteWin)
+            DEF_MAT(KQQKD, Ter_WhiteWin)
+            DEF_MAT(KRRKD, Ter_WhiteWin)
+            DEF_MAT(KQRKD, Ter_WhiteWin)
+            DEF_MAT(KQQKN, Ter_WhiteWin)
+            DEF_MAT(KRRKN, Ter_WhiteWin)
+            DEF_MAT(KQRKN, Ter_WhiteWin)
 
-    DEF_MAT_REV(KLKQQ, KQQKL)
-    DEF_MAT_REV(KLKRR, KRRKL)
-    DEF_MAT_REV(KLKQR, KQRKL)
-    DEF_MAT_REV(KDKQQ, KQQKD)
-    DEF_MAT_REV(KDKRR, KRRKD)
-    DEF_MAT_REV(KDKQR, KQRKD)
-    DEF_MAT_REV(KNKQQ, KQQKN)
-    DEF_MAT_REV(KNKRR, KRRKN)
-    DEF_MAT_REV(KNKQR, KQRKN)
+            DEF_MAT_REV(KLKQQ, KQQKL)
+            DEF_MAT_REV(KLKRR, KRRKL)
+            DEF_MAT_REV(KLKQR, KQRKL)
+            DEF_MAT_REV(KDKQQ, KQQKD)
+            DEF_MAT_REV(KDKRR, KRRKD)
+            DEF_MAT_REV(KDKQR, KQRKD)
+            DEF_MAT_REV(KNKQQ, KQQKN)
+            DEF_MAT_REV(KNKRR, KRRKN)
+            DEF_MAT_REV(KNKQR, KQRKN)
 
-    // 2m M
-    DEF_MAT(KLDKQ, Ter_Draw)
-    DEF_MAT(KLDKR, Ter_Draw)
-    DEF_MAT(KLLKQ, Ter_Draw)
-    DEF_MAT(KLLKR, Ter_Draw)
-    DEF_MAT(KDDKQ, Ter_Draw)
-    DEF_MAT(KDDKR, Ter_Draw)
-    DEF_MAT(KNNKQ, Ter_Draw)
-    DEF_MAT(KNNKR, Ter_Draw)
-    DEF_MAT(KLNKQ, Ter_Draw)
-    DEF_MAT(KLNKR, Ter_Draw)
-    DEF_MAT(KDNKQ, Ter_Draw)
-    DEF_MAT(KDNKR, Ter_Draw)
+            // 2m M
+            DEF_MAT(KLDKQ, Ter_Draw)
+            DEF_MAT(KLDKR, Ter_Draw)
+            DEF_MAT(KLLKQ, Ter_Draw)
+            DEF_MAT(KLLKR, Ter_Draw)
+            DEF_MAT(KDDKQ, Ter_Draw)
+            DEF_MAT(KDDKR, Ter_Draw)
+            DEF_MAT(KNNKQ, Ter_Draw)
+            DEF_MAT(KNNKR, Ter_Draw)
+            DEF_MAT(KLNKQ, Ter_Draw)
+            DEF_MAT(KLNKR, Ter_Draw)
+            DEF_MAT(KDNKQ, Ter_Draw)
+            DEF_MAT(KDNKR, Ter_Draw)
 
-    DEF_MAT_REV(KQKLD,KLDKQ)
-    DEF_MAT_REV(KRKLD,KLDKR)
-    DEF_MAT_REV(KQKLL,KLLKQ)
-    DEF_MAT_REV(KRKLL,KLLKR)
-    DEF_MAT_REV(KQKDD,KDDKQ)
-    DEF_MAT_REV(KRKDD,KDDKR)
-    DEF_MAT_REV(KQKNN,KNNKQ)
-    DEF_MAT_REV(KRKNN,KNNKR)
-    DEF_MAT_REV(KQKLN,KLNKQ)
-    DEF_MAT_REV(KRKLN,KLNKR)
-    DEF_MAT_REV(KQKDN,KDNKQ)
-    DEF_MAT_REV(KRKDN,KDNKR)
+            DEF_MAT_REV(KQKLD,KLDKQ)
+            DEF_MAT_REV(KRKLD,KLDKR)
+            DEF_MAT_REV(KQKLL,KLLKQ)
+            DEF_MAT_REV(KRKLL,KLLKR)
+            DEF_MAT_REV(KQKDD,KDDKQ)
+            DEF_MAT_REV(KRKDD,KDDKR)
+            DEF_MAT_REV(KQKNN,KNNKQ)
+            DEF_MAT_REV(KRKNN,KNNKR)
+            DEF_MAT_REV(KQKLN,KLNKQ)
+            DEF_MAT_REV(KRKLN,KLNKR)
+            DEF_MAT_REV(KQKDN,KDNKQ)
+            DEF_MAT_REV(KRKDN,KDNKR)
 
-    // 2m m : all draw
-    DEF_MAT(KLDKL, Ter_Draw)
-    DEF_MAT(KLDKD, Ter_Draw)
-    DEF_MAT(KLDKN, Ter_Draw)
-    DEF_MAT(KLLKL, Ter_Draw)
-    DEF_MAT(KLLKD, Ter_Draw)
-    DEF_MAT(KLLKN, Ter_Draw)
-    DEF_MAT(KDDKL, Ter_Draw)
-    DEF_MAT(KDDKD, Ter_Draw)
-    DEF_MAT(KDDKN, Ter_Draw)
-    DEF_MAT(KNNKL, Ter_Draw)
-    DEF_MAT(KNNKD, Ter_Draw)
-    DEF_MAT(KNNKN, Ter_Draw)
-    DEF_MAT(KLNKL, Ter_Draw)
-    DEF_MAT(KLNKD, Ter_Draw)
-    DEF_MAT(KLNKN, Ter_Draw)
-    DEF_MAT(KDNKL, Ter_Draw)
-    DEF_MAT(KDNKD, Ter_Draw)
-    DEF_MAT(KDNKN, Ter_Draw)
+            // 2m m : all draw
+            DEF_MAT(KLDKL, Ter_Draw)
+            DEF_MAT(KLDKD, Ter_Draw)
+            DEF_MAT(KLDKN, Ter_Draw)
+            DEF_MAT(KLLKL, Ter_Draw)
+            DEF_MAT(KLLKD, Ter_Draw)
+            DEF_MAT(KLLKN, Ter_Draw)
+            DEF_MAT(KDDKL, Ter_Draw)
+            DEF_MAT(KDDKD, Ter_Draw)
+            DEF_MAT(KDDKN, Ter_Draw)
+            DEF_MAT(KNNKL, Ter_Draw)
+            DEF_MAT(KNNKD, Ter_Draw)
+            DEF_MAT(KNNKN, Ter_Draw)
+            DEF_MAT(KLNKL, Ter_Draw)
+            DEF_MAT(KLNKD, Ter_Draw)
+            DEF_MAT(KLNKN, Ter_Draw)
+            DEF_MAT(KDNKL, Ter_Draw)
+            DEF_MAT(KDNKD, Ter_Draw)
+            DEF_MAT(KDNKN, Ter_Draw)
 
-    DEF_MAT_REV(KLKLD,KLDKL)
-    DEF_MAT_REV(KDKLD,KLDKD)
-    DEF_MAT_REV(KNKLD,KLDKN)
-    DEF_MAT_REV(KLKLL,KLLKL)
-    DEF_MAT_REV(KDKLL,KLLKD)
-    DEF_MAT_REV(KNKLL,KLLKN)
-    DEF_MAT_REV(KLKDD,KDDKL)
-    DEF_MAT_REV(KDKDD,KDDKD)
-    DEF_MAT_REV(KNKDD,KDDKN)
-    DEF_MAT_REV(KLKNN,KNNKL)
-    DEF_MAT_REV(KDKNN,KNNKD)
-    DEF_MAT_REV(KNKNN,KNNKN)
-    DEF_MAT_REV(KLKLN,KLNKL)
-    DEF_MAT_REV(KDKLN,KLNKD)
-    DEF_MAT_REV(KNKLN,KLNKN)
-    DEF_MAT_REV(KLKDN,KDNKL)
-    DEF_MAT_REV(KDKDN,KDNKD)
-    DEF_MAT_REV(KNKDN,KDNKN)
+            DEF_MAT_REV(KLKLD,KLDKL)
+            DEF_MAT_REV(KDKLD,KLDKD)
+            DEF_MAT_REV(KNKLD,KLDKN)
+            DEF_MAT_REV(KLKLL,KLLKL)
+            DEF_MAT_REV(KDKLL,KLLKD)
+            DEF_MAT_REV(KNKLL,KLLKN)
+            DEF_MAT_REV(KLKDD,KDDKL)
+            DEF_MAT_REV(KDKDD,KDDKD)
+            DEF_MAT_REV(KNKDD,KDDKN)
+            DEF_MAT_REV(KLKNN,KNNKL)
+            DEF_MAT_REV(KDKNN,KNNKD)
+            DEF_MAT_REV(KNKNN,KNNKN)
+            DEF_MAT_REV(KLKLN,KLNKL)
+            DEF_MAT_REV(KDKLN,KLNKD)
+            DEF_MAT_REV(KNKLN,KLNKN)
+            DEF_MAT_REV(KLKDN,KDNKL)
+            DEF_MAT_REV(KDKDN,KDNKD)
+            DEF_MAT_REV(KNKDN,KDNKN)
 
-    // Q x : all should be win
-    DEF_MAT(KQKR, Ter_WhiteWin)
-    DEF_MAT(KQKL, Ter_WhiteWin)
-    DEF_MAT(KQKD, Ter_WhiteWin)
-    DEF_MAT(KQKN, Ter_WhiteWin)
+            // Q x : all should be win
+            DEF_MAT(KQKR, Ter_WhiteWin)
+            DEF_MAT(KQKL, Ter_WhiteWin)
+            DEF_MAT(KQKD, Ter_WhiteWin)
+            DEF_MAT(KQKN, Ter_WhiteWin)
 
-    DEF_MAT_REV(KRKQ,KQKR)
-    DEF_MAT_REV(KLKQ,KQKL)
-    DEF_MAT_REV(KDKQ,KQKD)
-    DEF_MAT_REV(KNKQ,KQKN)
+            DEF_MAT_REV(KRKQ,KQKR)
+            DEF_MAT_REV(KLKQ,KQKL)
+            DEF_MAT_REV(KDKQ,KQKD)
+            DEF_MAT_REV(KNKQ,KQKN)
 
-    // R x : all should be draw
-    DEF_MAT(KRKL, Ter_LikelyDraw)
-    DEF_MAT(KRKD, Ter_LikelyDraw)
-    DEF_MAT(KRKN, Ter_LikelyDraw)
+            // R x : all should be draw
+            DEF_MAT(KRKL, Ter_LikelyDraw)
+            DEF_MAT(KRKD, Ter_LikelyDraw)
+            DEF_MAT(KRKN, Ter_LikelyDraw)
 
-    DEF_MAT_REV(KLKR,KRKL)
-    DEF_MAT_REV(KDKR,KRKD)
-    DEF_MAT_REV(KNKR,KRKN)
+            DEF_MAT_REV(KLKR,KRKL)
+            DEF_MAT_REV(KDKR,KRKD)
+            DEF_MAT_REV(KNKR,KRKN)
 
-    // B x : all are draw
-    DEF_MAT(KLKN, Ter_Draw)
-    DEF_MAT(KDKN, Ter_Draw)
+            // B x : all are draw
+            DEF_MAT(KLKN, Ter_Draw)
+            DEF_MAT(KDKN, Ter_Draw)
 
-    DEF_MAT_REV(KNKL,KLKN)
-    DEF_MAT_REV(KNKD,KDKN)
+            DEF_MAT_REV(KNKL,KLKN)
+            DEF_MAT_REV(KNKD,KDKN)
 
-    // X 0 : QR win, BN draw
-    DEF_MAT_H(KQK, Ter_WhiteWinWithHelper,&helperKXK)
-    DEF_MAT_H(KRK, Ter_WhiteWinWithHelper,&helperKXK)
-    DEF_MAT(KLK, Ter_Draw)
-    DEF_MAT(KDK, Ter_Draw)
-    DEF_MAT(KNK, Ter_Draw)
+            // X 0 : QR win, BN draw
+            DEF_MAT_H(KQK, Ter_WhiteWinWithHelper,&helperKXK)
+            DEF_MAT_H(KRK, Ter_WhiteWinWithHelper,&helperKXK)
+            DEF_MAT(KLK, Ter_Draw)
+            DEF_MAT(KDK, Ter_Draw)
+            DEF_MAT(KNK, Ter_Draw)
 
-    DEF_MAT_REV_H(KKQ,KQK,&helperKXK)
-    DEF_MAT_REV_H(KKR,KRK,&helperKXK)
-    DEF_MAT_REV(KKL,KLK)
-    DEF_MAT_REV(KKD,KDK)
-    DEF_MAT_REV(KKN,KNK)
+            DEF_MAT_REV_H(KKQ,KQK,&helperKXK)
+            DEF_MAT_REV_H(KKR,KRK,&helperKXK)
+            DEF_MAT_REV(KKL,KLK)
+            DEF_MAT_REV(KKD,KDK)
+            DEF_MAT_REV(KKN,KNK)
 
-    // 2X 0 : all win except LL, DD, NN
-    DEF_MAT(KQQK, Ter_WhiteWin)
-    DEF_MAT(KRRK, Ter_WhiteWin)
-    DEF_MAT_H(KLDK, Ter_WhiteWinWithHelper,&helperKmmK)
-    DEF_MAT(KLLK, Ter_Draw)
-    DEF_MAT(KDDK, Ter_Draw)
-    DEF_MAT(KNNK, Ter_Draw)
-    DEF_MAT_H(KLNK, Ter_WhiteWinWithHelper,&helperKmmK)
-    DEF_MAT_H(KDNK, Ter_WhiteWinWithHelper,&helperKmmK)
+            // 2X 0 : all win except LL, DD, NN
+            DEF_MAT(KQQK, Ter_WhiteWin)
+            DEF_MAT(KRRK, Ter_WhiteWin)
+            DEF_MAT_H(KLDK, Ter_WhiteWinWithHelper,&helperKmmK)
+            DEF_MAT(KLLK, Ter_Draw)
+            DEF_MAT(KDDK, Ter_Draw)
+            DEF_MAT(KNNK, Ter_Draw)
+            DEF_MAT_H(KLNK, Ter_WhiteWinWithHelper,&helperKmmK)
+            DEF_MAT_H(KDNK, Ter_WhiteWinWithHelper,&helperKmmK)
 
-    DEF_MAT_REV(KKQQ,KQQK)
-    DEF_MAT_REV(KKRR,KRRK)
-    DEF_MAT_REV_H(KKLD,KLDK,&helperKmmK)
-    DEF_MAT_REV(KKLL,KLLK)
-    DEF_MAT_REV(KKDD,KDDK)
-    DEF_MAT_REV(KKNN,KNNK)
-    DEF_MAT_REV_H(KKLN,KLNK,&helperKmmK)
-    DEF_MAT_REV_H(KKDN,KDNK,&helperKmmK)
+            DEF_MAT_REV(KKQQ,KQQK)
+            DEF_MAT_REV(KKRR,KRRK)
+            DEF_MAT_REV_H(KKLD,KLDK,&helperKmmK)
+            DEF_MAT_REV(KKLL,KLLK)
+            DEF_MAT_REV(KKDD,KDDK)
+            DEF_MAT_REV(KKNN,KNNK)
+            DEF_MAT_REV_H(KKLN,KLNK,&helperKmmK)
+            DEF_MAT_REV_H(KKDN,KDNK,&helperKmmK)
 
-    ///@todo other (with pawn ...)
+            ///@todo other (with pawn ...)
+        }
+    };
 
     inline Terminaison probeMaterialHashTable(const Position::Material & mat) { return materialHashTable[getMaterialHash(mat)]; }
 
@@ -2383,16 +2381,32 @@ ScoreType eval(const Position & p, float & gp){
 
     const bool white2Play = p.c == Co_White;
 
-    /*
-    //const Hash matHash = MaterialHash::getMaterialHash(p.mat);
-    //const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
-    if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ){
-       sc += MaterialHash::helperTable[matHash](p);
-       sc = (white2Play?+1:-1)*sc;
-       TT::setEvalEntry({ sc, gp, computeHash(p) });
-       return sc;
+    if ( ter != MaterialHash::Ter_Unknown ){
+        if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ){
+           sc += MaterialHash::helperTable[matHash](p);
+           sc = (white2Play?+1:-1)*sc;
+           TT::setEvalEntry({ sc, gp, computeHash(p) });
+           return sc;
+        }
+        else if ( ter == MaterialHash::Ter_WhiteWin || ter == MaterialHash::Ter_BlackWin){
+           sc *= 3;
+           sc = (white2Play?+1:-1)*sc;
+           TT::setEvalEntry({ sc, gp, computeHash(p) });
+           return sc;
+        }
+        else if ( ter == MaterialHash::Ter_HardToWin){
+           sc /= 2;
+           sc = (white2Play?+1:-1)*sc;
+           TT::setEvalEntry({ sc, gp, computeHash(p) });
+           return sc;
+        }
+        else if ( ter == MaterialHash::Ter_LikelyDraw ){
+            sc /= 3;
+            sc = (white2Play?+1:-1)*sc;
+            TT::setEvalEntry({ sc, gp, computeHash(p) });
+            return sc;
+        }
     }
-    */
 
     // pst & mobility & ///@todo attack
     static BitBoard(*const pf[])(const Square, const BitBoard, const  Color) = { &BB::coverage<P_wp>, &BB::coverage<P_wn>, &BB::coverage<P_wb>, &BB::coverage<P_wr>, &BB::coverage<P_wq>, &BB::coverage<P_wk> };
