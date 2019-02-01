@@ -476,6 +476,7 @@ namespace MaterialHash { // from Gull
         }
     }
 
+    /*
     const int pushToEdges[64] = {
       100, 90, 80, 70, 70, 80, 90, 100,
        90, 70, 60, 50, 50, 60, 70,  90,
@@ -529,27 +530,27 @@ namespace MaterialHash { // from Gull
     ScoreType helperDummy(const Position &p){
         return 0;
     }
+    */
 
-    ScoreType (* helperTable[TotalMat])(const Position &);
+    //ScoreType (* helperTable[TotalMat])(const Position &);
     Terminaison materialHashTable[TotalMat];
 
     struct MaterialHashInitializer {
         MaterialHashInitializer(const Position::Material & mat, Terminaison t) { materialHashTable[getMaterialHash(mat)] = t; }
-        MaterialHashInitializer(const Position::Material & mat, Terminaison t, ScoreType (*helper)(const Position &) ) { materialHashTable[getMaterialHash(mat)] = t; helperTable[getMaterialHash(mat)] = helper; }
+        //MaterialHashInitializer(const Position::Material & mat, Terminaison t, ScoreType (*helper)(const Position &) ) { materialHashTable[getMaterialHash(mat)] = t; helperTable[getMaterialHash(mat)] = helper; }
         static void init() {
             LogIt(logInfo) << "Material hash total : " << TotalMat;
             std::memset(materialHashTable, Ter_Unknown, sizeof(Terminaison)*TotalMat);
-            for(size_t k = 0 ; k < TotalMat ; ++k) helperTable[k] = &helperDummy;
-
+            //for(size_t k = 0 ; k < TotalMat ; ++k) helperTable[k] = &helperDummy;
 #define TO_STR2(x) #x
 #define TO_STR(x) TO_STR2(x)
 #define LINE_NAME(prefix) JOIN(prefix,__LINE__)
 #define JOIN(symbol1,symbol2) _DO_JOIN(symbol1,symbol2 )
 #define _DO_JOIN(symbol1,symbol2) symbol1##symbol2
 #define DEF_MAT(x,t) const Position::Material MAT##x = materialFromString( TO_STR(x) ); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t);
-#define DEF_MAT_H(x,t,h) const Position::Material MAT##x = materialFromString( TO_STR(x) ); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t,h);
+#define DEF_MAT_H(x,t,h) const Position::Material MAT##x = materialFromString( TO_STR(x) ); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t/*,h*/);
 #define DEF_MAT_REV(rev,x) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)]));
-#define DEF_MAT_REV_H(rev,x,h) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)]),h);
+#define DEF_MAT_REV_H(rev,x,h) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)])/*,h*/);
 
             // sym (and pseudo sym) : all should be draw
             DEF_MAT(KK,     Ter_Draw)
@@ -2350,9 +2351,9 @@ ScoreType eval(const Position & p, float & gp){
 
     ///@todo  make a fence detection in draw eval
 
-    const Hash matHash = MaterialHash::getMaterialHash(p.mat);
-    const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
-    if ( ter == MaterialHash::Ter_Draw) return 0;
+    //const Hash matHash = MaterialHash::getMaterialHash(p.mat);
+    //const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
+    //if ( ter == MaterialHash::Ter_Draw) return 0;
 
     ScoreType sc = 0;
     //SCoreType scEG = 0; ///@todo avoid all the multiplications here !
@@ -2381,6 +2382,7 @@ ScoreType eval(const Position & p, float & gp){
 
     const bool white2Play = p.c == Co_White;
 
+    /*
     if ( ter != MaterialHash::Ter_Unknown ){
         if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ){
            sc += MaterialHash::helperTable[matHash](p);
@@ -2407,6 +2409,7 @@ ScoreType eval(const Position & p, float & gp){
             return sc;
         }
     }
+    */
 
     // pst & mobility & ///@todo attack
     static BitBoard(*const pf[])(const Square, const BitBoard, const  Color) = { &BB::coverage<P_wp>, &BB::coverage<P_wn>, &BB::coverage<P_wb>, &BB::coverage<P_wr>, &BB::coverage<P_wq>, &BB::coverage<P_wk> };
@@ -2694,6 +2697,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     ScoreType val = eval(p,gp);
     ScoreType bestScore = val;
     MaterialHash::Terminaison drawStatus = interiorNodeRecognizer(p, false, false);
+    //if ( qDepth == 0 && drawStatus == MaterialHash::Ter_Draw) return 0;
     if (drawStatus == MaterialHash::Ter_HardToWin || drawStatus == MaterialHash::Ter_LikelyDraw) val = ScoreType(val/3.f); // eval scaling
     if ( val >= beta ) return val;
     if ( val > alpha) alpha = val;
