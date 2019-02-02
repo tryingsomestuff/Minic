@@ -461,12 +461,13 @@ namespace MaterialHash { // from Gull
         return mat;
     }
 
-    enum Terminaison : unsigned char { Ter_Unknown = 0, Ter_WhiteWinWithHelper, Ter_WhiteWin, Ter_BlackWinWithHelper, Ter_BlackWin, Ter_Draw, Ter_LikelyDraw, Ter_HardToWin };
+    enum Terminaison : unsigned char { Ter_Unknown = 0, Ter_WhiteWinWithHelper, Ter_WhiteWin, Ter_BlackWinWithHelper, Ter_BlackWin, Ter_Draw, Ter_MaterialDraw, Ter_LikelyDraw, Ter_HardToWin };
 
     inline Terminaison reverseTerminaison(Terminaison t) {
         switch (t) {
         case Ter_Unknown:
         case Ter_Draw:
+        case Ter_MaterialDraw:
         case Ter_LikelyDraw:           return t;
         case Ter_WhiteWin:             return Ter_BlackWin;
         case Ter_WhiteWinWithHelper:   return Ter_BlackWinWithHelper;
@@ -553,21 +554,21 @@ namespace MaterialHash { // from Gull
 #define DEF_MAT_REV_H(rev,x,h) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)])/*,h*/);
 
             // sym (and pseudo sym) : all should be draw
-            DEF_MAT(KK,     Ter_Draw)
-            DEF_MAT(KQQKQQ, Ter_Draw)
-            DEF_MAT(KQKQ,   Ter_Draw)
-            DEF_MAT(KRRKRR, Ter_Draw)
-            DEF_MAT(KRKR,   Ter_Draw)
-            DEF_MAT(KLDKLD, Ter_Draw)
-            DEF_MAT(KLLKLL, Ter_Draw)
-            DEF_MAT(KDDKDD, Ter_Draw)
-            DEF_MAT(KLDKLL, Ter_Draw)
-            DEF_MAT(KLDKDD, Ter_Draw)
-            DEF_MAT(KLKL,   Ter_Draw)
-            DEF_MAT(KDKD,   Ter_Draw)
-            DEF_MAT(KLKD,   Ter_Draw)
-            DEF_MAT(KNNKNN, Ter_Draw)
-            DEF_MAT(KNKN,   Ter_Draw)
+            DEF_MAT(KK,     Ter_MaterialDraw)
+            DEF_MAT(KQQKQQ, Ter_MaterialDraw)
+            DEF_MAT(KQKQ,   Ter_MaterialDraw)
+            DEF_MAT(KRRKRR, Ter_MaterialDraw)
+            DEF_MAT(KRKR,   Ter_MaterialDraw)
+            DEF_MAT(KLDKLD, Ter_MaterialDraw)
+            DEF_MAT(KLLKLL, Ter_MaterialDraw)
+            DEF_MAT(KDDKDD, Ter_MaterialDraw)
+            DEF_MAT(KLDKLL, Ter_MaterialDraw)
+            DEF_MAT(KLDKDD, Ter_MaterialDraw)
+            DEF_MAT(KLKL,   Ter_MaterialDraw)
+            DEF_MAT(KDKD,   Ter_MaterialDraw)
+            DEF_MAT(KLKD,   Ter_MaterialDraw)
+            DEF_MAT(KNNKNN, Ter_MaterialDraw)
+            DEF_MAT(KNKN,   Ter_MaterialDraw)
 
             DEF_MAT_REV(KDKL,   KLKD)
             DEF_MAT_REV(KLLKLD, KLDKLL)
@@ -610,18 +611,18 @@ namespace MaterialHash { // from Gull
             DEF_MAT_REV(KNKQR, KQRKN)
 
             // 2m M
-            DEF_MAT(KLDKQ, Ter_Draw)
-            DEF_MAT(KLDKR, Ter_Draw)
-            DEF_MAT(KLLKQ, Ter_Draw)
-            DEF_MAT(KLLKR, Ter_Draw)
-            DEF_MAT(KDDKQ, Ter_Draw)
-            DEF_MAT(KDDKR, Ter_Draw)
-            DEF_MAT(KNNKQ, Ter_Draw)
-            DEF_MAT(KNNKR, Ter_Draw)
-            DEF_MAT(KLNKQ, Ter_Draw)
-            DEF_MAT(KLNKR, Ter_Draw)
-            DEF_MAT(KDNKQ, Ter_Draw)
-            DEF_MAT(KDNKR, Ter_Draw)
+            DEF_MAT(KLDKQ, Ter_MaterialDraw)
+            DEF_MAT(KLDKR, Ter_MaterialDraw)
+            DEF_MAT(KLLKQ, Ter_MaterialDraw)
+            DEF_MAT(KLLKR, Ter_MaterialDraw)
+            DEF_MAT(KDDKQ, Ter_MaterialDraw)
+            DEF_MAT(KDDKR, Ter_MaterialDraw)
+            DEF_MAT(KNNKQ, Ter_MaterialDraw)
+            DEF_MAT(KNNKR, Ter_MaterialDraw)
+            DEF_MAT(KLNKQ, Ter_MaterialDraw)
+            DEF_MAT(KLNKR, Ter_MaterialDraw)
+            DEF_MAT(KDNKQ, Ter_MaterialDraw)
+            DEF_MAT(KDNKR, Ter_MaterialDraw)
 
             DEF_MAT_REV(KQKLD,KLDKQ)
             DEF_MAT_REV(KRKLD,KLDKR)
@@ -637,24 +638,24 @@ namespace MaterialHash { // from Gull
             DEF_MAT_REV(KRKDN,KDNKR)
 
             // 2m m : all draw
-            DEF_MAT(KLDKL, Ter_Draw)
-            DEF_MAT(KLDKD, Ter_Draw)
-            DEF_MAT(KLDKN, Ter_Draw)
-            DEF_MAT(KLLKL, Ter_Draw)
-            DEF_MAT(KLLKD, Ter_Draw)
-            DEF_MAT(KLLKN, Ter_Draw)
-            DEF_MAT(KDDKL, Ter_Draw)
-            DEF_MAT(KDDKD, Ter_Draw)
-            DEF_MAT(KDDKN, Ter_Draw)
-            DEF_MAT(KNNKL, Ter_Draw)
-            DEF_MAT(KNNKD, Ter_Draw)
-            DEF_MAT(KNNKN, Ter_Draw)
-            DEF_MAT(KLNKL, Ter_Draw)
-            DEF_MAT(KLNKD, Ter_Draw)
-            DEF_MAT(KLNKN, Ter_Draw)
-            DEF_MAT(KDNKL, Ter_Draw)
-            DEF_MAT(KDNKD, Ter_Draw)
-            DEF_MAT(KDNKN, Ter_Draw)
+            DEF_MAT(KLDKL, Ter_MaterialDraw)
+            DEF_MAT(KLDKD, Ter_MaterialDraw)
+            DEF_MAT(KLDKN, Ter_MaterialDraw)
+            DEF_MAT(KLLKL, Ter_MaterialDraw)
+            DEF_MAT(KLLKD, Ter_MaterialDraw)
+            DEF_MAT(KLLKN, Ter_MaterialDraw)
+            DEF_MAT(KDDKL, Ter_MaterialDraw)
+            DEF_MAT(KDDKD, Ter_MaterialDraw)
+            DEF_MAT(KDDKN, Ter_MaterialDraw)
+            DEF_MAT(KNNKL, Ter_MaterialDraw)
+            DEF_MAT(KNNKD, Ter_MaterialDraw)
+            DEF_MAT(KNNKN, Ter_MaterialDraw)
+            DEF_MAT(KLNKL, Ter_MaterialDraw)
+            DEF_MAT(KLNKD, Ter_MaterialDraw)
+            DEF_MAT(KLNKN, Ter_MaterialDraw)
+            DEF_MAT(KDNKL, Ter_MaterialDraw)
+            DEF_MAT(KDNKD, Ter_MaterialDraw)
+            DEF_MAT(KDNKN, Ter_MaterialDraw)
 
             DEF_MAT_REV(KLKLD,KLDKL)
             DEF_MAT_REV(KDKLD,KLDKD)
@@ -696,8 +697,8 @@ namespace MaterialHash { // from Gull
             DEF_MAT_REV(KNKR,KRKN)
 
             // B x : all are draw
-            DEF_MAT(KLKN, Ter_Draw)
-            DEF_MAT(KDKN, Ter_Draw)
+            DEF_MAT(KLKN, Ter_MaterialDraw)
+            DEF_MAT(KDKN, Ter_MaterialDraw)
 
             DEF_MAT_REV(KNKL,KLKN)
             DEF_MAT_REV(KNKD,KDKN)
@@ -705,9 +706,9 @@ namespace MaterialHash { // from Gull
             // X 0 : QR win, BN draw
             DEF_MAT_H(KQK, Ter_WhiteWinWithHelper,&helperKXK)
             DEF_MAT_H(KRK, Ter_WhiteWinWithHelper,&helperKXK)
-            DEF_MAT(KLK, Ter_Draw)
-            DEF_MAT(KDK, Ter_Draw)
-            DEF_MAT(KNK, Ter_Draw)
+            DEF_MAT(KLK, Ter_MaterialDraw)
+            DEF_MAT(KDK, Ter_MaterialDraw)
+            DEF_MAT(KNK, Ter_MaterialDraw)
 
             DEF_MAT_REV_H(KKQ,KQK,&helperKXK)
             DEF_MAT_REV_H(KKR,KRK,&helperKXK)
@@ -719,9 +720,9 @@ namespace MaterialHash { // from Gull
             DEF_MAT(KQQK, Ter_WhiteWin)
             DEF_MAT(KRRK, Ter_WhiteWin)
             DEF_MAT_H(KLDK, Ter_WhiteWinWithHelper,&helperKmmK)
-            DEF_MAT(KLLK, Ter_Draw)
-            DEF_MAT(KDDK, Ter_Draw)
-            DEF_MAT(KNNK, Ter_Draw)
+            DEF_MAT(KLLK, Ter_MaterialDraw)
+            DEF_MAT(KDDK, Ter_MaterialDraw)
+            DEF_MAT(KNNK, Ter_MaterialDraw)
             DEF_MAT_H(KLNK, Ter_WhiteWinWithHelper,&helperKmmK)
             DEF_MAT_H(KDNK, Ter_WhiteWinWithHelper,&helperKmmK)
 
@@ -2313,6 +2314,7 @@ void sort(const ThreadContext & context, std::vector<Move> & moves, const Positi
 
 inline bool ThreadContext::isRep(const Position & p, bool isPV)const{
     const int limit = isPV ? 3 : 1;
+    if ( p.fifty < (2*limit-1) ) return false;
     int count = 0;
     const Hash h = computeHash(p);
     for (int k = p.ply - 1; k >= 0; --k) {
@@ -2328,8 +2330,9 @@ MaterialHash::Terminaison ThreadContext::interiorNodeRecognizer(const Position &
     if (p.fifty >= 100)           return MaterialHash::Ter_Draw;
     if (p.mat.np == 0)            return MaterialHash::probeMaterialHashTable(p.mat);
     else { // some pawn are present
-        ///@todo ... KPK
+        ///@todo ... KPK KPKQ KPKR KPKB KPKN
     }
+    ///@todo  make a fence detection in draw eval
     return MaterialHash::Ter_Unknown;
 }
 
@@ -2349,14 +2352,13 @@ const ScoreType MOBEG[6][28] = { {0,0,0,0},
 
 ScoreType eval(const Position & p, float & gp){
 
-    ///@todo  make a fence detection in draw eval
-
     //const Hash matHash = MaterialHash::getMaterialHash(p.mat);
     //const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
     //if ( ter == MaterialHash::Ter_Draw) return 0;
+    //if ( ter == MaterialHash::Ter_MaterialDraw) return 0;
 
     ScoreType sc = 0;
-    //SCoreType scEG = 0; ///@todo avoid all the multiplications here !
+    //ScoreType scEG = 0; ///@todo avoid all the multiplications here !
     if (TT::getEvalEntry(computeHash(p), sc, gp)) return sc;
 
     static ScoreType dummyScore = 0;
@@ -2696,9 +2698,10 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     ScoreType val = eval(p,gp);
     ScoreType bestScore = val;
-    MaterialHash::Terminaison drawStatus = interiorNodeRecognizer(p, false, false);
-    //if ( qDepth == 0 && drawStatus == MaterialHash::Ter_Draw) return 0;
-    if (drawStatus == MaterialHash::Ter_HardToWin || drawStatus == MaterialHash::Ter_LikelyDraw) val = ScoreType(val/3.f); // eval scaling
+    //const MaterialHash::Terminaison drawStatus = interiorNodeRecognizer(p, false, false);
+    if ( qDepth == 0 && interiorNodeRecognizer(p, false, false) == MaterialHash::Ter_Draw) return 0;
+    //if ( drawStatus == MaterialHash::Ter_MaterialDraw) return 0;
+    //if (drawStatus == MaterialHash::Ter_HardToWin || drawStatus == MaterialHash::Ter_LikelyDraw) val = ScoreType(val/3.f); // eval scaling
     if ( val >= beta ) return val;
     if ( val > alpha) alpha = val;
 
@@ -2714,18 +2717,21 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     //const bool isInCheck = isAttacked(p, kingSquare(p));
 
     std::vector<Move> moves;
-    generate(p,moves,GP_cap);
+    generate(p,moves,/*isInCheck?GP_all:*/GP_cap); // check evasion or capture only
     sort(*this,moves,p/*,qDepth==0?&e:0*/);
 
     const ScoreType alphaInit = alpha;
 
+    //bool validMoveFound = false;
+
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         if ( StaticConfig::doQFutility /*&& !isInCheck*/ && val + StaticConfig::qfutilityMargin + getAbsValue(p,Move2To(*it)) <= alphaInit) continue;
-        //if ( SEEVal(p,*it) < -0 /* && !isCheck*/) continue; // see (prune bad capture)
-        if ( Move2Score(*it) < -900 /* && !isCheck*/) continue; // see (from move sorter, SEE<0 add -2000 if bad capture)
-        //if ( !SEE(p,*it) /* && !isCheck*/) continue; // see (prune all bad capture)
+        //if ( SEEVal(p,*it) < -0 /* && !isInCheck*/) continue; // see (prune bad capture)
+        if ( Move2Score(*it) < -900 /*&& !isInCheck*/) continue; // see (from move sorter, SEE<0 add -2000 if bad capture)
+        //if ( !SEE(p,*it) /* && !isInCheck*/) continue; // see (prune all bad capture)
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
+        //validMoveFound = true;
         if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply + 1;
         if (p.c == Co_Black && Move2To(*it) == p.wk) return MATE - ply + 1;
         val = -qsearch(-beta,-alpha,p2,ply+1,seldepth,qDepth-1);
@@ -2737,6 +2743,9 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
            }
         }
     }
+
+    //if ( !validMoveFound && isInCheck ) return -MATE + ply;
+
     return bestScore;
 }
 
@@ -2782,8 +2791,9 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     const bool rootnode = ply == 1;
 
     float gp = 0;
-    MaterialHash::Terminaison drawStatus = interiorNodeRecognizer(p, true, pvnode);
+    const MaterialHash::Terminaison drawStatus = interiorNodeRecognizer(p, true, pvnode);
     if (!rootnode && drawStatus == MaterialHash::Ter_Draw) return 0;
+    //if (!rootnode && drawStatus == MaterialHash::Ter_MaterialDraw) return 0;
     if (ply >= MAX_PLY - 1 || depth >= MAX_DEPTH - 1) return eval(p, gp);
 
     TT::Entry e;
@@ -2807,6 +2817,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     const bool hashUsable = e.h != 0 && ((e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact));
     if (isInCheck) val = -MATE + ply;
     else val = hashUsable?e.score:eval(p, gp);
+    //if (! hashUsable && (drawStatus == MaterialHash::Ter_HardToWin || drawStatus == MaterialHash::Ter_LikelyDraw)) val = ScoreType(val/3.f); // eval scaling
     scoreStack[p.ply] = val;
 
     bool futility = false, lmp = false;
