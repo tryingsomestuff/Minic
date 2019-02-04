@@ -32,7 +32,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 
-const std::string MinicVersion = "0.35";
+const std::string MinicVersion = "dev";
 
 #define STOPSCORE   ScoreType(20000)
 #define INFSCORE    ScoreType(15000)
@@ -1055,13 +1055,13 @@ struct ThreadContext{
     HistoryT historyT;
     CounterT counterT;
 
-    ScoreType pvs    (ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove = INVALIDMOVE);
+    template <bool pvnode> ScoreType pvs    (ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove = INVALIDMOVE);
     ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth, DepthType qDepth);
     ScoreType qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
     bool SEE(const Position & p, const Move & m, ScoreType threshold)const;
     template< bool display = false> ScoreType SEEVal(const Position & p, const Move & m)const;
     std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth);
-    MaterialHash::Terminaison interiorNodeRecognizer(const Position & p, bool withRep = true, bool isPV = true)const;
+    template< bool withRep = true, bool isPv = true, bool INR = true> MaterialHash::Terminaison interiorNodeRecognizer(const Position & p)const;
     bool isRep(const Position & p, bool isPv)const;
 
     void idleLoop(){
@@ -2325,14 +2325,17 @@ inline bool ThreadContext::isRep(const Position & p, bool isPV)const{
     return false;
 }
 
-MaterialHash::Terminaison ThreadContext::interiorNodeRecognizer(const Position & p, bool withRep, bool isPV)const{
+template< bool withRep, bool isPV, bool INR>
+MaterialHash::Terminaison ThreadContext::interiorNodeRecognizer(const Position & p)const{
     if (withRep && isRep(p,isPV)) return MaterialHash::Ter_Draw;
     if (p.fifty >= 100)           return MaterialHash::Ter_Draw;
-    if (p.mat.np == 0)            return MaterialHash::probeMaterialHashTable(p.mat);
-    else { // some pawn are present
-        ///@todo ... KPK KPKQ KPKR KPKB KPKN
+    if ( INR ){
+       if (p.mat.np == 0 )           return MaterialHash::probeMaterialHashTable(p.mat);
+       else { // some pawn are present
+           ///@todo ... KPK KPKQ KPKR KPKB KPKN
+           ///@todo  make a fence detection in draw eval
+       }
     }
-    ///@todo  make a fence detection in draw eval
     return MaterialHash::Ter_Unknown;
 }
 
@@ -2698,10 +2701,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     ScoreType val = eval(p,gp);
     ScoreType bestScore = val;
-    //const MaterialHash::Terminaison drawStatus = interiorNodeRecognizer(p, false, false);
-    if ( qDepth == 0 && interiorNodeRecognizer(p, false, false) == MaterialHash::Ter_Draw) return 0;
-    //if ( drawStatus == MaterialHash::Ter_MaterialDraw) return 0;
-    //if (drawStatus == MaterialHash::Ter_HardToWin || drawStatus == MaterialHash::Ter_LikelyDraw) val = ScoreType(val/3.f); // eval scaling
+    if ( qDepth == 0 && interiorNodeRecognizer<false,false,false>(p) == MaterialHash::Ter_Draw) return 0;
     if ( val >= beta ) return val;
     if ( val > alpha) alpha = val;
 
@@ -2767,14 +2767,15 @@ inline bool singularExtension(ThreadContext & context, ScoreType alpha, ScoreTyp
         const ScoreType betaC = e.score - depth;
         std::vector<Move> sePV;
         DepthType seSeldetph;
-        const ScoreType score = context.pvs(betaC - 1, betaC, p, depth/2, false, ply, sePV, seSeldetph, m);
+        const ScoreType score = context.pvs<false>(betaC - 1, betaC, p, depth/2, ply, sePV, seSeldetph, m);
         if (!ThreadContext::stopFlag && score < betaC) return true;
     }
     return false;
 }
 
 // pvs inspired by Xiphos
-ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, bool pvnode, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove){
+template< bool pvnode>
+ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove){
 
     if ( stopFlag || std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()) > currentMoveMs ){ stopFlag = true; return STOPSCORE; }
 
@@ -2791,9 +2792,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     const bool rootnode = ply == 1;
 
     float gp = 0;
-    const MaterialHash::Terminaison drawStatus = interiorNodeRecognizer(p, true, pvnode);
-    if (!rootnode && drawStatus == MaterialHash::Ter_Draw) return 0;
-    //if (!rootnode && drawStatus == MaterialHash::Ter_MaterialDraw) return 0;
+    if (!rootnode && interiorNodeRecognizer<true, pvnode, false>(p) == MaterialHash::Ter_Draw) return 0;
     if (ply >= MAX_PLY - 1 || depth >= MAX_DEPTH - 1) return eval(p, gp);
 
     TT::Entry e;
@@ -2817,7 +2816,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     const bool hashUsable = e.h != 0 && ((e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact));
     if (isInCheck) val = -MATE + ply;
     else val = hashUsable?e.score:eval(p, gp);
-    //if (! hashUsable && (drawStatus == MaterialHash::Ter_HardToWin || drawStatus == MaterialHash::Ter_LikelyDraw)) val = ScoreType(val/3.f); // eval scaling
     scoreStack[p.ply] = val;
 
     bool futility = false, lmp = false;
@@ -2847,7 +2845,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             pN.h ^= ZT[4][13];
             const int R = depth/4 + 3 + std::min((val-beta)/80,3); // adaptative
             std::vector<Move> nullPV;
-            const ScoreType nullscore = -pvs(-beta,-beta+1,pN,depth-R,false,ply+1,nullPV,seldepth);
+            const ScoreType nullscore = -pvs<false>(-beta,-beta+1,pN,depth-R,ply+1,nullPV,seldepth);
             if ( !stopFlag && nullscore >= beta ) return nullscore;
             if ( stopFlag ) return STOPSCORE;
         }
@@ -2871,7 +2869,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             ++probCutCount;
             ScoreType scorePC = betaPC; // -qsearch(-betaPC, -betaPC + 1, p2, ply + 1, seldepth,0);
             std::vector<Move> pvPC;
-            if (!stopFlag && scorePC >= betaPC) scorePC = -pvs(-betaPC,-betaPC+1,p2,depth-StaticConfig::probCutMinDepth+1,pvnode,ply+1,pvPC,seldepth);
+            if (!stopFlag && scorePC >= betaPC) scorePC = -pvs<pvnode>(-betaPC,-betaPC+1,p2,depth-StaticConfig::probCutMinDepth+1,ply+1,pvPC,seldepth);
             if (!stopFlag && scorePC >= betaPC) return scorePC;
             if (stopFlag) return STOPSCORE;
           }
@@ -2881,7 +2879,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     // IID
     if ( (e.h == 0 /*|| e.d < depth/3*/) && pvnode && depth >= StaticConfig::iidMinDepth){
         std::vector<Move> iidPV;
-        pvs(alpha,beta,p,depth-2,pvnode,ply,iidPV,seldepth); ///@todo here -2 or /2 seems to gives the same strength ...
+        pvs<pvnode>(alpha,beta,p,depth-2,ply,iidPV,seldepth); ///@todo here -2 or /2 seems to gives the same strength ...
         if ( !stopFlag) TT::getEntry(computeHash(p), depth, e);
         else return STOPSCORE;
     }
@@ -2902,7 +2900,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             int extension = 0;
             if (isInCheck) ++extension;
             if (!extension && skipMove==INVALIDMOVE && singularExtension(*this,alpha, beta, p, depth, e, e.m, rootnode, ply)) ++extension;
-            const ScoreType ttval = -pvs(-beta, -alpha, p2, depth-1+extension, pvnode, ply + 1, childPV, seldepth);
+            const ScoreType ttval = -pvs<pvnode>(-beta, -alpha, p2, depth-1+extension, ply + 1, childPV, seldepth);
             if (stopFlag) return STOPSCORE;
             bestScore = ttval;
             bestMove = e.m;
@@ -2949,7 +2947,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         int extension = 0;
         if (isInCheck && depth <= 4) extension = 1; // we are in check (extension)
         //if (depth <=3 && p.lastMove != INVALIDMOVE && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) extension = 1; ///@todo recapture extension
-        if (validMoveCount == 1 || !StaticConfig::doPVS) val = -pvs(-beta,-alpha,p2,depth-1+extension,pvnode,ply+1,childPV,seldepth);
+        if (validMoveCount == 1 || !StaticConfig::doPVS) val = -pvs<pvnode>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth);
         else{
             // reductions & prunings
             int reduction = 0;
@@ -2977,14 +2975,14 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             //if (reduction < 0) reduction = 0;
             //if (reduction >= depth) reduction = depth - 1;
             // PVS
-            val = -pvs(-alpha-1,-alpha,p2,depth-1-reduction+extension,false,ply+1,childPV,seldepth);
+            val = -pvs<false>(-alpha-1,-alpha,p2,depth-1-reduction+extension,ply+1,childPV,seldepth);
             if ( reduction > 0 && val > alpha ){
                 childPV.clear();
-                val = -pvs(-alpha-1,-alpha,p2,depth-1+extension,false,ply+1,childPV,seldepth);
+                val = -pvs<false>(-alpha-1,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth);
             }
             if ( val > alpha && val < beta ){
                 childPV.clear();
-                val = -pvs(-beta,-alpha,p2,depth-1+extension,true,ply+1,childPV,seldepth); // potential new pv node
+                val = -pvs<true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth); // potential new pv node
             }
         }
         if (stopFlag) return STOPSCORE;
@@ -3070,7 +3068,7 @@ std::vector<Move> ThreadContext::search(const Position & p, Move & m, DepthType 
         ScoreType score = 0;
         while( delta <= MATE ){
             pvLoc.clear();
-            score = pvs(alpha,beta,p,depth,true,1,pvLoc,seldepth);
+            score = pvs<true>(alpha,beta,p,depth,1,pvLoc,seldepth);
             if ( stopFlag ) break;
             delta += 2 + delta/2; // from xiphos ...
             if      (score <= alpha) alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) );
