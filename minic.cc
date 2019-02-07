@@ -32,7 +32,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "ttt";
 
 #define STOPSCORE   ScoreType(20000)
 #define INFSCORE    ScoreType(15000)
@@ -891,7 +891,7 @@ struct Entry{
 
 struct Bucket {
     static const int nbBucket = 2;
-    Entry e[nbBucket]; // first are replace always, last is replace by depth
+    Entry e[nbBucket]; // first is replace always, last are replace by depth
 };
 
 unsigned int powerFloor(unsigned int x) {
@@ -919,26 +919,28 @@ void clearTT() {
 bool getEntry(Hash h, DepthType d, Entry & e, int nbuck = 0) {
     assert(h > 0);
     if ( DynamicConfig::disableTT ) return false;
-    if (nbuck >= Bucket::nbBucket) return false;
+    if (nbuck >= Bucket::nbBucket) return false; // no more bucket
     const Entry & _e = table[h%ttSize].e[nbuck];
-    if ( _e.h != h ) return getEntry(h,d,e,nbuck+1);
-    e = _e; // only if no collision is detected !
-    if ( _e.d >= d ){ ++stats.tthits; return true; }
-    return getEntry(h,d,e,nbuck+1);
+    if ( _e.h == 0 ) return false; //early exist cause next ones are also empty ...
+    if ( _e.h != h ) return getEntry(h,d,e,nbuck+1); // next one
+    e = _e; // update entry only if no collision is detected !
+    if ( _e.d >= d ){ ++stats.tthits; return true; } // valid entry if depth is ok
+    return getEntry(h,d,e,nbuck+1); // next one
 }
 
 void setEntry(const Entry & e){
     assert(e.h > 0);
     if ( DynamicConfig::disableTT ) return;
-    for (unsigned int i = 0 ; i < Bucket::nbBucket-1 ; ++i){
-        Entry & _eAlways = table[e.h%ttSize].e[i];
-        //if ( _eAlways.h != e.h ){ // always replace (if hash is not the same) ///@todo
-           _eAlways = e;
-        //   break;
-        //}
+    const size_t index = e.h%ttSize;
+    table[index].e[0] = e; // first is always replace
+    Entry & _eDepthLowest = table[index].e[1];
+    DepthType lowest = _eDepthLowest.d;
+    for (unsigned int i = 2 ; i < Bucket::nbBucket ; ++i){ // next are replace by depth, we look for the lower depth
+        const Entry & _eDepth = table[index].e[i];
+        if ( _eDepth.h == 0 ) break; //early break cause next ones are also empty
+        if ( _eDepth.d < lowest ) { _eDepthLowest = _eDepth; lowest = _eDepth.d; }
     }
-    Entry & _eDepth = table[e.h%ttSize].e[Bucket::nbBucket-1];
-    if ( false && e.d >= _eDepth.d ) _eDepth = e; // replace if better depth
+    _eDepthLowest = e; // replace the one with the lowest depth
 }
 
 struct EvalEntry {
