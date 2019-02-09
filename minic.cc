@@ -28,7 +28,7 @@ typedef uint64_t u_int64_t;
 
 //#define IMPORTBOOK
 //#define WITH_TEXEL_TUNING
-//#define DEBUG_TOOL
+#define DEBUG_TOOL
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 
@@ -2080,7 +2080,7 @@ bool apply(Position & p, const Move & m){
 
     p.lastMove = m;
 
-    initMaterial(p);
+    initMaterial(p); ///@todo THIS IS SLOW, do it on the fly !!!
 
     return true;
 }
@@ -2264,7 +2264,7 @@ struct MoveSorter{
         else if ( t == T_std){
             if (sameMove(m, context.killerT.killers[0][p.ply])) s += 290;
             else if (sameMove(m, context.killerT.killers[1][p.ply])) s += 270;
-            else if ( sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 250;
+            else if (p.lastMove!=INVALIDMOVE && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 250;
             else s += context.historyT.history[getPieceIndex(p, from)][to];
             const bool isWhite = (p.whitePiece & SquareToBitboard(from)) != 0ull;
             s += PST[getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - PST[getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from];
@@ -2669,7 +2669,7 @@ ScoreType eval(const Position & p, float & gp){
     //sc += ScoreType(30*gp);
 
     // scale phase
-    sc = gp*sc + gpCompl*scEG + scScaled;
+    sc = ScoreType(gp*sc + gpCompl*scEG + scScaled);
 
     sc = (white2Play?+1:-1)*sc;
     return sc;
