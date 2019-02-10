@@ -2487,8 +2487,8 @@ ScoreType eval(const Position & p, float & gp){
             const uint64_t n = countBit(curAtt);
             sc   += EvalConfig::MOB  [ptype - 1][n];
             scEG += EvalConfig::MOBEG[ptype - 1][n];
-            dangerW -= countBit(curAtt & wKingZone) * EvalConfig::katt_defence_weight[ptype];
-            dangerB += countBit(curAtt & bKingZone) * EvalConfig::katt_attack_weight[ptype];
+            dangerW -= ScoreType(countBit(curAtt & wKingZone) * EvalConfig::katt_defence_weight[ptype]);
+            dangerB += ScoreType(countBit(curAtt & bKingZone) * EvalConfig::katt_attack_weight[ptype]);
         }
     }
 
@@ -2503,8 +2503,8 @@ ScoreType eval(const Position & p, float & gp){
             const uint64_t n = countBit(curAtt);
             sc   -= EvalConfig::MOB  [ptype - 1][n];
             scEG -= EvalConfig::MOBEG[ptype - 1][n];
-            dangerW += countBit(curAtt & wKingZone) * EvalConfig::katt_attack_weight[ptype];
-            dangerB -= countBit(curAtt & bKingZone) * EvalConfig::katt_defence_weight[ptype];
+            dangerW += ScoreType(countBit(curAtt & wKingZone) * EvalConfig::katt_attack_weight[ptype]);
+            dangerB -= ScoreType(countBit(curAtt & bKingZone) * EvalConfig::katt_defence_weight[ptype]);
         }
     }
 
