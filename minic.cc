@@ -28,11 +28,11 @@ typedef uint64_t u_int64_t;
 
 //#define IMPORTBOOK
 //#define WITH_TEXEL_TUNING
-#define DEBUG_TOOL
+//#define DEBUG_TOOL
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "att";
 
 #define STOPSCORE   ScoreType(20000)
 #define INFSCORE    ScoreType(15000)
@@ -160,8 +160,10 @@ struct Stats{
 
 Stats stats;
 
-enum Piece : char{ P_bk = -6, P_bq = -5, P_br = -4, P_bb = -3, P_bn = -2, P_bp = -1, P_none = 0, P_wp = 1, P_wn = 2, P_wb = 3, P_wr = 4, P_wq = 5, P_wk = 6 };
+enum Piece    : char{ P_bk = -6, P_bq = -5, P_br = -4, P_bb = -3, P_bn = -2, P_bp = -1, P_none = 0, P_wp = 1, P_wn = 2, P_wb = 3, P_wr = 4, P_wq = 5, P_wk = 6 };
 const int PieceShift = 6;
+enum Mat      : char{ M_t = 0, M_p, M_n, M_b, M_r, M_q, M_k, M_bl, M_bd, M_M, M_m };
+
 
 ScoreType   Values[13]    = { -8000, -1025, -477, -365, -337, -82, 0, 82, 337, 365, 477, 1025, 8000 };
 ScoreType   ValuesEG[13]  = { -8000,  -936, -512, -297, -281, -94, 0, 94, 281, 297, 512,  936, 8000 };
@@ -216,6 +218,8 @@ enum MType : char{
     T_cappromq   = 8,   T_cappromr   = 9,   T_cappromb   = 10,  T_cappromn   = 11,
     T_wks        = 12,  T_wqs        = 13,  T_bks        = 14,  T_bqs        = 15
 };
+
+Piece promShift(MType mt){ assert(mt>=T_promq); assert(mt<=T_cappromn); return Piece(P_wq - (mt%4));}
 
 enum Color : char{ Co_None  = -1,   Co_White = 0,   Co_Black = 1 };
 
@@ -355,15 +359,47 @@ struct Position{
     mutable Hash h = 0ull;
     Move lastMove = INVALIDMOVE;
 
-    struct Material {
-        unsigned char nwk = 0; unsigned char nwq = 0; unsigned char nwr = 0; unsigned char nwb = 0; unsigned char nwbl = 0; unsigned char nwbd = 0; unsigned char nwn = 0; unsigned char nwp = 0;
-        unsigned char nbk = 0; unsigned char nbq = 0; unsigned char nbr = 0; unsigned char nbb = 0; unsigned char nbbl = 0; unsigned char nbbd = 0; unsigned char nbn = 0; unsigned char nbp = 0;
-        unsigned char nk  = 0; unsigned char nq  = 0; unsigned char nr  = 0; unsigned char nb  = 0; unsigned char nn   = 0; unsigned char np   = 0;
-        unsigned char nwM = 0; unsigned char nbM = 0; unsigned char nwm = 0; unsigned char nbm = 0; unsigned char nwt  = 0; unsigned char nbt  = 0;
-    };
-
+    // t p n b r q k bl bd M n
+    typedef std::array<std::array<char,11>,2> Material;
     Material mat;
 };
+
+inline Color opponentColor(const Color c){ return Color((c+1)%2);}
+
+inline ScoreType Move2Score(Move h) { assert(h != INVALIDMOVE); return (h >> 16) & 0xFFFF; }
+inline Square    Move2From (Move h) { assert(h != INVALIDMOVE); return (h >> 10) & 0x3F  ; }
+inline Square    Move2To   (Move h) { assert(h != INVALIDMOVE); return (h >>  4) & 0x3F  ; }
+inline MType     Move2Type (Move h) { assert(h != INVALIDMOVE); return MType(h & 0xF)    ; }
+inline Move      ToMove(Square from, Square to, MType type)                  { assert(from >= 0 && from < 64); assert(to >= 0 && to < 64); return                 (from << 10) | (to << 4) | type; }
+inline Move      ToMove(Square from, Square to, MType type, ScoreType score) { assert(from >= 0 && from < 64); assert(to >= 0 && to < 64); return (score << 16) | (from << 10) | (to << 4) | type; }
+
+inline Piece getPieceIndex  (const Position &p, Square k){ assert(k >= 0 && k < 64); return Piece(p.b[k] + PieceShift);}
+
+inline Piece getPieceType   (const Position &p, Square k){ assert(k >= 0 && k < 64); return (Piece)std::abs(p.b[k]);}
+
+inline Color getColor       (const Position &p, Square k){ assert(k >= 0 && k < 64); return Colors[getPieceIndex(p,k)];}
+
+inline std::string getName  (const Position &p, Square k){ assert(k >= 0 && k < 64); return Names[getPieceIndex(p,k)];}
+
+inline ScoreType getValue   (const Position &p, Square k){ assert(k >= 0 && k < 64); return Values[getPieceIndex(p,k)];}
+
+inline ScoreType getAbsValue(const Position &p, Square k){ assert(k >= 0 && k < 64); return std::abs(Values[getPieceIndex(p,k)]); }
+
+inline bool isMatingScore (ScoreType s) { return (s >=  MATE - MAX_DEPTH); }
+inline bool isMatedScore  (ScoreType s) { return (s <= -MATE + MAX_DEPTH); }
+inline bool isMateScore   (ScoreType s) { return (std::abs(s) >= MATE - MAX_DEPTH); }
+
+inline bool isCapture(const MType & mt){ return mt == T_capture || mt == T_ep || mt == T_cappromq || mt == T_cappromr || mt == T_cappromb || mt == T_cappromn; }
+
+inline bool isCapture(const Move & m){ return isCapture(Move2Type(m)); }
+
+inline bool isPromotion(const MType & mt){ return mt >= T_promq && mt <= T_cappromn;}
+
+inline bool isPromotion(const Move & m){ return isPromotion(Move2Type(m));}
+
+inline bool isUnderPromotion(const MType & mt) { return mt >= T_promr && mt <= T_cappromn && mt != T_cappromq; }
+
+inline bool isUnderPromotion(const Move & m) { return isUnderPromotion(Move2Type(m)); }
 
 //inline int manhattanDistance(Square sq1, Square sq2) { return std::abs((sq2 >> 3) - (sq1 >> 3)) + std::abs((sq2 & 7) - (sq1 & 7));}
 inline int chebyshevDistance(Square sq1, Square sq2) { return std::max(std::abs((sq2 >> 3) - (sq1 >> 3)) , std::abs((sq2 & 7) - (sq1 & 7))); }
@@ -389,70 +425,78 @@ namespace MaterialHash { // from Gull
     const int UnknownMaterialHash = -1;
 
     inline Hash getMaterialHash(const Position::Material & mat) {
-        if (mat.nwq > 2 || mat.nbq > 2 || mat.nwr > 2 || mat.nbr > 2 || mat.nwbl > 1 || mat.nbbl > 1 || mat.nwbd > 1 || mat.nbbd > 1 || mat.nwn > 2 || mat.nbn > 2 || mat.nwp > 8 || mat.nbp > 8) return 0;
-        return mat.nwp * MatWP + mat.nbp * MatBP + mat.nwn * MatWN + mat.nbn * MatBN + mat.nwbl * MatWL + mat.nbbl * MatBL + mat.nwbd * MatWD + mat.nbbd * MatBD + mat.nwr * MatWR + mat.nbr * MatBR + mat.nwq * MatWQ + mat.nbq * MatBQ;
+        if (mat[Co_White][M_q] > 2 || mat[Co_Black][M_q] > 2 || mat[Co_White][M_r] > 2 || mat[Co_Black][M_r] > 2 || mat[Co_White][M_bl] > 1 || mat[Co_Black][M_bl] > 1 || mat[Co_White][M_bd] > 1 || mat[Co_Black][M_bd] > 1 || mat[Co_White][M_n] > 2 || mat[Co_Black][M_n] > 2 || mat[Co_White][M_p] > 8 || mat[Co_Black][M_p] > 8) return 0;
+        return mat[Co_White][M_p] * MatWP + mat[Co_Black][M_p] * MatBP + mat[Co_White][M_n] * MatWN + mat[Co_Black][M_n] * MatBN + mat[Co_White][M_bl] * MatWL + mat[Co_Black][M_bl] * MatBL + mat[Co_White][M_bd] * MatWD + mat[Co_Black][M_bd] * MatBD + mat[Co_White][M_r] * MatWR + mat[Co_Black][M_r] * MatBR + mat[Co_White][M_q] * MatWQ + mat[Co_Black][M_q] * MatBQ;
     }
 
     /*
     Position::Material getMatFromHash(Hash index) {
         Position::Material mat;
-        mat.nwq  = (int)(index % 3); index /= 3;        mat.nbq  = (int)(index % 3); index /= 3;
-        mat.nwr  = (int)(index % 3); index /= 3;        mat.nbr  = (int)(index % 3); index /= 3;
-        mat.nwbl = (int)(index % 2); index /= 2;        mat.nbbl = (int)(index % 2); index /= 2;
-        mat.nwbd = (int)(index % 2); index /= 2;        mat.nbbd = (int)(index % 2); index /= 2;
-        mat.nwn  = (int)(index % 3); index /= 3;        mat.nbn  = (int)(index % 3); index /= 3;
-        mat.nwp  = (int)(index % 9); index /= 9;        mat.nbp  = (int)(index);
+        mat[Co_White][M_q]  = (int)(index % 3); index /= 3;        mat[Co_Black][M_q]  = (int)(index % 3); index /= 3;
+        mat[Co_White][M_r]  = (int)(index % 3); index /= 3;        mat[Co_Black][M_r]  = (int)(index % 3); index /= 3;
+        mat[Co_White][M_bl] = (int)(index % 2); index /= 2;        mat[Co_Black][M_bl] = (int)(index % 2); index /= 2;
+        mat[Co_White][M_bd] = (int)(index % 2); index /= 2;        mat[Co_Black][M_bd] = (int)(index % 2); index /= 2;
+        //mat[Co_White][M_bd]
+        mat[Co_White][M_n]  = (int)(index % 3); index /= 3;        mat[Co_Black][M_n]  = (int)(index % 3); index /= 3;
+        mat[Co_White][M_p]  = (int)(index % 9); index /= 9;        mat[Co_Black][M_p]  = (int)(index);
+        //mat[Co_White][M_M]
+        //mat[Co_White][M_m]
+        //mat[Co_White][M_t]
         return mat;
     }
     */
 
     inline Position::Material getMatReverseColor(const Position::Material & mat) {
-        Position::Material rev;
-        rev.nwk = mat.nbk;  rev.nbk = mat.nwk;
-        rev.nwq = mat.nbq;  rev.nbq = mat.nwq;
-        rev.nwr = mat.nbr;  rev.nbr = mat.nwr;
-        rev.nwb = mat.nbb;  rev.nbb = mat.nwb;   rev.nwbl = mat.nbbl;  rev.nbbl = mat.nwbl;   rev.nwbd = mat.nbbd;  rev.nbbd = mat.nwbd;
-        rev.nwn = mat.nbn;  rev.nbn = mat.nwn;
-        rev.nwp = mat.nbp;  rev.nbp = mat.nwp;
-        rev.nwM = mat.nbM;  rev.nbM = mat.nwM;   rev.nwm = mat.nbm;    rev.nbm = mat.nwm;     rev.nwt = mat.nbt;    rev.nbt = mat.nwt;
+        Position::Material rev = {0};
+        rev[Co_White][M_k]  = mat[Co_Black][M_k];   rev[Co_Black][M_k]  = mat[Co_White][M_k];
+        rev[Co_White][M_q]  = mat[Co_Black][M_q];   rev[Co_Black][M_q]  = mat[Co_White][M_q];
+        rev[Co_White][M_r]  = mat[Co_Black][M_r];   rev[Co_Black][M_r]  = mat[Co_White][M_r];
+        rev[Co_White][M_b]  = mat[Co_Black][M_b];   rev[Co_Black][M_b]  = mat[Co_White][M_b];
+        rev[Co_White][M_bl] = mat[Co_Black][M_bl];  rev[Co_Black][M_bl] = mat[Co_White][M_bl];
+        rev[Co_White][M_bd] = mat[Co_Black][M_bd];  rev[Co_Black][M_bd] = mat[Co_White][M_bd];
+        rev[Co_White][M_n]  = mat[Co_Black][M_n];   rev[Co_Black][M_n]  = mat[Co_White][M_n];
+        rev[Co_White][M_p]  = mat[Co_Black][M_p];   rev[Co_Black][M_p]  = mat[Co_White][M_p];
+        rev[Co_White][M_M]  = mat[Co_Black][M_M];   rev[Co_Black][M_M]  = mat[Co_White][M_M];
+        rev[Co_White][M_m]  = mat[Co_Black][M_m];   rev[Co_Black][M_m]  = mat[Co_White][M_m];
+        rev[Co_White][M_t]  = mat[Co_Black][M_t];   rev[Co_Black][M_t]  = mat[Co_White][M_t];
         return rev;
     }
 
     Position::Material materialFromString(const std::string & strMat) {
-        Position::Material mat;
+        Position::Material mat = {0};
         bool isWhite = false;
         for (auto it = strMat.begin(); it != strMat.end(); ++it) {
             switch (*it) {
             case 'K':
                 isWhite = !isWhite;
-                (isWhite ? mat.nwk : mat.nbk) += 1;
+                (isWhite ? mat[Co_White][M_k] : mat[Co_Black][M_k]) += 1;
                 break;
             case 'Q':
-                (isWhite ? mat.nwq : mat.nbq) += 1;
-                (isWhite ? mat.nwM : mat.nbM) += 1;
-                (isWhite ? mat.nwt : mat.nbt) += 1;
+                (isWhite ? mat[Co_White][M_q] : mat[Co_Black][M_q]) += 1;
+                (isWhite ? mat[Co_White][M_M] : mat[Co_Black][M_M]) += 1;
+                (isWhite ? mat[Co_White][M_t] : mat[Co_Black][M_t]) += 1;
                 break;
             case 'R':
-                (isWhite ? mat.nwr : mat.nbr) += 1;
-                (isWhite ? mat.nwM : mat.nbM) += 1;
-                (isWhite ? mat.nwt : mat.nbt) += 1;
+                (isWhite ? mat[Co_White][M_r] : mat[Co_Black][M_r]) += 1;
+                (isWhite ? mat[Co_White][M_M] : mat[Co_Black][M_M]) += 1;
+                (isWhite ? mat[Co_White][M_t] : mat[Co_Black][M_t]) += 1;
                 break;
             case 'L':
-                (isWhite ? mat.nwbl : mat.nbbl) += 1;
-                (isWhite ? mat.nwb : mat.nbb) += 1;
-                (isWhite ? mat.nwm : mat.nbm) += 1;
-                (isWhite ? mat.nwt : mat.nbt) += 1;
+                (isWhite ? mat[Co_White][M_bl] : mat[Co_Black][M_bl]) += 1;
+                (isWhite ? mat[Co_White][M_b]  : mat[Co_Black][M_b])  += 1;
+                (isWhite ? mat[Co_White][M_m]  : mat[Co_Black][M_m])  += 1;
+                (isWhite ? mat[Co_White][M_t]  : mat[Co_Black][M_t])  += 1;
                 break;
             case 'D':
-                (isWhite ? mat.nwbd : mat.nbbd) += 1;
-                (isWhite ? mat.nwb : mat.nbb) += 1;
-                (isWhite ? mat.nwm : mat.nbm) += 1;
-                (isWhite ? mat.nwt : mat.nbt) += 1;
+                (isWhite ? mat[Co_White][M_bd] : mat[Co_Black][M_bd]) += 1;
+                (isWhite ? mat[Co_White][M_b]  : mat[Co_Black][M_b])  += 1;
+                (isWhite ? mat[Co_White][M_m]  : mat[Co_Black][M_m])  += 1;
+                (isWhite ? mat[Co_White][M_t]  : mat[Co_Black][M_t])  += 1;
                 break;
             case 'N':
-                (isWhite ? mat.nwn : mat.nbn) += 1;
-                (isWhite ? mat.nwm : mat.nbm) += 1;
-                (isWhite ? mat.nwt : mat.nbt) += 1;
+                (isWhite ? mat[Co_White][M_n] : mat[Co_Black][M_n]) += 1;
+                (isWhite ? mat[Co_White][M_m] : mat[Co_Black][M_m]) += 1;
+                (isWhite ? mat[Co_White][M_t] : mat[Co_Black][M_t]) += 1;
                 break;
             default:
                 LogIt(logFatal) << "Bad char in material definition";
@@ -546,8 +590,8 @@ namespace MaterialHash { // from Gull
 #define LINE_NAME(prefix) JOIN(prefix,__LINE__)
 #define JOIN(symbol1,symbol2) _DO_JOIN(symbol1,symbol2 )
 #define _DO_JOIN(symbol1,symbol2) symbol1##symbol2
-#define DEF_MAT(x,t) const Position::Material MAT##x = materialFromString( TO_STR(x) ); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t);
-#define DEF_MAT_H(x,t,h) const Position::Material MAT##x = materialFromString( TO_STR(x) ); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t,h);
+#define DEF_MAT(x,t) const Position::Material MAT##x = materialFromString(TO_STR(x)); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t);
+#define DEF_MAT_H(x,t,h) const Position::Material MAT##x = materialFromString(TO_STR(x)); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t,h);
 #define DEF_MAT_REV(rev,x) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)]));
 #define DEF_MAT_REV_H(rev,x,h) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)]),h);
 
@@ -741,25 +785,57 @@ namespace MaterialHash { // from Gull
 
 }
 
+void updateMaterialOther(Position & p){
+    p.mat[Co_White][M_M]  = p.mat[Co_White][M_q] + p.mat[Co_White][M_r];
+    p.mat[Co_Black][M_M]  = p.mat[Co_Black][M_q] + p.mat[Co_Black][M_r];
+    p.mat[Co_White][M_m]  = p.mat[Co_White][M_b] + p.mat[Co_White][M_n];
+    p.mat[Co_Black][M_m]  = p.mat[Co_Black][M_b] + p.mat[Co_Black][M_n];
+    p.mat[Co_White][M_t]  = p.mat[Co_White][M_M] + p.mat[Co_White][M_m];
+    p.mat[Co_Black][M_t]  = p.mat[Co_Black][M_M] + p.mat[Co_Black][M_m];
+}
+
 void initMaterial(Position & p){
-    p.mat.nwk = (unsigned char)countBit(p.whiteKing);
-    p.mat.nwq = (unsigned char)countBit(p.whiteQueen);
-    p.mat.nwr = (unsigned char)countBit(p.whiteRook);
-    p.mat.nwb = (unsigned char)countBit(p.whiteBishop);
-    p.mat.nwbl= (unsigned char)countBit(p.whiteBishop&whiteSquare);
-    p.mat.nwbd= (unsigned char)countBit(p.whiteBishop&blackSquare);
-    p.mat.nwn = (unsigned char)countBit(p.whiteKnight);
-    p.mat.nwp = (unsigned char)countBit(p.whitePawn);
-    p.mat.nbk = (unsigned char)countBit(p.blackKing);
-    p.mat.nbq = (unsigned char)countBit(p.blackQueen);
-    p.mat.nbr = (unsigned char)countBit(p.blackRook);
-    p.mat.nbb = (unsigned char)countBit(p.blackBishop);
-    p.mat.nbbl= (unsigned char)countBit(p.blackBishop&whiteSquare);
-    p.mat.nbbd= (unsigned char)countBit(p.blackBishop&blackSquare);
-    p.mat.nbn = (unsigned char)countBit(p.blackKnight);
-    p.mat.nbp = (unsigned char)countBit(p.blackPawn);
-    p.mat.nk  = p.mat.nwk + p.mat.nbk; p.mat.nq  = p.mat.nwq + p.mat.nbq; p.mat.nr  = p.mat.nwr + p.mat.nbr; p.mat.nb  = p.mat.nwb + p.mat.nbb; p.mat.nn  = p.mat.nwn + p.mat.nbn; p.mat.np  = p.mat.nwp + p.mat.nbp;
-    p.mat.nwM = p.mat.nwq + p.mat.nwr; p.mat.nbM = p.mat.nbq + p.mat.nbr; p.mat.nwm = p.mat.nwb + p.mat.nwn; p.mat.nbm = p.mat.nbb + p.mat.nbn; p.mat.nwt = p.mat.nwM + p.mat.nwm; p.mat.nbt = p.mat.nbM + p.mat.nbm;
+    p.mat[Co_White][M_k]  = (unsigned char)countBit(p.whiteKing);
+    p.mat[Co_White][M_q]  = (unsigned char)countBit(p.whiteQueen);
+    p.mat[Co_White][M_r]  = (unsigned char)countBit(p.whiteRook);
+    p.mat[Co_White][M_b]  = (unsigned char)countBit(p.whiteBishop);
+    p.mat[Co_White][M_bl] = (unsigned char)countBit(p.whiteBishop&whiteSquare);
+    p.mat[Co_White][M_bd] = (unsigned char)countBit(p.whiteBishop&blackSquare);
+    p.mat[Co_White][M_n]  = (unsigned char)countBit(p.whiteKnight);
+    p.mat[Co_White][M_p]  = (unsigned char)countBit(p.whitePawn);
+    p.mat[Co_Black][M_k]  = (unsigned char)countBit(p.blackKing);
+    p.mat[Co_Black][M_q]  = (unsigned char)countBit(p.blackQueen);
+    p.mat[Co_Black][M_r]  = (unsigned char)countBit(p.blackRook);
+    p.mat[Co_Black][M_b]  = (unsigned char)countBit(p.blackBishop);
+    p.mat[Co_Black][M_bl] = (unsigned char)countBit(p.blackBishop&whiteSquare);
+    p.mat[Co_Black][M_bd] = (unsigned char)countBit(p.blackBishop&blackSquare);
+    p.mat[Co_Black][M_n]  = (unsigned char)countBit(p.blackKnight);
+    p.mat[Co_Black][M_p]  = (unsigned char)countBit(p.blackPawn);
+    updateMaterialOther(p);
+}
+
+void updateMaterialStd(Position &p, const Square toBeCaptured){
+    const Piece pp = getPieceType(p,toBeCaptured);
+    const Color opp = opponentColor(p.c);
+    p.mat[opp][pp]--; // capture if to square is not empty
+
+    updateMaterialOther(p);
+}
+
+void updateMaterialEp(Position &p){
+    const Color opp = opponentColor(p.c);
+    p.mat[opp][M_p]--; // ep if to square is empty
+
+    updateMaterialOther(p);
+}
+
+void updateMaterialProm(Position &p, const Square toBeCaptured, MType mt){
+    const Piece pp = getPieceType(p,toBeCaptured);
+    const Color opp = opponentColor(p.c);
+    if ( pp != P_none ) p.mat[opp][pp]--; // capture if to square is not empty
+    if ( isPromotion(mt) ) p.mat[p.c][promShift(mt)]++; // prom
+
+    updateMaterialOther(p);
 }
 
 void initBitBoards(Position & p) {
@@ -793,18 +869,6 @@ void setBitBoards(Position & p) {
     p.occupancy  = p.whitePiece | p.blackPiece;
 }
 
-inline Piece getPieceIndex  (const Position &p, Square k){ assert(k >= 0 && k < 64); return Piece(p.b[k] + PieceShift);}
-
-inline Piece getPieceType   (const Position &p, Square k){ assert(k >= 0 && k < 64); return (Piece)std::abs(p.b[k]);}
-
-inline Color getColor       (const Position &p, Square k){ assert(k >= 0 && k < 64); return Colors[getPieceIndex(p,k)];}
-
-inline std::string getName  (const Position &p, Square k){ assert(k >= 0 && k < 64); return Names[getPieceIndex(p,k)];}
-
-inline ScoreType getValue   (const Position &p, Square k){ assert(k >= 0 && k < 64); return Values[getPieceIndex(p,k)];}
-
-inline ScoreType getAbsValue(const Position &p, Square k){ assert(k >= 0 && k < 64); return std::abs(Values[getPieceIndex(p,k)]); }
-
 inline void unSetBit(Position & p, Square k) { ///@todo keep this lookup table in position and implemente copy CTOR and operator
     assert(k >= 0 && k < 64);
     BitBoard * const allB[13] = { &(p.blackKing),&(p.blackQueen),&(p.blackRook),&(p.blackBishop),&(p.blackKnight),&(p.blackPawn),&dummy,&(p.whitePawn),&(p.whiteKnight),&(p.whiteBishop),&(p.whiteRook),&(p.whiteQueen),&(p.whiteKing) };
@@ -820,13 +884,6 @@ inline void setBit(Position &p, Square k, Piece pp) { ///@todo keep this lookup 
     BitBoard * const allB[13] = { &(p.blackKing),&(p.blackQueen),&(p.blackRook),&(p.blackBishop),&(p.blackKnight),&(p.blackPawn),&dummy,&(p.whitePawn),&(p.whiteKnight),&(p.whiteBishop),&(p.whiteRook),&(p.whiteQueen),&(p.whiteKing) };
     setBit(*allB[pp + PieceShift], k);
 }
-
-inline ScoreType Move2Score(Move h) { assert(h != INVALIDMOVE); return (h >> 16) & 0xFFFF; }
-inline Square    Move2From (Move h) { assert(h != INVALIDMOVE); return (h >> 10) & 0x3F  ; }
-inline Square    Move2To   (Move h) { assert(h != INVALIDMOVE); return (h >>  4) & 0x3F  ; }
-inline MType     Move2Type (Move h) { assert(h != INVALIDMOVE); return MType(h & 0xF)    ; }
-inline Move      ToMove(Square from, Square to, MType type)                  { assert(from >= 0 && from < 64); assert(to >= 0 && to < 64); return                 (from << 10) | (to << 4) | type; }
-inline Move      ToMove(Square from, Square to, MType type, ScoreType score) { assert(from >= 0 && from < 64); assert(to >= 0 && to < 64); return (score << 16) | (from << 10) | (to << 4) | type; }
 
 Hash randomInt(){
     static std::mt19937 mt(42); // fixed seed for ZHash !!!
@@ -1137,22 +1194,6 @@ ThreadPool::ThreadPool():stop(false){ push_back(new ThreadContext(size()));} // 
 
 ScoreType eval(const Position & p, float & gp); // forward decl
 
-inline bool isMatingScore (ScoreType s) { return (s >=  MATE - MAX_DEPTH); }
-inline bool isMatedScore  (ScoreType s) { return (s <= -MATE + MAX_DEPTH); }
-inline bool isMateScore   (ScoreType s) { return (std::abs(s) >= MATE - MAX_DEPTH); }
-
-inline bool isCapture(const MType & mt){ return mt == T_capture || mt == T_ep || mt == T_cappromq || mt == T_cappromr || mt == T_cappromb || mt == T_cappromn; }
-
-inline bool isCapture(const Move & m){ return isCapture(Move2Type(m)); }
-
-inline bool isPromotion(const MType & mt){ return mt >= T_promq && mt <= T_cappromn;}
-
-inline bool isPromotion(const Move & m){ return isPromotion(Move2Type(m));}
-
-inline bool isUnderPromotion(const MType & mt) { return mt >= T_promr && mt <= T_cappromn && mt != T_cappromq; }
-
-inline bool isUnderPromotion(const Move & m) { return isUnderPromotion(Move2Type(m)); }
-
 /*
 inline bool isTactical(const Move m) { return isCapture(m) || isPromotion(m); }
 
@@ -1241,6 +1282,13 @@ std::string ToString(const std::vector<Move> & moves){
     return ss.str();
 }
 
+std::string ToString(const Position::Material & mat) {
+    std::stringstream str;
+    str << "\n" << "#Q  :" << (int)mat[Co_White][M_q] << "\n" << "#R  :" << (int)mat[Co_White][M_r] << "\n" << "#B  :" << (int)mat[Co_White][M_b] << "\n" << "#L  :" << (int)mat[Co_White][M_bl] << "\n" << "#D  :" << (int)mat[Co_White][M_bd] << "\n" << "#N  :" << (int)mat[Co_White][M_n] << "\n" << "#P  :" << (int)mat[Co_White][M_p] << "\n" << "#Ma :" << (int)mat[Co_White][M_M] << "\n" << "#Mi :" << (int)mat[Co_White][M_m] << "\n" << "#T  :" << (int)mat[Co_White][M_t] << "\n";
+    str << "\n" << "#q  :" << (int)mat[Co_Black][M_q] << "\n" << "#r  :" << (int)mat[Co_Black][M_r] << "\n" << "#b  :" << (int)mat[Co_Black][M_b] << "\n" << "#l  :" << (int)mat[Co_Black][M_bl] << "\n" << "#d  :" << (int)mat[Co_Black][M_bd] << "\n" << "#n  :" << (int)mat[Co_Black][M_n] << "\n" << "#p  :" << (int)mat[Co_Black][M_p] << "\n" << "#ma :" << (int)mat[Co_Black][M_M] << "\n" << "#mi :" << (int)mat[Co_Black][M_m] << "\n" << "#t  :" << (int)mat[Co_Black][M_t] << "\n";
+    return str.str();
+}
+
 std::string ToString(const Position & p, bool noEval){
     std::stringstream ss;
     ss << "Position" << std::endl;
@@ -1259,18 +1307,9 @@ std::string ToString(const Position & p, bool noEval){
         sc = eval(p, gp);
         ss << "# Phase " << gp  << std::endl << "# Static score " << sc << std::endl << "# Hash " << computeHash(p) << std::endl << "# FEN " << GetFEN(p) << std::endl;
     }
-    ss << "#";
+    ss << ToString(p.mat);
     return ss.str();
 }
-
-std::string ToString(const Position::Material & mat) {
-    std::stringstream str;
-    str << "\n" << "Q  :" << (int)mat.nwq << "\n" << "R  :" << (int)mat.nwr << "\n" << "B  :" << (int)mat.nwb << "\n" << "L  :" << (int)mat.nwbl << "\n" << "D  :" << (int)mat.nwbd << "\n" << "N  :" << (int)mat.nwn << "\n" << "Ma :" << (int)mat.nwM << "\n" << "Mi :" << (int)mat.nwm << "\n" << "T  :" << (int)mat.nwt << "\n";
-    str << "\n" << "q  :" << (int)mat.nbq << "\n" << "r  :" << (int)mat.nbr << "\n" << "b  :" << (int)mat.nbb << "\n" << "l  :" << (int)mat.nbbl << "\n" << "d  :" << (int)mat.nbbd << "\n" << "n  :" << (int)mat.nbn << "\n" << "ma :" << (int)mat.nbM << "\n" << "mi :" << (int)mat.nbm << "\n" << "t  :" << (int)mat.nbt << "\n";
-    return str.str();
-}
-
-inline Color opponentColor(const Color c){ return Color((c+1)%2);}
 
 // from Rofchade
 const ScoreType PST[6][64] = {
@@ -1928,11 +1967,12 @@ bool apply(Position & p, const Move & m){
     const Piece  toP   = p.b[to];
 
     const int fromId   = fromP + PieceShift;
-    const int toId     = toP + PieceShift;
+    //const int toId     = toP + PieceShift;
 
     switch(type){
     case T_std:
     case T_capture:
+        updateMaterialStd(p,to);
     case T_check:
         movePiece(p, from, to, fromP, toP, type == T_capture);
 
@@ -1985,23 +2025,28 @@ bool apply(Position & p, const Move & m){
         p.h ^= ZT[from][fromId]; // remove fromP at from
         p.h ^= ZT[epCapSq][(p.c == Co_White ? P_bp : P_wp) + PieceShift]; // remove captured pawn
         p.h ^= ZT[to][fromId]; // add fromP at to
+        updateMaterialEp(p);
     }
         break;
 
     case T_promq:
     case T_cappromq:
+        updateMaterialProm(p,to,type);
         movePiece(p, from, to, fromP, toP, type == T_cappromq,(p.c == Co_White ? P_wq : P_bq));
         break;
     case T_promr:
     case T_cappromr:
+        updateMaterialProm(p,to,type);
         movePiece(p, from, to, fromP, toP, type == T_cappromr, (p.c == Co_White ? P_wr : P_br));
         break;
     case T_promb:
     case T_cappromb:
+        updateMaterialProm(p,to,type);
         movePiece(p, from, to, fromP, toP, type == T_cappromb, (p.c == Co_White ? P_wb : P_bb));
         break;
     case T_promn:
     case T_cappromn:
+        updateMaterialProm(p,to,type);
         movePiece(p, from, to, fromP, toP, type == T_cappromn, (p.c == Co_White ? P_wn : P_bn));
         break;
     case T_wks:
@@ -2071,16 +2116,16 @@ bool apply(Position & p, const Move & m){
     if (p.ep != INVALIDSQUARE) p.h ^= ZT[p.ep][13];
 
     p.c = opponentColor(p.c);
+    p.h ^= ZT[3][13]; p.h ^= ZT[4][13];
+
     if ( toP != P_none || abs(fromP) == P_wp ) p.fifty = 0;
     else ++p.fifty;
     if ( p.c == Co_White ) ++p.moves;
     ++p.ply;
 
-    p.h ^= ZT[3][13]; p.h ^= ZT[4][13];
+    //initMaterial(p);
 
     p.lastMove = m;
-
-    initMaterial(p); ///@todo THIS IS SLOW, do it on the fly !!!
 
     return true;
 }
@@ -2170,8 +2215,8 @@ ScoreType ThreadContext::SEEVal(const Position & pos, const Move & move)const{
     gain[0] = Values[P_wp+PieceShift];
   }
 
-  BitBoard bq = pos.whiteBishop | pos.whiteQueen | pos.blackBishop | pos.blackQueen;
-  BitBoard rq = pos.whiteRook   | pos.whiteQueen | pos.blackRook   | pos.blackQueen;
+  const BitBoard bq = pos.whiteBishop | pos.whiteQueen | pos.blackBishop | pos.blackQueen;
+  const BitBoard rq = pos.whiteRook   | pos.whiteQueen | pos.blackRook   | pos.blackQueen;
   const BitBoard occCol[2] = { pos.whitePiece, pos.blackPiece };
   const BitBoard piece_occ[5] = { pos.whitePawn | pos.blackPawn, pos.whiteKnight | pos.blackKnight, pos.whiteBishop | pos.blackBishop, pos.whiteRook | pos.blackRook, pos.whiteQueen | pos.blackQueen };
 
@@ -2185,7 +2230,7 @@ ScoreType ThreadContext::SEEVal(const Position & pos, const Move & move)const{
     int pp = 0;
     long long int pb = 0ll;
     for (pp = P_wp; pp <= P_wq; ++pp) if ((pb = side_att & piece_occ[pp-1])) break; // looking for the smaller attaker
-    if (!pb) pb = side_att; // in this case thi is the king
+    if (!pb) pb = side_att; // in this case this is the king
     pb = pb & -pb; // get the LSB
     if (display) { unsigned long int i = INVALIDSQUARE; bsf(pb,i); LogIt(logInfo) << "Capture from " << Squares[i]; }
     occ ^= pb; // remove this piece from occ
@@ -2303,7 +2348,7 @@ MaterialHash::Terminaison ThreadContext::interiorNodeRecognizer(const Position &
     if (withRep && isRep(p,isPV)) return MaterialHash::Ter_Draw;
     if (p.fifty >= 100)           return MaterialHash::Ter_Draw;
     if ( INR ){
-       if (p.mat.np == 0 )           return MaterialHash::probeMaterialHashTable(p.mat);
+       if (p.mat[Co_White][M_p] + p.mat[Co_Black][M_p] == 0 ) return MaterialHash::probeMaterialHashTable(p.mat);
        else { // some pawn are present
            ///@todo ... KPK KPKQ KPKR KPKB KPKN
            ///@todo  make a fence detection in draw eval
@@ -2326,6 +2371,22 @@ const ScoreType MOBEG[6][28] = { {0,0,0,0},
                                  {-19,-18,-16,-14,-12,-10,0,3,6,9,12,15,18,21,24,27,30,33,35,38,41,43,46,48,49,50,51},
                                  {-20,0,5,10,11,12,13,14} };
 
+// from Topple
+ScoreType katt_table[64] = {0};
+ScoreType katt_attack_weight [7] = {0, -3, 13, 8, 8, 10, 4};
+ScoreType katt_defence_weight[7] = {0,  4,  3, 4, 0, -1, 0};
+
+void initEval(){
+    static ScoreType katt_max    = 267;
+    static ScoreType katt_trans  = 32;
+    static ScoreType katt_scale  = 13;
+    static ScoreType katt_offset = 10;
+    for(int i = 0; i < 64; i++){
+        katt_table[i] = (int) (double(katt_max) / (1 + exp((katt_trans - i) / double(katt_scale)))) - katt_offset;
+        LogIt(logInfo) << "Attack level " << i << " " << katt_table[i];
+    }
+}
+
 ScoreType eval(const Position & p, float & gp){
 
     //const Hash matHash = MaterialHash::getMaterialHash(p.mat);
@@ -2342,26 +2403,26 @@ ScoreType eval(const Position & p, float & gp){
     // game phase
     ///@todo tune this, but care it seems to have a huge impact
     /*static*/ const float totalAbsScore = 2.f * *absValues[P_wq] + 4.f * *absValues[P_wr] + 4.f * *absValues[P_wb] + 4.f * *absValues[P_wn] + 16.f * *absValues[P_wp];
-    const float absscore = ((p.mat.nwq + p.mat.nbq) * *absValues[P_wq] + (p.mat.nwr + p.mat.nbr) * *absValues[P_wr] + (p.mat.nwb + p.mat.nbb) * *absValues[P_wb] + (p.mat.nwn + p.mat.nbn) * *absValues[P_wn] + (p.mat.nwp + p.mat.nbp) * *absValues[P_wp]) / totalAbsScore;
-    const float pawnScore = p.mat.np / 16.f;
-    const float pieceScore = (p.mat.nq + p.mat.nr + p.mat.nb + p.mat.nn) / 14.f;
+    const float absscore = ( (p.mat[Co_White][M_q] + p.mat[Co_Black][M_q]) * *absValues[P_wq] + (p.mat[Co_White][M_r] + p.mat[Co_Black][M_r]) * *absValues[P_wr] + (p.mat[Co_White][M_b] + p.mat[Co_Black][M_b]) * *absValues[P_wb] + (p.mat[Co_White][M_n] + p.mat[Co_Black][M_n]) * *absValues[P_wn] + (p.mat[Co_White][M_p] + p.mat[Co_Black][M_p]) * *absValues[P_wp]) / totalAbsScore;
+    const float pawnScore  = (p.mat[Co_White][M_p] + p.mat[Co_Black][M_p]) / 16.f;
+    const float pieceScore = (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t]) / 14.f;
     gp = (absscore*0.4f + pieceScore * 0.3f + pawnScore * 0.3f);
     const float gpCompl = 1.f - gp;
 
     // material (symetric version)
-    sc   += (p.mat.nwk - p.mat.nbk) * *absValues[P_wk]
-          + (p.mat.nwq - p.mat.nbq) * *absValues[P_wq]
-          + (p.mat.nwr - p.mat.nbr) * *absValues[P_wr]
-          + (p.mat.nwb - p.mat.nbb) * *absValues[P_wb]
-          + (p.mat.nwn - p.mat.nbn) * *absValues[P_wn]
-          + (p.mat.nwp - p.mat.nbp) * *absValues[P_wp];
+    sc   += (p.mat[Co_White][M_k] - p.mat[Co_Black][M_k]) * *absValues[P_wk]
+          + (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValues[P_wq]
+          + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * *absValues[P_wr]
+          + (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * *absValues[P_wb]
+          + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValues[P_wn]
+          + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValues[P_wp];
 
-    scEG += (p.mat.nwk - p.mat.nbk) * *absValuesEG[P_wk]
-          + (p.mat.nwq - p.mat.nbq) * *absValuesEG[P_wq]
-          + (p.mat.nwr - p.mat.nbr) * *absValuesEG[P_wr]
-          + (p.mat.nwb - p.mat.nbb) * *absValuesEG[P_wb]
-          + (p.mat.nwn - p.mat.nbn) * *absValuesEG[P_wn]
-          + (p.mat.nwp - p.mat.nbp) * *absValuesEG[P_wp];
+    scEG += (p.mat[Co_White][M_k] - p.mat[Co_Black][M_k]) * *absValuesEG[P_wk]
+          + (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValuesEG[P_wq]
+          + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * *absValuesEG[P_wr]
+          + (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * *absValuesEG[P_wb]
+          + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValuesEG[P_wn]
+          + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValuesEG[P_wp];
 
     const bool white2Play = p.c == Co_White;
 
@@ -2400,10 +2461,9 @@ ScoreType eval(const Position & p, float & gp){
     }
     */
 
-    // pst & mobility & ///@todo attack
+    // pst & mobility & ///@todo attack, openfile near king
     static BitBoard(*const pf[])(const Square, const BitBoard, const  Color) = { &BB::coverage<P_wp>, &BB::coverage<P_wn>, &BB::coverage<P_wb>, &BB::coverage<P_wr>, &BB::coverage<P_wq>, &BB::coverage<P_wk> };
 
-    /*
     BitBoard wKingZone = 0ull;
     if ( p.wk != INVALIDSQUARE ){
        wKingZone = BB::mask[p.wk].kingZone;
@@ -2412,12 +2472,9 @@ ScoreType eval(const Position & p, float & gp){
     if ( p.bk != INVALIDSQUARE ){
        bKingZone = BB::mask[p.bk].kingZone;
     }
-    float attSc = 0.f;
+    ScoreType dangerW = 0;
+    ScoreType dangerB = 0;
 
-    static const float attackValue[6] = { 1, 1.5f, 1.5f, 2, 3, 2 };
-    */
-
-    //BitBoard whiteAttack[6] = {0ull};
     BitBoard pieceBBiterator = p.whitePiece;
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
@@ -2427,15 +2484,14 @@ ScoreType eval(const Position & p, float & gp){
         scEG += PSTEG[ptype - 1][kk];
         if (ptype != P_wp) {
             const BitBoard curAtt = pf[ptype-1](k, p.occupancy, p.c) & ~p.whitePiece;
-            //whiteAttack[ptype-1] |= curAtt;
             const uint64_t n = countBit(curAtt);
             sc   += MOB  [ptype - 1][n];
             scEG += MOBEG[ptype - 1][n];
-            //attSc += countBit(curAtt & bKingZone) * attackValue[ptype - 1];
+            dangerW -= countBit(curAtt & wKingZone) * katt_defence_weight[ptype];
+            dangerB += countBit(curAtt & bKingZone) * katt_attack_weight[ptype];
         }
     }
 
-    //BitBoard blackAttack[6] = {0ull};
     pieceBBiterator = p.blackPiece;
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
@@ -2444,20 +2500,19 @@ ScoreType eval(const Position & p, float & gp){
         scEG -= PSTEG[ptype - 1][k];
         if (ptype != P_wp) {
             const BitBoard curAtt = pf[ptype-1](k, p.occupancy, p.c) & ~p.blackPiece;
-            //blackAttack[ptype-1] |= curAtt;
             const uint64_t n = countBit(curAtt);
             sc   -= MOB  [ptype - 1][n];
             scEG -= MOBEG[ptype - 1][n];
-            //attSc -= countBit(curAtt & wKingZone) * attackValue[ptype - 1];
+            dangerW += countBit(curAtt & wKingZone) * katt_attack_weight[ptype];
+            dangerB -= countBit(curAtt & bKingZone) * katt_defence_weight[ptype];
         }
     }
 
-    // use attack score
-    //sc   +=ScoreType(attSc*5);
-    //scEG +=ScoreType(attSc*5);
-
-    // in very end game winning king must be near the other king (helps in KQK or KRK)
-    if (p.mat.np == 0 && p.wk != INVALIDSQUARE && p.bk != INVALIDSQUARE) scEG -= ScoreType((sc>0?+1:-1)*chebyshevDistance(p.wk, p.bk)*35);
+    // use danger score
+    sc   -=  katt_table[std::min(std::max(dangerW,ScoreType(0)),ScoreType(63))];
+    sc   +=  katt_table[std::min(std::max(dangerB,ScoreType(0)),ScoreType(63))];
+    //scEG -=  katt_table[std::min(std::max(dangerW,0),63)];
+    //scEG +=  katt_table[std::min(std::max(dangerB,0),63)];
 
     // passer
     ///@todo candidate passed
@@ -2640,16 +2695,16 @@ ScoreType eval(const Position & p, float & gp){
     ///@todo this seems to LOSE elo !
     // number of pawn and piece type
     ScoreType scAjust = 0;
-    scAjust += p.mat.nwr * adjRook  [p.mat.nwp];
-    scAjust -= p.mat.nbr * adjRook  [p.mat.nbp];
-    scAjust += p.mat.nwn * adjKnight[p.mat.nwp];
-    scAjust -= p.mat.nbn * adjKnight[p.mat.nbp];
+    scAjust += p.mat[Co_White][M_r] * adjRook  [p.mat[Co_White][M_p]];
+    scAjust -= p.mat[Co_Black][M_r] * adjRook  [p.mat[Co_Black][M_p]];
+    scAjust += p.mat[Co_White][M_n] * adjKnight[p.mat[Co_White][M_p]];
+    scAjust -= p.mat[Co_Black][M_n] * adjKnight[p.mat[Co_Black][M_p]];
     // bishop pair
-    scAjust += ( (p.mat.nwb > 1 ? bishopPairBonus : 0)-(p.mat.nbb > 1 ? bishopPairBonus : 0) );
+    scAjust += ( (p.mat[Co_White][M_b] > 1 ? bishopPairBonus : 0)-(p.mat[Co_Black][M_b] > 1 ? bishopPairBonus : 0) );
     // knight pair
-    scAjust += ( (p.mat.nwn > 1 ? knightPairMalus : 0)-(p.mat.nbn > 1 ? knightPairMalus : 0) );
+    scAjust += ( (p.mat[Co_White][M_n] > 1 ? knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? knightPairMalus : 0) );
     // rook pair
-    scAjust += ( (p.mat.nwr > 1 ? rookPairMalus   : 0)-(p.mat.nbr > 1 ? rookPairMalus   : 0) );
+    scAjust += ( (p.mat[Co_White][M_r] > 1 ? rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? rookPairMalus   : 0) );
 
     sc   += scAjust;
     scEG += scAjust;
@@ -2852,7 +2907,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     bool futility = false, lmp = false;
     std::vector<Move> moves;
 
-    const bool isNotEndGame = gp > 0.2 && p.mat.np > 0 && (p.mat.nwt+p.mat.nbt > 2);
+    const bool isNotEndGame = gp > 0.2 && (p.mat[Co_White][M_p] + p.mat[Co_Black][M_p]) > 0 && (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t] > 2);
 
     // prunings
     if ( !DynamicConfig::mateFinder && !rootnode && isNotEndGame && !pvnode && !isInCheck && !isMateScore(alpha) && !isMateScore(beta) && skipMove == INVALIDMOVE){
@@ -3536,6 +3591,7 @@ int main(int argc, char ** argv){
     initMvvLva();
     BB::initMask();
     MaterialHash::MaterialHashInitializer::init();
+    initEval();
     ThreadPool::instance().setup(getOption<int>("threads",1,Validator<int>().setMin(1).setMax(64)));
     GETOPT(mateFinder, bool)
 
