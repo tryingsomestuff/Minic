@@ -32,7 +32,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 
-const std::string MinicVersion = "att";
+const std::string MinicVersion = "dev";
 
 #define STOPSCORE   ScoreType(20000)
 #define INFSCORE    ScoreType(15000)
@@ -2422,13 +2422,6 @@ ScoreType eval(const Position & p, float & gp){
     else return (white2Play?+1:-1)*MATE;
 
     // material (symetric version)
-    sc   += (p.mat[Co_White][M_k] - p.mat[Co_Black][M_k]) * *absValues[P_wk]
-          + (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValues[P_wq]
-          + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * *absValues[P_wr]
-          + (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * *absValues[P_wb]
-          + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValues[P_wn]
-          + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValues[P_wp];
-
     scEG += (p.mat[Co_White][M_k] - p.mat[Co_Black][M_k]) * *absValuesEG[P_wk]
           + (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValuesEG[P_wq]
           + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * *absValuesEG[P_wr]
@@ -2469,6 +2462,13 @@ ScoreType eval(const Position & p, float & gp){
     }
     */
 
+    sc   += (p.mat[Co_White][M_k] - p.mat[Co_Black][M_k]) * *absValues[P_wk]
+          + (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValues[P_wq]
+          + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * *absValues[P_wr]
+          + (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * *absValues[P_wb]
+          + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValues[P_wn]
+          + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValues[P_wp];
+
     // pst & mobility & ///@todo attack, openfile near king
     static BitBoard(*const pf[])(const Square, const BitBoard, const  Color) = { &BB::coverage<P_wp>, &BB::coverage<P_wn>, &BB::coverage<P_wb>, &BB::coverage<P_wr>, &BB::coverage<P_wq>, &BB::coverage<P_wk> };
 
@@ -2495,7 +2495,7 @@ ScoreType eval(const Position & p, float & gp){
     pieceBBiterator = p.blackPiece;
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
-        const Piece ptype = getPieceType(p, k);
+        const Piece ptype = getPieceType(p,k);
         sc   -= PST  [ptype - 1][k];
         scEG -= PSTEG[ptype - 1][k];
         if (ptype != P_wp) {

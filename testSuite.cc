@@ -366,13 +366,15 @@ void ExtendedPosition::testStatic(const std::vector<std::string> & positions,
     // display results
     std::cout << std::setw(25) << "Test" << std::setw(14) << "score" << std::endl;
     ScoreType score = 0;
-    for (size_t k = 0; k < positions.size(); ++k) {
+    for (size_t k = 0; k < positions.size()-2; k+=4) {
         std::cout << std::setw(25) << results[k].name << std::setw(14) << results[k].score << std::endl;
-        if ( k%chunck == 0 ){
-            score = results[k].score;
-        }
         // only compare unsigned score ...
-        if ( std::abs( std::abs(results[k].score) - std::abs(score) ) > 0 ){
+        if ( std::abs( std::abs(results[k].score) - std::abs(results[k+2].score) ) > 0 ){
+            LogIt(logWarn) << "Score differ !";
+        }
+        std::cout << std::setw(25) << results[k+1].name << std::setw(14) << results[k+1].score << std::endl;
+        // only compare unsigned score ...
+        if ( std::abs( std::abs(results[k+1].score) - std::abs(results[k+3].score) ) > 0 ){
             LogIt(logWarn) << "Score differ !";
         }
     }
