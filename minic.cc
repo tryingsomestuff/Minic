@@ -2488,8 +2488,8 @@ ScoreType eval(const Position & p, float & gp){
             const uint64_t n = countBit(curAtt);
             sc   += EvalConfig::MOB  [ptype - 1][n];
             scEG += EvalConfig::MOBEG[ptype - 1][n];
-            dangerW -= ScoreType(countBit(curAtt & wKingZone) * EvalConfig::katt_defence_weight[ptype]);
-            dangerB += ScoreType(countBit(curAtt & bKingZone) * EvalConfig::katt_attack_weight[ptype]);
+            //dangerW -= ScoreType(countBit(curAtt & wKingZone) * EvalConfig::katt_defence_weight[ptype]);
+            //dangerB += ScoreType(countBit(curAtt & bKingZone) * EvalConfig::katt_attack_weight[ptype]);
         }
     }
 
@@ -2504,14 +2504,14 @@ ScoreType eval(const Position & p, float & gp){
             const uint64_t n = countBit(curAtt);
             sc   -= EvalConfig::MOB  [ptype - 1][n];
             scEG -= EvalConfig::MOBEG[ptype - 1][n];
-            dangerW += ScoreType(countBit(curAtt & wKingZone) * EvalConfig::katt_attack_weight[ptype]);
-            dangerB -= ScoreType(countBit(curAtt & bKingZone) * EvalConfig::katt_defence_weight[ptype]);
+            //dangerW += ScoreType(countBit(curAtt & wKingZone) * EvalConfig::katt_attack_weight[ptype]);
+            //dangerB -= ScoreType(countBit(curAtt & bKingZone) * EvalConfig::katt_defence_weight[ptype]);
         }
     }
 
     // use danger score
-    sc   -=  katt_table[std::min(std::max(dangerW,ScoreType(0)),ScoreType(63))];
-    sc   +=  katt_table[std::min(std::max(dangerB,ScoreType(0)),ScoreType(63))];
+    //sc   -=  katt_table[std::min(std::max(dangerW,ScoreType(0)),ScoreType(63))];
+    //sc   +=  katt_table[std::min(std::max(dangerB,ScoreType(0)),ScoreType(63))];
 
     // passer
     ///@todo candidate passed
