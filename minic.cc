@@ -1077,13 +1077,23 @@ private:
     ThreadPool();
 };
 
+enum MoveDifficulty { MD_forced = 0, MD_easy, MD_std, MD_hardDefense, MD_hardAttack };
+
+namespace MoveDifficultyUtil {
+    const DepthType emergencyMinDepth = 9;
+    const ScoreType emergencyMargin = 50;
+    const ScoreType easyMoveMargin = 250;
+    const int       emergencyFactor = 5;
+    const float     maxStealFraction = 0.3f; // of remaining time
+}
+
 // thread from Stockfish
 struct ThreadContext{
 
     static bool stopFlag;
-    static bool easyMove;
+    static MoveDifficulty easyMove;
 
-    static int getCurrentMoveMs() { return easyMove ? (currentMoveMs >> 3) : currentMoveMs; }
+    static int getCurrentMoveMs();
 
     Hash hashStack[MAX_PLY] = { 0 };
     ScoreType evalStack[MAX_PLY] = { 0 };
@@ -1201,7 +1211,8 @@ private:
 };
 
 bool ThreadContext::stopFlag = false;
-bool ThreadContext::easyMove = false;
+
+MoveDifficulty ThreadContext::easyMove = MD_std;
 
 std::atomic<bool> ThreadContext::startLock;
 
@@ -1665,11 +1676,6 @@ int msecPerMove, msecInTC, nbMoveInTC, msecInc, msecUntilNextTC;
 bool isDynamic;
 
 std::chrono::time_point<Clock> startTime;
-const DepthType emergencyMinDepth = 9;
-const ScoreType emergencyMargin = 50;
-const ScoreType easyMoveMargin  = 250;
-const int   emergencyFactor  = 5;
-const float maxStealFraction = 0.3f; // of remaining time
 
 void init(){
     LogIt(logInfo) << "Init timeman" ;
@@ -1713,6 +1719,17 @@ int GetNextMSecPerMove(const Position & p){
 } // TimeMan
 
 inline void addMove(Square from, Square to, MType type, MoveList & moves){ assert( from >= 0 && from < 64); assert( to >=0 && to < 64); moves.push_back(ToMove(from,to,type,0));}
+
+int ThreadContext::getCurrentMoveMs() {
+    switch (easyMove) {
+    case MD_forced: return (currentMoveMs >> 4);
+    case MD_easy:   return (currentMoveMs >> 3);
+    case MD_std:    return (currentMoveMs);
+    case MD_hardDefense: return (std::min(int(TimeMan::msecUntilNextTC*MoveDifficultyUtil::maxStealFraction), currentMoveMs*MoveDifficultyUtil::emergencyFactor));
+    case MD_hardAttack: return (currentMoveMs);
+    }
+    return currentMoveMs;
+}
 
 Square kingSquare(const Position & p) { return (p.c == Co_White) ? p.wk : p.bk; }
 
@@ -2937,6 +2954,9 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     const bool isNotEndGame = gp > 0.2 && (p.mat[Co_White][M_p] + p.mat[Co_Black][M_p]) > 0 && (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t] > 2);
 
+    std::vector<Move> moves;
+    bool moveGenerated = false;
+
     // prunings
     if ( !DynamicConfig::mateFinder && !rootnode && isNotEndGame && !pvnode && !isInCheck && !isMateScore(alpha) && !isMateScore(beta) && skipMove == INVALIDMOVE){
 
@@ -3013,17 +3033,17 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             // extensions
             int extension = 0;
             if (isInCheck) ++extension;
-            if (!extension && skipMove==INVALIDMOVE && singularExtension(*this,alpha, beta, p, depth, e, e.m, rootnode, ply)) ++extension;
-            const ScoreType ttScore = -pvs<pvnode>(-beta, -alpha, p2, depth-1+extension, ply + 1, childPV, seldepth);
+            if (!extension && skipMove == INVALIDMOVE && singularExtension(*this, alpha, beta, p, depth, e, e.m, rootnode, ply)) ++extension;
+            const ScoreType ttScore = -pvs<pvnode>(-beta, -alpha, p2, depth - 1 + extension, ply + 1, childPV, seldepth);
             if (stopFlag) return STOPSCORE;
             bestScore = ttScore;
             bestMove = e.m;
-            if (rootnode && rootScores) rootScores->push_back({ e.m,ttval });
+            if (rootnode && rootScores) rootScores->push_back({ e.m,ttScore });
             if (ttScore > alpha) {
                 updatePV(pv, e.m, childPV);
                 if (ttScore >= beta) {
                     //if (Move2Type(e.m) == T_std && !isInCheck) updateTables(*this, p, depth, e.m); ///@todo ?
-                    if ( skipMove==INVALIDMOVE) TT::setEntry({ e.m,ttScore,evalScore,TT::B_beta,depth,computeHash(p) }); ///@todo this can only decrease depth ????
+                    if (skipMove == INVALIDMOVE) TT::setEntry({ e.m,ttScore,evalScore,TT::B_beta,depth,computeHash(p) }); ///@todo this can only decrease depth ????
                     return ttScore;
                 }
                 alphaUpdated = true;
@@ -3033,20 +3053,21 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     }
 
 #ifdef WITH_SYZYGY
-    if ( rootnode && countBit(p.whitePiece|p.blackPiece) <= SyzygyTb::MAX_TB_MEN){
+    if (rootnode && countBit(p.whitePiece | p.blackPiece) <= SyzygyTb::MAX_TB_MEN) {
         ScoreType tbScore = 0;
-        if ( SyzygyTb::probe_root(*this,p,tbScore,moves) < 0 ) generate(p,moves); // only good moves if TB success
-        //else LogIt(logInfo) << "tb hit root " << tbScore;
-    }
-    else
-#endif
-        if (!moveGenerated) {
+        if (SyzygyTb::probe_root(*this, p, tbScore, moves) < 0) { // only good moves if TB success
             generate(p, moves);
-            if (moves.empty()) return isInCheck ? -MATE + ply : 0;
-            sort(*this, moves, p, &e);
+            moveGenerated = true;
         }
+    }
+#endif
+    if (!moveGenerated) {
+        generate(p, moves);
+        if (moves.empty()) return isInCheck ? -MATE + ply : 0;
+        sort(*this, moves, p, &e);
+    }
+    const bool improving = (!isInCheck && ply >= 2 && evalScore >= evalStack[p.ply - 2]);
 
-    const bool improving = (!isInCheck && ply >= 2 && val >= scoreStack[p.ply - 2]);
     TT::Bound hashBound = TT::B_alpha;
 
     ScoreType score = -MATE + ply;
@@ -3105,7 +3126,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             }
         }
         if (stopFlag) return STOPSCORE;
-        if (rootnode && rootScores) rootScores->push_back({ *it,val });
+        if (rootnode && rootScores) rootScores->push_back({ *it,score });
         if ( score > bestScore ){
             bestScore = score;
             bestMove = *it;
@@ -3140,7 +3161,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         LogIt(logInfo) << "requested depth " << (int) d ;
         stats.init();
         stopFlag = false;
-        easyMove = false;
+        easyMove = MD_std;
         startLock.store(false);
     }
     else{
@@ -3183,8 +3204,8 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
     ScoreType easyScore = pvs(-MATE, MATE, p, 2, true, 1, pv, seldepth, INVALIDMOVE,&rootScores);
     std::sort(rootScores.begin(), rootScores.end(), [](const ThreadContext::RootScores& r1, const ThreadContext::RootScores & r2) {return r1.s > r2.s; });
     if (stopFlag) { bestScore = easyScore; goto pvsout; }
-    if (rootScores.size() == 1) easyMove = true; // only one check evasion or zugzwang
-    else if (rootScores.size() > 1 && rootScores[0].s > rootScores[1].s + TimeMan::easyMoveMargin) easyMove = true;
+    if (rootScores.size() == 1) easyMove = MD_forced; // only one check evasion or zugzwang
+    else if (rootScores.size() > 1 && rootScores[0].s > rootScores[1].s + MoveDifficultyUtil::easyMoveMargin) easyMove = MD_easy;
 
     // ID loop
     for(DepthType depth = 1 ; depth <= std::min(d,DepthType(MAX_DEPTH-6)) && !stopFlag ; ++depth ){ // -6 so that draw can be found for sure
@@ -3217,7 +3238,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
                           << ToString(pv)  ;//<< " " << "EBF: " << float(stats.nodes + stats.qnodes)/previousNodeCount ;
             previousNodeCount = stats.nodes + stats.qnodes;
         }
-        if (TimeMan::isDynamic && depth > TimeMan::emergencyMinDepth && bestScore < depthScores[depth - 1] - TimeMan::emergencyMargin) { easyMove = false; currentMoveMs = std::min(int(TimeMan::msecUntilNextTC*TimeMan::maxStealFraction), currentMoveMs*TimeMan::emergencyFactor); }
+        if (TimeMan::isDynamic && depth > MoveDifficultyUtil::emergencyMinDepth && bestScore < depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin) { easyMove = MD_hardDefense; }
         if (TimeMan::isDynamic && std::max(1,int(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()*1.8)) > getCurrentMoveMs()) break; // not enought time
         depthScores[depth] = bestScore;
         if (!pv.empty()) depthMoves [depth] = pv[0];
