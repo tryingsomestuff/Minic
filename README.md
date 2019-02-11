@@ -30,7 +30,7 @@ Rank Name                          Elo     +/-   Games   Score   Draws
   14 Minic 0.28                   -113      18    1185   34.3%   26.5%
 ```
 
-Actual WAC score is 274 (10sec per position on an old i7-2600K).
+Actual WAC score is 284 (10sec per position on an old i7-2600K).
 
 ## What about SMP ?  
 ```
