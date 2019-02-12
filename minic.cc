@@ -975,18 +975,19 @@ struct Bucket {
     Entry e[nbBucket];
 };
 
-unsigned int powerFloor(unsigned int x) {
-    unsigned int power = 1;
+unsigned long long int powerFloor(unsigned long long int x) {
+    unsigned long long int power = 1;
     while (power < x) power *= 2;
     return power/2;
 }
 
-static unsigned int ttSize = 0;
+static unsigned long long int ttSize = 0;
 static Bucket * table = 0;
 
 void initTable(){
     LogIt(logInfo) << "Init TT" ;
-    ttSize = powerFloor(DynamicConfig::ttSizeMb * 1024 * 1024 / (unsigned int)sizeof(Bucket));
+    LogIt(logInfo) << "Bucket size " << sizeof(Bucket);
+    ttSize = 1024 * powerFloor((DynamicConfig::ttSizeMb * 1024) / (unsigned long long int)sizeof(Bucket));
     table = new Bucket[ttSize];
     LogIt(logInfo) << "Size of TT " << ttSize * sizeof(Bucket) / 1024 / 1024 << "Mb" ;
 }
