@@ -152,9 +152,9 @@ std::string showAlgAbr(Move m, const Position & p) {
         while (b) v.push_back(BB::popBit(b));
         for(auto it = v.begin() ; it != v.end() ; ++it){
             if ( *it == from ) continue; // to not compare to myself ...
-            std::vector<Move> l;
+            MoveList l;
             generateSquare(p,l,*it);
-            for(auto mit = l.begin() ; mit != l.end() ; ++mit){
+            for(auto mit = l.MLbegin() ; mit != l.MLend() ; ++mit){
                 if ( *mit == m ) continue; // to not compare to myself ... should no happend thanks to previous verification
                 if ( Move2To(*mit) == to ){
                     isAmbiguousRank = true;

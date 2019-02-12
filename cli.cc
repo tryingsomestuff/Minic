@@ -45,7 +45,7 @@ Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc, bool 
     generate(p,moves);
     int validMoves = 0;
     int allMoves = 0;
-    for (auto it = moves.begin() ; it != moves.end(); ++it){
+    for (auto it = moves.MLbegin() ; it != moves.MLend(); ++it){
         const Move m = *it;
         ++allMoves;
         Position p2 = p;
@@ -206,7 +206,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
         generate(p,moves);
         sort(ThreadPool::instance().main(),moves,p,0);
         LogIt(logInfo) << "nb moves : " << moves.size() ;
-        for(auto it = moves.begin(); it != moves.end(); ++it){
+        for(auto it = moves.MLbegin(); it != moves.MLend(); ++it){
             LogIt(logInfo) << ToString(*it,true) ;
         }
         return 0;
