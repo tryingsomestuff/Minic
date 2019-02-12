@@ -2954,9 +2954,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     const bool isNotEndGame = gp > 0.2 && (p.mat[Co_White][M_p] + p.mat[Co_Black][M_p]) > 0 && (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t] > 2);
 
-    std::vector<Move> moves;
-    bool moveGenerated = false;
-
     // prunings
     if ( !DynamicConfig::mateFinder && !rootnode && isNotEndGame && !pvnode && !isInCheck && !isMateScore(alpha) && !isMateScore(beta) && skipMove == INVALIDMOVE){
 
@@ -3201,7 +3198,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
 
     // easy move detection (smal open window depth 2 search
     std::vector<ThreadContext::RootScores> rootScores;
-    ScoreType easyScore = pvs(-MATE, MATE, p, 2, true, 1, pv, seldepth, INVALIDMOVE,&rootScores);
+    ScoreType easyScore = pvs<true>(-MATE, MATE, p, 2, 1, pv, seldepth, INVALIDMOVE,&rootScores);
     std::sort(rootScores.begin(), rootScores.end(), [](const ThreadContext::RootScores& r1, const ThreadContext::RootScores & r2) {return r1.s > r2.s; });
     if (stopFlag) { bestScore = easyScore; goto pvsout; }
     if (rootScores.size() == 1) easyMove = MD_forced; // only one check evasion or zugzwang
