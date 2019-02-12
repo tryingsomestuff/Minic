@@ -54,6 +54,29 @@ typedef uint64_t Hash; // invalid if == 0
 typedef uint64_t Counter;
 typedef short int ScoreType;
 typedef uint64_t BitBoard;
+/*
+struct MoveList : public std::vector<Move>{
+   typedef std::vector<Move>::iterator Iterator;
+   typedef std::vector<Move>::const_iterator IteratorConst;
+   unsigned char n;
+   Iterator MLbegin(){return std::vector<Move>::begin();}
+   IteratorConst MLbegin()const{return std::vector<Move>::begin();}
+   Iterator MLend(){return std::vector<Move>::end();}
+   IteratorConst MLend()const{return std::vector<Move>::end();}
+};
+*/
+struct MoveList : public std::array<Move,MAX_MOVE>{
+   typedef std::array<Move,MAX_MOVE>::iterator Iterator;
+   typedef std::array<Move,MAX_MOVE>::const_iterator IteratorConst;
+   unsigned char n = 0;
+   Iterator MLbegin(){return std::array<Move,MAX_MOVE>::begin();}
+   IteratorConst MLbegin()const{return std::array<Move,MAX_MOVE>::begin();}
+   Iterator MLend(){return std::array<Move,MAX_MOVE>::begin()+n;}
+   IteratorConst MLend()const{return std::array<Move,MAX_MOVE>::begin()+n;}
+   void clear(){n=0;}
+   void push_back(const Move & m){ operator[](n)=m; n++;}
+};
+typedef std::vector<Move> PVList;
 
 namespace StaticEvalConfig{
 const bool doWindow         = true;
@@ -431,7 +454,7 @@ inline int chebyshevDistance(Square sq1, Square sq2) { return std::max(std::abs(
 
 enum GenPhase{ GP_all = 0, GP_cap = 1, GP_quiet = 2};
 
-void generate(const Position & p, std::vector<Move> & moves, GenPhase phase = GP_all);
+void generate(const Position & p, MoveList & moves, GenPhase phase = GP_all);
 
 namespace MaterialHash { // from Gull
     const int MatWQ = 1;
@@ -574,9 +597,7 @@ namespace MaterialHash { // from Gull
     ScoreType helperKXK(const Position &p){
         const Color winningSide = (countBit(p.whiteQueen|p.whiteRook)!=0 ? Co_White : Co_Black);
         if (p.c != winningSide ){ // stale mate detection for losing side
-            std::vector<Move> moves;
-            generate(p,moves,GP_all);
-            if ( moves.empty()) return 0;
+           ///@todo
         }
         const bool whiteWins = winningSide == Co_White;
         const Square winningK = (whiteWins ? p.wk : p.bk);
@@ -1040,7 +1061,7 @@ struct ThreadData{
     ScoreType sc;
     Position p;
     Move best;
-    std::vector<Move> pv;
+    PVList pv;
 };
 
 // Sizes and phases of the skip-blocks, used for distributing search depths across the threads, from stockfish
@@ -1109,12 +1130,12 @@ struct ThreadContext{
     HistoryT historyT;
     CounterT counterT;
 
-    template <bool pvnode, bool canNull = true> ScoreType pvs    (ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove = INVALIDMOVE);
+    template <bool pvnode, bool canNull = true> ScoreType pvs    (ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, const Move skipMove = INVALIDMOVE);
     ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth, DepthType qDepth);
     ScoreType qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
     bool SEE(const Position & p, const Move & m, ScoreType threshold)const;
     template< bool display = false> ScoreType SEEVal(const Position & p, const Move & m)const;
-    std::vector<Move> search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth);
+    PVList search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth);
     template< bool withRep = true, bool isPv = true, bool INR = true> MaterialHash::Terminaison interiorNodeRecognizer(const Position & p)const;
     bool isRep(const Position & p, bool isPv)const;
 
@@ -1302,7 +1323,7 @@ std::string ToString(const Move & m, bool withScore){
     return ss.str() + prom + score;
 }
 
-std::string ToString(const std::vector<Move> & moves){
+std::string ToString(const PVList & moves){
     std::stringstream ss;
     for(size_t k = 0 ; k < moves.size(); ++k) ss << ToString(moves[k]) << " ";
     return ss.str();
@@ -1687,7 +1708,7 @@ int GetNextMSecPerMove(const Position & p){
 }
 } // TimeMan
 
-inline void addMove(Square from, Square to, MType type, std::vector<Move> & moves){ assert( from >= 0 && from < 64); assert( to >=0 && to < 64); moves.push_back(ToMove(from,to,type,0));}
+inline void addMove(Square from, Square to, MType type, MoveList & moves){ assert( from >= 0 && from < 64); assert( to >=0 && to < 64); moves.push_back(ToMove(from,to,type,0));}
 
 Square kingSquare(const Position & p) { return (p.c == Co_White) ? p.wk : p.bk; }
 
@@ -1874,7 +1895,7 @@ inline bool isAttacked(const Position & p, const Square k) { return k!=INVALIDSQ
 
 inline bool getAttackers(const Position & p, const Square k, std::vector<Square> & attakers) { return k!=INVALIDSQUARE && BB::getAttackers(p, k, attakers);}
 
-void generateSquare(const Position & p, std::vector<Move> & moves, Square from, GenPhase phase = GP_all){
+void generateSquare(const Position & p, MoveList & moves, Square from, GenPhase phase = GP_all){
     assert(from != INVALIDSQUARE);
     const Color side = p.c;
     const BitBoard myPieceBB  = ((p.c == Co_White) ? p.whitePiece : p.blackPiece);
@@ -1940,7 +1961,7 @@ void generateSquare(const Position & p, std::vector<Move> & moves, Square from, 
     }
 }
 
-void generate(const Position & p, std::vector<Move> & moves, GenPhase phase){
+void generate(const Position & p, MoveList & moves, GenPhase phase){
     moves.clear();
     BitBoard myPieceBBiterator = ( (p.c == Co_White) ? p.whitePiece : p.blackPiece);
     while (myPieceBBiterator) generateSquare(p,moves,BB::popBit(myPieceBBiterator),phase);
@@ -2350,10 +2371,10 @@ struct MoveSorter{
     const ThreadContext & context;
 };
 
-void sort(const ThreadContext & context, std::vector<Move> & moves, const Position & p, const TT::Entry * e = NULL){
+void sort(const ThreadContext & context, MoveList & moves, const Position & p, const TT::Entry * e = NULL){
     const MoveSorter ms(context,p,e);
-    for(auto it = moves.begin() ; it != moves.end() ; ++it){ ms.computeScore(*it); }
-    std::sort(moves.begin(),moves.end(),ms);
+    for(auto it = moves.MLbegin() ; it != moves.MLend() ; ++it){ ms.computeScore(*it); }
+    std::sort(moves.MLbegin(),moves.MLend(),ms);
 }
 
 inline bool ThreadContext::isRep(const Position & p, bool isPV)const{
@@ -2512,6 +2533,9 @@ ScoreType eval(const Position & p, float & gp){
     // use danger score
     //sc   -=  katt_table[std::min(std::max(dangerW,ScoreType(0)),ScoreType(63))];
     //sc   +=  katt_table[std::min(std::max(dangerB,ScoreType(0)),ScoreType(63))];
+
+    // in very end game winning king must be near the other king
+    if ((p.mat[Co_White][M_p] + p.mat[Co_Black][M_p] == 0) && p.wk != INVALIDSQUARE && p.bk != INVALIDSQUARE) scEG -= ScoreType((sc>0?+1:-1)*chebyshevDistance(p.wk, p.bk)*35);
 
     // passer
     ///@todo candidate passed
@@ -2749,7 +2773,7 @@ ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const
     if ( evalScore >= beta ) return evalScore;
     if ( evalScore > alpha) alpha = evalScore;
 
-    std::vector<Move> moves;
+    MoveList moves;
     generate(p,moves,GP_cap);
     sort(*this,moves,p);
 
@@ -2798,7 +2822,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     const bool isInCheck = isAttacked(p, kingSquare(p));
 
-    std::vector<Move> moves;
+    MoveList moves;
     generate(p,moves,isInCheck?GP_all:GP_cap); // check evasion or capture only
     sort(*this,moves,p,qDepth==0?&e:0);
 
@@ -2806,7 +2830,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     bool validMoveFound = false;
 
-    for(auto it = moves.begin() ; it != moves.end() ; ++it){
+    for(auto it = moves.MLbegin() ; it != moves.MLend() ; ++it){
         if ( StaticEvalConfig::doQFutility && !isInCheck && evalScore + StaticEvalConfig::qfutilityMargin + getAbsValue(p,Move2To(*it)) <= alphaInit) continue;
         //if ( SEEVal(p,*it) < -0 /* && !isInCheck*/) continue; // see (prune bad capture)
         if ( Move2Score(*it) < -900 && !isInCheck) continue; // see (from move sorter, SEE<0 add -2000 if bad capture)
@@ -2831,7 +2855,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     return bestScore;
 }
 
-inline void updatePV(std::vector<Move> & pv, const Move & m, const std::vector<Move> & childPV) {
+inline void updatePV(PVList & pv, const Move & m, const PVList & childPV) {
     pv.clear();
     pv.push_back(m);
     std::copy(childPV.begin(), childPV.end(), std::back_inserter(pv));
@@ -2847,7 +2871,7 @@ inline void updateTables(ThreadContext & context, const Position & p, DepthType 
 inline bool singularExtension(ThreadContext & context, ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, const TT::Entry & e, const Move m, bool rootnode, int ply) {
     if ( depth >= StaticEvalConfig::singularExtensionDepth && sameMove(m, e.m) && !rootnode && !isMateScore(e.score) && e.b == TT::B_beta && e.d >= depth - 3) {
         const ScoreType betaC = e.score - depth;
-        std::vector<Move> sePV;
+        PVList sePV;
         DepthType seSeldetph;
         const ScoreType score = context.pvs<false>(betaC - 1, betaC, p, depth/2, ply, sePV, seSeldetph, m);
         if (!ThreadContext::stopFlag && score < betaC) return true;
@@ -2857,7 +2881,7 @@ inline bool singularExtension(ThreadContext & context, ScoreType alpha, ScoreTyp
 
 // pvs inspired by Xiphos
 template< bool pvnode, bool canNull>
-ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove){
+ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, const Move skipMove){
 
     if ( stopFlag || std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()) > currentMoveMs ){ stopFlag = true; return STOPSCORE; }
 
@@ -2901,7 +2925,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     evalStack[p.ply] = evalScore;
 
     bool futility = false, lmp = false;
-    std::vector<Move> moves;
+    MoveList moves;
 
     const bool isNotEndGame = gp > 0.2 && (p.mat[Co_White][M_p] + p.mat[Co_Black][M_p]) > 0 && (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t] > 2);
 
@@ -2926,7 +2950,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             pN.h ^= ZT[3][13];
             pN.h ^= ZT[4][13];
             const int R = depth/4 + 3 + std::min((evalScore-beta)/80,3); // adaptative
-            std::vector<Move> nullPV;
+            PVList nullPV;
             const ScoreType nullscore = -pvs<false,false>(-beta,-beta+1,pN,depth-R,ply+1,nullPV,seldepth);
             if ( !stopFlag && nullscore >= beta ) return nullscore;
             if ( stopFlag ) return STOPSCORE;
@@ -2944,13 +2968,13 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
           const ScoreType betaPC = beta + StaticEvalConfig::probCutMargin;
           generate(p,moves,GP_cap);
           sort(*this,moves,p,&e);
-          for (auto it = moves.begin() ; it != moves.end() && probCutCount < StaticEvalConfig::probCutMaxMoves; ++it){
+          for (auto it = moves.MLbegin() ; it != moves.MLend() && probCutCount < StaticEvalConfig::probCutMaxMoves; ++it){
             if ( e.h != 0 && sameMove(e.m, *it) && (Move2Score(*it) < 100) ) continue; // skip TT move if quiet or bad captures
             Position p2 = p;
             if ( ! apply(p2,*it) ) continue;
             ++probCutCount;
             ScoreType scorePC = betaPC; // -qsearch(-betaPC, -betaPC + 1, p2, ply + 1, seldepth,0);
-            std::vector<Move> pvPC;
+            PVList pvPC;
             if (!stopFlag && scorePC >= betaPC) scorePC = -pvs<pvnode>(-betaPC,-betaPC+1,p2,depth-StaticEvalConfig::probCutMinDepth+1,ply+1,pvPC,seldepth);
             if (!stopFlag && scorePC >= betaPC) return scorePC;
             if (stopFlag) return STOPSCORE;
@@ -2960,7 +2984,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     // IID
     if ( (e.h == 0 /*|| e.d < depth/3*/) && pvnode && depth >= StaticEvalConfig::iidMinDepth){
-        std::vector<Move> iidPV;
+        PVList iidPV;
         pvs<pvnode>(alpha,beta,p,depth/2,ply,iidPV,seldepth);
         if ( !stopFlag) TT::getEntry(computeHash(p), depth, e);
         else return STOPSCORE;
@@ -2976,7 +3000,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         Position p2 = p;
         if (apply(p2, e.m)) {
             validMoveCount++;
-            std::vector<Move> childPV;
+            PVList childPV;
             hashStack[p.ply] = p.h;
             // extensions
             int extension = 0;
@@ -3016,7 +3040,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     ScoreType score = -MATE + ply;
 
-    for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
+    for(auto it = moves.MLbegin() ; it != moves.MLend() && !stopFlag ; ++it){
         if (sameMove(skipMove, *it)) continue; // skipmove
         if ( e.h != 0 && sameMove(e.m, *it)) continue; // already tried
         Position p2 = p;
@@ -3026,7 +3050,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if (p.c == Co_Black && to == p.wk) return MATE - ply + 1;
         validMoveCount++;
         hashStack[p.ply] = p.h;
-        std::vector<Move> childPV;
+        PVList childPV;
         // extensions
         int extension = 0;
         if (isInCheck && depth <= 4) extension = 1; // we are in check (extension)
@@ -3081,7 +3105,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 if ( score >= beta ){
                     if ( Move2Type(*it) == T_std && !isInCheck){
                         updateTables(*this, p, depth, *it);
-                        for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2)
+                        for(auto it2 = moves.MLbegin() ; it2 != moves.MLend() && !sameMove(*it2,*it); ++it2)
                             if ( Move2Type(*it2) == T_std ) historyT.update(depth,*it2,p,false);
                     }
                     hashBound = TT::B_beta;
@@ -3097,7 +3121,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     return bestScore;
 }
 
-std::vector<Move> ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
+PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
     if ( isMainThread() ){
         LogIt(logInfo) << "Search called" ;
         LogIt(logInfo) << "requested time  " << currentMoveMs ;
@@ -3120,7 +3144,7 @@ std::vector<Move> ThreadContext::search(const Position & p, Move & m, DepthType 
     TimeMan::startTime = Clock::now();
 
     DepthType reachedDepth = 0;
-    std::vector<Move> pv;
+    PVList pv;
     ScoreType bestScore = 0;
     m = INVALIDMOVE;
 
@@ -3141,11 +3165,11 @@ std::vector<Move> ThreadContext::search(const Position & p, Move & m, DepthType 
     ScoreType previousBest = bestScore;
 
     for(DepthType depth = 1 ; depth <= std::min(d,DepthType(MAX_DEPTH-6)) && !stopFlag ; ++depth ){ // -6 so that draw can be found for sure
-        if (!isMainThread()){ // stockfish like thread  management
+        if (!isMainThread()){ // stockfish like thread management
             const int i = (id()-1)%20;
             if (((depth + SkipPhase[i]) / SkipSize[i]) % 2) continue;
         }
-        std::vector<Move> pvLoc;
+        PVList pvLoc;
         ScoreType delta = (StaticEvalConfig::doWindow && depth>4)?8:MATE; // MATE not INFSCORE in order to enter the loop below once
         ScoreType alpha = std::max(ScoreType(bestScore - delta), ScoreType (-INFSCORE));
         ScoreType beta  = std::min(ScoreType(bestScore + delta), INFSCORE);
@@ -3237,7 +3261,7 @@ Move thinkUntilTimeUp(){
     LogIt(logInfo) << "currentMoveMs  " << currentMoveMs ;
     LogIt(logInfo) << ToString(position) ;
     DepthType seldepth = 0;
-    std::vector<Move> pv;
+    PVList pv;
     const ThreadData d = {depth,seldepth/*dummy*/,score/*dummy*/,position,m/*dummy*/,pv/*dummy*/}; // only input coef
     ThreadPool::instance().searchSync(d);
     m = ThreadPool::instance().main().getData().best; // here output results
@@ -3257,7 +3281,7 @@ void ponderUntilInput(){
     Move m = INVALIDMOVE;
     depth = 64;
     DepthType seldepth = 0;
-    std::vector<Move> pv;
+    PVList pv;
     const ThreadData d = {depth,seldepth,score,position,m,pv};
     ThreadPool::instance().searchASync(d);
 }

@@ -41,7 +41,7 @@ void pstMean(){
 Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc, bool divide = false){
     if ( depth == 0) return 0;
     static TT::Entry e;
-    std::vector<Move> moves;
+    MoveList moves;
     generate(p,moves);
     int validMoves = 0;
     int allMoves = 0;
@@ -202,7 +202,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
     }
 
     if ( cli == "-gen" ){
-        std::vector<Move> moves;
+        MoveList moves;
         generate(p,moves);
         sort(ThreadPool::instance().main(),moves,p,0);
         LogIt(logInfo) << "nb moves : " << moves.size() ;
