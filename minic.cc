@@ -74,6 +74,7 @@ struct MoveList : public std::array<Move,MAX_MOVE>{
    Iterator MLend(){return std::array<Move,MAX_MOVE>::begin()+n;}
    IteratorConst MLend()const{return std::array<Move,MAX_MOVE>::begin()+n;}
    void clear(){n=0;}
+   size_t size(){return n;}
    void push_back(const Move & m){ operator[](n)=m; n++;}
 };
 typedef std::vector<Move> PVList;
@@ -1354,7 +1355,7 @@ std::string ToString(const Position & p, bool noEval){
         sc = eval(p, gp);
         ss << "# Phase " << gp  << std::endl << "# Static score " << sc << std::endl << "# Hash " << computeHash(p) << std::endl << "# FEN " << GetFEN(p) << std::endl;
     }
-    ss << ToString(p.mat);
+    //ss << ToString(p.mat);
     return ss.str();
 }
 
@@ -2409,14 +2410,14 @@ ScoreType katt_table[64] = {0};
 void initEval(){
     for(int i = 0; i < 64; i++){
         katt_table[i] = (int) (double(EvalConfig::katt_max) / (1 + exp((EvalConfig::katt_trans - i) / double(EvalConfig::katt_scale)))) - EvalConfig::katt_offset;
-        LogIt(logInfo) << "Attack level " << i << " " << katt_table[i];
+        //LogIt(logInfo) << "Attack level " << i << " " << katt_table[i];
     }
 }
 
 ScoreType eval(const Position & p, float & gp){
 
-    const Hash matHash = MaterialHash::getMaterialHash(p.mat);
-    const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
+    //const Hash matHash = MaterialHash::getMaterialHash(p.mat);
+    //const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
 
     ScoreType sc       = 0;
     ScoreType scEG     = 0;
@@ -2451,11 +2452,13 @@ ScoreType eval(const Position & p, float & gp){
           + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValuesEG[P_wn]
           + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValuesEG[P_wp];
 
+    /*
     if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ){
        scEG += MaterialHash::helperTable[matHash](p);
        scEG = (white2Play?+1:-1)*scEG;
        return scEG;
     }
+    */
     /*
     else if ( ter == MaterialHash::Ter_WhiteWin || ter == MaterialHash::Ter_BlackWin){
        scEG *= 3;
