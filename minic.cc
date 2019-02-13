@@ -54,29 +54,22 @@ typedef uint64_t Hash; // invalid if == 0
 typedef uint64_t Counter;
 typedef short int ScoreType;
 typedef uint64_t BitBoard;
-/*
-struct MoveList : public std::vector<Move>{
-   typedef std::vector<Move>::iterator Iterator;
-   typedef std::vector<Move>::const_iterator IteratorConst;
-   unsigned char n;
-   Iterator MLbegin(){return std::vector<Move>::begin();}
-   IteratorConst MLbegin()const{return std::vector<Move>::begin();}
-   Iterator MLend(){return std::vector<Move>::end();}
-   IteratorConst MLend()const{return std::vector<Move>::end();}
-};
-*/
-struct MoveList : public std::array<Move,MAX_MOVE>{
-   typedef std::array<Move,MAX_MOVE>::iterator Iterator;
-   typedef std::array<Move,MAX_MOVE>::const_iterator IteratorConst;
+
+struct MoveList {
+   std::array<Move,MAX_MOVE> _m;
+   typedef std::array<Move,MAX_MOVE>::iterator iterator;
+   typedef std::array<Move,MAX_MOVE>::const_iterator const_iterator;
    unsigned char n = 0;
-   Iterator MLbegin(){return std::array<Move,MAX_MOVE>::begin();}
-   IteratorConst MLbegin()const{return std::array<Move,MAX_MOVE>::begin();}
-   Iterator MLend(){return std::array<Move,MAX_MOVE>::begin()+n;}
-   IteratorConst MLend()const{return std::array<Move,MAX_MOVE>::begin()+n;}
+   iterator begin(){return _m.begin();}
+   const_iterator begin()const{return _m.begin();}
+   iterator end(){return _m.begin()+n;}
+   const_iterator end()const{return _m.begin()+n;}
    void clear(){n=0;}
    size_t size(){return n;}
-   void push_back(const Move & m){ operator[](n)=m; n++;}
+   void push_back(const Move & m){ _m[n]=m; n++;}
+   bool empty(){return n==0;}
 };
+
 typedef std::vector<Move> PVList;
 
 namespace StaticEvalConfig{
@@ -2374,8 +2367,8 @@ struct MoveSorter{
 
 void sort(const ThreadContext & context, MoveList & moves, const Position & p, const TT::Entry * e = NULL){
     const MoveSorter ms(context,p,e);
-    for(auto it = moves.MLbegin() ; it != moves.MLend() ; ++it){ ms.computeScore(*it); }
-    std::sort(moves.MLbegin(),moves.MLend(),ms);
+    for(auto it = moves.begin() ; it != moves.end() ; ++it){ ms.computeScore(*it); }
+    std::sort(moves.begin(),moves.end(),ms);
 }
 
 inline bool ThreadContext::isRep(const Position & p, bool isPV)const{
@@ -2833,7 +2826,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     bool validMoveFound = false;
 
-    for(auto it = moves.MLbegin() ; it != moves.MLend() ; ++it){
+    for(auto it = moves.begin() ; it != moves.end() ; ++it){
         if ( StaticEvalConfig::doQFutility && !isInCheck && evalScore + StaticEvalConfig::qfutilityMargin + getAbsValue(p,Move2To(*it)) <= alphaInit) continue;
         //if ( SEEVal(p,*it) < -0 /* && !isInCheck*/) continue; // see (prune bad capture)
         if ( Move2Score(*it) < -900 && !isInCheck) continue; // see (from move sorter, SEE<0 add -2000 if bad capture)
@@ -2971,7 +2964,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
           const ScoreType betaPC = beta + StaticEvalConfig::probCutMargin;
           generate(p,moves,GP_cap);
           sort(*this,moves,p,&e);
-          for (auto it = moves.MLbegin() ; it != moves.MLend() && probCutCount < StaticEvalConfig::probCutMaxMoves; ++it){
+          for (auto it = moves.begin() ; it != moves.end() && probCutCount < StaticEvalConfig::probCutMaxMoves; ++it){
             if ( e.h != 0 && sameMove(e.m, *it) && (Move2Score(*it) < 100) ) continue; // skip TT move if quiet or bad captures
             Position p2 = p;
             if ( ! apply(p2,*it) ) continue;
@@ -3043,7 +3036,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     ScoreType score = -MATE + ply;
 
-    for(auto it = moves.MLbegin() ; it != moves.MLend() && !stopFlag ; ++it){
+    for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
         if (sameMove(skipMove, *it)) continue; // skipmove
         if ( e.h != 0 && sameMove(e.m, *it)) continue; // already tried
         Position p2 = p;
@@ -3108,7 +3101,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 if ( score >= beta ){
                     if ( Move2Type(*it) == T_std && !isInCheck){
                         updateTables(*this, p, depth, *it);
-                        for(auto it2 = moves.MLbegin() ; it2 != moves.MLend() && !sameMove(*it2,*it); ++it2)
+                        for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2)
                             if ( Move2Type(*it2) == T_std ) historyT.update(depth,*it2,p,false);
                     }
                     hashBound = TT::B_beta;
