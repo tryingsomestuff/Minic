@@ -62,8 +62,7 @@ Minic now comes with both a json configuration file where some parameters can be
 {
    "threads": 1,
    "mateFinder": false,
-   "ttSizeMb": 512,
-   "ttESizeMb": 512,
+   "ttSizeMb": 1024,
    "book": true
 }
 ```
@@ -102,3 +101,7 @@ and a command line interface, using the same key word. For instance, forcing mat
 * 0.32 : fix bug in eval
 * 0.33 : more aggressive SEE, better move sorting, better time control. Preparing for Syzygy endgame table and end-game helpers KQK, KRK and KBNK.
 * 0.34 : just another TC management improvement
+* 0.35 : work on material draw
+* 0.36 : little optimisations
+* 0.37 : MoveList optimisations, fuse eval and score TT, refactoring a lot, bug fixes
+
