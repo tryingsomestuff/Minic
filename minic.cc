@@ -1142,7 +1142,7 @@ struct ThreadContext{
         ScoreType s;
     };
 
-    template <bool pvnode, bool canNull = true> ScoreType pvs    (ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, const Move skipMove = INVALIDMOVE, , std::vector<RootScores> * rootScores = 0);
+    template <bool pvnode, bool canNull = true> ScoreType pvs    (ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, const Move skipMove = INVALIDMOVE, std::vector<RootScores> * rootScores = 0);
     ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth, DepthType qDepth);
     ScoreType qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
     bool SEE(const Position & p, const Move & m, ScoreType threshold)const;
