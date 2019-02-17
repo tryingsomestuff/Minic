@@ -32,7 +32,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "test";
 
 #define STOPSCORE   ScoreType(-20000)
 #define INFSCORE    ScoreType(15000)
@@ -2212,7 +2212,7 @@ bool fileExists(const std::string& name){ return std::ifstream(name.c_str()).goo
 
 bool readBinaryBook(std::ifstream & stream) {
     Position ps;
-    readFEN(startPosition,ps);
+    readFEN(startPosition,ps,true);
     Position p = ps;
     Move hash = 0;
     while (!stream.eof()) {
@@ -2244,6 +2244,10 @@ const Move Get(const Hash h){
     if ( it == book.end() ) return INVALIDMOVE;
     return *select_randomly(it->second.begin(),it->second.end());
 }
+
+#ifdef IMPORTBOOK
+#include "bookGenerationTools.cc"
+#endif
 
 } // Book
 
@@ -2846,7 +2850,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     const bool isInCheck = isAttacked(p, kingSquare(p));
 
     MoveList moves;
-    generate(p,moves,isInCheck?GP_all:GP_cap); // check evasion or capture only
+    generate(p,moves,isInCheck?GP_all:GP_cap);
     sort(*this,moves,p,qDepth==0?&e:0);
 
     const ScoreType alphaInit = alpha;
@@ -2945,6 +2949,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     ScoreType evalScore;
     if (isInCheck) evalScore = -MATE + ply;
     else evalScore = (e.h != 0)?e.eval:eval(p, gp);
+    if ( (e.h != 0) && ((e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact)) ) evalScore = e.score;
     evalStack[p.ply] = evalScore;
 
     MoveList moves;
@@ -3017,7 +3022,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     int validMoveCount = 0;
     bool alphaUpdated = false;
-    ScoreType bestScore = -INFSCORE;
+    ScoreType bestScore = -MATE + ply;
     Move bestMove = INVALIDMOVE;
 
     // try the tt move before move generation (if not skipped move)
@@ -3040,7 +3045,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 updatePV(pv, e.m, childPV);
                 if (ttScore >= beta) {
                     //if (Move2Type(e.m) == T_std && !isInCheck) updateTables(*this, p, depth, e.m); ///@todo ?
-                    if (skipMove == INVALIDMOVE) TT::setEntry({ e.m,ttScore,evalScore,TT::B_beta,depth,computeHash(p) }); ///@todo this can only decrease depth ????
+                    if (skipMove == INVALIDMOVE /*&& ttScore != 0*/) TT::setEntry({ e.m,ttScore,evalScore,TT::B_beta,depth,computeHash(p) }); ///@todo this can only decrease depth ????
                     return ttScore;
                 }
                 alphaUpdated = true;
@@ -3146,6 +3151,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     }
 
     if ( validMoveCount==0 ) return (isInCheck || skipMove!=INVALIDMOVE)?-MATE + ply : 0;
+    ///@todo here not checking for alphaUpdated seems to LOSS elo !!!
     if ( skipMove==INVALIDMOVE && alphaUpdated ) TT::setEntry({bestMove,bestScore,evalScore,hashBound,depth,computeHash(p)});
 
     return bestScore;
@@ -3574,14 +3580,22 @@ template<typename T> struct OptionValue {};
 template<> struct OptionValue<bool> {
     const bool value = false;
     const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_boolean;
+    static const bool clampAllowed = false;
 };
 template<> struct OptionValue<int> {
     const int value = 0;
     const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_number_integer;
+    static const bool clampAllowed = true;
 };
 template<> struct OptionValue<float> {
     const float value = 0.f;
     const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_number_float;
+    static const bool clampAllowed = true;
+};
+template<> struct OptionValue<std::string> {
+    const std::string value = "";
+    const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_string;
+    static const bool clampAllowed = false;
 };
 
 // from argv (override json)
@@ -3616,10 +3630,11 @@ template<typename T> T getOption(const std::string & key, T defaultValue = Optio
     if ( found ) return v.get(cliValue);
     auto it = json.find(key);
     if (it == json.end()) { LogIt(logError) << "JSON key not given, " << key; return defaultValue; }
-    if (!OptionValue<T>().validator(it.value())) { LogIt(logError) << "JSON value does not have expected type, " << it.key() << " : " << it.value(); return defaultValue; }
+    auto val = it.value();
+    if (!OptionValue<T>().validator(val)) { LogIt(logError) << "JSON value does not have expected type, " << it.key() << " : " << val; return defaultValue; }
     else {
-        LogIt(logInfo) << "From config file, " << it.key() << " : " << it.value();
-        return v.get((T)it.value());
+        LogIt(logInfo) << "From config file, " << it.key() << " : " << val;
+        return OptionValue<T>().clampAllowed ? v.get(val.get<T>()): val.get<T>();
     }
 }
 
@@ -3633,10 +3648,6 @@ template<typename T> T getOption(const std::string & key, T defaultValue = Optio
 
 #ifdef WITH_TEXEL_TUNING
 #include "texelTuning.cc"
-#endif
-
-#ifdef IMPORTBOOK
-#include "bookGenerationTools.cc"
 #endif
 
 #ifdef WITH_TEST_SUITE
@@ -3658,9 +3669,22 @@ int main(int argc, char ** argv){
     ThreadPool::instance().setup(getOption<int>("threads",1,Validator<int>().setMin(1).setMax(64)));
     GETOPT(mateFinder, bool)
 
-    if ( getOption<bool>("book") && Book::fileExists("book.bin") ) {
-        std::ifstream bbook("book.bin",std::ios::in | std::ios::binary);
-        Book::readBinaryBook(bbook);
+    if ( getOption<bool>("book") ){
+        const std::string bookFile = getOption<std::string>("bookFile");
+        if ( bookFile.empty() ) {
+           LogIt(logWarn) << "json entry bookFile is empty, cannot load book";
+        }
+        else{
+           if (Book::fileExists(bookFile) ){
+              LogIt(logInfo) << "Loading book ...";
+              std::ifstream bbook(bookFile,std::ios::in | std::ios::binary);
+              Book::readBinaryBook(bbook);
+              LogIt(logInfo) << "... done";
+           }
+           else{
+              LogIt(logWarn) << "book file " << bookFile << " not found, cannot load book";
+           }
+        }
     }
 
 #ifdef WITH_SYZYGY
