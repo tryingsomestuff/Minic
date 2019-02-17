@@ -32,7 +32,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 
-const std::string MinicVersion = "0.38";
+const std::string MinicVersion = "dev";
 
 #define STOPSCORE   ScoreType(-20000)
 #define INFSCORE    ScoreType(15000)
@@ -1952,32 +1952,31 @@ void generateSquare(const Position & p, MoveList & moves, Square from, GenPhase 
     }
     else {
         BitBoard pawnmoves = 0ull;
-        if ( phase != GP_cap) pawnmoves |= BB::mask[from].push[p.c] & ~p.occupancy;
-        if ((phase != GP_cap) && (BB::mask[from].push[p.c] & p.occupancy) == 0ull) pawnmoves |= BB::mask[from].dpush[p.c] & ~p.occupancy;
-        if ( phase != GP_quiet) pawnmoves |= BB::mask[from].pawnAttack[p.c] & ~myPieceBB & oppPieceBB;
+        static const BitBoard rank1_or_rank8 = rank1 | rank8;
+        if ( phase != GP_quiet) pawnmoves = BB::mask[from].pawnAttack[p.c] & ~myPieceBB & oppPieceBB;
         while (pawnmoves) {
             const Square to = BB::popBit(pawnmoves);
-            const bool isCap = (phase == GP_cap) || ((oppPieceBB&SquareToBitboard(to)) != 0ull);
-            if (isCap){
-                if ( SQRANK(to) == 0 || SQRANK(to) == 7) {
-                    addMove(from, to, T_cappromq, moves); // pawn capture with promotion
-                    addMove(from, to, T_cappromr, moves); // pawn capture with promotion
-                    addMove(from, to, T_cappromb, moves); // pawn capture with promotion
-                    addMove(from, to, T_cappromn, moves); // pawn capture with promotion
-                }
-                else addMove(from,to,T_capture,moves);
+            if ( SquareToBitboard(to) & rank1_or_rank8 ) {
+                addMove(from, to, T_cappromq, moves); // pawn capture with promotion
+                addMove(from, to, T_cappromr, moves); // pawn capture with promotion
+                addMove(from, to, T_cappromb, moves); // pawn capture with promotion
+                addMove(from, to, T_cappromn, moves); // pawn capture with promotion
             }
-            else{
-                if ( SQRANK(to) == 0 || SQRANK(to) == 7) {
-                    addMove(from, to, T_promq, moves); // promotion Q
-                    addMove(from, to, T_promr, moves); // promotion R
-                    addMove(from, to, T_promb, moves); // promotion B
-                    addMove(from, to, T_promn, moves); // promotion N
-                }
-                else addMove(from,to,T_std,moves);
-            }
+            else addMove(from,to,T_capture,moves);
         }
-        if ( p.ep != INVALIDSQUARE && phase != GP_quiet ) pawnmoves |= BB::mask[from].pawnAttack[p.c] & ~myPieceBB & SquareToBitboard(p.ep);
+        if ( phase != GP_cap) pawnmoves |= BB::mask[from].push[p.c] & ~p.occupancy;
+        if ((phase != GP_cap) && (BB::mask[from].push[p.c] & p.occupancy) == 0ull) pawnmoves |= BB::mask[from].dpush[p.c] & ~p.occupancy;
+        while (pawnmoves) {
+            const Square to = BB::popBit(pawnmoves);
+            if ( SquareToBitboard(to) & rank1_or_rank8 ) {
+                addMove(from, to, T_promq, moves); // promotion Q
+                addMove(from, to, T_promr, moves); // promotion R
+                addMove(from, to, T_promb, moves); // promotion B
+                addMove(from, to, T_promn, moves); // promotion N
+            }
+            else addMove(from,to,T_std,moves);
+        }
+        if ( p.ep != INVALIDSQUARE && phase != GP_quiet ) pawnmoves = BB::mask[from].pawnAttack[p.c] & ~myPieceBB & SquareToBitboard(p.ep);
         while (pawnmoves) addMove(from,BB::popBit(pawnmoves),T_ep,moves);
     }
 }
