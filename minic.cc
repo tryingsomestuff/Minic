@@ -2949,7 +2949,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     ScoreType evalScore;
     if (isInCheck) evalScore = -MATE + ply;
     else evalScore = (e.h != 0)?e.eval:eval(p, gp);
-    if ( (e.h != 0) && ((e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact)) ) evalScore = e.score;
+    if ( (e.h != 0) && ((e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact)) ) evalScore = adjustHashScore(e.score,ply);
     evalStack[p.ply] = evalScore;
 
     MoveList moves;
