@@ -2,5 +2,6 @@
    "threads": 1,
    "mateFinder": false,
    "ttSizeMb": 1024,
-   "book":true
+   "book":true,
+   "bookFile": "book_small.bin"
 }
