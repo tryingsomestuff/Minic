@@ -2778,6 +2778,12 @@ ScoreType eval(const Position & p, float & gp){
     return sc;
 }
 
+ScoreType createHashScore(ScoreType score, DepthType ply){
+  if      (isMatingScore(score)) score += ply;
+  else if (isMatedScore (score)) score -= ply;
+  return score;
+}
+
 ScoreType adjustHashScore(ScoreType score, DepthType ply){
   if      (isMatingScore(score)) score -= ply;
   else if (isMatedScore (score)) score += ply;
@@ -2939,7 +2945,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 #ifdef WITH_SYZYGY
     ScoreType tbScore = 0;
     if ( !rootnode && countBit(p.whitePiece|p.blackPiece) <= SyzygyTb::MAX_TB_MEN && SyzygyTb::probe_wdl(p, tbScore, false) > 0){
-       TT::setEntry({INVALIDMOVE,tbScore,eval(p, gp),TT::B_exact,DepthType(200),computeHash(p)});
+       TT::setEntry({INVALIDMOVE,createHashScore(tbScore,ply),eval(p, gp),TT::B_exact,DepthType(200),computeHash(p)});
        return tbScore;
     }
 #endif
@@ -3044,7 +3050,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 updatePV(pv, e.m, childPV);
                 if (ttScore >= beta) {
                     //if (Move2Type(e.m) == T_std && !isInCheck) updateTables(*this, p, depth, e.m); ///@todo ?
-                    if (skipMove == INVALIDMOVE /*&& ttScore != 0*/) TT::setEntry({ e.m,ttScore,evalScore,TT::B_beta,depth,computeHash(p) }); ///@todo this can only decrease depth ????
+                    if (skipMove == INVALIDMOVE /*&& ttScore != 0*/) TT::setEntry({ e.m,createHashScore(ttScore,ply),evalScore,TT::B_beta,depth,computeHash(p) }); ///@todo this can only decrease depth ????
                     return ttScore;
                 }
                 alphaUpdated = true;
@@ -3151,7 +3157,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     if ( validMoveCount==0 ) return (isInCheck || skipMove!=INVALIDMOVE)?-MATE + ply : 0;
     ///@todo here not checking for alphaUpdated seems to LOSS elo !!!
-    if ( skipMove==INVALIDMOVE && alphaUpdated ) TT::setEntry({bestMove,bestScore,evalScore,hashBound,depth,computeHash(p)});
+    if ( skipMove==INVALIDMOVE && alphaUpdated ) TT::setEntry({bestMove,createHashScore(bestScore,ply),evalScore,hashBound,depth,computeHash(p)});
 
     return bestScore;
 }
