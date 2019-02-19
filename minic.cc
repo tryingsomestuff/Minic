@@ -32,7 +32,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 
-const std::string MinicVersion = "0.39";
+const std::string MinicVersion = "0.40";
 
 #define STOPSCORE   ScoreType(-20000)
 #define INFSCORE    ScoreType(15000)
@@ -2962,7 +2962,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     bool futility = false, lmp = false;
 
-    const bool isNotEndGame = gp > 0.2 && (p.mat[Co_White][M_p] + p.mat[Co_Black][M_p]) > 0 && (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t] > 2);
+    const bool isNotEndGame = /*gp > 0.2 && (p.mat[Co_White][M_p] + p.mat[Co_Black][M_p]) > 0 &&*/ (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t] > 0);
 
     // prunings
     if ( !DynamicConfig::mateFinder && !rootnode && isNotEndGame && !pvnode && !isInCheck && !isMateScore(alpha) && !isMateScore(beta) && skipMove == INVALIDMOVE){
