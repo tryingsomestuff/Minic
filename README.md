@@ -14,18 +14,16 @@ Quite poor for a chess engine (around 2400) but already way to strong for me !
 
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
-   0 Minic                          66       7    6405   59.4%   30.8%
-   1 fruit_21                      150      27     534   70.3%   23.8%
-   2 drosophila-win64               33      25     534   54.8%   26.0%
-   3 Minic 0.34                    -43      19     534   43.9%   56.7%
-   4 myrddin                       -45      26     533   43.6%   20.5%
-   5 Minic 0.32                    -73      21     533   39.7%   49.7%
-   6 MadChess.Engine               -88      26     534   37.5%   23.8%
-   7 Minic 0.29                   -122      23     534   33.1%   39.3%
-   8 Bitfoot                      -122      28     534   33.1%   15.7%
-   9 sungorus64                   -126      28     533   32.6%   19.1%
-  10 Horizon_4_4                  -145      29     534   30.2%   14.8%
-  11 Minic 0.28                   -183      26     534   25.8%   31.1%
+   1 fruit_21                      227      29     625   78.7%   15.7%
+   2 drosophila-win64               80      25     625   61.3%   21.8%
+   3 Minic                          78      23     625   61.0%   31.2%
+   4 Minic 0.37                     44      23     625   56.3%   31.7%
+   5 Minic 0.34                     -8      22     625   48.9%   33.1%
+   6 Minic 0.32                    -13      23     625   48.2%   30.7%
+   7 myrddin                       -58      24     625   41.8%   22.7%
+   8 MadChess.Engine               -65      25     625   40.7%   18.7%
+   9 sungorus64                   -110      25     625   34.6%   19.7%
+  10 Minic 0.28                   -160      25     625   28.5%   24.6%
 ```
 
 Current WAC score is 284 (10sec per position on an old i7-2600K).
