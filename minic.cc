@@ -32,7 +32,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 
-const std::string MinicVersion = "0.40";
+const std::string MinicVersion = "dev";
 
 #define STOPSCORE   ScoreType(-20000)
 #define INFSCORE    ScoreType(15000)
@@ -134,19 +134,19 @@ ScoreType   blockedBishop3       = -50;
 ScoreType   returningBishopBonus =  16;
 ScoreType   blockedRookByKing    = -22;
 
-const ScoreType MOB[6][28] = { {0,0,0,0},
-                               {-22,-15,-10,5,0,5,8,12,14,15},
-                               {-18,-8,0,5,10,15,20,25,28,30,32,34,36,38},
-                               {-20,-16,-12,-8,4,0,0,4,8,12,16,20,24,27,30},
-                               {-19,-18,-16,-14,-12,-10,0,3,6,9,12,15,18,21,24,27,30,33,35,38,41,43,46,48,49,50,51},
-                               {-20,0,5,10,11,12,13,14} };
+const ScoreType MOB[6][29] = { {0,0,0,0},
+                               {-22,-15,-10,-5,0,5,8,12,14},
+                               {-18,-8,0,5,10,15,20,25,28,30,32,34,36,38,40},
+                               {-20,-16,-12,-8,-4,0,4,8,12,16,20,24,27,30,32},
+                               {-19,-18,-16,-14,-12,-10,0,3,6,9,12,15,18,21,24,27,30,33,35,38,41,43,46,48,49,50,51,52,53},
+                               {-20,0,5,10,11,7,5,3,2} };
 
-const ScoreType MOBEG[6][28] = { {0,0,0,0},
-                                 {-22,-15,-10,5,0,5,8,12,14,15},
-                                 {-18,-8,0,5,10,15,20,25,28,30,32,34,36,38},
-                                 {-20,-16,-12,-8,4,0,0,4,8,12,16,20,24,27,30},
-                                 {-19,-18,-16,-14,-12,-10,0,3,6,9,12,15,18,21,24,27,30,33,35,38,41,43,46,48,49,50,51},
-                                 {-20,0,5,10,11,12,13,14} };
+const ScoreType MOBEG[6][29] = { {0,0,0,0},
+                                 {-22,-15,-10,-5,0,5,8,12,14},
+                                 {-18,-8,0,5,10,15,20,25,28,30,32,34,36,38,40},
+                                 {-20,-16,-12,-8,-4,0,4,8,12,16,20,24,27,30,32},
+                                 {-19,-18,-16,-14,-12,-10,0,3,6,9,12,15,18,21,24,27,30,33,35,38,41,43,46,48,49,50,51,52,53},
+                                 {-20,0,5,10,14,17,20,22,24} };
 
 ScoreType katt_max    = 267;
 ScoreType katt_trans  = 32;
@@ -2428,11 +2428,15 @@ MaterialHash::Terminaison ThreadContext::interiorNodeRecognizer(const Position &
     return MaterialHash::Ter_Unknown;
 }
 
+double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f, double offset = 0.f){
+    return m / (1 + exp((trans - x) / scale)) - offset;
+}
+
 ScoreType katt_table[64] = {0};
 
 void initEval(){
     for(int i = 0; i < 64; i++){
-        katt_table[i] = (int) (double(EvalConfig::katt_max) / (1 + exp((EvalConfig::katt_trans - i) / double(EvalConfig::katt_scale)))) - EvalConfig::katt_offset;
+        katt_table[i] = (int) sigmoid(i,EvalConfig::katt_max,EvalConfig::katt_trans,EvalConfig::katt_scale,EvalConfig::katt_offset);
         //LogIt(logInfo) << "Attack level " << i << " " << katt_table[i];
     }
 }
