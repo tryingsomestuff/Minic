@@ -10,7 +10,7 @@ Minic stands for "Minimal Chess".
 Have a look in the Dist directory for releases. Some more stable/official ones will also be made available as github release.
 
 ## Strength
-Quite poor for a chess engine (around 2400) but already way to strong for me !
+Quite poor for a chess engine (around 2500) but already way to strong for me !
 
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
