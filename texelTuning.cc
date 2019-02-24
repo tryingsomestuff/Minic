@@ -1,31 +1,31 @@
 namespace Texel {
 
-    struct TexelInput {
-        Position * p;
-        int result;
-    };
+struct TexelInput {
+    Position * p;
+    int result;
+};
 
-    template < typename T >
-    struct TexelParam {
-    public:
-        TexelParam(T & accessor, const T& inf, const T& sup, const std::string & name, const std::function<void(const T&)> & hook = [](const T&){}) :accessor(&accessor), inf(inf), sup(sup), name(name), hook(hook) {}
-        T * accessor;
-        T inf;
-        T sup;
-        std::string name;
-        std::function<void(const T&)> hook;
-        operator T&() { return *accessor; }
-        operator const T&()const { return *accessor; }
-        void operator=(const T& value){ *accessor = std::min(std::max(inf,value),sup); hook(value); }
-    };
+template < typename T >
+struct TexelParam {
+public:
+    TexelParam(T & accessor, const T& inf, const T& sup, const std::string & name, const std::function<void(const T&)> & hook = [](const T&){}) :accessor(&accessor), inf(inf), sup(sup), name(name), hook(hook) {}
+    T * accessor;
+    T inf;
+    T sup;
+    std::string name;
+    std::function<void(const T&)> hook;
+    operator T&() { return *accessor; }
+    operator const T&()const { return *accessor; }
+    void operator=(const T& value){ *accessor = std::min(std::max(inf,value),sup); hook(value); }
+};
 
-    template < typename T>
-    std::ostream& operator<<(std::ostream& os, const TexelParam<T>& p){const T& t = p; os << t; return os;}
+template < typename T>
+std::ostream& operator<<(std::ostream& os, const TexelParam<T>& p){const T& t = p; os << t; return os;}
 
-    double K = 0.23;
+double K = 0.23;
 
-    double Sigmoid(Position * p) {
-        /*
+double Sigmoid(Position * p) {
+    /*
         static unsigned long long int ncalls = 0;
         ncalls++;
         static std::chrono::time_point<Clock> sTime = Clock::now();
@@ -34,14 +34,14 @@ namespace Texel {
            LogIt(logInfo) << "Sigmoids " << ncalls*1000/elapsed << " calls/sec";
         }
         */
-        assert(p);
+    assert(p);
 
-        // qsearch
-        DepthType seldepth = 0;
-        double s = ThreadPool::instance().main().qsearchNoPruning(-10000,10000,*p,1,seldepth);
-        s *= (p->c == Co_White ? 1:-1);
+    // qsearch
+    DepthType seldepth = 0;
+    double s = ThreadPool::instance().main().qsearchNoPruning(-10000,10000,*p,1,seldepth);
+    s *= (p->c == Co_White ? 1:-1);
 
-        /*
+    /*
         // search
         Move m = INVALIDMOVE;
         DepthType d = 64;
@@ -50,149 +50,156 @@ namespace Texel {
         s *= (p->c == Co_White ? 1:-1);
         */
 
-        /*
+    /*
         // eval
         float gp;
         double s = eval(*p,gp);
         s *= (p->c == Co_White ? 1:-1);
         */
-        return 1. / (1. + std::pow(10, -/*K **/ s / 200.));
-    }
+    return 1. / (1. + std::pow(10, -/*K **/ s / 200.));
+}
 
-    double E(const std::vector<Texel::TexelInput> &data, size_t miniBatchSize) {
-        double e = 0;
-        for (size_t k = 0; k < miniBatchSize; ++k) {
-           const double r = (data[k].result+1)*0.5;
-           const double s = Sigmoid(data[k].p);
-           e += std::pow(r - s,2);
+double E(const std::vector<Texel::TexelInput> &data, size_t miniBatchSize) {
+    double e = 0;
+    bool progress = miniBatchSize > 10000;
+    std::chrono::time_point<Clock> startTime = Clock::now();
+    for (size_t k = 0; k < miniBatchSize; ++k) {
+        const double r = (data[k].result+1)*0.5;
+        const double s = Sigmoid(data[k].p);
+        e += std::pow(r - s,2);
+        if ( progress && k%10000 == 0) std::cout << "." << std::flush;
+    }
+    if ( progress ) {
+        int ms = (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count();
+        std::cout << " " << ms << " " << miniBatchSize/ms << "kps" << std::endl;
+    }
+    e /= miniBatchSize;
+    return e;
+}
+
+void Randomize(std::vector<Texel::TexelInput> & data, size_t miniBatchSize){ std::shuffle(data.begin(), data.end(), std::default_random_engine(0)); }
+
+double computeOptimalK(const std::vector<Texel::TexelInput> & data) {
+    double Kstart = 0.05, Kend = 3.0, Kdelta = 0.15;
+    double thisError, bestError = 100;
+    for (int i = 0; i < 5; ++i) {
+        LogIt(logInfo) << "Computing K Iteration " << i;
+        K = Kstart - Kdelta;
+        while (K < Kend) {
+            LogIt(logInfo) << "...";
+            K += Kdelta;
+            thisError = E(data,data.size());
+            if (thisError <= bestError) {
+                bestError = thisError, Kstart = K;
+                LogIt(logInfo) << "new best K = " << K << " E = " << bestError;
+            }
         }
-        e /= miniBatchSize;
-        return e;
+        LogIt(logInfo) << "iteration " << i << " K = " << Kstart << " E = " << bestError;
+        Kend = Kstart + Kdelta;
+        Kstart -= Kdelta;
+        Kdelta /= 10.0;
     }
+    K = Kstart;
+    return Kstart;
+}
 
-    void Randomize(std::vector<Texel::TexelInput> & data, size_t miniBatchSize){ std::shuffle(data.begin(), data.end(), std::default_random_engine(0)); }
 
-    double computeOptimalK(const std::vector<Texel::TexelInput> & data) {
-       double Kstart = 0.05, Kend = 3.0, Kdelta = 0.15;
-       double thisError, bestError = 100;
-       for (int i = 0; i < 5; ++i) {
-          LogIt(logInfo) << "Computing K Iteration " << i;
-          K = Kstart - Kdelta;
-          while (K < Kend) {
-              LogIt(logInfo) << "...";
-              K += Kdelta;
-              thisError = E(data,data.size());
-              if (thisError <= bestError) {
-                 bestError = thisError, Kstart = K;
-                 LogIt(logInfo) << "new best K = " << K << " E = " << bestError;
-              }
-          }
-          LogIt(logInfo) << "iteration " << i << " K = " << Kstart << " E = " << bestError;
-          Kend = Kstart + Kdelta;
-          Kstart -= Kdelta;
-          Kdelta /= 10.0;
-      }
-      K = Kstart;
-      return Kstart;
+std::vector<double> ComputeGradient(std::vector<TexelParam<ScoreType> > & x0, std::vector<Texel::TexelInput> &data, size_t gradientBatchSize, bool normalized = true) {
+    LogIt(logInfo) << "Computing gradient";
+    std::vector<double> g;
+    const ScoreType dx = 2;
+    for (size_t k = 0; k < x0.size(); ++k) {
+        const ScoreType oldvalue = x0[k];
+        x0[k] = oldvalue + dx;
+        double Ep1 = E(data, gradientBatchSize);
+        x0[k] = oldvalue - dx;
+        double Em1 = E(data, gradientBatchSize);
+        x0[k] = oldvalue;
+        double grad = (Ep1-Em1)/(2*dx);
+        g.push_back(grad);
+        //LogIt(logInfo) << "Gradient " << k << " " << grad;
     }
-
-
-    std::vector<double> ComputeGradient(std::vector<TexelParam<ScoreType> > & x0, std::vector<Texel::TexelInput> &data, size_t gradientBatchSize, bool normalized = true) {
-        LogIt(logInfo) << "Computing gradient";
-        std::vector<double> g;
-        const ScoreType dx = 2;
-        for (size_t k = 0; k < x0.size(); ++k) {
-            const ScoreType oldvalue = x0[k];
-            x0[k] = oldvalue + dx;
-            double Ep1 = E(data, gradientBatchSize);
-            x0[k] = oldvalue - dx;
-            double Em1 = E(data, gradientBatchSize);
-            x0[k] = oldvalue;
-            double grad = (Ep1-Em1)/(2*dx);
-            g.push_back(grad);
-            //LogIt(logInfo) << "Gradient " << k << " " << grad;
+    if ( normalized){
+        double norm = 0;
+        for (size_t k = 0; k < x0.size(); ++k) norm += g[k] * g[k];
+        norm = sqrt(norm);
+        if ( norm > 1e-12){
+            for (size_t k = 0; k < x0.size(); ++k) {
+                g[k] /= norm;
+                LogIt(logInfo) << "Gradient normalized " << k << " " << g[k];
+            }
         }
-        if ( normalized){
-           double norm = 0;
-           for (size_t k = 0; k < x0.size(); ++k) norm += g[k] * g[k];
-           norm = sqrt(norm);
-           if ( norm > 1e-12){
-              for (size_t k = 0; k < x0.size(); ++k) {
-                 g[k] /= norm;
-                 LogIt(logInfo) << "Gradient normalized " << k << " " << g[k];
-              }
-           }
-        }
-        return g;
     }
+    return g;
+}
 
-    std::vector<TexelParam<ScoreType> > TexelOptimizeSecante(const std::vector<TexelParam<ScoreType> >& initialGuess, std::vector<Texel::TexelInput> & data, size_t batchSize){
+std::vector<TexelParam<ScoreType> > TexelOptimizeSecante(const std::vector<TexelParam<ScoreType> >& initialGuess, std::vector<Texel::TexelInput> & data, size_t batchSize){
 
-        DynamicConfig::disableTT = true;
+    DynamicConfig::disableTT = true;
 
-        std::ofstream str("tuning.csv");
-        int it = 0;
+    std::ofstream str("tuning.csv");
+    int it = 0;
+    Randomize(data, batchSize);
+    std::vector<TexelParam<ScoreType> > bestParam = initialGuess;
+    ScoreType dx = 2;
+    double curEim1 = E(data, batchSize);
+    while (true) {
+        std::vector<double> g_i = ComputeGradient(bestParam, data, batchSize, false);
+        double gmax = -1;
+        for (size_t k = 0; k < bestParam.size(); ++k) {
+            const ScoreType oldValue = bestParam[k];
+            bestParam[k] = oldValue - dx;
+            gmax = std::max(gmax,std::fabs(g_i[k]));
+        }
+        LogIt(logInfo) << "gmax " << gmax;
+        if ( gmax < 1e-14 ) break;
+        std::vector<double> g_im1 = ComputeGradient(bestParam, data, batchSize, false);
+        for (size_t k = 0; k < bestParam.size(); ++k) {
+            const ScoreType oldValue = bestParam[k];
+            bestParam[k] = oldValue + dx;
+        }
+
+        for (size_t k = 0; k < bestParam.size(); ++k) {
+            const ScoreType oldValue = bestParam[k];
+            if ( std::fabs(g_i[k] - g_im1[k] >= 1e-16 )) bestParam[k] = ScoreType(oldValue - dx * g_i[k] / (g_i[k]-g_im1[k]));
+        }
+        LogIt(logInfo) << "Computing new error";
+        double curE = E(data, batchSize);
+        LogIt(logInfo) << "Current error " << curE << " best was : " << curEim1;
+        LogIt(logInfo) << "Current values :";
+        str << it << ";";
+        for (size_t k = 0; k < bestParam.size(); ++k) {
+            LogIt(logInfo) << bestParam[k].name << " " << bestParam[k];
+            str << bestParam[k] << ";";
+        }
+        str << curE << ";" << curEim1 << ";  ";
+        for (size_t k = 0; k < bestParam.size(); ++k) {
+            str << g_i[k] << ";" << g_im1[k] << ";  ";
+        }
+        str << std::endl;
+        curEim1 = curE;
+        // randomize for next iteration
         Randomize(data, batchSize);
-        std::vector<TexelParam<ScoreType> > bestParam = initialGuess;
-        ScoreType dx = 2;
-        double curEim1 = E(data, batchSize);
-        while (true) {
-            std::vector<double> g_i = ComputeGradient(bestParam, data, batchSize, false);
-            double gmax = -1;
-            for (size_t k = 0; k < bestParam.size(); ++k) {
-                const ScoreType oldValue = bestParam[k];
-                bestParam[k] = oldValue - dx;
-                gmax = std::max(gmax,std::fabs(g_i[k]));
-            }
-            LogIt(logInfo) << "gmax " << gmax;
-            if ( gmax < 1e-14 ) break;
-            std::vector<double> g_im1 = ComputeGradient(bestParam, data, batchSize, false);
-            for (size_t k = 0; k < bestParam.size(); ++k) {
-                const ScoreType oldValue = bestParam[k];
-                bestParam[k] = oldValue + dx;
-            }
-
-            for (size_t k = 0; k < bestParam.size(); ++k) {
-                const ScoreType oldValue = bestParam[k];
-                if ( std::fabs(g_i[k] - g_im1[k] >= 1e-16 )) bestParam[k] = ScoreType(oldValue - dx * g_i[k] / (g_i[k]-g_im1[k]));
-            }
-            LogIt(logInfo) << "Computing new error";
-            double curE = E(data, batchSize);
-            LogIt(logInfo) << "Current error " << curE << " best was : " << curEim1;
-            LogIt(logInfo) << "Current values :";
-            str << it << ";";
-            for (size_t k = 0; k < bestParam.size(); ++k) {
-               LogIt(logInfo) << bestParam[k].name << " " << bestParam[k];
-               str << bestParam[k] << ";";
-            }
-            str << curE << ";" << curEim1 << ";  ";
-            for (size_t k = 0; k < bestParam.size(); ++k) {
-               str << g_i[k] << ";" << g_im1[k] << ";  ";
-            }
-            str << std::endl;
-            curEim1 = curE;
-            // randomize for next iteration
-            Randomize(data, batchSize);
-            ++it;
-        }
-        return bestParam;
+        ++it;
     }
+    return bestParam;
+}
 
-    std::vector<TexelParam<ScoreType> > TexelOptimizeGD(const std::vector<TexelParam<ScoreType> >& initialGuess, std::vector<Texel::TexelInput> &data, const size_t batchSize) {
-        DynamicConfig::disableTT = true;
-        std::ofstream str("tuning.csv");
-        int it = 0;
-        Randomize(data, batchSize);
-        std::vector<TexelParam<ScoreType> > bestParam = initialGuess;
-        std::vector<double> previousUpdate(batchSize,0);
-        //ScoreType previousValue[batchSize] = {0};
-        //std::vector<double> previousGradient = {0};
-        while (it < 100000 ) {
-            std::vector<double> g = ComputeGradient(bestParam, data, batchSize);
-            double learningRate = 20;
-            double alpha = 0.9;
-            double bestCoeff = 1;
-            /*
+std::vector<TexelParam<ScoreType> > TexelOptimizeGD(const std::vector<TexelParam<ScoreType> >& initialGuess, std::vector<Texel::TexelInput> &data, const size_t batchSize) {
+    DynamicConfig::disableTT = true;
+    std::ofstream str("tuning.csv");
+    int it = 0;
+    Randomize(data, batchSize);
+    std::vector<TexelParam<ScoreType> > bestParam = initialGuess;
+    std::vector<double> previousUpdate(batchSize,0);
+    //ScoreType previousValue[batchSize] = {0};
+    //std::vector<double> previousGradient = {0};
+    while (it < 100000 ) {
+        std::vector<double> g = ComputeGradient(bestParam, data, batchSize);
+        double learningRate = 20;
+        double alpha = 0.9;
+        double bestCoeff = 1;
+        /*
             // line search
             double coeff = 1;
             LogIt(logInfo) << "Computing initial error (batch size)";
@@ -226,82 +233,204 @@ namespace Texel {
                 continue; // skip this sample
             }
             */
-            LogIt(logInfo) << "Applying gradient, learningRate = " << learningRate*bestCoeff << ", alpha " << alpha;
-            for (size_t k = 0; k < bestParam.size(); ++k) {
-                const ScoreType oldValue = bestParam[k];
-                double currentUpdate = ScoreType((1-alpha)*bestCoeff*learningRate * g[k] + alpha * previousUpdate[k]);
-                bestParam[k] = ScoreType(oldValue - currentUpdate);
-                previousUpdate[k] = currentUpdate;
-                //previousValue[k] = bestParam[k];
-            }
-            //previousGradient = g;
-            LogIt(logInfo) << "Computing new error";// (full data size)";
-            double curE = E(data, batchSize/*data.size()*/);
-            LogIt(logInfo) << curE;
-            // randomize for next iteration
-            Randomize(data, batchSize);
-            // display
-            for (size_t k = 0; k < bestParam.size(); ++k) LogIt(logInfo) << bestParam[k].name << " " << bestParam[k];
-            // write
-            if ( it % 10 == 0 ){
-                str << it << ";";
-                for (size_t k = 0; k < bestParam.size(); ++k) str << bestParam[k] << ";";
-                str << curE << std::endl;
-            }
-            ++it;
+        LogIt(logInfo) << "Applying gradient, learningRate = " << learningRate*bestCoeff << ", alpha " << alpha;
+        for (size_t k = 0; k < bestParam.size(); ++k) {
+            const ScoreType oldValue = bestParam[k];
+            double currentUpdate = ScoreType((1-alpha)*bestCoeff*learningRate * g[k] + alpha * previousUpdate[k]);
+            bestParam[k] = ScoreType(oldValue - currentUpdate);
+            previousUpdate[k] = currentUpdate;
+            //previousValue[k] = bestParam[k];
         }
-        return bestParam;
+        //previousGradient = g;
+        LogIt(logInfo) << "Computing new error";// (full data size)";
+        double curE = E(data, batchSize/*data.size()*/);
+        LogIt(logInfo) << curE;
+        // randomize for next iteration
+        Randomize(data, batchSize);
+        // display
+        for (size_t k = 0; k < bestParam.size(); ++k) LogIt(logInfo) << bestParam[k].name << " " << bestParam[k];
+        // write
+        if ( it % 10 == 0 ){
+            str << it << ";";
+            for (size_t k = 0; k < bestParam.size(); ++k) str << bestParam[k] << ";";
+            str << curE << std::endl;
+        }
+        ++it;
+    }
+    return bestParam;
+}
+
+std::vector<TexelParam<ScoreType> > TexelOptimizeNaive(const std::vector<TexelParam<ScoreType> >& initialGuess, std::vector<Texel::TexelInput> &data, const size_t batchSize) {
+    DynamicConfig::disableTT = true;
+    std::ofstream str("tuning.csv");
+    std::vector<TexelParam<ScoreType> > bestParam = initialGuess;
+    for (int loop = 0; loop < 5000; ++loop) {
+        for (size_t k = 0; k < bestParam.size(); ++k) {
+            Randomize(data, batchSize);
+            double initE = E(data, batchSize);
+            double curE = -1;
+            while ( true ) {
+                const ScoreType oldValue = bestParam[k];
+                bestParam[k] = ScoreType(oldValue - 1);
+                if (bestParam[k] == oldValue) break;
+                curE = E(data, batchSize);
+                if ( curE < initE ){
+                    LogIt(logInfo) << curE << " " << initE << " " << bestParam[k].name << " " << bestParam[k];
+                    initE = curE;
+                }
+                else{
+                    ScoreType oldValue = bestParam[k];
+                    bestParam[k] = ScoreType(oldValue + 1);
+                    curE = E(data, batchSize);
+                    break;
+                }
+            }
+            while ( true ) {
+                const ScoreType oldValue = bestParam[k];
+                bestParam[k] = ScoreType(oldValue + 1);
+                if (bestParam[k] == oldValue) break;
+                curE = E(data, batchSize);
+                if ( curE < initE ){
+                    LogIt(logInfo) << curE << " " << initE << " " << bestParam[k].name << " " << bestParam[k];
+                    initE = curE;
+                }
+                else{
+                    ScoreType oldValue = bestParam[k];
+                    bestParam[k] = ScoreType(oldValue - 1);
+                    curE = E(data, batchSize);
+                    break;
+                }
+            }
+            // write
+            str << loop << ";" << k << ";";
+            for (size_t k = 0; k < bestParam.size(); ++k) str << bestParam[k] << ";";
+            str << curE << std::endl;
+        }
+    }
+    return bestParam;
+}
+
+struct Particle{
+    std::vector<ScoreType> param;
+    std::vector<ScoreType> best;
+    std::vector<ScoreType> velocity;
+    double bestScore;
+};
+
+void RandomParam(std::vector<ScoreType> & p, ScoreType mini, ScoreType maxi){
+    static std::mt19937 mt(42); // fixed seed for ZHash !!!
+    std::uniform_int_distribution<unsigned long long int> dist(mini, maxi);
+    for(auto it = p.begin() ; it != p.end() ; ++it){
+        *it = dist(mt);
+    }
+}
+
+void copyParam( std::vector<TexelParam<ScoreType> > & param, const std::vector<ScoreType> & value, std::vector<ScoreType> & backup){
+    for(int k = 0 ; k < param.size() ; ++k){
+        backup[k] = param[k];
+        param[k] = value[k];
+    }
+}
+
+void restoreParam( std::vector<TexelParam<ScoreType> > & param, const std::vector<ScoreType> & value){
+    for(int k = 0 ; k < param.size() ; ++k){
+        param[k] = value[k];
+    }
+}
+
+std::vector<TexelParam<ScoreType> > TexelOptimizePSO(const std::vector<TexelParam<ScoreType> >& initialGuess, std::vector<Texel::TexelInput> &data, const size_t batchSize) {
+    DynamicConfig::disableTT = true;
+    std::ofstream str("tuning.csv");
+
+    int nbParticle = 35;
+
+    std::vector< Particle > particles(nbParticle);
+
+    double eBest = 1000000000000;
+
+    std::vector<TexelParam<ScoreType> > curParam = initialGuess;
+
+    std::vector<ScoreType> swarmBest(curParam.size());
+    copyParam(curParam,swarmBest,swarmBest);
+
+    int part = 0;
+    for(auto it = particles.begin() ; it != particles.end() ; ++it){
+        it->param.resize(curParam.size());
+        it->best.resize(curParam.size());
+        it->velocity.resize(curParam.size());
+        RandomParam(it->param,50,1500);
+        it->best = it->param;
+        RandomParam(it->velocity,-10,10);
+        std::vector<ScoreType> backup(curParam.size());
+        copyParam(curParam,it->param,backup);
+        double e = E(data, batchSize);
+        it->bestScore = e;
+        if ( e < eBest ){
+            swarmBest = it->param;
+            eBest = e;
+        }
+        restoreParam(curParam,backup);
+        LogIt(logInfo) << "Initial particle " << part++;
+        for (size_t k = 0; k < curParam.size(); ++k) LogIt(logInfo) << curParam[k].name << " " << it->param[k] << " " << it->velocity[k] << " " << it->bestScore;
     }
 
-    std::vector<TexelParam<ScoreType> > TexelOptimizeNaive(const std::vector<TexelParam<ScoreType> >& initialGuess, std::vector<Texel::TexelInput> &data, const size_t batchSize) {
-        DynamicConfig::disableTT = true;
-        std::ofstream str("tuning.csv");
-        std::vector<TexelParam<ScoreType> > bestParam = initialGuess;
-        for (int loop = 0; loop < 5000; ++loop) {
-            for (size_t k = 0; k < bestParam.size(); ++k) {
-                Randomize(data, batchSize);
-                double initE = E(data, batchSize);
-                double curE = -1;
-                while ( true ) {
-                    const ScoreType oldValue = bestParam[k];
-                    bestParam[k] = ScoreType(oldValue - 1);
-                    if (bestParam[k] == oldValue) break;
-                    curE = E(data, batchSize);
-                    if ( curE < initE ){
-                        LogIt(logInfo) << curE << " " << initE << " " << bestParam[k].name << " " << bestParam[k];
-                        initE = curE;
-                    }
-                    else{
-                        ScoreType oldValue = bestParam[k];
-                        bestParam[k] = ScoreType(oldValue + 1);
-                        curE = E(data, batchSize);
-                        break;
-                    }
-                }
-                while ( true ) {
-                    const ScoreType oldValue = bestParam[k];
-                    bestParam[k] = ScoreType(oldValue + 1);
-                    if (bestParam[k] == oldValue) break;
-                    curE = E(data, batchSize);
-                    if ( curE < initE ){
-                        LogIt(logInfo) << curE << " " << initE << " " << bestParam[k].name << " " << bestParam[k];
-                        initE = curE;
-                    }
-                    else{
-                        ScoreType oldValue = bestParam[k];
-                        bestParam[k] = ScoreType(oldValue - 1);
-                        curE = E(data, batchSize);
-                        break;
-                    }
-                }
-                // write
-                str << loop << ";" << k << ";";
-                for (size_t k = 0; k < bestParam.size(); ++k) str << bestParam[k] << ";";
-                str << curE << std::endl;
+    LogIt(logInfo) << "Initial best ";
+    for (size_t k = 0; k < curParam.size(); ++k) LogIt(logInfo) << curParam[k].name << " " << swarmBest[k] << " " << eBest;
+
+    double omega = 0.8;
+    double phip = 1.4;
+    double phig = 1.4;
+
+    int count = 0;
+
+    while ( true ) {
+        Randomize(data, batchSize);
+        for(auto it = particles.begin() ; it != particles.end() ; ++it){
+            for(int k = 0 ; k < curParam.size() ; ++k){
+                static std::mt19937 mt(42); // fixed seed for ZHash !!!
+                static std::uniform_real_distribution<double> dist(0,1);
+                double rp = dist(mt);
+                double rg = dist(mt);
+                (*it).velocity[k] = omega * (*it).velocity[k] + phip * rp * ((*it).best[k] - (*it).param[k]) + phig * rg * (swarmBest[k] - ((*it).param[k]));
             }
+            for(int k = 0 ; k < curParam.size() ; ++k){
+                (*it).param[k] += (*it).velocity[k];
+            }
+            std::vector<ScoreType> backup(curParam.size());
+            copyParam(curParam,it->param,backup);
+            double e = E(data, batchSize);
+            if ( e < it->bestScore ){
+                it->best = it->param;
+                it->bestScore = e;
+                if ( e < eBest){
+                    eBest = e;
+                    swarmBest = it->best;
+                }
+            }
+            restoreParam(curParam,backup);
         }
-        return bestParam;
+
+        std::cout << "=====================" << std::endl;
+
+        for(auto it = particles.begin() ; it != particles.end() ; ++it){
+            for (size_t k = 0; k < curParam.size(); ++k) LogIt(logInfo) << curParam[k].name << " " << it->param[k] << " " << it->velocity[k] << " " << it->bestScore;
+        }
+
+        std::cout << "------------------" << std::endl;
+
+        restoreParam(curParam,swarmBest);
+        // display
+        for (size_t k = 0; k < curParam.size(); ++k) LogIt(logInfo) << curParam[k].name << " " << curParam[k];
+        // write
+        //if ( count % 10 == 0 ){
+            str << count << ";";
+            for (size_t k = 0; k < curParam.size(); ++k) str << curParam[k] << ";";
+            str << eBest << std::endl;
+        //}
+        count++;
     }
+    return curParam;
+}
 
 } // Texel
 
@@ -325,9 +454,10 @@ void TexelTuning(const std::string & filename) {
 
     LogIt(logInfo) << "Data size : " << data.size();
 
-    //size_t batchSize = data.size(); // batch
+    size_t batchSize = data.size(); // batch
+    //size_t batchSize = 20000; // batch
     //size_t batchSize = 1024 ; // mini
-    size_t batchSize = 1; // stochastic
+    //size_t batchSize = 1; // stochastic
 
     //for(int k=0 ; k<13; ++k){Values[k] = 450; ValuesEG[k] = 450;}
 
@@ -342,7 +472,8 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wb+PieceShift], 150,  400, "EGbishop", [](const ScoreType& s){ValuesEG[P_bb+PieceShift] = -s;}));
     guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wr+PieceShift], 200,  700, "EGrook",   [](const ScoreType& s){ValuesEG[P_br+PieceShift] = -s;}));
     guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wq+PieceShift], 600, 1400, "EGqueen",  [](const ScoreType& s){ValuesEG[P_bq+PieceShift] = -s;}));
-/*
+
+    /*
     guess.push_back(Texel::TexelParam<ScoreType>(bishopPairBonus , -50,  50,"bishop pair"));
     guess.push_back(Texel::TexelParam<ScoreType>(knightPairMalus , -50,  50,"knight pair"));
     guess.push_back(Texel::TexelParam<ScoreType>(rookPairMalus   , -50,  50,"rook pair"));
@@ -374,7 +505,8 @@ void TexelTuning(const std::string & filename) {
 
     LogIt(logInfo) << "Initial values :";
     for (size_t k = 0; k < guess.size(); ++k) LogIt(logInfo) << guess[k].name << " " << guess[k];
-    std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeGD(guess, data, batchSize);
+    //std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeGD(guess, data, batchSize);
+    std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizePSO(guess, data, batchSize);
     //std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeSecante(guess, data, batchSize);
     //std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeNaive(guess, data, batchSize);
 
