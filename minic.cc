@@ -121,7 +121,7 @@ float       freePasserFactor      = 0.9f; // 190%
 ScoreType   adjKnight[9]  = { -24, -18, -12, -6,  0,  6,  12, 18, 24 };
 ScoreType   adjRook[9]    = {  48,  36,  24, 12,  0,-12, -24,-36,-48 };
 
-ScoreType   bishopPairBonus =  20;
+ScoreType   bishopPairBonus =  40;
 ScoreType   knightPairMalus = -8;
 ScoreType   rookPairMalus   = -16;
 
@@ -151,11 +151,12 @@ const ScoreType MOBEG[6][29] = { {0,0,0,0},
 ScoreType katt_max    = 267;
 ScoreType katt_trans  = 32;
 ScoreType katt_scale  = 13;
-ScoreType katt_offset = 10;
+ScoreType katt_offset = 20;
 
-ScoreType katt_attack_weight [7] = {0, -3, 13, 8, 8, 10, 4};
-ScoreType katt_defence_weight[7] = {0,  4,  3, 4, 0, -1, 0};
+ScoreType katt_attack_weight [7] = {0,  2,  4, 4, 8, 10, 4};
+ScoreType katt_defence_weight[7] = {0,  1,  4, 4, 3,  3, 0};
 
+ScoreType pawnMobility[2] = {1,8};
 
 }
 
@@ -2527,6 +2528,11 @@ ScoreType eval(const Position & p, float & gp){
     ScoreType dangerW = 0;
     ScoreType dangerB = 0;
 
+    BitBoard wAtt = 0ull;
+    BitBoard bAtt = 0ull;
+    BitBoard wSafePPush = 0ull;
+    BitBoard bSafePPush = 0ull;
+
     BitBoard pieceBBiterator = p.whitePiece;
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
@@ -2535,12 +2541,18 @@ ScoreType eval(const Position & p, float & gp){
         sc   += PST  [ptype - 1][kk];
         scEG += PSTEG[ptype - 1][kk];
         if (ptype != P_wp) {
-            const BitBoard curAtt = pf[ptype-1](k, p.occupancy, p.c) & ~p.whitePiece;
+            const BitBoard curTargets = pf[ptype-1](k, p.occupancy, p.c);
+            const BitBoard curAtt = curTargets & ~p.whitePiece;
+            wAtt |= curAtt;
             const uint64_t n = countBit(curAtt);
             sc   += EvalConfig::MOB  [ptype - 1][n];
             scEG += EvalConfig::MOBEG[ptype - 1][n];
-            //dangerW -= ScoreType(countBit(curAtt & wKingZone) * EvalConfig::katt_defence_weight[ptype]);
-            //dangerB += ScoreType(countBit(curAtt & bKingZone) * EvalConfig::katt_attack_weight[ptype]);
+            dangerW -= ScoreType(countBit(curTargets & wKingZone) * EvalConfig::katt_defence_weight[ptype]);
+            dangerB += ScoreType(countBit(curTargets & bKingZone) * EvalConfig::katt_attack_weight[ptype]);
+        }
+        else{
+            wSafePPush |= BB::mask[k].push[Co_White];
+            wAtt |= BB::mask[k].pawnAttack[Co_White];
         }
     }
 
@@ -2551,18 +2563,30 @@ ScoreType eval(const Position & p, float & gp){
         sc   -= PST  [ptype - 1][k];
         scEG -= PSTEG[ptype - 1][k];
         if (ptype != P_wp) {
-            const BitBoard curAtt = pf[ptype-1](k, p.occupancy, p.c) & ~p.blackPiece;
+            const BitBoard curTargets = pf[ptype-1](k, p.occupancy, p.c);
+            const BitBoard curAtt = curTargets & ~p.blackPiece;
+            bAtt |= curAtt;
             const uint64_t n = countBit(curAtt);
             sc   -= EvalConfig::MOB  [ptype - 1][n];
             scEG -= EvalConfig::MOBEG[ptype - 1][n];
-            //dangerW += ScoreType(countBit(curAtt & wKingZone) * EvalConfig::katt_attack_weight[ptype]);
-            //dangerB -= ScoreType(countBit(curAtt & bKingZone) * EvalConfig::katt_defence_weight[ptype]);
+            dangerW += ScoreType(countBit(curTargets & wKingZone) * EvalConfig::katt_attack_weight[ptype]);
+            dangerB -= ScoreType(countBit(curTargets & bKingZone) * EvalConfig::katt_defence_weight[ptype]);
+        }
+        else{
+            bSafePPush |= BB::mask[k].push[Co_Black];
+            bAtt |= BB::mask[k].pawnAttack[Co_Black];
         }
     }
 
     // use danger score
-    //sc   -=  katt_table[std::min(std::max(dangerW,ScoreType(0)),ScoreType(63))];
-    //sc   +=  katt_table[std::min(std::max(dangerB,ScoreType(0)),ScoreType(63))];
+    sc   -=  katt_table[std::min(std::max(dangerW,ScoreType(0)),ScoreType(63))];
+    sc   +=  katt_table[std::min(std::max(dangerB,ScoreType(0)),ScoreType(63))];
+
+    // safe pawn push (protected once or not attacked)
+    wSafePPush &= (wAtt | ~bAtt);
+    bSafePPush &= (bAtt | ~wAtt);
+    sc   += (countBit(wSafePPush) - countBit(bSafePPush)) * EvalConfig::pawnMobility[0];
+    scEG += (countBit(wSafePPush) - countBit(bSafePPush)) * EvalConfig::pawnMobility[1];
 
     // in very end game winning king must be near the other king
     if ((p.mat[Co_White][M_p] + p.mat[Co_Black][M_p] == 0) && p.wk != INVALIDSQUARE && p.bk != INVALIDSQUARE) scEG -= ScoreType((sc>0?+1:-1)*chebyshevDistance(p.wk, p.bk)*35);
@@ -2743,24 +2767,29 @@ ScoreType eval(const Position & p, float & gp){
     sc   += scBlocked;
     */
 
+    //ScoreType scAjust = 0;
+
     /*
     ///@todo this seems to LOSE elo !
     // number of pawn and piece type
-    ScoreType scAjust = 0;
+
     scAjust += p.mat[Co_White][M_r] * EvalConfig::adjRook  [p.mat[Co_White][M_p]];
     scAjust -= p.mat[Co_Black][M_r] * EvalConfig::adjRook  [p.mat[Co_Black][M_p]];
     scAjust += p.mat[Co_White][M_n] * EvalConfig::adjKnight[p.mat[Co_White][M_p]];
     scAjust -= p.mat[Co_Black][M_n] * EvalConfig::adjKnight[p.mat[Co_Black][M_p]];
+    */
+
     // bishop pair
-    scAjust += ( (p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonus : 0)-(p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonus : 0) );
+    //scAjust += ( (p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonus : 0)-(p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonus : 0) );
+    /*
     // knight pair
     scAjust += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0) );
     // rook pair
     scAjust += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
-
-    sc   += scAjust;
-    scEG += scAjust;
     */
+
+    //sc   += scAjust;
+    //scEG += scAjust;
 
     // pawn shield
     sc += ScoreType(((p.whiteKing & whiteKingQueenSide ) != 0ull)*countBit(p.whitePawn & whiteQueenSidePawnShield1)*EvalConfig::pawnShieldBonus    );
@@ -3174,7 +3203,6 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         stats.init();
         stopFlag = false;
         easyMove = MD_std;
-        startLock.store(false);
     }
     else{
         LogIt(logInfo) << "helper thread waiting ... " << id() ;
@@ -3199,31 +3227,38 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
     static Counter previousNodeCount;
     previousNodeCount = 1;
 
-    const Move bookMove = Book::Get(computeHash(p));
-    if ( bookMove != INVALIDMOVE){
-        pv .push_back(bookMove);
-        m = pv[0];
-        d = 0;
-        sc = 0;
-        return pv;
+    if ( isMainThread() ){
+       const Move bookMove = Book::Get(computeHash(p));
+       if ( bookMove != INVALIDMOVE){
+           pv .push_back(bookMove);
+           m = pv[0];
+           d = 0;
+           sc = 0;
+           return pv;
+       }
     }
 
     ScoreType depthScores[MAX_DEPTH] = { 0 };
     ScoreType depthMoves[MAX_DEPTH] = { INVALIDMOVE };
 
-    // easy move detection (smal open window depth 2 search
-    std::vector<ThreadContext::RootScores> rootScores;
-    ScoreType easyScore = pvs<true>(-MATE, MATE, p, 2, 1, pv, seldepth, INVALIDMOVE,&rootScores);
-    std::sort(rootScores.begin(), rootScores.end(), [](const ThreadContext::RootScores& r1, const ThreadContext::RootScores & r2) {return r1.s > r2.s; });
-    if (stopFlag) { bestScore = easyScore; goto pvsout; }
-    if (rootScores.size() == 1) easyMove = MD_forced; // only one check evasion or zugzwang
-    else if (rootScores.size() > 1 && rootScores[0].s > rootScores[1].s + MoveDifficultyUtil::easyMoveMargin) easyMove = MD_easy;
+    if ( isMainThread() ){
+       // easy move detection (small open window depth 2 search
+       std::vector<ThreadContext::RootScores> rootScores;
+       ScoreType easyScore = pvs<true>(-MATE, MATE, p, 2, 1, pv, seldepth, INVALIDMOVE,&rootScores);
+       std::sort(rootScores.begin(), rootScores.end(), [](const ThreadContext::RootScores& r1, const ThreadContext::RootScores & r2) {return r1.s > r2.s; });
+       if (stopFlag) { bestScore = easyScore; goto pvsout; }
+       if (rootScores.size() == 1) easyMove = MD_forced; // only one : check evasion or zugzwang
+       else if (rootScores.size() > 1 && rootScores[0].s > rootScores[1].s + MoveDifficultyUtil::easyMoveMargin) easyMove = MD_easy;
+    }
 
     // ID loop
     for(DepthType depth = 1 ; depth <= std::min(d,DepthType(MAX_DEPTH-6)) && !stopFlag ; ++depth ){ // -6 so that draw can be found for sure
         if (!isMainThread()){ // stockfish like thread management
             const int i = (id()-1)%20;
             if (((depth + SkipPhase[i]) / SkipSize[i]) % 2) continue;
+        }
+        else{
+            if ( depth == 5) startLock.store(false);
         }
         PVList pvLoc;
         ScoreType delta = (StaticEvalConfig::doWindow && depth>4)?8:MATE; // MATE not INFSCORE in order to enter the loop below once
@@ -3243,8 +3278,8 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         pv = pvLoc;
         reachedDepth = depth;
         bestScore    = score;
-        const int ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count());
         if ( isMainThread() ){
+            const int ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count());
             LogIt(logGUI) << int(depth) << " " << bestScore << " " << ms/10 << " " << stats.nodes + stats.qnodes << " "
                           << (int)seldepth << " " << int((stats.nodes + stats.qnodes)/(ms/1000.f)/1000.) << " " << stats.tthits/1000 << "\t"
                           << ToString(pv)  ;//<< " " << "EBF: " << float(stats.nodes + stats.qnodes)/previousNodeCount ;
@@ -3651,6 +3686,26 @@ template<typename T> T getOption(const std::string & key, T defaultValue = Optio
 #define GETOPT_D(name,type,def)             DynamicConfig::name = getOption<type>(#name,def);
 #define GETOPT_M(name,type,def,mini,maxi)   DynamicConfig::name = getOption<type>(#name,def,Validator<type>().setMin(mini).setMax(maxi));
 
+void initBook(){
+    if ( getOption<bool>("book") ){
+        const std::string bookFile = getOption<std::string>("bookFile");
+        if ( bookFile.empty() ) {
+           LogIt(logWarn) << "json entry bookFile is empty, cannot load book";
+        }
+        else{
+           if (Book::fileExists(bookFile) ){
+              LogIt(logInfo) << "Loading book ...";
+              std::ifstream bbook(bookFile,std::ios::in | std::ios::binary);
+              Book::readBinaryBook(bbook);
+              LogIt(logInfo) << "... done";
+           }
+           else{
+              LogIt(logWarn) << "book file " << bookFile << " not found, cannot load book";
+           }
+        }
+    }
+}
+
 #ifdef DEBUG_TOOL
 #include "cli.cc"
 #endif
@@ -3677,24 +3732,7 @@ int main(int argc, char ** argv){
     initEval();
     ThreadPool::instance().setup(getOption<int>("threads",1,Validator<int>().setMin(1).setMax(64)));
     GETOPT(mateFinder, bool)
-
-    if ( getOption<bool>("book") ){
-        const std::string bookFile = getOption<std::string>("bookFile");
-        if ( bookFile.empty() ) {
-           LogIt(logWarn) << "json entry bookFile is empty, cannot load book";
-        }
-        else{
-           if (Book::fileExists(bookFile) ){
-              LogIt(logInfo) << "Loading book ...";
-              std::ifstream bbook(bookFile,std::ios::in | std::ios::binary);
-              Book::readBinaryBook(bbook);
-              LogIt(logInfo) << "... done";
-           }
-           else{
-              LogIt(logWarn) << "book file " << bookFile << " not found, cannot load book";
-           }
-        }
-    }
+    initBook();
 
 #ifdef WITH_SYZYGY
     SyzygyTb::initTB("syzygy");
