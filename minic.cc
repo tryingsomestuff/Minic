@@ -2927,8 +2927,10 @@ inline void updatePV(PVList & pv, const Move & m, const PVList & childPV) {
 }
 
 inline void updateTables(ThreadContext & context, const Position & p, DepthType depth, const Move m) {
-    context.killerT.killers[1][p.ply] = context.killerT.killers[0][p.ply];
-    context.killerT.killers[0][p.ply] = m;
+    if ( ! sameMove(context.killerT.killers[0][p.ply],m)){
+       context.killerT.killers[1][p.ply] = context.killerT.killers[0][p.ply];
+       context.killerT.killers[0][p.ply] = m;
+    }
     context.historyT.update(depth, m, p, true);
     context.counterT.update(m,p);
 }
