@@ -122,8 +122,7 @@ std::ostream & operator<<(std::ostream & os, const std::vector<T> &v){
 }
 
 BitBoard getPieceBitboard(const Position & p, Piece t){
-    const BitBoard * const allB[13] = { &(p.blackKing),&(p.blackQueen),&(p.blackRook),&(p.blackBishop),&(p.blackKnight),&(p.blackPawn),&dummy,&(p.whitePawn),&(p.whiteKnight),&(p.whiteBishop),&(p.whiteRook),&(p.whiteQueen),&(p.whiteKing) };
-    return *allB[t+PieceShift];
+    return p.allB[t+PieceShift];
 }
 
 uint64_t numberOf(const Position & p, Piece t){ return countBit(getPieceBitboard(p,t));}

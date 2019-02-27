@@ -37,18 +37,18 @@ bool initTB(const std::string &path){
    return ok;
 }
 
-int probe_root(ThreadContext & context, const Position &p, ScoreType &score, std::vector<Move> &rootMoves){
+int probe_root(ThreadContext & context, const Position &p, ScoreType &score, MoveList &rootMoves){
    if ( MAX_TB_MEN <= 0 ) return -1;
    score = 0;
    unsigned results[TB_MAX_MOVES];
    unsigned result = tb_probe_root(p.whitePiece,
                                    p.blackPiece,
-                                   p.whiteKing   | p.blackKing,
-                                   p.whiteQueen  | p.blackQueen,
-                                   p.whiteRook   | p.blackRook,
-                                   p.whiteBishop | p.blackBishop,
-                                   p.whiteKnight | p.blackKnight,
-                                   p.whitePawn   | p.blackPawn,
+                                   p.whiteKing()   | p.blackKing(),
+                                   p.whiteQueen()  | p.blackQueen(),
+                                   p.whiteRook()   | p.blackRook(),
+                                   p.whiteBishop() | p.blackBishop(),
+                                   p.whiteKnight() | p.blackKnight(),
+                                   p.whitePawn()   | p.blackPawn(),
                                    p.fifty,
                                    p.castling != C_none,
                                    p.ep == INVALIDSQUARE ? 0 : p.ep,
@@ -75,12 +75,12 @@ int probe_wdl(const Position &p, ScoreType &score, bool use50MoveRule){
    score = 0;
    unsigned result = tb_probe_wdl(p.whitePiece,
                                   p.blackPiece,
-                                  p.whiteKing   | p.blackKing,
-                                  p.whiteQueen  | p.blackQueen,
-                                  p.whiteRook   | p.blackRook,
-                                  p.whiteBishop | p.blackBishop,
-                                  p.whiteKnight | p.blackKnight,
-                                  p.whitePawn   | p.blackPawn,
+                                  p.whiteKing()   | p.blackKing(),
+                                  p.whiteQueen()  | p.blackQueen(),
+                                  p.whiteRook()   | p.blackRook(),
+                                  p.whiteBishop() | p.blackBishop(),
+                                  p.whiteKnight() | p.blackKnight(),
+                                  p.whitePawn()   | p.blackPawn(),
                                   p.fifty,
                                   p.castling != C_none,
                                   p.ep == INVALIDSQUARE ? 0 : p.ep,

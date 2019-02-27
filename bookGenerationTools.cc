@@ -24,10 +24,9 @@ size_t countLine(std::istream &is){
 }
 
 std::string getFrom(const std::string & to, Position & p, const Piece & t, const std::string & helper = "" ){
-    const BitBoard * const allB[13] = { &(p.blackKing),&(p.blackQueen),&(p.blackRook),&(p.blackBishop),&(p.blackKnight),&(p.blackPawn),&dummy,&(p.whitePawn),&(p.whiteKnight),&(p.whiteBishop),&(p.whiteRook),&(p.whiteQueen),&(p.whiteKing) };
-    assert(allB[t + PieceShift] != 0);
-    if ( allB[t + PieceShift] != 0 ){
-        BitBoard froms = *(allB[t + PieceShift]);
+    assert(p.allB[t + PieceShift] != 0);
+    if ( p.allB[t + PieceShift] != 0 ){
+        BitBoard froms = p.allB[t + PieceShift];
         while(froms){
            const Square s = BB::popBit(froms);
            MoveList l;
