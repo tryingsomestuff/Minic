@@ -103,3 +103,4 @@ and a command line interface, using the same key word. For instance, forcing mat
 * 0.38 : build a bigger book (not used yet), implement the so called easy-move
 * 0.39 : fix a bad mate score TT issue, speed up pawn move generation
 * 0.40 : pruning in endgame also
+* 0.41 : try PSO texel tuning, prepare some evaluation feature, little speed optim
