@@ -1042,10 +1042,8 @@ struct ThreadContext{
     ScoreType evalStack[MAX_PLY] = { 0 };
 
     struct Stats{
-        /*std::atomic<*/Counter/*>*/ nodes, qnodes, tthits;
+        Counter nodes, qnodes, tthits;
         void init(){
-            static std::mutex statsMutex;
-            std::lock_guard<std::mutex> lock(statsMutex);
             LogIt(logInfo) << "Init stat" ;
             nodes = qnodes = tthits = 0;
         }
@@ -2634,7 +2632,7 @@ ScoreType eval(const Position & p, float & gp){
         const Square k = BB::popBit(pieceBBiterator);
         const bool passed = (BB::mask[k].passerSpan[Co_White] & p.blackPawn()) == 0ull;
         if (passed) {
-            const float factorProtected = 1 +((BB::shiftSouthWest(SquareToBitboard(k) & p.whitePawn()) != 0ull) || (BB::shiftSouthEast(SquareToBitboard(k) & p.whitePawn()) != 0ull)) * EvalConfig::protectedPasserFactor;
+            const float factorProtected = 1;// +((BB::shiftSouthWest(SquareToBitboard(k) & p.whitePawn()) != 0ull) || (BB::shiftSouthEast(SquareToBitboard(k) & p.whitePawn()) != 0ull)) * EvalConfig::protectedPasserFactor;
             const float factorFree      = 1;// +((BB::mask[k].passerSpan[Co_White] & p.blackPiece) == 0ull) * EvalConfig::freePasserFactor;
             const float kingNearBonus   = 0;// kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.bk, k) - chebyshevDistance(p.wk, k));
             const bool unstoppable       = false;// (p.nbq + p.nbr + p.nbb + p.nbn == 0)*((chebyshevDistance(p.bk, SQFILE(k) + 56) - (!white2Play)) > std::min(5, chebyshevDistance(SQFILE(k) + 56, k)));
@@ -2647,7 +2645,7 @@ ScoreType eval(const Position & p, float & gp){
         const Square k = BB::popBit(pieceBBiterator);
         const bool passed = (BB::mask[k].passerSpan[Co_Black] & p.whitePawn()) == 0ull;
         if (passed) {
-            const float factorProtected = 1 +((BB::shiftNorthWest(SquareToBitboard(k) & p.blackPawn()) != 0ull) || (BB::shiftNorthEast(SquareToBitboard(k) & p.blackPawn()) != 0ull)) * EvalConfig::protectedPasserFactor;
+            const float factorProtected = 1;// +((BB::shiftNorthWest(SquareToBitboard(k) & p.blackPawn()) != 0ull) || (BB::shiftNorthEast(SquareToBitboard(k) & p.blackPawn()) != 0ull)) * EvalConfig::protectedPasserFactor;
             const float factorFree      = 1;// +((BB::mask[k].passerSpan[Co_White] & p.whitePiece) == 0ull) * EvalConfig::freePasserFactor;
             const float kingNearBonus   = 0;// kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.wk, k) - chebyshevDistance(p.bk, k));
             const bool unstoppable       = false;// (p.nwq + p.nwr + p.nwb + p.nwn == 0)*((chebyshevDistance(p.wk, SQFILE(k)) - white2Play) > std::min(5, chebyshevDistance(SQFILE(k), k)));
