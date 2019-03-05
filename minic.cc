@@ -32,7 +32,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "0.42";
 
 #define STOPSCORE   ScoreType(-20000)
 #define INFSCORE    ScoreType(15000)
@@ -218,18 +218,6 @@ void initLMR(){
             lmrReduction[d][m] = (int)sqrt(float(d) * m / 8.f);
 }
 
-struct Stats{
-    std::atomic<Counter> nodes, qnodes, tthits;
-    void init(){
-        static std::mutex statsMutex;
-        std::lock_guard<std::mutex> lock(statsMutex);
-        LogIt(logInfo) << "Init stat" ;
-        nodes = qnodes = tthits = 0;
-    }
-};
-
-Stats stats;
-
 enum Piece    : char{ P_bk = -6, P_bq = -5, P_br = -4, P_bb = -3, P_bn = -2, P_bp = -1, P_none = 0, P_wp = 1, P_wn = 2, P_wb = 3, P_wr = 4, P_wq = 5, P_wk = 6 };
 const int PieceShift = 6;
 enum Mat      : char{ M_t = 0, M_p, M_n, M_b, M_r, M_q, M_k, M_bl, M_bd, M_M, M_m };
@@ -385,8 +373,8 @@ struct Position; // forward decl
 bool readFEN(const std::string & fen, Position & p, bool silent = false); // forward decl
 
 struct Position{
-    std::array<Piece,64> b = {P_none};
-    std::array<BitBoard,13> allB = {0ull};
+    std::array<Piece,64> b {{ P_none }};
+    std::array<BitBoard,13> allB {{ 0ull }};
 
     inline BitBoard & blackKing  () {return allB[0];}
     inline BitBoard & blackQueen () {return allB[1];}
@@ -432,7 +420,7 @@ struct Position{
 
     // t p n b r q k bl bd M n
     typedef std::array<std::array<char,11>,2> Material;
-    Material mat = {0};
+    Material mat = {{{{0}}}};
 };
 
 inline Color opponentColor(const Color c){ return Color((c+1)%2);}
@@ -998,81 +986,6 @@ Hash computeHash(const Position &p){
     return p.h;
 }
 
-namespace TT{
-enum Bound{ B_exact = 0, B_alpha = 1, B_beta  = 2 };
-struct Entry{
-    Entry():m(INVALIDMOVE),score(0),eval(0),b(B_alpha),d(-1),h(0ull){}
-    Entry(Move m, ScoreType s, ScoreType e, Bound b, DepthType d, Hash h) : m(m), score(s), eval(e), b(b), d(d), h(h){}
-    Move m;
-    ScoreType score;
-    ScoreType eval;
-    Bound b;
-    DepthType d;
-    Hash h;
-};
-
-struct Bucket {
-    static const int nbBucket = 2;
-    Entry e[nbBucket];
-};
-
-unsigned long long int powerFloor(unsigned long long int x) {
-    unsigned long long int power = 1;
-    while (power < x) power *= 2;
-    return power/2;
-}
-
-static unsigned long long int ttSize = 0;
-static Bucket * table = 0;
-
-void initTable(){
-    LogIt(logInfo) << "Init TT" ;
-    LogIt(logInfo) << "Bucket size " << sizeof(Bucket);
-    ttSize = 1024 * powerFloor((DynamicConfig::ttSizeMb * 1024) / (unsigned long long int)sizeof(Bucket));
-    table = new Bucket[ttSize];
-    LogIt(logInfo) << "Size of TT " << ttSize * sizeof(Bucket) / 1024 / 1024 << "Mb" ;
-}
-
-void clearTT() {
-    for (unsigned int k = 0; k < ttSize; ++k)
-        for (unsigned int i = 0 ; i < Bucket::nbBucket ; ++i)
-            table[k].e[i] = { INVALIDMOVE, 0, 0, B_alpha, 0, 0ull };
-}
-
-bool getEntry(Hash h, DepthType d, Entry & e, int nbuck = 0) {
-    assert(h > 0);
-    if ( DynamicConfig::disableTT ) return false;
-    if (nbuck >= Bucket::nbBucket) return false; // no more bucket
-    const Entry & _e = table[h%ttSize].e[nbuck];
-    if ( _e.h == 0 ) return false; //early exist cause next ones are also empty ...
-    if ( _e.h != h ) return getEntry(h,d,e,nbuck+1); // next one
-    e = _e; // update entry only if no collision is detected !
-    if ( _e.d >= d ){ ++stats.tthits; return true; } // valid entry if depth is ok
-    return getEntry(h,d,e,nbuck+1); // next one
-}
-
-void setEntry(const Entry & e){
-    assert(e.h > 0);
-    if ( DynamicConfig::disableTT ) return;
-    const size_t index = e.h%ttSize;
-    DepthType lowest = MAX_DEPTH;
-    Entry & _eDepthLowest = table[index].e[0];
-    for (unsigned int i = 0 ; i < Bucket::nbBucket ; ++i){ // we look for the lower depth
-        const Entry & _eDepth = table[index].e[i];
-        if ( _eDepth.h == 0 ) break; //early break cause next ones are also empty
-        if ( _eDepth.d < lowest ) { _eDepthLowest = _eDepth; lowest = _eDepth.d; }
-    }
-    _eDepthLowest = e; // replace the one with the lowest depth
-}
-
-struct EvalEntry {
-    ScoreType score;
-    float gp;
-    Hash h;
-};
-
-} // TT
-
 struct ThreadContext; // forward decl
 
 struct ThreadData{
@@ -1099,6 +1012,10 @@ public:
     void searchASync(const ThreadData & d);
     void startOthers();
     bool stop;
+
+    Counter nodes() const;
+    Counter qnodes() const;
+    Counter tthits() const;
 private:
     ThreadPool();
 };
@@ -1123,6 +1040,18 @@ struct ThreadContext{
 
     Hash hashStack[MAX_PLY] = { 0 };
     ScoreType evalStack[MAX_PLY] = { 0 };
+
+    struct Stats{
+        /*std::atomic<*/Counter/*>*/ nodes, qnodes, tthits;
+        void init(){
+            static std::mutex statsMutex;
+            std::lock_guard<std::mutex> lock(statsMutex);
+            LogIt(logInfo) << "Init stat" ;
+            nodes = qnodes = tthits = 0;
+        }
+    };
+
+    Stats stats;
 
     struct KillerT{
         Move killers[2][MAX_PLY];
@@ -1156,7 +1085,7 @@ struct ThreadContext{
                     counter[i][k] = 0;
         }
         inline void update(Move m, const Position & p){
-            if ( Move2Type(m) == T_std ) counter[Move2From(p.lastMove)][Move2To(p.lastMove)] = m;
+            if ( p.lastMove != INVALIDMOVE && Move2Type(m) == T_std ) counter[Move2From(p.lastMove)][Move2To(p.lastMove)] = m;
         }
     };
     KillerT killerT;
@@ -1278,6 +1207,85 @@ void ThreadPool::searchASync(const ThreadData & d){} ///@todo for pondering
 void ThreadPool::startOthers(){ for (auto s : *this) if (!(*s).isMainThread()) (*s).start();}
 
 ThreadPool::ThreadPool():stop(false){ push_back(new ThreadContext(size()));} // this one will be called "Main" thread
+
+Counter ThreadPool::nodes() const{ Counter n = 0; for (auto it : *this ){ n += it->stats.nodes;  } return n;}
+Counter ThreadPool::qnodes()const{ Counter n = 0; for (auto it : *this ){ n += it->stats.qnodes; } return n;}
+Counter ThreadPool::tthits()const{ Counter n = 0; for (auto it : *this ){ n += it->stats.tthits; } return n;}
+
+namespace TT{
+enum Bound{ B_exact = 0, B_alpha = 1, B_beta  = 2 };
+struct Entry{
+    Entry():m(INVALIDMOVE),score(0),eval(0),b(B_alpha),d(-1),h(0ull){}
+    Entry(Move m, ScoreType s, ScoreType e, Bound b, DepthType d, Hash h) : m(m), score(s), eval(e), b(b), d(d), h(h){}
+    Move m;
+    ScoreType score;
+    ScoreType eval;
+    Bound b;
+    DepthType d;
+    Hash h;
+};
+
+struct Bucket {
+    static const int nbBucket = 2;
+    Entry e[nbBucket];
+};
+
+unsigned long long int powerFloor(unsigned long long int x) {
+    unsigned long long int power = 1;
+    while (power < x) power *= 2;
+    return power/2;
+}
+
+static unsigned long long int ttSize = 0;
+static Bucket * table = 0;
+
+void initTable(){
+    LogIt(logInfo) << "Init TT" ;
+    LogIt(logInfo) << "Bucket size " << sizeof(Bucket);
+    ttSize = 1024 * powerFloor((DynamicConfig::ttSizeMb * 1024) / (unsigned long long int)sizeof(Bucket));
+    table = new Bucket[ttSize];
+    LogIt(logInfo) << "Size of TT " << ttSize * sizeof(Bucket) / 1024 / 1024 << "Mb" ;
+}
+
+void clearTT() {
+    for (unsigned int k = 0; k < ttSize; ++k)
+        for (unsigned int i = 0 ; i < Bucket::nbBucket ; ++i)
+            table[k].e[i] = { INVALIDMOVE, 0, 0, B_alpha, 0, 0ull };
+}
+
+bool getEntry(ThreadContext & context, Hash h, DepthType d, Entry & e, int nbuck = 0) {
+    assert(h > 0);
+    if ( DynamicConfig::disableTT ) return false;
+    if (nbuck >= Bucket::nbBucket) return false; // no more bucket
+    const Entry & _e = table[h%ttSize].e[nbuck];
+    if ( _e.h == 0 ) return false; //early exist cause next ones are also empty ...
+    if ( _e.h != h ) return getEntry(context,h,d,e,nbuck+1); // next one
+    e = _e; // update entry only if no collision is detected !
+    if ( _e.d >= d ){ ++context.stats.tthits; return true; } // valid entry if depth is ok
+    return getEntry(context,h,d,e,nbuck+1); // next one
+}
+
+void setEntry(const Entry & e){
+    assert(e.h > 0);
+    if ( DynamicConfig::disableTT ) return;
+    const size_t index = e.h%ttSize;
+    DepthType lowest = MAX_DEPTH;
+    Entry & _eDepthLowest = table[index].e[0];
+    for (unsigned int i = 0 ; i < Bucket::nbBucket ; ++i){ // we look for the lower depth
+        const Entry & _eDepth = table[index].e[i];
+        if ( _eDepth.h == 0 ) break; //early break cause next ones are also empty
+        if ( _eDepth.d < lowest ) { _eDepthLowest = _eDepth; lowest = _eDepth.d; }
+    }
+    _eDepthLowest = e; // replace the one with the lowest depth
+}
+
+struct EvalEntry {
+    ScoreType score;
+    float gp;
+    Hash h;
+};
+
+} // TT
 
 ScoreType eval(const Position & p, float & gp); // forward decl
 
@@ -2611,8 +2619,8 @@ ScoreType eval(const Position & p, float & gp){
     // safe pawn push (protected once or not attacked)
     wSafePPush &= (wAtt | ~bAtt);
     bSafePPush &= (bAtt | ~wAtt);
-    sc   += (countBit(wSafePPush) - countBit(bSafePPush)) * EvalConfig::pawnMobility[0];
-    scEG += (countBit(wSafePPush) - countBit(bSafePPush)) * EvalConfig::pawnMobility[1];
+    sc   += ScoreType(countBit(wSafePPush) - countBit(bSafePPush)) * EvalConfig::pawnMobility[0];
+    scEG += ScoreType(countBit(wSafePPush) - countBit(bSafePPush)) * EvalConfig::pawnMobility[1];
 
     // in very end game winning king must be near the other king
     if ((p.mat[Co_White][M_p] + p.mat[Co_Black][M_p] == 0) && p.wk != INVALIDSQUARE && p.bk != INVALIDSQUARE) scEG -= ScoreType((sc>0?+1:-1)*chebyshevDistance(p.wk, p.bk)*35);
@@ -2626,7 +2634,7 @@ ScoreType eval(const Position & p, float & gp){
         const Square k = BB::popBit(pieceBBiterator);
         const bool passed = (BB::mask[k].passerSpan[Co_White] & p.blackPawn()) == 0ull;
         if (passed) {
-            const float factorProtected = 1 +((BB::shiftSouthWest(SquareToBitboard(k)) & p.whitePawn() != 0ull) || (BB::shiftSouthEast(SquareToBitboard(k)) & p.whitePawn() != 0ull)) * EvalConfig::protectedPasserFactor;
+            const float factorProtected = 1 +((BB::shiftSouthWest(SquareToBitboard(k) & p.whitePawn()) != 0ull) || (BB::shiftSouthEast(SquareToBitboard(k) & p.whitePawn()) != 0ull)) * EvalConfig::protectedPasserFactor;
             const float factorFree      = 1;// +((BB::mask[k].passerSpan[Co_White] & p.blackPiece) == 0ull) * EvalConfig::freePasserFactor;
             const float kingNearBonus   = 0;// kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.bk, k) - chebyshevDistance(p.wk, k));
             const bool unstoppable       = false;// (p.nbq + p.nbr + p.nbb + p.nbn == 0)*((chebyshevDistance(p.bk, SQFILE(k) + 56) - (!white2Play)) > std::min(5, chebyshevDistance(SQFILE(k) + 56, k)));
@@ -2639,7 +2647,7 @@ ScoreType eval(const Position & p, float & gp){
         const Square k = BB::popBit(pieceBBiterator);
         const bool passed = (BB::mask[k].passerSpan[Co_Black] & p.whitePawn()) == 0ull;
         if (passed) {
-            const float factorProtected = 1 +((BB::shiftNorthWest(SquareToBitboard(k)) & p.blackPawn() != 0ull) || (BB::shiftNorthEast(SquareToBitboard(k)) & p.blackPawn() != 0ull)) * EvalConfig::protectedPasserFactor;
+            const float factorProtected = 1 +((BB::shiftNorthWest(SquareToBitboard(k) & p.blackPawn()) != 0ull) || (BB::shiftNorthEast(SquareToBitboard(k) & p.blackPawn()) != 0ull)) * EvalConfig::protectedPasserFactor;
             const float factorFree      = 1;// +((BB::mask[k].passerSpan[Co_White] & p.whitePiece) == 0ull) * EvalConfig::freePasserFactor;
             const float kingNearBonus   = 0;// kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.wk, k) - chebyshevDistance(p.bk, k));
             const bool unstoppable       = false;// (p.nwq + p.nwr + p.nwb + p.nwn == 0)*((chebyshevDistance(p.wk, SQFILE(k)) - white2Play) > std::min(5, chebyshevDistance(SQFILE(k), k)));
@@ -2899,7 +2907,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     if ( qDepth == 0 && interiorNodeRecognizer<true,false,false>(p) == MaterialHash::Ter_Draw) return 0; ///@todo is that gain elo ???
 
     TT::Entry e;
-    if (qDepth == 0 && TT::getEntry(computeHash(p), 0, e)) {
+    if (qDepth == 0 && TT::getEntry(*this,computeHash(p), 0, e)) {
         if ( e.h != 0 && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
            return adjustHashScore(e.score, ply);
         }
@@ -2996,7 +3004,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if (!rootnode && interiorNodeRecognizer<true, pvnode, false>(p) == MaterialHash::Ter_Draw) return 0;
 
     TT::Entry e;
-    if (skipMove==INVALIDMOVE && TT::getEntry(computeHash(p), depth, e)) { // if not skipmove
+    if (skipMove==INVALIDMOVE && TT::getEntry(*this,computeHash(p), depth, e)) { // if not skipmove
         if ( e.h != 0 && !rootnode && !pvnode && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
             if ( e.m != INVALIDMOVE) pv.push_back(e.m); // here e.m might be INVALIDMOVE if B_alpha so don't try this at root node !
             return adjustHashScore(e.score, ply);
@@ -3083,7 +3091,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if ( (e.h == 0 /*|| e.d < depth/3*/) && pvnode && depth >= StaticEvalConfig::iidMinDepth){
         PVList iidPV;
         pvs<pvnode>(alpha,beta,p,depth/2,ply,iidPV,seldepth);
-        if ( !stopFlag) TT::getEntry(computeHash(p), depth, e);
+        if ( !stopFlag) TT::getEntry(*this,computeHash(p), depth, e);
         else return STOPSCORE;
     }
 
@@ -3236,7 +3244,6 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         LogIt(logInfo) << "Search called" ;
         LogIt(logInfo) << "requested time  " << currentMoveMs ;
         LogIt(logInfo) << "requested depth " << (int) d ;
-        stats.init();
         stopFlag = false;
         easyMove = MD_std;
     }
@@ -3245,6 +3252,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         while(startLock.load()){;}
         LogIt(logInfo) << "... go for id " << id() ;
     }
+    stats.init();
     ///@todo do not reset that
     //TT::clearTT(); // to be used for reproductible results
     killerT.initKillers();
@@ -3316,10 +3324,10 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         bestScore    = score;
         if ( isMainThread() ){
             const int ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count());
-            LogIt(logGUI) << int(depth) << " " << bestScore << " " << ms/10 << " " << stats.nodes + stats.qnodes << " "
-                          << (int)seldepth << " " << int((stats.nodes + stats.qnodes)/(ms/1000.f)/1000.) << " " << stats.tthits/1000 << "\t"
+            LogIt(logGUI) << int(depth) << " " << bestScore << " " << ms/10 << " " << ThreadPool::instance().nodes() + ThreadPool::instance().qnodes() << " "
+                          << (int)seldepth << " " << int((ThreadPool::instance().nodes() + ThreadPool::instance().qnodes())/(ms/1000.f)/1000.) << " " << ThreadPool::instance().tthits()/1000 << "\t"
                           << ToString(pv)  ;//<< " " << "EBF: " << float(stats.nodes + stats.qnodes)/previousNodeCount ;
-            previousNodeCount = stats.nodes + stats.qnodes;
+            previousNodeCount = ThreadPool::instance().nodes() + ThreadPool::instance().qnodes();
         }
         if (TimeMan::isDynamic && depth > MoveDifficultyUtil::emergencyMinDepth && bestScore < depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin) { easyMove = MD_hardDefense; }
         if (TimeMan::isDynamic && std::max(1,int(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()*1.8)) > getCurrentMoveMs()) break; // not enought time
@@ -3760,7 +3768,6 @@ int main(int argc, char ** argv){
     initHash();
     GETOPT_D(ttSizeMb,int,128)
     TT::initTable();
-    stats.init();
     initLMR();
     initMvvLva();
     BB::initMask();
