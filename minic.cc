@@ -1255,7 +1255,7 @@ bool getEntry(ThreadContext & context, Hash h, DepthType d, Entry & e, int nbuck
     assert(h > 0);
     if ( DynamicConfig::disableTT ) return false;
     if (nbuck >= Bucket::nbBucket) return false; // no more bucket
-    const Entry & _e = table[h%ttSize].e[nbuck];
+    const Entry & _e = table[h&(ttSize-1)].e[nbuck];
     if ( _e.h == 0 ) return false; //early exist cause next ones are also empty ...
     if ( _e.h != h ) return getEntry(context,h,d,e,nbuck+1); // next one
     e = _e; // update entry only if no collision is detected !
@@ -1266,7 +1266,7 @@ bool getEntry(ThreadContext & context, Hash h, DepthType d, Entry & e, int nbuck
 void setEntry(const Entry & e){
     assert(e.h > 0);
     if ( DynamicConfig::disableTT ) return;
-    const size_t index = e.h%ttSize;
+    const size_t index = e.h&(ttSize-1);
     DepthType lowest = MAX_DEPTH;
     Entry & _eDepthLowest = table[index].e[0];
     for (unsigned int i = 0 ; i < Bucket::nbBucket ; ++i){ // we look for the lower depth
@@ -3143,7 +3143,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if (!moveGenerated) {
         generate(p, moves);
         if (moves.empty()) return isInCheck ? -MATE + ply : 0;
-        sort(*this, moves, p,true, &e);
+	/*if ( isMainThread() )*/ sort(*this, moves, p,true, &e);
+	//else std::random_shuffle(moves.begin(),moves.end());
     }
     const bool improving = (!isInCheck && ply >= 2 && evalScore >= evalStack[p.ply - 2]);
 
@@ -3272,6 +3273,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
     if ( isMainThread() ){
        const Move bookMove = Book::Get(computeHash(p));
        if ( bookMove != INVALIDMOVE){
+           if ( isMainThread() ) startLock.store(false);
            pv .push_back(bookMove);
            m = pv[0];
            d = 0;
@@ -3302,6 +3304,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         else{
             if ( depth == 5) startLock.store(false);
         }
+	LogIt(logInfo) << "Thread " << id() << " searching depth " << (int)depth;
         PVList pvLoc;
         ScoreType delta = (StaticEvalConfig::doWindow && depth>4)?8:MATE; // MATE not INFSCORE in order to enter the loop below once
         ScoreType alpha = std::max(ScoreType(bestScore - delta), ScoreType (-INFSCORE));
@@ -3333,6 +3336,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         if (!pv.empty()) depthMoves [depth] = pv[0];
     }
 pvsout:
+    if ( isMainThread() ) startLock.store(false);
     if (pv.empty()){
         LogIt(logWarn) << "Empty pv" ;
         m = INVALIDMOVE;
