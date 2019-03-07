@@ -93,3 +93,22 @@ and a command line interface, using the same key word. For instance, forcing mat
 * 0.40 : pruning in endgame also
 * 0.41 : try PSO texel tuning, prepare some evaluation feature, little speed optim
 * 0.42 : fix a SMP issue (lock)
+
+# Thanks
+
+Of course many/most idea in Minic are taken from the beautifull chess developer community.
+Here's an incomplete list of inspiring open-source engines :
+
+Arasan by Jon Dart
+CPW by Pawel Koziol and Edmund Moshammer
+Deepov by Romain Goussault
+Dorpsgek by Dan Ravensloft
+Galjoen by Werner Taelemans
+Madchess by Erik Madsen
+Rodent III by Pawel Koziol
+Stockfish by Tord Romstad, Marco Costalba, Joona Kiiski and Gary Linscott
+Topple by Vincent Konsolas
+TSCP by Tom Kerrigan
+Vajolet by Marco Belli
+Vice by BlueFeverSoft
+Xiphos by Milos Tatarevic
