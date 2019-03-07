@@ -10,30 +10,18 @@ Minic stands for "Minimal Chess".
 Have a look in the Dist directory for releases. Some more stable/official ones will also be made available as github release.
 
 ## Strength
-Quite poor for a chess engine (around 2500) but already way to strong for me !
+Quite poor for a chess engine (around 2550) but already way to strong for me !
 
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
-   1 fruit_21                      227      29     625   78.7%   15.7%
-   2 drosophila-win64               80      25     625   61.3%   21.8%
-   3 Minic                          78      23     625   61.0%   31.2%
-   4 Minic 0.37                     44      23     625   56.3%   31.7%
-   5 Minic 0.34                     -8      22     625   48.9%   33.1%
-   6 Minic 0.32                    -13      23     625   48.2%   30.7%
-   7 myrddin                       -58      24     625   41.8%   22.7%
-   8 MadChess.Engine               -65      25     625   40.7%   18.7%
-   9 sungorus64                   -110      25     625   34.6%   19.7%
-  10 Minic 0.28                   -160      25     625   28.5%   24.6%
-```
-
-Current WAC score is 284 (10sec per position on an old i7-2600K).
-
-## What about SMP ?  
-```
-Rank Name                          Elo     +/-   Games   Score   Draws
-   1 Minic 3 threads                60      34     200   58.5%   49.0%
-   2 Minic 2 threads               -16      33     200   47.8%   52.5%
-   3 Minic                         -44      32     200   43.8%   54.5%
+   1 rofChade                      260      32     532   81.7%   17.1%
+   2 fruit_21                      117      28     532   66.2%   19.2%
+   3 Minic 3 trheads                47      25     532   56.7%   27.3%
+   4 Minic 2 threads                24      25     532   53.4%   27.1%
+   5 Minic                         -14      25     533   47.9%   29.1%
+   6 drosophila-win64              -43      26     533   43.8%   20.8%
+   7 myrddin                      -177      30     532   26.5%   16.5%
+   8 MadChess.Engine              -201      31     532   23.9%   15.8%                      
 ```
 
 ## How to compile
@@ -104,3 +92,4 @@ and a command line interface, using the same key word. For instance, forcing mat
 * 0.39 : fix a bad mate score TT issue, speed up pawn move generation
 * 0.40 : pruning in endgame also
 * 0.41 : try PSO texel tuning, prepare some evaluation feature, little speed optim
+* 0.42 : fix a SMP issue (lock)
