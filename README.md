@@ -14,7 +14,7 @@ Quite poor for a chess engine (around 2550) but already way to strong for me !
 
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
-   1 rofChade                      260      32     532   81.7%   17.1%
+   1 rofChade1.0                   260      32     532   81.7%   17.1%
    2 fruit_21                      117      28     532   66.2%   19.2%
    3 Minic 3 trheads                47      25     532   56.7%   27.3%
    4 Minic 2 threads                24      25     532   53.4%   27.1%
