@@ -2469,6 +2469,7 @@ ScoreType katt_table[64] = {0};
 
 void initEval(){
     for(int i = 0; i < 64; i++){
+	 // idea taken from Topple
         katt_table[i] = (int) sigmoid(i,EvalConfig::katt_max,EvalConfig::katt_trans,EvalConfig::katt_scale,EvalConfig::katt_offset);
         //LogIt(logInfo) << "Attack level " << i << " " << katt_table[i];
     }
