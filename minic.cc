@@ -32,7 +32,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 
-const std::string MinicVersion = "0.43";
+const std::string MinicVersion = "dev";
 
 #define STOPSCORE   ScoreType(-20000)
 #define INFSCORE    ScoreType(15000)
@@ -104,6 +104,7 @@ namespace DynamicConfig{
 bool mateFinder = false;
 bool disableTT = false;
 unsigned int ttSizeMb  = 128; // here in Mb, will be converted to real size next
+bool fullXboardOutput = false;
 }
 
 namespace EvalConfig {
@@ -2469,7 +2470,7 @@ ScoreType katt_table[64] = {0};
 
 void initEval(){
     for(int i = 0; i < 64; i++){
-	 // idea taken from Topple
+     // idea taken from Topple
         katt_table[i] = (int) sigmoid(i,EvalConfig::katt_max,EvalConfig::katt_trans,EvalConfig::katt_scale,EvalConfig::katt_offset);
         //LogIt(logInfo) << "Attack level " << i << " " << katt_table[i];
     }
@@ -3144,8 +3145,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if (!moveGenerated) {
         generate(p, moves);
         if (moves.empty()) return isInCheck ? -MATE + ply : 0;
-	/*if ( isMainThread() )*/ sort(*this, moves, p,true, &e);
-	//else std::random_shuffle(moves.begin(),moves.end());
+    /*if ( isMainThread() )*/ sort(*this, moves, p,true, &e);
+    //else std::random_shuffle(moves.begin(),moves.end());
     }
     const bool improving = (!isInCheck && ply >= 2 && evalScore >= evalStack[p.ply - 2]);
 
@@ -3305,7 +3306,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         else{
             if ( depth == 5) startLock.store(false);
         }
-	LogIt(logInfo) << "Thread " << id() << " searching depth " << (int)depth;
+    LogIt(logInfo) << "Thread " << id() << " searching depth " << (int)depth;
         PVList pvLoc;
         ScoreType delta = (StaticEvalConfig::doWindow && depth>4)?8:MATE; // MATE not INFSCORE in order to enter the loop below once
         ScoreType alpha = std::max(ScoreType(bestScore - delta), ScoreType (-INFSCORE));
@@ -3326,10 +3327,14 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         bestScore    = score;
         if ( isMainThread() ){
             const int ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count());
-            LogIt(logGUI) << int(depth) << " " << bestScore << " " << ms/10 << " " << ThreadPool::instance().nodes() + ThreadPool::instance().qnodes() << " "
-                          << (int)seldepth << " " << int((ThreadPool::instance().nodes() + ThreadPool::instance().qnodes())/(ms/1000.f)/1000.) << " " << ThreadPool::instance().tthits()/1000 << "\t"
-                          << ToString(pv)  ;//<< " " << "EBF: " << float(stats.nodes + stats.qnodes)/previousNodeCount ;
-            previousNodeCount = ThreadPool::instance().nodes() + ThreadPool::instance().qnodes();
+            std::stringstream str;
+            Counter nodeCount = ThreadPool::instance().nodes() + ThreadPool::instance().qnodes();
+            str << int(depth) << " " << bestScore << " " << ms/10 << " " << nodeCount << " ";
+            if ( DynamicConfig::fullXboardOutput ) str << (int)seldepth << " " << int(nodeCount/(ms/1000.f)/1000.) << " " << ThreadPool::instance().tthits()/1000;
+            str << "\t" << ToString(pv);
+            //<< " " << "EBF: " << float(nodeCount)/previousNodeCount ;
+            LogIt(logGUI) << str.str();
+            previousNodeCount = nodeCount;
         }
         if (TimeMan::isDynamic && depth > MoveDifficultyUtil::emergencyMinDepth && bestScore < depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin) { easyMove = MD_hardDefense; }
         if (TimeMan::isDynamic && std::max(1,int(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()*1.8)) > getCurrentMoveMs()) break; // not enought time
@@ -3778,6 +3783,7 @@ int main(int argc, char ** argv){
     initEval();
     ThreadPool::instance().setup(getOption<int>("threads",1,Validator<int>().setMin(1).setMax(64)));
     GETOPT(mateFinder, bool)
+    GETOPT(fullXboardOutput, bool)
     initBook();
 
 #ifdef WITH_SYZYGY
