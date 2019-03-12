@@ -2982,7 +2982,7 @@ inline bool singularExtension(ThreadContext & context, ScoreType alpha, ScoreTyp
 
 // pvs inspired by Xiphos
 template< bool pvnode, bool canNull>
-ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, std::vector<Move> & pv, DepthType & seldepth, const Move skipMove, std::vector<RootScores> * rootScores){
+ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, const Move skipMove, std::vector<RootScores> * rootScores){
 
     if ( stopFlag || std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()) > getCurrentMoveMs() ){ stopFlag = true; return STOPSCORE; }
 
@@ -3048,17 +3048,23 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         }
 
         // null move
-        if ( StaticEvalConfig::doNullMove && canNull && pv.size() > 1 && depth >= StaticEvalConfig::nullMoveMinDepth && p.ep == INVALIDSQUARE && evalScore >= beta){
-            Position pN = p;
-            pN.c = opponentColor(pN.c);
-            pN.h ^= ZT[3][13];
-            pN.h ^= ZT[4][13];
-            const int R = depth/4 + 3 + std::min((evalScore-beta)/80,3); // adaptative
-            PVList nullPV;
-            const ScoreType nullscore = -pvs<false,false>(-beta,-beta+1,pN,depth-R,ply+1,nullPV,seldepth);
-            if ( !stopFlag && nullscore >= beta ) return nullscore;
-            if ( !stopFlag && nullscore <= -MATE) mateThreat = true;
-            if ( stopFlag ) return STOPSCORE;
+        PVList nullPV;
+        ///@todo fix the en passant issue here
+        if ( StaticEvalConfig::doNullMove && canNull && pv.size() > 1 && depth >= StaticEvalConfig::nullMoveMinDepth && p.ep == INVALIDSQUARE ){
+            const bool nullUseHash = (e.h != 0 && e.d > depth / 2);
+            const ScoreType nullIIDScore = nullUseHash ? evalScore : pvs<false, true>(beta - 1, beta, p, depth / 2, ply, nullPV, seldepth);
+            if (nullIIDScore >= beta) {
+                Position pN = p;
+                pN.c = opponentColor(pN.c);
+                pN.h ^= ZT[3][13];
+                pN.h ^= ZT[4][13];
+                const int R = depth / 4 + 3 + std::min((nullIIDScore - beta) / 80, 3); // adaptative
+                const ScoreType nullscore = -pvs<false, false>(-beta, -beta + 1, pN, depth - R, ply + 1, nullPV, seldepth);
+                if (!stopFlag && nullscore >= beta) return nullscore;
+                if (!stopFlag && nullscore <= -MATE) mateThreat = true;
+                if (stopFlag) return STOPSCORE;
+            }
+            if (!nullUseHash) evalScore = nullIIDScore; // use nullIIDScore as evalScore if it is smarter (it seems to work ... maybe thanks to fail-soft)
         }
 
         // LMP
