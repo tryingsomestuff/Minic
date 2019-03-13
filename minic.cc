@@ -2278,7 +2278,7 @@ const Move Get(const Hash h){
 }
 
 #ifdef IMPORTBOOK
-#include "bookGenerationTools.cc"
+#include "Add-On/bookGenerationTools.cc"
 #endif
 
 } // Book
@@ -2858,7 +2858,7 @@ ScoreType adjustHashScore(ScoreType score, DepthType ply){
 }
 
 #ifdef WITH_SYZYGY
-#include "syzygyInterface.cc"
+#include "Add-On/syzygyInterface.cc"
 #endif
 
 ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth){
@@ -3765,15 +3765,15 @@ void initBook(){
 }
 
 #ifdef DEBUG_TOOL
-#include "cli.cc"
+#include "Add-On/cli.cc"
 #endif
 
 #ifdef WITH_TEXEL_TUNING
-#include "texelTuning.cc"
+#include "Add-On/texelTuning.cc"
 #endif
 
 #ifdef WITH_TEST_SUITE
-#include "testSuite.cc"
+#include "Add-On/testSuite.cc"
 #endif
 
 int main(int argc, char ** argv){
