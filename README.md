@@ -18,7 +18,7 @@ Quite poor for a chess engine (around 2550) but already way to strong for me !
 Rank Name                          Elo     +/-   Games   Score   Draws
    1 rofChade1.0                   260      32     532   81.7%   17.1%
    2 fruit_21                      117      28     532   66.2%   19.2%
-   3 Minic 3 trheads                47      25     532   56.7%   27.3%
+   3 Minic 3 threads                47      25     532   56.7%   27.3%
    4 Minic 2 threads                24      25     532   53.4%   27.1%
    5 Minic                         -14      25     533   47.9%   29.1%
    6 drosophila-win64              -43      26     533   43.8%   20.8%
@@ -106,6 +106,7 @@ Arasan by Jon Dart
 CPW by Pawel Koziol and Edmund Moshammer  
 Deepov by Romain Goussault  
 Dorpsgek by Dan Ravensloft  
+Ethereal by Andrew Grant
 Galjoen by Werner Taelemans  
 Madchess by Erik Madsen  
 Rodent III by Pawel Koziol  
