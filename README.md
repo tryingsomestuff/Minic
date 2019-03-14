@@ -106,7 +106,7 @@ Arasan by Jon Dart
 CPW by Pawel Koziol and Edmund Moshammer  
 Deepov by Romain Goussault  
 Dorpsgek by Dan Ravensloft  
-Ethereal by Andrew Grant
+Ethereal by Andrew Grant  
 Galjoen by Werner Taelemans  
 Madchess by Erik Madsen  
 Rodent III by Pawel Koziol  
