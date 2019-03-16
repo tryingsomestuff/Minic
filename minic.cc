@@ -32,7 +32,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "dev2";
 
 #define STOPSCORE   ScoreType(-20000)
 #define INFSCORE    ScoreType(15000)
@@ -650,8 +650,8 @@ namespace MaterialHash { // from Gull
 #define _DO_JOIN(symbol1,symbol2) symbol1##symbol2
 #define DEF_MAT(x,t) const Position::Material MAT##x = materialFromString(TO_STR(x)); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t);
 #define DEF_MAT_H(x,t,h) const Position::Material MAT##x = materialFromString(TO_STR(x)); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t,h);
-#define DEF_MAT_REV(rev,x) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)]));
-#define DEF_MAT_REV_H(rev,x,h) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)]),h);
+#define DEF_MAT_REV(rev,x) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializerRev)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)]));
+#define DEF_MAT_REV_H(rev,x,h) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializerRev)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)]),h);
 
             // sym (and pseudo sym) : all should be draw
             DEF_MAT(KK,     Ter_MaterialDraw)
@@ -662,178 +662,98 @@ namespace MaterialHash { // from Gull
             DEF_MAT(KLDKLD, Ter_MaterialDraw)
             DEF_MAT(KLLKLL, Ter_MaterialDraw)
             DEF_MAT(KDDKDD, Ter_MaterialDraw)
-            DEF_MAT(KLDKLL, Ter_MaterialDraw)
-            DEF_MAT(KLDKDD, Ter_MaterialDraw)
+            DEF_MAT(KLDKLL, Ter_MaterialDraw)        DEF_MAT_REV(KLLKLD, KLDKLL)
+            DEF_MAT(KLDKDD, Ter_MaterialDraw)        DEF_MAT_REV(KDDKLD, KLDKDD)
             DEF_MAT(KLKL,   Ter_MaterialDraw)
             DEF_MAT(KDKD,   Ter_MaterialDraw)
-            DEF_MAT(KLKD,   Ter_MaterialDraw)
-            DEF_MAT(KNNKNN, Ter_MaterialDraw)
-            DEF_MAT(KNKN,   Ter_MaterialDraw)
-
-            DEF_MAT_REV(KDKL,   KLKD)
-            DEF_MAT_REV(KLLKLD, KLDKLL)
-            DEF_MAT_REV(KDDKLD, KLDKDD)
+            DEF_MAT(KLKD,   Ter_MaterialDraw)        DEF_MAT_REV(KDKL,   KLKD)
+            DEF_MAT(KNNKNN, Ter_MaterialDraw)        
+            DEF_MAT(KNKN,   Ter_MaterialDraw)        
 
             // 2M M
-            DEF_MAT(KQQKQ, Ter_WhiteWin)
-            DEF_MAT(KQQKR, Ter_WhiteWin)
-            DEF_MAT(KRRKQ, Ter_LikelyDraw)
-            DEF_MAT(KRRKR, Ter_WhiteWin)
-            DEF_MAT(KQRKQ, Ter_WhiteWin)
-            DEF_MAT(KQRKR, Ter_WhiteWin)
-
-            DEF_MAT_REV(KQKQQ,KQQKQ)
-            DEF_MAT_REV(KRKRR,KRRKR)
-            DEF_MAT_REV(KQKRR,KRRKQ)
-            DEF_MAT_REV(KRKQQ,KQQKR)
-            DEF_MAT_REV(KQKQR,KQRKQ)
-            DEF_MAT_REV(KRKQR,KQRKR)
+            DEF_MAT(KQQKQ, Ter_WhiteWin)             DEF_MAT_REV(KQKQQ, KQQKQ)
+            DEF_MAT(KQQKR, Ter_WhiteWin)             DEF_MAT_REV(KRKQQ, KQQKR)
+            DEF_MAT(KRRKQ, Ter_LikelyDraw)           DEF_MAT_REV(KQKRR, KRRKQ)
+            DEF_MAT(KRRKR, Ter_WhiteWin)             DEF_MAT_REV(KRKRR, KRRKR)
+            DEF_MAT(KQRKQ, Ter_WhiteWin)             DEF_MAT_REV(KQKQR, KQRKQ)
+            DEF_MAT(KQRKR, Ter_WhiteWin)             DEF_MAT_REV(KRKQR, KQRKR)
 
             // 2M m
-            DEF_MAT(KQQKL, Ter_WhiteWin)
-            DEF_MAT(KRRKL, Ter_WhiteWin)
-            DEF_MAT(KQRKL, Ter_WhiteWin)
-            DEF_MAT(KQQKD, Ter_WhiteWin)
-            DEF_MAT(KRRKD, Ter_WhiteWin)
-            DEF_MAT(KQRKD, Ter_WhiteWin)
-            DEF_MAT(KQQKN, Ter_WhiteWin)
-            DEF_MAT(KRRKN, Ter_WhiteWin)
-            DEF_MAT(KQRKN, Ter_WhiteWin)
-
-            DEF_MAT_REV(KLKQQ, KQQKL)
-            DEF_MAT_REV(KLKRR, KRRKL)
-            DEF_MAT_REV(KLKQR, KQRKL)
-            DEF_MAT_REV(KDKQQ, KQQKD)
-            DEF_MAT_REV(KDKRR, KRRKD)
-            DEF_MAT_REV(KDKQR, KQRKD)
-            DEF_MAT_REV(KNKQQ, KQQKN)
-            DEF_MAT_REV(KNKRR, KRRKN)
-            DEF_MAT_REV(KNKQR, KQRKN)
+            DEF_MAT(KQQKL, Ter_WhiteWin)             DEF_MAT_REV(KLKQQ, KQQKL)
+            DEF_MAT(KRRKL, Ter_WhiteWin)             DEF_MAT_REV(KLKRR, KRRKL)
+            DEF_MAT(KQRKL, Ter_WhiteWin)             DEF_MAT_REV(KLKQR, KQRKL)
+            DEF_MAT(KQQKD, Ter_WhiteWin)             DEF_MAT_REV(KDKQQ, KQQKD)
+            DEF_MAT(KRRKD, Ter_WhiteWin)             DEF_MAT_REV(KDKRR, KRRKD)
+            DEF_MAT(KQRKD, Ter_WhiteWin)             DEF_MAT_REV(KDKQR, KQRKD)
+            DEF_MAT(KQQKN, Ter_WhiteWin)             DEF_MAT_REV(KNKQQ, KQQKN)
+            DEF_MAT(KRRKN, Ter_WhiteWin)             DEF_MAT_REV(KNKRR, KRRKN)
+            DEF_MAT(KQRKN, Ter_WhiteWin)             DEF_MAT_REV(KNKQR, KQRKN)
 
             // 2m M
-            DEF_MAT(KLDKQ, Ter_MaterialDraw)
-            DEF_MAT(KLDKR, Ter_MaterialDraw)
-            DEF_MAT(KLLKQ, Ter_MaterialDraw)
-            DEF_MAT(KLLKR, Ter_MaterialDraw)
-            DEF_MAT(KDDKQ, Ter_MaterialDraw)
-            DEF_MAT(KDDKR, Ter_MaterialDraw)
-            DEF_MAT(KNNKQ, Ter_MaterialDraw)
-            DEF_MAT(KNNKR, Ter_MaterialDraw)
-            DEF_MAT(KLNKQ, Ter_MaterialDraw)
-            DEF_MAT(KLNKR, Ter_MaterialDraw)
-            DEF_MAT(KDNKQ, Ter_MaterialDraw)
-            DEF_MAT(KDNKR, Ter_MaterialDraw)
-
-            DEF_MAT_REV(KQKLD,KLDKQ)
-            DEF_MAT_REV(KRKLD,KLDKR)
-            DEF_MAT_REV(KQKLL,KLLKQ)
-            DEF_MAT_REV(KRKLL,KLLKR)
-            DEF_MAT_REV(KQKDD,KDDKQ)
-            DEF_MAT_REV(KRKDD,KDDKR)
-            DEF_MAT_REV(KQKNN,KNNKQ)
-            DEF_MAT_REV(KRKNN,KNNKR)
-            DEF_MAT_REV(KQKLN,KLNKQ)
-            DEF_MAT_REV(KRKLN,KLNKR)
-            DEF_MAT_REV(KQKDN,KDNKQ)
-            DEF_MAT_REV(KRKDN,KDNKR)
+            DEF_MAT(KLDKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKLD,KLDKQ)
+            DEF_MAT(KLDKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKLD,KLDKR)
+            DEF_MAT(KLLKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKLL,KLLKQ)
+            DEF_MAT(KLLKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKLL,KLLKR)
+            DEF_MAT(KDDKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKDD,KDDKQ)
+            DEF_MAT(KDDKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKDD,KDDKR)
+            DEF_MAT(KNNKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKNN,KNNKQ)
+            DEF_MAT(KNNKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKNN,KNNKR)
+            DEF_MAT(KLNKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKLN,KLNKQ)
+            DEF_MAT(KLNKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKLN,KLNKR)
+            DEF_MAT(KDNKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKDN,KDNKQ)
+            DEF_MAT(KDNKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKDN,KDNKR)
 
             // 2m m : all draw
-            DEF_MAT(KLDKL, Ter_MaterialDraw)
-            DEF_MAT(KLDKD, Ter_MaterialDraw)
-            DEF_MAT(KLDKN, Ter_MaterialDraw)
-            DEF_MAT(KLLKL, Ter_MaterialDraw)
-            DEF_MAT(KLLKD, Ter_MaterialDraw)
-            DEF_MAT(KLLKN, Ter_MaterialDraw)
-            DEF_MAT(KDDKL, Ter_MaterialDraw)
-            DEF_MAT(KDDKD, Ter_MaterialDraw)
-            DEF_MAT(KDDKN, Ter_MaterialDraw)
-            DEF_MAT(KNNKL, Ter_MaterialDraw)
-            DEF_MAT(KNNKD, Ter_MaterialDraw)
-            DEF_MAT(KNNKN, Ter_MaterialDraw)
-            DEF_MAT(KLNKL, Ter_MaterialDraw)
-            DEF_MAT(KLNKD, Ter_MaterialDraw)
-            DEF_MAT(KLNKN, Ter_MaterialDraw)
-            DEF_MAT(KDNKL, Ter_MaterialDraw)
-            DEF_MAT(KDNKD, Ter_MaterialDraw)
-            DEF_MAT(KDNKN, Ter_MaterialDraw)
-
-            DEF_MAT_REV(KLKLD,KLDKL)
-            DEF_MAT_REV(KDKLD,KLDKD)
-            DEF_MAT_REV(KNKLD,KLDKN)
-            DEF_MAT_REV(KLKLL,KLLKL)
-            DEF_MAT_REV(KDKLL,KLLKD)
-            DEF_MAT_REV(KNKLL,KLLKN)
-            DEF_MAT_REV(KLKDD,KDDKL)
-            DEF_MAT_REV(KDKDD,KDDKD)
-            DEF_MAT_REV(KNKDD,KDDKN)
-            DEF_MAT_REV(KLKNN,KNNKL)
-            DEF_MAT_REV(KDKNN,KNNKD)
-            DEF_MAT_REV(KNKNN,KNNKN)
-            DEF_MAT_REV(KLKLN,KLNKL)
-            DEF_MAT_REV(KDKLN,KLNKD)
-            DEF_MAT_REV(KNKLN,KLNKN)
-            DEF_MAT_REV(KLKDN,KDNKL)
-            DEF_MAT_REV(KDKDN,KDNKD)
-            DEF_MAT_REV(KNKDN,KDNKN)
+            DEF_MAT(KLDKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKLD,KLDKL)
+            DEF_MAT(KLDKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKLD,KLDKD)
+            DEF_MAT(KLDKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKLD,KLDKN)
+            DEF_MAT(KLLKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKLL,KLLKL)
+            DEF_MAT(KLLKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKLL,KLLKD)
+            DEF_MAT(KLLKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKLL,KLLKN)
+            DEF_MAT(KDDKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKDD,KDDKL)
+            DEF_MAT(KDDKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKDD,KDDKD)
+            DEF_MAT(KDDKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKDD,KDDKN)
+            DEF_MAT(KNNKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKNN,KNNKL)
+            DEF_MAT(KNNKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKNN,KNNKD)
+            DEF_MAT(KNNKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKNN,KNNKN)
+            DEF_MAT(KLNKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKLN,KLNKL)
+            DEF_MAT(KLNKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKLN,KLNKD)
+            DEF_MAT(KLNKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKLN,KLNKN)
+            DEF_MAT(KDNKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKDN,KDNKL)
+            DEF_MAT(KDNKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKDN,KDNKD)
+            DEF_MAT(KDNKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKDN,KDNKN)
 
             // Q x : all should be win
-            DEF_MAT(KQKR, Ter_WhiteWin)
-            DEF_MAT(KQKL, Ter_WhiteWin)
-            DEF_MAT(KQKD, Ter_WhiteWin)
-            DEF_MAT(KQKN, Ter_WhiteWin)
-
-            DEF_MAT_REV(KRKQ,KQKR)
-            DEF_MAT_REV(KLKQ,KQKL)
-            DEF_MAT_REV(KDKQ,KQKD)
-            DEF_MAT_REV(KNKQ,KQKN)
+            DEF_MAT(KQKR, Ter_WhiteWin)              DEF_MAT_REV(KRKQ,KQKR)
+            DEF_MAT(KQKL, Ter_WhiteWin)              DEF_MAT_REV(KLKQ,KQKL)
+            DEF_MAT(KQKD, Ter_WhiteWin)              DEF_MAT_REV(KDKQ,KQKD)
+            DEF_MAT(KQKN, Ter_WhiteWin)              DEF_MAT_REV(KNKQ,KQKN)
 
             // R x : all should be draw
-            DEF_MAT(KRKL, Ter_LikelyDraw)
-            DEF_MAT(KRKD, Ter_LikelyDraw)
-            DEF_MAT(KRKN, Ter_LikelyDraw)
-
-            DEF_MAT_REV(KLKR,KRKL)
-            DEF_MAT_REV(KDKR,KRKD)
-            DEF_MAT_REV(KNKR,KRKN)
+            DEF_MAT(KRKL, Ter_LikelyDraw)            DEF_MAT_REV(KLKR,KRKL)
+            DEF_MAT(KRKD, Ter_LikelyDraw)            DEF_MAT_REV(KDKR,KRKD)
+            DEF_MAT(KRKN, Ter_LikelyDraw)            DEF_MAT_REV(KNKR,KRKN)
 
             // B x : all are draw
-            DEF_MAT(KLKN, Ter_MaterialDraw)
-            DEF_MAT(KDKN, Ter_MaterialDraw)
-
-            DEF_MAT_REV(KNKL,KLKN)
-            DEF_MAT_REV(KNKD,KDKN)
+            DEF_MAT(KLKN, Ter_MaterialDraw)          DEF_MAT_REV(KNKL,KLKN)
+            DEF_MAT(KDKN, Ter_MaterialDraw)          DEF_MAT_REV(KNKD,KDKN)
 
             // X 0 : QR win, BN draw
-            DEF_MAT_H(KQK, Ter_WhiteWinWithHelper,&helperKXK)
-            DEF_MAT_H(KRK, Ter_WhiteWinWithHelper,&helperKXK)
-            DEF_MAT(KLK, Ter_MaterialDraw)
-            DEF_MAT(KDK, Ter_MaterialDraw)
-            DEF_MAT(KNK, Ter_MaterialDraw)
+            DEF_MAT_H(KQK, Ter_WhiteWinWithHelper,&helperKXK)   DEF_MAT_REV_H(KKQ,KQK,&helperKXK)
+            DEF_MAT_H(KRK, Ter_WhiteWinWithHelper,&helperKXK)   DEF_MAT_REV_H(KKR,KRK,&helperKXK)
+            DEF_MAT(KLK, Ter_MaterialDraw)                      DEF_MAT_REV(KKL,KLK)
+            DEF_MAT(KDK, Ter_MaterialDraw)                      DEF_MAT_REV(KKD,KDK)
+            DEF_MAT(KNK, Ter_MaterialDraw)                      DEF_MAT_REV(KKN,KNK)
 
-            DEF_MAT_REV_H(KKQ,KQK,&helperKXK)
-            DEF_MAT_REV_H(KKR,KRK,&helperKXK)
-            DEF_MAT_REV(KKL,KLK)
-            DEF_MAT_REV(KKD,KDK)
-            DEF_MAT_REV(KKN,KNK)
-
-            // 2X 0 : all win except LL, DD, NN
-            DEF_MAT(KQQK, Ter_WhiteWin)
-            DEF_MAT(KRRK, Ter_WhiteWin)
-            DEF_MAT_H(KLDK, Ter_WhiteWinWithHelper,&helperKmmK)
-            DEF_MAT(KLLK, Ter_MaterialDraw)
-            DEF_MAT(KDDK, Ter_MaterialDraw)
-            DEF_MAT(KNNK, Ter_MaterialDraw)
-            DEF_MAT_H(KLNK, Ter_WhiteWinWithHelper,&helperKmmK)
-            DEF_MAT_H(KDNK, Ter_WhiteWinWithHelper,&helperKmmK)
-
-            DEF_MAT_REV(KKQQ,KQQK)
-            DEF_MAT_REV(KKRR,KRRK)
-            DEF_MAT_REV_H(KKLD,KLDK,&helperKmmK)
-            DEF_MAT_REV(KKLL,KLLK)
-            DEF_MAT_REV(KKDD,KDDK)
-            DEF_MAT_REV(KKNN,KNNK)
-            DEF_MAT_REV_H(KKLN,KLNK,&helperKmmK)
-            DEF_MAT_REV_H(KKDN,KDNK,&helperKmmK)
+            // 2X 0 : all win except LL, DD, NN 
+            DEF_MAT(KQQK, Ter_WhiteWin)                         DEF_MAT_REV(KKQQ,KQQK)
+            DEF_MAT(KRRK, Ter_WhiteWin)                         DEF_MAT_REV(KKRR,KRRK)
+            DEF_MAT_H(KLDK, Ter_WhiteWinWithHelper,&helperKmmK) DEF_MAT_REV_H(KKLD,KLDK,&helperKmmK)
+            DEF_MAT(KLLK, Ter_MaterialDraw)                     DEF_MAT_REV(KKLL,KLLK)
+            DEF_MAT(KDDK, Ter_MaterialDraw)                     DEF_MAT_REV(KKDD,KDDK)
+            DEF_MAT(KNNK, Ter_MaterialDraw)                     DEF_MAT_REV(KKNN,KNNK)
+            DEF_MAT_H(KLNK, Ter_WhiteWinWithHelper,&helperKmmK) DEF_MAT_REV_H(KKLN,KLNK,&helperKmmK)
+            DEF_MAT_H(KDNK, Ter_WhiteWinWithHelper,&helperKmmK) DEF_MAT_REV_H(KKDN,KDNK,&helperKmmK)
 
             ///@todo other (with pawn ...)
         }
@@ -853,6 +773,7 @@ void updateMaterialOther(Position & p){
 }
 
 void initMaterial(Position & p){
+    ///@todo use allBB => 1 line ;-)
     p.mat[Co_White][M_k]  = (unsigned char)countBit(p.whiteKing());
     p.mat[Co_White][M_q]  = (unsigned char)countBit(p.whiteQueen());
     p.mat[Co_White][M_r]  = (unsigned char)countBit(p.whiteRook());
@@ -876,14 +797,12 @@ void updateMaterialStd(Position &p, const Square toBeCaptured){
     const Piece pp = getPieceType(p,toBeCaptured);
     const Color opp = opponentColor(p.c);
     p.mat[opp][pp]--; // capture if to square is not empty
-
     updateMaterialOther(p);
 }
 
 void updateMaterialEp(Position &p){
     const Color opp = opponentColor(p.c);
     p.mat[opp][M_p]--; // ep if to square is empty
-
     updateMaterialOther(p);
 }
 
@@ -892,7 +811,6 @@ void updateMaterialProm(Position &p, const Square toBeCaptured, MType mt){
     const Color opp = opponentColor(p.c);
     if ( pp != P_none ) p.mat[opp][pp]--; // capture if to square is not empty
     if ( isPromotion(mt) ) p.mat[p.c][promShift(mt)]++; // prom
-
     updateMaterialOther(p);
 }
 
@@ -905,6 +823,7 @@ void initBitBoards(Position & p) {
 void setBitBoards(Position & p) {
     initBitBoards(p);
     for (Square k = 0; k < 64; ++k) {
+        ///@todo use all BB => 1 line ;-)
         switch (p.b[k]){
         case P_none: break;
         case P_wp: p.whitePawn  () |= SquareToBitboard(k); break;
@@ -927,15 +846,15 @@ void setBitBoards(Position & p) {
     p.occupancy  = p.whitePiece | p.blackPiece;
 }
 
-inline void unSetBit(Position & p, Square k) { ///@todo keep this lookup table in position and implemente copy CTOR and operator
+inline void unSetBit(Position & p, Square k) {
     assert(k >= 0 && k < 64);
     unSetBit(p.allB[getPieceIndex(p, k)], k);
 }
-inline void unSetBit(Position &p, Square k, Piece pp) { ///@todo keep this lookup table in position and implemente copy CTOR and operator
+inline void unSetBit(Position &p, Square k, Piece pp) {
     assert(k >= 0 && k < 64);
     unSetBit(p.allB[pp + PieceShift], k);
 }
-inline void setBit(Position &p, Square k, Piece pp) { ///@todo keep this lookup table in position and implemente copy CTOR and operator
+inline void setBit(Position &p, Square k, Piece pp) {
     assert(k >= 0 && k < 64);
     setBit(p.allB[pp + PieceShift], k);
 }
@@ -1013,7 +932,7 @@ public:
     void searchASync(const ThreadData & d);
     void startOthers();
     bool stop;
-
+    // gathering info from all threads
     Counter nodes() const;
     Counter qnodes() const;
     Counter tthits() const;
@@ -1025,10 +944,10 @@ enum MoveDifficulty { MD_forced = 0, MD_easy, MD_std, MD_hardDefense, MD_hardAtt
 
 namespace MoveDifficultyUtil {
     const DepthType emergencyMinDepth = 9;
-    const ScoreType emergencyMargin = 50;
-    const ScoreType easyMoveMargin = 250;
-    const int       emergencyFactor = 5;
-    const float     maxStealFraction = 0.3f; // of remaining time
+    const ScoreType emergencyMargin   = 50;
+    const ScoreType easyMoveMargin    = 250;
+    const int       emergencyFactor   = 5;
+    const float     maxStealFraction  = 0.3f; // of remaining time
 }
 
 // thread from Stockfish
@@ -1096,8 +1015,9 @@ struct ThreadContext{
         ScoreType s;
     };
 
-    template <bool pvnode, bool canNull = true> ScoreType pvs    (ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, const Move skipMove = INVALIDMOVE, std::vector<RootScores> * rootScores = 0);
-    ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth, DepthType qDepth);
+    template <bool pvnode, bool canNull = true> ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, const Move skipMove = INVALIDMOVE, std::vector<RootScores> * rootScores = 0);
+    template <bool qRoot>
+    ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
     ScoreType qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
     bool SEE(const Position & p, const Move & m, ScoreType threshold)const;
     template< bool display = false> ScoreType SEEVal(const Position & p, const Move & m)const;
@@ -1131,7 +1051,7 @@ struct ThreadContext{
 
     void search(){
         LogIt(logInfo) << "Search launched " << id() ;
-        if ( isMainThread() ){ ThreadPool::instance().startOthers(); }
+        if ( isMainThread() ){ ThreadPool::instance().startOthers(); } // started but locked for now ...
         _data.pv = search(_data.p, _data.best, _data.depth, _data.sc, _data.seldepth);
     }
 
@@ -1193,7 +1113,7 @@ Move ThreadPool::searchSync(const ThreadData & d){
     LogIt(logInfo) << "...ok" ;
     for (auto s : *this) (*s).setData(d); // this is a copy
     LogIt(logInfo) << "Calling main thread search" ;
-    main().search();
+    main().search(); ///@todo 1 thread for nothing here (start instead ????)
     ThreadContext::stopFlag = true;
     LogIt(logInfo) << "Wait for workers to finish" ;
     for(auto s : *this) if (!(*s).isMainThread()) (*s).wait();
@@ -2295,22 +2215,22 @@ ScoreType ThreadContext::SEEVal(const Position & pos, const Move & move)const{
   ScoreType gain[64]; // 64 shall be bullet proof here...
   Square sq = Move2To(move);
   Square from = Move2From(move);
-  Piece p = pos.b[from];
-  Piece captured = pos.b[sq];
+  Piece p = getPieceType(pos,from);
+  Piece captured = getPieceType(pos,sq);
   Color side = pos.c;
-  ScoreType pv = Values[std::abs(p)+PieceShift];
+  ScoreType pv = Values[p+PieceShift];
   ScoreType cv = 0;
 
   if (captured != P_none){
-    cv = Values[std::abs(captured)+PieceShift];
+    cv = Values[captured+PieceShift];
     if (pv <= cv) return 0;
   }
 
-  bool isProm = isPromotion(move);
+  bool isPromPossible = SQRANK(sq) == 0 || SQRANK(sq) == 7;
   BitBoard occ = pos.occupancy ^ SquareToBitboard(from);
-  ScoreType pqv = Values[P_wq + PieceShift] - Values[P_wp + PieceShift];
+  const ScoreType pqv = Values[P_wq + PieceShift] - Values[P_wp + PieceShift];
   gain[0] = cv;
-  if (isProm && std::abs(p) == P_wp){
+  if (isPromPossible && p == P_wp){
     pv += pqv;
     gain[0] += pqv;
   }
@@ -2343,7 +2263,7 @@ ScoreType ThreadContext::SEEVal(const Position & pos, const Move & move)const{
     att &= occ;
     gain[cnt] = pv - gain[cnt - 1];
     pv = Values[pp+PieceShift];
-    if (isProm && p == P_wp) { pv += pqv; gain[cnt] += pqv; }
+    if (isPromPossible && p == P_wp) { pv += pqv; gain[cnt] += pqv; }
     cnt++;
   }
   while (--cnt) if (gain[cnt - 1] > -gain[cnt]) gain[cnt - 1] = -gain[cnt];
@@ -2356,11 +2276,12 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
     if (! isCapture(m)) return true;
     const Square from = Move2From(m);
     const Square to   = Move2To(m);
-    Piece nextVictim  = p.b[from];
+    const bool promPossible = (SQRANK(to) == 0 || SQRANK(to) == 7);
+    Piece nextVictim  = getPieceType(p,from);
     const Color us    = getColor(p,from);
     ScoreType balance = std::abs(getValue(p,to)) - threshold; // The opponent may be able to recapture so this is the best result we can hope for.
     if (balance < 0) return false;
-    balance -= std::abs(Values[nextVictim+PieceShift]); // Now assume the worst possible result: that the opponent can capture our piece for free.
+    balance -= Values[nextVictim+PieceShift]; // Now assume the worst possible result: that the opponent can capture our piece for free.
     if (balance >= 0) return true;
     if (getPieceType(p, to) == P_wk) return false; // capture king !
     Position p2 = p;
@@ -2376,15 +2297,17 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
         bool validThreatFound = false;
         unsigned int threatId = 0;
         while (!validThreatFound && threatId < stmAttackers.size()) {
-            const Move mm = ToMove(stmAttackers[threatId], to, T_capture); ///@todo prom ????
-            nextVictim = p2.b[stmAttackers[threatId]];
-            if (std::abs(nextVictim) == P_wk) return false; // capture king !
+            const Square att = stmAttackers[threatId];
+            const bool prom = promPossible && getPieceType(p, att) == P_wp;
+            const Move mm = ToMove(att, to, prom ? T_cappromq : T_capture); ///@todo prom ????
+            nextVictim = (Piece)(prom ? P_wq : getPieceType(p2,att)); // CAREFULL here :: we don't care black or white, always use abs(value) next !!!
+            if (nextVictim == P_wk) return false; // capture king !
             ++threatId;
             if ( ! apply(p2,mm) ) continue;
             validThreatFound = true;
-            balance = -balance - 1 - std::abs(Values[nextVictim+PieceShift]);
+            balance = -balance - 1 - Values[nextVictim+PieceShift];
             if (balance >= 0) {
-                if (std::abs(nextVictim) == P_wk) p2.c = opponentColor(p2.c);
+                if (nextVictim == P_wk) p2.c = opponentColor(p2.c);
                 endOfSEE = true;
             }
         }
@@ -2893,7 +2816,8 @@ ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const
     return bestScore;
 }
 
-ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth, DepthType qDepth){
+template < bool qRoot >
+ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth){
     float gp = 0;
     if ( ply >= MAX_PLY-1 ) return eval(p,gp);
     alpha = std::max(alpha, (ScoreType)(-MATE + ply));
@@ -2904,10 +2828,10 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     ++stats.qnodes;
 
-    if ( qDepth == 0 && interiorNodeRecognizer<true,false,false>(p) == MaterialHash::Ter_Draw) return 0; ///@todo is that gain elo ???
+    if ( qRoot && interiorNodeRecognizer<true,false,false>(p) == MaterialHash::Ter_Draw) return 0; ///@todo is that gain elo ???
 
     TT::Entry e;
-    if (qDepth == 0 && TT::getEntry(*this,computeHash(p), 0, e)) {
+    if ( qRoot && TT::getEntry(*this,computeHash(p), 0, e)) {
         if ( e.h != 0 && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
            return adjustHashScore(e.score, ply);
         }
@@ -2923,23 +2847,22 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     MoveList moves;
     generate(p,moves,isInCheck?GP_all:GP_cap);
-    sort(*this,moves,p,true/*false*/,qDepth==0?&e:0);
+    sort(*this,moves,p,true/*false*/,qRoot?&e:0);
 
     const ScoreType alphaInit = alpha;
 
     bool validMoveFound = false;
 
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
+        if (Move2Score(*it) < -900 && !isInCheck) continue; // see (from move sorter, SEE<0 add -2000 if bad capture)
         if ( StaticEvalConfig::doQFutility && !isInCheck && evalScore + StaticEvalConfig::qfutilityMargin + getAbsValue(p,Move2To(*it)) <= alphaInit) continue;
-        //if ( SEEVal(p,*it) < -0 /* && !isInCheck*/) continue; // see (prune bad capture)
-        if ( Move2Score(*it) < -900 && !isInCheck) continue; // see (from move sorter, SEE<0 add -2000 if bad capture)
-        //if ( !SEE(p,*it) /* && !isInCheck*/) continue; // see (prune all bad capture)
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
+        //bool isCheck = isAttacked(p2, kingSquare(p2));
         validMoveFound = true;
         if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply + 1;
         if (p.c == Co_Black && Move2To(*it) == p.wk) return MATE - ply + 1;
-        const ScoreType score = -qsearch(-beta,-alpha,p2,ply+1,seldepth,qDepth-1);
+        const ScoreType score = -qsearch<false>(-beta,-alpha,p2,ply+1,seldepth);
         if ( score > bestScore){
            bestScore = score;
            if ( score > alpha ){
@@ -2969,12 +2892,12 @@ inline void updateTables(ThreadContext & context, const Position & p, DepthType 
     context.counterT.update(m,p);
 }
 
-inline bool singularExtension(ThreadContext & context, ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, const TT::Entry & e, const Move m, bool rootnode, int ply) {
+inline bool singularExtension(ThreadContext & context, ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, const TT::Entry & e, const Move m, bool rootnode, int ply, bool isInCheck) {
     if ( depth >= StaticEvalConfig::singularExtensionDepth && sameMove(m, e.m) && !rootnode && !isMateScore(e.score) && e.b == TT::B_beta && e.d >= depth - 3) {
         const ScoreType betaC = e.score - depth;
         PVList sePV;
         DepthType seSeldetph;
-        const ScoreType score = context.pvs<false>(betaC - 1, betaC, p, depth/2, ply, sePV, seSeldetph, m);
+        const ScoreType score = context.pvs<false>(betaC - 1, betaC, p, depth/2, ply, sePV, seSeldetph, isInCheck, m);
         if (!ThreadContext::stopFlag && score < betaC) return true;
     }
     return false;
@@ -2982,13 +2905,13 @@ inline bool singularExtension(ThreadContext & context, ScoreType alpha, ScoreTyp
 
 // pvs inspired by Xiphos
 template< bool pvnode, bool canNull>
-ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, const Move skipMove, std::vector<RootScores> * rootScores){
+ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, const Move skipMove, std::vector<RootScores> * rootScores){
 
     if ( stopFlag || std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()) > getCurrentMoveMs() ){ stopFlag = true; return STOPSCORE; }
 
     if ((int)ply > seldepth) seldepth = ply;
 
-    if ( depth <= 0 ) return qsearch(alpha,beta,p,ply,seldepth,0);
+    if ( depth <= 0 ) return qsearch<true>(alpha,beta,p,ply,seldepth);
 
     ++stats.nodes;
 
@@ -3019,7 +2942,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     }
 #endif
 
-    const bool isInCheck = isAttacked(p, kingSquare(p));
+    //const bool isInCheck = isAttacked(p, kingSquare(p));
     ScoreType evalScore;
     if (isInCheck) evalScore = -MATE + ply;
     else evalScore = (e.h != 0)?e.eval:eval(p, gp);
@@ -3042,29 +2965,28 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         // razoring
         int rAlpha = alpha - StaticEvalConfig::razoringMargin;
         if ( StaticEvalConfig::doRazoring && depth <= StaticEvalConfig::razoringMaxDepth && evalScore <= rAlpha ){
-            const ScoreType qScore = qsearch(rAlpha,rAlpha+1,p,ply,seldepth,0);
+            const ScoreType qScore = qsearch<true>(rAlpha,rAlpha+1,p,ply,seldepth);
             if ( ! stopFlag && qScore <= alpha ) return qScore;
             if ( stopFlag ) return STOPSCORE;
         }
 
         // null move
         PVList nullPV;
-        ///@todo fix the en passant issue here
-        if ( StaticEvalConfig::doNullMove && canNull && pv.size() > 1 && depth >= StaticEvalConfig::nullMoveMinDepth && p.ep == INVALIDSQUARE ){
-            const bool nullUseHash = (e.h != 0 && e.d > depth / 2);
-            const ScoreType nullIIDScore = nullUseHash ? evalScore : pvs<false, true>(beta - 1, beta, p, depth / 2, ply, nullPV, seldepth);
+        if ( StaticEvalConfig::doNullMove && canNull && pv.size() > 1 && depth >= StaticEvalConfig::nullMoveMinDepth ){
+            const ScoreType nullIIDScore = pvs<false, true>(beta - 1, beta, p, depth / 2, ply, nullPV, seldepth, isInCheck);
             if (nullIIDScore >= beta) {
                 Position pN = p;
                 pN.c = opponentColor(pN.c);
                 pN.h ^= ZT[3][13];
                 pN.h ^= ZT[4][13];
+                if (pN.ep != INVALIDSQUARE) pN.h ^= ZT[pN.ep][13];
+                pN.ep = INVALIDSQUARE;
                 const int R = depth / 4 + 3 + std::min((nullIIDScore - beta) / 80, 3); // adaptative
-                const ScoreType nullscore = -pvs<false, false>(-beta, -beta + 1, pN, depth - R, ply + 1, nullPV, seldepth);
+                const ScoreType nullscore = -pvs<false, false>(-beta, -beta + 1, pN, depth - R, ply + 1, nullPV, seldepth, isInCheck);
                 if (!stopFlag && nullscore >= beta) return nullscore;
                 if (!stopFlag && nullscore <= -MATE) mateThreat = true;
                 if (stopFlag) return STOPSCORE;
             }
-            if (!nullUseHash) evalScore = nullIIDScore; // use nullIIDScore as evalScore if it is smarter (it seems to work ... maybe thanks to fail-soft)
         }
 
         // LMP
@@ -3083,10 +3005,11 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if ( e.h != 0 && sameMove(e.m, *it) && (Move2Score(*it) < 100) ) continue; // skip TT move if quiet or bad captures
             Position p2 = p;
             if ( ! apply(p2,*it) ) continue;
+            const bool isCheck = isAttacked(p2, kingSquare(p2));
             ++probCutCount;
-            ScoreType scorePC = betaPC; // -qsearch(-betaPC, -betaPC + 1, p2, ply + 1, seldepth,0);
+            ScoreType scorePC = betaPC; // -qsearch<true>(-betaPC, -betaPC + 1, p2, ply + 1, seldepth);
             PVList pvPC;
-            if (!stopFlag && scorePC >= betaPC) scorePC = -pvs<pvnode>(-betaPC,-betaPC+1,p2,depth-StaticEvalConfig::probCutMinDepth+1,ply+1,pvPC,seldepth);
+            if (!stopFlag && scorePC >= betaPC) scorePC = -pvs<pvnode>(-betaPC,-betaPC+1,p2,depth-StaticEvalConfig::probCutMinDepth+1,ply+1,pvPC,seldepth, isCheck);
             if (!stopFlag && scorePC >= betaPC) return scorePC;
             if (stopFlag) return STOPSCORE;
           }
@@ -3096,7 +3019,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     // IID
     if ( (e.h == 0 /*|| e.d < depth/3*/) && pvnode && depth >= StaticEvalConfig::iidMinDepth){
         PVList iidPV;
-        pvs<pvnode>(alpha,beta,p,depth/2,ply,iidPV,seldepth);
+        pvs<pvnode>(alpha,beta,p,depth/2,ply,iidPV,seldepth,isInCheck);
         if ( !stopFlag) TT::getEntry(*this,computeHash(p), depth, e);
         else return STOPSCORE;
     }
@@ -3106,8 +3029,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     ScoreType bestScore = -MATE + ply;
     Move bestMove = INVALIDMOVE;
 
-    ///@todo try to remember isCheck so that only isCheck or isInCheck is necessary
-
     // try the tt move before move generation (if not skipped move)
     if (e.h != 0 && e.m != INVALIDMOVE && !sameMove(e.m,skipMove)) { // should be the case thanks to iid at pvnode
         Position p2 = p;
@@ -3115,13 +3036,14 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             validMoveCount++;
             PVList childPV;
             hashStack[p.ply] = p.h;
+            const bool isCheck = isAttacked(p2, kingSquare(p2));
             // extensions
             int extension = 0;
             if (isInCheck) ++extension;
             //if (mateThreat) ++extension;
-            if (!extension && skipMove == INVALIDMOVE && singularExtension(*this, alpha, beta, p, depth, e, e.m, rootnode, ply)) ++extension;
+            if (!extension && skipMove == INVALIDMOVE && singularExtension(*this, alpha, beta, p, depth, e, e.m, rootnode, ply, isInCheck)) ++extension;
             //if (p.lastMove != INVALIDMOVE && Move2Type(p.lastMove) == T_capture && Move2To(e.m) == Move2To(p.lastMove)) ++extension; ///@todo recapture
-            const ScoreType ttScore = -pvs<pvnode>(-beta, -alpha, p2, depth - 1 + extension, ply + 1, childPV, seldepth);
+            const ScoreType ttScore = -pvs<pvnode>(-beta, -alpha, p2, depth - 1 + extension, ply + 1, childPV, seldepth, isCheck);
             if (stopFlag) return STOPSCORE;
             bestScore = ttScore;
             bestMove = e.m;
@@ -3176,12 +3098,12 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if (isInCheck && depth <= 4) ++extension; // we are in check (extension)
         //if (mateThreat && depth <= 4) ++extension;
         //if (depth <= 4 && p.lastMove != INVALIDMOVE && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++extension; ///@todo recapture
+        const bool isCheck = isAttacked(p2, kingSquare(p2));
         // pvs
-        if (validMoveCount == 1 || !StaticEvalConfig::doPVS) score = -pvs<pvnode>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth);
+        if (validMoveCount == 1 || !StaticEvalConfig::doPVS) score = -pvs<pvnode>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck);
         else{
             // reductions & prunings
             int reduction = 0;
-            const bool isCheck = isAttacked(p2, kingSquare(p2));
             const bool isAdvancedPawnPush = getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
             //if (isCheck && Move2Score(*it) > -900) ++extension; ///@todo we give check with a non risky move
             //if (isAdvancedPawnPush && depth < 5)   ++extension; ///@todo a pawn is near promotion
@@ -3206,14 +3128,14 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             //if (reduction < 0) reduction = 0;
             //if (reduction >= depth) reduction = depth - 1;
             // PVS
-            score = -pvs<false>(-alpha-1,-alpha,p2,depth-1-reduction+extension,ply+1,childPV,seldepth);
+            score = -pvs<false>(-alpha-1,-alpha,p2,depth-1-reduction+extension,ply+1,childPV,seldepth,isCheck);
             if ( reduction > 0 && score > alpha ){
                 childPV.clear();
-                score = -pvs<false>(-alpha-1,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth);
+                score = -pvs<false>(-alpha-1,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck);
             }
             if ( score > alpha && score < beta ){
                 childPV.clear();
-                score = -pvs<true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth); // potential new pv node
+                score = -pvs<true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck); // potential new pv node
             }
         }
         if (stopFlag) return STOPSCORE;
@@ -3260,7 +3182,6 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         LogIt(logInfo) << "... go for id " << id() ;
     }
     stats.init();
-    ///@todo do not reset that
     //TT::clearTT(); // to be used for reproductible results
     killerT.initKillers();
     historyT.initHistory();
@@ -3293,10 +3214,12 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
     ScoreType depthScores[MAX_DEPTH] = { 0 };
     ScoreType depthMoves[MAX_DEPTH] = { INVALIDMOVE };
 
+    const bool isInCheck = isAttacked(p, kingSquare(p));
+
     if ( isMainThread() ){
        // easy move detection (small open window depth 2 search
        std::vector<ThreadContext::RootScores> rootScores;
-       ScoreType easyScore = pvs<true>(-MATE, MATE, p, 2, 1, pv, seldepth, INVALIDMOVE,&rootScores);
+       ScoreType easyScore = pvs<true>(-MATE, MATE, p, 2, 1, pv, seldepth, isInCheck,INVALIDMOVE,&rootScores);
        std::sort(rootScores.begin(), rootScores.end(), [](const ThreadContext::RootScores& r1, const ThreadContext::RootScores & r2) {return r1.s > r2.s; });
        if (stopFlag) { bestScore = easyScore; goto pvsout; }
        if (rootScores.size() == 1) easyMove = MD_forced; // only one : check evasion or zugzwang
@@ -3312,7 +3235,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         else{
             if ( depth == 5) startLock.store(false);
         }
-    LogIt(logInfo) << "Thread " << id() << " searching depth " << (int)depth;
+        LogIt(logInfo) << "Thread " << id() << " searching depth " << (int)depth;
         PVList pvLoc;
         ScoreType delta = (StaticEvalConfig::doWindow && depth>4)?8:MATE; // MATE not INFSCORE in order to enter the loop below once
         ScoreType alpha = std::max(ScoreType(bestScore - delta), ScoreType (-INFSCORE));
@@ -3320,7 +3243,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         ScoreType score = 0;
         while( delta <= MATE ){
             pvLoc.clear();
-            score = pvs<true>(alpha,beta,p,depth,1,pvLoc,seldepth);
+            score = pvs<true>(alpha,beta,p,depth,1,pvLoc,seldepth, isInCheck);
             if ( stopFlag ) break;
             delta += 2 + delta/2; // from xiphos ...
             if      (score <= alpha) alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) );
