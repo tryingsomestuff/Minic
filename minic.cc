@@ -32,7 +32,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 
-const std::string MinicVersion = "dev2";
+const std::string MinicVersion = "dev";
 
 #define STOPSCORE   ScoreType(-20000)
 #define INFSCORE    ScoreType(15000)
@@ -82,7 +82,7 @@ const bool doLMP            = true;
 const bool doStaticNullMove = true;
 const bool doRazoring       = true;
 const bool doQFutility      = true;
-const bool doProbcut        = false;
+const bool doProbcut        = true;
 
 const ScoreType qfutilityMargin          = 128;
 const int       staticNullMoveMaxDepth   = 6;
@@ -466,7 +466,7 @@ inline int chebyshevDistance(Square sq1, Square sq2) { return std::max(std::abs(
 
 enum GenPhase{ GP_all = 0, GP_cap = 1, GP_quiet = 2};
 
-void generate(const Position & p, MoveList & moves, GenPhase phase = GP_all);
+void generate(const Position & p, MoveList & moves, GenPhase phase = GP_all, bool doNotClear = false);
 
 namespace MaterialHash { // from Gull
     const int MatWQ = 1;
@@ -1934,8 +1934,8 @@ void generateSquare(const Position & p, MoveList & moves, Square from, GenPhase 
     }
 }
 
-void generate(const Position & p, MoveList & moves, GenPhase phase){
-    moves.clear();
+void generate(const Position & p, MoveList & moves, GenPhase phase, bool doNotClear){
+    if ( !doNotClear) moves.clear();
     BitBoard myPieceBBiterator = ( (p.c == Co_White) ? p.whitePiece : p.blackPiece);
     while (myPieceBBiterator) generateSquare(p,moves,BB::popBit(myPieceBBiterator),phase);
 }
@@ -2951,6 +2951,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     MoveList moves;
     bool moveGenerated = false;
+    bool capMoveGenerated = false;
 
     bool futility = false, lmp = false, mateThreat = false;
 
@@ -2979,6 +2980,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 pN.c = opponentColor(pN.c);
                 pN.h ^= ZT[3][13];
                 pN.h ^= ZT[4][13];
+                pN.lastMove = INVALIDMOVE;
                 if (pN.ep != INVALIDSQUARE) pN.h ^= ZT[pN.ep][13];
                 pN.ep = INVALIDSQUARE;
                 const int R = depth / 4 + 3 + std::min((nullIIDScore - beta) / 80, 3); // adaptative
@@ -3001,6 +3003,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
           const ScoreType betaPC = beta + StaticEvalConfig::probCutMargin;
           generate(p,moves,GP_cap);
           sort(*this,moves,p,true,&e);
+          capMoveGenerated = true;
           for (auto it = moves.begin() ; it != moves.end() && probCutCount < StaticEvalConfig::probCutMaxMoves; ++it){
             if ( e.h != 0 && sameMove(e.m, *it) && (Move2Score(*it) < 100) ) continue; // skip TT move if quiet or bad captures
             Position p2 = p;
@@ -3065,13 +3068,13 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if (rootnode && countBit(p.whitePiece | p.blackPiece) <= SyzygyTb::MAX_TB_MEN) {
         ScoreType tbScore = 0;
         if (SyzygyTb::probe_root(*this, p, tbScore, moves) < 0) { // only good moves if TB success
-            generate(p, moves);
+            generate(p, moves, capMoveGenerated ? GP_quiet : GP_all, capMoveGenerated);
             moveGenerated = true;
         }
     }
 #endif
     if (!moveGenerated) {
-        generate(p, moves);
+        generate(p, moves, capMoveGenerated ? GP_quiet : GP_all, capMoveGenerated);
         if (moves.empty()) return isInCheck ? -MATE + ply : 0;
     /*if ( isMainThread() )*/ sort(*this, moves, p,true, &e);
     //else std::random_shuffle(moves.begin(),moves.end());
@@ -3097,7 +3100,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         int extension = 0;
         if (isInCheck && depth <= 4) ++extension; // we are in check (extension)
         //if (mateThreat && depth <= 4) ++extension;
-        //if (depth <= 4 && p.lastMove != INVALIDMOVE && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++extension; ///@todo recapture
+        //if (p.lastMove != INVALIDMOVE && Move2Score(*it) > -900 && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++extension; ///@todo recapture
         const bool isCheck = isAttacked(p2, kingSquare(p2));
         // pvs
         if (validMoveCount == 1 || !StaticEvalConfig::doPVS) score = -pvs<pvnode>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck);
@@ -3124,9 +3127,9 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if (StaticEvalConfig::doLMR && !DynamicConfig::mateFinder && (isPrunableStd /*|| isBadCap*/) && depth >= StaticEvalConfig::lmrMinDepth ) reduction = lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
             if (isPrunableStd && !DynamicConfig::mateFinder && !improving) ++reduction;
             if (pvnode && reduction > 0) --reduction;
-            //if (isPrunableStd) reduction -= 2*int(Move2Score(*it) / 250.f); ///@todo history reduction/extension
-            //if (reduction < 0) reduction = 0;
-            //if (reduction >= depth) reduction = depth - 1;
+            if (isPrunableStd) reduction -= 2*int(Move2Score(*it) / 200.f); ///@todo history reduction/extension
+            if (reduction < 0) reduction = 0;
+            if (reduction >= depth) reduction = depth - 1;
             // PVS
             score = -pvs<false>(-alpha-1,-alpha,p2,depth-1-reduction+extension,ply+1,childPV,seldepth,isCheck);
             if ( reduction > 0 && score > alpha ){
