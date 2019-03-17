@@ -1,17 +1,27 @@
 #!/bin/bash
 dir=$(readlink -f $(dirname $0)/..)
+
+d="-DDEBUG_TOOL"
+v="dev"
+t="-march=native"
+#t="-mpopcnt -msse4.2 -mavx -mavx2 -mbmi -mbmi2"
+
 if [ -n "$1" ] ; then
    v=$1
-   d="-DDEBUG_TOOL"
-else
-   v="dev"
-   d="-DDEBUG_TOOL"
+   shift
 fi
+
+if [ -n "$1" ] ; then
+   t=$1
+   shift
+fi
+
 g++ -v
 echo "version $v"
 echo "definition $d"
-export MINIC_NUM_THREADS=1
-g++ -s -fprofile-generate $d -DNDEBUG -O3 -flto -msse4.2 --std=c++11 minic.cc -o $dir/Dist/minic_${v}_linux_x64_see4.2 -lpthread -IFathom/src
-$dir/Dist/minic_${v}_linux_x64_see4.2 -analyze "r2q1rk1/p4ppp/1pb1pn2/8/5P2/1PBB3P/P1PPQ1P1/2KR3R b - - 1 14" 15
-g++ -s -fprofile-use $d -DNDEBUG -O3 -flto -msse4.2 --std=c++11 minic.cc -o $dir/Dist/minic_${v}_linux_x64_see4.2 -lpthread -IFathom/src
+echo "target $t"
+exe=minic_${v}_linux_x64
+g++ -s -fprofile-generate $d -DNDEBUG -O3 -flto $t --std=c++11 minic.cc -o $dir/Dist/$exe -lpthread -IFathom/src
+$dir/Dist/$exe -analyze "r2q1rk1/p4ppp/1pb1pn2/8/5P2/1PBB3P/P1PPQ1P1/2KR3R b - - 1 14" 15
+g++ -s -fprofile-use $d -DNDEBUG -O3 -flto $t --std=c++11 minic.cc -o $dir/Dist/$exe -lpthread -IFathom/src
 
