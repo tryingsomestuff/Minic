@@ -3,5 +3,6 @@
    "mateFinder": false,
    "ttSizeMb": 1024,
    "book": true,
-   "bookFile": "book_small.bin"
+   "bookFile": "book.bin",
+   "fullXboardOutput": true
 }
