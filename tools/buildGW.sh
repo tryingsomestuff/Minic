@@ -25,6 +25,7 @@ if [ "$t" != "-march=native" ]; then
    tname=$(echo $t | sed 's/-m//g' | sed 's/ /_/g')
    exe=${exe}_${tname}
 fi
+exe=${exe}.exe
 echo "Building $exe"
 
 x86_64-w64-mingw32-g++ minic.cc $d -DNDEBUG -O3 -flto -t -static -static-libgcc -static-libstdc++ -std=c++11 -o $dir/Dist/$exe -Wl,-Bstatic -lpthread
