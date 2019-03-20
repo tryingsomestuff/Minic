@@ -32,7 +32,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 
-const std::string MinicVersion = "devNM";
+const std::string MinicVersion = "0.44";
 
 #define STOPSCORE   ScoreType(-20000)
 #define INFSCORE    ScoreType(15000)
@@ -2440,6 +2440,7 @@ ScoreType eval(const Position & p, float & gp){
           + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValuesEG[P_wn]
           + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValuesEG[P_wp];
 
+    ///@todo
     /*
     if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ){
        scEG += MaterialHash::helperTable[matHash](p);
