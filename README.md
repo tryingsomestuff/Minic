@@ -96,6 +96,7 @@ and a command line interface, using the same key word. For instance, forcing mat
 * 0.41 : try PSO texel tuning, prepare some evaluation feature, little speed optim
 * 0.42 : fix a SMP issue (lock)
 * 0.43 : fix another SMP issue
+* 0.44 : fix null move that was in fact NOT activated ! activate probcut. Add some counters. New release are sse4.2 and avx2 for both windows and linux.
 
 ## Thanks
 
