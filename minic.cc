@@ -93,6 +93,7 @@ const int       nullMoveMinDepth         = 2;
 const int       lmpMaxDepth              = 10;
 const ScoreType futilityDepthCoeff       = 160;
 const int       iidMinDepth              = 5;
+const int       iidMinDepth2             = 8;
 const int       probCutMinDepth          = 5;
 const int       probCutMaxMoves          = 5;
 const ScoreType probCutMargin            = 80;
@@ -1021,7 +1022,7 @@ struct ThreadContext{
     };
 
     template <bool pvnode, bool canPrune = true> ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, const Move skipMove = INVALIDMOVE, std::vector<RootScores> * rootScores = 0);
-    template <bool qRoot>
+    template <bool qRoot, bool pvnode>
     ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
     ScoreType qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
     bool SEE(const Position & p, const Move & m, ScoreType threshold)const;
@@ -2822,38 +2823,40 @@ ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const
     return bestScore;
 }
 
-template < bool qRoot > ///@todo pvnode ???
+template < bool qRoot, bool pvnode > ///@todo pvnode ???
 ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth){
-    float gp = 0;
-    if ( ply >= MAX_PLY-1 ) return eval(p,gp);
+
+    ++stats.counters[Stats::sid_qnodes];
+
     alpha = std::max(alpha, (ScoreType)(-MATE + ply));
     beta  = std::min(beta , (ScoreType)( MATE - ply + 1));
     if (alpha >= beta) return alpha;
 
     if ((int)ply > seldepth) seldepth = ply;
 
-    ++stats.counters[Stats::sid_qnodes];
+    float gp = 0;
+    if (ply >= MAX_PLY - 1) return eval(p, gp);
 
     TT::Entry e;
     if ( qRoot ){
        if (interiorNodeRecognizer<true,false,false>(p) == MaterialHash::Ter_Draw) return 0; ///@todo is that gain elo ???
        if ( TT::getEntry(*this,computeHash(p), 0, e)) {
-          if ( e.h != 0 && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
+          if (!pvnode && e.h != 0 && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
              return adjustHashScore(e.score, ply);
           }
        }
     }
 
-    const ScoreType evalScore = e.h!=0?e.eval:eval(p,gp);
+    const bool isInCheck = isAttacked(p, kingSquare(p));
+
+    ScoreType evalScore = isInCheck ? -MATE+ply : (e.h!=0?e.eval:eval(p,gp));
+    // use tt score if possible and not in check 
+    if ( !isInCheck && e.h != 0 && ((e.b == TT::B_alpha && e.score <= evalScore) || (e.b == TT::B_beta  && e.score >= evalScore) || (e.b == TT::B_exact)) ) evalScore = e.score;
 
     if ( evalScore >= beta ) return evalScore;
     if ( evalScore > alpha) alpha = evalScore;
 
-    const bool isInCheck = isAttacked(p, kingSquare(p));
-
-    ScoreType bestScore = isInCheck?-MATE+ply:evalScore;
-
-    ///@todo use tt score if possible and not in check ?
+    ScoreType bestScore = evalScore;
 
     MoveList moves;
     generate(p,moves,isInCheck?GP_all:GP_cap);
@@ -2862,14 +2865,16 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     const ScoreType alphaInit = alpha;
 
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
-        if (Move2Score(*it) < -900 && !isInCheck) continue; // see (from move sorter, SEE<0 add -2000 if bad capture)
-        if ( StaticEvalConfig::doQFutility && !isInCheck && evalScore + StaticEvalConfig::qfutilityMargin + getAbsValue(p,Move2To(*it)) <= alphaInit) continue;
+        if (!isInCheck) {
+            if (Move2Score(*it) < -900) continue; // see (from move sorter, SEE<0 add -2000 if bad capture)
+            if (StaticEvalConfig::doQFutility && evalScore + StaticEvalConfig::qfutilityMargin + getAbsValue(p, Move2To(*it)) <= alphaInit) continue;
+        }
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
         //bool isCheck = isAttacked(p2, kingSquare(p2));
         if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply + 1;
         if (p.c == Co_Black && Move2To(*it) == p.wk) return MATE - ply + 1;
-        const ScoreType score = -qsearch<false>(-beta,-alpha,p2,ply+1,seldepth);
+        const ScoreType score = -qsearch<false,false>(-beta,-alpha,p2,ply+1,seldepth);
         if ( score > bestScore){
            bestScore = score;
            if ( score > alpha ){
@@ -2878,6 +2883,9 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
            }
         }
     }
+
+    ///@todo use hash also in qsearch ?
+
     return bestScore;
 }
 
@@ -2918,7 +2926,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     if ((int)ply > seldepth) seldepth = ply;
 
-    if ( depth <= 0 ) return qsearch<true>(alpha,beta,p,ply,seldepth);
+    if ( depth <= 0 ) return qsearch<true,pvnode>(alpha,beta,p,ply,seldepth);
 
     ++stats.counters[Stats::sid_nodes];
 
@@ -2934,6 +2942,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if (skipMove==INVALIDMOVE && TT::getEntry(*this,computeHash(p), depth, e)) { // if not skipmove
         if ( e.h != 0 && !rootnode && !pvnode && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
             if ( e.m != INVALIDMOVE) pv.push_back(e.m); // here e.m might be INVALIDMOVE if B_alpha so don't try this at root node !
+            if (Move2Type(e.m) == T_std && !isInCheck) updateTables(*this, p, e.d, e.m);
             return adjustHashScore(e.score, ply);
         }
     }
@@ -2946,12 +2955,17 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     }
 #endif
 
-    //const bool isInCheck = isAttacked(p, kingSquare(p));
     ScoreType evalScore;
     if (isInCheck) evalScore = -MATE + ply;
     else evalScore = (e.h != 0)?e.eval:eval(p, gp);
     evalStack[p.ply] = evalScore; // insert only static eval, not hash score
-    if ( (e.h != 0) && ((e.b == TT::B_alpha && e.score < evalScore) || (e.b == TT::B_beta && e.score > evalScore) || (e.b == TT::B_exact)) ) evalScore = adjustHashScore(e.score,ply);
+    
+    /* ///@todo THIS IS BUGGY : because pv is not filled if bestScore starts too big. In this case, probably hash move can be used to fill the PV ??
+    ScoreType bestScore = evalScore;
+    if ( (e.h != 0 && !isInCheck) && ((e.b == TT::B_alpha && e.score < evalScore) || (e.b == TT::B_beta && e.score > evalScore) || (e.b == TT::B_exact)) ) bestScore = adjustHashScore(e.score,ply);
+    */
+
+    ScoreType bestScore = -MATE + ply;
 
     MoveList moves;
     bool moveGenerated = false;
@@ -2962,48 +2976,45 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     const bool isNotEndGame = (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t] > 0);
 
     // prunings
-    if ( !DynamicConfig::mateFinder && canPrune && isNotEndGame && !pvnode && !isInCheck /*&& !isMateScore(alpha)*/ && !isMateScore(beta) ){
-
-        // static null move
-        if ( StaticEvalConfig::doStaticNullMove && depth <= StaticEvalConfig::staticNullMoveMaxDepth && evalScore >= beta + StaticEvalConfig::staticNullMoveDepthCoeff * depth ) return ++stats.counters[Stats::sid_staticNullMove],evalScore;
+    if ( !DynamicConfig::mateFinder && canPrune && !isInCheck && !isMateScore(beta) && !pvnode){
 
         // razoring
         int rAlpha = alpha - StaticEvalConfig::razoringMargin;
-        if ( StaticEvalConfig::doRazoring && depth <= StaticEvalConfig::razoringMaxDepth && evalScore <= rAlpha ){
+        if ( false && StaticEvalConfig::doRazoring && depth <= StaticEvalConfig::razoringMaxDepth && evalScore <= rAlpha ){
             ++stats.counters[Stats::sid_razoringTry];
-            const ScoreType qScore = qsearch<true>(rAlpha,rAlpha+1,p,ply,seldepth);
+            const ScoreType qScore = qsearch<true,pvnode>(rAlpha,rAlpha+1,p,ply,seldepth);
             if ( stopFlag ) return STOPSCORE;
             if ( qScore <= alpha ) return ++stats.counters[Stats::sid_razoring],qScore;
         }
 
-        // null move
-        PVList nullPV;
-        if ( StaticEvalConfig::doNullMove && depth >= StaticEvalConfig::nullMoveMinDepth ){
-            ++stats.counters[Stats::sid_nullMoveTry];
-            const ScoreType nullIIDScore = evalScore; // pvs<false, false>(beta - 1, beta, p, std::max(depth / 4,1), ply, nullPV, seldepth, isInCheck);
-            if (nullIIDScore >= beta) {
-                ++stats.counters[Stats::sid_nullMoveTry2];
-                Position pN = p;
-                ///@todo applyNull function
-                pN.c = opponentColor(pN.c);
-                pN.h ^= ZT[3][13];
-                pN.h ^= ZT[4][13];
-                pN.lastMove = INVALIDMOVE;
-                if (pN.ep != INVALIDSQUARE) pN.h ^= ZT[pN.ep][13];
-                pN.ep = INVALIDSQUARE;
-                const int R = depth / 4 + 3 + std::min((nullIIDScore - beta) / 80, 3); // adaptative
-                const ScoreType nullscore = -pvs<false, false>(-beta, -beta + 1, pN, depth - R, ply + 1, nullPV, seldepth, isInCheck);
-                if (stopFlag) return STOPSCORE;
-                if (nullscore >= beta) return ++stats.counters[Stats::sid_nullMove],isMateScore(nullscore)?beta:nullscore; ///@todo if mate return beta
-                if (isMatedScore(nullscore)) mateThreat = true;
+        if (isNotEndGame) {
+
+            // static null move
+            if (StaticEvalConfig::doStaticNullMove && depth <= StaticEvalConfig::staticNullMoveMaxDepth && evalScore >= beta + StaticEvalConfig::staticNullMoveDepthCoeff * depth) return ++stats.counters[Stats::sid_staticNullMove], evalScore;
+
+            // null move
+            PVList nullPV;
+            if (StaticEvalConfig::doNullMove && depth >= StaticEvalConfig::nullMoveMinDepth) {
+                ++stats.counters[Stats::sid_nullMoveTry];
+                const ScoreType nullIIDScore = evalScore; // pvs<false, false>(beta - 1, beta, p, std::max(depth / 4,1), ply, nullPV, seldepth, isInCheck);
+                if (nullIIDScore >= beta - 10 * depth) {
+                    ++stats.counters[Stats::sid_nullMoveTry2];
+                    Position pN = p;
+                    ///@todo applyNull function
+                    pN.c = opponentColor(pN.c);
+                    pN.h ^= ZT[3][13];
+                    pN.h ^= ZT[4][13];
+                    pN.lastMove = INVALIDMOVE;
+                    if (pN.ep != INVALIDSQUARE) pN.h ^= ZT[pN.ep][13];
+                    pN.ep = INVALIDSQUARE;
+                    const int R = depth / 4 + 3 + std::min((nullIIDScore - beta) / 80, 3); // adaptative
+                    const ScoreType nullscore = -pvs<false, false>(-beta, -beta + 1, pN, depth - R, ply + 1, nullPV, seldepth, isInCheck);
+                    if (stopFlag) return STOPSCORE;
+                    if (nullscore >= beta) return ++stats.counters[Stats::sid_nullMove], isMateScore(nullscore) ? beta : nullscore;
+                    if (isMatedScore(nullscore)) mateThreat = true;
+                }
             }
         }
-
-        // LMP
-        if (StaticEvalConfig::doLMP && depth <= StaticEvalConfig::lmpMaxDepth) lmp = true;
-
-        // futility
-        if (StaticEvalConfig::doFutility && evalScore <= alpha - StaticEvalConfig::futilityDepthCoeff*depth ) futility = true;
 
         // ProbCut
         if ( StaticEvalConfig::doProbcut && depth >= StaticEvalConfig::probCutMinDepth ){
@@ -3018,7 +3029,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             Position p2 = p;
             if ( ! apply(p2,*it) ) continue;
             ++probCutCount;
-            ScoreType scorePC = -qsearch<true>(-betaPC, -betaPC + 1, p2, ply + 1, seldepth);
+            ScoreType scorePC = -qsearch<true,pvnode>(-betaPC, -betaPC + 1, p2, ply + 1, seldepth);
             PVList pvPC;
             if (stopFlag) return STOPSCORE;
             if (scorePC >= betaPC) ++stats.counters[Stats::sid_probcutTry2], scorePC = -pvs<pvnode,true>(-betaPC,-betaPC+1,p2,depth-StaticEvalConfig::probCutMinDepth+1,ply+1,pvPC,seldepth, isAttacked(p2, kingSquare(p2)));
@@ -3029,7 +3040,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     }
 
     // IID
-    if ( (e.h == 0 /*|| e.d < depth/3*/) && pvnode && depth >= StaticEvalConfig::iidMinDepth){
+    if ( (e.h == 0 /*|| e.d < depth/3*/) && (pvnode && depth >= StaticEvalConfig::iidMinDepth || depth >= StaticEvalConfig::iidMinDepth2)){
         ++stats.counters[Stats::sid_iid];
         PVList iidPV;
         pvs<pvnode,false>(alpha,beta,p,depth/2,ply,iidPV,seldepth,isInCheck);
@@ -3037,9 +3048,15 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         else return STOPSCORE;
     }
 
+    // LMP
+    if (!rootnode && StaticEvalConfig::doLMP && depth <= StaticEvalConfig::lmpMaxDepth) lmp = true;
+
+    // futility
+    if (!rootnode && StaticEvalConfig::doFutility && evalScore <= alpha - StaticEvalConfig::futilityDepthCoeff*depth) futility = true;
+
     int validMoveCount = 0;
     bool alphaUpdated = false;
-    ScoreType bestScore = -MATE + ply;
+    bool bestScoreUpdated = false;
     Move bestMove = INVALIDMOVE;
 
     // try the tt move before move generation (if not skipped move)
@@ -3060,14 +3077,15 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if (stopFlag) return STOPSCORE;
             if ( ttScore > bestScore ){
                 bestScore = ttScore;
+                bestScoreUpdated = true;
                 bestMove = e.m;
                 if (rootnode && rootScores) rootScores->push_back({ e.m,ttScore });
                 if (ttScore > alpha) {
                     updatePV(pv, e.m, childPV);
                     if (ttScore >= beta) {
                         ++stats.counters[Stats::sid_ttbeta];
-                        //if (Move2Type(e.m) == T_std && !isInCheck) updateTables(*this, p, depth, e.m); ///@todo ?
-                        if (skipMove == INVALIDMOVE /*&& ttScore != 0*/) TT::setEntry({ e.m,createHashScore(ttScore,ply),evalScore,TT::B_beta,depth,computeHash(p) }); ///@todo this can only decrease depth ????
+                        if (Move2Type(e.m) == T_std && !isInCheck) updateTables(*this, p, depth, e.m); ///@todo ?
+                        if (skipMove == INVALIDMOVE /*&& ttScore != 0*/) TT::setEntry({ e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth,computeHash(p) }); ///@todo this can only decrease depth ????
                         return ttScore;
                     }
                     ++stats.counters[Stats::sid_ttalpha];
@@ -3087,6 +3105,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         }
     }
 #endif
+
+    ///@todo at root, maybe rootScore can be used to sort moves ??
 
     if (!moveGenerated) {
         generate(p, moves, capMoveGenerated ? GP_quiet : GP_all, capMoveGenerated);
@@ -3118,7 +3138,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         //if (p.lastMove != INVALIDMOVE && Move2Score(*it) > -900 && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++extension; ///@todo recapture
         const bool isCheck = isAttacked(p2, kingSquare(p2));
         // pvs
-        if (validMoveCount == 1 || !StaticEvalConfig::doPVS) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck);
+        if (validMoveCount < 1 || !StaticEvalConfig::doPVS) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck);
         else{
             // reductions & prunings
             int reduction = 0;
@@ -3126,7 +3146,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             //if (isCheck && Move2Score(*it) > -900) ++extension; ///@todo we give check with a non risky move
             //if (isAdvancedPawnPush && depth < 5)   ++extension; ///@todo a pawn is near promotion
             ///@todo passed pawn push extension
-            const bool isPrunable = !isInCheck && !isCheck && !isAdvancedPawnPush && !sameMove(*it, killerT.killers[0][p.ply]) && !sameMove(*it, killerT.killers[1][p.ply]) /*&& !isMateScore(alpha)*/ && !isMateScore(beta);
+            const bool isPrunable = !isInCheck && !isCheck && !isAdvancedPawnPush && !sameMove(*it, killerT.killers[0][p.ply]) && !sameMove(*it, killerT.killers[1][p.ply]) /*&& !isMateScore(alpha) */&& !isMateScore(beta);
             const bool isPrunableStd = isPrunable && Move2Type(*it) == T_std;
             // futility
             if (futility && isPrunableStd) {++stats.counters[Stats::sid_futility]; continue;}
@@ -3151,7 +3171,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 childPV.clear();
                 score = -pvs<false,true>(-alpha-1,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck);
             }
-            if ( score > alpha && score < beta ){
+            if ( pvnode && score > alpha && (rootnode || score < beta) ){
                 childPV.clear();
                 score = -pvs<true,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck); // potential new pv node
             }
@@ -3161,6 +3181,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if ( score > bestScore ){
             bestScore = score;
             bestMove = *it;
+            bestScoreUpdated = true;
             if ( score > alpha ){
                 updatePV(pv, *it, childPV);
                 alphaUpdated = true;
@@ -3181,7 +3202,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     if ( validMoveCount==0 ) return (isInCheck || skipMove!=INVALIDMOVE)?-MATE + ply : 0;
     ///@todo here not checking for alphaUpdated seems to LOSS elo !!!
-    if ( skipMove==INVALIDMOVE && alphaUpdated ) TT::setEntry({bestMove,createHashScore(bestScore,ply),evalScore,hashBound,depth,computeHash(p)});
+    if ( skipMove==INVALIDMOVE && /*alphaUpdated*/ bestScoreUpdated ) TT::setEntry({bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),hashBound,depth,computeHash(p)});
 
     return bestScore;
 }
