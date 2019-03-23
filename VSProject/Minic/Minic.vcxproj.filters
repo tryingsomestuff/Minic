@@ -30,5 +30,11 @@
     <ClCompile Include="..\..\texelTuning.cc">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\fs_search.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\x_search.c">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
