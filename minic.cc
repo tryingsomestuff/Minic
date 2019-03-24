@@ -972,7 +972,7 @@ struct ThreadContext{
 
     static int getCurrentMoveMs();
 
-    Hash hashStack[MAX_PLY] = { 0 };
+    Hash hashStack[MAX_PLY] = { 0ull };
     ScoreType evalStack[MAX_PLY] = { 0 };
 
     Stats stats;
@@ -1135,6 +1135,8 @@ ThreadPool::ThreadPool():stop(false){ push_back(new ThreadContext(size()));} // 
 
 Counter ThreadPool::counter(Stats::StatId id) const { Counter n = 0; for (auto it : *this ){ n += it->stats.counters[id];  } return n;}
 
+bool apply(Position & p, const Move & m); //forward decl
+
 namespace TT{
 enum Bound{ B_exact = 0, B_alpha = 1, B_beta  = 2 };
 struct Entry{
@@ -1200,6 +1202,15 @@ void setEntry(const Entry & e){
         if ( _eDepth.d < lowest ) { _eDepthLowest = _eDepth; lowest = _eDepth.d; }
     }
     _eDepthLowest = e; // replace the one with the lowest depth
+}
+
+void getPV(const Position & p, ThreadContext & context, PVList & pv){
+    TT::Entry e;
+    if (TT::getEntry(context, computeHash(p), 0, e)) {
+        if (e.h != 0) pv.insert(pv.begin(),e.m);
+        Position p2 = p;
+        if ( apply(p2,e.m) ) getPV(p2,context,pv);
+    }
 }
 
 struct EvalEntry {
@@ -1980,6 +1991,15 @@ bool validate(const Position &p, const Move &m){
 }
 */
 
+void applyNull(Position & pN) {
+    pN.c = opponentColor(pN.c);
+    pN.h ^= ZT[3][13];
+    pN.h ^= ZT[4][13];
+    pN.lastMove = INVALIDMOVE;
+    if (pN.ep != INVALIDSQUARE) pN.h ^= ZT[pN.ep][13];
+    pN.ep = INVALIDSQUARE;
+}
+
 bool apply(Position & p, const Move & m){
 
     assert(m != INVALIDMOVE);
@@ -2368,7 +2388,7 @@ inline bool ThreadContext::isRep(const Position & p, bool isPV)const{
     int count = 0;
     const Hash h = computeHash(p);
     for (int k = p.ply - 1; k >= 0; --k) {
-        if (hashStack[k] == 0) break;
+        if (hashStack[k] == 0ull) break;
         if (hashStack[k] == h) ++count;
         if (count >= limit) return true;
     }
@@ -2565,7 +2585,7 @@ ScoreType eval(const Position & p, float & gp){
             const float factorProtected = 1;// +((BB::shiftSouthWest(SquareToBitboard(k) & p.whitePawn()) != 0ull) || (BB::shiftSouthEast(SquareToBitboard(k) & p.whitePawn()) != 0ull)) * EvalConfig::protectedPasserFactor;
             const float factorFree      = 1;// +((BB::mask[k].passerSpan[Co_White] & p.blackPiece) == 0ull) * EvalConfig::freePasserFactor;
             const float kingNearBonus   = 0;// kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.bk, k) - chebyshevDistance(p.wk, k));
-            const bool unstoppable       = false;// (p.nbq + p.nbr + p.nbb + p.nbn == 0)*((chebyshevDistance(p.bk, SQFILE(k) + 56) - (!white2Play)) > std::min(5, chebyshevDistance(SQFILE(k) + 56, k)));
+            const bool unstoppable      = false;// (p.nbq + p.nbr + p.nbb + p.nbn == 0)*((chebyshevDistance(p.bk, SQFILE(k) + 56) - (!white2Play)) > std::min(5, chebyshevDistance(SQFILE(k) + 56, k)));
             if (unstoppable) scScaled += *absValues[P_wq] - *absValues[P_wp];
             else             scScaled += ScoreType( factorProtected * factorFree * (gp*EvalConfig::passerBonus[SQRANK(k)] + gpCompl*EvalConfig::passerBonusEG[SQRANK(k)] + kingNearBonus));
         }
@@ -2578,7 +2598,7 @@ ScoreType eval(const Position & p, float & gp){
             const float factorProtected = 1;// +((BB::shiftNorthWest(SquareToBitboard(k) & p.blackPawn()) != 0ull) || (BB::shiftNorthEast(SquareToBitboard(k) & p.blackPawn()) != 0ull)) * EvalConfig::protectedPasserFactor;
             const float factorFree      = 1;// +((BB::mask[k].passerSpan[Co_White] & p.whitePiece) == 0ull) * EvalConfig::freePasserFactor;
             const float kingNearBonus   = 0;// kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.wk, k) - chebyshevDistance(p.bk, k));
-            const bool unstoppable       = false;// (p.nwq + p.nwr + p.nwb + p.nwn == 0)*((chebyshevDistance(p.wk, SQFILE(k)) - white2Play) > std::min(5, chebyshevDistance(SQFILE(k), k)));
+            const bool unstoppable      = false;// (p.nwq + p.nwr + p.nwb + p.nwn == 0)*((chebyshevDistance(p.wk, SQFILE(k)) - white2Play) > std::min(5, chebyshevDistance(SQFILE(k), k)));
             if (unstoppable) scScaled -= *absValues[P_wq] - *absValues[P_wp];
             else             scScaled -= ScoreType( factorProtected * factorFree * (gp*EvalConfig::passerBonus[7 - SQRANK(k)] + gpCompl*EvalConfig::passerBonusEG[7 - SQRANK(k)] + kingNearBonus));
         }
@@ -2729,9 +2749,9 @@ ScoreType eval(const Position & p, float & gp){
     sc   += scBlocked;
     */
 
-    //ScoreType scAjust = 0;
-
     /*
+    ScoreType scAjust = 0;
+
     ///@todo this seems to LOSE elo !
     // number of pawn and piece type
 
@@ -2739,19 +2759,19 @@ ScoreType eval(const Position & p, float & gp){
     scAjust -= p.mat[Co_Black][M_r] * EvalConfig::adjRook  [p.mat[Co_Black][M_p]];
     scAjust += p.mat[Co_White][M_n] * EvalConfig::adjKnight[p.mat[Co_White][M_p]];
     scAjust -= p.mat[Co_Black][M_n] * EvalConfig::adjKnight[p.mat[Co_Black][M_p]];
-    */
+    
 
     // bishop pair
     //scAjust += ( (p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonus : 0)-(p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonus : 0) );
-    /*
+    
     // knight pair
     scAjust += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0) );
     // rook pair
     scAjust += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
+   
+    sc   += scAjust;
+    scEG += scAjust;
     */
-
-    //sc   += scAjust;
-    //scEG += scAjust;
 
     // pawn shield
     sc += ScoreType(((p.whiteKing() & whiteKingQueenSide ) != 0ull)*countBit(p.whitePawn() & whiteQueenSidePawnShield1)*EvalConfig::pawnShieldBonus    );
@@ -2826,6 +2846,8 @@ ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const
 template < bool qRoot, bool pvnode > ///@todo pvnode ???
 ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth){
 
+    if (stopFlag) return STOPSCORE; // no time check in qsearch, too slow
+
     ++stats.counters[Stats::sid_qnodes];
 
     alpha = std::max(alpha, (ScoreType)(-MATE + ply));
@@ -2860,7 +2882,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     MoveList moves;
     generate(p,moves,isInCheck?GP_all:GP_cap);
-    sort(*this,moves,p,true/*false*/,qRoot?&e:0); ///@todo only mvv-lva seems to lose elo
+    sort(*this,moves,p,qRoot||isInCheck /*true*//*false*/,qRoot?&e:0); ///@todo only mvv-lva seems to lose elo
 
     const ScoreType alphaInit = alpha;
 
@@ -2941,7 +2963,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     TT::Entry e;
     if (skipMove==INVALIDMOVE && TT::getEntry(*this,computeHash(p), depth, e)) { // if not skipmove
         if ( e.h != 0 && !rootnode && !pvnode && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
-            if ( e.m != INVALIDMOVE) pv.push_back(e.m); // here e.m might be INVALIDMOVE if B_alpha so don't try this at root node !
+            if ( e.m != INVALIDMOVE) pv.push_back(e.m); // here e.m might be INVALIDMOVE if B_alpha without alphaUpdated/bestScoreUpdated (so don't try this at root node !)
             if (Move2Type(e.m) == T_std && !isInCheck) updateTables(*this, p, e.d, e.m);
             return adjustHashScore(e.score, ply);
         }
@@ -2973,7 +2995,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     bool futility = false, lmp = false, mateThreat = false;
 
-    const bool isNotEndGame = (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t] > 0);
+    const bool isNotEndGame = (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t] > 0); ///@todo better ?
 
     // prunings
     if ( !DynamicConfig::mateFinder && canPrune && !isInCheck && !isMateScore(beta) && !pvnode){
@@ -3000,13 +3022,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 if (nullIIDScore >= beta - 10 * depth) {
                     ++stats.counters[Stats::sid_nullMoveTry2];
                     Position pN = p;
-                    ///@todo applyNull function
-                    pN.c = opponentColor(pN.c);
-                    pN.h ^= ZT[3][13];
-                    pN.h ^= ZT[4][13];
-                    pN.lastMove = INVALIDMOVE;
-                    if (pN.ep != INVALIDSQUARE) pN.h ^= ZT[pN.ep][13];
-                    pN.ep = INVALIDSQUARE;
+                    applyNull(pN);
                     const int R = depth / 4 + 3 + std::min((nullIIDScore - beta) / 80, 3); // adaptative
                     const ScoreType nullscore = -pvs<false, false>(-beta, -beta + 1, pN, depth - R, ply + 1, nullPV, seldepth, isInCheck);
                     if (stopFlag) return STOPSCORE;
@@ -3044,8 +3060,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         ++stats.counters[Stats::sid_iid];
         PVList iidPV;
         pvs<pvnode,false>(alpha,beta,p,depth/2,ply,iidPV,seldepth,isInCheck);
-        if ( !stopFlag) TT::getEntry(*this,computeHash(p), depth, e);
-        else return STOPSCORE;
+        if (stopFlag) return STOPSCORE;
+        TT::getEntry(*this,computeHash(p), depth, e);
     }
 
     // LMP
@@ -3311,9 +3327,13 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
     }
 pvsout:
     if ( isMainThread() ) startLock.store(false);
-    if (pv.empty()){
-        LogIt(logWarn) << "Empty pv" ;
+    if (pv.empty()){ // pv.size() != reachedDepth ?
         m = INVALIDMOVE;
+        LogIt(logInfo) << "Empty pv, trying to use TT" ;
+        TT::getPV(p, *this, pv);
+    }
+    if (pv.empty()) {
+        LogIt(logWarn) << "Empty pv"; // may occur in case of mate / stalemate...
     }
     else m = pv[0];
     d = reachedDepth;
