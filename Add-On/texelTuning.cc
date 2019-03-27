@@ -83,18 +83,18 @@ double computeOptimalK(const std::vector<Texel::TexelInput> & data) {
     double Kstart = 0.05, Kend = 3.0, Kdelta = 0.15;
     double thisError, bestError = 100;
     for (int i = 0; i < 5; ++i) {
-        LogIt(logInfo) << "Computing K Iteration " << i;
+        Logging::LogIt(Logging::logInfo) << "Computing K Iteration " << i;
         K = Kstart - Kdelta;
         while (K < Kend) {
-            LogIt(logInfo) << "...";
+            Logging::LogIt(Logging::logInfo) << "...";
             K += Kdelta;
             thisError = E(data,data.size());
             if (thisError <= bestError) {
                 bestError = thisError, Kstart = K;
-                LogIt(logInfo) << "new best K = " << K << " E = " << bestError;
+                Logging::LogIt(Logging::logInfo) << "new best K = " << K << " E = " << bestError;
             }
         }
-        LogIt(logInfo) << "iteration " << i << " K = " << Kstart << " E = " << bestError;
+        Logging::LogIt(Logging::logInfo) << "iteration " << i << " K = " << Kstart << " E = " << bestError;
         Kend = Kstart + Kdelta;
         Kstart -= Kdelta;
         Kdelta /= 10.0;
@@ -105,7 +105,7 @@ double computeOptimalK(const std::vector<Texel::TexelInput> & data) {
 
 
 std::vector<double> ComputeGradient(std::vector<TexelParam<ScoreType> > & x0, std::vector<Texel::TexelInput> &data, size_t gradientBatchSize, bool normalized = true) {
-    LogIt(logInfo) << "Computing gradient";
+    Logging::LogIt(Logging::logInfo) << "Computing gradient";
     std::vector<double> g;
     const ScoreType dx = 2;
     for (size_t k = 0; k < x0.size(); ++k) {
@@ -117,7 +117,7 @@ std::vector<double> ComputeGradient(std::vector<TexelParam<ScoreType> > & x0, st
         x0[k] = oldvalue;
         double grad = (Ep1-Em1)/(2*dx);
         g.push_back(grad);
-        //LogIt(logInfo) << "Gradient " << k << " " << grad;
+        //Logging::LogIt(Logging::logInfo) << "Gradient " << k << " " << grad;
     }
     if ( normalized){
         double norm = 0;
@@ -126,7 +126,7 @@ std::vector<double> ComputeGradient(std::vector<TexelParam<ScoreType> > & x0, st
         if ( norm > 1e-12){
             for (size_t k = 0; k < x0.size(); ++k) {
                 g[k] /= norm;
-                LogIt(logInfo) << "Gradient normalized " << k << " " << g[k];
+                Logging::LogIt(Logging::logInfo) << "Gradient normalized " << k << " " << g[k];
             }
         }
     }
@@ -151,7 +151,7 @@ std::vector<TexelParam<ScoreType> > TexelOptimizeSecante(const std::vector<Texel
             bestParam[k] = oldValue - dx;
             gmax = std::max(gmax,std::fabs(g_i[k]));
         }
-        LogIt(logInfo) << "gmax " << gmax;
+        Logging::LogIt(Logging::logInfo) << "gmax " << gmax;
         if ( gmax < 1e-14 ) break;
         std::vector<double> g_im1 = ComputeGradient(bestParam, data, batchSize, false);
         for (size_t k = 0; k < bestParam.size(); ++k) {
@@ -163,13 +163,13 @@ std::vector<TexelParam<ScoreType> > TexelOptimizeSecante(const std::vector<Texel
             const ScoreType oldValue = bestParam[k];
             if ( std::fabs(g_i[k] - g_im1[k] >= 1e-16 )) bestParam[k] = ScoreType(oldValue - dx * g_i[k] / (g_i[k]-g_im1[k]));
         }
-        LogIt(logInfo) << "Computing new error";
+        Logging::LogIt(Logging::logInfo) << "Computing new error";
         double curE = E(data, batchSize);
-        LogIt(logInfo) << "Current error " << curE << " best was : " << curEim1;
-        LogIt(logInfo) << "Current values :";
+        Logging::LogIt(Logging::logInfo) << "Current error " << curE << " best was : " << curEim1;
+        Logging::LogIt(Logging::logInfo) << "Current values :";
         str << it << ";";
         for (size_t k = 0; k < bestParam.size(); ++k) {
-            LogIt(logInfo) << bestParam[k].name << " " << bestParam[k];
+            Logging::LogIt(Logging::logInfo) << bestParam[k].name << " " << bestParam[k];
             str << bestParam[k] << ";";
         }
         str << curE << ";" << curEim1 << ";  ";
@@ -233,7 +233,7 @@ std::vector<TexelParam<ScoreType> > TexelOptimizeGD(const std::vector<TexelParam
                 continue; // skip this sample
             }
             */
-        LogIt(logInfo) << "Applying gradient, learningRate = " << learningRate*bestCoeff << ", alpha " << alpha;
+        Logging::LogIt(Logging::logInfo) << "Applying gradient, learningRate = " << learningRate*bestCoeff << ", alpha " << alpha;
         for (size_t k = 0; k < bestParam.size(); ++k) {
             const ScoreType oldValue = bestParam[k];
             double currentUpdate = ScoreType((1-alpha)*bestCoeff*learningRate * g[k] + alpha * previousUpdate[k]);
@@ -242,13 +242,13 @@ std::vector<TexelParam<ScoreType> > TexelOptimizeGD(const std::vector<TexelParam
             //previousValue[k] = bestParam[k];
         }
         //previousGradient = g;
-        LogIt(logInfo) << "Computing new error";// (full data size)";
+        Logging::LogIt(Logging::logInfo) << "Computing new error";// (full data size)";
         double curE = E(data, batchSize/*data.size()*/);
-        LogIt(logInfo) << curE;
+        Logging::LogIt(Logging::logInfo) << curE;
         // randomize for next iteration
         Randomize(data, batchSize);
         // display
-        for (size_t k = 0; k < bestParam.size(); ++k) LogIt(logInfo) << bestParam[k].name << " " << bestParam[k];
+        for (size_t k = 0; k < bestParam.size(); ++k) Logging::LogIt(Logging::logInfo) << bestParam[k].name << " " << bestParam[k];
         // write
         if ( it % 10 == 0 ){
             str << it << ";";
@@ -275,7 +275,7 @@ std::vector<TexelParam<ScoreType> > TexelOptimizeNaive(const std::vector<TexelPa
                 if (bestParam[k] == oldValue) break;
                 curE = E(data, batchSize);
                 if ( curE < initE ){
-                    LogIt(logInfo) << curE << " " << initE << " " << bestParam[k].name << " " << bestParam[k];
+                    Logging::LogIt(Logging::logInfo) << curE << " " << initE << " " << bestParam[k].name << " " << bestParam[k];
                     initE = curE;
                 }
                 else{
@@ -291,7 +291,7 @@ std::vector<TexelParam<ScoreType> > TexelOptimizeNaive(const std::vector<TexelPa
                 if (bestParam[k] == oldValue) break;
                 curE = E(data, batchSize);
                 if ( curE < initE ){
-                    LogIt(logInfo) << curE << " " << initE << " " << bestParam[k].name << " " << bestParam[k];
+                    Logging::LogIt(Logging::logInfo) << curE << " " << initE << " " << bestParam[k].name << " " << bestParam[k];
                     initE = curE;
                 }
                 else{
@@ -321,7 +321,7 @@ void RandomParam(std::vector<ScoreType> & p, ScoreType mini, ScoreType maxi){
     static std::mt19937 mt(42); // fixed seed for ZHash !!!
     std::uniform_int_distribution<unsigned long long int> dist(mini, maxi);
     for(auto it = p.begin() ; it != p.end() ; ++it){
-        *it = dist(mt);
+        *it = (ScoreType)dist(mt);
     }
 }
 
@@ -370,12 +370,12 @@ std::vector<TexelParam<ScoreType> > TexelOptimizePSO(const std::vector<TexelPara
             eBest = e;
         }
         restoreParam(curParam,backup);
-        LogIt(logInfo) << "Initial particle " << part++;
-        for (size_t k = 0; k < curParam.size(); ++k) LogIt(logInfo) << curParam[k].name << " " << it->param[k] << " " << it->velocity[k] << " " << it->bestScore;
+        Logging::LogIt(Logging::logInfo) << "Initial particle " << part++;
+        for (size_t k = 0; k < curParam.size(); ++k) Logging::LogIt(Logging::logInfo) << curParam[k].name << " " << it->param[k] << " " << it->velocity[k] << " " << it->bestScore;
     }
 
-    LogIt(logInfo) << "Initial best ";
-    for (size_t k = 0; k < curParam.size(); ++k) LogIt(logInfo) << curParam[k].name << " " << swarmBest[k] << " " << eBest;
+    Logging::LogIt(Logging::logInfo) << "Initial best ";
+    for (size_t k = 0; k < curParam.size(); ++k) Logging::LogIt(Logging::logInfo) << curParam[k].name << " " << swarmBest[k] << " " << eBest;
 
     double omega = 0.8;
     double phip = 1.4;
@@ -391,7 +391,7 @@ std::vector<TexelParam<ScoreType> > TexelOptimizePSO(const std::vector<TexelPara
                 static std::uniform_real_distribution<double> dist(0,1);
                 double rp = dist(mt);
                 double rg = dist(mt);
-                (*it).velocity[k] = omega * (*it).velocity[k] + phip * rp * ((*it).best[k] - (*it).param[k]) + phig * rg * (swarmBest[k] - ((*it).param[k]));
+                (*it).velocity[k] = ScoreType(omega * (*it).velocity[k] + phip * rp * ((*it).best[k] - (*it).param[k]) + phig * rg * (swarmBest[k] - ((*it).param[k])));
             }
             for(int k = 0 ; k < curParam.size() ; ++k){
                 (*it).param[k] += (*it).velocity[k];
@@ -413,14 +413,14 @@ std::vector<TexelParam<ScoreType> > TexelOptimizePSO(const std::vector<TexelPara
         std::cout << "=====================" << std::endl;
 
         for(auto it = particles.begin() ; it != particles.end() ; ++it){
-            for (size_t k = 0; k < curParam.size(); ++k) LogIt(logInfo) << curParam[k].name << " " << it->param[k] << " " << it->velocity[k] << " " << it->bestScore;
+            for (size_t k = 0; k < curParam.size(); ++k) Logging::LogIt(Logging::logInfo) << curParam[k].name << " " << it->param[k] << " " << it->velocity[k] << " " << it->bestScore;
         }
 
         std::cout << "------------------" << std::endl;
 
         restoreParam(curParam,swarmBest);
         // display
-        for (size_t k = 0; k < curParam.size(); ++k) LogIt(logInfo) << curParam[k].name << " " << curParam[k];
+        for (size_t k = 0; k < curParam.size(); ++k) Logging::LogIt(Logging::logInfo) << curParam[k].name << " " << curParam[k];
         // write
         //if ( count % 10 == 0 ){
             str << count << ";";
@@ -438,21 +438,21 @@ void TexelTuning(const std::string & filename) {
     std::ifstream stream(filename);
     std::string line;
     std::vector<Texel::TexelInput> data;
-    LogIt(logInfo) << "Running texel tuning with file " << filename;
+    Logging::LogIt(Logging::logInfo) << "Running texel tuning with file " << filename;
     int count = 0;
     while (std::getline(stream, line)){
         nlohmann::json o;
         try { o = nlohmann::json::parse(line); }
-        catch (...) { LogIt(logFatal) << "Cannot parse json " << line; }
+        catch (...) { Logging::LogIt(Logging::logFatal) << "Cannot parse json " << line; }
         std::string fen = o["fen"];
         Position * p = new Position;
         readFEN(fen,*p,true);
         /*if (std::abs(o["result"].get<int>()) == 1)*/ data.push_back({p, o["result"]});
         ++count;
-        if (count % 50000 == 0) LogIt(logInfo) << count << " position read";
+        if (count % 50000 == 0) Logging::LogIt(Logging::logInfo) << count << " position read";
     }
 
-    LogIt(logInfo) << "Data size : " << data.size();
+    Logging::LogIt(Logging::logInfo) << "Data size : " << data.size();
 
     size_t batchSize = data.size(); // batch
     //size_t batchSize = 20000; // batch
@@ -501,16 +501,16 @@ void TexelTuning(const std::string & filename) {
 
     //computeOptimalK(data);
 
-    LogIt(logInfo) << "Optimal K " << Texel::K;
+    Logging::LogIt(Logging::logInfo) << "Optimal K " << Texel::K;
 
-    LogIt(logInfo) << "Initial values :";
-    for (size_t k = 0; k < guess.size(); ++k) LogIt(logInfo) << guess[k].name << " " << guess[k];
+    Logging::LogIt(Logging::logInfo) << "Initial values :";
+    for (size_t k = 0; k < guess.size(); ++k) Logging::LogIt(Logging::logInfo) << guess[k].name << " " << guess[k];
     //std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeGD(guess, data, batchSize);
     std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizePSO(guess, data, batchSize);
     //std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeSecante(guess, data, batchSize);
     //std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeNaive(guess, data, batchSize);
 
-    LogIt(logInfo) << "Optimized values :";
-    for (size_t k = 0; k < optim.size(); ++k) LogIt(logInfo) << optim[k].name << " " << optim[k];
+    Logging::LogIt(Logging::logInfo) << "Optimized values :";
+    for (size_t k = 0; k < optim.size(); ++k) Logging::LogIt(Logging::logInfo) << optim[k].name << " " << optim[k];
     for (size_t k = 0; k < data.size(); ++k) delete data[k].p;
 }

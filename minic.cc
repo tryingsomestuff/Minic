@@ -16,6 +16,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <thread>
+#include <future>
 #ifdef _WIN32
 #include <stdlib.h>
 #include <intrin.h>
@@ -43,8 +44,8 @@ const std::string MinicVersion = "dev";
 #define MAX_MOVE      512
 #define MAX_DEPTH     64
 
-#define SQFILE(s) (s%8)
-#define SQRANK(s) (s/8)
+#define SQFILE(s) ((s)&7)
+#define SQRANK(s) ((s)>>3)
 
 typedef std::chrono::system_clock Clock;
 typedef char DepthType;
@@ -72,7 +73,136 @@ struct MoveList {
 
 typedef std::vector<Move> PVList;
 
-namespace StaticEvalConfig{
+namespace Logging {
+
+    inline void hellooo() { std::cout << "# This is Minic version " << MinicVersion << std::endl; }
+
+    inline std::string showDate() {
+        std::stringstream str;
+        auto msecEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch());
+        char buffer[64];
+        auto tt = std::chrono::system_clock::to_time_t(std::chrono::system_clock::time_point(msecEpoch));
+        std::strftime(buffer, 63, "%Y-%m-%d %H:%M:%S", localtime(&tt));
+        str << buffer << "-" << std::setw(3) << std::setfill('0') << msecEpoch.count() % 1000;
+        return str.str();
+    }
+
+    enum LogLevel : unsigned char { logTrace = 0, logDebug = 1, logInfo = 2, logWarn = 3, logError = 4, logFatal = 5, logGUI = 6, logUCIInfo = 7};
+
+    std::string backtrace() { return "@todo:: backtrace"; } ///@todo find a very simple portable implementation
+
+    class LogIt {
+    public:
+        LogIt(LogLevel loglevel) :_level(loglevel) {}
+
+        template <typename T> Logging::LogIt & operator<<(T const & value) { _buffer << value; return *this; }
+
+        ~LogIt() {
+            static const std::string _levelNames[7] = { "# Trace ", "# Debug ", "# Info  ", "# Warn  ", "# Error ", "# Fatal ", "" };
+            std::lock_guard<std::mutex> lock(_mutex);
+            if (_level != logGUI) std::cout << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
+            else 
+                if (_level == logUCIInfo) std::cout << "info string " << _buffer.str() << std::endl;
+                else std::cout << _buffer.str() << std::flush << std::endl;
+
+            if (_level == logFatal) { std::cout << backtrace() << std::endl; exit(1); }
+            else if (_level == logError) std::cout << backtrace() << std::endl;
+        }
+
+    private:
+        static std::mutex     _mutex;
+        std::ostringstream    _buffer;
+        LogLevel              _level;
+    };
+
+    std::mutex LogIt::_mutex;
+
+}
+
+namespace Options {
+
+    nlohmann::json json;
+    std::vector<std::string> args;
+
+    void initOptions(int argc, char ** argv) {
+        for (int i = 1; i < argc; ++i) args.push_back(argv[i]);
+        std::ifstream str("minic.json");
+        if (!str.is_open()) Logging::LogIt(Logging::logError) << "Cannot open minic.json";
+        else {
+            str >> json;
+            if (!json.is_object()) Logging::LogIt(Logging::logError) << "JSON is not an object";
+        }
+    }
+
+    template<typename T> struct OptionValue {};
+    template<> struct OptionValue<bool> {
+        const bool value = false;
+        const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_boolean;
+        static const bool clampAllowed = false;
+    };
+    template<> struct OptionValue<int> {
+        const int value = 0;
+        const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_number_integer;
+        static const bool clampAllowed = true;
+    };
+    template<> struct OptionValue<float> {
+        const float value = 0.f;
+        const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_number_float;
+        static const bool clampAllowed = true;
+    };
+    template<> struct OptionValue<std::string> {
+        const std::string value = "";
+        const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_string;
+        static const bool clampAllowed = false;
+    };
+
+    // from argv (override json)
+    template<typename T> T getOptionCLI(bool & found, const std::string & key, T defaultValue = OptionValue<T>().value) {
+        found = false;
+        auto it = std::find(args.begin(), args.end(), std::string("-") + key);
+        if (it == args.end()) { Logging::LogIt(Logging::logWarn) << "ARG key not given, " << key; return defaultValue; }
+        std::stringstream str;
+        ++it;
+        if (it == args.end()) { Logging::LogIt(Logging::logError) << "ARG value not given, " << key; return defaultValue; }
+        str << *it;
+        T ret = defaultValue;
+        str >> ret;
+        Logging::LogIt(Logging::logInfo) << "From ARG, " << key << " : " << ret;
+        found = true;
+        return ret;
+    }
+
+    template<typename T> struct Validator {
+        Validator() :hasMin(false), hasMax(false) {}
+        Validator & setMin(const T & v) { minValue = v; hasMin = true; return *this; }
+        Validator & setMax(const T & v) { maxValue = v; hasMax = true; return *this; }
+        bool hasMin, hasMax;
+        T minValue, maxValue;
+        T get(const T & v)const { return std::min(hasMax ? maxValue : v, std::max(hasMin ? minValue : v, v)); }
+    };
+
+    // from json
+    template<typename T> T getOption(const std::string & key, T defaultValue = OptionValue<T>().value, const Validator<T> & v = Validator<T>()) {
+        bool found = false;
+        const T cliValue = getOptionCLI(found, key, defaultValue);
+        if (found) return v.get(cliValue);
+        auto it = json.find(key);
+        if (it == json.end()) { Logging::LogIt(Logging::logError) << "JSON key not given, " << key; return defaultValue; }
+        auto val = it.value();
+        if (!OptionValue<T>().validator(val)) { Logging::LogIt(Logging::logError) << "JSON value does not have expected type, " << it.key() << " : " << val; return defaultValue; }
+        else {
+            Logging::LogIt(Logging::logInfo) << "From config file, " << it.key() << " : " << val;
+            return OptionValue<T>().clampAllowed ? v.get(val.get<T>()) : val.get<T>();
+        }
+    }
+
+}
+
+#define GETOPT(  name,type)                 DynamicConfig::name = Options::getOption<type>(#name);
+#define GETOPT_D(name,type,def)             DynamicConfig::name = Options::getOption<type>(#name,def);
+#define GETOPT_M(name,type,def,mini,maxi)   DynamicConfig::name = Options::getOption<type>(#name,def,Validator<type>().setMin(mini).setMax(maxi));
+
+namespace StaticConfig{
 const bool doWindow         = true;
 const bool doPVS            = true;
 const bool doNullMove       = true;
@@ -99,16 +229,146 @@ const int       probCutMaxMoves          = 5;
 const ScoreType probCutMargin            = 80;
 const int       lmrMinDepth              = 3;
 const int       singularExtensionDepth   = 8;
+
+const int lmpLimit[][StaticConfig::lmpMaxDepth + 1] = { { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 } ,{ 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };
+
+int lmrReduction[MAX_DEPTH][MAX_MOVE];
+
+void initLMR() {
+    Logging::LogIt(Logging::logInfo) << "Init lmr";
+    for (int d = 0; d < MAX_DEPTH; d++)
+        for (int m = 0; m < MAX_MOVE; m++)
+            lmrReduction[d][m] = (int)sqrt(float(d) * m / 8.f);
+}
+
 }
 
 namespace DynamicConfig{
-bool mateFinder = false;
-bool disableTT = false;
+bool mateFinder        = false;
+bool disableTT         = false;
 unsigned int ttSizeMb  = 128; // here in Mb, will be converted to real size next
-bool fullXboardOutput = false;
+bool fullXboardOutput  = false;
 }
 
 namespace EvalConfig {
+
+// from Rofchade
+const ScoreType PST[6][64] = {
+    {   //pawn
+          0,   0,   0,   0,   0,   0,  0,   0,
+         98, 134,  61,  95,  68, 126, 34, -11,
+         -6,   7,  26,  31,  65,  56, 25, -20,
+        -14,  13,   6,  21,  23,  12, 17, -23,
+        -27,  -2,  -5,  12,  17,   6, 10, -25,
+        -26,  -4,  -4, -10,   3,   3, 33, -12,
+        -35,  -1, -20, -23, -15,  24, 38, -22,
+          0,   0,   0,   0,   0,   0,  0,   0
+    },{ //knight
+        -167, -89, -34, -49,  61, -97, -15, -107,
+         -73, -41,  72,  36,  23,  62,   7,  -17,
+         -47,  60,  37,  65,  84, 129,  73,   44,
+          -9,  17,  19,  53,  37,  69,  18,   22,
+         -13,   4,  16,  13,  28,  19,  21,   -8,
+         -23,  -9,  12,  10,  19,  17,  25,  -16,
+         -29, -53, -12,  -3,  -1,  18, -14,  -19,
+        -105, -21, -58, -33, -17, -28, -19,  -23
+    },{ //bishop
+        -29,   4, -82, -37, -25, -42,   7,  -8,
+        -26,  16, -18, -13,  30,  59,  18, -47,
+        -16,  37,  43,  40,  35,  50,  37,  -2,
+         -4,   5,  19,  50,  37,  37,   7,  -2,
+         -6,  13,  13,  26,  34,  12,  10,   4,
+          0,  15,  15,  15,  14,  27,  18,  10,
+          4,  15,  16,   0,   7,  21,  33,   1,
+        -33,  -3, -14, -21, -13, -12, -39, -21
+    },{ //rook
+         32,  42,  32,  51, 63,  9,  31,  43,
+         27,  32,  58,  62, 80, 67,  26,  44,
+         -5,  19,  26,  36, 17, 45,  61,  16,
+        -24, -11,   7,  26, 24, 35,  -8, -20,
+        -36, -26, -12,  -1,  9, -7,   6, -23,
+        -45, -25, -16, -17,  3,  0,  -5, -33,
+        -44, -16, -20,  -9, -1, 11,  -6, -71,
+        -19, -13,   1,  17, 16,  7, -37, -26
+    },{ //queen
+        -28,   0,  29,  12,  59,  44,  43,  45,
+        -24, -39,  -5,   1, -16,  57,  28,  54,
+        -13, -17,   7,   8,  29,  56,  47,  57,
+        -27, -27, -16, -16,  -1,  17,  -2,   1,
+         -9, -26,  -9, -10,  -2,  -4,   3,  -3,
+        -14,   2, -11,  -2,  -5,   2,  14,   5,
+        -35,  -8,  11,   2,   8,  15,  -3,   1,
+         -1, -18,  -9,  10, -15, -25, -31, -50
+    },{ //king
+        -65,  23,  16, -15, -56, -34,   2,  13,
+         29,  -1, -20,  -7,  -8,  -4, -38, -29,
+         -9,  24,   2, -16, -20,   6,  22, -22,
+        -17, -20, -12, -27, -30, -25, -14, -36,
+        -49,  -1, -27, -39, -46, -44, -33, -51,
+        -14, -14, -22, -46, -44, -30, -15, -27,
+          1,   7,  -8, -64, -43, -16,   9,   8,
+        -15,  36,  12, -54,   8, -28,  24,  14
+    }
+};
+
+const ScoreType PSTEG[6][64] = {
+    {   //pawn
+          0,   0,   0,   0,   0,   0,   0,   0,
+        178, 173, 158, 134, 147, 132, 165, 187,
+         94, 100,  85,  67,  56,  53,  82,  84,
+         32,  24,  13,   5,  -2,   4,  17,  17,
+         13,   9,  -3,  -7,  -7,  -8,   3,  -1,
+          4,   7,  -6,   1,   0,  -5,  -1,  -8,
+         13,   8,   8,  10,  13,   0,   2,  -7,
+          0,   0,   0,   0,   0,   0,   0,   0
+    },{ //knight
+        -58, -38, -13, -28, -31, -27, -63, -99,
+        -25,  -8, -25,  -2,  -9, -25, -24, -52,
+        -24, -20,  10,   9,  -1,  -9, -19, -41,
+        -17,   3,  22,  22,  22,  11,   8, -18,
+        -18,  -6,  16,  25,  16,  17,   4, -18,
+        -23,  -3,  -1,  15,  10,  -3, -20, -22,
+        -42, -20, -10,  -5,  -2, -20, -23, -44,
+        -29, -51, -23, -15, -22, -18, -50, -64
+    },{ //bishop
+        -14, -21, -11,  -8, -7,  -9, -17, -24,
+         -8,  -4,   7, -12, -3, -13,  -4, -14,
+          2,  -8,   0,  -1, -2,   6,   0,   4,
+         -3,   9,  12,   9, 14,  10,   3,   2,
+         -6,   3,  13,  19,  7,  10,  -3,  -9,
+        -12,  -3,   8,  10, 13,   3,  -7, -15,
+        -14, -18,  -7,  -1,  4,  -9, -15, -27,
+        -23,  -9, -23,  -5, -9, -16,  -5, -17
+    },{ //rook
+        13, 10, 18, 15, 12,  12,   8,   5,
+        11, 13, 13, 11, -3,   3,   8,   3,
+         7,  7,  7,  5,  4,  -3,  -5,  -3,
+         4,  3, 13,  1,  2,   1,  -1,   2,
+         3,  5,  8,  4, -5,  -6,  -8, -11,
+        -4,  0, -5, -1, -7, -12,  -8, -16,
+        -6, -6,  0,  2, -9,  -9, -11,  -3,
+        -9,  2,  3, -1, -5, -13,   4, -20
+    },{ //queen
+         -9,  22,  22,  27,  27,  19,  10,  20,
+        -17,  20,  32,  41,  58,  25,  30,   0,
+        -20,   6,   9,  49,  47,  35,  19,   9,
+          3,  22,  24,  45,  57,  40,  57,  36,
+        -18,  28,  19,  47,  31,  34,  39,  23,
+        -16, -27,  15,   6,   9,  17,  10,   5,
+        -22, -23, -30, -16, -16, -23, -36, -32,
+        -33, -28, -22, -43,  -5, -32, -20, -41
+    },{ //king
+        -74, -35, -18, -18, -11,  15,   4, -17,
+        -12,  17,  14,  17,  17,  38,  23,  11,
+         10,  17,  23,  15,  20,  45,  44,  13,
+         -8,  22,  24,  27,  26,  33,  26,   3,
+        -18,  -4,  21,  24,  27,  23,   9, -11,
+        -19,  -3,  11,  21,  23,  16,   7,  -9,
+        -27, -11,   4,  13,  14,   4,  -5, -17,
+        -53, -34, -21, -11, -28, -14, -24, -43
+    }
+};
+
 ScoreType   passerBonus[8]        = { 0,  0,  3,  8, 15, 24, 34, 0};
 ScoreType   passerBonusEG[8]      = { 0,  4, 18, 42, 75,118,170, 0};
 ScoreType   kingNearPassedPawnEG  = 11;
@@ -162,83 +422,30 @@ ScoreType pawnMobility[2] = {1,8};
 
 }
 
-const int lmpLimit[][StaticEvalConfig::lmpMaxDepth + 1] = { { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 } , { 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };
-
-int lmrReduction[MAX_DEPTH][MAX_MOVE];
-
 std::string startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-std::string fine70        = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - -";
-std::string shirov        = "6r1/2rp1kpp/2qQp3/p3Pp1P/1pP2P2/1P2KP2/P5R1/6R1 w - - 0 1";
-
-int currentMoveMs = 777; // a dummy initial value, useful for debug
-
-inline void hellooo(){ std::cout << "# This is Minic version " << MinicVersion << std::endl; }
-
-inline std::string showDate() {
-    std::stringstream str;
-    auto msecEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch());
-    char buffer[64];
-    auto tt = std::chrono::system_clock::to_time_t(std::chrono::system_clock::time_point(msecEpoch));
-    std::strftime(buffer,63,"%Y-%m-%d %H:%M:%S",localtime(&tt));
-    str << buffer << "-" << std::setw(3) << std::setfill('0') << msecEpoch.count()%1000;
-    return str.str();
-}
-
-enum LogLevel : unsigned char{ logTrace = 0, logDebug = 1, logInfo = 2, logWarn = 3, logError = 4, logFatal = 5, logGUI = 6};
-
-std::string backtrace(){return "@todo:: backtrace";} ///@todo find a very simple portable implementation
-
-Square stringToSquare(const std::string & str){ return (str.at(1) - 49) * 8 + (str.at(0) - 97); }
-
-class LogIt{
-public:
-    LogIt(LogLevel loglevel):_level(loglevel){}
-
-    template <typename T> LogIt & operator<<(T const & value) { _buffer << value; return *this; }
-
-    ~LogIt(){
-        static const std::string _levelNames[7] = { "# Trace ", "# Debug ", "# Info  ", "# Warn  ", "# Error ", "# Fatal ", "" };
-        std::lock_guard<std::mutex> lock(_mutex);
-        if ( _level != logGUI) std::cout << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
-        else std::cout << _buffer.str()  << std::flush << std::endl;
-        if (_level == logFatal){ std::cout << backtrace() << std::endl; exit(1);}
-        else if (_level == logError) std::cout << backtrace() << std::endl;
-    }
-
-private:
-    static std::mutex     _mutex;
-    std::ostringstream    _buffer;
-    LogLevel              _level;
-};
-
-std::mutex LogIt::_mutex;
-
-void initLMR(){
-    LogIt(logInfo) << "Init lmr" ;
-    for (int d = 0; d < MAX_DEPTH; d++)
-        for (int m = 0; m < MAX_MOVE; m++)
-            lmrReduction[d][m] = (int)sqrt(float(d) * m / 8.f);
-}
+std::string fine70 = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - -";
+std::string shirov = "6r1/2rp1kpp/2qQp3/p3Pp1P/1pP2P2/1P2KP2/P5R1/6R1 w - - 0 1";
 
 enum Piece    : char{ P_bk = -6, P_bq = -5, P_br = -4, P_bb = -3, P_bn = -2, P_bp = -1, P_none = 0, P_wp = 1, P_wn = 2, P_wb = 3, P_wr = 4, P_wq = 5, P_wk = 6 };
 const int PieceShift = 6;
 enum Mat      : char{ M_t = 0, M_p, M_n, M_b, M_r, M_q, M_k, M_bl, M_bd, M_M, M_m };
 
-
 ScoreType   Values[13]    = { -8000, -1025, -477, -365, -337, -82, 0, 82, 337, 365, 477, 1025, 8000 };
 ScoreType   ValuesEG[13]  = { -8000,  -936, -512, -297, -281, -94, 0, 94, 281, 297, 512,  936, 8000 };
 std::string Names[13]     = { "k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K" };
 
-std::string Squares[64] = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2", "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4", "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5", "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6", "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" };
-std::string Files[8] = { "a", "b", "c", "d", "e", "f", "g", "h" };
-std::string Ranks[8] = { "1", "2", "3", "4", "5", "6", "7", "8" };
+std::string Squares[64]   = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2", "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4", "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5", "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6", "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" };
+std::string Files[8]      = { "a", "b", "c", "d", "e", "f", "g", "h" };
+std::string Ranks[8]      = { "1", "2", "3", "4", "5", "6", "7", "8" };
 enum Sq : char { Sq_a1 =  0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1,Sq_a2,Sq_b2,Sq_c2,Sq_d2,Sq_e2,Sq_f2,Sq_g2,Sq_h2,Sq_a3,Sq_b3,Sq_c3,Sq_d3,Sq_e3,Sq_f3,Sq_g3,Sq_h3,Sq_a4,Sq_b4,Sq_c4,Sq_d4,Sq_e4,Sq_f4,Sq_g4,Sq_h4,Sq_a5,Sq_b5,Sq_c5,Sq_d5,Sq_e5,Sq_f5,Sq_g5,Sq_h5,Sq_a6,Sq_b6,Sq_c6,Sq_d6,Sq_e6,Sq_f6,Sq_g6,Sq_h6,Sq_a7,Sq_b7,Sq_c7,Sq_d7,Sq_e7,Sq_f7,Sq_g7,Sq_h7,Sq_a8,Sq_b8,Sq_c8,Sq_d8,Sq_e8,Sq_f8,Sq_g8,Sq_h8};
 
 enum Castling : char{ C_none= 0, C_wks = 1, C_wqs = 2, C_bks = 4, C_bqs = 8 };
 
+Square stringToSquare(const std::string & str) { return (str.at(1) - 49) * 8 + (str.at(0) - 97); }
+
 int MvvLvaScores[6][6];
 void initMvvLva(){
-    LogIt(logInfo) << "Init mvv-lva" ;
+    Logging::LogIt(Logging::logInfo) << "Init mvv-lva" ;
     static const ScoreType IValues[6] = { 1, 2, 3, 5, 9, 20 }; ///@todo try N=B=3 !
     for(int v = 0; v < 6 ; ++v)
         for(int a = 0; a < 6 ; ++a)
@@ -266,12 +473,15 @@ Color Colors[13] = { Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_Black,
 inline int BitScanForward(BitBoard bb) { assert(bb != 0); return __builtin_ctzll(bb);}
 #define bsf(x,i)      (i=BitScanForward(x))
 #define swapbits(x)   (__builtin_bswap64 (x))
+#define swapbits32(x) (__builtin_bswap32 (x))
 #else
 #ifdef _WIN32
 #ifdef _WIN64
 #define POPCOUNT(x)   __popcnt64(x)
 #define bsf(x,i)      _BitScanForward64(&i,x)
 #define swapbits(x)   (_byteswap_uint64 (x))
+#define swapbits32(x) (_byteswap_ulong  (x))
+
 #else
 int popcount(uint64_t b){
     b = (b & 0x5555555555555555LU) + (b >> 1 & 0x5555555555555555LU);
@@ -300,12 +510,15 @@ int bitScanForward(int64_t bb) {
 #define POPCOUNT(x)   popcount(x)
 #define bsf(x,i)      (i=bitScanForward(x))
 #define swapbits(x)   (_byteswap_uint64 (x))
+#define swapbits32(x) (_byteswap_ulong  (x))
+
 #endif
 #else // linux
 #define POPCOUNT(x)   int(__builtin_popcountll(x))
 inline int BitScanForward(BitBoard bb) { assert(bb != 0ull); return __builtin_ctzll(bb);}
 #define bsf(x,i)      (i=BitScanForward(x))
 #define swapbits(x)   (__builtin_bswap64 (x))
+#define swapbits32(x) (__builtin_bswap32 (x))
 #endif
 #endif
 
@@ -465,10 +678,6 @@ inline bool isUnderPromotion(const Move & m) { return isUnderPromotion(Move2Type
 //inline int manhattanDistance(Square sq1, Square sq2) { return std::abs((sq2 >> 3) - (sq1 >> 3)) + std::abs((sq2 & 7) - (sq1 & 7));}
 inline int chebyshevDistance(Square sq1, Square sq2) { return std::max(std::abs((sq2 >> 3) - (sq1 >> 3)) , std::abs((sq2 & 7) - (sq1 & 7))); }
 
-enum GenPhase{ GP_all = 0, GP_cap = 1, GP_quiet = 2};
-
-void generate(const Position & p, MoveList & moves, GenPhase phase = GP_all, bool doNotClear = false);
-
 namespace MaterialHash { // from Gull
     const int MatWQ = 1;
     const int MatBQ = 3;
@@ -560,7 +769,7 @@ namespace MaterialHash { // from Gull
                 (isWhite ? mat[Co_White][M_t] : mat[Co_Black][M_t]) += 1;
                 break;
             default:
-                LogIt(logFatal) << "Bad char in material definition";
+                Logging::LogIt(Logging::logFatal) << "Bad char in material definition";
             }
         }
         return mat;
@@ -641,7 +850,7 @@ namespace MaterialHash { // from Gull
         MaterialHashInitializer(const Position::Material & mat, Terminaison t) { materialHashTable[getMaterialHash(mat)] = t; }
         MaterialHashInitializer(const Position::Material & mat, Terminaison t, ScoreType (*helper)(const Position &) ) { materialHashTable[getMaterialHash(mat)] = t; helperTable[getMaterialHash(mat)] = helper; }
         static void init() {
-            LogIt(logInfo) << "Material hash total : " << TotalMat;
+            Logging::LogIt(Logging::logInfo) << "Material hash total : " << TotalMat;
             std::memset(materialHashTable, Ter_Unknown, sizeof(Terminaison)*TotalMat);
             for(size_t k = 0 ; k < TotalMat ; ++k) helperTable[k] = &helperDummy;
 #define TO_STR2(x) #x
@@ -860,19 +1069,23 @@ inline void setBit(Position &p, Square k, Piece pp) {
     setBit(p.allB[pp + PieceShift], k);
 }
 
-Hash randomInt(){
-    static std::mt19937 mt(42); // fixed seed for ZHash !!!
-    static std::uniform_int_distribution<unsigned long long int> dist(0, UINT64_MAX);
-    return dist(mt);
-}
+namespace Zobrist {
 
-Hash ZT[64][14]; // should be 13 but last ray is for castling[0 7 56 63][13] and ep [k][13] and color [3 4][13]
+    Hash randomInt() {
+        static std::mt19937 mt(42); // fixed seed for ZHash !!!
+        static std::uniform_int_distribution<unsigned long long int> dist(0, UINT64_MAX);
+        return dist(mt);
+    }
 
-void initHash(){
-    LogIt(logInfo) << "Init hash" ;
-    for(int k = 0 ; k < 64 ; ++k)
-        for(int j = 0 ; j < 14 ; ++j)
-            ZT[k][j] = randomInt();
+    Hash ZT[64][14]; // should be 13 but last ray is for castling[0 7 56 63][13] and ep [k][13] and color [3 4][13]
+
+    void initHash() {
+        Logging::LogIt(Logging::logInfo) << "Init hash";
+        for (int k = 0; k < 64; ++k)
+            for (int j = 0; j < 14; ++j)
+                ZT[k][j] = randomInt();
+    }
+
 }
 
 std::string ToString(const Move & m    , bool withScore = false);
@@ -888,19 +1101,19 @@ Hash computeHash(const Position &p){
     if (p.h != 0) return p.h;
     for (int k = 0; k < 64; ++k){
         const Piece pp = p.b[k];
-        if ( pp != P_none) p.h ^= ZT[k][pp+PieceShift];
+        if ( pp != P_none) p.h ^= Zobrist::ZT[k][pp+PieceShift];
     }
-    if ( p.ep != INVALIDSQUARE ) p.h ^= ZT[p.ep][13];
-    if ( p.castling & C_wks)     p.h ^= ZT[7][13];
-    if ( p.castling & C_wqs)     p.h ^= ZT[0][13];
-    if ( p.castling & C_bks)     p.h ^= ZT[63][13];
-    if ( p.castling & C_bqs)     p.h ^= ZT[56][13];
-    if ( p.c == Co_White)        p.h ^= ZT[3][13];
-    if ( p.c == Co_Black)        p.h ^= ZT[4][13];
+    if ( p.ep != INVALIDSQUARE ) p.h ^= Zobrist::ZT[p.ep][13];
+    if ( p.castling & C_wks)     p.h ^= Zobrist::ZT[7][13];
+    if ( p.castling & C_wqs)     p.h ^= Zobrist::ZT[0][13];
+    if ( p.castling & C_bks)     p.h ^= Zobrist::ZT[63][13];
+    if ( p.castling & C_bqs)     p.h ^= Zobrist::ZT[56][13];
+    if ( p.c == Co_White)        p.h ^= Zobrist::ZT[3][13];
+    if ( p.c == Co_Black)        p.h ^= Zobrist::ZT[4][13];
 #ifdef DEBUG_HASH
     if ( h != 0ull && h != p.h ){
-        LogIt(logError) << "Hash error " << ToString(p.lastMove);
-        LogIt(logError) << ToString(p);
+        Logging::LogIt(logError) << "Hash error " << ToString(p.lastMove);
+        Logging::LogIt(logError) << ToString(p);
         exit(1);
     }
 #endif
@@ -918,10 +1131,6 @@ struct ThreadData{
     PVList pv;
 };
 
-// Sizes and phases of the skip-blocks, used for distributing search depths across the threads, from stockfish
-const int SkipSize[20]  = { 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4 };
-const int SkipPhase[20] = { 0, 1, 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 6, 7 };
-
 struct Stats{
     enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits,
                   sid_staticNullMove, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMove, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_futility, sid_see, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension,
@@ -929,7 +1138,7 @@ struct Stats{
     static const std::string Names[sid_maxid] ;
     Counter counters[sid_maxid];
     void init(){
-        LogIt(logInfo) << "Init stat" ;
+        Logging::LogIt(Logging::logInfo) << "Init stat" ;
         for(size_t k = 0 ; k < sid_maxid ; ++k) counters[k] = Counter(0);
     }
 };
@@ -946,17 +1155,24 @@ public:
     Move searchSync(const ThreadData & d);
     void searchASync(const ThreadData & d);
     void startOthers();
+    void wait(bool otherOnly = false);
     bool stop;
     // gathering info from all threads
     Counter counter(Stats::StatId id) const;
-    void DisplayStats()const{for(size_t k = 0 ; k < Stats::sid_maxid ; ++k) LogIt(logInfo) << Stats::Names[k] << " " << counter((Stats::StatId)k);}
+    void DisplayStats()const{for(size_t k = 0 ; k < Stats::sid_maxid ; ++k) Logging::LogIt(Logging::logInfo) << Stats::Names[k] << " " << counter((Stats::StatId)k);}
+    // Sizes and phases of the skip-blocks, used for distributing search depths across the threads, from stockfish
+    static const int skipSize[20];
+    static const int skipPhase[20];
 private:
     ThreadPool();
 };
 
-enum MoveDifficulty { MD_forced = 0, MD_easy, MD_std, MD_hardDefense, MD_hardAttack };
+const int ThreadPool::skipSize[20]  = { 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4 };
+const int ThreadPool::skipPhase[20] = { 0, 1, 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 6, 7 };
 
 namespace MoveDifficultyUtil {
+    enum MoveDifficulty { MD_forced = 0, MD_easy, MD_std, MD_hardDefense, MD_hardAttack };
+
     const DepthType emergencyMinDepth = 9;
     const ScoreType emergencyMargin   = 50;
     const ScoreType easyMoveMargin    = 250;
@@ -968,7 +1184,9 @@ namespace MoveDifficultyUtil {
 struct ThreadContext{
 
     static bool stopFlag;
-    static MoveDifficulty easyMove;
+    static MoveDifficultyUtil::MoveDifficulty moveDifficulty;
+
+    static int currentMoveMs;
 
     static int getCurrentMoveMs();
 
@@ -980,7 +1198,7 @@ struct ThreadContext{
     struct KillerT{
         Move killers[2][MAX_PLY];
         inline void initKillers(){
-            LogIt(logInfo) << "Init killers" ;
+            Logging::LogIt(Logging::logInfo) << "Init killers" ;
             for(int i = 0; i < 2; ++i)
                 for(int k = 0 ; k < MAX_PLY; ++k)
                     killers[i][k] = INVALIDMOVE;
@@ -990,7 +1208,7 @@ struct ThreadContext{
     struct HistoryT{
         ScoreType history[13][64];
         inline void initHistory(){
-            LogIt(logInfo) << "Init history" ;
+            Logging::LogIt(Logging::logInfo) << "Init history" ;
             for(int i = 0; i < 13; ++i)
                 for(int k = 0 ; k < 64; ++k)
                     history[i][k] = 0;
@@ -1003,7 +1221,7 @@ struct ThreadContext{
     struct CounterT{
         ScoreType counter[64][64];
         inline void initCounter(){
-            LogIt(logInfo) << "Init counter" ;
+            Logging::LogIt(Logging::logInfo) << "Init counter" ;
             for(int i = 0; i < 64; ++i)
                 for(int k = 0 ; k < 64; ++k)
                     counter[i][k] = 0;
@@ -1045,7 +1263,7 @@ struct ThreadContext{
 
     void start(){
         std::lock_guard<std::mutex> lock(_mutex);
-        LogIt(logInfo) << "Starting worker " << id() ;
+        Logging::LogIt(Logging::logInfo) << "Starting worker " << id() ;
         _searching = true;
         _cv.notify_one(); // Wake up the thread in IdleLoop()
     }
@@ -1056,7 +1274,7 @@ struct ThreadContext{
     }
 
     void search(){
-        LogIt(logInfo) << "Search launched " << id() ;
+        Logging::LogIt(Logging::logInfo) << "Search launched " << id() ;
         if ( isMainThread() ){ ThreadPool::instance().startOthers(); } // started but locked for now ...
         _data.pv = search(_data.p, _data.best, _data.depth, _data.sc, _data.seldepth);
     }
@@ -1069,7 +1287,7 @@ struct ThreadContext{
     ~ThreadContext(){
         _exit = true;
         start();
-        LogIt(logInfo) << "Waiting for workers to join...";
+        Logging::LogIt(Logging::logInfo) << "Waiting for workers to join...";
         _stdThread.join();
     }
 
@@ -1090,40 +1308,41 @@ private:
     std::thread             _stdThread;
 };
 
-bool ThreadContext::stopFlag = false;
-
-MoveDifficulty ThreadContext::easyMove = MD_std;
-
+bool ThreadContext::stopFlag      = true;
+int  ThreadContext::currentMoveMs = 777; // a dummy initial value, useful for debug
+MoveDifficultyUtil::MoveDifficulty ThreadContext::moveDifficulty = MoveDifficultyUtil::MD_std;
 std::atomic<bool> ThreadContext::startLock;
 
 ThreadPool & ThreadPool::instance(){ static ThreadPool pool; return pool;}
 
 ThreadPool::~ThreadPool(){
     while (size()) { delete back(); pop_back(); }
-    LogIt(logInfo) << "... ok threadPool deleted";
+    Logging::LogIt(Logging::logInfo) << "... ok threadPool deleted";
 }
 
 void ThreadPool::setup(unsigned int n){
     assert(n > 0);
-    LogIt(logInfo) << "Using " << n << " threads";
+    Logging::LogIt(Logging::logInfo) << "Using " << n << " threads";
     while (size() < (unsigned int)n) push_back(new ThreadContext(size()));
 }
 
 ThreadContext & ThreadPool::main() { return *(front()); }
 
+void ThreadPool::wait(bool otherOnly) {
+    Logging::LogIt(Logging::logInfo) << "Wait for workers to be ready";
+    for (auto s : *this) { if (!otherOnly || !(*s).isMainThread()) (*s).wait(); }
+    Logging::LogIt(Logging::logInfo) << "...ok";
+}
+
 Move ThreadPool::searchSync(const ThreadData & d){
-    LogIt(logInfo) << "Search Sync" ;
-    LogIt(logInfo) << "Wait for workers to be ready" ;
-    for (auto s : *this) (*s).wait();
+    Logging::LogIt(Logging::logInfo) << "Search Sync" ;
+    wait();
     ThreadContext::startLock.store(true);
-    LogIt(logInfo) << "...ok" ;
     for (auto s : *this) (*s).setData(d); // this is a copy
-    LogIt(logInfo) << "Calling main thread search" ;
+    Logging::LogIt(Logging::logInfo) << "Calling main thread search" ;
     main().search(); ///@todo 1 thread for nothing here (start instead ????)
     ThreadContext::stopFlag = true;
-    LogIt(logInfo) << "Wait for workers to finish" ;
-    for(auto s : *this) if (!(*s).isMainThread()) (*s).wait();
-    LogIt(logInfo) << "...ok" ;
+    wait();
     return main().getData().best;
 }
 
@@ -1165,11 +1384,11 @@ static unsigned long long int ttSize = 0;
 static Bucket * table = 0;
 
 void initTable(){
-    LogIt(logInfo) << "Init TT" ;
-    LogIt(logInfo) << "Bucket size " << sizeof(Bucket);
+    Logging::LogIt(Logging::logInfo) << "Init TT" ;
+    Logging::LogIt(Logging::logInfo) << "Bucket size " << sizeof(Bucket);
     ttSize = 1024 * powerFloor((DynamicConfig::ttSizeMb * 1024) / (unsigned long long int)sizeof(Bucket));
     table = new Bucket[ttSize];
-    LogIt(logInfo) << "Size of TT " << ttSize * sizeof(Bucket) / 1024 / 1024 << "Mb" ;
+    Logging::LogIt(Logging::logInfo) << "Size of TT " << ttSize * sizeof(Bucket) / 1024 / 1024 << "Mb" ;
 }
 
 void clearTT() {
@@ -1340,123 +1559,6 @@ std::string ToString(const Position & p, bool noEval){
     return ss.str();
 }
 
-// from Rofchade
-const ScoreType PST[6][64] = {
-    {   //pawn
-          0,   0,   0,   0,   0,   0,  0,   0,
-         98, 134,  61,  95,  68, 126, 34, -11,
-         -6,   7,  26,  31,  65,  56, 25, -20,
-        -14,  13,   6,  21,  23,  12, 17, -23,
-        -27,  -2,  -5,  12,  17,   6, 10, -25,
-        -26,  -4,  -4, -10,   3,   3, 33, -12,
-        -35,  -1, -20, -23, -15,  24, 38, -22,
-          0,   0,   0,   0,   0,   0,  0,   0
-    },{ //knight
-        -167, -89, -34, -49,  61, -97, -15, -107,
-         -73, -41,  72,  36,  23,  62,   7,  -17,
-         -47,  60,  37,  65,  84, 129,  73,   44,
-          -9,  17,  19,  53,  37,  69,  18,   22,
-         -13,   4,  16,  13,  28,  19,  21,   -8,
-         -23,  -9,  12,  10,  19,  17,  25,  -16,
-         -29, -53, -12,  -3,  -1,  18, -14,  -19,
-        -105, -21, -58, -33, -17, -28, -19,  -23
-    },{ //bishop
-        -29,   4, -82, -37, -25, -42,   7,  -8,
-        -26,  16, -18, -13,  30,  59,  18, -47,
-        -16,  37,  43,  40,  35,  50,  37,  -2,
-         -4,   5,  19,  50,  37,  37,   7,  -2,
-         -6,  13,  13,  26,  34,  12,  10,   4,
-          0,  15,  15,  15,  14,  27,  18,  10,
-          4,  15,  16,   0,   7,  21,  33,   1,
-        -33,  -3, -14, -21, -13, -12, -39, -21
-    },{ //rook
-         32,  42,  32,  51, 63,  9,  31,  43,
-         27,  32,  58,  62, 80, 67,  26,  44,
-         -5,  19,  26,  36, 17, 45,  61,  16,
-        -24, -11,   7,  26, 24, 35,  -8, -20,
-        -36, -26, -12,  -1,  9, -7,   6, -23,
-        -45, -25, -16, -17,  3,  0,  -5, -33,
-        -44, -16, -20,  -9, -1, 11,  -6, -71,
-        -19, -13,   1,  17, 16,  7, -37, -26
-    },{ //queen
-        -28,   0,  29,  12,  59,  44,  43,  45,
-        -24, -39,  -5,   1, -16,  57,  28,  54,
-        -13, -17,   7,   8,  29,  56,  47,  57,
-        -27, -27, -16, -16,  -1,  17,  -2,   1,
-         -9, -26,  -9, -10,  -2,  -4,   3,  -3,
-        -14,   2, -11,  -2,  -5,   2,  14,   5,
-        -35,  -8,  11,   2,   8,  15,  -3,   1,
-         -1, -18,  -9,  10, -15, -25, -31, -50
-    },{ //king
-        -65,  23,  16, -15, -56, -34,   2,  13,
-         29,  -1, -20,  -7,  -8,  -4, -38, -29,
-         -9,  24,   2, -16, -20,   6,  22, -22,
-        -17, -20, -12, -27, -30, -25, -14, -36,
-        -49,  -1, -27, -39, -46, -44, -33, -51,
-        -14, -14, -22, -46, -44, -30, -15, -27,
-          1,   7,  -8, -64, -43, -16,   9,   8,
-        -15,  36,  12, -54,   8, -28,  24,  14
-    }
-};
-
-const ScoreType PSTEG[6][64] = {
-    {   //pawn
-          0,   0,   0,   0,   0,   0,   0,   0,
-        178, 173, 158, 134, 147, 132, 165, 187,
-         94, 100,  85,  67,  56,  53,  82,  84,
-         32,  24,  13,   5,  -2,   4,  17,  17,
-         13,   9,  -3,  -7,  -7,  -8,   3,  -1,
-          4,   7,  -6,   1,   0,  -5,  -1,  -8,
-         13,   8,   8,  10,  13,   0,   2,  -7,
-          0,   0,   0,   0,   0,   0,   0,   0
-    },{ //knight
-        -58, -38, -13, -28, -31, -27, -63, -99,
-        -25,  -8, -25,  -2,  -9, -25, -24, -52,
-        -24, -20,  10,   9,  -1,  -9, -19, -41,
-        -17,   3,  22,  22,  22,  11,   8, -18,
-        -18,  -6,  16,  25,  16,  17,   4, -18,
-        -23,  -3,  -1,  15,  10,  -3, -20, -22,
-        -42, -20, -10,  -5,  -2, -20, -23, -44,
-        -29, -51, -23, -15, -22, -18, -50, -64
-    },{ //bishop
-        -14, -21, -11,  -8, -7,  -9, -17, -24,
-         -8,  -4,   7, -12, -3, -13,  -4, -14,
-          2,  -8,   0,  -1, -2,   6,   0,   4,
-         -3,   9,  12,   9, 14,  10,   3,   2,
-         -6,   3,  13,  19,  7,  10,  -3,  -9,
-        -12,  -3,   8,  10, 13,   3,  -7, -15,
-        -14, -18,  -7,  -1,  4,  -9, -15, -27,
-        -23,  -9, -23,  -5, -9, -16,  -5, -17
-    },{ //rook
-        13, 10, 18, 15, 12,  12,   8,   5,
-        11, 13, 13, 11, -3,   3,   8,   3,
-         7,  7,  7,  5,  4,  -3,  -5,  -3,
-         4,  3, 13,  1,  2,   1,  -1,   2,
-         3,  5,  8,  4, -5,  -6,  -8, -11,
-        -4,  0, -5, -1, -7, -12,  -8, -16,
-        -6, -6,  0,  2, -9,  -9, -11,  -3,
-        -9,  2,  3, -1, -5, -13,   4, -20
-    },{ //queen
-         -9,  22,  22,  27,  27,  19,  10,  20,
-        -17,  20,  32,  41,  58,  25,  30,   0,
-        -20,   6,   9,  49,  47,  35,  19,   9,
-          3,  22,  24,  45,  57,  40,  57,  36,
-        -18,  28,  19,  47,  31,  34,  39,  23,
-        -16, -27,  15,   6,   9,  17,  10,   5,
-        -22, -23, -30, -16, -16, -23, -36, -32,
-        -33, -28, -22, -43,  -5, -32, -20, -41
-    },{ //king
-        -74, -35, -18, -18, -11,  15,   4, -17,
-        -12,  17,  14,  17,  17,  38,  23,  11,
-         10,  17,  23,  15,  20,  45,  44,  13,
-         -8,  22,  24,  27,  26,  33,  26,   3,
-        -18,  -4,  21,  24,  27,  23,   9, -11,
-        -19,  -3,  11,  21,  23,  16,   7,  -9,
-        -27, -11,   4,  13,  14,   4,  -5, -17,
-        -53, -34, -21, -11, -28, -14, -24, -43
-    }
-};
-
 template < typename T > T readFromString(const std::string & s){ std::stringstream ss(s); T tmp; ss >> tmp; return tmp;}
 
 bool readFEN(const std::string & fen, Position & p, bool silent){
@@ -1464,7 +1566,7 @@ bool readFEN(const std::string & fen, Position & p, bool silent){
     std::stringstream iss(fen);
     std::copy(std::istream_iterator<std::string>(iss), std::istream_iterator<std::string>(), back_inserter(strList));
 
-    if ( !silent) LogIt(logInfo) << "Reading fen " << fen ;
+    if ( !silent) Logging::LogIt(Logging::logInfo) << "Reading fen " << fen ;
 
     // reset position
     p.h = 0;
@@ -1497,7 +1599,7 @@ bool readFEN(const std::string & fen, Position & p, bool silent){
         case '6': j += 5; break;
         case '7': j += 6; break;
         case '8': j += 7; break;
-        default: LogIt(logFatal) << "FEN ERROR 0 : " << letter ;
+        default: Logging::LogIt(Logging::logFatal) << "FEN ERROR 0 : " << letter ;
         }
         j++;
     }
@@ -1507,7 +1609,7 @@ bool readFEN(const std::string & fen, Position & p, bool silent){
     if (strList.size() >= 2){
         if (strList[1] == "w")      p.c = Co_White;
         else if (strList[1] == "b") p.c = Co_Black;
-        else { LogIt(logFatal) << "FEN ERROR 1" ; return false; }
+        else { Logging::LogIt(Logging::logFatal) << "FEN ERROR 1" ; return false; }
     }
 
     // Initialize all castle possibilities (default is none)
@@ -1518,20 +1620,20 @@ bool readFEN(const std::string & fen, Position & p, bool silent){
         if (strList[2].find('Q') != std::string::npos){ p.castling |= C_wqs; found = true; }
         if (strList[2].find('k') != std::string::npos){ p.castling |= C_bks; found = true; }
         if (strList[2].find('q') != std::string::npos){ p.castling |= C_bqs; found = true; }
-        if ( ! found ){ if ( !silent) LogIt(logWarn) << "No castling right given" ; }
+        if ( ! found ){ if ( !silent) Logging::LogIt(Logging::logWarn) << "No castling right given" ; }
     }
-    else if ( !silent) LogIt(logInfo) << "No castling right given" ;
+    else if ( !silent) Logging::LogIt(Logging::logInfo) << "No castling right given" ;
 
     // read en passant and save it (default is invalid)
     p.ep = INVALIDSQUARE;
     if ((strList.size() >= 4) && strList[3] != "-" ){
         if (strList[3].length() >= 2){
             if ((strList[3].at(0) >= 'a') && (strList[3].at(0) <= 'h') && ((strList[3].at(1) == '3') || (strList[3].at(1) == '6'))) p.ep = stringToSquare(strList[3]);
-            else { LogIt(logFatal) << "FEN ERROR 3-1 : bad en passant square : " << strList[3] ; return false; }
+            else { Logging::LogIt(Logging::logFatal) << "FEN ERROR 3-1 : bad en passant square : " << strList[3] ; return false; }
         }
-        else{ LogIt(logFatal) << "FEN ERROR 3-2 : bad en passant square : " << strList[3] ; return false; }
+        else{ Logging::LogIt(Logging::logFatal) << "FEN ERROR 3-2 : bad en passant square : " << strList[3] ; return false; }
     }
-    else if ( !silent) LogIt(logInfo) << "No en passant square given" ;
+    else if ( !silent) Logging::LogIt(Logging::logInfo) << "No en passant square given" ;
 
     assert(p.ep == INVALIDSQUARE || (SQRANK(p.ep) == 2 || SQRANK(p.ep) == 5));
 
@@ -1567,7 +1669,7 @@ void tokenize(const std::string& str, std::vector<std::string>& tokens, const st
 bool readMove(const Position & p, const std::string & ss, Square & from, Square & to, MType & moveType ) {
 
     if ( ss.empty()){
-        LogIt(logFatal) << "Trying to read empty move ! " ;
+        Logging::LogIt(Logging::logFatal) << "Trying to read empty move ! " ;
         moveType = T_std;
         return false;
     }
@@ -1582,7 +1684,7 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
     std::copy(std::istream_iterator<std::string>(iss), std::istream_iterator<std::string>(), back_inserter(strList));
 
     moveType = T_std;
-    if ( strList.empty()){ LogIt(logFatal) << "Trying to read bad move, seems empty " << str ; return false; }
+    if ( strList.empty()){ Logging::LogIt(Logging::logFatal) << "Trying to read bad move, seems empty " << str ; return false; }
 
     // detect special move
     if (strList[0] == "0-0" || strList[0] == "O-O"){
@@ -1594,11 +1696,11 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
         else moveType = T_bqs;
     }
     else{
-        if ( strList.size() == 1 ){ LogIt(logFatal) << "Trying to read bad move, malformed (=1) " << str ; return false; }
-        if ( strList.size() > 2 && strList[2] != "ep"){ LogIt(logFatal) << "Trying to read bad move, malformed (>2)" << str ; return false; }
+        if ( strList.size() == 1 ){ Logging::LogIt(Logging::logFatal) << "Trying to read bad move, malformed (=1) " << str ; return false; }
+        if ( strList.size() > 2 && strList[2] != "ep"){ Logging::LogIt(Logging::logFatal) << "Trying to read bad move, malformed (>2)" << str ; return false; }
 
         if (strList[0].size() == 2 && (strList[0].at(0) >= 'a') && (strList[0].at(0) <= 'h') && ((strList[0].at(1) >= 1) && (strList[0].at(1) <= '8'))) from = stringToSquare(strList[0]);
-        else { LogIt(logFatal) << "Trying to read bad move, invalid from square " << str ; return false; }
+        else { Logging::LogIt(Logging::logFatal) << "Trying to read bad move, invalid from square " << str ; return false; }
 
         bool isCapture = false;
 
@@ -1623,7 +1725,7 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
                 else if ( prom == "R" || prom == "r") moveType = isCapture ? T_cappromr : T_promr;
                 else if ( prom == "B" || prom == "b") moveType = isCapture ? T_cappromb : T_promb;
                 else if ( prom == "N" || prom == "n") moveType = isCapture ? T_cappromn : T_promn;
-                else{ LogIt(logFatal) << "Trying to read bad move, invalid to square " << str ; return false; }
+                else{ Logging::LogIt(Logging::logFatal) << "Trying to read bad move, invalid to square " << str ; return false; }
             }
             else{
                 to = stringToSquare(strList[1]);
@@ -1631,7 +1733,7 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
                 if(isCapture) moveType = T_capture;
             }
         }
-        else { LogIt(logFatal) << "Trying to read bad move, invalid to square " << str ; return false; }
+        else { Logging::LogIt(Logging::logFatal) << "Trying to read bad move, invalid to square " << str ; return false; }
     }
 
     if (getPieceType(p,from) == P_wp && to == p.ep) moveType = T_ep;
@@ -1640,43 +1742,51 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
 }
 
 namespace TimeMan{
-int msecPerMove, msecInTC, nbMoveInTC, msecInc, msecUntilNextTC;
+int msecPerMove, msecInTC, nbMoveInTC, msecInc, msecUntilNextTC, maxKNodes, moveToGo;
 bool isDynamic;
 
 std::chrono::time_point<Clock> startTime;
 
 void init(){
-    LogIt(logInfo) << "Init timeman" ;
+    Logging::LogIt(Logging::logInfo) << "Init timeman" ;
     msecPerMove     = 777;
     msecInTC        = -1;
     nbMoveInTC      = -1;
     msecInc         = -1;
     msecUntilNextTC = -1;
     isDynamic       = false;
+    maxKNodes       = -1;
+    moveToGo        = -1;
 }
 
 int GetNextMSecPerMove(const Position & p){
     static const int msecMargin = 50;
     int ms = -1;
-    LogIt(logInfo) << "msecPerMove     " << msecPerMove;
-    LogIt(logInfo) << "msecInTC        " << msecInTC   ;
-    LogIt(logInfo) << "msecInc         " << msecInc    ;
-    LogIt(logInfo) << "nbMoveInTC      " << nbMoveInTC ;
-    LogIt(logInfo) << "msecUntilNextTC " << msecUntilNextTC;
-    LogIt(logInfo) << "currentNbMoves  " << int(p.moves);
+    Logging::LogIt(Logging::logInfo) << "msecPerMove     " << msecPerMove;
+    Logging::LogIt(Logging::logInfo) << "msecInTC        " << msecInTC   ;
+    Logging::LogIt(Logging::logInfo) << "msecInc         " << msecInc    ;
+    Logging::LogIt(Logging::logInfo) << "nbMoveInTC      " << nbMoveInTC ;
+    Logging::LogIt(Logging::logInfo) << "msecUntilNextTC " << msecUntilNextTC;
+    Logging::LogIt(Logging::logInfo) << "currentNbMoves  " << int(p.moves);
     int msecIncLoc = (msecInc > 0) ? msecInc : 0;
     if ( msecPerMove > 0 ) ms =  msecPerMove;
-    else if ( nbMoveInTC > 0){ // mps is given
+    else if ( nbMoveInTC > 0){ // mps is given (xboard style)
         assert(msecInTC > 0); assert(nbMoveInTC > 0);
-        LogIt(logInfo) << "TC mode";
+        Logging::LogIt(Logging::logInfo) << "TC mode, xboard";
         if (!isDynamic) ms = int((msecInTC - msecMargin) / (float)nbMoveInTC) + msecIncLoc ;
-        else ms = std::min(msecUntilNextTC - msecMargin, int((msecUntilNextTC - msecMargin) / (float)(nbMoveInTC-((p.moves-1)%nbMoveInTC))) + msecIncLoc);
+        else { ms = std::min(msecUntilNextTC - msecMargin, int((msecUntilNextTC - msecMargin) /float(nbMoveInTC - ((p.moves - 1) % nbMoveInTC))) + msecIncLoc); }
+    }
+    else if (moveToGo > 0) { // moveToGo is given (uci style)
+        assert(msecInTC > 0); assert(nbMoveInTC > 0);
+        Logging::LogIt(Logging::logInfo) << "TC mode, UCI";
+        if (!isDynamic) Logging::LogIt(Logging::logFatal) << "bad timing configuration ...";
+        else { ms = std::min(msecUntilNextTC - msecMargin, int((msecUntilNextTC - msecMargin) / float(moveToGo)) + msecIncLoc); }
     }
     else{ // mps is not given
-        LogIt(logInfo) << "Fix time mode";
+        Logging::LogIt(Logging::logInfo) << "Fix time mode";
         const int nmoves = 24; // always be able to play this more moves !
-        LogIt(logInfo) << "nmoves    " << nmoves;
-        LogIt(logInfo) << "p.moves   " << int(p.moves);
+        Logging::LogIt(Logging::logInfo) << "nmoves    " << nmoves;
+        Logging::LogIt(Logging::logInfo) << "p.moves   " << int(p.moves);
         assert(nmoves > 0); assert(msecInTC >= 0);
         if (!isDynamic) ms = int((msecInTC+p.moves*msecIncLoc) / (float)(nmoves+p.moves)) - msecMargin;
         else ms = std::min(msecUntilNextTC - msecMargin, int(msecUntilNextTC / (float)nmoves + 0.75*msecIncLoc) - msecMargin);
@@ -1689,12 +1799,12 @@ int GetNextMSecPerMove(const Position & p){
 inline void addMove(Square from, Square to, MType type, MoveList & moves){ assert( from >= 0 && from < 64); assert( to >=0 && to < 64); moves.push_back(ToMove(from,to,type,0));}
 
 int ThreadContext::getCurrentMoveMs() {
-    switch (easyMove) {
-    case MD_forced:      return (currentMoveMs >> 4);
-    case MD_easy:        return (currentMoveMs >> 3);
-    case MD_std:         return (currentMoveMs);
-    case MD_hardDefense: return (std::min(int(TimeMan::msecUntilNextTC*MoveDifficultyUtil::maxStealFraction), currentMoveMs*MoveDifficultyUtil::emergencyFactor));
-    case MD_hardAttack:  return (currentMoveMs);
+    switch (moveDifficulty) {
+    case MoveDifficultyUtil::MD_forced:      return (currentMoveMs >> 4);
+    case MoveDifficultyUtil::MD_easy:        return (currentMoveMs >> 3);
+    case MoveDifficultyUtil::MD_std:         return (currentMoveMs);
+    case MoveDifficultyUtil::MD_hardDefense: return (std::min(int(TimeMan::msecUntilNextTC*MoveDifficultyUtil::maxStealFraction), currentMoveMs*MoveDifficultyUtil::emergencyFactor));
+    case MoveDifficultyUtil::MD_hardAttack:  return (currentMoveMs);
     }
     return currentMoveMs;
 }
@@ -1724,7 +1834,7 @@ struct Mask {
 Mask mask[64];
 
 inline void initMask() {
-    LogIt(logInfo) << "Init mask" ;
+    Logging::LogIt(Logging::logInfo) << "Init mask" ;
     int d[64][64] = { 0 };
     for (Square x = 0; x < 64; ++x) {
         mask[x].bbsquare = SquareToBitboard(x);
@@ -1884,6 +1994,8 @@ inline bool isAttacked(const Position & p, const Square k) { return k!=INVALIDSQ
 
 inline bool getAttackers(const Position & p, const Square k, std::vector<Square> & attakers) { return k!=INVALIDSQUARE && BB::getAttackers(p, k, attakers);}
 
+enum GenPhase { GP_all = 0, GP_cap = 1, GP_quiet = 2 };
+
 void generateSquare(const Position & p, MoveList & moves, Square from, GenPhase phase = GP_all){
     assert(from != INVALIDSQUARE);
     const Color side = p.c;
@@ -1949,7 +2061,7 @@ void generateSquare(const Position & p, MoveList & moves, Square from, GenPhase 
     }
 }
 
-void generate(const Position & p, MoveList & moves, GenPhase phase, bool doNotClear){
+void generate(const Position & p, MoveList & moves, GenPhase phase = GP_all, bool doNotClear = false){
     if ( !doNotClear) moves.clear();
     BitBoard myPieceBBiterator = ( (p.c == Co_White) ? p.whitePiece : p.blackPiece);
     while (myPieceBBiterator) generateSquare(p,moves,BB::popBit(myPieceBBiterator),phase);
@@ -1967,9 +2079,9 @@ inline void movePiece(Position & p, Square from, Square to, Piece fromP, Piece t
     unSetBit(p, from, fromP);
     unSetBit(p, to,   toP); // usefull only if move is a capture
     setBit  (p, to,   toPnew);
-    p.h ^= ZT[from][fromId]; // remove fromP at from
-    if (isCapture) p.h ^= ZT[to][toId]; // if capture remove toP at to
-    p.h ^= ZT[to][toIdnew]; // add fromP (or prom) at to
+    p.h ^= Zobrist::ZT[from][fromId]; // remove fromP at from
+    if (isCapture) p.h ^= Zobrist::ZT[to][toId]; // if capture remove toP at to
+    p.h ^= Zobrist::ZT[to][toIdnew]; // add fromP (or prom) at to
 }
 
 /*
@@ -1993,10 +2105,10 @@ bool validate(const Position &p, const Move &m){
 
 void applyNull(Position & pN) {
     pN.c = opponentColor(pN.c);
-    pN.h ^= ZT[3][13];
-    pN.h ^= ZT[4][13];
+    pN.h ^= Zobrist::ZT[3][13];
+    pN.h ^= Zobrist::ZT[4][13];
     pN.lastMove = INVALIDMOVE;
-    if (pN.ep != INVALIDSQUARE) pN.h ^= ZT[pN.ep][13];
+    if (pN.ep != INVALIDSQUARE) pN.h ^= Zobrist::ZT[pN.ep][13];
     pN.ep = INVALIDSQUARE;
 }
 
@@ -2023,14 +2135,14 @@ bool apply(Position & p, const Move & m){
         // update castling rigths and king position
         if ( fromP == P_wk ){
             p.wk = to;
-            if (p.castling & C_wks) p.h ^= ZT[7][13];
-            if (p.castling & C_wqs) p.h ^= ZT[0][13];
+            if (p.castling & C_wks) p.h ^= Zobrist::ZT[7][13];
+            if (p.castling & C_wqs) p.h ^= Zobrist::ZT[0][13];
             p.castling &= ~(C_wks | C_wqs);
         }
         else if ( fromP == P_bk ){
             p.bk = to;
-            if (p.castling & C_bks) p.h ^= ZT[63][13];
-            if (p.castling & C_bqs) p.h ^= ZT[56][13];
+            if (p.castling & C_bks) p.h ^= Zobrist::ZT[63][13];
+            if (p.castling & C_bqs) p.h ^= Zobrist::ZT[56][13];
             p.castling &= ~(C_bks | C_bqs);
         }
         // king capture : is that necessary ???
@@ -2039,19 +2151,19 @@ bool apply(Position & p, const Move & m){
 
         if ( fromP == P_wr && from == Sq_a1 && (p.castling & C_wqs)){
             p.castling &= ~C_wqs;
-            p.h ^= ZT[0][13];
+            p.h ^= Zobrist::ZT[0][13];
         }
         else if ( fromP == P_wr && from == Sq_h1 && (p.castling & C_wks) ){
             p.castling &= ~C_wks;
-            p.h ^= ZT[7][13];
+            p.h ^= Zobrist::ZT[7][13];
         }
         else if ( fromP == P_br && from == Sq_a8 && (p.castling & C_bqs)){
             p.castling &= ~C_bqs;
-            p.h ^= ZT[56][13];
+            p.h ^= Zobrist::ZT[56][13];
         }
         else if ( fromP == P_br && from == Sq_h8 && (p.castling & C_bks) ){
             p.castling &= ~C_bks;
-            p.h ^= ZT[63][13];
+            p.h ^= Zobrist::ZT[63][13];
         }
         break;
 
@@ -2066,9 +2178,9 @@ bool apply(Position & p, const Move & m){
         p.b[from] = P_none;
         p.b[to] = fromP;
         p.b[epCapSq] = P_none;
-        p.h ^= ZT[from][fromId]; // remove fromP at from
-        p.h ^= ZT[epCapSq][(p.c == Co_White ? P_bp : P_wp) + PieceShift]; // remove captured pawn
-        p.h ^= ZT[to][fromId]; // add fromP at to
+        p.h ^= Zobrist::ZT[from][fromId]; // remove fromP at from
+        p.h ^= Zobrist::ZT[epCapSq][(p.c == Co_White ? P_bp : P_wp) + PieceShift]; // remove captured pawn
+        p.h ^= Zobrist::ZT[to][fromId]; // add fromP at to
         updateMaterialEp(p);
     }
         break;
@@ -2097,16 +2209,16 @@ bool apply(Position & p, const Move & m){
         movePiece(p, Sq_e1, Sq_g1, P_wk, P_none);
         movePiece(p, Sq_h1, Sq_f1, P_wr, P_none);
         p.wk = Sq_g1;
-        if (p.castling & C_wqs) p.h ^= ZT[0][13];
-        if (p.castling & C_wks) p.h ^= ZT[7][13];
+        if (p.castling & C_wqs) p.h ^= Zobrist::ZT[0][13];
+        if (p.castling & C_wks) p.h ^= Zobrist::ZT[7][13];
         p.castling &= ~(C_wks | C_wqs);
         break;
     case T_wqs:
         movePiece(p, Sq_e1, Sq_c1, P_wk, P_none);
         movePiece(p, Sq_a1, Sq_d1, P_wr, P_none);
         p.wk = Sq_c1;
-        if (p.castling & C_wqs) p.h ^= ZT[0][13];
-        if (p.castling & C_wks) p.h ^= ZT[7][13];
+        if (p.castling & C_wqs) p.h ^= Zobrist::ZT[0][13];
+        if (p.castling & C_wks) p.h ^= Zobrist::ZT[7][13];
         p.castling &= ~(C_wks | C_wqs);
         break;
     case T_bks:
@@ -2114,16 +2226,16 @@ bool apply(Position & p, const Move & m){
         movePiece(p, Sq_h8, Sq_f8, P_br, P_none);
         p.b[Sq_e8] = P_none; p.b[Sq_f8] = P_br; p.b[Sq_g8] = P_bk; p.b[Sq_h8] = P_none;
         p.bk = Sq_g8;
-        if (p.castling & C_bqs) p.h ^= ZT[56][13];
-        if (p.castling & C_bks) p.h ^= ZT[63][13];
+        if (p.castling & C_bqs) p.h ^= Zobrist::ZT[56][13];
+        if (p.castling & C_bks) p.h ^= Zobrist::ZT[63][13];
         p.castling &= ~(C_bks | C_bqs);
         break;
     case T_bqs:
         movePiece(p, Sq_e8, Sq_c8, P_bk, P_none);
         movePiece(p, Sq_a8, Sq_d8, P_br, P_none);
         p.bk = Sq_c8;
-        if (p.castling & C_bqs) p.h ^= ZT[56][13];
-        if (p.castling & C_bks) p.h ^= ZT[63][13];
+        if (p.castling & C_bqs) p.h ^= Zobrist::ZT[56][13];
+        if (p.castling & C_bks) p.h ^= Zobrist::ZT[63][13];
         p.castling &= ~(C_bks | C_bqs);
         break;
     }
@@ -2137,30 +2249,30 @@ bool apply(Position & p, const Move & m){
     // Update castling right if rook captured
     if ( toP == P_wr && to == Sq_a1 && (p.castling & C_wqs) ){
         p.castling &= ~C_wqs;
-        p.h ^= ZT[0][13];
+        p.h ^= Zobrist::ZT[0][13];
     }
     else if ( toP == P_wr && to == Sq_h1 && (p.castling & C_wks) ){
         p.castling &= ~C_wks;
-        p.h ^= ZT[7][13];
+        p.h ^= Zobrist::ZT[7][13];
     }
     else if ( toP == P_br && to == Sq_a8 && (p.castling & C_bqs)){
         p.castling &= ~C_bqs;
-        p.h ^= ZT[56][13];
+        p.h ^= Zobrist::ZT[56][13];
     }
     else if ( toP == P_br && to == Sq_h8 && (p.castling & C_bks)){
         p.castling &= ~C_bks;
-        p.h ^= ZT[63][13];
+        p.h ^= Zobrist::ZT[63][13];
     }
 
     // update EP
-    if (p.ep != INVALIDSQUARE) p.h ^= ZT[p.ep][13];
+    if (p.ep != INVALIDSQUARE) p.h ^= Zobrist::ZT[p.ep][13];
     p.ep = INVALIDSQUARE;
     if ( abs(fromP) == P_wp && abs(to-from) == 16 ) p.ep = (from + to)/2;
     assert(p.ep == INVALIDSQUARE || (SQRANK(p.ep) == 2 || SQRANK(p.ep) == 5));
-    if (p.ep != INVALIDSQUARE) p.h ^= ZT[p.ep][13];
+    if (p.ep != INVALIDSQUARE) p.h ^= Zobrist::ZT[p.ep][13];
 
     p.c = opponentColor(p.c);
-    p.h ^= ZT[3][13]; p.h ^= ZT[4][13];
+    p.h ^= Zobrist::ZT[3][13]; p.h ^= Zobrist::ZT[4][13];
 
     if ( toP != P_none || abs(fromP) == P_wp ) p.fifty = 0;
     else ++p.fifty;
@@ -2219,6 +2331,26 @@ const Move Get(const Hash h){
     std::unordered_map<Hash, std::set<Move> >::iterator it = book.find(h);
     if ( it == book.end() ) return INVALIDMOVE;
     return *select_randomly(it->second.begin(),it->second.end());
+}
+
+void initBook() {
+    if (Options::getOption<bool>("book")) {
+        const std::string bookFile = Options::getOption<std::string>("bookFile");
+        if (bookFile.empty()) {
+            Logging::LogIt(Logging::logWarn) << "json entry bookFile is empty, cannot load book";
+        }
+        else {
+            if (Book::fileExists(bookFile)) {
+                Logging::LogIt(Logging::logInfo) << "Loading book ...";
+                std::ifstream bbook(bookFile, std::ios::in | std::ios::binary);
+                Book::readBinaryBook(bbook);
+                Logging::LogIt(Logging::logInfo) << "... done";
+            }
+            else {
+                Logging::LogIt(Logging::logWarn) << "book file " << bookFile << " not found, cannot load book";
+            }
+        }
+    }
 }
 
 #ifdef IMPORTBOOK
@@ -2280,7 +2412,7 @@ ScoreType ThreadContext::SEEVal(const Position & pos, const Move & move)const{
     for (pp = P_wp; pp <= P_wq; ++pp) if ((pb = side_att & piece_occ[pp-1])) break; // looking for the smaller attaker
     if (!pb) pb = side_att; // in this case this is the king
     pb = pb & -pb; // get the LSB
-    if (display) { unsigned long int i = INVALIDSQUARE; bsf(pb,i); LogIt(logInfo) << "Capture from " << Squares[i]; }
+    if (display) { unsigned long int i = INVALIDSQUARE; bsf(pb,i); Logging::LogIt(Logging::logInfo) << "Capture from " << Squares[i]; }
     occ ^= pb; // remove this piece from occ
     if (pp == P_wp || pp == P_wb || pp == P_wq) att |= BB::attack<P_wb>(sq, bq, occ); // new sliders might be behind
     if (pp == P_wr || pp == P_wq) att |= BB::attack<P_wr>(sq, rq, occ); // new sliders might be behind
@@ -2363,7 +2495,7 @@ struct MoveSorter{
             else if (p.lastMove!=INVALIDMOVE && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 250;
             else s += context.historyT.history[getPieceIndex(p, from)][to];
             const bool isWhite = (p.whitePiece & SquareToBitboard(from)) != 0ull;
-            s += PST[getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - PST[getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from];
+            s += EvalConfig::PST[getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - EvalConfig::PST[getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from];
         }
         m = ToMove(from, to, t, s);
     }
@@ -2417,9 +2549,9 @@ ScoreType katt_table[64] = {0};
 
 void initEval(){
     for(int i = 0; i < 64; i++){
-     // idea taken from Topple
+        // idea taken from Topple
         katt_table[i] = (int) sigmoid(i,EvalConfig::katt_max,EvalConfig::katt_trans,EvalConfig::katt_scale,EvalConfig::katt_offset);
-        //LogIt(logInfo) << "Attack level " << i << " " << katt_table[i];
+        //Logging::LogIt(Logging::logInfo) << "Attack level " << i << " " << katt_table[i];
     }
 }
 
@@ -2520,8 +2652,8 @@ ScoreType eval(const Position & p, float & gp){
         const Square k = BB::popBit(pieceBBiterator);
         const Square kk = k^56;
         const Piece ptype = getPieceType(p,k);
-        sc   += PST  [ptype - 1][kk];
-        scEG += PSTEG[ptype - 1][kk];
+        sc   += EvalConfig::PST  [ptype - 1][kk];
+        scEG += EvalConfig::PSTEG[ptype - 1][kk];
         if (ptype != P_wp) {
             const BitBoard curTargets = pf[ptype-1](k, p.occupancy, p.c);
             const BitBoard curAtt = curTargets & ~p.whitePiece;
@@ -2542,8 +2674,8 @@ ScoreType eval(const Position & p, float & gp){
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
         const Piece ptype = getPieceType(p,k);
-        sc   -= PST  [ptype - 1][k];
-        scEG -= PSTEG[ptype - 1][k];
+        sc   -= EvalConfig::PST  [ptype - 1][k];
+        scEG -= EvalConfig::PSTEG[ptype - 1][k];
         if (ptype != P_wp) {
             const BitBoard curTargets = pf[ptype-1](k, p.occupancy, p.c);
             const BitBoard curAtt = curTargets & ~p.blackPiece;
@@ -2889,7 +3021,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         if (!isInCheck) {
             if (Move2Score(*it) < -900) continue; // see (from move sorter, SEE<0 add -2000 if bad capture)
-            if (StaticEvalConfig::doQFutility && evalScore + StaticEvalConfig::qfutilityMargin + getAbsValue(p, Move2To(*it)) <= alphaInit) continue;
+            if (StaticConfig::doQFutility && evalScore + StaticConfig::qfutilityMargin + getAbsValue(p, Move2To(*it)) <= alphaInit) continue;
         }
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
@@ -2927,7 +3059,7 @@ inline void updateTables(ThreadContext & context, const Position & p, DepthType 
 }
 
 inline bool singularExtension(ThreadContext & context, ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, const TT::Entry & e, const Move m, bool rootnode, int ply, bool isInCheck) {
-    if ( depth >= StaticEvalConfig::singularExtensionDepth && sameMove(m, e.m) && !rootnode && !isMateScore(e.score) && e.b == TT::B_beta && e.d >= depth - 3) {
+    if ( depth >= StaticConfig::singularExtensionDepth && sameMove(m, e.m) && !rootnode && !isMateScore(e.score) && e.b == TT::B_beta && e.d >= depth - 3) {
         const ScoreType betaC = e.score - depth;
         PVList sePV;
         DepthType seSeldetph;
@@ -3001,8 +3133,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if ( !DynamicConfig::mateFinder && canPrune && !isInCheck && !isMateScore(beta) && !pvnode){
 
         // razoring
-        int rAlpha = alpha - StaticEvalConfig::razoringMargin;
-        if ( false && StaticEvalConfig::doRazoring && depth <= StaticEvalConfig::razoringMaxDepth && evalScore <= rAlpha ){
+        int rAlpha = alpha - StaticConfig::razoringMargin;
+        if ( false && StaticConfig::doRazoring && depth <= StaticConfig::razoringMaxDepth && evalScore <= rAlpha ){
             ++stats.counters[Stats::sid_razoringTry];
             const ScoreType qScore = qsearch<true,pvnode>(rAlpha,rAlpha+1,p,ply,seldepth);
             if ( stopFlag ) return STOPSCORE;
@@ -3012,11 +3144,11 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if (isNotEndGame) {
 
             // static null move
-            if (StaticEvalConfig::doStaticNullMove && depth <= StaticEvalConfig::staticNullMoveMaxDepth && evalScore >= beta + StaticEvalConfig::staticNullMoveDepthCoeff * depth) return ++stats.counters[Stats::sid_staticNullMove], evalScore;
+            if (StaticConfig::doStaticNullMove && depth <= StaticConfig::staticNullMoveMaxDepth && evalScore >= beta + StaticConfig::staticNullMoveDepthCoeff * depth) return ++stats.counters[Stats::sid_staticNullMove], evalScore;
 
             // null move
             PVList nullPV;
-            if (StaticEvalConfig::doNullMove && depth >= StaticEvalConfig::nullMoveMinDepth) {
+            if (StaticConfig::doNullMove && depth >= StaticConfig::nullMoveMinDepth) {
                 ++stats.counters[Stats::sid_nullMoveTry];
                 const ScoreType nullIIDScore = evalScore; // pvs<false, false>(beta - 1, beta, p, std::max(depth / 4,1), ply, nullPV, seldepth, isInCheck);
                 if (nullIIDScore >= beta - 10 * depth) {
@@ -3033,14 +3165,14 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         }
 
         // ProbCut
-        if ( StaticEvalConfig::doProbcut && depth >= StaticEvalConfig::probCutMinDepth ){
+        if ( StaticConfig::doProbcut && depth >= StaticConfig::probCutMinDepth ){
           ++stats.counters[Stats::sid_probcutTry];
           int probCutCount = 0;
-          const ScoreType betaPC = beta + StaticEvalConfig::probCutMargin;
+          const ScoreType betaPC = beta + StaticConfig::probCutMargin;
           generate(p,moves,GP_cap);
           sort(*this,moves,p,true,&e);
           capMoveGenerated = true;
-          for (auto it = moves.begin() ; it != moves.end() && probCutCount < StaticEvalConfig::probCutMaxMoves; ++it){
+          for (auto it = moves.begin() ; it != moves.end() && probCutCount < StaticConfig::probCutMaxMoves; ++it){
             if ( (e.h != 0 && sameMove(e.m, *it)) || (Move2Score(*it) < 900) ) continue; // skip TT move if quiet or bad captures
             Position p2 = p;
             if ( ! apply(p2,*it) ) continue;
@@ -3048,7 +3180,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             ScoreType scorePC = -qsearch<true,pvnode>(-betaPC, -betaPC + 1, p2, ply + 1, seldepth);
             PVList pvPC;
             if (stopFlag) return STOPSCORE;
-            if (scorePC >= betaPC) ++stats.counters[Stats::sid_probcutTry2], scorePC = -pvs<pvnode,true>(-betaPC,-betaPC+1,p2,depth-StaticEvalConfig::probCutMinDepth+1,ply+1,pvPC,seldepth, isAttacked(p2, kingSquare(p2)));
+            if (scorePC >= betaPC) ++stats.counters[Stats::sid_probcutTry2], scorePC = -pvs<pvnode,true>(-betaPC,-betaPC+1,p2,depth-StaticConfig::probCutMinDepth+1,ply+1,pvPC,seldepth, isAttacked(p2, kingSquare(p2)));
             if (stopFlag) return STOPSCORE;
             if (scorePC >= betaPC) return ++stats.counters[Stats::sid_probcut], scorePC;
           }
@@ -3056,7 +3188,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     }
 
     // IID
-    if ( (e.h == 0 /*|| e.d < depth/3*/) && (pvnode && depth >= StaticEvalConfig::iidMinDepth || depth >= StaticEvalConfig::iidMinDepth2)){
+    if ( (e.h == 0 /*|| e.d < depth/3*/) && (pvnode && depth >= StaticConfig::iidMinDepth || depth >= StaticConfig::iidMinDepth2)){
         ++stats.counters[Stats::sid_iid];
         PVList iidPV;
         pvs<pvnode,false>(alpha,beta,p,depth/2,ply,iidPV,seldepth,isInCheck);
@@ -3065,10 +3197,10 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     }
 
     // LMP
-    if (!rootnode && StaticEvalConfig::doLMP && depth <= StaticEvalConfig::lmpMaxDepth) lmp = true;
+    if (!rootnode && StaticConfig::doLMP && depth <= StaticConfig::lmpMaxDepth) lmp = true;
 
     // futility
-    if (!rootnode && StaticEvalConfig::doFutility && evalScore <= alpha - StaticEvalConfig::futilityDepthCoeff*depth) futility = true;
+    if (!rootnode && StaticConfig::doFutility && evalScore <= alpha - StaticConfig::futilityDepthCoeff*depth) futility = true;
 
     int validMoveCount = 0;
     bool alphaUpdated = false;
@@ -3154,7 +3286,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         //if (p.lastMove != INVALIDMOVE && Move2Score(*it) > -900 && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++extension; ///@todo recapture
         const bool isCheck = isAttacked(p2, kingSquare(p2));
         // pvs
-        if (validMoveCount < 1 || !StaticEvalConfig::doPVS) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck);
+        if (validMoveCount < 1 || !StaticConfig::doPVS) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck);
         else{
             // reductions & prunings
             int reduction = 0;
@@ -3167,14 +3299,14 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             // futility
             if (futility && isPrunableStd) {++stats.counters[Stats::sid_futility]; continue;}
             // LMP
-            if (lmp && isPrunableStd && validMoveCount >= lmpLimit[improving][depth] ) {++stats.counters[Stats::sid_lmp]; continue;}
+            if (lmp && isPrunableStd && validMoveCount >= StaticConfig::lmpLimit[improving][depth] ) {++stats.counters[Stats::sid_lmp]; continue;}
             // SEE
             const bool isPrunableCap = isPrunable    && Move2Type(*it) == T_capture;
             const bool isBadCap      = isPrunableCap && Move2Score(*it) < -900;
             if ((futility||depth<=4) && isBadCap) {++stats.counters[Stats::sid_see]; continue;}
             // LMR
-            if (StaticEvalConfig::doLMR && !DynamicConfig::mateFinder && isPrunableStd && depth >= StaticEvalConfig::lmrMinDepth ){
-                reduction = lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
+            if (StaticConfig::doLMR && !DynamicConfig::mateFinder && isPrunableStd && depth >= StaticConfig::lmrMinDepth ){
+                reduction = StaticConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
                 if (!improving) ++reduction;
                 if (pvnode && reduction > 0) --reduction;
                 reduction -= 2*int(Move2Score(*it) / 200.f); ///@todo history reduction/extension
@@ -3225,16 +3357,16 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
 PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
     if ( isMainThread() ){
-        LogIt(logInfo) << "Search called" ;
-        LogIt(logInfo) << "requested time  " << currentMoveMs ;
-        LogIt(logInfo) << "requested depth " << (int) d ;
+        Logging::LogIt(Logging::logInfo) << "Search called" ;
+        Logging::LogIt(Logging::logInfo) << "requested time  " << getCurrentMoveMs() ;
+        Logging::LogIt(Logging::logInfo) << "requested depth " << (int) d ;
         stopFlag = false;
-        easyMove = MD_std;
+        moveDifficulty = MoveDifficultyUtil::MD_std;
     }
     else{
-        LogIt(logInfo) << "helper thread waiting ... " << id() ;
+        Logging::LogIt(Logging::logInfo) << "helper thread waiting ... " << id() ;
         while(startLock.load()){;}
-        LogIt(logInfo) << "... go for id " << id() ;
+        Logging::LogIt(Logging::logInfo) << "... go for id " << id() ;
     }
     stats.init();
     //TT::clearTT(); // to be used for reproductible results
@@ -3277,22 +3409,22 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
        ScoreType easyScore = pvs<true,false>(-MATE, MATE, p, 2, 1, pv, seldepth, isInCheck,INVALIDMOVE,&rootScores);
        std::sort(rootScores.begin(), rootScores.end(), [](const ThreadContext::RootScores& r1, const ThreadContext::RootScores & r2) {return r1.s > r2.s; });
        if (stopFlag) { bestScore = easyScore; goto pvsout; }
-       if (rootScores.size() == 1) easyMove = MD_forced; // only one : check evasion or zugzwang
-       else if (rootScores.size() > 1 && rootScores[0].s > rootScores[1].s + MoveDifficultyUtil::easyMoveMargin) easyMove = MD_easy;
+       if (rootScores.size() == 1) moveDifficulty = MoveDifficultyUtil::MD_forced; // only one : check evasion or zugzwang
+       else if (rootScores.size() > 1 && rootScores[0].s > rootScores[1].s + MoveDifficultyUtil::easyMoveMargin) moveDifficulty = MoveDifficultyUtil::MD_easy;
     }
 
     // ID loop
     for(DepthType depth = 1 ; depth <= std::min(d,DepthType(MAX_DEPTH-6)) && !stopFlag ; ++depth ){ // -6 so that draw can be found for sure
         if (!isMainThread()){ // stockfish like thread management
             const int i = (id()-1)%20;
-            if (((depth + SkipPhase[i]) / SkipSize[i]) % 2) continue;
+            if (((depth + ThreadPool::skipPhase[i]) / ThreadPool::skipSize[i]) % 2) continue;
         }
         else{
             if ( depth == 5) startLock.store(false);
         }
-        LogIt(logInfo) << "Thread " << id() << " searching depth " << (int)depth;
+        Logging::LogIt(Logging::logInfo) << "Thread " << id() << " searching depth " << (int)depth;
         PVList pvLoc;
-        ScoreType delta = (StaticEvalConfig::doWindow && depth>4)?8:MATE; // MATE not INFSCORE in order to enter the loop below once
+        ScoreType delta = (StaticConfig::doWindow && depth>4)?8:MATE; // MATE not INFSCORE in order to enter the loop below once
         ScoreType alpha = std::max(ScoreType(bestScore - delta), ScoreType (-INFSCORE));
         ScoreType beta  = std::min(ScoreType(bestScore + delta), INFSCORE);
         ScoreType score = 0;
@@ -3301,8 +3433,8 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
             score = pvs<true,false>(alpha,beta,p,depth,1,pvLoc,seldepth, isInCheck);
             if ( stopFlag ) break;
             delta += 2 + delta/2; // from xiphos ...
-            if      (score <= alpha) {beta = (alpha + beta) / 2; alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) ); LogIt(logInfo) << "Increase window alpha " << alpha << ".." << beta;}
-            else if (score >= beta ) {/*alpha= (alpha + beta) / 2;*/ beta  = std::min(ScoreType(score + delta), ScoreType( MATE) ); LogIt(logInfo) << "Increase window beta "  << alpha << ".." << beta;}
+            if      (score <= alpha) {beta = (alpha + beta) / 2; alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) ); Logging::LogIt(Logging::logInfo) << "Increase window alpha " << alpha << ".." << beta;}
+            else if (score >= beta ) {/*alpha= (alpha + beta) / 2;*/ beta  = std::min(ScoreType(score + delta), ScoreType( MATE) ); Logging::LogIt(Logging::logInfo) << "Increase window beta "  << alpha << ".." << beta;}
             else break;
         }
         if (stopFlag) break;
@@ -3317,10 +3449,10 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
             if ( DynamicConfig::fullXboardOutput ) str << (int)seldepth << " " << int(nodeCount/(ms/1000.f)/1000.) << " " << ThreadPool::instance().counter(Stats::sid_tthits)/1000;
             str << "\t" << ToString(pv);
             //<< " " << "EBF: " << float(nodeCount)/previousNodeCount ;
-            LogIt(logGUI) << str.str();
+            Logging::LogIt(Logging::logGUI) << str.str();
             previousNodeCount = nodeCount;
         }
-        if (TimeMan::isDynamic && depth > MoveDifficultyUtil::emergencyMinDepth && bestScore < depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin) { easyMove = MD_hardDefense; }
+        if (TimeMan::isDynamic && depth > MoveDifficultyUtil::emergencyMinDepth && bestScore < depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin) { moveDifficulty = MoveDifficultyUtil::MD_hardDefense; }
         if (TimeMan::isDynamic && std::max(1,int(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()*1.8)) > getCurrentMoveMs()) break; // not enought time
         depthScores[depth] = bestScore;
         if (!pv.empty()) depthMoves [depth] = pv[0];
@@ -3329,11 +3461,11 @@ pvsout:
     if ( isMainThread() ) startLock.store(false);
     if (pv.empty()){ // pv.size() != reachedDepth ?
         m = INVALIDMOVE;
-        LogIt(logInfo) << "Empty pv, trying to use TT" ;
+        Logging::LogIt(Logging::logInfo) << "Empty pv, trying to use TT" ;
         TT::getPV(p, *this, pv);
     }
     if (pv.empty()) {
-        LogIt(logWarn) << "Empty pv"; // may occur in case of mate / stalemate...
+        Logging::LogIt(Logging::logWarn) << "Empty pv"; // may occur in case of mate / stalemate...
     }
     else m = pv[0];
     d = reachedDepth;
@@ -3344,120 +3476,146 @@ pvsout:
     return pv;
 }
 
+namespace COM {
+    bool pondering; // currently pondering
+    enum Ponder : unsigned char { p_off = 0, p_on = 1 };
+    Ponder ponder;
+    std::string command;
+    Position position;
+    Move move;
+    DepthType depth;
+
+    enum Mode : unsigned char { m_play_white = 0, m_play_black = 1, m_force = 2, m_analyze = 3 };
+    Mode mode;
+
+    enum SideToMove : unsigned char { stm_white = 0, stm_black = 1 };
+    SideToMove stm; ///@todo isn't this redundant with position.c ??
+
+    void newgame() {
+        mode = m_analyze;
+        stm = stm_white;
+        readFEN(startPosition, COM::position);
+        TT::clearTT();
+    }
+
+    void init() {
+        Logging::LogIt(Logging::logInfo) << "Init COM";
+        ponder = p_off;
+        pondering = false;
+        depth = -1;
+        newgame();
+    }
+
+    void readLine() {
+        command.clear();
+        std::getline(std::cin, command);
+        Logging::LogIt(Logging::logInfo) << "Received command : " << command;
+    }
+
+    SideToMove opponent(SideToMove & s) { return s == stm_white ? stm_black : stm_white; }
+    
+    bool sideToMoveFromFEN(const std::string & fen) {
+        const bool b = readFEN(fen, COM::position);
+        stm = COM::position.c == Co_White ? stm_white : stm_black;
+        return b;
+    }
+
+    Move thinkUntilTimeUp() {
+        Logging::LogIt(Logging::logInfo) << "Thinking... ";
+        ScoreType score = 0;
+        Move m = INVALIDMOVE;
+        if (depth < 0) depth = MAX_DEPTH;
+        Logging::LogIt(Logging::logInfo) << "depth          " << (int)depth;
+        ThreadContext::currentMoveMs = TimeMan::GetNextMSecPerMove(position);
+        Logging::LogIt(Logging::logInfo) << "currentMoveMs  " << ThreadContext::currentMoveMs;
+        Logging::LogIt(Logging::logInfo) << ToString(position);
+        DepthType seldepth = 0;
+        PVList pv;
+        const ThreadData d = { depth,seldepth/*dummy*/,score/*dummy*/,position,m/*dummy*/,pv/*dummy*/ }; // only input coef
+        ThreadPool::instance().searchSync(d);
+        m = ThreadPool::instance().main().getData().best; // here output results
+        Logging::LogIt(Logging::logInfo) << "...done returning move " << ToString(m);
+        return m;
+    }
+
+    bool makeMove(Move m, bool disp, std::string tag) {
+        if (disp && m != INVALIDMOVE) Logging::LogIt(Logging::logGUI) << tag << " " << ToString(m);
+        Logging::LogIt(Logging::logInfo) << ToString(position);
+        return apply(position, m);
+    }
+
+    void ponderUntilInput() {
+        Logging::LogIt(Logging::logInfo) << "Pondering... ";
+        ScoreType score = 0;
+        Move m = INVALIDMOVE;
+        depth = MAX_DEPTH;
+        DepthType seldepth = 0;
+        PVList pv;
+        const ThreadData d = { depth,seldepth,score,position,m,pv };
+        ThreadPool::instance().searchASync(d);
+    }
+
+    void stop() { ThreadContext::stopFlag = true; }
+
+    void stopPonder() { if ((int)mode == (int)opponent(stm) && ponder == p_on && pondering) { pondering = false; stop(); } }
+
+    Move moveFromCOM(std::string mstr) { // copy string on purpose
+        mstr = trim(mstr);
+        Square from = INVALIDSQUARE;
+        Square to = INVALIDSQUARE;
+        MType mtype = T_std;
+        readMove(COM::position, mstr, from, to, mtype);
+        Move m = ToMove(from, to, mtype);
+        bool whiteToMove = COM::position.c == Co_White;
+        // convert castling input notation to internal castling style if needed
+        if (mtype == T_std &&
+            from == (whiteToMove ? Sq_e1 : Sq_e8) &&
+            COM::position.b[from] == (whiteToMove ? P_wk : P_bk)) {
+            if (to == (whiteToMove ? Sq_c1 : Sq_c8)) m = ToMove(from, to, whiteToMove ? T_wqs : T_bqs);
+            else if (to == (whiteToMove ? Sq_g1 : Sq_g8)) m = ToMove(from, to, whiteToMove ? T_wks : T_bks);
+        }
+        return m;
+    }
+
+}
+
 namespace XBoard{
 bool display;
-bool pondering;
-
-enum Mode : unsigned char { m_play_white = 0, m_play_black = 1, m_force = 2, m_analyze = 3 };
-Mode mode;
-
-enum SideToMove : unsigned char { stm_white = 0, stm_black = 1 };
-SideToMove stm;
-
-enum Ponder : unsigned char { p_off = 0, p_on = 1 };
-Ponder ponder;
-
-std::string command;
-Position position;
-Move move;
-DepthType depth;
 
 void init(){
-    LogIt(logInfo) << "Init xboard" ;
-    ponder    = p_off;
-    mode      = m_analyze;
-    stm       = stm_white;
-    depth     = -1;
-    display   = false;
-    pondering = false;
-    readFEN(startPosition,position);
+    Logging::LogIt(Logging::logInfo) << "Init xboard" ;
+    COM::init();
+    display = false;
 }
 
-SideToMove opponent(SideToMove & s) { return s == stm_white ? stm_black : stm_white; }
-
-void readLine() {
-    command.clear();
-    std::getline(std::cin, command);
-    LogIt(logInfo) << "Receive command : " << command ;
-}
-
-bool sideToMoveFromFEN(const std::string & fen) {
-    const bool b = readFEN(fen,position);
-    stm = position.c == Co_White ? stm_white : stm_black;
-    return b;
-}
-
-Move thinkUntilTimeUp(){
-    LogIt(logInfo) << "Thinking... " ;
-    ScoreType score = 0;
-    Move m = INVALIDMOVE;
-    if ( depth < 0 ) depth = 64;
-    LogIt(logInfo) << "depth          " << (int)depth ;
-    currentMoveMs = TimeMan::GetNextMSecPerMove(position);
-    LogIt(logInfo) << "currentMoveMs  " << currentMoveMs ;
-    LogIt(logInfo) << ToString(position) ;
-    DepthType seldepth = 0;
-    PVList pv;
-    const ThreadData d = {depth,seldepth/*dummy*/,score/*dummy*/,position,m/*dummy*/,pv/*dummy*/}; // only input coef
-    ThreadPool::instance().searchSync(d);
-    m = ThreadPool::instance().main().getData().best; // here output results
-    LogIt(logInfo) << "...done returning move " << ToString(m) ;
-    return m;
-}
-
-bool makeMove(Move m,bool disp){
-    if ( disp && m != INVALIDMOVE) LogIt(logGUI) << "move " << ToString(m) ;
-    LogIt(logInfo) << ToString(position) ;
-    return apply(position,m);
-}
-
-void ponderUntilInput(){
-    LogIt(logInfo) << "Pondering... " ;
-    ScoreType score = 0;
-    Move m = INVALIDMOVE;
-    depth = 64;
-    DepthType seldepth = 0;
-    PVList pv;
-    const ThreadData d = {depth,seldepth,score,position,m,pv};
-    ThreadPool::instance().searchASync(d);
-}
-
-void stop(){ ThreadContext::stopFlag = true; }
-
-void stopPonder(){ if ((int)mode == (int)opponent(stm) && ponder == p_on && pondering) { pondering = false; stop(); } }
-
-void xboard();
-
-} // XBoard
-
-void XBoard::xboard(){
-    LogIt(logInfo) << "Starting XBoard main loop" ;
+void xboard(){
+    Logging::LogIt(Logging::logInfo) << "Starting XBoard main loop" ;
     ///@todo more feature disable !!
-    LogIt(logGUI) << "feature ping=1 setboard=1 colors=0 usermove=1 memory=0 sigint=0 sigterm=0 otime=0 time=1 nps=0 myname=\"Minic " << MinicVersion << "\"" ;
-    LogIt(logGUI) << "feature done=1" ;
+    Logging::LogIt(Logging::logGUI) << "feature ping=1 setboard=1 colors=0 usermove=1 memory=0 sigint=0 sigterm=0 otime=0 time=1 nps=0 myname=\"Minic " << MinicVersion << "\"" ;
+    Logging::LogIt(Logging::logGUI) << "feature done=1" ;
 
     while(true) {
-        LogIt(logInfo) << "XBoard: mode " << mode ;
-        LogIt(logInfo) << "XBoard: stm  " << stm ;
-        if(mode == m_analyze){
+        Logging::LogIt(Logging::logInfo) << "XBoard: mode " << COM::mode ;
+        Logging::LogIt(Logging::logInfo) << "XBoard: stm  " << COM::stm ;
+        if(COM::mode == COM::m_analyze){
             //AnalyzeUntilInput(); ///@todo
         }
         // move as computer if mode is equal to stm
-        if((int)mode == (int)stm) { // mouarfff
-            move = thinkUntilTimeUp();
-            if(move == INVALIDMOVE){ mode = m_force; }// game ends
+        if((int)COM::mode == (int)COM::stm) { // mouarfff
+            COM::move = COM::thinkUntilTimeUp();
+            if(COM::move == INVALIDMOVE){ COM::mode = COM::m_force; } // game ends
             else{
-                if ( ! makeMove(move,true) ){
-                    LogIt(logInfo) << "Bad computer move !" ;
-                    LogIt(logInfo) << ToString(position) ;
-                    mode = m_force;
+                if ( !COM::makeMove(COM::move,true,"move") ){
+                    Logging::LogIt(Logging::logInfo) << "Bad computer move !" ;
+                    Logging::LogIt(Logging::logInfo) << ToString(COM::position) ;
+                    COM::mode = COM::m_force;
                 }
-                stm = opponent(stm);
+                COM::stm = COM::opponent(COM::stm);
             }
         }
 
-        // if not our turn, and ponder on, let's think ...
-        if(move != INVALIDMOVE && (int)mode == (int)opponent(stm) && ponder == p_on && !pondering)  ponderUntilInput();
+        // if not our turn, and ponder is on, let's think ...
+        if(COM::move != INVALIDMOVE && (int)COM::mode == (int)COM::opponent(COM::stm) && COM::ponder == COM::p_on && !COM::pondering) COM::ponderUntilInput();
 
         bool commandOK = true;
         int once = 0;
@@ -3465,138 +3623,125 @@ void XBoard::xboard(){
         while(once++ == 0 || !commandOK){ // loop until a good command is found
             commandOK = true;
             // read next command !
-            readLine();
+            COM::readLine();
 
-            if ( command == "force")        mode = m_force;
-            else if ( command == "xboard")  LogIt(logInfo) << "This is minic!" ;
-            else if ( command == "post")    display = true;
-            else if ( command == "nopost")  display = false;
-            else if ( command == "computer"){ }
-            else if ( strncmp(command.c_str(),"protover",8) == 0){ }
-            else if ( strncmp(command.c_str(),"accepted",8) == 0){ }
-            else if ( strncmp(command.c_str(),"rejected",8) == 0){ }
-            else if ( strncmp(command.c_str(),"ping",4) == 0){
-                std::string str(command);
-                const size_t p = command.find("ping");
+            if (COM::command == "force")        COM::mode = COM::m_force;
+            else if (COM::command == "xboard")  Logging::LogIt(Logging::logInfo) << "This is minic!" ;
+            else if (COM::command == "post")    display = true;
+            else if (COM::command == "nopost")  display = false;
+            else if (COM::command == "computer"){ }
+            else if ( strncmp(COM::command.c_str(),"protover",8) == 0){ }
+            else if ( strncmp(COM::command.c_str(),"accepted",8) == 0){ }
+            else if ( strncmp(COM::command.c_str(),"rejected",8) == 0){ }
+            else if ( strncmp(COM::command.c_str(),"ping",4) == 0){
+                std::string str(COM::command);
+                const size_t p = COM::command.find("ping");
                 str = str.substr(p+4);
                 str = trim(str);
-                LogIt(logGUI) << "pong " << str ;
+                Logging::LogIt(Logging::logGUI) << "pong " << str ;
             }
-            else if ( command == "new"){
-                stopPonder();
-                stop();
-                mode = (Mode)((int)stm); ///@todo should not be here !!! I thought start mode shall be analysis ...
-                readFEN(startPosition,position);
-                move = INVALIDMOVE;
-                if(mode != m_analyze){
-                    mode = m_play_black;
-                    stm = stm_white;
+            else if (COM::command == "new"){
+                COM::stopPonder();
+                COM::stop();
+                COM::sideToMoveFromFEN(startPosition);
+                COM::mode = (COM::Mode)((int)COM::stm); ///@todo should not be here !!! I thought start mode shall be analysis ...
+                COM::move = INVALIDMOVE;
+                if(COM::mode != COM::m_analyze){
+                    COM::mode = COM::m_play_black;
+                    COM::stm = COM::stm_white;
                 }
             }
-            else if ( command == "white"){ // deprecated
-                stopPonder();
-                stop();
-                mode = m_play_black;
-                stm = stm_white;
+            else if (COM::command == "white"){ // deprecated
+                COM::stopPonder();
+                COM::stop();
+                COM::mode = COM::m_play_black;
+                COM::stm = COM::stm_white;
             }
-            else if ( command == "black"){ // deprecated
-                stopPonder();
-                stop();
-                mode = m_play_white;
-                stm = stm_black;
+            else if (COM::command == "black"){ // deprecated
+                COM::stopPonder();
+                COM::stop();
+                COM::mode = COM::m_play_white;
+                COM::stm = COM::stm_black;
             }
-            else if ( command == "go"){
-                stopPonder();
-                stop();
-                mode = (Mode)((int)stm);
+            else if (COM::command == "go"){
+                COM::stopPonder();
+                COM::stop();
+                COM::mode = (COM::Mode)((int)COM::stm);
             }
-            else if ( command == "playother"){
-                stopPonder();
-                stop();
-                mode = (Mode)((int)opponent(stm));
+            else if (COM::command == "playother"){
+                COM::stopPonder();
+                COM::stop();
+                COM::mode = (COM::Mode)((int)COM::opponent(COM::stm));
             }
-            else if ( strncmp(command.c_str(),"usermove",8) == 0){
-                stopPonder();
-                stop();
-                std::string mstr(command);
-                const size_t p = command.find("usermove");
+            else if ( strncmp(COM::command.c_str(),"usermove",8) == 0){
+                COM::stopPonder();
+                COM::stop();
+                std::string mstr(COM::command);
+                const size_t p = COM::command.find("usermove");
                 mstr = mstr.substr(p + 8);
-                mstr = trim(mstr);
-                Square from = INVALIDSQUARE;
-                Square to   = INVALIDSQUARE;
-                MType mtype = T_std;
-                readMove(position,mstr,from,to,mtype);
-                Move m = ToMove(from,to,mtype);
-                bool whiteToMove = position.c==Co_White;
-                // convert castling Xboard notation to internal castling style if needed
-                if ( mtype == T_std &&
-                     from == (whiteToMove?Sq_e1:Sq_e8) &&
-                     position.b[from] == (whiteToMove?P_wk:P_bk) ){
-                    if      ( to == (whiteToMove?Sq_c1:Sq_c8)) m = ToMove(from,to,whiteToMove?T_wqs:T_bqs);
-                    else if ( to == (whiteToMove?Sq_g1:Sq_g8)) m = ToMove(from,to,whiteToMove?T_wks:T_bks);
-                }
-                if(!makeMove(m,false)){ // make move
+                Move m = COM::moveFromCOM(mstr);
+                if(!COM::makeMove(m,false,"")){ // make move
                     commandOK = false;
-                    LogIt(logInfo) << "Bad opponent move !" ;
-                    LogIt(logInfo) << ToString(position) ;
-                    mode = m_force;
+                    Logging::LogIt(Logging::logInfo) << "Bad opponent move ! " << mstr;
+                    Logging::LogIt(Logging::logInfo) << ToString(COM::position) ;
+                    COM::mode = COM::m_force;
                 }
-                else stm = opponent(stm);
+                else COM::stm = COM::opponent(COM::stm);
             }
-            else if (  strncmp(command.c_str(),"setboard",8) == 0){
-                stopPonder();
-                stop();
-                std::string fen(command);
-                const size_t p = command.find("setboard");
+            else if (  strncmp(COM::command.c_str(),"setboard",8) == 0){
+                COM::stopPonder();
+                COM::stop();
+                std::string fen(COM::command);
+                const size_t p = COM::command.find("setboard");
                 fen = fen.substr(p+8);
-                if (!sideToMoveFromFEN(fen)){
-                    LogIt(logInfo) << "Illegal FEN" ;
+                if (!COM::sideToMoveFromFEN(fen)){
+                    Logging::LogIt(Logging::logFatal) << "Illegal FEN" ;
                     commandOK = false;
                 }
             }
-            else if ( strncmp(command.c_str(),"result",6) == 0){
-                stopPonder();
-                stop();
-                mode = m_force;
+            else if ( strncmp(COM::command.c_str(),"result",6) == 0){
+                COM::stopPonder();
+                COM::stop();
+                COM::mode = COM::m_force;
             }
-            else if ( command == "analyze"){
-                stopPonder();
-                stop();
-                mode = m_analyze;
+            else if (COM::command == "analyze"){
+                COM::stopPonder();
+                COM::stop();
+                COM::mode = COM::m_analyze;
             }
-            else if ( command == "exit"){
-                stopPonder();
-                stop();
-                mode = m_force;
+            else if (COM::command == "exit"){
+                COM::stopPonder();
+                COM::stop();
+                COM::mode = COM::m_force;
             }
-            else if ( command == "easy"){
-                stopPonder();
-                ponder = p_off;
+            else if (COM::command == "easy"){
+                COM::stopPonder();
+                COM::ponder = COM::p_off;
             }
-            else if ( command == "hard"){
-                ponder = p_off; ///@todo
+            else if (COM::command == "hard"){
+                COM::ponder = COM::p_off; ///@todo
             }
-            else if ( command == "quit"){
+            else if (COM::command == "quit"){
                 _exit(0);
             }
-            else if ( command == "pause"){
-                stopPonder();
-                readLine();
-                while( command != "resume"){
-                    LogIt(logInfo) << "Error (paused): " << command ;
-                    readLine();
+            else if (COM::command == "pause"){
+                COM::stopPonder();
+                COM::readLine();
+                while(COM::command != "resume"){
+                    Logging::LogIt(Logging::logInfo) << "Error (paused): " << COM::command ;
+                    COM::readLine();
                 }
             }
-            else if( strncmp(command.c_str(), "time",4) == 0) {
+            else if( strncmp(COM::command.c_str(), "time",4) == 0) {
                 int centisec = 0;
-                sscanf(command.c_str(), "time %d", &centisec);
+                sscanf(COM::command.c_str(), "time %d", &centisec);
                 // just updating remaining time in curren TC (shall be classic TC or sudden death)
                 TimeMan::isDynamic        = true;
                 TimeMan::msecUntilNextTC  = centisec*10;
             }
-            else if ( strncmp(command.c_str(), "st", 2) == 0) {
+            else if ( strncmp(COM::command.c_str(), "st", 2) == 0) {
                 int msecPerMove = 0;
-                sscanf(command.c_str(), "st %d", &msecPerMove);
+                sscanf(COM::command.c_str(), "st %d", &msecPerMove);
                 msecPerMove *= 1000;
                 // forced move time
                 TimeMan::isDynamic        = false;
@@ -3605,13 +3750,13 @@ void XBoard::xboard(){
                 TimeMan::msecInTC         = -1;
                 TimeMan::msecInc          = -1;
                 TimeMan::msecUntilNextTC  = -1;
-                depth                     = 64; // infinity
+                COM::depth                = MAX_DEPTH; // infinity
             }
-            else if ( strncmp(command.c_str(), "sd", 2) == 0) {
+            else if ( strncmp(COM::command.c_str(), "sd", 2) == 0) {
                 int d = 0;
-                sscanf(command.c_str(), "sd %d", &d);
-                depth = d;
-                if(depth<0) depth = 8;
+                sscanf(COM::command.c_str(), "sd %d", &d);
+                COM::depth = d;
+                if(COM::depth<0) COM::depth = 8;
                 // forced move depth
                 TimeMan::isDynamic        = false;
                 TimeMan::nbMoveInTC       = -1;
@@ -3620,12 +3765,12 @@ void XBoard::xboard(){
                 TimeMan::msecInc          = -1;
                 TimeMan::msecUntilNextTC  = -1;
             }
-            else if(strncmp(command.c_str(), "level",5) == 0) {
+            else if(strncmp(COM::command.c_str(), "level",5) == 0) {
                 int timeTC = 0;
                 int secTC = 0;
                 int inc = 0;
                 int mps = 0;
-                if( sscanf(command.c_str(), "level %d %d %d", &mps, &timeTC, &inc) != 3) sscanf(command.c_str(), "level %d %d:%d %d", &mps, &timeTC, &secTC, &inc);
+                if( sscanf(COM::command.c_str(), "level %d %d %d", &mps, &timeTC, &inc) != 3) sscanf(COM::command.c_str(), "level %d %d:%d %d", &mps, &timeTC, &secTC, &inc);
                 timeTC *= 60000;
                 timeTC += secTC * 1000;
                 int msecinc = inc * 1000;
@@ -3636,118 +3781,201 @@ void XBoard::xboard(){
                 TimeMan::msecInTC         = timeTC;
                 TimeMan::msecInc          = msecinc;
                 TimeMan::msecUntilNextTC  = timeTC; // just an init here, will be managed using "time" command later
-                depth                     = 64; // infinity
+                COM::depth                = MAX_DEPTH; // infinity
             }
-            else if ( command == "edit"){ }
-            else if ( command == "?"){ stop(); }
-            else if ( command == "draw")  { }
-            else if ( command == "undo")  { }
-            else if ( command == "remove"){ }
+            else if ( COM::command == "edit"){ }
+            else if ( COM::command == "?"){ COM::stop(); }
+            else if ( COM::command == "draw")  { }
+            else if ( COM::command == "undo")  { }
+            else if ( COM::command == "remove"){ }
             //************ end of Xboard command ********//
-            else LogIt(logInfo) << "Xboard does not know this command " << command ;
+            else Logging::LogIt(Logging::logInfo) << "Xboard does not know this command " << COM::command ;
         } // readline
     } // while true
-
 }
+} // XBoard
 
-nlohmann::json json;
-std::vector<std::string> args;
+namespace UCI {
 
-void initOptions(int argc, char ** argv) {
-    for(int i = 1 ; i < argc ; ++i) args.push_back(argv[i]);
-    std::ifstream str("minic.json");
-    if (!str.is_open()) LogIt(logError) << "Cannot open minic.json";
-    else {
-        str >> json;
-        if (!json.is_object()) LogIt(logError) << "JSON is not an object";
+    std::future<void> f;
+
+    void init() {
+        Logging::LogIt(Logging::logInfo) << "Init uci";
+        COM::init();
     }
-}
 
-template<typename T> struct OptionValue {};
-template<> struct OptionValue<bool> {
-    const bool value = false;
-    const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_boolean;
-    static const bool clampAllowed = false;
-};
-template<> struct OptionValue<int> {
-    const int value = 0;
-    const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_number_integer;
-    static const bool clampAllowed = true;
-};
-template<> struct OptionValue<float> {
-    const float value = 0.f;
-    const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_number_float;
-    static const bool clampAllowed = true;
-};
-template<> struct OptionValue<std::string> {
-    const std::string value = "";
-    const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_string;
-    static const bool clampAllowed = false;
-};
+    void uci() {
 
-// from argv (override json)
-template<typename T> T getOptionCLI(bool & found, const std::string & key, T defaultValue = OptionValue<T>().value){
-    found = false;
-    auto it = std::find(args.begin(),args.end(),std::string("-")+key);
-    if (it == args.end()) { LogIt(logWarn) << "ARG key not given, " << key; return defaultValue; }
-    std::stringstream str;
-    ++it;
-    if (it == args.end()) { LogIt(logError) << "ARG value not given, " << key; return defaultValue; }
-    str << *it;
-    T ret = defaultValue;
-    str >> ret;
-    LogIt(logInfo) << "From ARG, " << key << " : " << ret;
-    found = true;
-    return ret;
-}
+        while (true) {
+            COM::readLine();
+            std::istringstream iss(COM::command);
+            std::string uciCommand;
+            iss >> uciCommand;
+            Logging::LogIt(Logging::logInfo) << "uci received command " << uciCommand;
 
-template<typename T> struct Validator{
-   Validator():hasMin(false),hasMax(false){}
-   Validator & setMin(const T & v){ minValue=v; hasMin=true; return *this;}
-   Validator & setMax(const T & v){ maxValue=v; hasMax=true; return *this;}
-   bool hasMin,hasMax;
-   T minValue, maxValue;
-   T get(const T & v)const {return std::min(hasMax?maxValue:v,std::max(hasMin?minValue:v,v));}
-};
+            if (uciCommand == "uci") {
+                Logging::LogIt(Logging::logGUI) << "id name Minic " << MinicVersion;
+                Logging::LogIt(Logging::logGUI) << "id author Vivien Clauzon";
 
-// from json
-template<typename T> T getOption(const std::string & key, T defaultValue = OptionValue<T>().value, const Validator<T> & v = Validator<T>()) {
-    bool found = false;
-    const T cliValue = getOptionCLI(found,key,defaultValue);
-    if ( found ) return v.get(cliValue);
-    auto it = json.find(key);
-    if (it == json.end()) { LogIt(logError) << "JSON key not given, " << key; return defaultValue; }
-    auto val = it.value();
-    if (!OptionValue<T>().validator(val)) { LogIt(logError) << "JSON value does not have expected type, " << it.key() << " : " << val; return defaultValue; }
-    else {
-        LogIt(logInfo) << "From config file, " << it.key() << " : " << val;
-        return OptionValue<T>().clampAllowed ? v.get(val.get<T>()): val.get<T>();
-    }
-}
+                ///@todo options !
+                //Logging::LogIt(Logging::logGUI) << "option name Hash type spin default 128 min 1 max 1048576";
+                //Logging::LogIt(Logging::logGUI) << "option name Threads type spin default 1 min 1 max 128";
+                //Logging::LogIt(Logging::logGUI) << "option name SyzygyPath type string default <empty>";
+                //Logging::LogIt(Logging::logGUI) << "option name SyzygyResolve type spin default 512 min 1 max 1024";
+                //Logging::LogIt(Logging::logGUI) << "option name Ponder type check default false";
 
-#define GETOPT(  name,type)                 DynamicConfig::name = getOption<type>(#name);
-#define GETOPT_D(name,type,def)             DynamicConfig::name = getOption<type>(#name,def);
-#define GETOPT_M(name,type,def,mini,maxi)   DynamicConfig::name = getOption<type>(#name,def,Validator<type>().setMin(mini).setMax(maxi));
+                Logging::LogIt(Logging::logGUI) << "uciok";
+            }
+            else if (uciCommand == "setoption") {
+                std::string name;
+                iss >> name;
+                if (name == "name") iss >> name;
+                /*
+                if (name == "Hash") {
+                    std::string value;
+                    iss >> value; // Skip value
+                    iss >> hash_size;
+                    // Resize hash
+                    delete tt;
+                    tt = new tt::hash_t(hash_size * MB);
+                }
+                else if (name == "Threads") {
+                    std::string value;
+                    iss >> value; // Skip value
+                    iss >> threads;
+                }
+                else if (name == "SyzygyPath") {
+                    std::string value;
+                    iss >> value; // Skip value
 
-void initBook(){
-    if ( getOption<bool>("book") ){
-        const std::string bookFile = getOption<std::string>("bookFile");
-        if ( bookFile.empty() ) {
-           LogIt(logWarn) << "json entry bookFile is empty, cannot load book";
+                    std::string path;
+                    std::getline(iss, path);
+
+                    path = path.substr(1, path.size() - 1);
+
+                    std::cout << "Looking for tablebases in: " << path << std::endl;
+
+                    init_tablebases(path.c_str());
+                }
+                else if (name == "SyzygyResolve") {
+                    std::string value;
+                    iss >> value; // Skip value
+                    iss >> syzygy_resolve;
+                }
+                else if (name == "Ponder") {
+                    // Do nothing
+                }
+                */
+                else { Logging::LogIt(Logging::logUCIInfo) << "unknown uci option " << name; }
+            }
+            else if (uciCommand == "isready") { Logging::LogIt(Logging::logGUI) << "readyok"; }
+            else if (uciCommand == "stop") { Logging::LogIt(Logging::logInfo) << "stop requested";  ThreadContext::stopFlag = true; }
+            else if (uciCommand == "position") {
+                COM::position.h = 0ull; // invalidate position
+                std::string type;
+                while (iss >> type) {
+                    if (type == "startpos") { COM::sideToMoveFromFEN(startPosition); }
+                    else if (type == "fen") {
+                        std::string fen;
+                        for (int i = 0; i < 6; i++) { // always full fen ... ///@todo better?
+                            std::string component;
+                            iss >> component;
+                            fen += component + " ";
+                        }
+                        if (!COM::sideToMoveFromFEN(fen)) Logging::LogIt(Logging::logFatal) << "Illegal FEN " << fen;
+                    }
+                    else if (type == "moves") {
+                        if (computeHash(COM::position) != 0ull) {
+                            std::string mstr;
+                            while (iss >> mstr) {
+                                Move m = COM::moveFromCOM(mstr);
+                                if (!COM::makeMove(m, false, "")) { // make move
+                                    Logging::LogIt(Logging::logInfo) << "Bad move ! : " << mstr;
+                                    Logging::LogIt(Logging::logInfo) << ToString(COM::position);
+                                    COM::mode = COM::m_force;
+                                }
+                                else COM::stm = COM::opponent(COM::stm);
+                            }
+                        }
+                        else Logging::LogIt(Logging::logUCIInfo) << "no start position specified";
+                    }
+                }
+            }
+            else if (uciCommand == "go") {
+                if (!ThreadContext::stopFlag) { Logging::LogIt(Logging::logUCIInfo) << "go command received, but search already in progress"; }
+                else {
+                    if (computeHash(COM::position) != 0ull) {
+                        //std::vector<Move> root_moves;
+
+                        // default is infinite search
+                        TimeMan::isDynamic = false;
+                        TimeMan::nbMoveInTC = -1;
+                        TimeMan::msecPerMove = -1;
+                        TimeMan::msecInTC = -1;
+                        TimeMan::msecInc = -1;
+                        TimeMan::msecUntilNextTC = -1;
+                        COM::depth = MAX_DEPTH; // infinity
+
+                        COM::ponder = COM::p_off;
+
+                        std::string param;
+                        while (iss >> param) {
+                            Logging::LogIt(Logging::logInfo) << "received parameter " << param;
+                            if      (param == "infinite")    { TimeMan::msecPerMove = 60 * 60 * 1000 * 24; }
+                            else if (param == "depth")       { int d = 0;  iss >> d; COM::depth = d; }
+                            else if (param == "movetime")    { iss >> TimeMan::msecPerMove; }
+                            else if (param == "nodes")       { unsigned long long int maxNodes = 0;  iss >> maxNodes; TimeMan::maxKNodes = int(maxNodes/1000); }
+                            else if (param == "searchmoves") { Logging::LogIt(Logging::logUCIInfo) << param << " not implemented yet"; }
+                            else if (param == "wtime" && COM::position.c == Co_White) { iss >> TimeMan::msecUntilNextTC; TimeMan::isDynamic = true; }
+                            else if (param == "btime" && COM::position.c == Co_Black) { iss >> TimeMan::msecUntilNextTC; TimeMan::isDynamic = true; }
+                            else if (param == "winc"  && COM::position.c == Co_White) { iss >> TimeMan::msecInc; }
+                            else if (param == "binc"  && COM::position.c == Co_Black) { iss >> TimeMan::msecInc; }
+                            else if (param == "movestogo")   { iss >> TimeMan::moveToGo; TimeMan::isDynamic = true; }
+                            else if (param == "ponder")      { COM::ponder = COM::p_on; TimeMan::msecPerMove = 60 * 60 * 1000 * 24;} // infinite search time
+                            else                             { Logging::LogIt(Logging::logUCIInfo) << param << " not implemented"; }
+                        }
+
+                        f = std::async(std::launch::async, [] {
+                            COM::move = COM::thinkUntilTimeUp();
+                            if (COM::ponder == COM::p_off) {
+                                if (COM::move == INVALIDMOVE) { COM::mode = COM::m_force; } // game ends
+                                else {
+                                    if (!COM::makeMove(COM::move, true, "bestmove")) {
+                                        Logging::LogIt(Logging::logUCIInfo) << "Bad computer move !";
+                                        Logging::LogIt(Logging::logInfo) << ToString(COM::position);
+                                        COM::mode = COM::m_force;
+                                    }
+                                    COM::stm = COM::opponent(COM::stm);
+                                }
+
+                            }
+                        });
+                    }
+                    else { Logging::LogIt(Logging::logUCIInfo) << "search command received, but no position specified"; }
+                }
+            }
+            else if (uciCommand == "ponderhit") { Logging::LogIt(Logging::logUCIInfo) << uciCommand << " not implemented yet"; }
+            else if (uciCommand == "ucinewgame") {
+                if (!ThreadContext::stopFlag) { Logging::LogIt(Logging::logUCIInfo) << uciCommand << " received but search in progress ..."; }
+                else { COM::init(); }
+            }
+            else if (uciCommand == "eval") { Logging::LogIt(Logging::logUCIInfo) << uciCommand << " not implemented yet"; }
+            else if (uciCommand == "tbprobe") {
+                std::string type;
+                iss >> type;
+                Logging::LogIt(Logging::logUCIInfo) << uciCommand << " not implemented yet";
+            }
+            else if (uciCommand == "print") { Logging::LogIt(Logging::logInfo) << ToString(COM::position); }
+            else if (uciCommand == "quit") {
+                COM::stopPonder();
+                COM::stop();
+                _exit(0);
+            }
+            else if (!uciCommand.empty()) { Logging::LogIt(Logging::logUCIInfo) << "unrecognised command " << uciCommand; }
         }
-        else{
-           if (Book::fileExists(bookFile) ){
-              LogIt(logInfo) << "Loading book ...";
-              std::ifstream bbook(bookFile,std::ios::in | std::ios::binary);
-              Book::readBinaryBook(bbook);
-              LogIt(logInfo) << "... done";
-           }
-           else{
-              LogIt(logWarn) << "book file " << bookFile << " not found, cannot load book";
-           }
-        }
     }
-}
+
+} // UCI
 
 #ifdef DEBUG_TOOL
 #include "Add-On/cli.cc"
@@ -3761,26 +3989,30 @@ void initBook(){
 #include "Add-On/testSuite.cc"
 #endif
 
-int main(int argc, char ** argv){
-    hellooo();
-    initOptions(argc,argv);
-    initHash();
-    GETOPT_D(ttSizeMb,int,128)
+void init(int argc, char ** argv) {
+    Logging::hellooo();
+    Options::initOptions(argc, argv);
+    Zobrist::initHash();
+    GETOPT_D(ttSizeMb, int, 128)
     TT::initTable();
-    initLMR();
+    StaticConfig::initLMR();
     initMvvLva();
     BB::initMask();
     MaterialHash::MaterialHashInitializer::init();
     initEval();
-    ThreadPool::instance().setup(getOption<int>("threads",1,Validator<int>().setMin(1).setMax(64)));
+    ThreadPool::instance().setup(Options::getOption<int>("threads", 1, Options::Validator<int>().setMin(1).setMax(64)));
     GETOPT(mateFinder, bool)
     GETOPT(fullXboardOutput, bool)
-    initBook();
+    Book::initBook();
 
 #ifdef WITH_SYZYGY
     SyzygyTb::initTB("syzygy");
 #endif
+}
 
+int main(int argc, char ** argv){
+    init(argc, argv);
+    
 #ifdef WITH_TEST_SUITE
     if ( argc > 1 && test(argv[1])) return 0;
 #endif
@@ -3790,9 +4022,10 @@ int main(int argc, char ** argv){
 #endif
 
 #ifdef DEBUG_TOOL
-    if ( argc < 2 ) LogIt(logFatal) << "Hint: You can use -xboard command line option to enter xboard mode";
+    if ( argc < 2 ) Logging::LogIt(Logging::logFatal) << "Hint: You can use -xboard command line option to enter xboard mode";
     return cliManagement(argv[1],argc,argv);
 #else
+    ///@todo factorize with the one in cliManagement
     XBoard::init();
     TimeMan::init();
     XBoard::xboard();

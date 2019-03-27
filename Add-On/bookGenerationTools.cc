@@ -72,7 +72,7 @@ std::string getAlgAlt(const std::string & s, Position & p){
    if ( pos != std::string::npos){ // promotion
       prom = sAlgAbr.substr(pos+1);
       if ( prom.size() != 1 ){
-          LogIt(logFatal) << "Bad promotion string " << prom << " (" << s << ")";
+          Logging::LogIt(Logging::logFatal) << "Bad promotion string " << prom << " (" << s << ")";
           return "";
       }
       sAlgAbr = sAlgAbr.substr(0,pos);
@@ -127,12 +127,12 @@ std::string getAlgAlt(const std::string & s, Position & p){
    }
        break;
    default:
-       LogIt(logFatal) << "Bad move string " << sAlgAbr << " (" << s << ")";
+       Logging::LogIt(Logging::logFatal) << "Bad move string " << sAlgAbr << " (" << s << ")";
        return "";
    }
 
    if ( from.empty() ){
-       LogIt(logFatal) << "Cannot get from square " << to;
+       Logging::LogIt(Logging::logFatal) << "Cannot get from square " << to;
        return "";
    }
 
@@ -184,4 +184,5 @@ bool readBook(const std::string & bookFileName){
     }
     bookFileBinary.close();
     bookFile.close();
+    return true;
 }

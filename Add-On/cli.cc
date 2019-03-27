@@ -3,12 +3,12 @@ struct PerftAccumulator{
     Counter pseudoNodes,validNodes,captureNodes,epNodes,checkNode,checkMateNode;
 
     void Display(){
-        LogIt(logInfo) << "pseudoNodes   " << pseudoNodes   ;
-        LogIt(logInfo) << "validNodes    " << validNodes    ;
-        LogIt(logInfo) << "captureNodes  " << captureNodes  ;
-        LogIt(logInfo) << "epNodes       " << epNodes       ;
-        LogIt(logInfo) << "checkNode     " << checkNode     ;
-        LogIt(logInfo) << "checkMateNode " << checkMateNode ;
+        Logging::LogIt(Logging::logInfo) << "pseudoNodes   " << pseudoNodes   ;
+        Logging::LogIt(Logging::logInfo) << "validNodes    " << validNodes    ;
+        Logging::LogIt(Logging::logInfo) << "captureNodes  " << captureNodes  ;
+        Logging::LogIt(Logging::logInfo) << "epNodes       " << epNodes       ;
+        Logging::LogIt(Logging::logInfo) << "checkNode     " << checkNode     ;
+        Logging::LogIt(Logging::logInfo) << "checkMateNode " << checkMateNode ;
     }
 };
 
@@ -17,22 +17,22 @@ void pstMean(){
         int divisor = (i==0)?48:64;
         ScoreType sum = 0;
         for(int k = 0 ; k < 64 ; ++k){
-           sum += PST[i][k];
+           sum += EvalConfig::PST[i][k];
         }
-        LogIt(logInfo) << Names[i+1+PieceShift] << " " << sum/divisor;
+        Logging::LogIt(Logging::logInfo) << Names[i+1+PieceShift] << " " << sum/divisor;
         for(int k = ((i==0)?8:0) ; k < ((i==0)?56:64) ; ++k){
             if (k%8==0) std::cout << std::endl;
-            std::cout << PST[i][k]-sum/divisor << ",";
+            std::cout << EvalConfig::PST[i][k]-sum/divisor << ",";
         }
         std::cout << std::endl;
         sum = 0;
         for(int k = 0 ; k < 64 ; ++k){
-           sum += PSTEG[i][k];
+           sum += EvalConfig::PSTEG[i][k];
         }
-        LogIt(logInfo) << Names[i+1+PieceShift] << "EG " << sum/divisor;
+        Logging::LogIt(Logging::logInfo) << Names[i+1+PieceShift] << "EG " << sum/divisor;
         for(int k = ((i==0)?8:0) ; k < ((i==0)?56:64) ; ++k){
             if (k%8==0) std::cout << std::endl;
-            std::cout << PSTEG[i][k]-sum/divisor << ",";
+            std::cout << EvalConfig::PSTEG[i][k]-sum/divisor << ",";
         }
         std::cout << std::endl;
     }
@@ -51,24 +51,24 @@ Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc, bool 
         Position p2 = p;
         if ( ! apply(p2,m) ) continue;
         ++validMoves;
-        if ( divide && depth == 2 ) LogIt(logInfo) << ToString(p2) ;
+        if ( divide && depth == 2 ) Logging::LogIt(Logging::logInfo) << ToString(p2) ;
         Counter nNodes = perft(p2,depth-1,acc,divide);
-        if ( divide && depth == 2 ) LogIt(logInfo) << "=> after " << ToString(m) << " " << nNodes ;
-        if ( divide && depth == 1 ) LogIt(logInfo) << (int)depth << " " <<  ToString(m) ;
+        if ( divide && depth == 2 ) Logging::LogIt(Logging::logInfo) << "=> after " << ToString(m) << " " << nNodes ;
+        if ( divide && depth == 1 ) Logging::LogIt(Logging::logInfo) << (int)depth << " " <<  ToString(m) ;
     }
     if ( depth == 1 ) { acc.pseudoNodes += allMoves; acc.validNodes += validMoves; }
-    if ( divide && depth == 2 ) LogIt(logInfo) << "********************" ;
+    if ( divide && depth == 2 ) Logging::LogIt(Logging::logInfo) << "********************" ;
     return acc.validNodes;
 }
 
 void perft_test(const std::string & fen, DepthType d, unsigned long long int expected) {
     Position p;
     readFEN(fen, p);
-    LogIt(logInfo) << ToString(p) ;
+    Logging::LogIt(Logging::logInfo) << ToString(p) ;
     PerftAccumulator acc;
-    if (perft(p, d, acc, false) != expected) LogIt(logInfo) << "Error !! " << fen << " " << expected ;
+    if (perft(p, d, acc, false) != expected) Logging::LogIt(Logging::logInfo) << "Error !! " << fen << " " << expected ;
     acc.Display();
-    LogIt(logInfo) << "#########################" ;
+    Logging::LogIt(Logging::logInfo) << "#########################" ;
 }
 
 int cliManagement(std::string cli, int argc, char ** argv){
@@ -80,7 +80,14 @@ int cliManagement(std::string cli, int argc, char ** argv){
         return 0;
     }
 
-    LogIt(logInfo) << "You can use -xboard command line option to enter xboard mode";
+    if (cli == "-uci") {
+        UCI::init();
+        TimeMan::init();
+        UCI::uci();
+        return 0;
+    }
+
+    Logging::LogIt(Logging::logInfo) << "You can use -xboard command line option to enter xboard mode";
 
     if ( cli == "-perft_test" ){
         perft_test(startPosition, 5, 4865609);
@@ -106,16 +113,16 @@ int cliManagement(std::string cli, int argc, char ** argv){
 
     Position p;
     if ( ! readFEN(fen,p) ){
-        LogIt(logInfo) << "Error reading fen" ;
+        Logging::LogIt(Logging::logInfo) << "Error reading fen" ;
         return 1;
     }
 
-    LogIt(logInfo) << ToString(p) ;
+    Logging::LogIt(Logging::logInfo) << ToString(p) ;
 
     if (cli == "-qsearch"){
         DepthType seldepth = 0;
         double s = ThreadPool::instance().main().qsearchNoPruning(-10000,10000,p,1,seldepth);
-        LogIt(logInfo) << "Score " << s;
+        Logging::LogIt(Logging::logInfo) << "Score " << s;
         return 1;
     }
 
@@ -137,14 +144,14 @@ int cliManagement(std::string cli, int argc, char ** argv){
         # Info  2018-12-31 16:43:00-624: see value : c4e4 -606
         */
         Move m = ToMove(Sq_c4, Sq_e4, T_capture);
-        LogIt(logInfo) << "see value : " << ToString(m) << " " << ThreadPool::instance().main().SEEVal<true>(p,m);
+        Logging::LogIt(Logging::logInfo) << "see value : " << ToString(m) << " " << ThreadPool::instance().main().SEEVal<true>(p,m);
         return 0;
     }
 
     if (cli == "-attacked") {
         Square k = Sq_e4;
         if (argc >= 3) k = atoi(argv[3]);
-        LogIt(logInfo) << showBitBoard(BB::isAttackedBB(p, k, p.c));
+        Logging::LogIt(Logging::logInfo) << showBitBoard(BB::isAttackedBB(p, k, p.c));
         return 0;
     }
 
@@ -153,43 +160,43 @@ int cliManagement(std::string cli, int argc, char ** argv){
         if (argc >= 3) k = atoi(argv[3]);
         switch (p.b[k]) {
         case P_wp:
-            LogIt(logInfo) << showBitBoard((BB::coverage<P_wp>(k, p.occupancy, p.c) + BB::mask[k].push[p.c]) & ~p.whitePiece);
+            Logging::LogIt(Logging::logInfo) << showBitBoard((BB::coverage<P_wp>(k, p.occupancy, p.c) + BB::mask[k].push[p.c]) & ~p.whitePiece);
             break;
         case P_wn:
-            LogIt(logInfo) << showBitBoard(BB::coverage<P_wn>(k, p.occupancy, p.c) & ~p.whitePiece);
+            Logging::LogIt(Logging::logInfo) << showBitBoard(BB::coverage<P_wn>(k, p.occupancy, p.c) & ~p.whitePiece);
             break;
         case P_wb:
-            LogIt(logInfo) << showBitBoard(BB::coverage<P_wb>(k, p.occupancy, p.c) & ~p.whitePiece);
+            Logging::LogIt(Logging::logInfo) << showBitBoard(BB::coverage<P_wb>(k, p.occupancy, p.c) & ~p.whitePiece);
             break;
         case P_wr:
-            LogIt(logInfo) << showBitBoard(BB::coverage<P_wr>(k, p.occupancy, p.c) & ~p.whitePiece);
+            Logging::LogIt(Logging::logInfo) << showBitBoard(BB::coverage<P_wr>(k, p.occupancy, p.c) & ~p.whitePiece);
             break;
         case P_wq:
-            LogIt(logInfo) << showBitBoard(BB::coverage<P_wq>(k, p.occupancy, p.c) & ~p.whitePiece);
+            Logging::LogIt(Logging::logInfo) << showBitBoard(BB::coverage<P_wq>(k, p.occupancy, p.c) & ~p.whitePiece);
             break;
         case P_wk:
-            LogIt(logInfo) << showBitBoard(BB::coverage<P_wk>(k, p.occupancy, p.c) & ~p.whitePiece);
+            Logging::LogIt(Logging::logInfo) << showBitBoard(BB::coverage<P_wk>(k, p.occupancy, p.c) & ~p.whitePiece);
             break;
         case P_bk:
-            LogIt(logInfo) << showBitBoard(BB::coverage<P_wk>(k, p.occupancy, p.c) & ~p.blackPiece);
+            Logging::LogIt(Logging::logInfo) << showBitBoard(BB::coverage<P_wk>(k, p.occupancy, p.c) & ~p.blackPiece);
             break;
         case P_bq:
-            LogIt(logInfo) << showBitBoard(BB::coverage<P_wq>(k, p.occupancy, p.c )& ~p.blackPiece);
+            Logging::LogIt(Logging::logInfo) << showBitBoard(BB::coverage<P_wq>(k, p.occupancy, p.c )& ~p.blackPiece);
             break;
         case P_br:
-            LogIt(logInfo) << showBitBoard(BB::coverage<P_wr>(k, p.occupancy, p.c) & ~p.blackPiece);
+            Logging::LogIt(Logging::logInfo) << showBitBoard(BB::coverage<P_wr>(k, p.occupancy, p.c) & ~p.blackPiece);
             break;
         case P_bb:
-            LogIt(logInfo) << showBitBoard(BB::coverage<P_wb>(k, p.occupancy, p.c) & ~p.blackPiece);
+            Logging::LogIt(Logging::logInfo) << showBitBoard(BB::coverage<P_wb>(k, p.occupancy, p.c) & ~p.blackPiece);
             break;
         case P_bn:
-            LogIt(logInfo) << showBitBoard(BB::coverage<P_wn>(k, p.occupancy, p.c) & ~p.blackPiece);
+            Logging::LogIt(Logging::logInfo) << showBitBoard(BB::coverage<P_wn>(k, p.occupancy, p.c) & ~p.blackPiece);
             break;
         case P_bp:
-            LogIt(logInfo) << showBitBoard((BB::coverage<P_wp>(k, p.occupancy, p.c) + BB::mask[k].push[p.c])& ~p.blackPiece);
+            Logging::LogIt(Logging::logInfo) << showBitBoard((BB::coverage<P_wp>(k, p.occupancy, p.c) + BB::mask[k].push[p.c])& ~p.blackPiece);
             break;
         default:
-            LogIt(logInfo) << showBitBoard(0ull);
+            Logging::LogIt(Logging::logInfo) << showBitBoard(0ull);
         }
         return 0;
     }
@@ -197,7 +204,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
     if ( cli == "-eval" ){
         float gp = 0;
         int score = eval(p,gp);
-        LogIt(logInfo) << "eval " << score << " phase " << gp ;
+        Logging::LogIt(Logging::logInfo) << "eval " << score << " phase " << gp ;
         return 0;
     }
 
@@ -205,9 +212,9 @@ int cliManagement(std::string cli, int argc, char ** argv){
         MoveList moves;
         generate(p,moves);
         sort(ThreadPool::instance().main(),moves,p,0);
-        LogIt(logInfo) << "nb moves : " << moves.size() ;
+        Logging::LogIt(Logging::logInfo) << "nb moves : " << moves.size() ;
         for(auto it = moves.begin(); it != moves.end(); ++it){
-            LogIt(logInfo) << ToString(*it,true) ;
+            Logging::LogIt(Logging::logInfo) << ToString(*it,true) ;
         }
         return 0;
     }
@@ -216,7 +223,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
         Move m = ToMove(8,16,T_std);
         Position p2 = p;
         apply(p2,m);
-        LogIt(logInfo) << ToString(p2) ;
+        Logging::LogIt(Logging::logInfo) << ToString(p2) ;
         return 0;
     }
 
@@ -240,7 +247,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
         TimeMan::msecInTC        = -1;
         TimeMan::msecInc         = -1;
         TimeMan::msecUntilNextTC = -1;
-        currentMoveMs = TimeMan::GetNextMSecPerMove(p);
+        ThreadContext::currentMoveMs = TimeMan::GetNextMSecPerMove(p);
         DepthType seldepth = 0;
         std::vector<Move> pv;
         ThreadData d = {depth,seldepth/*dummy*/,s/*dummy*/,p,bestMove/*dummy*/,pv/*dummy*/}; // only input coef
@@ -248,7 +255,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
         bestMove = ThreadPool::instance().main().getData().best; // here output results
         s = ThreadPool::instance().main().getData().sc; // here output results
         pv = ThreadPool::instance().main().getData().pv; // here output results
-        LogIt(logInfo) << "Best move is " << ToString(bestMove) << " " << (int)depth << " " << s << " pv : " << ToString(pv) ;
+        Logging::LogIt(Logging::logInfo) << "Best move is " << ToString(bestMove) << " " << (int)depth << " " << s << " pv : " << ToString(pv) ;
         return 0;
     }
 
@@ -264,7 +271,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
         TimeMan::msecInTC        = -1;
         TimeMan::msecInc         = -1;
         TimeMan::msecUntilNextTC = -1;
-        currentMoveMs = TimeMan::GetNextMSecPerMove(p);
+        ThreadContext::currentMoveMs = TimeMan::GetNextMSecPerMove(p);
         DepthType seldepth = 0;
         std::vector<Move> pv;
         ThreadData d = {depth,seldepth/*dummy*/,s/*dummy*/,p,bestMove/*dummy*/,pv/*dummy*/}; // only input coef
@@ -272,10 +279,10 @@ int cliManagement(std::string cli, int argc, char ** argv){
         bestMove = ThreadPool::instance().main().getData().best; // here output results
         s = ThreadPool::instance().main().getData().sc; // here output results
         pv = ThreadPool::instance().main().getData().pv; // here output results
-        LogIt(logInfo) << "Best move is " << ToString(bestMove) << " " << (int)depth << " " << s << " pv : " << ToString(pv) ;
+        Logging::LogIt(Logging::logInfo) << "Best move is " << ToString(bestMove) << " " << (int)depth << " " << s << " pv : " << ToString(pv) ;
         return 0;
     }
 
-    LogIt(logInfo) << "Error : unknown command line" ;
+    Logging::LogIt(Logging::logInfo) << "Error : unknown command line" ;
     return 1;
 }
