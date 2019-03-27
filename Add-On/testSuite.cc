@@ -64,11 +64,11 @@ ExtendedPosition::ExtendedPosition(const std::string & extFEN, bool withMoveCoun
     if (!withMoveCount) {
         ply = 0; moves = 1; fifty = 0;
     }
-    LogIt(logInfo) << ToString(*this);
+    Logging::LogIt(Logging::logInfo) << ToString(*this);
     std::vector<std::string> strList;
     std::stringstream iss(extFEN);
     std::copy(std::istream_iterator<std::string>(iss), std::istream_iterator<std::string>(), back_inserter(strList));
-    if ( strList.size() < (withMoveCount?7u:5u)) LogIt(logFatal) << "Not an extended position";
+    if ( strList.size() < (withMoveCount?7u:5u)) Logging::LogIt(Logging::logFatal) << "Not an extended position";
     std::vector<std::string>(strList.begin()+(withMoveCount?6:4), strList.end()).swap(strList);
     const std::string extendedParamsStr = std::accumulate(strList.begin(), strList.end(), std::string(""),[](const std::string & a, const std::string & b) {return a + ' ' + b;});
     //LogIt(logInfo) << "extended parameters : " << extendedParamsStr;
@@ -80,7 +80,7 @@ ExtendedPosition::ExtendedPosition(const std::string & extFEN, bool withMoveCoun
         if ( strParamList[k].empty()) continue;
         std::vector<std::string> pair;
         split(pair,strParamList[k]," ");
-        if ( pair.size() < 2 ) LogIt(logFatal) << "Not un extended parameter pair";
+        if ( pair.size() < 2 ) Logging::LogIt(Logging::logFatal) << "Not un extended parameter pair";
         std::vector<std::string> values = pair;
         values.erase(values.begin());
         _extendedParams[pair[0]] = values;
@@ -100,7 +100,7 @@ std::string ExtendedPosition::id(){
 }
 
 bool ExtendedPosition::readEPDFile(const std::string & fileName, std::vector<std::string> & positions){
-    LogIt(logInfo) << "Loading EPD file : " << fileName;
+    Logging::LogIt(Logging::logInfo) << "Loading EPD file : " << fileName;
     std::ifstream str(fileName);
     if (str) {
         std::string line;
@@ -108,7 +108,7 @@ bool ExtendedPosition::readEPDFile(const std::string & fileName, std::vector<std
         return true;
     }
     else {
-        LogIt(logError) << "Cannot open EPD file " << fileName;
+        Logging::LogIt(Logging::logError) << "Cannot open EPD file " << fileName;
         return false;
     }
 }
@@ -236,19 +236,19 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
     };
 
     if (scores.size() != timeControls.size()){
-        LogIt(logFatal) << "Wrong timeControl versus score vector size";
+        Logging::LogIt(Logging::logFatal) << "Wrong timeControl versus score vector size";
     }
 
     Results ** results = new Results*[positions.size()];
 
     // run the test and fill results table
     for (size_t k = 0 ; k < positions.size() ; ++k ){
-        LogIt(logInfo) << "Test #" << k << " " << positions[k];
+        Logging::LogIt(Logging::logInfo) << "Test #" << k << " " << positions[k];
         results[k] = new Results[timeControls.size()];
         ExtendedPosition extP(positions[k],withMoveCount);
         for(size_t t = 0 ; t < timeControls.size() ; ++t){
-            LogIt(logInfo) << " " << t;
-            currentMoveMs = timeControls[t];
+            Logging::LogIt(Logging::logInfo) << " " << t;
+            ThreadContext::currentMoveMs = timeControls[t];
             DepthType seldepth = 0;
             DepthType depth = 64;
             ScoreType s = 0;
@@ -263,10 +263,10 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
             results[k][t].t = timeControls[t];
 
             results[k][t].computerMove = showAlgAbr(bestMove,extP);
-            LogIt(logInfo) << "Best move found is  " << results[k][t].computerMove;
+            Logging::LogIt(Logging::logInfo) << "Best move found is  " << results[k][t].computerMove;
 
             if ( extP.shallFindBest()){
-                LogIt(logInfo) << "Best move should be " << extP.bestMoves();
+                Logging::LogIt(Logging::logInfo) << "Best move should be " << extP.bestMoves();
                 results[k][t].bm = extP.bestMoves();
                 results[k][t].score = 0;
                 bool success = false;
@@ -280,7 +280,7 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
                 if ( breakAtFirstSuccess && success ) break;
             }
             else{
-                LogIt(logInfo) << "Bad move was " << extP.badMoves();
+                Logging::LogIt(Logging::logInfo) << "Bad move was " << extP.badMoves();
                 results[k][t].am = extP.badMoves();
                 results[k][t].score = scores[t];
                 bool success = true;
@@ -323,7 +323,7 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
     }
 
     if ( eloF(100) != 0) {
-        LogIt(logInfo) << "Total score " << totalScore << " => ELO " << eloF(totalScore);
+        Logging::LogIt(Logging::logInfo) << "Total score " << totalScore << " => ELO " << eloF(totalScore);
     }
 
     // clear results table
@@ -369,12 +369,12 @@ void ExtendedPosition::testStatic(const std::vector<std::string> & positions,
         std::cout << std::setw(25) << results[k].name << std::setw(14) << results[k].score << std::endl;
         // only compare unsigned score ...
         if ( std::abs( std::abs(results[k].score) - std::abs(results[k+2].score) ) > 0 ){
-            LogIt(logWarn) << "Score differ !";
+            Logging::LogIt(Logging::logWarn) << "Score differ !";
         }
         std::cout << std::setw(25) << results[k+1].name << std::setw(14) << results[k+1].score << std::endl;
         // only compare unsigned score ...
         if ( std::abs( std::abs(results[k+1].score) - std::abs(results[k+3].score) ) > 0 ){
-            LogIt(logWarn) << "Score differ !";
+            Logging::LogIt(Logging::logWarn) << "Score differ !";
         }
     }
 
@@ -385,17 +385,17 @@ void ExtendedPosition::testStatic(const std::vector<std::string> & positions,
 bool test(const std::string & option){
 
     if (option == "help_test") {
-        LogIt(logInfo) << "Available analysis tests";
-        LogIt(logInfo) << " BT2630";
-        LogIt(logInfo) << " arasan";
-        LogIt(logInfo) << " arasan_sym";
-        LogIt(logInfo) << " CCROHT";
-        LogIt(logInfo) << " BKTest";
-        LogIt(logInfo) << " EETest";
-        LogIt(logInfo) << " KMTest";
-        LogIt(logInfo) << " LCTest";
-        LogIt(logInfo) << " sbdTest";
-        LogIt(logInfo) << " STS";
+        Logging::LogIt(Logging::logInfo) << "Available analysis tests";
+        Logging::LogIt(Logging::logInfo) << " BT2630";
+        Logging::LogIt(Logging::logInfo) << " arasan";
+        Logging::LogIt(Logging::logInfo) << " arasan_sym";
+        Logging::LogIt(Logging::logInfo) << " CCROHT";
+        Logging::LogIt(Logging::logInfo) << " BKTest";
+        Logging::LogIt(Logging::logInfo) << " EETest";
+        Logging::LogIt(Logging::logInfo) << " KMTest";
+        Logging::LogIt(Logging::logInfo) << " LCTest";
+        Logging::LogIt(Logging::logInfo) << " sbdTest";
+        Logging::LogIt(Logging::logInfo) << " STS";
         return 0;
     }
 
@@ -875,6 +875,6 @@ bool test(const std::string & option){
         return true;
     }
 
-    LogIt(logInfo) << "No test requested ...";
+    Logging::LogIt(Logging::logInfo) << "No test requested ...";
     return false;
 }

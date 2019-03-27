@@ -18,22 +18,19 @@
     <ClCompile Include="..\..\minic.cc">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\bookGenerationTools.cc">
+    <ClCompile Include="..\..\Add-On\bookGenerationTools.cc">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\cli.cc">
+    <ClCompile Include="..\..\Add-On\cli.cc">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\testSuite.cc">
+    <ClCompile Include="..\..\Add-On\syzygyInterface.cc">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\texelTuning.cc">
+    <ClCompile Include="..\..\Add-On\testSuite.cc">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\fs_search.cpp">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\x_search.c">
+    <ClCompile Include="..\..\Add-On\texelTuning.cc">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,10 +1,13 @@
 
-namespace SyzygyTb {
+#define TB_CUSTOM_BSWAP32 swapbits32
+#define TB_CUSTOM_BSWAP64 swapbits
 
-extern "C"{
+extern "C" {
 #include "Fathom/src/tbprobe.c"
 }
 
+namespace SyzygyTb {
+    
 const ScoreType TB_CURSED_SCORE = 1;
 const ScoreType TB_WIN_SCORE = 1000;
 
@@ -29,11 +32,11 @@ Move getMove(const Position &p, unsigned res) {
 }
 
 bool initTB(const std::string &path){
-   LogIt(logInfo) << "Init tb";
+   Logging::LogIt(Logging::logInfo) << "Init tb";
    bool ok = tb_init(path.c_str());
    if (!ok) MAX_TB_MEN = 0;
    else     MAX_TB_MEN = TB_LARGEST;
-   LogIt(logInfo) << "MAX_TB_MEN :" << MAX_TB_MEN;
+   Logging::LogIt(Logging::logInfo) << "MAX_TB_MEN :" << MAX_TB_MEN;
    return ok;
 }
 
@@ -95,4 +98,4 @@ int probe_wdl(const Position &p, ScoreType &score, bool use50MoveRule){
    return 1;
 }
 
-}
+} // SyzygyTb
