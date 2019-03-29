@@ -42,7 +42,8 @@ const std::string MinicVersion = "dev";
 #define INVALIDSQUARE  -1
 #define MAX_PLY       512
 #define MAX_MOVE      512
-#define MAX_DEPTH     64
+#define MAX_DEPTH      64
+#define MAX_CAP        64
 
 #define SQFILE(s) ((s)&7)
 #define SQRANK(s) ((s)>>3)
@@ -56,10 +57,11 @@ typedef uint64_t Counter;
 typedef short int ScoreType;
 typedef uint64_t BitBoard;
 
-struct MoveList {
-   std::array<Move,MAX_MOVE> _m;
-   typedef std::array<Move,MAX_MOVE>::iterator iterator;
-   typedef std::array<Move,MAX_MOVE>::const_iterator const_iterator;
+template < typename T, int size >
+struct OptList {
+   std::array<T, size> _m;
+   typedef typename std::array<T, size>::iterator iterator;
+   typedef typename std::array<T, size>::const_iterator const_iterator;
    unsigned char n = 0;
    iterator begin(){return _m.begin();}
    const_iterator begin()const{return _m.begin();}
@@ -67,13 +69,23 @@ struct MoveList {
    const_iterator end()const{return _m.begin()+n;}
    void clear(){n=0;}
    size_t size(){return n;}
-   void push_back(const Move & m){ _m[n]=m; n++;}
+   void push_back(const T & m) { assert(n<size);  _m[n] = m; n++; }
    bool empty(){return n==0;}
+   T & operator [](size_t k) { assert(k < size); return _m[k]; }
+   const T & operator [](size_t k) const { assert(k < size);  return _m[k]; }
 };
 
+typedef OptList<Move,   MAX_MOVE> MoveList;
+//typedef OptList<Square, MAX_CAP>  SquareList;
+typedef std::vector<Square> SquareList;
+//struct PVList : public std::vector<Move> { PVList():std::vector<Move>(MAX_DEPTH, INVALIDMOVE) {}; };
 typedef std::vector<Move> PVList;
 
 namespace Logging {
+
+    enum COMType { CT_xboard = 0, CT_uci = 1 };
+
+    COMType ct = CT_xboard;
 
     inline void hellooo() { std::cout << "# This is Minic version " << MinicVersion << std::endl; }
 
@@ -248,6 +260,8 @@ bool mateFinder        = false;
 bool disableTT         = false;
 unsigned int ttSizeMb  = 128; // here in Mb, will be converted to real size next
 bool fullXboardOutput  = false;
+bool debugMode         = false;
+std::string debugFile  = "minic.debug";
 }
 
 namespace EvalConfig {
@@ -1399,14 +1413,14 @@ void clearTT() {
 
 bool getEntry(ThreadContext & context, Hash h, DepthType d, Entry & e, int nbuck = 0) {
     assert(h > 0);
-    if ( DynamicConfig::disableTT ) return false;
-    if (nbuck >= Bucket::nbBucket) return false; // no more bucket
+    if ( DynamicConfig::disableTT  ) return false;
+    if ( nbuck >= Bucket::nbBucket ) return false; // no more bucket
     const Entry & _e = table[h&(ttSize-1)].e[nbuck];
     if ( _e.h == 0 ) return false; //early exist cause next ones are also empty ...
     if ( _e.h != h ) return getEntry(context,h,d,e,nbuck+1); // next one
     e = _e; // update entry only if no collision is detected !
     if ( _e.d >= d ){ ++context.stats.counters[Stats::sid_tthits]; return true; } // valid entry if depth is ok
-    return getEntry(context,h,d,e,nbuck+1); // next one
+    else return getEntry(context,h,d,e,nbuck+1); // next one
 }
 
 void setEntry(const Entry & e){
@@ -1526,7 +1540,7 @@ std::string ToString(const Move & m, bool withScore){
 
 std::string ToString(const PVList & moves){
     std::stringstream ss;
-    for(size_t k = 0 ; k < moves.size(); ++k) ss << ToString(moves[k]) << " ";
+    for (size_t k = 0; k < moves.size(); ++k) { if (moves[k] == INVALIDMOVE) break;  ss << ToString(moves[k]) << " "; }
     return ss.str();
 }
 
@@ -1981,7 +1995,7 @@ BitBoard isAttackedBB(const Position &p, const Square x, Color c) {
     else               return attack<P_wb>(x, p.whiteBishop() | p.whiteQueen(), p.occupancy) | attack<P_wr>(x, p.whiteRook() | p.whiteQueen(), p.occupancy) | attack<P_wn>(x, p.whiteKnight()) | attack<P_wp>(x, p.whitePawn(), p.occupancy, Co_Black) | attack<P_wk>(x, p.whiteKing());
 }
 
-bool getAttackers(const Position & p, const Square k, std::vector<Square> & attakers) {
+bool getAttackers(const Position & p, const Square k, SquareList & attakers) {
     attakers.clear();
     BitBoard attack = isAttackedBB(p, k, p.c);
     while (attack) attakers.push_back(popBit(attack));
@@ -1992,7 +2006,7 @@ bool getAttackers(const Position & p, const Square k, std::vector<Square> & atta
 
 inline bool isAttacked(const Position & p, const Square k) { return k!=INVALIDSQUARE && BB::isAttackedBB(p, k, p.c) != 0ull;}
 
-inline bool getAttackers(const Position & p, const Square k, std::vector<Square> & attakers) { return k!=INVALIDSQUARE && BB::getAttackers(p, k, attakers);}
+inline bool getAttackers(const Position & p, const Square k, SquareList & attakers) { return k!=INVALIDSQUARE && BB::getAttackers(p, k, attakers);}
 
 enum GenPhase { GP_all = 0, GP_cap = 1, GP_quiet = 2 };
 
@@ -2146,8 +2160,8 @@ bool apply(Position & p, const Move & m){
             p.castling &= ~(C_bks | C_bqs);
         }
         // king capture : is that necessary ???
-        if ( toP == P_wk ) p.wk = INVALIDSQUARE;
-        if ( toP == P_bk ) p.bk = INVALIDSQUARE;
+        if      ( toP == P_wk ) p.wk = INVALIDSQUARE;
+        else if ( toP == P_bk ) p.bk = INVALIDSQUARE;
 
         if ( fromP == P_wr && from == Sq_a1 && (p.castling & C_wqs)){
             p.castling &= ~C_wqs;
@@ -2442,7 +2456,7 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
     if (getPieceType(p, to) == P_wk) return false; // capture king !
     Position p2 = p;
     if (!apply(p2, m)) return false;
-    std::vector<Square> stmAttackers;
+    SquareList stmAttackers;
     bool endOfSEE = false;
     while (!endOfSEE){
         p2.c = opponentColor(p2.c);
@@ -2995,9 +3009,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     if ( qRoot ){
        if (interiorNodeRecognizer<true,false,false>(p) == MaterialHash::Ter_Draw) return 0; ///@todo is that gain elo ???
        if ( TT::getEntry(*this,computeHash(p), 0, e)) {
-          if (!pvnode && e.h != 0 && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
-             return adjustHashScore(e.score, ply);
-          }
+          if (!pvnode && e.h != 0 && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) { return adjustHashScore(e.score, ply); }
        }
     }
 
@@ -3420,7 +3432,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
             if (((depth + ThreadPool::skipPhase[i]) / ThreadPool::skipSize[i]) % 2) continue;
         }
         else{
-            if ( depth == 5) startLock.store(false);
+            if ( depth == 5) startLock.store(false); // delayed other thread start
         }
         Logging::LogIt(Logging::logInfo) << "Thread " << id() << " searching depth " << (int)depth;
         PVList pvLoc;
@@ -3445,10 +3457,14 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
             const int ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count());
             std::stringstream str;
             Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
-            str << int(depth) << " " << bestScore << " " << ms/10 << " " << nodeCount << " ";
-            if ( DynamicConfig::fullXboardOutput ) str << (int)seldepth << " " << int(nodeCount/(ms/1000.f)/1000.) << " " << ThreadPool::instance().counter(Stats::sid_tthits)/1000;
-            str << "\t" << ToString(pv);
-            //<< " " << "EBF: " << float(nodeCount)/previousNodeCount ;
+            if (Logging::ct == Logging::CT_xboard) {
+                str << int(depth) << " " << bestScore << " " << ms / 10 << " " << nodeCount << " ";
+                if (DynamicConfig::fullXboardOutput) str << (int)seldepth << " " << int(nodeCount / (ms / 1000.f) / 1000.) << " " << ThreadPool::instance().counter(Stats::sid_tthits) / 1000;
+                str << "\t" << ToString(pv);
+            }
+            else if (Logging::ct == Logging::CT_uci) {
+                str << "info depth " << int(depth) << " score cp " << bestScore << " time " << ms << " nodes " << nodeCount << " nps " << int(nodeCount / (ms / 1000.f)) << " seldepth " << (int)seldepth << " tbhits " << ThreadPool::instance().counter(Stats::sid_tthits) << " pv " << ToString(pv);
+            }
             Logging::LogIt(Logging::logGUI) << str.str();
             previousNodeCount = nodeCount;
         }
@@ -3477,6 +3493,7 @@ pvsout:
 }
 
 namespace COM {
+
     bool pondering; // currently pondering
     enum Ponder : unsigned char { p_off = 0, p_on = 1 };
     Ponder ponder;
@@ -3583,6 +3600,7 @@ namespace XBoard{
 bool display;
 
 void init(){
+    Logging::ct = Logging::CT_xboard;
     Logging::LogIt(Logging::logInfo) << "Init xboard" ;
     COM::init();
     display = false;
@@ -3800,6 +3818,7 @@ namespace UCI {
     std::future<void> f;
 
     void init() {
+        Logging::ct = Logging::CT_uci;
         Logging::LogIt(Logging::logInfo) << "Init uci";
         COM::init();
     }
@@ -3905,7 +3924,7 @@ namespace UCI {
                 if (!ThreadContext::stopFlag) { Logging::LogIt(Logging::logUCIInfo) << "go command received, but search already in progress"; }
                 else {
                     if (computeHash(COM::position) != 0ull) {
-                        //std::vector<Move> root_moves;
+                        //MoveList root_moves;
 
                         // default is infinite search
                         TimeMan::isDynamic = false;
@@ -3917,6 +3936,7 @@ namespace UCI {
                         COM::depth = MAX_DEPTH; // infinity
 
                         COM::ponder = COM::p_off;
+                        DynamicConfig::mateFinder = false;
 
                         std::string param;
                         while (iss >> param) {
@@ -3926,15 +3946,16 @@ namespace UCI {
                             else if (param == "movetime")    { iss >> TimeMan::msecPerMove; }
                             else if (param == "nodes")       { unsigned long long int maxNodes = 0;  iss >> maxNodes; TimeMan::maxKNodes = int(maxNodes/1000); }
                             else if (param == "searchmoves") { Logging::LogIt(Logging::logUCIInfo) << param << " not implemented yet"; }
-                            else if (param == "wtime" && COM::position.c == Co_White) { iss >> TimeMan::msecUntilNextTC; TimeMan::isDynamic = true; }
-                            else if (param == "btime" && COM::position.c == Co_Black) { iss >> TimeMan::msecUntilNextTC; TimeMan::isDynamic = true; }
-                            else if (param == "winc"  && COM::position.c == Co_White) { iss >> TimeMan::msecInc; }
-                            else if (param == "binc"  && COM::position.c == Co_Black) { iss >> TimeMan::msecInc; }
+                            else if (param == "wtime")       { int t; iss >> t; if (COM::position.c == Co_White) { TimeMan::msecUntilNextTC = t; TimeMan::isDynamic = true; }}
+                            else if (param == "btime")       { int t; iss >> t; if (COM::position.c == Co_Black) { TimeMan::msecUntilNextTC = t; TimeMan::isDynamic = true; }}
+                            else if (param == "winc" )       { int t; iss >> t; if (COM::position.c == Co_White) { TimeMan::msecInc = t; }}
+                            else if (param == "binc" )       { int t; iss >> t; if (COM::position.c == Co_Black) { TimeMan::msecInc = t; }}
                             else if (param == "movestogo")   { iss >> TimeMan::moveToGo; TimeMan::isDynamic = true; }
                             else if (param == "ponder")      { COM::ponder = COM::p_on; TimeMan::msecPerMove = 60 * 60 * 1000 * 24;} // infinite search time
+                            else if (param == "mate")        { int d = 0;  iss >> d; COM::depth = d; DynamicConfig::mateFinder = true; TimeMan::msecPerMove = 60 * 60 * 1000 * 24; }
                             else                             { Logging::LogIt(Logging::logUCIInfo) << param << " not implemented"; }
                         }
-
+                        Logging::LogIt(Logging::logInfo) << "uci search launched";
                         f = std::async(std::launch::async, [] {
                             COM::move = COM::thinkUntilTimeUp();
                             if (COM::ponder == COM::p_off) {
@@ -3947,9 +3968,9 @@ namespace UCI {
                                     }
                                     COM::stm = COM::opponent(COM::stm);
                                 }
-
                             }
                         });
+                        Logging::LogIt(Logging::logInfo) << "uci search done";
                     }
                     else { Logging::LogIt(Logging::logUCIInfo) << "search command received, but no position specified"; }
                 }

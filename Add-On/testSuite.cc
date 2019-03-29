@@ -253,7 +253,7 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
             DepthType depth = 64;
             ScoreType s = 0;
             Move bestMove = INVALIDMOVE;
-            std::vector<Move> pv;
+            PVList pv;
             ThreadData d = {depth,seldepth,s,extP,bestMove,pv}; // only input coef
             ThreadPool::instance().searchSync(d);
             bestMove = ThreadPool::instance().main().getData().best; // here output results

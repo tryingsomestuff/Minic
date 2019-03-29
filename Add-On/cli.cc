@@ -249,7 +249,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
         TimeMan::msecUntilNextTC = -1;
         ThreadContext::currentMoveMs = TimeMan::GetNextMSecPerMove(p);
         DepthType seldepth = 0;
-        std::vector<Move> pv;
+        PVList pv;
         ThreadData d = {depth,seldepth/*dummy*/,s/*dummy*/,p,bestMove/*dummy*/,pv/*dummy*/}; // only input coef
         ThreadPool::instance().searchSync(d);
         bestMove = ThreadPool::instance().main().getData().best; // here output results
@@ -273,7 +273,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
         TimeMan::msecUntilNextTC = -1;
         ThreadContext::currentMoveMs = TimeMan::GetNextMSecPerMove(p);
         DepthType seldepth = 0;
-        std::vector<Move> pv;
+        PVList pv;
         ThreadData d = {depth,seldepth/*dummy*/,s/*dummy*/,p,bestMove/*dummy*/,pv/*dummy*/}; // only input coef
         ThreadPool::instance().searchSync(d);
         bestMove = ThreadPool::instance().main().getData().best; // here output results
