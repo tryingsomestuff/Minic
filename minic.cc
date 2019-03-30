@@ -57,11 +57,11 @@ typedef uint64_t Counter;
 typedef short int ScoreType;
 typedef uint64_t BitBoard;
 
-template < typename T, int size >
+template < typename T, int sizeT >
 struct OptList {
-   std::array<T, size> _m;
-   typedef typename std::array<T, size>::iterator iterator;
-   typedef typename std::array<T, size>::const_iterator const_iterator;
+   std::array<T, sizeT> _m;
+   typedef typename std::array<T, sizeT>::iterator iterator;
+   typedef typename std::array<T, sizeT>::const_iterator const_iterator;
    unsigned char n = 0;
    iterator begin(){return _m.begin();}
    const_iterator begin()const{return _m.begin();}
@@ -69,10 +69,10 @@ struct OptList {
    const_iterator end()const{return _m.begin()+n;}
    void clear(){n=0;}
    size_t size(){return n;}
-   void push_back(const T & m) { assert(n<size);  _m[n] = m; n++; }
+   void push_back(const T & m) { assert(n<sizeT);  _m[n] = m; n++; }
    bool empty(){return n==0;}
-   T & operator [](size_t k) { assert(k < size); return _m[k]; }
-   const T & operator [](size_t k) const { assert(k < size);  return _m[k]; }
+   T & operator [](size_t k) { assert(k < sizeT); return _m[k]; }
+   const T & operator [](size_t k) const { assert(k < sizeT);  return _m[k]; }
 };
 
 typedef OptList<Move,   MAX_MOVE> MoveList;
