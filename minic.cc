@@ -33,7 +33,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 
-const std::string MinicVersion = "0.45";
+const std::string MinicVersion = "dev";
 
 #define STOPSCORE   ScoreType(-20000)
 #define INFSCORE    ScoreType(15000)
@@ -250,7 +250,7 @@ void initLMR() {
     Logging::LogIt(Logging::logInfo) << "Init lmr";
     for (int d = 0; d < MAX_DEPTH; d++)
         for (int m = 0; m < MAX_MOVE; m++)
-            lmrReduction[d][m] = (int)sqrt(float(d) * m / 8.f);
+            lmrReduction[d][m] = int(1.0 + log(d) * log(m) * 0.5); //(int)sqrt(float(d) * m / 8.f);
 }
 
 }
