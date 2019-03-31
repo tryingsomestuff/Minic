@@ -3,7 +3,7 @@
 #define TB_CUSTOM_BSWAP64 swapbits
 
 extern "C" {
-#include "Fathom/src/tbprobe.c"
+#include "tbprobe.c"
 }
 
 namespace SyzygyTb {

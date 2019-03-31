@@ -80,13 +80,14 @@ int cliManagement(std::string cli, int argc, char ** argv){
         return 0;
     }
 
+#ifdef WITH_UCI
     if (cli == "-uci") {
         UCI::init();
         TimeMan::init();
         UCI::uci();
         return 0;
     }
-
+#endif
     Logging::LogIt(Logging::logInfo) << "You can use -xboard command line option to enter xboard mode";
 
     if ( cli == "-perft_test" ){

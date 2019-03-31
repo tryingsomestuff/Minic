@@ -32,6 +32,7 @@ typedef uint64_t u_int64_t;
 //#define DEBUG_TOOL
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
+//#define WITH_UCI
 
 const std::string MinicVersion = "dev";
 
@@ -47,6 +48,15 @@ const std::string MinicVersion = "dev";
 
 #define SQFILE(s) ((s)&7)
 #define SQRANK(s) ((s)>>3)
+
+namespace DynamicConfig{
+bool mateFinder        = false;
+bool disableTT         = false;
+unsigned int ttSizeMb  = 128; // here in Mb, will be converted to real size next
+bool fullXboardOutput  = false;
+bool debugMode         = false;
+std::string debugFile  = "minic.debug";
+}
 
 typedef std::chrono::system_clock Clock;
 typedef char DepthType;
@@ -99,35 +109,48 @@ namespace Logging {
         return str.str();
     }
 
-    enum LogLevel : unsigned char { logTrace = 0, logDebug = 1, logInfo = 2, logWarn = 3, logError = 4, logFatal = 5, logGUI = 6, logUCIInfo = 7};
+    enum LogLevel : unsigned char { logTrace = 0, logDebug = 1, logInfo = 2, logGUI = 3, logWarn = 4, logError = 5, logFatal = 6};
 
     std::string backtrace() { return "@todo:: backtrace"; } ///@todo find a very simple portable implementation
 
     class LogIt {
+        friend void init();
     public:
         LogIt(LogLevel loglevel) :_level(loglevel) {}
 
         template <typename T> Logging::LogIt & operator<<(T const & value) { _buffer << value; return *this; }
 
         ~LogIt() {
-            static const std::string _levelNames[7] = { "# Trace ", "# Debug ", "# Info  ", "# Warn  ", "# Error ", "# Fatal ", "" };
+            static const std::string _levelNames[7] = { "# Trace ", "# Debug ", "# Info  ", "", "# Warn  ", "# Error ", "# Fatal " };
             std::lock_guard<std::mutex> lock(_mutex);
-            if (_level != logGUI) std::cout << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
-            else 
-                if (_level == logUCIInfo) std::cout << "info string " << _buffer.str() << std::endl;
-                else std::cout << _buffer.str() << std::flush << std::endl;
-
-            if (_level == logFatal) { std::cout << backtrace() << std::endl; exit(1); }
-            else if (_level == logError) std::cout << backtrace() << std::endl;
+            if (_level != logGUI) {
+                std::cout       << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
+                if (_of) (*_of) << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
+            }
+            else {
+                std::cout       << _buffer.str() << std::flush << std::endl;
+                if (_of) (*_of) << _buffer.str() << std::flush << std::endl;
+            }
+            if (_level >= logError) std::cout << backtrace() << std::endl;
+            if (_level >= logFatal) exit(1);
         }
 
     private:
-        static std::mutex     _mutex;
-        std::ostringstream    _buffer;
-        LogLevel              _level;
+        static std::mutex      _mutex;
+        std::ostringstream     _buffer;
+        LogLevel               _level;
+        static std::ofstream * _of;
     };
 
+    void init(){
+        if ( DynamicConfig::debugMode ){
+            if ( DynamicConfig::debugFile.empty()) DynamicConfig::debugFile = "minic.debug";
+        }
+        LogIt::_of = new std::ofstream(DynamicConfig::debugFile); ///@todo leak, create a destroyer object for all thing to be deleted at the end ...
+    }
+
     std::mutex LogIt::_mutex;
+    std::ofstream * LogIt::_of = nullptr;
 
 }
 
@@ -199,7 +222,7 @@ namespace Options {
         const T cliValue = getOptionCLI(found, key, defaultValue);
         if (found) return v.get(cliValue);
         auto it = json.find(key);
-        if (it == json.end()) { Logging::LogIt(Logging::logError) << "JSON key not given, " << key; return defaultValue; }
+        if (it == json.end()) { Logging::LogIt(Logging::logWarn) << "JSON key not given, " << key; return defaultValue; }
         auto val = it.value();
         if (!OptionValue<T>().validator(val)) { Logging::LogIt(Logging::logError) << "JSON value does not have expected type, " << it.key() << " : " << val; return defaultValue; }
         else {
@@ -253,15 +276,6 @@ void initLMR() {
             lmrReduction[d][m] = int(1.0 + log(d) * log(m) * 0.5); //(int)sqrt(float(d) * m / 8.f);
 }
 
-}
-
-namespace DynamicConfig{
-bool mateFinder        = false;
-bool disableTT         = false;
-unsigned int ttSizeMb  = 128; // here in Mb, will be converted to real size next
-bool fullXboardOutput  = false;
-bool debugMode         = false;
-std::string debugFile  = "minic.debug";
 }
 
 namespace EvalConfig {
@@ -3813,190 +3827,9 @@ void xboard(){
 }
 } // XBoard
 
-namespace UCI {
-
-    std::future<void> f;
-
-    void init() {
-        Logging::ct = Logging::CT_uci;
-        Logging::LogIt(Logging::logInfo) << "Init uci";
-        COM::init();
-    }
-
-    void uci() {
-
-        while (true) {
-            COM::readLine();
-            std::istringstream iss(COM::command);
-            std::string uciCommand;
-            iss >> uciCommand;
-            Logging::LogIt(Logging::logInfo) << "uci received command " << uciCommand;
-
-            if (uciCommand == "uci") {
-                Logging::LogIt(Logging::logGUI) << "id name Minic " << MinicVersion;
-                Logging::LogIt(Logging::logGUI) << "id author Vivien Clauzon";
-
-                ///@todo options !
-                //Logging::LogIt(Logging::logGUI) << "option name Hash type spin default 128 min 1 max 1048576";
-                //Logging::LogIt(Logging::logGUI) << "option name Threads type spin default 1 min 1 max 128";
-                //Logging::LogIt(Logging::logGUI) << "option name SyzygyPath type string default <empty>";
-                //Logging::LogIt(Logging::logGUI) << "option name SyzygyResolve type spin default 512 min 1 max 1024";
-                //Logging::LogIt(Logging::logGUI) << "option name Ponder type check default false";
-
-                Logging::LogIt(Logging::logGUI) << "uciok";
-            }
-            else if (uciCommand == "setoption") {
-                std::string name;
-                iss >> name;
-                if (name == "name") iss >> name;
-                /*
-                if (name == "Hash") {
-                    std::string value;
-                    iss >> value; // Skip value
-                    iss >> hash_size;
-                    // Resize hash
-                    delete tt;
-                    tt = new tt::hash_t(hash_size * MB);
-                }
-                else if (name == "Threads") {
-                    std::string value;
-                    iss >> value; // Skip value
-                    iss >> threads;
-                }
-                else if (name == "SyzygyPath") {
-                    std::string value;
-                    iss >> value; // Skip value
-
-                    std::string path;
-                    std::getline(iss, path);
-
-                    path = path.substr(1, path.size() - 1);
-
-                    std::cout << "Looking for tablebases in: " << path << std::endl;
-
-                    init_tablebases(path.c_str());
-                }
-                else if (name == "SyzygyResolve") {
-                    std::string value;
-                    iss >> value; // Skip value
-                    iss >> syzygy_resolve;
-                }
-                else if (name == "Ponder") {
-                    // Do nothing
-                }
-                */
-                else { Logging::LogIt(Logging::logUCIInfo) << "unknown uci option " << name; }
-            }
-            else if (uciCommand == "isready") { Logging::LogIt(Logging::logGUI) << "readyok"; }
-            else if (uciCommand == "stop") { Logging::LogIt(Logging::logInfo) << "stop requested";  ThreadContext::stopFlag = true; }
-            else if (uciCommand == "position") {
-                COM::position.h = 0ull; // invalidate position
-                std::string type;
-                while (iss >> type) {
-                    if (type == "startpos") { COM::sideToMoveFromFEN(startPosition); }
-                    else if (type == "fen") {
-                        std::string fen;
-                        for (int i = 0; i < 6; i++) { // always full fen ... ///@todo better?
-                            std::string component;
-                            iss >> component;
-                            fen += component + " ";
-                        }
-                        if (!COM::sideToMoveFromFEN(fen)) Logging::LogIt(Logging::logFatal) << "Illegal FEN " << fen;
-                    }
-                    else if (type == "moves") {
-                        if (computeHash(COM::position) != 0ull) {
-                            std::string mstr;
-                            while (iss >> mstr) {
-                                Move m = COM::moveFromCOM(mstr);
-                                if (!COM::makeMove(m, false, "")) { // make move
-                                    Logging::LogIt(Logging::logInfo) << "Bad move ! : " << mstr;
-                                    Logging::LogIt(Logging::logInfo) << ToString(COM::position);
-                                    COM::mode = COM::m_force;
-                                }
-                                else COM::stm = COM::opponent(COM::stm);
-                            }
-                        }
-                        else Logging::LogIt(Logging::logUCIInfo) << "no start position specified";
-                    }
-                }
-            }
-            else if (uciCommand == "go") {
-                if (!ThreadContext::stopFlag) { Logging::LogIt(Logging::logUCIInfo) << "go command received, but search already in progress"; }
-                else {
-                    if (computeHash(COM::position) != 0ull) {
-                        //MoveList root_moves;
-
-                        // default is infinite search
-                        TimeMan::isDynamic = false;
-                        TimeMan::nbMoveInTC = -1;
-                        TimeMan::msecPerMove = -1;
-                        TimeMan::msecInTC = -1;
-                        TimeMan::msecInc = -1;
-                        TimeMan::msecUntilNextTC = -1;
-                        COM::depth = MAX_DEPTH; // infinity
-
-                        COM::ponder = COM::p_off;
-                        DynamicConfig::mateFinder = false;
-
-                        std::string param;
-                        while (iss >> param) {
-                            Logging::LogIt(Logging::logInfo) << "received parameter " << param;
-                            if      (param == "infinite")    { TimeMan::msecPerMove = 60 * 60 * 1000 * 24; }
-                            else if (param == "depth")       { int d = 0;  iss >> d; COM::depth = d; }
-                            else if (param == "movetime")    { iss >> TimeMan::msecPerMove; }
-                            else if (param == "nodes")       { unsigned long long int maxNodes = 0;  iss >> maxNodes; TimeMan::maxKNodes = int(maxNodes/1000); }
-                            else if (param == "searchmoves") { Logging::LogIt(Logging::logUCIInfo) << param << " not implemented yet"; }
-                            else if (param == "wtime")       { int t; iss >> t; if (COM::position.c == Co_White) { TimeMan::msecUntilNextTC = t; TimeMan::isDynamic = true; }}
-                            else if (param == "btime")       { int t; iss >> t; if (COM::position.c == Co_Black) { TimeMan::msecUntilNextTC = t; TimeMan::isDynamic = true; }}
-                            else if (param == "winc" )       { int t; iss >> t; if (COM::position.c == Co_White) { TimeMan::msecInc = t; }}
-                            else if (param == "binc" )       { int t; iss >> t; if (COM::position.c == Co_Black) { TimeMan::msecInc = t; }}
-                            else if (param == "movestogo")   { iss >> TimeMan::moveToGo; TimeMan::isDynamic = true; }
-                            else if (param == "ponder")      { COM::ponder = COM::p_on; TimeMan::msecPerMove = 60 * 60 * 1000 * 24;} // infinite search time
-                            else if (param == "mate")        { int d = 0;  iss >> d; COM::depth = d; DynamicConfig::mateFinder = true; TimeMan::msecPerMove = 60 * 60 * 1000 * 24; }
-                            else                             { Logging::LogIt(Logging::logUCIInfo) << param << " not implemented"; }
-                        }
-                        Logging::LogIt(Logging::logInfo) << "uci search launched";
-                        f = std::async(std::launch::async, [] {
-                            COM::move = COM::thinkUntilTimeUp();
-                            if (COM::ponder == COM::p_off) {
-                                if (COM::move == INVALIDMOVE) { COM::mode = COM::m_force; } // game ends
-                                else {
-                                    if (!COM::makeMove(COM::move, true, "bestmove")) {
-                                        Logging::LogIt(Logging::logUCIInfo) << "Bad computer move !";
-                                        Logging::LogIt(Logging::logInfo) << ToString(COM::position);
-                                        COM::mode = COM::m_force;
-                                    }
-                                    COM::stm = COM::opponent(COM::stm);
-                                }
-                            }
-                        });
-                        Logging::LogIt(Logging::logInfo) << "uci search done";
-                    }
-                    else { Logging::LogIt(Logging::logUCIInfo) << "search command received, but no position specified"; }
-                }
-            }
-            else if (uciCommand == "ponderhit") { Logging::LogIt(Logging::logUCIInfo) << uciCommand << " not implemented yet"; }
-            else if (uciCommand == "ucinewgame") {
-                if (!ThreadContext::stopFlag) { Logging::LogIt(Logging::logUCIInfo) << uciCommand << " received but search in progress ..."; }
-                else { COM::init(); }
-            }
-            else if (uciCommand == "eval") { Logging::LogIt(Logging::logUCIInfo) << uciCommand << " not implemented yet"; }
-            else if (uciCommand == "tbprobe") {
-                std::string type;
-                iss >> type;
-                Logging::LogIt(Logging::logUCIInfo) << uciCommand << " not implemented yet";
-            }
-            else if (uciCommand == "print") { Logging::LogIt(Logging::logInfo) << ToString(COM::position); }
-            else if (uciCommand == "quit") {
-                COM::stopPonder();
-                COM::stop();
-                _exit(0);
-            }
-            else if (!uciCommand.empty()) { Logging::LogIt(Logging::logUCIInfo) << "unrecognised command " << uciCommand; }
-        }
-    }
-
-} // UCI
+#ifdef WITH_UCI
+#include "Add-On/uci.cc"
+#endif
 
 #ifdef DEBUG_TOOL
 #include "Add-On/cli.cc"
@@ -4011,6 +3844,9 @@ namespace UCI {
 #endif
 
 void init(int argc, char ** argv) {
+    GETOPT(debugMode, bool)
+    GETOPT(debugFile, std::string)
+    Logging::init();
     Logging::hellooo();
     Options::initOptions(argc, argv);
     Zobrist::initHash();
@@ -4047,9 +3883,14 @@ int main(int argc, char ** argv){
     return cliManagement(argv[1],argc,argv);
 #else
     ///@todo factorize with the one in cliManagement
-    XBoard::init();
     TimeMan::init();
+#ifndef WITH_UCI
+    XBoard::init();
     XBoard::xboard();
+#else
+    UCI::init();
+    UCI::uci();
+#endif
     return 0;
 #endif
 }
