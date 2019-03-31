@@ -97,7 +97,7 @@ and a command line interface, using the same key word. For instance, forcing mat
 * 0.42 : fix a SMP issue (lock)
 * 0.43 : fix another SMP issue
 * 0.44 : fix null move that was in fact NOT activated ! activate probcut. Add some counters. New release are sse4.2 and avx2 for both windows and linux.
-* 0.45 : lot of clean up in code, search tuning, starts UCI implementation
+* 0.45 : lot of clean up in code, search tuning, starts UCI implementation, and fix null move ...
 
 ## Thanks
 
