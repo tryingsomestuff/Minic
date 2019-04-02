@@ -16,14 +16,16 @@ Quite poor for a chess engine (around 2550) but already way to strong for me !
 
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
-   1 rofChade1.0                   260      32     532   81.7%   17.1%
-   2 fruit_21                      117      28     532   66.2%   19.2%
-   3 Minic 3 threads                47      25     532   56.7%   27.3%
-   4 Minic 2 threads                24      25     532   53.4%   27.1%
-   5 Minic                         -14      25     533   47.9%   29.1%
-   6 drosophila-win64              -43      26     533   43.8%   20.8%
-   7 myrddin                      -177      30     532   26.5%   16.5%
-   8 MadChess.Engine              -201      31     532   23.9%   15.8%                      
+   0 Minic                          62      16    1219   58.8%   32.2%
+   1 rofChade                      196      51     174   75.6%   22.4%
+   2 fruit_21                       44      47     174   56.3%   18.4%
+   3 Minic 0.44                    -16      36     174   47.7%   52.9%
+   4 Minic 0.43                   -118      35     174   33.6%   53.4%
+   5 Minic 0.40                   -125      38     174   32.8%   47.1%
+   6 myrddin                      -213      55     174   22.7%   16.7%
+   7 MadChess.Engine              -244      58     175   19.7%   14.3%
+
+1219 of 7000 games finished.                   
 ```
 
 ## How to compile
