@@ -139,18 +139,16 @@ namespace Logging {
         static std::mutex      _mutex;
         std::ostringstream     _buffer;
         LogLevel               _level;
-        static std::ofstream * _of;
+        static std::unique_ptr<std::ofstream> _of;
     };
 
     void init(){
-        if ( DynamicConfig::debugMode ){
-            if ( DynamicConfig::debugFile.empty()) DynamicConfig::debugFile = "minic.debug";
-        }
-        LogIt::_of = new std::ofstream(DynamicConfig::debugFile); ///@todo leak, create a destroyer object for all thing to be deleted at the end ...
+        if ( DynamicConfig::debugMode ){ if ( DynamicConfig::debugFile.empty()) DynamicConfig::debugFile = "minic.debug"; }
+        LogIt::_of = std::unique_ptr<std::ofstream>(new std::ofstream(DynamicConfig::debugFile));
     }
 
     std::mutex LogIt::_mutex;
-    std::ofstream * LogIt::_of = nullptr;
+    std::unique_ptr<std::ofstream> LogIt::_of;
 
 }
 
@@ -2364,9 +2362,7 @@ const Move Get(const Hash h){
 void initBook() {
     if (Options::getOption<bool>("book")) {
         const std::string bookFile = Options::getOption<std::string>("bookFile");
-        if (bookFile.empty()) {
-            Logging::LogIt(Logging::logWarn) << "json entry bookFile is empty, cannot load book";
-        }
+        if (bookFile.empty()) { Logging::LogIt(Logging::logWarn) << "json entry bookFile is empty, cannot load book"; }
         else {
             if (Book::fileExists(bookFile)) {
                 Logging::LogIt(Logging::logInfo) << "Loading book ...";
@@ -2374,9 +2370,7 @@ void initBook() {
                 Book::readBinaryBook(bbook);
                 Logging::LogIt(Logging::logInfo) << "... done";
             }
-            else {
-                Logging::LogIt(Logging::logWarn) << "book file " << bookFile << " not found, cannot load book";
-            }
+            else { Logging::LogIt(Logging::logWarn) << "book file " << bookFile << " not found, cannot load book"; }
         }
     }
 }
@@ -3494,9 +3488,7 @@ pvsout:
         Logging::LogIt(Logging::logInfo) << "Empty pv, trying to use TT" ;
         TT::getPV(p, *this, pv);
     }
-    if (pv.empty()) {
-        Logging::LogIt(Logging::logWarn) << "Empty pv"; // may occur in case of mate / stalemate...
-    }
+    if (pv.empty()) { Logging::LogIt(Logging::logWarn) << "Empty pv"; }// may occur in case of mate / stalemate... 
     else m = pv[0];
     d = reachedDepth;
     sc = bestScore;
