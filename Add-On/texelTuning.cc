@@ -387,7 +387,7 @@ std::vector<TexelParam<ScoreType> > TexelOptimizePSO(const std::vector<TexelPara
         Randomize(data, batchSize);
         for(auto it = particles.begin() ; it != particles.end() ; ++it){
             for(int k = 0 ; k < curParam.size() ; ++k){
-                static std::mt19937 mt(42); // fixed seed for ZHash !!!
+                static std::mt19937 mt(42); // fixed seed
                 static std::uniform_real_distribution<double> dist(0,1);
                 double rp = dist(mt);
                 double rg = dist(mt);
@@ -505,8 +505,8 @@ void TexelTuning(const std::string & filename) {
 
     Logging::LogIt(Logging::logInfo) << "Initial values :";
     for (size_t k = 0; k < guess.size(); ++k) Logging::LogIt(Logging::logInfo) << guess[k].name << " " << guess[k];
-    //std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeGD(guess, data, batchSize);
-    std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizePSO(guess, data, batchSize);
+    std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeGD(guess, data, batchSize);
+    //std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizePSO(guess, data, batchSize);
     //std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeSecante(guess, data, batchSize);
     //std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeNaive(guess, data, batchSize);
 

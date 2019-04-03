@@ -28,7 +28,7 @@ typedef uint64_t u_int64_t;
 #include "json.hpp"
 
 //#define IMPORTBOOK
-//#define WITH_TEXEL_TUNING
+#define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
@@ -2579,8 +2579,8 @@ void initEval(){
 
 ScoreType eval(const Position & p, float & gp){
 
-    //const Hash matHash = MaterialHash::getMaterialHash(p.mat);
-    //const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
+    const Hash matHash = MaterialHash::getMaterialHash(p.mat);
+    const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
 
     ScoreType sc       = 0;
     ScoreType scEG     = 0;
@@ -2616,14 +2616,12 @@ ScoreType eval(const Position & p, float & gp){
           + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValuesEG[P_wp];
 
     ///@todo
-    /*
+
     if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ){
        scEG += MaterialHash::helperTable[matHash](p);
        scEG = (white2Play?+1:-1)*scEG;
        return scEG;
     }
-    */
-    /*
     else if ( ter == MaterialHash::Ter_WhiteWin || ter == MaterialHash::Ter_BlackWin){
        scEG *= 3;
        scEG = (white2Play?+1:-1)*sc;
@@ -2639,6 +2637,7 @@ ScoreType eval(const Position & p, float & gp){
         scEG = (white2Play?+1:-1)*scEG;
         return scEG;
     }
+/*
     else if ( ter == MaterialHash::Ter_Draw){
         // is king in check ?
 
@@ -2649,7 +2648,7 @@ ScoreType eval(const Position & p, float & gp){
 
         return 0;
     }
-    */
+*/
 
     sc   += (p.mat[Co_White][M_k] - p.mat[Co_Black][M_k]) * *absValues[P_wk]
           + (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValues[P_wq]
