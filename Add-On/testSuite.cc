@@ -170,8 +170,8 @@ std::string showAlgAbr(Move m, const Position & p) {
         }
     }
 
-    if ( isAmbiguousRank || ((t==P_wp || t==P_bp) && isCapture(m)) ) s+= Files[SQFILE(from)];
-    if ( isAmbiguousFile ) s+= Ranks[SQRANK(from)];
+    if ( isAmbiguousRank || ((t==P_wp || t==P_bp) && isCapture(m)) ) s+= FileNames[SQFILE(from)];
+    if ( isAmbiguousFile ) s+= RankNames[SQRANK(from)];
 
     // add 'x' if capture
     if ( isCapture(m)){
@@ -179,7 +179,7 @@ std::string showAlgAbr(Move m, const Position & p) {
     }
 
     // add landing position
-    s+= Squares[to];
+    s+= SquareNames[to];
 
     // and promotion to
     if (isPromotion(m)){
