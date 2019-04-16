@@ -2783,14 +2783,13 @@ ScoreType eval(const Position & p, float & gp){
     ///@todo candidate passed
     ///@todo rook on open file
 
-    /*
     // count pawn per file
     ///@todo use a cache for that ?!
-    const uint64_t nbWP[8] = {0ull};
-    const uint64_t nbBP[8] = {0ull};
+    uint64_t nbWP[8] = {0ull};
+    uint64_t nbBP[8] = {0ull};
     for(int f = File_a; f <= File_h ; ++f){
-        nbWP[f] = countBit(whitePawn & files[f];)
-        nbBP[f] = countBit(blackPawn & files[f];)
+        nbWP[f] = countBit(whitePawn & files[f]);
+        nbBP[f] = countBit(blackPawn & files[f]);
         // double pawn malus
         sc   -= (nbWP[f]>>1)*EvalConfig::doublePawnMalus;
         scEG -= (nbWP[f]>>1)*EvalConfig::doublePawnMalusEG;
@@ -2798,6 +2797,7 @@ ScoreType eval(const Position & p, float & gp){
         scEG += (nbBP[f]>>1)*EvalConfig::doublePawnMalusEG;
     }
 
+    /*
     // isolated pawn malus
     sc   -= (        nbWPA&&!nbWPB)*EvalConfig::isolatedPawnMalus;
     sc   -= (!nbWPA&&nbWPB&&!nbWPC)*EvalConfig::isolatedPawnMalus;
