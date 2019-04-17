@@ -2785,49 +2785,25 @@ ScoreType eval(const Position & p, float & gp){
 
     // count pawn per file
     ///@todo use a cache for that ?!
-    uint64_t nbWP[8] = {0ull};
-    uint64_t nbBP[8] = {0ull};
+    uint64_t nbWP[10] = {0ull};
+    uint64_t nbBP[10] = {0ull};
     for(int f = File_a; f <= File_h ; ++f){
-        nbWP[f] = countBit(whitePawn & files[f]);
-        nbBP[f] = countBit(blackPawn & files[f]);
+        nbWP[f+1] = countBit(whitePawn & files[f]);
+        nbBP[f+1] = countBit(blackPawn & files[f]);
         // double pawn malus
-        sc   -= (nbWP[f]>>1)*EvalConfig::doublePawnMalus;
-        scEG -= (nbWP[f]>>1)*EvalConfig::doublePawnMalusEG;
-        sc   += (nbBP[f]>>1)*EvalConfig::doublePawnMalus;
-        scEG += (nbBP[f]>>1)*EvalConfig::doublePawnMalusEG;
+        sc   -= (nbWP[f+1]>>1)*EvalConfig::doublePawnMalus;
+        scEG -= (nbWP[f+1]>>1)*EvalConfig::doublePawnMalusEG;
+        sc   += (nbBP[f+1]>>1)*EvalConfig::doublePawnMalus;
+        scEG += (nbBP[f+1]>>1)*EvalConfig::doublePawnMalusEG;
     }
 
-    /*
-    // isolated pawn malus
-    sc   -= (        nbWPA&&!nbWPB)*EvalConfig::isolatedPawnMalus;
-    sc   -= (!nbWPA&&nbWPB&&!nbWPC)*EvalConfig::isolatedPawnMalus;
-    sc   -= (!nbWPB&&nbWPC&&!nbWPD)*EvalConfig::isolatedPawnMalus;
-    sc   -= (!nbWPC&&nbWPD&&!nbWPE)*EvalConfig::isolatedPawnMalus;
-    sc   -= (!nbWPD&&nbWPE&&!nbWPF)*EvalConfig::isolatedPawnMalus;
-    sc   -= (!nbWPE&&nbWPF&&!nbWPG)*EvalConfig::isolatedPawnMalus;
-    sc   -= (!nbWPG&&nbWPH        )*EvalConfig::isolatedPawnMalus;
-    sc   += (        nbBPA&&!nbBPB)*EvalConfig::isolatedPawnMalus;
-    sc   += (!nbBPA&&nbBPB&&!nbBPC)*EvalConfig::isolatedPawnMalus;
-    sc   += (!nbBPB&&nbBPC&&!nbBPD)*EvalConfig::isolatedPawnMalus;
-    sc   += (!nbBPC&&nbBPD&&!nbBPE)*EvalConfig::isolatedPawnMalus;
-    sc   += (!nbBPD&&nbBPE&&!nbBPF)*EvalConfig::isolatedPawnMalus;
-    sc   += (!nbBPE&&nbBPF&&!nbBPG)*EvalConfig::isolatedPawnMalus;
-    sc   += (!nbBPG&&nbBPH        )*EvalConfig::isolatedPawnMalus;
-    scEG -= (        nbWPA&&!nbWPB)*EvalConfig::isolatedPawnMalusEG;
-    scEG -= (!nbWPA&&nbWPB&&!nbWPC)*EvalConfig::isolatedPawnMalusEG;
-    scEG -= (!nbWPB&&nbWPC&&!nbWPD)*EvalConfig::isolatedPawnMalusEG;
-    scEG -= (!nbWPC&&nbWPD&&!nbWPE)*EvalConfig::isolatedPawnMalusEG;
-    scEG -= (!nbWPD&&nbWPE&&!nbWPF)*EvalConfig::isolatedPawnMalusEG;
-    scEG -= (!nbWPE&&nbWPF&&!nbWPG)*EvalConfig::isolatedPawnMalusEG;
-    scEG -= (!nbWPG&&nbWPH        )*EvalConfig::isolatedPawnMalusEG;
-    scEG += (        nbBPA&&!nbBPB)*EvalConfig::isolatedPawnMalusEG;
-    scEG += (!nbBPA&&nbBPB&&!nbBPC)*EvalConfig::isolatedPawnMalusEG;
-    scEG += (!nbBPB&&nbBPC&&!nbBPD)*EvalConfig::isolatedPawnMalusEG;
-    scEG += (!nbBPC&&nbBPD&&!nbBPE)*EvalConfig::isolatedPawnMalusEG;
-    scEG += (!nbBPD&&nbBPE&&!nbBPF)*EvalConfig::isolatedPawnMalusEG;
-    scEG += (!nbBPE&&nbBPF&&!nbBPG)*EvalConfig::isolatedPawnMalusEG;
-    scEG += (!nbBPG&&nbBPH        )*EvalConfig::isolatedPawnMalusEG;
-    */
+    // isolated pawn malus (second loop needed)
+    for(int f = File_a; f <= File_h ; ++f){
+        sc -= (!nbWP[f] && nbWP[f+1] && !nbWP[f+2])*EvalConfig::isolatedPawnMalus;
+        sc -= (!nbWP[f] && nbWP[f+1] && !nbWP[f+2])*EvalConfig::isolatedPawnMalusEG;
+        sc += (!nbBP[f] && nbBP[f+1] && !nbBP[f+2])*EvalConfig::isolatedPawnMalus;
+        sc == (!nbBP[f] && nbBP[f+1] && !nbBP[f+2])*EvalConfig::isolatedPawnMalusEG;
+    }
 
     /*
     // blocked piece
