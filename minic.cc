@@ -27,7 +27,7 @@ typedef uint64_t u_int64_t;
 
 #include "json.hpp"
 
-//#define IMPORTBOOK
+#define IMPORTBOOK
 #define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
 //#define WITH_TEST_SUITE
@@ -403,7 +403,7 @@ ScoreType   doublePawnMalusEG     = 15;
 ScoreType   isolatedPawnMalus     = 5;
 ScoreType   isolatedPawnMalusEG   = 15;
 ScoreType   pawnShieldBonus[4]    = {0, 15, 30, 45};
-float       protectedPasserFactor = 0.25f; // 125%
+float       protectedPasserFactor = 0.5f; // 150%
 float       freePasserFactor      = 0.9f; // 190%
 
 ScoreType   adjKnight[9]  = { -24, -18, -12, -6,  0,  6,  12, 18, 24 };
@@ -1698,6 +1698,26 @@ void tokenize(const std::string& str, std::vector<std::string>& tokens, const st
     }
 }
 
+inline std::string SanitizeCastling(const Position & p, const std::string & str){
+    // SAN castling notation
+    if (( str == "e1g1" && p.b[Sq_e1] == P_wk ) || ( str == "e8g8" && p.b[Sq_e8] == P_bk )) return "0-0";
+    if (( str == "e1c1" && p.b[Sq_e1] == P_wk ) || ( str == "e8c8" && p.b[Sq_e8] == P_bk )) return "0-0-0";
+    return str;
+}
+
+inline Move SanitizeCastling(const Position & p, const Move & m){
+    if ( m == INVALIDMOVE ) return m;
+    // SAN castling notation
+    const Square from = Move2From(m);
+    const Square to   = Move2To(m);
+    MType mtype = Move2Type(m);
+    if ( (from == Sq_e1) && (p.b[Sq_e1] == P_wk) && (to == Sq_g1)) mtype=T_wks;
+    if ( (from == Sq_e8) && (p.b[Sq_e8] == P_bk) && (to == Sq_g8)) mtype=T_bks;
+    if ( (from == Sq_e1) && (p.b[Sq_e1] == P_wk) && (to == Sq_c1)) mtype=T_wqs;
+    if ( (from == Sq_e8) && (p.b[Sq_e8] == P_bk) && (to == Sq_c8)) mtype=T_bqs;
+    return ToMove(from,to,mtype);
+}
+
 bool readMove(const Position & p, const std::string & ss, Square & from, Square & to, MType & moveType ) {
 
     if ( ss.empty()){
@@ -1707,6 +1727,11 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
     }
 
     std::string str(ss);
+    str = SanitizeCastling(p,str);
+
+    // SAN castling notation
+    if (( str == "e1g1" && p.b[Sq_e1] == P_wk ) || ( str == "e8g8" && p.b[Sq_e8] == P_bk )) str = "0-0";
+    if (( str == "e1c1" && p.b[Sq_e1] == P_wk ) || ( str == "e8c8" && p.b[Sq_e8] == P_bk )) str = "0-0-0";
 
     // add space to go to own internal notation
     if ( str != "0-0" && str != "0-0-0" && str != "O-O" && str != "O-O-O" ) str.insert(2," ");
@@ -2357,6 +2382,7 @@ Iter select_randomly(Iter start, Iter end) {
 const Move Get(const Hash h){
     std::unordered_map<Hash, std::set<Move> >::iterator it = book.find(h);
     if ( it == book.end() ) return INVALIDMOVE;
+    Logging::LogIt(Logging::logInfo) << "Book hit";
     return *select_randomly(it->second.begin(),it->second.end());
 }
 
@@ -3364,7 +3390,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
     previousNodeCount = 1;
 
     if ( isMainThread() ){
-       const Move bookMove = Book::Get(computeHash(p));
+       const Move bookMove = SanitizeCastling(p,Book::Get(computeHash(p)));
        if ( bookMove != INVALIDMOVE){
            if ( isMainThread() ) startLock.store(false);
            pv .push_back(bookMove);
