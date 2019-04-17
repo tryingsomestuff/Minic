@@ -2791,10 +2791,10 @@ ScoreType eval(const Position & p, float & gp){
         nbWP[f+1] = countBit(whitePawn & files[f]);
         nbBP[f+1] = countBit(blackPawn & files[f]);
         // double pawn malus
-        sc   -= (nbWP[f+1]>>1)*EvalConfig::doublePawnMalus;
-        scEG -= (nbWP[f+1]>>1)*EvalConfig::doublePawnMalusEG;
-        sc   += (nbBP[f+1]>>1)*EvalConfig::doublePawnMalus;
-        scEG += (nbBP[f+1]>>1)*EvalConfig::doublePawnMalusEG;
+        sc   -= ScoreType(nbWP[f+1]>>1)*EvalConfig::doublePawnMalus;
+        scEG -= ScoreType(nbWP[f+1]>>1)*EvalConfig::doublePawnMalusEG;
+        sc   += ScoreType(nbBP[f+1]>>1)*EvalConfig::doublePawnMalus;
+        scEG += ScoreType(nbBP[f+1]>>1)*EvalConfig::doublePawnMalusEG;
     }
 
     // isolated pawn malus (second loop needed)
@@ -2802,7 +2802,7 @@ ScoreType eval(const Position & p, float & gp){
         sc -= (!nbWP[f] && nbWP[f+1] && !nbWP[f+2])*EvalConfig::isolatedPawnMalus;
         sc -= (!nbWP[f] && nbWP[f+1] && !nbWP[f+2])*EvalConfig::isolatedPawnMalusEG;
         sc += (!nbBP[f] && nbBP[f+1] && !nbBP[f+2])*EvalConfig::isolatedPawnMalus;
-        sc == (!nbBP[f] && nbBP[f+1] && !nbBP[f+2])*EvalConfig::isolatedPawnMalusEG;
+        sc += (!nbBP[f] && nbBP[f+1] && !nbBP[f+2])*EvalConfig::isolatedPawnMalusEG;
     }
 
     /*
