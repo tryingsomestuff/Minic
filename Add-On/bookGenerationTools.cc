@@ -32,12 +32,12 @@ std::string getFrom(const std::string & to, Position & p, const Piece & t, const
            MoveList l;
            generateSquare(p,l,s,GP_all);
            for(auto m = l.begin() ; m != l.end() ; ++m){
-               if ( Squares[Move2To(*m)] == to ){
+               if ( SquareNames[Move2To(*m)] == to ){
                    if ( helper.empty()){
-                       return Squares[Move2From(*m)];
+                       return SquareNames[Move2From(*m)];
                    }
                    else{
-                       std::string from = Squares[Move2From(*m)];
+                       std::string from = SquareNames[Move2From(*m)];
 #ifndef __linux__
                        if (isalpha(helper[0])) {
 #else
@@ -144,7 +144,7 @@ bool add(const std::string & move, Position & p, std::ofstream & binFile){
    std::string moveStr = move;
    if ( move == "0-0" || move == "0-0-0" || move == "O-O" || move == "O-O-O") moveStr = move;
    else {
-       moveStr = getAlgAlt(moveStr,p); // convert from short algebraic notation to internal notation
+       //moveStr = getAlgAlt(moveStr,p); // convert from short algebraic notation to internal notation
        moveStr.insert(2," ");
    }
    Square from = INVALIDSQUARE;
