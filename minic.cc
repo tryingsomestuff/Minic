@@ -27,8 +27,8 @@ typedef uint64_t u_int64_t;
 
 #include "json.hpp"
 
-#define IMPORTBOOK
-#define WITH_TEXEL_TUNING
+//#define IMPORTBOOK
+//#define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
