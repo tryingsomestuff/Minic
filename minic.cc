@@ -2640,7 +2640,7 @@ inline void evalPawnWhite(const Position & p, BitBoard pieceBBiterator, ScoreTyp
         // passer
         const bool passed = (BB::mask[k].passerSpan[Co_White] & p.blackPawn()) == 0ull;
         if (passed) {
-            const float factorProtected = 1+((BB::shiftSouthWest(SquareToBitboard(k)) | BB::shiftSouthEast(SquareToBitboard(k))) & p.whitePawn() != 0ull) * EvalConfig::protectedPasserFactor;
+            const float factorProtected = 1+(((BB::shiftSouthWest(SquareToBitboard(k)) | BB::shiftSouthEast(SquareToBitboard(k))) & p.whitePawn()) != 0ull) * EvalConfig::protectedPasserFactor;
             const float factorFree      = 1;// +((BB::mask[k].passerSpan[Co_White] & p.blackPiece) == 0ull) * EvalConfig::freePasserFactor;
             const float kingNearBonus   = 0;// kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.bk, k) - chebyshevDistance(p.wk, k));
             const bool unstoppable      = (p.mat[Co_Black][M_t] == 0)*((chebyshevDistance(p.bk, SQFILE(k) + 56) - (!white2Play)) > std::min(5, chebyshevDistance(SQFILE(k) + 56, k)));
@@ -2681,7 +2681,7 @@ inline void evalPawnBlack(const Position & p, BitBoard pieceBBiterator, ScoreTyp
         // passer
         const bool passed = (BB::mask[k].passerSpan[Co_Black] & p.whitePawn()) == 0ull;
         if (passed) {
-            const float factorProtected = 1+((BB::shiftNorthWest(SquareToBitboard(k)) | BB::shiftNorthEast(SquareToBitboard(k))) & p.blackPawn() != 0ull) * EvalConfig::protectedPasserFactor;
+            const float factorProtected = 1+(((BB::shiftNorthWest(SquareToBitboard(k)) | BB::shiftNorthEast(SquareToBitboard(k))) & p.blackPawn()) != 0ull) * EvalConfig::protectedPasserFactor;
             const float factorFree      = 1;// +((BB::mask[k].passerSpan[Co_White] & p.whitePiece) == 0ull) * EvalConfig::freePasserFactor;
             const float kingNearBonus   = 0;// kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.wk, k) - chebyshevDistance(p.bk, k));
             const bool unstoppable      = (p.mat[Co_White][M_t] == 0)*((chebyshevDistance(p.wk, SQFILE(k)) - white2Play) > std::min(5, chebyshevDistance(SQFILE(k), k)));
