@@ -406,6 +406,8 @@ ScoreType   pawnShieldBonus[4]    = {0, 15, 30, 45};
 float       protectedPasserFactor = 0.5f; // 150%
 float       freePasserFactor      = 0.9f; // 190%
 
+ScoreType   rookOnOpenFile[3]      = {5,5,15}; // opp semi, self semi, open
+
 ScoreType   adjKnight[9]  = { -24, -18, -12, -6,  0,  6,  12, 18, 24 };
 ScoreType   adjRook[9]    = {  48,  36,  24, 12,  0,-12, -24,-36,-48 };
 
@@ -2833,14 +2835,28 @@ ScoreType eval(const Position & p, float & gp){
     ///@todo use a cache for that ?!
     uint64_t nbWP[10] = {0ull};
     uint64_t nbBP[10] = {0ull};
+    uint64_t nbWR[8] = {0ull};
+    uint64_t nbBR[8] = {0ull};
+
     for(int f = File_a; f <= File_h ; ++f){
         nbWP[f+1] = countBit(whitePawn & files[f]);
         nbBP[f+1] = countBit(blackPawn & files[f]);
+        nbWR[f] = countBit(p.whiteRook() & files[f]);
+        nbBR[f] = countBit(p.blackRook() & files[f]);
         // double pawn malus
         sc   -= ScoreType(nbWP[f+1]>>1)*EvalConfig::doublePawnMalus;
         scEG -= ScoreType(nbWP[f+1]>>1)*EvalConfig::doublePawnMalusEG;
         sc   += ScoreType(nbBP[f+1]>>1)*EvalConfig::doublePawnMalus;
         scEG += ScoreType(nbBP[f+1]>>1)*EvalConfig::doublePawnMalusEG;
+        // rook on open file
+        if ( nbWR[f] ){
+            if ( nbWP[f+1] == 0 ) sc += nbBP[f+1] == 0 ? EvalConfig::rookOnOpenFile[2]:EvalConfig::rookOnOpenFile[1];
+            else if ( nbBP[f+1] == 0 ) sc += EvalConfig::rookOnOpenFile[0];
+        }
+        if ( nbBR[f] ){
+            if ( nbBP[f+1] == 0 ) sc += nbWP[f+1] == 0 ? EvalConfig::rookOnOpenFile[2]:EvalConfig::rookOnOpenFile[1];
+            else if ( nbWP[f+1] == 0 ) sc += EvalConfig::rookOnOpenFile[0];
+        }
     }
 
     // isolated pawn malus (second loop needed)
