@@ -2028,6 +2028,13 @@ int popBit(BitBoard & b) {
     return i;
 }
 
+Square SquareFromBitBoard(const BitBoard & b) {
+    assert(b != 0ull);
+    unsigned long i = 0;
+    bsf(b, i);
+    return Square(i);
+}
+
 BitBoard isAttackedBB(const Position &p, const Square x, Color c) {
     if (c == Co_White) return attack<P_wb>(x, p.blackBishop() | p.blackQueen(), p.occupancy) | attack<P_wr>(x, p.blackRook() | p.blackQueen(), p.occupancy) | attack<P_wn>(x, p.blackKnight()) | attack<P_wp>(x, p.blackPawn(), p.occupancy, Co_White) | attack<P_wk>(x, p.blackKing());
     else               return attack<P_wb>(x, p.whiteBishop() | p.whiteQueen(), p.occupancy) | attack<P_wr>(x, p.whiteRook() | p.whiteQueen(), p.occupancy) | attack<P_wn>(x, p.whiteKnight()) | attack<P_wp>(x, p.whitePawn(), p.occupancy, Co_Black) | attack<P_wk>(x, p.whiteKing());
@@ -2649,9 +2656,9 @@ inline void evalPawnWhite(const Position & p, BitBoard pieceBBiterator, ScoreTyp
         // passer
         const bool passed = isWhitePasser(p,k);
         if (passed) {
-            const Square sw = BB::shiftSouthWest(SquareToBitboard(k));
-            const Square se = BB::shiftSouthEast(SquareToBitboard(k));
-            const float factorProtected = 1+( ((sw&p.whitePawn()!=0ull)&&isWhitePasser(p,sw)) || ((se&p.whitePawn()!=0ull)&&isWhitePasser(p,se)) ) * EvalConfig::protectedPasserFactor;
+            const BitBoard sw = BB::shiftSouthWest(SquareToBitboard(k));
+            const BitBoard se = BB::shiftSouthEast(SquareToBitboard(k));
+            const float factorProtected = 1+( (((sw&p.whitePawn())!=0ull)&&isWhitePasser(p, BB::SquareFromBitBoard(sw))) || (((se&p.whitePawn())!=0ull)&&isWhitePasser(p, BB::SquareFromBitBoard(se))) ) * EvalConfig::protectedPasserFactor;
             const float factorFree      = 1;// +((BB::mask[k].passerSpan[Co_White] & p.blackPiece) == 0ull) * EvalConfig::freePasserFactor;
             const float kingNearBonus   = 0;// kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.bk, k) - chebyshevDistance(p.wk, k));
             const bool unstoppable      = (p.mat[Co_Black][M_t] == 0)*((chebyshevDistance(p.bk, SQFILE(k) + 56) - (!white2Play)) > std::min(5, chebyshevDistance(SQFILE(k) + 56, k)));
@@ -2692,9 +2699,9 @@ inline void evalPawnBlack(const Position & p, BitBoard pieceBBiterator, ScoreTyp
         // passer
         const bool passed = isBlackPasser(p,k);
         if (passed) {
-            const Square nw = BB::shiftNorthWest(SquareToBitboard(k));
-            const Square ne = BB::shiftNorthEast(SquareToBitboard(k));
-            const float factorProtected = 1+( ((nw&p.blackPawn()!=0ull)&&isBlackPasser(p,nw)) || ((ne&p.blackPawn()!=0ull)&&isBlackPasser(p,ne)) ) * EvalConfig::protectedPasserFactor;
+            const BitBoard nw = BB::shiftNorthWest(SquareToBitboard(k));
+            const BitBoard ne = BB::shiftNorthEast(SquareToBitboard(k));
+            const float factorProtected = 1+( (((nw&p.blackPawn())!=0ull)&&isBlackPasser(p, BB::SquareFromBitBoard(nw))) || (((ne&p.blackPawn())!=0ull)&&isBlackPasser(p, BB::SquareFromBitBoard(ne))) ) * EvalConfig::protectedPasserFactor;
             const float factorFree      = 1;// +((BB::mask[k].passerSpan[Co_White] & p.whitePiece) == 0ull) * EvalConfig::freePasserFactor;
             const float kingNearBonus   = 0;// kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.wk, k) - chebyshevDistance(p.bk, k));
             const bool unstoppable      = (p.mat[Co_White][M_t] == 0)*((chebyshevDistance(p.wk, SQFILE(k)) - white2Play) > std::min(5, chebyshevDistance(SQFILE(k), k)));
