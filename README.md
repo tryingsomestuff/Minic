@@ -100,6 +100,11 @@ and a command line interface, using the same key word. For instance, forcing mat
 * 0.43 : fix another SMP issue
 * 0.44 : fix null move that was in fact NOT activated ! activate probcut. Add some counters. New release are sse4.2 and avx2 for both windows and linux.
 * 0.45 : lot of clean up in code, search tuning, starts UCI implementation, and fix null move ...
+* 0.46 : little optim
+* 0.47 : clean up, try uci support 
+* 0.48 : some evaluation features about Pawn
+* 0.49 : more pawn features
+* 0.50 : more rook and pawn features 
 
 ## Thanks
 
