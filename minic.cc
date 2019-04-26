@@ -53,15 +53,8 @@ const std::string MinicVersion = "dev";
 
 /*
 //todo
-+other book
-+Compilation win32
-+Reduce score when 50 moves rule approach
 -Root move ordering
-+Exchange when ahead
-+Bad cap can be killers
-+Fawn Pawn
 -Candidate and backward
-+Rook behind own or enemy passer
 */
 
 #define STOPSCORE   ScoreType(-20000)
@@ -852,6 +845,9 @@ namespace MaterialHash { // from Gull
                 (isWhite ? mat[Co_White][M_m] : mat[Co_Black][M_m]) += 1;
                 (isWhite ? mat[Co_White][M_t] : mat[Co_Black][M_t]) += 1;
                 break;
+             case 'P':
+                (isWhite ? mat[Co_White][M_p] : mat[Co_Black][M_p]) += 1;
+                break;
             default:
                 Logging::LogIt(Logging::logFatal) << "Bad char in material definition";
             }
@@ -914,6 +910,7 @@ namespace MaterialHash { // from Gull
         const bool whiteWins = winningSide == Co_White;
         Square winningK = (whiteWins ? p.wk : p.bk);
         Square losingK  = (whiteWins ? p.bk : p.wk);
+        ///@todo sometimes going to the bad corner ... why
         if ( ((p.whiteBishop()|p.blackBishop()) & whiteSquare) != 0 ){
             winningK = ~winningK;
             losingK  = ~losingK;
@@ -949,7 +946,7 @@ namespace MaterialHash { // from Gull
             DEF_MAT(KLKL,   Ter_MaterialDraw)
             DEF_MAT(KDKD,   Ter_MaterialDraw)
 
-            // sym (and pseudo sym) : all should be draw (nearly)
+            // sym (and pseudo sym) : all should be draw (or very nearly)
             DEF_MAT(KK,     Ter_MaterialDraw)
             DEF_MAT(KQQKQQ, Ter_MaterialDraw)
             DEF_MAT(KQKQ,   Ter_MaterialDraw)
@@ -1048,6 +1045,12 @@ namespace MaterialHash { // from Gull
             DEF_MAT(KNNK, Ter_MaterialDraw)                     DEF_MAT_REV(KKNN,KNNK)
             DEF_MAT_H(KLNK, Ter_WhiteWinWithHelper,&helperKmmK) DEF_MAT_REV_H(KKLN,KLNK,&helperKmmK)
             DEF_MAT_H(KDNK, Ter_WhiteWinWithHelper,&helperKmmK) DEF_MAT_REV_H(KKDN,KDNK,&helperKmmK)
+
+            // Opposite bishop with P
+            DEF_MAT(KLPKD, Ter_LikelyDraw)                      DEF_MAT_REV(KDKLP,KLPKD)
+            DEF_MAT(KDPKL, Ter_LikelyDraw)                      DEF_MAT_REV(KLKDP,KDPKL)
+            DEF_MAT(KLPPKD, Ter_LikelyDraw)                     DEF_MAT_REV(KDKLPP,KLPPKD)
+            DEF_MAT(KDPPKL, Ter_LikelyDraw)                     DEF_MAT_REV(KLKDPP,KDPPKL)
 
             ///@todo other (with pawn ...)
         }
@@ -1509,7 +1512,7 @@ struct EvalEntry {
 
 } // TT
 
-ScoreType eval(const Position & p, float & gp); // forward decl
+ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator = false); // forward decl
 
 /*
 inline bool isTactical(const Move m) { return isCapture(m) || isPromotion(m); }
@@ -2750,10 +2753,7 @@ inline void evalPawnBlack(const Position & p, BitBoard pieceBBiterator, ScoreTyp
     }
 }
 
-ScoreType eval(const Position & p, float & gp){
-
-    const Hash matHash = MaterialHash::getMaterialHash(p.mat);
-    const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
+ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
 
     ScoreType sc       = 0;
     ScoreType scEG     = 0;
@@ -2785,25 +2785,30 @@ ScoreType eval(const Position & p, float & gp){
           + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValuesEG[P_wn]
           + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValuesEG[P_wp];
 
-    // end game knowledge
     const Color winningSide = scEG>0?Co_White:Co_Black;
-    if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ) return (white2Play?+1:-1)*(scEG+MaterialHash::helperTable[matHash](p,winningSide));
-    else if ( ter == MaterialHash::Ter_WhiteWin || ter == MaterialHash::Ter_BlackWin) return (white2Play?+1:-1)*3*scEG;
-    else if ( ter == MaterialHash::Ter_HardToWin) return (white2Play?+1:-1)*scEG/2;
-    else if ( ter == MaterialHash::Ter_LikelyDraw ) return (white2Play?+1:-1)*scEG/3;
-    ///@todo
-    /*
-    else if ( ter == MaterialHash::Ter_Draw){
-        // is king in check ?
 
-        return 0;
-    }
-    else if ( ter == MaterialHash::Ter_MaterialDraw){
-        // mate and stale ?
+    // end game knowledge
+    if ( safeMatEvaluator ){
+       const Hash matHash = MaterialHash::getMaterialHash(p.mat);
+       const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
+       if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ) return (white2Play?+1:-1)*(scEG+MaterialHash::helperTable[matHash](p,winningSide));
+       else if ( ter == MaterialHash::Ter_WhiteWin || ter == MaterialHash::Ter_BlackWin) return (white2Play?+1:-1)*3*scEG;
+       else if ( ter == MaterialHash::Ter_HardToWin) return (white2Play?+1:-1)*scEG/2;
+       else if ( ter == MaterialHash::Ter_LikelyDraw ) return (white2Play?+1:-1)*scEG/3;
+       ///@todo
+       /*
+       else if ( ter == MaterialHash::Ter_Draw){
+           // is king in check ?
 
-        return 0;
+           return 0;
+       }
+       else if ( ter == MaterialHash::Ter_MaterialDraw){
+           // mate and stale ?
+
+           return 0;
+       }
+       */
     }
-    */
 
     // material (symetric version)
     ScoreType matPiece = (p.mat[Co_White][M_k] - p.mat[Co_Black][M_k]) * *absValues[P_wk]
@@ -3091,6 +3096,8 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     const ScoreType alphaInit = alpha;
 
+    bool validCapFound = false;
+
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         if (!isInCheck) {
             if (isBadCap(*it)) continue; // see (from move sorter, SEE<0 add -2000 if bad capture)
@@ -3098,6 +3105,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
         }
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
+        validCapFound = true;
         //bool isCheck = isAttacked(p2, kingSquare(p2));
         if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply + 1;
         if (p.c == Co_Black && Move2To(*it) == p.wk) return MATE - ply + 1;
@@ -3113,7 +3121,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     ///@todo use hash also in qsearch ?
 
-    return bestScore;
+    return validCapFound?bestScore:eval(p, gp, true); // use material/draw evaluator on leaf
 }
 
 inline void updatePV(PVList & pv, const Move & m, const PVList & childPV) {
