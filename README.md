@@ -117,7 +117,7 @@ and a command line interface, using the same key word. For instance, forcing mat
 * 0.47 : clean up, try uci support 
 * 0.48 : some evaluation features about Pawn
 * 0.49 : more pawn features
-* 0.50 : more rook and pawn features 
+* 0.50 : more rook and pawn features (new Win32 releases)
 
 ## Thanks
 
