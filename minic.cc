@@ -34,7 +34,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_SYZYGY
 //#define WITH_UCI
 
-const std::string MinicVersion = "0.50";
+const std::string MinicVersion = "dev";
 
 ///@todo on test
 
@@ -59,9 +59,9 @@ const std::string MinicVersion = "0.50";
 -Root move ordering
 +Exchange when ahead
 +Bad cap can be killers
-+Fawn Pawn from stockfish
--Candidate and backward from topple
-+Rook behind own or enemy passer from topple
++Fawn Pawn
+-Candidate and backward
++Rook behind own or enemy passer
 */
 
 #define STOPSCORE   ScoreType(-20000)
