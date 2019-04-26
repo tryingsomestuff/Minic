@@ -10,7 +10,7 @@ Minic stands for "Minimal Chess".
 ## Release
 
 Have a look in the Dist directory for releases. Some more stable/official ones will also be made available as github release.
-Sarting from release 0.50 new binaries are available :
+Starting from release 0.50 new binaries are available :
 
 * minic_0.50_linux_x64_avx2_bmi2: fully optimized Linux64 (avx2+bmi2)   
 * minic_0.50_linux_x64_sse4.2: optimized Linux64 (sse4.2)  
