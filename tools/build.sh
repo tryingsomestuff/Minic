@@ -22,7 +22,7 @@ echo "definition $d"
 echo "target $t"
 exe=minic_${v}_linux_x64
 if [ "$t" != "-march=native" ]; then
-   tname=$(echo $t | sed 's/-m//g' | sed 's/ /_/g')
+   tname=$(echo $t | sed 's/-m//g' | sed 's/arch=//g' | sed 's/ /_/g')
    exe=${exe}_${tname}
 fi
 echo "Building $exe"
