@@ -22,6 +22,8 @@ Starting from release 0.50 new binaries are available :
 * minic_0.50_mingw_x64_sse4.2.exe: optimized Windows64 (sse4.2)  
 * minic_0.50_mingw_x64_i686.exe: basic Windows64   
    
+ Please note that Win32 binaries are very slow (I don't know why yet, so please use Win64 one if possible).
+   
 ## Strength
 Quite poor for a chess engine (around 2650) but already way to strong for me !
 
