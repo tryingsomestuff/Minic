@@ -40,17 +40,17 @@ double Sigmoid(Position * p) {
     // eval returns (white2Play?+1:-1)*sc
     // so does qsearch or search : score from side to move point of view
 
-    // tuning data score is +1 if side to move wins, -1 if it loses
-    // scaled to +1 if side to move wins to 0 if it loses
+    // tuning data score is +1 if white wins, -1 if black wins
+    // scaled to +1 if white wins and 0 if black wins
 
-    // so score used here must be >0 if side to move wins
+    // so score used here must be >0 if white wins
     // /////////////////////////////////////////
 
     /*
     // qsearch
     DepthType seldepth = 0;
     double s = ThreadPool::instance().main().qsearchNoPruning(-10000,10000,*p,1,seldepth);
-    //s *= (p->c == Co_White ? +1:-1);
+    s *= (p->c == Co_White ? +1:-1);
     */
 
     /*
@@ -59,15 +59,14 @@ double Sigmoid(Position * p) {
     DepthType d = 64;
     ScoreType s = 0;
     ThreadPool::instance().main().search(*p,m,4,s,seldepth);
-    //s *= (p->c == Co_White ? +1:-1);
+    s *= (p->c == Co_White ? +1:-1);
     */
 
     // eval
     float gp;
     double s = eval(*p,gp);
-    //s *= (p->c == Co_White ? +1:-1);
-
-    return 1. / (1. + std::pow(10, -/*K **/ s / 200.));
+    s *= (p->c == Co_White ? +1:-1);
+    return 1. / (1. + std::pow(10, -/*K**/s/400. ));
 }
 
 double E(const std::vector<Texel::TexelInput> &data, size_t miniBatchSize) {
@@ -100,7 +99,7 @@ double computeOptimalK(const std::vector<Texel::TexelInput> & data) {
             Logging::LogIt(Logging::logInfo) << "...";
             K += Kdelta;
             thisError = E(data,data.size());
-            if (thisError <= bestError) {
+            if (thisError < bestError) {
                 bestError = thisError, Kstart = K;
                 Logging::LogIt(Logging::logInfo) << "new best K = " << K << " E = " << bestError;
             }
@@ -113,7 +112,6 @@ double computeOptimalK(const std::vector<Texel::TexelInput> & data) {
     K = Kstart;
     return Kstart;
 }
-
 
 std::vector<double> ComputeGradient(std::vector<TexelParam<ScoreType> > & x0, std::vector<Texel::TexelInput> &data, size_t gradientBatchSize, bool normalized = true) {
     Logging::LogIt(Logging::logInfo) << "Computing gradient";
@@ -246,7 +244,10 @@ std::vector<TexelParam<ScoreType> > TexelOptimizeGD(const std::vector<TexelParam
             }
         }
 
-        if (coef == 0 ) break;
+        if (coef == 0 ) {
+            Logging::LogIt(Logging::logInfo) << "Line search failed";
+            break;
+        }
 
         Logging::LogIt(Logging::logInfo) << "Applying gradient, learningRate = " << learningRate << ", alpha " << alpha << " LS best : " << coef;
         for (size_t k = 0; k < bestParam.size(); ++k) {
@@ -278,12 +279,15 @@ std::vector<TexelParam<ScoreType> > TexelOptimizeNaive(const std::vector<TexelPa
     DynamicConfig::disableTT = true;
     std::ofstream str("tuning.csv");
     std::vector<TexelParam<ScoreType> > bestParam = initialGuess;
+    int stepMax = 5;
+    int step = 0;
     for (int loop = 0; loop < 5000; ++loop) {
         for (size_t k = 0; k < bestParam.size(); ++k) {
             Randomize(data, batchSize);
             double initE = E(data, batchSize);
             double curE = -1;
-            while ( true ) {
+            while ( step < stepMax ) {
+                step++;
                 const ScoreType oldValue = bestParam[k];
                 bestParam[k] = ScoreType(oldValue - 1);
                 if (bestParam[k] == oldValue) break;
@@ -299,7 +303,9 @@ std::vector<TexelParam<ScoreType> > TexelOptimizeNaive(const std::vector<TexelPa
                     break;
                 }
             }
-            while ( true ) {
+            step = 0;
+            while ( step < stepMax ) {
+                step++;
                 const ScoreType oldValue = bestParam[k];
                 bestParam[k] = ScoreType(oldValue + 1);
                 if (bestParam[k] == oldValue) break;
@@ -448,24 +454,132 @@ std::vector<TexelParam<ScoreType> > TexelOptimizePSO(const std::vector<TexelPara
 
 } // Texel
 
+void split( std::vector<std::string> & v, const std::string & str, const std::string & sep){
+    size_t start = 0, end = 0;
+    while ( end != std::string::npos){
+        end = str.find( sep, start);
+        v.push_back( str.substr( start,(end == std::string::npos) ? std::string::npos : end - start));
+        start = (   ( end > (std::string::npos - sep.size()) ) ?  std::string::npos  :  end + sep.size());
+    }
+}
+
+std::vector<std::string> split2(const std::string & line, char sep, char delim){
+   std::vector<std::string> v;
+   const char * c = line.c_str();       // prepare to parse the line
+   bool inSep{false};
+   for (const char* p = c; *p ; ++p) {  // iterate through the string
+       if (*p == delim) {               // toggle flag if we're btw delim
+           inSep = !inSep;
+       }
+       else if (*p == sep && !inSep) {  // if sep OUTSIDE delim
+           std::string str(c,p-c);
+           str.erase(std::remove(str.begin(), str.end(), ':'), str.end());
+           v.push_back(str);            // keep the field
+           c = p+1;                     // and start parsing next one
+       }
+   }
+   v.push_back(std::string(c));         // last field delimited by end of line instead of sep
+   return v;
+}
+
+std::string ltrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !std::isspace(ch); }));
+    return s;
+}
+
+
+class ExtendedPosition : public Position{
+public:
+    ExtendedPosition(const std::string & s, bool withMoveCount = true);
+    bool shallFindBest();
+    std::vector<std::string> bestMoves();
+    std::vector<std::string> badMoves();
+    std::string id();
+    static bool readEPDFile(const std::string & fileName, std::vector<std::string> & positions);
+    static void test(const std::vector<std::string> & positions,
+                     const std::vector<int> &         timeControls,
+                     bool                             breakAtFirstSuccess,
+                     const std::vector<int> &         scores,
+                     std::function< int(int) >        eloF,
+                     bool                             withMoveCount = true);
+    static void testStatic(const std::vector<std::string> & positions,
+                           int chunck = 4,
+                           bool withMoveCount = false);
+    std::map<std::string,std::vector<std::string> > _extendedParams;
+};
+
+ExtendedPosition::ExtendedPosition(const std::string & extFEN, bool withMoveCount) : Position(extFEN){
+    if (!withMoveCount) {
+        ply = 0; moves = 1; fifty = 0;
+    }
+    //Logging::LogIt(Logging::logInfo) << ToString(*this);
+    std::vector<std::string> strList;
+    std::stringstream iss(extFEN);
+    std::copy(std::istream_iterator<std::string>(iss), std::istream_iterator<std::string>(), back_inserter(strList));
+    if ( strList.size() < (withMoveCount?7u:5u)) Logging::LogIt(Logging::logFatal) << "Not an extended position";
+    std::vector<std::string>(strList.begin()+(withMoveCount?6:4), strList.end()).swap(strList);
+    const std::string extendedParamsStr = std::accumulate(strList.begin(), strList.end(), std::string(""),[](const std::string & a, const std::string & b) {return a + ' ' + b;});
+    //LogIt(logInfo) << "extended parameters : " << extendedParamsStr;
+    std::vector<std::string> strParamList;
+    split(strParamList,extendedParamsStr,";");
+    for(size_t k = 0 ; k < strParamList.size() ; ++k){
+        //LogIt(logInfo) << "extended parameters : " << k << " " << strParamList[k];
+        strParamList[k] = ltrim(strParamList[k]);
+        if ( strParamList[k].empty()) continue;
+        std::vector<std::string> pair;
+        split(pair,strParamList[k]," ");
+        if ( pair.size() < 2 ) Logging::LogIt(Logging::logFatal) << "Not un extended parameter pair";
+        std::vector<std::string> values = pair;
+        values.erase(values.begin());
+        _extendedParams[pair[0]] = values;
+        //LogIt(logInfo) << "extended parameters pair : " << pair[0] << " => " << values[0];
+    }
+}
+
+bool ExtendedPosition::shallFindBest(){ return _extendedParams.find("bm") != _extendedParams.end();}
+
+std::vector<std::string> ExtendedPosition::bestMoves(){ return _extendedParams["bm"];}
+
+std::vector<std::string> ExtendedPosition::badMoves(){ return _extendedParams["am"];}
+
+std::string ExtendedPosition::id(){
+    if ( _extendedParams.find("id") != _extendedParams.end() ) return _extendedParams["id"][0];
+    else return "";
+}
+
+bool ExtendedPosition::readEPDFile(const std::string & fileName, std::vector<std::string> & positions){
+    Logging::LogIt(Logging::logInfo) << "Loading EPD file : " << fileName;
+    std::ifstream str(fileName);
+    if (str) {
+        std::string line;
+        while (std::getline(str, line)) positions.push_back(line);
+        return true;
+    }
+    else {
+        Logging::LogIt(Logging::logError) << "Cannot open EPD file " << fileName;
+        return false;
+    }
+}
+
+int getResult(const std::string & s){
+    if ( s == "\"1-0\"" ) return 1;
+    if ( s == "\"0-1\"" ) return -1;
+    if ( s == "\"1/2-1/2\"" ) return 0;
+    Logging::LogIt(Logging::logFatal) << "Bad position result " << s;
+    return 0;
+}
+
 void TexelTuning(const std::string & filename) {
-    std::ifstream stream(filename);
-    std::string line;
     std::vector<Texel::TexelInput> data;
     Logging::LogIt(Logging::logInfo) << "Running texel tuning with file " << filename;
-    int count = 0;
-    while (std::getline(stream, line)){
-        nlohmann::json o;
-        try { o = nlohmann::json::parse(line); }
-        catch (...) { Logging::LogIt(Logging::logFatal) << "Cannot parse json " << line; }
-        std::string fen = o["fen"];
-        Position * p = new Position;
-        readFEN(fen,*p,true);
-        /*if (std::abs(o["result"].get<int>()) == 1)*/ data.push_back({p, o["result"]});
-        ++count;
-        if (count % 50000 == 0) Logging::LogIt(Logging::logInfo) << count << " position read";
+    std::vector<std::string> positions;
+    ExtendedPosition::readEPDFile(filename,positions);
+    for(int k = 0 ; k < positions.size() ; ++k){
+        ExtendedPosition * p = new ExtendedPosition(positions[k],false);
+        data.push_back({p, getResult(p->_extendedParams["c9"][0])});
+        // +1 white win, -1 black wins, 0 draw
+        if (k % 50000 == 0) Logging::LogIt(Logging::logInfo) << k << " position read";
     }
-
     Logging::LogIt(Logging::logInfo) << "Data size : " << data.size();
 
     //size_t batchSize = data.size(); // batch
@@ -477,18 +591,16 @@ void TexelTuning(const std::string & filename) {
 
     std::vector<Texel::TexelParam<ScoreType> > guess;
 
-    /*
-    //guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wp+PieceShift], 20,  2000, "pawn",     [](const ScoreType& s){Values[P_bp+PieceShift] = -s;}));
-    guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wn+PieceShift],   150,  400, "knight",   [](const ScoreType& s){Values[P_bn+PieceShift] = -s;}));
-    guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wb+PieceShift],   150,  400, "bishop",   [](const ScoreType& s){Values[P_bb+PieceShift] = -s;}));
-    guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wr+PieceShift],   200,  700, "rook",     [](const ScoreType& s){Values[P_br+PieceShift] = -s;}));
-    guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wq+PieceShift],   600, 1200, "queen",    [](const ScoreType& s){Values[P_bq+PieceShift] = -s;}));
+    guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wp+PieceShift],    20,  200, "pawn",     [](const ScoreType& s){Values[P_bp+PieceShift] = -s;}));
+    guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wn+PieceShift],   150,  600, "knight",   [](const ScoreType& s){Values[P_bn+PieceShift] = -s;}));
+    guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wb+PieceShift],   150,  600, "bishop",   [](const ScoreType& s){Values[P_bb+PieceShift] = -s;}));
+    guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wr+PieceShift],   200,  800, "rook",     [](const ScoreType& s){Values[P_br+PieceShift] = -s;}));
+    guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wq+PieceShift],   600, 1800, "queen",    [](const ScoreType& s){Values[P_bq+PieceShift] = -s;}));
     guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wp+PieceShift],  50,  200, "EGpawn",   [](const ScoreType& s){ValuesEG[P_bp+PieceShift] = -s;}));
-    guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wn+PieceShift], 150,  400, "EGknight", [](const ScoreType& s){ValuesEG[P_bn+PieceShift] = -s;}));
-    guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wb+PieceShift], 150,  400, "EGbishop", [](const ScoreType& s){ValuesEG[P_bb+PieceShift] = -s;}));
-    guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wr+PieceShift], 200,  700, "EGrook",   [](const ScoreType& s){ValuesEG[P_br+PieceShift] = -s;}));
-    guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wq+PieceShift], 600, 1400, "EGqueen",  [](const ScoreType& s){ValuesEG[P_bq+PieceShift] = -s;}));
-    */
+    guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wn+PieceShift], 150,  600, "EGknight", [](const ScoreType& s){ValuesEG[P_bn+PieceShift] = -s;}));
+    guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wb+PieceShift], 150,  600, "EGbishop", [](const ScoreType& s){ValuesEG[P_bb+PieceShift] = -s;}));
+    guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wr+PieceShift], 200,  800, "EGrook",   [](const ScoreType& s){ValuesEG[P_br+PieceShift] = -s;}));
+    guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wq+PieceShift], 600, 1800, "EGqueen",  [](const ScoreType& s){ValuesEG[P_bq+PieceShift] = -s;}));
 
     /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::katt_attack_weight[0]  , -150, 150,"katt_attack_ 0"));
@@ -537,11 +649,13 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(pawnShieldBonus     ,-15,55,"pawnShieldBonus"));
     */
 
+    /*
     for (int k = 1 ; k < 6 ; ++k ){
         for(int i = 0 ; i < 29 ; ++i){
            guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::MOB[k][i],-200,200,"mob"+std::to_string(k)+"_"+std::to_string(i),[k,i](const ScoreType & s){EvalConfig::MOBEG[k][i] = s;}));
         }
     }
+    */
 
     /*
     for (int k = 1 ; k < 6 ; ++k ){
@@ -552,15 +666,14 @@ void TexelTuning(const std::string & filename) {
     */
 
     //computeOptimalK(data);
-
-    Logging::LogIt(Logging::logInfo) << "Optimal K " << Texel::K;
+    //Logging::LogIt(Logging::logInfo) << "Optimal K " << Texel::K;
 
     Logging::LogIt(Logging::logInfo) << "Initial values :";
     for (size_t k = 0; k < guess.size(); ++k) Logging::LogIt(Logging::logInfo) << guess[k].name << " " << guess[k];
-    std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeGD(guess, data, batchSize);
+    //std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeGD(guess, data, batchSize);
     //std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizePSO(guess, data, batchSize);
     //std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeSecante(guess, data, batchSize);
-    //std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeNaive(guess, data, batchSize);
+    std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeNaive(guess, data, batchSize);
 
     Logging::LogIt(Logging::logInfo) << "Optimized values :";
     for (size_t k = 0; k < optim.size(); ++k) Logging::LogIt(Logging::logInfo) << optim[k].name << " " << optim[k];
