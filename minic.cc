@@ -34,25 +34,13 @@ typedef uint64_t u_int64_t;
 //#define WITH_SYZYGY
 //#define WITH_UCI
 
-const std::string MinicVersion = "0.50";
-
-//with protected passer +30 =>51 but now not good ... to test again
-//double pawn +7 =>52
-//isolated +25 =>53
-//rook on open : not good (discarded)
-//near king +30 =>54
-//bad cap killers : not good (discarded)
-//fawn pawn =>55
-//exchange : very bad this way (discarded)
-//rook behind =>56 : not that good ...
-//scaled fifty rule : not good
-//scaled piece todo : not good
-//free passed : not good =>dev
+const std::string MinicVersion = "0.51";
 
 /*
 //todo
 -Root move ordering
 -Candidate and backward
+-test more extension
 */
 
 #define STOPSCORE   ScoreType(-20000)
@@ -423,7 +411,7 @@ ScoreType   doublePawnMalusEG     = 15;
 ScoreType   isolatedPawnMalus     = 5;
 ScoreType   isolatedPawnMalusEG   = 15;
 ScoreType   pawnShieldBonus[4]    = {0, 15, 30, 45};
-float       protectedPasserFactor = 0.5f; // 150%
+float       protectedPasserFactor = 0.25f; // 125%
 float       freePasserFactor      = 0.9f; // 190%
 
 ScoreType   fawnPawn              = 30;
@@ -1907,6 +1895,7 @@ int ThreadContext::getCurrentMoveMs() {
 }
 
 Square kingSquare(const Position & p) { return (p.c == Co_White) ? p.wk : p.bk; }
+Square opponentKingSquare(const Position & p) { return (p.c == Co_White) ? p.bk : p.wk; }
 
 // HQ BB code from Amoeba
 namespace BB {
@@ -2663,7 +2652,6 @@ inline bool isBlackPasser(const Position &p, Square k){
     return (BB::mask[k].passerSpan[Co_Black] & p.whitePawn()) == 0ull;
 }
 
-
 template < int T >
 inline void evalPieceWhite(const Position & p, BitBoard pieceBBiterator, ScoreType & sc, ScoreType & scEG, ScoreType & scScaled,
                            BitBoard & wAtt, ScoreType & dangerW, ScoreType & dangerB){
@@ -2680,8 +2668,28 @@ inline void evalPieceWhite(const Position & p, BitBoard pieceBBiterator, ScoreTy
         const BitBoard curAtt = target & ~p.whitePiece;
         wAtt |= curAtt;
         const uint64_t n = countBit(curAtt);
-        sc   += EvalConfig::MOB  [T - 1][n];
-        scEG += EvalConfig::MOBEG[T - 1][n];
+        sc   += EvalConfig::MOB  [T-1][n];
+        scEG += EvalConfig::MOBEG[T-1][n];
+    }
+}
+
+template < int T >
+inline void evalPieceBlack(const Position & p, BitBoard pieceBBiterator, ScoreType & sc, ScoreType & scEG, ScoreType & scScaled,
+                           BitBoard & bAtt, ScoreType & dangerW, ScoreType & dangerB){
+    const BitBoard wKingZone = BB::mask[p.wk].kingZone;
+    const BitBoard bKingZone = BB::mask[p.bk].kingZone;
+    while (pieceBBiterator) {
+        const Square k = BB::popBit(pieceBBiterator);
+        sc   -= EvalConfig::PST  [T-1][k];
+        scEG -= EvalConfig::PSTEG[T-1][k];
+        const BitBoard target = pf[T-1](k, p.occupancy, p.c);
+        dangerW += ScoreType(countBit(target & wKingZone) * EvalConfig::katt_attack_weight[T]);
+        dangerB -= ScoreType(countBit(target & bKingZone) * EvalConfig::katt_defence_weight[T]);
+        const BitBoard curAtt = target & ~p.blackPiece;
+        bAtt |= curAtt;
+        const uint64_t n = countBit(curAtt);
+        sc   -= EvalConfig::MOB  [T-1][n];
+        scEG -= EvalConfig::MOBEG[T-1][n];
     }
 }
 
@@ -2706,26 +2714,6 @@ inline void evalPawnWhite(const Position & p, BitBoard pieceBBiterator, ScoreTyp
             if (unstoppable) scScaled += Values[P_wq+PieceShift] - Values[P_wp+PieceShift];
             else             scScaled += ScoreType( factorProtected * factorFree * (gp*EvalConfig::passerBonus[SQRANK(k)] + gpCompl*EvalConfig::passerBonusEG[SQRANK(k)] + kingNearBonus + rookBehind));
         }
-    }
-}
-
-template < int T >
-inline void evalPieceBlack(const Position & p, BitBoard pieceBBiterator, ScoreType & sc, ScoreType & scEG, ScoreType & scScaled,
-                           BitBoard & bAtt, ScoreType & dangerW, ScoreType & dangerB){
-    const BitBoard wKingZone = BB::mask[p.wk].kingZone;
-    const BitBoard bKingZone = BB::mask[p.bk].kingZone;
-    while (pieceBBiterator) {
-        const Square k = BB::popBit(pieceBBiterator);
-        sc   -= EvalConfig::PST  [T-1][k];
-        scEG -= EvalConfig::PSTEG[T-1][k];
-        const BitBoard target = pf[T-1](k, p.occupancy, p.c);
-        dangerW += ScoreType(countBit(target & wKingZone) * EvalConfig::katt_attack_weight[T]);
-        dangerB -= ScoreType(countBit(target & bKingZone) * EvalConfig::katt_defence_weight[T]);
-        const BitBoard curAtt = target & ~p.blackPiece;
-        bAtt |= curAtt;
-        const uint64_t n = countBit(curAtt);
-        sc   -= EvalConfig::MOB  [T - 1][n];
-        scEG -= EvalConfig::MOBEG[T - 1][n];
     }
 }
 
@@ -2793,21 +2781,11 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
        const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
        if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ) return (white2Play?+1:-1)*(scEG+MaterialHash::helperTable[matHash](p,winningSide));
        else if ( ter == MaterialHash::Ter_WhiteWin || ter == MaterialHash::Ter_BlackWin) return (white2Play?+1:-1)*3*scEG;
-       else if ( ter == MaterialHash::Ter_HardToWin) return (white2Play?+1:-1)*scEG/2;
-       else if ( ter == MaterialHash::Ter_LikelyDraw ) return (white2Play?+1:-1)*scEG/3;
-       ///@todo
-       /*
-       else if ( ter == MaterialHash::Ter_Draw){
-           // is king in check ?
-
-           return 0;
-       }
-       else if ( ter == MaterialHash::Ter_MaterialDraw){
-           // mate and stale ?
-
-           return 0;
-       }
-       */
+       else if ( ter == MaterialHash::Ter_HardToWin)     return (white2Play?+1:-1)*scEG/2;
+       else if ( ter == MaterialHash::Ter_LikelyDraw )   return (white2Play?+1:-1)*scEG/3;
+       ///@todo next two seem to lose elo
+       //else if ( ter == MaterialHash::Ter_Draw){         if ( !isAttacked(p,kingSquare(p)) ) return 0;}
+       //else if ( ter == MaterialHash::Ter_MaterialDraw){ if ( !isAttacked(p,kingSquare(p)) ) return 0;} ///@todo also verify stalemate ?
     }
 
     // material (symetric version)
@@ -2820,7 +2798,6 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     sc += matPawn + matPiece;
 
     // pst & mobility & attack
-
     ScoreType dangerW     = 0;
     ScoreType dangerB     = 0;
     BitBoard wAtt         = 0ull;
@@ -2833,7 +2810,7 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     const BitBoard whitePawn = p.whitePawn();
     const BitBoard blackPawn = p.blackPawn();
 
-    // first pass (PST, king zone attack, passer)
+    // PST, mobility, king zone attack, passer
     evalPieceWhite<P_wn>(p,p.whiteKnight(),sc,scEG,scScaled,wAtt,dangerW,dangerB);
     evalPieceWhite<P_wb>(p,p.whiteBishop(),sc,scEG,scScaled,wAtt,dangerW,dangerB);
     evalPieceWhite<P_wr>(p,p.whiteRook()  ,sc,scEG,scScaled,wAtt,dangerW,dangerB);
@@ -2886,7 +2863,6 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
         if ( nbWR ){
             if ( nbWP[f+1] == 0 ) sc += nbBP[f+1] == 0 ? EvalConfig::rookOnOpenFile[2]:EvalConfig::rookOnOpenFile[1];
             else if ( nbBP[f+1] == 0 ) sc += EvalConfig::rookOnOpenFile[0];
-
         }
         if ( nbBR ){
             if ( nbBP[f+1] == 0 ) sc += nbWP[f+1] == 0 ? EvalConfig::rookOnOpenFile[2]:EvalConfig::rookOnOpenFile[1];
@@ -2967,23 +2943,23 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     sc   += scBlocked;
     */
 
-    /*
     ScoreType scAjust = 0;
     // number of pawn and piece type
+    /*
     scAjust += p.mat[Co_White][M_r] * EvalConfig::adjRook  [p.mat[Co_White][M_p]];
     scAjust -= p.mat[Co_Black][M_r] * EvalConfig::adjRook  [p.mat[Co_Black][M_p]];
     scAjust += p.mat[Co_White][M_n] * EvalConfig::adjKnight[p.mat[Co_White][M_p]];
     scAjust -= p.mat[Co_Black][M_n] * EvalConfig::adjKnight[p.mat[Co_Black][M_p]];
+    */
 
-    // bishop pair
+    // bishop pair bonus
     scAjust += ( (p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonus : 0)-(p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonus : 0) );
-    // knight pair
+    // knight pair malus
     scAjust += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0) );
-    // rook pair
+    // rook pair malus
     scAjust += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
    
     scScaled   += scAjust;
-    */
 
     // pawn shield
     //sc += EvalConfig::pawnShieldBonus[std::min(3,int(countBit(wKingZone & whitePawn)))];
@@ -3334,7 +3310,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     }
 #endif
 
-    ///@todo at root, maybe rootScore can be used to sort moves ??
+    ///@todo at root, maybe rootScore or node count can be used to sort moves ??
 
     if (!moveGenerated) {
         generate(p, moves, capMoveGenerated ? GP_quiet : GP_all, capMoveGenerated);
@@ -3801,12 +3777,8 @@ void xboard(){
                 COM::stopPonder();
                 COM::ponder = COM::p_off;
             }
-            else if (COM::command == "hard"){
-                COM::ponder = COM::p_off; ///@todo
-            }
-            else if (COM::command == "quit"){
-                _exit(0);
-            }
+            else if (COM::command == "hard"){COM::ponder = COM::p_off;} ///@todo
+            else if (COM::command == "quit"){_exit(0);}
             else if (COM::command == "pause"){
                 COM::stopPonder();
                 COM::readLine();
