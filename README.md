@@ -72,6 +72,18 @@ Minic now comes with both a json configuration file where some parameters can be
 ```
 and a command line interface, using the same key word. For instance, forcing mateFinder mode can be done by adding "-mateFinder 1" when calling Minic.
 
+## Opening books
+
+Minic comes with some opening books written in an internal own binary format. There are currently 4 books
+```
+book_small : a very small book only with main variation of classic opening lines
+book_big   : abigger book (take 5 secondes to load) of nearly 400.000 lines
+Carlsen    : based on Carlsen most used opening lines (thanks to Jonathan Cremers)
+Anand      : based on Anad most used opening lines (thanks to Jonathan Cremers)
+```
+
+You can use both the json configuation file or the command line argument to select the book.
+
 ## History
 
 * 0.1 : first commit with the initial code done in less than 2 days
