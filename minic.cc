@@ -36,20 +36,18 @@ typedef uint64_t u_int64_t;
 
 const std::string MinicVersion = "0.50";
 
-///@todo on test
-
-//with protected passer +30
-//double pawn +7
-//isolated +25
+//with protected passer +30 =>51 but now not good ... to test again
+//double pawn +7 =>52
+//isolated +25 =>53
 //rook on open : not good (discarded)
-//near king +30
+//near king +30 =>54
 //bad cap killers : not good (discarded)
-//fawn pawn
+//fawn pawn =>55
 //exchange : very bad this way (discarded)
-//rook behind
+//rook behind =>56 : not that good ...
 //scaled fifty rule : not good
 //scaled piece todo : not good
-//free passed : not good
+//free passed : not good =>dev
 
 /*
 //todo
@@ -697,7 +695,7 @@ struct Position{
     BitBoard occupancy  = 0ull;
 
     Position(){}
-    Position(const std::string & fen){readFEN(fen,*this);}
+    Position(const std::string & fen){readFEN(fen,*this,true);}
 
     unsigned char fifty = 0;
     unsigned char moves = 0;
@@ -941,6 +939,8 @@ namespace MaterialHash { // from Gull
 #define DEF_MAT_H(x,t,h) const Position::Material MAT##x = materialFromString(TO_STR(x)); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t,h);
 #define DEF_MAT_REV(rev,x) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializerRev)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)]));
 #define DEF_MAT_REV_H(rev,x,h) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializerRev)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)]),h);
+
+            ///@todo some Ter_MaterialDraw are Ter_Draw (FIDE)
 
             // other FIDE draw
             DEF_MAT(KLKL,   Ter_MaterialDraw)
@@ -2698,11 +2698,11 @@ inline void evalPawnWhite(const Position & p, BitBoard pieceBBiterator, ScoreTyp
         if (passed) {
             const BitBoard sw = BB::shiftSouthWest(SquareToBitboard(k));
             const BitBoard se = BB::shiftSouthEast(SquareToBitboard(k));
-            const float factorProtected = 1+( (((sw&p.whitePawn())!=0ull)&&isWhitePasser(p, BB::SquareFromBitBoard(sw))) || (((se&p.whitePawn())!=0ull)&&isWhitePasser(p, BB::SquareFromBitBoard(se))) ) * EvalConfig::protectedPasserFactor;
-            const float factorFree      = 1;//+((BB::mask[k].frontSpan[Co_White] & p.blackPiece) == 0ull) * EvalConfig::freePasserFactor;
+            const float factorProtected = 1;//+( (((sw&p.whitePawn())!=0ull)&&isWhitePasser(p, BB::SquareFromBitBoard(sw))) || (((se&p.whitePawn())!=0ull)&&isWhitePasser(p, BB::SquareFromBitBoard(se))) ) * EvalConfig::protectedPasserFactor;
+            const float factorFree      = 1+((BB::mask[k].frontSpan[Co_White] & p.blackPiece) == 0ull) * EvalConfig::freePasserFactor;
             const float kingNearBonus   = EvalConfig::kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.bk, k) - chebyshevDistance(p.wk, k));
             const bool unstoppable      = (p.mat[Co_Black][M_t] == 0)*((chebyshevDistance(p.bk, SQFILE(k) + 56) - (!white2Play)) > std::min(5, chebyshevDistance(SQFILE(k) + 56, k)));
-            const ScoreType rookBehind  = ((p.whiteRook() & BB::mask[k].rearSpan[Co_White])!=0ull) * EvalConfig::rookBehindPassed - ((p.blackRook() & BB::mask[k].rearSpan[Co_White])!=0ull) * EvalConfig::rookBehindPassed;
+            const ScoreType rookBehind  = 0;//((p.whiteRook() & BB::mask[k].rearSpan[Co_White])!=0ull) * EvalConfig::rookBehindPassed - ((p.blackRook() & BB::mask[k].rearSpan[Co_White])!=0ull) * EvalConfig::rookBehindPassed;
             if (unstoppable) scScaled += Values[P_wq+PieceShift] - Values[P_wp+PieceShift];
             else             scScaled += ScoreType( factorProtected * factorFree * (gp*EvalConfig::passerBonus[SQRANK(k)] + gpCompl*EvalConfig::passerBonusEG[SQRANK(k)] + kingNearBonus + rookBehind));
         }
@@ -2742,11 +2742,11 @@ inline void evalPawnBlack(const Position & p, BitBoard pieceBBiterator, ScoreTyp
         if (passed) {
             const BitBoard nw = BB::shiftNorthWest(SquareToBitboard(k));
             const BitBoard ne = BB::shiftNorthEast(SquareToBitboard(k));
-            const float factorProtected = 1+( (((nw&p.blackPawn())!=0ull)&&isBlackPasser(p, BB::SquareFromBitBoard(nw))) || (((ne&p.blackPawn())!=0ull)&&isBlackPasser(p, BB::SquareFromBitBoard(ne))) ) * EvalConfig::protectedPasserFactor;
-            const float factorFree      = 1;//+((BB::mask[k].frontSpan[Co_White] & p.whitePiece) == 0ull) * EvalConfig::freePasserFactor;
+            const float factorProtected = 1;//+( (((nw&p.blackPawn())!=0ull)&&isBlackPasser(p, BB::SquareFromBitBoard(nw))) || (((ne&p.blackPawn())!=0ull)&&isBlackPasser(p, BB::SquareFromBitBoard(ne))) ) * EvalConfig::protectedPasserFactor;
+            const float factorFree      = 1+((BB::mask[k].frontSpan[Co_Black] & p.whitePiece) == 0ull) * EvalConfig::freePasserFactor;
             const float kingNearBonus   = EvalConfig::kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.wk, k) - chebyshevDistance(p.bk, k));
             const bool unstoppable      = (p.mat[Co_White][M_t] == 0)*((chebyshevDistance(p.wk, SQFILE(k)) - white2Play) > std::min(5, chebyshevDistance(SQFILE(k), k)));
-            const ScoreType rookBehind  = ((p.blackRook() & BB::mask[k].rearSpan[Co_Black])!=0ull) * EvalConfig::rookBehindPassed - ((p.whiteRook() & BB::mask[k].rearSpan[Co_Black])!=0ull) * EvalConfig::rookBehindPassed;
+            const ScoreType rookBehind  = 0;//((p.blackRook() & BB::mask[k].rearSpan[Co_Black])!=0ull) * EvalConfig::rookBehindPassed - ((p.whiteRook() & BB::mask[k].rearSpan[Co_Black])!=0ull) * EvalConfig::rookBehindPassed;
             if (unstoppable) scScaled -= Values[P_wq+PieceShift] - Values[P_wp+PieceShift];
             else             scScaled -= ScoreType( factorProtected * factorFree * (gp*EvalConfig::passerBonus[7 - SQRANK(k)] + gpCompl*EvalConfig::passerBonusEG[7 - SQRANK(k)] + kingNearBonus + rookBehind));
         }
@@ -2871,7 +2871,6 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     ///@todo use a cache for that ?!
     uint64_t nbWP[10] = {0ull};
     uint64_t nbBP[10] = {0ull};
-
     for(int f = File_a; f <= File_h ; ++f){
         nbWP[f+1] = countBit(whitePawn & files[f]);
         nbBP[f+1] = countBit(blackPawn & files[f]);
@@ -3927,7 +3926,7 @@ int main(int argc, char ** argv){
 #endif
 
 #ifdef WITH_TEXEL_TUNING
-    if ( argc > 1 && std::string(argv[1]) == "-texel" ) { TexelTuning("tuning/Ethereal.fens.json"); return 0;}
+    if ( argc > 1 && std::string(argv[1]) == "-texel" ) { TexelTuning(argv[2]); return 0;}
 #endif
 
 #ifdef DEBUG_TOOL
