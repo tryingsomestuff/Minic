@@ -30,16 +30,12 @@ Quite poor for a chess engine (around 2650) but already way to strong for me !
 
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
-   0 Minic                          62      16    1219   58.8%   32.2%
-   1 rofChade                      196      51     174   75.6%   22.4%
-   2 fruit_21                       44      47     174   56.3%   18.4%
-   3 Minic 0.44                    -16      36     174   47.7%   52.9%
-   4 Minic 0.43                   -118      35     174   33.6%   53.4%
-   5 Minic 0.40                   -125      38     174   32.8%   47.1%
-   6 myrddin                      -213      55     174   22.7%   16.7%
-   7 MadChess.Engine              -244      58     175   19.7%   14.3%
-
-1219 of 7000 games finished.                   
+   1 zurichess-neuchatel-linux-amd64     280      46     273   83.3%   17.9%
+   2 minic_0.50_linux_x64_avx2_bmi2       24      35     273   53.5%   30.0%
+   3 wyldchess1.51_bmi                    20      36     273   52.9%   24.5%
+   4 minic_0.47_linux_x64_avx2_bmi2      -25      34     273   46.3%   31.9%
+   5 minic_0.43_linux_x64_see4.2        -116      37     273   33.9%   26.7%
+   6 asymptote-v0.4.2                   -147      39     273   30.0%   21.2                 
 ```
 
 ## How to compile
