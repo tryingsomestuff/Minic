@@ -13,15 +13,15 @@ Have a look in the Dist directory for releases. Some more stable/official ones w
 Starting from release 0.50 new binaries are available :
 
 ```
-* minic_0.50_linux_x64_avx2_bmi2: fully optimized Linux64 (avx2+bmi2)   
-* minic_0.50_linux_x64_sse4.2: optimized Linux64 (sse4.2)  
-* minic_0.50_linux_x64_x86-64: basic Linux64  
+* minic_0.50_linux_x64_avx2_bmi2    : fully optimized Linux64 (avx2+bmi2)   
+* minic_0.50_linux_x64_sse4.2       : optimized Linux64 (sse4.2)  
+* minic_0.50_linux_x64_x86-64       : basic Linux64  
 * minic_0.50_mingw_x32_avx2_bmi2.exe: fully optimized Windows32 (avx2+bmi2)  
-* minic_0.50_mingw_x32_sse4.2.exe: optimized Windows32 (sse4.2)  
-* minic_0.50_mingw_x32_i686.exe: basic Windows32  
+* minic_0.50_mingw_x32_sse4.2.exe   : optimized Windows32 (sse4.2)  
+* minic_0.50_mingw_x32_i686.exe     : basic Windows32  
 * minic_0.50_mingw_x64_avx2_bmi2.exe: fully optimized Windows64 (avx2+bmi2)  
-* minic_0.50_mingw_x64_sse4.2.exe: optimized Windows64 (sse4.2)  
-* minic_0.50_mingw_x64_i686.exe: basic Windows64   
+* minic_0.50_mingw_x64_sse4.2.exe   : optimized Windows64 (sse4.2)  
+* minic_0.50_mingw_x64_i686.exe     : basic Windows64   
 ```   
  Please note that Win32 binaries are very slow (I don't know why yet, so please use Win64 one if possible).
    
