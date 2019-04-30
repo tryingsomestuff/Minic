@@ -33,13 +33,13 @@ Please note that Win32 binaries are very slow (I don't know why yet, so please u
 Minic 0.47 is 2650 on the CCRL 40/40 scale, so way to strong for me ! This is more or less like GM level for human being.
 
 ```
-Rank Name                          Elo     +/-   Games   Score   Draws
+Rank Name                                Elo     +/-   Games   Score   Draws
    1 zurichess-neuchatel-linux-amd64     280      46     273   83.3%   17.9%
    2 minic_0.50_linux_x64_avx2_bmi2       24      35     273   53.5%   30.0%
    3 wyldchess1.51_bmi                    20      36     273   52.9%   24.5%
    4 minic_0.47_linux_x64_avx2_bmi2      -25      34     273   46.3%   31.9%
    5 minic_0.43_linux_x64_see4.2        -116      37     273   33.9%   26.7%
-   6 asymptote-v0.4.2                   -147      39     273   30.0%   21.2                 
+   6 asymptote-v0.4.2                   -147      39     273   30.0%   21.2%                 
 ```
 
 ## How to compile
