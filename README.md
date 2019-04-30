@@ -4,8 +4,11 @@
 A simple chess engine to learn and play with.
 Compatible with xboard/winboard.
 Initially, the code size was supposed not go above 2000sloc.
-Now that more features (especially SMP) has come up, I'll try to keep it under 3000sloc.
-Minic stands for "Minimal Chess".
+Now that more features (especially SMP and bitboard) has come up, I'll try to keep it under 3000sloc.
+This is why Minic stands for "Minimal Chess" (and is not related to the GM Dragoljub Minić).
+
+## Code style
+Minic is (mainly) a one-file-code with very dense lines. This is of course very wrong in terms of software design... So why is it so? First reason is that Minic was first develop as a week-end project, the quick-and-dirty way, and since then I'm having fun going on this way ; being a "small" code size engine is part of the stakes in developing it. Second reason is that it helps the compilers optimize the whole code. The only dependency is the very good json header-only library nlohmann/json used to parse the config file. Some optional features such as Texel tuning, perft, tests, uci support, book generation ... are available in the Add-Ons directory.
 
 ## Release
 
@@ -23,10 +26,11 @@ Starting from release 0.50 new binaries are available :
 * minic_0.50_mingw_x64_sse4.2.exe   : optimized Windows64 (sse4.2)  
 * minic_0.50_mingw_x64_x86-64.exe   : basic Windows64   
 ```   
- Please note that Win32 binaries are very slow (I don't know why yet, so please use Win64 one if possible).
+
+Please note that Win32 binaries are very slow (I don't know why yet, so please use Win64 one if possible).
    
 ## Strength
-Quite poor for a chess engine (around 2650) but already way to strong for me !
+Minic 0.47 is 2650 on the CCRL 40/40 scale, so way to strong for me ! This is more or less like GM level for human being.
 
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
@@ -40,7 +44,7 @@ Rank Name                          Elo     +/-   Games   Score   Draws
 
 ## How to compile
 * Linux : use the given build script (or make your own ...)
-* Windows : use the given VS2017 project (or make your own ...)
+* Windows : use the given VS2017 project (or make your own ...), or use the Linux cross-compilation script given.
 
 ## How to run
 add the command line option "-xboard" to go to xboard/winboard mode.
@@ -51,7 +55,8 @@ Other available options are :
 * -gen <"fen"> : move generation on the given position
 * -perft <"fen"> depth : perft on the given position and depth
 * -analyze <"fen"> depth : analysis on the given position and depth
-* -mateFinder <"fen"> depth : same as analysis but without prunings in search.
+* -mateFinder <"fen"> depth : same as analysis but without prunings in search
+* ...
 
 ## Options
 
@@ -149,3 +154,9 @@ TSCP by Tom Kerrigan
 Vajolet by Marco Belli  
 Vice by BlueFeverSoft  
 Xiphos by Milos Tatarevic  
+
+Many thanks also to all testers for all those long time control tests, they really are valuable inputs in the chess engine development process. 
+
+Also thanks to TCEC for letting Minic participate to the Season 15 division 4a, it was fun to see Minic on such a great hardware.
+
+And of course thanks to all the members of the talkchess forum and CPW, and to H.G. Muller for hosting the friendly monthly tourney.
