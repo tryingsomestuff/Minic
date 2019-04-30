@@ -80,7 +80,7 @@ Minic comes with some opening books written in an internal own binary format. Th
 book_small : a very small book only with main variation of classic opening lines
 book_big   : abigger book (take 5 secondes to load) of nearly 400.000 lines
 Carlsen    : based on Carlsen most used opening lines (thanks to Jonathan Cremers)
-Anand      : based on Anad most used opening lines (thanks to Jonathan Cremers)
+Anand      : based on Anand most used opening lines (thanks to Jonathan Cremers)
 ```
 
 You can use both the json configuation file or the command line argument to select the book.
