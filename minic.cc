@@ -28,7 +28,7 @@ typedef uint64_t u_int64_t;
 #include "json.hpp"
 
 //#define IMPORTBOOK
-//#define WITH_TEXEL_TUNING
+#define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
@@ -63,6 +63,7 @@ namespace DynamicConfig{
     bool fullXboardOutput  = false;
     bool debugMode         = false;
     std::string debugFile  = "minic.debug";
+    unsigned int level     = 1;
 }
 
 typedef std::chrono::system_clock Clock;
@@ -185,6 +186,11 @@ namespace Options {
         const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_number_integer;
         static const bool clampAllowed = true;
     };
+    template<> struct OptionValue<unsigned int> {
+        const int value = 0;
+        const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_number_integer;
+        static const bool clampAllowed = true;
+    };
     template<> struct OptionValue<float> {
         const float value = 0.f;
         const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_number_float;
@@ -240,7 +246,7 @@ namespace Options {
 
 #define GETOPT(  name,type)                 DynamicConfig::name = Options::getOption<type>(#name);
 #define GETOPT_D(name,type,def)             DynamicConfig::name = Options::getOption<type>(#name,def);
-#define GETOPT_M(name,type,def,mini,maxi)   DynamicConfig::name = Options::getOption<type>(#name,def,Validator<type>().setMin(mini).setMax(maxi));
+#define GETOPT_M(name,type,def,mini,maxi)   DynamicConfig::name = Options::getOption<type>(#name,def,Options::Validator<type>().setMin(mini).setMax(maxi));
 
 namespace StaticConfig{
 const bool doWindow         = true;
@@ -257,11 +263,14 @@ const bool doProbcut        = true;
 const ScoreType qfutilityMargin          = 128;
 const int       staticNullMoveMaxDepth   = 6;
 const ScoreType staticNullMoveDepthCoeff = 80;
-const ScoreType razoringMargin           = 200;
+const ScoreType staticNullMoveDepthInit  = 0;
+const ScoreType razoringMarginDepthCoeff = 0;
+const ScoreType razoringMarginDepthInit  = 200;
 const int       razoringMaxDepth         = 3;
 const int       nullMoveMinDepth         = 2;
 const int       lmpMaxDepth              = 10;
 const ScoreType futilityDepthCoeff       = 160;
+const ScoreType futilityDepthInit        = 0;
 const int       iidMinDepth              = 5;
 const int       iidMinDepth2             = 8;
 const int       probCutMinDepth          = 5;
@@ -436,22 +445,6 @@ ScoreType   blockedBishop3       = -50;
 ScoreType   returningBishopBonus =  16;
 ScoreType   blockedRookByKing    = -22;
 
-/*
-ScoreType MOB[6][29]   = { {  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0},
-                           {-62,-53,-12, -4,  3, 13, 22, 28, 33,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0},
-                           {-48,-20, 16, 26, 38, 51, 55, 63, 64, 68, 81, 82, 91, 98,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0},
-                           {-58,-27,-15,-10, -5, -2,  9, 16, 29, 30, 32, 38, 46, 48, 58,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0},
-                           {-39,-21,  3,  4, 14, 22, 28, 41, 43, 48, 56, 60, 61, 66, 67, 70, 71, 73, 79, 88, 89, 99,102,103,106,109,113,116,  0},
-                           {  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}};
-
-ScoreType MOBEG[6][29] = { {  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0},
-                           {-81,-56,-30,-14,  8, 15, 23, 27, 33,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0},
-                           {-59,-23, -3, 13, 24, 42, 54, 57, 65, 73, 78, 86, 88, 97,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0},
-                           {-76,-18, 28, 55, 69, 82,112,118,132,142,155,165,166,169,171,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0},
-                           {-36,-15,  8, 18, 34, 54, 61, 73, 79, 92, 94,104,113,120,123,126,133,136,140,143,148,166,170,175,184,191,206,212,  0},
-                           {  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}};
-*/
-
 ScoreType MOB[6][29] = { {0,0,0,0},
                          {-22,-15,-10,-5,0,5,8,12,14},
                          {-18,-8,0,5,10,15,20,25,28,30,32,34,36,38,40},
@@ -597,22 +590,14 @@ enum BBSq : BitBoard { BBSq_a1 = SquareToBitboard(Sq_a1),BBSq_b1 = SquareToBitbo
                        BBSq_a7 = SquareToBitboard(Sq_a7),BBSq_b7 = SquareToBitboard(Sq_b7),BBSq_c7 = SquareToBitboard(Sq_c7),BBSq_d7 = SquareToBitboard(Sq_d7),BBSq_e7 = SquareToBitboard(Sq_e7),BBSq_f7 = SquareToBitboard(Sq_f7),BBSq_g7 = SquareToBitboard(Sq_g7),BBSq_h7 = SquareToBitboard(Sq_h7),
                        BBSq_a8 = SquareToBitboard(Sq_a8),BBSq_b8 = SquareToBitboard(Sq_b8),BBSq_c8 = SquareToBitboard(Sq_c8),BBSq_d8 = SquareToBitboard(Sq_d8),BBSq_e8 = SquareToBitboard(Sq_e8),BBSq_f8 = SquareToBitboard(Sq_f8),BBSq_g8 = SquareToBitboard(Sq_g8),BBSq_h8 = SquareToBitboard(Sq_h8)};
 
-const BitBoard whiteSquare               = 0x55AA55AA55AA55AA;
-const BitBoard blackSquare               = 0xAA55AA55AA55AA55;
-const BitBoard whiteSideSquare           = 0x00000000FFFFFFFF;
-const BitBoard blackSideSquare           = 0xFFFFFFFF00000000;
-const BitBoard whiteKingQueenSide        = 0x0000000000000007;
-const BitBoard whiteKingKingSide         = 0x00000000000000e0;
-const BitBoard blackKingQueenSide        = 0x0700000000000000;
-const BitBoard blackKingKingSide         = 0xe000000000000000;
-const BitBoard whiteQueenSidePawnShield1 = 0x0000000000000700;
-const BitBoard whiteKingSidePawnShield1  = 0x000000000000e000;
-const BitBoard blackQueenSidePawnShield1 = 0x0007000000000000;
-const BitBoard blackKingSidePawnShield1  = 0x00e0000000000000;
-const BitBoard whiteQueenSidePawnShield2 = 0x0000000000070000;
-const BitBoard whiteKingSidePawnShield2  = 0x0000000000e00000;
-const BitBoard blackQueenSidePawnShield2 = 0x0000070000000000;
-const BitBoard blackKingSidePawnShield2  = 0x0000e00000000000;
+const BitBoard whiteSquare               = 0x55AA55AA55AA55AA; const BitBoard blackSquare               = 0xAA55AA55AA55AA55;
+const BitBoard whiteSideSquare           = 0x00000000FFFFFFFF; const BitBoard blackSideSquare           = 0xFFFFFFFF00000000;
+const BitBoard whiteKingQueenSide        = 0x0000000000000007; const BitBoard whiteKingKingSide         = 0x00000000000000e0;
+const BitBoard blackKingQueenSide        = 0x0700000000000000; const BitBoard blackKingKingSide         = 0xe000000000000000;
+const BitBoard whiteQueenSidePawnShield1 = 0x0000000000000700; const BitBoard whiteKingSidePawnShield1  = 0x000000000000e000;
+const BitBoard blackQueenSidePawnShield1 = 0x0007000000000000; const BitBoard blackKingSidePawnShield1  = 0x00e0000000000000;
+const BitBoard whiteQueenSidePawnShield2 = 0x0000000000070000; const BitBoard whiteKingSidePawnShield2  = 0x0000000000e00000;
+const BitBoard blackQueenSidePawnShield2 = 0x0000070000000000; const BitBoard blackKingSidePawnShield2  = 0x0000e00000000000;
 const BitBoard fileA                     = 0x0101010101010101;
 const BitBoard fileB                     = 0x0202020202020202;
 const BitBoard fileC                     = 0x0404040404040404;
@@ -732,10 +717,6 @@ inline bool isPromotion(const MType & mt){ return mt >= T_promq && mt <= T_cappr
 
 inline bool isPromotion(const Move & m){ return isPromotion(Move2Type(m));}
 
-inline bool isUnderPromotion(const MType & mt) { return mt >= T_promr && mt <= T_cappromn && mt != T_cappromq; }
-
-inline bool isUnderPromotion(const Move & m) { return isUnderPromotion(Move2Type(m)); }
-
 inline bool isBadCap(const Move & m) { return Move2Score(m) < -900;}
 
 //inline int manhattanDistance(Square sq1, Square sq2) { return std::abs((sq2 >> 3) - (sq1 >> 3)) + std::abs((sq2 & 7) - (sq1 & 7));}
@@ -761,23 +742,6 @@ namespace MaterialHash { // from Gull
         if (mat[Co_White][M_q] > 2 || mat[Co_Black][M_q] > 2 || mat[Co_White][M_r] > 2 || mat[Co_Black][M_r] > 2 || mat[Co_White][M_bl] > 1 || mat[Co_Black][M_bl] > 1 || mat[Co_White][M_bd] > 1 || mat[Co_Black][M_bd] > 1 || mat[Co_White][M_n] > 2 || mat[Co_Black][M_n] > 2 || mat[Co_White][M_p] > 8 || mat[Co_Black][M_p] > 8) return 0;
         return mat[Co_White][M_p] * MatWP + mat[Co_Black][M_p] * MatBP + mat[Co_White][M_n] * MatWN + mat[Co_Black][M_n] * MatBN + mat[Co_White][M_bl] * MatWL + mat[Co_Black][M_bl] * MatBL + mat[Co_White][M_bd] * MatWD + mat[Co_Black][M_bd] * MatBD + mat[Co_White][M_r] * MatWR + mat[Co_Black][M_r] * MatBR + mat[Co_White][M_q] * MatWQ + mat[Co_Black][M_q] * MatBQ;
     }
-
-    /*
-    Position::Material getMatFromHash(Hash index) {
-        Position::Material mat;
-        mat[Co_White][M_q]  = (int)(index % 3); index /= 3;        mat[Co_Black][M_q]  = (int)(index % 3); index /= 3;
-        mat[Co_White][M_r]  = (int)(index % 3); index /= 3;        mat[Co_Black][M_r]  = (int)(index % 3); index /= 3;
-        mat[Co_White][M_bl] = (int)(index % 2); index /= 2;        mat[Co_Black][M_bl] = (int)(index % 2); index /= 2;
-        mat[Co_White][M_bd] = (int)(index % 2); index /= 2;        mat[Co_Black][M_bd] = (int)(index % 2); index /= 2;
-        //mat[Co_White][M_bd]
-        mat[Co_White][M_n]  = (int)(index % 3); index /= 3;        mat[Co_Black][M_n]  = (int)(index % 3); index /= 3;
-        mat[Co_White][M_p]  = (int)(index % 9); index /= 9;        mat[Co_Black][M_p]  = (int)(index);
-        //mat[Co_White][M_M]
-        //mat[Co_White][M_m]
-        //mat[Co_White][M_t]
-        return mat;
-    }
-    */
 
     inline Position::Material getMatReverseColor(const Position::Material & mat) {
         Position::Material rev = {0};
@@ -1034,11 +998,31 @@ namespace MaterialHash { // from Gull
             DEF_MAT_H(KLNK, Ter_WhiteWinWithHelper,&helperKmmK) DEF_MAT_REV_H(KKLN,KLNK,&helperKmmK)
             DEF_MAT_H(KDNK, Ter_WhiteWinWithHelper,&helperKmmK) DEF_MAT_REV_H(KKDN,KDNK,&helperKmmK)
 
+            // Rm R : likely draws
+            DEF_MAT_H(KRNKR, Ter_LikelyDraw,&helperKXK)            DEF_MAT_REV_H(KRKRN,KRNKR,&helperKXK)
+            DEF_MAT_H(KRLKR, Ter_LikelyDraw,&helperKXK)            DEF_MAT_REV_H(KRKRL,KRLKR,&helperKXK)
+            DEF_MAT_H(KRDKR, Ter_LikelyDraw,&helperKXK)            DEF_MAT_REV_H(KRKRD,KRDKR,&helperKXK)
+
+            // Qm Q : hard to win
+            DEF_MAT_H(KQNKQ, Ter_HardToWin,&helperKXK)             DEF_MAT_REV_H(KQKQN,KQNKQ,&helperKXK)
+            DEF_MAT_H(KQLKQ, Ter_HardToWin,&helperKXK)             DEF_MAT_REV_H(KQKQL,KQLKQ,&helperKXK)
+            DEF_MAT_H(KQDKQ, Ter_HardToWin,&helperKXK)             DEF_MAT_REV_H(KQKQD,KQDKQ,&helperKXK)
+
+            // Qm R : wins
+            DEF_MAT_H(KQNKR, Ter_WhiteWin,&helperKXK)              DEF_MAT_REV_H(KRKQN,KQNKR,&helperKXK)
+            DEF_MAT_H(KQLKR, Ter_WhiteWin,&helperKXK)              DEF_MAT_REV_H(KRKQL,KQLKR,&helperKXK)
+            DEF_MAT_H(KQDKR, Ter_WhiteWin,&helperKXK)              DEF_MAT_REV_H(KRKQD,KQRKR,&helperKXK)
+
+            // Q Rm : hard to win
+            DEF_MAT_H(KQKRN, Ter_HardToWin,&helperKXK)             DEF_MAT_REV_H(KRNKQ,KQKRN,&helperKXK)
+            DEF_MAT_H(KQKRL, Ter_HardToWin,&helperKXK)             DEF_MAT_REV_H(KRLKQ,KQKRL,&helperKXK)
+            DEF_MAT_H(KQKRD, Ter_HardToWin,&helperKXK)             DEF_MAT_REV_H(KRDKQ,KQKRD,&helperKXK)
+
             // Opposite bishop with P
-            DEF_MAT(KLPKD, Ter_LikelyDraw)                      DEF_MAT_REV(KDKLP,KLPKD)
-            DEF_MAT(KDPKL, Ter_LikelyDraw)                      DEF_MAT_REV(KLKDP,KDPKL)
-            DEF_MAT(KLPPKD, Ter_LikelyDraw)                     DEF_MAT_REV(KDKLPP,KLPPKD)
-            DEF_MAT(KDPPKL, Ter_LikelyDraw)                     DEF_MAT_REV(KLKDPP,KDPPKL)
+            DEF_MAT(KLPKD, Ter_LikelyDraw)            DEF_MAT_REV(KDKLP,KLPKD)
+            DEF_MAT(KDPKL, Ter_LikelyDraw)            DEF_MAT_REV(KLKDP,KDPKL)
+            DEF_MAT(KLPPKD, Ter_LikelyDraw)           DEF_MAT_REV(KDKLPP,KLPPKD)
+            DEF_MAT(KDPPKL, Ter_LikelyDraw)           DEF_MAT_REV(KLKDPP,KDPPKL)
 
             ///@todo other (with pawn ...)
         }
@@ -1304,7 +1288,6 @@ struct ThreadContext{
     ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
     ScoreType qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
     bool SEE(const Position & p, const Move & m, ScoreType threshold)const;
-    template< bool display = false> ScoreType SEEVal(const Position & p, const Move & m)const;
     PVList search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth);
     template< bool withRep = true, bool isPv = true, bool INR = true> MaterialHash::Terminaison interiorNodeRecognizer(const Position & p)const;
     bool isRep(const Position & p, bool isPv)const;
@@ -1522,25 +1505,9 @@ void setPawnEntry(const PawnEntry & e){
     if ( DynamicConfig::disableTT ) return;
     pawnTable[e.h&(ttSize-1)] = e;}
 
-
-
 } // TT
 
 ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator = false); // forward decl
-
-/*
-inline bool isTactical(const Move m) { return isCapture(m) || isPromotion(m); }
-
-inline bool isSafe(const Move m, const Position & p) {
-    if (isUnderPromotion(m)) return false;
-    Piece pp = getPieceType(p, Move2From(m));
-    if (pp == P_wk) return true;
-    if (isCapture(m) && getAbsValue(p, Move2To(m)) >= Values[pp + PieceShift]) return true;
-    return !isBadCap(m); // see
-}
-
-inline bool isDangerous(const Move m, bool isInCheck, bool isCheck) { return isTactical(m) || isCheck || isInCheck; }
-*/
 
 std::string trim(const std::string& str, const std::string& whitespace = " \t"){
     const auto strBegin = str.find_first_not_of(whitespace);
@@ -2198,25 +2165,6 @@ inline void movePiece(Position & p, Square from, Square to, Piece fromP, Piece t
     p.h ^= Zobrist::ZT[to][toIdnew]; // add fromP (or prom) at to
 }
 
-/*
-bool validate(const Position &p, const Move &m){
-    if ( m == INVALIDMOVE ) return false;
-    const BitBoard side = p.whitePiece;
-    const BitBoard opponent = p.blackPiece;
-    if ( p.c == Co_Black ) std::swap(side,opponent);
-    const Square from = Move2From(m);
-    if ( (SquareToBitboard(from) & side) == 0ull ) return false; // from piece is not ours
-    const Piece ptype = (Piece)std::abs(p.b[from]);
-    assert(ptype != P_none);
-    static BitBoard(*const pf[])(const Square, const BitBoard, const  Color) = { &BB::coverage<P_wp>, &BB::coverage<P_wn>, &BB::coverage<P_wb>, &BB::coverage<P_wr>, &BB::coverage<P_wq>, &BB::coverage<P_wk> };
-    const Square to = Move2To(m);
-    if ( (SquareToBitboard(to) & side) != 0ull ) return false; // to piece is ours
-    const BitBoard bb = pf[ptype-1](from, p.occupancy, p.c) & ~side;
-    if ( (SquareToBitboard(to) & bb) == 0ull ) return false; // to square is not reachable with this kind of piece, or there is something between from and to for sliders
-    return true;
-}
-*/
-
 void applyNull(Position & pN) {
     pN.c = opponentColor(pN.c);
     pN.h ^= Zobrist::ZT[3][13];
@@ -2476,67 +2424,6 @@ struct SortThreatsFunctor {
     bool operator()(const Square s1,const Square s2) { return std::abs(getValue(_p,s1)) < std::abs(getValue(_p,s2));}
 };
 
-// see value (from xiphos and CPW...)
-template< bool display>
-ScoreType ThreadContext::SEEVal(const Position & pos, const Move & move)const{
-  ScoreType gain[64]; // 64 shall be bullet proof here...
-  Square sq = Move2To(move);
-  Square from = Move2From(move);
-  Piece p = getPieceType(pos,from);
-  Piece captured = getPieceType(pos,sq);
-  Color side = pos.c;
-  ScoreType pv = Values[p+PieceShift];
-  ScoreType cv = 0;
-
-  if (captured != P_none){
-    cv = Values[captured+PieceShift];
-    if (pv <= cv) return 0;
-  }
-
-  bool isPromPossible = SQRANK(sq) == 0 || SQRANK(sq) == 7;
-  BitBoard occ = pos.occupancy ^ SquareToBitboard(from);
-  const ScoreType pqv = Values[P_wq + PieceShift] - Values[P_wp + PieceShift];
-  gain[0] = cv;
-  if (isPromPossible && p == P_wp){
-    pv += pqv;
-    gain[0] += pqv;
-  }
-  else if (sq == pos.ep && p == P_wp)  {
-    occ ^= SquareToBitboard(sq ^ 8); // toggling the fourth bit of sq (+/- 8)
-    gain[0] = Values[P_wp+PieceShift];
-  }
-
-  const BitBoard bq = pos.whiteBishop() | pos.whiteQueen() | pos.blackBishop() | pos.blackQueen();
-  const BitBoard rq = pos.whiteRook()   | pos.whiteQueen() | pos.blackRook()   | pos.blackQueen();
-  const BitBoard occCol[2] = { pos.whitePiece, pos.blackPiece };
-  const BitBoard piece_occ[5] = { pos.whitePawn() | pos.blackPawn(), pos.whiteKnight() | pos.blackKnight(), pos.whiteBishop() | pos.blackBishop(), pos.whiteRook() | pos.blackRook(), pos.whiteQueen() | pos.blackQueen() };
-
-  int cnt = 1;
-  BitBoard att = BB::isAttackedBB(pos, sq, pos.c) | BB::isAttackedBB(pos, sq, opponentColor(pos.c)); // initial attack bitboard (both color)
-  while(att){
-    //std::cout << showBitBoard(att) << std::endl;
-    side = opponentColor(side);
-    const BitBoard side_att = att & occCol[side]; // attack bitboard relative to side
-    if (side_att == 0) break; // no more threat
-    int pp = 0;
-    long long int pb = 0ll;
-    for (pp = P_wp; pp <= P_wq; ++pp) if ((pb = side_att & piece_occ[pp-1])) break; // looking for the smaller attaker
-    if (!pb) pb = side_att; // in this case this is the king
-    pb = pb & -pb; // get the LSB
-    if (display) { unsigned long int i = INVALIDSQUARE; bsf(pb,i); Logging::LogIt(Logging::logInfo) << "Capture from " << SquareNames[i]; }
-    occ ^= pb; // remove this piece from occ
-    if (pp == P_wp || pp == P_wb || pp == P_wq) att |= BB::attack<P_wb>(sq, bq, occ); // new sliders might be behind
-    if (pp == P_wr || pp == P_wq) att |= BB::attack<P_wr>(sq, rq, occ); // new sliders might be behind
-    att &= occ;
-    gain[cnt] = pv - gain[cnt - 1];
-    pv = Values[pp+PieceShift];
-    if (isPromPossible && p == P_wp) { pv += pqv; gain[cnt] += pqv; }
-    cnt++;
-  }
-  while (--cnt) if (gain[cnt - 1] > -gain[cnt]) gain[cnt - 1] = -gain[cnt];
-  return gain[0];
-}
-
 // Static Exchange Evaluation (cutoff version algorithm from stockfish)
 bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold) const{
     // Only deal with normal moves
@@ -2785,7 +2672,7 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     const float absscore = ( (p.mat[Co_White][M_q] + p.mat[Co_Black][M_q]) * *absValues[P_wq] + (p.mat[Co_White][M_r] + p.mat[Co_Black][M_r]) * *absValues[P_wr] + (p.mat[Co_White][M_b] + p.mat[Co_Black][M_b]) * *absValues[P_wb] + (p.mat[Co_White][M_n] + p.mat[Co_Black][M_n]) * *absValues[P_wn] + (p.mat[Co_White][M_p] + p.mat[Co_Black][M_p]) * *absValues[P_wp]) / totalAbsScore;
     const float pawnScore  = (p.mat[Co_White][M_p] + p.mat[Co_Black][M_p]) / 16.f;
     const float pieceScore = (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t]) / 14.f;
-    gp = (absscore*0.4f + pieceScore * 0.3f + pawnScore * 0.3f);
+    gp = absscore*0.4f + pieceScore * 0.3f + pawnScore * 0.3f;
     const float gpCompl = 1.f - gp;
 
     // king captured
@@ -3217,7 +3104,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if ( !DynamicConfig::mateFinder && canPrune && !isInCheck && !isMateScore(beta) && !pvnode){
 
         // razoring
-        int rAlpha = alpha - StaticConfig::razoringMargin;
+        int rAlpha = alpha - StaticConfig::razoringMarginDepthInit - StaticConfig::razoringMarginDepthCoeff*depth;
         if ( false && StaticConfig::doRazoring && depth <= StaticConfig::razoringMaxDepth && evalScore <= rAlpha ){ ///@todo
             ++stats.counters[Stats::sid_razoringTry];
             const ScoreType qScore = qsearch<true,pvnode>(rAlpha,rAlpha+1,p,ply,seldepth);
@@ -3228,7 +3115,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if (isNotEndGame) {
 
             // static null move
-            if (StaticConfig::doStaticNullMove && depth <= StaticConfig::staticNullMoveMaxDepth && evalScore >= beta + StaticConfig::staticNullMoveDepthCoeff * depth) return ++stats.counters[Stats::sid_staticNullMove], evalScore;
+            if (StaticConfig::doStaticNullMove && depth <= StaticConfig::staticNullMoveMaxDepth && evalScore >= beta + StaticConfig::staticNullMoveDepthInit + StaticConfig::staticNullMoveDepthCoeff * depth) return ++stats.counters[Stats::sid_staticNullMove], evalScore;
 
             // null move
             PVList nullPV;
@@ -3284,7 +3171,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if (!rootnode && StaticConfig::doLMP && depth <= StaticConfig::lmpMaxDepth) lmp = true;
 
     // futility
-    if (!rootnode && StaticConfig::doFutility && evalScore <= alpha - StaticConfig::futilityDepthCoeff*depth) futility = true;
+    if (!rootnode && StaticConfig::doFutility && evalScore <= alpha - StaticConfig::futilityDepthInit - StaticConfig::futilityDepthCoeff*depth) futility = true;
 
     int validMoveCount = 0;
     bool alphaUpdated = false;
@@ -3439,6 +3326,10 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 }
 
 PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
+
+    // a playing level feature for the poor ...
+    d=DynamicConfig::level==10?d:DynamicConfig::level;
+
     if ( isMainThread() ){
         Logging::LogIt(Logging::logInfo) << "Search called" ;
         Logging::LogIt(Logging::logInfo) << "requested time  " << getCurrentMoveMs() ;
@@ -3901,7 +3792,7 @@ void init(int argc, char ** argv) {
     Logging::hellooo();
     Options::initOptions(argc, argv);
     Zobrist::initHash();
-    GETOPT_D(ttSizeMb, int, 128)
+    GETOPT_D(ttSizeMb, unsigned int, 128)
     TT::initTable();
     StaticConfig::initLMR();
     initMvvLva();
@@ -3912,6 +3803,7 @@ void init(int argc, char ** argv) {
     GETOPT(mateFinder, bool)
     GETOPT(fullXboardOutput, bool)
     Book::initBook();
+    GETOPT_M(level, unsigned int,10,0,10)
 
 #ifdef WITH_SYZYGY
     SyzygyTb::initTB("syzygy");
