@@ -2690,14 +2690,14 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
 
     const Color winningSide = scEG>0?Co_White:Co_Black;
 
-    // end game knowledge
+    // end game knowledge (helper or scaling)
     if ( safeMatEvaluator ){
        const Hash matHash = MaterialHash::getMaterialHash(p.mat);
        const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
        if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ) return (white2Play?+1:-1)*(scEG+MaterialHash::helperTable[matHash](p,winningSide));
-       else if ( ter == MaterialHash::Ter_WhiteWin || ter == MaterialHash::Ter_BlackWin) return (white2Play?+1:-1)*3*scEG;
-       else if ( ter == MaterialHash::Ter_HardToWin)     return (white2Play?+1:-1)*scEG/2;
-       else if ( ter == MaterialHash::Ter_LikelyDraw )   return (white2Play?+1:-1)*scEG/3;
+       else if ( ter == MaterialHash::Ter_WhiteWin || ter == MaterialHash::Ter_BlackWin) scEG*=3;
+       else if ( ter == MaterialHash::Ter_HardToWin)     scEG/=2;
+       else if ( ter == MaterialHash::Ter_LikelyDraw )   scEG/=3;
        ///@todo next two seem to lose elo
        //else if ( ter == MaterialHash::Ter_Draw){         if ( !isAttacked(p,kingSquare(p)) ) return 0;}
        //else if ( ter == MaterialHash::Ter_MaterialDraw){ if ( !isAttacked(p,kingSquare(p)) ) return 0;} ///@todo also verify stalemate ?
