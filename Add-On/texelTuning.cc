@@ -25,33 +25,20 @@ std::ostream& operator<<(std::ostream& os, const TexelParam<T>& p){const T& t = 
 double K = 0.23;
 
 double Sigmoid(Position * p) {
-    /*
-    static unsigned long long int ncalls = 0;
-    ncalls++;
-    static std::chrono::time_point<Clock> sTime = Clock::now();
-    unsigned long long int elapsed =  (unsigned long long int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - sTime).count();
-    if ( ncalls % 10000 == 0 ){
-       LogIt(logInfo) << "Sigmoids " << ncalls*1000/elapsed << " calls/sec";
-    }
-    */
     assert(p);
 
     // /////////////////////////////////////////
     // eval returns (white2Play?+1:-1)*sc
     // so does qsearch or search : score from side to move point of view
-
     // tuning data score is +1 if white wins, -1 if black wins
     // scaled to +1 if white wins and 0 if black wins
-
     // so score used here must be >0 if white wins
     // /////////////////////////////////////////
 
-    /*
     // qsearch
     DepthType seldepth = 0;
     double s = ThreadPool::instance().main().qsearchNoPruning(-10000,10000,*p,1,seldepth);
     s *= (p->c == Co_White ? +1:-1);
-    */
 
     /*
     // search
@@ -62,11 +49,14 @@ double Sigmoid(Position * p) {
     s *= (p->c == Co_White ? +1:-1);
     */
 
+    /*
     // eval
     float gp;
     double s = eval(*p,gp);
     s *= (p->c == Co_White ? +1:-1);
-    return 1. / (1. + std::pow(10, -/*K**/s/400. ));
+    */
+
+    return 1. / (1. + std::pow(10, -K*s/400. ));
 }
 
 double E(const std::vector<Texel::TexelInput> &data, size_t miniBatchSize) {
@@ -74,17 +64,14 @@ double E(const std::vector<Texel::TexelInput> &data, size_t miniBatchSize) {
     const bool progress = miniBatchSize > 100000;
     std::chrono::time_point<Clock> startTime = Clock::now();
     for (size_t k = 0; k < miniBatchSize; ++k) {
-        const double r = (data[k].result+1)*0.5;
-        const double s = Sigmoid(data[k].p);
-        e += std::pow(r - s,2);
+        e += std::pow((data[k].result+1)*0.5 - Sigmoid(data[k].p),2);
         if ( progress && k%10000 == 0) std::cout << "." << std::flush;
     }
     if ( progress ) {
         const int ms = (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count();
         std::cout << " " << ms << "ms " << miniBatchSize/ms << "kps" << std::endl;
     }
-    e /= miniBatchSize;
-    return e;
+    return e/miniBatchSize;
 }
 
 void Randomize(std::vector<Texel::TexelInput> & data, size_t miniBatchSize){ std::shuffle(data.begin(), data.end(), std::default_random_engine(0)); }
@@ -286,6 +273,7 @@ std::vector<TexelParam<ScoreType> > TexelOptimizeNaive(const std::vector<TexelPa
             Randomize(data, batchSize);
             double initE = E(data, batchSize);
             double curE = -1;
+            step = 0;
             while ( step < stepMax ) {
                 step++;
                 const ScoreType oldValue = bestParam[k];
@@ -299,7 +287,7 @@ std::vector<TexelParam<ScoreType> > TexelOptimizeNaive(const std::vector<TexelPa
                 else{
                     ScoreType oldValue = bestParam[k];
                     bestParam[k] = ScoreType(oldValue + 1);
-                    curE = E(data, batchSize);
+                    //curE = E(data, batchSize);
                     break;
                 }
             }
@@ -317,7 +305,7 @@ std::vector<TexelParam<ScoreType> > TexelOptimizeNaive(const std::vector<TexelPa
                 else{
                     ScoreType oldValue = bestParam[k];
                     bestParam[k] = ScoreType(oldValue - 1);
-                    curE = E(data, batchSize);
+                    //curE = E(data, batchSize);
                     break;
                 }
             }
@@ -582,8 +570,8 @@ void TexelTuning(const std::string & filename) {
     }
     Logging::LogIt(Logging::logInfo) << "Data size : " << data.size();
 
-    //size_t batchSize = data.size(); // batch
-    size_t batchSize = 20000; // batch
+    size_t batchSize = data.size(); // batch
+    //size_t batchSize = 20000; // batch
     //size_t batchSize = 1024 ; // mini
     //size_t batchSize = 1; // stochastic
 
@@ -665,8 +653,8 @@ void TexelTuning(const std::string & filename) {
     }
     */
 
-    //computeOptimalK(data);
-    //Logging::LogIt(Logging::logInfo) << "Optimal K " << Texel::K;
+    computeOptimalK(data);
+    Logging::LogIt(Logging::logInfo) << "Optimal K " << Texel::K;
 
     Logging::LogIt(Logging::logInfo) << "Initial values :";
     for (size_t k = 0; k < guess.size(); ++k) Logging::LogIt(Logging::logInfo) << guess[k].name << " " << guess[k];
