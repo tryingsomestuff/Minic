@@ -34,7 +34,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_SYZYGY
 //#define WITH_UCI
 
-const std::string MinicVersion = "0.53";
+const std::string MinicVersion = "dev";
 
 /*
 //todo
@@ -910,8 +910,8 @@ namespace MaterialHash { // from Gull
             DEF_MAT(KLDKLL, Ter_MaterialDraw)        DEF_MAT_REV(KLLKLD, KLDKLL)
             DEF_MAT(KLDKDD, Ter_MaterialDraw)        DEF_MAT_REV(KDDKLD, KLDKDD)
             DEF_MAT(KLKD,   Ter_MaterialDraw)        DEF_MAT_REV(KDKL,   KLKD)
-            DEF_MAT(KNNKNN, Ter_MaterialDraw)        
-            DEF_MAT(KNKN,   Ter_MaterialDraw)        
+            DEF_MAT(KNNKNN, Ter_MaterialDraw)
+            DEF_MAT(KNKN,   Ter_MaterialDraw)
 
             // 2M M
             DEF_MAT(KQQKQ, Ter_WhiteWin)             DEF_MAT_REV(KQKQQ, KQQKQ)
