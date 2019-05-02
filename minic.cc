@@ -28,7 +28,7 @@ typedef uint64_t u_int64_t;
 #include "json.hpp"
 
 //#define IMPORTBOOK
-#define WITH_TEXEL_TUNING
+//#define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
@@ -421,7 +421,7 @@ ScoreType   isolatedPawnMalus     = 5;
 ScoreType   isolatedPawnMalusEG   = 15;
 ScoreType   pawnShieldBonus[4]    = {0, 15, 30, 45};
 float       protectedPasserFactor = 0.25f; // 125%
-float       freePasserFactor      = 0.9f; // 190%
+float       freePasserFactor      = 0.25f; // 125%
 
 ScoreType   fawnPawn              = 30;
 
@@ -2619,13 +2619,13 @@ inline void evalPawnWhite(const Position & p, BitBoard pieceBBiterator, ScoreTyp
         if (passed) {
             const BitBoard sw = BB::shiftSouthWest(SquareToBitboard(k));
             const BitBoard se = BB::shiftSouthEast(SquareToBitboard(k));
-            const float factorProtected = 1;//+( (((sw&p.whitePawn())!=0ull)&&isWhitePasser(p, BB::SquareFromBitBoard(sw))) || (((se&p.whitePawn())!=0ull)&&isWhitePasser(p, BB::SquareFromBitBoard(se))) ) * EvalConfig::protectedPasserFactor;
+            const float factorProtected = 1+( (((sw&p.whitePawn())!=0ull)&&isWhitePasser(p, BB::SquareFromBitBoard(sw))) || (((se&p.whitePawn())!=0ull)&&isWhitePasser(p, BB::SquareFromBitBoard(se))) ) * EvalConfig::protectedPasserFactor;
             const float factorFree      = 1+((BB::mask[k].frontSpan[Co_White] & p.blackPiece) == 0ull) * EvalConfig::freePasserFactor;
             const float kingNearBonus   = EvalConfig::kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.bk, k) - chebyshevDistance(p.wk, k));
             const bool unstoppable      = (p.mat[Co_Black][M_t] == 0)*((chebyshevDistance(p.bk, SQFILE(k) + 56) - (!white2Play)) > std::min(5, chebyshevDistance(SQFILE(k) + 56, k)));
             const ScoreType rookBehind  = 0;//((p.whiteRook() & BB::mask[k].rearSpan[Co_White])!=0ull) * EvalConfig::rookBehindPassed - ((p.blackRook() & BB::mask[k].rearSpan[Co_White])!=0ull) * EvalConfig::rookBehindPassed;
             if (unstoppable) scScaled += Values[P_wq+PieceShift] - Values[P_wp+PieceShift];
-            else             scScaled += ScoreType( factorProtected * factorFree * (gp*EvalConfig::passerBonus[SQRANK(k)] + gpCompl*EvalConfig::passerBonusEG[SQRANK(k)] + kingNearBonus + rookBehind));
+            else             scScaled += ScoreType( factorProtected * factorFree * (gp*EvalConfig::passerBonus[SQRANK(k)] + gpCompl*EvalConfig::passerBonusEG[SQRANK(k)]) + kingNearBonus + rookBehind);
         }
     }
 }
@@ -2643,13 +2643,13 @@ inline void evalPawnBlack(const Position & p, BitBoard pieceBBiterator, ScoreTyp
         if (passed) {
             const BitBoard nw = BB::shiftNorthWest(SquareToBitboard(k));
             const BitBoard ne = BB::shiftNorthEast(SquareToBitboard(k));
-            const float factorProtected = 1;//+( (((nw&p.blackPawn())!=0ull)&&isBlackPasser(p, BB::SquareFromBitBoard(nw))) || (((ne&p.blackPawn())!=0ull)&&isBlackPasser(p, BB::SquareFromBitBoard(ne))) ) * EvalConfig::protectedPasserFactor;
+            const float factorProtected = 1+( (((nw&p.blackPawn())!=0ull)&&isBlackPasser(p, BB::SquareFromBitBoard(nw))) || (((ne&p.blackPawn())!=0ull)&&isBlackPasser(p, BB::SquareFromBitBoard(ne))) ) * EvalConfig::protectedPasserFactor;
             const float factorFree      = 1+((BB::mask[k].frontSpan[Co_Black] & p.whitePiece) == 0ull) * EvalConfig::freePasserFactor;
             const float kingNearBonus   = EvalConfig::kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.wk, k) - chebyshevDistance(p.bk, k));
             const bool unstoppable      = (p.mat[Co_White][M_t] == 0)*((chebyshevDistance(p.wk, SQFILE(k)) - white2Play) > std::min(5, chebyshevDistance(SQFILE(k), k)));
             const ScoreType rookBehind  = 0;//((p.blackRook() & BB::mask[k].rearSpan[Co_Black])!=0ull) * EvalConfig::rookBehindPassed - ((p.whiteRook() & BB::mask[k].rearSpan[Co_Black])!=0ull) * EvalConfig::rookBehindPassed;
             if (unstoppable) scScaled -= Values[P_wq+PieceShift] - Values[P_wp+PieceShift];
-            else             scScaled -= ScoreType( factorProtected * factorFree * (gp*EvalConfig::passerBonus[7 - SQRANK(k)] + gpCompl*EvalConfig::passerBonusEG[7 - SQRANK(k)] + kingNearBonus + rookBehind));
+            else             scScaled -= ScoreType( factorProtected * factorFree * (gp*EvalConfig::passerBonus[7 - SQRANK(k)] + gpCompl*EvalConfig::passerBonusEG[7 - SQRANK(k)]) + kingNearBonus + rookBehind);
         }
     }
 }
