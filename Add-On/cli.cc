@@ -182,7 +182,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
 
     if ( cli == "-eval" ){
         float gp = 0;
-        int score = eval(p,gp);
+        int score = eval(p,gp,true);
         Logging::LogIt(Logging::logInfo) << "eval " << score << " phase " << gp ;
         return 0;
     }
