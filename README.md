@@ -134,6 +134,9 @@ You can use both the json configuation file or the command line argument to sele
 * 0.48 : some evaluation features about Pawn
 * 0.49 : more pawn features
 * 0.50 : more rook and pawn features (new Win32 releases)
+* 0.51 : use bishop pair bonus
+* 0.52 : fix history, check extension, some endgames (prepare for pawn hash table ...)
+* 0.53 : fix pawn eval
 
 ## Thanks
 
