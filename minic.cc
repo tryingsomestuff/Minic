@@ -3566,11 +3566,15 @@ void init(){
     display = false;
 }
 
+void setFeature(){
+    ///@todo more feature disable !!
+    Logging::LogIt(Logging::logGUI) << "feature ping=1 setboard=1 colors=0 usermove=1 memory=0 sigint=0 sigterm=0 otime=0 time=1 nps=0 myname=\"Minic " << MinicVersion << "\"";
+    Logging::LogIt(Logging::logGUI) << "feature done=1";
+}
+
 void xboard(){
     Logging::LogIt(Logging::logInfo) << "Starting XBoard main loop" ;
-    ///@todo more feature disable !!
-    Logging::LogIt(Logging::logGUI) << "feature ping=1 setboard=1 colors=0 usermove=1 memory=0 sigint=0 sigterm=0 otime=0 time=1 nps=0 myname=\"Minic " << MinicVersion << "\"" ;
-    Logging::LogIt(Logging::logGUI) << "feature done=1" ;
+    setFeature(); ///@todo should not be here
 
     while(true) {
         Logging::LogIt(Logging::logInfo) << "XBoard: mode " << COM::mode ;
@@ -3608,7 +3612,7 @@ void xboard(){
             else if (COM::command == "post")    display = true;
             else if (COM::command == "nopost")  display = false;
             else if (COM::command == "computer"){ }
-            else if ( strncmp(COM::command.c_str(),"protover",8) == 0){ }
+            else if ( strncmp(COM::command.c_str(),"protover",8) == 0){ setFeature(); }
             else if ( strncmp(COM::command.c_str(),"accepted",8) == 0){ }
             else if ( strncmp(COM::command.c_str(),"rejected",8) == 0){ }
             else if ( strncmp(COM::command.c_str(),"ping",4) == 0){
