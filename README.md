@@ -165,3 +165,9 @@ Many thanks also to all testers for all those long time control tests, they real
 Also thanks to TCEC for letting Minic participate to the Season 15 division 4a, it was fun to see Minic on such a great hardware.
 
 And of course thanks to all the members of the talkchess forum and CPW, and to H.G. Muller for hosting the friendly monthly tourney.
+
+## Info
+- Am I a chess player ?
+- yes
+- good one ?
+- no (https://lichess.org/@/xr_a_y)
