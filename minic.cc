@@ -259,16 +259,19 @@ const bool doStaticNullMove = true;
 const bool doRazoring       = true;
 const bool doQFutility      = true;
 const bool doProbcut        = true;
+const bool doHistoryPruning = true;
 
 const ScoreType qfutilityMargin          = 128;
 const int       staticNullMoveMaxDepth   = 6;
 const ScoreType staticNullMoveDepthCoeff = 80;
 const ScoreType staticNullMoveDepthInit  = 0;
-const ScoreType razoringMarginDepthCoeff = 0;
-const ScoreType razoringMarginDepthInit  = 200;
+const ScoreType razoringMarginDepthCoeff = 100;
+const ScoreType razoringMarginDepthInit  = 50;
 const int       razoringMaxDepth         = 3;
 const int       nullMoveMinDepth         = 2;
 const int       lmpMaxDepth              = 10;
+const int       historyPuningMaxDepth    = 3;
+const ScoreType historyPuningThreshold   = -50;
 const ScoreType futilityDepthCoeff       = 160;
 const ScoreType futilityDepthInit        = 0;
 const int       iidMinDepth              = 5;
@@ -422,6 +425,10 @@ ScoreType   isolatedPawnMalusEG   = 15;
 ScoreType   pawnShieldBonus[4]    = {0, 15, 30, 45};
 float       protectedPasserFactor = 0.25f; // 125%
 float       freePasserFactor      = 0.25f; // 125%
+
+ScoreType   stormBonus1           = 30;
+ScoreType   stormBonus2           = 20;
+ScoreType   stormBonus3           = 10;
 
 ScoreType   fawnPawn              = 30;
 
@@ -712,6 +719,10 @@ inline bool isMateScore   (ScoreType s) { return (std::abs(s) >= MATE - MAX_DEPT
 inline bool isCapture(const MType & mt){ return mt == T_capture || mt == T_ep || mt == T_cappromq || mt == T_cappromr || mt == T_cappromb || mt == T_cappromn; }
 
 inline bool isCapture(const Move & m){ return isCapture(Move2Type(m)); }
+
+inline bool isCastling(const MType & mt){ return mt == T_bks || mt == T_bqs || mt == T_wks || mt == T_wqs; }
+
+inline bool isCastling(const Move & m){ return isCastling(Move2Type(m)); }
 
 inline bool isPromotion(const MType & mt){ return mt >= T_promq && mt <= T_cappromn;}
 
@@ -1178,7 +1189,7 @@ struct ThreadData{
 };
 
 struct Stats{
-    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits,sid_ttPhits,sid_staticNullMove, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMove, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_futility, sid_see, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension,sid_maxid };
+    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits,sid_ttPhits,sid_staticNullMove, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMove, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_see, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_pawnPushExtension, sid_singularExtension, sid_mateThreadExtension, sid_maxid };
     static const std::string Names[sid_maxid] ;
     Counter counters[sid_maxid];
     void init(){
@@ -1187,7 +1198,7 @@ struct Stats{
     }
 };
 
-const std::string Stats::Names[Stats::sid_maxid] = { "nodes", "qnodes", "tthits", "ttPHist", "staticNullMove", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMove", "probcutTry", "probcutTry2", "probcut", "lmp", "futility", "see", "iid", "ttalpha", "ttbeta", "checkExtension"};
+const std::string Stats::Names[Stats::sid_maxid] = { "nodes", "qnodes", "tthits", "Ptthits", "staticNullMove", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMove", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "see", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "pawnPushExtension", "singuilarExtension", "mateThreadExtension"};
 
 // singleton pool of threads
 class ThreadPool : public std::vector<ThreadContext*> {
@@ -1249,16 +1260,15 @@ struct ThreadContext{
     };
 
     struct HistoryT{
-        ScoreType history[2][13][64];
+        ScoreType history[13][64];
         inline void initHistory(){
             Logging::LogIt(Logging::logInfo) << "Init history" ;
-            for(int c = 0; c < 2; ++c)
-               for(int i = 0; i < 13; ++i)
-                  for(int k = 0 ; k < 64; ++k)
-                     history[c][i][k] = 0;
+            for(int i = 0; i < 13; ++i)
+               for(int k = 0 ; k < 64; ++k)
+                  history[i][k] = 0;
         }
         inline void update(DepthType depth, Move m, const Position & p, bool plus){
-            if ( Move2Type(m) == T_std ) history[p.c][getPieceIndex(p,Move2From(m))][Move2To(m)] += ScoreType( (plus?+1:-1) * (depth*depth/6.f) - (history[p.c][getPieceIndex(p,Move2From(m))][Move2To(m)] * depth*depth/6.f / 200.f));
+            if ( Move2Type(m) == T_std ) history[getPieceIndex(p,Move2From(m))][Move2To(m)] += ScoreType( (plus?+1:-1) * (depth*depth/6.f) - (history[getPieceIndex(p,Move2From(m))][Move2To(m)] * depth*depth/6.f / 200.f));
         }
     };
 
@@ -2491,7 +2501,7 @@ struct MoveSorter{
             if      (sameMove(m, context.killerT.killers[0][p.ply])) s += 290;
             else if (sameMove(m, context.killerT.killers[1][p.ply])) s += 270;
             else if (p.lastMove!=INVALIDMOVE && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 250;
-            else s += context.historyT.history[p.c][getPieceIndex(p, from)][to];
+            else s += context.historyT.history[getPieceIndex(p, from)][to];
             const bool isWhite = (p.whitePiece & SquareToBitboard(from)) != 0ull;
             s += EvalConfig::PST[getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - EvalConfig::PST[getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from];
         }
@@ -2556,6 +2566,8 @@ BitBoard(*const pf[])(const Square, const BitBoard, const  Color) = { &BB::cover
 }
 
 ///@todo fuse using color helpers !
+///@todo storm (cf tucano)
+///@todo backward and candidate
 
 inline bool isWhitePasser(const Position &p, Square k){
     return (BB::mask[k].passerSpan[Co_White] & p.blackPawn()) == 0ull;
@@ -2681,8 +2693,7 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     if ( p.bk == INVALIDSQUARE ) return (white2Play?+1:-1)* MATE; //*absValues[P_wk];
 
     // EG material (symetric version)
-    scEG += (p.mat[Co_White][M_k] - p.mat[Co_Black][M_k]) * *absValuesEG[P_wk]
-          + (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValuesEG[P_wq]
+    scEG += (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValuesEG[P_wq]
           + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * *absValuesEG[P_wr]
           + (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * *absValuesEG[P_wb]
           + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValuesEG[P_wn]
@@ -2704,12 +2715,11 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     }
 
     // material (symetric version)
-    ScoreType matPiece = (p.mat[Co_White][M_k] - p.mat[Co_Black][M_k]) * *absValues[P_wk]
-                       + (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValues[P_wq]
-                       + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * *absValues[P_wr]
-                       + (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * *absValues[P_wb]
-                       + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValues[P_wn];
-    ScoreType matPawn  = (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValues[P_wp];
+    const ScoreType matPiece = (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValues[P_wq]
+                             + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * *absValues[P_wr]
+                             + (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * *absValues[P_wb]
+                             + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValues[P_wn];
+    const ScoreType matPawn  = (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValues[P_wp];
     sc += matPawn + matPiece;
 
     // pst & mobility & attack
@@ -2741,8 +2751,20 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     evalPawnBlack       (p,blackPawn      ,sc,scEG,scScaled,bAtt,bSafePPush,pawnTargetsB,gp,gpCompl);
 
     // use king danger score
-    sc   -=  EvalConfig::katt_table[std::min(std::max(dangerW,ScoreType(0)),ScoreType(63))];
-    sc   +=  EvalConfig::katt_table[std::min(std::max(dangerB,ScoreType(0)),ScoreType(63))];
+    sc/*Scaled*/ -=  EvalConfig::katt_table[std::min(std::max(dangerW,ScoreType(0)),ScoreType(63))];
+    sc/*Scaled*/ +=  EvalConfig::katt_table[std::min(std::max(dangerB,ScoreType(0)),ScoreType(63))];
+
+    // pawn storm
+    /*
+    const BitBoard wKingFrontOppPawn = BB::mask[p.wk].passerSpan[Co_White] & p.blackPawn();
+    scScaled += ScoreType( countBit(wKingFrontOppPawn & rank2) * EvalConfig::stormBonus1);
+    scScaled += ScoreType( countBit(wKingFrontOppPawn & rank3) * EvalConfig::stormBonus2);
+    scScaled += ScoreType( countBit(wKingFrontOppPawn & rank4) * EvalConfig::stormBonus3);
+    const BitBoard bKingFrontOppPawn = BB::mask[p.bk].passerSpan[Co_Black] & p.whitePawn();
+    scScaled += ScoreType( countBit(bKingFrontOppPawn & rank7) * EvalConfig::stormBonus1);
+    scScaled += ScoreType( countBit(bKingFrontOppPawn & rank6) * EvalConfig::stormBonus2);
+    scScaled += ScoreType( countBit(bKingFrontOppPawn & rank5) * EvalConfig::stormBonus3);
+    */
 
     // safe pawn push (protected once or not attacked)
     wSafePPush &= (wAtt | ~bAtt);
@@ -3096,16 +3118,21 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     bool moveGenerated = false;
     bool capMoveGenerated = false;
 
-    bool futility = false, lmp = false, mateThreat = false;
+    bool futility = false, lmp = false, mateThreat = false, historyPruning = false;
 
     const bool isNotEndGame = (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t] > 0); ///@todo better ?
 
     // prunings
     if ( !DynamicConfig::mateFinder && canPrune && !isInCheck && !isMateScore(beta) && !pvnode){
 
+        if (isNotEndGame) {
+            // static null move
+            if (StaticConfig::doStaticNullMove && depth <= StaticConfig::staticNullMoveMaxDepth && evalScore >= beta + StaticConfig::staticNullMoveDepthInit + StaticConfig::staticNullMoveDepthCoeff * depth) return ++stats.counters[Stats::sid_staticNullMove], evalScore;
+        }
+
         // razoring
         int rAlpha = alpha - StaticConfig::razoringMarginDepthInit - StaticConfig::razoringMarginDepthCoeff*depth;
-        if ( false && StaticConfig::doRazoring && depth <= StaticConfig::razoringMaxDepth && evalScore <= rAlpha ){ ///@todo
+        if ( false && StaticConfig::doRazoring && depth <= StaticConfig::razoringMaxDepth && evalScore <= rAlpha ){
             ++stats.counters[Stats::sid_razoringTry];
             const ScoreType qScore = qsearch<true,pvnode>(rAlpha,rAlpha+1,p,ply,seldepth);
             if ( stopFlag ) return STOPSCORE;
@@ -3113,9 +3140,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         }
 
         if (isNotEndGame) {
-
-            // static null move
-            if (StaticConfig::doStaticNullMove && depth <= StaticConfig::staticNullMoveMaxDepth && evalScore >= beta + StaticConfig::staticNullMoveDepthInit + StaticConfig::staticNullMoveDepthCoeff * depth) return ++stats.counters[Stats::sid_staticNullMove], evalScore;
 
             // null move
             PVList nullPV;
@@ -3173,10 +3197,15 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     // futility
     if (!rootnode && StaticConfig::doFutility && evalScore <= alpha - StaticConfig::futilityDepthInit - StaticConfig::futilityDepthCoeff*depth) futility = true;
 
+    // history pruning
+    if (!rootnode && StaticConfig::doHistoryPruning && depth < StaticConfig::historyPuningMaxDepth) historyPruning = true;
+
     int validMoveCount = 0;
     bool alphaUpdated = false;
     bool bestScoreUpdated = false;
     Move bestMove = INVALIDMOVE;
+    TT::Bound hashBound = TT::B_alpha;
+    bool ttMoveIsCapture = false;
 
     // try the tt move before move generation (if not skipped move)
     if (e.h != 0 && e.m != INVALIDMOVE && !sameMove(e.m,skipMove)) { // should be the case thanks to iid at pvnode
@@ -3186,12 +3215,17 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             PVList childPV;
             hashStack[p.ply] = p.h;
             const bool isCheck = isAttacked(p2, kingSquare(p2));
+            if ( isCapture(e.m) ) ttMoveIsCapture = true;
+            //const bool isAdvancedPawnPush = getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
             // extensions
             int extension = 0;
-            //if (isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension;
-            //if (mateThreat) ++extension;
-            if (!extension && skipMove == INVALIDMOVE && singularExtension(*this, alpha, beta, p, depth, e, e.m, rootnode, ply, isInCheck)) ++extension;
-            //if (p.lastMove != INVALIDMOVE && Move2Type(p.lastMove) == T_capture && Move2To(e.m) == Move2To(p.lastMove)) ++extension; ///@todo recapture seems to lose elo
+            //if (!extension /*&& pvnode*/ && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension;
+            //if (!extension && isCastling(e.m) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
+            //if (!extension && mateThreat) ++stats.counters[Stats::sid_mateThreadExtension],++extension;
+            //if (!extension && p.lastMove != INVALIDMOVE && Move2Type(p.lastMove) == T_capture && Move2To(e.m) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; ///@todo recapture seems to lose elo
+            //if (!extension && isCheck && !isBadCap(e.m)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
+            //if (!extension && isAdvancedPawnPush && sameMove(*it, context.killerT.killers[0][p.ply])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo isPassed ?
+            if (!extension && skipMove == INVALIDMOVE && singularExtension(*this, alpha, beta, p, depth, e, e.m, rootnode, ply, isInCheck)) ++stats.counters[Stats::sid_singularExtension],++extension;
             const ScoreType ttScore = -pvs<pvnode,true>(-beta, -alpha, p2, depth - 1 + extension, ply + 1, childPV, seldepth, isCheck);
             if (stopFlag) return STOPSCORE;
             if ( ttScore > bestScore ){
@@ -3200,6 +3234,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 bestMove = e.m;
                 if (rootnode && rootScores) rootScores->push_back({ e.m,ttScore });
                 if (ttScore > alpha) {
+                    hashBound = TT::B_exact;
                     updatePV(pv, e.m, childPV);
                     if (ttScore >= beta) {
                         ++stats.counters[Stats::sid_ttbeta];
@@ -3235,8 +3270,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     }
     const bool improving = (!isInCheck && ply >= 2 && evalScore >= evalStack[p.ply - 2]);
 
-    TT::Bound hashBound = TT::B_alpha;
-
     ScoreType score = -MATE + ply;
 
     for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
@@ -3248,29 +3281,31 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if (p.c == Co_White && to == p.bk) return MATE - ply + 1;
         if (p.c == Co_Black && to == p.wk) return MATE - ply + 1;
         validMoveCount++;
-        hashStack[p.ply] = p.h;
         PVList childPV;
+        hashStack[p.ply] = p.h;
+        const bool isCheck = isAttacked(p2, kingSquare(p2));
+        const bool isAdvancedPawnPush = getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
         // extensions
         int extension = 0;
-        //if (isInCheck && depth <= 4) ++stats.counters[Stats::sid_checkExtension],++extension; // we are in check (extension)
-        //if (mateThreat && depth <= 4) ++extension;
-        //if (p.lastMove != INVALIDMOVE && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++extension; ///@todo recapture seems to lose elo
-        const bool isCheck = isAttacked(p2, kingSquare(p2));
+        //if (!extension && pvnode && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension; // we are in check (extension)
+        //if (!extension && mateThreat && depth <= 4) ++stats.counters[Stats::sid_mateThreadExtension],++extension;
+        //if (!extension && p.lastMove != INVALIDMOVE && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; ///@todo recapture seems to lose elo
+        //if (!extension && isCheck && !isBadCap(*it)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
+        //if (!extension && isAdvancedPawnPush && sameMove(*it, context.killerT.killers[0][p.ply])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo isPassed ?
+        //if (!extension && isCastling(e.m) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
         // pvs
-        if (validMoveCount < 1 || !StaticConfig::doPVS) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck);
+        if (validMoveCount < 2 || !StaticConfig::doPVS) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck);
         else{
             // reductions & prunings
             int reduction = 0;
-            const bool isAdvancedPawnPush = getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
-            //if (isCheck && !isBadCap(*it)) ++extension; ///@todo we give check with a non risky move
-            //if (isAdvancedPawnPush && depth < 5)   ++extension; ///@todo a pawn is near promotion
-            ///@todo passed pawn push extension
             const bool isPrunable = !isInCheck && !isCheck && !isAdvancedPawnPush && !sameMove(*it, killerT.killers[0][p.ply]) && !sameMove(*it, killerT.killers[1][p.ply]) /*&& !isMateScore(alpha) */&& !isMateScore(beta);
             const bool isPrunableStd = isPrunable && Move2Type(*it) == T_std;
             // futility
             if (futility && isPrunableStd) {++stats.counters[Stats::sid_futility]; continue;}
             // LMP
             if (lmp && isPrunableStd && validMoveCount >= StaticConfig::lmpLimit[improving][depth] ) {++stats.counters[Stats::sid_lmp]; continue;}
+            // History pruning
+            if (historyPruning && isPrunableStd && Move2Score(*it) < StaticConfig::historyPuningMaxDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
             // SEE
             const bool isPrunableCap = isPrunable && Move2Type(*it) == T_capture && isBadCap(*it);
             if ((futility||depth<=4) && isPrunableCap) {++stats.counters[Stats::sid_see]; continue;}
@@ -3278,6 +3313,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if (StaticConfig::doLMR && !DynamicConfig::mateFinder && isPrunableStd && depth >= StaticConfig::lmrMinDepth ){
                 reduction = StaticConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
                 if (!improving) ++reduction;
+                if (ttMoveIsCapture) ++reduction;
                 if (pvnode && reduction > 0) --reduction;
                 reduction -= 2*int(Move2Score(*it) / 200.f); //history reduction/extension
                 if (reduction < 0) reduction = 0;
@@ -3364,7 +3400,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
        const Move bookMove = SanitizeCastling(p,Book::Get(computeHash(p)));
        if ( bookMove != INVALIDMOVE){
            if ( isMainThread() ) startLock.store(false);
-           pv .push_back(bookMove);
+           pv.push_back(bookMove);
            m = pv[0];
            d = 0;
            sc = 0;
@@ -3377,6 +3413,19 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
 
     const bool isInCheck = isAttacked(p, kingSquare(p));
 
+    DepthType startDepth = 1;
+
+    // probe TT, to skip some search ...
+    /*
+    TT::Entry e;
+    if (TT::getEntry(*this,computeHash(p), 0, e) && e.h != 0 && e.b == TT::B_exact ) {
+       startDepth = e.d;
+       pv.push_back(e.m);
+       reachedDepth = d;
+       bestScore    = e.score;
+    }
+    */
+
     if ( isMainThread() ){
        // easy move detection (small open window depth 2 search
        std::vector<ThreadContext::RootScores> rootScores;
@@ -3388,13 +3437,13 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
     }
 
     // ID loop
-    for(DepthType depth = 1 ; depth <= std::min(d,DepthType(MAX_DEPTH-6)) && !stopFlag ; ++depth ){ // -6 so that draw can be found for sure
+    for(DepthType depth = startDepth ; depth <= std::min(d,DepthType(MAX_DEPTH-6)) && !stopFlag ; ++depth ){ // -6 so that draw can be found for sure
         if (!isMainThread()){ // stockfish like thread management
             const int i = (id()-1)%20;
             if (((depth + ThreadPool::skipPhase[i]) / ThreadPool::skipSize[i]) % 2) continue;
         }
         else{
-            if ( depth == 5) startLock.store(false); // delayed other thread start
+            if ( depth >= 5) startLock.store(false); // delayed other thread start
         }
         Logging::LogIt(Logging::logInfo) << "Thread " << id() << " searching depth " << (int)depth;
         PVList pvLoc;
