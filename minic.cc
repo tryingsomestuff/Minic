@@ -426,9 +426,9 @@ ScoreType   pawnShieldBonus[4]    = {0, 15, 30, 45};
 float       protectedPasserFactor = 0.25f; // 125%
 float       freePasserFactor      = 0.25f; // 125%
 
-ScoreType   stormBonus1           = 30;
-ScoreType   stormBonus2           = 20;
-ScoreType   stormBonus3           = 10;
+ScoreType   stormBonus1           = 50;
+ScoreType   stormBonus2           = 30;
+ScoreType   stormBonus3           = 15;
 
 ScoreType   fawnPawn              = 30;
 
@@ -2750,21 +2750,23 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     evalPieceBlack<P_wk>(p,p.blackKing()  ,sc,scEG,scScaled,bAtt,dangerW,dangerB);
     evalPawnBlack       (p,blackPawn      ,sc,scEG,scScaled,bAtt,bSafePPush,pawnTargetsB,gp,gpCompl);
 
-    // use king danger score
+    // use king danger score ///@todo loss a lot of elo if applied in end-game
     sc/*Scaled*/ -=  EvalConfig::katt_table[std::min(std::max(dangerW,ScoreType(0)),ScoreType(63))];
     sc/*Scaled*/ +=  EvalConfig::katt_table[std::min(std::max(dangerB,ScoreType(0)),ScoreType(63))];
 
-    // pawn storm
-    /*
-    const BitBoard wKingFrontOppPawn = BB::mask[p.wk].passerSpan[Co_White] & p.blackPawn();
-    scScaled += ScoreType( countBit(wKingFrontOppPawn & rank2) * EvalConfig::stormBonus1);
-    scScaled += ScoreType( countBit(wKingFrontOppPawn & rank3) * EvalConfig::stormBonus2);
-    scScaled += ScoreType( countBit(wKingFrontOppPawn & rank4) * EvalConfig::stormBonus3);
-    const BitBoard bKingFrontOppPawn = BB::mask[p.bk].passerSpan[Co_Black] & p.whitePawn();
-    scScaled += ScoreType( countBit(bKingFrontOppPawn & rank7) * EvalConfig::stormBonus1);
-    scScaled += ScoreType( countBit(bKingFrontOppPawn & rank6) * EvalConfig::stormBonus2);
-    scScaled += ScoreType( countBit(bKingFrontOppPawn & rank5) * EvalConfig::stormBonus3);
-    */
+    // pawn storm (queen is here and there is an attack)
+    if ( p.blackQueen() ){
+        const BitBoard wKingFrontOppPawn = BB::mask[p.wk].passerSpan[Co_White] & p.blackPawn();
+        sc/*Scaled*/ -= ScoreType( countBit(wKingFrontOppPawn & rank2) * EvalConfig::stormBonus1 * dangerW/32.);
+        sc/*Scaled*/ -= ScoreType( countBit(wKingFrontOppPawn & rank3) * EvalConfig::stormBonus2 * dangerW/32.);
+        sc/*Scaled*/ -= ScoreType( countBit(wKingFrontOppPawn & rank4) * EvalConfig::stormBonus3 * dangerW/32.);
+    }
+    if ( p.whiteQueen() ){
+        const BitBoard bKingFrontOppPawn = BB::mask[p.bk].passerSpan[Co_Black] & p.whitePawn();
+        sc/*Scaled*/ += ScoreType( countBit(bKingFrontOppPawn & rank7) * EvalConfig::stormBonus1 * dangerB/32.);
+        sc/*Scaled*/ += ScoreType( countBit(bKingFrontOppPawn & rank6) * EvalConfig::stormBonus2 * dangerB/32.);
+        sc/*Scaled*/ += ScoreType( countBit(bKingFrontOppPawn & rank5) * EvalConfig::stormBonus3 * dangerB/32.);
+    }
 
     // safe pawn push (protected once or not attacked)
     wSafePPush &= (wAtt | ~bAtt);
