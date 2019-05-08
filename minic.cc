@@ -1393,7 +1393,7 @@ Move ThreadPool::searchSync(const ThreadData & d){
     ThreadContext::startLock.store(true);
     for (auto s : *this) (*s).setData(d); // this is a copy
     Logging::LogIt(Logging::logInfo) << "Calling main thread search" ;
-    main().search(); ///@todo 1 thread for nothing here (start instead ????)
+    main().search(); ///@todo 1 thread for nothing here
     ThreadContext::stopFlag = true;
     wait();
     return main().getData().best;
@@ -2463,7 +2463,7 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
         while (!validThreatFound && threatId < stmAttackers.size()) {
             const Square att = stmAttackers[threatId];
             const bool prom = promPossible && getPieceType(p, att) == P_wp;
-            const Move mm = ToMove(att, to, prom ? T_cappromq : T_capture); ///@todo prom ????
+            const Move mm = ToMove(att, to, prom ? T_cappromq : T_capture);
             nextVictim = (Piece)(prom ? P_wq : getPieceType(p2,att)); // CAREFULL here :: we don't care black or white, always use abs(value) next !!!
             if (nextVictim == P_wk) return false; // capture king !
             ++threatId;
@@ -2967,7 +2967,7 @@ ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const
     return bestScore;
 }
 
-template < bool qRoot, bool pvnode > ///@todo pvnode ???
+template < bool qRoot, bool pvnode >
 ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth){
 
     if (stopFlag) return STOPSCORE; // no time check in qsearch, too slow
@@ -3123,7 +3123,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     const bool isNotEndGame = (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t] > 0); ///@todo better ?
 
     // prunings
-    if ( !DynamicConfig::mateFinder && canPrune && !isInCheck && !isMateScore(beta) && !pvnode){
+    if ( !DynamicConfig::mateFinder && canPrune && !isInCheck /*&& !isMateScore(beta)*/ && !pvnode){ ///@todo this is not losing that much elo and allow for better check mate finding ...
 
         if (isNotEndGame) {
             // static null move
@@ -3160,7 +3160,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         }
 
         // ProbCut
-        if ( StaticConfig::doProbcut && depth >= StaticConfig::probCutMinDepth ){
+        if ( StaticConfig::doProbcut && depth >= StaticConfig::probCutMinDepth && !isMateScore(beta)){
           ++stats.counters[Stats::sid_probcutTry];
           int probCutCount = 0;
           const ScoreType betaPC = beta + StaticConfig::probCutMargin;
@@ -3223,7 +3223,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if (!extension /*&& pvnode*/ && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension;
             //if (!extension && isCastling(e.m) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
             //if (!extension && mateThreat) ++stats.counters[Stats::sid_mateThreadExtension],++extension;
-            if (!extension && p.lastMove != INVALIDMOVE && Move2Type(p.lastMove) == T_capture && Move2To(e.m) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; ///@todo recapture seems to lose elo
+            if (!extension && p.lastMove != INVALIDMOVE && Move2Type(p.lastMove) == T_capture && Move2To(e.m) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; // recapture
             //if (!extension && isCheck && !isBadCap(e.m)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
             if (!extension && isAdvancedPawnPush && sameMove(e.m, killerT.killers[0][p.ply])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo isPassed ?
             if (!extension && skipMove == INVALIDMOVE && singularExtension(*this, alpha, beta, p, depth, e, e.m, rootnode, ply, isInCheck)) ++stats.counters[Stats::sid_singularExtension],++extension;
@@ -3239,8 +3239,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                     updatePV(pv, e.m, childPV);
                     if (ttScore >= beta) {
                         ++stats.counters[Stats::sid_ttbeta];
-                        if ((Move2Type(e.m) == T_std /*|| isBadCap(e.m)*/) && !isInCheck) updateTables(*this, p, depth, e.m); ///@todo ?
-                        if (skipMove == INVALIDMOVE /*&& ttScore != 0*/) TT::setEntry({ e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth,computeHash(p) }); ///@todo this can only decrease depth ????
+                        if ((Move2Type(e.m) == T_std /*|| isBadCap(e.m)*/) && !isInCheck) updateTables(*this, p, depth, e.m); ///@todo badcap can be killers ?
+                        if (skipMove == INVALIDMOVE /*&& ttScore != 0*/) TT::setEntry({ e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth,computeHash(p) }); 
                         return ttScore;
                     }
                     ++stats.counters[Stats::sid_ttalpha];
@@ -3288,9 +3288,9 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         const bool isAdvancedPawnPush = getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
         // extensions
         int extension = 0;
-        //if (!extension && pvnode && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension; // we are in check (extension)
+        //if (!extension && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension; // we are in check (extension)
         //if (!extension && mateThreat && depth <= 4) ++stats.counters[Stats::sid_mateThreadExtension],++extension;
-        if (!extension && p.lastMove != INVALIDMOVE && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; ///@todo recapture seems to lose elo
+        if (!extension && p.lastMove != INVALIDMOVE && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; //todo recapture
         //if (!extension && isCheck && !isBadCap(*it)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
         if (!extension && isAdvancedPawnPush && sameMove(*it, killerT.killers[0][p.ply])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo isPassed ?
         //if (!extension && isCastling(e.m) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
@@ -3343,10 +3343,10 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 alpha = score;
                 hashBound = TT::B_exact;
                 if ( score >= beta ){
-                    if ( (Move2Type(*it) == T_std /*|| isBadCap(*it)*/) && !isInCheck){
+                    if ( (Move2Type(*it) == T_std /*|| isBadCap(*it)*/) && !isInCheck){ ///@todo bad cap can be killers?
                         updateTables(*this, p, depth, *it);
                         for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2)
-                            if ( Move2Type(*it2) == T_std /*|| isBadCap(*it2)*/) historyT.update(depth,*it2,p,false);
+                            if ( Move2Type(*it2) == T_std /*|| isBadCap(*it2)*/) historyT.update(depth,*it2,p,false); ///@todo bad cap can be killers
                     }
                     hashBound = TT::B_beta;
                     break;
@@ -3750,7 +3750,7 @@ void xboard(){
                 COM::stopPonder();
                 COM::ponder = COM::p_off;
             }
-            else if (COM::command == "hard"){COM::ponder = COM::p_off;} ///@todo
+            else if (COM::command == "hard"){COM::ponder = COM::p_off;} ///@todo pondering
             else if (COM::command == "quit"){_exit(0);}
             else if (COM::command == "pause"){
                 COM::stopPonder();
