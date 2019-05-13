@@ -1228,7 +1228,7 @@ const int ThreadPool::skipPhase[20] = { 0, 1, 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 0, 1
 namespace MoveDifficultyUtil {
     enum MoveDifficulty { MD_forced = 0, MD_easy, MD_std, MD_hardDefense, MD_hardAttack };
     const DepthType emergencyMinDepth = 9;
-    const ScoreType emergencyMargin   = 50;
+    const ScoreType emergencyMargin   = 80;
     const ScoreType easyMoveMargin    = 250;
     const int       emergencyFactor   = 5;
     const float     maxStealFraction  = 0.3f; // of remaining time
@@ -3067,8 +3067,8 @@ inline bool singularExtension(ThreadContext & context, ScoreType alpha, ScoreTyp
 // pvs inspired by Xiphos
 template< bool pvnode, bool canPrune>
 ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, const Move skipMove, std::vector<RootScores> * rootScores){
-
-    if ( stopFlag || std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()) > getCurrentMoveMs() ){ stopFlag = true; return STOPSCORE; }
+    if (stopFlag) return STOPSCORE;
+    if ( std::max(1, (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()) > getCurrentMoveMs() ){ stopFlag = true; Logging::LogIt(Logging::logInfo) << "stopFlag triggered in thread " << id(); }
 
     float gp = 0;
     if (ply >= MAX_PLY - 1 || depth >= MAX_DEPTH - 1) return eval(p, gp);
@@ -3482,10 +3482,10 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
             }
             Logging::LogIt(Logging::logGUI) << str.str();
             //previousNodeCount = nodeCount;
-        }
-        if (TimeMan::isDynamic && depth > MoveDifficultyUtil::emergencyMinDepth && bestScore < depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin) { moveDifficulty = MoveDifficultyUtil::MD_hardDefense; }
-        if (TimeMan::isDynamic && std::max(1,int(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()*1.8)) > getCurrentMoveMs()) break; // not enought time
-        depthScores[depth] = bestScore;
+            if (TimeMan::isDynamic && depth > MoveDifficultyUtil::emergencyMinDepth && bestScore < depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin) { moveDifficulty = MoveDifficultyUtil::MD_hardDefense; Logging::LogIt(Logging::logInfo) << "Emergency mode activated : " << bestScore << " < " << depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin; }
+            if (TimeMan::isDynamic && std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()*1.8)) > getCurrentMoveMs()) { stopFlag = true; Logging::LogIt(Logging::logInfo) << "stopflag triggered, not enough time for next depth"; break; } // not enought time
+            depthScores[depth] = bestScore;
+		}
         //if (!pv.empty()) depthMoves[depth] = pv[0];
     }
 pvsout:
@@ -3500,7 +3500,7 @@ pvsout:
     d = reachedDepth;
     sc = bestScore;
 
-    ThreadPool::instance().DisplayStats();
+    if (isMainThread()) ThreadPool::instance().DisplayStats();
 
     return pv;
 }
@@ -3621,6 +3621,7 @@ void init(){
 
 void setFeature(){
     ///@todo more feature disable !!
+    ///@todo use otime ?
     Logging::LogIt(Logging::logGUI) << "feature ping=1 setboard=1 colors=0 usermove=1 memory=0 sigint=0 sigterm=0 otime=0 time=1 nps=0 myname=\"Minic " << MinicVersion << "\"";
     Logging::LogIt(Logging::logGUI) << "feature done=1";
 }
