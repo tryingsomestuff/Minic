@@ -1848,7 +1848,7 @@ void init(){
 }
 
 int GetNextMSecPerMove(const Position & p){
-    static const int msecMarginMin = 50;
+    static const int msecMarginMin = 80;
     static const int msecMarginMax = 3000;
     static const float msecMarginCoef = 0.02;
     int ms = -1;
