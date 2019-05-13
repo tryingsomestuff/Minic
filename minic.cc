@@ -34,7 +34,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_SYZYGY
 //#define WITH_UCI
 
-const std::string MinicVersion = "0.56";
+const std::string MinicVersion = "0.57";
 
 /*
 //todo
@@ -1863,14 +1863,14 @@ int GetNextMSecPerMove(const Position & p){
     else if ( nbMoveInTC > 0){ // mps is given (xboard style)
         assert(msecInTC > 0); assert(nbMoveInTC > 0);
         Logging::LogIt(Logging::logInfo) << "TC mode, xboard";
-        const int msecMargin = std::max(std::min(msecMarginMax, int(msecMarginCoef*msecUntilNextTC)), msecMarginMin);
+        const int msecMargin = std::max(std::min(msecMarginMax, int(msecMarginCoef*msecInTC)), msecMarginMin);
         if (!isDynamic) ms = int((msecInTC - msecMarginMin) / (float)nbMoveInTC) + msecIncLoc ;
         else { ms = std::min(msecUntilNextTC - msecMargin, int((msecUntilNextTC - msecMargin) /float(nbMoveInTC - ((p.moves - 1) % nbMoveInTC))) + msecIncLoc); }
     }
     else if (moveToGo > 0) { // moveToGo is given (uci style)
         assert(msecInTC > 0); assert(nbMoveInTC > 0);
         Logging::LogIt(Logging::logInfo) << "TC mode, UCI";
-        const int msecMargin = std::max(std::min(msecMarginMax, int(msecMarginCoef*msecUntilNextTC)), msecMarginMin);
+        const int msecMargin = std::max(std::min(msecMarginMax, int(msecMarginCoef*msecInTC)), msecMarginMin);
         if (!isDynamic) Logging::LogIt(Logging::logFatal) << "bad timing configuration ...";
         else { ms = std::min(msecUntilNextTC - msecMargin, int((msecUntilNextTC - msecMargin) / float(moveToGo)) + msecIncLoc); }
     }
@@ -1880,7 +1880,7 @@ int GetNextMSecPerMove(const Position & p){
         Logging::LogIt(Logging::logInfo) << "nmoves    " << nmoves;
         Logging::LogIt(Logging::logInfo) << "p.moves   " << int(p.moves);
         assert(nmoves > 0); assert(msecInTC >= 0);
-        const int msecMargin = std::max(std::min(msecMarginMax, int(msecMarginCoef*msecUntilNextTC)), msecMarginMin);
+        const int msecMargin = std::max(std::min(msecMarginMax, int(msecMarginCoef*msecInTC)), msecMarginMin);
         if (!isDynamic) ms = int((msecInTC+p.moves*msecIncLoc) / (float)(nmoves+p.moves)) - msecMarginMin;
         else ms = std::min(msecUntilNextTC - msecMargin, int(msecUntilNextTC / (float)nmoves + 0.75*msecIncLoc) - msecMargin);
     }
