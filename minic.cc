@@ -1242,7 +1242,7 @@ struct ThreadContext{
 
     static int currentMoveMs;
 
-    static int getCurrentMoveMs();
+    static int getCurrentMoveMs(); // use this (and not the variable) to take emergency time into account !
 
     Hash hashStack[MAX_PLY] = { 0ull };
     ScoreType evalStack[MAX_PLY] = { 0 };
@@ -1879,8 +1879,7 @@ int GetNextMSecPerMove(const Position & p){
         if (!isDynamic) ms = int((msecInTC+p.moves*msecIncLoc) / (float)(nmoves+p.moves)) - msecMargin;
         else ms = std::min(msecUntilNextTC - msecMargin, int(msecUntilNextTC / (float)nmoves + 0.75*msecIncLoc) - msecMargin);
     }
-    if (ms <= 5) ms = 20; // not much time left, let's try that ...
-    return ms;
+    return std::max(ms, 20);// if not much time left, let's try that ...
 }
 } // TimeMan
 
