@@ -3317,8 +3317,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 reduction = StaticConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
                 if (!improving) ++reduction;
                 if (ttMoveIsCapture) ++reduction;
-                if (pvnode && reduction > 0) --reduction;
                 reduction -= 2*int(Move2Score(*it) / 200.f); //history reduction/extension
+                if (pvnode && reduction > 0) --reduction;
                 if (reduction < 0) reduction = 0;
                 if (reduction >= depth - 1) reduction = depth - 2;
             }
@@ -3367,6 +3367,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
 
     // a playing level feature for the poor ...
+    ///@todo more things shall depend on level
     d=DynamicConfig::level==10?d:DynamicConfig::level;
 
     if ( isMainThread() ){
