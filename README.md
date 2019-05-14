@@ -139,6 +139,10 @@ You can use both the json configuation file or the command line argument to sele
 * 0.51 : use bishop pair bonus
 * 0.52 : fix history, check extension, some endgames (prepare for pawn hash table ...)
 * 0.53 : fix pawn eval
+* 0.54 : working on extension and eval
+* 0.55 : working on extension and eval
+* 0.56 : TC issue in multi-thread mode
+* 0.57 : fix 0.56
 
 ## Thanks
 
