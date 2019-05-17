@@ -34,7 +34,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_SYZYGY
 //#define WITH_UCI
 
-const std::string MinicVersion = "0.57";
+const std::string MinicVersion = "dev";
 
 /*
 //todo
@@ -256,10 +256,10 @@ const bool doFutility       = true;
 const bool doLMR            = true;
 const bool doLMP            = true;
 const bool doStaticNullMove = true;
-const bool doRazoring       = true;
+const bool doRazoring       = false;
 const bool doQFutility      = true;
 const bool doProbcut        = true;
-const bool doHistoryPruning = true;
+const bool doHistoryPruning = false;
 
 const ScoreType qfutilityMargin          = 128;
 const int       staticNullMoveMaxDepth   = 6;
@@ -271,7 +271,7 @@ const int       razoringMaxDepth         = 3;
 const int       nullMoveMinDepth         = 2;
 const int       lmpMaxDepth              = 10;
 const int       historyPuningMaxDepth    = 3;
-const ScoreType historyPuningThreshold   = -50;
+const ScoreType historyPuningThreshold   = 50;
 const ScoreType futilityDepthCoeff       = 160;
 const ScoreType futilityDepthInit        = 0;
 const int       iidMinDepth              = 5;
@@ -425,6 +425,8 @@ ScoreType   isolatedPawnMalusEG   = 15;
 ScoreType   pawnShieldBonus[4]    = {0, 15, 30, 45};
 float       protectedPasserFactor = 0.25f; // 125%
 float       freePasserFactor      = 0.25f; // 125%
+
+ScoreType   centerControl         = 10;
 
 ScoreType   stormBonus1           = 50;
 ScoreType   stormBonus2           = 30;
@@ -623,6 +625,7 @@ const BitBoard rank6                     = 0x0000ff0000000000;
 const BitBoard rank7                     = 0x00ff000000000000;
 const BitBoard rank8                     = 0xff00000000000000;
 const BitBoard ranks[8] = {rank1,rank2,rank3,rank4,rank5,rank6,rank7,rank8};
+const BitBoard center = BBSq_d4 | BBSq_d5 | BBSq_e4 | BBSq_e5;
 BitBoard dummy                           = 0x0ull;
 
 std::string showBitBoard(const BitBoard & b) {
@@ -1228,7 +1231,7 @@ const int ThreadPool::skipPhase[20] = { 0, 1, 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 0, 1
 namespace MoveDifficultyUtil {
     enum MoveDifficulty { MD_forced = 0, MD_easy, MD_std, MD_hardDefense, MD_hardAttack };
     const DepthType emergencyMinDepth = 9;
-    const ScoreType emergencyMargin   = 80;
+    const ScoreType emergencyMargin   = 50;
     const ScoreType easyMoveMargin    = 250;
     const int       emergencyFactor   = 5;
     const float     maxStealFraction  = 0.3f; // of remaining time
@@ -1848,7 +1851,7 @@ void init(){
 }
 
 int GetNextMSecPerMove(const Position & p){
-    static const int msecMarginMin = 80;
+    static const int msecMarginMin = 50;
     static const int msecMarginMax = 3000;
     static const float msecMarginCoef = 0.02;
     int ms = -1;
@@ -2639,7 +2642,7 @@ inline void evalPawnWhite(const Position & p, BitBoard pieceBBiterator, ScoreTyp
             const float factorFree      = 1+((BB::mask[k].frontSpan[Co_White] & p.blackPiece) == 0ull) * EvalConfig::freePasserFactor;
             const float kingNearBonus   = EvalConfig::kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.bk, k) - chebyshevDistance(p.wk, k));
             const bool unstoppable      = (p.mat[Co_Black][M_t] == 0)&&((chebyshevDistance(p.bk, SQFILE(k) + 56) - (!white2Play)) > std::min(5, chebyshevDistance(SQFILE(k) + 56, k)));
-            const ScoreType rookBehind  = ((p.whiteRook() & BB::mask[k].rearSpan[Co_White])!=0ull) * EvalConfig::rookBehindPassed - ((p.blackRook() & BB::mask[k].rearSpan[Co_White])!=0ull) * EvalConfig::rookBehindPassed;
+            const ScoreType rookBehind  = 0;//((p.whiteRook() & BB::mask[k].rearSpan[Co_White])!=0ull) * EvalConfig::rookBehindPassed - ((p.blackRook() & BB::mask[k].rearSpan[Co_White])!=0ull) * EvalConfig::rookBehindPassed;
             if (unstoppable) scScaled += Values[P_wq+PieceShift] - Values[P_wp+PieceShift];
             else             scScaled += ScoreType( factorProtected * factorFree * (gp*EvalConfig::passerBonus[SQRANK(k)] + gpCompl*EvalConfig::passerBonusEG[SQRANK(k)]) + kingNearBonus + gpCompl*rookBehind);
         }
@@ -2663,7 +2666,7 @@ inline void evalPawnBlack(const Position & p, BitBoard pieceBBiterator, ScoreTyp
             const float factorFree      = 1+((BB::mask[k].frontSpan[Co_Black] & p.whitePiece) == 0ull) * EvalConfig::freePasserFactor;
             const float kingNearBonus   = EvalConfig::kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.wk, k) - chebyshevDistance(p.bk, k));
             const bool unstoppable      = (p.mat[Co_White][M_t] == 0)&&((chebyshevDistance(p.wk, SQFILE(k)) - white2Play) > std::min(5, chebyshevDistance(SQFILE(k), k)));
-            const ScoreType rookBehind  = ((p.blackRook() & BB::mask[k].rearSpan[Co_Black])!=0ull) * EvalConfig::rookBehindPassed - ((p.whiteRook() & BB::mask[k].rearSpan[Co_Black])!=0ull) * EvalConfig::rookBehindPassed;
+            const ScoreType rookBehind  = 0;//((p.blackRook() & BB::mask[k].rearSpan[Co_Black])!=0ull) * EvalConfig::rookBehindPassed - ((p.whiteRook() & BB::mask[k].rearSpan[Co_Black])!=0ull) * EvalConfig::rookBehindPassed;
             if (unstoppable) scScaled -= Values[P_wq+PieceShift] - Values[P_wp+PieceShift];
             else             scScaled -= ScoreType( factorProtected * factorFree * (gp*EvalConfig::passerBonus[7 - SQRANK(k)] + gpCompl*EvalConfig::passerBonusEG[7 - SQRANK(k)]) + kingNearBonus + gpCompl*rookBehind);
         }
@@ -2758,6 +2761,10 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     sc/*Scaled*/ -=  EvalConfig::katt_table[std::min(std::max(dangerW,ScoreType(0)),ScoreType(63))];
     sc/*Scaled*/ +=  EvalConfig::katt_table[std::min(std::max(dangerB,ScoreType(0)),ScoreType(63))];
 
+    // center control
+    //sc += countBit(center | wAtt ) * EvalConfig::centerControl;
+    //sc -= countBit(center | bAtt ) * EvalConfig::centerControl;
+
     /*
     // pawn storm (queen is here and there is an attack)
     if ( p.blackQueen() ){
@@ -2796,13 +2803,14 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     for(int f = File_a; f <= File_h ; ++f){
         nbWP[f+1] = countBit(whitePawn & files[f]);
         nbBP[f+1] = countBit(blackPawn & files[f]);
-        const uint64_t nbWR = countBit(p.whiteRook() & files[f]);
-        const uint64_t nbBR = countBit(p.blackRook() & files[f]);
+        //const uint64_t nbWR = countBit(p.whiteRook() & files[f]);
+        //const uint64_t nbBR = countBit(p.blackRook() & files[f]);
         // double pawn malus
         sc   -= ScoreType(nbWP[f+1]>>1)*EvalConfig::doublePawnMalus;
         scEG -= ScoreType(nbWP[f+1]>>1)*EvalConfig::doublePawnMalusEG;
         sc   += ScoreType(nbBP[f+1]>>1)*EvalConfig::doublePawnMalus;
         scEG += ScoreType(nbBP[f+1]>>1)*EvalConfig::doublePawnMalusEG;
+        /*
         // rook on open file ///@todo seems to be 0 elo...
         if ( nbWR ){
             if ( nbWP[f+1] == 0 ) sc += nbBP[f+1] == 0 ? EvalConfig::rookOnOpenFile[2]:EvalConfig::rookOnOpenFile[1];
@@ -2812,19 +2820,22 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
             if ( nbBP[f+1] == 0 ) sc -= nbWP[f+1] == 0 ? EvalConfig::rookOnOpenFile[2]:EvalConfig::rookOnOpenFile[1];
             else if ( nbWP[f+1] == 0 ) sc -= EvalConfig::rookOnOpenFile[0];
         }
+        */
     }
 
     // isolated pawn malus (second loop needed)
     for(int f = File_a; f <= File_h ; ++f){
-        sc -= (!nbWP[f] && nbWP[f+1] && !nbWP[f+2])*EvalConfig::isolatedPawnMalus;
-        sc -= (!nbWP[f] && nbWP[f+1] && !nbWP[f+2])*EvalConfig::isolatedPawnMalusEG;
-        sc += (!nbBP[f] && nbBP[f+1] && !nbBP[f+2])*EvalConfig::isolatedPawnMalus;
-        sc += (!nbBP[f] && nbBP[f+1] && !nbBP[f+2])*EvalConfig::isolatedPawnMalusEG;
+        sc   -= (!nbWP[f] && nbWP[f+1] && !nbWP[f+2])*EvalConfig::isolatedPawnMalus;
+        scEG -= (!nbWP[f] && nbWP[f+1] && !nbWP[f+2])*EvalConfig::isolatedPawnMalusEG;
+        sc   += (!nbBP[f] && nbBP[f+1] && !nbBP[f+2])*EvalConfig::isolatedPawnMalus;
+        scEG += (!nbBP[f] && nbBP[f+1] && !nbBP[f+2])*EvalConfig::isolatedPawnMalusEG;
     }
 
     // I like fawn pawn (king side only)
-    scScaled -= ((p.whiteKing() & whiteKingKingSide) == 0ull) * ((BBSq_h3 & blackPawn) != 0) * ((BBSq_h2 & whitePawn) != 0) * ((BBSq_g3 & whitePawn) != 0) * EvalConfig::fawnPawn;
-    scScaled += ((p.blackKing() & blackKingKingSide) == 0ull) * ((BBSq_h6 & whitePawn) != 0) * ((BBSq_h7 & blackPawn) != 0) * ((BBSq_g6 & blackPawn) != 0) * EvalConfig::fawnPawn;
+    /*
+    sc -= ((p.whiteKing() & whiteKingKingSide) == 0ull) * ((BBSq_h3 & blackPawn) != 0) * ((BBSq_h2 & whitePawn) != 0) * ((BBSq_g3 & whitePawn) != 0) * EvalConfig::fawnPawn;
+    sc += ((p.blackKing() & blackKingKingSide) == 0ull) * ((BBSq_h6 & whitePawn) != 0) * ((BBSq_h7 & blackPawn) != 0) * ((BBSq_g6 & blackPawn) != 0) * EvalConfig::fawnPawn;
+    */
 
     /*
     // blocked piece
@@ -2886,7 +2897,6 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     sc   += scBlocked;
     */
 
-    ScoreType scAjust = 0;
     // number of pawn and piece type
     /*
     scAjust += p.mat[Co_White][M_r] * EvalConfig::adjRook  [p.mat[Co_White][M_p]];
@@ -2896,13 +2906,11 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     */
 
     // bishop pair bonus
-    scAjust += ( (p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonus : 0)-(p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonus : 0) );
+    scScaled += ( (p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonus : 0)-(p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonus : 0) );
     // knight pair malus
-    scAjust += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0) );
+    scScaled += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0) );
     // rook pair malus
-    scAjust += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
-   
-    scScaled   += scAjust;
+    scScaled += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
 
     // pawn shield
     //sc += EvalConfig::pawnShieldBonus[std::min(3,int(countBit(wKingZone & whitePawn)))];
@@ -2917,7 +2925,7 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     sc -= ScoreType(((p.blackKing() & blackKingKingSide  ) != 0ull)*countBit(blackPawn & blackKingSidePawnShield2 )*EvalConfig::pawnShieldBonus[1] / 2);
 
     // tempo
-    //sc += ScoreType(30*gp);
+    //sc += ScoreType(30);
 
     // scale phase and scale 50 move rule
     return (white2Play?+1:-1)*ScoreType( (gp*sc + gpCompl*scEG + scScaled ) /** (-sigmoid(p.fifty,1,55,10,1) )*/ );
@@ -3138,7 +3146,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
         // razoring
         int rAlpha = alpha - StaticConfig::razoringMarginDepthInit - StaticConfig::razoringMarginDepthCoeff*depth;
-        if ( false && StaticConfig::doRazoring && depth <= StaticConfig::razoringMaxDepth && evalScore <= rAlpha ){
+        if ( StaticConfig::doRazoring && depth <= StaticConfig::razoringMaxDepth && evalScore <= rAlpha ){
             ++stats.counters[Stats::sid_razoringTry];
             const ScoreType qScore = qsearch<true,pvnode>(rAlpha,rAlpha+1,p,ply,seldepth);
             if ( stopFlag ) return STOPSCORE;
@@ -3221,17 +3229,17 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             PVList childPV;
             hashStack[p.ply] = p.h;
             const bool isCheck = isAttacked(p2, kingSquare(p2));
-            const Square to = Move2To(e.m);
+            //const Square to = Move2To(e.m);
             if ( isCapture(e.m) ) ttMoveIsCapture = true;
-            const bool isAdvancedPawnPush = getPieceType(p,Move2From(e.m)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
+            //const bool isAdvancedPawnPush = getPieceType(p,Move2From(e.m)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
             // extensions
             int extension = 0;
-            if (!extension /*&& pvnode*/ && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension;
+            //if (!extension /*&& pvnode*/ && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension;
             if (!extension && isCastling(e.m) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
             //if (!extension && mateThreat) ++stats.counters[Stats::sid_mateThreadExtension],++extension;
-            if (!extension && p.lastMove != INVALIDMOVE && Move2Type(p.lastMove) == T_capture && Move2To(e.m) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; // recapture
+            //if (!extension && p.lastMove != INVALIDMOVE && Move2Type(p.lastMove) == T_capture && Move2To(e.m) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; // recapture
             //if (!extension && isCheck && !isBadCap(e.m)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
-            if (!extension && isAdvancedPawnPush && sameMove(e.m, killerT.killers[0][p.ply])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo isPassed ?
+            //if (!extension && isAdvancedPawnPush && sameMove(e.m, killerT.killers[0][p.ply])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo isPassed ?
             if (!extension && skipMove == INVALIDMOVE && singularExtension(*this, alpha, beta, p, depth, e, e.m, rootnode, ply, isInCheck)) ++stats.counters[Stats::sid_singularExtension],++extension;
             const ScoreType ttScore = -pvs<pvnode,true>(-beta, -alpha, p2, depth - 1 + extension, ply + 1, childPV, seldepth, isCheck);
             if (stopFlag) return STOPSCORE;
@@ -3296,9 +3304,9 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         int extension = 0;
         //if (!extension && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension; // we are in check (extension)
         //if (!extension && mateThreat && depth <= 4) ++stats.counters[Stats::sid_mateThreadExtension],++extension;
-        if (!extension && p.lastMove != INVALIDMOVE && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; //todo recapture
+        //if (!extension && p.lastMove != INVALIDMOVE && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; //todo recapture
         //if (!extension && isCheck && !isBadCap(*it)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
-        if (!extension && isAdvancedPawnPush && sameMove(*it, killerT.killers[0][p.ply])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo isPassed ?
+        //if (!extension && isAdvancedPawnPush && sameMove(*it, killerT.killers[0][p.ply])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo isPassed ?
         if (!extension && isCastling(*it) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
         // pvs
         if (validMoveCount < 2 || !StaticConfig::doPVS) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck);
@@ -3312,7 +3320,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             // LMP
             if (lmp && isPrunableStd && validMoveCount >= StaticConfig::lmpLimit[improving][depth] ) {++stats.counters[Stats::sid_lmp]; continue;}
             // History pruning
-            if (historyPruning && isPrunableStd && Move2Score(*it) < StaticConfig::historyPuningMaxDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
+            if (historyPruning && isPrunableStd && (validMoveCount > 8 || Move2Score(*it) < StaticConfig::historyPuningThreshold)) {++stats.counters[Stats::sid_historyPruning]; continue;}
             // SEE
             const bool isPrunableCap = isPrunable && Move2Type(*it) == T_capture && isBadCap(*it);
             if ((futility||depth<=4) && isPrunableCap) {++stats.counters[Stats::sid_see]; continue;}
