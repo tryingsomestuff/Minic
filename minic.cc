@@ -265,8 +265,8 @@ const ScoreType qfutilityMargin          = 128;
 const int       staticNullMoveMaxDepth   = 6;
 const ScoreType staticNullMoveDepthCoeff = 80;
 const ScoreType staticNullMoveDepthInit  = 0;
-const ScoreType razoringMarginDepthCoeff = 100;
-const ScoreType razoringMarginDepthInit  = 50;
+const ScoreType razoringMarginDepthCoeff = 0;
+const ScoreType razoringMarginDepthInit  = 200;
 const int       razoringMaxDepth         = 3;
 const int       nullMoveMinDepth         = 2;
 const int       lmpMaxDepth              = 10;
@@ -426,7 +426,7 @@ ScoreType   pawnShieldBonus[4]    = {0, 15, 30, 45};
 float       protectedPasserFactor = 0.25f; // 125%
 float       freePasserFactor      = 0.25f; // 125%
 
-ScoreType   centerControl         = 10;
+ScoreType   centerControl         = 5;
 
 ScoreType   stormBonus1           = 50;
 ScoreType   stormBonus2           = 30;
@@ -2613,7 +2613,7 @@ inline void evalPieceWhite(const Position & p, BitBoard pieceBBiterator, ScoreTy
         const uint64_t n = countBit(curAtt);
         sc   += EvalConfig::MOB  [T-1][n];
         scEG += EvalConfig::MOBEG[T-1][n];
-        //sc   += countBit(center & target ) * EvalConfig::centerControl;
+        sc   += countBit(center & target ) * EvalConfig::centerControl;
     }
 }
 
@@ -2633,7 +2633,7 @@ inline void evalPieceBlack(const Position & p, BitBoard pieceBBiterator, ScoreTy
         const uint64_t n = countBit(curAtt);
         sc   -= EvalConfig::MOB  [T-1][n];
         scEG -= EvalConfig::MOBEG[T-1][n];
-        //sc -= countBit(center & target ) * EvalConfig::centerControl;
+        sc -= countBit(center & target ) * EvalConfig::centerControl;
     }
 }
 
@@ -2659,7 +2659,7 @@ inline void evalPawnWhite(const Position & p, BitBoard pieceBBiterator, ScoreTyp
             if (unstoppable) scScaled += Values[P_wq+PieceShift] - Values[P_wp+PieceShift];
             else             scScaled += ScoreType( factorProtected * factorFree * (gp*EvalConfig::passerBonus[SQRANK(k)] + gpCompl*EvalConfig::passerBonusEG[SQRANK(k)]) + kingNearBonus + gpCompl*rookBehind);
         }
-        //sc   += countBit(center & BB::mask[k].pawnAttack[Co_White] ) * EvalConfig::centerControl;
+        sc   += countBit(center & BB::mask[k].pawnAttack[Co_White] ) * EvalConfig::centerControl;
     }
 }
 
@@ -2685,7 +2685,7 @@ inline void evalPawnBlack(const Position & p, BitBoard pieceBBiterator, ScoreTyp
             if (unstoppable) scScaled -= Values[P_wq+PieceShift] - Values[P_wp+PieceShift];
             else             scScaled -= ScoreType( factorProtected * factorFree * (gp*EvalConfig::passerBonus[7 - SQRANK(k)] + gpCompl*EvalConfig::passerBonusEG[7 - SQRANK(k)]) + kingNearBonus + gpCompl*rookBehind);
         }
-        //sc -= countBit(center & BB::mask[k].pawnAttack[Co_Black] ) * EvalConfig::centerControl;
+        sc -= countBit(center & BB::mask[k].pawnAttack[Co_Black] ) * EvalConfig::centerControl;
     }
 }
 
@@ -3157,7 +3157,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         int rAlpha = alpha - StaticConfig::razoringMarginDepthInit - StaticConfig::razoringMarginDepthCoeff*depth;
         if ( StaticConfig::doRazoring && depth <= StaticConfig::razoringMaxDepth && evalScore <= rAlpha ){
             ++stats.counters[Stats::sid_razoringTry];
-            const ScoreType qScore = qsearch<true,pvnode>(rAlpha,rAlpha+1,p,ply,seldepth);
+            const ScoreType qScore = qsearch<true,pvnode>(alpha,beta,p,ply,seldepth);
             if ( stopFlag ) return STOPSCORE;
             if ( qScore <= alpha ) return ++stats.counters[Stats::sid_razoring],qScore;
         }
@@ -3259,7 +3259,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 if (rootnode && rootScores) rootScores->push_back({ e.m,ttScore });
                 if (ttScore > alpha) {
                     hashBound = TT::B_exact;
-                    updatePV(pv, e.m, childPV);
+                    if (pvnode) updatePV(pv, e.m, childPV);
                     if (ttScore >= beta) {
                         ++stats.counters[Stats::sid_ttbeta];
                         if ((Move2Type(e.m) == T_std /*|| isBadCap(e.m)*/) && !isInCheck) updateTables(*this, p, depth, e.m); ///@todo badcap can be killers ?
@@ -3361,7 +3361,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             bestMove = *it;
             bestScoreUpdated = true;
             if ( score > alpha ){
-                updatePV(pv, *it, childPV);
+                if (pvnode) updatePV(pv, *it, childPV);
                 //alphaUpdated = true;
                 alpha = score;
                 hashBound = TT::B_exact;
