@@ -34,7 +34,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_SYZYGY
 //#define WITH_UCI
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "0.59";
 
 /*
 //todo
@@ -416,12 +416,12 @@ const ScoreType PSTEG[6][64] = {
 
 ScoreType   passerBonus[8]        = { 0,  0,  3,  8, 15, 24, 34, 0};
 ScoreType   passerBonusEG[8]      = { 0,  4, 18, 42, 75,118,170, 0};
-ScoreType   rookBehindPassed      = 20;
-ScoreType   kingNearPassedPawnEG  = 11;
-ScoreType   doublePawnMalus       = 5;
-ScoreType   doublePawnMalusEG     = 15;
-ScoreType   isolatedPawnMalus     = 5;
-ScoreType   isolatedPawnMalusEG   = 15;
+ScoreType   rookBehindPassed      = 36;
+ScoreType   kingNearPassedPawnEG  = 5;
+ScoreType   doublePawnMalus       = 16;
+ScoreType   doublePawnMalusEG     = 17;
+ScoreType   isolatedPawnMalus     = 21;
+ScoreType   isolatedPawnMalusEG   = 11;
 ScoreType   pawnShieldBonus[4]    = {0, 15, 30, 45};
 float       protectedPasserFactor = 0.25f; // 125%
 float       freePasserFactor      = 0.25f; // 125%
@@ -2613,7 +2613,7 @@ inline void evalPieceWhite(const Position & p, BitBoard pieceBBiterator, ScoreTy
         const uint64_t n = countBit(curAtt);
         sc   += EvalConfig::MOB  [T-1][n];
         scEG += EvalConfig::MOBEG[T-1][n];
-        sc   += countBit(center & target ) * EvalConfig::centerControl;
+        //sc   += countBit(center & target ) * EvalConfig::centerControl;
     }
 }
 
@@ -2633,7 +2633,7 @@ inline void evalPieceBlack(const Position & p, BitBoard pieceBBiterator, ScoreTy
         const uint64_t n = countBit(curAtt);
         sc   -= EvalConfig::MOB  [T-1][n];
         scEG -= EvalConfig::MOBEG[T-1][n];
-        sc -= countBit(center & target ) * EvalConfig::centerControl;
+        //sc -= countBit(center & target ) * EvalConfig::centerControl;
     }
 }
 
@@ -2655,11 +2655,11 @@ inline void evalPawnWhite(const Position & p, BitBoard pieceBBiterator, ScoreTyp
             const float factorFree      = 1+((BB::mask[k].frontSpan[Co_White] & p.blackPiece) == 0ull) * EvalConfig::freePasserFactor;
             const float kingNearBonus   = EvalConfig::kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.bk, k) - chebyshevDistance(p.wk, k));
             const bool unstoppable      = (p.mat[Co_Black][M_t] == 0)&&((chebyshevDistance(p.bk, SQFILE(k) + 56) - (!white2Play)) > std::min(5, chebyshevDistance(SQFILE(k) + 56, k)));
-            const ScoreType rookBehind  = 0;//(countBit(p.whiteRook() & BB::mask[k].rearSpan[Co_White]) - countBit(p.blackRook() & BB::mask[k].rearSpan[Co_White])) * EvalConfig::rookBehindPassed;
+            const ScoreType rookBehind  = (countBit(p.whiteRook() & BB::mask[k].rearSpan[Co_White]) - countBit(p.blackRook() & BB::mask[k].rearSpan[Co_White])) * EvalConfig::rookBehindPassed;
             if (unstoppable) scScaled += Values[P_wq+PieceShift] - Values[P_wp+PieceShift];
             else             scScaled += ScoreType( factorProtected * factorFree * (gp*EvalConfig::passerBonus[SQRANK(k)] + gpCompl*EvalConfig::passerBonusEG[SQRANK(k)]) + kingNearBonus + gpCompl*rookBehind);
         }
-        sc   += countBit(center & BB::mask[k].pawnAttack[Co_White] ) * EvalConfig::centerControl;
+        //sc   += countBit(center & BB::mask[k].pawnAttack[Co_White] ) * EvalConfig::centerControl;
     }
 }
 
@@ -2681,11 +2681,11 @@ inline void evalPawnBlack(const Position & p, BitBoard pieceBBiterator, ScoreTyp
             const float factorFree      = 1+((BB::mask[k].frontSpan[Co_Black] & p.whitePiece) == 0ull) * EvalConfig::freePasserFactor;
             const float kingNearBonus   = EvalConfig::kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.wk, k) - chebyshevDistance(p.bk, k));
             const bool unstoppable      = (p.mat[Co_White][M_t] == 0)&&((chebyshevDistance(p.wk, SQFILE(k)) - white2Play) > std::min(5, chebyshevDistance(SQFILE(k), k)));
-            const ScoreType rookBehind  = 0;//(countBit(p.blackRook() & BB::mask[k].rearSpan[Co_Black]) - countBit(p.whiteRook() & BB::mask[k].rearSpan[Co_Black])) * EvalConfig::rookBehindPassed;
+            const ScoreType rookBehind  = (countBit(p.blackRook() & BB::mask[k].rearSpan[Co_Black]) - countBit(p.whiteRook() & BB::mask[k].rearSpan[Co_Black])) * EvalConfig::rookBehindPassed;
             if (unstoppable) scScaled -= Values[P_wq+PieceShift] - Values[P_wp+PieceShift];
             else             scScaled -= ScoreType( factorProtected * factorFree * (gp*EvalConfig::passerBonus[7 - SQRANK(k)] + gpCompl*EvalConfig::passerBonusEG[7 - SQRANK(k)]) + kingNearBonus + gpCompl*rookBehind);
         }
-        sc -= countBit(center & BB::mask[k].pawnAttack[Co_Black] ) * EvalConfig::centerControl;
+        //sc -= countBit(center & BB::mask[k].pawnAttack[Co_Black] ) * EvalConfig::centerControl;
     }
 }
 
