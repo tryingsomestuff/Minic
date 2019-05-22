@@ -207,7 +207,7 @@ std::vector<TexelParam<ScoreType> > TexelOptimizeGD(const std::vector<TexelParam
         Logging::LogIt(Logging::logInfo) << "Base E "  << baseE;
 
         double coef = 0;
-        int lsStep = 20;
+        size_t lsStep = 20;
         // lin-search
         for(size_t i = 1 ; i < lsStep ; ++i){
             const double curCoef = bestParam.size()*i*1./(lsStep-1);
@@ -334,14 +334,14 @@ void RandomParam(std::vector<ScoreType> & p, ScoreType mini, ScoreType maxi){
 }
 
 void copyParam( std::vector<TexelParam<ScoreType> > & param, const std::vector<ScoreType> & value, std::vector<ScoreType> & backup){
-    for(int k = 0 ; k < param.size() ; ++k){
+    for(size_t k = 0 ; k < param.size() ; ++k){
         backup[k] = param[k];
         param[k] = value[k];
     }
 }
 
 void restoreParam( std::vector<TexelParam<ScoreType> > & param, const std::vector<ScoreType> & value){
-    for(int k = 0 ; k < param.size() ; ++k){
+    for(size_t k = 0 ; k < param.size() ; ++k){
         param[k] = value[k];
     }
 }
@@ -394,14 +394,14 @@ std::vector<TexelParam<ScoreType> > TexelOptimizePSO(const std::vector<TexelPara
     while ( true ) {
         Randomize(data, batchSize);
         for(auto it = particles.begin() ; it != particles.end() ; ++it){
-            for(int k = 0 ; k < curParam.size() ; ++k){
+            for(size_t k = 0 ; k < curParam.size() ; ++k){
                 static std::mt19937 mt(42); // fixed seed
                 static std::uniform_real_distribution<double> dist(0,1);
                 double rp = dist(mt);
                 double rg = dist(mt);
                 (*it).velocity[k] = ScoreType(omega * (*it).velocity[k] + phip * rp * ((*it).best[k] - (*it).param[k]) + phig * rg * (swarmBest[k] - ((*it).param[k])));
             }
-            for(int k = 0 ; k < curParam.size() ; ++k){
+            for(size_t k = 0 ; k < curParam.size() ; ++k){
                 (*it).param[k] += (*it).velocity[k];
             }
             std::vector<ScoreType> backup(curParam.size());
@@ -562,7 +562,7 @@ void TexelTuning(const std::string & filename) {
     Logging::LogIt(Logging::logInfo) << "Running texel tuning with file " << filename;
     std::vector<std::string> positions;
     ExtendedPosition::readEPDFile(filename,positions);
-    for(int k = 0 ; k < positions.size() ; ++k){
+    for(size_t k = 0 ; k < positions.size() ; ++k){
         ExtendedPosition * p = new ExtendedPosition(positions[k],false);
         data.push_back({p, getResult(p->_extendedParams["c9"][0])});
         // +1 white win, -1 black wins, 0 draw
@@ -579,6 +579,7 @@ void TexelTuning(const std::string & filename) {
 
     std::vector<Texel::TexelParam<ScoreType> > guess;
 
+    /*
     guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wp+PieceShift],    20,  200, "pawn",     [](const ScoreType& s){Values[P_bp+PieceShift] = -s;}));
     guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wn+PieceShift],   150,  600, "knight",   [](const ScoreType& s){Values[P_bn+PieceShift] = -s;}));
     guess.push_back(Texel::TexelParam<ScoreType>(Values[P_wb+PieceShift],   150,  600, "bishop",   [](const ScoreType& s){Values[P_bb+PieceShift] = -s;}));
@@ -589,6 +590,9 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wb+PieceShift], 150,  600, "EGbishop", [](const ScoreType& s){ValuesEG[P_bb+PieceShift] = -s;}));
     guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wr+PieceShift], 200,  800, "EGrook",   [](const ScoreType& s){ValuesEG[P_br+PieceShift] = -s;}));
     guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wq+PieceShift], 600, 1800, "EGqueen",  [](const ScoreType& s){ValuesEG[P_bq+PieceShift] = -s;}));
+    */
+
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::bishopPairBonus, -300, 300, "bishopPairBonus"));
 
     /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::katt_attack_weight[0]  , -150, 150,"katt_attack_ 0"));
