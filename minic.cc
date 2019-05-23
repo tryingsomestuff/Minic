@@ -34,7 +34,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_SYZYGY
 //#define WITH_UCI
 
-const std::string MinicVersion = "0.59";
+const std::string MinicVersion = "dev";
 
 /*
 //todo
@@ -2655,7 +2655,7 @@ inline void evalPawnWhite(const Position & p, BitBoard pieceBBiterator, ScoreTyp
             const float factorFree      = 1+((BB::mask[k].frontSpan[Co_White] & p.blackPiece) == 0ull) * EvalConfig::freePasserFactor;
             const float kingNearBonus   = EvalConfig::kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.bk, k) - chebyshevDistance(p.wk, k));
             const bool unstoppable      = (p.mat[Co_Black][M_t] == 0)&&((chebyshevDistance(p.bk, SQFILE(k) + 56) - (!white2Play)) > std::min(5, chebyshevDistance(SQFILE(k) + 56, k)));
-            const ScoreType rookBehind  = (countBit(p.whiteRook() & BB::mask[k].rearSpan[Co_White]) - countBit(p.blackRook() & BB::mask[k].rearSpan[Co_White])) * EvalConfig::rookBehindPassed;
+            const ScoreType rookBehind  = ScoreType(countBit(p.whiteRook() & BB::mask[k].rearSpan[Co_White]) - countBit(p.blackRook() & BB::mask[k].rearSpan[Co_White])) * EvalConfig::rookBehindPassed;
             if (unstoppable) scScaled += Values[P_wq+PieceShift] - Values[P_wp+PieceShift];
             else             scScaled += ScoreType( factorProtected * factorFree * (gp*EvalConfig::passerBonus[SQRANK(k)] + gpCompl*EvalConfig::passerBonusEG[SQRANK(k)]) + kingNearBonus + gpCompl*rookBehind);
         }
@@ -2681,7 +2681,7 @@ inline void evalPawnBlack(const Position & p, BitBoard pieceBBiterator, ScoreTyp
             const float factorFree      = 1+((BB::mask[k].frontSpan[Co_Black] & p.whitePiece) == 0ull) * EvalConfig::freePasserFactor;
             const float kingNearBonus   = EvalConfig::kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.wk, k) - chebyshevDistance(p.bk, k));
             const bool unstoppable      = (p.mat[Co_White][M_t] == 0)&&((chebyshevDistance(p.wk, SQFILE(k)) - white2Play) > std::min(5, chebyshevDistance(SQFILE(k), k)));
-            const ScoreType rookBehind  = (countBit(p.blackRook() & BB::mask[k].rearSpan[Co_Black]) - countBit(p.whiteRook() & BB::mask[k].rearSpan[Co_Black])) * EvalConfig::rookBehindPassed;
+            const ScoreType rookBehind  = ScoreType(countBit(p.blackRook() & BB::mask[k].rearSpan[Co_Black]) - countBit(p.whiteRook() & BB::mask[k].rearSpan[Co_Black])) * EvalConfig::rookBehindPassed;
             if (unstoppable) scScaled -= Values[P_wq+PieceShift] - Values[P_wp+PieceShift];
             else             scScaled -= ScoreType( factorProtected * factorFree * (gp*EvalConfig::passerBonus[7 - SQRANK(k)] + gpCompl*EvalConfig::passerBonusEG[7 - SQRANK(k)]) + kingNearBonus + gpCompl*rookBehind);
         }
