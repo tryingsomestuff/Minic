@@ -34,7 +34,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_SYZYGY
 //#define WITH_UCI
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "0.60";
 
 /*
 //todo
@@ -1415,7 +1415,7 @@ Counter ThreadPool::counter(Stats::StatId id) const { Counter n = 0; for (auto i
 bool apply(Position & p, const Move & m); //forward decl
 
 namespace TT{
-enum Bound{ B_exact = 0, B_alpha = 1, B_beta = 2, B_qsearch = 3 };
+enum Bound{ B_exact = 0, B_alpha = 1, B_beta = 2};
 struct Entry{
     Entry():m(INVALIDMOVE),score(0),eval(0),b(B_alpha),d(-1),h(0ull){}
     Entry(Move m, ScoreType s, ScoreType e, Bound b, DepthType d, Hash h) : m(m), score(s), eval(e), b(b), d(d), h(h){}
