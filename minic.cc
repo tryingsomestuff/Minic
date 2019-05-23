@@ -1415,7 +1415,7 @@ Counter ThreadPool::counter(Stats::StatId id) const { Counter n = 0; for (auto i
 bool apply(Position & p, const Move & m); //forward decl
 
 namespace TT{
-enum Bound{ B_exact = 0, B_alpha = 1, B_beta  = 2 };
+enum Bound{ B_exact = 0, B_alpha = 1, B_beta = 2, B_qsearch = 3 };
 struct Entry{
     Entry():m(INVALIDMOVE),score(0),eval(0),b(B_alpha),d(-1),h(0ull){}
     Entry(Move m, ScoreType s, ScoreType e, Bound b, DepthType d, Hash h) : m(m), score(s), eval(e), b(b), d(d), h(h){}
@@ -3008,15 +3008,19 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     float gp = 0;
     if (ply >= MAX_PLY - 1) return eval(p, gp);
 
-    TT::Entry e;
-    if ( qRoot ){
-       if (interiorNodeRecognizer<true,false,false>(p) == MaterialHash::Ter_Draw) return 0; ///@todo is that gain elo ???
-       if ( TT::getEntry(*this,computeHash(p), 0, e)) {
-          if (!pvnode && e.h != 0 && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) { return adjustHashScore(e.score, ply); }
-       }
-    }
+    Move bestMove = INVALIDMOVE;
 
     const bool isInCheck = isAttacked(p, kingSquare(p));
+    DepthType hashDepth = (isInCheck||qRoot) ? 0 : -1;
+
+    TT::Entry e;
+    if (TT::getEntry(*this, computeHash(p), hashDepth, e)) {
+        if (!pvnode && e.h != 0 && ((e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact))) { return adjustHashScore(e.score, ply); }
+        bestMove = e.m;
+    }
+    if ( qRoot ){
+       if (interiorNodeRecognizer<true,false,false>(p) == MaterialHash::Ter_Draw) return 0; ///@todo is that gain elo ???
+    }    
 
     ScoreType evalScore = isInCheck ? -MATE+ply : (e.h!=0?e.eval:eval(p,gp));
     // use tt score if possible and not in check 
@@ -3024,6 +3028,8 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     if ( evalScore >= beta ) return evalScore;
     if ( evalScore > alpha) alpha = evalScore;
+
+    TT::Bound b = TT::B_alpha;
 
     ScoreType bestScore = evalScore;
 
@@ -3048,13 +3054,22 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
         if (p.c == Co_Black && Move2To(*it) == p.wk) return MATE - ply + 1;
         const ScoreType score = -qsearch<false,false>(-beta,-alpha,p2,ply+1,seldepth);
         if ( score > bestScore){
+           bestMove = *it;
            bestScore = score;
+           b = TT::B_exact;
            if ( score > alpha ){
-              if ( score >= beta ) return score;
-              alpha = score;
+               if (score >= beta) {
+                   TT::setEntry({ bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),TT::B_beta,hashDepth,computeHash(p) });
+                   return score;
+               }
+               alpha = score;
            }
         }
     }
+
+    // store eval
+    TT::setEntry({ bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),b,hashDepth,computeHash(p) });
+
     ///@todo use hash also in qsearch ?
     return validCapFound?bestScore:eval(p, gp, true); // use material/draw evaluator on leaf
 }
