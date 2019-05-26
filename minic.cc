@@ -3057,9 +3057,7 @@ ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const
 
 template < bool qRoot, bool pvnode >
 ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth){
-
     if (stopFlag) return STOPSCORE; // no time check in qsearch, too slow
-
     ++stats.counters[Stats::sid_qnodes];
 
     alpha = std::max(alpha, (ScoreType)(-MATE + ply));
@@ -3070,7 +3068,6 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     float gp = 0;
     if (ply >= MAX_PLY - 1) return eval(p, gp);
-
     Move bestMove = INVALIDMOVE;
 
     const bool isInCheck = isAttacked(p, kingSquare(p));
@@ -3093,7 +3090,6 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     if ( evalScore > alpha) alpha = evalScore;
 
     TT::Bound b = TT::B_alpha;
-
     ScoreType bestScore = evalScore;
 
     MoveList moves;
@@ -3101,7 +3097,6 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     sort(*this,moves,p,qRoot||isInCheck,qRoot?&e:0); ///@todo only mvv-lva seems to lose elo
 
     const ScoreType alphaInit = alpha;
-
     bool validCapFound = false;
 
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
@@ -3129,11 +3124,8 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
            }
         }
     }
-
     // store eval
     TT::setEntry({ bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),b,hashDepth,computeHash(p) });
-
-    ///@todo use hash also in qsearch ?
     return validCapFound?bestScore:eval(p, gp, true); // use material/draw evaluator on leaf
 }
 
@@ -3214,18 +3206,15 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     */
 
     ScoreType bestScore = -MATE + ply;
-
     MoveList moves;
     bool moveGenerated = false;
     bool capMoveGenerated = false;
 
     bool futility = false, lmp = false, /*mateThreat = false,*/ historyPruning = false;
-
     const bool isNotEndGame = (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t] > 0); ///@todo better ?
 
     // prunings
     if ( !DynamicConfig::mateFinder && canPrune && !isInCheck && !isMateScore(beta) && !pvnode){ ///@todo this is not losing that much elo and allow for better check mate finding ...
-
         if (isNotEndGame) {
             // static null move
             if (StaticConfig::doStaticNullMove && depth <= StaticConfig::staticNullMoveMaxDepth && evalScore >= beta + StaticConfig::staticNullMoveDepthInit + StaticConfig::staticNullMoveDepthCoeff * depth) return ++stats.counters[Stats::sid_staticNullMove], evalScore;
@@ -3241,7 +3230,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         }
 
         if (isNotEndGame) {
-
             // null move
             PVList nullPV;
             if (StaticConfig::doNullMove && depth >= StaticConfig::nullMoveMinDepth) {
@@ -3391,9 +3379,9 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         int extension = 0;
         //if (!extension && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension; // we are in check (extension)
         //if (!extension && mateThreat && depth <= 4) ++stats.counters[Stats::sid_mateThreadExtension],++extension;
-        //if (!extension && p.lastMove != INVALIDMOVE && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; //todo recapture
+        //if (!extension && p.lastMove != INVALIDMOVE && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; //recapture
         //if (!extension && isCheck && !isBadCap(*it)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
-        //if (!extension && isAdvancedPawnPush && sameMove(*it, killerT.killers[0][p.ply])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo isPassed ?
+        //if (!extension && isAdvancedPawnPush && sameMove(*it, killerT.killers[0][p.ply])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo and isPassed ?
         if (!extension && isCastling(*it) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
         // pvs
         if (validMoveCount < 2 || !StaticConfig::doPVS) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck);
@@ -3457,14 +3445,13 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     }
 
     if ( validMoveCount==0 ) return (isInCheck || skipMove!=INVALIDMOVE)?-MATE + ply : 0;
-    ///@todo here not checking for alphaUpdated seems to LOSS elo !!!
+    ///@todo here not checking for alphaUpdated or bestScoreUpdated seems to LOSS elo !!!
     if ( skipMove==INVALIDMOVE && /*alphaUpdated*/ bestScoreUpdated ) TT::setEntry({bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),hashBound,depth,computeHash(p)});
 
     return bestScore;
 }
 
 PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
-
     // a playing level feature for the poor ...
     ///@todo more things shall depend on level
     d=DynamicConfig::level==10?d:DynamicConfig::level;
