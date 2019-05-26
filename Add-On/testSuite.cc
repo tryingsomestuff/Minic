@@ -31,7 +31,7 @@ std::string showAlgAbr(Move m, const Position & p) {
     Piece t = p.b[from];
 
     // add piece type if not pawn
-    s+= Names[PieceShift + std::abs(t)];
+    s+= PieceNames[PieceShift + std::abs(t)];
     if ( t==P_wp || t==P_bp ) s.clear(); // no piece symbol for pawn
 
     // ensure move is not ambiguous

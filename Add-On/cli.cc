@@ -19,7 +19,7 @@ void pstMean(){
         for(int k = 0 ; k < 64 ; ++k){
            sum += EvalConfig::PST[i][k];
         }
-        Logging::LogIt(Logging::logInfo) << Names[i+1+PieceShift] << " " << sum/divisor;
+        Logging::LogIt(Logging::logInfo) << PieceNames[i+1+PieceShift] << " " << sum/divisor;
         for(int k = ((i==0)?8:0) ; k < ((i==0)?56:64) ; ++k){
             if (k%8==0) std::cout << std::endl;
             std::cout << EvalConfig::PST[i][k]-sum/divisor << ",";
@@ -29,7 +29,7 @@ void pstMean(){
         for(int k = 0 ; k < 64 ; ++k){
            sum += EvalConfig::PSTEG[i][k];
         }
-        Logging::LogIt(Logging::logInfo) << Names[i+1+PieceShift] << "EG " << sum/divisor;
+        Logging::LogIt(Logging::logInfo) << PieceNames[i+1+PieceShift] << "EG " << sum/divisor;
         for(int k = ((i==0)?8:0) ; k < ((i==0)?56:64) ; ++k){
             if (k%8==0) std::cout << std::endl;
             std::cout << EvalConfig::PSTEG[i][k]-sum/divisor << ",";
