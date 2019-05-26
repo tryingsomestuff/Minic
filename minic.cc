@@ -103,13 +103,9 @@ typedef std::vector<Square> SquareList;
 typedef std::vector<Move> PVList;
 
 namespace Logging {
-
     enum COMType { CT_xboard = 0, CT_uci = 1 };
-
     COMType ct = CT_xboard;
-
     inline void hellooo() { std::cout << "# This is Minic version " << MinicVersion << std::endl; }
-
     inline std::string showDate() {
         std::stringstream str;
         auto msecEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch());
@@ -119,11 +115,8 @@ namespace Logging {
         str << buffer << "-" << std::setw(3) << std::setfill('0') << msecEpoch.count() % 1000;
         return str.str();
     }
-
     enum LogLevel : unsigned char { logTrace = 0, logDebug = 1, logInfo = 2, logGUI = 3, logWarn = 4, logError = 5, logFatal = 6};
-
     std::string backtrace() { return "@todo:: backtrace"; } ///@todo find a very simple portable implementation
-
     class LogIt {
         friend void init();
     public:
@@ -145,29 +138,23 @@ namespace Logging {
             if (_level >= logError) std::cout << backtrace() << std::endl;
             if (_level >= logFatal) exit(1);
         }
-
     private:
         static std::mutex      _mutex;
         std::ostringstream     _buffer;
         LogLevel               _level;
         static std::unique_ptr<std::ofstream> _of;
     };
-
     void init(){
         if ( DynamicConfig::debugMode ){ if ( DynamicConfig::debugFile.empty()) DynamicConfig::debugFile = "minic.debug"; }
         LogIt::_of = std::unique_ptr<std::ofstream>(new std::ofstream(DynamicConfig::debugFile));
     }
-
     std::mutex LogIt::_mutex;
     std::unique_ptr<std::ofstream> LogIt::_of;
-
 }
 
 namespace Options {
-
     nlohmann::json json;
     std::vector<std::string> args;
-
     void initOptions(int argc, char ** argv) {
         for (int i = 1; i < argc; ++i) args.push_back(argv[i]);
         std::ifstream str("minic.json");
@@ -177,7 +164,6 @@ namespace Options {
             if (!json.is_object()) Logging::LogIt(Logging::logError) << "JSON is not an object";
         }
     }
-
     template<typename T> struct OptionValue {};
     template<> struct OptionValue<bool> {
         const bool value = false;
@@ -204,7 +190,6 @@ namespace Options {
         const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_string;
         static const bool clampAllowed = false;
     };
-
     // from argv (override json)
     template<typename T> T getOptionCLI(bool & found, const std::string & key, T defaultValue = OptionValue<T>().value) {
         found = false;
@@ -220,7 +205,6 @@ namespace Options {
         found = true;
         return ret;
     }
-
     template<typename T> struct Validator {
         Validator() :hasMin(false), hasMax(false) {}
         Validator & setMin(const T & v) { minValue = v; hasMin = true; return *this; }
@@ -229,7 +213,6 @@ namespace Options {
         T minValue, maxValue;
         T get(const T & v)const { return std::min(hasMax ? maxValue : v, std::max(hasMin ? minValue : v, v)); }
     };
-
     // from json
     template<typename T> T getOption(const std::string & key, T defaultValue = OptionValue<T>().value, const Validator<T> & v = Validator<T>()) {
         bool found = false;
@@ -244,7 +227,6 @@ namespace Options {
             return OptionValue<T>().clampAllowed ? v.get(val.get<T>()) : val.get<T>();
         }
     }
-
 }
 
 #define GETOPT(  name,type)                 DynamicConfig::name = Options::getOption<type>(#name);
@@ -633,7 +615,6 @@ const BitBoard rank7                     = 0x00ff000000000000;
 const BitBoard rank8                     = 0xff00000000000000;
 const BitBoard ranks[8] = {rank1,rank2,rank3,rank4,rank5,rank6,rank7,rank8};
 const BitBoard center = BBSq_d4 | BBSq_d5 | BBSq_e4 | BBSq_e5;
-BitBoard dummy                           = 0x0ull;
 
 std::string showBitBoard(const BitBoard & b) {
     std::bitset<64> bs(b);
@@ -3223,7 +3204,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
 #ifdef WITH_SYZYGY
     ScoreType tbScore = 0;
-    if ( !rootnode && countBit(p.whitePiece|p.blackPiece) <= SyzygyTb::MAX_TB_MEN && SyzygyTb::probe_wdl(p, tbScore, false) > 0){
+    if ( !rootnode && int(countBit(p.whitePiece|p.blackPiece)) <= SyzygyTb::MAX_TB_MEN && SyzygyTb::probe_wdl(p, tbScore, false) > 0){
        TT::setEntry({INVALIDMOVE,createHashScore(tbScore,ply),eval(p, gp),TT::B_exact,DepthType(200),computeHash(p)});
        return tbScore;
     }
@@ -3379,7 +3360,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     }
 
 #ifdef WITH_SYZYGY
-    if (rootnode && countBit(p.whitePiece | p.blackPiece) <= SyzygyTb::MAX_TB_MEN) {
+    if (rootnode && int(countBit(p.whitePiece | p.blackPiece)) <= SyzygyTb::MAX_TB_MEN) {
         ScoreType tbScore = 0;
         if (SyzygyTb::probe_root(*this, p, tbScore, moves) < 0) { // only good moves if TB success
             generate(p, moves, capMoveGenerated ? GP_quiet : GP_all, capMoveGenerated);
@@ -3958,6 +3939,10 @@ void xboard(){
 
 #ifdef DEBUG_TOOL
 #include "Add-On/cli.cc"
+#endif
+
+#if defined(WITH_TEXEL_TUNING) || defined(WITH_TEST_SUITE)
+#include "Add-On/extendedPosition.cc"
 #endif
 
 #ifdef WITH_TEXEL_TUNING
