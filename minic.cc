@@ -34,7 +34,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_SYZYGY
 //#define WITH_UCI
 
-const std::string MinicVersion = "0.60";
+const std::string MinicVersion = "dev";
 
 /*
 //todo
@@ -55,6 +55,9 @@ const std::string MinicVersion = "0.60";
 
 #define SQFILE(s) ((s)&7)
 #define SQRANK(s) ((s)>>3)
+#define MakeSquare(f,r) Square(((r) << 3) + (f))
+#define VFlip(s) ((s)^Sq_a8)
+#define HFlip(s) ((s)^7)
 
 namespace DynamicConfig{
     bool mateFinder        = false;
@@ -501,6 +504,7 @@ std::string FileNames[8]      = { "a", "b", "c", "d", "e", "f", "g", "h" };
 std::string RankNames[8]      = { "1", "2", "3", "4", "5", "6", "7", "8" };
 enum Sq : char { Sq_a1 =  0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1,Sq_a2,Sq_b2,Sq_c2,Sq_d2,Sq_e2,Sq_f2,Sq_g2,Sq_h2,Sq_a3,Sq_b3,Sq_c3,Sq_d3,Sq_e3,Sq_f3,Sq_g3,Sq_h3,Sq_a4,Sq_b4,Sq_c4,Sq_d4,Sq_e4,Sq_f4,Sq_g4,Sq_h4,Sq_a5,Sq_b5,Sq_c5,Sq_d5,Sq_e5,Sq_f5,Sq_g5,Sq_h5,Sq_a6,Sq_b6,Sq_c6,Sq_d6,Sq_e6,Sq_f6,Sq_g6,Sq_h6,Sq_a7,Sq_b7,Sq_c7,Sq_d7,Sq_e7,Sq_f7,Sq_g7,Sq_h7,Sq_a8,Sq_b8,Sq_c8,Sq_d8,Sq_e8,Sq_f8,Sq_g8,Sq_h8};
 enum File : char { File_a = 0,File_b,File_c,File_d,File_e,File_f,File_g,File_h};
+enum Rank : char { Rank_1 = 0,Rank_2,Rank_3,Rank_4,Rank_5,Rank_6,Rank_7,Rank_8};
 
 enum Castling : char{ C_none= 0, C_wks = 1, C_wqs = 2, C_bks = 4, C_bqs = 8 };
 
@@ -525,6 +529,7 @@ enum MType : char{
 Piece promShift(MType mt){ assert(mt>=T_promq); assert(mt<=T_cappromn); return Piece(P_wq - (mt%4));}
 
 enum Color : char{ Co_None  = -1,   Co_White = 0,   Co_Black = 1 };
+constexpr Color operator~(Color c){return Color(c^Co_Black);} // switch color
 
 // ttmove 3000, promcap >1000, cap, checks, killers, castling, other by history < 200.
 ScoreType MoveScoring[16] = { 0, 1000, 1100, 300, 950, 500, 350, 300, 1950, 1500, 1350, 1300, 250, 250, 250, 250 };
@@ -662,6 +667,9 @@ struct Position{
     inline BitBoard & whiteQueen () {return allB[11];}
     inline BitBoard & whiteKing  () {return allB[12];}
 
+    template<Piece pp>
+    inline BitBoard & pieces(Color c){ return allB[(1-2*c)*pp+PieceShift]; }
+
     inline const BitBoard & blackKing  ()const {return allB[0];}
     inline const BitBoard & blackQueen ()const {return allB[1];}
     inline const BitBoard & blackRook  ()const {return allB[2];}
@@ -674,6 +682,9 @@ struct Position{
     inline const BitBoard & whiteRook  ()const {return allB[10];}
     inline const BitBoard & whiteQueen ()const {return allB[11];}
     inline const BitBoard & whiteKing  ()const {return allB[12];}
+
+    template<Piece pp>
+    inline const BitBoard & pieces(Color c)const{ return allB[(1-2*c)*pp+PieceShift]; }
 
     BitBoard whitePiece = 0ull;
     BitBoard blackPiece = 0ull;
@@ -696,7 +707,207 @@ struct Position{
     Material mat = {{{{0}}}};
 };
 
-inline Color opponentColor(const Color c){ return Color((c+1)%2);}
+// HQ BB code from Amoeba
+namespace BB {
+inline BitBoard shiftSouth    (BitBoard bitBoard) { return bitBoard >> 8; }
+inline BitBoard shiftNorth    (BitBoard bitBoard) { return bitBoard << 8; }
+inline BitBoard shiftWest     (BitBoard bitBoard) { return bitBoard >> 1 & ~fileH; }
+inline BitBoard shiftEast     (BitBoard bitBoard) { return bitBoard << 1 & ~fileA; }
+inline BitBoard shiftNorthEast(BitBoard bitBoard) { return bitBoard << 9 & ~fileA; }
+inline BitBoard shiftNorthWest(BitBoard bitBoard) { return bitBoard << 7 & ~fileH; }
+inline BitBoard shiftSouthEast(BitBoard bitBoard) { return bitBoard >> 7 & ~fileA; }
+inline BitBoard shiftSouthWest(BitBoard bitBoard) { return bitBoard >> 9 & ~fileH; }
+
+int ranks[512];
+struct Mask {
+    BitBoard bbsquare, diagonal, antidiagonal, file, kingZone, pawnAttack[2], push[2], dpush[2], enpassant, knight, king, frontSpan[2], rearSpan[2], passerSpan[2], attackFrontSpan[2], between[64];
+    Mask():bbsquare(0ull), diagonal(0ull), antidiagonal(0ull), file(0ull), kingZone(0ull), pawnAttack{ 0ull,0ull }, push{ 0ull,0ull }, dpush{ 0ull,0ull }, enpassant(0ull), knight(0ull), king(0ull), frontSpan{0ull}, rearSpan{0ull}, passerSpan{0ull}, attackFrontSpan{0ull}, between{0ull}{}
+};
+Mask mask[64];
+
+inline void initMask() {
+    Logging::LogIt(Logging::logInfo) << "Init mask" ;
+    int d[64][64] = { 0 };
+    for (Square x = 0; x < 64; ++x) {
+        mask[x].bbsquare = SquareToBitboard(x);
+        for (int i = -1; i <= 1; ++i) {
+            for (int j = -1; j <= 1; ++j) {
+                if (i == 0 && j == 0) continue;
+                for (int r = (x >> 3) + i, f = (x & 7) + j; 0 <= r && r < 8 && 0 <= f && f < 8; r += i, f += j) {
+                    const int y = 8 * r + f;
+                    d[x][y] = (8 * i + j);
+                    for (int z = x + d[x][y]; z != y; z += d[x][y]) mask[x].between[y] |= SquareToBitboard(z);
+                }
+                const int r = x >> 3;
+                const int f = x & 7;
+                if ( 0 <= r+i && r+i < 8 && 0 <= f+j && f+j < 8) mask[x].kingZone |= SquareToBitboard(((x >> 3) + i)*8+(x & 7) + j);
+            }
+        }
+
+        for (int y = x - 9; y >= 0 && d[x][y] == -9; y -= 9) mask[x].diagonal |= SquareToBitboard(y);
+        for (int y = x + 9; y < 64 && d[x][y] ==  9; y += 9) mask[x].diagonal |= SquareToBitboard(y);
+
+        for (int y = x - 7; y >= 0 && d[x][y] == -7; y -= 7) mask[x].antidiagonal |= SquareToBitboard(y);
+        for (int y = x + 7; y < 64 && d[x][y] ==  7; y += 7) mask[x].antidiagonal |= SquareToBitboard(y);
+
+        for (int y = x - 8; y >= 0; y -= 8) mask[x].file |= SquareToBitboard(y);
+        for (int y = x + 8; y < 64; y += 8) mask[x].file |= SquareToBitboard(y);
+
+        int f = x & 07;
+        int r = x >> 3;
+        for (int i = -1, c = 1, dp = 6; i <= 1; i += 2, c = 0, dp = 1) {
+            for (int j = -1; j <= 1; j += 2) if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) {  mask[x].pawnAttack[c] |= SquareToBitboard((r + i) * 8 + (f + j)); }
+            if (0 <= r + i && r + i < 8) {
+                mask[x].push[c] = SquareToBitboard((r + i) * 8 + f);
+                if ( r == dp ) mask[x].dpush[c] = SquareToBitboard((r + 2*i) * 8 + f); // double push
+            }
+        }
+        if (r == 3 || r == 4) {
+            if (f > 0) mask[x].enpassant |= SquareToBitboard(x - 1);
+            if (f < 7) mask[x].enpassant |= SquareToBitboard(x + 1);
+        }
+
+        for (int i = -2; i <= 2; i = (i == -1 ? 1 : i + 1)) {
+            for (int j = -2; j <= 2; ++j) {
+                if (i == j || i == -j || j == 0) continue;
+                if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) { mask[x].knight |= SquareToBitboard(8 * (r + i) + (f + j)); }
+            }
+        }
+
+        for (int i = -1; i <= 1; ++i) {
+            for (int j = -1; j <= 1; ++j) {
+                if (i == 0 && j == 0) continue;
+                if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) { mask[x].king |= SquareToBitboard(8 * (r + i) + (f + j)); }
+            }
+        }
+
+        BitBoard wspan = SquareToBitboardTable(x);
+        wspan |= wspan << 8; wspan |= wspan << 16; wspan |= wspan << 32;
+        wspan = shiftNorth(wspan);
+        BitBoard bspan = SquareToBitboardTable(x);
+        bspan |= bspan >> 8; bspan |= bspan >> 16; bspan |= bspan >> 32;
+        bspan = shiftSouth(bspan);
+
+        mask[x].frontSpan[Co_White] = mask[x].rearSpan[Co_Black] = wspan;
+        mask[x].frontSpan[Co_Black] = mask[x].rearSpan[Co_White] = bspan;
+
+        mask[x].passerSpan[Co_White] = wspan;
+        mask[x].passerSpan[Co_White] |= shiftWest(wspan);
+        mask[x].passerSpan[Co_White] |= shiftEast(wspan);
+        mask[x].passerSpan[Co_Black] = bspan;
+        mask[x].passerSpan[Co_Black] |= shiftWest(bspan);
+        mask[x].passerSpan[Co_Black] |= shiftEast(bspan);
+
+        mask[x].attackFrontSpan[Co_White] = shiftWest(wspan);
+        mask[x].attackFrontSpan[Co_White] |= shiftEast(wspan);
+        mask[x].attackFrontSpan[Co_Black] = shiftWest(bspan);
+        mask[x].attackFrontSpan[Co_Black] |= shiftEast(bspan);
+    }
+
+    for (Square o = 0; o < 64; ++o) {
+        for (int k = 0; k < 8; ++k) {
+            int y = 0;
+            for (int x = k - 1; x >= 0; --x) {
+                const BitBoard b = SquareToBitboard(x);
+                y |= b;
+                if (((o << 1) & b) == b) break;
+            }
+            for (int x = k + 1; x < 8; ++x) {
+                const BitBoard b = SquareToBitboard(x);
+                y |= b;
+                if (((o << 1) & b) == b) break;
+            }
+            ranks[o * 8 + k] = y;
+        }
+    }
+}
+
+inline BitBoard attack(const BitBoard occupancy, const Square x, const BitBoard m) {
+    BitBoard forward = occupancy & m;
+    BitBoard reverse = swapbits(forward);
+    forward -= SquareToBitboard(x);
+    reverse -= SquareToBitboard(x^63);
+    forward ^= swapbits(reverse);
+    forward &= m;
+    return forward;
+}
+
+inline BitBoard rankAttack(const BitBoard occupancy, const Square x) {
+    const int f = x & 7; const int r = x & 56;
+    return BitBoard(ranks[((occupancy >> r) & 126) * 4 + f]) << r;
+}
+
+inline BitBoard fileAttack(const BitBoard occupancy, const Square x) { return attack(occupancy, x, mask[x].file); }
+
+inline BitBoard diagonalAttack(const BitBoard occupancy, const Square x) { return attack(occupancy, x, mask[x].diagonal); }
+
+inline BitBoard antidiagonalAttack(const BitBoard occupancy, const Square x) { return attack(occupancy, x, mask[x].antidiagonal); }
+
+template < Piece > BitBoard coverage(const Square x, const BitBoard occupancy = 0, const Color c = Co_White) { assert(false); return 0ull; }
+template <       > BitBoard coverage<P_wp>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].pawnAttack[c]; }
+template <       > BitBoard coverage<P_wn>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].knight; }
+template <       > BitBoard coverage<P_wb>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return diagonalAttack(occupancy, x) | antidiagonalAttack(occupancy, x); }
+template <       > BitBoard coverage<P_wr>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return fileAttack(occupancy, x) | rankAttack(occupancy, x); }
+template <       > BitBoard coverage<P_wq>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return diagonalAttack(occupancy, x) | antidiagonalAttack(occupancy, x) | fileAttack(occupancy, x) | rankAttack(occupancy, x); }
+template <       > BitBoard coverage<P_wk>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].king; }
+
+template < Piece pp > inline BitBoard attack(const Square x, const BitBoard target, const BitBoard occupancy = 0, const Color c = Co_White) { return coverage<pp>(x, occupancy, c) & target; }
+
+int popBit(BitBoard & b) {
+    assert( b != 0ull);
+    unsigned long i = 0;
+    bsf(b, i);
+    b &= b - 1;
+    return i;
+}
+
+Square SquareFromBitBoard(const BitBoard & b) {
+    assert(b != 0ull);
+    unsigned long i = 0;
+    bsf(b, i);
+    return Square(i);
+}
+
+BitBoard isAttackedBB(const Position &p, const Square x, Color c) {
+    if (c == Co_White) return attack<P_wb>(x, p.blackBishop() | p.blackQueen(), p.occupancy) | attack<P_wr>(x, p.blackRook() | p.blackQueen(), p.occupancy) | attack<P_wn>(x, p.blackKnight()) | attack<P_wp>(x, p.blackPawn(), p.occupancy, Co_White) | attack<P_wk>(x, p.blackKing());
+    else               return attack<P_wb>(x, p.whiteBishop() | p.whiteQueen(), p.occupancy) | attack<P_wr>(x, p.whiteRook() | p.whiteQueen(), p.occupancy) | attack<P_wn>(x, p.whiteKnight()) | attack<P_wp>(x, p.whitePawn(), p.occupancy, Co_Black) | attack<P_wk>(x, p.whiteKing());
+}
+
+// generated incrementally to avoid expensive sorting after generation
+bool getAttackers(const Position & p, const Square x, SquareList & attakers) {
+    attakers.clear();
+    if (p.c == Co_White){
+        BitBoard att = attack<P_wb>(x, p.blackQueen(), p.occupancy);
+        while (att) attakers.push_back(popBit(att));
+        att = attack<P_wr>(x, p.blackQueen(), p.occupancy);
+        while (att) attakers.push_back(popBit(att));
+        att = attack<P_wr>(x, p.blackRook(), p.occupancy);
+        while (att) attakers.push_back(popBit(att));
+        att = attack<P_wb>(x, p.blackBishop(), p.occupancy);
+        while (att) attakers.push_back(popBit(att));
+        att = attack<P_wn>(x, p.blackKnight());
+        while (att) attakers.push_back(popBit(att));
+        att = attack<P_wp>(x, p.blackPawn(), p.occupancy, Co_White);
+        while (att) attakers.push_back(popBit(att));
+    }
+    else{
+        BitBoard att = attack<P_wb>(x, p.whiteQueen(), p.occupancy);
+        while (att) attakers.push_back(popBit(att));
+        att = attack<P_wr>(x, p.whiteQueen(), p.occupancy);
+        while (att) attakers.push_back(popBit(att));
+        att = attack<P_wr>(x, p.whiteRook(), p.occupancy);
+        while (att) attakers.push_back(popBit(att));
+        att = attack<P_wb>(x, p.whiteBishop(), p.occupancy);
+        while (att) attakers.push_back(popBit(att));
+        att = attack<P_wn>(x, p.whiteKnight());
+        while (att) attakers.push_back(popBit(att));
+        att = attack<P_wp>(x, p.whitePawn(), p.occupancy, Co_Black);
+        while (att) attakers.push_back(popBit(att));
+    }
+    return !attakers.empty();
+}
+
+} // BB
 
 inline ScoreType Move2Score(Move h) { assert(h != INVALIDMOVE); return (h >> 16) & 0xFFFF; }
 inline Square    Move2From (Move h) { assert(h != INVALIDMOVE); return (h >> 10) & 0x3F  ; }
@@ -862,7 +1073,7 @@ namespace MaterialHash { // from Gull
     const int pushClose[8] = { 0, 0, 100, 80, 60, 40, 20,  10 };
     const int pushAway [8] = { 0, 5,  20, 40, 60, 80, 90, 100 };
 
-    ScoreType helperKXK(const Position &p, Color winningSide){
+    ScoreType helperKXK(const Position &p, Color winningSide, ScoreType s){
         if (p.c != winningSide ){ // stale mate detection for losing side
            ///@todo
         }
@@ -870,30 +1081,110 @@ namespace MaterialHash { // from Gull
         const Square winningK = (whiteWins ? p.wk : p.bk);
         const Square losingK  = (whiteWins ? p.bk : p.wk);
         const ScoreType sc = pushToEdges[losingK] + pushClose[chebyshevDistance(winningK,losingK)];
-        return whiteWins?sc:-sc;
+        return s + whiteWins?sc:-sc;
     }
-    ScoreType helperKmmK(const Position &p, Color winningSide){
+    ScoreType helperKmmK(const Position &p, Color winningSide, ScoreType s){
         const bool whiteWins = winningSide == Co_White;
         Square winningK = (whiteWins ? p.wk : p.bk);
         Square losingK  = (whiteWins ? p.bk : p.wk);
         ///@todo sometimes going to the bad corner ... why
         if ( ((p.whiteBishop()|p.blackBishop()) & whiteSquare) != 0 ){
-            winningK = ~winningK;
-            losingK  = ~losingK;
+            winningK = VFlip(winningK);
+            losingK  = VFlip(losingK);
         }
         const ScoreType sc = pushToCorners[losingK] + pushClose[chebyshevDistance(winningK,losingK)];
-        return whiteWins?sc:-sc;
+        return s + whiteWins?sc:-sc;
     }
-    ScoreType helperDummy(const Position &p, Color winningSide){
+    ScoreType helperDummy(const Position &, Color , ScoreType){
         return 0;
     }
 
-    ScoreType (* helperTable[TotalMat])(const Position &, Color );
+// idea taken from Stockfish or public-domain KPK from HGM
+namespace KPK{
+
+Square normalize(const Position& p, Color strongSide, Square sq) {
+   assert(countBit(BB::SquareFromBitBoard(p.pieces<P_wp>(strongSide))) == 1);
+   if (SQFILE(BB::SquareFromBitBoard(BB::SquareFromBitBoard(p.pieces<P_wp>(strongSide)))) >= File_e) sq = Square(HFlip(sq));
+   return strongSide == Co_White ? sq : VFlip(sq);
+}
+
+constexpr unsigned maxIndex = 2*24*64*64;
+uint32_t KPKBitbase[maxIndex/32];
+unsigned index(Color us, Square bksq, Square wksq, Square psq) { return wksq | (bksq << 6) | (us << 12) | (SQFILE(psq) << 13) | ((6 - SQRANK(psq)) << 15);}
+enum kpk_result : unsigned char { kpk_invalid = 0, kpk_unknown = 1, kpk_draw = 2, kpk_win = 4};
+kpk_result& operator|=(kpk_result& r, kpk_result v) { return r = kpk_result(r | v); }
+
+struct KPKPosition {
+    KPKPosition() = default;
+    explicit KPKPosition(unsigned idx){
+        ksq[Co_White] = Square( idx        & 0x3F);
+        ksq[Co_Black] = Square((idx >>  6) & 0x3F);
+        us            = Color ((idx >> 12) & 0x01);
+        psq           = MakeSquare(File((idx >> 13) & 0x3), Rank(6 - ((idx >> 15) & 0x7)));
+        if ( chebyshevDistance(ksq[Co_White], ksq[Co_Black]) <= 1 || ksq[Co_White] == psq || ksq[Co_Black] == psq || (us == Co_White && (BB::mask[psq].pawnAttack[Co_White] & SquareToBitboard(ksq[Co_Black])))) result = kpk_invalid;
+        else if ( us == Co_White && SQRANK(psq) == 6 && ksq[us] != psq + 8 && ( chebyshevDistance(ksq[~us], psq + 8) > 1 || (BB::mask[ksq[us]].king & SquareToBitboard(psq + 8)))) result = kpk_win;
+        else if ( us == Co_Black && ( !(BB::mask[ksq[us]].king & ~(BB::mask[ksq[~us]].king | BB::mask[psq].pawnAttack[~us])) || (BB::mask[ksq[us]].king & SquareToBitboard(psq) & ~BB::mask[ksq[~us]].king))) result = kpk_draw;
+        else result = kpk_unknown;
+    }
+    operator kpk_result() const { return result; }
+    kpk_result preCompute(const std::vector<KPKPosition>& db) { return us == Co_White ? preCompute<Co_White>(db) : preCompute<Co_Black>(db); }
+    template<Color Us> kpk_result preCompute(const std::vector<KPKPosition>& db) {
+        constexpr Color Them = (Us == Co_White ? Co_Black : Co_White);
+        constexpr kpk_result good = (Us == Co_White ? kpk_win  : kpk_draw);
+        constexpr kpk_result bad  = (Us == Co_White ? kpk_draw : kpk_win);
+        kpk_result r = kpk_invalid;
+        BitBoard b = BB::mask[ksq[us]].king;
+        while (b){
+           Square s = BB::popBit(b);
+           r |= Us == Co_White ? db[index(Them, ksq[Them], s, psq)] : db[index(Them, s, ksq[Them], psq)];
+        }
+        if (Us == Co_White){
+            if (SQRANK(psq) < 6) r |= db[index(Them, ksq[Them], ksq[Us], psq + 8)];
+            if (SQRANK(psq) == 1 && psq + 8 != ksq[Us] && psq + 8 != ksq[Them]) r |= db[index(Them, ksq[Them], ksq[Us], psq + 8 + 8)];
+        }
+        return result = r & good ? good : r & kpk_unknown ? kpk_unknown : bad;
+    }
+    Color us;
+    Square ksq[2], psq;
+    kpk_result result;
+};
+
+bool probe(Square wksq, Square wpsq, Square bksq, Color us) {
+    assert(SQFILE(wpsq) <= 4);
+    const unsigned idx = index(us, bksq, wksq, wpsq);
+    assert(idx < maxIndex);
+    return KPKBitbase[idx/32] & (1<<(idx&0x1F));
+}
+
+void init(){
+    Logging::LogIt(Logging::logInfo) << "KPK init";
+    std::vector<KPKPosition> db(maxIndex);
+    unsigned idx, repeat = 1;
+    for (idx = 0; idx < maxIndex; ++idx) db[idx] = KPKPosition(idx);
+    while (repeat) for (repeat = idx = 0; idx < maxIndex; ++idx) repeat |= (db[idx] == kpk_unknown && db[idx].preCompute(db) != kpk_unknown); 
+    for (idx = 0; idx < maxIndex; ++idx){ if (db[idx] == kpk_win) { KPKBitbase[idx / 32] |= 1 << (idx & 0x1F); } }
+    Logging::LogIt(Logging::logInfo) << "... KPK init done";
+}
+
+} // KPK
+
+    ScoreType helperKPK(const Position &p, Color strongSide, ScoreType s){
+       ///@todo maybe an incrementally updated piece square list can be cool ...
+       const Square wksq = KPK::normalize(p, strongSide, BB::SquareFromBitBoard(p.pieces<P_wk>(strongSide)));
+       const Square bksq = KPK::normalize(p, strongSide, BB::SquareFromBitBoard(p.pieces<P_wk>(~strongSide)));
+       const Square psq  = KPK::normalize(p, strongSide, BB::SquareFromBitBoard(p.pieces<P_wp>(strongSide)));
+       const Color us = strongSide == p.c ? Co_White:Co_Black;
+       if (!KPK::probe(wksq, psq, bksq, us)) return 0;
+       const ScoreType result = MATE/2 + ValuesEG[P_wp+PieceShift] + 10*SQRANK(psq); // ensure progress of pawn
+       return result; //strongSide == p.c ? result : -result;
+    }
+
+    ScoreType (* helperTable[TotalMat])(const Position &, Color, ScoreType );
     Terminaison materialHashTable[TotalMat];
 
     struct MaterialHashInitializer {
         MaterialHashInitializer(const Position::Material & mat, Terminaison t) { materialHashTable[getMaterialHash(mat)] = t; }
-        MaterialHashInitializer(const Position::Material & mat, Terminaison t, ScoreType (*helper)(const Position &, Color) ) { materialHashTable[getMaterialHash(mat)] = t; helperTable[getMaterialHash(mat)] = helper; }
+        MaterialHashInitializer(const Position::Material & mat, Terminaison t, ScoreType (*helper)(const Position &, Color, ScoreType) ) { materialHashTable[getMaterialHash(mat)] = t; helperTable[getMaterialHash(mat)] = helper; }
         static void init() {
             Logging::LogIt(Logging::logInfo) << "Material hash total : " << TotalMat;
             std::memset(materialHashTable, Ter_Unknown, sizeof(Terminaison)*TotalMat);
@@ -1040,6 +1331,8 @@ namespace MaterialHash { // from Gull
             DEF_MAT(KLPPKD, Ter_LikelyDraw)           DEF_MAT_REV(KDKLPP,KLPPKD)
             DEF_MAT(KDPPKL, Ter_LikelyDraw)           DEF_MAT_REV(KLKDPP,KDPPKL)
 
+            DEF_MAT_H(KPK, Ter_WhiteWinWithHelper,&helperKPK)    DEF_MAT_REV_H(KKP,KPK,&helperKPK)
+
             ///@todo other (with pawn ...)
         }
     };
@@ -1080,21 +1373,18 @@ void initMaterial(Position & p){
 
 void updateMaterialStd(Position &p, const Square toBeCaptured){
     const Piece pp = getPieceType(p,toBeCaptured);
-    const Color opp = opponentColor(p.c);
-    p.mat[opp][pp]--; // capture if to square is not empty
+    p.mat[~p.c][pp]--; // capture if to square is not empty
     updateMaterialOther(p);
 }
 
 void updateMaterialEp(Position &p){
-    const Color opp = opponentColor(p.c);
-    p.mat[opp][M_p]--; // ep if to square is empty
+    p.mat[~p.c][M_p]--; // ep if to square is empty
     updateMaterialOther(p);
 }
 
 void updateMaterialProm(Position &p, const Square toBeCaptured, MType mt){
     const Piece pp = getPieceType(p,toBeCaptured);
-    const Color opp = opponentColor(p.c);
-    if ( pp != P_none ) p.mat[opp][pp]--; // capture if to square is not empty
+    if ( pp != P_none ) p.mat[~p.c][pp]--; // capture if to square is not empty
     if ( isPromotion(mt) ) p.mat[p.c][promShift(mt)]++; // prom
     updateMaterialOther(p);
 }
@@ -1909,208 +2199,6 @@ int ThreadContext::getCurrentMoveMs() {
 Square kingSquare(const Position & p) { return (p.c == Co_White) ? p.wk : p.bk; }
 Square opponentKingSquare(const Position & p) { return (p.c == Co_White) ? p.bk : p.wk; }
 
-// HQ BB code from Amoeba
-namespace BB {
-inline BitBoard shiftSouth    (BitBoard bitBoard) { return bitBoard >> 8; }
-inline BitBoard shiftNorth    (BitBoard bitBoard) { return bitBoard << 8; }
-inline BitBoard shiftWest     (BitBoard bitBoard) { return bitBoard >> 1 & ~fileH; }
-inline BitBoard shiftEast     (BitBoard bitBoard) { return bitBoard << 1 & ~fileA; }
-inline BitBoard shiftNorthEast(BitBoard bitBoard) { return bitBoard << 9 & ~fileA; }
-inline BitBoard shiftNorthWest(BitBoard bitBoard) { return bitBoard << 7 & ~fileH; }
-inline BitBoard shiftSouthEast(BitBoard bitBoard) { return bitBoard >> 7 & ~fileA; }
-inline BitBoard shiftSouthWest(BitBoard bitBoard) { return bitBoard >> 9 & ~fileH; }
-
-int ranks[512];
-struct Mask {
-    BitBoard bbsquare, diagonal, antidiagonal, file, kingZone, pawnAttack[2], push[2], dpush[2], enpassant, knight, king, frontSpan[2], rearSpan[2], passerSpan[2], attackFrontSpan[2], between[64];
-    Mask():bbsquare(0ull), diagonal(0ull), antidiagonal(0ull), file(0ull), kingZone(0ull), pawnAttack{ 0ull,0ull }, push{ 0ull,0ull }, dpush{ 0ull,0ull }, enpassant(0ull), knight(0ull), king(0ull), frontSpan{0ull}, rearSpan{0ull}, passerSpan{0ull}, attackFrontSpan{0ull}, between{0ull}{}
-};
-Mask mask[64];
-
-inline void initMask() {
-    Logging::LogIt(Logging::logInfo) << "Init mask" ;
-    int d[64][64] = { 0 };
-    for (Square x = 0; x < 64; ++x) {
-        mask[x].bbsquare = SquareToBitboard(x);
-        for (int i = -1; i <= 1; ++i) {
-            for (int j = -1; j <= 1; ++j) {
-                if (i == 0 && j == 0) continue;
-                for (int r = (x >> 3) + i, f = (x & 7) + j; 0 <= r && r < 8 && 0 <= f && f < 8; r += i, f += j) {
-                    const int y = 8 * r + f;
-                    d[x][y] = (8 * i + j);
-                    for (int z = x + d[x][y]; z != y; z += d[x][y]) mask[x].between[y] |= SquareToBitboard(z);
-                }
-                const int r = x >> 3;
-                const int f = x & 7;
-                if ( 0 <= r+i && r+i < 8 && 0 <= f+j && f+j < 8) mask[x].kingZone |= SquareToBitboard(((x >> 3) + i)*8+(x & 7) + j);
-            }
-        }
-
-        for (int y = x - 9; y >= 0 && d[x][y] == -9; y -= 9) mask[x].diagonal |= SquareToBitboard(y);
-        for (int y = x + 9; y < 64 && d[x][y] ==  9; y += 9) mask[x].diagonal |= SquareToBitboard(y);
-
-        for (int y = x - 7; y >= 0 && d[x][y] == -7; y -= 7) mask[x].antidiagonal |= SquareToBitboard(y);
-        for (int y = x + 7; y < 64 && d[x][y] ==  7; y += 7) mask[x].antidiagonal |= SquareToBitboard(y);
-
-        for (int y = x - 8; y >= 0; y -= 8) mask[x].file |= SquareToBitboard(y);
-        for (int y = x + 8; y < 64; y += 8) mask[x].file |= SquareToBitboard(y);
-
-        int f = x & 07;
-        int r = x >> 3;
-        for (int i = -1, c = 1, dp = 6; i <= 1; i += 2, c = 0, dp = 1) {
-            for (int j = -1; j <= 1; j += 2) if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) {  mask[x].pawnAttack[c] |= SquareToBitboard((r + i) * 8 + (f + j)); }
-            if (0 <= r + i && r + i < 8) {
-                mask[x].push[c] = SquareToBitboard((r + i) * 8 + f);
-                if ( r == dp ) mask[x].dpush[c] = SquareToBitboard((r + 2*i) * 8 + f); // double push
-            }
-        }
-        if (r == 3 || r == 4) {
-            if (f > 0) mask[x].enpassant |= SquareToBitboard(x - 1);
-            if (f < 7) mask[x].enpassant |= SquareToBitboard(x + 1);
-        }
-
-        for (int i = -2; i <= 2; i = (i == -1 ? 1 : i + 1)) {
-            for (int j = -2; j <= 2; ++j) {
-                if (i == j || i == -j || j == 0) continue;
-                if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) { mask[x].knight |= SquareToBitboard(8 * (r + i) + (f + j)); }
-            }
-        }
-
-        for (int i = -1; i <= 1; ++i) {
-            for (int j = -1; j <= 1; ++j) {
-                if (i == 0 && j == 0) continue;
-                if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) { mask[x].king |= SquareToBitboard(8 * (r + i) + (f + j)); }
-            }
-        }
-
-        BitBoard wspan = SquareToBitboardTable(x);
-        wspan |= wspan << 8; wspan |= wspan << 16; wspan |= wspan << 32;
-        wspan = shiftNorth(wspan);
-        BitBoard bspan = SquareToBitboardTable(x);
-        bspan |= bspan >> 8; bspan |= bspan >> 16; bspan |= bspan >> 32;
-        bspan = shiftSouth(bspan);
-
-        mask[x].frontSpan[Co_White] = mask[x].rearSpan[Co_Black] = wspan;
-        mask[x].frontSpan[Co_Black] = mask[x].rearSpan[Co_White] = bspan;
-
-        mask[x].passerSpan[Co_White] = wspan;
-        mask[x].passerSpan[Co_White] |= shiftWest(wspan);
-        mask[x].passerSpan[Co_White] |= shiftEast(wspan);
-        mask[x].passerSpan[Co_Black] = bspan;
-        mask[x].passerSpan[Co_Black] |= shiftWest(bspan);
-        mask[x].passerSpan[Co_Black] |= shiftEast(bspan);
-
-        mask[x].attackFrontSpan[Co_White] = shiftWest(wspan);
-        mask[x].attackFrontSpan[Co_White] |= shiftEast(wspan);
-        mask[x].attackFrontSpan[Co_Black] = shiftWest(bspan);
-        mask[x].attackFrontSpan[Co_Black] |= shiftEast(bspan);
-    }
-
-    for (Square o = 0; o < 64; ++o) {
-        for (int k = 0; k < 8; ++k) {
-            int y = 0;
-            for (int x = k - 1; x >= 0; --x) {
-                const BitBoard b = SquareToBitboard(x);
-                y |= b;
-                if (((o << 1) & b) == b) break;
-            }
-            for (int x = k + 1; x < 8; ++x) {
-                const BitBoard b = SquareToBitboard(x);
-                y |= b;
-                if (((o << 1) & b) == b) break;
-            }
-            ranks[o * 8 + k] = y;
-        }
-    }
-}
-
-inline BitBoard attack(const BitBoard occupancy, const Square x, const BitBoard m) {
-    BitBoard forward = occupancy & m;
-    BitBoard reverse = swapbits(forward);
-    forward -= SquareToBitboard(x);
-    reverse -= SquareToBitboard(x^63);
-    forward ^= swapbits(reverse);
-    forward &= m;
-    return forward;
-}
-
-inline BitBoard rankAttack(const BitBoard occupancy, const Square x) {
-    const int f = x & 7; const int r = x & 56;
-    return BitBoard(ranks[((occupancy >> r) & 126) * 4 + f]) << r;
-}
-
-inline BitBoard fileAttack(const BitBoard occupancy, const Square x) { return attack(occupancy, x, mask[x].file); }
-
-inline BitBoard diagonalAttack(const BitBoard occupancy, const Square x) { return attack(occupancy, x, mask[x].diagonal); }
-
-inline BitBoard antidiagonalAttack(const BitBoard occupancy, const Square x) { return attack(occupancy, x, mask[x].antidiagonal); }
-
-template < Piece > BitBoard coverage(const Square x, const BitBoard occupancy = 0, const Color c = Co_White) { assert(false); return 0ull; }
-template <       > BitBoard coverage<P_wp>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].pawnAttack[c]; }
-template <       > BitBoard coverage<P_wn>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].knight; }
-template <       > BitBoard coverage<P_wb>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return diagonalAttack(occupancy, x) | antidiagonalAttack(occupancy, x); }
-template <       > BitBoard coverage<P_wr>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return fileAttack(occupancy, x) | rankAttack(occupancy, x); }
-template <       > BitBoard coverage<P_wq>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return diagonalAttack(occupancy, x) | antidiagonalAttack(occupancy, x) | fileAttack(occupancy, x) | rankAttack(occupancy, x); }
-template <       > BitBoard coverage<P_wk>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].king; }
-
-template < Piece pp > inline BitBoard attack(const Square x, const BitBoard target, const BitBoard occupancy = 0, const Color c = Co_White) { return coverage<pp>(x, occupancy, c) & target; }
-
-int popBit(BitBoard & b) {
-    assert( b != 0ull);
-    unsigned long i = 0;
-    bsf(b, i);
-    b &= b - 1;
-    return i;
-}
-
-Square SquareFromBitBoard(const BitBoard & b) {
-    assert(b != 0ull);
-    unsigned long i = 0;
-    bsf(b, i);
-    return Square(i);
-}
-
-BitBoard isAttackedBB(const Position &p, const Square x, Color c) {
-    if (c == Co_White) return attack<P_wb>(x, p.blackBishop() | p.blackQueen(), p.occupancy) | attack<P_wr>(x, p.blackRook() | p.blackQueen(), p.occupancy) | attack<P_wn>(x, p.blackKnight()) | attack<P_wp>(x, p.blackPawn(), p.occupancy, Co_White) | attack<P_wk>(x, p.blackKing());
-    else               return attack<P_wb>(x, p.whiteBishop() | p.whiteQueen(), p.occupancy) | attack<P_wr>(x, p.whiteRook() | p.whiteQueen(), p.occupancy) | attack<P_wn>(x, p.whiteKnight()) | attack<P_wp>(x, p.whitePawn(), p.occupancy, Co_Black) | attack<P_wk>(x, p.whiteKing());
-}
-
-// generated incrementally to avoid expensive sorting after generation
-bool getAttackers(const Position & p, const Square x, SquareList & attakers) {
-    attakers.clear();
-    if (p.c == Co_White){
-        BitBoard att = attack<P_wb>(x, p.blackQueen(), p.occupancy);
-        while (att) attakers.push_back(popBit(att));
-        att = attack<P_wr>(x, p.blackQueen(), p.occupancy);
-        while (att) attakers.push_back(popBit(att));
-        att = attack<P_wr>(x, p.blackRook(), p.occupancy);
-        while (att) attakers.push_back(popBit(att));
-        att = attack<P_wb>(x, p.blackBishop(), p.occupancy);
-        while (att) attakers.push_back(popBit(att));
-        att = attack<P_wn>(x, p.blackKnight());
-        while (att) attakers.push_back(popBit(att));
-        att = attack<P_wp>(x, p.blackPawn(), p.occupancy, Co_White);
-        while (att) attakers.push_back(popBit(att));
-    }
-    else{
-        BitBoard att = attack<P_wb>(x, p.whiteQueen(), p.occupancy);
-        while (att) attakers.push_back(popBit(att));
-        att = attack<P_wr>(x, p.whiteQueen(), p.occupancy);
-        while (att) attakers.push_back(popBit(att));
-        att = attack<P_wr>(x, p.whiteRook(), p.occupancy);
-        while (att) attakers.push_back(popBit(att));
-        att = attack<P_wb>(x, p.whiteBishop(), p.occupancy);
-        while (att) attakers.push_back(popBit(att));
-        att = attack<P_wn>(x, p.whiteKnight());
-        while (att) attakers.push_back(popBit(att));
-        att = attack<P_wp>(x, p.whitePawn(), p.occupancy, Co_Black);
-        while (att) attakers.push_back(popBit(att));
-    }
-    return !attakers.empty();
-}
-
-} // BB
-
 inline bool isAttacked(const Position & p, const Square k) { return k!=INVALIDSQUARE && BB::isAttackedBB(p, k, p.c) != 0ull;}
 
 inline bool getAttackers(const Position & p, const Square k, SquareList & attakers) { return k!=INVALIDSQUARE && BB::getAttackers(p, k, attakers);}
@@ -2206,7 +2294,7 @@ inline void movePiece(Position & p, Square from, Square to, Piece fromP, Piece t
 }
 
 void applyNull(Position & pN) {
-    pN.c = opponentColor(pN.c);
+    pN.c = ~pN.c;
     pN.h ^= Zobrist::ZT[3][13];
     pN.h ^= Zobrist::ZT[4][13];
     pN.lastMove = INVALIDMOVE;
@@ -2373,7 +2461,7 @@ bool apply(Position & p, const Move & m){
     assert(p.ep == INVALIDSQUARE || (SQRANK(p.ep) == 2 || SQRANK(p.ep) == 5));
     if (p.ep != INVALIDSQUARE) p.h ^= Zobrist::ZT[p.ep][13];
 
-    p.c = opponentColor(p.c);
+    p.c = ~p.c;
     p.h ^= Zobrist::ZT[3][13]; p.h ^= Zobrist::ZT[4][13];
 
     if ( toP != P_none || abs(fromP) == P_wp ) p.fifty = 0;
@@ -2485,9 +2573,9 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
     SquareList stmAttackers;
     bool endOfSEE = false;
     while (!endOfSEE){
-        p2.c = opponentColor(p2.c);
+        p2.c = ~p2.c;
         bool threatsFound = getAttackers(p2, to, stmAttackers);
-        p2.c = opponentColor(p2.c);
+        p2.c = ~p2.c;
         if (!threatsFound) break;
         //std::sort(stmAttackers.begin(),stmAttackers.end(),SortThreatsFunctor(p2)); // already sorted in getAttackers
         bool validThreatFound = false;
@@ -2503,7 +2591,7 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
             validThreatFound = true;
             balance = -balance - 1 - Values[nextVictim+PieceShift];
             if (balance >= 0) {
-                if (nextVictim == P_wk) p2.c = opponentColor(p2.c);
+                if (nextVictim == P_wk) p2.c = ~p2.c;
                 endOfSEE = true;
             }
         }
@@ -2586,6 +2674,7 @@ double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f,
 void initEval(){
    for(int i = 0; i < 64; i++){ EvalConfig::katt_table[i] = (int) sigmoid(i,EvalConfig::katt_max,EvalConfig::katt_trans,EvalConfig::katt_scale,EvalConfig::katt_offset); }
 }
+
 
 namespace{ BitBoard(*const pf[])(const Square, const BitBoard, const  Color) = { &BB::coverage<P_wp>, &BB::coverage<P_wn>, &BB::coverage<P_wb>, &BB::coverage<P_wr>, &BB::coverage<P_wq>, &BB::coverage<P_wk> };}
 
@@ -2726,7 +2815,7 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     if ( safeMatEvaluator ){
        const Hash matHash = MaterialHash::getMaterialHash(p.mat);
        const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
-       if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ) return (white2Play?+1:-1)*(scEG+MaterialHash::helperTable[matHash](p,winningSide));
+       if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ) return (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSide,scEG));
        else if ( ter == MaterialHash::Ter_WhiteWin || ter == MaterialHash::Ter_BlackWin) scEG*=3;
        else if ( ter == MaterialHash::Ter_HardToWin) scEG/=2;
        else if ( ter == MaterialHash::Ter_LikelyDraw ) scEG/=3;
@@ -3891,6 +3980,7 @@ void init(int argc, char ** argv) {
     StaticConfig::initLMR();
     initMvvLva();
     BB::initMask();
+    MaterialHash::KPK::init();
     MaterialHash::MaterialHashInitializer::init();
     initEval();
     ThreadPool::instance().setup(Options::getOption<int>("threads", 1, Options::Validator<int>().setMin(1).setMax(64)));
