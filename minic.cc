@@ -678,7 +678,8 @@ struct Position{
     unsigned char moves = 0;
     unsigned char ply; // this is not the "same" ply as the one used to get seldepth
     unsigned int castling = 0;
-    Square ep = INVALIDSQUARE, wk = INVALIDSQUARE, bk = INVALIDSQUARE;
+    Square ep = INVALIDSQUARE;
+    Square king[2] = { INVALIDSQUARE };
     Color c = Co_White;
     mutable Hash h = 0ull;
     Move lastMove = INVALIDMOVE;
@@ -1058,23 +1059,20 @@ namespace MaterialHash { // from Gull
         if (p.c != winningSide ){ // stale mate detection for losing side
            ///@todo
         }
-        const bool whiteWins = winningSide == Co_White;
-        const Square winningK = (whiteWins ? p.wk : p.bk);
-        const Square losingK  = (whiteWins ? p.bk : p.wk);
+        Square winningK = p.king[winningSide];
+        Square losingK  = p.king[~winningSide];
         const ScoreType sc = pushToEdges[losingK] + pushClose[chebyshevDistance(winningK,losingK)];
-        return s + whiteWins?sc:-sc;
+        return s + (winningSide == Co_White)?sc:-sc;
     }
     ScoreType helperKmmK(const Position &p, Color winningSide, ScoreType s){
-        const bool whiteWins = winningSide == Co_White;
-        Square winningK = (whiteWins ? p.wk : p.bk);
-        Square losingK  = (whiteWins ? p.bk : p.wk);
-        ///@todo sometimes going to the bad corner ... why
+        Square winningK = p.king[winningSide];
+        Square losingK  = p.king[~winningSide];
         if ( ((p.whiteBishop()|p.blackBishop()) & whiteSquare) != 0 ){
             winningK = VFlip(winningK);
             losingK  = VFlip(losingK);
         }
         const ScoreType sc = pushToCorners[losingK] + pushClose[chebyshevDistance(winningK,losingK)];
-        return s + whiteWins?sc:-sc;
+        return s + (winningSide == Co_White)?sc:-sc;
     }
     ScoreType helperDummy(const Position &, Color , ScoreType){
         return 0;
@@ -1149,7 +1147,7 @@ void init(){
 
 } // KPK
 
-    ScoreType helperKPK(const Position &p, Color strongSide, ScoreType s){
+    ScoreType helperKPK(const Position &p, Color strongSide, ScoreType ){
        ///@todo maybe an incrementally updated piece square list can be cool ...
        const Square wksq = KPK::normalize(p, strongSide, BB::SquareFromBitBoard(p.pieces<P_wk>(strongSide)));
        const Square bksq = KPK::normalize(p, strongSide, BB::SquareFromBitBoard(p.pieces<P_wk>(~strongSide)));
@@ -1312,6 +1310,7 @@ void init(){
             DEF_MAT(KLPPKD, Ter_LikelyDraw)           DEF_MAT_REV(KDKLPP,KLPPKD)
             DEF_MAT(KDPPKL, Ter_LikelyDraw)           DEF_MAT_REV(KLKDPP,KDPPKL)
 
+            // KPK
             DEF_MAT_H(KPK, Ter_WhiteWinWithHelper,&helperKPK)    DEF_MAT_REV_H(KKP,KPK,&helperKPK)
 
             ///@todo other (with pawn ...)
@@ -1886,7 +1885,7 @@ std::string ToString(const Position & p, bool noEval){
     }
     ss << "# +-+-+-+-+-+-+-+-+" << std::endl;
     if ( p.ep >=0 ) ss << "# ep " << SquareNames[p.ep] << std::endl;
-    ss << "# wk " << (p.wk!=INVALIDSQUARE?SquareNames[p.wk]:"none")  << std::endl << "# bk " << (p.bk!=INVALIDSQUARE?SquareNames[p.bk]:"none") << std::endl;
+    ss << "# wk " << (p.king[Co_White]!=INVALIDSQUARE?SquareNames[p.king[Co_White]]:"none")  << std::endl << "# bk " << (p.king[Co_Black]!=INVALIDSQUARE?SquareNames[p.king[Co_Black]]:"none") << std::endl;
     ss << "# Turn " << (p.c == Co_White ? "white" : "black") << std::endl;
     ScoreType sc = 0;
     if ( ! noEval ){
@@ -1922,13 +1921,13 @@ bool readFEN(const std::string & fen, Position & p, bool silent){
         case 'n': p.b[k]= P_bn; break;
         case 'b': p.b[k]= P_bb; break;
         case 'q': p.b[k]= P_bq; break;
-        case 'k': p.b[k]= P_bk; p.bk = k; break;
+        case 'k': p.b[k]= P_bk; p.king[Co_Black] = k; break;
         case 'P': p.b[k]= P_wp; break;
         case 'R': p.b[k]= P_wr; break;
         case 'N': p.b[k]= P_wn; break;
         case 'B': p.b[k]= P_wb; break;
         case 'Q': p.b[k]= P_wq; break;
-        case 'K': p.b[k]= P_wk; p.wk = k; break;
+        case 'K': p.b[k]= P_wk; p.king[Co_White] = k; break;
         case '/': j--; break;
         case '1': break;
         case '2': j++; break;
@@ -2177,8 +2176,8 @@ int ThreadContext::getCurrentMoveMs() {
     return currentMoveMs;
 }
 
-Square kingSquare(const Position & p) { return (p.c == Co_White) ? p.wk : p.bk; }
-Square opponentKingSquare(const Position & p) { return (p.c == Co_White) ? p.bk : p.wk; }
+Square kingSquare(const Position & p) { return p.king[p.c]; }
+Square opponentKingSquare(const Position & p) { return p.king[~p.c]; }
 
 inline bool isAttacked(const Position & p, const Square k) { return k!=INVALIDSQUARE && BB::isAttackedBB(p, k, p.c) != 0ull;}
 
@@ -2305,20 +2304,20 @@ bool apply(Position & p, const Move & m){
 
         // update castling rigths and king position
         if ( fromP == P_wk ){
-            p.wk = to;
+            p.king[Co_White] = to;
             if (p.castling & C_wks) p.h ^= Zobrist::ZT[7][13];
             if (p.castling & C_wqs) p.h ^= Zobrist::ZT[0][13];
             p.castling &= ~(C_wks | C_wqs);
         }
         else if ( fromP == P_bk ){
-            p.bk = to;
+            p.king[Co_Black] = to;
             if (p.castling & C_bks) p.h ^= Zobrist::ZT[63][13];
             if (p.castling & C_bqs) p.h ^= Zobrist::ZT[56][13];
             p.castling &= ~(C_bks | C_bqs);
         }
         // king capture : is that necessary ???
-        if      ( toP == P_wk ) p.wk = INVALIDSQUARE;
-        else if ( toP == P_bk ) p.bk = INVALIDSQUARE;
+        if      ( toP == P_wk ) p.king[Co_White] = INVALIDSQUARE;
+        else if ( toP == P_bk ) p.king[Co_Black] = INVALIDSQUARE;
 
         if ( fromP == P_wr && from == Sq_a1 && (p.castling & C_wqs)){
             p.castling &= ~C_wqs;
@@ -2379,7 +2378,7 @@ bool apply(Position & p, const Move & m){
     case T_wks:
         movePiece(p, Sq_e1, Sq_g1, P_wk, P_none);
         movePiece(p, Sq_h1, Sq_f1, P_wr, P_none);
-        p.wk = Sq_g1;
+        p.king[Co_White] = Sq_g1;
         if (p.castling & C_wqs) p.h ^= Zobrist::ZT[0][13];
         if (p.castling & C_wks) p.h ^= Zobrist::ZT[7][13];
         p.castling &= ~(C_wks | C_wqs);
@@ -2387,7 +2386,7 @@ bool apply(Position & p, const Move & m){
     case T_wqs:
         movePiece(p, Sq_e1, Sq_c1, P_wk, P_none);
         movePiece(p, Sq_a1, Sq_d1, P_wr, P_none);
-        p.wk = Sq_c1;
+        p.king[Co_White] = Sq_c1;
         if (p.castling & C_wqs) p.h ^= Zobrist::ZT[0][13];
         if (p.castling & C_wks) p.h ^= Zobrist::ZT[7][13];
         p.castling &= ~(C_wks | C_wqs);
@@ -2396,7 +2395,7 @@ bool apply(Position & p, const Move & m){
         movePiece(p, Sq_e8, Sq_g8, P_bk, P_none);
         movePiece(p, Sq_h8, Sq_f8, P_br, P_none);
         p.b[Sq_e8] = P_none; p.b[Sq_f8] = P_br; p.b[Sq_g8] = P_bk; p.b[Sq_h8] = P_none;
-        p.bk = Sq_g8;
+        p.king[Co_Black] = Sq_g8;
         if (p.castling & C_bqs) p.h ^= Zobrist::ZT[56][13];
         if (p.castling & C_bks) p.h ^= Zobrist::ZT[63][13];
         p.castling &= ~(C_bks | C_bqs);
@@ -2404,7 +2403,7 @@ bool apply(Position & p, const Move & m){
     case T_bqs:
         movePiece(p, Sq_e8, Sq_c8, P_bk, P_none);
         movePiece(p, Sq_a8, Sq_d8, P_br, P_none);
-        p.bk = Sq_c8;
+        p.king[Co_Black] = Sq_c8;
         if (p.castling & C_bqs) p.h ^= Zobrist::ZT[56][13];
         if (p.castling & C_bks) p.h ^= Zobrist::ZT[63][13];
         p.castling &= ~(C_bks | C_bqs);
@@ -2656,20 +2655,14 @@ void initEval(){
    for(int i = 0; i < 64; i++){ EvalConfig::katt_table[i] = (int) sigmoid(i,EvalConfig::katt_max,EvalConfig::katt_trans,EvalConfig::katt_scale,EvalConfig::katt_offset); }
 }
 
-
 namespace{ BitBoard(*const pf[])(const Square, const BitBoard, const  Color) = { &BB::coverage<P_wp>, &BB::coverage<P_wn>, &BB::coverage<P_wb>, &BB::coverage<P_wr>, &BB::coverage<P_wq>, &BB::coverage<P_wk> };}
 
-///@todo fuse using color helpers !
-///@todo backward and candidate
-
-inline bool isWhitePasser(const Position &p, Square k){ return (BB::mask[k].passerSpan[Co_White] & p.blackPawn()) == 0ull;}
-
-inline bool isBlackPasser(const Position &p, Square k){ return (BB::mask[k].passerSpan[Co_Black] & p.whitePawn()) == 0ull;}
+template<Color c> inline bool isPasser(const Position &p, Square k){ return (BB::mask[k].passerSpan[c] & p.pieces<P_wp>(~c)) == 0ull;}
 
 template < int T >
 inline void evalPieceWhite(const Position & p, BitBoard pieceBBiterator, ScoreType & sc, ScoreType & scEG, ScoreType & scScaled, BitBoard & wAtt, ScoreType & dangerW, ScoreType & dangerB){
-    const BitBoard wKingZone = BB::mask[p.wk].kingZone;
-    const BitBoard bKingZone = BB::mask[p.bk].kingZone;
+    const BitBoard wKingZone = BB::mask[p.king[Co_White]].kingZone;
+    const BitBoard bKingZone = BB::mask[p.king[Co_Black]].kingZone;
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
         const Square kk = k^56;
@@ -2689,8 +2682,8 @@ inline void evalPieceWhite(const Position & p, BitBoard pieceBBiterator, ScoreTy
 
 template < int T >
 inline void evalPieceBlack(const Position & p, BitBoard pieceBBiterator, ScoreType & sc, ScoreType & scEG, ScoreType & scScaled, BitBoard & bAtt, ScoreType & dangerW, ScoreType & dangerB){
-    const BitBoard wKingZone = BB::mask[p.wk].kingZone;
-    const BitBoard bKingZone = BB::mask[p.bk].kingZone;
+    const BitBoard wKingZone = BB::mask[p.king[Co_White]].kingZone;
+    const BitBoard bKingZone = BB::mask[p.king[Co_Black]].kingZone;
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
         sc   -= EvalConfig::PST  [T-1][k];
@@ -2715,16 +2708,16 @@ inline void evalPawnWhite(const Position & p, BitBoard pieceBBiterator, ScoreTyp
         pawnTargetsW |= BB::mask[k].pawnAttack[Co_White] /*& ~p.whitePiece*/;
         wAtt |= BB::mask[k].pawnAttack[Co_White] & ~p.whitePiece;
         // passer
-        const bool passed = isWhitePasser(p,k);
+        const bool passed = isPasser<Co_White>(p,k);
         if (passed) {
             const BitBoard bbk = SquareToBitboard(k);
             passer |= bbk;
             const BitBoard sw = BB::shiftSouthWest(bbk);
             const BitBoard se = BB::shiftSouthEast(bbk);
-            const float factorProtected = 1+( (((sw&p.whitePawn())!=0ull)&&isWhitePasser(p, BB::SquareFromBitBoard(sw))) || (((se&p.whitePawn())!=0ull)&&isWhitePasser(p, BB::SquareFromBitBoard(se))) ) * EvalConfig::protectedPasserFactor;
+            const float factorProtected = 1+( (((sw&p.whitePawn())!=0ull)&&isPasser<Co_White>(p, BB::SquareFromBitBoard(sw))) || (((se&p.whitePawn())!=0ull)&&isPasser<Co_White>(p, BB::SquareFromBitBoard(se))) ) * EvalConfig::protectedPasserFactor;
             const float factorFree      = 1+((BB::mask[k].frontSpan[Co_White] & p.blackPiece) == 0ull) * EvalConfig::freePasserFactor;
-            const float kingNearBonus   = EvalConfig::kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.bk, k) - chebyshevDistance(p.wk, k));
-            const bool unstoppable      = (p.mat[Co_Black][M_t] == 0)&&((chebyshevDistance(p.bk, SQFILE(k) + 56) - (!white2Play)) > std::min(5, chebyshevDistance(SQFILE(k) + 56, k)));
+            const float kingNearBonus   = EvalConfig::kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.king[Co_Black], k) - chebyshevDistance(p.king[Co_White], k));
+            const bool unstoppable      = (p.mat[Co_Black][M_t] == 0)&&((chebyshevDistance(p.king[Co_Black], SQFILE(k) + 56) - (!white2Play)) > std::min(5, chebyshevDistance(SQFILE(k) + 56, k)));
             const ScoreType rookBehind  = ScoreType(countBit(p.whiteRook() & BB::mask[k].rearSpan[Co_White]) - countBit(p.blackRook() & BB::mask[k].rearSpan[Co_White])) * EvalConfig::rookBehindPassed;
             if (unstoppable) scScaled += Values[P_wq+PieceShift] - Values[P_wp+PieceShift];
             else             scScaled += ScoreType( factorProtected * factorFree * (gp*EvalConfig::passerBonus[SQRANK(k)] + gpCompl*EvalConfig::passerBonusEG[SQRANK(k)]) + kingNearBonus + gpCompl*rookBehind);
@@ -2741,16 +2734,16 @@ inline void evalPawnBlack(const Position & p, BitBoard pieceBBiterator, ScoreTyp
         pawnTargetsB |= BB::mask[k].pawnAttack[Co_Black] /*& ~p.blackPiece*/;
         bAtt |= BB::mask[k].pawnAttack[Co_Black] & ~p.blackPiece;
         // passer
-        const bool passed = isBlackPasser(p,k);
+        const bool passed = isPasser<Co_Black>(p,k);
         if (passed) {
             const BitBoard bbk = SquareToBitboard(k);
             passer |= bbk;
             const BitBoard nw = BB::shiftNorthWest(bbk);
             const BitBoard ne = BB::shiftNorthEast(bbk);
-            const float factorProtected = 1+( (((nw&p.blackPawn())!=0ull)&&isBlackPasser(p, BB::SquareFromBitBoard(nw))) || (((ne&p.blackPawn())!=0ull)&&isBlackPasser(p, BB::SquareFromBitBoard(ne))) ) * EvalConfig::protectedPasserFactor;
+            const float factorProtected = 1+( (((nw&p.blackPawn())!=0ull)&&isPasser<Co_Black>(p, BB::SquareFromBitBoard(nw))) || (((ne&p.blackPawn())!=0ull)&&isPasser<Co_Black>(p, BB::SquareFromBitBoard(ne))) ) * EvalConfig::protectedPasserFactor;
             const float factorFree      = 1+((BB::mask[k].frontSpan[Co_Black] & p.whitePiece) == 0ull) * EvalConfig::freePasserFactor;
-            const float kingNearBonus   = EvalConfig::kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.wk, k) - chebyshevDistance(p.bk, k));
-            const bool unstoppable      = (p.mat[Co_White][M_t] == 0)&&((chebyshevDistance(p.wk, SQFILE(k)) - white2Play) > std::min(5, chebyshevDistance(SQFILE(k), k)));
+            const float kingNearBonus   = EvalConfig::kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.king[Co_White], k) - chebyshevDistance(p.king[Co_Black], k));
+            const bool unstoppable      = (p.mat[Co_White][M_t] == 0)&&((chebyshevDistance(p.king[Co_White], SQFILE(k)) - white2Play) > std::min(5, chebyshevDistance(SQFILE(k), k)));
             const ScoreType rookBehind  = ScoreType(countBit(p.blackRook() & BB::mask[k].rearSpan[Co_Black]) - countBit(p.whiteRook() & BB::mask[k].rearSpan[Co_Black])) * EvalConfig::rookBehindPassed;
             if (unstoppable) scScaled -= Values[P_wq+PieceShift] - Values[P_wp+PieceShift];
             else             scScaled -= ScoreType( factorProtected * factorFree * (gp*EvalConfig::passerBonus[7 - SQRANK(k)] + gpCompl*EvalConfig::passerBonusEG[7 - SQRANK(k)]) + kingNearBonus + gpCompl*rookBehind);
@@ -2784,8 +2777,8 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
 
     // king captured
     const bool white2Play = p.c == Co_White;
-    if ( p.wk == INVALIDSQUARE ) return (white2Play?-1:+1)* MATE; //*absValues[P_wk];
-    if ( p.bk == INVALIDSQUARE ) return (white2Play?+1:-1)* MATE; //*absValues[P_wk];
+    if ( p.king[Co_White] == INVALIDSQUARE ) return (white2Play?-1:+1)* MATE; //*absValues[P_wk];
+    if ( p.king[Co_Black] == INVALIDSQUARE ) return (white2Play?+1:-1)* MATE; //*absValues[P_wk];
 
     // EG material (symetric version)
     scEG += (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValuesEG[P_wq] + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * *absValuesEG[P_wr] + (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * *absValuesEG[P_wb] + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValuesEG[P_wn] + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValuesEG[P_wp];
@@ -2842,13 +2835,13 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     /*
     // pawn storm (queen is here and there is an attack)
     if ( p.blackQueen() ){
-        const BitBoard wKingFrontOppPawn = BB::mask[p.wk].passerSpan[Co_White] & p.blackPawn();
+        const BitBoard wKingFrontOppPawn = BB::mask[p.king[Co_White]].passerSpan[Co_White] & p.blackPawn();
         sc -= ScoreType( countBit(wKingFrontOppPawn & rank2) * EvalConfig::stormBonus1 * dangerW/32.);
         sc -= ScoreType( countBit(wKingFrontOppPawn & rank3) * EvalConfig::stormBonus2 * dangerW/32.);
         sc -= ScoreType( countBit(wKingFrontOppPawn & rank4) * EvalConfig::stormBonus3 * dangerW/32.);
     }
     if ( p.whiteQueen() ){
-        const BitBoard bKingFrontOppPawn = BB::mask[p.bk].passerSpan[Co_Black] & p.whitePawn();
+        const BitBoard bKingFrontOppPawn = BB::mask[p.king[Co_Black]].passerSpan[Co_Black] & p.whitePawn();
         sc += ScoreType( countBit(bKingFrontOppPawn & rank7) * EvalConfig::stormBonus1 * dangerB/32.);
         sc += ScoreType( countBit(bKingFrontOppPawn & rank6) * EvalConfig::stormBonus2 * dangerB/32.);
         sc += ScoreType( countBit(bKingFrontOppPawn & rank5) * EvalConfig::stormBonus3 * dangerB/32.);
@@ -2870,7 +2863,7 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     */
 
     // in very end game winning king must be near the other king ///@todo shall be removed if material helpers work ...
-    if ((p.mat[Co_White][M_p] + p.mat[Co_Black][M_p] == 0) && p.wk != INVALIDSQUARE && p.bk != INVALIDSQUARE) scEG -= ScoreType((sc>0?+1:-1)*chebyshevDistance(p.wk, p.bk)*35);
+    if ((p.mat[Co_White][M_p] + p.mat[Co_Black][M_p] == 0) && p.king[Co_White] != INVALIDSQUARE && p.king[Co_Black] != INVALIDSQUARE) scEG -= ScoreType((sc>0?+1:-1)*chebyshevDistance(p.king[Co_White], p.king[Co_Black])*35);
 
     /*
     // when ahead exchange pieces, when below exchange pawns ///@todo this is wrong (bug)
@@ -3048,8 +3041,8 @@ ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
-        if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply + 1;
-        if (p.c == Co_Black && Move2To(*it) == p.wk) return MATE - ply + 1;
+        if (p.c == Co_White && Move2To(*it) == p.king[Co_Black]) return MATE - ply + 1;
+        if (p.c == Co_Black && Move2To(*it) == p.king[Co_White]) return MATE - ply + 1;
         const ScoreType score = -qsearchNoPruning(-beta,-alpha,p2,ply+1,seldepth);
         if ( score > bestScore){
            bestScore = score;
@@ -3120,8 +3113,8 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
         if ( ! apply(p2,*it) ) continue;
         validCapFound = true;
         //bool isCheck = isAttacked(p2, kingSquare(p2));
-        if (p.c == Co_White && Move2To(*it) == p.bk) return MATE - ply + 1;
-        if (p.c == Co_Black && Move2To(*it) == p.wk) return MATE - ply + 1;
+        if (p.c == Co_White && Move2To(*it) == p.king[Co_Black]) return MATE - ply + 1;
+        if (p.c == Co_Black && Move2To(*it) == p.king[Co_White]) return MATE - ply + 1;
         const ScoreType score = -qsearch<false,false>(-beta,-alpha,p2,ply+1,seldepth);
         if ( score > bestScore){
            bestMove = *it;
@@ -3387,8 +3380,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
         const Square to = Move2To(*it);
-        if (p.c == Co_White && to == p.bk) return MATE - ply + 1;
-        if (p.c == Co_Black && to == p.wk) return MATE - ply + 1;
+        if (p.c == Co_White && to == p.king[Co_Black]) return MATE - ply + 1;
+        if (p.c == Co_Black && to == p.king[Co_White]) return MATE - ply + 1;
         validMoveCount++;
         PVList childPV;
         hashStack[p.ply] = p.h;
