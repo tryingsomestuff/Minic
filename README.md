@@ -149,6 +149,8 @@ You can use both the json configuation file or the command line argument to sele
 * 0.55 : working on extension and eval
 * 0.56 : TC issue in multi-thread mode
 * 0.57 : fix 0.56
+* 0.58 to 0.60 : trying so add evaluation feature (without success ...)
+* 0.61 : KPK and code clean up
 
 ## Thanks
 
