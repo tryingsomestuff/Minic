@@ -733,7 +733,7 @@ inline void initMask() {
         for (int y = x - 8; y >= 0; y -= 8) mask[x].file |= SquareToBitboard(y);
         for (int y = x + 8; y < 64; y += 8) mask[x].file |= SquareToBitboard(y);
 
-        int f = x & 07;
+        int f = SQFILE(x);
         int r = SQRANK(x);
         for (int i = -1, c = 1, dp = 6; i <= 1; i += 2, c = 0, dp = 1) {
             for (int j = -1; j <= 1; j += 2) if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) {  mask[x].pawnAttack[c] |= SquareToBitboard((r + i) * 8 + (f + j)); }
@@ -955,7 +955,7 @@ namespace MaterialHash { // from Gull
 
     Position::Material materialFromString(const std::string & strMat) {
         Position::Material mat = {0};
-        Color c = Co_White;
+        Color c = Co_Black;
         for (auto it = strMat.begin(); it != strMat.end(); ++it) {
             switch (*it) {
             case 'K': c = ~c;             mat[c][M_k] += 1;   break;
@@ -2435,7 +2435,7 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
     const Square to   = Move2To(m);
     const bool promPossible = (SQRANK(to) == 0 || SQRANK(to) == 7);
     Piece nextVictim  = getPieceType(p,from);
-    const Color us    = Colors[nextVictim+PieceShift];
+    const Color us    = Colors[getPieceIndex(p,from)];
     ScoreType balance = std::abs(getValue(p,to)) - threshold; // The opponent may be able to recapture so this is the best result we can hope for.
     if (balance < 0) return false;
     balance -= Values[nextVictim+PieceShift]; // Now assume the worst possible result: that the opponent can capture our piece for free.
