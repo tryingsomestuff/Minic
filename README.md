@@ -140,17 +140,18 @@ You can use both the json configuation file or the command line argument to sele
 * 0.46 : little optim
 * 0.47 : clean up, try uci support 
 * 0.48 : some evaluation features about Pawn
-* 0.49 : more pawn features
-* 0.50 : more rook and pawn features (new Win32 releases)
-* 0.51 : use bishop pair bonus
-* 0.52 : fix history, check extension, some endgames (prepare for pawn hash table ...)
-* 0.53 : fix pawn eval
-* 0.54 : working on extension and eval
-* 0.55 : working on extension and eval
-* 0.56 : TC issue in multi-thread mode
-* 0.57 : fix 0.56
-* 0.58 to 0.60 : trying so add evaluation feature (without success ...)
-* 0.61 : KPK and code clean up
+* 0.49 : more pawn features   
+* 0.50 : more rook and pawn features (new Win32 releases)  
+* 0.51 : use bishop pair bonus  
+* 0.52 : fix history, check extension, some endgames (prepare for pawn hash table ...)  
+* 0.53 : fix pawn eval  
+* 0.54 : working on extension and eval  
+* 0.55 : working on extension and eval  
+* 0.56 : TC issue in multi-thread mode  
+* 0.57 : fix 0.56  
+* 0.58 and 0.59 : trying so add evaluation feature (without success ...)  
+* 0.60 : use hash in qsearch  
+* 0.61 : KPK and code clean up  
 
 ## Thanks
 
