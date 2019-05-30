@@ -2676,19 +2676,6 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
 
     const Color winningSide = scEG>0?Co_White:Co_Black;
 
-    // end game knowledge (helper or scaling)
-    if ( true/*safeMatEvaluator*/ ){
-       const Hash matHash = MaterialHash::getMaterialHash(p.mat);
-       const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
-       if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ) return (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSide,scEG));
-       else if ( ter == MaterialHash::Ter_WhiteWin || ter == MaterialHash::Ter_BlackWin) scEG*=3;
-       else if ( ter == MaterialHash::Ter_HardToWin) scEG/=2;
-       else if ( ter == MaterialHash::Ter_LikelyDraw ) scEG/=3;
-       ///@todo next two seem to lose elo
-       //else if ( ter == MaterialHash::Ter_Draw){         if ( !isAttacked(p,kingSquare(p)) ) return 0;}
-       //else if ( ter == MaterialHash::Ter_MaterialDraw){ if ( !isAttacked(p,kingSquare(p)) ) return 0;} ///@todo also verify stalemate ?
-    }
-
     // material (symetric version)
     const ScoreType matPiece = (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValues[P_wq] + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * *absValues[P_wr] + (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * *absValues[P_wb] + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValues[P_wn];
     const ScoreType matPawn  = (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValues[P_wp];
@@ -2718,6 +2705,20 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     evalPieceBlack<P_wq>(p,p.blackQueen() ,sc,scEG,scScaled,bAtt,dangerW,dangerB);
     evalPieceBlack<P_wk>(p,p.blackKing()  ,sc,scEG,scScaled,bAtt,dangerW,dangerB);
     evalPawnBlack       (p,blackPawn      ,sc,scEG,scScaled,bAtt,bSafePPush,pawnTargetsB,passerB,gp,gpCompl);
+
+    // end game knowledge (helper or scaling)
+    if ( true/*safeMatEvaluator*/ ){
+       const Hash matHash = MaterialHash::getMaterialHash(p.mat);
+       const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
+       if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ) return (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSide,scEG));
+       else if ( ter == MaterialHash::Ter_WhiteWin || ter == MaterialHash::Ter_BlackWin) scEG*=3;
+       else if ( ter == MaterialHash::Ter_HardToWin) scEG/=2;
+       else if ( ter == MaterialHash::Ter_LikelyDraw ) scEG/=3;
+       ///@todo next two seem to lose elo
+       //else if ( ter == MaterialHash::Ter_Draw){         if ( !isAttacked(p,kingSquare(p)) ) return 0;}
+       //else if ( ter == MaterialHash::Ter_MaterialDraw){ if ( !isAttacked(p,kingSquare(p)) ) return 0;} ///@todo also verify stalemate ?
+    }
+
     // pawn attack / defence
     const BitBoard wKingZone = BB::mask[p.king[Co_White]].kingZone;
     const BitBoard bKingZone = BB::mask[p.king[Co_Black]].kingZone;
@@ -2813,7 +2814,7 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     */
 
     // in very end game winning king must be near the other king ///@todo shall be removed if material helpers work ...
-    if ((p.mat[Co_White][M_p] + p.mat[Co_Black][M_p] == 0) && p.king[Co_White] != INVALIDSQUARE && p.king[Co_Black] != INVALIDSQUARE) scEG -= ScoreType((sc>0?+1:-1)*chebyshevDistance(p.king[Co_White], p.king[Co_Black])*35);
+    if ((p.mat[Co_White][M_p] + p.mat[Co_Black][M_p] == 0) && p.king[Co_White] != INVALIDSQUARE && p.king[Co_Black] != INVALIDSQUARE) scEG -= ScoreType((sc>0?+1:-1)*(chebyshevDistance(p.king[Co_White], p.king[Co_Black])-2)*35);
 
     /*
     // when ahead exchange pieces, when below exchange pawns ///@todo this is wrong (bug)
