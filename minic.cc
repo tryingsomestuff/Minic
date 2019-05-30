@@ -34,7 +34,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_SYZYGY
 //#define WITH_UCI
 
-const std::string MinicVersion = "0.61";
+const std::string MinicVersion = "dev";
 
 /*
 //todo
@@ -46,6 +46,7 @@ const std::string MinicVersion = "0.61";
 #define STOPSCORE   ScoreType(-20000)
 #define INFSCORE    ScoreType(15000)
 #define MATE        ScoreType(10000)
+#define WIN         ScoreType(6000)
 #define INVALIDMOVE    -1
 #define INVALIDSQUARE  -1
 #define MAX_PLY       512
@@ -1016,7 +1017,7 @@ namespace MaterialHash { // from Gull
         const Square winningK = p.king[winningSide];
         const Square losingK  = p.king[~winningSide];
         const ScoreType sc = pushToEdges[losingK] + pushClose[chebyshevDistance(winningK,losingK)];
-        return s + (winningSide == Co_White)?sc:-sc;
+        return s + ((winningSide == Co_White)?(sc+WIN):(-sc-WIN));
     }
     ScoreType helperKmmK(const Position &p, Color winningSide, ScoreType s){
         Square winningK = p.king[winningSide];
@@ -1026,7 +1027,7 @@ namespace MaterialHash { // from Gull
             losingK  = VFlip(losingK);
         }
         const ScoreType sc = pushToCorners[losingK] + pushClose[chebyshevDistance(winningK,losingK)];
-        return s + (winningSide == Co_White)?sc:-sc;
+        return s + ((winningSide == Co_White)?(sc+WIN):(-sc-WIN));
     }
     ScoreType helperDummy(const Position &, Color , ScoreType){ return 0; }
 
@@ -1035,7 +1036,7 @@ namespace MaterialHash { // from Gull
 
     Square normalizeSquare(const Position& p, Color strongSide, Square sq) {
        assert(countBit(BB::SquareFromBitBoard(p.pieces<P_wp>(strongSide))) == 1); // only for KPK !
-       if (SQFILE(BB::SquareFromBitBoard(BB::SquareFromBitBoard(p.pieces<P_wp>(strongSide)))) >= File_e) sq = Square(HFlip(sq));
+       if (SQFILE(BB::SquareFromBitBoard(p.pieces<P_wp>(strongSide))) >= File_e) sq = Square(HFlip(sq));
        return strongSide == Co_White ? sq : VFlip(sq);
     }
 
@@ -1062,7 +1063,7 @@ namespace MaterialHash { // from Gull
             constexpr kpk_result bad  = (Us == Co_White ? kpk_draw : kpk_win);
             kpk_result r = kpk_invalid;
             BitBoard b = BB::mask[ksq[us]].king;
-            while (b){ r |= Us == Co_White ? db[index(Them, ksq[Them], BB::popBit(b), psq)] : db[index(Them, BB::popBit(b), ksq[Them], psq)]; }
+            while (b){ r |= (Us == Co_White ? db[index(Them, ksq[Them], BB::popBit(b), psq)] : db[index(Them, BB::popBit(b), ksq[Them], psq)]); }
             if (Us == Co_White){
                 if (SQRANK(psq) < 6) r |= db[index(Them, ksq[Them], ksq[Us], psq + 8)];
                 if (SQRANK(psq) == 1 && psq + 8 != ksq[Us] && psq + 8 != ksq[Them]) r |= db[index(Them, ksq[Them], ksq[Us], psq + 8 + 8)];
@@ -1092,11 +1093,11 @@ namespace MaterialHash { // from Gull
 
     } // KPK
 
-    ScoreType helperKPK(const Position &p, Color strongSide, ScoreType ){
-       ///@todo maybe an incrementally updated piece square list can be cool ...
-       const Square psq = KPK::normalizeSquare(p, strongSide, BB::SquareFromBitBoard(p.pieces<P_wp>(strongSide)));
-       if (!KPK::probe(KPK::normalizeSquare(p, strongSide, BB::SquareFromBitBoard(p.pieces<P_wk>(strongSide))), psq, KPK::normalizeSquare(p, strongSide, BB::SquareFromBitBoard(p.pieces<P_wk>(~strongSide))), strongSide == p.c ? Co_White:Co_Black)) return 0;
-       return MATE/2 + ValuesEG[P_wp+PieceShift] + 10*SQRANK(psq); //strongSide == p.c ? result : -result;
+    ScoreType helperKPK(const Position &p, Color winningSide, ScoreType ){
+       ///@todo maybe an incrementally updated piece square list can be cool to avoid those SquareFromBitBoard...
+       const Square psq = KPK::normalizeSquare(p, winningSide, BB::SquareFromBitBoard(p.pieces<P_wp>(winningSide)));
+       if (!KPK::probe(KPK::normalizeSquare(p, winningSide, BB::SquareFromBitBoard(p.pieces<P_wk>(winningSide))), psq, KPK::normalizeSquare(p, winningSide, BB::SquareFromBitBoard(p.pieces<P_wk>(~winningSide))), winningSide == p.c ? Co_White:Co_Black)) return 0;
+       return ((winningSide == Co_White)?+1:-1)*(WIN + ValuesEG[P_wp+PieceShift] + 10*SQRANK(psq));
     }
 
     ScoreType (* helperTable[TotalMat])(const Position &, Color, ScoreType );
