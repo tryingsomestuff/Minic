@@ -485,7 +485,18 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wq+PieceShift], 600, 1800, "EGqueen",  [](const ScoreType& s){ValuesEG[P_bq+PieceShift] = -s;}));
     */
 
-    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::bishopPairBonus, -300, 300, "bishopPairBonus"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::katt_attack_weight[1], -30, 30, "ap"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::katt_attack_weight[2], -30, 30, "an"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::katt_attack_weight[3], -30, 30, "ab"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::katt_attack_weight[4], -30, 30, "ar"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::katt_attack_weight[5], -30, 30, "aq"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::katt_attack_weight[6], -30, 30, "ak"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::katt_defence_weight[1], -30, 30, "dp"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::katt_defence_weight[2], -30, 30, "dn"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::katt_defence_weight[3], -30, 30, "db"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::katt_defence_weight[4], -30, 30, "dr"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::katt_defence_weight[5], -30, 30, "dq"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::katt_defence_weight[6], -30, 30, "dk"));
 
     /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::katt_attack_weight[0]  , -150, 150,"katt_attack_ 0"));
