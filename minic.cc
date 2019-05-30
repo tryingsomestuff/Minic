@@ -28,7 +28,7 @@ typedef uint64_t u_int64_t;
 #include "json.hpp"
 
 //#define IMPORTBOOK
-//#define WITH_TEXEL_TUNING
+#define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
@@ -412,9 +412,7 @@ float       freePasserFactor      = 0.25f; // 125%
 
 ScoreType   centerControl         = 5;
 
-ScoreType   stormBonus1           = 50;
-ScoreType   stormBonus2           = 30;
-ScoreType   stormBonus3           = 15;
+ScoreType   stormBonus[3]         = {50,30,15};
 
 ScoreType   exchangeFactor        = 7;
 
@@ -450,24 +448,19 @@ ScoreType MOBEG[6][29] = { {0,0,0,0},
                            {-19,-18,-16,-14,-12,-10,0,3,6,9,12,15,18,21,24,27,30,33,35,38,41,43,46,48,49,50,51,52,53},
                            {-20,0,5,10,14,17,20,22,24} };
 
-ScoreType katt_max    = 416;
-ScoreType katt_trans  = 38;
-ScoreType katt_scale  = 18;
-ScoreType katt_offset = 10;
-
-ScoreType katt_fawnPawn = 30;
-
-ScoreType katt_attack_weight [7] = {0, 4,10, 4, 3, 7, 4};
-ScoreType katt_defence_weight[7] = {0, 6, 3, 3, 1, 0, 0};
-
+ScoreType katt_max    = 267;
+ScoreType katt_trans  = 32;
+ScoreType katt_scale  = 13;
+ScoreType katt_offset = 20;
+ScoreType katt_fawnPawn = 10;
+ScoreType katt_attack_weight [7] = {0,  2,  4, 4, 8, 10, 4};
+ScoreType katt_defence_weight[7] = {0,  1,  4, 4, 3,  3, 0};
 ScoreType katt_openfile = 13;
 ScoreType katt_semiopenfile_our = 10;
 ScoreType katt_semiopenfile_opp = 12;
-
 ScoreType katt_table[64] = {0};
 
 ScoreType pawnMobility[2] = {1,8};
-
 ScoreType safePasser[2] = {10,25};
 
 }
@@ -2684,7 +2677,7 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     const Color winningSide = scEG>0?Co_White:Co_Black;
 
     // end game knowledge (helper or scaling)
-    if ( safeMatEvaluator ){
+    if ( true/*safeMatEvaluator*/ ){
        const Hash matHash = MaterialHash::getMaterialHash(p.mat);
        const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
        if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ) return (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSide,scEG));
@@ -2737,8 +2730,8 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     dangerW += wKPawnThreat * EvalConfig::katt_attack_weight[P_wp];
     dangerB += bKPawnThreat * EvalConfig::katt_attack_weight[P_wp];
     // I like fawn pawn (king side only)
-    dangerW += ((p.whiteKing() & whiteKingKingSide) == 0ull) * ((BBSq_h3 & blackPawn) != 0) * ((BBSq_h2 & whitePawn) != 0) * ((BBSq_g3 & whitePawn) != 0) * EvalConfig::katt_fawnPawn;
-    dangerB += ((p.blackKing() & blackKingKingSide) == 0ull) * ((BBSq_h6 & whitePawn) != 0) * ((BBSq_h7 & blackPawn) != 0) * ((BBSq_g6 & blackPawn) != 0) * EvalConfig::katt_fawnPawn;
+    //dangerW += ((p.whiteKing() & whiteKingKingSide) != 0ull) * ((BBSq_h3 & blackPawn) != 0) * ((BBSq_h2 & whitePawn) != 0) * ((BBSq_g3 & whitePawn) != 0) * EvalConfig::katt_fawnPawn;
+    //dangerB += ((p.blackKing() & blackKingKingSide) != 0ull) * ((BBSq_h6 & whitePawn) != 0) * ((BBSq_h7 & blackPawn) != 0) * ((BBSq_g6 & blackPawn) != 0) * EvalConfig::katt_fawnPawn;
 
     // count pawn per file
     ///@todo use a cache for that ?!
@@ -2793,15 +2786,15 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     // pawn storm (queen is here and there is an attack)
     if ( p.blackQueen() ){
         const BitBoard wKingFrontOppPawn = BB::mask[p.king[Co_White]].passerSpan[Co_White] & p.blackPawn();
-        sc -= ScoreType( countBit(wKingFrontOppPawn & rank2) * EvalConfig::stormBonus1 * dangerW/32.);
-        sc -= ScoreType( countBit(wKingFrontOppPawn & rank3) * EvalConfig::stormBonus2 * dangerW/32.);
-        sc -= ScoreType( countBit(wKingFrontOppPawn & rank4) * EvalConfig::stormBonus3 * dangerW/32.);
+        sc -= ScoreType( countBit(wKingFrontOppPawn & rank2) * EvalConfig::stormBonus[0] * dangerW/32.); ///@todo fuse 1line
+        sc -= ScoreType( countBit(wKingFrontOppPawn & rank3) * EvalConfig::stormBonus[1] * dangerW/32.);
+        sc -= ScoreType( countBit(wKingFrontOppPawn & rank4) * EvalConfig::stormBonus[2] * dangerW/32.);
     }
     if ( p.whiteQueen() ){
         const BitBoard bKingFrontOppPawn = BB::mask[p.king[Co_Black]].passerSpan[Co_Black] & p.whitePawn();
-        sc += ScoreType( countBit(bKingFrontOppPawn & rank7) * EvalConfig::stormBonus1 * dangerB/32.);
-        sc += ScoreType( countBit(bKingFrontOppPawn & rank6) * EvalConfig::stormBonus2 * dangerB/32.);
-        sc += ScoreType( countBit(bKingFrontOppPawn & rank5) * EvalConfig::stormBonus3 * dangerB/32.);
+        sc += ScoreType( countBit(bKingFrontOppPawn & rank7) * EvalConfig::stormBonus[0] * dangerB/32.); ///@todo fuse 1line
+        sc += ScoreType( countBit(bKingFrontOppPawn & rank6) * EvalConfig::stormBonus[1] * dangerB/32.);
+        sc += ScoreType( countBit(bKingFrontOppPawn & rank5) * EvalConfig::stormBonus[2] * dangerB/32.);
     }
     */
 
