@@ -416,8 +416,6 @@ ScoreType   stormBonus1           = 50;
 ScoreType   stormBonus2           = 30;
 ScoreType   stormBonus3           = 15;
 
-ScoreType   fawnPawn              = 30;
-
 ScoreType   exchangeFactor        = 7;
 
 ScoreType   rookOnOpenFile[3]      = {25,25,35}; // opp semi, self semi, open
@@ -452,13 +450,19 @@ ScoreType MOBEG[6][29] = { {0,0,0,0},
                            {-19,-18,-16,-14,-12,-10,0,3,6,9,12,15,18,21,24,27,30,33,35,38,41,43,46,48,49,50,51,52,53},
                            {-20,0,5,10,14,17,20,22,24} };
 
-ScoreType katt_max    = 267;
-ScoreType katt_trans  = 32;
-ScoreType katt_scale  = 13;
-ScoreType katt_offset = 20;
+ScoreType katt_max    = 416;
+ScoreType katt_trans  = 38;
+ScoreType katt_scale  = 18;
+ScoreType katt_offset = 10;
 
-ScoreType katt_attack_weight [7] = {0,  2,  4, 4, 8, 10, 4};
-ScoreType katt_defence_weight[7] = {0,  1,  4, 4, 3,  3, 0};
+ScoreType katt_fawnPawn = 30;
+
+ScoreType katt_attack_weight [7] = {0, 4,10, 4, 3, 7, 4};
+ScoreType katt_defence_weight[7] = {0, 6, 3, 3, 1, 0, 0};
+
+ScoreType katt_openfile = 13;
+ScoreType katt_semiopenfile_our = 10;
+ScoreType katt_semiopenfile_opp = 12;
 
 ScoreType katt_table[64] = {0};
 
@@ -2707,24 +2711,83 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     const BitBoard whitePawn = p.whitePawn();
     const BitBoard blackPawn = p.blackPawn();
 
-    // PST, mobility, king zone attack, passer
+    // PST, mobility, king zone attack, passer, for white
     evalPieceWhite<P_wn>(p,p.whiteKnight(),sc,scEG,scScaled,wAtt,dangerW,dangerB);
     evalPieceWhite<P_wb>(p,p.whiteBishop(),sc,scEG,scScaled,wAtt,dangerW,dangerB);
     evalPieceWhite<P_wr>(p,p.whiteRook()  ,sc,scEG,scScaled,wAtt,dangerW,dangerB);
     evalPieceWhite<P_wq>(p,p.whiteQueen() ,sc,scEG,scScaled,wAtt,dangerW,dangerB);
     evalPieceWhite<P_wk>(p,p.whiteKing()  ,sc,scEG,scScaled,wAtt,dangerW,dangerB);
     evalPawnWhite       (p,whitePawn      ,sc,scEG,scScaled,wAtt,wSafePPush,pawnTargetsW,passerW,gp,gpCompl);
-
+    // PST, mobility, king zone attack, passer, for black
     evalPieceBlack<P_wn>(p,p.blackKnight(),sc,scEG,scScaled,bAtt,dangerW,dangerB);
     evalPieceBlack<P_wb>(p,p.blackBishop(),sc,scEG,scScaled,bAtt,dangerW,dangerB);
     evalPieceBlack<P_wr>(p,p.blackRook()  ,sc,scEG,scScaled,bAtt,dangerW,dangerB);
     evalPieceBlack<P_wq>(p,p.blackQueen() ,sc,scEG,scScaled,bAtt,dangerW,dangerB);
     evalPieceBlack<P_wk>(p,p.blackKing()  ,sc,scEG,scScaled,bAtt,dangerW,dangerB);
     evalPawnBlack       (p,blackPawn      ,sc,scEG,scScaled,bAtt,bSafePPush,pawnTargetsB,passerB,gp,gpCompl);
+    // pawn attack / defence
+    const BitBoard wKingZone = BB::mask[p.king[Co_White]].kingZone;
+    const BitBoard bKingZone = BB::mask[p.king[Co_Black]].kingZone;
+    const int wPawnShield = int(countBit(wKingZone & whitePawn));
+    const int bPawnShield = int(countBit(bKingZone & blackPawn));
+    const int wKPawnThreat = int(countBit(wKingZone & blackPawn & bAtt)); // only count protected panws
+    const int bKPawnThreat = int(countBit(bKingZone & whitePawn & wAtt)); // only count protected panws
+    dangerW -= wPawnShield * EvalConfig::katt_defence_weight[P_wp];
+    dangerB -= bPawnShield * EvalConfig::katt_defence_weight[P_wp];
+    dangerW += wKPawnThreat * EvalConfig::katt_attack_weight[P_wp];
+    dangerB += bKPawnThreat * EvalConfig::katt_attack_weight[P_wp];
+    // I like fawn pawn (king side only)
+    dangerW += ((p.whiteKing() & whiteKingKingSide) == 0ull) * ((BBSq_h3 & blackPawn) != 0) * ((BBSq_h2 & whitePawn) != 0) * ((BBSq_g3 & whitePawn) != 0) * EvalConfig::katt_fawnPawn;
+    dangerB += ((p.blackKing() & blackKingKingSide) == 0ull) * ((BBSq_h6 & whitePawn) != 0) * ((BBSq_h7 & blackPawn) != 0) * ((BBSq_g6 & blackPawn) != 0) * EvalConfig::katt_fawnPawn;
 
-    // use king danger score ///@todo lose a lot of elo if applied in end-game
-    sc/*Scaled*/ -=  EvalConfig::katt_table[std::min(std::max(dangerW,ScoreType(0)),ScoreType(63))];
-    sc/*Scaled*/ +=  EvalConfig::katt_table[std::min(std::max(dangerB,ScoreType(0)),ScoreType(63))];
+    // count pawn per file
+    ///@todo use a cache for that ?!
+    uint64_t nbWP[10] = {0ull}, nbBP[10] = {0ull};
+    for(int f = File_a; f <= File_h ; ++f){
+        nbWP[f+1] = countBit(whitePawn & files[f]);
+        nbBP[f+1] = countBit(blackPawn & files[f]);
+        //const uint64_t nbWR = countBit(p.whiteRook() & files[f]);
+        //const uint64_t nbBR = countBit(p.blackRook() & files[f]);
+        // double pawn malus
+        sc   -= ScoreType(nbWP[f+1]>>1)*EvalConfig::doublePawnMalus;
+        scEG -= ScoreType(nbWP[f+1]>>1)*EvalConfig::doublePawnMalusEG;
+        sc   += ScoreType(nbBP[f+1]>>1)*EvalConfig::doublePawnMalus;
+        scEG += ScoreType(nbBP[f+1]>>1)*EvalConfig::doublePawnMalusEG;
+
+        // king danger if open file and rook on the board
+        if ((BB::mask[p.king[Co_White]].kingZone & files[f]) && p.blackRook()){
+            if (!nbWP[f+1]){ dangerW += (!nbBP[f+1]) ? EvalConfig::katt_openfile : EvalConfig::katt_semiopenfile_our; }
+            else if (!nbBP[f+1]){ dangerW += EvalConfig::katt_semiopenfile_opp; }
+        }
+        if ((BB::mask[p.king[Co_Black]].kingZone & files[f]) && p.whiteRook()){
+            if (!nbBP[f+1]){ dangerB += (!nbWP[f+1]) ? EvalConfig::katt_openfile : EvalConfig::katt_semiopenfile_our; }
+            else if (!nbWP[f+1]){ dangerB += EvalConfig::katt_semiopenfile_opp; }
+        }
+
+        // rook on open file ///@todo seems to be 0 elo...
+        /*
+        if ( nbWR ){
+            if ( nbWP[f+1] == 0 ) sc += nbWR*(nbBP[f+1] == 0 ? EvalConfig::rookOnOpenFile[2]:EvalConfig::rookOnOpenFile[1]);
+            else if ( nbBP[f+1] == 0 ) sc += nbWR*EvalConfig::rookOnOpenFile[0];
+        }
+        if ( nbBR ){
+            if ( nbBP[f+1] == 0 ) sc -= nbBR*(nbWP[f+1] == 0 ? EvalConfig::rookOnOpenFile[2]:EvalConfig::rookOnOpenFile[1]);
+            else if ( nbWP[f+1] == 0 ) sc -= nbBR*EvalConfig::rookOnOpenFile[0];
+        }
+        */
+    }
+
+    // isolated pawn malus (second loop needed)
+    for(int f = File_a; f <= File_h ; ++f){
+        sc   -= (!nbWP[f] && nbWP[f+1] && !nbWP[f+2])*EvalConfig::isolatedPawnMalus;
+        scEG -= (!nbWP[f] && nbWP[f+1] && !nbWP[f+2])*EvalConfig::isolatedPawnMalusEG;
+        sc   += (!nbBP[f] && nbBP[f+1] && !nbBP[f+2])*EvalConfig::isolatedPawnMalus;
+        scEG += (!nbBP[f] && nbBP[f+1] && !nbBP[f+2])*EvalConfig::isolatedPawnMalusEG;
+    }
+
+    // use king danger score. DO NOT apply this in end-game
+    sc -=  EvalConfig::katt_table[std::min(std::max(dangerW,ScoreType(0)),ScoreType(63))];
+    sc +=  EvalConfig::katt_table[std::min(std::max(dangerB,ScoreType(0)),ScoreType(63))];
 
     /*
     // pawn storm (queen is here and there is an attack)
@@ -2763,46 +2826,6 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     // when ahead exchange pieces, when below exchange pawns ///@todo this is wrong (bug)
     scEG += ((winningSide==Co_White)?-1:+1)*ScoreType( (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t])*EvalConfig::exchangeFactor*std::abs(matPiece)/100.f*gpCompl);
     scEG += ((winningSide==Co_White)?+1:-1)*ScoreType( (p.mat[Co_White][M_p]+p.mat[Co_Black][M_p])*EvalConfig::exchangeFactor*std::abs(matPawn )/100.f*gpCompl);
-    */
-
-    // count pawn per file
-    ///@todo use a cache for that ?!
-    uint64_t nbWP[10] = {0ull}, nbBP[10] = {0ull};
-    for(int f = File_a; f <= File_h ; ++f){
-        nbWP[f+1] = countBit(whitePawn & files[f]);
-        nbBP[f+1] = countBit(blackPawn & files[f]);
-        //const uint64_t nbWR = countBit(p.whiteRook() & files[f]);
-        //const uint64_t nbBR = countBit(p.blackRook() & files[f]);
-        // double pawn malus
-        sc   -= ScoreType(nbWP[f+1]>>1)*EvalConfig::doublePawnMalus;
-        scEG -= ScoreType(nbWP[f+1]>>1)*EvalConfig::doublePawnMalusEG;
-        sc   += ScoreType(nbBP[f+1]>>1)*EvalConfig::doublePawnMalus;
-        scEG += ScoreType(nbBP[f+1]>>1)*EvalConfig::doublePawnMalusEG;
-        // rook on open file ///@todo seems to be 0 elo...
-        /*
-        if ( nbWR ){
-            if ( nbWP[f+1] == 0 ) sc += nbWR*(nbBP[f+1] == 0 ? EvalConfig::rookOnOpenFile[2]:EvalConfig::rookOnOpenFile[1]);
-            else if ( nbBP[f+1] == 0 ) sc += nbWR*EvalConfig::rookOnOpenFile[0];
-        }
-        if ( nbBR ){
-            if ( nbBP[f+1] == 0 ) sc -= nbBR*(nbWP[f+1] == 0 ? EvalConfig::rookOnOpenFile[2]:EvalConfig::rookOnOpenFile[1]);
-            else if ( nbWP[f+1] == 0 ) sc -= nbBR*EvalConfig::rookOnOpenFile[0];
-        }
-        */
-    }
-
-    // isolated pawn malus (second loop needed)
-    for(int f = File_a; f <= File_h ; ++f){
-        sc   -= (!nbWP[f] && nbWP[f+1] && !nbWP[f+2])*EvalConfig::isolatedPawnMalus;
-        scEG -= (!nbWP[f] && nbWP[f+1] && !nbWP[f+2])*EvalConfig::isolatedPawnMalusEG;
-        sc   += (!nbBP[f] && nbBP[f+1] && !nbBP[f+2])*EvalConfig::isolatedPawnMalus;
-        scEG += (!nbBP[f] && nbBP[f+1] && !nbBP[f+2])*EvalConfig::isolatedPawnMalusEG;
-    }
-
-    // I like fawn pawn (king side only)
-    /*
-    sc -= ((p.whiteKing() & whiteKingKingSide) == 0ull) * ((BBSq_h3 & blackPawn) != 0) * ((BBSq_h2 & whitePawn) != 0) * ((BBSq_g3 & whitePawn) != 0) * EvalConfig::fawnPawn;
-    sc += ((p.blackKing() & blackKingKingSide) == 0ull) * ((BBSq_h6 & whitePawn) != 0) * ((BBSq_h7 & blackPawn) != 0) * ((BBSq_g6 & blackPawn) != 0) * EvalConfig::fawnPawn;
     */
 
     /*
@@ -2881,8 +2904,6 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     scScaled += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
 
     // pawn shield
-    //sc += EvalConfig::pawnShieldBonus[std::min(3,int(countBit(wKingZone & whitePawn)))];
-    //sc -= EvalConfig::pawnShieldBonus[std::min(3,int(countBit(bKingZone & blackPawn)))];
     sc += ScoreType(((p.whiteKing() & whiteKingQueenSide ) != 0ull)*countBit(whitePawn & whiteQueenSidePawnShield1)*EvalConfig::pawnShieldBonus[1]    );
     sc += ScoreType(((p.whiteKing() & whiteKingQueenSide ) != 0ull)*countBit(whitePawn & whiteQueenSidePawnShield2)*EvalConfig::pawnShieldBonus[1] / 2);
     sc += ScoreType(((p.whiteKing() & whiteKingKingSide  ) != 0ull)*countBit(whitePawn & whiteKingSidePawnShield1 )*EvalConfig::pawnShieldBonus[1]    );
