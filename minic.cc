@@ -1705,8 +1705,7 @@ std::string trim(const std::string& str, const std::string& whitespace = " \t"){
     return str.substr(strBegin, strRange);
 }
 
-std::string GetFENShort(const Position &p ){
-    // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR"
+std::string GetFENShort(const Position &p ){ // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR"
     std::stringstream ss;
     int count = 0;
     for (int i = 7; i >= 0; --i) {
@@ -1726,8 +1725,7 @@ std::string GetFENShort(const Position &p ){
     return ss.str();
 }
 
-std::string GetFENShort2(const Position &p) {
-    // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d5
+std::string GetFENShort2(const Position &p) { // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d5
     std::stringstream ss;
     ss << GetFENShort(p) << " " << (p.c == Co_White ? "w" : "b") << " ";
     bool withCastling = false;
@@ -1741,8 +1739,7 @@ std::string GetFENShort2(const Position &p) {
     return ss.str();
 }
 
-std::string GetFEN(const Position &p) {
-    // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d5 0 2"
+std::string GetFEN(const Position &p) { // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d5 0 2"
     std::stringstream ss;
     ss << GetFENShort2(p) << " " << (int)p.fifty << " " << (int)p.moves;
     return ss.str();
@@ -1845,8 +1842,7 @@ bool readFEN(const std::string & fen, Position & p, bool silent){
         j++;
     }
 
-    // set the turn; default is white
-    p.c = Co_White;
+    p.c = Co_White; // set the turn; default is white
     if (strList.size() >= 2){
         if (strList[1] == "w")      p.c = Co_White;
         else if (strList[1] == "b") p.c = Co_Black;
@@ -1946,23 +1942,14 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
     if ( strList.empty()){ Logging::LogIt(Logging::logFatal) << "Trying to read bad move, seems empty " << str ; return false; }
 
     // detect special move
-    if (strList[0] == "0-0" || strList[0] == "O-O"){
-        if ( p.c == Co_White ) moveType = T_wks;
-        else moveType = T_bks;
-    }
-    else if (strList[0] == "0-0-0" || strList[0] == "O-O-O"){
-        if ( p.c == Co_White) moveType = T_wqs;
-        else moveType = T_bqs;
-    }
+    if      (strList[0] == "0-0"   || strList[0] == "O-O")   moveType = ( p.c == Co_White) ? T_wks:T_bks;
+    else if (strList[0] == "0-0-0" || strList[0] == "O-O-O") moveType = ( p.c == Co_White) ? T_wqs:T_bqs;
     else{
         if ( strList.size() == 1 ){ Logging::LogIt(Logging::logFatal) << "Trying to read bad move, malformed (=1) " << str ; return false; }
         if ( strList.size() > 2 && strList[2] != "ep"){ Logging::LogIt(Logging::logFatal) << "Trying to read bad move, malformed (>2)" << str ; return false; }
-
         if (strList[0].size() == 2 && (strList[0].at(0) >= 'a') && (strList[0].at(0) <= 'h') && ((strList[0].at(1) >= 1) && (strList[0].at(1) <= '8'))) from = stringToSquare(strList[0]);
         else { Logging::LogIt(Logging::logFatal) << "Trying to read bad move, invalid from square " << str ; return false; }
-
         bool isCapture = false;
-
         // be carefull, promotion possible !
         if (strList[1].size() >= 2 && (strList[1].at(0) >= 'a') && (strList[1].at(0) <= 'h') &&  ((strList[1].at(1) >= '1') && (strList[1].at(1) <= '8'))) {
             if ( strList[1].size() > 2 ){ // promotion
@@ -1999,7 +1986,6 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
 namespace TimeMan{
 int msecPerMove, msecInTC, nbMoveInTC, msecInc, msecUntilNextTC, maxKNodes, moveToGo;
 bool isDynamic;
-
 std::chrono::time_point<Clock> startTime;
 
 void init(){
@@ -2063,11 +2049,9 @@ int ThreadContext::getCurrentMoveMs() {
     return currentMoveMs;
 }
 
-Square kingSquare(const Position & p) { return p.king[p.c]; }
-Square opponentKingSquare(const Position & p) { return p.king[~p.c]; }
-
+inline Square kingSquare(const Position & p) { return p.king[p.c]; }
+inline Square oppKingSquare(const Position & p) { return p.king[~p.c]; }
 inline bool isAttacked(const Position & p, const Square k) { return k!=INVALIDSQUARE && BB::isAttackedBB(p, k, p.c) != 0ull;}
-
 inline bool getAttackers(const Position & p, const Square k, SquareList & attakers) { return k!=INVALIDSQUARE && BB::getAttackers(p, k, attakers);}
 
 enum GenPhase { GP_all = 0, GP_cap = 1, GP_quiet = 2 };
@@ -2117,8 +2101,7 @@ void generateSquare(const Position & p, MoveList & moves, Square from, GenPhase 
                 addMove(from, to, T_cappromr, moves); // pawn capture with promotion
                 addMove(from, to, T_cappromb, moves); // pawn capture with promotion
                 addMove(from, to, T_cappromn, moves); // pawn capture with promotion
-            }
-            else addMove(from,to,T_capture,moves);
+            } else addMove(from,to,T_capture,moves);
         }
         if ( phase != GP_cap) pawnmoves |= BB::mask[from].push[p.c] & ~p.occupancy;
         if ((phase != GP_cap) && (BB::mask[from].push[p.c] & p.occupancy) == 0ull) pawnmoves |= BB::mask[from].dpush[p.c] & ~p.occupancy;
@@ -2129,8 +2112,7 @@ void generateSquare(const Position & p, MoveList & moves, Square from, GenPhase 
                 addMove(from, to, T_promr, moves); // promotion R
                 addMove(from, to, T_promb, moves); // promotion B
                 addMove(from, to, T_promn, moves); // promotion N
-            }
-            else addMove(from,to,T_std,moves);
+            } else addMove(from,to,T_std,moves);
         }
         if ( p.ep != INVALIDSQUARE && phase != GP_quiet ) pawnmoves = BB::mask[from].pawnAttack[p.c] & ~myPieceBB & SquareToBitboard(p.ep);
         while (pawnmoves) addMove(from,BB::popBit(pawnmoves),T_ep,moves);
@@ -2344,7 +2326,6 @@ bool apply(Position & p, const Move & m){
 }
 
 namespace Book {
-//struct to hold the value:
 template<typename T> struct bits_t { T t; };
 template<typename T> bits_t<T&> bits(T &t) { return bits_t<T&>{t}; }
 template<typename T> bits_t<const T&> bits(const T& t) { return bits_t<const T&>{t};}
@@ -2525,13 +2506,7 @@ template< bool withRep, bool isPV, bool INR>
 MaterialHash::Terminaison ThreadContext::interiorNodeRecognizer(const Position & p)const{
     if (withRep && isRep(p,isPV)) return MaterialHash::Ter_Draw;
     if (p.fifty >= 100)           return MaterialHash::Ter_Draw;
-    if ( INR ){
-       if (p.mat[Co_White][M_p] + p.mat[Co_Black][M_p] == 0 ) return MaterialHash::probeMaterialHashTable(p.mat);
-       else { // some pawn are present
-           ///@todo ... KPK KPKQ KPKR KPKB KPKN
-           ///@todo  make a fence detection in draw eval
-       }
-    }
+    if ( INR && (p.mat[Co_White][M_p] + p.mat[Co_Black][M_p]) < 2 ) return MaterialHash::probeMaterialHashTable(p.mat);
     return MaterialHash::Ter_Unknown;
 }
 
@@ -2619,8 +2594,8 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
 
     // king captured
     const bool white2Play = p.c == Co_White;
-    if ( p.king[Co_White] == INVALIDSQUARE ) return (white2Play?-1:+1)* MATE; //*absValues[P_wk];
-    if ( p.king[Co_Black] == INVALIDSQUARE ) return (white2Play?+1:-1)* MATE; //*absValues[P_wk];
+    if ( p.king[Co_White] == INVALIDSQUARE ) return (white2Play?-1:+1)* MATE;
+    if ( p.king[Co_Black] == INVALIDSQUARE ) return (white2Play?+1:-1)* MATE;
 
     // EG material (symetric version)
     scEG += (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValuesEG[P_wq] + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * *absValuesEG[P_wr] + (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * *absValuesEG[P_wb] + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValuesEG[P_wn] + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValuesEG[P_wp];
@@ -2654,7 +2629,7 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     evalPawn<Co_Black>      (p,p.pieces<P_wp>(Co_Black),sc,scEG,scScaled,att[Co_Black],safePPush[Co_Black],pawnTargets[Co_Black],passer[Co_Black],gp,gpCompl);
 
     // end game knowledge (helper or scaling)
-    if ( true/*safeMatEvaluator*/ ){ // && gp < XXXX
+    if ( gp < 0.3f /*safeMatEvaluator*/ ){
        const Hash matHash = MaterialHash::getMaterialHash(p.mat);
        const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
        if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ) return (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSide,scEG));
