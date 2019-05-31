@@ -406,7 +406,7 @@ ScoreType   doublePawnMalus       = 16;
 ScoreType   doublePawnMalusEG     = 17;
 ScoreType   isolatedPawnMalus     = 21;
 ScoreType   isolatedPawnMalusEG   = 11;
-ScoreType   pawnShieldBonus[4]    = {0, 15, 30, 45};
+//ScoreType   pawnShieldBonus[4]    = {-30, 0, 30, 50};
 float       protectedPasserFactor = 0.25f; // 125%
 float       freePasserFactor      = 0.25f; // 125%
 
@@ -2711,9 +2711,9 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
        const Hash matHash = MaterialHash::getMaterialHash(p.mat);
        const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
        if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ) return (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSide,scEG));
-       else if ( ter == MaterialHash::Ter_WhiteWin || ter == MaterialHash::Ter_BlackWin) scEG*=3;
-       else if ( ter == MaterialHash::Ter_HardToWin) scEG/=2;
-       else if ( ter == MaterialHash::Ter_LikelyDraw ) scEG/=3;
+       else if ( ter == MaterialHash::Ter_WhiteWin || ter == MaterialHash::Ter_BlackWin) scEG*=int(5 - 5*(100-p.fifty)/100.);
+       else if ( ter == MaterialHash::Ter_HardToWin) scEG/=int(2 + 8*(100-p.fifty)/100.);
+       else if ( ter == MaterialHash::Ter_LikelyDraw ) scEG/=int(3 + 7*(100-p.fifty)/100.);
        ///@todo next two seem to lose elo
        //else if ( ter == MaterialHash::Ter_Draw){         if ( !isAttacked(p,kingSquare(p)) ) return 0;}
        //else if ( ter == MaterialHash::Ter_MaterialDraw){ if ( !isAttacked(p,kingSquare(p)) ) return 0;} ///@todo also verify stalemate ?
@@ -2897,6 +2897,7 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     // rook pair malus
     scScaled += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
 
+    /*
     // pawn shield
     sc += ScoreType(((p.whiteKing() & whiteKingQueenSide ) != 0ull)*countBit(whitePawn & whiteQueenSidePawnShield1)*EvalConfig::pawnShieldBonus[1]    );
     sc += ScoreType(((p.whiteKing() & whiteKingQueenSide ) != 0ull)*countBit(whitePawn & whiteQueenSidePawnShield2)*EvalConfig::pawnShieldBonus[1] / 2);
@@ -2906,6 +2907,7 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     sc -= ScoreType(((p.blackKing() & blackKingQueenSide ) != 0ull)*countBit(blackPawn & blackQueenSidePawnShield2)*EvalConfig::pawnShieldBonus[1] / 2);
     sc -= ScoreType(((p.blackKing() & blackKingKingSide  ) != 0ull)*countBit(blackPawn & blackKingSidePawnShield1 )*EvalConfig::pawnShieldBonus[1]    );
     sc -= ScoreType(((p.blackKing() & blackKingKingSide  ) != 0ull)*countBit(blackPawn & blackKingSidePawnShield2 )*EvalConfig::pawnShieldBonus[1] / 2);
+    */
 
     // tempo
     //sc += ScoreType(30);
