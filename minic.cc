@@ -30,7 +30,7 @@ typedef uint64_t u_int64_t;
 //#define IMPORTBOOK
 //#define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
-//#define WITH_TEST_SUITE
+#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 //#define WITH_UCI
 
@@ -411,9 +411,9 @@ float       freePasserFactor      = 0.25f; // 125%
 
 ScoreType   centerControl         = 5;
 
-ScoreType   exchangeFactor        = 7;
+ScoreType   tradeDown[9]             = {80,50,30,10,0,-5,-15,-45,-80};
 
-ScoreType   rookOnOpenFile[3]      = {25,25,35}; // opp semi, self semi, open
+ScoreType   rookOnOpenFile[3]     = {25,25,35}; // opp semi, self semi, open
 
 ScoreType   adjKnight[9]  = { -24, -18, -12, -6,  0,  6,  12, 18, 24 };
 ScoreType   adjRook[9]    = {  48,  36,  24, 12,  0,-12, -24,-36,-48 };
@@ -449,7 +449,6 @@ ScoreType katt_max    = 512;
 ScoreType katt_trans  = 32;
 ScoreType katt_scale  = 13;
 ScoreType katt_offset = 40;
-ScoreType katt_fawnPawn = 10;
 enum katt_att_def : unsigned char { katt_attack = 0, katt_defence = 1 };
 ScoreType katt_att_def_weight[2][7] = { {0, 8, 9, 5, 5,  6, 4}, {0,13, 9, 3, 2,  2, 0} };
 ScoreType katt_openfile = 13;
@@ -2568,6 +2567,15 @@ inline void evalPawn(const Position & p, BitBoard pieceBBiterator, ScoreType & s
     }
 }
 
+template< Color C>
+inline void evalPawnDanger(const Position & p, const BitBoard (& att)[2], ScoreType (& danger)[2]){
+    const BitBoard kingZone[2] = { BB::mask[p.king[Co_White]].kingZone, BB::mask[p.king[Co_Black]].kingZone};
+    const int pawnShield = int(countBit(kingZone[C] & p.pieces<P_wp>(C)));
+    const int pawnThreat = int(countBit(kingZone[C] & p.pieces<P_wp>(~C) & att[~C])); // only count protected pawns in king area
+    danger[C] -= pawnShield * EvalConfig::katt_att_def_weight[EvalConfig::katt_defence][P_wp];
+    danger[C] += pawnThreat * EvalConfig::katt_att_def_weight[EvalConfig::katt_attack][P_wp];
+}
+
 ///@todo reward safe checks
 ///@todo threat by protected pawn (and after push)
 ///@todo threat on the queen
@@ -2641,20 +2649,9 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
        //else if ( ter == MaterialHash::Ter_MaterialDraw){ if ( !isAttacked(p,kingSquare(p)) ) return 0;} ///@todo also verify stalemate ?
     }
 
-    // pawn attack / defence
-    const BitBoard wKingZone = BB::mask[p.king[Co_White]].kingZone;
-    const BitBoard bKingZone = BB::mask[p.king[Co_Black]].kingZone;
-    const int wPawnShield = int(countBit(wKingZone & pawns[Co_White]));
-    const int bPawnShield = int(countBit(bKingZone & pawns[Co_Black]));
-    const int wKPawnThreat = int(countBit(wKingZone & pawns[Co_Black] & att[Co_Black])); // only count protected pawns in king area
-    const int bKPawnThreat = int(countBit(bKingZone & pawns[Co_White] & att[Co_White])); // only count protected pawns in king area
-    danger[Co_White] -= wPawnShield * EvalConfig::katt_att_def_weight[EvalConfig::katt_defence][P_wp];
-    danger[Co_Black] -= bPawnShield * EvalConfig::katt_att_def_weight[EvalConfig::katt_defence][P_wp];
-    danger[Co_White] += wKPawnThreat * EvalConfig::katt_att_def_weight[EvalConfig::katt_attack][P_wp];
-    danger[Co_Black] += bKPawnThreat * EvalConfig::katt_att_def_weight[EvalConfig::katt_attack][P_wp];
-    // I like fawn pawn (king side only)
-    danger[Co_White] += ((p.whiteKing() & whiteKingKingSide) != 0ull) * ((BBSq_h3 & pawns[Co_Black]) != 0) * ((BBSq_h2 & pawns[Co_White]) != 0) * ((BBSq_g3 & pawns[Co_White]) != 0) * EvalConfig::katt_fawnPawn;
-    danger[Co_Black] += ((p.blackKing() & blackKingKingSide) != 0ull) * ((BBSq_h6 & pawns[Co_White]) != 0) * ((BBSq_h7 & pawns[Co_Black]) != 0) * ((BBSq_g6 & pawns[Co_Black]) != 0) * EvalConfig::katt_fawnPawn;
+    // second pass
+    evalPawnDanger<Co_White>(p,att,danger);
+    evalPawnDanger<Co_Black>(p,att,danger);
 
     // count pawn per file
     ///@todo use a cache for that ?!
@@ -2669,7 +2666,7 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
         scEG -= ScoreType(nbWP[f+1]>>1)*EvalConfig::doublePawnMalusEG;
         sc   += ScoreType(nbBP[f+1]>>1)*EvalConfig::doublePawnMalus;
         scEG += ScoreType(nbBP[f+1]>>1)*EvalConfig::doublePawnMalusEG;
-        // king danger if open file and rook on the board
+        // danger if open file near king and rook on the board
         if ((BB::mask[p.king[Co_White]].kingZone & files[f]) && p.blackRook()){
             if (!nbWP[f+1]){ danger[Co_White] += (!nbBP[f+1]) ? EvalConfig::katt_openfile : EvalConfig::katt_semiopenfile_our; }
             else if (!nbBP[f+1]){ danger[Co_White] += EvalConfig::katt_semiopenfile_opp; }
@@ -2716,13 +2713,11 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     */
 
     // in very end game winning king must be near the other king ///@todo shall be removed if material helpers work ...
-    if ((p.mat[Co_White][M_p] + p.mat[Co_Black][M_p] == 0) && p.king[Co_White] != INVALIDSQUARE && p.king[Co_Black] != INVALIDSQUARE) scEG -= ScoreType((sc>0?+1:-1)*(chebyshevDistance(p.king[Co_White], p.king[Co_Black])-2)*35);
+    if ((p.mat[Co_White][M_p] + p.mat[Co_Black][M_p] == 0) && p.king[Co_White] != INVALIDSQUARE && p.king[Co_Black] != INVALIDSQUARE) scEG -= ScoreType((sc>0?+1:-1)*(chebyshevDistance(p.king[Co_White], p.king[Co_Black])-2)*15);
 
-    /*
-    // when ahead exchange pieces, when below exchange pawns ///@todo this is wrong (bug)
-    scEG += ((winningSide==Co_White)?-1:+1)*ScoreType( (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t])*EvalConfig::exchangeFactor*std::abs(matPiece)/100.f*gpCompl);
-    scEG += ((winningSide==Co_White)?+1:-1)*ScoreType( (p.mat[Co_White][M_p]+p.mat[Co_Black][M_p])*EvalConfig::exchangeFactor*std::abs(matPawn )/100.f*gpCompl);
-    */
+    // when ahead exchange pieces, when below exchange pawns
+    //scEG += winningSide==Co_White ?  EvalConfig::tradeDown[std::min((char)8,p.mat[Co_Black][M_t])] : -EvalConfig::tradeDown[std::min((char)8,p.mat[Co_White][M_t])];
+    //scEG += winningSide==Co_White ? -EvalConfig::tradeDown[std::min((char)8,p.mat[Co_Black][M_p])] :  EvalConfig::tradeDown[std::min((char)8,p.mat[Co_White][M_p])];
 
     /*
     // blocked piece
@@ -2784,7 +2779,7 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     sc   += scBlocked;
     */
 
-    // number of pawn and piece type
+    // number of pawn and piece type value
     /*
     scAjust += p.mat[Co_White][M_r] * EvalConfig::adjRook  [p.mat[Co_White][M_p]];
     scAjust -= p.mat[Co_Black][M_r] * EvalConfig::adjRook  [p.mat[Co_Black][M_p]];
