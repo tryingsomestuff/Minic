@@ -1696,7 +1696,8 @@ void setPawnEntry(const PawnEntry & e){
 
 } // TT
 
-ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator = false); // forward decl
+template < bool display = false, bool safeMatEvaluator = true >
+ScoreType eval(const Position & p, float & gp); // forward decl
 
 std::string trim(const std::string& str, const std::string& whitespace = " \t"){
     const auto strBegin = str.find_first_not_of(whitespace);
@@ -1752,8 +1753,10 @@ std::string ToString(const Move & m, bool withScore){
     std::string prom;
     const std::string score = (withScore ? " (" + std::to_string(Move2Score(m)) + ")" : "");
     switch (Move2Type(m)) {
-    case T_bks: case T_wks: return "O-O" + score;
-    case T_bqs: case T_wqs: return "O-O-O" + score;
+    case T_bks: return "e8g8" + score;
+    case T_wks: return "e1g1" + score;
+    case T_bqs: return "e8c8" + score;
+    case T_wqs: return "e8c1" + score;
     default:
         static const std::string promSuffixe[] = { "","","","","q","r","b","n","q","r","b","n" };
         prom = promSuffixe[Move2Type(m)];
@@ -1940,16 +1943,16 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
     std::copy(std::istream_iterator<std::string>(iss), std::istream_iterator<std::string>(), back_inserter(strList));
 
     moveType = T_std;
-    if ( strList.empty()){ Logging::LogIt(Logging::logFatal) << "Trying to read bad move, seems empty " << str ; return false; }
+    if ( strList.empty()){ Logging::LogIt(Logging::logError) << "Trying to read bad move, seems empty " << str ; return false; }
 
     // detect special move
     if      (strList[0] == "0-0"   || strList[0] == "O-O")   moveType = ( p.c == Co_White) ? T_wks:T_bks;
     else if (strList[0] == "0-0-0" || strList[0] == "O-O-O") moveType = ( p.c == Co_White) ? T_wqs:T_bqs;
     else{
-        if ( strList.size() == 1 ){ Logging::LogIt(Logging::logFatal) << "Trying to read bad move, malformed (=1) " << str ; return false; }
-        if ( strList.size() > 2 && strList[2] != "ep"){ Logging::LogIt(Logging::logFatal) << "Trying to read bad move, malformed (>2)" << str ; return false; }
+        if ( strList.size() == 1 ){ Logging::LogIt(Logging::logError) << "Trying to read bad move, malformed (=1) " << str ; return false; }
+        if ( strList.size() > 2 && strList[2] != "ep"){ Logging::LogIt(Logging::logError) << "Trying to read bad move, malformed (>2)" << str ; return false; }
         if (strList[0].size() == 2 && (strList[0].at(0) >= 'a') && (strList[0].at(0) <= 'h') && ((strList[0].at(1) >= 1) && (strList[0].at(1) <= '8'))) from = stringToSquare(strList[0]);
-        else { Logging::LogIt(Logging::logFatal) << "Trying to read bad move, invalid from square " << str ; return false; }
+        else { Logging::LogIt(Logging::logError) << "Trying to read bad move, invalid from square " << str ; return false; }
         bool isCapture = false;
         // be carefull, promotion possible !
         if (strList[1].size() >= 2 && (strList[1].at(0) >= 'a') && (strList[1].at(0) <= 'h') &&  ((strList[1].at(1) >= '1') && (strList[1].at(1) <= '8'))) {
@@ -1970,7 +1973,7 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
                 else if ( prom == "R" || prom == "r") moveType = isCapture ? T_cappromr : T_promr;
                 else if ( prom == "B" || prom == "b") moveType = isCapture ? T_cappromb : T_promb;
                 else if ( prom == "N" || prom == "n") moveType = isCapture ? T_cappromn : T_promn;
-                else{ Logging::LogIt(Logging::logFatal) << "Trying to read bad move, invalid to square " << str ; return false; }
+                else{ Logging::LogIt(Logging::logError) << "Trying to read bad move, invalid to square " << str ; return false; }
             }
             else{
                 to = stringToSquare(strList[1]);
@@ -1978,7 +1981,7 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
                 if(isCapture) moveType = T_capture;
             }
         }
-        else { Logging::LogIt(Logging::logFatal) << "Trying to read bad move, invalid to square " << str ; return false; }
+        else { Logging::LogIt(Logging::logError) << "Trying to read bad move, invalid to square " << str ; return false; }
     }
     if (getPieceType(p,from) == P_wp && to == p.ep) moveType = T_ep;
     return true;
@@ -2609,10 +2612,9 @@ inline void evalPawnDanger(const Position & p, const BitBoard (& att)[2], ScoreT
 ///@todo threat on the queen
 ///@todo storm
 
-ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
-
+template < bool display, bool safeMatEvaluator >
+ScoreType eval(const Position & p, float & gp ){
     EvalScore score;
-
     static const ScoreType dummyScore = 0;
     static const ScoreType *absValues[7]   = { &dummyScore, &Values  [P_wp + PieceShift], &Values  [P_wn + PieceShift], &Values  [P_wb + PieceShift], &Values  [P_wr + PieceShift], &Values  [P_wq + PieceShift], &Values  [P_wk + PieceShift] };
     static const ScoreType *absValuesEG[7] = { &dummyScore, &ValuesEG[P_wp + PieceShift], &ValuesEG[P_wn + PieceShift], &ValuesEG[P_wb + PieceShift], &ValuesEG[P_wr + PieceShift], &ValuesEG[P_wq + PieceShift], &ValuesEG[P_wk + PieceShift] };
@@ -2660,7 +2662,7 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     evalPiece<P_wk,Co_Black>(p,p.pieces<P_wk>(Co_Black),score,att[Co_Black],danger);
 
     // end game knowledge (helper or scaling)
-    if ( gp < 0.3f /*safeMatEvaluator*/ ){
+    if ( safeMatEvaluator && gp < 0.3f ){
        const Hash matHash = MaterialHash::getMaterialHash(p.mat);
        const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
        if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ) return (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSide,score.scoresEG[EvalScore::sc_Mat]));
@@ -2824,7 +2826,7 @@ ScoreType eval(const Position & p, float & gp, bool safeMatEvaluator){
     // tempo
     //score.scores[EvalScore::sc_Tempo] += ScoreType(30);
 
-    //score.Display(p,gp);
+    if ( display ) score.Display(p,gp);
 
     // scale phase and scale 50 move rule
     return (white2Play?+1:-1)*score.Score(p,gp);
@@ -2918,7 +2920,6 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     sort(*this,moves,p,qRoot||isInCheck,qRoot?&e:0); ///@todo only mvv-lva seems to lose elo
 
     const ScoreType alphaInit = alpha;
-    bool validCapFound = false;
 
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         if (!isInCheck) {
@@ -2927,7 +2928,6 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
         }
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
-        validCapFound = true;
         //bool isCheck = isAttacked(p2, kingSquare(p2));
         if (p.c == Co_White && Move2To(*it) == p.king[Co_Black]) return MATE - ply + 1;
         if (p.c == Co_Black && Move2To(*it) == p.king[Co_White]) return MATE - ply + 1;
@@ -2947,7 +2947,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     }
     // store eval
     TT::setEntry({ bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),b,hashDepth,computeHash(p) });
-    return validCapFound?bestScore:eval(p, gp, true); // use material/draw evaluator on leaf
+    return bestScore;
 }
 
 inline void updatePV(PVList & pv, const Move & m, const PVList & childPV) {
@@ -3481,7 +3481,7 @@ namespace COM {
         Square from = INVALIDSQUARE;
         Square to = INVALIDSQUARE;
         MType mtype = T_std;
-        readMove(COM::position, mstr, from, to, mtype);
+        if (!readMove(COM::position, mstr, from, to, mtype)) return INVALIDMOVE;
         Move m = ToMove(from, to, mtype);
         bool whiteToMove = COM::position.c == Co_White;
         // convert castling input notation to internal castling style if needed
@@ -3510,6 +3510,24 @@ void setFeature(){
     ///@todo use otime ?
     Logging::LogIt(Logging::logGUI) << "feature ping=1 setboard=1 colors=0 usermove=1 memory=0 sigint=0 sigterm=0 otime=0 time=1 nps=0 myname=\"Minic " << MinicVersion << "\"";
     Logging::LogIt(Logging::logGUI) << "feature done=1";
+}
+
+bool receiveMove(const std::string & command){
+    std::string mstr(COM::command);
+    const size_t p = COM::command.find("usermove");
+    if (p != std::string::npos) mstr = mstr.substr(p + 8);
+    Move m = COM::moveFromCOM(mstr);
+    if ( m == INVALIDMOVE ) return false;
+    COM::stopPonder();
+    COM::stop();
+    if(!COM::makeMove(m,false,"")){ // make move
+        Logging::LogIt(Logging::logInfo) << "Bad opponent move ! " << mstr;
+        Logging::LogIt(Logging::logInfo) << ToString(COM::position) ;
+        COM::mode = COM::m_force;
+        return false;
+    }
+    else COM::stm = COM::opponent(COM::stm);
+    return true;
 }
 
 void xboard(){
@@ -3596,19 +3614,7 @@ void xboard(){
                 COM::mode = (COM::Mode)((int)COM::opponent(COM::stm));
             }
             else if ( strncmp(COM::command.c_str(),"usermove",8) == 0){
-                COM::stopPonder();
-                COM::stop();
-                std::string mstr(COM::command);
-                const size_t p = COM::command.find("usermove");
-                mstr = mstr.substr(p + 8);
-                Move m = COM::moveFromCOM(mstr);
-                if(!COM::makeMove(m,false,"")){ // make move
-                    commandOK = false;
-                    Logging::LogIt(Logging::logInfo) << "Bad opponent move ! " << mstr;
-                    Logging::LogIt(Logging::logInfo) << ToString(COM::position) ;
-                    COM::mode = COM::m_force;
-                }
-                else COM::stm = COM::opponent(COM::stm);
+                if (!receiveMove(COM::command)) commandOK = false;
             }
             else if (  strncmp(COM::command.c_str(),"setboard",8) == 0){
                 COM::stopPonder();
@@ -3707,7 +3713,8 @@ void xboard(){
             else if ( COM::command == "undo")  { }
             else if ( COM::command == "remove"){ }
             //************ end of Xboard command ********//
-            else Logging::LogIt(Logging::logInfo) << "Xboard does not know this command " << COM::command ;
+            // let's try to read the unknown command as a move ... trying to fix a scid versus PC issue ...
+            else if ( !receiveMove(COM::command)) Logging::LogIt(Logging::logInfo) << "Xboard does not know this command " << COM::command ;
         } // readline
     } // while true
 }
