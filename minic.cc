@@ -404,7 +404,7 @@ ScoreType   doublePawnMalus       = 16;
 ScoreType   doublePawnMalusEG     = 17;
 ScoreType   isolatedPawnMalus     = 21;
 ScoreType   isolatedPawnMalusEG   = 11;
-float       protectedPasserFactor = 0.25f; // 125%
+float       protectedPasserFactor = 0.9f; // 125%
 float       freePasserFactor      = 0.25f; // 125%
 
 ScoreType   tradeDown[9]          = {80,50,30,10,0,-5,-15,-45,-80};
@@ -580,10 +580,6 @@ const BitBoard whiteSquare               = 0x55AA55AA55AA55AA; const BitBoard bl
 const BitBoard whiteSideSquare           = 0x00000000FFFFFFFF; const BitBoard blackSideSquare           = 0xFFFFFFFF00000000;
 const BitBoard whiteKingQueenSide        = 0x0000000000000007; const BitBoard whiteKingKingSide         = 0x00000000000000e0;
 const BitBoard blackKingQueenSide        = 0x0700000000000000; const BitBoard blackKingKingSide         = 0xe000000000000000;
-const BitBoard whiteQueenSidePawnShield1 = 0x0000000000000700; const BitBoard whiteKingSidePawnShield1  = 0x000000000000e000;
-const BitBoard blackQueenSidePawnShield1 = 0x0007000000000000; const BitBoard blackKingSidePawnShield1  = 0x00e0000000000000;
-const BitBoard whiteQueenSidePawnShield2 = 0x0000000000070000; const BitBoard whiteKingSidePawnShield2  = 0x0000000000e00000;
-const BitBoard blackQueenSidePawnShield2 = 0x0000070000000000; const BitBoard blackKingSidePawnShield2  = 0x0000e00000000000;
 const BitBoard fileA                     = 0x0101010101010101;
 const BitBoard fileB                     = 0x0202020202020202;
 const BitBoard fileC                     = 0x0404040404040404;
@@ -2549,7 +2545,7 @@ namespace{ // some Color / Piece helpers
    template<Color C> inline const Rank ColorRank(const Square k)        { return Rank(C==Co_White? SQRANK(k) : (7-SQRANK(k)));}
 }
 
-template < int T , Color C>
+template < Piece T , Color C>
 inline void evalPiece(const Position & p, BitBoard pieceBBiterator, EvalScore & score, BitBoard & att, ScoreType (& danger)[2]){
     const BitBoard kingZone[2] = { BB::mask[p.king[Co_White]].kingZone, BB::mask[p.king[Co_Black]].kingZone};
     while (pieceBBiterator) {
@@ -2557,7 +2553,7 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, EvalScore & 
         const Square kk = ColorSquarePstHelper<C>(k);
         score.scores[EvalScore::sc_PST]   += ColorSignHelper<C>()*EvalConfig::PST  [T-1][kk];
         score.scoresEG[EvalScore::sc_PST] += ColorSignHelper<C>()*EvalConfig::PSTEG[T-1][kk];
-        const BitBoard target = pf[T-1](k, p.occupancy, p.c);
+        const BitBoard target = pf[T-1](k, p.occupancy | ~p.pieces<T>(C), p.c);
         danger[C]  -= ScoreType(countBit(target & kingZone[C])  * EvalConfig::katt_att_def_weight[EvalConfig::katt_defence][T]);
         danger[~C] += ScoreType(countBit(target & kingZone[~C]) * EvalConfig::katt_att_def_weight[EvalConfig::katt_attack][T]);
         const BitBoard curAtt = target & ~p.allPieces[C];
@@ -2593,11 +2589,8 @@ inline void evalPawn(const Position & p, BitBoard pieceBBiterator, EvalScore & s
 
 template< Color C>
 inline void evalPawnDanger(const Position & p, const BitBoard (& att)[2], ScoreType (& danger)[2]){
-    const BitBoard kingZone[2] = { BB::mask[p.king[Co_White]].kingZone, BB::mask[p.king[Co_Black]].kingZone};
-    const int pawnShield = int(countBit(kingZone[C] & p.pieces<P_wp>(C)));
-    const int pawnThreat = int(countBit(kingZone[C] & p.pieces<P_wp>(~C) & att[~C])); // only count protected pawns in king area
-    danger[C] -= pawnShield * EvalConfig::katt_att_def_weight[EvalConfig::katt_defence][P_wp];
-    danger[C] += pawnThreat * EvalConfig::katt_att_def_weight[EvalConfig::katt_attack][P_wp];
+    danger[C] -= int(countBit(BB::mask[p.king[C]].kingZone & p.pieces<P_wp>(C)))            * EvalConfig::katt_att_def_weight[EvalConfig::katt_defence][P_wp];
+    danger[C] += int(countBit(BB::mask[p.king[C]].kingZone & p.pieces<P_wp>(~C) & att[~C])) * EvalConfig::katt_att_def_weight[EvalConfig::katt_attack] [P_wp];
 }
 
 ///@todo reward safe checks
@@ -2681,12 +2674,12 @@ ScoreType eval(const Position & p, float & gp ){
     for(int f = File_a; f <= File_h ; ++f){
         nbWP[f+1] = countBit(pawns[Co_White] & files[f]);
         nbBP[f+1] = countBit(pawns[Co_Black] & files[f]);
-        const uint64_t nbWR = countBit(p.whiteRook() & files[f]);
-        const uint64_t nbBR = countBit(p.blackRook() & files[f]);
+        //const uint64_t nbWR = countBit(p.whiteRook() & files[f]);
+        //const uint64_t nbBR = countBit(p.blackRook() & files[f]);
         // double pawn malus
-        score.scores[EvalScore::sc_PwnDoubled]   -= ScoreType(nbWP[f+1]>>1)*EvalConfig::doublePawnMalus;
+        score.scores  [EvalScore::sc_PwnDoubled] -= ScoreType(nbWP[f+1]>>1)*EvalConfig::doublePawnMalus;
         score.scoresEG[EvalScore::sc_PwnDoubled] -= ScoreType(nbWP[f+1]>>1)*EvalConfig::doublePawnMalusEG;
-        score.scores[EvalScore::sc_PwnDoubled]   += ScoreType(nbBP[f+1]>>1)*EvalConfig::doublePawnMalus;
+        score.scores  [EvalScore::sc_PwnDoubled] += ScoreType(nbBP[f+1]>>1)*EvalConfig::doublePawnMalus;
         score.scoresEG[EvalScore::sc_PwnDoubled] += ScoreType(nbBP[f+1]>>1)*EvalConfig::doublePawnMalusEG;
         // danger if open file near king and rook(s) on the board
         if ((BB::mask[p.king[Co_White]].kingZone & files[f]) && p.blackRook()){
@@ -2697,6 +2690,7 @@ ScoreType eval(const Position & p, float & gp ){
             if      (!nbBP[f+1]){ danger[Co_Black] += (!nbWP[f+1]) ? EvalConfig::katt_openfile : EvalConfig::katt_semiopenfile_our; }
             else if (!nbWP[f+1]){ danger[Co_Black] += EvalConfig::katt_semiopenfile_opp; }
         }
+        /*
         // rook on open file
         if ( nbWR ){
             if      ( nbWP[f+1] == 0 ) score.scores[EvalScore::sc_OpenFile] += nbWR*(nbBP[f+1] == 0 ? EvalConfig::rookOnOpenFile:EvalConfig::rookOnOpenSemiFileOur);
@@ -2706,13 +2700,14 @@ ScoreType eval(const Position & p, float & gp ){
             if      ( nbBP[f+1] == 0 ) score.scores[EvalScore::sc_OpenFile] -= nbBR*(nbWP[f+1] == 0 ? EvalConfig::rookOnOpenFile:EvalConfig::rookOnOpenSemiFileOur);
             else if ( nbWP[f+1] == 0 ) score.scores[EvalScore::sc_OpenFile] -= nbBR*EvalConfig::rookOnOpenSemiFileOpp;
         }
+        */
     }
 
     // isolated pawn malus (second loop needed)
     for(int f = File_a; f <= File_h ; ++f){
-        score.scores[EvalScore::sc_PwnIsolated]   -= (!nbWP[f] && nbWP[f+1] && !nbWP[f+2])*EvalConfig::isolatedPawnMalus;
+        score.scores  [EvalScore::sc_PwnIsolated] -= (!nbWP[f] && nbWP[f+1] && !nbWP[f+2])*EvalConfig::isolatedPawnMalus;
         score.scoresEG[EvalScore::sc_PwnIsolated] -= (!nbWP[f] && nbWP[f+1] && !nbWP[f+2])*EvalConfig::isolatedPawnMalusEG;
-        score.scores[EvalScore::sc_PwnIsolated]   += (!nbBP[f] && nbBP[f+1] && !nbBP[f+2])*EvalConfig::isolatedPawnMalus;
+        score.scores  [EvalScore::sc_PwnIsolated] += (!nbBP[f] && nbBP[f+1] && !nbBP[f+2])*EvalConfig::isolatedPawnMalus;
         score.scoresEG[EvalScore::sc_PwnIsolated] += (!nbBP[f] && nbBP[f+1] && !nbBP[f+2])*EvalConfig::isolatedPawnMalusEG;
     }
 
@@ -2797,8 +2792,6 @@ ScoreType eval(const Position & p, float & gp ){
     // king blocking rook
     if ( ( (p.blackKing() & BBSq_f8) || (p.blackKing() & BBSq_g8) ) && ( (p.blackRook() & BBSq_h8) || (p.blackRook() & BBSq_g8) ) ) score.scores[EvalScore::sc_Blocked] += EvalConfig::blockedRookByKing;
     if ( ( (p.blackKing() & BBSq_c8) || (p.blackKing() & BBSq_b8) ) && ( (p.blackRook() & BBSq_a8) || (p.blackRook() & BBSq_b8) ) ) score.scores[EvalScore::sc_Blocked] += EvalConfig::blockedRookByKing;
-
-    sc   += scBlocked;
     */
 
     // number of pawn and piece type value
@@ -2809,19 +2802,16 @@ ScoreType eval(const Position & p, float & gp ){
     score.scAjust -= p.mat[Co_Black][M_n] * EvalConfig::adjKnight[p.mat[Co_Black][M_p]];
     */
 
-    // bishop pair bonus
+    // adjust piece pair score
     score.scoresScaled[EvalScore::sc_Adjust] += ( (p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonus : 0)-(p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonus : 0) );
-    // knight pair malus
     score.scoresScaled[EvalScore::sc_Adjust] += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0) );
-    // rook pair malus
     score.scoresScaled[EvalScore::sc_Adjust] += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
 
     // tempo
     //score.scores[EvalScore::sc_Tempo] += ScoreType(30);
 
+    // scale phase and 50 moves rule
     if ( display ) score.Display(p,gp);
-
-    // scale phase and scale 50 move rule
     return (white2Play?+1:-1)*score.Score(p,gp);
 }
 
