@@ -243,7 +243,7 @@ const bool doStaticNullMove = true;
 const bool doRazoring       = true;
 const bool doQFutility      = true;
 const bool doProbcut        = true;
-const bool doHistoryPruning = false;
+const bool doHistoryPruning = false; ///@todo
 
 const ScoreType qfutilityMargin          = 128;
 const int       staticNullMoveMaxDepth   = 6;
@@ -272,9 +272,7 @@ int lmrReduction[MAX_DEPTH][MAX_MOVE];
 
 void initLMR() {
     Logging::LogIt(Logging::logInfo) << "Init lmr";
-    for (int d = 0; d < MAX_DEPTH; d++)
-        for (int m = 0; m < MAX_MOVE; m++)
-            lmrReduction[d][m] = int(1.0 + log(d) * log(m) * 0.5); //(int)sqrt(float(d) * m / 8.f);
+    for (int d = 0; d < MAX_DEPTH; d++) for (int m = 0; m < MAX_MOVE; m++) lmrReduction[d][m] = int(1.0 + log(d) * log(m) * 0.5); //(int)sqrt(float(d) * m / 8.f);
 }
 
 }
@@ -488,9 +486,7 @@ int MvvLvaScores[6][6];
 void initMvvLva(){
     Logging::LogIt(Logging::logInfo) << "Init mvv-lva" ;
     static const ScoreType IValues[6] = { 1, 2, 3, 5, 9, 20 }; ///@todo try N=B=3 !
-    for(int v = 0; v < 6 ; ++v)
-        for(int a = 0; a < 6 ; ++a)
-            MvvLvaScores[v][a] = IValues[v] * 20 - IValues[a];
+    for(int v = 0; v < 6 ; ++v) for(int a = 0; a < 6 ; ++a) MvvLvaScores[v][a] = IValues[v] * 20 - IValues[a];
 }
 
 enum MType : unsigned char{
@@ -1026,7 +1022,7 @@ namespace MaterialHash { // from Gull
     }
     ScoreType helperDummy(const Position &, Color , ScoreType){ return 0; }
 
-    // idea taken from Stockfish or public-domain KPK from HGM
+    // idea taken from Stockfish (or public-domain KPK from HGM)
     namespace KPK{
 
     Square normalizeSquare(const Position& p, Color strongSide, Square sq) {
@@ -1290,8 +1286,8 @@ void updateMaterialEp(Position &p){
 void updateMaterialProm(Position &p, const Square toBeCaptured, MType mt){
     const Piece pp = getPieceType(p,toBeCaptured);
     if ( pp != P_none ) p.mat[~p.c][pp]--; // capture if to square is not empty
-    p.mat[p.c][P_wp+PieceShift]--; // prom
-    p.mat[p.c][promShift(mt)]++;  // prom
+    p.mat[p.c][P_wp+PieceShift]--; // pawn
+    p.mat[p.c][promShift(mt)]++;  // prom piece
     updateMaterialOther(p);
 }
 
@@ -1473,10 +1469,7 @@ struct ThreadContext{
     HistoryT historyT;
     CounterT counterT;
 
-    struct RootScores {
-        Move m;
-        ScoreType s;
-    };
+    struct RootScores { Move m; ScoreType s; };
 
     template <bool pvnode, bool canPrune = true> ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, const Move skipMove = INVALIDMOVE, std::vector<RootScores> * rootScores = 0);
     template <bool qRoot, bool pvnode>
@@ -3021,7 +3014,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     else evalScore = (e.h != 0)?e.eval:eval(p, gp);
     evalStack[p.ply] = evalScore; // insert only static eval, not hash score
     
-    /* ///@todo THIS IS BUGGY : because pv is not filled if bestScore starts too big. In this case, probably hash move can be used to fill the PV ??
+    /* ///@todo THIS IS BUGGY : because pv is not filled (even at root) if bestScore starts too big.
     ScoreType bestScore = evalScore;
     if ( (e.h != 0 && !isInCheck) && ((e.b == TT::B_alpha && e.score < evalScore) || (e.b == TT::B_beta && e.score > evalScore) || (e.b == TT::B_exact)) ) bestScore = adjustHashScore(e.score,ply);
     */
@@ -3030,7 +3023,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     MoveList moves;
     bool moveGenerated = false;
     bool capMoveGenerated = false;
-
     bool futility = false, lmp = false, /*mateThreat = false,*/ historyPruning = false;
     const bool isNotEndGame = (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t] > 0); ///@todo better ?
 
@@ -3306,7 +3298,6 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
     }
 
     ScoreType depthScores[MAX_DEPTH] = { 0 };
-    //ScoreType depthMoves[MAX_DEPTH] = { INVALIDMOVE };
 
     const bool isInCheck = isAttacked(p, kingSquare(p));
 
@@ -3324,7 +3315,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
     */
 
     if ( isMainThread() ){
-       // easy move detection (small open window depth 2 search
+       // easy move detection (small open window depth 2 search)
        std::vector<ThreadContext::RootScores> rootScores;
        ScoreType easyScore = pvs<true,false>(-MATE, MATE, p, 2, 1, pv, seldepth, isInCheck,INVALIDMOVE,&rootScores);
        std::sort(rootScores.begin(), rootScores.end(), [](const ThreadContext::RootScores& r1, const ThreadContext::RootScores & r2) {return r1.s > r2.s; });
@@ -3376,11 +3367,10 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
             if (TimeMan::isDynamic && std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()*1.8)) > getCurrentMoveMs()) { stopFlag = true; Logging::LogIt(Logging::logInfo) << "stopflag triggered, not enough time for next depth"; break; } // not enought time
             depthScores[depth] = bestScore;
         }
-        //if (!pv.empty()) depthMoves[depth] = pv[0];
     }
 pvsout:
     if ( isMainThread() ) startLock.store(false);
-    if (pv.empty()){ // pv.size() != reachedDepth ?
+    if (pv.empty()){
         m = INVALIDMOVE;
         Logging::LogIt(Logging::logInfo) << "Empty pv, trying to use TT" ;
         TT::getPV(p, *this, pv);
@@ -3401,10 +3391,8 @@ namespace COM {
     Position position;
     Move move;
     DepthType depth;
-
     enum Mode : unsigned char { m_play_white = 0, m_play_black = 1, m_force = 2, m_analyze = 3 };
     Mode mode;
-
     enum SideToMove : unsigned char { stm_white = 0, stm_black = 1 };
     SideToMove stm; ///@todo isn't this redundant with position.c ??
 
@@ -3485,10 +3473,8 @@ namespace COM {
         Move m = ToMove(from, to, mtype);
         bool whiteToMove = COM::position.c == Co_White;
         // convert castling input notation to internal castling style if needed
-        if (mtype == T_std &&
-            from == (whiteToMove ? Sq_e1 : Sq_e8) &&
-            COM::position.b[from] == (whiteToMove ? P_wk : P_bk)) {
-            if (to == (whiteToMove ? Sq_c1 : Sq_c8)) m = ToMove(from, to, whiteToMove ? T_wqs : T_bqs);
+        if (mtype == T_std && from == (whiteToMove ? Sq_e1 : Sq_e8) && COM::position.b[from] == (whiteToMove ? P_wk : P_bk)) {
+            if      (to == (whiteToMove ? Sq_c1 : Sq_c8)) m = ToMove(from, to, whiteToMove ? T_wqs : T_bqs);
             else if (to == (whiteToMove ? Sq_g1 : Sq_g8)) m = ToMove(from, to, whiteToMove ? T_wks : T_bks);
         }
         return m;
@@ -3562,8 +3548,7 @@ void xboard(){
 
         while(once++ == 0 || !commandOK){ // loop until a good command is found
             commandOK = true;
-            // read next command !
-            COM::readLine();
+            COM::readLine(); // read next command !
 
             if (COM::command == "force")        COM::mode = COM::m_force;
             else if (COM::command == "xboard")  Logging::LogIt(Logging::logInfo) << "This is minic!" ;
@@ -3666,11 +3651,10 @@ void xboard(){
             else if ( strncmp(COM::command.c_str(), "st", 2) == 0) {
                 int msecPerMove = 0;
                 sscanf(COM::command.c_str(), "st %d", &msecPerMove);
-                msecPerMove *= 1000;
                 // forced move time
                 TimeMan::isDynamic        = false;
                 TimeMan::nbMoveInTC       = -1;
-                TimeMan::msecPerMove      = msecPerMove;
+                TimeMan::msecPerMove      = msecPerMove*1000;
                 TimeMan::msecInTC         = -1;
                 TimeMan::msecInc          = -1;
                 TimeMan::msecUntilNextTC  = -1;
@@ -3690,20 +3674,14 @@ void xboard(){
                 TimeMan::msecUntilNextTC  = -1;
             }
             else if(strncmp(COM::command.c_str(), "level",5) == 0) {
-                int timeTC = 0;
-                int secTC = 0;
-                int inc = 0;
-                int mps = 0;
+                int timeTC = 0, secTC = 0, inc = 0, mps = 0;
                 if( sscanf(COM::command.c_str(), "level %d %d %d", &mps, &timeTC, &inc) != 3) sscanf(COM::command.c_str(), "level %d %d:%d %d", &mps, &timeTC, &secTC, &inc);
-                timeTC *= 60000;
-                timeTC += secTC * 1000;
-                int msecinc = inc * 1000;
                 // classic TC is mps>0, else sudden death
                 TimeMan::isDynamic        = false;
                 TimeMan::nbMoveInTC       = mps;
                 TimeMan::msecPerMove      = -1;
-                TimeMan::msecInTC         = timeTC;
-                TimeMan::msecInc          = msecinc;
+                TimeMan::msecInTC         = timeTC*60000 + secTC * 1000;
+                TimeMan::msecInc          = inc * 1000;
                 TimeMan::msecUntilNextTC  = timeTC; // just an init here, will be managed using "time" command later
                 COM::depth                = MAX_DEPTH; // infinity
             }
