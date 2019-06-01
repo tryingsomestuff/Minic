@@ -443,12 +443,12 @@ ScoreType MOBEG[6][29] = { {0,0,0,0},
                            {-19,-18,-16,-14,-12,-10,0,3,6,9,12,15,18,21,24,27,30,33,35,38,41,43,46,48,49,50,51,52,53},
                            {-20,0,5,10,14,17,20,22,24} };
 
-ScoreType katt_max    = 512;
+ScoreType katt_max    = 267;
 ScoreType katt_trans  = 32;
 ScoreType katt_scale  = 13;
-ScoreType katt_offset = 40;
+ScoreType katt_offset = 20;
 enum katt_att_def : unsigned char { katt_attack = 0, katt_defence = 1 };
-ScoreType katt_att_def_weight[2][7] = { {0, 8, 9, 5, 5,  6, 4}, {0,13, 9, 3, 2,  2, 0} };
+ScoreType katt_att_def_weight[2][7] = { {0, 2, 4, 4, 8, 10, 4}, {0, 1, 4, 4, 3, 3, 0} };
 ScoreType katt_openfile = 13;
 ScoreType katt_semiopenfile_our = 10;
 ScoreType katt_semiopenfile_opp = 12;
