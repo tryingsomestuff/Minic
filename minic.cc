@@ -406,7 +406,7 @@ ScoreType   doublePawnMalus       = 16;
 ScoreType   doublePawnMalusEG     = 17;
 ScoreType   isolatedPawnMalus     = 21;
 ScoreType   isolatedPawnMalusEG   = 11;
-float       protectedPasserFactor = 0.9f; // 125%
+float       protectedPasserFactor = 0.25f; // 125%
 float       freePasserFactor      = 0.25f; // 125%
 
 ScoreType   tradeDown[9]          = {80,50,30,10,0,-5,-15,-45,-80};
@@ -1751,7 +1751,7 @@ std::string ToString(const Move & m, bool withScore){
     case T_bks: return "e8g8" + score;
     case T_wks: return "e1g1" + score;
     case T_bqs: return "e8c8" + score;
-    case T_wqs: return "e8c1" + score;
+    case T_wqs: return "e1c1" + score;
     default:
         static const std::string promSuffixe[] = { "","","","","q","r","b","n","q","r","b","n" };
         prom = promSuffixe[Move2Type(m)];
@@ -2559,7 +2559,7 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, EvalScore & 
         const Square kk = ColorSquarePstHelper<C>(k);
         score.scores[EvalScore::sc_PST]   += ColorSignHelper<C>()*EvalConfig::PST  [T-1][kk];
         score.scoresEG[EvalScore::sc_PST] += ColorSignHelper<C>()*EvalConfig::PSTEG[T-1][kk];
-        const BitBoard target = pf[T-1](k, p.occupancy | ~p.pieces<T>(C), p.c);
+        const BitBoard target = pf[T-1](k, p.occupancy /*^ p.pieces<T>(C)*/, p.c); ///@todo aligned threats ???
         danger[C]  -= ScoreType(countBit(target & kingZone[C])  * EvalConfig::katt_att_def_weight[EvalConfig::katt_defence][T]);
         danger[~C] += ScoreType(countBit(target & kingZone[~C]) * EvalConfig::katt_att_def_weight[EvalConfig::katt_attack][T]);
         const BitBoard curAtt = target & ~p.allPieces[C];
@@ -2670,8 +2670,8 @@ ScoreType eval(const Position & p, float & gp ){
     evalPawn<Co_White>(p,p.pieces<P_wp>(Co_White),score,att[Co_White],safePPush[Co_White],pawnTargets[Co_White],passer[Co_White],gp,gpCompl);
     evalPawn<Co_Black>(p,p.pieces<P_wp>(Co_Black),score,att[Co_Black],safePPush[Co_Black],pawnTargets[Co_Black],passer[Co_Black],gp,gpCompl);
     // pawn second pass (needs att)
-    evalPawnDanger<Co_White>(p,att,danger);
-    evalPawnDanger<Co_Black>(p,att,danger);
+    //evalPawnDanger<Co_White>(p,att,danger);
+    //evalPawnDanger<Co_Black>(p,att,danger);
 
     // count pawn per file
     ///@todo use a cache for that ?!
@@ -2688,6 +2688,7 @@ ScoreType eval(const Position & p, float & gp ){
         score.scores  [EvalScore::sc_PwnDoubled] += ScoreType(nbBP[f+1]>>1)*EvalConfig::doublePawnMalus;
         score.scoresEG[EvalScore::sc_PwnDoubled] += ScoreType(nbBP[f+1]>>1)*EvalConfig::doublePawnMalusEG;
         // danger if open file near king and rook(s) on the board
+        /*
         if ((BB::mask[p.king[Co_White]].kingZone & files[f]) && p.blackRook()){
             if      (!nbWP[f+1]){ danger[Co_White] += (!nbBP[f+1]) ? EvalConfig::katt_openfile : EvalConfig::katt_semiopenfile_our; }
             else if (!nbBP[f+1]){ danger[Co_White] += EvalConfig::katt_semiopenfile_opp; }
@@ -2696,6 +2697,7 @@ ScoreType eval(const Position & p, float & gp ){
             if      (!nbBP[f+1]){ danger[Co_Black] += (!nbWP[f+1]) ? EvalConfig::katt_openfile : EvalConfig::katt_semiopenfile_our; }
             else if (!nbWP[f+1]){ danger[Co_Black] += EvalConfig::katt_semiopenfile_opp; }
         }
+        */
         /*
         // rook on open file
         if ( nbWR ){
@@ -2814,14 +2816,14 @@ ScoreType eval(const Position & p, float & gp ){
     score.scoresScaled[EvalScore::sc_Adjust] += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
 
     // pawn shield (PST and king troppism alone is not enough)
-    //score.scores[EvalScore::sc_PwnShield] += ScoreType(((p.whiteKing() & whiteKingQueenSide ) != 0ull)*countBit(pawns[Co_White] & whiteQueenSidePawnShield1)*EvalConfig::pawnShieldBonus[1]    );
-    //score.scores[EvalScore::sc_PwnShield] += ScoreType(((p.whiteKing() & whiteKingQueenSide ) != 0ull)*countBit(pawns[Co_White] & whiteQueenSidePawnShield2)*EvalConfig::pawnShieldBonus[1] / 2);
-    //score.scores[EvalScore::sc_PwnShield] += ScoreType(((p.whiteKing() & whiteKingKingSide  ) != 0ull)*countBit(pawns[Co_White] & whiteKingSidePawnShield1 )*EvalConfig::pawnShieldBonus[1]    );
-    //score.scores[EvalScore::sc_PwnShield] += ScoreType(((p.whiteKing() & whiteKingKingSide  ) != 0ull)*countBit(pawns[Co_White] & whiteKingSidePawnShield2 )*EvalConfig::pawnShieldBonus[1] / 2);
-    //score.scores[EvalScore::sc_PwnShield] -= ScoreType(((p.blackKing() & blackKingQueenSide ) != 0ull)*countBit(pawns[Co_Black] & blackQueenSidePawnShield1)*EvalConfig::pawnShieldBonus[1]    );
-    //score.scores[EvalScore::sc_PwnShield] -= ScoreType(((p.blackKing() & blackKingQueenSide ) != 0ull)*countBit(pawns[Co_Black] & blackQueenSidePawnShield2)*EvalConfig::pawnShieldBonus[1] / 2);
-    //score.scores[EvalScore::sc_PwnShield] -= ScoreType(((p.blackKing() & blackKingKingSide  ) != 0ull)*countBit(pawns[Co_Black] & blackKingSidePawnShield1 )*EvalConfig::pawnShieldBonus[1]    );
-    //score.scores[EvalScore::sc_PwnShield] -= ScoreType(((p.blackKing() & blackKingKingSide  ) != 0ull)*countBit(pawns[Co_Black] & blackKingSidePawnShield2 )*EvalConfig::pawnShieldBonus[1] / 2);
+    score.scores[EvalScore::sc_PwnShield] += ScoreType(((p.whiteKing() & whiteKingQueenSide ) != 0ull)*countBit(pawns[Co_White] & whiteQueenSidePawnShield1)*EvalConfig::pawnShieldBonus[1]    );
+    score.scores[EvalScore::sc_PwnShield] += ScoreType(((p.whiteKing() & whiteKingQueenSide ) != 0ull)*countBit(pawns[Co_White] & whiteQueenSidePawnShield2)*EvalConfig::pawnShieldBonus[1] / 2);
+    score.scores[EvalScore::sc_PwnShield] += ScoreType(((p.whiteKing() & whiteKingKingSide  ) != 0ull)*countBit(pawns[Co_White] & whiteKingSidePawnShield1 )*EvalConfig::pawnShieldBonus[1]    );
+    score.scores[EvalScore::sc_PwnShield] += ScoreType(((p.whiteKing() & whiteKingKingSide  ) != 0ull)*countBit(pawns[Co_White] & whiteKingSidePawnShield2 )*EvalConfig::pawnShieldBonus[1] / 2);
+    score.scores[EvalScore::sc_PwnShield] -= ScoreType(((p.blackKing() & blackKingQueenSide ) != 0ull)*countBit(pawns[Co_Black] & blackQueenSidePawnShield1)*EvalConfig::pawnShieldBonus[1]    );
+    score.scores[EvalScore::sc_PwnShield] -= ScoreType(((p.blackKing() & blackKingQueenSide ) != 0ull)*countBit(pawns[Co_Black] & blackQueenSidePawnShield2)*EvalConfig::pawnShieldBonus[1] / 2);
+    score.scores[EvalScore::sc_PwnShield] -= ScoreType(((p.blackKing() & blackKingKingSide  ) != 0ull)*countBit(pawns[Co_Black] & blackKingSidePawnShield1 )*EvalConfig::pawnShieldBonus[1]    );
+    score.scores[EvalScore::sc_PwnShield] -= ScoreType(((p.blackKing() & blackKingKingSide  ) != 0ull)*countBit(pawns[Co_Black] & blackKingSidePawnShield2 )*EvalConfig::pawnShieldBonus[1] / 2);
 
     // tempo
     //score.scores[EvalScore::sc_Tempo] += ScoreType(30);
