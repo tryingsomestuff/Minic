@@ -396,6 +396,8 @@ const ScoreType PSTEG[6][64] = {
     }
 };
 
+ScoreType   pawnShieldBonus[4]    = {0, 15, 30, 45};
+
 ScoreType   passerBonus[8]        = { 0,  0,  3,  8, 15, 24, 34, 0};
 ScoreType   passerBonusEG[8]      = { 0,  4, 18, 42, 75,118,170, 0};
 ScoreType   rookBehindPassed      = 36;
@@ -580,6 +582,10 @@ const BitBoard whiteSquare               = 0x55AA55AA55AA55AA; const BitBoard bl
 const BitBoard whiteSideSquare           = 0x00000000FFFFFFFF; const BitBoard blackSideSquare           = 0xFFFFFFFF00000000;
 const BitBoard whiteKingQueenSide        = 0x0000000000000007; const BitBoard whiteKingKingSide         = 0x00000000000000e0;
 const BitBoard blackKingQueenSide        = 0x0700000000000000; const BitBoard blackKingKingSide         = 0xe000000000000000;
+const BitBoard whiteQueenSidePawnShield1 = 0x0000000000000700; const BitBoard whiteKingSidePawnShield1  = 0x000000000000e000;
+const BitBoard blackQueenSidePawnShield1 = 0x0007000000000000; const BitBoard blackKingSidePawnShield1  = 0x00e0000000000000;
+const BitBoard whiteQueenSidePawnShield2 = 0x0000000000070000; const BitBoard whiteKingSidePawnShield2  = 0x0000000000e00000;
+const BitBoard blackQueenSidePawnShield2 = 0x0000070000000000; const BitBoard blackKingSidePawnShield2 = 0x0000e00000000000;
 const BitBoard fileA                     = 0x0101010101010101;
 const BitBoard fileB                     = 0x0202020202020202;
 const BitBoard fileC                     = 0x0404040404040404;
@@ -2507,7 +2513,7 @@ double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f,
 void initEval(){ for(int i = 0; i < 64; i++){ EvalConfig::katt_table[i] = (int) sigmoid(i,EvalConfig::katt_max,EvalConfig::katt_trans,EvalConfig::katt_scale,EvalConfig::katt_offset); } } // idea taken from Topple
 
 struct EvalScore{
-    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_MOB, sc_ATT, sc_Pwn, sc_PwnPassed, sc_PwnIsolated, sc_PwnDoubled, sc_PwnPush, sc_Blocked, sc_Adjust, sc_OpenFile, sc_EndGame, sc_Exchange, sc_Tempo, sc_max };
+    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_MOB, sc_ATT, sc_Pwn, sc_PwnShield, sc_PwnPassed, sc_PwnIsolated, sc_PwnDoubled, sc_PwnPush, sc_Blocked, sc_Adjust, sc_OpenFile, sc_EndGame, sc_Exchange, sc_Tempo, sc_max };
     float scalingFactor = 1;
     ScoreType scores[sc_max] = {0};  ScoreType scoresEG[sc_max] = {0};  ScoreType scoresScaled[sc_max] = {0};
     ScoreType Score(const Position &p, float gp){
@@ -2516,7 +2522,7 @@ struct EvalScore{
         return (gp*sc + (1.f-gp)*scEG + scScaled)*scalingFactor*std::min(1.f,(110-p.fifty)/100.f);
     }
     void Display(const Position &p, float gp){
-        static const std::string scNames[sc_max] = { "Mat", "PST", "MOB", "Att", "Pwn", "PwnPassed", "PwnIsolated", "PwnDoubled", "PwnPush", "Blocked", "Adjust", "OpenFile", "EndGame", "Exchange", "Tempo"};
+        static const std::string scNames[sc_max] = { "Mat", "PST", "MOB", "Att", "Pwn", "PwnShield", "PwnPassed", "PwnIsolated", "PwnDoubled", "PwnPush", "Blocked", "Adjust", "OpenFile", "EndGame", "Exchange", "Tempo"};
         ScoreType sc = 0, scEG = 0, scScaled = 0;
         for(int k = 0 ; k < sc_max ; ++k){
             Logging::LogIt(Logging::logInfo) << scNames[k] << "       " << scores[k];
@@ -2806,6 +2812,16 @@ ScoreType eval(const Position & p, float & gp ){
     score.scoresScaled[EvalScore::sc_Adjust] += ( (p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonus : 0)-(p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonus : 0) );
     score.scoresScaled[EvalScore::sc_Adjust] += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0) );
     score.scoresScaled[EvalScore::sc_Adjust] += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
+
+    // pawn shield (PST and king troppism alone is not enough)
+    //score.scores[EvalScore::sc_PwnShield] += ScoreType(((p.whiteKing() & whiteKingQueenSide ) != 0ull)*countBit(pawns[Co_White] & whiteQueenSidePawnShield1)*EvalConfig::pawnShieldBonus[1]    );
+    //score.scores[EvalScore::sc_PwnShield] += ScoreType(((p.whiteKing() & whiteKingQueenSide ) != 0ull)*countBit(pawns[Co_White] & whiteQueenSidePawnShield2)*EvalConfig::pawnShieldBonus[1] / 2);
+    //score.scores[EvalScore::sc_PwnShield] += ScoreType(((p.whiteKing() & whiteKingKingSide  ) != 0ull)*countBit(pawns[Co_White] & whiteKingSidePawnShield1 )*EvalConfig::pawnShieldBonus[1]    );
+    //score.scores[EvalScore::sc_PwnShield] += ScoreType(((p.whiteKing() & whiteKingKingSide  ) != 0ull)*countBit(pawns[Co_White] & whiteKingSidePawnShield2 )*EvalConfig::pawnShieldBonus[1] / 2);
+    //score.scores[EvalScore::sc_PwnShield] -= ScoreType(((p.blackKing() & blackKingQueenSide ) != 0ull)*countBit(pawns[Co_Black] & blackQueenSidePawnShield1)*EvalConfig::pawnShieldBonus[1]    );
+    //score.scores[EvalScore::sc_PwnShield] -= ScoreType(((p.blackKing() & blackKingQueenSide ) != 0ull)*countBit(pawns[Co_Black] & blackQueenSidePawnShield2)*EvalConfig::pawnShieldBonus[1] / 2);
+    //score.scores[EvalScore::sc_PwnShield] -= ScoreType(((p.blackKing() & blackKingKingSide  ) != 0ull)*countBit(pawns[Co_Black] & blackKingSidePawnShield1 )*EvalConfig::pawnShieldBonus[1]    );
+    //score.scores[EvalScore::sc_PwnShield] -= ScoreType(((p.blackKing() & blackKingKingSide  ) != 0ull)*countBit(pawns[Co_Black] & blackKingSidePawnShield2 )*EvalConfig::pawnShieldBonus[1] / 2);
 
     // tempo
     //score.scores[EvalScore::sc_Tempo] += ScoreType(30);
