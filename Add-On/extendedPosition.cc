@@ -1,3 +1,5 @@
+#include <cctype>
+
 void split( std::vector<std::string> & v, const std::string & str, const std::string & sep){
     size_t start = 0, end = 0;
     while ( end != std::string::npos){
