@@ -1941,8 +1941,15 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
     if ( strList.empty()){ Logging::LogIt(Logging::logError) << "Trying to read bad move, seems empty " << str ; return false; }
 
     // detect special move
-    if      (strList[0] == "0-0"   || strList[0] == "O-O")   moveType = ( p.c == Co_White) ? T_wks:T_bks;
-    else if (strList[0] == "0-0-0" || strList[0] == "O-O-O") moveType = ( p.c == Co_White) ? T_wqs:T_bqs;
+    if (strList[0] == "0-0" || strList[0] == "O-O") {
+        moveType = (p.c == Co_White) ? T_wks : T_bks;
+        from = (p.c == Co_White) ? Sq_e1 : Sq_e8;
+        to = (p.c == Co_White) ? Sq_g1 : Sq_g8;
+    }
+    else if (strList[0] == "0-0-0" || strList[0] == "O-O-O") {
+        moveType = (p.c == Co_White) ? T_wqs : T_bqs;
+        to = (p.c == Co_White) ? Sq_c1 : Sq_c8;
+    }
     else{
         if ( strList.size() == 1 ){ Logging::LogIt(Logging::logError) << "Trying to read bad move, malformed (=1) " << str ; return false; }
         if ( strList.size() > 2 && strList[2] != "ep"){ Logging::LogIt(Logging::logError) << "Trying to read bad move, malformed (>2)" << str ; return false; }
@@ -2519,7 +2526,7 @@ struct EvalScore{
     ScoreType Score(const Position &p, float gp){
         ScoreType sc = 0, scEG = 0, scScaled = 0;
         for(int k = 0 ; k < sc_max ; ++k){ sc += scores[k]; scEG += scoresEG[k]; scScaled += scoresScaled[k]; }
-        return (gp*sc + (1.f-gp)*scEG + scScaled)*scalingFactor*std::min(1.f,(110-p.fifty)/100.f);
+        return ScoreType((gp*sc + (1.f-gp)*scEG + scScaled)*scalingFactor*std::min(1.f,(110-p.fifty)/100.f));
     }
     void Display(const Position &p, float gp){
         static const std::string scNames[sc_max] = { "Mat", "PST", "MOB", "Att", "Pwn", "PwnShield", "PwnPassed", "PwnIsolated", "PwnDoubled", "PwnPush", "Blocked", "Adjust", "OpenFile", "EndGame", "Exchange", "Tempo"};
