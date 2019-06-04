@@ -34,7 +34,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_SYZYGY
 //#define WITH_UCI
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "0.62";
 
 /*
 //todo
@@ -2674,8 +2674,8 @@ ScoreType eval(const Position & p, float & gp ){
     evalPawn<Co_White>(p,p.pieces<P_wp>(Co_White),score,att[Co_White],safePPush[Co_White],pawnTargets[Co_White],passer[Co_White],gp,gpCompl);
     evalPawn<Co_Black>(p,p.pieces<P_wp>(Co_Black),score,att[Co_Black],safePPush[Co_Black],pawnTargets[Co_Black],passer[Co_Black],gp,gpCompl);
     // pawn second pass (needs att)
-    evalPawnDanger<Co_White>(p,att,danger);
-    evalPawnDanger<Co_Black>(p,att,danger);
+    //evalPawnDanger<Co_White>(p,att,danger);
+    //evalPawnDanger<Co_Black>(p,att,danger);
 
     // count pawn per file
     ///@todo use a cache for that ?!
@@ -2692,7 +2692,7 @@ ScoreType eval(const Position & p, float & gp ){
         score.scores  [EvalScore::sc_PwnDoubled] += ScoreType(nbBP[f+1]>>1)*EvalConfig::doublePawnMalus;
         score.scoresEG[EvalScore::sc_PwnDoubled] += ScoreType(nbBP[f+1]>>1)*EvalConfig::doublePawnMalusEG;
         // danger if open file near king and rook(s) on the board
-        
+        /*
         if ((BB::mask[p.king[Co_White]].kingZone & files[f]) && p.blackRook()){
             if      (!nbWP[f+1]){ danger[Co_White] += (!nbBP[f+1]) ? EvalConfig::katt_openfile : EvalConfig::katt_semiopenfile_our; }
             else if (!nbBP[f+1]){ danger[Co_White] += EvalConfig::katt_semiopenfile_opp; }
@@ -2701,7 +2701,7 @@ ScoreType eval(const Position & p, float & gp ){
             if      (!nbBP[f+1]){ danger[Co_Black] += (!nbWP[f+1]) ? EvalConfig::katt_openfile : EvalConfig::katt_semiopenfile_our; }
             else if (!nbWP[f+1]){ danger[Co_Black] += EvalConfig::katt_semiopenfile_opp; }
         }
-        
+        */
         /*
         // rook on open file
         if ( nbWR ){
