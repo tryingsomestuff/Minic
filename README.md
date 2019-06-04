@@ -152,6 +152,7 @@ You can use both the json configuation file or the command line argument to sele
 * 0.58 and 0.59 : trying so add evaluation feature (without success ...)  
 * 0.60 : use hash in qsearch  
 * 0.61 : KPK and code clean up  
+* 0.62 : fix an issue with material well castling, a lot of code refactoring
 
 ## Thanks
 
