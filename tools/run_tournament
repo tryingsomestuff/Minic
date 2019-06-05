@@ -19,7 +19,7 @@ fi
 
 #engines="$engines -engine name=fairymax cmd=/usr/games/fairymax"
 engines="$engines -engine name=minic_0.53 cmd=$dir/Dist/minic_0.53_linux_x64$ARCH arg=-xboard dir=$dir"
-engines="$engines -engine name=minic_0.61 cmd=$dir/Dist/minic_0.61_linux_x64$ARCH arg=-xboard dir=$dir"
+engines="$engines -engine name=minic_0.62 cmd=$dir/Dist/minic_0.62_linux_x64$ARCH arg=-xboard dir=$dir"
 
 echo $engines
 
