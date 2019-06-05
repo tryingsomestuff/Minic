@@ -463,7 +463,7 @@ void TexelTuning(const std::string & filename) {
     }
     Logging::LogIt(Logging::logInfo) << "Data size : " << data.size();
 
-    size_t batchSize = data.size(); // batch
+    size_t batchSize = data.size()/10; // batch
     //size_t batchSize = 20000; // batch
     //size_t batchSize = 1024 ; // mini
     //size_t batchSize = 1; // stochastic

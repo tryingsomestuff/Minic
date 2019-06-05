@@ -30,11 +30,11 @@ typedef uint64_t u_int64_t;
 //#define IMPORTBOOK
 //#define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
-#define WITH_TEST_SUITE
+//#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 //#define WITH_UCI
 
-const std::string MinicVersion = "0.62";
+const std::string MinicVersion = "dev";
 
 /*
 //todo
@@ -2563,7 +2563,7 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, EvalScore & 
         const Square kk = ColorSquarePstHelper<C>(k);
         score.scores[EvalScore::sc_PST]   += ColorSignHelper<C>()*EvalConfig::PST  [T-1][kk];
         score.scoresEG[EvalScore::sc_PST] += ColorSignHelper<C>()*EvalConfig::PSTEG[T-1][kk];
-        const BitBoard target = pf[T-1](k, p.occupancy /*^ p.pieces<T>(C)*/, p.c); ///@todo aligned threats ???
+        const BitBoard target = pf[T-1](k, p.occupancy ^ p.pieces<T>(C), p.c); // aligned threats also taken into account
         danger[C]  -= ScoreType(countBit(target & kingZone[C])  * EvalConfig::katt_att_def_weight[EvalConfig::katt_defence][T]);
         danger[~C] += ScoreType(countBit(target & kingZone[~C]) * EvalConfig::katt_att_def_weight[EvalConfig::katt_attack][T]);
         const BitBoard curAtt = target & ~p.allPieces[C];
@@ -2619,9 +2619,9 @@ ScoreType eval(const Position & p, float & gp ){
     ///@todo tune gp computation, but care it seems to have a huge impact
     const float totalAbsScore = 2.f * *absValues[P_wq] + 4.f * *absValues[P_wr] + 4.f * *absValues[P_wb] + 4.f * *absValues[P_wn] + 16.f * *absValues[P_wp];
     const float absscore = ( (p.mat[Co_White][M_q] + p.mat[Co_Black][M_q]) * *absValues[P_wq] + (p.mat[Co_White][M_r] + p.mat[Co_Black][M_r]) * *absValues[P_wr] + (p.mat[Co_White][M_b] + p.mat[Co_Black][M_b]) * *absValues[P_wb] + (p.mat[Co_White][M_n] + p.mat[Co_Black][M_n]) * *absValues[P_wn] + (p.mat[Co_White][M_p] + p.mat[Co_Black][M_p]) * *absValues[P_wp]) / totalAbsScore;
-    const float pawnScore  = (p.mat[Co_White][M_p] + p.mat[Co_Black][M_p]) / 16.f;
-    const float pieceScore = (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t]) / 14.f;
-    gp = absscore*0.4f + pieceScore * 0.3f + pawnScore * 0.3f;
+    //const float pawnScore  = (p.mat[Co_White][M_p] + p.mat[Co_Black][M_p]) / 16.f;
+    //const float pieceScore = (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t]) / 14.f;
+    gp = absscore;//*0.4f + pieceScore * 0.3f + pawnScore * 0.3f;
     const float gpCompl = 1.f - gp;
 
     // king captured
@@ -2667,7 +2667,7 @@ ScoreType eval(const Position & p, float & gp ){
        else if ( ter == MaterialHash::Ter_LikelyDraw ) score.scalingFactor=3 + 7*p.fifty/100.f;
        ///@todo next two seem to lose elo
        //else if ( ter == MaterialHash::Ter_Draw){         if ( !isAttacked(p,kingSquare(p)) ) return 0;}
-       //else if ( ter == MaterialHash::Ter_MaterialDraw){ if ( !isAttacked(p,kingSquare(p)) ) return 0;} ///@todo also verify stalemate ?
+       else if ( ter == MaterialHash::Ter_MaterialDraw){ if ( !isAttacked(p,kingSquare(p)) ) return 0;} ///@todo also verify stalemate ?
     }
 
     // pawn first pass
@@ -2691,8 +2691,8 @@ ScoreType eval(const Position & p, float & gp ){
         score.scoresEG[EvalScore::sc_PwnDoubled] -= ScoreType(nbWP[f+1]>>1)*EvalConfig::doublePawnMalusEG;
         score.scores  [EvalScore::sc_PwnDoubled] += ScoreType(nbBP[f+1]>>1)*EvalConfig::doublePawnMalus;
         score.scoresEG[EvalScore::sc_PwnDoubled] += ScoreType(nbBP[f+1]>>1)*EvalConfig::doublePawnMalusEG;
+	/*
         // danger if open file near king and rook(s) on the board
-        /*
         if ((BB::mask[p.king[Co_White]].kingZone & files[f]) && p.blackRook()){
             if      (!nbWP[f+1]){ danger[Co_White] += (!nbBP[f+1]) ? EvalConfig::katt_openfile : EvalConfig::katt_semiopenfile_our; }
             else if (!nbBP[f+1]){ danger[Co_White] += EvalConfig::katt_semiopenfile_opp; }
@@ -2701,7 +2701,7 @@ ScoreType eval(const Position & p, float & gp ){
             if      (!nbBP[f+1]){ danger[Co_Black] += (!nbWP[f+1]) ? EvalConfig::katt_openfile : EvalConfig::katt_semiopenfile_our; }
             else if (!nbWP[f+1]){ danger[Co_Black] += EvalConfig::katt_semiopenfile_opp; }
         }
-        */
+	*/
         /*
         // rook on open file
         if ( nbWR ){
@@ -2859,7 +2859,7 @@ ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const
     const ScoreType evalScore = eval(p,gp);
 
     if ( evalScore >= beta ) return evalScore;
-    if ( evalScore > alpha) alpha = evalScore;
+    if ( evalScore > alpha ) alpha = evalScore;
 
     const bool isInCheck = isAttacked(p, kingSquare(p));
     ScoreType bestScore = isInCheck?-MATE+ply:evalScore;
@@ -2970,7 +2970,7 @@ inline void updateTables(ThreadContext & context, const Position & p, DepthType 
     context.counterT.update(m,p);
 }
 
-inline bool singularExtension(ThreadContext & context, ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, const TT::Entry & e, const Move m, bool rootnode, int ply, bool isInCheck) {
+inline bool singularExtension(ThreadContext & context, const Position & p, DepthType depth, const TT::Entry & e, const Move m, bool rootnode, int ply, bool isInCheck) {
     if ( depth >= StaticConfig::singularExtensionDepth && sameMove(m, e.m) && !rootnode && !isMateScore(e.score) && e.b == TT::B_beta && e.d >= depth - 3) {
         const ScoreType betaC = e.score - depth;
         PVList sePV;
@@ -3136,7 +3136,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             //if (!extension && p.lastMove != INVALIDMOVE && Move2Type(p.lastMove) == T_capture && Move2To(e.m) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; // recapture
             //if (!extension && isCheck && !isBadCap(e.m)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
             //if (!extension && isAdvancedPawnPush && sameMove(e.m, killerT.killers[0][p.ply])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo isPassed ?
-            if (!extension && skipMove == INVALIDMOVE && singularExtension(*this, alpha, beta, p, depth, e, e.m, rootnode, ply, isInCheck)) ++stats.counters[Stats::sid_singularExtension],++extension;
+            if (!extension && skipMove == INVALIDMOVE && singularExtension(*this, p, depth, e, e.m, rootnode, ply, isInCheck)) ++stats.counters[Stats::sid_singularExtension],++extension;
             const ScoreType ttScore = -pvs<pvnode,true>(-beta, -alpha, p2, depth - 1 + extension, ply + 1, childPV, seldepth, isCheck);
             if (stopFlag) return STOPSCORE;
             if ( ttScore > bestScore ){
