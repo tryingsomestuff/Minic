@@ -34,7 +34,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_SYZYGY
 //#define WITH_UCI
 
-const std::string MinicVersion = "0.63";
+const std::string MinicVersion = "dev";
 
 /*
 //todo
@@ -53,12 +53,15 @@ const std::string MinicVersion = "0.63";
 #define MAX_MOVE      512
 #define MAX_DEPTH      64
 #define MAX_CAP        64
+#define MAX_HISTORY    200.f
 
 #define SQFILE(s) ((s)&7)
 #define SQRANK(s) ((s)>>3)
 #define MakeSquare(f,r) Square(((r)<<3) + (f))
 #define VFlip(s) ((s)^Sq_a8)
 #define HFlip(s) ((s)^7)
+#define SQR(x) ((x)*(x))
+#define HSCORE(depth) ScoreType(SQR(std::min((int)depth, 16)) * 32 / 40.)
 
 namespace DynamicConfig{
     bool mateFinder        = false;
@@ -266,7 +269,7 @@ const ScoreType probCutMargin            = 80;
 const int       lmrMinDepth              = 3;
 const int       singularExtensionDepth   = 8;
 
-const int lmpLimit[][StaticConfig::lmpMaxDepth + 1] = { { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 } ,{ 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };
+const int lmpLimit[][StaticConfig::lmpMaxDepth + 1] = { { 0, 2, 3, 5, 9, 13, 18, 25, 34, 45, 55 }, { 0, 4, 5, 8, 13, 20, 29, 40, 54, 68, 83 } };
 
 int lmrReduction[MAX_DEPTH][MAX_MOVE];
 
@@ -1452,10 +1455,11 @@ struct ThreadContext{
             Logging::LogIt(Logging::logInfo) << "Init history" ;
             for(int i = 0; i < 13; ++i) for(int k = 0 ; k < 64; ++k) history[i][k] = 0;
         }
-        inline void update(DepthType depth, Move m, const Position & p, bool plus){
+        template<int S>
+        inline void update(DepthType depth, Move m, const Position & p){
             const int pp = getPieceIndex(p,Move2From(m));
             const Square to = Move2To(m);
-            if ( Move2Type(m) == T_std ) history[pp][to] += ScoreType( ((plus?+1:-1) - history[pp][to] / 200.f) * depth*depth/6.f );
+            if ( Move2Type(m) == T_std ) history[pp][to] += ScoreType( ( S - history[pp][to] / MAX_HISTORY) * HSCORE(depth) );
         }
     };
 
@@ -2962,13 +2966,16 @@ inline void updatePV(PVList & pv, const Move & m, const PVList & childPV) {
     std::copy(childPV.begin(), childPV.end(), std::back_inserter(pv));
 }
 
-inline void updateTables(ThreadContext & context, const Position & p, DepthType depth, const Move m) {
-    if ( ! sameMove(context.killerT.killers[0][p.ply],m)){
-       context.killerT.killers[1][p.ply] = context.killerT.killers[0][p.ply];
-       context.killerT.killers[0][p.ply] = m;
+inline void updateTables(ThreadContext & context, const Position & p, DepthType depth, const Move m, TT::Bound bound) {
+    if (bound == TT::B_beta) {
+        if (!sameMove(context.killerT.killers[0][p.ply], m)) {
+            context.killerT.killers[1][p.ply] = context.killerT.killers[0][p.ply];
+            context.killerT.killers[0][p.ply] = m;
+        }
+        context.historyT.update<1>(depth, m, p);
+        context.counterT.update(m, p);
     }
-    context.historyT.update(depth, m, p, true);
-    context.counterT.update(m,p);
+    else if ( bound == TT::B_alpha) context.historyT.update<-1>(depth, m, p);
 }
 
 inline bool singularExtension(ThreadContext & context, const Position & p, DepthType depth, const TT::Entry & e, const Move m, bool rootnode, int ply, bool isInCheck) {
@@ -3009,7 +3016,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if (skipMove==INVALIDMOVE && TT::getEntry(*this,computeHash(p), depth, e)) { // if not skipmove
         if ( e.h != 0 && !rootnode && !pvnode && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
             if ( e.m != INVALIDMOVE) pv.push_back(e.m); // here e.m might be INVALIDMOVE if B_alpha without alphaUpdated/bestScoreUpdated (so don't try this at root node !)
-            if ((Move2Type(e.m) == T_std /*|| isBadCap(e.m)*/) && !isInCheck) updateTables(*this, p, e.d, e.m);
+            if ((Move2Type(e.m) == T_std /*|| isBadCap(e.m)*/) && !isInCheck) updateTables(*this, p, depth, e.m, e.b);
             return adjustHashScore(e.score, ply);
         }
     }
@@ -3150,7 +3157,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                     if (pvnode) updatePV(pv, e.m, childPV);
                     if (ttScore >= beta) {
                         ++stats.counters[Stats::sid_ttbeta];
-                        if ((Move2Type(e.m) == T_std /*|| isBadCap(e.m)*/) && !isInCheck) updateTables(*this, p, depth, e.m); ///@todo badcap can be killers ?
+                        if ((Move2Type(e.m) == T_std /*|| isBadCap(e.m)*/) && !isInCheck) updateTables(*this, p, depth + (ttScore > (beta+80)), e.m, TT::B_beta); ///@todo badcap can be killers ?
                         if (skipMove == INVALIDMOVE /*&& ttScore != 0*/) TT::setEntry({ e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth,computeHash(p) }); 
                         return ttScore;
                     }
@@ -3226,7 +3233,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 reduction = StaticConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
                 if (!improving) ++reduction;
                 if (ttMoveIsCapture) ++reduction;
-                reduction -= 2*int(Move2Score(*it) / 200.f); //history reduction/extension
+                reduction -= 2*int(Move2Score(*it) / MAX_HISTORY); //history reduction/extension
                 if (pvnode && reduction > 0) --reduction;
                 if (reduction < 0) reduction = 0;
                 if (reduction >= depth - 1) reduction = depth - 2;
@@ -3249,8 +3256,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 hashBound = TT::B_exact;
                 if ( score >= beta ){
                     if ( (Move2Type(*it) == T_std /*|| isBadCap(*it)*/) && !isInCheck){ ///@todo bad cap can be killers?
-                        updateTables(*this, p, depth, *it);
-                        for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2) if ( Move2Type(*it2) == T_std && !sameMove(*it2, killerT.killers[0][p.ply])/*|| isBadCap(*it2)*/) historyT.update(depth,*it2,p,false); ///@todo bad cap can be killers
+                        updateTables(*this, p, depth + (score>beta+80), *it, TT::B_beta);
+                        for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2) if ( Move2Type(*it2) == T_std && !sameMove(*it2, killerT.killers[0][p.ply])/*|| isBadCap(*it2)*/) historyT.update<-1>(depth + (score > (beta + 80)),*it2,p); ///@todo bad cap can be killers
                     }
                     hashBound = TT::B_beta;
                     break;
