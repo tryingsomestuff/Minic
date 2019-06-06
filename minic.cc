@@ -503,8 +503,8 @@ Piece promShift(MType mt){ assert(mt>=T_promq); assert(mt<=T_cappromn); return P
 enum Color : char{ Co_None  = -1,   Co_White = 0,   Co_Black = 1 };
 constexpr Color operator~(Color c){return Color(c^Co_Black);} // switch color
 
-// ttmove 3000, promcap >1000, cap, checks, killers, castling, other by history < 200.
-ScoreType MoveScoring[16] = { 0, 1000, 1100, 300, 950, 500, 350, 300, 1950, 1500, 1350, 1300, 250, 250, 250, 250 };
+// ttmove 10000, promcap >7000, cap 7000, checks 6000, killers 600-500-400, counter 300, castling 700, other by history < 200, bad cap <-7000.
+ScoreType MoveScoring[16] = { 0, 7000, 7100, 6000, 2950, 2500, 2350, 2300, 7950, 7500, 7350, 7300, 700, 700, 700, 700 };
 
 Color Colors[13] = { Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_None, Co_White, Co_White, Co_White, Co_White, Co_White, Co_White};
 
@@ -2462,15 +2462,16 @@ struct MoveSorter{
         const Square from = Move2From(m);
         const Square to   = Move2To(m);
         ScoreType s = MoveScoring[t];
-        if (e && sameMove(e->m,m)) s += 3000;
+        if (e && sameMove(e->m,m)) s += 10000;
         if (isCapture(t)){
             s += MvvLvaScores[getPieceType(p,to)-1][getPieceType(p,from)-1];
-            if ( useSEE && !context.SEE(p,m,0)) s -= 2000;
+            if ( useSEE && !context.SEE(p,m,0)) s -= 2*MoveScoring[T_capture];
         }
         else if ( t == T_std){
-            if      (sameMove(m, context.killerT.killers[0][p.ply])) s += 290;
-            else if (sameMove(m, context.killerT.killers[1][p.ply])) s += 270;
-            else if (p.lastMove!=INVALIDMOVE && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 250;
+            if      (sameMove(m, context.killerT.killers[0][p.ply])) s += 600;
+            else if (sameMove(m, context.killerT.killers[1][p.ply])) s += 500;
+            else if (p.ply > 1 && sameMove(m, context.killerT.killers[0][p.ply-2])) s += 400;
+            else if (p.lastMove!=INVALIDMOVE && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 300;
             else s += context.historyT.history[getPieceIndex(p, from)][to];
             const bool isWhite = (p.allPieces[Co_White] & SquareToBitboard(from)) != 0ull;
             s += EvalConfig::PST[getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - EvalConfig::PST[getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from];
@@ -3249,7 +3250,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 if ( score >= beta ){
                     if ( (Move2Type(*it) == T_std /*|| isBadCap(*it)*/) && !isInCheck){ ///@todo bad cap can be killers?
                         updateTables(*this, p, depth, *it);
-                        for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2) if ( Move2Type(*it2) == T_std /*|| isBadCap(*it2)*/) historyT.update(depth,*it2,p,false); ///@todo bad cap can be killers
+                        for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2) if ( Move2Type(*it2) == T_std && !sameMove(*it2, killerT.killers[0][p.ply])/*|| isBadCap(*it2)*/) historyT.update(depth,*it2,p,false); ///@todo bad cap can be killers
                     }
                     hashBound = TT::B_beta;
                     break;

@@ -26,7 +26,8 @@ if [ "$t" != "-march=native" ]; then
    exe=${exe}_${tname}
 fi
 echo "Building $exe"
-g++ -s -fprofile-generate -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto $t --std=c++11 minic.cc -o $dir/Dist/$exe -lpthread -IFathom/src
+OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto $t --std=c++11 -IFathom/src"
+g++ -fprofile-generate $OPT minic.cc -o $dir/Dist/$exe -lpthread
 $dir/Dist/$exe -analyze "r2q1rk1/p4ppp/1pb1pn2/8/5P2/1PBB3P/P1PPQ1P1/2KR3R b - - 1 14" 20
-g++ -s -fprofile-use $d -DNDEBUG -O3 -flto $t --std=c++11 minic.cc -o $dir/Dist/$exe -lpthread -IFathom/src
+g++ -fprofile-use $OPT minic.cc -o $dir/Dist/$exe -lpthread
 
