@@ -61,7 +61,7 @@ const std::string MinicVersion = "dev_2";
 #define VFlip(s) ((s)^Sq_a8)
 #define HFlip(s) ((s)^7)
 #define SQR(x) ((x)*(x))
-#define HSCORE(depth) ScoreType(SQR(std::min((int)depth, 16)) )
+#define HSCORE(depth) ScoreType(SQR(std::min((int)depth, 16)) * 4 )
 
 namespace DynamicConfig{
     bool mateFinder        = false;
@@ -1263,6 +1263,14 @@ void updateMaterialOther(Position & p){
     p.mat[Co_White][M_M] = p.mat[Co_White][M_q] + p.mat[Co_White][M_r];  p.mat[Co_Black][M_M] = p.mat[Co_Black][M_q] + p.mat[Co_Black][M_r];
     p.mat[Co_White][M_m] = p.mat[Co_White][M_b] + p.mat[Co_White][M_n];  p.mat[Co_Black][M_m] = p.mat[Co_Black][M_b] + p.mat[Co_Black][M_n];
     p.mat[Co_White][M_t] = p.mat[Co_White][M_M] + p.mat[Co_White][M_m];  p.mat[Co_Black][M_t] = p.mat[Co_Black][M_M] + p.mat[Co_Black][M_m];
+    if (p.whiteBishop()) {
+        p.mat[Co_White][M_bl] = (unsigned char)countBit(p.whiteBishop()&whiteSquare);
+        p.mat[Co_White][M_bd] = (unsigned char)countBit(p.whiteBishop()&blackSquare);
+    }
+    if (p.blackBishop()) {
+        p.mat[Co_Black][M_bl] = (unsigned char)countBit(p.blackBishop()&whiteSquare);
+        p.mat[Co_Black][M_bd] = (unsigned char)countBit(p.blackBishop()&blackSquare);
+    }
 }
 
 void initMaterial(Position & p){
@@ -1271,8 +1279,6 @@ void initMaterial(Position & p){
     p.mat[Co_White][M_q]  = (unsigned char)countBit(p.whiteQueen());                     p.mat[Co_Black][M_q]  = (unsigned char)countBit(p.blackQueen());
     p.mat[Co_White][M_r]  = (unsigned char)countBit(p.whiteRook());                      p.mat[Co_Black][M_r]  = (unsigned char)countBit(p.blackRook());
     p.mat[Co_White][M_b]  = (unsigned char)countBit(p.whiteBishop());                    p.mat[Co_Black][M_b]  = (unsigned char)countBit(p.blackBishop());
-    p.mat[Co_White][M_bl] = (unsigned char)countBit(p.whiteBishop()&whiteSquare);        p.mat[Co_Black][M_bl] = (unsigned char)countBit(p.blackBishop()&whiteSquare);
-    p.mat[Co_White][M_bd] = (unsigned char)countBit(p.whiteBishop()&blackSquare);        p.mat[Co_Black][M_bd] = (unsigned char)countBit(p.blackBishop()&blackSquare);
     p.mat[Co_White][M_n]  = (unsigned char)countBit(p.whiteKnight());                    p.mat[Co_Black][M_n]  = (unsigned char)countBit(p.blackKnight());
     p.mat[Co_White][M_p]  = (unsigned char)countBit(p.whitePawn());                      p.mat[Co_Black][M_p]  = (unsigned char)countBit(p.blackPawn());
     updateMaterialOther(p);
@@ -1280,20 +1286,16 @@ void initMaterial(Position & p){
 
 void updateMaterialStd(Position &p, const Square toBeCaptured){
     p.mat[~p.c][getPieceType(p,toBeCaptured)]--; // capture if to square is not empty
-    updateMaterialOther(p);
 }
 
 void updateMaterialEp(Position &p){
     p.mat[~p.c][M_p]--; // ep if to square is empty
-    updateMaterialOther(p);
 }
 
 void updateMaterialProm(Position &p, const Square toBeCaptured, MType mt){
-    const Piece pp = getPieceType(p,toBeCaptured);
-    if ( pp != P_none ) p.mat[~p.c][pp]--; // capture if to square is not empty
-    p.mat[p.c][P_wp+PieceShift]--; // pawn
-    p.mat[p.c][promShift(mt)]++;  // prom piece
-    updateMaterialOther(p);
+    p.mat[~p.c][getPieceType(p, toBeCaptured)]--; // capture if to square is not empty
+    p.mat[p.c][P_wp]--; // pawn
+    p.mat[p.c][promShift(mt)]++;   // prom piece
 }
 
 void initBitBoards(Position & p) {
@@ -2005,7 +2007,7 @@ void init(){
 int GetNextMSecPerMove(const Position & p){
     static const int msecMarginMin = 50;
     static const int msecMarginMax = 3000;
-    static const float msecMarginCoef = 0.02;
+    static const float msecMarginCoef = 0.02f;
     int ms = -1;
     Logging::LogIt(Logging::logInfo) << "msecPerMove     " << msecPerMove;
     Logging::LogIt(Logging::logInfo) << "msecInTC        " << msecInTC   ;
@@ -2325,6 +2327,7 @@ bool apply(Position & p, const Move & m){
     if ( p.c == Co_White ) ++p.moves;
     ++p.ply;
 
+    updateMaterialOther(p);
     //initMaterial(p);
 
     p.lastMove = m;
