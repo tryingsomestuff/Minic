@@ -34,7 +34,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_SYZYGY
 //#define WITH_UCI
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "dev_2";
 
 /*
 //todo
@@ -53,7 +53,7 @@ const std::string MinicVersion = "dev";
 #define MAX_MOVE      512
 #define MAX_DEPTH      64
 #define MAX_CAP        64
-#define MAX_HISTORY    200.f
+#define MAX_HISTORY    1000.f
 
 #define SQFILE(s) ((s)&7)
 #define SQRANK(s) ((s)>>3)
@@ -61,7 +61,7 @@ const std::string MinicVersion = "dev";
 #define VFlip(s) ((s)^Sq_a8)
 #define HFlip(s) ((s)^7)
 #define SQR(x) ((x)*(x))
-#define HSCORE(depth) ScoreType(SQR(std::min((int)depth, 16)) * 32 / 40.)
+#define HSCORE(depth) ScoreType(SQR(std::min((int)depth, 16)) )
 
 namespace DynamicConfig{
     bool mateFinder        = false;
@@ -506,8 +506,8 @@ Piece promShift(MType mt){ assert(mt>=T_promq); assert(mt<=T_cappromn); return P
 enum Color : char{ Co_None  = -1,   Co_White = 0,   Co_Black = 1 };
 constexpr Color operator~(Color c){return Color(c^Co_Black);} // switch color
 
-// ttmove 10000, promcap >7000, cap 7000, checks 6000, killers 600-500-400, counter 300, castling 700, other by history < 200, bad cap <-7000.
-ScoreType MoveScoring[16] = { 0, 7000, 7100, 6000, 2950, 2500, 2350, 2300, 7950, 7500, 7350, 7300, 700, 700, 700, 700 };
+// ttmove 10000, promcap >7000, cap 7000, checks 6000, killers 1600-1500-1400, counter 1300, castling 2000, other by -1000 < history < 1000, bad cap <-7000.
+ScoreType MoveScoring[16] = { 0, 7000, 7100, 6000, 2950, 2500, 2350, 2300, 7950, 7500, 7350, 7300, 20000, 20000, 2000, 2000 };
 
 Color Colors[13] = { Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_None, Co_White, Co_White, Co_White, Co_White, Co_White, Co_White};
 
@@ -2459,7 +2459,7 @@ bool sameMove(const Move & a, const Move & b) { return (a & 0x0000FFFF) == (b & 
 
 struct MoveSorter{
 
-    MoveSorter(const ThreadContext & context, const Position & p, bool useSEE = true, const TT::Entry * e = NULL):context(context),p(p),useSEE(useSEE),e(e){ assert(e==0||e->h!=0||e->m==INVALIDMOVE); }
+    MoveSorter(const ThreadContext & context, const Position & p, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL):context(context),p(p),useSEE(useSEE),isInCheck(isInCheck),e(e){ assert(e==0||e->h!=0||e->m==INVALIDMOVE); }
 
     void computeScore(Move & m)const{
         const MType  t    = Move2Type(m);
@@ -2472,10 +2472,11 @@ struct MoveSorter{
             if ( useSEE && !context.SEE(p,m,0)) s -= 2*MoveScoring[T_capture];
         }
         else if ( t == T_std){
-            if      (sameMove(m, context.killerT.killers[0][p.ply])) s += 600;
-            else if (sameMove(m, context.killerT.killers[1][p.ply])) s += 500;
-            else if (p.ply > 1 && sameMove(m, context.killerT.killers[0][p.ply-2])) s += 400;
-            else if (p.lastMove!=INVALIDMOVE && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 300;
+            if      (isInCheck && getPieceType(p, from) == P_wk)     s += 9000;
+            if      (sameMove(m, context.killerT.killers[0][p.ply])) s += 1600;
+            else if (sameMove(m, context.killerT.killers[1][p.ply])) s += 1500;
+            else if (p.ply > 1 && sameMove(m, context.killerT.killers[0][p.ply-2])) s += 1400;
+            else if (p.lastMove!=INVALIDMOVE && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 1300;
             else s += context.historyT.history[getPieceIndex(p, from)][to];
             const bool isWhite = (p.allPieces[Co_White] & SquareToBitboard(from)) != 0ull;
             s += EvalConfig::PST[getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - EvalConfig::PST[getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from];
@@ -2489,10 +2490,11 @@ struct MoveSorter{
     const TT::Entry * e;
     const ThreadContext & context;
     const bool useSEE;
+    const bool isInCheck;
 };
 
-void sort(const ThreadContext & context, MoveList & moves, const Position & p, bool useSEE = true, const TT::Entry * e = NULL){
-    const MoveSorter ms(context,p,useSEE,e);
+void sort(const ThreadContext & context, MoveList & moves, const Position & p, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL){
+    const MoveSorter ms(context,p,useSEE,isInCheck,e);
     for(auto it = moves.begin() ; it != moves.end() ; ++it){ ms.computeScore(*it); }
     std::sort(moves.begin(),moves.end(),ms);
 }
@@ -2927,7 +2929,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     MoveList moves;
     generate(p,moves,isInCheck?GP_all:GP_cap);
-    sort(*this,moves,p,qRoot||isInCheck,qRoot?&e:0); ///@todo only mvv-lva seems to lose elo
+    sort(*this,moves,p,qRoot||isInCheck,isInCheck,qRoot?&e:0); ///@todo only mvv-lva seems to lose elo
 
     const ScoreType alphaInit = alpha;
 
@@ -3083,7 +3085,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
           int probCutCount = 0;
           const ScoreType betaPC = beta + StaticConfig::probCutMargin;
           generate(p,moves,GP_cap);
-          sort(*this,moves,p,true,&e);
+          sort(*this,moves,p,true,isInCheck,&e);
           capMoveGenerated = true;
           for (auto it = moves.begin() ; it != moves.end() && probCutCount < StaticConfig::probCutMaxMoves; ++it){
             if ( (e.h != 0 && sameMove(e.m, *it)) || isBadCap(*it) ) continue; // skip TT move if quiet or bad captures
@@ -3180,14 +3182,21 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 #endif
 
     ///@todo at root, maybe rootScore or node count can be used to sort moves ??
-
     if (!moveGenerated) {
         generate(p, moves, capMoveGenerated ? GP_quiet : GP_all, capMoveGenerated);
         if (moves.empty()) return isInCheck ? -MATE + ply : 0;
-    /*if ( isMainThread() )*/ sort(*this, moves, p,true, &e);
+    /*if ( isMainThread() )*/ sort(*this, moves, p,true, isInCheck, &e);
     //else std::random_shuffle(moves.begin(),moves.end());
     }
     const bool improving = (!isInCheck && ply >= 2 && evalScore >= evalStack[p.ply - 2]);
+
+    /*
+    std::cout << ToString(p) << std::endl;
+    for (auto it = moves.begin(); it != moves.end() && !stopFlag; ++it) {
+        std::cout << ToString(*it, true) << std::endl;
+    }
+    std::cout << "********************" << std::endl;
+    */
 
     ScoreType score = -MATE + ply;
 
