@@ -61,7 +61,7 @@ const std::string MinicVersion = "dev_2";
 #define VFlip(s) ((s)^Sq_a8)
 #define HFlip(s) ((s)^7)
 #define SQR(x) ((x)*(x))
-#define HSCORE(depth) ScoreType(SQR(std::min((int)depth, 16)) * 4 )
+#define HSCORE(depth) ScoreType(SQR(std::min((int)depth, 16))*4 )
 
 namespace DynamicConfig{
     bool mateFinder        = false;
@@ -269,7 +269,8 @@ const ScoreType probCutMargin            = 80;
 const int       lmrMinDepth              = 3;
 const int       singularExtensionDepth   = 8;
 
-const int lmpLimit[][StaticConfig::lmpMaxDepth + 1] = { { 0, 2, 3, 5, 9, 13, 18, 25, 34, 45, 55 }, { 0, 4, 5, 8, 13, 20, 29, 40, 54, 68, 83 } };
+//const int lmpLimit[][StaticConfig::lmpMaxDepth + 1] = { { 0, 2, 3, 5, 9, 13, 18, 25, 34, 45, 55 }, { 0, 4, 5, 8, 13, 20, 29, 40, 54, 68, 83 } };
+const int lmpLimit[][StaticConfig::lmpMaxDepth + 1] = { { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 } ,{ 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };
 
 int lmrReduction[MAX_DEPTH][MAX_MOVE];
 
@@ -2470,12 +2471,12 @@ struct MoveSorter{
         const Square to   = Move2To(m);
         ScoreType s = MoveScoring[t];
         if (e && sameMove(e->m,m)) s += 10000;
+        else if (isInCheck && getPieceType(p, from) == P_wk) s += 8500;
         if (isCapture(t)){
             s += MvvLvaScores[getPieceType(p,to)-1][getPieceType(p,from)-1];
-            if ( useSEE && !context.SEE(p,m,0)) s -= 2*MoveScoring[T_capture];
+            if ( useSEE && !context.SEE(p,m,0)) s -= MoveScoring[T_capture] - 1000;
         }
         else if ( t == T_std){
-            if      (isInCheck && getPieceType(p, from) == P_wk)     s += 9000;
             if      (sameMove(m, context.killerT.killers[0][p.ply])) s += 1600;
             else if (sameMove(m, context.killerT.killers[1][p.ply])) s += 1500;
             else if (p.ply > 1 && sameMove(m, context.killerT.killers[0][p.ply-2])) s += 1400;
