@@ -30,7 +30,7 @@ std::string getFrom(const std::string & to, Position & p, const Piece & t, const
         while(froms){
            const Square s = BB::popBit(froms);
            MoveList l;
-           generateSquare(p,l,s,GP_all);
+           generateSquare<GP_all>(p,l,s);
            for(auto m = l.begin() ; m != l.end() ; ++m){
                if ( SquareNames[Move2To(*m)] == to ){
                    if ( helper.empty()){
