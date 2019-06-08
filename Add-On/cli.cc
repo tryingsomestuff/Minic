@@ -42,7 +42,7 @@ Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc, bool 
     if ( depth == 0) return 0;
     static TT::Entry e;
     MoveList moves;
-    generate(p,moves);
+    generate<GP_all>(p,moves);
     int validMoves = 0;
     int allMoves = 0;
     for (auto it = moves.begin() ; it != moves.end(); ++it){
@@ -189,7 +189,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
 
     if ( cli == "-gen" ){
         MoveList moves;
-        generate(p,moves);
+        generate<GP_all>(p,moves);
         sort(ThreadPool::instance().main(),moves,p,0);
         Logging::LogIt(Logging::logInfo) << "nb moves : " << moves.size() ;
         for(auto it = moves.begin(); it != moves.end(); ++it){

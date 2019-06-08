@@ -2074,11 +2074,12 @@ inline bool getAttackers(const Position & p, const Square k, SquareList & attake
 
 enum GenPhase { GP_all = 0, GP_cap = 1, GP_quiet = 2 };
 
-void generateSquare(const Position & p, MoveList & moves, Square from, GenPhase phase = GP_all){
+template < GenPhase phase = GP_all >
+void generateSquare(const Position & p, MoveList & moves, Square from){
     assert(from != INVALIDSQUARE);
     const Color side = p.c;
-    const BitBoard myPieceBB  = ((p.c == Co_White) ? p.allPieces[Co_White] : p.allPieces[Co_Black]);
-    const BitBoard oppPieceBB = ((p.c != Co_White) ? p.allPieces[Co_White] : p.allPieces[Co_Black]);
+    const BitBoard myPieceBB  = p.allPieces[side];
+    const BitBoard oppPieceBB = p.allPieces[~side];
     const Piece piece = p.b[from];
     const Piece ptype = (Piece)std::abs(piece);
     assert ( ptype != P_none ) ;
@@ -2137,10 +2138,11 @@ void generateSquare(const Position & p, MoveList & moves, Square from, GenPhase 
     }
 }
 
-void generate(const Position & p, MoveList & moves, GenPhase phase = GP_all, bool doNotClear = false){
+template < GenPhase phase = GP_all >
+void generate(const Position & p, MoveList & moves, bool doNotClear = false){
     if ( !doNotClear) moves.clear();
     BitBoard myPieceBBiterator = ( (p.c == Co_White) ? p.allPieces[Co_White] : p.allPieces[Co_Black]);
-    while (myPieceBBiterator) generateSquare(p,moves,BB::popBit(myPieceBBiterator),phase);
+    while (myPieceBBiterator) generateSquare<phase>(p,moves,BB::popBit(myPieceBBiterator));
 }
 
 inline void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, bool isCapture = false, Piece prom = P_none) {
@@ -2888,7 +2890,7 @@ ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const
     ScoreType bestScore = isInCheck?-MATE+ply:evalScore;
 
     MoveList moves;
-    generate(p,moves,GP_cap);
+    generate<GP_cap>(p,moves);
     sort(*this,moves,p,true);
 
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
@@ -2945,7 +2947,8 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     ScoreType bestScore = evalScore;
 
     MoveList moves;
-    generate(p,moves,isInCheck?GP_all:GP_cap);
+    if ( isInCheck ) generate<GP_all>(p,moves);
+    else             generate<GP_cap>(p,moves);
     sort(*this,moves,p,qRoot||isInCheck,isInCheck,qRoot?&e:0); ///@todo only mvv-lva seems to lose elo
 
     const ScoreType alphaInit = alpha;
@@ -3101,7 +3104,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
           ++stats.counters[Stats::sid_probcutTry];
           int probCutCount = 0;
           const ScoreType betaPC = beta + StaticConfig::probCutMargin;
-          generate(p,moves,GP_cap);
+          generate<GP_cap>(p,moves);
           sort(*this,moves,p,true,isInCheck,&e);
           capMoveGenerated = true;
           for (auto it = moves.begin() ; it != moves.end() && probCutCount < StaticConfig::probCutMaxMoves; ++it){
@@ -3192,7 +3195,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if (rootnode && int(countBit(p.allPieces[Co_White] | p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN) {
         ScoreType tbScore = 0;
         if (SyzygyTb::probe_root(*this, p, tbScore, moves) < 0) { // only good moves if TB success
-            generate(p, moves, capMoveGenerated ? GP_quiet : GP_all, capMoveGenerated);
+            if (capMoveGenerated) generate<GP_quiet>(p, moves, true);
+            else                  generate<GP_all>  (p, moves, false);
             moveGenerated = true;
         }
     }
@@ -3200,7 +3204,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     ///@todo at root, maybe rootScore or node count can be used to sort moves ??
     if (!moveGenerated) {
-        generate(p, moves, capMoveGenerated ? GP_quiet : GP_all, capMoveGenerated);
+        if (capMoveGenerated) generate<GP_quiet>(p, moves, true);
+        else                  generate<GP_all>  (p, moves, false);
         if (moves.empty()) return isInCheck ? -MATE + ply : 0;
     /*if ( isMainThread() )*/ sort(*this, moves, p,true, isInCheck, &e);
     //else std::random_shuffle(moves.begin(),moves.end());
