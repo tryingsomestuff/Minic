@@ -34,7 +34,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_SYZYGY
 //#define WITH_UCI
 
-const std::string MinicVersion = "dev_2";
+const std::string MinicVersion = "dev";
 
 /*
 //todo
