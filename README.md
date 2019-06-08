@@ -33,21 +33,23 @@ Please note that Win32 binaries are very slow (I don't know why yet, so please u
 Minic 0.47 is 2650 on the CCRL 40/40 scale, so way to strong for me ! This is more or less like GM level for human being.
 
 ```
-Rank Name                                Elo     +/-   Games   Score   Draws
-   1 zurichess-neuchatel-linux-amd64     264      16    2177   82.1%   16.4%
-   2 MinkoChess_1.3_x64                  239      16    2178   79.9%   16.7%
-   3 ruy-1.1.9-linux                      93      13    2178   63.1%   21.1%
-   4 redqueen-1.1.98.linux64              -2      13    2177   49.7%   22.0%
-   5 minic_dev_linux_x64                 -10      13    2177   48.6%   24.5%
-   6 wyldchess1.51_bmi                   -21      13    2177   47.0%   23.4%
-   7 minic_0.53_linux_x64_avx2_bmi2      -32      13    2177   45.5%   23.9%
-   8 minic_0.58_linux_x64_avx2_bmi2      -38      13    2177   44.5%   25.2%
-   9 GreKo-Linux-64                      -49      13    2178   42.9%   18.1%
-  10 Fridolin310                         -81      13    2178   38.6%   21.2%
-  11 igel-x64_popcnt                    -112      14    2178   34.5%   18.9%
-  12 asymptote-v0.4.2                   -202      15    2178   23.8%   14.7%
+Rank Name                          Elo     +/-   Games   Score   Draws
+   1 zurichess-neuchatel           243      13    2857   80.2%   18.3%
+   2 MinkoChess_1.3                205      13    2856   76.5%   19.5%
+   3 ruy-1.1.9                      90      12    2857   62.7%   21.9%
+   4 minic_0.63                     19      11    2857   52.7%   32.0%
+   5 minic_0.63                     13      10    2857   51.9%   32.1%
+   6 minic_0.62                     -0      10    2857   50.0%   32.8%
+   7 minic_0.61                     -8      10    2858   48.9%   32.2%
+   8 redqueen-1.1.98               -21      11    2857   46.9%   21.9%
+   9 minic_0.53                    -32      11    2857   45.4%   30.1%
+  10 wyldchess1.51                 -37      11    2856   44.7%   24.3%
+  11 GreKo                         -81      12    2857   38.6%   18.8%
+  12 Fridolin310                  -107      12    2858   35.0%   20.7%
+  13 asymptote-v0.4.2             -114      12    2858   34.1%   17.8%
+  14 igel-1.6                     -127      12    2858   32.6%   19.1%
 
-13065 of 66000 games finished.              
+20000 of 91000 games finished.            
 ```
 
 ## How to compile
