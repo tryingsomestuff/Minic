@@ -57,7 +57,7 @@ public:
 
 ExtendedPosition::ExtendedPosition(const std::string & extFEN, bool withMoveCount) : Position(extFEN){
     if (!withMoveCount) {
-        ply = 0; moves = 1; fifty = 0;
+        halfmoves = 0; moves = 1; fifty = 0;
     }
     //Logging::LogIt(Logging::logInfo) << ToString(*this);
     std::vector<std::string> strList;
