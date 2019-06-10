@@ -3253,7 +3253,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             // LMP
             if (lmp && isPrunableStd && validMoveCount >= StaticConfig::lmpLimit[improving][depth] ) {++stats.counters[Stats::sid_lmp]; continue;}
             // History pruning
-            if (historyPruning && isPrunableStd && (validMoveCount > 8 || Move2Score(*it) < StaticConfig::historyPuningThreshold)) {++stats.counters[Stats::sid_historyPruning]; continue;}
+            if (historyPruning && isPrunableStd && validMoveCount > StaticConfig::lmpLimit[improving][depth]/3 && Move2Score(*it) < StaticConfig::historyPuningThreshold) {++stats.counters[Stats::sid_historyPruning]; continue;}
             // SEE
             const bool isPrunableCap = isPrunable && Move2Type(*it) == T_capture && isBadCap(*it);
             if ((futility||depth<=4) && isPrunableCap) {++stats.counters[Stats::sid_see]; continue;}
