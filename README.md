@@ -13,6 +13,13 @@ Minic is (mainly) a one-file-code with very dense lines. This is of course very 
 ## Release
 
 Have a look in the Dist directory for releases. Some more stable/official ones will also be made available as github release.
+
+I "release" (create a version number) as soon as I wanna test something. This is usefull for the development process, so that I don't become confused after too much tries... and can revert things properly.
+
+I "officially release" (create a github version) as sson as I have some validated elo (at least +10). Those are version usefull for testers or users.
+
+In a github release, a tester shall only use the given (attached) binaries. The full "source" package always contains everything (source code, all previous versions, test suites, opening suite, books, ...). If you want to use Minic parameter file (minic.json) or some given book file, there are not attached in all release, there are downloadable from the github repo.
+
 Starting from release 0.50 new binaries are available :
 
 ```
