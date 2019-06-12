@@ -30,7 +30,7 @@ typedef uint64_t u_int64_t;
 //#define IMPORTBOOK
 //#define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
-//#define WITH_TEST_SUITE
+#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 //#define WITH_UCI
 
@@ -249,19 +249,18 @@ const bool doProbcut        = true;
 const bool doHistoryPruning = true; ///@todo
 // first value if eval score is used, second if hash score is used
 const ScoreType qfutilityMargin          [2] = {128, 128};
-const int       staticNullMoveMaxDepth   [2] = {7  , 7};
-const ScoreType staticNullMoveDepthCoeff [2] = {175, 175};
+const int       staticNullMoveMaxDepth   [2] = {6  , 6};
+const ScoreType staticNullMoveDepthCoeff [2] = {80 , 80};
 const ScoreType staticNullMoveDepthInit  [2] = {0  , 0};
-const ScoreType razoringMarginDepthCoeff [2] = {60 , 60};
-const ScoreType razoringMarginDepthInit  [2] = {100, 100};
-const int       razoringMaxDepth         [2] = {4  , 4};
+const ScoreType razoringMarginDepthCoeff [2] = {0  , 0};
+const ScoreType razoringMarginDepthInit  [2] = {200, 200};
+const int       razoringMaxDepth         [2] = {3  , 3};
 const int       nullMoveMinDepth             = 2;
 const int       lmpMaxDepth                  = 10;
 const int       historyPuningMaxDepth        = 3;
-const ScoreType historyPuningThreshold       = 0;
-const ScoreType futilityDepthCoeff       [2] = { 50, 50};
-const ScoreType futilityDepthInit        [2] = {100,100};
-const int       futulityMaxDepth         [2] = { 6 , 6 };
+const ScoreType historyPuningThreshold       = 300;
+const ScoreType futilityDepthCoeff       [2] = {160, 160};
+const ScoreType futilityDepthInit        [2] = {0  , 0};
 const int       iidMinDepth                  = 5;
 const int       iidMinDepth2                 = 8;
 const int       probCutMinDepth              = 5;
@@ -3070,6 +3069,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     const bool isNotEndGame = (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t] > 0); ///@todo better ?
 
     const bool improving = (!isInCheck && ply > 1 && evalStack[p.halfmoves] >= evalStack[p.halfmoves - 2]);
+    DepthType marginDepth = std::max(1,depth-(evalScoreIsHashScore?e.d:0));
 
     // prunings
     if ( !DynamicConfig::mateFinder && canPrune && !isInCheck && !isMateScore(beta) && !pvnode){ ///@todo removing the !isMateScore(beta) is not losing that much elo and allow for better check mate finding ...
@@ -3077,7 +3077,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if (StaticConfig::doStaticNullMove && isNotEndGame && depth <= StaticConfig::staticNullMoveMaxDepth[evalScoreIsHashScore] && evalScore >= beta + StaticConfig::staticNullMoveDepthInit[evalScoreIsHashScore] + (StaticConfig::staticNullMoveDepthCoeff[evalScoreIsHashScore] - 50*improving) * depth) return ++stats.counters[Stats::sid_staticNullMove], evalScore;
 
         // razoring
-        int rAlpha = alpha - StaticConfig::razoringMarginDepthInit[evalScoreIsHashScore] - StaticConfig::razoringMarginDepthCoeff[evalScoreIsHashScore]*depth;
+        int rAlpha = alpha - StaticConfig::razoringMarginDepthInit[evalScoreIsHashScore] - StaticConfig::razoringMarginDepthCoeff[evalScoreIsHashScore]*marginDepth;
         if ( StaticConfig::doRazoring && depth <= StaticConfig::razoringMaxDepth[evalScoreIsHashScore] && evalScore <= rAlpha ){
             ++stats.counters[Stats::sid_razoringTry];
             const ScoreType qScore = qsearch<true,pvnode>(alpha,beta,p,ply,seldepth);
@@ -3245,6 +3245,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if (validMoveCount < 2 || !StaticConfig::doPVS) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck);
         else{
             // reductions & prunings
+            ///@todo try if many moves => reduce more, if less move => reduce less
             int reduction = 0;
             const bool isPrunable = !isInCheck && !isCheck && !isAdvancedPawnPush && !sameMove(*it, killerT.killers[0][p.halfmoves]) && !sameMove(*it, killerT.killers[1][p.halfmoves]) /*&& !isMateScore(alpha) */&& !isMateScore(beta);
             const bool isPrunableStd = isPrunable && Move2Type(*it) == T_std;
