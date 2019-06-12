@@ -38,8 +38,11 @@ class ExtendedPosition : public Position{
 public:
     ExtendedPosition(const std::string & s, bool withMoveCount = true);
     bool shallFindBest();
+    bool shallAvoidBad();
+    bool meaStyle();
     std::vector<std::string> bestMoves();
     std::vector<std::string> badMoves();
+    std::vector<std::string> comment0();
     std::string id();
     static bool readEPDFile(const std::string & fileName, std::vector<std::string> & positions);
     static void test(const std::vector<std::string> & positions,
@@ -85,9 +88,13 @@ ExtendedPosition::ExtendedPosition(const std::string & extFEN, bool withMoveCoun
 
 bool ExtendedPosition::shallFindBest(){ return _extendedParams.find("bm") != _extendedParams.end();}
 
+bool ExtendedPosition::shallAvoidBad(){ return _extendedParams.find("am") != _extendedParams.end();}
+
 std::vector<std::string> ExtendedPosition::bestMoves(){ return _extendedParams["bm"];}
 
 std::vector<std::string> ExtendedPosition::badMoves(){ return _extendedParams["am"];}
+
+std::vector<std::string> ExtendedPosition::comment0(){ return _extendedParams["c0"];}
 
 std::string ExtendedPosition::id(){
     if ( _extendedParams.find("id") != _extendedParams.end() ) return _extendedParams["id"][0];

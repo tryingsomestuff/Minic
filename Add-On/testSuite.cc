@@ -125,6 +125,7 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
         std::string name;
         std::vector<std::string> bm;
         std::vector<std::string> am;
+        std::vector<std::pair<std::string, int > > mea;
         std::string computerMove;
         int score;
     };
@@ -173,7 +174,7 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
                 }
                 if ( breakAtFirstSuccess && success ) break;
             }
-            else{
+            else if( extP.shallAvoidBad()){
                 Logging::LogIt(Logging::logInfo) << "Bad move was " << extP.badMoves();
                 results[k][t].am = extP.badMoves();
                 results[k][t].score = scores[t];
@@ -182,6 +183,29 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
                     if ( results[k][t].computerMove == results[k][t].am[i]){
                         results[k][t].score = 0;
                         success = false;
+                        break;
+                    }
+                }
+                if ( breakAtFirstSuccess && success ) break;
+            }
+            else { // look into c0 section ...
+                Logging::LogIt(Logging::logInfo) << "Mea style " << extP.comment0();
+                std::vector<std::string> tokens = extP.comment0();
+                for (size_t s = 0 ; s < tokens.size() ; ++s){
+                    std::string tmp = tokens[s];
+                    tmp.erase(std::remove(tmp.begin(), tmp.end(), '"'), tmp.end());
+                    tmp.erase(std::remove(tmp.begin(), tmp.end(), ','), tmp.end());
+                    std::cout << tmp << std::endl;
+                    std::vector<std::string> keyval;
+                    tokenize(tmp,keyval,"=");
+                    results[k][t].mea.push_back(std::make_pair(keyval[0], std::stoi( keyval[1] )));
+                }
+                results[k][t].score = 0;
+                bool success = false;
+                for(size_t i = 0 ; i < results[k][t].mea.size() ; ++i){
+                    if ( results[k][t].computerMove == results[k][t].mea[i].first){
+                        results[k][t].score = results[k][t].mea[i].second;
+                        success = true;
                         break;
                     }
                 }
@@ -290,6 +314,83 @@ bool test(const std::string & option){
         Logging::LogIt(Logging::logInfo) << " sbdTest";
         Logging::LogIt(Logging::logInfo) << " STS";
         return 0;
+    }
+
+    if (option == "mea2") {
+        std::vector<std::string> positions;
+        if ( ! ExtendedPosition::readEPDFile("TestSuite/mea-2-moves-fixed.epd",positions) ) return 1;
+
+        std::vector<int> timeControls = { 1000 }; //mseconds
+        std::vector<int> scores = { 1 };
+
+        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return score;},false);
+        return true;
+    }
+
+    if (option == "mea3") {
+        std::vector<std::string> positions;
+        if ( ! ExtendedPosition::readEPDFile("TestSuite/mea-3-moves-fixed.epd",positions) ) return 1;
+
+        std::vector<int> timeControls = { 1000 }; //mseconds
+        std::vector<int> scores = { 1 };
+
+        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return score;},false);
+        return true;
+    }
+
+    if (option == "mea4") {
+        std::vector<std::string> positions;
+        if ( ! ExtendedPosition::readEPDFile("TestSuite/mea-4-moves-fixed.epd",positions) ) return 1;
+
+        std::vector<int> timeControls = { 1000 }; //mseconds
+        std::vector<int> scores = { 1 };
+
+        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return score;},false);
+        return true;
+    }
+
+    if (option == "opening200") {
+        std::vector<std::string> positions;
+        if ( ! ExtendedPosition::readEPDFile("TestSuite/Openings200.epd",positions) ) return 1;
+
+        std::vector<int> timeControls = { 1000 }; //mseconds
+        std::vector<int> scores = { 1 };
+
+        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return score;},false);
+        return true;
+    }
+
+    if (option == "opening1000") {
+        std::vector<std::string> positions;
+        if ( ! ExtendedPosition::readEPDFile("TestSuite/Openings1000.epd",positions) ) return 1;
+
+        std::vector<int> timeControls = { 1000 }; //mseconds
+        std::vector<int> scores = { 1 };
+
+        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return score;},false);
+        return true;
+    }
+
+    if (option == "middle200") {
+        std::vector<std::string> positions;
+        if ( ! ExtendedPosition::readEPDFile("TestSuite/Midgames250.epd",positions) ) return 1;
+
+        std::vector<int> timeControls = { 1000 }; //mseconds
+        std::vector<int> scores = { 1 };
+
+        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return score;},false);
+        return true;
+    }
+
+    if (option == "middle1000") {
+        std::vector<std::string> positions;
+        if ( ! ExtendedPosition::readEPDFile("TestSuite/Midgames1000.epd",positions) ) return 1;
+
+        std::vector<int> timeControls = { 1000 }; //mseconds
+        std::vector<int> scores = { 1 };
+
+        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return score;},false);
+        return true;
     }
 
     if (option == "BT2630") {
