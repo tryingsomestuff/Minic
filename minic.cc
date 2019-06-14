@@ -34,7 +34,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_SYZYGY
 //#define WITH_UCI
 
-const std::string MinicVersion = "0.64";
+const std::string MinicVersion = "dev";
 
 /*
 //todo
@@ -246,21 +246,22 @@ const bool doStaticNullMove = true;
 const bool doRazoring       = true;
 const bool doQFutility      = true;
 const bool doProbcut        = true;
-const bool doHistoryPruning = false; ///@todo
+const bool doHistoryPruning = true; ///@todo
 // first value if eval score is used, second if hash score is used
-const ScoreType qfutilityMargin          [2] = {128, 80};
-const int       staticNullMoveMaxDepth   [2] = {6  , 6};
-const ScoreType staticNullMoveDepthCoeff [2] = {80 , 80};
+const ScoreType qfutilityMargin          [2] = {128, 128};
+const int       staticNullMoveMaxDepth   [2] = {7  , 7};
+const ScoreType staticNullMoveDepthCoeff [2] = {175, 175};
 const ScoreType staticNullMoveDepthInit  [2] = {0  , 0};
-const ScoreType razoringMarginDepthCoeff [2] = {0  , 0};
-const ScoreType razoringMarginDepthInit  [2] = {200, 100};
-const int       razoringMaxDepth         [2] = {3  , 3};
+const ScoreType razoringMarginDepthCoeff [2] = {60 , 60};
+const ScoreType razoringMarginDepthInit  [2] = {100, 100};
+const int       razoringMaxDepth         [2] = {4  , 4};
 const int       nullMoveMinDepth             = 2;
 const int       lmpMaxDepth                  = 10;
 const int       historyPuningMaxDepth        = 3;
-const ScoreType historyPuningThreshold       = 300;
-const ScoreType futilityDepthCoeff       [2] = {160, 80};
-const ScoreType futilityDepthInit        [2] = {0  , 0};
+const ScoreType historyPuningThreshold       = 0;
+const ScoreType futilityDepthCoeff       [2] = { 50, 50};
+const ScoreType futilityDepthInit        [2] = {100,100};
+const int       futulityMaxDepth         [2] = { 6 , 6 };
 const int       iidMinDepth                  = 5;
 const int       iidMinDepth2                 = 8;
 const int       probCutMinDepth              = 5;
@@ -3068,10 +3069,12 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     bool futility = false, lmp = false, /*mateThreat = false,*/ historyPruning = false;
     const bool isNotEndGame = (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t] > 0); ///@todo better ?
 
+    const bool improving = (!isInCheck && ply > 1 && evalStack[p.halfmoves] >= evalStack[p.halfmoves - 2]);
+
     // prunings
     if ( !DynamicConfig::mateFinder && canPrune && !isInCheck && !isMateScore(beta) && !pvnode){ ///@todo removing the !isMateScore(beta) is not losing that much elo and allow for better check mate finding ...
         // static null move
-        if (StaticConfig::doStaticNullMove && isNotEndGame && depth <= StaticConfig::staticNullMoveMaxDepth[evalScoreIsHashScore] && evalScore >= beta + StaticConfig::staticNullMoveDepthInit[evalScoreIsHashScore] + StaticConfig::staticNullMoveDepthCoeff[evalScoreIsHashScore] * depth) return ++stats.counters[Stats::sid_staticNullMove], evalScore;
+        if (StaticConfig::doStaticNullMove && isNotEndGame && depth <= StaticConfig::staticNullMoveMaxDepth[evalScoreIsHashScore] && evalScore >= beta + StaticConfig::staticNullMoveDepthInit[evalScoreIsHashScore] + (StaticConfig::staticNullMoveDepthCoeff[evalScoreIsHashScore] - 50*improving) * depth) return ++stats.counters[Stats::sid_staticNullMove], evalScore;
 
         // razoring
         int rAlpha = alpha - StaticConfig::razoringMarginDepthInit[evalScoreIsHashScore] - StaticConfig::razoringMarginDepthCoeff[evalScoreIsHashScore]*depth;
@@ -3086,16 +3089,20 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if (isNotEndGame && StaticConfig::doNullMove && depth >= StaticConfig::nullMoveMinDepth) {
             PVList nullPV;
             ++stats.counters[Stats::sid_nullMoveTry];
-            const ScoreType nullIIDScore = evalScore; // pvs<false, false>(beta - 1, beta, p, std::max(depth / 4,1), ply, nullPV, seldepth, isInCheck);
-            if (nullIIDScore >= beta - 10 * depth) {
-                ++stats.counters[Stats::sid_nullMoveTry2];
-                Position pN = p;
-                applyNull(pN);
-                const int R = depth / 4 + 3 + std::min((nullIIDScore - beta) / 80, 3); // adaptative
-                const ScoreType nullscore = -pvs<false, false>(-beta, -beta + 1, pN, depth - R, ply + 1, nullPV, seldepth, isInCheck);
-                if (stopFlag) return STOPSCORE;
-                if (nullscore >= beta) return ++stats.counters[Stats::sid_nullMove], isMateScore(nullscore) ? beta : nullscore;
-                //if (isMatedScore(nullscore)) mateThreat = true;
+            const int R = depth / 4 + 3 + std::min((evalScore - beta) / 80, 3); // adaptative
+            const ScoreType nullIIDScore = evalScore; // pvs<false, false>(beta - 1, beta, p, std::max(depth/4,1), ply, nullPV, seldepth, isInCheck);
+            if (nullIIDScore >= beta /*- 10 * depth*/) {
+                TT::Entry nullE;
+                TT::getEntry(*this, computeHash(p), depth - R, nullE);
+                if (nullE.h == 0 || nullE.score >= beta) { // avoid null move search if TT gives a score < beta for the same depth
+                    ++stats.counters[Stats::sid_nullMoveTry2];
+                    Position pN = p;
+                    applyNull(pN);
+                    const ScoreType nullscore = -pvs<false, false>(-beta, -beta + 1, pN, depth - R, ply + 1, nullPV, seldepth, isInCheck);
+                    if (stopFlag) return STOPSCORE;
+                    if (nullscore >= beta) return ++stats.counters[Stats::sid_nullMove], isMateScore(nullscore) ? beta : nullscore;
+                    //if (isMatedScore(nullscore)) mateThreat = true;
+                }
             }
         }
 
@@ -3134,7 +3141,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     // LMP
     if (!rootnode && StaticConfig::doLMP && depth <= StaticConfig::lmpMaxDepth) lmp = true;
     // futility
-    if (!rootnode && StaticConfig::doFutility && evalScore <= alpha - StaticConfig::futilityDepthInit[evalScoreIsHashScore] - StaticConfig::futilityDepthCoeff[evalScoreIsHashScore]*depth) futility = true;
+    if (!rootnode && StaticConfig::doFutility && depth <= StaticConfig::futulityMaxDepth[evalScoreIsHashScore] && evalScore <= alpha - StaticConfig::futilityDepthInit[evalScoreIsHashScore] - StaticConfig::futilityDepthCoeff[evalScoreIsHashScore]*depth) futility = true;
     // history pruning
     if (!rootnode && StaticConfig::doHistoryPruning && depth < StaticConfig::historyPuningMaxDepth) historyPruning = true;
 
@@ -3160,7 +3167,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             //const bool isAdvancedPawnPush = getPieceType(p,Move2From(e.m)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
             // extensions
             int extension = 0;
-            //if (!extension /*&& pvnode*/ && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension;
+            if (!extension && pvnode && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension;
             if (!extension && isCastling(e.m) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
             //if (!extension && mateThreat) ++stats.counters[Stats::sid_mateThreadExtension],++extension;
             //if (!extension && p.lastMove != INVALIDMOVE && Move2Type(p.lastMove) == T_capture && Move2To(e.m) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; // recapture
@@ -3210,7 +3217,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     /*if ( isMainThread() )*/ sort(*this, moves, p,true, isInCheck, &e);
     //else std::random_shuffle(moves.begin(),moves.end());
     }
-    const bool improving = (!isInCheck && ply > 1 && evalStack[p.halfmoves] >= evalStack[p.halfmoves - 2]);
 
     ScoreType score = -MATE + ply;
 
@@ -3229,7 +3235,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         const bool isAdvancedPawnPush = getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
         // extensions
         int extension = 0;
-        //if (!extension && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension; // we are in check (extension)
+        if (!extension && pvnode && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension; // we are in check (extension)
         //if (!extension && mateThreat && depth <= 4) ++stats.counters[Stats::sid_mateThreadExtension],++extension;
         //if (!extension && p.lastMove != INVALIDMOVE && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; //recapture
         //if (!extension && isCheck && !isBadCap(*it)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
