@@ -261,6 +261,7 @@ const int       historyPuningMaxDepth        = 3;
 const ScoreType historyPuningThreshold       = 300;
 const ScoreType futilityDepthCoeff       [2] = {160, 160};
 const ScoreType futilityDepthInit        [2] = {0  , 0};
+const int       futilityMaxDepth         [2] = {10 , 10};
 const int       iidMinDepth                  = 5;
 const int       iidMinDepth2                 = 8;
 const int       probCutMinDepth              = 5;
@@ -3141,7 +3142,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     // LMP
     if (!rootnode && StaticConfig::doLMP && depth <= StaticConfig::lmpMaxDepth) lmp = true;
     // futility
-    if (!rootnode && StaticConfig::doFutility && depth <= StaticConfig::futulityMaxDepth[evalScoreIsHashScore] && evalScore <= alpha - StaticConfig::futilityDepthInit[evalScoreIsHashScore] - StaticConfig::futilityDepthCoeff[evalScoreIsHashScore]*depth) futility = true;
+    if (!rootnode && StaticConfig::doFutility && depth <= StaticConfig::futilityMaxDepth[evalScoreIsHashScore] && evalScore <= alpha - StaticConfig::futilityDepthInit[evalScoreIsHashScore] - StaticConfig::futilityDepthCoeff[evalScoreIsHashScore]*depth) futility = true;
     // history pruning
     if (!rootnode && StaticConfig::doHistoryPruning && depth < StaticConfig::historyPuningMaxDepth) historyPruning = true;
 
