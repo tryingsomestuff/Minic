@@ -30,11 +30,11 @@ typedef uint64_t u_int64_t;
 //#define IMPORTBOOK
 //#define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
-#define WITH_TEST_SUITE
+//#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 //#define WITH_UCI
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "0.66";
 
 /*
 //todo
@@ -250,7 +250,7 @@ const bool doHistoryPruning = true; ///@todo
 // first value if eval score is used, second if hash score is used
 const ScoreType qfutilityMargin          [2] = {128, 128};
 const int       staticNullMoveMaxDepth   [2] = {6  , 6};
-const ScoreType staticNullMoveDepthCoeff [2] = {80 , 80};
+const ScoreType staticNullMoveDepthCoeff [2] = {80 , 80}; // -50*improving
 const ScoreType staticNullMoveDepthInit  [2] = {0  , 0};
 const ScoreType razoringMarginDepthCoeff [2] = {0  , 0};
 const ScoreType razoringMarginDepthInit  [2] = {200, 200};
@@ -259,9 +259,9 @@ const int       nullMoveMinDepth             = 2;
 const int       lmpMaxDepth                  = 10;
 const int       historyPuningMaxDepth        = 3;
 const ScoreType historyPuningThreshold       = 300;
-const ScoreType futilityDepthCoeff       [2] = {160, 160};
-const ScoreType futilityDepthInit        [2] = {0  , 0};
 const int       futilityMaxDepth         [2] = {10 , 10};
+const ScoreType futilityDepthCoeff       [2] = {160, 160};
+const ScoreType futilityDepthInit        [2] = {0  ,0};
 const int       iidMinDepth                  = 5;
 const int       iidMinDepth2                 = 8;
 const int       probCutMinDepth              = 5;
@@ -1397,7 +1397,7 @@ struct ThreadData{
 };
 
 struct Stats{
-    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits,sid_ttPhits,sid_staticNullMove, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMove, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_see, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_pawnPushExtension, sid_singularExtension, sid_mateThreadExtension, sid_maxid };
+    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits,sid_ttPhits,sid_staticNullMove, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMove, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_see, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_pawnPushExtension, sid_singularExtension, sid_mateThreadExtension, sid_maxid };
     static const std::string Names[sid_maxid] ;
     Counter counters[sid_maxid];
     void init(){
@@ -1406,7 +1406,7 @@ struct Stats{
     }
 };
 
-const std::string Stats::Names[Stats::sid_maxid] = { "nodes", "qnodes", "tthits", "Ptthits", "staticNullMove", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMove", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "see", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "pawnPushExtension", "singularExtension", "mateThreadExtension"};
+const std::string Stats::Names[Stats::sid_maxid] = { "nodes", "qnodes", "tthits", "Ptthits", "staticNullMove", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMove", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "see", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "pawnPushExtension", "singularExtension", "mateThreadExtension"};
 
 // singleton pool of threads
 class ThreadPool : public std::vector<ThreadContext*> {
@@ -2431,7 +2431,7 @@ struct SortThreatsFunctor {
 // Static Exchange Evaluation (cutoff version algorithm from stockfish)
 bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold) const{
     // Only deal with normal moves
-    if (! isCapture(m)) return true;
+    //if (! isCapture(m)) return true;
     const Square from = Move2From(m);
     const Square to   = Move2To(m);
     const bool promPossible = (SQRANK(to) == 0 || SQRANK(to) == 7);
@@ -3074,8 +3074,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     // prunings
     if ( !DynamicConfig::mateFinder && canPrune && !isInCheck && !isMateScore(beta) && !pvnode){ ///@todo removing the !isMateScore(beta) is not losing that much elo and allow for better check mate finding ...
-        // static null move
-        if (StaticConfig::doStaticNullMove && isNotEndGame && depth <= StaticConfig::staticNullMoveMaxDepth[evalScoreIsHashScore] && evalScore >= beta + StaticConfig::staticNullMoveDepthInit[evalScoreIsHashScore] + (StaticConfig::staticNullMoveDepthCoeff[evalScoreIsHashScore] - 50*improving) * depth) return ++stats.counters[Stats::sid_staticNullMove], evalScore;
+        // static null move ///@todo use improving ?
+        if (StaticConfig::doStaticNullMove && isNotEndGame && depth <= StaticConfig::staticNullMoveMaxDepth[evalScoreIsHashScore] && evalScore >= beta + StaticConfig::staticNullMoveDepthInit[evalScoreIsHashScore] + (StaticConfig::staticNullMoveDepthCoeff[evalScoreIsHashScore] /*- 50*improving*/) * depth) return ++stats.counters[Stats::sid_staticNullMove], evalScore;
 
         // razoring
         int rAlpha = alpha - StaticConfig::razoringMarginDepthInit[evalScoreIsHashScore] - StaticConfig::razoringMarginDepthCoeff[evalScoreIsHashScore]*marginDepth;
@@ -3246,9 +3246,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if (validMoveCount < 2 || !StaticConfig::doPVS) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck);
         else{
             // reductions & prunings
-            ///@todo try if many moves => reduce more, if less move => reduce less
             int reduction = 0;
-            const bool isPrunable = !isInCheck && !isCheck && !isAdvancedPawnPush && !sameMove(*it, killerT.killers[0][p.halfmoves]) && !sameMove(*it, killerT.killers[1][p.halfmoves]) /*&& !isMateScore(alpha) */&& !isMateScore(beta);
+            const bool isPrunable = !isInCheck && /*isNotEndGame &&*/ !isCheck && !isAdvancedPawnPush && !sameMove(*it, killerT.killers[0][p.halfmoves]) && !sameMove(*it, killerT.killers[1][p.halfmoves]) /*&& !isMateScore(alpha) */&& !isMateScore(beta);
             const bool isPrunableStd = isPrunable && Move2Type(*it) == T_std;
             // futility
             if (futility && isPrunableStd) {++stats.counters[Stats::sid_futility]; continue;}
@@ -3256,15 +3255,18 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if (lmp && isPrunableStd && validMoveCount >= StaticConfig::lmpLimit[improving][depth] ) {++stats.counters[Stats::sid_lmp]; continue;}
             // History pruning
             if (historyPruning && isPrunableStd && validMoveCount > StaticConfig::lmpLimit[improving][depth]/3 && Move2Score(*it) < StaticConfig::historyPuningThreshold) {++stats.counters[Stats::sid_historyPruning]; continue;}
-            // SEE
+            // SEE (cap)
             const bool isPrunableCap = isPrunable && Move2Type(*it) == T_capture && isBadCap(*it);
-            if ((futility||depth<=4) && isPrunableCap) {++stats.counters[Stats::sid_see]; continue;}
+            if ((futility||depth<=4) && isPrunableCap ) {++stats.counters[Stats::sid_see]; continue;}
+            // SEE (quiet)
+            if ((futility||depth<=4) && isPrunableStd && !SEE(p,*it,-100*depth)) {++stats.counters[Stats::sid_seeQuiet]; continue;}
             // LMR
             if (StaticConfig::doLMR && !DynamicConfig::mateFinder && isPrunableStd && depth >= StaticConfig::lmrMinDepth ){
                 reduction = StaticConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
                 if (!improving) ++reduction;
                 if (ttMoveIsCapture) ++reduction;
                 reduction -= 2*int(Move2Score(*it) / MAX_HISTORY); //history reduction/extension
+                //if (!pvnode) reduction += std::min(2,(int)moves.size()/10 - 1); // if many moves => reduce more, if less move => reduce less
                 if (pvnode && reduction > 0) --reduction;
                 if (reduction < 0) reduction = 0;
                 if (reduction >= depth - 1) reduction = depth - 1;
@@ -3349,21 +3351,8 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
     }
 
     ScoreType depthScores[MAX_DEPTH] = { 0 };
-
     const bool isInCheck = isAttacked(p, kingSquare(p));
-
     DepthType startDepth = 1;
-
-    // probe TT, to skip some search ...
-    /*
-    TT::Entry e;
-    if (TT::getEntry(*this,computeHash(p), 0, e) && e.h != 0 && e.b == TT::B_exact ) {
-       startDepth = e.d;
-       pv.push_back(e.m);
-       reachedDepth = d;
-       bestScore    = e.score;
-    }
-    */
 
     if ( isMainThread() ){
        // easy move detection (small open window depth 2 search)
