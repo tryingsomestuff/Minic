@@ -34,7 +34,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_SYZYGY
 //#define WITH_UCI
 
-const std::string MinicVersion = "0.66";
+const std::string MinicVersion = "dev";
 
 /*
 //todo
@@ -63,15 +63,11 @@ const std::string MinicVersion = "0.66";
 #define SQR(x) ((x)*(x))
 #define HSCORE(depth) ScoreType(SQR(std::min((int)depth, 16))*4)
 
-namespace DynamicConfig{
-    bool mateFinder        = false;
-    bool disableTT         = false;
-    unsigned int ttSizeMb  = 128; // here in Mb, will be converted to real size next
-    bool fullXboardOutput  = false;
-    bool debugMode         = false;
-    std::string debugFile  = "minic.debug";
-    unsigned int level     = 1;
-}
+#define TO_STR2(x) #x
+#define TO_STR(x) TO_STR2(x)
+#define LINE_NAME(prefix) JOIN(prefix,__LINE__)
+#define JOIN(symbol1,symbol2) _DO_JOIN(symbol1,symbol2 )
+#define _DO_JOIN(symbol1,symbol2) symbol1##symbol2
 
 typedef std::chrono::system_clock Clock;
 typedef char DepthType;
@@ -103,6 +99,21 @@ struct OptList {
 typedef OptList<Move,   MAX_MOVE> MoveList;
 typedef std::vector<Square> SquareList; //typedef OptList<Square, MAX_CAP>  SquareList; is slower
 typedef std::vector<Move> PVList; //struct PVList : public std::vector<Move> { PVList():std::vector<Move>(MAX_DEPTH, INVALIDMOVE) {}; }; is slower
+
+namespace DynamicConfig{ // before Logging
+
+    std::vector<std::string> optionsName;
+    struct OptionInitializer { OptionInitializer(const std::string & n){optionsName.push_back(n);} };
+#define DECLARE_OPTION(t,n,v) t n=v; OptionInitializer LINE_NAME(optIni)(TO_STR(n));
+
+    DECLARE_OPTION(bool,mateFinder,false)
+    DECLARE_OPTION(bool,disableTT,false)
+    DECLARE_OPTION(unsigned int,ttSizeMb,128) // here in Mb, will be converted to real size next
+    DECLARE_OPTION(bool,fullXboardOutput,false)
+    DECLARE_OPTION(bool,debugMode,false)
+    DECLARE_OPTION(std::string,debugFile,"minic.debug")
+    DECLARE_OPTION(unsigned int,level,1)
+}
 
 namespace Logging {
     enum COMType { CT_xboard = 0, CT_uci = 1 };
@@ -154,7 +165,7 @@ namespace Logging {
     std::unique_ptr<std::ofstream> LogIt::_of;
 }
 
-namespace Options {
+namespace Options { // after Logging
     nlohmann::json json;
     std::vector<std::string> args;
     void initOptions(int argc, char ** argv) {
@@ -258,7 +269,7 @@ const int       razoringMaxDepth         [2] = {3  , 3};
 const int       nullMoveMinDepth             = 2;
 const int       lmpMaxDepth                  = 10;
 const int       historyPuningMaxDepth        = 3;
-const ScoreType historyPuningThreshold       = 300;
+const ScoreType historyPuningThreshold       = 0;
 const int       futilityMaxDepth         [2] = {10 , 10};
 const ScoreType futilityDepthCoeff       [2] = {160, 160};
 const ScoreType futilityDepthInit        [2] = {0  ,0};
@@ -1112,11 +1123,6 @@ namespace MaterialHash { // from Gull
             Logging::LogIt(Logging::logInfo) << "Material hash total : " << TotalMat;
             std::memset(materialHashTable, Ter_Unknown, sizeof(Terminaison)*TotalMat);
             for(size_t k = 0 ; k < TotalMat ; ++k) helperTable[k] = &helperDummy;
-#define TO_STR2(x) #x
-#define TO_STR(x) TO_STR2(x)
-#define LINE_NAME(prefix) JOIN(prefix,__LINE__)
-#define JOIN(symbol1,symbol2) _DO_JOIN(symbol1,symbol2 )
-#define _DO_JOIN(symbol1,symbol2) symbol1##symbol2
 #define DEF_MAT(x,t)     const Position::Material MAT##x = materialFromString(TO_STR(x)); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t   );
 #define DEF_MAT_H(x,t,h) const Position::Material MAT##x = materialFromString(TO_STR(x)); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t, h);
 #define DEF_MAT_REV(rev,x)     const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializerRev)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)])   );
