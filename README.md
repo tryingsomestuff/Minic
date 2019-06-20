@@ -164,6 +164,10 @@ You can use both the json configuation file or the command line argument to sele
 * 0.62 : fix an issue with material when castling, a lot of code refactoring
 * 0.63 : others fix
 * 0.64 : others fix again, lot of refactoring
+* 0.65 : working on search
+* 0.66 : working on search again
+* 0.67 : working on search again (quiet move SEE)
+* 0.68 : working on search again (LMR when in check)
 
 ## Thanks
 
