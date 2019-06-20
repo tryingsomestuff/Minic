@@ -259,7 +259,7 @@ const bool doQFutility      = true;
 const bool doProbcut        = true;
 const bool doHistoryPruning = true; ///@todo
 // first value if eval score is used, second if hash score is used
-const ScoreType qfutilityMargin          [2] = {128, 128};
+const ScoreType qfutilityMargin          [2] = {90, 90};
 const int       staticNullMoveMaxDepth   [2] = {6  , 6};
 const ScoreType staticNullMoveDepthCoeff [2] = {80 , 80}; // -50*improving
 const ScoreType staticNullMoveDepthInit  [2] = {0  , 0};
@@ -3253,19 +3253,21 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         else{
             // reductions & prunings
             int reduction = 0;
-            const bool isPrunable = !isInCheck && /*isNotEndGame &&*/ !isCheck && !isAdvancedPawnPush && !sameMove(*it, killerT.killers[0][p.halfmoves]) && !sameMove(*it, killerT.killers[1][p.halfmoves]) /*&& !isMateScore(alpha) */&& !isMateScore(beta);
+            const bool isPrunable =  /*isNotEndGame &&*/ !isAdvancedPawnPush && !sameMove(*it, killerT.killers[0][p.halfmoves]) && !sameMove(*it, killerT.killers[1][p.halfmoves]) /*&& !isMateScore(alpha) */&& !isMateScore(beta);
+            const bool noCheck = !isInCheck && !isCheck;
             const bool isPrunableStd = isPrunable && Move2Type(*it) == T_std;
+            const bool isPrunableStdNoCheck = isPrunable && noCheck && Move2Type(*it) == T_std;
             // futility
-            if (futility && isPrunableStd) {++stats.counters[Stats::sid_futility]; continue;}
+            if (futility && isPrunableStdNoCheck) {++stats.counters[Stats::sid_futility]; continue;}
             // LMP
-            if (lmp && isPrunableStd && validMoveCount >= StaticConfig::lmpLimit[improving][depth] ) {++stats.counters[Stats::sid_lmp]; continue;}
+            if (lmp && isPrunableStdNoCheck && validMoveCount >= StaticConfig::lmpLimit[improving][depth] ) {++stats.counters[Stats::sid_lmp]; continue;}
             // History pruning
-            if (historyPruning && isPrunableStd && validMoveCount > StaticConfig::lmpLimit[improving][depth]/3 && Move2Score(*it) < StaticConfig::historyPuningThreshold) {++stats.counters[Stats::sid_historyPruning]; continue;}
+            if (historyPruning && isPrunableStdNoCheck && validMoveCount > StaticConfig::lmpLimit[improving][depth]/3 && Move2Score(*it) < StaticConfig::historyPuningThreshold) {++stats.counters[Stats::sid_historyPruning]; continue;}
             // SEE (cap)
-            const bool isPrunableCap = isPrunable && Move2Type(*it) == T_capture && isBadCap(*it);
+            const bool isPrunableCap = isPrunable && noCheck && Move2Type(*it) == T_capture && isBadCap(*it);
             if ((futility||depth<=4) && isPrunableCap ) {++stats.counters[Stats::sid_see]; continue;}
             // SEE (quiet)
-            if ((futility||depth<=4) && isPrunableStd && !SEE(p,*it,-100*depth)) {++stats.counters[Stats::sid_seeQuiet]; continue;}
+            if ((futility||depth<=4) && isPrunableStdNoCheck && !SEE(p,*it,-100*depth)) {++stats.counters[Stats::sid_seeQuiet]; continue;}
             // LMR
             if (StaticConfig::doLMR && !DynamicConfig::mateFinder && isPrunableStd && depth >= StaticConfig::lmrMinDepth ){
                 reduction = StaticConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
