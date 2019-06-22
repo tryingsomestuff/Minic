@@ -100,19 +100,14 @@ typedef OptList<Move,   MAX_MOVE> MoveList;
 typedef std::vector<Square> SquareList; //typedef OptList<Square, MAX_CAP>  SquareList; is slower
 typedef std::vector<Move> PVList; //struct PVList : public std::vector<Move> { PVList():std::vector<Move>(MAX_DEPTH, INVALIDMOVE) {}; }; is slower
 
-namespace DynamicConfig{ // before Logging
-
-    std::vector<std::string> optionsName;
-    struct OptionInitializer { OptionInitializer(const std::string & n){optionsName.push_back(n);} };
-#define DECLARE_OPTION(t,n,v) t n=v; OptionInitializer LINE_NAME(optIni)(TO_STR(n));
-
-    DECLARE_OPTION(bool,mateFinder,false)
-    DECLARE_OPTION(bool,disableTT,false)
-    DECLARE_OPTION(unsigned int,ttSizeMb,128) // here in Mb, will be converted to real size next
-    DECLARE_OPTION(bool,fullXboardOutput,false)
-    DECLARE_OPTION(bool,debugMode,false)
-    DECLARE_OPTION(std::string,debugFile,"minic.debug")
-    DECLARE_OPTION(unsigned int,level,1)
+namespace DynamicConfig{
+    bool mateFinder        = false;
+    bool disableTT         = false;
+    unsigned int ttSizeMb  = 128; // here in Mb, will be converted to real size next
+    bool fullXboardOutput  = false;
+    bool debugMode         = false;
+    std::string debugFile  = "minic.debug";
+    unsigned int level     = 10;
 }
 
 namespace Logging {
