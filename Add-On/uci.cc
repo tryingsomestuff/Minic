@@ -113,10 +113,11 @@ namespace UCI {
 
                         TimeMan::isDynamic = false;
                         TimeMan::nbMoveInTC = -1;
-                        TimeMan::msecPerMove = 777;
+                        TimeMan::msecPerMove = -1;
                         TimeMan::msecInTC = -1;
                         TimeMan::msecInc = -1;
                         TimeMan::msecUntilNextTC = -1;
+                        TimeMan::moveToGo = -1;
                         COM::depth = MAX_DEPTH; // infinity
 
                         COM::ponder = COM::p_off;
@@ -154,7 +155,7 @@ namespace UCI {
                                 }
                             }
                         });
-                        Logging::LogIt(Logging::logInfo) << "uci search done";
+                        Logging::LogIt(Logging::logInfo) << "uci async";
                     }
                     else { Logging::LogIt(Logging::logGUI) << "info string search command received, but no position specified"; }
                 }

@@ -2026,9 +2026,14 @@ int GetNextMSecPerMove(const Position & p){
     Logging::LogIt(Logging::logInfo) << "nbMoveInTC      " << nbMoveInTC ;
     Logging::LogIt(Logging::logInfo) << "msecUntilNextTC " << msecUntilNextTC;
     Logging::LogIt(Logging::logInfo) << "currentNbMoves  " << int(p.moves);
+    Logging::LogIt(Logging::logInfo) << "moveToGo        " << moveToGo;
     int msecIncLoc = (msecInc > 0) ? msecInc : 0;
-    if ( msecPerMove > 0 ) ms =  msecPerMove;
+    if ( msecPerMove > 0 ) {
+        Logging::LogIt(Logging::logInfo) << "Fixed time per move";
+        ms =  msecPerMove;
+    }
     else if ( nbMoveInTC > 0){ // mps is given (xboard style)
+        Logging::LogIt(Logging::logInfo) << "Xboard style TC";
         assert(msecInTC > 0); assert(nbMoveInTC > 0);
         Logging::LogIt(Logging::logInfo) << "TC mode, xboard";
         const int msecMargin = std::max(std::min(msecMarginMax, int(msecMarginCoef*msecInTC)), msecMarginMin);
@@ -2036,14 +2041,14 @@ int GetNextMSecPerMove(const Position & p){
         else { ms = std::min(msecUntilNextTC - msecMargin, int((msecUntilNextTC - msecMargin) /float(nbMoveInTC - ((p.moves - 1) % nbMoveInTC))) + msecIncLoc); }
     }
     else if (moveToGo > 0) { // moveToGo is given (uci style)
-        assert(msecInTC > 0); assert(nbMoveInTC > 0);
-        Logging::LogIt(Logging::logInfo) << "TC mode, UCI";
-        const int msecMargin = std::max(std::min(msecMarginMax, int(msecMarginCoef*msecInTC)), msecMarginMin);
+        assert(msecUntilNextTC > 0);
+        Logging::LogIt(Logging::logInfo) << "UCI style TC";
+        const int msecMargin = std::max(std::min(msecMarginMax, int(msecMarginCoef*msecUntilNextTC)), msecMarginMin);
         if (!isDynamic) Logging::LogIt(Logging::logFatal) << "bad timing configuration ...";
         else { ms = std::min(msecUntilNextTC - msecMargin, int((msecUntilNextTC - msecMargin) / float(moveToGo)) + msecIncLoc); }
     }
     else{ // mps is not given
-        Logging::LogIt(Logging::logInfo) << "Fix time mode";
+        Logging::LogIt(Logging::logInfo) << "Suddendeath style";
         const int nmoves = 24; // always be able to play this more moves !
         Logging::LogIt(Logging::logInfo) << "nmoves    " << nmoves;
         Logging::LogIt(Logging::logInfo) << "p.moves   " << int(p.moves);
@@ -3699,6 +3704,7 @@ void xboard(){
                 TimeMan::msecInTC         = -1;
                 TimeMan::msecInc          = -1;
                 TimeMan::msecUntilNextTC  = -1;
+                TimeMan::moveToGo         = -1;
                 COM::depth                = MAX_DEPTH; // infinity
             }
             else if ( strncmp(COM::command.c_str(), "sd", 2) == 0) {
@@ -3713,6 +3719,7 @@ void xboard(){
                 TimeMan::msecInTC         = -1;
                 TimeMan::msecInc          = -1;
                 TimeMan::msecUntilNextTC  = -1;
+                TimeMan::moveToGo         = -1;
             }
             else if(strncmp(COM::command.c_str(), "level",5) == 0) {
                 int timeTC = 0, secTC = 0, inc = 0, mps = 0;
@@ -3724,6 +3731,7 @@ void xboard(){
                 TimeMan::msecInTC         = timeTC*60000 + secTC * 1000;
                 TimeMan::msecInc          = inc * 1000;
                 TimeMan::msecUntilNextTC  = timeTC; // just an init here, will be managed using "time" command later
+                TimeMan::moveToGo         = -1;
                 COM::depth                = MAX_DEPTH; // infinity
             }
             else if ( COM::command == "edit"){ }
