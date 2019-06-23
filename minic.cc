@@ -28,7 +28,7 @@ typedef uint64_t u_int64_t;
 #include "json.hpp"
 
 //#define IMPORTBOOK
-//#define WITH_TEXEL_TUNING
+#define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
@@ -437,7 +437,7 @@ ScoreType katt_trans  = 32;
 ScoreType katt_scale  = 13;
 ScoreType katt_offset = 20;
 enum katt_att_def : unsigned char { katt_attack = 0, katt_defence = 1 };
-ScoreType katt_att_def_weight[2][7] = { {0, 2, 4, 4, 8, 10, 4}, {0, 1, 4, 4, 3, 3, 0} };
+ScoreType katt_att_def_weight[2][7] = { {0, 2, 4, 2, 5, 6, 4}, {0, 1, 12, -5, 1, 0, 0} };
 ScoreType katt_openfile = 13;
 ScoreType katt_semiopenfile_our = 10;
 ScoreType katt_semiopenfile_opp = 12;
