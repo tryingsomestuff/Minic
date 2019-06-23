@@ -89,7 +89,7 @@ namespace UCI {
                         if (!COM::sideToMoveFromFEN(fen)) Logging::LogIt(Logging::logFatal) << "Illegal FEN " << fen;
                     }
                     else if (type == "moves") {
-                        if (computeHash(COM::position) != 0ull) {
+                        if (COM::position.h != 0ull) {
                             std::string mstr;
                             while (iss >> mstr) {
                                 Move m = COM::moveFromCOM(mstr);
@@ -108,7 +108,7 @@ namespace UCI {
             else if (uciCommand == "go") {
                 if (!ThreadContext::stopFlag) { Logging::LogIt(Logging::logGUI) << "info string go command received, but search already in progress"; }
                 else {
-                    if (computeHash(COM::position) != 0ull) {
+                    if (COM::position.h != 0ull) {
                         //MoveList root_moves;
 
                         TimeMan::isDynamic = false;
@@ -154,8 +154,9 @@ namespace UCI {
                                     COM::stm = COM::opponent(COM::stm);
                                 }
                             }
+                            Logging::LogIt(Logging::logInfo) << "uci async done";
                         });
-                        Logging::LogIt(Logging::logInfo) << "uci async";
+                        Logging::LogIt(Logging::logInfo) << "uci async started";
                     }
                     else { Logging::LogIt(Logging::logGUI) << "info string search command received, but no position specified"; }
                 }

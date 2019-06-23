@@ -32,7 +32,7 @@ typedef uint64_t u_int64_t;
 //#define DEBUG_TOOL
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
-//#define WITH_UCI
+#define WITH_UCI
 
 const std::string MinicVersion = "dev";
 
@@ -108,6 +108,9 @@ namespace DynamicConfig{
     bool debugMode         = false;
     std::string debugFile  = "minic.debug";
     unsigned int level     = 10;
+    bool book              = true;
+    std::string bookFile   = "book.bin";
+    int threads            = 1;
 }
 
 namespace Logging {
@@ -163,7 +166,7 @@ namespace Logging {
 namespace Options { // after Logging
     nlohmann::json json;
     std::vector<std::string> args;
-    void initOptions(int argc, char ** argv) {
+    void readOptions(int argc, char ** argv) {
         for (int i = 1; i < argc; ++i) args.push_back(argv[i]);
         std::ifstream str("minic.json");
         if (!str.is_open()) Logging::LogIt(Logging::logError) << "Cannot open minic.json";
@@ -172,74 +175,42 @@ namespace Options { // after Logging
             if (!json.is_object()) Logging::LogIt(Logging::logError) << "JSON is not an object";
         }
     }
-    template<typename T> struct OptionValue {};
-    template<> struct OptionValue<bool> {
-        const bool value = false;
-        const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_boolean;
-        static const bool clampAllowed = false;
-    };
-    template<> struct OptionValue<int> {
-        const int value = 0;
-        const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_number_integer;
-        static const bool clampAllowed = true;
-    };
-    template<> struct OptionValue<unsigned int> {
-        const int value = 0;
-        const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_number_integer;
-        static const bool clampAllowed = true;
-    };
-    template<> struct OptionValue<float> {
-        const float value = 0.f;
-        const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_number_float;
-        static const bool clampAllowed = true;
-    };
-    template<> struct OptionValue<std::string> {
-        const std::string value = "";
-        const std::function<bool(const nlohmann::json::reference)> validator = &nlohmann::json::is_string;
-        static const bool clampAllowed = false;
-    };
     // from argv (override json)
-    template<typename T> T getOptionCLI(bool & found, const std::string & key, T defaultValue = OptionValue<T>().value) {
-        found = false;
+    template<typename T> bool getOptionCLI(T & value, const std::string & key) {
         auto it = std::find(args.begin(), args.end(), std::string("-") + key);
-        if (it == args.end()) { Logging::LogIt(Logging::logWarn) << "ARG key not given, " << key; return defaultValue; }
+        if (it == args.end()) { Logging::LogIt(Logging::logWarn) << "ARG key not given, " << key; return false; }
         std::stringstream str;
         ++it;
-        if (it == args.end()) { Logging::LogIt(Logging::logError) << "ARG value not given, " << key; return defaultValue; }
+        if (it == args.end()) { Logging::LogIt(Logging::logError) << "ARG value not given, " << key; return false; }
         str << *it;
-        T ret = defaultValue;
-        str >> ret;
-        Logging::LogIt(Logging::logInfo) << "From ARG, " << key << " : " << ret;
-        found = true;
-        return ret;
+        str >> value;
+        Logging::LogIt(Logging::logInfo) << "From ARG, " << key << " : " << value;
+        return true;
     }
-    template<typename T> struct Validator {
-        Validator() :hasMin(false), hasMax(false) {}
-        Validator & setMin(const T & v) { minValue = v; hasMin = true; return *this; }
-        Validator & setMax(const T & v) { maxValue = v; hasMax = true; return *this; }
-        bool hasMin, hasMax;
-        T minValue, maxValue;
-        T get(const T & v)const { return std::min(hasMax ? maxValue : v, std::max(hasMin ? minValue : v, v)); }
-    };
     // from json
-    template<typename T> T getOption(const std::string & key, T defaultValue = OptionValue<T>().value, const Validator<T> & v = Validator<T>()) {
-        bool found = false;
-        const T cliValue = getOptionCLI(found, key, defaultValue);
-        if (found) return v.get(cliValue);
+    template<typename T> bool getOption(T & value, const std::string & key) {
+        T cliValue;
+        if (getOptionCLI(cliValue, key)) return true;
         auto it = json.find(key);
-        if (it == json.end()) { Logging::LogIt(Logging::logWarn) << "JSON key not given, " << key; return defaultValue; }
-        auto val = it.value();
-        if (!OptionValue<T>().validator(val)) { Logging::LogIt(Logging::logError) << "JSON value does not have expected type, " << it.key() << " : " << val; return defaultValue; }
-        else {
-            Logging::LogIt(Logging::logInfo) << "From config file, " << it.key() << " : " << val;
-            return OptionValue<T>().clampAllowed ? v.get(val.get<T>()) : val.get<T>();
-        }
+        if (it == json.end()) { Logging::LogIt(Logging::logWarn) << "JSON key not given, " << key; return false; }
+        value = it.value();
+        Logging::LogIt(Logging::logInfo) << "From config file, " << it.key() << " : " << value;
+        return true;
     }
+#define GETOPT(name,type) Options::getOption<type>(DynamicConfig::name,#name);
+    void initOptions(int argc, char ** argv){
+       readOptions(argc,argv);
+       GETOPT(debugMode,        bool)
+       GETOPT(debugFile,        std::string)
+       GETOPT(book,             bool)
+       GETOPT(bookFile,         std::string)
+       GETOPT(ttSizeMb,         unsigned int)
+       GETOPT(threads,          int)
+       GETOPT(mateFinder,       bool)
+       GETOPT(fullXboardOutput, bool)
+       GETOPT(level,            unsigned int)
+   }
 }
-
-#define GETOPT(  name,type)                 DynamicConfig::name = Options::getOption<type>(#name);
-#define GETOPT_D(name,type,def)             DynamicConfig::name = Options::getOption<type>(#name,def);
-#define GETOPT_M(name,type,def,mini,maxi)   DynamicConfig::name = Options::getOption<type>(#name,def,Options::Validator<type>().setMin(mini).setMax(maxi));
 
 namespace StaticConfig{
 const bool doWindow         = true;
@@ -279,10 +250,16 @@ const int       singularExtensionDepth       = 8;
 const int lmpLimit[][StaticConfig::lmpMaxDepth + 1] = { { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 } ,{ 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };
 
 int lmrReduction[MAX_DEPTH][MAX_MOVE];
-
 void initLMR() {
     Logging::LogIt(Logging::logInfo) << "Init lmr";
     for (int d = 0; d < MAX_DEPTH; d++) for (int m = 0; m < MAX_MOVE; m++) lmrReduction[d][m] = int(1.0 + log(d) * log(m) * 0.5); //(int)sqrt(float(d) * m / 8.f);
+}
+
+int MvvLvaScores[6][6];
+void initMvvLva(){
+    Logging::LogIt(Logging::logInfo) << "Init mvv-lva" ;
+    static const ScoreType IValues[6] = { 1, 2, 3, 5, 9, 20 }; ///@todo try N=B=3 !
+    for(int v = 0; v < 6 ; ++v) for(int a = 0; a < 6 ; ++a) MvvLvaScores[v][a] = IValues[v] * 20 - IValues[a];
 }
 
 }
@@ -480,9 +457,9 @@ Piece operator++(Piece & pp){pp=Piece(pp+1); return pp;}
 const int PieceShift = 6;
 enum Mat      : unsigned char{ M_t = 0, M_p, M_n, M_b, M_r, M_q, M_k, M_bl, M_bd, M_M, M_m };
 
-ScoreType   Values[13]    = { -8000, -1025, -477, -365, -337, -82, 0, 82, 337, 365, 477, 1025, 8000 };
-ScoreType   ValuesEG[13]  = { -8000,  -936, -512, -297, -281, -94, 0, 94, 281, 297, 512,  936, 8000 };
-std::string PieceNames[13]     = { "k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K" };
+ScoreType   Values[13]        = { -8000, -1025, -477, -365, -337, -82, 0, 82, 337, 365, 477, 1025, 8000 };
+ScoreType   ValuesEG[13]      = { -8000,  -936, -512, -297, -281, -94, 0, 94, 281, 297, 512,  936, 8000 };
+std::string PieceNames[13]    = { "k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K" };
 
 std::string SquareNames[64]   = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2", "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4", "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5", "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6", "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" };
 std::string FileNames[8]      = { "a", "b", "c", "d", "e", "f", "g", "h" };
@@ -499,13 +476,6 @@ void operator&=(Castling & a, const Castling &b){ a = a & b;}
 void operator|=(Castling & a, const Castling &b){ a = a | b;}
 
 inline Square stringToSquare(const std::string & str) { return (str.at(1) - 49) * 8 + (str.at(0) - 97); }
-
-int MvvLvaScores[6][6];
-void initMvvLva(){
-    Logging::LogIt(Logging::logInfo) << "Init mvv-lva" ;
-    static const ScoreType IValues[6] = { 1, 2, 3, 5, 9, 20 }; ///@todo try N=B=3 !
-    for(int v = 0; v < 6 ; ++v) for(int a = 0; a < 6 ; ++a) MvvLvaScores[v][a] = IValues[v] * 20 - IValues[a];
-}
 
 enum MType : unsigned char{
     T_std        = 0,   T_capture    = 1,   T_ep         = 2,   T_check      = 3, // T_check not used yet
@@ -1618,13 +1588,6 @@ struct Entry{
     Hash h;
 };
 
-struct PawnEntry{
-    PawnEntry():score(0),h(0ull){}
-    PawnEntry(ScoreType s, Hash h):score(s),h(h){}
-    ScoreType score;
-    Hash h;
-};
-
 struct Bucket { static const int nbBucket = 2;  Entry e[nbBucket];};
 
 unsigned long long int powerFloor(unsigned long long int x) {
@@ -1636,20 +1599,13 @@ unsigned long long int powerFloor(unsigned long long int x) {
 static unsigned long long int ttSize = 0;
 static std::unique_ptr<Bucket[]> table;
 
-static unsigned long long int ttPSize = 1024*1024; //1MEntry
-static std::unique_ptr<PawnEntry[]> pawnTable;
-
 void initTable(){
     assert(table==nullptr);
-    assert(pawnTable==nullptr);
     Logging::LogIt(Logging::logInfo) << "Init TT" ;
     Logging::LogIt(Logging::logInfo) << "Bucket size " << sizeof(Bucket);
-    Logging::LogIt(Logging::logInfo) << "Pawn entry size " << sizeof(PawnEntry);
     ttSize = 1024 * powerFloor((DynamicConfig::ttSizeMb * 1024) / (unsigned long long int)sizeof(Bucket));
     table = std::unique_ptr<Bucket[]>(new Bucket[ttSize]);
     Logging::LogIt(Logging::logInfo) << "Size of TT " << ttSize * sizeof(Bucket) / 1024 / 1024 << "Mb" ;
-    pawnTable = std::unique_ptr<PawnEntry[]>(new PawnEntry[ttPSize]);
-    Logging::LogIt(Logging::logInfo) << "Size of pawn TT " << ttPSize * sizeof(PawnEntry) / 1024 / 1024 << "Mb" ;
 }
 
 void clearTT() {
@@ -1690,21 +1646,6 @@ void getPV(const Position & p, ThreadContext & context, PVList & pv){
         if ( apply(p2,e.m) ) getPV(p2,context,pv);
     }
 }
-
-bool getPawnEntry(ThreadContext & context, Hash h, PawnEntry & e) {
-    assert(h > 0);
-    if ( DynamicConfig::disableTT  ) return false;
-    const PawnEntry & _e = pawnTable[h&(ttPSize-1)];
-    if ( _e.h == 0 || _e.h != h) return false; //early exist, bad hash
-    e = _e; // update entry only if no collision is detected !
-    ++context.stats.counters[Stats::sid_ttPhits];
-    return true;
-}
-
-void setPawnEntry(const PawnEntry & e){
-    assert(e.h > 0);
-    if ( DynamicConfig::disableTT ) return;
-    pawnTable[e.h&(ttSize-1)] = e;}
 
 } // TT
 
@@ -2405,17 +2346,16 @@ const Move Get(const Hash h){
 }
 
 void initBook() {
-    if (Options::getOption<bool>("book")) {
-        const std::string bookFile = Options::getOption<std::string>("bookFile");
-        if (bookFile.empty()) { Logging::LogIt(Logging::logWarn) << "json entry bookFile is empty, cannot load book"; }
+    if (DynamicConfig::book ) {
+        if (DynamicConfig::bookFile.empty()) { Logging::LogIt(Logging::logWarn) << "json entry bookFile is empty, cannot load book"; }
         else {
-            if (Book::fileExists(bookFile)) {
+            if (Book::fileExists(DynamicConfig::bookFile)) {
                 Logging::LogIt(Logging::logInfo) << "Loading book ...";
-                std::ifstream bbook(bookFile, std::ios::in | std::ios::binary);
+                std::ifstream bbook(DynamicConfig::bookFile, std::ios::in | std::ios::binary);
                 Book::readBinaryBook(bbook);
                 Logging::LogIt(Logging::logInfo) << "... done";
             }
-            else { Logging::LogIt(Logging::logWarn) << "book file " << bookFile << " not found, cannot load book"; }
+            else { Logging::LogIt(Logging::logWarn) << "book file " << DynamicConfig::bookFile << " not found, cannot load book"; }
         }
     }
 }
@@ -2494,7 +2434,7 @@ struct MoveSorter{
         if (e && sameMove(e->m,m)) s += 10000;
         else if (isInCheck && getPieceType(p, from) == P_wk) s += 8500;
         if (isCapture(t)){
-            s += MvvLvaScores[getPieceType(p,to)-1][getPieceType(p,from)-1];
+            s += StaticConfig::MvvLvaScores[getPieceType(p,to)-1][getPieceType(p,from)-1];
             if ( useSEE && !context.SEE(p,m,0)) s -= 2*MoveScoring[T_capture];
         }
         else if ( t == T_std){
@@ -3466,7 +3406,7 @@ namespace COM {
     SideToMove opponent(SideToMove & s) { return s == stm_white ? stm_black : stm_white; }
     
     bool sideToMoveFromFEN(const std::string & fen) {
-        const bool b = readFEN(fen, COM::position);
+        const bool b = readFEN(fen, COM::position,true);
         stm = COM::position.c == Co_White ? stm_white : stm_black;
         return b;
     }
@@ -3545,8 +3485,8 @@ void setFeature(){
 }
 
 bool receiveMove(const std::string & command){
-    std::string mstr(COM::command);
-    const size_t p = COM::command.find("usermove");
+    std::string mstr(command);
+    const size_t p = command.find("usermove");
     if (p != std::string::npos) mstr = mstr.substr(p + 8);
     Move m = COM::moveFromCOM(mstr);
     if ( m == INVALIDMOVE ) return false;
@@ -3768,26 +3708,19 @@ void xboard(){
 #endif
 
 void init(int argc, char ** argv) {
-    GETOPT(debugMode, bool)
-    GETOPT(debugFile, std::string)
-    Logging::init();
     Logging::hellooo();
     Options::initOptions(argc, argv);
+    Logging::init(); // after reading options
     Zobrist::initHash();
-    GETOPT_D(ttSizeMb, unsigned int, 128)
     TT::initTable();
     StaticConfig::initLMR();
-    initMvvLva();
+    StaticConfig::initMvvLva();
     BB::initMask();
     MaterialHash::KPK::init();
     MaterialHash::MaterialHashInitializer::init();
     initEval();
-    ThreadPool::instance().setup(Options::getOption<int>("threads", 1, Options::Validator<int>().setMin(1).setMax(64)));
-    GETOPT(mateFinder, bool)
-    GETOPT(fullXboardOutput, bool)
+    ThreadPool::instance().setup(DynamicConfig::threads);
     Book::initBook();
-    GETOPT_M(level, unsigned int,10,0,10)
-
 #ifdef WITH_SYZYGY
     SyzygyTb::initTB("syzygy");
 #endif
