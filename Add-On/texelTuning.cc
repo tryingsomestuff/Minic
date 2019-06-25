@@ -292,38 +292,45 @@ void TexelTuning(const std::string & filename) {
 
     /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::katt_max , -400, 800, "kattmax",[](const ScoreType & ){initEval();}));
-    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::katt_scale , 0, 100, "kattscalre",[](const ScoreType & ){initEval();}));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::katt_scale , -100, 100, "kattscalre",[](const ScoreType & ){initEval();}));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::katt_trans , -100, 100, "katt_trans",[](const ScoreType & ){initEval();}));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::katt_offset , -100, 100, "katt_offset",[](const ScoreType & ){initEval();}));
+    */
+
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookBehindPassed , -500,  500,"rookBehindPassed"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnMobility[0] , -500,  500,"pmobility0"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnMobility[1] , -500,  500,"pmobility1"));
+
+    /*
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::bishopPairBonus , -500,  500,"bishop pair"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::knightPairMalus , -500,  500,"knight pair"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookPairMalus   , -500,  500,"rook pair"));
+
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[1]  , -1500, 1500,"passer 1"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[2]  , -1500, 1500,"passer 2"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[3]  , -1500, 1500,"passer 3"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[4]  , -1500, 1500,"passer 4"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[5]  , -1500, 1500,"passer 5"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[6]  , -1500, 1500,"passer 6"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonusEG[1], -1500, 1500,"passer 1"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonusEG[2], -1500, 1500,"passer 2"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonusEG[3], -1500, 1500,"passer 3"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonusEG[4], -1500, 1500,"passer 4"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonusEG[5], -1500, 1500,"passer 5"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonusEG[6], -1500, 1500,"passer 6"));
+
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingNearPassedPawnEG,-150,550,"kingNearPassedPawnEG"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::doublePawnMalus     ,-150,550,"doublePawnMalus"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::doublePawnMalusEG   ,-150,550,"doublePawnMalusEG"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::isolatedPawnMalus   ,-150,550,"isolatedPawnMalus"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::isolatedPawnMalusEG ,-150,550,"isolatedPawnMalusEG"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnShieldBonus     ,-150,550,"pawnShieldBonus"));
     */
 
     /*
-    guess.push_back(Texel::TexelParam<ScoreType>(bishopPairBonus , -50,  50,"bishop pair"));
-    guess.push_back(Texel::TexelParam<ScoreType>(knightPairMalus , -50,  50,"knight pair"));
-    guess.push_back(Texel::TexelParam<ScoreType>(rookPairMalus   , -50,  50,"rook pair"));
-
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[1]  , -150, 150,"passer 1"));
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[2]  , -150, 150,"passer 2"));
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[3]  , -150, 150,"passer 3"));
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[4]  , -150, 150,"passer 4"));
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[5]  , -150, 150,"passer 5"));
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonus[6]  , -150, 150,"passer 6"));
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonusEG[1], -150, 150,"passer 1"));
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonusEG[2], -150, 150,"passer 2"));
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonusEG[3], -150, 150,"passer 3"));
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonusEG[4], -150, 150,"passer 4"));
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonusEG[5], -150, 150,"passer 5"));
-    guess.push_back(Texel::TexelParam<ScoreType>(passerBonusEG[6], -150, 150,"passer 6"));
-
-    guess.push_back(Texel::TexelParam<ScoreType>(kingNearPassedPawnEG,-15,55,"kingNearPassedPawnEG"));
-    guess.push_back(Texel::TexelParam<ScoreType>(doublePawnMalus     ,-15,55,"doublePawnMalus"));
-    guess.push_back(Texel::TexelParam<ScoreType>(doublePawnMalusEG   ,-15,55,"doublePawnMalusEG"));
-    guess.push_back(Texel::TexelParam<ScoreType>(isolatedPawnMalus   ,-15,55,"isolatedPawnMalus"));
-    guess.push_back(Texel::TexelParam<ScoreType>(isolatedPawnMalusEG ,-15,55,"isolatedPawnMalusEG"));
-    guess.push_back(Texel::TexelParam<ScoreType>(pawnShieldBonus     ,-15,55,"pawnShieldBonus"));
-    */
-
     for (int k = 1 ; k < 6 ; ++k ){
         for(int i = 0 ; i < 29 ; ++i){
-           guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::MOB[k][i],-200,200,"mob"+std::to_string(k)+"_"+std::to_string(i)/*,[k,i](const ScoreType & s){EvalConfig::MOBEG[k][i] = s;}*/));
+           guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::MOB[k][i],-200,200,"mob"+std::to_string(k)+"_"+std::to_string(i)));
         }
     }
 
@@ -332,6 +339,7 @@ void TexelTuning(const std::string & filename) {
            guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::MOBEG[k][i],-200,200,"mobeg"+std::to_string(k)+"_"+std::to_string(i)));
         }
     }
+    */
 
     computeOptimalK(data);
     Logging::LogIt(Logging::logInfo) << "Optimal K " << Texel::K;
