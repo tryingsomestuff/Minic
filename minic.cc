@@ -383,16 +383,16 @@ const ScoreType PSTEG[6][64] = {
     }
 };
 
-ScoreType   pawnShieldBonus[4]    = {0, 15, 30, 45};
+ScoreType   pawnShieldBonus       = 7;
 
-ScoreType   passerBonus[8]        = { 0,  0,  3,  8, 15, 24, 34, 0};
-ScoreType   passerBonusEG[8]      = { 0,  4, 18, 42, 75,118,170, 0};
-ScoreType   rookBehindPassed      = 36;
-ScoreType   kingNearPassedPawnEG  = 5;
-ScoreType   doublePawnMalus       = 16;
-ScoreType   doublePawnMalusEG     = 17;
-ScoreType   isolatedPawnMalus     = 21;
-ScoreType   isolatedPawnMalusEG   = 11;
+ScoreType   passerBonus[8]        = { 0, -3, -2,-10, 14, 26, 38, 0};
+ScoreType   passerBonusEG[8]      = { 0,-10,  6, 21, 52,120,197, 0};
+ScoreType   rookBehindPassed      = 25;
+ScoreType   kingNearPassedPawnEG  = 10;
+ScoreType   doublePawnMalus       = -4;
+ScoreType   doublePawnMalusEG     = 26;
+ScoreType   isolatedPawnMalus     = 27;
+ScoreType   isolatedPawnMalusEG   = 5;
 float       protectedPasserFactor = 0.25f; // 125%
 float       freePasserFactor      = 0.25f; // 125%
 
@@ -406,8 +406,8 @@ ScoreType   adjKnight[9]  = { -24, -18, -12, -6,  0,  6,  12, 18, 24 };
 ScoreType   adjRook[9]    = {  48,  36,  24, 12,  0,-12, -24,-36,-48 };
 
 ScoreType   bishopPairBonus =  40;
-ScoreType   knightPairMalus = -8;
-ScoreType   rookPairMalus   = -16;
+ScoreType   knightPairMalus =   1;
+ScoreType   rookPairMalus   = -13;
 
 ScoreType   blockedBishopByPawn  = -24;
 ScoreType   blockedKnight        = -150;
@@ -419,23 +419,23 @@ ScoreType   returningBishopBonus =  16;
 ScoreType   blockedRookByKing    = -22;
 
 ScoreType MOB[6][29] = { {0,0,0,0},
-                         {-22,-15,-10,-5,0,5,8,12,14},
-                         {-18,-8,0,5,10,15,20,25,28,30,32,34,36,38,40},
-                         {-20,-16,-12,-8,-4,0,4,8,12,16,20,24,27,30,32},
-                         {-19,-18,-16,-14,-12,-10,0,3,6,9,12,15,18,21,24,27,30,33,35,38,41,43,46,48,49,50,51,52,53},
-                         {-20,0,5,10,11,7,5,3,2} };
+                         {-22,41,49,45,56,50,47,49,46},
+                         {-11,5,11,15,12,24,19,21,23,18,21,31,36,38,40},
+                         {15,21,26,30,23,30,37,46,45,49,66,65,73,67,44},
+                         {-8,1,12,16,29,37,36,36,35,39,40,37,31,35,35,27,32,35,35,38,41,43,46,48,49,50,51,52,53},
+                         {20,3,3,-2,-16,-42,-14,-34,3} };
 
 ScoreType MOBEG[6][29] = { {0,0,0,0},
-                           {-22,-15,-10,-5,0,5,8,12,14},
-                           {-18,-8,0,5,10,15,20,25,28,30,32,34,36,38,40},
-                           {-20,-16,-12,-8,-4,0,4,8,12,16,20,24,27,30,32},
-                           {-19,-18,-16,-14,-12,-10,0,3,6,9,12,15,18,21,24,27,30,33,35,38,41,43,46,48,49,50,51,52,53},
-                           {-20,0,5,10,14,17,20,22,24} };
+                           {-22,-15,7,19,12,18,20,23,22},
+                           {-18,-8,-1,11,25,26,33,42,40,40,39,33,36,38,40},
+                           {-20,-4,25,31,56,55,56,59,68,68,68,73,75,83,89},
+                           {-19,-18,-16,-14,-12,-10,0,3,6,9,12,15,19,23,26,33,32,39,41,44,42,47,46,48,49,50,51,52,53},
+                           {-20,-3,9,35,50,69,57,66,63} };
 
-ScoreType katt_max    = 267;
-ScoreType katt_trans  = 32;
-ScoreType katt_scale  = 13;
-ScoreType katt_offset = 20;
+ScoreType katt_max    = 284;
+ScoreType katt_trans  = 34;
+ScoreType katt_scale  = 11;
+ScoreType katt_offset = 17;
 enum katt_att_def : unsigned char { katt_attack = 0, katt_defence = 1 };
 ScoreType katt_att_def_weight[2][7] = { {0, 2, 4, 2, 5, 6, 4}, {0, 1, 12, -5, 1, 0, 0} };
 ScoreType katt_openfile = 13;
@@ -443,7 +443,7 @@ ScoreType katt_semiopenfile_our = 10;
 ScoreType katt_semiopenfile_opp = 12;
 ScoreType katt_table[64] = {0};
 
-ScoreType pawnMobility[2] = {1,8};
+ScoreType pawnMobility[2] = {4,9};
 ScoreType safePasser[2] = {10,25};
 
 }
@@ -1368,7 +1368,7 @@ struct ThreadData{
 };
 
 struct Stats{
-    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits,sid_ttPhits,sid_staticNullMove, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMove, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_see, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_pawnPushExtension, sid_singularExtension, sid_mateThreadExtension, sid_maxid };
+    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits,sid_staticNullMove, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMove, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_see, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_pawnPushExtension, sid_singularExtension, sid_mateThreadExtension, sid_maxid };
     static const std::string Names[sid_maxid] ;
     Counter counters[sid_maxid];
     void init(){
@@ -1377,7 +1377,7 @@ struct Stats{
     }
 };
 
-const std::string Stats::Names[Stats::sid_maxid] = { "nodes", "qnodes", "tthits", "Ptthits", "staticNullMove", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMove", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "see", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "pawnPushExtension", "singularExtension", "mateThreadExtension"};
+const std::string Stats::Names[Stats::sid_maxid] = { "nodes", "qnodes", "tthits", "staticNullMove", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMove", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "see", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "pawnPushExtension", "singularExtension", "mateThreadExtension"};
 
 // singleton pool of threads
 class ThreadPool : public std::vector<ThreadContext*> {
@@ -2792,14 +2792,14 @@ ScoreType eval(const Position & p, float & gp ){
     score.scoresScaled[EvalScore::sc_Adjust] += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
 
     // pawn shield (PST and king troppism alone is not enough)
-    score.scores[EvalScore::sc_PwnShield] += ScoreType(((p.whiteKing() & whiteKingQueenSide ) != 0ull)*countBit(pawns[Co_White] & whiteQueenSidePawnShield1)*EvalConfig::pawnShieldBonus[1]    );
-    score.scores[EvalScore::sc_PwnShield] += ScoreType(((p.whiteKing() & whiteKingQueenSide ) != 0ull)*countBit(pawns[Co_White] & whiteQueenSidePawnShield2)*EvalConfig::pawnShieldBonus[1] / 2);
-    score.scores[EvalScore::sc_PwnShield] += ScoreType(((p.whiteKing() & whiteKingKingSide  ) != 0ull)*countBit(pawns[Co_White] & whiteKingSidePawnShield1 )*EvalConfig::pawnShieldBonus[1]    );
-    score.scores[EvalScore::sc_PwnShield] += ScoreType(((p.whiteKing() & whiteKingKingSide  ) != 0ull)*countBit(pawns[Co_White] & whiteKingSidePawnShield2 )*EvalConfig::pawnShieldBonus[1] / 2);
-    score.scores[EvalScore::sc_PwnShield] -= ScoreType(((p.blackKing() & blackKingQueenSide ) != 0ull)*countBit(pawns[Co_Black] & blackQueenSidePawnShield1)*EvalConfig::pawnShieldBonus[1]    );
-    score.scores[EvalScore::sc_PwnShield] -= ScoreType(((p.blackKing() & blackKingQueenSide ) != 0ull)*countBit(pawns[Co_Black] & blackQueenSidePawnShield2)*EvalConfig::pawnShieldBonus[1] / 2);
-    score.scores[EvalScore::sc_PwnShield] -= ScoreType(((p.blackKing() & blackKingKingSide  ) != 0ull)*countBit(pawns[Co_Black] & blackKingSidePawnShield1 )*EvalConfig::pawnShieldBonus[1]    );
-    score.scores[EvalScore::sc_PwnShield] -= ScoreType(((p.blackKing() & blackKingKingSide  ) != 0ull)*countBit(pawns[Co_Black] & blackKingSidePawnShield2 )*EvalConfig::pawnShieldBonus[1] / 2);
+    score.scores[EvalScore::sc_PwnShield] += ScoreType(((p.whiteKing() & whiteKingQueenSide ) != 0ull)*countBit(pawns[Co_White] & whiteQueenSidePawnShield1)*EvalConfig::pawnShieldBonus    );
+    score.scores[EvalScore::sc_PwnShield] += ScoreType(((p.whiteKing() & whiteKingQueenSide ) != 0ull)*countBit(pawns[Co_White] & whiteQueenSidePawnShield2)*EvalConfig::pawnShieldBonus / 2);
+    score.scores[EvalScore::sc_PwnShield] += ScoreType(((p.whiteKing() & whiteKingKingSide  ) != 0ull)*countBit(pawns[Co_White] & whiteKingSidePawnShield1 )*EvalConfig::pawnShieldBonus    );
+    score.scores[EvalScore::sc_PwnShield] += ScoreType(((p.whiteKing() & whiteKingKingSide  ) != 0ull)*countBit(pawns[Co_White] & whiteKingSidePawnShield2 )*EvalConfig::pawnShieldBonus / 2);
+    score.scores[EvalScore::sc_PwnShield] -= ScoreType(((p.blackKing() & blackKingQueenSide ) != 0ull)*countBit(pawns[Co_Black] & blackQueenSidePawnShield1)*EvalConfig::pawnShieldBonus    );
+    score.scores[EvalScore::sc_PwnShield] -= ScoreType(((p.blackKing() & blackKingQueenSide ) != 0ull)*countBit(pawns[Co_Black] & blackQueenSidePawnShield2)*EvalConfig::pawnShieldBonus / 2);
+    score.scores[EvalScore::sc_PwnShield] -= ScoreType(((p.blackKing() & blackKingKingSide  ) != 0ull)*countBit(pawns[Co_Black] & blackKingSidePawnShield1 )*EvalConfig::pawnShieldBonus    );
+    score.scores[EvalScore::sc_PwnShield] -= ScoreType(((p.blackKing() & blackKingKingSide  ) != 0ull)*countBit(pawns[Co_Black] & blackKingSidePawnShield2 )*EvalConfig::pawnShieldBonus / 2);
 
     // tempo
     //score.scores[EvalScore::sc_Tempo] += ScoreType(30);
