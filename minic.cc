@@ -2680,12 +2680,12 @@ ScoreType eval(const Position & p, float & gp ){
 
         // rook on open file
         if ( nbWR ){
-            if      ( nbWP[f+1] == 0 ) score.scores[EvalScore::sc_OpenFile] += nbWR*(nbBP[f+1] == 0 ? EvalConfig::rookOnOpenFile:EvalConfig::rookOnOpenSemiFileOur);
-            else if ( nbBP[f+1] == 0 ) score.scores[EvalScore::sc_OpenFile] += nbWR*EvalConfig::rookOnOpenSemiFileOpp;
+            if      ( nbWP[f+1] == 0 ) score.scores[EvalScore::sc_OpenFile] += ScoreType(nbWR*(nbBP[f+1] == 0 ? EvalConfig::rookOnOpenFile:EvalConfig::rookOnOpenSemiFileOur));
+            else if ( nbBP[f+1] == 0 ) score.scores[EvalScore::sc_OpenFile] += ScoreType(nbWR*EvalConfig::rookOnOpenSemiFileOpp);
         }
         if ( nbBR ){
-            if      ( nbBP[f+1] == 0 ) score.scores[EvalScore::sc_OpenFile] -= nbBR*(nbWP[f+1] == 0 ? EvalConfig::rookOnOpenFile:EvalConfig::rookOnOpenSemiFileOur);
-            else if ( nbWP[f+1] == 0 ) score.scores[EvalScore::sc_OpenFile] -= nbBR*EvalConfig::rookOnOpenSemiFileOpp;
+            if      ( nbBP[f+1] == 0 ) score.scores[EvalScore::sc_OpenFile] -= ScoreType(nbBR*(nbWP[f+1] == 0 ? EvalConfig::rookOnOpenFile:EvalConfig::rookOnOpenSemiFileOur));
+            else if ( nbWP[f+1] == 0 ) score.scores[EvalScore::sc_OpenFile] -= ScoreType(nbBR*EvalConfig::rookOnOpenSemiFileOpp);
         }
     }
 
