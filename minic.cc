@@ -32,9 +32,9 @@ typedef uint64_t u_int64_t;
 //#define DEBUG_TOOL
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
-#define WITH_UCI
+//#define WITH_UCI
 
-const std::string MinicVersion = "0.70";
+const std::string MinicVersion = "dev";
 
 /*
 //todo
@@ -393,17 +393,17 @@ ScoreType   doublePawnMalus       = -4;
 ScoreType   doublePawnMalusEG     = 26;
 ScoreType   isolatedPawnMalus     = 27;
 ScoreType   isolatedPawnMalusEG   = 5;
-float       protectedPasserFactor = 0.25f; // 125%
-float       freePasserFactor      = 0.25f; // 125%
+ScoreType   protectedPasserFactor = 8;  // 108%
+ScoreType   freePasserFactor      = 37; // 137%
 
 ScoreType   tradeDown[9]          = {80,50,30,10,0,-5,-15,-45,-80};
 
-ScoreType   rookOnOpenFile        = 25;
-ScoreType   rookOnOpenSemiFileOur = 15;
-ScoreType   rookOnOpenSemiFileOpp = 15;
+ScoreType   rookOnOpenFile        = 23;
+ScoreType   rookOnOpenSemiFileOur = 11;
+ScoreType   rookOnOpenSemiFileOpp = -2;
 
-ScoreType   adjKnight[9]  = { -24, -18, -12, -6,  0,  6,  12, 18, 24 };
-ScoreType   adjRook[9]    = {  48,  36,  24, 12,  0,-12, -24,-36,-48 };
+ScoreType   adjKnight[9]  = { -24, -13, -5, -3, -1,  0,  2,  4, 8 };
+ScoreType   adjRook[9]    = {  24,   6,  0, -3, -6, -6, -6, -3, 0 };
 
 ScoreType   bishopPairBonus =  40;
 ScoreType   knightPairMalus =   1;
@@ -457,8 +457,8 @@ Piece operator++(Piece & pp){pp=Piece(pp+1); return pp;}
 const int PieceShift = 6;
 enum Mat      : unsigned char{ M_t = 0, M_p, M_n, M_b, M_r, M_q, M_k, M_bl, M_bd, M_M, M_m };
 
-ScoreType   Values[13]        = { -8000, -1025, -477, -365, -337, -82, 0, 82, 337, 365, 477, 1025, 8000 };
-ScoreType   ValuesEG[13]      = { -8000,  -936, -512, -297, -281, -94, 0, 94, 281, 297, 512,  936, 8000 };
+ScoreType   Values[13]        = { -8000, -1103, -538, -393, -359, -85, 0, 85, 359, 393, 538, 1103, 8000 };
+ScoreType   ValuesEG[13]      = { -8000, -1076, -518, -301, -290, -93, 0, 93, 290, 301, 518, 1076, 8000 };
 std::string PieceNames[13]    = { "k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K" };
 
 std::string SquareNames[64]   = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2", "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4", "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5", "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6", "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" };
@@ -2558,8 +2558,8 @@ inline void evalPawn(const Position & p, BitBoard pieceBBiterator, EvalScore & s
             passer |= bbk;
             const BitBoard fw = forwardWest<C>(bbk);
             const BitBoard fe = forwardEast<C>(bbk);
-            const float factorProtected = 1+( (((fw&p.pieces<P_wp>(C))!=0ull)&&isPasser<C>(p, BB::SquareFromBitBoard(fw))) || (((fe&p.pieces<P_wp>(C))!=0ull)&&isPasser<C>(p, BB::SquareFromBitBoard(fe))) ) * EvalConfig::protectedPasserFactor;
-            const float factorFree      = 1+((BB::mask[k].frontSpan[C] & p.allPieces[~C]) == 0ull) * EvalConfig::freePasserFactor;
+            const float factorProtected = 1+( (((fw&p.pieces<P_wp>(C))!=0ull)&&isPasser<C>(p, BB::SquareFromBitBoard(fw))) || (((fe&p.pieces<P_wp>(C))!=0ull)&&isPasser<C>(p, BB::SquareFromBitBoard(fe))) ) * EvalConfig::protectedPasserFactor/100.f;
+            const float factorFree      = 1+((BB::mask[k].frontSpan[C] & p.allPieces[~C]) == 0ull) * EvalConfig::freePasserFactor/100.f;
             const float kingNearBonus   = EvalConfig::kingNearPassedPawnEG * gpCompl * (chebyshevDistance(p.king[~C], k) - chebyshevDistance(p.king[C], k));
             const bool unstoppable      = (p.mat[~C][M_t] == 0)&&((chebyshevDistance(p.king[~C],PromotionSquare<C>(k))-int(p.c!=C)) > std::min(5, chebyshevDistance(PromotionSquare<C>(k),k)));
             const ScoreType rookBehind  = ScoreType(countBit(p.pieces<P_wr>(C) & BB::mask[k].rearSpan[C]) - countBit(p.pieces<P_wr>(~C) & BB::mask[k].rearSpan[C])) * EvalConfig::rookBehindPassed;
@@ -2656,8 +2656,8 @@ ScoreType eval(const Position & p, float & gp ){
     for(int f = File_a; f <= File_h ; ++f){
         nbWP[f+1] = countBit(pawns[Co_White] & files[f]);
         nbBP[f+1] = countBit(pawns[Co_Black] & files[f]);
-        //const uint64_t nbWR = countBit(p.whiteRook() & files[f]);
-        //const uint64_t nbBR = countBit(p.blackRook() & files[f]);
+        const uint64_t nbWR = countBit(p.whiteRook() & files[f]);
+        const uint64_t nbBR = countBit(p.blackRook() & files[f]);
         // double pawn malus
         score.scores  [EvalScore::sc_PwnDoubled] -= ScoreType(nbWP[f+1]>>1)*EvalConfig::doublePawnMalus;
         score.scoresEG[EvalScore::sc_PwnDoubled] -= ScoreType(nbWP[f+1]>>1)*EvalConfig::doublePawnMalusEG;
@@ -2674,7 +2674,6 @@ ScoreType eval(const Position & p, float & gp ){
             else if (!nbWP[f+1]){ danger[Co_Black] += EvalConfig::katt_semiopenfile_opp; }
         }
 	*/
-        /*
         // rook on open file
         if ( nbWR ){
             if      ( nbWP[f+1] == 0 ) score.scores[EvalScore::sc_OpenFile] += nbWR*(nbBP[f+1] == 0 ? EvalConfig::rookOnOpenFile:EvalConfig::rookOnOpenSemiFileOur);
@@ -2684,7 +2683,6 @@ ScoreType eval(const Position & p, float & gp ){
             if      ( nbBP[f+1] == 0 ) score.scores[EvalScore::sc_OpenFile] -= nbBR*(nbWP[f+1] == 0 ? EvalConfig::rookOnOpenFile:EvalConfig::rookOnOpenSemiFileOur);
             else if ( nbWP[f+1] == 0 ) score.scores[EvalScore::sc_OpenFile] -= nbBR*EvalConfig::rookOnOpenSemiFileOpp;
         }
-        */
     }
 
     // isolated pawn malus (second loop needed)
@@ -2779,12 +2777,10 @@ ScoreType eval(const Position & p, float & gp ){
     */
 
     // number of pawn and piece type value
-    /*
-    score.scAjust += p.mat[Co_White][M_r] * EvalConfig::adjRook  [p.mat[Co_White][M_p]];
-    score.scAjust -= p.mat[Co_Black][M_r] * EvalConfig::adjRook  [p.mat[Co_Black][M_p]];
-    score.scAjust += p.mat[Co_White][M_n] * EvalConfig::adjKnight[p.mat[Co_White][M_p]];
-    score.scAjust -= p.mat[Co_Black][M_n] * EvalConfig::adjKnight[p.mat[Co_Black][M_p]];
-    */
+    score.scoresScaled[EvalScore::sc_Adjust] += p.mat[Co_White][M_r] * EvalConfig::adjRook  [p.mat[Co_White][M_p]];
+    score.scoresScaled[EvalScore::sc_Adjust] -= p.mat[Co_Black][M_r] * EvalConfig::adjRook  [p.mat[Co_Black][M_p]];
+    score.scoresScaled[EvalScore::sc_Adjust] += p.mat[Co_White][M_n] * EvalConfig::adjKnight[p.mat[Co_White][M_p]];
+    score.scoresScaled[EvalScore::sc_Adjust] -= p.mat[Co_Black][M_n] * EvalConfig::adjKnight[p.mat[Co_Black][M_p]];
 
     // adjust piece pair score
     score.scoresScaled[EvalScore::sc_Adjust] += ( (p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonus : 0)-(p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonus : 0) );
