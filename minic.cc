@@ -1996,7 +1996,7 @@ int GetNextMSecPerMove(const Position & p){
         Logging::LogIt(Logging::logInfo) << "p.moves   " << int(p.moves);
         assert(nmoves > 0); assert(msecInTC >= 0);
         const int msecMargin = std::max(std::min(msecMarginMax, int(msecMarginCoef*msecInTC)), msecMarginMin);
-        if (!isDynamic) ms = int((msecInTC+p.moves*msecIncLoc) / (float)(nmoves+p.moves)) - msecMarginMin;
+        if (!isDynamic) ms = int((msecInTC+msecIncLoc) / (float)(nmoves)) - msecMarginMin;
         else ms = std::min(msecUntilNextTC - msecMargin, int(msecUntilNextTC / (float)nmoves + 0.75*msecIncLoc) - msecMargin);
     }
     return std::max(ms, 20);// if not much time left, let's try that ...
