@@ -34,7 +34,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_SYZYGY
 //#define WITH_UCI
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "0.74";
 
 /*
 //todo
@@ -234,8 +234,8 @@ const ScoreType razoringMarginDepthInit  [2] = {200, 200};
 const int       razoringMaxDepth         [2] = {3  , 3};
 const int       nullMoveMinDepth             = 2;
 const int       lmpMaxDepth                  = 10;
-const int       historyPuningMaxDepth        = 3;
-const ScoreType historyPuningThreshold       = 0;
+const int       historyPruningMaxDepth       = 3;
+const ScoreType historyPruningThreshold      = 0;
 const int       futilityMaxDepth         [2] = {10 , 10};
 const ScoreType futilityDepthCoeff       [2] = {160, 160};
 const ScoreType futilityDepthInit        [2] = {0  ,0};
@@ -445,7 +445,6 @@ ScoreType kingAttSemiOpenfileOpp = 2;
 ScoreType kingAttTable[64] = {0};
 
 ScoreType pawnMobility[2] = {4,9};
-ScoreType safePasser[2] = {-12,7}; ///@todo
 
 }
 
@@ -2707,14 +2706,6 @@ ScoreType eval(const Position & p, float & gp ){
     score.scores[EvalScore::sc_PwnPush]   += ScoreType(countBit(safePPush[Co_White]) - countBit(safePPush[Co_Black])) * EvalConfig::pawnMobility[0];
     score.scoresEG[EvalScore::sc_PwnPush] += ScoreType(countBit(safePPush[Co_White]) - countBit(safePPush[Co_Black])) * EvalConfig::pawnMobility[1];
 
-    // safe passer bonus ///@todo
-    /*
-    score.scores[EvalScore::sc_PwnPassed]   += countBit(passer[Co_White] & (att[Co_White] | ~att[Co_Black])) * EvalConfig::safePasser[0];
-    score.scoresEG[EvalScore::sc_PwnPassed] += countBit(passer[Co_White] & (att[Co_White] | ~att[Co_Black])) * EvalConfig::safePasser[1];
-    score.scores[EvalScore::sc_PwnPassed]   -= countBit(passer[Co_Black] & (att[Co_Black] | ~att[Co_White])) * EvalConfig::safePasser[0];
-    score.scoresEG[EvalScore::sc_PwnPassed] -= countBit(passer[Co_Black] & (att[Co_Black] | ~att[Co_White])) * EvalConfig::safePasser[1];
-    */
-
     // in very end game winning king must be near the other king ///@todo shall be removed if material helpers work ...
     if ((p.mat[Co_White][M_p] + p.mat[Co_Black][M_p] == 0) && p.king[Co_White] != INVALIDSQUARE && p.king[Co_Black] != INVALIDSQUARE) score.scoresEG[EvalScore::sc_EndGame] -= ScoreType((score.scoresEG[EvalScore::sc_EndGame]>0?+1:-1)*(chebyshevDistance(p.king[Co_White], p.king[Co_Black])-2)*15);
 
@@ -3089,7 +3080,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     // futility
     if (!rootnode && StaticConfig::doFutility && depth <= StaticConfig::futilityMaxDepth[evalScoreIsHashScore] && evalScore <= alpha - StaticConfig::futilityDepthInit[evalScoreIsHashScore] - StaticConfig::futilityDepthCoeff[evalScoreIsHashScore]*depth) futility = true;
     // history pruning
-    if (!rootnode && StaticConfig::doHistoryPruning && depth < StaticConfig::historyPuningMaxDepth) historyPruning = true;
+    if (!rootnode && StaticConfig::doHistoryPruning && depth < StaticConfig::historyPruningMaxDepth) historyPruning = true;
 
     int validMoveCount = 0;
     //bool alphaUpdated = false;
@@ -3201,7 +3192,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             // LMP
             if (lmp && isPrunableStdNoCheck && validMoveCount >= StaticConfig::lmpLimit[improving][depth] ) {++stats.counters[Stats::sid_lmp]; continue;}
             // History pruning
-            if (historyPruning && isPrunableStdNoCheck && validMoveCount > StaticConfig::lmpLimit[improving][depth]/3 && Move2Score(*it) < StaticConfig::historyPuningThreshold) {++stats.counters[Stats::sid_historyPruning]; continue;}
+            if (historyPruning && isPrunableStdNoCheck && validMoveCount > StaticConfig::lmpLimit[improving][depth]/3 && Move2Score(*it) < StaticConfig::historyPruningThreshold) {++stats.counters[Stats::sid_historyPruning]; continue;}
             // SEE (cap)
             const bool isPrunableCap = isPrunable && noCheck && Move2Type(*it) == T_capture && isBadCap(*it);
             if ((futility||depth<=4) && isPrunableCap ) {++stats.counters[Stats::sid_see]; continue;}
