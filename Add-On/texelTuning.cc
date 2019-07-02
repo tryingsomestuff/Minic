@@ -306,11 +306,6 @@ void TexelTuning(const std::string & filename) {
     */
 
     /*
-    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::safePasser[0] , -500,  500,"safePasser0"));
-    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::safePasser[1] , -500,  500,"safePasser1"));
-    */
-
-    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::protectedPasserFactor , -150,  150,"protectedPasserFactor"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::freePasserFactor , -150,  150,"freePasserFactor"));
     */
