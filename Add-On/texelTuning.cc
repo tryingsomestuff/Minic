@@ -324,13 +324,13 @@ void TexelTuning(const std::string & filename) {
     }
     */
 
-    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::tradeDownPiece , -150,  150,"tradeDownPiece"));
-    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::tradeDownPawn , -150,  150,"tradeDownPawn"));
-
     /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::bishopPairBonus , -500,  500,"bishop pair"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::knightPairMalus , -500,  500,"knight pair"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookPairMalus   , -500,  500,"rook pair"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::bishopPairBonusEG , -500,  500,"bishop pair EG"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::knightPairMalusEG , -500,  500,"knight pair EG"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookPairMalusEG   , -500,  500,"rook pair EG"));
     */
 
     /*

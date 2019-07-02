@@ -396,9 +396,6 @@ ScoreType   isolatedPawnMalusEG   = 5;
 ScoreType   protectedPasserFactor = 8;  // 108%
 ScoreType   freePasserFactor      = 37; // 137%
 
-ScoreType   tradeDownPiece        = 12;
-ScoreType   tradeDownPawn         = 12;
-
 ScoreType   rookOnOpenFile        = 23;
 ScoreType   rookOnOpenSemiFileOur = 11;
 ScoreType   rookOnOpenSemiFileOpp = -2;
@@ -406,9 +403,12 @@ ScoreType   rookOnOpenSemiFileOpp = -2;
 ScoreType   adjKnight[9]  = { -24, -13, -5, -3, -1,  0,  2,  4, 8 };
 ScoreType   adjRook[9]    = {  24,   6,  0, -3, -6, -6, -6, -3, 0 };
 
-ScoreType   bishopPairBonus =  40;
-ScoreType   knightPairMalus =   1;
-ScoreType   rookPairMalus   = -13;
+ScoreType   bishopPairBonus =  38;
+ScoreType   knightPairMalus =   7;
+ScoreType   rookPairMalus   =  -5;
+ScoreType   bishopPairBonusEG =  47;
+ScoreType   knightPairMalusEG =  -3;
+ScoreType   rookPairMalusEG   = -16;
 
 ScoreType   blockedBishopByPawn  = -24;
 ScoreType   blockedKnight        = -150;
@@ -2719,12 +2719,6 @@ ScoreType eval(const Position & p, float & gp ){
     if ((p.mat[Co_White][M_p] + p.mat[Co_Black][M_p] == 0) && p.king[Co_White] != INVALIDSQUARE && p.king[Co_Black] != INVALIDSQUARE) score.scoresEG[EvalScore::sc_EndGame] -= ScoreType((score.scoresEG[EvalScore::sc_EndGame]>0?+1:-1)*(chebyshevDistance(p.king[Co_White], p.king[Co_Black])-2)*15);
 
     /*
-    // when ahead exchange pieces, when below exchange pawns
-    score.scoresEG[EvalScore::sc_Exchange] -= ScoreType(EvalConfig::tradeDownPiece * (matScoreW - matScoreB)/100.f * (matPieceScoreW-matPieceScoreB)/100.f);
-    score.scoresEG[EvalScore::sc_Exchange] += ScoreType(EvalConfig::tradeDownPawn  * (matScoreW - matScoreB)/100.f * (matPawnScoreW -matPawnScoreB )/100.f);
-    */
-
-    /*
     // blocked piece ///@todo
     // white
     // bishop blocked by own pawn
@@ -2789,9 +2783,12 @@ ScoreType eval(const Position & p, float & gp ){
     score.scoresScaled[EvalScore::sc_Adjust] -= p.mat[Co_Black][M_n] * EvalConfig::adjKnight[p.mat[Co_Black][M_p]];
 
     // adjust piece pair score
-    score.scoresScaled[EvalScore::sc_Adjust] += ( (p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonus : 0)-(p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonus : 0) );
-    score.scoresScaled[EvalScore::sc_Adjust] += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0) );
-    score.scoresScaled[EvalScore::sc_Adjust] += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
+    score.scores[EvalScore::sc_Adjust] += ( (p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonus : 0)-(p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonus : 0) );
+    score.scores[EvalScore::sc_Adjust] += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0) );
+    score.scores[EvalScore::sc_Adjust] += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
+    score.scoresEG[EvalScore::sc_Adjust] += ( (p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonusEG : 0)-(p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonusEG : 0) );
+    score.scoresEG[EvalScore::sc_Adjust] += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalusEG : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalusEG : 0) );
+    score.scoresEG[EvalScore::sc_Adjust] += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalusEG   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalusEG   : 0) );
 
     // pawn shield (PST and king troppism alone is not enough)
     score.scores[EvalScore::sc_PwnShield] += ScoreType(((p.whiteKing() & whiteKingQueenSide ) != 0ull)*countBit(pawns[Co_White] & whiteQueenSidePawnShield1)*EvalConfig::pawnShieldBonus    );
