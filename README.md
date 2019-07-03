@@ -189,11 +189,13 @@ Galjoen by Werner Taelemans
 Madchess by Erik Madsen  
 Rodent III by Pawel Koziol  
 Stockfish by Tord Romstad, Marco Costalba, Joona Kiiski and Gary Linscott  
+Texel by Peter Österlund   
 Topple by Vincent Konsolas  
 TSCP by Tom Kerrigan  
 Vajolet by Marco Belli  
 Vice by BlueFeverSoft  
 Xiphos by Milos Tatarevic  
+Zurichess by Alexandru Moșoi   
 
 Many thanks also to all testers for all those long time control tests, they really are valuable inputs in the chess engine development process. 
 
