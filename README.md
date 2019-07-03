@@ -173,6 +173,7 @@ You can use both the json configuation file or the command line argument to sele
 * 0.66 : working on search again
 * 0.67 : working on search again (quiet move SEE)
 * 0.68 : working on search again (LMR when in check)
+* 0.69..0.74 : tuning eval (texel tuning on Zurichess quiet.edp)
 
 ## Thanks
 
