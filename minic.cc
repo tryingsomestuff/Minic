@@ -237,7 +237,7 @@ const int       lmpMaxDepth                  = 10;
 const int       historyPruningMaxDepth       = 3;
 const ScoreType historyPruningThreshold      = 0;
 const int       futilityMaxDepth         [2] = {10 , 10};
-const ScoreType futilityDepthCoeff       [2] = {160, 160};
+const ScoreType futilityDepthCoeff       [2] = {160 , 160};
 const ScoreType futilityDepthInit        [2] = {0  ,0};
 const int       iidMinDepth                  = 5;
 const int       iidMinDepth2                 = 8;
@@ -1192,7 +1192,7 @@ namespace MaterialHash { // from Gull
             DEF_MAT(KDK, Ter_MaterialDraw)                      DEF_MAT_REV(KKD,KDK)
             DEF_MAT(KNK, Ter_MaterialDraw)                      DEF_MAT_REV(KKN,KNK)
 
-            // 2X 0 : all win except LL, DD, NN 
+            // 2X 0 : all win except LL, DD, NN
             DEF_MAT(KQQK, Ter_WhiteWin)                         DEF_MAT_REV(KKQQ,KQQK)
             DEF_MAT(KRRK, Ter_WhiteWin)                         DEF_MAT_REV(KKRR,KRRK)
             DEF_MAT_H(KLDK, Ter_WhiteWinWithHelper,&helperKmmK) DEF_MAT_REV_H(KKLD,KLDK,&helperKmmK)
@@ -1371,7 +1371,7 @@ struct ThreadData{
 };
 
 struct Stats{
-    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits,sid_staticNullMove, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMove, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_see, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_pawnPushExtension, sid_singularExtension, sid_mateThreadExtension, sid_maxid };
+    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits,sid_staticNullMove, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMove, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_see, sid_see2, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_pawnPushExtension, sid_singularExtension, sid_mateThreadExtension, sid_maxid };
     static const std::string Names[sid_maxid] ;
     Counter counters[sid_maxid];
     void init(){
@@ -1380,7 +1380,7 @@ struct Stats{
     }
 };
 
-const std::string Stats::Names[Stats::sid_maxid] = { "nodes", "qnodes", "tthits", "staticNullMove", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMove", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "see", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "pawnPushExtension", "singularExtension", "mateThreadExtension"};
+const std::string Stats::Names[Stats::sid_maxid] = { "nodes", "qnodes", "tthits", "staticNullMove", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMove", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "see", "see2", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "pawnPushExtension", "singularExtension", "mateThreadExtension"};
 
 // singleton pool of threads
 class ThreadPool : public std::vector<ThreadContext*> {
@@ -2898,7 +2898,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     ScoreType evalScore = isInCheck ? -MATE+ply : (e.h!=0?e.eval:eval(p,gp));
     bool evalScoreIsHashScore = false;
-    // use tt score if possible and not in check 
+    // use tt score if possible and not in check
     if ( !isInCheck && e.h != 0 && ((e.b == TT::B_alpha && e.score <= evalScore) || (e.b == TT::B_beta  && e.score >= evalScore) || (e.b == TT::B_exact)) ) evalScore = e.score, evalScoreIsHashScore = true;
 
     if ( evalScore >= beta ) return evalScore;
@@ -2966,7 +2966,7 @@ inline bool singularExtension(ThreadContext & context, const Position & p, Depth
         const ScoreType betaC = e.score - depth;
         PVList sePV;
         DepthType seSeldetph = 0;
-        const ScoreType score = context.pvs<false,false>(betaC - 1, betaC, p, depth/2, ply, sePV, seSeldetph, isInCheck, m); 
+        const ScoreType score = context.pvs<false,false>(betaC - 1, betaC, p, depth/2, ply, sePV, seSeldetph, isInCheck, m);
         if (!ThreadContext::stopFlag && score < betaC) return true;
     }
     return false;
@@ -3102,7 +3102,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     // LMP
     if (!rootnode && StaticConfig::doLMP && depth <= StaticConfig::lmpMaxDepth) lmp = true;
     // futility
-    if (!rootnode && StaticConfig::doFutility && depth <= StaticConfig::futilityMaxDepth[evalScoreIsHashScore] && evalScore <= alpha - StaticConfig::futilityDepthInit[evalScoreIsHashScore] - StaticConfig::futilityDepthCoeff[evalScoreIsHashScore]*depth) futility = true;
+    const ScoreType futilityScore = alpha - StaticConfig::futilityDepthInit[evalScoreIsHashScore] - StaticConfig::futilityDepthCoeff[evalScoreIsHashScore]*depth;
+    if (!rootnode && StaticConfig::doFutility && depth <= StaticConfig::futilityMaxDepth[evalScoreIsHashScore] && evalScore <= futilityScore) futility = true;
     // history pruning
     if (!rootnode && StaticConfig::doHistoryPruning && depth < StaticConfig::historyPruningMaxDepth) historyPruning = true;
 
@@ -3148,7 +3149,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                     if (ttScore >= beta) {
                         ++stats.counters[Stats::sid_ttbeta];
                         if ((Move2Type(e.m) == T_std /*|| isBadCap(e.m)*/) && !isInCheck) updateTables(*this, p, depth + (ttScore > (beta+80)), e.m, TT::B_beta); ///@todo badcap can be killers ?
-                        if (skipMove == INVALIDMOVE /*&& ttScore != 0*/) TT::setEntry({ e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth,computeHash(p) }); 
+                        if (skipMove == INVALIDMOVE /*&& ttScore != 0*/) TT::setEntry({ e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth,computeHash(p) });
                         return ttScore;
                     }
                     ++stats.counters[Stats::sid_ttalpha];
@@ -3217,11 +3218,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if (lmp && isPrunableStdNoCheck && validMoveCount >= StaticConfig::lmpLimit[improving][depth] ) {++stats.counters[Stats::sid_lmp]; continue;}
             // History pruning
             if (historyPruning && isPrunableStdNoCheck && validMoveCount > StaticConfig::lmpLimit[improving][depth]/3 && Move2Score(*it) < StaticConfig::historyPruningThreshold) {++stats.counters[Stats::sid_historyPruning]; continue;}
-            // SEE (cap)
-            const bool isPrunableCap = isPrunable && noCheck && Move2Type(*it) == T_capture && isBadCap(*it);
-            if ((futility||depth<=4) && isPrunableCap ) {++stats.counters[Stats::sid_see]; continue;}
-            // SEE (quiet)
-            if ((futility||depth<=4) && isPrunableStdNoCheck && !SEE(p,*it,-100*depth)) {++stats.counters[Stats::sid_seeQuiet]; continue;}
             // LMR
             if (StaticConfig::doLMR && !DynamicConfig::mateFinder && isPrunableStd && depth >= StaticConfig::lmrMinDepth ){
                 reduction = StaticConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
@@ -3233,8 +3229,17 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 if (reduction < 0) reduction = 0;
                 if (reduction >= depth - 1) reduction = depth - 1;
             }
+            const DepthType nextDepth = depth-1-reduction+extension;
+            // SEE (capture)
+            const bool isPrunableCap = isPrunable && noCheck && Move2Type(*it) == T_capture && isBadCap(*it);
+            if (isPrunableCap){
+               if (futility) {++stats.counters[Stats::sid_see]; continue;}
+               else if ( !SEE(p,*it,-100*depth)) {++stats.counters[Stats::sid_see2]; continue;}
+            }
+            // SEE (quiet)
+            if ( isPrunableStdNoCheck && !SEE(p,*it,-30*nextDepth*nextDepth)) {++stats.counters[Stats::sid_seeQuiet]; continue;}
             // PVS
-            score = -pvs<false,true>(-alpha-1,-alpha,p2,depth-1-reduction+extension,ply+1,childPV,seldepth,isCheck);
+            score = -pvs<false,true>(-alpha-1,-alpha,p2,nextDepth,ply+1,childPV,seldepth,isCheck);
             if ( reduction > 0 && score > alpha )                       { childPV.clear(); score = -pvs<false,true>(-alpha-1,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck); }
             if ( pvnode && score > alpha && (rootnode || score < beta) ){ childPV.clear(); score = -pvs<true ,true>(-beta   ,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck); } // potential new pv node
         }
@@ -3375,7 +3380,7 @@ pvsout:
         Logging::LogIt(Logging::logInfo) << "Empty pv, trying to use TT" ;
         TT::getPV(p, *this, pv);
     }
-    if (pv.empty()) { Logging::LogIt(Logging::logWarn) << "Empty pv"; }// may occur in case of mate / stalemate... 
+    if (pv.empty()) { Logging::LogIt(Logging::logWarn) << "Empty pv"; }// may occur in case of mate / stalemate...
     else m = pv[0];
     d = reachedDepth;
     sc = bestScore;
@@ -3418,7 +3423,7 @@ namespace COM {
     }
 
     SideToMove opponent(SideToMove & s) { return s == stm_white ? stm_black : stm_white; }
-    
+
     bool sideToMoveFromFEN(const std::string & fen) {
         const bool b = readFEN(fen, COM::position,true);
         stm = COM::position.c == Co_White ? stm_white : stm_black;
@@ -3742,7 +3747,7 @@ void init(int argc, char ** argv) {
 
 int main(int argc, char ** argv){
     init(argc, argv);
-    
+
 #ifdef WITH_TEST_SUITE
     if ( argc > 1 && test(argv[1])) return 0;
 #endif
