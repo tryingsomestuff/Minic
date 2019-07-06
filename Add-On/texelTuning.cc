@@ -343,24 +343,24 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonusEG[6], -1500, 1500,"passer 6"));
     */
 
-    
-    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingNearPassedPawnEG,-150,550,"kingNearPassedPawnEG"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::doublePawnMalus[0],-150,550,"doublePawnMalus[0]"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::doublePawnMalusEG[0],-150,550,"doublePawnMalusEG[0]"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::isolatedPawnMalus[0],-150,550,"isolatedPawnMalus[0]"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::isolatedPawnMalusEG[0],-150,550,"isolatedPawnMalusEG[0]"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::backwardPawnMalus[0], -150, 550, "backwardPawnMalus0"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::backwardPawnMalusEG[0], -150, 550, "backwardPawnMalusEG0"));
+
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::doublePawnMalus[1], -150, 550, "doublePawnMalus[1]"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::doublePawnMalusEG[1], -150, 550, "doublePawnMalusEG[1]"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::isolatedPawnMalus[1], -150, 550, "isolatedPawnMalus[1]"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::isolatedPawnMalusEG[1], -150, 550, "isolatedPawnMalusEG[1]"));
-    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnShieldBonus     ,-150,550,"pawnShieldBonus"));
-    
-    
-    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::backwardPawnMalus[0], -150, 550, "backwardPawnMalus0"));
-    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::backwardPawnMalusEG[0], -150, 550, "backwardPawnMalusEG0"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::backwardPawnMalus[1], -150, 550, "backwardPawnMalus1"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::backwardPawnMalusEG[1], -150, 550, "backwardPawnMalusEG1"));
-    
+
+    /*
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnShieldBonus     ,-150,550,"pawnShieldBonus"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingNearPassedPawnEG,-150,550,"kingNearPassedPawnEG"));
+    */
 
     /*
     for (int k = 1 ; k < 6 ; ++k ){

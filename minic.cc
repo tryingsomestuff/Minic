@@ -39,7 +39,7 @@ const std::string MinicVersion = "dev";
 /*
 //todo
 -Root move ordering
--Candidate and backward
+-Candidate
 -test more extension
 */
 
@@ -390,12 +390,12 @@ ScoreType   passerBonusEG[8]      = { 0,-10,  6, 21, 52,120,197, 0};
 
 ScoreType   rookBehindPassed      = 25;
 ScoreType   kingNearPassedPawnEG  = 10;
-ScoreType   doublePawnMalus[2]    = { 21, -13 };
-ScoreType   doublePawnMalusEG[2]  = { 11, 34 };
-ScoreType   isolatedPawnMalus[2]  = { 13, 35 };
-ScoreType   isolatedPawnMalusEG[2]= { 6, 8 };
-ScoreType   backwardPawnMalus[2]  = { 3, 16 };
-ScoreType   backwardPawnMalusEG[2]= { 10, 8 };
+ScoreType   doublePawnMalus[2]    = { 23, -13 };
+ScoreType   doublePawnMalusEG[2]  = { 12, 34 };
+ScoreType   isolatedPawnMalus[2]  = { 12, 31 };
+ScoreType   isolatedPawnMalusEG[2]= { 5, 7 };
+ScoreType   backwardPawnMalus[2]  = { 1, 18 };
+ScoreType   backwardPawnMalusEG[2]= { 6, 1 };
 ScoreType   protectedPasserFactor = 8;  // 108%
 ScoreType   freePasserFactor      = 37; // 137%
 
@@ -2526,22 +2526,11 @@ namespace{ // some Color / Piece helpers
    template<Color C> inline constexpr Square ColorSignHelper()          { return C==Co_White?+1:-1;}
    template<Color C> inline const BitBoard backwardWest(const BitBoard b){ return C==Co_White? BB::shiftSouthWest(b) : BB::shiftNorthWest(b);}
    template<Color C> inline const BitBoard backwardEast(const BitBoard b){ return C==Co_White? BB::shiftSouthEast(b) : BB::shiftNorthEast(b);}
-   template<Color C> inline const BitBoard shiftNorth(const BitBoard b) { return C==Co_White? BB::shiftNorth(b) : BB::shiftSouth(b); }
+   template<Color C> inline const BitBoard shiftForward(const BitBoard b) { return C==Co_White? BB::shiftNorth(b) : BB::shiftSouth(b); }
+   template<Color C> inline const BitBoard shiftBackward(const BitBoard b) { return C!=Co_White? BB::shiftNorth(b) : BB::shiftSouth(b); }
    template<Color C> inline const Square PromotionSquare(const Square k){ return C==Co_White? (SQFILE(k) + 56) : SQFILE(k);}
    template<Color C> inline const Rank ColorRank(const Square k)        { return Rank(C==Co_White? SQRANK(k) : (7-SQRANK(k)));}
-   template<Color C> inline const BitBoard allPawnAttack(const Position &p) {
-       BitBoard b = p.pieces<P_wp>(C);
-       BitBoard att = 0ull;
-       while (b) att |= BB::mask[BB::popBit(b)].pawnAttack[C];
-       return att;
-   }
-   template<Color C> inline const BitBoard allPawnAttackSpan(const Position &p) {
-       BitBoard b = p.pieces<P_wp>(C);
-       BitBoard att = 0ull;
-       while (b) att |= BB::mask[BB::popBit(b)].attackFrontSpan[C];
-       return att;
-   }
-   template<Color C> inline bool isBackward(const Position &p, Square k, const BitBoard pAtt[2], const BitBoard pAttSpan[2]){ return shiftNorth<~C>(shiftNorth<C>(SquareToBitboard(k)) & pAtt[~C] & ~pAttSpan[C]); }
+   template<Color C> inline bool isBackward(const Position &p, Square k, const BitBoard pAtt[2], const BitBoard pAttSpan[2]){ return ((shiftForward<C>(SquareToBitboard(k))&~p.pieces<P_wp>(~C)) & pAtt[~C] & ~pAttSpan[C]) != 0ull; }
 }
 
 template < Piece T , Color C>
@@ -2564,13 +2553,12 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, EvalScore & 
 }
 
 template< Color C>
-inline void evalPawn(const Position & p, BitBoard pieceBBiterator, EvalScore & score, BitBoard & att, BitBoard & safePPush, BitBoard & pawnTargets, BitBoard & passer, float gp, float gpCompl){
-    const BitBoard pAtt[2] = { allPawnAttack<Co_White>(p),  allPawnAttack<Co_Black>(p) };
-    const BitBoard pAttSpan[2] = { allPawnAttackSpan<Co_White>(p),  allPawnAttackSpan<Co_Black>(p) };
+inline void evalPawn(const Position & p, BitBoard pieceBBiterator, EvalScore & score, BitBoard & att, BitBoard & safePPush, BitBoard & pawnTargets, BitBoard & pawnAttSpan, BitBoard & passer, float gp, float gpCompl){
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
-        safePPush |= BB::mask[k].push[C] & ~p.occupancy;
-        pawnTargets |= BB::mask[k].pawnAttack[C] /*& ~p.allPieces[C]*/;
+        safePPush |= BB::mask[k].push[C] & ~p.occupancy; // for now just pawn push (safe will come later...)
+        pawnTargets |= BB::mask[k].pawnAttack[C];
+        pawnAttSpan |= BB::mask[k].attackFrontSpan[C];
         att |= BB::mask[k].pawnAttack[C] & ~p.allPieces[C];
         if (isPasser<C>(p,k)) {
             const BitBoard bbk = SquareToBitboard(k);
@@ -2585,10 +2573,17 @@ inline void evalPawn(const Position & p, BitBoard pieceBBiterator, EvalScore & s
             if (unstoppable) score.scoresScaled[EvalScore::sc_PwnPassed] += ColorSignHelper<C>()*(Values[P_wq+PieceShift] - Values[P_wp+PieceShift]);
             else             score.scoresScaled[EvalScore::sc_PwnPassed] += ColorSignHelper<C>()*ScoreType( factorProtected * factorFree * (gp*EvalConfig::passerBonus[ColorRank<C>(k)] + gpCompl*EvalConfig::passerBonusEG[ColorRank<C>(k)]) + kingNearBonus + gpCompl*rookBehind);
         }
-        else if (isBackward<C>(p, k, pAtt, pAttSpan)) {
-            const bool openFile = countBit(BB::mask[k].file & p.pieces<P_wp>(~C))==0; ///@todo shall not be computed twice !
-            score.scores[EvalScore::sc_PwnBackward]   -= ColorSignHelper<C>()*EvalConfig::backwardPawnMalus[openFile];
-            score.scoresEG[EvalScore::sc_PwnBackward] -= ColorSignHelper<C>()*EvalConfig::backwardPawnMalusEG[openFile];
+    }
+}
+
+template< Color C>
+inline void evalPawn2(const Position & p, BitBoard pieceBBiterator, EvalScore & score, const BitBoard (&pAtt)[2], const BitBoard (&pAttSpan)[2]){
+    while (pieceBBiterator) {
+        const Square k = BB::popBit(pieceBBiterator);
+        if (isBackward<C>(p, k, pAtt, pAttSpan)) {
+           const bool openFile = (BB::mask[k].file & p.pieces<P_wp>(~C))==0ull;
+           score.scores[EvalScore::sc_PwnBackward]   -= ColorSignHelper<C>()*EvalConfig::backwardPawnMalus[openFile];
+           score.scoresEG[EvalScore::sc_PwnBackward] -= ColorSignHelper<C>()*EvalConfig::backwardPawnMalusEG[openFile];
         }
     }
 }
@@ -2600,7 +2595,6 @@ inline void evalPawnDanger(const Position & p, const BitBoard (& att)[2], ScoreT
 }
 
 ///@todo reward safe checks
-///@todo threat by protected pawn (and after push)
 ///@todo threat on the queen
 ///@todo storm
 
@@ -2637,11 +2631,12 @@ ScoreType eval(const Position & p, float & gp ){
     // material (symetric version)
     score.scores[EvalScore::sc_Mat] += matScoreW - matScoreB;
 
-    // pst & mobility & attack
+    // usefull bitboards
     ScoreType danger[2]     = {0, 0};
     BitBoard att[2]         = {0ull, 0ull};
     BitBoard safePPush[2]   = {0ull, 0ull};
     BitBoard pawnTargets[2] = {0ull, 0ull};
+    BitBoard pawnAttSpan[2] = {0ull, 0ull};
     BitBoard passer[2]      = {0ull, 0ull};
 
     // PST, mobility, king zone attack, passer, for white
@@ -2670,9 +2665,12 @@ ScoreType eval(const Position & p, float & gp ){
     }
 
     // pawn first pass
-    evalPawn<Co_White>(p,p.pieces<P_wp>(Co_White),score,att[Co_White],safePPush[Co_White],pawnTargets[Co_White],passer[Co_White],gp,gpCompl);
-    evalPawn<Co_Black>(p,p.pieces<P_wp>(Co_Black),score,att[Co_Black],safePPush[Co_Black],pawnTargets[Co_Black],passer[Co_Black],gp,gpCompl);
-    // pawn second pass (needs att)
+    evalPawn<Co_White>(p,p.pieces<P_wp>(Co_White),score,att[Co_White],safePPush[Co_White],pawnTargets[Co_White],pawnAttSpan[Co_White],passer[Co_White],gp,gpCompl);
+    evalPawn<Co_Black>(p,p.pieces<P_wp>(Co_Black),score,att[Co_Black],safePPush[Co_Black],pawnTargets[Co_Black],pawnAttSpan[Co_Black],passer[Co_Black],gp,gpCompl);
+    // pawn second pass
+    evalPawn2<Co_White>(p,p.pieces<P_wp>(Co_White),score,{pawnTargets[Co_White],pawnTargets[Co_Black]},{pawnAttSpan[Co_White],pawnAttSpan[Co_Black]});
+    evalPawn2<Co_Black>(p,p.pieces<P_wp>(Co_Black),score,{pawnTargets[Co_White],pawnTargets[Co_Black]},{pawnAttSpan[Co_White],pawnAttSpan[Co_Black]});
+    // pawn third pass
     evalPawnDanger<Co_White>(p,att,danger);
     evalPawnDanger<Co_Black>(p,att,danger);
 
