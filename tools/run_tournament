@@ -10,18 +10,12 @@ if [ "$1" != "nodev" ]; then
    engines="$engines -engine name=minic_dev cmd=$dir/Tourney/minic_dev_linux_x64 arg=-xboard dir=$dir"
 fi
 
-
-#for i in `seq 70 -1 53`; do
-#   if [ -e "$dir/Dist/minic_0.${i}_linux_x64$ARCH" ]; then
-#      engines="$engines -engine name=minic_${i} cmd=$dir/Dist/minic_0.${i}_linux_x64$ARCH arg=-xboard dir=$dir"
-#   fi
-#done
-
-#engines="$engines -engine name=fairymax cmd=/usr/games/fairymax"
+engines="$engines -engine name=minic_0.47 cmd=$dir/Dist/minic_0.47_linux_x64$ARCH arg=-xboard dir=$dir"
 engines="$engines -engine name=minic_0.53 cmd=$dir/Dist/minic_0.53_linux_x64$ARCH arg=-xboard dir=$dir"
-engines="$engines -engine name=minic_0.62 cmd=$dir/Dist/minic_0.62_linux_x64$ARCH arg=-xboard dir=$dir"
-engines="$engines -engine name=minic_0.63 cmd=$dir/Dist/minic_0.63_linux_x64$ARCH arg=-xboard dir=$dir"
 engines="$engines -engine name=minic_0.65 cmd=$dir/Dist/minic_0.65_linux_x64$ARCH arg=-xboard dir=$dir"
+engines="$engines -engine name=minic_0.71 cmd=$dir/Dist/minic_0.71_linux_x64$ARCH arg=-xboard dir=$dir"
+engines="$engines -engine name=minic_0.74 cmd=$dir/Dist/minic_0.74_linux_x64$ARCH arg=-xboard dir=$dir"
+engines="$engines -engine name=minic_0.75 cmd=$dir/Dist/minic_0.75_linux_x64$ARCH arg=-xboard dir=$dir"
 
 engines="$engines -engine conf=igel"
 
