@@ -4,5 +4,7 @@
    "ttSizeMb": 1024,
    "book": true,
    "bookFile": "book.bin",
-   "fullXboardOutput": true
+   "fullXboardOutput": true,
+   "debugMode": false,
+   "debugFile": "minic.debug"
 }
