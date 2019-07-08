@@ -431,30 +431,30 @@ const ScoreType PSTEG[6][64] = {
     }
 };
 
-EvalScore   pawnShieldBonus       = {7,0};
+EvalScore   pawnShieldBonus       = {5,-3};
 
 enum PawnEvalSemiOpen{ Close=0, SemiOpen=1};
 
 EvalScore   passerBonus[8]        = { { 0, 0 }, {-3, -10} , {-2, 6}, {-10, 21}, {14, 52}, {26, 120}, {38, 197}, {0, 0}};
 
-EvalScore   rookBehindPassed      = { 0,25};
-EvalScore   kingNearPassedPawn    = { 0,10};
-EvalScore   doublePawnMalus[2]    = {{ 23,12 },{23,12 }};
-EvalScore   isolatedPawnMalus[2]  = {{ 12, 5 },{12, 5 }};
-EvalScore   backwardPawnMalus[2]  = {{  1, 6 },{ 1, 6 }};
-EvalScore   protectedPasserFactor = { 8, 8}; // 1XX%
-EvalScore   freePasserFactor      = {37,37}; // 1XX%
+EvalScore   rookBehindPassed      = { 0,30};
+EvalScore   kingNearPassedPawn    = { -7,12};
+EvalScore   doublePawnMalus[2]    = {{ 21,11 },{-5,30 }};
+EvalScore   isolatedPawnMalus[2]  = {{ 13, 6 },{33, 9 }};
+EvalScore   backwardPawnMalus[2]  = {{  3, 6 },{18, 0 }};
+EvalScore   protectedPasserFactor = { 8,12}; // 1XX%
+EvalScore   freePasserFactor      = {38,44}; // 1XX%
 
-EvalScore   rookOnOpenFile        = {23, 0};
-EvalScore   rookOnOpenSemiFileOur = {11, 0};
-EvalScore   rookOnOpenSemiFileOpp = {-2, 0};
+EvalScore   rookOnOpenFile        = {36,-7};
+EvalScore   rookOnOpenSemiFileOur = { 9,-2};
+EvalScore   rookOnOpenSemiFileOpp = {-4, 4};
 
-EvalScore   adjKnight[9]  = { {-24,-24}, {-13,-13}, {-5,-5}, {-3,-3}, {-1,-1}, {0,0}, {2,2}, { 4,4}, {  8,8 }};
-EvalScore   adjRook[9]    = { { 24, 24}, {  6,  6}, { 0, 0}, {-3,-3}, {-6,-6}, {-6,-6}, {-6,-6}, {-3,-3}, {0,0}};
+EvalScore   adjKnight[9]  = { {-24,-27}, {-13,-13}, {-5,-3}, {-2,-2}, {-4,-6}, {-4,8}, {0,21}, { 5,17}, { 8,8} };
+EvalScore   adjRook[9]    = { { 24, 18}, {  6,  4}, {-1, 0}, {-5,-1}, {-5,-2}, {-3,2}, {0, 4}, { 1,13}, {12,0} };
 
-EvalScore   bishopPairBonus   = {38, 47};
-EvalScore   knightPairMalus   = {7 ,-3};
-EvalScore   rookPairMalus     = {-5,-16};
+EvalScore   bishopPairBonus   = {32, 49};
+EvalScore   knightPairMalus   = {-2 , 4};
+EvalScore   rookPairMalus     = {-15,-9};
 EvalScore   pawnMobility      = { 4,  9};
 
 ScoreType   blockedBishopByPawn  = -24;
