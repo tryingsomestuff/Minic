@@ -435,7 +435,7 @@ EvalScore   pawnShieldBonus       = {5,-3};
 
 enum PawnEvalSemiOpen{ Close=0, SemiOpen=1};
 
-EvalScore   passerBonus[8]        = { { 0, 0 }, {-3, -10} , {-2, 6}, {-10, 21}, {14, 52}, {26, 120}, {38, 197}, {0, 0}};
+EvalScore   passerBonus[8]        = { { 0, 0 }, {-2, -8} , {-8, -2}, {-12, 25}, {9, 53}, {30, 115}, {45, 181}, {0, 0}};
 
 EvalScore   rookBehindPassed      = { 0,30};
 EvalScore   kingNearPassedPawn    = { -7,12};
@@ -485,10 +485,10 @@ ScoreType kingAttTrans  = 31;
 ScoreType kingAttScale  = 13;
 ScoreType kingAttOffset = 17;
 enum katt_att_def : unsigned char { katt_attack = 0, katt_defence = 1 };
-ScoreType kingAttWeight[2][7] = { {0, 2, 7, 6, 2, 9, -1}, {0, 5, 7, 5, 0, -1, 0} };
-ScoreType kingAttOpenfile        = 11;
+ScoreType kingAttWeight[2][7] = { {0, 2, 7, 6, 3, 9, -1}, {0, 6, 7, 5, 0, 0, 0} };
+ScoreType kingAttOpenfile        = 10;
 ScoreType kingAttSemiOpenfileOur = 5;
-ScoreType kingAttSemiOpenfileOpp = 2;
+ScoreType kingAttSemiOpenfileOpp = 3;
 ScoreType kingAttTable[64] = {0};
 
 }
