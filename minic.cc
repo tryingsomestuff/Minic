@@ -710,14 +710,51 @@ struct Position{
 
 // HQ BB code from Amoeba
 namespace BB {
-inline BitBoard shiftSouth    (BitBoard bitBoard) { return bitBoard >> 8; }
-inline BitBoard shiftNorth    (BitBoard bitBoard) { return bitBoard << 8; }
-inline BitBoard shiftWest     (BitBoard bitBoard) { return bitBoard >> 1 & ~fileH; }
-inline BitBoard shiftEast     (BitBoard bitBoard) { return bitBoard << 1 & ~fileA; }
-inline BitBoard shiftNorthEast(BitBoard bitBoard) { return bitBoard << 9 & ~fileA; }
-inline BitBoard shiftNorthWest(BitBoard bitBoard) { return bitBoard << 7 & ~fileH; }
-inline BitBoard shiftSouthEast(BitBoard bitBoard) { return bitBoard >> 7 & ~fileA; }
-inline BitBoard shiftSouthWest(BitBoard bitBoard) { return bitBoard >> 9 & ~fileH; }
+inline constexpr BitBoard _shiftSouth    (BitBoard b) { return b >> 8; }
+inline constexpr BitBoard _shiftNorth    (BitBoard b) { return b << 8; }
+inline constexpr BitBoard _shiftWest     (BitBoard b) { return b >> 1 & ~fileH; }
+inline constexpr BitBoard _shiftEast     (BitBoard b) { return b << 1 & ~fileA; }
+inline constexpr BitBoard _shiftNorthEast(BitBoard b) { return b << 9 & ~fileA; }
+inline constexpr BitBoard _shiftNorthWest(BitBoard b) { return b << 7 & ~fileH; }
+inline constexpr BitBoard _shiftSouthEast(BitBoard b) { return b >> 7 & ~fileA; }
+inline constexpr BitBoard _shiftSouthWest(BitBoard b) { return b >> 9 & ~fileH; }
+
+template<Color C> inline constexpr BitBoard shiftN  (const BitBoard b) { return C==Co_White? BB::_shiftNorth(b) : BB::_shiftSouth(b); }
+template<Color C> inline constexpr BitBoard shiftS  (const BitBoard b) { return C!=Co_White? BB::_shiftNorth(b) : BB::_shiftSouth(b); }
+template<Color C> inline constexpr BitBoard shiftSW (const BitBoard b) { return C==Co_White? BB::_shiftSouthWest(b) : BB::_shiftNorthWest(b);}
+template<Color C> inline constexpr BitBoard shiftSE (const BitBoard b) { return C==Co_White? BB::_shiftSouthEast(b) : BB::_shiftNorthEast(b);}
+template<Color C> inline constexpr BitBoard shiftNW (const BitBoard b) { return C!=Co_White? BB::_shiftSouthWest(b) : BB::_shiftNorthWest(b);}
+template<Color C> inline constexpr BitBoard shiftNE (const BitBoard b) { return C!=Co_White? BB::_shiftSouthEast(b) : BB::_shiftNorthEast(b);}
+
+template<Color> inline constexpr BitBoard fillForward(BitBoard b);
+template<> inline constexpr BitBoard fillForward<Co_White>(BitBoard b) {  b |= (b << 8u);    b |= (b << 16u);    b |= (b << 32u);    return b;}
+template<> inline constexpr BitBoard fillForward<Co_Black>(BitBoard b) {  b |= (b >> 8u);    b |= (b >> 16u);    b |= (b >> 32u);    return b;}
+template<Color C> inline constexpr BitBoard frontSpan(BitBoard b) { return fillForward<C>(shiftN<C>(b));}
+template<Color C> inline constexpr BitBoard rearSpan(BitBoard b) { return frontSpan<~C>(b);}
+template<Color C> inline constexpr BitBoard pawnSemiOpen(BitBoard own, BitBoard opp) { return own & ~frontSpan<~C>(opp);}
+inline constexpr BitBoard fillFile(BitBoard b) { return fillForward<Co_White>(b) | fillForward<Co_Black>(b);}
+inline constexpr BitBoard open_files(BitBoard w, BitBoard b) { return ~fillFile(w) & ~fillFile(b);}
+
+template<Color C> inline constexpr BitBoard pawnAttacks(BitBoard b)       { return shiftNW<C>(b) | shiftNE<C>(b);}
+template<Color C> inline constexpr BitBoard pawnDoubleAttacks(BitBoard b) { return shiftNW<C>(b) & shiftNE<C>(b);}
+template<Color C> inline constexpr BitBoard pawnSingleAttacks(BitBoard b) { return shiftNW<C>(b) ^ shiftNE<C>(b);}
+
+template<Color C> inline constexpr BitBoard pawnHoles(BitBoard b)   { return ~fillForward<C>(pawnAttacks<C>(b));}
+template<Color C> inline constexpr BitBoard pawnDoubled(BitBoard b) { return frontSpan<C>(b) & b;}
+
+inline constexpr BitBoard pawnIsolated(BitBoard b) { return b & ~fillFile(_shiftEast(b)) & ~fillFile(_shiftWest(b));}
+
+template<Color C> inline constexpr BitBoard pawnBackward(BitBoard own, BitBoard opp) {return shiftN<~C>( (shiftN<C>(own)& ~opp) & ~fillForward<C>(pawnAttacks<C>(own)) & (pawnAttacks<~C>(opp)));}
+template<Color C> inline constexpr BitBoard pawnStraggler(BitBoard own, BitBoard opp, BitBoard own_backwards) { return own_backwards & pawnSemiOpen<C>(own, opp) & (C ? 0x00ffff0000000000ull : 0x0000000000ffff00ull);}
+template<Color C> inline constexpr BitBoard pawnForwardCoverage(BitBoard bb) { BitBoard spans = frontSpan<C>(bb); return spans | _shiftEast(spans) | _shiftWest(spans);}
+template<Color C> inline constexpr BitBoard pawnPassed(BitBoard own, BitBoard opp) { return own & ~pawnForwardCoverage<~C>(opp);}
+template<Color C> inline constexpr BitBoard pawnCandidates(BitBoard own, BitBoard opp) {
+    const BitBoard opp_double_attacks = pawnDoubleAttacks<~C>(opp);
+    const BitBoard opp_single_attacks = pawnSingleAttacks<~C>(opp);
+    const BitBoard own_double_attacks = pawnDoubleAttacks<C>(own);
+    const BitBoard own_single_attacks = pawnSingleAttacks<C>(own);
+    return pawnSemiOpen<C>(own, opp) & shiftN<~C>((own_single_attacks & opp_single_attacks) | (own_double_attacks & opp_double_attacks));
+}
 
 int ranks[512];
 struct Mask {
@@ -784,25 +821,25 @@ inline void initMask() {
 
         BitBoard wspan = SquareToBitboardTable(x);
         wspan |= wspan << 8; wspan |= wspan << 16; wspan |= wspan << 32;
-        wspan = shiftNorth(wspan);
+        wspan = _shiftNorth(wspan);
         BitBoard bspan = SquareToBitboardTable(x);
         bspan |= bspan >> 8; bspan |= bspan >> 16; bspan |= bspan >> 32;
-        bspan = shiftSouth(bspan);
+        bspan = _shiftSouth(bspan);
 
         mask[x].frontSpan[Co_White] = mask[x].rearSpan[Co_Black] = wspan;
         mask[x].frontSpan[Co_Black] = mask[x].rearSpan[Co_White] = bspan;
 
         mask[x].passerSpan[Co_White] = wspan;
-        mask[x].passerSpan[Co_White] |= shiftWest(wspan);
-        mask[x].passerSpan[Co_White] |= shiftEast(wspan);
+        mask[x].passerSpan[Co_White] |= _shiftWest(wspan);
+        mask[x].passerSpan[Co_White] |= _shiftEast(wspan);
         mask[x].passerSpan[Co_Black] = bspan;
-        mask[x].passerSpan[Co_Black] |= shiftWest(bspan);
-        mask[x].passerSpan[Co_Black] |= shiftEast(bspan);
+        mask[x].passerSpan[Co_Black] |= _shiftWest(bspan);
+        mask[x].passerSpan[Co_Black] |= _shiftEast(bspan);
 
-        mask[x].attackFrontSpan[Co_White] = shiftWest(wspan);
-        mask[x].attackFrontSpan[Co_White] |= shiftEast(wspan);
-        mask[x].attackFrontSpan[Co_Black] = shiftWest(bspan);
-        mask[x].attackFrontSpan[Co_Black] |= shiftEast(bspan);
+        mask[x].attackFrontSpan[Co_White] = _shiftWest(wspan);
+        mask[x].attackFrontSpan[Co_White] |= _shiftEast(wspan);
+        mask[x].attackFrontSpan[Co_Black] = _shiftWest(bspan);
+        mask[x].attackFrontSpan[Co_Black] |= _shiftEast(bspan);
     }
 
     for (Square o = 0; o < 64; ++o) {
@@ -2566,13 +2603,9 @@ namespace{ // some Color / Piece helpers
    template<Color C> inline bool isPasser(const Position &p, Square k)     { return (BB::mask[k].passerSpan[C] & p.pieces<P_wp>(~C)) == 0ull;}
    template<Color C> inline Square ColorSquarePstHelper(Square k)          { return C==Co_White?(k^56):k;}
    template<Color C> inline constexpr ScoreType ColorSignHelper()          { return C==Co_White?+1:-1;}
-   template<Color C> inline const BitBoard backwardWest(const BitBoard b)  { return C==Co_White? BB::shiftSouthWest(b) : BB::shiftNorthWest(b);}
-   template<Color C> inline const BitBoard backwardEast(const BitBoard b)  { return C==Co_White? BB::shiftSouthEast(b) : BB::shiftNorthEast(b);}
-   template<Color C> inline const BitBoard shiftForward(const BitBoard b)  { return C==Co_White? BB::shiftNorth(b) : BB::shiftSouth(b); }
-   template<Color C> inline const BitBoard shiftBackward(const BitBoard b) { return C!=Co_White? BB::shiftNorth(b) : BB::shiftSouth(b); }
    template<Color C> inline const Square PromotionSquare(const Square k)   { return C==Co_White? (SQFILE(k) + 56) : SQFILE(k);}
    template<Color C> inline const Rank ColorRank(const Square k)           { return Rank(C==Co_White? SQRANK(k) : (7-SQRANK(k)));}
-   template<Color C> inline bool isBackward(const Position &p, Square k, const BitBoard pAtt[2], const BitBoard pAttSpan[2]){ return ((shiftForward<C>(SquareToBitboard(k))&~p.pieces<P_wp>(~C)) & pAtt[~C] & ~pAttSpan[C]) != 0ull; }
+   template<Color C> inline bool isBackward(const Position &p, Square k, const BitBoard pAtt[2], const BitBoard pAttSpan[2]){ return ((BB::shiftN<C>(SquareToBitboard(k))&~p.pieces<P_wp>(~C)) & pAtt[~C] & ~pAttSpan[C]) != 0ull; }
 }
 
 template < Piece T , Color C>
@@ -2598,35 +2631,27 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, ScoreAcc & s
 #define ONEPERCENT 0.01f
 
 template< Color C>
-inline void evalPawn(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, BitBoard & pawnPush, BitBoard & pawnTargets, BitBoard & pawnAttSpan, BitBoard & passer){
+inline void evalPawnPasser(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score){
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
-        pawnPush    |= BB::mask[k].push[C];
-        pawnTargets |= BB::mask[k].pawnAttack[C];
-        pawnAttSpan |= BB::mask[k].attackFrontSpan[C];
-        if (isPasser<C>(p,k)) {
-            const BitBoard bbk = SquareToBitboardTable(k);
-            passer |= bbk;
-            const BitBoard bw = backwardWest<C>(bbk);
-            const BitBoard be = backwardEast<C>(bbk);
-            const EvalScore factorProtected = EvalConfig::protectedPasserFactor * ( (((bw&p.pieces<P_wp>(C))!=0ull)&&isPasser<C>(p, BB::SquareFromBitBoard(bw))) || (((be&p.pieces<P_wp>(C))!=0ull)&&isPasser<C>(p, BB::SquareFromBitBoard(be))) ) ;
-            const EvalScore factorFree      = EvalConfig::freePasserFactor      * ScoreType( (BB::mask[k].frontSpan[C] & p.allPieces[~C]) == 0ull );
-            const EvalScore kingNearBonus   = EvalConfig::kingNearPassedPawn    * ScoreType( chebyshevDistance(p.king[~C], k) - chebyshevDistance(p.king[C], k) );
-            const EvalScore rookBehind      = EvalConfig::rookBehindPassed      * (countBit(p.pieces<P_wr>(C) & BB::mask[k].rearSpan[C]) - countBit(p.pieces<P_wr>(~C) & BB::mask[k].rearSpan[C]));
-            const bool unstoppable          = (p.mat[~C][M_t] == 0)&&((chebyshevDistance(p.king[~C],PromotionSquare<C>(k))-int(p.c!=C)) > std::min(Square(5), chebyshevDistance(PromotionSquare<C>(k),k)));
-            if (unstoppable) score.scores[ScoreAcc::sc_PwnPassed] += ColorSignHelper<C>()*(Values[P_wq+PieceShift] - Values[P_wp+PieceShift]);
-            else             score.scores[ScoreAcc::sc_PwnPassed] += (EvalConfig::passerBonus[ColorRank<C>(k)].scale((1.f+factorProtected[MG]*ONEPERCENT)*(1.f+factorFree[MG]*ONEPERCENT),(1.f+factorProtected[EG]*ONEPERCENT)*(1.f+factorFree[EG]*ONEPERCENT)) + kingNearBonus + rookBehind)*ColorSignHelper<C>();
-        }
+        const BitBoard bbk = SquareToBitboardTable(k);
+        const BitBoard bw = BB::shiftSW<C>(bbk);
+        const BitBoard be = BB::shiftSE<C>(bbk);
+        const EvalScore factorProtected = EvalConfig::protectedPasserFactor * ( (((bw&p.pieces<P_wp>(C))!=0ull)&&isPasser<C>(p, BB::SquareFromBitBoard(bw))) || (((be&p.pieces<P_wp>(C))!=0ull)&&isPasser<C>(p, BB::SquareFromBitBoard(be))) ) ;
+        const EvalScore factorFree      = EvalConfig::freePasserFactor      * ScoreType( (BB::mask[k].frontSpan[C] & p.allPieces[~C]) == 0ull );
+        const EvalScore kingNearBonus   = EvalConfig::kingNearPassedPawn    * ScoreType( chebyshevDistance(p.king[~C], k) - chebyshevDistance(p.king[C], k) );
+        const EvalScore rookBehind      = EvalConfig::rookBehindPassed      * (countBit(p.pieces<P_wr>(C) & BB::mask[k].rearSpan[C]) - countBit(p.pieces<P_wr>(~C) & BB::mask[k].rearSpan[C]));
+        const bool unstoppable          = (p.mat[~C][M_t] == 0)&&((chebyshevDistance(p.king[~C],PromotionSquare<C>(k))-int(p.c!=C)) > std::min(Square(5), chebyshevDistance(PromotionSquare<C>(k),k)));
+        if (unstoppable) score.scores[ScoreAcc::sc_PwnPassed] += ColorSignHelper<C>()*(Values[P_wq+PieceShift] - Values[P_wp+PieceShift]);
+        else             score.scores[ScoreAcc::sc_PwnPassed] += (EvalConfig::passerBonus[ColorRank<C>(k)].scale((1.f+factorProtected[MG]*ONEPERCENT)*(1.f+factorFree[MG]*ONEPERCENT),(1.f+factorProtected[EG]*ONEPERCENT)*(1.f+factorFree[EG]*ONEPERCENT)) + kingNearBonus + rookBehind)*ColorSignHelper<C>();
     }
 }
 
 template< Color C>
-inline void evalPawn2(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, const BitBoard (&pAtt)[2], const BitBoard (&pAttSpan)[2]){
+inline void evalPawnBackward(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score){
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
-        if (isBackward<C>(p, k, pAtt, pAttSpan)) {
-            score.scores[ScoreAcc::sc_PwnBackward] -= EvalConfig::backwardPawnMalus[(BB::mask[k].file & p.pieces<P_wp>(~C))==0ull] * ColorSignHelper<C>();
-        }
+        score.scores[ScoreAcc::sc_PwnBackward] -= EvalConfig::backwardPawnMalus[(BB::mask[k].file & p.pieces<P_wp>(~C))==0ull] * ColorSignHelper<C>();
     }
 }
 
@@ -2673,13 +2698,16 @@ ScoreType eval(const Position & p, float & gp ){
     score.scores[ScoreAcc::sc_Mat][MG] += matScoreW - matScoreB;
 
     // usefull bitboards accumulator
-    ScoreType danger[2]     = {0, 0};
-    BitBoard att[2]         = {0ull, 0ull};
-    BitBoard safePawnPush[2]= {0ull, 0ull};
-    BitBoard pawnTargets[2] = {0ull, 0ull};
-    BitBoard pawnAttSpan[2] = {0ull, 0ull};
-    BitBoard passer[2]      = {0ull, 0ull};
     const BitBoard pawns[2] = {p.whitePawn(), p.blackPawn()};
+    ScoreType danger[2]     = {0, 0};
+    BitBoard att[2]         = {0, 0};
+    const BitBoard safePawnPush[2]= {BB::shiftN<Co_White>(pawns[Co_White]) & (~p.occupancy & (att[Co_White] | ~att[Co_Black])), BB::shiftN<Co_Black>(pawns[Co_Black]) & (~p.occupancy & (att[Co_Black] | ~att[Co_White]))};
+    const BitBoard pawnTargets[2] = {BB::pawnAttacks<Co_White>(pawns[Co_White]), BB::pawnAttacks<Co_Black>(pawns[Co_Black])};
+    const BitBoard passer[2]      = {BB::pawnPassed<Co_White>(pawns[Co_White],pawns[Co_Black]), BB::pawnPassed<Co_Black>(pawns[Co_Black],pawns[Co_White])};
+    const BitBoard backward[2]    = {BB::pawnBackward<Co_White>(pawns[Co_White],pawns[Co_Black]), BB::pawnBackward<Co_Black>(pawns[Co_Black],pawns[Co_White])};
+    ///@todo refactor isolated, doubled and openfile !!!!
+    //const BitBoard isolated[2]    = {BB::pawnIsolated(pawns[Co_White]), BB::pawnIsolated(pawns[Co_Black])};
+    //const BitBoard doubled[2]     = {BB::pawnDoubled(pawns[Co_White]), BB::pawnDoubled(pawns[Co_White])};
 
     // PST, mobility, king zone attack, passer, for white
     evalPiece<P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),score,att[Co_White],danger);
@@ -2707,15 +2735,13 @@ ScoreType eval(const Position & p, float & gp ){
     }
 
     // pawn first pass
-    evalPawn<Co_White>(p,p.pieces<P_wp>(Co_White),score,safePawnPush[Co_White],pawnTargets[Co_White],pawnAttSpan[Co_White],passer[Co_White]);
-    evalPawn<Co_Black>(p,p.pieces<P_wp>(Co_Black),score,safePawnPush[Co_Black],pawnTargets[Co_Black],pawnAttSpan[Co_Black],passer[Co_Black]);
+    evalPawnPasser<Co_White>(p,passer[Co_White],score);
+    evalPawnPasser<Co_Black>(p,passer[Co_Black],score);
     att[Co_White] |= (pawnTargets[Co_White] & ~p.allPieces[Co_White]);
     att[Co_Black] |= (pawnTargets[Co_Black] & ~p.allPieces[Co_Black]);
-    safePawnPush[Co_White] &= (~p.occupancy & (att[Co_White] | ~att[Co_Black]));
-    safePawnPush[Co_Black] &= (~p.occupancy & (att[Co_Black] | ~att[Co_White]));
     // pawn second pass
-    evalPawn2<Co_White>(p,p.pieces<P_wp>(Co_White),score,pawnTargets,pawnAttSpan);
-    evalPawn2<Co_Black>(p,p.pieces<P_wp>(Co_Black),score,pawnTargets,pawnAttSpan);
+    evalPawnBackward<Co_White>(p,backward[Co_White],score);
+    evalPawnBackward<Co_Black>(p,backward[Co_Black],score);
     // pawn third pass
     evalPawnDanger<Co_White>(p,att,danger);
     evalPawnDanger<Co_Black>(p,att,danger);
