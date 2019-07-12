@@ -34,7 +34,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_SYZYGY
 //#define WITH_UCI
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "0.77";
 
 /*
 //todo
@@ -733,7 +733,7 @@ template<Color C> inline constexpr BitBoard frontSpan(BitBoard b) { return fillF
 template<Color C> inline constexpr BitBoard rearSpan(BitBoard b) { return frontSpan<~C>(b);}
 template<Color C> inline constexpr BitBoard pawnSemiOpen(BitBoard own, BitBoard opp) { return own & ~frontSpan<~C>(opp);}
 inline constexpr BitBoard fillFile(BitBoard b) { return fillForward<Co_White>(b) | fillForward<Co_Black>(b);}
-inline constexpr BitBoard open_files(BitBoard w, BitBoard b) { return ~fillFile(w) & ~fillFile(b);}
+inline constexpr BitBoard openFiles(BitBoard w, BitBoard b) { return ~fillFile(w) & ~fillFile(b);}
 
 template<Color C> inline constexpr BitBoard pawnAttacks(BitBoard b)       { return shiftNW<C>(b) | shiftNE<C>(b);}
 template<Color C> inline constexpr BitBoard pawnDoubleAttacks(BitBoard b) { return shiftNW<C>(b) & shiftNE<C>(b);}
@@ -2701,13 +2701,14 @@ ScoreType eval(const Position & p, float & gp ){
     const BitBoard pawns[2] = {p.whitePawn(), p.blackPawn()};
     ScoreType danger[2]     = {0, 0};
     BitBoard att[2]         = {0, 0};
-    const BitBoard safePawnPush[2]= {BB::shiftN<Co_White>(pawns[Co_White]) & (~p.occupancy & (att[Co_White] | ~att[Co_Black])), BB::shiftN<Co_Black>(pawns[Co_Black]) & (~p.occupancy & (att[Co_Black] | ~att[Co_White]))};
-    const BitBoard pawnTargets[2] = {BB::pawnAttacks<Co_White>(pawns[Co_White]), BB::pawnAttacks<Co_Black>(pawns[Co_Black])};
-    const BitBoard passer[2]      = {BB::pawnPassed<Co_White>(pawns[Co_White],pawns[Co_Black]), BB::pawnPassed<Co_Black>(pawns[Co_Black],pawns[Co_White])};
-    const BitBoard backward[2]    = {BB::pawnBackward<Co_White>(pawns[Co_White],pawns[Co_Black]), BB::pawnBackward<Co_Black>(pawns[Co_Black],pawns[Co_White])};
-    ///@todo refactor isolated, doubled and openfile !!!!
-    //const BitBoard isolated[2]    = {BB::pawnIsolated(pawns[Co_White]), BB::pawnIsolated(pawns[Co_Black])};
-    //const BitBoard doubled[2]     = {BB::pawnDoubled(pawns[Co_White]), BB::pawnDoubled(pawns[Co_White])};
+    const BitBoard safePawnPush[2]  = {BB::shiftN<Co_White>(pawns[Co_White]) & (~p.occupancy & (att[Co_White] | ~att[Co_Black])), BB::shiftN<Co_Black>(pawns[Co_Black]) & (~p.occupancy & (att[Co_Black] | ~att[Co_White]))};
+    const BitBoard pawnTargets[2]   = {BB::pawnAttacks<Co_White>(pawns[Co_White]), BB::pawnAttacks<Co_Black>(pawns[Co_Black])};
+    const BitBoard passer[2]        = {BB::pawnPassed<Co_White>(pawns[Co_White],pawns[Co_Black]), BB::pawnPassed<Co_Black>(pawns[Co_Black],pawns[Co_White])};
+    const BitBoard backward[2]      = {BB::pawnBackward<Co_White>(pawns[Co_White],pawns[Co_Black]), BB::pawnBackward<Co_Black>(pawns[Co_Black],pawns[Co_White])};
+    const BitBoard isolated[2]      = {BB::pawnIsolated(pawns[Co_White]), BB::pawnIsolated(pawns[Co_Black])};
+    const BitBoard doubled[2]       = {BB::pawnDoubled<Co_White>(pawns[Co_White]), BB::pawnDoubled<Co_Black>(pawns[Co_White])};
+    const BitBoard semiOpenFiles[2] ={BB::pawnSemiOpen<Co_White>(pawns[Co_White],pawns[Co_Black]),BB::pawnSemiOpen<Co_Black>(pawns[Co_Black],pawns[Co_White])};
+    const BitBoard openFiles        = BB::openFiles(pawns[Co_White],pawns[Co_Black]);
 
     // PST, mobility, king zone attack, passer, for white
     evalPiece<P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),score,att[Co_White],danger);
@@ -2746,43 +2747,33 @@ ScoreType eval(const Position & p, float & gp ){
     evalPawnDanger<Co_White>(p,att,danger);
     evalPawnDanger<Co_Black>(p,att,danger);
 
-    // count pawn per file
-    ScoreType nbWP[10] = {0ull}, nbBP[10] = {0ull};
-    for(int f = File_a; f <= File_h ; ++f){
-        nbWP[f+1] = countBit(pawns[Co_White] & files[f]);
-        nbBP[f+1] = countBit(pawns[Co_Black] & files[f]);
-        const ScoreType nbWR = countBit(p.whiteRook() & files[f]);
-        const ScoreType nbBR = countBit(p.blackRook() & files[f]);
-        // double pawn malus
-        score.scores[ScoreAcc::sc_PwnDoubled] -= EvalConfig::doublePawnMalus[!nbBP[f+1]]*ScoreType(nbWP[f+1]>>1);
-        score.scores[ScoreAcc::sc_PwnDoubled] += EvalConfig::doublePawnMalus[!nbWP[f+1]]*ScoreType(nbBP[f+1]>>1);
+    // open file near king
+    danger[Co_White] += EvalConfig::kingAttOpenfile        * countBit(BB::mask[p.king[Co_White]].kingZone & openFiles) ;
+    danger[Co_White] += EvalConfig::kingAttSemiOpenfileOpp * countBit(BB::mask[p.king[Co_White]].kingZone & semiOpenFiles[Co_White]);
+    danger[Co_White] += EvalConfig::kingAttSemiOpenfileOur * countBit(BB::mask[p.king[Co_White]].kingZone & semiOpenFiles[Co_Black]);
+    danger[Co_Black] += EvalConfig::kingAttOpenfile        * countBit(BB::mask[p.king[Co_Black]].kingZone & openFiles);
+    danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOpp * countBit(BB::mask[p.king[Co_Black]].kingZone & semiOpenFiles[Co_Black]);
+    danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * countBit(BB::mask[p.king[Co_Black]].kingZone & semiOpenFiles[Co_White]);
 
-        // danger if open file near king and rook(s) on the board
-        if (p.blackRook() && (BB::mask[p.king[Co_White]].kingZone & files[f]) ){
-            if      (!nbWP[f+1]){ danger[Co_White] += (!nbBP[f+1]) ? EvalConfig::kingAttOpenfile : EvalConfig::kingAttSemiOpenfileOur; }
-            else if (!nbBP[f+1]){ danger[Co_White] += EvalConfig::kingAttSemiOpenfileOpp; }
-        }
-        if (p.whiteRook() && (BB::mask[p.king[Co_Black]].kingZone & files[f]) ){
-            if      (!nbBP[f+1]){ danger[Co_Black] += (!nbWP[f+1]) ? EvalConfig::kingAttOpenfile : EvalConfig::kingAttSemiOpenfileOur; }
-            else if (!nbWP[f+1]){ danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOpp; }
-        }
+    // rook on open file
+    score.scores[ScoreAcc::sc_OpenFile] += EvalConfig::rookOnOpenFile         * countBit(p.whiteRook() & openFiles);
+    score.scores[ScoreAcc::sc_OpenFile] += EvalConfig::kingAttSemiOpenfileOpp * countBit(p.whiteRook() & semiOpenFiles[Co_White]);
+    score.scores[ScoreAcc::sc_OpenFile] += EvalConfig::kingAttSemiOpenfileOur * countBit(p.whiteRook() & semiOpenFiles[Co_Black]);
+    score.scores[ScoreAcc::sc_OpenFile] -= EvalConfig::rookOnOpenFile         * countBit(p.blackRook() & openFiles);
+    score.scores[ScoreAcc::sc_OpenFile] -= EvalConfig::kingAttSemiOpenfileOpp * countBit(p.blackRook() & semiOpenFiles[Co_Black]);
+    score.scores[ScoreAcc::sc_OpenFile] -= EvalConfig::kingAttSemiOpenfileOur * countBit(p.blackRook() & semiOpenFiles[Co_White]);
 
-        // rook on open file
-        if ( nbWR ){
-            if      ( nbWP[f+1] == 0 ) score.scores[ScoreAcc::sc_OpenFile] += (nbBP[f+1] == 0 ? EvalConfig::rookOnOpenFile:EvalConfig::rookOnOpenSemiFileOur)*nbWR;
-            else if ( nbBP[f+1] == 0 ) score.scores[ScoreAcc::sc_OpenFile] += EvalConfig::rookOnOpenSemiFileOpp*nbWR;
-        }
-        if ( nbBR ){
-            if      ( nbBP[f+1] == 0 ) score.scores[ScoreAcc::sc_OpenFile] -= (nbWP[f+1] == 0 ? EvalConfig::rookOnOpenFile:EvalConfig::rookOnOpenSemiFileOur)*nbBR;
-            else if ( nbWP[f+1] == 0 ) score.scores[ScoreAcc::sc_OpenFile] -= EvalConfig::rookOnOpenSemiFileOpp*nbBR;
-        }
-    }
+    // double pawn malus
+    score.scores[ScoreAcc::sc_PwnDoubled] -= EvalConfig::doublePawnMalus[EvalConfig::Close]    * countBit(doubled[Co_White] & ~semiOpenFiles[Co_White]);
+    score.scores[ScoreAcc::sc_PwnDoubled] -= EvalConfig::doublePawnMalus[EvalConfig::SemiOpen] * countBit(doubled[Co_White] &  semiOpenFiles[Co_White]);
+    score.scores[ScoreAcc::sc_PwnDoubled] += EvalConfig::doublePawnMalus[EvalConfig::Close]    * countBit(doubled[Co_Black] & ~semiOpenFiles[Co_Black]);
+    score.scores[ScoreAcc::sc_PwnDoubled] += EvalConfig::doublePawnMalus[EvalConfig::SemiOpen] * countBit(doubled[Co_Black] &  semiOpenFiles[Co_Black]);
 
-    // isolated pawn malus (second loop needed)
-    for(int f = File_a; f <= File_h ; ++f){
-       score.scores[ScoreAcc::sc_PwnIsolated] -= EvalConfig::isolatedPawnMalus[!nbBP[f+1]]*(!nbWP[f] && nbWP[f+1] && !nbWP[f+2]);
-       score.scores[ScoreAcc::sc_PwnIsolated] += EvalConfig::isolatedPawnMalus[!nbWP[f+1]]*(!nbBP[f] && nbBP[f+1] && !nbBP[f+2]);
-    }
+    // isolated pawn malus
+    score.scores[ScoreAcc::sc_PwnIsolated] -= EvalConfig::isolatedPawnMalus[EvalConfig::Close]    * countBit(isolated[Co_White] & ~semiOpenFiles[Co_White]);
+    score.scores[ScoreAcc::sc_PwnIsolated] -= EvalConfig::isolatedPawnMalus[EvalConfig::SemiOpen] * countBit(isolated[Co_White] &  semiOpenFiles[Co_White]);
+    score.scores[ScoreAcc::sc_PwnIsolated] += EvalConfig::isolatedPawnMalus[EvalConfig::Close]    * countBit(isolated[Co_Black] & ~semiOpenFiles[Co_Black]);
+    score.scores[ScoreAcc::sc_PwnIsolated] += EvalConfig::isolatedPawnMalus[EvalConfig::SemiOpen] * countBit(isolated[Co_Black] &  semiOpenFiles[Co_Black]);
 
     // use king danger score. **DO NOT** apply this in end-game
     score.scores[ScoreAcc::sc_ATT][MG] -=  EvalConfig::kingAttTable[std::min(std::max(danger[Co_White],ScoreType(0)),ScoreType(63))];

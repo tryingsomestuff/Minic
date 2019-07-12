@@ -28,5 +28,5 @@ fi
 exe32=${exe32}.exe
 echo "Building $exe32"
 
-i686-w64-mingw32-g++-posix minic.cc $d -DNDEBUG -O3 -flto $t -static -static-libgcc -static-libstdc++ -std=c++11 -o $dir/Dist/$exe32 -Wl,-Bstatic -lpthread
+i686-w64-mingw32-g++-posix minic.cc $d -DNDEBUG -O3 -flto $t -static -static-libgcc -static-libstdc++ -std=c++14 -o $dir/Dist/$exe32 -Wl,-Bstatic -lpthread
 i686-w64-mingw32-strip $dir/Dist/$exe32
