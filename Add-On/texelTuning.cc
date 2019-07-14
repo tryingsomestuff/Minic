@@ -387,23 +387,16 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[6][EG], -1500, 1500,"candidateEG 6"));
     */
 
-    /*
     for (int k = 1 ; k < 6 ; ++k ){
         for(int i = 0 ; i < 29 ; ++i){
-           guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::MOB[k][i],-200,200,"mob"+std::to_string(k)+"_"+std::to_string(i)));
+           guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::MOB[k][i][MG],-200,200,"mob"+std::to_string(k)+"_"+std::to_string(i)));
         }
     }
 
     for (int k = 1 ; k < 6 ; ++k ){
         for(int i = 0 ; i < 29 ; ++i){
-           guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::MOBEG[k][i],-200,200,"mobeg"+std::to_string(k)+"_"+std::to_string(i)));
+           guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::MOB[k][i][EG],-200,200,"mobeg"+std::to_string(k)+"_"+std::to_string(i)));
         }
-    }
-    */
-
-    for(int i = 0 ; i < 29 ; ++i){
-       guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::QMOB[i][MG],-200,200,"qmob_"+std::to_string(i)));
-       guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::QMOB[i][EG],-200,200,"qmobeg_"+std::to_string(i)));
     }
 
     /*

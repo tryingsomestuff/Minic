@@ -85,7 +85,7 @@ struct EvalScore{
     ScoreType sc[GP_MAX] = {0};
     EvalScore(ScoreType mg,ScoreType eg):sc{mg,eg}{}
     EvalScore(ScoreType s):sc{s,s}{}
-    explicit EvalScore():sc{0,0}{}
+    EvalScore():sc{0,0}{}
     EvalScore(const EvalScore & e):sc{e.sc[MG],e.sc[EG]}{}
 
     ScoreType & operator[](GamePhase g){ return sc[g];}
@@ -315,120 +315,68 @@ void initMvvLva(){
 namespace EvalConfig {
 
 // from Rofchade (on talkchess)
-const ScoreType PST[6][64] = {
-    {   //pawn
-          0,   0,   0,   0,   0,   0,  0,   0,
-         98, 134,  61,  95,  68, 126, 34, -11,
-         -6,   7,  26,  31,  65,  56, 25, -20,
-        -14,  13,   6,  21,  23,  12, 17, -23,
-        -27,  -2,  -5,  12,  17,   6, 10, -25,
-        -26,  -4,  -4, -10,   3,   3, 33, -12,
-        -35,  -1, -20, -23, -15,  24, 38, -22,
-          0,   0,   0,   0,   0,   0,  0,   0
-    },{ //knight
-        -167, -89, -34, -49,  61, -97, -15, -107,
-         -73, -41,  72,  36,  23,  62,   7,  -17,
-         -47,  60,  37,  65,  84, 129,  73,   44,
-          -9,  17,  19,  53,  37,  69,  18,   22,
-         -13,   4,  16,  13,  28,  19,  21,   -8,
-         -23,  -9,  12,  10,  19,  17,  25,  -16,
-         -29, -53, -12,  -3,  -1,  18, -14,  -19,
-        -105, -21, -58, -33, -17, -28, -19,  -23
-    },{ //bishop
-        -29,   4, -82, -37, -25, -42,   7,  -8,
-        -26,  16, -18, -13,  30,  59,  18, -47,
-        -16,  37,  43,  40,  35,  50,  37,  -2,
-         -4,   5,  19,  50,  37,  37,   7,  -2,
-         -6,  13,  13,  26,  34,  12,  10,   4,
-          0,  15,  15,  15,  14,  27,  18,  10,
-          4,  15,  16,   0,   7,  21,  33,   1,
-        -33,  -3, -14, -21, -13, -12, -39, -21
-    },{ //rook
-         32,  42,  32,  51, 63,  9,  31,  43,
-         27,  32,  58,  62, 80, 67,  26,  44,
-         -5,  19,  26,  36, 17, 45,  61,  16,
-        -24, -11,   7,  26, 24, 35,  -8, -20,
-        -36, -26, -12,  -1,  9, -7,   6, -23,
-        -45, -25, -16, -17,  3,  0,  -5, -33,
-        -44, -16, -20,  -9, -1, 11,  -6, -71,
-        -19, -13,   1,  17, 16,  7, -37, -26
-    },{ //queen
-        -28,   0,  29,  12,  59,  44,  43,  45,
-        -24, -39,  -5,   1, -16,  57,  28,  54,
-        -13, -17,   7,   8,  29,  56,  47,  57,
-        -27, -27, -16, -16,  -1,  17,  -2,   1,
-         -9, -26,  -9, -10,  -2,  -4,   3,  -3,
-        -14,   2, -11,  -2,  -5,   2,  14,   5,
-        -35,  -8,  11,   2,   8,  15,  -3,   1,
-         -1, -18,  -9,  10, -15, -25, -31, -50
-    },{ //king
-        -65,  23,  16, -15, -56, -34,   2,  13,
-         29,  -1, -20,  -7,  -8,  -4, -38, -29,
-         -9,  24,   2, -16, -20,   6,  22, -22,
-        -17, -20, -12, -27, -30, -25, -14, -36,
-        -49,  -1, -27, -39, -46, -44, -33, -51,
-        -14, -14, -22, -46, -44, -30, -15, -27,
-          1,   7,  -8, -64, -43, -16,   9,   8,
-        -15,  36,  12, -54,   8, -28,  24,  14
-    }
-};
 
-const ScoreType PSTEG[6][64] = {
-    {   //pawn
-          0,   0,   0,   0,   0,   0,   0,   0,
-        178, 173, 158, 134, 147, 132, 165, 187,
-         94, 100,  85,  67,  56,  53,  82,  84,
-         32,  24,  13,   5,  -2,   4,  17,  17,
-         13,   9,  -3,  -7,  -7,  -8,   3,  -1,
-          4,   7,  -6,   1,   0,  -5,  -1,  -8,
-         13,   8,   8,  10,  13,   0,   2,  -7,
-          0,   0,   0,   0,   0,   0,   0,   0
-    },{ //knight
-        -58, -38, -13, -28, -31, -27, -63, -99,
-        -25,  -8, -25,  -2,  -9, -25, -24, -52,
-        -24, -20,  10,   9,  -1,  -9, -19, -41,
-        -17,   3,  22,  22,  22,  11,   8, -18,
-        -18,  -6,  16,  25,  16,  17,   4, -18,
-        -23,  -3,  -1,  15,  10,  -3, -20, -22,
-        -42, -20, -10,  -5,  -2, -20, -23, -44,
-        -29, -51, -23, -15, -22, -18, -50, -64
-    },{ //bishop
-        -14, -21, -11,  -8, -7,  -9, -17, -24,
-         -8,  -4,   7, -12, -3, -13,  -4, -14,
-          2,  -8,   0,  -1, -2,   6,   0,   4,
-         -3,   9,  12,   9, 14,  10,   3,   2,
-         -6,   3,  13,  19,  7,  10,  -3,  -9,
-        -12,  -3,   8,  10, 13,   3,  -7, -15,
-        -14, -18,  -7,  -1,  4,  -9, -15, -27,
-        -23,  -9, -23,  -5, -9, -16,  -5, -17
-    },{ //rook
-        13, 10, 18, 15, 12,  12,   8,   5,
-        11, 13, 13, 11, -3,   3,   8,   3,
-         7,  7,  7,  5,  4,  -3,  -5,  -3,
-         4,  3, 13,  1,  2,   1,  -1,   2,
-         3,  5,  8,  4, -5,  -6,  -8, -11,
-        -4,  0, -5, -1, -7, -12,  -8, -16,
-        -6, -6,  0,  2, -9,  -9, -11,  -3,
-        -9,  2,  3, -1, -5, -13,   4, -20
-    },{ //queen
-         -9,  22,  22,  27,  27,  19,  10,  20,
-        -17,  20,  32,  41,  58,  25,  30,   0,
-        -20,   6,   9,  49,  47,  35,  19,   9,
-          3,  22,  24,  45,  57,  40,  57,  36,
-        -18,  28,  19,  47,  31,  34,  39,  23,
-        -16, -27,  15,   6,   9,  17,  10,   5,
-        -22, -23, -30, -16, -16, -23, -36, -32,
-        -33, -28, -22, -43,  -5, -32, -20, -41
-    },{ //king
-        -74, -35, -18, -18, -11,  15,   4, -17,
-        -12,  17,  14,  17,  17,  38,  23,  11,
-         10,  17,  23,  15,  20,  45,  44,  13,
-         -8,  22,  24,  27,  26,  33,  26,   3,
-        -18,  -4,  21,  24,  27,  23,   9, -11,
-        -19,  -3,  11,  21,  23,  16,   7,  -9,
-        -27, -11,   4,  13,  14,   4,  -5, -17,
-        -53, -34, -21, -11, -28, -14, -24, -43
-    }
+const EvalScore PST[6][64] = {
+{
+    {   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},
+    {  98, 178},{ 134, 173},{  61, 158},{  95, 134},{  68, 147},{ 126, 132},{  34, 165},{ -11, 187},
+    {  -6,  94},{   7, 100},{  26,  85},{  31,  67},{  65,  56},{  56,  53},{  25,  82},{ -20,  84},
+    { -14,  32},{  13,  24},{   6,  13},{  21,   5},{  23,  -2},{  12,   4},{  17,  17},{ -23,  17},
+    { -27,  13},{  -2,   9},{  -5,  -3},{  12,  -7},{  17,  -7},{   6,  -8},{  10,   3},{ -25,  -1},
+    { -26,   4},{  -4,   7},{  -4,  -6},{ -10,   1},{   3,   0},{   3,  -5},{  33,  -1},{ -12,  -8},
+    { -35,  13},{  -1,   8},{ -20,   8},{ -23,  10},{ -15,  13},{  24,   0},{  38,   2},{ -22,  -7},
+    {   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0}
+},
+{
+    {-167, -58},{ -89, -38},{ -34, -13},{ -49, -28},{  61, -31},{ -97, -27},{ -15, -63},{-107, -99},
+    { -73, -25},{ -41,  -8},{  72, -25},{  36,  -2},{  23,  -9},{  62, -25},{   7, -24},{ -17, -52},
+    { -47, -24},{  60, -20},{  37,  10},{  65,   9},{  84,  -1},{ 129,  -9},{  73, -19},{  44, -41},
+    {  -9, -17},{  17,   3},{  19,  22},{  53,  22},{  37,  22},{  69,  11},{  18,   8},{  22, -18},
+    { -13, -18},{   4,  -6},{  16,  16},{  13,  25},{  28,  16},{  19,  17},{  21,   4},{  -8, -18},
+    { -23, -23},{  -9,  -3},{  12,  -1},{  10,  15},{  19,  10},{  17,  -3},{  25, -20},{ -16, -22},
+    { -29, -42},{ -53, -20},{ -12, -10},{  -3,  -5},{  -1,  -2},{  18, -20},{ -14, -23},{ -19, -44},
+    {-105, -29},{ -21, -51},{ -58, -23},{ -33, -15},{ -17, -22},{ -28, -18},{ -19, -50},{ -23, -64}
+},
+{
+    { -29, -14},{   4, -21},{ -82, -11},{ -37,  -8},{ -25,  -7},{ -42,  -9},{   7, -17},{  -8, -24},
+    { -26,  -8},{  16,  -4},{ -18,   7},{ -13, -12},{  30,  -3},{  59, -13},{  18,  -4},{ -47, -14},
+    { -16,   2},{  37,  -8},{  43,   0},{  40,  -1},{  35,  -2},{  50,   6},{  37,   0},{  -2,   4},
+    {  -4,  -3},{   5,   9},{  19,  12},{  50,   9},{  37,  14},{  37,  10},{   7,   3},{  -2,   2},
+    {  -6,  -6},{  13,   3},{  13,  13},{  26,  19},{  34,   7},{  12,  10},{  10,  -3},{   4,  -9},
+    {   0, -12},{  15,  -3},{  15,   8},{  15,  10},{  14,  13},{  27,   3},{  18,  -7},{  10, -15},
+    {   4, -14},{  15, -18},{  16,  -7},{   0,  -1},{   7,   4},{  21,  -9},{  33, -15},{   1, -27},
+    { -33, -23},{  -3,  -9},{ -14, -23},{ -21,  -5},{ -13,  -9},{ -12, -16},{ -39,  -5},{ -21, -17}
+},
+{
+    {  32,  13},{  42,  10},{  32,  18},{  51,  15},{  63,  12},{   9,  12},{  31,   8},{  43,   5},
+    {  27,  11},{  32,  13},{  58,  13},{  62,  11},{  80,  -3},{  67,   3},{  26,   8},{  44,   3},
+    {  -5,   7},{  19,   7},{  26,   7},{  36,   5},{  17,   4},{  45,  -3},{  61,  -5},{  16,  -3},
+    { -24,   4},{ -11,   3},{   7,  13},{  26,   1},{  24,   2},{  35,   1},{  -8,  -1},{ -20,   2},
+    { -36,   3},{ -26,   5},{ -12,   8},{  -1,   4},{   9,  -5},{  -7,  -6},{   6,  -8},{ -23, -11},
+    { -45,  -4},{ -25,   0},{ -16,  -5},{ -17,  -1},{   3,  -7},{   0, -12},{  -5,  -8},{ -33, -16},
+    { -44,  -6},{ -16,  -6},{ -20,   0},{  -9,   2},{  -1,  -9},{  11,  -9},{  -6, -11},{ -71,  -3},
+    { -19,  -9},{ -13,   2},{   1,   3},{  17,  -1},{  16,  -5},{   7, -13},{ -37,   4},{ -26, -20}
+},
+{
+    { -28,  -9},{   0,  22},{  29,  22},{  12,  27},{  59,  27},{  44,  19},{  43,  10},{  45,  20},
+    { -24, -17},{ -39,  20},{  -5,  32},{   1,  41},{ -16,  58},{  57,  25},{  28,  30},{  54,   0},
+    { -13, -20},{ -17,   6},{   7,   9},{   8,  49},{  29,  47},{  56,  35},{  47,  19},{  57,   9},
+    { -27,   3},{ -27,  22},{ -16,  24},{ -16,  45},{  -1,  57},{  17,  40},{  -2,  57},{   1,  36},
+    {  -9, -18},{ -26,  28},{  -9,  19},{ -10,  47},{  -2,  31},{  -4,  34},{   3,  39},{  -3,  23},
+    { -14, -16},{   2, -27},{ -11,  15},{  -2,   6},{  -5,   9},{   2,  17},{  14,  10},{   5,   5},
+    { -35, -22},{  -8, -23},{  11, -30},{   2, -16},{   8, -16},{  15, -23},{  -3, -36},{   1, -32},
+    {  -1, -33},{ -18, -28},{  -9, -22},{  10, -43},{ -15,  -5},{ -25, -32},{ -31, -20},{ -50, -41}
+},
+{
+    { -65, -74},{  23, -35},{  16, -18},{ -15, -18},{ -56, -11},{ -34,  15},{   2,   4},{  13, -17},
+    {  29, -12},{  -1,  17},{ -20,  14},{  -7,  17},{  -8,  17},{  -4,  38},{ -38,  23},{ -29,  11},
+    {  -9,  10},{  24,  17},{   2,  23},{ -16,  15},{ -20,  20},{   6,  45},{  22,  44},{ -22,  13},
+    { -17,  -8},{ -20,  22},{ -12,  24},{ -27,  27},{ -30,  26},{ -25,  33},{ -14,  26},{ -36,   3},
+    { -49, -18},{  -1,  -4},{ -27,  21},{ -39,  24},{ -46,  27},{ -44,  23},{ -33,   9},{ -51, -11},
+    { -14, -19},{ -14,  -3},{ -22,  11},{ -46,  21},{ -44,  23},{ -30,  16},{ -15,   7},{ -27,  -9},
+    {   1, -27},{   7, -11},{  -8,   4},{ -64,  13},{ -43,  14},{ -16,   4},{   9,  -5},{   8, -17},
+    { -15, -53},{  36, -34},{  12, -21},{ -54, -11},{   8, -28},{ -28, -14},{  24, -24},{  14, -43}
+}
 };
 
 EvalScore   pawnShieldBonus       = {5,-3};
@@ -467,21 +415,12 @@ ScoreType   blockedBishop3       = -50;
 ScoreType   returningBishopBonus =  16;
 ScoreType   blockedRookByKing    = -22;
 
-ScoreType MOB[6][29] = { {0,0,0,0},
-                         {-22,41,49,45,56,50,47,49,46},
-                         {-11,5,11,15,12,24,19,21,23,18,21,31,36,38,40},
-                         {15,21,26,30,23,30,37,46,45,49,66,65,73,67,44},
-                         {-8,1,12,16,29,37,36,36,35,39,40,37,31,35,35,27,32,35,35,38,41,43,46,48,49,50,51,52,53},
-                         {20,3,3,-2,-16,-42,-14,-34,3} };
-
-ScoreType MOBEG[6][29] = { {0,0,0,0},
-                           {-22,-15,7,19,12,18,20,23,22},
-                           {-18,-8,-1,11,25,26,33,42,40,40,39,33,36,38,40},
-                           {-20,-4,25,31,56,55,56,59,68,68,68,73,75,83,89},
-                           {-19,-18,-16,-14,-12,-10,0,3,6,9,12,15,19,23,26,33,32,39,41,44,42,47,46,48,49,50,51,52,53},
-                           {-20,-3,9,35,50,69,57,66,63} };
-
-EvalScore QMOB[29] = {{-70,-70},{-50,-50},{-16,-16},{25,-14},{41,-19},{35,-24},{28,2},{26,3},{25,9},{28,26},{23,24},{29,20},{32,22},{29,30},{30,32},{27,32},{30,29},{39,36},{41,41},{44,44},{42,42},{47,47},{46,46},{48,48},{49,49},{50,50},{51,51},{52,52},{53,53}};
+EvalScore MOB[6][29] = { {{0,0},{0,0},{0,0},{0,0}},
+                         {{-22,-22},{41,-15},{49,7},{45,19},{56,12},{50,18},{47,20},{49,23},{46,22}},
+                         {{-11,-18},{5,-8},{11,-1},{15,11},{12,25},{24,26},{19,33},{21,42},{23,40},{18,40},{21,39},{31,33},{36,36},{38,38},{40,40}},
+                         {{15,-20},{21,-4},{26,25},{30,31},{23,56},{30,55},{37,56},{46,59},{45,68},{49,68},{66,68},{65,73},{73,75},{67,83},{44,89}},
+                         {{-8,-19},{1,-18},{12,-16},{16,-14},{29,-12},{37,-10},{36,0},{36,3},{35,6},{39,9},{40,12},{37,15},{31,19},{35,23},{35,26},{27,33},{32,32},{35,39},{35,41},{38,44},{41,42},{43,47},{46,46},{48,49},{49,50},{50,50},{51,51},{52,52},{53,53}},
+                         {{20,-20},{3,-3},{3,9},{-2,35},{-16,50},{-42,69},{-14,57},{-34,66},{3,63} } };
 
 ScoreType kingAttMax    = 284;
 ScoreType kingAttTrans  = 31;
@@ -751,13 +690,7 @@ template<Color C> inline constexpr BitBoard pawnBackward(BitBoard own, BitBoard 
 template<Color C> inline constexpr BitBoard pawnStraggler(BitBoard own, BitBoard opp, BitBoard own_backwards) { return own_backwards & pawnSemiOpen<C>(own, opp) & (C ? 0x00ffff0000000000ull : 0x0000000000ffff00ull);}
 template<Color C> inline constexpr BitBoard pawnForwardCoverage(BitBoard bb) { BitBoard spans = frontSpan<C>(bb); return spans | _shiftEast(spans) | _shiftWest(spans);}
 template<Color C> inline constexpr BitBoard pawnPassed(BitBoard own, BitBoard opp) { return own & ~pawnForwardCoverage<~C>(opp);}
-template<Color C> inline constexpr BitBoard pawnCandidates(BitBoard own, BitBoard opp) {
-    const BitBoard opp_double_attacks = pawnDoubleAttacks<~C>(opp);
-    const BitBoard opp_single_attacks = pawnSingleAttacks<~C>(opp);
-    const BitBoard own_double_attacks = pawnDoubleAttacks<C>(own);
-    const BitBoard own_single_attacks = pawnSingleAttacks<C>(own);
-    return pawnSemiOpen<C>(own, opp) & shiftN<~C>((own_single_attacks & opp_single_attacks) | (own_double_attacks & opp_double_attacks));
-}
+template<Color C> inline constexpr BitBoard pawnCandidates(BitBoard own, BitBoard opp) { return pawnSemiOpen<C>(own, opp) & shiftN<~C>((pawnSingleAttacks<C>(own) & pawnSingleAttacks<~C>(opp)) | (pawnDoubleAttacks<C>(own) & pawnDoubleAttacks<~C>(opp)));}
 
 int ranks[512];
 struct Mask {
@@ -2511,7 +2444,7 @@ bool sameMove(const Move & a, const Move & b) { return (a & 0x0000FFFF) == (b & 
 
 struct MoveSorter{
 
-    MoveSorter(const ThreadContext & context, const Position & p, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL):context(context),p(p),useSEE(useSEE),isInCheck(isInCheck),e(e){ assert(e==0||e->h!=0||e->m==INVALIDMOVE); }
+    MoveSorter(const ThreadContext & context, const Position & p, float gp, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL):context(context),p(p),gp(gp),useSEE(useSEE),isInCheck(isInCheck),e(e){ assert(e==0||e->h!=0||e->m==INVALIDMOVE); }
 
     void computeScore(Move & m)const{
         const MType  t    = Move2Type(m);
@@ -2531,7 +2464,7 @@ struct MoveSorter{
             else if (p.lastMove!=INVALIDMOVE && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 1300;
             else s += context.historyT.history[getPieceIndex(p, from)][to];
             const bool isWhite = (p.allPieces[Co_White] & SquareToBitboard(from)) != 0ull;
-            s += EvalConfig::PST[getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - EvalConfig::PST[getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from];
+            s += ScaleScore(EvalConfig::PST[getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - EvalConfig::PST[getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from],gp);
         }
         m = ToMove(from, to, t, s);
     }
@@ -2543,10 +2476,11 @@ struct MoveSorter{
     const ThreadContext & context;
     const bool useSEE;
     const bool isInCheck;
+    float gp;
 };
 
-void sort(const ThreadContext & context, MoveList & moves, const Position & p, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL){
-    const MoveSorter ms(context,p,useSEE,isInCheck,e);
+void sort(const ThreadContext & context, MoveList & moves, const Position & p, float gp, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL){
+    const MoveSorter ms(context,p,gp,useSEE,isInCheck,e);
     for(auto it = moves.begin() ; it != moves.end() ; ++it){ ms.computeScore(*it); }
     std::sort(moves.begin(),moves.end(),ms);
 }
@@ -2576,7 +2510,7 @@ double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f,
 void initEval(){ for(int i = 0; i < 64; i++){ EvalConfig::kingAttTable[i] = (int) sigmoid(i,EvalConfig::kingAttMax,EvalConfig::kingAttTrans,EvalConfig::kingAttScale,EvalConfig::kingAttOffset); } } // idea taken from Topple
 
 struct ScoreAcc{
-    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_MOB, sc_QMOB, sc_ATT, sc_Pwn, sc_PwnShield, sc_PwnPassed, sc_PwnIsolated, sc_PwnDoubled, sc_PwnBackward, sc_PwnCandidate, sc_PwnPush, sc_Blocked, sc_Adjust, sc_OpenFile, sc_EndGame, sc_Exchange, sc_Tempo, sc_max };
+    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_MOB, sc_ATT, sc_Pwn, sc_PwnShield, sc_PwnPassed, sc_PwnIsolated, sc_PwnDoubled, sc_PwnBackward, sc_PwnCandidate, sc_PwnPush, sc_Blocked, sc_Adjust, sc_OpenFile, sc_EndGame, sc_Exchange, sc_Tempo, sc_max };
     float scalingFactor = 1;
     EvalScore scores[sc_max];
     ScoreType Score(const Position &p, float gp){
@@ -2585,7 +2519,7 @@ struct ScoreAcc{
         return ScoreType(ScaleScore(sc,gp)*scalingFactor*std::min(1.f,(110-p.fifty)/100.f));
     }
     void Display(const Position &p, float gp){
-        static const std::string scNames[sc_max] = { "Mat", "PST", "MOB", "QMOB", "Att", "Pwn", "PwnShield", "PwnPassed", "PwnIsolated", "PwnDoubled", "PwnBackward", "PwnCandidate", "PwnPush", "Blocked", "Adjust", "OpenFile", "EndGame", "Exchange", "Tempo"};
+        static const std::string scNames[sc_max] = { "Mat", "PST", "MOB", "Att", "Pwn", "PwnShield", "PwnPassed", "PwnIsolated", "PwnDoubled", "PwnBackward", "PwnCandidate", "PwnPush", "Blocked", "Adjust", "OpenFile", "EndGame", "Exchange", "Tempo"};
         EvalScore sc;
         for(int k = 0 ; k < sc_max ; ++k){
             Logging::LogIt(Logging::logInfo) << scNames[k] << "       " << scores[k][MG];
@@ -2617,22 +2551,17 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, ScoreAcc & s
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
         const Square kk = ColorSquarePstHelper<C>(k);
-        score.scores[ScoreAcc::sc_PST][MG] += ColorSignHelper<C>()*EvalConfig::PST  [T-1][kk];
-        score.scores[ScoreAcc::sc_PST][EG] += ColorSignHelper<C>()*EvalConfig::PSTEG[T-1][kk];
+        score.scores[ScoreAcc::sc_PST] += EvalConfig::PST[T-1][kk] * ColorSignHelper<C>();
         const BitBoard target = pf[T-1](k, p.occupancy ^ p.pieces<T>(C), p.c); // aligned threats of same piece type also taken into account ///@todo better?
         danger[C]  -= countBit(target & kingZone[C])  * EvalConfig::kingAttWeight[EvalConfig::katt_defence][T];
         danger[~C] += countBit(target & kingZone[~C]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][T];
-        const BitBoard curAtt = target & ~p.allPieces[C];
-        att |= curAtt;
-        const ScoreType n = countBit(curAtt);
-        score.scores[ScoreAcc::sc_MOB][MG] += ColorSignHelper<C>()*EvalConfig::MOB  [T-1][n];
-        score.scores[ScoreAcc::sc_MOB][EG] += ColorSignHelper<C>()*EvalConfig::MOBEG[T-1][n];
+        att |= target /*& ~p.allPieces[C]*/;
     }
 }
 
-template < Color C>
-inline void evalQueenSafeMob(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, BitBoard (& att)[2]){
-    while (pieceBBiterator) score.scores[ScoreAcc::sc_QMOB] += EvalConfig::QMOB[countBit(pf[P_wq-1](BB::popBit(pieceBBiterator), p.occupancy, p.c) & ~att[~C])]*ColorSignHelper<C>();
+template < Piece T ,Color C>
+inline void evalMob(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, BitBoard (& att)[2]){
+    while (pieceBBiterator){ score.scores[ScoreAcc::sc_MOB] += EvalConfig::MOB[T-1][countBit(pf[T-1](BB::popBit(pieceBBiterator), p.occupancy, p.c) & ~att[~C])]*ColorSignHelper<C>();}
 }
 
 #define ONEPERCENT 0.01f
@@ -2656,18 +2585,12 @@ inline void evalPawnPasser(const Position & p, BitBoard pieceBBiterator, ScoreAc
 
 template< Color C>
 inline void evalPawnBackward(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score){
-    while (pieceBBiterator) {
-        const Square k = BB::popBit(pieceBBiterator);
-        score.scores[ScoreAcc::sc_PwnBackward] -= EvalConfig::backwardPawnMalus[(BB::mask[k].file & p.pieces<P_wp>(~C))==0ull] * ColorSignHelper<C>();
-    }
+    while (pieceBBiterator) { score.scores[ScoreAcc::sc_PwnBackward] -= EvalConfig::backwardPawnMalus[(BB::mask[BB::popBit(pieceBBiterator)].file & p.pieces<P_wp>(~C))==0ull] * ColorSignHelper<C>();}
 }
 
 template< Color C>
 inline void evalPawnCandidate(BitBoard pieceBBiterator, ScoreAcc & score){
-    while (pieceBBiterator) {
-        const Square k = BB::popBit(pieceBBiterator);
-        score.scores[ScoreAcc::sc_PwnCandidate] += EvalConfig::candidate[ColorRank<C>(k)] * ColorSignHelper<C>();
-    }
+    while (pieceBBiterator) { score.scores[ScoreAcc::sc_PwnCandidate] += EvalConfig::candidate[ColorRank<C>(BB::popBit(pieceBBiterator))] * ColorSignHelper<C>();}
 }
 
 template< Color C>
@@ -2677,7 +2600,6 @@ inline void evalPawnDanger(const Position & p, const BitBoard (& att)[2], ScoreT
 }
 
 ///@todo reward safe checks
-///@todo threat on the queen
 ///@todo storm
 ///@todo pawn hash table
 
@@ -2726,7 +2648,7 @@ ScoreType eval(const Position & p, float & gp ){
     const BitBoard openFiles        =  BB::openFiles(pawns[Co_White],pawns[Co_Black]);
     const BitBoard candidates[2]    = {BB::pawnCandidates<Co_White>(pawns[Co_White],pawns[Co_Black]),BB::pawnCandidates<Co_Black>(pawns[Co_Black],pawns[Co_White])};
 
-    // PST, mobility, king zone attack, passer, for white
+    // PST, king zone attack, passer
     evalPiece<P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),score,att[Co_White],danger);
     evalPiece<P_wb,Co_White>(p,p.pieces<P_wb>(Co_White),score,att[Co_White],danger);
     evalPiece<P_wr,Co_White>(p,p.pieces<P_wr>(Co_White),score,att[Co_White],danger);
@@ -2738,12 +2660,20 @@ ScoreType eval(const Position & p, float & gp ){
     evalPiece<P_wq,Co_Black>(p,p.pieces<P_wq>(Co_Black),score,att[Co_Black],danger);
     evalPiece<P_wk,Co_Black>(p,p.pieces<P_wk>(Co_Black),score,att[Co_Black],danger);
 
-    att[Co_White] |= (pawnTargets[Co_White] & ~p.allPieces[Co_White]);
-    att[Co_Black] |= (pawnTargets[Co_Black] & ~p.allPieces[Co_Black]);
+    att[Co_White] |= (pawnTargets[Co_White] /*& ~p.allPieces[Co_White]*/);
+    att[Co_Black] |= (pawnTargets[Co_Black] /*& ~p.allPieces[Co_Black]*/);
 
-    // queen safe mobility
-    evalQueenSafeMob<Co_White>(p,p.pieces<P_wq>(Co_White),score,att);
-    evalQueenSafeMob<Co_Black>(p,p.pieces<P_wq>(Co_Black),score,att);
+    // safe mobility
+    evalMob<P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),score,att);
+    evalMob<P_wb,Co_White>(p,p.pieces<P_wb>(Co_White),score,att);
+    evalMob<P_wr,Co_White>(p,p.pieces<P_wr>(Co_White),score,att);
+    evalMob<P_wq,Co_White>(p,p.pieces<P_wq>(Co_White),score,att);
+    evalMob<P_wk,Co_White>(p,p.pieces<P_wk>(Co_White),score,att);
+    evalMob<P_wn,Co_Black>(p,p.pieces<P_wn>(Co_Black),score,att);
+    evalMob<P_wb,Co_Black>(p,p.pieces<P_wb>(Co_Black),score,att);
+    evalMob<P_wr,Co_Black>(p,p.pieces<P_wr>(Co_Black),score,att);
+    evalMob<P_wq,Co_Black>(p,p.pieces<P_wq>(Co_Black),score,att);
+    evalMob<P_wk,Co_Black>(p,p.pieces<P_wk>(Co_Black),score,att);
 
     // end game knowledge (helper or scaling)
     if ( safeMatEvaluator && gp < 0.3f ){
@@ -2925,7 +2855,7 @@ ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const
 
     MoveList moves;
     generate<GP_cap>(p,moves);
-    sort(*this,moves,p,true);
+    sort(*this,moves,p,gp,true);
 
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         Position p2 = p;
@@ -2983,7 +2913,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     MoveList moves;
     if ( isInCheck ) generate<GP_all>(p,moves);
     else             generate<GP_cap>(p,moves);
-    sort(*this,moves,p,qRoot||isInCheck,isInCheck,qRoot?&e:0); ///@todo only mvv-lva seems to lose elo
+    sort(*this,moves,p,gp,qRoot||isInCheck,isInCheck,qRoot?&e:0); ///@todo only mvv-lva seems to lose elo
 
     const ScoreType alphaInit = alpha;
 
@@ -3146,7 +3076,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
           int probCutCount = 0;
           const ScoreType betaPC = beta + StaticConfig::probCutMargin;
           generate<GP_cap>(p,moves);
-          sort(*this,moves,p,true,isInCheck,&e);
+          sort(*this,moves,p,gp,true,isInCheck,&e);
           capMoveGenerated = true;
           for (auto it = moves.begin() ; it != moves.end() && probCutCount < StaticConfig::probCutMaxMoves; ++it){
             if ( (e.h != 0 && sameMove(e.m, *it)) || isBadCap(*it) ) continue; // skip TT move if quiet or bad captures
@@ -3249,7 +3179,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if (capMoveGenerated) generate<GP_quiet>(p, moves, true);
         else                  generate<GP_all>  (p, moves, false);
         if (moves.empty()) return isInCheck ? -MATE + ply : 0;
-    /*if ( isMainThread() )*/ sort(*this, moves, p,true, isInCheck, &e);
+    /*if ( isMainThread() )*/ sort(*this, moves, p, gp, true, isInCheck, &e);
     //else std::random_shuffle(moves.begin(),moves.end());
     }
 
