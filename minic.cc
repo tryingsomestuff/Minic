@@ -34,13 +34,13 @@ typedef uint64_t u_int64_t;
 //#define WITH_SYZYGY
 //#define WITH_UCI
 
-const std::string MinicVersion = "0.77";
+const std::string MinicVersion = "dev";
 
 /*
 //todo
 -Root move ordering
--Candidate
 -test more extension
+-queen safety
 */
 
 #define STOPSCORE   ScoreType(-20000)
@@ -442,6 +442,7 @@ EvalScore   kingNearPassedPawn    = { -7,12};
 EvalScore   doublePawnMalus[2]    = {{ 21,11 },{-5,30 }};
 EvalScore   isolatedPawnMalus[2]  = {{ 13, 6 },{33, 9 }};
 EvalScore   backwardPawnMalus[2]  = {{  3, 6 },{18, 0 }};
+EvalScore   candidate[8]          = { {0, 0}, {-30,11}, {-16,0}, {16,6}, { 24,51}, {-11,14}, {-11,14}, {0, 0} };
 EvalScore   protectedPasserFactor = { 8,12}; // 1XX%
 EvalScore   freePasserFactor      = {38,44}; // 1XX%
 
@@ -479,6 +480,8 @@ ScoreType MOBEG[6][29] = { {0,0,0,0},
                            {-20,-4,25,31,56,55,56,59,68,68,68,73,75,83,89},
                            {-19,-18,-16,-14,-12,-10,0,3,6,9,12,15,19,23,26,33,32,39,41,44,42,47,46,48,49,50,51,52,53},
                            {-20,-3,9,35,50,69,57,66,63} };
+
+EvalScore QMOB[29] = {{-70,-70},{-50,-50},{-16,-16},{25,-14},{41,-19},{35,-24},{28,2},{26,3},{25,9},{28,26},{23,24},{29,20},{32,22},{29,30},{30,32},{27,32},{30,29},{39,36},{41,41},{44,44},{42,42},{47,47},{46,46},{48,48},{49,49},{50,50},{51,51},{52,52},{53,53}};
 
 ScoreType kingAttMax    = 284;
 ScoreType kingAttTrans  = 31;
@@ -2573,7 +2576,7 @@ double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f,
 void initEval(){ for(int i = 0; i < 64; i++){ EvalConfig::kingAttTable[i] = (int) sigmoid(i,EvalConfig::kingAttMax,EvalConfig::kingAttTrans,EvalConfig::kingAttScale,EvalConfig::kingAttOffset); } } // idea taken from Topple
 
 struct ScoreAcc{
-    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_MOB, sc_ATT, sc_Pwn, sc_PwnShield, sc_PwnPassed, sc_PwnIsolated, sc_PwnDoubled, sc_PwnBackward, sc_PwnPush, sc_Blocked, sc_Adjust, sc_OpenFile, sc_EndGame, sc_Exchange, sc_Tempo, sc_max };
+    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_MOB, sc_QMOB, sc_ATT, sc_Pwn, sc_PwnShield, sc_PwnPassed, sc_PwnIsolated, sc_PwnDoubled, sc_PwnBackward, sc_PwnCandidate, sc_PwnPush, sc_Blocked, sc_Adjust, sc_OpenFile, sc_EndGame, sc_Exchange, sc_Tempo, sc_max };
     float scalingFactor = 1;
     EvalScore scores[sc_max];
     ScoreType Score(const Position &p, float gp){
@@ -2582,7 +2585,7 @@ struct ScoreAcc{
         return ScoreType(ScaleScore(sc,gp)*scalingFactor*std::min(1.f,(110-p.fifty)/100.f));
     }
     void Display(const Position &p, float gp){
-        static const std::string scNames[sc_max] = { "Mat", "PST", "MOB", "Att", "Pwn", "PwnShield", "PwnPassed", "PwnIsolated", "PwnDoubled", "PwnBackward", "PwnPush", "Blocked", "Adjust", "OpenFile", "EndGame", "Exchange", "Tempo"};
+        static const std::string scNames[sc_max] = { "Mat", "PST", "MOB", "QMOB", "Att", "Pwn", "PwnShield", "PwnPassed", "PwnIsolated", "PwnDoubled", "PwnBackward", "PwnCandidate", "PwnPush", "Blocked", "Adjust", "OpenFile", "EndGame", "Exchange", "Tempo"};
         EvalScore sc;
         for(int k = 0 ; k < sc_max ; ++k){
             Logging::LogIt(Logging::logInfo) << scNames[k] << "       " << scores[k][MG];
@@ -2622,10 +2625,14 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, ScoreAcc & s
         const BitBoard curAtt = target & ~p.allPieces[C];
         att |= curAtt;
         const ScoreType n = countBit(curAtt);
-        ///@todo fuse
         score.scores[ScoreAcc::sc_MOB][MG] += ColorSignHelper<C>()*EvalConfig::MOB  [T-1][n];
         score.scores[ScoreAcc::sc_MOB][EG] += ColorSignHelper<C>()*EvalConfig::MOBEG[T-1][n];
     }
+}
+
+template < Color C>
+inline void evalQueenSafeMob(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, BitBoard (& att)[2]){
+    while (pieceBBiterator) score.scores[ScoreAcc::sc_QMOB] += EvalConfig::QMOB[countBit(pf[P_wq-1](BB::popBit(pieceBBiterator), p.occupancy, p.c) & ~att[~C])]*ColorSignHelper<C>();
 }
 
 #define ONEPERCENT 0.01f
@@ -2652,6 +2659,14 @@ inline void evalPawnBackward(const Position & p, BitBoard pieceBBiterator, Score
     while (pieceBBiterator) {
         const Square k = BB::popBit(pieceBBiterator);
         score.scores[ScoreAcc::sc_PwnBackward] -= EvalConfig::backwardPawnMalus[(BB::mask[k].file & p.pieces<P_wp>(~C))==0ull] * ColorSignHelper<C>();
+    }
+}
+
+template< Color C>
+inline void evalPawnCandidate(BitBoard pieceBBiterator, ScoreAcc & score){
+    while (pieceBBiterator) {
+        const Square k = BB::popBit(pieceBBiterator);
+        score.scores[ScoreAcc::sc_PwnCandidate] += EvalConfig::candidate[ColorRank<C>(k)] * ColorSignHelper<C>();
     }
 }
 
@@ -2707,8 +2722,9 @@ ScoreType eval(const Position & p, float & gp ){
     const BitBoard backward[2]      = {BB::pawnBackward<Co_White>(pawns[Co_White],pawns[Co_Black]), BB::pawnBackward<Co_Black>(pawns[Co_Black],pawns[Co_White])};
     const BitBoard isolated[2]      = {BB::pawnIsolated(pawns[Co_White]), BB::pawnIsolated(pawns[Co_Black])};
     const BitBoard doubled[2]       = {BB::pawnDoubled<Co_White>(pawns[Co_White]), BB::pawnDoubled<Co_Black>(pawns[Co_White])};
-    const BitBoard semiOpenFiles[2] ={BB::pawnSemiOpen<Co_White>(pawns[Co_White],pawns[Co_Black]),BB::pawnSemiOpen<Co_Black>(pawns[Co_Black],pawns[Co_White])};
-    const BitBoard openFiles        = BB::openFiles(pawns[Co_White],pawns[Co_Black]);
+    const BitBoard semiOpenFiles[2] = {BB::pawnSemiOpen<Co_White>(pawns[Co_White],pawns[Co_Black]),BB::pawnSemiOpen<Co_Black>(pawns[Co_Black],pawns[Co_White])};
+    const BitBoard openFiles        =  BB::openFiles(pawns[Co_White],pawns[Co_Black]);
+    const BitBoard candidates[2]    = {BB::pawnCandidates<Co_White>(pawns[Co_White],pawns[Co_Black]),BB::pawnCandidates<Co_Black>(pawns[Co_Black],pawns[Co_White])};
 
     // PST, mobility, king zone attack, passer, for white
     evalPiece<P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),score,att[Co_White],danger);
@@ -2721,6 +2737,13 @@ ScoreType eval(const Position & p, float & gp ){
     evalPiece<P_wr,Co_Black>(p,p.pieces<P_wr>(Co_Black),score,att[Co_Black],danger);
     evalPiece<P_wq,Co_Black>(p,p.pieces<P_wq>(Co_Black),score,att[Co_Black],danger);
     evalPiece<P_wk,Co_Black>(p,p.pieces<P_wk>(Co_Black),score,att[Co_Black],danger);
+
+    att[Co_White] |= (pawnTargets[Co_White] & ~p.allPieces[Co_White]);
+    att[Co_Black] |= (pawnTargets[Co_Black] & ~p.allPieces[Co_Black]);
+
+    // queen safe mobility
+    evalQueenSafeMob<Co_White>(p,p.pieces<P_wq>(Co_White),score,att);
+    evalQueenSafeMob<Co_Black>(p,p.pieces<P_wq>(Co_Black),score,att);
 
     // end game knowledge (helper or scaling)
     if ( safeMatEvaluator && gp < 0.3f ){
@@ -2735,17 +2758,18 @@ ScoreType eval(const Position & p, float & gp ){
        else if ( ter == MaterialHash::Ter_MaterialDraw){ if ( !isAttacked(p,kingSquare(p)) ) return 0;} ///@todo also verify stalemate ?
     }
 
-    // pawn first pass
+    // pawn passer
     evalPawnPasser<Co_White>(p,passer[Co_White],score);
     evalPawnPasser<Co_Black>(p,passer[Co_Black],score);
-    att[Co_White] |= (pawnTargets[Co_White] & ~p.allPieces[Co_White]);
-    att[Co_Black] |= (pawnTargets[Co_Black] & ~p.allPieces[Co_Black]);
-    // pawn second pass
+    // pawn backward
     evalPawnBackward<Co_White>(p,backward[Co_White],score);
     evalPawnBackward<Co_Black>(p,backward[Co_Black],score);
-    // pawn third pass
+    // pawn danger
     evalPawnDanger<Co_White>(p,att,danger);
     evalPawnDanger<Co_Black>(p,att,danger);
+    // pawn candidate
+    evalPawnCandidate<Co_White>(candidates[Co_White],score);
+    evalPawnCandidate<Co_Black>(candidates[Co_Black],score);
 
     // open file near king
     danger[Co_White] += EvalConfig::kingAttOpenfile        * countBit(BB::mask[p.king[Co_White]].kingZone & openFiles) ;
