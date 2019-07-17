@@ -848,36 +848,20 @@ BitBoard isAttackedBB(const Position &p, const Square x, Color c) {
 }
 
 // generated incrementally to avoid expensive sorting after generation
-bool getAttackers(const Position & p, const Square x, SquareList & attakers) {
+template < Color C > bool getAttackers(const Position & p, const Square x, SquareList & attakers) {
     attakers.clear();
-    if (p.c == Co_White){
-        BitBoard att = attack<P_wb>(x, p.blackQueen(), p.occupancy);
-        while (att) attakers.push_back(popBit(att));
-        att = attack<P_wr>(x, p.blackQueen(), p.occupancy);
-        while (att) attakers.push_back(popBit(att));
-        att = attack<P_wr>(x, p.blackRook(), p.occupancy);
-        while (att) attakers.push_back(popBit(att));
-        att = attack<P_wb>(x, p.blackBishop(), p.occupancy);
-        while (att) attakers.push_back(popBit(att));
-        att = attack<P_wn>(x, p.blackKnight());
-        while (att) attakers.push_back(popBit(att));
-        att = attack<P_wp>(x, p.blackPawn(), p.occupancy, Co_White);
-        while (att) attakers.push_back(popBit(att));
-    }
-    else{
-        BitBoard att = attack<P_wb>(x, p.whiteQueen(), p.occupancy);
-        while (att) attakers.push_back(popBit(att));
-        att = attack<P_wr>(x, p.whiteQueen(), p.occupancy);
-        while (att) attakers.push_back(popBit(att));
-        att = attack<P_wr>(x, p.whiteRook(), p.occupancy);
-        while (att) attakers.push_back(popBit(att));
-        att = attack<P_wb>(x, p.whiteBishop(), p.occupancy);
-        while (att) attakers.push_back(popBit(att));
-        att = attack<P_wn>(x, p.whiteKnight());
-        while (att) attakers.push_back(popBit(att));
-        att = attack<P_wp>(x, p.whitePawn(), p.occupancy, Co_Black);
-        while (att) attakers.push_back(popBit(att));
-    }
+    BitBoard att = attack<P_wb>(x, p.pieces<P_wq>(~C), p.occupancy);
+    while (att) attakers.push_back(popBit(att));
+    att = attack<P_wr>(x, p.pieces<P_wq>(~C), p.occupancy);
+    while (att) attakers.push_back(popBit(att));
+    att = attack<P_wr>(x, p.pieces<P_wr>(~C), p.occupancy);
+    while (att) attakers.push_back(popBit(att));
+    att = attack<P_wb>(x, p.pieces<P_wb>(~C), p.occupancy);
+    while (att) attakers.push_back(popBit(att));
+    att = attack<P_wn>(x, p.pieces<P_wn>(~C));
+    while (att) attakers.push_back(popBit(att));
+    att = attack<P_wp>(x, p.pieces<P_wp>(~C), p.occupancy, C);
+    while (att) attakers.push_back(popBit(att));
     return !attakers.empty();
 }
 
@@ -2038,7 +2022,7 @@ int ThreadContext::getCurrentMoveMs() {
 inline Square kingSquare(const Position & p) { return p.king[p.c]; }
 inline Square oppKingSquare(const Position & p) { return p.king[~p.c]; }
 inline bool isAttacked(const Position & p, const Square k) { return k!=INVALIDSQUARE && BB::isAttackedBB(p, k, p.c) != 0ull;}
-inline bool getAttackers(const Position & p, const Square k, SquareList & attakers) { return k!=INVALIDSQUARE && BB::getAttackers(p, k, attakers);}
+inline bool getAttackers(const Position & p, const Square k, SquareList & attakers) { return k!=INVALIDSQUARE && (p.c==Co_White?BB::getAttackers<Co_White>(p, k, attakers):BB::getAttackers<Co_Black>(p, k, attakers));}
 
 enum GenPhase { GP_all = 0, GP_cap = 1, GP_quiet = 2 };
 
@@ -2386,15 +2370,7 @@ void initBook() {
 
 } // Book
 
-/*
-struct SortThreatsFunctor {
-    const Position & _p;
-    SortThreatsFunctor(const Position & p):_p(p){}
-    bool operator()(const Square s1,const Square s2) { return std::abs(getValue(_p,s1)) < std::abs(getValue(_p,s2));}
-};
-*/
-
-// Static Exchange Evaluation (cutoff version algorithm from stockfish)
+// Static Exchange Evaluation (cutoff version algorithm from Stockfish)
 bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold) const{
     // Only deal with normal moves
     //if (! isCapture(m)) return true;
@@ -2414,10 +2390,9 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
     bool endOfSEE = false;
     while (!endOfSEE){
         p2.c = ~p2.c;
-        bool threatsFound = getAttackers(p2, to, stmAttackers);
+        bool threatsFound = getAttackers(p2, to, stmAttackers); // already sorted in getAttackers
         p2.c = ~p2.c;
         if (!threatsFound) break;
-        //std::sort(stmAttackers.begin(),stmAttackers.end(),SortThreatsFunctor(p2)); // already sorted in getAttackers
         bool validThreatFound = false;
         unsigned int threatId = 0;
         while (!validThreatFound && threatId < stmAttackers.size()) {
@@ -2561,7 +2536,7 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, ScoreAcc & s
 
 template < Piece T ,Color C>
 inline void evalMob(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, BitBoard (& att)[2]){
-    while (pieceBBiterator){ score.scores[ScoreAcc::sc_MOB] += EvalConfig::MOB[T-1][countBit(pf[T-1](BB::popBit(pieceBBiterator), p.occupancy, p.c) & ~att[~C])]*ColorSignHelper<C>();}
+    while (pieceBBiterator){ score.scores[ScoreAcc::sc_MOB] += EvalConfig::MOB[T-1][countBit(pf[T-1](BB::popBit(pieceBBiterator), p.occupancy, p.c) & ~p.allPieces[C] /*& ~att[~C]*/)]*ColorSignHelper<C>();}
 }
 
 #define ONEPERCENT 0.01f
@@ -2602,6 +2577,7 @@ inline void evalPawnDanger(const Position & p, const BitBoard (& att)[2], ScoreT
 ///@todo reward safe checks
 ///@todo storm
 ///@todo pawn hash table
+///@todo hanging, pins
 
 template < bool display, bool safeMatEvaluator >
 ScoreType eval(const Position & p, float & gp ){
