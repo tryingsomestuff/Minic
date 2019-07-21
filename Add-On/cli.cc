@@ -101,6 +101,18 @@ int cliManagement(std::string cli, int argc, char ** argv){
         return 1;
     }
 
+    if (cli == "-see"){
+        Square from = INVALIDSQUARE;
+        Square to = INVALIDSQUARE;
+        MType mtype = T_std;
+        readMove(p,argv[3],from,to,mtype);
+        Move m = ToMove(from,to,mtype);
+        ScoreType t = atoi(argv[4]);
+        bool b = ThreadPool::instance().main().SEE(p,m,t);
+        Logging::LogIt(Logging::logInfo) << "SEE ? " << (b?"ok":"not");
+        return 1;
+    }
+
     if (cli == "-attacked") {
         Square k = Sq_e4;
         if (argc >= 3) k = atoi(argv[3]);
@@ -204,7 +216,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
         DepthType seldepth = 0;
         PVList pv;
         ThreadData d = {depth,seldepth/*dummy*/,s/*dummy*/,p,bestMove/*dummy*/,pv/*dummy*/}; // only input coef
-        ThreadPool::instance().searchSync(d);
+        ThreadPool::instance().search(d);
         bestMove = ThreadPool::instance().main().getData().best; // here output results
         s = ThreadPool::instance().main().getData().sc; // here output results
         pv = ThreadPool::instance().main().getData().pv; // here output results
@@ -228,7 +240,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
         DepthType seldepth = 0;
         PVList pv;
         ThreadData d = {depth,seldepth/*dummy*/,s/*dummy*/,p,bestMove/*dummy*/,pv/*dummy*/}; // only input coef
-        ThreadPool::instance().searchSync(d);
+        ThreadPool::instance().search(d);
         bestMove = ThreadPool::instance().main().getData().best; // here output results
         s = ThreadPool::instance().main().getData().sc; // here output results
         pv = ThreadPool::instance().main().getData().pv; // here output results

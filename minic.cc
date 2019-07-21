@@ -850,17 +850,20 @@ BitBoard isAttackedBB(const Position &p, const Square x, Color c) {
 // generated incrementally to avoid expensive sorting after generation
 template < Color C > bool getAttackers(const Position & p, const Square x, SquareList & attakers) {
     attakers.clear();
-    BitBoard att = attack<P_wb>(x, p.pieces<P_wq>(~C), p.occupancy);
-    while (att) attakers.push_back(popBit(att));
-    att = attack<P_wr>(x, p.pieces<P_wq>(~C), p.occupancy);
-    while (att) attakers.push_back(popBit(att));
-    att = attack<P_wr>(x, p.pieces<P_wr>(~C), p.occupancy);
-    while (att) attakers.push_back(popBit(att));
-    att = attack<P_wb>(x, p.pieces<P_wb>(~C), p.occupancy);
+    BitBoard att;
+    att = attack<P_wp>(x, p.pieces<P_wp>(~C), p.occupancy, C);
     while (att) attakers.push_back(popBit(att));
     att = attack<P_wn>(x, p.pieces<P_wn>(~C));
     while (att) attakers.push_back(popBit(att));
-    att = attack<P_wp>(x, p.pieces<P_wp>(~C), p.occupancy, C);
+    att = attack<P_wb>(x, p.pieces<P_wb>(~C), p.occupancy);
+    while (att) attakers.push_back(popBit(att));
+    att = attack<P_wr>(x, p.pieces<P_wr>(~C), p.occupancy);
+    while (att) attakers.push_back(popBit(att));
+    att = attack<P_wr>(x, p.pieces<P_wq>(~C), p.occupancy);
+    while (att) attakers.push_back(popBit(att));
+    attack<P_wb>(x, p.pieces<P_wq>(~C), p.occupancy);
+    while (att) attakers.push_back(popBit(att));
+    att = attack<P_wk>(x, p.pieces<P_wk>(~C), p.occupancy);
     while (att) attakers.push_back(popBit(att));
     return !attakers.empty();
 }
@@ -1390,8 +1393,7 @@ public:
     ~ThreadPool();
     void setup(unsigned int n);
     ThreadContext & main();
-    Move searchSync(const ThreadData & d);
-    void searchASync(const ThreadData & d);
+    Move search(const ThreadData & d);
     void startOthers();
     void wait(bool otherOnly = false);
     bool stop;
@@ -1472,6 +1474,7 @@ struct ThreadContext{
     PVList search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth);
     template< bool withRep = true, bool isPv = true, bool INR = true> MaterialHash::Terminaison interiorNodeRecognizer(const Position & p)const;
     bool isRep(const Position & p, bool isPv)const;
+    void displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv);
 
     void idleLoop(){
         while (true){
@@ -1499,7 +1502,7 @@ struct ThreadContext{
 
     void search(){
         Logging::LogIt(Logging::logInfo) << "Search launched " << id() ;
-        if ( isMainThread() ){ ThreadPool::instance().startOthers(); } // started but locked for now ...
+        if ( isMainThread() ){ ThreadPool::instance().startOthers(); } // started other threads but locked for now ...
         _data.pv = search(_data.p, _data.best, _data.depth, _data.sc, _data.seldepth);
     }
 
@@ -1558,7 +1561,7 @@ void ThreadPool::wait(bool otherOnly) {
     Logging::LogIt(Logging::logInfo) << "...ok";
 }
 
-Move ThreadPool::searchSync(const ThreadData & d){
+Move ThreadPool::search(const ThreadData & d){ // distribute data and call main thread search
     Logging::LogIt(Logging::logInfo) << "Search Sync" ;
     wait();
     ThreadContext::startLock.store(true);
@@ -1569,8 +1572,6 @@ Move ThreadPool::searchSync(const ThreadData & d){
     wait();
     return main().getData().best;
 }
-
-void ThreadPool::searchASync(const ThreadData & d){} ///@todo for pondering
 
 void ThreadPool::startOthers(){ for (auto s : *this) if (!(*s).isMainThread()) (*s).start();}
 
@@ -2022,7 +2023,7 @@ int ThreadContext::getCurrentMoveMs() {
 inline Square kingSquare(const Position & p) { return p.king[p.c]; }
 inline Square oppKingSquare(const Position & p) { return p.king[~p.c]; }
 inline bool isAttacked(const Position & p, const Square k) { return k!=INVALIDSQUARE && BB::isAttackedBB(p, k, p.c) != 0ull;}
-inline bool getAttackers(const Position & p, const Square k, SquareList & attakers) { return k!=INVALIDSQUARE && (p.c==Co_White?BB::getAttackers<Co_White>(p, k, attakers):BB::getAttackers<Co_Black>(p, k, attakers));}
+inline bool getAttackers(const Position & p, const Square k, SquareList & attakers, Color c) { return k!=INVALIDSQUARE && (c==Co_White?BB::getAttackers<Co_White>(p, k, attakers):BB::getAttackers<Co_Black>(p, k, attakers));}
 
 enum GenPhase { GP_all = 0, GP_cap = 1, GP_quiet = 2 };
 
@@ -2372,43 +2373,37 @@ void initBook() {
 
 // Static Exchange Evaluation (cutoff version algorithm from Stockfish)
 bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold) const{
-    // Only deal with normal moves
-    //if (! isCapture(m)) return true;
     const Square from = Move2From(m);
     const Square to   = Move2To(m);
+    if (getPieceType(p, to) == P_wk) return true; // capture king !
     const bool promPossible = (SQRANK(to) == 0 || SQRANK(to) == 7);
     Piece nextVictim  = getPieceType(p,from);
-    const Color us    = Colors[getPieceIndex(p,from)];
+    const Color us    = p.c;//Colors[getPieceIndex(p,from)];
     ScoreType balance = std::abs(getValue(p,to)) - threshold; // The opponent may be able to recapture so this is the best result we can hope for.
     if (balance < 0) return false;
     balance -= Values[nextVictim+PieceShift]; // Now assume the worst possible result: that the opponent can capture our piece for free.
     if (balance >= 0) return true;
-    if (getPieceType(p, to) == P_wk) return false; // capture king !
     Position p2 = p;
-    if (!apply(p2, m)) return false;
+    if (!apply(p2, m)) return false; // this shall not happend !
     SquareList stmAttackers;
     bool endOfSEE = false;
     while (!endOfSEE){
-        p2.c = ~p2.c;
-        bool threatsFound = getAttackers(p2, to, stmAttackers); // already sorted in getAttackers
-        p2.c = ~p2.c;
+        bool threatsFound = getAttackers(p2, to, stmAttackers, ~p2.c); // already sorted in getAttackers
         if (!threatsFound) break;
         bool validThreatFound = false;
         unsigned int threatId = 0;
         while (!validThreatFound && threatId < stmAttackers.size()) {
             const Square att = stmAttackers[threatId];
-            const bool prom = promPossible && getPieceType(p, att) == P_wp;
+            const Piece pp = getPieceType(p2, att);
+            const bool prom = promPossible && pp == P_wp;
             const Move mm = ToMove(att, to, prom ? T_cappromq : T_capture);
-            nextVictim = (Piece)(prom ? P_wq : getPieceType(p2,att)); // CAREFULL here :: we don't care black or white, always use abs(value) next !!!
-            if (nextVictim == P_wk) return false; // capture king !
+            nextVictim = (Piece)(prom ? P_wq : pp); // CAREFULL here :: we don't care black or white, always use abs(value) next !!!
             ++threatId;
+            if (getPieceType(p,to) == P_wk) return us == p2.c; // capture king !
             if ( ! apply(p2,mm) ) continue;
             validThreatFound = true;
             balance = -balance - 1 - Values[nextVictim+PieceShift];
-            if (balance >= 0) {
-                if (nextVictim == P_wk) p2.c = ~p2.c;
-                endOfSEE = true;
-            }
+            if (balance >= 0 && nextVictim != P_wk) endOfSEE = true;
         }
         if (!validThreatFound) endOfSEE = true;
     }
@@ -3252,6 +3247,19 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     return bestScore;
 }
 
+void ThreadContext::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv){
+    const int ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count());
+    std::stringstream str;
+    Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
+    if (Logging::ct == Logging::CT_xboard) {
+        str << int(depth) << " " << bestScore << " " << ms / 10 << " " << nodeCount << " ";
+        if (DynamicConfig::fullXboardOutput) str << (int)seldepth << " " << int(nodeCount / (ms / 1000.f) / 1000.) << " " << ThreadPool::instance().counter(Stats::sid_tthits) / 1000;
+        str << "\t" << ToString(pv);
+    }
+    else if (Logging::ct == Logging::CT_uci) { str << "info depth " << int(depth) << " score cp " << bestScore << " time " << ms << " nodes " << nodeCount << " nps " << int(nodeCount / (ms / 1000.f)) << " seldepth " << (int)seldepth << " tbhits " << ThreadPool::instance().counter(Stats::sid_tthits) << " pv " << ToString(pv); }
+    Logging::LogIt(Logging::logGUI) << str.str();
+}
+
 PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
     // a playing level feature for the poor ...
     ///@todo more things shall depend on level
@@ -3292,6 +3300,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
            m = pv[0];
            d = 0;
            sc = 0;
+           displayGUI(d,d,sc,pv);
            return pv;
        }
     }
@@ -3337,16 +3346,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         reachedDepth = depth;
         bestScore    = score;
         if ( isMainThread() ){
-            const int ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count());
-            std::stringstream str;
-            Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
-            if (Logging::ct == Logging::CT_xboard) {
-                str << int(depth) << " " << bestScore << " " << ms / 10 << " " << nodeCount << " ";
-                if (DynamicConfig::fullXboardOutput) str << (int)seldepth << " " << int(nodeCount / (ms / 1000.f) / 1000.) << " " << ThreadPool::instance().counter(Stats::sid_tthits) / 1000;
-                str << "\t" << ToString(pv);
-            }
-            else if (Logging::ct == Logging::CT_uci) { str << "info depth " << int(depth) << " score cp " << bestScore << " time " << ms << " nodes " << nodeCount << " nps " << int(nodeCount / (ms / 1000.f)) << " seldepth " << (int)seldepth << " tbhits " << ThreadPool::instance().counter(Stats::sid_tthits) << " pv " << ToString(pv); }
-            Logging::LogIt(Logging::logGUI) << str.str();
+            displayGUI(depth,seldepth,bestScore,pv);
             if (TimeMan::isDynamic && depth > MoveDifficultyUtil::emergencyMinDepth && bestScore < depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin) { moveDifficulty = MoveDifficultyUtil::MD_hardDefense; Logging::LogIt(Logging::logInfo) << "Emergency mode activated : " << bestScore << " < " << depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin; }
             if (TimeMan::isDynamic && std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()*1.8)) > getCurrentMoveMs()) { stopFlag = true; Logging::LogIt(Logging::logInfo) << "stopflag triggered, not enough time for next depth"; break; } // not enought time
             depthScores[depth] = bestScore;
@@ -3368,7 +3368,8 @@ pvsout:
 }
 
 namespace COM {
-    bool pondering; // currently pondering
+    enum State : unsigned char { st_pondering = 0, st_analyzing, st_searching, st_none };
+    State state; // redundant with Mode & Ponder...
     enum Ponder : unsigned char { p_off = 0, p_on = 1 };
     Ponder ponder;
     std::string command;
@@ -3380,8 +3381,10 @@ namespace COM {
     enum SideToMove : unsigned char { stm_white = 0, stm_black = 1 };
     SideToMove stm; ///@todo isn't this redundant with position.c ??
 
+    std::future<void> f;
+
     void newgame() {
-        mode = m_analyze;
+        mode = m_force;
         stm = stm_white;
         readFEN(startPosition, COM::position);
         TT::clearTT();
@@ -3390,7 +3393,7 @@ namespace COM {
     void init() {
         Logging::LogIt(Logging::logInfo) << "Init COM";
         ponder = p_off;
-        pondering = false;
+        state = st_none;
         depth = -1;
         newgame();
     }
@@ -3409,19 +3412,19 @@ namespace COM {
         return b;
     }
 
-    Move thinkUntilTimeUp() {
+    Move thinkUntilTimeUp(int forcedMs = -1) { // think and when threads stop searching, return best move
         Logging::LogIt(Logging::logInfo) << "Thinking... ";
         ScoreType score = 0;
         Move m = INVALIDMOVE;
         if (depth < 0) depth = MAX_DEPTH;
         Logging::LogIt(Logging::logInfo) << "depth          " << (int)depth;
-        ThreadContext::currentMoveMs = TimeMan::GetNextMSecPerMove(position);
+        ThreadContext::currentMoveMs = forcedMs <= 0 ? TimeMan::GetNextMSecPerMove(position) : forcedMs;
         Logging::LogIt(Logging::logInfo) << "currentMoveMs  " << ThreadContext::currentMoveMs;
         Logging::LogIt(Logging::logInfo) << ToString(position);
         DepthType seldepth = 0;
         PVList pv;
         const ThreadData d = { depth,seldepth/*dummy*/,score/*dummy*/,position,m/*dummy*/,pv/*dummy*/ }; // only input coef
-        ThreadPool::instance().searchSync(d);
+        ThreadPool::instance().search(d);
         m = ThreadPool::instance().main().getData().best; // here output results
         Logging::LogIt(Logging::logInfo) << "...done returning move " << ToString(m);
         return m;
@@ -3433,20 +3436,38 @@ namespace COM {
         return apply(position, m);
     }
 
-    void ponderUntilInput() {
-        Logging::LogIt(Logging::logInfo) << "Pondering... ";
-        ScoreType score = 0;
-        Move m = INVALIDMOVE;
-        depth = MAX_DEPTH;
-        DepthType seldepth = 0;
-        PVList pv;
-        const ThreadData d = { depth,seldepth,score,position,m,pv };
-        ThreadPool::instance().searchASync(d);
+    void thinkAsync(int forcedMs = -1) { // fork a future that runs a synchorous search, if needed send returned move to GUI
+        if ( COM::f.valid() ) COM::f.wait(); // to be sure ... wait for previous future to terminate before launching new one
+        f = std::async(std::launch::async, [forcedMs] {
+            COM::move = COM::thinkUntilTimeUp(forcedMs);
+            if (state == st_searching) {
+                if (COM::move == INVALIDMOVE) { COM::mode = COM::m_force; } // game ends
+                else {
+                    if (!COM::makeMove(COM::move, true, Logging::ct == Logging::CT_uci ? "bestmove" : "move")) {
+                        Logging::LogIt(Logging::logGUI) << "info string Bad computer move !";
+                        Logging::LogIt(Logging::logInfo) << ToString(COM::position);
+                        COM::mode = COM::m_force;
+                    }
+                    COM::stm = COM::opponent(COM::stm);
+                }
+            }
+            Logging::LogIt(Logging::logInfo) << "search async done";
+            state = st_none;
+        });
     }
 
-    void stop() { ThreadContext::stopFlag = true; }
+    void stop() {
+        Logging::LogIt(Logging::logInfo) << "stoping search";
+        ThreadContext::stopFlag = true;
+        Logging::LogIt(Logging::logInfo) << "wait for future to land ...";
+        if ( f.valid() ) f.wait(); // synchronous wait of current future
+        Logging::LogIt(Logging::logInfo) << "...ok future is terminated";
+        state = st_none;
+    }
 
-    void stopPonder() { if ((int)mode == (int)opponent(stm) && ponder == p_on && pondering) { pondering = false; stop(); } }
+    void stopPonder() {
+        if (state == st_pondering) { stop(); }
+    }
 
     Move moveFromCOM(std::string mstr) { // copy string on purpose
         mstr = trim(mstr);
@@ -3478,7 +3499,7 @@ void init(){
 void setFeature(){
     ///@todo more feature disable !!
     ///@todo use otime ?
-    Logging::LogIt(Logging::logGUI) << "feature ping=1 setboard=1 colors=0 usermove=1 memory=0 sigint=0 sigterm=0 otime=0 time=1 nps=0 myname=\"Minic " << MinicVersion << "\"";
+    Logging::LogIt(Logging::logGUI) << "feature ping=1 setboard=1 edit=0 colors=0 usermove=1 memory=0 sigint=0 sigterm=0 otim=0 time=1 nps=0 draw=0 playother=0 myname=\"Minic " << MinicVersion << "\"";
     Logging::LogIt(Logging::logGUI) << "feature done=1";
 }
 
@@ -3488,7 +3509,6 @@ bool receiveMove(const std::string & command){
     if (p != std::string::npos) mstr = mstr.substr(p + 8);
     Move m = COM::moveFromCOM(mstr);
     if ( m == INVALIDMOVE ) return false;
-    COM::stopPonder();
     COM::stop();
     if(!COM::makeMove(m,false,"")){ // make move
         Logging::LogIt(Logging::logInfo) << "Bad opponent move ! " << mstr;
@@ -3507,25 +3527,31 @@ void xboard(){
     while(true) {
         Logging::LogIt(Logging::logInfo) << "XBoard: mode " << COM::mode ;
         Logging::LogIt(Logging::logInfo) << "XBoard: stm  " << COM::stm ;
-        if(COM::mode == COM::m_analyze){
-            //AnalyzeUntilInput(); ///@todo analyze mode
+        if(COM::mode == COM::m_analyze && COM::state == COM::st_none){
+            /*
+            COM::state = COM::st_analyzing;
+            Logging::LogIt(Logging::logInfo) << "xboard search launched (analysis)";
+            COM::thinkAsync(60*60*1000*24); // 1 day == infinity ...
+            Logging::LogIt(Logging::logInfo) << "xboard async started (analysis)";
+            */
         }
         // move as computer if mode is equal to stm
-        if((int)COM::mode == (int)COM::stm) { // mouarfff
-            COM::move = COM::thinkUntilTimeUp();
-            if(COM::move == INVALIDMOVE){ COM::mode = COM::m_force; } // game ends
-            else{
-                if ( !COM::makeMove(COM::move,true,"move") ){
-                    Logging::LogIt(Logging::logInfo) << "Bad computer move !" ;
-                    Logging::LogIt(Logging::logInfo) << ToString(COM::position) ;
-                    COM::mode = COM::m_force;
-                }
-                COM::stm = COM::opponent(COM::stm);
-            }
+        else if((int)COM::mode == (int)COM::stm && COM::state == COM::st_none) {
+            COM::state = COM::st_searching;
+            Logging::LogIt(Logging::logInfo) << "xboard search launched";
+            COM::thinkAsync();
+            Logging::LogIt(Logging::logInfo) << "xboard async started";
+            if ( COM::f.valid() ) COM::f.wait(); // synchronous search
         }
-
         // if not our turn, and ponder is on, let's think ...
-        if(COM::move != INVALIDMOVE && (int)COM::mode == (int)COM::opponent(COM::stm) && COM::ponder == COM::p_on && !COM::pondering) COM::ponderUntilInput();
+        else if(COM::move != INVALIDMOVE && (int)COM::mode == (int)COM::opponent(COM::stm) && COM::ponder == COM::p_on && COM::state == COM::st_none) {
+            /*
+            COM::state = COM::st_pondering;
+            Logging::LogIt(Logging::logInfo) << "xboard search launched (pondering)";
+            COM::thinkAsync(60*60*1000*24); // 1 day == infinity ...
+            Logging::LogIt(Logging::logInfo) << "xboard async started (pondering)";
+            */
+        }
 
         bool commandOK = true;
         int once = 0;
@@ -3549,11 +3575,10 @@ void xboard(){
                 str = trim(str);
                 Logging::LogIt(Logging::logGUI) << "pong " << str ;
             }
-            else if (COM::command == "new"){
-                COM::stopPonder();
+            else if (COM::command == "new"){ // not following protocol, should set infinite depth search
                 COM::stop();
                 COM::sideToMoveFromFEN(startPosition);
-                COM::mode = (COM::Mode)((int)COM::stm); ///@todo should not be here !!! I thought start mode shall be analysis ...
+                COM::mode = (COM::Mode)((int)COM::stm);
                 COM::move = INVALIDMOVE;
                 if(COM::mode != COM::m_analyze){
                     COM::mode = COM::m_play_black;
@@ -3561,24 +3586,20 @@ void xboard(){
                 }
             }
             else if (COM::command == "white"){ // deprecated
-                COM::stopPonder();
                 COM::stop();
                 COM::mode = COM::m_play_black;
                 COM::stm = COM::stm_white;
             }
             else if (COM::command == "black"){ // deprecated
-                COM::stopPonder();
                 COM::stop();
                 COM::mode = COM::m_play_white;
                 COM::stm = COM::stm_black;
             }
             else if (COM::command == "go"){
-                COM::stopPonder();
                 COM::stop();
                 COM::mode = (COM::Mode)((int)COM::stm);
             }
             else if (COM::command == "playother"){
-                COM::stopPonder();
                 COM::stop();
                 COM::mode = (COM::Mode)((int)COM::opponent(COM::stm));
             }
@@ -3586,7 +3607,6 @@ void xboard(){
                 if (!receiveMove(COM::command)) commandOK = false;
             }
             else if (  strncmp(COM::command.c_str(),"setboard",8) == 0){
-                COM::stopPonder();
                 COM::stop();
                 std::string fen(COM::command);
                 const size_t p = COM::command.find("setboard");
@@ -3597,17 +3617,14 @@ void xboard(){
                 }
             }
             else if ( strncmp(COM::command.c_str(),"result",6) == 0){
-                COM::stopPonder();
                 COM::stop();
                 COM::mode = COM::m_force;
             }
             else if (COM::command == "analyze"){
-                COM::stopPonder();
                 COM::stop();
                 COM::mode = COM::m_analyze;
             }
             else if (COM::command == "exit"){
-                COM::stopPonder();
                 COM::stop();
                 COM::mode = COM::m_force;
             }
@@ -3615,7 +3632,7 @@ void xboard(){
                 COM::stopPonder();
                 COM::ponder = COM::p_off;
             }
-            else if (COM::command == "hard"){COM::ponder = COM::p_off;} ///@todo pondering
+            else if (COM::command == "hard"){COM::ponder = COM::p_on;}
             else if (COM::command == "quit"){_exit(0);}
             else if (COM::command == "pause"){
                 COM::stopPonder();
@@ -3632,7 +3649,7 @@ void xboard(){
                 TimeMan::isDynamic        = true;
                 TimeMan::msecUntilNextTC  = centisec*10;
             }
-            else if ( strncmp(COM::command.c_str(), "st", 2) == 0) {
+            else if ( strncmp(COM::command.c_str(), "st", 2) == 0) { // not following protocol, will update search time
                 int msecPerMove = 0;
                 sscanf(COM::command.c_str(), "st %d", &msecPerMove);
                 // forced move time
@@ -3645,7 +3662,7 @@ void xboard(){
                 TimeMan::moveToGo         = -1;
                 COM::depth                = MAX_DEPTH; // infinity
             }
-            else if ( strncmp(COM::command.c_str(), "sd", 2) == 0) {
+            else if ( strncmp(COM::command.c_str(), "sd", 2) == 0) { // not following protocol, will update search depth
                 int d = 0;
                 sscanf(COM::command.c_str(), "sd %d", &d);
                 COM::depth = d;
@@ -3673,10 +3690,14 @@ void xboard(){
                 COM::depth                = MAX_DEPTH; // infinity
             }
             else if ( COM::command == "edit"){ }
-            else if ( COM::command == "?"){ COM::stop(); }
+            else if ( COM::command == "?"){ if ( COM::state == COM::st_searching ) COM::stop(); }
             else if ( COM::command == "draw")  { }
             else if ( COM::command == "undo")  { }
+            else if ( COM::command == "hint")  { }
+            else if ( COM::command == "bk")    { }
             else if ( COM::command == "remove"){ }
+            else if ( COM::command == "random"){ }
+            else if ( strncmp(COM::command.c_str(), "otim",4) == 0){ }
             else if ( COM::command == "."){ }
             //************ end of Xboard command ********//
             // let's try to read the unknown command as a move ... trying to fix a scid versus PC issue ...
