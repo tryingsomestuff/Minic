@@ -1,7 +1,5 @@
 namespace UCI {
 
-    std::future<void> f;
-
     void init() {
         Logging::ct = Logging::CT_uci;
         Logging::LogIt(Logging::logInfo) << "Init uci";
@@ -141,21 +139,7 @@ namespace UCI {
                             else                             { Logging::LogIt(Logging::logGUI) << "info string " << param << " not implemented"; }
                         }
                         Logging::LogIt(Logging::logInfo) << "uci search launched";
-                        f = std::async(std::launch::async, [] {
-                            COM::move = COM::thinkUntilTimeUp();
-                            if (COM::ponder == COM::p_off) {
-                                if (COM::move == INVALIDMOVE) { COM::mode = COM::m_force; } // game ends
-                                else {
-                                    if (!COM::makeMove(COM::move, true, "bestmove")) {
-                                        Logging::LogIt(Logging::logGUI) << "info string Bad computer move !";
-                                        Logging::LogIt(Logging::logInfo) << ToString(COM::position);
-                                        COM::mode = COM::m_force;
-                                    }
-                                    COM::stm = COM::opponent(COM::stm);
-                                }
-                            }
-                            Logging::LogIt(Logging::logInfo) << "uci async done";
-                        });
+                        COM::thinkAsync();
                         Logging::LogIt(Logging::logInfo) << "uci async started";
                     }
                     else { Logging::LogIt(Logging::logGUI) << "info string search command received, but no position specified"; }
