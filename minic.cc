@@ -3369,7 +3369,7 @@ pvsout:
 
 namespace COM {
     enum State : unsigned char { st_pondering = 0, st_analyzing, st_searching, st_none };
-    State state; // redundant with Mode & Ponder...
+    State state; // this is redundant with Mode & Ponder...
     enum Ponder : unsigned char { p_off = 0, p_on = 1 };
     Ponder ponder;
     std::string command;
@@ -3435,9 +3435,24 @@ namespace COM {
         Logging::LogIt(Logging::logInfo) << ToString(position);
         return apply(position, m);
     }
+    
+    void stop() {
+        Logging::LogIt(Logging::logInfo) << "stoping previous search";
+        ThreadContext::stopFlag = true;
+        if ( f.valid() ){
+           Logging::LogIt(Logging::logInfo) << "wait for future to land ...";
+           f.wait(); // synchronous wait of current future
+           Logging::LogIt(Logging::logInfo) << "...ok future is terminated";
+        }
+        state = st_none;
+    }
+
+    void stopPonder() {
+        if (state == st_pondering) { stop(); }
+    }
 
     void thinkAsync(int forcedMs = -1) { // fork a future that runs a synchorous search, if needed send returned move to GUI
-        if ( COM::f.valid() ) COM::f.wait(); // to be sure ... wait for previous future to terminate before launching new one
+        stop(); // stop anything launched previousliy
         f = std::async(std::launch::async, [forcedMs] {
             COM::move = COM::thinkUntilTimeUp(forcedMs);
             if (state == st_searching) {
@@ -3454,19 +3469,6 @@ namespace COM {
             Logging::LogIt(Logging::logInfo) << "search async done";
             state = st_none;
         });
-    }
-
-    void stop() {
-        Logging::LogIt(Logging::logInfo) << "stoping search";
-        ThreadContext::stopFlag = true;
-        Logging::LogIt(Logging::logInfo) << "wait for future to land ...";
-        if ( f.valid() ) f.wait(); // synchronous wait of current future
-        Logging::LogIt(Logging::logInfo) << "...ok future is terminated";
-        state = st_none;
-    }
-
-    void stopPonder() {
-        if (state == st_pondering) { stop(); }
     }
 
     Move moveFromCOM(std::string mstr) { // copy string on purpose
@@ -3498,7 +3500,7 @@ void init(){
 
 void setFeature(){
     ///@todo more feature disable !!
-    ///@todo use otime ?
+    ///@todo use otim ?
     Logging::LogIt(Logging::logGUI) << "feature ping=1 setboard=1 edit=0 colors=0 usermove=1 memory=0 sigint=0 sigterm=0 otim=0 time=1 nps=0 draw=0 playother=0 myname=\"Minic " << MinicVersion << "\"";
     Logging::LogIt(Logging::logGUI) << "feature done=1";
 }
@@ -3528,12 +3530,12 @@ void xboard(){
         Logging::LogIt(Logging::logInfo) << "XBoard: mode " << COM::mode ;
         Logging::LogIt(Logging::logInfo) << "XBoard: stm  " << COM::stm ;
         if(COM::mode == COM::m_analyze && COM::state == COM::st_none){
-            /*
+		/*
             COM::state = COM::st_analyzing;
             Logging::LogIt(Logging::logInfo) << "xboard search launched (analysis)";
             COM::thinkAsync(60*60*1000*24); // 1 day == infinity ...
             Logging::LogIt(Logging::logInfo) << "xboard async started (analysis)";
-            */
+	    */
         }
         // move as computer if mode is equal to stm
         else if((int)COM::mode == (int)COM::stm && COM::state == COM::st_none) {
@@ -3541,16 +3543,16 @@ void xboard(){
             Logging::LogIt(Logging::logInfo) << "xboard search launched";
             COM::thinkAsync();
             Logging::LogIt(Logging::logInfo) << "xboard async started";
-            if ( COM::f.valid() ) COM::f.wait(); // synchronous search
+            //if ( COM::f.valid() ) COM::f.wait(); // synchronous search
         }
         // if not our turn, and ponder is on, let's think ...
         else if(COM::move != INVALIDMOVE && (int)COM::mode == (int)COM::opponent(COM::stm) && COM::ponder == COM::p_on && COM::state == COM::st_none) {
-            /*
+		/*
             COM::state = COM::st_pondering;
             Logging::LogIt(Logging::logInfo) << "xboard search launched (pondering)";
             COM::thinkAsync(60*60*1000*24); // 1 day == infinity ...
             Logging::LogIt(Logging::logInfo) << "xboard async started (pondering)";
-            */
+	    */
         }
 
         bool commandOK = true;
@@ -3701,7 +3703,7 @@ void xboard(){
             else if ( COM::command == "."){ }
             //************ end of Xboard command ********//
             // let's try to read the unknown command as a move ... trying to fix a scid versus PC issue ...
-            else if ( !receiveMove(COM::command)) Logging::LogIt(Logging::logInfo) << "Xboard does not know this command " << COM::command ;
+            else if ( !receiveMove(COM::command)) Logging::LogIt(Logging::logInfo) << "Xboard does not know this command \"" << COM::command << "\"";
         } // readline
     } // while true
 }
