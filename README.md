@@ -174,6 +174,11 @@ You can use both the json configuation file or the command line argument to sele
 * 0.67 : working on search again (quiet move SEE)
 * 0.68 : working on search again (LMR when in check)
 * 0.69..0.74 : tuning eval (texel tuning on Zurichess quiet.edp)
+* 0.75 : backward pawn, tweak SEE  
+* 0.76 : refactoring eval scoring  
+* 0.77 : better use of bitboard in pawn eval  
+* 0.78 : candidate  
+* 0.79 : bug fix in SEE, pondering and analysis mode
 
 ## Thanks
 
