@@ -77,6 +77,7 @@ typedef uint64_t Hash; // invalid if == 0
 typedef uint64_t Counter;
 typedef uint64_t BitBoard;
 typedef short int ScoreType;
+typedef uint64_t TimeType;
 
 enum GamePhase { MG=0, EG=1, GP_MAX=2 };
 GamePhase operator++(GamePhase & g){g=GamePhase(g+1); return g;}
@@ -121,7 +122,7 @@ struct EvalScore{
     EvalScore  operator -(const int& s)const{EvalScore e(*this); for(GamePhase g=MG; g<GP_MAX; ++g)e[g]-=s; return e;}
     void       operator =(const int& s){for(GamePhase g=MG; g<GP_MAX; ++g){sc[g]=s;}}
 
-    EvalScore scale(float s_mg,float s_eg)const{ EvalScore e(*this); e[MG]*=s_mg; e[EG]*=s_eg; return e;}
+    EvalScore scale(float s_mg,float s_eg)const{ EvalScore e(*this); e[MG]= ScoreType(s_mg*e[MG]); e[EG]= ScoreType(s_eg*e[EG]); return e;}
 
 };
 
@@ -274,36 +275,36 @@ const bool doProbcut        = true;
 const bool doHistoryPruning = true; ///@todo
 // first value if eval score is used, second if hash score is used
 const ScoreType qfutilityMargin          [2] = {90, 90};
-const int       staticNullMoveMaxDepth   [2] = {6  , 6};
+const DepthType staticNullMoveMaxDepth   [2] = {6  , 6};
 const ScoreType staticNullMoveDepthCoeff [2] = {80 , 80}; // -50*improving
 const ScoreType staticNullMoveDepthInit  [2] = {0  , 0};
 const ScoreType razoringMarginDepthCoeff [2] = {0  , 0};
 const ScoreType razoringMarginDepthInit  [2] = {200, 200};
-const int       razoringMaxDepth         [2] = {3  , 3};
-const int       nullMoveMinDepth             = 2;
-const int       lmpMaxDepth                  = 10;
-const int       historyPruningMaxDepth       = 3;
+const DepthType razoringMaxDepth         [2] = {3  , 3};
+const DepthType nullMoveMinDepth             = 2;
+const DepthType lmpMaxDepth                  = 10;
+const DepthType historyPruningMaxDepth       = 3;
 const ScoreType historyPruningThreshold      = 0;
-const int       futilityMaxDepth         [2] = {10 , 10};
+const DepthType futilityMaxDepth         [2] = {10 , 10};
 const ScoreType futilityDepthCoeff       [2] = {160 , 160};
 const ScoreType futilityDepthInit        [2] = {0  ,0};
-const int       iidMinDepth                  = 5;
-const int       iidMinDepth2                 = 8;
-const int       probCutMinDepth              = 5;
+const DepthType iidMinDepth                  = 5;
+const DepthType iidMinDepth2                 = 8;
+const DepthType probCutMinDepth              = 5;
 const int       probCutMaxMoves              = 5;
 const ScoreType probCutMargin                = 80;
-const int       lmrMinDepth                  = 3;
-const int       singularExtensionDepth       = 8;
+const DepthType lmrMinDepth                  = 3;
+const DepthType singularExtensionDepth       = 8;
 
 const int lmpLimit[][StaticConfig::lmpMaxDepth + 1] = { { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 } ,{ 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };
 
-int lmrReduction[MAX_DEPTH][MAX_MOVE];
+DepthType lmrReduction[MAX_DEPTH][MAX_MOVE];
 void initLMR() {
     Logging::LogIt(Logging::logInfo) << "Init lmr";
-    for (int d = 0; d < MAX_DEPTH; d++) for (int m = 0; m < MAX_MOVE; m++) lmrReduction[d][m] = int(1.0 + log(d) * log(m) * 0.5);
+    for (int d = 0; d < MAX_DEPTH; d++) for (int m = 0; m < MAX_MOVE; m++) lmrReduction[d][m] = DepthType(1.0 + log(d) * log(m) * 0.5);
 }
 
-int MvvLvaScores[6][6];
+ScoreType MvvLvaScores[6][6];
 void initMvvLva(){
     Logging::LogIt(Logging::logInfo) << "Init mvv-lva" ;
     static const ScoreType IValues[6] = { 1, 2, 3, 5, 9, 20 }; ///@todo try N=B=3 !
@@ -969,7 +970,7 @@ namespace MaterialHash { // from Gull
         }
     }
 
-    const int pushToEdges[64] = {
+    const ScoreType pushToEdges[64] = {
       100, 90, 80, 70, 70, 80, 90, 100,
        90, 70, 60, 50, 50, 60, 70,  90,
        80, 60, 40, 30, 30, 40, 60,  80,
@@ -980,7 +981,7 @@ namespace MaterialHash { // from Gull
       100, 90, 80, 70, 70, 80, 90, 100
     };
 
-    const int pushToCorners[64] = {
+    const ScoreType pushToCorners[64] = {
       200, 190, 180, 170, 160, 150, 140, 130,
       190, 180, 170, 160, 150, 140, 130, 140,
       180, 170, 155, 140, 140, 125, 140, 150,
@@ -991,8 +992,8 @@ namespace MaterialHash { // from Gull
       130, 140, 150, 160, 170, 180, 190, 200
     };
 
-    const int pushClose[8] = { 0, 0, 100, 80, 60, 40, 20,  10 };
-    const int pushAway [8] = { 0, 5,  20, 40, 60, 80, 90, 100 };
+    const ScoreType pushClose[8] = { 0, 0, 100, 80, 60, 40, 20,  10 };
+    const ScoreType pushAway [8] = { 0, 5,  20, 40, 60, 80, 90, 100 };
 
     ScoreType helperKXK(const Position &p, Color winningSide, ScoreType s){
         if (p.c != winningSide ){ // stale mate detection for losing side
@@ -1343,7 +1344,7 @@ Hash computeHash(const Position &p){
     p.h = 0ull;
 #endif
     if (p.h != 0) return p.h;
-    for (int k = 0; k < 64; ++k){
+    for (Square k = 0; k < 64; ++k){
         const Piece pp = p.b[k];
         if ( pp != P_none) p.h ^= Zobrist::ZT[k][pp+PieceShift];
     }
@@ -1422,8 +1423,8 @@ namespace MoveDifficultyUtil {
 struct ThreadContext{
     static bool stopFlag;
     static MoveDifficultyUtil::MoveDifficulty moveDifficulty;
-    static int currentMoveMs;
-    static int getCurrentMoveMs(); // use this (and not the variable) to take emergency time into account !
+    static TimeType currentMoveMs;
+    static TimeType getCurrentMoveMs(); // use this (and not the variable) to take emergency time into account !
 
     Hash hashStack[MAX_PLY] = { 0ull };
     ScoreType evalStack[MAX_PLY] = { 0 };
@@ -1501,7 +1502,7 @@ struct ThreadContext{
     }
 
     void search(){
-        Logging::LogIt(Logging::logInfo) << "Search launched " << id() ;
+        Logging::LogIt(Logging::logInfo) << "Search launched for thread " << id() ;
         if ( isMainThread() ){ ThreadPool::instance().startOthers(); } // started other threads but locked for now ...
         _data.pv = search(_data.p, _data.best, _data.depth, _data.sc, _data.seldepth);
     }
@@ -1535,8 +1536,8 @@ private:
     std::thread             _stdThread;
 };
 
-bool ThreadContext::stopFlag      = true;
-int  ThreadContext::currentMoveMs = 777; // a dummy initial value, useful for debug
+bool ThreadContext::stopFlag           = true;
+TimeType  ThreadContext::currentMoveMs = 777; // a dummy initial value, useful for debug
 MoveDifficultyUtil::MoveDifficulty ThreadContext::moveDifficulty = MoveDifficultyUtil::MD_std;
 std::atomic<bool> ThreadContext::startLock;
 
@@ -1753,7 +1754,7 @@ std::string ToString(const Position & p, bool noEval){
     if ( ! noEval ){
         float gp = 0;
         sc = eval(p, gp);
-        ss << "# Phase " << gp  << std::endl << "# Static score " << sc << std::endl << "# Hash " << computeHash(p) << std::endl << "# FEN " << GetFEN(p) << std::endl;
+        ss << "# Phase " << gp << std::endl << "# Static score " << sc << std::endl << "# Hash " << computeHash(p) << std::endl << "# FEN " << GetFEN(p);
     }
     //ss << ToString(p.mat);
     return ss.str();
@@ -1950,7 +1951,7 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
 }
 
 namespace TimeMan{
-int msecPerMove, msecInTC, nbMoveInTC, msecInc, msecUntilNextTC, maxKNodes, moveToGo;
+TimeType msecPerMove, msecInTC, nbMoveInTC, msecInc, msecUntilNextTC, maxKNodes, moveToGo;
 bool isDynamic;
 std::chrono::time_point<Clock> startTime;
 
@@ -1961,11 +1962,11 @@ void init(){
     isDynamic   = false;
 }
 
-int GetNextMSecPerMove(const Position & p){
-    static const int msecMarginMin = 50;
-    static const int msecMarginMax = 3000;
+TimeType GetNextMSecPerMove(const Position & p){
+    static const TimeType msecMarginMin = 50;
+    static const TimeType msecMarginMax = 3000;
     static const float msecMarginCoef = 0.02f;
-    int ms = -1;
+    TimeType ms = -1;
     Logging::LogIt(Logging::logInfo) << "msecPerMove     " << msecPerMove;
     Logging::LogIt(Logging::logInfo) << "msecInTC        " << msecInTC   ;
     Logging::LogIt(Logging::logInfo) << "msecInc         " << msecInc    ;
@@ -1973,7 +1974,7 @@ int GetNextMSecPerMove(const Position & p){
     Logging::LogIt(Logging::logInfo) << "msecUntilNextTC " << msecUntilNextTC;
     Logging::LogIt(Logging::logInfo) << "currentNbMoves  " << int(p.moves);
     Logging::LogIt(Logging::logInfo) << "moveToGo        " << moveToGo;
-    int msecIncLoc = (msecInc > 0) ? msecInc : 0;
+    TimeType msecIncLoc = (msecInc > 0) ? msecInc : 0;
     if ( msecPerMove > 0 ) {
         Logging::LogIt(Logging::logInfo) << "Fixed time per move";
         ms =  msecPerMove;
@@ -1982,14 +1983,14 @@ int GetNextMSecPerMove(const Position & p){
         Logging::LogIt(Logging::logInfo) << "Xboard style TC";
         assert(msecInTC > 0); assert(nbMoveInTC > 0);
         Logging::LogIt(Logging::logInfo) << "TC mode, xboard";
-        const int msecMargin = std::max(std::min(msecMarginMax, int(msecMarginCoef*msecInTC)), msecMarginMin);
+        const TimeType msecMargin = std::max(std::min(msecMarginMax, TimeType(msecMarginCoef*msecInTC)), msecMarginMin);
         if (!isDynamic) ms = int((msecInTC - msecMarginMin) / (float)nbMoveInTC) + msecIncLoc ;
         else { ms = std::min(msecUntilNextTC - msecMargin, int((msecUntilNextTC - msecMargin) /float(nbMoveInTC - ((p.moves - 1) % nbMoveInTC))) + msecIncLoc); }
     }
     else if (moveToGo > 0) { // moveToGo is given (uci style)
         assert(msecUntilNextTC > 0);
         Logging::LogIt(Logging::logInfo) << "UCI style TC";
-        const int msecMargin = std::max(std::min(msecMarginMax, int(msecMarginCoef*msecUntilNextTC)), msecMarginMin);
+        const TimeType msecMargin = std::max(std::min(msecMarginMax, TimeType(msecMarginCoef*msecUntilNextTC)), msecMarginMin);
         if (!isDynamic) Logging::LogIt(Logging::logFatal) << "bad timing configuration ...";
         else { ms = std::min(msecUntilNextTC - msecMargin, int((msecUntilNextTC - msecMargin) / float(moveToGo)) + msecIncLoc); }
     }
@@ -1999,22 +2000,22 @@ int GetNextMSecPerMove(const Position & p){
         Logging::LogIt(Logging::logInfo) << "nmoves    " << nmoves;
         Logging::LogIt(Logging::logInfo) << "p.moves   " << int(p.moves);
         assert(nmoves > 0); assert(msecInTC >= 0);
-        const int msecMargin = std::max(std::min(msecMarginMax, int(msecMarginCoef*msecInTC)), msecMarginMin);
+        const TimeType msecMargin = std::max(std::min(msecMarginMax, TimeType(msecMarginCoef*msecInTC)), msecMarginMin);
         if (!isDynamic) ms = int((msecInTC+msecIncLoc) / (float)(nmoves)) - msecMarginMin;
-        else ms = std::min(msecUntilNextTC - msecMargin, int(msecUntilNextTC / (float)nmoves + 0.75*msecIncLoc) - msecMargin);
+        else ms = std::min(msecUntilNextTC - msecMargin, TimeType(msecUntilNextTC / (float)nmoves + 0.75*msecIncLoc) - msecMargin);
     }
-    return std::max(ms, 20);// if not much time left, let's try that ...
+    return std::max(ms, TimeType(20));// if not much time left, let's try that ...
 }
 } // TimeMan
 
 inline void addMove(Square from, Square to, MType type, MoveList & moves){ assert( from >= 0 && from < 64); assert( to >=0 && to < 64); moves.push_back(ToMove(from,to,type,0));}
 
-int ThreadContext::getCurrentMoveMs() {
+TimeType ThreadContext::getCurrentMoveMs() {
     switch (moveDifficulty) {
     case MoveDifficultyUtil::MD_forced:      return (currentMoveMs >> 4);
     case MoveDifficultyUtil::MD_easy:        return (currentMoveMs >> 3);
     case MoveDifficultyUtil::MD_std:         return (currentMoveMs);
-    case MoveDifficultyUtil::MD_hardDefense: return (std::min(int(TimeMan::msecUntilNextTC*MoveDifficultyUtil::maxStealFraction), currentMoveMs*MoveDifficultyUtil::emergencyFactor));
+    case MoveDifficultyUtil::MD_hardDefense: return (std::min(TimeType(TimeMan::msecUntilNextTC*MoveDifficultyUtil::maxStealFraction), currentMoveMs*MoveDifficultyUtil::emergencyFactor));
     case MoveDifficultyUtil::MD_hardAttack:  return (currentMoveMs);
     }
     return currentMoveMs;
@@ -2477,7 +2478,7 @@ MaterialHash::Terminaison ThreadContext::interiorNodeRecognizer(const Position &
 }
 
 double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f, double offset = 0.f){ return m / (1 + exp((trans - x) / scale)) - offset;}
-void initEval(){ for(int i = 0; i < 64; i++){ EvalConfig::kingAttTable[i] = (int) sigmoid(i,EvalConfig::kingAttMax,EvalConfig::kingAttTrans,EvalConfig::kingAttScale,EvalConfig::kingAttOffset); } } // idea taken from Topple
+void initEval(){ for(Square i = 0; i < 64; i++){ EvalConfig::kingAttTable[i] = (int) sigmoid(i,EvalConfig::kingAttMax,EvalConfig::kingAttTrans,EvalConfig::kingAttScale,EvalConfig::kingAttOffset); } } // idea taken from Topple
 
 struct ScoreAcc{
     enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_MOB, sc_ATT, sc_Pwn, sc_PwnShield, sc_PwnPassed, sc_PwnIsolated, sc_PwnDoubled, sc_PwnBackward, sc_PwnCandidate, sc_PwnPush, sc_Blocked, sc_Adjust, sc_OpenFile, sc_EndGame, sc_Exchange, sc_Tempo, sc_max };
@@ -3012,7 +3013,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if (StaticConfig::doStaticNullMove && isNotEndGame && depth <= StaticConfig::staticNullMoveMaxDepth[evalScoreIsHashScore] && evalScore >= beta + StaticConfig::staticNullMoveDepthInit[evalScoreIsHashScore] + (StaticConfig::staticNullMoveDepthCoeff[evalScoreIsHashScore] /*- 50*improving*/) * depth) return ++stats.counters[Stats::sid_staticNullMove], evalScore;
 
         // razoring
-        int rAlpha = alpha - StaticConfig::razoringMarginDepthInit[evalScoreIsHashScore] - StaticConfig::razoringMarginDepthCoeff[evalScoreIsHashScore]*marginDepth;
+        ScoreType rAlpha = alpha - StaticConfig::razoringMarginDepthInit[evalScoreIsHashScore] - StaticConfig::razoringMarginDepthCoeff[evalScoreIsHashScore]*marginDepth;
         if ( StaticConfig::doRazoring && depth <= StaticConfig::razoringMaxDepth[evalScoreIsHashScore] && evalScore <= rAlpha ){
             ++stats.counters[Stats::sid_razoringTry];
             const ScoreType qScore = qsearch<true,pvnode>(alpha,beta,p,ply,seldepth);
@@ -3024,7 +3025,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if (isNotEndGame && StaticConfig::doNullMove && depth >= StaticConfig::nullMoveMinDepth) {
             PVList nullPV;
             ++stats.counters[Stats::sid_nullMoveTry];
-            const int R = depth / 4 + 3 + std::min((evalScore - beta) / 80, 3); // adaptative
+            const DepthType R = depth / 4 + 3 + std::min((evalScore - beta) / 80, 3); // adaptative
             const ScoreType nullIIDScore = evalScore; // pvs<false, false>(beta - 1, beta, p, std::max(depth/4,1), ply, nullPV, seldepth, isInCheck);
             if (nullIIDScore >= beta /*- 10 * depth*/) {
                 TT::Entry nullE;
@@ -3102,7 +3103,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if ( isCapture(e.m) ) ttMoveIsCapture = true;
             //const bool isAdvancedPawnPush = getPieceType(p,Move2From(e.m)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
             // extensions
-            int extension = 0;
+            DepthType extension = 0;
             if (!extension && pvnode && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension;
             if (!extension && isCastling(e.m) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
             //if (!extension && mateThreat) ++stats.counters[Stats::sid_mateThreadExtension],++extension;
@@ -3170,7 +3171,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         const bool isCheck = isAttacked(p2, kingSquare(p2));
         const bool isAdvancedPawnPush = getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
         // extensions
-        int extension = 0;
+        DepthType extension = 0;
         if (!extension && pvnode && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension; // we are in check (extension)
         //if (!extension && mateThreat && depth <= 4) ++stats.counters[Stats::sid_mateThreadExtension],++extension;
         //if (!extension && p.lastMove != INVALIDMOVE && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; //recapture
@@ -3181,7 +3182,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if (validMoveCount < 2 || !StaticConfig::doPVS) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck);
         else{
             // reductions & prunings
-            int reduction = 0;
+            DepthType reduction = 0;
             const bool isPrunable =  /*isNotEndGame &&*/ !isAdvancedPawnPush && !sameMove(*it, killerT.killers[0][p.halfmoves]) && !sameMove(*it, killerT.killers[1][p.halfmoves]) /*&& !isMateScore(alpha) */&& !isMateScore(beta);
             const bool noCheck = !isInCheck && !isCheck;
             const bool isPrunableStd = isPrunable && Move2Type(*it) == T_std;
@@ -3248,7 +3249,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 }
 
 void ThreadContext::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv){
-    const int ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count());
+    const TimeType ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count());
     std::stringstream str;
     Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
     if (Logging::ct == Logging::CT_xboard) {
@@ -3266,7 +3267,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
     d=DynamicConfig::level==10?d:DynamicConfig::level;
 
     if ( isMainThread() ){
-        Logging::LogIt(Logging::logInfo) << "Search called" ;
+        Logging::LogIt(Logging::logInfo) << "Search params :" ;
         Logging::LogIt(Logging::logInfo) << "requested time  " << getCurrentMoveMs() ;
         Logging::LogIt(Logging::logInfo) << "requested depth " << (int) d ;
         stopFlag = false;
@@ -3412,8 +3413,8 @@ namespace COM {
         return b;
     }
 
-    Move thinkUntilTimeUp(int forcedMs = -1) { // think and when threads stop searching, return best move
-        Logging::LogIt(Logging::logInfo) << "Thinking... ";
+    Move thinkUntilTimeUp(TimeType forcedMs = -1) { // think and when threads stop searching, return best move
+        Logging::LogIt(Logging::logInfo) << "Thinking... (state " << COM::state << ")";
         ScoreType score = 0;
         Move m = INVALIDMOVE;
         if (depth < 0) depth = MAX_DEPTH;
@@ -3426,7 +3427,7 @@ namespace COM {
         const ThreadData d = { depth,seldepth/*dummy*/,score/*dummy*/,position,m/*dummy*/,pv/*dummy*/ }; // only input coef
         ThreadPool::instance().search(d);
         m = ThreadPool::instance().main().getData().best; // here output results
-        Logging::LogIt(Logging::logInfo) << "...done returning move " << ToString(m);
+        Logging::LogIt(Logging::logInfo) << "...done returning move " << ToString(m) << " (state " << COM::state << ")";;
         return m;
     }
 
@@ -3437,25 +3438,26 @@ namespace COM {
     }
     
     void stop() {
-        Logging::LogIt(Logging::logInfo) << "stoping previous search";
+        Logging::LogIt(Logging::logInfo) << "stopping previous search";
         ThreadContext::stopFlag = true;
         if ( f.valid() ){
            Logging::LogIt(Logging::logInfo) << "wait for future to land ...";
            f.wait(); // synchronous wait of current future
            Logging::LogIt(Logging::logInfo) << "...ok future is terminated";
         }
-        state = st_none;
     }
 
     void stopPonder() {
         if (state == st_pondering) { stop(); }
     }
 
-    void thinkAsync(int forcedMs = -1) { // fork a future that runs a synchorous search, if needed send returned move to GUI
+    void thinkAsync(TimeType forcedMs = -1) { // fork a future that runs a synchorous search, if needed send returned move to GUI
         stop(); // stop anything launched previousliy
         f = std::async(std::launch::async, [forcedMs] {
             COM::move = COM::thinkUntilTimeUp(forcedMs);
+            Logging::LogIt(Logging::logInfo) << "search async done (state " << state << ")";
             if (state == st_searching) {
+                Logging::LogIt(Logging::logInfo) << "sending move to GUI " << ToString(COM::move);
                 if (COM::move == INVALIDMOVE) { COM::mode = COM::m_force; } // game ends
                 else {
                     if (!COM::makeMove(COM::move, true, Logging::ct == Logging::CT_uci ? "bestmove" : "move")) {
@@ -3466,7 +3468,6 @@ namespace COM {
                     COM::stm = COM::opponent(COM::stm);
                 }
             }
-            Logging::LogIt(Logging::logInfo) << "search async done";
             state = st_none;
         });
     }
@@ -3530,12 +3531,10 @@ void xboard(){
         Logging::LogIt(Logging::logInfo) << "XBoard: mode " << COM::mode ;
         Logging::LogIt(Logging::logInfo) << "XBoard: stm  " << COM::stm ;
         if(COM::mode == COM::m_analyze && COM::state == COM::st_none){
-		/*
             COM::state = COM::st_analyzing;
             Logging::LogIt(Logging::logInfo) << "xboard search launched (analysis)";
             COM::thinkAsync(60*60*1000*24); // 1 day == infinity ...
             Logging::LogIt(Logging::logInfo) << "xboard async started (analysis)";
-	    */
         }
         // move as computer if mode is equal to stm
         else if((int)COM::mode == (int)COM::stm && COM::state == COM::st_none) {
@@ -3547,12 +3546,10 @@ void xboard(){
         }
         // if not our turn, and ponder is on, let's think ...
         else if(COM::move != INVALIDMOVE && (int)COM::mode == (int)COM::opponent(COM::stm) && COM::ponder == COM::p_on && COM::state == COM::st_none) {
-		/*
             COM::state = COM::st_pondering;
             Logging::LogIt(Logging::logInfo) << "xboard search launched (pondering)";
             COM::thinkAsync(60*60*1000*24); // 1 day == infinity ...
             Logging::LogIt(Logging::logInfo) << "xboard async started (pondering)";
-	    */
         }
 
         bool commandOK = true;
