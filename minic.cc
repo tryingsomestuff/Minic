@@ -3465,7 +3465,7 @@ namespace COM {
                         Logging::LogIt(Logging::logInfo) << ToString(COM::position);
                         COM::mode = COM::m_force;
                     }
-                    COM::stm = COM::opponent(COM::stm);
+                    else COM::stm = COM::opponent(COM::stm);
                 }
             }
             state = st_none;
@@ -3527,9 +3527,11 @@ void xboard(){
     Logging::LogIt(Logging::logInfo) << "Starting XBoard main loop" ;
     setFeature(); ///@todo should not be here
 
-    while(true) {
-        Logging::LogIt(Logging::logInfo) << "XBoard: mode " << COM::mode ;
-        Logging::LogIt(Logging::logInfo) << "XBoard: stm  " << COM::stm ;
+    bool iterate = true;
+
+    std::future<void> l = std::async([&iterate]{
+      while(iterate) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         if(COM::mode == COM::m_analyze && COM::state == COM::st_none){
             COM::state = COM::st_analyzing;
             Logging::LogIt(Logging::logInfo) << "xboard search launched (analysis)";
@@ -3551,10 +3553,15 @@ void xboard(){
             COM::thinkAsync(60*60*1000*24); // 1 day == infinity ...
             Logging::LogIt(Logging::logInfo) << "xboard async started (pondering)";
         }
+      }
+    });
 
+    while(true) {
+        Logging::LogIt(Logging::logInfo) << "XBoard: mode  " << COM::mode ;
+        Logging::LogIt(Logging::logInfo) << "XBoard: stm   " << COM::stm  ;
+        Logging::LogIt(Logging::logInfo) << "XBoard: state " << COM::state;
         bool commandOK = true;
         int once = 0;
-
         while(once++ == 0 || !commandOK){ // loop until a good command is found
             commandOK = true;
             COM::readLine(); // read next command !
@@ -3577,7 +3584,7 @@ void xboard(){
             else if (COM::command == "new"){ // not following protocol, should set infinite depth search
                 COM::stop();
                 COM::sideToMoveFromFEN(startPosition);
-                COM::mode = (COM::Mode)((int)COM::stm);
+                COM::mode = (COM::Mode)((int)COM::stm); ///@todo this is so wrong !
                 COM::move = INVALIDMOVE;
                 if(COM::mode != COM::m_analyze){
                     COM::mode = COM::m_play_black;
@@ -3703,6 +3710,9 @@ void xboard(){
             else if ( !receiveMove(COM::command)) Logging::LogIt(Logging::logInfo) << "Xboard does not know this command \"" << COM::command << "\"";
         } // readline
     } // while true
+
+    iterate = false;
+    l.wait();
 }
 } // XBoard
 
