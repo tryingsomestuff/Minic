@@ -179,6 +179,7 @@ You can use both the json configuation file or the command line argument to sele
 * 0.77 : better use of bitboard in pawn eval  
 * 0.78 : candidate  
 * 0.79 : bug fix in SEE, pondering and analysis mode
+* 0.80 : level from 0 to 10. 0 is random mover, 10 is full strength  
 
 ## Thanks
 
