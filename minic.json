@@ -6,5 +6,6 @@
    "bookFile": "book.bin",
    "fullXboardOutput": true,
    "debugMode": false,
-   "debugFile": "minic.debug"
+   "debugFile": "minic.debug",
+   "level": 10
 }
