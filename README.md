@@ -92,7 +92,8 @@ Minic now comes with both a json configuration file where some parameters can be
    "ttSizeMb": 1024,
    "book": true,
    "bookFile": "book_big.bin",
-   "fullXboardOutput": false
+   "fullXboardOutput": false,
+   "level": 10
 }
 ```
 and a command line interface, using the same key word. For instance, forcing mateFinder mode can be done by adding "-mateFinder 1" when calling Minic.
