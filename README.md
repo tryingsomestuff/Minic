@@ -64,6 +64,8 @@ Rank Name                          Elo     +/-   Games   Score   Draws
 17902 of 171000 games finished.        
 ```
 
+Minic strength can be ajdusted using the level option (from command line or json configuration file). Level 0 is a random mover, 1 very weak, ..., level 10 is full strength.
+
 ## How to compile
 * Linux : use the given build script (or make your own ...)
 * Windows : use the given VS2017 project (or make your own ...), or use the Linux cross-compilation script given.
