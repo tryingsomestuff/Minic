@@ -298,8 +298,8 @@ const DepthType singularExtensionDepth       = 8;
 
 // a playing level feature for the poor ...
 const int nlevel = 10;
-const DepthType levelDepthMax[nlevel+1]   = {1,2,3,5,7,9,12,15,18,22,MAX_DEPTH};
-const ScoreType levelRandomAmpl[nlevel+1] = {100,90,80,60,40,20,10,5,3,0,0};
+const DepthType levelDepthMax[nlevel+1]   = {1,1,1,2,4,6,8,10,12,14,MAX_DEPTH};
+const ScoreType levelRandomAmpl[nlevel+1] = {200,150,100,70,60,50,40,20,10,5,0};
 
 const int lmpLimit[][StaticConfig::lmpMaxDepth + 1] = { { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 } ,{ 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };
 
@@ -3167,6 +3167,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     //else std::random_shuffle(moves.begin(),moves.end());
     }
 
+    if (rootnode && DynamicConfig::level == 0 ){std::random_shuffle(moves.begin(),moves.end());}
+
     ScoreType score = -MATE + ply;
 
     for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
@@ -3253,6 +3255,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 }
             }
         }
+        if ( rootnode && DynamicConfig::level == 0 && validMoveCount ) break;
     }
 
     if ( validMoveCount==0 ) return (isInCheck || skipMove!=INVALIDMOVE)?-MATE + ply : 0;
