@@ -2977,11 +2977,12 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if (alpha >= beta) return alpha;
 
     const bool rootnode = ply == 1;
+    const bool randM = rootnode && DynamicConfig::level == 0;
 
     if (!rootnode && interiorNodeRecognizer<true, pvnode, true>(p) == MaterialHash::Ter_Draw) return 0;
 
     TT::Entry e;
-    if (skipMove==INVALIDMOVE && TT::getEntry(*this,computeHash(p), depth, e)) { // if not skipmove
+    if ( ! randM && skipMove==INVALIDMOVE && TT::getEntry(*this,computeHash(p), depth, e)) { // if not skipmove
         if ( e.h != 0 && !rootnode && !pvnode && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
             if ( e.m != INVALIDMOVE) pv.push_back(e.m); // here e.m might be INVALIDMOVE if B_alpha without alphaUpdated/bestScoreUpdated (so don't try this at root node !)
             if ((Move2Type(e.m) == T_std /*|| isBadCap(e.m)*/) && !isInCheck) updateTables(*this, p, depth, e.m, e.b);
@@ -3076,7 +3077,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     }
 
     // IID
-    if ( (e.h == 0 /*|| e.d < depth/3*/) && ((pvnode && depth >= StaticConfig::iidMinDepth) || depth >= StaticConfig::iidMinDepth2)){
+    if ( !randM && (e.h == 0 /*|| e.d < depth/3*/) && ((pvnode && depth >= StaticConfig::iidMinDepth) || depth >= StaticConfig::iidMinDepth2)){
         ++stats.counters[Stats::sid_iid];
         PVList iidPV;
         pvs<pvnode,false>(alpha,beta,p,depth/2,ply,iidPV,seldepth,isInCheck);
@@ -3100,7 +3101,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     bool ttMoveIsCapture = false;
 
     // try the tt move before move generation (if not skipped move)
-    if (e.h != 0 && e.m != INVALIDMOVE && !sameMove(e.m,skipMove)) { // should be the case thanks to iid at pvnode
+    if ( e.h != 0 && e.m != INVALIDMOVE && !sameMove(e.m,skipMove)) { // should be the case thanks to iid at pvnode
         Position p2 = p;
         if (apply(p2, e.m)) {
             const Square to = Move2To(e.m);
@@ -3167,13 +3168,13 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     //else std::random_shuffle(moves.begin(),moves.end());
     }
 
-    if (rootnode && DynamicConfig::level == 0 ){std::random_shuffle(moves.begin(),moves.end());}
+    if (randM){std::random_shuffle(moves.begin(),moves.end());}
 
     ScoreType score = -MATE + ply;
 
     for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
         if (sameMove(skipMove, *it)) continue; // skipmove
-        if ( e.h != 0 && sameMove(e.m, *it)) continue; // already tried
+        if (e.h != 0 && sameMove(e.m, *it)) continue; // already tried
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
         const Square to = Move2To(*it);
@@ -3195,7 +3196,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
            if (!extension && isCastling(*it) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
         }
         // pvs
-        if (validMoveCount < 2 || !StaticConfig::doPVS) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck);
+        if (validMoveCount < 2 || !StaticConfig::doPVS ) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck);
         else{
             // reductions & prunings
             DepthType reduction = 0;
@@ -3236,7 +3237,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         }
         if (stopFlag) return STOPSCORE;
         if (rootnode && rootScores) rootScores->push_back({ *it,score });
-        if ( score > bestScore ){
+        if ( score > bestScore || randM){
             bestScore = score;
             bestMove = *it;
             bestScoreUpdated = true;
@@ -3255,7 +3256,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 }
             }
         }
-        if ( rootnode && DynamicConfig::level == 0 && validMoveCount ) break;
+        if ( randM && validMoveCount ) break;
     }
 
     if ( validMoveCount==0 ) return (isInCheck || skipMove!=INVALIDMOVE)?-MATE + ply : 0;
@@ -3452,7 +3453,7 @@ namespace COM {
         Logging::LogIt(Logging::logInfo) << ToString(position);
         return apply(position, m);
     }
-    
+
     void stop() {
         Logging::LogIt(Logging::logInfo) << "stopping previous search";
         ThreadContext::stopFlag = true;
@@ -3569,35 +3570,9 @@ bool replay(int nbmoves){
 void xboard(){
     Logging::LogIt(Logging::logInfo) << "Starting XBoard main loop" ;
     setFeature(); ///@todo should not be here
-    bool iterate = true;
-    std::future<void> l = std::async([&iterate]{
-      while(iterate) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        if(COM::mode == COM::m_analyze && COM::state == COM::st_none){
-            COM::state = COM::st_analyzing;
-            Logging::LogIt(Logging::logInfo) << "xboard search launched (analysis)";
-            COM::thinkAsync(60*60*1000*24); // 1 day == infinity ...
-            Logging::LogIt(Logging::logInfo) << "xboard async started (analysis)";
-        }
-        // move as computer if mode is equal to stm
-        else if((int)COM::mode == (int)COM::stm && COM::state == COM::st_none) {
-            COM::state = COM::st_searching;
-            Logging::LogIt(Logging::logInfo) << "xboard search launched";
-            COM::thinkAsync();
-            Logging::LogIt(Logging::logInfo) << "xboard async started";
-            //if ( COM::f.valid() ) COM::f.wait(); // synchronous search
-        }
-        // if not our turn, and ponder is on, let's think ...
-        else if(COM::move != INVALIDMOVE && (int)COM::mode == (int)COM::opponent(COM::stm) && COM::ponder == COM::p_on && COM::state == COM::st_none) {
-            COM::state = COM::st_pondering;
-            Logging::LogIt(Logging::logInfo) << "xboard search launched (pondering)";
-            COM::thinkAsync(60*60*1000*24); // 1 day == infinity ...
-            Logging::LogIt(Logging::logInfo) << "xboard async started (pondering)";
-        }
-      }
-    });
 
-    while(true) {
+    bool iterate = true;
+    while(iterate) {
         Logging::LogIt(Logging::logInfo) << "XBoard: mode  " << COM::mode ;
         Logging::LogIt(Logging::logInfo) << "XBoard: stm   " << COM::stm  ;
         Logging::LogIt(Logging::logInfo) << "XBoard: state " << COM::state;
@@ -3606,7 +3581,6 @@ void xboard(){
         while(once++ == 0 || !commandOK){ // loop until a good command is found
             commandOK = true;
             COM::readLine(); // read next command !
-
             if (COM::command == "force")        COM::mode = COM::m_force;
             else if (COM::command == "xboard")  Logging::LogIt(Logging::logInfo) << "This is minic!" ;
             else if (COM::command == "post")    display = true;
@@ -3681,7 +3655,7 @@ void xboard(){
                 COM::ponder = COM::p_off;
             }
             else if (COM::command == "hard"){COM::ponder = COM::p_on;}
-            else if (COM::command == "quit"){_exit(0);}
+            else if (COM::command == "quit"){iterate = false;}
             else if (COM::command == "pause"){
                 COM::stopPonder();
                 COM::readLine();
@@ -3751,10 +3725,31 @@ void xboard(){
             // let's try to read the unknown command as a move ... trying to fix a scid versus PC issue ...
             else if ( !receiveMove(COM::command)) Logging::LogIt(Logging::logInfo) << "Xboard does not know this command \"" << COM::command << "\"";
         } // readline
+
+        if(COM::mode == COM::m_analyze && COM::state == COM::st_none){
+            COM::state = COM::st_analyzing;
+            Logging::LogIt(Logging::logInfo) << "xboard search launched (analysis)";
+            COM::thinkAsync(60*60*1000*24); // 1 day == infinity ...
+            Logging::LogIt(Logging::logInfo) << "xboard async started (analysis)";
+        }
+        // move as computer if mode is equal to stm
+        else if((int)COM::mode == (int)COM::stm && COM::state == COM::st_none) {
+            COM::state = COM::st_searching;
+            Logging::LogIt(Logging::logInfo) << "xboard search launched";
+            COM::thinkAsync();
+            Logging::LogIt(Logging::logInfo) << "xboard async started";
+            //if ( COM::f.valid() ) COM::f.wait(); // synchronous search
+        }
+        // if not our turn, and ponder is on, let's think ...
+        else if(COM::move != INVALIDMOVE && (int)COM::mode == (int)COM::opponent(COM::stm) && COM::ponder == COM::p_on && COM::state == COM::st_none) {
+            COM::state = COM::st_pondering;
+            Logging::LogIt(Logging::logInfo) << "xboard search launched (pondering)";
+            COM::thinkAsync(60*60*1000*24); // 1 day == infinity ...
+            Logging::LogIt(Logging::logInfo) << "xboard async started (pondering)";
+        }
+
     } // while true
 
-    iterate = false;
-    l.wait();
 }
 } // XBoard
 

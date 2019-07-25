@@ -25,6 +25,7 @@ engines="$engines -engine conf=minic_0.78"
 engines="$engines -engine conf=asymptote_v0.6"
 engines="$engines -engine conf=Topple"
 engines="$engines -engine conf=Winter"
+engines="$engines -engine conf=minic_dev"
 
 echo $engines
 
