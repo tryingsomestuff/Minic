@@ -43,6 +43,7 @@ const std::string MinicVersion = "dev";
 -queen safety
 */
 
+#define INFINITETIME TimeType(60*60*1000*24)
 #define STOPSCORE   ScoreType(-20000)
 #define INFSCORE    ScoreType(15000)
 #define MATE        ScoreType(10000)
@@ -3339,7 +3340,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
     const bool isInCheck = isAttacked(p, kingSquare(p));
     DepthType startDepth = 1;
 
-    if ( isMainThread() && d > 9 ){
+    if ( isMainThread() && d > 9 && ThreadContext::currentMoveMs < INFINITETIME ){
        // easy move detection (small open window depth 2 search)
        std::vector<ThreadContext::RootScores> rootScores;
        ScoreType easyScore = pvs<true,false>(-MATE, MATE, p, 2, 1, pv, seldepth, isInCheck,INVALIDMOVE,&rootScores);
@@ -3392,7 +3393,7 @@ pvsout:
     if (pv.empty()){
         m = INVALIDMOVE;
         Logging::LogIt(Logging::logInfo) << "Empty pv, trying to use TT" ;
-        TT::getPV(p, *this, pv);
+        //TT::getPV(p, *this, pv); // might infinite loop !!!! ///@todo
     }
     if (pv.empty()) { Logging::LogIt(Logging::logWarn) << "Empty pv"; }// may occur in case of mate / stalemate...
     else m = pv[0];
@@ -3711,7 +3712,7 @@ void xboard(){
                 // forced move depth
                 TimeMan::isDynamic        = false;
                 TimeMan::nbMoveInTC       = -1;
-                TimeMan::msecPerMove      = 60*60*1000*24; // 1 day == infinity ...
+                TimeMan::msecPerMove      = INFINITETIME; // 1 day == infinity ...
                 TimeMan::msecInTC         = -1;
                 TimeMan::msecInc          = -1;
                 TimeMan::msecUntilNextTC  = -1;
@@ -3757,13 +3758,13 @@ void xboard(){
         if(COM::move != INVALIDMOVE && (int)COM::mode == (int)COM::opponent(COM::stm) && COM::ponder == COM::p_on && COM::state == COM::st_none) {
             COM::state = COM::st_pondering;
             Logging::LogIt(Logging::logInfo) << "xboard search launched (pondering)";
-            COM::thinkAsync(60*60*1000*24); // 1 day == infinity ...
+            COM::thinkAsync(INFINITETIME); // 1 day == infinity ...
             Logging::LogIt(Logging::logInfo) << "xboard async started (pondering)";
         }
         else if(COM::mode == COM::m_analyze && COM::state == COM::st_none){
             COM::state = COM::st_analyzing;
             Logging::LogIt(Logging::logInfo) << "xboard search launched (analysis)";
-            COM::thinkAsync(60*60*1000*24); // 1 day == infinity ...
+            COM::thinkAsync(INFINITETIME); // 1 day == infinity ...
             Logging::LogIt(Logging::logInfo) << "xboard async started (analysis)";
         }
     } // while true
