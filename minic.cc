@@ -3403,7 +3403,7 @@ pvsout:
 }
 
 namespace COM {
-    enum State : unsigned char { st_pondering = 0, st_analyzing, st_searching, st_none };
+    enum State : unsigned char { st_waiting_for_move = 0, st_pondering, st_analyzing, st_searching, st_none };
     State state; // this is redundant with Mode & Ponder...
     enum Ponder : unsigned char { p_off = 0, p_on = 1 };
     Ponder ponder;
@@ -3506,7 +3506,7 @@ namespace COM {
                     }
                 }
             }
-            state = st_none;
+            state = state==st_pondering ? st_waiting_for_move : st_none;
         });
     }
 
@@ -3560,6 +3560,7 @@ bool receiveMove(const std::string & command){
     else {
         COM::stm = COM::opponent(COM::stm);
         COM::moves.push_back(m);
+	COM::state = COM::st_none;
     }
     return true;
 }
