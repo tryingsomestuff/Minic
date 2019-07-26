@@ -80,6 +80,18 @@ Minic random mover stats are the following :
 Current level elo are more or less those :
 
 ```
+Rank Name                          Elo     +/-   Games   Score   Draws
+   1 minic_devlvl10                  631     156     175   97.4%    4.0%
+   2 minic_devlvl9                   407      88     177   91.2%    5.1%
+   3 minic_devlvl8                   231      61     177   79.1%    6.8%
+   4 minic_devlvl7                   167      56     177   72.3%    4.5%
+   5 minic_devlvl6                    65      51     178   59.3%    3.9%
+   6 minic_devlvl5                     2      50     178   50.3%    5.1%
+   7 minic_devlvl4                   -67      51     179   40.5%    2.8%
+   8 minic_devlvl3                  -165      55     179   27.9%    5.6%
+   9 minic_devlvl2                  -244      61     180   19.7%    7.2%
+  10 minic_devlvl1                  -308      69     179   14.5%    6.7%
+  11 minic_devlvl0                  -inf     nan     179    0.0%    0.0%
 ```
 
 ## How to compile
