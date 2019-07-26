@@ -64,7 +64,23 @@ Rank Name                          Elo     +/-   Games   Score   Draws
 17902 of 171000 games finished.        
 ```
 
-Minic strength can be ajdusted using the level option (from command line or json configuration file). Level 0 is a random mover, 1 very weak, ..., level 10 is full strength.
+Minic strength can be ajdusted using the level option (from command line or json configuration file). Level 0 is a random mover, 1 very weak, ..., level 10 is full strength. Level functionnaly will be enhanced in a near future.
+
+Minic random mover stats are the following :
+
+```
+   7.73%  0-1 {Black mates}
+   7.50%  1-0 {White mates}
+   2.45%  1/2-1/2 {Draw by 3-fold repetition}
+  21.99%  1/2-1/2 {Draw by fifty moves rule}
+  54.16%  1/2-1/2 {Draw by insufficient mating material}
+   6.13%  1/2-1/2 {Draw by stalemate}
+```
+
+Current level elo are more or less those :
+
+```
+```
 
 ## How to compile
 * Linux : use the given build script (or make your own ...)
