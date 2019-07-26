@@ -3403,7 +3403,7 @@ pvsout:
 }
 
 namespace COM {
-    enum State : unsigned char { st_waiting_for_move = 0, st_pondering, st_analyzing, st_searching, st_none };
+    enum State : unsigned char { st_pondering = 0, st_analyzing, st_searching, st_none };
     State state; // this is redundant with Mode & Ponder...
     enum Ponder : unsigned char { p_off = 0, p_on = 1 };
     Ponder ponder;
@@ -3506,7 +3506,8 @@ namespace COM {
                     }
                 }
             }
-            state = state==st_pondering ? st_waiting_for_move : st_none;
+            Logging::LogIt(Logging::logInfo) << "Putting state to none (state " << st << ")";
+            state = st_none;
         });
     }
 
@@ -3546,11 +3547,11 @@ void setFeature(){
 
 bool receiveMove(const std::string & command){
     std::string mstr(command);
+    COM::stop();
     const size_t p = command.find("usermove");
     if (p != std::string::npos) mstr = mstr.substr(p + 8);
     Move m = COM::moveFromCOM(mstr);
     if ( m == INVALIDMOVE ) return false;
-    COM::stop();
     if(!COM::makeMove(m,false,"")){ // make move
         Logging::LogIt(Logging::logInfo) << "Bad opponent move ! " << mstr;
         Logging::LogIt(Logging::logInfo) << ToString(COM::position) ;
@@ -3560,7 +3561,6 @@ bool receiveMove(const std::string & command){
     else {
         COM::stm = COM::opponent(COM::stm);
         COM::moves.push_back(m);
-	COM::state = COM::st_none;
     }
     return true;
 }
@@ -3690,6 +3690,7 @@ void xboard(){
                 // just updating remaining time in curren TC (shall be classic TC or sudden death)
                 TimeMan::isDynamic        = true;
                 TimeMan::msecUntilNextTC  = centisec*10;
+                commandOK = false; // waiting for usermove to be sent !!!! ///@todo this is not pretty !
             }
             else if ( strncmp(COM::command.c_str(), "st", 2) == 0) { // not following protocol, will update search time
                 int msecPerMove = 0;
@@ -3739,7 +3740,7 @@ void xboard(){
             else if ( COM::command == "hint")  { }
             else if ( COM::command == "bk")    { }
             else if ( COM::command == "random"){ }
-            else if ( strncmp(COM::command.c_str(), "otim",4) == 0){ }
+            else if ( strncmp(COM::command.c_str(), "otim",4) == 0){ commandOK = false; }
             else if ( COM::command == "."){ }
             //************ end of Xboard command ********//
             // let's try to read the unknown command as a move ... trying to fix a scid versus PC issue ...
