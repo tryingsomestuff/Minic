@@ -3571,7 +3571,7 @@ bool replay(size_t nbmoves){
     if (!COM::sideToMoveFromFEN(GetFEN(COM::initialPos))) return false;
     COM::initialPos = COM::position;
     COM::moves.clear();
-    for(int k = 0 ; k < nbmoves; ++k){
+    for(size_t k = 0 ; k < nbmoves; ++k){
         if(!COM::makeMove(vm[k],false,"")){ // make move
             Logging::LogIt(Logging::logInfo) << "Bad move ! " << ToString(vm[k]);
             Logging::LogIt(Logging::logInfo) << ToString(COM::position) ;
