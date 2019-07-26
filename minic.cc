@@ -71,9 +71,9 @@ const std::string MinicVersion = "dev";
 #define _DO_JOIN(symbol1,symbol2) symbol1##symbol2
 
 typedef std::chrono::system_clock Clock;
-typedef char DepthType;
+typedef signed char DepthType;
 typedef int Move;      // invalid if < 0
-typedef char Square;   // invalid if < 0
+typedef signed char Square;   // invalid if < 0
 typedef uint64_t Hash; // invalid if == 0
 typedef uint64_t Counter;
 typedef uint64_t BitBoard;
@@ -448,7 +448,7 @@ std::string startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq 
 std::string fine70 = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1";
 std::string shirov = "6r1/2rp1kpp/2qQp3/p3Pp1P/1pP2P2/1P2KP2/P5R1/6R1 w - - 0 1";
 
-enum Piece    : char{ P_bk = -6, P_bq = -5, P_br = -4, P_bb = -3, P_bn = -2, P_bp = -1, P_none = 0, P_wp = 1, P_wn = 2, P_wb = 3, P_wr = 4, P_wq = 5, P_wk = 6 };
+enum Piece    : signed char{ P_bk = -6, P_bq = -5, P_br = -4, P_bb = -3, P_bn = -2, P_bp = -1, P_none = 0, P_wp = 1, P_wn = 2, P_wb = 3, P_wr = 4, P_wq = 5, P_wk = 6 };
 Piece operator++(Piece & pp){pp=Piece(pp+1); return pp;}
 const int PieceShift = 6;
 enum Mat      : unsigned char{ M_t = 0, M_p, M_n, M_b, M_r, M_q, M_k, M_bl, M_bd, M_M, M_m };
@@ -482,7 +482,7 @@ enum MType : unsigned char{
 
 Piece promShift(MType mt){ assert(mt>=T_promq); assert(mt<=T_cappromn); return Piece(P_wq - (mt%4));} // awfull hack
 
-enum Color : char{ Co_None  = -1,   Co_White = 0,   Co_Black = 1,   Co_End };
+enum Color : signed char{ Co_None  = -1,   Co_White = 0,   Co_Black = 1,   Co_End };
 constexpr Color operator~(Color c){return Color(c^Co_Black);} // switch color
 Color operator++(Color & c){c=Color(c+1); return c;}
 
@@ -560,7 +560,7 @@ enum BBSq : BitBoard { BBSq_a1 = SquareToBitboard(Sq_a1),BBSq_b1 = SquareToBitbo
                        BBSq_a8 = SquareToBitboard(Sq_a8),BBSq_b8 = SquareToBitboard(Sq_b8),BBSq_c8 = SquareToBitboard(Sq_c8),BBSq_d8 = SquareToBitboard(Sq_d8),BBSq_e8 = SquareToBitboard(Sq_e8),BBSq_f8 = SquareToBitboard(Sq_f8),BBSq_g8 = SquareToBitboard(Sq_g8),BBSq_h8 = SquareToBitboard(Sq_h8)};
 
 const BitBoard whiteSquare               = 0x55AA55AA55AA55AA; const BitBoard blackSquare               = 0xAA55AA55AA55AA55;
-const BitBoard whiteSideSquare           = 0x00000000FFFFFFFF; const BitBoard blackSideSquare           = 0xFFFFFFFF00000000;
+//const BitBoard whiteSideSquare           = 0x00000000FFFFFFFF; const BitBoard blackSideSquare           = 0xFFFFFFFF00000000;
 const BitBoard whiteKingQueenSide        = 0x0000000000000007; const BitBoard whiteKingKingSide         = 0x00000000000000e0;
 const BitBoard blackKingQueenSide        = 0x0700000000000000; const BitBoard blackKingKingSide         = 0xe000000000000000;
 const BitBoard whiteQueenSidePawnShield1 = 0x0000000000000700; const BitBoard whiteKingSidePawnShield1  = 0x000000000000e000;
@@ -568,24 +568,24 @@ const BitBoard blackQueenSidePawnShield1 = 0x0007000000000000; const BitBoard bl
 const BitBoard whiteQueenSidePawnShield2 = 0x0000000000070000; const BitBoard whiteKingSidePawnShield2  = 0x0000000000e00000;
 const BitBoard blackQueenSidePawnShield2 = 0x0000070000000000; const BitBoard blackKingSidePawnShield2 = 0x0000e00000000000;
 const BitBoard fileA                     = 0x0101010101010101;
-const BitBoard fileB                     = 0x0202020202020202;
-const BitBoard fileC                     = 0x0404040404040404;
-const BitBoard fileD                     = 0x0808080808080808;
-const BitBoard fileE                     = 0x1010101010101010;
-const BitBoard fileF                     = 0x2020202020202020;
-const BitBoard fileG                     = 0x4040404040404040;
+//const BitBoard fileB                     = 0x0202020202020202;
+//const BitBoard fileC                     = 0x0404040404040404;
+//const BitBoard fileD                     = 0x0808080808080808;
+//const BitBoard fileE                     = 0x1010101010101010;
+//const BitBoard fileF                     = 0x2020202020202020;
+//const BitBoard fileG                     = 0x4040404040404040;
 const BitBoard fileH                     = 0x8080808080808080;
-const BitBoard files[8] = {fileA,fileB,fileC,fileD,fileE,fileF,fileG,fileH};
+//const BitBoard files[8] = {fileA,fileB,fileC,fileD,fileE,fileF,fileG,fileH};
 const BitBoard rank1                     = 0x00000000000000ff;
-const BitBoard rank2                     = 0x000000000000ff00;
-const BitBoard rank3                     = 0x0000000000ff0000;
-const BitBoard rank4                     = 0x00000000ff000000;
-const BitBoard rank5                     = 0x000000ff00000000;
-const BitBoard rank6                     = 0x0000ff0000000000;
-const BitBoard rank7                     = 0x00ff000000000000;
+//const BitBoard rank2                     = 0x000000000000ff00;
+//const BitBoard rank3                     = 0x0000000000ff0000;
+//const BitBoard rank4                     = 0x00000000ff000000;
+//const BitBoard rank5                     = 0x000000ff00000000;
+//const BitBoard rank6                     = 0x0000ff0000000000;
+//const BitBoard rank7                     = 0x00ff000000000000;
 const BitBoard rank8                     = 0xff00000000000000;
-const BitBoard ranks[8] = {rank1,rank2,rank3,rank4,rank5,rank6,rank7,rank8};
-const BitBoard center = BBSq_d4 | BBSq_d5 | BBSq_e4 | BBSq_e5;
+//const BitBoard ranks[8] = {rank1,rank2,rank3,rank4,rank5,rank6,rank7,rank8};
+//const BitBoard center = BBSq_d4 | BBSq_d5 | BBSq_e4 | BBSq_e5;
 
 std::string showBitBoard(const BitBoard & b) {
     std::bitset<64> bs(b);
@@ -708,7 +708,7 @@ Mask mask[64];
 
 inline void initMask() {
     Logging::LogIt(Logging::logInfo) << "Init mask" ;
-    int d[64][64] = { 0 };
+    int d[64][64] = { {0} };
     for (Square x = 0; x < 64; ++x) {
         mask[x].bbsquare = SquareToBitboard(x);
         for (int i = -1; i <= 1; ++i) {
@@ -922,7 +922,6 @@ namespace MaterialHash { // from Gull
     const int MatWP = (3 * 3 * 3 * 3 * 2 * 2 * 2 * 2 * 3 * 3);
     const int MatBP = (3 * 3 * 3 * 3 * 2 * 2 * 2 * 2 * 3 * 3 * 9);
     const int TotalMat = ((2 * (MatWQ + MatBQ) + MatWL + MatBL + MatWD + MatBD + 2 * (MatWR + MatBR + MatWN + MatBN) + 8 * (MatWP + MatBP)) + 1);
-    const int UnknownMaterialHash = -1;
 
     inline Hash getMaterialHash(const Position::Material & mat) {
         if (mat[Co_White][M_q] > 2 || mat[Co_Black][M_q] > 2 || mat[Co_White][M_r] > 2 || mat[Co_Black][M_r] > 2 || mat[Co_White][M_bl] > 1 || mat[Co_Black][M_bl] > 1 || mat[Co_White][M_bd] > 1 || mat[Co_Black][M_bd] > 1 || mat[Co_White][M_n] > 2 || mat[Co_Black][M_n] > 2 || mat[Co_White][M_p] > 8 || mat[Co_Black][M_p] > 8) return 0;
@@ -930,7 +929,7 @@ namespace MaterialHash { // from Gull
     }
 
     inline Position::Material getMatReverseColor(const Position::Material & mat) {
-        Position::Material rev = {0};
+        Position::Material rev = {{{{0}}}};
         rev[Co_White][M_k]  = mat[Co_Black][M_k];   rev[Co_Black][M_k]  = mat[Co_White][M_k];
         rev[Co_White][M_q]  = mat[Co_Black][M_q];   rev[Co_Black][M_q]  = mat[Co_White][M_q];
         rev[Co_White][M_r]  = mat[Co_Black][M_r];   rev[Co_Black][M_r]  = mat[Co_White][M_r];
@@ -946,7 +945,7 @@ namespace MaterialHash { // from Gull
     }
 
     Position::Material materialFromString(const std::string & strMat) {
-        Position::Material mat = {0};
+        Position::Material mat = {{{{0}}}};
         Color c = Co_Black;
         for (auto it = strMat.begin(); it != strMat.end(); ++it) {
             switch (*it) {
@@ -999,7 +998,7 @@ namespace MaterialHash { // from Gull
     };
 
     const ScoreType pushClose[8] = { 0, 0, 100, 80, 60, 40, 20,  10 };
-    const ScoreType pushAway [8] = { 0, 5,  20, 40, 60, 80, 90, 100 };
+    //const ScoreType pushAway [8] = { 0, 5,  20, 40, 60, 80, 90, 100 };
 
     ScoreType helperKXK(const Position &p, Color winningSide, ScoreType s){
         if (p.c != winningSide ){ // stale mate detection for losing side
@@ -3488,12 +3487,11 @@ namespace COM {
         if (state == st_pondering) { stop(); }
     }
 
-    void thinkAsync(TimeType forcedMs = -1) { // fork a future that runs a synchorous search, if needed send returned move to GUI
-        stop(); // stop anything launched previousliy
-        f = std::async(std::launch::async, [forcedMs] {
+    void thinkAsync(State st, TimeType forcedMs = -1) { // fork a future that runs a synchorous search, if needed send returned move to GUI
+        f = std::async(std::launch::async, [st,forcedMs] {
             COM::move = COM::thinkUntilTimeUp(forcedMs);
-            Logging::LogIt(Logging::logInfo) << "search async done (state " << state << ")";
-            if (state == st_searching) {
+            Logging::LogIt(Logging::logInfo) << "search async done (state " << st << ")";
+            if (st == st_searching) {
                 Logging::LogIt(Logging::logInfo) << "sending move to GUI " << ToString(COM::move);
                 if (COM::move == INVALIDMOVE) { COM::mode = COM::m_force; } // game ends
                 else {
@@ -3685,6 +3683,7 @@ void xboard(){
                 }
             }
             else if( strncmp(COM::command.c_str(), "time",4) == 0) {
+                COM::stopPonder();
                 int centisec = 0;
                 sscanf(COM::command.c_str(), "time %d", &centisec);
                 // just updating remaining time in curren TC (shall be classic TC or sudden death)
@@ -3750,7 +3749,7 @@ void xboard(){
         if((int)COM::mode == (int)COM::stm && COM::state == COM::st_none) {
             COM::state = COM::st_searching;
             Logging::LogIt(Logging::logInfo) << "xboard search launched";
-            COM::thinkAsync();
+            COM::thinkAsync(COM::state);
             Logging::LogIt(Logging::logInfo) << "xboard async started";
             if ( COM::f.valid() ) COM::f.wait(); // synchronous search
         }
@@ -3758,13 +3757,13 @@ void xboard(){
         if(COM::move != INVALIDMOVE && (int)COM::mode == (int)COM::opponent(COM::stm) && COM::ponder == COM::p_on && COM::state == COM::st_none) {
             COM::state = COM::st_pondering;
             Logging::LogIt(Logging::logInfo) << "xboard search launched (pondering)";
-            COM::thinkAsync(INFINITETIME); // 1 day == infinity ...
+            COM::thinkAsync(COM::state,INFINITETIME); // 1 day == infinity ...
             Logging::LogIt(Logging::logInfo) << "xboard async started (pondering)";
         }
         else if(COM::mode == COM::m_analyze && COM::state == COM::st_none){
             COM::state = COM::st_analyzing;
             Logging::LogIt(Logging::logInfo) << "xboard search launched (analysis)";
-            COM::thinkAsync(INFINITETIME); // 1 day == infinity ...
+            COM::thinkAsync(COM::state,INFINITETIME); // 1 day == infinity ...
             Logging::LogIt(Logging::logInfo) << "xboard async started (analysis)";
         }
     } // while true
