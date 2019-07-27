@@ -275,7 +275,7 @@ const bool doStaticNullMove = true;
 const bool doRazoring       = true;
 const bool doQFutility      = true;
 const bool doProbcut        = true;
-const bool doHistoryPruning = true; ///@todo
+const bool doHistoryPruning = true;
 // first value if eval score is used, second if hash score is used
 const ScoreType qfutilityMargin          [2] = {90, 90};
 const DepthType staticNullMoveMaxDepth   [2] = {6  , 6};
@@ -1285,6 +1285,10 @@ void updateMaterialProm(Position &p, const Square toBeCaptured, MType mt){
     p.mat[p.c][promShift(mt)]++;   // prom piece
 }
 
+inline void unSetBit(Position & p, Square k)           { assert(k >= 0 && k < 64); unSetBit(p.allB[getPieceIndex(p, k)], k);}
+inline void unSetBit(Position & p, Square k, Piece pp) { assert(k >= 0 && k < 64); unSetBit(p.allB[pp + PieceShift]    , k);}
+inline void setBit  (Position & p, Square k, Piece pp) { assert(k >= 0 && k < 64); setBit  (p.allB[pp + PieceShift]    , k);}
+
 void initBitBoards(Position & p) {
     p.whitePawn() = p.whiteKnight() = p.whiteBishop() = p.whiteRook() = p.whiteQueen() = p.whiteKing() = 0ull;
     p.blackPawn() = p.blackKnight() = p.blackBishop() = p.blackRook() = p.blackQueen() = p.blackKing() = 0ull;
@@ -1293,33 +1297,11 @@ void initBitBoards(Position & p) {
 
 void setBitBoards(Position & p) {
     initBitBoards(p);
-    for (Square k = 0; k < 64; ++k) {
-        ///@todo use all BB => 1 line ;-)
-        switch (p.b[k]){
-        case P_none: break;
-        case P_wp: p.whitePawn  () |= SquareToBitboard(k); break;
-        case P_wn: p.whiteKnight() |= SquareToBitboard(k); break;
-        case P_wb: p.whiteBishop() |= SquareToBitboard(k); break;
-        case P_wr: p.whiteRook  () |= SquareToBitboard(k); break;
-        case P_wq: p.whiteQueen () |= SquareToBitboard(k); break;
-        case P_wk: p.whiteKing  () |= SquareToBitboard(k); break;
-        case P_bp: p.blackPawn  () |= SquareToBitboard(k); break;
-        case P_bn: p.blackKnight() |= SquareToBitboard(k); break;
-        case P_bb: p.blackBishop() |= SquareToBitboard(k); break;
-        case P_br: p.blackRook  () |= SquareToBitboard(k); break;
-        case P_bq: p.blackQueen () |= SquareToBitboard(k); break;
-        case P_bk: p.blackKing  () |= SquareToBitboard(k); break;
-        default: assert(false);
-        }
-    }
+    for (Square k = 0; k < 64; ++k) { setBit(p,k,p.b[k]); }
     p.allPieces[Co_White] = p.whitePawn() | p.whiteKnight() | p.whiteBishop() | p.whiteRook() | p.whiteQueen() | p.whiteKing();
     p.allPieces[Co_Black] = p.blackPawn() | p.blackKnight() | p.blackBishop() | p.blackRook() | p.blackQueen() | p.blackKing();
     p.occupancy  = p.allPieces[Co_White] | p.allPieces[Co_Black];
 }
-
-inline void unSetBit(Position & p, Square k)           { assert(k >= 0 && k < 64); unSetBit(p.allB[getPieceIndex(p, k)], k);}
-inline void unSetBit(Position & p, Square k, Piece pp) { assert(k >= 0 && k < 64); unSetBit(p.allB[pp + PieceShift]    , k);}
-inline void setBit  (Position & p, Square k, Piece pp) { assert(k >= 0 && k < 64); setBit  (p.allB[pp + PieceShift]    , k);}
 
 namespace Zobrist {
     template < class T = Hash>
