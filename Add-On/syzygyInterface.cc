@@ -76,8 +76,8 @@ int probe_root(ThreadContext & context, const Position &p, ScoreType &score, Mov
 int probe_wdl(const Position &p, ScoreType &score, bool use50MoveRule){
    if ( MAX_TB_MEN <= 0 ) return -1;
    score = 0;
-   unsigned result = tb_probe_wdl(p.whitePiece,
-                                  p.blackPiece,
+   unsigned result = tb_probe_wdl(p.allPieces[Co_White],
+                                  p.allPieces[Co_Black],
                                   p.whiteKing()   | p.blackKing(),
                                   p.whiteQueen()  | p.blackQueen(),
                                   p.whiteRook()   | p.blackRook(),
