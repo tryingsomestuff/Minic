@@ -7,5 +7,6 @@
    "fullXboardOutput": true,
    "debugMode": false,
    "debugFile": "minic.debug",
-   "level": 10
+   "level": 10,
+   "syzygyPath": "/data/minic/TB/syzygy"
 }
