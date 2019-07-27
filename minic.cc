@@ -413,15 +413,6 @@ EvalScore   knightPairMalus   = {-2 , 4};
 EvalScore   rookPairMalus     = {-15,-9};
 EvalScore   pawnMobility      = { 4,  9};
 
-ScoreType   blockedBishopByPawn  = -24;
-ScoreType   blockedKnight        = -150;
-ScoreType   blockedKnight2       = -100;
-ScoreType   blockedBishop        = -150;
-ScoreType   blockedBishop2       = -100;
-ScoreType   blockedBishop3       = -50;
-ScoreType   returningBishopBonus =  16;
-ScoreType   blockedRookByKing    = -22;
-
 EvalScore MOB[6][29] = { {{0,0},{0,0},{0,0},{0,0}},
                          {{-22,-22},{41,-15},{49,7},{45,19},{56,12},{50,18},{47,20},{49,23},{46,22}},
                          {{-11,-18},{5,-8},{11,-1},{15,11},{12,25},{24,26},{19,33},{21,42},{23,40},{18,40},{21,39},{31,33},{36,36},{38,38},{40,40}},
@@ -2487,7 +2478,7 @@ double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f,
 void initEval(){ for(Square i = 0; i < 64; i++){ EvalConfig::kingAttTable[i] = (int) sigmoid(i,EvalConfig::kingAttMax,EvalConfig::kingAttTrans,EvalConfig::kingAttScale,EvalConfig::kingAttOffset); } } // idea taken from Topple
 
 struct ScoreAcc{
-    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_Pwn, sc_PwnShield, sc_PwnPassed, sc_PwnIsolated, sc_PwnDoubled, sc_PwnBackward, sc_PwnCandidate, sc_PwnPush, sc_Blocked, sc_Adjust, sc_OpenFile, sc_EndGame, sc_Exchange, sc_Tempo, sc_max };
+    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_Pwn, sc_PwnShield, sc_PwnPassed, sc_PwnIsolated, sc_PwnDoubled, sc_PwnBackward, sc_PwnCandidate, sc_PwnPush, sc_Adjust, sc_OpenFile, sc_EndGame, sc_Exchange, sc_Tempo, sc_max };
     float scalingFactor = 1;
     EvalScore scores[sc_max];
     ScoreType Score(const Position &p, float gp){
@@ -2496,7 +2487,7 @@ struct ScoreAcc{
         return ScoreType(ScaleScore(sc,gp)*scalingFactor*std::min(1.f,(110-p.fifty)/100.f));
     }
     void Display(const Position &p, float gp){
-        static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "Pwn", "PwnShield", "PwnPassed", "PwnIsolated", "PwnDoubled", "PwnBackward", "PwnCandidate", "PwnPush", "Blocked", "Adjust", "OpenFile", "EndGame", "Exchange", "Tempo"};
+        static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "Pwn", "PwnShield", "PwnPassed", "PwnIsolated", "PwnDoubled", "PwnBackward", "PwnCandidate", "PwnPush", "Adjust", "OpenFile", "EndGame", "Exchange", "Tempo"};
         EvalScore sc;
         for(int k = 0 ; k < sc_max ; ++k){
             Logging::LogIt(Logging::logInfo) << scNames[k] << "       " << scores[k][MG];
@@ -2720,85 +2711,6 @@ ScoreType eval(const Position & p, float & gp ){
 
     // in very end game winning king must be near the other king ///@todo shall be removed if material helpers work ...
     if ((p.mat[Co_White][M_p] + p.mat[Co_Black][M_p] == 0) && p.king[Co_White] != INVALIDSQUARE && p.king[Co_Black] != INVALIDSQUARE) score.scores[ScoreAcc::sc_EndGame][EG] -= ScoreType((score.scores[ScoreAcc::sc_Mat][EG]>0?+1:-1)*(chebyshevDistance(p.king[Co_White], p.king[Co_Black])-2)*15);
-
-    /*
-    // blocked piece ///@todo
-    // white
-    // bishop blocked by own pawn
-    ScoreType scBlocked = 0;
-    if ( (p.whiteBishop() & BBSq_c1) && (pawns[Co_White] & BBSq_d2) && (p.occupancy & BBSq_d3) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedBishopByPawn;
-    if ( (p.whiteBishop() & BBSq_f1) && (pawns[Co_White] & BBSq_e2) && (p.occupancy & BBSq_e3) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedBishopByPawn;
-
-    // trapped knight
-    if ( (p.whiteKnight() & BBSq_a8) && ( (pawns[Co_Black] & BBSq_a7) || (pawns[Co_Black] & BBSq_c7) ) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedKnight;
-    if ( (p.whiteKnight() & BBSq_h8) && ( (pawns[Co_Black] & BBSq_h7) || (pawns[Co_Black] & BBSq_f7) ) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedKnight;
-    if ( (p.whiteKnight() & BBSq_a7) && ( (pawns[Co_Black] & BBSq_a6) || (pawns[Co_Black] & BBSq_b7) ) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedKnight2;
-    if ( (p.whiteKnight() & BBSq_h7) && ( (pawns[Co_Black] & BBSq_h6) || (pawns[Co_Black] & BBSq_g7) ) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedKnight2;
-
-    // trapped bishop
-    if ( (p.whiteBishop() & BBSq_a7) && (pawns[Co_Black] & BBSq_b6) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedBishop;
-    if ( (p.whiteBishop() & BBSq_h7) && (pawns[Co_Black] & BBSq_g6) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedBishop;
-    if ( (p.whiteBishop() & BBSq_b8) && (pawns[Co_Black] & BBSq_c7) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedBishop2;
-    if ( (p.whiteBishop() & BBSq_g8) && (pawns[Co_Black] & BBSq_f7) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedBishop2;
-    if ( (p.whiteBishop() & BBSq_a6) && (pawns[Co_Black] & BBSq_b5) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedBishop3;
-    if ( (p.whiteBishop() & BBSq_h6) && (pawns[Co_Black] & BBSq_g5) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedBishop3;
-
-    // bishop near castled king (bonus)
-    if ( (p.whiteBishop() & BBSq_f1) && (p.whiteKing() & BBSq_g1) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::returningBishopBonus;
-    if ( (p.whiteBishop() & BBSq_c1) && (p.whiteKing() & BBSq_b1) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::returningBishopBonus;
-
-    // king blocking rook
-    if ( ( (p.whiteKing() & BBSq_f1) || (p.whiteKing() & BBSq_g1) ) && ( (p.whiteRook() & BBSq_h1) || (p.whiteRook() & BBSq_g1) ) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedRookByKing;
-    if ( ( (p.whiteKing() & BBSq_c1) || (p.whiteKing() & BBSq_b1) ) && ( (p.whiteRook() & BBSq_a1) || (p.whiteRook() & BBSq_b1) ) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedRookByKing;
-
-    // black
-    // bishop blocked by own pawn
-    if ( (p.blackBishop() & BBSq_c8) && (pawns[Co_Black] & BBSq_d7) && (p.occupancy & BBSq_d6) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedBishopByPawn;
-    if ( (p.blackBishop() & BBSq_f8) && (pawns[Co_Black] & BBSq_e7) && (p.occupancy & BBSq_e6) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedBishopByPawn;
-
-    // trapped knight
-    if ( (p.blackKnight() & BBSq_a1) && ((pawns[Co_White] & BBSq_a2) || (pawns[Co_White] & BBSq_c2) ) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedKnight;
-    if ( (p.blackKnight() & BBSq_h1) && ((pawns[Co_White] & BBSq_h2) || (pawns[Co_White] & BBSq_f2) ) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedKnight;
-    if ( (p.blackKnight() & BBSq_a2) && ((pawns[Co_White] & BBSq_a3) || (pawns[Co_White] & BBSq_b2) ) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedKnight2;
-    if ( (p.blackKnight() & BBSq_h2) && ((pawns[Co_White] & BBSq_h3) || (pawns[Co_White] & BBSq_g2) ) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedKnight2;
-
-    // trapped bishop
-    if ( (p.blackBishop() & BBSq_a2) && (pawns[Co_White] & BBSq_b3) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedBishop;
-    if ( (p.blackBishop() & BBSq_h2) && (pawns[Co_White] & BBSq_g3) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedBishop;
-    if ( (p.blackBishop() & BBSq_b1) && (pawns[Co_White] & BBSq_c2) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedBishop2;
-    if ( (p.blackBishop() & BBSq_g1) && (pawns[Co_White] & BBSq_f2) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedBishop2;
-    if ( (p.blackBishop() & BBSq_a3) && (pawns[Co_White] & BBSq_b4) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedBishop3;
-    if ( (p.blackBishop() & BBSq_h3) && (pawns[Co_White] & BBSq_g4) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedBishop3;
-
-    // bishop near castled king (bonus)
-    if ( (p.blackBishop() & BBSq_f8) && (p.blackKing() & BBSq_g8) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::returningBishopBonus;
-    if ( (p.blackBishop() & BBSq_c8) && (p.blackKing() & BBSq_b8) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::returningBishopBonus;
-
-    // king blocking rook
-    if ( ( (p.blackKing() & BBSq_f8) || (p.blackKing() & BBSq_g8) ) && ( (p.blackRook() & BBSq_h8) || (p.blackRook() & BBSq_g8) ) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedRookByKing;
-    if ( ( (p.blackKing() & BBSq_c8) || (p.blackKing() & BBSq_b8) ) && ( (p.blackRook() & BBSq_a8) || (p.blackRook() & BBSq_b8) ) ) score.scores[MG][ScoreAcc::sc_Blocked] += EvalConfig::blockedRookByKing;
-    */
-
-    // number of pawn and piece type value
-    score.scores[ScoreAcc::sc_Adjust] += EvalConfig::adjRook  [p.mat[Co_White][M_p]] * ScoreType(p.mat[Co_White][M_r]);
-    score.scores[ScoreAcc::sc_Adjust] -= EvalConfig::adjRook  [p.mat[Co_Black][M_p]] * ScoreType(p.mat[Co_Black][M_r]);
-    score.scores[ScoreAcc::sc_Adjust] += EvalConfig::adjKnight[p.mat[Co_White][M_p]] * ScoreType(p.mat[Co_White][M_n]);
-    score.scores[ScoreAcc::sc_Adjust] -= EvalConfig::adjKnight[p.mat[Co_Black][M_p]] * ScoreType(p.mat[Co_Black][M_n]);
-
-    // adjust piece pair score
-    score.scores[ScoreAcc::sc_Adjust]   += ( (p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonus : 0)-(p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonus : 0) );
-    score.scores[ScoreAcc::sc_Adjust]   += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0) );
-    score.scores[ScoreAcc::sc_Adjust]   += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
-
-    // pawn shield (PST and king troppism alone is not enough)
-    score.scores[ScoreAcc::sc_PwnShield] += EvalConfig::pawnShieldBonus     * (((p.whiteKing() & whiteKingQueenSide ) != 0ull)*countBit(pawns[Co_White] & whiteQueenSidePawnShield1));
-    score.scores[ScoreAcc::sc_PwnShield] += EvalConfig::pawnShieldBonus / 2 * (((p.whiteKing() & whiteKingQueenSide ) != 0ull)*countBit(pawns[Co_White] & whiteQueenSidePawnShield2));
-    score.scores[ScoreAcc::sc_PwnShield] += EvalConfig::pawnShieldBonus     * (((p.whiteKing() & whiteKingKingSide  ) != 0ull)*countBit(pawns[Co_White] & whiteKingSidePawnShield1 ));
-    score.scores[ScoreAcc::sc_PwnShield] += EvalConfig::pawnShieldBonus / 2 * (((p.whiteKing() & whiteKingKingSide  ) != 0ull)*countBit(pawns[Co_White] & whiteKingSidePawnShield2 ));
-    score.scores[ScoreAcc::sc_PwnShield] -= EvalConfig::pawnShieldBonus     * (((p.blackKing() & blackKingQueenSide ) != 0ull)*countBit(pawns[Co_Black] & blackQueenSidePawnShield1));
-    score.scores[ScoreAcc::sc_PwnShield] -= EvalConfig::pawnShieldBonus / 2 * (((p.blackKing() & blackKingQueenSide ) != 0ull)*countBit(pawns[Co_Black] & blackQueenSidePawnShield2));
-    score.scores[ScoreAcc::sc_PwnShield] -= EvalConfig::pawnShieldBonus     * (((p.blackKing() & blackKingKingSide  ) != 0ull)*countBit(pawns[Co_Black] & blackKingSidePawnShield1 ));
-    score.scores[ScoreAcc::sc_PwnShield] -= EvalConfig::pawnShieldBonus / 2 * (((p.blackKing() & blackKingKingSide  ) != 0ull)*countBit(pawns[Co_Black] & blackKingSidePawnShield2 ));
 
     // tempo
     //score.scores[ScoreAcc::sc_Tempo] += ScoreType(30);
