@@ -1,0 +1,11 @@
+#!/bin/bash
+
+dir=$(readlink -f $(dirname $0)/../)
+
+cd $dir
+
+g++ -g -O3 -flto --std=c++11 minic.cc -lpthread -DDEBUG_TOOL 
+#valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all ./a.out -analyze "fine70" 35
+#valgrind --tool=exp-sgcheck ./a.out -analyze "fine70" 35
+valgrind --tool=memcheck ./a.out -analyze "fine70" 35
+
