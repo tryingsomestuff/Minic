@@ -139,7 +139,7 @@ namespace UCI {
                             else                             { Logging::LogIt(Logging::logGUI) << "info string " << param << " not implemented"; }
                         }
                         Logging::LogIt(Logging::logInfo) << "uci search launched";
-                        COM::thinkAsync();
+                        COM::thinkAsync(COM::st_searching);
                         Logging::LogIt(Logging::logInfo) << "uci async started";
                     }
                     else { Logging::LogIt(Logging::logGUI) << "info string search command received, but no position specified"; }

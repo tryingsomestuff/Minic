@@ -1,6 +1,8 @@
 #!/bin/bash
 dir=$(readlink -f $(dirname $0)/..)
 
+$dir/tools/buildFathom.sh
+
 d="-DDEBUG_TOOL"
 v="dev"
 t="-march=native"
@@ -25,10 +27,18 @@ if [ "$t" != "-march=native" ]; then
    tname=$(echo $t | sed 's/-m//g' | sed 's/arch=//g' | sed 's/ /_/g')
    exe=${exe}_${tname}
 fi
+
+lib=fathom_${v}_linux_x64
+if [ "$t" != "-march=native" ]; then
+   tname=$(echo $t | sed 's/-m//g' | sed 's/arch=//g' | sed 's/ /_/g')
+   lib=${lib}_${tname}
+fi
+lib=${lib}.o
+
 echo "Building $exe"
-OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto $t --std=c++14 -IFathom/src"
+OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto $t --std=c++14 -I$dir/Fathom/src"
 #OPT="-Wall -Wno-char-subscripts -Wno-reorder $d -g -flto $t --std=c++11 -IFathom/src"
-g++ -fprofile-generate $OPT minic.cc -o $dir/Dist/$exe -lpthread
+g++ -fprofile-generate $OPT minic.cc -o $dir/Dist/$exe -lpthread $dir/Fathom/src/$lib
 $dir/Dist/$exe -analyze "r2q1rk1/p4ppp/1pb1pn2/8/5P2/1PBB3P/P1PPQ1P1/2KR3R b - - 1 14" 20
-g++ -fprofile-use $OPT minic.cc -o $dir/Dist/$exe -lpthread
+g++ -fprofile-use $OPT minic.cc -o $dir/Dist/$exe -lpthread $dir/Fathom/src/$lib
 
