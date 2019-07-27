@@ -150,7 +150,7 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
             Move bestMove = INVALIDMOVE;
             PVList pv;
             ThreadData d = {depth,seldepth,s,extP,bestMove,pv}; // only input coef
-            ThreadPool::instance().searchSync(d);
+            ThreadPool::instance().search(d);
             bestMove = ThreadPool::instance().main().getData().best; // here output results
 
             results[k][t].name = extP.id();
@@ -161,7 +161,7 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
             Logging::LogIt(Logging::logInfo) << "Best move found is  " << results[k][t].computerMove;
 
             if ( extP.shallFindBest()){
-                Logging::LogIt(Logging::logInfo) << "Best move should be " << extP.bestMoves();
+                Logging::LogIt(Logging::logInfo) << "Best move should be " << extP.bestMoves()[0];
                 results[k][t].bm = extP.bestMoves();
                 results[k][t].score = 0;
                 bool success = false;
@@ -175,7 +175,7 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
                 if ( breakAtFirstSuccess && success ) break;
             }
             else if( extP.shallAvoidBad()){
-                Logging::LogIt(Logging::logInfo) << "Bad move was " << extP.badMoves();
+                Logging::LogIt(Logging::logInfo) << "Bad move was " << extP.badMoves()[0];
                 results[k][t].am = extP.badMoves();
                 results[k][t].score = scores[t];
                 bool success = true;

@@ -1,13 +1,13 @@
 
-#define TB_CUSTOM_BSWAP32 swapbits32
-#define TB_CUSTOM_BSWAP64 swapbits
+//#define TB_CUSTOM_BSWAP32 swapbits32
+//#define TB_CUSTOM_BSWAP64 swapbits
 
 extern "C" {
-#include "tbprobe.c"
+#include "tbprobe.h"
 }
 
 namespace SyzygyTb {
-    
+
 const ScoreType TB_CURSED_SCORE = 1;
 const ScoreType TB_WIN_SCORE = 1000;
 
