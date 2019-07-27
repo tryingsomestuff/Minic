@@ -30,7 +30,7 @@ fi
 lib=${lib}.o
 echo "Building $lib"
 
-OPT="-s -Wall -Wno-char-subscripts $d -DNDEBUG -O3 -flto $t -I."
+OPT="-Wall -Wno-char-subscripts $d -DNDEBUG -O3 -flto $t -I."
 gcc -c $OPT tbprobe.c -o $lib
 
 cd -

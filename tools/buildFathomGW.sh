@@ -32,6 +32,5 @@ echo "Building $lib"
 
 OPT="-s -Wall -Wno-char-subscripts $d -DNDEBUG -O3 -flto $t -I."
 x86_64-w64-mingw32-gcc -c $OPT tbprobe.c -o $lib
-x86_64-w64-mingw32-strip ${lib}
 
 cd -
