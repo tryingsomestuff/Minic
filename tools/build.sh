@@ -1,12 +1,16 @@
 #!/bin/bash
 dir=$(readlink -f $(dirname $0)/..)
 
-$dir/tools/buildFathom.sh
+FATHOM_PRESENT=0
+if [ -e Fathom/src/tbprobe.h ]; then
+   FATHOM_PRESENT=1
+   echo "found Fathom lib, trying to build"
+   $dir/tools/buildFathom.sh
+fi
 
 d="-DDEBUG_TOOL"
 v="dev"
 t="-march=native"
-#t="-mpopcnt -msse4.2 -mavx -mavx2 -mbmi -mbmi2"
 
 if [ -n "$1" ] ; then
    v=$1
@@ -22,23 +26,28 @@ g++ -v
 echo "version $v"
 echo "definition $d"
 echo "target $t"
+
 exe=minic_${v}_linux_x64
 if [ "$t" != "-march=native" ]; then
    tname=$(echo $t | sed 's/-m//g' | sed 's/arch=//g' | sed 's/ /_/g')
    exe=${exe}_${tname}
 fi
 
-lib=fathom_${v}_linux_x64
-if [ "$t" != "-march=native" ]; then
-   tname=$(echo $t | sed 's/-m//g' | sed 's/arch=//g' | sed 's/ /_/g')
-   lib=${lib}_${tname}
-fi
-lib=${lib}.o
-
 echo "Building $exe"
-OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto $t --std=c++14 -I$dir/Fathom/src"
-#OPT="-Wall -Wno-char-subscripts -Wno-reorder $d -g -flto $t --std=c++11 -IFathom/src"
-g++ -fprofile-generate $OPT minic.cc -o $dir/Dist/$exe -lpthread $dir/Fathom/src/$lib
+OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto $t --std=c++14"
+echo $OPT
+
+if [ $FATHOM_PRESENT = "1" ]; then
+   lib=fathom_${v}_linux_x64
+   if [ "$t" != "-march=native" ]; then
+      tname=$(echo $t | sed 's/-m//g' | sed 's/arch=//g' | sed 's/ /_/g')
+      lib=${lib}_${tname}
+   fi
+   lib=${lib}.o
+   OPT="$OPT $dir/Fathom/src/$lib -I$dir/Fathom/src"
+fi
+
+g++ -fprofile-generate $OPT minic.cc -o $dir/Dist/$exe -lpthread
 $dir/Dist/$exe -analyze "r2q1rk1/p4ppp/1pb1pn2/8/5P2/1PBB3P/P1PPQ1P1/2KR3R b - - 1 14" 20
-g++ -fprofile-use $OPT minic.cc -o $dir/Dist/$exe -lpthread $dir/Fathom/src/$lib
+g++ -fprofile-use $OPT minic.cc -o $dir/Dist/$exe -lpthread
 
