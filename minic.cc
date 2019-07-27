@@ -2435,11 +2435,11 @@ struct MoveSorter{
             if ( useSEE && !context.SEE(p,m,0)) s -= 2*MoveScoring[T_capture];
         }
         else if ( t == T_std){
-            if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 1600;
-            else if (sameMove(m, context.killerT.killers[1][p.halfmoves])) s += 1500;
-            else if (p.halfmoves > 1 && sameMove(m, context.killerT.killers[0][p.halfmoves-2])) s += 1400;
-            else if (p.lastMove!=INVALIDMOVE && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 1300;
-            else s += context.historyT.history[getPieceIndex(p, from)][to];
+            if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 1800;
+            else if (sameMove(m, context.killerT.killers[1][p.halfmoves])) s += 1650;
+            else if (p.halfmoves > 1 && sameMove(m, context.killerT.killers[0][p.halfmoves-2])) s += 1500;
+            else if (p.lastMove!=INVALIDMOVE && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 1350;
+            else s += context.historyT.history[getPieceIndex(p, from)][to]; // +/- 1000
             const bool isWhite = (p.allPieces[Co_White] & SquareToBitboard(from)) != 0ull;
             s += ScaleScore(EvalConfig::PST[getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - EvalConfig::PST[getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from],gp);
         }
