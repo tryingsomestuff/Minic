@@ -189,7 +189,7 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
                 if ( breakAtFirstSuccess && success ) break;
             }
             else { // look into c0 section ...
-                Logging::LogIt(Logging::logInfo) << "Mea style " << extP.comment0();
+                Logging::LogIt(Logging::logInfo) << "Mea style " << extP.comment0()[0];
                 std::vector<std::string> tokens = extP.comment0();
                 for (size_t s = 0 ; s < tokens.size() ; ++s){
                     std::string tmp = tokens[s];
