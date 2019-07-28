@@ -83,7 +83,7 @@ typedef long long int TimeType;
 enum GamePhase { MG=0, EG=1, GP_MAX=2 };
 GamePhase operator++(GamePhase & g){g=GamePhase(g+1); return g;}
 
-struct EvalScore{
+struct EvalScore{ ///@todo use Stockfish trick (two short in one int)
     ScoreType sc[GP_MAX] = {0};
     EvalScore(ScoreType mg,ScoreType eg):sc{mg,eg}{}
     EvalScore(ScoreType s):sc{s,s}{}
@@ -279,7 +279,7 @@ const bool doHistoryPruning = true;
 // first value if eval score is used, second if hash score is used
 const ScoreType qfutilityMargin          [2] = {90, 90};
 const DepthType staticNullMoveMaxDepth   [2] = {6  , 6};
-const ScoreType staticNullMoveDepthCoeff [2] = {80 , 80}; // -50*improving
+const ScoreType staticNullMoveDepthCoeff [2] = {80 , 80};
 const ScoreType staticNullMoveDepthInit  [2] = {0  , 0};
 const ScoreType razoringMarginDepthCoeff [2] = {0  , 0};
 const ScoreType razoringMarginDepthInit  [2] = {200, 200};
@@ -287,7 +287,8 @@ const DepthType razoringMaxDepth         [2] = {3  , 3};
 const DepthType nullMoveMinDepth             = 2;
 const DepthType lmpMaxDepth                  = 10;
 const DepthType historyPruningMaxDepth       = 3;
-const ScoreType historyPruningThreshold      = 0;
+const ScoreType historyPruningThresholdInit  = 0;
+const ScoreType historyPruningThresholdDepth = 0;
 const DepthType futilityMaxDepth         [2] = {10 , 10};
 const ScoreType futilityDepthCoeff       [2] = {160 , 160};
 const ScoreType futilityDepthInit        [2] = {0  ,0};
@@ -2416,7 +2417,7 @@ struct MoveSorter{
             else if (p.lastMove!=INVALIDMOVE && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 1350;
             else s += context.historyT.history[getPieceIndex(p, from)][to]; // +/- 1000
             const bool isWhite = (p.allPieces[Co_White] & SquareToBitboard(from)) != 0ull;
-            s += ScaleScore(EvalConfig::PST[getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - EvalConfig::PST[getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from],gp);
+            s += ScaleScore(EvalConfig::PST[getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - EvalConfig::PST[getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from],gp)/*/2*/; ///@todo try lower values ?
         }
         m = ToMove(from, to, t, s);
     }
@@ -2530,7 +2531,7 @@ inline void evalPawnPasser(const Position & p, BitBoard pieceBBiterator, ScoreAc
         const EvalScore kingNearBonus   = EvalConfig::kingNearPassedPawn    * ScoreType( chebyshevDistance(p.king[~C], k) - chebyshevDistance(p.king[C], k) );
         const EvalScore rookBehind      = EvalConfig::rookBehindPassed      * (countBit(p.pieces<P_wr>(C) & BB::mask[k].rearSpan[C]) - countBit(p.pieces<P_wr>(~C) & BB::mask[k].rearSpan[C]));
         const bool unstoppable          = (p.mat[~C][M_t] == 0)&&((chebyshevDistance(p.king[~C],PromotionSquare<C>(k))-int(p.c!=C)) > std::min(Square(5), chebyshevDistance(PromotionSquare<C>(k),k)));
-        if (unstoppable) score.scores[ScoreAcc::sc_PwnPassed] += ColorSignHelper<C>()*(Values[P_wq+PieceShift] - Values[P_wp+PieceShift]);
+        if (unstoppable) score.scores[ScoreAcc::sc_PwnPassed] += ColorSignHelper<C>()*(Values[P_wr+PieceShift] - Values[P_wp+PieceShift]); // yes rook not queen to force promotion asap
         else             score.scores[ScoreAcc::sc_PwnPassed] += (EvalConfig::passerBonus[ColorRank<C>(k)].scale((1.f+factorProtected[MG]*ONEPERCENT)*(1.f+factorFree[MG]*ONEPERCENT),(1.f+factorProtected[EG]*ONEPERCENT)*(1.f+factorFree[EG]*ONEPERCENT)) + kingNearBonus + rookBehind)*ColorSignHelper<C>();
     }
 }
@@ -2720,7 +2721,7 @@ ScoreType adjustHashScore(ScoreType score, DepthType ply){
 extern "C" {
 #include "tbprobe.h"
 }
-namespace SyzygyTb {
+namespace SyzygyTb { // from Arasan
 const ScoreType TB_CURSED_SCORE = 1;
 const ScoreType TB_WIN_SCORE = 1000;
 const ScoreType valueMap[5]     = {-TB_WIN_SCORE, -TB_CURSED_SCORE, 0, TB_CURSED_SCORE, TB_WIN_SCORE};
@@ -2995,8 +2996,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     // prunings
     if ( !DynamicConfig::mateFinder && canPrune && !isInCheck && !isMateScore(beta) && !pvnode){ ///@todo removing the !isMateScore(beta) is not losing that much elo and allow for better check mate finding ...
-        // static null move ///@todo use improving ?
-        if (StaticConfig::doStaticNullMove && isNotEndGame && depth <= StaticConfig::staticNullMoveMaxDepth[evalScoreIsHashScore] && evalScore >= beta + StaticConfig::staticNullMoveDepthInit[evalScoreIsHashScore] + (StaticConfig::staticNullMoveDepthCoeff[evalScoreIsHashScore] /*- 50*improving*/) * depth) return ++stats.counters[Stats::sid_staticNullMove], evalScore;
+        // static null move
+        if (StaticConfig::doStaticNullMove && isNotEndGame && depth <= StaticConfig::staticNullMoveMaxDepth[evalScoreIsHashScore] && evalScore >= beta + StaticConfig::staticNullMoveDepthInit[evalScoreIsHashScore] + (StaticConfig::staticNullMoveDepthCoeff[evalScoreIsHashScore]) * depth) return ++stats.counters[Stats::sid_staticNullMove], evalScore;
 
         // razoring
         ScoreType rAlpha = alpha - StaticConfig::razoringMarginDepthInit[evalScoreIsHashScore] - StaticConfig::razoringMarginDepthCoeff[evalScoreIsHashScore]*marginDepth;
@@ -3183,7 +3184,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             // LMP
             if (lmp && isPrunableStdNoCheck && validMoveCount >= StaticConfig::lmpLimit[improving][depth] ) {++stats.counters[Stats::sid_lmp]; continue;}
             // History pruning
-            if (historyPruning && isPrunableStdNoCheck && validMoveCount > StaticConfig::lmpLimit[improving][depth]/3 && Move2Score(*it) < StaticConfig::historyPruningThreshold) {++stats.counters[Stats::sid_historyPruning]; continue;}
+            if (historyPruning && isPrunableStdNoCheck /*&& validMoveCount > StaticConfig::lmpLimit[improving][depth]/3*/ && Move2Score(*it) < StaticConfig::historyPruningThresholdInit + depth*StaticConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
             // LMR
             if (StaticConfig::doLMR && !DynamicConfig::mateFinder && isPrunableStd && depth >= StaticConfig::lmrMinDepth ){
                 reduction = StaticConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
@@ -3351,7 +3352,7 @@ pvsout:
     if (pv.empty()){
         m = INVALIDMOVE;
         Logging::LogIt(Logging::logInfo) << "Empty pv, trying to use TT" ;
-        //TT::getPV(p, *this, pv); // might infinite loop !!!! ///@todo
+        //TT::getPV(p, *this, pv); // might infinite loop !!!! ///@todo fix this
     }
     if (pv.empty()) { Logging::LogIt(Logging::logWarn) << "Empty pv"; }// may occur in case of mate / stalemate...
     else m = pv[0];
