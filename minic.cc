@@ -2408,7 +2408,10 @@ struct MoveSorter{
         else if (isInCheck && getPieceType(p, from) == P_wk) s += 8500;
         if (isCapture(t)){
             s += StaticConfig::MvvLvaScores[getPieceType(p,to)-1][getPieceType(p,from)-1];
-            if ( useSEE && !context.SEE(p,m,0)) s -= 2*MoveScoring[T_capture];
+            if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 1800;
+            else if (sameMove(m, context.killerT.killers[1][p.halfmoves])) s += 1650;
+            else if (p.halfmoves > 1 && sameMove(m, context.killerT.killers[0][p.halfmoves-2])) s += 1500;
+            else if ( useSEE && !context.SEE(p,m,0)) s -= 2*MoveScoring[T_capture];
         }
         else if ( t == T_std){
             if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 1800;
@@ -2723,7 +2726,7 @@ extern "C" {
 }
 namespace SyzygyTb { // from Arasan
 const ScoreType TB_CURSED_SCORE = 1;
-const ScoreType TB_WIN_SCORE = 1000;
+const ScoreType TB_WIN_SCORE = 2000;
 const ScoreType valueMap[5]     = {-TB_WIN_SCORE, -TB_CURSED_SCORE, 0, TB_CURSED_SCORE, TB_WIN_SCORE};
 const ScoreType valueMapNo50[5] = {-TB_WIN_SCORE, -TB_WIN_SCORE,    0, TB_WIN_SCORE,    TB_WIN_SCORE};
 int MAX_TB_MEN = -1;
@@ -2960,16 +2963,17 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if ( skipMove==INVALIDMOVE && TT::getEntry(*this,computeHash(p), depth, e)) { // if not skipmove
         if ( e.h != 0 && !rootnode && !pvnode && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
             if ( e.m != INVALIDMOVE) pv.push_back(e.m); // here e.m might be INVALIDMOVE if B_alpha without alphaUpdated/bestScoreUpdated (so don't try this at root node !)
-            if ((Move2Type(e.m) == T_std /*|| isBadCap(e.m)*/) && !isInCheck) updateTables(*this, p, depth, e.m, e.b);
+            if ((Move2Type(e.m) == T_std || isBadCap(e.m)) && !isInCheck) updateTables(*this, p, depth, e.m, e.b);
             return adjustHashScore(e.score, ply);
         }
     }
 
 #ifdef WITH_SYZYGY
     ScoreType tbScore = 0;
-    if ( !rootnode && (countBit(p.allPieces[Co_White]|p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN && SyzygyTb::probe_wdl(p, tbScore, false) > 0){
+    if ( !rootnode && skipMove==INVALIDMOVE && (countBit(p.allPieces[Co_White]|p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN && SyzygyTb::probe_wdl(p, tbScore, false) > 0){
        ++stats.counters[Stats::sid_tbHit1];
-       TT::setEntry({INVALIDMOVE,createHashScore(tbScore,ply),eval(p, gp),TT::B_exact,DepthType(200),computeHash(p)});
+       if ( abs(tbScore) == SyzygyTb::TB_WIN_SCORE) tbScore += (e.h != 0)?e.eval:eval(p, gp);
+       TT::setEntry({INVALIDMOVE,createHashScore(tbScore,ply),tbScore,TT::B_exact,DepthType(200),computeHash(p)});
        return tbScore;
     }
 #endif
@@ -3112,7 +3116,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                     if (pvnode) updatePV(pv, e.m, childPV);
                     if (ttScore >= beta) {
                         ++stats.counters[Stats::sid_ttbeta];
-                        if ((Move2Type(e.m) == T_std /*|| isBadCap(e.m)*/) && !isInCheck) updateTables(*this, p, depth + (ttScore > (beta+80)), e.m, TT::B_beta); ///@todo badcap can be killers ?
+                        if ((Move2Type(e.m) == T_std || isBadCap(e.m)) && !isInCheck) updateTables(*this, p, depth + (ttScore > (beta+80)), e.m, TT::B_beta); ///@todo badcap can be killers ?
                         if (skipMove == INVALIDMOVE /*&& ttScore != 0*/) TT::setEntry({ e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth,computeHash(p) });
                         return ttScore;
                     }
@@ -3130,9 +3134,9 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if (SyzygyTb::probe_root(*this, p, tbScore, moves) < 0) { // only good moves if TB success
             if (capMoveGenerated) generate<GP_quiet>(p, moves, true);
             else                  generate<GP_all>  (p, moves, false);
-            moveGenerated = true;
         }
         else ++stats.counters[Stats::sid_tbHit2];
+        moveGenerated = true;
     }
 #endif
 
@@ -3184,7 +3188,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             // LMP
             if (lmp && isPrunableStdNoCheck && validMoveCount >= StaticConfig::lmpLimit[improving][depth] ) {++stats.counters[Stats::sid_lmp]; continue;}
             // History pruning
-            if (historyPruning && isPrunableStdNoCheck /*&& validMoveCount > StaticConfig::lmpLimit[improving][depth]/3*/ && Move2Score(*it) < StaticConfig::historyPruningThresholdInit + depth*StaticConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
+            if (historyPruning && isPrunableStdNoCheck && validMoveCount > StaticConfig::lmpLimit[improving][depth]/3 && Move2Score(*it) < StaticConfig::historyPruningThresholdInit + depth*StaticConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
             // LMR
             if (StaticConfig::doLMR && !DynamicConfig::mateFinder && isPrunableStd && depth >= StaticConfig::lmrMinDepth ){
                 reduction = StaticConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
@@ -3222,9 +3226,9 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 alpha = score;
                 hashBound = TT::B_exact;
                 if ( score >= beta ){
-                    if ( (Move2Type(*it) == T_std /*|| isBadCap(*it)*/) && !isInCheck){ ///@todo bad cap can be killers?
+                    if ( (Move2Type(*it) == T_std || isBadCap(*it)) && !isInCheck){ ///@todo bad cap can be killers?
                         updateTables(*this, p, depth + (score>beta+80), *it, TT::B_beta);
-                        for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2) if ( Move2Type(*it2) == T_std && !sameMove(*it2, killerT.killers[0][p.halfmoves])/*|| isBadCap(*it2)*/) historyT.update<-1>(depth + (score > (beta + 80)),*it2,p); ///@todo bad cap can be killers
+                        for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2) if ( Move2Type(*it2) == T_std && !sameMove(*it2, killerT.killers[0][p.halfmoves]) /*|| isBadCap(*it2)*/) historyT.update<-1>(depth + (score > (beta + 80)),*it2,p); ///@todo bad cap can be killers
                     }
                     hashBound = TT::B_beta;
                     break;
