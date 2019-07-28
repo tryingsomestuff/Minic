@@ -119,12 +119,21 @@ Minic now comes with both a json configuration file where some parameters can be
    "mateFinder": false,
    "ttSizeMb": 1024,
    "book": true,
-   "bookFile": "book_big.bin",
-   "fullXboardOutput": false,
-   "level": 10
+   "bookFile": "book.bin",
+   "fullXboardOutput": true,
+   "debugMode": false,
+   "debugFile": "minic.debug",
+   "level": 10,
+   "syzygyPath": "/data/minic/TB/syzygy"
 }
+
 ```
 and a command line interface, using the same key word. For instance, forcing mateFinder mode can be done by adding "-mateFinder 1" when calling Minic.
+
+## Syzygy EGT
+
+To compile with SYZYGY support you'll need to clone https://github.com/jdart1/Fathom as Fathom directory and activate WITH_SYZYGY definition at compile time.
+To use EGT just specify syzygyPath in the configuration file or in the command line.
 
 ## Opening books
 
