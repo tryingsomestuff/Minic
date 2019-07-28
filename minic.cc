@@ -3134,10 +3134,9 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if (SyzygyTb::probe_root(*this, p, tbScore, moves) < 0) { // only good moves if TB success
             if (capMoveGenerated) generate<GP_quiet>(p, moves, true);
             else                  generate<GP_all>  (p, moves, false);
-            moveGenerated = true;
         }
         else ++stats.counters[Stats::sid_tbHit2];
-
+        moveGenerated = true;
     }
 #endif
 
