@@ -1,0 +1,16 @@
+#!/bin/bash
+
+dir=$(readlink -f $(dirname $0)/..)
+
+CUTECHESS=$dir/../cutechess/projects/cli/cutechess-cli
+ARCH=_avx2_bmi2
+engines=""
+
+engines="$engines -engine conf=minic_devl0"
+engines="$engines -engine conf=minic_devl0"
+
+echo $engines
+
+$CUTECHESS $engines -each proto=xboard tc=40/20 timemargin=200 -rounds 1000000 -pgnout pgn_$(date +"%Y_%m_%d"_%H%M%S).out -ratinginterval 1 -recover -concurrency 8 > tournament_rand.log 2>&1 &
+
+
