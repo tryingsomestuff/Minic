@@ -37,6 +37,8 @@ Please note that Win32 binaries are very slow (I don't know why yet, so please u
 ## Strength
 Minic 0.47 is 2650 on the CCRL 40/40 scale, so way to strong for me ! This is more or less like GM level for human being.
 
+Minic finished 13/18 at TCEC16 qualification league (https://cd.tcecbeta.club/archive.html?season=16&div=ql&game=1)
+
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
    1 zurichess-neuchatel           235      16    1884   79.4%   20.9%
@@ -236,7 +238,7 @@ Zurichess by Alexandru Moșoi
 
 Many thanks also to all testers for all those long time control tests, they really are valuable inputs in the chess engine development process. 
 
-Also thanks to TCEC for letting Minic participate to the Season 15 division 4a, it was fun to see Minic on such a great hardware.
+Also thanks to TCEC for letting Minic participate to the Season 15 division 4a and Season 16 qualification league, it was fun to see Minic on such a great hardware.
 
 And of course thanks to all the members of the talkchess forum and CPW, and to H.G. Muller for hosting the friendly monthly tourney.
 
