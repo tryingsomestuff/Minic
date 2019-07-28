@@ -2624,7 +2624,7 @@ ScoreType eval(const Position & p, float & gp ){
     att[Co_White] |= (pawnTargets[Co_White] /*& ~p.allPieces[Co_White]*/);
     att[Co_Black] |= (pawnTargets[Co_Black] /*& ~p.allPieces[Co_Black]*/);
 
-    // safe mobility
+    // mobility
     evalMob<P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),score,att);
     evalMob<P_wb,Co_White>(p,p.pieces<P_wb>(Co_White),score,att);
     evalMob<P_wr,Co_White>(p,p.pieces<P_wr>(Co_White),score,att);
@@ -2972,7 +2972,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     ScoreType tbScore = 0;
     if ( !rootnode && skipMove==INVALIDMOVE && (countBit(p.allPieces[Co_White]|p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN && SyzygyTb::probe_wdl(p, tbScore, false) > 0){
        ++stats.counters[Stats::sid_tbHit1];
-       if ( abs(tbScore) == SyzygyTb::TB_WIN_SCORE) tbScore += (e.h != 0)?e.eval:eval(p, gp);
+       if ( abs(tbScore) == SyzygyTb::TB_WIN_SCORE) tbScore += eval(p, gp);
        TT::setEntry({INVALIDMOVE,createHashScore(tbScore,ply),tbScore,TT::B_exact,DepthType(200),computeHash(p)});
        return tbScore;
     }
@@ -3134,9 +3134,10 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if (SyzygyTb::probe_root(*this, p, tbScore, moves) < 0) { // only good moves if TB success
             if (capMoveGenerated) generate<GP_quiet>(p, moves, true);
             else                  generate<GP_all>  (p, moves, false);
+            moveGenerated = true;
         }
         else ++stats.counters[Stats::sid_tbHit2];
-        moveGenerated = true;
+
     }
 #endif
 
@@ -3144,10 +3145,12 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if (!moveGenerated) {
         if (capMoveGenerated) generate<GP_quiet>(p, moves, true);
         else                  generate<GP_all>  (p, moves, false);
-        if (moves.empty()) return isInCheck ? -MATE + ply : 0;
+    }
+
+    if (moves.empty()) return isInCheck ? -MATE + ply : 0;
+
     /*if ( isMainThread() )*/ sort(*this, moves, p, gp, true, isInCheck, &e);
     //else std::random_shuffle(moves.begin(),moves.end());
-    }
 
     ScoreType score = -MATE + ply;
 
