@@ -8,5 +8,5 @@
    "debugMode": false,
    "debugFile": "minic.debug",
    "level": 10,
-   "syzygyPath": "/data/minic/TB/syzygy"
+   "syzygyPath": "/ssd/Minic/TB/syzygy"
 }

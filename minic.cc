@@ -2967,7 +2967,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             return adjustHashScore(e.score, ply);
         }
     }
-    bool ttHit = e.h != 0 && (e.b == TT::B_exact);
 
 #ifdef WITH_SYZYGY
     ScoreType tbScore = 0;
@@ -3014,7 +3013,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         }
 
         // null move
-        if (isNotEndGame && !ttHit && StaticConfig::doNullMove && depth >= StaticConfig::nullMoveMinDepth) {
+        if (isNotEndGame && StaticConfig::doNullMove && depth >= StaticConfig::nullMoveMinDepth) {
             PVList nullPV;
             ++stats.counters[Stats::sid_nullMoveTry];
             const DepthType R = depth / 4 + 3 + std::min((evalScore - beta) / 80, 3); // adaptative
