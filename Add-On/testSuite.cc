@@ -40,7 +40,7 @@ std::string showAlgAbr(Move m, const Position & p) {
     if ( numberOf(p,t)>1 ){
         std::vector<Square> v;
         BitBoard b = getPieceBitboard(p,t);
-        while (b) v.push_back(BB::popBit(b));
+        while (b) v.push_back(BBTools::popBit(b));
         for(auto it = v.begin() ; it != v.end() ; ++it){
             if ( *it == from ) continue; // to not compare to myself ...
             MoveList l;

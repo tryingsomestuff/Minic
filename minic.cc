@@ -31,7 +31,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
 //#define WITH_TEST_SUITE
-#define WITH_SYZYGY
+//#define WITH_SYZYGY
 //#define WITH_UCI
 
 const std::string MinicVersion = "dev";
@@ -124,7 +124,6 @@ struct EvalScore{ ///@todo use Stockfish trick (two short in one int)
     void       operator =(const int& s){for(GamePhase g=MG; g<GP_MAX; ++g){sc[g]=s;}}
 
     EvalScore scale(float s_mg,float s_eg)const{ EvalScore e(*this); e[MG]= ScoreType(s_mg*e[MG]); e[EG]= ScoreType(s_eg*e[EG]); return e;}
-
 };
 
 template < typename T, int sizeT >
@@ -145,7 +144,7 @@ struct OptList {
    const T & operator [](size_t k) const { assert(k < sizeT);  return _m[k]; }
 };
 
-typedef OptList<Move,   MAX_MOVE> MoveList;
+typedef OptList<Move,MAX_MOVE> MoveList;
 typedef std::vector<Square> SquareList; //typedef OptList<Square, MAX_CAP>  SquareList; is slower
 typedef std::vector<Move> PVList; //struct PVList : public std::vector<Move> { PVList():std::vector<Move>(MAX_DEPTH, INVALIDMOVE) {}; }; is slower
 
@@ -182,9 +181,7 @@ namespace Logging {
         friend void init();
     public:
         LogIt(LogLevel loglevel) :_level(loglevel) {}
-
         template <typename T> Logging::LogIt & operator<<(T const & value) { _buffer << value; return *this; }
-
         ~LogIt() {
             static const std::string _levelNames[7] = { "# Trace ", "# Debug ", "# Info  ", "", "# Warn  ", "# Error ", "# Fatal " };
             std::lock_guard<std::mutex> lock(_mutex);
@@ -538,7 +535,7 @@ inline int BitScanForward(BitBoard bb) { assert(bb != 0ull); return __builtin_ct
 #endif
 
 #define SquareToBitboard(k) (1ull<<(k))
-#define SquareToBitboardTable(k) BB::mask[k].bbsquare
+#define SquareToBitboardTable(k) BBTools::mask[k].bbsquare
 inline ScoreType countBit(const BitBoard & b)           { return ScoreType(POPCOUNT(b));}
 inline void      setBit  (      BitBoard & b, Square k) { b |= SquareToBitboard(k);}
 inline void      unSetBit(      BitBoard & b, Square k) { b &= ~SquareToBitboard(k);}
@@ -651,8 +648,16 @@ struct Position{
     Material mat = {{{{0}}}};
 };
 
+namespace PieceTools{
+inline Piece getPieceIndex  (const Position &p, Square k){ assert(k >= 0 && k < 64); return Piece(p.b[k] + PieceShift);}
+inline Piece getPieceType   (const Position &p, Square k){ assert(k >= 0 && k < 64); return (Piece)std::abs(p.b[k]);}
+inline std::string getName  (const Position &p, Square k){ assert(k >= 0 && k < 64); return PieceNames[getPieceIndex(p,k)];}
+inline ScoreType getValue   (const Position &p, Square k){ assert(k >= 0 && k < 64); return Values[getPieceIndex(p,k)];}
+inline ScoreType getAbsValue(const Position &p, Square k){ assert(k >= 0 && k < 64); return std::abs(Values[getPieceIndex(p,k)]); }
+}
+
 // HQ BB code from Amoeba
-namespace BB {
+namespace BBTools {
 inline constexpr BitBoard _shiftSouth    (BitBoard b) { return b >> 8; }
 inline constexpr BitBoard _shiftNorth    (BitBoard b) { return b << 8; }
 inline constexpr BitBoard _shiftWest     (BitBoard b) { return b >> 1 & ~fileH; }
@@ -662,12 +667,12 @@ inline constexpr BitBoard _shiftNorthWest(BitBoard b) { return b << 7 & ~fileH; 
 inline constexpr BitBoard _shiftSouthEast(BitBoard b) { return b >> 7 & ~fileA; }
 inline constexpr BitBoard _shiftSouthWest(BitBoard b) { return b >> 9 & ~fileH; }
 
-template<Color C> inline constexpr BitBoard shiftN  (const BitBoard b) { return C==Co_White? BB::_shiftNorth(b) : BB::_shiftSouth(b); }
-template<Color C> inline constexpr BitBoard shiftS  (const BitBoard b) { return C!=Co_White? BB::_shiftNorth(b) : BB::_shiftSouth(b); }
-template<Color C> inline constexpr BitBoard shiftSW (const BitBoard b) { return C==Co_White? BB::_shiftSouthWest(b) : BB::_shiftNorthWest(b);}
-template<Color C> inline constexpr BitBoard shiftSE (const BitBoard b) { return C==Co_White? BB::_shiftSouthEast(b) : BB::_shiftNorthEast(b);}
-template<Color C> inline constexpr BitBoard shiftNW (const BitBoard b) { return C!=Co_White? BB::_shiftSouthWest(b) : BB::_shiftNorthWest(b);}
-template<Color C> inline constexpr BitBoard shiftNE (const BitBoard b) { return C!=Co_White? BB::_shiftSouthEast(b) : BB::_shiftNorthEast(b);}
+template<Color C> inline constexpr BitBoard shiftN  (const BitBoard b) { return C==Co_White? BBTools::_shiftNorth(b) : BBTools::_shiftSouth(b); }
+template<Color C> inline constexpr BitBoard shiftS  (const BitBoard b) { return C!=Co_White? BBTools::_shiftNorth(b) : BBTools::_shiftSouth(b); }
+template<Color C> inline constexpr BitBoard shiftSW (const BitBoard b) { return C==Co_White? BBTools::_shiftSouthWest(b) : BBTools::_shiftNorthWest(b);}
+template<Color C> inline constexpr BitBoard shiftSE (const BitBoard b) { return C==Co_White? BBTools::_shiftSouthEast(b) : BBTools::_shiftNorthEast(b);}
+template<Color C> inline constexpr BitBoard shiftNW (const BitBoard b) { return C!=Co_White? BBTools::_shiftSouthWest(b) : BBTools::_shiftNorthWest(b);}
+template<Color C> inline constexpr BitBoard shiftNE (const BitBoard b) { return C!=Co_White? BBTools::_shiftSouthEast(b) : BBTools::_shiftNorthEast(b);}
 
 template<Color> inline constexpr BitBoard fillForward(BitBoard b);
 template<> inline constexpr BitBoard fillForward<Co_White>(BitBoard b) {  b |= (b << 8u);    b |= (b << 16u);    b |= (b << 32u);    return b;}
@@ -869,6 +874,24 @@ template < Color C > bool getAttackers(const Position & p, const Square x, Squar
     return !attakers.empty();
 }
 
+inline void unSetBit(Position & p, Square k)           { assert(k >= 0 && k < 64); ::unSetBit(p.allB[PieceTools::getPieceIndex(p, k)], k);}
+inline void unSetBit(Position & p, Square k, Piece pp) { assert(k >= 0 && k < 64); ::unSetBit(p.allB[pp + PieceShift]    , k);}
+inline void setBit  (Position & p, Square k, Piece pp) { assert(k >= 0 && k < 64); ::setBit  (p.allB[pp + PieceShift]    , k);}
+
+void initBitBoards(Position & p) {
+    p.whitePawn() = p.whiteKnight() = p.whiteBishop() = p.whiteRook() = p.whiteQueen() = p.whiteKing() = 0ull;
+    p.blackPawn() = p.blackKnight() = p.blackBishop() = p.blackRook() = p.blackQueen() = p.blackKing() = 0ull;
+    p.allPieces[Co_White] = p.allPieces[Co_Black] = p.occupancy = 0ull;
+}
+
+void setBitBoards(Position & p) {
+    initBitBoards(p);
+    for (Square k = 0; k < 64; ++k) { setBit(p,k,p.b[k]); }
+    p.allPieces[Co_White] = p.whitePawn() | p.whiteKnight() | p.whiteBishop() | p.whiteRook() | p.whiteQueen() | p.whiteKing();
+    p.allPieces[Co_Black] = p.blackPawn() | p.blackKnight() | p.blackBishop() | p.blackRook() | p.blackQueen() | p.blackKing();
+    p.occupancy  = p.allPieces[Co_White] | p.allPieces[Co_Black];
+}
+
 } // BB
 
 inline ScoreType Move2Score(Move h) { assert(h != INVALIDMOVE); return (h >> 16) & 0xFFFF; }
@@ -877,12 +900,6 @@ inline Square    Move2To   (Move h) { assert(h != INVALIDMOVE); return (h >>  4)
 inline MType     Move2Type (Move h) { assert(h != INVALIDMOVE); return MType(h & 0xF)    ; }
 inline Move      ToMove(Square from, Square to, MType type)                  { assert(from >= 0 && from < 64); assert(to >= 0 && to < 64); return                 (from << 10) | (to << 4) | type; }
 inline Move      ToMove(Square from, Square to, MType type, ScoreType score) { assert(from >= 0 && from < 64); assert(to >= 0 && to < 64); return (score << 16) | (from << 10) | (to << 4) | type; }
-
-inline Piece getPieceIndex  (const Position &p, Square k){ assert(k >= 0 && k < 64); return Piece(p.b[k] + PieceShift);}
-inline Piece getPieceType   (const Position &p, Square k){ assert(k >= 0 && k < 64); return (Piece)std::abs(p.b[k]);}
-inline std::string getName  (const Position &p, Square k){ assert(k >= 0 && k < 64); return PieceNames[getPieceIndex(p,k)];}
-inline ScoreType getValue   (const Position &p, Square k){ assert(k >= 0 && k < 64); return Values[getPieceIndex(p,k)];}
-inline ScoreType getAbsValue(const Position &p, Square k){ assert(k >= 0 && k < 64); return std::abs(Values[getPieceIndex(p,k)]); }
 
 inline bool isMatingScore (ScoreType s) { return (s >=  MATE - MAX_DEPTH); }
 inline bool isMatedScore  (ScoreType s) { return (s <= -MATE + MAX_DEPTH); }
@@ -1020,7 +1037,7 @@ namespace MaterialHash { // from Gull
 
     Square normalizeSquare(const Position& p, Color strongSide, Square sq) {
        assert(countBit(p.pieces<P_wp>(strongSide)) == 1); // only for KPK !
-       if (SQFILE(BB::SquareFromBitBoard(p.pieces<P_wp>(strongSide))) >= File_e) sq = Square(HFlip(sq));
+       if (SQFILE(BBTools::SquareFromBitBoard(p.pieces<P_wp>(strongSide))) >= File_e) sq = Square(HFlip(sq));
        return strongSide == Co_White ? sq : VFlip(sq);
     }
 
@@ -1034,9 +1051,9 @@ namespace MaterialHash { // from Gull
         KPKPosition() = default;
         explicit KPKPosition(unsigned idx){ // first init
             ksq[Co_White] = Square( idx & 0x3F); ksq[Co_Black] = Square((idx >> 6) & 0x3F); us = Color ((idx >> 12) & 0x01);  psq = MakeSquare(File((idx >> 13) & 0x3), Rank(6 - ((idx >> 15) & 0x7)));
-            if ( chebyshevDistance(ksq[Co_White], ksq[Co_Black]) <= 1 || ksq[Co_White] == psq || ksq[Co_Black] == psq || (us == Co_White && (BB::mask[psq].pawnAttack[Co_White] & SquareToBitboard(ksq[Co_Black])))) result = kpk_invalid;
-            else if ( us == Co_White && SQRANK(psq) == 6 && ksq[us] != psq + 8 && ( chebyshevDistance(ksq[~us], psq + 8) > 1 || (BB::mask[ksq[us]].king & SquareToBitboard(psq + 8)))) result = kpk_win;
-            else if ( us == Co_Black && ( !(BB::mask[ksq[us]].king & ~(BB::mask[ksq[~us]].king | BB::mask[psq].pawnAttack[~us])) || (BB::mask[ksq[us]].king & SquareToBitboard(psq) & ~BB::mask[ksq[~us]].king))) result = kpk_draw;
+            if ( chebyshevDistance(ksq[Co_White], ksq[Co_Black]) <= 1 || ksq[Co_White] == psq || ksq[Co_Black] == psq || (us == Co_White && (BBTools::mask[psq].pawnAttack[Co_White] & SquareToBitboard(ksq[Co_Black])))) result = kpk_invalid;
+            else if ( us == Co_White && SQRANK(psq) == 6 && ksq[us] != psq + 8 && ( chebyshevDistance(ksq[~us], psq + 8) > 1 || (BBTools::mask[ksq[us]].king & SquareToBitboard(psq + 8)))) result = kpk_win;
+            else if ( us == Co_Black && ( !(BBTools::mask[ksq[us]].king & ~(BBTools::mask[ksq[~us]].king | BBTools::mask[psq].pawnAttack[~us])) || (BBTools::mask[ksq[us]].king & SquareToBitboard(psq) & ~BBTools::mask[ksq[~us]].king))) result = kpk_draw;
             else result = kpk_unknown; // done later
         }
         operator kpk_result() const { return result; }
@@ -1046,8 +1063,8 @@ namespace MaterialHash { // from Gull
             constexpr kpk_result good = (Us == Co_White ? kpk_win  : kpk_draw);
             constexpr kpk_result bad  = (Us == Co_White ? kpk_draw : kpk_win);
             kpk_result r = kpk_invalid;
-            BitBoard b = BB::mask[ksq[us]].king;
-            while (b){ r |= (Us == Co_White ? db[index(Them, ksq[Them], BB::popBit(b), psq)] : db[index(Them, BB::popBit(b), ksq[Them], psq)]); }
+            BitBoard b = BBTools::mask[ksq[us]].king;
+            while (b){ r |= (Us == Co_White ? db[index(Them, ksq[Them], BBTools::popBit(b), psq)] : db[index(Them, BBTools::popBit(b), ksq[Them], psq)]); }
             if (Us == Co_White){
                 if (SQRANK(psq) < 6) r |= db[index(Them, ksq[Them], ksq[Us], psq + 8)];
                 if (SQRANK(psq) == 1 && psq + 8 != ksq[Us] && psq + 8 != ksq[Them]) r |= db[index(Them, ksq[Them], ksq[Us], psq + 8 + 8)];
@@ -1080,8 +1097,8 @@ namespace MaterialHash { // from Gull
 
     ScoreType helperKPK(const Position &p, Color winningSide, ScoreType ){
        ///@todo maybe an incrementally updated piece square list can be cool to avoid those SquareFromBitBoard...
-       const Square psq = KPK::normalizeSquare(p, winningSide, BB::SquareFromBitBoard(p.pieces<P_wp>(winningSide)));
-       if (!KPK::probe(KPK::normalizeSquare(p, winningSide, BB::SquareFromBitBoard(p.pieces<P_wk>(winningSide))), psq, KPK::normalizeSquare(p, winningSide, BB::SquareFromBitBoard(p.pieces<P_wk>(~winningSide))), winningSide == p.c ? Co_White:Co_Black)) return 0;
+       const Square psq = KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces<P_wp>(winningSide)));
+       if (!KPK::probe(KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces<P_wk>(winningSide))), psq, KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces<P_wk>(~winningSide))), winningSide == p.c ? Co_White:Co_Black)) return 0;
        return ((winningSide == Co_White)?+1:-1)*(WIN + ValuesEG[P_wp+PieceShift] + 10*SQRANK(psq));
     }
 
@@ -1273,7 +1290,7 @@ void initMaterial(Position & p){ // M_p .. M_k is the same as P_wp .. P_wk
 }
 
 void updateMaterialStd(Position &p, const Square toBeCaptured){
-    p.mat[~p.c][getPieceType(p,toBeCaptured)]--; // capture if to square is not empty
+    p.mat[~p.c][PieceTools::getPieceType(p,toBeCaptured)]--; // capture if to square is not empty
 }
 
 void updateMaterialEp(Position &p){
@@ -1281,27 +1298,9 @@ void updateMaterialEp(Position &p){
 }
 
 void updateMaterialProm(Position &p, const Square toBeCaptured, MType mt){
-    p.mat[~p.c][getPieceType(p, toBeCaptured)]--; // capture if to square is not empty
+    p.mat[~p.c][PieceTools::getPieceType(p, toBeCaptured)]--; // capture if to square is not empty
     p.mat[p.c][P_wp]--; // pawn
     p.mat[p.c][promShift(mt)]++;   // prom piece
-}
-
-inline void unSetBit(Position & p, Square k)           { assert(k >= 0 && k < 64); unSetBit(p.allB[getPieceIndex(p, k)], k);}
-inline void unSetBit(Position & p, Square k, Piece pp) { assert(k >= 0 && k < 64); unSetBit(p.allB[pp + PieceShift]    , k);}
-inline void setBit  (Position & p, Square k, Piece pp) { assert(k >= 0 && k < 64); setBit  (p.allB[pp + PieceShift]    , k);}
-
-void initBitBoards(Position & p) {
-    p.whitePawn() = p.whiteKnight() = p.whiteBishop() = p.whiteRook() = p.whiteQueen() = p.whiteKing() = 0ull;
-    p.blackPawn() = p.blackKnight() = p.blackBishop() = p.blackRook() = p.blackQueen() = p.blackKing() = 0ull;
-    p.allPieces[Co_White] = p.allPieces[Co_Black] = p.occupancy = 0ull;
-}
-
-void setBitBoards(Position & p) {
-    initBitBoards(p);
-    for (Square k = 0; k < 64; ++k) { setBit(p,k,p.b[k]); }
-    p.allPieces[Co_White] = p.whitePawn() | p.whiteKnight() | p.whiteBishop() | p.whiteRook() | p.whiteQueen() | p.whiteKing();
-    p.allPieces[Co_Black] = p.blackPawn() | p.blackKnight() | p.blackBishop() | p.blackRook() | p.blackQueen() | p.blackKing();
-    p.occupancy  = p.allPieces[Co_White] | p.allPieces[Co_Black];
 }
 
 namespace Zobrist {
@@ -1319,7 +1318,6 @@ namespace Zobrist {
 }
 
 //#define DEBUG_HASH
-
 Hash computeHash(const Position &p){
 #ifdef DEBUG_HASH
     Hash h = p.h;
@@ -1429,7 +1427,7 @@ struct ThreadContext{
         }
         template<int S>
         inline void update(DepthType depth, Move m, const Position & p){
-            const int pp = getPieceIndex(p,Move2From(m));
+            const int pp = PieceTools::getPieceIndex(p,Move2From(m));
             const Square to = Move2To(m);
             if ( Move2Type(m) == T_std ) history[pp][to] += ScoreType( ( S - history[pp][to] / MAX_HISTORY) * HSCORE(depth) );
         }
@@ -1657,7 +1655,7 @@ std::string GetFENShort(const Position &p ){ // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/P
             if (p.b[k] == P_none) ++count;
             else {
                 if (count != 0) { ss << count; count = 0; }
-                ss << getName(p,k);
+                ss << PieceTools::getName(p,k);
             }
             if (j == 7) {
                 if (count != 0) { ss << count; count = 0; }
@@ -1725,7 +1723,7 @@ std::string ToString(const Position & p, bool noEval){
     ss << "Position" << std::endl;
     for (Square j = 7; j >= 0; --j) {
         ss << "# +-+-+-+-+-+-+-+-+" << std::endl << "# |";
-        for (Square i = 0; i < 8; ++i) ss << getName(p,i+j*8) << '|';
+        for (Square i = 0; i < 8; ++i) ss << PieceTools::getName(p,i+j*8) << '|';
         ss << std::endl;
     }
     ss << "# +-+-+-+-+-+-+-+-+" << std::endl;
@@ -1830,7 +1828,7 @@ bool readFEN(const std::string & fen, Position & p, bool silent){
     p.halfmoves = (int(p.moves) - 1) * 2 + 1 + (p.c == Co_Black ? 1 : 0);
 
     p.h = computeHash(p);
-    setBitBoards(p);
+    BBTools::setBitBoards(p);
     initMaterial(p);
     return true;
 }
@@ -1928,7 +1926,7 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
         }
         else { Logging::LogIt(Logging::logError) << "Trying to read bad move, invalid to square " << str ; return false; }
     }
-    if (getPieceType(p,from) == P_wp && to == p.ep) moveType = T_ep;
+    if (PieceTools::getPieceType(p,from) == P_wp && to == p.ep) moveType = T_ep;
     return true;
 }
 
@@ -2005,8 +2003,8 @@ TimeType ThreadContext::getCurrentMoveMs() {
 
 inline Square kingSquare(const Position & p) { return p.king[p.c]; }
 inline Square oppKingSquare(const Position & p) { return p.king[~p.c]; }
-inline bool isAttacked(const Position & p, const Square k) { return k!=INVALIDSQUARE && BB::isAttackedBB(p, k, p.c) != 0ull;}
-inline bool getAttackers(const Position & p, const Square k, SquareList & attakers, Color c) { return k!=INVALIDSQUARE && (c==Co_White?BB::getAttackers<Co_White>(p, k, attakers):BB::getAttackers<Co_Black>(p, k, attakers));}
+inline bool isAttacked(const Position & p, const Square k) { return k!=INVALIDSQUARE && BBTools::isAttackedBB(p, k, p.c) != 0ull;}
+inline bool getAttackers(const Position & p, const Square k, SquareList & attakers, Color c) { return k!=INVALIDSQUARE && (c==Co_White?BBTools::getAttackers<Co_White>(p, k, attakers):BBTools::getAttackers<Co_Black>(p, k, attakers));}
 
 enum GenPhase { GP_all = 0, GP_cap = 1, GP_quiet = 2 };
 
@@ -2019,13 +2017,13 @@ void generateSquare(const Position & p, MoveList & moves, Square from){
     const Piece piece = p.b[from];
     const Piece ptype = (Piece)std::abs(piece);
     assert ( ptype != P_none ) ;
-    static BitBoard(*const pf[])(const Square, const BitBoard, const Color) = { &BB::coverage<P_wp>, &BB::coverage<P_wn>, &BB::coverage<P_wb>, &BB::coverage<P_wr>, &BB::coverage<P_wq>, &BB::coverage<P_wk> };
+    static BitBoard(*const pf[])(const Square, const BitBoard, const Color) = { &BBTools::coverage<P_wp>, &BBTools::coverage<P_wn>, &BBTools::coverage<P_wb>, &BBTools::coverage<P_wr>, &BBTools::coverage<P_wq>, &BBTools::coverage<P_wk> };
     if (ptype != P_wp) {
         BitBoard bb = pf[ptype-1](from, p.occupancy, p.c) & ~myPieceBB;
         if      (phase == GP_cap)   bb &= oppPieceBB;  // only target opponent piece
         else if (phase == GP_quiet) bb &= ~oppPieceBB; // do not target opponent piece
         while (bb) {
-            const Square to = BB::popBit(bb);
+            const Square to = BBTools::popBit(bb);
             const bool isCap = (phase == GP_cap) || ((oppPieceBB&SquareToBitboard(to)) != 0ull);
             if (isCap) addMove(from,to,T_capture,moves);
             else addMove(from,to,T_std,moves);
@@ -2048,9 +2046,9 @@ void generateSquare(const Position & p, MoveList & moves, Square from){
     else {
         BitBoard pawnmoves = 0ull;
         static const BitBoard rank1_or_rank8 = rank1 | rank8;
-        if ( phase != GP_quiet) pawnmoves = BB::mask[from].pawnAttack[p.c] & ~myPieceBB & oppPieceBB;
+        if ( phase != GP_quiet) pawnmoves = BBTools::mask[from].pawnAttack[p.c] & ~myPieceBB & oppPieceBB;
         while (pawnmoves) {
-            const Square to = BB::popBit(pawnmoves);
+            const Square to = BBTools::popBit(pawnmoves);
             if ( SquareToBitboard(to) & rank1_or_rank8 ) {
                 addMove(from, to, T_cappromq, moves); // pawn capture with promotion
                 addMove(from, to, T_cappromr, moves); // pawn capture with promotion
@@ -2058,10 +2056,10 @@ void generateSquare(const Position & p, MoveList & moves, Square from){
                 addMove(from, to, T_cappromn, moves); // pawn capture with promotion
             } else addMove(from,to,T_capture,moves);
         }
-        if ( phase != GP_cap) pawnmoves |= BB::mask[from].push[p.c] & ~p.occupancy;
-        if ((phase != GP_cap) && (BB::mask[from].push[p.c] & p.occupancy) == 0ull) pawnmoves |= BB::mask[from].dpush[p.c] & ~p.occupancy;
+        if ( phase != GP_cap) pawnmoves |= BBTools::mask[from].push[p.c] & ~p.occupancy;
+        if ((phase != GP_cap) && (BBTools::mask[from].push[p.c] & p.occupancy) == 0ull) pawnmoves |= BBTools::mask[from].dpush[p.c] & ~p.occupancy;
         while (pawnmoves) {
-            const Square to = BB::popBit(pawnmoves);
+            const Square to = BBTools::popBit(pawnmoves);
             if ( SquareToBitboard(to) & rank1_or_rank8 ) {
                 addMove(from, to, T_promq, moves); // promotion Q
                 addMove(from, to, T_promr, moves); // promotion R
@@ -2069,8 +2067,8 @@ void generateSquare(const Position & p, MoveList & moves, Square from){
                 addMove(from, to, T_promn, moves); // promotion N
             } else addMove(from,to,T_std,moves);
         }
-        if ( p.ep != INVALIDSQUARE && phase != GP_quiet ) pawnmoves = BB::mask[from].pawnAttack[p.c] & ~myPieceBB & SquareToBitboard(p.ep);
-        while (pawnmoves) addMove(from,BB::popBit(pawnmoves),T_ep,moves);
+        if ( p.ep != INVALIDSQUARE && phase != GP_quiet ) pawnmoves = BBTools::mask[from].pawnAttack[p.c] & ~myPieceBB & SquareToBitboard(p.ep);
+        while (pawnmoves) addMove(from,BBTools::popBit(pawnmoves),T_ep,moves);
     }
 }
 
@@ -2078,7 +2076,7 @@ template < GenPhase phase = GP_all >
 void generate(const Position & p, MoveList & moves, bool doNotClear = false){
     if ( !doNotClear) moves.clear();
     BitBoard myPieceBBiterator = ( (p.c == Co_White) ? p.allPieces[Co_White] : p.allPieces[Co_Black]);
-    while (myPieceBBiterator) generateSquare<phase>(p,moves,BB::popBit(myPieceBBiterator));
+    while (myPieceBBiterator) generateSquare<phase>(p,moves,BBTools::popBit(myPieceBBiterator));
 }
 
 inline void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, bool isCapture = false, Piece prom = P_none) {
@@ -2090,9 +2088,9 @@ inline void movePiece(Position & p, Square from, Square to, Piece fromP, Piece t
     assert(to>=0 && to<64);
     p.b[from] = P_none;
     p.b[to]   = toPnew;
-    unSetBit(p, from, fromP);
-    unSetBit(p, to,   toP); // usefull only if move is a capture
-    setBit  (p, to,   toPnew);
+    BBTools::unSetBit(p, from, fromP);
+    BBTools::unSetBit(p, to,   toP); // usefull only if move is a capture
+    BBTools::setBit  (p, to,   toPnew);
     p.h ^= Zobrist::ZT[from][fromId]; // remove fromP at from
     if (isCapture) p.h ^= Zobrist::ZT[to][toId]; // if capture remove toP at to
     p.h ^= Zobrist::ZT[to][toIdnew]; // add fromP (or prom) at to
@@ -2105,6 +2103,10 @@ void applyNull(Position & pN) {
     pN.lastMove = INVALIDMOVE;
     if (pN.ep != INVALIDSQUARE) pN.h ^= Zobrist::ZT[pN.ep][13];
     pN.ep = INVALIDSQUARE;
+///@todo fix null move ???
+//    pN.fifty = 0;
+//    if ( pN.c == Co_White ) ++pN.moves;
+//    ++pN.halfmoves;
 }
 
 bool apply(Position & p, const Move & m){
@@ -2167,9 +2169,9 @@ bool apply(Position & p, const Move & m){
         assert(SQRANK(p.ep) == 2 || SQRANK(p.ep) == 5);
         const Square epCapSq = p.ep + (p.c == Co_White ? -8 : +8);
         assert(epCapSq>=0 && epCapSq<64);
-        unSetBit(p, epCapSq); // BEFORE setting p.b new shape !!!
-        unSetBit(p, from);
-        setBit(p, to, fromP);
+        BBTools::unSetBit(p, epCapSq); // BEFORE setting p.b new shape !!!
+        BBTools::unSetBit(p, from);
+        BBTools::setBit(p, to, fromP);
         p.b[from] = P_none;
         p.b[to] = fromP;
         p.b[epCapSq] = P_none;
@@ -2358,11 +2360,11 @@ void initBook() {
 bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold) const{
     const Square from = Move2From(m);
     const Square to   = Move2To(m);
-    if (getPieceType(p, to) == P_wk) return true; // capture king !
+    if (PieceTools::getPieceType(p, to) == P_wk) return true; // capture king !
     const bool promPossible = (SQRANK(to) == 0 || SQRANK(to) == 7);
-    Piece nextVictim  = getPieceType(p,from);
-    const Color us    = p.c;//Colors[getPieceIndex(p,from)];
-    ScoreType balance = std::abs(getValue(p,to)) - threshold; // The opponent may be able to recapture so this is the best result we can hope for.
+    Piece nextVictim  = PieceTools::getPieceType(p,from);
+    const Color us    = p.c;//Colors[PieceTools::getPieceIndex(p,from)];
+    ScoreType balance = std::abs(PieceTools::getValue(p,to)) - threshold; // The opponent may be able to recapture so this is the best result we can hope for.
     if (balance < 0) return false;
     balance -= Values[nextVictim+PieceShift]; // Now assume the worst possible result: that the opponent can capture our piece for free.
     if (balance >= 0) return true;
@@ -2377,12 +2379,12 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
         unsigned int threatId = 0;
         while (!validThreatFound && threatId < stmAttackers.size()) {
             const Square att = stmAttackers[threatId];
-            const Piece pp = getPieceType(p2, att);
+            const Piece pp = PieceTools::getPieceType(p2, att);
             const bool prom = promPossible && pp == P_wp;
             const Move mm = ToMove(att, to, prom ? T_cappromq : T_capture);
             nextVictim = (Piece)(prom ? P_wq : pp); // CAREFULL here :: we don't care black or white, always use abs(value) next !!!
             ++threatId;
-            if (getPieceType(p,to) == P_wk) return us == p2.c; // capture king !
+            if (PieceTools::getPieceType(p,to) == P_wk) return us == p2.c; // capture king !
             if ( ! apply(p2,mm) ) continue;
             validThreatFound = true;
             balance = -balance - 1 - Values[nextVictim+PieceShift];
@@ -2405,22 +2407,22 @@ struct MoveSorter{
         const Square to   = Move2To(m);
         ScoreType s = MoveScoring[t];
         if (e && sameMove(e->m,m)) s += 10000;
-        else if (isInCheck && getPieceType(p, from) == P_wk) s += 8500;
+        else if (isInCheck && PieceTools::getPieceType(p, from) == P_wk) s += 8500;
         if (isCapture(t)){
-            s += StaticConfig::MvvLvaScores[getPieceType(p,to)-1][getPieceType(p,from)-1];
-            if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 1800;
-            else if (sameMove(m, context.killerT.killers[1][p.halfmoves])) s += 1650;
-            else if (p.halfmoves > 1 && sameMove(m, context.killerT.killers[0][p.halfmoves-2])) s += 1500;
-            else if ( useSEE && !context.SEE(p,m,0)) s -= 2*MoveScoring[T_capture];
+            s += StaticConfig::MvvLvaScores[PieceTools::getPieceType(p,to)-1][PieceTools::getPieceType(p,from)-1]; //[0 400]
+            //if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 1800;
+            //else if (sameMove(m, context.killerT.killers[1][p.halfmoves])) s += 1650;
+            //else if (p.halfmoves > 1 && sameMove(m, context.killerT.killers[0][p.halfmoves-2])) s += 1500;
+            /*else*/ if ( useSEE && !context.SEE(p,m,0)) s -= 2*MoveScoring[T_capture];
         }
         else if ( t == T_std){
             if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 1800;
             else if (sameMove(m, context.killerT.killers[1][p.halfmoves])) s += 1650;
             else if (p.halfmoves > 1 && sameMove(m, context.killerT.killers[0][p.halfmoves-2])) s += 1500;
             else if (p.lastMove!=INVALIDMOVE && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 1350;
-            else s += context.historyT.history[getPieceIndex(p, from)][to]; // +/- 1000
+            else s += context.historyT.history[PieceTools::getPieceIndex(p, from)][to]; // +/- 1000
             const bool isWhite = (p.allPieces[Co_White] & SquareToBitboard(from)) != 0ull;
-            s += ScaleScore(EvalConfig::PST[getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - EvalConfig::PST[getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from],gp)/*/2*/; ///@todo try lower values ?
+            s += ScaleScore(EvalConfig::PST[PieceTools::getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - EvalConfig::PST[PieceTools::getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from],gp)/*/2*/; ///@todo try lower values ?
         }
         m = ToMove(from, to, t, s);
     }
@@ -2492,20 +2494,20 @@ struct ScoreAcc{
 };
 
 namespace{ // some Color / Piece helpers
-   BitBoard(*const pf[])(const Square, const BitBoard, const  Color) =     { &BB::coverage<P_wp>, &BB::coverage<P_wn>, &BB::coverage<P_wb>, &BB::coverage<P_wr>, &BB::coverage<P_wq>, &BB::coverage<P_wk> };
-   template<Color C> inline bool isPasser(const Position &p, Square k)     { return (BB::mask[k].passerSpan[C] & p.pieces<P_wp>(~C)) == 0ull;}
+   BitBoard(*const pf[])(const Square, const BitBoard, const  Color) =     { &BBTools::coverage<P_wp>, &BBTools::coverage<P_wn>, &BBTools::coverage<P_wb>, &BBTools::coverage<P_wr>, &BBTools::coverage<P_wq>, &BBTools::coverage<P_wk> };
+   template<Color C> inline bool isPasser(const Position &p, Square k)     { return (BBTools::mask[k].passerSpan[C] & p.pieces<P_wp>(~C)) == 0ull;}
    template<Color C> inline Square ColorSquarePstHelper(Square k)          { return C==Co_White?(k^56):k;}
    template<Color C> inline constexpr ScoreType ColorSignHelper()          { return C==Co_White?+1:-1;}
    template<Color C> inline const Square PromotionSquare(const Square k)   { return C==Co_White? (SQFILE(k) + 56) : SQFILE(k);}
    template<Color C> inline const Rank ColorRank(const Square k)           { return Rank(C==Co_White? SQRANK(k) : (7-SQRANK(k)));}
-   template<Color C> inline bool isBackward(const Position &p, Square k, const BitBoard pAtt[2], const BitBoard pAttSpan[2]){ return ((BB::shiftN<C>(SquareToBitboard(k))&~p.pieces<P_wp>(~C)) & pAtt[~C] & ~pAttSpan[C]) != 0ull; }
+   template<Color C> inline bool isBackward(const Position &p, Square k, const BitBoard pAtt[2], const BitBoard pAttSpan[2]){ return ((BBTools::shiftN<C>(SquareToBitboard(k))&~p.pieces<P_wp>(~C)) & pAtt[~C] & ~pAttSpan[C]) != 0ull; }
 }
 
 template < Piece T , Color C>
 inline void evalPiece(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, BitBoard & att, ScoreType (& danger)[2]){
-    const BitBoard kingZone[2] = { BB::mask[p.king[Co_White]].kingZone, BB::mask[p.king[Co_Black]].kingZone};
+    const BitBoard kingZone[2] = { BBTools::mask[p.king[Co_White]].kingZone, BBTools::mask[p.king[Co_Black]].kingZone};
     while (pieceBBiterator) {
-        const Square k = BB::popBit(pieceBBiterator);
+        const Square k = BBTools::popBit(pieceBBiterator);
         const Square kk = ColorSquarePstHelper<C>(k);
         score.scores[ScoreAcc::sc_PST]  += EvalConfig::PST[T-1][kk] * ColorSignHelper<C>();
         const BitBoard target = pf[T-1](k, p.occupancy ^ p.pieces<T>(C), p.c); // aligned threats of same piece type also taken into account ///@todo better?
@@ -2517,7 +2519,7 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, ScoreAcc & s
 
 template < Piece T ,Color C>
 inline void evalMob(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, BitBoard (& att)[2]){
-    while (pieceBBiterator){ score.scores[ScoreAcc::sc_MOB] += EvalConfig::MOB[T-1][countBit(pf[T-1](BB::popBit(pieceBBiterator), p.occupancy, p.c) & ~p.allPieces[C] /*& ~att[~C]*/)]*ColorSignHelper<C>();}
+    while (pieceBBiterator){ score.scores[ScoreAcc::sc_MOB] += EvalConfig::MOB[T-1][countBit(pf[T-1](BBTools::popBit(pieceBBiterator), p.occupancy, p.c) & ~p.allPieces[C] /*& ~att[~C]*/)]*ColorSignHelper<C>();}
 }
 
 #define ONEPERCENT 0.01f
@@ -2525,14 +2527,14 @@ inline void evalMob(const Position & p, BitBoard pieceBBiterator, ScoreAcc & sco
 template< Color C>
 inline void evalPawnPasser(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score){
     while (pieceBBiterator) {
-        const Square k = BB::popBit(pieceBBiterator);
+        const Square k = BBTools::popBit(pieceBBiterator);
         const BitBoard bbk = SquareToBitboardTable(k);
-        const BitBoard bw = BB::shiftSW<C>(bbk);
-        const BitBoard be = BB::shiftSE<C>(bbk);
-        const EvalScore factorProtected = EvalConfig::protectedPasserFactor * ( (((bw&p.pieces<P_wp>(C))!=0ull)&&isPasser<C>(p, BB::SquareFromBitBoard(bw))) || (((be&p.pieces<P_wp>(C))!=0ull)&&isPasser<C>(p, BB::SquareFromBitBoard(be))) ) ;
-        const EvalScore factorFree      = EvalConfig::freePasserFactor      * ScoreType( (BB::mask[k].frontSpan[C] & p.allPieces[~C]) == 0ull );
+        const BitBoard bw = BBTools::shiftSW<C>(bbk);
+        const BitBoard be = BBTools::shiftSE<C>(bbk);
+        const EvalScore factorProtected = EvalConfig::protectedPasserFactor * ( (((bw&p.pieces<P_wp>(C))!=0ull)&&isPasser<C>(p, BBTools::SquareFromBitBoard(bw))) || (((be&p.pieces<P_wp>(C))!=0ull)&&isPasser<C>(p, BBTools::SquareFromBitBoard(be))) ) ;
+        const EvalScore factorFree      = EvalConfig::freePasserFactor      * ScoreType( (BBTools::mask[k].frontSpan[C] & p.allPieces[~C]) == 0ull );
         const EvalScore kingNearBonus   = EvalConfig::kingNearPassedPawn    * ScoreType( chebyshevDistance(p.king[~C], k) - chebyshevDistance(p.king[C], k) );
-        const EvalScore rookBehind      = EvalConfig::rookBehindPassed      * (countBit(p.pieces<P_wr>(C) & BB::mask[k].rearSpan[C]) - countBit(p.pieces<P_wr>(~C) & BB::mask[k].rearSpan[C]));
+        const EvalScore rookBehind      = EvalConfig::rookBehindPassed      * (countBit(p.pieces<P_wr>(C) & BBTools::mask[k].rearSpan[C]) - countBit(p.pieces<P_wr>(~C) & BBTools::mask[k].rearSpan[C]));
         const bool unstoppable          = (p.mat[~C][M_t] == 0)&&((chebyshevDistance(p.king[~C],PromotionSquare<C>(k))-int(p.c!=C)) > std::min(Square(5), chebyshevDistance(PromotionSquare<C>(k),k)));
         if (unstoppable) score.scores[ScoreAcc::sc_PwnPassed] += ColorSignHelper<C>()*(Values[P_wr+PieceShift] - Values[P_wp+PieceShift]); // yes rook not queen to force promotion asap
         else             score.scores[ScoreAcc::sc_PwnPassed] += (EvalConfig::passerBonus[ColorRank<C>(k)].scale((1.f+factorProtected[MG]*ONEPERCENT)*(1.f+factorFree[MG]*ONEPERCENT),(1.f+factorProtected[EG]*ONEPERCENT)*(1.f+factorFree[EG]*ONEPERCENT)) + kingNearBonus + rookBehind)*ColorSignHelper<C>();
@@ -2541,18 +2543,18 @@ inline void evalPawnPasser(const Position & p, BitBoard pieceBBiterator, ScoreAc
 
 template< Color C>
 inline void evalPawnBackward(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score){
-    while (pieceBBiterator) { score.scores[ScoreAcc::sc_PwnBackward] -= EvalConfig::backwardPawnMalus[(BB::mask[BB::popBit(pieceBBiterator)].file & p.pieces<P_wp>(~C))==0ull] * ColorSignHelper<C>();}
+    while (pieceBBiterator) { score.scores[ScoreAcc::sc_PwnBackward] -= EvalConfig::backwardPawnMalus[(BBTools::mask[BBTools::popBit(pieceBBiterator)].file & p.pieces<P_wp>(~C))==0ull] * ColorSignHelper<C>();}
 }
 
 template< Color C>
 inline void evalPawnCandidate(BitBoard pieceBBiterator, ScoreAcc & score){
-    while (pieceBBiterator) { score.scores[ScoreAcc::sc_PwnCandidate] += EvalConfig::candidate[ColorRank<C>(BB::popBit(pieceBBiterator))] * ColorSignHelper<C>();}
+    while (pieceBBiterator) { score.scores[ScoreAcc::sc_PwnCandidate] += EvalConfig::candidate[ColorRank<C>(BBTools::popBit(pieceBBiterator))] * ColorSignHelper<C>();}
 }
 
 template< Color C>
 inline void evalPawnDanger(const Position & p, const BitBoard (& att)[2], ScoreType (& danger)[2]){
-    danger[C] -= (countBit(BB::mask[p.king[C]].kingZone & p.pieces<P_wp>(C)))            * EvalConfig::kingAttWeight[EvalConfig::katt_defence][P_wp];
-    danger[C] += (countBit(BB::mask[p.king[C]].kingZone & p.pieces<P_wp>(~C) & att[~C])) * EvalConfig::kingAttWeight[EvalConfig::katt_attack] [P_wp];
+    danger[C] -= (countBit(BBTools::mask[p.king[C]].kingZone & p.pieces<P_wp>(C)))            * EvalConfig::kingAttWeight[EvalConfig::katt_defence][P_wp];
+    danger[C] += (countBit(BBTools::mask[p.king[C]].kingZone & p.pieces<P_wp>(~C) & att[~C])) * EvalConfig::kingAttWeight[EvalConfig::katt_attack] [P_wp];
 }
 
 ///@todo reward safe checks
@@ -2599,15 +2601,15 @@ ScoreType eval(const Position & p, float & gp ){
     const BitBoard pawns[2] = {p.whitePawn(), p.blackPawn()};
     ScoreType danger[2]     = {0, 0};
     BitBoard att[2]         = {0, 0};
-    const BitBoard safePawnPush[2]  = {BB::shiftN<Co_White>(pawns[Co_White]) & (~p.occupancy & (att[Co_White] | ~att[Co_Black])), BB::shiftN<Co_Black>(pawns[Co_Black]) & (~p.occupancy & (att[Co_Black] | ~att[Co_White]))};
-    const BitBoard pawnTargets[2]   = {BB::pawnAttacks<Co_White>(pawns[Co_White]), BB::pawnAttacks<Co_Black>(pawns[Co_Black])};
-    const BitBoard passer[2]        = {BB::pawnPassed<Co_White>(pawns[Co_White],pawns[Co_Black]), BB::pawnPassed<Co_Black>(pawns[Co_Black],pawns[Co_White])};
-    const BitBoard backward[2]      = {BB::pawnBackward<Co_White>(pawns[Co_White],pawns[Co_Black]), BB::pawnBackward<Co_Black>(pawns[Co_Black],pawns[Co_White])};
-    const BitBoard isolated[2]      = {BB::pawnIsolated(pawns[Co_White]), BB::pawnIsolated(pawns[Co_Black])};
-    const BitBoard doubled[2]       = {BB::pawnDoubled<Co_White>(pawns[Co_White]), BB::pawnDoubled<Co_Black>(pawns[Co_White])};
-    const BitBoard semiOpenFiles[2] = {BB::pawnSemiOpen<Co_White>(pawns[Co_White],pawns[Co_Black]),BB::pawnSemiOpen<Co_Black>(pawns[Co_Black],pawns[Co_White])};
-    const BitBoard openFiles        =  BB::openFiles(pawns[Co_White],pawns[Co_Black]);
-    const BitBoard candidates[2]    = {BB::pawnCandidates<Co_White>(pawns[Co_White],pawns[Co_Black]),BB::pawnCandidates<Co_Black>(pawns[Co_Black],pawns[Co_White])};
+    const BitBoard safePawnPush[2]  = {BBTools::shiftN<Co_White>(pawns[Co_White]) & (~p.occupancy & (att[Co_White] | ~att[Co_Black])), BBTools::shiftN<Co_Black>(pawns[Co_Black]) & (~p.occupancy & (att[Co_Black] | ~att[Co_White]))};
+    const BitBoard pawnTargets[2]   = {BBTools::pawnAttacks<Co_White>(pawns[Co_White]), BBTools::pawnAttacks<Co_Black>(pawns[Co_Black])};
+    const BitBoard passer[2]        = {BBTools::pawnPassed<Co_White>(pawns[Co_White],pawns[Co_Black]), BBTools::pawnPassed<Co_Black>(pawns[Co_Black],pawns[Co_White])};
+    const BitBoard backward[2]      = {BBTools::pawnBackward<Co_White>(pawns[Co_White],pawns[Co_Black]), BBTools::pawnBackward<Co_Black>(pawns[Co_Black],pawns[Co_White])};
+    const BitBoard isolated[2]      = {BBTools::pawnIsolated(pawns[Co_White]), BBTools::pawnIsolated(pawns[Co_Black])};
+    const BitBoard doubled[2]       = {BBTools::pawnDoubled<Co_White>(pawns[Co_White]), BBTools::pawnDoubled<Co_Black>(pawns[Co_White])};
+    const BitBoard semiOpenFiles[2] = {BBTools::pawnSemiOpen<Co_White>(pawns[Co_White],pawns[Co_Black]),BBTools::pawnSemiOpen<Co_Black>(pawns[Co_Black],pawns[Co_White])};
+    const BitBoard openFiles        =  BBTools::openFiles(pawns[Co_White],pawns[Co_Black]);
+    const BitBoard candidates[2]    = {BBTools::pawnCandidates<Co_White>(pawns[Co_White],pawns[Co_Black]),BBTools::pawnCandidates<Co_Black>(pawns[Co_Black],pawns[Co_White])};
 
     // PST, king zone attack, passer
     evalPiece<P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),score,att[Co_White],danger);
@@ -2663,12 +2665,12 @@ ScoreType eval(const Position & p, float & gp ){
     evalPawnCandidate<Co_Black>(candidates[Co_Black],score);
 
     // open file near king
-    danger[Co_White] += EvalConfig::kingAttOpenfile        * countBit(BB::mask[p.king[Co_White]].kingZone & openFiles) ;
-    danger[Co_White] += EvalConfig::kingAttSemiOpenfileOpp * countBit(BB::mask[p.king[Co_White]].kingZone & semiOpenFiles[Co_White]);
-    danger[Co_White] += EvalConfig::kingAttSemiOpenfileOur * countBit(BB::mask[p.king[Co_White]].kingZone & semiOpenFiles[Co_Black]);
-    danger[Co_Black] += EvalConfig::kingAttOpenfile        * countBit(BB::mask[p.king[Co_Black]].kingZone & openFiles);
-    danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOpp * countBit(BB::mask[p.king[Co_Black]].kingZone & semiOpenFiles[Co_Black]);
-    danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * countBit(BB::mask[p.king[Co_Black]].kingZone & semiOpenFiles[Co_White]);
+    danger[Co_White] += EvalConfig::kingAttOpenfile        * countBit(BBTools::mask[p.king[Co_White]].kingZone & openFiles) ;
+    danger[Co_White] += EvalConfig::kingAttSemiOpenfileOpp * countBit(BBTools::mask[p.king[Co_White]].kingZone & semiOpenFiles[Co_White]);
+    danger[Co_White] += EvalConfig::kingAttSemiOpenfileOur * countBit(BBTools::mask[p.king[Co_White]].kingZone & semiOpenFiles[Co_Black]);
+    danger[Co_Black] += EvalConfig::kingAttOpenfile        * countBit(BBTools::mask[p.king[Co_Black]].kingZone & openFiles);
+    danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOpp * countBit(BBTools::mask[p.king[Co_Black]].kingZone & semiOpenFiles[Co_Black]);
+    danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * countBit(BBTools::mask[p.king[Co_Black]].kingZone & semiOpenFiles[Co_White]);
 
     // rook on open file
     score.scores[ScoreAcc::sc_OpenFile] += EvalConfig::rookOnOpenFile         * countBit(p.whiteRook() & openFiles);
@@ -2863,7 +2865,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         if (!isInCheck) {
             if (isBadCap(*it)) continue; // see
-            if (StaticConfig::doQFutility && evalScore + StaticConfig::qfutilityMargin[evalScoreIsHashScore] + getAbsValue(p, Move2To(*it)) <= alphaInit) continue;
+            if (StaticConfig::doQFutility && evalScore + StaticConfig::qfutilityMargin[evalScoreIsHashScore] + PieceTools::getAbsValue(p, Move2To(*it)) <= alphaInit) continue;
         }
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
@@ -2961,7 +2963,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     TT::Entry e;
     if ( skipMove==INVALIDMOVE && TT::getEntry(*this,computeHash(p), depth, e)) { // if not skipmove
-        if ( /*e.h != 0 &&*/ !rootnode && !pvnode && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
+        if ( e.h != 0 && !rootnode && !pvnode && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
             if ( e.m != INVALIDMOVE) pv.push_back(e.m); // here e.m might be INVALIDMOVE if B_alpha without alphaUpdated/bestScoreUpdated (so don't try this at root node !)
             if ((Move2Type(e.m) == T_std || isBadCap(e.m)) && !isInCheck) updateTables(*this, p, depth, e.m, e.b);
             return adjustHashScore(e.score, ply);
@@ -3092,7 +3094,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             hashStack[p.halfmoves] = p.h;
             const bool isCheck = isAttacked(p2, kingSquare(p2));
             if ( isCapture(e.m) ) ttMoveIsCapture = true;
-            //const bool isAdvancedPawnPush = getPieceType(p,Move2From(e.m)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
+            //const bool isAdvancedPawnPush = PieceTools::getPieceType(p,Move2From(e.m)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
             // extensions
             DepthType extension = 0;
             if ( DynamicConfig::level>8){
@@ -3116,7 +3118,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                     if (pvnode) updatePV(pv, e.m, childPV);
                     if (ttScore >= beta) {
                         ++stats.counters[Stats::sid_ttbeta];
-                        if ((Move2Type(e.m) == T_std || isBadCap(e.m)) && !isInCheck) updateTables(*this, p, depth + (ttScore > (beta+80)), e.m, TT::B_beta); ///@todo badcap can be killers ?
+                        if ((Move2Type(e.m) == T_std /*|| isBadCap(e.m)*/) && !isInCheck) updateTables(*this, p, depth + (ttScore > (beta+80)), e.m, TT::B_beta); ///@todo badcap can be killers ?
                         if (skipMove == INVALIDMOVE /*&& ttScore != 0*/) TT::setEntry({ e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth,computeHash(p) });
                         return ttScore;
                     }
@@ -3165,7 +3167,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         PVList childPV;
         hashStack[p.halfmoves] = p.h;
         const bool isCheck = isAttacked(p2, kingSquare(p2));
-        const bool isAdvancedPawnPush = getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
+        const bool isAdvancedPawnPush = PieceTools::getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
         // extensions
         DepthType extension = 0;
         if ( DynamicConfig::level>8){
@@ -3228,7 +3230,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 alpha = score;
                 hashBound = TT::B_exact;
                 if ( score >= beta ){
-                    if ( (Move2Type(*it) == T_std || isBadCap(*it)) && !isInCheck){ ///@todo bad cap can be killers?
+                    if ( (Move2Type(*it) == T_std /*|| isBadCap(*it)*/) && !isInCheck){ ///@todo bad cap can be killers?
                         updateTables(*this, p, depth + (score>beta+80), *it, TT::B_beta);
                         for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2) if ( Move2Type(*it2) == T_std && !sameMove(*it2, killerT.killers[0][p.halfmoves]) /*|| isBadCap(*it2)*/) historyT.update<-1>(depth + (score > (beta + 80)),*it2,p); ///@todo bad cap can be killers
                     }
@@ -3767,7 +3769,7 @@ void init(int argc, char ** argv) {
     TT::initTable();
     StaticConfig::initLMR();
     StaticConfig::initMvvLva();
-    BB::initMask();
+    BBTools::initMask();
     MaterialHash::KPK::init();
     MaterialHash::MaterialHashInitializer::init();
     initEval();
