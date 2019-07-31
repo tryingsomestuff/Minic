@@ -116,7 +116,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
     if (cli == "-attacked") {
         Square k = Sq_e4;
         if (argc >= 3) k = atoi(argv[3]);
-        Logging::LogIt(Logging::logInfo) << showBitBoard(BB::isAttackedBB(p, k, p.c));
+        Logging::LogIt(Logging::logInfo) << showBitBoard(BBTools::isAttackedBB(p, k, p.c));
         return 0;
     }
 
@@ -125,40 +125,40 @@ int cliManagement(std::string cli, int argc, char ** argv){
         if (argc >= 3) k = atoi(argv[3]);
         switch (p.b[k]) {
         case P_wp:
-            Logging::LogIt(Logging::logInfo) << showBitBoard((BB::coverage<P_wp>(k, p.occupancy, p.c) + BB::mask[k].push[p.c]) & ~p.allPieces[Co_White]);
+            Logging::LogIt(Logging::logInfo) << showBitBoard((BBTools::coverage<P_wp>(k, p.occupancy, p.c) + BBTools::mask[k].push[p.c]) & ~p.allPieces[Co_White]);
             break;
         case P_wn:
-            Logging::LogIt(Logging::logInfo) << showBitBoard(BB::coverage<P_wn>(k, p.occupancy, p.c) & ~p.allPieces[Co_White]);
+            Logging::LogIt(Logging::logInfo) << showBitBoard(BBTools::coverage<P_wn>(k, p.occupancy, p.c) & ~p.allPieces[Co_White]);
             break;
         case P_wb:
-            Logging::LogIt(Logging::logInfo) << showBitBoard(BB::coverage<P_wb>(k, p.occupancy, p.c) & ~p.allPieces[Co_White]);
+            Logging::LogIt(Logging::logInfo) << showBitBoard(BBTools::coverage<P_wb>(k, p.occupancy, p.c) & ~p.allPieces[Co_White]);
             break;
         case P_wr:
-            Logging::LogIt(Logging::logInfo) << showBitBoard(BB::coverage<P_wr>(k, p.occupancy, p.c) & ~p.allPieces[Co_White]);
+            Logging::LogIt(Logging::logInfo) << showBitBoard(BBTools::coverage<P_wr>(k, p.occupancy, p.c) & ~p.allPieces[Co_White]);
             break;
         case P_wq:
-            Logging::LogIt(Logging::logInfo) << showBitBoard(BB::coverage<P_wq>(k, p.occupancy, p.c) & ~p.allPieces[Co_White]);
+            Logging::LogIt(Logging::logInfo) << showBitBoard(BBTools::coverage<P_wq>(k, p.occupancy, p.c) & ~p.allPieces[Co_White]);
             break;
         case P_wk:
-            Logging::LogIt(Logging::logInfo) << showBitBoard(BB::coverage<P_wk>(k, p.occupancy, p.c) & ~p.allPieces[Co_White]);
+            Logging::LogIt(Logging::logInfo) << showBitBoard(BBTools::coverage<P_wk>(k, p.occupancy, p.c) & ~p.allPieces[Co_White]);
             break;
         case P_bk:
-            Logging::LogIt(Logging::logInfo) << showBitBoard(BB::coverage<P_wk>(k, p.occupancy, p.c) & ~p.allPieces[Co_Black]);
+            Logging::LogIt(Logging::logInfo) << showBitBoard(BBTools::coverage<P_wk>(k, p.occupancy, p.c) & ~p.allPieces[Co_Black]);
             break;
         case P_bq:
-            Logging::LogIt(Logging::logInfo) << showBitBoard(BB::coverage<P_wq>(k, p.occupancy, p.c )& ~p.allPieces[Co_Black]);
+            Logging::LogIt(Logging::logInfo) << showBitBoard(BBTools::coverage<P_wq>(k, p.occupancy, p.c )& ~p.allPieces[Co_Black]);
             break;
         case P_br:
-            Logging::LogIt(Logging::logInfo) << showBitBoard(BB::coverage<P_wr>(k, p.occupancy, p.c) & ~p.allPieces[Co_Black]);
+            Logging::LogIt(Logging::logInfo) << showBitBoard(BBTools::coverage<P_wr>(k, p.occupancy, p.c) & ~p.allPieces[Co_Black]);
             break;
         case P_bb:
-            Logging::LogIt(Logging::logInfo) << showBitBoard(BB::coverage<P_wb>(k, p.occupancy, p.c) & ~p.allPieces[Co_Black]);
+            Logging::LogIt(Logging::logInfo) << showBitBoard(BBTools::coverage<P_wb>(k, p.occupancy, p.c) & ~p.allPieces[Co_Black]);
             break;
         case P_bn:
-            Logging::LogIt(Logging::logInfo) << showBitBoard(BB::coverage<P_wn>(k, p.occupancy, p.c) & ~p.allPieces[Co_Black]);
+            Logging::LogIt(Logging::logInfo) << showBitBoard(BBTools::coverage<P_wn>(k, p.occupancy, p.c) & ~p.allPieces[Co_Black]);
             break;
         case P_bp:
-            Logging::LogIt(Logging::logInfo) << showBitBoard((BB::coverage<P_wp>(k, p.occupancy, p.c) + BB::mask[k].push[p.c])& ~p.allPieces[Co_Black]);
+            Logging::LogIt(Logging::logInfo) << showBitBoard((BBTools::coverage<P_wp>(k, p.occupancy, p.c) + BBTools::mask[k].push[p.c])& ~p.allPieces[Co_Black]);
             break;
         default:
             Logging::LogIt(Logging::logInfo) << showBitBoard(0ull);

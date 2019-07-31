@@ -28,7 +28,7 @@ std::string getFrom(const std::string & to, Position & p, const Piece & t, const
     if ( p.allB[t + PieceShift] != 0 ){
         BitBoard froms = p.allB[t + PieceShift];
         while(froms){
-           const Square s = BB::popBit(froms);
+           const Square s = BBTools::popBit(froms);
            MoveList l;
            generateSquare<GP_all>(p,l,s);
            for(auto m = l.begin() ; m != l.end() ; ++m){
