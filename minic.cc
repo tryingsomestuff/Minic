@@ -477,8 +477,8 @@ enum Color : signed char{ Co_None  = -1,   Co_White = 0,   Co_Black = 1,   Co_En
 constexpr Color operator~(Color c){return Color(c^Co_Black);} // switch color
 Color operator++(Color & c){c=Color(c+1); return c;}
 
-// ttmove 10000, promcap >7000, cap 7000, checks 6000, killers 1600-1500-1400, counter 1300, castling 2000, other by -1000 < history < 1000, bad cap <-7000.
-ScoreType MoveScoring[16] = { 0, 7000, 7100, 6000, 2950, 2500, 2350, 2300, 7950, 7500, 7350, 7300, 20000, 20000, 2000, 2000 };
+// ttmove 10000, promcap >7000, cap 7000, checks 6000, killers 1600-1500-1400, counter 1300, castling 200, other by -1000 < history < 1000, bad cap <-7000.
+ScoreType MoveScoring[16] = { 0, 7000, 7100, 6000, 2950, 2500, 2350, 2300, 7950, 7500, 7350, 7300, 200, 200, 200, 200 };
 
 Color Colors[13] = { Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_None, Co_White, Co_White, Co_White, Co_White, Co_White, Co_White};
 
@@ -2103,10 +2103,6 @@ void applyNull(Position & pN) {
     pN.lastMove = INVALIDMOVE;
     if (pN.ep != INVALIDSQUARE) pN.h ^= Zobrist::ZT[pN.ep][13];
     pN.ep = INVALIDSQUARE;
-///@todo fix null move ???
-//    pN.fifty = 0;
-//    if ( pN.c == Co_White ) ++pN.moves;
-//    ++pN.halfmoves;
 }
 
 bool apply(Position & p, const Move & m){
@@ -2406,14 +2402,14 @@ struct MoveSorter{
         const Square from = Move2From(m);
         const Square to   = Move2To(m);
         ScoreType s = MoveScoring[t];
-        if (e && sameMove(e->m,m)) s += 10000;
-        else if (isInCheck && PieceTools::getPieceType(p, from) == P_wk) s += 8500;
+        if (e && sameMove(e->m,m)) s += 15000;
+        else if (isInCheck && PieceTools::getPieceType(p, from) == P_wk) s += 10000; // king evasion
         if (isCapture(t)){
             s += StaticConfig::MvvLvaScores[PieceTools::getPieceType(p,to)-1][PieceTools::getPieceType(p,from)-1]; //[0 400]
-            //if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 1800;
-            //else if (sameMove(m, context.killerT.killers[1][p.halfmoves])) s += 1650;
-            //else if (p.halfmoves > 1 && sameMove(m, context.killerT.killers[0][p.halfmoves-2])) s += 1500;
-            /*else*/ if ( useSEE && !context.SEE(p,m,0)) s -= 2*MoveScoring[T_capture];
+            if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 1800 - MoveScoring[T_capture];
+            else if (sameMove(m, context.killerT.killers[1][p.halfmoves])) s += 1650 - MoveScoring[T_capture];
+            else if (p.halfmoves > 1 && sameMove(m, context.killerT.killers[0][p.halfmoves-2])) s += 1500 - MoveScoring[T_capture];
+            else if ( useSEE && !context.SEE(p,m,0)) s -= 2*MoveScoring[T_capture];
         }
         else if ( t == T_std){
             if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 1800;
@@ -2646,7 +2642,7 @@ ScoreType eval(const Position & p, float & gp ){
        else if ( ter == MaterialHash::Ter_WhiteWin || ter == MaterialHash::Ter_BlackWin) score.scalingFactor = 5 - 5*p.fifty/100.f;
        else if ( ter == MaterialHash::Ter_HardToWin)   score.scalingFactor = 0.5f - 0.5f*(p.fifty/100.f);
        else if ( ter == MaterialHash::Ter_LikelyDraw ) score.scalingFactor = 0.3f - 0.3f*(p.fifty/100.f);
-       ///@todo next two seem to lose elo
+       ///@todo next seem to lose elo
        //else if ( ter == MaterialHash::Ter_Draw){         if ( !isAttacked(p,kingSquare(p)) ) return 0;}
        else if ( ter == MaterialHash::Ter_MaterialDraw){ if ( !isAttacked(p,kingSquare(p)) ) return 0;} ///@todo also verify stalemate ?
     }
@@ -2858,7 +2854,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     MoveList moves;
     if ( isInCheck ) generate<GP_all>(p,moves);
     else             generate<GP_cap>(p,moves);
-    sort(*this,moves,p,gp,qRoot||isInCheck,isInCheck,qRoot?&e:0); ///@todo only mvv-lva seems to lose elo
+    sort(*this,moves,p,gp,true/*qRoot||isInCheck*/,isInCheck,qRoot?&e:0); ///@todo only mvv-lva seems to lose elo
 
     const ScoreType alphaInit = alpha;
 
@@ -3118,7 +3114,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                     if (pvnode) updatePV(pv, e.m, childPV);
                     if (ttScore >= beta) {
                         ++stats.counters[Stats::sid_ttbeta];
-                        if ((Move2Type(e.m) == T_std /*|| isBadCap(e.m)*/) && !isInCheck) updateTables(*this, p, depth + (ttScore > (beta+80)), e.m, TT::B_beta); ///@todo badcap can be killers ?
+                        if ((Move2Type(e.m) == T_std || isBadCap(e.m)) && !isInCheck) updateTables(*this, p, depth + (ttScore > (beta+80)), e.m, TT::B_beta); ///@todo bad cap can be killers ?
                         if (skipMove == INVALIDMOVE /*&& ttScore != 0*/) TT::setEntry({ e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth,computeHash(p) });
                         return ttScore;
                     }
@@ -3230,7 +3226,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 alpha = score;
                 hashBound = TT::B_exact;
                 if ( score >= beta ){
-                    if ( (Move2Type(*it) == T_std /*|| isBadCap(*it)*/) && !isInCheck){ ///@todo bad cap can be killers?
+                    if ( (Move2Type(*it) == T_std || isBadCap(*it)) && !isInCheck){ ///@todo bad cap can be killers?
                         updateTables(*this, p, depth + (score>beta+80), *it, TT::B_beta);
                         for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2) if ( Move2Type(*it2) == T_std && !sameMove(*it2, killerT.killers[0][p.halfmoves]) /*|| isBadCap(*it2)*/) historyT.update<-1>(depth + (score > (beta + 80)),*it2,p); ///@todo bad cap can be killers
                     }
@@ -3535,6 +3531,9 @@ bool receiveMove(const std::string & command){
 
 bool replay(size_t nbmoves){
     assert(nbmoves < moves.size());
+    COM::State previousState = COM::state;
+    COM::stop();
+    COM::mode = COM::m_force;
     std::vector<Move> vm = COM::moves;
     if (!COM::sideToMoveFromFEN(GetFEN(COM::initialPos))) return false;
     COM::initialPos = COM::position;
@@ -3551,6 +3550,7 @@ bool replay(size_t nbmoves){
             COM::moves.push_back(vm[k]);
         }
     }
+    if ( previousState == COM::st_analyzing ) { COM::mode = COM::m_analyze; }
     return true;
 }
 
@@ -3703,8 +3703,8 @@ void xboard(){
             else if ( COM::command == "edit"){ }
             else if ( COM::command == "?"){ if ( COM::state == COM::st_searching ) COM::stop(); }
             else if ( COM::command == "draw")  { }
-            else if ( COM::command == "undo")  { replay(COM::moves.size()-2);}
-            else if ( COM::command == "remove"){ replay(COM::moves.size()-1);}
+            else if ( COM::command == "undo")  { replay(COM::moves.size()-1);}
+            else if ( COM::command == "remove"){ replay(COM::moves.size()-2);}
             else if ( COM::command == "hint")  { }
             else if ( COM::command == "bk")    { }
             else if ( COM::command == "random"){ }

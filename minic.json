@@ -2,7 +2,7 @@
    "threads": 1,
    "mateFinder": false,
    "ttSizeMb": 1024,
-   "book": true,
+   "book": false,
    "bookFile": "book.bin",
    "fullXboardOutput": true,
    "debugMode": false,
