@@ -911,7 +911,7 @@ inline bool isCastling (const MType & mt){ return mt == T_bks || mt == T_bqs || 
 inline bool isCastling (const Move & m  ){ return isCastling(Move2Type(m)); }
 inline bool isPromotion(const MType & mt){ return mt >= T_promq && mt <= T_cappromn;}
 inline bool isPromotion(const Move & m  ){ return isPromotion(Move2Type(m));}
-inline bool isBadCap   (const Move & m  ){ return Move2Score(m) < -900;}
+inline bool isBadCap   (const Move & m  ){ return Move2Score(m) < -MoveScoring[T_capture] + 400;}
 
 inline Square chebyshevDistance(Square sq1, Square sq2) { return std::max(std::abs(SQRANK(sq2) - SQRANK(sq1)) , std::abs(SQFILE(sq2) - SQFILE(sq1))); }
 
@@ -2103,6 +2103,9 @@ void applyNull(Position & pN) {
     pN.lastMove = INVALIDMOVE;
     if (pN.ep != INVALIDSQUARE) pN.h ^= Zobrist::ZT[pN.ep][13];
     pN.ep = INVALIDSQUARE;
+
+    if ( pN.c == Co_White ) ++pN.moves;
+    ++pN.halfmoves;
 }
 
 bool apply(Position & p, const Move & m){
@@ -2405,11 +2408,13 @@ struct MoveSorter{
         if (e && sameMove(e->m,m)) s += 15000;
         else if (isInCheck && PieceTools::getPieceType(p, from) == P_wk) s += 10000; // king evasion
         if (isCapture(t)){
-            s += StaticConfig::MvvLvaScores[PieceTools::getPieceType(p,to)-1][PieceTools::getPieceType(p,from)-1]; //[0 400]
             if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 1800 - MoveScoring[T_capture];
             else if (sameMove(m, context.killerT.killers[1][p.halfmoves])) s += 1650 - MoveScoring[T_capture];
             else if (p.halfmoves > 1 && sameMove(m, context.killerT.killers[0][p.halfmoves-2])) s += 1500 - MoveScoring[T_capture];
-            else if ( useSEE && !context.SEE(p,m,0)) s -= 2*MoveScoring[T_capture];
+            else {
+                s += StaticConfig::MvvLvaScores[PieceTools::getPieceType(p,to)-1][PieceTools::getPieceType(p,from)-1]; //[0 400]
+                if ( useSEE && !context.SEE(p,m,0)) s -= 2*MoveScoring[T_capture];
+            }
         }
         else if ( t == T_std){
             if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 1800;
@@ -2831,7 +2836,8 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     Move bestMove = INVALIDMOVE;
 
     const bool isInCheck = isAttacked(p, kingSquare(p));
-    DepthType hashDepth = (isInCheck||qRoot) ? 0 : -1;
+    bool specialQSearch = isInCheck||qRoot;
+    DepthType hashDepth = specialQSearch ? 0 : -1;
 
     TT::Entry e;
     if (TT::getEntry(*this, computeHash(p), hashDepth, e)) {
@@ -2854,13 +2860,13 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     MoveList moves;
     if ( isInCheck ) generate<GP_all>(p,moves);
     else             generate<GP_cap>(p,moves);
-    sort(*this,moves,p,gp,true/*qRoot||isInCheck*/,isInCheck,qRoot?&e:0); ///@todo only mvv-lva seems to lose elo
+    sort(*this,moves,p,gp,specialQSearch,isInCheck,specialQSearch?&e:0);
 
     const ScoreType alphaInit = alpha;
 
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         if (!isInCheck) {
-            if (isBadCap(*it)) continue; // see
+            if ((specialQSearch && isBadCap(*it)) || !SEE(p,*it,0)) continue; // see is only available if move sorter performed see already (here only at qroot node ...)
             if (StaticConfig::doQFutility && evalScore + StaticConfig::qfutilityMargin[evalScoreIsHashScore] + PieceTools::getAbsValue(p, Move2To(*it)) <= alphaInit) continue;
         }
         Position p2 = p;
@@ -2872,8 +2878,8 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
         if ( score > bestScore){
            bestMove = *it;
            bestScore = score;
-           b = TT::B_exact;
            if ( score > alpha ){
+               b = TT::B_exact;
                if (score >= beta) {
                    TT::setEntry({ bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),TT::B_beta,hashDepth,computeHash(p) });
                    return score;
@@ -2961,7 +2967,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if ( skipMove==INVALIDMOVE && TT::getEntry(*this,computeHash(p), depth, e)) { // if not skipmove
         if ( e.h != 0 && !rootnode && !pvnode && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
             if ( e.m != INVALIDMOVE) pv.push_back(e.m); // here e.m might be INVALIDMOVE if B_alpha without alphaUpdated/bestScoreUpdated (so don't try this at root node !)
-            if ((Move2Type(e.m) == T_std || isBadCap(e.m)) && !isInCheck) updateTables(*this, p, depth, e.m, e.b);
+            if ((Move2Type(e.m) == T_std || isBadCap(e.m)) && !isInCheck) updateTables(*this, p, depth, e.m, e.b); // bad cap can be killers
             return adjustHashScore(e.score, ply);
         }
     }
@@ -3054,6 +3060,9 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         }
     }
 
+    // clearing sibling killer slots
+    killerT.killers[0][p.halfmoves+1] = killerT.killers[1][p.halfmoves+1] = 0;
+
     // IID
     if ( (e.h == 0 /*|| e.d < depth/3*/) && ((pvnode && depth >= StaticConfig::iidMinDepth) || depth >= StaticConfig::iidMinDepth2)){
         ++stats.counters[Stats::sid_iid];
@@ -3090,7 +3099,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             hashStack[p.halfmoves] = p.h;
             const bool isCheck = isAttacked(p2, kingSquare(p2));
             if ( isCapture(e.m) ) ttMoveIsCapture = true;
-            //const bool isAdvancedPawnPush = PieceTools::getPieceType(p,Move2From(e.m)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
+            const bool isAdvancedPawnPush = PieceTools::getPieceType(p,Move2From(e.m)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
             // extensions
             DepthType extension = 0;
             if ( DynamicConfig::level>8){
@@ -3099,7 +3108,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                //if (!extension && mateThreat) ++stats.counters[Stats::sid_mateThreadExtension],++extension;
                //if (!extension && p.lastMove != INVALIDMOVE && Move2Type(p.lastMove) == T_capture && Move2To(e.m) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; // recapture
                //if (!extension && isCheck && !isBadCap(e.m)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
-               //if (!extension && isAdvancedPawnPush && sameMove(e.m, killerT.killers[0][p.halfmoves])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo isPassed ?
+               if (!extension && isAdvancedPawnPush && sameMove(e.m, killerT.killers[0][p.halfmoves])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo isPassed ?
                if (!extension && skipMove == INVALIDMOVE && singularExtension(*this, p, depth, e, e.m, rootnode, ply, isInCheck)) ++stats.counters[Stats::sid_singularExtension],++extension;
             }
             const ScoreType ttScore = -pvs<pvnode,true>(-beta, -alpha, p2, depth - 1 + extension, ply + 1, childPV, seldepth, isCheck);
@@ -3171,7 +3180,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
            //if (!extension && mateThreat && depth <= 4) ++stats.counters[Stats::sid_mateThreadExtension],++extension;
            //if (!extension && p.lastMove != INVALIDMOVE && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; //recapture
            //if (!extension && isCheck && !isBadCap(*it)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
-           //if (!extension && isAdvancedPawnPush && sameMove(*it, killerT.killers[0][p.halfmoves])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo and isPassed ?
+           if (!extension && isAdvancedPawnPush && sameMove(*it, killerT.killers[0][p.halfmoves])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo and isPassed ?
            if (!extension && isCastling(*it) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
         }
         // pvs
@@ -3208,7 +3217,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                else if ( !SEE(p,*it,-100*depth)) {++stats.counters[Stats::sid_see2]; continue;}
             }
             // SEE (quiet)
-            if ( isPrunableStdNoCheck && !SEE(p,*it,-30*nextDepth*nextDepth)) {++stats.counters[Stats::sid_seeQuiet]; continue;}
+            if ( isPrunableStdNoCheck && !SEE(p,*it,-15*nextDepth*nextDepth)) {++stats.counters[Stats::sid_seeQuiet]; continue;}
             // PVS
             score = -pvs<false,true>(-alpha-1,-alpha,p2,nextDepth,ply+1,childPV,seldepth,isCheck);
             if ( reduction > 0 && score > alpha )                       { childPV.clear(); score = -pvs<false,true>(-alpha-1,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck); }
@@ -3228,7 +3237,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 if ( score >= beta ){
                     if ( (Move2Type(*it) == T_std || isBadCap(*it)) && !isInCheck){ ///@todo bad cap can be killers?
                         updateTables(*this, p, depth + (score>beta+80), *it, TT::B_beta);
-                        for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2) if ( Move2Type(*it2) == T_std && !sameMove(*it2, killerT.killers[0][p.halfmoves]) /*|| isBadCap(*it2)*/) historyT.update<-1>(depth + (score > (beta + 80)),*it2,p); ///@todo bad cap can be killers
+                        for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2) if ( (Move2Type(*it2) == T_std || isBadCap(*it2) ) && !sameMove(*it2, killerT.killers[0][p.halfmoves] ) ) historyT.update<-1>(depth + (score > (beta + 80)),*it2,p); ///@todo bad cap can be killers
                     }
                     hashBound = TT::B_beta;
                     break;
@@ -3301,12 +3310,14 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
 
     ScoreType depthScores[MAX_DEPTH] = { 0 };
     const bool isInCheck = isAttacked(p, kingSquare(p));
-    DepthType startDepth = 1;
+    const DepthType easyMoveDetectionDepth = 5;
 
-    if ( isMainThread() && d > 9 && ThreadContext::currentMoveMs < INFINITETIME ){
+    DepthType startDepth = 1;//std::min(d,easyMoveDetectionDepth);
+
+    if ( isMainThread() && d > easyMoveDetectionDepth+2 && ThreadContext::currentMoveMs < INFINITETIME ){
        // easy move detection (small open window depth 2 search)
        std::vector<ThreadContext::RootScores> rootScores;
-       ScoreType easyScore = pvs<true,false>(-MATE, MATE, p, 2, 1, pv, seldepth, isInCheck,INVALIDMOVE,&rootScores);
+       ScoreType easyScore = pvs<true,false>(-MATE, MATE, p, easyMoveDetectionDepth, 1, pv, seldepth, isInCheck,INVALIDMOVE,&rootScores);
        std::sort(rootScores.begin(), rootScores.end(), [](const ThreadContext::RootScores& r1, const ThreadContext::RootScores & r2) {return r1.s > r2.s; });
        if (stopFlag) { bestScore = easyScore; goto pvsout; }
        if (rootScores.size() == 1) moveDifficulty = MoveDifficultyUtil::MD_forced; // only one : check evasion or zugzwang
