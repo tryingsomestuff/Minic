@@ -28,7 +28,7 @@ typedef uint64_t u_int64_t;
 #include "json.hpp"
 
 //#define IMPORTBOOK
-//#define WITH_TEXEL_TUNING
+#define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
@@ -323,7 +323,7 @@ namespace EvalConfig {
 
 // from Rofchade (on talkchess)
 
-const EvalScore PST[6][64] = {
+EvalScore PST[6][64] = {
 {
     {   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},
     {  98, 178},{ 134, 173},{  61, 158},{  95, 134},{  68, 147},{ 126, 132},{  34, 165},{ -11, 187},
@@ -394,9 +394,11 @@ EvalScore   passerBonus[8]        = { { 0, 0 }, {-2, -8} , {-8, -2}, {-12, 25}, 
 
 EvalScore   rookBehindPassed      = { 0,30};
 EvalScore   kingNearPassedPawn    = { -7,12};
-EvalScore   doublePawnMalus[2]    = {{ 21,11 },{-5,30 }};
-EvalScore   isolatedPawnMalus[2]  = {{ 13, 6 },{33, 9 }};
-EvalScore   backwardPawnMalus[2]  = {{  3, 6 },{18, 0 }};
+EvalScore   doublePawnMalus[2]    = {{ 21,11 },{-5,30 }}; // openfile
+EvalScore   isolatedPawnMalus[2]  = {{ 13, 6 },{33, 9 }}; // openfile
+EvalScore   backwardPawnMalus[2]  = {{  3, 6 },{18, 0 }}; // openfile
+EvalScore   holesMalus            = { -9,2};
+EvalScore   outpost               = { 10,14};
 EvalScore   candidate[8]          = { {0, 0}, {-30,11}, {-16,0}, {16,6}, { 24,51}, {-11,14}, {-11,14}, {0, 0} };
 EvalScore   protectedPasserFactor = { 8,12}; // 1XX%
 EvalScore   freePasserFactor      = {38,44}; // 1XX%
@@ -577,6 +579,10 @@ const BitBoard rank1                     = 0x00000000000000ff;
 const BitBoard rank8                     = 0xff00000000000000;
 //const BitBoard ranks[8] = {rank1,rank2,rank3,rank4,rank5,rank6,rank7,rank8};
 //const BitBoard center = BBSq_d4 | BBSq_d5 | BBSq_e4 | BBSq_e5;
+const BitBoard extendedCenter = BBSq_c3 | BBSq_c4 | BBSq_c5 | BBSq_c6
+                              | BBSq_d3 | BBSq_d4 | BBSq_d5 | BBSq_d6
+                              | BBSq_e3 | BBSq_e4 | BBSq_e5 | BBSq_e6
+                              | BBSq_f3 | BBSq_f4 | BBSq_f5 | BBSq_f6;
 
 std::string showBitBoard(const BitBoard & b) {
     std::bitset<64> bs(b);
@@ -2469,7 +2475,7 @@ double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f,
 void initEval(){ for(Square i = 0; i < 64; i++){ EvalConfig::kingAttTable[i] = (int) sigmoid(i,EvalConfig::kingAttMax,EvalConfig::kingAttTrans,EvalConfig::kingAttScale,EvalConfig::kingAttOffset); } } // idea taken from Topple
 
 struct ScoreAcc{
-    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_Pwn, sc_PwnShield, sc_PwnPassed, sc_PwnIsolated, sc_PwnDoubled, sc_PwnBackward, sc_PwnCandidate, sc_PwnPush, sc_Adjust, sc_OpenFile, sc_EndGame, sc_Exchange, sc_Tempo, sc_max };
+    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_Pwn, sc_PwnShield, sc_PwnPassed, sc_PwnIsolated, sc_PwnDoubled, sc_PwnBackward, sc_PwnCandidate, sc_PwnHole, sc_Outpost, sc_PwnPush, sc_Adjust, sc_OpenFile, sc_EndGame, sc_Exchange, sc_Tempo, sc_max };
     float scalingFactor = 1;
     EvalScore scores[sc_max];
     ScoreType Score(const Position &p, float gp){
@@ -2478,7 +2484,7 @@ struct ScoreAcc{
         return ScoreType(ScaleScore(sc,gp)*scalingFactor*std::min(1.f,(110-p.fifty)/100.f));
     }
     void Display(const Position &p, float gp){
-        static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "Pwn", "PwnShield", "PwnPassed", "PwnIsolated", "PwnDoubled", "PwnBackward", "PwnCandidate", "PwnPush", "Adjust", "OpenFile", "EndGame", "Exchange", "Tempo"};
+        static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "Pwn", "PwnShield", "PwnPassed", "PwnIsolated", "PwnDoubled", "PwnBackward", "PwnCandidate", "PwnHole", "Outpost", "PwnPush", "Adjust", "OpenFile", "EndGame", "Exchange", "Tempo"};
         EvalScore sc;
         for(int k = 0 ; k < sc_max ; ++k){
             Logging::LogIt(Logging::logInfo) << scNames[k] << "       " << scores[k][MG];
@@ -2559,9 +2565,10 @@ inline void evalPawnDanger(const Position & p, const BitBoard (& att)[2], ScoreT
 }
 
 ///@todo reward safe checks
-///@todo storm
+///@todo pawn storm
 ///@todo pawn hash table
 ///@todo hanging, pins
+///@todo queen safety
 
 template < bool display, bool safeMatEvaluator >
 ScoreType eval(const Position & p, float & gp ){
@@ -2611,6 +2618,7 @@ ScoreType eval(const Position & p, float & gp ){
     const BitBoard semiOpenFiles[2] = {BBTools::pawnSemiOpen<Co_White>(pawns[Co_White],pawns[Co_Black]),BBTools::pawnSemiOpen<Co_Black>(pawns[Co_Black],pawns[Co_White])};
     const BitBoard openFiles        =  BBTools::openFiles(pawns[Co_White],pawns[Co_Black]);
     const BitBoard candidates[2]    = {BBTools::pawnCandidates<Co_White>(pawns[Co_White],pawns[Co_Black]),BBTools::pawnCandidates<Co_Black>(pawns[Co_Black],pawns[Co_White])};
+    const BitBoard holes[2]         = {BBTools::pawnHoles<Co_White>(pawns[Co_White]) & extendedCenter, BBTools::pawnHoles<Co_Black>(pawns[Co_Black]) & extendedCenter};
 
     // PST, king zone attack, passer
     evalPiece<P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),score,att[Co_White],danger);
@@ -2692,6 +2700,14 @@ ScoreType eval(const Position & p, float & gp ){
     score.scores[ScoreAcc::sc_PwnIsolated] -= EvalConfig::isolatedPawnMalus[EvalConfig::SemiOpen] * countBit(isolated[Co_White] &  semiOpenFiles[Co_White]);
     score.scores[ScoreAcc::sc_PwnIsolated] += EvalConfig::isolatedPawnMalus[EvalConfig::Close]    * countBit(isolated[Co_Black] & ~semiOpenFiles[Co_Black]);
     score.scores[ScoreAcc::sc_PwnIsolated] += EvalConfig::isolatedPawnMalus[EvalConfig::SemiOpen] * countBit(isolated[Co_Black] &  semiOpenFiles[Co_Black]);
+
+    // pawn hole, unguarded
+    score.scores[ScoreAcc::sc_PwnHole] += EvalConfig::holesMalus * countBit(holes[Co_White] & ~att[Co_White]);
+    score.scores[ScoreAcc::sc_PwnHole] -= EvalConfig::holesMalus * countBit(holes[Co_Black] & ~att[Co_Black]);
+
+    // knight on opponent hole, protected
+    score.scores[ScoreAcc::sc_Outpost] += EvalConfig::outpost * countBit(holes[Co_Black] & p.whiteKnight() & pawnTargets[Co_White]);
+    score.scores[ScoreAcc::sc_Outpost] -= EvalConfig::outpost * countBit(holes[Co_White] & p.blackKnight() & pawnTargets[Co_Black]);
 
     // use king danger score. **DO NOT** apply this in end-game
     score.scores[ScoreAcc::sc_ATT][MG] -=  EvalConfig::kingAttTable[std::min(std::max(danger[Co_White],ScoreType(0)),ScoreType(63))];
@@ -3247,7 +3263,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     }
 
     if ( validMoveCount==0 ) return (isInCheck || skipMove!=INVALIDMOVE)?-MATE + ply : 0;
-    ///@todo here not checking for alphaUpdated or bestScoreUpdated seems to LOSS elo !!!
     if ( skipMove==INVALIDMOVE && /*alphaUpdated*/ bestScoreUpdated ) TT::setEntry({bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),hashBound,depth,computeHash(p)});
 
     return bestScore;
