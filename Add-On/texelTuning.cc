@@ -347,6 +347,16 @@ void TexelTuning(const std::string & filename) {
     */
 
     /*
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::holesMalus[MG],-150,550,"holesMalus"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::holesMalus[EG],-150,550,"holesMalusEG"));
+    */
+
+    /*
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::outpost[MG],-150,550,"outpost"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::outpost[EG],-150,550,"outpostEG"));
+    */
+
+    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::doublePawnMalus  [0][MG],-150,550,"doublePawnMalus[0]"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::doublePawnMalus  [0][EG],-150,550,"doublePawnMalusEG[0]"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::isolatedPawnMalus[0][MG],-150,550,"isolatedPawnMalus[0]"));
@@ -398,6 +408,17 @@ void TexelTuning(const std::string & filename) {
         }
     }
     */
+
+    for (int k = 0 ; k < 6 ; ++k ){
+        for(int i = 0 ; i < 64 ; ++i){
+           guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::PST[k][i][MG],-200,200,"pst"+std::to_string(k)+"_"+std::to_string(i)));
+        }
+    }
+    for (int k = 0 ; k < 6 ; ++k ){
+        for(int i = 0 ; i < 64 ; ++i){
+           guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::PST[k][i][EG],-200,200,"psteg"+std::to_string(k)+"_"+std::to_string(i)));
+        }
+    }
 
     /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookOnOpenFile       [MG] , -500,  500,"rookOnOpenFile"));
