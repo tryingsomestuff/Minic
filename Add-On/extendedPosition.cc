@@ -1,5 +1,110 @@
 #include <cctype>
 
+BitBoard getPieceBitboard(const Position & p, Piece t){
+    return p.allB[t+PieceShift];
+}
+
+uint64_t numberOf(const Position & p, Piece t){ return countBit(getPieceBitboard(p,t));}
+
+std::string showAlgAbr(Move m, const Position & p) {
+    Square from  = Move2From(m);
+    Square to    = Move2To(m);
+    MType  mtype = Move2Type(m);
+    if ( m == INVALIDMOVE) return "xx";
+
+    bool isCheck = false;
+    bool isNotLegal = false;
+    Position p2 = p;
+    if (apply(p2,m)){
+        if ( isAttacked(p2, kingSquare(p2)) ) isCheck = true;
+    }
+    else{ isNotLegal = true; }
+
+    if ( mtype == T_wks || mtype == T_bks) return std::string("0-0")   + (isCheck?"+":"") + (isNotLegal?"~":"");
+    if ( mtype == T_wqs || mtype == T_bqs) return std::string("0-0-0") + (isCheck?"+":"") + (isNotLegal?"~":"");
+
+    std::string s;
+    Piece t = p.b[from];
+
+    // add piece type if not pawn
+    s+= PieceNames[PieceShift + std::abs(t)];
+    if ( t==P_wp || t==P_bp ) s.clear(); // no piece symbol for pawn
+
+    // ensure move is not ambiguous
+    bool isSamePiece= false;
+    bool isSameFile = false;
+    bool isSameRank = false;
+    if ( numberOf(p,t)>1 ){
+        std::vector<Square> v;
+        BitBoard b = getPieceBitboard(p,t);
+        while (b) v.push_back(BBTools::popBit(b));
+        for(auto it = v.begin() ; it != v.end() ; ++it){
+            if ( *it == from ) continue; // to not compare to myself ...
+            MoveList l;
+            generateSquare<GP_all>(p,l,*it);
+            for(auto mit = l.begin() ; mit != l.end() ; ++mit){
+                if ( *mit == m ) continue; // to not compare to myself ... should no happend thanks to previous verification
+                Position p3 = p;
+                if (apply(p3,*mit)){ // only if move is legal
+                   if ( Move2To(*mit) == to && (t == p.b[Move2From(*mit)]) ){ // another move is landing on the same square with the same piece type
+                      isSamePiece = true;
+                      if ( SQFILE(Move2From(*mit)) == SQFILE(from)){ isSameFile = true; }
+                      if ( SQRANK(Move2From(*mit)) == SQRANK(from)){ isSameRank = true; }
+                   }
+                }
+            }
+        }
+    }
+
+    if (((t==P_wp || t==P_bp) && isCapture(m)) ) s+= FileNames[SQFILE(from)];
+    else if ( isSamePiece ){
+        if ( !isSameFile )                     s+= FileNames[SQFILE(from)];
+        else if ( isSameFile && !isSameRank )  s+= RankNames[SQRANK(from)];
+        else if ( isSameFile && isSameRank )  {s+= FileNames[SQFILE(from)]; s+= RankNames[SQRANK(from)];}
+    }
+
+    // add 'x' if capture
+    if ( isCapture(m)){
+        s+="x";
+    }
+
+    // add landing position
+    s+= SquareNames[to];
+
+    // and promotion to
+    if (isPromotion(m)){
+        switch(mtype){
+        case T_cappromq:
+        case T_promq:
+            s += "=";
+            s += "Q";
+            break;
+        case T_cappromr:
+        case T_promr:
+            s += "=";
+            s += "R";
+            break;
+        case T_cappromb:
+        case T_promb:
+            s += "=";
+            s += "B";
+            break;
+        case T_cappromn:
+        case T_promn:
+            s += "=";
+            s += "N";
+            break;
+        default:
+            break;
+        }
+    }
+
+    if ( isCheck ) s += "+";
+    if ( isNotLegal ) s += "~";
+
+    return s;
+}
+
 void split( std::vector<std::string> & v, const std::string & str, const std::string & sep){
     size_t start = 0, end = 0;
     while ( end != std::string::npos){
