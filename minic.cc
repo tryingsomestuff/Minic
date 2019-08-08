@@ -33,6 +33,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 //#define WITH_UCI
+#define WITH_PGN_PARSER
 
 const std::string MinicVersion = "dev";
 
@@ -321,99 +322,97 @@ void initMvvLva(){
 
 namespace EvalConfig {
 
-// from Rofchade (on talkchess)
-
 EvalScore PST[6][64] = {
-{
-    {   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},
-    {  98, 178},{ 134, 173},{  61, 158},{  95, 134},{  68, 147},{ 126, 132},{  34, 165},{ -11, 187},
-    {  -6,  94},{   7, 100},{  26,  85},{  31,  67},{  65,  56},{  56,  53},{  25,  82},{ -20,  84},
-    { -14,  32},{  13,  24},{   6,  13},{  21,   5},{  23,  -2},{  12,   4},{  17,  17},{ -23,  17},
-    { -27,  13},{  -2,   9},{  -5,  -3},{  12,  -7},{  17,  -7},{   6,  -8},{  10,   3},{ -25,  -1},
-    { -26,   4},{  -4,   7},{  -4,  -6},{ -10,   1},{   3,   0},{   3,  -5},{  33,  -1},{ -12,  -8},
-    { -35,  13},{  -1,   8},{ -20,   8},{ -23,  10},{ -15,  13},{  24,   0},{  38,   2},{ -22,  -7},
-    {   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0}
-},
-{
-    {-167, -58},{ -89, -38},{ -34, -13},{ -49, -28},{  61, -31},{ -97, -27},{ -15, -63},{-107, -99},
-    { -73, -25},{ -41,  -8},{  72, -25},{  36,  -2},{  23,  -9},{  62, -25},{   7, -24},{ -17, -52},
-    { -47, -24},{  60, -20},{  37,  10},{  65,   9},{  84,  -1},{ 129,  -9},{  73, -19},{  44, -41},
-    {  -9, -17},{  17,   3},{  19,  22},{  53,  22},{  37,  22},{  69,  11},{  18,   8},{  22, -18},
-    { -13, -18},{   4,  -6},{  16,  16},{  13,  25},{  28,  16},{  19,  17},{  21,   4},{  -8, -18},
-    { -23, -23},{  -9,  -3},{  12,  -1},{  10,  15},{  19,  10},{  17,  -3},{  25, -20},{ -16, -22},
-    { -29, -42},{ -53, -20},{ -12, -10},{  -3,  -5},{  -1,  -2},{  18, -20},{ -14, -23},{ -19, -44},
-    {-105, -29},{ -21, -51},{ -58, -23},{ -33, -15},{ -17, -22},{ -28, -18},{ -19, -50},{ -23, -64}
-},
-{
-    { -29, -14},{   4, -21},{ -82, -11},{ -37,  -8},{ -25,  -7},{ -42,  -9},{   7, -17},{  -8, -24},
-    { -26,  -8},{  16,  -4},{ -18,   7},{ -13, -12},{  30,  -3},{  59, -13},{  18,  -4},{ -47, -14},
-    { -16,   2},{  37,  -8},{  43,   0},{  40,  -1},{  35,  -2},{  50,   6},{  37,   0},{  -2,   4},
-    {  -4,  -3},{   5,   9},{  19,  12},{  50,   9},{  37,  14},{  37,  10},{   7,   3},{  -2,   2},
-    {  -6,  -6},{  13,   3},{  13,  13},{  26,  19},{  34,   7},{  12,  10},{  10,  -3},{   4,  -9},
-    {   0, -12},{  15,  -3},{  15,   8},{  15,  10},{  14,  13},{  27,   3},{  18,  -7},{  10, -15},
-    {   4, -14},{  15, -18},{  16,  -7},{   0,  -1},{   7,   4},{  21,  -9},{  33, -15},{   1, -27},
-    { -33, -23},{  -3,  -9},{ -14, -23},{ -21,  -5},{ -13,  -9},{ -12, -16},{ -39,  -5},{ -21, -17}
-},
-{
-    {  32,  13},{  42,  10},{  32,  18},{  51,  15},{  63,  12},{   9,  12},{  31,   8},{  43,   5},
-    {  27,  11},{  32,  13},{  58,  13},{  62,  11},{  80,  -3},{  67,   3},{  26,   8},{  44,   3},
-    {  -5,   7},{  19,   7},{  26,   7},{  36,   5},{  17,   4},{  45,  -3},{  61,  -5},{  16,  -3},
-    { -24,   4},{ -11,   3},{   7,  13},{  26,   1},{  24,   2},{  35,   1},{  -8,  -1},{ -20,   2},
-    { -36,   3},{ -26,   5},{ -12,   8},{  -1,   4},{   9,  -5},{  -7,  -6},{   6,  -8},{ -23, -11},
-    { -45,  -4},{ -25,   0},{ -16,  -5},{ -17,  -1},{   3,  -7},{   0, -12},{  -5,  -8},{ -33, -16},
-    { -44,  -6},{ -16,  -6},{ -20,   0},{  -9,   2},{  -1,  -9},{  11,  -9},{  -6, -11},{ -71,  -3},
-    { -19,  -9},{ -13,   2},{   1,   3},{  17,  -1},{  16,  -5},{   7, -13},{ -37,   4},{ -26, -20}
-},
-{
-    { -28,  -9},{   0,  22},{  29,  22},{  12,  27},{  59,  27},{  44,  19},{  43,  10},{  45,  20},
-    { -24, -17},{ -39,  20},{  -5,  32},{   1,  41},{ -16,  58},{  57,  25},{  28,  30},{  54,   0},
-    { -13, -20},{ -17,   6},{   7,   9},{   8,  49},{  29,  47},{  56,  35},{  47,  19},{  57,   9},
-    { -27,   3},{ -27,  22},{ -16,  24},{ -16,  45},{  -1,  57},{  17,  40},{  -2,  57},{   1,  36},
-    {  -9, -18},{ -26,  28},{  -9,  19},{ -10,  47},{  -2,  31},{  -4,  34},{   3,  39},{  -3,  23},
-    { -14, -16},{   2, -27},{ -11,  15},{  -2,   6},{  -5,   9},{   2,  17},{  14,  10},{   5,   5},
-    { -35, -22},{  -8, -23},{  11, -30},{   2, -16},{   8, -16},{  15, -23},{  -3, -36},{   1, -32},
-    {  -1, -33},{ -18, -28},{  -9, -22},{  10, -43},{ -15,  -5},{ -25, -32},{ -31, -20},{ -50, -41}
-},
-{
-    { -65, -74},{  23, -35},{  16, -18},{ -15, -18},{ -56, -11},{ -34,  15},{   2,   4},{  13, -17},
-    {  29, -12},{  -1,  17},{ -20,  14},{  -7,  17},{  -8,  17},{  -4,  38},{ -38,  23},{ -29,  11},
-    {  -9,  10},{  24,  17},{   2,  23},{ -16,  15},{ -20,  20},{   6,  45},{  22,  44},{ -22,  13},
-    { -17,  -8},{ -20,  22},{ -12,  24},{ -27,  27},{ -30,  26},{ -25,  33},{ -14,  26},{ -36,   3},
-    { -49, -18},{  -1,  -4},{ -27,  21},{ -39,  24},{ -46,  27},{ -44,  23},{ -33,   9},{ -51, -11},
-    { -14, -19},{ -14,  -3},{ -22,  11},{ -46,  21},{ -44,  23},{ -30,  16},{ -15,   7},{ -27,  -9},
-    {   1, -27},{   7, -11},{  -8,   4},{ -64,  13},{ -43,  14},{ -16,   4},{   9,  -5},{   8, -17},
-    { -15, -53},{  36, -34},{  12, -21},{ -54, -11},{   8, -28},{ -28, -14},{  24, -24},{  14, -43}
-}
+    {
+      {   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},
+      {  98, 118},{ 133,  94},{  60,  89},{  95,  80},{  68,  92},{ 126,  67},{  34, 130},{ -11, 182},
+      {  -6,  85},{   7,  67},{  23,  48},{  28,  34},{  65,  26},{  56,  29},{  25,  61},{ -20,  81},
+      { -14,  32},{   9,  20},{   4,  10},{  10,   5},{  13,   1},{  12,   3},{  11,  15},{ -23,  17},
+      { -13,  13},{  -2,   9},{   1,   1},{   7,  -1},{  11,  -3},{   5,  -5},{  10,   3},{ -12,  -1},
+      { -11,   4},{   1,   7},{   0,   1},{  -2,   2},{   3,   0},{   4,   0},{  18,  -1},{   0,  -8},
+      { -35,  13},{  -1,   8},{ -11,   8},{  -9,   7},{  -6,   8},{  11,   0},{  38,   2},{ -22,  -7},
+      {   0,   0},{   3,   1},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   2,   0},{   0,   0}
+    },
+    {
+      {-167, -58},{ -89, -38},{ -34, -13},{ -49, -28},{  61, -31},{ -97, -27},{ -15, -63},{-107, -99},
+      { -73, -85},{ -42, -87},{  71, -94},{  36, -56},{  23, -64},{  62, -90},{   7, -59},{ -17, -57},
+      { -47, -33},{  60, -53},{  34, -27},{  62, -25},{  84, -31},{ 129, -33},{  73, -40},{  44, -44},
+      {  -9, -17},{  -1,   0},{  13,  18},{  44,  20},{  23,  22},{  69,   7},{   5,   6},{  22, -18},
+      {  -8, -18},{   4,  -6},{  22,  20},{  -6,  31},{  19,  19},{  16,  20},{  21,   4},{   2, -18},
+      { -14, -23},{  -8,  -3},{  17,   2},{  18,  15},{  18,   9},{  28,  -1},{   4, -20},{  -7, -22},
+      { -29, -42},{ -53, -20},{  -3, -10},{  22, -14},{  18,  -8},{  -2, -20},{ -14, -23},{ -19, -44},
+      {-105, -29},{ -15, -51},{ -58, -23},{ -33, -15},{ -17, -22},{ -28, -18},{ -11, -50},{ -23, -64}
+    },
+    {
+      { -29, -14},{   4, -21},{ -82, -11},{ -37,  -8},{ -25,  -7},{ -42,  -9},{   7, -17},{  -8, -24},
+      { -26,  -8},{  16,  -4},{ -18,   7},{ -13, -12},{  30,  -3},{  59, -13},{  18,  -4},{ -47, -14},
+      { -15,   2},{  37,  -7},{  43,   0},{  40,  -1},{  35,  -2},{  50,   6},{  37,   0},{  -2,   4},
+      {  -4,   0},{  24,  12},{  19,  14},{  51,   9},{  37,  14},{  37,  10},{  32,   2},{   0,   2},
+      {  -6,  -5},{  13,   6},{  46,  13},{  28,  27},{  44,   7},{  33,  11},{  13,  -2},{   4,  -9},
+      {  25, -12},{  42,   1},{  44,  13},{  48,   6},{  40,  12},{  60,   0},{  44,  -5},{  18, -15},
+      {   4, -14},{  38,  -7},{  45,  -7},{  32,   5},{  41,   3},{  24,  -6},{  47,  -8},{   1, -27},
+      { -33, -23},{  -3,  -9},{  26,  -8},{  -9,  11},{  -7,   5},{  19,   5},{ -39,  -5},{ -21, -17}
+    },
+    {
+      {  32,  14},{  42,  10},{  32,  14},{  51,  11},{  63,  10},{   9,  12},{  31,   8},{  43,   5},
+      {  27,  14},{  32,  10},{  58,   4},{  62,   2},{  80,  -7},{  67,   1},{  26,  10},{  44,   3},
+      {  -5,   9},{  19,   6},{  26,   2},{  36,   1},{  17,   3},{  45,  -3},{  61,  -5},{  16,  -5},
+      { -24,  14},{ -11,   4},{   7,  12},{  26,  -4},{  24,  -3},{  35,   0},{  -8,  -1},{ -20,   2},
+      { -36,  10},{ -26,  11},{ -12,  10},{  -2,   3},{   9,  -8},{  -7,  -5},{   6,  -8},{ -22,  -9},
+      { -45,   6},{ -23,   3},{ -16,  -2},{ -17,   0},{   3,  -9},{   0, -11},{  -5,  -8},{ -31, -14},
+      { -32,   2},{ -14,  -3},{ -20,   5},{  -9,   3},{   0,  -8},{  10, -10},{  -6, -11},{ -60,  -1},
+      {  -7,   1},{  -3,   7},{  10,  -1},{  18,  -9},{  24, -10},{  16,   2},{ -31,  14},{   3, -24}
+    },
+    {
+      { -28,  -9},{   0,  22},{  29,  22},{  12,  27},{  59,  27},{  44,  19},{  43,  10},{  45,  20},
+      { -24, -17},{ -43,  20},{  -5,  32},{   1,  41},{ -16,  58},{  57,  25},{  28,  30},{  54,   0},
+      { -13, -20},{ -17,   6},{   7,   9},{   8,  49},{  29,  47},{  56,  35},{  47,  19},{  57,   9},
+      { -27,   3},{ -27,  22},{ -16,  24},{ -17,  45},{  -1,  57},{  17,  40},{  -2,  57},{   1,  36},
+      {  -1, -18},{ -26,  28},{  -8,  19},{ -19,  47},{  -2,  31},{  -4,  34},{   5,  39},{  -3,  23},
+      { -14, -16},{  18, -27},{  -7,  15},{   6,   6},{  -3,   9},{  12,  17},{  16,  10},{   5,   5},
+      { -35, -22},{   0, -23},{  26, -30},{  15, -16},{  25, -16},{  15, -23},{  -3, -36},{   1, -32},
+      {  -1, -33},{  -5, -28},{  10, -22},{  27, -41},{  -3,  -5},{ -25, -32},{ -31, -20},{ -50, -41}
+    },
+    {
+      { -65, -74},{  23, -35},{  16, -18},{ -15, -18},{ -56, -11},{ -34,  15},{   2,   4},{  13, -17},
+      {  29, -12},{  -1,  17},{ -20,  14},{  -7,  17},{  -8,  17},{  -4,  38},{ -38,  23},{ -29,  11},
+      {  -9,  10},{  24,  17},{   2,  23},{ -16,  15},{ -20,  20},{   6,  45},{  22,  44},{ -22,  13},
+      { -17,  -8},{ -20,  22},{ -12,  25},{ -27,  30},{ -30,  28},{ -25,  32},{ -14,  26},{ -36,   3},
+      { -49, -18},{  -1,  -4},{ -27,  23},{ -39,  27},{ -46,  28},{ -44,  18},{ -33,  -1},{ -51, -14},
+      { -14, -19},{ -14,  -4},{ -22,  14},{ -46,  21},{ -44,  21},{ -31,  10},{ -16,  -2},{ -27, -12},
+      {   1, -28},{   7, -17},{  -8,   4},{ -62,  24},{ -39,  17},{ -23,  -2},{  23, -23},{  15, -27},
+      { -15, -53},{  32, -52},{  16, -25},{ -55,  -6},{  10, -37},{ -24, -13},{  49, -48},{  16, -49}
+    }
 };
 
 EvalScore   pawnShieldBonus       = {5,-3};
 
 enum PawnEvalSemiOpen{ Close=0, SemiOpen=1};
 
-EvalScore   passerBonus[8]        = { { 0, 0 }, {-2, -8} , {-8, -2}, {-12, 25}, {9, 53}, {30, 115}, {45, 181}, {0, 0}};
+EvalScore   passerBonus[8]        = { { 0, 0 }, {-2, -3} , {-12, 2}, {-19, 20}, {9, 36}, {30, 80}, {45, 128}, {0, 0}};
 
-EvalScore   rookBehindPassed      = { 0,30};
-EvalScore   kingNearPassedPawn    = { -7,12};
-EvalScore   doublePawnMalus[2]    = {{ 21,11 },{-5,30 }}; // openfile
-EvalScore   isolatedPawnMalus[2]  = {{ 13, 6 },{33, 9 }}; // openfile
-EvalScore   backwardPawnMalus[2]  = {{  3, 6 },{18, 0 }}; // openfile
-EvalScore   holesMalus            = { -9,2};
-EvalScore   outpost               = { 10,14};
-EvalScore   candidate[8]          = { {0, 0}, {-30,11}, {-16,0}, {16,6}, { 24,51}, {-11,14}, {-11,14}, {0, 0} };
-EvalScore   protectedPasserFactor = { 8,12}; // 1XX%
-EvalScore   freePasserFactor      = {38,44}; // 1XX%
+EvalScore   rookBehindPassed      = { -3,38};
+EvalScore   kingNearPassedPawn    = { -7,15};
+EvalScore   doublePawnMalus[2]    = {{ 21, 9 },{-5,32 }}; // openfile
+EvalScore   isolatedPawnMalus[2]  = {{ 11, 8 },{23,12 }}; // openfile
+EvalScore   backwardPawnMalus[2]  = {{  6, 8 },{23, 2 }}; // openfile
+EvalScore   holesMalus            = {-12, 3};
+EvalScore   outpost               = { 10,15};
+EvalScore   candidate[8]          = { {0, 0}, {-31,11}, {-16,0}, {16,6}, { 24,51}, {-11,14}, {-11,14}, {0, 0} };
+EvalScore   protectedPasserFactor = { 8, 11}; // 1XX%
+EvalScore   freePasserFactor      = {38,123}; // 1XX%
 
-EvalScore   rookOnOpenFile        = {36,-7};
+EvalScore   rookOnOpenFile        = {34, 1};
 EvalScore   rookOnOpenSemiFileOur = { 9,-2};
 EvalScore   rookOnOpenSemiFileOpp = {-4, 4};
 
 EvalScore   adjKnight[9]  = { {-24,-27}, {-13,-13}, {-5,-3}, {-2,-2}, {-4,-6}, {-4,8}, {0,21}, { 5,17}, { 8,8} };
 EvalScore   adjRook[9]    = { { 24, 18}, {  6,  4}, {-1, 0}, {-5,-1}, {-5,-2}, {-3,2}, {0, 4}, { 1,13}, {12,0} };
 
-EvalScore   bishopPairBonus   = {32, 49};
+EvalScore   bishopPairBonus   = { 32,49};
 EvalScore   knightPairMalus   = {-2 , 4};
 EvalScore   rookPairMalus     = {-15,-9};
-EvalScore   pawnMobility      = { 4,  9};
+EvalScore   pawnMobility      = { 7,  6};
 
 EvalScore MOB[6][29] = { {{0,0},{0,0},{0,0},{0,0}},
                          {{-22,-22},{41,-15},{49,7},{45,19},{56,12},{50,18},{47,20},{49,23},{46,22}},
@@ -424,22 +423,22 @@ EvalScore MOB[6][29] = { {{0,0},{0,0},{0,0},{0,0}},
 
 ScoreType kingAttMax    = 284;
 ScoreType kingAttTrans  = 31;
-ScoreType kingAttScale  = 13;
+ScoreType kingAttScale  = 17;
 ScoreType kingAttOffset = 17;
 enum katt_att_def : unsigned char { katt_attack = 0, katt_defence = 1 };
-ScoreType kingAttWeight[2][7] = { {0, 2, 7, 6, 3, 9, -1}, {0, 6, 7, 5, 0, 0, 0} };
-ScoreType kingAttOpenfile        = 10;
-ScoreType kingAttSemiOpenfileOur = 5;
-ScoreType kingAttSemiOpenfileOpp = 3;
-ScoreType kingAttTable[64] = {0};
+ScoreType kingAttWeight[2][7]    = { {0, -2, 3,13, 4,13, -1}, {0, 6, 8, 6, -2, -1, 0} };
+ScoreType kingAttOpenfile        = 6;
+ScoreType kingAttSemiOpenfileOur = 3;
+ScoreType kingAttSemiOpenfileOpp = 1;
+ScoreType kingAttTable[64]       = {0};
 
 }
 
 inline ScoreType ScaleScore(EvalScore s, float gp){ return ScoreType(gp*s[MG] + (1.f-gp)*s[EG]);}
 
 std::string startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-std::string fine70 = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1";
-std::string shirov = "6r1/2rp1kpp/2qQp3/p3Pp1P/1pP2P2/1P2KP2/P5R1/6R1 w - - 0 1";
+std::string fine70        = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1";
+std::string shirov        = "6r1/2rp1kpp/2qQp3/p3Pp1P/1pP2P2/1P2KP2/P5R1/6R1 w - - 0 1";
 
 enum Piece    : signed char{ P_bk = -6, P_bq = -5, P_br = -4, P_bb = -3, P_bn = -2, P_bp = -1, P_none = 0, P_wp = 1, P_wn = 2, P_wb = 3, P_wr = 4, P_wq = 5, P_wk = 6 };
 Piece operator++(Piece & pp){pp=Piece(pp+1); return pp;}
@@ -1641,8 +1640,9 @@ void getPV(const Position & p, ThreadContext & context, PVList & pv){
 
 } // TT
 
+class ScoreAcc; // forward decl
 template < bool display = false, bool safeMatEvaluator = true >
-ScoreType eval(const Position & p, float & gp); // forward decl
+ScoreType eval(const Position & p, float & gp, ScoreAcc * sc = 0); // forward decl
 
 std::string trim(const std::string& str, const std::string& whitespace = " \t"){
     const auto strBegin = str.find_first_not_of(whitespace);
@@ -2116,7 +2116,7 @@ void applyNull(Position & pN) {
 
 bool apply(Position & p, const Move & m){
 
-    assert(m != INVALIDMOVE);
+    if (m == INVALIDMOVE) return false;
 
     const Square from  = Move2From(m);
     const Square to    = Move2To(m);
@@ -2571,8 +2571,9 @@ inline void evalPawnDanger(const Position & p, const BitBoard (& att)[2], ScoreT
 ///@todo queen safety
 
 template < bool display, bool safeMatEvaluator >
-ScoreType eval(const Position & p, float & gp ){
-    ScoreAcc score;
+ScoreType eval(const Position & p, float & gp, ScoreAcc * sc ){
+    ScoreAcc scoreLoc;
+    ScoreAcc & score = sc ? *sc : scoreLoc;
     static const ScoreType dummyScore = 0;
     static const ScoreType *absValues[7]   = { &dummyScore, &Values  [P_wp + PieceShift], &Values  [P_wn + PieceShift], &Values  [P_wb + PieceShift], &Values  [P_wr + PieceShift], &Values  [P_wq + PieceShift], &Values  [P_wk + PieceShift] };
     static const ScoreType *absValuesEG[7] = { &dummyScore, &ValuesEG[P_wp + PieceShift], &ValuesEG[P_wn + PieceShift], &ValuesEG[P_wb + PieceShift], &ValuesEG[P_wr + PieceShift], &ValuesEG[P_wq + PieceShift], &ValuesEG[P_wk + PieceShift] };
@@ -2621,19 +2622,18 @@ ScoreType eval(const Position & p, float & gp ){
     const BitBoard holes[2]         = {BBTools::pawnHoles<Co_White>(pawns[Co_White]) & extendedCenter, BBTools::pawnHoles<Co_Black>(pawns[Co_Black]) & extendedCenter};
 
     // PST, king zone attack, passer
+    evalPiece<P_wp,Co_White>(p,p.pieces<P_wn>(Co_White),score,att[Co_White],danger);
     evalPiece<P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),score,att[Co_White],danger);
     evalPiece<P_wb,Co_White>(p,p.pieces<P_wb>(Co_White),score,att[Co_White],danger);
     evalPiece<P_wr,Co_White>(p,p.pieces<P_wr>(Co_White),score,att[Co_White],danger);
     evalPiece<P_wq,Co_White>(p,p.pieces<P_wq>(Co_White),score,att[Co_White],danger);
     evalPiece<P_wk,Co_White>(p,p.pieces<P_wk>(Co_White),score,att[Co_White],danger);
+    evalPiece<P_wp,Co_Black>(p,p.pieces<P_wn>(Co_Black),score,att[Co_Black],danger);
     evalPiece<P_wn,Co_Black>(p,p.pieces<P_wn>(Co_Black),score,att[Co_Black],danger);
     evalPiece<P_wb,Co_Black>(p,p.pieces<P_wb>(Co_Black),score,att[Co_Black],danger);
     evalPiece<P_wr,Co_Black>(p,p.pieces<P_wr>(Co_Black),score,att[Co_Black],danger);
     evalPiece<P_wq,Co_Black>(p,p.pieces<P_wq>(Co_Black),score,att[Co_Black],danger);
     evalPiece<P_wk,Co_Black>(p,p.pieces<P_wk>(Co_Black),score,att[Co_Black],danger);
-
-    att[Co_White] |= (pawnTargets[Co_White] /*& ~p.allPieces[Co_White]*/);
-    att[Co_Black] |= (pawnTargets[Co_Black] /*& ~p.allPieces[Co_Black]*/);
 
     // mobility
     evalMob<P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),score,att);
@@ -3775,8 +3775,12 @@ void xboard(){
 #include "Add-On/cli.cc"
 #endif
 
-#if defined(WITH_TEXEL_TUNING) || defined(WITH_TEST_SUITE)
+#if defined(WITH_TEXEL_TUNING) || defined(WITH_TEST_SUITE) || defined(WITH_PGN_PARSER)
 #include "Add-On/extendedPosition.cc"
+#endif
+
+#ifdef WITH_PGN_PARSER
+#include "Add-On/pgnparser.cc"
 #endif
 
 #ifdef WITH_TEXEL_TUNING
@@ -3813,6 +3817,9 @@ int main(int argc, char ** argv){
 #endif
 #ifdef WITH_TEXEL_TUNING
     if ( argc > 1 && std::string(argv[1]) == "-texel" ) { TexelTuning(argv[2]); return 0;}
+#endif
+#ifdef WITH_PGN_PARSER
+    if ( argc > 1 && std::string(argv[1]) == "-pgn" ) { return PGNParse(argv[2]); }
 #endif
 #ifdef DEBUG_TOOL
     if ( argc < 2 ) Logging::LogIt(Logging::logFatal) << "Hint: You can use -xboard command line option to enter xboard mode";

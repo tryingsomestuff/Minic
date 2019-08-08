@@ -96,7 +96,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
 
     if (cli == "-qsearch"){
         DepthType seldepth = 0;
-        double s = ThreadPool::instance().main().qsearchNoPruning(-10000,10000,p,1,seldepth);
+        ScoreType s = ThreadPool::instance().main().qsearchNoPruning(-10000,10000,p,1,seldepth);
         Logging::LogIt(Logging::logInfo) << "Score " << s;
         return 1;
     }
@@ -168,7 +168,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
 
     if ( cli == "-eval" ){
         float gp = 0;
-        int score = eval<true>(p,gp);
+        ScoreType score = eval<true>(p,gp);
         Logging::LogIt(Logging::logInfo) << "eval " << score << " phase " << gp ;
         return 0;
     }
