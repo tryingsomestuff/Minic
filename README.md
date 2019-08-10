@@ -222,6 +222,7 @@ You can use both the json configuation file or the command line argument to sele
 * 0.80 : level from 0 to 10. 0 is random mover, 10 is full strength  
 * 0.81 : working on random mover and pondering  
 * 0.82 : finally a working pondering release ...
+* 0.83 : bug fix, pawn PST were not use anymore ... :-S
 
 ## Thanks
 
