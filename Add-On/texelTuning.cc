@@ -293,7 +293,7 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttSemiOpenfileOpp , -400, 800, "kingAttSemiOpenfileOpp"));
 
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttMax    , -400, 800, "kattmax",[](const ScoreType & ){initEval();}));
-    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttScale  , -100, 100, "kattscalre",[](const ScoreType & ){initEval();}));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttScale  , -100, 100, "kattscale",[](const ScoreType & ){initEval();}));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttTrans  , -100, 100, "kingAttTrans",[](const ScoreType & ){initEval();}));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttOffset , -100, 100, "kingAttOffset",[](const ScoreType & ){initEval();}));
 
