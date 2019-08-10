@@ -150,22 +150,26 @@ void pgnparse__(std::ifstream & is,std::ofstream & os) {
       if (a%100==0) std::cout << "Analyzing game " << a << " " << c << " " << e << std::endl;
       float gp;
       DepthType seldepth = 0;
-      ScoreAcc sc;
       for (int i = 16 ; i <= game.n-6 ; ++i){
+          ScoreAcc sc;
           Position p = game.p[i];
-          const ScoreType equalMargin = 50;
+          const ScoreType equalMargin = 120;
           const ScoreType seval = eval(p,gp,&sc);
           if ( std::abs(ScaleScore(sc.scores[ScoreAcc::sc_Mat],gp)) < equalMargin){
-              ++e;
+             ++e;
              const ScoreType squiet = ThreadPool::instance().main().qsearchNoPruning(-10000,10000,p,1,seldepth);
-             const ScoreType quietMargin = 30;
+             const ScoreType quietMargin = 80;
              if ( std::abs(seval-squiet) < quietMargin){
                 os << GetFEN(p) << " c9 \"" << game.resultStr << "\";" << std::endl;
                 ++c;
              }
+             /*
+             else{
+                std::cout << GetFEN(p) << " || " << seval << " " << squiet << " " << ScaleScore(sc.scores[ScoreAcc::sc_Mat],gp) << " " << sc.scores[ScoreAcc::sc_Mat][MG] << " " << sc.scores[ScoreAcc::sc_Mat][EG] << " " << gp << std::endl;
+             }
+             */
           }
       }
-
   }
   std::cout << "...done" << std::endl;
 }
