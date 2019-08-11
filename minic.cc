@@ -3097,7 +3097,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     TT::Bound hashBound = TT::B_alpha;
     bool ttMoveIsCapture = false;
 
-    //bool isQueenAttacked = p.pieces<P_wq>(p.c) && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces<P_wq>(p.c))); // only first queen ...
+    bool isQueenAttacked = p.pieces<P_wq>(p.c) && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces<P_wq>(p.c))); // only first queen ...
 
     // try the tt move before move generation (if not skipped move)
     if ( e.h != 0 && e.m != INVALIDMOVE && !sameMove(e.m,skipMove)) { // should be the case thanks to iid at pvnode
@@ -3122,7 +3122,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                //if (!extension && isCheck && !isBadCap(e.m)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
                if (!extension && isAdvancedPawnPush && sameMove(e.m, killerT.killers[0][p.halfmoves])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo isPassed ?
                if (!extension && skipMove == INVALIDMOVE && singularExtension(*this, p, depth, e, e.m, rootnode, ply, isInCheck)) ++stats.counters[Stats::sid_singularExtension],++extension;
-               //if (!extension && isQueenAttacked && PieceTools::getPieceType(p,Move2From(e.m)) == P_wq) ++stats.counters[Stats::sid_queenThreatExtension],++extension;
+               if (!extension && isQueenAttacked && PieceTools::getPieceType(p,Move2From(e.m)) == P_wq) ++stats.counters[Stats::sid_queenThreatExtension],++extension;
             }
             const ScoreType ttScore = -pvs<pvnode,true>(-beta, -alpha, p2, depth - 1 + extension, ply + 1, childPV, seldepth, isCheck);
             if (stopFlag) return STOPSCORE;
@@ -3195,7 +3195,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
            //if (!extension && isCheck && !isBadCap(*it)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
            if (!extension && isAdvancedPawnPush && sameMove(*it, killerT.killers[0][p.halfmoves])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo and isPassed ?
            if (!extension && isCastling(*it) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
-           //if (!extension && isQueenAttacked && PieceTools::getPieceType(p,Move2From(*it)) == P_wq) ++stats.counters[Stats::sid_queenThreatExtension],++extension;
+           //if (!extension && isQueenAttacked && PieceTools::getPieceType(p,Move2From(*it)) == P_wq) ++stats.counters[Stats::sid_queenThreatExtension],++extension; // too much of that
         }
         // pvs
         if (validMoveCount < 2 || !StaticConfig::doPVS ) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck);
@@ -3352,16 +3352,17 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         Logging::LogIt(Logging::logInfo) << "Thread " << id() << " searching depth " << (int)depth;
         PVList pvLoc;
         ScoreType delta = (StaticConfig::doWindow && depth>4)?8:MATE; // MATE not INFSCORE in order to enter the loop below once
-        ScoreType alpha = std::max(ScoreType(bestScore - delta), ScoreType (-INFSCORE));
-        ScoreType beta  = std::min(ScoreType(bestScore + delta), INFSCORE);
+        ScoreType alpha = std::max(ScoreType(bestScore - delta), ScoreType (-MATE));
+        ScoreType beta  = std::min(ScoreType(bestScore + delta), MATE);
         ScoreType score = 0;
-        while( delta <= MATE ){
+        while( true ){
             pvLoc.clear();
             score = pvs<true,false>(alpha,beta,p,depth,1,pvLoc,seldepth, isInCheck);
             if ( stopFlag ) break;
             delta += 2 + delta/2; // from xiphos ...
-            if      (score <= alpha) {beta = (alpha + beta) / 2; alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) ); Logging::LogIt(Logging::logInfo) << "Increase window alpha " << alpha << ".." << beta;}
-            else if (score >= beta ) {/*alpha= (alpha + beta) / 2;*/ beta  = std::min(ScoreType(score + delta), ScoreType( MATE) ); Logging::LogIt(Logging::logInfo) << "Increase window beta "  << alpha << ".." << beta;}
+            ///@todo display upper/lower bound info ?
+            if      (alpha > -MATE && score <= alpha) {beta = std::min(MATE,ScoreType((alpha + beta)/2)); alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) ); Logging::LogIt(Logging::logInfo) << "Increase window alpha " << alpha << ".." << beta;}
+            else if (beta  <  MATE && score >= beta ) {/*alpha= std::max(-MATE,ScoreType((alpha + beta) / 2));*/ beta  = std::min(ScoreType(score + delta), ScoreType( MATE) ); Logging::LogIt(Logging::logInfo) << "Increase window beta "  << alpha << ".." << beta;}
             else break;
         }
         if (stopFlag) break;

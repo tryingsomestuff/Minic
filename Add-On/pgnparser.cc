@@ -41,6 +41,9 @@ void pgnparse__(std::ifstream & is,std::ofstream & os) {
   int a = 0;
   int c = 0;
   int e = 0;
+
+  std::set<Hash> hashes;
+
   while(read){
       ++k;
       if (k%1000==0) std::cout << "Parsing game " << k << std::endl;
@@ -153,6 +156,8 @@ void pgnparse__(std::ifstream & is,std::ofstream & os) {
       for (int i = 16 ; i <= game.n-6 ; ++i){
           ScoreAcc sc;
           Position p = game.p[i];
+          if ( hashes.find(computeHash(p)) != hashes.end()) continue;
+          hashes.insert(computeHash(p));
           const ScoreType equalMargin = 120;
           const ScoreType seval = eval(p,gp,&sc);
           if ( std::abs(ScaleScore(sc.scores[ScoreAcc::sc_Mat],gp)) < equalMargin){
@@ -160,7 +165,7 @@ void pgnparse__(std::ifstream & is,std::ofstream & os) {
              const ScoreType squiet = ThreadPool::instance().main().qsearchNoPruning(-10000,10000,p,1,seldepth);
              const ScoreType quietMargin = 80;
              if ( std::abs(seval-squiet) < quietMargin){
-                os << GetFEN(p) << " c9 \"" << game.resultStr << "\";" << std::endl;
+                os << GetFENShort2(p) << " c9 \"" << game.resultStr << "\";" << std::endl;
                 ++c;
              }
              /*
