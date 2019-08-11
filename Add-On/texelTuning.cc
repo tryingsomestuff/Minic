@@ -246,7 +246,7 @@ void TexelTuning(const std::string & filename) {
     std::vector<std::string> positions;
     ExtendedPosition::readEPDFile(filename,positions);
     for(size_t k = 0 ; k < positions.size() ; ++k){
-        ExtendedPosition * p = new ExtendedPosition(positions[k],true);
+        ExtendedPosition * p = new ExtendedPosition(positions[k],false);
         data.push_back({p, getResult(p->_extendedParams["c9"][0])});
         // +1 white win, -1 black wins, 0 draw
         if (k % 50000 == 0) Logging::LogIt(Logging::logInfo) << k << " position read";
