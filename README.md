@@ -107,7 +107,10 @@ Other available options are :
 * -gen <"fen"> : move generation on the given position
 * -perft <"fen"> depth : perft on the given position and depth
 * -analyze <"fen"> depth : analysis on the given position and depth
+* -qsearch <"fen"> : just a qsearch ...
 * -mateFinder <"fen"> depth : same as analysis but without prunings in search
+* -pgn <file> : extraction tool to build tuning data
+* -texel <file> : run a texel tuning session
 * ...
 
 ## Options
@@ -223,6 +226,8 @@ You can use both the json configuation file or the command line argument to sele
 * 0.81 : working on random mover and pondering  
 * 0.82 : finally a working pondering release ...
 * 0.83 : bug fix, pawn PST were not use anymore ... :-S
+* 0.84 : little search and eval tweaking
+* 0.85 : window search bug fix
 
 ## Thanks
 
