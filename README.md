@@ -41,20 +41,18 @@ Minic finished 13/18 at TCEC16 qualification league (https://cd.tcecbeta.club/ar
 
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
-   1 zurichess-neuchatel           154      21     893   70.8%   24.6%
-   2 Winter                        149      21     893   70.2%   23.3%
-   3 Topple                         92      20     893   62.9%   24.4%
-   4 minic_dev                      56      19     892   58.0%   29.8%
-   5 asymptote_v0.6                 54      20     892   57.7%   26.2%
-   6 minic_0.84                     40      19     892   55.7%   32.5%
-   7 ruy-1.1.9                      12      20     894   51.8%   22.6%
-   8 minic_0.76                      4      19     893   50.5%   31.4%
-   9 minic_0.82                     -4      19     892   49.4%   31.6%
-  10 igel_1.7                     -172      22     893   27.0%   20.3%
-  11 GreKo                        -207      24     892   23.3%   15.6%
-  12 asymptote-v0.4.2             -214      24     893   22.6%   15.7%
-
-17902 of 171000 games finished.        
+   1 Winter                        156      18    1291   71.1%   22.5%
+   2 zurichess-neuchatel           148      17    1290   70.0%   25.8%
+   3 Topple                         90      17    1291   62.7%   25.4%
+   4 asymptote_v0.6                 66      17    1291   59.3%   25.4%
+   5 minic_dev                      56      16    1291   58.0%   29.7%
+   6 minic_0.84                     36      16    1291   55.2%   32.1%
+   7 ruy-1.1.9                       6      17    1291   50.9%   23.1%
+   8 minic_0.82                     -1      16    1291   49.8%   29.8%
+   9 minic_0.76                     -1      16    1290   49.8%   29.6%
+  10 igel_1.7                     -175      19    1290   26.7%   19.5%
+  11 GreKo                        -201      20    1291   23.9%   15.4%
+  12 asymptote-v0.4.2             -215      20    1290   22.4%   15.1%   
 ```
 
 Minic strength can be ajdusted using the level option (from command line or json configuration file). Level 0 is a random mover, 1 very weak, ..., level 10 is full strength. Level functionnaly will be enhanced in a near future.
