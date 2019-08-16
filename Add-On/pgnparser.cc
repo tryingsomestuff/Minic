@@ -7,7 +7,7 @@ public:
     std::string resultStr;
     std::vector<Move> moves;
     int n = 0;
-    static const int minElo = 2800;
+    static const int minElo = 3200;
 };
 
 int parseResult(const std::string& result) {

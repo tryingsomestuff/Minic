@@ -1362,7 +1362,7 @@ struct ThreadData{
 };
 
 struct Stats{
-    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits,sid_staticNullMove, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMove, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_see, sid_see2, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_pawnPushExtension, sid_singularExtension, sid_queenThreatExtension, sid_mateThreadExtension, sid_tbHit1, sid_tbHit2, sid_maxid };
+    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits,sid_staticNullMove, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMove, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_see, sid_see2, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_pawnPushExtension, sid_singularExtension, sid_singularExtension2, sid_queenThreatExtension, sid_mateThreadExtension, sid_tbHit1, sid_tbHit2, sid_maxid };
     static const std::string Names[sid_maxid] ;
     Counter counters[sid_maxid];
     void init(){
@@ -1371,7 +1371,7 @@ struct Stats{
     }
 };
 
-const std::string Stats::Names[Stats::sid_maxid] = { "nodes", "qnodes", "tthits", "staticNullMove", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMove", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "see", "see2", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "pawnPushExtension", "singularExtension", "queenThreatExtension", "mateThreadExtension", "TBHit1", "TBHit2"};
+const std::string Stats::Names[Stats::sid_maxid] = { "nodes", "qnodes", "tthits", "staticNullMove", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMove", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "see", "see2", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "pawnPushExtension", "singularExtension", "singularExtension2", "queenThreatExtension", "mateThreadExtension", "TBHit1", "TBHit2"};
 
 // singleton pool of threads
 class ThreadPool : public std::vector<ThreadContext*> {
@@ -1606,6 +1606,7 @@ void clearTT() {
 
 bool getEntry(ThreadContext & context, Hash h, DepthType d, Entry & e, int nbuck = 0) {
     assert(h > 0);
+    // e.h must not be reset here because of recursion ! (would dismiss first hash found when _e.d < d)
     if ( DynamicConfig::disableTT  ) return false;
     if ( nbuck >= Bucket::nbBucket ) return false; // no more bucket
     const Entry & _e = table[h&(ttSize-1)].e[nbuck];
@@ -2405,30 +2406,33 @@ bool sameMove(const Move & a, const Move & b) { return (a & 0x0000FFFF) == (b & 
 
 struct MoveSorter{
 
-    MoveSorter(const ThreadContext & context, const Position & p, float gp, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL):context(context),p(p),gp(gp),useSEE(useSEE),isInCheck(isInCheck),e(e){ assert(e==0||e->h!=0||e->m==INVALIDMOVE); }
+    MoveSorter(const ThreadContext & context, const Position & p, float gp, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL, const Move refutation = INVALIDMOVE):context(context),p(p),gp(gp),useSEE(useSEE),isInCheck(isInCheck),e(e),refutation(refutation){ assert(e==0||e->h!=0||e->m==INVALIDMOVE); }
 
     void computeScore(Move & m)const{
         const MType  t    = Move2Type(m);
         const Square from = Move2From(m);
         const Square to   = Move2To(m);
         ScoreType s = MoveScoring[t];
-        if (e && sameMove(e->m,m)) s += 15000;
+        if (e && sameMove(e->m,m)) s += 15000; // TT move
         else if (isInCheck && PieceTools::getPieceType(p, from) == P_wk) s += 10000; // king evasion
         if (isCapture(t)){
-            if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 1800 - MoveScoring[T_capture];
-            else if (sameMove(m, context.killerT.killers[1][p.halfmoves])) s += 1650 - MoveScoring[T_capture];
-            else if (p.halfmoves > 1 && sameMove(m, context.killerT.killers[0][p.halfmoves-2])) s += 1500 - MoveScoring[T_capture];
+            if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 1800 - MoveScoring[T_capture]; // bad cap killer
+            else if (sameMove(m, context.killerT.killers[1][p.halfmoves])) s += 1650 - MoveScoring[T_capture]; // bad cap killer
+            else if (p.halfmoves > 1 && sameMove(m, context.killerT.killers[0][p.halfmoves-2])) s += 1500 - MoveScoring[T_capture]; // bad cap killer
             else {
                 s += StaticConfig::MvvLvaScores[PieceTools::getPieceType(p,to)-1][PieceTools::getPieceType(p,from)-1]; //[0 400]
-                if ( useSEE && !context.SEE(p,m,0)) s -= 2*MoveScoring[T_capture];
+                if ( useSEE && !context.SEE(p,m,0)) s -= 2*MoveScoring[T_capture]; // other bad cap
             }
         }
         else if ( t == T_std){
-            if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 1800;
-            else if (sameMove(m, context.killerT.killers[1][p.halfmoves])) s += 1650;
-            else if (p.halfmoves > 1 && sameMove(m, context.killerT.killers[0][p.halfmoves-2])) s += 1500;
-            else if (p.lastMove!=INVALIDMOVE && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 1350;
-            else s += context.historyT.history[PieceTools::getPieceIndex(p, from)][to]; // +/- 1000
+            if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 1800; // quiet killer
+            else if (sameMove(m, context.killerT.killers[1][p.halfmoves])) s += 1650; // quiet killer
+            else if (p.halfmoves > 1 && sameMove(m, context.killerT.killers[0][p.halfmoves-2])) s += 1500; // quiet killer
+            else if (p.lastMove!=INVALIDMOVE && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 1350; // quiet counter
+            else {
+                s += context.historyT.history[PieceTools::getPieceIndex(p, from)][to]; // +/- MAX_HISTORY = 1000
+                if ( from == Move2To(refutation) /*&& context.SEE(p,m,0)*/) s+= 200; // move (safely) leaving threat square from null move search
+            }
             const bool isWhite = (p.allPieces[Co_White] & SquareToBitboard(from)) != 0ull;
             s += ScaleScore(EvalConfig::PST[PieceTools::getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - EvalConfig::PST[PieceTools::getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from],gp)/*/2*/; ///@todo try lower values ?
         }
@@ -2442,11 +2446,12 @@ struct MoveSorter{
     const ThreadContext & context;
     const bool useSEE;
     const bool isInCheck;
+    const Move refutation;
     float gp;
 };
 
-void sort(const ThreadContext & context, MoveList & moves, const Position & p, float gp, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL){
-    const MoveSorter ms(context,p,gp,useSEE,isInCheck,e);
+void sort(const ThreadContext & context, MoveList & moves, const Position & p, float gp, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL, const Move refutation = INVALIDMOVE){
+    const MoveSorter ms(context,p,gp,useSEE,isInCheck,e,refutation);
     for(auto it = moves.begin() ; it != moves.end() ; ++it){ ms.computeScore(*it); }
     std::sort(moves.begin(),moves.end(),ms);
 }
@@ -2950,7 +2955,7 @@ ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck){
         if (p.c == Co_Black && to == p.king[Co_White]) return MATE + 1;
         return 0;
     }
-    return -MATE;
+    return isInCheck ? -MATE : 0;
 }
 
 // pvs inspired by Xiphos
@@ -3015,6 +3020,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     const bool improving = (!isInCheck && ply > 1 && evalStack[p.halfmoves] >= evalStack[p.halfmoves - 2]);
     DepthType marginDepth = std::max(1,depth-(evalScoreIsHashScore?e.d:0));
 
+    Move refutation = INVALIDMOVE;
+
     // prunings
     if ( !DynamicConfig::mateFinder && canPrune && !isInCheck && !isMateScore(beta) && !pvnode){ ///@todo removing the !isMateScore(beta) is not losing that much elo and allow for better check mate finding ...
         // static null move
@@ -3038,12 +3045,15 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if (nullIIDScore >= beta /*- 10 * depth*/) { ///@todo try to minimize sid_nullMoveTry2 versus sid_nullMove
                 TT::Entry nullE;
                 TT::getEntry(*this, computeHash(p), depth - R, nullE);
-                if (nullE.h == 0 || nullE.score >= beta) { // avoid null move search if TT gives a score < beta for the same depth
+                if (nullE.h == 0ull || nullE.score >= beta) { // avoid null move search if TT gives a score < beta for the same depth
                     ++stats.counters[Stats::sid_nullMoveTry2];
                     Position pN = p;
                     applyNull(pN);
                     const ScoreType nullscore = -pvs<false, false>(-beta, -beta + 1, pN, depth - R, ply + 1, nullPV, seldepth, isInCheck);
                     if (stopFlag) return STOPSCORE;
+                    TT::Entry nullEThreat;
+                    TT::getEntry(*this,computeHash(pN), 0, nullEThreat);
+                    if ( nullEThreat.h != 0ull ) refutation = nullEThreat.m;
                     if (nullscore >= beta) return ++stats.counters[Stats::sid_nullMove], isMateScore(nullscore) ? beta : nullscore;
                     //if (isMatedScore(nullscore)) mateThreat = true;
                 }
@@ -3059,7 +3069,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
           sort(*this,moves,p,gp,true,isInCheck,&e);
           capMoveGenerated = true;
           for (auto it = moves.begin() ; it != moves.end() && probCutCount < StaticConfig::probCutMaxMoves; ++it){
-            if ( (e.h != 0 && sameMove(e.m, *it)) || isBadCap(*it) ) continue; // skip TT move if quiet or bad captures
+            if ( (e.h != 0ull && sameMove(e.m, *it)) || isBadCap(*it) ) continue; // skip TT move if quiet or bad captures
             Position p2 = p;
             if ( ! apply(p2,*it) ) continue;
             ++probCutCount;
@@ -3074,7 +3084,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     }
 
     // IID
-    if ( (e.h == 0 /*|| e.d < depth/3*/) && ((pvnode && depth >= StaticConfig::iidMinDepth) || depth >= StaticConfig::iidMinDepth2)){
+    if ( (e.h == 0ull /*|| e.d < depth/3*/) && ((pvnode && depth >= StaticConfig::iidMinDepth) || depth >= StaticConfig::iidMinDepth2)){
         ++stats.counters[Stats::sid_iid];
         PVList iidPV;
         pvs<pvnode,false>(alpha,beta,p,depth/2,ply,iidPV,seldepth,isInCheck);
@@ -3121,8 +3131,19 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                //if (!extension && p.lastMove != INVALIDMOVE && Move2Type(p.lastMove) == T_capture && Move2To(e.m) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; // recapture
                //if (!extension && isCheck && !isBadCap(e.m)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
                if (!extension && isAdvancedPawnPush && sameMove(e.m, killerT.killers[0][p.halfmoves])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo isPassed ?
-               if (!extension && skipMove == INVALIDMOVE && singularExtension(*this, p, depth, e, e.m, rootnode, ply, isInCheck)) ++stats.counters[Stats::sid_singularExtension],++extension;
                if (!extension && isQueenAttacked && PieceTools::getPieceType(p,Move2From(e.m)) == P_wq) ++stats.counters[Stats::sid_queenThreatExtension],++extension;
+               //if (!extension && skipMove == INVALIDMOVE && singularExtension(*this, p, depth, e, e.m, rootnode, ply, isInCheck)) ++stats.counters[Stats::sid_singularExtension],++extension;
+               if (!extension && skipMove == INVALIDMOVE && depth >= StaticConfig::singularExtensionDepth && !rootnode && !isMateScore(e.score) && e.b == TT::B_beta && e.d >= depth - 3){
+                   const ScoreType betaC = e.score - 2*depth;
+                   PVList sePV;
+                   DepthType seSeldetph = 0;
+                   const ScoreType score = pvs<false,false>(betaC - 1, betaC, p, depth/2, ply, sePV, seSeldetph, isInCheck, e.m);
+                   if (!ThreadContext::stopFlag && score < betaC) {
+                       ++stats.counters[Stats::sid_singularExtension],++extension;
+                       if ( score < betaC - std::min(4*depth,36)) ++stats.counters[Stats::sid_singularExtension2],++extension;
+                   }
+                   else if ( score >= beta && betaC >= beta) return score;
+               }
             }
             const ScoreType ttScore = -pvs<pvnode,true>(-beta, -alpha, p2, depth - 1 + extension, ply + 1, childPV, seldepth, isCheck);
             if (stopFlag) return STOPSCORE;
@@ -3168,7 +3189,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     if (moves.empty()) return isInCheck ? -MATE + ply : 0;
 
-    /*if ( isMainThread() )*/ sort(*this, moves, p, gp, true, isInCheck, &e);
+    /*if ( isMainThread() )*/ sort(*this, moves, p, gp, true, isInCheck, &e, refutation != INVALIDMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMOVE);
     //else std::random_shuffle(moves.begin(),moves.end());
 
     ScoreType score = -MATE + ply;
@@ -3203,7 +3224,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             // reductions & prunings
             DepthType reduction = 0;
             const bool isPrunable =  /*isNotEndGame &&*/ !isAdvancedPawnPush && !sameMove(*it, killerT.killers[0][p.halfmoves]) && !sameMove(*it, killerT.killers[1][p.halfmoves]) /*&& !isMateScore(alpha) */&& !isMateScore(beta);
-            const bool noCheck = !isInCheck && !isCheck;
+            const bool noCheck = !isInCheck && (!isCheck /*|| !extension*/);
             const bool isPrunableStd = isPrunable && Move2Type(*it) == T_std;
             const bool isPrunableStdNoCheck = isPrunable && noCheck && Move2Type(*it) == T_std;
             // futility
