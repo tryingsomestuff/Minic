@@ -6,24 +6,24 @@ CUTECHESS=$dir/../cutechess/projects/cli/cutechess-cli
 engines=""
 
 engines="$engines -engine conf=asymptote-v0.4.2"
-#engines="$engines -engine conf=ruy-1.1.9"
-#engines="$engines -engine conf=wyldchess1.51"
-engines="$engines -engine conf=zurichess-neuchatel"
+engines="$engines -engine conf=asymptote_v0.6"
+engines="$engines -engine conf=ruy-1.1.9"
 engines="$engines -engine conf=Fridolin310"
-#engines="$engines -engine conf=GreKo"
+engines="$engines -engine conf=GreKo"
 engines="$engines -engine conf=igel_1.7"
+engines="$engines -engine conf=igel_1.8.3"
 engines="$engines -engine conf=redqueen-1.1.98"
 engines="$engines -engine conf=minic_0.47"
-#engines="$engines -engine conf=minic_0.57"
+engines="$engines -engine conf=minic_0.57"
 engines="$engines -engine conf=minic_0.65"
 engines="$engines -engine conf=minic_0.76"
 engines="$engines -engine conf=minic_0.80"
 engines="$engines -engine conf=minic_0.83"
-engines="$engines -engine conf=asymptote_v0.6"
 engines="$engines -engine conf=Topple"
 engines="$engines -engine conf=Winter"
+engines="$engines -engine conf=zurichess-neuchatel"
 engines="$engines -engine conf=minic_dev"
 
 echo $engines
 
-$CUTECHESS $engines -each tc=40/10 timemargin=200 -rounds 1000 -pgnout pgn_$(date +"%Y_%m_%d"_%H%M%S).out -ratinginterval 1 -repeat -openings file=$dir/OpeningBook/2moves_LT_1000.pgn format=pgn order=random plies=24 -recover -concurrency 8 > tournament.log 2>&1 &
+$CUTECHESS $engines -each tc=40/120 timemargin=200 -rounds 1000 -pgnout pgn_$(date +"%Y_%m_%d"_%H%M%S).out -ratinginterval 1 -repeat -openings file=$dir/OpeningBook/2moves_LT_1000.pgn format=pgn order=random plies=24 -recover -concurrency 7 > tournament.log 2>&1 &
