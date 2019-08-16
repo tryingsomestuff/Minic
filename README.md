@@ -37,7 +37,12 @@ Please note that Win32 binaries are very slow (I don't know why yet, so please u
 ## Strength
 Minic 0.47 is 2650 on the CCRL 40/40 scale, so way to strong for me ! This is more or less like GM level for human being.
 
+STS : 1051/1500 @10sec per position (single thread)
+WAC : 263/300 @10sec per position (single thread)
+
 Minic finished 13/18 at TCEC16 qualification league (https://cd.tcecbeta.club/archive.html?season=16&div=ql&game=1)
+
+Here are some fast TC results (40/20sec)
 
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
