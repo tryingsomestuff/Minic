@@ -12,7 +12,7 @@ Minic is (mainly) a one-file-code with very dense lines. This is of course very 
 
 ## Release
 
-WARNING : Dist directory as been REMOVED from the repository because it was starting to be too big. Unofficial releases are not available anymore. This operation has changed Minic git history, so you shall probably re-clone a clean repo.
+WARNING : Dist directory as been REMOVED from the repository because it was starting to be too big. Unofficial releases are not available anymore. This operation has changed Minic git history, so you shall probably re-clone a clean repo. All (unofficial) releases are available in a new repo, here : https://github.com/tryingsomestuff/Minic-Dist
 
 Some stable/official ones will also be made available as github release. I "officially release" (create a github version) as sson as I have some validated elo (at least +10).
 
