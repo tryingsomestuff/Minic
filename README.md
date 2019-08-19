@@ -224,6 +224,7 @@ You can use both the json configuation file or the command line argument to sele
 * 0.83 : bug fix, pawn PST were not use anymore ... :-S
 * 0.84 : little search and eval tweaking
 * 0.85 : window search bug fix
+* 0.86..0.87 : working on search and move ordering
 
 ## Thanks
 
