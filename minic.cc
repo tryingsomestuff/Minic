@@ -1461,7 +1461,7 @@ struct ThreadContext{
     PVList search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth);
     template< bool withRep = true, bool isPv = true, bool INR = true> MaterialHash::Terminaison interiorNodeRecognizer(const Position & p)const;
     bool isRep(const Position & p, bool isPv)const;
-    void displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv);
+    void displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv, const std::string & mark = "");
 
     void idleLoop(){
         while (true){
@@ -1633,10 +1633,18 @@ void setEntry(const Entry & e){
 
 void getPV(const Position & p, ThreadContext & context, PVList & pv){
     TT::Entry e;
-    if (TT::getEntry(context, computeHash(p), 0, e)) {
-        if (e.h != 0) pv.insert(pv.begin(),e.m);
-        Position p2 = p;
-        if ( apply(p2,e.m) ) getPV(p2,context,pv);
+    Hash hashStack[MAX_PLY] = {0ull};
+    Position p2 = p;
+    bool stop = false;
+    for( int k = 0 ; k < MAX_PLY && !stop; ++k){
+      if ( !TT::getEntry(context, computeHash(p2), 0, e)) break;
+      if (e.h != 0) {
+        hashStack[k] = computeHash(p2);
+        pv.push_back(e.m);
+        if ( !apply(p2,e.m) ) break;
+        const Hash h = computeHash(p2);
+        for (int i = k-1; i >= 0; --i) if (hashStack[i] == h) {stop=true;break;}
+      }
     }
 }
 
@@ -3223,7 +3231,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         else{
             // reductions & prunings
             DepthType reduction = 0;
-            const bool isPrunable =  /*isNotEndGame &&*/ !isAdvancedPawnPush && !sameMove(*it, killerT.killers[0][p.halfmoves]) && !sameMove(*it, killerT.killers[1][p.halfmoves]) /*&& !isMateScore(alpha) */&& !isMateScore(beta);
+            const bool isPrunable =  /*isNotEndGame &&*/ !isAdvancedPawnPush && !sameMove(*it, killerT.killers[0][p.halfmoves]) && !sameMove(*it, killerT.killers[1][p.halfmoves]) /*&& !isMateScore(alpha) *//*&& !isMateScore(beta)*/;
             const bool noCheck = !isInCheck && (!isCheck /*|| !extension*/);
             const bool isPrunableStd = isPrunable && Move2Type(*it) == T_std;
             const bool isPrunableStdNoCheck = isPrunable && noCheck && Move2Type(*it) == T_std;
@@ -3287,7 +3295,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     return bestScore;
 }
 
-void ThreadContext::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv){
+void ThreadContext::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv, const std::string & mark){
     const TimeType ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count());
     std::stringstream str;
     Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
@@ -3295,6 +3303,7 @@ void ThreadContext::displayGUI(DepthType depth, DepthType seldepth, ScoreType be
         str << int(depth) << " " << bestScore << " " << ms / 10 << " " << nodeCount << " ";
         if (DynamicConfig::fullXboardOutput) str << (int)seldepth << " " << int(nodeCount / (ms / 1000.f) / 1000.) << " " << ThreadPool::instance().counter(Stats::sid_tthits) / 1000;
         str << "\t" << ToString(pv);
+        if ( !mark.empty() ) str << mark;
     }
     else if (Logging::ct == Logging::CT_uci) { str << "info depth " << int(depth) << " score cp " << bestScore << " time " << ms << " nodes " << nodeCount << " nps " << int(nodeCount / (ms / 1000.f)) << " seldepth " << (int)seldepth << " tbhits " << ThreadPool::instance().counter(Stats::sid_tthits) << " pv " << ToString(pv); }
     Logging::LogIt(Logging::logGUI) << str.str();
@@ -3378,12 +3387,30 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         ScoreType score = 0;
         while( true ){
             pvLoc.clear();
-            score = pvs<true,false>(alpha,beta,p,depth,1,pvLoc,seldepth, isInCheck);
+            score = pvs<true,false>(alpha,beta,p,depth,1,pvLoc,seldepth,isInCheck);
             if ( stopFlag ) break;
             delta += 2 + delta/2; // from xiphos ...
             ///@todo display upper/lower bound info ?
-            if      (alpha > -MATE && score <= alpha) {beta = std::min(MATE,ScoreType((alpha + beta)/2)); alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) ); Logging::LogIt(Logging::logInfo) << "Increase window alpha " << alpha << ".." << beta;}
-            else if (beta  <  MATE && score >= beta ) {/*alpha= std::max(-MATE,ScoreType((alpha + beta) / 2));*/ beta  = std::min(ScoreType(score + delta), ScoreType( MATE) ); Logging::LogIt(Logging::logInfo) << "Increase window beta "  << alpha << ".." << beta;}
+            if (alpha > -MATE && score <= alpha) {
+                beta = std::min(MATE,ScoreType((alpha + beta)/2));
+                alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) );
+                Logging::LogIt(Logging::logInfo) << "Increase window alpha " << alpha << ".." << beta;
+                if ( isMainThread() ){
+                    PVList pv2;
+                    TT::getPV(p, *this, pv2);
+                    displayGUI(depth,seldepth,score,pv2,"!");
+                }
+            }
+            else if (beta  <  MATE && score >= beta ) {
+                /*alpha= std::max(-MATE,ScoreType((alpha + beta) / 2));*/
+                beta  = std::min(ScoreType(score + delta), ScoreType( MATE) );
+                Logging::LogIt(Logging::logInfo) << "Increase window beta "  << alpha << ".." << beta;
+                if ( isMainThread() ){
+                    PVList pv2;
+                    TT::getPV(p, *this, pv2);
+                    displayGUI(depth,seldepth,score,pv2,"?");
+                }
+            }
             else break;
         }
         if (stopFlag) break;
@@ -3402,7 +3429,7 @@ pvsout:
     if (pv.empty()){
         m = INVALIDMOVE;
         Logging::LogIt(Logging::logInfo) << "Empty pv, trying to use TT" ;
-        //TT::getPV(p, *this, pv); // might infinite loop !!!! ///@todo fix this
+        //TT::getPV(p, *this, pv);
     }
     if (pv.empty()) { Logging::LogIt(Logging::logWarn) << "Empty pv"; }// may occur in case of mate / stalemate...
     else m = pv[0];
