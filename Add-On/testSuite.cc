@@ -781,6 +781,17 @@ bool test(const std::string & option){
         return true;
     }
 
+    if (option == "MATE") {
+        std::vector<std::string> positions;
+        if ( ! ExtendedPosition::readEPDFile("TestSuite/dmzx.edp",positions)) return 1;
+
+        std::vector<int> timeControls = { 15000 }; //mseconds
+        std::vector<int> scores = { 1};
+
+        ExtendedPosition::test(positions,timeControls,false,scores,[=](int score){return 0;},false);
+        return true;
+    }
+
     Logging::LogIt(Logging::logInfo) << "No test requested ...";
     return false;
 }
