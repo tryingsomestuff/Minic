@@ -2579,7 +2579,9 @@ inline void evalPawnCandidate(BitBoard pieceBBiterator, ScoreAcc & score){
 ///@todo pawn storm
 ///@todo pawn hash table
 ///@todo hanging, pins
-///@todo queen safety
+///@todo minor blocking openfile
+///@todo bad bishop (counting white/black square pawn of both side)
+///@todo rook facing king (whatever is on the file)
 
 template < bool display, bool safeMatEvaluator >
 ScoreType eval(const Position & p, float & gp, ScoreAcc * sc ){
@@ -3390,9 +3392,9 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
             score = pvs<true,false>(alpha,beta,p,depth,1,pvLoc,seldepth,isInCheck);
             if ( stopFlag ) break;
             delta += 2 + delta/2; // from xiphos ...
-            ///@todo display upper/lower bound info ?
             if (alpha > -MATE && score <= alpha) {
-                beta = std::min(MATE,ScoreType((alpha + beta)/2));
+                //Logging::LogIt(Logging::logInfo) << "Windows was " << alpha << ".." << beta << ", score " << score;
+                beta  = std::min(MATE,ScoreType((alpha + beta)/2));
                 alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) );
                 Logging::LogIt(Logging::logInfo) << "Increase window alpha " << alpha << ".." << beta;
                 if ( isMainThread() ){
@@ -3401,8 +3403,9 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
                     displayGUI(depth,seldepth,score,pv2,"!");
                 }
             }
-            else if (beta  <  MATE && score >= beta ) {
-                /*alpha= std::max(-MATE,ScoreType((alpha + beta) / 2));*/
+            else if (beta < MATE && score >= beta ) {
+                //Logging::LogIt(Logging::logInfo) << "Windows was " << alpha << ".." << beta << ", score " << score;
+                //alpha = std::max(ScoreType(-MATE),ScoreType((alpha + beta)/2));
                 beta  = std::min(ScoreType(score + delta), ScoreType( MATE) );
                 Logging::LogIt(Logging::logInfo) << "Increase window beta "  << alpha << ".." << beta;
                 if ( isMainThread() ){
