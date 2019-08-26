@@ -1650,7 +1650,7 @@ void getPV(const Position & p, ThreadContext & context, PVList & pv){
 
 } // TT
 
-class ScoreAcc; // forward decl
+struct ScoreAcc; // forward decl
 template < bool display = false, bool safeMatEvaluator = true >
 ScoreType eval(const Position & p, float & gp, ScoreAcc * sc = 0); // forward decl
 
@@ -3606,7 +3606,7 @@ bool receiveMove(const std::string & command){
 }
 
 bool replay(size_t nbmoves){
-    assert(nbmoves < moves.size());
+    assert(nbmoves < COM::moves.size());
     COM::State previousState = COM::state;
     COM::stop();
     COM::mode = COM::m_force;
