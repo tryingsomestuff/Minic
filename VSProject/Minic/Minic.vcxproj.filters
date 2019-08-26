@@ -33,5 +33,8 @@
     <ClCompile Include="..\..\Add-On\texelTuning.cc">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Add-On\pgnparser.cc">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
