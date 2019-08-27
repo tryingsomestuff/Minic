@@ -184,11 +184,12 @@ namespace Logging {
         LogIt(LogLevel loglevel) :_level(loglevel) {}
         template <typename T> Logging::LogIt & operator<<(T const & value) { _buffer << value; return *this; }
         ~LogIt() {
-            static const std::string _levelNames[7] = { "# Trace ", "# Debug ", "# Info  ", "", "# Warn  ", "# Error ", "# Fatal " };
+            static const std::string _protocolComment[2] = { "# ", "info string " };
+            static const std::string _levelNames[7] = { "Trace ", "Debug ", "Info  ", "", "Warn  ", "Error ", "Fatal " };
             std::lock_guard<std::mutex> lock(_mutex);
             if (_level != logGUI) {
-                std::cout       << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
-                if (_of) (*_of) << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
+                std::cout       << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
+                if (_of) (*_of) << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
             }
             else {
                 std::cout       << _buffer.str() << std::flush << std::endl;
@@ -3233,7 +3234,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         else{
             // reductions & prunings
             DepthType reduction = 0;
-            const bool isPrunable =  /*isNotEndGame &&*/ !isAdvancedPawnPush && !sameMove(*it, killerT.killers[0][p.halfmoves]) && !sameMove(*it, killerT.killers[1][p.halfmoves]) /*&& !isMateScore(alpha) *//*&& !isMateScore(beta)*/;
+            const bool isPrunable =  /*isNotEndGame &&*/ !isAdvancedPawnPush && !sameMove(*it, killerT.killers[0][p.halfmoves]) && !sameMove(*it, killerT.killers[1][p.halfmoves]) && !isMateScore(alpha) /*&& !isMateScore(beta)*/;
             const bool noCheck = !isInCheck && (!isCheck /*|| !extension*/);
             const bool isPrunableStd = isPrunable && Move2Type(*it) == T_std;
             const bool isPrunableStdNoCheck = isPrunable && noCheck && Move2Type(*it) == T_std;
