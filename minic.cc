@@ -41,7 +41,6 @@ const std::string MinicVersion = "dev";
 //todo
 -Root move ordering
 -test more extension
--queen safety
 */
 
 #define INFINITETIME TimeType(60*60*1000*24)
@@ -1273,7 +1272,7 @@ namespace MaterialHash { // from Gull
             // KPK
             DEF_MAT_H(KPK, Ter_WhiteWinWithHelper,&helperKPK)    DEF_MAT_REV_H(KKP,KPK,&helperKPK)
 
-            ///@todo other (with pawn ...)
+            ///@todo other (with more pawn ...)
         }
     };
 
@@ -2583,9 +2582,6 @@ inline void evalPawnCandidate(BitBoard pieceBBiterator, ScoreAcc & score){
 ///@todo pawn storm
 ///@todo pawn hash table
 ///@todo hanging, pins
-///@todo minor blocking openfile
-///@todo bad bishop (counting white/black square pawn of both side)
-///@todo rook facing king (whatever is on the file)
 
 template < bool display, bool safeMatEvaluator >
 ScoreType eval(const Position & p, float & gp, ScoreAcc * sc ){
@@ -2741,7 +2737,7 @@ ScoreType eval(const Position & p, float & gp, ScoreAcc * sc ){
     score.scores[ScoreAcc::sc_PwnPush] += EvalConfig::pawnMobility * (countBit(safePawnPush[Co_White]) - countBit(safePawnPush[Co_Black]));
 
     // in very end game winning king must be near the other king ///@todo shall be removed if material helpers work ...
-    if ((p.mat[Co_White][M_p] + p.mat[Co_Black][M_p] == 0) && p.king[Co_White] != INVALIDSQUARE && p.king[Co_Black] != INVALIDSQUARE) score.scores[ScoreAcc::sc_EndGame][EG] -= ScoreType((score.scores[ScoreAcc::sc_Mat][EG]>0?+1:-1)*(chebyshevDistance(p.king[Co_White], p.king[Co_Black])-2)*15);
+    //if ((p.mat[Co_White][M_p] + p.mat[Co_Black][M_p] == 0) && p.king[Co_White] != INVALIDSQUARE && p.king[Co_Black] != INVALIDSQUARE) score.scores[ScoreAcc::sc_EndGame][EG] -= ScoreType((score.scores[ScoreAcc::sc_Mat][EG]>0?+1:-1)*(chebyshevDistance(p.king[Co_White], p.king[Co_Black])-2)*15);
 
     // tempo
     //score.scores[ScoreAcc::sc_Tempo] += ScoreType(30);
@@ -3179,7 +3175,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                     if (pvnode) updatePV(pv, e.m, childPV);
                     if (ttScore >= beta) {
                         ++stats.counters[Stats::sid_ttbeta];
-                        if ((Move2Type(e.m) == T_std || isBadCap(e.m)) && !isInCheck) updateTables(*this, p, depth + (ttScore > (beta+80)), e.m, TT::B_beta); ///@todo bad cap can be killers ?
+                        if ((Move2Type(e.m) == T_std || isBadCap(e.m)) && !isInCheck) updateTables(*this, p, depth + (ttScore > (beta+80)), e.m, TT::B_beta);
                         if (skipMove == INVALIDMOVE /*&& ttScore != 0*/) TT::setEntry({ e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth,computeHash(p) });
                         return ttScore;
                     }
@@ -3292,9 +3288,9 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 alpha = score;
                 hashBound = TT::B_exact;
                 if ( score >= beta ){
-                    if ( (Move2Type(*it) == T_std || isBadCap(*it)) && !isInCheck){ ///@todo bad cap can be killers?
+                    if ( (Move2Type(*it) == T_std || isBadCap(*it)) && !isInCheck){
                         updateTables(*this, p, depth + (score>beta+80), *it, TT::B_beta);
-                        for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2) if ( (Move2Type(*it2) == T_std || isBadCap(*it2) ) ) historyT.update<-1>(depth + (score > (beta + 80)),*it2,p); ///@todo bad cap can be killers
+                        for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2) if ( (Move2Type(*it2) == T_std || isBadCap(*it2) ) ) historyT.update<-1>(depth + (score > (beta + 80)),*it2,p);
                     }
                     hashBound = TT::B_beta;
                     break;
