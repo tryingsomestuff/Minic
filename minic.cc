@@ -290,7 +290,7 @@ const ScoreType historyPruningThresholdInit  = 0;
 const ScoreType historyPruningThresholdDepth = 0;
 const DepthType futilityMaxDepth         [2] = {10 , 10};
 const ScoreType futilityDepthCoeff       [2] = {160, 160};
-const ScoreType futilityDepthInit        [2] = {0  ,0};
+const ScoreType futilityDepthInit        [2] = {0  , 0};
 const DepthType iidMinDepth                  = 5;
 const DepthType iidMinDepth2                 = 8;
 const DepthType probCutMinDepth              = 5;
@@ -406,6 +406,9 @@ EvalScore   freePasserFactor      = {38,123}; // 1XX%
 EvalScore   rookOnOpenFile        = {34, 1};
 EvalScore   rookOnOpenSemiFileOur = { 9,-2};
 EvalScore   rookOnOpenSemiFileOpp = {-4, 4};
+
+EvalScore   rookFrontKingMalus    = {-10,-1};
+EvalScore   minorOnOpenFile       = {10,-1};
 
 EvalScore   adjKnight[9]  = { {-24,-27}, {-13,-13}, {-5,-3}, {-2,-2}, {-4,-6}, {-4,8}, {0,21}, { 5,17}, { 8,8} };
 EvalScore   adjRook[9]    = { { 24, 18}, {  6,  4}, {-1, 0}, {-5,-1}, {-5,-2}, {-3,2}, {0, 4}, { 1,13}, {12,0} };
@@ -2443,7 +2446,7 @@ struct MoveSorter{
                 if ( from == Move2To(refutation) && context.SEE(p,m,-70)) s+=100; // move (safely) leaving threat square from null move search
             }
             const bool isWhite = (p.allPieces[Co_White] & SquareToBitboard(from)) != 0ull;
-            s += ScaleScore(EvalConfig::PST[PieceTools::getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - EvalConfig::PST[PieceTools::getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from],gp)/*/2*/; ///@todo try lower values ?
+            s += ScaleScore(EvalConfig::PST[PieceTools::getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - EvalConfig::PST[PieceTools::getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from],gp);
         }
         m = ToMove(from, to, t, s);
     }
@@ -2490,7 +2493,7 @@ double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f,
 void initEval(){ for(Square i = 0; i < 64; i++){ EvalConfig::kingAttTable[i] = (int) sigmoid(i,EvalConfig::kingAttMax,EvalConfig::kingAttTrans,EvalConfig::kingAttScale,EvalConfig::kingAttOffset); } }// idea taken from Topple
 
 struct ScoreAcc{
-    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_Pwn, sc_PwnShield, sc_PwnPassed, sc_PwnIsolated, sc_PwnDoubled, sc_PwnBackward, sc_PwnCandidate, sc_PwnHole, sc_Outpost, sc_PwnPush, sc_Adjust, sc_OpenFile, sc_EndGame, sc_Exchange, sc_Tempo, sc_max };
+    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_Pwn, sc_PwnShield, sc_PwnPassed, sc_PwnIsolated, sc_PwnDoubled, sc_PwnBackward, sc_PwnCandidate, sc_PwnHole, sc_Outpost, sc_PwnPush, sc_Adjust, sc_OpenFile, sc_EndGame, sc_RookFrontKing, sc_MinorOnOpenFile, sc_Tempo, sc_max };
     float scalingFactor = 1;
     std::array<EvalScore,sc_max> scores;
     ScoreType Score(const Position &p, float gp){
@@ -2499,7 +2502,7 @@ struct ScoreAcc{
         return ScoreType(ScaleScore(sc,gp)*scalingFactor*std::min(1.f,(110-p.fifty)/100.f));
     }
     void Display(const Position &p, float gp){
-        static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "Pwn", "PwnShield", "PwnPassed", "PwnIsolated", "PwnDoubled", "PwnBackward", "PwnCandidate", "PwnHole", "Outpost", "PwnPush", "Adjust", "OpenFile", "EndGame", "Exchange", "Tempo"};
+        static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "Pwn", "PwnShield", "PwnPassed", "PwnIsolated", "PwnDoubled", "PwnBackward", "PwnCandidate", "PwnHole", "Outpost", "PwnPush", "Adjust", "OpenFile", "EndGame", "RookFrontKing", "MinorOnOpenFile", "Tempo"};
         EvalScore sc;
         for(int k = 0 ; k < sc_max ; ++k){
             Logging::LogIt(Logging::logInfo) << scNames[k] << "       " << scores[k][MG];
@@ -2701,6 +2704,14 @@ ScoreType eval(const Position & p, float & gp, ScoreAcc * sc ){
     score.scores[ScoreAcc::sc_OpenFile] -= EvalConfig::rookOnOpenFile         * countBit(p.blackRook() & openFiles);
     score.scores[ScoreAcc::sc_OpenFile] -= EvalConfig::kingAttSemiOpenfileOpp * countBit(p.blackRook() & semiOpenFiles[Co_Black]);
     score.scores[ScoreAcc::sc_OpenFile] -= EvalConfig::kingAttSemiOpenfileOur * countBit(p.blackRook() & semiOpenFiles[Co_White]);
+
+    // rook facing king
+    score.scores[ScoreAcc::sc_RookFrontKing] += EvalConfig::rookFrontKingMalus * countBit(BBTools::frontSpan<Co_White>(p.whiteKing()) & p.blackRook());
+    score.scores[ScoreAcc::sc_RookFrontKing] -= EvalConfig::rookFrontKingMalus * countBit(BBTools::frontSpan<Co_Black>(p.blackKing()) & p.whiteRook());
+
+    // defended minor blocking openfile
+    score.scores[ScoreAcc::sc_MinorOnOpenFile] += EvalConfig::minorOnOpenFile * countBit(openFiles & (p.whiteBishop()|p.whiteKnight()) & BBTools::pawnAttacks<Co_White>(p.whitePawn()));
+    score.scores[ScoreAcc::sc_MinorOnOpenFile] -= EvalConfig::minorOnOpenFile * countBit(openFiles & (p.blackBishop()|p.blackKnight()) & BBTools::pawnAttacks<Co_Black>(p.blackPawn()));
 
     // double pawn malus
     score.scores[ScoreAcc::sc_PwnDoubled] -= EvalConfig::doublePawnMalus[EvalConfig::Close]    * countBit(doubled[Co_White] & ~semiOpenFiles[Co_White]);
