@@ -77,17 +77,17 @@ Current level elo are more or less those :
 
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
-   1 minic_devlvl10                  631     156     175   97.4%    4.0%
-   2 minic_devlvl9                   407      88     177   91.2%    5.1%
-   3 minic_devlvl8                   231      61     177   79.1%    6.8%
-   4 minic_devlvl7                   167      56     177   72.3%    4.5%
-   5 minic_devlvl6                    65      51     178   59.3%    3.9%
-   6 minic_devlvl5                     2      50     178   50.3%    5.1%
-   7 minic_devlvl4                   -67      51     179   40.5%    2.8%
-   8 minic_devlvl3                  -165      55     179   27.9%    5.6%
-   9 minic_devlvl2                  -244      61     180   19.7%    7.2%
-  10 minic_devlvl1                  -308      69     179   14.5%    6.7%
-  11 minic_devlvl0                  -inf     nan     179    0.0%    0.0%
+   1 minic_devl10                  621      38    1783   97.3%    4.7%
+   2 minic_devl9                   389      24    1784   90.4%    7.2%
+   3 minic_devl8                   237      19    1785   79.6%    7.5%
+   4 minic_devl7                   155      17    1785   70.9%    6.1%
+   5 minic_devl6                    75      16    1786   60.7%    4.4%
+   6 minic_devl5                    -1      16    1786   49.9%    2.5%
+   7 minic_devl4                   -78      16    1785   39.0%    5.3%
+   8 minic_devl3                  -157      17    1784   28.8%    7.2%
+   9 minic_devl2                  -269      19    1785   17.6%    9.7%
+  10 minic_devl1                  -290      20    1785   15.8%    8.9%
+  11 minic_devl0                 -1230     nan    1786    0.1%    0.2%
 ```
 
 ## How to compile
