@@ -325,13 +325,13 @@ namespace EvalConfig {
 EvalScore PST[6][64] = {
     {
       {   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},
-      {  98, 118},{ 133,  94},{  60,  89},{  95,  80},{  68,  92},{ 126,  67},{  34, 130},{ -11, 182},
-      {  -6,  85},{   7,  67},{  23,  48},{  28,  34},{  65,  26},{  56,  29},{  25,  61},{ -20,  81},
-      { -14,  32},{   9,  20},{   4,  10},{  10,   5},{  13,   1},{  12,   3},{  11,  15},{ -23,  17},
-      { -13,  13},{  -2,   9},{   1,   1},{   7,  -1},{  11,  -3},{   5,  -5},{  10,   3},{ -12,  -1},
-      { -11,   4},{   1,   7},{   0,   1},{  -2,   2},{   3,   0},{   4,   0},{  18,  -1},{   0,  -8},
-      { -35,  13},{  -1,   8},{ -11,   8},{  -9,   7},{  -6,   8},{  11,   0},{  38,   2},{ -22,  -7},
-      {   0,   0},{   3,   1},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   2,   0},{   0,   0}
+      {  98,  71},{ 133,  70},{  60,  80},{  95,  59},{  68,  91},{ 126,  65},{  34, 129},{ -11, 136},
+      {  -6,  45},{   7,  40},{  23,  20},{  28, -12},{  65, -17},{  56,   3},{  25,  27},{ -20,  34},
+      {  -5,  28},{   6,  14},{   6,   4},{  29, -19},{  29, -14},{  14,  -3},{  16,   4},{ -12,  13},
+      { -17,  22},{ -13,  16},{   0,  -1},{  20,  -9},{  22, -10},{  19, -11},{   4,  -3},{ -16,   1},
+      {  -8,   8},{ -12,   8},{   3,  -4},{   3,  -6},{  11,  -1},{  18,  -5},{  34, -14},{   7, -11},
+      { -18,  17},{ -11,   3},{ -11,   6},{  -4,  -1},{   0,   8},{  27,  -2},{  30,  -8},{  -5, -12},
+      {   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0}
     },
     {
       {-167, -58},{ -89, -38},{ -34, -13},{ -49, -28},{  61, -31},{ -97, -27},{ -15, -63},{-107, -99},
@@ -431,6 +431,7 @@ ScoreType kingAttScale  = 24;
 ScoreType kingAttOffset = 10;
 ScoreType kingAttWeight[2][7]    = { {0, -1, 2, 13, 5, 13, 0}, {0, -3, 9, 7, -1, 0, 0} };
 ScoreType kingAttTable[64]       = {0};
+EvalScore queenNearKing = {5, 9};
 
 ScoreType kingAttOpenfile        = 8;
 ScoreType kingAttSemiOpenfileOur = -5;
@@ -1046,7 +1047,7 @@ namespace MaterialHash { // from Gull
 
     Square normalizeSquare(const Position& p, Color strongSide, Square sq) {
        assert(countBit(p.pieces<P_wp>(strongSide)) == 1); // only for KPK !
-       if (SQFILE(BBTools::SquareFromBitBoard(p.pieces<P_wp>(strongSide))) >= File_e) sq = Square(HFlip(sq));
+       if (SQFILE(BBTools::SquareFromBitBoard(p.pieces<P_wp>(strongSide))) >= File_e) sq = Square(HFlip(sq)); // we know there is at least one pawn
        return strongSide == Co_White ? sq : VFlip(sq);
     }
 
@@ -1106,7 +1107,7 @@ namespace MaterialHash { // from Gull
 
     ScoreType helperKPK(const Position &p, Color winningSide, ScoreType ){
        ///@todo maybe an incrementally updated piece square list can be cool to avoid those SquareFromBitBoard...
-       const Square psq = KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces<P_wp>(winningSide)));
+       const Square psq = KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces<P_wp>(winningSide))); // we know there is at least one pawn
        if (!KPK::probe(KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces<P_wk>(winningSide))), psq, KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces<P_wk>(~winningSide))), winningSide == p.c ? Co_White:Co_Black)) return 0;
        return ((winningSide == Co_White)?+1:-1)*(WIN + ValuesEG[P_wp+PieceShift] + 10*SQRANK(psq));
     }
@@ -2518,7 +2519,7 @@ struct ScoreAcc{
 };
 
 namespace{ // some Color / Piece helpers
-   BitBoard(*const pf[])(const Square, const BitBoard, const  Color) =     { &BBTools::coverage<P_wp>, &BBTools::coverage<P_wn>, &BBTools::coverage<P_wb>, &BBTools::coverage<P_wr>, &BBTools::coverage<P_wq>, &BBTools::coverage<P_wk> };
+   BitBoard(*const pfAtt[])(const Square, const BitBoard, const  Color) =     { &BBTools::coverage<P_wp>, &BBTools::coverage<P_wn>, &BBTools::coverage<P_wb>, &BBTools::coverage<P_wr>, &BBTools::coverage<P_wq>, &BBTools::coverage<P_wk> };
    template<Color C> inline bool isPasser(const Position &p, Square k)     { return (BBTools::mask[k].passerSpan[C] & p.pieces<P_wp>(~C)) == 0ull;}
    template<Color C> inline Square ColorSquarePstHelper(Square k)          { return C==Co_White?(k^56):k;}
    template<Color C> inline constexpr ScoreType ColorSignHelper()          { return C==Co_White?+1:-1;}
@@ -2534,7 +2535,7 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, ScoreAcc & s
         const Square k = BBTools::popBit(pieceBBiterator);
         const Square kk = ColorSquarePstHelper<C>(k);
         score.scores[ScoreAcc::sc_PST]  += EvalConfig::PST[T-1][kk] * ColorSignHelper<C>();
-        const BitBoard target = pf[T-1](k, p.occupancy ^ p.pieces<T>(C), p.c); // aligned threats of same piece type also taken into account ///@todo better?
+        const BitBoard target = pfAtt[T-1](k, p.occupancy ^ p.pieces<T>(C), p.c); // aligned threats of same piece type also taken into account ///@todo better?
         kdanger[C]  -= countBit(target & kingZone[C])  * EvalConfig::kingAttWeight[EvalConfig::katt_defence][T];
         kdanger[~C] += countBit(target & kingZone[~C]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][T];
         att |= target /*& ~p.allPieces[C]*/;
@@ -2544,7 +2545,7 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, ScoreAcc & s
 template < Piece T ,Color C>
 inline void evalMob(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, const BitBoard (& att)[2], BitBoard & mob){
     while (pieceBBiterator){
-        mob = pf[T-1](BBTools::popBit(pieceBBiterator), p.occupancy, p.c) & ~p.allPieces[C] /*& ~att[~C]*/;
+        mob = pfAtt[T-1](BBTools::popBit(pieceBBiterator), p.occupancy, p.c) & ~p.allPieces[C] /*& ~att[~C]*/;
         score.scores[ScoreAcc::sc_MOB] += EvalConfig::MOB[T-1][countBit(mob)]*ColorSignHelper<C>();
     }
 }
@@ -2637,13 +2638,13 @@ ScoreType eval(const Position & p, float & gp, ScoreAcc * sc ){
     const BitBoard holes[2]         = {BBTools::pawnHoles<Co_White>(pawns[Co_White]) & extendedCenter, BBTools::pawnHoles<Co_Black>(pawns[Co_Black]) & extendedCenter};
 
     // PST, king zone attack
-    evalPiece<P_wp,Co_White>(p,p.pieces<P_wn>(Co_White),score,att[Co_White],kdanger);
+    evalPiece<P_wp,Co_White>(p,p.pieces<P_wp>(Co_White),score,att[Co_White],kdanger);
     evalPiece<P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),score,att[Co_White],kdanger);
     evalPiece<P_wb,Co_White>(p,p.pieces<P_wb>(Co_White),score,att[Co_White],kdanger);
     evalPiece<P_wr,Co_White>(p,p.pieces<P_wr>(Co_White),score,att[Co_White],kdanger);
     evalPiece<P_wq,Co_White>(p,p.pieces<P_wq>(Co_White),score,att[Co_White],kdanger);
     evalPiece<P_wk,Co_White>(p,p.pieces<P_wk>(Co_White),score,att[Co_White],kdanger);
-    evalPiece<P_wp,Co_Black>(p,p.pieces<P_wn>(Co_Black),score,att[Co_Black],kdanger);
+    evalPiece<P_wp,Co_Black>(p,p.pieces<P_wp>(Co_Black),score,att[Co_Black],kdanger);
     evalPiece<P_wn,Co_Black>(p,p.pieces<P_wn>(Co_Black),score,att[Co_Black],kdanger);
     evalPiece<P_wb,Co_Black>(p,p.pieces<P_wb>(Co_Black),score,att[Co_Black],kdanger);
     evalPiece<P_wr,Co_Black>(p,p.pieces<P_wr>(Co_Black),score,att[Co_Black],kdanger);
@@ -2728,6 +2729,10 @@ ScoreType eval(const Position & p, float & gp, ScoreAcc * sc ){
     // knight on opponent hole, protected
     score.scores[ScoreAcc::sc_Outpost] += EvalConfig::outpost * countBit(holes[Co_Black] & p.whiteKnight() & pawnTargets[Co_White]);
     score.scores[ScoreAcc::sc_Outpost] -= EvalConfig::outpost * countBit(holes[Co_White] & p.blackKnight() & pawnTargets[Co_Black]);
+
+    // queen distance to opponent king
+    //if ( p.blackQueen() ) kdanger[Co_White] += EvalConfig::queenNearKing * (7 - chebyshevDistance(p.king[Co_White], BBTools::SquareFromBitBoard(p.blackQueen()));
+    //if ( p.whiteQueen() ) kdanger[Co_Black] += EvalConfig::queenNearKing * (7 - chebyshevDistance(p.king[Co_Black], BBTools::SquareFromBitBoard(p.whiteQueen()));
 
     // use king danger score. **DO NOT** apply this in end-game
     score.scores[ScoreAcc::sc_ATT][MG] -=  EvalConfig::kingAttTable[std::min(std::max(kdanger[Co_White],ScoreType(0)),ScoreType(63))];

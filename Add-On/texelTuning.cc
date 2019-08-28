@@ -407,22 +407,27 @@ void TexelTuning(const std::string & filename) {
     */
 
     /*
-    for (int k = 0 ; k < 6 ; ++k ){
+    for (int k = 0 ; k < 1 ; ++k ){
         for(int i = 0 ; i < 64 ; ++i){
            guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::PST[k][i][MG],-200,200,"pst"+std::to_string(k)+"_"+std::to_string(i)));
         }
     }
-    for (int k = 0 ; k < 6 ; ++k ){
+    for (int k = 0 ; k < 1 ; ++k ){
         for(int i = 0 ; i < 64 ; ++i){
            guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::PST[k][i][EG],-200,200,"psteg"+std::to_string(k)+"_"+std::to_string(i)));
         }
     }
     */
 
+    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookFrontKingMalus[MG] , -500,  500,"rookFrontKingMalus"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookFrontKingMalus[EG] , -500,  500,"rookFrontKingMalusEG"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::minorOnOpenFile[MG] , -500,  500,"minorOnOpenFile"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::minorOnOpenFile[EG] , -500,  500,"minorOnOpenFileEG"));
+    */
+
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::queenNearKing[MG] , -500,  500,"queenNearKing"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::queenNearKing[EG] , -500,  500,"queenNearKingEG"));
 
     computeOptimalK(data);
     Logging::LogIt(Logging::logInfo) << "Optimal K " << Texel::K;
