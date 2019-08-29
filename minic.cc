@@ -431,7 +431,7 @@ ScoreType kingAttScale  = 24;
 ScoreType kingAttOffset = 10;
 ScoreType kingAttWeight[2][7]    = { {0, -1, 2, 13, 5, 13, 0}, {0, -3, 9, 7, -1, 0, 0} };
 ScoreType kingAttTable[64]       = {0};
-EvalScore queenNearKing = {5, 9};
+EvalScore queenNearKing = {2,3};
 
 ScoreType kingAttOpenfile        = 8;
 ScoreType kingAttSemiOpenfileOur = -5;
@@ -924,6 +924,8 @@ inline bool isPromotion(const Move & m  ){ return isPromotion(Move2Type(m));}
 inline bool isBadCap   (const Move & m  ){ return Move2Score(m) < -MoveScoring[T_capture] + 400;}
 
 inline Square chebyshevDistance(Square sq1, Square sq2) { return std::max(std::abs(SQRANK(sq2) - SQRANK(sq1)) , std::abs(SQFILE(sq2) - SQFILE(sq1))); }
+inline Square manatthanDistance(Square sq1, Square sq2) { return std::abs(SQRANK(sq2) - SQRANK(sq1)) + std::abs(SQFILE(sq2) - SQFILE(sq1)); }
+inline Square minDistance      (Square sq1, Square sq2) { return std::min(std::abs(SQRANK(sq2) - SQRANK(sq1)) , std::abs(SQFILE(sq2) - SQFILE(sq1))); }
 
 std::string ToString(const Move & m    , bool withScore = false);
 std::string ToString(const Position & p, bool noEval = false);
@@ -2493,7 +2495,7 @@ double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f,
 void initEval(){ for(Square i = 0; i < 64; i++){ EvalConfig::kingAttTable[i] = (int) sigmoid(i,EvalConfig::kingAttMax,EvalConfig::kingAttTrans,EvalConfig::kingAttScale,EvalConfig::kingAttOffset); } }// idea taken from Topple
 
 struct ScoreAcc{
-    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_Pwn, sc_PwnShield, sc_PwnPassed, sc_PwnIsolated, sc_PwnDoubled, sc_PwnBackward, sc_PwnCandidate, sc_PwnHole, sc_Outpost, sc_PwnPush, sc_Adjust, sc_OpenFile, sc_EndGame, sc_RookFrontKing, sc_MinorOnOpenFile, sc_Tempo, sc_max };
+    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_Pwn, sc_PwnShield, sc_PwnPassed, sc_PwnIsolated, sc_PwnDoubled, sc_PwnBackward, sc_PwnCandidate, sc_PwnHole, sc_Outpost, sc_PwnPush, sc_Adjust, sc_OpenFile, sc_EndGame, sc_RookFrontKing, sc_MinorOnOpenFile, sc_QueenNearKing, sc_Tempo, sc_max };
     float scalingFactor = 1;
     std::array<EvalScore,sc_max> scores;
     ScoreType Score(const Position &p, float gp){
@@ -2502,7 +2504,7 @@ struct ScoreAcc{
         return ScoreType(ScaleScore(sc,gp)*scalingFactor*std::min(1.f,(110-p.fifty)/100.f));
     }
     void Display(const Position &p, float gp){
-        static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "Pwn", "PwnShield", "PwnPassed", "PwnIsolated", "PwnDoubled", "PwnBackward", "PwnCandidate", "PwnHole", "Outpost", "PwnPush", "Adjust", "OpenFile", "EndGame", "RookFrontKing", "MinorOnOpenFile", "Tempo"};
+        static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "Pwn", "PwnShield", "PwnPassed", "PwnIsolated", "PwnDoubled", "PwnBackward", "PwnCandidate", "PwnHole", "Outpost", "PwnPush", "Adjust", "OpenFile", "EndGame", "RookFrontKing", "MinorOnOpenFile", "QueenNearKing", "Tempo"};
         EvalScore sc;
         for(int k = 0 ; k < sc_max ; ++k){
             Logging::LogIt(Logging::logInfo) << scNames[k] << "       " << scores[k][MG];
@@ -2731,8 +2733,8 @@ ScoreType eval(const Position & p, float & gp, ScoreAcc * sc ){
     score.scores[ScoreAcc::sc_Outpost] -= EvalConfig::outpost * countBit(holes[Co_White] & p.blackKnight() & pawnTargets[Co_Black]);
 
     // queen distance to opponent king
-    //if ( p.blackQueen() ) kdanger[Co_White] += EvalConfig::queenNearKing * (7 - chebyshevDistance(p.king[Co_White], BBTools::SquareFromBitBoard(p.blackQueen()));
-    //if ( p.whiteQueen() ) kdanger[Co_Black] += EvalConfig::queenNearKing * (7 - chebyshevDistance(p.king[Co_Black], BBTools::SquareFromBitBoard(p.whiteQueen()));
+    if ( p.blackQueen() ) score.scores[ScoreAcc::sc_QueenNearKing] -= EvalConfig::queenNearKing * (7 - minDistance(p.king[Co_White], BBTools::SquareFromBitBoard(p.blackQueen())) );
+    if ( p.whiteQueen() ) score.scores[ScoreAcc::sc_QueenNearKing] += EvalConfig::queenNearKing * (7 - minDistance(p.king[Co_Black], BBTools::SquareFromBitBoard(p.whiteQueen())) );
 
     // use king danger score. **DO NOT** apply this in end-game
     score.scores[ScoreAcc::sc_ATT][MG] -=  EvalConfig::kingAttTable[std::min(std::max(kdanger[Co_White],ScoreType(0)),ScoreType(63))];
