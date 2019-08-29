@@ -1275,7 +1275,7 @@ namespace MaterialHash { // from Gull
             // KPK
             DEF_MAT_H(KPK, Ter_WhiteWinWithHelper,&helperKPK)    DEF_MAT_REV_H(KKP,KPK,&helperKPK)
 
-            ///@todo other (with more pawn ...)
+            ///@todo other (with more pawn ...), especially KPsKB with wrong color bishop
         }
     };
 
@@ -3343,7 +3343,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
     historyT.initHistory();
     counterT.initCounter();
 
-    TimeMan::startTime = Clock::now();
+    TimeMan::startTime = Clock::now(); ///@todo put this before ?
 
     DepthType reachedDepth = 0;
     PVList pv;

@@ -99,7 +99,7 @@ std::string showAlgAbr(Move m, const Position & p) {
         }
     }
 
-    if ( isCheck ) s += "+";
+    if ( isCheck )    s += "+";
     if ( isNotLegal ) s += "~";
 
     return s;
