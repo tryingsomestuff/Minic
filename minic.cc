@@ -415,7 +415,7 @@ EvalScore   adjRook[9]    = { { 24, 18}, {  6,  4}, {-1, 0}, {-5,-1}, {-5,-2}, {
 EvalScore   bishopPairBonus   = { 32,49};
 EvalScore   knightPairMalus   = {-2 , 4};
 EvalScore   rookPairMalus     = {-15,-9};
-EvalScore   pawnMobility      = { 7,  6};
+EvalScore   pawnMobility      = { 9,  8};
 
 EvalScore MOB[6][29] = { {{0,0},{0,0},{0,0},{0,0}},
                          {{-22,-22},{41,-15},{49,7},{45,19},{56,12},{50,18},{47,20},{49,23},{46,22}},
@@ -2628,16 +2628,15 @@ ScoreType eval(const Position & p, float & gp, ScoreAcc * sc ){
     ScoreType kdanger[2]    = {0, 0};
     BitBoard att[2]         = {0ull, 0ull};
     BitBoard mob[6][2]      = {0ull};
-    const BitBoard safePawnPush[2]  = {BBTools::shiftN<Co_White>(pawns[Co_White]) & (~p.occupancy & (att[Co_White] | ~att[Co_Black])), BBTools::shiftN<Co_Black>(pawns[Co_Black]) & (~p.occupancy & (att[Co_Black] | ~att[Co_White]))};
-    const BitBoard pawnTargets[2]   = {BBTools::pawnAttacks<Co_White>(pawns[Co_White]), BBTools::pawnAttacks<Co_Black>(pawns[Co_Black])};
-    const BitBoard passer[2]        = {BBTools::pawnPassed<Co_White>(pawns[Co_White],pawns[Co_Black]), BBTools::pawnPassed<Co_Black>(pawns[Co_Black],pawns[Co_White])};
-    const BitBoard backward[2]      = {BBTools::pawnBackward<Co_White>(pawns[Co_White],pawns[Co_Black]), BBTools::pawnBackward<Co_Black>(pawns[Co_Black],pawns[Co_White])};
-    const BitBoard isolated[2]      = {BBTools::pawnIsolated(pawns[Co_White]), BBTools::pawnIsolated(pawns[Co_Black])};
-    const BitBoard doubled[2]       = {BBTools::pawnDoubled<Co_White>(pawns[Co_White]), BBTools::pawnDoubled<Co_Black>(pawns[Co_White])};
-    const BitBoard semiOpenFiles[2] = {BBTools::pawnSemiOpen<Co_White>(pawns[Co_White],pawns[Co_Black]),BBTools::pawnSemiOpen<Co_Black>(pawns[Co_Black],pawns[Co_White])};
-    const BitBoard openFiles        =  BBTools::openFiles(pawns[Co_White],pawns[Co_Black]);
-    const BitBoard candidates[2]    = {BBTools::pawnCandidates<Co_White>(pawns[Co_White],pawns[Co_Black]),BBTools::pawnCandidates<Co_Black>(pawns[Co_Black],pawns[Co_White])};
-    const BitBoard holes[2]         = {BBTools::pawnHoles<Co_White>(pawns[Co_White]) & extendedCenter, BBTools::pawnHoles<Co_Black>(pawns[Co_Black]) & extendedCenter};
+    const BitBoard pawnTargets[2]   = {BBTools::pawnAttacks   <Co_White>(pawns[Co_White])                  , BBTools::pawnAttacks   <Co_Black>(pawns[Co_Black])};
+    const BitBoard passer[2]        = {BBTools::pawnPassed    <Co_White>(pawns[Co_White] ,pawns[Co_Black]) , BBTools::pawnPassed    <Co_Black>(pawns[Co_Black],pawns[Co_White])};
+    const BitBoard backward[2]      = {BBTools::pawnBackward  <Co_White>(pawns[Co_White] ,pawns[Co_Black]) , BBTools::pawnBackward  <Co_Black>(pawns[Co_Black],pawns[Co_White])};
+    const BitBoard isolated[2]      = {BBTools::pawnIsolated            (pawns[Co_White])                  , BBTools::pawnIsolated            (pawns[Co_Black])};
+    const BitBoard doubled[2]       = {BBTools::pawnDoubled   <Co_White>(pawns[Co_White])                  , BBTools::pawnDoubled   <Co_Black>(pawns[Co_Black])};
+    const BitBoard semiOpenFiles[2] = {BBTools::pawnSemiOpen  <Co_White>(pawns[Co_White] ,pawns[Co_Black]) , BBTools::pawnSemiOpen  <Co_Black>(pawns[Co_Black],pawns[Co_White])};
+    const BitBoard openFiles        =  BBTools::openFiles               (pawns[Co_White]                   , pawns[Co_Black]);
+    const BitBoard candidates[2]    = {BBTools::pawnCandidates<Co_White>(pawns[Co_White] ,pawns[Co_Black]) , BBTools::pawnCandidates<Co_Black>(pawns[Co_Black],pawns[Co_White])};
+    const BitBoard holes[2]         = {BBTools::pawnHoles     <Co_White>(pawns[Co_White]) & extendedCenter , BBTools::pawnHoles     <Co_Black>(pawns[Co_Black]) & extendedCenter};
 
     // PST, king zone attack
     evalPiece<P_wp,Co_White>(p,p.pieces<P_wp>(Co_White),score,att[Co_White],kdanger);
@@ -2741,10 +2740,8 @@ ScoreType eval(const Position & p, float & gp, ScoreAcc * sc ){
     score.scores[ScoreAcc::sc_ATT][MG] +=  EvalConfig::kingAttTable[std::min(std::max(kdanger[Co_Black],ScoreType(0)),ScoreType(63))];
 
     // safe pawn push (protected once or not attacked)
+    const BitBoard safePawnPush[2]  = {BBTools::shiftN<Co_White>(pawns[Co_White]) & (~p.occupancy & (att[Co_White] | ~att[Co_Black])), BBTools::shiftN<Co_Black>(pawns[Co_Black]) & (~p.occupancy & (att[Co_Black] | ~att[Co_White]))};
     score.scores[ScoreAcc::sc_PwnPush] += EvalConfig::pawnMobility * (countBit(safePawnPush[Co_White]) - countBit(safePawnPush[Co_Black]));
-
-    // in very end game winning king must be near the other king ///@todo shall be removed if material helpers work ...
-    //if ((p.mat[Co_White][M_p] + p.mat[Co_Black][M_p] == 0) && p.king[Co_White] != INVALIDSQUARE && p.king[Co_Black] != INVALIDSQUARE) score.scores[ScoreAcc::sc_EndGame][EG] -= ScoreType((score.scores[ScoreAcc::sc_Mat][EG]>0?+1:-1)*(chebyshevDistance(p.king[Co_White], p.king[Co_Black])-2)*15);
 
     // tempo
     //score.scores[ScoreAcc::sc_Tempo] += ScoreType(30);
