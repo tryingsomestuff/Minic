@@ -1368,7 +1368,7 @@ struct ThreadData{
 };
 
 struct Stats{
-    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits,sid_staticNullMove, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMove, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_see, sid_see2, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_pawnPushExtension, sid_singularExtension, sid_singularExtension2, sid_queenThreatExtension, sid_mateThreadExtension, sid_tbHit1, sid_tbHit2, sid_maxid };
+    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits,sid_staticNullMove, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMove, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_see, sid_see2, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_pawnPushExtension, sid_singularExtension, sid_singularExtension2, sid_queenThreatExtension, sid_BMExtension, sid_mateThreadExtension, sid_tbHit1, sid_tbHit2, sid_maxid };
     static const std::string Names[sid_maxid] ;
     Counter counters[sid_maxid];
     void init(){
@@ -1377,7 +1377,7 @@ struct Stats{
     }
 };
 
-const std::string Stats::Names[Stats::sid_maxid] = { "nodes", "qnodes", "tthits", "staticNullMove", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMove", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "see", "see2", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "pawnPushExtension", "singularExtension", "singularExtension2", "queenThreatExtension", "mateThreadExtension", "TBHit1", "TBHit2"};
+const std::string Stats::Names[Stats::sid_maxid] = { "nodes", "qnodes", "tthits", "staticNullMove", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMove", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "see", "see2", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "pawnPushExtension", "singularExtension", "singularExtension2", "queenThreatExtension", "BMExtension", "mateThreadExtension", "TBHit1", "TBHit2"};
 
 // singleton pool of threads
 class ThreadPool : public std::vector<ThreadContext*> {
@@ -1420,6 +1420,7 @@ struct ThreadContext{
 
     Hash hashStack[MAX_PLY] = { 0ull };
     ScoreType evalStack[MAX_PLY] = { 0 };
+    Move threatStack[MAX_PLY] = { INVALIDMOVE };
 
     Stats stats;
 
@@ -1639,7 +1640,7 @@ void setEntry(const Entry & e){
 
 void getPV(const Position & p, ThreadContext & context, PVList & pv){
     TT::Entry e;
-    Hash hashStack[MAX_PLY] = {0ull};
+    Hash hashStack[MAX_PLY] = { 0ull };
     Position p2 = p;
     bool stop = false;
     for( int k = 0 ; k < MAX_PLY && !stop; ++k){
@@ -3131,6 +3132,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     bool isQueenAttacked = p.pieces<P_wq>(p.c) && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces<P_wq>(p.c))); // only first queen ...
 
+    threatStack[p.halfmoves] = refutation;
+
     // try the tt move before move generation (if not skipped move)
     if ( e.h != 0 && e.m != INVALIDMOVE && !sameMove(e.m,skipMove)) { // should be the case thanks to iid at pvnode
         Position p2 = p;
@@ -3140,7 +3143,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if (p.c == Co_Black && to == p.king[Co_White]) return MATE - ply + 1;
             validMoveCount++;
             PVList childPV;
-            hashStack[p.halfmoves] = p.h;
+            hashStack[p2.halfmoves] = p2.h;
             const bool isCheck = isAttacked(p2, kingSquare(p2));
             if ( isCapture(e.m) ) ttMoveIsCapture = true;
             const bool isAdvancedPawnPush = PieceTools::getPieceType(p,Move2From(e.m)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
@@ -3155,6 +3158,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                if (!extension && isAdvancedPawnPush && sameMove(e.m, killerT.killers[0][p.halfmoves])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo isPassed ?
                if (!extension && isQueenAttacked && PieceTools::getPieceType(p,Move2From(e.m)) == P_wq && Move2Type(e.m) == T_std && SEE(p,e.m,0)) ++stats.counters[Stats::sid_queenThreatExtension],++extension;
                //if (!extension && skipMove == INVALIDMOVE && singularExtension(*this, p, depth, e, e.m, rootnode, ply, isInCheck)) ++stats.counters[Stats::sid_singularExtension],++extension;
+               if (!extension && p.halfmoves > 1 && threatStack[p.halfmoves] != INVALIDMOVE && (sameMove(threatStack[p.halfmoves],threatStack[p.halfmoves-2]) || (Move2To(threatStack[p.halfmoves]) == Move2To(threatStack[p.halfmoves-2]) && isCapture(threatStack[p.halfmoves])))) ++stats.counters[Stats::sid_BMExtension],++extension;
                if (!extension && skipMove == INVALIDMOVE && depth >= StaticConfig::singularExtensionDepth && !rootnode && !isMateScore(e.score) && e.b == TT::B_beta && e.d >= depth - 3){
                    const ScoreType betaC = e.score - 2*depth;
                    PVList sePV;
@@ -3226,7 +3230,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if (p.c == Co_Black && to == p.king[Co_White]) return MATE - ply + 1;
         validMoveCount++;
         PVList childPV;
-        hashStack[p.halfmoves] = p.h;
+        hashStack[p2.halfmoves] = p2.h;
         const bool isCheck = isAttacked(p2, kingSquare(p2));
         const bool isAdvancedPawnPush = PieceTools::getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
         // extensions
@@ -3239,6 +3243,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
            if (!extension && isAdvancedPawnPush && sameMove(*it, killerT.killers[0][p.halfmoves])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo and isPassed ?
            if (!extension && isCastling(*it) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
            //if (!extension && isQueenAttacked && PieceTools::getPieceType(p,Move2From(*it)) == P_wq && Move2Type(*it) == T_std && SEE(p,*it,0)) ++stats.counters[Stats::sid_queenThreatExtension],++extension; // too much of that
+           //if (!extension && p.halfmoves > 1 && threatStack[p.halfmoves] != INVALIDMOVE && sameMove(threatStack[p.halfmoves],threatStack[p.halfmoves-2])) ++stats.counters[Stats::sid_BMExtension],++extension;
         }
         // pvs
         if (validMoveCount < 2 || !StaticConfig::doPVS ) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck);
