@@ -3157,7 +3157,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                //if (!extension && isCheck && !isBadCap(e.m)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
                if (!extension && isAdvancedPawnPush && sameMove(e.m, killerT.killers[0][p.halfmoves])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo isPassed ?
                if (!extension && isQueenAttacked && PieceTools::getPieceType(p,Move2From(e.m)) == P_wq && Move2Type(e.m) == T_std && SEE(p,e.m,0)) ++stats.counters[Stats::sid_queenThreatExtension],++extension;
-               //if (!extension && skipMove == INVALIDMOVE && singularExtension(*this, p, depth, e, e.m, rootnode, ply, isInCheck)) ++stats.counters[Stats::sid_singularExtension],++extension;
                if (!extension && p.halfmoves > 1 && threatStack[p.halfmoves] != INVALIDMOVE && (sameMove(threatStack[p.halfmoves],threatStack[p.halfmoves-2]) || (Move2To(threatStack[p.halfmoves]) == Move2To(threatStack[p.halfmoves-2]) && isCapture(threatStack[p.halfmoves])))) ++stats.counters[Stats::sid_BMExtension],++extension;
                if (!extension && skipMove == INVALIDMOVE && depth >= StaticConfig::singularExtensionDepth && !rootnode && !isMateScore(e.score) && e.b == TT::B_beta && e.d >= depth - 3){
                    const ScoreType betaC = e.score - 2*depth;
@@ -3243,7 +3242,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
            if (!extension && isAdvancedPawnPush && sameMove(*it, killerT.killers[0][p.halfmoves])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo and isPassed ?
            if (!extension && isCastling(*it) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
            //if (!extension && isQueenAttacked && PieceTools::getPieceType(p,Move2From(*it)) == P_wq && Move2Type(*it) == T_std && SEE(p,*it,0)) ++stats.counters[Stats::sid_queenThreatExtension],++extension; // too much of that
-           //if (!extension && p.halfmoves > 1 && threatStack[p.halfmoves] != INVALIDMOVE && sameMove(threatStack[p.halfmoves],threatStack[p.halfmoves-2])) ++stats.counters[Stats::sid_BMExtension],++extension;
+           //if (!extension && p.halfmoves > 1 && threatStack[p.halfmoves] != INVALIDMOVE && (sameMove(threatStack[p.halfmoves],threatStack[p.halfmoves-2]) || (Move2To(threatStack[p.halfmoves]) == Move2To(threatStack[p.halfmoves-2]) && isCapture(threatStack[p.halfmoves])))) ++stats.counters[Stats::sid_BMExtension],++extension;
         }
         // pvs
         if (validMoveCount < 2 || !StaticConfig::doPVS ) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck);
@@ -3268,8 +3267,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 reduction -= 2*int(Move2Score(*it) / MAX_HISTORY); //history reduction/extension
                 //if (!pvnode) reduction += std::min(2,(int)moves.size()/10 - 1); // if many moves => reduce more, if less move => reduce less
                 if (pvnode && reduction > 0) --reduction;
-                if (reduction < 0) reduction = 0;
-                if (reduction >= depth - 1) reduction = depth - 1;
+                if (reduction + extension < 0) reduction = -extension;
+                if (reduction + extension >= depth - 1) reduction = depth - 1 - extension;
             }
             const DepthType nextDepth = depth-1-reduction+extension;
             // SEE (capture)
