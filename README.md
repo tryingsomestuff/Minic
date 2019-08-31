@@ -225,6 +225,8 @@ You can use both the json configuation file or the command line argument to sele
 * 0.84 : little search and eval tweaking
 * 0.85 : window search bug fix
 * 0.86..0.87 : working on search and move ordering
+* 0.88..0.91 : add and fix some eval features, try queen/king proximity, try BM extension
+* 0.92 : fix extension/reduction
 
 ## Thanks
 
