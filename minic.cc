@@ -389,18 +389,19 @@ EvalScore   pawnShieldBonus       = {5,-3};
 
 enum PawnEvalSemiOpen{ Close=0, SemiOpen=1};
 
-EvalScore   passerBonus[8]        = { { 0, 0 }, {-2, -3} , {-12, 2}, {-19, 20}, {9, 36}, {30, 80}, {45, 128}, {0, 0}};
+EvalScore   passerBonus[8]        = { { 0, 0 }, {-1, -6} , {-12, 1}, {-17, 19}, {9, 34}, {30, 68}, {45, 78}, {0, 0}};
 
-EvalScore   rookBehindPassed      = { -3,38};
-EvalScore   kingNearPassedPawn    = { -7,15};
-EvalScore   doublePawnMalus[2]    = {{ 21, 9 },{-5,32 }}; // openfile
-EvalScore   isolatedPawnMalus[2]  = {{ 11, 8 },{23,12 }}; // openfile
-EvalScore   backwardPawnMalus[2]  = {{  6, 8 },{23, 2 }}; // openfile
-EvalScore   holesMalus            = {-12, 3};
-EvalScore   outpost               = { 10,15};
-EvalScore   candidate[8]          = { {0, 0}, {-31,11}, {-16,0}, {16,6}, { 24,51}, {-11,14}, {-11,14}, {0, 0} };
+EvalScore   rookBehindPassed      = { -3,40};
+EvalScore   kingNearPassedPawn    = { -7,13};
+EvalScore   doublePawnMalus[2]    = {{ 14, 10 },{-11, 24 }}; // openfile
+EvalScore   isolatedPawnMalus[2]  = {{ 10,  7 },{ 22, 12 }}; // openfile
+EvalScore   backwardPawnMalus[2]  = {{  5,  2 },{ 22, -1 }}; // openfile
+EvalScore   holesMalus            = {-9, 4};
+EvalScore   outpost               = { 13,19};
+EvalScore   candidate[8]          = { {0, 0}, {-31,11}, {-15,0}, {16,6}, { 24,51}, {-11,14}, {-11,14}, {0, 0} };
 EvalScore   protectedPasserFactor = { 8, 11}; // 1XX%
-EvalScore   freePasserFactor      = {38,123}; // 1XX%
+EvalScore   freePasserFactor      = {38,121}; // 1XX%
+EvalScore   pawnMobility          = { 9, 11};
 
 EvalScore   rookOnOpenFile        = {34, 1};
 EvalScore   rookOnOpenSemiFileOur = { 9,-2};
@@ -409,13 +410,12 @@ EvalScore   rookOnOpenSemiFileOpp = {-4, 4};
 EvalScore   rookFrontKingMalus    = {-10,-1};
 EvalScore   minorOnOpenFile       = {10,-1};
 
-EvalScore   adjKnight[9]  = { {-24,-27}, {-13,-13}, {-5,-3}, {-2,-2}, {-4,-6}, {-4,8}, {0,21}, { 5,17}, { 8,8} };
-EvalScore   adjRook[9]    = { { 24, 18}, {  6,  4}, {-1, 0}, {-5,-1}, {-5,-2}, {-3,2}, {0, 4}, { 1,13}, {12,0} };
+EvalScore   adjKnight[9]  = { {-24,-27}, {-12, 9}, {-4,19}, { 1,21}, {11,23}, { 10,23}, {  9,43}, { 17,39}, {17,10} };
+EvalScore   adjRook[9]    = { { 24, 22}, {  9,11}, {15,10}, { 4,14}, {-8,19}, {-11,28}, {-11,32}, {-16,46}, {-5,17} };
 
-EvalScore   bishopPairBonus   = { 32,49};
-EvalScore   knightPairMalus   = {-2 , 4};
-EvalScore   rookPairMalus     = {-15,-9};
-EvalScore   pawnMobility      = { 9,  8};
+EvalScore   bishopPairBonus   = { 29, 57};
+EvalScore   knightPairMalus   = {  8, -9};
+EvalScore   rookPairMalus     = {  3,-14};
 
 EvalScore MOB[6][29] = { {{0,0},{0,0},{0,0},{0,0}},
                          {{-22,-22},{41,-15},{49,7},{45,19},{56,12},{50,18},{47,20},{49,23},{46,22}},
@@ -2743,6 +2743,29 @@ ScoreType eval(const Position & p, float & gp, ScoreAcc * sc ){
     // safe pawn push (protected once or not attacked)
     const BitBoard safePawnPush[2]  = {BBTools::shiftN<Co_White>(pawns[Co_White]) & (~p.occupancy & (att[Co_White] | ~att[Co_Black])), BBTools::shiftN<Co_Black>(pawns[Co_Black]) & (~p.occupancy & (att[Co_Black] | ~att[Co_White]))};
     score.scores[ScoreAcc::sc_PwnPush] += EvalConfig::pawnMobility * (countBit(safePawnPush[Co_White]) - countBit(safePawnPush[Co_Black]));
+
+    // number of pawn and piece type value
+    score.scores[ScoreAcc::sc_Adjust] += EvalConfig::adjRook  [p.mat[Co_White][M_p]] * ScoreType(p.mat[Co_White][M_r]);
+    score.scores[ScoreAcc::sc_Adjust] -= EvalConfig::adjRook  [p.mat[Co_Black][M_p]] * ScoreType(p.mat[Co_Black][M_r]);
+    score.scores[ScoreAcc::sc_Adjust] += EvalConfig::adjKnight[p.mat[Co_White][M_p]] * ScoreType(p.mat[Co_White][M_n]);
+    score.scores[ScoreAcc::sc_Adjust] -= EvalConfig::adjKnight[p.mat[Co_Black][M_p]] * ScoreType(p.mat[Co_Black][M_n]);
+
+    // adjust piece pair score
+    score.scores[ScoreAcc::sc_Adjust]   += ( (p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonus : 0)-(p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonus : 0) );
+    score.scores[ScoreAcc::sc_Adjust]   += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0) );
+    score.scores[ScoreAcc::sc_Adjust]   += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
+
+    /*
+    // pawn shield (PST and king troppism alone is not enough)
+    score.scores[ScoreAcc::sc_PwnShield] += EvalConfig::pawnShieldBonus     * (((p.whiteKing() & whiteKingQueenSide ) != 0ull)*countBit(pawns[Co_White] & whiteQueenSidePawnShield1));
+    score.scores[ScoreAcc::sc_PwnShield] += EvalConfig::pawnShieldBonus / 2 * (((p.whiteKing() & whiteKingQueenSide ) != 0ull)*countBit(pawns[Co_White] & whiteQueenSidePawnShield2));
+    score.scores[ScoreAcc::sc_PwnShield] += EvalConfig::pawnShieldBonus     * (((p.whiteKing() & whiteKingKingSide  ) != 0ull)*countBit(pawns[Co_White] & whiteKingSidePawnShield1 ));
+    score.scores[ScoreAcc::sc_PwnShield] += EvalConfig::pawnShieldBonus / 2 * (((p.whiteKing() & whiteKingKingSide  ) != 0ull)*countBit(pawns[Co_White] & whiteKingSidePawnShield2 ));
+    score.scores[ScoreAcc::sc_PwnShield] -= EvalConfig::pawnShieldBonus     * (((p.blackKing() & blackKingQueenSide ) != 0ull)*countBit(pawns[Co_Black] & blackQueenSidePawnShield1));
+    score.scores[ScoreAcc::sc_PwnShield] -= EvalConfig::pawnShieldBonus / 2 * (((p.blackKing() & blackKingQueenSide ) != 0ull)*countBit(pawns[Co_Black] & blackQueenSidePawnShield2));
+    score.scores[ScoreAcc::sc_PwnShield] -= EvalConfig::pawnShieldBonus     * (((p.blackKing() & blackKingKingSide  ) != 0ull)*countBit(pawns[Co_Black] & blackKingSidePawnShield1 ));
+    score.scores[ScoreAcc::sc_PwnShield] -= EvalConfig::pawnShieldBonus / 2 * (((p.blackKing() & blackKingKingSide  ) != 0ull)*countBit(pawns[Co_Black] & blackKingSidePawnShield2 ));
+    */
 
     // tempo
     //score.scores[ScoreAcc::sc_Tempo] += ScoreType(30);
