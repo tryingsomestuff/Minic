@@ -403,12 +403,12 @@ EvalScore   protectedPasserFactor = { 8, 11}; // 1XX%
 EvalScore   freePasserFactor      = {38,121}; // 1XX%
 EvalScore   pawnMobility          = { 9, 11};
 
-EvalScore   rookOnOpenFile        = {34, 1};
+EvalScore   rookOnOpenFile        = {44,-5};
 EvalScore   rookOnOpenSemiFileOur = { 9,-2};
 EvalScore   rookOnOpenSemiFileOpp = {-4, 4};
 
-EvalScore   rookFrontKingMalus    = {-10,-1};
-EvalScore   minorOnOpenFile       = {10,-1};
+EvalScore   rookFrontKingMalus    = {-13,-2};
+EvalScore   minorOnOpenFile       = {15,-5};
 
 EvalScore   adjKnight[9]  = { {-24,-27}, {-12, 9}, {-4,19}, { 1,21}, {11,23}, { 10,23}, {  9,43}, { 17,39}, {17,10} };
 EvalScore   adjRook[9]    = { { 24, 22}, {  9,11}, {15,10}, { 4,14}, {-8,19}, {-11,28}, {-11,32}, {-16,46}, {-5,17} };
@@ -431,7 +431,7 @@ ScoreType kingAttScale  = 24;
 ScoreType kingAttOffset = 10;
 ScoreType kingAttWeight[2][7]    = { {0, -1, 2, 13, 5, 13, 0}, {0, -3, 9, 7, -1, 0, 0} };
 ScoreType kingAttTable[64]       = {0};
-EvalScore queenNearKing = {2,3};
+EvalScore queenNearKing = {2,4};
 
 ScoreType kingAttOpenfile        = 8;
 ScoreType kingAttSemiOpenfileOur = -5;
