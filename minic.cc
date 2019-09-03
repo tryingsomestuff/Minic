@@ -43,6 +43,10 @@ const std::string MinicVersion = "dev";
 -test more extension
 */
 
+///@todo test debug hash
+///@todo do debug material DEBUG_MATERIAL
+///@todo do debug BB
+
 #define INFINITETIME TimeType(60*60*1000*24)
 #define STOPSCORE   ScoreType(-20000)
 #define INFSCORE    ScoreType(15000)
@@ -301,7 +305,7 @@ const DepthType singularExtensionDepth       = 8;
 // a playing level feature for the poor ...
 const int nlevel = 10;
 const DepthType levelDepthMax[nlevel+1]   = {0,1,1,2,4,6,8,10,12,14,MAX_DEPTH};
-const ScoreType levelRandomAmpl[nlevel+1] = {0/*random mover*/,250,200,150,100,80,60,30,20,10,0};
+const ScoreType levelRandomAmpl[nlevel+1] = {0/*random mover*/,250,200,150,100,80,60,30,20,10,0/*full strenght*/};
 
 const int lmpLimit[][StaticConfig::lmpMaxDepth + 1] = { { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 } ,{ 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };
 
@@ -418,11 +422,11 @@ EvalScore   knightPairMalus   = {  8, -9};
 EvalScore   rookPairMalus     = {  3,-14};
 
 EvalScore MOB[6][29] = { {{0,0},{0,0},{0,0},{0,0}},
-                         {{-22,-22},{41,-15},{49,7},{45,19},{56,12},{50,18},{47,20},{49,23},{46,22}},
-                         {{-11,-18},{5,-8},{11,-1},{15,11},{12,25},{24,26},{19,33},{21,42},{23,40},{18,40},{21,39},{31,33},{36,36},{38,38},{40,40}},
-                         {{15,-20},{21,-4},{26,25},{30,31},{23,56},{30,55},{37,56},{46,59},{45,68},{49,68},{66,68},{65,73},{73,75},{67,83},{44,89}},
-                         {{-8,-19},{1,-18},{12,-16},{16,-14},{29,-12},{37,-10},{36,0},{36,3},{35,6},{39,9},{40,12},{37,15},{31,19},{35,23},{35,26},{27,33},{32,32},{35,39},{35,41},{38,44},{41,42},{43,47},{46,46},{48,49},{49,50},{50,50},{51,51},{52,52},{53,53}},
-                         {{20,-20},{3,-3},{3,9},{-2,35},{-16,50},{-42,69},{-14,57},{-34,66},{3,63} } };
+                         {{-22,-22},{48,-15},{52,8},{51,18},{57,14},{55,19},{52,23},{57,13},{57,12}},
+                         {{-13,-18},{2,-8},{11,4},{17,12},{20,23},{24,28},{28,30},{29,33},{29,35},{29,30},{27,33},{32,24},{36,36},{38,38},{40,40}},
+                         {{21,-20},{27,-1},{28,30},{35,40},{35,53},{40,61},{48,63},{53,62},{50,71},{57,68},{65,72},{62,77},{64,82},{67,83},{44,86}},
+                         {{1,-19},{12,-18},{17,-16},{17,-14},{25,-12},{32,-10},{31,0},{32,3},{34,6},{36,9},{36,12},{36,15},{31,18},{36,23},{35,27},{31,33},{33,32},{33,40},{35,41},{38,44},{41,42},{43,47},{46,46},{48,49},{49,50},{50,50},{51,51},{52,52},{53,53}},
+                         {{19,-20},{5,-3},{-1,14},{-7,40},{-23,54},{-48,69},{-25,67},{-30,73},{2,64} } };
 
 enum katt_att_def : unsigned char { katt_attack = 0, katt_defence = 1 };
 ScoreType kingAttMax    = 421;
@@ -845,7 +849,7 @@ template < Piece pp > inline BitBoard attack(const Square x, const BitBoard targ
 
 int popBit(BitBoard & b) {
     assert( b != 0ull);
-    unsigned long i = 0;
+    int i = 0;
     bsf(b, i);
     b &= b - 1;
     return i;
@@ -853,7 +857,7 @@ int popBit(BitBoard & b) {
 
 Square SquareFromBitBoard(const BitBoard & b) {
     assert(b != 0ull);
-    unsigned long i = 0;
+    int i = 0;
     bsf(b, i);
     return Square(i);
 }
