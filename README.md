@@ -46,18 +46,14 @@ Here are some fast TC results (40/20sec)
 
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
-   1 Winter                        156      18    1291   71.1%   22.5%
-   2 zurichess-neuchatel           148      17    1290   70.0%   25.8%
-   3 Topple                         90      17    1291   62.7%   25.4%
-   4 asymptote_v0.6                 66      17    1291   59.3%   25.4%
-   5 minic_dev                      56      16    1291   58.0%   29.7%
-   6 minic_0.84                     36      16    1291   55.2%   32.1%
-   7 ruy-1.1.9                       6      17    1291   50.9%   23.1%
-   8 minic_0.82                     -1      16    1291   49.8%   29.8%
-   9 minic_0.76                     -1      16    1290   49.8%   29.6%
-  10 igel_1.7                     -175      19    1290   26.7%   19.5%
-  11 GreKo                        -201      20    1291   23.9%   15.4%
-  12 asymptote-v0.4.2             -215      20    1290   22.4%   15.1%   
+   1 Winter                         69      11    2800   59.8%   30.1%
+   2 zurichess-neuchatel            64      10    2801   59.2%   35.1%
+   3 minic_0.96                      5      10    2801   50.7%   42.2%
+   4 minic_0.97                      3      10    2801   50.4%   42.6%
+   5 minic_dev                       2      10    2801   50.2%   41.3%
+   6 Topple                         -1      10    2800   49.8%   33.9%
+   7 asymptote_v0.6                -40      11    2801   44.3%   31.8%
+   8 ruy-1.1.9                    -103      11    2801   35.6%   26.4%
 ```
 
 Minic strength can be ajdusted using the level option (from command line or json configuration file). Level 0 is a random mover, 1 very weak, ..., level 10 is full strength. Level functionnaly will be enhanced in a near future.
