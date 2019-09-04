@@ -35,7 +35,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_UCI
 #define WITH_PGN_PARSER
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "0.98";
 
 /*
 //todo
@@ -871,6 +871,7 @@ BitBoard isAttackedBB(const Position &p, const Square x, Color c) {
 template < Color C > bool getAttackers(const Position & p, const Square x, SquareList & attakers) {
     attakers.clear();
     BitBoard att;
+    ///@todo verify is x is promRank and if so reorder pawn just before queen
     att = attack<P_wp>(x, p.pieces<P_wp>(~C), p.occupancy, C);
     while (att) attakers.push_back(popBit(att));
     att = attack<P_wn>(x, p.pieces<P_wn>(~C));
@@ -1314,8 +1315,8 @@ void updateMaterialEp(Position &p){
 }
 
 void updateMaterialProm(Position &p, const Square toBeCaptured, MType mt){
-    p.mat[~p.c][PieceTools::getPieceType(p, toBeCaptured)]--; // capture if to square is not empty
-    p.mat[p.c][P_wp]--; // pawn
+    p.mat[~p.c][PieceTools::getPieceType(p,toBeCaptured)]--; // capture if to square is not empty
+    p.mat[p.c][M_p]--; // pawn
     p.mat[p.c][promShift(mt)]++;   // prom piece
 }
 
@@ -1353,8 +1354,8 @@ Hash computeHash(const Position &p){
     if ( p.c == Co_Black)        p.h ^= Zobrist::ZT[4][13];
 #ifdef DEBUG_HASH
     if ( h != 0ull && h != p.h ){
-        Logging::LogIt(logError) << "Hash error " << ToString(p.lastMove);
-        Logging::LogIt(logError) << ToString(p,true);
+        Logging::LogIt(Logging::logError) << "Hash error " << ToString(p.lastMove);
+        Logging::LogIt(Logging::logError) << ToString(p,true);
         exit(1);
     }
 #endif
@@ -2139,11 +2140,33 @@ bool apply(Position & p, const Move & m){
 
     if (m == INVALIDMOVE) return false;
 
+    //#define DEBUG_MATERIAL
+
+#ifdef DEBUG_MATERIAL
+    Position previous = p;
+#endif
+
     const Square from  = Move2From(m);
     const Square to    = Move2To(m);
     const MType  type  = Move2Type(m);
     const Piece  fromP = p.b[from];
     const Piece  toP   = p.b[to];
+
+//#define DEBUG_APPLY
+#ifdef DEBUG_APPLY
+    if (( fromP > 0 && p.c == Co_Black ) || (fromP < 0 && p.c == Co_White ) ){
+        Logging::LogIt(Logging::logError) << "Apply error, wrong color";
+        Logging::LogIt(Logging::logError) << ToString(p);
+        Logging::LogIt(Logging::logError) << ToString(m);
+        exit(1);
+    }
+    if (( toP > 0 && p.c == Co_White ) || (toP < 0 && p.c == Co_Black ) ){
+        Logging::LogIt(Logging::logError) << "Apply error, cap own piece";
+        Logging::LogIt(Logging::logError) << ToString(p);
+        Logging::LogIt(Logging::logError) << ToString(m);
+        exit(1);
+    }
+#endif
 
     const int fromId   = fromP + PieceShift;
     //const int toId     = toP + PieceShift;
@@ -2303,12 +2326,23 @@ bool apply(Position & p, const Move & m){
     ++p.halfmoves;
 
     updateMaterialOther(p);
-//#define DEBUG_MATERIAL
+
 #ifdef DEBUG_MATERIAL
     Position::Material mat = p.mat;
     initMaterial(p);
-    if ( p.mat != mat ){ Logging::LogIt(Logging::logFatal) << "Material update error";}
+    if ( p.mat != mat ){
+        Logging::LogIt(Logging::logError) << "Material update error";
+        Logging::LogIt(Logging::logError) << ToString(previous);
+        Logging::LogIt(Logging::logError) << ToString(previous.mat);
+        Logging::LogIt(Logging::logError) << ToString(p);
+        Logging::LogIt(Logging::logError) << ToString(p.lastMove);
+        Logging::LogIt(Logging::logError) << ToString(m);
+        Logging::LogIt(Logging::logError) << ToString(mat);
+        Logging::LogIt(Logging::logError) << ToString(p.mat);
+        exit(1);
+    }
 #endif
+
     p.lastMove = m;
 
     return true;
@@ -2389,13 +2423,13 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
     if (PieceTools::getPieceType(p, to) == P_wk) return true; // capture king !
     const bool promPossible = (SQRANK(to) == 0 || SQRANK(to) == 7);
     Piece nextVictim  = PieceTools::getPieceType(p,from);
-    const Color us    = p.c;//Colors[PieceTools::getPieceIndex(p,from)];
+    const Color us    = p.c;
     ScoreType balance = std::abs(PieceTools::getValue(p,to)) - threshold; // The opponent may be able to recapture so this is the best result we can hope for.
     if (balance < 0) return false;
     balance -= Values[nextVictim+PieceShift]; // Now assume the worst possible result: that the opponent can capture our piece for free.
     if (balance >= 0) return true;
     Position p2 = p;
-    if (!apply(p2, m)) return false; // this shall not happend !
+    if (!apply(p2, m)) return false;
     SquareList stmAttackers;
     bool endOfSEE = false;
     while (!endOfSEE){
@@ -2410,11 +2444,13 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
             const Move mm = ToMove(att, to, prom ? T_cappromq : T_capture);
             nextVictim = (Piece)(prom ? P_wq : pp); // CAREFULL here :: we don't care black or white, always use abs(value) next !!!
             ++threatId;
-            if (PieceTools::getPieceType(p,to) == P_wk) return us == p2.c; // capture king !
-            if ( ! apply(p2,mm) ) continue;
+            if (PieceTools::getPieceType(p2,to) == P_wk) return us == p2.c; // capture king !
+            Position p3 = p2;
+            if (!apply(p3,mm)) continue;
             validThreatFound = true;
             balance = -balance - 1 - Values[nextVictim+PieceShift];
             if (balance >= 0 && nextVictim != P_wk) endOfSEE = true;
+            p2 = p3;
         }
         if (!validThreatFound) endOfSEE = true;
     }
