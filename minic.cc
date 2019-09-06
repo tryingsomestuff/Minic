@@ -35,7 +35,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_UCI
 #define WITH_PGN_PARSER
 
-const std::string MinicVersion = "0.98";
+const std::string MinicVersion = "dev";
 
 /*
 //todo
@@ -389,7 +389,7 @@ EvalScore PST[6][64] = {
   }
 };
 
-EvalScore   pawnShieldBonus       = {5,-3};
+EvalScore   pawnShieldBonus       = {4,2};
 
 enum PawnEvalSemiOpen{ Close=0, SemiOpen=1};
 
@@ -429,17 +429,17 @@ EvalScore MOB[6][29] = { {{0,0},{0,0},{0,0},{0,0}},
                          {{19,-20},{5,-3},{-1,14},{-7,40},{-23,54},{-48,69},{-25,67},{-30,73},{2,64} } };
 
 enum katt_att_def : unsigned char { katt_attack = 0, katt_defence = 1 };
-ScoreType kingAttMax    = 421;
-ScoreType kingAttTrans  = 56;
-ScoreType kingAttScale  = 24;
+ScoreType kingAttMax    = 422;
+ScoreType kingAttTrans  = 45;
+ScoreType kingAttScale  = 25;
 ScoreType kingAttOffset = 10;
-ScoreType kingAttWeight[2][7]    = { {0, -1, 2, 13, 5, 13, 0}, {0, -3, 9, 7, -1, 0, 0} };
+ScoreType kingAttWeight[2][7]    = { {0, 6, 4, 9, 4, 9, 1}, {0, -1, 4, 5, 0, 0, 0} };
 ScoreType kingAttTable[64]       = {0};
 EvalScore queenNearKing = {2,4};
 
-ScoreType kingAttOpenfile        = 8;
-ScoreType kingAttSemiOpenfileOur = -5;
-ScoreType kingAttSemiOpenfileOpp = -2;
+ScoreType kingAttOpenfile        = 5;
+ScoreType kingAttSemiOpenfileOpp = -3;
+ScoreType kingAttSemiOpenfileOur = -7;
 
 }
 
@@ -562,12 +562,6 @@ enum BBSq : BitBoard { BBSq_a1 = SquareToBitboard(Sq_a1),BBSq_b1 = SquareToBitbo
 
 const BitBoard whiteSquare               = 0x55AA55AA55AA55AA; const BitBoard blackSquare               = 0xAA55AA55AA55AA55;
 //const BitBoard whiteSideSquare           = 0x00000000FFFFFFFF; const BitBoard blackSideSquare           = 0xFFFFFFFF00000000;
-const BitBoard whiteKingQueenSide        = 0x0000000000000007; const BitBoard whiteKingKingSide         = 0x00000000000000e0;
-const BitBoard blackKingQueenSide        = 0x0700000000000000; const BitBoard blackKingKingSide         = 0xe000000000000000;
-const BitBoard whiteQueenSidePawnShield1 = 0x0000000000000700; const BitBoard whiteKingSidePawnShield1  = 0x000000000000e000;
-const BitBoard blackQueenSidePawnShield1 = 0x0007000000000000; const BitBoard blackKingSidePawnShield1  = 0x00e0000000000000;
-const BitBoard whiteQueenSidePawnShield2 = 0x0000000000070000; const BitBoard whiteKingSidePawnShield2  = 0x0000000000e00000;
-const BitBoard blackQueenSidePawnShield2 = 0x0000070000000000; const BitBoard blackKingSidePawnShield2 = 0x0000e00000000000;
 const BitBoard fileA                     = 0x0101010101010101;
 //const BitBoard fileB                     = 0x0202020202020202;
 //const BitBoard fileC                     = 0x0404040404040404;
@@ -2795,17 +2789,9 @@ ScoreType eval(const Position & p, float & gp, ScoreAcc * sc ){
     score.scores[ScoreAcc::sc_Adjust]   += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0) );
     score.scores[ScoreAcc::sc_Adjust]   += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
 
-    /*
     // pawn shield (PST and king troppism alone is not enough)
-    score.scores[ScoreAcc::sc_PwnShield] += EvalConfig::pawnShieldBonus     * (((p.whiteKing() & whiteKingQueenSide ) != 0ull)*countBit(pawns[Co_White] & whiteQueenSidePawnShield1));
-    score.scores[ScoreAcc::sc_PwnShield] += EvalConfig::pawnShieldBonus / 2 * (((p.whiteKing() & whiteKingQueenSide ) != 0ull)*countBit(pawns[Co_White] & whiteQueenSidePawnShield2));
-    score.scores[ScoreAcc::sc_PwnShield] += EvalConfig::pawnShieldBonus     * (((p.whiteKing() & whiteKingKingSide  ) != 0ull)*countBit(pawns[Co_White] & whiteKingSidePawnShield1 ));
-    score.scores[ScoreAcc::sc_PwnShield] += EvalConfig::pawnShieldBonus / 2 * (((p.whiteKing() & whiteKingKingSide  ) != 0ull)*countBit(pawns[Co_White] & whiteKingSidePawnShield2 ));
-    score.scores[ScoreAcc::sc_PwnShield] -= EvalConfig::pawnShieldBonus     * (((p.blackKing() & blackKingQueenSide ) != 0ull)*countBit(pawns[Co_Black] & blackQueenSidePawnShield1));
-    score.scores[ScoreAcc::sc_PwnShield] -= EvalConfig::pawnShieldBonus / 2 * (((p.blackKing() & blackKingQueenSide ) != 0ull)*countBit(pawns[Co_Black] & blackQueenSidePawnShield2));
-    score.scores[ScoreAcc::sc_PwnShield] -= EvalConfig::pawnShieldBonus     * (((p.blackKing() & blackKingKingSide  ) != 0ull)*countBit(pawns[Co_Black] & blackKingSidePawnShield1 ));
-    score.scores[ScoreAcc::sc_PwnShield] -= EvalConfig::pawnShieldBonus / 2 * (((p.blackKing() & blackKingKingSide  ) != 0ull)*countBit(pawns[Co_Black] & blackKingSidePawnShield2 ));
-    */
+    score.scores[ScoreAcc::sc_PwnShield] += EvalConfig::pawnShieldBonus * std::min(countBit( BBTools::mask[p.king[Co_White]].kingZone & pawns[Co_White] ),ScoreType(3));
+    score.scores[ScoreAcc::sc_PwnShield] -= EvalConfig::pawnShieldBonus * std::min(countBit( BBTools::mask[p.king[Co_Black]].kingZone & pawns[Co_Black] ),ScoreType(3));
 
     // tempo
     //score.scores[ScoreAcc::sc_Tempo] += ScoreType(30);
