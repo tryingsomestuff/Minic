@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <fstream>
 #include <iterator>
+#include <limits.h>
 #include <vector>
 #include <sstream>
 #include <set>
@@ -57,7 +58,6 @@ const std::string MinicVersion = "dev";
 #define MAX_PLY       512
 #define MAX_MOVE      256   // 256 is enough I guess ...
 #define MAX_DEPTH     127   // DepthType is a char, do not go above 127
-#define MAX_CAP        64   // seems enough for standard position...
 #define MAX_HISTORY  1000.f
 
 #define SQFILE(s) ((s)&7)
@@ -149,8 +149,8 @@ struct OptList {
 };
 
 typedef OptList<Move,MAX_MOVE> MoveList;
-typedef std::vector<Square> SquareList; //typedef OptList<Square, MAX_CAP>  SquareList; is slower
-typedef std::vector<Move> PVList; //struct PVList : public std::vector<Move> { PVList():std::vector<Move>(MAX_DEPTH, INVALIDMOVE) {}; }; is slower
+typedef std::vector<Square> SquareList;
+typedef std::vector<Move> PVList;
 
 namespace DynamicConfig{
     bool mateFinder        = false;
@@ -217,16 +217,147 @@ namespace Logging {
     std::unique_ptr<std::ofstream> LogIt::_of;
 }
 
+namespace StaticConfig{
+const bool doWindow         = true;
+const bool doPVS            = true;
+const bool doNullMove       = true;
+const bool doFutility       = true;
+const bool doLMR            = true;
+const bool doLMP            = true;
+const bool doStaticNullMove = true;
+const bool doRazoring       = true;
+const bool doQFutility      = true;
+const bool doProbcut        = true;
+const bool doHistoryPruning = true;
+// first value if eval score is used, second if hash score is used
+/*const*/ ScoreType qfutilityMargin          [2] = {90, 90};
+/*const*/ DepthType staticNullMoveMaxDepth   [2] = {6  , 6};
+/*const*/ ScoreType staticNullMoveDepthCoeff [2] = {80 , 80};
+/*const*/ ScoreType staticNullMoveDepthInit  [2] = {0  , 0};
+/*const*/ ScoreType razoringMarginDepthCoeff [2] = {0  , 0};
+/*const*/ ScoreType razoringMarginDepthInit  [2] = {200, 200};
+/*const*/ DepthType razoringMaxDepth         [2] = {3  , 3};
+/*const*/ DepthType nullMoveMinDepth             = 2;
+/*const*/ DepthType historyPruningMaxDepth       = 3;
+/*const*/ ScoreType historyPruningThresholdInit  = 0;
+/*const*/ ScoreType historyPruningThresholdDepth = 0;
+/*const*/ DepthType futilityMaxDepth         [2] = {10 , 10};
+/*const*/ ScoreType futilityDepthCoeff       [2] = {160, 160};
+/*const*/ ScoreType futilityDepthInit        [2] = {0  , 0};
+/*const*/ DepthType iidMinDepth                  = 5;
+/*const*/ DepthType iidMinDepth2                 = 8;
+/*const*/ DepthType probCutMinDepth              = 5;
+/*const*/ int       probCutMaxMoves              = 5;
+/*const*/ ScoreType probCutMargin                = 80;
+/*const*/ DepthType lmrMinDepth                  = 3;
+/*const*/ DepthType singularExtensionDepth       = 8;
+
+// a playing level feature for the poor ...
+const int nlevel = 10;
+const DepthType levelDepthMax[nlevel+1]   = {0,1,1,2,4,6,8,10,12,14,MAX_DEPTH};
+const ScoreType levelRandomAmpl[nlevel+1] = {0/*random mover*/,250,200,150,100,80,60,30,20,10,0/*full strenght*/};
+
+const DepthType lmpMaxDepth                  = 10;
+const int lmpLimit[][StaticConfig::lmpMaxDepth + 1] = { { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 } ,{ 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };
+
+DepthType lmrReduction[MAX_DEPTH][MAX_MOVE];
+void initLMR() {
+    Logging::LogIt(Logging::logInfo) << "Init lmr";
+    for (int d = 0; d < MAX_DEPTH; d++) for (int m = 0; m < MAX_MOVE; m++) lmrReduction[d][m] = DepthType(1.0 + log(d) * log(m) * 0.5);
+}
+
+ScoreType MvvLvaScores[6][6];
+void initMvvLva(){
+    Logging::LogIt(Logging::logInfo) << "Init mvv-lva" ;
+    static const ScoreType IValues[6] = { 1, 2, 3, 5, 9, 20 }; ///@todo try N=B=3 !
+    for(int v = 0; v < 6 ; ++v) for(int a = 0; a < 6 ; ++a) MvvLvaScores[v][a] = IValues[v] * 20 - IValues[a];
+}
+
+}
+
 namespace Options { // after Logging
     nlohmann::json json;
     std::vector<std::string> args;
-    void readOptions(int argc, char ** argv) {
+    ///@todo use std::variant ? and std::optinal ?? c++17
+    enum KeyType : unsigned char { k_bool = 0, k_depth, k_int, k_score, k_ull, k_string};
+    enum WidgetType : unsigned char { w_check = 0, w_string, w_spin, w_combo, w_slider, w_file, w_path, w_max};
+    const std::string widgetXboardNames[w_max] = {"check","string","spin","combo","slider","file","path"};
+    struct KeyBase {
+      template < typename T > KeyBase(KeyType t, WidgetType w, const std::string & k, T * v, const std::function<void(void)> & cb = []{} ) :type(t), wtype(w), key(k), value((void*)v) {callBack = cb;}
+      template < typename T > KeyBase(KeyType t, WidgetType w, const std::string & k, T * v, const T & vmin, const T & vmax, const std::function<void(void)> & cb = []{} ) :type(t), wtype(w), key(k), value((void*)v), vmin(vmin), vmax(vmax) {callBack = cb;}
+      KeyType             type;
+      WidgetType          wtype;
+      std::string         key;
+      void*               value;
+      int                 vmin = 0, vmax = 0; // assume int type is covering all the case (string excluded ...)
+      std::function<void(void)> callBack;
+    };
+    std::vector<KeyBase> _keys;
+    KeyBase & GetKey(const std::string & key) {
+        bool keyFound = false;
+        KeyBase * keyRef = &_keys[0]; // CARE :: assume _keys is never empty ...
+        for (size_t k = 0; k < _keys.size() && !keyFound; ++k) { if (key == _keys[k].key) { keyRef = &_keys[k]; break;} }
+        return *keyRef;
+    }
+    template< KeyType T > struct OptionTypeHelper{};
+    template<> struct OptionTypeHelper<k_bool>  { typedef bool _type;};
+    template<> struct OptionTypeHelper<k_depth> { typedef DepthType _type;};
+    template<> struct OptionTypeHelper<k_int>   { typedef int _type;};
+    template<> struct OptionTypeHelper<k_score> { typedef ScoreType _type;};
+    template<> struct OptionTypeHelper<k_ull>   { typedef unsigned long long _type;};
+    template<> struct OptionTypeHelper<k_string>{ typedef std::string _type;};
+    const int GetValue(const std::string & key){ // assume we can convert to int safely (not valid for string of course !)
+        const KeyBase & k = GetKey(key);
+        switch (k.type) {
+        case k_bool:   return (int)*static_cast<bool*>(k.value);
+        case k_depth:  return (int)*static_cast<DepthType*>(k.value);
+        case k_int:    return (int)*static_cast<int*>(k.value);
+        case k_score:  return (int)*static_cast<ScoreType*>(k.value);
+        case k_ull:    return (int)*static_cast<unsigned long long int*>(k.value);
+        case k_string:
+        default:       Logging::LogIt(Logging::logError) << "Bad key type"; return false;
+        }
+    }
+    const std::string GetValueString(const std::string & key){ // the one for string
+        const KeyBase & k = GetKey(key);
+        if (k.type != k_string) Logging::LogIt(Logging::logError) << "Bad type";
+        return *static_cast<std::string*>(k.value);
+    }
+#define SETVALUE(TYPE) {TYPE v; str >> v; *static_cast<TYPE*>(keyRef.value) = v;} break;
+    bool SetValue(const std::string & key, const std::string & value){
+        KeyBase & keyRef = GetKey(key);
+        std::stringstream str(value);
+        switch (keyRef.type) {
+        case k_bool:   SETVALUE(bool)
+        case k_depth:  SETVALUE(DepthType)
+        case k_int:    SETVALUE(int)
+        case k_score:  SETVALUE(ScoreType)
+        case k_ull:    SETVALUE(unsigned long long)
+        case k_string: SETVALUE(std::string)
+        default: Logging::LogIt(Logging::logError) << "Bad key type"; return false;
+        }
+        Logging::LogIt(Logging::logInfo) << "Option set " << key << "=" << value;
+        return true;
+    }
+    void registerCOMOptions(){ // options exposed xboard GUI
+       _keys.push_back(KeyBase(k_int,   w_spin, "level"               , &DynamicConfig::level              , (unsigned int)0  , (unsigned int)10   ));
+       _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin0"    , &StaticConfig::qfutilityMargin[0]  , ScoreType(50)    , ScoreType(500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin1"    , &StaticConfig::qfutilityMargin[1]  , ScoreType(50)    , ScoreType(500)     ));
+       ///@todo more ...
+    }
+    ///@todo UCI version
+    void displayOptionsXBoard(){
+        for(auto it = _keys.begin() ; it != _keys.end() ; ++it)
+            if (it->type!=k_string ) Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << (int)GetValue(it->key)  <<  " " << it->vmin << " " << it->vmax << "\"";
+            else                     Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << GetValueString(it->key) << "\"";
+    }
+    void readOptions(int argc, char ** argv) { // load json config and command line args in memory
         for (int i = 1; i < argc; ++i) args.push_back(argv[i]);
         std::ifstream str("minic.json");
-        if (!str.is_open()) Logging::LogIt(Logging::logError) << "Cannot open minic.json";
+        if (!str.is_open()) Logging::LogIt(Logging::logWarn) << "Cannot open minic.json";
         else {
             str >> json;
-            if (!json.is_object()) Logging::LogIt(Logging::logError) << "JSON is not an object";
+            if (!json.is_object()) Logging::LogIt(Logging::logError) << "Something wrong in minic.json";
         }
     }
     // from argv (override json)
@@ -252,6 +383,7 @@ namespace Options { // after Logging
     }
 #define GETOPT(name,type) Options::getOption<type>(DynamicConfig::name,#name);
     void initOptions(int argc, char ** argv){
+       registerCOMOptions();
        readOptions(argc,argv);
        GETOPT(debugMode,        bool)
        GETOPT(debugFile,        std::string)
@@ -264,64 +396,6 @@ namespace Options { // after Logging
        GETOPT(level,            unsigned int)
        GETOPT(syzygyPath,       std::string)
    }
-}
-
-namespace StaticConfig{
-const bool doWindow         = true;
-const bool doPVS            = true;
-const bool doNullMove       = true;
-const bool doFutility       = true;
-const bool doLMR            = true;
-const bool doLMP            = true;
-const bool doStaticNullMove = true;
-const bool doRazoring       = true;
-const bool doQFutility      = true;
-const bool doProbcut        = true;
-const bool doHistoryPruning = true;
-// first value if eval score is used, second if hash score is used
-const ScoreType qfutilityMargin          [2] = {90, 90};
-const DepthType staticNullMoveMaxDepth   [2] = {6  , 6};
-const ScoreType staticNullMoveDepthCoeff [2] = {80 , 80};
-const ScoreType staticNullMoveDepthInit  [2] = {0  , 0};
-const ScoreType razoringMarginDepthCoeff [2] = {0  , 0};
-const ScoreType razoringMarginDepthInit  [2] = {200, 200};
-const DepthType razoringMaxDepth         [2] = {3  , 3};
-const DepthType nullMoveMinDepth             = 2;
-const DepthType lmpMaxDepth                  = 10;
-const DepthType historyPruningMaxDepth       = 3;
-const ScoreType historyPruningThresholdInit  = 0;
-const ScoreType historyPruningThresholdDepth = 0;
-const DepthType futilityMaxDepth         [2] = {10 , 10};
-const ScoreType futilityDepthCoeff       [2] = {160, 160};
-const ScoreType futilityDepthInit        [2] = {0  , 0};
-const DepthType iidMinDepth                  = 5;
-const DepthType iidMinDepth2                 = 8;
-const DepthType probCutMinDepth              = 5;
-const int       probCutMaxMoves              = 5;
-const ScoreType probCutMargin                = 80;
-const DepthType lmrMinDepth                  = 3;
-const DepthType singularExtensionDepth       = 8;
-
-// a playing level feature for the poor ...
-const int nlevel = 10;
-const DepthType levelDepthMax[nlevel+1]   = {0,1,1,2,4,6,8,10,12,14,MAX_DEPTH};
-const ScoreType levelRandomAmpl[nlevel+1] = {0/*random mover*/,250,200,150,100,80,60,30,20,10,0/*full strenght*/};
-
-const int lmpLimit[][StaticConfig::lmpMaxDepth + 1] = { { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 } ,{ 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };
-
-DepthType lmrReduction[MAX_DEPTH][MAX_MOVE];
-void initLMR() {
-    Logging::LogIt(Logging::logInfo) << "Init lmr";
-    for (int d = 0; d < MAX_DEPTH; d++) for (int m = 0; m < MAX_MOVE; m++) lmrReduction[d][m] = DepthType(1.0 + log(d) * log(m) * 0.5);
-}
-
-ScoreType MvvLvaScores[6][6];
-void initMvvLva(){
-    Logging::LogIt(Logging::logInfo) << "Init mvv-lva" ;
-    static const ScoreType IValues[6] = { 1, 2, 3, 5, 9, 20 }; ///@todo try N=B=3 !
-    for(int v = 0; v < 6 ; ++v) for(int a = 0; a < 6 ; ++a) MvvLvaScores[v][a] = IValues[v] * 20 - IValues[a];
-}
-
 }
 
 namespace EvalConfig {
@@ -3647,6 +3721,7 @@ void setFeature(){
     ///@todo more feature disable !!
     ///@todo use otim ?
     Logging::LogIt(Logging::logGUI) << "feature ping=1 setboard=1 edit=0 colors=0 usermove=1 memory=0 sigint=0 sigterm=0 otim=0 time=1 nps=0 draw=0 playother=0 myname=\"Minic " << MinicVersion << "\"";
+    Options::displayOptionsXBoard();
     Logging::LogIt(Logging::logGUI) << "feature done=1";
 }
 
@@ -3697,7 +3772,7 @@ bool replay(size_t nbmoves){
 
 void xboard(){
     Logging::LogIt(Logging::logInfo) << "Starting XBoard main loop" ;
-    setFeature(); ///@todo should not be here
+    //setFeature(); ///@todo should not be here
 
     bool iterate = true;
     while(iterate) {
@@ -3851,6 +3926,16 @@ void xboard(){
             else if ( COM::command == "random"){ }
             else if ( strncmp(COM::command.c_str(), "otim",4) == 0){ commandOK = false; }
             else if ( COM::command == "."){ }
+            else if (strncmp(COM::command.c_str(), "option", 6) == 0) {
+                std::stringstream str(COM::command);
+                std::string tmpstr;
+                str >> tmpstr; // option
+                str >> tmpstr; // key[=value] in fact
+                std::vector<std::string> kv;
+                tokenize(tmpstr,kv,"=");
+                kv.resize(2); // hacky ...
+                if ( !Options::SetValue(kv[0],kv[1])) Logging::LogIt(Logging::logError) << "Unable to set value " << kv[0] << " = " << kv[1];
+            }
             //************ end of Xboard command ********//
             // let's try to read the unknown command as a move ... trying to fix a scid versus PC issue ...
             else if ( !receiveMove(COM::command)) Logging::LogIt(Logging::logInfo) << "Xboard does not know this command \"" << COM::command << "\"";

@@ -20,12 +20,12 @@ namespace UCI {
                 Logging::LogIt(Logging::logGUI) << "id author Vivien Clauzon";
 
                 ///@todo options !
+                /// for ( opt in ..
                 //Logging::LogIt(Logging::logGUI) << "option name Hash type spin default 128 min 1 max 1048576";
                 //Logging::LogIt(Logging::logGUI) << "option name Threads type spin default 1 min 1 max 128";
                 //Logging::LogIt(Logging::logGUI) << "option name SyzygyPath type string default <empty>";
                 //Logging::LogIt(Logging::logGUI) << "option name SyzygyResolve type spin default 512 min 1 max 1024";
                 //Logging::LogIt(Logging::logGUI) << "option name Ponder type check default false";
-
                 Logging::LogIt(Logging::logGUI) << "uciok";
             }
             else if (uciCommand == "setoption") {
@@ -33,37 +33,11 @@ namespace UCI {
                 iss >> name;
                 if (name == "name") iss >> name;
                 /*
-                if (name == "Hash") {
-                    std::string value;
-                    iss >> value; // Skip value
-                    iss >> hash_size;
-                    // Resize hash
-                    delete tt;
-                    tt = new tt::hash_t(hash_size * MB);
+                if ( isUCIOption(name) ){
+                   UCIReadOption(name,iss);
                 }
-                else if (name == "Threads") {
-                    std::string value;
-                    iss >> value; // Skip value
-                    iss >> threads;
-                }
-                else if (name == "SyzygyPath") {
-                    std::string value;
-                    iss >> value; // Skip value
-
-                    std::string path;
-                    std::getline(iss, path);
-
-                    path = path.substr(1, path.size() - 1);
-
-                    std::cout << "Looking for tablebases in: " << path << std::endl;
-
-                    init_tablebases(path.c_str());
-                }
-                else if (name == "SyzygyResolve") {
-                    std::string value;
-                    iss >> value; // Skip value
-                    iss >> syzygy_resolve;
-                }
+                */
+                /*
                 else if (name == "Ponder") {
                     // Do nothing
                 }
