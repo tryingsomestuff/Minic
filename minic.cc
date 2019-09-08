@@ -33,7 +33,7 @@ typedef uint64_t u_int64_t;
 //#define DEBUG_TOOL
 //#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
-//#define WITH_UCI
+#define WITH_UCI
 #define WITH_PGN_PARSER
 
 const std::string MinicVersion = "dev";
@@ -169,7 +169,6 @@ namespace DynamicConfig{
 namespace Logging {
     enum COMType { CT_xboard = 0, CT_uci = 1 };
     COMType ct = CT_xboard;
-    inline void hellooo() { std::cout << "# This is Minic version " << MinicVersion << std::endl; }
     inline std::string showDate() {
         std::stringstream str;
         auto msecEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch());
@@ -180,6 +179,8 @@ namespace Logging {
         return str.str();
     }
     enum LogLevel : unsigned char { logTrace = 0, logDebug = 1, logInfo = 2, logGUI = 3, logWarn = 4, logError = 5, logFatal = 6};
+    const std::string _protocolComment[2] = { "# ", "info string " };
+    const std::string _levelNames[7] = { "Trace ", "Debug ", "Info  ", "", "Warn  ", "Error ", "Fatal " };
     std::string backtrace() { return "@todo:: backtrace"; } ///@todo find a very simple portable implementation
     class LogIt {
         friend void init();
@@ -187,8 +188,6 @@ namespace Logging {
         LogIt(LogLevel loglevel) :_level(loglevel) {}
         template <typename T> Logging::LogIt & operator<<(T const & value) { _buffer << value; return *this; }
         ~LogIt() {
-            static const std::string _protocolComment[2] = { "# ", "info string " };
-            static const std::string _levelNames[7] = { "Trace ", "Debug ", "Info  ", "", "Warn  ", "Error ", "Fatal " };
             std::lock_guard<std::mutex> lock(_mutex);
             if (_level != logGUI) {
                 std::cout       << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
@@ -207,6 +206,7 @@ namespace Logging {
         LogLevel               _level;
         static std::unique_ptr<std::ofstream> _of;
     };
+    inline void hellooo() { std::cout << Logging::_protocolComment[Logging::ct] << "This is Minic version " << MinicVersion << std::endl; }
     void init(){
         if ( DynamicConfig::debugMode ){
             if ( DynamicConfig::debugFile.empty()) DynamicConfig::debugFile = "minic.debug";
@@ -280,16 +280,16 @@ namespace Options { // after Logging
     std::vector<std::string> args;
     ///@todo use std::variant ? and std::optinal ?? c++17
     enum KeyType : unsigned char { k_bool = 0, k_depth, k_int, k_score, k_ull, k_string};
-    enum WidgetType : unsigned char { w_check = 0, w_string, w_spin, w_combo, w_slider, w_file, w_path, w_max};
-    const std::string widgetXboardNames[w_max] = {"check","string","spin","combo","slider","file","path"};
+    enum WidgetType : unsigned char { w_check = 0, w_string, w_spin, w_combo, w_button, w_max};
+    const std::string widgetXboardNames[w_max] = {"check","string","spin","combo","button"};
     struct KeyBase {
       template < typename T > KeyBase(KeyType t, WidgetType w, const std::string & k, T * v, const std::function<void(void)> & cb = []{} ) :type(t), wtype(w), key(k), value((void*)v) {callBack = cb;}
       template < typename T > KeyBase(KeyType t, WidgetType w, const std::string & k, T * v, const T & vmin, const T & vmax, const std::function<void(void)> & cb = []{} ) :type(t), wtype(w), key(k), value((void*)v), vmin(vmin), vmax(vmax) {callBack = cb;}
-      KeyType             type;
-      WidgetType          wtype;
-      std::string         key;
-      void*               value;
-      int                 vmin = 0, vmax = 0; // assume int type is covering all the case (string excluded ...)
+      KeyType     type;
+      WidgetType  wtype;
+      std::string key;
+      void*       value;
+      int         vmin = 0, vmax = 0; // assume int type is covering all the case (string excluded ...)
       std::function<void(void)> callBack;
     };
     std::vector<KeyBase> _keys;
@@ -350,6 +350,11 @@ namespace Options { // after Logging
         for(auto it = _keys.begin() ; it != _keys.end() ; ++it)
             if (it->type!=k_string ) Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << (int)GetValue(it->key)  <<  " " << it->vmin << " " << it->vmax << "\"";
             else                     Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << GetValueString(it->key) << "\"";
+    }
+    void displayOptionsUCI(){
+        for(auto it = _keys.begin() ; it != _keys.end() ; ++it)
+            if (it->type!=k_string ) Logging::LogIt(Logging::logGUI) << "option name " << it->key << " type " << widgetXboardNames[it->wtype] << " default " << (int)GetValue(it->key)  <<  " min " << it->vmin << " max " << it->vmax;
+            else                     Logging::LogIt(Logging::logGUI) << "option name " << it->key << " type " << widgetXboardNames[it->wtype] << " default " << GetValueString(it->key);
     }
     void readOptions(int argc, char ** argv) { // load json config and command line args in memory
         for (int i = 1; i < argc; ++i) args.push_back(argv[i]);
@@ -664,10 +669,10 @@ std::string showBitBoard(const BitBoard & b) {
     std::bitset<64> bs(b);
     std::stringstream ss;
     for (int j = 7; j >= 0; --j) {
-        ss << "\n# +-+-+-+-+-+-+-+-+" << std::endl << "# |";
+        ss << "\n" << Logging::_protocolComment[Logging::ct] << "+-+-+-+-+-+-+-+-+" << std::endl << Logging::_protocolComment[Logging::ct] << "|";
         for (int i = 0; i < 8; ++i) ss << (bs[i + j * 8] ? "X" : " ") << '|';
     }
-    ss << "\n# +-+-+-+-+-+-+-+-+";
+    ss << "\n" << Logging::_protocolComment[Logging::ct] << "+-+-+-+-+-+-+-+-+";
     return ss.str();
 }
 
@@ -1809,8 +1814,8 @@ std::string ToString(const PVList & moves){
 
 std::string ToString(const Position::Material & mat) {
     std::stringstream str;
-    str << "\n" << "#Q  :" << (int)mat[Co_White][M_q] << "\n" << "#R  :" << (int)mat[Co_White][M_r] << "\n" << "#B  :" << (int)mat[Co_White][M_b] << "\n" << "#L  :" << (int)mat[Co_White][M_bl] << "\n" << "#D  :" << (int)mat[Co_White][M_bd] << "\n" << "#N  :" << (int)mat[Co_White][M_n] << "\n" << "#P  :" << (int)mat[Co_White][M_p] << "\n" << "#Ma :" << (int)mat[Co_White][M_M] << "\n" << "#Mi :" << (int)mat[Co_White][M_m] << "\n" << "#T  :" << (int)mat[Co_White][M_t] << "\n";
-    str << "\n" << "#q  :" << (int)mat[Co_Black][M_q] << "\n" << "#r  :" << (int)mat[Co_Black][M_r] << "\n" << "#b  :" << (int)mat[Co_Black][M_b] << "\n" << "#l  :" << (int)mat[Co_Black][M_bl] << "\n" << "#d  :" << (int)mat[Co_Black][M_bd] << "\n" << "#n  :" << (int)mat[Co_Black][M_n] << "\n" << "#p  :" << (int)mat[Co_Black][M_p] << "\n" << "#ma :" << (int)mat[Co_Black][M_M] << "\n" << "#mi :" << (int)mat[Co_Black][M_m] << "\n" << "#t  :" << (int)mat[Co_Black][M_t] << "\n";
+    str << "\n" << Logging::_protocolComment[Logging::ct] << "Q  :" << (int)mat[Co_White][M_q] << "\n" << Logging::_protocolComment[Logging::ct] << "R  :" << (int)mat[Co_White][M_r] << "\n" << Logging::_protocolComment[Logging::ct] << "B  :" << (int)mat[Co_White][M_b] << "\n" << Logging::_protocolComment[Logging::ct] << "L  :" << (int)mat[Co_White][M_bl] << "\n" << Logging::_protocolComment[Logging::ct] << "D  :" << (int)mat[Co_White][M_bd] << "\n" << Logging::_protocolComment[Logging::ct] << "N  :" << (int)mat[Co_White][M_n] << "\n" << Logging::_protocolComment[Logging::ct] << "P  :" << (int)mat[Co_White][M_p] << "\n" << Logging::_protocolComment[Logging::ct] << "Ma :" << (int)mat[Co_White][M_M] << "\n" << Logging::_protocolComment[Logging::ct] << "Mi :" << (int)mat[Co_White][M_m] << "\n" << Logging::_protocolComment[Logging::ct] << "T  :" << (int)mat[Co_White][M_t] << "\n";
+    str << "\n" << Logging::_protocolComment[Logging::ct] << "q  :" << (int)mat[Co_Black][M_q] << "\n" << Logging::_protocolComment[Logging::ct] << "r  :" << (int)mat[Co_Black][M_r] << "\n" << Logging::_protocolComment[Logging::ct] << "b  :" << (int)mat[Co_Black][M_b] << "\n" << Logging::_protocolComment[Logging::ct] << "l  :" << (int)mat[Co_Black][M_bl] << "\n" << Logging::_protocolComment[Logging::ct] << "d  :" << (int)mat[Co_Black][M_bd] << "\n" << Logging::_protocolComment[Logging::ct] << "n  :" << (int)mat[Co_Black][M_n] << "\n" << Logging::_protocolComment[Logging::ct] << "p  :" << (int)mat[Co_Black][M_p] << "\n" << Logging::_protocolComment[Logging::ct] << "ma :" << (int)mat[Co_Black][M_M] << "\n" << Logging::_protocolComment[Logging::ct] << "mi :" << (int)mat[Co_Black][M_m] << "\n" << Logging::_protocolComment[Logging::ct] << "t  :" << (int)mat[Co_Black][M_t] << "\n";
     return str.str();
 }
 
@@ -1818,19 +1823,19 @@ std::string ToString(const Position & p, bool noEval){
     std::stringstream ss;
     ss << "Position" << std::endl;
     for (Square j = 7; j >= 0; --j) {
-        ss << "# +-+-+-+-+-+-+-+-+" << std::endl << "# |";
+        ss << Logging::_protocolComment[Logging::ct] << " +-+-+-+-+-+-+-+-+" << std::endl << Logging::_protocolComment[Logging::ct] << " |";
         for (Square i = 0; i < 8; ++i) ss << PieceTools::getName(p,i+j*8) << '|';
         ss << std::endl;
     }
-    ss << "# +-+-+-+-+-+-+-+-+" << std::endl;
-    if ( p.ep >=0 ) ss << "# ep " << SquareNames[p.ep] << std::endl;
-    ss << "# wk " << (p.king[Co_White]!=INVALIDSQUARE?SquareNames[p.king[Co_White]]:"none")  << std::endl << "# bk " << (p.king[Co_Black]!=INVALIDSQUARE?SquareNames[p.king[Co_Black]]:"none") << std::endl;
-    ss << "# Turn " << (p.c == Co_White ? "white" : "black") << std::endl;
+    ss << Logging::_protocolComment[Logging::ct] << " +-+-+-+-+-+-+-+-+" << std::endl;
+    if ( p.ep >=0 ) ss << Logging::_protocolComment[Logging::ct] << " ep " << SquareNames[p.ep] << std::endl;
+    ss << Logging::_protocolComment[Logging::ct] << " wk " << (p.king[Co_White]!=INVALIDSQUARE?SquareNames[p.king[Co_White]]:"none")  << std::endl << Logging::_protocolComment[Logging::ct] << " bk " << (p.king[Co_Black]!=INVALIDSQUARE?SquareNames[p.king[Co_Black]]:"none") << std::endl;
+    ss << Logging::_protocolComment[Logging::ct] << " Turn " << (p.c == Co_White ? "white" : "black") << std::endl;
     ScoreType sc = 0;
     if ( ! noEval ){
         float gp = 0;
         sc = eval(p, gp);
-        ss << "# Phase " << gp << std::endl << "# Static score " << sc << std::endl << "# Hash " << computeHash(p) << std::endl << "# FEN " << GetFEN(p);
+        ss << Logging::_protocolComment[Logging::ct] << " Phase " << gp << std::endl << Logging::_protocolComment[Logging::ct] << " Static score " << sc << std::endl << Logging::_protocolComment[Logging::ct] << " Hash " << computeHash(p) << std::endl << Logging::_protocolComment[Logging::ct] << " FEN " << GetFEN(p);
     }
     //ss << ToString(p.mat);
     return ss.str();
