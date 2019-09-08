@@ -35,8 +35,8 @@ double Sigmoid(Position * p) {
     // so score used here must be >0 if white wins
     // /////////////////////////////////////////
 
-    // qsearch
     /*
+    // qsearch
     DepthType seldepth = 0;
     double s = ThreadPool::instance().main().qsearchNoPruning(-10000,10000,*p,1,seldepth);
     s *= (p->c == Co_White ? +1:-1);
@@ -64,7 +64,7 @@ double E(const std::vector<Texel::TexelInput> &data, size_t miniBatchSize) {
     const bool progress = miniBatchSize > 100000;
     std::chrono::time_point<Clock> startTime = Clock::now();
     for (size_t k = 0; k < miniBatchSize; ++k) {
-        e += std::pow(/*(data[k].result+1)*0.5*/ data[k].result - Sigmoid(data[k].p),2);
+        e += std::pow((data[k].result+1)*0.5 - Sigmoid(data[k].p),2);
         if ( progress && k%10000 == 0) std::cout << "." << std::flush;
     }
     if ( progress ) {
@@ -392,7 +392,7 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[5][EG], -1500, 1500,"candidateEG 5"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[6][EG], -1500, 1500,"candidateEG 6"));
 
-
+    /*
     for (int k = 1 ; k < 6 ; ++k ){
         for(int i = 0 ; i < 29 ; ++i){
            guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::MOB[k][i][MG],-200,200,"mob"+std::to_string(k)+"_"+std::to_string(i)));
@@ -404,7 +404,9 @@ void TexelTuning(const std::string & filename) {
            guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::MOB[k][i][EG],-200,200,"mobeg"+std::to_string(k)+"_"+std::to_string(i)));
         }
     }
+    */
 
+    /*
     for (int k = 0 ; k < 6 ; ++k ){
         for(int i = 0 ; i < 64 ; ++i){
            guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::PST[k][i][MG],-200,200,"pst"+std::to_string(k)+"_"+std::to_string(i)));
@@ -415,6 +417,7 @@ void TexelTuning(const std::string & filename) {
            guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::PST[k][i][EG],-200,200,"psteg"+std::to_string(k)+"_"+std::to_string(i)));
         }
     }
+    */
 
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookFrontKingMalus[MG] , -500,  500,"rookFrontKingMalus"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookFrontKingMalus[EG] , -500,  500,"rookFrontKingMalusEG"));

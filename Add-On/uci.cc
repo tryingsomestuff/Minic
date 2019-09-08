@@ -15,34 +15,22 @@ namespace UCI {
             iss >> uciCommand;
             Logging::LogIt(Logging::logInfo) << "uci received command " << uciCommand;
 
+            ///@todo protect some stuff when search is running !
+
             if (uciCommand == "uci") {
                 Logging::LogIt(Logging::logGUI) << "id name Minic " << MinicVersion;
                 Logging::LogIt(Logging::logGUI) << "id author Vivien Clauzon";
-
-                ///@todo options !
-                /// for ( opt in ..
-                //Logging::LogIt(Logging::logGUI) << "option name Hash type spin default 128 min 1 max 1048576";
-                //Logging::LogIt(Logging::logGUI) << "option name Threads type spin default 1 min 1 max 128";
-                //Logging::LogIt(Logging::logGUI) << "option name SyzygyPath type string default <empty>";
-                //Logging::LogIt(Logging::logGUI) << "option name SyzygyResolve type spin default 512 min 1 max 1024";
-                //Logging::LogIt(Logging::logGUI) << "option name Ponder type check default false";
+                Options::displayOptionsUCI();
                 Logging::LogIt(Logging::logGUI) << "uciok";
             }
             else if (uciCommand == "setoption") {
-                std::string name;
-                iss >> name;
-                if (name == "name") iss >> name;
-                /*
-                if ( isUCIOption(name) ){
-                   UCIReadOption(name,iss);
-                }
-                */
-                /*
-                else if (name == "Ponder") {
-                    // Do nothing
-                }
-                */
-                else { Logging::LogIt(Logging::logGUI) << "info string unknown uci option " << name; }
+                std::string tmpstr,key,val;
+                iss >> tmpstr; //"name"
+                iss >> key;
+                iss >> tmpstr; //"value"
+                iss >> val;
+                if ( !Options::SetValue(key,val)) Logging::LogIt(Logging::logError) << "Unable to set value " << key<< " = " << val;
+                else { Logging::LogIt(Logging::logGUI) << "info string unknown uci option " << key; }
             }
             else if (uciCommand == "isready") { Logging::LogIt(Logging::logGUI) << "readyok"; }
             else if (uciCommand == "stop") { Logging::LogIt(Logging::logInfo) << "stop requested";  ThreadContext::stopFlag = true; }
