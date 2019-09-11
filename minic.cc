@@ -340,9 +340,38 @@ namespace Options { // after Logging
         return true;
     }
     void registerCOMOptions(){ // options exposed xboard GUI
-       _keys.push_back(KeyBase(k_int,   w_spin, "level"               , &DynamicConfig::level              , (unsigned int)0  , (unsigned int)10   ));
-       _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin0"    , &StaticConfig::qfutilityMargin[0]  , ScoreType(50)    , ScoreType(500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin1"    , &StaticConfig::qfutilityMargin[1]  , ScoreType(50)    , ScoreType(500)     ));
+       //_keys.push_back(KeyBase(k_int,   w_spin, "level"                       , &DynamicConfig::level                          , (unsigned int)0  , (unsigned int)10   ));
+       _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin0"            , &StaticConfig::qfutilityMargin[0]              , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin1"            , &StaticConfig::qfutilityMargin[1]              , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "staticNullMoveMaxDepth0"     , &StaticConfig::staticNullMoveMaxDepth[0]       , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "staticNullMoveMaxDepth1"     , &StaticConfig::staticNullMoveMaxDepth[1]       , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthCoeff0"   , &StaticConfig::staticNullMoveDepthCoeff[0]     , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthCoeff1"   , &StaticConfig::staticNullMoveDepthCoeff[1]     , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthInit0"    , &StaticConfig::staticNullMoveDepthInit[0]      , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthInit1"    , &StaticConfig::staticNullMoveDepthInit[1]      , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthCoeff0"   , &StaticConfig::razoringMarginDepthCoeff[0]     , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthCoeff1"   , &StaticConfig::razoringMarginDepthCoeff[1]     , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthInit0"    , &StaticConfig::razoringMarginDepthInit[0]      , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthInit1"    , &StaticConfig::razoringMarginDepthInit[1]      , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "razoringMaxDepth0"           , &StaticConfig::razoringMaxDepth[0]             , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "razoringMaxDepth1"           , &StaticConfig::razoringMaxDepth[1]             , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "nullMoveMinDepth"            , &StaticConfig::nullMoveMinDepth                , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "historyPruningMaxDepth"      , &StaticConfig::historyPruningMaxDepth          , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_score, w_spin, "historyPruningThresholdInit" , &StaticConfig::historyPruningThresholdInit     , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "historyPruningThresholdDepth", &StaticConfig::historyPruningThresholdDepth    , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "futilityMaxDepth0"           , &StaticConfig::futilityMaxDepth[0]             , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "futilityMaxDepth1"           , &StaticConfig::futilityMaxDepth[1]             , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthCoeff0"         , &StaticConfig::futilityDepthCoeff[0]           , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthCoeff1"         , &StaticConfig::futilityDepthCoeff[1]           , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthInit0"          , &StaticConfig::futilityDepthInit[0]            , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthInit1"          , &StaticConfig::futilityDepthInit[1]            , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "iidMinDepth"                 , &StaticConfig::iidMinDepth                     , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "iidMinDepth2"                , &StaticConfig::iidMinDepth2                    , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "probCutMinDepth"             , &StaticConfig::probCutMinDepth                 , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_int  , w_spin, "probCutMaxMoves"             , &StaticConfig::probCutMaxMoves                 , 0               , 30                  ));
+       _keys.push_back(KeyBase(k_score, w_spin, "probCutMargin"               , &StaticConfig::probCutMargin                   , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "lmrMinDepth"                 , &StaticConfig::lmrMinDepth                     , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "singularExtensionDepth"      , &StaticConfig::singularExtensionDepth          , DepthType(0)    , DepthType(30)       ));
        ///@todo more ...
     }
     ///@todo UCI version
@@ -727,7 +756,7 @@ struct Position{
     Castling castling = C_none;
     Square ep = INVALIDSQUARE, king[2] = { INVALIDSQUARE };
     Color c = Co_White;
-    mutable Hash h = 0ull;
+    mutable Hash h = 0ull, ph = 0ull;
     Move lastMove = INVALIDMOVE;
 
     // t p n b r q k bl bd M n  (total is first so that pawn to king is same a Piece)
@@ -1413,8 +1442,8 @@ Hash computeHash(const Position &p){
     Hash h = p.h;
     p.h = 0ull;
 #endif
-    if (p.h != 0) return p.h;
-    for (Square k = 0; k < 64; ++k){
+    if (p.h != 0ull) return p.h;
+    for (Square k = 0; k < 64; ++k){ ///todo try if BB is faster here ?
         const Piece pp = p.b[k];
         if ( pp != P_none) p.h ^= Zobrist::ZT[k][pp+PieceShift];
     }
@@ -1433,6 +1462,37 @@ Hash computeHash(const Position &p){
     }
 #endif
     return p.h;
+}
+
+//#define DEBUG_PHASH
+Hash computePHash(const Position &p){
+#ifdef DEBUG_PHASH
+    Hash h = p.ph;
+    p.ph = 0ull;
+#endif
+
+    p.ph = 0ull; ///@todo incremental pawn hash update
+
+    if (p.ph != 0ull) return p.ph;
+    BitBoard bb = p.whitePawn();
+    while (bb) { p.ph ^= Zobrist::ZT[BBTools::popBit(bb)][P_wp + PieceShift]; }
+    bb = p.blackPawn();
+    while (bb) { p.ph ^= Zobrist::ZT[BBTools::popBit(bb)][P_bp + PieceShift]; }
+    bb = p.whiteKing();
+    while (bb) { p.ph ^= Zobrist::ZT[BBTools::popBit(bb)][P_wk + PieceShift]; }
+    bb = p.blackKing();
+    while (bb) { p.ph ^= Zobrist::ZT[BBTools::popBit(bb)][P_bk + PieceShift]; }
+    if ( p.ep != INVALIDSQUARE ) p.ph ^= Zobrist::ZT[p.ep][13];
+    if ( p.c == Co_White)        p.ph ^= Zobrist::ZT[3][13];
+    if ( p.c == Co_Black)        p.ph ^= Zobrist::ZT[4][13];
+#ifdef DEBUG_PHASH
+    if ( h != 0ull && h != p.ph ){
+        Logging::LogIt(Logging::logError) << "Hash error " << ToString(p.lastMove);
+        Logging::LogIt(Logging::logError) << ToString(p,true);
+        exit(1);
+    }
+#endif
+    return p.ph;
 }
 
 struct ThreadContext; // forward decl
@@ -1851,7 +1911,7 @@ bool readFEN(const std::string & fen, Position & p, bool silent){
     if ( !silent) Logging::LogIt(Logging::logInfo) << "Reading fen " << fen ;
 
     // reset position
-    p.h = 0;
+    p.h = 0ull; p.ph = 0ull;
     for(Square k = 0 ; k < 64 ; ++k) p.b[k] = P_none;
 
     Square j = 1, i = 0;
@@ -1929,6 +1989,7 @@ bool readFEN(const std::string & fen, Position & p, bool silent){
     p.halfmoves = (int(p.moves) - 1) * 2 + 1 + (p.c == Co_Black ? 1 : 0);
 
     p.h = computeHash(p);
+    //p.ph = computePHash(p);
     BBTools::setBitBoards(p);
     initMaterial(p);
     return true;
@@ -2195,6 +2256,7 @@ inline void movePiece(Position & p, Square from, Square to, Piece fromP, Piece t
     p.h ^= Zobrist::ZT[from][fromId]; // remove fromP at from
     if (isCapture) p.h ^= Zobrist::ZT[to][toId]; // if capture remove toP at to
     p.h ^= Zobrist::ZT[to][toIdnew]; // add fromP (or prom) at to
+    ///@todo incremental pawn hash update ?
 }
 
 void applyNull(Position & pN) {
@@ -2204,6 +2266,8 @@ void applyNull(Position & pN) {
     pN.lastMove = INVALIDMOVE;
     if (pN.ep != INVALIDSQUARE) pN.h ^= Zobrist::ZT[pN.ep][13];
     pN.ep = INVALIDSQUARE;
+
+    ///@todo incremental pawn hash update ?
 
     if ( pN.c == Co_White ) ++pN.moves;
     ++pN.halfmoves;
@@ -2243,6 +2307,8 @@ bool apply(Position & p, const Move & m){
 
     const int fromId   = fromP + PieceShift;
     //const int toId     = toP + PieceShift;
+
+    ///@todo incremental pawn hash update ?
 
     switch(type){
     case T_std:
