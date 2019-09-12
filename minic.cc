@@ -190,8 +190,8 @@ namespace Logging {
         ~LogIt() {
             std::lock_guard<std::mutex> lock(_mutex);
             if (_level != logGUI) {
-                std::cout       << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
-                if (_of) (*_of) << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
+               std::cout       << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
+               if (_of) (*_of) << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
             }
             else {
                 std::cout       << _buffer.str() << std::flush << std::endl;
@@ -296,7 +296,8 @@ namespace Options { // after Logging
     KeyBase & GetKey(const std::string & key) {
         bool keyFound = false;
         KeyBase * keyRef = &_keys[0]; // CARE :: assume _keys is never empty ...
-        for (size_t k = 0; k < _keys.size() && !keyFound; ++k) { if (key == _keys[k].key) { keyRef = &_keys[k]; break;} }
+        for (size_t k = 0; k < _keys.size(); ++k) { if (key == _keys[k].key) { keyRef = &_keys[k]; keyFound = true; break;} }
+        if ( !keyFound) Logging::LogIt(Logging::logFatal) << "Key not found " << key;
         return *keyRef;
     }
     template< KeyType T > struct OptionTypeHelper{};
@@ -323,23 +324,39 @@ namespace Options { // after Logging
         if (k.type != k_string) Logging::LogIt(Logging::logError) << "Bad type";
         return *static_cast<std::string*>(k.value);
     }
-#define SETVALUE(TYPE) {TYPE v; str >> v; *static_cast<TYPE*>(keyRef.value) = v;} break;
+    void displayOptionsDebug(){
+        for(auto it = _keys.begin() ; it != _keys.end() ; ++it)
+            if (it->type!=k_string ) Logging::LogIt(Logging::logInfo) << "option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << (int)GetValue(it->key)  <<  " " << it->vmin << " " << it->vmax << "\"";
+            else                     Logging::LogIt(Logging::logInfo) << "option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << GetValueString(it->key) << "\"";
+    }    void displayOptionsXBoard(){
+        for(auto it = _keys.begin() ; it != _keys.end() ; ++it)
+            if (it->type!=k_string ) Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << (int)GetValue(it->key)  <<  " " << it->vmin << " " << it->vmax << "\"";
+            else                     Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << GetValueString(it->key) << "\"";
+    }
+    void displayOptionsUCI(){
+        for(auto it = _keys.begin() ; it != _keys.end() ; ++it)
+            if (it->type!=k_string ) Logging::LogIt(Logging::logGUI) << "option name " << it->key << " type " << widgetXboardNames[it->wtype] << " default " << (int)GetValue(it->key)  <<  " min " << it->vmin << " max " << it->vmax;
+            else                     Logging::LogIt(Logging::logGUI) << "option name " << it->key << " type " << widgetXboardNames[it->wtype] << " default " << GetValueString(it->key);
+    }
+#define SETVALUE(TYPEIN,TYPEOUT) {TYPEIN v; str >> v; *static_cast<TYPEOUT*>(keyRef.value) = (TYPEOUT)v;} break;
     bool SetValue(const std::string & key, const std::string & value){
         KeyBase & keyRef = GetKey(key);
         std::stringstream str(value);
         switch (keyRef.type) {
-        case k_bool:   SETVALUE(bool)
-        case k_depth:  SETVALUE(DepthType)
-        case k_int:    SETVALUE(int)
-        case k_score:  SETVALUE(ScoreType)
-        case k_ull:    SETVALUE(unsigned long long)
-        case k_string: SETVALUE(std::string)
+        case k_bool:   SETVALUE(int,bool)
+        case k_depth:  SETVALUE(int,DepthType)
+        case k_int:    SETVALUE(int,int)
+        case k_score:  SETVALUE(int,ScoreType)
+        case k_ull:    SETVALUE(int,unsigned long long)
+        case k_string: SETVALUE(std::string,std::string)
         default: Logging::LogIt(Logging::logError) << "Bad key type"; return false;
         }
         Logging::LogIt(Logging::logInfo) << "Option set " << key << "=" << value;
+        //displayOptionsDebug();
         return true;
     }
     void registerCOMOptions(){ // options exposed xboard GUI
+       //return;
        //_keys.push_back(KeyBase(k_int,   w_spin, "level"                       , &DynamicConfig::level                          , (unsigned int)0  , (unsigned int)10   ));
        _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin0"            , &StaticConfig::qfutilityMargin[0]              , ScoreType(0)    , ScoreType(1500)     ));
        _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin1"            , &StaticConfig::qfutilityMargin[1]              , ScoreType(0)    , ScoreType(1500)     ));
@@ -373,17 +390,6 @@ namespace Options { // after Logging
        _keys.push_back(KeyBase(k_depth, w_spin, "lmrMinDepth"                 , &StaticConfig::lmrMinDepth                     , DepthType(0)    , DepthType(30)       ));
        _keys.push_back(KeyBase(k_depth, w_spin, "singularExtensionDepth"      , &StaticConfig::singularExtensionDepth          , DepthType(0)    , DepthType(30)       ));
        ///@todo more ...
-    }
-    ///@todo UCI version
-    void displayOptionsXBoard(){
-        for(auto it = _keys.begin() ; it != _keys.end() ; ++it)
-            if (it->type!=k_string ) Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << (int)GetValue(it->key)  <<  " " << it->vmin << " " << it->vmax << "\"";
-            else                     Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << GetValueString(it->key) << "\"";
-    }
-    void displayOptionsUCI(){
-        for(auto it = _keys.begin() ; it != _keys.end() ; ++it)
-            if (it->type!=k_string ) Logging::LogIt(Logging::logGUI) << "option name " << it->key << " type " << widgetXboardNames[it->wtype] << " default " << (int)GetValue(it->key)  <<  " min " << it->vmin << " max " << it->vmax;
-            else                     Logging::LogIt(Logging::logGUI) << "option name " << it->key << " type " << widgetXboardNames[it->wtype] << " default " << GetValueString(it->key);
     }
     void readOptions(int argc, char ** argv) { // load json config and command line args in memory
         for (int i = 1; i < argc; ++i) args.push_back(argv[i]);
