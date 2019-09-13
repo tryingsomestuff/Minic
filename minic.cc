@@ -1606,7 +1606,7 @@ struct ThreadContext{
 
     struct RootScores { Move m; ScoreType s; };
 
-    ScoreType drawnScore() { return -1 + 2*(stats.counters[Stats::sid_qnodes] % 2); }
+    ScoreType drawScore() { return -1 + 2*(stats.counters[Stats::sid_qnodes] % 2); }
 
     template <bool pvnode, bool canPrune = true> ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, const Move skipMove = INVALIDMOVE, std::vector<RootScores> * rootScores = 0);
     template <bool qRoot, bool pvnode>
@@ -2861,7 +2861,7 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
        else if ( ter == MaterialHash::Ter_LikelyDraw ) score.scalingFactor = 0.3f - 0.3f*(p.fifty/100.f);
        ///@todo next seem to lose elo
        //else if ( ter == MaterialHash::Ter_Draw){         if ( !isAttacked(p,kingSquare(p)) ) return drawnScore();}
-       else if ( ter == MaterialHash::Ter_MaterialDraw){ if ( !isAttacked(p,kingSquare(p)) ) return drawnScore();} ///@todo also verify stalemate ?
+       else if ( ter == MaterialHash::Ter_MaterialDraw){ if ( !isAttacked(p,kingSquare(p)) ) return drawScore();} ///@todo also verify stalemate ?
     }
 
     // pawn passer
@@ -3086,7 +3086,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
         if (!pvnode && e.h != 0 && ((e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact))) { return adjustHashScore(e.score, ply); }
         bestMove = e.m;
     }
-    if ( qRoot && interiorNodeRecognizer<true,false,true>(p) == MaterialHash::Ter_Draw) return drawnScore(); ///@todo is that gain elo ???
+    if ( qRoot && interiorNodeRecognizer<true,false,true>(p) == MaterialHash::Ter_Draw) return drawScore(); ///@todo is that gain elo ???
 
     ScoreType evalScore = isInCheck ? -MATE+ply : (e.h!=0?e.eval:eval(p,gp));
     bool evalScoreIsHashScore = false;
@@ -3203,7 +3203,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     const bool rootnode = ply == 1;
 
-    if (!rootnode && interiorNodeRecognizer<true, pvnode, true>(p) == MaterialHash::Ter_Draw) return drawnScore();
+    if (!rootnode && interiorNodeRecognizer<true, pvnode, true>(p) == MaterialHash::Ter_Draw) return drawScore();
 
     TT::Entry e;
     if ( skipMove==INVALIDMOVE && TT::getEntry(*this,computeHash(p), depth, e)) { // if not skipmove
