@@ -168,7 +168,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
 
     if ( cli == "-eval" ){
         float gp = 0;
-        ScoreType score = eval<true>(p,gp);
+        ScoreType score = ThreadPool::instance().main().eval<true>(p,gp);
         Logging::LogIt(Logging::logInfo) << "eval " << score << " phase " << gp ;
         return 0;
     }
