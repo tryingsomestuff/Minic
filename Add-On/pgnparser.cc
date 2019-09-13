@@ -159,7 +159,7 @@ void pgnparse__(std::ifstream & is,std::ofstream & os) {
           if ( hashes.find(computeHash(p)) != hashes.end()) continue;
           hashes.insert(computeHash(p));
           const ScoreType equalMargin = 120;
-          const ScoreType seval = eval(p,gp,&sc);
+          const ScoreType seval = ThreadPool::instance().main().eval(p,gp,&sc);
           if ( std::abs(ScaleScore(sc.scores[ScoreAcc::sc_Mat],gp)) < equalMargin){
              ++e;
              const ScoreType squiet = ThreadPool::instance().main().qsearchNoPruning(-10000,10000,p,1,seldepth);

@@ -53,7 +53,7 @@ double Sigmoid(Position * p) {
 
     // eval
     float gp;
-    double s = eval(*p,gp);
+    double s = ThreadPool::instance().main().eval(*p,gp);
     s *= (p->c == Co_White ? +1:-1);
 
     return 1. / (1. + std::pow(10, -K*s/400. ));

@@ -957,7 +957,7 @@ template < Piece pp > inline BitBoard attack(const Square x, const BitBoard targ
 
 int popBit(BitBoard & b) {
     assert( b != 0ull);
-    int i = 0;
+    unsigned long i = 0;
     bsf(b, i);
     b &= b - 1;
     return i;
@@ -965,7 +965,7 @@ int popBit(BitBoard & b) {
 
 Square SquareFromBitBoard(const BitBoard & b) {
     assert(b != 0ull);
-    int i = 0;
+    unsigned long i = 0;
     bsf(b, i);
     return Square(i);
 }
@@ -1060,7 +1060,7 @@ namespace MaterialHash { // from Gull
     const int TotalMat = ((2 * (MatWQ + MatBQ) + MatWL + MatBL + MatWD + MatBD + 2 * (MatWR + MatBR + MatWN + MatBN) + 8 * (MatWP + MatBP)) + 1);
 
     inline Hash getMaterialHash(const Position::Material & mat) {
-        if (mat[Co_White][M_q] > 2 || mat[Co_Black][M_q] > 2 || mat[Co_White][M_r] > 2 || mat[Co_Black][M_r] > 2 || mat[Co_White][M_bl] > 1 || mat[Co_Black][M_bl] > 1 || mat[Co_White][M_bd] > 1 || mat[Co_Black][M_bd] > 1 || mat[Co_White][M_n] > 2 || mat[Co_Black][M_n] > 2 || mat[Co_White][M_p] > 8 || mat[Co_Black][M_p] > 8) return 0;
+        if (mat[Co_White][M_q] > 2 || mat[Co_Black][M_q] > 2 || mat[Co_White][M_r] > 2 || mat[Co_Black][M_r] > 2 || mat[Co_White][M_bl] > 1 || mat[Co_Black][M_bl] > 1 || mat[Co_White][M_bd] > 1 || mat[Co_Black][M_bd] > 1 || mat[Co_White][M_n] > 2 || mat[Co_Black][M_n] > 2 || mat[Co_White][M_p] > 8 || mat[Co_Black][M_p] > 8) return 0ull;
         return mat[Co_White][M_p] * MatWP + mat[Co_Black][M_p] * MatBP + mat[Co_White][M_n] * MatWN + mat[Co_Black][M_n] * MatBN + mat[Co_White][M_bl] * MatWL + mat[Co_Black][M_bl] * MatBL + mat[Co_White][M_bd] * MatWD + mat[Co_Black][M_bd] * MatBD + mat[Co_White][M_r] * MatWR + mat[Co_Black][M_r] * MatBR + mat[Co_White][M_q] * MatWQ + mat[Co_Black][M_q] * MatBQ;
     }
 
@@ -1155,7 +1155,7 @@ namespace MaterialHash { // from Gull
         const ScoreType sc = pushToCorners[losingK] + pushClose[chebyshevDistance(winningK,losingK)];
         return s + ((winningSide == Co_White)?(sc+WIN):(-sc-WIN));
     }
-    ScoreType helperDummy(const Position &, Color , ScoreType){ return 0; }
+    ScoreType helperDummy(const Position &, Color , ScoreType){ return 0; } ///@todo not 0 for debug purpose ??
 
     // idea taken from Stockfish (or public-domain KPK from HGM)
     namespace KPK{
@@ -1223,7 +1223,7 @@ namespace MaterialHash { // from Gull
     ScoreType helperKPK(const Position &p, Color winningSide, ScoreType ){
        ///@todo maybe an incrementally updated piece square list can be cool to avoid those SquareFromBitBoard...
        const Square psq = KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces<P_wp>(winningSide))); // we know there is at least one pawn
-       if (!KPK::probe(KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces<P_wk>(winningSide))), psq, KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces<P_wk>(~winningSide))), winningSide == p.c ? Co_White:Co_Black)) return 0;
+       if (!KPK::probe(KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces<P_wk>(winningSide))), psq, KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces<P_wk>(~winningSide))), winningSide == p.c ? Co_White:Co_Black)) return 0; // shall be drawScore but this is not a 3rep case so don't bother too much ...
        return ((winningSide == Co_White)?+1:-1)*(WIN + ValuesEG[P_wp+PieceShift] + 10*SQRANK(psq));
     }
 
@@ -1555,7 +1555,9 @@ namespace MoveDifficultyUtil {
     const float     maxStealFraction  = 0.3f; // of remaining time
 }
 
-// thread from Stockfish
+struct ScoreAcc; // forward decl
+
+// thread Stockfish style
 struct ThreadContext{
     static bool stopFlag;
     static MoveDifficultyUtil::MoveDifficulty moveDifficulty;
@@ -1604,6 +1606,8 @@ struct ThreadContext{
 
     struct RootScores { Move m; ScoreType s; };
 
+    ScoreType drawnScore() { return -1 + 2*(stats.counters[Stats::sid_qnodes] % 2); }
+
     template <bool pvnode, bool canPrune = true> ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, const Move skipMove = INVALIDMOVE, std::vector<RootScores> * rootScores = 0);
     template <bool qRoot, bool pvnode>
     ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
@@ -1613,6 +1617,7 @@ struct ThreadContext{
     template< bool withRep = true, bool isPv = true, bool INR = true> MaterialHash::Terminaison interiorNodeRecognizer(const Position & p)const;
     bool isRep(const Position & p, bool isPv)const;
     void displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv, const std::string & mark = "");
+    template < bool display = false, bool safeMatEvaluator = true > ScoreType eval(const Position & p, float & gp, ScoreAcc * sc = 0); 
 
     void idleLoop(){
         while (true){
@@ -1801,10 +1806,6 @@ void getPV(const Position & p, ThreadContext & context, PVList & pv){
 
 } // TT
 
-struct ScoreAcc; // forward decl
-template < bool display = false, bool safeMatEvaluator = true >
-ScoreType eval(const Position & p, float & gp, ScoreAcc * sc = 0); // forward decl
-
 std::string trim(const std::string& str, const std::string& whitespace = " \t"){
     const auto strBegin = str.find_first_not_of(whitespace);
     if (strBegin == std::string::npos) return ""; // no content
@@ -1900,7 +1901,7 @@ std::string ToString(const Position & p, bool noEval){
     ScoreType sc = 0;
     if ( ! noEval ){
         float gp = 0;
-        sc = eval(p, gp);
+        sc = ThreadPool::instance().main().eval(p, gp);
         ss << Logging::_protocolComment[Logging::ct] << " Phase " << gp << std::endl << Logging::_protocolComment[Logging::ct] << " Static score " << sc << std::endl << Logging::_protocolComment[Logging::ct] << " Hash " << computeHash(p) << std::endl << Logging::_protocolComment[Logging::ct] << " FEN " << GetFEN(p);
     }
     //ss << ToString(p.mat);
@@ -2773,7 +2774,7 @@ inline void evalPawnCandidate(BitBoard pieceBBiterator, ScoreAcc & score){
 ///@todo hanging, pins
 
 template < bool display, bool safeMatEvaluator >
-ScoreType eval(const Position & p, float & gp, ScoreAcc * sc ){
+ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
     ScoreAcc scoreLoc;
     ScoreAcc & score = sc ? *sc : scoreLoc;
     score.scores = {0};
@@ -2859,8 +2860,8 @@ ScoreType eval(const Position & p, float & gp, ScoreAcc * sc ){
        else if ( ter == MaterialHash::Ter_HardToWin)   score.scalingFactor = 0.5f - 0.5f*(p.fifty/100.f);
        else if ( ter == MaterialHash::Ter_LikelyDraw ) score.scalingFactor = 0.3f - 0.3f*(p.fifty/100.f);
        ///@todo next seem to lose elo
-       //else if ( ter == MaterialHash::Ter_Draw){         if ( !isAttacked(p,kingSquare(p)) ) return 0;}
-       else if ( ter == MaterialHash::Ter_MaterialDraw){ if ( !isAttacked(p,kingSquare(p)) ) return 0;} ///@todo also verify stalemate ?
+       //else if ( ter == MaterialHash::Ter_Draw){         if ( !isAttacked(p,kingSquare(p)) ) return drawnScore();}
+       else if ( ter == MaterialHash::Ter_MaterialDraw){ if ( !isAttacked(p,kingSquare(p)) ) return drawnScore();} ///@todo also verify stalemate ?
     }
 
     // pawn passer
@@ -3085,7 +3086,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
         if (!pvnode && e.h != 0 && ((e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact))) { return adjustHashScore(e.score, ply); }
         bestMove = e.m;
     }
-    if ( qRoot && interiorNodeRecognizer<true,false,true>(p) == MaterialHash::Ter_Draw) return 0; ///@todo is that gain elo ???
+    if ( qRoot && interiorNodeRecognizer<true,false,true>(p) == MaterialHash::Ter_Draw) return drawnScore(); ///@todo is that gain elo ???
 
     ScoreType evalScore = isInCheck ? -MATE+ply : (e.h!=0?e.eval:eval(p,gp));
     bool evalScoreIsHashScore = false;
@@ -3202,7 +3203,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     const bool rootnode = ply == 1;
 
-    if (!rootnode && interiorNodeRecognizer<true, pvnode, true>(p) == MaterialHash::Ter_Draw) return 0;
+    if (!rootnode && interiorNodeRecognizer<true, pvnode, true>(p) == MaterialHash::Ter_Draw) return drawnScore();
 
     TT::Entry e;
     if ( skipMove==INVALIDMOVE && TT::getEntry(*this,computeHash(p), depth, e)) { // if not skipmove
@@ -4087,20 +4088,21 @@ void init(int argc, char ** argv) {
 #endif
 }
 
-int main(int argc, char ** argv){
+int main(int argc, char ** argv) {
     init(argc, argv);
 #ifdef WITH_TEST_SUITE
-    if ( argc > 1 && test(argv[1])) return 0;
+    if (argc > 1 && test(argv[1])) return EXIT_SUCCESS;
 #endif
 #ifdef WITH_TEXEL_TUNING
-    if ( argc > 1 && std::string(argv[1]) == "-texel" ) { TexelTuning(argv[2]); return 0;}
+    if (argc > 1 && std::string(argv[1]) == "-texel") { TexelTuning(argv[2]); return EXIT_SUCCESS; }
 #endif
 #ifdef WITH_PGN_PARSER
-    if ( argc > 1 && std::string(argv[1]) == "-pgn" ) { return PGNParse(argv[2]); }
+    if (argc > 1 && std::string(argv[1]) == "-pgn") { return PGNParse(argv[2]); }
 #endif
 #ifdef DEBUG_TOOL
-    if ( argc < 2 ) Logging::LogIt(Logging::logFatal) << "Hint: You can use -xboard command line option to enter xboard mode";
-    return cliManagement(argv[1],argc,argv);
+    if (argc < 2) {
+        Logging::LogIt(Logging::logError) << "Hint: You can use -xboard command line option to enter xboard mode"; return EXIT_FAILURE;
+}   else return cliManagement(argv[1],argc,argv);
 #else
     ///@todo factorize with the one in cliManagement
     TimeMan::init();
@@ -4111,6 +4113,6 @@ int main(int argc, char ** argv){
     UCI::init();
     UCI::uci();
 #endif
-    return 0;
+    return EXIT_SUCCESS;
 #endif
 }
