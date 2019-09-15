@@ -255,8 +255,8 @@ void TexelTuning(const std::string & filename) {
     ExtendedPosition::readEPDFile(filename,positions);
     for(size_t k = 0 ; k < positions.size() ; ++k){
         ExtendedPosition * p = new ExtendedPosition(positions[k],false);
-        //data.push_back({p, getResult(p->_extendedParams["c9"][0])});
-        data.push_back({p, getResult2(p->_extendedParams["c2"][0])});
+        data.push_back({p, getResult(p->_extendedParams["c9"][0])});
+        //data.push_back({p, getResult2(p->_extendedParams["c2"][0])});
         // +1 white win, -1 black wins, 0 draw
         if (k % 50000 == 0) Logging::LogIt(Logging::logInfo) << k << " position read";
     }
@@ -284,6 +284,7 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wq+PieceShift], 600, 1800, "EGqueen",  [](const ScoreType& s){ValuesEG[P_bq+PieceShift] = -s;}));
     */
 
+    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttWeight[0][1], -30, 30, "ap"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttWeight[0][2], -30, 30, "an"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttWeight[0][3], -30, 30, "ab"));
@@ -391,6 +392,7 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[4][EG], -1500, 1500,"candidateEG 4"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[5][EG], -1500, 1500,"candidateEG 5"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[6][EG], -1500, 1500,"candidateEG 6"));
+*/
 
     /*
     for (int k = 1 ; k < 6 ; ++k ){
@@ -419,6 +421,18 @@ void TexelTuning(const std::string & filename) {
     }
     */
 
+    /*
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookQueenSameFile[MG] , -500,  500,"rookQueenSameFile"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookQueenSameFile[EG] , -500,  500,"rookQueenSameFileEG"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookFrontQueenMalus[MG] , -500,  500,"rookFrontQueenMalus"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookFrontQueenMalus[EG] , -500,  500,"rookFrontQueenMalusEG"));
+    */
+
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::hangingPieceMalus[MG] , -500,  500,"hangingPieceMalus"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::hangingPieceMalus[EG] , -500,  500,"hangingPieceMalusEG"));
+
+
+    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookFrontKingMalus[MG] , -500,  500,"rookFrontKingMalus"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookFrontKingMalus[EG] , -500,  500,"rookFrontKingMalusEG"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::minorOnOpenFile[MG] , -500,  500,"minorOnOpenFile"));
@@ -426,6 +440,7 @@ void TexelTuning(const std::string & filename) {
 
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::queenNearKing[MG] , -500,  500,"queenNearKing"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::queenNearKing[EG] , -500,  500,"queenNearKingEG"));
+    */
 
     computeOptimalK(data);
     Logging::LogIt(Logging::logInfo) << "Optimal K " << Texel::K;
