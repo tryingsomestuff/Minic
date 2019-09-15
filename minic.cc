@@ -32,7 +32,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
 //#define WITH_TEST_SUITE
-#define WITH_SYZYGY
+//#define WITH_SYZYGY
 #define WITH_UCI
 //#define WITH_PGN_PARSER
 
@@ -43,10 +43,6 @@ const std::string MinicVersion = "dev";
 -Root move ordering
 -test more extension
 */
-
-///@todo test debug hash
-///@todo do debug material DEBUG_MATERIAL
-///@todo do debug BB
 
 #define INFINITETIME TimeType(60*60*1000*24)
 #define STOPSCORE   ScoreType(-20000)
@@ -525,8 +521,12 @@ EvalScore   rookOnOpenFile        = {44,-5};
 EvalScore   rookOnOpenSemiFileOur = { 9,-2};
 EvalScore   rookOnOpenSemiFileOpp = {-4, 4};
 
+EvalScore   rookQueenSameFile     = {-4,4};
+EvalScore   rookFrontQueenMalus   = {-2,8};
 EvalScore   rookFrontKingMalus    = {-13,-2};
 EvalScore   minorOnOpenFile       = {15,-5};
+
+EvalScore   hangingPieceMalus     = {-22, -4};
 
 EvalScore   adjKnight[9]  = { {-24,-27}, {-12, 9}, {-4,19}, { 1,21}, {11,23}, { 10,23}, {  9,43}, { 17,39}, {17,10} };
 EvalScore   adjRook[9]    = { { 24, 22}, {  9,11}, {15,10}, { 4,14}, {-8,19}, {-11,28}, {-11,32}, {-16,46}, {-5,17} };
@@ -1606,7 +1606,7 @@ struct ThreadContext{
 
     struct RootScores { Move m; ScoreType s; };
 
-    ScoreType drawScore() { return -1 + 2*(stats.counters[Stats::sid_qnodes] % 2); }
+    ScoreType drawScore() { return -1 + 2*((stats.counters[Stats::sid_nodes]+stats.counters[Stats::sid_qnodes]) % 2); }
 
     template <bool pvnode, bool canPrune = true> ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, const Move skipMove = INVALIDMOVE, std::vector<RootScores> * rootScores = 0);
     template <bool qRoot, bool pvnode>
@@ -2682,7 +2682,7 @@ double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f,
 void initEval(){ for(Square i = 0; i < 64; i++){ EvalConfig::kingAttTable[i] = (int) sigmoid(i,EvalConfig::kingAttMax,EvalConfig::kingAttTrans,EvalConfig::kingAttScale,EvalConfig::kingAttOffset); } }// idea taken from Topple
 
 struct ScoreAcc{
-    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_Pwn, sc_PwnShield, sc_PwnPassed, sc_PwnIsolated, sc_PwnDoubled, sc_PwnBackward, sc_PwnCandidate, sc_PwnHole, sc_Outpost, sc_PwnPush, sc_Adjust, sc_OpenFile, sc_EndGame, sc_RookFrontKing, sc_MinorOnOpenFile, sc_QueenNearKing, sc_Tempo, sc_max };
+    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_Pwn, sc_PwnShield, sc_PwnPassed, sc_PwnIsolated, sc_PwnDoubled, sc_PwnBackward, sc_PwnCandidate, sc_PwnHole, sc_Outpost, sc_PwnPush, sc_Adjust, sc_OpenFile, sc_EndGame, sc_RookFrontKing, sc_RookFrontQueen, sc_RookQueenSameFile, sc_MinorOnOpenFile, sc_QueenNearKing, sc_hanging, sc_Tempo, sc_max };
     float scalingFactor = 1;
     std::array<EvalScore,sc_max> scores;
     ScoreType Score(const Position &p, float gp){
@@ -2691,7 +2691,7 @@ struct ScoreAcc{
         return ScoreType(ScaleScore(sc,gp)*scalingFactor*std::min(1.f,(110-p.fifty)/100.f));
     }
     void Display(const Position &p, float gp){
-        static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "Pwn", "PwnShield", "PwnPassed", "PwnIsolated", "PwnDoubled", "PwnBackward", "PwnCandidate", "PwnHole", "Outpost", "PwnPush", "Adjust", "OpenFile", "EndGame", "RookFrontKing", "MinorOnOpenFile", "QueenNearKing", "Tempo"};
+        static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "Pwn", "PwnShield", "PwnPassed", "PwnIsolated", "PwnDoubled", "PwnBackward", "PwnCandidate", "PwnHole", "Outpost", "PwnPush", "Adjust", "OpenFile", "EndGame", "RookFrontKing", "RookFrontQueen", "RookQueenSameFile", "MinorOnOpenFile", "QueenNearKing", "Hanging", "Tempo"};
         EvalScore sc;
         for(int k = 0 ; k < sc_max ; ++k){
             Logging::LogIt(Logging::logInfo) << scNames[k] << "       " << scores[k][MG];
@@ -2718,7 +2718,7 @@ namespace{ // some Color / Piece helpers
 }
 
 template < Piece T , Color C>
-inline void evalPiece(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, BitBoard & att, ScoreType (& kdanger)[2]){
+inline void evalPiece(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, BitBoard (& attBy)[6], ScoreType (& kdanger)[2]){
     const BitBoard kingZone[2] = { BBTools::mask[p.king[Co_White]].kingZone, BBTools::mask[p.king[Co_Black]].kingZone};
     while (pieceBBiterator) {
         const Square k = BBTools::popBit(pieceBBiterator);
@@ -2727,7 +2727,7 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, ScoreAcc & s
         const BitBoard target = pfAtt[T-1](k, p.occupancy ^ p.pieces<T>(C), p.c); // aligned threats of same piece type also taken into account ///@todo better?
         kdanger[C]  -= countBit(target & kingZone[C])  * EvalConfig::kingAttWeight[EvalConfig::katt_defence][T];
         kdanger[~C] += countBit(target & kingZone[~C]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][T];
-        att |= target /*& ~p.allPieces[C]*/;
+        attBy[T-1] |= target;
     }
 }
 
@@ -2771,7 +2771,7 @@ inline void evalPawnCandidate(BitBoard pieceBBiterator, ScoreAcc & score){
 ///@todo reward safe checks
 ///@todo pawn storm
 ///@todo pawn hash table
-///@todo hanging, pins
+///@todo pins
 
 template < bool display, bool safeMatEvaluator >
 ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
@@ -2787,15 +2787,13 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
     if ( lra > 0 ) { score.scores[ScoreAcc::sc_Rand] += Zobrist::randomInt<int>(-lra,lra); }
 
     // game phase and material scores
-    const float totalMatScore = 2.f * *absValues[P_wq] + 4.f * *absValues[P_wr] + 4.f * *absValues[P_wb] + 4.f * *absValues[P_wn] + 16.f * *absValues[P_wp];
+    const float totalMatScore = 2.f * *absValues[P_wq] + 4.f * *absValues[P_wr] + 4.f * *absValues[P_wb] + 4.f * *absValues[P_wn] + 16.f * *absValues[P_wp]; // cannot be static for tuning process ...
     const ScoreType matPieceScoreW = p.mat[Co_White][M_q] * *absValues[P_wq] + p.mat[Co_White][M_r] * *absValues[P_wr] + p.mat[Co_White][M_b] * *absValues[P_wb] + p.mat[Co_White][M_n] * *absValues[P_wn];
     const ScoreType matPieceScoreB = p.mat[Co_Black][M_q] * *absValues[P_wq] + p.mat[Co_Black][M_r] * *absValues[P_wr] + p.mat[Co_Black][M_b] * *absValues[P_wb] + p.mat[Co_Black][M_n] * *absValues[P_wn];
     const ScoreType matPawnScoreW  = p.mat[Co_White][M_p] * *absValues[P_wp];
     const ScoreType matPawnScoreB  = p.mat[Co_Black][M_p] * *absValues[P_wp];
     const ScoreType matScoreW = matPieceScoreW + matPawnScoreW;
     const ScoreType matScoreB = matPieceScoreB + matPawnScoreB;
-    //const ScoreType matPiece = matPieceScoreW - matPieceScoreB;
-    //const ScoreType matPawn  = matPawnScoreW - matPawnScoreB;
     gp = ( matScoreW + matScoreB ) / totalMatScore;
 
     // king captured
@@ -2806,50 +2804,6 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
     // EG material (symetric version)
     score.scores[ScoreAcc::sc_Mat][EG] += (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValuesEG[P_wq] + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * *absValuesEG[P_wr] + (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * *absValuesEG[P_wb] + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValuesEG[P_wn] + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValuesEG[P_wp];
     const Color winningSide = score.scores[ScoreAcc::sc_Mat][EG]>0?Co_White:Co_Black;
-
-    // material (symetric version)
-    score.scores[ScoreAcc::sc_Mat][MG] += matScoreW - matScoreB;
-
-    // usefull bitboards accumulator
-    const BitBoard pawns[2] = {p.whitePawn(), p.blackPawn()};
-    ScoreType kdanger[2]    = {0, 0};
-    BitBoard att[2]         = {0ull, 0ull};
-    BitBoard mob[6][2]      = {0ull};
-    const BitBoard pawnTargets[2]   = {BBTools::pawnAttacks   <Co_White>(pawns[Co_White])                  , BBTools::pawnAttacks   <Co_Black>(pawns[Co_Black])};
-    const BitBoard passer[2]        = {BBTools::pawnPassed    <Co_White>(pawns[Co_White] ,pawns[Co_Black]) , BBTools::pawnPassed    <Co_Black>(pawns[Co_Black],pawns[Co_White])};
-    const BitBoard backward[2]      = {BBTools::pawnBackward  <Co_White>(pawns[Co_White] ,pawns[Co_Black]) , BBTools::pawnBackward  <Co_Black>(pawns[Co_Black],pawns[Co_White])};
-    const BitBoard isolated[2]      = {BBTools::pawnIsolated            (pawns[Co_White])                  , BBTools::pawnIsolated            (pawns[Co_Black])};
-    const BitBoard doubled[2]       = {BBTools::pawnDoubled   <Co_White>(pawns[Co_White])                  , BBTools::pawnDoubled   <Co_Black>(pawns[Co_Black])};
-    const BitBoard semiOpenFiles[2] = {BBTools::pawnSemiOpen  <Co_White>(pawns[Co_White] ,pawns[Co_Black]) , BBTools::pawnSemiOpen  <Co_Black>(pawns[Co_Black],pawns[Co_White])};
-    const BitBoard openFiles        =  BBTools::openFiles               (pawns[Co_White]                   , pawns[Co_Black]);
-    const BitBoard candidates[2]    = {BBTools::pawnCandidates<Co_White>(pawns[Co_White] ,pawns[Co_Black]) , BBTools::pawnCandidates<Co_Black>(pawns[Co_Black],pawns[Co_White])};
-    const BitBoard holes[2]         = {BBTools::pawnHoles     <Co_White>(pawns[Co_White]) & extendedCenter , BBTools::pawnHoles     <Co_Black>(pawns[Co_Black]) & extendedCenter};
-
-    // PST, king zone attack
-    evalPiece<P_wp,Co_White>(p,p.pieces<P_wp>(Co_White),score,att[Co_White],kdanger);
-    evalPiece<P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),score,att[Co_White],kdanger);
-    evalPiece<P_wb,Co_White>(p,p.pieces<P_wb>(Co_White),score,att[Co_White],kdanger);
-    evalPiece<P_wr,Co_White>(p,p.pieces<P_wr>(Co_White),score,att[Co_White],kdanger);
-    evalPiece<P_wq,Co_White>(p,p.pieces<P_wq>(Co_White),score,att[Co_White],kdanger);
-    evalPiece<P_wk,Co_White>(p,p.pieces<P_wk>(Co_White),score,att[Co_White],kdanger);
-    evalPiece<P_wp,Co_Black>(p,p.pieces<P_wp>(Co_Black),score,att[Co_Black],kdanger);
-    evalPiece<P_wn,Co_Black>(p,p.pieces<P_wn>(Co_Black),score,att[Co_Black],kdanger);
-    evalPiece<P_wb,Co_Black>(p,p.pieces<P_wb>(Co_Black),score,att[Co_Black],kdanger);
-    evalPiece<P_wr,Co_Black>(p,p.pieces<P_wr>(Co_Black),score,att[Co_Black],kdanger);
-    evalPiece<P_wq,Co_Black>(p,p.pieces<P_wq>(Co_Black),score,att[Co_Black],kdanger);
-    evalPiece<P_wk,Co_Black>(p,p.pieces<P_wk>(Co_Black),score,att[Co_Black],kdanger);
-
-    // mobility
-    evalMob<P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),score,/*att*/pawnTargets,mob[P_wp-1][Co_White]);
-    evalMob<P_wb,Co_White>(p,p.pieces<P_wb>(Co_White),score,/*att*/pawnTargets,mob[P_wn-1][Co_White]);
-    evalMob<P_wr,Co_White>(p,p.pieces<P_wr>(Co_White),score,/*att*/pawnTargets,mob[P_wb-1][Co_White]);
-    evalMob<P_wq,Co_White>(p,p.pieces<P_wq>(Co_White),score,/*att*/pawnTargets,mob[P_wr-1][Co_White]);
-    evalMob<P_wk,Co_White>(p,p.pieces<P_wk>(Co_White),score,/*att*/pawnTargets,mob[P_wq-1][Co_White]);
-    evalMob<P_wn,Co_Black>(p,p.pieces<P_wn>(Co_Black),score,/*att*/pawnTargets,mob[P_wp-1][Co_Black]);
-    evalMob<P_wb,Co_Black>(p,p.pieces<P_wb>(Co_Black),score,/*att*/pawnTargets,mob[P_wn-1][Co_Black]);
-    evalMob<P_wr,Co_Black>(p,p.pieces<P_wr>(Co_Black),score,/*att*/pawnTargets,mob[P_wb-1][Co_Black]);
-    evalMob<P_wq,Co_Black>(p,p.pieces<P_wq>(Co_Black),score,/*att*/pawnTargets,mob[P_wr-1][Co_Black]);
-    evalMob<P_wk,Co_Black>(p,p.pieces<P_wk>(Co_Black),score,/*att*/pawnTargets,mob[P_wq-1][Co_Black]);
 
     // end game knowledge (helper or scaling)
     if ( safeMatEvaluator && gp < 0.3f ){
@@ -2864,15 +2818,47 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
        else if ( ter == MaterialHash::Ter_MaterialDraw){ if ( !isAttacked(p,kingSquare(p)) ) return drawScore();} ///@todo also verify stalemate ?
     }
 
-    // pawn passer
-    evalPawnPasser<Co_White>(p,passer[Co_White],score);
-    evalPawnPasser<Co_Black>(p,passer[Co_Black],score);
-    // pawn backward
-    evalPawnBackward<Co_White>(p,backward[Co_White],score);
-    evalPawnBackward<Co_Black>(p,backward[Co_Black],score);
-    // pawn candidate
-    evalPawnCandidate<Co_White>(candidates[Co_White],score);
-    evalPawnCandidate<Co_Black>(candidates[Co_Black],score);
+    // material (symetric version)
+    score.scores[ScoreAcc::sc_Mat][MG] += matScoreW - matScoreB;
+
+    // usefull bitboards accumulator
+    const BitBoard pawns[2] = {p.whitePawn(), p.blackPawn()};
+    ScoreType kdanger[2]    = {0, 0};
+    BitBoard att[2]         = {0ull, 0ull};
+    BitBoard attBy[2][6]    = {{0ull}};
+    BitBoard mob[6][2]      = {{0ull}};
+
+    // PST, attack, danger
+    evalPiece<P_wp,Co_White>(p,p.pieces<P_wp>(Co_White),score,attBy[Co_White],kdanger);
+    evalPiece<P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),score,attBy[Co_White],kdanger);
+    evalPiece<P_wb,Co_White>(p,p.pieces<P_wb>(Co_White),score,attBy[Co_White],kdanger);
+    evalPiece<P_wr,Co_White>(p,p.pieces<P_wr>(Co_White),score,attBy[Co_White],kdanger);
+    evalPiece<P_wq,Co_White>(p,p.pieces<P_wq>(Co_White),score,attBy[Co_White],kdanger);
+    evalPiece<P_wk,Co_White>(p,p.pieces<P_wk>(Co_White),score,attBy[Co_White],kdanger);
+    evalPiece<P_wp,Co_Black>(p,p.pieces<P_wp>(Co_Black),score,attBy[Co_Black],kdanger);
+    evalPiece<P_wn,Co_Black>(p,p.pieces<P_wn>(Co_Black),score,attBy[Co_Black],kdanger);
+    evalPiece<P_wb,Co_Black>(p,p.pieces<P_wb>(Co_Black),score,attBy[Co_Black],kdanger);
+    evalPiece<P_wr,Co_Black>(p,p.pieces<P_wr>(Co_Black),score,attBy[Co_Black],kdanger);
+    evalPiece<P_wq,Co_Black>(p,p.pieces<P_wq>(Co_Black),score,attBy[Co_Black],kdanger);
+    evalPiece<P_wk,Co_Black>(p,p.pieces<P_wk>(Co_Black),score,attBy[Co_Black],kdanger);
+
+    att[Co_White] = attBy[Co_White][P_wp-1] | attBy[Co_White][P_wn-1] | attBy[Co_White][P_wb-1] | attBy[Co_White][P_wr-1] | attBy[Co_White][P_wq-1] | attBy[Co_White][P_wk-1];
+    att[Co_Black] = attBy[Co_Black][P_wp-1] | attBy[Co_Black][P_wn-1] | attBy[Co_Black][P_wb-1] | attBy[Co_Black][P_wr-1] | attBy[Co_Black][P_wq-1] | attBy[Co_Black][P_wk-1];
+
+    const BitBoard pawnTargets[2]   = {BBTools::pawnAttacks   <Co_White>(pawns[Co_White])                  , BBTools::pawnAttacks   <Co_Black>(pawns[Co_Black])};
+    const BitBoard passer[2]        = {BBTools::pawnPassed    <Co_White>(pawns[Co_White] ,pawns[Co_Black]) , BBTools::pawnPassed    <Co_Black>(pawns[Co_Black],pawns[Co_White])};
+    const BitBoard backward[2]      = {BBTools::pawnBackward  <Co_White>(pawns[Co_White] ,pawns[Co_Black]) , BBTools::pawnBackward  <Co_Black>(pawns[Co_Black],pawns[Co_White])};
+    const BitBoard isolated[2]      = {BBTools::pawnIsolated            (pawns[Co_White])                  , BBTools::pawnIsolated            (pawns[Co_Black])};
+    const BitBoard doubled[2]       = {BBTools::pawnDoubled   <Co_White>(pawns[Co_White])                  , BBTools::pawnDoubled   <Co_Black>(pawns[Co_Black])};
+    const BitBoard semiOpenFiles[2] = {BBTools::pawnSemiOpen  <Co_White>(pawns[Co_White] ,pawns[Co_Black]) , BBTools::pawnSemiOpen  <Co_Black>(pawns[Co_Black],pawns[Co_White])};
+    const BitBoard openFiles        =  BBTools::openFiles               (pawns[Co_White]                   , pawns[Co_Black]);
+    const BitBoard candidates[2]    = {BBTools::pawnCandidates<Co_White>(pawns[Co_White] ,pawns[Co_Black]) , BBTools::pawnCandidates<Co_Black>(pawns[Co_Black],pawns[Co_White])};
+    const BitBoard holes[2]         = {BBTools::pawnHoles     <Co_White>(pawns[Co_White]) & extendedCenter , BBTools::pawnHoles     <Co_Black>(pawns[Co_Black]) & extendedCenter};
+    const BitBoard hanging[2]       = {p.allPieces[Co_White] & ((~att[Co_White] & att[Co_Black]) | pawnTargets[Co_Black]), p.allPieces[Co_Black] & ((~att[Co_Black] & att[Co_White]) | pawnTargets[Co_White])};
+
+    // hanging piece
+    score.scores[ScoreAcc::sc_hanging] += EvalConfig::hangingPieceMalus * countBit(hanging[Co_White]);
+    score.scores[ScoreAcc::sc_hanging] -= EvalConfig::hangingPieceMalus * countBit(hanging[Co_Black]);
 
     // open file near king
     kdanger[Co_White] += EvalConfig::kingAttOpenfile        * countBit(BBTools::mask[p.king[Co_White]].kingZone & openFiles) ;
@@ -2882,6 +2868,18 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
     kdanger[Co_Black] += EvalConfig::kingAttSemiOpenfileOpp * countBit(BBTools::mask[p.king[Co_Black]].kingZone & semiOpenFiles[Co_Black]);
     kdanger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * countBit(BBTools::mask[p.king[Co_Black]].kingZone & semiOpenFiles[Co_White]);
 
+    // pieces mobility
+    evalMob<P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),score,/*att*/pawnTargets,mob[P_wp-1][Co_White]);
+    evalMob<P_wb,Co_White>(p,p.pieces<P_wb>(Co_White),score,/*att*/pawnTargets,mob[P_wn-1][Co_White]);
+    evalMob<P_wr,Co_White>(p,p.pieces<P_wr>(Co_White),score,/*att*/pawnTargets,mob[P_wb-1][Co_White]);
+    evalMob<P_wq,Co_White>(p,p.pieces<P_wq>(Co_White),score,/*att*/pawnTargets,mob[P_wr-1][Co_White]);
+    evalMob<P_wk,Co_White>(p,p.pieces<P_wk>(Co_White),score,/*att*/pawnTargets,mob[P_wq-1][Co_White]);
+    evalMob<P_wn,Co_Black>(p,p.pieces<P_wn>(Co_Black),score,/*att*/pawnTargets,mob[P_wp-1][Co_Black]);
+    evalMob<P_wb,Co_Black>(p,p.pieces<P_wb>(Co_Black),score,/*att*/pawnTargets,mob[P_wn-1][Co_Black]);
+    evalMob<P_wr,Co_Black>(p,p.pieces<P_wr>(Co_Black),score,/*att*/pawnTargets,mob[P_wb-1][Co_Black]);
+    evalMob<P_wq,Co_Black>(p,p.pieces<P_wq>(Co_Black),score,/*att*/pawnTargets,mob[P_wr-1][Co_Black]);
+    evalMob<P_wk,Co_Black>(p,p.pieces<P_wk>(Co_Black),score,/*att*/pawnTargets,mob[P_wq-1][Co_Black]);
+
     // rook on open file
     score.scores[ScoreAcc::sc_OpenFile] += EvalConfig::rookOnOpenFile         * countBit(p.whiteRook() & openFiles);
     score.scores[ScoreAcc::sc_OpenFile] += EvalConfig::kingAttSemiOpenfileOpp * countBit(p.whiteRook() & semiOpenFiles[Co_White]);
@@ -2890,25 +2888,48 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
     score.scores[ScoreAcc::sc_OpenFile] -= EvalConfig::kingAttSemiOpenfileOpp * countBit(p.blackRook() & semiOpenFiles[Co_Black]);
     score.scores[ScoreAcc::sc_OpenFile] -= EvalConfig::kingAttSemiOpenfileOur * countBit(p.blackRook() & semiOpenFiles[Co_White]);
 
-    // rook facing king
+    // enemy rook facing king
     score.scores[ScoreAcc::sc_RookFrontKing] += EvalConfig::rookFrontKingMalus * countBit(BBTools::frontSpan<Co_White>(p.whiteKing()) & p.blackRook());
     score.scores[ScoreAcc::sc_RookFrontKing] -= EvalConfig::rookFrontKingMalus * countBit(BBTools::frontSpan<Co_Black>(p.blackKing()) & p.whiteRook());
+
+    // enemy rook facing queen
+    if ( p.whiteQueen() ) score.scores[ScoreAcc::sc_RookFrontQueen] += EvalConfig::rookFrontQueenMalus * countBit(BBTools::frontSpan<Co_White>(BBTools::SquareFromBitBoard(p.whiteQueen())) & p.blackRook());
+    if ( p.blackQueen() ) score.scores[ScoreAcc::sc_RookFrontQueen] -= EvalConfig::rookFrontQueenMalus * countBit(BBTools::frontSpan<Co_Black>(BBTools::SquareFromBitBoard(p.blackQueen())) & p.whiteRook());
+
+    // queen aligned with own rook
+    if ( p.whiteQueen() ) score.scores[ScoreAcc::sc_RookQueenSameFile] += EvalConfig::rookQueenSameFile * countBit(BBTools::fillFile(BBTools::SquareFromBitBoard(p.whiteQueen())) & p.whiteRook());
+    if ( p.blackQueen() ) score.scores[ScoreAcc::sc_RookQueenSameFile] -= EvalConfig::rookQueenSameFile * countBit(BBTools::fillFile(BBTools::SquareFromBitBoard(p.blackQueen())) & p.blackRook());
 
     // defended minor blocking openfile
     score.scores[ScoreAcc::sc_MinorOnOpenFile] += EvalConfig::minorOnOpenFile * countBit(openFiles & (p.whiteBishop()|p.whiteKnight()) & BBTools::pawnAttacks<Co_White>(p.whitePawn()));
     score.scores[ScoreAcc::sc_MinorOnOpenFile] -= EvalConfig::minorOnOpenFile * countBit(openFiles & (p.blackBishop()|p.blackKnight()) & BBTools::pawnAttacks<Co_Black>(p.blackPawn()));
 
+    // pawn passer
+    evalPawnPasser<Co_White>(p,passer[Co_White],score);
+    evalPawnPasser<Co_Black>(p,passer[Co_Black],score);
+    // pawn backward
+    evalPawnBackward<Co_White>(p,backward[Co_White],score);
+    evalPawnBackward<Co_Black>(p,backward[Co_Black],score);
+    // pawn candidate
+    evalPawnCandidate<Co_White>(candidates[Co_White],score);
+    evalPawnCandidate<Co_Black>(candidates[Co_Black],score);
     // double pawn malus
     score.scores[ScoreAcc::sc_PwnDoubled] -= EvalConfig::doublePawnMalus[EvalConfig::Close]    * countBit(doubled[Co_White] & ~semiOpenFiles[Co_White]);
     score.scores[ScoreAcc::sc_PwnDoubled] -= EvalConfig::doublePawnMalus[EvalConfig::SemiOpen] * countBit(doubled[Co_White] &  semiOpenFiles[Co_White]);
     score.scores[ScoreAcc::sc_PwnDoubled] += EvalConfig::doublePawnMalus[EvalConfig::Close]    * countBit(doubled[Co_Black] & ~semiOpenFiles[Co_Black]);
     score.scores[ScoreAcc::sc_PwnDoubled] += EvalConfig::doublePawnMalus[EvalConfig::SemiOpen] * countBit(doubled[Co_Black] &  semiOpenFiles[Co_Black]);
-
     // isolated pawn malus
     score.scores[ScoreAcc::sc_PwnIsolated] -= EvalConfig::isolatedPawnMalus[EvalConfig::Close]    * countBit(isolated[Co_White] & ~semiOpenFiles[Co_White]);
     score.scores[ScoreAcc::sc_PwnIsolated] -= EvalConfig::isolatedPawnMalus[EvalConfig::SemiOpen] * countBit(isolated[Co_White] &  semiOpenFiles[Co_White]);
     score.scores[ScoreAcc::sc_PwnIsolated] += EvalConfig::isolatedPawnMalus[EvalConfig::Close]    * countBit(isolated[Co_Black] & ~semiOpenFiles[Co_Black]);
     score.scores[ScoreAcc::sc_PwnIsolated] += EvalConfig::isolatedPawnMalus[EvalConfig::SemiOpen] * countBit(isolated[Co_Black] &  semiOpenFiles[Co_Black]);
+    // pawn shield (PST and king troppism alone is not enough)
+    score.scores[ScoreAcc::sc_PwnShield] += EvalConfig::pawnShieldBonus * std::min(countBit( BBTools::mask[p.king[Co_White]].kingZone & pawns[Co_White] ),ScoreType(3));
+    score.scores[ScoreAcc::sc_PwnShield] -= EvalConfig::pawnShieldBonus * std::min(countBit( BBTools::mask[p.king[Co_Black]].kingZone & pawns[Co_Black] ),ScoreType(3));
+
+    // safe pawn push (protected once or not attacked)
+    const BitBoard safePawnPush[2]  = {BBTools::shiftN<Co_White>(pawns[Co_White]) & (~p.occupancy & (att[Co_White] | ~att[Co_Black])), BBTools::shiftN<Co_Black>(pawns[Co_Black]) & (~p.occupancy & (att[Co_Black] | ~att[Co_White]))};
+    score.scores[ScoreAcc::sc_PwnPush] += EvalConfig::pawnMobility * (countBit(safePawnPush[Co_White]) - countBit(safePawnPush[Co_Black]));
 
     // pawn hole, unguarded
     score.scores[ScoreAcc::sc_PwnHole] += EvalConfig::holesMalus * countBit(holes[Co_White] & ~att[Co_White]);
@@ -2918,17 +2939,13 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
     score.scores[ScoreAcc::sc_Outpost] += EvalConfig::outpost * countBit(holes[Co_Black] & p.whiteKnight() & pawnTargets[Co_White]);
     score.scores[ScoreAcc::sc_Outpost] -= EvalConfig::outpost * countBit(holes[Co_White] & p.blackKnight() & pawnTargets[Co_Black]);
 
-    // queen distance to opponent king
+    // attack : queen distance to opponent king
     if ( p.blackQueen() ) score.scores[ScoreAcc::sc_QueenNearKing] -= EvalConfig::queenNearKing * (7 - minDistance(p.king[Co_White], BBTools::SquareFromBitBoard(p.blackQueen())) );
     if ( p.whiteQueen() ) score.scores[ScoreAcc::sc_QueenNearKing] += EvalConfig::queenNearKing * (7 - minDistance(p.king[Co_Black], BBTools::SquareFromBitBoard(p.whiteQueen())) );
 
-    // use king danger score. **DO NOT** apply this in end-game
+    // danger : use king danger score. **DO NOT** apply this in end-game
     score.scores[ScoreAcc::sc_ATT][MG] -=  EvalConfig::kingAttTable[std::min(std::max(kdanger[Co_White],ScoreType(0)),ScoreType(63))];
     score.scores[ScoreAcc::sc_ATT][MG] +=  EvalConfig::kingAttTable[std::min(std::max(kdanger[Co_Black],ScoreType(0)),ScoreType(63))];
-
-    // safe pawn push (protected once or not attacked)
-    const BitBoard safePawnPush[2]  = {BBTools::shiftN<Co_White>(pawns[Co_White]) & (~p.occupancy & (att[Co_White] | ~att[Co_Black])), BBTools::shiftN<Co_Black>(pawns[Co_Black]) & (~p.occupancy & (att[Co_Black] | ~att[Co_White]))};
-    score.scores[ScoreAcc::sc_PwnPush] += EvalConfig::pawnMobility * (countBit(safePawnPush[Co_White]) - countBit(safePawnPush[Co_Black]));
 
     // number of pawn and piece type value
     score.scores[ScoreAcc::sc_Adjust] += EvalConfig::adjRook  [p.mat[Co_White][M_p]] * ScoreType(p.mat[Co_White][M_r]);
@@ -2940,10 +2957,6 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
     score.scores[ScoreAcc::sc_Adjust]   += ( (p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonus : 0)-(p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonus : 0) );
     score.scores[ScoreAcc::sc_Adjust]   += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0) );
     score.scores[ScoreAcc::sc_Adjust]   += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
-
-    // pawn shield (PST and king troppism alone is not enough)
-    score.scores[ScoreAcc::sc_PwnShield] += EvalConfig::pawnShieldBonus * std::min(countBit( BBTools::mask[p.king[Co_White]].kingZone & pawns[Co_White] ),ScoreType(3));
-    score.scores[ScoreAcc::sc_PwnShield] -= EvalConfig::pawnShieldBonus * std::min(countBit( BBTools::mask[p.king[Co_Black]].kingZone & pawns[Co_Black] ),ScoreType(3));
 
     // tempo
     //score.scores[ScoreAcc::sc_Tempo] += ScoreType(30);
