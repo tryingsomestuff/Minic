@@ -90,6 +90,10 @@ Rank Name                          Elo     +/-   Games   Score   Draws
 * Linux : use the given build script (or make your own ...)
 * Windows : use the given VS2017 project (or make your own ...), or use the Linux cross-compilation script given.
 
+## Syzygy EGT
+To compile with SYZYGY support you'll need to clone https://github.com/jdart1/Fathom as Fathom directory and activate WITH_SYZYGY definition at compile time.
+To use EGT just specify syzygyPath in the configuration file or in the command line.
+
 ## How to run
 add the command line option "-xboard" to go to xboard/winboard mode.
 
@@ -124,11 +128,6 @@ Minic now comes with both a json configuration file where some parameters can be
 
 ```
 and a command line interface, using the same key word. For instance, forcing mateFinder mode can be done by adding "-mateFinder 1" when calling Minic.
-
-## Syzygy EGT
-
-To compile with SYZYGY support you'll need to clone https://github.com/jdart1/Fathom as Fathom directory and activate WITH_SYZYGY definition at compile time.
-To use EGT just specify syzygyPath in the configuration file or in the command line.
 
 ## Opening books
 
