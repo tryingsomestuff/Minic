@@ -271,174 +271,6 @@ void initMvvLva(){
 
 }
 
-namespace Options { // after Logging
-    nlohmann::json json;
-    std::vector<std::string> args;
-    ///@todo use std::variant ? and std::optinal ?? c++17
-    enum KeyType : unsigned char { k_bad = 0, k_bool, k_depth, k_int, k_score, k_ull, k_string};
-    enum WidgetType : unsigned char { w_check = 0, w_string, w_spin, w_combo, w_button, w_max};
-    const std::string widgetXboardNames[w_max] = {"check","string","spin","combo","button"};
-    struct KeyBase {
-      template < typename T > KeyBase(KeyType t, WidgetType w, const std::string & k, T * v, const std::function<void(void)> & cb = []{} ) :type(t), wtype(w), key(k), value((void*)v) {callBack = cb;}
-      template < typename T > KeyBase(KeyType t, WidgetType w, const std::string & k, T * v, const T & vmin, const T & vmax, const std::function<void(void)> & cb = []{} ) :type(t), wtype(w), key(k), value((void*)v), vmin(vmin), vmax(vmax) {callBack = cb;}
-      KeyType     type;
-      WidgetType  wtype;
-      std::string key;
-      void*       value;
-      int         vmin = 0, vmax = 0; // assume int type is covering all the case (string excluded ...)
-      std::function<void(void)> callBack;
-    };
-    std::vector<KeyBase> _keys;
-    KeyBase & GetKey(const std::string & key) {
-        bool keyFound = false;
-	static int dummy = 0;
-	static KeyBase badKey(k_bad,w_button,"bad_default_key",&dummy,0,0);
-        KeyBase * keyRef = &badKey;
-        for (size_t k = 0; k < _keys.size(); ++k) { if (key == _keys[k].key) { keyRef = &_keys[k]; keyFound = true; break;} }
-        if ( !keyFound) Logging::LogIt(Logging::logWarn) << "Key not found " << key;
-        return *keyRef;
-    }
-    template< KeyType T > struct OptionTypeHelper{};
-    template<> struct OptionTypeHelper<k_bool>  { typedef bool _type;};
-    template<> struct OptionTypeHelper<k_depth> { typedef DepthType _type;};
-    template<> struct OptionTypeHelper<k_int>   { typedef int _type;};
-    template<> struct OptionTypeHelper<k_score> { typedef ScoreType _type;};
-    template<> struct OptionTypeHelper<k_ull>   { typedef unsigned long long _type;};
-    template<> struct OptionTypeHelper<k_string>{ typedef std::string _type;};
-    const int GetValue(const std::string & key){ // assume we can convert to int safely (not valid for string of course !)
-        const KeyBase & k = GetKey(key);
-        switch (k.type) {
-        case k_bool:   return (int)*static_cast<bool*>(k.value);
-        case k_depth:  return (int)*static_cast<DepthType*>(k.value);
-        case k_int:    return (int)*static_cast<int*>(k.value);
-        case k_score:  return (int)*static_cast<ScoreType*>(k.value);
-        case k_ull:    return (int)*static_cast<unsigned long long int*>(k.value);
-        case k_string:
-	case k_bad:
-        default:       Logging::LogIt(Logging::logError) << "Bad key type"; return false;
-        }
-    }
-    const std::string GetValueString(const std::string & key){ // the one for string
-        const KeyBase & k = GetKey(key);
-        if (k.type != k_string) Logging::LogIt(Logging::logError) << "Bad key type";
-        return *static_cast<std::string*>(k.value);
-    }
-    void displayOptionsDebug(){
-        for(auto it = _keys.begin() ; it != _keys.end() ; ++it)
-            if (it->type!=k_string ) Logging::LogIt(Logging::logInfo) << "option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << (int)GetValue(it->key)  <<  " " << it->vmin << " " << it->vmax << "\"";
-            else                     Logging::LogIt(Logging::logInfo) << "option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << GetValueString(it->key) << "\"";
-    }    void displayOptionsXBoard(){
-        for(auto it = _keys.begin() ; it != _keys.end() ; ++it)
-            if (it->type!=k_string ) Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << (int)GetValue(it->key)  <<  " " << it->vmin << " " << it->vmax << "\"";
-            else                     Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << GetValueString(it->key) << "\"";
-    }
-    void displayOptionsUCI(){
-        for(auto it = _keys.begin() ; it != _keys.end() ; ++it)
-            if (it->type!=k_string ) Logging::LogIt(Logging::logGUI) << "option name " << it->key << " type " << widgetXboardNames[it->wtype] << " default " << (int)GetValue(it->key)  <<  " min " << it->vmin << " max " << it->vmax;
-            else                     Logging::LogIt(Logging::logGUI) << "option name " << it->key << " type " << widgetXboardNames[it->wtype] << " default " << GetValueString(it->key);
-    }
-#define SETVALUE(TYPEIN,TYPEOUT) {TYPEIN v; str >> v; *static_cast<TYPEOUT*>(keyRef.value) = (TYPEOUT)v;} break;
-    bool SetValue(const std::string & key, const std::string & value){
-        KeyBase & keyRef = GetKey(key);
-        std::stringstream str(value);
-        switch (keyRef.type) {
-        case k_bool:   SETVALUE(int,bool)
-        case k_depth:  SETVALUE(int,DepthType)
-        case k_int:    SETVALUE(int,int)
-        case k_score:  SETVALUE(int,ScoreType)
-        case k_ull:    SETVALUE(int,unsigned long long)
-        case k_string: SETVALUE(std::string,std::string)
-	case k_bad:
-        default: Logging::LogIt(Logging::logError) << "Bad key type"; return false;
-        }
-        Logging::LogIt(Logging::logInfo) << "Option set " << key << "=" << value;
-        //displayOptionsDebug();
-        return true;
-    }
-    void registerCOMOptions(){ // options exposed xboard GUI
-       _keys.push_back(KeyBase(k_int,   w_spin, "level"                       , &DynamicConfig::level                          , (unsigned int)0  , (unsigned int)10   ));
-       /*
-       _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin0"            , &StaticConfig::qfutilityMargin[0]              , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin1"            , &StaticConfig::qfutilityMargin[1]              , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "staticNullMoveMaxDepth0"     , &StaticConfig::staticNullMoveMaxDepth[0]       , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "staticNullMoveMaxDepth1"     , &StaticConfig::staticNullMoveMaxDepth[1]       , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthCoeff0"   , &StaticConfig::staticNullMoveDepthCoeff[0]     , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthCoeff1"   , &StaticConfig::staticNullMoveDepthCoeff[1]     , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthInit0"    , &StaticConfig::staticNullMoveDepthInit[0]      , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthInit1"    , &StaticConfig::staticNullMoveDepthInit[1]      , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthCoeff0"   , &StaticConfig::razoringMarginDepthCoeff[0]     , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthCoeff1"   , &StaticConfig::razoringMarginDepthCoeff[1]     , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthInit0"    , &StaticConfig::razoringMarginDepthInit[0]      , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthInit1"    , &StaticConfig::razoringMarginDepthInit[1]      , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "razoringMaxDepth0"           , &StaticConfig::razoringMaxDepth[0]             , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "razoringMaxDepth1"           , &StaticConfig::razoringMaxDepth[1]             , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "nullMoveMinDepth"            , &StaticConfig::nullMoveMinDepth                , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "historyPruningMaxDepth"      , &StaticConfig::historyPruningMaxDepth          , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_score, w_spin, "historyPruningThresholdInit" , &StaticConfig::historyPruningThresholdInit     , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "historyPruningThresholdDepth", &StaticConfig::historyPruningThresholdDepth    , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "futilityMaxDepth0"           , &StaticConfig::futilityMaxDepth[0]             , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "futilityMaxDepth1"           , &StaticConfig::futilityMaxDepth[1]             , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthCoeff0"         , &StaticConfig::futilityDepthCoeff[0]           , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthCoeff1"         , &StaticConfig::futilityDepthCoeff[1]           , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthInit0"          , &StaticConfig::futilityDepthInit[0]            , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthInit1"          , &StaticConfig::futilityDepthInit[1]            , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "iidMinDepth"                 , &StaticConfig::iidMinDepth                     , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "iidMinDepth2"                , &StaticConfig::iidMinDepth2                    , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "probCutMinDepth"             , &StaticConfig::probCutMinDepth                 , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_int  , w_spin, "probCutMaxMoves"             , &StaticConfig::probCutMaxMoves                 , 0               , 30                  ));
-       _keys.push_back(KeyBase(k_score, w_spin, "probCutMargin"               , &StaticConfig::probCutMargin                   , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "lmrMinDepth"                 , &StaticConfig::lmrMinDepth                     , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "singularExtensionDepth"      , &StaticConfig::singularExtensionDepth          , DepthType(0)    , DepthType(30)       ));
-       */
-       ///@todo more ...
-    }
-    void readOptions(int argc, char ** argv) { // load json config and command line args in memory
-        for (int i = 1; i < argc; ++i) args.push_back(argv[i]);
-        std::ifstream str("minic.json");
-        if (!str.is_open()) Logging::LogIt(Logging::logWarn) << "Cannot open minic.json";
-        else {
-            str >> json;
-            if (!json.is_object()) Logging::LogIt(Logging::logError) << "Something wrong in minic.json";
-        }
-    }
-    // from argv (override json)
-    template<typename T> bool getOptionCLI(T & value, const std::string & key) {
-        auto it = std::find(args.begin(), args.end(), std::string("-") + key);
-        if (it == args.end()) { Logging::LogIt(Logging::logWarn) << "ARG key not given, " << key; return false; }
-        std::stringstream str;
-        ++it;
-        if (it == args.end()) { Logging::LogIt(Logging::logError) << "ARG value not given, " << key; return false; }
-        str << *it;
-        str >> value;
-        Logging::LogIt(Logging::logInfo) << "From ARG, " << key << " : " << value;
-        return true;
-    }
-    // from json
-    template<typename T> bool getOption(T & value, const std::string & key) {
-        if (getOptionCLI(value, key)) return true;
-        auto it = json.find(key);
-        if (it == json.end()) { Logging::LogIt(Logging::logWarn) << "JSON key not given, " << key; return false; }
-        value = it.value();
-        Logging::LogIt(Logging::logInfo) << "From config file, " << it.key() << " : " << value;
-        return true;
-    }
-#define GETOPT(name,type) Options::getOption<type>(DynamicConfig::name,#name);
-    void initOptions(int argc, char ** argv){
-       registerCOMOptions();
-       readOptions(argc,argv);
-       GETOPT(debugMode,        bool)
-       GETOPT(debugFile,        std::string)
-       GETOPT(book,             bool)
-       GETOPT(bookFile,         std::string)
-       GETOPT(ttSizeMb,         unsigned int)
-       GETOPT(threads,          int)
-       GETOPT(mateFinder,       bool)
-       GETOPT(fullXboardOutput, bool)
-       GETOPT(level,            unsigned int)
-       GETOPT(syzygyPath,       std::string)
-   }
-}
-
 namespace EvalConfig {
 
 EvalScore PST[6][64] = {
@@ -1761,7 +1593,7 @@ void initTable(){
     Logging::LogIt(Logging::logInfo) << "Init TT" ;
     Logging::LogIt(Logging::logInfo) << "Bucket size " << sizeof(Bucket);
     ttSize = 1024 * powerFloor((DynamicConfig::ttSizeMb * 1024) / (unsigned long long int)sizeof(Bucket));
-    table = std::unique_ptr<Bucket[]>(new Bucket[ttSize]);
+    table.reset(new Bucket[ttSize]);
     Logging::LogIt(Logging::logInfo) << "Size of TT " << ttSize * sizeof(Bucket) / 1024 / 1024 << "Mb" ;
 }
 
@@ -3712,6 +3544,177 @@ pvsout:
     sc = bestScore;
     if (isMainThread()) ThreadPool::instance().DisplayStats();
     return pv;
+}
+
+namespace Options {
+    nlohmann::json json;
+    std::vector<std::string> args;
+    ///@todo use std::variant ? and std::optinal ?? c++17
+    enum KeyType : unsigned char { k_bad = 0, k_bool, k_depth, k_int, k_score, k_ull, k_string};
+    enum WidgetType : unsigned char { w_check = 0, w_string, w_spin, w_combo, w_button, w_max};
+    const std::string widgetXboardNames[w_max] = {"check","string","spin","combo","button"};
+    struct KeyBase {
+      template < typename T > KeyBase(KeyType t, WidgetType w, const std::string & k, T * v, const std::function<void(void)> & cb = []{} ) :type(t), wtype(w), key(k), value((void*)v) {callBack = cb;}
+      template < typename T > KeyBase(KeyType t, WidgetType w, const std::string & k, T * v, const T & vmin, const T & vmax, const std::function<void(void)> & cb = []{} ) :type(t), wtype(w), key(k), value((void*)v), vmin(vmin), vmax(vmax) {callBack = cb;}
+      KeyType     type;
+      WidgetType  wtype;
+      std::string key;
+      void*       value;
+      int         vmin = 0, vmax = 0; // assume int type is covering all the case (string excluded ...)
+      std::function<void(void)> callBack;
+    };
+    std::vector<KeyBase> _keys;
+    KeyBase & GetKey(const std::string & key) {
+        bool keyFound = false;
+        static int dummy = 0;
+        static KeyBase badKey(k_bad,w_button,"bad_default_key",&dummy,0,0);
+        KeyBase * keyRef = &badKey;
+        for (size_t k = 0; k < _keys.size(); ++k) { if (key == _keys[k].key) { keyRef = &_keys[k]; keyFound = true; break;} }
+        if ( !keyFound) Logging::LogIt(Logging::logWarn) << "Key not found " << key;
+        return *keyRef;
+    }
+    template< KeyType T > struct OptionTypeHelper{};
+    template<> struct OptionTypeHelper<k_bool>  { typedef bool _type;};
+    template<> struct OptionTypeHelper<k_depth> { typedef DepthType _type;};
+    template<> struct OptionTypeHelper<k_int>   { typedef int _type;};
+    template<> struct OptionTypeHelper<k_score> { typedef ScoreType _type;};
+    template<> struct OptionTypeHelper<k_ull>   { typedef unsigned long long _type;};
+    template<> struct OptionTypeHelper<k_string>{ typedef std::string _type;};
+    const int GetValue(const std::string & key){ // assume we can convert to int safely (not valid for string of course !)
+        const KeyBase & k = GetKey(key);
+        switch (k.type) {
+        case k_bool:   return (int)*static_cast<bool*>(k.value);
+        case k_depth:  return (int)*static_cast<DepthType*>(k.value);
+        case k_int:    return (int)*static_cast<int*>(k.value);
+        case k_score:  return (int)*static_cast<ScoreType*>(k.value);
+        case k_ull:    return (int)*static_cast<unsigned long long int*>(k.value);
+        case k_string:
+        case k_bad:
+        default:       Logging::LogIt(Logging::logError) << "Bad key type"; return false;
+        }
+    }
+    const std::string GetValueString(const std::string & key){ // the one for string
+        const KeyBase & k = GetKey(key);
+        if (k.type != k_string) Logging::LogIt(Logging::logError) << "Bad key type";
+        return *static_cast<std::string*>(k.value);
+    }
+    void displayOptionsDebug(){
+        for(auto it = _keys.begin() ; it != _keys.end() ; ++it)
+            if (it->type!=k_string ) Logging::LogIt(Logging::logInfo) << "option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << (int)GetValue(it->key)  <<  " " << it->vmin << " " << it->vmax << "\"";
+            else                     Logging::LogIt(Logging::logInfo) << "option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << GetValueString(it->key) << "\"";
+    }    void displayOptionsXBoard(){
+        for(auto it = _keys.begin() ; it != _keys.end() ; ++it)
+            if (it->type!=k_string ) Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << (int)GetValue(it->key)  <<  " " << it->vmin << " " << it->vmax << "\"";
+            else                     Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << GetValueString(it->key) << "\"";
+    }
+    void displayOptionsUCI(){
+        for(auto it = _keys.begin() ; it != _keys.end() ; ++it)
+            if (it->type!=k_string ) Logging::LogIt(Logging::logGUI) << "option name " << it->key << " type " << widgetXboardNames[it->wtype] << " default " << (int)GetValue(it->key)  <<  " min " << it->vmin << " max " << it->vmax;
+            else                     Logging::LogIt(Logging::logGUI) << "option name " << it->key << " type " << widgetXboardNames[it->wtype] << " default " << GetValueString(it->key);
+    }
+#define SETVALUE(TYPEIN,TYPEOUT) {TYPEIN v; str >> v; *static_cast<TYPEOUT*>(keyRef.value) = (TYPEOUT)v;} break;
+    bool SetValue(const std::string & key, const std::string & value){
+        KeyBase & keyRef = GetKey(key);
+        std::stringstream str(value);
+        switch (keyRef.type) {
+        case k_bool:   SETVALUE(int,bool)
+        case k_depth:  SETVALUE(int,DepthType)
+        case k_int:    SETVALUE(int,int)
+        case k_score:  SETVALUE(int,ScoreType)
+        case k_ull:    SETVALUE(int,unsigned long long)
+        case k_string: SETVALUE(std::string,std::string)
+        case k_bad:
+        default: Logging::LogIt(Logging::logError) << "Bad key type"; return false;
+        }
+        if ( keyRef.callBack ) keyRef.callBack();
+        Logging::LogIt(Logging::logInfo) << "Option set " << key << "=" << value;
+        //displayOptionsDebug();
+        return true;
+    }
+    void registerCOMOptions(){ // options exposed xboard GUI
+       _keys.push_back(KeyBase(k_int,   w_spin, "level"                       , &DynamicConfig::level                          , (unsigned int)0  , (unsigned int)10     ));
+       _keys.push_back(KeyBase(k_int,   w_spin, "Hash"                        , &DynamicConfig::ttSizeMb                       , (unsigned int)0  , (unsigned int)256000, &TT::initTable));
+
+       /*
+       _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin0"            , &StaticConfig::qfutilityMargin[0]              , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin1"            , &StaticConfig::qfutilityMargin[1]              , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "staticNullMoveMaxDepth0"     , &StaticConfig::staticNullMoveMaxDepth[0]       , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "staticNullMoveMaxDepth1"     , &StaticConfig::staticNullMoveMaxDepth[1]       , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthCoeff0"   , &StaticConfig::staticNullMoveDepthCoeff[0]     , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthCoeff1"   , &StaticConfig::staticNullMoveDepthCoeff[1]     , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthInit0"    , &StaticConfig::staticNullMoveDepthInit[0]      , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthInit1"    , &StaticConfig::staticNullMoveDepthInit[1]      , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthCoeff0"   , &StaticConfig::razoringMarginDepthCoeff[0]     , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthCoeff1"   , &StaticConfig::razoringMarginDepthCoeff[1]     , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthInit0"    , &StaticConfig::razoringMarginDepthInit[0]      , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthInit1"    , &StaticConfig::razoringMarginDepthInit[1]      , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "razoringMaxDepth0"           , &StaticConfig::razoringMaxDepth[0]             , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "razoringMaxDepth1"           , &StaticConfig::razoringMaxDepth[1]             , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "nullMoveMinDepth"            , &StaticConfig::nullMoveMinDepth                , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "historyPruningMaxDepth"      , &StaticConfig::historyPruningMaxDepth          , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_score, w_spin, "historyPruningThresholdInit" , &StaticConfig::historyPruningThresholdInit     , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "historyPruningThresholdDepth", &StaticConfig::historyPruningThresholdDepth    , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "futilityMaxDepth0"           , &StaticConfig::futilityMaxDepth[0]             , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "futilityMaxDepth1"           , &StaticConfig::futilityMaxDepth[1]             , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthCoeff0"         , &StaticConfig::futilityDepthCoeff[0]           , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthCoeff1"         , &StaticConfig::futilityDepthCoeff[1]           , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthInit0"          , &StaticConfig::futilityDepthInit[0]            , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthInit1"          , &StaticConfig::futilityDepthInit[1]            , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "iidMinDepth"                 , &StaticConfig::iidMinDepth                     , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "iidMinDepth2"                , &StaticConfig::iidMinDepth2                    , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "probCutMinDepth"             , &StaticConfig::probCutMinDepth                 , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_int  , w_spin, "probCutMaxMoves"             , &StaticConfig::probCutMaxMoves                 , 0               , 30                  ));
+       _keys.push_back(KeyBase(k_score, w_spin, "probCutMargin"               , &StaticConfig::probCutMargin                   , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "lmrMinDepth"                 , &StaticConfig::lmrMinDepth                     , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "singularExtensionDepth"      , &StaticConfig::singularExtensionDepth          , DepthType(0)    , DepthType(30)       ));
+       */
+       ///@todo more ...
+    }
+    void readOptions(int argc, char ** argv) { // load json config and command line args in memory
+        for (int i = 1; i < argc; ++i) args.push_back(argv[i]);
+        std::ifstream str("minic.json");
+        if (!str.is_open()) Logging::LogIt(Logging::logWarn) << "Cannot open minic.json";
+        else {
+            str >> json;
+            if (!json.is_object()) Logging::LogIt(Logging::logError) << "Something wrong in minic.json";
+        }
+    }
+    // from argv (override json)
+    template<typename T> bool getOptionCLI(T & value, const std::string & key) {
+        auto it = std::find(args.begin(), args.end(), std::string("-") + key);
+        if (it == args.end()) { Logging::LogIt(Logging::logWarn) << "ARG key not given, " << key; return false; }
+        std::stringstream str;
+        ++it;
+        if (it == args.end()) { Logging::LogIt(Logging::logError) << "ARG value not given, " << key; return false; }
+        str << *it;
+        str >> value;
+        Logging::LogIt(Logging::logInfo) << "From ARG, " << key << " : " << value;
+        return true;
+    }
+    // from json
+    template<typename T> bool getOption(T & value, const std::string & key) {
+        if (getOptionCLI(value, key)) return true;
+        auto it = json.find(key);
+        if (it == json.end()) { Logging::LogIt(Logging::logWarn) << "JSON key not given, " << key; return false; }
+        value = it.value();
+        Logging::LogIt(Logging::logInfo) << "From config file, " << it.key() << " : " << value;
+        return true;
+    }
+#define GETOPT(name,type) Options::getOption<type>(DynamicConfig::name,#name);
+    void initOptions(int argc, char ** argv){
+       registerCOMOptions();
+       readOptions(argc,argv);
+       GETOPT(debugMode,        bool)
+       GETOPT(debugFile,        std::string)
+       GETOPT(book,             bool)
+       GETOPT(bookFile,         std::string)
+       GETOPT(ttSizeMb,         unsigned int)
+       GETOPT(threads,          int)
+       GETOPT(mateFinder,       bool)
+       GETOPT(fullXboardOutput, bool)
+       GETOPT(level,            unsigned int)
+       GETOPT(syzygyPath,       std::string)
+   }
 }
 
 namespace COM {

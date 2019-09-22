@@ -30,7 +30,6 @@ namespace UCI {
                 iss >> tmpstr; //"value"
                 iss >> val;
                 if ( !Options::SetValue(key,val)) Logging::LogIt(Logging::logError) << "Unable to set value " << key<< " = " << val;
-                else { Logging::LogIt(Logging::logGUI) << "info string unknown uci option " << key; }
             }
             else if (uciCommand == "isready") { Logging::LogIt(Logging::logGUI) << "readyok"; }
             else if (uciCommand == "stop") { Logging::LogIt(Logging::logInfo) << "stop requested";  ThreadContext::stopFlag = true; }
