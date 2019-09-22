@@ -3602,7 +3602,8 @@ namespace Options {
         for(auto it = _keys.begin() ; it != _keys.end() ; ++it)
             if (it->type!=k_string ) Logging::LogIt(Logging::logInfo) << "option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << (int)GetValue(it->key)  <<  " " << it->vmin << " " << it->vmax << "\"";
             else                     Logging::LogIt(Logging::logInfo) << "option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << GetValueString(it->key) << "\"";
-    }    void displayOptionsXBoard(){
+    }
+    void displayOptionsXBoard(){
         for(auto it = _keys.begin() ; it != _keys.end() ; ++it)
             if (it->type!=k_string ) Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << (int)GetValue(it->key)  <<  " " << it->vmin << " " << it->vmax << "\"";
             else                     Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << GetValueString(it->key) << "\"";
