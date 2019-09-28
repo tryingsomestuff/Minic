@@ -36,7 +36,7 @@ typedef uint64_t u_int64_t;
 #define WITH_UCI
 //#define WITH_PGN_PARSER
 
-const std::string MinicVersion = "0.100";
+const std::string MinicVersion = "dev";
 
 /*
 //todo
@@ -336,44 +336,47 @@ EvalScore PST[6][64] = {
   }
 };
 
-EvalScore   pawnShieldBonus       = {4,2};
+EvalScore   pawnShieldBonus       = {4,1};
 
 enum PawnEvalSemiOpen{ Close=0, SemiOpen=1};
 
-EvalScore   passerBonus[8]        = { { 0, 0 }, {-1, -6} , {-12, 1}, {-17, 19}, {9, 34}, {30, 68}, {45, 78}, {0, 0}};
+EvalScore   passerBonus[8]        = { { 0, 0 }, {0, -6} , {-10, 1}, {-14, 18}, {7, 31}, {30, 67}, {45, 75}, {0, 0}};
 
 EvalScore   rookBehindPassed      = { -3,40};
-EvalScore   kingNearPassedPawn    = { -7,13};
-EvalScore   doublePawnMalus[2]    = {{ 14, 10 },{-11, 24 }}; // openfile
-EvalScore   isolatedPawnMalus[2]  = {{ 10,  7 },{ 22, 12 }}; // openfile
-EvalScore   backwardPawnMalus[2]  = {{  5,  2 },{ 22, -1 }}; // openfile
-EvalScore   holesMalus            = {-10, 5};
+EvalScore   kingNearPassedPawn    = { -8,11};
+EvalScore   doublePawnMalus[2]    = {{ 24, 11 },{-1, 24 }}; // openfile
+EvalScore   isolatedPawnMalus[2]  = {{ 11,  5 },{ 21, 14 }}; // openfile
+EvalScore   backwardPawnMalus[2]  = {{  4, -3 },{ 22, -1 }}; // openfile
+EvalScore   holesMalus            = {-8, 4};
 EvalScore   outpost               = { 14,19};
 EvalScore   candidate[8]          = { {0, 0}, {-31,11}, {-15,0}, {16,6}, { 24,51}, {-11,14}, {-11,14}, {0, 0} };
 EvalScore   protectedPasserFactor = { 8, 11}; // 1XX%
 EvalScore   freePasserFactor      = {38,121}; // 1XX%
-EvalScore   pawnMobility          = { 6, 9};
-EvalScore   pawnSafeAtt           = { 44,11};
-EvalScore   pawnSafePushAtt       = { 15, 8};
+EvalScore   pawnMobility          = { 4, 10};
+EvalScore   pawnSafeAtt           = { 39,11};
+EvalScore   pawnSafePushAtt       = { 14, 9};
 
-EvalScore   rookOnOpenFile        = {44,-5};
+EvalScore   rookOnOpenFile        = {48,-4};
 EvalScore   rookOnOpenSemiFileOur = { 9,-2};
 EvalScore   rookOnOpenSemiFileOpp = {-4, 4};
 
 EvalScore   rookQueenSameFile     = {-4,6};
 EvalScore   rookFrontQueenMalus   = {-4,8};
-EvalScore   rookFrontKingMalus    = {-13,-2};
-EvalScore   minorOnOpenFile       = {15,-5};
+EvalScore   rookFrontKingMalus    = {-12,-2};
+EvalScore   minorOnOpenFile       = {18,-4};
 EvalScore   attQueenMalus[6]      = {{2,-5},{-16,4},{-40,-16},{-57,-3},{32,39},{0,0}};
 
 EvalScore   hangingPieceMalus     = {-5, -5};
 
-EvalScore   adjKnight[9]  = { {-24,-27}, {-12, 9}, {-4,19}, { 1,21}, {11,23}, { 10,23}, {  9,43}, { 17,39}, {17,10} };
-EvalScore   adjRook[9]    = { { 24, 22}, {  9,11}, {15,10}, { 4,14}, {-8,19}, {-11,28}, {-11,32}, {-16,46}, {-5,17} };
+EvalScore   adjKnight[9]  = { {-24,-27}, {-12, 9}, {-4,19}, { 1,19}, {12,22}, { 11,25}, {  8,45}, { 19,39}, {20,10} };
+EvalScore   adjRook[9]    = { { 24, 22}, {  9,11}, {15,7}, { 4,9}, {-11,16}, {-17,26}, {-18,30}, {-21,46}, {-10,17} };
 
-EvalScore   bishopPairBonus   = { 29, 57};
-EvalScore   knightPairMalus   = {  8, -9};
+EvalScore   bishopPairBonus   = { 31, 58};
+EvalScore   knightPairMalus   = {  6, -9};
 EvalScore   rookPairMalus     = {  3,-14};
+
+EvalScore   pawnlessFlank     = { -42,-1};
+
 
 EvalScore MOB[6][29] = { {{0,0},{0,0},{0,0},{0,0}},
                          {{-22,-22},{48,-15},{52,8},{51,18},{57,14},{55,19},{52,23},{57,13},{57,12}},
@@ -390,7 +393,7 @@ ScoreType kingAttOffset = 10;
 ScoreType kingAttWeight[2][6]    = { { 1, 7, 11, 5, 10, 0}, { 6, 4, 6, 0, 0, 0} };
 ScoreType kingAttSafeCheck[6]    = {   4, 36, 31, 31, 33, 0};
 ScoreType kingAttTable[64]       = {0};
-EvalScore queenNearKing = {2,4};
+EvalScore queenNearKing = {-1,7};
 
 ScoreType kingAttOpenfile        = 3;
 ScoreType kingAttSemiOpenfileOpp = 1;
@@ -518,12 +521,12 @@ enum BBSq : BitBoard { BBSq_a1 = SquareToBitboard(Sq_a1),BBSq_b1 = SquareToBitbo
 const BitBoard whiteSquare               = 0x55AA55AA55AA55AA; const BitBoard blackSquare               = 0xAA55AA55AA55AA55;
 //const BitBoard whiteSideSquare           = 0x00000000FFFFFFFF; const BitBoard blackSideSquare           = 0xFFFFFFFF00000000;
 const BitBoard fileA                     = 0x0101010101010101;
-//const BitBoard fileB                     = 0x0202020202020202;
-//const BitBoard fileC                     = 0x0404040404040404;
-//const BitBoard fileD                     = 0x0808080808080808;
-//const BitBoard fileE                     = 0x1010101010101010;
-//const BitBoard fileF                     = 0x2020202020202020;
-//const BitBoard fileG                     = 0x4040404040404040;
+const BitBoard fileB                     = 0x0202020202020202;
+const BitBoard fileC                     = 0x0404040404040404;
+const BitBoard fileD                     = 0x0808080808080808;
+const BitBoard fileE                     = 0x1010101010101010;
+const BitBoard fileF                     = 0x2020202020202020;
+const BitBoard fileG                     = 0x4040404040404040;
 const BitBoard fileH                     = 0x8080808080808080;
 //const BitBoard files[8] = {fileA,fileB,fileC,fileD,fileE,fileF,fileG,fileH};
 const BitBoard rank1                     = 0x00000000000000ff;
@@ -540,6 +543,11 @@ const BitBoard extendedCenter = BBSq_c3 | BBSq_c4 | BBSq_c5 | BBSq_c6
                               | BBSq_d3 | BBSq_d4 | BBSq_d5 | BBSq_d6
                               | BBSq_e3 | BBSq_e4 | BBSq_e5 | BBSq_e6
                               | BBSq_f3 | BBSq_f4 | BBSq_f5 | BBSq_f6;
+
+const BitBoard queenSide   = fileA | fileB | fileC | fileD;
+const BitBoard centerFiles = fileC | fileD | fileE | fileF;
+const BitBoard kingSide    = fileE | fileF | fileG | fileH;
+const BitBoard kingFlank[8] = { queenSide ^ fileD, queenSide, queenSide, centerFiles, centerFiles, kingSide, kingSide, kingSide ^ fileE };
 
 std::string showBitBoard(const BitBoard & b) {
     std::bitset<64> bs(b);
@@ -880,6 +888,7 @@ inline bool isBadCap   (const Move & m  ){ return Move2Score(m) < -MoveScoring[T
 inline Square chebyshevDistance(Square sq1, Square sq2) { return std::max(std::abs(SQRANK(sq2) - SQRANK(sq1)) , std::abs(SQFILE(sq2) - SQFILE(sq1))); }
 inline Square manatthanDistance(Square sq1, Square sq2) { return std::abs(SQRANK(sq2) - SQRANK(sq1)) + std::abs(SQFILE(sq2) - SQFILE(sq1)); }
 inline Square minDistance      (Square sq1, Square sq2) { return std::min(std::abs(SQRANK(sq2) - SQRANK(sq1)) , std::abs(SQFILE(sq2) - SQFILE(sq1))); }
+inline Square flankDistance    (Square sq1, Square sq2) { return std::abs(SQFILE(sq2) - SQFILE(sq1)) - std::abs(SQRANK(sq2) - SQRANK(sq1)); }
 
 std::string ToString(const Move & m    , bool withScore = false);
 std::string ToString(const Position & p, bool noEval = false);
@@ -2518,7 +2527,7 @@ double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f,
 void initEval(){ for(Square i = 0; i < 64; i++){ EvalConfig::kingAttTable[i] = (int) sigmoid(i,EvalConfig::kingAttMax,EvalConfig::kingAttTrans,EvalConfig::kingAttScale,EvalConfig::kingAttOffset); } }// idea taken from Topple
 
 struct ScoreAcc{
-    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_Pwn, sc_PwnShield, sc_PwnPassed, sc_PwnIsolated, sc_PwnDoubled, sc_PwnBackward, sc_PwnCandidate, sc_PwnHole, sc_Outpost, sc_PwnPush, sc_PwnSafeAtt, sc_PwnPushAtt, sc_Adjust, sc_OpenFile, sc_EndGame, sc_RookFrontKing, sc_RookFrontQueen, sc_RookQueenSameFile, sc_AttQueenMalus, sc_MinorOnOpenFile, sc_QueenNearKing, sc_hanging, sc_Tempo, sc_max };
+    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_Pwn, sc_PwnShield, sc_PwnPassed, sc_PwnIsolated, sc_PwnDoubled, sc_PwnBackward, sc_PwnCandidate, sc_PwnHole, sc_Outpost, sc_PwnPush, sc_PwnSafeAtt, sc_PwnPushAtt, sc_Adjust, sc_Initiative, sc_PawnLessFlanck, sc_OpenFile, sc_EndGame, sc_RookFrontKing, sc_RookFrontQueen, sc_RookQueenSameFile, sc_AttQueenMalus, sc_MinorOnOpenFile, sc_QueenNearKing, sc_hanging, sc_Tempo, sc_max };
     float scalingFactor = 1;
     std::array<EvalScore,sc_max> scores;
     ScoreType Score(const Position &p, float gp){
@@ -2527,7 +2536,7 @@ struct ScoreAcc{
         return ScoreType(ScaleScore(sc,gp)*scalingFactor*std::min(1.f,(110-p.fifty)/100.f));
     }
     void Display(const Position &p, float gp){
-        static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "Pwn", "PwnShield", "PwnPassed", "PwnIsolated", "PwnDoubled", "PwnBackward", "PwnCandidate", "PwnHole", "Outpost", "PwnPush", "PwnSafeAtt", "PwnPushAtt" , "Adjust", "OpenFile", "EndGame", "RookFrontKing", "RookFrontQueen", "RookQueenSameFile", "AttQueenMalus", "MinorOnOpenFile", "QueenNearKing", "Hanging", "Tempo"};
+        static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "Pwn", "PwnShield", "PwnPassed", "PwnIsolated", "PwnDoubled", "PwnBackward", "PwnCandidate", "PwnHole", "Outpost", "PwnPush", "PwnSafeAtt", "PwnPushAtt" , "Adjust", "Initiative", "PawnLessFlanck", "OpenFile", "EndGame", "RookFrontKing", "RookFrontQueen", "RookQueenSameFile", "AttQueenMalus", "MinorOnOpenFile", "QueenNearKing", "Hanging", "Tempo"};
         EvalScore sc;
         for(int k = 0 ; k < sc_max ; ++k){
             Logging::LogIt(Logging::logInfo) << scNames[k] << "       " << scores[k][MG];
@@ -2648,23 +2657,23 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
 
     // EG material (symetric version)
     score.scores[ScoreAcc::sc_Mat][EG] += (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValuesEG[P_wq] + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * *absValuesEG[P_wr] + (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * *absValuesEG[P_wb] + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValuesEG[P_wn] + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValuesEG[P_wp];
-    const Color winningSide = score.scores[ScoreAcc::sc_Mat][EG]>0?Co_White:Co_Black;
+    const Color winningSideEG = score.scores[ScoreAcc::sc_Mat][EG]>0?Co_White:Co_Black;
 
     // end game knowledge (helper or scaling)
     if ( safeMatEvaluator && gp < 0.3f ){
        const Hash matHash = MaterialHash::getMaterialHash(p.mat);
        const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
-       if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ) return (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSide,score.scores[ScoreAcc::sc_Mat][EG]));
+       if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ) return (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSideEG,score.scores[ScoreAcc::sc_Mat][EG]));
        else if ( ter == MaterialHash::Ter_WhiteWin || ter == MaterialHash::Ter_BlackWin) score.scalingFactor = 5 - 5*p.fifty/100.f;
        else if ( ter == MaterialHash::Ter_HardToWin)   score.scalingFactor = 0.5f - 0.5f*(p.fifty/100.f);
        else if ( ter == MaterialHash::Ter_LikelyDraw ) score.scalingFactor = 0.3f - 0.3f*(p.fifty/100.f);
-       ///@todo next seem to lose elo
-       //else if ( ter == MaterialHash::Ter_Draw){         if ( !isAttacked(p,kingSquare(p)) ) return drawnScore();}
+       else if ( ter == MaterialHash::Ter_Draw){         if ( !isAttacked(p,kingSquare(p)) ) return drawScore();}
        else if ( ter == MaterialHash::Ter_MaterialDraw){ if ( !isAttacked(p,kingSquare(p)) ) return drawScore();} ///@todo also verify stalemate ?
     }
 
     // material (symetric version)
     score.scores[ScoreAcc::sc_Mat][MG] += matScoreW - matScoreB;
+    //const Color winningSideMG = score.scores[ScoreAcc::sc_Mat][MG]>0?Co_White:Co_Black;
 
     // usefull bitboards accumulator
     const BitBoard pawns[2]          = {p.whitePawn(), p.blackPawn()};
@@ -2831,6 +2840,10 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
     score.scores[ScoreAcc::sc_Adjust]   += ( (p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonus : 0)-(p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonus : 0) );
     score.scores[ScoreAcc::sc_Adjust]   += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0) );
     score.scores[ScoreAcc::sc_Adjust]   += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
+
+    // malus for king on a pawnless flank
+    if (!(pawns[Co_White] & kingFlank[SQFILE(p.king[Co_White])])) score.scores[ScoreAcc::sc_PawnLessFlanck] += EvalConfig::pawnlessFlank;
+    if (!(pawns[Co_Black] & kingFlank[SQFILE(p.king[Co_Black])])) score.scores[ScoreAcc::sc_PawnLessFlanck] -= EvalConfig::pawnlessFlank;
 
     // tempo
     //score.scores[ScoreAcc::sc_Tempo] += ScoreType(30);

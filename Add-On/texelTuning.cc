@@ -293,6 +293,7 @@ void TexelTuning(const std::string & filename) {
     //guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttSafeCheck[5], -30, 30, "ck"));
     */
 
+    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::attQueenMalus[0][MG], -150, 300, "aqp"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::attQueenMalus[1][MG], -150, 300, "aqn"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::attQueenMalus[2][MG], -150, 300, "aqb"));
@@ -303,6 +304,7 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::attQueenMalus[2][EG], -150, 300, "aqbeg"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::attQueenMalus[3][EG], -150, 300, "aqreg"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::attQueenMalus[4][EG], -150, 300, "aqqeg"));
+    */
 
     /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttWeight[0][0], -30, 30, "ap"));
@@ -387,7 +389,6 @@ void TexelTuning(const std::string & filename) {
     /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::holesMalus[MG],-150,550,"holesMalus"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::holesMalus[EG],-150,550,"holesMalusEG"));
-
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::outpost[MG],-150,550,"outpost"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::outpost[EG],-150,550,"outpostEG"));
     */
@@ -482,9 +483,7 @@ void TexelTuning(const std::string & filename) {
     /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnSafeAtt[MG] , -500,  500,"pawnSafeAtt"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnSafeAtt[EG] , -500,  500,"pawnSafeAttEG"));
-    */
 
-    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnSafePushAtt[MG] , -500,  500,"pawnSafePushAtt"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnSafePushAtt[EG] , -500,  500,"pawnSafePushAttEG"));
     */
@@ -502,6 +501,11 @@ void TexelTuning(const std::string & filename) {
     /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::queenNearKing[MG] , -500,  500,"queenNearKing"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::queenNearKing[EG] , -500,  500,"queenNearKingEG"));
+    */
+
+    /*
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnlessFlank[MG] , -500,  500,"pawnlessFlank"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnlessFlank[EG] , -500,  500,"pawnlessFlankEG"));
     */
 
     computeOptimalK(data);
