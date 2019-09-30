@@ -234,6 +234,7 @@ const ScoreType razoringMarginDepthCoeff [2] = {0  , 0};
 const ScoreType razoringMarginDepthInit  [2] = {200, 200};
 const DepthType razoringMaxDepth         [2] = {3  , 3};
 const DepthType nullMoveMinDepth             = 2;
+const DepthType nullMoveVerifDepth           = 16;
 const DepthType historyPruningMaxDepth       = 3;
 const ScoreType historyPruningThresholdInit  = 0;
 const ScoreType historyPruningThresholdDepth = 0;
@@ -1362,7 +1363,7 @@ struct ThreadData{
 };
 
 struct Stats{
-    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits,sid_staticNullMove, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMove, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_see, sid_see2, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_pawnPushExtension, sid_singularExtension, sid_singularExtension2, sid_queenThreatExtension, sid_BMExtension, sid_mateThreadExtension, sid_tbHit1, sid_tbHit2, sid_maxid };
+    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits,sid_staticNullMove, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMoveTry3, sid_nullMove, sid_nullMove2, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_see, sid_see2, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_pawnPushExtension, sid_singularExtension, sid_singularExtension2, sid_queenThreatExtension, sid_BMExtension, sid_mateThreadExtension, sid_tbHit1, sid_tbHit2, sid_maxid };
     static const std::string Names[sid_maxid] ;
     Counter counters[sid_maxid];
     void init(){
@@ -1371,7 +1372,7 @@ struct Stats{
     }
 };
 
-const std::string Stats::Names[Stats::sid_maxid] = { "nodes", "qnodes", "tthits", "staticNullMove", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMove", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "see", "see2", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "pawnPushExtension", "singularExtension", "singularExtension2", "queenThreatExtension", "BMExtension", "mateThreadExtension", "TBHit1", "TBHit2"};
+const std::string Stats::Names[Stats::sid_maxid] = { "nodes", "qnodes", "tthits", "staticNullMove", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMoveTry3", "nullMove", "nullMove2", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "see", "see2", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "pawnPushExtension", "singularExtension", "singularExtension2", "queenThreatExtension", "BMExtension", "mateThreadExtension", "TBHit1", "TBHit2"};
 
 // singleton pool of threads
 class ThreadPool : public std::vector<std::unique_ptr<ThreadContext>> {
@@ -1453,6 +1454,7 @@ struct ThreadContext{
     KillerT killerT;
     HistoryT historyT;
     CounterT counterT;
+    DepthType nullMoveMinPly = 0;
 
     struct RootScores { Move m; ScoreType s; };
 
@@ -1761,6 +1763,8 @@ std::string ToString(const Position & p, bool noEval){
 template < typename T > T readFromString(const std::string & s){ std::stringstream ss(s); T tmp; ss >> tmp; return tmp;}
 
 bool readFEN(const std::string & fen, Position & p, bool silent){
+    static Position defaultPos;
+    p = defaultPos;
     std::vector<std::string> strList;
     std::stringstream iss(fen);
     std::copy(std::istream_iterator<std::string>(iss), std::istream_iterator<std::string>(), back_inserter(strList));
@@ -3150,11 +3154,11 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         }
 
         // null move
-        if (isNotEndGame && StaticConfig::doNullMove && depth >= StaticConfig::nullMoveMinDepth) {
+        if (isNotEndGame && StaticConfig::doNullMove && ply >= (unsigned int)nullMoveMinPly && depth >= StaticConfig::nullMoveMinDepth) {
             PVList nullPV;
             ++stats.counters[Stats::sid_nullMoveTry];
             const DepthType R = depth / 4 + 3 + std::min((evalScore - beta) / 80, 3); // adaptative
-            const ScoreType nullIIDScore = evalScore; // pvs<false, false>(beta - 1, beta, p, std::max(depth/4,1), ply, nullPV, seldepth, isInCheck);
+            const ScoreType nullIIDScore = evalScore; // pvs<false, false>(beta - 1, beta, p, std::max(depth/4,1), ply, nullPV, seldepth, isInCheck, !cutNode);
             if (nullIIDScore >= beta /*- 10 * depth*/) { ///@todo try to minimize sid_nullMoveTry2 versus sid_nullMove
                 TT::Entry nullE;
                 TT::getEntry(*this, computeHash(p), depth - R, nullE);
@@ -3162,13 +3166,21 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                     ++stats.counters[Stats::sid_nullMoveTry2];
                     Position pN = p;
                     applyNull(pN);
-                    const ScoreType nullscore = -pvs<false, false>(-beta, -beta + 1, pN, depth - R, ply + 1, nullPV, seldepth, isInCheck, !cutNode);
+                    ScoreType nullscore = -pvs<false, false>(-beta, -beta + 1, pN, depth - R, ply + 1, nullPV, seldepth, isInCheck, !cutNode);
                     if (stopFlag) return STOPSCORE;
                     TT::Entry nullEThreat;
                     TT::getEntry(*this,computeHash(pN), 0, nullEThreat);
                     if ( nullEThreat.h != 0ull ) refutation = nullEThreat.m;
-                    if (nullscore >= beta) return ++stats.counters[Stats::sid_nullMove], isMateScore(nullscore) ? beta : nullscore;
-                    //if (isMatedScore(nullscore)) mateThreat = true;
+                    if (nullscore >= beta){
+                       //if (isMatedScore(nullscore)) mateThreat = true;
+                       if (depth <= StaticConfig::nullMoveVerifDepth || nullMoveMinPly>0) return ++stats.counters[Stats::sid_nullMove], isMateScore(nullscore) ? beta : nullscore;
+                       ++stats.counters[Stats::sid_nullMoveTry3];
+                       nullMoveMinPly = ply + 3*(depth-R)/4;
+                       nullscore = pvs<false, false>(beta - 1, beta, p, depth -R, ply+1, nullPV, seldepth, isInCheck, !cutNode);
+                       nullMoveMinPly = 0;
+                       if (stopFlag) return STOPSCORE;
+                       if (nullscore >= beta ) return ++stats.counters[Stats::sid_nullMove2], nullscore;
+                    }
                 }
             }
         }
@@ -3339,7 +3351,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         else{
             // reductions & prunings
             DepthType reduction = 0;
-            const bool isPrunable =  /*isNotEndGame &&*/ !isAdvancedPawnPush && !sameMove(*it, killerT.killers[0][p.halfmoves]) && !sameMove(*it, killerT.killers[1][p.halfmoves]) && !isMateScore(alpha) /*&& !isMateScore(beta)*/;
+            const bool isPrunable =  /*isNotEndGame &&*/ /*!isAdvancedPawnPush && !sameMove(*it, killerT.killers[0][p.halfmoves]) && !sameMove(*it, killerT.killers[1][p.halfmoves]) &&*/ !isMateScore(alpha) /*&& !isMateScore(beta)*/;
             const bool noCheck = !isInCheck && (!isCheck /*|| !extension*/);
             const bool isPrunableStd = isPrunable && Move2Type(*it) == T_std;
             const bool isPrunableStdNoCheck = isPrunable && noCheck && Move2Type(*it) == T_std;
