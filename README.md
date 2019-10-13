@@ -56,7 +56,7 @@ Rank Name                          Elo     +/-   Games   Score   Draws
    9 asymptote_v0.6                -91      18     998   37.2%   29.6%
 ```
 
-Minic strength can be ajdusted using the level option (from command line, json configuration file, or using protocol option support). Level 0 is a random mover, 1 very weak, ..., level 100 is full strength. Level functionnaly will be enhanced in a near future.
+Minic strength can be ajdusted using the level option (from command line, json configuration file, or using protocol option support, using value from 0 to 100). Level 0 is a random mover, 10 very weak, ..., level 100 is full strength. Level functionnaly will be enhanced in a near future.
 
 Minic random mover stats are the following :
 
@@ -95,7 +95,7 @@ To compile with SYZYGY support you'll need to clone https://github.com/jdart1/Fa
 To use EGT just specify syzygyPath in the configuration file or in the command line.
 
 ## How to run
-add the command line option "-xboard" to go to xboard/winboard mode.
+add the command line option "-xboard" to go to xboard/winboard mode or -uci for UCI.
 
 Other available options are :
 * -perft_test : run the inner perft test
@@ -122,7 +122,7 @@ Minic now comes with both a json configuration file where some parameters can be
    "fullXboardOutput": true,
    "debugMode": false,
    "debugFile": "minic.debug",
-   "level": 10,
+   "level": 100,
    "syzygyPath": "/data/minic/TB/syzygy"
 }
 
