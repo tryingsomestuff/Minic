@@ -2,10 +2,10 @@
 
 # Minic
 A simple chess engine to learn and play with.
-Compatible with xboard/winboard.
+Compatible with both xboard/winboard and UCI.
 Initially, the code size was supposed not go above 2000sloc.
-Now that more features (especially SMP and bitboard) has come up, I'll try to keep it under 3000sloc.
-This is why Minic stands for "Minimal Chess" (and is not related to the GM Dragoljub Minić).
+Now that more features (especially SMP and bitboard) has come up, I'll try to keep it under 4000sloc.
+This is why Minic stands for "Minimal Chess" (and is not related to the GM Dragoljub Minić) but as not much to do with minimalism now...
 
 ## Code style
 Minic is (mainly) a one-file-code with very dense lines. This is of course very wrong in terms of software design... So why is it so? First reason is that Minic was first develop as a week-end project, the quick-and-dirty way, and since then I'm having fun going on this way ; being a "small" code size engine is part of the stakes in developing it. Second reason is that it helps the compilers optimize the whole code. The only dependency is the very good json header-only library nlohmann/json used to parse the config file. Some optional features such as Texel tuning, perft, tests, uci support, book generation ... are available in the Add-Ons directory.
@@ -31,11 +31,10 @@ Starting from release 0.50 new binaries are available :
 * minic_0.50_mingw_x64_sse4.2.exe   : optimized Windows64 (sse4.2)  
 * minic_0.50_mingw_x64_x86-64.exe   : basic Windows64   
 ```   
-
 Please note that Win32 binaries are very slow (I don't know why yet, so please use Win64 one if possible).
    
 ## Strength
-Minic 0.98 is 2846 on the CCRL 40/40 scale, so way to strong for me ! This is more or less like GM level for human being.
+Minic 0.98 is around 2840 on the CCRL 40/40 scale, so way to strong for me ! This is more or less like GM level for human being.
 
 STS : 1051/1500 @10sec per position (single thread)  
 WAC : 263/300 @10sec per position (single thread)
@@ -57,7 +56,7 @@ Rank Name                          Elo     +/-   Games   Score   Draws
    9 asymptote_v0.6                -91      18     998   37.2%   29.6%
 ```
 
-Minic strength can be ajdusted using the level option (from command line or json configuration file). Level 0 is a random mover, 1 very weak, ..., level 10 is full strength. Level functionnaly will be enhanced in a near future.
+Minic strength can be ajdusted using the level option (from command line, json configuration file, or using protocol option support). Level 0 is a random mover, 1 very weak, ..., level 100 is full strength. Level functionnaly will be enhanced in a near future.
 
 Minic random mover stats are the following :
 
@@ -226,6 +225,7 @@ You can use both the json configuation file or the command line argument to sele
 * 0.93..0.95 : re-tune almost everything
 * 0.96..0.98 : some tuning and SEE fix
 * 0.99 : random draw eval
+* 1.00 : tweak evak and search, work on TT scheme, some fixes, !! 1 year anniversary release !!
 
 ## Thanks
 
