@@ -69,22 +69,7 @@ Minic random mover stats are the following :
    6.13%  1/2-1/2 {Draw by stalemate}
 ```
 
-Current level elo are more or less those :
-
-```
-Rank Name                          Elo     +/-   Games   Score   Draws
-   1 minic_devl10                  621      38    1783   97.3%    4.7%
-   2 minic_devl9                   389      24    1784   90.4%    7.2%
-   3 minic_devl8                   237      19    1785   79.6%    7.5%
-   4 minic_devl7                   155      17    1785   70.9%    6.1%
-   5 minic_devl6                    75      16    1786   60.7%    4.4%
-   6 minic_devl5                    -1      16    1786   49.9%    2.5%
-   7 minic_devl4                   -78      16    1785   39.0%    5.3%
-   8 minic_devl3                  -157      17    1784   28.8%    7.2%
-   9 minic_devl2                  -269      19    1785   17.6%    9.7%
-  10 minic_devl1                  -290      20    1785   15.8%    8.9%
-  11 minic_devl0                 -1230     nan    1786    0.1%    0.2%
-```
+Current level elo are more or less so that even a kid can beat low level Minic. From level 50 or 60, you will start to struggle more.
 
 ## How to compile
 * Linux : use the given build script (or make your own ...)
