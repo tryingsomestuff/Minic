@@ -29,9 +29,9 @@ typedef uint64_t u_int64_t;
 #include "json.hpp"
 
 //#define IMPORTBOOK
-#define WITH_TEXEL_TUNING
+//#define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
-//#define WITH_TEST_SUITE
+#define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 #define WITH_UCI
 //#define WITH_PGN_PARSER
@@ -72,13 +72,16 @@ const std::string MinicVersion = "dev";
 
 typedef std::chrono::system_clock Clock;
 typedef signed char DepthType;
-typedef int Move;      // invalid if < 0
+typedef int32_t Move;      // invalid if < 0
+typedef int16_t MiniMove;  // invalid if < 0
 typedef signed char Square;   // invalid if < 0
 typedef uint64_t Hash; // invalid if == 0
+typedef uint32_t MiniHash; // invalid if == 0
 typedef uint64_t Counter;
 typedef uint64_t BitBoard;
-typedef short int ScoreType;
-typedef long long int TimeType;
+typedef int16_t  ScoreType;
+typedef int64_t  TimeType;
+typedef bool GenerationType;
 
 enum GamePhase { MG=0, EG=1, GP_MAX=2 };
 GamePhase operator++(GamePhase & g){g=GamePhase(g+1); return g;}
@@ -155,7 +158,7 @@ namespace DynamicConfig{
     bool fullXboardOutput  = false;
     bool debugMode         = false;
     std::string debugFile  = "minic.debug";
-    unsigned int level     = 10;
+    unsigned int level     = 100;
     bool book              = true;
     std::string bookFile   = "book.bin";
     unsigned int threads   = 1;
@@ -234,7 +237,7 @@ const ScoreType razoringMarginDepthCoeff [2] = {0  , 0};
 const ScoreType razoringMarginDepthInit  [2] = {200, 200};
 const DepthType razoringMaxDepth         [2] = {3  , 3};
 const DepthType nullMoveMinDepth             = 2;
-const DepthType nullMoveVerifDepth           = 16;
+const DepthType nullMoveVerifDepth           = 64; // means off ...
 const DepthType historyPruningMaxDepth       = 3;
 const ScoreType historyPruningThresholdInit  = 0;
 const ScoreType historyPruningThresholdDepth = 0;
@@ -250,9 +253,8 @@ const DepthType lmrMinDepth                  = 3;
 const DepthType singularExtensionDepth       = 8;
 
 // a playing level feature for the poor ...
-const int nlevel = 10;
-const DepthType levelDepthMax[nlevel+1]   = {0,1,1,2,4,6,8,10,12,14,MAX_DEPTH};
-const ScoreType levelRandomAmpl[nlevel+1] = {0/*random mover*/,250,200,150,100,80,60,30,20,10,0/*full strenght*/};
+const int nlevel = 100;
+const DepthType levelDepthMax[nlevel/10+1]   = {0,1,1,2,4,6,8,10,12,14,MAX_DEPTH};
 
 const DepthType lmpMaxDepth                  = 10;
 const int lmpLimit[][StaticConfig::lmpMaxDepth + 1] = { { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 } ,{ 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };
@@ -1023,6 +1025,7 @@ namespace MaterialHash { // from Gull
     enum kpk_result : unsigned char { kpk_invalid = 0, kpk_unknown = 1, kpk_draw = 2, kpk_win = 4};
     kpk_result& operator|=(kpk_result& r, kpk_result v) { return r = kpk_result(r | v); }
 
+    #pragma pack(push, 1)
     struct KPKPosition {
         KPKPosition() = default;
         explicit KPKPosition(unsigned idx){ // first init
@@ -1047,10 +1050,11 @@ namespace MaterialHash { // from Gull
             }
             return result = r & good ? good : r & kpk_unknown ? kpk_unknown : bad;
         }
-        Color us;
         Square ksq[2], psq;
         kpk_result result;
+        Color us;
     };
+    #pragma pack(pop)
 
     bool probe(Square wksq, Square wpsq, Square bksq, Color us) {
         assert(SQFILE(wpsq) <= 4);
@@ -1577,18 +1581,26 @@ Counter ThreadPool::counter(Stats::StatId id) const { Counter n = 0; for (auto &
 bool apply(Position & p, const Move & m); //forward decl
 
 namespace TT{
+
+inline MiniHash Hash64to32   (Hash h) { return (h >> 32) & 0xFFFFFFFF; }
+inline MiniMove Move2MiniMove(Move m) { return m & 0xFFFF;} // skip score
+
+GenerationType curGen = 0;
 enum Bound : unsigned char{ B_exact = 0, B_alpha = 1, B_beta = 2};
+#pragma pack(push, 1)
 struct Entry{
-    Entry():m(INVALIDMOVE),h(0ull),score(0),eval(0),b(B_alpha),d(-1){}
-    Entry(Move m, ScoreType s, ScoreType e, Bound b, DepthType d, Hash h) : m(m), h(h), score(s), eval(e), b(b), d(d){}
-    Move m;
-    Hash h;
+    Entry():m(INVALIDMOVE),h(0),score(0),eval(0),b(B_alpha),d(-1)/*,generation(curGen)*/{}
+    Entry(Hash h, Move m, ScoreType s, ScoreType e, Bound b, DepthType d) : h(Hash64to32(h)), m(Move2MiniMove(m)), score(s), eval(e)/*, generation(curGen)*/, b(b), d(d){}
+    MiniHash h;
+    MiniMove m;
     ScoreType score, eval;
+    //GenerationType generation;
     Bound b;
     DepthType d;
 };
+#pragma pack(pop)
 
-struct Bucket { static const int nbBucket = 2;  Entry e[nbBucket];};
+struct Bucket { static const int nbBucket = 3;  Entry e[nbBucket];};
 
 unsigned long long int powerFloor(unsigned long long int x) {
     unsigned long long int power = 1;
@@ -1609,7 +1621,12 @@ void initTable(){
 }
 
 void clearTT() {
-    for (unsigned int k = 0; k < ttSize; ++k) for (unsigned int i = 0 ; i < Bucket::nbBucket ; ++i) table[k].e[i] = { INVALIDMOVE, 0, 0, B_alpha, 0, 0ull };
+    TT::curGen = 0;
+    for (unsigned int k = 0; k < ttSize; ++k) for (unsigned int i = 0 ; i < Bucket::nbBucket ; ++i) table[k].e[i] = { 0, INVALIDMOVE, 0, 0, B_alpha, 0 };
+}
+
+void age(){
+    TT::curGen = !TT::curGen;
 }
 
 bool getEntry(ThreadContext & context, Hash h, DepthType d, Entry & e, int nbuck = 0) {
@@ -1619,24 +1636,28 @@ bool getEntry(ThreadContext & context, Hash h, DepthType d, Entry & e, int nbuck
     if ( nbuck >= Bucket::nbBucket ) return false; // no more bucket
     const Entry & _e = table[h&(ttSize-1)].e[nbuck];
     if ( _e.h == 0 ) return false; //early exist cause next ones are also empty ...
-    if ( _e.h != h ) return getEntry(context,h,d,e,nbuck+1); // next one
+    if ( _e.h != Hash64to32(h) ) return getEntry(context,h,d,e,nbuck+1); // next one
     e = _e; // update entry only if no collision is detected !
     if ( _e.d >= d ){ ++context.stats.counters[Stats::sid_tthits]; return true; } // valid entry if depth is ok
     else return getEntry(context,h,d,e,nbuck+1); // next one
 }
 
-void setEntry(const Entry & e){
+void setEntry(Hash h, Move m, ScoreType s, ScoreType eval, Bound b, DepthType d){
+    const Entry e = {h,m,s,eval,b,d};
     assert(e.h > 0);
     if ( DynamicConfig::disableTT ) return;
-    const size_t index = e.h&(ttSize-1);
-    DepthType lowest = MAX_DEPTH;
-    Entry & _eDepthLowest = table[index].e[0];
-    for (unsigned int i = 0 ; i < Bucket::nbBucket ; ++i){ // we look for the lower depth
-        const Entry & _eDepth = table[index].e[i];
-        if ( _eDepth.h == 0 ) break; //early break cause next ones are also empty
-        if ( _eDepth.d < lowest ) { _eDepthLowest = _eDepth; lowest = _eDepth.d; }
+    const size_t index = h&(ttSize-1);
+    table[index].e[0] = e; // first is always replace
+    Entry * toUpdate = &(table[index].e[1]);
+    for (unsigned int i = 1 ; i < Bucket::nbBucket ; ++i){ // other replace by depth (and generation ?)
+        Entry & curEntry = table[index].e[i];
+        if( curEntry.h == 0 ) break; //early break
+        if( curEntry.h == e.h ){ // found entry with same hash
+           if( curEntry.d < e.d ) {  curEntry = e;  return; }
+        }
+        else if( curEntry.d < toUpdate->d /*|| curEntry.generation < toUpdate->generation*/ ) toUpdate = &curEntry; // not same hash, replace the oldest or lowest depth
     }
-    _eDepthLowest = e; // replace the one with the lowest depth
+    *toUpdate = e;
 }
 
 void getPV(const Position & p, ThreadContext & context, PVList & pv){
@@ -2481,7 +2502,7 @@ struct MoveSorter{
             else if (p.lastMove!=INVALIDMOVE && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 1350; // quiet counter
             else {
                 s += context.historyT.history[PieceTools::getPieceIndex(p, from)][to]; // +/- MAX_HISTORY = 1000
-                if ( from == Move2To(refutation) && context.SEE(p,m,-70)) s+=100; // move (safely) leaving threat square from null move search
+                if ( refutation != INVALIDMOVE && from == Move2To(refutation) && context.SEE(p,m,-70)) s+=100; // move (safely) leaving threat square from null move search
             }
             const bool isWhite = (p.allPieces[Co_White] & SquareToBitboard(from)) != 0ull;
             s += ScaleScore(EvalConfig::PST[PieceTools::getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - EvalConfig::PST[PieceTools::getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from],gp);
@@ -2641,7 +2662,7 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
     static const ScoreType *absValuesEG[7] = { &dummyScore, &ValuesEG[P_wp + PieceShift], &ValuesEG[P_wn + PieceShift], &ValuesEG[P_wb + PieceShift], &ValuesEG[P_wr + PieceShift], &ValuesEG[P_wq + PieceShift], &ValuesEG[P_wk + PieceShift] };
 
     // level for the poor ...
-    const int lra = StaticConfig::levelRandomAmpl[DynamicConfig::level];
+    const int lra = std::max(0u,750 - 10*DynamicConfig::level);
     if ( lra > 0 ) { score.scores[ScoreAcc::sc_Rand] += Zobrist::randomInt<int>(-lra,lra); }
 
     // game phase and material scores
@@ -2988,14 +3009,14 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     TT::Entry e;
     if (TT::getEntry(*this, computeHash(p), hashDepth, e)) {
         if (!pvnode && e.h != 0 && ((e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact))) { return adjustHashScore(e.score, ply); }
-        bestMove = e.m;
+        if ( e.m!=INVALIDMOVE && (isCapture(e.m) || specialQSearch) ) bestMove = e.m;
     }
     if ( qRoot && interiorNodeRecognizer<true,false,true>(p) == MaterialHash::Ter_Draw) return drawScore(); ///@todo is that gain elo ???
 
     ScoreType evalScore = isInCheck ? -MATE+ply : (e.h!=0?e.eval:eval(p,gp));
     bool evalScoreIsHashScore = false;
     // use tt score if possible and not in check
-    if ( !isInCheck && e.h != 0 && ((e.b == TT::B_alpha && e.score <= evalScore) || (e.b == TT::B_beta  && e.score >= evalScore) || (e.b == TT::B_exact)) ) evalScore = e.score, evalScoreIsHashScore = true;
+    if ( !isInCheck && e.h != 0 && ((e.b == TT::B_alpha && e.score <= evalScore) || (e.b == TT::B_beta && e.score >= evalScore) || (e.b == TT::B_exact)) ) evalScore = e.score, evalScoreIsHashScore = true;
 
     if ( evalScore >= beta ) return evalScore;
     if ( evalScore > alpha) alpha = evalScore;
@@ -3006,7 +3027,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     MoveList moves;
     if ( isInCheck ) generate<GP_all>(p,moves);
     else             generate<GP_cap>(p,moves);
-    sort(*this,moves,p,gp,specialQSearch,isInCheck,specialQSearch?&e:0);
+    sort(*this,moves,p,gp,specialQSearch,isInCheck,/*specialQSearch?&*/&e/*:0*/);
 
     const ScoreType alphaInit = alpha;
 
@@ -3027,15 +3048,14 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
            if ( score > alpha ){
                b = TT::B_exact;
                if (score >= beta) {
-                   TT::setEntry({ bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),TT::B_beta,hashDepth,computeHash(p) });
+                   TT::setEntry(computeHash(p),bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),TT::B_beta,hashDepth);
                    return score;
                }
                alpha = score;
            }
         }
     }
-    // store eval
-    TT::setEntry({ bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),b,hashDepth,computeHash(p) });
+    TT::setEntry(computeHash(p),bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),b,hashDepth);
     return bestScore;
 }
 
@@ -3112,7 +3132,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if ( !rootnode && skipMove==INVALIDMOVE && (countBit(p.allPieces[Co_White]|p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN && SyzygyTb::probe_wdl(p, tbScore, false) > 0){
        ++stats.counters[Stats::sid_tbHit1];
        if ( abs(tbScore) == SyzygyTb::TB_WIN_SCORE) tbScore += eval(p, gp);
-       TT::setEntry({INVALIDMOVE,createHashScore(tbScore,ply),createHashScore(tbScore,ply),TT::B_exact,DepthType(127),computeHash(p)});
+       TT::setEntry(computeHash(p),INVALIDMOVE,createHashScore(tbScore,ply),createHashScore(tbScore,ply),TT::B_exact,DepthType(127));
        return tbScore;
     }
 #endif
@@ -3231,6 +3251,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     Move bestMove = INVALIDMOVE;
     TT::Bound hashBound = TT::B_alpha;
     bool ttMoveIsCapture = false;
+    //bool ttMoveSingularExt = false;
 
     bool isQueenAttacked = p.pieces<P_wq>(p.c) && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces<P_wq>(p.c))); // only first queen ...
 
@@ -3251,7 +3272,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             const bool isAdvancedPawnPush = PieceTools::getPieceType(p,Move2From(e.m)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
             // extensions
             DepthType extension = 0;
-            if ( DynamicConfig::level>8){
+            if ( DynamicConfig::level>80){
                if (!extension && pvnode && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension;
                if (!extension && isCastling(e.m) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
                //if (!extension && mateThreat) ++stats.counters[Stats::sid_mateThreadExtension],++extension;
@@ -3259,15 +3280,16 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                //if (!extension && isCheck && !isBadCap(e.m)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
                if (!extension && isAdvancedPawnPush && sameMove(e.m, killerT.killers[0][p.halfmoves])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo isPassed ?
                if (!extension && isQueenAttacked && PieceTools::getPieceType(p,Move2From(e.m)) == P_wq && Move2Type(e.m) == T_std && SEE(p,e.m,0)) ++stats.counters[Stats::sid_queenThreatExtension],++extension;
-               if (!extension && p.halfmoves > 1 && threatStack[p.halfmoves] != INVALIDMOVE && (sameMove(threatStack[p.halfmoves],threatStack[p.halfmoves-2]) || (Move2To(threatStack[p.halfmoves]) == Move2To(threatStack[p.halfmoves-2]) && isCapture(threatStack[p.halfmoves])))) ++stats.counters[Stats::sid_BMExtension],++extension;
+               if (!extension && p.halfmoves > 1 && threatStack[p.halfmoves] != INVALIDMOVE && threatStack[p.halfmoves-2] != INVALIDMOVE && (sameMove(threatStack[p.halfmoves],threatStack[p.halfmoves-2]) || (Move2To(threatStack[p.halfmoves]) == Move2To(threatStack[p.halfmoves-2]) && isCapture(threatStack[p.halfmoves])))) ++stats.counters[Stats::sid_BMExtension],++extension;
                if (!extension && skipMove == INVALIDMOVE && depth >= StaticConfig::singularExtensionDepth && !rootnode && !isMateScore(e.score) && e.b == TT::B_beta && e.d >= depth - 3){
                    const ScoreType betaC = e.score - 2*depth;
                    PVList sePV;
                    DepthType seSeldetph = 0;
                    const ScoreType score = pvs<false,false>(betaC - 1, betaC, p, depth/2, ply, sePV, seSeldetph, isInCheck, cutNode, e.m);
-                   if (!ThreadContext::stopFlag && score < betaC) {
+                   if (stopFlag) return STOPSCORE;
+                   if (score < betaC) {
                        ++stats.counters[Stats::sid_singularExtension],++extension;
-                       if ( score < betaC - std::min(4*depth,36)) ++stats.counters[Stats::sid_singularExtension2],++extension;
+                       if ( score < betaC - std::min(4*depth,36)) ++stats.counters[Stats::sid_singularExtension2],/*ttMoveSingularExt=true,*/++extension;
                    }
                    else if ( score >= beta && betaC >= beta) return score;
                }
@@ -3285,7 +3307,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                     if (ttScore >= beta) {
                         ++stats.counters[Stats::sid_ttbeta];
                         if ((Move2Type(e.m) == T_std || isBadCap(e.m)) && !isInCheck) updateTables(*this, p, depth + (ttScore > (beta+80)), e.m, TT::B_beta);
-                        if (skipMove == INVALIDMOVE /*&& ttScore != 0*/) TT::setEntry({ e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth,computeHash(p) });
+                        if (skipMove == INVALIDMOVE /*&& ttScore != 0*/) TT::setEntry(computeHash(p),e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth);
                         return ttScore;
                     }
                     ++stats.counters[Stats::sid_ttalpha];
@@ -3336,7 +3358,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         const bool isAdvancedPawnPush = PieceTools::getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
         // extensions
         DepthType extension = 0;
-        if ( DynamicConfig::level>8){
+        if ( DynamicConfig::level>80){
            if (!extension && pvnode && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension; // we are in check (extension)
            //if (!extension && mateThreat && depth <= 4) ++stats.counters[Stats::sid_mateThreadExtension],++extension;
            //if (!extension && p.lastMove != INVALIDMOVE && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; //recapture
@@ -3351,22 +3373,25 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         else{
             // reductions & prunings
             DepthType reduction = 0;
-            const bool isPrunable =  /*isNotEndGame &&*/ /*!isAdvancedPawnPush && !sameMove(*it, killerT.killers[0][p.halfmoves]) && !sameMove(*it, killerT.killers[1][p.halfmoves]) &&*/ !isMateScore(alpha) /*&& !isMateScore(beta)*/;
-            const bool noCheck = !isInCheck && (!isCheck /*|| !extension*/);
-            const bool isPrunableStd = isPrunable && Move2Type(*it) == T_std;
+            const bool isPrunable           =  /*isNotEndGame &&*/ !isAdvancedPawnPush && !sameMove(*it, killerT.killers[0][p.halfmoves]) && !sameMove(*it, killerT.killers[1][p.halfmoves]) && !isMateScore(alpha) /*&& !isMateScore(beta)*/;
+            const bool noCheck              = !isInCheck && (!isCheck /*|| !extension*/);
+            const bool isPrunableStd        = isPrunable && Move2Type(*it) == T_std;
             const bool isPrunableStdNoCheck = isPrunable && noCheck && Move2Type(*it) == T_std;
+            const bool isPrunableCap        = isPrunable && noCheck && Move2Type(*it) == T_capture && isBadCap(*it);
+            const bool overLmpLimit         = validMoveCount >= StaticConfig::lmpLimit[improving][depth];
             // futility
             if (futility && isPrunableStdNoCheck) {++stats.counters[Stats::sid_futility]; continue;}
             // LMP
-            if (lmp && isPrunableStdNoCheck && validMoveCount >= StaticConfig::lmpLimit[improving][depth] ) {++stats.counters[Stats::sid_lmp]; continue;}
+            if (lmp && isPrunableStdNoCheck && overLmpLimit ) {++stats.counters[Stats::sid_lmp]; continue;}
             // History pruning
             if (historyPruning && isPrunableStdNoCheck && validMoveCount > StaticConfig::lmpLimit[improving][depth]/3 && Move2Score(*it) < StaticConfig::historyPruningThresholdInit + depth*StaticConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
             // LMR
-            if (StaticConfig::doLMR && !DynamicConfig::mateFinder && (isPrunableStd /*|| cutNode*/) && depth >= StaticConfig::lmrMinDepth ){
+            if (StaticConfig::doLMR && !DynamicConfig::mateFinder && (isPrunableStd /*|| cutNode || overLmpLimit*/) && depth >= StaticConfig::lmrMinDepth ){
                 reduction = StaticConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
                 reduction += !improving;
-                reduction += ttMoveIsCapture;
-                //reduction += 2 * cutNode;
+                reduction += ttMoveIsCapture/*&&isPrunableStd*/;
+                //reduction += cutNode&&isPrunableStd;
+                //reduction -= ttMoveSingularExt;
                 reduction -= 2*int(Move2Score(*it) / MAX_HISTORY); //history reduction/extension
                 if (pvnode && reduction > 0) --reduction;
                 if (reduction + extension < 0) reduction = -extension;
@@ -3374,13 +3399,12 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             }
             const DepthType nextDepth = depth-1-reduction+extension;
             // SEE (capture)
-            const bool isPrunableCap = isPrunable && noCheck && Move2Type(*it) == T_capture && isBadCap(*it);
             if (isPrunableCap){
                if (futility) {++stats.counters[Stats::sid_see]; continue;}
-               else if ( !SEE(p,*it,-100*depth)) {++stats.counters[Stats::sid_see2]; continue;}
+               else if ( /*!rootnode &&*/ !SEE(p,*it,-100*depth)) {++stats.counters[Stats::sid_see2]; continue;}
             }
             // SEE (quiet)
-            if ( isPrunableStdNoCheck && !SEE(p,*it,-15*nextDepth*nextDepth)) {++stats.counters[Stats::sid_seeQuiet]; continue;}
+            if ( isPrunableStdNoCheck && /*!rootnode &&*/ !SEE(p,*it,-15*nextDepth*nextDepth)) {++stats.counters[Stats::sid_seeQuiet]; continue;}
             // PVS
             score = -pvs<false,true>(-alpha-1,-alpha,p2,nextDepth,ply+1,childPV,seldepth,isCheck,true);
             if ( reduction > 0 && score > alpha )                       { childPV.clear(); score = -pvs<false,true>(-alpha-1,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,!cutNode); }
@@ -3410,7 +3434,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     }
 
     if ( validMoveCount==0 ) return (isInCheck || skipMove!=INVALIDMOVE)?-MATE + ply : 0;
-    if ( skipMove==INVALIDMOVE /*&&*/ /*alphaUpdated*/ /*bestScoreUpdated*/ ) TT::setEntry({bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),hashBound,depth,computeHash(p)});
+    if ( skipMove==INVALIDMOVE /*&&*/ /*alphaUpdated*/ /*bestScoreUpdated*/ ) TT::setEntry(computeHash(p),bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),hashBound,depth);
 
     return bestScore;
 }
@@ -3430,7 +3454,7 @@ void ThreadContext::displayGUI(DepthType depth, DepthType seldepth, ScoreType be
 }
 
 PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
-    d=DynamicConfig::level==10?d:StaticConfig::levelDepthMax[DynamicConfig::level];
+    d=std::max((signed char)1,DynamicConfig::level==StaticConfig::nlevel?d:std::min(d,StaticConfig::levelDepthMax[DynamicConfig::level/10]));
     if ( isMainThread() ){
         Logging::LogIt(Logging::logInfo) << "Search params :" ;
         Logging::LogIt(Logging::logInfo) << "requested time  " << getCurrentMoveMs() ;
@@ -3445,6 +3469,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
     }
     stats.init();
     //TT::clearTT(); // to be used for reproductible results
+    TT::age();
     killerT.initKillers();
     historyT.initHistory();
     counterT.initCounter();
@@ -3652,7 +3677,7 @@ namespace Options {
         return true;
     }
     void registerCOMOptions(){ // options exposed xboard GUI
-       _keys.push_back(KeyBase(k_int,   w_spin, "level"                       , &DynamicConfig::level                          , (unsigned int)0  , (unsigned int)10      ));
+       _keys.push_back(KeyBase(k_int,   w_spin, "level"                       , &DynamicConfig::level                          , (unsigned int)0  , (unsigned int)StaticConfig::nlevel     ));
        _keys.push_back(KeyBase(k_int,   w_spin, "Hash"                        , &DynamicConfig::ttSizeMb                       , (unsigned int)0  , (unsigned int)256000, &TT::initTable));
        _keys.push_back(KeyBase(k_int,   w_spin, "threads"                     , &DynamicConfig::threads                        , (unsigned int)0  , (unsigned int)128   , std::bind(&ThreadPool::setup, &ThreadPool::instance())));
 
