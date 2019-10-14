@@ -39,6 +39,7 @@ fi
 
 echo "Building $exe"
 OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto $t --std=c++14"
+#OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -O1 -g -flto $t --std=c++14"
 echo $OPT
 
 if [ $FATHOM_PRESENT = "1" ]; then

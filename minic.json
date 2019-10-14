@@ -1,12 +1,12 @@
 {
    "threads": 1,
    "mateFinder": false,
-   "ttSizeMb": 1024,
+   "ttSizeMb": 256,
    "book": false,
    "bookFile": "book.bin",
    "fullXboardOutput": true,
    "debugMode": false,
    "debugFile": "minic.debug",
-   "level": 10,
+   "level": 100,
    "syzygyPath": ""
 }
