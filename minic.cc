@@ -36,7 +36,7 @@ typedef uint64_t u_int64_t;
 #define WITH_UCI
 //#define WITH_PGN_PARSER
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "1.00";
 
 /*
 //todo
@@ -3719,7 +3719,7 @@ namespace Options {
     void readOptions(int argc, char ** argv) { // load json config and command line args in memory
         for (int i = 1; i < argc; ++i) args.push_back(argv[i]);
         std::ifstream str("minic.json");
-        if (!str.is_open()) Logging::LogIt(Logging::logWarn) << "Cannot open minic.json";
+        if (!str.is_open()) Logging::LogIt(Logging::logWarn) << "I was not able to open minic.json";
         else {
             str >> json;
             if (!json.is_object()) Logging::LogIt(Logging::logError) << "Something wrong in minic.json";
