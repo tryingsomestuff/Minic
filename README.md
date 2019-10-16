@@ -38,7 +38,7 @@ Starting from release 1.00 Minic support setting options using protocol (both XB
 ## Strength
 Minic 0.98 is tested around 2840 on the CCRL 40/40 scale, so way to strong for a human being ! 
 STS : 1051/1500 @10sec per position (single thread)  
-WAC : 263/300 @10sec per position (single thread)
+WAC : 275/300 @10sec per position (single thread)
 
 Minic finished 13/18 at TCEC16 qualification league (https://cd.tcecbeta.club/archive.html?season=16&div=ql&game=1)
 
