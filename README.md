@@ -113,7 +113,7 @@ Minic now comes with both a json configuration file where some parameters can be
 ```
 and a command line interface, using the same key word. For instance, forcing mateFinder mode can be done by adding "-mateFinder 1" when calling Minic.
 
-Starting from release 1.00, important options are also avaible throught protocol.
+Starting from release 1.00, important options are also available through protocol.
 
 ## Opening books
 
