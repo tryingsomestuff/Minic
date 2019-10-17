@@ -36,7 +36,7 @@ typedef uint64_t u_int64_t;
 #define WITH_UCI
 //#define WITH_PGN_PARSER
 
-const std::string MinicVersion = "1.00";
+const std::string MinicVersion = "dev";
 
 /*
 //todo
@@ -1473,7 +1473,7 @@ struct ThreadContext{
     template< bool withRep = true, bool isPv = true, bool INR = true> MaterialHash::Terminaison interiorNodeRecognizer(const Position & p)const;
     bool isRep(const Position & p, bool isPv)const;
     void displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv, const std::string & mark = "");
-    template < bool display = false, bool safeMatEvaluator = true > ScoreType eval(const Position & p, float & gp, ScoreAcc * sc = 0); 
+    template < bool display = false, bool safeMatEvaluator = true > ScoreType eval(const Position & p, float & gp, ScoreAcc * sc = 0);
 
     void idleLoop(){
         while (true){
@@ -2871,7 +2871,7 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
     if (!(pawns[Co_Black] & kingFlank[SQFILE(p.king[Co_Black])])) score.scores[ScoreAcc::sc_PawnLessFlanck] -= EvalConfig::pawnlessFlank;
 
     // tempo
-    //score.scores[ScoreAcc::sc_Tempo] += ScoreType(30);
+    score.scores[ScoreAcc::sc_Tempo] += ScoreType(15*gp);
 
     // scale phase and 50 moves rule
     if ( display ) score.Display(p,gp);
