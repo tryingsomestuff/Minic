@@ -393,7 +393,7 @@ ScoreType kingAttMax    = 422;
 ScoreType kingAttTrans  = 45;
 ScoreType kingAttScale  = 17;
 ScoreType kingAttOffset = 10;
-ScoreType kingAttWeight[2][6]    = { { 1, 7, 11, 5, 10, 0}, { 6, 4, 6, 0, 0, 0} };
+ScoreType kingAttWeight[2][6]    = { { 10, 7, 11, 5, 10, 0}, { 6, 4, 6, 0, 0, 0} };
 ScoreType kingAttSafeCheck[6]    = {   4, 36, 31, 31, 33, 0};
 ScoreType kingAttTable[64]       = {0};
 EvalScore queenNearKing = {-1,7};
@@ -842,7 +842,7 @@ template < Color C > bool getAttackers(const Position & p, const Square x, Squar
     while (att) attakers.push_back(popBit(att));
     att = attack<P_wr>(x, p.pieces<P_wq>(~C), p.occupancy);
     while (att) attakers.push_back(popBit(att));
-    attack<P_wb>(x, p.pieces<P_wq>(~C), p.occupancy);
+    att = attack<P_wb>(x, p.pieces<P_wq>(~C), p.occupancy);
     while (att) attakers.push_back(popBit(att));
     att = attack<P_wk>(x, p.pieces<P_wk>(~C), p.occupancy);
     while (att) attakers.push_back(popBit(att));
@@ -3118,21 +3118,25 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     if (!rootnode && interiorNodeRecognizer<true, pvnode, true>(p) == MaterialHash::Ter_Draw) return drawScore();
 
+    const bool withoutSkipMove = skipMove == INVALIDMOVE;
+    const Hash pHash = computeHash(p) ^ (withoutSkipMove ? 0 : skipMove);
+    bool validTTmove = false;
     TT::Entry e;
-    if ( skipMove==INVALIDMOVE && TT::getEntry(*this,computeHash(p), depth, e)) { // if not skipmove
+    if ( /*withoutSkipMove &&*/ TT::getEntry(*this,pHash, depth, e)) { // if not skipmove
         if ( e.h != 0 && !rootnode && !pvnode && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
-            //if ( e.m != INVALIDMOVE) pv.push_back(e.m); // here e.m might be INVALIDMOVE if B_alpha without alphaUpdated/bestScoreUpdated (so don't try this at root node !)
-            if ((Move2Type(e.m) == T_std || isBadCap(e.m)) && !isInCheck) updateTables(*this, p, depth, e.m, e.b); // bad cap can be killers
+            //if (e.m != INVALIDMOVE) pv.push_back(e.m); // here e.m might be INVALIDMOVE if B_alpha without alphaUpdated/bestScoreUpdated (so don't try this at root node !)
+            if (e.m != INVALIDMOVE && (Move2Type(e.m) == T_std || isBadCap(e.m)) && !isInCheck) updateTables(*this, p, depth, e.m, e.b); // bad cap can be killers
             return adjustHashScore(e.score, ply);
         }
     }
+    validTTmove = e.h != 0 && e.m != INVALIDMOVE;
 
 #ifdef WITH_SYZYGY
     ScoreType tbScore = 0;
-    if ( !rootnode && skipMove==INVALIDMOVE && (countBit(p.allPieces[Co_White]|p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN && SyzygyTb::probe_wdl(p, tbScore, false) > 0){
+    if ( !rootnode && /*withoutSkipMove &&*/ (countBit(p.allPieces[Co_White]|p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN && SyzygyTb::probe_wdl(p, tbScore, false) > 0){
        ++stats.counters[Stats::sid_tbHit1];
        if ( abs(tbScore) == SyzygyTb::TB_WIN_SCORE) tbScore += eval(p, gp);
-       TT::setEntry(computeHash(p),INVALIDMOVE,createHashScore(tbScore,ply),createHashScore(tbScore,ply),TT::B_exact,DepthType(127));
+       TT::setEntry(pHash,INVALIDMOVE,createHashScore(tbScore,ply),createHashScore(tbScore,ply),TT::B_exact,DepthType(127));
        return tbScore;
     }
 #endif
@@ -3181,7 +3185,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             const ScoreType nullIIDScore = evalScore; // pvs<false, false>(beta - 1, beta, p, std::max(depth/4,1), ply, nullPV, seldepth, isInCheck, !cutNode);
             if (nullIIDScore >= beta /*- 10 * depth*/) { ///@todo try to minimize sid_nullMoveTry2 versus sid_nullMove
                 TT::Entry nullE;
-                TT::getEntry(*this, computeHash(p), depth - R, nullE);
+                TT::getEntry(*this, pHash, depth - R, nullE);
                 if (nullE.h == 0ull || nullE.score >= beta) { // avoid null move search if TT gives a score < beta for the same depth
                     ++stats.counters[Stats::sid_nullMoveTry2];
                     Position pN = p;
@@ -3214,7 +3218,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
           sort(*this,moves,p,gp,true,isInCheck,&e);
           capMoveGenerated = true;
           for (auto it = moves.begin() ; it != moves.end() && probCutCount < StaticConfig::probCutMaxMoves /*+ 2*cutNode*/; ++it){
-            if ( (e.h != 0ull && sameMove(e.m, *it)) || isBadCap(*it) ) continue; // skip TT move if quiet or bad captures
+            if ( (validTTmove && sameMove(e.m, *it)) || isBadCap(*it) ) continue; // skip TT move if quiet or bad captures
             Position p2 = p;
             if ( ! apply(p2,*it) ) continue;
             ++probCutCount;
@@ -3229,12 +3233,13 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     }
 
     // IID
-    if ( (e.h == 0ull /*|| e.d < depth/3*/) && ((pvnode && depth >= StaticConfig::iidMinDepth) || depth >= StaticConfig::iidMinDepth2)){
+    if ( /*withoutSkipMove &&*/ (e.h == 0ull /*|| e.d < depth/3*/) && ((pvnode && depth >= StaticConfig::iidMinDepth) || depth >= StaticConfig::iidMinDepth2)){
         ++stats.counters[Stats::sid_iid];
         PVList iidPV;
-        pvs<pvnode,false>(alpha,beta,p,depth/2,ply,iidPV,seldepth,isInCheck,cutNode);
+        pvs<pvnode,false>(alpha,beta,p,depth/2,ply,iidPV,seldepth,isInCheck,cutNode,skipMove);
         if (stopFlag) return STOPSCORE;
-        TT::getEntry(*this,computeHash(p), depth, e);
+        TT::getEntry(*this,pHash, depth, e);
+        validTTmove = e.h != 0 && e.m != INVALIDMOVE;
     }
 
     // LMP
@@ -3258,7 +3263,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     threatStack[p.halfmoves] = refutation;
 
     // try the tt move before move generation (if not skipped move)
-    if ( e.h != 0 && e.m != INVALIDMOVE && !sameMove(e.m,skipMove)) { // should be the case thanks to iid at pvnode
+    if ( e.h != 0 && validTTmove && !sameMove(e.m,skipMove)) { // should be the case thanks to iid at pvnode
         Position p2 = p;
         if (apply(p2, e.m)) {
             const Square to = Move2To(e.m);
@@ -3281,7 +3286,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                if (!extension && isAdvancedPawnPush && sameMove(e.m, killerT.killers[0][p.halfmoves])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo isPassed ?
                if (!extension && isQueenAttacked && PieceTools::getPieceType(p,Move2From(e.m)) == P_wq && Move2Type(e.m) == T_std && SEE(p,e.m,0)) ++stats.counters[Stats::sid_queenThreatExtension],++extension;
                if (!extension && p.halfmoves > 1 && threatStack[p.halfmoves] != INVALIDMOVE && threatStack[p.halfmoves-2] != INVALIDMOVE && (sameMove(threatStack[p.halfmoves],threatStack[p.halfmoves-2]) || (Move2To(threatStack[p.halfmoves]) == Move2To(threatStack[p.halfmoves-2]) && isCapture(threatStack[p.halfmoves])))) ++stats.counters[Stats::sid_BMExtension],++extension;
-               if (!extension && skipMove == INVALIDMOVE && depth >= StaticConfig::singularExtensionDepth && !rootnode && !isMateScore(e.score) && e.b == TT::B_beta && e.d >= depth - 3){
+               if (!extension && withoutSkipMove && depth >= StaticConfig::singularExtensionDepth && !rootnode && !isMateScore(e.score) && e.b == TT::B_beta && e.d >= depth - 3){
                    const ScoreType betaC = e.score - 2*depth;
                    PVList sePV;
                    DepthType seSeldetph = 0;
@@ -3307,7 +3312,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                     if (ttScore >= beta) {
                         ++stats.counters[Stats::sid_ttbeta];
                         if ((Move2Type(e.m) == T_std || isBadCap(e.m)) && !isInCheck) updateTables(*this, p, depth + (ttScore > (beta+80)), e.m, TT::B_beta);
-                        if (skipMove == INVALIDMOVE /*&& ttScore != 0*/) TT::setEntry(computeHash(p),e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth);
+                        if (true /*withoutSkipMove &&*/ /*&& ttScore != 0*/) TT::setEntry(pHash,e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth);
                         return ttScore;
                     }
                     ++stats.counters[Stats::sid_ttalpha];
@@ -3345,7 +3350,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
         if (sameMove(skipMove, *it)) continue; // skipmove
-        if (e.h != 0 && sameMove(e.m, *it)) continue; // already tried
+        if (e.h != 0 && validTTmove && sameMove(e.m, *it)) continue; // already tried
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
         const Square to = Move2To(*it);
@@ -3433,8 +3438,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         }
     }
 
-    if ( validMoveCount==0 ) return (isInCheck || skipMove!=INVALIDMOVE)?-MATE + ply : 0;
-    if ( skipMove==INVALIDMOVE /*&&*/ /*alphaUpdated*/ /*bestScoreUpdated*/ ) TT::setEntry(computeHash(p),bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),hashBound,depth);
+    if ( validMoveCount==0 ) return (isInCheck || !withoutSkipMove)?-MATE + ply : 0;
+    if ( true /*withoutSkipMove &&*/ /*&&*/ /*alphaUpdated*/ /*bestScoreUpdated*/ ) TT::setEntry(pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),hashBound,depth);
 
     return bestScore;
 }
