@@ -29,7 +29,7 @@ typedef uint64_t u_int64_t;
 #include "json.hpp"
 
 //#define IMPORTBOOK
-//#define WITH_TEXEL_TUNING
+#define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
 #define WITH_TEST_SUITE
 //#define WITH_SYZYGY
@@ -356,17 +356,17 @@ EvalScore   candidate[8]          = { {0, 0}, {-31,11}, {-15,0}, {16,6}, { 24,51
 EvalScore   protectedPasserFactor = { 8, 11}; // 1XX%
 EvalScore   freePasserFactor      = {38,121}; // 1XX%
 EvalScore   pawnMobility          = { 4, 10};
-EvalScore   pawnSafeAtt           = { 39,11};
-EvalScore   pawnSafePushAtt       = { 14, 9};
+EvalScore   pawnSafeAtt           = { 39,12};
+EvalScore   pawnSafePushAtt       = { 16, 4};
 
 EvalScore   rookOnOpenFile        = {48,-4};
 EvalScore   rookOnOpenSemiFileOur = { 9,-2};
 EvalScore   rookOnOpenSemiFileOpp = {-4, 4};
 
-EvalScore   rookQueenSameFile     = {-4,6};
+EvalScore   rookQueenSameFile     = {1,-1};
 EvalScore   rookFrontQueenMalus   = {-4,8};
-EvalScore   rookFrontKingMalus    = {-12,-2};
-EvalScore   minorOnOpenFile       = {18,-4};
+EvalScore   rookFrontKingMalus    = {-11,5};
+EvalScore   minorOnOpenFile       = {21,-6};
 EvalScore   attQueenMalus[6]      = {{2,-5},{-16,4},{-40,-16},{-57,-3},{32,39},{0,0}};
 
 EvalScore   hangingPieceMalus     = {-5, -5};
@@ -378,7 +378,7 @@ EvalScore   bishopPairBonus   = { 31, 58};
 EvalScore   knightPairMalus   = {  6, -9};
 EvalScore   rookPairMalus     = {  3,-14};
 
-EvalScore   pawnlessFlank     = { -42,-1};
+EvalScore   pawnlessFlank     = { -12,-7};
 
 
 EvalScore MOB[6][29] = { {{0,0},{0,0},{0,0},{0,0}},
@@ -394,7 +394,7 @@ ScoreType kingAttTrans  = 45;
 ScoreType kingAttScale  = 17;
 ScoreType kingAttOffset = 10;
 ScoreType kingAttWeight[2][6]    = { { 10, 7, 11, 5, 10, 0}, { 6, 4, 6, 0, 0, 0} };
-ScoreType kingAttSafeCheck[6]    = {   4, 36, 31, 31, 33, 0};
+ScoreType kingAttSafeCheck[6]    = {   4, 37, 36, 33, 32, 0};
 ScoreType kingAttTable[64]       = {0};
 EvalScore queenNearKing = {-1,7};
 
@@ -2798,11 +2798,9 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
     if ( whiteQueenSquare != INVALIDSQUARE ) score.scores[ScoreAcc::sc_RookFrontQueen] += EvalConfig::rookFrontQueenMalus * countBit(BBTools::frontSpan<Co_White>(whiteQueenSquare) & p.blackRook());
     if ( blackQueenSquare != INVALIDSQUARE ) score.scores[ScoreAcc::sc_RookFrontQueen] -= EvalConfig::rookFrontQueenMalus * countBit(BBTools::frontSpan<Co_Black>(blackQueenSquare) & p.whiteRook());
 
-    /*
     // queen aligned with own rook
     if ( whiteQueenSquare != INVALIDSQUARE ) score.scores[ScoreAcc::sc_RookQueenSameFile] += EvalConfig::rookQueenSameFile * countBit(BBTools::fillFile(whiteQueenSquare) & p.whiteRook());
     if ( blackQueenSquare != INVALIDSQUARE ) score.scores[ScoreAcc::sc_RookQueenSameFile] -= EvalConfig::rookQueenSameFile * countBit(BBTools::fillFile(blackQueenSquare) & p.blackRook());
-    */
 
     /*
     // hanging queen
