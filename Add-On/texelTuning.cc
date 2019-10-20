@@ -284,6 +284,7 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wq+PieceShift], 600, 1800, "EGqueen",  [](const ScoreType& s){ValuesEG[P_bq+PieceShift] = -s;}));
     */
 
+
     /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttSafeCheck[0], -30, 300, "cp"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttSafeCheck[1], -30, 300, "cn"));
@@ -292,6 +293,7 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttSafeCheck[4], -30, 300, "cq"));
     //guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttSafeCheck[5], -30, 30, "ck"));
     */
+
 
     /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::attQueenMalus[0][MG], -150, 300, "aqp"));
@@ -465,6 +467,7 @@ void TexelTuning(const std::string & filename) {
     }
     */
 
+
     /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookQueenSameFile[MG] , -500,  500,"rookQueenSameFile"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookQueenSameFile[EG] , -500,  500,"rookQueenSameFileEG"));
@@ -480,33 +483,23 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::hangingPieceMalus[EG] , -500,  500,"hangingPieceMalusEG"));
     */
 
-    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnSafeAtt[MG] , -500,  500,"pawnSafeAtt"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnSafeAtt[EG] , -500,  500,"pawnSafeAttEG"));
 
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnSafePushAtt[MG] , -500,  500,"pawnSafePushAtt"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnSafePushAtt[EG] , -500,  500,"pawnSafePushAttEG"));
-    */
 
-    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookFrontKingMalus[MG] , -500,  500,"rookFrontKingMalus"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookFrontKingMalus[EG] , -500,  500,"rookFrontKingMalusEG"));
-    */
 
-    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::minorOnOpenFile[MG] , -500,  500,"minorOnOpenFile"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::minorOnOpenFile[EG] , -500,  500,"minorOnOpenFileEG"));
-    */
 
-    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::queenNearKing[MG] , -500,  500,"queenNearKing"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::queenNearKing[EG] , -500,  500,"queenNearKingEG"));
-    */
 
-    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnlessFlank[MG] , -500,  500,"pawnlessFlank"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnlessFlank[EG] , -500,  500,"pawnlessFlankEG"));
-    */
 
     computeOptimalK(data);
     Logging::LogIt(Logging::logInfo) << "Optimal K " << Texel::K;
