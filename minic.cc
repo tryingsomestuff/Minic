@@ -81,7 +81,7 @@ typedef uint64_t Counter;
 typedef uint64_t BitBoard;
 typedef int16_t  ScoreType;
 typedef int64_t  TimeType;
-typedef bool GenerationType;
+typedef int16_t  GenerationType;
 
 enum GamePhase { MG=0, EG=1, GP_MAX=2 };
 GamePhase operator++(GamePhase & g){g=GamePhase(g+1); return g;}
@@ -1626,7 +1626,7 @@ void clearTT() {
 }
 
 void age(){
-    TT::curGen = !TT::curGen;
+    ++TT::curGen;
 }
 
 bool getEntry(ThreadContext & context, Hash h, DepthType d, Entry & e, int nbuck = 0) {
@@ -3016,10 +3016,10 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     // use tt score if possible and not in check
     if ( !isInCheck && e.h != 0 && ((e.b == TT::B_alpha && e.score <= evalScore) || (e.b == TT::B_beta && e.score >= evalScore) || (e.b == TT::B_exact)) ) evalScore = e.score, evalScoreIsHashScore = true;
 
-    if ( evalScore >= beta ) return evalScore;
-    if ( evalScore > alpha) alpha = evalScore;
-
     TT::Bound b = TT::B_alpha;
+    if ( evalScore >= beta ) return evalScore;
+    if ( evalScore > alpha) alpha = evalScore;/*, b = isInCheck? TT::B_alpha : TT::B_exact;*/ // stand pat is at least bound exact if no capture is valid
+
     ScoreType bestScore = evalScore;
 
     MoveList moves;
@@ -3246,7 +3246,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     const ScoreType futilityScore = alpha - StaticConfig::futilityDepthInit[evalScoreIsHashScore] - StaticConfig::futilityDepthCoeff[evalScoreIsHashScore]*depth;
     if (!rootnode && StaticConfig::doFutility && depth <= StaticConfig::futilityMaxDepth[evalScoreIsHashScore] && evalScore <= futilityScore) futility = true;
     // history pruning
-    if (!rootnode && StaticConfig::doHistoryPruning && depth < StaticConfig::historyPruningMaxDepth) historyPruning = true;
+    if (!rootnode && StaticConfig::doHistoryPruning && isNotEndGame && depth < StaticConfig::historyPruningMaxDepth) historyPruning = true;
 
     int validMoveCount = 0;
     //bool alphaUpdated = false;
@@ -3262,6 +3262,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     // try the tt move before move generation (if not skipped move)
     if ( e.h != 0 && validTTmove && !sameMove(e.m,skipMove)) { // should be the case thanks to iid at pvnode
+        bestMove = e.m; // in order to preserve tt move for alpha bound entry
         Position p2 = p;
         if (apply(p2, e.m)) {
             const Square to = Move2To(e.m);
@@ -3292,7 +3293,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                    if (stopFlag) return STOPSCORE;
                    if (score < betaC) {
                        ++stats.counters[Stats::sid_singularExtension],++extension;
-                       if ( score < betaC - std::min(4*depth,36)) ++stats.counters[Stats::sid_singularExtension2],/*ttMoveSingularExt=true,*/++extension;
+                       if ( score < betaC - std::min(4*depth,36)) ++stats.counters[Stats::sid_singularExtension2]/*,ttMoveSingularExt=true*/,++extension;
                    }
                    else if ( score >= beta && betaC >= beta) return score;
                }
@@ -3348,7 +3349,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
         if (sameMove(skipMove, *it)) continue; // skipmove
-        if (e.h != 0 && validTTmove && sameMove(e.m, *it)) continue; // already tried
+        if (validTTmove && sameMove(e.m, *it)) continue; // already tried
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
         const Square to = Move2To(*it);
@@ -3369,7 +3370,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
            if (!extension && isAdvancedPawnPush && sameMove(*it, killerT.killers[0][p.halfmoves])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo and isPassed ?
            if (!extension && isCastling(*it) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
            //if (!extension && isQueenAttacked && PieceTools::getPieceType(p,Move2From(*it)) == P_wq && Move2Type(*it) == T_std && SEE(p,*it,0)) ++stats.counters[Stats::sid_queenThreatExtension],++extension; // too much of that
-           //if (!extension && p.halfmoves > 1 && threatStack[p.halfmoves] != INVALIDMOVE && (sameMove(threatStack[p.halfmoves],threatStack[p.halfmoves-2]) || (Move2To(threatStack[p.halfmoves]) == Move2To(threatStack[p.halfmoves-2]) && isCapture(threatStack[p.halfmoves])))) ++stats.counters[Stats::sid_BMExtension],++extension;
+           //if (!extension && p.halfmoves > 1 && threatStack[p.halfmoves] != INVALIDMOVE && threatStack[p.halfmoves-2] != INVALIDMOVE && (sameMove(threatStack[p.halfmoves],threatStack[p.halfmoves-2]) || (Move2To(threatStack[p.halfmoves]) == Move2To(threatStack[p.halfmoves-2]) && isCapture(threatStack[p.halfmoves])))) ++stats.counters[Stats::sid_BMExtension],++extension;
         }
         // pvs
         if (validMoveCount < (2/*+2*rootnode*/) || !StaticConfig::doPVS ) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,!cutNode);
@@ -3387,7 +3388,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             // LMP
             if (lmp && isPrunableStdNoCheck && overLmpLimit ) {++stats.counters[Stats::sid_lmp]; continue;}
             // History pruning
-            if (historyPruning && isPrunableStdNoCheck && validMoveCount > StaticConfig::lmpLimit[improving][depth]/3 && Move2Score(*it) < StaticConfig::historyPruningThresholdInit + depth*StaticConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
+            if (historyPruning && isPrunableStdNoCheck /*&& validMoveCount > StaticConfig::lmpLimit[improving][depth]/3*/ && Move2Score(*it) < StaticConfig::historyPruningThresholdInit + depth*StaticConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
             // LMR
             if (StaticConfig::doLMR && !DynamicConfig::mateFinder && (isPrunableStd /*|| cutNode || overLmpLimit*/) && depth >= StaticConfig::lmrMinDepth ){
                 reduction = StaticConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
@@ -3402,7 +3403,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             }
             const DepthType nextDepth = depth-1-reduction+extension;
             // SEE (capture)
-            if (isPrunableCap){
+            if (isPrunableCap /*&& !extension*/){
                if (futility) {++stats.counters[Stats::sid_see]; continue;}
                else if ( /*!rootnode &&*/ !SEE(p,*it,-100*depth)) {++stats.counters[Stats::sid_see2]; continue;}
             }
