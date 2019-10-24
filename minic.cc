@@ -3396,8 +3396,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 reduction += ttMoveIsCapture/*&&isPrunableStd*/;
                 //reduction += cutNode&&isPrunableStd;
                 //reduction -= ttMoveSingularExt;
-                reduction -= 2*int(Move2Score(*it) / MAX_HISTORY); //history reduction/extension
                 if (pvnode && reduction > 0) --reduction;
+                reduction -= 2*int(Move2Score(*it) / MAX_HISTORY); //history reduction/extension
                 if (reduction + extension < 0) reduction = -extension;
                 if (reduction + extension >= depth - 1) reduction = depth - 1 - extension;
             }
