@@ -1581,7 +1581,6 @@ Counter ThreadPool::counter(Stats::StatId id) const { Counter n = 0; for (auto &
 bool apply(Position & p, const Move & m); //forward decl
 
 namespace TT{
-
 inline MiniHash Hash64to32   (Hash h) { return (h >> 32) & 0xFFFFFFFF; }
 inline MiniMove Move2MiniMove(Move m) { return m & 0xFFFF;} // skip score
 
@@ -1600,7 +1599,7 @@ struct Entry{
 };
 #pragma pack(pop)
 
-struct Bucket { static const int nbBucket = 3;  Entry e[nbBucket];};
+struct Bucket { static const int nbBucket = 5;  Entry e[nbBucket];};
 
 unsigned long long int powerFloor(unsigned long long int x) {
     unsigned long long int power = 1;
@@ -1627,6 +1626,18 @@ void clearTT() {
 
 void age(){
     ++TT::curGen;
+}
+
+void prefetch(Hash h) {
+    void * addr = (&table[h&(ttSize-1)].e[0]);
+#  if defined(__INTEL_COMPILER)
+   __asm__ ("");
+#  endif
+#  if defined(__INTEL_COMPILER) || defined(_MSC_VER)
+  _mm_prefetch((char*)addr, _MM_HINT_T0);
+#  else
+  __builtin_prefetch(addr);
+#  endif
 }
 
 bool getEntry(ThreadContext & context, Hash h, DepthType d, Entry & e, int nbuck = 0) {
@@ -3265,6 +3276,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         bestMove = e.m; // in order to preserve tt move for alpha bound entry
         Position p2 = p;
         if (apply(p2, e.m)) {
+            TT::prefetch(computeHash(p2));
             const Square to = Move2To(e.m);
             if (p.c == Co_White && to == p.king[Co_Black]) return MATE - ply + 1;
             if (p.c == Co_Black && to == p.king[Co_White]) return MATE - ply + 1;
@@ -3352,6 +3364,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if (validTTmove && sameMove(e.m, *it)) continue; // already tried
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
+        TT::prefetch(computeHash(p2));
         const Square to = Move2To(*it);
         if (p.c == Co_White && to == p.king[Co_Black]) return MATE - ply + 1;
         if (p.c == Co_Black && to == p.king[Co_White]) return MATE - ply + 1;
@@ -3389,6 +3402,11 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if (lmp && isPrunableStdNoCheck && overLmpLimit ) {++stats.counters[Stats::sid_lmp]; continue;}
             // History pruning
             if (historyPruning && isPrunableStdNoCheck /*&& validMoveCount > StaticConfig::lmpLimit[improving][depth]/3*/ && Move2Score(*it) < StaticConfig::historyPruningThresholdInit + depth*StaticConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
+            // SEE (capture)
+            if (isPrunableCap){
+               if (futility) {++stats.counters[Stats::sid_see]; continue;}
+               else if ( /*!rootnode &&*/ !SEE(p,*it,-100*depth)) {++stats.counters[Stats::sid_see2]; continue;}
+            }
             // LMR
             if (StaticConfig::doLMR && !DynamicConfig::mateFinder && (isPrunableStd /*|| cutNode || overLmpLimit*/) && depth >= StaticConfig::lmrMinDepth ){
                 reduction = StaticConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
@@ -3402,11 +3420,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 if (reduction + extension >= depth - 1) reduction = depth - 1 - extension;
             }
             const DepthType nextDepth = depth-1-reduction+extension;
-            // SEE (capture)
-            if (isPrunableCap /*&& !extension*/){
-               if (futility) {++stats.counters[Stats::sid_see]; continue;}
-               else if ( /*!rootnode &&*/ !SEE(p,*it,-100*depth)) {++stats.counters[Stats::sid_see2]; continue;}
-            }
             // SEE (quiet)
             if ( isPrunableStdNoCheck && /*!rootnode &&*/ !SEE(p,*it,-15*nextDepth*nextDepth)) {++stats.counters[Stats::sid_seeQuiet]; continue;}
             // PVS
