@@ -37,6 +37,8 @@ if [ "$t" != "-march=native" ]; then
    exe=${exe}_${tname}
 fi
 
+rm -f minic.gcda
+
 echo "Building $exe"
 OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto $t --std=c++14"
 #OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -O1 -g -flto $t --std=c++14"
