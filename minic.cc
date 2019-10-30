@@ -1592,17 +1592,6 @@ bool getPawnEntry(ThreadContext & context, Hash h, PawnEntry *& pe){
     return true;
 }
 
-/*
-void setPawnEntry(ThreadContext & context, Hash h, const PawnEntry & pe){
-    assert(h > 0);
-    if ( DynamicConfig::disableTT  ) return;
-    PawnEntry & _e = tablePawn[h&(ttSizePawn-1)];
-    ++context.stats.counters[Stats::sid_ttPawnInsert];
-    _e = pe; // big copy
-    _e.h = Hash64to32(h);
-}
-*/
-
 private:
     ThreadData              _data;
     size_t                  _index;
@@ -2873,6 +2862,7 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
        pe.danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOpp * countBit(kingFlank[SQFILE(p.king[Co_Black])] & pe.semiOpenFiles[Co_Black])/8;
        pe.danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * countBit(kingFlank[SQFILE(p.king[Co_Black])] & pe.semiOpenFiles[Co_White])/8;
 
+       ++stats.counters[Stats::sid_ttPawnInsert];
        pe.h = Hash64to32(computePHash(p)); // set the pawn entry
     }
     assert(pePtr);
