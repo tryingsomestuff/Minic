@@ -339,7 +339,7 @@ EvalScore PST[6][64] = {
   }
 };
 
-EvalScore   pawnShieldBonus       = {4,1};
+EvalScore   pawnShieldBonus       = {6,4};
 
 enum PawnEvalSemiOpen{ Close=0, SemiOpen=1};
 
@@ -347,21 +347,21 @@ EvalScore   passerBonus[8]        = { { 0, 0 }, {0, -6} , {-10, 1}, {-14, 18}, {
 
 EvalScore   rookBehindPassed      = { -3,40};
 EvalScore   kingNearPassedPawn    = { -8,11};
-EvalScore   doublePawnMalus[2]    = {{ 24, 11 },{-1, 24 }}; // openfile
-EvalScore   isolatedPawnMalus[2]  = {{ 11,  5 },{ 21, 14 }}; // openfile
-EvalScore   backwardPawnMalus[2]  = {{  4, -3 },{ 22, -1 }}; // openfile
-EvalScore   holesMalus            = {-8, 4};
+EvalScore   doublePawnMalus[2]    = {{ 25, 11 },{ 0,  24 }}; // openfile
+EvalScore   isolatedPawnMalus[2]  = {{ 11,  5 },{ 19, 16 }}; // openfile
+EvalScore   backwardPawnMalus[2]  = {{  3, -4 },{ 22, -2 }}; // openfile
+EvalScore   holesMalus            = {-9, 4};
 EvalScore   outpost               = { 14,19};
-EvalScore   candidate[8]          = { {0, 0}, {-31,11}, {-15,0}, {16,6}, { 24,51}, {-11,14}, {-11,14}, {0, 0} };
+EvalScore   candidate[8]          = { {0, 0}, {-30,11}, {-15,0}, {14,6}, { 24,51}, {-11,14}, {-11,14}, {0, 0} };
 EvalScore   protectedPasserFactor = { 8, 11}; // 1XX%
 EvalScore   freePasserFactor      = {38,121}; // 1XX%
 EvalScore   pawnMobility          = { 4, 10};
 EvalScore   pawnSafeAtt           = { 39,12};
 EvalScore   pawnSafePushAtt       = { 16, 4};
 
-EvalScore   rookOnOpenFile        = {48,-5};
-EvalScore   rookOnOpenSemiFileOur = { 9,-2};
-EvalScore   rookOnOpenSemiFileOpp = {-4, 4};
+EvalScore   rookOnOpenFile        = {51,-3};
+EvalScore   rookOnOpenSemiFileOur = { 8,-1};
+EvalScore   rookOnOpenSemiFileOpp = {18,-2};
 
 EvalScore   rookQueenSameFile     = {9,-3};
 EvalScore   rookFrontQueenMalus   = {-7,-18};
@@ -398,9 +398,9 @@ ScoreType kingAttSafeCheck[6]    = {   4, 37, 36, 33, 32, 0};
 ScoreType kingAttTable[64]       = {0};
 EvalScore queenNearKing = {-1,7};
 
-ScoreType kingAttOpenfile        = 1;
-ScoreType kingAttSemiOpenfileOpp = -3;
-ScoreType kingAttSemiOpenfileOur = -29;
+ScoreType kingAttOpenfile        = 2;
+ScoreType kingAttSemiOpenfileOpp = 1;
+ScoreType kingAttSemiOpenfileOur = -3;
 
 }
 
@@ -1555,17 +1555,9 @@ struct PawnEntry{
     MiniHash h = 0;
     EvalScore score = {0,0};
     ScoreType danger[2] = {0,0};
-
-    /*
-    BitBoard passed[2]        = {0ull,0ull};
-    BitBoard isolated[2]      = {0ull,0ull};
-    BitBoard backward[2]      = {0ull,0ull};
-    BitBoard doubled[2]       = {0ull,0ull};
-    */
     BitBoard pawnTargets[2]   = {0ull,0ull};
-    BitBoard semiOpenFiles[2] = {0ull,0ull};
-    //BitBoard candidates[2]    = {0ull,0ull};
     BitBoard holes[2]         = {0ull,0ull};
+    BitBoard semiOpenFiles[2] = {0ull,0ull};
     BitBoard openFiles        = 0ull;
 };
 #pragma pack(pop)
@@ -2828,9 +2820,10 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
        const BitBoard isolated      [2] = {BBTools::pawnIsolated            (pawns[Co_White])                 , BBTools::pawnIsolated            (pawns[Co_Black])};
        const BitBoard doubled       [2] = {BBTools::pawnDoubled   <Co_White>(pawns[Co_White])                 , BBTools::pawnDoubled   <Co_Black>(pawns[Co_Black])};
        const BitBoard candidates    [2] = {BBTools::pawnCandidates<Co_White>(pawns[Co_White] ,pawns[Co_Black]), BBTools::pawnCandidates<Co_Black>(pawns[Co_Black],pawns[Co_White])};
-       pe.pawnTargets   [Co_White] = BBTools::pawnAttacks   <Co_White>(pawns[Co_White])                  ; pe.pawnTargets   [Co_Black] = BBTools::pawnAttacks   <Co_Black>(pawns[Co_Black]);
-       pe.semiOpenFiles [Co_White] = BBTools::pawnSemiOpen  <Co_White>(pawns[Co_White] ,pawns[Co_Black]) ; pe.semiOpenFiles [Co_Black] = BBTools::pawnSemiOpen  <Co_Black>(pawns[Co_Black],pawns[Co_White]);
-       pe.holes         [Co_White] = BBTools::pawnHoles     <Co_White>(pawns[Co_White]) & extendedCenter ; pe.holes         [Co_Black] = BBTools::pawnHoles     <Co_Black>(pawns[Co_Black]) & extendedCenter;
+       pe.pawnTargets   [Co_White] = BBTools::pawnAttacks   <Co_White>(pawns[Co_White])                       ; pe.pawnTargets   [Co_Black] = BBTools::pawnAttacks   <Co_Black>(pawns[Co_Black]);
+       // semiOpen white is with white pawn, and without black pawn
+       pe.semiOpenFiles [Co_White] = BBTools::fillFile(pawns[Co_White]) & ~BBTools::fillFile(pawns[Co_Black]) ; pe.semiOpenFiles [Co_Black] = BBTools::fillFile(pawns[Co_Black]) & ~BBTools::fillFile(pawns[Co_White]);
+       pe.holes         [Co_White] = BBTools::pawnHoles     <Co_White>(pawns[Co_White]) & extendedCenter      ; pe.holes         [Co_Black] = BBTools::pawnHoles     <Co_Black>(pawns[Co_Black]) & extendedCenter;
        pe.openFiles     =  BBTools::openFiles(pawns[Co_White], pawns[Co_Black]);
    
        // pawn passer
@@ -2858,13 +2851,14 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
        // pawn hole, unguarded
        pe.score/*.scores[ScoreAcc::sc_PwnHole]*/ += EvalConfig::holesMalus * countBit(pe.holes[Co_White] & ~att[Co_White]);
        pe.score/*.scores[ScoreAcc::sc_PwnHole]*/ -= EvalConfig::holesMalus * countBit(pe.holes[Co_Black] & ~att[Co_Black]);
+
        // open file near king
-       pe.danger[Co_White] += EvalConfig::kingAttOpenfile        * countBit(BBTools::mask[p.king[Co_White]].kingZone & pe.openFiles) ;
-       pe.danger[Co_White] += EvalConfig::kingAttSemiOpenfileOpp * countBit(BBTools::mask[p.king[Co_White]].kingZone & pe.semiOpenFiles[Co_White]);
-       pe.danger[Co_White] += EvalConfig::kingAttSemiOpenfileOur * countBit(BBTools::mask[p.king[Co_White]].kingZone & pe.semiOpenFiles[Co_Black]);
-       pe.danger[Co_Black] += EvalConfig::kingAttOpenfile        * countBit(BBTools::mask[p.king[Co_Black]].kingZone & pe.openFiles);
-       pe.danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOpp * countBit(BBTools::mask[p.king[Co_Black]].kingZone & pe.semiOpenFiles[Co_Black]);
-       pe.danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * countBit(BBTools::mask[p.king[Co_Black]].kingZone & pe.semiOpenFiles[Co_White]);
+       pe.danger[Co_White] += EvalConfig::kingAttOpenfile        * countBit(kingFlank[SQFILE(p.king[Co_White])] & pe.openFiles)/8;
+       pe.danger[Co_White] += EvalConfig::kingAttSemiOpenfileOpp * countBit(kingFlank[SQFILE(p.king[Co_White])] & pe.semiOpenFiles[Co_White])/8;
+       pe.danger[Co_White] += EvalConfig::kingAttSemiOpenfileOur * countBit(kingFlank[SQFILE(p.king[Co_White])] & pe.semiOpenFiles[Co_Black])/8;
+       pe.danger[Co_Black] += EvalConfig::kingAttOpenfile        * countBit(kingFlank[SQFILE(p.king[Co_Black])] & pe.openFiles)/8;
+       pe.danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOpp * countBit(kingFlank[SQFILE(p.king[Co_Black])] & pe.semiOpenFiles[Co_Black])/8;
+       pe.danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * countBit(kingFlank[SQFILE(p.king[Co_Black])] & pe.semiOpenFiles[Co_White])/8;
 
        setPawnEntry(*this, computePHash(p), pe);
     }
@@ -2879,7 +2873,7 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
     score.scores[ScoreAcc::sc_MinorOnOpenFile] += EvalConfig::minorOnOpenFile * countBit(pe.openFiles & (p.whiteBishop()|p.whiteKnight()) & pe.pawnTargets[Co_White]);
     score.scores[ScoreAcc::sc_MinorOnOpenFile] -= EvalConfig::minorOnOpenFile * countBit(pe.openFiles & (p.blackBishop()|p.blackKnight()) & pe.pawnTargets[Co_Black]);
     
-    // knight on opponent hole, protected
+    // knight on opponent hole, protected by pawn
     score.scores[ScoreAcc::sc_Outpost] += EvalConfig::outpost * countBit(pe.holes[Co_Black] & p.whiteKnight() & pe.pawnTargets[Co_White]);
     score.scores[ScoreAcc::sc_Outpost] -= EvalConfig::outpost * countBit(pe.holes[Co_White] & p.blackKnight() & pe.pawnTargets[Co_Black]);
 
