@@ -2851,7 +2851,9 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
        // pawn hole, unguarded
        pe.score/*.scores[ScoreAcc::sc_PwnHole]*/ += EvalConfig::holesMalus * countBit(pe.holes[Co_White] & ~att[Co_White]);
        pe.score/*.scores[ScoreAcc::sc_PwnHole]*/ -= EvalConfig::holesMalus * countBit(pe.holes[Co_Black] & ~att[Co_Black]);
-
+       // malus for king on a pawnless flank
+       if (!(pawns[Co_White] & kingFlank[SQFILE(p.king[Co_White])])) pe.score/*.scores[ScoreAcc::sc_PawnLessFlanck]*/ += EvalConfig::pawnlessFlank;
+       if (!(pawns[Co_Black] & kingFlank[SQFILE(p.king[Co_Black])])) pe.score/*.scores[ScoreAcc::sc_PawnLessFlanck]*/ -= EvalConfig::pawnlessFlank;
        // open file near king
        pe.danger[Co_White] += EvalConfig::kingAttOpenfile        * countBit(kingFlank[SQFILE(p.king[Co_White])] & pe.openFiles)/8;
        pe.danger[Co_White] += EvalConfig::kingAttSemiOpenfileOpp * countBit(kingFlank[SQFILE(p.king[Co_White])] & pe.semiOpenFiles[Co_White])/8;
@@ -2882,6 +2884,10 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
         kdanger[Co_White] += EvalConfig::kingAttSafeCheck[pp-1] * countBit( checkers[Co_Black][pp-1] & ~att[Co_White] );
         kdanger[Co_Black] += EvalConfig::kingAttSafeCheck[pp-1] * countBit( checkers[Co_White][pp-1] & ~att[Co_Black] );
     }
+
+    // danger : use king danger score. **DO NOT** apply this in end-game
+    score.scores[ScoreAcc::sc_ATT][MG] -=  EvalConfig::kingAttTable[std::min(std::max(kdanger[Co_White],ScoreType(0)),ScoreType(63))];
+    score.scores[ScoreAcc::sc_ATT][MG] +=  EvalConfig::kingAttTable[std::min(std::max(kdanger[Co_Black],ScoreType(0)),ScoreType(63))];
 
     // number of hanging pieces
     const BitBoard hanging[2] = {nonPawnMat[Co_White] & (safe[Co_Black] | pe.pawnTargets[Co_Black])     , nonPawnMat[Co_Black] & (safe[Co_White] | pe.pawnTargets[Co_White])};
@@ -2945,10 +2951,6 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
     if ( blackQueenSquare != INVALIDSQUARE ) score.scores[ScoreAcc::sc_QueenNearKing] -= EvalConfig::queenNearKing * (7 - minDistance(p.king[Co_White], blackQueenSquare) );
     if ( whiteQueenSquare != INVALIDSQUARE ) score.scores[ScoreAcc::sc_QueenNearKing] += EvalConfig::queenNearKing * (7 - minDistance(p.king[Co_Black], whiteQueenSquare) );
 
-    // danger : use king danger score. **DO NOT** apply this in end-game
-    score.scores[ScoreAcc::sc_ATT][MG] -=  EvalConfig::kingAttTable[std::min(std::max(kdanger[Co_White],ScoreType(0)),ScoreType(63))];
-    score.scores[ScoreAcc::sc_ATT][MG] +=  EvalConfig::kingAttTable[std::min(std::max(kdanger[Co_Black],ScoreType(0)),ScoreType(63))];
-
     // number of pawn and piece type value
     score.scores[ScoreAcc::sc_Adjust] += EvalConfig::adjRook  [p.mat[Co_White][M_p]] * ScoreType(p.mat[Co_White][M_r]);
     score.scores[ScoreAcc::sc_Adjust] -= EvalConfig::adjRook  [p.mat[Co_Black][M_p]] * ScoreType(p.mat[Co_Black][M_r]);
@@ -2959,10 +2961,6 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
     score.scores[ScoreAcc::sc_Adjust]   += ( (p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonus : 0)-(p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonus : 0) );
     score.scores[ScoreAcc::sc_Adjust]   += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0) );
     score.scores[ScoreAcc::sc_Adjust]   += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
-
-    // malus for king on a pawnless flank
-    if (!(pawns[Co_White] & kingFlank[SQFILE(p.king[Co_White])])) score.scores[ScoreAcc::sc_PawnLessFlanck] += EvalConfig::pawnlessFlank;
-    if (!(pawns[Co_Black] & kingFlank[SQFILE(p.king[Co_Black])])) score.scores[ScoreAcc::sc_PawnLessFlanck] -= EvalConfig::pawnlessFlank;
 
     // tempo
     score.scores[ScoreAcc::sc_Tempo][MG] += ScoreType(15);
