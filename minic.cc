@@ -1552,21 +1552,26 @@ struct ThreadContext{
 
 #pragma pack(push, 1)
 struct PawnEntry{
-    MiniHash h = 0;
-    EvalScore score = {0,0};
-    ScoreType danger[2] = {0,0};
     BitBoard pawnTargets[2]   = {0ull,0ull};
     BitBoard holes[2]         = {0ull,0ull};
     BitBoard semiOpenFiles[2] = {0ull,0ull};
     BitBoard openFiles        = 0ull;
+    EvalScore score           = {0,0};
+    ScoreType danger[2]       = {0,0};
+    MiniHash h                = 0;
+    void reset(){
+        score[MG] = 0;   score[EG] = 0;
+        danger[0] = 0;   danger[1] = 0;
+    }
 };
 #pragma pack(pop)
 
-static const unsigned long long int ttSizePawn = 1024*32;
+static const unsigned long long int ttSizePawn;
 static std::unique_ptr<PawnEntry[]> tablePawn;
 
 void initPawnTable(){
     assert(tablePawn==nullptr);
+    assert(ttSizePawn>0);
     Logging::LogIt(Logging::logInfo) << "Init Pawn TT : " << ttSizePawn;
     Logging::LogIt(Logging::logInfo) << "PawnEntry size " << sizeof(PawnEntry);
     tablePawn.reset(new PawnEntry[ttSizePawn]);
@@ -1574,19 +1579,20 @@ void initPawnTable(){
 }
 
 void clearPawnTT() {
-    for (unsigned int k = 0; k < ttSizePawn; ++k) tablePawn[k] = { 0, 0ull, 0ull, 0ull, 0ull };
+    for (unsigned int k = 0; k < ttSizePawn; ++k) tablePawn[k].h = 0;
 }
 
-bool getPawnEntry(ThreadContext & context, Hash h, PawnEntry & pe){
+bool getPawnEntry(ThreadContext & context, Hash h, PawnEntry *& pe){
     assert(h > 0);
+    PawnEntry & _e = tablePawn[h&(ttSizePawn-1)];
+    pe = &_e;
     if ( DynamicConfig::disableTT  ) return false;
-    const PawnEntry & _e = tablePawn[h&(ttSizePawn-1)];
-    if ( _e.h != Hash64to32(h) ) return false;
+    if ( _e.h != Hash64to32(h) )     return false;
     ++context.stats.counters[Stats::sid_ttPawnhits];
-    pe = _e; // big copy
     return true;
 }
 
+/*
 void setPawnEntry(ThreadContext & context, Hash h, const PawnEntry & pe){
     assert(h > 0);
     if ( DynamicConfig::disableTT  ) return;
@@ -1595,7 +1601,7 @@ void setPawnEntry(ThreadContext & context, Hash h, const PawnEntry & pe){
     _e = pe; // big copy
     _e.h = Hash64to32(h);
 }
-
+*/
 
 private:
     ThreadData              _data;
@@ -1614,6 +1620,7 @@ TimeType  ThreadContext::currentMoveMs = 777; // a dummy initial value, useful f
 MoveDifficultyUtil::MoveDifficulty ThreadContext::moveDifficulty = MoveDifficultyUtil::MD_std;
 std::atomic<bool> ThreadContext::startLock;
 std::unique_ptr<ThreadContext::PawnEntry[]> ThreadContext::tablePawn = 0;
+const unsigned long long int ThreadContext::ttSizePawn = 1024*32;
 
 ThreadPool & ThreadPool::instance(){ static ThreadPool pool; return pool;}
 
@@ -2813,8 +2820,11 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
     att[Co_White] = attFromPiece[Co_White][P_wp-1] | attFromPiece[Co_White][P_wn-1] | attFromPiece[Co_White][P_wb-1] | attFromPiece[Co_White][P_wr-1] | attFromPiece[Co_White][P_wq-1] | attFromPiece[Co_White][P_wk-1];
     att[Co_Black] = attFromPiece[Co_Black][P_wp-1] | attFromPiece[Co_Black][P_wn-1] | attFromPiece[Co_Black][P_wb-1] | attFromPiece[Co_Black][P_wr-1] | attFromPiece[Co_Black][P_wq-1] | attFromPiece[Co_Black][P_wk-1];
 
-    PawnEntry pe;
-    if (! getPawnEntry(*this, computePHash(p), pe) ){
+    PawnEntry * pePtr = nullptr;
+    if (! getPawnEntry(*this, computePHash(p), pePtr) ){ // always set pePtr as a valid ptr (unless pawn size is zero which shall not happend)
+       assert(pePtr);
+       PawnEntry & pe = *pePtr;
+       pe.reset();
        const BitBoard passed        [2] = {BBTools::pawnPassed    <Co_White>(pawns[Co_White] ,pawns[Co_Black]), BBTools::pawnPassed    <Co_Black>(pawns[Co_Black],pawns[Co_White])};
        const BitBoard backward      [2] = {BBTools::pawnBackward  <Co_White>(pawns[Co_White] ,pawns[Co_Black]), BBTools::pawnBackward  <Co_Black>(pawns[Co_Black],pawns[Co_White])};
        const BitBoard isolated      [2] = {BBTools::pawnIsolated            (pawns[Co_White])                 , BBTools::pawnIsolated            (pawns[Co_Black])};
@@ -2845,25 +2855,28 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
        pe.score/*.scores[ScoreAcc::sc_PwnIsolated]*/ -= EvalConfig::isolatedPawnMalus[EvalConfig::SemiOpen] * countBit(isolated[Co_White] &  pe.semiOpenFiles[Co_White]);
        pe.score/*.scores[ScoreAcc::sc_PwnIsolated]*/ += EvalConfig::isolatedPawnMalus[EvalConfig::Close]    * countBit(isolated[Co_Black] & ~pe.semiOpenFiles[Co_Black]);
        pe.score/*.scores[ScoreAcc::sc_PwnIsolated]*/ += EvalConfig::isolatedPawnMalus[EvalConfig::SemiOpen] * countBit(isolated[Co_Black] &  pe.semiOpenFiles[Co_Black]);
-       // pawn shield (PST and king troppism alone is not enough)
-       pe.score/*.scores[ScoreAcc::sc_PwnShield]*/ += EvalConfig::pawnShieldBonus * std::min(countBit( BBTools::mask[p.king[Co_White]].kingZone & pawns[Co_White] ),ScoreType(3));
-       pe.score/*.scores[ScoreAcc::sc_PwnShield]*/ -= EvalConfig::pawnShieldBonus * std::min(countBit( BBTools::mask[p.king[Co_Black]].kingZone & pawns[Co_Black] ),ScoreType(3));
        // pawn hole, unguarded
        pe.score/*.scores[ScoreAcc::sc_PwnHole]*/ += EvalConfig::holesMalus * countBit(pe.holes[Co_White] & ~att[Co_White]);
        pe.score/*.scores[ScoreAcc::sc_PwnHole]*/ -= EvalConfig::holesMalus * countBit(pe.holes[Co_Black] & ~att[Co_Black]);
+
+       // pawn shield (PST and king troppism alone is not enough)
+       pe.score/*.scores[ScoreAcc::sc_PwnShield]*/ += EvalConfig::pawnShieldBonus * std::min(countBit( BBTools::mask[p.king[Co_White]].kingZone & pawns[Co_White] ),ScoreType(3));
+       pe.score/*.scores[ScoreAcc::sc_PwnShield]*/ -= EvalConfig::pawnShieldBonus * std::min(countBit( BBTools::mask[p.king[Co_Black]].kingZone & pawns[Co_Black] ),ScoreType(3));
        // malus for king on a pawnless flank
        if (!(pawns[Co_White] & kingFlank[SQFILE(p.king[Co_White])])) pe.score/*.scores[ScoreAcc::sc_PawnLessFlanck]*/ += EvalConfig::pawnlessFlank;
        if (!(pawns[Co_Black] & kingFlank[SQFILE(p.king[Co_Black])])) pe.score/*.scores[ScoreAcc::sc_PawnLessFlanck]*/ -= EvalConfig::pawnlessFlank;
        // open file near king
-       pe.danger[Co_White] += EvalConfig::kingAttOpenfile        * countBit(kingFlank[SQFILE(p.king[Co_White])] & pe.openFiles)/8;
+       pe.danger[Co_White] += EvalConfig::kingAttOpenfile        * countBit(kingFlank[SQFILE(p.king[Co_White])] & pe.openFiles              )/8;
        pe.danger[Co_White] += EvalConfig::kingAttSemiOpenfileOpp * countBit(kingFlank[SQFILE(p.king[Co_White])] & pe.semiOpenFiles[Co_White])/8;
        pe.danger[Co_White] += EvalConfig::kingAttSemiOpenfileOur * countBit(kingFlank[SQFILE(p.king[Co_White])] & pe.semiOpenFiles[Co_Black])/8;
-       pe.danger[Co_Black] += EvalConfig::kingAttOpenfile        * countBit(kingFlank[SQFILE(p.king[Co_Black])] & pe.openFiles)/8;
+       pe.danger[Co_Black] += EvalConfig::kingAttOpenfile        * countBit(kingFlank[SQFILE(p.king[Co_Black])] & pe.openFiles              )/8;
        pe.danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOpp * countBit(kingFlank[SQFILE(p.king[Co_Black])] & pe.semiOpenFiles[Co_Black])/8;
        pe.danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * countBit(kingFlank[SQFILE(p.king[Co_Black])] & pe.semiOpenFiles[Co_White])/8;
 
-       setPawnEntry(*this, computePHash(p), pe);
+       pe.h = Hash64to32(computePHash(p)); // set the pawn entry
     }
+    assert(pePtr);
+    const PawnEntry & pe = *pePtr;
     score.scores[ScoreAcc::sc_PawnTT] += pe.score;
     kdanger[Co_White] += pe.danger[Co_White];
     kdanger[Co_Black] += pe.danger[Co_Black];
