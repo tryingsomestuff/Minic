@@ -378,7 +378,7 @@ EvalScore   bishopPairBonus   = { 31, 58};
 EvalScore   knightPairMalus   = {  6, -9};
 EvalScore   rookPairMalus     = {  3,-14};
 
-EvalScore   pawnlessFlank     = { -12,-7};
+EvalScore   pawnlessFlank     = { -10,-7};
 
 
 EvalScore MOB[6][29] = { {{0,0},{0,0},{0,0},{0,0}},
@@ -1325,7 +1325,7 @@ Hash computeHash(const Position &p){
     return p.h;
 }
 
-//#define DEBUG_PHASH
+#define DEBUG_PHASH
 Hash computePHash(const Position &p){
 #ifdef DEBUG_PHASH
     Hash h = p.ph;
@@ -1340,9 +1340,9 @@ Hash computePHash(const Position &p){
     while (bb) { p.ph ^= Zobrist::ZT[BBTools::popBit(bb)][P_wk + PieceShift]; }
     bb = p.blackKing();
     while (bb) { p.ph ^= Zobrist::ZT[BBTools::popBit(bb)][P_bk + PieceShift]; }
-    if ( p.ep != INVALIDSQUARE ) p.ph ^= Zobrist::ZT[p.ep][13];
-    if ( p.c == Co_White)        p.ph ^= Zobrist::ZT[3][13];
-    if ( p.c == Co_Black)        p.ph ^= Zobrist::ZT[4][13];
+    //if ( p.ep != INVALIDSQUARE ) p.ph ^= Zobrist::ZT[p.ep][13];
+    //if ( p.c == Co_White)        p.ph ^= Zobrist::ZT[3][13];
+    //if ( p.c == Co_Black)        p.ph ^= Zobrist::ZT[4][13];
 #ifdef DEBUG_PHASH
     if ( h != 0ull && h != p.ph ){
         Logging::LogIt(Logging::logError) << "Pawn Hash error " << ToString(p.lastMove);
@@ -1660,7 +1660,7 @@ enum Bound : unsigned char{ B_exact = 0, B_alpha = 1, B_beta = 2};
 #pragma pack(push, 1)
 struct Entry{
     Entry():m(INVALIDMOVE),h(0),score(0),eval(0),b(B_alpha),d(-1)/*,generation(curGen)*/{}
-    Entry(Hash h, Move m, ScoreType s, ScoreType e, Bound b, DepthType d) : h(Hash64to32(h)), m(Move2MiniMove(m)), score(s), eval(e)/*, generation(curGen)*/, b(b), d(d){}
+    Entry(Hash h, Move m, ScoreType s, ScoreType e, Bound b, DepthType d) : h(Hash64to32(h)), m(Move2MiniMove(m)), score(s), eval(e), /*generation(curGen),*/ b(b), d(d){}
     MiniHash h;
     MiniMove m;
     ScoreType score, eval;
@@ -2244,9 +2244,9 @@ void applyNull(Position & pN) {
     pN.h ^= Zobrist::ZT[4][13];
     if (pN.ep != INVALIDSQUARE) pN.h ^= Zobrist::ZT[pN.ep][13];
 
-    pN.ph ^= Zobrist::ZT[3][13];
-    pN.ph ^= Zobrist::ZT[4][13];
-    if (pN.ep != INVALIDSQUARE) pN.ph ^= Zobrist::ZT[pN.ep][13];
+    //pN.ph ^= Zobrist::ZT[3][13];
+    //pN.ph ^= Zobrist::ZT[4][13];
+    //if (pN.ep != INVALIDSQUARE) pN.ph ^= Zobrist::ZT[pN.ep][13];
 
     pN.lastMove = INVALIDMOVE;
     pN.ep = INVALIDSQUARE;
@@ -2433,16 +2433,16 @@ bool apply(Position & p, const Move & m){
 
     // update EP
     if (p.ep != INVALIDSQUARE) p.h  ^= Zobrist::ZT[p.ep][13];
-    if (p.ep != INVALIDSQUARE) p.ph ^= Zobrist::ZT[p.ep][13];
+    //if (p.ep != INVALIDSQUARE) p.ph ^= Zobrist::ZT[p.ep][13];
     p.ep = INVALIDSQUARE;
     if ( abs(fromP) == P_wp && abs(to-from) == 16 ) p.ep = (from + to)/2;
     assert(p.ep == INVALIDSQUARE || (SQRANK(p.ep) == 2 || SQRANK(p.ep) == 5));
     if (p.ep != INVALIDSQUARE) p.h  ^= Zobrist::ZT[p.ep][13];
-    if (p.ep != INVALIDSQUARE) p.ph ^= Zobrist::ZT[p.ep][13];
+    //if (p.ep != INVALIDSQUARE) p.ph ^= Zobrist::ZT[p.ep][13];
 
     p.c = ~p.c;
     p.h  ^= Zobrist::ZT[3][13] ; p.h  ^= Zobrist::ZT[4][13];
-    p.ph ^= Zobrist::ZT[3][13] ; p.ph ^= Zobrist::ZT[4][13];
+    //p.ph ^= Zobrist::ZT[3][13] ; p.ph ^= Zobrist::ZT[4][13];
 
     if ( toP != P_none || abs(fromP) == P_wp ) p.fifty = 0;
     else ++p.fifty;
@@ -2833,10 +2833,10 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
        pe.score += EvalConfig::backwardPawnMalus[EvalConfig::Close]    * countBit(backward[Co_Black] & ~semiOpenPawn[Co_Black]);
        pe.score += EvalConfig::backwardPawnMalus[EvalConfig::SemiOpen] * countBit(backward[Co_Black] &  semiOpenPawn[Co_Black]);
        // double pawn malus
-       pe.score -= EvalConfig::doublePawnMalus[EvalConfig::Close]       * countBit(doubled[Co_White]  & ~semiOpenPawn[Co_White]);
-       pe.score -= EvalConfig::doublePawnMalus[EvalConfig::SemiOpen]    * countBit(doubled[Co_White]  &  semiOpenPawn[Co_White]);
-       pe.score += EvalConfig::doublePawnMalus[EvalConfig::Close]       * countBit(doubled[Co_Black]  & ~semiOpenPawn[Co_Black]);
-       pe.score += EvalConfig::doublePawnMalus[EvalConfig::SemiOpen]    * countBit(doubled[Co_Black]  &  semiOpenPawn[Co_Black]);
+       pe.score -= EvalConfig::doublePawnMalus[EvalConfig::Close]      * countBit(doubled[Co_White]  & ~semiOpenPawn[Co_White]);
+       pe.score -= EvalConfig::doublePawnMalus[EvalConfig::SemiOpen]   * countBit(doubled[Co_White]  &  semiOpenPawn[Co_White]);
+       pe.score += EvalConfig::doublePawnMalus[EvalConfig::Close]      * countBit(doubled[Co_Black]  & ~semiOpenPawn[Co_Black]);
+       pe.score += EvalConfig::doublePawnMalus[EvalConfig::SemiOpen]   * countBit(doubled[Co_Black]  &  semiOpenPawn[Co_Black]);
        // isolated pawn malus
        pe.score -= EvalConfig::isolatedPawnMalus[EvalConfig::Close]    * countBit(isolated[Co_White] & ~semiOpenPawn[Co_White]);
        pe.score -= EvalConfig::isolatedPawnMalus[EvalConfig::SemiOpen] * countBit(isolated[Co_White] &  semiOpenPawn[Co_White]);
