@@ -1412,7 +1412,7 @@ inline MiniHash Hash64to32   (Hash h) { return (h >> 32) & 0xFFFFFFFF; }
 inline MiniMove Move2MiniMove(Move m) { return m & 0xFFFF;} // skip score
 
 struct ScoreAcc{
-    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_Pwn, sc_PwnShield, sc_PwnPassed, sc_PwnIsolated, sc_PwnDoubled, sc_PwnBackward, sc_PwnCandidate, sc_PwnHole, sc_Outpost, sc_PwnPush, sc_PwnSafeAtt, sc_PwnPushAtt, sc_Adjust, sc_Initiative, sc_PawnLessFlanck, sc_OpenFile, sc_EndGame, sc_RookFrontKing, sc_RookFrontQueen, sc_RookQueenSameFile, sc_AttQueenMalus, sc_MinorOnOpenFile, sc_QueenNearKing, sc_hanging, sc_Tempo, sc_PawnTT, sc_max };
+    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_Outpost, sc_PwnPush, sc_PwnSafeAtt, sc_PwnPushAtt, sc_Adjust, sc_OpenFile, sc_RookFrontKing, sc_RookFrontQueen, sc_RookQueenSameFile, sc_AttQueenMalus, sc_MinorOnOpenFile, sc_QueenNearKing, sc_Hanging, sc_Tempo, sc_PawnTT, sc_max };
     float scalingFactor = 1;
     std::array<EvalScore,sc_max> scores;
     ScoreType Score(const Position &p, float gp){
@@ -1422,7 +1422,7 @@ struct ScoreAcc{
     }
 
     void Display(const Position &p, float gp){
-        static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "Pwn", "PwnShield", "PwnPassed", "PwnIsolated", "PwnDoubled", "PwnBackward", "PwnCandidate", "PwnHole", "Outpost", "PwnPush", "PwnSafeAtt", "PwnPushAtt" , "Adjust", "Initiative", "PawnLessFlanck", "OpenFile", "EndGame", "RookFrontKing", "RookFrontQueen", "RookQueenSameFile", "AttQueenMalus", "MinorOnOpenFile", "QueenNearKing", "Hanging", "Tempo", "PawnTT"};
+        static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "Outpost", "PwnPush", "PwnSafeAtt", "PwnPushAtt" , "Adjust", "OpenFile", "RookFrontKing", "RookFrontQueen", "RookQueenSameFile", "AttQueenMalus", "MinorOnOpenFile", "QueenNearKing", "Hanging", "Tempo", "PawnTT"};
         EvalScore sc;
         for(int k = 0 ; k < sc_max ; ++k){
             Logging::LogIt(Logging::logInfo) << scNames[k] << "       " << scores[k][MG];
@@ -2716,14 +2716,14 @@ inline void evalPawnPasser(const Position & p, BitBoard pieceBBiterator, EvalSco
         const EvalScore kingNearBonus   = EvalConfig::kingNearPassedPawn    * ScoreType( chebyshevDistance(p.king[~C], k) - chebyshevDistance(p.king[C], k) );
         const EvalScore rookBehind      = EvalConfig::rookBehindPassed      * (countBit(p.pieces<P_wr>(C) & BBTools::mask[k].rearSpan[C]) - countBit(p.pieces<P_wr>(~C) & BBTools::mask[k].rearSpan[C]));
         const bool unstoppable          = (p.mat[~C][M_t] == 0)&&((chebyshevDistance(p.king[~C],PromotionSquare<C>(k))-int(p.c!=C)) > std::min(Square(5), chebyshevDistance(PromotionSquare<C>(k),k)));
-        if (unstoppable) score/*.scores[ScoreAcc::sc_PwnPassed]*/ += ColorSignHelper<C>()*(Values[P_wr+PieceShift] - Values[P_wp+PieceShift]); // yes rook not queen to force promotion asap
-        else             score/*.scores[ScoreAcc::sc_PwnPassed]*/ += (EvalConfig::passerBonus[ColorRank<C>(k)].scale((1.f+factorProtected[MG]*ONEPERCENT)*(1.f+factorFree[MG]*ONEPERCENT),(1.f+factorProtected[EG]*ONEPERCENT)*(1.f+factorFree[EG]*ONEPERCENT)) + kingNearBonus + rookBehind)*ColorSignHelper<C>();
+        if (unstoppable) score += ColorSignHelper<C>()*(Values[P_wr+PieceShift] - Values[P_wp+PieceShift]); // yes rook not queen to force promotion asap
+        else             score += (EvalConfig::passerBonus[ColorRank<C>(k)].scale((1.f+factorProtected[MG]*ONEPERCENT)*(1.f+factorFree[MG]*ONEPERCENT),(1.f+factorProtected[EG]*ONEPERCENT)*(1.f+factorFree[EG]*ONEPERCENT)) + kingNearBonus + rookBehind)*ColorSignHelper<C>();
     }
 }
 
 template< Color C>
 inline void evalPawnCandidate(BitBoard pieceBBiterator, EvalScore & score){
-    while (pieceBBiterator) { score/*.scores[ScoreAcc::sc_PwnCandidate]*/ += EvalConfig::candidate[ColorRank<C>(BBTools::popBit(pieceBBiterator))] * ColorSignHelper<C>();}
+    while (pieceBBiterator) { score += EvalConfig::candidate[ColorRank<C>(BBTools::popBit(pieceBBiterator))] * ColorSignHelper<C>();}
 }
 
 ///@todo pawn storm
@@ -2828,30 +2828,30 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
        evalPawnCandidate<Co_White>(candidates[Co_White],pe.score);
        evalPawnCandidate<Co_Black>(candidates[Co_Black],pe.score);
        // pawn backward
-       pe.score/*.scores[ScoreAcc::sc_PwnBackward]*/ -= EvalConfig::backwardPawnMalus[EvalConfig::Close]    * countBit(backward[Co_White] & ~semiOpenPawn[Co_White]);
-       pe.score/*.scores[ScoreAcc::sc_PwnBackward]*/ -= EvalConfig::backwardPawnMalus[EvalConfig::SemiOpen] * countBit(backward[Co_White] &  semiOpenPawn[Co_White]);
-       pe.score/*.scores[ScoreAcc::sc_PwnBackward]*/ += EvalConfig::backwardPawnMalus[EvalConfig::Close]    * countBit(backward[Co_Black] & ~semiOpenPawn[Co_Black]);
-       pe.score/*.scores[ScoreAcc::sc_PwnBackward]*/ += EvalConfig::backwardPawnMalus[EvalConfig::SemiOpen] * countBit(backward[Co_Black] &  semiOpenPawn[Co_Black]);
+       pe.score -= EvalConfig::backwardPawnMalus[EvalConfig::Close]    * countBit(backward[Co_White] & ~semiOpenPawn[Co_White]);
+       pe.score -= EvalConfig::backwardPawnMalus[EvalConfig::SemiOpen] * countBit(backward[Co_White] &  semiOpenPawn[Co_White]);
+       pe.score += EvalConfig::backwardPawnMalus[EvalConfig::Close]    * countBit(backward[Co_Black] & ~semiOpenPawn[Co_Black]);
+       pe.score += EvalConfig::backwardPawnMalus[EvalConfig::SemiOpen] * countBit(backward[Co_Black] &  semiOpenPawn[Co_Black]);
        // double pawn malus
-       pe.score/*.scores[ScoreAcc::sc_PwnDoubled]*/ -= EvalConfig::doublePawnMalus[EvalConfig::Close]       * countBit(doubled[Co_White]  & ~semiOpenPawn[Co_White]);
-       pe.score/*.scores[ScoreAcc::sc_PwnDoubled]*/ -= EvalConfig::doublePawnMalus[EvalConfig::SemiOpen]    * countBit(doubled[Co_White]  &  semiOpenPawn[Co_White]);
-       pe.score/*.scores[ScoreAcc::sc_PwnDoubled]*/ += EvalConfig::doublePawnMalus[EvalConfig::Close]       * countBit(doubled[Co_Black]  & ~semiOpenPawn[Co_Black]);
-       pe.score/*.scores[ScoreAcc::sc_PwnDoubled]*/ += EvalConfig::doublePawnMalus[EvalConfig::SemiOpen]    * countBit(doubled[Co_Black]  &  semiOpenPawn[Co_Black]);
+       pe.score -= EvalConfig::doublePawnMalus[EvalConfig::Close]       * countBit(doubled[Co_White]  & ~semiOpenPawn[Co_White]);
+       pe.score -= EvalConfig::doublePawnMalus[EvalConfig::SemiOpen]    * countBit(doubled[Co_White]  &  semiOpenPawn[Co_White]);
+       pe.score += EvalConfig::doublePawnMalus[EvalConfig::Close]       * countBit(doubled[Co_Black]  & ~semiOpenPawn[Co_Black]);
+       pe.score += EvalConfig::doublePawnMalus[EvalConfig::SemiOpen]    * countBit(doubled[Co_Black]  &  semiOpenPawn[Co_Black]);
        // isolated pawn malus
-       pe.score/*.scores[ScoreAcc::sc_PwnIsolated]*/ -= EvalConfig::isolatedPawnMalus[EvalConfig::Close]    * countBit(isolated[Co_White] & ~semiOpenPawn[Co_White]);
-       pe.score/*.scores[ScoreAcc::sc_PwnIsolated]*/ -= EvalConfig::isolatedPawnMalus[EvalConfig::SemiOpen] * countBit(isolated[Co_White] &  semiOpenPawn[Co_White]);
-       pe.score/*.scores[ScoreAcc::sc_PwnIsolated]*/ += EvalConfig::isolatedPawnMalus[EvalConfig::Close]    * countBit(isolated[Co_Black] & ~semiOpenPawn[Co_Black]);
-       pe.score/*.scores[ScoreAcc::sc_PwnIsolated]*/ += EvalConfig::isolatedPawnMalus[EvalConfig::SemiOpen] * countBit(isolated[Co_Black] &  semiOpenPawn[Co_Black]);
+       pe.score -= EvalConfig::isolatedPawnMalus[EvalConfig::Close]    * countBit(isolated[Co_White] & ~semiOpenPawn[Co_White]);
+       pe.score -= EvalConfig::isolatedPawnMalus[EvalConfig::SemiOpen] * countBit(isolated[Co_White] &  semiOpenPawn[Co_White]);
+       pe.score += EvalConfig::isolatedPawnMalus[EvalConfig::Close]    * countBit(isolated[Co_Black] & ~semiOpenPawn[Co_Black]);
+       pe.score += EvalConfig::isolatedPawnMalus[EvalConfig::SemiOpen] * countBit(isolated[Co_Black] &  semiOpenPawn[Co_Black]);
        // pawn hole, unguarded
-       pe.score/*.scores[ScoreAcc::sc_PwnHole]*/ += EvalConfig::holesMalus * countBit(pe.holes[Co_White] & ~att[Co_White]);
-       pe.score/*.scores[ScoreAcc::sc_PwnHole]*/ -= EvalConfig::holesMalus * countBit(pe.holes[Co_Black] & ~att[Co_Black]);
+       pe.score += EvalConfig::holesMalus * countBit(pe.holes[Co_White] & ~att[Co_White]);
+       pe.score -= EvalConfig::holesMalus * countBit(pe.holes[Co_Black] & ~att[Co_Black]);
 
        // pawn shield (PST and king troppism alone is not enough)
-       pe.score/*.scores[ScoreAcc::sc_PwnShield]*/ += EvalConfig::pawnShieldBonus * std::min(countBit( BBTools::mask[p.king[Co_White]].kingZone & pawns[Co_White] ),ScoreType(3));
-       pe.score/*.scores[ScoreAcc::sc_PwnShield]*/ -= EvalConfig::pawnShieldBonus * std::min(countBit( BBTools::mask[p.king[Co_Black]].kingZone & pawns[Co_Black] ),ScoreType(3));
+       pe.score += EvalConfig::pawnShieldBonus * std::min(countBit( BBTools::mask[p.king[Co_White]].kingZone & pawns[Co_White] ),ScoreType(3));
+       pe.score -= EvalConfig::pawnShieldBonus * std::min(countBit( BBTools::mask[p.king[Co_Black]].kingZone & pawns[Co_Black] ),ScoreType(3));
        // malus for king on a pawnless flank
-       if (!(pawns[Co_White] & kingFlank[SQFILE(p.king[Co_White])])) pe.score/*.scores[ScoreAcc::sc_PawnLessFlanck]*/ += EvalConfig::pawnlessFlank;
-       if (!(pawns[Co_Black] & kingFlank[SQFILE(p.king[Co_Black])])) pe.score/*.scores[ScoreAcc::sc_PawnLessFlanck]*/ -= EvalConfig::pawnlessFlank;
+       if (!(pawns[Co_White] & kingFlank[SQFILE(p.king[Co_White])])) pe.score += EvalConfig::pawnlessFlank;
+       if (!(pawns[Co_Black] & kingFlank[SQFILE(p.king[Co_Black])])) pe.score -= EvalConfig::pawnlessFlank;
        // open file near king
        pe.danger[Co_White] += EvalConfig::kingAttOpenfile        * countBit(kingFlank[SQFILE(p.king[Co_White])] & pe.openFiles              )/8;
        pe.danger[Co_White] += EvalConfig::kingAttSemiOpenfileOpp * countBit(kingFlank[SQFILE(p.king[Co_White])] & pe.semiOpenFiles[Co_White])/8;
@@ -2892,7 +2892,7 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
 
     // number of hanging pieces
     const BitBoard hanging[2] = {nonPawnMat[Co_White] & (safe[Co_Black] | pe.pawnTargets[Co_Black])     , nonPawnMat[Co_Black] & (safe[Co_White] | pe.pawnTargets[Co_White])};
-    score.scores[ScoreAcc::sc_hanging] += EvalConfig::hangingPieceMalus * (countBit(hanging[Co_White]) - countBit(hanging[Co_Black]));
+    score.scores[ScoreAcc::sc_Hanging] += EvalConfig::hangingPieceMalus * (countBit(hanging[Co_White]) - countBit(hanging[Co_Black]));
 
     // threat by safe pawn
     const BitBoard safePawnAtt[2]  = {nonPawnMat[Co_Black] & BBTools::pawnAttacks<Co_White>(pawns[Co_White] & safe[Co_White]), nonPawnMat[Co_White] & BBTools::pawnAttacks<Co_Black>(pawns[Co_Black] & safe[Co_Black])};
