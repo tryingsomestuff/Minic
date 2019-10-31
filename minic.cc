@@ -1325,7 +1325,7 @@ Hash computeHash(const Position &p){
     return p.h;
 }
 
-#define DEBUG_PHASH
+//#define DEBUG_PHASH
 Hash computePHash(const Position &p){
 #ifdef DEBUG_PHASH
     Hash h = p.ph;
