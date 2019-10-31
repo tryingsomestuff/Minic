@@ -284,7 +284,6 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wq+PieceShift], 600, 1800, "EGqueen",  [](const ScoreType& s){ValuesEG[P_bq+PieceShift] = -s;}));
     */
 
-
     /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttSafeCheck[0], -30, 300, "cp"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttSafeCheck[1], -30, 300, "cn"));
@@ -293,7 +292,6 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttSafeCheck[4], -30, 300, "cq"));
     //guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttSafeCheck[5], -30, 30, "ck"));
     */
-
 
     /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::attQueenMalus[0][MG], -150, 300, "aqp"));
@@ -321,13 +319,11 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttWeight[1][3], -30, 30, "dr"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttWeight[1][4], -30, 30, "dq"));
     //guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttWeight[1][5], -30, 30, "dk"));
-    */
 
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttOpenfile , -400, 800, "kingAttOpenfile"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttSemiOpenfileOur , -400, 800, "kingAttSemiOpenfileOur"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttSemiOpenfileOpp , -400, 800, "kingAttSemiOpenfileOpp"));
 
-    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttMax    , -400, 800, "kattmax",[](const ScoreType & ){initEval();}));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttScale  , -100, 100, "kattscale",[](const ScoreType & ){initEval();}));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttTrans  , -100, 100, "kingAttTrans",[](const ScoreType & ){initEval();}));
@@ -366,12 +362,14 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookPairMalus  [EG] , -500,  500,"rook pair EG"));
     */
 
+    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookOnOpenFile       [MG] , -500,  500,"rookOnOpenFile"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookOnOpenSemiFileOpp[MG] , -500,  500,"rookOnOpenSemiFileOpp"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookOnOpenSemiFileOur[MG] , -500,  500,"rookOnOpenSemiFileOur"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookOnOpenFile       [EG] , -500,  500,"rookOnOpenFileEG"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookOnOpenSemiFileOpp[EG] , -500,  500,"rookOnOpenSemiFileOppEG"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookOnOpenSemiFileOur[EG] , -500,  500,"rookOnOpenSemiFileOurEG"));
+    */
 
     /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[1][MG], -1500, 1500,"passer 1"));
