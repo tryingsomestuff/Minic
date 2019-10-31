@@ -347,9 +347,9 @@ EvalScore   passerBonus[8]        = { { 0, 0 }, {0, -6} , {-10, 1}, {-14, 18}, {
 
 EvalScore   rookBehindPassed      = { -3,40};
 EvalScore   kingNearPassedPawn    = { -8,11};
-EvalScore   doublePawnMalus[2]    = {{ 25, 11 },{ 0,  24 }}; // openfile
-EvalScore   isolatedPawnMalus[2]  = {{ 11,  5 },{ 19, 16 }}; // openfile
-EvalScore   backwardPawnMalus[2]  = {{  3, -4 },{ 22, -2 }}; // openfile
+EvalScore   doublePawnMalus[2]    = {{ 25, 12 },{  5, 19 }}; // openfile
+EvalScore   isolatedPawnMalus[2]  = {{ 14,  2 },{ 15, 17 }}; // openfile
+EvalScore   backwardPawnMalus[2]  = {{ -2,  2 },{ 24, -5 }}; // openfile
 EvalScore   holesMalus            = {-9, 4};
 EvalScore   outpost               = { 14,19};
 EvalScore   candidate[8]          = { {0, 0}, {-30,11}, {-15,0}, {14,6}, { 24,51}, {-11,14}, {-11,14}, {0, 0} };
@@ -2722,11 +2722,6 @@ inline void evalPawnPasser(const Position & p, BitBoard pieceBBiterator, EvalSco
 }
 
 template< Color C>
-inline void evalPawnBackward(const Position & p, BitBoard pieceBBiterator, EvalScore & score){
-    while (pieceBBiterator) { score/*.scores[ScoreAcc::sc_PwnBackward]*/ -= EvalConfig::backwardPawnMalus[(BBTools::mask[BBTools::popBit(pieceBBiterator)].file & p.pieces<P_wp>(~C))==0ull] * ColorSignHelper<C>();}
-}
-
-template< Color C>
 inline void evalPawnCandidate(BitBoard pieceBBiterator, EvalScore & score){
     while (pieceBBiterator) { score/*.scores[ScoreAcc::sc_PwnCandidate]*/ += EvalConfig::candidate[ColorRank<C>(BBTools::popBit(pieceBBiterator))] * ColorSignHelper<C>();}
 }
@@ -2814,11 +2809,12 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
        assert(pePtr);
        PawnEntry & pe = *pePtr;
        pe.reset();
-       const BitBoard passed        [2] = {BBTools::pawnPassed    <Co_White>(pawns[Co_White] ,pawns[Co_Black]), BBTools::pawnPassed    <Co_Black>(pawns[Co_Black],pawns[Co_White])};
-       const BitBoard backward      [2] = {BBTools::pawnBackward  <Co_White>(pawns[Co_White] ,pawns[Co_Black]), BBTools::pawnBackward  <Co_Black>(pawns[Co_Black],pawns[Co_White])};
+       const BitBoard passed        [2] = {BBTools::pawnPassed    <Co_White>(pawns[Co_White],pawns[Co_Black]) , BBTools::pawnPassed    <Co_Black>(pawns[Co_Black],pawns[Co_White])};
+       const BitBoard backward      [2] = {BBTools::pawnBackward  <Co_White>(pawns[Co_White],pawns[Co_Black]) , BBTools::pawnBackward  <Co_Black>(pawns[Co_Black],pawns[Co_White])};
        const BitBoard isolated      [2] = {BBTools::pawnIsolated            (pawns[Co_White])                 , BBTools::pawnIsolated            (pawns[Co_Black])};
        const BitBoard doubled       [2] = {BBTools::pawnDoubled   <Co_White>(pawns[Co_White])                 , BBTools::pawnDoubled   <Co_Black>(pawns[Co_Black])};
-       const BitBoard candidates    [2] = {BBTools::pawnCandidates<Co_White>(pawns[Co_White] ,pawns[Co_Black]), BBTools::pawnCandidates<Co_Black>(pawns[Co_Black],pawns[Co_White])};
+       const BitBoard candidates    [2] = {BBTools::pawnCandidates<Co_White>(pawns[Co_White],pawns[Co_Black]) , BBTools::pawnCandidates<Co_Black>(pawns[Co_Black],pawns[Co_White])};
+       const BitBoard semiOpenPawn  [2] = {BBTools::pawnSemiOpen  <Co_White>(pawns[Co_White],pawns[Co_Black]) , BBTools::pawnSemiOpen  <Co_Black>(pawns[Co_Black],pawns[Co_White])};
        pe.pawnTargets   [Co_White] = BBTools::pawnAttacks   <Co_White>(pawns[Co_White])                       ; pe.pawnTargets   [Co_Black] = BBTools::pawnAttacks   <Co_Black>(pawns[Co_Black]);
        // semiOpen white is with white pawn, and without black pawn
        pe.semiOpenFiles [Co_White] = BBTools::fillFile(pawns[Co_White]) & ~BBTools::fillFile(pawns[Co_Black]) ; pe.semiOpenFiles [Co_Black] = BBTools::fillFile(pawns[Co_Black]) & ~BBTools::fillFile(pawns[Co_White]);
@@ -2828,22 +2824,24 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
        // pawn passer
        evalPawnPasser<Co_White>(p,passed[Co_White],pe.score);
        evalPawnPasser<Co_Black>(p,passed[Co_Black],pe.score);
-       // pawn backward
-       evalPawnBackward<Co_White>(p,backward[Co_White],pe.score);
-       evalPawnBackward<Co_Black>(p,backward[Co_Black],pe.score);
        // pawn candidate
        evalPawnCandidate<Co_White>(candidates[Co_White],pe.score);
        evalPawnCandidate<Co_Black>(candidates[Co_Black],pe.score);
+       // pawn backward
+       pe.score/*.scores[ScoreAcc::sc_PwnBackward]*/ -= EvalConfig::backwardPawnMalus[EvalConfig::Close]    * countBit(backward[Co_White] & ~semiOpenPawn[Co_White]);
+       pe.score/*.scores[ScoreAcc::sc_PwnBackward]*/ -= EvalConfig::backwardPawnMalus[EvalConfig::SemiOpen] * countBit(backward[Co_White] &  semiOpenPawn[Co_White]);
+       pe.score/*.scores[ScoreAcc::sc_PwnBackward]*/ += EvalConfig::backwardPawnMalus[EvalConfig::Close]    * countBit(backward[Co_Black] & ~semiOpenPawn[Co_Black]);
+       pe.score/*.scores[ScoreAcc::sc_PwnBackward]*/ += EvalConfig::backwardPawnMalus[EvalConfig::SemiOpen] * countBit(backward[Co_Black] &  semiOpenPawn[Co_Black]);
        // double pawn malus
-       pe.score/*.scores[ScoreAcc::sc_PwnDoubled]*/ -= EvalConfig::doublePawnMalus[EvalConfig::Close]    * countBit(doubled[Co_White] & ~pe.semiOpenFiles[Co_White]);
-       pe.score/*.scores[ScoreAcc::sc_PwnDoubled]*/ -= EvalConfig::doublePawnMalus[EvalConfig::SemiOpen] * countBit(doubled[Co_White] &  pe.semiOpenFiles[Co_White]);
-       pe.score/*.scores[ScoreAcc::sc_PwnDoubled]*/ += EvalConfig::doublePawnMalus[EvalConfig::Close]    * countBit(doubled[Co_Black] & ~pe.semiOpenFiles[Co_Black]);
-       pe.score/*.scores[ScoreAcc::sc_PwnDoubled]*/ += EvalConfig::doublePawnMalus[EvalConfig::SemiOpen] * countBit(doubled[Co_Black] &  pe.semiOpenFiles[Co_Black]);
+       pe.score/*.scores[ScoreAcc::sc_PwnDoubled]*/ -= EvalConfig::doublePawnMalus[EvalConfig::Close]       * countBit(doubled[Co_White]  & ~semiOpenPawn[Co_White]);
+       pe.score/*.scores[ScoreAcc::sc_PwnDoubled]*/ -= EvalConfig::doublePawnMalus[EvalConfig::SemiOpen]    * countBit(doubled[Co_White]  &  semiOpenPawn[Co_White]);
+       pe.score/*.scores[ScoreAcc::sc_PwnDoubled]*/ += EvalConfig::doublePawnMalus[EvalConfig::Close]       * countBit(doubled[Co_Black]  & ~semiOpenPawn[Co_Black]);
+       pe.score/*.scores[ScoreAcc::sc_PwnDoubled]*/ += EvalConfig::doublePawnMalus[EvalConfig::SemiOpen]    * countBit(doubled[Co_Black]  &  semiOpenPawn[Co_Black]);
        // isolated pawn malus
-       pe.score/*.scores[ScoreAcc::sc_PwnIsolated]*/ -= EvalConfig::isolatedPawnMalus[EvalConfig::Close]    * countBit(isolated[Co_White] & ~pe.semiOpenFiles[Co_White]);
-       pe.score/*.scores[ScoreAcc::sc_PwnIsolated]*/ -= EvalConfig::isolatedPawnMalus[EvalConfig::SemiOpen] * countBit(isolated[Co_White] &  pe.semiOpenFiles[Co_White]);
-       pe.score/*.scores[ScoreAcc::sc_PwnIsolated]*/ += EvalConfig::isolatedPawnMalus[EvalConfig::Close]    * countBit(isolated[Co_Black] & ~pe.semiOpenFiles[Co_Black]);
-       pe.score/*.scores[ScoreAcc::sc_PwnIsolated]*/ += EvalConfig::isolatedPawnMalus[EvalConfig::SemiOpen] * countBit(isolated[Co_Black] &  pe.semiOpenFiles[Co_Black]);
+       pe.score/*.scores[ScoreAcc::sc_PwnIsolated]*/ -= EvalConfig::isolatedPawnMalus[EvalConfig::Close]    * countBit(isolated[Co_White] & ~semiOpenPawn[Co_White]);
+       pe.score/*.scores[ScoreAcc::sc_PwnIsolated]*/ -= EvalConfig::isolatedPawnMalus[EvalConfig::SemiOpen] * countBit(isolated[Co_White] &  semiOpenPawn[Co_White]);
+       pe.score/*.scores[ScoreAcc::sc_PwnIsolated]*/ += EvalConfig::isolatedPawnMalus[EvalConfig::Close]    * countBit(isolated[Co_Black] & ~semiOpenPawn[Co_Black]);
+       pe.score/*.scores[ScoreAcc::sc_PwnIsolated]*/ += EvalConfig::isolatedPawnMalus[EvalConfig::SemiOpen] * countBit(isolated[Co_Black] &  semiOpenPawn[Co_Black]);
        // pawn hole, unguarded
        pe.score/*.scores[ScoreAcc::sc_PwnHole]*/ += EvalConfig::holesMalus * countBit(pe.holes[Co_White] & ~att[Co_White]);
        pe.score/*.scores[ScoreAcc::sc_PwnHole]*/ -= EvalConfig::holesMalus * countBit(pe.holes[Co_Black] & ~att[Co_Black]);
