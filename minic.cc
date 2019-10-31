@@ -390,17 +390,17 @@ EvalScore MOB[6][29] = { {{0,0},{0,0},{0,0},{0,0}},
 
 enum katt_att_def : unsigned char { katt_attack = 0, katt_defence = 1 };
 ScoreType kingAttMax    = 422;
-ScoreType kingAttTrans  = 45;
-ScoreType kingAttScale  = 17;
+ScoreType kingAttTrans  = 48;
+ScoreType kingAttScale  = 15;
 ScoreType kingAttOffset = 10;
-ScoreType kingAttWeight[2][6]    = { { 10, 7, 11, 5, 10, 0}, { 6, 4, 6, 0, 0, 0} };
+ScoreType kingAttWeight[2][6]    = { { 2, 8, 10, 6, 10, 0}, { 6, 5, 6, -1, 0, 0} };
 ScoreType kingAttSafeCheck[6]    = {   4, 37, 36, 33, 32, 0};
 ScoreType kingAttTable[64]       = {0};
 EvalScore queenNearKing = {-1,7};
-
-ScoreType kingAttOpenfile        = 2;
+// next are redoundant with pawn less flank
+ScoreType kingAttOpenfile        = 4;
 ScoreType kingAttSemiOpenfileOpp = 1;
-ScoreType kingAttSemiOpenfileOur = -3;
+ScoreType kingAttSemiOpenfileOur = 1;
 
 }
 
@@ -2823,7 +2823,7 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
        // semiOpen white is with white pawn, and without black pawn
        pe.semiOpenFiles [Co_White] = BBTools::fillFile(pawns[Co_White]) & ~BBTools::fillFile(pawns[Co_Black]) ; pe.semiOpenFiles [Co_Black] = BBTools::fillFile(pawns[Co_Black]) & ~BBTools::fillFile(pawns[Co_White]);
        pe.holes         [Co_White] = BBTools::pawnHoles     <Co_White>(pawns[Co_White]) & extendedCenter      ; pe.holes         [Co_Black] = BBTools::pawnHoles     <Co_Black>(pawns[Co_Black]) & extendedCenter;
-       pe.openFiles     =  BBTools::openFiles(pawns[Co_White], pawns[Co_Black]);
+       pe.openFiles =  BBTools::openFiles(pawns[Co_White], pawns[Co_Black]);
    
        // pawn passer
        evalPawnPasser<Co_White>(p,passed[Co_White],pe.score);
