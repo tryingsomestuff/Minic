@@ -353,11 +353,15 @@ void TexelTuning(const std::string & filename) {
     }
     */
 
+    for (int k = 0 ; k < 9 ; ++k ){
+      guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::bishopPairBonus[k][MG] , -500,  500,"bishop pair"+std::to_string(k)));
+      guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::bishopPairBonus[k][EG] , -500,  500,"bishop pair EG"+std::to_string(k)));
+    }
+
     /*
-    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::bishopPairBonus[MG] , -500,  500,"bishop pair"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::knightPairMalus[MG] , -500,  500,"knight pair"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookPairMalus  [MG] , -500,  500,"rook pair"));
-    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::bishopPairBonus[EG] , -500,  500,"bishop pair EG"));
+
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::knightPairMalus[EG] , -500,  500,"knight pair EG"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookPairMalus  [EG] , -500,  500,"rook pair EG"));
     */
@@ -500,8 +504,33 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::queenNearKing[EG] , -500,  500,"queenNearKingEG"));
     */
 
+    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnlessFlank[MG] , -500,  500,"pawnlessFlank"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnlessFlank[EG] , -500,  500,"pawnlessFlankEG"));
+    */
+
+    /*
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedKing [0][MG] , -100, 100, "ppinK"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedKing [0][EG] , -100, 100, "ppinKEG"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[0][MG] , -100, 100, "ppinq"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[0][EG] , -100, 100, "ppinqEG"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedKing [1][MG] , -100, 100, "npinK"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedKing [1][EG] , -100, 100, "npinKEG"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[1][MG] , -100, 100, "npinq"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[1][EG] , -100, 100, "npinqEG"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedKing [2][MG] , -100, 100, "bpinK"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedKing [2][EG] , -100, 100, "bpinKEG"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[2][MG] , -100, 100, "bpinq"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[2][EG] , -100, 100, "bpinqEG"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedKing [3][MG] , -100, 100, "rpinK"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedKing [3][EG] , -100, 100, "rpinKEG"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[3][MG] , -100, 100, "rpinq"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[3][EG] , -100, 100, "rpinqEG"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedKing [4][MG] , -100, 100, "qpinK"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedKing [4][EG] , -100, 100, "qpinKEG"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[4][MG] , -100, 100, "qpinq"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[4][EG] , -100, 100, "qpinqEG"));
+    */
 
     computeOptimalK(data);
     Logging::LogIt(Logging::logInfo) << "Optimal K " << Texel::K;
