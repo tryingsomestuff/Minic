@@ -1366,7 +1366,7 @@ struct ThreadData{
 };
 
 struct Stats{
-    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits, sid_ttPawnhits, sid_ttPawnInsert, sid_staticNullMove, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMoveTry3, sid_nullMove, sid_nullMove2, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_see, sid_see2, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_pawnPushExtension, sid_singularExtension, sid_singularExtension2, sid_queenThreatExtension, sid_BMExtension, sid_mateThreadExtension, sid_tbHit1, sid_tbHit2, sid_maxid };
+    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits, sid_ttInsert, sid_ttPawnhits, sid_ttPawnInsert, sid_staticNullMove, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMoveTry3, sid_nullMove, sid_nullMove2, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_see, sid_see2, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_pawnPushExtension, sid_singularExtension, sid_singularExtension2, sid_queenThreatExtension, sid_BMExtension, sid_mateThreadExtension, sid_tbHit1, sid_tbHit2, sid_maxid };
     static const std::string Names[sid_maxid] ;
     Counter counters[sid_maxid];
     void init(){
@@ -1375,7 +1375,7 @@ struct Stats{
     }
 };
 
-const std::string Stats::Names[Stats::sid_maxid] = { "nodes", "qnodes", "tthits", "ttPawnhits", "ttPawnInsert", "staticNullMove", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMoveTry3", "nullMove", "nullMove2", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "see", "see2", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "pawnPushExtension", "singularExtension", "singularExtension2", "queenThreatExtension", "BMExtension", "mateThreadExtension", "TBHit1", "TBHit2"};
+const std::string Stats::Names[Stats::sid_maxid] = { "nodes", "qnodes", "tthits", "ttInsert", "ttPawnhits", "ttPawnInsert", "staticNullMove", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMoveTry3", "nullMove", "nullMove2", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "see", "see2", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "pawnPushExtension", "singularExtension", "singularExtension2", "queenThreatExtension", "BMExtension", "mateThreadExtension", "TBHit1", "TBHit2"};
 
 // singleton pool of threads
 class ThreadPool : public std::vector<std::unique_ptr<ThreadContext>> {
@@ -1725,7 +1725,7 @@ bool getEntry(ThreadContext & context, Hash h, DepthType d, Entry & e, int nbuck
     else return getEntry(context,h,d,e,nbuck+1); // next one
 }
 
-void setEntry(Hash h, Move m, ScoreType s, ScoreType eval, Bound b, DepthType d){
+void setEntry(ThreadContext & context, Hash h, Move m, ScoreType s, ScoreType eval, Bound b, DepthType d){
     const Entry e = {h,m,s,eval,b,d};
     assert(e.h > 0);
     if ( DynamicConfig::disableTT ) return;
@@ -1734,12 +1734,11 @@ void setEntry(Hash h, Move m, ScoreType s, ScoreType eval, Bound b, DepthType d)
     Entry * toUpdate = &(table[index].e[1]);
     for (unsigned int i = 1 ; i < Bucket::nbBucket ; ++i){ // other replace by depth (and generation ?)
         Entry & curEntry = table[index].e[i];
-        if( curEntry.h == 0 ) break; //early break
-        if( curEntry.h == e.h ){ // found entry with same hash
-           if( curEntry.d < e.d ) {  curEntry = e;  return; }
-        }
+        if( curEntry.h == 0 ) break;
+        if( curEntry.h == e.h && curEntry.d < e.d ) { toUpdate = &curEntry; break; }
         else if( curEntry.d < toUpdate->d /*|| curEntry.generation < toUpdate->generation*/ ) toUpdate = &curEntry; // not same hash, replace the oldest or lowest depth
     }
+    ++context.stats.counters[Stats::sid_ttInsert];
     *toUpdate = e;
 }
 
@@ -2949,6 +2948,7 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
     const Square whiteQueenSquare = p.whiteQueen() ? BBTools::SquareFromBitBoard(p.whiteQueen()) : INVALIDSQUARE;
     const Square blackQueenSquare = p.blackQueen() ? BBTools::SquareFromBitBoard(p.blackQueen()) : INVALIDSQUARE;
 
+    /*
     // pins on king and queen
     const BitBoard pinnedK [2] = { getPinned<Co_White>(p,p.king[Co_White]), getPinned<Co_Black>(p,p.king[Co_Black]) };
     const BitBoard pinnedQ [2] = { getPinned<Co_White>(p,whiteQueenSquare), getPinned<Co_Black>(p,blackQueenSquare) };
@@ -2958,6 +2958,7 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
        score.scores[ScoreAcc::sc_PinsQ] -= EvalConfig::pinnedQueen[pp-1] * countBit(pinnedQ[Co_White] & p.pieces(Co_White,pp));
        score.scores[ScoreAcc::sc_PinsQ] += EvalConfig::pinnedQueen[pp-1] * countBit(pinnedQ[Co_Black] & p.pieces(Co_Black,pp));
     }
+    */
 
     /*
     // hanging queen
@@ -3157,14 +3158,14 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
            if ( score > alpha ){
                b = TT::B_exact;
                if (score >= beta) {
-                   TT::setEntry(computeHash(p),bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),TT::B_beta,hashDepth);
+                   TT::setEntry(*this,computeHash(p),bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),TT::B_beta,hashDepth);
                    return score;
                }
                alpha = score;
            }
         }
     }
-    TT::setEntry(computeHash(p),bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),b,hashDepth);
+    TT::setEntry(*this,computeHash(p),bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),b,hashDepth);
     return bestScore;
 }
 
@@ -3246,7 +3247,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if ( !rootnode && /*withoutSkipMove &&*/ (countBit(p.allPieces[Co_White]|p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN && SyzygyTb::probe_wdl(p, tbScore, false) > 0){
        ++stats.counters[Stats::sid_tbHit1];
        if ( abs(tbScore) == SyzygyTb::TB_WIN_SCORE) tbScore += eval(p, gp);
-       TT::setEntry(pHash,INVALIDMOVE,createHashScore(tbScore,ply),createHashScore(tbScore,ply),TT::B_exact,DepthType(127));
+       TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(tbScore,ply),createHashScore(tbScore,ply),TT::B_exact,DepthType(127));
        return tbScore;
     }
 #endif
@@ -3257,7 +3258,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     else evalScore = (e.h != 0)?e.eval:eval(p, gp);
     evalStack[p.halfmoves] = evalScore; // insert only static eval, never hash score !
     bool evalScoreIsHashScore = false;
-    if ( !validTTmove) TT::setEntry(pHash,INVALIDMOVE,createHashScore(evalScore,ply),createHashScore(evalScore,ply),TT::B_none,-2);
+    if ( !validTTmove) TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(evalScore,ply),createHashScore(evalScore,ply),TT::B_none,-2); // insert an eval here in case of pruning ...
     if ( (e.h != 0 && !isInCheck) && ((e.b == TT::B_alpha && e.score < evalScore) || (e.b == TT::B_beta && e.score > evalScore) || (e.b == TT::B_exact)) ) evalScore = adjustHashScore(e.score,ply), evalScoreIsHashScore=true;
 
     /* ///@todo THIS IS BUGGY : because pv is not filled (even at root) if bestScore starts too big.
@@ -3290,12 +3291,12 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         }
 
         // null move
-        if (isNotEndGame && StaticConfig::doNullMove && ply >= (unsigned int)nullMoveMinPly && depth >= StaticConfig::nullMoveMinDepth) {
+        if (isNotEndGame && withoutSkipMove && evalScore >= evalStack[p.halfmoves] && StaticConfig::doNullMove && ply >= (unsigned int)nullMoveMinPly && depth >= StaticConfig::nullMoveMinDepth) {
             PVList nullPV;
             ++stats.counters[Stats::sid_nullMoveTry];
             const DepthType R = depth / 4 + 3 + std::min((evalScore - beta) / 80, 3); // adaptative
             const ScoreType nullIIDScore = evalScore; // pvs<false, false>(beta - 1, beta, p, std::max(depth/4,1), ply, nullPV, seldepth, isInCheck, !cutNode);
-            if (nullIIDScore >= beta /*- 10 * depth*/) { ///@todo try to minimize sid_nullMoveTry2 versus sid_nullMove
+            if (nullIIDScore >= beta /*&& evalStack[p.halfmoves] >= beta + 10 * (depth-improving)*/ ) { ///@todo try to minimize sid_nullMoveTry2 versus sid_nullMove
                 TT::Entry nullE;
                 TT::getEntry(*this, pHash, depth - R, nullE);
                 if (nullE.h == 0ull || nullE.score >= beta) { // avoid null move search if TT gives a score < beta for the same depth
@@ -3345,7 +3346,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     }
 
     // IID
-    if ( /*withoutSkipMove &&*/ (e.h == 0ull /*|| e.d < depth/3*/) && ((pvnode && depth >= StaticConfig::iidMinDepth) || (/*cutNode &&*/ depth >= StaticConfig::iidMinDepth2)) ){ ///@todo try with cutNonde only ?
+    if ( /*withoutSkipMove &&*/ (e.h == 0ull /*|| e.d < depth/3*/) && ((pvnode && depth >= StaticConfig::iidMinDepth) || (cutNode && depth >= StaticConfig::iidMinDepth2)) ){ ///@todo try with cutNonde only ?
         ++stats.counters[Stats::sid_iid];
         PVList iidPV;
         pvs<pvnode,false>(alpha,beta,p,/*pvnode?depth-2:*/depth/2,ply,iidPV,seldepth,isInCheck,cutNode,skipMove);
@@ -3426,7 +3427,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                     if (ttScore >= beta) {
                         ++stats.counters[Stats::sid_ttbeta];
                         if ((Move2Type(e.m) == T_std || isBadCap(e.m)) && !isInCheck) updateTables(*this, p, depth + (ttScore > (beta+80)), e.m, TT::B_beta);
-                        if (true /*withoutSkipMove &&*/ /*&& ttScore != 0*/) TT::setEntry(pHash,e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth);
+                        if (true /*withoutSkipMove &&*/ /*&& ttScore != 0*/) TT::setEntry(*this,pHash,e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth);
                         return ttScore;
                     }
                     ++stats.counters[Stats::sid_ttalpha];
@@ -3554,7 +3555,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     }
 
     if ( validMoveCount==0 ) return (isInCheck || !withoutSkipMove)?-MATE + ply : 0;
-    if ( true /*withoutSkipMove &&*/ /*&&*/ /*alphaUpdated*/ /*bestScoreUpdated*/ ) TT::setEntry(pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),hashBound,depth);
+    if ( true /*withoutSkipMove &&*/ /*&&*/ /*alphaUpdated*/ /*bestScoreUpdated*/ ) TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),hashBound,depth);
 
     return bestScore;
 }
