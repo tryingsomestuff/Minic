@@ -84,6 +84,9 @@ typedef int16_t  ScoreType;
 typedef int64_t  TimeType;
 typedef int16_t  GenerationType;
 
+inline MiniHash Hash64to32   (Hash h) { return (h >> 32) & 0xFFFFFFFF; }
+inline MiniMove Move2MiniMove(Move m) { return m & 0xFFFF;} // skip score
+
 enum GamePhase { MG=0, EG=1, GP_MAX=2 };
 GamePhase operator++(GamePhase & g){g=GamePhase(g+1); return g;}
 
@@ -567,25 +570,22 @@ struct Position; // forward decl
 bool readFEN(const std::string & fen, Position & p, bool silent = false); // forward decl
 
 struct Position{
-    std::array<Piece,64> b {{ P_none }};
+    std::array<Piece,64>    b    {{ P_none }};
     std::array<BitBoard,13> allB {{ 0ull }};
 
-    inline BitBoard & blackKing  () {return allB[0];}
-    inline BitBoard & blackQueen () {return allB[1];}
-    inline BitBoard & blackRook  () {return allB[2];}
-    inline BitBoard & blackBishop() {return allB[3];}
-    inline BitBoard & blackKnight() {return allB[4];}
-    inline BitBoard & blackPawn  () {return allB[5];}
-    inline BitBoard & whitePawn  () {return allB[7];}
-    inline BitBoard & whiteKnight() {return allB[8];}
-    inline BitBoard & whiteBishop() {return allB[9];}
-    inline BitBoard & whiteRook  () {return allB[10];}
-    inline BitBoard & whiteQueen () {return allB[11];}
-    inline BitBoard & whiteKing  () {return allB[12];}
+    BitBoard allPieces[2] = {0ull};
+    BitBoard occupancy    = 0ull;
 
-    template<Piece pp>
-    inline BitBoard & pieces(Color c){ return allB[(1-2*c)*pp+PieceShift]; }
-    inline BitBoard & pieces(Color c, Piece pp){ return allB[(1-2*c)*pp+PieceShift]; }
+    // t p n b r q k bl bd M n  (total is first so that pawn to king is same a Piece)
+    typedef std::array<std::array<char,11>,2> Material;
+    Material mat = {{{{0}}}};
+
+    mutable Hash h = 0ull, ph = 0ull;
+    Move lastMove = INVALIDMOVE;
+    Square ep = INVALIDSQUARE, king[2] = { INVALIDSQUARE };
+    unsigned char fifty = 0, moves = 0, halfmoves = 0; // this is not the same as "ply", the one used to get seldepth
+    Castling castling = C_none;
+    Color c = Co_White;
 
     inline const BitBoard & blackKing  ()const {return allB[0];}
     inline const BitBoard & blackQueen ()const {return allB[1];}
@@ -604,22 +604,8 @@ struct Position{
     inline const BitBoard & pieces(Color c)const{ return allB[(1-2*c)*pp+PieceShift]; }
     inline const BitBoard & pieces(Color c, Piece pp)const{ return allB[(1-2*c)*pp+PieceShift]; }
 
-    BitBoard allPieces[2] = {0ull};
-    BitBoard occupancy  = 0ull;
-
     Position(){}
     Position(const std::string & fen){readFEN(fen,*this,true);}
-
-    unsigned char fifty = 0, moves = 0, halfmoves = 0; // this is not the same as "ply", the one used to get seldepth
-    Castling castling = C_none;
-    Square ep = INVALIDSQUARE, king[2] = { INVALIDSQUARE };
-    Color c = Co_White;
-    mutable Hash h = 0ull, ph = 0ull;
-    Move lastMove = INVALIDMOVE;
-
-    // t p n b r q k bl bd M n  (total is first so that pawn to king is same a Piece)
-    typedef std::array<std::array<char,11>,2> Material;
-    Material mat = {{{{0}}}};
 };
 
 namespace PieceTools{
@@ -641,18 +627,18 @@ inline constexpr BitBoard _shiftNorthWest(BitBoard b) { return b << 7 & ~fileH; 
 inline constexpr BitBoard _shiftSouthEast(BitBoard b) { return b >> 7 & ~fileA; }
 inline constexpr BitBoard _shiftSouthWest(BitBoard b) { return b >> 9 & ~fileH; }
 
-template<Color C> inline constexpr BitBoard shiftN  (const BitBoard b) { return C==Co_White? BBTools::_shiftNorth(b) : BBTools::_shiftSouth(b); }
-template<Color C> inline constexpr BitBoard shiftS  (const BitBoard b) { return C!=Co_White? BBTools::_shiftNorth(b) : BBTools::_shiftSouth(b); }
+template<Color C> inline constexpr BitBoard shiftN  (const BitBoard b) { return C==Co_White? BBTools::_shiftNorth(b)     : BBTools::_shiftSouth(b);    }
+template<Color C> inline constexpr BitBoard shiftS  (const BitBoard b) { return C!=Co_White? BBTools::_shiftNorth(b)     : BBTools::_shiftSouth(b);    }
 template<Color C> inline constexpr BitBoard shiftSW (const BitBoard b) { return C==Co_White? BBTools::_shiftSouthWest(b) : BBTools::_shiftNorthWest(b);}
 template<Color C> inline constexpr BitBoard shiftSE (const BitBoard b) { return C==Co_White? BBTools::_shiftSouthEast(b) : BBTools::_shiftNorthEast(b);}
 template<Color C> inline constexpr BitBoard shiftNW (const BitBoard b) { return C!=Co_White? BBTools::_shiftSouthWest(b) : BBTools::_shiftNorthWest(b);}
 template<Color C> inline constexpr BitBoard shiftNE (const BitBoard b) { return C!=Co_White? BBTools::_shiftSouthEast(b) : BBTools::_shiftNorthEast(b);}
 
-template<Color> inline constexpr BitBoard fillForward(BitBoard b);
-template<> inline constexpr BitBoard fillForward<Co_White>(BitBoard b) {  b |= (b << 8u);    b |= (b << 16u);    b |= (b << 32u);    return b;}
-template<> inline constexpr BitBoard fillForward<Co_Black>(BitBoard b) {  b |= (b >> 8u);    b |= (b >> 16u);    b |= (b >> 32u);    return b;}
+template<Color  > inline constexpr BitBoard fillForward(BitBoard b);
+template<>        inline constexpr BitBoard fillForward<Co_White>(BitBoard b) {  b |= (b << 8u);    b |= (b << 16u);    b |= (b << 32u);    return b;}
+template<>        inline constexpr BitBoard fillForward<Co_Black>(BitBoard b) {  b |= (b >> 8u);    b |= (b >> 16u);    b |= (b >> 32u);    return b;}
 template<Color C> inline constexpr BitBoard frontSpan(BitBoard b) { return fillForward<C>(shiftN<C>(b));}
-template<Color C> inline constexpr BitBoard rearSpan(BitBoard b) { return frontSpan<~C>(b);}
+template<Color C> inline constexpr BitBoard rearSpan (BitBoard b) { return frontSpan<~C>(b);}
 template<Color C> inline constexpr BitBoard pawnSemiOpen(BitBoard own, BitBoard opp) { return own & ~frontSpan<~C>(opp);}
 inline constexpr BitBoard fillFile(BitBoard b) { return fillForward<Co_White>(b) | fillForward<Co_Black>(b);}
 inline constexpr BitBoard openFiles(BitBoard w, BitBoard b) { return ~fillFile(w) & ~fillFile(b);}
@@ -666,11 +652,11 @@ template<Color C> inline constexpr BitBoard pawnDoubled(BitBoard b) { return fro
 
 inline constexpr BitBoard pawnIsolated(BitBoard b) { return b & ~fillFile(_shiftEast(b)) & ~fillFile(_shiftWest(b));}
 
-template<Color C> inline constexpr BitBoard pawnBackward(BitBoard own, BitBoard opp) {return shiftN<~C>( (shiftN<C>(own)& ~opp) & ~fillForward<C>(pawnAttacks<C>(own)) & (pawnAttacks<~C>(opp)));}
-template<Color C> inline constexpr BitBoard pawnStraggler(BitBoard own, BitBoard opp, BitBoard own_backwards) { return own_backwards & pawnSemiOpen<C>(own, opp) & (C ? 0x00ffff0000000000ull : 0x0000000000ffff00ull);}
-template<Color C> inline constexpr BitBoard pawnForwardCoverage(BitBoard bb) { BitBoard spans = frontSpan<C>(bb); return spans | _shiftEast(spans) | _shiftWest(spans);}
-template<Color C> inline constexpr BitBoard pawnPassed(BitBoard own, BitBoard opp) { return own & ~pawnForwardCoverage<~C>(opp);}
-template<Color C> inline constexpr BitBoard pawnCandidates(BitBoard own, BitBoard opp) { return pawnSemiOpen<C>(own, opp) & shiftN<~C>((pawnSingleAttacks<C>(own) & pawnSingleAttacks<~C>(opp)) | (pawnDoubleAttacks<C>(own) & pawnDoubleAttacks<~C>(opp)));}
+template<Color C> inline constexpr BitBoard pawnBackward       (BitBoard own, BitBoard opp) {return shiftN<~C>( (shiftN<C>(own)& ~opp) & ~fillForward<C>(pawnAttacks<C>(own)) & (pawnAttacks<~C>(opp)));}
+template<Color C> inline constexpr BitBoard pawnForwardCoverage(BitBoard bb               ) { BitBoard spans = frontSpan<C>(bb); return spans | _shiftEast(spans) | _shiftWest(spans);}
+template<Color C> inline constexpr BitBoard pawnPassed         (BitBoard own, BitBoard opp) { return own & ~pawnForwardCoverage<~C>(opp);}
+template<Color C> inline constexpr BitBoard pawnCandidates     (BitBoard own, BitBoard opp) { return pawnSemiOpen<C>(own, opp) & shiftN<~C>((pawnSingleAttacks<C>(own) & pawnSingleAttacks<~C>(opp)) | (pawnDoubleAttacks<C>(own) & pawnDoubleAttacks<~C>(opp)));}
+template<Color C> inline constexpr BitBoard pawnStraggler      (BitBoard own, BitBoard opp, BitBoard own_backwards) { return own_backwards & pawnSemiOpen<C>(own, opp) & (C ? 0x00ffff0000000000ull : 0x0000000000ffff00ull);} ///@todo use this !
 
 int ranks[512];
 struct Mask {
@@ -791,17 +777,15 @@ inline BitBoard rankAttack(const BitBoard occupancy, const Square x) {
     return BitBoard(ranks[((occupancy >> r) & 126) * 4 + f]) << r;
 }
 
-inline BitBoard fileAttack(const BitBoard occupancy, const Square x) { return attack(occupancy, x, mask[x].file); }
-
-inline BitBoard diagonalAttack(const BitBoard occupancy, const Square x) { return attack(occupancy, x, mask[x].diagonal); }
-
+inline BitBoard fileAttack        (const BitBoard occupancy, const Square x) { return attack(occupancy, x, mask[x].file);         }
+inline BitBoard diagonalAttack    (const BitBoard occupancy, const Square x) { return attack(occupancy, x, mask[x].diagonal);     }
 inline BitBoard antidiagonalAttack(const BitBoard occupancy, const Square x) { return attack(occupancy, x, mask[x].antidiagonal); }
 
 template < Piece > BitBoard coverage(const Square x, const BitBoard occupancy = 0, const Color c = Co_White) { assert(false); return 0ull; }
 template <       > BitBoard coverage<P_wp>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].pawnAttack[c]; }
 template <       > BitBoard coverage<P_wn>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].knight; }
 template <       > BitBoard coverage<P_wb>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return diagonalAttack(occupancy, x) | antidiagonalAttack(occupancy, x); }
-template <       > BitBoard coverage<P_wr>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return fileAttack(occupancy, x) | rankAttack(occupancy, x); }
+template <       > BitBoard coverage<P_wr>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return fileAttack    (occupancy, x) | rankAttack        (occupancy, x); }
 template <       > BitBoard coverage<P_wq>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return diagonalAttack(occupancy, x) | antidiagonalAttack(occupancy, x) | fileAttack(occupancy, x) | rankAttack(occupancy, x); }
 template <       > BitBoard coverage<P_wk>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].king; }
 
@@ -815,7 +799,7 @@ int popBit(BitBoard & b) {
     return i;
 }
 
-Square SquareFromBitBoard(const BitBoard & b) {
+Square SquareFromBitBoard(const BitBoard & b) { // return first square
     assert(b != 0ull);
     unsigned long i = 0;
     bsf(b, i);
@@ -850,12 +834,11 @@ template < Color C > bool getAttackers(const Position & p, const Square x, Squar
 }
 
 inline void unSetBit(Position & p, Square k)           { assert(k >= 0 && k < 64); ::unSetBit(p.allB[PieceTools::getPieceIndex(p, k)], k);}
-inline void unSetBit(Position & p, Square k, Piece pp) { assert(k >= 0 && k < 64); ::unSetBit(p.allB[pp + PieceShift]    , k);}
-inline void setBit  (Position & p, Square k, Piece pp) { assert(k >= 0 && k < 64); ::setBit  (p.allB[pp + PieceShift]    , k);}
+inline void unSetBit(Position & p, Square k, Piece pp) { assert(k >= 0 && k < 64); ::unSetBit(p.allB[pp + PieceShift]                , k);}
+inline void setBit  (Position & p, Square k, Piece pp) { assert(k >= 0 && k < 64); ::setBit  (p.allB[pp + PieceShift]                , k);}
 
 void initBitBoards(Position & p) {
-    p.whitePawn() = p.whiteKnight() = p.whiteBishop() = p.whiteRook() = p.whiteQueen() = p.whiteKing() = 0ull;
-    p.blackPawn() = p.blackKnight() = p.blackBishop() = p.blackRook() = p.blackQueen() = p.blackKing() = 0ull;
+    p.allB.fill(0ull);
     p.allPieces[Co_White] = p.allPieces[Co_Black] = p.occupancy = 0ull;
 }
 
@@ -891,7 +874,6 @@ inline bool isBadCap   (const Move & m  ){ return Move2Score(m) < -MoveScoring[T
 inline Square chebyshevDistance(Square sq1, Square sq2) { return std::max(std::abs(SQRANK(sq2) - SQRANK(sq1)) , std::abs(SQFILE(sq2) - SQFILE(sq1))); }
 inline Square manatthanDistance(Square sq1, Square sq2) { return std::abs(SQRANK(sq2) - SQRANK(sq1)) + std::abs(SQFILE(sq2) - SQFILE(sq1)); }
 inline Square minDistance      (Square sq1, Square sq2) { return std::min(std::abs(SQRANK(sq2) - SQRANK(sq1)) , std::abs(SQFILE(sq2) - SQFILE(sq1))); }
-inline Square flankDistance    (Square sq1, Square sq2) { return std::abs(SQFILE(sq2) - SQFILE(sq1)) - std::abs(SQRANK(sq2) - SQRANK(sq1)); }
 
 std::string ToString(const Move & m    , bool withScore = false);
 std::string ToString(const Position & p, bool noEval = false);
@@ -1270,15 +1252,15 @@ void initMaterial(Position & p){ // M_p .. M_k is the same as P_wp .. P_wk
     updateMaterialOther(p);
 }
 
-void updateMaterialStd(Position &p, const Square toBeCaptured){
+inline void updateMaterialStd(Position &p, const Square toBeCaptured){
     p.mat[~p.c][PieceTools::getPieceType(p,toBeCaptured)]--; // capture if to square is not empty
 }
 
-void updateMaterialEp(Position &p){
+inline void updateMaterialEp(Position &p){
     p.mat[~p.c][M_p]--; // ep if to square is empty
 }
 
-void updateMaterialProm(Position &p, const Square toBeCaptured, MType mt){
+inline void updateMaterialProm(Position &p, const Square toBeCaptured, MType mt){
     p.mat[~p.c][PieceTools::getPieceType(p,toBeCaptured)]--; // capture if to square is not empty
     p.mat[p.c][M_p]--; // pawn
     p.mat[p.c][promShift(mt)]++;   // prom piece
@@ -1367,15 +1349,12 @@ struct ThreadData{
 
 struct Stats{
     enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits, sid_ttInsert, sid_ttPawnhits, sid_ttPawnInsert, sid_staticNullMove, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMoveTry3, sid_nullMove, sid_nullMove2, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_see, sid_see2, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_pawnPushExtension, sid_singularExtension, sid_singularExtension2, sid_queenThreatExtension, sid_BMExtension, sid_mateThreadExtension, sid_tbHit1, sid_tbHit2, sid_maxid };
-    static const std::string Names[sid_maxid] ;
-    Counter counters[sid_maxid];
-    void init(){
-        Logging::LogIt(Logging::logInfo) << "Init stat" ;
-        for(size_t k = 0 ; k < sid_maxid ; ++k) counters[k] = Counter(0);
-    }
+    static const std::array<std::string,sid_maxid> Names;
+    std::array<Counter,sid_maxid> counters;
+    void init(){ Logging::LogIt(Logging::logInfo) << "Init stat" ;  counters.fill(0ull); }
 };
 
-const std::string Stats::Names[Stats::sid_maxid] = { "nodes", "qnodes", "tthits", "ttInsert", "ttPawnhits", "ttPawnInsert", "staticNullMove", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMoveTry3", "nullMove", "nullMove2", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "see", "see2", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "pawnPushExtension", "singularExtension", "singularExtension2", "queenThreatExtension", "BMExtension", "mateThreadExtension", "TBHit1", "TBHit2"};
+const std::array<std::string,Stats::sid_maxid> Stats::Names = { "nodes", "qnodes", "tthits", "ttInsert", "ttPawnhits", "ttPawnInsert", "staticNullMove", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMoveTry3", "nullMove", "nullMove2", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "see", "see2", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "pawnPushExtension", "singularExtension", "singularExtension2", "queenThreatExtension", "BMExtension", "mateThreadExtension", "TBHit1", "TBHit2"};
 
 // singleton pool of threads
 class ThreadPool : public std::vector<std::unique_ptr<ThreadContext>> {
@@ -1397,8 +1376,9 @@ private:
     ThreadPool();
 };
 
-const int ThreadPool::skipSize[20]  = { 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4 };
-const int ThreadPool::skipPhase[20] = { 0, 1, 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 6, 7 };
+const unsigned int threadSkipSize = 20;
+const int ThreadPool::skipSize[threadSkipSize]  = { 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4 };
+const int ThreadPool::skipPhase[threadSkipSize] = { 0, 1, 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 6, 7 };
 
 namespace MoveDifficultyUtil {
     enum MoveDifficulty { MD_forced = 0, MD_easy, MD_std, MD_hardDefense, MD_hardAttack };
@@ -1408,9 +1388,6 @@ namespace MoveDifficultyUtil {
     const int       emergencyFactor   = 5;
     const float     maxStealFraction  = 0.3f; // of remaining time
 }
-
-inline MiniHash Hash64to32   (Hash h) { return (h >> 32) & 0xFFFFFFFF; }
-inline MiniMove Move2MiniMove(Move m) { return m & 0xFFFF;} // skip score
 
 struct ScoreAcc{
     enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_Outpost, sc_PwnPush, sc_PwnSafeAtt, sc_PwnPushAtt, sc_Adjust, sc_OpenFile, sc_RookFrontKing, sc_RookFrontQueen, sc_RookQueenSameFile, sc_AttQueenMalus, sc_MinorOnOpenFile, sc_QueenNearKing, sc_Hanging, sc_PinsK, sc_PinsQ, sc_PawnTT, sc_max };
@@ -2441,10 +2418,12 @@ bool apply(Position & p, const Move & m){
     if (p.ep != INVALIDSQUARE) p.h  ^= Zobrist::ZT[p.ep][13];
     //if (p.ep != INVALIDSQUARE) p.ph ^= Zobrist::ZT[p.ep][13];
 
+    // update color
     p.c = ~p.c;
     p.h  ^= Zobrist::ZT[3][13] ; p.h  ^= Zobrist::ZT[4][13];
     //p.ph ^= Zobrist::ZT[3][13] ; p.ph ^= Zobrist::ZT[4][13];
 
+    // update game state
     if ( toP != P_none || abs(fromP) == P_wp ) p.fifty = 0;
     else ++p.fifty;
     if ( p.c == Co_White ) ++p.moves;
@@ -3642,7 +3621,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
     // ID loop
     for(DepthType depth = startDepth ; depth <= std::min(d,DepthType(MAX_DEPTH-6)) && !stopFlag ; ++depth ){ // -6 so that draw can be found for sure
         if (!isMainThread()){ // stockfish like thread management
-            const int i = (id()-1)%20;
+            const int i = (id()-1)%threadSkipSize;
             if (((depth + ThreadPool::skipPhase[i]) / ThreadPool::skipSize[i]) % 2) continue;
         }
         else{ if ( depth >= 5) startLock.store(false);} // delayed other thread start
