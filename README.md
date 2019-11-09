@@ -212,6 +212,7 @@ You can use both the json configuation file or the command line argument to sele
 * 0.96..0.98 : some tuning and SEE fix
 * 0.99 : random draw eval
 * 1.00 : tweak eval and search, work on TT scheme, some fixes, !!! 1 year anniversary release !!!
+* 1.01..1.09 : work on dedicated pawn table for eval, many eval fixes, search tweaks
 
 ## Thanks
 
