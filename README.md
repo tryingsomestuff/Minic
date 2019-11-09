@@ -14,7 +14,7 @@ Minic is (mainly) a one-file-code with very dense lines. This is of course very 
 
 WARNING : Dist directory as been REMOVED from the repository because it was starting to be too big. Unofficial releases are not available anymore. This operation has changed Minic git history, so you shall probably re-clone a clean repo. All (unofficial) releases are available in a new repo, here : https://github.com/tryingsomestuff/Minic-Dist
 
-Some stable/official ones will also be made available as github release. I "officially release" (create a github version) as sson as I have some validated elo (at least +10).
+Some stable/official ones will also be made available as github release. I "officially release" (create a github version) as soon as I have some validated elo (at least +10).
 
 In a github release, a tester shall only use the given (attached) binaries. The full "source" package always contains everything (source code, test suites, opening suite, books, ...). If you want to use Minic parameter file (minic.json) or some given book file, there are not attached in all release, there are downloadable from the github repo.
 
