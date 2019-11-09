@@ -376,7 +376,7 @@ EvalScore   attQueenMalus[5]      = {{2,-5},{-16,4},{-40,-16},{-57,-3},{32,39}};
 EvalScore   pinnedKing [5]        = { { -2, -9}, { 17, 51}, {-11, 63}, {-18, 62}, {-5, 26} };
 EvalScore   pinnedQueen[5]        = { {  9,-30}, {-25, 10}, {  7, 10}, {  2, 10}, {26, 32} };
 
-EvalScore   hangingPieceMalus     = {-4, -5};
+EvalScore   hangingPieceMalus     = {-13, -4};
 
 EvalScore   adjKnight[9]      = { {-24,-27}, { -12, 9}, { -4, 19}, {  1, 19}, { 12, 22}, { 11, 25}, {  8, 45}, { 19, 39}, { 20, 10} };
 EvalScore   adjRook[9]        = { { 24, 22}, {  9, 11}, { 15,  7}, {  4,  9}, {-11, 16}, {-17, 26}, {-18, 30}, {-21, 46}, {-10, 17} };
@@ -1651,7 +1651,7 @@ struct Entry{
 };
 #pragma pack(pop)
 
-struct Bucket { static const int nbBucket = 5;  Entry e[nbBucket];};
+struct Bucket { static const int nbBucket = 3;  Entry e[nbBucket];};
 
 unsigned long long int powerFloor(unsigned long long int x) {
     unsigned long long int power = 1;
@@ -2809,7 +2809,7 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
     evalPiece<P_wk,Co_Black>(p,p.pieces<P_wk>(Co_Black),score.scores[ScoreAcc::sc_PST],attFromPiece[Co_Black][P_wk-1],kdanger,checkers[Co_Black][P_wk-1]/*,attFromSquare[Co_Black][P_wk-1]*/);
 
     PawnEntry * pePtr = nullptr;
-    if (! getPawnEntry(*this, computePHash(p), pePtr) ){ // always set pePtr as a valid ptr (unless pawn size is zero which shall not happend)
+    if ( ! getPawnEntry(*this, computePHash(p), pePtr) ){ // always set pePtr as a valid ptr (unless pawn size is zero which shall not happend)
        assert(pePtr);
        PawnEntry & pe = *pePtr;
        pe.reset();
@@ -2921,8 +2921,8 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
     score.scores[ScoreAcc::sc_ATT][MG] -=  EvalConfig::kingAttTable[std::min(std::max(kdanger[Co_White],ScoreType(0)),ScoreType(63))];
     score.scores[ScoreAcc::sc_ATT][MG] +=  EvalConfig::kingAttTable[std::min(std::max(kdanger[Co_Black],ScoreType(0)),ScoreType(63))];
 
-    // number of hanging pieces
-    const BitBoard hanging[2] = {nonPawnMat[Co_White] & (safe[Co_Black] | pe.pawnTargets[Co_Black])     , nonPawnMat[Co_Black] & (safe[Co_White] | pe.pawnTargets[Co_White])};
+    // number of hanging pieces ///@todo attack twice, defended once
+    const BitBoard hanging[2] = {nonPawnMat[Co_White] & ((att[Co_Black] & ~att[Co_White]) | pe.pawnTargets[Co_Black])     , nonPawnMat[Co_Black] & ((att[Co_White] & ~att[Co_Black]) | pe.pawnTargets[Co_White])};
     score.scores[ScoreAcc::sc_Hanging] += EvalConfig::hangingPieceMalus * (countBit(hanging[Co_White]) - countBit(hanging[Co_Black]));
 
     // threat by safe pawn
@@ -3265,7 +3265,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
 #ifdef WITH_SYZYGY
     ScoreType tbScore = 0;
-    if ( !rootnode && /*withoutSkipMove &&*/ (countBit(p.allPieces[Co_White]|p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN && SyzygyTb::probe_wdl(p, tbScore, false) > 0){
+    if ( !rootnode && withoutSkipMove && (countBit(p.allPieces[Co_White]|p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN && SyzygyTb::probe_wdl(p, tbScore, false) > 0){
        ++stats.counters[Stats::sid_tbHit1];
        if ( abs(tbScore) == SyzygyTb::TB_WIN_SCORE) tbScore += eval(p, gp);
        TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(tbScore,ply),createHashScore(tbScore,ply),TT::B_exact,DepthType(127));
@@ -3460,7 +3460,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     }
 
 #ifdef WITH_SYZYGY
-    if (rootnode && (countBit(p.allPieces[Co_White] | p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN) {
+    if (rootnode && withoutSkipMove && (countBit(p.allPieces[Co_White] | p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN) {
         ScoreType tbScore = 0;
         if (SyzygyTb::probe_root(*this, p, tbScore, moves) < 0) { // only good moves if TB success
             if (capMoveGenerated) generate<GP_quiet>(p, moves, true);
