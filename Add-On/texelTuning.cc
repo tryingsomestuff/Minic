@@ -339,6 +339,7 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnMobility[EG] , -500,  500,"pmobility1"));
     */
     
+    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::protectedPasserBonus[1][MG] , -150,  150,"protectedPasserFactor"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::protectedPasserBonus[1][EG] , -150,  150,"protectedPasserFactorEG"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::protectedPasserBonus[2][MG] , -150,  150,"protectedPasserFactor"));
@@ -364,6 +365,7 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::freePasserBonus[5][EG] , -150,  150,"freePasserBonusEG"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::freePasserBonus[6][MG] , -150,  150,"freePasserBonus"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::freePasserBonus[6][EG] , -150,  150,"freePasserBonusEG"));
+    */
 
     /*
     for (int k = 0 ; k < 9 ; ++k ){
@@ -502,10 +504,8 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookFrontQueenMalus[EG] , -500,  500,"rookFrontQueenMalusEG"));
     */
 
-    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::hangingPieceMalus[MG] , -500,  500,"hangingPieceMalus"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::hangingPieceMalus[EG] , -500,  500,"hangingPieceMalusEG"));
-    */
 
     /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnSafeAtt[MG] , -500,  500,"pawnSafeAtt"));
