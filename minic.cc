@@ -85,6 +85,49 @@ typedef int16_t  ScoreType;
 typedef int64_t  TimeType;
 typedef int16_t  GenerationType;
 
+//#define WITH_TIMER
+#ifdef WITH_TIMER
+#ifdef _WIN32
+#include <intrin.h>
+uint64_t rdtsc(){return __rdtsc();}
+#else
+uint64_t rdtsc(){
+    unsigned int lo,hi;
+    __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
+    return ((uint64_t)hi << 32) | lo;
+}
+#endif
+#define START_TIMER uint64_t rdtscBegin = rdtsc();
+#define STOP_AND_SUM_TIMER(name) Timers::rdtscCounter##name += rdtsc() - rdtscBegin; ++Timers::callCounter##name;
+namespace Timers{
+uint64_t rdtscCounterSee       = 0ull;
+uint64_t rdtscCounterApply     = 0ull;
+uint64_t rdtscCounterEval      = 0ull;
+uint64_t rdtscCounterAttack    = 0ull;
+uint64_t rdtscCounterGenerate  = 0ull;
+uint64_t rdtscCounterTotal     = 0ull;
+
+uint64_t callCounterSee       = 0ull;
+uint64_t callCounterApply     = 0ull;
+uint64_t callCounterEval      = 0ull;
+uint64_t callCounterAttack    = 0ull;
+uint64_t callCounterGenerate  = 0ull;
+uint64_t callCounterTotal     = 0ull;
+
+void Display(){
+    std::cout << "See      " << rdtscCounterSee       << "  " << 100.f*rdtscCounterSee       / rdtscCounterTotal << "%  " << callCounterSee      << " " << rdtscCounterSee      / callCounterSee      << std::endl;
+    std::cout << "Apply    " << rdtscCounterApply     << "  " << 100.f*rdtscCounterApply     / rdtscCounterTotal << "%  " << callCounterApply    << " " << rdtscCounterApply    / callCounterApply    << std::endl;
+    std::cout << "Eval     " << rdtscCounterEval      << "  " << 100.f*rdtscCounterEval      / rdtscCounterTotal << "%  " << callCounterEval     << " " << rdtscCounterEval     / callCounterEval     << std::endl;
+    std::cout << "Attack   " << rdtscCounterAttack    << "  " << 100.f*rdtscCounterAttack    / rdtscCounterTotal << "%  " << callCounterAttack   << " " << rdtscCounterAttack   / callCounterAttack   << std::endl;
+    std::cout << "Generate " << rdtscCounterGenerate  << "  " << 100.f*rdtscCounterGenerate  / rdtscCounterTotal << "%  " << callCounterGenerate << " " << rdtscCounterGenerate / callCounterGenerate << std::endl;
+    std::cout << "Total    " << rdtscCounterTotal     << std::endl;
+}
+}
+#else
+#define START_TIMER
+#define STOP_AND_SUM_TIMER(name)
+#endif
+
 inline MiniHash Hash64to32   (Hash h) { return (h >> 32) & 0xFFFFFFFF; }
 inline MiniMove Move2MiniMove(Move m) { return m & 0xFFFF;} // skip score
 
@@ -453,8 +496,8 @@ enum Color : signed char{ Co_None  = -1,   Co_White = 0,   Co_Black = 1,   Co_En
 constexpr Color operator~(Color c){return Color(c^Co_Black);} // switch color
 Color operator++(Color & c){c=Color(c+1); return c;}
 
-// ttmove 10000, promcap >7000, cap 7000, checks 6000, killers 1600-1500-1400, counter 1300, castling 200, other by -1000 < history < 1000, bad cap <-7000.
-ScoreType MoveScoring[16] = { 0, 7000, 7100, 6000, 2950, 2500, 2350, 2300, 7950, 7500, 7350, 7300, 200, 200, 200, 200 };
+// ttmove 10000, promcap >7000, cap 7000, checks 6000, killers 1800-1700-1600, counter 1500, castling 200, other by -1000 < history < 1000, bad cap <-7000.
+ScoreType MoveScoring[16] = { 0, 7000, 7100, 6000, 3950, 3500, 3350, 3300, 7950, 7500, 7350, 7300, 200, 200, 200, 200 };
 
 Color Colors[13] = { Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_None, Co_White, Co_White, Co_White, Co_White, Co_White, Co_White};
 
@@ -765,12 +808,14 @@ inline void initMask() {
 }
 
 inline BitBoard attack(const BitBoard occupancy, const Square x, const BitBoard m) {
+    START_TIMER
     BitBoard forward = occupancy & m;
     BitBoard reverse = swapbits(forward);
     forward -= SquareToBitboard(x);
     reverse -= SquareToBitboard(x^63);
     forward ^= swapbits(reverse);
     forward &= m;
+    STOP_AND_SUM_TIMER(Attack)
     return forward;
 }
 
@@ -1418,6 +1463,8 @@ struct ScoreAcc{
     }
 };
 
+bool sameMove(const Move & a, const Move & b) { return (a & 0x0000FFFF) == (b & 0x0000FFFF);}
+
 // thread Stockfish style
 struct ThreadContext{
     static bool stopFlag;
@@ -1433,9 +1480,26 @@ struct ThreadContext{
 
     struct KillerT{
         Move killers[2][MAX_PLY];
+        Move killersCap[2][MAX_PLY];
         inline void initKillers(){
             Logging::LogIt(Logging::logInfo) << "Init killers" ;
-            for(int i = 0; i < 2; ++i) for(int k = 0 ; k < MAX_PLY; ++k) killers[i][k] = INVALIDMOVE;
+            for(int i = 0; i < 2; ++i) for(int k = 0 ; k < MAX_PLY; ++k) killers[i][k] = INVALIDMOVE, killersCap[i][k] = INVALIDMOVE;
+        }
+        inline bool isKiller(const Move m, const DepthType ply ){
+            if ( !isCapture(m)) return sameMove(m, killers[0]   [ply]) || sameMove(m, killers[1]   [ply]);
+            else                return sameMove(m, killersCap[0][ply]) || sameMove(m, killersCap[1][ply]);
+        }
+        inline void update(Move m, const Position & p){
+           if (!sameMove(killers[0][p.halfmoves], m)) {
+              killers[1][p.halfmoves] = killers[0][p.halfmoves];
+              killers[0][p.halfmoves] = m;
+           }
+        }
+        inline void updateCap(Move m, const Position & p){
+           if (!sameMove(killersCap[0][p.halfmoves], m)) {
+              killersCap[1][p.halfmoves] = killersCap[0][p.halfmoves];
+              killersCap[0][p.halfmoves] = m;
+           }
         }
     };
 
@@ -1455,11 +1519,13 @@ struct ThreadContext{
 
     struct CounterT{
         ScoreType counter[64][64];
+        ScoreType counterCap[64][64];
         inline void initCounter(){
             Logging::LogIt(Logging::logInfo) << "Init counter" ;
-            for(int i = 0; i < 64; ++i) for(int k = 0 ; k < 64; ++k) counter[i][k] = 0;
+            for(int i = 0; i < 64; ++i) for(int k = 0 ; k < 64; ++k) counter[i][k] = 0, counterCap[i][k] = 0;
         }
-        inline void update(Move m, const Position & p){ if ( p.lastMove > NULLMOVE && Move2Type(m) == T_std ) counter[Move2From(p.lastMove)][Move2To(p.lastMove)] = m; }
+        inline void update   (Move m, const Position & p){ if ( p.lastMove > NULLMOVE /*&& Move2Type(m) == T_std*/ ) counter   [Move2From(p.lastMove)][Move2To(p.lastMove)] = m; }
+        inline void updateCap(Move m, const Position & p){ if ( p.lastMove > NULLMOVE /*&& isCapture(m)*/ )          counterCap[Move2From(p.lastMove)][Move2To(p.lastMove)] = m; }
     };
     KillerT killerT;
     HistoryT historyT;
@@ -1681,7 +1747,7 @@ void age(){
 }
 
 void prefetch(Hash h) {
-    void * addr = (&table[h&(ttSize-1)].e[0]);
+   void * addr = (&table[h&(ttSize-1)].e[0]);
 #  if defined(__INTEL_COMPILER)
    __asm__ ("");
 #  endif
@@ -2190,9 +2256,11 @@ void generateSquare(const Position & p, MoveList & moves, Square from){
 
 template < GenPhase phase = GP_all >
 void generate(const Position & p, MoveList & moves, bool doNotClear = false){
+    START_TIMER
     if ( !doNotClear) moves.clear();
     BitBoard myPieceBBiterator = ( (p.c == Co_White) ? p.allPieces[Co_White] : p.allPieces[Co_Black]);
     while (myPieceBBiterator) generateSquare<phase>(p,moves,BBTools::popBit(myPieceBBiterator));
+    STOP_AND_SUM_TIMER(Generate)
 }
 
 inline void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, bool isCapture = false, Piece prom = P_none) {
@@ -2236,6 +2304,7 @@ void applyNull(ThreadContext & context, Position & pN) {
 }
 
 bool apply(Position & p, const Move & m){
+    START_TIMER
     if (m == INVALIDMOVE) return false;
     //#define DEBUG_MATERIAL
 #ifdef DEBUG_MATERIAL
@@ -2452,6 +2521,7 @@ bool apply(Position & p, const Move & m){
 
     p.lastMove = m;
 
+    STOP_AND_SUM_TIMER(Apply)
     return true;
 }
 
@@ -2525,6 +2595,7 @@ void initBook() {
 
 // Static Exchange Evaluation (cutoff version algorithm from Stockfish)
 bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold) const{
+    START_TIMER
     const Square from = Move2From(m);
     const Square to   = Move2To(m);
     if (PieceTools::getPieceType(p, to) == P_wk) return true; // capture king !
@@ -2561,10 +2632,9 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
         }
         if (!validThreatFound) endOfSEE = true;
     }
+    STOP_AND_SUM_TIMER(See)
     return us != p2.c; // we break the above loop when stm loses
 }
-
-bool sameMove(const Move & a, const Move & b) { return (a & 0x0000FFFF) == (b & 0x0000FFFF);}
 
 struct MoveSorter{
 
@@ -2574,29 +2644,38 @@ struct MoveSorter{
         const MType  t    = Move2Type(m);
         const Square from = Move2From(m);
         const Square to   = Move2To(m);
-        ScoreType s = MoveScoring[t];
+        ScoreType s       = Move2Score(m);
+        if ( s != 0 ) return; // prob cut already compute captures score
+        s = MoveScoring[t];
         if (e && sameMove(e->m,m)) s += 15000; // TT move
-        else if (isInCheck && PieceTools::getPieceType(p, from) == P_wk) s += 10000; // king evasion
-        if (isCapture(t)){
-            if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 1800 - MoveScoring[T_capture]; // bad cap killer
-            else if (sameMove(m, context.killerT.killers[1][p.halfmoves])) s += 1650 - MoveScoring[T_capture]; // bad cap killer
-            else if (p.halfmoves > 1 && sameMove(m, context.killerT.killers[0][p.halfmoves-2])) s += 1500 - MoveScoring[T_capture]; // bad cap killer
-            else {
-                s += StaticConfig::MvvLvaScores[PieceTools::getPieceType(p,to)-1][PieceTools::getPieceType(p,from)-1]; //[0 400]
-                if ( useSEE && !context.SEE(p,m,-70)) s -= 2*MoveScoring[T_capture]; // other bad cap
+        else{
+            if (isInCheck && PieceTools::getPieceType(p, from) == P_wk) s += 10000; // king evasion
+            if ( isCapture(t) && !isPromotion(t)){ // bad capture can be killers
+                if      (sameMove(m, context.killerT.killersCap[0][p.halfmoves])) s += - 1650 - MoveScoring[T_capture]; // bad cap killer
+                else if (sameMove(m, context.killerT.killersCap[1][p.halfmoves])) s += - 1700 - MoveScoring[T_capture]; // bad cap killer
+                else if (p.halfmoves > 1 && sameMove(m, context.killerT.killersCap[0][p.halfmoves-2])) s += - 1750 - MoveScoring[T_capture]; // bad cap killer
+                else if (p.lastMove > NULLMOVE && sameMove(context.counterT.counterCap[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= - 1800 - MoveScoring[T_capture]; // cap counter
+                else {
+                    const Piece victim   = PieceTools::getPieceType(p,to);
+                    const Piece attacker = PieceTools::getPieceType(p,from);
+                    s += StaticConfig::MvvLvaScores[victim-1][attacker-1]; //[0 400]
+                    if ( !isInCheck && (useSEE && !context.SEE(p,m,-70) /*|| (std::abs(Values[victim+PieceShift]) < std::abs(Values[attacker+PieceShift]) )*/ ) ) s -= 2*MoveScoring[T_capture]; // other bad cap
+                }
             }
-        }
-        else if ( t == T_std){
-            if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 1800; // quiet killer
-            else if (sameMove(m, context.killerT.killers[1][p.halfmoves])) s += 1650; // quiet killer
-            else if (p.halfmoves > 1 && sameMove(m, context.killerT.killers[0][p.halfmoves-2])) s += 1500; // quiet killer
-            else if (p.lastMove > NULLMOVE && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 1350; // quiet counter
-            else {
-                s += context.historyT.history[PieceTools::getPieceIndex(p, from)][to]; // +/- MAX_HISTORY = 1000
-                if ( refutation != INVALIDMOVE && from == Move2To(refutation) && context.SEE(p,m,-70)) s+=100; // move (safely) leaving threat square from null move search
+            else if ( t == T_std ){
+                if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 2800; // quiet killer
+                else if (sameMove(m, context.killerT.killers[1][p.halfmoves])) s += 2750; // quiet killer
+                else if (p.halfmoves > 1 && sameMove(m, context.killerT.killers[0][p.halfmoves-2])) s += 2700; // quiet killer
+                else if (p.lastMove > NULLMOVE && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 2650; // quiet counter
+                else {
+                    if ( !isInCheck ){
+                       s += context.historyT.history[PieceTools::getPieceIndex(p, from)][to]; // +/- MAX_HISTORY = 1000
+                       if ( refutation != INVALIDMOVE && from == Move2To(refutation) && context.SEE(p,m,-70)) s+=100; // move (safely) leaving threat square from null move search
+                       const bool isWhite = (p.allPieces[Co_White] & SquareToBitboard(from)) != 0ull;
+                       s += ScaleScore(EvalConfig::PST[PieceTools::getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - EvalConfig::PST[PieceTools::getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from],gp);
+                    }
+                }
             }
-            const bool isWhite = (p.allPieces[Co_White] & SquareToBitboard(from)) != 0ull;
-            s += ScaleScore(EvalConfig::PST[PieceTools::getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - EvalConfig::PST[PieceTools::getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from],gp);
         }
         m = ToMove(from, to, t, s);
     }
@@ -2739,6 +2818,7 @@ BitBoard getPinned(const Position & p, const Square s){
 
 template < bool display, bool safeMatEvaluator >
 ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
+    START_TIMER
     ScoreAcc scoreLoc;
     ScoreAcc & score = sc ? *sc : scoreLoc;
     score.scores = {0};
@@ -3006,7 +3086,9 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
 
     if ( display ) score.Display(p,gp);
     // scale both phase and 50 moves rule
-    return (white2Play?+1:-1)*score.Score(p,gp);
+    ScoreType ret = (white2Play?+1:-1)*score.Score(p,gp);
+    STOP_AND_SUM_TIMER(Eval)
+    return ret;
 }
 
 ScoreType createHashScore(ScoreType score, DepthType ply){
@@ -3196,14 +3278,28 @@ inline void updatePV(PVList & pv, const Move & m, const PVList & childPV) {
     std::copy(childPV.begin(), childPV.end(), std::back_inserter(pv));
 }
 
-inline void updateTables(ThreadContext & context, const Position & p, DepthType depth, const Move m, TT::Bound bound) {
+inline void updateTablesCap(ThreadContext & context, const Position & p, DepthType depth, const Move m, TT::Bound bound) {
     if (bound == TT::B_beta) {
-        if (!sameMove(context.killerT.killers[0][p.halfmoves], m)) {
-            context.killerT.killers[1][p.halfmoves] = context.killerT.killers[0][p.halfmoves];
-            context.killerT.killers[0][p.halfmoves] = m;
+        if (!sameMove(context.killerT.killersCap[0][p.halfmoves], m)) {
+            context.killerT.killersCap[1][p.halfmoves] = context.killerT.killersCap[0][p.halfmoves];
+            context.killerT.killersCap[0][p.halfmoves] = m;
         }
-        context.historyT.update<1>(depth, m, p);
         context.counterT.update(m, p);
+    }
+}
+
+inline void updateTables(ThreadContext & context, const Position & p, DepthType depth, const Move m, TT::Bound bound) {
+    if ( isCapture(m)) { updateTablesCap(context,p,depth,m,bound); return; }
+    if (bound == TT::B_beta) {
+        if ( isCapture(m)){
+            context.killerT.updateCap(m,p);
+            context.counterT.updateCap(m, p);
+        }
+        else{
+           context.killerT.update(m,p);
+           context.historyT.update<1>(depth, m, p);
+           context.counterT.update(m, p);
+        }
     }
     else if ( bound == TT::B_alpha) context.historyT.update<-1>(depth, m, p);
 }
@@ -3257,7 +3353,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if ( /*withoutSkipMove &&*/ TT::getEntry(*this,pHash, depth, e)) { // if not skipmove
         if ( e.h != 0 && !rootnode && !pvnode && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
             //if (e.m != INVALIDMOVE) pv.push_back(e.m); // here e.m might be INVALIDMOVE if B_alpha without alphaUpdated/bestScoreUpdated (so don't try this at root node !)
-            if (e.m != INVALIDMOVE && (Move2Type(e.m) == T_std || isBadCap(e.m)) && !isInCheck) updateTables(*this, p, depth, e.m, e.b); // bad cap can be killers
+            if (!isInCheck && e.m != INVALIDMOVE && (Move2Type(e.m) == T_std || isBadCap(e.m))) updateTables(*this, p, depth, e.m, e.b); // bad cap can be killers
             return adjustHashScore(e.score, ply);
         }
     }
@@ -3352,7 +3448,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
           sort(*this,moves,p,gp,true,isInCheck,&e);
           capMoveGenerated = true;
           for (auto it = moves.begin() ; it != moves.end() && probCutCount < StaticConfig::probCutMaxMoves /*+ 2*cutNode*/; ++it){
-            if ( (validTTmove && sameMove(e.m, *it)) || isBadCap(*it) ) continue; // skip TT move if quiet or bad captures
+            if ( (validTTmove && sameMove(e.m, *it)) /*|| isBadCap(*it)*/ || !SEE(p,*it,0) ) continue; // skip TT move if quiet or bad captures
             Position p2 = p;
             if ( ! apply(p2,*it) ) continue;
             ++probCutCount;
@@ -3419,7 +3515,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                //if (!extension && mateThreat) ++stats.counters[Stats::sid_mateThreadExtension],++extension;
                //if (!extension && p.lastMove != INVALIDMOVE && Move2Type(p.lastMove) == T_capture && Move2To(e.m) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; // recapture
                //if (!extension && isCheck && !isBadCap(e.m)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
-               if (!extension && isAdvancedPawnPush && sameMove(e.m, killerT.killers[0][p.halfmoves])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo isPassed ?
+               if (!extension && isAdvancedPawnPush && killerT.isKiller(e.m,p.halfmoves)) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo isPassed ?
                if (!extension && isQueenAttacked && PieceTools::getPieceType(p,Move2From(e.m)) == P_wq && Move2Type(e.m) == T_std && SEE(p,e.m,0)) ++stats.counters[Stats::sid_queenThreatExtension],++extension;
                if (!extension && p.halfmoves > 1 && threatStack[p.halfmoves] != INVALIDMOVE && threatStack[p.halfmoves-2] != INVALIDMOVE && (sameMove(threatStack[p.halfmoves],threatStack[p.halfmoves-2]) || (Move2To(threatStack[p.halfmoves]) == Move2To(threatStack[p.halfmoves-2]) && isCapture(threatStack[p.halfmoves])))) ++stats.counters[Stats::sid_BMExtension],++extension;
                if (!extension && withoutSkipMove && depth >= StaticConfig::singularExtensionDepth && !rootnode && !isMateScore(e.score) && e.b == TT::B_beta && e.d >= depth - 3){
@@ -3447,7 +3543,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                     if (pvnode) updatePV(pv, e.m, childPV);
                     if (ttScore >= beta) {
                         ++stats.counters[Stats::sid_ttbeta];
-                        if ((Move2Type(e.m) == T_std || isBadCap(e.m)) && !isInCheck) updateTables(*this, p, depth + (ttScore > (beta+80)), e.m, TT::B_beta);
+                        if ( !isInCheck && (Move2Type(e.m) == T_std || isBadCap(e.m))) updateTables(*this, p, depth + (ttScore > (beta+80)), e.m, TT::B_beta);
                         if (true /*withoutSkipMove &&*/ /*&& ttScore != 0*/) TT::setEntry(*this,pHash,e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth);
                         return ttScore;
                     }
@@ -3505,7 +3601,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
            //if (!extension && mateThreat && depth <= 4) ++stats.counters[Stats::sid_mateThreadExtension],++extension;
            //if (!extension && p.lastMove > NULLMOVE && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; //recapture
            //if (!extension && isCheck && !isBadCap(*it)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
-           if (!extension && isAdvancedPawnPush && sameMove(*it, killerT.killers[0][p.halfmoves])) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo and isPassed ?
+           if (!extension && isAdvancedPawnPush && killerT.isKiller(*it,p.halfmoves)) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo and isPassed ?
            if (!extension && isCastling(*it) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
            //if (!extension && isQueenAttacked && PieceTools::getPieceType(p,Move2From(*it)) == P_wq && Move2Type(*it) == T_std && SEE(p,*it,0)) ++stats.counters[Stats::sid_queenThreatExtension],++extension; // too much of that
            //if (!extension && p.halfmoves > 1 && threatStack[p.halfmoves] != INVALIDMOVE && threatStack[p.halfmoves-2] != INVALIDMOVE && (sameMove(threatStack[p.halfmoves],threatStack[p.halfmoves-2]) || (Move2To(threatStack[p.halfmoves]) == Move2To(threatStack[p.halfmoves-2]) && isCapture(threatStack[p.halfmoves])))) ++stats.counters[Stats::sid_BMExtension],++extension;
@@ -3515,7 +3611,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         else{
             // reductions & prunings
             DepthType reduction = 0;
-            const bool isPrunable           =  /*isNotEndGame &&*/ !isAdvancedPawnPush && !sameMove(*it, killerT.killers[0][p.halfmoves]) && !sameMove(*it, killerT.killers[1][p.halfmoves]) && !isMateScore(alpha) /*&& !isMateScore(beta)*/;
+            const bool isPrunable           =  /*isNotEndGame &&*/ !isAdvancedPawnPush && !killerT.isKiller(*it,p.halfmoves) && !isMateScore(alpha) /*&& !isMateScore(beta)*/;
             const bool noCheck              = !isInCheck && (!isCheck /*|| !extension*/);
             const bool isPrunableStd        = isPrunable && Move2Type(*it) == T_std;
             const bool isPrunableStdNoCheck = isPrunable && noCheck && Move2Type(*it) == T_std;
@@ -3565,9 +3661,9 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 alpha = score;
                 hashBound = TT::B_exact;
                 if ( score >= beta ){
-                    if ( (Move2Type(*it) == T_std || isBadCap(*it)) && !isInCheck){
+                    if ( !isInCheck && (Move2Type(*it) == T_std || isBadCap(*it))){
                         updateTables(*this, p, depth + (score>beta+80), *it, TT::B_beta);
-                        for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2) if ( (Move2Type(*it2) == T_std || isBadCap(*it2) ) ) historyT.update<-1>(depth + (score > (beta + 80)),*it2,p);
+                        for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2) if ( Move2Type(*it2) == T_std ) historyT.update<-1>(depth + (score > (beta + 80)),*it2,p);
                     }
                     hashBound = TT::B_beta;
                     break;
@@ -4338,6 +4434,7 @@ void init(int argc, char ** argv) {
 }
 
 int main(int argc, char ** argv) {
+    START_TIMER
     init(argc, argv);
 #ifdef WITH_TEST_SUITE
     if (argc > 1 && test(argv[1])) return EXIT_SUCCESS;
@@ -4351,7 +4448,15 @@ int main(int argc, char ** argv) {
 #ifdef DEBUG_TOOL
     if (argc < 2) {
         Logging::LogIt(Logging::logError) << "Hint: You can use -xboard command line option to enter xboard mode"; return EXIT_FAILURE;
-}   else return cliManagement(argv[1],argc,argv);
+    }
+    else{
+        int ret = cliManagement(argv[1],argc,argv);
+        STOP_AND_SUM_TIMER(Total)
+        #ifdef WITH_TIMER
+            Timers::Display();
+        #endif
+        return ret;
+    }
 #else
     ///@todo factorize with the one in cliManagement
     TimeMan::init();
@@ -4361,6 +4466,10 @@ int main(int argc, char ** argv) {
 #else
     UCI::init();
     UCI::uci();
+#endif
+    STOP_AND_SUM_TIMER(Total)
+#ifdef WITH_TIMER
+    Timers::Display();
 #endif
     return EXIT_SUCCESS;
 #endif
