@@ -45,6 +45,31 @@ void perft_test(const std::string & fen, DepthType d, unsigned long long int exp
     Logging::LogIt(Logging::logInfo) << "#########################" ;
 }
 
+void analyze(const Position & p, DepthType depth){
+        Move bestMove = INVALIDMOVE;
+        ScoreType s = 0;
+        TimeMan::isDynamic       = false;
+        TimeMan::nbMoveInTC      = -1;
+        TimeMan::msecPerMove     = 60*60*1000*24; // 1 day == infinity ...
+        TimeMan::msecInTC        = -1;
+        TimeMan::msecInc         = -1;
+        TimeMan::msecUntilNextTC = -1;
+        ThreadContext::currentMoveMs = TimeMan::GetNextMSecPerMove(p);
+        DepthType seldepth = 0;
+        PVList pv;
+        ThreadData d = {depth,seldepth/*dummy*/,s/*dummy*/,p,bestMove/*dummy*/,pv/*dummy*/}; // only input coef
+        ThreadPool::instance().search(d);
+        bestMove = ThreadPool::instance().main().getData().best; // here output results
+        s = ThreadPool::instance().main().getData().sc; // here output results
+        pv = ThreadPool::instance().main().getData().pv; // here output results
+        Logging::LogIt(Logging::logInfo) << "Best move is " << ToString(bestMove) << " " << (int)depth << " " << s << " pv : " << ToString(pv);
+        Logging::LogIt(Logging::logInfo) << "Next two lines are for OpenBench";
+        const TimeType ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count());
+        const Counter nodeCount = ThreadPool::instance().main().stats.counters[Stats::sid_nodes] + ThreadPool::instance().main().stats.counters[Stats::sid_qnodes];
+        std::cerr << nodeCount << std::endl;
+        std::cerr << int(nodeCount/(ms/1000.f)) << std::endl;
+}
+
 int cliManagement(std::string cli, int argc, char ** argv){
 
     if ( cli == "-xboard" ){
@@ -63,12 +88,21 @@ int cliManagement(std::string cli, int argc, char ** argv){
     }
 #endif
     Logging::LogIt(Logging::logInfo) << "You can use -xboard command line option to enter xboard mode";
+    Logging::LogIt(Logging::logInfo) << "You can use -uci command line option to enter uci mode";
 
     if ( cli == "-perft_test" ){
         perft_test(startPosition, 5, 4865609);
         perft_test("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ", 4, 4085603);
         perft_test("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ", 6, 11030083);
         perft_test("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", 5, 15833292);
+    }
+
+    if ( cli == "bench" ){
+        Position p;
+        readFEN(shirov,p);
+        DepthType d = 23;
+        analyze(p,d);
+        return 0;
     }
 
     if ( argc < 3 ) return 1;
@@ -204,23 +238,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
     if ( cli == "-analyze" ){
         DepthType depth = 5;
         if ( argc >= 3 ) depth = atoi(argv[3]);
-        Move bestMove = INVALIDMOVE;
-        ScoreType s = 0;
-        TimeMan::isDynamic       = false;
-        TimeMan::nbMoveInTC      = -1;
-        TimeMan::msecPerMove     = 60*60*1000*24; // 1 day == infinity ...
-        TimeMan::msecInTC        = -1;
-        TimeMan::msecInc         = -1;
-        TimeMan::msecUntilNextTC = -1;
-        ThreadContext::currentMoveMs = TimeMan::GetNextMSecPerMove(p);
-        DepthType seldepth = 0;
-        PVList pv;
-        ThreadData d = {depth,seldepth/*dummy*/,s/*dummy*/,p,bestMove/*dummy*/,pv/*dummy*/}; // only input coef
-        ThreadPool::instance().search(d);
-        bestMove = ThreadPool::instance().main().getData().best; // here output results
-        s = ThreadPool::instance().main().getData().sc; // here output results
-        pv = ThreadPool::instance().main().getData().pv; // here output results
-        Logging::LogIt(Logging::logInfo) << "Best move is " << ToString(bestMove) << " " << (int)depth << " " << s << " pv : " << ToString(pv) ;
+	analyze(p,depth);
         return 0;
     }
 
@@ -228,23 +246,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
         DynamicConfig::mateFinder = true;
         DepthType depth = 5;
         if ( argc >= 3 ) depth = atoi(argv[3]);
-        Move bestMove = INVALIDMOVE;
-        ScoreType s = 0;
-        TimeMan::isDynamic       = false;
-        TimeMan::nbMoveInTC      = -1;
-        TimeMan::msecPerMove     = 60*60*1000*24; // 1 day == infinity ...
-        TimeMan::msecInTC        = -1;
-        TimeMan::msecInc         = -1;
-        TimeMan::msecUntilNextTC = -1;
-        ThreadContext::currentMoveMs = TimeMan::GetNextMSecPerMove(p);
-        DepthType seldepth = 0;
-        PVList pv;
-        ThreadData d = {depth,seldepth/*dummy*/,s/*dummy*/,p,bestMove/*dummy*/,pv/*dummy*/}; // only input coef
-        ThreadPool::instance().search(d);
-        bestMove = ThreadPool::instance().main().getData().best; // here output results
-        s = ThreadPool::instance().main().getData().sc; // here output results
-        pv = ThreadPool::instance().main().getData().pv; // here output results
-        Logging::LogIt(Logging::logInfo) << "Best move is " << ToString(bestMove) << " " << (int)depth << " " << s << " pv : " << ToString(pv) ;
+	analyze(p,depth);
         return 0;
     }
 
