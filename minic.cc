@@ -2651,10 +2651,10 @@ struct MoveSorter{
         else{
             if (isInCheck && PieceTools::getPieceType(p, from) == P_wk) s += 10000; // king evasion
             if ( isCapture(t) && !isPromotion(t)){ // bad capture can be killers
-                if      (sameMove(m, context.killerT.killersCap[0][p.halfmoves])) s += 350 - MoveScoring[T_capture]; // bad cap killer
-                else if (sameMove(m, context.killerT.killersCap[1][p.halfmoves])) s += 300 - MoveScoring[T_capture]; // bad cap killer
-                else if (p.halfmoves > 1 && sameMove(m, context.killerT.killersCap[0][p.halfmoves-2])) s += 250 - MoveScoring[T_capture]; // bad cap killer
-                else if (p.lastMove > NULLMOVE && sameMove(context.counterT.counterCap[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 200 - MoveScoring[T_capture]; // cap counter
+                if      (sameMove(m, context.killerT.killersCap[0][p.halfmoves])) s += 2350 - MoveScoring[T_capture]; // bad cap killer
+                else if (sameMove(m, context.killerT.killersCap[1][p.halfmoves])) s += 2300 - MoveScoring[T_capture]; // bad cap killer
+                else if (p.halfmoves > 1 && sameMove(m, context.killerT.killersCap[0][p.halfmoves-2])) s += 2250 - MoveScoring[T_capture]; // bad cap killer
+                else if (p.lastMove > NULLMOVE && sameMove(context.counterT.counterCap[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 2200 - MoveScoring[T_capture]; // cap counter
                 else {
                     const Piece victim   = PieceTools::getPieceType(p,to);
                     const Piece attacker = PieceTools::getPieceType(p,from);
@@ -2663,10 +2663,10 @@ struct MoveSorter{
                 }
             }
             else if ( t == T_std ){
-                if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 2800; // quiet killer
-                else if (sameMove(m, context.killerT.killers[1][p.halfmoves])) s += 2750; // quiet killer
-                else if (p.halfmoves > 1 && sameMove(m, context.killerT.killers[0][p.halfmoves-2])) s += 2700; // quiet killer
-                else if (p.lastMove > NULLMOVE && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 2650; // quiet counter
+                if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 1800; // quiet killer
+                else if (sameMove(m, context.killerT.killers[1][p.halfmoves])) s += 1750; // quiet killer
+                else if (p.halfmoves > 1 && sameMove(m, context.killerT.killers[0][p.halfmoves-2])) s += 1700; // quiet killer
+                else if (p.lastMove > NULLMOVE && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 1650; // quiet counter
                 else {
                     if ( !isInCheck ){
                        s += context.historyT.history[PieceTools::getPieceIndex(p, from)][to]; // +/- MAX_HISTORY = 1000
