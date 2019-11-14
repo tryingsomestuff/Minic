@@ -2651,10 +2651,10 @@ struct MoveSorter{
         else{
             if (isInCheck && PieceTools::getPieceType(p, from) == P_wk) s += 10000; // king evasion
             if ( isCapture(t) && !isPromotion(t)){ // bad capture can be killers
-                if      (sameMove(m, context.killerT.killersCap[0][p.halfmoves])) s += 2350 - MoveScoring[T_capture]; // bad cap killer
-                else if (sameMove(m, context.killerT.killersCap[1][p.halfmoves])) s += 2300 - MoveScoring[T_capture]; // bad cap killer
-                else if (p.halfmoves > 1 && sameMove(m, context.killerT.killersCap[0][p.halfmoves-2])) s += 2250 - MoveScoring[T_capture]; // bad cap killer
-                else if (p.lastMove > NULLMOVE && sameMove(context.counterT.counterCap[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 2200 - MoveScoring[T_capture]; // cap counter
+                if      (sameMove(m, context.killerT.killersCap[0][p.halfmoves])) s += -2000 - MoveScoring[T_capture]; // bad cap killer
+                else if (sameMove(m, context.killerT.killersCap[1][p.halfmoves])) s += -2100 - MoveScoring[T_capture]; // bad cap killer
+                else if (p.halfmoves > 1 && sameMove(m, context.killerT.killersCap[0][p.halfmoves-2])) s += - 2200 - MoveScoring[T_capture]; // bad cap killer
+                else if (p.lastMove > NULLMOVE && sameMove(context.counterT.counterCap[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= - 2300 - MoveScoring[T_capture]; // cap counter
                 else {
                     const Piece victim   = PieceTools::getPieceType(p,to);
                     const Piece attacker = PieceTools::getPieceType(p,from);
