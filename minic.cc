@@ -2595,6 +2595,7 @@ void initBook() {
 
 // Static Exchange Evaluation (cutoff version algorithm from Stockfish)
 bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold) const{
+    static BitBoard(*const pfAtt[])(const Square, const BitBoard, const BitBoard, const Color) = { &BBTools::attack<P_wp>,  &BBTools::attack<P_wn>, &BBTools::attack<P_wb>, &BBTools::attack<P_wr>, &BBTools::attack<P_wq>,  &BBTools::attack<P_wk> };
     START_TIMER
     const Square from = Move2From(m);
     const Square to   = Move2To(m);
@@ -2611,24 +2612,27 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
     SquareList stmAttackers;
     bool endOfSEE = false;
     while (!endOfSEE){
-        bool threatsFound = getAttackers(p2, to, stmAttackers, ~p2.c); // already sorted in getAttackers
-        if (!threatsFound) break;
         bool validThreatFound = false;
-        unsigned int threatId = 0;
-        while (!validThreatFound && threatId < stmAttackers.size()) {
-            const Square att = stmAttackers[threatId];
-            const Piece pp = PieceTools::getPieceType(p2, att);
-            const bool prom = promPossible && pp == P_wp;
-            const Move mm = ToMove(att, to, prom ? T_cappromq : T_capture);
-            nextVictim = (Piece)(prom ? P_wq : pp); // CAREFULL here :: we don't care black or white, always use abs(value) next !!!
-            ++threatId;
-            if (PieceTools::getPieceType(p2,to) == P_wk) return us == p2.c; // capture king !
-            Position p3 = p2;
-            if (!apply(p3,mm)) continue;
-            validThreatFound = true;
-            balance = -balance - 1 - Values[nextVictim+PieceShift];
-            if (balance >= 0 && nextVictim != P_wk) endOfSEE = true;
-            p2 = p3;
+        for ( Piece pp = P_wp ; pp <= P_wk ; ++pp){
+           BitBoard att = pfAtt[pp-1](to, p2.pieces(p2.c,pp), p2.occupancy, ~p2.c);
+           if ( !att ) continue; // next piece type
+           while (att) stmAttackers.push_back(BBTools::popBit(att));
+           unsigned int threatId = 0;
+           while (!validThreatFound && threatId < stmAttackers.size()) {
+              const Square att = stmAttackers[threatId];
+              const Piece pp = PieceTools::getPieceType(p2, att);
+              const bool prom = promPossible && pp == P_wp;
+              const Move mm = ToMove(att, to, prom ? T_cappromq : T_capture);
+              nextVictim = (Piece)(prom ? P_wq : pp); // CAREFULL here :: we don't care black or white, always use abs(value) next !!!
+              ++threatId;
+              if (PieceTools::getPieceType(p2,to) == P_wk) return us == p2.c; // capture king !
+              Position p3 = p2;
+              if (!apply(p3,mm)) continue;
+              validThreatFound = true;
+              balance = -balance - 1 - Values[nextVictim+PieceShift];
+              if (balance >= 0 && nextVictim != P_wk) endOfSEE = true;
+              p2 = p3;
+          }
         }
         if (!validThreatFound) endOfSEE = true;
     }
