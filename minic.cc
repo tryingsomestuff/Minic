@@ -2621,7 +2621,6 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
            unsigned int threatId = 0;
            while (!validThreatFound && threatId < stmAttackers.size()) {
               const Square att = stmAttackers[threatId];
-              const Piece pp = PieceTools::getPieceType(p2, att);
               const bool prom = promPossible && pp == P_wp;
               const Move mm = ToMove(att, to, prom ? T_cappromq : T_capture);
               nextVictim = (Piece)(prom ? P_wq : pp); // CAREFULL here :: we don't care black or white, always use abs(value) next !!!
