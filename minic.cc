@@ -2616,6 +2616,7 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
         for ( Piece pp = P_wp ; pp <= P_wk && !validThreatFound ; ++pp){
            BitBoard att = pfAtt[pp-1](to, p2.pieces(p2.c,pp), p2.occupancy, ~p2.c);
            if ( !att ) continue; // next piece type
+	   stmAttackers.clear();
            while (att) stmAttackers.push_back(BBTools::popBit(att));
            unsigned int threatId = 0;
            while (!validThreatFound && threatId < stmAttackers.size()) {
