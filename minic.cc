@@ -3485,7 +3485,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     Move bestMove = INVALIDMOVE;
     TT::Bound hashBound = TT::B_alpha;
     bool ttMoveIsCapture = false;
-    //bool ttMoveSingularExt = false;
+    bool ttMoveSingularExt = false;
 
     bool isQueenAttacked = p.pieces<P_wq>(p.c) && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces<P_wq>(p.c))); // only first queen ...
 
@@ -3525,7 +3525,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                    if (stopFlag) return STOPSCORE;
                    if (score < betaC) {
                        ++stats.counters[Stats::sid_singularExtension],++extension;
-                       if ( score < betaC - std::min(4*depth,36)) ++stats.counters[Stats::sid_singularExtension2]/*,ttMoveSingularExt=true*/,++extension;
+                       if ( score < betaC - std::min(4*depth,36)) ++stats.counters[Stats::sid_singularExtension2],ttMoveSingularExt=true,++extension;
                    }
                    else if ( score >= beta && betaC >= beta) return score;
                }
@@ -3633,7 +3633,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 reduction += !improving;
                 reduction += ttMoveIsCapture/*&&isPrunableStd*/;
                 //reduction += cutNode&&isPrunableStd;
-                //reduction -= ttMoveSingularExt;
+                reduction -= ttMoveSingularExt;
                 if (pvnode && reduction > 0) --reduction;
                 reduction -= 2*int(Move2Score(*it) / MAX_HISTORY); //history reduction/extension
                 //if ( reduction < 0) reduction = 0;
