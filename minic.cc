@@ -40,6 +40,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_SYZYGY
 #define WITH_UCI
 //#define WITH_PGN_PARSER
+#define WITH_MAGIC
 
 const std::string MinicVersion = "dev";
 
@@ -672,7 +673,6 @@ inline ScoreType getValue   (const Position &p, Square k){ assert(k >= 0 && k < 
 inline ScoreType getAbsValue(const Position &p, Square k){ assert(k >= 0 && k < 64); return std::abs(Values[getPieceIndex(p,k)]); }
 }
 
-// HQ BB code from Amoeba
 namespace BBTools {
 inline constexpr BitBoard _shiftSouth    (BitBoard b) { return b >> 8; }
 inline constexpr BitBoard _shiftNorth    (BitBoard b) { return b << 8; }
@@ -722,6 +722,7 @@ int popBit(BitBoard & b) {
     return i;
 }
 
+// HQ BB code and init inspired by Amoeba
 int ranks[512];
 struct Mask {
     BitBoard bbsquare, diagonal, antidiagonal, file, kingZone, pawnAttack[2], push[2], dpush[2], enpassant, knight, king, frontSpan[2], rearSpan[2], passerSpan[2], attackFrontSpan[2], between[64];
@@ -826,9 +827,7 @@ inline void initMask() {
     }
 }
 
-#define WITH_MAGIC
-
-#ifndef WITH_MAGIC
+#ifndef WITH_MAGIC // then use HQBB
 
 inline BitBoard attack(const BitBoard occupancy, const Square x, const BitBoard m) {
     START_TIMER
@@ -861,9 +860,9 @@ template <       > BitBoard coverage<P_wk>(const Square x, const BitBoard occupa
 
 template < Piece pp > inline BitBoard attack(const Square x, const BitBoard target, const BitBoard occupancy = 0, const Color c = Co_White) { return coverage<pp>(x, occupancy, c) & target; }
 
-#else
+#else // MAGIC
 
-namespace MagicBB{
+namespace MagicBB{ // inspired by Rubi and Stockfish
 #define BISHOP_INDEX_BITS 9
 #define ROOK_INDEX_BITS 12
 struct SMagic { BitBoard mask, magic; };
@@ -960,7 +959,7 @@ template <       > BitBoard coverage<P_wk>(const Square x, const BitBoard occupa
 
 template < Piece pp > inline BitBoard attack(const Square x, const BitBoard target, const BitBoard occupancy = 0, const Color c = Co_White) { return coverage<pp>(x, occupancy, c) & target; }
 
-#endif
+#endif // MAGIC
 
 Square SquareFromBitBoard(const BitBoard & b) { // return first square
     assert(b != 0ull);
@@ -974,7 +973,7 @@ BitBoard allAttackedBB(const Position &p, const Square x, Color c) {
     else               return attack<P_wb>(x, p.whiteBishop() | p.whiteQueen(), p.occupancy) | attack<P_wr>(x, p.whiteRook() | p.whiteQueen(), p.occupancy) | attack<P_wn>(x, p.whiteKnight()) | attack<P_wp>(x, p.whitePawn(), p.occupancy, Co_Black) | attack<P_wk>(x, p.whiteKing());
 }
 
-bool isAttackedBB(const Position &p, const Square x, Color c) {
+bool isAttackedBB(const Position &p, const Square x, Color c) { ///@todo try to optimize order better ?
     if (c == Co_White) return attack<P_wp>(x, p.blackPawn(), p.occupancy, Co_White) || attack<P_wb>(x, p.blackBishop() | p.blackQueen(), p.occupancy) || attack<P_wr>(x, p.blackRook() | p.blackQueen(), p.occupancy) || attack<P_wn>(x, p.blackKnight()) || attack<P_wk>(x, p.blackKing());
     else               return attack<P_wp>(x, p.whitePawn(), p.occupancy, Co_Black) || attack<P_wb>(x, p.whiteBishop() | p.whiteQueen(), p.occupancy) || attack<P_wr>(x, p.whiteRook() | p.whiteQueen(), p.occupancy) || attack<P_wn>(x, p.whiteKnight()) || attack<P_wk>(x, p.whiteKing());
 }
