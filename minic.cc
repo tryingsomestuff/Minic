@@ -104,6 +104,7 @@ uint64_t rdtscCounterSee       = 0ull;
 uint64_t rdtscCounterApply     = 0ull;
 uint64_t rdtscCounterEval      = 0ull;
 uint64_t rdtscCounterAttack    = 0ull;
+uint64_t rdtscCounterMovePiece = 0ull;
 uint64_t rdtscCounterGenerate  = 0ull;
 uint64_t rdtscCounterTotal     = 0ull;
 
@@ -111,16 +112,18 @@ uint64_t callCounterSee       = 0ull;
 uint64_t callCounterApply     = 0ull;
 uint64_t callCounterEval      = 0ull;
 uint64_t callCounterAttack    = 0ull;
+uint64_t callCounterMovePiece = 0ull;
 uint64_t callCounterGenerate  = 0ull;
 uint64_t callCounterTotal     = 0ull;
 
 void Display(){
-    std::cout << "See      " << rdtscCounterSee       << "  " << 100.f*rdtscCounterSee       / rdtscCounterTotal << "%  " << callCounterSee      << " " << rdtscCounterSee      / callCounterSee      << std::endl;
-    std::cout << "Apply    " << rdtscCounterApply     << "  " << 100.f*rdtscCounterApply     / rdtscCounterTotal << "%  " << callCounterApply    << " " << rdtscCounterApply    / callCounterApply    << std::endl;
-    std::cout << "Eval     " << rdtscCounterEval      << "  " << 100.f*rdtscCounterEval      / rdtscCounterTotal << "%  " << callCounterEval     << " " << rdtscCounterEval     / callCounterEval     << std::endl;
-    std::cout << "Attack   " << rdtscCounterAttack    << "  " << 100.f*rdtscCounterAttack    / rdtscCounterTotal << "%  " << callCounterAttack   << " " << rdtscCounterAttack   / callCounterAttack   << std::endl;
-    std::cout << "Generate " << rdtscCounterGenerate  << "  " << 100.f*rdtscCounterGenerate  / rdtscCounterTotal << "%  " << callCounterGenerate << " " << rdtscCounterGenerate / callCounterGenerate << std::endl;
-    std::cout << "Total    " << rdtscCounterTotal     << std::endl;
+    if ( callCounterSee)      std::cout << "See      " << rdtscCounterSee       << "  " << 100.f*rdtscCounterSee       / rdtscCounterTotal << "%  " << callCounterSee      << " " << rdtscCounterSee      / callCounterSee      << std::endl;
+    if ( callCounterApply)    std::cout << "Apply    " << rdtscCounterApply     << "  " << 100.f*rdtscCounterApply     / rdtscCounterTotal << "%  " << callCounterApply    << " " << rdtscCounterApply    / callCounterApply    << std::endl;
+    if ( callCounterMovePiece)std::cout << "Move P   " << rdtscCounterMovePiece << "  " << 100.f*rdtscCounterMovePiece / rdtscCounterTotal << "%  " << callCounterMovePiece<< " " << rdtscCounterMovePiece/ callCounterMovePiece<< std::endl;
+    if ( callCounterEval)     std::cout << "Eval     " << rdtscCounterEval      << "  " << 100.f*rdtscCounterEval      / rdtscCounterTotal << "%  " << callCounterEval     << " " << rdtscCounterEval     / callCounterEval     << std::endl;
+    if ( callCounterAttack)   std::cout << "Attack   " << rdtscCounterAttack    << "  " << 100.f*rdtscCounterAttack    / rdtscCounterTotal << "%  " << callCounterAttack   << " " << rdtscCounterAttack   / callCounterAttack   << std::endl;
+    if ( callCounterGenerate) std::cout << "Generate " << rdtscCounterGenerate  << "  " << 100.f*rdtscCounterGenerate  / rdtscCounterTotal << "%  " << callCounterGenerate << " " << rdtscCounterGenerate / callCounterGenerate << std::endl;
+     std::cout << "Total    " << rdtscCounterTotal     << std::endl;
 }
 }
 #else
@@ -579,16 +582,16 @@ const BitBoard fileE                     = 0x1010101010101010;
 const BitBoard fileF                     = 0x2020202020202020;
 const BitBoard fileG                     = 0x4040404040404040;
 const BitBoard fileH                     = 0x8080808080808080;
-//const BitBoard files[8] = {fileA,fileB,fileC,fileD,fileE,fileF,fileG,fileH};
+const BitBoard files[8] = {fileA,fileB,fileC,fileD,fileE,fileF,fileG,fileH};
 const BitBoard rank1                     = 0x00000000000000ff;
-//const BitBoard rank2                     = 0x000000000000ff00;
-//const BitBoard rank3                     = 0x0000000000ff0000;
-//const BitBoard rank4                     = 0x00000000ff000000;
-//const BitBoard rank5                     = 0x000000ff00000000;
-//const BitBoard rank6                     = 0x0000ff0000000000;
-//const BitBoard rank7                     = 0x00ff000000000000;
+const BitBoard rank2                     = 0x000000000000ff00;
+const BitBoard rank3                     = 0x0000000000ff0000;
+const BitBoard rank4                     = 0x00000000ff000000;
+const BitBoard rank5                     = 0x000000ff00000000;
+const BitBoard rank6                     = 0x0000ff0000000000;
+const BitBoard rank7                     = 0x00ff000000000000;
 const BitBoard rank8                     = 0xff00000000000000;
-//const BitBoard ranks[8] = {rank1,rank2,rank3,rank4,rank5,rank6,rank7,rank8};
+const BitBoard ranks[8] = {rank1,rank2,rank3,rank4,rank5,rank6,rank7,rank8};
 //const BitBoard center = BBSq_d4 | BBSq_d5 | BBSq_e4 | BBSq_e5;
 const BitBoard extendedCenter = BBSq_c3 | BBSq_c4 | BBSq_c5 | BBSq_c6
                               | BBSq_d3 | BBSq_d4 | BBSq_d5 | BBSq_d6
@@ -703,6 +706,14 @@ template<Color C> inline constexpr BitBoard pawnPassed         (BitBoard own, Bi
 template<Color C> inline constexpr BitBoard pawnCandidates     (BitBoard own, BitBoard opp) { return pawnSemiOpen<C>(own, opp) & shiftN<~C>((pawnSingleAttacks<C>(own) & pawnSingleAttacks<~C>(opp)) | (pawnDoubleAttacks<C>(own) & pawnDoubleAttacks<~C>(opp)));}
 template<Color C> inline constexpr BitBoard pawnStraggler      (BitBoard own, BitBoard opp, BitBoard own_backwards) { return own_backwards & pawnSemiOpen<C>(own, opp) & (C ? 0x00ffff0000000000ull : 0x0000000000ffff00ull);} ///@todo use this !
 
+int popBit(BitBoard & b) {
+    assert( b != 0ull);
+    unsigned long i = 0;
+    bsf(b, i);
+    b &= b - 1;
+    return i;
+}
+
 int ranks[512];
 struct Mask {
     BitBoard bbsquare, diagonal, antidiagonal, file, kingZone, pawnAttack[2], push[2], dpush[2], enpassant, knight, king, frontSpan[2], rearSpan[2], passerSpan[2], attackFrontSpan[2], between[64];
@@ -807,6 +818,10 @@ inline void initMask() {
     }
 }
 
+#define WITH_MAGIC
+
+#ifndef WITH_MAGIC
+
 inline BitBoard attack(const BitBoard occupancy, const Square x, const BitBoard m) {
     START_TIMER
     BitBoard forward = occupancy & m;
@@ -838,13 +853,118 @@ template <       > BitBoard coverage<P_wk>(const Square x, const BitBoard occupa
 
 template < Piece pp > inline BitBoard attack(const Square x, const BitBoard target, const BitBoard occupancy = 0, const Color c = Co_White) { return coverage<pp>(x, occupancy, c) & target; }
 
-int popBit(BitBoard & b) {
-    assert( b != 0ull);
-    unsigned long i = 0;
-    bsf(b, i);
-    b &= b - 1;
-    return i;
+#else
+
+namespace MagicBB{
+
+#define BISHOPINDEXBITS 9
+#define ROOKINDEXBITS 12
+#define MAGICBISHOPINDEX(m,x) (int)((((m) & MagicBB::mBishopTbl[x].mask) * MagicBB::mBishopTbl[x].magic) >> (64 - BISHOPINDEXBITS))
+#define MAGICROOKINDEX(m,x) (int)((((m) & MagicBB::mRookTbl[x].mask) * MagicBB::mRookTbl[x].magic) >> (64 - ROOKINDEXBITS))
+#define MAGICBISHOPATTACKS(m,x) (MagicBB::mBishopAttacks[x][MAGICBISHOPINDEX(m,x)])
+#define MAGICROOKATTACKS(m,x) (MagicBB::mRookAttacks[x][MAGICROOKINDEX(m,x)])
+
+BitBoard mBishopAttacks[64][1 << BISHOPINDEXBITS];
+BitBoard mRookAttacks[64][1 << ROOKINDEXBITS];
+
+#define ISOUTERFILE(x) (SQFILE(x) == 0 || SQFILE(x) == 7)
+#define ISNEIGHBOUR(x,y) ((x) >= 0 && (x) < 64 && (y) >= 0 && (y) < 64 && abs(SQRANK(x) - SQRANK(y)) <= 1 && abs(SQFILE(x) - SQFILE(y)) <= 1)
+#define PROMOTERANK(x) (SQRANK(x) == 0 || SQRANK(x) == 7)
+
+struct SMagic { BitBoard mask, magic; };
+
+SMagic mBishopTbl[64];
+SMagic mRookTbl[64];
+
+const BitBoard bishopmagics[] = {
+    0x1002004102008200, 0x1002004102008200, 0x4310002248214800, 0x402010c110014208, 0xa000a06240114001, 0xa000a06240114001, 0x402010c110014208, 0xa000a06240114001,
+    0x1002004102008200, 0x1002004102008200, 0x1002004102008200, 0x1002004102008200, 0x100c009840001000, 0x4310002248214800, 0xa000a06240114001, 0x4310002248214800,
+    0x4310002248214800, 0x822143005020a148, 0x0001901c00420040, 0x0880504024308060, 0x0100201004200002, 0xa000a06240114001, 0x822143005020a148, 0x1002004102008200,
+    0x1002004102008200, 0x1002004102008200, 0x1002004102008200, 0x2008080100820102, 0x1481010004104010, 0x0002052000100024, 0xc880221002060081, 0xc880221002060081,
+    0x4310002248214800, 0xc880221002060081, 0x0001901c00420040, 0x8400208020080201, 0x000e008400060020, 0x00449210e3902028, 0x402010c110014208, 0xc880221002060081,
+    0x100c009840001000, 0xc880221002060081, 0x1000820800c00060, 0x2803101084008800, 0x2200608200100080, 0x0040900130840090, 0x0024010008800a00, 0x0400110410804810,
+    0x402010c110014208, 0xa000a06240114001, 0xa000a06240114001, 0x1002004102008200, 0x1002004102008200, 0x1002004102008200, 0x1002004102008200, 0x1002004102008200,
+    0xa000a06240114001, 0x4310002248214800, 0x1002004102008200, 0x1002004102008200, 0x1002004102008200, 0x1002004102008200, 0x1002004102008200, 0x1002004102008200
+};
+
+const BitBoard rookmagics[] = {
+    0x8200108041020020, 0x8200108041020020, 0xc880221002060081, 0x0009100804021000, 0x0500010004107800, 0x0024010008800a00, 0x0400110410804810, 0x8300038100004222,
+    0x004a800182c00020, 0x0009100804021000, 0x3002200010c40021, 0x0020100104000208, 0x01021001a0080020, 0x0884020010082100, 0x1000820800c00060, 0x8020480110020020,
+    0x0002052000100024, 0x0200190040088100, 0x0030802001a00800, 0x8010002004000202, 0x0040010100080010, 0x2200608200100080, 0x0001901c00420040, 0x0001400a24008010,
+    0x1400a22008001042, 0x8200108041020020, 0x2004500023002400, 0x8105100028001048, 0x8010024d00014802, 0x8000820028030004, 0x402010c110014208, 0x8300038100004222,
+    0x0001804002800124, 0x0084022014041400, 0x0030802001a00800, 0x0110a01001080008, 0x0b10080850081100, 0x000010040049020c, 0x0024010008800a00, 0x014c800040100426,
+    0x1100400010208000, 0x0009100804021000, 0x0010024871202002, 0x8014001028c80801, 0x1201082010a00200, 0x0002008004102009, 0x8300038100004222, 0x0000401001a00408,
+    0x4520920010210200, 0x0400110410804810, 0x8105100028001048, 0x8105100028001048, 0x0802801009083002, 0x8200108041020020, 0x8200108041020020, 0x4000a12400848110,
+    0x2000804026001102, 0x2000804026001102, 0x800040a010040901, 0x80001802002c0422, 0x0010b018200c0122, 0x200204802a080401, 0x8880604201100844, 0x80000cc281092402
+};
+
+BitBoard getAttacks(int index, BitBoard occ, int delta){
+    BitBoard attacks = 0ULL;
+    BitBoard blocked = 0ULL;
+    for (int shift = index + delta; ISNEIGHBOUR(shift, shift - delta); shift += delta) {
+        if (!blocked) attacks |= SquareToBitboard(shift);
+        blocked |= ((1ULL << shift) & occ);
+    }
+    return attacks;
 }
+
+BitBoard getOccupiedFromMBIndex(int j, BitBoard mask){
+    BitBoard occ = 0ULL;
+    int k;
+    int i = 0;
+    while (mask){
+        k = popBit(mask);
+        if (j & SquareToBitboard(i)) occ |= (1ULL << k);
+        i++;
+    }
+    return occ;
+}
+
+void initMagic(){
+    Logging::LogIt(Logging::logInfo) << "Init magic" ;
+    for (Square from = 0; from < 64; from++) {
+        mBishopTbl[from].mask = 0ULL;
+        mRookTbl[from].mask = 0ULL;
+        for (Square j = 0; j < 64; j++){
+            if (from == j) continue;
+            if (SQRANK(from) == SQRANK(j) && !ISOUTERFILE(j)) mRookTbl[from].mask |= SquareToBitboard(j);
+            if (SQFILE(from) == SQFILE(j) && !PROMOTERANK(j)) mRookTbl[from].mask |= SquareToBitboard(j);
+            if (abs(SQRANK(from) - SQRANK(j)) == abs(SQFILE(from) - SQFILE(j)) && !ISOUTERFILE(j) && !PROMOTERANK(j)) mBishopTbl[from].mask |= SquareToBitboard(j);
+        }
+
+        mBishopTbl[from].magic = bishopmagics[from];
+
+        for (int j = 0; j < (1 << BISHOPINDEXBITS); j++) {
+            const BitBoard occ = getOccupiedFromMBIndex(j, mBishopTbl[from].mask);
+            const BitBoard attack = (getAttacks(from, occ, -7) | getAttacks(from, occ, 7) | getAttacks(from, occ, -9) | getAttacks(from, occ, 9));
+            const int hashindex = MAGICBISHOPINDEX(occ, from);
+            mBishopAttacks[from][hashindex] = attack;
+        }
+
+        mRookTbl[from].magic = rookmagics[from];
+
+        for (int j = 0; j < (1 << ROOKINDEXBITS); j++) {
+            const BitBoard occ = getOccupiedFromMBIndex(j, mRookTbl[from].mask);
+            const BitBoard attack = (getAttacks(from, occ, -1) | getAttacks(from, occ, 1) | getAttacks(from, occ, -8) | getAttacks(from, occ, 8));
+            const int hashindex = MAGICROOKINDEX(occ, from);
+            mRookAttacks[from][hashindex] = attack;
+        }
+    }
+}
+
+} // MagicBB
+
+template < Piece > BitBoard coverage(const Square x, const BitBoard occupancy = 0, const Color c = Co_White) { assert(false); return 0ull; }
+template <       > BitBoard coverage<P_wp>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].pawnAttack[c]; }
+template <       > BitBoard coverage<P_wn>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].knight; }
+template <       > BitBoard coverage<P_wb>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return MAGICBISHOPATTACKS(occupancy, x);}
+template <       > BitBoard coverage<P_wr>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return MAGICROOKATTACKS(occupancy, x); }
+template <       > BitBoard coverage<P_wq>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return MAGICBISHOPATTACKS(occupancy, x) | MAGICROOKATTACKS(occupancy, x); }
+template <       > BitBoard coverage<P_wk>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].king; }
+
+template < Piece pp > inline BitBoard attack(const Square x, const BitBoard target, const BitBoard occupancy = 0, const Color c = Co_White) { return coverage<pp>(x, occupancy, c) & target; }
+
+#endif
 
 Square SquareFromBitBoard(const BitBoard & b) { // return first square
     assert(b != 0ull);
@@ -853,31 +973,14 @@ Square SquareFromBitBoard(const BitBoard & b) { // return first square
     return Square(i);
 }
 
-BitBoard isAttackedBB(const Position &p, const Square x, Color c) {
+BitBoard allAttackedBB(const Position &p, const Square x, Color c) {
     if (c == Co_White) return attack<P_wb>(x, p.blackBishop() | p.blackQueen(), p.occupancy) | attack<P_wr>(x, p.blackRook() | p.blackQueen(), p.occupancy) | attack<P_wn>(x, p.blackKnight()) | attack<P_wp>(x, p.blackPawn(), p.occupancy, Co_White) | attack<P_wk>(x, p.blackKing());
     else               return attack<P_wb>(x, p.whiteBishop() | p.whiteQueen(), p.occupancy) | attack<P_wr>(x, p.whiteRook() | p.whiteQueen(), p.occupancy) | attack<P_wn>(x, p.whiteKnight()) | attack<P_wp>(x, p.whitePawn(), p.occupancy, Co_Black) | attack<P_wk>(x, p.whiteKing());
 }
 
-// generated incrementally to avoid expensive sorting after generation
-template < Color C > bool getAttackers(const Position & p, const Square x, SquareList & attakers) {
-    attakers.clear();
-    BitBoard att;
-    ///@todo verify is x is promRank and if so reorder pawn just before queen
-    att = attack<P_wp>(x, p.pieces<P_wp>(~C), p.occupancy, C);
-    while (att) attakers.push_back(popBit(att));
-    att = attack<P_wn>(x, p.pieces<P_wn>(~C));
-    while (att) attakers.push_back(popBit(att));
-    att = attack<P_wb>(x, p.pieces<P_wb>(~C), p.occupancy);
-    while (att) attakers.push_back(popBit(att));
-    att = attack<P_wr>(x, p.pieces<P_wr>(~C), p.occupancy);
-    while (att) attakers.push_back(popBit(att));
-    att = attack<P_wr>(x, p.pieces<P_wq>(~C), p.occupancy);
-    while (att) attakers.push_back(popBit(att));
-    att = attack<P_wb>(x, p.pieces<P_wq>(~C), p.occupancy);
-    while (att) attakers.push_back(popBit(att));
-    att = attack<P_wk>(x, p.pieces<P_wk>(~C), p.occupancy);
-    while (att) attakers.push_back(popBit(att));
-    return !attakers.empty();
+bool isAttackedBB(const Position &p, const Square x, Color c) {
+    if (c == Co_White) return attack<P_wp>(x, p.blackPawn(), p.occupancy, Co_White) || attack<P_wb>(x, p.blackBishop() | p.blackQueen(), p.occupancy) || attack<P_wr>(x, p.blackRook() | p.blackQueen(), p.occupancy) || attack<P_wn>(x, p.blackKnight()) || attack<P_wk>(x, p.blackKing());
+    else               return attack<P_wp>(x, p.whitePawn(), p.occupancy, Co_Black) || attack<P_wb>(x, p.whiteBishop() | p.whiteQueen(), p.occupancy) || attack<P_wr>(x, p.whiteRook() | p.whiteQueen(), p.occupancy) || attack<P_wn>(x, p.whiteKnight()) || attack<P_wk>(x, p.whiteKing());
 }
 
 inline void unSetBit(Position & p, Square k)           { assert(k >= 0 && k < 64); ::unSetBit(p.allB[PieceTools::getPieceIndex(p, k)], k);}
@@ -1297,14 +1400,6 @@ void updateMaterialOther(Position & p){
 void initMaterial(Position & p){ // M_p .. M_k is the same as P_wp .. P_wk
     for( Color c = Co_White ; c < Co_End ; ++c) for( Piece pp = P_wp ; pp <= P_wk ; ++pp) p.mat[c][pp] = (unsigned char)countBit(p.pieces(c,pp));
     updateMaterialOther(p);
-}
-
-inline void updateMaterialStd(Position &p, const Square toBeCaptured){
-    p.mat[~p.c][PieceTools::getPieceType(p,toBeCaptured)]--; // capture if to square is not empty
-}
-
-inline void updateMaterialEp(Position &p){
-    p.mat[~p.c][M_p]--; // ep if to square is empty
 }
 
 inline void updateMaterialProm(Position &p, const Square toBeCaptured, MType mt){
@@ -2185,8 +2280,7 @@ TimeType ThreadContext::getCurrentMoveMs() {
 
 inline Square kingSquare(const Position & p) { return p.king[p.c]; }
 inline Square oppKingSquare(const Position & p) { return p.king[~p.c]; }
-inline bool isAttacked(const Position & p, const Square k) { return k!=INVALIDSQUARE && BBTools::isAttackedBB(p, k, p.c) != 0ull;}
-inline bool getAttackers(const Position & p, const Square k, SquareList & attakers, Color c) { return k!=INVALIDSQUARE && (c==Co_White?BBTools::getAttackers<Co_White>(p, k, attakers):BBTools::getAttackers<Co_Black>(p, k, attakers));}
+inline bool isAttacked(const Position & p, const Square k) { return k!=INVALIDSQUARE && BBTools::allAttackedBB(p, k, p.c) != 0ull;}
 
 enum GenPhase { GP_all = 0, GP_cap = 1, GP_quiet = 2 };
 
@@ -2264,6 +2358,7 @@ void generate(const Position & p, MoveList & moves, bool doNotClear = false){
 }
 
 inline void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, bool isCapture = false, Piece prom = P_none) {
+    START_TIMER
     const int fromId   = fromP + PieceShift;
     const int toId     = toP + PieceShift;
     const Piece toPnew = prom != P_none ? prom : fromP;
@@ -2285,6 +2380,7 @@ inline void movePiece(Position & p, Square from, Square to, Piece fromP, Piece t
        if ( prom == P_none) p.ph ^= Zobrist::ZT[to][toIdnew]; // add fromP (if not prom) at to
     }
     if (isCapture && (abs(toP) == P_wp || abs(toP) == P_wk)) p.ph ^= Zobrist::ZT[to][toId];
+    STOP_AND_SUM_TIMER(MovePiece)
 }
 
 void applyNull(ThreadContext & context, Position & pN) {
@@ -2340,7 +2436,7 @@ bool apply(Position & p, const Move & m){
     case T_std:
     case T_capture:
     case T_check:
-        updateMaterialStd(p,to);
+        p.mat[~p.c][std::abs(toP)]--;
         movePiece(p, from, to, fromP, toP, type == T_capture);
 
         // update castling rigths and king position
@@ -2360,19 +2456,19 @@ bool apply(Position & p, const Move & m){
         if      ( toP == P_wk ) p.king[Co_White] = INVALIDSQUARE;
         else if ( toP == P_bk ) p.king[Co_Black] = INVALIDSQUARE;
 
-        if ( fromP == P_wr && from == Sq_a1 && (p.castling & C_wqs)){
+        if ( (p.castling & C_wqs) && from == Sq_a1 && fromP == P_wr ){
             p.castling &= ~C_wqs;
             p.h ^= Zobrist::ZT[0][13];
         }
-        else if ( fromP == P_wr && from == Sq_h1 && (p.castling & C_wks) ){
+        else if ( (p.castling & C_wks) && from == Sq_h1 && fromP == P_wr ){
             p.castling &= ~C_wks;
             p.h ^= Zobrist::ZT[7][13];
         }
-        else if ( fromP == P_br && from == Sq_a8 && (p.castling & C_bqs)){
+        else if ( (p.castling & C_bqs) && from == Sq_a8 && fromP == P_br){
             p.castling &= ~C_bqs;
             p.h ^= Zobrist::ZT[56][13];
         }
-        else if ( fromP == P_br && from == Sq_h8 && (p.castling & C_bks) ){
+        else if ( (p.castling & C_bks) && from == Sq_h8 && fromP == P_br ){
             p.castling &= ~C_bks;
             p.h ^= Zobrist::ZT[63][13];
         }
@@ -2398,7 +2494,7 @@ bool apply(Position & p, const Move & m){
         p.ph ^= Zobrist::ZT[epCapSq][(p.c == Co_White ? P_bp : P_wp) + PieceShift]; // remove captured pawn
         p.ph ^= Zobrist::ZT[to][fromId]; // add fromP at to
 
-        updateMaterialEp(p);
+        p.mat[~p.c][M_p]--;
     }
         break;
 
@@ -2441,7 +2537,6 @@ bool apply(Position & p, const Move & m){
     case T_bks:
         movePiece(p, Sq_e8, Sq_g8, P_bk, P_none);
         movePiece(p, Sq_h8, Sq_f8, P_br, P_none);
-        p.b[Sq_e8] = P_none; p.b[Sq_f8] = P_br; p.b[Sq_g8] = P_bk; p.b[Sq_h8] = P_none;
         p.king[Co_Black] = Sq_g8;
         if (p.castling & C_bqs) p.h ^= Zobrist::ZT[56][13];
         if (p.castling & C_bks) p.h ^= Zobrist::ZT[63][13];
@@ -4422,6 +4517,9 @@ void init(int argc, char ** argv) {
     StaticConfig::initLMR();
     StaticConfig::initMvvLva();
     BBTools::initMask();
+#ifdef WITH_MAGIC
+    BBTools::MagicBB::initMagic();
+#endif
     MaterialHash::KPK::init();
     MaterialHash::MaterialHashInitializer::init();
     initEval();
