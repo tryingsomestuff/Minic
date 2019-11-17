@@ -151,6 +151,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
     if (cli == "-attacked") {
         Square k = Sq_e4;
         if (argc >= 3) k = atoi(argv[3]);
+        Logging::LogIt(Logging::logInfo) << SquareNames[k];
         Logging::LogIt(Logging::logInfo) << showBitBoard(BBTools::allAttackedBB(p, k, p.c));
         return 0;
     }
