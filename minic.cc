@@ -974,8 +974,8 @@ BitBoard allAttackedBB(const Position &p, const Square x, Color c) {
 }
 
 bool isAttackedBB(const Position &p, const Square x, Color c) { ///@todo try to optimize order better ?
-    if (c == Co_White) return attack<P_wp>(x, p.blackPawn(), p.occupancy, Co_White) || attack<P_wb>(x, p.blackBishop() | p.blackQueen(), p.occupancy) || attack<P_wr>(x, p.blackRook() | p.blackQueen(), p.occupancy) || attack<P_wn>(x, p.blackKnight()) || attack<P_wk>(x, p.blackKing());
-    else               return attack<P_wp>(x, p.whitePawn(), p.occupancy, Co_Black) || attack<P_wb>(x, p.whiteBishop() | p.whiteQueen(), p.occupancy) || attack<P_wr>(x, p.whiteRook() | p.whiteQueen(), p.occupancy) || attack<P_wn>(x, p.whiteKnight()) || attack<P_wk>(x, p.whiteKing());
+    if (c == Co_White) return attack<P_wb>(x, p.blackBishop() | p.blackQueen(), p.occupancy) || attack<P_wr>(x, p.blackRook() | p.blackQueen(), p.occupancy) || attack<P_wp>(x, p.blackPawn(), p.occupancy, Co_White) || attack<P_wn>(x, p.blackKnight()) || attack<P_wk>(x, p.blackKing());
+    else               return attack<P_wb>(x, p.whiteBishop() | p.whiteQueen(), p.occupancy) || attack<P_wr>(x, p.whiteRook() | p.whiteQueen(), p.occupancy) || attack<P_wp>(x, p.whitePawn(), p.occupancy, Co_Black) || attack<P_wn>(x, p.whiteKnight()) || attack<P_wk>(x, p.whiteKing());
 }
 
 inline void unSetBit(Position & p, Square k)           { assert(k >= 0 && k < 64); ::unSetBit(p.allB[PieceTools::getPieceIndex(p, k)], k);}
@@ -2275,7 +2275,7 @@ TimeType ThreadContext::getCurrentMoveMs() {
 
 inline Square kingSquare(const Position & p) { return p.king[p.c]; }
 inline Square oppKingSquare(const Position & p) { return p.king[~p.c]; }
-inline bool isAttacked(const Position & p, const Square k) { return k!=INVALIDSQUARE && BBTools::allAttackedBB(p, k, p.c) != 0ull;}
+inline bool isAttacked(const Position & p, const Square k) { return k!=INVALIDSQUARE && BBTools::isAttackedBB(p, k, p.c);}
 
 enum GenPhase { GP_all = 0, GP_cap = 1, GP_quiet = 2 };
 
