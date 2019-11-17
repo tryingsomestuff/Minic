@@ -95,6 +95,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
         perft_test("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ", 4, 4085603);
         perft_test("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ", 6, 11030083);
         perft_test("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", 5, 15833292);
+        return 0;
     }
 
     if ( cli == "bench" ){
@@ -150,7 +151,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
     if (cli == "-attacked") {
         Square k = Sq_e4;
         if (argc >= 3) k = atoi(argv[3]);
-        Logging::LogIt(Logging::logInfo) << showBitBoard(BBTools::isAttackedBB(p, k, p.c));
+        Logging::LogIt(Logging::logInfo) << showBitBoard(BBTools::allAttackedBB(p, k, p.c));
         return 0;
     }
 
