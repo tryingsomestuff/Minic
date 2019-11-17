@@ -18,12 +18,17 @@
 #include <mutex>
 #include <thread>
 #include <future>
+#include <string>
 #ifdef _WIN32
 #include <stdlib.h>
 #include <intrin.h>
 typedef uint64_t u_int64_t;
 #else
 #include <unistd.h>
+#endif
+
+#ifdef __BMI2__
+#include <immintrin.h>
 #endif
 
 #include "json.hpp"
@@ -60,6 +65,9 @@ const std::string MinicVersion = "dev";
 
 #define SQFILE(s) ((s)&7)
 #define SQRANK(s) ((s)>>3)
+#define ISOUTERFILE(x) (SQFILE(x) == 0 || SQFILE(x) == 7)
+#define ISNEIGHBOUR(x,y) ((x) >= 0 && (x) < 64 && (y) >= 0 && (y) < 64 && abs(SQRANK(x) - SQRANK(y)) <= 1 && abs(SQFILE(x) - SQFILE(y)) <= 1)
+#define PROMOTION_RANK(x) (SQRANK(x) == 0 || SQRANK(x) == 7)
 #define MakeSquare(f,r) Square(((r)<<3) + (f))
 #define VFlip(s) ((s)^Sq_a8)
 #define HFlip(s) ((s)^7)
@@ -856,27 +864,24 @@ template < Piece pp > inline BitBoard attack(const Square x, const BitBoard targ
 #else
 
 namespace MagicBB{
-
-#define BISHOPINDEXBITS 9
-#define ROOKINDEXBITS 12
-#define MAGICBISHOPINDEX(m,x) (int)((((m) & MagicBB::mBishopTbl[x].mask) * MagicBB::mBishopTbl[x].magic) >> (64 - BISHOPINDEXBITS))
-#define MAGICROOKINDEX(m,x) (int)((((m) & MagicBB::mRookTbl[x].mask) * MagicBB::mRookTbl[x].magic) >> (64 - ROOKINDEXBITS))
-#define MAGICBISHOPATTACKS(m,x) (MagicBB::mBishopAttacks[x][MAGICBISHOPINDEX(m,x)])
-#define MAGICROOKATTACKS(m,x) (MagicBB::mRookAttacks[x][MAGICROOKINDEX(m,x)])
-
-BitBoard mBishopAttacks[64][1 << BISHOPINDEXBITS];
-BitBoard mRookAttacks[64][1 << ROOKINDEXBITS];
-
-#define ISOUTERFILE(x) (SQFILE(x) == 0 || SQFILE(x) == 7)
-#define ISNEIGHBOUR(x,y) ((x) >= 0 && (x) < 64 && (y) >= 0 && (y) < 64 && abs(SQRANK(x) - SQRANK(y)) <= 1 && abs(SQFILE(x) - SQFILE(y)) <= 1)
-#define PROMOTERANK(x) (SQRANK(x) == 0 || SQRANK(x) == 7)
-
+#define BISHOP_INDEX_BITS 9
+#define ROOK_INDEX_BITS 12
 struct SMagic { BitBoard mask, magic; };
+SMagic bishop[64];
+SMagic rook[64];
+BitBoard bishopAttacks[64][1 << BISHOP_INDEX_BITS];
+BitBoard rookAttacks[64][1 << ROOK_INDEX_BITS];
+#ifdef __BMI2__
+#define MAGICBISHOPINDEX(m,x) (_pext_u64(m, MagicBB::bishop[x].mask))
+#define MAGICROOKINDEX(m,x) (_pext_u64(m, MagicBB::rook[x].mask))
+#else
+#define MAGICBISHOPINDEX(m,x) (int)((((m) & MagicBB::bishop[x].mask) * MagicBB::bishop[x].magic) >> (64 - BISHOP_INDEX_BITS))
+#define MAGICROOKINDEX(m,x) (int)((((m) & MagicBB::rook[x].mask) * MagicBB::rook[x].magic) >> (64 - ROOK_INDEX_BITS))
+#endif
+#define MAGICBISHOPATTACKS(m,x) (MagicBB::bishopAttacks[x][MAGICBISHOPINDEX(m,x)])
+#define MAGICROOKATTACKS(m,x) (MagicBB::rookAttacks[x][MAGICROOKINDEX(m,x)])
 
-SMagic mBishopTbl[64];
-SMagic mRookTbl[64];
-
-const BitBoard bishopmagics[] = {
+const BitBoard bishopMagics[] = {
     0x1002004102008200, 0x1002004102008200, 0x4310002248214800, 0x402010c110014208, 0xa000a06240114001, 0xa000a06240114001, 0x402010c110014208, 0xa000a06240114001,
     0x1002004102008200, 0x1002004102008200, 0x1002004102008200, 0x1002004102008200, 0x100c009840001000, 0x4310002248214800, 0xa000a06240114001, 0x4310002248214800,
     0x4310002248214800, 0x822143005020a148, 0x0001901c00420040, 0x0880504024308060, 0x0100201004200002, 0xa000a06240114001, 0x822143005020a148, 0x1002004102008200,
@@ -887,7 +892,7 @@ const BitBoard bishopmagics[] = {
     0xa000a06240114001, 0x4310002248214800, 0x1002004102008200, 0x1002004102008200, 0x1002004102008200, 0x1002004102008200, 0x1002004102008200, 0x1002004102008200
 };
 
-const BitBoard rookmagics[] = {
+const BitBoard rookMagics[] = {
     0x8200108041020020, 0x8200108041020020, 0xc880221002060081, 0x0009100804021000, 0x0500010004107800, 0x0024010008800a00, 0x0400110410804810, 0x8300038100004222,
     0x004a800182c00020, 0x0009100804021000, 0x3002200010c40021, 0x0020100104000208, 0x01021001a0080020, 0x0884020010082100, 0x1000820800c00060, 0x8020480110020020,
     0x0002052000100024, 0x0200190040088100, 0x0030802001a00800, 0x8010002004000202, 0x0040010100080010, 0x2200608200100080, 0x0001901c00420040, 0x0001400a24008010,
@@ -898,7 +903,7 @@ const BitBoard rookmagics[] = {
     0x2000804026001102, 0x2000804026001102, 0x800040a010040901, 0x80001802002c0422, 0x0010b018200c0122, 0x200204802a080401, 0x8880604201100844, 0x80000cc281092402
 };
 
-BitBoard getAttacks(int index, BitBoard occ, int delta){
+BitBoard computeAttacks(int index, BitBoard occ, int delta){
     BitBoard attacks = 0ULL;
     BitBoard blocked = 0ULL;
     for (int shift = index + delta; ISNEIGHBOUR(shift, shift - delta); shift += delta) {
@@ -908,12 +913,11 @@ BitBoard getAttacks(int index, BitBoard occ, int delta){
     return attacks;
 }
 
-BitBoard getOccupiedFromMBIndex(int j, BitBoard mask){
+BitBoard occupiedFromIndex(int j, BitBoard mask){
     BitBoard occ = 0ULL;
-    int k;
     int i = 0;
     while (mask){
-        k = popBit(mask);
+        const int k = popBit(mask);
         if (j & SquareToBitboard(i)) occ |= (1ULL << k);
         i++;
     }
@@ -923,31 +927,23 @@ BitBoard getOccupiedFromMBIndex(int j, BitBoard mask){
 void initMagic(){
     Logging::LogIt(Logging::logInfo) << "Init magic" ;
     for (Square from = 0; from < 64; from++) {
-        mBishopTbl[from].mask = 0ULL;
-        mRookTbl[from].mask = 0ULL;
+        bishop[from].mask = 0ULL;
+        rook[from].mask = 0ULL;
         for (Square j = 0; j < 64; j++){
             if (from == j) continue;
-            if (SQRANK(from) == SQRANK(j) && !ISOUTERFILE(j)) mRookTbl[from].mask |= SquareToBitboard(j);
-            if (SQFILE(from) == SQFILE(j) && !PROMOTERANK(j)) mRookTbl[from].mask |= SquareToBitboard(j);
-            if (abs(SQRANK(from) - SQRANK(j)) == abs(SQFILE(from) - SQFILE(j)) && !ISOUTERFILE(j) && !PROMOTERANK(j)) mBishopTbl[from].mask |= SquareToBitboard(j);
+            if (SQRANK(from) == SQRANK(j) && !ISOUTERFILE(j))    rook[from].mask |= SquareToBitboard(j);
+            if (SQFILE(from) == SQFILE(j) && !PROMOTION_RANK(j)) rook[from].mask |= SquareToBitboard(j);
+            if (abs(SQRANK(from) - SQRANK(j)) == abs(SQFILE(from) - SQFILE(j)) && !ISOUTERFILE(j) && !PROMOTION_RANK(j)) bishop[from].mask |= SquareToBitboard(j);
         }
-
-        mBishopTbl[from].magic = bishopmagics[from];
-
-        for (int j = 0; j < (1 << BISHOPINDEXBITS); j++) {
-            const BitBoard occ = getOccupiedFromMBIndex(j, mBishopTbl[from].mask);
-            const BitBoard attack = (getAttacks(from, occ, -7) | getAttacks(from, occ, 7) | getAttacks(from, occ, -9) | getAttacks(from, occ, 9));
-            const int hashindex = MAGICBISHOPINDEX(occ, from);
-            mBishopAttacks[from][hashindex] = attack;
+        bishop[from].magic = bishopMagics[from];
+        for (int j = 0; j < (1 << BISHOP_INDEX_BITS); j++) {
+            const BitBoard occ = occupiedFromIndex(j, bishop[from].mask);
+            bishopAttacks[from][MAGICBISHOPINDEX(occ, from)] = (computeAttacks(from, occ, -7) | computeAttacks(from, occ, 7) | computeAttacks(from, occ, -9) | computeAttacks(from, occ, 9));
         }
-
-        mRookTbl[from].magic = rookmagics[from];
-
-        for (int j = 0; j < (1 << ROOKINDEXBITS); j++) {
-            const BitBoard occ = getOccupiedFromMBIndex(j, mRookTbl[from].mask);
-            const BitBoard attack = (getAttacks(from, occ, -1) | getAttacks(from, occ, 1) | getAttacks(from, occ, -8) | getAttacks(from, occ, 8));
-            const int hashindex = MAGICROOKINDEX(occ, from);
-            mRookAttacks[from][hashindex] = attack;
+        rook[from].magic = rookMagics[from];
+        for (int j = 0; j < (1 << ROOK_INDEX_BITS); j++) {
+            const BitBoard occ = occupiedFromIndex(j, rook[from].mask);
+            rookAttacks[from][MAGICROOKINDEX(occ, from)] = (computeAttacks(from, occ, -1) | computeAttacks(from, occ, 1) | computeAttacks(from, occ, -8) | computeAttacks(from, occ, 8));
         }
     }
 }
@@ -957,8 +953,8 @@ void initMagic(){
 template < Piece > BitBoard coverage(const Square x, const BitBoard occupancy = 0, const Color c = Co_White) { assert(false); return 0ull; }
 template <       > BitBoard coverage<P_wp>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].pawnAttack[c]; }
 template <       > BitBoard coverage<P_wn>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].knight; }
-template <       > BitBoard coverage<P_wb>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return MAGICBISHOPATTACKS(occupancy, x);}
-template <       > BitBoard coverage<P_wr>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return MAGICROOKATTACKS(occupancy, x); }
+template <       > BitBoard coverage<P_wb>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return MAGICBISHOPATTACKS(occupancy, x); }
+template <       > BitBoard coverage<P_wr>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return MAGICROOKATTACKS  (occupancy, x); }
 template <       > BitBoard coverage<P_wq>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return MAGICBISHOPATTACKS(occupancy, x) | MAGICROOKATTACKS(occupancy, x); }
 template <       > BitBoard coverage<P_wk>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].king; }
 
@@ -2695,7 +2691,7 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
     const Square from = Move2From(m);
     const Square to   = Move2To(m);
     if (PieceTools::getPieceType(p, to) == P_wk) return true; // capture king !
-    const bool promPossible = (SQRANK(to) == 0 || SQRANK(to) == 7);
+    const bool promPossible = PROMOTION_RANK(to);
     Piece nextVictim  = PieceTools::getPieceType(p,from);
     const Color us    = p.c;
     ScoreType balance = std::abs(PieceTools::getValue(p,to)) - threshold; // The opponent may be able to recapture so this is the best result we can hope for.
@@ -3580,7 +3576,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     Move bestMove = INVALIDMOVE;
     TT::Bound hashBound = TT::B_alpha;
     bool ttMoveIsCapture = false;
-    bool ttMoveSingularExt = false;
+    //bool ttMoveSingularExt = false;
 
     bool isQueenAttacked = p.pieces<P_wq>(p.c) && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces<P_wq>(p.c))); // only first queen ...
 
@@ -3620,7 +3616,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                    if (stopFlag) return STOPSCORE;
                    if (score < betaC) {
                        ++stats.counters[Stats::sid_singularExtension],++extension;
-                       if ( score < betaC - std::min(4*depth,36)) ++stats.counters[Stats::sid_singularExtension2],ttMoveSingularExt=true,++extension;
+                       if ( score < betaC - std::min(4*depth,36)) ++stats.counters[Stats::sid_singularExtension2],/*ttMoveSingularExt=true,*/++extension;
                    }
                    else if ( score >= beta && betaC >= beta) return score;
                }
@@ -3728,7 +3724,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 reduction += !improving;
                 reduction += ttMoveIsCapture/*&&isPrunableStd*/;
                 //reduction += cutNode&&isPrunableStd;
-                reduction -= ttMoveSingularExt;
+                //reduction -= (reduction>1)&&ttMoveSingularExt;
                 if (pvnode && reduction > 0) --reduction;
                 reduction -= 2*int(Move2Score(*it) / MAX_HISTORY); //history reduction/extension
                 //if ( reduction < 0) reduction = 0;
