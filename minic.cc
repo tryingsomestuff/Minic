@@ -2452,22 +2452,24 @@ bool apply(Position & p, const Move & m, bool noValidation){
         if      ( toP == P_wk ) p.king[Co_White] = INVALIDSQUARE;
         else if ( toP == P_bk ) p.king[Co_Black] = INVALIDSQUARE;
 
-        if ( (p.castling & C_wqs) && from == Sq_a1 && fromP == P_wr ){
-            p.castling &= ~C_wqs;
-            p.h ^= Zobrist::ZT[0][13];
-        }
-        else if ( (p.castling & C_wks) && from == Sq_h1 && fromP == P_wr ){
-            p.castling &= ~C_wks;
-            p.h ^= Zobrist::ZT[7][13];
-        }
-        else if ( (p.castling & C_bqs) && from == Sq_a8 && fromP == P_br){
-            p.castling &= ~C_bqs;
-            p.h ^= Zobrist::ZT[56][13];
-        }
-        else if ( (p.castling & C_bks) && from == Sq_h8 && fromP == P_br ){
-            p.castling &= ~C_bks;
-            p.h ^= Zobrist::ZT[63][13];
-        }
+	if ( p.castling != C_none ){
+           if ( (p.castling & C_wqs) && from == Sq_a1 && fromP == P_wr ){
+               p.castling &= ~C_wqs;
+               p.h ^= Zobrist::ZT[0][13];
+           }
+           else if ( (p.castling & C_wks) && from == Sq_h1 && fromP == P_wr ){
+               p.castling &= ~C_wks;
+               p.h ^= Zobrist::ZT[7][13];
+           }
+           else if ( (p.castling & C_bqs) && from == Sq_a8 && fromP == P_br){
+               p.castling &= ~C_bqs;
+               p.h ^= Zobrist::ZT[56][13];
+           }
+           else if ( (p.castling & C_bks) && from == Sq_h8 && fromP == P_br ){
+               p.castling &= ~C_bks;
+               p.h ^= Zobrist::ZT[63][13];
+           }
+	}
         break;
 
     case T_ep: {
@@ -2555,21 +2557,23 @@ bool apply(Position & p, const Move & m, bool noValidation){
     if ( !noValidation && isAttacked(p,kingSquare(p)) ) return false; // this is the only legal move validation needed
 
     // Update castling right if rook captured
-    if ( toP == P_wr && to == Sq_a1 && (p.castling & C_wqs) ){
-        p.castling &= ~C_wqs;
-        p.h ^= Zobrist::ZT[0][13];
-    }
-    else if ( toP == P_wr && to == Sq_h1 && (p.castling & C_wks) ){
-        p.castling &= ~C_wks;
-        p.h ^= Zobrist::ZT[7][13];
-    }
-    else if ( toP == P_br && to == Sq_a8 && (p.castling & C_bqs)){
-        p.castling &= ~C_bqs;
-        p.h ^= Zobrist::ZT[56][13];
-    }
-    else if ( toP == P_br && to == Sq_h8 && (p.castling & C_bks)){
-        p.castling &= ~C_bks;
-        p.h ^= Zobrist::ZT[63][13];
+    if ( p.castling != C_none ){
+       if ( toP == P_wr && to == Sq_a1 && (p.castling & C_wqs) ){
+           p.castling &= ~C_wqs;
+           p.h ^= Zobrist::ZT[0][13];
+       }
+       else if ( toP == P_wr && to == Sq_h1 && (p.castling & C_wks) ){
+           p.castling &= ~C_wks;
+           p.h ^= Zobrist::ZT[7][13];
+       }
+       else if ( toP == P_br && to == Sq_a8 && (p.castling & C_bqs)){
+           p.castling &= ~C_bqs;
+           p.h ^= Zobrist::ZT[56][13];
+       }
+       else if ( toP == P_br && to == Sq_h8 && (p.castling & C_bks)){
+           p.castling &= ~C_bks;
+           p.h ^= Zobrist::ZT[63][13];
+       }
     }
 
     // update EP
