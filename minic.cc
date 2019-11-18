@@ -1788,7 +1788,7 @@ ThreadPool::ThreadPool():stop(false){ push_back(std::unique_ptr<ThreadContext>(n
 
 Counter ThreadPool::counter(Stats::StatId id) const { Counter n = 0; for (auto & it : *this ){ n += it->stats.counters[id];  } return n;}
 
-bool apply(Position & p, const Move & m); //forward decl
+bool apply(Position & p, const Move & m, bool noValidation = false); //forward decl
 
 namespace TT{
 
@@ -2395,7 +2395,7 @@ void applyNull(ThreadContext & context, Position & pN) {
     ++pN.halfmoves;
 }
 
-bool apply(Position & p, const Move & m){
+bool apply(Position & p, const Move & m, bool noValidation){
     START_TIMER
     if (m == INVALIDMOVE) return false;
     //#define DEBUG_MATERIAL
@@ -2552,7 +2552,7 @@ bool apply(Position & p, const Move & m){
     p.allPieces[Co_Black] = p.blackPawn() | p.blackKnight() | p.blackBishop() | p.blackRook() | p.blackQueen() | p.blackKing();
     p.occupancy = p.allPieces[Co_White] | p.allPieces[Co_Black];
 
-    if ( isAttacked(p,kingSquare(p)) ) return false; // this is the only legal move validation needed
+    if ( !noValidation && isAttacked(p,kingSquare(p)) ) return false; // this is the only legal move validation needed
 
     // Update castling right if rook captured
     if ( toP == P_wr && to == Sq_a1 && (p.castling & C_wqs) ){
@@ -2702,7 +2702,7 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
     balance -= Values[nextVictim+PieceShift]; // Now assume the worst possible result: that the opponent can capture our piece for free.
     if (balance >= 0) return true;
     Position p2 = p;
-    if (!apply(p2, m)) return false;
+    if (!apply(p2, m, true)) return false;
     bool endOfSEE = false;
     while (!endOfSEE){
         bool validThreatFound = false;
@@ -2715,7 +2715,7 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
               Position p3 = p2;
               prom = promPossible && pp == P_wp;
               const Move mm = ToMove(sqAtt, to, prom ? T_cappromq : T_capture);
-              if (!apply(p3,mm)) continue;
+              if (!apply(p3,mm,true)) continue;
               validThreatFound = true;
               nextVictim = prom ? P_wq : pp; // CAREFULL here :: we don't care black or white, always use abs(value) next !!!
               balance = -balance - 1 - Values[nextVictim+PieceShift];
