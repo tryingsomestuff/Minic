@@ -2302,6 +2302,7 @@ void generateSquare(const Position & p, MoveList & moves, Square from){
         if ( phase != GP_cap && ptype == P_wk ){ // castling
             if ( side == Co_White) {
                 if ( p.castling & (C_wqs|C_wks) ){
+                   ///@todo do that later in apply and use between BB to check for piece and attack (compatible with FRC)
                    bool e1Attacked = isAttacked(p,Sq_e1);
                    if ( (p.castling & C_wqs) && p.b[Sq_b1] == P_none && p.b[Sq_c1] == P_none && p.b[Sq_d1] == P_none && !isAttacked(p,Sq_c1) && !isAttacked(p,Sq_d1) && !e1Attacked) addMove(from, Sq_c1, T_wqs, moves); // wqs
                    if ( (p.castling & C_wks) && p.b[Sq_f1] == P_none && p.b[Sq_g1] == P_none && !e1Attacked && !isAttacked(p,Sq_f1) && !isAttacked(p,Sq_g1)) addMove(from, Sq_g1, T_wks, moves); // wks
@@ -2689,11 +2690,14 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
     START_TIMER
     const Square from = Move2From(m);
     const Square to   = Move2To(m);
+    const MType type  = Move2Type(m);
     if (PieceTools::getPieceType(p, to) == P_wk) return true; // capture king !
     const bool promPossible = PROMOTION_RANK(to);
-    Piece nextVictim  = PieceTools::getPieceType(p,from);
+    Piece pp = PieceTools::getPieceType(p,from);
+    bool prom = promPossible && pp == P_wp;
+    Piece nextVictim  = prom ? P_wq : pp;
     const Color us    = p.c;
-    ScoreType balance = std::abs(PieceTools::getValue(p,to)) - threshold; // The opponent may be able to recapture so this is the best result we can hope for.
+    ScoreType balance = std::abs(type==T_ep ? Values[P_wp+PieceShift] : PieceTools::getValue(p,to)) - threshold; // The opponent may be able to recapture so this is the best result we can hope for.
     if (balance < 0) return false;
     balance -= Values[nextVictim+PieceShift]; // Now assume the worst possible result: that the opponent can capture our piece for free.
     if (balance >= 0) return true;
@@ -2702,18 +2706,18 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
     bool endOfSEE = false;
     while (!endOfSEE){
         bool validThreatFound = false;
-        for ( Piece pp = P_wp ; pp <= P_wk && !validThreatFound ; ++pp){
+        for ( pp = P_wp ; pp <= P_wk && !validThreatFound ; ++pp){
            BitBoard att = pfAtt[pp-1](to, p2.pieces(p2.c,pp), p2.occupancy, ~p2.c);
            if ( !att ) continue; // next piece type
 	   Square sqAtt = INVALIDSQUARE;
            while (!validThreatFound && att && (sqAtt = BBTools::popBit(att))) {
               if (PieceTools::getPieceType(p2,to) == P_wk) return us == p2.c; // capture king !
               Position p3 = p2;
-              const bool prom = promPossible && pp == P_wp;
+              prom = promPossible && pp == P_wp;
               const Move mm = ToMove(sqAtt, to, prom ? T_cappromq : T_capture);
               if (!apply(p3,mm)) continue;
               validThreatFound = true;
-              nextVictim = (Piece)(prom ? P_wq : pp); // CAREFULL here :: we don't care black or white, always use abs(value) next !!!
+              nextVictim = prom ? P_wq : pp; // CAREFULL here :: we don't care black or white, always use abs(value) next !!!
               balance = -balance - 1 - Values[nextVictim+PieceShift];
               if (balance >= 0 && nextVictim != P_wk) endOfSEE = true;
               p2 = p3;
