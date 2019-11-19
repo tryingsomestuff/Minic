@@ -94,7 +94,7 @@ namespace UCI {
                             else if (param == "btime")       { int t; iss >> t; if (COM::position.c == Co_Black) { TimeMan::msecUntilNextTC = t; TimeMan::isDynamic = true; }}
                             else if (param == "winc" )       { int t; iss >> t; if (COM::position.c == Co_White) { TimeMan::msecInc = t; }}
                             else if (param == "binc" )       { int t; iss >> t; if (COM::position.c == Co_Black) { TimeMan::msecInc = t; }}
-                            else if (param == "movestogo")   { iss >> TimeMan::moveToGo; TimeMan::isDynamic = true; }
+                            else if (param == "movestogo")   { int t; iss >> t; TimeMan::moveToGo = t; TimeMan::isDynamic = true; }
                             else if (param == "ponder")      { COM::ponder = COM::p_on; TimeMan::msecPerMove = 60 * 60 * 1000 * 24;} // infinite search time
                             else if (param == "mate")        { int d = 0;  iss >> d; COM::depth = d; DynamicConfig::mateFinder = true; TimeMan::msecPerMove = 60 * 60 * 1000 * 24; }
                             else                             { Logging::LogIt(Logging::logGUI) << "info string " << param << " not implemented"; }
