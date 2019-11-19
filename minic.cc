@@ -4546,17 +4546,18 @@ int main(int argc, char ** argv) {
     if (argc > 1 && std::string(argv[1]) == "-pgn") { return PGNParse(argv[2]); }
 #endif
 #ifdef DEBUG_TOOL
+    std::string firstOption;
     if (argc < 2) {
-        Logging::LogIt(Logging::logError) << "Hint: You can use -xboard command line option to enter xboard mode"; return EXIT_FAILURE;
+        Logging::LogIt(Logging::logInfo) << "Hint: You can use -xboard command line option to enter xboard mode"; //return EXIT_FAILURE;
+        firstOption="-uci";
     }
-    else{
-        int ret = cliManagement(argv[1],argc,argv);
-        STOP_AND_SUM_TIMER(Total)
-        #ifdef WITH_TIMER
-            Timers::Display();
-        #endif
-        return ret;
-    }
+    else firstOption=argv[1];
+    int ret = cliManagement(firstOption,argc,argv);
+    STOP_AND_SUM_TIMER(Total)
+    #ifdef WITH_TIMER
+        Timers::Display();
+    #endif
+    return ret;
 #else
     ///@todo factorize with the one in cliManagement
     TimeMan::init();
