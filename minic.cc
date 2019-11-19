@@ -2704,7 +2704,7 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
     bool prom = promPossible && pp == P_wp;
     Piece nextVictim  = prom ? P_wq : pp;
     const Color us    = p.c;
-    ScoreType balance = std::abs(type==T_ep ? Values[P_wp+PieceShift] : PieceTools::getValue(p,to)) - threshold; // The opponent may be able to recapture so this is the best result we can hope for.
+    ScoreType balance = (type==T_ep ? Values[P_wp+PieceShift] : PieceTools::getAbsValue(p,to)) - threshold; // The opponent may be able to recapture so this is the best result we can hope for.
     if (balance < 0) return false;
     balance -= Values[nextVictim+PieceShift]; // Now assume the worst possible result: that the opponent can capture our piece for free.
     if (balance >= 0) return true;
@@ -3348,7 +3348,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         if (!isInCheck) {
             if ((specialQSearch && isBadCap(*it)) || !SEE(p,*it,0)) continue; // see is only available if move sorter performed see already (here only at qroot node ...)
-            if (StaticConfig::doQFutility && evalScore + StaticConfig::qfutilityMargin[evalScoreIsHashScore] + PieceTools::getAbsValue(p, Move2To(*it)) <= alphaInit) continue; ///@todo bug with EP here !!
+            if (StaticConfig::doQFutility && evalScore + StaticConfig::qfutilityMargin[evalScoreIsHashScore] + (Move2Type(*it)==T_ep ? Values[P_wp+PieceShift] : PieceTools::getAbsValue(p, Move2To(*it))) <= alphaInit) continue;
         }
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
