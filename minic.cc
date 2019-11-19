@@ -64,6 +64,8 @@ const std::string MinicVersion = "dev";
 #define MAX_DEPTH     127   // DepthType is a char, do not go above 127
 #define MAX_HISTORY  1000.f
 
+#define VALIDMOVE(m) ((m)!=NULLMOVE && (m)!=INVALIDMOVE)
+
 #define SQFILE(s) ((s)&7)
 #define SQRANK(s) ((s)>>3)
 #define ISOUTERFILE(x) (SQFILE(x) == 0 || SQFILE(x) == 7)
@@ -997,10 +999,10 @@ void setBitBoards(Position & p) {
 
 } // BB
 
-inline ScoreType Move2Score(Move h) { assert(h > NULLMOVE); return (h >> 16) & 0xFFFF; }
-inline Square    Move2From (Move h) { assert(h > NULLMOVE); return (h >> 10) & 0x3F  ; }
-inline Square    Move2To   (Move h) { assert(h > NULLMOVE); return (h >>  4) & 0x3F  ; }
-inline MType     Move2Type (Move h) { assert(h > NULLMOVE); return MType(h & 0xF)    ; }
+inline ScoreType Move2Score(Move m) { assert(VALIDMOVE(m)); return (m >> 16) & 0xFFFF; }
+inline Square    Move2From (Move m) { assert(VALIDMOVE(m)); return (m >> 10) & 0x3F  ; }
+inline Square    Move2To   (Move m) { assert(VALIDMOVE(m)); return (m >>  4) & 0x3F  ; }
+inline MType     Move2Type (Move m) { assert(VALIDMOVE(m)); return MType(m & 0xF)    ; }
 inline Move      ToMove(Square from, Square to, MType type)                  { assert(from >= 0 && from < 64); assert(to >= 0 && to < 64); return                 (from << 10) | (to << 4) | type; }
 inline Move      ToMove(Square from, Square to, MType type, ScoreType score) { assert(from >= 0 && from < 64); assert(to >= 0 && to < 64); return (score << 16) | (from << 10) | (to << 4) | type; }
 
@@ -1614,8 +1616,8 @@ struct ThreadContext{
             Logging::LogIt(Logging::logInfo) << "Init counter" ;
             for(int i = 0; i < 64; ++i) for(int k = 0 ; k < 64; ++k) counter[i][k] = 0, counterCap[i][k] = 0;
         }
-        inline void update   (Move m, const Position & p){ if ( p.lastMove > NULLMOVE /*&& Move2Type(m) == T_std*/ ) counter   [Move2From(p.lastMove)][Move2To(p.lastMove)] = m; }
-        inline void updateCap(Move m, const Position & p){ if ( p.lastMove > NULLMOVE /*&& isCapture(m)*/ )          counterCap[Move2From(p.lastMove)][Move2To(p.lastMove)] = m; }
+        inline void update   (Move m, const Position & p){ if ( VALIDMOVE(p.lastMove) /*&& Move2Type(m) == T_std*/ ) counter   [Move2From(p.lastMove)][Move2To(p.lastMove)] = m; }
+        inline void updateCap(Move m, const Position & p){ if ( VALIDMOVE(p.lastMove) /*&& isCapture(m)*/ )          counterCap[Move2From(p.lastMove)][Move2To(p.lastMove)] = m; }
     };
     KillerT killerT;
     HistoryT historyT;
@@ -1888,7 +1890,7 @@ void getPV(const Position & p, ThreadContext & context, PVList & pv){
       if (e.h != 0) {
         hashStack[k] = computeHash(p2);
         pv.push_back(e.m);
-        if ( !apply(p2,e.m) ) break;
+        if ( ! VALIDMOVE(e.m) || !apply(p2,e.m) ) break;
         const Hash h = computeHash(p2);
         for (int i = k-1; i >= 0; --i) if (hashStack[i] == h) {stop=true;break;}
       }
@@ -2114,7 +2116,7 @@ inline std::string SanitizeCastling(const Position & p, const std::string & str)
 }
 
 inline Move SanitizeCastling(const Position & p, const Move & m){
-    if ( m <= NULLMOVE ) return m;
+    if ( !VALIDMOVE(m) ) return m;
     // SAN castling notation
     const Square from = Move2From(m);
     const Square to   = Move2To(m);
@@ -2397,7 +2399,7 @@ void applyNull(ThreadContext & context, Position & pN) {
 
 bool apply(Position & p, const Move & m, bool noValidation){
     START_TIMER
-    if (m == INVALIDMOVE) return false;
+    assert(VALIDMOVE(m));
     //#define DEBUG_MATERIAL
 #ifdef DEBUG_MATERIAL
     Position previous = p;
@@ -2690,6 +2692,7 @@ void initBook() {
 
 // Static Exchange Evaluation (cutoff version algorithm from Stockfish)
 bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold) const{
+    assert(VALIDMOVE(m));
     constexpr static BitBoard(*const pfAtt[])(const Square, const BitBoard, const BitBoard, const Color) = { &BBTools::attack<P_wp>,  &BBTools::attack<P_wn>, &BBTools::attack<P_wb>, &BBTools::attack<P_wr>, &BBTools::attack<P_wq>,  &BBTools::attack<P_wk> };
     START_TIMER
     const Square from = Move2From(m);
@@ -2738,6 +2741,7 @@ struct MoveSorter{
     MoveSorter(const ThreadContext & context, const Position & p, float gp, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL, const Move refutation = INVALIDMOVE):context(context),p(p),gp(gp),useSEE(useSEE),isInCheck(isInCheck),e(e),refutation(refutation){ assert(e==0||e->h!=0||e->m==INVALIDMOVE); }
 
     void computeScore(Move & m)const{
+        assert(VALIDMOVE(m));
         const MType  t    = Move2Type(m);
         const Square from = Move2From(m);
         const Square to   = Move2To(m);
@@ -2763,7 +2767,7 @@ struct MoveSorter{
                 if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 1800; // quiet killer
                 else if (sameMove(m, context.killerT.killers[1][p.halfmoves])) s += 1750; // quiet killer
                 else if (p.halfmoves > 1 && sameMove(m, context.killerT.killers[0][p.halfmoves-2])) s += 1700; // quiet killer
-                else if (p.lastMove > NULLMOVE && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 1650; // quiet counter
+                else if (VALIDMOVE(p.lastMove) && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 1650; // quiet counter
                 else {
                     if ( !isInCheck ){
                        s += context.historyT.history[PieceTools::getPieceIndex(p, from)][to]; // +/- MAX_HISTORY = 1000
@@ -3344,7 +3348,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         if (!isInCheck) {
             if ((specialQSearch && isBadCap(*it)) || !SEE(p,*it,0)) continue; // see is only available if move sorter performed see already (here only at qroot node ...)
-            if (StaticConfig::doQFutility && evalScore + StaticConfig::qfutilityMargin[evalScoreIsHashScore] + PieceTools::getAbsValue(p, Move2To(*it)) <= alphaInit) continue;
+            if (StaticConfig::doQFutility && evalScore + StaticConfig::qfutilityMargin[evalScoreIsHashScore] + PieceTools::getAbsValue(p, Move2To(*it)) <= alphaInit) continue; ///@todo bug with EP here !!
         }
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
@@ -3614,7 +3618,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                //if (!extension && isCheck && !isBadCap(e.m)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
                if (!extension && isAdvancedPawnPush && killerT.isKiller(e.m,p.halfmoves)) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo isPassed ?
                if (!extension && isQueenAttacked && PieceTools::getPieceType(p,Move2From(e.m)) == P_wq && Move2Type(e.m) == T_std && SEE(p,e.m,0)) ++stats.counters[Stats::sid_queenThreatExtension],++extension;
-               if (!extension && p.halfmoves > 1 && threatStack[p.halfmoves] != INVALIDMOVE && threatStack[p.halfmoves-2] != INVALIDMOVE && (sameMove(threatStack[p.halfmoves],threatStack[p.halfmoves-2]) || (Move2To(threatStack[p.halfmoves]) == Move2To(threatStack[p.halfmoves-2]) && isCapture(threatStack[p.halfmoves])))) ++stats.counters[Stats::sid_BMExtension],++extension;
+               if (!extension && p.halfmoves > 1 && VALIDMOVE(threatStack[p.halfmoves]) && VALIDMOVE(threatStack[p.halfmoves-2]) && (sameMove(threatStack[p.halfmoves],threatStack[p.halfmoves-2]) || (Move2To(threatStack[p.halfmoves]) == Move2To(threatStack[p.halfmoves-2]) && isCapture(threatStack[p.halfmoves])))) ++stats.counters[Stats::sid_BMExtension],++extension;
                if (!extension && withoutSkipMove && depth >= StaticConfig::singularExtensionDepth && !rootnode && !isMateScore(e.score) && e.b == TT::B_beta && e.d >= depth - 3){
                    const ScoreType betaC = e.score - 2*depth;
                    PVList sePV;
