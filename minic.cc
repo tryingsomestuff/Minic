@@ -1611,13 +1611,13 @@ struct ThreadContext{
 
     struct CounterT{
         ScoreType counter[64][64];
-        ScoreType counterCap[64][64];
+        //ScoreType counterCap[64][64];
         inline void initCounter(){
             Logging::LogIt(Logging::logInfo) << "Init counter" ;
-            for(int i = 0; i < 64; ++i) for(int k = 0 ; k < 64; ++k) counter[i][k] = 0, counterCap[i][k] = 0;
+            for(int i = 0; i < 64; ++i) for(int k = 0 ; k < 64; ++k) counter[i][k] = 0;//, counterCap[i][k] = 0;
         }
-        inline void update   (Move m, const Position & p){ if ( VALIDMOVE(p.lastMove) /*&& Move2Type(m) == T_std*/ ) counter   [Move2From(p.lastMove)][Move2To(p.lastMove)] = m; }
-        inline void updateCap(Move m, const Position & p){ if ( VALIDMOVE(p.lastMove) /*&& isCapture(m)*/ )          counterCap[Move2From(p.lastMove)][Move2To(p.lastMove)] = m; }
+        inline void update   (Move m, const Position & p){ if ( VALIDMOVE(p.lastMove) ) counter   [Move2From(p.lastMove)][Move2To(p.lastMove)] = m; }
+        //inline void updateCap(Move m, const Position & p){ if ( VALIDMOVE(p.lastMove) ) counterCap[Move2From(p.lastMove)][Move2To(p.lastMove)] = m; }
     };
     KillerT killerT;
     HistoryT historyT;
@@ -2752,11 +2752,11 @@ struct MoveSorter{
         else{
             if (isInCheck && PieceTools::getPieceType(p, from) == P_wk) s += 10000; // king evasion
             if ( isCapture(t) && !isPromotion(t)){ // bad capture can be killers
-                /*if      (sameMove(m, context.killerT.killersCap[0][p.halfmoves])) s += -2000 - MoveScoring[T_capture]; // bad cap killer
-                else if (sameMove(m, context.killerT.killersCap[1][p.halfmoves])) s += -2100 - MoveScoring[T_capture]; // bad cap killer
-                else if (p.halfmoves > 1 && sameMove(m, context.killerT.killersCap[0][p.halfmoves-2])) s += - 2200 - MoveScoring[T_capture]; // bad cap killer
-                else if (p.lastMove > NULLMOVE && sameMove(context.counterT.counterCap[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= - 2300 - MoveScoring[T_capture]; // cap counter
-                else*/ {
+                if      (sameMove(m, context.killerT.killersCap[0][p.halfmoves])) s += -2000 - MoveScoring[T_capture]; // bad cap killer
+                //else if (sameMove(m, context.killerT.killersCap[1][p.halfmoves])) s += -2100 - MoveScoring[T_capture]; // bad cap killer
+                //else if (p.halfmoves > 1 && sameMove(m, context.killerT.killersCap[0][p.halfmoves-2])) s += - 2200 - MoveScoring[T_capture]; // bad cap killer
+                //else if (p.lastMove > NULLMOVE && sameMove(context.counterT.counterCap[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= - 2300 - MoveScoring[T_capture]; // cap counter
+                else {
                     const Piece victim   = PieceTools::getPieceType(p,to);
                     const Piece attacker = PieceTools::getPieceType(p,from);
                     s += StaticConfig::MvvLvaScores[victim-1][attacker-1]; //[0 400]
@@ -3394,12 +3394,12 @@ inline void updateTables(ThreadContext & context, const Position & p, DepthType 
     if (bound == TT::B_beta) {
         if ( isCapture(m)){
             context.killerT.updateCap(m,p);
-            context.counterT.updateCap(m, p);
+            //context.counterT.updateCap(m, p);
         }
         else{
            context.killerT.update(m,p);
-           context.historyT.update<1>(depth, m, p);
            context.counterT.update(m, p);
+           context.historyT.update<1>(depth, m, p);
         }
     }
     else if ( bound == TT::B_alpha) context.historyT.update<-1>(depth, m, p);
