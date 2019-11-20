@@ -1572,25 +1572,17 @@ struct ThreadContext{
 
     struct KillerT{
         Move killers[2][MAX_PLY];
-        Move killersCap[2][MAX_PLY];
         inline void initKillers(){
             Logging::LogIt(Logging::logInfo) << "Init killers" ;
-            for(int i = 0; i < 2; ++i) for(int k = 0 ; k < MAX_PLY; ++k) killers[i][k] = INVALIDMOVE, killersCap[i][k] = INVALIDMOVE;
+            for(int i = 0; i < 2; ++i) for(int k = 0 ; k < MAX_PLY; ++k) killers[i][k] = INVALIDMOVE;
         }
         inline bool isKiller(const Move m, const DepthType ply ){
-            if ( !isCapture(m)) return sameMove(m, killers[0]   [ply]) || sameMove(m, killers[1]   [ply]);
-            else                return sameMove(m, killersCap[0][ply]) || sameMove(m, killersCap[1][ply]);
+            return sameMove(m, killers[0]   [ply]) || sameMove(m, killers[1]   [ply]);
         }
         inline void update(Move m, const Position & p){
            if (!sameMove(killers[0][p.halfmoves], m)) {
               killers[1][p.halfmoves] = killers[0][p.halfmoves];
               killers[0][p.halfmoves] = m;
-           }
-        }
-        inline void updateCap(Move m, const Position & p){
-           if (!sameMove(killersCap[0][p.halfmoves], m)) {
-              killersCap[1][p.halfmoves] = killersCap[0][p.halfmoves];
-              killersCap[0][p.halfmoves] = m;
            }
         }
     };
@@ -1611,13 +1603,11 @@ struct ThreadContext{
 
     struct CounterT{
         ScoreType counter[64][64];
-        //ScoreType counterCap[64][64];
         inline void initCounter(){
             Logging::LogIt(Logging::logInfo) << "Init counter" ;
-            for(int i = 0; i < 64; ++i) for(int k = 0 ; k < 64; ++k) counter[i][k] = 0;//, counterCap[i][k] = 0;
+            for(int i = 0; i < 64; ++i) for(int k = 0 ; k < 64; ++k) counter[i][k] = 0;
         }
         inline void update   (Move m, const Position & p){ if ( VALIDMOVE(p.lastMove) ) counter   [Move2From(p.lastMove)][Move2To(p.lastMove)] = m; }
-        //inline void updateCap(Move m, const Position & p){ if ( VALIDMOVE(p.lastMove) ) counterCap[Move2From(p.lastMove)][Move2To(p.lastMove)] = m; }
     };
     KillerT killerT;
     HistoryT historyT;
@@ -2751,17 +2741,11 @@ struct MoveSorter{
         if (e && sameMove(e->m,m)) s += 15000; // TT move
         else{
             if (isInCheck && PieceTools::getPieceType(p, from) == P_wk) s += 10000; // king evasion
-            if ( isCapture(t) && !isPromotion(t)){ // bad capture can be killers
-                if      (sameMove(m, context.killerT.killersCap[0][p.halfmoves])) s += 2000 - MoveScoring[T_capture]; // bad cap killer
-                //else if (sameMove(m, context.killerT.killersCap[1][p.halfmoves])) s += -2100 - MoveScoring[T_capture]; // bad cap killer
-                //else if (p.halfmoves > 1 && sameMove(m, context.killerT.killersCap[0][p.halfmoves-2])) s += - 2200 - MoveScoring[T_capture]; // bad cap killer
-                //else if (p.lastMove > NULLMOVE && sameMove(context.counterT.counterCap[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= - 2300 - MoveScoring[T_capture]; // cap counter
-                else {
-                    const Piece victim   = PieceTools::getPieceType(p,to);
-                    const Piece attacker = PieceTools::getPieceType(p,from);
-                    if ( t != T_ep ) s += StaticConfig::MvvLvaScores[victim-1][attacker-1]; //[0 400]
-                    if ( !isInCheck && (useSEE && !context.SEE(p,m,-70) /*|| (std::abs(Values[victim+PieceShift]) < std::abs(Values[attacker+PieceShift]) )*/ ) ) s -= 2*MoveScoring[T_capture]; // other bad cap
-                }
+            if ( isCapture(t) && !isPromotion(t)){ 
+                const Piece victim   = PieceTools::getPieceType(p,to);
+                const Piece attacker = PieceTools::getPieceType(p,from);
+                if ( t != T_ep ) s += StaticConfig::MvvLvaScores[victim-1][attacker-1]; //[0 400]
+                if ( !isInCheck && (useSEE && !context.SEE(p,m,-70) /*|| (std::abs(Values[victim+PieceShift]) < std::abs(Values[attacker+PieceShift]) )*/ ) ) s -= 2*MoveScoring[T_capture]; 
             }
             else if ( t == T_std ){
                 if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 1800; // quiet killer
@@ -3379,28 +3363,11 @@ inline void updatePV(PVList & pv, const Move & m, const PVList & childPV) {
     std::copy(childPV.begin(), childPV.end(), std::back_inserter(pv));
 }
 
-inline void updateTablesCap(ThreadContext & context, const Position & p, DepthType depth, const Move m, TT::Bound bound) {
-    if (bound == TT::B_beta) {
-        if (!sameMove(context.killerT.killersCap[0][p.halfmoves], m)) {
-            context.killerT.killersCap[1][p.halfmoves] = context.killerT.killersCap[0][p.halfmoves];
-            context.killerT.killersCap[0][p.halfmoves] = m;
-        }
-        context.counterT.update(m, p);
-    }
-}
-
 inline void updateTables(ThreadContext & context, const Position & p, DepthType depth, const Move m, TT::Bound bound) {
-    if ( isCapture(m)) { updateTablesCap(context,p,depth,m,bound); return; }
     if (bound == TT::B_beta) {
-        if ( isCapture(m)){
-            context.killerT.updateCap(m,p);
-            //context.counterT.updateCap(m, p);
-        }
-        else{
-           context.killerT.update(m,p);
-           context.counterT.update(m, p);
-           context.historyT.update<1>(depth, m, p);
-        }
+       context.killerT.update(m,p);
+       context.counterT.update(m, p);
+       context.historyT.update<1>(depth, m, p);
     }
     else if ( bound == TT::B_alpha) context.historyT.update<-1>(depth, m, p);
 }
@@ -3454,7 +3421,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if ( /*withoutSkipMove &&*/ TT::getEntry(*this,pHash, depth, e)) { // if not skipmove
         if ( e.h != 0 && !rootnode && !pvnode && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
             //if (e.m != INVALIDMOVE) pv.push_back(e.m); // here e.m might be INVALIDMOVE if B_alpha without alphaUpdated/bestScoreUpdated (so don't try this at root node !)
-            if (!isInCheck && e.m != INVALIDMOVE && (Move2Type(e.m) == T_std || isBadCap(e.m))) updateTables(*this, p, depth, e.m, e.b); // bad cap can be killers
+            if (!isInCheck && e.m != INVALIDMOVE && Move2Type(e.m) == T_std ) updateTables(*this, p, depth, e.m, e.b);
             return adjustHashScore(e.score, ply);
         }
     }
@@ -3644,7 +3611,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                     if (pvnode) updatePV(pv, e.m, childPV);
                     if (ttScore >= beta) {
                         ++stats.counters[Stats::sid_ttbeta];
-                        if ( !isInCheck && (Move2Type(e.m) == T_std || isBadCap(e.m))) updateTables(*this, p, depth + (ttScore > (beta+80)), e.m, TT::B_beta);
+                        if ( !isInCheck && Move2Type(e.m) == T_std ) updateTables(*this, p, depth + (ttScore > (beta+80)), e.m, TT::B_beta);
                         if (true /*withoutSkipMove &&*/ /*&& ttScore != 0*/) TT::setEntry(*this,pHash,e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth);
                         return ttScore;
                     }
@@ -3762,7 +3729,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 alpha = score;
                 hashBound = TT::B_exact;
                 if ( score >= beta ){
-                    if ( !isInCheck && (Move2Type(*it) == T_std || isBadCap(*it))){
+                    if ( !isInCheck && Move2Type(*it) == T_std ){
                         updateTables(*this, p, depth + (score>beta+80), *it, TT::B_beta);
                         for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2) if ( Move2Type(*it2) == T_std ) historyT.update<-1>(depth + (score > (beta + 80)),*it2,p);
                     }
