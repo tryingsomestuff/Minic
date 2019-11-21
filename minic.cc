@@ -2719,11 +2719,12 @@ struct MoveSorter{
                 else if (p.halfmoves > 1 && sameMove(m, context.killerT.killers[0][p.halfmoves-2])) s += 1700; // quiet killer
                 else if (VALIDMOVE(p.lastMove) && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 1650; // quiet counter
                 else {
+                    s += context.historyT.history[PieceTools::getPieceIndex(p, from)][to]; // +/- MAX_HISTORY = 1000
                     if ( !isInCheck ){
-                       s += context.historyT.history[PieceTools::getPieceIndex(p, from)][to]; // +/- MAX_HISTORY = 1000
-                       if ( refutation != INVALIDMOVE && from == Move2To(refutation) && context.SEE(p,m,-70)) s+=200; // move (safely) leaving threat square from null move search
+                       if ( refutation != INVALIDMOVE && from == Move2To(refutation) && context.SEE(p,m,-70)) s+=500; // move (safely) leaving threat square from null move search
                        const bool isWhite = (p.allPieces[Co_White] & SquareToBitboard(from)) != 0ull;
-                       s += ScaleScore(EvalConfig::PST[PieceTools::getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - EvalConfig::PST[PieceTools::getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from],gp);
+                       const EvalScore * const  pst = EvalConfig::PST[PieceTools::getPieceType(p, from) - 1];
+                       s += ScaleScore(pst[isWhite ? (to ^ 56) : to] - pst[isWhite ? (from ^ 56) : from],gp);
                     }
                 }
             }
