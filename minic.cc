@@ -2721,7 +2721,7 @@ struct MoveSorter{
                 else {
                     if ( !isInCheck ){
                        s += context.historyT.history[PieceTools::getPieceIndex(p, from)][to]; // +/- MAX_HISTORY = 1000
-                       if ( refutation != INVALIDMOVE && from == Move2To(refutation) && context.SEE(p,m,-70)) s+=500; // move (safely) leaving threat square from null move search
+                       if ( refutation != INVALIDMOVE && from == Move2To(refutation) && context.SEE(p,m,-70)) s+=200; // move (safely) leaving threat square from null move search
                        const bool isWhite = (p.allPieces[Co_White] & SquareToBitboard(from)) != 0ull;
                        s += ScaleScore(EvalConfig::PST[PieceTools::getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - EvalConfig::PST[PieceTools::getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from],gp);
                     }
