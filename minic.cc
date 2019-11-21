@@ -2736,7 +2736,7 @@ struct MoveSorter{
         const Square from = Move2From(m);
         const Square to   = Move2To(m);
         ScoreType s       = Move2Score(m);
-        if ( s != 0 ) return; // prob cut already compute captures score
+        if ( s != 0 ) return; // prob cut already computed captures score
         s = MoveScoring[t];
         if (e && sameMove(e->m,m)) s += 15000; // TT move
         else{
@@ -2744,8 +2744,12 @@ struct MoveSorter{
             if ( isCapture(t) && !isPromotion(t)){ 
                 const Piece victim   = PieceTools::getPieceType(p,to);
                 const Piece attacker = PieceTools::getPieceType(p,from);
-                if ( t != T_ep ) s += StaticConfig::MvvLvaScores[victim-1][attacker-1]; //[0 400]
-                if ( !isInCheck && (useSEE && !context.SEE(p,m,-70) /*|| (std::abs(Values[victim+PieceShift]) < std::abs(Values[attacker+PieceShift]) )*/ ) ) s -= 2*MoveScoring[T_capture]; 
+                if ( t != T_ep ){
+                   assert(victim>0);
+                   assert(attacker>0);
+                   s += StaticConfig::MvvLvaScores[victim-1][attacker-1]; //[0 400]
+                }
+                if ( !isInCheck && (useSEE && !context.SEE(p,m,-70) ) ) s -= 2*MoveScoring[T_capture];
             }
             else if ( t == T_std ){
                 if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 1800; // quiet killer
@@ -2755,7 +2759,7 @@ struct MoveSorter{
                 else {
                     if ( !isInCheck ){
                        s += context.historyT.history[PieceTools::getPieceIndex(p, from)][to]; // +/- MAX_HISTORY = 1000
-                       if ( refutation != INVALIDMOVE && from == Move2To(refutation) && context.SEE(p,m,-70)) s+=100; // move (safely) leaving threat square from null move search
+                       if ( refutation != INVALIDMOVE && from == Move2To(refutation) && context.SEE(p,m,-70)) s+=500; // move (safely) leaving threat square from null move search
                        const bool isWhite = (p.allPieces[Co_White] & SquareToBitboard(from)) != 0ull;
                        s += ScaleScore(EvalConfig::PST[PieceTools::getPieceType(p, from) - 1][isWhite ? (to ^ 56) : to] - EvalConfig::PST[PieceTools::getPieceType(p, from) - 1][isWhite ? (from ^ 56) : from],gp);
                     }
