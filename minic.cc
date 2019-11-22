@@ -172,7 +172,6 @@ struct OptList {
 };
 
 typedef OptList<Move,MAX_MOVE> MoveList;
-typedef std::vector<Square> SquareList;
 typedef std::vector<Move> PVList;
 
 namespace DynamicConfig{
@@ -369,15 +368,15 @@ EvalScore   rookBehindPassed      = { -8,41};
 EvalScore   kingNearPassedPawn    = { -6,13};
 enum PawnEvalSemiOpen{ Close=0, SemiOpen=1};
 ///@todo make this depends on file! (/rank?)
-EvalScore   doublePawnMalus[2]    = {{ 25, 12 },{  5, 19 }}; // openfile
-EvalScore   isolatedPawnMalus[2]  = {{ 13,  3 },{ 15, 17 }}; // openfile
-EvalScore   backwardPawnMalus[2]  = {{ -2,  2 },{ 24, -5 }}; // openfile
-EvalScore   holesMalus            = {-9, 4};
+EvalScore   doublePawnMalus[2]    = {{ 25, 12 },{  5, 19 }}; // close semiopenfile
+EvalScore   isolatedPawnMalus[2]  = {{ 13,  3 },{ 15, 17 }}; // close semiopenfile
+EvalScore   backwardPawnMalus[2]  = {{ -2,  2 },{ 24, -5 }}; // close semiopenfile
+EvalScore   holesMalus            = { -9, 4};
 EvalScore   outpost               = { 14,19};
 EvalScore   candidate[8]          = { {0, 0}, {-30, 11}, {-15,  0}, { 14,  6}, { 24, 51}, {-11, 14}, {-11, 14}, { 0, 0} };
 EvalScore   protectedPasserBonus[8]={ {0, 0}, {  8, 17}, { 8 ,  4}, { 14,  3}, { 14, 11}, { 12, 19}, { 8 , 16}, { 0, 0} };
 EvalScore   freePasserBonus[8]    = { {0, 0}, { -5, 34}, {-24, 36}, {-22, 38}, {-19, 41}, { -5, 58}, {-23, 77}, { 0, 0} };
-EvalScore   pawnMobility          = { 5, 12};
+EvalScore   pawnMobility          = {  5,12};
 EvalScore   pawnSafeAtt           = { 39,12};
 EvalScore   pawnSafePushAtt       = { 16, 4};
 EvalScore   pawnlessFlank         = {-10,-7};
@@ -386,10 +385,10 @@ EvalScore   rookOnOpenFile        = {51,-3};
 EvalScore   rookOnOpenSemiFileOur = { 8,-1};
 EvalScore   rookOnOpenSemiFileOpp = {18,-2};
 
-EvalScore   rookQueenSameFile     = {9,-3};
-EvalScore   rookFrontQueenMalus   = {-7,-18};
-EvalScore   rookFrontKingMalus    = {-11,5};
-EvalScore   minorOnOpenFile       = {21,-6};
+EvalScore   rookQueenSameFile     = {  9, -3};
+EvalScore   rookFrontQueenMalus   = { -7,-18};
+EvalScore   rookFrontKingMalus    = {-11,  5};
+EvalScore   minorOnOpenFile       = { 21, -6};
 EvalScore   attQueenMalus[5]      = {{2,-5},{-16,4},{-40,-16},{-57,-3},{32,39}};
 
 EvalScore   pinnedKing [5]        = { { -2, -9}, { 17, 51}, {-11, 63}, {-18, 62}, {-5, 26} };
@@ -402,13 +401,14 @@ EvalScore   adjRook[9]        = { { 24, 22}, {  9, 11}, { 15,  7}, {  4,  9}, {-
 EvalScore   bishopPairBonus[9]= { { 31, 56}, { 31, 57}, { 27, 63}, { 14, 77}, { 24, 62}, { 29, 62}, { 33, 61}, { 34, 58}, { 34, 53} };
 EvalScore   knightPairMalus   = { 6, -9};
 EvalScore   rookPairMalus     = { 3,-14};
+EvalScore   queenNearKing     = {-1,  6};
 
 EvalScore MOB[6][29] = { {{0,0},{0,0},{0,0},{0,0}},
-                         {{-22,-22},{48,-15},{52,8},{51,18},{57,14},{55,19},{52,23},{57,13},{57,12}},
-                         {{-13,-18},{2,-8},{11,4},{17,12},{20,23},{24,28},{28,30},{29,33},{29,35},{29,30},{27,33},{32,24},{36,36},{38,38},{40,40}},
-                         {{21,-20},{27,-1},{28,30},{35,40},{35,53},{40,61},{48,63},{53,62},{50,71},{57,68},{65,72},{62,77},{64,82},{67,83},{44,86}},
-                         {{1,-19},{12,-18},{17,-16},{17,-14},{25,-12},{32,-10},{31,0},{32,3},{34,6},{36,9},{36,12},{36,15},{31,18},{36,23},{35,27},{31,33},{33,32},{33,40},{35,41},{38,44},{41,42},{43,47},{46,46},{48,49},{49,50},{50,50},{51,51},{52,52},{53,53}},
-                         {{19,-20},{5,-3},{-1,14},{-7,40},{-23,54},{-48,69},{-25,67},{-30,73},{2,64} } };
+	                 {{-22,-22},{48,-15},{52,8},{51,18},{57,14},{55,19},{52,23},{57,13},{57,12}},
+	                 {{-13,-18},{2,-8},{11,4},{17,12},{20,23},{24,28},{28,30},{29,33},{29,35},{29,30},{27,33},{32,24},{36,36},{38,38},{40,40}},
+	                 {{21,-20},{27,-1},{28,30},{35,40},{35,53},{40,61},{48,63},{53,62},{50,71},{57,68},{65,72},{62,77},{64,82},{67,83},{44,86}},
+	                 {{1,-19},{12,-18},{17,-16},{17,-14},{25,-12},{32,-10},{31,0},{32,3},{34,6},{36,9},{36,12},{36,15},{31,18},{36,23},{35,27},{31,33},{33,32},{33,40},{35,41},{38,44},{41,42},{43,47},{46,46},{48,49},{49,50},{50,50},{51,51},{52,52},{53,53}},
+	                 {{19,-20},{5,-3},{-1,14},{-7,40},{-23,54},{-48,69},{-25,67},{-30,73},{2,64} } };
 
 enum katt_att_def : unsigned char { katt_attack = 0, katt_defence = 1 };
 ScoreType kingAttMax    = 422;
@@ -418,14 +418,11 @@ ScoreType kingAttOffset = 10;
 ScoreType kingAttWeight[2][6]    = { { 2, 7, 8, 4, 9, -1}, { 5, 3, 5, 0, 1, 0} };
 ScoreType kingAttSafeCheck[6]    = {   4, 37, 36, 33, 32, 0};
 ScoreType kingAttTable[64]       = {0};
-EvalScore queenNearKing = {-1,6};
-// next are redoundant with pawn less flank
 ScoreType kingAttOpenfile        = 6;
 ScoreType kingAttSemiOpenfileOpp = 3;
 ScoreType kingAttSemiOpenfileOur = 2;
 
-ScoreType tempo = 15;
-
+//ScoreType tempo = 15;
 }
 
 inline ScoreType ScaleScore(EvalScore s, float gp){ return ScoreType(gp*s[MG] + (1.f-gp)*s[EG]);}
@@ -836,13 +833,13 @@ BitBoard bishopAttacks[64][1 << BISHOP_INDEX_BITS];
 BitBoard rookAttacks[64][1 << ROOK_INDEX_BITS];
 #ifdef __BMI2__
 #define MAGICBISHOPINDEX(m,x) (_pext_u64(m, MagicBB::bishop[x].mask))
-#define MAGICROOKINDEX(m,x) (_pext_u64(m, MagicBB::rook[x].mask))
+#define MAGICROOKINDEX(m,x)   (_pext_u64(m, MagicBB::rook  [x].mask))
 #else
 #define MAGICBISHOPINDEX(m,x) (int)((((m) & MagicBB::bishop[x].mask) * MagicBB::bishop[x].magic) >> (64 - BISHOP_INDEX_BITS))
-#define MAGICROOKINDEX(m,x) (int)((((m) & MagicBB::rook[x].mask) * MagicBB::rook[x].magic) >> (64 - ROOK_INDEX_BITS))
+#define MAGICROOKINDEX(m,x)   (int)((((m) & MagicBB::rook  [x].mask) * MagicBB::rook  [x].magic) >> (64 - ROOK_INDEX_BITS))
 #endif
 #define MAGICBISHOPATTACKS(m,x) (MagicBB::bishopAttacks[x][MAGICBISHOPINDEX(m,x)])
-#define MAGICROOKATTACKS(m,x) (MagicBB::rookAttacks[x][MAGICROOKINDEX(m,x)])
+#define MAGICROOKATTACKS(m,x)   (MagicBB::rookAttacks  [x][MAGICROOKINDEX(m,x)])
 
 const BitBoard bishopMagics[] = {
     0x1002004102008200, 0x1002004102008200, 0x4310002248214800, 0x402010c110014208, 0xa000a06240114001, 0xa000a06240114001, 0x402010c110014208, 0xa000a06240114001,
@@ -867,8 +864,7 @@ const BitBoard rookMagics[] = {
 };
 
 BitBoard computeAttacks(int index, BitBoard occ, int delta){
-    BitBoard attacks = 0ULL;
-    BitBoard blocked = 0ULL;
+    BitBoard attacks = 0ull, blocked = 0ull;
     for (int shift = index + delta; ISNEIGHBOUR(shift, shift - delta); shift += delta) {
         if (!blocked) attacks |= SquareToBitboard(shift);
         blocked |= ((1ULL << shift) & occ);
@@ -925,16 +921,14 @@ template < Piece pp > inline BitBoard attack(const Square x, const BitBoard targ
 
 #endif // MAGIC
 
+constexpr BitBoard(*const pfCoverage[])(const Square, const BitBoard, const Color) = { &BBTools::coverage<P_wp>, &BBTools::coverage<P_wn>, &BBTools::coverage<P_wb>, &BBTools::coverage<P_wr>, &BBTools::coverage<P_wq>, &BBTools::coverage<P_wk> };
+constexpr BitBoard(*const pfAttack[])(const Square, const BitBoard, const BitBoard, const Color) = { &BBTools::attack<P_wp>,  &BBTools::attack<P_wn>, &BBTools::attack<P_wb>, &BBTools::attack<P_wr>, &BBTools::attack<P_wq>,  &BBTools::attack<P_wk> };
+
 Square SquareFromBitBoard(const BitBoard & b) { // return first square
     assert(b != 0ull);
     unsigned long i = 0;
     bsf(b, i);
     return Square(i);
-}
-
-BitBoard allAttackedBB(const Position &p, const Square x, Color c) {
-    if (c == Co_White) return attack<P_wb>(x, p.blackBishop() | p.blackQueen(), p.occupancy) | attack<P_wr>(x, p.blackRook() | p.blackQueen(), p.occupancy) | attack<P_wn>(x, p.blackKnight()) | attack<P_wp>(x, p.blackPawn(), p.occupancy, Co_White) | attack<P_wk>(x, p.blackKing());
-    else               return attack<P_wb>(x, p.whiteBishop() | p.whiteQueen(), p.occupancy) | attack<P_wr>(x, p.whiteRook() | p.whiteQueen(), p.occupancy) | attack<P_wn>(x, p.whiteKnight()) | attack<P_wp>(x, p.whitePawn(), p.occupancy, Co_Black) | attack<P_wk>(x, p.whiteKing());
 }
 
 bool isAttackedBB(const Position &p, const Square x, Color c) { ///@todo try to optimize order better ?
@@ -978,7 +972,7 @@ inline bool isCastling (const MType & mt){ return mt == T_bks || mt == T_bqs || 
 inline bool isCastling (const Move & m  ){ return isCastling(Move2Type(m)); }
 inline bool isPromotion(const MType & mt){ return mt >= T_promq && mt <= T_cappromn;}
 inline bool isPromotion(const Move & m  ){ return isPromotion(Move2Type(m));}
-inline bool isBadCap   (const Move & m  ){ return Move2Score(m) < -MoveScoring[T_capture] + 400;}
+inline bool isBadCap   (const Move & m  ){ return Move2Score(m) < -MoveScoring[T_capture] + 800;}
 
 inline Square chebyshevDistance(Square sq1, Square sq2) { return std::max(std::abs(SQRANK(sq2) - SQRANK(sq1)) , std::abs(SQFILE(sq2) - SQFILE(sq1))); }
 inline Square manatthanDistance(Square sq1, Square sq2) { return std::abs(SQRANK(sq2) - SQRANK(sq1)) + std::abs(SQFILE(sq2) - SQFILE(sq1)); }
@@ -989,7 +983,7 @@ std::string ToString(const Position & p, bool noEval = false);
 std::string ToString(const Position::Material & mat);
 
 ///@todo try to include MG and EG score in table, as well as game phase
-namespace MaterialHash { // from Gull
+namespace MaterialHash { // idea from Gull
     const int MatWQ = 1;
     const int MatBQ = 3;
     const int MatWR = (3 * 3);
@@ -1400,11 +1394,7 @@ Hash computeHash(const Position &p){
     if ( p.c == Co_White)        p.h ^= Zobrist::ZT[3][13];
     if ( p.c == Co_Black)        p.h ^= Zobrist::ZT[4][13];
 #ifdef DEBUG_HASH
-    if ( h != 0ull && h != p.h ){
-        Logging::LogIt(Logging::logError) << "Hash error " << ToString(p.lastMove);
-        Logging::LogIt(Logging::logError) << ToString(p,true);
-        exit(1);
-    }
+    if ( h != 0ull && h != p.h ){ Logging::LogIt(Logging::logFatal) << "Hash error " << ToString(p.lastMove) << ToString(p,true); }
 #endif
     return p.h;
 }
@@ -1428,12 +1418,7 @@ Hash computePHash(const Position &p){
     //if ( p.c == Co_White)        p.ph ^= Zobrist::ZT[3][13];
     //if ( p.c == Co_Black)        p.ph ^= Zobrist::ZT[4][13];
 #ifdef DEBUG_PHASH
-    if ( h != 0ull && h != p.ph ){
-        Logging::LogIt(Logging::logError) << "Pawn Hash error " << ToString(p.lastMove);
-        Logging::LogIt(Logging::logError) << ToString(p,true);
-        Logging::LogIt(Logging::logError) << p.ph << " != " << h;
-        exit(1);
-    }
+    if ( h != 0ull && h != p.ph ){ Logging::LogIt(Logging::logFatal) << "Pawn Hash error " << ToString(p.lastMove) << ToString(p,true) << p.ph << " != " << h; }
 #endif
     return p.ph;
 }
@@ -1538,8 +1523,8 @@ struct ThreadContext{
             Logging::LogIt(Logging::logInfo) << "Init killers" ;
             for(int i = 0; i < 2; ++i) for(int k = 0 ; k < MAX_PLY; ++k) killers[i][k] = INVALIDMOVE;
         }
-        inline bool isKiller(const Move m, const DepthType ply ){
-            return sameMove(m, killers[0]   [ply]) || sameMove(m, killers[1]   [ply]);
+        inline bool isKiller(const Move m, const DepthType ply){
+            return sameMove(m, killers[0][ply]) || sameMove(m, killers[1][ply]);
         }
         inline void update(Move m, const Position & p){
            if (!sameMove(killers[0][p.halfmoves], m)) {
@@ -1902,7 +1887,6 @@ std::string GetFEN(const Position &p) { // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1P
 std::string ToString(const Move & m, bool withScore){
     if ( m == INVALIDMOVE ) return "invalid move";
     if ( m == NULLMOVE ) return "null move";
-    std::stringstream ss;
     std::string prom;
     const std::string score = (withScore ? " (" + std::to_string(Move2Score(m)) + ")" : "");
     switch (Move2Type(m)) {
@@ -1915,8 +1899,7 @@ std::string ToString(const Move & m, bool withScore){
         prom = promSuffixe[Move2Type(m)];
         break;
     }
-    ss << SquareNames[Move2From(m)] << SquareNames[Move2To(m)];
-    return ss.str() + prom + score;
+    return SquareNames[Move2From(m)] + SquareNames[Move2To(m)] + prom + score;
 }
 
 std::string ToString(const PVList & moves){
@@ -1934,7 +1917,7 @@ std::string ToString(const Position::Material & mat) {
 
 std::string ToString(const Position & p, bool noEval){
     std::stringstream ss;
-    ss << "Position" << std::endl;
+    ss << "\nPosition" << std::endl;
     for (Square j = 7; j >= 0; --j) {
         ss << Logging::_protocolComment[Logging::ct] << " +-+-+-+-+-+-+-+-+" << std::endl << Logging::_protocolComment[Logging::ct] << " |";
         for (Square i = 0; i < 8; ++i) ss << PieceTools::getName(p,i+j*8) << '|';
@@ -2061,7 +2044,6 @@ void tokenize(const std::string& str, std::vector<std::string>& tokens, const st
 }
 
 inline std::string SanitizeCastling(const Position & p, const std::string & str){
-    // SAN castling notation
     if (( str == "e1g1" && p.b[Sq_e1] == P_wk ) || ( str == "e8g8" && p.b[Sq_e8] == P_bk )) return "0-0";
     if (( str == "e1c1" && p.b[Sq_e1] == P_wk ) || ( str == "e8c8" && p.b[Sq_e8] == P_bk )) return "0-0-0";
     return str;
@@ -2069,7 +2051,6 @@ inline std::string SanitizeCastling(const Position & p, const std::string & str)
 
 inline Move SanitizeCastling(const Position & p, const Move & m){
     if ( !VALIDMOVE(m) ) return m;
-    // SAN castling notation
     const Square from = Move2From(m);
     const Square to   = Move2To(m);
     MType mtype = Move2Type(m);
@@ -2217,18 +2198,18 @@ TimeType GetNextMSecPerMove(const Position & p){
 inline void addMove(Square from, Square to, MType type, MoveList & moves){ assert( from >= 0 && from < 64); assert( to >=0 && to < 64); moves.push_back(ToMove(from,to,type,0));}
 
 TimeType ThreadContext::getCurrentMoveMs() {
+    TimeType ret = currentMoveMs;
     switch (moveDifficulty) {
-    case MoveDifficultyUtil::MD_forced:      return (currentMoveMs >> 4);
-    case MoveDifficultyUtil::MD_easy:        return (currentMoveMs >> 3);
-    case MoveDifficultyUtil::MD_std:         return (currentMoveMs);
-    case MoveDifficultyUtil::MD_hardDefense: return (std::min(TimeType(TimeMan::msecUntilNextTC*MoveDifficultyUtil::maxStealFraction), currentMoveMs*MoveDifficultyUtil::emergencyFactor));
-    case MoveDifficultyUtil::MD_hardAttack:  return (currentMoveMs);
+    case MoveDifficultyUtil::MD_forced:      ret = (ret >> 4); break;
+    case MoveDifficultyUtil::MD_easy:        ret = (ret >> 3); break;
+    case MoveDifficultyUtil::MD_std:         break;
+    case MoveDifficultyUtil::MD_hardDefense: ret = (std::min(TimeType(TimeMan::msecUntilNextTC*MoveDifficultyUtil::maxStealFraction), ret*MoveDifficultyUtil::emergencyFactor)); break;
+    case MoveDifficultyUtil::MD_hardAttack:  break;
     }
-    return currentMoveMs;
+    return std::max(ret, TimeType(20));// if not much time left, let's try that ...;
 }
 
 inline Square kingSquare(const Position & p) { return p.king[p.c]; }
-inline Square oppKingSquare(const Position & p) { return p.king[~p.c]; }
 inline bool isAttacked(const Position & p, const Square k) { return k!=INVALIDSQUARE && BBTools::isAttackedBB(p, k, p.c);}
 
 enum GenPhase { GP_all = 0, GP_cap = 1, GP_quiet = 2 };
@@ -2242,9 +2223,8 @@ void generateSquare(const Position & p, MoveList & moves, Square from){
     const Piece piece = p.b[from];
     const Piece ptype = (Piece)std::abs(piece);
     assert ( ptype != P_none ) ;
-    static BitBoard(*const pf[])(const Square, const BitBoard, const Color) = { &BBTools::coverage<P_wp>, &BBTools::coverage<P_wn>, &BBTools::coverage<P_wb>, &BBTools::coverage<P_wr>, &BBTools::coverage<P_wq>, &BBTools::coverage<P_wk> };
     if (ptype != P_wp) {
-        BitBoard bb = pf[ptype-1](from, p.occupancy, p.c) & ~myPieceBB;
+        BitBoard bb = BBTools::pfCoverage[ptype-1](from, p.occupancy, p.c) & ~myPieceBB;
         if      (phase == GP_cap)   bb &= oppPieceBB;  // only target opponent piece
         else if (phase == GP_quiet) bb &= ~oppPieceBB; // do not target opponent piece
         while (bb) {
@@ -2301,7 +2281,7 @@ void generateSquare(const Position & p, MoveList & moves, Square from){
 template < GenPhase phase = GP_all >
 void generate(const Position & p, MoveList & moves, bool doNotClear = false){
     START_TIMER
-    if ( !doNotClear) moves.clear();
+    if (!doNotClear) moves.clear();
     BitBoard myPieceBBiterator = ( (p.c == Co_White) ? p.allPieces[Co_White] : p.allPieces[Co_Black]);
     while (myPieceBBiterator) generateSquare<phase>(p,moves,BBTools::popBit(myPieceBBiterator));
     STOP_AND_SUM_TIMER(Generate)
@@ -2339,10 +2319,6 @@ void applyNull(ThreadContext & context, Position & pN) {
     pN.h ^= Zobrist::ZT[4][13];
     if (pN.ep != INVALIDSQUARE) pN.h ^= Zobrist::ZT[pN.ep][13];
 
-    //pN.ph ^= Zobrist::ZT[3][13];
-    //pN.ph ^= Zobrist::ZT[4][13];
-    //if (pN.ep != INVALIDSQUARE) pN.ph ^= Zobrist::ZT[pN.ep][13];
-
     pN.lastMove = NULLMOVE;
     pN.ep = INVALIDSQUARE;
     if ( pN.c == Co_White ) ++pN.moves;
@@ -2356,32 +2332,17 @@ bool apply(Position & p, const Move & m, bool noValidation){
 #ifdef DEBUG_MATERIAL
     Position previous = p;
 #endif
-
     const Square from  = Move2From(m);
     const Square to    = Move2To(m);
     const MType  type  = Move2Type(m);
     const Piece  fromP = p.b[from];
     const Piece  toP   = p.b[to];
-
 //#define DEBUG_APPLY
 #ifdef DEBUG_APPLY
-    if (( fromP > 0 && p.c == Co_Black ) || (fromP < 0 && p.c == Co_White ) ){
-        Logging::LogIt(Logging::logError) << "Apply error, wrong color";
-        Logging::LogIt(Logging::logError) << ToString(p);
-        Logging::LogIt(Logging::logError) << ToString(m);
-        exit(1);
-    }
-    if (( toP > 0 && p.c == Co_White ) || (toP < 0 && p.c == Co_Black ) ){
-        Logging::LogIt(Logging::logError) << "Apply error, cap own piece";
-        Logging::LogIt(Logging::logError) << ToString(p);
-        Logging::LogIt(Logging::logError) << ToString(m);
-        exit(1);
-    }
+    if (( fromP > 0 && p.c == Co_Black ) || (fromP < 0 && p.c == Co_White ) ){ Logging::LogIt(Logging::logFatal) << "Apply error, wrong color" << ToString(p) << ToString(m); }
+    if (( toP   > 0 && p.c == Co_White ) || (toP   < 0 && p.c == Co_Black ) ){ Logging::LogIt(Logging::logFatal) << "Apply error, cap own piece" << ToString(p) << ToString(m); }
 #endif
-
     const int fromId   = fromP + PieceShift;
-    //const int toId     = toP + PieceShift;
-
     switch(type){
     case T_std:
     case T_capture:
@@ -2532,17 +2493,14 @@ bool apply(Position & p, const Move & m, bool noValidation){
 
     // update EP
     if (p.ep != INVALIDSQUARE) p.h  ^= Zobrist::ZT[p.ep][13];
-    //if (p.ep != INVALIDSQUARE) p.ph ^= Zobrist::ZT[p.ep][13];
     p.ep = INVALIDSQUARE;
     if ( abs(fromP) == P_wp && abs(to-from) == 16 ) p.ep = (from + to)/2;
     assert(p.ep == INVALIDSQUARE || (SQRANK(p.ep) == 2 || SQRANK(p.ep) == 5));
     if (p.ep != INVALIDSQUARE) p.h  ^= Zobrist::ZT[p.ep][13];
-    //if (p.ep != INVALIDSQUARE) p.ph ^= Zobrist::ZT[p.ep][13];
 
     // update color
     p.c = ~p.c;
     p.h  ^= Zobrist::ZT[3][13] ; p.h  ^= Zobrist::ZT[4][13];
-    //p.ph ^= Zobrist::ZT[3][13] ; p.ph ^= Zobrist::ZT[4][13];
 
     // update game state
     if ( toP != P_none || abs(fromP) == P_wp ) p.fifty = 0;
@@ -2551,25 +2509,12 @@ bool apply(Position & p, const Move & m, bool noValidation){
     ++p.halfmoves;
 
     updateMaterialOther(p);
-
 #ifdef DEBUG_MATERIAL
     Position::Material mat = p.mat;
     initMaterial(p);
-    if ( p.mat != mat ){
-        Logging::LogIt(Logging::logError) << "Material update error";
-        Logging::LogIt(Logging::logError) << ToString(previous);
-        Logging::LogIt(Logging::logError) << ToString(previous.mat);
-        Logging::LogIt(Logging::logError) << ToString(p);
-        Logging::LogIt(Logging::logError) << ToString(p.lastMove);
-        Logging::LogIt(Logging::logError) << ToString(m);
-        Logging::LogIt(Logging::logError) << ToString(mat);
-        Logging::LogIt(Logging::logError) << ToString(p.mat);
-        exit(1);
-    }
+    if ( p.mat != mat ){ Logging::LogIt(Logging::logFatal) << "Material update error" << ToString(previous) << ToString(previous.mat) << ToString(p) << ToString(p.lastMove) << ToString(m) << ToString(mat) << ToString(p.mat); }
 #endif
-
     p.lastMove = m;
-
     STOP_AND_SUM_TIMER(Apply)
     return true;
 }
@@ -2639,13 +2584,11 @@ void initBook() {
 #ifdef IMPORTBOOK
 #include "Add-On/bookGenerationTools.cc"
 #endif
-
 } // Book
 
 // Static Exchange Evaluation (cutoff version algorithm from Stockfish)
 bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold) const{
     assert(VALIDMOVE(m));
-    constexpr static BitBoard(*const pfAtt[])(const Square, const BitBoard, const BitBoard, const Color) = { &BBTools::attack<P_wp>,  &BBTools::attack<P_wn>, &BBTools::attack<P_wb>, &BBTools::attack<P_wr>, &BBTools::attack<P_wq>,  &BBTools::attack<P_wk> };
     START_TIMER
     const Square from = Move2From(m);
     const Square to   = Move2To(m);
@@ -2666,7 +2609,7 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
     while (!endOfSEE){
         bool validThreatFound = false;
         for ( pp = P_wp ; pp <= P_wk && !validThreatFound ; ++pp){
-           BitBoard att = pfAtt[pp-1](to, p2.pieces(p2.c,pp), p2.occupancy, ~p2.c);
+           BitBoard att = BBTools::pfAttack[pp-1](to, p2.pieces(p2.c,pp), p2.occupancy, ~p2.c);
            if ( !att ) continue; // next piece type
 	   Square sqAtt = INVALIDSQUARE;
            while (!validThreatFound && att && (sqAtt = BBTools::popBit(att))) {
@@ -2704,14 +2647,12 @@ struct MoveSorter{
         else{
             if (isInCheck && PieceTools::getPieceType(p, from) == P_wk) s += 10000; // king evasion
             if ( isCapture(t) && !isPromotion(t)){ 
-                const Piece victim   = PieceTools::getPieceType(p,to);
+                const Piece victim   = (t != T_ep) ? PieceTools::getPieceType(p,to) : P_wp;
                 const Piece attacker = PieceTools::getPieceType(p,from);
-                if ( t != T_ep ){
-                   assert(victim>0);
-                   assert(attacker>0);
-                   s += StaticConfig::MvvLvaScores[victim-1][attacker-1]; //[0 400]
-                }
-                if ( !isInCheck && (useSEE && !context.SEE(p,m,-70) ) ) s -= 2*MoveScoring[T_capture];
+                assert(victim>0); assert(attacker>0);
+                s += StaticConfig::MvvLvaScores[victim-1][attacker-1]; //[0 400]
+                if ( (useSEE && !isInCheck && !context.SEE(p,m,-70) ) /*|| (!useSEE && attacker > victim)*/ ) s -= 2*MoveScoring[T_capture]; // bad capture
+                //else if ( isCapture(p.lastMove) && to == Move2To(p.lastMove) ) s += 400; // recapture bonus
             }
             else if ( t == T_std ){
                 if      (sameMove(m, context.killerT.killers[0][p.halfmoves])) s += 1800; // quiet killer
@@ -2721,7 +2662,7 @@ struct MoveSorter{
                 else {
                     s += context.historyT.history[PieceTools::getPieceIndex(p, from)][to]; // +/- MAX_HISTORY = 1000
                     if ( !isInCheck ){
-                       if ( refutation != INVALIDMOVE && from == Move2To(refutation) && context.SEE(p,m,-70)) s+=500; // move (safely) leaving threat square from null move search
+                       if ( refutation != INVALIDMOVE && from == Move2To(refutation) && context.SEE(p,m,-70)) s += 1000; // move (safely) leaving threat square from null move search
                        const bool isWhite = (p.allPieces[Co_White] & SquareToBitboard(from)) != 0ull;
                        const EvalScore * const  pst = EvalConfig::PST[PieceTools::getPieceType(p, from) - 1];
                        s += ScaleScore(pst[isWhite ? (to ^ 56) : to] - pst[isWhite ? (from ^ 56) : from],gp);
@@ -2775,7 +2716,6 @@ void initEval(){ for(Square i = 0; i < 64; i++){ EvalConfig::kingAttTable[i] = (
 
 
 namespace{ // some Color / Piece helpers
-   BitBoard(*const pfAtt[])(const Square, const BitBoard, const  Color) =     { &BBTools::coverage<P_wp>, &BBTools::coverage<P_wn>, &BBTools::coverage<P_wb>, &BBTools::coverage<P_wr>, &BBTools::coverage<P_wq>, &BBTools::coverage<P_wk> };
    template<Color C> inline bool isPasser(const Position &p, Square k)     { return (BBTools::mask[k].passerSpan[C] & p.pieces<P_wp>(~C)) == 0ull;}
    template<Color C> inline Square ColorSquarePstHelper(Square k)          { return C==Co_White?(k^56):k;}
    template<Color C> inline constexpr ScoreType ColorSignHelper()          { return C==Co_White?+1:-1;}
@@ -2797,7 +2737,7 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, EvalScore & 
         const Square k = BBTools::popBit(pieceBBiterator);
         const Square kk = ColorSquarePstHelper<C>(k);
         score += EvalConfig::PST[T-1][kk] * ColorSignHelper<C>();
-        BitBoard target = pfAtt[T-1](k, p.occupancy ^ /*p.pieces<T>(C)*/ alignedThreatPieceSlider<T>(p,C), C); // aligned threats of same piece type also taken into account ///@todo better?
+        BitBoard target = BBTools::pfCoverage[T-1](k, p.occupancy ^ /*p.pieces<T>(C)*/ alignedThreatPieceSlider<T>(p,C), C); // aligned threats of same piece type also taken into account ///@todo better?
         if ( target ){
            kdanger[C]  -= countBit(target & kingZone[C])  * EvalConfig::kingAttWeight[EvalConfig::katt_defence][T-1];
            kdanger[~C] += countBit(target & kingZone[~C]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][T-1];
@@ -2819,7 +2759,7 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, EvalScore & 
 template < Piece T ,Color C>
 inline void evalMob(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, const BitBoard (& att)[2], BitBoard & mob){
     while (pieceBBiterator){
-        mob = pfAtt[T-1](BBTools::popBit(pieceBBiterator), p.occupancy, C) & ~p.allPieces[C] /*& ~att[~C]*/;
+        mob = BBTools::pfCoverage[T-1](BBTools::popBit(pieceBBiterator), p.occupancy, C) & ~p.allPieces[C] /*& ~att[~C]*/;
         score.scores[ScoreAcc::sc_MOB] += EvalConfig::MOB[T-1][countBit(mob)]*ColorSignHelper<C>();
     }
 }
@@ -2902,7 +2842,7 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
     const Color winningSideEG = score.scores[ScoreAcc::sc_Mat][EG]>0?Co_White:Co_Black;
 
     // end game knowledge (helper or scaling)
-    if ( safeMatEvaluator && gp < 0.3f ){
+    if ( safeMatEvaluator && (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t]<6) ){
        const Hash matHash = MaterialHash::getMaterialHash(p.mat);
        const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
        if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ) return (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSideEG,score.scores[ScoreAcc::sc_Mat][EG]));
@@ -3069,16 +3009,16 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
     score.scores[ScoreAcc::sc_PwnPushAtt] += EvalConfig::pawnSafePushAtt * (countBit(nonPawnMat[Co_Black] & BBTools::pawnAttacks<Co_White>(safePawnPush[Co_White])) - countBit(nonPawnMat[Co_White] & BBTools::pawnAttacks<Co_Black>(safePawnPush[Co_Black])));
 
     // pieces mobility
-    evalMob<P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),score,/*att*/pe.pawnTargets,mob[P_wn-1][Co_White]);
-    evalMob<P_wb,Co_White>(p,p.pieces<P_wb>(Co_White),score,/*att*/pe.pawnTargets,mob[P_wb-1][Co_White]);
-    evalMob<P_wr,Co_White>(p,p.pieces<P_wr>(Co_White),score,/*att*/pe.pawnTargets,mob[P_wr-1][Co_White]);
-    evalMob<P_wq,Co_White>(p,p.pieces<P_wq>(Co_White),score,/*att*/pe.pawnTargets,mob[P_wq-1][Co_White]);
-    evalMob<P_wk,Co_White>(p,p.pieces<P_wk>(Co_White),score,/*att*/pe.pawnTargets,mob[P_wk-1][Co_White]);
-    evalMob<P_wn,Co_Black>(p,p.pieces<P_wn>(Co_Black),score,/*att*/pe.pawnTargets,mob[P_wn-1][Co_Black]);
-    evalMob<P_wb,Co_Black>(p,p.pieces<P_wb>(Co_Black),score,/*att*/pe.pawnTargets,mob[P_wb-1][Co_Black]);
-    evalMob<P_wr,Co_Black>(p,p.pieces<P_wr>(Co_Black),score,/*att*/pe.pawnTargets,mob[P_wr-1][Co_Black]);
-    evalMob<P_wq,Co_Black>(p,p.pieces<P_wq>(Co_Black),score,/*att*/pe.pawnTargets,mob[P_wq-1][Co_Black]);
-    evalMob<P_wk,Co_Black>(p,p.pieces<P_wk>(Co_Black),score,/*att*/pe.pawnTargets,mob[P_wk-1][Co_Black]);
+    evalMob<P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),score,att,mob[P_wn-1][Co_White]);
+    evalMob<P_wb,Co_White>(p,p.pieces<P_wb>(Co_White),score,att,mob[P_wb-1][Co_White]);
+    evalMob<P_wr,Co_White>(p,p.pieces<P_wr>(Co_White),score,att,mob[P_wr-1][Co_White]);
+    evalMob<P_wq,Co_White>(p,p.pieces<P_wq>(Co_White),score,att,mob[P_wq-1][Co_White]);
+    evalMob<P_wk,Co_White>(p,p.pieces<P_wk>(Co_White),score,att,mob[P_wk-1][Co_White]);
+    evalMob<P_wn,Co_Black>(p,p.pieces<P_wn>(Co_Black),score,att,mob[P_wn-1][Co_Black]);
+    evalMob<P_wb,Co_Black>(p,p.pieces<P_wb>(Co_Black),score,att,mob[P_wb-1][Co_Black]);
+    evalMob<P_wr,Co_Black>(p,p.pieces<P_wr>(Co_Black),score,att,mob[P_wr-1][Co_Black]);
+    evalMob<P_wq,Co_Black>(p,p.pieces<P_wq>(Co_Black),score,att,mob[P_wq-1][Co_Black]);
+    evalMob<P_wk,Co_Black>(p,p.pieces<P_wk>(Co_Black),score,att,mob[P_wk-1][Co_Black]);
 
     // rook on open file
     score.scores[ScoreAcc::sc_OpenFile] += EvalConfig::rookOnOpenFile         * countBit(p.whiteRook() & pe.openFiles);
@@ -3238,8 +3178,6 @@ ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
-        if (p.c == Co_White && Move2To(*it) == p.king[Co_Black]) return MATE - ply + 1;
-        if (p.c == Co_Black && Move2To(*it) == p.king[Co_White]) return MATE - ply + 1;
         const ScoreType score = -qsearchNoPruning(-beta,-alpha,p2,ply+1,seldepth);
         if ( score > bestScore){
            bestScore = score;
@@ -3274,7 +3212,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     TT::Entry e;
     if (TT::getEntry(*this, computeHash(p), hashDepth, e)) {
         if (!pvnode && e.h != 0 && ((e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact))) { return adjustHashScore(e.score, ply); }
-        if ( e.m!=INVALIDMOVE && (isCapture(e.m) || specialQSearch) ) bestMove = e.m;
+        if ( e.m!=INVALIDMOVE && (specialQSearch || isCapture(e.m)) ) bestMove = e.m;
     }
     if ( qRoot && interiorNodeRecognizer<true,false,true>(p) == MaterialHash::Ter_Draw) return drawScore(); ///@todo is that gain elo ???
 
@@ -3292,30 +3230,27 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     MoveList moves;
     if ( isInCheck ) generate<GP_all>(p,moves);
     else             generate<GP_cap>(p,moves);
-    sort(*this,moves,p,gp,specialQSearch,isInCheck,/*specialQSearch?&*/&e/*:0*/);
+    sort(*this,moves,p,gp,specialQSearch,isInCheck,&e);
 
     const ScoreType alphaInit = alpha;
 
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         if (!isInCheck) {
-            if ((specialQSearch && isBadCap(*it)) || !SEE(p,*it,0)) continue; // see is only available if move sorter performed see already (here only at qroot node ...)
+            if ((specialQSearch && isBadCap(*it)) || !SEE(p,*it,0)) continue; // see is only available if move sorter performed see already
             if (StaticConfig::doQFutility && evalScore + StaticConfig::qfutilityMargin[evalScoreIsHashScore] + (Move2Type(*it)==T_ep ? Values[P_wp+PieceShift] : PieceTools::getAbsValue(p, Move2To(*it))) <= alphaInit) continue;
         }
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
-        //bool isCheck = isAttacked(p2, kingSquare(p2));
-        if (p.c == Co_White && Move2To(*it) == p.king[Co_Black]) return MATE - ply + 1;
-        if (p.c == Co_Black && Move2To(*it) == p.king[Co_White]) return MATE - ply + 1;
         const ScoreType score = -qsearch<false,false>(-beta,-alpha,p2,ply+1,seldepth);
         if ( score > bestScore){
            bestMove = *it;
            bestScore = score;
            if ( score > alpha ){
-               b = TT::B_exact;
                if (score >= beta) {
-                   TT::setEntry(*this,computeHash(p),bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),TT::B_beta,hashDepth);
-                   return score;
+                   b = TT::B_beta;
+                   break;
                }
+               b = TT::B_exact;
                alpha = score;
            }
         }
@@ -3361,7 +3296,7 @@ ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck){
 template< bool pvnode, bool canPrune>
 ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, bool cutNode, const Move skipMove, std::vector<RootScores> * rootScores){
     if (stopFlag) return STOPSCORE;
-    //if ( TimeMan::maxKNodes>0 && (stats.counters[Stats::sid_nodes] + stats.counters[Stats::sid_qnodes])/1000 > TimeMan::maxKNodes) { stopFlag = true; Logging::LogIt(Logging::logInfo) << "stopFlag triggered (nodes limits) in thread " << id(); }
+    //if ( TimeMan::maxKNodes>0 && (stats.counters[Stats::sid_nodes] + stats.counters[Stats::sid_qnodes])/1000 > TimeMan::maxKNodes) { stopFlag = true; Logging::LogIt(Logging::logInfo) << "stopFlag triggered (nodes limits) in thread " << id(); } ///@todo
     if ( (TimeType)std::max(1, (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()) > getCurrentMoveMs() ){ stopFlag = true; Logging::LogIt(Logging::logInfo) << "stopFlag triggered in thread " << id(); }
 
     float gp = 0;
@@ -3385,9 +3320,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     const Hash pHash = computeHash(p) ^ (withoutSkipMove ? 0 : skipMove);
     bool validTTmove = false;
     TT::Entry e;
-    if ( /*withoutSkipMove &&*/ TT::getEntry(*this,pHash, depth, e)) { // if not skipmove
+    if ( TT::getEntry(*this,pHash, depth, e)) {
         if ( e.h != 0 && !rootnode && !pvnode && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
-            //if (e.m != INVALIDMOVE) pv.push_back(e.m); // here e.m might be INVALIDMOVE if B_alpha without alphaUpdated/bestScoreUpdated (so don't try this at root node !)
             if (!isInCheck && e.m != INVALIDMOVE && Move2Type(e.m) == T_std ) updateTables(*this, p, depth, e.m, e.b);
             return adjustHashScore(e.score, ply);
         }
@@ -3450,12 +3384,13 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             const ScoreType nullIIDScore = evalScore; // pvs<false, false>(beta - 1, beta, p, std::max(depth/4,1), ply, nullPV, seldepth, isInCheck, !cutNode);
             if (nullIIDScore >= beta /*&& evalStack[p.halfmoves] >= beta + 10 * (depth-improving)*/ ) { ///@todo try to minimize sid_nullMoveTry2 versus sid_nullMove
                 TT::Entry nullE;
-                TT::getEntry(*this, pHash, depth - R, nullE);
-                if (nullE.h == 0ull || nullE.score >= beta) { // avoid null move search if TT gives a score < beta for the same depth
+                const DepthType nullDepth = depth-R;
+                TT::getEntry(*this, pHash, nullDepth, nullE);
+                if (nullE.h == 0ull || nullE.score >= beta ) { // avoid null move search if TT gives a score < beta for the same depth
                     ++stats.counters[Stats::sid_nullMoveTry2];
                     Position pN = p;
                     applyNull(*this,pN);
-                    ScoreType nullscore = -pvs<false, false>(-beta, -beta + 1, pN, depth - R, ply + 1, nullPV, seldepth, isInCheck, !cutNode);
+                    ScoreType nullscore = -pvs<false, false>(-beta, -beta + 1, pN, nullDepth, ply + 1, nullPV, seldepth, isInCheck, !cutNode);
                     if (stopFlag) return STOPSCORE;
                     TT::Entry nullEThreat;
                     TT::getEntry(*this,computeHash(pN), 0, nullEThreat);
@@ -3464,8 +3399,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                        //if (isMatedScore(nullscore)) mateThreat = true;
                        if (depth <= StaticConfig::nullMoveVerifDepth || nullMoveMinPly>0) return ++stats.counters[Stats::sid_nullMove], isMateScore(nullscore) ? beta : nullscore;
                        ++stats.counters[Stats::sid_nullMoveTry3];
-                       nullMoveMinPly = ply + 3*(depth-R)/4;
-                       nullscore = pvs<false, false>(beta - 1, beta, p, depth -R, ply+1, nullPV, seldepth, isInCheck, !cutNode);
+                       nullMoveMinPly = ply + 3*nullDepth/4;
+                       nullscore = pvs<false, false>(beta - 1, beta, p, nullDepth, ply+1, nullPV, seldepth, isInCheck, !cutNode);
                        nullMoveMinPly = 0;
                        if (stopFlag) return STOPSCORE;
                        if (nullscore >= beta ) return ++stats.counters[Stats::sid_nullMove2], nullscore;
@@ -3483,7 +3418,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
           sort(*this,moves,p,gp,true,isInCheck,&e);
           capMoveGenerated = true;
           for (auto it = moves.begin() ; it != moves.end() && probCutCount < StaticConfig::probCutMaxMoves /*+ 2*cutNode*/; ++it){
-            if ( (validTTmove && sameMove(e.m, *it)) /*|| isBadCap(*it)*/ || !SEE(p,*it,0) ) continue; // skip TT move if quiet or bad captures
+            if ( (validTTmove && sameMove(e.m, *it)) || isBadCap(*it) ) continue; // skip TT move if quiet or bad captures
             Position p2 = p;
             if ( ! apply(p2,*it) ) continue;
             ++probCutCount;
@@ -3498,10 +3433,10 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     }
 
     // IID
-    if ( /*withoutSkipMove &&*/ (e.h == 0ull /*|| e.d < depth/3*/) && ((pvnode && depth >= StaticConfig::iidMinDepth) || (cutNode && depth >= StaticConfig::iidMinDepth2)) ){ ///@todo try with cutNonde only ?
+    if ( (e.h == 0ull /*|| e.d < depth/4*/) && ((pvnode && depth >= StaticConfig::iidMinDepth) || (cutNode && depth >= StaticConfig::iidMinDepth2)) ){ ///@todo try with cutNode only ?
         ++stats.counters[Stats::sid_iid];
         PVList iidPV;
-        pvs<pvnode,false>(alpha,beta,p,/*pvnode?depth-2:*/depth/2,ply,iidPV,seldepth,isInCheck,cutNode,skipMove);
+        pvs<pvnode,true>(alpha,beta,p,/*pvnode?depth-2:*/depth/2,ply,iidPV,seldepth,isInCheck,cutNode,skipMove);
         if (stopFlag) return STOPSCORE;
         TT::getEntry(*this,pHash, depth, e);
         validTTmove = e.h != 0 && e.m != INVALIDMOVE;
@@ -3516,8 +3451,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if (!rootnode && StaticConfig::doHistoryPruning && isNotEndGame && depth < StaticConfig::historyPruningMaxDepth) historyPruning = true;
 
     int validMoveCount = 0;
-    //bool alphaUpdated = false;
-    //bool bestScoreUpdated = false;
     Move bestMove = INVALIDMOVE;
     TT::Bound hashBound = TT::B_alpha;
     bool ttMoveIsCapture = false;
@@ -3534,8 +3467,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if (apply(p2, e.m)) {
             TT::prefetch(computeHash(p2));
             const Square to = Move2To(e.m);
-            if (p.c == Co_White && to == p.king[Co_Black]) return MATE - ply + 1;
-            if (p.c == Co_Black && to == p.king[Co_White]) return MATE - ply + 1;
             validMoveCount++;
             PVList childPV;
             hashStack[p2.halfmoves] = p2.h;
@@ -3570,7 +3501,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if (stopFlag) return STOPSCORE;
             if ( ttScore > bestScore ){
                 bestScore = ttScore;
-                //bestScoreUpdated = true;
                 bestMove = e.m;
                 if (rootnode && rootScores) rootScores->push_back({ e.m,ttScore });
                 if (ttScore > alpha) {
@@ -3579,11 +3509,10 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                     if (ttScore >= beta) {
                         ++stats.counters[Stats::sid_ttbeta];
                         if ( !isInCheck && Move2Type(e.m) == T_std ) updateTables(*this, p, depth + (ttScore > (beta+80)), e.m, TT::B_beta);
-                        if (true /*withoutSkipMove &&*/ /*&& ttScore != 0*/) TT::setEntry(*this,pHash,e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth);
+                        TT::setEntry(*this,pHash,e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth);
                         return ttScore;
                     }
                     ++stats.counters[Stats::sid_ttalpha];
-                    //alphaUpdated = true;
                     alpha = ttScore;
                 }
             }
@@ -3607,14 +3536,10 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if (capMoveGenerated) generate<GP_quiet>(p, moves, true);
         else                  generate<GP_all>  (p, moves, false);
     }
-
     if (moves.empty()) return isInCheck ? -MATE + ply : 0;
-
-    /*if ( isMainThread() )*/ sort(*this, moves, p, gp, true, isInCheck, &e, refutation != INVALIDMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMOVE);
-    //else std::random_shuffle(moves.begin(),moves.end());
+    sort(*this, moves, p, gp, true, isInCheck, &e, refutation != INVALIDMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMOVE);
 
     ScoreType score = -MATE + ply;
-
     for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
         if (sameMove(skipMove, *it)) continue; // skipmove
         if (validTTmove && sameMove(e.m, *it)) continue; // already tried
@@ -3641,36 +3566,39 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
            //if (!extension && isQueenAttacked && PieceTools::getPieceType(p,Move2From(*it)) == P_wq && Move2Type(*it) == T_std && SEE(p,*it,0)) ++stats.counters[Stats::sid_queenThreatExtension],++extension; // too much of that
            //if (!extension && p.halfmoves > 1 && threatStack[p.halfmoves] != INVALIDMOVE && threatStack[p.halfmoves-2] != INVALIDMOVE && (sameMove(threatStack[p.halfmoves],threatStack[p.halfmoves-2]) || (Move2To(threatStack[p.halfmoves]) == Move2To(threatStack[p.halfmoves-2]) && isCapture(threatStack[p.halfmoves])))) ++stats.counters[Stats::sid_BMExtension],++extension;
         }
+        const bool isQuiet = Move2Type(*it) == T_std;
         // pvs
         if (validMoveCount < (2/*+2*rootnode*/) || !StaticConfig::doPVS ) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,!cutNode);
         else{
             // reductions & prunings
             DepthType reduction = 0;
-            const bool isPrunable           =  /*isNotEndGame &&*/ !isAdvancedPawnPush && !killerT.isKiller(*it,p.halfmoves) && !isMateScore(alpha) /*&& !isMateScore(beta)*/;
-            const bool noCheck              = !isInCheck && (!isCheck /*|| !extension*/);
-            const bool isPrunableStd        = isPrunable && Move2Type(*it) == T_std;
-            const bool isPrunableStdNoCheck = isPrunable && noCheck && Move2Type(*it) == T_std;
-            const bool isPrunableCap        = isPrunable && noCheck && Move2Type(*it) == T_capture && isBadCap(*it);
+            const bool isPrunable           = /*isNotEndGame &&*/ !isAdvancedPawnPush && !isMateScore(alpha) && !DynamicConfig::mateFinder && !killerT.isKiller(*it,p.halfmoves);
+            const bool isReductible         = /*isNotEndGame &&*/ !isAdvancedPawnPush && !DynamicConfig::mateFinder;
+            const bool noCheck              = !isInCheck && !isCheck;
             const bool overLmpLimit         = validMoveCount >= StaticConfig::lmpLimit[improving][depth];
+            const bool isPrunableStd        = isPrunable && isQuiet;
+            const bool isPrunableStdNoCheck = isPrunableStd && noCheck;
+            const bool isPrunableCap        = isPrunable && Move2Type(*it) == T_capture && isBadCap(*it) && noCheck ;
             // futility
             if (futility && isPrunableStdNoCheck) {++stats.counters[Stats::sid_futility]; continue;}
             // LMP
             if (lmp && isPrunableStdNoCheck && overLmpLimit ) {++stats.counters[Stats::sid_lmp]; continue;}
             // History pruning
-            if (historyPruning && isPrunableStdNoCheck /*&& validMoveCount > StaticConfig::lmpLimit[improving][depth]/3*/ && Move2Score(*it) < StaticConfig::historyPruningThresholdInit + depth*StaticConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
+            if (historyPruning && isPrunableStdNoCheck && Move2Score(*it) < StaticConfig::historyPruningThresholdInit + depth*StaticConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
             // SEE (capture)
             if (isPrunableCap){
                if (futility) {++stats.counters[Stats::sid_see]; continue;}
-               else if ( /*!rootnode &&*/ !SEE(p,*it,-100*depth)) {++stats.counters[Stats::sid_see2]; continue;}
+               else if ( !rootnode && !SEE(p,*it,-100*depth)) {++stats.counters[Stats::sid_see2]; continue;}
             }
             // LMR
-            if (StaticConfig::doLMR && !DynamicConfig::mateFinder && (isPrunableStd /*|| cutNode || overLmpLimit*/) && depth >= StaticConfig::lmrMinDepth ){
+            if (StaticConfig::doLMR && (isReductible && isQuiet ) && depth >= StaticConfig::lmrMinDepth ){
                 reduction = StaticConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
                 reduction += !improving;
                 reduction += ttMoveIsCapture/*&&isPrunableStd*/;
                 //reduction += cutNode&&isPrunableStd;
                 //reduction -= (reduction>1)&&ttMoveSingularExt;
                 if (pvnode && reduction > 0) --reduction;
+                if (!noCheck) --reduction;
                 reduction -= 2*int(Move2Score(*it) / MAX_HISTORY); //history reduction/extension
                 //if ( reduction < 0) reduction = 0;
                 if (reduction + extension < 0) reduction = -extension;
@@ -3696,7 +3624,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 alpha = score;
                 hashBound = TT::B_exact;
                 if ( score >= beta ){
-                    if ( !isInCheck && Move2Type(*it) == T_std ){
+                    if ( !isInCheck && isQuiet ){
                         updateTables(*this, p, depth + (score>beta+80), *it, TT::B_beta);
                         for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2) if ( Move2Type(*it2) == T_std ) historyT.update<-1>(depth + (score > (beta + 80)),*it2,p);
                     }
@@ -3706,10 +3634,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             }
         }
     }
-
     if ( validMoveCount==0 ) return (isInCheck || !withoutSkipMove)?-MATE + ply : 0;
-    if ( true /*withoutSkipMove &&*/ /*&&*/ /*alphaUpdated*/ /*bestScoreUpdated*/ ) TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),hashBound,depth);
-
+    TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),hashBound,depth);
     return bestScore;
 }
 
@@ -3778,7 +3704,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
     DepthType startDepth = 1;//std::min(d,easyMoveDetectionDepth);
 
     if ( isMainThread() && d > easyMoveDetectionDepth+2 && ThreadContext::currentMoveMs < INFINITETIME ){
-       // easy move detection (small open window depth 2 search)
+       // easy move detection (small open window search)
        std::vector<ThreadContext::RootScores> rootScores;
        ScoreType easyScore = pvs<true,false>(-MATE, MATE, p, easyMoveDetectionDepth, 1, pv, seldepth, isInCheck,false,INVALIDMOVE,&rootScores);
        std::sort(rootScores.begin(), rootScores.end(), [](const ThreadContext::RootScores& r1, const ThreadContext::RootScores & r2) {return r1.s > r2.s; });
@@ -3811,7 +3737,6 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
             if ( stopFlag ) break;
             delta += 2 + delta/2; // from xiphos ...
             if (alpha > -MATE && score <= alpha) {
-                //Logging::LogIt(Logging::logInfo) << "Windows was " << alpha << ".." << beta << ", score " << score;
                 beta  = std::min(MATE,ScoreType((alpha + beta)/2));
                 alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) );
                 Logging::LogIt(Logging::logInfo) << "Increase window alpha " << alpha << ".." << beta;
@@ -3822,7 +3747,6 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
                 }
             }
             else if (beta < MATE && score >= beta ) {
-                //Logging::LogIt(Logging::logInfo) << "Windows was " << alpha << ".." << beta << ", score " << score;
                 //alpha = std::max(ScoreType(-MATE),ScoreType((alpha + beta)/2));
                 beta  = std::min(ScoreType(score + delta), ScoreType( MATE) );
                 Logging::LogIt(Logging::logInfo) << "Increase window beta "  << alpha << ".." << beta;
@@ -3849,11 +3773,8 @@ pvsout:
     if ( isMainThread() ) startLock.store(false);
     if (pv.empty()){
         m = INVALIDMOVE;
-        Logging::LogIt(Logging::logInfo) << "Empty pv, trying to use TT" ;
-        //TT::getPV(p, *this, pv);
-    }
-    if (pv.empty()) { Logging::LogIt(Logging::logWarn) << "Empty pv"; }// may occur in case of mate / stalemate...
-    else m = pv[0];
+        Logging::LogIt(Logging::logWarn) << "Empty pv" ;
+    } else m = pv[0];
     d = reachedDepth;
     sc = bestScore;
     if (isMainThread()) ThreadPool::instance().DisplayStats();
@@ -4097,7 +4018,7 @@ namespace COM {
         Logging::LogIt(Logging::logInfo) << ToString(position);
         DepthType seldepth = 0;
         PVList pv;
-        const ThreadData d = { depth,seldepth/*dummy*/,score/*dummy*/,position,m/*dummy*/,pv/*dummy*/ }; // only input coef
+        const ThreadData d = { depth,seldepth/*dummy*/,score/*dummy*/,position,m/*dummy*/,pv/*dummy*/ };
         ThreadPool::instance().search(d);
         m = ThreadPool::instance().main().getData().best; // here output results
         Logging::LogIt(Logging::logInfo) << "...done returning move " << ToString(m) << " (state " << COM::state << ")";;
@@ -4191,8 +4112,7 @@ bool receiveMove(const std::string & command){
     Move m = COM::moveFromCOM(mstr);
     if ( m == INVALIDMOVE ) return false;
     if(!COM::makeMove(m,false,"")){ // make move
-        Logging::LogIt(Logging::logInfo) << "Bad opponent move ! " << mstr;
-        Logging::LogIt(Logging::logInfo) << ToString(COM::position) ;
+        Logging::LogIt(Logging::logInfo) << "Bad opponent move ! " << mstr << ToString(COM::position) ;
         COM::mode = COM::m_force;
         return false;
     }

@@ -63,6 +63,7 @@ double E(const std::vector<Texel::TexelInput> &data, size_t miniBatchSize) {
     double e = 0;
     const bool progress = miniBatchSize > 100000;
     std::chrono::time_point<Clock> startTime = Clock::now();
+    ///@todo openmp loop
     for (size_t k = 0; k < miniBatchSize; ++k) {
         e += std::pow((data[k].result+1)*0.5 - Sigmoid(data[k].p),2);
         if ( progress && k%10000 == 0) std::cout << "." << std::flush;
@@ -469,7 +470,6 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[6][EG], -1500, 1500,"candidateEG 6"));
     */
 
-    /*
     for (int k = 1 ; k < 6 ; ++k ){
         for(int i = 0 ; i < 29 ; ++i){
            guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::MOB[k][i][MG],-200,200,"mob"+std::to_string(k)+"_"+std::to_string(i)));
@@ -481,7 +481,6 @@ void TexelTuning(const std::string & filename) {
            guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::MOB[k][i][EG],-200,200,"mobeg"+std::to_string(k)+"_"+std::to_string(i)));
         }
     }
-    */
 
     /*
     for (int k = 0 ; k < 6 ; ++k ){
@@ -504,8 +503,10 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookFrontQueenMalus[EG] , -500,  500,"rookFrontQueenMalusEG"));
     */
 
+    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::hangingPieceMalus[MG] , -500,  500,"hangingPieceMalus"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::hangingPieceMalus[EG] , -500,  500,"hangingPieceMalusEG"));
+    */
 
     /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnSafeAtt[MG] , -500,  500,"pawnSafeAtt"));
