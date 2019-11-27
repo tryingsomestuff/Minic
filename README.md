@@ -42,18 +42,25 @@ WAC : 275/300 @10sec per position (single thread)
 
 Minic finished 13/18 at TCEC16 qualification league (https://cd.tcecbeta.club/archive.html?season=16&div=ql&game=1)
 
-Here are some fast TC results (40/20sec)
+Here are some very fast TC results (40/10sec)
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
-   1 rodentIII                     100      18     996   64.1%   34.3%
-   2 komodo-13-64-ja                98      18     997   63.8%   30.5%
-   3 zurichess-neuchatel            21      17     997   53.0%   36.5%
-   4 Winter                         16      18     997   52.3%   29.5%
-   5 minic_dev                      -5      16     998   49.3%   43.1%
-   6 minic_0.99                    -36      16     997   44.9%   44.0%
-   7 minic_0.98                    -36      16     998   44.8%   42.2%
-   8 Topple                        -65      17     998   40.7%   35.4%
-   9 asymptote_v0.6                -91      18     998   37.2%   29.6%
+   1 komodo-13-64-ja               163      21     902   71.8%   23.5%
+   2 rodentIII                     150      20     901   70.4%   28.9%
+   3 Winter0.7                      99      20     903   63.9%   25.9%
+   4 zurichess-neuchatel            73      19     902   60.4%   30.0%
+   5 Winter0.6                      50      19     901   57.2%   27.9%
+   6 minic_1.14                     45      18     902   56.4%   35.3%
+   7 minic_1.09                     20      19     901   52.8%   28.4%
+   8 asymptote_v0.6                  7      19     901   51.1%   27.7%
+   9 minic_1.00                      5      19     903   50.7%   31.8%
+  10 igel-1.9.2                     -5      19     901   49.3%   27.9%
+  11 Topple_master                 -34      19     902   45.1%   27.8%
+  12 ruy-1.1.9                     -46      20     901   43.5%   23.4%
+  13 redqueen-1.1.98              -159      22     901   28.6%   17.2%
+  14 igel_1.8.3                   -169      22     901   27.4%   19.1%
+  15 asymptote-v0.4.2             -225      25     902   21.5%   13.6%
+
 ```
 
 Minic strength can be ajdusted using the level option (from command line, json configuration file, or using protocol option support, using value from 0 to 100). Level 0 is a random mover, 1 to 30 very weak, ..., level 100 is full strength. Level functionnaly will be enhanced in a near future.
