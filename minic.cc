@@ -3531,6 +3531,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     }
 #endif
 
+    ScoreType score = -MATE + ply;
+
     ///@todo at root, maybe rootScore or node count can be used to sort moves ??
     if (!moveGenerated) {
         if (capMoveGenerated) generate<GP_quiet>(p, moves, true);
@@ -3539,7 +3541,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if (moves.empty()) return isInCheck ? -MATE + ply : 0;
     sort(*this, moves, p, gp, true, isInCheck, &e, refutation != INVALIDMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMOVE);
 
-    ScoreType score = -MATE + ply;
     for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
         if (sameMove(skipMove, *it)) continue; // skipmove
         if (validTTmove && sameMove(e.m, *it)) continue; // already tried
@@ -3634,6 +3635,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             }
         }
     }
+
     if ( validMoveCount==0 ) return (isInCheck || !withoutSkipMove)?-MATE + ply : 0;
     TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),hashBound,depth);
     return bestScore;
