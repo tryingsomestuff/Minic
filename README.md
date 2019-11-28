@@ -220,6 +220,7 @@ You can use both the json configuation file or the command line argument to sele
 * 0.99 : random draw eval
 * 1.00 : tweak eval and search, work on TT scheme, some fixes, !!! 1 year anniversary release !!!
 * 1.01..1.09 : work on dedicated pawn table for eval, many eval fixes, search tweaks
+* 1.10..1.14 : work on move ordering
 
 ## Thanks
 
