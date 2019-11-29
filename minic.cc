@@ -439,6 +439,9 @@ enum Mat      : unsigned char{ M_t = 0, M_p, M_n, M_b, M_r, M_q, M_k, M_bl, M_bd
 ScoreType   Values[13]        = { -8000, -1103, -538, -393, -359, -85, 0, 85, 359, 393, 538, 1103, 8000 };
 ScoreType   ValuesEG[13]      = { -8000, -1076, -518, -301, -290, -93, 0, 93, 290, 301, 518, 1076, 8000 };
 std::string PieceNames[13]    = { "k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K" };
+const ScoreType dummyScore = 0;
+const ScoreType *absValues[7]   = { &dummyScore, &Values  [P_wp + PieceShift], &Values  [P_wn + PieceShift], &Values  [P_wb + PieceShift], &Values  [P_wr + PieceShift], &Values  [P_wq + PieceShift], &Values  [P_wk + PieceShift] };
+const ScoreType *absValuesEG[7] = { &dummyScore, &ValuesEG[P_wp + PieceShift], &ValuesEG[P_wn + PieceShift], &ValuesEG[P_wb + PieceShift], &ValuesEG[P_wr + PieceShift], &ValuesEG[P_wq + PieceShift], &ValuesEG[P_wk + PieceShift] };
 
 std::string SquareNames[64]   = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2", "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4", "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5", "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6", "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" };
 std::string FileNames[8]      = { "a", "b", "c", "d", "e", "f", "g", "h" };
@@ -1003,6 +1006,28 @@ namespace MaterialHash { // idea from Gull
         return mat[Co_White][M_p] * MatWP + mat[Co_Black][M_p] * MatBP + mat[Co_White][M_n] * MatWN + mat[Co_Black][M_n] * MatBN + mat[Co_White][M_bl] * MatWL + mat[Co_Black][M_bl] * MatBL + mat[Co_White][M_bd] * MatWD + mat[Co_Black][M_bd] * MatBD + mat[Co_White][M_r] * MatWR + mat[Co_Black][M_r] * MatBR + mat[Co_White][M_q] * MatWQ + mat[Co_Black][M_q] * MatBQ;
     }
 
+    inline Position::Material indexToMat(int index){
+        Position::Material m = {{{{0}}}};
+        m[Co_White][M_q] = index % 3; index /= 3;
+        m[Co_Black][M_q] = index % 3; index /= 3;
+        m[Co_White][M_r] = index % 3; index /= 3;
+        m[Co_Black][M_r] = index % 3; index /= 3;
+        m[Co_White][M_bl]= index % 2; index /= 2;
+        m[Co_Black][M_bl]= index % 2; index /= 2;
+        m[Co_White][M_bd]= index % 2; index /= 2;
+        m[Co_Black][M_bd]= index % 2; index /= 2;
+        m[Co_White][M_n] = index % 3; index /= 3;
+        m[Co_Black][M_n] = index % 3; index /= 3;
+        m[Co_White][M_p] = index % 9; index /= 9;
+        m[Co_Black][M_p] = index;
+	m[Co_White][M_b] = m[Co_White][M_bl] + m[Co_White][M_bd];
+	m[Co_Black][M_b] = m[Co_Black][M_bl] + m[Co_Black][M_bd];
+        m[Co_White][M_M] = m[Co_White][M_q] + m[Co_White][M_r];  m[Co_Black][M_M] = m[Co_Black][M_q] + m[Co_Black][M_r];
+        m[Co_White][M_m] = m[Co_White][M_b] + m[Co_White][M_n];  m[Co_Black][M_m] = m[Co_Black][M_b] + m[Co_Black][M_n];
+        m[Co_White][M_t] = m[Co_White][M_M] + m[Co_White][M_m];  m[Co_Black][M_t] = m[Co_Black][M_M] + m[Co_Black][M_m];
+        return m;
+    }
+
     inline Position::Material getMatReverseColor(const Position::Material & mat) {
         Position::Material rev = {{{{0}}}};
         rev[Co_White][M_k]  = mat[Co_Black][M_k];   rev[Co_Black][M_k]  = mat[Co_White][M_k];
@@ -1169,19 +1194,42 @@ namespace MaterialHash { // idea from Gull
     }
 
     ScoreType (* helperTable[TotalMat])(const Position &, Color, ScoreType );
-    Terminaison materialHashTable[TotalMat];
+    struct MaterialHashEntry  { Terminaison t = Ter_Unknown; EvalScore score={0,0}; float gp = 1.f;};
+    MaterialHashEntry materialHashTable[TotalMat];
+
+    void InitMaterialScore(){
+        Logging::LogIt(Logging::logInfo) << "Material hash init";
+	///@todo THIS IS WRONG FOR TUNING PROCESS OF PIECES VALUES
+        const float totalMatScore = 2.f * *absValues[P_wq] + 4.f * *absValues[P_wr] + 4.f * *absValues[P_wb] + 4.f * *absValues[P_wn] + 16.f * *absValues[P_wp]; 
+        for (int k = 0 ; k < TotalMat ; ++k){
+	    const Position::Material mat = indexToMat(k);
+	    //std::cout << ToString(mat) << std::endl;
+            const ScoreType matPieceScoreW = mat[Co_White][M_q] * *absValues[P_wq] + mat[Co_White][M_r] * *absValues[P_wr] + mat[Co_White][M_b] * *absValues[P_wb] + mat[Co_White][M_n] * *absValues[P_wn];
+            const ScoreType matPieceScoreB = mat[Co_Black][M_q] * *absValues[P_wq] + mat[Co_Black][M_r] * *absValues[P_wr] + mat[Co_Black][M_b] * *absValues[P_wb] + mat[Co_Black][M_n] * *absValues[P_wn];
+            const ScoreType matPawnScoreW  = mat[Co_White][M_p] * *absValues[P_wp];
+            const ScoreType matPawnScoreB  = mat[Co_Black][M_p] * *absValues[P_wp];
+            const ScoreType matScoreW = matPieceScoreW + matPawnScoreW;
+            const ScoreType matScoreB = matPieceScoreB + matPawnScoreB;
+            materialHashTable[k].gp = (matScoreW + matScoreB ) / totalMatScore;
+            materialHashTable[k].score[MG] += matScoreW - matScoreB;
+            materialHashTable[k].score[EG] += (mat[Co_White][M_q] - mat[Co_Black][M_q]) * *absValuesEG[P_wq] + (mat[Co_White][M_r] - mat[Co_Black][M_r]) * *absValuesEG[P_wr] + (mat[Co_White][M_b] - mat[Co_Black][M_b]) * *absValuesEG[P_wb] + (mat[Co_White][M_n] - mat[Co_Black][M_n]) * *absValuesEG[P_wn] + (mat[Co_White][M_p] - mat[Co_Black][M_p]) * *absValuesEG[P_wp];
+        }
+        Logging::LogIt(Logging::logInfo) << "...Done";
+    }
 
     struct MaterialHashInitializer {
-        MaterialHashInitializer(const Position::Material & mat, Terminaison t) { materialHashTable[getMaterialHash(mat)] = t; }
-        MaterialHashInitializer(const Position::Material & mat, Terminaison t, ScoreType (*helper)(const Position &, Color, ScoreType) ) { materialHashTable[getMaterialHash(mat)] = t; helperTable[getMaterialHash(mat)] = helper; }
+        MaterialHashInitializer(const Position::Material & mat, Terminaison t) { materialHashTable[getMaterialHash(mat)].t = t; }
+        MaterialHashInitializer(const Position::Material & mat, Terminaison t, ScoreType (*helper)(const Position &, Color, ScoreType) ) { materialHashTable[getMaterialHash(mat)].t = t; helperTable[getMaterialHash(mat)] = helper; }
         static void init() {
             Logging::LogIt(Logging::logInfo) << "Material hash total : " << TotalMat;
-            std::memset(materialHashTable, Ter_Unknown, sizeof(Terminaison)*TotalMat);
+
+            InitMaterialScore();
+
             for(size_t k = 0 ; k < TotalMat ; ++k) helperTable[k] = &helperDummy;
 #define DEF_MAT(x,t)     const Position::Material MAT##x = materialFromString(TO_STR(x)); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t   );
 #define DEF_MAT_H(x,t,h) const Position::Material MAT##x = materialFromString(TO_STR(x)); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t, h);
-#define DEF_MAT_REV(rev,x)     const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializerRev)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)])   );
-#define DEF_MAT_REV_H(rev,x,h) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializerRev)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)]), h);
+#define DEF_MAT_REV(rev,x)     const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializerRev)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)].t)   );
+#define DEF_MAT_REV_H(rev,x,h) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializerRev)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)].t), h);
 
             ///@todo some Ter_MaterialDraw are Ter_Draw (FIDE)
 
@@ -1333,21 +1381,17 @@ namespace MaterialHash { // idea from Gull
         }
     };
 
-    inline Terminaison probeMaterialHashTable(const Position::Material & mat) { return materialHashTable[getMaterialHash(mat)]; }
+    inline Terminaison probeMaterialHashTable(const Position::Material & mat) { return materialHashTable[getMaterialHash(mat)].t; }
 }
 
 void updateMaterialOther(Position & p){
     p.mat[Co_White][M_M] = p.mat[Co_White][M_q] + p.mat[Co_White][M_r];  p.mat[Co_Black][M_M] = p.mat[Co_Black][M_q] + p.mat[Co_Black][M_r];
     p.mat[Co_White][M_m] = p.mat[Co_White][M_b] + p.mat[Co_White][M_n];  p.mat[Co_Black][M_m] = p.mat[Co_Black][M_b] + p.mat[Co_Black][M_n];
     p.mat[Co_White][M_t] = p.mat[Co_White][M_M] + p.mat[Co_White][M_m];  p.mat[Co_Black][M_t] = p.mat[Co_Black][M_M] + p.mat[Co_Black][M_m];
-    if (p.whiteBishop()) {
-        p.mat[Co_White][M_bl] = (unsigned char)countBit(p.whiteBishop()&whiteSquare);
-        p.mat[Co_White][M_bd] = (unsigned char)countBit(p.whiteBishop()&blackSquare);
-    }
-    if (p.blackBishop()) {
-        p.mat[Co_Black][M_bl] = (unsigned char)countBit(p.blackBishop()&whiteSquare);
-        p.mat[Co_Black][M_bd] = (unsigned char)countBit(p.blackBishop()&blackSquare);
-    }
+    p.mat[Co_White][M_bl] = (unsigned char)countBit(p.whiteBishop()&whiteSquare);
+    p.mat[Co_White][M_bd] = (unsigned char)countBit(p.whiteBishop()&blackSquare);
+    p.mat[Co_Black][M_bl] = (unsigned char)countBit(p.blackBishop()&whiteSquare);
+    p.mat[Co_Black][M_bd] = (unsigned char)countBit(p.blackBishop()&blackSquare);
 }
 
 void initMaterial(Position & p){ // M_p .. M_k is the same as P_wp .. P_wk
@@ -2814,48 +2858,50 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
     ScoreAcc scoreLoc;
     ScoreAcc & score = sc ? *sc : scoreLoc;
     score.scores = {0};
-    static const ScoreType dummyScore = 0;
-    static const ScoreType *absValues[7]   = { &dummyScore, &Values  [P_wp + PieceShift], &Values  [P_wn + PieceShift], &Values  [P_wb + PieceShift], &Values  [P_wr + PieceShift], &Values  [P_wq + PieceShift], &Values  [P_wk + PieceShift] };
-    static const ScoreType *absValuesEG[7] = { &dummyScore, &ValuesEG[P_wp + PieceShift], &ValuesEG[P_wn + PieceShift], &ValuesEG[P_wb + PieceShift], &ValuesEG[P_wr + PieceShift], &ValuesEG[P_wq + PieceShift], &ValuesEG[P_wk + PieceShift] };
+    
+    // king captured
+    const bool white2Play = p.c == Co_White;
+    if ( p.king[Co_White] == INVALIDSQUARE ) return gp=0,(white2Play?-1:+1)* MATE;
+    if ( p.king[Co_Black] == INVALIDSQUARE ) return gp=0,(white2Play?+1:-1)* MATE;
 
     // level for the poor ...
     const int lra = std::max(0u,750 - 10*DynamicConfig::level);
     if ( lra > 0 ) { score.scores[ScoreAcc::sc_Rand] += Zobrist::randomInt<int>(-lra,lra); }
 
-    // game phase and material scores ///@todo precalculated this in Material hash
-    const float totalMatScore = 2.f * *absValues[P_wq] + 4.f * *absValues[P_wr] + 4.f * *absValues[P_wb] + 4.f * *absValues[P_wn] + 16.f * *absValues[P_wp]; // cannot be static for tuning process ...
-    const ScoreType matPieceScoreW = p.mat[Co_White][M_q] * *absValues[P_wq] + p.mat[Co_White][M_r] * *absValues[P_wr] + p.mat[Co_White][M_b] * *absValues[P_wb] + p.mat[Co_White][M_n] * *absValues[P_wn];
-    const ScoreType matPieceScoreB = p.mat[Co_Black][M_q] * *absValues[P_wq] + p.mat[Co_Black][M_r] * *absValues[P_wr] + p.mat[Co_Black][M_b] * *absValues[P_wb] + p.mat[Co_Black][M_n] * *absValues[P_wn];
-    const ScoreType matPawnScoreW  = p.mat[Co_White][M_p] * *absValues[P_wp];
-    const ScoreType matPawnScoreB  = p.mat[Co_Black][M_p] * *absValues[P_wp];
-    const ScoreType matScoreW = matPieceScoreW + matPawnScoreW;
-    const ScoreType matScoreB = matPieceScoreB + matPawnScoreB;
-    gp = (matScoreW + matScoreB ) / totalMatScore;
+    // Material evaluation
+    const Hash matHash = MaterialHash::getMaterialHash(p.mat);
+    if ( matHash ){
+       const MaterialHash::MaterialHashEntry & MEntry = MaterialHash::materialHashTable[matHash];
+       gp = MEntry.gp;
+       score.scores[ScoreAcc::sc_Mat][EG] += MEntry.score[EG];
+       score.scores[ScoreAcc::sc_Mat][MG] += MEntry.score[MG];
 
-    // king captured
-    const bool white2Play = p.c == Co_White;
-    if ( p.king[Co_White] == INVALIDSQUARE ) return (white2Play?-1:+1)* MATE;
-    if ( p.king[Co_Black] == INVALIDSQUARE ) return (white2Play?+1:-1)* MATE;
-
-    // EG material (symetric version)  ///@todo precalculated this in Material hash
-    score.scores[ScoreAcc::sc_Mat][EG] += (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValuesEG[P_wq] + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * *absValuesEG[P_wr] + (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * *absValuesEG[P_wb] + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValuesEG[P_wn] + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValuesEG[P_wp];
-    const Color winningSideEG = score.scores[ScoreAcc::sc_Mat][EG]>0?Co_White:Co_Black;
-
-    // end game knowledge (helper or scaling)
-    if ( safeMatEvaluator && (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t]<6) ){
-       const Hash matHash = MaterialHash::getMaterialHash(p.mat);
-       const MaterialHash::Terminaison ter = MaterialHash::materialHashTable[matHash];
-       if ( ter == MaterialHash::Ter_WhiteWinWithHelper || ter == MaterialHash::Ter_BlackWinWithHelper ) return (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSideEG,score.scores[ScoreAcc::sc_Mat][EG]));
-       else if ( ter == MaterialHash::Ter_WhiteWin || ter == MaterialHash::Ter_BlackWin) score.scalingFactor = 5 - 5*p.fifty/100.f;
-       else if ( ter == MaterialHash::Ter_HardToWin)   score.scalingFactor = 0.5f - 0.5f*(p.fifty/100.f);
-       else if ( ter == MaterialHash::Ter_LikelyDraw ) score.scalingFactor = 0.3f - 0.3f*(p.fifty/100.f);
-       else if ( ter == MaterialHash::Ter_Draw){         if ( !isAttacked(p,kingSquare(p)) ) return drawScore();}
-       else if ( ter == MaterialHash::Ter_MaterialDraw){ if ( !isAttacked(p,kingSquare(p)) ) return drawScore();} ///@todo also verify stalemate ?
+       // end game knowledge (helper or scaling)
+       if ( safeMatEvaluator && (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t]<6) ){
+          const Color winningSideEG = score.scores[ScoreAcc::sc_Mat][EG]>0?Co_White:Co_Black;
+          if ( MEntry.t == MaterialHash::Ter_WhiteWinWithHelper || MEntry.t == MaterialHash::Ter_BlackWinWithHelper ) return (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSideEG,score.scores[ScoreAcc::sc_Mat][EG]));
+          else if ( MEntry.t == MaterialHash::Ter_WhiteWin || MEntry.t == MaterialHash::Ter_BlackWin) score.scalingFactor = 5 - 5*p.fifty/100.f;
+          else if ( MEntry.t == MaterialHash::Ter_HardToWin)   score.scalingFactor = 0.5f - 0.5f*(p.fifty/100.f);
+          else if ( MEntry.t == MaterialHash::Ter_LikelyDraw ) score.scalingFactor = 0.3f - 0.3f*(p.fifty/100.f);
+          else if ( MEntry.t == MaterialHash::Ter_Draw){         if ( !isAttacked(p,kingSquare(p)) ) return drawScore();}
+          else if ( MEntry.t == MaterialHash::Ter_MaterialDraw){ if ( !isAttacked(p,kingSquare(p)) ) return drawScore();} ///@todo also verify stalemate ?
+       }
     }
-
-    // material (symetric version) ///@todo precalculated this in Material hash
-    score.scores[ScoreAcc::sc_Mat][MG] += matScoreW - matScoreB;
-    //const Color winningSideMG = score.scores[ScoreAcc::sc_Mat][MG]>0?Co_White:Co_Black;
+    else{
+       // game phase and material scores 
+       const float totalMatScore = 2.f * *absValues[P_wq] + 4.f * *absValues[P_wr] + 4.f * *absValues[P_wb] + 4.f * *absValues[P_wn] + 16.f * *absValues[P_wp]; // cannot be static for tuning process ...
+       const ScoreType matPieceScoreW = p.mat[Co_White][M_q] * *absValues[P_wq] + p.mat[Co_White][M_r] * *absValues[P_wr] + p.mat[Co_White][M_b] * *absValues[P_wb] + p.mat[Co_White][M_n] * *absValues[P_wn];
+       const ScoreType matPieceScoreB = p.mat[Co_Black][M_q] * *absValues[P_wq] + p.mat[Co_Black][M_r] * *absValues[P_wr] + p.mat[Co_Black][M_b] * *absValues[P_wb] + p.mat[Co_Black][M_n] * *absValues[P_wn];
+       const ScoreType matPawnScoreW  = p.mat[Co_White][M_p] * *absValues[P_wp];
+       const ScoreType matPawnScoreB  = p.mat[Co_Black][M_p] * *absValues[P_wp];
+       const ScoreType matScoreW = matPieceScoreW + matPawnScoreW;
+       const ScoreType matScoreB = matPieceScoreB + matPawnScoreB;
+       gp = (matScoreW + matScoreB ) / totalMatScore;
+       // EG material (symetric version)
+       score.scores[ScoreAcc::sc_Mat][EG] += (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValuesEG[P_wq] + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * *absValuesEG[P_wr] + (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * *absValuesEG[P_wb] + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValuesEG[P_wn] + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValuesEG[P_wp];
+       // material (symetric version) 
+       score.scores[ScoreAcc::sc_Mat][MG] += matScoreW - matScoreB;
+    }
 
     // usefull bitboards accumulator
     const BitBoard pawns[2]          = {p.whitePawn(), p.blackPawn()};
