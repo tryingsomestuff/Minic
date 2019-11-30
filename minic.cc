@@ -180,6 +180,7 @@ namespace DynamicConfig{
     unsigned int ttSizeMb  = 128; // here in Mb, will be converted to real size next
     bool fullXboardOutput  = false;
     bool debugMode         = false;
+    bool quiet             = false;
     std::string debugFile  = "minic.debug";
     unsigned int level     = 100;
     bool book              = true;
@@ -212,8 +213,10 @@ namespace Logging {
         ~LogIt() {
             std::lock_guard<std::mutex> lock(_mutex);
             if (_level != logGUI) {
-               std::cout       << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
-               if (_of) (*_of) << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
+	       if ( ! DynamicConfig::quiet || _level > logGUI ){
+                  std::cout       << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
+                  if (_of) (*_of) << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
+	       }
             }
             else {
                 std::cout       << _buffer.str() << std::flush << std::endl;
@@ -3923,7 +3926,7 @@ namespace Options {
     void registerCOMOptions(){ // options exposed xboard GUI
        _keys.push_back(KeyBase(k_int,   w_spin, "level"                       , &DynamicConfig::level                          , (unsigned int)0  , (unsigned int)StaticConfig::nlevel     ));
        _keys.push_back(KeyBase(k_int,   w_spin, "Hash"                        , &DynamicConfig::ttSizeMb                       , (unsigned int)0  , (unsigned int)256000, &TT::initTable));
-       _keys.push_back(KeyBase(k_int,   w_spin, "threads"                     , &DynamicConfig::threads                        , (unsigned int)0  , (unsigned int)128   , std::bind(&ThreadPool::setup, &ThreadPool::instance())));
+       _keys.push_back(KeyBase(k_int,   w_spin, "threads"                     , &DynamicConfig::threads                        , (unsigned int)0  , (unsigned int)256   , std::bind(&ThreadPool::setup, &ThreadPool::instance())));
 
        /*
        _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin0"            , &StaticConfig::qfutilityMargin[0]              , ScoreType(0)    , ScoreType(1500)     ));
@@ -3994,6 +3997,7 @@ namespace Options {
     void initOptions(int argc, char ** argv){
        registerCOMOptions();
        readOptions(argc,argv);
+       GETOPT(quiet,            bool)  // first to be read
        GETOPT(debugMode,        bool)
        GETOPT(debugFile,        std::string)
        GETOPT(book,             bool)
