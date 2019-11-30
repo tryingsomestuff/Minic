@@ -1180,6 +1180,7 @@ namespace MaterialHash { // idea from Gull
 
     void init(){
         Logging::LogIt(Logging::logInfo) << "KPK init";
+        Logging::LogIt(Logging::logInfo) << "KPK table size : " << maxIndex/32*sizeof(uint32_t)/1024 << "Kb";
         std::vector<KPKPosition> db(maxIndex);
         unsigned idx, repeat = 1;
         for (idx = 0; idx < maxIndex; ++idx) db[idx] = KPKPosition(idx); // init
@@ -1225,6 +1226,7 @@ namespace MaterialHash { // idea from Gull
         MaterialHashInitializer(const Position::Material & mat, Terminaison t, ScoreType (*helper)(const Position &, Color, ScoreType) ) { materialHashTable[getMaterialHash(mat)].t = t; helperTable[getMaterialHash(mat)] = helper; }
         static void init() {
             Logging::LogIt(Logging::logInfo) << "Material hash total : " << TotalMat;
+            Logging::LogIt(Logging::logInfo) << "Material hash size : " << TotalMat*sizeof(MaterialHashEntry)/1024/1024 << "Mb";
 
             InitMaterialScore();
 
