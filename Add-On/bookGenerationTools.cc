@@ -151,7 +151,7 @@ bool add(const std::string & move, Position & p, std::ofstream & binFile){
    Square to   = INVALIDSQUARE;
    MType mtype = T_std;
    readMove(p,moveStr,from,to,mtype);
-   const Move m = SanitizeCastling(p,ToMove(from,to,mtype));
+   const Move m = ToMove(from,to,mtype); //SanitizeCastling(p,ToMove(from,to,mtype));
    if ( ! apply(p,m) ) return false;
    binFile << bits(m);
    return true;

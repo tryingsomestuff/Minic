@@ -96,6 +96,17 @@ typedef int16_t  ScoreType;
 typedef int64_t  TimeType;
 typedef int16_t  GenerationType;
 
+#include <array>
+#include <type_traits>
+#include <utility>
+
+template<std::size_t size, typename T, std::size_t... indexes>
+constexpr auto make_array_n_impl(T && value, std::index_sequence<indexes...>) { return std::array<std::decay_t<T>, size>{ (static_cast<void>(indexes), value)..., std::forward<T>(value) };}
+template<typename T>
+constexpr auto make_array_n(std::integral_constant<std::size_t, 0>, T &&) { return std::array<std::decay_t<T>, 0>{};}
+template<std::size_t size, typename T> constexpr auto make_array_n(std::integral_constant<std::size_t, size>, T && value) { return make_array_n_impl<size>(std::forward<T>(value), std::make_index_sequence<size - 1>{});}
+template<std::size_t size, typename T> constexpr auto make_array_n(T && value) { return make_array_n(std::integral_constant<std::size_t, size>{}, std::forward<T>(value)); }
+
 //#define WITH_TIMER
 #ifdef WITH_TIMER
 #include "Add-On/timers.cc"
@@ -187,6 +198,7 @@ namespace DynamicConfig{
     std::string bookFile   = "book.bin";
     unsigned int threads   = 1;
     std::string syzygyPath = "";
+    bool FRC               = false;
 }
 
 namespace Logging {
@@ -453,12 +465,13 @@ enum Sq   : unsigned char { Sq_a1  = 0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1
 enum File : unsigned char { File_a = 0,File_b,File_c,File_d,File_e,File_f,File_g,File_h};
 enum Rank : unsigned char { Rank_1 = 0,Rank_2,Rank_3,Rank_4,Rank_5,Rank_6,Rank_7,Rank_8};
 
-enum Castling : unsigned char{ C_none= 0, C_wks = 1, C_wqs = 2, C_bks = 4, C_bqs = 8 };
-Castling operator&(const Castling & a, const Castling &b){return Castling(char(a)&char(b));}
-Castling operator|(const Castling & a, const Castling &b){return Castling(char(a)|char(b));}
-Castling operator~(const Castling & a){return Castling(~char(a));}
-void operator&=(Castling & a, const Castling &b){ a = a & b;}
-void operator|=(Castling & a, const Castling &b){ a = a | b;}
+enum CastlingRights : unsigned char{ C_none = 0, C_wks = 1, C_wqs = 2, C_bks = 4, C_bqs = 8 };
+enum CastlingTypes : unsigned char { CT_OOO = 0, CT_OO = 1 };
+CastlingRights operator&(const CastlingRights & a, const CastlingRights &b){return CastlingRights(char(a)&char(b));}
+CastlingRights operator|(const CastlingRights & a, const CastlingRights &b){return CastlingRights(char(a)|char(b));}
+CastlingRights operator~(const CastlingRights & a){return CastlingRights(~char(a));}
+void operator&=(CastlingRights & a, const CastlingRights &b){ a = a & b;}
+void operator|=(CastlingRights & a, const CastlingRights &b){ a = a | b;}
 
 inline Square stringToSquare(const std::string & str) { return (str.at(1) - 49) * 8 + (str.at(0) - 97); }
 
@@ -532,7 +545,7 @@ inline int BitScanForward(BitBoard bb) { assert(bb != 0ull); return __builtin_ct
 #endif // linux
 #endif
 
-#define SquareToBitboard(k) (1ull<<(k))
+#define SquareToBitboard(k) BitBoard(1ull<<(k))
 #define SquareToBitboardTable(k) BBTools::mask[k].bbsquare
 inline ScoreType countBit(const BitBoard & b)           { return ScoreType(POPCOUNT(b));}
 inline void      setBit  (      BitBoard & b, Square k) { b |= SquareToBitboard(k);}
@@ -606,9 +619,9 @@ struct Position{
 
     mutable Hash h = 0ull, ph = 0ull;
     Move lastMove = INVALIDMOVE;
-    Square ep = INVALIDSQUARE, king[2] = { INVALIDSQUARE };
+    Square ep = INVALIDSQUARE, king[2] = { INVALIDSQUARE, INVALIDSQUARE }, rooksInit[2][2] = { INVALIDSQUARE , INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE}, kingInit[2] = { INVALIDSQUARE, INVALIDSQUARE };
     unsigned char fifty = 0, moves = 0, halfmoves = 0; // this is not the same as "ply", the one used to get seldepth
-    Castling castling = C_none;
+    CastlingRights castling = C_none;
     Color c = Co_White;
 
     inline const BitBoard & blackKing  ()const {return allB[0];}
@@ -1560,9 +1573,9 @@ struct ThreadContext{
     static TimeType currentMoveMs;
     static TimeType getCurrentMoveMs(); // use this (and not the variable) to take emergency time into account !
 
-    Hash hashStack[MAX_PLY]      = { 0ull };
-    ScoreType evalStack[MAX_PLY] = { 0 };
-    Move threatStack[MAX_PLY]    = { INVALIDMOVE };
+    std::array<Hash,MAX_PLY>      hashStack   = make_array_n<MAX_PLY,Hash>(0ull);
+    std::array<ScoreType,MAX_PLY> evalStack   = make_array_n<MAX_PLY,ScoreType>(0);
+    std::array<Move,MAX_PLY>      threatStack = make_array_n<MAX_PLY,Move>(INVALIDMOVE);
 
     Stats stats;
 
@@ -1939,10 +1952,10 @@ std::string ToString(const Move & m, bool withScore){
     std::string prom;
     const std::string score = (withScore ? " (" + std::to_string(Move2Score(m)) + ")" : "");
     switch (Move2Type(m)) {
-    case T_bks: return "e8g8" + score;
-    case T_wks: return "e1g1" + score;
-    case T_bqs: return "e8c8" + score;
-    case T_wqs: return "e1c1" + score;
+    case T_bks: return (DynamicConfig::FRC?"O-O":"e8g8") + score;
+    case T_wks: return (DynamicConfig::FRC?"O-O":"e1g1") + score;
+    case T_bqs: return (DynamicConfig::FRC?"O-O-O":"e8c8") + score;
+    case T_wqs: return (DynamicConfig::FRC?"O-O-O":"e1c1") + score;
     default:
         static const std::string promSuffixe[] = { "","","","","q","r","b","n","q","r","b","n" };
         prom = promSuffixe[Move2Type(m)];
@@ -1966,7 +1979,7 @@ std::string ToString(const Position::Material & mat) {
 
 std::string ToString(const Position & p, bool noEval){
     std::stringstream ss;
-    ss << "\nPosition" << std::endl;
+    ss << "Position" << std::endl;
     for (Square j = 7; j >= 0; --j) {
         ss << Logging::_protocolComment[Logging::ct] << " +-+-+-+-+-+-+-+-+" << std::endl << Logging::_protocolComment[Logging::ct] << " |";
         for (Square i = 0; i < 8; ++i) ss << PieceTools::getName(p,i+j*8) << '|';
@@ -1974,7 +1987,12 @@ std::string ToString(const Position & p, bool noEval){
     }
     ss << Logging::_protocolComment[Logging::ct] << " +-+-+-+-+-+-+-+-+" << std::endl;
     if ( p.ep >=0 ) ss << Logging::_protocolComment[Logging::ct] << " ep " << SquareNames[p.ep] << std::endl;
-    ss << Logging::_protocolComment[Logging::ct] << " wk " << (p.king[Co_White]!=INVALIDSQUARE?SquareNames[p.king[Co_White]]:"none")  << std::endl << Logging::_protocolComment[Logging::ct] << " bk " << (p.king[Co_Black]!=INVALIDSQUARE?SquareNames[p.king[Co_Black]]:"none") << std::endl;
+    ss << Logging::_protocolComment[Logging::ct] << " wk " << (p.king[Co_White]!=INVALIDSQUARE?SquareNames[p.king[Co_White]]:"none")  << std::endl;
+    ss << Logging::_protocolComment[Logging::ct] << " bk " << (p.king[Co_Black]!=INVALIDSQUARE?SquareNames[p.king[Co_Black]]:"none") << std::endl;
+    ss << Logging::_protocolComment[Logging::ct] << " wrOOO " << (p.rooksInit[Co_White][CT_OOO]!=INVALIDSQUARE?SquareNames[p.rooksInit[Co_White][CT_OOO]]:"none") << std::endl;
+    ss << Logging::_protocolComment[Logging::ct] << " wrOO  " << (p.rooksInit[Co_White][CT_OO ]!=INVALIDSQUARE?SquareNames[p.rooksInit[Co_White][CT_OO ]]:"none") << std::endl;
+    ss << Logging::_protocolComment[Logging::ct] << " brOOO " << (p.rooksInit[Co_Black][CT_OOO]!=INVALIDSQUARE?SquareNames[p.rooksInit[Co_Black][CT_OOO]]:"none") << std::endl;
+    ss << Logging::_protocolComment[Logging::ct] << " brOO  " << (p.rooksInit[Co_Black][CT_OO ]!=INVALIDSQUARE?SquareNames[p.rooksInit[Co_Black][CT_OO ]]:"none") << std::endl;
     ss << Logging::_protocolComment[Logging::ct] << " Turn " << (p.c == Co_White ? "white" : "black") << std::endl;
     ScoreType sc = 0;
     if ( ! noEval ){
@@ -2044,11 +2062,33 @@ bool readFEN(const std::string & fen, Position & p, bool silent){
     p.castling = C_none;
     if (strList.size() >= 3){
         bool found = false;
-        if (strList[2].find('K') != std::string::npos){ p.castling |= C_wks; found = true; }
-        if (strList[2].find('Q') != std::string::npos){ p.castling |= C_wqs; found = true; }
-        if (strList[2].find('k') != std::string::npos){ p.castling |= C_bks; found = true; }
-        if (strList[2].find('q') != std::string::npos){ p.castling |= C_bqs; found = true; }
+        if ( !DynamicConfig::FRC){
+           Logging::LogIt(Logging::logInfo) << "is not FCR";
+           if (strList[2].find('K') != std::string::npos){ p.castling |= C_wks; found = true; }
+           if (strList[2].find('Q') != std::string::npos){ p.castling |= C_wqs; found = true; }
+           if (strList[2].find('k') != std::string::npos){ p.castling |= C_bks; found = true; }
+           if (strList[2].find('q') != std::string::npos){ p.castling |= C_bqs; found = true; }
+        }
+        else{
+           Logging::LogIt(Logging::logInfo) << "is FCR";
+           for ( const char & cr : strList[2] ){
+               Logging::LogIt(Logging::logInfo) << cr;
+               const Color c = std::isupper(cr) ? Co_White : Co_Black;
+               const char kf = std::toupper(FileNames[SQFILE(p.king[c])].at(0));
+               if ( std::toupper(cr) > kf ) { p.castling |= (c==Co_White ? C_wks:C_bks); found = true; }
+               else                         { p.castling |= (c==Co_White ? C_wqs:C_bqs); found = true; }
+           }
+        }
+        if (strList[2].find('-') != std::string::npos){ found = true; Logging::LogIt(Logging::logInfo) << "No castling right given" ;}
         if ( ! found ){ if ( !silent) Logging::LogIt(Logging::logWarn) << "No castling right given" ; }
+        else{ ///@todo detect illegal stuff in here ??
+            p.kingInit[Co_White] = p.king[Co_White];
+            p.kingInit[Co_Black] = p.king[Co_Black];
+            if ( p.castling & C_wqs ) { for( Square s = Sq_a1 ; s <= Sq_h1 ; ++s ){ if ( s < p.king[Co_White] && p.b[s]==P_wr ) { p.rooksInit[Co_White][CT_OOO] = s; break; } } }
+            if ( p.castling & C_wks ) { for( Square s = Sq_a1 ; s <= Sq_h1 ; ++s ){ if ( s > p.king[Co_White] && p.b[s]==P_wr ) { p.rooksInit[Co_White][CT_OO]  = s; break; } } }
+            if ( p.castling & C_bqs ) { for( Square s = Sq_a8 ; s <= Sq_h8 ; ++s ){ if ( s < p.king[Co_Black] && p.b[s]==P_br ) { p.rooksInit[Co_Black][CT_OOO] = s; break; } } }
+            if ( p.castling & C_bks ) { for( Square s = Sq_a8 ; s <= Sq_h8 ; ++s ){ if ( s > p.king[Co_Black] && p.b[s]==P_br ) { p.rooksInit[Co_Black][CT_OO]  = s; break; } } }
+        }
     }
     else if ( !silent) Logging::LogIt(Logging::logInfo) << "No castling right given" ;
 
@@ -2103,12 +2143,18 @@ inline Move SanitizeCastling(const Position & p, const Move & m){
     const Square from = Move2From(m);
     const Square to   = Move2To(m);
     MType mtype = Move2Type(m);
-    if ( (from == Sq_e1) && (p.b[Sq_e1] == P_wk) && (to == Sq_g1)) mtype=T_wks;
-    if ( (from == Sq_e8) && (p.b[Sq_e8] == P_bk) && (to == Sq_g8)) mtype=T_bks;
-    if ( (from == Sq_e1) && (p.b[Sq_e1] == P_wk) && (to == Sq_c1)) mtype=T_wqs;
-    if ( (from == Sq_e8) && (p.b[Sq_e8] == P_bk) && (to == Sq_c8)) mtype=T_bqs;
-    return ToMove(from,to,mtype);
+    // convert GUI castling input notation to internal castling style if not FRC
+    if ( !DynamicConfig::FRC ){
+       bool whiteToMove = p.c == Co_White;
+       if (mtype == T_std && from == p.kingInit[p.c] ) {
+           if      (to == (whiteToMove ? Sq_c1 : Sq_c8)) return ToMove(from, to, whiteToMove ? T_wqs : T_bqs);
+           else if (to == (whiteToMove ? Sq_g1 : Sq_g8)) return ToMove(from, to, whiteToMove ? T_wks : T_bks);
+       }
+    }
+    return m;
 }
+
+inline Square kingSquare(const Position & p) { return p.king[p.c]; }
 
 bool readMove(const Position & p, const std::string & ss, Square & from, Square & to, MType & moveType ) {
     if ( ss.empty()){
@@ -2118,7 +2164,7 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
     }
     std::string str(ss);
     str = SanitizeCastling(p,str);
-    // add space to go to own internal notation
+    // add space to go to own internal notation (if not castling)
     if ( str != "0-0" && str != "0-0-0" && str != "O-O" && str != "O-O-O" ) str.insert(2," ");
 
     std::vector<std::string> strList;
@@ -2128,14 +2174,15 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
     moveType = T_std;
     if ( strList.empty()){ Logging::LogIt(Logging::logError) << "Trying to read bad move, seems empty " << str ; return false; }
 
-    // detect special move
+    // detect castling
     if (strList[0] == "0-0" || strList[0] == "O-O") {
         moveType = (p.c == Co_White) ? T_wks : T_bks;
-        from = (p.c == Co_White) ? Sq_e1 : Sq_e8;
+        from = kingSquare(p);
         to = (p.c == Co_White) ? Sq_g1 : Sq_g8;
     }
     else if (strList[0] == "0-0-0" || strList[0] == "O-O-O") {
         moveType = (p.c == Co_White) ? T_wqs : T_bqs;
+        from = kingSquare(p);
         to = (p.c == Co_White) ? Sq_c1 : Sq_c8;
     }
     else{
@@ -2172,8 +2219,13 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
             }
         }
         else { Logging::LogIt(Logging::logError) << "Trying to read bad move, invalid to square " << str ; return false; }
+        if (PieceTools::getPieceType(p,from) == P_wp && to == p.ep) moveType = T_ep;
     }
-    if (PieceTools::getPieceType(p,from) == P_wp && to == p.ep) moveType = T_ep;
+    if ( DynamicConfig::FRC ){
+       // In FRC, some castling way be encoded king takes rooks ... Let's check that, the dirty way
+       if ( p.b[from] == P_wk && p.b[to] == P_wr ){ moveType = (to<from ? T_wqs : T_wks); }
+       if ( p.b[from] == P_bk && p.b[to] == P_br ){ moveType = (to<from ? T_bqs : T_bks); }
+    }
     return true;
 }
 
@@ -2258,8 +2310,12 @@ TimeType ThreadContext::getCurrentMoveMs() {
     return std::max(ret, TimeType(20));// if not much time left, let's try that ...;
 }
 
-inline Square kingSquare(const Position & p) { return p.king[p.c]; }
 inline bool isAttacked(const Position & p, const Square k) { return k!=INVALIDSQUARE && BBTools::isAttackedBB(p, k, p.c);}
+
+inline bool isAttacked(const Position & p, BitBoard bb) { // copy
+    while ( bb ) if ( isAttacked(p, Square(BBTools::popBit(bb)))) return true;
+    return false;
+}
 
 enum GenPhase { GP_all = 0, GP_cap = 1, GP_quiet = 2 };
 
@@ -2285,16 +2341,21 @@ void generateSquare(const Position & p, MoveList & moves, Square from){
         if ( phase != GP_cap && ptype == P_wk ){ // castling
             if ( side == Co_White) {
                 if ( p.castling & (C_wqs|C_wks) ){
-                   ///@todo do that later in apply and use between BB to check for piece and attack (compatible with FRC)
-                   bool e1Attacked = isAttacked(p,Sq_e1);
-                   if ( (p.castling & C_wqs) && p.b[Sq_b1] == P_none && p.b[Sq_c1] == P_none && p.b[Sq_d1] == P_none && !isAttacked(p,Sq_c1) && !isAttacked(p,Sq_d1) && !e1Attacked) addMove(from, Sq_c1, T_wqs, moves); // wqs
-                   if ( (p.castling & C_wks) && p.b[Sq_f1] == P_none && p.b[Sq_g1] == P_none && !e1Attacked && !isAttacked(p,Sq_f1) && !isAttacked(p,Sq_g1)) addMove(from, Sq_g1, T_wks, moves); // wks
+                   if ( (p.castling & C_wqs)
+                        && ( ( (BBTools::mask[p.king[Co_White]].between[Sq_c1] | BBTools::mask[p.rooksInit[Co_White][CT_OOO]].between[Sq_d1]) & p.occupancy) == 0ull)
+                        && !isAttacked(p,BBTools::mask[p.king[Co_White]].between[Sq_c1] | SquareToBitboard(p.king[Co_White])) ) addMove(from, Sq_c1, T_wqs, moves); // wqs
+                   if ( (p.castling & C_wks)
+                        && ( ( (BBTools::mask[p.king[Co_White]].between[Sq_g1] | BBTools::mask[p.rooksInit[Co_White][CT_OO ]].between[Sq_f1]) & p.occupancy) == 0ull)
+                        && !isAttacked(p,BBTools::mask[p.king[Co_White]].between[Sq_g1] | SquareToBitboard(p.king[Co_White])) ) addMove(from, Sq_g1, T_wks, moves); // wks
                 }
             }
             else if ( p.castling & (C_bqs|C_bks)){
-                const bool e8Attacked = isAttacked(p,Sq_e8);
-                if ( (p.castling & C_bqs) && p.b[Sq_b8] == P_none && p.b[Sq_c8] == P_none && p.b[Sq_d8] == P_none && !isAttacked(p,Sq_c8) && !isAttacked(p,Sq_d8) && !e8Attacked) addMove(from, Sq_c8, T_bqs, moves); // bqs
-                if ( (p.castling & C_bks) && p.b[Sq_f8] == P_none && p.b[Sq_g8] == P_none && !e8Attacked && !isAttacked(p,Sq_f8) && !isAttacked(p,Sq_g8)) addMove(from, Sq_g8, T_bks, moves); // bks
+                if ( (p.castling & C_bqs)
+                     && ( ( (BBTools::mask[p.king[Co_Black]].between[Sq_c8] | BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].between[Sq_d8]) & p.occupancy) == 0ull)
+                     && !isAttacked(p,BBTools::mask[p.king[Co_Black]].between[Sq_c8] | SquareToBitboard(p.king[Co_Black])) ) addMove(from, Sq_c8, T_bqs, moves); // bqs
+                if ( (p.castling & C_bks)
+                     && ( ( (BBTools::mask[p.king[Co_Black]].between[Sq_g8] | BBTools::mask[p.rooksInit[Co_Black][CT_OO ]].between[Sq_f8]) & p.occupancy) == 0ull)
+                     && !isAttacked(p,BBTools::mask[p.king[Co_Black]].between[Sq_g8] | SquareToBitboard(p.king[Co_Black])) ) addMove(from, Sq_g8, T_bks, moves); // bks
             }
         }
     }
@@ -2337,6 +2398,7 @@ void generate(const Position & p, MoveList & moves, bool doNotClear = false){
 }
 
 inline void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, bool isCapture = false, Piece prom = P_none) {
+    ///@todo not FRC ready
     START_TIMER
     const int fromId   = fromP + PieceShift;
     const int toId     = toP + PieceShift;
@@ -2417,19 +2479,19 @@ bool apply(Position & p, const Move & m, bool noValidation){
         else if ( toP == P_bk ) p.king[Co_Black] = INVALIDSQUARE;
 
 	if ( p.castling != C_none ){
-           if ( (p.castling & C_wqs) && from == Sq_a1 && fromP == P_wr ){
+           if ( (p.castling & C_wqs) && from == p.rooksInit[Co_White][CT_OOO] && fromP == P_wr ){
                p.castling &= ~C_wqs;
                p.h ^= Zobrist::ZT[0][13];
            }
-           else if ( (p.castling & C_wks) && from == Sq_h1 && fromP == P_wr ){
+           else if ( (p.castling & C_wks) && from == p.rooksInit[Co_White][CT_OO] && fromP == P_wr ){
                p.castling &= ~C_wks;
                p.h ^= Zobrist::ZT[7][13];
            }
-           else if ( (p.castling & C_bqs) && from == Sq_a8 && fromP == P_br){
+           else if ( (p.castling & C_bqs) && from == p.rooksInit[Co_Black][CT_OOO] && fromP == P_br){
                p.castling &= ~C_bqs;
                p.h ^= Zobrist::ZT[56][13];
            }
-           else if ( (p.castling & C_bks) && from == Sq_h8 && fromP == P_br ){
+           else if ( (p.castling & C_bks) && from == p.rooksInit[Co_Black][CT_OO] && fromP == P_br ){
                p.castling &= ~C_bks;
                p.h ^= Zobrist::ZT[63][13];
            }
@@ -2481,32 +2543,80 @@ bool apply(Position & p, const Move & m, bool noValidation){
         movePiece(p, from, to, fromP, toP, type == T_cappromn, (p.c == Co_White ? P_wn : P_bn));
         break;
     case T_wks:
-        movePiece(p, Sq_e1, Sq_g1, P_wk, P_none);
-        movePiece(p, Sq_h1, Sq_f1, P_wr, P_none);
+        //movePiece(p, p.king[Co_White], Sq_g1, P_wk, P_none);
+        //movePiece(p, p.rooksInit[Co_White][CT_OO], Sq_f1, P_wr, P_none);
+        BBTools::unSetBit(p, p.king[Co_White]);
+        BBTools::unSetBit(p, p.rooksInit[Co_White][CT_OO]);
+        BBTools::setBit(p, Sq_g1, P_wk);
+        BBTools::setBit(p, Sq_f1, P_wr);
+        p.b[p.king[Co_White]] = P_none;
+        p.b[p.rooksInit[Co_White][CT_OO]] = P_none;
+        p.b[Sq_g1] = P_wk;
+        p.b[Sq_f1] = P_wr;
+        p.h ^= Zobrist::ZT[p.king[Co_White]][P_wk+PieceShift];
+        p.h ^= Zobrist::ZT[p.rooksInit[Co_White][CT_OO]][P_wr+PieceShift];
+        p.h ^= Zobrist::ZT[Sq_g1][P_wk+PieceShift];
+        p.h ^= Zobrist::ZT[Sq_f1][P_wr+PieceShift];
         p.king[Co_White] = Sq_g1;
         if (p.castling & C_wqs) p.h ^= Zobrist::ZT[0][13];
         if (p.castling & C_wks) p.h ^= Zobrist::ZT[7][13];
         p.castling &= ~(C_wks | C_wqs);
         break;
     case T_wqs:
-        movePiece(p, Sq_e1, Sq_c1, P_wk, P_none);
-        movePiece(p, Sq_a1, Sq_d1, P_wr, P_none);
+        //movePiece(p, p.king[Co_White], Sq_c1, P_wk, P_none);
+        //movePiece(p, p.rooksInit[Co_White][CT_OOO], Sq_d1, P_wr, P_none);
+        BBTools::unSetBit(p, p.king[Co_White]);
+        BBTools::unSetBit(p, p.rooksInit[Co_White][CT_OOO]);
+        BBTools::setBit(p, Sq_c1, P_wk);
+        BBTools::setBit(p, Sq_d1, P_wr);
+        p.b[p.king[Co_White]] = P_none;
+        p.b[p.rooksInit[Co_White][CT_OOO]] = P_none;
+        p.b[Sq_c1] = P_wk;
+        p.b[Sq_d1] = P_wr;
+        p.h ^= Zobrist::ZT[p.king[Co_White]][P_wk+PieceShift];
+        p.h ^= Zobrist::ZT[p.rooksInit[Co_White][CT_OOO]][P_wr+PieceShift];
+        p.h ^= Zobrist::ZT[Sq_c1][P_wk+PieceShift];
+        p.h ^= Zobrist::ZT[Sq_d1][P_wr+PieceShift];
         p.king[Co_White] = Sq_c1;
         if (p.castling & C_wqs) p.h ^= Zobrist::ZT[0][13];
         if (p.castling & C_wks) p.h ^= Zobrist::ZT[7][13];
         p.castling &= ~(C_wks | C_wqs);
         break;
     case T_bks:
-        movePiece(p, Sq_e8, Sq_g8, P_bk, P_none);
-        movePiece(p, Sq_h8, Sq_f8, P_br, P_none);
+        //movePiece(p, p.king[Co_Black], Sq_g8, P_bk, P_none);
+        //movePiece(p, p.rooksInit[Co_Black][CT_OO], Sq_f8, P_br, P_none);
+        BBTools::unSetBit(p, p.king[Co_Black]);
+        BBTools::unSetBit(p, p.rooksInit[Co_Black][CT_OO]);
+        BBTools::setBit(p, Sq_g8, P_bk);
+        BBTools::setBit(p, Sq_f8, P_br);
+        p.b[p.king[Co_Black]] = P_none;
+        p.b[p.rooksInit[Co_Black][CT_OO]] = P_none;
+        p.b[Sq_g8] = P_bk;
+        p.b[Sq_f8] = P_br;
+        p.h ^= Zobrist::ZT[p.king[Co_Black]][P_bk+PieceShift];
+        p.h ^= Zobrist::ZT[p.rooksInit[Co_Black][CT_OO]][P_br+PieceShift];
+        p.h ^= Zobrist::ZT[Sq_g8][P_bk+PieceShift];
+        p.h ^= Zobrist::ZT[Sq_f8][P_br+PieceShift];
         p.king[Co_Black] = Sq_g8;
         if (p.castling & C_bqs) p.h ^= Zobrist::ZT[56][13];
         if (p.castling & C_bks) p.h ^= Zobrist::ZT[63][13];
         p.castling &= ~(C_bks | C_bqs);
         break;
     case T_bqs:
-        movePiece(p, Sq_e8, Sq_c8, P_bk, P_none);
-        movePiece(p, Sq_a8, Sq_d8, P_br, P_none);
+        //movePiece(p, p.king[Co_Black], Sq_c8, P_bk, P_none);
+        //movePiece(p, p.rooksInit[Co_Black][CT_OOO], Sq_d8, P_br, P_none);
+        BBTools::unSetBit(p, p.king[Co_Black]);
+        BBTools::unSetBit(p, p.rooksInit[Co_Black][CT_OOO]);
+        BBTools::setBit(p, Sq_c8, P_bk);
+        BBTools::setBit(p, Sq_d8, P_br);
+        p.b[p.king[Co_Black]] = P_none;
+        p.b[p.rooksInit[Co_Black][CT_OOO]] = P_none;
+        p.b[Sq_c8] = P_bk;
+        p.b[Sq_d8] = P_br;
+        p.h ^= Zobrist::ZT[p.king[Co_Black]][P_bk+PieceShift];
+        p.h ^= Zobrist::ZT[p.rooksInit[Co_Black][CT_OOO]][P_br+PieceShift];
+        p.h ^= Zobrist::ZT[Sq_c8][P_bk+PieceShift];
+        p.h ^= Zobrist::ZT[Sq_d8][P_br+PieceShift];
         p.king[Co_Black] = Sq_c8;
         if (p.castling & C_bqs) p.h ^= Zobrist::ZT[56][13];
         if (p.castling & C_bks) p.h ^= Zobrist::ZT[63][13];
@@ -2522,19 +2632,19 @@ bool apply(Position & p, const Move & m, bool noValidation){
 
     // Update castling right if rook captured
     if ( p.castling != C_none ){
-       if ( toP == P_wr && to == Sq_a1 && (p.castling & C_wqs) ){
+       if ( toP == P_wr && to == p.rooksInit[Co_White][CT_OOO] && (p.castling & C_wqs) ){
            p.castling &= ~C_wqs;
            p.h ^= Zobrist::ZT[0][13];
        }
-       else if ( toP == P_wr && to == Sq_h1 && (p.castling & C_wks) ){
+       else if ( toP == P_wr && to == p.rooksInit[Co_White][CT_OO] && (p.castling & C_wks) ){
            p.castling &= ~C_wks;
            p.h ^= Zobrist::ZT[7][13];
        }
-       else if ( toP == P_br && to == Sq_a8 && (p.castling & C_bqs)){
+       else if ( toP == P_br && to == p.rooksInit[Co_Black][CT_OOO] && (p.castling & C_bqs)){
            p.castling &= ~C_bqs;
            p.h ^= Zobrist::ZT[56][13];
        }
-       else if ( toP == P_br && to == Sq_h8 && (p.castling & C_bks)){
+       else if ( toP == P_br && to == p.rooksInit[Co_Black][CT_OO] && (p.castling & C_bks)){
            p.castling &= ~C_bks;
            p.h ^= Zobrist::ZT[63][13];
        }
@@ -3889,20 +3999,23 @@ namespace Options {
     }
     void displayOptionsDebug(){
         for(auto it = _keys.begin() ; it != _keys.end() ; ++it)
-            if (it->type!=k_string ) Logging::LogIt(Logging::logInfo) << "option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << (int)GetValue(it->key)  <<  " " << it->vmin << " " << it->vmax << "\"";
-            else                     Logging::LogIt(Logging::logInfo) << "option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << GetValueString(it->key) << "\"";
+            if      (it->type==k_string ) Logging::LogIt(Logging::logInfo) << "option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << GetValueString(it->key) << "\"";
+            else if (it->type==k_bool )   Logging::LogIt(Logging::logInfo) << "option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << (GetValue(it->key)?"true":"false") << "\"";
+            else                          Logging::LogIt(Logging::logInfo) << "option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << (int)GetValue(it->key)  <<  " " << it->vmin << " " << it->vmax << "\"";
     }
     void displayOptionsXBoard(){
         for(auto it = _keys.begin() ; it != _keys.end() ; ++it)
-            if (it->type!=k_string ) Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << (int)GetValue(it->key)  <<  " " << it->vmin << " " << it->vmax << "\"";
-            else                     Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << GetValueString(it->key) << "\"";
+            if      (it->type==k_string ) Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << GetValueString(it->key) << "\"";
+            else if (it->type==k_bool )   Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << bool(GetValue(it->key)) << "\"";
+            else                          Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << (int)GetValue(it->key)  <<  " " << it->vmin << " " << it->vmax << "\"";
     }
     void displayOptionsUCI(){
         for(auto it = _keys.begin() ; it != _keys.end() ; ++it)
-            if (it->type!=k_string ) Logging::LogIt(Logging::logGUI) << "option name " << it->key << " type " << widgetXboardNames[it->wtype] << " default " << (int)GetValue(it->key)  <<  " min " << it->vmin << " max " << it->vmax;
-            else                     Logging::LogIt(Logging::logGUI) << "option name " << it->key << " type " << widgetXboardNames[it->wtype] << " default " << GetValueString(it->key);
+            if      (it->type==k_string ) Logging::LogIt(Logging::logGUI) << "option name " << it->key << " type " << widgetXboardNames[it->wtype] << " default " << GetValueString(it->key);
+            else if (it->type==k_bool )   Logging::LogIt(Logging::logGUI) << "option name " << it->key << " type " << widgetXboardNames[it->wtype] << " default " << (GetValue(it->key)?"true":"false");
+            else                          Logging::LogIt(Logging::logGUI) << "option name " << it->key << " type " << widgetXboardNames[it->wtype] << " default " << (int)GetValue(it->key)  <<  " min " << it->vmin << " max " << it->vmax;
     }
-#define SETVALUE(TYPEIN,TYPEOUT) {TYPEIN v; str >> v; *static_cast<TYPEOUT*>(keyRef.value) = (TYPEOUT)v;} break;
+#define SETVALUE(TYPEIN,TYPEOUT) {TYPEIN v; str >> std::boolalpha >> v; *static_cast<TYPEOUT*>(keyRef.value) = (TYPEOUT)v;} break;
     bool SetValue(const std::string & key, const std::string & value){
         KeyBase & keyRef = GetKey(key);
         if ( !keyRef.hotPlug && ThreadPool::instance().main().searching() ){
@@ -3911,7 +4024,7 @@ namespace Options {
         }
         std::stringstream str(value);
         switch (keyRef.type) {
-        case k_bool:   SETVALUE(int,bool)
+        case k_bool:   SETVALUE(bool,bool)
         case k_depth:  SETVALUE(int,DepthType)
         case k_int:    SETVALUE(int,int)
         case k_score:  SETVALUE(int,ScoreType)
@@ -3922,13 +4035,15 @@ namespace Options {
         }
         if ( keyRef.callBack ) keyRef.callBack();
         Logging::LogIt(Logging::logInfo) << "Option set " << key << "=" << value;
-        //displayOptionsDebug();
+        displayOptionsDebug();
         return true;
     }
     void registerCOMOptions(){ // options exposed xboard GUI
        _keys.push_back(KeyBase(k_int,   w_spin, "level"                       , &DynamicConfig::level                          , (unsigned int)0  , (unsigned int)StaticConfig::nlevel     ));
        _keys.push_back(KeyBase(k_int,   w_spin, "Hash"                        , &DynamicConfig::ttSizeMb                       , (unsigned int)0  , (unsigned int)256000, &TT::initTable));
        _keys.push_back(KeyBase(k_int,   w_spin, "threads"                     , &DynamicConfig::threads                        , (unsigned int)0  , (unsigned int)256   , std::bind(&ThreadPool::setup, &ThreadPool::instance())));
+
+       _keys.push_back(KeyBase(k_bool,  w_check, "UCI_Chess960"               , &DynamicConfig::FRC                            , false            , true ));
 
        /*
        _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin0"            , &StaticConfig::qfutilityMargin[0]              , ScoreType(0)    , ScoreType(1500)     ));
@@ -4124,19 +4239,11 @@ namespace COM {
     }
 
     Move moveFromCOM(std::string mstr) { // copy string on purpose
-        mstr = trim(mstr);
         Square from = INVALIDSQUARE;
-        Square to = INVALIDSQUARE;
+        Square to   = INVALIDSQUARE;
         MType mtype = T_std;
-        if (!readMove(COM::position, mstr, from, to, mtype)) return INVALIDMOVE;
-        Move m = ToMove(from, to, mtype);
-        bool whiteToMove = COM::position.c == Co_White;
-        // convert castling input notation to internal castling style if needed
-        if (mtype == T_std && from == (whiteToMove ? Sq_e1 : Sq_e8) && COM::position.b[from] == (whiteToMove ? P_wk : P_bk)) {
-            if      (to == (whiteToMove ? Sq_c1 : Sq_c8)) m = ToMove(from, to, whiteToMove ? T_wqs : T_bqs);
-            else if (to == (whiteToMove ? Sq_g1 : Sq_g8)) m = ToMove(from, to, whiteToMove ? T_wks : T_bks);
-        }
-        return m;
+        if (!readMove(COM::position, trim(mstr), from, to, mtype)) return INVALIDMOVE;
+        return ToMove(from, to, mtype);
     }
 }
 
@@ -4153,7 +4260,7 @@ void init(){
 void setFeature(){
     ///@todo more feature disable !!
     ///@todo use otim ?
-    Logging::LogIt(Logging::logGUI) << "feature ping=1 setboard=1 edit=0 colors=0 usermove=1 memory=0 sigint=0 sigterm=0 otim=0 time=1 nps=0 draw=0 playother=0 myname=\"Minic " << MinicVersion << "\"";
+    Logging::LogIt(Logging::logGUI) << "feature ping=1 setboard=1 edit=0 colors=0 usermove=1 memory=0 sigint=0 sigterm=0 otim=0 time=1 nps=0 draw=0 playother=0 variants=\"normal,fischerandom\" myname=\"Minic " << MinicVersion << "\"";
     Options::displayOptionsXBoard();
     Logging::LogIt(Logging::logGUI) << "feature done=1";
 }
@@ -4235,6 +4342,7 @@ void xboard(){
                 COM::stop();
                 if (!COM::sideToMoveFromFEN(startPosition)){ commandOK = false; }
                 COM::initialPos = COM::position;
+                DynamicConfig::FRC = false;
                 COM::moves.clear();
                 COM::mode = (COM::Mode)((int)COM::stm); ///@todo this is so wrong !
                 COM::move = INVALIDMOVE;
@@ -4242,6 +4350,12 @@ void xboard(){
                     COM::mode = COM::m_play_black;
                     COM::stm = COM::stm_white;
                 }
+            }
+            else if (strncmp(COM::command.c_str(),"variant",7) == 0){
+                const size_t v = COM::command.find("variant");
+                const std::string var = trim(COM::command.substr(v+7));
+                if ( var == "fischerandom") DynamicConfig::FRC = true;
+                else { Logging::LogIt(Logging::logWarn) << "Unsupported variant : " << var; }
             }
             else if (COM::command == "white"){ // deprecated
                 COM::stop();
