@@ -52,6 +52,7 @@ namespace UCI {
                             std::string mstr;
                             while (iss >> mstr) {
                                 Move m = COM::moveFromCOM(mstr);
+                                Logging::LogIt(Logging::logInfo) << "UCI applying move " << ToString(m);
                                 if (!COM::makeMove(m, false, "")) { // make move
                                     Logging::LogIt(Logging::logInfo) << "Bad move ! : " << mstr;
                                     Logging::LogIt(Logging::logInfo) << ToString(COM::position);

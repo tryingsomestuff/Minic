@@ -191,7 +191,7 @@ namespace DynamicConfig{
     unsigned int ttSizeMb  = 128; // here in Mb, will be converted to real size next
     bool fullXboardOutput  = false;
     bool debugMode         = false;
-    bool quiet             = false;
+    bool quiet             = true;
     std::string debugFile  = "minic.debug";
     unsigned int level     = 100;
     bool book              = true;
@@ -247,7 +247,7 @@ namespace Logging {
     void init(){
         if ( DynamicConfig::debugMode ){
             if ( DynamicConfig::debugFile.empty()) DynamicConfig::debugFile = "minic.debug";
-            LogIt::_of = std::unique_ptr<std::ofstream>(new std::ofstream(DynamicConfig::debugFile));
+            LogIt::_of = std::unique_ptr<std::ofstream>(new std::ofstream(DynamicConfig::debugFile + "_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())));
         }
     }
     std::mutex LogIt::_mutex;
@@ -4197,7 +4197,7 @@ namespace COM {
     bool makeMove(Move m, bool disp, std::string tag) {
         if (disp && m != INVALIDMOVE) Logging::LogIt(Logging::logGUI) << tag << " " << ToString(m);
         Logging::LogIt(Logging::logInfo) << ToString(position);
-        return apply(position, m);
+        return apply(position, m, true);
     }
 
     void stop() {
