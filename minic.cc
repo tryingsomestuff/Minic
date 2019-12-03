@@ -4195,9 +4195,10 @@ namespace COM {
     }
 
     bool makeMove(Move m, bool disp, std::string tag) {
+        bool b = apply(position, m, true);
         if (disp && m != INVALIDMOVE) Logging::LogIt(Logging::logGUI) << tag << " " << ToString(m);
         Logging::LogIt(Logging::logInfo) << ToString(position);
-        return apply(position, m, true);
+        return b;
     }
 
     void stop() {
