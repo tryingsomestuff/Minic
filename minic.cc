@@ -42,7 +42,7 @@ typedef uint64_t u_int64_t;
 //#define WITH_PGN_PARSER
 #define WITH_MAGIC
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "1.15";
 
 /*
 //todo

@@ -5,7 +5,7 @@
    "book": false,
    "bookFile": "book.bin",
    "fullXboardOutput": true,
-   "debugMode": true,
+   "debugMode": false,
    "debugFile": "minic.debug",
    "level": 100,
    "syzygyPath": ""
