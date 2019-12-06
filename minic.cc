@@ -62,7 +62,7 @@ const std::string MinicVersion = "1.15";
 #define MAX_PLY       512
 #define MAX_MOVE      256   // 256 is enough I guess ...
 #define MAX_DEPTH     127   // DepthType is a char, do not go above 127
-#define MAX_HISTORY  1000.f
+#define MAX_HISTORY  1000
 
 #define VALIDMOVE(m) ((m)!=NULLMOVE && (m)!=INVALIDMOVE)
 
@@ -1597,16 +1597,18 @@ struct ThreadContext{
     };
 
     struct HistoryT{
-        ScoreType history[13][64];
+        ScoreType history[2][64][64];
         inline void initHistory(){
             Logging::LogIt(Logging::logInfo) << "Init history" ;
-            for(int i = 0; i < 13; ++i) for(int k = 0 ; k < 64; ++k) history[i][k] = 0;
+            for(int i = 0; i < 64; ++i) for(int k = 0 ; k < 64; ++k) history[0][i][k] = history[1][i][k] = 0;
         }
         template<int S>
         inline void update(DepthType depth, Move m, const Position & p){
-            const int pp = PieceTools::getPieceIndex(p,Move2From(m));
+            const Color c = p.c;
+            const Square from = Move2From(m);
             const Square to = Move2To(m);
-            if ( Move2Type(m) == T_std ) history[pp][to] += ScoreType( ( S - history[pp][to] / MAX_HISTORY) * HSCORE(depth) );
+            const ScoreType s = S * HSCORE(depth);
+            if ( Move2Type(m) == T_std ) history[c][from][to] += s - history[c][from][to] * std::abs(s) / MAX_HISTORY;
         }
     };
 
@@ -2819,7 +2821,7 @@ struct MoveSorter{
                 else if (p.halfmoves > 1 && sameMove(m, context.killerT.killers[0][p.halfmoves-2])) s += 1700; // quiet killer
                 else if (VALIDMOVE(p.lastMove) && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 1650; // quiet counter
                 else {
-                    s += context.historyT.history[PieceTools::getPieceIndex(p, from)][to]; // +/- MAX_HISTORY = 1000
+                    s += context.historyT.history[p.c][from][to]; // +/- MAX_HISTORY = 1000
                     if ( !isInCheck ){
                        if ( refutation != INVALIDMOVE && from == Move2To(refutation) && context.SEE(p,m,-70)) s += 1000; // move (safely) leaving threat square from null move search
                        const bool isWhite = (p.allPieces[Co_White] & SquareToBitboard(from)) != 0ull;
@@ -3761,7 +3763,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 //reduction -= (reduction>1)&&ttMoveSingularExt;
                 if (pvnode && reduction > 0) --reduction;
                 if (!noCheck) --reduction;
-                reduction -= 2*int(Move2Score(*it) / MAX_HISTORY); //history reduction/extension
+                reduction -= 2 * Move2Score(*it) / MAX_HISTORY; //history reduction/extension
                 //if ( reduction < 0) reduction = 0;
                 if (reduction + extension < 0) reduction = -extension;
                 if (reduction + extension >= depth - 1) reduction = depth - 1 - extension;
