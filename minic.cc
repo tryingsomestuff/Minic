@@ -199,6 +199,7 @@ namespace DynamicConfig{
     unsigned int threads   = 1;
     std::string syzygyPath = "";
     bool FRC               = false;
+    bool UCIPonder         = false;
 }
 
 namespace Logging {
@@ -266,6 +267,7 @@ const bool doRazoring       = true;
 const bool doQFutility      = true;
 const bool doProbcut        = true;
 const bool doHistoryPruning = true;
+const bool doCMHPruning     = true;
 // first value if eval score is used, second if hash score is used
 const ScoreType qfutilityMargin          [2] = {90, 90};
 const DepthType staticNullMoveMaxDepth   [2] = {6  , 6};
@@ -279,6 +281,7 @@ const DepthType nullMoveVerifDepth           = 64; // means off ...
 const DepthType historyPruningMaxDepth       = 3;
 const ScoreType historyPruningThresholdInit  = 0;
 const ScoreType historyPruningThresholdDepth = 0;
+const DepthType CMHMaxDepth                  = 4;
 const DepthType futilityMaxDepth         [2] = {10 , 10};
 const ScoreType futilityDepthCoeff       [2] = {160, 160};
 const ScoreType futilityDepthInit        [2] = {0  , 0};
@@ -1496,13 +1499,13 @@ struct ThreadData{
 };
 
 struct Stats{
-    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits, sid_ttInsert, sid_ttPawnhits, sid_ttPawnInsert, sid_staticNullMove, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMoveTry3, sid_nullMove, sid_nullMove2, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_see, sid_see2, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_pawnPushExtension, sid_singularExtension, sid_singularExtension2, sid_queenThreatExtension, sid_BMExtension, sid_mateThreadExtension, sid_tbHit1, sid_tbHit2, sid_maxid };
+    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits, sid_ttInsert, sid_ttPawnhits, sid_ttPawnInsert, sid_staticNullMove, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMoveTry3, sid_nullMove, sid_nullMove2, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_CMHPruning, sid_see, sid_see2, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_CMHExtension, sid_pawnPushExtension, sid_singularExtension, sid_singularExtension2, sid_queenThreatExtension, sid_BMExtension, sid_mateThreadExtension, sid_tbHit1, sid_tbHit2, sid_maxid };
     static const std::array<std::string,sid_maxid> Names;
     std::array<Counter,sid_maxid> counters;
     void init(){ Logging::LogIt(Logging::logInfo) << "Init stat" ;  counters.fill(0ull); }
 };
 
-const std::array<std::string,Stats::sid_maxid> Stats::Names = { "nodes", "qnodes", "tthits", "ttInsert", "ttPawnhits", "ttPawnInsert", "staticNullMove", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMoveTry3", "nullMove", "nullMove2", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "see", "see2", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "pawnPushExtension", "singularExtension", "singularExtension2", "queenThreatExtension", "BMExtension", "mateThreadExtension", "TBHit1", "TBHit2"};
+const std::array<std::string,Stats::sid_maxid> Stats::Names = { "nodes", "qnodes", "tthits", "ttInsert", "ttPawnhits", "ttPawnInsert", "staticNullMove", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMoveTry3", "nullMove", "nullMove2", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "CMHPruning", "see", "see2", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "CMHExtension", "pawnPushExtension", "singularExtension", "singularExtension2", "queenThreatExtension", "BMExtension", "mateThreadExtension", "TBHit1", "TBHit2"};
 
 // singleton pool of threads
 class ThreadPool : public std::vector<std::unique_ptr<ThreadContext>> {
@@ -1583,6 +1586,9 @@ struct ThreadContext{
 
     Stats stats;
 
+    static const int MAX_CMH_PLY = 2;
+    typedef std::array<ScoreType*,MAX_CMH_PLY> CMHPtrArray;
+
     struct KillerT{
         Move killers[MAX_DEPTH][2];
         inline void initKillers(){
@@ -1601,32 +1607,31 @@ struct ThreadContext{
     };
 
     struct HistoryT{
-        //static const int MAX_CMH_PLY = 2;
         ScoreType history[2][64][64]; // color, from, to
-        /*
+        ScoreType historyP[13][64]; // Piece, to
         ScoreType counter_history[13][64][13*64]; //previous moved piece, previous to, current moved piece * boardsize + current to
-        std::array<ScoreType*,2> getCMHPtr(const Position &p, DepthType ply){
-            std::array<ScoreType*,2> cmhPtr = {0};
-            for( int k = 0 ; k < MAX_CMH_PLY ; ++k){
-                if( ply > k && VALIDMOVE(p.lastMove)){
-                   cmhPtr[k] = counter_history[]
-                }
-            }
-        }
-        */
         inline void initHistory(){
             Logging::LogIt(Logging::logInfo) << "Init history" ;
             for(int i = 0; i < 64; ++i) for(int k = 0 ; k < 64; ++k) history[0][i][k] = history[1][i][k] = 0;
-            //for(int i = 0; i < 13; ++i) for(int j = 0 ; j < 64; ++j) for(int k = 0 ; k < 64; ++k)  counter_history[i][j][k] = -1;
+            for(int i = 0; i < 13; ++i) for(int k = 0 ; k < 64; ++k) historyP[i][k] = 0;
+            for(int i = 0; i < 13; ++i) for(int j = 0 ; j < 64; ++j) for(int k = 0 ; k < 64; ++k)  counter_history[i][j][k] = 1;
         }
         template<int S>
-        inline void update(DepthType depth, Move m, const Position & p){
+        inline void update(DepthType depth, Move m, const Position & p, CMHPtrArray & cmhPtr){
             if ( Move2Type(m) == T_std ){
                const Color c = p.c;
                const Square from = Move2From(m);
                const Square to = Move2To(m);
                const ScoreType s = S * HSCORE(depth);
+	       const Piece pp = p.b[from];
                history[c][from][to] += s - history[c][from][to] * std::abs(s) / MAX_HISTORY;
+               historyP[pp+PieceShift][to] += s - historyP[pp+PieceShift][to] * std::abs(s) / MAX_HISTORY;
+               for (int i = 0; i < MAX_CMH_PLY; ++i){
+                   if (cmhPtr[i]){
+                      ScoreType & item = cmhPtr[i][(p.b[from]+PieceShift) * 64 + to];
+                      item += s - item * std::abs(s) / MAX_HISTORY;
+                   }
+               }
             }
         }
     };
@@ -1643,6 +1648,22 @@ struct ThreadContext{
     HistoryT historyT;
     CounterT counterT;
     DepthType nullMoveMinPly = 0;
+
+    void getCMHPtr(DepthType ply, CMHPtrArray & cmhPtr){
+        cmhPtr.fill(0);
+        for( int k = 0 ; k < MAX_CMH_PLY ; ++k){
+            if( ply > k && VALIDMOVE(stack[ply-k].p.lastMove)){
+               const Square to = Move2To(stack[ply-k].p.lastMove);
+               cmhPtr[k] = historyT.counter_history[stack[ply-k-1].p.b[to]+PieceShift][to];
+            }
+        }
+    }
+    inline ScoreType getCMHScore(const Position & p, const Square from, const Square to, DepthType ply, const CMHPtrArray & cmhPtr) const {
+        //return 0;
+        ScoreType ret = 0;
+        for (int i = 0; i < MAX_CMH_PLY; i ++){ if (cmhPtr[i]){ ret += cmhPtr[i][(p.b[from]+PieceShift) * 64 + to]; } }
+        return ret;
+    }
 
     struct RootScores { Move m; ScoreType s; };
 
@@ -1852,6 +1873,12 @@ void initTable(){
 void clearTT() {
     TT::curGen = 0;
     for (unsigned int k = 0; k < ttSize; ++k) for (unsigned int i = 0 ; i < Bucket::nbBucket ; ++i) table[k].e[i] = { 0, INVALIDMOVE, 0, 0, B_alpha, 0 };
+}
+
+int hashFull(){
+    unsigned long long count = 0;
+    for (unsigned int k = 0; k < ttSize; ++k) for (unsigned int i = 0 ; i < Bucket::nbBucket ; ++i) if ( table[k].e[i].h ) ++count;
+    return int((count*1000)/(ttSize*Bucket::nbBucket));
 }
 
 void age(){
@@ -2813,7 +2840,7 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
 
 struct MoveSorter{
 
-    MoveSorter(const ThreadContext & context, const Position & p, float gp, DepthType ply, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL, const Move refutation = INVALIDMOVE):context(context),p(p),gp(gp),ply(ply),useSEE(useSEE),isInCheck(isInCheck),e(e),refutation(refutation){ assert(e==0||e->h!=0||e->m==INVALIDMOVE); }
+    MoveSorter(const ThreadContext & context, const Position & p, float gp, DepthType ply, const ThreadContext::CMHPtrArray & cmhPtr, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL, const Move refutation = INVALIDMOVE):context(context),p(p),gp(gp),ply(ply),cmhPtr(cmhPtr),useSEE(useSEE),isInCheck(isInCheck),e(e),refutation(refutation){ assert(e==0||e->h!=0||e->m==INVALIDMOVE); }
 
     void computeScore(Move & m)const{
         assert(VALIDMOVE(m));
@@ -2835,12 +2862,14 @@ struct MoveSorter{
                 //else if ( isCapture(p.lastMove) && to == Move2To(p.lastMove) ) s += 400; // recapture bonus
             }
             else if ( t == T_std ){
-                if      (sameMove(m, context.killerT.killers[ply][0])) s += 1800; // quiet killer
-                else if (sameMove(m, context.killerT.killers[ply][1])) s += 1750; // quiet killer
-                else if (ply > 1 && sameMove(m, context.killerT.killers[ply-2][0])) s += 1700; // quiet killer
-                else if (VALIDMOVE(p.lastMove) && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 1650; // quiet counter
+                if      (sameMove(m, context.killerT.killers[ply][0])) s += 2800; // quiet killer
+                else if (sameMove(m, context.killerT.killers[ply][1])) s += 2750; // quiet killer
+                else if (ply > 1 && sameMove(m, context.killerT.killers[ply-2][0])) s += 2700; // quiet killer
+                else if (VALIDMOVE(p.lastMove) && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 2650; // quiet counter
                 else {
-                    s += context.historyT.history[p.c][from][to]; // +/- MAX_HISTORY = 1000
+                    s += context.historyT.history[p.c][from][to] /4; // +/- MAX_HISTORY = 1000
+                    s += context.historyT.historyP[p.b[from]+PieceShift][to] /2 ; // +/- MAX_HISTORY = 1000
+                    s += context.getCMHScore(p, from, to, ply, cmhPtr) /4; // +/- MAX_HISTORY = 1000
                     if ( !isInCheck ){
                        if ( refutation != INVALIDMOVE && from == Move2To(refutation) && context.SEE(p,m,-70)) s += 1000; // move (safely) leaving threat square from null move search
                        const bool isWhite = (p.allPieces[Co_White] & SquareToBitboard(from)) != 0ull;
@@ -2862,11 +2891,12 @@ struct MoveSorter{
     const bool isInCheck;
     const Move refutation;
     const DepthType ply;
+    const ThreadContext::CMHPtrArray & cmhPtr;
     float gp;
 };
 
-void sort(const ThreadContext & context, MoveList & moves, const Position & p, float gp, DepthType ply, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL, const Move refutation = INVALIDMOVE){
-    const MoveSorter ms(context,p,gp,ply,useSEE,isInCheck,e,refutation);
+void sort(const ThreadContext & context, MoveList & moves, const Position & p, float gp, DepthType ply, const ThreadContext::CMHPtrArray & cmhPtr, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL, const Move refutation = INVALIDMOVE){
+    const MoveSorter ms(context,p,gp,ply,cmhPtr,useSEE,isInCheck,e,refutation);
     for(auto it = moves.begin() ; it != moves.end() ; ++it){ ms.computeScore(*it); }
     std::sort(moves.begin(),moves.end(),ms);
 }
@@ -3354,9 +3384,12 @@ ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const
     const bool isInCheck = isAttacked(p, kingSquare(p));
     ScoreType bestScore = isInCheck?-MATE+ply:evalScore;
 
+    ThreadContext::CMHPtrArray cmhPtr;
+    getCMHPtr(p.halfmoves,cmhPtr);
+
     MoveList moves;
     generate<GP_cap>(p,moves);
-    sort(*this,moves,p,gp,0,true);
+    sort(*this,moves,p,gp,0,cmhPtr,true);
 
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         Position p2 = p;
@@ -3392,6 +3425,9 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     bool specialQSearch = isInCheck||qRoot;
     DepthType hashDepth = specialQSearch ? 0 : -1;
 
+    ThreadContext::CMHPtrArray cmhPtr;
+    getCMHPtr(p.halfmoves,cmhPtr);
+
     TT::Entry e;
     if (TT::getEntry(*this, computeHash(p), hashDepth, e)) {
         if (!pvnode && e.h != 0 && ((e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact))) { return adjustHashScore(e.score, ply); }
@@ -3413,7 +3449,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     MoveList moves;
     if ( isInCheck ) generate<GP_all>(p,moves);
     else             generate<GP_cap>(p,moves);
-    sort(*this,moves,p,gp,ply,specialQSearch,isInCheck,&e);
+    sort(*this,moves,p,gp,ply,cmhPtr,specialQSearch,isInCheck,&e);
 
     const ScoreType alphaInit = alpha;
 
@@ -3448,13 +3484,13 @@ inline void updatePV(PVList & pv, const Move & m, const PVList & childPV) {
     std::copy(childPV.begin(), childPV.end(), std::back_inserter(pv));
 }
 
-inline void updateTables(ThreadContext & context, const Position & p, DepthType depth, DepthType ply, const Move m, TT::Bound bound) {
+inline void updateTables(ThreadContext & context, const Position & p, DepthType depth, DepthType ply, const Move m, TT::Bound bound, ThreadContext::CMHPtrArray & cmhPtr) {
     if (bound == TT::B_beta) {
        context.killerT.update(m,ply);
        context.counterT.update(m, p);
-       context.historyT.update<1>(depth, m, p);
+       context.historyT.update<1>(depth, m, p, cmhPtr);
     }
-    else if ( bound == TT::B_alpha) context.historyT.update<-1>(depth, m, p);
+    else if ( bound == TT::B_alpha) context.historyT.update<-1>(depth, m, p, cmhPtr);
 }
 
 ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck){
@@ -3499,13 +3535,16 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     if (!rootnode && interiorNodeRecognizer<true, pvnode, true>(p) == MaterialHash::Ter_Draw) return drawScore();
 
+    ThreadContext::CMHPtrArray cmhPtr;
+    getCMHPtr(p.halfmoves,cmhPtr);
+
     const bool withoutSkipMove = skipMove == INVALIDMOVE;
     const Hash pHash = computeHash(p) ^ (withoutSkipMove ? 0 : skipMove);
     bool validTTmove = false;
     TT::Entry e;
     if ( TT::getEntry(*this,pHash, depth, e)) {
         if ( e.h != 0 && !rootnode && !pvnode && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
-            if (!isInCheck && e.m != INVALIDMOVE && Move2Type(e.m) == T_std ) updateTables(*this, p, depth, ply, e.m, e.b);
+            if (!isInCheck && e.m != INVALIDMOVE && Move2Type(e.m) == T_std ) updateTables(*this, p, depth, ply, e.m, e.b, cmhPtr);
             return adjustHashScore(e.score, ply);
         }
     }
@@ -3537,7 +3576,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     MoveList moves;
     bool moveGenerated = false;
     bool capMoveGenerated = false;
-    bool futility = false, lmp = false, /*mateThreat = false,*/ historyPruning = false;
+    bool futility = false, lmp = false, /*mateThreat = false,*/ historyPruning = false, CMHPruning = false;
     const bool isNotEndGame = (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t] > 0); ///@todo better ?
     const bool improving = (!isInCheck && ply > 0 && stack[p.halfmoves].eval >= stack[p.halfmoves-2].eval);
     DepthType marginDepth = std::max(1,depth-(evalScoreIsHashScore?e.d:0));
@@ -3572,6 +3611,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                     ++stats.counters[Stats::sid_nullMoveTry2];
                     Position pN = p;
                     applyNull(*this,pN);
+                    stack[pN.halfmoves].h = pN.h;
+                    stack[pN.halfmoves].p = pN;
                     ScoreType nullscore = -pvs<false, false>(-beta, -beta + 1, pN, nullDepth, ply + 1, nullPV, seldepth, isInCheck, !cutNode);
                     if (stopFlag) return STOPSCORE;
                     TT::Entry nullEThreat;
@@ -3597,7 +3638,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
           int probCutCount = 0;
           const ScoreType betaPC = beta + StaticConfig::probCutMargin;
           generate<GP_cap>(p,moves);
-          sort(*this,moves,p,gp,ply,true,isInCheck,&e);
+          sort(*this,moves,p,gp,ply,cmhPtr,true,isInCheck,&e);
           capMoveGenerated = true;
           for (auto it = moves.begin() ; it != moves.end() && probCutCount < StaticConfig::probCutMaxMoves /*+ 2*cutNode*/; ++it){
             if ( (validTTmove && sameMove(e.m, *it)) || isBadCap(*it) ) continue; // skip TT move if quiet or bad captures
@@ -3633,6 +3674,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if (!rootnode && StaticConfig::doFutility && depth <= StaticConfig::futilityMaxDepth[evalScoreIsHashScore] && evalScore <= futilityScore) futility = true;
     // history pruning
     if (!rootnode && StaticConfig::doHistoryPruning && isNotEndGame && depth < StaticConfig::historyPruningMaxDepth) historyPruning = true;
+    // CMH pruning
+    if (!rootnode && StaticConfig::doCMHPruning && isNotEndGame && depth < StaticConfig::CMHMaxDepth) CMHPruning = true;
 
     int validMoveCount = 0;
     Move bestMove = INVALIDMOVE;
@@ -3647,13 +3690,14 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     // try the tt move before move generation (if not skipped move)
     if ( e.h != 0 && validTTmove && !sameMove(e.m,skipMove)) { // should be the case thanks to iid at pvnode
         bestMove = e.m; // in order to preserve tt move for alpha bound entry
-        Position  p2 = p;
+        Position p2 = p;
         if (apply(p2, e.m)) {
             TT::prefetch(computeHash(p2));
             const Square to = Move2To(e.m);
             validMoveCount++;
             PVList childPV;
             stack[p2.halfmoves].h = p2.h;
+            stack[p2.halfmoves].p = p2;
             const bool isCheck = isAttacked(p2, kingSquare(p2));
             if ( isCapture(e.m) ) ttMoveIsCapture = true;
             const bool isAdvancedPawnPush = PieceTools::getPieceType(p,Move2From(e.m)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
@@ -3692,7 +3736,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                     if (pvnode) updatePV(pv, e.m, childPV);
                     if (ttScore >= beta) {
                         ++stats.counters[Stats::sid_ttbeta];
-                        if ( !isInCheck && Move2Type(e.m) == T_std ) updateTables(*this, p, depth + (ttScore > (beta+80)), ply, e.m, TT::B_beta);
+                        if ( !isInCheck && Move2Type(e.m) == T_std ) updateTables(*this, p, depth + (ttScore > (beta+80)), ply, e.m, TT::B_beta, cmhPtr);
                         TT::setEntry(*this,pHash,e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth);
                         return ttScore;
                     }
@@ -3723,7 +3767,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         else                  generate<GP_all>  (p, moves, false);
     }
     if (moves.empty()) return isInCheck ? -MATE + ply : 0;
-    sort(*this, moves, p, gp, ply, true, isInCheck, &e, refutation != INVALIDMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMOVE);
+    sort(*this, moves, p, gp, ply, cmhPtr, true, isInCheck, &e, refutation != INVALIDMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMOVE);
 
     for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
         if (sameMove(skipMove, *it)) continue; // skipmove
@@ -3737,10 +3781,12 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         validMoveCount++;
         PVList childPV;
         stack[p2.halfmoves].h = p2.h;
+        stack[p2.halfmoves].p = p2;
         const bool isCheck = isAttacked(p2, kingSquare(p2));
         const bool isAdvancedPawnPush = PieceTools::getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
         // extensions
         DepthType extension = 0;
+        const bool isQuiet = Move2Type(*it) == T_std;
         if ( DynamicConfig::level>80){
            if (!extension && pvnode && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension; // we are in check (extension)
            //if (!extension && mateThreat && depth <= 4) ++stats.counters[Stats::sid_mateThreadExtension],++extension;
@@ -3750,8 +3796,11 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
            if (!extension && isCastling(*it) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
            //if (!extension && isQueenAttacked && PieceTools::getPieceType(p,Move2From(*it)) == P_wq && Move2Type(*it) == T_std && SEE(p,*it,0)) ++stats.counters[Stats::sid_queenThreatExtension],++extension; // too much of that
            //if (!extension && p.halfmoves > 1 && stack[p.halfmoves].threat != INVALIDMOVE && stack[p.halfmoves-2].threat != INVALIDMOVE && (sameMove(stack[p.halfmoves].threat,stack[p.halfmoves-2].threat) || (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves-2].threat) && isCapture(stack[p.halfmoves].threat)))) ++stats.counters[Stats::sid_BMExtension],++extension;
+           /*if (isQuiet) {
+             const int pp = (p.b[Move2From(*it)]+PieceShift) * 64 + Move2To(*it);
+             if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= MAX_HISTORY / 2 && cmhPtr[1][pp] >= MAX_HISTORY / 2) ++stats.counters[Stats::sid_CMHExtension],++extension;
+           }*/
         }
-        const bool isQuiet = Move2Type(*it) == T_std;
         // pvs
         if (validMoveCount < (2/*+2*rootnode*/) || !StaticConfig::doPVS ) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,!cutNode);
         else{
@@ -3770,6 +3819,13 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if (lmp && isPrunableStdNoCheck && overLmpLimit ) {++stats.counters[Stats::sid_lmp]; continue;}
             // History pruning
             if (historyPruning && isPrunableStdNoCheck && Move2Score(*it) < StaticConfig::historyPruningThresholdInit + depth*StaticConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
+            // CMH pruning
+	    /*
+            if (CMHPruning){
+              const int pp = (p.b[Move2From(*it)]+PieceShift) * 64 + Move2To(*it);
+              if ((!cmhPtr[0] || cmhPtr[0][pp] < 0) && (!cmhPtr[1] || cmhPtr[1][pp] < 0)) { ++stats.counters[Stats::sid_CMHPruning]; continue;}
+            }
+	    */
             // SEE (capture)
             if (isPrunableCap){
                if (futility) {++stats.counters[Stats::sid_see]; continue;}
@@ -3810,8 +3866,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 hashBound = TT::B_exact;
                 if ( score >= beta ){
                     if ( !isInCheck && isQuiet ){
-                        updateTables(*this, p, depth + (score>beta+80), ply, *it, TT::B_beta);
-                        for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2) if ( Move2Type(*it2) == T_std ) historyT.update<-1>(depth + (score > (beta + 80)),*it2,p);
+                        updateTables(*this, p, depth + (score>beta+80), ply, *it, TT::B_beta, cmhPtr);
+                        for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2) if ( Move2Type(*it2) == T_std ) historyT.update<-1>(depth + (score > (beta + 80)), *it2, p, cmhPtr);
                     }
                     hashBound = TT::B_beta;
                     break;
@@ -3831,11 +3887,16 @@ void ThreadContext::displayGUI(DepthType depth, DepthType seldepth, ScoreType be
     Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
     if (Logging::ct == Logging::CT_xboard) {
         str << int(depth) << " " << bestScore << " " << ms / 10 << " " << nodeCount << " ";
-        if (DynamicConfig::fullXboardOutput) str << (int)seldepth << " " << int(nodeCount / (ms / 1000.f) / 1000.) << " " << ThreadPool::instance().counter(Stats::sid_tthits) / 1000;
+        if (DynamicConfig::fullXboardOutput) str << (int)seldepth << " " << int(nodeCount / (ms / 1000.f) / 1000.);
         str << "\t" << ToString(pv);
         if ( !mark.empty() ) str << mark;
     }
-    else if (Logging::ct == Logging::CT_uci) { str << "info depth " << int(depth) << " score cp " << bestScore << " time " << ms << " nodes " << nodeCount << " nps " << int(nodeCount / (ms / 1000.f)) << " seldepth " << (int)seldepth << " tbhits " << ThreadPool::instance().counter(Stats::sid_tthits) << " pv " << ToString(pv); }
+    else if (Logging::ct == Logging::CT_uci) {
+        str << "info depth " << int(depth) << " score cp " << bestScore << " time " << ms << " nodes " << nodeCount << " nps " << int(nodeCount / (ms / 1000.f)) << " seldepth " << (int)seldepth << " pv " << ToString(pv);
+        if ( depth > 10 && (depth%4==0)){
+            str << " hashfull " << TT::hashFull();
+        }
+    }
     Logging::LogIt(Logging::logGUI) << str.str();
 }
 
@@ -4066,8 +4127,8 @@ namespace Options {
        _keys.push_back(KeyBase(k_int,   w_spin, "level"                       , &DynamicConfig::level                          , (unsigned int)0  , (unsigned int)StaticConfig::nlevel     ));
        _keys.push_back(KeyBase(k_int,   w_spin, "Hash"                        , &DynamicConfig::ttSizeMb                       , (unsigned int)0  , (unsigned int)256000, &TT::initTable));
        _keys.push_back(KeyBase(k_int,   w_spin, "threads"                     , &DynamicConfig::threads                        , (unsigned int)0  , (unsigned int)256   , std::bind(&ThreadPool::setup, &ThreadPool::instance())));
-
        _keys.push_back(KeyBase(k_bool,  w_check, "UCI_Chess960"               , &DynamicConfig::FRC                            , false            , true ));
+       _keys.push_back(KeyBase(k_bool,  w_check, "Ponder"                     , &DynamicConfig::UCIPonder                      , false            , true ));
 
        /*
        _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin0"            , &StaticConfig::qfutilityMargin[0]              , ScoreType(0)    , ScoreType(1500)     ));
@@ -4159,7 +4220,7 @@ namespace COM {
     Ponder ponder;
     std::string command;
     Position position;
-    Move move;
+    Move move = INVALIDMOVE, ponderMove = INVALIDMOVE;
     DepthType depth;
     enum Mode : unsigned char { m_play_white = 0, m_play_black = 1, m_force = 2, m_analyze = 3 };
     Mode mode;
@@ -4218,9 +4279,9 @@ namespace COM {
         return m;
     }
 
-    bool makeMove(Move m, bool disp, std::string tag) {
+    bool makeMove(Move m, bool disp, std::string tag, Move ponder = INVALIDMOVE) {
         bool b = apply(position, m, true);
-        if (disp && m != INVALIDMOVE) Logging::LogIt(Logging::logGUI) << tag << " " << ToString(m);
+        if (disp && m != INVALIDMOVE) Logging::LogIt(Logging::logGUI) << tag << " " << ToString(m) << (Logging::ct==Logging::CT_uci && VALIDMOVE(ponder) ? (" ponder " + ToString(ponder)) : "");
         Logging::LogIt(Logging::logInfo) << ToString(position);
         return b;
     }
@@ -4242,12 +4303,14 @@ namespace COM {
     void thinkAsync(State st, TimeType forcedMs = -1) { // fork a future that runs a synchorous search, if needed send returned move to GUI
         f = std::async(std::launch::async, [st,forcedMs] {
             COM::move = COM::thinkUntilTimeUp(forcedMs);
+            const PVList & pv = ThreadPool::instance().main().getData().pv;
+            COM::ponderMove = pv.size()>1?pv[1]:INVALIDMOVE;
             Logging::LogIt(Logging::logInfo) << "search async done (state " << st << ")";
             if (st == st_searching) {
                 Logging::LogIt(Logging::logInfo) << "sending move to GUI " << ToString(COM::move);
                 if (COM::move == INVALIDMOVE) { COM::mode = COM::m_force; } // game ends
                 else {
-                    if (!COM::makeMove(COM::move, true, Logging::ct == Logging::CT_uci ? "bestmove" : "move")) {
+                    if (!COM::makeMove(COM::move, true, Logging::ct == Logging::CT_uci ? "bestmove" : "move", COM::ponderMove)) {
                         Logging::LogIt(Logging::logGUI) << "info string Bad computer move !";
                         Logging::LogIt(Logging::logInfo) << ToString(COM::position);
                         COM::mode = COM::m_force;
