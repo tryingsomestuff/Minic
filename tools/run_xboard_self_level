@@ -2,5 +2,5 @@
 
 dir=$(readlink -f $(dirname $0)/..)
 
-/usr/games/xboard -fcp "$dir/Dist/minic_dev_linux_x64 -xboard -level $1" -fd "$dir/Dist/" -scp "$dir/Dist/minic_dev_linux_x64 -xboard -level $2" -sd "$dir/Dist/" -tc 2:10 -mps 40 -xponder -debug
+/usr/games/xboard -fcp "$dir/Dist/minic_dev_linux_x64 -xboard -level $1" -fd "$dir/Dist/" -scp "$dir/Dist/minic_dev_linux_x64 -xboard -level $2" -sd "$dir/Dist/" -tc 0:30 -mps 40 -ponder -debug
 

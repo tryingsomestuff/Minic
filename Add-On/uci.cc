@@ -107,7 +107,10 @@ namespace UCI {
                     else { Logging::LogIt(Logging::logGUI) << "info string search command received, but no position specified"; }
                 }
             }
-            else if (uciCommand == "ponderhit") { Logging::LogIt(Logging::logGUI) << "info string " << uciCommand << " not implemented yet"; }
+            else if (uciCommand == "ponderhit") {
+                Logging::LogIt(Logging::logInfo) << "received command ponderhit";
+                ThreadContext::stopFlag = true;
+            }
             else if (uciCommand == "ucinewgame") {
                 if (!ThreadContext::stopFlag) { Logging::LogIt(Logging::logGUI) << "info string " << uciCommand << " received but search in progress ..."; }
                 else { COM::init(); }
