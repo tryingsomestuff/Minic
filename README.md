@@ -222,6 +222,7 @@ You can use both the json configuation file or the command line argument to sele
 * 1.01..1.09 : work on dedicated pawn table for eval, many eval fixes, search tweaks
 * 1.10..1.14 : work on move ordering
 * 1.15 : FRC !
+* 1.16..1.19 : work on killer, history and counter
 
 ## Thanks
 
