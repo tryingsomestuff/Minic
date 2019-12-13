@@ -390,6 +390,7 @@ EvalScore   doublePawnMalus[2]    = {{ 25, 12 },{  5, 19 }}; // close semiopenfi
 EvalScore   isolatedPawnMalus[2]  = {{ 13,  3 },{ 15, 17 }}; // close semiopenfile
 EvalScore   backwardPawnMalus[2]  = {{ -2,  2 },{ 24, -5 }}; // close semiopenfile
 EvalScore   holesMalus            = { -9, 4};
+EvalScore   pieceFrontPawn        = { -3,12};
 EvalScore   outpost               = { 14,19};
 EvalScore   candidate[8]          = { {0, 0}, {-30, 11}, {-15,  0}, { 14,  6}, { 24, 51}, {-11, 14}, {-11, 14}, { 0, 0} };
 EvalScore   protectedPasserBonus[8]={ {0, 0}, {  8, 17}, { 8 ,  4}, { 14,  3}, { 14, 11}, { 12, 19}, { 8 , 16}, { 0, 0} };
@@ -1541,7 +1542,7 @@ namespace MoveDifficultyUtil {
 }
 
 struct ScoreAcc{
-    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_Holes, sc_Outpost, sc_FreePasser, sc_PwnPush, sc_PwnSafeAtt, sc_PwnPushAtt, sc_Adjust, sc_OpenFile, sc_RookFrontKing, sc_RookFrontQueen, sc_RookQueenSameFile, sc_AttQueenMalus, sc_MinorOnOpenFile, sc_RookBehindPassed, sc_QueenNearKing, sc_Hanging, sc_PinsK, sc_PinsQ, sc_PawnTT, sc_max };
+    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_PieceBlockPawn, sc_Holes, sc_Outpost, sc_FreePasser, sc_PwnPush, sc_PwnSafeAtt, sc_PwnPushAtt, sc_Adjust, sc_OpenFile, sc_RookFrontKing, sc_RookFrontQueen, sc_RookQueenSameFile, sc_AttQueenMalus, sc_MinorOnOpenFile, sc_RookBehindPassed, sc_QueenNearKing, sc_Hanging, sc_PinsK, sc_PinsQ, sc_PawnTT, sc_max };
     float scalingFactor = 1;
     std::array<EvalScore,sc_max> scores;
     ScoreType Score(const Position &p, float gp){
@@ -1551,7 +1552,7 @@ struct ScoreAcc{
     }
 
     void Display(const Position &p, float gp){
-        static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "Holes", "Outpost", "FreePasser", "PwnPush", "PwnSafeAtt", "PwnPushAtt" , "Adjust", "OpenFile", "RookFrontKing", "RookFrontQueen", "RookQueenSameFile", "AttQueenMalus", "MinorOnOpenFile", "RookBehindPassed", "QueenNearKing", "Hanging", "PinsK", "PinsQ", "PawnTT"};
+        static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "PieceBlockPawn", "Holes", "Outpost", "FreePasser", "PwnPush", "PwnSafeAtt", "PwnPushAtt" , "Adjust", "OpenFile", "RookFrontKing", "RookFrontQueen", "RookQueenSameFile", "AttQueenMalus", "MinorOnOpenFile", "RookBehindPassed", "QueenNearKing", "Hanging", "PinsK", "PinsQ", "PawnTT"};
         EvalScore sc;
         for(int k = 0 ; k < sc_max ; ++k){
             Logging::LogIt(Logging::logInfo) << scNames[k] << "       " << scores[k][MG];
@@ -2120,7 +2121,7 @@ bool readFEN(const std::string & fen, Position & p, bool silent){
     if (strList.size() >= 3){
         bool found = false;
         if ( !DynamicConfig::FRC){
-           Logging::LogIt(Logging::logInfo) << "is not FCR";
+           //Logging::LogIt(Logging::logInfo) << "is not FRC";
            if (strList[2].find('K') != std::string::npos){ p.castling |= C_wks; found = true; }
            if (strList[2].find('Q') != std::string::npos){ p.castling |= C_wqs; found = true; }
            if (strList[2].find('k') != std::string::npos){ p.castling |= C_bks; found = true; }
@@ -2136,7 +2137,7 @@ bool readFEN(const std::string & fen, Position & p, bool silent){
                else                         { p.castling |= (c==Co_White ? C_wqs:C_bqs); found = true; }
            }
         }
-        if (strList[2].find('-') != std::string::npos){ found = true; Logging::LogIt(Logging::logInfo) << "No castling right given" ;}
+        if (strList[2].find('-') != std::string::npos){ found = true; /*Logging::LogIt(Logging::logInfo) << "No castling right given" ;*/}
         if ( ! found ){ if ( !silent) Logging::LogIt(Logging::logWarn) << "No castling right given" ; }
         else{ ///@todo detect illegal stuff in here ??
             p.kingInit[Co_White] = p.king[Co_White];
@@ -3186,6 +3187,10 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
     const BitBoard nonPawnMat[2]    = {p.allPieces[Co_White] & ~pawns[Co_White] , p.allPieces[Co_Black] & ~pawns[Co_Black]};
     const BitBoard safe[2]          = {att[Co_White] | ~att[Co_Black]           , att[Co_Black] | ~att[Co_White]};
 
+    // own piece in front of pawn
+    score.scores[ScoreAcc::sc_PieceBlockPawn] += EvalConfig::pieceFrontPawn * countBit( BBTools::shiftN<Co_White>(pawns[Co_White]) & nonPawnMat[Co_White] ); 
+    score.scores[ScoreAcc::sc_PieceBlockPawn] -= EvalConfig::pieceFrontPawn * countBit( BBTools::shiftN<Co_Black>(pawns[Co_Black]) & nonPawnMat[Co_Black] ); 
+
     // pawn hole, unguarded
     score.scores[ScoreAcc::sc_Holes] += EvalConfig::holesMalus * countBit(pe.holes[Co_White] & ~att[Co_White]);
     score.scores[ScoreAcc::sc_Holes] -= EvalConfig::holesMalus * countBit(pe.holes[Co_Black] & ~att[Co_Black]);
@@ -3586,7 +3591,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     MoveList moves;
     bool moveGenerated = false;
     bool capMoveGenerated = false;
-    bool futility = false, lmp = false, /*mateThreat = false,*/ historyPruning = false; //, CMHPruning = false;
+    bool futility = false, lmp = false, /*mateThreat = false,*/ historyPruning = false, CMHPruning = false;
     const bool isNotEndGame = (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t] > 0); ///@todo better ?
     const bool improving = (!isInCheck && ply > 0 && stack[p.halfmoves].eval >= stack[p.halfmoves-2].eval);
     DepthType marginDepth = std::max(1,depth-(evalScoreIsHashScore?e.d:0));
@@ -3685,7 +3690,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     // history pruning
     if (!rootnode && StaticConfig::doHistoryPruning && isNotEndGame && depth < StaticConfig::historyPruningMaxDepth) historyPruning = true;
     // CMH pruning
-    //if (!rootnode && StaticConfig::doCMHPruning && isNotEndGame && depth < StaticConfig::CMHMaxDepth) CMHPruning = true;
+    if (!rootnode && StaticConfig::doCMHPruning && isNotEndGame && depth < StaticConfig::CMHMaxDepth) CMHPruning = true;
 
     int validMoveCount = 0;
     Move bestMove = INVALIDMOVE;
@@ -3834,15 +3839,13 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if (futility && isPrunableStdNoCheck) {++stats.counters[Stats::sid_futility]; continue;}
             // LMP
             if (lmp && isPrunableStdNoCheck && overLmpLimit ) {++stats.counters[Stats::sid_lmp]; continue;}
-            // History pruning
+            // History pruning (with CMH)
             if (historyPruning && isPrunableStdNoCheck && Move2Score(*it) < StaticConfig::historyPruningThresholdInit + depth*StaticConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
-            /*
-            // CMH pruning
+            // CMH pruning alone
             if (CMHPruning && isPrunableStdNoCheck){
               const int pp = (p.b[Move2From(*it)]+PieceShift) * 64 + Move2To(*it);
               if ((!cmhPtr[0] || cmhPtr[0][pp] < 0) && (!cmhPtr[1] || cmhPtr[1][pp] < 0)) { ++stats.counters[Stats::sid_CMHPruning]; continue;}
             }
-            */
             // SEE (capture)
             if (isPrunableCap){
                if (futility) {++stats.counters[Stats::sid_see]; continue;}
