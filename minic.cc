@@ -1851,12 +1851,17 @@ enum Bound : unsigned char{ B_exact = 0, B_alpha = 1, B_beta = 2, B_none = 3};
 struct Entry{
     Entry():m(INVALIDMOVE),h(0),score(0),eval(0),b(B_none),d(-1)/*,generation(curGen)*/{}
     Entry(Hash h, Move m, ScoreType s, ScoreType e, Bound b, DepthType d) : h(Hash64to32(h)), m(Move2MiniMove(m)), score(s), eval(e), /*generation(curGen),*/ b(b), d(d){}
-    MiniHash h;
-    MiniMove m;
-    ScoreType score, eval;
+    MiniHash h;            //32
+    ScoreType score, eval; //16 + 16
+    union{
+        MiniHash data;     //32
+        struct{
+           MiniMove m;     //16
+           Bound b;        //8
+           DepthType d;    //8
+        };
+    };
     //GenerationType generation;
-    Bound b;
-    DepthType d;
 };
 #pragma pack(pop)
 
@@ -1912,16 +1917,17 @@ bool getEntry(ThreadContext & context, Hash h, DepthType d, Entry & e, int nbuck
     // e.h must not be reset here because of recursion ! (would dismiss first hash found when _e.d < d)
     if ( DynamicConfig::disableTT  ) return false;
     if ( nbuck >= Bucket::nbBucket ) return false; // no more bucket
-    const Entry & _e = table[h&(ttSize-1)].e[nbuck];
+    Entry & _e = table[h&(ttSize-1)].e[nbuck];
     if ( _e.h == 0 ) return false; //early exist cause next ones are also empty ...
-    if ( _e.h != Hash64to32(h) ) return getEntry(context,h,d,e,nbuck+1); // next one
+    if ( (_e.h ^ _e.data) != Hash64to32(h) ) return _e.h=0,getEntry(context,h,d,e,nbuck+1); // next one
     e = _e; // update entry only if no collision is detected !
     if ( _e.d >= d ){ ++context.stats.counters[Stats::sid_tthits]; return true; } // valid entry if depth is ok
     else return getEntry(context,h,d,e,nbuck+1); // next one
 }
 
 void setEntry(ThreadContext & context, Hash h, Move m, ScoreType s, ScoreType eval, Bound b, DepthType d){
-    const Entry e = {h,m,s,eval,b,d};
+    Entry e = {h,m,s,eval,b,d};
+    e.h ^= e.data;
     assert(e.h > 0);
     if ( DynamicConfig::disableTT ) return;
     const size_t index = h&(ttSize-1);
@@ -3676,8 +3682,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         PVList iidPV;
         pvs<pvnode,true>(alpha,beta,p,/*pvnode?depth-2:*/depth/2,ply,iidPV,seldepth,isInCheck,cutNode,skipMove);
         if (stopFlag) return STOPSCORE;
-        TT::getEntry(*this,pHash, depth, e);
-        validTTmove = e.h != 0 && e.m != INVALIDMOVE;
+        validTTmove = TT::getEntry(*this,pHash, depth, e) && e.h != 0 && e.m != INVALIDMOVE;
     }
 
     killerT.killers[ply+1][0] = killerT.killers[ply+1][1] = 0;
