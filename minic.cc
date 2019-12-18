@@ -1739,48 +1739,48 @@ struct ThreadContext{
 
     bool searching()const{return  _searching;}
 
-#pragma pack(push, 1)
-struct PawnEntry{
-    BitBoard pawnTargets[2]   = {0ull,0ull};
-    BitBoard holes[2]         = {0ull,0ull};
-    BitBoard semiOpenFiles[2] = {0ull,0ull};
-    BitBoard passed[2] = {0ull,0ull};
-    BitBoard openFiles        = 0ull;
-    EvalScore score           = {0,0};
-    ScoreType danger[2]       = {0,0};
-    MiniHash h                = 0;
-    void reset(){
-        score[MG] = 0;   score[EG] = 0;
-        danger[0] = 0;   danger[1] = 0;
+    #pragma pack(push, 1)
+    struct PawnEntry{
+        BitBoard pawnTargets[2]   = {0ull,0ull};
+        BitBoard holes[2]         = {0ull,0ull};
+        BitBoard semiOpenFiles[2] = {0ull,0ull};
+        BitBoard passed[2] = {0ull,0ull};
+        BitBoard openFiles        = 0ull;
+        EvalScore score           = {0,0};
+        ScoreType danger[2]       = {0,0};
+        MiniHash h                = 0;
+        void reset(){
+            score[MG] = 0;   score[EG] = 0;
+            danger[0] = 0;   danger[1] = 0;
+        }
+    };
+    #pragma pack(pop)
+
+    static const unsigned long long int ttSizePawn;
+    static std::unique_ptr<PawnEntry[]> tablePawn;
+
+    void initPawnTable(){
+        assert(tablePawn==nullptr);
+        assert(ttSizePawn>0);
+        Logging::LogIt(Logging::logInfo) << "Init Pawn TT : " << ttSizePawn;
+        Logging::LogIt(Logging::logInfo) << "PawnEntry size " << sizeof(PawnEntry);
+        tablePawn.reset(new PawnEntry[ttSizePawn]);
+        Logging::LogIt(Logging::logInfo) << "Size of Pawn TT " << ttSizePawn * sizeof(PawnEntry) / 1024 / 1024 << "Mb" ;
     }
-};
-#pragma pack(pop)
 
-static const unsigned long long int ttSizePawn;
-static std::unique_ptr<PawnEntry[]> tablePawn;
+    void clearPawnTT() {
+        for (unsigned int k = 0; k < ttSizePawn; ++k) tablePawn[k].h = 0;
+    }
 
-void initPawnTable(){
-    assert(tablePawn==nullptr);
-    assert(ttSizePawn>0);
-    Logging::LogIt(Logging::logInfo) << "Init Pawn TT : " << ttSizePawn;
-    Logging::LogIt(Logging::logInfo) << "PawnEntry size " << sizeof(PawnEntry);
-    tablePawn.reset(new PawnEntry[ttSizePawn]);
-    Logging::LogIt(Logging::logInfo) << "Size of Pawn TT " << ttSizePawn * sizeof(PawnEntry) / 1024 / 1024 << "Mb" ;
-}
-
-void clearPawnTT() {
-    for (unsigned int k = 0; k < ttSizePawn; ++k) tablePawn[k].h = 0;
-}
-
-bool getPawnEntry(ThreadContext & context, Hash h, PawnEntry *& pe){
-    assert(h > 0);
-    PawnEntry & _e = tablePawn[h&(ttSizePawn-1)];
-    pe = &_e;
-    if ( DynamicConfig::disableTT  ) return false;
-    if ( _e.h != Hash64to32(h) )     return false;
-    ++context.stats.counters[Stats::sid_ttPawnhits];
-    return true;
-}
+    bool getPawnEntry(ThreadContext & context, Hash h, PawnEntry *& pe){
+        assert(h > 0);
+        PawnEntry & _e = tablePawn[h&(ttSizePawn-1)];
+        pe = &_e;
+        if ( DynamicConfig::disableTT  ) return false;
+        if ( _e.h != Hash64to32(h) )     return false;
+        ++context.stats.counters[Stats::sid_ttPawnhits];
+        return true;
+    }
 
 private:
     ThreadData              _data;
@@ -3926,6 +3926,7 @@ void ThreadContext::displayGUI(DepthType depth, DepthType seldepth, ScoreType be
 }
 
 PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
+    TimeMan::startTime = Clock::now(); ///@todo put this before ?
     d=std::max((signed char)1,DynamicConfig::level==StaticConfig::nlevel?d:std::min(d,StaticConfig::levelDepthMax[DynamicConfig::level/10]));
     if ( isMainThread() ){
         Logging::LogIt(Logging::logInfo) << "Search params :" ;
@@ -3933,6 +3934,8 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         Logging::LogIt(Logging::logInfo) << "requested depth " << (int) d ;
         stopFlag = false;
         moveDifficulty = MoveDifficultyUtil::MD_std;
+        //TT::clearTT(); // to be used for reproductible results
+        TT::age();
     }
     else{
         Logging::LogIt(Logging::logInfo) << "helper thread waiting ... " << id() ;
@@ -3940,14 +3943,10 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         Logging::LogIt(Logging::logInfo) << "... go for id " << id() ;
     }
     stats.init();
-    //TT::clearTT(); // to be used for reproductible results
     //clearPawnTT();
-    TT::age();
     killerT.initKillers();
     historyT.initHistory();
     counterT.initCounter();
-
-    TimeMan::startTime = Clock::now(); ///@todo put this before ?
 
     DepthType reachedDepth = 0;
     PVList pv;
@@ -4260,7 +4259,7 @@ namespace COM {
         stm = stm_white;
         readFEN(startPosition, COM::position);
         TT::clearTT();
-        //clearPawnTT(); ///@todo reset api in ThreadPool (loop context)
+        //clearPawnTT(); ///@todo loop context
     }
 
     void init() {
