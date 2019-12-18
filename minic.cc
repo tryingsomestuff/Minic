@@ -1772,14 +1772,25 @@ struct ThreadContext{
         for (unsigned int k = 0; k < ttSizePawn; ++k) tablePawn[k].h = 0;
     }
 
-    bool getPawnEntry(ThreadContext & context, Hash h, PawnEntry *& pe){
+    bool getPawnEntry(Hash h, PawnEntry *& pe){
         assert(h > 0);
         PawnEntry & _e = tablePawn[h&(ttSizePawn-1)];
         pe = &_e;
         if ( DynamicConfig::disableTT  ) return false;
         if ( _e.h != Hash64to32(h) )     return false;
-        ++context.stats.counters[Stats::sid_ttPawnhits];
+        ++stats.counters[Stats::sid_ttPawnhits];
         return true;
+    }
+
+    void prefetchPawn(Hash h) {
+       void * addr = (&tablePawn[h&(ttSizePawn-1)]);
+    #  if defined(__INTEL_COMPILER)
+       __asm__ ("");
+    #  elif defined(_MSC_VER)
+      _mm_prefetch((char*)addr, _MM_HINT_T0);
+    #  else
+      __builtin_prefetch(addr);
+    #  endif
     }
 
 private:
@@ -1904,8 +1915,7 @@ void prefetch(Hash h) {
    void * addr = (&table[h&(ttSize-1)].e[0]);
 #  if defined(__INTEL_COMPILER)
    __asm__ ("");
-#  endif
-#  if defined(__INTEL_COMPILER) || defined(_MSC_VER)
+#  elif defined(_MSC_VER)
   _mm_prefetch((char*)addr, _MM_HINT_T0);
 #  else
   __builtin_prefetch(addr);
@@ -3111,7 +3121,7 @@ ScoreType ThreadContext::eval(const Position & p, float & gp, ScoreAcc * sc ){
     evalPiece<P_wk,Co_Black>(p,p.pieces<P_wk>(Co_Black),score.scores[ScoreAcc::sc_PST],attFromPiece[Co_Black][P_wk-1],kdanger,checkers[Co_Black][P_wk-1]/*,attFromSquare[Co_Black][P_wk-1]*/);
 
     PawnEntry * pePtr = nullptr;
-    if ( ! getPawnEntry(*this, computePHash(p), pePtr) ){ // always set pePtr as a valid ptr (unless pawn size is zero which shall not happend)
+    if ( ! getPawnEntry(computePHash(p), pePtr) ){ // always set pePtr as a valid ptr (unless pawn size is zero which shall not happend)
        assert(pePtr);
        PawnEntry & pe = *pePtr;
        pe.reset();
@@ -3713,6 +3723,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         Position p2 = p;
         if (apply(p2, e.m)) {
             TT::prefetch(computeHash(p2));
+            prefetchPawn(computeHash(p2));
             //const Square to = Move2To(e.m);
             validMoveCount++;
             PVList childPV;
@@ -3802,6 +3813,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
         TT::prefetch(computeHash(p2));
+        prefetchPawn(computeHash(p2));
         const Square to = Move2To(*it);
         if (p.c == Co_White && to == p.king[Co_Black]) return MATE - ply + 1;
         if (p.c == Co_Black && to == p.king[Co_White]) return MATE - ply + 1;
@@ -3995,7 +4007,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
             const int i = (id()-1)%threadSkipSize;
             if (((depth + ThreadPool::skipPhase[i]) / ThreadPool::skipSize[i]) % 2) continue;
         }
-        else{ if ( depth >= 5) startLock.store(false);} // delayed other thread start
+        else{ if ( depth > 1) startLock.store(false);} // delayed other thread start
         Logging::LogIt(Logging::logInfo) << "Thread " << id() << " searching depth " << (int)depth;
         PVList pvLoc;
         ScoreType delta = (StaticConfig::doWindow && depth>4)?8:MATE; // MATE not INFSCORE in order to enter the loop below once
