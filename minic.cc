@@ -1587,8 +1587,7 @@ struct ThreadContext{
 
     Stats stats;
 
-    struct RootScores { Move m; ScoreType s; };
-    std::vector<RootScores> rootScores;
+    Move previousBest;
 
     static const int MAX_CMH_PLY = 2;
     typedef std::array<ScoreType*,MAX_CMH_PLY> CMHPtrArray;
@@ -2876,7 +2875,7 @@ struct MoveSorter{
         ScoreType s       = Move2Score(m);
         if ( s != 0 ) return; // prob cut already computed captures score
         s = MoveScoring[t];
-        if ( ply == 0 && context.rootScores.size() && sameMove(m,context.rootScores[0].m)) s += 20000; // previous root best
+        if ( ply == 0 && sameMove(context.previousBest,m)) s += 20000; // previous root best
         else if (e && sameMove(e->m,m)) s += 15000; // TT move
         else{
             if (isInCheck && PieceTools::getPieceType(p, from) == P_wk) s += 10000; // king evasion
@@ -3765,7 +3764,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             }
             const ScoreType ttScore = -pvs<pvnode,true>(-beta, -alpha, p2, depth - 1 + extension, ply + 1, childPV, seldepth, isCheck, !cutNode);
             if (stopFlag) return STOPSCORE;
-            if (rootnode ) rootScores.push_back({ e.m,ttScore });
+            if (rootnode ) previousBest = e.m;
             if ( ttScore > bestScore ){
                 bestScore = ttScore;
                 bestMove = e.m;
@@ -3799,7 +3798,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     ScoreType score = -MATE + ply;
 
-    ///@todo at root, maybe rootScore or node count can be used to sort moves ??
     if (!moveGenerated) {
         if (capMoveGenerated) generate<GP_quiet>(p, moves, true);
         else                  generate<GP_all>  (p, moves, false);
@@ -3891,7 +3889,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if ( pvnode && score > alpha && (rootnode || score < beta) ){ childPV.clear(); score = -pvs<true ,true>(-beta   ,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,false); } // potential new pv node
         }
         if (stopFlag) return STOPSCORE;
-        if (rootnode) rootScores.push_back({ *it,score });
+        if (rootnode) previousBest = *it;
         if ( score > bestScore ){
             bestScore = score;
             bestMove = *it;
@@ -3938,9 +3936,9 @@ void ThreadContext::displayGUI(DepthType depth, DepthType seldepth, ScoreType be
 }
 
 PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
-    TimeMan::startTime = Clock::now(); ///@todo put this before ?
     d=std::max((signed char)1,DynamicConfig::level==StaticConfig::nlevel?d:std::min(d,StaticConfig::levelDepthMax[DynamicConfig::level/10]));
     if ( isMainThread() ){
+        TimeMan::startTime = Clock::now(); ///@todo put this before ?
         Logging::LogIt(Logging::logInfo) << "Search params :" ;
         Logging::LogIt(Logging::logInfo) << "requested time  " << getCurrentMoveMs() ;
         Logging::LogIt(Logging::logInfo) << "requested depth " << (int) d ;
@@ -3948,6 +3946,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         moveDifficulty = MoveDifficultyUtil::MD_std;
         //TT::clearTT(); // to be used for reproductible results
         TT::age();
+        stack[p.halfmoves].h = p.h;
     }
     else{
         Logging::LogIt(Logging::logInfo) << "helper thread waiting ... " << id() ;
@@ -3964,8 +3963,6 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
     PVList pv;
     ScoreType bestScore = 0;
     m = INVALIDMOVE;
-
-    stack[p.halfmoves].h = p.h;
 
     if ( isMainThread() ){
        const Move bookMove = SanitizeCastling(p,Book::Get(computeHash(p)));
@@ -3986,11 +3983,12 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
 
     DepthType startDepth = 1;//std::min(d,easyMoveDetectionDepth);
 
-    if ( isMainThread() && d > easyMoveDetectionDepth+2 && ThreadContext::currentMoveMs < INFINITETIME ){
+    if ( isMainThread() && d > easyMoveDetectionDepth+5 && ThreadContext::currentMoveMs < INFINITETIME ){
+       struct RootScores { Move m; ScoreType s; };
+       std::vector<RootScores> rootScores;
        // easy move detection (small open window search)
-       rootScores.clear();
        ScoreType easyScore = pvs<true,false>(-MATE, MATE, p, easyMoveDetectionDepth, 1, pv, seldepth, isInCheck,false,INVALIDMOVE);
-       std::sort(rootScores.begin(), rootScores.end(), [](const ThreadContext::RootScores& r1, const ThreadContext::RootScores & r2) {return r1.s > r2.s; });
+       std::sort(rootScores.begin(), rootScores.end(), [](const RootScores& r1, const RootScores & r2) {return r1.s > r2.s; });
        if (stopFlag) { bestScore = easyScore; goto pvsout; }
        if (rootScores.size() == 1) moveDifficulty = MoveDifficultyUtil::MD_forced; // only one : check evasion or zugzwang
        else if (rootScores.size() > 1 && rootScores[0].s > rootScores[1].s + MoveDifficultyUtil::easyMoveMargin) moveDifficulty = MoveDifficultyUtil::MD_easy;
