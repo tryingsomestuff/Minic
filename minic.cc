@@ -430,16 +430,16 @@ EvalScore MOB[6][29] = { {{0,0},{0,0},{0,0},{0,0}},
 	                 {{19,-20},{5,-3},{-1,14},{-7,40},{-23,54},{-48,69},{-25,67},{-30,73},{2,64} } };
 
 enum katt_att_def : unsigned char { katt_attack = 0, katt_defence = 1 };
-ScoreType kingAttMax    = 440;
-ScoreType kingAttTrans  = 20;
-ScoreType kingAttScale  = 51;
-ScoreType kingAttOffset = 3;
-ScoreType kingAttWeight[2][6]    = { { 233, 399, 534, 314, 640, -97}, { 247, 225, 302, 74, 248, 0} };
-ScoreType kingAttSafeCheck[6]    = { 134 , 840, 1018, 1089, 1071, 0};
+ScoreType kingAttMax    = 422;
+ScoreType kingAttTrans  = 48;
+ScoreType kingAttScale  = 15;
+ScoreType kingAttOffset = 10;
+ScoreType kingAttWeight[2][6]    = { { 64, 224, 256, 128, 288, -32}, { 160, 96, 160, 0, 32, 0} };
+ScoreType kingAttSafeCheck[6]    = {   128, 1184, 1152, 1056, 1024, 0};
 ScoreType kingAttTable[64]       = {0};
-ScoreType kingAttOpenfile        = 130;
-ScoreType kingAttSemiOpenfileOpp = 37;
-ScoreType kingAttSemiOpenfileOur = -5;
+ScoreType kingAttOpenfile        = 192;
+ScoreType kingAttSemiOpenfileOpp = 96;
+ScoreType kingAttSemiOpenfileOur = 64;
 
 //ScoreType tempo = 15;
 }
