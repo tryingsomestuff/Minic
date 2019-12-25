@@ -2888,10 +2888,10 @@ struct MoveSorter{
                 //else if ( isCapture(p.lastMove) && to == Move2To(p.lastMove) ) s += 400; // recapture bonus
             }
             else if ( t == T_std ){
-                if      (sameMove(m, context.killerT.killers[ply][0])) s += 2800; // quiet killer
-                else if (sameMove(m, context.killerT.killers[ply][1])) s += 2750; // quiet killer
-                else if (ply > 1 && sameMove(m, context.killerT.killers[ply-2][0])) s += 2700; // quiet killer
-                else if (VALIDMOVE(p.lastMove) && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 2650; // quiet counter
+                if      (sameMove(m, context.killerT.killers[ply][0])) s += 1800; // quiet killer
+                else if (sameMove(m, context.killerT.killers[ply][1])) s += 1750; // quiet killer
+                else if (ply > 1 && sameMove(m, context.killerT.killers[ply-2][0])) s += 1700; // quiet killer
+                else if (VALIDMOVE(p.lastMove) && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 1650; // quiet counter
                 else {
                     s += context.historyT.history[p.c][from][to] /4; // +/- MAX_HISTORY = 1000
                     s += context.historyT.historyP[p.b[from]+PieceShift][to] /2 ; // +/- MAX_HISTORY = 1000
@@ -3052,7 +3052,7 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context, ScoreAcc 
     if ( p.king[Co_Black] == INVALIDSQUARE ) return gp=0,(white2Play?+1:-1)* MATE;
 
     // level for the poor ...
-    const int lra = std::max(0u,750 - 10*DynamicConfig::level);
+    const int lra = std::max(0u,500 - 10*DynamicConfig::level);
     if ( lra > 0 ) { score.scores[ScoreAcc::sc_Rand] += Zobrist::randomInt<int>(-lra,lra); }
 
     // Material evaluation
@@ -3728,7 +3728,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             validMoveCount++;
             PVList childPV;
             stack[p2.halfmoves].h = p2.h;
-            stack[p2.halfmoves].p = p2;
+            stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
             const bool isCheck = isAttacked(p2, kingSquare(p2));
             if ( isCapture(e.m) ) ttMoveIsCapture = true;
             const bool isQuiet = Move2Type(e.m) == T_std;
@@ -3818,7 +3818,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         validMoveCount++;
         PVList childPV;
         stack[p2.halfmoves].h = p2.h;
-        stack[p2.halfmoves].p = p2;
+        stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
         const bool isCheck = isAttacked(p2, kingSquare(p2));
         const bool isAdvancedPawnPush = PieceTools::getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
         // extensions
@@ -3875,9 +3875,9 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 //reduction -= (reduction>1)&&ttMoveSingularExt;
                 if (pvnode && reduction > 0) --reduction;
                 if (!noCheck) --reduction;
-                reduction -= 2 * Move2Score(*it) / MAX_HISTORY; //history reduction/extension
+                reduction -= (2 * Move2Score(*it)) / MAX_HISTORY; //history reduction/extension (beware killers and counter are socred above history max, so reduced less
                 if ( reduction < 0 ) reduction = 0;
-                else if ( reduction >= depth - 1 + extension ) reduction = depth - 1 + extension - 1;
+                if ( reduction >= depth - 1 + extension ) reduction = depth - 1 + extension - 1;
             }
             const DepthType nextDepth = depth-1-reduction+extension;
             // SEE (quiet)
@@ -3945,7 +3945,6 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         moveDifficulty = MoveDifficultyUtil::MD_std;
         //TT::clearTT(); // to be used for reproductible results
         TT::age();
-        stack[p.halfmoves].h = p.h;
     }
     else{
         Logging::LogIt(Logging::logInfo) << "helper thread waiting ... " << id() ;
@@ -3957,6 +3956,8 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
     killerT.initKillers();
     historyT.initHistory();
     counterT.initCounter();
+
+    stack[p.halfmoves].h = p.h;
 
     DepthType reachedDepth = 0;
     PVList pv;
@@ -4013,7 +4014,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         ScoreType score = 0;
         while( true ){
             pvLoc.clear();
-            stack[0].p = p;
+            stack[p.halfmoves].h = p.h;
             score = pvs<true,false>(alpha,beta,p,depth,0,pvLoc,seldepth,isInCheck,false);
             if ( stopFlag ) break;
             delta += 2 + delta/2; // from xiphos ...
@@ -4157,9 +4158,9 @@ namespace Options {
         return true;
     }
     void registerCOMOptions(){ // options exposed xboard GUI
-       _keys.push_back(KeyBase(k_int,   w_spin, "level"                       , &DynamicConfig::level                          , (unsigned int)0  , (unsigned int)StaticConfig::nlevel     ));
-       _keys.push_back(KeyBase(k_int,   w_spin, "Hash"                        , &DynamicConfig::ttSizeMb                       , (unsigned int)0  , (unsigned int)256000, &TT::initTable));
-       _keys.push_back(KeyBase(k_int,   w_spin, "threads"                     , &DynamicConfig::threads                        , (unsigned int)0  , (unsigned int)256   , std::bind(&ThreadPool::setup, &ThreadPool::instance())));
+       _keys.push_back(KeyBase(k_int,   w_spin, "Level"                       , &DynamicConfig::level                          , (unsigned int)0  , (unsigned int)StaticConfig::nlevel     ));
+       _keys.push_back(KeyBase(k_int,   w_spin, "Hash"                        , &DynamicConfig::ttSizeMb                       , (unsigned int)1  , (unsigned int)256000, &TT::initTable));
+       _keys.push_back(KeyBase(k_int,   w_spin, "Threads"                     , &DynamicConfig::threads                        , (unsigned int)1  , (unsigned int)256   , std::bind(&ThreadPool::setup, &ThreadPool::instance())));
        _keys.push_back(KeyBase(k_bool,  w_check, "UCI_Chess960"               , &DynamicConfig::FRC                            , false            , true ));
        _keys.push_back(KeyBase(k_bool,  w_check, "Ponder"                     , &DynamicConfig::UCIPonder                      , false            , true ));
 
