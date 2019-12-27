@@ -64,7 +64,7 @@ double E(const std::vector<Texel::TexelInput> &data, size_t miniBatchSize) {
     const bool progress = miniBatchSize > 100000;
     std::chrono::time_point<Clock> startTime = Clock::now();
 
-    auto worker = [&] (int begin, int end, std::atomic<double> & acc) {
+    auto worker = [&] (size_t begin, size_t end, std::atomic<double> & acc) {
       double e = 0;
       for(auto k = begin; k != end; ++k) {
         e += std::pow((data[k].result+1)*0.5 - Sigmoid(data[k].p),2);
@@ -73,9 +73,9 @@ double E(const std::vector<Texel::TexelInput> &data, size_t miniBatchSize) {
     };
 
     std::vector<std::thread> threads(DynamicConfig::threads);
-    const int grainsize = miniBatchSize / DynamicConfig::threads;
+    const size_t grainsize = miniBatchSize / DynamicConfig::threads;
 
-    int work_iter = 0;
+    size_t work_iter = 0;
     for(auto it = std::begin(threads); it != std::end(threads) - 1; ++it) {
       *it = std::thread(worker, work_iter, work_iter + grainsize, std::ref(e));
       work_iter += grainsize;
