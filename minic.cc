@@ -3659,7 +3659,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     ScoreType evalScore;
     if (isInCheck) evalScore = -MATE + ply;
-    else if ( p.lastMove == NULLMOVE && p.halfmoves ) evalScore = -stack[p.halfmoves-1].eval; // skip eval if nullmove just applied
+    else if ( p.lastMove == NULLMOVE && ply > 0 ) evalScore = -stack[p.halfmoves-1].eval; // skip eval if nullmove just applied
     else evalScore = (e.h != 0)?e.eval:eval(p, gp, *this);
     stack[p.halfmoves].eval = evalScore; // insert only static eval, never hash score !
     bool evalScoreIsHashScore = false;
@@ -3806,7 +3806,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                //if (!extension && isCheck && !isBadCap(e.m)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
                if (!extension && isAdvancedPawnPush && killerT.isKiller(e.m,ply)) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo isPassed ?
                if (!extension && (p.pieces<P_wq>(p.c) && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces<P_wq>(p.c)))) && PieceTools::getPieceType(p,Move2From(e.m)) == P_wq && isQuiet && SEE(p,e.m,0)) ++stats.counters[Stats::sid_queenThreatExtension],++extension;
-               if (!extension && p.halfmoves > 1 && VALIDMOVE(stack[p.halfmoves].threat) && VALIDMOVE(stack[p.halfmoves-2].threat) && (sameMove(stack[p.halfmoves].threat,stack[p.halfmoves-2].threat) || (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves-2].threat) && isCapture(stack[p.halfmoves].threat)))) ++stats.counters[Stats::sid_BMExtension],++extension;
+               if (!extension && ply > 1 && VALIDMOVE(stack[p.halfmoves].threat) && VALIDMOVE(stack[p.halfmoves-2].threat) && (sameMove(stack[p.halfmoves].threat,stack[p.halfmoves-2].threat) || (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves-2].threat) && isCapture(stack[p.halfmoves].threat)))) ++stats.counters[Stats::sid_BMExtension],++extension;
                /*
                if (!extension && isQuiet) {
                  const int pp = (p.b[Move2From(e.m)]+PieceShift) * 64 + Move2To(e.m);
@@ -3896,7 +3896,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
            //if (!extension && isCheck && !isBadCap(*it)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
            if (!extension && isAdvancedPawnPush && killerT.isKiller(*it,ply)) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo and isPassed ?
            if (noTTmove && !extension && (p.pieces<P_wq>(p.c) && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces<P_wq>(p.c)))) && PieceTools::getPieceType(p,Move2From(*it)) == P_wq && Move2Type(*it) == T_std && SEE(p,*it,0)) ++stats.counters[Stats::sid_queenThreatExtension],++extension; // too much of that
-           if (noTTmove && !extension && p.halfmoves > 1 && stack[p.halfmoves].threat != INVALIDMOVE && stack[p.halfmoves-2].threat != INVALIDMOVE && (sameMove(stack[p.halfmoves].threat,stack[p.halfmoves-2].threat) || (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves-2].threat) && isCapture(stack[p.halfmoves].threat)))) ++stats.counters[Stats::sid_BMExtension],++extension;
+           if (noTTmove && !extension && ply > 1 && stack[p.halfmoves].threat != INVALIDMOVE && stack[p.halfmoves-2].threat != INVALIDMOVE && (sameMove(stack[p.halfmoves].threat,stack[p.halfmoves-2].threat) || (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves-2].threat) && isCapture(stack[p.halfmoves].threat)))) ++stats.counters[Stats::sid_BMExtension],++extension;
            if (!noTTmove && !extension && isQuiet) {
              const int pp = (p.b[Move2From(*it)]+PieceShift) * 64 + Move2To(*it);
              if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= MAX_HISTORY / 2 && cmhPtr[1][pp] >= MAX_HISTORY / 2) ++stats.counters[Stats::sid_CMHExtension],++extension;
