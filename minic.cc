@@ -614,6 +614,7 @@ const BitBoard extendedCenter = BBSq_c3 | BBSq_c4 | BBSq_c5 | BBSq_c6
                               | BBSq_e3 | BBSq_e4 | BBSq_e5 | BBSq_e6
                               | BBSq_f3 | BBSq_f4 | BBSq_f5 | BBSq_f6;
 
+const BitBoard holesZone[2] = { rank4 | rank5 | rank6 | rank7,  rank2 | rank3 | rank4 | rank5 };
 const BitBoard queenSide   = fileA | fileB | fileC | fileD;
 const BitBoard centerFiles = fileC | fileD | fileE | fileF;
 const BitBoard kingSide    = fileE | fileF | fileG | fileH;
@@ -3195,7 +3196,7 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context, ScoreAcc 
        // semiOpen white is with white pawn, and without black pawn
        pe.semiOpenFiles [Co_White] = BBTools::fillFile(pawns[Co_White]) & ~BBTools::fillFile(pawns[Co_Black]) ; pe.semiOpenFiles [Co_Black] = BBTools::fillFile(pawns[Co_Black]) & ~BBTools::fillFile(pawns[Co_White]);
        pe.passed        [Co_White] = BBTools::pawnPassed    <Co_White>(pawns[Co_White],pawns[Co_Black])       ; pe.passed        [Co_Black] = BBTools::pawnPassed    <Co_Black>(pawns[Co_Black],pawns[Co_White]);
-       pe.holes         [Co_White] = BBTools::pawnHoles     <Co_White>(pawns[Co_White]) & extendedCenter      ; pe.holes         [Co_Black] = BBTools::pawnHoles     <Co_Black>(pawns[Co_Black]) & extendedCenter;
+       pe.holes         [Co_White] = BBTools::pawnHoles     <Co_White>(pawns[Co_White]) & holesZone[Co_White] ; pe.holes         [Co_Black] = BBTools::pawnHoles     <Co_Black>(pawns[Co_Black]) & holesZone[Co_White];
        pe.openFiles =  BBTools::openFiles(pawns[Co_White], pawns[Co_Black]);
    
        // PST, attack
