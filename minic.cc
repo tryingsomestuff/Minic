@@ -317,6 +317,27 @@ void initMvvLva(){
 
 namespace EvalConfig {
 
+/*
+// Taken from Defenchess
+ScoreType imbalance_mines[5][5] = {
+    // pawn knight bishop rook queen
+    {    16                          }, // Pawn
+    {   146,   -40                   }, // Knight
+    {    55,    12,     7            }, // Bishop
+    {    32,    31,    61, -81       }, // Rook
+    {    12,    80,    75, -35,   12 }  // Queen
+};
+
+ScoreType imbalance_theirs[5][5] = {
+    // pawn knight bishop rook queen
+    {     0                          }, // Pawn
+    {    42,     0                   }, // Knight
+    {    40,    12,     0            }, // Bishop
+    {    50,     9,   -11,   0       }, // Rook
+    {    88,   -28,    60,  96,    0 }  // Queen
+};
+*/
+
 EvalScore PST[6][64] = {
   {
     {   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},
@@ -395,7 +416,7 @@ EvalScore   outpost               = { 14,19};
 EvalScore   candidate[8]          = { {0, 0}, {-30, 11}, {-15,  0}, { 14,  6}, { 24, 51}, {-11, 14}, {-11, 14}, { 0, 0} };
 EvalScore   protectedPasserBonus[8]={ {0, 0}, {  8, 17}, { 8 ,  4}, { 14,  2}, { 14, 11}, { 12, 19}, { 8 , 16}, { 0, 0} };
 EvalScore   freePasserBonus[8]    = { {0, 0}, { -5, 27}, {-24, 19}, {-22, 22}, {-19, 41}, { -5, 74}, {-23, 77}, { 0, 0} };
-EvalScore   pawnMobility          = { -4,15};
+EvalScore   pawnMobility          = { -1,15};
 EvalScore   pawnSafeAtt           = { 34,12};
 EvalScore   pawnSafePushAtt       = { 20, 6};
 EvalScore   pawnlessFlank         = {-10,-19};
@@ -422,24 +443,24 @@ EvalScore   knightPairMalus   = { 4, -9};
 EvalScore   rookPairMalus     = { 3,-14};
 EvalScore   queenNearKing     = {-2,  9};
 
-EvalScore MOB[6][29] = { {{0,0},{0,0},{0,0},{0,0}},
-	                 {{-22,-22},{48,-15},{52,8},{51,18},{57,14},{55,19},{52,23},{57,13},{57,12}},
-	                 {{-13,-18},{2,-8},{11,4},{17,12},{20,23},{24,28},{28,30},{29,33},{29,35},{29,30},{27,33},{32,24},{36,36},{38,38},{40,40}},
-	                 {{21,-20},{27,-1},{28,30},{35,40},{35,53},{40,61},{48,63},{53,62},{50,71},{57,68},{65,72},{62,77},{64,82},{67,83},{44,86}},
-	                 {{1,-19},{12,-18},{17,-16},{17,-14},{25,-12},{32,-10},{31,0},{32,3},{34,6},{36,9},{36,12},{36,15},{31,18},{36,23},{35,27},{31,33},{33,32},{33,40},{35,41},{38,44},{41,42},{43,47},{46,46},{48,49},{49,50},{50,50},{51,51},{52,52},{53,53}},
-	                 {{19,-20},{5,-3},{-1,14},{-7,40},{-23,54},{-48,69},{-25,67},{-30,73},{2,64} } };
+EvalScore MOB[6][29] = { {{ 23,-46}, { 23,  5}, { 29, 15}, { 32, 19}, { 40, 17}, { 39, 15}, { 28, 23}, { 35, 46}, { 29, 47} },
+                         {{-25,-34}, {-12, 10}, { -4, 22}, {  0, 28}, {  2, 31}, {  4, 33}, {  1, 33}, { 21, 19}, { 41, 22}, {45, 36}, {55, 37}, {71, 65}, {71, 56}, {120, 95} },
+                         {{  4,-43}, {  5, 14}, { 10, 48}, { 16, 51}, { 14, 60}, { 18, 62}, { 18, 67}, { 22, 69}, { 26, 72}, {41, 69}, {57, 66}, {56, 66}, {48, 70}, {57, 69}, {72, 56}},
+                         {{  6,-41}, { 13,-26}, { 16, -8}, { 18, -5}, { 21,  0}, { 17, 12}, { 17, 23}, { 17, 41}, { 13, 13}, {23, 47}, {28, 50}, {34, 24}, {16, 32}, {24, 87} },
+                         {{ -3,-64}, { -3,-25}, {  2,-11}, { -1, -7}, {  8,-10}, {  8, -4}, {  3, 15}, {  7, 14}, { 13, 15}, {21, 26}, { 8, 37}, {21, 43}, {25, 48}, {19, 45}, {24, 54}},
+                         {{  4,-17}, { -5, 31}, {-11, 41}, {-15, 46}, {-22, 48}, {-27, 40}, {-25, 43}, {-30, 40}, {-40, 23} } };
 
 enum katt_att_def : unsigned char { katt_attack = 0, katt_defence = 1 };
-ScoreType kingAttMax    = 422;
-ScoreType kingAttTrans  = 48;
-ScoreType kingAttScale  = 15;
+ScoreType kingAttMax    = 423;
+ScoreType kingAttTrans  = 44;
+ScoreType kingAttScale  = 16;
 ScoreType kingAttOffset = 10;
-ScoreType kingAttWeight[2][6]    = { { 64, 224, 256, 128, 288, -32}, { 160, 96, 160, 0, 32, 0} };
+ScoreType kingAttWeight[2][6]    = { { 64, 224, 256, 129, 289, -32}, { 160, 96, 160, -2, 31, 0} };
 ScoreType kingAttSafeCheck[6]    = {   128, 1184, 1152, 1056, 1024, 0};
 ScoreType kingAttTable[64]       = {0};
 ScoreType kingAttOpenfile        = 192;
-ScoreType kingAttSemiOpenfileOpp = 96;
-ScoreType kingAttSemiOpenfileOur = 64;
+ScoreType kingAttSemiOpenfileOpp = 97;
+ScoreType kingAttSemiOpenfileOur = 63;
 
 //ScoreType tempo = 15;
 }
@@ -454,6 +475,7 @@ enum Piece    : signed char{ P_bk = -6, P_bq = -5, P_br = -4, P_bb = -3, P_bn = 
 Piece operator++(Piece & pp){pp=Piece(pp+1); return pp;}
 const int PieceShift = 6;
 enum Mat      : unsigned char{ M_t = 0, M_p, M_n, M_b, M_r, M_q, M_k, M_bl, M_bd, M_M, M_m };
+Mat operator++(Mat & m){m=Mat(m+1); return m;}
 
 ScoreType   Values[13]        = { -8000, -1103, -538, -393, -359, -85, 0, 85, 359, 393, 538, 1103, 8000 };
 ScoreType   ValuesEG[13]      = { -8000, -1076, -518, -301, -290, -93, 0, 93, 290, 301, 518, 1076, 8000 };
@@ -1218,10 +1240,23 @@ namespace MaterialHash { // idea from Gull
     struct MaterialHashEntry  { Terminaison t = Ter_Unknown; EvalScore score={0,0}; float gp = 1.f;};
     MaterialHashEntry materialHashTable[TotalMat];
 
-    void InitMaterialScore(){
-        Logging::LogIt(Logging::logInfo) << "Material hash init";
-	///@todo THIS IS WRONG FOR TUNING PROCESS OF PIECES VALUES
-        const float totalMatScore = 2.f * *absValues[P_wq] + 4.f * *absValues[P_wr] + 4.f * *absValues[P_wb] + 4.f * *absValues[P_wn] + 16.f * *absValues[P_wp]; 
+    /*
+    ScoreType Imbalance(const Position::Material & mat, Color c) {
+        ScoreType bonus = 0;
+        // Second-degree polynomial material imbalance, by Tord Romstad (old version, not the current Stockfish stuff)
+        for (Mat m1 = M_p; m1 <= M_q; ++m1) {
+            if (!mat[c][m1]) continue;
+            for (Mat m2 = M_p; m2 <= m1; ++m2) {
+                bonus += imbalance_mines[m1][m2] * mat[c][m1] * mat[c][m2] + imbalance_theirs[m1][m2] * mat[c][m1] * mat[~c][m2];
+            }
+        }
+        return bonus/16;
+    }
+    */
+
+    void InitMaterialScore(bool display = true){
+        if ( display) Logging::LogIt(Logging::logInfo) << "Material hash init";
+        const float totalMatScore = 2.f * *absValues[P_wq] + 4.f * *absValues[P_wr] + 4.f * *absValues[P_wb] + 4.f * *absValues[P_wn] + 16.f * *absValues[P_wp];
         for (int k = 0 ; k < TotalMat ; ++k){
 	    const Position::Material mat = indexToMat(k);
 	    //std::cout << ToString(mat) << std::endl;
@@ -1231,11 +1266,12 @@ namespace MaterialHash { // idea from Gull
             const ScoreType matPawnScoreB  = mat[Co_Black][M_p] * *absValues[P_wp];
             const ScoreType matScoreW = matPieceScoreW + matPawnScoreW;
             const ScoreType matScoreB = matPieceScoreB + matPawnScoreB;
+            const ScoreType imbalance = 0;//Imbalance(mat,Co_White) - Imbalance(mat,Co_Black);
             materialHashTable[k].gp = (matScoreW + matScoreB ) / totalMatScore;
-            materialHashTable[k].score[MG] += matScoreW - matScoreB;
-            materialHashTable[k].score[EG] += (mat[Co_White][M_q] - mat[Co_Black][M_q]) * *absValuesEG[P_wq] + (mat[Co_White][M_r] - mat[Co_Black][M_r]) * *absValuesEG[P_wr] + (mat[Co_White][M_b] - mat[Co_Black][M_b]) * *absValuesEG[P_wb] + (mat[Co_White][M_n] - mat[Co_Black][M_n]) * *absValuesEG[P_wn] + (mat[Co_White][M_p] - mat[Co_Black][M_p]) * *absValuesEG[P_wp];
+            materialHashTable[k].score[MG] = imbalance + matScoreW - matScoreB;
+            materialHashTable[k].score[EG] = imbalance + (mat[Co_White][M_q] - mat[Co_Black][M_q]) * *absValuesEG[P_wq] + (mat[Co_White][M_r] - mat[Co_Black][M_r]) * *absValuesEG[P_wr] + (mat[Co_White][M_b] - mat[Co_Black][M_b]) * *absValuesEG[P_wb] + (mat[Co_White][M_n] - mat[Co_Black][M_n]) * *absValuesEG[P_wn] + (mat[Co_White][M_p] - mat[Co_Black][M_p]) * *absValuesEG[P_wp];
         }
-        Logging::LogIt(Logging::logInfo) << "...Done";
+       if ( display) Logging::LogIt(Logging::logInfo) << "...Done";
     }
 
     struct MaterialHashInitializer {
@@ -2988,10 +3024,29 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, const BitBoa
 ///@todo special version of evalPiece for king ??
 
 template < Piece T ,Color C>
-inline void evalMob(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, const BitBoard (& att)[2], BitBoard & mob){
+inline void evalMob(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, const BitBoard safe){
     while (pieceBBiterator){
-        mob = BBTools::pfCoverage[T-1](BBTools::popBit(pieceBBiterator), p.occupancy, C) & ~p.allPieces[C] /*& ~att[~C]*/;
-        score.scores[ScoreAcc::sc_MOB] += EvalConfig::MOB[T-1][countBit(mob)]*ColorSignHelper<C>();
+        const BitBoard mob = BBTools::pfCoverage[T-1](BBTools::popBit(pieceBBiterator), p.occupancy, C) & ~p.allPieces[C] & safe;
+        score.scores[ScoreAcc::sc_MOB] += EvalConfig::MOB[T-2][countBit(mob)]*ColorSignHelper<C>();
+    }
+}
+
+template < Color C >
+inline void evalMobQ(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, const BitBoard safe){
+    while (pieceBBiterator){
+        const Square s = BBTools::popBit(pieceBBiterator);
+        BitBoard mob = BBTools::pfCoverage[P_wb-1](s, p.occupancy, C) & ~p.allPieces[C] & safe;
+        score.scores[ScoreAcc::sc_MOB] += EvalConfig::MOB[3][countBit(mob)]*ColorSignHelper<C>();
+        mob = BBTools::pfCoverage[P_wr-1](s, p.occupancy, C) & ~p.allPieces[C] & safe;
+        score.scores[ScoreAcc::sc_MOB] += EvalConfig::MOB[4][countBit(mob)]*ColorSignHelper<C>();
+    }
+}
+
+template < Color C>
+inline void evalMobK(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, const BitBoard safe){
+    while (pieceBBiterator){
+        const BitBoard mob = BBTools::pfCoverage[P_wk-1](BBTools::popBit(pieceBBiterator), p.occupancy, C) & ~p.allPieces[C] & safe;
+        score.scores[ScoreAcc::sc_MOB] += EvalConfig::MOB[5][countBit(mob)]*ColorSignHelper<C>();
     }
 }
 
@@ -3037,8 +3092,6 @@ BitBoard getPinned(const Position & p, const Square s){
     return pinned;
 }
 
-///@todo pawn storm
-
 template < bool display, bool safeMatEvaluator >
 ScoreType eval(const Position & p, float & gp, ThreadContext &context, ScoreAcc * sc ){
     START_TIMER
@@ -3054,6 +3107,8 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context, ScoreAcc 
     // level for the poor ...
     const int lra = std::max(0u,500 - 10*DynamicConfig::level);
     if ( lra > 0 ) { score.scores[ScoreAcc::sc_Rand] += Zobrist::randomInt<int>(-lra,lra); }
+
+    context.prefetchPawn(computeHash(p));
 
     // Material evaluation
     const Hash matHash = MaterialHash::getMaterialHash(p.mat);
@@ -3090,20 +3145,17 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context, ScoreAcc 
        score.scores[ScoreAcc::sc_Mat][MG] += matScoreW - matScoreB;
     }
 
-    context.prefetchPawn(computeHash(p));
-
     // usefull bitboards accumulator
     const BitBoard pawns[2]          = {p.whitePawn(), p.blackPawn()};
     ScoreType kdanger[2]             = {0, 0};
     BitBoard att[2]                  = {0ull, 0ull};
     BitBoard att2[2]                 = {0ull, 0ull};
     BitBoard attFromPiece[2][6]      = {{0ull}}; ///@todo use this more!
-    BitBoard mob[6][2]               = {0ull};
     BitBoard checkers[2][6]          = {0ull};
 
     const BitBoard kingZone[2] = { BBTools::mask[p.king[Co_White]].kingZone, BBTools::mask[p.king[Co_Black]].kingZone};
 
-    // PST, attack, danger ///@todo move pawn thing to Pawn cache
+    // PST, attack, danger
     evalPiece<P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),kingZone,score.scores[ScoreAcc::sc_PST],attFromPiece[Co_White][P_wn-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wn-1]);
     evalPiece<P_wb,Co_White>(p,p.pieces<P_wb>(Co_White),kingZone,score.scores[ScoreAcc::sc_PST],attFromPiece[Co_White][P_wb-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wb-1]);
     evalPiece<P_wr,Co_White>(p,p.pieces<P_wr>(Co_White),kingZone,score.scores[ScoreAcc::sc_PST],attFromPiece[Co_White][P_wr-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wr-1]);
@@ -3114,6 +3166,16 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context, ScoreAcc 
     evalPiece<P_wr,Co_Black>(p,p.pieces<P_wr>(Co_Black),kingZone,score.scores[ScoreAcc::sc_PST],attFromPiece[Co_Black][P_wr-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wr-1]);
     evalPiece<P_wq,Co_Black>(p,p.pieces<P_wq>(Co_Black),kingZone,score.scores[ScoreAcc::sc_PST],attFromPiece[Co_Black][P_wq-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wq-1]);
     evalPiece<P_wk,Co_Black>(p,p.pieces<P_wk>(Co_Black),kingZone,score.scores[ScoreAcc::sc_PST],attFromPiece[Co_Black][P_wk-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wk-1]);
+
+    /*
+    ScoreType lazyScore = score.Score(p,gp);
+    if ( std::abs(lazyScore) > 1000){
+        // scale both phase and 50 moves rule
+        ScoreType ret = (white2Play?+1:-1)*score.Score(p,gp);
+        STOP_AND_SUM_TIMER(Eval)
+        return ret;
+    }
+    */
 
     ThreadContext::PawnEntry dummy; // used for texel tuning
     ThreadContext::PawnEntry * pePtr = nullptr;
@@ -3260,16 +3322,16 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context, ScoreAcc 
     score.scores[ScoreAcc::sc_PwnPushAtt] += EvalConfig::pawnSafePushAtt * (countBit(nonPawnMat[Co_Black] & BBTools::pawnAttacks<Co_White>(safePawnPush[Co_White])) - countBit(nonPawnMat[Co_White] & BBTools::pawnAttacks<Co_Black>(safePawnPush[Co_Black])));
 
     // pieces mobility
-    evalMob<P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),score,att,mob[P_wn-1][Co_White]);
-    evalMob<P_wb,Co_White>(p,p.pieces<P_wb>(Co_White),score,att,mob[P_wb-1][Co_White]);
-    evalMob<P_wr,Co_White>(p,p.pieces<P_wr>(Co_White),score,att,mob[P_wr-1][Co_White]);
-    evalMob<P_wq,Co_White>(p,p.pieces<P_wq>(Co_White),score,att,mob[P_wq-1][Co_White]);
-    evalMob<P_wk,Co_White>(p,p.pieces<P_wk>(Co_White),score,att,mob[P_wk-1][Co_White]);
-    evalMob<P_wn,Co_Black>(p,p.pieces<P_wn>(Co_Black),score,att,mob[P_wn-1][Co_Black]);
-    evalMob<P_wb,Co_Black>(p,p.pieces<P_wb>(Co_Black),score,att,mob[P_wb-1][Co_Black]);
-    evalMob<P_wr,Co_Black>(p,p.pieces<P_wr>(Co_Black),score,att,mob[P_wr-1][Co_Black]);
-    evalMob<P_wq,Co_Black>(p,p.pieces<P_wq>(Co_Black),score,att,mob[P_wq-1][Co_Black]);
-    evalMob<P_wk,Co_Black>(p,p.pieces<P_wk>(Co_Black),score,att,mob[P_wk-1][Co_Black]);
+    evalMob <P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),score,safeSquare[Co_White]);
+    evalMob <P_wb,Co_White>(p,p.pieces<P_wb>(Co_White),score,safeSquare[Co_White]);
+    evalMob <P_wr,Co_White>(p,p.pieces<P_wr>(Co_White),score,safeSquare[Co_White]);
+    evalMobQ<     Co_White>(p,p.pieces<P_wq>(Co_White),score,safeSquare[Co_White]);
+    evalMobK<     Co_White>(p,p.pieces<P_wk>(Co_White),score,~att[Co_Black]);
+    evalMob <P_wn,Co_Black>(p,p.pieces<P_wn>(Co_Black),score,safeSquare[Co_Black]);
+    evalMob <P_wb,Co_Black>(p,p.pieces<P_wb>(Co_Black),score,safeSquare[Co_Black]);
+    evalMob <P_wr,Co_Black>(p,p.pieces<P_wr>(Co_Black),score,safeSquare[Co_Black]);
+    evalMobQ<     Co_Black>(p,p.pieces<P_wq>(Co_Black),score,safeSquare[Co_Black]);
+    evalMobK<     Co_Black>(p,p.pieces<P_wk>(Co_Black),score,~att[Co_White]);
 
     // rook on open file
     score.scores[ScoreAcc::sc_OpenFile] += EvalConfig::rookOnOpenFile         * countBit(p.whiteRook() & pe.openFiles);
@@ -3682,7 +3744,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             ScoreType scorePC = -qsearch<true,pvnode>(-betaPC, -betaPC + 1, p2, ply + 1, seldepth);
             PVList pcPV;
             if (stopFlag) return STOPSCORE;
-            if (scorePC >= betaPC) ++stats.counters[Stats::sid_probcutTry2], scorePC = -pvs<pvnode,true>(-betaPC,-betaPC+1,p2,depth-StaticConfig::probCutMinDepth+1,ply+1,pcPV,seldepth, isAttacked(p2, kingSquare(p2)), !cutNode);
+            if (scorePC >= betaPC) ++stats.counters[Stats::sid_probcutTry2], scorePC = -pvs<false,true>(-betaPC,-betaPC+1,p2,depth-StaticConfig::probCutMinDepth+1,ply+1,pcPV,seldepth, isAttacked(p2, kingSquare(p2)), !cutNode);
             if (stopFlag) return STOPSCORE;
             if (scorePC >= betaPC) return ++stats.counters[Stats::sid_probcut], scorePC;
           }
@@ -3693,7 +3755,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if ( (e.h == 0ull /*|| e.d < depth/4*/) && ((pvnode && depth >= StaticConfig::iidMinDepth) || (cutNode && depth >= StaticConfig::iidMinDepth2)) ){ ///@todo try with cutNode only ?
         ++stats.counters[Stats::sid_iid];
         PVList iidPV;
-        pvs<pvnode,true>(alpha,beta,p,/*pvnode?depth-2:*/depth/2,ply,iidPV,seldepth,isInCheck,cutNode,skipMove);
+        pvs<pvnode,false>(alpha,beta,p,/*pvnode?depth-2:*/depth/2,ply,iidPV,seldepth,isInCheck,cutNode,skipMove);
         if (stopFlag) return STOPSCORE;
         validTTmove = TT::getEntry(*this,pHash, depth, e) && e.h != 0 && e.m != INVALIDMOVE;
     }
@@ -3816,6 +3878,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if (p.c == Co_White && to == p.king[Co_Black]) return MATE - ply + 1;
         if (p.c == Co_Black && to == p.king[Co_White]) return MATE - ply + 1;
         validMoveCount++;
+        const bool noTTmove = validTTmove == 1;
         PVList childPV;
         stack[p2.halfmoves].h = p2.h;
         stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
@@ -3826,14 +3889,14 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         const bool isQuiet = Move2Type(*it) == T_std;
         if ( DynamicConfig::level>80){
            if (!extension && pvnode && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension; // we are in check (extension)
+           if (!extension && isCastling(*it) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
            //if (!extension && mateThreat && depth <= 4) ++stats.counters[Stats::sid_mateThreatExtension],++extension;
            //if (!extension && p.lastMove > NULLMOVE && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; //recapture
            //if (!extension && isCheck && !isBadCap(*it)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
            if (!extension && isAdvancedPawnPush && killerT.isKiller(*it,ply)) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo and isPassed ?
-           if (!extension && isCastling(*it) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
-           //if (!extension && isQueenAttacked && PieceTools::getPieceType(p,Move2From(*it)) == P_wq && Move2Type(*it) == T_std && SEE(p,*it,0)) ++stats.counters[Stats::sid_queenThreatExtension],++extension; // too much of that
-           //if (!extension && p.halfmoves > 1 && stack[p.halfmoves].threat != INVALIDMOVE && stack[p.halfmoves-2].threat != INVALIDMOVE && (sameMove(stack[p.halfmoves].threat,stack[p.halfmoves-2].threat) || (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves-2].threat) && isCapture(stack[p.halfmoves].threat)))) ++stats.counters[Stats::sid_BMExtension],++extension;
-           if (!extension && isQuiet) {
+           if (noTTmove && !extension && (p.pieces<P_wq>(p.c) && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces<P_wq>(p.c)))) && PieceTools::getPieceType(p,Move2From(*it)) == P_wq && Move2Type(*it) == T_std && SEE(p,*it,0)) ++stats.counters[Stats::sid_queenThreatExtension],++extension; // too much of that
+           if (noTTmove && !extension && p.halfmoves > 1 && stack[p.halfmoves].threat != INVALIDMOVE && stack[p.halfmoves-2].threat != INVALIDMOVE && (sameMove(stack[p.halfmoves].threat,stack[p.halfmoves-2].threat) || (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves-2].threat) && isCapture(stack[p.halfmoves].threat)))) ++stats.counters[Stats::sid_BMExtension],++extension;
+           if (!noTTmove && !extension && isQuiet) {
              const int pp = (p.b[Move2From(*it)]+PieceShift) * 64 + Move2To(*it);
              if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= MAX_HISTORY / 2 && cmhPtr[1][pp] >= MAX_HISTORY / 2) ++stats.counters[Stats::sid_CMHExtension],++extension;
            }
@@ -3876,7 +3939,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 if (pvnode && reduction > 0) --reduction;
                 if (!noCheck) --reduction;
                 reduction -= (2 * Move2Score(*it)) / MAX_HISTORY; //history reduction/extension (beware killers and counter are socred above history max, so reduced less
-                if ( reduction < 0 ) reduction = 0;
+                if ( extension - reduction > 0 ) reduction = extension;
                 if ( reduction >= depth - 1 + extension ) reduction = depth - 1 + extension - 1;
             }
             const DepthType nextDepth = depth-1-reduction+extension;
