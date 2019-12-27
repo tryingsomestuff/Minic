@@ -411,7 +411,7 @@ enum PawnEvalSemiOpen{ Close=0, SemiOpen=1};
 EvalScore   doublePawnMalus[2]    = {{ 28, 10 },{ 12, 17 }}; // close semiopenfile
 EvalScore   isolatedPawnMalus[2]  = {{ 10,  5 },{ 15, 17 }}; // close semiopenfile
 EvalScore   backwardPawnMalus[2]  = {{  2,  1 },{ 26, -6 }}; // close semiopenfile
-EvalScore   holesMalus            = { -10, 3};
+EvalScore   holesMalus            = { -5, 1};
 EvalScore   pieceFrontPawn        = { -13,13};
 EvalScore   outpost               = { 14,19};
 EvalScore   candidate[8]          = { {0, 0}, {-30, 11}, {-15,  0}, { 14,  6}, { 24, 51}, {-11, 14}, {-11, 14}, { 0, 0} };
@@ -614,7 +614,7 @@ const BitBoard extendedCenter = BBSq_c3 | BBSq_c4 | BBSq_c5 | BBSq_c6
                               | BBSq_e3 | BBSq_e4 | BBSq_e5 | BBSq_e6
                               | BBSq_f3 | BBSq_f4 | BBSq_f5 | BBSq_f6;
 
-const BitBoard holesZone[2] = { rank4 | rank5 | rank6 | rank7,  rank2 | rank3 | rank4 | rank5 };
+const BitBoard holesZone[2] = { rank2 | rank3 | rank4 | rank5,  rank4 | rank5 | rank6 | rank7 };
 const BitBoard queenSide   = fileA | fileB | fileC | fileD;
 const BitBoard centerFiles = fileC | fileD | fileE | fileF;
 const BitBoard kingSide    = fileE | fileF | fileG | fileH;
