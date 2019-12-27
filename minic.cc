@@ -195,7 +195,7 @@ namespace DynamicConfig{
     bool quiet             = true;
     std::string debugFile  = "minic.debug";
     unsigned int level     = 100;
-    bool book              = true;
+    bool book              = false;
     std::string bookFile   = "book.bin";
     unsigned int threads   = 1;
     std::string syzygyPath = "";
@@ -3675,7 +3675,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     bool capMoveGenerated = false;
     bool futility = false, lmp = false, /*mateThreat = false,*/ historyPruning = false, CMHPruning = false;
     const bool isNotEndGame = (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t] > 0); ///@todo better ?
-    const bool improving = (!isInCheck && ply > 0 && stack[p.halfmoves].eval >= stack[p.halfmoves-2].eval);
+    const bool improving = (!isInCheck && ply > 1 && stack[p.halfmoves].eval >= stack[p.halfmoves-2].eval);
     DepthType marginDepth = std::max(1,depth-(evalScoreIsHashScore?e.d:0));
 
     Move refutation = INVALIDMOVE;
