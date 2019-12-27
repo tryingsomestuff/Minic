@@ -1,5 +1,5 @@
 {
-   "threads": 1,
+   "Threads": 1,
    "mateFinder": false,
    "ttSizeMb": 256,
    "book": false,
@@ -7,6 +7,6 @@
    "fullXboardOutput": true,
    "debugMode": false,
    "debugFile": "minic.debug",
-   "level": 100,
+   "Level": 100,
    "syzygyPath": "/ssd/Minic/TB/syzygy"
 }
