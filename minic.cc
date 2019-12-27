@@ -85,7 +85,7 @@ const std::string MinicVersion = "dev";
 #define _DO_JOIN(symbol1,symbol2) symbol1##symbol2
 
 typedef std::chrono::system_clock Clock;
-typedef signed char DepthType;
+typedef signed short int DepthType;
 typedef int32_t Move;         // invalid if < 0
 typedef int16_t MiniMove;     // invalid if < 0
 typedef signed char Square;   // invalid if < 0
@@ -648,7 +648,7 @@ struct Position{
     Move lastMove = INVALIDMOVE;
     Square ep = INVALIDSQUARE, king[2] = { INVALIDSQUARE, INVALIDSQUARE }, rooksInit[2][2] = { INVALIDSQUARE , INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE}, kingInit[2] = { INVALIDSQUARE, INVALIDSQUARE };
     unsigned char fifty = 0;
-    unsigned int moves = 0, halfmoves = 0;
+    unsigned short int moves = 0, halfmoves = 0;
     CastlingRights castling = C_none;
     Color c = Co_White;
 
@@ -4000,7 +4000,7 @@ void ThreadContext::displayGUI(DepthType depth, DepthType seldepth, ScoreType be
 }
 
 PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
-    d=std::max((signed char)1,DynamicConfig::level==StaticConfig::nlevel?d:std::min(d,StaticConfig::levelDepthMax[DynamicConfig::level/10]));
+    d=std::max((signed short int)1,DynamicConfig::level==StaticConfig::nlevel?d:std::min(d,StaticConfig::levelDepthMax[DynamicConfig::level/10]));
     if ( isMainThread() ){
         TimeMan::startTime = Clock::now(); ///@todo put this before ?
         Logging::LogIt(Logging::logInfo) << "Search params :" ;
