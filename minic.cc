@@ -647,7 +647,8 @@ struct Position{
     mutable Hash h = 0ull, ph = 0ull;
     Move lastMove = INVALIDMOVE;
     Square ep = INVALIDSQUARE, king[2] = { INVALIDSQUARE, INVALIDSQUARE }, rooksInit[2][2] = { INVALIDSQUARE , INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE}, kingInit[2] = { INVALIDSQUARE, INVALIDSQUARE };
-    unsigned char fifty = 0, moves = 0, halfmoves = 0;
+    unsigned char fifty = 0;
+    unsigned int moves = 0, halfmoves = 0;
     CastlingRights castling = C_none;
     Color c = Co_White;
 
@@ -4051,7 +4052,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
        struct RootScores { Move m; ScoreType s; };
        std::vector<RootScores> rootScores;
        // easy move detection (small open window search)
-       ScoreType easyScore = pvs<true,false>(-MATE, MATE, p, easyMoveDetectionDepth, 1, pv, seldepth, isInCheck,false,INVALIDMOVE);
+       ScoreType easyScore = pvs<true,false>(-MATE, MATE, p, easyMoveDetectionDepth, 0, pv, seldepth, isInCheck,false,INVALIDMOVE);
        std::sort(rootScores.begin(), rootScores.end(), [](const RootScores& r1, const RootScores & r2) {return r1.s > r2.s; });
        if (stopFlag) { bestScore = easyScore; goto pvsout; }
        if (rootScores.size() == 1) moveDifficulty = MoveDifficultyUtil::MD_forced; // only one : check evasion or zugzwang
