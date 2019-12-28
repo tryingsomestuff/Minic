@@ -34,6 +34,7 @@ namespace UCI {
             else if (uciCommand == "isready") { Logging::LogIt(Logging::logGUI) << "readyok"; }
             else if (uciCommand == "stop") { Logging::LogIt(Logging::logInfo) << "stop requested";  ThreadContext::stopFlag = true; }
             else if (uciCommand == "position") {
+                auto startTimePos = Clock::now();
                 COM::position.h = 0ull; // invalidate position
                 std::string type;
                 while (iss >> type) {
@@ -64,6 +65,7 @@ namespace UCI {
                         else Logging::LogIt(Logging::logGUI) << "info string no start position specified";
                     }
                 }
+                TimeMan::overHead = (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTimePos).count();
             }
             else if (uciCommand == "go") {
                 if (!ThreadContext::stopFlag) { Logging::LogIt(Logging::logGUI) << "info string go command received, but search already in progress"; }
