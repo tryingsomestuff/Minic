@@ -36,5 +36,8 @@
     <ClCompile Include="..\..\Add-On\pgnparser.cc">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Add-On\uci.cc">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

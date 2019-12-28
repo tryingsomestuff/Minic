@@ -227,10 +227,10 @@ namespace Logging {
         ~LogIt() {
             std::lock_guard<std::mutex> lock(_mutex);
             if (_level != logGUI) {
-	       if ( ! DynamicConfig::quiet || _level > logGUI ){
+	           if ( ! DynamicConfig::quiet || _level > logGUI ){
                   std::cout       << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
                   if (_of) (*_of) << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
-	       }
+	           }
             }
             else {
                 std::cout       << _buffer.str() << std::flush << std::endl;
@@ -980,6 +980,7 @@ Square SquareFromBitBoard(const BitBoard & b) { // return first square
 }
 
 bool isAttackedBB(const Position &p, const Square x, Color c) { ///@todo try to optimize order better ?
+    assert(x != INVALIDSQUARE);
     if (c == Co_White) return attack<P_wb>(x, p.blackBishop() | p.blackQueen(), p.occupancy) || attack<P_wr>(x, p.blackRook() | p.blackQueen(), p.occupancy) || attack<P_wp>(x, p.blackPawn(), p.occupancy, Co_White) || attack<P_wn>(x, p.blackKnight()) || attack<P_wk>(x, p.blackKing());
     else               return attack<P_wb>(x, p.whiteBishop() | p.whiteQueen(), p.occupancy) || attack<P_wr>(x, p.whiteRook() | p.whiteQueen(), p.occupancy) || attack<P_wp>(x, p.whitePawn(), p.occupancy, Co_Black) || attack<P_wn>(x, p.whiteKnight()) || attack<P_wk>(x, p.whiteKing());
 }
@@ -1065,8 +1066,8 @@ namespace MaterialHash { // idea from Gull
         m[Co_Black][M_n] = index % 3; index /= 3;
         m[Co_White][M_p] = index % 9; index /= 9;
         m[Co_Black][M_p] = index;
-	m[Co_White][M_b] = m[Co_White][M_bl] + m[Co_White][M_bd];
-	m[Co_Black][M_b] = m[Co_Black][M_bl] + m[Co_Black][M_bd];
+	    m[Co_White][M_b] = m[Co_White][M_bl] + m[Co_White][M_bd];
+	    m[Co_Black][M_b] = m[Co_Black][M_bl] + m[Co_Black][M_bd];
         m[Co_White][M_M] = m[Co_White][M_q] + m[Co_White][M_r];  m[Co_Black][M_M] = m[Co_Black][M_q] + m[Co_Black][M_r];
         m[Co_White][M_m] = m[Co_White][M_b] + m[Co_White][M_n];  m[Co_Black][M_m] = m[Co_Black][M_b] + m[Co_Black][M_n];
         m[Co_White][M_t] = m[Co_White][M_M] + m[Co_White][M_m];  m[Co_Black][M_t] = m[Co_Black][M_M] + m[Co_Black][M_m];
@@ -1573,11 +1574,11 @@ const int ThreadPool::skipPhase[threadSkipSize] = { 0, 1, 0, 1, 2, 3, 0, 1, 2, 3
 
 namespace MoveDifficultyUtil {
     enum MoveDifficulty { MD_forced = 0, MD_easy, MD_std, MD_hardDefense, MD_hardAttack };
-    const DepthType emergencyMinDepth = 9;
-    const ScoreType emergencyMargin   = 50;
+    const DepthType emergencyMinDepth = 14;
+    const ScoreType emergencyMargin   = 90;
     const ScoreType easyMoveMargin    = 250;
     const int       emergencyFactor   = 5;
-    const float     maxStealFraction  = 0.3f; // of remaining time
+    const float     maxStealFraction  = 0.2f; // of remaining time
 }
 
 struct ScoreAcc{
@@ -1716,6 +1717,7 @@ struct ThreadContext{
     */
 
     ScoreType drawScore() { return -1 + 2*((stats.counters[Stats::sid_nodes]+stats.counters[Stats::sid_qnodes]) % 2); }
+
 
     template <bool pvnode, bool canPrune = true> ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, bool cutNode, const Move skipMove = INVALIDMOVE);
     template <bool qRoot, bool pvnode>
@@ -1858,6 +1860,11 @@ void ThreadPool::setup(){
     assert(DynamicConfig::threads > 0);
     clear();
     Logging::LogIt(Logging::logInfo) << "Using " << DynamicConfig::threads << " threads";
+    unsigned int maxThreads = std::max(1u,std::thread::hardware_concurrency());
+    if (DynamicConfig::threads > maxThreads) {
+        Logging::LogIt(Logging::logWarn) << "Trying to use more threads than hardware core, I don't like that and will use only " << maxThreads << " threads";
+        DynamicConfig::threads = maxThreads;
+    }
     while (size() < DynamicConfig::threads) {
        push_back(std::unique_ptr<ThreadContext>(new ThreadContext(size())));
        back()->initPawnTable();
@@ -2099,12 +2106,12 @@ std::string ToString(const Position & p, bool noEval){
     }
     ss << Logging::_protocolComment[Logging::ct] << " +-+-+-+-+-+-+-+-+" << std::endl;
     if ( p.ep >=0 ) ss << Logging::_protocolComment[Logging::ct] << " ep " << SquareNames[p.ep] << std::endl;
-    ss << Logging::_protocolComment[Logging::ct] << " wk " << (p.king[Co_White]!=INVALIDSQUARE?SquareNames[p.king[Co_White]]:"none")  << std::endl;
-    ss << Logging::_protocolComment[Logging::ct] << " bk " << (p.king[Co_Black]!=INVALIDSQUARE?SquareNames[p.king[Co_Black]]:"none") << std::endl;
-    ss << Logging::_protocolComment[Logging::ct] << " wrOOO " << (p.rooksInit[Co_White][CT_OOO]!=INVALIDSQUARE?SquareNames[p.rooksInit[Co_White][CT_OOO]]:"none") << std::endl;
-    ss << Logging::_protocolComment[Logging::ct] << " wrOO  " << (p.rooksInit[Co_White][CT_OO ]!=INVALIDSQUARE?SquareNames[p.rooksInit[Co_White][CT_OO ]]:"none") << std::endl;
-    ss << Logging::_protocolComment[Logging::ct] << " brOOO " << (p.rooksInit[Co_Black][CT_OOO]!=INVALIDSQUARE?SquareNames[p.rooksInit[Co_Black][CT_OOO]]:"none") << std::endl;
-    ss << Logging::_protocolComment[Logging::ct] << " brOO  " << (p.rooksInit[Co_Black][CT_OO ]!=INVALIDSQUARE?SquareNames[p.rooksInit[Co_Black][CT_OO ]]:"none") << std::endl;
+    //ss << Logging::_protocolComment[Logging::ct] << " wk " << (p.king[Co_White]!=INVALIDSQUARE?SquareNames[p.king[Co_White]]:"none")  << std::endl;
+    //ss << Logging::_protocolComment[Logging::ct] << " bk " << (p.king[Co_Black]!=INVALIDSQUARE?SquareNames[p.king[Co_Black]]:"none") << std::endl;
+    //ss << Logging::_protocolComment[Logging::ct] << " wrOOO " << (p.rooksInit[Co_White][CT_OOO]!=INVALIDSQUARE?SquareNames[p.rooksInit[Co_White][CT_OOO]]:"none") << std::endl;
+    //ss << Logging::_protocolComment[Logging::ct] << " wrOO  " << (p.rooksInit[Co_White][CT_OO ]!=INVALIDSQUARE?SquareNames[p.rooksInit[Co_White][CT_OO ]]:"none") << std::endl;
+    //ss << Logging::_protocolComment[Logging::ct] << " brOOO " << (p.rooksInit[Co_Black][CT_OOO]!=INVALIDSQUARE?SquareNames[p.rooksInit[Co_Black][CT_OOO]]:"none") << std::endl;
+    //ss << Logging::_protocolComment[Logging::ct] << " brOO  " << (p.rooksInit[Co_Black][CT_OO ]!=INVALIDSQUARE?SquareNames[p.rooksInit[Co_Black][CT_OO ]]:"none") << std::endl;
     ss << Logging::_protocolComment[Logging::ct] << " Turn " << (p.c == Co_White ? "white" : "black") << std::endl;
     ScoreType sc = 0;
     if ( ! noEval ){
@@ -2225,6 +2232,11 @@ bool readFEN(const std::string & fen, Position & p, bool silent){
     if (strList.size() >= 6) p.moves = (unsigned char)readFromString<int>(strList[5]);
     else p.moves = 1;
 
+    if (p.moves < 1) { // fix a LittleBlitzer bug here ...
+        Logging::LogIt(Logging::logWarn) << "Wrong move counter " << (int)p.moves;
+        p.moves = 1;
+    }
+
     p.halfmoves = (int(p.moves) - 1) * 2 + 1 + (p.c == Co_Black ? 1 : 0);
 
     BBTools::setBitBoards(p);
@@ -2342,7 +2354,7 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
 }
 
 namespace TimeMan{
-TimeType msecPerMove, msecInTC, nbMoveInTC, msecInc, msecUntilNextTC;
+TimeType msecPerMove, msecInTC, nbMoveInTC, msecInc, msecUntilNextTC, overHead = 0;
 DepthType moveToGo;
 unsigned long long maxKNodes;
 bool isDynamic;
@@ -2358,9 +2370,9 @@ void init(){
 }
 
 TimeType GetNextMSecPerMove(const Position & p){
-    static const TimeType msecMarginMin = 10;
+    static const TimeType msecMarginMin = 100; // this is HUGE at short TC !
     static const TimeType msecMarginMax = 1000;
-    static const float msecMarginCoef = 0.01f;
+    static const float msecMarginCoef   = 0.01f;
     TimeType ms = -1;
     Logging::LogIt(Logging::logInfo) << "msecPerMove     " << msecPerMove;
     Logging::LogIt(Logging::logInfo) << "msecInTC        " << msecInTC   ;
@@ -2404,7 +2416,7 @@ TimeType GetNextMSecPerMove(const Position & p){
         if (!isDynamic) ms = int((msecInTC+msecIncLoc) / (float)(nmoves)) - msecMarginMin;
         else ms = std::min(msecUntilNextTC - msecMargin, TimeType(msecUntilNextTC / (float)nmoves + 0.75*msecIncLoc) - msecMargin);
     }
-    return std::max(ms, TimeType(20));// if not much time left, let's try that ...
+    return std::max(ms-overHead, TimeType(20));// if not much time left, let's try that hoping for a friendly GUI...
 }
 } // TimeMan
 
@@ -3267,7 +3279,7 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context, ScoreAcc 
     att[Co_Black]  |= pe.pawnTargets[Co_Black];
 
     const BitBoard nonPawnMat[2]               = {p.allPieces[Co_White] & ~pawns[Co_White] , p.allPieces[Co_Black] & ~pawns[Co_Black]};
-    //const BitBoard attackedOrNotDefended[2]    = {att[Co_White]  | ~att[Co_Black]  , att[Co_Black]  | ~att[Co_White] };
+    const BitBoard attackedOrNotDefended[2]    = {att[Co_White]  | ~att[Co_Black]  , att[Co_Black]  | ~att[Co_White] };
     const BitBoard attackedAndNotDefended[2]   = {att[Co_White]  & ~att[Co_Black]  , att[Co_Black]  & ~att[Co_White] };
     const BitBoard attacked2AndNotDefended2[2] = {att2[Co_White] & ~att2[Co_Black] , att2[Co_Black] & ~att2[Co_White]};
 
@@ -3310,7 +3322,7 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context, ScoreAcc 
     score.scores[ScoreAcc::sc_ATT][MG] +=  EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_Black]/32),ScoreType(0)),ScoreType(63))];
 
     // number of hanging pieces
-    const BitBoard hanging[2] = {nonPawnMat[Co_White] & weakSquare[Co_White] , nonPawnMat[Co_Black] & weakSquare[Co_Black]};
+    const BitBoard hanging[2] = {nonPawnMat[Co_White] & weakSquare[Co_White] , nonPawnMat[Co_Black] & weakSquare[Co_Black] };
     score.scores[ScoreAcc::sc_Hanging] += EvalConfig::hangingPieceMalus * (countBit(hanging[Co_White]) - countBit(hanging[Co_Black]));
 
     // threat by safe pawn
@@ -3803,18 +3815,22 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if ( DynamicConfig::level>80){
                if (!extension && pvnode && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension;
                if (!extension && isCastling(e.m) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
+               if (!extension && ply > 1 && VALIDMOVE(stack[p.halfmoves].threat) && VALIDMOVE(stack[p.halfmoves - 2].threat) && (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) || (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat)))) ++stats.counters[Stats::sid_BMExtension], ++extension;
                //if (!extension && mateThreat) ++stats.counters[Stats::sid_mateThreatExtension],++extension;
-               //if (!extension && p.lastMove != INVALIDMOVE && Move2Type(p.lastMove) == T_capture && Move2To(e.m) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; // recapture
-               //if (!extension && isCheck && !isBadCap(e.m)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
-               if (!extension && isAdvancedPawnPush && killerT.isKiller(e.m,ply)) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo isPassed ?
-               if (!extension && (p.pieces<P_wq>(p.c) && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces<P_wq>(p.c)))) && PieceTools::getPieceType(p,Move2From(e.m)) == P_wq && isQuiet && SEE(p,e.m,0)) ++stats.counters[Stats::sid_queenThreatExtension],++extension;
-               if (!extension && ply > 1 && VALIDMOVE(stack[p.halfmoves].threat) && VALIDMOVE(stack[p.halfmoves-2].threat) && (sameMove(stack[p.halfmoves].threat,stack[p.halfmoves-2].threat) || (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves-2].threat) && isCapture(stack[p.halfmoves].threat)))) ++stats.counters[Stats::sid_BMExtension],++extension;
+               //if (!extension && p.lastMove > NULLMOVE && Move2Type(p.lastMove) == T_capture && Move2To(e.m) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; // recapture
+               //if (!extension && isCheck ) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
                /*
                if (!extension && isQuiet) {
-                 const int pp = (p.b[Move2From(e.m)]+PieceShift) * 64 + Move2To(e.m);
-                 if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= MAX_HISTORY / 2 && cmhPtr[1][pp] >= MAX_HISTORY / 2) ++stats.counters[Stats::sid_CMHExtension],++extension;
+               const int pp = (p.b[Move2From(e.m)] + PieceShift) * 64 + Move2To(e.m);
+               if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= MAX_HISTORY / 2 && cmhPtr[1][pp] >= MAX_HISTORY / 2) ++stats.counters[Stats::sid_CMHExtension], ++extension;
                }
                */
+               if (!extension && isAdvancedPawnPush ) {
+                   const BitBoard pawns[2] = { p2.pieces<P_wp>(Co_White), p2.pieces<P_wp>(Co_Black) };
+                   const BitBoard passed[2] = { BBTools::pawnPassed<Co_White>(pawns[Co_White], pawns[Co_Black]), BBTools::pawnPassed<Co_Black>(pawns[Co_Black], pawns[Co_White]) };
+                   if ( SquareToBitboard(to) & passed[p.c] ) ++stats.counters[Stats::sid_pawnPushExtension], ++extension;
+               }
+               if (!extension && pvnode && (p.pieces<P_wq>(p.c) && isQuiet && PieceTools::getPieceType(p, Move2From(e.m)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces<P_wq>(p.c)))) && SEE(p, e.m, 0)) ++stats.counters[Stats::sid_queenThreatExtension], ++extension;
                if (!extension && withoutSkipMove && depth >= StaticConfig::singularExtensionDepth && !rootnode && !isMateScore(e.score) && e.b == TT::B_beta && e.d >= depth - 3){
                    const ScoreType betaC = e.score - 2*depth;
                    PVList sePV;
@@ -3881,28 +3897,33 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         if (p.c == Co_White && to == p.king[Co_Black]) return MATE - ply + 1;
         if (p.c == Co_Black && to == p.king[Co_White]) return MATE - ply + 1;
         validMoveCount++;
-        const bool noTTmove = validTTmove == 1;
+        const bool firstMove = validMoveCount == 1;
         PVList childPV;
         stack[p2.halfmoves].h = p2.h;
         stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
         const bool isCheck = isAttacked(p2, kingSquare(p2));
-        const bool isAdvancedPawnPush = PieceTools::getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
+        bool isAdvancedPawnPush = PieceTools::getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
         // extensions
         DepthType extension = 0;
         const bool isQuiet = Move2Type(*it) == T_std;
         if ( DynamicConfig::level>80){
            if (!extension && pvnode && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension; // we are in check (extension)
            if (!extension && isCastling(*it) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
+           if (!extension && ply > 1 && stack[p.halfmoves].threat != INVALIDMOVE && stack[p.halfmoves - 2].threat != INVALIDMOVE && (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) || (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat)))) ++stats.counters[Stats::sid_BMExtension], ++extension;
            //if (!extension && mateThreat && depth <= 4) ++stats.counters[Stats::sid_mateThreatExtension],++extension;
            //if (!extension && p.lastMove > NULLMOVE && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; //recapture
            //if (!extension && isCheck && !isBadCap(*it)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
-           if (!extension && isAdvancedPawnPush && killerT.isKiller(*it,ply)) ++stats.counters[Stats::sid_pawnPushExtension],++extension; // a pawn is near promotion ///@todo and isPassed ?
-           if (noTTmove && !extension && (p.pieces<P_wq>(p.c) && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces<P_wq>(p.c)))) && PieceTools::getPieceType(p,Move2From(*it)) == P_wq && Move2Type(*it) == T_std && SEE(p,*it,0)) ++stats.counters[Stats::sid_queenThreatExtension],++extension; // too much of that
-           if (noTTmove && !extension && ply > 1 && stack[p.halfmoves].threat != INVALIDMOVE && stack[p.halfmoves-2].threat != INVALIDMOVE && (sameMove(stack[p.halfmoves].threat,stack[p.halfmoves-2].threat) || (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves-2].threat) && isCapture(stack[p.halfmoves].threat)))) ++stats.counters[Stats::sid_BMExtension],++extension;
-           if (!noTTmove && !extension && isQuiet) {
-             const int pp = (p.b[Move2From(*it)]+PieceShift) * 64 + Move2To(*it);
-             if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= MAX_HISTORY / 2 && cmhPtr[1][pp] >= MAX_HISTORY / 2) ++stats.counters[Stats::sid_CMHExtension],++extension;
+           if (!extension && !firstMove && isQuiet) {
+               const int pp = (p.b[Move2From(*it)] + PieceShift) * 64 + Move2To(*it);
+               if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= MAX_HISTORY / 2 && cmhPtr[1][pp] >= MAX_HISTORY / 2) ++stats.counters[Stats::sid_CMHExtension], ++extension;
            }
+           if (!extension && isAdvancedPawnPush /*&& (killerT.isKiller(*it, ply) || !isBadCap(*it))*/) {
+               const BitBoard pawns[2] = { p2.pieces<P_wp>(Co_White), p2.pieces<P_wp>(Co_Black) };
+               const BitBoard passed[2] = { BBTools::pawnPassed<Co_White>(pawns[Co_White], pawns[Co_Black]), BBTools::pawnPassed<Co_Black>(pawns[Co_Black], pawns[Co_White]) };
+               isAdvancedPawnPush = SquareToBitboard(to) & passed[p.c];
+               if (isAdvancedPawnPush) ++stats.counters[Stats::sid_pawnPushExtension], ++extension;
+           }
+           if (!extension && pvnode && firstMove && (p.pieces<P_wq>(p.c) && Move2Type(*it) == T_std && PieceTools::getPieceType(p, Move2From(*it)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces<P_wq>(p.c)))) && SEE(p, *it, 0)) ++stats.counters[Stats::sid_queenThreatExtension], ++extension; // too much of that
         }
         // pvs
         if (validMoveCount < (2/*+2*rootnode*/) || !StaticConfig::doPVS ) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,!cutNode);
@@ -3982,6 +4003,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 }
 
 void ThreadContext::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv, const std::string & mark){
+    static unsigned char count = 0;
+    count++; // overflow is ok
     const TimeType ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count());
     std::stringstream str;
     Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
@@ -3993,9 +4016,11 @@ void ThreadContext::displayGUI(DepthType depth, DepthType seldepth, ScoreType be
     }
     else if (Logging::ct == Logging::CT_uci) {
         str << "info depth " << int(depth) << " score cp " << bestScore << " time " << ms << " nodes " << nodeCount << " nps " << int(nodeCount / (ms / 1000.f)) << " seldepth " << (int)seldepth << " pv " << ToString(pv) << " tbhits " << ThreadPool::instance().counter(Stats::sid_tbHit1) + ThreadPool::instance().counter(Stats::sid_tbHit2);
-        if ( depth > 10 && (depth%4==0)){
+        /*
+        if ( (count%10) == 10 && !stopFlag){ ///@todo and enough time to do it ...
             str << " hashfull " << TT::hashFull();
         }
+        */
     }
     Logging::LogIt(Logging::logGUI) << str.str();
 }
