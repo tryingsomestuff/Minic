@@ -163,7 +163,7 @@ public:
     std::map<std::string,std::vector<std::string> > _extendedParams;
 };
 
-ExtendedPosition::ExtendedPosition(const std::string & extFEN, bool withMoveCount) : Position(extFEN){
+ExtendedPosition::ExtendedPosition(const std::string & extFEN, bool withMoveCount) : Position(extFEN, withMoveCount){
     if (!withMoveCount) {
         halfmoves = 0; moves = 1; fifty = 0;
     }
