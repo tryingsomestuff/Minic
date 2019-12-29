@@ -637,7 +637,7 @@ std::string showBitBoard(const BitBoard & b) {
 }
 
 struct Position; // forward decl
-bool readFEN(const std::string & fen, Position & p, bool silent = false); // forward decl
+bool readFEN(const std::string & fen, Position & p, bool silent = false, bool withMoveount = false); // forward decl
 
 struct Position{
     std::array<Piece,64>    b    {{ P_none }};
@@ -676,7 +676,7 @@ struct Position{
     inline const BitBoard & pieces(Color c, Piece pp)const{ return allB[(1-2*c)*pp+PieceShift]; }
 
     Position(){}
-    Position(const std::string & fen){readFEN(fen,*this,true);}
+    Position(const std::string & fen, bool withMoveCount = true){readFEN(fen,*this,true,withMoveCount);}
 };
 
 namespace PieceTools{
@@ -2130,7 +2130,7 @@ std::string ToString(const Position & p, bool noEval){
 
 template < typename T > T readFromString(const std::string & s){ std::stringstream ss(s); T tmp; ss >> tmp; return tmp;}
 
-bool readFEN(const std::string & fen, Position & p, bool silent){
+bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCount){
     static Position defaultPos;
     p = defaultPos;
     std::vector<std::string> strList;
@@ -2230,11 +2230,11 @@ bool readFEN(const std::string & fen, Position & p, bool silent){
     assert(p.ep == INVALIDSQUARE || (SQRANK(p.ep) == 2 || SQRANK(p.ep) == 5));
 
     // read 50 moves rules
-    if (strList.size() >= 5) p.fifty = (unsigned char)readFromString<int>(strList[4]);
+    if (withMoveCount && strList.size() >= 5) p.fifty = (unsigned char)readFromString<int>(strList[4]);
     else p.fifty = 0;
 
     // read number of move
-    if (strList.size() >= 6) p.moves = (unsigned char)readFromString<int>(strList[5]);
+    if (withMoveCount && strList.size() >= 6) p.moves = (unsigned char)readFromString<int>(strList[5]);
     else p.moves = 1;
 
     if (p.moves < 1) { // fix a LittleBlitzer bug here ...
