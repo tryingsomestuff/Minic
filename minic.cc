@@ -437,12 +437,17 @@ EvalScore   pinnedQueen[5]        = { { 12,-34}, {-25, 10}, {  5, 10}, {  1, 10}
 
 EvalScore   hangingPieceMalus     = {-21, -10};
 
-EvalScore   adjKnight[9]      = { {-24,-27}, { -12, 9}, { -4, 18}, {  1, 17}, { 12, 22}, { 17, 24}, { 14, 46}, { 26, 40}, { 22, 10} };
-EvalScore   adjRook[9]        = { { 24, 22}, {  9,  7}, { 15,  1}, {  1,  4}, {-17, 13}, {-23, 24}, {-24, 32}, {-23, 46}, { -3, 17} };
-EvalScore   bishopPairBonus[9]= { { 31, 56}, { 31, 57}, { 27, 63}, { 14, 77}, { 24, 62}, { 29, 62}, { 37, 61}, { 38, 58}, { 33, 53} };
-EvalScore   knightPairMalus   = { 4, -9};
-EvalScore   rookPairMalus     = { 3,-14};
-EvalScore   queenNearKing     = {-2,  9};
+EvalScore   threatByMinor[6]      = { { -12, -7 },{ -19,-27 },{ -19, -10 },{ -25, 11 },{ -16, -9 },{ -15, -30 } };
+EvalScore   threatByRook[6]       = { {   0,-10 },{  -7, -1 },{  -3,  -6 },{  -4, -3 },{  -7, -9 },{ -15,  -9 } };
+EvalScore   threatByQueen[6]      = { {  -8, 20 },{   1, -2 },{  20,  -9 },{  31, -7 },{  12, -6 },{ -15,  -9 } };
+EvalScore   threatByKing[6]       = { {  -5,-18 },{  -5,  0 },{  -4,  -9 },{  -5, -5 },{  -5, -9 },{   0,   0 } };
+
+EvalScore   adjKnight[9]          = { {-24,-27}, { -12, 9}, { -4, 18}, {  1, 17}, { 12, 22}, { 17, 24}, { 14, 46}, { 26, 40}, { 22, 10} };
+EvalScore   adjRook[9]            = { { 24, 22}, {  9,  7}, { 15,  1}, {  1,  4}, {-17, 13}, {-23, 24}, {-24, 32}, {-23, 46}, { -3, 17} };
+EvalScore   bishopPairBonus[9]    = { { 31, 56}, { 31, 57}, { 27, 63}, { 14, 77}, { 24, 62}, { 29, 62}, { 37, 61}, { 38, 58}, { 33, 53} };
+EvalScore   knightPairMalus       = { 4, -9};
+EvalScore   rookPairMalus         = { 3,-14};
+EvalScore   queenNearKing         = {-2,  9};
 
 EvalScore MOB[6][29] = { {{ 23,-46}, { 23,  5}, { 29, 15}, { 32, 19}, { 40, 17}, { 39, 15}, { 28, 23}, { 35, 46}, { 29, 47} },
                          {{-25,-34}, {-12, 10}, { -4, 22}, {  0, 28}, {  2, 31}, {  4, 33}, {  1, 33}, { 21, 19}, { 41, 22}, {45, 36}, {55, 37}, {71, 65}, {71, 56}, {120, 95} },
@@ -1582,7 +1587,7 @@ namespace MoveDifficultyUtil {
 }
 
 struct ScoreAcc{
-    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_PieceBlockPawn, sc_Holes, sc_Outpost, sc_FreePasser, sc_PwnPush, sc_PwnSafeAtt, sc_PwnPushAtt, sc_Adjust, sc_OpenFile, sc_RookFrontKing, sc_RookFrontQueen, sc_RookQueenSameFile, sc_AttQueenMalus, sc_MinorOnOpenFile, sc_RookBehindPassed, sc_QueenNearKing, sc_Hanging, sc_PinsK, sc_PinsQ, sc_PawnTT, sc_max };
+    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_PieceBlockPawn, sc_Holes, sc_Outpost, sc_FreePasser, sc_PwnPush, sc_PwnSafeAtt, sc_PwnPushAtt, sc_Adjust, sc_OpenFile, sc_RookFrontKing, sc_RookFrontQueen, sc_RookQueenSameFile, sc_AttQueenMalus, sc_MinorOnOpenFile, sc_RookBehindPassed, sc_QueenNearKing, sc_Hanging, sc_Threat, sc_PinsK, sc_PinsQ, sc_PawnTT, sc_max };
     float scalingFactor = 1;
     std::array<EvalScore,sc_max> scores;
     ScoreType Score(const Position &p, float gp){
@@ -1592,7 +1597,7 @@ struct ScoreAcc{
     }
 
     void Display(const Position &p, float gp){
-        static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "PieceBlockPawn", "Holes", "Outpost", "FreePasser", "PwnPush", "PwnSafeAtt", "PwnPushAtt" , "Adjust", "OpenFile", "RookFrontKing", "RookFrontQueen", "RookQueenSameFile", "AttQueenMalus", "MinorOnOpenFile", "RookBehindPassed", "QueenNearKing", "Hanging", "PinsK", "PinsQ", "PawnTT"};
+        static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "PieceBlockPawn", "Holes", "Outpost", "FreePasser", "PwnPush", "PwnSafeAtt", "PwnPushAtt" , "Adjust", "OpenFile", "RookFrontKing", "RookFrontQueen", "RookQueenSameFile", "AttQueenMalus", "MinorOnOpenFile", "RookBehindPassed", "QueenNearKing", "Hanging", "Threats", "PinsK", "PinsQ", "PawnTT"};
         EvalScore sc;
         for(int k = 0 ; k < sc_max ; ++k){
             Logging::LogIt(Logging::logInfo) << scNames[k] << "       " << scores[k][MG];
@@ -3329,9 +3334,30 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context, ScoreAcc 
     score.scores[ScoreAcc::sc_ATT][MG] -=  EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_White]/32),ScoreType(0)),ScoreType(63))];
     score.scores[ScoreAcc::sc_ATT][MG] +=  EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_Black]/32),ScoreType(0)),ScoreType(63))];
 
-    // number of hanging pieces
+    // number of hanging pieces (complexity ...)
     const BitBoard hanging[2] = {nonPawnMat[Co_White] & weakSquare[Co_White] , nonPawnMat[Co_Black] & weakSquare[Co_Black] };
     score.scores[ScoreAcc::sc_Hanging] += EvalConfig::hangingPieceMalus * (countBit(hanging[Co_White]) - countBit(hanging[Co_Black]));
+
+    // threats by minor
+    BitBoard targetThreat = (nonPawnMat[Co_White] | (pawns[Co_White] & weakSquare[Co_White]) ) & (attFromPiece[Co_Black][P_wn-1] | attFromPiece[Co_Black][P_wb-1]);
+    while (targetThreat) score.scores[ScoreAcc::sc_Threat] += EvalConfig::threatByMinor[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
+    targetThreat = (nonPawnMat[Co_Black] | (pawns[Co_Black] & weakSquare[Co_Black]) ) & (attFromPiece[Co_White][P_wn-1] | attFromPiece[Co_White][P_wb-1]);
+    while (targetThreat) score.scores[ScoreAcc::sc_Threat] -= EvalConfig::threatByMinor[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
+    // threats by rook
+    targetThreat = p.allPieces[Co_White] & weakSquare[Co_White] & attFromPiece[Co_Black][P_wr-1];
+    while (targetThreat) score.scores[ScoreAcc::sc_Threat] += EvalConfig::threatByRook[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
+    targetThreat = p.allPieces[Co_Black] & weakSquare[Co_Black] & attFromPiece[Co_White][P_wr-1];
+    while (targetThreat) score.scores[ScoreAcc::sc_Threat] -= EvalConfig::threatByRook[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
+    // threats by queen
+    targetThreat = p.allPieces[Co_White] & weakSquare[Co_White] & attFromPiece[Co_Black][P_wq-1];
+    while (targetThreat) score.scores[ScoreAcc::sc_Threat] += EvalConfig::threatByQueen[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
+    targetThreat = p.allPieces[Co_Black] & weakSquare[Co_Black] & attFromPiece[Co_White][P_wq-1];
+    while (targetThreat) score.scores[ScoreAcc::sc_Threat] -= EvalConfig::threatByQueen[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
+    // threats by king
+    targetThreat = p.allPieces[Co_White] & weakSquare[Co_White] & attFromPiece[Co_Black][P_wk-1];
+    while (targetThreat) score.scores[ScoreAcc::sc_Threat] += EvalConfig::threatByKing[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
+    targetThreat = p.allPieces[Co_Black] & weakSquare[Co_Black] & attFromPiece[Co_White][P_wk-1];
+    while (targetThreat) score.scores[ScoreAcc::sc_Threat] -= EvalConfig::threatByKing[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
 
     // threat by safe pawn
     const BitBoard safePawnAtt[2]  = {nonPawnMat[Co_Black] & BBTools::pawnAttacks<Co_White>(pawns[Co_White] & safeSquare[Co_White]), nonPawnMat[Co_White] & BBTools::pawnAttacks<Co_Black>(pawns[Co_Black] & safeSquare[Co_Black])};
