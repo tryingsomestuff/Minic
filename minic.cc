@@ -304,7 +304,7 @@ const int lmpLimit[][StaticConfig::lmpMaxDepth + 1] = { { 0, 3, 4, 6, 10, 15, 21
 DepthType lmrReduction[MAX_DEPTH][MAX_MOVE];
 void initLMR() {
     Logging::LogIt(Logging::logInfo) << "Init lmr";
-    for (int d = 0; d < MAX_DEPTH; d++) for (int m = 0; m < MAX_MOVE; m++) lmrReduction[d][m] = DepthType(1.0 + log(d) * log(m) * 0.5);
+    for (int d = 0; d < MAX_DEPTH; d++) for (int m = 0; m < MAX_MOVE; m++) lmrReduction[d][m] = DepthType( log(d) * log(m) * 0.5);
 }
 
 ScoreType MvvLvaScores[6][6];
