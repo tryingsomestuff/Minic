@@ -437,10 +437,10 @@ EvalScore   pinnedQueen[5]        = { { 12,-34}, {-25, 10}, {  5, 10}, {  1, 10}
 
 EvalScore   hangingPieceMalus     = {-21, -10};
 
-EvalScore   threatByMinor[6]      = { { -12, -7 },{ -19,-27 },{ -19, -10 },{ -25, 11 },{ -16, -9 },{ -15, -30 } };
-EvalScore   threatByRook[6]       = { {   0,-10 },{  -7, -1 },{  -3,  -6 },{  -4, -3 },{  -7, -9 },{ -15,  -9 } };
-EvalScore   threatByQueen[6]      = { {  -8, 20 },{   1, -2 },{  20,  -9 },{  31, -7 },{  12, -6 },{ -15,  -9 } };
-EvalScore   threatByKing[6]       = { {  -5,-18 },{  -5,  0 },{  -4,  -9 },{  -5, -5 },{  -5, -9 },{   0,   0 } };
+EvalScore   threatByMinor[6]      = { { -12, -7 },{ -19,-27 },{ -19, -10 },{ -25, 11 },{ -16, -9 },{ 0, 0 } };
+EvalScore   threatByRook[6]       = { {  -6, -7 },{ -11, -1 },{  -4,  -3 },{  -4, -1 },{  -7, -9 },{ 0, 0 } };
+EvalScore   threatByQueen[6]      = { {  -8, 20 },{   1, -2 },{  20,  -9 },{  31, -7 },{  16, -6 },{ 0, 0 } };
+EvalScore   threatByKing[6]       = { {  -6,-17 },{  -5,  1 },{  -4, -10 },{  -5, -7 },{   0,  0 },{ 0, 0 } };
 
 EvalScore   adjKnight[9]          = { {-24,-27}, { -12, 9}, { -4, 18}, {  1, 17}, { 12, 22}, { 17, 24}, { 14, 46}, { 26, 40}, { 22, 10} };
 EvalScore   adjRook[9]            = { { 24, 22}, {  9,  7}, { 15,  1}, {  1,  4}, {-17, 13}, {-23, 24}, {-24, 32}, {-23, 46}, { -3, 17} };
@@ -2238,7 +2238,7 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
     else p.moves = 1;
 
     if (p.moves < 1) { // fix a LittleBlitzer bug here ...
-        Logging::LogIt(Logging::logWarn) << "Wrong move counter " << (int)p.moves;
+        Logging::LogIt(Logging::logWarn) << "Wrong move counter " << (int)p.moves << " using 1 instead";
         p.moves = 1;
     }
 
