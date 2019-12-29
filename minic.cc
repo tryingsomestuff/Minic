@@ -2678,8 +2678,10 @@ bool apply(Position & p, const Move & m, bool noValidation){
         p.b[Sq_g1] = P_wk;
         p.b[Sq_f1] = P_wr;
         p.h ^= Zobrist::ZT[p.king[Co_White]][P_wk+PieceShift];
+        p.ph ^= Zobrist::ZT[p.king[Co_White]][P_wk+PieceShift];
         p.h ^= Zobrist::ZT[p.rooksInit[Co_White][CT_OO]][P_wr+PieceShift];
         p.h ^= Zobrist::ZT[Sq_g1][P_wk+PieceShift];
+        p.ph ^= Zobrist::ZT[Sq_g1][P_wk+PieceShift];
         p.h ^= Zobrist::ZT[Sq_f1][P_wr+PieceShift];
         p.king[Co_White] = Sq_g1;
         if (p.castling & C_wqs) p.h ^= Zobrist::ZT[0][13];
@@ -2698,8 +2700,10 @@ bool apply(Position & p, const Move & m, bool noValidation){
         p.b[Sq_c1] = P_wk;
         p.b[Sq_d1] = P_wr;
         p.h ^= Zobrist::ZT[p.king[Co_White]][P_wk+PieceShift];
+        p.ph ^= Zobrist::ZT[p.king[Co_White]][P_wk+PieceShift];
         p.h ^= Zobrist::ZT[p.rooksInit[Co_White][CT_OOO]][P_wr+PieceShift];
         p.h ^= Zobrist::ZT[Sq_c1][P_wk+PieceShift];
+        p.ph ^= Zobrist::ZT[Sq_c1][P_wk+PieceShift];
         p.h ^= Zobrist::ZT[Sq_d1][P_wr+PieceShift];
         p.king[Co_White] = Sq_c1;
         if (p.castling & C_wqs) p.h ^= Zobrist::ZT[0][13];
@@ -2718,8 +2722,10 @@ bool apply(Position & p, const Move & m, bool noValidation){
         p.b[Sq_g8] = P_bk;
         p.b[Sq_f8] = P_br;
         p.h ^= Zobrist::ZT[p.king[Co_Black]][P_bk+PieceShift];
+        p.ph ^= Zobrist::ZT[p.king[Co_Black]][P_bk+PieceShift];
         p.h ^= Zobrist::ZT[p.rooksInit[Co_Black][CT_OO]][P_br+PieceShift];
         p.h ^= Zobrist::ZT[Sq_g8][P_bk+PieceShift];
+        p.ph ^= Zobrist::ZT[Sq_g8][P_bk+PieceShift];
         p.h ^= Zobrist::ZT[Sq_f8][P_br+PieceShift];
         p.king[Co_Black] = Sq_g8;
         if (p.castling & C_bqs) p.h ^= Zobrist::ZT[56][13];
@@ -2738,8 +2744,10 @@ bool apply(Position & p, const Move & m, bool noValidation){
         p.b[Sq_c8] = P_bk;
         p.b[Sq_d8] = P_br;
         p.h ^= Zobrist::ZT[p.king[Co_Black]][P_bk+PieceShift];
+        p.ph ^= Zobrist::ZT[p.king[Co_Black]][P_bk+PieceShift];
         p.h ^= Zobrist::ZT[p.rooksInit[Co_Black][CT_OOO]][P_br+PieceShift];
         p.h ^= Zobrist::ZT[Sq_c8][P_bk+PieceShift];
+        p.ph ^= Zobrist::ZT[Sq_c8][P_bk+PieceShift];
         p.h ^= Zobrist::ZT[Sq_d8][P_br+PieceShift];
         p.king[Co_Black] = Sq_c8;
         if (p.castling & C_bqs) p.h ^= Zobrist::ZT[56][13];
