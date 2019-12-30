@@ -3739,7 +3739,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     // prunings
     if ( !DynamicConfig::mateFinder && canPrune && !isInCheck /*&& !isMateScore(beta)*/ && !pvnode){ ///@todo removing the !isMateScore(beta) is not losing that much elo and allow for better check mate finding ...
         // static null move
-        if (StaticConfig::doStaticNullMove && isNotEndGame && depth <= StaticConfig::staticNullMoveMaxDepth[evalScoreIsHashScore] && evalScore >= beta + StaticConfig::staticNullMoveDepthInit[evalScoreIsHashScore] + (StaticConfig::staticNullMoveDepthCoeff[evalScoreIsHashScore]) * depth) return ++stats.counters[Stats::sid_staticNullMove], evalScore;
+        if (StaticConfig::doStaticNullMove && !isMateScore(evalScore) && isNotEndGame && depth <= StaticConfig::staticNullMoveMaxDepth[evalScoreIsHashScore] && evalScore >= beta + StaticConfig::staticNullMoveDepthInit[evalScoreIsHashScore] + (StaticConfig::staticNullMoveDepthCoeff[evalScoreIsHashScore]) * depth) return ++stats.counters[Stats::sid_staticNullMove], evalScore;
 
         // razoring
         ScoreType rAlpha = alpha - StaticConfig::razoringMarginDepthInit[evalScoreIsHashScore] - StaticConfig::razoringMarginDepthCoeff[evalScoreIsHashScore]*marginDepth;
