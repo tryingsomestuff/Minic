@@ -443,10 +443,12 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::isolatedPawnMalus[1][EG], -150, 550, "isolatedPawnMalusEG[1]"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::backwardPawnMalus[1][MG], -150, 550, "backwardPawnMalus1"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::backwardPawnMalus[1][EG], -150, 550, "backwardPawnMalusEG1"));
+    */
 
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnShieldBonus[MG]     ,-150,550,"pawnShieldBonus0"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnShieldBonus[EG]     ,-150,550,"pawnShieldBonus1"));
 
+    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingNearPassedPawn[MG],-150,550,"kingNearPassedPawn"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingNearPassedPawn[EG],-150,550,"kingNearPassedPawnEG"));
 
@@ -467,6 +469,7 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[6][EG], -1500, 1500,"candidateEG 6"));
     */
 
+    /*
     for (int k = 0; k < 6; ++k) {
        guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::threatByMinor[k][MG], -200, 200, "threatByMinor" + std::to_string(k) ));
        guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::threatByMinor[k][EG], -200, 200, "threatByMinorEG" + std::to_string(k)));
@@ -486,6 +489,7 @@ void TexelTuning(const std::string & filename) {
         guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::threatByKing[k][MG], -200, 200, "threatByKing" + std::to_string(k)));
         guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::threatByKing[k][EG], -200, 200, "threatByKingEG" + std::to_string(k)));
     }
+    */
 
     /*
     for (int k = 0 ; k < 6 ; ++k ){
