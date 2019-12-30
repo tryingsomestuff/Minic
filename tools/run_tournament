@@ -5,6 +5,7 @@ dir=$(readlink -f $(dirname $0)/..)
 CUTECHESS=$dir/../cutechess/projects/cli/cutechess-cli
 engines=""
 
+engines="$engines -engine conf=minic_dev"
 engines="$engines -engine conf=asymptote_v0.6"
 #engines="$engines -engine conf=Fridolin310"
 #engines="$engines -engine conf=GreKo"
@@ -23,7 +24,6 @@ engines="$engines -engine conf=zurichess-neuchatel"
 #engines="$engines -engine conf=minic_dev"
 engines="$engines -engine conf=minic_1.19"
 engines="$engines -engine conf=minic_1.21"
-engines="$engines -engine conf=minic_dev"
 engines="$engines -engine conf=rodentIII"
 engines="$engines -engine conf=komodo-13-64-ja"
 engines="$engines -engine conf=amoeba"
@@ -36,4 +36,4 @@ engines="$engines -engine conf=igel-2.2.0"
 
 echo $engines
 
-$CUTECHESS $engines -each tc=40/10 timemargin=200 -rounds 1000 -pgnout pgn_$(date +"%Y_%m_%d"_%H%M%S).out -ratinginterval 1 -repeat -openings file=$dir/OpeningBook/Adam-Hair-12moves-397457.pgn format=pgn order=random plies=24 -recover -concurrency 8 > tournament.log 2>&1 &
+$CUTECHESS $engines -each tc=40/60 timemargin=200 -rounds 1000 -pgnout pgn_$(date +"%Y_%m_%d"_%H%M%S).out -ratinginterval 1 -repeat -openings file=$dir/OpeningBook/Adam-Hair-12moves-397457.pgn format=pgn order=random plies=24 -recover -concurrency 8 -tournament gauntlet > tournament.log 2>&1 &
