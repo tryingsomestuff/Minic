@@ -52,7 +52,7 @@ const std::string MinicVersion = "dev";
 -FRC castling
 */
 
-#define INFINITETIME TimeType(60*60*1000*24)
+#define INFINITETIME TimeType(60ull*60ull*1000ull*24ull*30ull) // 1 month ...
 #define STOPSCORE   ScoreType(-20000)
 #define INFSCORE    ScoreType(15000)
 #define MATE        ScoreType(10000)
@@ -402,7 +402,7 @@ EvalScore PST[6][64] = {
   }
 };
 
-EvalScore   pawnShieldBonus       = {6, 2};
+EvalScore   pawnShieldBonus       = {2, -2};
 EvalScore   passerBonus[8]        = { { 0, 0 }, {20, -40} , {6, -19}, {-10, 13}, {10, 37}, {33, 71}, {42, 109}, {0, 0}};
 EvalScore   rookBehindPassed      = { -8,41};
 EvalScore   kingNearPassedPawn    = { -9,13};
@@ -2363,6 +2363,7 @@ TimeType msecPerMove, msecInTC, nbMoveInTC, msecInc, msecUntilNextTC, overHead =
 DepthType moveToGo;
 unsigned long long maxKNodes;
 bool isDynamic;
+bool isUCIPondering;
 std::chrono::time_point<Clock> startTime;
 
 void init(){
@@ -2372,6 +2373,7 @@ void init(){
     moveToGo    = -1;
     maxKNodes   = 0;
     isDynamic   = false;
+    isUCIPondering  = false;
 }
 
 TimeType GetNextMSecPerMove(const Position & p){
@@ -2409,7 +2411,7 @@ TimeType GetNextMSecPerMove(const Position & p){
         Logging::LogIt(Logging::logInfo) << "UCI style TC";
         const TimeType msecMargin = std::max(std::min(msecMarginMax, TimeType(msecMarginCoef*msecUntilNextTC)), msecMarginMin);
         if (!isDynamic) Logging::LogIt(Logging::logFatal) << "bad timing configuration ...";
-        else { ms = std::min(msecUntilNextTC - msecMargin, int((msecUntilNextTC - msecMargin) / float(moveToGo)) + msecIncLoc); }
+        else { ms = std::min(msecUntilNextTC - msecMargin, TimeType((msecUntilNextTC - msecMargin) / float(moveToGo) + msecIncLoc)*(isUCIPondering?5:4)/4); }
     }
     else{ // mps is not given
         Logging::LogIt(Logging::logInfo) << "Suddendeath style";
@@ -2419,7 +2421,7 @@ TimeType GetNextMSecPerMove(const Position & p){
         assert(nmoves > 0); assert(msecInTC >= 0);
         const TimeType msecMargin = std::max(std::min(msecMarginMax, TimeType(msecMarginCoef*msecInTC)), msecMarginMin);
         if (!isDynamic) ms = int((msecInTC+msecIncLoc) / (float)(nmoves)) - msecMarginMin;
-        else ms = std::min(msecUntilNextTC - msecMargin, TimeType(msecUntilNextTC / (float)nmoves + 0.75*msecIncLoc) - msecMargin);
+        else ms = std::min(msecUntilNextTC - msecMargin, TimeType(msecUntilNextTC / (float)nmoves + 0.75*msecIncLoc - msecMargin)*(isUCIPondering?5:4)/4);
     }
     return std::max(ms-overHead, TimeType(20));// if not much time left, let's try that hoping for a friendly GUI...
 }
@@ -2428,6 +2430,9 @@ TimeType GetNextMSecPerMove(const Position & p){
 inline void addMove(Square from, Square to, MType type, MoveList & moves){ assert( from >= 0 && from < 64); assert( to >=0 && to < 64); moves.push_back(ToMove(from,to,type,0));}
 
 TimeType ThreadContext::getCurrentMoveMs() {
+    if (TimeMan::isUCIPondering) {
+        return INFINITETIME;
+    }
     TimeType ret = currentMoveMs;
     switch (moveDifficulty) {
     case MoveDifficultyUtil::MD_forced:      ret = (ret >> 4); break;
@@ -2568,7 +2573,7 @@ void applyNull(ThreadContext & context, Position & pN) {
 bool apply(Position & p, const Move & m, bool noValidation){
     START_TIMER
     assert(VALIDMOVE(m));
-    //#define DEBUG_MATERIAL
+//#define DEBUG_MATERIAL
 #ifdef DEBUG_MATERIAL
     Position previous = p;
 #endif
@@ -3181,7 +3186,8 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context, ScoreAcc 
     BitBoard attFromPiece[2][6]      = {{0ull}}; ///@todo use this more!
     BitBoard checkers[2][6]          = {0ull};
 
-    const BitBoard kingZone[2] = { BBTools::mask[p.king[Co_White]].kingZone, BBTools::mask[p.king[Co_Black]].kingZone};
+    const BitBoard kingZone[2]   = { BBTools::mask[p.king[Co_White]].kingZone, BBTools::mask[p.king[Co_Black]].kingZone};
+    const BitBoard kingShield[2] = { kingZone[Co_White] & ~BBTools::shiftS<Co_White>(ranks[SQRANK(p.king[Co_White])]) , kingZone[Co_Black] & ~BBTools::shiftS<Co_Black>(ranks[SQRANK(p.king[Co_Black])]) };
 
     // PST, attack, danger
     evalPiece<P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),kingZone,score.scores[ScoreAcc::sc_PST],attFromPiece[Co_White][P_wn-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wn-1]);
@@ -3257,8 +3263,10 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context, ScoreAcc 
        pe.score += EvalConfig::isolatedPawnMalus[EvalConfig::Close]    * countBit(isolated[Co_Black] & ~semiOpenPawn[Co_Black]);
        pe.score += EvalConfig::isolatedPawnMalus[EvalConfig::SemiOpen] * countBit(isolated[Co_Black] &  semiOpenPawn[Co_Black]);
        // pawn shield (PST and king troppism alone is not enough)
-       pe.score += EvalConfig::pawnShieldBonus * std::min(countBit( kingZone[Co_White] & pawns[Co_White] ),ScoreType(3));
-       pe.score -= EvalConfig::pawnShieldBonus * std::min(countBit( kingZone[Co_Black] & pawns[Co_Black] ),ScoreType(3));
+       const int pawnShieldW = countBit(kingShield[Co_White] & pawns[Co_White]);
+       const int pawnShieldB = countBit(kingShield[Co_Black] & pawns[Co_Black]);
+       pe.score += EvalConfig::pawnShieldBonus * std::min(pawnShieldW*pawnShieldW,9);
+       pe.score -= EvalConfig::pawnShieldBonus * std::min(pawnShieldB*pawnShieldB,9);
        // malus for king on a pawnless flank
        const File wkf = (File)SQFILE(p.king[Co_White]);
        const File bkf = (File)SQFILE(p.king[Co_Black]);
@@ -4690,7 +4698,7 @@ void xboard(){
                 // forced move depth
                 TimeMan::isDynamic        = false;
                 TimeMan::nbMoveInTC       = -1;
-                TimeMan::msecPerMove      = INFINITETIME; // 1 day == infinity ...
+                TimeMan::msecPerMove      = INFINITETIME;
                 TimeMan::msecInTC         = -1;
                 TimeMan::msecInc          = -1;
                 TimeMan::msecUntilNextTC  = -1;
@@ -4746,13 +4754,13 @@ void xboard(){
         if(COM::move != INVALIDMOVE && (int)COM::mode == (int)COM::opponent(COM::stm) && COM::ponder == COM::p_on && COM::state == COM::st_none) {
             COM::state = COM::st_pondering;
             Logging::LogIt(Logging::logInfo) << "xboard search launched (pondering)";
-            COM::thinkAsync(COM::state,INFINITETIME); // 1 day == infinity ...
+            COM::thinkAsync(COM::state,INFINITETIME);
             Logging::LogIt(Logging::logInfo) << "xboard async started (pondering)";
         }
         else if(COM::mode == COM::m_analyze && COM::state == COM::st_none){
             COM::state = COM::st_analyzing;
             Logging::LogIt(Logging::logInfo) << "xboard search launched (analysis)";
-            COM::thinkAsync(COM::state,INFINITETIME); // 1 day == infinity ...
+            COM::thinkAsync(COM::state,INFINITETIME);
             Logging::LogIt(Logging::logInfo) << "xboard async started (analysis)";
         }
     } // while true
