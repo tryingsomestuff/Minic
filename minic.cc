@@ -3730,7 +3730,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     bool moveGenerated = false;
     bool capMoveGenerated = false;
     bool futility = false, lmp = false, /*mateThreat = false,*/ historyPruning = false, CMHPruning = false;
-    const bool isNotEndGame = (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t] > 0); ///@todo better ?
+    const bool isNotEndGame = p.mat[p.c][M_t]> 0; ///@todo better ?
     const bool improving = (!isInCheck && ply > 1 && stack[p.halfmoves].eval >= stack[p.halfmoves-2].eval);
     DepthType marginDepth = std::max(1,depth-(evalScoreIsHashScore?e.d:0));
 
