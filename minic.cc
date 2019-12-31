@@ -1983,7 +1983,15 @@ bool getEntry(ThreadContext & context, const Position & p, Hash h, DepthType d, 
     if ( nbuck >= Bucket::nbBucket ) return false; // no more bucket
     Entry & _e = table[h&(ttSize-1)].e[nbuck];
     if ( _e.h == 0 ) return false; //early exist cause next ones are also empty ...
-    if ( /*(_e.h ^ _e.data) != Hash64to32(h) ||*/ !isPseudoLegal(p, _e.m)) return _e.h=0,getEntry(context,p,h,d,e,nbuck+1); // next one
+    if ( (_e.h ^ _e.data) == Hash64to32(h) ) {
+	    if ( _e.m != INVALIDMOVE && !isPseudoLegal(p, _e.m)) {
+		    std::cout << "Invalid TT move" << std::endl;
+		    std::cout << ToString(p) << std::endl;
+		    std::cout << ToString(_e.m) << std::endl;
+		    return _e.h=0,getEntry(context,p,h,d,e,nbuck+1); // next one
+	    }
+    }
+    else return _e.h=0,getEntry(context,p,h,d,e,nbuck+1); // next one
     e = _e; // update entry only if no collision is detected !
     if ( _e.d >= d ){ ++context.stats.counters[Stats::sid_tthits]; return true; } // valid entry if depth is ok
     else return getEntry(context,p,h,d,e,nbuck+1); // next one
@@ -3675,21 +3683,7 @@ bool isPseudoLegal(const Position & p, Move m){ // validate TT move
     if ((toP > 0 && p.c == Co_White) || (toP < 0 && p.c == Co_Black)) return false;
     const Piece fromPieceType = (Piece)std::abs(fromP);
     const MType t = Move2Type(m);
-    if (t == T_ep && p.ep == INVALIDSQUARE) return false;
-    if (fromPieceType == P_wp){
-        if (t == T_ep && SQRANK(to) != EPRank[p.c]) return false;
-        if (!isPromotion(m) && SQRANK(to) == PromRank[p.c]) return false;
-        if ( isPromotion(m) &&  SQRANK(to) != PromRank[p.c]) return false;
-        BitBoard validPush = BBTools::mask[from].push[p.c] & ~p.occupancy;
-        if ((BBTools::mask[from].push[p.c] & p.occupancy) == 0ull) validPush |= BBTools::mask[from].dpush[p.c] & ~p.occupancy;
-        if (validPush & SquareToBitboard(to)) return true;
-        const BitBoard validCap = BBTools::mask[from].pawnAttack[p.c] & ~p.allPieces[p.c];
-        if ( (validCap & SquareToBitboard(to)) && (toP != P_none || (t == T_ep && to == p.ep))) return true;
-        return false;
-    }
-
-    if (fromPieceType != P_wk){ return (BBTools::pfCoverage[fromPieceType-1](from,p.occupancy,p.c) & SquareToBitboard(to)) != 0ull; }
-
+    if (t == T_ep && (p.ep == INVALIDSQUARE || fromPieceType != P_wp)) return false;
     // castling
     if (isCastling(m)){
         if (p.c == Co_White) {
@@ -3711,7 +3705,18 @@ bool isPseudoLegal(const Position & p, Move m){ // validate TT move
             return false;
         }
     }
-
+    if (fromPieceType == P_wp){
+        if (t == T_ep && SQRANK(to) != EPRank[p.c]) return false;
+        if (!isPromotion(m) && SQRANK(to) == PromRank[p.c]) return false;
+        if ( isPromotion(m) &&  SQRANK(to) != PromRank[p.c]) return false;
+        BitBoard validPush = BBTools::mask[from].push[p.c] & ~p.occupancy;
+        if ((BBTools::mask[from].push[p.c] & p.occupancy) == 0ull) validPush |= BBTools::mask[from].dpush[p.c] & ~p.occupancy;
+        if (validPush & SquareToBitboard(to)) return true;
+        const BitBoard validCap = BBTools::mask[from].pawnAttack[p.c] & ~p.allPieces[p.c];
+        if ( (validCap & SquareToBitboard(to)) && (toP != P_none || (t == T_ep && to == p.ep))) return true;
+        return false;
+    }
+    if (fromPieceType != P_wk){ return (BBTools::pfCoverage[fromPieceType-1](from,p.occupancy,p.c) & SquareToBitboard(to)) != 0ull; }
     // king
     return (BBTools::mask[p.king[p.c]].kingZone & SquareToBitboard(to)) != 0ull;
 }
