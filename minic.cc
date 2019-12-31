@@ -497,6 +497,9 @@ enum Sq   : unsigned char { Sq_a1  = 0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1
 enum File : unsigned char { File_a = 0,File_b,File_c,File_d,File_e,File_f,File_g,File_h};
 enum Rank : unsigned char { Rank_1 = 0,Rank_2,Rank_3,Rank_4,Rank_5,Rank_6,Rank_7,Rank_8};
 
+const Rank PromRank[2] = { Rank_8 , Rank_1 };
+const Rank EPRank[2]   = { Rank_6 , Rank_3 };
+
 enum CastlingRights : unsigned char{ C_none = 0, C_wks = 1, C_wqs = 2, C_bks = 4, C_bqs = 8 };
 enum CastlingTypes : unsigned char { CT_OOO = 0, CT_OO = 1 };
 CastlingRights operator&(const CastlingRights & a, const CastlingRights &b){return CastlingRights(char(a)&char(b));}
@@ -3675,8 +3678,9 @@ bool isPseudoLegal(const Position & p, Move m){ // validate TT move
     if (fromPieceType == P_wp){
         const MType t = Move2Type(m);
         if (t == T_ep && p.ep == INVALIDSQUARE) return false;
-        if (!isPromotion(m) && (SQRANK(to) == 7 || SQRANK(to) == 0)) return false;
-        if ( isPromotion(m) &&  SQRANK(to) != 7 && SQRANK(to) != 0 ) return false;
+        if (t == T_ep && SQRANK(to) != EPRank[p.c]) return false;
+        if (!isPromotion(m) && SQRANK(to) == PromRank[p.c]) return false;
+        if ( isPromotion(m) &&  SQRANK(to) != PromRank[p.c]) return false;
         BitBoard validPush = BBTools::mask[from].push[p.c] & ~p.occupancy;
         if ((BBTools::mask[from].push[p.c] & p.occupancy) == 0ull) validPush |= BBTools::mask[from].dpush[p.c] & ~p.occupancy;
         if (validPush && SquareToBitboard(to)) return true;
