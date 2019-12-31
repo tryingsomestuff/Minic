@@ -3674,10 +3674,9 @@ bool isPseudoLegal(const Position & p, Move m){ // validate TT move
     const Piece toP = p.b[to];
     if ((toP > 0 && p.c == Co_White) || (toP < 0 && p.c == Co_Black)) return false;
     const Piece fromPieceType = (Piece)std::abs(fromP);
-
+    const MType t = Move2Type(m);
+    if (t == T_ep && p.ep == INVALIDSQUARE) return false;
     if (fromPieceType == P_wp){
-        const MType t = Move2Type(m);
-        if (t == T_ep && p.ep == INVALIDSQUARE) return false;
         if (t == T_ep && SQRANK(to) != EPRank[p.c]) return false;
         if (!isPromotion(m) && SQRANK(to) == PromRank[p.c]) return false;
         if ( isPromotion(m) &&  SQRANK(to) != PromRank[p.c]) return false;
@@ -3693,7 +3692,6 @@ bool isPseudoLegal(const Position & p, Move m){ // validate TT move
 
     // castling
     if (isCastling(m)){
-        const MType t = Move2Type(m);
         if (p.c == Co_White) {
             if (t == T_wqs && (p.castling & C_wqs)
                 && (((BBTools::mask[p.king[Co_White]].between[Sq_c1] | BBTools::mask[p.rooksInit[Co_White][CT_OOO]].between[Sq_d1]) & p.occupancy) == 0ull)
