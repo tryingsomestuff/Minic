@@ -2800,7 +2800,7 @@ bool apply(Position & p, const Move & m, bool noValidation){
     if (p.ep != INVALIDSQUARE) p.h  ^= Zobrist::ZT[p.ep][13];
     p.ep = INVALIDSQUARE;
     if ( abs(fromP) == P_wp && abs(to-from) == 16 ) p.ep = (from + to)/2;
-    assert(p.ep == INVALIDSQUARE || (SQRANK(p.ep) == 2 || SQRANK(p.ep) == 5));
+    assert(p.ep == INVALIDSQUARE || SQRANK(p.ep) == EPRank[~p.c]);
     if (p.ep != INVALIDSQUARE) p.h  ^= Zobrist::ZT[p.ep][13];
 
     // update color
@@ -3683,9 +3683,9 @@ bool isPseudoLegal(const Position & p, Move m){ // validate TT move
         if ( isPromotion(m) &&  SQRANK(to) != PromRank[p.c]) return false;
         BitBoard validPush = BBTools::mask[from].push[p.c] & ~p.occupancy;
         if ((BBTools::mask[from].push[p.c] & p.occupancy) == 0ull) validPush |= BBTools::mask[from].dpush[p.c] & ~p.occupancy;
-        if (validPush && SquareToBitboard(to)) return true;
+        if (validPush & SquareToBitboard(to)) return true;
         const BitBoard validCap = BBTools::mask[from].pawnAttack[p.c] & ~p.allPieces[p.c];
-        if (validCap && (toP != P_none || (t == T_ep && to == p.ep))) return true;
+        if ( (validCap & SquareToBitboard(to)) && (toP != P_none || (t == T_ep && to == p.ep))) return true;
         return false;
     }
 
