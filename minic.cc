@@ -1983,8 +1983,9 @@ bool getEntry(ThreadContext & context, const Position & p, Hash h, DepthType d, 
     if ( nbuck >= Bucket::nbBucket ) return false; // no more bucket
     Entry & _e = table[h&(ttSize-1)].e[nbuck];
     if ( _e.h == 0 ) return false; //early exist cause next ones are also empty ...
-    if ( (_e.h ^ _e.data) == Hash64to32(h) ) {
-	    if ( _e.m != INVALIDMOVE && !isPseudoLegal(p, _e.m)) {
+    if ( ((_e.h ^ _e.data)/*&0x00000111*/) == (Hash64to32(h)/*&0x00000111*/) ) {
+	    if ( _e.m > NULLMOVE && !isPseudoLegal(p, _e.m)) {
+            // should never been here !
 		    std::cout << "Invalid TT move" << std::endl;
 		    std::cout << ToString(p) << std::endl;
 		    std::cout << ToString(_e.m) << std::endl;
@@ -3648,21 +3649,21 @@ inline void updatePV(PVList & pv, const Move & m, const PVList & childPV) {
 
 inline void updateTables(ThreadContext & context, const Position & p, DepthType depth, DepthType ply, const Move m, TT::Bound bound, ThreadContext::CMHPtrArray & cmhPtr) {
     if (bound == TT::B_beta) {
-       context.killerT.update(m,ply);
-       context.counterT.update(m, p);
-       context.historyT.update<1>(depth, m, p, cmhPtr);
+context.killerT.update(m, ply);
+context.counterT.update(m, p);
+context.historyT.update<1>(depth, m, p, cmhPtr);
     }
-    else if ( bound == TT::B_alpha) context.historyT.update<-1>(depth, m, p, cmhPtr);
+    else if (bound == TT::B_alpha) context.historyT.update<-1>(depth, m, p, cmhPtr);
 }
 
-ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck){
+ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck) {
     MoveList moves;
-    generate<GP_all>  (p, moves, false);
+    generate<GP_all>(p, moves, false);
     if (moves.empty()) return isInCheck ? -MATE : 0;
-    std::random_shuffle(moves.begin(),moves.end());
-    for(auto it = moves.begin() ; it != moves.end(); ++it){
+    std::random_shuffle(moves.begin(), moves.end());
+    for (auto it = moves.begin(); it != moves.end(); ++it) {
         Position p2 = p;
-        if ( ! apply(p2,*it) ) continue;
+        if (!apply(p2, *it)) continue;
         PVList childPV;
         updatePV(pv, *it, childPV);
         const Square to = Move2To(*it);
@@ -3673,19 +3674,31 @@ ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck){
     return isInCheck ? -MATE : 0;
 }
 
-bool isPseudoLegal(const Position & p, Move m){ // validate TT move
-    if (m <= NULLMOVE) return false;
+bool isPseudoLegal(const Position & p, Move m) { // validate TT move
+    if (m <= NULLMOVE) {
+        std::cout << "0" << std::endl;
+        return false;
+    }
     const Square from = Move2From(m);
     const Piece fromP = p.b[from];
-    if ( fromP == P_none || (fromP > 0 && p.c == Co_Black) || (fromP < 0 && p.c == Co_White)) return false;
+    if (fromP == P_none || (fromP > 0 && p.c == Co_Black) || (fromP < 0 && p.c == Co_White)) {
+        std::cout << "1" << std::endl;
+        return false;
+    }
     const Square to = Move2To(m);
     const Piece toP = p.b[to];
-    if ((toP > 0 && p.c == Co_White) || (toP < 0 && p.c == Co_Black)) return false;
+    if ((toP > 0 && p.c == Co_White) || (toP < 0 && p.c == Co_Black)) {
+        std::cout << "2" << std::endl;
+        return false;
+    }
     const Piece fromPieceType = (Piece)std::abs(fromP);
     const MType t = Move2Type(m);
-    if (t == T_ep && (p.ep == INVALIDSQUARE || fromPieceType != P_wp)) return false;
+    if (t == T_ep && (p.ep == INVALIDSQUARE || fromPieceType != P_wp)) {
+        std::cout << "3" << std::endl;
+        return false;
+    }
     // castling
-    if (isCastling(m)){
+    if (isCastling(m)) {
         if (p.c == Co_White) {
             if (t == T_wqs && (p.castling & C_wqs)
                 && (((BBTools::mask[p.king[Co_White]].between[Sq_c1] | BBTools::mask[p.rooksInit[Co_White][CT_OOO]].between[Sq_d1]) & p.occupancy) == 0ull)
@@ -3693,32 +3706,54 @@ bool isPseudoLegal(const Position & p, Move m){ // validate TT move
             if (t == T_wks && (p.castling & C_wks)
                 && (((BBTools::mask[p.king[Co_White]].between[Sq_g1] | BBTools::mask[p.rooksInit[Co_White][CT_OO]].between[Sq_f1]) & p.occupancy) == 0ull)
                 && !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_g1] | SquareToBitboard(p.king[Co_White]))) return true;
+            std::cout << "4" << std::endl;
             return false;
         }
-        else{
+        else {
             if (t == T_bqs && (p.castling & C_bqs)
                 && (((BBTools::mask[p.king[Co_Black]].between[Sq_c8] | BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].between[Sq_d8]) & p.occupancy) == 0ull)
                 && !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_c8] | SquareToBitboard(p.king[Co_Black]))) return true;
             if (t == T_bks && (p.castling & C_bks)
                 && (((BBTools::mask[p.king[Co_Black]].between[Sq_g8] | BBTools::mask[p.rooksInit[Co_Black][CT_OO]].between[Sq_f8]) & p.occupancy) == 0ull)
                 && !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_g8] | SquareToBitboard(p.king[Co_Black]))) return true;
+            std::cout << "5" << std::endl;
             return false;
         }
     }
-    if (fromPieceType == P_wp){
-        if (t == T_ep && SQRANK(to) != EPRank[p.c]) return false;
-        if (!isPromotion(m) && SQRANK(to) == PromRank[p.c]) return false;
-        if ( isPromotion(m) &&  SQRANK(to) != PromRank[p.c]) return false;
+    if (fromPieceType == P_wp) {
+        if (t == T_ep && SQRANK(to) != EPRank[p.c]) {
+            std::cout << "6" << std::endl;
+            return false;
+        }
+        if (!isPromotion(m) && SQRANK(to) == PromRank[p.c]) {
+            std::cout << "7" << std::endl;
+            return false;
+        }
+        if (isPromotion(m) && SQRANK(to) != PromRank[p.c]) {
+            std::cout << "8" << std::endl;
+            return false;
+        }
         BitBoard validPush = BBTools::mask[from].push[p.c] & ~p.occupancy;
         if ((BBTools::mask[from].push[p.c] & p.occupancy) == 0ull) validPush |= BBTools::mask[from].dpush[p.c] & ~p.occupancy;
         if (validPush & SquareToBitboard(to)) return true;
         const BitBoard validCap = BBTools::mask[from].pawnAttack[p.c] & ~p.allPieces[p.c];
-        if ( (validCap & SquareToBitboard(to)) && (toP != P_none || (t == T_ep && to == p.ep))) return true;
+        if ((validCap & SquareToBitboard(to)) && (toP != P_none || (t == T_ep && to == p.ep))) return true;
+        std::cout << "9" << std::endl;
         return false;
     }
-    if (fromPieceType != P_wk){ return (BBTools::pfCoverage[fromPieceType-1](from,p.occupancy,p.c) & SquareToBitboard(to)) != 0ull; }
+    if (fromPieceType != P_wk) {
+        if ((BBTools::pfCoverage[fromPieceType - 1](from, p.occupancy, p.c) & SquareToBitboard(to)) != 0ull) {
+            return true;
+        }
+        std::cout << "10" << std::endl;
+        return false;
+    }
     // king
-    return (BBTools::mask[p.king[p.c]].kingZone & SquareToBitboard(to)) != 0ull;
+    if ((BBTools::mask[p.king[p.c]].kingZone & SquareToBitboard(to)) != 0ull) {
+        return true;
+    }
+    std::cout << "11" << std::endl;
+    return false;
 }
 
 // pvs inspired by Xiphos
