@@ -265,7 +265,7 @@ const bool doLMR            = true;
 const bool doLMP            = true;
 const bool doStaticNullMove = true;
 const bool doRazoring       = true;
-const bool doQFutility      = true;
+const bool doQFutility      = false;
 const bool doProbcut        = true;
 const bool doHistoryPruning = true;
 const bool doCMHPruning     = true;
@@ -3571,7 +3571,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     Move bestMove = INVALIDMOVE;
 
     const bool isInCheck = isAttacked(p, kingSquare(p));
-    bool specialQSearch = isInCheck||qRoot;
+    const bool specialQSearch = isInCheck || qRoot;
     DepthType hashDepth = specialQSearch ? 0 : -1;
 
     ThreadContext::CMHPtrArray cmhPtr;
@@ -3580,7 +3580,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     TT::Entry e;
     if (TT::getEntry(*this, computeHash(p), hashDepth, e)) {
         if (!pvnode && e.h != 0 && ((e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact))) { return adjustHashScore(e.score, ply); }
-        if ( e.m!=INVALIDMOVE && (specialQSearch || isCapture(e.m)) ) bestMove = e.m;
+        if ( e.m!=INVALIDMOVE && (isInCheck || isCapture(e.m)) ) bestMove = e.m;
     }
     if ( qRoot && interiorNodeRecognizer<true,false,true>(p) == MaterialHash::Ter_Draw) return drawScore(); ///@todo is that gain elo ???
 
@@ -3596,22 +3596,19 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     ScoreType bestScore = evalScore;
 
     MoveList moves;
-    if ( isInCheck ) generate<GP_all>(p,moves);
+    if ( isInCheck ) generate<GP_all>(p,moves); ///@odo generate only evasion !
     else             generate<GP_cap>(p,moves);
-    sort(*this,moves,p,gp,ply,cmhPtr,specialQSearch,isInCheck,&e);
+    sort(*this,moves,p,gp,ply,cmhPtr,isInCheck,isInCheck,&e);
 
     const ScoreType alphaInit = alpha;
-    //int moveCount = 0;
 
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         if (!isInCheck) {
-            if ((specialQSearch && isBadCap(*it)) || !SEE(p,*it,0)) continue; // see is only available if move sorter performed see already
+            if (!SEE(p,*it,0)) continue;
             if (StaticConfig::doQFutility && evalScore + StaticConfig::qfutilityMargin[evalScoreIsHashScore] + (Move2Type(*it)==T_ep ? Values[P_wp+PieceShift] : PieceTools::getAbsValue(p, Move2To(*it))) <= alphaInit) continue;
         }
-        //else if (!qRoot && moveCount > 2 && !isMateScore(bestScore) && Move2Type(*it)==T_std && !SEE(p,*it,0)) continue;
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
-        //moveCount++;
         TT::prefetch(computeHash(p2));
         const ScoreType score = -qsearch<false,false>(-beta,-alpha,p2,ply+1,seldepth);
         if ( score > bestScore){
