@@ -3661,6 +3661,54 @@ ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck){
     return isInCheck ? -MATE : 0;
 }
 
+bool isPseudoLegal(const Position & p, Move m){ // validate TT move
+    const Square from = Move2From(m);
+    const Piece fromP = p.b[from];
+    if ( fromP == P_none || (fromP > 0 && p.c == Co_Black) || (fromP < 0 && p.c == Co_White)) return false;
+    const Square to = Move2To(m);
+    const Piece toP = p.b[to];
+    if ((toP > 0 && p.c == Co_White) || (toP < 0 && p.c == Co_Black)) return false;
+    const Piece fromPieceType = (Piece)std::abs(fromP);
+
+    if (fromPieceType == P_wp){
+        if (!isPromotion(m) && (SQRANK(to) == 7 || SQRANK(to) == 0)) return false;
+        BitBoard validPush = BBTools::mask[from].push[p.c] & ~p.occupancy;
+        if ((BBTools::mask[from].push[p.c] & p.occupancy) == 0ull) validPush |= BBTools::mask[from].dpush[p.c] & ~p.occupancy;
+        if (validPush && SquareToBitboard(to)) return true;
+        const BitBoard validCap = BBTools::mask[from].pawnAttack[p.c] & ~p.allPieces[p.c];
+        if (validCap && (toP != P_none || to == p.ep)) return true;
+        return false;
+    }
+
+    if (fromPieceType != P_wk){ return (BBTools::pfCoverage[fromPieceType-1](from,p.occupancy,p.c) & SquareToBitboard(to)) != 0ull; }
+
+    // castling
+    if (isCastling(m)){
+        const MType t = Move2Type(m);
+        if (p.c == Co_White) {
+            if (t == C_wqs && (p.castling & C_wqs)
+                && (((BBTools::mask[p.king[Co_White]].between[Sq_c1] | BBTools::mask[p.rooksInit[Co_White][CT_OOO]].between[Sq_d1]) & p.occupancy) == 0ull)
+                && !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_c1] | SquareToBitboard(p.king[Co_White]))) return true;
+            if (t == C_wks && (p.castling & C_wks)
+                && (((BBTools::mask[p.king[Co_White]].between[Sq_g1] | BBTools::mask[p.rooksInit[Co_White][CT_OO]].between[Sq_f1]) & p.occupancy) == 0ull)
+                && !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_g1] | SquareToBitboard(p.king[Co_White]))) return true;
+            return false;
+        }
+        else{
+            if (t == C_bqs && (p.castling & C_bqs)
+                && (((BBTools::mask[p.king[Co_Black]].between[Sq_c8] | BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].between[Sq_d8]) & p.occupancy) == 0ull)
+                && !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_c8] | SquareToBitboard(p.king[Co_Black]))) return true;
+            if (t == C_bks && (p.castling & C_bks)
+                && (((BBTools::mask[p.king[Co_Black]].between[Sq_g8] | BBTools::mask[p.rooksInit[Co_Black][CT_OO]].between[Sq_f8]) & p.occupancy) == 0ull)
+                && !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_g8] | SquareToBitboard(p.king[Co_Black]))) return true;
+            return false;
+        }
+    }
+
+    // king
+    return (BBTools::mask[p.king[p.c]].kingZone & SquareToBitboard(to)) != 0ull;
+}
+
 // pvs inspired by Xiphos
 template< bool pvnode, bool canPrune>
 ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, bool cutNode, const Move skipMove){
@@ -3838,7 +3886,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if ( e.h != 0 && validTTmove && !sameMove(e.m,skipMove)) { // should be the case thanks to iid at pvnode
         bestMove = e.m; // in order to preserve tt move for alpha bound entry
         Position p2 = p;
-        if (apply(p2, e.m)) {
+        if (isPseudoLegal(p,e.m) && apply(p2, e.m)) {
             TT::prefetch(computeHash(p2));
             const Square to = Move2To(e.m);
             validMoveCount++;
