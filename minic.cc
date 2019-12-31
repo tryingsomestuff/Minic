@@ -2411,7 +2411,7 @@ TimeType GetNextMSecPerMove(const Position & p){
         Logging::LogIt(Logging::logInfo) << "UCI style TC";
         const TimeType msecMargin = std::max(std::min(msecMarginMax, TimeType(msecMarginCoef*msecUntilNextTC)), msecMarginMin);
         if (!isDynamic) Logging::LogIt(Logging::logFatal) << "bad timing configuration ...";
-        else { ms = std::min(msecUntilNextTC - msecMargin, TimeType((msecUntilNextTC - msecMargin) / float(moveToGo) + msecIncLoc)*(isUCIPondering?5:4)/4); }
+        else { ms = std::min(msecUntilNextTC - msecMargin, TimeType((msecUntilNextTC - msecMargin) / float(moveToGo) + msecIncLoc)*(isUCIPondering?3:2)/2); }
     }
     else{ // mps is not given
         Logging::LogIt(Logging::logInfo) << "Suddendeath style";
@@ -2421,7 +2421,7 @@ TimeType GetNextMSecPerMove(const Position & p){
         assert(nmoves > 0); assert(msecInTC >= 0);
         const TimeType msecMargin = std::max(std::min(msecMarginMax, TimeType(msecMarginCoef*msecInTC)), msecMarginMin);
         if (!isDynamic) ms = int((msecInTC+msecIncLoc) / (float)(nmoves)) - msecMarginMin;
-        else ms = std::min(msecUntilNextTC - msecMargin, TimeType(msecUntilNextTC / (float)nmoves + 0.75*msecIncLoc - msecMargin)*(isUCIPondering?5:4)/4);
+        else ms = std::min(msecUntilNextTC - msecMargin, TimeType(msecUntilNextTC / (float)nmoves + 0.75*msecIncLoc - msecMargin)*(isUCIPondering?3:2)/2);
     }
     return std::max(ms-overHead, TimeType(20));// if not much time left, let's try that hoping for a friendly GUI...
 }
