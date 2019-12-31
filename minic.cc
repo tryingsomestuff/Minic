@@ -1903,6 +1903,7 @@ ThreadPool::ThreadPool():stop(false){ push_back(std::unique_ptr<ThreadContext>(n
 Counter ThreadPool::counter(Stats::StatId id) const { Counter n = 0; for (auto & it : *this ){ n += it->stats.counters[id];  } return n;}
 
 bool apply(Position & p, const Move & m, bool noValidation = false); //forward decl
+bool isPseudoLegal(const Position & p, Move m); // forward decl
 
 namespace TT{
 
@@ -1972,17 +1973,17 @@ void prefetch(Hash h) {
 #  endif
 }
 
-bool getEntry(ThreadContext & context, Hash h, DepthType d, Entry & e, int nbuck = 0) {
+bool getEntry(ThreadContext & context, const Position & p, Hash h, DepthType d, Entry & e, int nbuck = 0) {
     assert(h > 0);
     // e.h must not be reset here because of recursion ! (would dismiss first hash found when _e.d < d)
     if ( DynamicConfig::disableTT  ) return false;
     if ( nbuck >= Bucket::nbBucket ) return false; // no more bucket
     Entry & _e = table[h&(ttSize-1)].e[nbuck];
     if ( _e.h == 0 ) return false; //early exist cause next ones are also empty ...
-    if ( (_e.h ^ _e.data) != Hash64to32(h) ) return _e.h=0,getEntry(context,h,d,e,nbuck+1); // next one
+    if ( /*(_e.h ^ _e.data) != Hash64to32(h) ||*/ !isPseudoLegal(p, _e.m)) return _e.h=0,getEntry(context,p,h,d,e,nbuck+1); // next one
     e = _e; // update entry only if no collision is detected !
     if ( _e.d >= d ){ ++context.stats.counters[Stats::sid_tthits]; return true; } // valid entry if depth is ok
-    else return getEntry(context,h,d,e,nbuck+1); // next one
+    else return getEntry(context,p,h,d,e,nbuck+1); // next one
 }
 
 void setEntry(ThreadContext & context, Hash h, Move m, ScoreType s, ScoreType eval, Bound b, DepthType d){
@@ -2009,7 +2010,7 @@ void getPV(const Position & p, ThreadContext & context, PVList & pv){
     Position p2 = p;
     bool stop = false;
     for( int k = 0 ; k < MAX_PLY && !stop; ++k){
-      if ( !TT::getEntry(context, computeHash(p2), 0, e)) break;
+      if ( !TT::getEntry(context, p2, computeHash(p2), 0, e)) break;
       if (e.h != 0) {
         hashStack[k] = computeHash(p2);
         pv.push_back(e.m);
@@ -2461,7 +2462,7 @@ void generateSquare(const Position & p, MoveList & moves, Square from){
     const BitBoard oppPieceBB = p.allPieces[~side];
     const Piece piece = p.b[from];
     const Piece ptype = (Piece)std::abs(piece);
-    assert ( ptype != P_none ) ;
+    assert ( ptype != P_none );
     if (ptype != P_wp) {
         BitBoard bb = BBTools::pfCoverage[ptype-1](from, p.occupancy, p.c) & ~myPieceBB;
         if      (phase == GP_cap)   bb &= oppPieceBB;  // only target opponent piece
@@ -3578,7 +3579,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     getCMHPtr(p.halfmoves,cmhPtr);
 
     TT::Entry e;
-    if (TT::getEntry(*this, computeHash(p), hashDepth, e)) {
+    if (TT::getEntry(*this, p, computeHash(p), hashDepth, e)) {
         if (!pvnode && e.h != 0 && ((e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact))) { return adjustHashScore(e.score, ply); }
         if ( e.m!=INVALIDMOVE && (isInCheck || isCapture(e.m)) ) bestMove = e.m;
     }
@@ -3662,6 +3663,7 @@ ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck){
 }
 
 bool isPseudoLegal(const Position & p, Move m){ // validate TT move
+    if (m <= NULLMOVE) return false;
     const Square from = Move2From(m);
     const Piece fromP = p.b[from];
     if ( fromP == P_none || (fromP > 0 && p.c == Co_Black) || (fromP < 0 && p.c == Co_White)) return false;
@@ -3671,12 +3673,15 @@ bool isPseudoLegal(const Position & p, Move m){ // validate TT move
     const Piece fromPieceType = (Piece)std::abs(fromP);
 
     if (fromPieceType == P_wp){
+        const MType t = Move2Type(m);
+        if (t == T_ep && p.ep == INVALIDSQUARE) return false;
         if (!isPromotion(m) && (SQRANK(to) == 7 || SQRANK(to) == 0)) return false;
+        if ( isPromotion(m) &&  SQRANK(to) != 7 && SQRANK(to) != 0 ) return false;
         BitBoard validPush = BBTools::mask[from].push[p.c] & ~p.occupancy;
         if ((BBTools::mask[from].push[p.c] & p.occupancy) == 0ull) validPush |= BBTools::mask[from].dpush[p.c] & ~p.occupancy;
         if (validPush && SquareToBitboard(to)) return true;
         const BitBoard validCap = BBTools::mask[from].pawnAttack[p.c] & ~p.allPieces[p.c];
-        if (validCap && (toP != P_none || to == p.ep)) return true;
+        if (validCap && (toP != P_none || (t == T_ep && to == p.ep))) return true;
         return false;
     }
 
@@ -3686,19 +3691,19 @@ bool isPseudoLegal(const Position & p, Move m){ // validate TT move
     if (isCastling(m)){
         const MType t = Move2Type(m);
         if (p.c == Co_White) {
-            if (t == C_wqs && (p.castling & C_wqs)
+            if (t == T_wqs && (p.castling & C_wqs)
                 && (((BBTools::mask[p.king[Co_White]].between[Sq_c1] | BBTools::mask[p.rooksInit[Co_White][CT_OOO]].between[Sq_d1]) & p.occupancy) == 0ull)
                 && !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_c1] | SquareToBitboard(p.king[Co_White]))) return true;
-            if (t == C_wks && (p.castling & C_wks)
+            if (t == T_wks && (p.castling & C_wks)
                 && (((BBTools::mask[p.king[Co_White]].between[Sq_g1] | BBTools::mask[p.rooksInit[Co_White][CT_OO]].between[Sq_f1]) & p.occupancy) == 0ull)
                 && !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_g1] | SquareToBitboard(p.king[Co_White]))) return true;
             return false;
         }
         else{
-            if (t == C_bqs && (p.castling & C_bqs)
+            if (t == T_bqs && (p.castling & C_bqs)
                 && (((BBTools::mask[p.king[Co_Black]].between[Sq_c8] | BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].between[Sq_d8]) & p.occupancy) == 0ull)
                 && !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_c8] | SquareToBitboard(p.king[Co_Black]))) return true;
-            if (t == C_bks && (p.castling & C_bks)
+            if (t == T_bks && (p.castling & C_bks)
                 && (((BBTools::mask[p.king[Co_Black]].between[Sq_g8] | BBTools::mask[p.rooksInit[Co_Black][CT_OO]].between[Sq_f8]) & p.occupancy) == 0ull)
                 && !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_g8] | SquareToBitboard(p.king[Co_Black]))) return true;
             return false;
@@ -3740,7 +3745,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     const Hash pHash = computeHash(p) ^ (withoutSkipMove ? 0 : skipMove);
     bool validTTmove = false;
     TT::Entry e;
-    if ( TT::getEntry(*this,pHash, depth, e)) {
+    if ( TT::getEntry(*this, p, pHash, depth, e)) {
         if ( e.h != 0 && !rootnode && !pvnode && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
             if (!isInCheck && e.m != INVALIDMOVE && Move2Type(e.m) == T_std ) updateTables(*this, p, depth, ply, e.m, e.b, cmhPtr);
             return adjustHashScore(e.score, ply);
@@ -3804,7 +3809,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if (nullIIDScore >= beta /*&& stack[p.halfmoves].eval >= beta + 10 * (depth-improving)*/ ) { ///@todo try to minimize sid_nullMoveTry2 versus sid_nullMove
                 TT::Entry nullE;
                 const DepthType nullDepth = depth-R;
-                TT::getEntry(*this, pHash, nullDepth, nullE);
+                TT::getEntry(*this, p, pHash, nullDepth, nullE);
                 if (nullE.h == 0ull || nullE.score >= beta ) { // avoid null move search if TT gives a score < beta for the same depth
                     ++stats.counters[Stats::sid_nullMoveTry2];
                     Position pN = p;
@@ -3814,7 +3819,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                     ScoreType nullscore = -pvs<false, false>(-beta, -beta + 1, pN, nullDepth, ply + 1, nullPV, seldepth, isInCheck, !cutNode);
                     if (stopFlag) return STOPSCORE;
                     TT::Entry nullEThreat;
-                    TT::getEntry(*this,computeHash(pN), 0, nullEThreat);
+                    TT::getEntry(*this, pN, computeHash(pN), 0, nullEThreat);
                     if ( nullEThreat.h != 0ull ) refutation = nullEThreat.m;
                     //if (isMatedScore(nullscore)) mateThreat = true;
                     if (nullscore >= beta){
@@ -3859,7 +3864,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         PVList iidPV;
         pvs<pvnode,false>(alpha,beta,p,/*pvnode?depth-2:*/depth/2,ply,iidPV,seldepth,isInCheck,cutNode,skipMove);
         if (stopFlag) return STOPSCORE;
-        validTTmove = TT::getEntry(*this,pHash, depth, e) && e.h != 0 && e.m != INVALIDMOVE;
+        validTTmove = TT::getEntry(*this, p, pHash, depth, e) && e.h != 0 && e.m != INVALIDMOVE;
     }
 
     killerT.killers[ply+1][0] = killerT.killers[ply+1][1] = 0;
@@ -3886,7 +3891,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if ( e.h != 0 && validTTmove && !sameMove(e.m,skipMove)) { // should be the case thanks to iid at pvnode
         bestMove = e.m; // in order to preserve tt move for alpha bound entry
         Position p2 = p;
-        if (isPseudoLegal(p,e.m) && apply(p2, e.m)) {
+        if ( apply(p2, e.m)) {
             TT::prefetch(computeHash(p2));
             const Square to = Move2To(e.m);
             validMoveCount++;
