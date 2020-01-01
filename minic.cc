@@ -1179,6 +1179,16 @@ namespace MaterialHash { // idea from Gull
     namespace KPK{
 
     Square normalizeSquare(const Position& p, Color strongSide, Square sq) {
+       /*
+       if (countBit(p.pieces<P_wp>(strongSide)) != 1) {
+           std::cout << ToString(p,true) << std::endl;
+           std::cout << ToString(p.mat) << std::endl;
+           std::cout << showBitBoard(p.whiteKing()) << std::endl;
+           std::cout << showBitBoard(p.blackKing()) << std::endl;
+           std::cout << showBitBoard(p.whitePawn()) << std::endl;
+           std::cout << showBitBoard(p.blackPawn()) << std::endl;
+       }
+       */
        assert(countBit(p.pieces<P_wp>(strongSide)) == 1); // only for KPK !
        if (SQFILE(BBTools::SquareFromBitBoard(p.pieces<P_wp>(strongSide))) >= File_e) sq = Square(HFlip(sq)); // we know there is at least one pawn
        return strongSide == Co_White ? sq : VFlip(sq);
@@ -1986,11 +1996,11 @@ bool getEntry(ThreadContext & context, const Position & p, Hash h, DepthType d, 
     if ( /*true ||*/ (((_e.h ^ _e.data)/*&0x00000111*/) == (Hash64to32(h)/*&0x00000111*/)) ) {
 	    if ( VALIDMOVE(_e.m) && !isPseudoLegal(p, _e.m)) {
             // should never been here !
-	        /*
+	        
 		    std::cout << "Invalid TT move" << std::endl;
 		    std::cout << ToString(p) << std::endl;
 		    std::cout << ToString(_e.m) << std::endl;
-		    */
+		    
 		    return _e.h=0,getEntry(context,p,h,d,e,nbuck+1); // next one
 	    }
     }
@@ -2111,8 +2121,8 @@ std::string ToString(const PVList & moves){
 
 std::string ToString(const Position::Material & mat) {
     std::stringstream str;
-    str << "\n" << Logging::_protocolComment[Logging::ct] << "Q  :" << (int)mat[Co_White][M_q] << "\n" << Logging::_protocolComment[Logging::ct] << "R  :" << (int)mat[Co_White][M_r] << "\n" << Logging::_protocolComment[Logging::ct] << "B  :" << (int)mat[Co_White][M_b] << "\n" << Logging::_protocolComment[Logging::ct] << "L  :" << (int)mat[Co_White][M_bl] << "\n" << Logging::_protocolComment[Logging::ct] << "D  :" << (int)mat[Co_White][M_bd] << "\n" << Logging::_protocolComment[Logging::ct] << "N  :" << (int)mat[Co_White][M_n] << "\n" << Logging::_protocolComment[Logging::ct] << "P  :" << (int)mat[Co_White][M_p] << "\n" << Logging::_protocolComment[Logging::ct] << "Ma :" << (int)mat[Co_White][M_M] << "\n" << Logging::_protocolComment[Logging::ct] << "Mi :" << (int)mat[Co_White][M_m] << "\n" << Logging::_protocolComment[Logging::ct] << "T  :" << (int)mat[Co_White][M_t] << "\n";
-    str << "\n" << Logging::_protocolComment[Logging::ct] << "q  :" << (int)mat[Co_Black][M_q] << "\n" << Logging::_protocolComment[Logging::ct] << "r  :" << (int)mat[Co_Black][M_r] << "\n" << Logging::_protocolComment[Logging::ct] << "b  :" << (int)mat[Co_Black][M_b] << "\n" << Logging::_protocolComment[Logging::ct] << "l  :" << (int)mat[Co_Black][M_bl] << "\n" << Logging::_protocolComment[Logging::ct] << "d  :" << (int)mat[Co_Black][M_bd] << "\n" << Logging::_protocolComment[Logging::ct] << "n  :" << (int)mat[Co_Black][M_n] << "\n" << Logging::_protocolComment[Logging::ct] << "p  :" << (int)mat[Co_Black][M_p] << "\n" << Logging::_protocolComment[Logging::ct] << "ma :" << (int)mat[Co_Black][M_M] << "\n" << Logging::_protocolComment[Logging::ct] << "mi :" << (int)mat[Co_Black][M_m] << "\n" << Logging::_protocolComment[Logging::ct] << "t  :" << (int)mat[Co_Black][M_t] << "\n";
+    str << "\n" << Logging::_protocolComment[Logging::ct] << "K  :" << (int)mat[Co_White][M_k] << "\n" << Logging::_protocolComment[Logging::ct] << "Q  :" << (int)mat[Co_White][M_q] << "\n" << Logging::_protocolComment[Logging::ct] << "R  :" << (int)mat[Co_White][M_r] << "\n" << Logging::_protocolComment[Logging::ct] << "B  :" << (int)mat[Co_White][M_b] << "\n" << Logging::_protocolComment[Logging::ct] << "L  :" << (int)mat[Co_White][M_bl] << "\n" << Logging::_protocolComment[Logging::ct] << "D  :" << (int)mat[Co_White][M_bd] << "\n" << Logging::_protocolComment[Logging::ct] << "N  :" << (int)mat[Co_White][M_n] << "\n" << Logging::_protocolComment[Logging::ct] << "P  :" << (int)mat[Co_White][M_p] << "\n" << Logging::_protocolComment[Logging::ct] << "Ma :" << (int)mat[Co_White][M_M] << "\n" << Logging::_protocolComment[Logging::ct] << "Mi :" << (int)mat[Co_White][M_m] << "\n" << Logging::_protocolComment[Logging::ct] << "T  :" << (int)mat[Co_White][M_t] << "\n";
+    str << "\n" << Logging::_protocolComment[Logging::ct] << "k  :" << (int)mat[Co_Black][M_k] << "\n" << Logging::_protocolComment[Logging::ct] << "q  :" << (int)mat[Co_Black][M_q] << "\n" << Logging::_protocolComment[Logging::ct] << "r  :" << (int)mat[Co_Black][M_r] << "\n" << Logging::_protocolComment[Logging::ct] << "b  :" << (int)mat[Co_Black][M_b] << "\n" << Logging::_protocolComment[Logging::ct] << "l  :" << (int)mat[Co_Black][M_bl] << "\n" << Logging::_protocolComment[Logging::ct] << "d  :" << (int)mat[Co_Black][M_bd] << "\n" << Logging::_protocolComment[Logging::ct] << "n  :" << (int)mat[Co_Black][M_n] << "\n" << Logging::_protocolComment[Logging::ct] << "p  :" << (int)mat[Co_Black][M_p] << "\n" << Logging::_protocolComment[Logging::ct] << "ma :" << (int)mat[Co_Black][M_M] << "\n" << Logging::_protocolComment[Logging::ct] << "mi :" << (int)mat[Co_Black][M_m] << "\n" << Logging::_protocolComment[Logging::ct] << "t  :" << (int)mat[Co_Black][M_t] << "\n";
     return str.str();
 }
 
@@ -2126,8 +2136,8 @@ std::string ToString(const Position & p, bool noEval){
     }
     ss << Logging::_protocolComment[Logging::ct] << " +-+-+-+-+-+-+-+-+" << std::endl;
     if ( p.ep >=0 ) ss << Logging::_protocolComment[Logging::ct] << " ep " << SquareNames[p.ep] << std::endl;
-    //ss << Logging::_protocolComment[Logging::ct] << " wk " << (p.king[Co_White]!=INVALIDSQUARE?SquareNames[p.king[Co_White]]:"none")  << std::endl;
-    //ss << Logging::_protocolComment[Logging::ct] << " bk " << (p.king[Co_Black]!=INVALIDSQUARE?SquareNames[p.king[Co_Black]]:"none") << std::endl;
+    ss << Logging::_protocolComment[Logging::ct] << " wk " << (p.king[Co_White]!=INVALIDSQUARE?SquareNames[p.king[Co_White]]:"none")  << std::endl;
+    ss << Logging::_protocolComment[Logging::ct] << " bk " << (p.king[Co_Black]!=INVALIDSQUARE?SquareNames[p.king[Co_Black]]:"none") << std::endl;
     //ss << Logging::_protocolComment[Logging::ct] << " wrOOO " << (p.rooksInit[Co_White][CT_OOO]!=INVALIDSQUARE?SquareNames[p.rooksInit[Co_White][CT_OOO]]:"none") << std::endl;
     //ss << Logging::_protocolComment[Logging::ct] << " wrOO  " << (p.rooksInit[Co_White][CT_OO ]!=INVALIDSQUARE?SquareNames[p.rooksInit[Co_White][CT_OO ]]:"none") << std::endl;
     //ss << Logging::_protocolComment[Logging::ct] << " brOOO " << (p.rooksInit[Co_Black][CT_OOO]!=INVALIDSQUARE?SquareNames[p.rooksInit[Co_Black][CT_OOO]]:"none") << std::endl;
@@ -2605,7 +2615,8 @@ bool apply(Position & p, const Move & m, bool noValidation){
 #ifdef DEBUG_APPLY
     if ( !isPseudoLegal(p,m) ) { 
         Logging::LogIt(Logging::logError) << "Apply error, not legal " << ToString(p) << ToString(m); 
-}
+        assert(false);
+    }
  #endif
     const int fromId   = fromP + PieceShift;
     switch(type){
@@ -3698,10 +3709,23 @@ bool isPseudoLegal(const Position & p, Move m) { // validate TT move
         //std::cout << "2" << std::endl;
         return false;
     }
+    if ((Piece)std::abs(toP) == P_wk) {
+        //std::cout << "2k" << std::endl;
+        return false;
+    }
     const Piece fromPieceType = (Piece)std::abs(fromP);
     const MType t = Move2Type(m);
     if (t == T_ep && (p.ep == INVALIDSQUARE || fromPieceType != P_wp)) {
         //std::cout << "3" << std::endl;
+        return false;
+    }
+    if (t == T_ep && p.b[p.ep + (p.c==Co_White?-8:+8)] != (p.c==Co_White?P_bp:P_wp)) {
+        //std::cout << "3b" << std::endl;
+        return false;
+    }
+    // prom
+    if (isPromotion(m) && fromPieceType != P_wp) {
+        //std::cout << "3c" << std::endl;
         return false;
     }
     // castling
