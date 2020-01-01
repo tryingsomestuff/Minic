@@ -1983,10 +1983,10 @@ bool getEntry(ThreadContext & context, const Position & p, Hash h, DepthType d, 
     if ( nbuck >= Bucket::nbBucket ) return false; // no more bucket
     Entry & _e = table[h&(ttSize-1)].e[nbuck];
     if ( _e.h == 0 ) return false; //early exist cause next ones are also empty ...
-    if ( ((_e.h ^ _e.data)/*&0x00000111*/) == (Hash64to32(h)/*&0x00000111*/) ) {
-	    if ( _e.m > NULLMOVE && !isPseudoLegal(p, _e.m)) {
-                    // should never been here !
-	            /*
+    if ( /*true ||*/ (((_e.h ^ _e.data)/*&0x00000111*/) == (Hash64to32(h)/*&0x00000111*/)) ) {
+	    if ( VALIDMOVE(_e.m) && !isPseudoLegal(p, _e.m)) {
+            // should never been here !
+	        /*
 		    std::cout << "Invalid TT move" << std::endl;
 		    std::cout << ToString(p) << std::endl;
 		    std::cout << ToString(_e.m) << std::endl;
@@ -2370,6 +2370,10 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
        if ( p.b[from] == P_wk && p.b[to] == P_wr ){ moveType = (to<from ? T_wqs : T_wks); }
        if ( p.b[from] == P_bk && p.b[to] == P_br ){ moveType = (to<from ? T_bqs : T_bks); }
     }
+    if (!isPseudoLegal(p, ToMove(from, to, moveType))) {
+        Logging::LogIt(Logging::logError) << "Trying to read bad move, not legal " << ToString(p) << str;
+        return false;
+    }
     return true;
 }
 
@@ -2599,9 +2603,10 @@ bool apply(Position & p, const Move & m, bool noValidation){
     const Piece  toP   = p.b[to];
 //#define DEBUG_APPLY
 #ifdef DEBUG_APPLY
-    if (( fromP > 0 && p.c == Co_Black ) || (fromP < 0 && p.c == Co_White ) ){ Logging::LogIt(Logging::logFatal) << "Apply error, wrong color" << ToString(p) << ToString(m); }
-    if (( toP   > 0 && p.c == Co_White ) || (toP   < 0 && p.c == Co_Black ) ){ Logging::LogIt(Logging::logFatal) << "Apply error, cap own piece" << ToString(p) << ToString(m); }
-#endif
+    if ( !isPseudoLegal(p,m) ) { 
+        Logging::LogIt(Logging::logError) << "Apply error, not legal " << ToString(p) << ToString(m); 
+}
+ #endif
     const int fromId   = fromP + PieceShift;
     switch(type){
     case T_std:
@@ -2649,7 +2654,7 @@ bool apply(Position & p, const Move & m, bool noValidation){
 
     case T_ep: {
         assert(p.ep != INVALIDSQUARE);
-        assert(SQRANK(p.ep) == 2 || SQRANK(p.ep) == 5);
+        assert(SQRANK(p.ep) == EPRank[p.c]);
         const Square epCapSq = p.ep + (p.c == Co_White ? -8 : +8);
         assert(epCapSq>=0 && epCapSq<64);
         BBTools::unSetBit(p, epCapSq); // BEFORE setting p.b new shape !!!
@@ -3677,7 +3682,7 @@ ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck) {
 }
 
 bool isPseudoLegal(const Position & p, Move m) { // validate TT move
-    if (m <= NULLMOVE) {
+    if (!VALIDMOVE(m)) {
         //std::cout << "0" << std::endl;
         return false;
     }

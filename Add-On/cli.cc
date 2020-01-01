@@ -50,7 +50,7 @@ void analyze(const Position & p, DepthType depth){
         ScoreType s = 0;
         TimeMan::isDynamic       = false;
         TimeMan::nbMoveInTC      = -1;
-        TimeMan::msecPerMove     = 60*60*1000*24; // 1 day == infinity ...
+        TimeMan::msecPerMove     = INFINITETIME;
         TimeMan::msecInTC        = -1;
         TimeMan::msecInc         = -1;
         TimeMan::msecUntilNextTC = -1;
