@@ -1996,11 +1996,11 @@ bool getEntry(ThreadContext & context, const Position & p, Hash h, DepthType d, 
     if ( /*true ||*/ (((_e.h ^ _e.data)/*&0x00000111*/) == (Hash64to32(h)/*&0x00000111*/)) ) {
 	    if ( VALIDMOVE(_e.m) && !isPseudoLegal(p, _e.m)) {
             // should never been here !
-	        
+	        /*
 		    std::cout << "Invalid TT move" << std::endl;
 		    std::cout << ToString(p) << std::endl;
 		    std::cout << ToString(_e.m) << std::endl;
-		    
+		    */
 		    return _e.h=0,getEntry(context,p,h,d,e,nbuck+1); // next one
 	    }
     }
