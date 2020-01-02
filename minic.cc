@@ -1,25 +1,28 @@
 #include <algorithm>
-#include <cassert>
-#include <bitset>
-#include <cmath>
-#include <cctype>
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <iterator>
-#include <limits.h>
-#include <vector>
-#include <sstream>
-#include <set>
-#include <chrono>
-#include <random>
-#include <unordered_map>
+#include <array>
 #include <atomic>
+#include <bitset>
+#include <cassert>
+#include <cctype>
+#include <chrono>
+#include <climits>
+#include <cmath>
 #include <condition_variable>
-#include <mutex>
-#include <thread>
+#include <fstream>
 #include <future>
+#include <iomanip>
+#include <iostream>
+#include <iterator>
+#include <mutex>
+#include <random>
+#include <set>
+#include <sstream>
 #include <string>
+#include <thread>
+#include <type_traits>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 #ifdef _WIN32
 #include <stdlib.h>
 #include <intrin.h>
@@ -34,6 +37,8 @@ typedef uint64_t u_int64_t;
 
 #include "json.hpp"
 
+const std::string MinicVersion = "dev";
+
 //#define IMPORTBOOK
 #define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
@@ -43,14 +48,12 @@ typedef uint64_t u_int64_t;
 //#define WITH_PGN_PARSER
 #define WITH_MAGIC
 
-const std::string MinicVersion = "dev";
-
-/*
-//todo
--Root move ordering
--test more extension
--FRC castling
-*/
+//#define WITH_TIMER
+//#define DEBUG_HASH
+//#define DEBUG_PHASH
+//#define DEBUG_MATERIAL
+//#define DEBUG_APPLY
+//#define WITH_CLOP_SEARCH
 
 #define INFINITETIME TimeType(60ull*60ull*1000ull*24ull*30ull) // 1 month ...
 #define STOPSCORE   ScoreType(-20000)
@@ -61,8 +64,8 @@ const std::string MinicVersion = "dev";
 #define NULLMOVE        0
 #define INVALIDSQUARE  -1
 #define MAX_PLY       512
-#define MAX_MOVE      256   // 256 is enough I guess ...
-#define MAX_DEPTH     127   // DepthType is a char, do not go above 127
+#define MAX_MOVE      256   // 256 is enough I guess/home ...
+#define MAX_DEPTH     127   // DepthType is a char, !!!do not go above 127!!!
 #define MAX_HISTORY  1000
 
 #define VALIDMOVE(m) ((m)!=NULLMOVE && (m)!=INVALIDMOVE)
@@ -80,7 +83,7 @@ const std::string MinicVersion = "dev";
 
 #define TO_STR2(x) #x
 #define TO_STR(x) TO_STR2(x)
-#define LINE_NAME(prefix) JOIN(prefix,__LINE__)
+#define LINE_NAME(prefix, suffix) JOIN(JOIN(prefix,__LINE__),suffix)
 #define JOIN(symbol1,symbol2) _DO_JOIN(symbol1,symbol2 )
 #define _DO_JOIN(symbol1,symbol2) symbol1##symbol2
 
@@ -89,17 +92,13 @@ typedef signed short int DepthType;
 typedef int32_t Move;         // invalid if < 0
 typedef int16_t MiniMove;     // invalid if < 0
 typedef signed char Square;   // invalid if < 0
-typedef uint64_t Hash;        // invalid if == 0
+typedef uint64_t Hash;        // invalid if == 0ull
 typedef uint32_t MiniHash;    // invalid if == 0
 typedef uint64_t Counter;
 typedef uint64_t BitBoard;
 typedef int16_t  ScoreType;
 typedef int64_t  TimeType;
 typedef int16_t  GenerationType;
-
-#include <array>
-#include <type_traits>
-#include <utility>
 
 template<std::size_t size, typename T, std::size_t... indexes>
 constexpr auto make_array_n_impl(T && value, std::index_sequence<indexes...>) { return std::array<std::decay_t<T>, size>{ (static_cast<void>(indexes), value)..., std::forward<T>(value) };}
@@ -108,7 +107,6 @@ constexpr auto make_array_n(std::integral_constant<std::size_t, 0>, T &&) { retu
 template<std::size_t size, typename T> constexpr auto make_array_n(std::integral_constant<std::size_t, size>, T && value) { return make_array_n_impl<size>(std::forward<T>(value), std::make_index_sequence<size - 1>{});}
 template<std::size_t size, typename T> constexpr auto make_array_n(T && value) { return make_array_n(std::integral_constant<std::size_t, size>{}, std::forward<T>(value)); }
 
-//#define WITH_TIMER
 #ifdef WITH_TIMER
 #include "Add-On/timers.cc"
 #else
@@ -256,7 +254,7 @@ namespace Logging {
     std::unique_ptr<std::ofstream> LogIt::_of;
 }
 
-namespace StaticConfig{
+namespace SearchConfig{
 const bool doWindow         = true;
 const bool doPVS            = true;
 const bool doNullMove       = true;
@@ -294,12 +292,11 @@ const bool doCMHPruning     = true;
 /*const*/ DepthType lmrMinDepth                  = 3;
 /*const*/ DepthType singularExtensionDepth       = 8;
 
-// a playing level feature for the poor ...
 const int nlevel = 100;
 const DepthType levelDepthMax[nlevel/10+1]   = {0,1,1,2,4,6,8,10,12,14,MAX_DEPTH};
 
 const DepthType lmpMaxDepth                  = 10;
-const int lmpLimit[][StaticConfig::lmpMaxDepth + 1] = { { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 } ,{ 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };
+const int lmpLimit[][SearchConfig::lmpMaxDepth + 1] = { { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 } ,{ 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };
 
 DepthType lmrReduction[MAX_DEPTH][MAX_MOVE];
 void initLMR() {
@@ -314,7 +311,7 @@ void initMvvLva(){
     for(int v = 0; v < 6 ; ++v) for(int a = 0; a < 6 ; ++a) MvvLvaScores[v][a] = IValues[v] * 20 - IValues[a];
 }
 
-}
+} // SearchConfig
 
 namespace EvalConfig {
 
@@ -469,7 +466,8 @@ ScoreType kingAttSemiOpenfileOpp = 97;
 ScoreType kingAttSemiOpenfileOur = 63;
 
 //ScoreType tempo = 15;
-}
+
+} // EvalConfig
 
 inline ScoreType ScaleScore(EvalScore s, float gp){ return ScoreType(gp*s[MG] + (1.f-gp)*s[EG]);}
 
@@ -526,7 +524,7 @@ Color operator++(Color & c){c=Color(c+1); return c;}
 // ttmove 10000, promcap >7000, cap 7000, checks 6000, killers 1800-1700-1600, counter 1500, castling 200, other by -1000 < history < 1000, bad cap <-7000.
 ScoreType MoveScoring[16] = { 0, 7000, 7100, 6000, 3950, 3500, 3350, 3300, 7950, 7500, 7350, 7300, 200, 200, 200, 200 };
 
-Color Colors[13] = { Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_None, Co_White, Co_White, Co_White, Co_White, Co_White, Co_White};
+//Color Colors[13] = { Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_None, Co_White, Co_White, Co_White, Co_White, Co_White, Co_White};
 
 #ifdef __MINGW32__
 #define POPCOUNT(x)   int(__builtin_popcountll(x))
@@ -582,6 +580,7 @@ inline int BitScanForward(BitBoard bb) { assert(bb != 0ull); return __builtin_ct
 
 #define SquareToBitboard(k) BitBoard(1ull<<(k))
 #define SquareToBitboardTable(k) BBTools::mask[k].bbsquare
+
 inline ScoreType countBit(const BitBoard & b)           { return ScoreType(POPCOUNT(b));}
 inline void      setBit  (      BitBoard & b, Square k) { b |= SquareToBitboard(k);}
 inline void      unSetBit(      BitBoard & b, Square k) { b &= ~SquareToBitboard(k);}
@@ -739,7 +738,7 @@ int popBit(BitBoard & b) {
     return i;
 }
 
-// HQ BB code and init inspired by Amoeba
+// HQ BB code and init inspired by Amoeba/Dumb
 int ranks[512];
 struct Mask {
     BitBoard bbsquare, diagonal, antidiagonal, file, kingZone, pawnAttack[2], push[2], dpush[2], enpassant, knight, king, frontSpan[2], rearSpan[2], passerSpan[2], attackFrontSpan[2], between[64];
@@ -980,7 +979,7 @@ template < Piece pp > inline BitBoard attack(const Square x, const BitBoard targ
 constexpr BitBoard(*const pfCoverage[])(const Square, const BitBoard, const Color) = { &BBTools::coverage<P_wp>, &BBTools::coverage<P_wn>, &BBTools::coverage<P_wb>, &BBTools::coverage<P_wr>, &BBTools::coverage<P_wq>, &BBTools::coverage<P_wk> };
 constexpr BitBoard(*const pfAttack[])(const Square, const BitBoard, const BitBoard, const Color) = { &BBTools::attack<P_wp>,  &BBTools::attack<P_wn>, &BBTools::attack<P_wb>, &BBTools::attack<P_wr>, &BBTools::attack<P_wq>,  &BBTools::attack<P_wk> };
 
-Square SquareFromBitBoard(const BitBoard & b) { // return first square
+Square SquareFromBitBoard(const BitBoard & b) { // return first square only
     assert(b != 0ull);
     unsigned long i = 0;
     bsf(b, i);
@@ -1179,16 +1178,6 @@ namespace MaterialHash { // idea from Gull
     namespace KPK{
 
     Square normalizeSquare(const Position& p, Color strongSide, Square sq) {
-       /*
-       if (countBit(p.pieces<P_wp>(strongSide)) != 1) {
-           std::cout << ToString(p,true) << std::endl;
-           std::cout << ToString(p.mat) << std::endl;
-           std::cout << showBitBoard(p.whiteKing()) << std::endl;
-           std::cout << showBitBoard(p.blackKing()) << std::endl;
-           std::cout << showBitBoard(p.whitePawn()) << std::endl;
-           std::cout << showBitBoard(p.blackPawn()) << std::endl;
-       }
-       */
        assert(countBit(p.pieces<P_wp>(strongSide)) == 1); // only for KPK !
        if (SQFILE(BBTools::SquareFromBitBoard(p.pieces<P_wp>(strongSide))) >= File_e) sq = Square(HFlip(sq)); // we know there is at least one pawn
        return strongSide == Co_White ? sq : VFlip(sq);
@@ -1280,8 +1269,7 @@ namespace MaterialHash { // idea from Gull
         if ( display) Logging::LogIt(Logging::logInfo) << "Material hash init";
         const float totalMatScore = 2.f * *absValues[P_wq] + 4.f * *absValues[P_wr] + 4.f * *absValues[P_wb] + 4.f * *absValues[P_wn] + 16.f * *absValues[P_wp];
         for (int k = 0 ; k < TotalMat ; ++k){
-	    const Position::Material mat = indexToMat(k);
-	    //std::cout << ToString(mat) << std::endl;
+            const Position::Material mat = indexToMat(k);
             const ScoreType matPieceScoreW = mat[Co_White][M_q] * *absValues[P_wq] + mat[Co_White][M_r] * *absValues[P_wr] + mat[Co_White][M_b] * *absValues[P_wb] + mat[Co_White][M_n] * *absValues[P_wn];
             const ScoreType matPieceScoreB = mat[Co_Black][M_q] * *absValues[P_wq] + mat[Co_Black][M_r] * *absValues[P_wr] + mat[Co_Black][M_b] * *absValues[P_wb] + mat[Co_Black][M_n] * *absValues[P_wn];
             const ScoreType matPawnScoreW  = mat[Co_White][M_p] * *absValues[P_wp];
@@ -1306,99 +1294,64 @@ namespace MaterialHash { // idea from Gull
             InitMaterialScore();
 
             for(size_t k = 0 ; k < TotalMat ; ++k) helperTable[k] = &helperDummy;
-#define DEF_MAT(x,t)     const Position::Material MAT##x = materialFromString(TO_STR(x)); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t   );
-#define DEF_MAT_H(x,t,h) const Position::Material MAT##x = materialFromString(TO_STR(x)); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer)( MAT##x ,t, h);
-#define DEF_MAT_REV(rev,x)     const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializerRev)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)].t)   );
-#define DEF_MAT_REV_H(rev,x,h) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializerRev)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)].t), h);
+#define DEF_MAT(x,t)     const Position::Material MAT##x = materialFromString(TO_STR(x)); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer,MAT##x)( MAT##x ,t   );
+#define DEF_MAT_H(x,t,h) const Position::Material MAT##x = materialFromString(TO_STR(x)); MaterialHashInitializer LINE_NAME(dummyMaterialInitializer,MAT##x)( MAT##x ,t, h);
+#define DEF_MAT_REV(rev,x)     const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializerRev,MAT##x)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)].t)   );
+#define DEF_MAT_REV_H(rev,x,h) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializerRev,MAT##x)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)].t), h);
 
             ///@todo some Ter_MaterialDraw are Ter_Draw (FIDE)
 
             // other FIDE draw
-            DEF_MAT(KLKL,   Ter_MaterialDraw)
-            DEF_MAT(KDKD,   Ter_MaterialDraw)
+            DEF_MAT(KLKL,   Ter_MaterialDraw)        DEF_MAT(KDKD,   Ter_MaterialDraw)
 
             // sym (and pseudo sym) : all should be draw (or very nearly)
-            DEF_MAT(KK,     Ter_MaterialDraw)
-            DEF_MAT(KQQKQQ, Ter_MaterialDraw)
-            DEF_MAT(KQKQ,   Ter_MaterialDraw)
-            DEF_MAT(KRRKRR, Ter_MaterialDraw)
-            DEF_MAT(KRKR,   Ter_MaterialDraw)
-            DEF_MAT(KLDKLD, Ter_MaterialDraw)
-            DEF_MAT(KLLKLL, Ter_MaterialDraw)
-            DEF_MAT(KDDKDD, Ter_MaterialDraw)
-            DEF_MAT(KLDKLL, Ter_MaterialDraw)        DEF_MAT_REV(KLLKLD, KLDKLL)
-            DEF_MAT(KLDKDD, Ter_MaterialDraw)        DEF_MAT_REV(KDDKLD, KLDKDD)
+            DEF_MAT(KK,     Ter_MaterialDraw)        DEF_MAT(KQQKQQ, Ter_MaterialDraw)    DEF_MAT(KQKQ,   Ter_MaterialDraw)        DEF_MAT(KRRKRR, Ter_MaterialDraw)        
+            DEF_MAT(KRKR,   Ter_MaterialDraw)        DEF_MAT(KLDKLD, Ter_MaterialDraw)    DEF_MAT(KLLKLL, Ter_MaterialDraw)        DEF_MAT(KDDKDD, Ter_MaterialDraw)
+            DEF_MAT(KNNKNN, Ter_MaterialDraw)        DEF_MAT(KNKN  , Ter_MaterialDraw)
+            DEF_MAT(KLDKLL, Ter_MaterialDraw)        DEF_MAT_REV(KLLKLD, KLDKLL)          DEF_MAT(KLDKDD, Ter_MaterialDraw)        DEF_MAT_REV(KDDKLD, KLDKDD)
             DEF_MAT(KLKD,   Ter_MaterialDraw)        DEF_MAT_REV(KDKL,   KLKD)
-            DEF_MAT(KNNKNN, Ter_MaterialDraw)
-            DEF_MAT(KNKN,   Ter_MaterialDraw)
-
+            
             // 2M M
-            DEF_MAT(KQQKQ, Ter_WhiteWin)             DEF_MAT_REV(KQKQQ, KQQKQ)
-            DEF_MAT(KQQKR, Ter_WhiteWin)             DEF_MAT_REV(KRKQQ, KQQKR)
-            DEF_MAT(KRRKQ, Ter_LikelyDraw)           DEF_MAT_REV(KQKRR, KRRKQ)
-            DEF_MAT(KRRKR, Ter_WhiteWin)             DEF_MAT_REV(KRKRR, KRRKR)
-            DEF_MAT(KQRKQ, Ter_WhiteWin)             DEF_MAT_REV(KQKQR, KQRKQ)
-            DEF_MAT(KQRKR, Ter_WhiteWin)             DEF_MAT_REV(KRKQR, KQRKR)
+            DEF_MAT(KQQKQ, Ter_WhiteWin)             DEF_MAT_REV(KQKQQ, KQQKQ)            DEF_MAT(KQQKR, Ter_WhiteWin)             DEF_MAT_REV(KRKQQ, KQQKR)
+            DEF_MAT(KRRKQ, Ter_LikelyDraw)           DEF_MAT_REV(KQKRR, KRRKQ)            DEF_MAT(KRRKR, Ter_WhiteWin)             DEF_MAT_REV(KRKRR, KRRKR)
+            DEF_MAT(KQRKQ, Ter_WhiteWin)             DEF_MAT_REV(KQKQR, KQRKQ)            DEF_MAT(KQRKR, Ter_WhiteWin)             DEF_MAT_REV(KRKQR, KQRKR)
 
             // 2M m
-            DEF_MAT(KQQKL, Ter_WhiteWin)             DEF_MAT_REV(KLKQQ, KQQKL)
-            DEF_MAT(KRRKL, Ter_WhiteWin)             DEF_MAT_REV(KLKRR, KRRKL)
-            DEF_MAT(KQRKL, Ter_WhiteWin)             DEF_MAT_REV(KLKQR, KQRKL)
-            DEF_MAT(KQQKD, Ter_WhiteWin)             DEF_MAT_REV(KDKQQ, KQQKD)
-            DEF_MAT(KRRKD, Ter_WhiteWin)             DEF_MAT_REV(KDKRR, KRRKD)
-            DEF_MAT(KQRKD, Ter_WhiteWin)             DEF_MAT_REV(KDKQR, KQRKD)
-            DEF_MAT(KQQKN, Ter_WhiteWin)             DEF_MAT_REV(KNKQQ, KQQKN)
-            DEF_MAT(KRRKN, Ter_WhiteWin)             DEF_MAT_REV(KNKRR, KRRKN)
+            DEF_MAT(KQQKL, Ter_WhiteWin)             DEF_MAT_REV(KLKQQ, KQQKL)            DEF_MAT(KRRKL, Ter_WhiteWin)             DEF_MAT_REV(KLKRR, KRRKL)
+            DEF_MAT(KQRKL, Ter_WhiteWin)             DEF_MAT_REV(KLKQR, KQRKL)            DEF_MAT(KQQKD, Ter_WhiteWin)             DEF_MAT_REV(KDKQQ, KQQKD)
+            DEF_MAT(KRRKD, Ter_WhiteWin)             DEF_MAT_REV(KDKRR, KRRKD)            DEF_MAT(KQRKD, Ter_WhiteWin)             DEF_MAT_REV(KDKQR, KQRKD)
+            DEF_MAT(KQQKN, Ter_WhiteWin)             DEF_MAT_REV(KNKQQ, KQQKN)            DEF_MAT(KRRKN, Ter_WhiteWin)             DEF_MAT_REV(KNKRR, KRRKN)
             DEF_MAT(KQRKN, Ter_WhiteWin)             DEF_MAT_REV(KNKQR, KQRKN)
 
             // 2m M
-            DEF_MAT(KLDKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKLD,KLDKQ)
-            DEF_MAT(KLDKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKLD,KLDKR)
-            DEF_MAT(KLLKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKLL,KLLKQ)
-            DEF_MAT(KLLKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKLL,KLLKR)
-            DEF_MAT(KDDKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKDD,KDDKQ)
-            DEF_MAT(KDDKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKDD,KDDKR)
-            DEF_MAT(KNNKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKNN,KNNKQ)
-            DEF_MAT(KNNKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKNN,KNNKR)
-            DEF_MAT(KLNKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKLN,KLNKQ)
-            DEF_MAT(KLNKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKLN,KLNKR)
-            DEF_MAT(KDNKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKDN,KDNKQ)
-            DEF_MAT(KDNKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKDN,KDNKR)
+            DEF_MAT(KLDKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKLD,KLDKQ)            DEF_MAT(KLDKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKLD,KLDKR)
+            DEF_MAT(KLLKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKLL,KLLKQ)            DEF_MAT(KLLKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKLL,KLLKR)
+            DEF_MAT(KDDKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKDD,KDDKQ)            DEF_MAT(KDDKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKDD,KDDKR)
+            DEF_MAT(KNNKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKNN,KNNKQ)            DEF_MAT(KNNKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKNN,KNNKR)
+            DEF_MAT(KLNKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKLN,KLNKQ)            DEF_MAT(KLNKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKLN,KLNKR)
+            DEF_MAT(KDNKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKDN,KDNKQ)            DEF_MAT(KDNKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKDN,KDNKR)
 
             // 2m m : all draw
-            DEF_MAT(KLDKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKLD,KLDKL)
-            DEF_MAT(KLDKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKLD,KLDKD)
-            DEF_MAT(KLDKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKLD,KLDKN)
-            DEF_MAT(KLLKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKLL,KLLKL)
-            DEF_MAT(KLLKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKLL,KLLKD)
-            DEF_MAT(KLLKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKLL,KLLKN)
-            DEF_MAT(KDDKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKDD,KDDKL)
-            DEF_MAT(KDDKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKDD,KDDKD)
-            DEF_MAT(KDDKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKDD,KDDKN)
-            DEF_MAT(KNNKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKNN,KNNKL)
-            DEF_MAT(KNNKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKNN,KNNKD)
-            DEF_MAT(KNNKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKNN,KNNKN)
-            DEF_MAT(KLNKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKLN,KLNKL)
-            DEF_MAT(KLNKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKLN,KLNKD)
-            DEF_MAT(KLNKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKLN,KLNKN)
-            DEF_MAT(KDNKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKDN,KDNKL)
-            DEF_MAT(KDNKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKDN,KDNKD)
-            DEF_MAT(KDNKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKDN,KDNKN)
+            DEF_MAT(KLDKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKLD,KLDKL)            DEF_MAT(KLDKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKLD,KLDKD)
+            DEF_MAT(KLDKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKLD,KLDKN)            DEF_MAT(KLLKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKLL,KLLKL)
+            DEF_MAT(KLLKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKLL,KLLKD)            DEF_MAT(KLLKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKLL,KLLKN)
+            DEF_MAT(KDDKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKDD,KDDKL)            DEF_MAT(KDDKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKDD,KDDKD)
+            DEF_MAT(KDDKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKDD,KDDKN)            DEF_MAT(KNNKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKNN,KNNKL)
+            DEF_MAT(KNNKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKNN,KNNKD)            DEF_MAT(KNNKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKNN,KNNKN)
+            DEF_MAT(KLNKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKLN,KLNKL)            DEF_MAT(KLNKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKLN,KLNKD)
+            DEF_MAT(KLNKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKLN,KLNKN)            DEF_MAT(KDNKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKDN,KDNKL)
+            DEF_MAT(KDNKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKDN,KDNKD)            DEF_MAT(KDNKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKDN,KDNKN)
 
             // Q x : all should be win
-            DEF_MAT(KQKR, Ter_WhiteWin)              DEF_MAT_REV(KRKQ,KQKR)
-            DEF_MAT(KQKL, Ter_WhiteWin)              DEF_MAT_REV(KLKQ,KQKL)
-            DEF_MAT(KQKD, Ter_WhiteWin)              DEF_MAT_REV(KDKQ,KQKD)
-            DEF_MAT(KQKN, Ter_WhiteWin)              DEF_MAT_REV(KNKQ,KQKN)
+            DEF_MAT(KQKR, Ter_WhiteWin)              DEF_MAT_REV(KRKQ,KQKR)              DEF_MAT(KQKL, Ter_WhiteWin)              DEF_MAT_REV(KLKQ,KQKL)
+            DEF_MAT(KQKD, Ter_WhiteWin)              DEF_MAT_REV(KDKQ,KQKD)              DEF_MAT(KQKN, Ter_WhiteWin)              DEF_MAT_REV(KNKQ,KQKN)
 
             // R x : all should be draw
-            DEF_MAT(KRKL, Ter_LikelyDraw)            DEF_MAT_REV(KLKR,KRKL)
-            DEF_MAT(KRKD, Ter_LikelyDraw)            DEF_MAT_REV(KDKR,KRKD)
+            DEF_MAT(KRKL, Ter_LikelyDraw)            DEF_MAT_REV(KLKR,KRKL)              DEF_MAT(KRKD, Ter_LikelyDraw)            DEF_MAT_REV(KDKR,KRKD)
             DEF_MAT(KRKN, Ter_LikelyDraw)            DEF_MAT_REV(KNKR,KRKN)
 
             // B x : all are draw
-            DEF_MAT(KLKN, Ter_MaterialDraw)          DEF_MAT_REV(KNKL,KLKN)
-            DEF_MAT(KDKN, Ter_MaterialDraw)          DEF_MAT_REV(KNKD,KDKN)
+            DEF_MAT(KLKN, Ter_MaterialDraw)          DEF_MAT_REV(KNKL,KLKN)              DEF_MAT(KDKN, Ter_MaterialDraw)          DEF_MAT_REV(KNKD,KDKN)
 
             // X 0 : QR win, BN draw
             DEF_MAT_H(KQK, Ter_WhiteWinWithHelper,&helperKXK)   DEF_MAT_REV_H(KKQ,KQK,&helperKXK)
@@ -1423,14 +1376,10 @@ namespace MaterialHash { // idea from Gull
             DEF_MAT(KRDKR, Ter_LikelyDraw)            DEF_MAT_REV(KRKRD,KRDKR)
 
             // Rm m : hard to win
-            DEF_MAT(KRNKN, Ter_HardToWin)             DEF_MAT_REV(KNKRN,KRNKN)
-            DEF_MAT(KRNKL, Ter_HardToWin)             DEF_MAT_REV(KLKRN,KRNKL)
-            DEF_MAT(KRNKD, Ter_HardToWin)             DEF_MAT_REV(KDKRN,KRNKD)
-            DEF_MAT(KRLKN, Ter_HardToWin)             DEF_MAT_REV(KNKRL,KRLKN)
-            DEF_MAT(KRLKL, Ter_HardToWin)             DEF_MAT_REV(KLKRL,KRLKL)
-            DEF_MAT(KRLKD, Ter_HardToWin)             DEF_MAT_REV(KDKRL,KRLKD)
-            DEF_MAT(KRDKN, Ter_HardToWin)             DEF_MAT_REV(KNKRD,KRDKN)
-            DEF_MAT(KRDKL, Ter_HardToWin)             DEF_MAT_REV(KLKRD,KRDKL)
+            DEF_MAT(KRNKN, Ter_HardToWin)             DEF_MAT_REV(KNKRN,KRNKN)            DEF_MAT(KRNKL, Ter_HardToWin)             DEF_MAT_REV(KLKRN,KRNKL)
+            DEF_MAT(KRNKD, Ter_HardToWin)             DEF_MAT_REV(KDKRN,KRNKD)            DEF_MAT(KRLKN, Ter_HardToWin)             DEF_MAT_REV(KNKRL,KRLKN)
+            DEF_MAT(KRLKL, Ter_HardToWin)             DEF_MAT_REV(KLKRL,KRLKL)            DEF_MAT(KRLKD, Ter_HardToWin)             DEF_MAT_REV(KDKRL,KRLKD)
+            DEF_MAT(KRDKN, Ter_HardToWin)             DEF_MAT_REV(KNKRD,KRDKN)            DEF_MAT(KRDKL, Ter_HardToWin)             DEF_MAT_REV(KLKRD,KRDKL)
             DEF_MAT(KRDKD, Ter_HardToWin)             DEF_MAT_REV(KDKRD,KRDKD)
 
             // Qm Q : hard to win
@@ -1449,10 +1398,8 @@ namespace MaterialHash { // idea from Gull
             DEF_MAT_H(KQKRD, Ter_HardToWin,&helperKXK)             DEF_MAT_REV_H(KRDKQ,KQKRD,&helperKXK)
 
             // Opposite bishop with P
-            DEF_MAT(KLPKD, Ter_LikelyDraw)            DEF_MAT_REV(KDKLP,KLPKD)
-            DEF_MAT(KDPKL, Ter_LikelyDraw)            DEF_MAT_REV(KLKDP,KDPKL)
-            DEF_MAT(KLPPKD, Ter_LikelyDraw)           DEF_MAT_REV(KDKLPP,KLPPKD)
-            DEF_MAT(KDPPKL, Ter_LikelyDraw)           DEF_MAT_REV(KLKDPP,KDPPKL)
+            DEF_MAT(KLPKD, Ter_LikelyDraw)            DEF_MAT_REV(KDKLP,KLPKD)            DEF_MAT(KDPKL, Ter_LikelyDraw)            DEF_MAT_REV(KLKDP,KDPKL)
+            DEF_MAT(KLPPKD, Ter_LikelyDraw)           DEF_MAT_REV(KDKLPP,KLPPKD)          DEF_MAT(KDPPKL, Ter_LikelyDraw)           DEF_MAT_REV(KLKDPP,KDPPKL)
 
             // KPK
             DEF_MAT_H(KPK, Ter_WhiteWinWithHelper,&helperKPK)    DEF_MAT_REV_H(KKP,KPK,&helperKPK)
@@ -1468,10 +1415,8 @@ void updateMaterialOther(Position & p){
     p.mat[Co_White][M_M] = p.mat[Co_White][M_q] + p.mat[Co_White][M_r];  p.mat[Co_Black][M_M] = p.mat[Co_Black][M_q] + p.mat[Co_Black][M_r];
     p.mat[Co_White][M_m] = p.mat[Co_White][M_b] + p.mat[Co_White][M_n];  p.mat[Co_Black][M_m] = p.mat[Co_Black][M_b] + p.mat[Co_Black][M_n];
     p.mat[Co_White][M_t] = p.mat[Co_White][M_M] + p.mat[Co_White][M_m];  p.mat[Co_Black][M_t] = p.mat[Co_Black][M_M] + p.mat[Co_Black][M_m];
-    p.mat[Co_White][M_bl] = (unsigned char)countBit(p.whiteBishop()&whiteSquare);
-    p.mat[Co_White][M_bd] = (unsigned char)countBit(p.whiteBishop()&blackSquare);
-    p.mat[Co_Black][M_bl] = (unsigned char)countBit(p.blackBishop()&whiteSquare);
-    p.mat[Co_Black][M_bd] = (unsigned char)countBit(p.blackBishop()&blackSquare);
+    p.mat[Co_White][M_bl] = (unsigned char)countBit(p.whiteBishop()&whiteSquare);   p.mat[Co_White][M_bd] = (unsigned char)countBit(p.whiteBishop()&blackSquare);
+    p.mat[Co_Black][M_bl] = (unsigned char)countBit(p.blackBishop()&whiteSquare);   p.mat[Co_Black][M_bd] = (unsigned char)countBit(p.blackBishop()&blackSquare);
 }
 
 void initMaterial(Position & p){ // M_p .. M_k is the same as P_wp .. P_wk
@@ -1499,7 +1444,6 @@ namespace Zobrist {
     }
 }
 
-//#define DEBUG_HASH
 Hash computeHash(const Position &p){
 #ifdef DEBUG_HASH
     Hash h = p.h;
@@ -1523,7 +1467,6 @@ Hash computeHash(const Position &p){
     return p.h;
 }
 
-//#define DEBUG_PHASH
 Hash computePHash(const Position &p){
 #ifdef DEBUG_PHASH
     Hash h = p.ph;
@@ -1538,9 +1481,6 @@ Hash computePHash(const Position &p){
     while (bb) { p.ph ^= Zobrist::ZT[BBTools::popBit(bb)][P_wk + PieceShift]; }
     bb = p.blackKing();
     while (bb) { p.ph ^= Zobrist::ZT[BBTools::popBit(bb)][P_bk + PieceShift]; }
-    //if ( p.ep != INVALIDSQUARE ) p.ph ^= Zobrist::ZT[p.ep][13];
-    //if ( p.c == Co_White)        p.ph ^= Zobrist::ZT[3][13];
-    //if ( p.c == Co_Black)        p.ph ^= Zobrist::ZT[4][13];
 #ifdef DEBUG_PHASH
     if ( h != 0ull && h != p.ph ){ Logging::LogIt(Logging::logFatal) << "Pawn Hash error " << ToString(p.lastMove) << ToString(p,true) << p.ph << " != " << h; }
 #endif
@@ -1558,13 +1498,13 @@ struct ThreadData{
 };
 
 struct Stats{
-    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits, sid_ttInsert, sid_ttPawnhits, sid_ttPawnInsert, sid_staticNullMove, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMoveTry3, sid_nullMove, sid_nullMove2, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_CMHPruning, sid_see, sid_see2, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_CMHExtension, sid_pawnPushExtension, sid_singularExtension, sid_singularExtension2, sid_queenThreatExtension, sid_BMExtension, sid_mateThreatExtension, sid_tbHit1, sid_tbHit2, sid_maxid };
+    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits, sid_ttInsert, sid_ttPawnhits, sid_ttPawnInsert, sid_materialTableMiss, sid_staticNullMove, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMoveTry3, sid_nullMove, sid_nullMove2, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_CMHPruning, sid_see, sid_see2, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_CMHExtension, sid_pawnPushExtension, sid_singularExtension, sid_singularExtension2, sid_queenThreatExtension, sid_BMExtension, sid_mateThreatExtension, sid_tbHit1, sid_tbHit2, sid_maxid };
     static const std::array<std::string,sid_maxid> Names;
     std::array<Counter,sid_maxid> counters;
     void init(){ Logging::LogIt(Logging::logInfo) << "Init stat" ;  counters.fill(0ull); }
 };
 
-const std::array<std::string,Stats::sid_maxid> Stats::Names = { "nodes", "qnodes", "tthits", "ttInsert", "ttPawnhits", "ttPawnInsert", "staticNullMove", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMoveTry3", "nullMove", "nullMove2", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "CMHPruning", "see", "see2", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "CMHExtension", "pawnPushExtension", "singularExtension", "singularExtension2", "queenThreatExtension", "BMExtension", "mateThreatExtension", "TBHit1", "TBHit2"};
+const std::array<std::string,Stats::sid_maxid> Stats::Names = { "nodes", "qnodes", "tthits", "ttInsert", "ttPawnhits", "ttPawnInsert", "materialMiss", "staticNullMove", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMoveTry3", "nullMove", "nullMove2", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "CMHPruning", "see", "see2", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "CMHExtension", "pawnPushExtension", "singularExtension", "singularExtension2", "queenThreatExtension", "BMExtension", "mateThreatExtension", "TBHit1", "TBHit2"};
 
 // singleton pool of threads
 class ThreadPool : public std::vector<std::unique_ptr<ThreadContext>> {
@@ -1580,12 +1520,12 @@ public:
     // gathering info from all threads
     Counter counter(Stats::StatId id) const;
     void DisplayStats()const{for(size_t k = 0 ; k < Stats::sid_maxid ; ++k) Logging::LogIt(Logging::logInfo) << Stats::Names[k] << " " << counter((Stats::StatId)k);}
-    // Sizes and phases of the skip-blocks, used for distributing search depths across the threads, from stockfish
     static const int skipSize[20], skipPhase[20];
 private:
     ThreadPool();
 };
 
+// Sizes and phases of the skip-blocks, used for distributing search depths across the threads, from stockfish
 const unsigned int threadSkipSize = 20;
 const int ThreadPool::skipSize[threadSkipSize]  = { 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4 };
 const int ThreadPool::skipPhase[threadSkipSize] = { 0, 1, 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 6, 7 };
@@ -1684,7 +1624,7 @@ struct ThreadContext{
                const Square from = Move2From(m);
                const Square to = Move2To(m);
                const ScoreType s = S * HSCORE(depth);
-	       const Piece pp = p.b[from];
+               const Piece pp = p.b[from];
                history[c][from][to] += s - history[c][from][to] * std::abs(s) / MAX_HISTORY;
                historyP[pp+PieceShift][to] += s - historyP[pp+PieceShift][to] * std::abs(s) / MAX_HISTORY;
                for (int i = 0; i < MAX_CMH_PLY; ++i){
@@ -1703,7 +1643,7 @@ struct ThreadContext{
             Logging::LogIt(Logging::logInfo) << "Init counter" ;
             for(int i = 0; i < 64; ++i) for(int k = 0 ; k < 64; ++k) counter[i][k] = 0;
         }
-        inline void update   (Move m, const Position & p){ if ( VALIDMOVE(p.lastMove) ) counter   [Move2From(p.lastMove)][Move2To(p.lastMove)] = m; }
+        inline void update(Move m, const Position & p){ if ( VALIDMOVE(p.lastMove) ) counter[Move2From(p.lastMove)][Move2To(p.lastMove)] = m; }
     };
     KillerT killerT;
     HistoryT historyT;
@@ -1720,26 +1660,15 @@ struct ThreadContext{
         }
     }
     inline ScoreType getCMHScore(const Position & p, const Square from, const Square to, DepthType ply, const CMHPtrArray & cmhPtr) const {
-        //return 0;
         ScoreType ret = 0;
         for (int i = 0; i < MAX_CMH_PLY; i ++){ if (cmhPtr[i]){ ret += cmhPtr[i][(p.b[from]+PieceShift) * 64 + to]; } }
         return ret;
     }
 
-    /*
-    inline ScoreType getHistoryScore(const Position & p, const Move m) const {
-       const Square from = Move2From(m);
-       const Square to = Move2To(m);
-       return (historyT.history[p.c][from][to] + historyT.historyP[p.b[from]+PieceShift][to])/2;
-    }
-    */
-
     ScoreType drawScore() { return -1 + 2*((stats.counters[Stats::sid_nodes]+stats.counters[Stats::sid_qnodes]) % 2); }
 
-
     template <bool pvnode, bool canPrune = true> ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, bool cutNode, const Move skipMove = INVALIDMOVE);
-    template <bool qRoot, bool pvnode>
-    ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
+    template <bool qRoot, bool pvnode> ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
     ScoreType qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
     bool SEE(const Position & p, const Move & m, ScoreType threshold)const;
     PVList search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth);
@@ -1833,7 +1762,6 @@ struct ThreadContext{
         assert(h > 0);
         PawnEntry & _e = tablePawn[h&(ttSizePawn-1)];
         pe = &_e;
-        //if ( DynamicConfig::disableTT  ) return false;
         if ( _e.h != Hash64to32(h) )     return false;
         ++stats.counters[Stats::sid_ttPawnhits];
         return true;
@@ -1856,7 +1784,7 @@ private:
     std::mutex              _mutex;
     static std::mutex       _mutexDisplay;
     std::condition_variable _cv;
-    // next two MUST be initialized BEFORE _stdThread (can be here to be sure ...)
+    // next two MUST be initialized BEFORE _stdThread
     bool                    _exit;
     bool                    _searching;
     std::thread             _stdThread;
@@ -1867,8 +1795,6 @@ TimeType  ThreadContext::currentMoveMs = 777; // a dummy initial value, useful f
 MoveDifficultyUtil::MoveDifficulty ThreadContext::moveDifficulty = MoveDifficultyUtil::MD_std;
 std::atomic<bool> ThreadContext::startLock;
 const unsigned long long int ThreadContext::ttSizePawn = 1024*32;
-
-template < bool display = false, bool safeMatEvaluator = true > ScoreType eval(const Position & p, float & gp, ThreadContext & context, ScoreAcc * sc = 0);
 
 ThreadPool & ThreadPool::instance(){ static ThreadPool pool; return pool;}
 
@@ -1917,6 +1843,7 @@ Counter ThreadPool::counter(Stats::StatId id) const { Counter n = 0; for (auto &
 
 bool apply(Position & p, const Move & m, bool noValidation = false); //forward decl
 bool isPseudoLegal(const Position & p, Move m); // forward decl
+template < bool display = false, bool safeMatEvaluator = true > ScoreType eval(const Position & p, float & gp, ThreadContext & context, ScoreAcc * sc = 0); //forward decl
 
 namespace TT{
 
@@ -1993,18 +1920,7 @@ bool getEntry(ThreadContext & context, const Position & p, Hash h, DepthType d, 
     if ( nbuck >= Bucket::nbBucket ) return false; // no more bucket
     Entry & _e = table[h&(ttSize-1)].e[nbuck];
     if ( _e.h == 0 ) return false; //early exist cause next ones are also empty ...
-    if ( /*true ||*/ (((_e.h ^ _e.data)/*&0x00000111*/) == (Hash64to32(h)/*&0x00000111*/)) ) {
-	    if ( VALIDMOVE(_e.m) && !isPseudoLegal(p, _e.m)) {
-            // should never been here !
-	        /*
-		    std::cout << "Invalid TT move" << std::endl;
-		    std::cout << ToString(p) << std::endl;
-		    std::cout << ToString(_e.m) << std::endl;
-		    */
-		    return _e.h=0,getEntry(context,p,h,d,e,nbuck+1); // next one
-	    }
-    }
-    else return _e.h=0,getEntry(context,p,h,d,e,nbuck+1); // next one
+    if ( !VALIDMOVE(_e.m) || (_e.h ^ _e.data) != Hash64to32(h) || !isPseudoLegal(p, _e.m)) { return _e.h = 0, getEntry(context, p, h, d, e, nbuck + 1); } // next one
     e = _e; // update entry only if no collision is detected !
     if ( _e.d >= d ){ ++context.stats.counters[Stats::sid_tthits]; return true; } // valid entry if depth is ok
     else return getEntry(context,p,h,d,e,nbuck+1); // next one
@@ -2038,7 +1954,7 @@ void getPV(const Position & p, ThreadContext & context, PVList & pv){
       if (e.h != 0) {
         hashStack[k] = computeHash(p2);
         pv.push_back(e.m);
-        if ( ! VALIDMOVE(e.m) || !apply(p2,e.m) ) break;
+        if ( !VALIDMOVE(e.m) || !apply(p2,e.m) ) break;
         const Hash h = computeHash(p2);
         for (int i = k-1; i >= 0; --i) if (hashStack[i] == h) {stop=true;break;}
       }
@@ -2136,12 +2052,8 @@ std::string ToString(const Position & p, bool noEval){
     }
     ss << Logging::_protocolComment[Logging::ct] << " +-+-+-+-+-+-+-+-+" << std::endl;
     if ( p.ep >=0 ) ss << Logging::_protocolComment[Logging::ct] << " ep " << SquareNames[p.ep] << std::endl;
-    ss << Logging::_protocolComment[Logging::ct] << " wk " << (p.king[Co_White]!=INVALIDSQUARE?SquareNames[p.king[Co_White]]:"none")  << std::endl;
-    ss << Logging::_protocolComment[Logging::ct] << " bk " << (p.king[Co_Black]!=INVALIDSQUARE?SquareNames[p.king[Co_Black]]:"none") << std::endl;
-    //ss << Logging::_protocolComment[Logging::ct] << " wrOOO " << (p.rooksInit[Co_White][CT_OOO]!=INVALIDSQUARE?SquareNames[p.rooksInit[Co_White][CT_OOO]]:"none") << std::endl;
-    //ss << Logging::_protocolComment[Logging::ct] << " wrOO  " << (p.rooksInit[Co_White][CT_OO ]!=INVALIDSQUARE?SquareNames[p.rooksInit[Co_White][CT_OO ]]:"none") << std::endl;
-    //ss << Logging::_protocolComment[Logging::ct] << " brOOO " << (p.rooksInit[Co_Black][CT_OOO]!=INVALIDSQUARE?SquareNames[p.rooksInit[Co_Black][CT_OOO]]:"none") << std::endl;
-    //ss << Logging::_protocolComment[Logging::ct] << " brOO  " << (p.rooksInit[Co_Black][CT_OO ]!=INVALIDSQUARE?SquareNames[p.rooksInit[Co_Black][CT_OO ]]:"none") << std::endl;
+    //ss << Logging::_protocolComment[Logging::ct] << " wk " << (p.king[Co_White]!=INVALIDSQUARE?SquareNames[p.king[Co_White]]:"none")  << std::endl;
+    //ss << Logging::_protocolComment[Logging::ct] << " bk " << (p.king[Co_Black]!=INVALIDSQUARE?SquareNames[p.king[Co_Black]]:"none") << std::endl;
     ss << Logging::_protocolComment[Logging::ct] << " Turn " << (p.c == Co_White ? "white" : "black") << std::endl;
     ScoreType sc = 0;
     if ( ! noEval ){
@@ -2403,6 +2315,7 @@ void init(){
     maxKNodes   = 0;
     isDynamic   = false;
     isUCIPondering  = false;
+    ///@todo a bool for possible emergency functionality
 }
 
 TimeType GetNextMSecPerMove(const Position & p){
@@ -2456,31 +2369,31 @@ TimeType GetNextMSecPerMove(const Position & p){
 }
 } // TimeMan
 
-inline void addMove(Square from, Square to, MType type, MoveList & moves){ assert( from >= 0 && from < 64); assert( to >=0 && to < 64); moves.push_back(ToMove(from,to,type,0));}
-
 TimeType ThreadContext::getCurrentMoveMs() {
     if (TimeMan::isUCIPondering) {
         return INFINITETIME;
     }
     TimeType ret = currentMoveMs;
-    switch (moveDifficulty) {
-    case MoveDifficultyUtil::MD_forced:      ret = (ret >> 4); break;
-    case MoveDifficultyUtil::MD_easy:        ret = (ret >> 3); break;
-    case MoveDifficultyUtil::MD_std:         break;
-    case MoveDifficultyUtil::MD_hardDefense: ret = (std::min(TimeType(TimeMan::msecUntilNextTC*MoveDifficultyUtil::maxStealFraction), ret*MoveDifficultyUtil::emergencyFactor)); break;
-    case MoveDifficultyUtil::MD_hardAttack:  break;
+    if (TimeMan::msecUntilNextTC > 0){
+        switch (moveDifficulty) {
+        case MoveDifficultyUtil::MD_forced:      ret = (ret >> 4); break;
+        case MoveDifficultyUtil::MD_easy:        ret = (ret >> 3); break;
+        case MoveDifficultyUtil::MD_std:         break;
+        case MoveDifficultyUtil::MD_hardDefense: ret = (std::min(TimeType(TimeMan::msecUntilNextTC*MoveDifficultyUtil::maxStealFraction), ret*MoveDifficultyUtil::emergencyFactor)); break;
+        case MoveDifficultyUtil::MD_hardAttack:  break;
+        }
     }
     return std::max(ret, TimeType(20));// if not much time left, let's try that ...;
 }
 
 inline bool isAttacked(const Position & p, const Square k) { return k!=INVALIDSQUARE && BBTools::isAttackedBB(p, k, p.c);}
-
 inline bool isAttacked(const Position & p, BitBoard bb) { // copy
     while ( bb ) if ( isAttacked(p, Square(BBTools::popBit(bb)))) return true;
     return false;
 }
 
 enum GenPhase { GP_all = 0, GP_cap = 1, GP_quiet = 2 };
+inline void addMove(Square from, Square to, MType type, MoveList & moves) { assert(from >= 0 && from < 64); assert(to >= 0 && to < 64); moves.push_back(ToMove(from, to, type, 0)); }
 
 template < GenPhase phase = GP_all >
 void generateSquare(const Position & p, MoveList & moves, Square from){
@@ -2561,7 +2474,6 @@ void generate(const Position & p, MoveList & moves, bool doNotClear = false){
 }
 
 inline void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, bool isCapture = false, Piece prom = P_none) {
-    ///@todo not FRC ready
     START_TIMER
     const int fromId   = fromP + PieceShift;
     const int toId     = toP + PieceShift;
@@ -2592,7 +2504,6 @@ void applyNull(ThreadContext & context, Position & pN) {
     pN.h ^= Zobrist::ZT[3][13];
     pN.h ^= Zobrist::ZT[4][13];
     if (pN.ep != INVALIDSQUARE) pN.h ^= Zobrist::ZT[pN.ep][13];
-
     pN.lastMove = NULLMOVE;
     pN.ep = INVALIDSQUARE;
     if ( pN.c == Co_White ) ++pN.moves;
@@ -2602,7 +2513,6 @@ void applyNull(ThreadContext & context, Position & pN) {
 bool apply(Position & p, const Move & m, bool noValidation){
     START_TIMER
     assert(VALIDMOVE(m));
-//#define DEBUG_MATERIAL
 #ifdef DEBUG_MATERIAL
     Position previous = p;
 #endif
@@ -2611,14 +2521,13 @@ bool apply(Position & p, const Move & m, bool noValidation){
     const MType  type  = Move2Type(m);
     const Piece  fromP = p.b[from];
     const Piece  toP   = p.b[to];
-//#define DEBUG_APPLY
+    const int fromId   = fromP + PieceShift;
 #ifdef DEBUG_APPLY
-    if ( !isPseudoLegal(p,m) ) { 
-        Logging::LogIt(Logging::logError) << "Apply error, not legal " << ToString(p) << ToString(m); 
+    if (!isPseudoLegal(p, m)) {
+        Logging::LogIt(Logging::logError) << "Apply error, not legal " << ToString(p) << ToString(m);
         assert(false);
     }
- #endif
-    const int fromId   = fromP + PieceShift;
+#endif
     switch(type){
     case T_std:
     case T_capture:
@@ -2643,7 +2552,7 @@ bool apply(Position & p, const Move & m, bool noValidation){
         if      ( toP == P_wk ) p.king[Co_White] = INVALIDSQUARE;
         else if ( toP == P_bk ) p.king[Co_Black] = INVALIDSQUARE;
 
-	if ( p.castling != C_none ){
+        if ( p.castling != C_none ){
            if ( (p.castling & C_wqs) && from == p.rooksInit[Co_White][CT_OOO] && fromP == P_wr ){
                p.castling &= ~C_wqs;
                p.h ^= Zobrist::ZT[0][13];
@@ -2660,7 +2569,7 @@ bool apply(Position & p, const Move & m, bool noValidation){
                p.castling &= ~C_bks;
                p.h ^= Zobrist::ZT[63][13];
            }
-	}
+        }
         break;
 
     case T_ep: {
@@ -2708,8 +2617,6 @@ bool apply(Position & p, const Move & m, bool noValidation){
         movePiece(p, from, to, fromP, toP, type == T_cappromn, (p.c == Co_White ? P_wn : P_bn));
         break;
     case T_wks:
-        //movePiece(p, p.king[Co_White], Sq_g1, P_wk, P_none);
-        //movePiece(p, p.rooksInit[Co_White][CT_OO], Sq_f1, P_wr, P_none);
         BBTools::unSetBit(p, p.king[Co_White]);
         BBTools::unSetBit(p, p.rooksInit[Co_White][CT_OO]);
         BBTools::setBit(p, Sq_g1, P_wk);
@@ -2730,8 +2637,6 @@ bool apply(Position & p, const Move & m, bool noValidation){
         p.castling &= ~(C_wks | C_wqs);
         break;
     case T_wqs:
-        //movePiece(p, p.king[Co_White], Sq_c1, P_wk, P_none);
-        //movePiece(p, p.rooksInit[Co_White][CT_OOO], Sq_d1, P_wr, P_none);
         BBTools::unSetBit(p, p.king[Co_White]);
         BBTools::unSetBit(p, p.rooksInit[Co_White][CT_OOO]);
         BBTools::setBit(p, Sq_c1, P_wk);
@@ -2752,8 +2657,6 @@ bool apply(Position & p, const Move & m, bool noValidation){
         p.castling &= ~(C_wks | C_wqs);
         break;
     case T_bks:
-        //movePiece(p, p.king[Co_Black], Sq_g8, P_bk, P_none);
-        //movePiece(p, p.rooksInit[Co_Black][CT_OO], Sq_f8, P_br, P_none);
         BBTools::unSetBit(p, p.king[Co_Black]);
         BBTools::unSetBit(p, p.rooksInit[Co_Black][CT_OO]);
         BBTools::setBit(p, Sq_g8, P_bk);
@@ -2774,8 +2677,6 @@ bool apply(Position & p, const Move & m, bool noValidation){
         p.castling &= ~(C_bks | C_bqs);
         break;
     case T_bqs:
-        //movePiece(p, p.king[Co_Black], Sq_c8, P_bk, P_none);
-        //movePiece(p, p.rooksInit[Co_Black][CT_OOO], Sq_d8, P_br, P_none);
         BBTools::unSetBit(p, p.king[Co_Black]);
         BBTools::unSetBit(p, p.rooksInit[Co_Black][CT_OOO]);
         BBTools::setBit(p, Sq_c8, P_bk);
@@ -2943,7 +2844,7 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
         for ( pp = P_wp ; pp <= P_wk && !validThreatFound ; ++pp){
            BitBoard att = BBTools::pfAttack[pp-1](to, p2.pieces(p2.c,pp), p2.occupancy, ~p2.c);
            if ( !att ) continue; // next piece type
-	   Square sqAtt = INVALIDSQUARE;
+           Square sqAtt = INVALIDSQUARE;
            while (!validThreatFound && att && (sqAtt = BBTools::popBit(att))) {
               if (PieceTools::getPieceType(p2,to) == P_wk) return us == p2.c; // capture king !
               Position p3 = p2;
@@ -2983,9 +2884,9 @@ struct MoveSorter{
                 const Piece victim   = (t != T_ep) ? PieceTools::getPieceType(p,to) : P_wp;
                 const Piece attacker = PieceTools::getPieceType(p,from);
                 assert(victim>0); assert(attacker>0);
-                s += StaticConfig::MvvLvaScores[victim-1][attacker-1]; //[0 400]
+                s += SearchConfig::MvvLvaScores[victim-1][attacker-1]; //[0 400]
                 if ( (useSEE && !isInCheck && !context.SEE(p,m,-70) ) /*|| (!useSEE && attacker > victim)*/ ) s -= 2*MoveScoring[T_capture]; // bad capture
-                //else if ( isCapture(p.lastMove) && to == Move2To(p.lastMove) ) s += 400; // recapture bonus
+                //else if ( isCapture(p.lastMove) && to == Move2To(p.lastMove) ) s += 400; // recapture bonus ///@todo test again !
             }
             else if ( t == T_std ){
                 if      (sameMove(m, context.killerT.killers[ply][0])) s += 1800; // quiet killer
@@ -3051,7 +2952,6 @@ MaterialHash::Terminaison ThreadContext::interiorNodeRecognizer(const Position &
 double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f, double offset = 0.f){ return m / (1 + exp((trans - x) / scale)) - offset;}
 void initEval(){ for(Square i = 0; i < 64; i++){ EvalConfig::kingAttTable[i] = (int) sigmoid(i,EvalConfig::kingAttMax,EvalConfig::kingAttTrans,EvalConfig::kingAttScale,EvalConfig::kingAttOffset); } }// idea taken from Topple
 
-
 namespace{ // some Color / Piece helpers
    template<Color C> inline bool isPasser(const Position &p, Square k)     { return (BBTools::mask[k].passerSpan[C] & p.pieces<P_wp>(~C)) == 0ull;}
    template<Color C> inline Square ColorSquarePstHelper(Square k)          { return C==Co_White?(k^56):k;}
@@ -3084,7 +2984,6 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, const BitBoa
         }
     }
 }
-
 ///@todo special version of evalPiece for king ??
 
 template < Piece T ,Color C>
@@ -3177,24 +3076,23 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context, ScoreAcc 
     // Material evaluation
     const Hash matHash = MaterialHash::getMaterialHash(p.mat);
     if ( matHash ){
+        // Hash data
        const MaterialHash::MaterialHashEntry & MEntry = MaterialHash::materialHashTable[matHash];
        gp = MEntry.gp;
        score.scores[ScoreAcc::sc_Mat][EG] += MEntry.score[EG];
        score.scores[ScoreAcc::sc_Mat][MG] += MEntry.score[MG];
-
        // end game knowledge (helper or scaling)
        if ( safeMatEvaluator && (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t]<6) ){
           const Color winningSideEG = score.scores[ScoreAcc::sc_Mat][EG]>0?Co_White:Co_Black;
-          if ( MEntry.t == MaterialHash::Ter_WhiteWinWithHelper || MEntry.t == MaterialHash::Ter_BlackWinWithHelper ) return (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSideEG,score.scores[ScoreAcc::sc_Mat][EG]));
+          if      ( MEntry.t == MaterialHash::Ter_WhiteWinWithHelper || MEntry.t == MaterialHash::Ter_BlackWinWithHelper ) return (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSideEG,score.scores[ScoreAcc::sc_Mat][EG]));
+          else if ( MEntry.t == MaterialHash::Ter_Draw)         { if (!isAttacked(p, kingSquare(p))) return context.drawScore(); }
+          else if ( MEntry.t == MaterialHash::Ter_MaterialDraw) { if (!isAttacked(p, kingSquare(p))) return context.drawScore(); }
           else if ( MEntry.t == MaterialHash::Ter_WhiteWin || MEntry.t == MaterialHash::Ter_BlackWin) score.scalingFactor = 5 - 5*p.fifty/100.f;
-          else if ( MEntry.t == MaterialHash::Ter_HardToWin)   score.scalingFactor = 0.5f - 0.5f*(p.fifty/100.f);
-          else if ( MEntry.t == MaterialHash::Ter_LikelyDraw ) score.scalingFactor = 0.3f - 0.3f*(p.fifty/100.f);
-          else if ( MEntry.t == MaterialHash::Ter_Draw){         if ( !isAttacked(p,kingSquare(p)) ) return context.drawScore();}
-          else if ( MEntry.t == MaterialHash::Ter_MaterialDraw){ if ( !isAttacked(p,kingSquare(p)) ) return context.drawScore();}
+          else if ( MEntry.t == MaterialHash::Ter_HardToWin)  score.scalingFactor = 0.5f - 0.5f*(p.fifty/100.f);
+          else if ( MEntry.t == MaterialHash::Ter_LikelyDraw) score.scalingFactor = 0.3f - 0.3f*(p.fifty/100.f);
        }
     }
-    else{
-       // game phase and material scores 
+    else{ // game phase and material scores out of table
        const float totalMatScore = 2.f * *absValues[P_wq] + 4.f * *absValues[P_wr] + 4.f * *absValues[P_wb] + 4.f * *absValues[P_wn] + 16.f * *absValues[P_wp]; // cannot be static for tuning process ...
        const ScoreType matPieceScoreW = p.mat[Co_White][M_q] * *absValues[P_wq] + p.mat[Co_White][M_r] * *absValues[P_wr] + p.mat[Co_White][M_b] * *absValues[P_wb] + p.mat[Co_White][M_n] * *absValues[P_wn];
        const ScoreType matPieceScoreB = p.mat[Co_Black][M_q] * *absValues[P_wq] + p.mat[Co_Black][M_r] * *absValues[P_wr] + p.mat[Co_Black][M_b] * *absValues[P_wb] + p.mat[Co_Black][M_n] * *absValues[P_wn];
@@ -3202,11 +3100,10 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context, ScoreAcc 
        const ScoreType matPawnScoreB  = p.mat[Co_Black][M_p] * *absValues[P_wp];
        const ScoreType matScoreW = matPieceScoreW + matPawnScoreW;
        const ScoreType matScoreB = matPieceScoreB + matPawnScoreB;
-       gp = (matScoreW + matScoreB ) / totalMatScore;
-       // EG material (symetric version)
+       gp = (matScoreW + matScoreB ) / totalMatScore; // based on MG values
        score.scores[ScoreAcc::sc_Mat][EG] += (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValuesEG[P_wq] + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * *absValuesEG[P_wr] + (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * *absValuesEG[P_wb] + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValuesEG[P_wn] + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValuesEG[P_wp];
-       // material (symetric version) 
        score.scores[ScoreAcc::sc_Mat][MG] += matScoreW - matScoreB;
+       ++context.stats.counters[Stats::sid_materialTableMiss];
     }
 
     // usefull bitboards accumulator
@@ -3235,8 +3132,7 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context, ScoreAcc 
     /*
     ScoreType lazyScore = score.Score(p,gp);
     if ( std::abs(lazyScore) > 1000){
-        // scale both phase and 50 moves rule
-        ScoreType ret = (white2Play?+1:-1)*score.Score(p,gp);
+        ScoreType ret = (white2Play?+1:-1)*score.Score(p,gp); // scale both phase and 50 moves rule
         STOP_AND_SUM_TIMER(Eval)
         return ret;
     }
@@ -3255,8 +3151,7 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context, ScoreAcc 
        const BitBoard candidates    [2] = {BBTools::pawnCandidates<Co_White>(pawns[Co_White],pawns[Co_Black]) , BBTools::pawnCandidates<Co_Black>(pawns[Co_Black],pawns[Co_White])};
        const BitBoard semiOpenPawn  [2] = {BBTools::pawnSemiOpen  <Co_White>(pawns[Co_White],pawns[Co_Black]) , BBTools::pawnSemiOpen  <Co_Black>(pawns[Co_Black],pawns[Co_White])};
        pe.pawnTargets   [Co_White] = BBTools::pawnAttacks   <Co_White>(pawns[Co_White])                       ; pe.pawnTargets   [Co_Black] = BBTools::pawnAttacks   <Co_Black>(pawns[Co_Black]);
-       // semiOpen white is with white pawn, and without black pawn
-       pe.semiOpenFiles [Co_White] = BBTools::fillFile(pawns[Co_White]) & ~BBTools::fillFile(pawns[Co_Black]) ; pe.semiOpenFiles [Co_Black] = BBTools::fillFile(pawns[Co_Black]) & ~BBTools::fillFile(pawns[Co_White]);
+       pe.semiOpenFiles [Co_White] = BBTools::fillFile(pawns[Co_White]) & ~BBTools::fillFile(pawns[Co_Black]) ; pe.semiOpenFiles [Co_Black] = BBTools::fillFile(pawns[Co_Black]) & ~BBTools::fillFile(pawns[Co_White]); // semiOpen white means with white pawn, and without black pawn
        pe.passed        [Co_White] = BBTools::pawnPassed    <Co_White>(pawns[Co_White],pawns[Co_Black])       ; pe.passed        [Co_Black] = BBTools::pawnPassed    <Co_Black>(pawns[Co_Black],pawns[Co_White]);
        pe.holes         [Co_White] = BBTools::pawnHoles     <Co_White>(pawns[Co_White]) & holesZone[Co_White] ; pe.holes         [Co_Black] = BBTools::pawnHoles     <Co_Black>(pawns[Co_Black]) & holesZone[Co_White];
        pe.openFiles =  BBTools::openFiles(pawns[Co_White], pawns[Co_Black]);
@@ -3319,8 +3214,8 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context, ScoreAcc 
     }
     assert(pePtr);
     const ThreadContext::PawnEntry & pe = *pePtr;
-    // update global things with pawn entry stuff
     score.scores[ScoreAcc::sc_PawnTT] += pe.score;
+    // update global things with pawn entry stuff
     kdanger[Co_White] += pe.danger[Co_White];
     kdanger[Co_Black] += pe.danger[Co_Black];
     checkers[Co_White][0] = BBTools::pawnAttacks<Co_Black>(p.pieces<P_wk>(Co_Black)) & pawns[Co_White];
@@ -3470,8 +3365,7 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context, ScoreAcc 
     score.scores[ScoreAcc::sc_Adjust] += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
 
     if ( display ) score.Display(p,gp);
-    // scale both phase and 50 moves rule
-    ScoreType ret = (white2Play?+1:-1)*score.Score(p,gp);
+    ScoreType ret = (white2Play?+1:-1)*score.Score(p,gp); // scale both phase and 50 moves rule
     STOP_AND_SUM_TIMER(Eval)
     return ret;
 }
@@ -3492,7 +3386,7 @@ ScoreType adjustHashScore(ScoreType score, DepthType ply){
 extern "C" {
 #include "tbprobe.h"
 }
-namespace SyzygyTb { // from Arasan
+namespace SyzygyTb { // more or less copy/paste from Arasan
 const ScoreType TB_CURSED_SCORE = 1;
 const ScoreType TB_WIN_SCORE = 2000;
 const ScoreType valueMap[5]     = {-TB_WIN_SCORE, -TB_CURSED_SCORE, 0, TB_CURSED_SCORE, TB_WIN_SCORE};
@@ -3588,7 +3482,7 @@ ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const
 
 template < bool qRoot, bool pvnode >
 ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth){
-    if (stopFlag) return STOPSCORE; // no time check in qsearch, too slow
+    if (stopFlag) return STOPSCORE; // no time verification in qsearch, too slow
     ++stats.counters[Stats::sid_qnodes];
 
     alpha = std::max(alpha, (ScoreType)(-MATE + ply));
@@ -3622,7 +3516,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     TT::Bound b = TT::B_alpha;
     if ( evalScore >= beta ) return evalScore;
-    if ( evalScore > alpha) alpha = evalScore;/*, b = isInCheck? TT::B_alpha : TT::B_exact;*/ // stand pat is at least bound exact if no capture is valid
+    if ( evalScore > alpha) alpha = evalScore;/*, b = isInCheck? TT::B_alpha : TT::B_exact;*/ // stand pat is at least bound exact if no capture is valid ///@todo ?
 
     ScoreType bestScore = evalScore;
 
@@ -3636,7 +3530,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         if (!isInCheck) {
             if (!SEE(p,*it,0)) continue;
-            if (StaticConfig::doQFutility && evalScore + StaticConfig::qfutilityMargin[evalScoreIsHashScore] + (Move2Type(*it)==T_ep ? Values[P_wp+PieceShift] : PieceTools::getAbsValue(p, Move2To(*it))) <= alphaInit) continue;
+            if (SearchConfig::doQFutility && evalScore + SearchConfig::qfutilityMargin[evalScoreIsHashScore] + (Move2Type(*it)==T_ep ? Values[P_wp+PieceShift] : PieceTools::getAbsValue(p, Move2To(*it))) <= alphaInit) continue;
         }
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
@@ -3693,42 +3587,19 @@ ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck) {
 }
 
 bool isPseudoLegal(const Position & p, Move m) { // validate TT move
-    if (!VALIDMOVE(m)) {
-        //std::cout << "0" << std::endl;
-        return false;
-    }
+    if (!VALIDMOVE(m)) { return false; }
     const Square from = Move2From(m);
     const Piece fromP = p.b[from];
-    if (fromP == P_none || (fromP > 0 && p.c == Co_Black) || (fromP < 0 && p.c == Co_White)) {
-        //std::cout << "1" << std::endl;
-        return false;
-    }
+    if (fromP == P_none || (fromP > 0 && p.c == Co_Black) || (fromP < 0 && p.c == Co_White)) { return false; }
     const Square to = Move2To(m);
     const Piece toP = p.b[to];
-    if ((toP > 0 && p.c == Co_White) || (toP < 0 && p.c == Co_Black)) {
-        //std::cout << "2" << std::endl;
-        return false;
-    }
-    if ((Piece)std::abs(toP) == P_wk) {
-        //std::cout << "2k" << std::endl;
-        return false;
-    }
+    if ((toP > 0 && p.c == Co_White) || (toP < 0 && p.c == Co_Black)) { return false; }
+    if ((Piece)std::abs(toP) == P_wk) { return false; }
     const Piece fromPieceType = (Piece)std::abs(fromP);
     const MType t = Move2Type(m);
-    if (t == T_ep && (p.ep == INVALIDSQUARE || fromPieceType != P_wp)) {
-        //std::cout << "3" << std::endl;
-        return false;
-    }
-    if (t == T_ep && p.b[p.ep + (p.c==Co_White?-8:+8)] != (p.c==Co_White?P_bp:P_wp)) {
-        //std::cout << "3b" << std::endl;
-        return false;
-    }
-    // prom
-    if (isPromotion(m) && fromPieceType != P_wp) {
-        //std::cout << "3c" << std::endl;
-        return false;
-    }
-    // castling
+    if (t == T_ep && (p.ep == INVALIDSQUARE || fromPieceType != P_wp)) { return false;}
+    if (t == T_ep && p.b[p.ep + (p.c==Co_White?-8:+8)] != (p.c==Co_White?P_bp:P_wp)) { return false;}
+    if (isPromotion(m) && fromPieceType != P_wp) { return false; }
     if (isCastling(m)) {
         if (p.c == Co_White) {
             if (t == T_wqs && (p.castling & C_wqs)
@@ -3737,7 +3608,6 @@ bool isPseudoLegal(const Position & p, Move m) { // validate TT move
             if (t == T_wks && (p.castling & C_wks)
                 && (((BBTools::mask[p.king[Co_White]].between[Sq_g1] | BBTools::mask[p.rooksInit[Co_White][CT_OO]].between[Sq_f1]) & p.occupancy) == 0ull)
                 && !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_g1] | SquareToBitboard(p.king[Co_White]))) return true;
-            //std::cout << "4" << std::endl;
             return false;
         }
         else {
@@ -3747,43 +3617,25 @@ bool isPseudoLegal(const Position & p, Move m) { // validate TT move
             if (t == T_bks && (p.castling & C_bks)
                 && (((BBTools::mask[p.king[Co_Black]].between[Sq_g8] | BBTools::mask[p.rooksInit[Co_Black][CT_OO]].between[Sq_f8]) & p.occupancy) == 0ull)
                 && !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_g8] | SquareToBitboard(p.king[Co_Black]))) return true;
-            //std::cout << "5" << std::endl;
             return false;
         }
     }
     if (fromPieceType == P_wp) {
-        if (t == T_ep && SQRANK(to) != EPRank[p.c]) {
-            //std::cout << "6" << std::endl;
-            return false;
-        }
-        if (!isPromotion(m) && SQRANK(to) == PromRank[p.c]) {
-            //std::cout << "7" << std::endl;
-            return false;
-        }
-        if (isPromotion(m) && SQRANK(to) != PromRank[p.c]) {
-            //std::cout << "8" << std::endl;
-            return false;
-        }
+        if (t == T_ep && SQRANK(to) != EPRank[p.c]) { return false; }
+        if (!isPromotion(m) && SQRANK(to) == PromRank[p.c]) { return false; }
+        if (isPromotion(m) && SQRANK(to) != PromRank[p.c]) { return false; }
         BitBoard validPush = BBTools::mask[from].push[p.c] & ~p.occupancy;
         if ((BBTools::mask[from].push[p.c] & p.occupancy) == 0ull) validPush |= BBTools::mask[from].dpush[p.c] & ~p.occupancy;
         if (validPush & SquareToBitboard(to)) return true;
         const BitBoard validCap = BBTools::mask[from].pawnAttack[p.c] & ~p.allPieces[p.c];
         if ((validCap & SquareToBitboard(to)) && (toP != P_none || (t == T_ep && to == p.ep))) return true;
-        //std::cout << "9" << std::endl;
         return false;
     }
     if (fromPieceType != P_wk) {
-        if ((BBTools::pfCoverage[fromPieceType - 1](from, p.occupancy, p.c) & SquareToBitboard(to)) != 0ull) {
-            return true;
-        }
-        //std::cout << "10" << std::endl;
+        if ((BBTools::pfCoverage[fromPieceType - 1](from, p.occupancy, p.c) & SquareToBitboard(to)) != 0ull) { return true; }
         return false;
     }
-    // king
-    if ((BBTools::mask[p.king[p.c]].kingZone & SquareToBitboard(to)) != 0ull) {
-        return true;
-    }
-    //std::cout << "11" << std::endl;
+    if ((BBTools::mask[p.king[p.c]].kingZone & SquareToBitboard(to)) != 0ull) { return true; } // only king is not verified yet
     return false;
 }
 
@@ -3862,11 +3714,11 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     // prunings
     if ( !DynamicConfig::mateFinder && canPrune && !isInCheck /*&& !isMateScore(beta)*/ && !pvnode){ ///@todo removing the !isMateScore(beta) is not losing that much elo and allow for better check mate finding ...
         // static null move
-        if (StaticConfig::doStaticNullMove && !isMateScore(evalScore) && isNotEndGame && depth <= StaticConfig::staticNullMoveMaxDepth[evalScoreIsHashScore] && evalScore >= beta + StaticConfig::staticNullMoveDepthInit[evalScoreIsHashScore] + (StaticConfig::staticNullMoveDepthCoeff[evalScoreIsHashScore]) * depth) return ++stats.counters[Stats::sid_staticNullMove], evalScore;
+        if (SearchConfig::doStaticNullMove && !isMateScore(evalScore) && isNotEndGame && depth <= SearchConfig::staticNullMoveMaxDepth[evalScoreIsHashScore] && evalScore >= beta + SearchConfig::staticNullMoveDepthInit[evalScoreIsHashScore] + (SearchConfig::staticNullMoveDepthCoeff[evalScoreIsHashScore]) * depth) return ++stats.counters[Stats::sid_staticNullMove], evalScore;
 
         // razoring
-        ScoreType rAlpha = alpha - StaticConfig::razoringMarginDepthInit[evalScoreIsHashScore] - StaticConfig::razoringMarginDepthCoeff[evalScoreIsHashScore]*marginDepth;
-        if ( StaticConfig::doRazoring && depth <= StaticConfig::razoringMaxDepth[evalScoreIsHashScore] && evalScore <= rAlpha ){
+        ScoreType rAlpha = alpha - SearchConfig::razoringMarginDepthInit[evalScoreIsHashScore] - SearchConfig::razoringMarginDepthCoeff[evalScoreIsHashScore]*marginDepth;
+        if ( SearchConfig::doRazoring && depth <= SearchConfig::razoringMaxDepth[evalScoreIsHashScore] && evalScore <= rAlpha ){
             ++stats.counters[Stats::sid_razoringTry];
             const ScoreType qScore = qsearch<true,pvnode>(alpha,beta,p,ply,seldepth);
             if ( stopFlag ) return STOPSCORE;
@@ -3874,7 +3726,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         }
 
         // null move
-        if (isNotEndGame && withoutSkipMove && evalScore >= stack[p.halfmoves].eval && StaticConfig::doNullMove && ply >= (unsigned int)nullMoveMinPly && depth >= StaticConfig::nullMoveMinDepth) {
+        if (isNotEndGame && withoutSkipMove && evalScore >= stack[p.halfmoves].eval && SearchConfig::doNullMove && ply >= (unsigned int)nullMoveMinPly && depth >= SearchConfig::nullMoveMinDepth) {
             PVList nullPV;
             ++stats.counters[Stats::sid_nullMoveTry];
             const DepthType R = depth / 4 + 3 + std::min((evalScore - beta) / 80, 3); // adaptative
@@ -3896,7 +3748,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                     if ( nullEThreat.h != 0ull ) refutation = nullEThreat.m;
                     //if (isMatedScore(nullscore)) mateThreat = true;
                     if (nullscore >= beta){
-                       if (depth <= StaticConfig::nullMoveVerifDepth || nullMoveMinPly>0) return ++stats.counters[Stats::sid_nullMove], isMateScore(nullscore) ? beta : nullscore;
+                       if (depth <= SearchConfig::nullMoveVerifDepth || nullMoveMinPly>0) return ++stats.counters[Stats::sid_nullMove], isMateScore(nullscore) ? beta : nullscore;
                        ++stats.counters[Stats::sid_nullMoveTry3];
                        nullMoveMinPly = ply + 3*nullDepth/4;
                        nullscore = pvs<false, false>(beta - 1, beta, p, nullDepth, ply+1, nullPV, seldepth, isInCheck, !cutNode);
@@ -3909,14 +3761,14 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         }
 
         // ProbCut
-        if ( StaticConfig::doProbcut && depth >= StaticConfig::probCutMinDepth && !isMateScore(beta)){
+        if ( SearchConfig::doProbcut && depth >= SearchConfig::probCutMinDepth && !isMateScore(beta)){
           ++stats.counters[Stats::sid_probcutTry];
           int probCutCount = 0;
-          const ScoreType betaPC = beta + StaticConfig::probCutMargin;
+          const ScoreType betaPC = beta + SearchConfig::probCutMargin;
           generate<GP_cap>(p,moves);
           sort(*this,moves,p,gp,ply,cmhPtr,true,isInCheck,&e);
           capMoveGenerated = true;
-          for (auto it = moves.begin() ; it != moves.end() && probCutCount < StaticConfig::probCutMaxMoves /*+ 2*cutNode*/; ++it){
+          for (auto it = moves.begin() ; it != moves.end() && probCutCount < SearchConfig::probCutMaxMoves /*+ 2*cutNode*/; ++it){
             if ( (validTTmove && sameMove(e.m, *it)) || isBadCap(*it) ) continue; // skip TT move if quiet or bad captures
             Position p2 = p;
             if ( ! apply(p2,*it) ) continue;
@@ -3924,7 +3776,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             ScoreType scorePC = -qsearch<true,pvnode>(-betaPC, -betaPC + 1, p2, ply + 1, seldepth);
             PVList pcPV;
             if (stopFlag) return STOPSCORE;
-            if (scorePC >= betaPC) ++stats.counters[Stats::sid_probcutTry2], scorePC = -pvs<false,true>(-betaPC,-betaPC+1,p2,depth-StaticConfig::probCutMinDepth+1,ply+1,pcPV,seldepth, isAttacked(p2, kingSquare(p2)), !cutNode);
+            if (scorePC >= betaPC) ++stats.counters[Stats::sid_probcutTry2], scorePC = -pvs<false,true>(-betaPC,-betaPC+1,p2,depth-SearchConfig::probCutMinDepth+1,ply+1,pcPV,seldepth, isAttacked(p2, kingSquare(p2)), !cutNode);
             if (stopFlag) return STOPSCORE;
             if (scorePC >= betaPC) return ++stats.counters[Stats::sid_probcut], scorePC;
           }
@@ -3932,7 +3784,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     }
 
     // IID
-    if ( (e.h == 0ull /*|| e.d < depth/4*/) && ((pvnode && depth >= StaticConfig::iidMinDepth) || (cutNode && depth >= StaticConfig::iidMinDepth2)) ){ ///@todo try with cutNode only ?
+    if ( (e.h == 0ull /*|| e.d < depth/4*/) && ((pvnode && depth >= SearchConfig::iidMinDepth) || (cutNode && depth >= SearchConfig::iidMinDepth2)) ){ ///@todo try with cutNode only ?
         ++stats.counters[Stats::sid_iid];
         PVList iidPV;
         pvs<pvnode,false>(alpha,beta,p,/*pvnode?depth-2:*/depth/2,ply,iidPV,seldepth,isInCheck,cutNode,skipMove);
@@ -3943,14 +3795,14 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     killerT.killers[ply+1][0] = killerT.killers[ply+1][1] = 0;
 
     // LMP
-    if (!rootnode && StaticConfig::doLMP && depth <= StaticConfig::lmpMaxDepth) lmp = true;
+    if (!rootnode && SearchConfig::doLMP && depth <= SearchConfig::lmpMaxDepth) lmp = true;
     // futility
-    const ScoreType futilityScore = alpha - StaticConfig::futilityDepthInit[evalScoreIsHashScore] - StaticConfig::futilityDepthCoeff[evalScoreIsHashScore]*depth;
-    if (!rootnode && StaticConfig::doFutility && depth <= StaticConfig::futilityMaxDepth[evalScoreIsHashScore] && evalScore <= futilityScore) futility = true;
+    const ScoreType futilityScore = alpha - SearchConfig::futilityDepthInit[evalScoreIsHashScore] - SearchConfig::futilityDepthCoeff[evalScoreIsHashScore]*depth;
+    if (!rootnode && SearchConfig::doFutility && depth <= SearchConfig::futilityMaxDepth[evalScoreIsHashScore] && evalScore <= futilityScore) futility = true;
     // history pruning
-    if (!rootnode && StaticConfig::doHistoryPruning && isNotEndGame && depth < StaticConfig::historyPruningMaxDepth) historyPruning = true;
+    if (!rootnode && SearchConfig::doHistoryPruning && isNotEndGame && depth < SearchConfig::historyPruningMaxDepth) historyPruning = true;
     // CMH pruning
-    if (!rootnode && StaticConfig::doCMHPruning && isNotEndGame && depth < StaticConfig::CMHMaxDepth) CMHPruning = true;
+    if (!rootnode && SearchConfig::doCMHPruning && isNotEndGame && depth < SearchConfig::CMHMaxDepth) CMHPruning = true;
 
     int validMoveCount = 0;
     Move bestMove = INVALIDMOVE;
@@ -3996,7 +3848,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                    if ( SquareToBitboard(to) & passed[p.c] ) ++stats.counters[Stats::sid_pawnPushExtension], ++extension;
                }
                if (!extension && pvnode && (p.pieces<P_wq>(p.c) && isQuiet && PieceTools::getPieceType(p, Move2From(e.m)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces<P_wq>(p.c)))) && SEE(p, e.m, 0)) ++stats.counters[Stats::sid_queenThreatExtension], ++extension;
-               if (!extension && withoutSkipMove && depth >= StaticConfig::singularExtensionDepth && !rootnode && !isMateScore(e.score) && e.b == TT::B_beta && e.d >= depth - 3){
+               if (!extension && withoutSkipMove && depth >= SearchConfig::singularExtensionDepth && !rootnode && !isMateScore(e.score) && e.b == TT::B_beta && e.d >= depth - 3){
                    const ScoreType betaC = e.score - 2*depth;
                    PVList sePV;
                    DepthType seSeldetph = 0;
@@ -4091,14 +3943,14 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
            if (!extension && pvnode && firstMove && (p.pieces<P_wq>(p.c) && Move2Type(*it) == T_std && PieceTools::getPieceType(p, Move2From(*it)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces<P_wq>(p.c)))) && SEE(p, *it, 0)) ++stats.counters[Stats::sid_queenThreatExtension], ++extension; // too much of that
         }
         // pvs
-        if (validMoveCount < (2/*+2*rootnode*/) || !StaticConfig::doPVS ) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,!cutNode);
+        if (validMoveCount < (2/*+2*rootnode*/) || !SearchConfig::doPVS ) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,!cutNode);
         else{
             // reductions & prunings
             DepthType reduction = 0;
             const bool isPrunable           = /*isNotEndGame &&*/ !isAdvancedPawnPush && !isMateScore(alpha) && !DynamicConfig::mateFinder && !killerT.isKiller(*it,ply);
             const bool isReductible         = /*isNotEndGame &&*/ !isAdvancedPawnPush && !DynamicConfig::mateFinder;
             const bool noCheck              = !isInCheck && !isCheck;
-            const bool overLmpLimit         = validMoveCount >= StaticConfig::lmpLimit[improving][depth];
+            const bool overLmpLimit         = validMoveCount >= SearchConfig::lmpLimit[improving][depth];
             const bool isPrunableStd        = isPrunable && isQuiet;
             const bool isPrunableStdNoCheck = isPrunableStd && noCheck;
             const bool isPrunableCap        = isPrunable && Move2Type(*it) == T_capture && isBadCap(*it) && noCheck ;
@@ -4107,7 +3959,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             // LMP
             if (lmp && isPrunableStdNoCheck && overLmpLimit ) {++stats.counters[Stats::sid_lmp]; continue;}
             // History pruning (with CMH)
-            if (historyPruning && isPrunableStdNoCheck && Move2Score(*it) < StaticConfig::historyPruningThresholdInit + depth*StaticConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
+            if (historyPruning && isPrunableStdNoCheck && Move2Score(*it) < SearchConfig::historyPruningThresholdInit + depth*SearchConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
             // CMH pruning alone
             if (CMHPruning && isPrunableStdNoCheck){
               const int pp = (p.b[Move2From(*it)]+PieceShift) * 64 + Move2To(*it);
@@ -4119,8 +3971,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                else if ( !rootnode && !SEE(p,*it,-100*depth)) {++stats.counters[Stats::sid_see2]; continue;}
             }
             // LMR
-            if (StaticConfig::doLMR && (isReductible && isQuiet ) && depth >= StaticConfig::lmrMinDepth ){
-                reduction = StaticConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
+            if (SearchConfig::doLMR && (isReductible && isQuiet ) && depth >= SearchConfig::lmrMinDepth ){
+                reduction = SearchConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
                 reduction += !improving;
                 reduction += ttMoveIsCapture/*&&isPrunableStd*/;
                 //reduction += cutNode&&isPrunableStd;
@@ -4181,7 +4033,7 @@ void ThreadContext::displayGUI(DepthType depth, DepthType seldepth, ScoreType be
     }
     else if (Logging::ct == Logging::CT_uci) {
         str << "info depth " << int(depth) << " score cp " << bestScore << " time " << ms << " nodes " << nodeCount << " nps " << int(nodeCount / (ms / 1000.f)) << " seldepth " << (int)seldepth << " pv " << ToString(pv) << " tbhits " << ThreadPool::instance().counter(Stats::sid_tbHit1) + ThreadPool::instance().counter(Stats::sid_tbHit2);
-        /*
+        /* ///@todo hashfull
         if ( (count%10) == 10 && !stopFlag){ ///@todo and enough time to do it ...
             str << " hashfull " << TT::hashFull();
         }
@@ -4191,7 +4043,7 @@ void ThreadContext::displayGUI(DepthType depth, DepthType seldepth, ScoreType be
 }
 
 PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
-    d=std::max((signed short int)1,DynamicConfig::level==StaticConfig::nlevel?d:std::min(d,StaticConfig::levelDepthMax[DynamicConfig::level/10]));
+    d=std::max((signed short int)1,DynamicConfig::level==SearchConfig::nlevel?d:std::min(d,SearchConfig::levelDepthMax[DynamicConfig::level/10]));
     if ( isMainThread() ){
         TimeMan::startTime = Clock::now(); ///@todo put this before ?
         Logging::LogIt(Logging::logInfo) << "Search params :" ;
@@ -4239,7 +4091,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
 
     DepthType startDepth = 1;//std::min(d,easyMoveDetectionDepth);
 
-    if ( isMainThread() && d > easyMoveDetectionDepth+5 && ThreadContext::currentMoveMs < INFINITETIME ){
+    if ( isMainThread() && d > easyMoveDetectionDepth+5 && ThreadContext::currentMoveMs < INFINITETIME && TimeMan::msecUntilNextTC > 0){
        struct RootScores { Move m; ScoreType s; };
        std::vector<RootScores> rootScores;
        // easy move detection (small open window search)
@@ -4256,7 +4108,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
     }
 
     // ID loop
-    for(DepthType depth = startDepth ; depth <= std::min(d,DepthType(MAX_DEPTH-6)) && !stopFlag ; ++depth ){ // -6 so that draw can be found for sure
+    for(DepthType depth = startDepth ; depth <= std::min(d,DepthType(MAX_DEPTH-6)) && !stopFlag ; ++depth ){ // -6 so that draw can be found for sure ///@todo I don't understand this -6 anymore ..
         if (!isMainThread()){ // stockfish like thread management
             const int i = (id()-1)%threadSkipSize;
             if (((depth + ThreadPool::skipPhase[i]) / ThreadPool::skipSize[i]) % 2) continue;
@@ -4264,7 +4116,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         else{ if ( depth > 1) startLock.store(false);} // delayed other thread start
         Logging::LogIt(Logging::logInfo) << "Thread " << id() << " searching depth " << (int)depth;
         PVList pvLoc;
-        ScoreType delta = (StaticConfig::doWindow && depth>4)?8:MATE; // MATE not INFSCORE in order to enter the loop below once
+        ScoreType delta = (SearchConfig::doWindow && depth>4)?8:MATE; // MATE not INFSCORE in order to enter the loop below once
         ScoreType alpha = std::max(ScoreType(bestScore - delta), ScoreType (-MATE));
         ScoreType beta  = std::min(ScoreType(bestScore + delta), MATE);
         ScoreType score = 0;
@@ -4414,45 +4266,47 @@ namespace Options {
         return true;
     }
     void registerCOMOptions(){ // options exposed xboard GUI
-       _keys.push_back(KeyBase(k_int,   w_spin, "Level"                       , &DynamicConfig::level                          , (unsigned int)0  , (unsigned int)StaticConfig::nlevel     ));
+       _keys.push_back(KeyBase(k_int,   w_spin, "Level"                       , &DynamicConfig::level                          , (unsigned int)0  , (unsigned int)SearchConfig::nlevel     ));
        _keys.push_back(KeyBase(k_int,   w_spin, "Hash"                        , &DynamicConfig::ttSizeMb                       , (unsigned int)1  , (unsigned int)256000, &TT::initTable));
        _keys.push_back(KeyBase(k_int,   w_spin, "Threads"                     , &DynamicConfig::threads                        , (unsigned int)1  , (unsigned int)256   , std::bind(&ThreadPool::setup, &ThreadPool::instance())));
        _keys.push_back(KeyBase(k_bool,  w_check, "UCI_Chess960"               , &DynamicConfig::FRC                            , false            , true ));
        _keys.push_back(KeyBase(k_bool,  w_check, "Ponder"                     , &DynamicConfig::UCIPonder                      , false            , true ));
 
-       _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin0"            , &StaticConfig::qfutilityMargin[0]              , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin1"            , &StaticConfig::qfutilityMargin[1]              , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "staticNullMoveMaxDepth0"     , &StaticConfig::staticNullMoveMaxDepth[0]       , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "staticNullMoveMaxDepth1"     , &StaticConfig::staticNullMoveMaxDepth[1]       , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthCoeff0"   , &StaticConfig::staticNullMoveDepthCoeff[0]     , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthCoeff1"   , &StaticConfig::staticNullMoveDepthCoeff[1]     , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthInit0"    , &StaticConfig::staticNullMoveDepthInit[0]      , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthInit1"    , &StaticConfig::staticNullMoveDepthInit[1]      , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthCoeff0"   , &StaticConfig::razoringMarginDepthCoeff[0]     , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthCoeff1"   , &StaticConfig::razoringMarginDepthCoeff[1]     , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthInit0"    , &StaticConfig::razoringMarginDepthInit[0]      , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthInit1"    , &StaticConfig::razoringMarginDepthInit[1]      , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "razoringMaxDepth0"           , &StaticConfig::razoringMaxDepth[0]             , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "razoringMaxDepth1"           , &StaticConfig::razoringMaxDepth[1]             , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "nullMoveMinDepth"            , &StaticConfig::nullMoveMinDepth                , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "historyPruningMaxDepth"      , &StaticConfig::historyPruningMaxDepth          , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_score, w_spin, "historyPruningThresholdInit" , &StaticConfig::historyPruningThresholdInit     , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "historyPruningThresholdDepth", &StaticConfig::historyPruningThresholdDepth    , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "futilityMaxDepth0"           , &StaticConfig::futilityMaxDepth[0]             , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "futilityMaxDepth1"           , &StaticConfig::futilityMaxDepth[1]             , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthCoeff0"         , &StaticConfig::futilityDepthCoeff[0]           , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthCoeff1"         , &StaticConfig::futilityDepthCoeff[1]           , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthInit0"          , &StaticConfig::futilityDepthInit[0]            , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthInit1"          , &StaticConfig::futilityDepthInit[1]            , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "iidMinDepth"                 , &StaticConfig::iidMinDepth                     , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "iidMinDepth2"                , &StaticConfig::iidMinDepth2                    , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "probCutMinDepth"             , &StaticConfig::probCutMinDepth                 , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_int  , w_spin, "probCutMaxMoves"             , &StaticConfig::probCutMaxMoves                 , 0               , 30                  ));
-       _keys.push_back(KeyBase(k_score, w_spin, "probCutMargin"               , &StaticConfig::probCutMargin                   , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "lmrMinDepth"                 , &StaticConfig::lmrMinDepth                     , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "singularExtensionDepth"      , &StaticConfig::singularExtensionDepth          , DepthType(0)    , DepthType(30)       ));
-
+#ifdef WITH_CLOP_SEARCH
+       _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin0"            , &SearchConfig::qfutilityMargin[0]              , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin1"            , &SearchConfig::qfutilityMargin[1]              , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "staticNullMoveMaxDepth0"     , &SearchConfig::staticNullMoveMaxDepth[0]       , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "staticNullMoveMaxDepth1"     , &SearchConfig::staticNullMoveMaxDepth[1]       , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthCoeff0"   , &SearchConfig::staticNullMoveDepthCoeff[0]     , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthCoeff1"   , &SearchConfig::staticNullMoveDepthCoeff[1]     , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthInit0"    , &SearchConfig::staticNullMoveDepthInit[0]      , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthInit1"    , &SearchConfig::staticNullMoveDepthInit[1]      , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthCoeff0"   , &SearchConfig::razoringMarginDepthCoeff[0]     , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthCoeff1"   , &SearchConfig::razoringMarginDepthCoeff[1]     , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthInit0"    , &SearchConfig::razoringMarginDepthInit[0]      , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthInit1"    , &SearchConfig::razoringMarginDepthInit[1]      , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "razoringMaxDepth0"           , &SearchConfig::razoringMaxDepth[0]             , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "razoringMaxDepth1"           , &SearchConfig::razoringMaxDepth[1]             , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "nullMoveMinDepth"            , &SearchConfig::nullMoveMinDepth                , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "historyPruningMaxDepth"      , &SearchConfig::historyPruningMaxDepth          , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_score, w_spin, "historyPruningThresholdInit" , &SearchConfig::historyPruningThresholdInit     , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "historyPruningThresholdDepth", &SearchConfig::historyPruningThresholdDepth    , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "futilityMaxDepth0"           , &SearchConfig::futilityMaxDepth[0]             , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "futilityMaxDepth1"           , &SearchConfig::futilityMaxDepth[1]             , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthCoeff0"         , &SearchConfig::futilityDepthCoeff[0]           , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthCoeff1"         , &SearchConfig::futilityDepthCoeff[1]           , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthInit0"          , &SearchConfig::futilityDepthInit[0]            , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthInit1"          , &SearchConfig::futilityDepthInit[1]            , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "iidMinDepth"                 , &SearchConfig::iidMinDepth                     , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "iidMinDepth2"                , &SearchConfig::iidMinDepth2                    , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "probCutMinDepth"             , &SearchConfig::probCutMinDepth                 , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_int  , w_spin, "probCutMaxMoves"             , &SearchConfig::probCutMaxMoves                 , 0               , 30                  ));
+       _keys.push_back(KeyBase(k_score, w_spin, "probCutMargin"               , &SearchConfig::probCutMargin                   , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "lmrMinDepth"                 , &SearchConfig::lmrMinDepth                     , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "singularExtensionDepth"      , &SearchConfig::singularExtensionDepth          , DepthType(0)    , DepthType(30)       ));
        ///@todo more ...
+#endif
+       
     }
     void readOptions(int argc, char ** argv) { // load json config and command line args in memory
         for (int i = 1; i < argc; ++i) args.push_back(argv[i]);
@@ -4484,8 +4338,9 @@ namespace Options {
         Logging::LogIt(Logging::logInfo) << "From config file, " << it.key() << " : " << value;
         return true;
     }
-#define GETOPT(name,type) Options::getOption<type>(DynamicConfig::name,#name);
+
     void initOptions(int argc, char ** argv){
+#define GETOPT(name,type) Options::getOption<type>(DynamicConfig::name,#name);
        registerCOMOptions();
        readOptions(argc,argv);
        GETOPT(quiet,            bool)  // first to be read
@@ -4690,7 +4545,6 @@ bool replay(size_t nbmoves){
 
 void xboard(){
     Logging::LogIt(Logging::logInfo) << "Starting XBoard main loop" ;
-    //setFeature(); ///@todo should not be here
 
     bool iterate = true;
     while(iterate) {
@@ -4922,8 +4776,8 @@ void init(int argc, char ** argv) {
     Logging::init(); // after reading options
     Zobrist::initHash();
     TT::initTable();
-    StaticConfig::initLMR();
-    StaticConfig::initMvvLva();
+    SearchConfig::initLMR();
+    SearchConfig::initMvvLva();
     BBTools::initMask();
 #ifdef WITH_MAGIC
     BBTools::MagicBB::initMagic();
