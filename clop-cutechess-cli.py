@@ -36,13 +36,13 @@ import sys
 cutechess_cli_path = "\"C:\Program Files (x86)\cutechess\cutechess-cli.exe\""
 
 # The engine whose parameters will be optimized
-engine = 'conf=minic_1.26_uci'
+engine = 'conf=minic_dev_uci'
 
 # Format for the commands that are sent to the engine to
 # set the parameter values. When the command is sent,
 # {name} will be replaced with the parameter name and {value}
 # with the parameter value.
-engine_param_cmd = 'setoption Name {name} Value {value}'
+engine_param_cmd = 'setoption name {name} value {value}'
 
 # A pool of opponents for the engine. The opponent will be
 # chosen based on the seed sent by CLOP.
@@ -51,7 +51,7 @@ opponents = [
 ]
 
 # Additional cutechess-cli options, eg. time control and opening book
-options = '-each tc=40/3 -draw movenumber=80 movecount=5 score=5 -resign movecount=5 score=500'
+options = '-each tc=40/10 -draw movenumber=80 movecount=5 score=5 -resign movecount=5 score=500'
 
 def main(argv = None):
     if argv is None:
