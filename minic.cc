@@ -270,29 +270,29 @@ const bool doProbcut        = true;
 const bool doHistoryPruning = true;
 const bool doCMHPruning     = true;
 // first value if eval score is used, second if hash score is used
-const ScoreType qfutilityMargin          [2] = {90 , 90};          
-const DepthType staticNullMoveMaxDepth   [2] = {6  , 6};          
-const ScoreType staticNullMoveDepthCoeff [2] = {80 , 80};         
-const ScoreType staticNullMoveDepthInit  [2] = {0  , 0};          
-const DepthType razoringMaxDepth         [2] = {3  , 3}; 
-const ScoreType razoringMarginDepthCoeff [2] = {0  , 0};          
-const ScoreType razoringMarginDepthInit  [2] = {200, 200};        
-const DepthType nullMoveMinDepth             = 2;
-const DepthType nullMoveVerifDepth           = 64; // means off ...
-const DepthType historyPruningMaxDepth       = 3;
-const ScoreType historyPruningThresholdInit  = 0;
-const ScoreType historyPruningThresholdDepth = 0;
-const DepthType CMHMaxDepth                  = 4;
-const DepthType futilityMaxDepth         [2] = {10 , 10};
-const ScoreType futilityDepthCoeff       [2] = {160, 160};
-const ScoreType futilityDepthInit        [2] = {0  , 0};
-const DepthType iidMinDepth                  = 5;
-const DepthType iidMinDepth2                 = 8;
-const DepthType probCutMinDepth              = 5;
-const int       probCutMaxMoves              = 5;
-const ScoreType probCutMargin                = 80;
-const DepthType lmrMinDepth                  = 3;
-const DepthType singularExtensionDepth       = 8;
+/*const*/ ScoreType qfutilityMargin          [2] = {90 , 90};          
+/*const*/ DepthType staticNullMoveMaxDepth   [2] = {6  , 6};          
+/*const*/ ScoreType staticNullMoveDepthCoeff [2] = {80 , 80};         
+/*const*/ ScoreType staticNullMoveDepthInit  [2] = {0  , 0};          
+/*const*/ DepthType razoringMaxDepth         [2] = {3  , 3}; 
+/*const*/ ScoreType razoringMarginDepthCoeff [2] = {0  , 0};          
+/*const*/ ScoreType razoringMarginDepthInit  [2] = {200, 200};        
+/*const*/ DepthType nullMoveMinDepth             = 2;
+/*const*/ DepthType nullMoveVerifDepth           = 64; // means off ...
+/*const*/ DepthType historyPruningMaxDepth       = 3;
+/*const*/ ScoreType historyPruningThresholdInit  = 0;
+/*const*/ ScoreType historyPruningThresholdDepth = 0;
+/*const*/ DepthType CMHMaxDepth                  = 4;
+/*const*/ DepthType futilityMaxDepth         [2] = {10 , 10};
+/*const*/ ScoreType futilityDepthCoeff       [2] = {160, 160};
+/*const*/ ScoreType futilityDepthInit        [2] = {0  , 0};
+/*const*/ DepthType iidMinDepth                  = 5;
+/*const*/ DepthType iidMinDepth2                 = 8;
+/*const*/ DepthType probCutMinDepth              = 5;
+/*const*/ int       probCutMaxMoves              = 5;
+/*const*/ ScoreType probCutMargin                = 80;
+/*const*/ DepthType lmrMinDepth                  = 3;
+/*const*/ DepthType singularExtensionDepth       = 8;
 
 // a playing level feature for the poor ...
 const int nlevel = 100;
@@ -4420,7 +4420,6 @@ namespace Options {
        _keys.push_back(KeyBase(k_bool,  w_check, "UCI_Chess960"               , &DynamicConfig::FRC                            , false            , true ));
        _keys.push_back(KeyBase(k_bool,  w_check, "Ponder"                     , &DynamicConfig::UCIPonder                      , false            , true ));
 
-       /*
        _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin0"            , &StaticConfig::qfutilityMargin[0]              , ScoreType(0)    , ScoreType(1500)     ));
        _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin1"            , &StaticConfig::qfutilityMargin[1]              , ScoreType(0)    , ScoreType(1500)     ));
        _keys.push_back(KeyBase(k_depth, w_spin, "staticNullMoveMaxDepth0"     , &StaticConfig::staticNullMoveMaxDepth[0]       , DepthType(0)    , DepthType(30)       ));
@@ -4452,7 +4451,7 @@ namespace Options {
        _keys.push_back(KeyBase(k_score, w_spin, "probCutMargin"               , &StaticConfig::probCutMargin                   , ScoreType(0)    , ScoreType(1500)     ));
        _keys.push_back(KeyBase(k_depth, w_spin, "lmrMinDepth"                 , &StaticConfig::lmrMinDepth                     , DepthType(0)    , DepthType(30)       ));
        _keys.push_back(KeyBase(k_depth, w_spin, "singularExtensionDepth"      , &StaticConfig::singularExtensionDepth          , DepthType(0)    , DepthType(30)       ));
-       */
+
        ///@todo more ...
     }
     void readOptions(int argc, char ** argv) { // load json config and command line args in memory
@@ -4499,7 +4498,9 @@ namespace Options {
        GETOPT(mateFinder,       bool)
        GETOPT(fullXboardOutput, bool)
        GETOPT(level,            unsigned int)
+#ifdef WITH_SYZYGY
        GETOPT(syzygyPath,       std::string)
+#endif
    }
 }
 
