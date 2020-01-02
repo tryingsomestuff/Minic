@@ -1,0 +1,32 @@
+Name test
+
+Script C:/Users/xr_a_/Desktop/minic/clop-cutechess-cli.bat
+
+IntegerParameter iidMinDepth 0 15
+IntegerParameter iidMinDepth2 0 15
+
+Processor machine1
+Processor machine2
+Processor machine3
+Processor machine4
+
+# Call the script "Replications" times in a row with identical parameter values
+# Replications may be used to alternate colors, for instance.
+# Seed % Replications would indicate color.
+Replications 2
+
+# Parameters of statistical model of outcome
+# For binary outcome &#40;Win/Loss, no draws&#41;, use "DrawElo 0"
+# For chess, use "DrawElo 100"
+DrawElo 100
+
+# Regression parameters
+# H 3 is recommended &#40;it is the default value&#41;
+# Correlations may be "all" &#40;default&#41; or "none"
+# Even if variables are not correlated "all" should work well. The problem is
+# that the regression might become very costly if the number of variables is
+# high. So use "Correlations none" only if you are certain parameters are
+# independent or you have so many variables that "all" is too costly.
+H 3
+Correlations all
+
