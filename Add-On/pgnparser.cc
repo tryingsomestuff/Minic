@@ -154,13 +154,12 @@ void pgnparse__(std::ifstream & is,std::ofstream & os) {
       float gp;
       DepthType seldepth = 0;
       for (int i = 16 ; i <= game.n-6 ; ++i){
-          ScoreAcc sc;
           Position p = game.p[i];
           if ( hashes.find(computeHash(p)) != hashes.end()) continue;
           hashes.insert(computeHash(p));
           const ScoreType equalMargin = 120;
-          const ScoreType seval = ThreadPool::instance().main().eval(p,gp,&sc);
-          if ( std::abs(ScaleScore(sc.scores[ScoreAcc::sc_Mat],gp)) < equalMargin){
+          const ScoreType seval = ThreadPool::instance().main().eval(p,gp);
+          if (seval < equalMargin){ /// @todo use material table here !
              ++e;
              const ScoreType squiet = ThreadPool::instance().main().qsearchNoPruning(-10000,10000,p,1,seldepth);
              const ScoreType quietMargin = 80;

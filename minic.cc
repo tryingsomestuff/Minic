@@ -120,7 +120,7 @@ inline MiniMove Move2MiniMove(Move m) { return m & 0xFFFF;} // skip score
 enum GamePhase { MG=0, EG=1, GP_MAX=2 };
 GamePhase operator++(GamePhase & g){g=GamePhase(g+1); return g;}
 
-struct EvalScore{ ///@todo use Stockfish trick (two short in one int)
+struct EvalScore{ ///@todo use Stockfish trick (two short in one int) but it's hard to make it compatible with Texel tuning !
     std::array<ScoreType,GP_MAX> sc = {0};
     EvalScore(ScoreType mg,ScoreType eg):sc{mg,eg}{}
     EvalScore(ScoreType s):sc{s,s}{}
@@ -150,6 +150,7 @@ struct EvalScore{ ///@todo use Stockfish trick (two short in one int)
     EvalScore  operator -(const ScoreType& s)const{EvalScore e(*this); for(GamePhase g=MG; g<GP_MAX; ++g)e[g]-=s; return e;}
     void       operator =(const ScoreType& s){for(GamePhase g=MG; g<GP_MAX; ++g){sc[g]=s;}}
 
+    /*
     EvalScore& operator*=(const int& s){for(GamePhase g=MG; g<GP_MAX; ++g)sc[g]*=s; return *this;}
     EvalScore& operator/=(const int& s){for(GamePhase g=MG; g<GP_MAX; ++g)sc[g]/=s; return *this;}
     EvalScore& operator+=(const int& s){for(GamePhase g=MG; g<GP_MAX; ++g)sc[g]+=s; return *this;}
@@ -159,6 +160,7 @@ struct EvalScore{ ///@todo use Stockfish trick (two short in one int)
     EvalScore  operator +(const int& s)const{EvalScore e(*this); for(GamePhase g=MG; g<GP_MAX; ++g)e[g]+=s; return e;}
     EvalScore  operator -(const int& s)const{EvalScore e(*this); for(GamePhase g=MG; g<GP_MAX; ++g)e[g]-=s; return e;}
     void       operator =(const int& s){for(GamePhase g=MG; g<GP_MAX; ++g){sc[g]=s;}}
+    */
 
     EvalScore scale(float s_mg,float s_eg)const{ EvalScore e(*this); e[MG]= ScoreType(s_mg*e[MG]); e[EG]= ScoreType(s_eg*e[EG]); return e;}
 };
@@ -1542,7 +1544,7 @@ namespace MoveDifficultyUtil {
 struct ScoreAcc{
     enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_PieceBlockPawn, sc_Holes, sc_Outpost, sc_FreePasser, sc_PwnPush, sc_PwnSafeAtt, sc_PwnPushAtt, sc_Adjust, sc_OpenFile, sc_RookFrontKing, sc_RookFrontQueen, sc_RookQueenSameFile, sc_AttQueenMalus, sc_MinorOnOpenFile, sc_RookBehindPassed, sc_QueenNearKing, sc_Hanging, sc_Threat, sc_PinsK, sc_PinsQ, sc_PawnTT, sc_max };
     float scalingFactor = 1;
-    std::array<EvalScore,sc_max> scores;
+    std::array<EvalScore, sc_max> scores = { 0 };
     ScoreType Score(const Position &p, float gp){
         EvalScore sc;
         for(int k = 0 ; k < sc_max ; ++k){ sc += scores[k]; }
@@ -1843,7 +1845,7 @@ Counter ThreadPool::counter(Stats::StatId id) const { Counter n = 0; for (auto &
 
 bool apply(Position & p, const Move & m, bool noValidation = false); //forward decl
 bool isPseudoLegal(const Position & p, Move m); // forward decl
-template < bool display = false, bool safeMatEvaluator = true > ScoreType eval(const Position & p, float & gp, ThreadContext & context, ScoreAcc * sc = 0); //forward decl
+template < bool display = false, bool safeMatEvaluator = true > ScoreType eval(const Position & p, float & gp, ThreadContext & context); //forward decl
 
 namespace TT{
 
@@ -3056,11 +3058,9 @@ BitBoard getPinned(const Position & p, const Square s){
 }
 
 template < bool display, bool safeMatEvaluator >
-ScoreType eval(const Position & p, float & gp, ThreadContext &context, ScoreAcc * sc ){
+ScoreType eval(const Position & p, float & gp, ThreadContext &context){
     START_TIMER
-    ScoreAcc scoreLoc;
-    ScoreAcc & score = sc ? *sc : scoreLoc;
-    score.scores = {0};
+    ScoreAcc score;
     
     // king captured
     const bool white2Play = p.c == Co_White;
@@ -3343,10 +3343,14 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context, ScoreAcc 
     const BitBoard pinnedK [2] = { getPinned<Co_White>(p,p.king[Co_White]), getPinned<Co_Black>(p,p.king[Co_Black]) };
     const BitBoard pinnedQ [2] = { getPinned<Co_White>(p,whiteQueenSquare), getPinned<Co_Black>(p,blackQueenSquare) };
     for (Piece pp = P_wp ; pp < P_wk ; ++pp) {
-       score.scores[ScoreAcc::sc_PinsK] -= EvalConfig::pinnedKing [pp-1] * countBit(pinnedK[Co_White] & p.pieces(Co_White,pp));
-       score.scores[ScoreAcc::sc_PinsK] += EvalConfig::pinnedKing [pp-1] * countBit(pinnedK[Co_Black] & p.pieces(Co_Black,pp));
-       score.scores[ScoreAcc::sc_PinsQ] -= EvalConfig::pinnedQueen[pp-1] * countBit(pinnedQ[Co_White] & p.pieces(Co_White,pp));
-       score.scores[ScoreAcc::sc_PinsQ] += EvalConfig::pinnedQueen[pp-1] * countBit(pinnedQ[Co_Black] & p.pieces(Co_Black,pp));
+        if (p.pieces(Co_White, pp)) {
+            if (pinnedK[Co_White] & p.pieces(Co_White, pp)) score.scores[ScoreAcc::sc_PinsK] -= EvalConfig::pinnedKing[pp - 1] * countBit(pinnedK[Co_White] & p.pieces(Co_White, pp));
+            if (pinnedQ[Co_White] & p.pieces(Co_White, pp)) score.scores[ScoreAcc::sc_PinsQ] -= EvalConfig::pinnedQueen[pp - 1] * countBit(pinnedQ[Co_White] & p.pieces(Co_White, pp));
+        }
+        if (p.pieces(Co_Black, pp)) {
+            if (pinnedK[Co_Black] & p.pieces(Co_Black, pp)) score.scores[ScoreAcc::sc_PinsK] += EvalConfig::pinnedKing[pp - 1] * countBit(pinnedK[Co_Black] & p.pieces(Co_Black, pp));
+            if (pinnedQ[Co_Black] & p.pieces(Co_Black, pp)) score.scores[ScoreAcc::sc_PinsQ] += EvalConfig::pinnedQueen[pp - 1] * countBit(pinnedQ[Co_Black] & p.pieces(Co_Black, pp));
+        }
     }
 
     // attack : queen distance to opponent king (wrong if multiple queens ...)
