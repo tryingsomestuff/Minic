@@ -40,13 +40,14 @@ typedef uint64_t u_int64_t;
 const std::string MinicVersion = "dev";
 
 //#define IMPORTBOOK
-#define WITH_TEXEL_TUNING
+//#define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
 #define WITH_TEST_SUITE
 //#define WITH_SYZYGY
 #define WITH_UCI
 //#define WITH_PGN_PARSER
 #define WITH_MAGIC
+//#define WITH_LMRNN
 
 //#define WITH_TIMER
 //#define DEBUG_HASH
@@ -652,7 +653,7 @@ struct Position{
 
     // t p n b r q k bl bd M n  (total is first so that pawn to king is same a Piece)
     typedef std::array<std::array<char,11>,2> Material;
-    Material mat = {{{{0}}}};
+    Material mat = {{{{0}}}}; // such a nice syntax ...
 
     mutable Hash h = 0ull, ph = 0ull;
     Move lastMove = INVALIDMOVE;
@@ -1491,6 +1492,33 @@ Hash computePHash(const Position &p){
 
 struct ThreadContext; // forward decl
 
+#ifdef WITH_LMRNN
+template <int N, typename ValueType, typename InputType> struct NN { 
+    static const unsigned int n = N;
+    float w[n + 1];
+    float learningRate;
+    uint64_t epoch;
+    void init() {
+        w[n] = 1;
+        epoch = 0;
+        for (int k = 0; k < n; ++k) w[k] = 0;
+    }
+    inline NN(float learningRate) : learningRate(learningRate) { init(); }
+    void train(const InputType(& input)[n], ValueType prediction, ValueType result) {
+        const ValueType error = (result - prediction);
+        const float le = learningRate * error;
+        epoch++;
+        w[n] += le;
+        for (int d = 0; d < n; d++) w[d] += input[d] * le;
+    }
+    bool predict(const InputType(& input)[n])const{
+        float x = w[n];
+        for (int d = 0; d < n; d++) x += w[d] * input[d];
+        return x > 0;
+    }
+};
+#endif
+
 struct ThreadData{
     DepthType depth, seldepth;
     ScoreType sc;
@@ -1541,18 +1569,20 @@ namespace MoveDifficultyUtil {
     const float     maxStealFraction  = 0.2f; // of remaining time
 }
 
+enum eScores : unsigned char { sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_PieceBlockPawn, sc_Holes, sc_Outpost, sc_FreePasser, sc_PwnPush, sc_PwnSafeAtt, sc_PwnPushAtt, sc_Adjust, sc_OpenFile, sc_RookFrontKing, sc_RookFrontQueen, sc_RookQueenSameFile, sc_AttQueenMalus, sc_MinorOnOpenFile, sc_RookBehindPassed, sc_QueenNearKing, sc_Hanging, sc_Threat, sc_PinsK, sc_PinsQ, sc_PawnTT, sc_max };
+static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "PieceBlockPawn", "Holes", "Outpost", "FreePasser", "PwnPush", "PwnSafeAtt", "PwnPushAtt" , "Adjust", "OpenFile", "RookFrontKing", "RookFrontQueen", "RookQueenSameFile", "AttQueenMalus", "MinorOnOpenFile", "RookBehindPassed", "QueenNearKing", "Hanging", "Threats", "PinsK", "PinsQ", "PawnTT" };
+//#define DEBUG_ACC
+#ifdef DEBUG_ACC
 struct ScoreAcc{
-    enum eScores : unsigned char{ sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_PieceBlockPawn, sc_Holes, sc_Outpost, sc_FreePasser, sc_PwnPush, sc_PwnSafeAtt, sc_PwnPushAtt, sc_Adjust, sc_OpenFile, sc_RookFrontKing, sc_RookFrontQueen, sc_RookQueenSameFile, sc_AttQueenMalus, sc_MinorOnOpenFile, sc_RookBehindPassed, sc_QueenNearKing, sc_Hanging, sc_Threat, sc_PinsK, sc_PinsQ, sc_PawnTT, sc_max };
     float scalingFactor = 1;
     std::array<EvalScore, sc_max> scores = { 0 };
+    EvalScore & operator[](eScores e) { return scores[e]; }
     ScoreType Score(const Position &p, float gp){
         EvalScore sc;
         for(int k = 0 ; k < sc_max ; ++k){ sc += scores[k]; }
         return ScoreType(ScaleScore(sc,gp)*scalingFactor*std::min(1.f,(110-p.fifty)/100.f));
     }
-
     void Display(const Position &p, float gp){
-        static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "PieceBlockPawn", "Holes", "Outpost", "FreePasser", "PwnPush", "PwnSafeAtt", "PwnPushAtt" , "Adjust", "OpenFile", "RookFrontKing", "RookFrontQueen", "RookQueenSameFile", "AttQueenMalus", "MinorOnOpenFile", "RookBehindPassed", "QueenNearKing", "Hanging", "Threats", "PinsK", "PinsQ", "PawnTT"};
         EvalScore sc;
         for(int k = 0 ; k < sc_max ; ++k){
             Logging::LogIt(Logging::logInfo) << scNames[k] << "       " << scores[k][MG];
@@ -1567,7 +1597,23 @@ struct ScoreAcc{
         Logging::LogIt(Logging::logInfo) << "Total  " << ScoreType(ScaleScore(sc,gp)*scalingFactor*std::min(1.f,(110-p.fifty)/100.f));
     }
 };
+#else
+struct ScoreAcc {
+    float scalingFactor = 1;
+    EvalScore score = { 0 };
+    inline EvalScore & operator[](eScores ) { return score; }
+    ScoreType Score(const Position &p, float gp) { return ScoreType(ScaleScore(score, gp)*scalingFactor*std::min(1.f, (110 - p.fifty) / 100.f)); }
+    void Display(const Position &p, float gp) {
+        Logging::LogIt(Logging::logInfo) << "Score  " << score[MG];
+        Logging::LogIt(Logging::logInfo) << "EG     " << score[EG];
+        Logging::LogIt(Logging::logInfo) << "Scaling factor " << scalingFactor;
+        Logging::LogIt(Logging::logInfo) << "Game phase " << gp;
+        Logging::LogIt(Logging::logInfo) << "Fifty  " << std::min(1.f, (110 - p.fifty) / 100.f);
+        Logging::LogIt(Logging::logInfo) << "Total  " << ScoreType(ScaleScore(score, gp)*scalingFactor*std::min(1.f, (110 - p.fifty) / 100.f));
+    }
+};
 
+#endif
 bool sameMove(const Move & a, const Move & b) { return (a & 0x0000FFFF) == (b & 0x0000FFFF);}
 
 // thread Stockfish style
@@ -1711,7 +1757,11 @@ struct ThreadContext{
     size_t id()const { return _index;}
     bool   isMainThread()const { return id() == 0 ; }
 
-    ThreadContext(size_t n):_index(n),_exit(false),_searching(true),_stdThread(&ThreadContext::idleLoop, this){ wait(); }
+    ThreadContext(size_t n):_index(n),_exit(false),_searching(true),_stdThread(&ThreadContext::idleLoop, this)
+#ifdef WITH_LMRNN
+        ,nn(1e-2)
+#endif
+    { wait(); }
 
     ~ThreadContext(){
         _exit = true;
@@ -1779,6 +1829,10 @@ struct ThreadContext{
       __builtin_prefetch(addr);
     #  endif
     }
+
+#ifdef WITH_LMRNN
+    NN<4,int,float> nn;
+#endif
 
 private:
     ThreadData              _data;
@@ -2992,7 +3046,7 @@ template < Piece T ,Color C>
 inline void evalMob(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, const BitBoard safe){
     while (pieceBBiterator){
         const BitBoard mob = BBTools::pfCoverage[T-1](BBTools::popBit(pieceBBiterator), p.occupancy, C) & ~p.allPieces[C] & safe;
-        score.scores[ScoreAcc::sc_MOB] += EvalConfig::MOB[T-2][countBit(mob)]*ColorSignHelper<C>();
+        score[sc_MOB] += EvalConfig::MOB[T-2][countBit(mob)]*ColorSignHelper<C>();
     }
 }
 
@@ -3001,9 +3055,9 @@ inline void evalMobQ(const Position & p, BitBoard pieceBBiterator, ScoreAcc & sc
     while (pieceBBiterator){
         const Square s = BBTools::popBit(pieceBBiterator);
         BitBoard mob = BBTools::pfCoverage[P_wb-1](s, p.occupancy, C) & ~p.allPieces[C] & safe;
-        score.scores[ScoreAcc::sc_MOB] += EvalConfig::MOB[3][countBit(mob)]*ColorSignHelper<C>();
+        score[sc_MOB] += EvalConfig::MOB[3][countBit(mob)]*ColorSignHelper<C>();
         mob = BBTools::pfCoverage[P_wr-1](s, p.occupancy, C) & ~p.allPieces[C] & safe;
-        score.scores[ScoreAcc::sc_MOB] += EvalConfig::MOB[4][countBit(mob)]*ColorSignHelper<C>();
+        score[sc_MOB] += EvalConfig::MOB[4][countBit(mob)]*ColorSignHelper<C>();
     }
 }
 
@@ -3011,7 +3065,7 @@ template < Color C>
 inline void evalMobK(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, const BitBoard safe){
     while (pieceBBiterator){
         const BitBoard mob = BBTools::pfCoverage[P_wk-1](BBTools::popBit(pieceBBiterator), p.occupancy, C) & ~p.allPieces[C] & safe;
-        score.scores[ScoreAcc::sc_MOB] += EvalConfig::MOB[5][countBit(mob)]*ColorSignHelper<C>();
+        score[sc_MOB] += EvalConfig::MOB[5][countBit(mob)]*ColorSignHelper<C>();
     }
 }
 
@@ -3069,7 +3123,7 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context){
 
     // level for the poor ...
     const int lra = std::max(0u,500 - 10*DynamicConfig::level);
-    if ( lra > 0 ) { score.scores[ScoreAcc::sc_Rand] += Zobrist::randomInt<int>(-lra,lra); }
+    if ( lra > 0 ) { score[sc_Rand] += Zobrist::randomInt<int>(-lra,lra); }
 
     context.prefetchPawn(computeHash(p));
 
@@ -3079,12 +3133,12 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context){
         // Hash data
        const MaterialHash::MaterialHashEntry & MEntry = MaterialHash::materialHashTable[matHash];
        gp = MEntry.gp;
-       score.scores[ScoreAcc::sc_Mat][EG] += MEntry.score[EG];
-       score.scores[ScoreAcc::sc_Mat][MG] += MEntry.score[MG];
+       score[sc_Mat][EG] += MEntry.score[EG];
+       score[sc_Mat][MG] += MEntry.score[MG];
        // end game knowledge (helper or scaling)
        if ( safeMatEvaluator && (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t]<6) ){
-          const Color winningSideEG = score.scores[ScoreAcc::sc_Mat][EG]>0?Co_White:Co_Black;
-          if      ( MEntry.t == MaterialHash::Ter_WhiteWinWithHelper || MEntry.t == MaterialHash::Ter_BlackWinWithHelper ) return (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSideEG,score.scores[ScoreAcc::sc_Mat][EG]));
+          const Color winningSideEG = score[sc_Mat][EG]>0?Co_White:Co_Black;
+          if      ( MEntry.t == MaterialHash::Ter_WhiteWinWithHelper || MEntry.t == MaterialHash::Ter_BlackWinWithHelper ) return (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSideEG,score[sc_Mat][EG]));
           else if ( MEntry.t == MaterialHash::Ter_Draw)         { if (!isAttacked(p, kingSquare(p))) return context.drawScore(); }
           else if ( MEntry.t == MaterialHash::Ter_MaterialDraw) { if (!isAttacked(p, kingSquare(p))) return context.drawScore(); }
           else if ( MEntry.t == MaterialHash::Ter_WhiteWin || MEntry.t == MaterialHash::Ter_BlackWin) score.scalingFactor = 5 - 5*p.fifty/100.f;
@@ -3101,8 +3155,8 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context){
        const ScoreType matScoreW = matPieceScoreW + matPawnScoreW;
        const ScoreType matScoreB = matPieceScoreB + matPawnScoreB;
        gp = (matScoreW + matScoreB ) / totalMatScore; // based on MG values
-       score.scores[ScoreAcc::sc_Mat][EG] += (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValuesEG[P_wq] + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * *absValuesEG[P_wr] + (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * *absValuesEG[P_wb] + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValuesEG[P_wn] + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValuesEG[P_wp];
-       score.scores[ScoreAcc::sc_Mat][MG] += matScoreW - matScoreB;
+       score[sc_Mat][EG] += (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValuesEG[P_wq] + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * *absValuesEG[P_wr] + (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * *absValuesEG[P_wb] + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValuesEG[P_wn] + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValuesEG[P_wp];
+       score[sc_Mat][MG] += matScoreW - matScoreB;
        ++context.stats.counters[Stats::sid_materialTableMiss];
     }
 
@@ -3118,16 +3172,16 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context){
     const BitBoard kingShield[2] = { kingZone[Co_White] & ~BBTools::shiftS<Co_White>(ranks[SQRANK(p.king[Co_White])]) , kingZone[Co_Black] & ~BBTools::shiftS<Co_Black>(ranks[SQRANK(p.king[Co_Black])]) };
 
     // PST, attack, danger
-    evalPiece<P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),kingZone,score.scores[ScoreAcc::sc_PST],attFromPiece[Co_White][P_wn-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wn-1]);
-    evalPiece<P_wb,Co_White>(p,p.pieces<P_wb>(Co_White),kingZone,score.scores[ScoreAcc::sc_PST],attFromPiece[Co_White][P_wb-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wb-1]);
-    evalPiece<P_wr,Co_White>(p,p.pieces<P_wr>(Co_White),kingZone,score.scores[ScoreAcc::sc_PST],attFromPiece[Co_White][P_wr-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wr-1]);
-    evalPiece<P_wq,Co_White>(p,p.pieces<P_wq>(Co_White),kingZone,score.scores[ScoreAcc::sc_PST],attFromPiece[Co_White][P_wq-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wq-1]);
-    evalPiece<P_wk,Co_White>(p,p.pieces<P_wk>(Co_White),kingZone,score.scores[ScoreAcc::sc_PST],attFromPiece[Co_White][P_wk-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wk-1]);
-    evalPiece<P_wn,Co_Black>(p,p.pieces<P_wn>(Co_Black),kingZone,score.scores[ScoreAcc::sc_PST],attFromPiece[Co_Black][P_wn-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wn-1]);
-    evalPiece<P_wb,Co_Black>(p,p.pieces<P_wb>(Co_Black),kingZone,score.scores[ScoreAcc::sc_PST],attFromPiece[Co_Black][P_wb-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wb-1]);
-    evalPiece<P_wr,Co_Black>(p,p.pieces<P_wr>(Co_Black),kingZone,score.scores[ScoreAcc::sc_PST],attFromPiece[Co_Black][P_wr-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wr-1]);
-    evalPiece<P_wq,Co_Black>(p,p.pieces<P_wq>(Co_Black),kingZone,score.scores[ScoreAcc::sc_PST],attFromPiece[Co_Black][P_wq-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wq-1]);
-    evalPiece<P_wk,Co_Black>(p,p.pieces<P_wk>(Co_Black),kingZone,score.scores[ScoreAcc::sc_PST],attFromPiece[Co_Black][P_wk-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wk-1]);
+    evalPiece<P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),kingZone,score[sc_PST],attFromPiece[Co_White][P_wn-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wn-1]);
+    evalPiece<P_wb,Co_White>(p,p.pieces<P_wb>(Co_White),kingZone,score[sc_PST],attFromPiece[Co_White][P_wb-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wb-1]);
+    evalPiece<P_wr,Co_White>(p,p.pieces<P_wr>(Co_White),kingZone,score[sc_PST],attFromPiece[Co_White][P_wr-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wr-1]);
+    evalPiece<P_wq,Co_White>(p,p.pieces<P_wq>(Co_White),kingZone,score[sc_PST],attFromPiece[Co_White][P_wq-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wq-1]);
+    evalPiece<P_wk,Co_White>(p,p.pieces<P_wk>(Co_White),kingZone,score[sc_PST],attFromPiece[Co_White][P_wk-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wk-1]);
+    evalPiece<P_wn,Co_Black>(p,p.pieces<P_wn>(Co_Black),kingZone,score[sc_PST],attFromPiece[Co_Black][P_wn-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wn-1]);
+    evalPiece<P_wb,Co_Black>(p,p.pieces<P_wb>(Co_Black),kingZone,score[sc_PST],attFromPiece[Co_Black][P_wb-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wb-1]);
+    evalPiece<P_wr,Co_Black>(p,p.pieces<P_wr>(Co_Black),kingZone,score[sc_PST],attFromPiece[Co_Black][P_wr-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wr-1]);
+    evalPiece<P_wq,Co_Black>(p,p.pieces<P_wq>(Co_Black),kingZone,score[sc_PST],attFromPiece[Co_Black][P_wq-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wq-1]);
+    evalPiece<P_wk,Co_Black>(p,p.pieces<P_wk>(Co_Black),kingZone,score[sc_PST],attFromPiece[Co_Black][P_wk-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wk-1]);
 
     /*
     ScoreType lazyScore = score.Score(p,gp);
@@ -3138,10 +3192,14 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context){
     }
     */
 
-    ThreadContext::PawnEntry dummy; // used for texel tuning
     ThreadContext::PawnEntry * pePtr = nullptr;
-    if ( DynamicConfig::disableTT || !context.getPawnEntry(computePHash(p), pePtr) ){
-       if ( DynamicConfig::disableTT ) pePtr = &dummy;
+#ifdef WITH_TEXEL_TUNING
+    ThreadContext::PawnEntry dummy; // used for texel tuning
+    pePtr = &dummy;
+    {
+#else
+    if ( !context.getPawnEntry(computePHash(p), pePtr) ){
+#endif  
        assert(pePtr);
        ThreadContext::PawnEntry & pe = *pePtr;
        pe.reset();
@@ -3214,7 +3272,7 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context){
     }
     assert(pePtr);
     const ThreadContext::PawnEntry & pe = *pePtr;
-    score.scores[ScoreAcc::sc_PawnTT] += pe.score;
+    score[sc_PawnTT] += pe.score;
     // update global things with pawn entry stuff
     kdanger[Co_White] += pe.danger[Co_White];
     kdanger[Co_Black] += pe.danger[Co_Black];
@@ -3235,28 +3293,28 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context){
     const BitBoard protectedSquare[2]  = {pe.pawnTargets[Co_White] | attackedAndNotDefended[Co_White] | attacked2AndNotDefended2[Co_White] , pe.pawnTargets[Co_Black] | attackedAndNotDefended[Co_Black] | attacked2AndNotDefended2[Co_Black] };
 
     // own piece in front of pawn
-    score.scores[ScoreAcc::sc_PieceBlockPawn] += EvalConfig::pieceFrontPawn * countBit( BBTools::shiftN<Co_White>(pawns[Co_White]) & nonPawnMat[Co_White] ); 
-    score.scores[ScoreAcc::sc_PieceBlockPawn] -= EvalConfig::pieceFrontPawn * countBit( BBTools::shiftN<Co_Black>(pawns[Co_Black]) & nonPawnMat[Co_Black] ); 
+    score[sc_PieceBlockPawn] += EvalConfig::pieceFrontPawn * countBit( BBTools::shiftN<Co_White>(pawns[Co_White]) & nonPawnMat[Co_White] ); 
+    score[sc_PieceBlockPawn] -= EvalConfig::pieceFrontPawn * countBit( BBTools::shiftN<Co_Black>(pawns[Co_Black]) & nonPawnMat[Co_Black] ); 
 
     // pawn hole, unprotected
-    score.scores[ScoreAcc::sc_Holes] += EvalConfig::holesMalus * countBit(pe.holes[Co_White] & ~protectedSquare[Co_White]);
-    score.scores[ScoreAcc::sc_Holes] -= EvalConfig::holesMalus * countBit(pe.holes[Co_Black] & ~protectedSquare[Co_Black]);
+    score[sc_Holes] += EvalConfig::holesMalus * countBit(pe.holes[Co_White] & ~protectedSquare[Co_White]);
+    score[sc_Holes] -= EvalConfig::holesMalus * countBit(pe.holes[Co_Black] & ~protectedSquare[Co_Black]);
 
     // free passer bonus
-    evalPawnFreePasser<Co_White>(p,pe.passed[Co_White], score.scores[ScoreAcc::sc_FreePasser]);
-    evalPawnFreePasser<Co_Black>(p,pe.passed[Co_Black], score.scores[ScoreAcc::sc_FreePasser]);
+    evalPawnFreePasser<Co_White>(p,pe.passed[Co_White], score[sc_FreePasser]);
+    evalPawnFreePasser<Co_Black>(p,pe.passed[Co_Black], score[sc_FreePasser]);
 
     // rook behind passed
-    score.scores[ScoreAcc::sc_RookBehindPassed] += EvalConfig::rookBehindPassed * (countBit(p.pieces<P_wr>(Co_White) & BBTools::rearSpan<Co_White>(pe.passed[Co_White])) - countBit(p.pieces<P_wr>(Co_Black) & BBTools::rearSpan<Co_White>(pe.passed[Co_White])));
-    score.scores[ScoreAcc::sc_RookBehindPassed] -= EvalConfig::rookBehindPassed * (countBit(p.pieces<P_wr>(Co_Black) & BBTools::rearSpan<Co_Black>(pe.passed[Co_Black])) - countBit(p.pieces<P_wr>(Co_White) & BBTools::rearSpan<Co_Black>(pe.passed[Co_Black])));
+    score[sc_RookBehindPassed] += EvalConfig::rookBehindPassed * (countBit(p.pieces<P_wr>(Co_White) & BBTools::rearSpan<Co_White>(pe.passed[Co_White])) - countBit(p.pieces<P_wr>(Co_Black) & BBTools::rearSpan<Co_White>(pe.passed[Co_White])));
+    score[sc_RookBehindPassed] -= EvalConfig::rookBehindPassed * (countBit(p.pieces<P_wr>(Co_Black) & BBTools::rearSpan<Co_Black>(pe.passed[Co_Black])) - countBit(p.pieces<P_wr>(Co_White) & BBTools::rearSpan<Co_Black>(pe.passed[Co_Black])));
 
     // protected minor blocking openfile
-    score.scores[ScoreAcc::sc_MinorOnOpenFile] += EvalConfig::minorOnOpenFile * countBit(pe.openFiles & (p.whiteBishop()|p.whiteKnight()) & pe.pawnTargets[Co_White]);
-    score.scores[ScoreAcc::sc_MinorOnOpenFile] -= EvalConfig::minorOnOpenFile * countBit(pe.openFiles & (p.blackBishop()|p.blackKnight()) & pe.pawnTargets[Co_Black]);
+    score[sc_MinorOnOpenFile] += EvalConfig::minorOnOpenFile * countBit(pe.openFiles & (p.whiteBishop()|p.whiteKnight()) & pe.pawnTargets[Co_White]);
+    score[sc_MinorOnOpenFile] -= EvalConfig::minorOnOpenFile * countBit(pe.openFiles & (p.blackBishop()|p.blackKnight()) & pe.pawnTargets[Co_Black]);
     
     // knight on opponent hole, protected
-    score.scores[ScoreAcc::sc_Outpost] += EvalConfig::outpost * countBit(pe.holes[Co_Black] & p.whiteKnight() & pe.pawnTargets[Co_White]);
-    score.scores[ScoreAcc::sc_Outpost] -= EvalConfig::outpost * countBit(pe.holes[Co_White] & p.blackKnight() & pe.pawnTargets[Co_Black]);
+    score[sc_Outpost] += EvalConfig::outpost * countBit(pe.holes[Co_Black] & p.whiteKnight() & pe.pawnTargets[Co_White]);
+    score[sc_Outpost] -= EvalConfig::outpost * countBit(pe.holes[Co_White] & p.blackKnight() & pe.pawnTargets[Co_Black]);
 
     // reward safe checks
     for (Piece pp = P_wp ; pp < P_wk ; ++pp) {
@@ -3265,44 +3323,44 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context){
     }
 
     // danger : use king danger score. **DO NOT** apply this in end-game
-    score.scores[ScoreAcc::sc_ATT][MG] -=  EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_White]/32),ScoreType(0)),ScoreType(63))];
-    score.scores[ScoreAcc::sc_ATT][MG] +=  EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_Black]/32),ScoreType(0)),ScoreType(63))];
+    score[sc_ATT][MG] -=  EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_White]/32),ScoreType(0)),ScoreType(63))];
+    score[sc_ATT][MG] +=  EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_Black]/32),ScoreType(0)),ScoreType(63))];
 
     // number of hanging pieces (complexity ...)
     const BitBoard hanging[2] = {nonPawnMat[Co_White] & weakSquare[Co_White] , nonPawnMat[Co_Black] & weakSquare[Co_Black] };
-    score.scores[ScoreAcc::sc_Hanging] += EvalConfig::hangingPieceMalus * (countBit(hanging[Co_White]) - countBit(hanging[Co_Black]));
+    score[sc_Hanging] += EvalConfig::hangingPieceMalus * (countBit(hanging[Co_White]) - countBit(hanging[Co_Black]));
 
     // threats by minor
     BitBoard targetThreat = (nonPawnMat[Co_White] | (pawns[Co_White] & weakSquare[Co_White]) ) & (attFromPiece[Co_Black][P_wn-1] | attFromPiece[Co_Black][P_wb-1]);
-    while (targetThreat) score.scores[ScoreAcc::sc_Threat] += EvalConfig::threatByMinor[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
+    while (targetThreat) score[sc_Threat] += EvalConfig::threatByMinor[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
     targetThreat = (nonPawnMat[Co_Black] | (pawns[Co_Black] & weakSquare[Co_Black]) ) & (attFromPiece[Co_White][P_wn-1] | attFromPiece[Co_White][P_wb-1]);
-    while (targetThreat) score.scores[ScoreAcc::sc_Threat] -= EvalConfig::threatByMinor[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
+    while (targetThreat) score[sc_Threat] -= EvalConfig::threatByMinor[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
     // threats by rook
     targetThreat = p.allPieces[Co_White] & weakSquare[Co_White] & attFromPiece[Co_Black][P_wr-1];
-    while (targetThreat) score.scores[ScoreAcc::sc_Threat] += EvalConfig::threatByRook[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
+    while (targetThreat) score[sc_Threat] += EvalConfig::threatByRook[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
     targetThreat = p.allPieces[Co_Black] & weakSquare[Co_Black] & attFromPiece[Co_White][P_wr-1];
-    while (targetThreat) score.scores[ScoreAcc::sc_Threat] -= EvalConfig::threatByRook[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
+    while (targetThreat) score[sc_Threat] -= EvalConfig::threatByRook[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
     // threats by queen
     targetThreat = p.allPieces[Co_White] & weakSquare[Co_White] & attFromPiece[Co_Black][P_wq-1];
-    while (targetThreat) score.scores[ScoreAcc::sc_Threat] += EvalConfig::threatByQueen[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
+    while (targetThreat) score[sc_Threat] += EvalConfig::threatByQueen[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
     targetThreat = p.allPieces[Co_Black] & weakSquare[Co_Black] & attFromPiece[Co_White][P_wq-1];
-    while (targetThreat) score.scores[ScoreAcc::sc_Threat] -= EvalConfig::threatByQueen[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
+    while (targetThreat) score[sc_Threat] -= EvalConfig::threatByQueen[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
     // threats by king
     targetThreat = p.allPieces[Co_White] & weakSquare[Co_White] & attFromPiece[Co_Black][P_wk-1];
-    while (targetThreat) score.scores[ScoreAcc::sc_Threat] += EvalConfig::threatByKing[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
+    while (targetThreat) score[sc_Threat] += EvalConfig::threatByKing[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
     targetThreat = p.allPieces[Co_Black] & weakSquare[Co_Black] & attFromPiece[Co_White][P_wk-1];
-    while (targetThreat) score.scores[ScoreAcc::sc_Threat] -= EvalConfig::threatByKing[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
+    while (targetThreat) score[sc_Threat] -= EvalConfig::threatByKing[PieceTools::getPieceType(p, BBTools::popBit(targetThreat))-1];
 
     // threat by safe pawn
     const BitBoard safePawnAtt[2]  = {nonPawnMat[Co_Black] & BBTools::pawnAttacks<Co_White>(pawns[Co_White] & safeSquare[Co_White]), nonPawnMat[Co_White] & BBTools::pawnAttacks<Co_Black>(pawns[Co_Black] & safeSquare[Co_Black])};
-    score.scores[ScoreAcc::sc_PwnSafeAtt] += EvalConfig::pawnSafeAtt * (countBit(safePawnAtt[Co_White]) - countBit(safePawnAtt[Co_Black]));
+    score[sc_PwnSafeAtt] += EvalConfig::pawnSafeAtt * (countBit(safePawnAtt[Co_White]) - countBit(safePawnAtt[Co_Black]));
 
     // safe pawn push (protected once or not attacked)
     const BitBoard safePawnPush[2]  = {BBTools::shiftN<Co_White>(pawns[Co_White]) & ~p.occupancy & safeSquare[Co_White], BBTools::shiftN<Co_Black>(pawns[Co_Black]) & ~p.occupancy & safeSquare[Co_Black]};
-    score.scores[ScoreAcc::sc_PwnPush] += EvalConfig::pawnMobility * (countBit(safePawnPush[Co_White]) - countBit(safePawnPush[Co_Black]));
+    score[sc_PwnPush] += EvalConfig::pawnMobility * (countBit(safePawnPush[Co_White]) - countBit(safePawnPush[Co_Black]));
 
     // threat by safe pawn push
-    score.scores[ScoreAcc::sc_PwnPushAtt] += EvalConfig::pawnSafePushAtt * (countBit(nonPawnMat[Co_Black] & BBTools::pawnAttacks<Co_White>(safePawnPush[Co_White])) - countBit(nonPawnMat[Co_White] & BBTools::pawnAttacks<Co_Black>(safePawnPush[Co_Black])));
+    score[sc_PwnPushAtt] += EvalConfig::pawnSafePushAtt * (countBit(nonPawnMat[Co_Black] & BBTools::pawnAttacks<Co_White>(safePawnPush[Co_White])) - countBit(nonPawnMat[Co_White] & BBTools::pawnAttacks<Co_Black>(safePawnPush[Co_Black])));
 
     // pieces mobility
     evalMob <P_wn,Co_White>(p,p.pieces<P_wn>(Co_White),score,safeSquare[Co_White]);
@@ -3317,24 +3375,24 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context){
     evalMobK<     Co_Black>(p,p.pieces<P_wk>(Co_Black),score,~att[Co_White]);
 
     // rook on open file
-    score.scores[ScoreAcc::sc_OpenFile] += EvalConfig::rookOnOpenFile         * countBit(p.whiteRook() & pe.openFiles);
-    score.scores[ScoreAcc::sc_OpenFile] += EvalConfig::rookOnOpenSemiFileOur  * countBit(p.whiteRook() & pe.semiOpenFiles[Co_White]);
-    score.scores[ScoreAcc::sc_OpenFile] += EvalConfig::rookOnOpenSemiFileOpp  * countBit(p.whiteRook() & pe.semiOpenFiles[Co_Black]);
-    score.scores[ScoreAcc::sc_OpenFile] -= EvalConfig::rookOnOpenFile         * countBit(p.blackRook() & pe.openFiles);
-    score.scores[ScoreAcc::sc_OpenFile] -= EvalConfig::rookOnOpenSemiFileOur  * countBit(p.blackRook() & pe.semiOpenFiles[Co_Black]);
-    score.scores[ScoreAcc::sc_OpenFile] -= EvalConfig::rookOnOpenSemiFileOpp  * countBit(p.blackRook() & pe.semiOpenFiles[Co_White]);
+    score[sc_OpenFile] += EvalConfig::rookOnOpenFile         * countBit(p.whiteRook() & pe.openFiles);
+    score[sc_OpenFile] += EvalConfig::rookOnOpenSemiFileOur  * countBit(p.whiteRook() & pe.semiOpenFiles[Co_White]);
+    score[sc_OpenFile] += EvalConfig::rookOnOpenSemiFileOpp  * countBit(p.whiteRook() & pe.semiOpenFiles[Co_Black]);
+    score[sc_OpenFile] -= EvalConfig::rookOnOpenFile         * countBit(p.blackRook() & pe.openFiles);
+    score[sc_OpenFile] -= EvalConfig::rookOnOpenSemiFileOur  * countBit(p.blackRook() & pe.semiOpenFiles[Co_Black]);
+    score[sc_OpenFile] -= EvalConfig::rookOnOpenSemiFileOpp  * countBit(p.blackRook() & pe.semiOpenFiles[Co_White]);
 
     // enemy rook facing king
-    score.scores[ScoreAcc::sc_RookFrontKing] += EvalConfig::rookFrontKingMalus * countBit(BBTools::frontSpan<Co_White>(p.whiteKing()) & p.blackRook());
-    score.scores[ScoreAcc::sc_RookFrontKing] -= EvalConfig::rookFrontKingMalus * countBit(BBTools::frontSpan<Co_Black>(p.blackKing()) & p.whiteRook());
+    score[sc_RookFrontKing] += EvalConfig::rookFrontKingMalus * countBit(BBTools::frontSpan<Co_White>(p.whiteKing()) & p.blackRook());
+    score[sc_RookFrontKing] -= EvalConfig::rookFrontKingMalus * countBit(BBTools::frontSpan<Co_Black>(p.blackKing()) & p.whiteRook());
 
     // enemy rook facing queen
-    score.scores[ScoreAcc::sc_RookFrontQueen] += EvalConfig::rookFrontQueenMalus * countBit(BBTools::frontSpan<Co_White>(p.whiteQueen()) & p.blackRook());
-    score.scores[ScoreAcc::sc_RookFrontQueen] -= EvalConfig::rookFrontQueenMalus * countBit(BBTools::frontSpan<Co_Black>(p.blackQueen()) & p.whiteRook());
+    score[sc_RookFrontQueen] += EvalConfig::rookFrontQueenMalus * countBit(BBTools::frontSpan<Co_White>(p.whiteQueen()) & p.blackRook());
+    score[sc_RookFrontQueen] -= EvalConfig::rookFrontQueenMalus * countBit(BBTools::frontSpan<Co_Black>(p.blackQueen()) & p.whiteRook());
 
     // queen aligned with own rook
-    score.scores[ScoreAcc::sc_RookQueenSameFile] += EvalConfig::rookQueenSameFile * countBit(BBTools::fillFile(p.whiteQueen()) & p.whiteRook());
-    score.scores[ScoreAcc::sc_RookQueenSameFile] -= EvalConfig::rookQueenSameFile * countBit(BBTools::fillFile(p.blackQueen()) & p.blackRook());
+    score[sc_RookQueenSameFile] += EvalConfig::rookQueenSameFile * countBit(BBTools::fillFile(p.whiteQueen()) & p.whiteRook());
+    score[sc_RookQueenSameFile] -= EvalConfig::rookQueenSameFile * countBit(BBTools::fillFile(p.blackQueen()) & p.blackRook());
 
     const Square whiteQueenSquare = p.whiteQueen() ? BBTools::SquareFromBitBoard(p.whiteQueen()) : INVALIDSQUARE;
     const Square blackQueenSquare = p.blackQueen() ? BBTools::SquareFromBitBoard(p.blackQueen()) : INVALIDSQUARE;
@@ -3344,29 +3402,29 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context){
     const BitBoard pinnedQ [2] = { getPinned<Co_White>(p,whiteQueenSquare), getPinned<Co_Black>(p,blackQueenSquare) };
     for (Piece pp = P_wp ; pp < P_wk ; ++pp) {
         if (p.pieces(Co_White, pp)) {
-            if (pinnedK[Co_White] & p.pieces(Co_White, pp)) score.scores[ScoreAcc::sc_PinsK] -= EvalConfig::pinnedKing[pp - 1] * countBit(pinnedK[Co_White] & p.pieces(Co_White, pp));
-            if (pinnedQ[Co_White] & p.pieces(Co_White, pp)) score.scores[ScoreAcc::sc_PinsQ] -= EvalConfig::pinnedQueen[pp - 1] * countBit(pinnedQ[Co_White] & p.pieces(Co_White, pp));
+            if (pinnedK[Co_White] & p.pieces(Co_White, pp)) score[sc_PinsK] -= EvalConfig::pinnedKing[pp - 1] * countBit(pinnedK[Co_White] & p.pieces(Co_White, pp));
+            if (pinnedQ[Co_White] & p.pieces(Co_White, pp)) score[sc_PinsQ] -= EvalConfig::pinnedQueen[pp - 1] * countBit(pinnedQ[Co_White] & p.pieces(Co_White, pp));
         }
         if (p.pieces(Co_Black, pp)) {
-            if (pinnedK[Co_Black] & p.pieces(Co_Black, pp)) score.scores[ScoreAcc::sc_PinsK] += EvalConfig::pinnedKing[pp - 1] * countBit(pinnedK[Co_Black] & p.pieces(Co_Black, pp));
-            if (pinnedQ[Co_Black] & p.pieces(Co_Black, pp)) score.scores[ScoreAcc::sc_PinsQ] += EvalConfig::pinnedQueen[pp - 1] * countBit(pinnedQ[Co_Black] & p.pieces(Co_Black, pp));
+            if (pinnedK[Co_Black] & p.pieces(Co_Black, pp)) score[sc_PinsK] += EvalConfig::pinnedKing[pp - 1] * countBit(pinnedK[Co_Black] & p.pieces(Co_Black, pp));
+            if (pinnedQ[Co_Black] & p.pieces(Co_Black, pp)) score[sc_PinsQ] += EvalConfig::pinnedQueen[pp - 1] * countBit(pinnedQ[Co_Black] & p.pieces(Co_Black, pp));
         }
     }
 
     // attack : queen distance to opponent king (wrong if multiple queens ...)
-    if ( blackQueenSquare != INVALIDSQUARE ) score.scores[ScoreAcc::sc_QueenNearKing] -= EvalConfig::queenNearKing * (7 - minDistance(p.king[Co_White], blackQueenSquare) );
-    if ( whiteQueenSquare != INVALIDSQUARE ) score.scores[ScoreAcc::sc_QueenNearKing] += EvalConfig::queenNearKing * (7 - minDistance(p.king[Co_Black], whiteQueenSquare) );
+    if ( blackQueenSquare != INVALIDSQUARE ) score[sc_QueenNearKing] -= EvalConfig::queenNearKing * (7 - minDistance(p.king[Co_White], blackQueenSquare) );
+    if ( whiteQueenSquare != INVALIDSQUARE ) score[sc_QueenNearKing] += EvalConfig::queenNearKing * (7 - minDistance(p.king[Co_Black], whiteQueenSquare) );
 
     // number of pawn and piece type value
-    score.scores[ScoreAcc::sc_Adjust] += EvalConfig::adjRook  [p.mat[Co_White][M_p]] * ScoreType(p.mat[Co_White][M_r]);
-    score.scores[ScoreAcc::sc_Adjust] -= EvalConfig::adjRook  [p.mat[Co_Black][M_p]] * ScoreType(p.mat[Co_Black][M_r]);
-    score.scores[ScoreAcc::sc_Adjust] += EvalConfig::adjKnight[p.mat[Co_White][M_p]] * ScoreType(p.mat[Co_White][M_n]);
-    score.scores[ScoreAcc::sc_Adjust] -= EvalConfig::adjKnight[p.mat[Co_Black][M_p]] * ScoreType(p.mat[Co_Black][M_n]);
+    score[sc_Adjust] += EvalConfig::adjRook  [p.mat[Co_White][M_p]] * ScoreType(p.mat[Co_White][M_r]);
+    score[sc_Adjust] -= EvalConfig::adjRook  [p.mat[Co_Black][M_p]] * ScoreType(p.mat[Co_Black][M_r]);
+    score[sc_Adjust] += EvalConfig::adjKnight[p.mat[Co_White][M_p]] * ScoreType(p.mat[Co_White][M_n]);
+    score[sc_Adjust] -= EvalConfig::adjKnight[p.mat[Co_Black][M_p]] * ScoreType(p.mat[Co_Black][M_n]);
 
     // adjust piece pair score
-    score.scores[ScoreAcc::sc_Adjust] += ( (p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonus[p.mat[Co_White][M_p]] : 0)-(p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonus[p.mat[Co_Black][M_p]] : 0) );
-    score.scores[ScoreAcc::sc_Adjust] += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0) );
-    score.scores[ScoreAcc::sc_Adjust] += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
+    score[sc_Adjust] += ( (p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonus[p.mat[Co_White][M_p]] : 0)-(p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonus[p.mat[Co_Black][M_p]] : 0) );
+    score[sc_Adjust] += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0) );
+    score[sc_Adjust] += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
 
     if ( display ) score.Display(p,gp);
     ScoreType ret = (white2Play?+1:-1)*score.Score(p,gp); // scale both phase and 50 moves rule
@@ -3975,7 +4033,16 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                else if ( !rootnode && !SEE(p,*it,-100*depth)) {++stats.counters[Stats::sid_see2]; continue;}
             }
             // LMR
+#ifdef WITH_LMRNN
+            const float features[nn.n] = { float(improving),float(isInCheck),float(isCapture(*it) || isPromotion(*it)),-float(cutNode) };
+            ///@todo try to use ttMoveIsCapture, ttMoveSingularExt
+            bool prediction = false;
+#endif
             if (SearchConfig::doLMR && (isReductible && isQuiet ) && depth >= SearchConfig::lmrMinDepth ){
+#ifdef WITH_LMRNN
+                prediction = nn.predict(features); // shall be reduce less ?
+                reduction -= prediction;
+#endif
                 reduction = SearchConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
                 reduction += !improving;
                 reduction += ttMoveIsCapture/*&&isPrunableStd*/;
@@ -3984,6 +4051,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 if (pvnode && reduction > 0) --reduction;
                 if (!noCheck) --reduction;
                 reduction -= (2 * Move2Score(*it)) / MAX_HISTORY; //history reduction/extension (beware killers and counter are socred above history max, so reduced less
+
                 if ( extension - reduction > 0 ) reduction = extension;
                 if ( reduction >= depth - 1 + extension ) reduction = depth - 1 + extension - 1;
             }
@@ -3992,6 +4060,9 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if ( isPrunableStdNoCheck && /*!rootnode &&*/ !SEE(p,*it,-15*nextDepth*nextDepth)) {++stats.counters[Stats::sid_seeQuiet]; continue;}
             // PVS
             score = -pvs<false,true>(-alpha-1,-alpha,p2,nextDepth,ply+1,childPV,seldepth,isCheck,true);
+#ifdef WITH_LMRNN
+            if (SearchConfig::doLMR) nn.train(features, !prediction, (score > alpha) + (score > beta)); // "result" is 0 if < alpha, 1 if > alpha, 2 if > beta
+#endif
             if ( reduction > 0 && score > alpha )                       { childPV.clear(); score = -pvs<false,true>(-alpha-1,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,!cutNode); }
             if ( pvnode && score > alpha && (rootnode || score < beta) ){ childPV.clear(); score = -pvs<true ,true>(-beta   ,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,false); } // potential new pv node
         }
@@ -4068,6 +4139,9 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
     killerT.initKillers();
     historyT.initHistory();
     counterT.initCounter();
+#ifdef WITH_LMRNN
+    nn.init();
+#endif
 
     stack[p.halfmoves].h = p.h;
 

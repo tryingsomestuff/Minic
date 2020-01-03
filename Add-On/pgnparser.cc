@@ -169,7 +169,7 @@ void pgnparse__(std::ifstream & is,std::ofstream & os) {
              }
              /*
              else{
-                std::cout << GetFEN(p) << " || " << seval << " " << squiet << " " << ScaleScore(sc.scores[ScoreAcc::sc_Mat],gp) << " " << sc.scores[ScoreAcc::sc_Mat][MG] << " " << sc.scores[ScoreAcc::sc_Mat][EG] << " " << gp << std::endl;
+                std::cout << GetFEN(p) << " || " << seval << " " << squiet << " " << ScaleScore(sc.scores[sc_Mat],gp) << " " << sc.scores[sc_Mat][MG] << " " << sc.scores[sc_Mat][EG] << " " << gp << std::endl;
              }
              */
           }
