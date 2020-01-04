@@ -37,7 +37,7 @@ typedef uint64_t u_int64_t;
 
 #include "json.hpp"
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "1.27";
 
 //#define IMPORTBOOK
 #define WITH_TEXEL_TUNING
