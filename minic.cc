@@ -37,7 +37,7 @@ typedef uint64_t u_int64_t;
 
 #include "json.hpp"
 
-const std::string MinicVersion = "1.27";
+const std::string MinicVersion = "dev";
 
 //#define IMPORTBOOK
 #define WITH_TEXEL_TUNING
@@ -291,7 +291,7 @@ const bool doCMHPruning     = true;
 /*const*/ DepthType probCutMinDepth              = 5;
 /*const*/ int       probCutMaxMoves              = 5;
 /*const*/ ScoreType probCutMargin                = 80;
-/*const*/ DepthType lmrMinDepth                  = 3;
+/*const*/ DepthType lmrMinDepth                  = 2;
 /*const*/ DepthType singularExtensionDepth       = 8;
 
 const int nlevel = 100;
