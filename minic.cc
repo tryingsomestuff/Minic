@@ -43,7 +43,7 @@ const std::string MinicVersion = "dev";
 //#define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
 #define WITH_TEST_SUITE
-//#define WITH_SYZYGY
+#define WITH_SYZYGY
 #define WITH_UCI
 //#define WITH_PGN_PARSER
 #define WITH_MAGIC
@@ -60,7 +60,7 @@ const std::string MinicVersion = "dev";
 #define STOPSCORE   ScoreType(-20000)
 #define INFSCORE    ScoreType(15000)
 #define MATE        ScoreType(10000)
-#define WIN         ScoreType(6000)
+#define WIN         ScoreType(5000)
 #define INVALIDMOVE    -1
 #define NULLMOVE        0
 #define INVALIDSQUARE  -1
