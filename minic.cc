@@ -40,10 +40,10 @@ typedef uint64_t u_int64_t;
 const std::string MinicVersion = "dev";
 
 //#define IMPORTBOOK
-//#define WITH_TEXEL_TUNING
+#define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
 #define WITH_TEST_SUITE
-#define WITH_SYZYGY
+//#define WITH_SYZYGY
 #define WITH_UCI
 //#define WITH_PGN_PARSER
 #define WITH_MAGIC
@@ -468,7 +468,7 @@ ScoreType kingAttOpenfile        = 192;
 ScoreType kingAttSemiOpenfileOpp = 97;
 ScoreType kingAttSemiOpenfileOur = 63;
 
-//ScoreType tempo = 15;
+EvalScore tempo = {0,0}; //{27, 26};
 
 } // EvalConfig
 
@@ -512,7 +512,7 @@ void operator|=(CastlingRights & a, const CastlingRights &b){ a = a | b;}
 inline Square stringToSquare(const std::string & str) { return (str.at(1) - 49) * 8 + (str.at(0) - 97); }
 
 enum MType : unsigned char{
-    T_std        = 0,   T_capture    = 1,   T_ep         = 2,   T_check      = 3, // T_check not used yet
+    T_std        = 0,   T_capture    = 1,   T_reserved   = 2,   T_ep         = 3,
     T_promq      = 4,   T_promr      = 5,   T_promb      = 6,   T_promn      = 7,
     T_cappromq   = 8,   T_cappromr   = 9,   T_cappromb   = 10,  T_cappromn   = 11,
     T_wks        = 12,  T_wqs        = 13,  T_bks        = 14,  T_bqs        = 15
@@ -1499,9 +1499,9 @@ template <int N, typename ValueType, typename InputType> struct NN {
     float learningRate;
     uint64_t epoch;
     void init() {
-        w[n] = 1;
+        w[n] = 0;
         epoch = 0;
-        for (int k = 0; k < n; ++k) w[k] = 0;
+        for (unsigned int k = 0; k < n; ++k) w[k] = 0;
     }
     inline NN(float learningRate) : learningRate(learningRate) { init(); }
     void train(const InputType(& input)[n], ValueType prediction, ValueType result) {
@@ -1509,12 +1509,12 @@ template <int N, typename ValueType, typename InputType> struct NN {
         const float le = learningRate * error;
         epoch++;
         w[n] += le;
-        for (int d = 0; d < n; d++) w[d] += input[d] * le;
+        for (unsigned int d = 0; d < n; d++) w[d] += input[d] * le;
     }
-    bool predict(const InputType(& input)[n])const{
+    ValueType predict(const InputType(& input)[n])const{
         float x = w[n];
-        for (int d = 0; d < n; d++) x += w[d] * input[d];
-        return x > 0;
+        for (unsigned int d = 0; d < n; d++) x += w[d] * input[d];
+        return x;
     }
 };
 #endif
@@ -1528,13 +1528,13 @@ struct ThreadData{
 };
 
 struct Stats{
-    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits, sid_ttInsert, sid_ttPawnhits, sid_ttPawnInsert, sid_materialTableMiss, sid_staticNullMove, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMoveTry3, sid_nullMove, sid_nullMove2, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_CMHPruning, sid_see, sid_see2, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_CMHExtension, sid_pawnPushExtension, sid_singularExtension, sid_singularExtension2, sid_queenThreatExtension, sid_BMExtension, sid_mateThreatExtension, sid_tbHit1, sid_tbHit2, sid_maxid };
+    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits, sid_ttInsert, sid_ttPawnhits, sid_ttPawnInsert, sid_materialTableMiss, sid_staticNullMove, sid_lmr, sid_lmrFail, sid_pvsFail, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMoveTry3, sid_nullMove, sid_nullMove2, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_CMHPruning, sid_see, sid_see2, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_CMHExtension, sid_pawnPushExtension, sid_singularExtension, sid_singularExtension2, sid_singularExtension3, sid_queenThreatExtension, sid_BMExtension, sid_mateThreatExtension, sid_tbHit1, sid_tbHit2, sid_maxid };
     static const std::array<std::string,sid_maxid> Names;
     std::array<Counter,sid_maxid> counters;
     void init(){ Logging::LogIt(Logging::logInfo) << "Init stat" ;  counters.fill(0ull); }
 };
 
-const std::array<std::string,Stats::sid_maxid> Stats::Names = { "nodes", "qnodes", "tthits", "ttInsert", "ttPawnhits", "ttPawnInsert", "materialMiss", "staticNullMove", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMoveTry3", "nullMove", "nullMove2", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "CMHPruning", "see", "see2", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "CMHExtension", "pawnPushExtension", "singularExtension", "singularExtension2", "queenThreatExtension", "BMExtension", "mateThreatExtension", "TBHit1", "TBHit2"};
+const std::array<std::string,Stats::sid_maxid> Stats::Names = { "nodes", "qnodes", "tthits", "ttInsert", "ttPawnhits", "ttPawnInsert", "materialMiss", "staticNullMove", "lmr", "lmrfail", "pvsfail", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMoveTry3", "nullMove", "nullMove2", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "CMHPruning", "see", "see2", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "CMHExtension", "pawnPushExtension", "singularExtension", "singularExtension2", "singularExtension3", "queenThreatExtension", "BMExtension", "mateThreatExtension", "TBHit1", "TBHit2"};
 
 // singleton pool of threads
 class ThreadPool : public std::vector<std::unique_ptr<ThreadContext>> {
@@ -1569,8 +1569,8 @@ namespace MoveDifficultyUtil {
     const float     maxStealFraction  = 0.2f; // of remaining time
 }
 
-enum eScores : unsigned char { sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_PieceBlockPawn, sc_Holes, sc_Outpost, sc_FreePasser, sc_PwnPush, sc_PwnSafeAtt, sc_PwnPushAtt, sc_Adjust, sc_OpenFile, sc_RookFrontKing, sc_RookFrontQueen, sc_RookQueenSameFile, sc_AttQueenMalus, sc_MinorOnOpenFile, sc_RookBehindPassed, sc_QueenNearKing, sc_Hanging, sc_Threat, sc_PinsK, sc_PinsQ, sc_PawnTT, sc_max };
-static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "PieceBlockPawn", "Holes", "Outpost", "FreePasser", "PwnPush", "PwnSafeAtt", "PwnPushAtt" , "Adjust", "OpenFile", "RookFrontKing", "RookFrontQueen", "RookQueenSameFile", "AttQueenMalus", "MinorOnOpenFile", "RookBehindPassed", "QueenNearKing", "Hanging", "Threats", "PinsK", "PinsQ", "PawnTT" };
+enum eScores : unsigned char { sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_PieceBlockPawn, sc_Holes, sc_Outpost, sc_FreePasser, sc_PwnPush, sc_PwnSafeAtt, sc_PwnPushAtt, sc_Adjust, sc_OpenFile, sc_RookFrontKing, sc_RookFrontQueen, sc_RookQueenSameFile, sc_AttQueenMalus, sc_MinorOnOpenFile, sc_RookBehindPassed, sc_QueenNearKing, sc_Hanging, sc_Threat, sc_PinsK, sc_PinsQ, sc_PawnTT, sc_Tempo, sc_max };
+static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "PieceBlockPawn", "Holes", "Outpost", "FreePasser", "PwnPush", "PwnSafeAtt", "PwnPushAtt" , "Adjust", "OpenFile", "RookFrontKing", "RookFrontQueen", "RookQueenSameFile", "AttQueenMalus", "MinorOnOpenFile", "RookBehindPassed", "QueenNearKing", "Hanging", "Threats", "PinsK", "PinsQ", "PawnTT", "Tempo" };
 //#define DEBUG_ACC
 #ifdef DEBUG_ACC
 struct ScoreAcc{
@@ -1831,7 +1831,7 @@ struct ThreadContext{
     }
 
 #ifdef WITH_LMRNN
-    NN<4,int,float> nn;
+    NN<9,DepthType,float> nn;
 #endif
 
 private:
@@ -2537,21 +2537,25 @@ inline void movePiece(Position & p, Square from, Square to, Piece fromP, Piece t
     const int toIdnew  = prom != P_none ? (prom + PieceShift) : fromId;
     assert(from>=0 && from<64);
     assert(to>=0 && to<64);
+    assert(fromP != P_none);
+    // update board
     p.b[from] = P_none;
     p.b[to]   = toPnew;
+    // update bitboard
     BBTools::unSetBit(p, from, fromP);
     BBTools::unSetBit(p, to,   toP); // usefull only if move is a capture
     BBTools::setBit  (p, to,   toPnew);
-
+    // update Zobrist hash
     p.h ^= Zobrist::ZT[from][fromId]; // remove fromP at from
-    if (isCapture) p.h ^= Zobrist::ZT[to][toId]; // if capture remove toP at to
     p.h ^= Zobrist::ZT[to][toIdnew]; // add fromP (or prom) at to
-
     if ( abs(fromP) == P_wp || abs(fromP) == P_wk ){
        p.ph ^= Zobrist::ZT[from][fromId]; // remove fromP at from
        if ( prom == P_none) p.ph ^= Zobrist::ZT[to][toIdnew]; // add fromP (if not prom) at to
     }
-    if (isCapture && (abs(toP) == P_wp || abs(toP) == P_wk)) p.ph ^= Zobrist::ZT[to][toId];
+    if (isCapture) { // if capture remove toP at to
+        p.h ^= Zobrist::ZT[to][toId];
+        if ( (abs(toP) == P_wp || abs(toP) == P_wk) ) p.ph ^= Zobrist::ZT[to][toId];
+    }
     STOP_AND_SUM_TIMER(MovePiece)
 }
 
@@ -2560,8 +2564,8 @@ void applyNull(ThreadContext & context, Position & pN) {
     pN.h ^= Zobrist::ZT[3][13];
     pN.h ^= Zobrist::ZT[4][13];
     if (pN.ep != INVALIDSQUARE) pN.h ^= Zobrist::ZT[pN.ep][13];
-    pN.lastMove = NULLMOVE;
     pN.ep = INVALIDSQUARE;
+    pN.lastMove = NULLMOVE;
     if ( pN.c == Co_White ) ++pN.moves;
     ++pN.halfmoves;
 }
@@ -2587,7 +2591,7 @@ bool apply(Position & p, const Move & m, bool noValidation){
     switch(type){
     case T_std:
     case T_capture:
-    case T_check:
+    case T_reserved:
         p.mat[~p.c][std::abs(toP)]--;
         movePiece(p, from, to, fromP, toP, type == T_capture);
 
@@ -3426,6 +3430,9 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context){
     score[sc_Adjust] += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0) );
     score[sc_Adjust] += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
 
+    // tempo
+    score[sc_Tempo] += EvalConfig::tempo*(white2Play?+1:-1);
+
     if ( display ) score.Display(p,gp);
     ScoreType ret = (white2Play?+1:-1)*score.Score(p,gp); // scale both phase and 50 moves rule
     STOP_AND_SUM_TIMER(Eval)
@@ -3572,6 +3579,11 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     if ( qRoot && interiorNodeRecognizer<true,false,true>(p) == MaterialHash::Ter_Draw) return drawScore(); ///@todo is that gain elo ???
 
     ScoreType evalScore = isInCheck ? -MATE+ply : (e.h!=0?e.eval:eval(p,gp,*this));
+    //ScoreType evalScore;
+    //if (isInCheck) evalScore = -MATE + ply;
+    //else if ( p.lastMove == NULLMOVE && ply > 0 ) evalScore = ScaleScore(EvalConfig::tempo*2,gp) - stack[p.halfmoves-1].eval; // skip eval if nullmove just applied
+    //else evalScore = (e.h != 0)?e.eval:eval(p, gp, *this);
+
     bool evalScoreIsHashScore = false;
     // use tt score if possible and not in check
     if ( !isInCheck && e.h != 0 && ((e.b == TT::B_alpha && e.score <= evalScore) || (e.b == TT::B_beta && e.score >= evalScore) || (e.b == TT::B_exact)) ) evalScore = e.score, evalScoreIsHashScore = true;
@@ -3623,9 +3635,9 @@ inline void updatePV(PVList & pv, const Move & m, const PVList & childPV) {
 
 inline void updateTables(ThreadContext & context, const Position & p, DepthType depth, DepthType ply, const Move m, TT::Bound bound, ThreadContext::CMHPtrArray & cmhPtr) {
     if (bound == TT::B_beta) {
-context.killerT.update(m, ply);
-context.counterT.update(m, p);
-context.historyT.update<1>(depth, m, p, cmhPtr);
+        context.killerT.update(m, ply);
+        context.counterT.update(m, p);
+        context.historyT.update<1>(depth, m, p, cmhPtr);
     }
     else if (bound == TT::B_alpha) context.historyT.update<-1>(depth, m, p, cmhPtr);
 }
@@ -3752,7 +3764,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     ScoreType evalScore;
     if (isInCheck) evalScore = -MATE + ply;
-    else if ( p.lastMove == NULLMOVE && ply > 0 ) evalScore = -stack[p.halfmoves-1].eval; // skip eval if nullmove just applied
+    else if ( p.lastMove == NULLMOVE && ply > 0 ) evalScore = ScaleScore(EvalConfig::tempo*2,gp) - stack[p.halfmoves-1].eval; // skip eval if nullmove just applied
     else evalScore = (e.h != 0)?e.eval:eval(p, gp, *this);
     stack[p.halfmoves].eval = evalScore; // insert only static eval, never hash score !
     bool evalScoreIsHashScore = false;
@@ -3920,7 +3932,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                        ++stats.counters[Stats::sid_singularExtension],++extension;
                        if ( score < betaC - std::min(4*depth,36)) ++stats.counters[Stats::sid_singularExtension2],/*ttMoveSingularExt=true,*/++extension;
                    }
-                   else if ( score >= beta && betaC >= beta) return score;
+                   else if ( score >= beta && betaC >= beta) return ++stats.counters[Stats::sid_singularExtension3],score;
                }
             }
             const ScoreType ttScore = -pvs<pvnode,true>(-beta, -alpha, p2, depth - 1 + extension, ply + 1, childPV, seldepth, isCheck, !cutNode);
@@ -4034,15 +4046,11 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             }
             // LMR
 #ifdef WITH_LMRNN
-            const float features[nn.n] = { float(improving),float(isInCheck),float(isCapture(*it) || isPromotion(*it)),-float(cutNode) };
-            ///@todo try to use ttMoveIsCapture, ttMoveSingularExt
-            bool prediction = false;
+            const float features[nn.n] = { float(stats.counters[Stats::sid_pvsFail]), float(stats.counters[Stats::sid_lmrFail]), float(mateThreat), float(ttMoveSingularExt),-float(ttMoveIsCapture),float(improving),float(isInCheck),float(isCapture(*it) || isPromotion(*it)),-float(cutNode) };
+            DepthType prediction = 0;
 #endif
             if (SearchConfig::doLMR && (isReductible && isQuiet ) && depth >= SearchConfig::lmrMinDepth ){
-#ifdef WITH_LMRNN
-                prediction = nn.predict(features); // shall be reduce less ?
-                reduction -= prediction;
-#endif
+                ++stats.counters[Stats::sid_lmr];
                 reduction = SearchConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
                 reduction += !improving;
                 reduction += ttMoveIsCapture/*&&isPrunableStd*/;
@@ -4051,7 +4059,10 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 if (pvnode && reduction > 0) --reduction;
                 if (!noCheck) --reduction;
                 reduction -= (2 * Move2Score(*it)) / MAX_HISTORY; //history reduction/extension (beware killers and counter are socred above history max, so reduced less
-
+#ifdef WITH_LMRNN
+                prediction = nn.predict(features); // shall be reduce less ?
+                reduction -= prediction;
+#endif
                 if ( extension - reduction > 0 ) reduction = extension;
                 if ( reduction >= depth - 1 + extension ) reduction = depth - 1 + extension - 1;
             }
@@ -4061,10 +4072,10 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             // PVS
             score = -pvs<false,true>(-alpha-1,-alpha,p2,nextDepth,ply+1,childPV,seldepth,isCheck,true);
 #ifdef WITH_LMRNN
-            if (SearchConfig::doLMR) nn.train(features, !prediction, (score > alpha) + (score > beta)); // "result" is 0 if < alpha, 1 if > alpha, 2 if > beta
+            if (SearchConfig::doLMR) nn.train(features, prediction, (score > alpha) + (score > beta)); // "result" is 0 if < alpha, 1 if > alpha, 2 if > beta
 #endif
-            if ( reduction > 0 && score > alpha )                       { childPV.clear(); score = -pvs<false,true>(-alpha-1,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,!cutNode); }
-            if ( pvnode && score > alpha && (rootnode || score < beta) ){ childPV.clear(); score = -pvs<true ,true>(-beta   ,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,false); } // potential new pv node
+            if ( reduction > 0 && score > alpha )                       { ++stats.counters[Stats::sid_lmrFail]; childPV.clear(); score = -pvs<false,true>(-alpha-1,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,!cutNode); }
+            if ( pvnode && score > alpha && (rootnode || score < beta) ){ ++stats.counters[Stats::sid_pvsFail]; childPV.clear(); score = -pvs<true ,true>(-beta   ,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,false); } // potential new pv node
         }
         if (stopFlag) return STOPSCORE;
         if (rootnode) previousBest = *it;
