@@ -3578,11 +3578,11 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     }
     if ( qRoot && interiorNodeRecognizer<true,false,true>(p) == MaterialHash::Ter_Draw) return drawScore(); ///@todo is that gain elo ???
 
-    ScoreType evalScore = isInCheck ? -MATE+ply : (e.h!=0?e.eval:eval(p,gp,*this));
-    //ScoreType evalScore;
-    //if (isInCheck) evalScore = -MATE + ply;
-    //else if ( p.lastMove == NULLMOVE && ply > 0 ) evalScore = ScaleScore(EvalConfig::tempo*2,gp) - stack[p.halfmoves-1].eval; // skip eval if nullmove just applied
-    //else evalScore = (e.h != 0)?e.eval:eval(p, gp, *this);
+    //ScoreType evalScore = isInCheck ? -MATE+ply : (e.h!=0?e.eval:eval(p,gp,*this));
+    ScoreType evalScore;
+    if (isInCheck) evalScore = -MATE + ply;
+    else if ( p.lastMove == NULLMOVE && ply > 0 ) evalScore = ScaleScore(EvalConfig::tempo*2,gp) - stack[p.halfmoves-1].eval; // skip eval if nullmove just applied
+    else evalScore = (e.h != 0)?e.eval:eval(p, gp, *this);
 
     bool evalScoreIsHashScore = false;
     // use tt score if possible and not in check
