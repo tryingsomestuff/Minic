@@ -151,18 +151,6 @@ struct EvalScore{ ///@todo use Stockfish trick (two short in one int) but it's h
     EvalScore  operator -(const ScoreType& s)const{EvalScore e(*this); for(GamePhase g=MG; g<GP_MAX; ++g)e[g]-=s; return e;}
     void       operator =(const ScoreType& s){for(GamePhase g=MG; g<GP_MAX; ++g){sc[g]=s;}}
 
-    /*
-    EvalScore& operator*=(const int& s){for(GamePhase g=MG; g<GP_MAX; ++g)sc[g]*=s; return *this;}
-    EvalScore& operator/=(const int& s){for(GamePhase g=MG; g<GP_MAX; ++g)sc[g]/=s; return *this;}
-    EvalScore& operator+=(const int& s){for(GamePhase g=MG; g<GP_MAX; ++g)sc[g]+=s; return *this;}
-    EvalScore& operator-=(const int& s){for(GamePhase g=MG; g<GP_MAX; ++g)sc[g]-=s; return *this;}
-    EvalScore  operator *(const int& s)const{EvalScore e(*this); for(GamePhase g=MG; g<GP_MAX; ++g)e[g]*=s; return e;}
-    EvalScore  operator /(const int& s)const{EvalScore e(*this); for(GamePhase g=MG; g<GP_MAX; ++g)e[g]/=s; return e;}
-    EvalScore  operator +(const int& s)const{EvalScore e(*this); for(GamePhase g=MG; g<GP_MAX; ++g)e[g]+=s; return e;}
-    EvalScore  operator -(const int& s)const{EvalScore e(*this); for(GamePhase g=MG; g<GP_MAX; ++g)e[g]-=s; return e;}
-    void       operator =(const int& s){for(GamePhase g=MG; g<GP_MAX; ++g){sc[g]=s;}}
-    */
-
     EvalScore scale(float s_mg,float s_eg)const{ EvalScore e(*this); e[MG]= ScoreType(s_mg*e[MG]); e[EG]= ScoreType(s_eg*e[EG]); return e;}
 };
 
