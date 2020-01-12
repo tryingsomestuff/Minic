@@ -37,13 +37,13 @@ typedef uint64_t u_int64_t;
 
 #include "json.hpp"
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "1.32";
 
 //#define IMPORTBOOK
 #define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
 #define WITH_TEST_SUITE
-//#define WITH_SYZYGY
+#define WITH_SYZYGY
 #define WITH_UCI
 //#define WITH_PGN_PARSER
 #define WITH_MAGIC
