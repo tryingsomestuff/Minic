@@ -37,24 +37,27 @@ typedef uint64_t u_int64_t;
 
 #include "json.hpp"
 
-const std::string MinicVersion = "1.31";
+const std::string MinicVersion = "dev";
 
 //#define IMPORTBOOK
 #define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
 #define WITH_TEST_SUITE
-#define WITH_SYZYGY
+//#define WITH_SYZYGY
 #define WITH_UCI
 //#define WITH_PGN_PARSER
 #define WITH_MAGIC
 //#define WITH_LMRNN
 
 //#define WITH_TIMER
+//#define WITH_CLOP_SEARCH
+
 //#define DEBUG_HASH
 //#define DEBUG_PHASH
 //#define DEBUG_MATERIAL
 //#define DEBUG_APPLY
-//#define WITH_CLOP_SEARCH
+//#define DEBUG_PSEUDO_LEGAL
+//#define DEBUG_HASH_ENTRY
 
 #define INFINITETIME TimeType(60ull*60ull*1000ull*24ull*30ull) // 1 month ...
 #define STOPSCORE   ScoreType(-20000)
@@ -69,7 +72,7 @@ const std::string MinicVersion = "1.31";
 #define MAX_DEPTH     127   // DepthType is a char, !!!do not go above 127!!!
 #define MAX_HISTORY  1000
 
-#define VALIDMOVE(m) ((m)!=NULLMOVE && (m)!=INVALIDMOVE)
+#define VALIDMOVE(m) ((int(m & 0x0000FFFF)) > 0)
 
 #define SQFILE(s) ((s)&7)
 #define SQRANK(s) ((s)>>3)
@@ -226,7 +229,9 @@ namespace Logging {
                 if (_of) (*_of) << _buffer.str() << std::flush << std::endl;
             }
             if (_level >= logError) std::cout << backtrace() << std::endl;
-            if (_level >= logFatal) exit(1);
+            if (_level >= logFatal) {
+                exit(1);
+            }
         }
     private:
         static std::mutex      _mutex;
@@ -1963,8 +1968,15 @@ bool getEntry(ThreadContext & context, const Position & p, Hash h, DepthType d, 
     if ( DynamicConfig::disableTT  ) return false;
     if ( nbuck >= Bucket::nbBucket ) return false; // no more bucket
     Entry & _e = table[h&(ttSize-1)].e[nbuck];
+#ifdef DEBUG_HASH_ENTRY
+    _e.d = Zobrist::randomInt<unsigned int>(0, UINT32_MAX);
+#endif
     if ( _e.h == 0 ) return false; //early exist cause next ones are also empty ...
-    if ( !VALIDMOVE(_e.m) || (_e.h ^ _e.data) != Hash64to32(h) || !isPseudoLegal(p, _e.m)) { return _e.h = 0, getEntry(context, p, h, d, e, nbuck + 1); } // next one
+    if ( !VALIDMOVE(_e.m) || 
+#ifndef DEBUG_HASH_ENTRY
+        (_e.h ^ _e.data) != Hash64to32(h) || 
+#endif
+        !isPseudoLegal(p, _e.m)) { return _e.h = 0, getEntry(context, p, h, d, e, nbuck + 1); } // next one
     e = _e; // update entry only if no collision is detected !
     if ( _e.d >= d ){ ++context.stats.counters[Stats::sid_tthits]; return true; } // valid entry if depth is ok
     else return getEntry(context,p,h,d,e,nbuck+1); // next one
@@ -2096,7 +2108,7 @@ std::string ToString(const Position & p, bool noEval){
     }
     ss << Logging::_protocolComment[Logging::ct] << " +-+-+-+-+-+-+-+-+" << std::endl;
     if ( p.ep >=0 ) ss << Logging::_protocolComment[Logging::ct] << " ep " << SquareNames[p.ep] << std::endl;
-    //ss << Logging::_protocolComment[Logging::ct] << " wk " << (p.king[Co_White]!=INVALIDSQUARE?SquareNames[p.king[Co_White]]:"none")  << std::endl;
+    //ss << Logging::_protocolComment[Logging::ct] << " wk " << (p.king[Co_White]!=INVALIDSQUARE?SquareNames[p.king[Co_White]]:"none") << std::endl;
     //ss << Logging::_protocolComment[Logging::ct] << " bk " << (p.king[Co_Black]!=INVALIDSQUARE?SquareNames[p.king[Co_Black]]:"none") << std::endl;
     ss << Logging::_protocolComment[Logging::ct] << " Turn " << (p.c == Co_White ? "white" : "black") << std::endl;
     ScoreType sc = 0;
@@ -3648,7 +3660,33 @@ ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck) {
     return isInCheck ? -MATE : 0;
 }
 
-bool isPseudoLegal(const Position & p, Move m) { // validate TT move
+#ifdef DEBUG_PSEUDO_LEGAL
+bool isPseudoLegal2(const Position & p, Move m); // forward decl
+bool isPseudoLegal(const Position & p, Move m) {
+    const bool b = isPseudoLegal2(p,m);
+    if (b) {
+        MoveList moves;
+        generate(p, moves);
+        bool found = false;
+        for (auto it = moves.begin(); it != moves.end() && !found; ++it) if (sameMove(*it, m)) found = true;
+        if (!found){
+            std::cout << ToString(p) << "\n"  << ToString(m) << "\t" << m << std::endl;
+            std::cout << SquareNames[Move2From(m)] << std::endl;
+            std::cout << SquareNames[Move2To(m)] << std::endl;
+            std::cout << (int)Move2Type(m) << std::endl;
+            std::cout << Move2Score(m) << std::endl;
+            std::cout << int(m & 0x0000FFFF) << std::endl;
+            for (auto it = moves.begin(); it != moves.end(); ++it) std::cout << ToString(*it) <<"\t" << *it << "\t";
+            std::cout << std::endl;
+            std::cout << "Not a generated move !" << std::endl;
+        }
+    }
+    return b;
+}
+bool isPseudoLegal2(const Position & p, Move m) { // validate TT move
+#else
+ bool isPseudoLegal(const Position & p, Move m) { // validate TT move
+#endif
     if (!VALIDMOVE(m)) { return false; }
     const Square from = Move2From(m);
     const Piece fromP = p.b[from];
@@ -3659,6 +3697,8 @@ bool isPseudoLegal(const Position & p, Move m) { // validate TT move
     if ((Piece)std::abs(toP) == P_wk) { return false; }
     const Piece fromPieceType = (Piece)std::abs(fromP);
     const MType t = Move2Type(m);
+    if (toP == P_none && (isCapture(t) && t!=T_ep)) { return false; }
+    if (toP != P_none && !isCapture(t)) { return false; }
     if (t == T_ep && (p.ep == INVALIDSQUARE || fromPieceType != P_wp)) { return false;}
     if (t == T_ep && p.b[p.ep + (p.c==Co_White?-8:+8)] != (p.c==Co_White?P_bp:P_wp)) { return false;}
     if (isPromotion(m) && fromPieceType != P_wp) { return false; }
