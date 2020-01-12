@@ -65,6 +65,7 @@ const std::string MinicVersion = "dev";
 #define MATE        ScoreType(10000)
 #define WIN         ScoreType(5000)
 #define INVALIDMOVE     int32_t(0xFFFF0000)
+#define INVALIDBOOKMOVE int32_t(0xFFFFFFFF) // different for retrocompatibility ///@todo regenerate some books !
 #define INVALIDMINIMOVE int16_t(0x0000)
 #define NULLMOVE        0
 #define INVALIDSQUARE  -1
@@ -73,7 +74,7 @@ const std::string MinicVersion = "dev";
 #define MAX_DEPTH     127   // DepthType is a char, !!!do not go above 127!!!
 #define MAX_HISTORY  1000
 
-#define VALIDMOVE(m) ( m != NULLMOVE && m != INVALIDMOVE)
+#define VALIDMOVE(m) ( (m) != NULLMOVE && (m) != INVALIDMOVE)
 
 #define SQFILE(s) ((s)&7)
 #define SQRANK(s) ((s)>>3)
@@ -2070,7 +2071,7 @@ std::string GetFEN(const Position &p) { // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1P
 
 std::string ToString(const Move & m, bool withScore){
     if ( m == INVALIDMOVE ) return "invalid move";
-    if ( m == NULLMOVE ) return "null move";
+    if ( m == NULLMOVE )    return "null move";
     std::string prom;
     const std::string score = (withScore ? " (" + std::to_string(Move2Score(m)) + ")" : "");
     switch (Move2Type(m)) {
@@ -2828,18 +2829,21 @@ bool readBinaryBook(std::ifstream & stream) {
     Position ps;
     readFEN(startPosition,ps,true);
     Position p = ps;
-    Move hash = 0;
+    Move m = 0;
     while (!stream.eof()) {
-        hash = 0;
-        stream >> bits(hash);
-        if (hash == INVALIDMOVE) {
+        m = 0;
+        stream >> bits(m);
+        if (m == INVALIDBOOKMOVE) { ///@todo use MiniMove in book !!!!
             p = ps;
-            stream >> bits(hash);
+            stream >> bits(m);
             if (stream.eof()) break;
         }
         const Hash h = computeHash(p);
-        if ( ! apply(p,hash)) return false;
-        book[h].insert(hash);
+        if ( ! apply(p,m)){
+            Logging::LogIt(Logging::logError) << "Unable to read book";
+            return false;
+        }
+        book[h].insert(m);
     }
     return true;
 }
