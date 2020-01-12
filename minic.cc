@@ -64,7 +64,8 @@ const std::string MinicVersion = "dev";
 #define INFSCORE    ScoreType(15000)
 #define MATE        ScoreType(10000)
 #define WIN         ScoreType(5000)
-#define INVALIDMOVE    -1
+#define INVALIDMOVE     0xFFFF0000
+#define INVALIDMINIMOVE 0x0000u
 #define NULLMOVE        0
 #define INVALIDSQUARE  -1
 #define MAX_PLY       512
@@ -72,7 +73,7 @@ const std::string MinicVersion = "dev";
 #define MAX_DEPTH     127   // DepthType is a char, !!!do not go above 127!!!
 #define MAX_HISTORY  1000
 
-#define VALIDMOVE(m) ((int(m & 0x0000FFFF)) > 0)
+#define VALIDMOVE(m) (m > 0)
 
 #define SQFILE(s) ((s)&7)
 #define SQRANK(s) ((s)>>3)
@@ -1900,7 +1901,7 @@ GenerationType curGen = 0;
 enum Bound : unsigned char{ B_exact = 0, B_alpha = 1, B_beta = 2, B_none = 3};
 #pragma pack(push, 1)
 struct Entry{
-    Entry():m(INVALIDMOVE),h(0),score(0),eval(0),b(B_none),d(-1)/*,generation(curGen)*/{}
+    Entry():m(INVALIDMINIMOVE),h(0),score(0),eval(0),b(B_none),d(-1)/*,generation(curGen)*/{}
     Entry(Hash h, Move m, ScoreType s, ScoreType e, Bound b, DepthType d) : h(Hash64to32(h)), m(Move2MiniMove(m)), score(s), eval(e), /*generation(curGen),*/ b(b), d(d){}
     MiniHash h;            //32
     ScoreType score, eval; //16 + 16
@@ -1938,7 +1939,7 @@ void initTable(){
 
 void clearTT() {
     TT::curGen = 0;
-    for (unsigned int k = 0; k < ttSize; ++k) for (unsigned int i = 0 ; i < Bucket::nbBucket ; ++i) table[k].e[i] = { 0, INVALIDMOVE, 0, 0, B_alpha, 0 };
+    for (unsigned int k = 0; k < ttSize; ++k) for (unsigned int i = 0 ; i < Bucket::nbBucket ; ++i) table[k].e[i] = { 0, INVALIDMINIMOVE, 0, 0, B_alpha, 0 };
 }
 
 int hashFull(){
@@ -3936,7 +3937,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                if (!extension && isCastling(e.m) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
                if (!extension && ply > 1 && VALIDMOVE(stack[p.halfmoves].threat) && VALIDMOVE(stack[p.halfmoves - 2].threat) && (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) || (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat)))) ++stats.counters[Stats::sid_BMExtension], ++extension;
                //if (!extension && mateThreat) ++stats.counters[Stats::sid_mateThreatExtension],++extension;
-               //if (!extension && p.lastMove > NULLMOVE && Move2Type(p.lastMove) == T_capture && Move2To(e.m) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; // recapture
+               //if (!extension && VALIDMOVE(p.lastMove) && Move2Type(p.lastMove) == T_capture && Move2To(e.m) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; // recapture
                //if (!extension && isCheck ) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
                /*
                if (!extension && isQuiet) {
@@ -4030,7 +4031,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
            if (!extension && isCastling(*it) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
            if (!extension && ply > 1 && stack[p.halfmoves].threat != INVALIDMOVE && stack[p.halfmoves - 2].threat != INVALIDMOVE && (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) || (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat)))) ++stats.counters[Stats::sid_BMExtension], ++extension;
            //if (!extension && mateThreat && depth <= 4) ++stats.counters[Stats::sid_mateThreatExtension],++extension;
-           //if (!extension && p.lastMove > NULLMOVE && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; //recapture
+           //if (!extension && VALIDMOVE(p.lastMove) && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; //recapture
            //if (!extension && isCheck && !isBadCap(*it)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
            if (!extension && !firstMove && isQuiet) {
                const int pp = (p.b[Move2From(*it)] + PieceShift) * 64 + Move2To(*it);
