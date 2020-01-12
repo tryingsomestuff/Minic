@@ -64,8 +64,8 @@ const std::string MinicVersion = "dev";
 #define INFSCORE    ScoreType(15000)
 #define MATE        ScoreType(10000)
 #define WIN         ScoreType(5000)
-#define INVALIDMOVE     0xFFFF0000
-#define INVALIDMINIMOVE 0x0000u
+#define INVALIDMOVE     int32_t(0xFFFF0000)
+#define INVALIDMINIMOVE int16_t(0x0000)
 #define NULLMOVE        0
 #define INVALIDSQUARE  -1
 #define MAX_PLY       512
@@ -73,7 +73,7 @@ const std::string MinicVersion = "dev";
 #define MAX_DEPTH     127   // DepthType is a char, !!!do not go above 127!!!
 #define MAX_HISTORY  1000
 
-#define VALIDMOVE(m) (m > 0)
+#define VALIDMOVE(m) ( m != NULLMOVE && m != INVALIDMOVE)
 
 #define SQFILE(s) ((s)&7)
 #define SQRANK(s) ((s)>>3)
