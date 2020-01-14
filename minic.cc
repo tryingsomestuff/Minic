@@ -37,7 +37,7 @@ typedef uint64_t u_int64_t;
 
 #include "json.hpp"
 
-const std::string MinicVersion = "1.32";
+const std::string MinicVersion = "1.34";
 
 //#define IMPORTBOOK
 //#define WITH_TEXEL_TUNING
@@ -57,6 +57,10 @@ const std::string MinicVersion = "1.32";
 //#define DEBUG_APPLY
 //#define DEBUG_PSEUDO_LEGAL
 //#define DEBUG_HASH_ENTRY
+
+///@todo clop search param
+///@todo test NN LMR
+///@todo
 
 #ifdef WITH_TEXEL_TUNING
 #define CONST_TEXEL_TUNING
@@ -78,14 +82,14 @@ const std::string MinicVersion = "1.32";
 #define INVALIDMOVE     int32_t(0xFFFF0000)
 #define INVALIDBOOKMOVE int32_t(0xFFFFFFFF) // different for retrocompatibility ///@todo regenerate some books !
 #define INVALIDMINIMOVE int16_t(0x0000)
-#define NULLMOVE        0
+#define NULLMOVE        int32_t(0xFFFF1111)
 #define INVALIDSQUARE  -1
 #define MAX_PLY       512
 #define MAX_MOVE      256   // 256 is enough I guess/home ...
 #define MAX_DEPTH     127   // DepthType is a char, !!!do not go above 127!!!
 #define MAX_HISTORY  1000
 
-#define VALIDMOVE(m) ( (m) != NULLMOVE && (m) != INVALIDMOVE)
+#define VALIDMOVE(m) ( (m) != NULLMOVE && (m) != INVALIDMOVE && (m) != INVALIDMINIMOVE )
 
 #define SQFILE(s) ((s)&7)
 #define SQRANK(s) ((s)>>3)
