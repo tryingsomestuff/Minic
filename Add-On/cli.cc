@@ -40,7 +40,7 @@ void perft_test(const std::string & fen, DepthType d, unsigned long long int exp
     readFEN(fen, p);
     Logging::LogIt(Logging::logInfo) << ToString(p) ;
     PerftAccumulator acc;
-    if (perft(p, d, acc, false) != expected) Logging::LogIt(Logging::logInfo) << "Error !! " << fen << " " << expected ;
+    if (perft(p, d, acc, false) != expected) Logging::LogIt(Logging::logFatal) << "Error !! " << fen << " " << expected ;
     acc.Display();
     Logging::LogIt(Logging::logInfo) << "#########################" ;
 }
@@ -103,6 +103,37 @@ int cliManagement(std::string cli, int argc, char ** argv){
         perft_test("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ", 6, 11030083);
         perft_test("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", 5, 15833292);
         return 0;
+    }
+
+    if ( cli == "-perft_test_long_fisher" ){
+        std::ifstream infile("fischer.txt");
+        std::string line;
+        while (std::getline(infile, line)){
+            std::size_t found = line.find_first_of(",");
+            const std::string fen = line.substr(0, found);
+            while (found != std::string::npos ){
+                const std::size_t start = found+1;
+                found=line.find_first_of(",",found + 1 );
+                const unsigned long long ull = std::stoull (line.substr(start, found-start));
+                perft_test(fen, 6, ull);
+            }
+        }
+    }
+
+    if ( cli == "-perft_test_long" ){
+        std::ifstream infile("perft.txt");
+        std::string line;
+        while (std::getline(infile, line)){
+            std::size_t found = line.find_first_of(",");
+            const std::string fen = line.substr(0, found);
+            unsigned int i = 0;
+            while (found != std::string::npos ){
+                const std::size_t start = found+1;
+                found=line.find_first_of(",",found + 1 );
+                const unsigned long long ull = std::stoull (line.substr(start, found-start));
+                perft_test(fen, ++i, ull);
+            }
+        }
     }
 
     if ( cli == "bench" ){

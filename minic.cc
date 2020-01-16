@@ -57,6 +57,7 @@ const std::string MinicVersion = "1.34";
 //#define DEBUG_APPLY
 //#define DEBUG_PSEUDO_LEGAL
 //#define DEBUG_HASH_ENTRY
+//#define DEBUG_KING_CAP
 
 ///@todo clop search param
 ///@todo test NN LMR
@@ -3471,6 +3472,19 @@ ScoreType adjustHashScore(ScoreType score, DepthType ply){
   return score;
 }
 
+#ifdef DEBUG_KING_CAP
+inline void debug_king_cap(const Position & p){
+    if ( !p.whiteKing()||!p.blackKing()){
+       std::cout << "no more king" << std::endl;
+       std::cout << ToString(p) << std::endl;
+       std::cout << ToString(p.lastMove) << std::endl;
+       exit(1);
+    }
+}
+#else
+inline void debug_king_cap(const Position &){;}
+#endif
+
 #ifdef WITH_SYZYGY
 extern "C" {
 #include "tbprobe.h"
@@ -3508,6 +3522,7 @@ int probe_root(ThreadContext & context, const Position &p, ScoreType &score, Mov
    if ( MAX_TB_MEN <= 0 ) return -1;
    score = 0;
    unsigned results[TB_MAX_MOVES];
+   debug_king_cap(p);
    unsigned result = tb_probe_root(p.allPieces[Co_White],p.allPieces[Co_Black],p.whiteKing()|p.blackKing(),p.whiteQueen()|p.blackQueen(),p.whiteRook()|p.blackRook(),p.whiteBishop()|p.blackBishop(),p.whiteKnight()|p.blackKnight(),p.whitePawn()|p.blackPawn(),p.fifty,p.castling != C_none,p.ep == INVALIDSQUARE ? 0 : p.ep,p.c == Co_White,results);
    if (result == TB_RESULT_FAILED) return -1;
    const unsigned wdl = TB_GET_WDL(result);
@@ -3524,6 +3539,7 @@ int probe_root(ThreadContext & context, const Position &p, ScoreType &score, Mov
 int probe_wdl(const Position &p, ScoreType &score, bool use50MoveRule){
    if ( MAX_TB_MEN <= 0 ) return -1;
    score = 0;
+   debug_king_cap(p);
    unsigned result = tb_probe_wdl(p.allPieces[Co_White],p.allPieces[Co_Black],p.whiteKing()|p.blackKing(),p.whiteQueen()|p.blackQueen(),p.whiteRook()|p.blackRook(),p.whiteBishop()|p.blackBishop(),p.whiteKnight()|p.blackKnight(),p.whitePawn()|p.blackPawn(),p.fifty,p.castling != C_none,p.ep == INVALIDSQUARE ? 0 : p.ep,p.c == Co_White);
    if (result == TB_RESULT_FAILED) return 0;
    unsigned wdl = TB_GET_WDL(result);
@@ -3587,6 +3603,8 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     const bool isInCheck = isAttacked(p, kingSquare(p));
     const bool specialQSearch = isInCheck || qRoot;
     DepthType hashDepth = specialQSearch ? 0 : -1;
+
+    debug_king_cap(p);
 
     ThreadContext::CMHPtrArray cmhPtr;
     getCMHPtr(p.halfmoves,cmhPtr);
@@ -3750,7 +3768,7 @@ bool isPseudoLegal2(const Position & p, Move m) { // validate TT move
         if ((BBTools::mask[from].push[p.c] & p.occupancy) == 0ull) validPush |= BBTools::mask[from].dpush[p.c] & ~p.occupancy;
         if (validPush & SquareToBitboard(to)) return true;
         const BitBoard validCap = BBTools::mask[from].pawnAttack[p.c] & ~p.allPieces[p.c];
-        if ((validCap & SquareToBitboard(to)) && (toP != P_none || (t == T_ep && to == p.ep))) return true;
+        if ((validCap & SquareToBitboard(to)) && (( t != T_ep && toP != P_none) || (t == T_ep && to == p.ep))) return true;
         return false;
     }
     if (fromPieceType != P_wk) {
@@ -3774,6 +3792,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if ((int)ply > seldepth) seldepth = ply;
 
     if ( depth <= 0 ) return qsearch<true,pvnode>(alpha,beta,p,ply,seldepth);
+
+    debug_king_cap(p);
 
     ++stats.counters[Stats::sid_nodes];
 
