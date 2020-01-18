@@ -12,15 +12,22 @@ struct PerftAccumulator{
     }
 };
 
+//#define DEBUG_PERFT
+
 Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc, bool divide = false){
     if ( depth == 0) return 0;
     static TT::Entry e;
     MoveList moves;
-    generate<GP_all>(p,moves);
     int validMoves = 0;
     int allMoves = 0;
+#ifndef DEBUG_PERFT
+    generate<GP_all>(p,moves);
     for (auto it = moves.begin() ; it != moves.end(); ++it){
         const Move m = *it;
+#else
+    for ( MiniMove m = std::numeric_limits<MiniMove>::min(); m < std::numeric_limits<MiniMove>::max(); ++m){
+        if( !isPseudoLegal(p,m) ) continue;
+#endif
         ++allMoves;
         Position p2 = p;
         if ( ! apply(p2,m) ) continue;
@@ -40,8 +47,9 @@ void perft_test(const std::string & fen, DepthType d, unsigned long long int exp
     readFEN(fen, p);
     Logging::LogIt(Logging::logInfo) << ToString(p) ;
     PerftAccumulator acc;
-    if (perft(p, d, acc, false) != expected) Logging::LogIt(Logging::logFatal) << "Error !! " << fen << " " << expected ;
+    unsigned long long int n = perft(p, d, acc, false);
     acc.Display();
+    if (n != expected) Logging::LogIt(Logging::logFatal) << "Error !! " << fen << " " << expected ;
     Logging::LogIt(Logging::logInfo) << "#########################" ;
 }
 

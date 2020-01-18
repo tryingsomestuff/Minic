@@ -3735,6 +3735,7 @@ bool isPseudoLegal2(const Position & p, Move m) { // validate TT move
     if ((Piece)std::abs(toP) == P_wk) { return false; }
     const Piece fromPieceType = (Piece)std::abs(fromP);
     const MType t = Move2Type(m);
+    if ( t == T_reserved ) {return false;}
     if (toP == P_none && (isCapture(t) && t!=T_ep)) { return false; }
     if (toP != P_none && !isCapture(t)) { return false; }
     if (t == T_ep && (p.ep == INVALIDSQUARE || fromPieceType != P_wp)) { return false;}
@@ -3742,26 +3743,27 @@ bool isPseudoLegal2(const Position & p, Move m) { // validate TT move
     if (isPromotion(m) && fromPieceType != P_wp) { return false; }
     if (isCastling(m)) {
         if (p.c == Co_White) {
-            if (t == T_wqs && (p.castling & C_wqs)
+            if (t == T_wqs && (p.castling & C_wqs) && from == p.kingInit[Co_White] && fromP == P_wk && to == Sq_c1 && toP == P_none
                 && (((BBTools::mask[p.king[Co_White]].between[Sq_c1] | BBTools::mask[p.rooksInit[Co_White][CT_OOO]].between[Sq_d1]) & p.occupancy) == 0ull)
                 && !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_c1] | SquareToBitboard(p.king[Co_White]))) return true;
-            if (t == T_wks && (p.castling & C_wks)
+            if (t == T_wks && (p.castling & C_wks) && from == p.kingInit[Co_White] && fromP == P_wk && to == Sq_g1 && toP == P_none
                 && (((BBTools::mask[p.king[Co_White]].between[Sq_g1] | BBTools::mask[p.rooksInit[Co_White][CT_OO]].between[Sq_f1]) & p.occupancy) == 0ull)
                 && !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_g1] | SquareToBitboard(p.king[Co_White]))) return true;
             return false;
         }
         else {
-            if (t == T_bqs && (p.castling & C_bqs)
+            if (t == T_bqs && (p.castling & C_bqs) && from == p.kingInit[Co_Black] && fromP == P_bk && to == Sq_c8 && toP == P_none
                 && (((BBTools::mask[p.king[Co_Black]].between[Sq_c8] | BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].between[Sq_d8]) & p.occupancy) == 0ull)
                 && !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_c8] | SquareToBitboard(p.king[Co_Black]))) return true;
-            if (t == T_bks && (p.castling & C_bks)
+            if (t == T_bks && (p.castling & C_bks) && from == p.kingInit[Co_Black] && fromP == P_bk && to == Sq_g8 && toP == P_none
                 && (((BBTools::mask[p.king[Co_Black]].between[Sq_g8] | BBTools::mask[p.rooksInit[Co_Black][CT_OO]].between[Sq_f8]) & p.occupancy) == 0ull)
                 && !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_g8] | SquareToBitboard(p.king[Co_Black]))) return true;
             return false;
         }
     }
     if (fromPieceType == P_wp) {
-        if (t == T_ep && SQRANK(to) != EPRank[p.c]) { return false; }
+        if (t == T_ep && to != p.ep) { return false; }
+        if (t != T_ep && p.ep != INVALIDSQUARE && to == p.ep) { return false; }
         if (!isPromotion(m) && SQRANK(to) == PromRank[p.c]) { return false; }
         if (isPromotion(m) && SQRANK(to) != PromRank[p.c]) { return false; }
         BitBoard validPush = BBTools::mask[from].push[p.c] & ~p.occupancy;
