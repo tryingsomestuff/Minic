@@ -32,8 +32,12 @@ standard output:
 
 from subprocess import Popen, PIPE
 import sys
+import platform
 
-cutechess_cli_path = "\"C:\Program Files (x86)\cutechess\cutechess-cli.exe\""
+if platform.system() is 'Windows':
+   cutechess_cli_path = "\"C:\Program Files (x86)\cutechess\cutechess-cli.exe\""
+else:
+   cutechess_cli_path = "/ssd/cutechess/projects/cli/cutechess-cli"
 
 # The engine whose parameters will be optimized
 engine = 'conf=minic_dev_uci'
@@ -47,11 +51,11 @@ engine_param_cmd = 'setoption name {name} value {value}'
 # A pool of opponents for the engine. The opponent will be
 # chosen based on the seed sent by CLOP.
 opponents = [
-    'conf=minic_1.26_uci'
+    'conf=minic_1.35_uci'
 ]
 
 # Additional cutechess-cli options, eg. time control and opening book
-options = '-each tc=40/10 -draw movenumber=80 movecount=5 score=5 -resign movecount=5 score=500'
+options = '-each tc=40/5 -draw movenumber=80 movecount=5 score=5 -resign movecount=5 score=500'
 
 def main(argv = None):
     if argv is None:
