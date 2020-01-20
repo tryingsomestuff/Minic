@@ -13,6 +13,7 @@
 #include <iomanip>
 #include <iostream>
 #include <iterator>
+#include <list>
 #include <mutex>
 #include <random>
 #include <set>
@@ -37,7 +38,7 @@ typedef uint64_t u_int64_t;
 
 #include "json.hpp"
 
-const std::string MinicVersion = "1.34";
+const std::string MinicVersion = "dev";
 
 //#define IMPORTBOOK
 //#define WITH_TEXEL_TUNING
@@ -49,7 +50,7 @@ const std::string MinicVersion = "1.34";
 #define WITH_MAGIC
 //#define WITH_LMRNN
 //#define WITH_TIMER
-//#define WITH_CLOP_SEARCH
+#define WITH_CLOP_SEARCH
 
 //#define DEBUG_HASH
 //#define DEBUG_PHASH
@@ -2911,9 +2912,9 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
     const bool promPossible = PROMOTION_RANK(to);
     Piece pp = PieceTools::getPieceType(p,from);
     bool prom = promPossible && pp == P_wp;
-    Piece nextVictim  = prom ? P_wq : pp;
+    Piece nextVictim  = prom ? P_wq : pp; ///@todo other prom
     const Color us    = p.c;
-    ScoreType balance = (type==T_ep ? Values[P_wp+PieceShift] : PieceTools::getAbsValue(p,to)) - threshold; // The opponent may be able to recapture so this is the best result we can hope for.
+    ScoreType balance = (type==T_ep ? Values[P_wp+PieceShift] : PieceTools::getAbsValue(p,to)) - threshold + (prom?(Values[P_wq+PieceShift]-Values[P_wp+PieceShift]):0); // The opponent may be able to recapture so this is the best result we can hope for.
     if (balance < 0) return false;
     balance -= Values[nextVictim+PieceShift]; // Now assume the worst possible result: that the opponent can capture our piece for free.
     if (balance >= 0) return true;
@@ -2934,7 +2935,7 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
               if (!apply(p3,mm,true)) continue;
               validThreatFound = true;
               nextVictim = prom ? P_wq : pp; // CAREFULL here :: we don't care black or white, always use abs(value) next !!!
-              balance = -balance - 1 - Values[nextVictim+PieceShift];
+              balance = -balance - 1 - (prom?(Values[P_wq+PieceShift]-Values[P_wp+PieceShift]):Values[nextVictim+PieceShift]); ///@todo other prom ?
               if (balance >= 0 && nextVictim != P_wk) endOfSEE = true;
               p2 = p3;
            }
