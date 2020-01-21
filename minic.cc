@@ -44,7 +44,7 @@ const std::string MinicVersion = "dev";
 //#define WITH_TEXEL_TUNING
 //#define DEBUG_TOOL
 #define WITH_TEST_SUITE
-#define WITH_SYZYGY
+//#define WITH_SYZYGY
 #define WITH_UCI
 //#define WITH_PGN_PARSER
 #define WITH_MAGIC
@@ -2935,7 +2935,8 @@ bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold)
               if (!apply(p3,mm,true)) continue;
               validThreatFound = true;
               nextVictim = prom ? P_wq : pp; // CAREFULL here :: we don't care black or white, always use abs(value) next !!!
-              balance = -balance - 1 - (prom?(Values[P_wq+PieceShift]-Values[P_wp+PieceShift]):Values[nextVictim+PieceShift]); ///@todo other prom ?
+              if (prom) balance -= Values[P_wp + PieceShift];
+              balance = -balance - 1 - Values[nextVictim+PieceShift]; ///@todo other prom ?
               if (balance >= 0 && nextVictim != P_wk) endOfSEE = true;
               p2 = p3;
            }
