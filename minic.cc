@@ -50,7 +50,7 @@ const std::string MinicVersion = "dev";
 #define WITH_MAGIC
 //#define WITH_LMRNN
 //#define WITH_TIMER
-#define WITH_CLOP_SEARCH
+//#define WITH_CLOP_SEARCH
 
 //#define DEBUG_HASH
 //#define DEBUG_PHASH
@@ -98,6 +98,7 @@ const std::string MinicVersion = "dev";
 #define ISOUTERFILE(x) (SQFILE(x) == 0 || SQFILE(x) == 7)
 #define ISNEIGHBOUR(x,y) ((x) >= 0 && (x) < 64 && (y) >= 0 && (y) < 64 && abs(SQRANK(x) - SQRANK(y)) <= 1 && abs(SQFILE(x) - SQFILE(y)) <= 1)
 #define PROMOTION_RANK(x) (SQRANK(x) == 0 || SQRANK(x) == 7)
+#define PROMOTION_RANK_C(x,c) ((c==Co_Black && SQRANK(x) == 0) || (c==Co_White && SQRANK(x) == 7))
 #define MakeSquare(f,r) Square(((r)<<3) + (f))
 #define VFlip(s) ((s)^Sq_a8)
 #define HFlip(s) ((s)^7)
@@ -1730,7 +1731,8 @@ struct ThreadContext{
     template <bool pvnode, bool canPrune = true> ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, bool cutNode, const Move skipMove = INVALIDMOVE);
     template <bool qRoot, bool pvnode> ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
     ScoreType qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
-    bool SEE(const Position & p, const Move & m, ScoreType threshold)const;
+    bool SEE_GE(const Position & p, const Move & m, ScoreType threshold)const;
+    ScoreType SEE(const Position & p, const Move & m)const;
     PVList search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth);
     template< bool withRep = true, bool isPv = true, bool INR = true> MaterialHash::Terminaison interiorNodeRecognizer(const Position & p)const;
     bool isRep(const Position & p, bool isPv)const;
@@ -2901,15 +2903,90 @@ void initBook() {
 #endif
 } // Book
 
+namespace BBTools {
+    BitBoard allAttackedBB(const Position &p, const Square x, Color c) {
+        if (c == Co_White) return attack<P_wb>(x, p.blackBishop() | p.blackQueen(), p.occupancy) | attack<P_wr>(x, p.blackRook() | p.blackQueen(), p.occupancy) | attack<P_wn>(x, p.blackKnight()) | attack<P_wp>(x, p.blackPawn(), p.occupancy, Co_White) | attack<P_wk>(x, p.blackKing());
+        else               return attack<P_wb>(x, p.whiteBishop() | p.whiteQueen(), p.occupancy) | attack<P_wr>(x, p.whiteRook() | p.whiteQueen(), p.occupancy) | attack<P_wn>(x, p.whiteKnight()) | attack<P_wp>(x, p.whitePawn(), p.occupancy, Co_Black) | attack<P_wk>(x, p.whiteKing());
+    }
+}
+
+ScoreType ThreadContext::SEE(const Position & p, const Move & m) const {
+    if ( ! VALIDMOVE(m) ) return 0;
+
+    ///@todo EP first move!
+    Square from = Move2From(m);
+    const Square to = Move2To(m);
+    const Square mtype = Move2Type(m);
+    BitBoard attackers = BBTools::allAttackedBB(p, to, p.c) | BBTools::allAttackedBB(p, to, ~p.c);
+    BitBoard occupation_mask = 0xFFFFFFFFFFFFFFFF;
+    ScoreType current_target_val = 0;
+    const bool promPossible = PROMOTION_RANK_C(to, p.c);
+    Color c = p.c;
+
+    int nCapt = 0;
+    ScoreType swapList[32]; // max 32 caps ... shall be ok
+
+    swapList[nCapt] = PieceTools::getAbsValue(p, to);
+    Piece pp = PieceTools::getPieceType(p, to);
+    current_target_val = Values[pp];
+    if (promPossible && pp == P_wp) {
+        swapList[nCapt] += Values[P_wq] - Values[P_wp]; ///@todo others prom type
+        current_target_val += Values[P_wq] - Values[P_wp]; ///@todo others prom type
+    }
+    nCapt++;
+
+    // Remove attacker
+    attackers &= ~SquareToBitboard(from);
+    occupation_mask &= ~SquareToBitboard(from);
+
+    attackers |= BBTools::attack<P_wr>(to, p.whiteQueen() | p.blackQueen() | p.whiteRook()   | p.blackRook(),   p.occupancy & occupation_mask, c) |
+                 BBTools::attack<P_wb>(to, p.whiteQueen() | p.blackQueen() | p.whiteBishop() | p.blackBishop(), p.occupancy & occupation_mask, c) ;
+    attackers &= occupation_mask;
+    c = ~c;
+
+    while (attackers) {
+        if (!promPossible && attackers & p.pieces<P_wp>(c))      from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wp>(c));
+        else if (attackers & p.pieces<P_wn>(c))                  from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wn>(c));
+        else if (attackers & p.pieces<P_wb>(c))                  from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wb>(c));
+        else if (attackers & p.pieces<P_wr>(c))                  from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wr>(c));
+        else if (promPossible && attackers & p.pieces<P_wp>(c))  from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wp>(c));
+        else if (attackers & p.pieces<P_wq>(c))                  from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wq>(c));
+        else if (attackers & p.pieces<P_wk>(c) && !(attackers & p.allPieces[~c]))  from = BBTools::SquareFromBitBoard(attackers &  p.pieces<P_wk>(c));
+        else break;
+
+        swapList[nCapt] = -swapList[nCapt - 1] + current_target_val;
+
+        pp = PieceTools::getPieceType(p, from);
+        current_target_val = Values[pp];
+        if (promPossible && pp == P_wp) {
+            swapList[nCapt] += Values[P_wq] - Values[P_wp]; ///@todo others prom type
+            current_target_val += Values[P_wq] - Values[P_wp]; ///@todo others prom type
+        }
+        nCapt++;
+
+        attackers &= ~SquareToBitboard(from);
+        occupation_mask &= ~SquareToBitboard(from);
+
+        attackers |= BBTools::attack<P_wr>(to, p.whiteQueen() | p.blackQueen() | p.whiteRook()   | p.blackRook(),   p.occupancy & occupation_mask, c) |
+                     BBTools::attack<P_wb>(to, p.whiteQueen() | p.blackQueen() | p.whiteBishop() | p.blackBishop(), p.occupancy & occupation_mask, c);
+        attackers &= occupation_mask;
+        c = ~c;
+    }
+
+    while (--nCapt) if (swapList[nCapt] > -swapList[nCapt - 1])  swapList[nCapt - 1] = -swapList[nCapt];
+    return swapList[0];
+}
+
 // Static Exchange Evaluation (cutoff version algorithm from Stockfish)
-bool ThreadContext::SEE(const Position & p, const Move & m, ScoreType threshold) const{
+bool ThreadContext::SEE_GE(const Position & p, const Move & m, ScoreType threshold) const{
     assert(VALIDMOVE(m));
     START_TIMER
     const Square from = Move2From(m);
     const Square to   = Move2To(m);
     const MType type  = Move2Type(m);
     if (PieceTools::getPieceType(p, to) == P_wk) return true; // capture king !
-    const bool promPossible = PROMOTION_RANK(to);
+    const bool promPossible = PROMOTION_RANK_C(to,p.c);
+    if (promPossible) return true; // never treat possible prom case !
     Piece pp = PieceTools::getPieceType(p,from);
     bool prom = promPossible && pp == P_wp;
     Piece nextVictim  = prom ? P_wq : pp; ///@todo other prom
@@ -2968,7 +3045,7 @@ struct MoveSorter{
                 const Piece attacker = PieceTools::getPieceType(p,from);
                 assert(victim>0); assert(attacker>0);
                 s += SearchConfig::MvvLvaScores[victim-1][attacker-1]; //[0 400]
-                if ( (useSEE && !isInCheck && !context.SEE(p,m,-70) ) /*|| (!useSEE && attacker > victim)*/ ) s -= 2*MoveScoring[T_capture]; // bad capture
+                if ( (useSEE && !isInCheck && !context.SEE_GE(p,m,-70) ) /*|| (!useSEE && attacker > victim)*/ ) s -= 2*MoveScoring[T_capture]; // bad capture
                 //else if ( isCapture(p.lastMove) && to == Move2To(p.lastMove) ) s += 400; // recapture bonus ///@todo test again !
             }
             else if ( t == T_std ){
@@ -2981,7 +3058,7 @@ struct MoveSorter{
                     s += context.historyT.historyP[p.b[from]+PieceShift][to] /2 ; // +/- MAX_HISTORY = 1000
                     s += context.getCMHScore(p, from, to, ply, cmhPtr) /4; // +/- MAX_HISTORY = 1000
                     if ( !isInCheck ){
-                       if ( refutation != INVALIDMOVE && from == Move2To(refutation) && context.SEE(p,m,-70)) s += 1000; // move (safely) leaving threat square from null move search
+                       if ( refutation != INVALIDMOVE && from == Move2To(refutation) && context.SEE_GE(p,m,-70)) s += 1000; // move (safely) leaving threat square from null move search
                        const bool isWhite = (p.allPieces[Co_White] & SquareToBitboard(from)) != 0ull;
                        const EvalScore * const  pst = EvalConfig::PST[PieceTools::getPieceType(p, from) - 1];
                        s += ScaleScore(pst[isWhite ? (to ^ 56) : to] - pst[isWhite ? (from ^ 56) : from],gp);
@@ -3643,7 +3720,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         if (!isInCheck) {
-            if (!SEE(p,*it,0)) continue;
+            if (!SEE_GE(p,*it,0)) continue;
             if (SearchConfig::doQFutility && evalScore + SearchConfig::qfutilityMargin[evalScoreIsHashScore] + (Move2Type(*it)==T_ep ? Values[P_wp+PieceShift] : PieceTools::getAbsValue(p, Move2To(*it))) <= alphaInit) continue;
         }
         Position p2 = p;
@@ -3993,7 +4070,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                    const BitBoard passed[2] = { BBTools::pawnPassed<Co_White>(pawns[Co_White], pawns[Co_Black]), BBTools::pawnPassed<Co_Black>(pawns[Co_Black], pawns[Co_White]) };
                    if ( SquareToBitboard(to) & passed[p.c] ) ++stats.counters[Stats::sid_pawnPushExtension], ++extension;
                }
-               if (!extension && pvnode && (p.pieces<P_wq>(p.c) && isQuiet && PieceTools::getPieceType(p, Move2From(e.m)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces<P_wq>(p.c)))) && SEE(p, e.m, 0)) ++stats.counters[Stats::sid_queenThreatExtension], ++extension;
+               if (!extension && pvnode && (p.pieces<P_wq>(p.c) && isQuiet && PieceTools::getPieceType(p, Move2From(e.m)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces<P_wq>(p.c)))) && SEE_GE(p, e.m, 0)) ++stats.counters[Stats::sid_queenThreatExtension], ++extension;
                if (!extension && withoutSkipMove && depth >= SearchConfig::singularExtensionDepth && !rootnode && !isMateScore(e.score) && e.b == TT::B_beta && e.d >= depth - 3){
                    const ScoreType betaC = e.score - 2*depth;
                    PVList sePV;
@@ -4086,7 +4163,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                isAdvancedPawnPush = SquareToBitboard(to) & passed[p.c];
                if (isAdvancedPawnPush) ++stats.counters[Stats::sid_pawnPushExtension], ++extension;
            }
-           if (!extension && pvnode && firstMove && (p.pieces<P_wq>(p.c) && Move2Type(*it) == T_std && PieceTools::getPieceType(p, Move2From(*it)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces<P_wq>(p.c)))) && SEE(p, *it, 0)) ++stats.counters[Stats::sid_queenThreatExtension], ++extension; // too much of that
+           if (!extension && pvnode && firstMove && (p.pieces<P_wq>(p.c) && Move2Type(*it) == T_std && PieceTools::getPieceType(p, Move2From(*it)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces<P_wq>(p.c)))) && SEE_GE(p, *it, 0)) ++stats.counters[Stats::sid_queenThreatExtension], ++extension; 
         }
         // pvs
         if (validMoveCount < (2/*+2*rootnode*/) || !SearchConfig::doPVS ) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,!cutNode);
@@ -4114,7 +4191,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             // SEE (capture)
             if (isPrunableCap){
                if (futility) {++stats.counters[Stats::sid_see]; continue;}
-               else if ( !rootnode && !SEE(p,*it,-100*depth)) {++stats.counters[Stats::sid_see2]; continue;}
+               else if ( !rootnode && !SEE_GE(p,*it,-100*depth)) {++stats.counters[Stats::sid_see2]; continue;}
             }
             // LMR
 #ifdef WITH_LMRNN
@@ -4140,7 +4217,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             }
             const DepthType nextDepth = depth-1-reduction+extension;
             // SEE (quiet)
-            if ( isPrunableStdNoCheck && /*!rootnode &&*/ !SEE(p,*it,-15*nextDepth*nextDepth)) {++stats.counters[Stats::sid_seeQuiet]; continue;}
+            if ( isPrunableStdNoCheck && /*!rootnode &&*/ !SEE_GE(p,*it,-15*nextDepth*nextDepth)) {++stats.counters[Stats::sid_seeQuiet]; continue;}
             // PVS
             score = -pvs<false,true>(-alpha-1,-alpha,p2,nextDepth,ply+1,childPV,seldepth,isCheck,true);
 #ifdef WITH_LMRNN
