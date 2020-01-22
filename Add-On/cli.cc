@@ -78,13 +78,6 @@ void analyze(const Position & p, DepthType depth){
         std::cerr << int(nodeCount/(ms/1000.f)) << std::endl;
 }
 
-namespace BBTools{
-BitBoard allAttackedBB(const Position &p, const Square x, Color c) {
-    if (c == Co_White) return attack<P_wb>(x, p.blackBishop() | p.blackQueen(), p.occupancy) | attack<P_wr>(x, p.blackRook() | p.blackQueen(), p.occupancy) | attack<P_wn>(x, p.blackKnight()) | attack<P_wp>(x, p.blackPawn(), p.occupancy, Co_White) | attack<P_wk>(x, p.blackKing());
-    else               return attack<P_wb>(x, p.whiteBishop() | p.whiteQueen(), p.occupancy) | attack<P_wr>(x, p.whiteRook() | p.whiteQueen(), p.occupancy) | attack<P_wn>(x, p.whiteKnight()) | attack<P_wp>(x, p.whitePawn(), p.occupancy, Co_Black) | attack<P_wk>(x, p.whiteKing());
-}
-}
-
 int cliManagement(std::string cli, int argc, char ** argv){
 
     if ( cli == "-xboard" ){
@@ -225,11 +218,11 @@ int cliManagement(std::string cli, int argc, char ** argv){
             Position p;
             readFEN(t.fen, p, true);
             Logging::LogIt(Logging::logError) << "============================== " << t.fen << " -";
-            bool b = ThreadPool::instance().main().SEE(p,t.m,t.threshold-1);
+            bool b = ThreadPool::instance().main().SEE_GE(p,t.m,t.threshold-1);
             if ( !b ) Logging::LogIt(Logging::logError) << "wrong SEE value - " << ToString(p) << "\n" << ToString(t.m);
 
             Logging::LogIt(Logging::logError) << "============================== " << t.fen << " +";
-            b = ThreadPool::instance().main().SEE(p,t.m,t.threshold+1);
+            b = ThreadPool::instance().main().SEE_GE(p,t.m,t.threshold+1);
             if ( b ) Logging::LogIt(Logging::logError)  << "wrong SEE value + " << ToString(p) << "\n" << ToString(t.m);
         }
 
@@ -281,7 +274,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
         readMove(p,argv[3],from,to,mtype);
         Move m = ToMove(from,to,mtype);
         ScoreType t = atoi(argv[4]);
-        bool b = ThreadPool::instance().main().SEE(p,m,t);
+        bool b = ThreadPool::instance().main().SEE_GE(p,m,t);
         Logging::LogIt(Logging::logInfo) << "SEE ? " << (b?"ok":"not");
         return 1;
     }
