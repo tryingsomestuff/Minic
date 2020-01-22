@@ -2926,16 +2926,17 @@ ScoreType ThreadContext::SEE(const Position & p, const Move & m) const {
     int nCapt = 0;
     ScoreType swapList[32]; // max 32 caps ... shall be ok
 
-    swapList[nCapt] = PieceTools::getAbsValue(p, to);
-    Piece pp = PieceTools::getPieceType(p, to);
-    current_target_val = Values[pp];
+    Piece pp = PieceTools::getPieceType(p, from);
     if (promPossible && pp == P_wp) {
-        swapList[nCapt] += Values[P_wq] - Values[P_wp]; ///@todo others prom type
-        current_target_val += Values[P_wq] - Values[P_wp]; ///@todo others prom type
+        swapList[nCapt] = Values[P_wq+PieceShift] - Values[P_wp+PieceShift]; ///@todo others prom type
+        current_target_val = Values[P_wq+PieceShift] - Values[P_wp+PieceShift]; ///@todo others prom type
+    }
+    else{
+        current_target_val = Values[pp+PieceShift];
+        swapList[nCapt] = PieceTools::getAbsValue(p, to);
     }
     nCapt++;
 
-    // Remove attacker
     attackers &= ~SquareToBitboard(from);
     occupation_mask &= ~SquareToBitboard(from);
 
@@ -2945,23 +2946,31 @@ ScoreType ThreadContext::SEE(const Position & p, const Move & m) const {
     c = ~c;
 
     while (attackers) {
-        if (!promPossible && attackers & p.pieces<P_wp>(c))      from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wp>(c));
-        else if (attackers & p.pieces<P_wn>(c))                  from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wn>(c));
-        else if (attackers & p.pieces<P_wb>(c))                  from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wb>(c));
-        else if (attackers & p.pieces<P_wr>(c))                  from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wr>(c));
-        else if (promPossible && attackers & p.pieces<P_wp>(c))  from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wp>(c));
-        else if (attackers & p.pieces<P_wq>(c))                  from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wq>(c));
-        else if (attackers & p.pieces<P_wk>(c) && !(attackers & p.allPieces[~c]))  from = BBTools::SquareFromBitBoard(attackers &  p.pieces<P_wk>(c));
+        if (!promPossible && attackers & p.pieces<P_wp>(c))        from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wp>(c));
+        else if (attackers & p.pieces<P_wn>(c))                    from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wn>(c));
+        else if (attackers & p.pieces<P_wb>(c))                    from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wb>(c));
+        else if (attackers & p.pieces<P_wr>(c))                    from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wr>(c));
+        else if (promPossible && (attackers & p.pieces<P_wp>(c)))  from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wp>(c));
+        else if (attackers & p.pieces<P_wq>(c))                    from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wq>(c));
+        else if ((attackers & p.pieces<P_wk>(c)) && !(attackers & p.allPieces[~c])) from = BBTools::SquareFromBitBoard(attackers &  p.pieces<P_wk>(c));
         else break;
 
-        swapList[nCapt] = -swapList[nCapt - 1] + current_target_val;
+        std::cout << SquareNames[from] << std::endl;
 
-        pp = PieceTools::getPieceType(p, from);
-        current_target_val = Values[pp];
+        pp = PieceTools::getPieceType(p, from); ///@todo not very efficient, we already know the type of piece here !
         if (promPossible && pp == P_wp) {
-            swapList[nCapt] += Values[P_wq] - Values[P_wp]; ///@todo others prom type
-            current_target_val += Values[P_wq] - Values[P_wp]; ///@todo others prom type
+            swapList[nCapt] = -swapList[nCapt - 1] + Values[P_wq+PieceShift] - Values[P_wp+PieceShift]; ///@todo others prom type
+            current_target_val = Values[P_wq+PieceShift] - Values[P_wp+PieceShift]; ///@todo others prom type
         }
+        else{
+            current_target_val = Values[pp+PieceShift];
+            swapList[nCapt] = -swapList[nCapt - 1] + current_target_val;
+        }
+
+        std::cout << current_target_val  << std::endl;
+        std::cout << swapList[nCapt - 1] << std::endl;
+        std::cout << swapList[nCapt]     << std::endl;
+
         nCapt++;
 
         attackers &= ~SquareToBitboard(from);
