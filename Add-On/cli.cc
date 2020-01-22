@@ -224,6 +224,11 @@ int cliManagement(std::string cli, int argc, char ** argv){
             Logging::LogIt(Logging::logError) << "============================== " << t.fen << " +";
             b = ThreadPool::instance().main().SEE_GE(p,t.m,t.threshold+1);
             if ( b ) Logging::LogIt(Logging::logError)  << "wrong SEE value + " << ToString(p) << "\n" << ToString(t.m);
+
+            Logging::LogIt(Logging::logError) << "============================== " << t.fen << " ==";
+            const ScoreType s = ThreadPool::instance().main().SEE(p,t.m);
+            b = s == t.threshold;
+            if ( !b ) Logging::LogIt(Logging::logError)  << "wrong SEE value == " << ToString(p) << "\n" << ToString(t.m) << " " << s << " " << t.threshold;
         }
 
         return 0;
@@ -372,7 +377,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
     if ( cli == "-analyze" ){
         DepthType depth = 5;
         if ( argc >= 3 ) depth = atoi(argv[3]);
-	analyze(p,depth);
+        analyze(p,depth);
         return 0;
     }
 
@@ -380,7 +385,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
         DynamicConfig::mateFinder = true;
         DepthType depth = 5;
         if ( argc >= 3 ) depth = atoi(argv[3]);
-	analyze(p,depth);
+        analyze(p,depth);
         return 0;
     }
 
