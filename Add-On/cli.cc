@@ -187,11 +187,10 @@ int cliManagement(std::string cli, int argc, char ** argv){
         posList.push_back( SEETest{"5k2/p2P2pp/1b6/1p6/1Nn1P1n1/8/PPP4P/R2QK1NR w KQ - 0 1",			ToMove(Sq_d7,Sq_d8, T_promq), ScoreType(( -P + Q ) - Q + B )});
         posList.push_back( SEETest{"4kbnr/p1P1pppp/b7/4q3/7n/8/PP1PPPPP/RNBQKBNR w KQk - 0 1",                  ToMove(Sq_c7,Sq_c8, T_promq), ScoreType(( -P + Q ) - Q )});
         posList.push_back( SEETest{"4kbnr/p1P1pppp/b7/4q3/7n/8/PPQPPPPP/RNB1KBNR w KQk - 0 1",                  ToMove(Sq_c7,Sq_c8, T_promq), ScoreType(( -P + Q ) - Q + B )});
-        posList.push_back( SEETest{"4kbnr/p1P1pppp/b7/4q3/7n/8/PPQPPPPP/RNB1KBNR w KQk - 0 1",                  ToMove(Sq_c7,Sq_c8, T_promn), ScoreType(( -P + N ) )});
+        posList.push_back( SEETest{"4kbnr/p1P1pppp/b7/4q3/7n/8/PPQPPPPP/RNB1KBNR w KQk - 0 1",                  ToMove(Sq_c7,Sq_c8, T_promn), ScoreType(( -P + N - N + B) )}); ///@todo this does not test "other prom" as the knight is captured !
         /* initial move En Passant */
         posList.push_back( SEETest{"4kbnr/p1P4p/b1q5/5pP1/4n3/5Q2/PP1PPP1P/RNB1KBNR w KQk f6 0 2",		ToMove(Sq_g5,Sq_f6, T_ep), ScoreType(P - P )});
         posList.push_back( SEETest{"4kbnr/p1P4p/b1q5/5pP1/4n2Q/8/PP1PPP1P/RNB1KBNR w KQk f6 0 2",		ToMove(Sq_g5,Sq_f6, T_ep), ScoreType(P - P )});
-        posList.push_back( SEETest{"4kb1r/p1P4p/b4Q2/8/8/8/PP1PPP1P/RNB1KBNR b KQk - 0 3 ",			ToMove(Sq_g5,Sq_f6, T_ep), ScoreType(P )});
         /* initial move capture promotion */
         posList.push_back( SEETest{"1n2kb1r/p1P4p/2qb4/5pP1/4n2Q/8/PP1PPP1P/RNB1KBNR w KQk - 0 1",		ToMove(Sq_c7,Sq_b8, T_cappromq ), ScoreType(N + ( -P + Q ) -Q )});
 
@@ -201,14 +200,14 @@ int cliManagement(std::string cli, int argc, char ** argv){
         posList.push_back( SEETest{"3N4/2K5/2n5/1k6/8/8/8/8 b - - 0 1",                                         ToMove(Sq_c6,Sq_d8, T_capture), ScoreType(0) });
 
         /* promotion inside the loop */
-        posList.push_back( SEETest{"3N4/2P5/2n5/1k6/8/8/8/4K3 b - - 0 1",					ToMove(Sq_c6,Sq_d8, T_capture), ScoreType(N - ( N - P + Q )) });
-        posList.push_back( SEETest{"3N4/2P5/2n5/1k6/8/8/8/4K3 b - - 0 1",					ToMove(Sq_c6,Sq_b8, T_capture), ScoreType(- ( N - P + Q )) });
+        posList.push_back( SEETest{"3N4/2P5/2n5/1k6/8/8/8/4K3 b - - 0 1",					ToMove(Sq_c6,Sq_d8, T_capture), ScoreType(N - N - Q + P ) });
+        posList.push_back( SEETest{"3N4/2P5/2n5/1k6/8/8/8/4K3 b - - 0 1",					ToMove(Sq_c6,Sq_b8, T_capture), ScoreType(- N - Q + P ) });
         posList.push_back( SEETest{"3n3r/2P5/8/1k6/8/8/3Q4/4K3 w - - 0 1",					ToMove(Sq_d2,Sq_d8, T_capture), ScoreType(N) });
         posList.push_back( SEETest{"3n3r/2P5/8/1k6/8/8/3Q4/4K3 w - - 0 1",					ToMove(Sq_c7,Sq_d8, T_promq)  , ScoreType( (N - P + Q ) - Q + R) });
         /* double promotion inside the loop */
         posList.push_back( SEETest{"r2n3r/2P1P3/4N3/1k6/8/8/8/4K3 w - - 0 1",					ToMove(Sq_e6,Sq_d8, T_capture), ScoreType(N) });
-        posList.push_back( SEETest{"8/8/8/1k6/6b1/4N3/2p3K1/3n4 w - - 0 1",					ToMove(Sq_e3,Sq_d1, T_capture), ScoreType(N - ( N - P + Q )) });
-        posList.push_back( SEETest{"8/8/1k6/8/8/2N1N3/2p1p1K1/3n4 w - - 0 1",					ToMove(Sq_c3,Sq_d1, T_capture), ScoreType(N - ( N - P + Q )) });
+        posList.push_back( SEETest{"8/8/8/1k6/6b1/4N3/2p3K1/3n4 w - - 0 1",					ToMove(Sq_e3,Sq_d1, T_capture), ScoreType(0) });
+        posList.push_back( SEETest{"8/8/1k6/8/8/2N1N3/2p1p1K1/3n4 w - - 0 1",					ToMove(Sq_c3,Sq_d1, T_capture), ScoreType(N - N - (Q - P) + Q - N - (Q - P)) });
 
         posList.push_back( SEETest{"8/8/1k6/8/8/2N1N3/4p1K1/3n4 w - - 0 1",					ToMove(Sq_c3,Sq_d1, T_capture), ScoreType(N - (N - P + Q ) + Q) });
 
@@ -217,6 +216,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
         for (auto & t : posList) {
             Position p;
             readFEN(t.fen, p, true);
+	    /*
             Logging::LogIt(Logging::logError) << "============================== " << t.fen << " -";
             bool b = ThreadPool::instance().main().SEE_GE(p,t.m,t.threshold-1);
             if ( !b ) Logging::LogIt(Logging::logError) << "wrong SEE value - " << ToString(p) << "\n" << ToString(t.m);
@@ -224,10 +224,10 @@ int cliManagement(std::string cli, int argc, char ** argv){
             Logging::LogIt(Logging::logError) << "============================== " << t.fen << " +";
             b = ThreadPool::instance().main().SEE_GE(p,t.m,t.threshold+1);
             if ( b ) Logging::LogIt(Logging::logError)  << "wrong SEE value + " << ToString(p) << "\n" << ToString(t.m);
-
+            */
             Logging::LogIt(Logging::logError) << "============================== " << t.fen << " ==";
             const ScoreType s = ThreadPool::instance().main().SEE(p,t.m);
-            b = s == t.threshold;
+            bool b = s == t.threshold;
             if ( !b ) Logging::LogIt(Logging::logError)  << "wrong SEE value == " << ToString(p) << "\n" << ToString(t.m) << " " << s << " " << t.threshold;
         }
 

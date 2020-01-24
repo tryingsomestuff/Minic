@@ -2920,20 +2920,20 @@ ScoreType ThreadContext::SEE(const Position & p, const Move & m) const {
     BitBoard attackers = BBTools::allAttackedBB(p, to, p.c) | BBTools::allAttackedBB(p, to, ~p.c);
     BitBoard occupation_mask = 0xFFFFFFFFFFFFFFFF;
     ScoreType current_target_val = 0;
-    const bool promPossible = PROMOTION_RANK_C(to, p.c);
+    const bool promPossible = PROMOTION_RANK(to);
     Color c = p.c;
 
     int nCapt = 0;
     ScoreType swapList[32]; // max 32 caps ... shall be ok
 
     Piece pp = PieceTools::getPieceType(p, from);
+    swapList[nCapt] = PieceTools::getAbsValue(p, to);
     if (promPossible && pp == P_wp) {
-        swapList[nCapt] = Values[P_wq+PieceShift] - Values[P_wp+PieceShift]; ///@todo others prom type
-        current_target_val = Values[P_wq+PieceShift] - Values[P_wp+PieceShift]; ///@todo others prom type
+        swapList[nCapt] += Values[P_wq+PieceShift] - Values[P_wp+PieceShift]; ///@todo others prom type
+        current_target_val = Values[P_wq+PieceShift]; ///@todo others prom type
     }
     else{
         current_target_val = Values[pp+PieceShift];
-        swapList[nCapt] = PieceTools::getAbsValue(p, to);
     }
     nCapt++;
 
@@ -2955,30 +2955,26 @@ ScoreType ThreadContext::SEE(const Position & p, const Move & m) const {
         else if ((attackers & p.pieces<P_wk>(c)) && !(attackers & p.allPieces[~c])) from = BBTools::SquareFromBitBoard(attackers &  p.pieces<P_wk>(c));
         else break;
 
-        std::cout << SquareNames[from] << std::endl;
-
         pp = PieceTools::getPieceType(p, from); ///@todo not very efficient, we already know the type of piece here !
+        //std::cout << PieceNames[pp+PieceShift] << promPossible << std::endl;
+        swapList[nCapt] = -swapList[nCapt - 1] + current_target_val;
         if (promPossible && pp == P_wp) {
-            swapList[nCapt] = -swapList[nCapt - 1] + Values[P_wq+PieceShift] - Values[P_wp+PieceShift]; ///@todo others prom type
-            current_target_val = Values[P_wq+PieceShift] - Values[P_wp+PieceShift]; ///@todo others prom type
+            //std::cout << "prom" << std::endl;
+            swapList[nCapt] += Values[P_wq+PieceShift] - Values[P_wp+PieceShift]; ///@todo others prom type
+            current_target_val = Values[P_wq+PieceShift]; ///@todo others prom type
         }
         else{
             current_target_val = Values[pp+PieceShift];
-            swapList[nCapt] = -swapList[nCapt - 1] + current_target_val;
         }
 
-        std::cout << current_target_val  << std::endl;
-        std::cout << swapList[nCapt - 1] << std::endl;
-        std::cout << swapList[nCapt]     << std::endl;
-
         nCapt++;
-
         attackers &= ~SquareToBitboard(from);
         occupation_mask &= ~SquareToBitboard(from);
 
         attackers |= BBTools::attack<P_wr>(to, p.whiteQueen() | p.blackQueen() | p.whiteRook()   | p.blackRook(),   p.occupancy & occupation_mask, c) |
-                     BBTools::attack<P_wb>(to, p.whiteQueen() | p.blackQueen() | p.whiteBishop() | p.blackBishop(), p.occupancy & occupation_mask, c);
+                     BBTools::attack<P_wb>(to, p.whiteQueen() | p.blackQueen() | p.whiteBishop() | p.blackBishop(), p.occupancy & occupation_mask, c) ;
         attackers &= occupation_mask;
+
         c = ~c;
     }
 
@@ -2986,6 +2982,11 @@ ScoreType ThreadContext::SEE(const Position & p, const Move & m) const {
     return swapList[0];
 }
 
+bool ThreadContext::SEE_GE(const Position & p, const Move & m, ScoreType threshold) const{
+   return SEE(p,m) >= threshold;
+}
+
+/*
 // Static Exchange Evaluation (cutoff version algorithm from Stockfish)
 bool ThreadContext::SEE_GE(const Position & p, const Move & m, ScoreType threshold) const{
     assert(VALIDMOVE(m));
@@ -3032,6 +3033,7 @@ bool ThreadContext::SEE_GE(const Position & p, const Move & m, ScoreType thresho
     STOP_AND_SUM_TIMER(See)
     return us != p2.c; // we break the above loop when stm loses
 }
+*/
 
 struct MoveSorter{
 
