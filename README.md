@@ -36,7 +36,8 @@ Please note that Win32 binaries are very slow (I don't know why yet, so please u
 Starting from release 1.00 Minic support setting options using protocol (both XBoard and UCI). Option priority are as follow : json file, can be override by command line option, that can be override by protocol option.
    
 ## Strength
-Minic 0.98 is tested around 2840 on the CCRL 40/40 scale, so way to strong for a human being !  
+Minic 0.98 is tested around 2840 on the CCRL 40/15 scale, so way to strong for a human being !  
+and Minic 1.35 is tested > 3000 on the CCRL BLITZ 4CPU scale.
 STS : 1128/1500 @10sec per position (single thread)  
 WAC : 277/300 @10sec per position (single thread)  
 
@@ -250,7 +251,7 @@ Zurichess by Alexandru Moșoi
 
 Many thanks also to all testers for all those long time control tests, they really are valuable inputs in the chess engine development process. 
 
-Also thanks to TCEC for letting Minic participate to the Season 15 division 4a and Season 16 qualification league, it was fun to see Minic on such a great hardware.
+Also thanks to TCEC for letting Minic participate to the Season 15 division 4a, Season 16 qualification league and Season 17 QL and L1, it was fun to see Minic on such a great hardware.
 
 And of course thanks to all the members of the talkchess forum and CPW, and to H.G. Muller for hosting the friendly monthly tourney.
 
