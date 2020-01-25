@@ -2590,8 +2590,8 @@ inline void movePieceCastle(Position & p, CastlingTypes ct, Square kingDest, Squ
     const Piece pr = c==Co_White?P_wr:P_br;
     const CastlingRights ks = c==Co_White?C_wks:C_bks;
     const CastlingRights qs = c==Co_White?C_wqs:C_bqs;
-    const Square sks = Co_White?7:63;
-    const Square sqs = Co_White?0:56;
+    const Square sks = c==Co_White?7:63;
+    const Square sqs = c==Co_White?0:56;
     BBTools::unSetBit(p, p.king[c]);
     BBTools::unSetBit(p, p.rooksInit[c][ct]);
     BBTools::setBit(p, kingDest, pk);
