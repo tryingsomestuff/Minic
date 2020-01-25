@@ -1093,8 +1093,8 @@ namespace MaterialHash { // idea from Gull
         m[Co_Black][M_n] = index % 3; index /= 3;
         m[Co_White][M_p] = index % 9; index /= 9;
         m[Co_Black][M_p] = index;
-	    m[Co_White][M_b] = m[Co_White][M_bl] + m[Co_White][M_bd];
-	    m[Co_Black][M_b] = m[Co_Black][M_bl] + m[Co_Black][M_bd];
+        m[Co_White][M_b] = m[Co_White][M_bl] + m[Co_White][M_bd];
+        m[Co_Black][M_b] = m[Co_Black][M_bl] + m[Co_Black][M_bd];
         m[Co_White][M_M] = m[Co_White][M_q] + m[Co_White][M_r];  m[Co_Black][M_M] = m[Co_Black][M_q] + m[Co_Black][M_r];
         m[Co_White][M_m] = m[Co_White][M_b] + m[Co_White][M_n];  m[Co_Black][M_m] = m[Co_Black][M_b] + m[Co_Black][M_n];
         m[Co_White][M_t] = m[Co_White][M_M] + m[Co_White][M_m];  m[Co_Black][M_t] = m[Co_Black][M_M] + m[Co_Black][M_m];
@@ -2584,6 +2584,34 @@ inline void movePiece(Position & p, Square from, Square to, Piece fromP, Piece t
     STOP_AND_SUM_TIMER(MovePiece)
 }
 
+template < Color c>
+inline void movePieceCastle(Position & p, CastlingTypes ct, Square kingDest, Square rookDest){
+    const Piece pk = c==Co_White?P_wk:P_bk;
+    const Piece pr = c==Co_White?P_wr:P_br;
+    const CastlingRights ks = c==Co_White?C_wks:C_bks;
+    const CastlingRights qs = c==Co_White?C_wqs:C_bqs;
+    const Square sks = Co_White?7:63;
+    const Square sqs = Co_White?0:56;
+    BBTools::unSetBit(p, p.king[c]);
+    BBTools::unSetBit(p, p.rooksInit[c][ct]);
+    BBTools::setBit(p, kingDest, pk);
+    BBTools::setBit(p, rookDest, pr);
+    p.b[p.king[c]] = P_none;
+    p.b[p.rooksInit[c][ct]] = P_none;
+    p.b[kingDest] = pk;
+    p.b[rookDest] = pr;
+    p.h ^= Zobrist::ZT[p.king[c]][pk+PieceShift];
+    p.ph ^= Zobrist::ZT[p.king[c]][pk+PieceShift];
+    p.h ^= Zobrist::ZT[p.rooksInit[c][ct]][pr+PieceShift];
+    p.h ^= Zobrist::ZT[kingDest][pk+PieceShift];
+    p.ph ^= Zobrist::ZT[kingDest][pk+PieceShift];
+    p.h ^= Zobrist::ZT[rookDest][pr+PieceShift];
+    p.king[c] = kingDest;
+    if (p.castling & qs) p.h ^= Zobrist::ZT[sqs][13];
+    if (p.castling & ks) p.h ^= Zobrist::ZT[sks][13];
+    p.castling &= ~(ks | qs);
+}
+
 void applyNull(ThreadContext & context, Position & pN) {
     pN.c = ~pN.c;
     pN.h ^= Zobrist::ZT[3][13];
@@ -2702,84 +2730,16 @@ bool apply(Position & p, const Move & m, bool noValidation){
         movePiece(p, from, to, fromP, toP, type == T_cappromn, (p.c == Co_White ? P_wn : P_bn));
         break;
     case T_wks:
-        BBTools::unSetBit(p, p.king[Co_White]);
-        BBTools::unSetBit(p, p.rooksInit[Co_White][CT_OO]);
-        BBTools::setBit(p, Sq_g1, P_wk);
-        BBTools::setBit(p, Sq_f1, P_wr);
-        p.b[p.king[Co_White]] = P_none;
-        p.b[p.rooksInit[Co_White][CT_OO]] = P_none;
-        p.b[Sq_g1] = P_wk;
-        p.b[Sq_f1] = P_wr;
-        p.h ^= Zobrist::ZT[p.king[Co_White]][P_wk+PieceShift];
-        p.ph ^= Zobrist::ZT[p.king[Co_White]][P_wk+PieceShift];
-        p.h ^= Zobrist::ZT[p.rooksInit[Co_White][CT_OO]][P_wr+PieceShift];
-        p.h ^= Zobrist::ZT[Sq_g1][P_wk+PieceShift];
-        p.ph ^= Zobrist::ZT[Sq_g1][P_wk+PieceShift];
-        p.h ^= Zobrist::ZT[Sq_f1][P_wr+PieceShift];
-        p.king[Co_White] = Sq_g1;
-        if (p.castling & C_wqs) p.h ^= Zobrist::ZT[0][13];
-        if (p.castling & C_wks) p.h ^= Zobrist::ZT[7][13];
-        p.castling &= ~(C_wks | C_wqs);
+        movePieceCastle<Co_White>(p,CT_OO,Sq_g1,Sq_f1);
         break;
     case T_wqs:
-        BBTools::unSetBit(p, p.king[Co_White]);
-        BBTools::unSetBit(p, p.rooksInit[Co_White][CT_OOO]);
-        BBTools::setBit(p, Sq_c1, P_wk);
-        BBTools::setBit(p, Sq_d1, P_wr);
-        p.b[p.king[Co_White]] = P_none;
-        p.b[p.rooksInit[Co_White][CT_OOO]] = P_none;
-        p.b[Sq_c1] = P_wk;
-        p.b[Sq_d1] = P_wr;
-        p.h ^= Zobrist::ZT[p.king[Co_White]][P_wk+PieceShift];
-        p.ph ^= Zobrist::ZT[p.king[Co_White]][P_wk+PieceShift];
-        p.h ^= Zobrist::ZT[p.rooksInit[Co_White][CT_OOO]][P_wr+PieceShift];
-        p.h ^= Zobrist::ZT[Sq_c1][P_wk+PieceShift];
-        p.ph ^= Zobrist::ZT[Sq_c1][P_wk+PieceShift];
-        p.h ^= Zobrist::ZT[Sq_d1][P_wr+PieceShift];
-        p.king[Co_White] = Sq_c1;
-        if (p.castling & C_wqs) p.h ^= Zobrist::ZT[0][13];
-        if (p.castling & C_wks) p.h ^= Zobrist::ZT[7][13];
-        p.castling &= ~(C_wks | C_wqs);
+        movePieceCastle<Co_White>(p,CT_OOO,Sq_c1,Sq_d1);
         break;
     case T_bks:
-        BBTools::unSetBit(p, p.king[Co_Black]);
-        BBTools::unSetBit(p, p.rooksInit[Co_Black][CT_OO]);
-        BBTools::setBit(p, Sq_g8, P_bk);
-        BBTools::setBit(p, Sq_f8, P_br);
-        p.b[p.king[Co_Black]] = P_none;
-        p.b[p.rooksInit[Co_Black][CT_OO]] = P_none;
-        p.b[Sq_g8] = P_bk;
-        p.b[Sq_f8] = P_br;
-        p.h ^= Zobrist::ZT[p.king[Co_Black]][P_bk+PieceShift];
-        p.ph ^= Zobrist::ZT[p.king[Co_Black]][P_bk+PieceShift];
-        p.h ^= Zobrist::ZT[p.rooksInit[Co_Black][CT_OO]][P_br+PieceShift];
-        p.h ^= Zobrist::ZT[Sq_g8][P_bk+PieceShift];
-        p.ph ^= Zobrist::ZT[Sq_g8][P_bk+PieceShift];
-        p.h ^= Zobrist::ZT[Sq_f8][P_br+PieceShift];
-        p.king[Co_Black] = Sq_g8;
-        if (p.castling & C_bqs) p.h ^= Zobrist::ZT[56][13];
-        if (p.castling & C_bks) p.h ^= Zobrist::ZT[63][13];
-        p.castling &= ~(C_bks | C_bqs);
+        movePieceCastle<Co_Black>(p,CT_OO,Sq_g8,Sq_f8);
         break;
     case T_bqs:
-        BBTools::unSetBit(p, p.king[Co_Black]);
-        BBTools::unSetBit(p, p.rooksInit[Co_Black][CT_OOO]);
-        BBTools::setBit(p, Sq_c8, P_bk);
-        BBTools::setBit(p, Sq_d8, P_br);
-        p.b[p.king[Co_Black]] = P_none;
-        p.b[p.rooksInit[Co_Black][CT_OOO]] = P_none;
-        p.b[Sq_c8] = P_bk;
-        p.b[Sq_d8] = P_br;
-        p.h ^= Zobrist::ZT[p.king[Co_Black]][P_bk+PieceShift];
-        p.ph ^= Zobrist::ZT[p.king[Co_Black]][P_bk+PieceShift];
-        p.h ^= Zobrist::ZT[p.rooksInit[Co_Black][CT_OOO]][P_br+PieceShift];
-        p.h ^= Zobrist::ZT[Sq_c8][P_bk+PieceShift];
-        p.ph ^= Zobrist::ZT[Sq_c8][P_bk+PieceShift];
-        p.h ^= Zobrist::ZT[Sq_d8][P_br+PieceShift];
-        p.king[Co_Black] = Sq_c8;
-        if (p.castling & C_bqs) p.h ^= Zobrist::ZT[56][13];
-        if (p.castling & C_bks) p.h ^= Zobrist::ZT[63][13];
-        p.castling &= ~(C_bks | C_bqs);
+        movePieceCastle<Co_Black>(p,CT_OOO,Sq_c8,Sq_d8);
         break;
     }
 
