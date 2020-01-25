@@ -40,18 +40,26 @@ typedef uint64_t u_int64_t;
 
 const std::string MinicVersion = "dev";
 
-//#define IMPORTBOOK
-//#define WITH_TEXEL_TUNING
-//#define DEBUG_TOOL
-#define WITH_TEST_SUITE
-//#define WITH_SYZYGY
+// *** options
 #define WITH_UCI
-//#define WITH_PGN_PARSER
 #define WITH_MAGIC
+//#define WITH_SYZYGY
+
+// *** Add-ons
+//#define IMPORTBOOK
+//#define DEBUG_TOOL
+//#define WITH_TEST_SUITE
+//#define WITH_PGN_PARSER
+
+// *** Testing
 //#define WITH_LMRNN
+
+// *** Tuning
 //#define WITH_TIMER
 //#define WITH_CLOP_SEARCH
+//#define WITH_TEXEL_TUNING
 
+// *** debug
 //#define DEBUG_HASH
 //#define DEBUG_PHASH
 //#define DEBUG_MATERIAL
@@ -59,6 +67,8 @@ const std::string MinicVersion = "dev";
 //#define DEBUG_PSEUDO_LEGAL
 //#define DEBUG_HASH_ENTRY
 //#define DEBUG_KING_CAP
+//#define DEBUG_ACC
+//#define DEBUG_PERFT
 
 ///@todo clop search param
 ///@todo test NN LMR
@@ -123,13 +133,6 @@ typedef uint64_t BitBoard;
 typedef int16_t  ScoreType;
 typedef int64_t  TimeType;
 typedef int16_t  GenerationType;
-
-template<std::size_t size, typename T, std::size_t... indexes>
-constexpr auto make_array_n_impl(T && value, std::index_sequence<indexes...>) { return std::array<std::decay_t<T>, size>{ (static_cast<void>(indexes), value)..., std::forward<T>(value) };}
-template<typename T>
-constexpr auto make_array_n(std::integral_constant<std::size_t, 0>, T &&) { return std::array<std::decay_t<T>, 0>{};}
-template<std::size_t size, typename T> constexpr auto make_array_n(std::integral_constant<std::size_t, size>, T && value) { return make_array_n_impl<size>(std::forward<T>(value), std::make_index_sequence<size - 1>{});}
-template<std::size_t size, typename T> constexpr auto make_array_n(T && value) { return make_array_n(std::integral_constant<std::size_t, size>{}, std::forward<T>(value)); }
 
 #ifdef WITH_TIMER
 #include "Add-On/timers.cc"
@@ -1585,7 +1588,7 @@ namespace MoveDifficultyUtil {
 
 enum eScores : unsigned char { sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_PieceBlockPawn, sc_Holes, sc_Outpost, sc_FreePasser, sc_PwnPush, sc_PwnSafeAtt, sc_PwnPushAtt, sc_Adjust, sc_OpenFile, sc_RookFrontKing, sc_RookFrontQueen, sc_RookQueenSameFile, sc_AttQueenMalus, sc_MinorOnOpenFile, sc_RookBehindPassed, sc_QueenNearKing, sc_Hanging, sc_Threat, sc_PinsK, sc_PinsQ, sc_PawnTT, sc_Tempo, sc_max };
 static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "PieceBlockPawn", "Holes", "Outpost", "FreePasser", "PwnPush", "PwnSafeAtt", "PwnPushAtt" , "Adjust", "OpenFile", "RookFrontKing", "RookFrontQueen", "RookQueenSameFile", "AttQueenMalus", "MinorOnOpenFile", "RookBehindPassed", "QueenNearKing", "Hanging", "Threats", "PinsK", "PinsQ", "PawnTT", "Tempo" };
-//#define DEBUG_ACC
+
 #ifdef DEBUG_ACC
 struct ScoreAcc{
     float scalingFactor = 1;

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+dir=$(readlink -f $(dirname $0)/../)
+
+cd $dir
+
+g++ -pg -O1 -no-pie --std=c++14 minic.cc -lpthread -DDEBUG_TOOL -o minic.prof
+./minic.prof -analyze "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10" 22 -book 0
+gprof minic.prof gmon.out | gprof2dot | dot -Tpng -o prof.png
+gprof minic.prof gmon.out > prof.txt
+
