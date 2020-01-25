@@ -105,7 +105,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
     }
 
     if ( cli == "-perft_test_long_fisher" ){
-        std::ifstream infile("fischer.txt");
+        std::ifstream infile("TestSuite/fischer.txt");
         std::string line;
         while (std::getline(infile, line)){
             std::size_t found = line.find_first_of(",");
@@ -120,7 +120,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
     }
 
     if ( cli == "-perft_test_long" ){
-        std::ifstream infile("perft.txt");
+        std::ifstream infile("TestSuite/perft.txt");
         std::string line;
         while (std::getline(infile, line)){
             std::size_t found = line.find_first_of(",");
