@@ -151,6 +151,8 @@ int cliManagement(std::string cli, int argc, char ** argv){
         const ScoreType R = Values[P_wr+PieceShift];
         const ScoreType Q = Values[P_wq+PieceShift];
 
+        std::cout << P << "\t" << N << "\t" << B << "\t" << R << "\t" << Q << "\t" << std::endl;
+
         // from Vajolet
         std::list<SEETest> posList;
         /* capture initial move */
@@ -182,12 +184,13 @@ int cliManagement(std::string cli, int argc, char ** argv){
         posList.push_back( SEETest{"2r1k2r/pb4pp/5p1b/2KB3n/1N2N3/3P1PB1/PPP1P1PP/R2Q3R w k - 0 1",		ToMove(Sq_d5,Sq_c6, T_std), ScoreType(- B + B )});
         posList.push_back( SEETest{"2r1k3/pbr3pp/5p1b/2KB3n/1N2N3/3P1PB1/PPP1P1PP/R2Q3R w - - 0 1",		ToMove(Sq_d5,Sq_c6, T_std), ScoreType(- B + B - N )});
         /* initial move promotion */
-        posList.push_back( SEETest{"5k2/p2P2pp/8/1pb5/1Nn1P1n1/6Q1/PPP4P/R3K1NR w KQ - 0 1",			ToMove(Sq_d7,Sq_d8, T_promq), ScoreType(( -P + Q ) )});
-        posList.push_back( SEETest{"r4k2/p2P2pp/8/1pb5/1Nn1P1n1/6Q1/PPP4P/R3K1NR w KQ - 0 1",			ToMove(Sq_d7,Sq_d8, T_promq), ScoreType(( -P + Q ) - Q )});
-        posList.push_back( SEETest{"5k2/p2P2pp/1b6/1p6/1Nn1P1n1/8/PPP4P/R2QK1NR w KQ - 0 1",			ToMove(Sq_d7,Sq_d8, T_promq), ScoreType(( -P + Q ) - Q + B )});
-        posList.push_back( SEETest{"4kbnr/p1P1pppp/b7/4q3/7n/8/PP1PPPPP/RNBQKBNR w KQk - 0 1",                  ToMove(Sq_c7,Sq_c8, T_promq), ScoreType(( -P + Q ) - Q )});
-        posList.push_back( SEETest{"4kbnr/p1P1pppp/b7/4q3/7n/8/PPQPPPPP/RNB1KBNR w KQk - 0 1",                  ToMove(Sq_c7,Sq_c8, T_promq), ScoreType(( -P + Q ) - Q + B )});
-        posList.push_back( SEETest{"4kbnr/p1P1pppp/b7/4q3/7n/8/PPQPPPPP/RNB1KBNR w KQk - 0 1",                  ToMove(Sq_c7,Sq_c8, T_promn), ScoreType(( -P + N - N + B) )}); ///@todo this does not test "other prom" as the knight is captured !
+        posList.push_back( SEETest{"5k2/p2P2pp/8/1pb5/1Nn1P1n1/6Q1/PPP4P/R3K1NR w KQ - 0 1",			ToMove(Sq_d7,Sq_d8, T_promq), ScoreType( -P + Q  )});
+        posList.push_back( SEETest{"r4k2/p2P2pp/8/1pb5/1Nn1P1n1/6Q1/PPP4P/R3K1NR w KQ - 0 1",			ToMove(Sq_d7,Sq_d8, T_promq), ScoreType( -P + Q - Q )});
+        posList.push_back( SEETest{"5k2/p2P2pp/1b6/1p6/1Nn1P1n1/8/PPP4P/R2QK1NR w KQ - 0 1",			ToMove(Sq_d7,Sq_d8, T_promq), ScoreType( -P + Q - Q + B )});
+        posList.push_back( SEETest{"4kbnr/p1P1pppp/b7/4q3/7n/8/PP1PPPPP/RNBQKBNR w KQk - 0 1",                  ToMove(Sq_c7,Sq_c8, T_promq), ScoreType( -P + Q - Q )});
+        posList.push_back( SEETest{"4kbnr/p1P1pppp/b7/4q3/7n/8/PPQPPPPP/RNB1KBNR w KQk - 0 1",                  ToMove(Sq_c7,Sq_c8, T_promq), ScoreType( -P + Q - Q + B )});
+        posList.push_back( SEETest{"4kbnr/p1P1pppp/b7/4q3/7n/8/PPQPPPPP/RNB1KBNR w KQk - 0 1",                  ToMove(Sq_c7,Sq_c8, T_promn), ScoreType( -P + N )});
+        posList.push_back( SEETest{"4kbnr/p1P1pppp/1b6/4q3/7n/8/PPQPPPPP/RNB1KBNR w KQk - 0 1",                 ToMove(Sq_c7,Sq_c8, T_promn), ScoreType( -P + N )});
         /* initial move En Passant */
         posList.push_back( SEETest{"4kbnr/p1P4p/b1q5/5pP1/4n3/5Q2/PP1PPP1P/RNB1KBNR w KQk f6 0 2",		ToMove(Sq_g5,Sq_f6, T_ep), ScoreType(P - P )});
         posList.push_back( SEETest{"4kbnr/p1P4p/b1q5/5pP1/4n2Q/8/PP1PPP1P/RNB1KBNR w KQk f6 0 2",		ToMove(Sq_g5,Sq_f6, T_ep), ScoreType(P - P )});
@@ -207,7 +210,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
         /* double promotion inside the loop */
         posList.push_back( SEETest{"r2n3r/2P1P3/4N3/1k6/8/8/8/4K3 w - - 0 1",					ToMove(Sq_e6,Sq_d8, T_capture), ScoreType(N) });
         posList.push_back( SEETest{"8/8/8/1k6/6b1/4N3/2p3K1/3n4 w - - 0 1",					ToMove(Sq_e3,Sq_d1, T_capture), ScoreType(0) });
-        posList.push_back( SEETest{"8/8/1k6/8/8/2N1N3/2p1p1K1/3n4 w - - 0 1",					ToMove(Sq_c3,Sq_d1, T_capture), ScoreType(N - N - (Q - P) + Q - N - (Q - P)) });
+        posList.push_back( SEETest{"8/8/1k6/8/8/2N1N3/2p1p1K1/3n4 w - - 0 1",					ToMove(Sq_c3,Sq_d1, T_capture), ScoreType(N - N - Q + P) });
 
         posList.push_back( SEETest{"8/8/1k6/8/8/2N1N3/4p1K1/3n4 w - - 0 1",					ToMove(Sq_c3,Sq_d1, T_capture), ScoreType(N - (N - P + Q ) + Q) });
 

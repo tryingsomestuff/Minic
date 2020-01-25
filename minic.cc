@@ -1045,6 +1045,7 @@ inline bool isCastling (const Move & m  ){ return isCastling(Move2Type(m)); }
 inline bool isPromotion(const MType & mt){ return mt >= T_promq && mt <= T_cappromn;}
 inline bool isPromotion(const Move & m  ){ return isPromotion(Move2Type(m));}
 inline bool isBadCap   (const Move & m  ){ return Move2Score(m) < -MoveScoring[T_capture] + 800;}
+inline ScoreType badCapScore (const Move & m ){ return Move2Score(m) + MoveScoring[T_capture];}
 
 inline Square chebyshevDistance(Square sq1, Square sq2) { return std::max(std::abs(SQRANK(sq2) - SQRANK(sq1)) , std::abs(SQFILE(sq2) - SQFILE(sq1))); }
 inline Square manatthanDistance(Square sq1, Square sq2) { return std::abs(SQRANK(sq2) - SQRANK(sq1)) + std::abs(SQFILE(sq2) - SQFILE(sq1)); }
@@ -2916,7 +2917,7 @@ ScoreType ThreadContext::SEE(const Position & p, const Move & m) const {
     ///@todo EP first move!
     Square from = Move2From(m);
     const Square to = Move2To(m);
-    const Square mtype = Move2Type(m);
+    const MType mtype = Move2Type(m);
     BitBoard attackers = BBTools::allAttackedBB(p, to, p.c) | BBTools::allAttackedBB(p, to, ~p.c);
     BitBoard occupation_mask = 0xFFFFFFFFFFFFFFFF;
     ScoreType current_target_val = 0;
@@ -2927,13 +2928,20 @@ ScoreType ThreadContext::SEE(const Position & p, const Move & m) const {
     ScoreType swapList[32]; // max 32 caps ... shall be ok
 
     Piece pp = PieceTools::getPieceType(p, from);
-    swapList[nCapt] = PieceTools::getAbsValue(p, to);
-    if (promPossible && pp == P_wp) {
-        swapList[nCapt] += Values[P_wq+PieceShift] - Values[P_wp+PieceShift]; ///@todo others prom type
-        current_target_val = Values[P_wq+PieceShift]; ///@todo others prom type
+    if ( mtype == T_ep ){
+        swapList[nCapt] = Values[P_wp+PieceShift];
+        current_target_val = Values[pp+PieceShift];
+        occupation_mask &= ~SquareToBitboard(p.ep);
     }
     else{
-        current_target_val = Values[pp+PieceShift];
+        swapList[nCapt] = PieceTools::getAbsValue(p, to);
+        if (promPossible && pp == P_wp) {
+            swapList[nCapt] += Values[promShift(mtype)+PieceShift] - Values[P_wp+PieceShift];
+            current_target_val = Values[promShift(mtype)+PieceShift];
+        }
+        else{
+            current_target_val = Values[pp+PieceShift];
+        }
     }
     nCapt++;
 
@@ -3055,9 +3063,14 @@ struct MoveSorter{
                 const Piece victim   = (t != T_ep) ? PieceTools::getPieceType(p,to) : P_wp;
                 const Piece attacker = PieceTools::getPieceType(p,from);
                 assert(victim>0); assert(attacker>0);
-                s += SearchConfig::MvvLvaScores[victim-1][attacker-1]; //[0 400]
-                if ( (useSEE && !isInCheck && !context.SEE_GE(p,m,-70) ) /*|| (!useSEE && attacker > victim)*/ ) s -= 2*MoveScoring[T_capture]; // bad capture
-                //else if ( isCapture(p.lastMove) && to == Move2To(p.lastMove) ) s += 400; // recapture bonus ///@todo test again !
+                if ( useSEE && !isInCheck ){
+                    const ScoreType see = context.SEE(p,m);
+                    if ( see < -70 ) s -= 2*MoveScoring[T_capture] + see; // bad capture
+                    else if ( isCapture(p.lastMove) && to == Move2To(p.lastMove) ) s += 400; // recapture bonus ///@todo test again !
+                }
+                else{ // MVVLVA
+                    s += SearchConfig::MvvLvaScores[victim-1][attacker-1]; //[0 400]
+                }
             }
             else if ( t == T_std ){
                 if      (sameMove(m, context.killerT.killers[ply][0])) s += 1800; // quiet killer
@@ -4202,7 +4215,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             // SEE (capture)
             if (isPrunableCap){
                if (futility) {++stats.counters[Stats::sid_see]; continue;}
-               else if ( !rootnode && !SEE_GE(p,*it,-100*depth)) {++stats.counters[Stats::sid_see2]; continue;}
+               else if ( !rootnode && badCapScore(*it) < -100*depth /*!SEE_GE(p,*it,-100*depth)*/) {++stats.counters[Stats::sid_see2]; continue;} ///@todo already known in current move score
             }
             // LMR
 #ifdef WITH_LMRNN
