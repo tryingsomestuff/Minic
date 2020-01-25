@@ -12,8 +12,6 @@ struct PerftAccumulator{
     }
 };
 
-//#define DEBUG_PERFT
-
 Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc, bool divide = false){
     if ( depth == 0) return 0;
     static TT::Entry e;

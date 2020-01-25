@@ -1,0 +1,7 @@
+readpgn test.pgn
+elo
+ mm
+ exactdist
+ ratings
+x
+
