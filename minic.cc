@@ -2902,9 +2902,7 @@ ScoreType ThreadContext::SEE(const Position & p, const Move & m) const {
             swapList[nCapt] += Values[promShift(mtype)+PieceShift] - Values[P_wp+PieceShift];
             current_target_val = Values[promShift(mtype)+PieceShift];
         }
-        else{
-            current_target_val = Values[pp+PieceShift];
-        }
+        else current_target_val = Values[pp+PieceShift];
     }
     nCapt++;
 
@@ -2917,26 +2915,21 @@ ScoreType ThreadContext::SEE(const Position & p, const Move & m) const {
     c = ~c;
 
     while (attackers) {
-        if (!promPossible && attackers & p.pieces<P_wp>(c))        from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wp>(c));
-        else if (attackers & p.pieces<P_wn>(c))                    from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wn>(c));
-        else if (attackers & p.pieces<P_wb>(c))                    from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wb>(c));
-        else if (attackers & p.pieces<P_wr>(c))                    from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wr>(c));
-        else if (promPossible && (attackers & p.pieces<P_wp>(c)))  from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wp>(c));
-        else if (attackers & p.pieces<P_wq>(c))                    from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wq>(c));
-        else if ((attackers & p.pieces<P_wk>(c)) && !(attackers & p.allPieces[~c])) from = BBTools::SquareFromBitBoard(attackers &  p.pieces<P_wk>(c));
+        if (!promPossible && attackers & p.pieces<P_wp>(c))        from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wp>(c)),pp=P_wp;
+        else if (attackers & p.pieces<P_wn>(c))                    from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wn>(c)),pp=P_wn;
+        else if (attackers & p.pieces<P_wb>(c))                    from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wb>(c)),pp=P_wb;
+        else if (attackers & p.pieces<P_wr>(c))                    from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wr>(c)),pp=P_wr;
+        else if (promPossible && (attackers & p.pieces<P_wp>(c)))  from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wp>(c)),pp=P_wp;
+        else if (attackers & p.pieces<P_wq>(c))                    from = BBTools::SquareFromBitBoard(attackers & p.pieces<P_wq>(c)),pp=P_wq;
+        else if ((attackers & p.pieces<P_wk>(c)) && !(attackers & p.allPieces[~c])) from = BBTools::SquareFromBitBoard(attackers &  p.pieces<P_wk>(c)),pp=P_wk;
         else break;
 
-        pp = PieceTools::getPieceType(p, from); ///@todo not very efficient, we already know the type of piece here !
-        //std::cout << PieceNames[pp+PieceShift] << promPossible << std::endl;
         swapList[nCapt] = -swapList[nCapt - 1] + current_target_val;
         if (promPossible && pp == P_wp) {
-            //std::cout << "prom" << std::endl;
-            swapList[nCapt] += Values[P_wq+PieceShift] - Values[P_wp+PieceShift]; ///@todo others prom type
-            current_target_val = Values[P_wq+PieceShift]; ///@todo others prom type
+            swapList[nCapt] += Values[P_wq+PieceShift] - Values[P_wp+PieceShift];
+            current_target_val = Values[P_wq+PieceShift];
         }
-        else{
-            current_target_val = Values[pp+PieceShift];
-        }
+        else current_target_val = Values[pp+PieceShift];
 
         nCapt++;
         attackers &= ~SquareToBitboard(from);
@@ -3028,8 +3021,11 @@ struct MoveSorter{
                 assert(victim>0); assert(attacker>0);
                 if ( useSEE && !isInCheck ){
                     const ScoreType see = context.SEE(p,m);
-                    if ( see < -70 ) s -= 2*MoveScoring[T_capture] + see; // bad capture
-                    else if ( isCapture(p.lastMove) && to == Move2To(p.lastMove) ) s += 400; // recapture bonus ///@todo test again !
+                    s += see;
+                    if ( see < -70 ) s -= 2*MoveScoring[T_capture]; // bad capture
+                    else {
+                        //if ( isCapture(p.lastMove) && to == Move2To(p.lastMove) ) s += 400; // recapture bonus ///@todo test again !
+                    }
                 }
                 else{ // MVVLVA
                     s += SearchConfig::MvvLvaScores[victim-1][attacker-1]; //[0 400]
