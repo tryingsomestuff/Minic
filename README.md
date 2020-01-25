@@ -37,7 +37,7 @@ Starting from release 1.00 Minic support setting options using protocol (both XB
    
 ## Strength
 Minic 0.98 is tested around 2840 on the CCRL 40/15 scale, so way to strong for a human being !  
-and Minic 1.35 is tested > 3000 on the CCRL BLITZ 4CPU scale.
+and Minic 1.35 is tested > 3000 on the CCRL BLITZ 4CPU scale.  
 STS : 1128/1500 @10sec per position (single thread)  
 WAC : 277/300 @10sec per position (single thread)  
 
