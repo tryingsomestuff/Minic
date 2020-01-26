@@ -294,6 +294,17 @@ bool test(const std::string & option){
         return true;
     }
 
+    if (option == "hard2020") {
+        std::vector<std::string> positions;
+        if ( ! ExtendedPosition::readEPDFile("TestSuite/hard2020.epd",positions) ) return 1;
+
+        std::vector<int> timeControls = { 60000 }; //mseconds
+        std::vector<int> scores = { 1 };
+
+        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return score;},false);
+        return true;
+    }
+
     if (option == "BT2630") {
         std::vector<std::string> positions;
 

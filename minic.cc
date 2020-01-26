@@ -48,7 +48,7 @@ const std::string MinicVersion = "dev";
 // *** Add-ons
 //#define IMPORTBOOK
 //#define DEBUG_TOOL
-//#define WITH_TEST_SUITE
+#define WITH_TEST_SUITE
 //#define WITH_PGN_PARSER
 
 // *** Testing
@@ -3024,7 +3024,7 @@ struct MoveSorter{
                     s += see;
                     if ( see < -70 ) s -= 2*MoveScoring[T_capture]; // bad capture
                     else {
-                        //if ( isCapture(p.lastMove) && to == Move2To(p.lastMove) ) s += 400; // recapture bonus ///@todo test again !
+                        if ( isCapture(p.lastMove) && to == Move2To(p.lastMove) ) s += 400; // recapture bonus
                     }
                 }
                 else{ // MVVLVA
@@ -4146,7 +4146,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                isAdvancedPawnPush = SquareToBitboard(to) & passed[p.c];
                if (isAdvancedPawnPush) ++stats.counters[Stats::sid_pawnPushExtension], ++extension;
            }
-           if (!extension && pvnode && firstMove && (p.pieces<P_wq>(p.c) && Move2Type(*it) == T_std && PieceTools::getPieceType(p, Move2From(*it)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces<P_wq>(p.c)))) && SEE_GE(p, *it, 0)) ++stats.counters[Stats::sid_queenThreatExtension], ++extension; 
+           if (!extension && pvnode && firstMove && (p.pieces<P_wq>(p.c) && isQuiet && Move2Type(*it) == T_std && PieceTools::getPieceType(p, Move2From(*it)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces<P_wq>(p.c)))) && SEE_GE(p, *it, 0)) ++stats.counters[Stats::sid_queenThreatExtension], ++extension;
         }
         // pvs
         if (validMoveCount < (2/*+2*rootnode*/) || !SearchConfig::doPVS ) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,!cutNode);
@@ -4200,7 +4200,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             }
             const DepthType nextDepth = depth-1-reduction+extension;
             // SEE (quiet)
-            if ( isPrunableStdNoCheck && /*!rootnode &&*/ !SEE_GE(p,*it,-15*nextDepth*nextDepth)) {++stats.counters[Stats::sid_seeQuiet]; continue;}
+            if ( isPrunableStdNoCheck && /*!rootnode &&*/ SEE_GE(p,*it,-15*nextDepth*nextDepth)) {++stats.counters[Stats::sid_seeQuiet]; continue;}
             // PVS
             score = -pvs<false,true>(-alpha-1,-alpha,p2,nextDepth,ply+1,childPV,seldepth,isCheck,true);
 #ifdef WITH_LMRNN
