@@ -24,9 +24,6 @@
     <ClCompile Include="..\..\Add-On\cli.cc">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Add-On\syzygyInterface.cc">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\Add-On\testSuite.cc">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
