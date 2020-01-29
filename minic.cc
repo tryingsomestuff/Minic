@@ -43,7 +43,7 @@ const std::string MinicVersion = "dev";
 // *** options
 #define WITH_UCI
 #define WITH_MAGIC
-#define WITH_SYZYGY
+//#define WITH_SYZYGY
 
 // *** Add-ons
 //#define IMPORTBOOK
@@ -53,11 +53,12 @@ const std::string MinicVersion = "dev";
 
 // *** Testing
 //#define WITH_LMRNN
+//#define WITH_MLPNN
 
 // *** Tuning
 //#define WITH_TIMER
 //#define WITH_CLOP_SEARCH
-//#define WITH_TEXEL_TUNING
+#define WITH_TEXEL_TUNING
 
 // *** debug
 //#define DEBUG_HASH
@@ -73,6 +74,11 @@ const std::string MinicVersion = "dev";
 ///@todo clop search param
 ///@todo test NN LMR
 ///@todo
+
+#ifdef WITH_MLPNN
+#include "tiny_dnn/tiny_dnn.h"
+tiny_dnn::network<tiny_dnn::sequential> evalNet;
+#endif
 
 #ifdef WITH_TEXEL_TUNING
 #define CONST_TEXEL_TUNING
@@ -139,6 +145,16 @@ typedef int16_t  GenerationType;
 #else
 #define START_TIMER
 #define STOP_AND_SUM_TIMER(name)
+#endif
+
+#ifdef WITH_MLPNN
+void initNet() {
+    evalNet << tiny_dnn::fully_connected_layer(25, 50);
+    evalNet << tiny_dnn::tanh_layer();
+    evalNet << tiny_dnn::fully_connected_layer(50, 50);
+    evalNet << tiny_dnn::tanh_layer();
+    evalNet << tiny_dnn::fully_connected_layer(50, 1);
+}
 #endif
 
 inline MiniHash Hash64to32   (Hash h) { return (h >> 32) & 0xFFFFFFFF; }
@@ -334,26 +350,24 @@ void initMvvLva(){
 
 namespace EvalConfig {
 
-/*
 // Taken from Defenchess
 ScoreType imbalance_mines[5][5] = {
     // pawn knight bishop rook queen
-    {    16                          }, // Pawn
-    {   146,   -40                   }, // Knight
-    {    55,    12,     7            }, // Bishop
-    {    32,    31,    61, -81       }, // Rook
-    {    12,    80,    75, -35,   12 }  // Queen
+    {   20                         }, // Pawn
+    {   90,   10                   }, // Knight
+    {   41,   19,   -8             }, // Bishop
+    {   84,   29,   55,  -9        }, // Rook
+    {  116,   23,   22,  31,  14   }  // Queen
 };
 
 ScoreType imbalance_theirs[5][5] = {
     // pawn knight bishop rook queen
-    {     0                          }, // Pawn
-    {    42,     0                   }, // Knight
-    {    40,    12,     0            }, // Bishop
-    {    50,     9,   -11,   0       }, // Rook
-    {    88,   -28,    60,  96,    0 }  // Queen
+    {  -41                         }, // Pawn
+    {   45,    2                   }, // Knight
+    {   86,    6,     4            }, // Bishop
+    {  149,    6,   -29,  -51      }, // Rook
+    {  235,   20,    38,   32,  -5 }  // Queen
 };
-*/
 
 CONST_TEXEL_TUNING EvalScore PST[6][64] = {
   {
@@ -1271,19 +1285,18 @@ namespace MaterialHash { // idea from Gull
     struct MaterialHashEntry  { Terminaison t = Ter_Unknown; EvalScore score={0,0}; float gp = 1.f;};
     MaterialHashEntry materialHashTable[TotalMat];
 
-    /*
     ScoreType Imbalance(const Position::Material & mat, Color c) {
         ScoreType bonus = 0;
         // Second-degree polynomial material imbalance, by Tord Romstad (old version, not the current Stockfish stuff)
         for (Mat m1 = M_p; m1 <= M_q; ++m1) {
             if (!mat[c][m1]) continue;
             for (Mat m2 = M_p; m2 <= m1; ++m2) {
-                bonus += imbalance_mines[m1][m2] * mat[c][m1] * mat[c][m2] + imbalance_theirs[m1][m2] * mat[c][m1] * mat[~c][m2];
+                bonus += EvalConfig::imbalance_mines[m1-1][m2-1] * mat[c][m1] * mat[c][m2] + EvalConfig::imbalance_theirs[m1-1][m2-1] * mat[c][m1] * mat[~c][m2];
             }
         }
+        //std::cout << ToString(mat) << "\n" << bonus/16 << std::endl;
         return bonus/16;
     }
-    */
 
     void InitMaterialScore(bool display = true){
         if ( display) Logging::LogIt(Logging::logInfo) << "Material hash init";
@@ -1296,7 +1309,7 @@ namespace MaterialHash { // idea from Gull
             const ScoreType matPawnScoreB  = mat[Co_Black][M_p] * *absValues[P_wp];
             const ScoreType matScoreW = matPieceScoreW + matPawnScoreW;
             const ScoreType matScoreB = matPieceScoreB + matPawnScoreB;
-            const ScoreType imbalance = 0;//Imbalance(mat,Co_White) - Imbalance(mat,Co_Black);
+            const ScoreType imbalance = 0;// Imbalance(mat, Co_White) - Imbalance(mat, Co_Black);
             materialHashTable[k].gp = (matScoreW + matScoreB ) / totalMatScore;
             materialHashTable[k].score[MG] = imbalance + matScoreW - matScoreB;
             materialHashTable[k].score[EG] = imbalance + (mat[Co_White][M_q] - mat[Co_Black][M_q]) * *absValuesEG[P_wq] + (mat[Co_White][M_r] - mat[Co_Black][M_r]) * *absValuesEG[P_wr] + (mat[Co_White][M_b] - mat[Co_Black][M_b]) * *absValuesEG[P_wb] + (mat[Co_White][M_n] - mat[Co_Black][M_n]) * *absValuesEG[P_wn] + (mat[Co_White][M_p] - mat[Co_Black][M_p]) * *absValuesEG[P_wp];
@@ -1586,8 +1599,8 @@ namespace MoveDifficultyUtil {
     const float     maxStealFraction  = 0.2f; // of remaining time
 }
 
-enum eScores : unsigned char { sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_PieceBlockPawn, sc_Holes, sc_Outpost, sc_FreePasser, sc_PwnPush, sc_PwnSafeAtt, sc_PwnPushAtt, sc_Adjust, sc_OpenFile, sc_RookFrontKing, sc_RookFrontQueen, sc_RookQueenSameFile, sc_AttQueenMalus, sc_MinorOnOpenFile, sc_RookBehindPassed, sc_QueenNearKing, sc_Hanging, sc_Threat, sc_PinsK, sc_PinsQ, sc_PawnTT, sc_Tempo, sc_max };
-static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "PieceBlockPawn", "Holes", "Outpost", "FreePasser", "PwnPush", "PwnSafeAtt", "PwnPushAtt" , "Adjust", "OpenFile", "RookFrontKing", "RookFrontQueen", "RookQueenSameFile", "AttQueenMalus", "MinorOnOpenFile", "RookBehindPassed", "QueenNearKing", "Hanging", "Threats", "PinsK", "PinsQ", "PawnTT", "Tempo" };
+enum eScores : unsigned char { sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_PieceBlockPawn, sc_Holes, sc_Outpost, sc_FreePasser, sc_PwnPush, sc_PwnSafeAtt, sc_PwnPushAtt, sc_Adjust, sc_OpenFile, sc_RookFrontKing, sc_RookFrontQueen, sc_RookQueenSameFile, sc_AttQueenMalus, sc_MinorOnOpenFile, sc_RookBehindPassed, sc_QueenNearKing, sc_Hanging, sc_Threat, sc_PinsK, sc_PinsQ, sc_PawnTT, sc_Tempo, sc_NN, sc_max };
+static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "PieceBlockPawn", "Holes", "Outpost", "FreePasser", "PwnPush", "PwnSafeAtt", "PwnPushAtt" , "Adjust", "OpenFile", "RookFrontKing", "RookFrontQueen", "RookQueenSameFile", "AttQueenMalus", "MinorOnOpenFile", "RookBehindPassed", "QueenNearKing", "Hanging", "Threats", "PinsK", "PinsQ", "PawnTT", "Tempo", "NN" };
 
 #ifdef DEBUG_ACC
 struct ScoreAcc{
@@ -3247,6 +3260,9 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context){
        ++context.stats.counters[Stats::sid_materialTableMiss];
     }
 
+    score[sc_Mat][EG] += MaterialHash::Imbalance(p.mat, Co_White) - MaterialHash::Imbalance(p.mat, Co_Black);
+    score[sc_Mat][MG] += MaterialHash::Imbalance(p.mat, Co_White) - MaterialHash::Imbalance(p.mat, Co_Black);
+
     // usefull bitboards accumulator
     const BitBoard pawns[2]          = {p.whitePawn(), p.blackPawn()};
     ScoreType kdanger[2]             = {0, 0};
@@ -3515,6 +3531,14 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context){
 
     // tempo
     score[sc_Tempo] += EvalConfig::tempo*(white2Play?+1:-1);
+
+    /*
+#ifdef WITH_MLPNN
+    // bias NN
+    tiny_dnn::vec_t xv = { (float)p.mat[Co_White][M_p], (float)p.mat[Co_Black][M_p] };
+    score[sc_NN] += ScoreType(evalNet.predict(xv)[0]);
+#endif
+*/
 
     if ( display ) score.Display(p,gp);
     ScoreType ret = (white2Play?+1:-1)*score.Score(p,gp); // scale both phase and 50 moves rule
@@ -5000,6 +5024,9 @@ void init(int argc, char ** argv) {
     SearchConfig::initLMR();
     SearchConfig::initMvvLva();
     BBTools::initMask();
+#ifdef WITH_MLPNN
+    initNet();
+#endif
 #ifdef WITH_MAGIC
     BBTools::MagicBB::initMagic();
 #endif
@@ -5021,6 +5048,9 @@ int main(int argc, char ** argv) {
 #endif
 #ifdef WITH_TEXEL_TUNING
     if (argc > 1 && std::string(argv[1]) == "-texel") { TexelTuning(argv[2]); return EXIT_SUCCESS; }
+#endif
+#ifdef WITH_MLPNN
+    if (argc > 1 && std::string(argv[1]) == "-mlp") { evalNetLearn(argv[2]); return EXIT_SUCCESS; }
 #endif
 #ifdef WITH_PGN_PARSER
     if (argc > 1 && std::string(argv[1]) == "-pgn") { return PGNParse(argv[2]); }

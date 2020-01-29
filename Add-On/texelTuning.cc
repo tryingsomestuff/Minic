@@ -572,8 +572,17 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[4][EG] , -100, 100, "qpinqEG"));
     */
 
+    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::tempo[MG] , -500,  500,"tempo"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::tempo[EG] , -500,  500,"tempo"));
+    */
+
+    for (Mat m1 = M_p; m1 <= M_q; ++m1) {
+        for (Mat m2 = M_p; m2 <= m1; ++m2) {
+            guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::imbalance_mines[m1-1][m2-1],  -300, 300, "imbalance_mines"  + std::to_string(m1) + "_" + std::to_string(m2)));
+            guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::imbalance_theirs[m1-1][m2-1], -300, 300, "imbalance_theirs" + std::to_string(m1) + "_" + std::to_string(m2)));
+        }
+    }
 
     computeOptimalK(data);
     Logging::LogIt(Logging::logInfo) << "Optimal K " << Texel::K;
@@ -587,3 +596,130 @@ void TexelTuning(const std::string & filename) {
     for (size_t k = 0; k < optim.size(); ++k) Logging::LogIt(Logging::logInfo) << optim[k].name << " " << optim[k];
     for (size_t k = 0; k < data.size(); ++k) delete data[k].p;
 }
+
+
+#ifdef WITH_MLPNN
+void evalNetLearn(const std::string & filename) {
+
+    std::vector<Texel::TexelInput> data;
+    Logging::LogIt(Logging::logInfo) << "Running texel tuning with file " << filename;
+    std::vector<std::string> positions;
+    ExtendedPosition::readEPDFile(filename, positions);
+    for (size_t k = 0; k < positions.size(); ++k) {
+        ExtendedPosition * p = new ExtendedPosition(positions[k], false);
+        data.push_back({ p, getResult(p->_extendedParams["c9"][0]) });
+        //data.push_back({p, getResult2(p->_extendedParams["c2"][0])});
+        // +1 white win, -1 black wins, 0 draw
+        if (k % 50000 == 0) Logging::LogIt(Logging::logInfo) << k << " position read";
+    }
+    Logging::LogIt(Logging::logInfo) << "Data size : " << data.size();
+
+    size_t batchSize = data.size() / 20;
+
+    Randomize(data, batchSize);
+
+    std::cout << "creating input ..." << std::endl;
+    std::vector<tiny_dnn::vec_t> X;
+    std::vector<tiny_dnn::vec_t> Y;
+    for (size_t k = 0; k < batchSize; ++k) {
+        const BitBoard pawns[2]         = { data[k].p->whitePawn(), data[k].p->blackPawn() };
+        const BitBoard backward[2]      = { BBTools::pawnBackward  <Co_White>(pawns[Co_White],pawns[Co_Black])       , BBTools::pawnBackward  <Co_Black>(pawns[Co_Black],pawns[Co_White]) };
+        const BitBoard isolated[2]      = { BBTools::pawnIsolated(pawns[Co_White])                                   , BBTools::pawnIsolated(pawns[Co_Black]) };
+        const BitBoard doubled[2]       = { BBTools::pawnDoubled   <Co_White>(pawns[Co_White])                       , BBTools::pawnDoubled   <Co_Black>(pawns[Co_Black]) };
+        const BitBoard candidates[2]    = { BBTools::pawnCandidates<Co_White>(pawns[Co_White],pawns[Co_Black])       , BBTools::pawnCandidates<Co_Black>(pawns[Co_Black],pawns[Co_White]) };
+        const BitBoard semiOpenPawn[2]  = { BBTools::pawnSemiOpen  <Co_White>(pawns[Co_White],pawns[Co_Black])       , BBTools::pawnSemiOpen  <Co_Black>(pawns[Co_Black],pawns[Co_White]) };
+        const BitBoard pawnTargets[2]   = { BBTools::pawnAttacks   <Co_White>(pawns[Co_White])                       , BBTools::pawnAttacks   <Co_Black>(pawns[Co_Black]) };
+        const BitBoard semiOpenFiles[2] = { BBTools::fillFile(pawns[Co_White]) & ~BBTools::fillFile(pawns[Co_Black]) , BBTools::fillFile(pawns[Co_Black]) & ~BBTools::fillFile(pawns[Co_White]) }; // semiOpen white means with white pawn, and without black pawn
+        const BitBoard passed[2]        = { BBTools::pawnPassed    <Co_White>(pawns[Co_White], pawns[Co_Black])      , BBTools::pawnPassed    <Co_Black>(pawns[Co_Black], pawns[Co_White]) };
+        const BitBoard holes[2]         = { BBTools::pawnHoles     <Co_White>(pawns[Co_White]) & holesZone[Co_White] , BBTools::pawnHoles     <Co_Black>(pawns[Co_Black]) & holesZone[Co_White] };
+        const BitBoard openFiles        = BBTools::openFiles(pawns[Co_White], pawns[Co_Black]);
+        tiny_dnn::vec_t vx = { (float)data[k].p->mat[Co_White][M_p]    , (float)data[k].p->mat[Co_Black][M_p],
+                               (float)data[k].p->mat[Co_White][M_n]    , (float)data[k].p->mat[Co_Black][M_n],
+                               (float)data[k].p->mat[Co_White][M_b]    , (float)data[k].p->mat[Co_Black][M_b], 
+                               (float)data[k].p->mat[Co_White][M_r]    , (float)data[k].p->mat[Co_Black][M_r], 
+                               (float)data[k].p->mat[Co_White][M_q]    , (float)data[k].p->mat[Co_Black][M_q],
+                               (float)countBit(backward[Co_White])     , (float)countBit(backward[Co_Black]),
+                               (float)countBit(isolated[Co_White])     , (float)countBit(isolated[Co_Black]),
+                               (float)countBit(doubled[Co_White])      , (float)countBit(doubled[Co_Black]),
+                               (float)countBit(candidates[Co_White])   , (float)countBit(candidates[Co_Black]),
+                               (float)countBit(semiOpenPawn[Co_White]) , (float)countBit(semiOpenPawn[Co_Black]),
+                               (float)countBit(passed[Co_White])       , (float)countBit(passed[Co_Black]),
+                               (float)countBit(holes[Co_White])        , (float)countBit(holes[Co_Black]),
+                               (float)countBit(openFiles) 
+                             };
+        float gp;
+        double s = eval(*data[k].p, gp, ThreadPool::instance().main());
+        s *= (data[k].p->c == Co_White ? +1 : -1);
+        s = 1. / (1. + std::pow(10, -1.35 * s / 400.));
+        tiny_dnn::vec_t vy = { (float)(data[k].result - s) };
+        X.push_back(vx);
+        Y.push_back(vy);
+    }
+
+    Randomize(data, batchSize);
+
+    std::cout << "creating input ..." << std::endl;
+    std::vector<tiny_dnn::vec_t> Xtest;
+    std::vector<tiny_dnn::vec_t> Ytest;
+    for (size_t k = 0; k < batchSize; ++k) {
+        const BitBoard pawns[2]         = { data[k].p->whitePawn(), data[k].p->blackPawn() };
+        const BitBoard backward[2]      = { BBTools::pawnBackward  <Co_White>(pawns[Co_White],pawns[Co_Black])       , BBTools::pawnBackward  <Co_Black>(pawns[Co_Black],pawns[Co_White]) };
+        const BitBoard isolated[2]      = { BBTools::pawnIsolated(pawns[Co_White])                                   , BBTools::pawnIsolated(pawns[Co_Black]) };
+        const BitBoard doubled[2]       = { BBTools::pawnDoubled   <Co_White>(pawns[Co_White])                       , BBTools::pawnDoubled   <Co_Black>(pawns[Co_Black]) };
+        const BitBoard candidates[2]    = { BBTools::pawnCandidates<Co_White>(pawns[Co_White],pawns[Co_Black])       , BBTools::pawnCandidates<Co_Black>(pawns[Co_Black],pawns[Co_White]) };
+        const BitBoard semiOpenPawn[2]  = { BBTools::pawnSemiOpen  <Co_White>(pawns[Co_White],pawns[Co_Black])       , BBTools::pawnSemiOpen  <Co_Black>(pawns[Co_Black],pawns[Co_White]) };
+        const BitBoard pawnTargets[2]   = { BBTools::pawnAttacks   <Co_White>(pawns[Co_White])                       , BBTools::pawnAttacks   <Co_Black>(pawns[Co_Black]) };
+        const BitBoard semiOpenFiles[2] = { BBTools::fillFile(pawns[Co_White]) & ~BBTools::fillFile(pawns[Co_Black]) , BBTools::fillFile(pawns[Co_Black]) & ~BBTools::fillFile(pawns[Co_White]) }; // semiOpen white means with white pawn, and without black pawn
+        const BitBoard passed[2]        = { BBTools::pawnPassed    <Co_White>(pawns[Co_White], pawns[Co_Black])      , BBTools::pawnPassed    <Co_Black>(pawns[Co_Black], pawns[Co_White]) };
+        const BitBoard holes[2]         = { BBTools::pawnHoles     <Co_White>(pawns[Co_White]) & holesZone[Co_White] , BBTools::pawnHoles     <Co_Black>(pawns[Co_Black]) & holesZone[Co_White] };
+        const BitBoard openFiles        = BBTools::openFiles(pawns[Co_White], pawns[Co_Black]);
+        tiny_dnn::vec_t vx = { (float)data[k].p->mat[Co_White][M_p]    , (float)data[k].p->mat[Co_Black][M_p],
+                               (float)data[k].p->mat[Co_White][M_n]    , (float)data[k].p->mat[Co_Black][M_n],
+                               (float)data[k].p->mat[Co_White][M_b]    , (float)data[k].p->mat[Co_Black][M_b], 
+                               (float)data[k].p->mat[Co_White][M_r]    , (float)data[k].p->mat[Co_Black][M_r], 
+                               (float)data[k].p->mat[Co_White][M_q]    , (float)data[k].p->mat[Co_Black][M_q],
+                               (float)countBit(backward[Co_White])     , (float)countBit(backward[Co_Black]),
+                               (float)countBit(isolated[Co_White])     , (float)countBit(isolated[Co_Black]),
+                               (float)countBit(doubled[Co_White])      , (float)countBit(doubled[Co_Black]),
+                               (float)countBit(candidates[Co_White])   , (float)countBit(candidates[Co_Black]),
+                               (float)countBit(semiOpenPawn[Co_White]) , (float)countBit(semiOpenPawn[Co_Black]),
+                               (float)countBit(passed[Co_White])       , (float)countBit(passed[Co_Black]),
+                               (float)countBit(holes[Co_White])        , (float)countBit(holes[Co_Black]),
+                               (float)countBit(openFiles) 
+                             };
+        float gp;
+        double s = eval(*data[k].p, gp, ThreadPool::instance().main());
+        s *= (data[k].p->c == Co_White ? +1 : -1);
+        s = 1. / (1. + std::pow(10, -1.35 * s / 400.));
+        tiny_dnn::vec_t vy = { (float)(data[k].result - s) };
+        Xtest.push_back(vx);
+        Ytest.push_back(vy);
+    }
+
+    size_t sample_size = 16;   // 16 samples for each network weight update
+    int epochs = 2000;         // 2000 presentation of all samples
+    tiny_dnn::adamax opt;
+    
+    int iEpoch = 0;
+    int iBatch = 0;
+    auto on_enumerate_epoch = [&]() {
+        iBatch = 0;
+        iEpoch++;
+        if (iEpoch % 2) return;
+        std::cout << "Computing error ..." << std::endl;
+        double eTraining = evalNet.get_loss<tiny_dnn::mse>(X, Y);
+        double eTest = evalNet.get_loss<tiny_dnn::mse>(Xtest, Ytest);
+        std::cout << "epoch=" << iEpoch << "/" << epochs << " eTraining=" << eTraining << " eTest=" << eTest << std::endl;
+    };
+    auto on_enumerate_batch = [&]() {
+        iBatch++;
+        if (iBatch % 100) return;
+        std::cout << "batch=" << iBatch << "/" << batchSize/ sample_size << std::endl;
+    };
+    // learn
+    std::cout << "learning ..." << std::endl;
+    evalNet.fit<tiny_dnn::mse>(opt, X, Y, sample_size, epochs, on_enumerate_batch, on_enumerate_epoch);
+
+}
+
+#endif
