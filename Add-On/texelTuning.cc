@@ -579,8 +579,8 @@ void TexelTuning(const std::string & filename) {
 
     for (Mat m1 = M_p; m1 <= M_q; ++m1) {
         for (Mat m2 = M_p; m2 <= m1; ++m2) {
-            guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::imbalance_mines[m1-1][m2-1],  -300, 300, "imbalance_mines"  + std::to_string(m1) + "_" + std::to_string(m2)));
-            guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::imbalance_theirs[m1-1][m2-1], -300, 300, "imbalance_theirs" + std::to_string(m1) + "_" + std::to_string(m2)));
+            guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::imbalance_mines[m1-1][m2-1],  -3000, 3000, "imbalance_mines"  + std::to_string(m1) + "_" + std::to_string(m2)));
+            guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::imbalance_theirs[m1-1][m2-1], -3000, 3000, "imbalance_theirs" + std::to_string(m1) + "_" + std::to_string(m2)));
         }
     }
 
