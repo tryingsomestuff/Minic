@@ -353,20 +353,20 @@ namespace EvalConfig {
 // Taken from Defenchess
 ScoreType imbalance_mines[5][5] = {
     // pawn knight bishop rook queen
-    {   20                         }, // Pawn
-    {   90,   10                   }, // Knight
-    {   41,   19,   -8             }, // Bishop
-    {   84,   29,   55,  -9        }, // Rook
-    {  116,   23,   22,  31,  14   }  // Queen
+    {   71                         }, // Pawn
+    {  211, -185                   }, // Knight
+    {  170, -295, -192             }, // Bishop
+    {  358, -272, -363, -377       }, // Rook
+    {  463, -350, -507,-1084, -375 }  // Queen
 };
 
 ScoreType imbalance_theirs[5][5] = {
     // pawn knight bishop rook queen
-    {  -41                         }, // Pawn
-    {   45,    2                   }, // Knight
-    {   86,    6,     4            }, // Bishop
-    {  149,    6,   -29,  -51      }, // Rook
-    {  235,   20,    38,   32,  -5 }  // Queen
+    { -247                         }, // Pawn
+    {  266,  -12                   }, // Knight
+    {  328,  -39,   -39            }, // Bishop
+    {  495,  -42,  -151,  -85      }, // Rook
+    {  707,  352,   308,  341,  27 }  // Queen
 };
 
 CONST_TEXEL_TUNING EvalScore PST[6][64] = {
