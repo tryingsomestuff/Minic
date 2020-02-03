@@ -51,7 +51,7 @@ engine_param_cmd = 'setoption name {name} value {value}'
 # A pool of opponents for the engine. The opponent will be
 # chosen based on the seed sent by CLOP.
 opponents = [
-    'conf=minic_1.35_uci'
+    'conf=minic_dev_uci'
 ]
 
 # Additional cutechess-cli options, eg. time control and opening book

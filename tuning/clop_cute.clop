@@ -1,17 +1,26 @@
 Name test
 
-#Script C:/Users/xr_a_/Desktop/minic/clop-cutechess-cli.bat
-Script /ssd/Minic/clop-cutechess-cli.sh
+#Script C:/Users/xr_a_/Desktop/minic/tuning/clop-cutechess-cli.bat
+Script /ssd/Minic/tuning/clop-cutechess-cli.sh
 
-IntegerParameter staticNullMoveMaxDepth0 0 15
-IntegerParameter staticNullMoveMaxDepth1 0 15
-IntegerParameter staticNullMoveDepthCoeff0 30 300
-IntegerParameter staticNullMoveDepthCoeff1 30 300
+#IntegerParameter staticNullMoveMaxDepth0 0 15
+#IntegerParameter staticNullMoveMaxDepth1 0 15
+#IntegerParameter staticNullMoveDepthCoeff0 30 300
+#IntegerParameter staticNullMoveDepthCoeff1 30 300
+
+IntegerParameter dangerLimitPruning0 0 1000
+IntegerParameter dangerLimitPruning1 0 1000
+IntegerParameter dangerLimitReduction0 0 1000
+IntegerParameter dangerLimitReduction1 0 1000
 
 Processor machine1
-#Processor machine2
-#Processor machine3
-#Processor machine4
+Processor machine2
+Processor machine3
+Processor machine4
+Processor machine5
+Processor machine6
+Processor machine7
+Processor machine8
 
 # Call the script "Replications" times in a row with identical parameter values
 # Replications may be used to alternate colors, for instance.

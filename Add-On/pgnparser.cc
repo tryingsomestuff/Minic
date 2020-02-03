@@ -151,14 +151,14 @@ void pgnparse__(std::ifstream & is,std::ofstream & os) {
       if ( game.whiteElo < PGNGame::minElo || game.blackElo < PGNGame::minElo ) continue;
       ++a;
       if (a%100==0) std::cout << "Analyzing game " << a << " " << c << " " << e << std::endl;
-      float gp;
+      EvalData data;
       DepthType seldepth = 0;
       for (int i = 16 ; i <= game.n-6 ; ++i){
           Position p = game.p[i];
           if ( hashes.find(computeHash(p)) != hashes.end()) continue;
           hashes.insert(computeHash(p));
           const ScoreType equalMargin = 120;
-          const ScoreType seval = ThreadPool::instance().main().eval(p,gp);
+          const ScoreType seval = ThreadPool::instance().main().eval(p,data);
           if (seval < equalMargin){ /// @todo use material table here !
              ++e;
              const ScoreType squiet = ThreadPool::instance().main().qsearchNoPruning(-10000,10000,p,1,seldepth);

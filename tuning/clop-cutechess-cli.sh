@@ -1,2 +1,2 @@
 #!/bin/bash
-python clop-cutechess-cli.py $@
+python $(dirname $0)/clop-cutechess-cli.py $@

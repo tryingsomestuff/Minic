@@ -48,7 +48,7 @@ const std::string MinicVersion = "dev";
 // *** Add-ons
 //#define IMPORTBOOK
 //#define DEBUG_TOOL
-#define WITH_TEST_SUITE
+//#define WITH_TEST_SUITE
 //#define WITH_PGN_PARSER
 
 // *** Testing
@@ -57,8 +57,8 @@ const std::string MinicVersion = "dev";
 
 // *** Tuning
 //#define WITH_TIMER
-//#define WITH_CLOP_SEARCH
-#define WITH_TEXEL_TUNING
+#define WITH_CLOP_SEARCH
+//#define WITH_TEXEL_TUNING
 
 // *** debug
 //#define DEBUG_HASH
@@ -326,6 +326,9 @@ CONST_CLOP_TUNING int       probCutMaxMoves              = 5;
 CONST_CLOP_TUNING ScoreType probCutMargin                = 80;
 CONST_CLOP_TUNING DepthType lmrMinDepth                  = 2;
 CONST_CLOP_TUNING DepthType singularExtensionDepth       = 8;
+// on move / opponent
+CONST_CLOP_TUNING ScoreType dangerLimitPruning[2]        = {880,920};
+CONST_CLOP_TUNING ScoreType dangerLimitReduction[2]      = {520,700};
 
 const int nlevel = 100;
 const DepthType levelDepthMax[nlevel/10+1]   = {0,1,1,2,4,6,8,10,12,14,MAX_DEPTH};
@@ -350,23 +353,22 @@ void initMvvLva(){
 
 namespace EvalConfig {
 
-// Taken from Defenchess
-ScoreType imbalance_mines[5][5] = {
+CONST_TEXEL_TUNING EvalScore imbalance_mines[5][5] = {
     // pawn knight bishop rook queen
-    {   71                         }, // Pawn
-    {  211, -185                   }, // Knight
-    {  170, -295, -192             }, // Bishop
-    {  358, -272, -363, -377       }, // Rook
-    {  463, -350, -507,-1084, -375 }  // Queen
+    {  { 12, 99}                                                      }, // Pawn
+    {  {205,234}, {-119,-247}                                         }, // Knight
+    {  {262,129}, {-356,-290}, {-161,-242}                            }, // Bishop
+    {  {393,395}, {-299,-251}, {-328,-404},{ -255, -462}              }, // Rook
+    {  {507,473}, {-425,-350}, {-608,-510},{-1162,-1092}, {-392,-388} }  // Queen
 };
 
-ScoreType imbalance_theirs[5][5] = {
+CONST_TEXEL_TUNING EvalScore imbalance_theirs[5][5] = {
     // pawn knight bishop rook queen
-    { -247                         }, // Pawn
-    {  266,  -12                   }, // Knight
-    {  328,  -39,   -39            }, // Bishop
-    {  495,  -42,  -151,  -85      }, // Rook
-    {  707,  352,   308,  341,  27 }  // Queen
+    { {-188,-301}                                                  }, // Pawn
+    { { 294, 284}, { -23,-17}                                      }, // Knight
+    { { 243, 416}, {   3,-45},  { -58, -53}                        }, // Bishop
+    { { 284, 626}, {  31,-54},  {-116,-153}, {-108,-146}           }, // Rook
+    { { 705, 753}, { 394,351},  { 381, 307}, { 327, 329},  {36,25} }  // Queen
 };
 
 CONST_TEXEL_TUNING EvalScore PST[6][64] = {
@@ -1285,8 +1287,8 @@ namespace MaterialHash { // idea from Gull
     struct MaterialHashEntry  { Terminaison t = Ter_Unknown; EvalScore score={0,0}; float gp = 1.f;};
     MaterialHashEntry materialHashTable[TotalMat];
 
-    ScoreType Imbalance(const Position::Material & mat, Color c) {
-        ScoreType bonus = 0;
+    EvalScore Imbalance(const Position::Material & mat, Color c) {
+        EvalScore bonus = 0;
         // Second-degree polynomial material imbalance, by Tord Romstad (old version, not the current Stockfish stuff)
         for (Mat m1 = M_p; m1 <= M_q; ++m1) {
             if (!mat[c][m1]) continue;
@@ -1294,7 +1296,6 @@ namespace MaterialHash { // idea from Gull
                 bonus += EvalConfig::imbalance_mines[m1-1][m2-1] * mat[c][m1] * mat[c][m2] + EvalConfig::imbalance_theirs[m1-1][m2-1] * mat[c][m1] * mat[~c][m2];
             }
         }
-        //std::cout << ToString(mat) << "\n" << bonus/16 << std::endl;
         return bonus/16;
     }
 
@@ -1309,10 +1310,14 @@ namespace MaterialHash { // idea from Gull
             const ScoreType matPawnScoreB  = mat[Co_Black][M_p] * *absValues[P_wp];
             const ScoreType matScoreW = matPieceScoreW + matPawnScoreW;
             const ScoreType matScoreB = matPieceScoreB + matPawnScoreB;
-            const ScoreType imbalance = 0;// Imbalance(mat, Co_White) - Imbalance(mat, Co_Black);
+#ifdef WITH_TEXEL_TUNING
+            const EvalScore imbalance = {0,0};
+#else
+            const EvalScore imbalance = Imbalance(mat, Co_White) - Imbalance(mat, Co_Black);
+#endif
             materialHashTable[k].gp = (matScoreW + matScoreB ) / totalMatScore;
-            materialHashTable[k].score[MG] = imbalance + matScoreW - matScoreB;
-            materialHashTable[k].score[EG] = imbalance + (mat[Co_White][M_q] - mat[Co_Black][M_q]) * *absValuesEG[P_wq] + (mat[Co_White][M_r] - mat[Co_Black][M_r]) * *absValuesEG[P_wr] + (mat[Co_White][M_b] - mat[Co_Black][M_b]) * *absValuesEG[P_wb] + (mat[Co_White][M_n] - mat[Co_Black][M_n]) * *absValuesEG[P_wn] + (mat[Co_White][M_p] - mat[Co_Black][M_p]) * *absValuesEG[P_wp];
+            materialHashTable[k].score[MG] = imbalance[MG] + matScoreW - matScoreB;
+            materialHashTable[k].score[EG] = imbalance[EG] + (mat[Co_White][M_q] - mat[Co_Black][M_q]) * *absValuesEG[P_wq] + (mat[Co_White][M_r] - mat[Co_Black][M_r]) * *absValuesEG[P_wr] + (mat[Co_White][M_b] - mat[Co_Black][M_b]) * *absValuesEG[P_wb] + (mat[Co_White][M_n] - mat[Co_Black][M_n]) * *absValuesEG[P_wn] + (mat[Co_White][M_p] - mat[Co_Black][M_p]) * *absValuesEG[P_wp];
         }
        if ( display) Logging::LogIt(Logging::logInfo) << "...Done";
     }
@@ -1558,13 +1563,13 @@ struct ThreadData{
 };
 
 struct Stats{
-    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits, sid_ttInsert, sid_ttPawnhits, sid_ttPawnInsert, sid_materialTableMiss, sid_staticNullMove, sid_lmr, sid_lmrFail, sid_pvsFail, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMoveTry3, sid_nullMove, sid_nullMove2, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_CMHPruning, sid_see, sid_see2, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_CMHExtension, sid_pawnPushExtension, sid_singularExtension, sid_singularExtension2, sid_singularExtension3, sid_queenThreatExtension, sid_BMExtension, sid_mateThreatExtension, sid_tbHit1, sid_tbHit2, sid_maxid };
+    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits, sid_ttInsert, sid_ttPawnhits, sid_ttPawnInsert, sid_ttschits, sid_ttscmiss, sid_materialTableHits, sid_materialTableMiss, sid_staticNullMove, sid_lmr, sid_lmrFail, sid_pvsFail, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMoveTry3, sid_nullMove, sid_nullMove2, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_CMHPruning, sid_see, sid_see2, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_CMHExtension, sid_pawnPushExtension, sid_singularExtension, sid_singularExtension2, sid_singularExtension3, sid_queenThreatExtension, sid_BMExtension, sid_mateThreatExtension, sid_tbHit1, sid_tbHit2, sid_maxid };
     static const std::array<std::string,sid_maxid> Names;
     std::array<Counter,sid_maxid> counters;
     void init(){ Logging::LogIt(Logging::logInfo) << "Init stat" ;  counters.fill(0ull); }
 };
 
-const std::array<std::string,Stats::sid_maxid> Stats::Names = { "nodes", "qnodes", "tthits", "ttInsert", "ttPawnhits", "ttPawnInsert", "materialMiss", "staticNullMove", "lmr", "lmrfail", "pvsfail", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMoveTry3", "nullMove", "nullMove2", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "CMHPruning", "see", "see2", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "CMHExtension", "pawnPushExtension", "singularExtension", "singularExtension2", "singularExtension3", "queenThreatExtension", "BMExtension", "mateThreatExtension", "TBHit1", "TBHit2"};
+const std::array<std::string,Stats::sid_maxid> Stats::Names = { "nodes", "qnodes", "tthits", "ttInsert", "ttPawnhits", "ttPawnInsert", "ttScHits", "ttScMiss", "materialHits", "materialMiss", "staticNullMove", "lmr", "lmrfail", "pvsfail", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMoveTry3", "nullMove", "nullMove2", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "CMHPruning", "see", "see2", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "CMHExtension", "pawnPushExtension", "singularExtension", "singularExtension2", "singularExtension3", "queenThreatExtension", "BMExtension", "mateThreatExtension", "TBHit1", "TBHit2"};
 
 // singleton pool of threads
 class ThreadPool : public std::vector<std::unique_ptr<ThreadContext>> {
@@ -1646,6 +1651,11 @@ struct ScoreAcc {
 #endif
 bool sameMove(const Move & a, const Move & b) { return (a & 0x0000FFFF) == (b & 0x0000FFFF);}
 
+struct EvalData{
+    float gp = 0;
+    ScoreType danger[2] = {0,0};
+};
+
 // thread Stockfish style
 struct ThreadContext{
     static bool stopFlag;
@@ -1656,6 +1666,7 @@ struct ThreadContext{
     struct StackData{
        Hash h = 0ull;
        ScoreType eval = 0;
+       EvalData data = { 0, {0,0} };
        Move threat = INVALIDMOVE;
        Position p;
     };
@@ -1930,7 +1941,7 @@ Counter ThreadPool::counter(Stats::StatId id) const { Counter n = 0; for (auto &
 
 bool apply(Position & p, const Move & m, bool noValidation = false); //forward decl
 bool isPseudoLegal(const Position & p, Move m); // forward decl
-template < bool display = false, bool safeMatEvaluator = true > ScoreType eval(const Position & p, float & gp, ThreadContext & context); //forward decl
+template < bool display = false, bool safeMatEvaluator = true > ScoreType eval(const Position & p, EvalData & data, ThreadContext & context); //forward decl
 
 namespace TT{
 
@@ -1938,12 +1949,12 @@ GenerationType curGen = 0;
 enum Bound : unsigned char{ B_exact = 0, B_alpha = 1, B_beta = 2, B_none = 3};
 #pragma pack(push, 1)
 struct Entry{
-    Entry():m(INVALIDMINIMOVE),h(0),score(0),eval(0),b(B_none),d(-1)/*,generation(curGen)*/{}
-    Entry(Hash h, Move m, ScoreType s, ScoreType e, Bound b, DepthType d) : h(Hash64to32(h)), m(Move2MiniMove(m)), score(s), eval(e), /*generation(curGen),*/ b(b), d(d){}
+    Entry():m(INVALIDMINIMOVE),h(0),s(0),e(0),b(B_none),d(-1)/*,generation(curGen)*/{}
+    Entry(Hash h, Move m, ScoreType s, ScoreType e, Bound b, DepthType d) : h(Hash64to32(h)), m(Move2MiniMove(m)), s(s), e(e), /*generation(curGen),*/ b(b), d(d){}
     MiniHash h;            //32
-    ScoreType score, eval; //16 + 16
+    ScoreType s, e;        //16 + 16
     union{
-        MiniHash data;     //32
+        MiniHash _d;       //32
         struct{
            MiniMove m;     //16
            Bound b;        //8
@@ -2012,7 +2023,7 @@ bool getEntry(ThreadContext & context, const Position & p, Hash h, DepthType d, 
     if ( _e.h == 0 ) return false; //early exist cause next ones are also empty ...
     if ( !VALIDMOVE(_e.m) || 
 #ifndef DEBUG_HASH_ENTRY
-        (_e.h ^ _e.data) != Hash64to32(h) || 
+        (_e.h ^ _e._d) != Hash64to32(h) ||
 #endif
         !isPseudoLegal(p, _e.m)) { return _e.h = 0, getEntry(context, p, h, d, e, nbuck + 1); } // next one
     e = _e; // update entry only if no collision is detected !
@@ -2022,7 +2033,7 @@ bool getEntry(ThreadContext & context, const Position & p, Hash h, DepthType d, 
 
 void setEntry(ThreadContext & context, Hash h, Move m, ScoreType s, ScoreType eval, Bound b, DepthType d){
     Entry e = {h,m,s,eval,b,d};
-    e.h ^= e.data;
+    e.h ^= e._d;
     assert(e.h > 0);
     if ( DynamicConfig::disableTT ) return;
     const size_t index = h&(ttSize-1);
@@ -2151,9 +2162,9 @@ std::string ToString(const Position & p, bool noEval){
     ss << Logging::_protocolComment[Logging::ct] << " Turn " << (p.c == Co_White ? "white" : "black") << std::endl;
     ScoreType sc = 0;
     if ( ! noEval ){
-        float gp = 0;
-        sc = eval(p, gp, ThreadPool::instance().main());
-        ss << Logging::_protocolComment[Logging::ct] << " Phase " << gp << std::endl << Logging::_protocolComment[Logging::ct] << " Static score " << sc << std::endl << Logging::_protocolComment[Logging::ct] << " Hash " << computeHash(p) << std::endl << Logging::_protocolComment[Logging::ct] << " FEN " << GetFEN(p);
+        EvalData data;
+        sc = eval(p, data, ThreadPool::instance().main());
+        ss << Logging::_protocolComment[Logging::ct] << " Phase " << data.gp << std::endl << Logging::_protocolComment[Logging::ct] << " Static score " << sc << std::endl << Logging::_protocolComment[Logging::ct] << " Hash " << computeHash(p) << std::endl << Logging::_protocolComment[Logging::ct] << " FEN " << GetFEN(p);
     }
     //ss << ToString(p.mat);
     return ss.str();
@@ -3212,14 +3223,14 @@ BitBoard getPinned(const Position & p, const Square s){
 }
 
 template < bool display, bool safeMatEvaluator >
-ScoreType eval(const Position & p, float & gp, ThreadContext &context){
+ScoreType eval(const Position & p, EvalData & data, ThreadContext &context){
     START_TIMER
     ScoreAcc score;
     
     // king captured
     const bool white2Play = p.c == Co_White;
-    if ( p.king[Co_White] == INVALIDSQUARE ) return gp=0,(white2Play?-1:+1)* MATE;
-    if ( p.king[Co_Black] == INVALIDSQUARE ) return gp=0,(white2Play?+1:-1)* MATE;
+    if ( p.king[Co_White] == INVALIDSQUARE ) return data.gp=0,(white2Play?-1:+1)* MATE;
+    if ( p.king[Co_Black] == INVALIDSQUARE ) return data.gp=0,(white2Play?+1:-1)* MATE;
 
     // level for the poor ...
     const int lra = std::max(0u,500 - 10*DynamicConfig::level);
@@ -3230,9 +3241,10 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context){
     // Material evaluation
     const Hash matHash = MaterialHash::getMaterialHash(p.mat);
     if ( matHash ){
+        ++context.stats.counters[Stats::sid_materialTableHits];
         // Hash data
        const MaterialHash::MaterialHashEntry & MEntry = MaterialHash::materialHashTable[matHash];
-       gp = MEntry.gp;
+       data.gp = MEntry.gp;
        score[sc_Mat][EG] += MEntry.score[EG];
        score[sc_Mat][MG] += MEntry.score[MG];
        // end game knowledge (helper or scaling)
@@ -3254,14 +3266,15 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context){
        const ScoreType matPawnScoreB  = p.mat[Co_Black][M_p] * *absValues[P_wp];
        const ScoreType matScoreW = matPieceScoreW + matPawnScoreW;
        const ScoreType matScoreB = matPieceScoreB + matPawnScoreB;
-       gp = (matScoreW + matScoreB ) / totalMatScore; // based on MG values
+       data.gp = (matScoreW + matScoreB ) / totalMatScore; // based on MG values
        score[sc_Mat][EG] += (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValuesEG[P_wq] + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * *absValuesEG[P_wr] + (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * *absValuesEG[P_wb] + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValuesEG[P_wn] + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValuesEG[P_wp];
        score[sc_Mat][MG] += matScoreW - matScoreB;
        ++context.stats.counters[Stats::sid_materialTableMiss];
     }
 
-    score[sc_Mat][EG] += MaterialHash::Imbalance(p.mat, Co_White) - MaterialHash::Imbalance(p.mat, Co_Black);
-    score[sc_Mat][MG] += MaterialHash::Imbalance(p.mat, Co_White) - MaterialHash::Imbalance(p.mat, Co_Black);
+#ifdef WITH_TEXEL_TUNING
+    score[sc_Mat] += MaterialHash::Imbalance(p.mat, Co_White) - MaterialHash::Imbalance(p.mat, Co_Black);
+#endif
 
     // usefull bitboards accumulator
     const BitBoard pawns[2]          = {p.whitePawn(), p.blackPawn()};
@@ -3286,6 +3299,7 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context){
     evalPiece<P_wq,Co_Black>(p,p.pieces<P_wq>(Co_Black),kingZone,score[sc_PST],attFromPiece[Co_Black][P_wq-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wq-1]);
     evalPiece<P_wk,Co_Black>(p,p.pieces<P_wk>(Co_Black),kingZone,score[sc_PST],attFromPiece[Co_Black][P_wk-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wk-1]);
 
+    ///@todo lazy evaluation
     /*
     ScoreType lazyScore = score.Score(p,gp);
     if ( std::abs(lazyScore) > 1000){
@@ -3428,6 +3442,8 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context){
     // danger : use king danger score. **DO NOT** apply this in end-game
     score[sc_ATT][MG] -=  EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_White]/32),ScoreType(0)),ScoreType(63))];
     score[sc_ATT][MG] +=  EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_Black]/32),ScoreType(0)),ScoreType(63))];
+    data.danger[Co_White] = kdanger[Co_White];
+    data.danger[Co_Black] = kdanger[Co_Black];
 
     // number of hanging pieces (complexity ...)
     const BitBoard hanging[2] = {nonPawnMat[Co_White] & weakSquare[Co_White] , nonPawnMat[Co_Black] & weakSquare[Co_Black] };
@@ -3538,10 +3554,10 @@ ScoreType eval(const Position & p, float & gp, ThreadContext &context){
     tiny_dnn::vec_t xv = { (float)p.mat[Co_White][M_p], (float)p.mat[Co_Black][M_p] };
     score[sc_NN] += ScoreType(evalNet.predict(xv)[0]);
 #endif
-*/
+    */
 
-    if ( display ) score.Display(p,gp);
-    ScoreType ret = (white2Play?+1:-1)*score.Score(p,gp); // scale both phase and 50 moves rule
+    if ( display ) score.Display(p,data.gp);
+    ScoreType ret = (white2Play?+1:-1)*score.Score(p,data.gp); // scale both phase and 50 moves rule
     STOP_AND_SUM_TIMER(Eval)
     return ret;
 }
@@ -3639,9 +3655,9 @@ int probe_wdl(const Position &p, ScoreType &score, bool use50MoveRule){
 #endif
 
 ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth){
-    float gp = 0;
+    EvalData data;
     ++stats.counters[Stats::sid_qnodes];
-    const ScoreType evalScore = eval(p,gp,*this);
+    const ScoreType evalScore = eval(p,data,*this);
 
     if ( evalScore >= beta ) return evalScore;
     if ( evalScore > alpha ) alpha = evalScore;
@@ -3654,7 +3670,7 @@ ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const
 
     MoveList moves;
     generate<GP_cap>(p,moves);
-    sort(*this,moves,p,gp,ply,cmhPtr,true);
+    sort(*this,moves,p,data.gp,ply,cmhPtr,true);
 
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         Position p2 = p;
@@ -3682,8 +3698,8 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     if ((int)ply > seldepth) seldepth = ply;
 
-    float gp = 0;
-    if (ply >= MAX_DEPTH - 1) return eval(p, gp, *this);
+    EvalData data;
+    if (ply >= MAX_DEPTH - 1) return eval(p, data, *this);
     Move bestMove = INVALIDMOVE;
 
     const bool isInCheck = isAttacked(p, kingSquare(p));
@@ -3697,20 +3713,38 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     TT::Entry e;
     if (TT::getEntry(*this, p, computeHash(p), hashDepth, e)) {
-        if (!pvnode && e.h != 0 && ((e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact))) { return adjustHashScore(e.score, ply); }
+        if (!pvnode && e.h != 0 && ((e.b == TT::B_alpha && e.s <= alpha) || (e.b == TT::B_beta  && e.s >= beta) || (e.b == TT::B_exact))) { return adjustHashScore(e.s, ply); }
         if ( e.m!=INVALIDMOVE && (isInCheck || isCapture(e.m)) ) bestMove = e.m;
     }
     if ( qRoot && interiorNodeRecognizer<true,false,true>(p) == MaterialHash::Ter_Draw) return drawScore(); ///@todo is that gain elo ???
 
-    //ScoreType evalScore = isInCheck ? -MATE+ply : (e.h!=0?e.eval:eval(p,gp,*this));
     ScoreType evalScore;
     if (isInCheck) evalScore = -MATE + ply;
-    else if ( p.lastMove == NULLMOVE && ply > 0 ) evalScore = ScaleScore(EvalConfig::tempo*2,gp) - stack[p.halfmoves-1].eval; // skip eval if nullmove just applied
-    else evalScore = (e.h != 0)?e.eval:eval(p, gp, *this);
-
+    else if ( p.lastMove == NULLMOVE && ply > 0 ) evalScore = ScaleScore(EvalConfig::tempo,stack[p.halfmoves-1].data.gp) - stack[p.halfmoves-1].eval; // skip eval if nullmove just applied
+    else{
+        if (e.h != 0){
+            ++stats.counters[Stats::sid_ttschits];
+            evalScore = e.e;
+            const Hash matHash = MaterialHash::getMaterialHash(p.mat);
+            if ( matHash ){
+               ++stats.counters[Stats::sid_materialTableHits];
+               const MaterialHash::MaterialHashEntry & MEntry = MaterialHash::materialHashTable[matHash];
+               data.gp = MEntry.gp;
+            }
+            else{
+               data.gp = 0; ///@todo let's hope this is good enough
+               ++stats.counters[Stats::sid_materialTableMiss];
+            }
+            ///@todo data.danger is not filled here !!
+        }
+        else {
+            ++stats.counters[Stats::sid_ttscmiss];
+            evalScore = eval(p, data, *this);
+        }
+    }
     bool evalScoreIsHashScore = false;
     // use tt score if possible and not in check
-    if ( !isInCheck && e.h != 0 && ((e.b == TT::B_alpha && e.score <= evalScore) || (e.b == TT::B_beta && e.score >= evalScore) || (e.b == TT::B_exact)) ) evalScore = e.score, evalScoreIsHashScore = true;
+    if ( !isInCheck && e.h != 0 && ((e.b == TT::B_alpha && e.s <= evalScore) || (e.b == TT::B_beta && e.s >= evalScore) || (e.b == TT::B_exact)) ) evalScore = e.s, evalScoreIsHashScore = true;
 
     TT::Bound b = TT::B_alpha;
     if ( evalScore >= beta ) return evalScore;
@@ -3721,7 +3755,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     MoveList moves;
     if ( isInCheck ) generate<GP_all>(p,moves); ///@odo generate only evasion !
     else             generate<GP_cap>(p,moves);
-    sort(*this,moves,p,gp,ply,cmhPtr,isInCheck,isInCheck,&e);
+    sort(*this,moves,p,data.gp,ply,cmhPtr,isInCheck,isInCheck,&e);
 
     const ScoreType alphaInit = alpha;
 
@@ -3874,8 +3908,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     //if ( TimeMan::maxKNodes>0 && (stats.counters[Stats::sid_nodes] + stats.counters[Stats::sid_qnodes])/1000 > TimeMan::maxKNodes) { stopFlag = true; Logging::LogIt(Logging::logInfo) << "stopFlag triggered (nodes limits) in thread " << id(); } ///@todo
     if ( (TimeType)std::max(1, (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()) > getCurrentMoveMs() ){ stopFlag = true; Logging::LogIt(Logging::logInfo) << "stopFlag triggered in thread " << id(); }
 
-    float gp = 0;
-    if (ply >= MAX_DEPTH - 1 || depth >= MAX_DEPTH - 1) return eval(p, gp, *this);
+    EvalData data;
+    if (ply >= MAX_DEPTH - 1 || depth >= MAX_DEPTH - 1) return eval(p, data, *this);
 
     if ((int)ply > seldepth) seldepth = ply;
 
@@ -3901,9 +3935,9 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     bool validTTmove = false;
     TT::Entry e;
     if ( TT::getEntry(*this, p, pHash, depth, e)) {
-        if ( e.h != 0 && !rootnode && !pvnode && ( (e.b == TT::B_alpha && e.score <= alpha) || (e.b == TT::B_beta  && e.score >= beta) || (e.b == TT::B_exact) ) ) {
+        if ( e.h != 0 && !rootnode && !pvnode && ( (e.b == TT::B_alpha && e.s <= alpha) || (e.b == TT::B_beta  && e.s >= beta) || (e.b == TT::B_exact) ) ) {
             if (!isInCheck && e.m != INVALIDMOVE && Move2Type(e.m) == T_std ) updateTables(*this, p, depth, ply, e.m, e.b, cmhPtr);
-            return adjustHashScore(e.score, ply);
+            return adjustHashScore(e.s, ply);
         }
     }
     validTTmove = e.h != 0 && e.m != INVALIDMOVE;
@@ -3912,7 +3946,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     ScoreType tbScore = 0;
     if ( !rootnode && withoutSkipMove && (countBit(p.allPieces[Co_White]|p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN && SyzygyTb::probe_wdl(p, tbScore, false) > 0){
        ++stats.counters[Stats::sid_tbHit1];
-       if ( abs(tbScore) == SyzygyTb::TB_WIN_SCORE) tbScore += eval(p, gp, *this);
+       if ( abs(tbScore) == SyzygyTb::TB_WIN_SCORE) tbScore += eval(p, data, *this);
        TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(tbScore,ply),createHashScore(tbScore,ply),TT::B_exact,DepthType(127));
        return tbScore;
     }
@@ -3920,16 +3954,34 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     ScoreType evalScore;
     if (isInCheck) evalScore = -MATE + ply;
-    else if ( p.lastMove == NULLMOVE && ply > 0 ) evalScore = ScaleScore(EvalConfig::tempo*2,gp) - stack[p.halfmoves-1].eval; // skip eval if nullmove just applied
-    else evalScore = (e.h != 0)?e.eval:eval(p, gp, *this);
+    else if ( p.lastMove == NULLMOVE && ply > 0 ) evalScore = ScaleScore(EvalConfig::tempo,stack[p.halfmoves-1].data.gp) - stack[p.halfmoves-1].eval; // skip eval if nullmove just applied
+    else{
+        if (e.h != 0){
+            ++stats.counters[Stats::sid_ttschits];
+            evalScore = e.e;
+            const Hash matHash = MaterialHash::getMaterialHash(p.mat);
+            if ( matHash ){
+               ++stats.counters[Stats::sid_materialTableHits];
+               const MaterialHash::MaterialHashEntry & MEntry = MaterialHash::materialHashTable[matHash];
+               data.gp = MEntry.gp;
+            }
+            else{
+               data.gp = 0; ///@todo let's hope this is good enough
+               ++stats.counters[Stats::sid_materialTableMiss];
+            }
+            ///@todo data.danger is not filled here !!
+        }
+        else {
+            ++stats.counters[Stats::sid_ttscmiss];
+            evalScore = eval(p, data, *this);
+        }
+    }
     stack[p.halfmoves].eval = evalScore; // insert only static eval, never hash score !
+    stack[p.halfmoves].data = data;
     bool evalScoreIsHashScore = false;
-    if ( !validTTmove) TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(evalScore,ply),createHashScore(evalScore,ply),TT::B_none,-2); // insert an eval here in case of pruning ...
-    if ( (e.h != 0 && !isInCheck) && ((e.b == TT::B_alpha && e.score < evalScore) || (e.b == TT::B_beta && e.score > evalScore) || (e.b == TT::B_exact)) ) evalScore = adjustHashScore(e.score,ply), evalScoreIsHashScore=true;
+    if ( !validTTmove) TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(evalScore,ply),createHashScore(evalScore,ply),TT::B_none,-2); // already insert an eval here in case of pruning ...
+    if ( (e.h != 0 && !isInCheck) && ((e.b == TT::B_alpha && e.s < evalScore) || (e.b == TT::B_beta && e.s > evalScore) || (e.b == TT::B_exact)) ) evalScore = adjustHashScore(e.s,ply), evalScoreIsHashScore=true;
 
-    /* ///@todo THIS IS BUGGY : because pv is not filled (even at root) if bestScore starts too big.
-    ScoreType bestScore = evalScore;
-    */
     ScoreType bestScore = -MATE + ply;
     MoveList moves;
     bool moveGenerated = false;
@@ -3965,7 +4017,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 TT::Entry nullE;
                 const DepthType nullDepth = depth-R;
                 TT::getEntry(*this, p, pHash, nullDepth, nullE);
-                if (nullE.h == 0ull || nullE.score >= beta ) { // avoid null move search if TT gives a score < beta for the same depth
+                if (nullE.h == 0ull || nullE.s >= beta ) { // avoid null move search if TT gives a score < beta for the same depth
                     ++stats.counters[Stats::sid_nullMoveTry2];
                     Position pN = p;
                     applyNull(*this,pN);
@@ -3996,7 +4048,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
           int probCutCount = 0;
           const ScoreType betaPC = beta + SearchConfig::probCutMargin;
           generate<GP_cap>(p,moves);
-          sort(*this,moves,p,gp,ply,cmhPtr,true,isInCheck,&e);
+          sort(*this,moves,p,data.gp,ply,cmhPtr,true,isInCheck,&e);
           capMoveGenerated = true;
           for (auto it = moves.begin() ; it != moves.end() && probCutCount < SearchConfig::probCutMaxMoves /*+ 2*cutNode*/; ++it){
             if ( (validTTmove && sameMove(e.m, *it)) || isBadCap(*it) ) continue; // skip TT move if quiet or bad captures
@@ -4078,8 +4130,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                    if ( SquareToBitboard(to) & passed[p.c] ) ++stats.counters[Stats::sid_pawnPushExtension], ++extension;
                }
                if (!extension && pvnode && (p.pieces<P_wq>(p.c) && isQuiet && PieceTools::getPieceType(p, Move2From(e.m)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces<P_wq>(p.c)))) && SEE_GE(p, e.m, 0)) ++stats.counters[Stats::sid_queenThreatExtension], ++extension;
-               if (!extension && withoutSkipMove && depth >= SearchConfig::singularExtensionDepth && !rootnode && !isMateScore(e.score) && e.b == TT::B_beta && e.d >= depth - 3){
-                   const ScoreType betaC = e.score - 2*depth;
+               if (!extension && withoutSkipMove && depth >= SearchConfig::singularExtensionDepth && !rootnode && !isMateScore(e.s) && e.b == TT::B_beta && e.d >= depth - 3){
+                   const ScoreType betaC = e.s - 2*depth;
                    PVList sePV;
                    DepthType seSeldetph = 0;
                    const ScoreType score = pvs<false,false>(betaC - 1, betaC, p, depth/2, ply, sePV, seSeldetph, isInCheck, cutNode, e.m);
@@ -4132,7 +4184,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         else                  generate<GP_all>  (p, moves, false);
     }
     if (moves.empty()) return isInCheck ? -MATE + ply : 0;
-    sort(*this, moves, p, gp, ply, cmhPtr, true, isInCheck, &e, refutation != INVALIDMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMOVE);
+    sort(*this, moves, p, data.gp, ply, cmhPtr, true, isInCheck, &e, refutation != INVALIDMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMOVE);
 
     for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
         if (sameMove(skipMove, *it)) continue; // skipmove
@@ -4177,7 +4229,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         else{
             // reductions & prunings
             DepthType reduction = 0;
-            const bool isPrunable           = /*isNotEndGame &&*/ !isAdvancedPawnPush && !isMateScore(alpha) && !DynamicConfig::mateFinder && !killerT.isKiller(*it,ply);
+            const bool isPrunable           = /*isNotEndGame &&*/ !isAdvancedPawnPush && !isMateScore(alpha) && !DynamicConfig::mateFinder && !killerT.isKiller(*it,ply) && data.danger[p.c] < SearchConfig::dangerLimitPruning[0] && data.danger[~p.c] < SearchConfig::dangerLimitPruning[1] ;
             const bool isReductible         = /*isNotEndGame &&*/ !isAdvancedPawnPush && !DynamicConfig::mateFinder;
             const bool noCheck              = !isInCheck && !isCheck;
             const bool overLmpLimit         = validMoveCount > SearchConfig::lmpLimit[improving][depth];
@@ -4210,6 +4262,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 reduction = SearchConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
                 reduction += !improving;
                 reduction += ttMoveIsCapture/*&&isPrunableStd*/;
+                reduction -= (data.danger[p.c] > SearchConfig::dangerLimitReduction[0] || data.danger[~p.c] > SearchConfig::dangerLimitReduction[1]);
                 //reduction += cutNode&&isPrunableStd;
                 //reduction -= (reduction>1)&&ttMoveSingularExt;
                 if (pvnode && reduction > 0) --reduction;
@@ -4549,6 +4602,12 @@ namespace Options {
        _keys.push_back(KeyBase(k_score, w_spin, "probCutMargin"               , &SearchConfig::probCutMargin                   , ScoreType(0)    , ScoreType(1500)     ));
        _keys.push_back(KeyBase(k_depth, w_spin, "lmrMinDepth"                 , &SearchConfig::lmrMinDepth                     , DepthType(0)    , DepthType(30)       ));
        _keys.push_back(KeyBase(k_depth, w_spin, "singularExtensionDepth"      , &SearchConfig::singularExtensionDepth          , DepthType(0)    , DepthType(30)       ));
+
+       _keys.push_back(KeyBase(k_score, w_spin, "dangerLimitPruning0"         , &SearchConfig::dangerLimitPruning[0]           , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "dangerLimitPruning1"         , &SearchConfig::dangerLimitPruning[1]           , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "dangerLimitReduction0"       , &SearchConfig::dangerLimitReduction[0]         , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "dangerLimitReduction1"       , &SearchConfig::dangerLimitReduction[1]         , ScoreType(0)    , ScoreType(1500)     ));
+
        ///@todo more ...
 #endif
        
