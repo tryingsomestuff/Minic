@@ -52,8 +52,8 @@ double Sigmoid(Position * p) {
     */
 
     // eval
-    float gp;
-    double s = eval(*p,gp,ThreadPool::instance().main());
+    EvalData data;
+    double s = eval(*p,data,ThreadPool::instance().main());
     s *= (p->c == Co_White ? +1:-1);
 
     return 1. / (1. + std::pow(10, -K*s/400. ));
@@ -579,8 +579,10 @@ void TexelTuning(const std::string & filename) {
 
     for (Mat m1 = M_p; m1 <= M_q; ++m1) {
         for (Mat m2 = M_p; m2 <= m1; ++m2) {
-            guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::imbalance_mines[m1-1][m2-1],  -3000, 3000, "imbalance_mines"  + std::to_string(m1) + "_" + std::to_string(m2)));
-            guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::imbalance_theirs[m1-1][m2-1], -3000, 3000, "imbalance_theirs" + std::to_string(m1) + "_" + std::to_string(m2)));
+            guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::imbalance_mines[m1-1][m2-1][MG],  -3000, 3000, "imbalance_mines"  + std::to_string(m1) + "_" + std::to_string(m2)));
+            guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::imbalance_theirs[m1-1][m2-1][MG], -3000, 3000, "imbalance_theirs" + std::to_string(m1) + "_" + std::to_string(m2)));
+            guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::imbalance_mines[m1-1][m2-1][EG],  -3000, 3000, "imbalance_minesEG"  + std::to_string(m1) + "_" + std::to_string(m2)));
+            guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::imbalance_theirs[m1-1][m2-1][EG], -3000, 3000, "imbalance_theirsEG" + std::to_string(m1) + "_" + std::to_string(m2)));
         }
     }
 
@@ -647,8 +649,8 @@ void evalNetLearn(const std::string & filename) {
                                (float)countBit(holes[Co_White])        , (float)countBit(holes[Co_Black]),
                                (float)countBit(openFiles) 
                              };
-        float gp;
-        double s = eval(*data[k].p, gp, ThreadPool::instance().main());
+        EvalData data;
+        double s = eval(*data[k].p, data, ThreadPool::instance().main());
         s *= (data[k].p->c == Co_White ? +1 : -1);
         s = 1. / (1. + std::pow(10, -1.35 * s / 400.));
         tiny_dnn::vec_t vy = { (float)(data[k].result - s) };
@@ -687,8 +689,8 @@ void evalNetLearn(const std::string & filename) {
                                (float)countBit(holes[Co_White])        , (float)countBit(holes[Co_Black]),
                                (float)countBit(openFiles) 
                              };
-        float gp;
-        double s = eval(*data[k].p, gp, ThreadPool::instance().main());
+        EvalData data;
+        double s = eval(*data[k].p, data, ThreadPool::instance().main());
         s *= (data[k].p->c == Co_White ? +1 : -1);
         s = 1. / (1. + std::pow(10, -1.35 * s / 400.));
         tiny_dnn::vec_t vy = { (float)(data[k].result - s) };
