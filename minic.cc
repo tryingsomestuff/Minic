@@ -73,7 +73,7 @@ const std::string MinicVersion = "dev";
 
 ///@todo clop search param
 ///@todo test NN LMR
-///@todo
+///@todo remplace all c==Co_White by little table access to avoid if statement
 
 #ifdef WITH_MLPNN
 #include "tiny_dnn/tiny_dnn.h"
@@ -327,8 +327,8 @@ CONST_CLOP_TUNING ScoreType probCutMargin                = 80;
 CONST_CLOP_TUNING DepthType lmrMinDepth                  = 2;
 CONST_CLOP_TUNING DepthType singularExtensionDepth       = 8;
 // on move / opponent
-CONST_CLOP_TUNING ScoreType dangerLimitPruning[2]        = {880,920};
-CONST_CLOP_TUNING ScoreType dangerLimitReduction[2]      = {520,700};
+CONST_CLOP_TUNING ScoreType dangerLimitPruning[2]        = {3000,3000};
+CONST_CLOP_TUNING ScoreType dangerLimitReduction[2]      = {3000,3000};
 
 const int nlevel = 100;
 const DepthType levelDepthMax[nlevel/10+1]   = {0,1,1,2,4,6,8,10,12,14,MAX_DEPTH};
@@ -763,7 +763,7 @@ template<Color C> inline constexpr BitBoard pawnBackward       (BitBoard own, Bi
 template<Color C> inline constexpr BitBoard pawnForwardCoverage(BitBoard bb               ) { BitBoard spans = frontSpan<C>(bb); return spans | _shiftEast(spans) | _shiftWest(spans);}
 template<Color C> inline constexpr BitBoard pawnPassed         (BitBoard own, BitBoard opp) { return own & ~pawnForwardCoverage<~C>(opp);}
 template<Color C> inline constexpr BitBoard pawnCandidates     (BitBoard own, BitBoard opp) { return pawnSemiOpen<C>(own, opp) & shiftN<~C>((pawnSingleAttacks<C>(own) & pawnSingleAttacks<~C>(opp)) | (pawnDoubleAttacks<C>(own) & pawnDoubleAttacks<~C>(opp)));}
-template<Color C> inline constexpr BitBoard pawnStraggler      (BitBoard own, BitBoard opp, BitBoard own_backwards) { return own_backwards & pawnSemiOpen<C>(own, opp) & (C ? 0x00ffff0000000000ull : 0x0000000000ffff00ull);} ///@todo use this !
+//template<Color C> inline constexpr BitBoard pawnStraggler      (BitBoard own, BitBoard opp, BitBoard own_backwards) { return own_backwards & pawnSemiOpen<C>(own, opp) & (C ? 0x00ffff0000000000ull : 0x0000000000ffff00ull);} ///@todo use this !
 
 int popBit(BitBoard & b) {
     assert( b != 0ull);
@@ -774,8 +774,8 @@ int popBit(BitBoard & b) {
 }
 
 // HQ BB code and init inspired by Amoeba/Dumb
-int ranks[512];
 struct Mask {
+    static int ranks[512];
     BitBoard bbsquare, diagonal, antidiagonal, file, kingZone, pawnAttack[2], push[2], dpush[2], enpassant, knight, king, frontSpan[2], rearSpan[2], passerSpan[2], attackFrontSpan[2], between[64];
     Mask():bbsquare(0ull), diagonal(0ull), antidiagonal(0ull), file(0ull), kingZone(0ull), pawnAttack{ 0ull,0ull }, push{ 0ull,0ull }, dpush{ 0ull,0ull }, enpassant(0ull), knight(0ull), king(0ull), frontSpan{0ull}, rearSpan{0ull}, passerSpan{0ull}, attackFrontSpan{0ull}, between{0ull}{}
 };
@@ -873,7 +873,7 @@ inline void initMask() {
                 y |= b;
                 if (((o << 1) & b) == b) break;
             }
-            ranks[o * 8 + k] = y;
+            Mask::ranks[o * 8 + k] = y;
         }
     }
 }
@@ -999,7 +999,7 @@ void initMagic(){
 
 } // MagicBB
 
-template < Piece > BitBoard coverage(const Square x, const BitBoard occupancy = 0, const Color c = Co_White) { assert(false); return 0ull; }
+template < Piece > BitBoard coverage      (const Square x, const BitBoard occupancy, const Color c) { assert(false); return 0ull; }
 template <       > BitBoard coverage<P_wp>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].pawnAttack[c]; }
 template <       > BitBoard coverage<P_wn>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].knight; }
 template <       > BitBoard coverage<P_wb>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return MAGICBISHOPATTACKS(occupancy, x); }
@@ -1011,8 +1011,8 @@ template < Piece pp > inline BitBoard attack(const Square x, const BitBoard targ
 
 #endif // MAGIC
 
-constexpr BitBoard(*const pfCoverage[])(const Square, const BitBoard, const Color) = { &BBTools::coverage<P_wp>, &BBTools::coverage<P_wn>, &BBTools::coverage<P_wb>, &BBTools::coverage<P_wr>, &BBTools::coverage<P_wq>, &BBTools::coverage<P_wk> };
-constexpr BitBoard(*const pfAttack[])(const Square, const BitBoard, const BitBoard, const Color) = { &BBTools::attack<P_wp>,  &BBTools::attack<P_wn>, &BBTools::attack<P_wb>, &BBTools::attack<P_wr>, &BBTools::attack<P_wq>,  &BBTools::attack<P_wk> };
+constexpr BitBoard(*const pfCoverage[])(const Square, const BitBoard, const Color)                 = { &BBTools::coverage<P_wp>, &BBTools::coverage<P_wn>, &BBTools::coverage<P_wb>, &BBTools::coverage<P_wr>, &BBTools::coverage<P_wq>, &BBTools::coverage<P_wk> };
+constexpr BitBoard(*const pfAttack[])  (const Square, const BitBoard, const BitBoard, const Color) = { &BBTools::attack<P_wp>,   &BBTools::attack<P_wn>,   &BBTools::attack<P_wb>,   &BBTools::attack<P_wr>,   &BBTools::attack<P_wq>,   &BBTools::attack<P_wk>   };
 
 Square SquareFromBitBoard(const BitBoard & b) { // return first square only
     assert(b != 0ull);
@@ -1074,7 +1074,6 @@ std::string ToString(const Move & m    , bool withScore = false);
 std::string ToString(const Position & p, bool noEval = false);
 std::string ToString(const Position::Material & mat);
 
-///@todo try to include MG and EG score in table, as well as game phase
 namespace MaterialHash { // idea from Gull
     const int MatWQ = 1;
     const int MatBQ = 3;
@@ -1656,7 +1655,7 @@ struct EvalData{
     ScoreType danger[2] = {0,0};
 };
 
-// thread Stockfish style
+// former thread Stockfish style
 struct ThreadContext{
     static bool stopFlag;
     static MoveDifficultyUtil::MoveDifficulty moveDifficulty;
@@ -1866,9 +1865,9 @@ struct ThreadContext{
     #  if defined(__INTEL_COMPILER)
        __asm__ ("");
     #  elif defined(_MSC_VER)
-      _mm_prefetch((char*)addr, _MM_HINT_T0);
+       _mm_prefetch((char*)addr, _MM_HINT_T0);
     #  else
-      __builtin_prefetch(addr);
+       __builtin_prefetch(addr);
     #  endif
     }
 
@@ -1996,18 +1995,16 @@ int hashFull(){
     return int((count*1000)/(ttSize*Bucket::nbBucket));
 }
 
-void age(){
-    ++TT::curGen;
-}
+void age(){ ++TT::curGen;}
 
 void prefetch(Hash h) {
    void * addr = (&table[h&(ttSize-1)].e[0]);
 #  if defined(__INTEL_COMPILER)
    __asm__ ("");
 #  elif defined(_MSC_VER)
-  _mm_prefetch((char*)addr, _MM_HINT_T0);
+   _mm_prefetch((char*)addr, _MM_HINT_T0);
 #  else
-  __builtin_prefetch(addr);
+   __builtin_prefetch(addr);
 #  endif
 }
 
@@ -2492,7 +2489,7 @@ TimeType ThreadContext::getCurrentMoveMs() {
 }
 
 inline bool isAttacked(const Position & p, const Square k) { return k!=INVALIDSQUARE && BBTools::isAttackedBB(p, k, p.c);}
-inline bool isAttacked(const Position & p, BitBoard bb) { // copy
+inline bool isAttacked(const Position & p, BitBoard bb) { // copy ///@todo should be done without iterate over Square !
     while ( bb ) if ( isAttacked(p, Square(BBTools::popBit(bb)))) return true;
     return false;
 }
@@ -4262,7 +4259,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 reduction = SearchConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
                 reduction += !improving;
                 reduction += ttMoveIsCapture/*&&isPrunableStd*/;
-                reduction -= (data.danger[p.c] > SearchConfig::dangerLimitReduction[0] || data.danger[~p.c] > SearchConfig::dangerLimitReduction[1]);
+                reduction += (data.danger[p.c] < SearchConfig::dangerLimitReduction[0] && data.danger[~p.c] < SearchConfig::dangerLimitReduction[1]);
                 //reduction += cutNode&&isPrunableStd;
                 //reduction -= (reduction>1)&&ttMoveSingularExt;
                 if (pvnode && reduction > 0) --reduction;
