@@ -8,8 +8,8 @@ Script /ssd/Minic/tuning/clop-cutechess-cli.sh
 #IntegerParameter staticNullMoveDepthCoeff0 30 300
 #IntegerParameter staticNullMoveDepthCoeff1 30 300
 
-IntegerParameter dangerLimitPruning0 0 1000
-IntegerParameter dangerLimitPruning1 0 1000
+#IntegerParameter dangerLimitPruning0 0 1000
+#IntegerParameter dangerLimitPruning1 0 1000
 IntegerParameter dangerLimitReduction0 0 1000
 IntegerParameter dangerLimitReduction1 0 1000
 
