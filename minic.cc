@@ -38,12 +38,12 @@ typedef uint64_t u_int64_t;
 
 #include "json.hpp"
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "1.38";
 
 // *** options
 #define WITH_UCI
 #define WITH_MAGIC
-//#define WITH_SYZYGY
+#define WITH_SYZYGY
 
 // *** Add-ons
 //#define IMPORTBOOK
@@ -57,7 +57,7 @@ const std::string MinicVersion = "dev";
 
 // *** Tuning
 //#define WITH_TIMER
-#define WITH_CLOP_SEARCH
+//#define WITH_CLOP_SEARCH
 //#define WITH_TEXEL_TUNING
 
 // *** debug
@@ -4226,7 +4226,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         else{
             // reductions & prunings
             DepthType reduction = 0;
-            const bool isPrunable           = /*isNotEndGame &&*/ !isAdvancedPawnPush && !isMateScore(alpha) && !DynamicConfig::mateFinder && !killerT.isKiller(*it,ply) && data.danger[p.c] < SearchConfig::dangerLimitPruning[0] && data.danger[~p.c] < SearchConfig::dangerLimitPruning[1] ;
+            const bool isPrunable           = /*isNotEndGame &&*/ !isAdvancedPawnPush && !isMateScore(alpha) && !DynamicConfig::mateFinder && !killerT.isKiller(*it,ply);//&& data.danger[p.c] < SearchConfig::dangerLimitPruning[0] && data.danger[~p.c] < SearchConfig::dangerLimitPruning[1] ;
             const bool isReductible         = /*isNotEndGame &&*/ !isAdvancedPawnPush && !DynamicConfig::mateFinder;
             const bool noCheck              = !isInCheck && !isCheck;
             const bool overLmpLimit         = validMoveCount > SearchConfig::lmpLimit[improving][depth];
@@ -4259,7 +4259,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 reduction = SearchConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
                 reduction += !improving;
                 reduction += ttMoveIsCapture/*&&isPrunableStd*/;
-                reduction += (data.danger[p.c] < SearchConfig::dangerLimitReduction[0] && data.danger[~p.c] < SearchConfig::dangerLimitReduction[1]);
+                //reduction += (data.danger[p.c] < SearchConfig::dangerLimitReduction[0] && data.danger[~p.c] < SearchConfig::dangerLimitReduction[1]);
                 //reduction += cutNode&&isPrunableStd;
                 //reduction -= (reduction>1)&&ttMoveSingularExt;
                 if (pvnode && reduction > 0) --reduction;
