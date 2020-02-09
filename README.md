@@ -228,6 +228,7 @@ You can use both the json configuation file or the command line argument to sele
 * 1.16..1.19 : work on killer, history and counter
 * 1.19..1.26 : mainly TCEC QL preparation and debugging
 * 1.26..1.34 : mainly TCEC L2 preparation, debugging and cleaning
+* 1.35..1.38 : playing with SEE, initiative, danger, ...
 
 ## Thanks
 
