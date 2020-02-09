@@ -328,8 +328,8 @@ CONST_CLOP_TUNING ScoreType probCutMargin                = 80;
 CONST_CLOP_TUNING DepthType lmrMinDepth                  = 2;
 CONST_CLOP_TUNING DepthType singularExtensionDepth       = 8;
 // on move / opponent
-CONST_CLOP_TUNING ScoreType dangerLimitPruning[2]        = {700,700};
-CONST_CLOP_TUNING ScoreType dangerLimitReduction[2]      = {700,700};
+CONST_CLOP_TUNING ScoreType dangerLimitPruning[2]        = {800,800};
+CONST_CLOP_TUNING ScoreType dangerLimitReduction[2]      = {800,800};
 
 const int nlevel = 100;
 const DepthType levelDepthMax[nlevel/10+1]   = {0,1,1,2,4,6,8,10,12,14,MAX_DEPTH};
@@ -4263,7 +4263,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             // SEE (capture)
             if (isPrunableCap){
                if (futility) {++stats.counters[Stats::sid_see]; continue;}
-               else if ( !rootnode && badCapScore(*it) < -(1+isDangerPrune)*100*depth /*!SEE_GE(p,*it,-100*depth)*/) {++stats.counters[Stats::sid_see2]; continue;} ///@todo already known in current move score
+               else if ( !rootnode && badCapScore(*it) < -(1+2*isDangerPrune)*100*depth /*!SEE_GE(p,*it,-100*depth)*/) {++stats.counters[Stats::sid_see2]; continue;} ///@todo already known in current move score
             }
             // LMR
 #ifdef WITH_LMRNN
