@@ -429,8 +429,7 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::outpost[EG],-150,550,"outpostEG"));
     */
 
-    /*
-    
+    /*    
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::doublePawnMalus  [0][MG],-150,550,"doublePawnMalus[0]"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::doublePawnMalus  [0][EG],-150,550,"doublePawnMalusEG[0]"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::isolatedPawnMalus[0][MG],-150,550,"isolatedPawnMalus[0]"));
@@ -525,10 +524,29 @@ void TexelTuning(const std::string & filename) {
 
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookFrontQueenMalus[MG] , -500,  500,"rookFrontQueenMalus"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookFrontQueenMalus[EG] , -500,  500,"rookFrontQueenMalusEG"));
+    */
 
+    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::hangingPieceMalus[MG] , -500,  500,"hangingPieceMalus"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::hangingPieceMalus[EG] , -500,  500,"hangingPieceMalusEG"));
+    */
 
+    /*
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::initiative[0][MG] , -500,  500,"initiativeMG0"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::initiative[0][EG] , -500,  500,"initiativeEG0"));
+    */
+    /*
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::initiative[1][MG] , -500,  500,"initiativeMG1"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::initiative[1][EG] , -500,  500,"initiativeEG1"));
+    */
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::initiative[2][MG] , -500,  500,"initiativeMG2"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::initiative[2][EG] , -500,  500,"initiativeEG2"));
+    /*
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::initiative[3][MG] , -500,  500,"initiativeMG3"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::initiative[3][EG] , -500,  500,"initiativeEG3"));
+    */
+
+    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnSafeAtt[MG] , -500,  500,"pawnSafeAtt"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnSafeAtt[EG] , -500,  500,"pawnSafeAttEG"));
 
@@ -577,6 +595,7 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::tempo[EG] , -500,  500,"tempo"));
     */
 
+    /*
     for (Mat m1 = M_p; m1 <= M_q; ++m1) {
         for (Mat m2 = M_p; m2 <= m1; ++m2) {
             guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::imbalance_mines[m1-1][m2-1][MG],  -3000, 3000, "imbalance_mines"  + std::to_string(m1) + "_" + std::to_string(m2)));
@@ -585,6 +604,7 @@ void TexelTuning(const std::string & filename) {
             guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::imbalance_theirs[m1-1][m2-1][EG], -3000, 3000, "imbalance_theirsEG" + std::to_string(m1) + "_" + std::to_string(m2)));
         }
     }
+    */
 
     computeOptimalK(data);
     Logging::LogIt(Logging::logInfo) << "Optimal K " << Texel::K;

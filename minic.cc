@@ -38,7 +38,7 @@ typedef uint64_t u_int64_t;
 
 #include "json.hpp"
 
-const std::string MinicVersion = "1.38";
+const std::string MinicVersion = "dev";
 
 // *** options
 #define WITH_UCI
@@ -73,7 +73,6 @@ const std::string MinicVersion = "1.38";
 
 ///@todo clop search param
 ///@todo test NN LMR
-///@todo remplace all c==Co_White by little table access to avoid if statement
 
 #ifdef WITH_MLPNN
 #include "tiny_dnn/tiny_dnn.h"
@@ -102,7 +101,7 @@ tiny_dnn::network<tiny_dnn::sequential> evalNet;
 #define INVALIDMINIMOVE int16_t(0x0000)
 #define NULLMOVE        int32_t(0xFFFF1111)
 #define INVALIDSQUARE  -1
-#define MAX_PLY       512
+#define MAX_PLY      1024
 #define MAX_MOVE      256   // 256 is enough I guess/home ...
 #define MAX_DEPTH     127   // DepthType is a char, !!!do not go above 127!!!
 #define MAX_HISTORY  1000
@@ -162,6 +161,8 @@ inline MiniMove Move2MiniMove(Move m) { return m & 0xFFFF;} // skip score
 
 enum GamePhase { MG=0, EG=1, GP_MAX=2 };
 GamePhase operator++(GamePhase & g){g=GamePhase(g+1); return g;}
+
+template <typename T> int sgn(T val) { return (T(0) < val) - (val < T(0)); }
 
 struct EvalScore{ ///@todo use Stockfish trick (two short in one int) but it's hard to make it compatible with Texel tuning !
     std::array<ScoreType,GP_MAX> sc = {0};
@@ -327,8 +328,8 @@ CONST_CLOP_TUNING ScoreType probCutMargin                = 80;
 CONST_CLOP_TUNING DepthType lmrMinDepth                  = 2;
 CONST_CLOP_TUNING DepthType singularExtensionDepth       = 8;
 // on move / opponent
-CONST_CLOP_TUNING ScoreType dangerLimitPruning[2]        = {3000,3000};
-CONST_CLOP_TUNING ScoreType dangerLimitReduction[2]      = {3000,3000};
+CONST_CLOP_TUNING ScoreType dangerLimitPruning[2]        = {700,700};
+CONST_CLOP_TUNING ScoreType dangerLimitReduction[2]      = {700,700};
 
 const int nlevel = 100;
 const DepthType levelDepthMax[nlevel/10+1]   = {0,1,1,2,4,6,8,10,12,14,MAX_DEPTH};
@@ -467,11 +468,11 @@ CONST_TEXEL_TUNING EvalScore   minorOnOpenFile       = { 11, -3};
 CONST_TEXEL_TUNING EvalScore   pinnedKing [5]        = { { -5, -9}, { 13, 65}, { -8, 66}, {-16, 61}, {-1, 27} };
 CONST_TEXEL_TUNING EvalScore   pinnedQueen[5]        = { { 12,-34}, {-25, 10}, {  5, 10}, {  1, 10}, {31, 34} };
 
-CONST_TEXEL_TUNING EvalScore   hangingPieceMalus     = {-21, -10};
+CONST_TEXEL_TUNING EvalScore   hangingPieceMalus     = {-24, -11};
 
-CONST_TEXEL_TUNING EvalScore   threatByMinor[6]      = { { -12, -7 },{ -19,-27 },{ -19, -10 },{ -25, 11 },{ -16, -9 },{ 0, 0 } };
-CONST_TEXEL_TUNING EvalScore   threatByRook[6]       = { {  -6, -7 },{ -11, -1 },{  -4,  -3 },{  -4, -1 },{  -7, -9 },{ 0, 0 } };
-CONST_TEXEL_TUNING EvalScore   threatByQueen[6]      = { {  -8, 20 },{   1, -2 },{  20,  -9 },{  31, -7 },{  16, -6 },{ 0, 0 } };
+CONST_TEXEL_TUNING EvalScore   threatByMinor[6]      = { { -11, -5 },{ -20,-27 },{ -19, -10 },{ -25, 11 },{ -16, -9 },{ 0, 0 } };
+CONST_TEXEL_TUNING EvalScore   threatByRook[6]       = { {  -5, -5 },{ -11, -1 },{  -4,  -3 },{  -4, -1 },{  -7, -9 },{ 0, 0 } };
+CONST_TEXEL_TUNING EvalScore   threatByQueen[6]      = { {  -4, 21 },{   1, -2 },{  20,  -9 },{  31, -7 },{  16, -6 },{ 0, 0 } };
 CONST_TEXEL_TUNING EvalScore   threatByKing[6]       = { {  -6,-17 },{  -5,  1 },{  -4, -10 },{  -5, -7 },{   0,  0 },{ 0, 0 } };
 
 CONST_TEXEL_TUNING EvalScore   adjKnight[9]          = { {-24,-27}, { -12, 9}, { -4, 18}, {  1, 17}, { 12, 22}, { 17, 24}, { 14, 46}, { 26, 40}, { 22, 10} };
@@ -487,6 +488,8 @@ CONST_TEXEL_TUNING EvalScore MOB[6][29] = { {{ 23,-46}, { 23,  5}, { 29, 15}, { 
                                             {{  6,-41}, { 13,-26}, { 16, -8}, { 18, -5}, { 21,  0}, { 17, 12}, { 17, 23}, { 17, 41}, { 13, 13}, {23, 47}, {28, 50}, {34, 24}, {16, 32}, {24, 87} },
                                             {{ -3,-64}, { -3,-25}, {  2,-11}, { -1, -7}, {  8,-10}, {  8, -4}, {  3, 15}, {  7, 14}, { 13, 15}, {21, 26}, { 8, 37}, {21, 43}, {25, 48}, {19, 45}, {24, 54}},
                                             {{  4,-17}, { -5, 31}, {-11, 41}, {-15, 46}, {-22, 48}, {-27, 40}, {-25, 43}, {-30, 40}, {-40, 23} } };
+
+CONST_TEXEL_TUNING EvalScore initiative[4] = {{1,5}, {58,39}, {115,64}, {71,78}};
 
 enum katt_att_def : unsigned char { katt_attack = 0, katt_defence = 1 };
 CONST_TEXEL_TUNING ScoreType kingAttMax    = 423;
@@ -779,6 +782,7 @@ struct Mask {
     BitBoard bbsquare, diagonal, antidiagonal, file, kingZone, pawnAttack[2], push[2], dpush[2], enpassant, knight, king, frontSpan[2], rearSpan[2], passerSpan[2], attackFrontSpan[2], between[64];
     Mask():bbsquare(0ull), diagonal(0ull), antidiagonal(0ull), file(0ull), kingZone(0ull), pawnAttack{ 0ull,0ull }, push{ 0ull,0ull }, dpush{ 0ull,0ull }, enpassant(0ull), knight(0ull), king(0ull), frontSpan{0ull}, rearSpan{0ull}, passerSpan{0ull}, attackFrontSpan{0ull}, between{0ull}{}
 };
+int Mask::ranks[512] = {0};
 Mask mask[64];
 
 inline void initMask() {
@@ -1562,13 +1566,13 @@ struct ThreadData{
 };
 
 struct Stats{
-    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits, sid_ttInsert, sid_ttPawnhits, sid_ttPawnInsert, sid_ttschits, sid_ttscmiss, sid_materialTableHits, sid_materialTableMiss, sid_staticNullMove, sid_lmr, sid_lmrFail, sid_pvsFail, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMoveTry3, sid_nullMove, sid_nullMove2, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_CMHPruning, sid_see, sid_see2, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_CMHExtension, sid_pawnPushExtension, sid_singularExtension, sid_singularExtension2, sid_singularExtension3, sid_queenThreatExtension, sid_BMExtension, sid_mateThreatExtension, sid_tbHit1, sid_tbHit2, sid_maxid };
+    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits, sid_ttInsert, sid_ttPawnhits, sid_ttPawnInsert, sid_ttschits, sid_ttscmiss, sid_materialTableHits, sid_materialTableMiss, sid_staticNullMove, sid_lmr, sid_lmrFail, sid_pvsFail, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMoveTry3, sid_nullMove, sid_nullMove2, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_CMHPruning, sid_see, sid_see2, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_CMHExtension, sid_pawnPushExtension, sid_singularExtension, sid_singularExtension2, sid_singularExtension3, sid_queenThreatExtension, sid_BMExtension, sid_mateThreatExtension, sid_tbHit1, sid_tbHit2, sid_dangerPrune, sid_dangerReduce, sid_maxid };
     static const std::array<std::string,sid_maxid> Names;
     std::array<Counter,sid_maxid> counters;
     void init(){ Logging::LogIt(Logging::logInfo) << "Init stat" ;  counters.fill(0ull); }
 };
 
-const std::array<std::string,Stats::sid_maxid> Stats::Names = { "nodes", "qnodes", "tthits", "ttInsert", "ttPawnhits", "ttPawnInsert", "ttScHits", "ttScMiss", "materialHits", "materialMiss", "staticNullMove", "lmr", "lmrfail", "pvsfail", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMoveTry3", "nullMove", "nullMove2", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "CMHPruning", "see", "see2", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "CMHExtension", "pawnPushExtension", "singularExtension", "singularExtension2", "singularExtension3", "queenThreatExtension", "BMExtension", "mateThreatExtension", "TBHit1", "TBHit2"};
+const std::array<std::string,Stats::sid_maxid> Stats::Names = { "nodes", "qnodes", "tthits", "ttInsert", "ttPawnhits", "ttPawnInsert", "ttScHits", "ttScMiss", "materialHits", "materialMiss", "staticNullMove", "lmr", "lmrfail", "pvsfail", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMoveTry3", "nullMove", "nullMove2", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "CMHPruning", "see", "see2", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "CMHExtension", "pawnPushExtension", "singularExtension", "singularExtension2", "singularExtension3", "queenThreatExtension", "BMExtension", "mateThreatExtension", "TBHit1", "TBHit2", "dangerPrune", "dangerReduce"};
 
 // singleton pool of threads
 class ThreadPool : public std::vector<std::unique_ptr<ThreadContext>> {
@@ -1603,8 +1607,8 @@ namespace MoveDifficultyUtil {
     const float     maxStealFraction  = 0.2f; // of remaining time
 }
 
-enum eScores : unsigned char { sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_PieceBlockPawn, sc_Holes, sc_Outpost, sc_FreePasser, sc_PwnPush, sc_PwnSafeAtt, sc_PwnPushAtt, sc_Adjust, sc_OpenFile, sc_RookFrontKing, sc_RookFrontQueen, sc_RookQueenSameFile, sc_AttQueenMalus, sc_MinorOnOpenFile, sc_RookBehindPassed, sc_QueenNearKing, sc_Hanging, sc_Threat, sc_PinsK, sc_PinsQ, sc_PawnTT, sc_Tempo, sc_NN, sc_max };
-static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "PieceBlockPawn", "Holes", "Outpost", "FreePasser", "PwnPush", "PwnSafeAtt", "PwnPushAtt" , "Adjust", "OpenFile", "RookFrontKing", "RookFrontQueen", "RookQueenSameFile", "AttQueenMalus", "MinorOnOpenFile", "RookBehindPassed", "QueenNearKing", "Hanging", "Threats", "PinsK", "PinsQ", "PawnTT", "Tempo", "NN" };
+enum eScores : unsigned char { sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_PieceBlockPawn, sc_Holes, sc_Outpost, sc_FreePasser, sc_PwnPush, sc_PwnSafeAtt, sc_PwnPushAtt, sc_Adjust, sc_OpenFile, sc_RookFrontKing, sc_RookFrontQueen, sc_RookQueenSameFile, sc_AttQueenMalus, sc_MinorOnOpenFile, sc_RookBehindPassed, sc_QueenNearKing, sc_Hanging, sc_Threat, sc_PinsK, sc_PinsQ, sc_PawnTT, sc_Tempo, sc_initiative, sc_NN, sc_max };
+static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "PieceBlockPawn", "Holes", "Outpost", "FreePasser", "PwnPush", "PwnSafeAtt", "PwnPushAtt" , "Adjust", "OpenFile", "RookFrontKing", "RookFrontQueen", "RookQueenSameFile", "AttQueenMalus", "MinorOnOpenFile", "RookBehindPassed", "QueenNearKing", "Hanging", "Threats", "PinsK", "PinsQ", "PawnTT", "Tempo", "initiative", "NN" };
 
 #ifdef DEBUG_ACC
 struct ScoreAcc{
@@ -3125,9 +3129,9 @@ namespace{ // some Color / Piece helpers
    template<Color C> inline bool isBackward(const Position &p, Square k, const BitBoard pAtt[2], const BitBoard pAttSpan[2]){ return ((BBTools::shiftN<C>(SquareToBitboard(k))&~p.pieces<P_wp>(~C)) & pAtt[~C] & ~pAttSpan[C]) != 0ull; }
    template<Piece T> inline BitBoard alignedThreatPieceSlider(const Position & p, Color C);
    template<> inline BitBoard alignedThreatPieceSlider<P_wn>(const Position & p, Color C){ return 0ull;}
-   template<> inline BitBoard alignedThreatPieceSlider<P_wb>(const Position & p, Color C){ return p.pieces<P_wb>(C) | p.pieces<P_wq>(C);}
-   template<> inline BitBoard alignedThreatPieceSlider<P_wr>(const Position & p, Color C){ return p.pieces<P_wr>(C) | p.pieces<P_wq>(C);}
-   template<> inline BitBoard alignedThreatPieceSlider<P_wq>(const Position & p, Color C){ return p.pieces<P_wb>(C) | p.pieces<P_wr>(C);} ///@todo this is false ...
+   template<> inline BitBoard alignedThreatPieceSlider<P_wb>(const Position & p, Color C){ return p.pieces<P_wb>(C) | p.pieces<P_wq>(C) /*| p.pieces<P_wn>(C)*/;}
+   template<> inline BitBoard alignedThreatPieceSlider<P_wr>(const Position & p, Color C){ return p.pieces<P_wr>(C) | p.pieces<P_wq>(C) /*| p.pieces<P_wn>(C)*/;}
+   template<> inline BitBoard alignedThreatPieceSlider<P_wq>(const Position & p, Color C){ return p.pieces<P_wb>(C) | p.pieces<P_wr>(C) /*| p.pieces<P_wn>(C)*/;} ///@todo this is false ...
    template<> inline BitBoard alignedThreatPieceSlider<P_wk>(const Position & p, Color C){ return 0ull;}
 }
 
@@ -3137,14 +3141,17 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, const BitBoa
         const Square k = BBTools::popBit(pieceBBiterator);
         const Square kk = ColorSquarePstHelper<C>(k);
         score += EvalConfig::PST[T-1][kk] * ColorSignHelper<C>();
-        BitBoard target = BBTools::pfCoverage[T-1](k, p.occupancy ^ /*p.pieces<T>(C)*/ alignedThreatPieceSlider<T>(p,C), C); // aligned threats of same piece type also taken into account ///@todo better?
+        const BitBoard target = BBTools::pfCoverage[T-1](k, p.occupancy, C); // real targets
         if ( target ){
-           kdanger[C]  -= countBit(target & kingZone[C])  * EvalConfig::kingAttWeight[EvalConfig::katt_defence][T-1];
-           kdanger[~C] += countBit(target & kingZone[~C]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][T-1];
            attBy |= target;
            att2  |= att & target;
            att   |= target;
            if ( target & p.pieces<P_wk>(~C) ) checkers |= SquareToBitboard(k);
+        }
+        const BitBoard shadowTarget = BBTools::pfCoverage[T-1](k, p.occupancy ^ /*p.pieces<T>(C)*/ alignedThreatPieceSlider<T>(p,C), C); // aligned threats of same piece type also taken into account and knight in front also removed ///@todo better?
+        if ( shadowTarget ){
+           kdanger[C]  -= countBit(shadowTarget & kingZone[C])  * EvalConfig::kingAttWeight[EvalConfig::katt_defence][T-1];
+           kdanger[~C] += countBit(shadowTarget & kingZone[~C]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][T-1];
         }
     }
 }
@@ -3275,6 +3282,7 @@ ScoreType eval(const Position & p, EvalData & data, ThreadContext &context){
 
     // usefull bitboards accumulator
     const BitBoard pawns[2]          = {p.whitePawn(), p.blackPawn()};
+    const BitBoard allPawns          = pawns[Co_White] | pawns[Co_Black];
     ScoreType kdanger[2]             = {0, 0};
     BitBoard att[2]                  = {0ull, 0ull};
     BitBoard att2[2]                 = {0ull, 0ull};
@@ -3541,6 +3549,11 @@ ScoreType eval(const Position & p, EvalData & data, ThreadContext &context){
     score[sc_Adjust] += ( (p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonus[p.mat[Co_White][M_p]] : 0)-(p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonus[p.mat[Co_Black][M_p]] : 0) );
     score[sc_Adjust] += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0) );
     score[sc_Adjust] += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
+
+    // initiative
+    const EvalScore initiativeBonus = EvalConfig::initiative[0] * countBit(allPawns) + EvalConfig::initiative[1] * ((allPawns & queenSide) && (allPawns & kingSide)) + EvalConfig::initiative[2] * (countBit(p.occupancy & ~allPawns) == 2) - EvalConfig::initiative[3];
+    score[sc_initiative][MG] += sgn(score.score[MG]) * std::max(initiativeBonus[MG], ScoreType(-std::abs(score.score[MG])));
+    score[sc_initiative][EG] += sgn(score.score[EG]) * std::max(initiativeBonus[EG], ScoreType(-std::abs(score.score[EG])));
 
     // tempo
     score[sc_Tempo] += EvalConfig::tempo*(white2Play?+1:-1);
@@ -4226,17 +4239,20 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         else{
             // reductions & prunings
             DepthType reduction = 0;
-            const bool isPrunable           = /*isNotEndGame &&*/ !isAdvancedPawnPush && !isMateScore(alpha) && !DynamicConfig::mateFinder && !killerT.isKiller(*it,ply);//&& data.danger[p.c] < SearchConfig::dangerLimitPruning[0] && data.danger[~p.c] < SearchConfig::dangerLimitPruning[1] ;
+            const bool isPrunable           = /*isNotEndGame &&*/ !isAdvancedPawnPush && !isMateScore(alpha) && !DynamicConfig::mateFinder && !killerT.isKiller(*it,ply);
             const bool isReductible         = /*isNotEndGame &&*/ !isAdvancedPawnPush && !DynamicConfig::mateFinder;
             const bool noCheck              = !isInCheck && !isCheck;
-            const bool overLmpLimit         = validMoveCount > SearchConfig::lmpLimit[improving][depth];
             const bool isPrunableStd        = isPrunable && isQuiet;
             const bool isPrunableStdNoCheck = isPrunableStd && noCheck;
             const bool isPrunableCap        = isPrunable && Move2Type(*it) == T_capture && isBadCap(*it) && noCheck ;
+            const bool isDangerPrune        = data.danger[p.c] > SearchConfig::dangerLimitPruning[0] || data.danger[~p.c] > SearchConfig::dangerLimitPruning[1];
+            const bool isDangerRed          = data.danger[p.c] > SearchConfig::dangerLimitReduction[0] || data.danger[~p.c] > SearchConfig::dangerLimitReduction[1];
+            if ( isDangerPrune) ++stats.counters[Stats::sid_dangerPrune];
+            if ( isDangerRed)   ++stats.counters[Stats::sid_dangerReduce];
             // futility
             if (futility && isPrunableStdNoCheck) {++stats.counters[Stats::sid_futility]; continue;}
             // LMP
-            if (lmp && isPrunableStdNoCheck && overLmpLimit ) {++stats.counters[Stats::sid_lmp]; continue;}
+            if (lmp && isPrunableStdNoCheck && validMoveCount > (1/*+isDangerPrune*/)*SearchConfig::lmpLimit[improving][depth] ) {++stats.counters[Stats::sid_lmp]; continue;}
             // History pruning (with CMH)
             if (historyPruning && isPrunableStdNoCheck && Move2Score(*it) < SearchConfig::historyPruningThresholdInit + depth*SearchConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
             // CMH pruning alone
@@ -4247,7 +4263,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             // SEE (capture)
             if (isPrunableCap){
                if (futility) {++stats.counters[Stats::sid_see]; continue;}
-               else if ( !rootnode && badCapScore(*it) < -100*depth /*!SEE_GE(p,*it,-100*depth)*/) {++stats.counters[Stats::sid_see2]; continue;} ///@todo already known in current move score
+               else if ( !rootnode && badCapScore(*it) < -(1+isDangerPrune)*100*depth /*!SEE_GE(p,*it,-100*depth)*/) {++stats.counters[Stats::sid_see2]; continue;} ///@todo already known in current move score
             }
             // LMR
 #ifdef WITH_LMRNN
@@ -4259,12 +4275,14 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 reduction = SearchConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
                 reduction += !improving;
                 reduction += ttMoveIsCapture/*&&isPrunableStd*/;
-                //reduction += (data.danger[p.c] < SearchConfig::dangerLimitReduction[0] && data.danger[~p.c] < SearchConfig::dangerLimitReduction[1]);
                 //reduction += cutNode&&isPrunableStd;
-                //reduction -= (reduction>1)&&ttMoveSingularExt;
-                if (pvnode && reduction > 0) --reduction;
-                if (!noCheck) --reduction;
                 reduction -= (2 * Move2Score(*it)) / MAX_HISTORY; //history reduction/extension (beware killers and counter are socred above history max, so reduced less
+                if ( reduction > 0){
+                    if      ( pvnode           ) --reduction;
+                    //else if ( isDangerRed      ) --reduction;
+                    else if ( !noCheck         ) --reduction;
+                    //else if ( ttMoveSingularExt) --reduction;
+                }
 #ifdef WITH_LMRNN
                 prediction = nn.predict(features); // shall be reduce less ?
                 reduction -= prediction;
@@ -4274,7 +4292,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             }
             const DepthType nextDepth = depth-1-reduction+extension;
             // SEE (quiet)
-            if ( isPrunableStdNoCheck && /*!rootnode &&*/ !SEE_GE(p,*it,-15*nextDepth*nextDepth)) {++stats.counters[Stats::sid_seeQuiet]; continue;}
+            if ( isPrunableStdNoCheck && /*!rootnode &&*/ !SEE_GE(p,*it,-15*(1/*+isDangerPrune*/)*nextDepth*nextDepth)) {++stats.counters[Stats::sid_seeQuiet]; continue;}
             // PVS
             score = -pvs<false,true>(-alpha-1,-alpha,p2,nextDepth,ply+1,childPV,seldepth,isCheck,true);
 #ifdef WITH_LMRNN
