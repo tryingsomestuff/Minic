@@ -328,8 +328,8 @@ CONST_CLOP_TUNING ScoreType probCutMargin                = 80;
 CONST_CLOP_TUNING DepthType lmrMinDepth                  = 2;
 CONST_CLOP_TUNING DepthType singularExtensionDepth       = 8;
 // on move / opponent
-CONST_CLOP_TUNING ScoreType dangerLimitPruning[2]        = {800,800};
-CONST_CLOP_TUNING ScoreType dangerLimitReduction[2]      = {800,800};
+CONST_CLOP_TUNING ScoreType dangerLimitPruning[2]        = {900,900};
+CONST_CLOP_TUNING ScoreType dangerLimitReduction[2]      = {900,900};
 
 const int nlevel = 100;
 const DepthType levelDepthMax[nlevel/10+1]   = {0,1,1,2,4,6,8,10,12,14,MAX_DEPTH};
@@ -4247,12 +4247,13 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             const bool isPrunableCap        = isPrunable && Move2Type(*it) == T_capture && isBadCap(*it) && noCheck ;
             const bool isDangerPrune        = data.danger[p.c] > SearchConfig::dangerLimitPruning[0] || data.danger[~p.c] > SearchConfig::dangerLimitPruning[1];
             const bool isDangerRed          = data.danger[p.c] > SearchConfig::dangerLimitReduction[0] || data.danger[~p.c] > SearchConfig::dangerLimitReduction[1];
+            const float dangerPruneFactor   = ((1.f+data.danger[p.c])/SearchConfig::dangerLimitPruning[0] + (1.f+data.danger[~p.c])/SearchConfig::dangerLimitPruning[1])/2;
             if ( isDangerPrune) ++stats.counters[Stats::sid_dangerPrune];
             if ( isDangerRed)   ++stats.counters[Stats::sid_dangerReduce];
             // futility
             if (futility && isPrunableStdNoCheck) {++stats.counters[Stats::sid_futility]; continue;}
             // LMP
-            if (lmp && isPrunableStdNoCheck && validMoveCount > (1/*+isDangerPrune*/)*SearchConfig::lmpLimit[improving][depth] ) {++stats.counters[Stats::sid_lmp]; continue;}
+            if (lmp && isPrunableStdNoCheck && validMoveCount > (1/*+dangerPruneFactor*/)*SearchConfig::lmpLimit[improving][depth] ) {++stats.counters[Stats::sid_lmp]; continue;}
             // History pruning (with CMH)
             if (historyPruning && isPrunableStdNoCheck && Move2Score(*it) < SearchConfig::historyPruningThresholdInit + depth*SearchConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
             // CMH pruning alone
@@ -4263,7 +4264,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             // SEE (capture)
             if (isPrunableCap){
                if (futility) {++stats.counters[Stats::sid_see]; continue;}
-               else if ( !rootnode && badCapScore(*it) < -(1+2*isDangerPrune)*100*depth /*!SEE_GE(p,*it,-100*depth)*/) {++stats.counters[Stats::sid_see2]; continue;} ///@todo already known in current move score
+               else if ( !rootnode && badCapScore(*it) < -(1+dangerPruneFactor*dangerPruneFactor)*100*depth /*!SEE_GE(p,*it,-100*depth)*/) {++stats.counters[Stats::sid_see2]; continue;} ///@todo already known in current move score
             }
             // LMR
 #ifdef WITH_LMRNN
