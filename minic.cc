@@ -329,7 +329,7 @@ CONST_CLOP_TUNING DepthType lmrMinDepth                  = 2;
 CONST_CLOP_TUNING DepthType singularExtensionDepth       = 8;
 // on move / opponent
 CONST_CLOP_TUNING ScoreType dangerLimitPruning[2]        = {900,900};
-CONST_CLOP_TUNING ScoreType dangerLimitReduction[2]      = {900,900};
+CONST_CLOP_TUNING ScoreType dangerLimitReduction[2]      = {700,700};
 
 const int nlevel = 100;
 const DepthType levelDepthMax[nlevel/10+1]   = {0,1,1,2,4,6,8,10,12,14,MAX_DEPTH};
@@ -4280,7 +4280,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 reduction -= (2 * Move2Score(*it)) / MAX_HISTORY; //history reduction/extension (beware killers and counter are socred above history max, so reduced less
                 if ( reduction > 0){
                     if      ( pvnode           ) --reduction;
-                    //else if ( isDangerRed      ) --reduction;
+                    else if ( isDangerRed      ) --reduction;
                     else if ( !noCheck         ) --reduction;
                     //else if ( ttMoveSingularExt) --reduction;
                 }
