@@ -2463,13 +2463,13 @@ TimeType GetNextMSecPerMove(const Position & p){
     }
     else{ // mps is not given
         Logging::LogIt(Logging::logInfo) << "Suddendeath style";
-        const int nmoves = 24; // always be able to play this more moves !
+        const int nmoves = 17; // always be able to play this more moves !
         Logging::LogIt(Logging::logInfo) << "nmoves    " << nmoves;
         Logging::LogIt(Logging::logInfo) << "p.moves   " << int(p.moves);
         assert(nmoves > 0); assert(msecInTC >= 0);
         const TimeType msecMargin = std::max(std::min(msecMarginMax, TimeType(msecMarginCoef*msecInTC)), msecMarginMin);
-        if (!isDynamic) ms = int((msecInTC+msecIncLoc) / (float)(nmoves)) - msecMarginMin;
-        else ms = std::min(msecUntilNextTC - msecMargin, TimeType(msecUntilNextTC / (float)nmoves + 0.75*msecIncLoc - msecMargin)*(isUCIPondering?3:2)/2);
+        if (!isDynamic) ms = int((msecInTC+msecIncLoc-msecMarginMin) / (float)(nmoves)) ;
+        else ms = std::min(msecUntilNextTC - msecMargin, TimeType((msecUntilNextTC - msecMargin) / (float)nmoves + msecIncLoc )*(isUCIPondering?3:2)/2);
     }
     return std::max(ms-overHead, TimeType(20));// if not much time left, let's try that hoping for a friendly GUI...
 }
