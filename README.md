@@ -227,8 +227,10 @@ You can use both the json configuation file or the command line argument to sele
 * 1.15 : FRC !
 * 1.16..1.19 : work on killer, history and counter
 * 1.19..1.26 : mainly TCEC QL preparation and debugging  
-* 1.26..1.34 : mainly TCEC L2 preparation, debugging and cleaning  
-* 1.35..1.38 : playing with SEE, initiative, imbalance, danger, ...
+* 1.26..1.34 : mainly TCEC L2 preparation, debugging and cleaning   
+* 1.35..1.38 : playing with SEE, initiative, imbalance, danger, ...  
+* 1.39..1.40 : tuning search SEE and LMR with danger score from evaluation  
+* 1.41..1.42 : fixing a time management issue with incremental TC  
 
 ## Thanks
 
