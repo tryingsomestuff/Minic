@@ -42,6 +42,7 @@ const std::string MinicVersion = "dev";
 
 // *** options
 #define WITH_UCI
+#define WITH_XBOARD
 #define WITH_MAGIC
 #define WITH_SYZYGY
 
@@ -1193,7 +1194,7 @@ namespace MaterialHash { // idea from Gull
     }
     ScoreType helperDummy(const Position &, Color , ScoreType){ return 0; } ///@todo not 0 for debug purpose ??
 
-    // idea taken from Stockfish (or public-domain KPK from HGM)
+    // idea taken from public-domain KPK from HGM
     namespace KPK{
 
     Square normalizeSquare(const Position& p, Color strongSide, Square sq) {
@@ -2443,6 +2444,8 @@ inline bool isAttacked(const Position & p, BitBoard bb) { // copy ///@todo shoul
     return false;
 }
 
+namespace MoveGen{
+
 enum GenPhase { GP_all = 0, GP_cap = 1, GP_quiet = 2 };
 inline void addMove(Square from, Square to, MType type, MoveList & moves) { assert(from >= 0 && from < 64); assert(to >= 0 && to < 64); moves.push_back(ToMove(from, to, type, 0)); }
 
@@ -2523,6 +2526,8 @@ void generate(const Position & p, MoveList & moves, bool doNotClear = false){
     while (myPieceBBiterator) generateSquare<phase>(p,moves,BBTools::popBit(myPieceBBiterator));
     STOP_AND_SUM_TIMER(Generate)
 }
+
+} // MoveGen
 
 inline void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, bool isCapture = false, Piece prom = P_none) {
     START_TIMER
@@ -2837,7 +2842,7 @@ void initBook() {
 #endif
 } // Book
 
-namespace BBTools {
+namespace BBTools { // re-open
     BitBoard allAttackedBB(const Position &p, const Square x, Color c) {
         if (c == Co_White) return attack<P_wb>(x, p.blackBishop() | p.blackQueen(), p.occupancy) | attack<P_wr>(x, p.blackRook() | p.blackQueen(), p.occupancy) | attack<P_wn>(x, p.blackKnight()) | attack<P_wp>(x, p.blackPawn(), p.occupancy, Co_White) | attack<P_wk>(x, p.blackKing());
         else               return attack<P_wb>(x, p.whiteBishop() | p.whiteQueen(), p.occupancy) | attack<P_wr>(x, p.whiteRook() | p.whiteQueen(), p.occupancy) | attack<P_wn>(x, p.whiteKnight()) | attack<P_wp>(x, p.whitePawn(), p.occupancy, Co_Black) | attack<P_wk>(x, p.whiteKing());
@@ -3033,13 +3038,13 @@ struct MoveSorter{
     const DepthType ply;
     const ThreadContext::CMHPtrArray & cmhPtr;
     float gp;
-};
 
-void sort(const ThreadContext & context, MoveList & moves, const Position & p, float gp, DepthType ply, const ThreadContext::CMHPtrArray & cmhPtr, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL, const Move refutation = INVALIDMOVE){
-    const MoveSorter ms(context,p,gp,ply,cmhPtr,useSEE,isInCheck,e,refutation);
-    for(auto it = moves.begin() ; it != moves.end() ; ++it){ ms.computeScore(*it); }
-    std::sort(moves.begin(),moves.end(),ms);
-}
+    static void sort(const ThreadContext & context, MoveList & moves, const Position & p, float gp, DepthType ply, const ThreadContext::CMHPtrArray & cmhPtr, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL, const Move refutation = INVALIDMOVE){
+        const MoveSorter ms(context,p,gp,ply,cmhPtr,useSEE,isInCheck,e,refutation);
+        for(auto it = moves.begin() ; it != moves.end() ; ++it){ ms.computeScore(*it); }
+        std::sort(moves.begin(),moves.end(),ms);
+    }
+};
 
 inline bool ThreadContext::isRep(const Position & p, bool isPV)const{
     const int limit = isPV ? 3 : 1;
@@ -3168,6 +3173,17 @@ BitBoard getPinned(const Position & p, const Square s){
     return pinned;
 }
 
+float gamePhase(const Position & p, ScoreType & matScoreW, ScoreType & matScoreB){
+    const float totalMatScore = 2.f * *absValues[P_wq] + 4.f * *absValues[P_wr] + 4.f * *absValues[P_wb] + 4.f * *absValues[P_wn] + 16.f * *absValues[P_wp]; // cannot be static for tuning process ...
+    const ScoreType matPieceScoreW = p.mat[Co_White][M_q] * *absValues[P_wq] + p.mat[Co_White][M_r] * *absValues[P_wr] + p.mat[Co_White][M_b] * *absValues[P_wb] + p.mat[Co_White][M_n] * *absValues[P_wn];
+    const ScoreType matPieceScoreB = p.mat[Co_Black][M_q] * *absValues[P_wq] + p.mat[Co_Black][M_r] * *absValues[P_wr] + p.mat[Co_Black][M_b] * *absValues[P_wb] + p.mat[Co_Black][M_n] * *absValues[P_wn];
+    const ScoreType matPawnScoreW  = p.mat[Co_White][M_p] * *absValues[P_wp];
+    const ScoreType matPawnScoreB  = p.mat[Co_Black][M_p] * *absValues[P_wp];
+    matScoreW = matPieceScoreW + matPawnScoreW;
+    matScoreB = matPieceScoreB + matPawnScoreB;
+    return (matScoreW + matScoreB ) / totalMatScore; // based on MG values
+}
+
 template < bool display, bool safeMatEvaluator >
 ScoreType eval(const Position & p, EvalData & data, ThreadContext &context){
     START_TIMER
@@ -3187,8 +3203,8 @@ ScoreType eval(const Position & p, EvalData & data, ThreadContext &context){
     // Material evaluation
     const Hash matHash = MaterialHash::getMaterialHash(p.mat);
     if ( matHash ){
-        ++context.stats.counters[Stats::sid_materialTableHits];
-        // Hash data
+       ++context.stats.counters[Stats::sid_materialTableHits];
+       // Hash data
        const MaterialHash::MaterialHashEntry & MEntry = MaterialHash::materialHashTable[matHash];
        data.gp = MEntry.gp;
        score[sc_Mat][EG] += MEntry.score[EG];
@@ -3205,14 +3221,9 @@ ScoreType eval(const Position & p, EvalData & data, ThreadContext &context){
        }
     }
     else{ // game phase and material scores out of table
-       const float totalMatScore = 2.f * *absValues[P_wq] + 4.f * *absValues[P_wr] + 4.f * *absValues[P_wb] + 4.f * *absValues[P_wn] + 16.f * *absValues[P_wp]; // cannot be static for tuning process ...
-       const ScoreType matPieceScoreW = p.mat[Co_White][M_q] * *absValues[P_wq] + p.mat[Co_White][M_r] * *absValues[P_wr] + p.mat[Co_White][M_b] * *absValues[P_wb] + p.mat[Co_White][M_n] * *absValues[P_wn];
-       const ScoreType matPieceScoreB = p.mat[Co_Black][M_q] * *absValues[P_wq] + p.mat[Co_Black][M_r] * *absValues[P_wr] + p.mat[Co_Black][M_b] * *absValues[P_wb] + p.mat[Co_Black][M_n] * *absValues[P_wn];
-       const ScoreType matPawnScoreW  = p.mat[Co_White][M_p] * *absValues[P_wp];
-       const ScoreType matPawnScoreB  = p.mat[Co_Black][M_p] * *absValues[P_wp];
-       const ScoreType matScoreW = matPieceScoreW + matPawnScoreW;
-       const ScoreType matScoreB = matPieceScoreB + matPawnScoreB;
-       data.gp = (matScoreW + matScoreB ) / totalMatScore; // based on MG values
+       ScoreType matScoreW = 0;
+       ScoreType matScoreB = 0;
+       data.gp = gamePhase(p,matScoreW, matScoreB);
        score[sc_Mat][EG] += (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValuesEG[P_wq] + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * *absValuesEG[P_wr] + (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * *absValuesEG[P_wb] + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValuesEG[P_wn] + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValuesEG[P_wp];
        score[sc_Mat][MG] += matScoreW - matScoreB;
        ++context.stats.counters[Stats::sid_materialTableMiss];
@@ -3613,8 +3624,8 @@ ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const
     getCMHPtr(p.halfmoves,cmhPtr);
 
     MoveList moves;
-    generate<GP_cap>(p,moves);
-    sort(*this,moves,p,data.gp,ply,cmhPtr,true);
+    MoveGen::generate<MoveGen::GP_cap>(p,moves);
+    MoveSorter::sort(*this,moves,p,data.gp,ply,cmhPtr,true);
 
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         Position p2 = p;
@@ -3697,9 +3708,9 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     ScoreType bestScore = evalScore;
 
     MoveList moves;
-    if ( isInCheck ) generate<GP_all>(p,moves); ///@odo generate only evasion !
-    else             generate<GP_cap>(p,moves);
-    sort(*this,moves,p,data.gp,ply,cmhPtr,isInCheck,isInCheck,&e);
+    if ( isInCheck ) MoveGen::generate<MoveGen::GP_all>(p,moves); ///@odo generate only evasion !
+    else             MoveGen::generate<MoveGen::GP_cap>(p,moves);
+    MoveSorter::sort(*this,moves,p,data.gp,ply,cmhPtr,isInCheck,isInCheck,&e);
 
     const ScoreType alphaInit = alpha;
 
@@ -3746,7 +3757,7 @@ inline void updateTables(ThreadContext & context, const Position & p, DepthType 
 
 ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck) {
     MoveList moves;
-    generate<GP_all>(p, moves, false);
+    MoveGen::generate<MoveGen::GP_all>(p, moves, false);
     if (moves.empty()) return isInCheck ? -MATE : 0;
     std::random_shuffle(moves.begin(), moves.end());
     for (auto it = moves.begin(); it != moves.end(); ++it) {
@@ -3768,7 +3779,7 @@ bool isPseudoLegal(const Position & p, Move m) {
     const bool b = isPseudoLegal2(p,m);
     if (b) {
         MoveList moves;
-        generate(p, moves);
+        MoveGen::generate<MoveGen::GP_all>(p, moves);
         bool found = false;
         for (auto it = moves.begin(); it != moves.end() && !found; ++it) if (sameMove(*it, m)) found = true;
         if (!found){
@@ -3910,7 +3921,9 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                data.gp = MEntry.gp;
             }
             else{
-               data.gp = 0; ///@todo let's hope this is good enough
+               ScoreType matScoreW = 0;
+               ScoreType matScoreB = 0;
+               data.gp = gamePhase(p,matScoreW,matScoreB);
                ++stats.counters[Stats::sid_materialTableMiss];
             }
             ///@todo data.danger is not filled here !!
@@ -3991,8 +4004,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
           ++stats.counters[Stats::sid_probcutTry];
           int probCutCount = 0;
           const ScoreType betaPC = beta + SearchConfig::probCutMargin;
-          generate<GP_cap>(p,moves);
-          sort(*this,moves,p,data.gp,ply,cmhPtr,true,isInCheck,&e);
+          MoveGen::generate<MoveGen::GP_cap>(p,moves);
+          MoveSorter::sort(*this,moves,p,data.gp,ply,cmhPtr,true,isInCheck,&e);
           capMoveGenerated = true;
           for (auto it = moves.begin() ; it != moves.end() && probCutCount < SearchConfig::probCutMaxMoves /*+ 2*cutNode*/; ++it){
             if ( (validTTmove && sameMove(e.m, *it)) || isBadCap(*it) ) continue; // skip TT move if quiet or bad captures
@@ -4113,8 +4126,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if (rootnode && withoutSkipMove && (countBit(p.allPieces[Co_White] | p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN) {
         ScoreType tbScore = 0;
         if (SyzygyTb::probe_root(*this, p, tbScore, moves) < 0) { // only good moves if TB success
-            if (capMoveGenerated) generate<GP_quiet>(p, moves, true);
-            else                  generate<GP_all>  (p, moves, false);
+            if (capMoveGenerated) MoveGen::generate<MoveGen::GP_quiet>(p, moves, true);
+            else                  MoveGen::generate<MoveGen::GP_all>  (p, moves, false);
         }
         else ++stats.counters[Stats::sid_tbHit2];
         moveGenerated = true;
@@ -4124,11 +4137,11 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     ScoreType score = -MATE + ply;
 
     if (!moveGenerated) {
-        if (capMoveGenerated) generate<GP_quiet>(p, moves, true);
-        else                  generate<GP_all>  (p, moves, false);
+        if (capMoveGenerated) MoveGen::generate<MoveGen::GP_quiet>(p, moves, true);
+        else                  MoveGen::generate<MoveGen::GP_all>  (p, moves, false);
     }
     if (moves.empty()) return isInCheck ? -MATE + ply : 0;
-    sort(*this, moves, p, data.gp, ply, cmhPtr, true, isInCheck, &e, refutation != INVALIDMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMOVE);
+    MoveSorter::sort(*this, moves, p, data.gp, ply, cmhPtr, true, isInCheck, &e, refutation != INVALIDMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMOVE);
 
     for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
         if (sameMove(skipMove, *it)) continue; // skipmove
@@ -4727,7 +4740,8 @@ namespace COM {
 
 #ifdef WITH_UCI
 #include "Add-On/uci.cc"
-#else
+#endif
+#ifdef WITH_XBOARD
 #include "Add-On/xboard.cc"
 #endif
 
@@ -4800,7 +4814,7 @@ int main(int argc, char ** argv) {
     return ret;
 #else
     TimeMan::init();
-#ifndef WITH_UCI
+#ifndef WITH_UCI // UCI is default
     XBoard::init();
     XBoard::xboard();
 #else

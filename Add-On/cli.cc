@@ -19,7 +19,7 @@ Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc, bool 
     int validMoves = 0;
     int allMoves = 0;
 #ifndef DEBUG_PERFT
-    generate<GP_all>(p,moves);
+    MoveGen::generate<MoveGen::GP_all>(p,moves);
     for (auto it = moves.begin() ; it != moves.end(); ++it){
         const Move m = *it;
 #else
@@ -86,7 +86,8 @@ int cliManagement(std::string cli, int argc, char ** argv){
         return 0;
     }
     Logging::LogIt(Logging::logInfo) << "You can use -uci command line option to enter uci mode";
-#else
+#endif
+#ifdef WITH_XBOARD
     if ( cli == "-xboard" ){
         XBoard::init();
         TimeMan::init();
@@ -348,9 +349,9 @@ int cliManagement(std::string cli, int argc, char ** argv){
 
     if ( cli == "-gen" ){
         MoveList moves;
-        generate<GP_all>(p,moves);
+        MoveGen::generate<MoveGen::GP_all>(p,moves);
         ThreadContext::CMHPtrArray cmhPtr = {0};
-        sort(ThreadPool::instance().main(),moves,p,0.f,0,cmhPtr);
+        MoveSorter::sort(ThreadPool::instance().main(),moves,p,0.f,0,cmhPtr);
         Logging::LogIt(Logging::logInfo) << "nb moves : " << moves.size() ;
         for(auto it = moves.begin(); it != moves.end(); ++it){
             Logging::LogIt(Logging::logInfo) << ToString(*it,true) ;

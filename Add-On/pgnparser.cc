@@ -19,7 +19,7 @@ int parseResult(const std::string& result) {
 
 Move SANToMove(const std::string & s, const Position & p){
    MoveList moves;
-   generate<GP_all>(p,moves);
+   MoveGen::generate<MoveGen::GP_all>(p,moves);
    //std::cout << ToString(p) << std::endl;
    //std::cout << moves.size() << std::endl;
    for (auto it = moves.begin() ; it != moves.end() ; ++it){

@@ -41,7 +41,7 @@ std::string showAlgAbr(Move m, const Position & p) {
         for(auto it = v.begin() ; it != v.end() ; ++it){
             if ( *it == from ) continue; // to not compare to myself ...
             MoveList l;
-            generateSquare<GP_all>(p,l,*it);
+            MoveGen::generateSquare<MoveGen::GP_all>(p,l,*it);
             for(auto mit = l.begin() ; mit != l.end() ; ++mit){
                 if ( *mit == m ) continue; // to not compare to myself ... should no happend thanks to previous verification
                 Position p3 = p;
