@@ -51,16 +51,12 @@ const std::string MinicVersion = "dev";
 //#define WITH_TEST_SUITE
 //#define WITH_PGN_PARSER
 
-// *** Testing
-//#define WITH_LMRNN
-//#define WITH_MLPNN
-
 // *** Tuning
 //#define WITH_TIMER
 //#define WITH_CLOP_SEARCH
 //#define WITH_TEXEL_TUNING
 
-// *** debug
+// *** Debug
 //#define DEBUG_HASH
 //#define DEBUG_PHASH
 //#define DEBUG_MATERIAL
@@ -72,12 +68,6 @@ const std::string MinicVersion = "dev";
 //#define DEBUG_PERFT
 
 ///@todo clop search param
-///@todo test NN LMR
-
-#ifdef WITH_MLPNN
-#include "tiny_dnn/tiny_dnn.h"
-tiny_dnn::network<tiny_dnn::sequential> evalNet;
-#endif
 
 #ifdef WITH_TEXEL_TUNING
 #define CONST_TEXEL_TUNING
@@ -146,16 +136,6 @@ typedef int16_t  GenerationType;
 #define STOP_AND_SUM_TIMER(name)
 #endif
 
-#ifdef WITH_MLPNN
-void initNet() {
-    evalNet << tiny_dnn::fully_connected_layer(25, 50);
-    evalNet << tiny_dnn::tanh_layer();
-    evalNet << tiny_dnn::fully_connected_layer(50, 50);
-    evalNet << tiny_dnn::tanh_layer();
-    evalNet << tiny_dnn::fully_connected_layer(50, 1);
-}
-#endif
-
 inline MiniHash Hash64to32   (Hash h) { return (h >> 32) & 0xFFFFFFFF; }
 inline MiniMove Move2MiniMove(Move m) { return m & 0xFFFF;} // skip score
 
@@ -197,23 +177,7 @@ struct EvalScore{ ///@todo use Stockfish trick (two short in one int) but it's h
     EvalScore scale(float s_mg,float s_eg)const{ EvalScore e(*this); e[MG]= ScoreType(s_mg*e[MG]); e[EG]= ScoreType(s_eg*e[EG]); return e;}
 };
 
-template < typename T, int sizeT >
-struct OptList {
-   std::array<T, sizeT> _m;
-   typedef typename std::array<T, sizeT>::iterator iterator;
-   typedef typename std::array<T, sizeT>::const_iterator const_iterator;
-   unsigned char n = 0;
-   iterator begin(){return _m.begin();}
-   const_iterator begin()const{return _m.begin();}
-   iterator end(){return _m.begin()+n;}
-   const_iterator end()const{return _m.begin()+n;}
-   void clear(){n=0;}
-   size_t size(){return n;}
-   void push_back(const T & m) { assert(n<sizeT);  _m[n] = m; n++; }
-   bool empty(){return n==0;}
-   T & operator [](size_t k) { assert(k < sizeT); return _m[k]; }
-   const T & operator [](size_t k) const { assert(k < sizeT);  return _m[k]; }
-};
+template < typename T, int SIZE > struct OptList : public std::vector<T>{ OptList() : std::vector<T>(){std::vector<T>::reserve(SIZE);};};
 
 typedef OptList<Move,MAX_MOVE> MoveList;
 typedef std::vector<Move> PVList;
@@ -536,8 +500,8 @@ enum Rank : unsigned char { Rank_1 = 0,Rank_2,Rank_3,Rank_4,Rank_5,Rank_6,Rank_7
 const Rank PromRank[2] = { Rank_8 , Rank_1 };
 const Rank EPRank[2]   = { Rank_6 , Rank_3 };
 
-enum CastlingRights : unsigned char{ C_none = 0, C_wks = 1, C_wqs = 2, C_bks = 4, C_bqs = 8 };
 enum CastlingTypes : unsigned char { CT_OOO = 0, CT_OO = 1 };
+enum CastlingRights : unsigned char{ C_none = 0, C_wks = 1, C_wqs = 2, C_bks = 4, C_bqs = 8 };
 CastlingRights operator&(const CastlingRights & a, const CastlingRights &b){return CastlingRights(char(a)&char(b));}
 CastlingRights operator|(const CastlingRights & a, const CastlingRights &b){return CastlingRights(char(a)|char(b));}
 CastlingRights operator~(const CastlingRights & a){return CastlingRights(~char(a));}
@@ -561,8 +525,6 @@ Color operator++(Color & c){c=Color(c+1); return c;}
 
 // ttmove 10000, promcap >7000, cap 7000, checks 6000, killers 1800-1700-1600, counter 1500, castling 200, other by -1000 < history < 1000, bad cap <-7000.
 ScoreType MoveScoring[16] = { 0, 7000, 7100, 6000, 3950, 3500, 3350, 3300, 7950, 7500, 7350, 7300, 200, 200, 200, 200 };
-
-//Color Colors[13] = { Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_Black, Co_None, Co_White, Co_White, Co_White, Co_White, Co_White, Co_White};
 
 #ifdef __MINGW32__
 #define POPCOUNT(x)   int(__builtin_popcountll(x))
@@ -1048,7 +1010,7 @@ void setBitBoards(Position & p) {
     p.occupancy  = p.allPieces[Co_White] | p.allPieces[Co_Black];
 }
 
-} // BB
+} // BBTools
 
 inline ScoreType Move2Score(Move m) { assert(VALIDMOVE(m)); return (m >> 16) & 0xFFFF; }
 inline Square    Move2From (Move m) { assert(VALIDMOVE(m)); return (m >> 10) & 0x3F  ; }
@@ -1450,26 +1412,26 @@ namespace MaterialHash { // idea from Gull
     };
 
     inline Terminaison probeMaterialHashTable(const Position::Material & mat) { return materialHashTable[getMaterialHash(mat)].t; }
-}
 
-void updateMaterialOther(Position & p){
-    p.mat[Co_White][M_M] = p.mat[Co_White][M_q] + p.mat[Co_White][M_r];  p.mat[Co_Black][M_M] = p.mat[Co_Black][M_q] + p.mat[Co_Black][M_r];
-    p.mat[Co_White][M_m] = p.mat[Co_White][M_b] + p.mat[Co_White][M_n];  p.mat[Co_Black][M_m] = p.mat[Co_Black][M_b] + p.mat[Co_Black][M_n];
-    p.mat[Co_White][M_t] = p.mat[Co_White][M_M] + p.mat[Co_White][M_m];  p.mat[Co_Black][M_t] = p.mat[Co_Black][M_M] + p.mat[Co_Black][M_m];
-    p.mat[Co_White][M_bl] = (unsigned char)countBit(p.whiteBishop()&whiteSquare);   p.mat[Co_White][M_bd] = (unsigned char)countBit(p.whiteBishop()&blackSquare);
-    p.mat[Co_Black][M_bl] = (unsigned char)countBit(p.blackBishop()&whiteSquare);   p.mat[Co_Black][M_bd] = (unsigned char)countBit(p.blackBishop()&blackSquare);
-}
+    void updateMaterialOther(Position & p){
+        p.mat[Co_White][M_M] = p.mat[Co_White][M_q] + p.mat[Co_White][M_r];  p.mat[Co_Black][M_M] = p.mat[Co_Black][M_q] + p.mat[Co_Black][M_r];
+        p.mat[Co_White][M_m] = p.mat[Co_White][M_b] + p.mat[Co_White][M_n];  p.mat[Co_Black][M_m] = p.mat[Co_Black][M_b] + p.mat[Co_Black][M_n];
+        p.mat[Co_White][M_t] = p.mat[Co_White][M_M] + p.mat[Co_White][M_m];  p.mat[Co_Black][M_t] = p.mat[Co_Black][M_M] + p.mat[Co_Black][M_m];
+        p.mat[Co_White][M_bl] = (unsigned char)countBit(p.whiteBishop()&whiteSquare);   p.mat[Co_White][M_bd] = (unsigned char)countBit(p.whiteBishop()&blackSquare);
+        p.mat[Co_Black][M_bl] = (unsigned char)countBit(p.blackBishop()&whiteSquare);   p.mat[Co_Black][M_bd] = (unsigned char)countBit(p.blackBishop()&blackSquare);
+    }
 
-void initMaterial(Position & p){ // M_p .. M_k is the same as P_wp .. P_wk
-    for( Color c = Co_White ; c < Co_End ; ++c) for( Piece pp = P_wp ; pp <= P_wk ; ++pp) p.mat[c][pp] = (unsigned char)countBit(p.pieces(c,pp));
-    updateMaterialOther(p);
-}
+    void initMaterial(Position & p){ // M_p .. M_k is the same as P_wp .. P_wk
+        for( Color c = Co_White ; c < Co_End ; ++c) for( Piece pp = P_wp ; pp <= P_wk ; ++pp) p.mat[c][pp] = (unsigned char)countBit(p.pieces(c,pp));
+        updateMaterialOther(p);
+    }
 
-inline void updateMaterialProm(Position &p, const Square toBeCaptured, MType mt){
-    p.mat[~p.c][PieceTools::getPieceType(p,toBeCaptured)]--; // capture if to square is not empty
-    p.mat[p.c][M_p]--; // pawn
-    p.mat[p.c][promShift(mt)]++;   // prom piece
-}
+    inline void updateMaterialProm(Position &p, const Square toBeCaptured, MType mt){
+        p.mat[~p.c][PieceTools::getPieceType(p,toBeCaptured)]--; // capture if to square is not empty
+        p.mat[p.c][M_p]--; // pawn
+        p.mat[p.c][promShift(mt)]++;   // prom piece
+    }
+} // MaterialHash
 
 namespace Zobrist {
     template < class T = Hash>
@@ -1529,33 +1491,6 @@ Hash computePHash(const Position &p){
 }
 
 struct ThreadContext; // forward decl
-
-#ifdef WITH_LMRNN
-template <int N, typename ValueType, typename InputType> struct NN { 
-    static const unsigned int n = N;
-    float w[n + 1];
-    float learningRate;
-    uint64_t epoch;
-    void init() {
-        w[n] = 0;
-        epoch = 0;
-        for (unsigned int k = 0; k < n; ++k) w[k] = 0;
-    }
-    inline NN(float learningRate) : learningRate(learningRate) { init(); }
-    void train(const InputType(& input)[n], ValueType prediction, ValueType result) {
-        const ValueType error = (result - prediction);
-        const float le = learningRate * error;
-        epoch++;
-        w[n] += le;
-        for (unsigned int d = 0; d < n; d++) w[d] += input[d] * le;
-    }
-    ValueType predict(const InputType(& input)[n])const{
-        float x = w[n];
-        for (unsigned int d = 0; d < n; d++) x += w[d] * input[d];
-        return x;
-    }
-};
-#endif
 
 struct ThreadData{
     DepthType depth, seldepth;
@@ -1802,11 +1737,7 @@ struct ThreadContext{
     size_t id()const { return _index;}
     bool   isMainThread()const { return id() == 0 ; }
 
-    ThreadContext(size_t n):_index(n),_exit(false),_searching(true),_stdThread(&ThreadContext::idleLoop, this)
-#ifdef WITH_LMRNN
-        ,nn(1e-2)
-#endif
-    { wait(); }
+    ThreadContext(size_t n):_index(n),_exit(false),_searching(true),_stdThread(&ThreadContext::idleLoop, this){ wait(); }
 
     ~ThreadContext(){
         _exit = true;
@@ -1874,10 +1805,6 @@ struct ThreadContext{
        __builtin_prefetch(addr);
     #  endif
     }
-
-#ifdef WITH_LMRNN
-    NN<9,DepthType,float> nn;
-#endif
 
 private:
     ThreadData              _data;
@@ -2288,7 +2215,7 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
     p.halfmoves = (int(p.moves) - 1) * 2 + 1 + (p.c == Co_Black ? 1 : 0);
 
     BBTools::setBitBoards(p);
-    initMaterial(p);
+    MaterialHash::initMaterial(p);
     p.h = computeHash(p);
     p.ph = computePHash(p);
     return true;
@@ -2736,22 +2663,22 @@ bool apply(Position & p, const Move & m, bool noValidation){
 
     case T_promq:
     case T_cappromq:
-        updateMaterialProm(p,to,type);
+        MaterialHash::updateMaterialProm(p,to,type);
         movePiece(p, from, to, fromP, toP, type == T_cappromq,(p.c == Co_White ? P_wq : P_bq));
         break;
     case T_promr:
     case T_cappromr:
-        updateMaterialProm(p,to,type);
+        MaterialHash::updateMaterialProm(p,to,type);
         movePiece(p, from, to, fromP, toP, type == T_cappromr, (p.c == Co_White ? P_wr : P_br));
         break;
     case T_promb:
     case T_cappromb:
-        updateMaterialProm(p,to,type);
+        MaterialHash::updateMaterialProm(p,to,type);
         movePiece(p, from, to, fromP, toP, type == T_cappromb, (p.c == Co_White ? P_wb : P_bb));
         break;
     case T_promn:
     case T_cappromn:
-        updateMaterialProm(p,to,type);
+        MaterialHash::updateMaterialProm(p,to,type);
         movePiece(p, from, to, fromP, toP, type == T_cappromn, (p.c == Co_White ? P_wn : P_bn));
         break;
     case T_wks:
@@ -2811,10 +2738,10 @@ bool apply(Position & p, const Move & m, bool noValidation){
     if ( p.c == Co_White ) ++p.moves;
     ++p.halfmoves;
 
-    updateMaterialOther(p);
+    MaterialHash::updateMaterialOther(p);
 #ifdef DEBUG_MATERIAL
     Position::Material mat = p.mat;
-    initMaterial(p);
+    MaterialHash::initMaterial(p);
     if ( p.mat != mat ){ Logging::LogIt(Logging::logFatal) << "Material update error" << ToString(previous) << ToString(previous.mat) << ToString(p) << ToString(p.lastMove) << ToString(m) << ToString(mat) << ToString(p.mat); }
 #endif
     p.lastMove = m;
@@ -3558,14 +3485,6 @@ ScoreType eval(const Position & p, EvalData & data, ThreadContext &context){
     // tempo
     score[sc_Tempo] += EvalConfig::tempo*(white2Play?+1:-1);
 
-    /*
-#ifdef WITH_MLPNN
-    // bias NN
-    tiny_dnn::vec_t xv = { (float)p.mat[Co_White][M_p], (float)p.mat[Co_Black][M_p] };
-    score[sc_NN] += ScoreType(evalNet.predict(xv)[0]);
-#endif
-    */
-
     if ( display ) score.Display(p,data.gp);
     ScoreType ret = (white2Play?+1:-1)*score.Score(p,data.gp); // scale both phase and 50 moves rule
     STOP_AND_SUM_TIMER(Eval)
@@ -4267,10 +4186,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                else if ( !rootnode && badCapScore(*it) < -(1+dangerPruneFactor*dangerPruneFactor)*100*depth /*!SEE_GE(p,*it,-100*depth)*/) {++stats.counters[Stats::sid_see2]; continue;} ///@todo already known in current move score
             }
             // LMR
-#ifdef WITH_LMRNN
-            const float features[nn.n] = { float(stats.counters[Stats::sid_pvsFail]), float(stats.counters[Stats::sid_lmrFail]), float(mateThreat), float(ttMoveSingularExt),-float(ttMoveIsCapture),float(improving),float(isInCheck),float(isCapture(*it) || isPromotion(*it)),-float(cutNode) };
-            DepthType prediction = 0;
-#endif
             if (SearchConfig::doLMR && (isReductible && isQuiet ) && depth >= SearchConfig::lmrMinDepth ){
                 ++stats.counters[Stats::sid_lmr];
                 reduction = SearchConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
@@ -4284,10 +4199,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                     else if ( !noCheck         ) --reduction;
                     //else if ( ttMoveSingularExt) --reduction;
                 }
-#ifdef WITH_LMRNN
-                prediction = nn.predict(features); // shall be reduce less ?
-                reduction -= prediction;
-#endif
                 if ( extension - reduction > 0 ) reduction = extension;
                 if ( reduction >= depth - 1 + extension ) reduction = depth - 1 + extension - 1;
             }
@@ -4296,9 +4207,6 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if ( isPrunableStdNoCheck && /*!rootnode &&*/ !SEE_GE(p,*it,-15*(1/*+isDangerPrune*/)*nextDepth*nextDepth)) {++stats.counters[Stats::sid_seeQuiet]; continue;}
             // PVS
             score = -pvs<false,true>(-alpha-1,-alpha,p2,nextDepth,ply+1,childPV,seldepth,isCheck,true);
-#ifdef WITH_LMRNN
-            if (SearchConfig::doLMR) nn.train(features, prediction, (score > alpha) + (score > beta)); // "result" is 0 if < alpha, 1 if > alpha, 2 if > beta
-#endif
             if ( reduction > 0 && score > alpha )                       { ++stats.counters[Stats::sid_lmrFail]; childPV.clear(); score = -pvs<false,true>(-alpha-1,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,!cutNode); }
             if ( pvnode && score > alpha && (rootnode || score < beta) ){ ++stats.counters[Stats::sid_pvsFail]; childPV.clear(); score = -pvs<true ,true>(-beta   ,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,false); } // potential new pv node
         }
@@ -4371,13 +4279,10 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         Logging::LogIt(Logging::logInfo) << "... go for id " << id() ;
     }
     stats.init();
-    //clearPawnTT();
+    //clearPawnTT(); ///@todo loop context
     killerT.initKillers();
     historyT.initHistory();
     counterT.initCounter();
-#ifdef WITH_LMRNN
-    nn.init();
-#endif
 
     stack[p.halfmoves].h = p.h;
 
@@ -4394,6 +4299,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
            m = pv[0];
            d = 0;
            sc = 0;
+           seldepth = 0;
            displayGUI(d,d,sc,pv);
            return pv;
        }
@@ -5099,9 +5005,6 @@ void init(int argc, char ** argv) {
     SearchConfig::initLMR();
     SearchConfig::initMvvLva();
     BBTools::initMask();
-#ifdef WITH_MLPNN
-    initNet();
-#endif
 #ifdef WITH_MAGIC
     BBTools::MagicBB::initMagic();
 #endif
@@ -5123,9 +5026,6 @@ int main(int argc, char ** argv) {
 #endif
 #ifdef WITH_TEXEL_TUNING
     if (argc > 1 && std::string(argv[1]) == "-texel") { TexelTuning(argv[2]); return EXIT_SUCCESS; }
-#endif
-#ifdef WITH_MLPNN
-    if (argc > 1 && std::string(argv[1]) == "-mlp") { evalNetLearn(argv[2]); return EXIT_SUCCESS; }
 #endif
 #ifdef WITH_PGN_PARSER
     if (argc > 1 && std::string(argv[1]) == "-pgn") { return PGNParse(argv[2]); }
