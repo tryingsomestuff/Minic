@@ -78,13 +78,6 @@ void analyze(const Position & p, DepthType depth){
 
 int cliManagement(std::string cli, int argc, char ** argv){
 
-    if ( cli == "-xboard" ){
-        XBoard::init();
-        TimeMan::init();
-        XBoard::xboard();
-        return 0;
-    }
-
 #ifdef WITH_UCI
     if (cli == "-uci") {
         UCI::init();
@@ -92,9 +85,16 @@ int cliManagement(std::string cli, int argc, char ** argv){
         UCI::uci();
         return 0;
     }
-#endif
-    Logging::LogIt(Logging::logInfo) << "You can use -xboard command line option to enter xboard mode";
     Logging::LogIt(Logging::logInfo) << "You can use -uci command line option to enter uci mode";
+#else
+    if ( cli == "-xboard" ){
+        XBoard::init();
+        TimeMan::init();
+        XBoard::xboard();
+        return 0;
+    }
+    Logging::LogIt(Logging::logInfo) << "You can use -xboard command line option to enter xboard mode";
+#endif
 
     if ( cli == "-perft_test" ){
         perft_test(startPosition, 5, 4865609);
