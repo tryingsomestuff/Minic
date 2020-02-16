@@ -4241,7 +4241,8 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 void ThreadContext::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv, const std::string & mark){
     static unsigned char count = 0;
     count++; // overflow is ok
-    const TimeType ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count());
+    const auto now = Clock::now();
+    const TimeType ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(now - TimeMan::startTime).count());
     std::stringstream str;
     Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
     if (Logging::ct == Logging::CT_xboard) {
@@ -4252,11 +4253,13 @@ void ThreadContext::displayGUI(DepthType depth, DepthType seldepth, ScoreType be
     }
     else if (Logging::ct == Logging::CT_uci) {
         str << "info depth " << int(depth) << " score cp " << bestScore << " time " << ms << " nodes " << nodeCount << " nps " << int(nodeCount / (ms / 1000.f)) << " seldepth " << (int)seldepth << " pv " << ToString(pv) << " tbhits " << ThreadPool::instance().counter(Stats::sid_tbHit1) + ThreadPool::instance().counter(Stats::sid_tbHit2);
-        /* ///@todo hashfull
-        if ( (count%10) == 10 && !stopFlag){ ///@todo and enough time to do it ...
+        static auto lastHashFull = Clock::now();
+        if (  (int)std::chrono::duration_cast<std::chrono::milliseconds>(now - lastHashFull).count() > 500
+              && (TimeType)std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(now - TimeMan::startTime).count()*2)) < getCurrentMoveMs()
+              && !stopFlag){
+            lastHashFull = now;
             str << " hashfull " << TT::hashFull();
         }
-        */
     }
     Logging::LogIt(Logging::logGUI) << str.str();
 }
