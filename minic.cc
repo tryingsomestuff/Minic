@@ -3697,7 +3697,9 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
                data.gp = MEntry.gp;
             }
             else{
-               data.gp = 0; ///@todo let's hope this is good enough
+               ScoreType matScoreW = 0;
+               ScoreType matScoreB = 0;
+               data.gp = gamePhase(p,matScoreW,matScoreB);
                ++stats.counters[Stats::sid_materialTableMiss];
             }
             ///@todo data.danger is not filled here !!
@@ -4824,10 +4826,11 @@ int main(int argc, char ** argv) {
     return ret;
 #else
     TimeMan::init();
-#ifndef WITH_UCI // UCI is default
+#ifdef WITH_XBOARD
     XBoard::init();
     XBoard::xboard();
-#else
+#endif
+#ifdef WITH_UCI
     UCI::init();
     UCI::uci();
 #endif
