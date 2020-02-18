@@ -1261,7 +1261,6 @@ namespace MaterialHash { // idea from Gull
     } // KPK
 
     ScoreType helperKPK(const Position &p, Color winningSide, ScoreType ){
-       ///@todo maybe an incrementally updated piece square list can be cool to avoid those SquareFromBitBoard...
        const Square psq = KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces<P_wp>(winningSide))); // we know there is at least one pawn
        if (!KPK::probe(KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces<P_wk>(winningSide))), psq, KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces<P_wk>(~winningSide))), winningSide == p.c ? Co_White:Co_Black)) return 0; // shall be drawScore but this is not a 3rep case so don't bother too much ...
        return ((winningSide == Co_White)?+1:-1)*(WIN + ValuesEG[P_wp+PieceShift] + 10*SQRANK(psq));
@@ -1466,49 +1465,6 @@ namespace Zobrist {
     }
 }
 
-Hash computeHash(const Position &p){
-#ifdef DEBUG_HASH
-    Hash h = p.h;
-    p.h = nullHash;
-#endif
-    if (p.h != nullHash) return p.h;
-    for (Square k = 0; k < 64; ++k){ ///todo try if BB is faster here ?
-        const Piece pp = p.b[k];
-        if ( pp != P_none) p.h ^= Zobrist::ZT[k][pp+PieceShift];
-    }
-    if ( p.ep != INVALIDSQUARE ) p.h ^= Zobrist::ZT[p.ep][13];
-    if ( p.castling & C_wks)     p.h ^= Zobrist::ZT[7][13];
-    if ( p.castling & C_wqs)     p.h ^= Zobrist::ZT[0][13];
-    if ( p.castling & C_bks)     p.h ^= Zobrist::ZT[63][13];
-    if ( p.castling & C_bqs)     p.h ^= Zobrist::ZT[56][13];
-    if ( p.c == Co_White)        p.h ^= Zobrist::ZT[3][13];
-    if ( p.c == Co_Black)        p.h ^= Zobrist::ZT[4][13];
-#ifdef DEBUG_HASH
-    if ( h != nullHash && h != p.h ){ Logging::LogIt(Logging::logFatal) << "Hash error " << ToString(p.lastMove) << ToString(p,true); }
-#endif
-    return p.h;
-}
-
-Hash computePHash(const Position &p){
-#ifdef DEBUG_PHASH
-    Hash h = p.ph;
-    p.ph = nullHash;
-#endif
-    if (p.ph != nullHash) return p.ph;
-    BitBoard bb = p.whitePawn();
-    while (bb) { p.ph ^= Zobrist::ZT[BBTools::popBit(bb)][P_wp + PieceShift]; }
-    bb = p.blackPawn();
-    while (bb) { p.ph ^= Zobrist::ZT[BBTools::popBit(bb)][P_bp + PieceShift]; }
-    bb = p.whiteKing();
-    while (bb) { p.ph ^= Zobrist::ZT[BBTools::popBit(bb)][P_wk + PieceShift]; }
-    bb = p.blackKing();
-    while (bb) { p.ph ^= Zobrist::ZT[BBTools::popBit(bb)][P_bk + PieceShift]; }
-#ifdef DEBUG_PHASH
-    if ( h != nullHash && h != p.ph ){ Logging::LogIt(Logging::logFatal) << "Pawn Hash error " << ToString(p.lastMove) << ToString(p,true) << p.ph << " != " << h; }
-#endif
-    return p.ph;
-}
-
 struct ThreadContext; // forward decl
 
 struct ThreadData{
@@ -1520,13 +1476,13 @@ struct ThreadData{
 };
 
 struct Stats{
-    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits, sid_ttInsert, sid_ttPawnhits, sid_ttPawnInsert, sid_ttschits, sid_ttscmiss, sid_materialTableHits, sid_materialTableMiss, sid_staticNullMove, sid_lmr, sid_lmrFail, sid_pvsFail, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMoveTry3, sid_nullMove, sid_nullMove2, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_CMHPruning, sid_see, sid_see2, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_CMHExtension, sid_pawnPushExtension, sid_singularExtension, sid_singularExtension2, sid_singularExtension3, sid_queenThreatExtension, sid_BMExtension, sid_mateThreatExtension, sid_tbHit1, sid_tbHit2, sid_dangerPrune, sid_dangerReduce, sid_maxid };
+    enum StatId { sid_nodes = 0, sid_qnodes, sid_tthits, sid_ttInsert, sid_ttPawnhits, sid_ttPawnInsert, sid_ttschits, sid_ttscmiss, sid_materialTableHits, sid_materialTableMiss, sid_staticNullMove, sid_lmr, sid_lmrFail, sid_pvsFail, sid_razoringTry, sid_razoring, sid_nullMoveTry, sid_nullMoveTry2, sid_nullMoveTry3, sid_nullMove, sid_nullMove2, sid_probcutTry, sid_probcutTry2, sid_probcut, sid_lmp, sid_historyPruning, sid_futility, sid_CMHPruning, sid_see, sid_see2, sid_seeQuiet, sid_iid, sid_ttalpha, sid_ttbeta, sid_checkExtension, sid_checkExtension2, sid_recaptureExtension, sid_castlingExtension, sid_CMHExtension, sid_pawnPushExtension, sid_singularExtension, sid_singularExtension2, sid_singularExtension3, sid_queenThreatExtension, sid_BMExtension, sid_mateThreatExtension, sid_tbHit1, sid_tbHit2, sid_dangerPrune, sid_dangerReduce, sid_hashComputed, sid_maxid };
     static const std::array<std::string,sid_maxid> Names;
     std::array<Counter,sid_maxid> counters;
     void init(){ Logging::LogIt(Logging::logInfo) << "Init stat" ;  counters.fill(0ull); }
 };
 
-const std::array<std::string,Stats::sid_maxid> Stats::Names = { "nodes", "qnodes", "tthits", "ttInsert", "ttPawnhits", "ttPawnInsert", "ttScHits", "ttScMiss", "materialHits", "materialMiss", "staticNullMove", "lmr", "lmrfail", "pvsfail", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMoveTry3", "nullMove", "nullMove2", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "CMHPruning", "see", "see2", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "CMHExtension", "pawnPushExtension", "singularExtension", "singularExtension2", "singularExtension3", "queenThreatExtension", "BMExtension", "mateThreatExtension", "TBHit1", "TBHit2", "dangerPrune", "dangerReduce"};
+const std::array<std::string,Stats::sid_maxid> Stats::Names = { "nodes", "qnodes", "tthits", "ttInsert", "ttPawnhits", "ttPawnInsert", "ttScHits", "ttScMiss", "materialHits", "materialMiss", "staticNullMove", "lmr", "lmrfail", "pvsfail", "razoringTry", "razoring", "nullMoveTry", "nullMoveTry2", "nullMoveTry3", "nullMove", "nullMove2", "probcutTry", "probcutTry2", "probcut", "lmp", "historyPruning", "futility", "CMHPruning", "see", "see2", "seeQuiet", "iid", "ttalpha", "ttbeta", "checkExtension", "checkExtension2", "recaptureExtension", "castlingExtension", "CMHExtension", "pawnPushExtension", "singularExtension", "singularExtension2", "singularExtension3", "queenThreatExtension", "BMExtension", "mateThreatExtension", "TBHit1", "TBHit2", "dangerPrune", "dangerReduce", "computedHash"};
 
 // singleton pool of threads
 class ThreadPool : public std::vector<std::unique_ptr<ThreadContext>> {
@@ -1870,6 +1826,51 @@ void ThreadPool::wait(bool otherOnly) {
     Logging::LogIt(Logging::logInfo) << "...ok";
 }
 
+Hash computeHash(const Position &p){
+#ifdef DEBUG_HASH
+    Hash h = p.h;
+    p.h = nullHash;
+#endif
+    if (p.h != nullHash) return p.h;
+    ++ThreadPool::instance().main().stats.counters[Stats::sid_hashComputed]; // shall of course never happend !
+    for (Square k = 0; k < 64; ++k){ ///todo try if BB is faster here ?
+        const Piece pp = p.b[k];
+        if ( pp != P_none) p.h ^= Zobrist::ZT[k][pp+PieceShift];
+    }
+    if ( p.ep != INVALIDSQUARE ) p.h ^= Zobrist::ZT[p.ep][13];
+    if ( p.castling & C_wks)     p.h ^= Zobrist::ZT[7][13];
+    if ( p.castling & C_wqs)     p.h ^= Zobrist::ZT[0][13];
+    if ( p.castling & C_bks)     p.h ^= Zobrist::ZT[63][13];
+    if ( p.castling & C_bqs)     p.h ^= Zobrist::ZT[56][13];
+    if ( p.c == Co_White)        p.h ^= Zobrist::ZT[3][13];
+    if ( p.c == Co_Black)        p.h ^= Zobrist::ZT[4][13];
+#ifdef DEBUG_HASH
+    if ( h != nullHash && h != p.h ){ Logging::LogIt(Logging::logFatal) << "Hash error " << ToString(p.lastMove) << ToString(p,true); }
+#endif
+    return p.h;
+}
+
+Hash computePHash(const Position &p){
+#ifdef DEBUG_PHASH
+    Hash h = p.ph;
+    p.ph = nullHash;
+#endif
+    if (p.ph != nullHash) return p.ph;
+    ++ThreadPool::instance().main().stats.counters[Stats::sid_hashComputed]; // shall of course never happend !
+    BitBoard bb = p.whitePawn();
+    while (bb) { p.ph ^= Zobrist::ZT[BBTools::popBit(bb)][P_wp + PieceShift]; }
+    bb = p.blackPawn();
+    while (bb) { p.ph ^= Zobrist::ZT[BBTools::popBit(bb)][P_bp + PieceShift]; }
+    bb = p.whiteKing();
+    while (bb) { p.ph ^= Zobrist::ZT[BBTools::popBit(bb)][P_wk + PieceShift]; }
+    bb = p.blackKing();
+    while (bb) { p.ph ^= Zobrist::ZT[BBTools::popBit(bb)][P_bk + PieceShift]; }
+#ifdef DEBUG_PHASH
+    if ( h != nullHash && h != p.ph ){ Logging::LogIt(Logging::logFatal) << "Pawn Hash error " << ToString(p.lastMove) << ToString(p,true) << p.ph << " != " << h; }
+#endif
+    return p.ph;
+}
+
 Move ThreadPool::search(const ThreadData & d){ // distribute data and call main thread search
     Logging::LogIt(Logging::logInfo) << "Search Sync" ;
     wait();
@@ -2159,16 +2160,18 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
         case '6': j += 5; break;
         case '7': j += 6; break;
         case '8': j += 7; break;
-        default: Logging::LogIt(Logging::logFatal) << "FEN ERROR 0 : " << letter ;
+        default: Logging::LogIt(Logging::logFatal) << "FEN ERROR -1 : invalid character in fen string :" << letter ;
         }
         j++;
     }
+
+    if ( p.king[Co_White] == INVALIDSQUARE || p.king[Co_Black] == INVALIDSQUARE ) { Logging::LogIt(Logging::logFatal) << "FEN ERROR 0 : missing king" ; return false; }
 
     p.c = Co_White; // set the turn; default is white
     if (strList.size() >= 2){
         if (strList[1] == "w")      p.c = Co_White;
         else if (strList[1] == "b") p.c = Co_Black;
-        else { Logging::LogIt(Logging::logFatal) << "FEN ERROR 1" ; return false; }
+        else { Logging::LogIt(Logging::logFatal) << "FEN ERROR 1 : bad color" ; return false; }
     }
 
     // Initialize all castle possibilities (default is none)
@@ -2194,7 +2197,7 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
         }
         if (strList[2].find('-') != std::string::npos){ found = true; /*Logging::LogIt(Logging::logInfo) << "No castling right given" ;*/}
         if ( ! found ){ if ( !silent) Logging::LogIt(Logging::logWarn) << "No castling right given" ; }
-        else{ ///@todo detect illegal stuff in here ??
+        else{ ///@todo detect illegal stuff in here
             p.kingInit[Co_White] = p.king[Co_White];
             p.kingInit[Co_Black] = p.king[Co_Black];
             if ( p.castling & C_wqs ) { for( Square s = Sq_a1 ; s <= Sq_h1 ; ++s ){ if ( s < p.king[Co_White] && p.b[s]==P_wr ) { p.rooksInit[Co_White][CT_OOO] = s; break; } } }
@@ -2210,9 +2213,9 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
     if ((strList.size() >= 4) && strList[3] != "-" ){
         if (strList[3].length() >= 2){
             if ((strList[3].at(0) >= 'a') && (strList[3].at(0) <= 'h') && ((strList[3].at(1) == '3') || (strList[3].at(1) == '6'))) p.ep = stringToSquare(strList[3]);
-            else { Logging::LogIt(Logging::logFatal) << "FEN ERROR 3-1 : bad en passant square : " << strList[3] ; return false; }
+            else { Logging::LogIt(Logging::logFatal) << "FEN ERROR 2 : bad en passant square : " << strList[3] ; return false; }
         }
-        else{ Logging::LogIt(Logging::logFatal) << "FEN ERROR 3-2 : bad en passant square : " << strList[3] ; return false; }
+        else{ Logging::LogIt(Logging::logFatal) << "FEN ERROR 3 : bad en passant square : " << strList[3] ; return false; }
     }
     else if ( !silent) Logging::LogIt(Logging::logInfo) << "No en passant square given" ;
 
@@ -2852,7 +2855,6 @@ namespace BBTools { // re-open
 ScoreType ThreadContext::SEE(const Position & p, const Move & m) const {
     if ( ! VALIDMOVE(m) ) return 0;
 
-    ///@todo EP first move!
     Square from = Move2From(m);
     const Square to = Move2To(m);
     const MType mtype = Move2Type(m);
@@ -3257,15 +3259,13 @@ ScoreType eval(const Position & p, EvalData & data, ThreadContext &context){
     evalPiece<P_wq,Co_Black>(p,p.pieces<P_wq>(Co_Black),kingZone,score[sc_PST],attFromPiece[Co_Black][P_wq-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wq-1]);
     evalPiece<P_wk,Co_Black>(p,p.pieces<P_wk>(Co_Black),kingZone,score[sc_PST],attFromPiece[Co_Black][P_wk-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wk-1]);
 
-    ///@todo lazy evaluation
-    /*
-    ScoreType lazyScore = score.Score(p,gp);
-    if ( std::abs(lazyScore) > 1000){
-        ScoreType ret = (white2Play?+1:-1)*score.Score(p,gp); // scale both phase and 50 moves rule
+    // lazy evaluation
+    ScoreType lazyScore = score.Score(p,data.gp); // scale both phase and 50 moves rule
+    if ( std::abs(lazyScore) > ScaleScore({600,1000}, data.gp)){ // winning / losing position
+        ScoreType ret = (white2Play?+1:-1)*lazyScore;
         STOP_AND_SUM_TIMER(Eval)
         return ret;
     }
-    */
 
     ThreadContext::PawnEntry * pePtr = nullptr;
 #ifdef WITH_TEXEL_TUNING
@@ -3357,6 +3357,16 @@ ScoreType eval(const Position & p, EvalData & data, ThreadContext &context){
     att2[Co_Black] |= att[Co_Black] & pe.pawnTargets[Co_Black];
     att[Co_White]  |= pe.pawnTargets[Co_White];
     att[Co_Black]  |= pe.pawnTargets[Co_Black];
+    
+    /*
+    // lazy evaluation 2
+    lazyScore = score.Score(p,data.gp); // scale both phase and 50 moves rule
+    if ( std::abs(lazyScore) > 700){ // winning / losing position
+        ScoreType ret = (white2Play?+1:-1)*lazyScore;
+        STOP_AND_SUM_TIMER(Eval)
+        return ret;
+    }
+    */
 
     const BitBoard nonPawnMat[2]               = {p.allPieces[Co_White] & ~pawns[Co_White] , p.allPieces[Co_Black] & ~pawns[Co_Black]};
     //const BitBoard attackedOrNotDefended[2]    = {att[Co_White]  | ~att[Co_Black]  , att[Co_Black]  | ~att[Co_White] };
