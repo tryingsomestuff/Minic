@@ -3259,6 +3259,8 @@ ScoreType eval(const Position & p, EvalData & data, ThreadContext &context){
     evalPiece<P_wq,Co_Black>(p,p.pieces<P_wq>(Co_Black),kingZone,score[sc_PST],attFromPiece[Co_Black][P_wq-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wq-1]);
     evalPiece<P_wk,Co_Black>(p,p.pieces<P_wk>(Co_Black),kingZone,score[sc_PST],attFromPiece[Co_Black][P_wk-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wk-1]);
 
+    /*
+#ifndef WITH_TEXEL_TUNING
     // lazy evaluation
     ScoreType lazyScore = score.Score(p,data.gp); // scale both phase and 50 moves rule
     if ( std::abs(lazyScore) > ScaleScore({600,1000}, data.gp)){ // winning / losing position
@@ -3266,6 +3268,8 @@ ScoreType eval(const Position & p, EvalData & data, ThreadContext &context){
         STOP_AND_SUM_TIMER(Eval)
         return ret;
     }
+#endif
+    */
 
     ThreadContext::PawnEntry * pePtr = nullptr;
 #ifdef WITH_TEXEL_TUNING
@@ -3685,11 +3689,12 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     ScoreType evalScore;
     if (isInCheck) evalScore = -MATE + ply;
-    else if ( p.lastMove == NULLMOVE && ply > 0 ) evalScore = ScaleScore(EvalConfig::tempo,stack[p.halfmoves-1].data.gp) - stack[p.halfmoves-1].eval; // skip eval if nullmove just applied
+    else if ( p.lastMove == NULLMOVE && ply > 0 ) evalScore = ScaleScore(EvalConfig::tempo,stack[p.halfmoves-1].data.gp) - stack[p.halfmoves-1].eval; // skip eval if nullmove just applied ///@todo wrong ! gp is 0 here
     else{
         if (e.h != 0){
             ++stats.counters[Stats::sid_ttschits];
             evalScore = e.e;
+            /*
             const Hash matHash = MaterialHash::getMaterialHash(p.mat);
             if ( matHash ){
                ++stats.counters[Stats::sid_materialTableHits];
@@ -3702,7 +3707,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
                data.gp = gamePhase(p,matScoreW,matScoreB);
                ++stats.counters[Stats::sid_materialTableMiss];
             }
-            ///@todo data.danger is not filled here !!
+            */
         }
         else {
             ++stats.counters[Stats::sid_ttscmiss];
@@ -3722,7 +3727,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     MoveList moves;
     if ( isInCheck ) MoveGen::generate<MoveGen::GP_all>(p,moves); ///@odo generate only evasion !
     else             MoveGen::generate<MoveGen::GP_cap>(p,moves);
-    MoveSorter::sort(*this,moves,p,data.gp,ply,cmhPtr,isInCheck,isInCheck,&e);
+    MoveSorter::sort(*this,moves,p,data.gp,ply,cmhPtr,isInCheck,isInCheck,&e); ///@todo warning gp = 0 here !
 
     const ScoreType alphaInit = alpha;
 
@@ -3921,7 +3926,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
 
     ScoreType evalScore;
     if (isInCheck) evalScore = -MATE + ply;
-    else if ( p.lastMove == NULLMOVE && ply > 0 ) evalScore = ScaleScore(EvalConfig::tempo,stack[p.halfmoves-1].data.gp) - stack[p.halfmoves-1].eval; // skip eval if nullmove just applied
+    else if ( p.lastMove == NULLMOVE && ply > 0 ) evalScore = ScaleScore(EvalConfig::tempo,stack[p.halfmoves-1].data.gp) - stack[p.halfmoves-1].eval; // skip eval if nullmove just applied ///@todo wrong ! gp is 0 here
     else{
         if (e.h != 0){
             ++stats.counters[Stats::sid_ttschits];
