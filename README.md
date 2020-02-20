@@ -45,25 +45,21 @@ Minic 1.22 is tested at 2699 on the fastgm rating list (http://www.fastgm.de/60-
 STS : 1128/1500 @10sec per position (single thread)  
 WAC : 277/300 @10sec per position (single thread)  
 
-Here are some very fast TC results (40/10sec)
+Here are some very fast TC results (CCRL Blitz TC)
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
-   1 komodo-13-64-ja               163      21     902   71.8%   23.5%
-   2 rodentIII                     150      20     901   70.4%   28.9%
-   3 Winter0.7                      99      20     903   63.9%   25.9%
-   4 zurichess-neuchatel            73      19     902   60.4%   30.0%
-   5 Winter0.6                      50      19     901   57.2%   27.9%
-   6 minic_1.14                     45      18     902   56.4%   35.3%
-   7 minic_1.09                     20      19     901   52.8%   28.4%
-   8 asymptote_v0.6                  7      19     901   51.1%   27.7%
-   9 minic_1.00                      5      19     903   50.7%   31.8%
-  10 igel-1.9.2                     -5      19     901   49.3%   27.9%
-  11 Topple_master                 -34      19     902   45.1%   27.8%
-  12 ruy-1.1.9                     -46      20     901   43.5%   23.4%
-  13 redqueen-1.1.98              -159      22     901   28.6%   17.2%
-  14 igel_1.8.3                   -169      22     901   27.4%   19.1%
-  15 asymptote-v0.4.2             -225      25     902   21.5%   13.6%
-
+   1 Defenchess_2.2                280      37     313   83.4%   26.8%
+   2 demolito                      166      33     313   72.2%   33.2%
+   3 igel-last                      93      29     313   63.1%   43.8%
+   4 Winter0.7                      66      30     313   59.4%   39.6%
+   5 komodo-13-64-ja                48      30     313   56.9%   38.3%
+   6 Hakkapeliitta                  17      32     313   52.4%   30.7%
+   7 amoeba                         16      29     313   52.2%   45.0%
+   8 rodentIII                       7      31     313   51.0%   36.7%
+   9 cheng4_linux_x64               -9      30     313   48.7%   37.4%
+  10 minic_1.35                    -33      25     313   45.2%   57.2%
+  11 Counter-v3.4-linux-64         -88      32     313   37.5%   32.3%
+  12 FabChessv1.13                -109      32     313   34.8%   35.8%
 ```
 
 Minic strength can be ajdusted using the level option (from command line, json configuration file, or using protocol option support, using value from 0 to 100). Level 0 is a random mover, 1 to 30 very weak, ..., level 100 is full strength. Level functionnaly will be enhanced in a near future.
