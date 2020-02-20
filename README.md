@@ -45,7 +45,7 @@ Minic 1.22 is tested at 2699 on the fastgm rating list (http://www.fastgm.de/60-
 STS : 1128/1500 @10sec per position (single thread)  
 WAC : 277/300 @10sec per position (single thread)  
 
-Here are some very fast TC results (CCRL Blitz TC)
+Here are some fast TC results (CCRL Blitz TC)
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
    1 Defenchess_2.2                280      37     313   83.4%   26.8%
