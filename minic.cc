@@ -42,9 +42,9 @@ const std::string MinicVersion = "dev";
 
 // *** options
 #define WITH_UCI
-#define WITH_XBOARD
+//#define WITH_XBOARD
 #define WITH_MAGIC
-#define WITH_SYZYGY
+//#define WITH_SYZYGY
 
 // *** Add-ons
 //#define IMPORTBOOK
@@ -95,8 +95,6 @@ const std::string MinicVersion = "dev";
 #define MAX_DEPTH     127   // DepthType is a char, !!!do not go above 127!!!
 #define MAX_HISTORY  1000
 
-#define VALIDMOVE(m) ( (m) != NULLMOVE && (m) != INVALIDMOVE && (m) != INVALIDMINIMOVE )
-
 #define SQFILE(s) ((s)&7)
 #define SQRANK(s) ((s)>>3)
 #define ISOUTERFILE(x) (SQFILE(x) == 0 || SQFILE(x) == 7)
@@ -130,6 +128,9 @@ typedef int16_t  GenerationType;
 
 const Hash nullHash = 0ull;
 const BitBoard empty = 0ull;
+
+inline bool VALIDMOVE(const Move & m){ return m != NULLMOVE && m != INVALIDMOVE; }
+inline bool VALIDMOVE(const MiniMove & m){ return m != INVALIDMINIMOVE; }
 
 #ifdef WITH_TIMER
 #include "Add-On/timers.cc"
@@ -635,10 +636,12 @@ const BitBoard rank7                     = 0x00ff000000000000;
 const BitBoard rank8                     = 0xff00000000000000;
 const BitBoard ranks[8] = {rank1,rank2,rank3,rank4,rank5,rank6,rank7,rank8};
 //const BitBoard center = BBSq_d4 | BBSq_d5 | BBSq_e4 | BBSq_e5;
+/*
 const BitBoard extendedCenter = BBSq_c3 | BBSq_c4 | BBSq_c5 | BBSq_c6
                               | BBSq_d3 | BBSq_d4 | BBSq_d5 | BBSq_d6
                               | BBSq_e3 | BBSq_e4 | BBSq_e5 | BBSq_e6
                               | BBSq_f3 | BBSq_f4 | BBSq_f5 | BBSq_f6;
+*/
 
 const BitBoard holesZone[2] = { rank2 | rank3 | rank4 | rank5,  rank4 | rank5 | rank6 | rank7 };
 const BitBoard queenSide   = fileA | fileB | fileC | fileD;
@@ -673,7 +676,7 @@ struct Position{
 
     mutable Hash h = nullHash, ph = nullHash;
     Move lastMove = INVALIDMOVE;
-    Square ep = INVALIDSQUARE, king[2] = { INVALIDSQUARE, INVALIDSQUARE }, rooksInit[2][2] = { INVALIDSQUARE , INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE}, kingInit[2] = { INVALIDSQUARE, INVALIDSQUARE };
+    Square ep = INVALIDSQUARE, king[2] = { INVALIDSQUARE, INVALIDSQUARE }, rooksInit[2][2] = { {INVALIDSQUARE, INVALIDSQUARE}, {INVALIDSQUARE, INVALIDSQUARE}}, kingInit[2] = {INVALIDSQUARE, INVALIDSQUARE};
     unsigned char fifty = 0;
     unsigned short int moves = 0, halfmoves = 0;
     CastlingRights castling = C_none;
@@ -997,7 +1000,7 @@ template < Piece pp > inline BitBoard attack(const Square x, const BitBoard targ
 #endif // MAGIC
 
 constexpr BitBoard(*const pfCoverage[])(const Square, const BitBoard, const Color)                 = { &BBTools::coverage<P_wp>, &BBTools::coverage<P_wn>, &BBTools::coverage<P_wb>, &BBTools::coverage<P_wr>, &BBTools::coverage<P_wq>, &BBTools::coverage<P_wk> };
-constexpr BitBoard(*const pfAttack[])  (const Square, const BitBoard, const BitBoard, const Color) = { &BBTools::attack<P_wp>,   &BBTools::attack<P_wn>,   &BBTools::attack<P_wb>,   &BBTools::attack<P_wr>,   &BBTools::attack<P_wq>,   &BBTools::attack<P_wk>   };
+//constexpr BitBoard(*const pfAttack[])  (const Square, const BitBoard, const BitBoard, const Color) = { &BBTools::attack<P_wp>,   &BBTools::attack<P_wn>,   &BBTools::attack<P_wb>,   &BBTools::attack<P_wr>,   &BBTools::attack<P_wq>,   &BBTools::attack<P_wk>   };
 
 Square SquareFromBitBoard(const BitBoard & b) { // return first square only
     assert(b != empty);
@@ -3197,7 +3200,7 @@ ScoreType eval(const Position & p, EvalData & data, ThreadContext &context){
     if ( p.king[Co_Black] == INVALIDSQUARE ) return data.gp=0,(white2Play?+1:-1)* MATE;
 
     // level for the poor ...
-    const int lra = std::max(0u,500 - 10*DynamicConfig::level);
+    const int lra = std::max(0, 500 - int(10*DynamicConfig::level));
     if ( lra > 0 ) { score[sc_Rand] += Zobrist::randomInt<int>(-lra,lra); }
 
     context.prefetchPawn(computeHash(p));
@@ -3242,7 +3245,7 @@ ScoreType eval(const Position & p, EvalData & data, ThreadContext &context){
     BitBoard att[2]                  = {empty, empty};
     BitBoard att2[2]                 = {empty, empty};
     BitBoard attFromPiece[2][6]      = {{empty}}; ///@todo use this more!
-    BitBoard checkers[2][6]          = {empty};
+    BitBoard checkers[2][6]          = {{empty}};
 
     const BitBoard kingZone[2]   = { BBTools::mask[p.king[Co_White]].kingZone, BBTools::mask[p.king[Co_Black]].kingZone};
     const BitBoard kingShield[2] = { kingZone[Co_White] & ~BBTools::shiftS<Co_White>(ranks[SQRANK(p.king[Co_White])]) , kingZone[Co_Black] & ~BBTools::shiftS<Co_Black>(ranks[SQRANK(p.king[Co_Black])]) };
@@ -3683,7 +3686,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     TT::Entry e;
     if (TT::getEntry(*this, p, computeHash(p), hashDepth, e)) {
         if (!pvnode && e.h != 0 && ((e.b == TT::B_alpha && e.s <= alpha) || (e.b == TT::B_beta  && e.s >= beta) || (e.b == TT::B_exact))) { return adjustHashScore(e.s, ply); }
-        if ( e.m!=INVALIDMOVE && (isInCheck || isCapture(e.m)) ) bestMove = e.m;
+        if ( e.m!=INVALIDMINIMOVE && (isInCheck || isCapture(e.m)) ) bestMove = e.m;
     }
     if ( qRoot && interiorNodeRecognizer<true,false,true>(p) == MaterialHash::Ter_Draw) return drawScore(); ///@todo is that gain elo ???
 
@@ -3776,7 +3779,9 @@ ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck) {
     MoveList moves;
     MoveGen::generate<MoveGen::GP_all>(p, moves, false);
     if (moves.empty()) return isInCheck ? -MATE : 0;
-    std::random_shuffle(moves.begin(), moves.end());
+    static std::random_device rd;
+    static std::mt19937 g(rd());
+    std::shuffle(moves.begin(), moves.end(),g);
     for (auto it = moves.begin(); it != moves.end(); ++it) {
         Position p2 = p;
         if (!apply(p2, *it)) continue;
@@ -3908,11 +3913,11 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     TT::Entry e;
     if ( TT::getEntry(*this, p, pHash, depth, e)) {
         if ( e.h != 0 && !rootnode && !pvnode && ( (e.b == TT::B_alpha && e.s <= alpha) || (e.b == TT::B_beta  && e.s >= beta) || (e.b == TT::B_exact) ) ) {
-            if (!isInCheck && e.m != INVALIDMOVE && Move2Type(e.m) == T_std ) updateTables(*this, p, depth, ply, e.m, e.b, cmhPtr);
+            if (!isInCheck && e.m != INVALIDMINIMOVE && Move2Type(e.m) == T_std ) updateTables(*this, p, depth, ply, e.m, e.b, cmhPtr);
             return adjustHashScore(e.s, ply);
         }
     }
-    validTTmove = e.h != 0 && e.m != INVALIDMOVE;
+    validTTmove = e.h != 0 && e.m != INVALIDMINIMOVE;
 
 #ifdef WITH_SYZYGY
     ScoreType tbScore = 0;
@@ -4045,7 +4050,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         PVList iidPV;
         pvs<pvnode,false>(alpha,beta,p,/*pvnode?depth-2:*/depth/2,ply,iidPV,seldepth,isInCheck,cutNode,skipMove);
         if (stopFlag) return STOPSCORE;
-        validTTmove = TT::getEntry(*this, p, pHash, depth, e) && e.h != 0 && e.m != INVALIDMOVE;
+        validTTmove = TT::getEntry(*this, p, pHash, depth, e) && e.h != 0 && e.m != INVALIDMINIMOVE;
     }
 
     killerT.killers[ply+1][0] = killerT.killers[ply+1][1] = 0;
@@ -4834,10 +4839,11 @@ int main(int argc, char ** argv) {
 #ifdef WITH_XBOARD
     XBoard::init();
     XBoard::xboard();
-#endif
+#else
 #ifdef WITH_UCI
     UCI::init();
     UCI::uci();
+#endif
 #endif
     STOP_AND_SUM_TIMER(Total)
 #ifdef WITH_TIMER
