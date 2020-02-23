@@ -391,7 +391,14 @@ void TexelTuning(const std::string & filename) {
       guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::bishopPairBonus[k][MG] , -500,  500,"bishop pair"+std::to_string(k)));
       guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::bishopPairBonus[k][EG] , -500,  500,"bishop pair EG"+std::to_string(k)));
     }
+    */
 
+    for (int k = 0 ; k < 9 ; ++k ){
+       guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::badBishop[k][MG] , -500,  500,"badBishop"+std::to_string(k)));
+       guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::badBishop[k][EG] , -500,  500,"badBishopEG"+std::to_string(k)));
+    }
+
+    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::knightPairMalus[MG] , -500,  500,"knight pair"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookPairMalus  [MG] , -500,  500,"rook pair"));
 
@@ -539,8 +546,10 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::initiative[1][MG] , -500,  500,"initiativeMG1"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::initiative[1][EG] , -500,  500,"initiativeEG1"));
     */
+    /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::initiative[2][MG] , -500,  500,"initiativeMG2"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::initiative[2][EG] , -500,  500,"initiativeEG2"));
+    */
     /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::initiative[3][MG] , -500,  500,"initiativeMG3"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::initiative[3][EG] , -500,  500,"initiativeEG3"));
@@ -591,7 +600,7 @@ void TexelTuning(const std::string & filename) {
     */
 
     /*
-    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::tempo[MG] , -500,  500,"tempo"));
+
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::tempo[EG] , -500,  500,"tempo"));
     */
 

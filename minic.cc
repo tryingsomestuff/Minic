@@ -42,9 +42,9 @@ const std::string MinicVersion = "dev";
 
 // *** options
 #define WITH_UCI
-//#define WITH_XBOARD
+#define WITH_XBOARD
 #define WITH_MAGIC
-//#define WITH_SYZYGY
+#define WITH_SYZYGY
 
 // *** Add-ons
 //#define IMPORTBOOK
@@ -55,7 +55,7 @@ const std::string MinicVersion = "dev";
 // *** Tuning
 //#define WITH_TIMER
 //#define WITH_CLOP_SEARCH
-//#define WITH_TEXEL_TUNING
+#define WITH_TEXEL_TUNING
 
 // *** Debug
 //#define DEBUG_HASH
@@ -444,6 +444,7 @@ CONST_TEXEL_TUNING EvalScore   threatByKing[6]       = { {  -6,-17 },{  -5,  1 }
 
 CONST_TEXEL_TUNING EvalScore   adjKnight[9]          = { {-24,-27}, { -12, 9}, { -4, 18}, {  1, 17}, { 12, 22}, { 17, 24}, { 14, 46}, { 26, 40}, { 22, 10} };
 CONST_TEXEL_TUNING EvalScore   adjRook[9]            = { { 24, 22}, {  9,  7}, { 15,  1}, {  1,  4}, {-17, 13}, {-23, 24}, {-24, 32}, {-23, 46}, { -3, 17} };
+CONST_TEXEL_TUNING EvalScore   badBishop[9]          = { {-16,  3}, {-12, -1}, {-11,  8}, { -6, 14}, {  1, 18}, {  4, 30}, { 14, 31}, { 19, 48}, { 36, 68} };
 CONST_TEXEL_TUNING EvalScore   bishopPairBonus[9]    = { { 31, 56}, { 31, 57}, { 27, 63}, { 14, 77}, { 24, 62}, { 29, 62}, { 37, 61}, { 38, 58}, { 33, 53} };
 CONST_TEXEL_TUNING EvalScore   knightPairMalus       = { 4, -9};
 CONST_TEXEL_TUNING EvalScore   rookPairMalus         = { 3,-14};
@@ -3515,6 +3516,12 @@ ScoreType eval(const Position & p, EvalData & data, ThreadContext &context){
     score[sc_Adjust] += EvalConfig::adjKnight[p.mat[Co_White][M_p]] * ScoreType(p.mat[Co_White][M_n]);
     score[sc_Adjust] -= EvalConfig::adjKnight[p.mat[Co_Black][M_p]] * ScoreType(p.mat[Co_Black][M_n]);
 
+    // bad bishop
+    if (p.whiteBishop() & whiteSquare) score[sc_Adjust] -= EvalConfig::badBishop[countBit(pawns[Co_White] & whiteSquare)];
+    if (p.whiteBishop() & blackSquare) score[sc_Adjust] -= EvalConfig::badBishop[countBit(pawns[Co_White] & blackSquare)];
+    if (p.blackBishop() & whiteSquare) score[sc_Adjust] += EvalConfig::badBishop[countBit(pawns[Co_Black] & whiteSquare)];
+    if (p.blackBishop() & blackSquare) score[sc_Adjust] += EvalConfig::badBishop[countBit(pawns[Co_Black] & blackSquare)];
+
     // adjust piece pair score
     score[sc_Adjust] += ( (p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonus[p.mat[Co_White][M_p]] : 0)-(p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonus[p.mat[Co_Black][M_p]] : 0) );
     score[sc_Adjust] += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0) );
@@ -3723,7 +3730,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
 
     TT::Bound b = TT::B_alpha;
     if ( evalScore >= beta ) return evalScore;
-    if ( evalScore > alpha) alpha = evalScore;/*, b = isInCheck? TT::B_alpha : TT::B_exact;*/ // stand pat is at least bound exact if no capture is valid ///@todo ?
+    if ( /*pvnode &&*/ evalScore > alpha) alpha = evalScore; ///@todo ??
 
     ScoreType bestScore = evalScore;
 
