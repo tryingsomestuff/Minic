@@ -38,7 +38,7 @@ typedef uint64_t u_int64_t;
 
 #include "json.hpp"
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "1.45";
 
 // *** options
 #define WITH_UCI
@@ -267,7 +267,7 @@ const bool doLMP            = true;
 const bool doStaticNullMove = true;
 const bool doRazoring       = true;
 const bool doQFutility      = false;
-const bool doQDeltaPruning  = true;
+const bool doQDeltaPruning  = false;
 const bool doProbcut        = true;
 const bool doHistoryPruning = true;
 const bool doCMHPruning     = true;
