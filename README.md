@@ -229,6 +229,9 @@ You can use both the json configuation file or the command line argument to sele
 * 1.35..1.38 : playing with SEE, initiative, imbalance, danger, ...  
 * 1.39..1.40 : tuning search SEE and LMR with danger score from evaluation  
 * 1.41..1.42 : fixing a time management issue with incremental TC  
+* 1.43 : qsearch cleaning  
+* 1.44 : bad bishop eval  
+
 
 ## Thanks
 
