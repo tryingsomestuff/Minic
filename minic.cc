@@ -49,7 +49,7 @@ const std::string MinicVersion = "1.45";
 // *** Add-ons
 //#define IMPORTBOOK
 //#define DEBUG_TOOL
-//#define WITH_TEST_SUITE
+#define WITH_TEST_SUITE
 //#define WITH_PGN_PARSER
 
 // *** Tuning
@@ -267,7 +267,7 @@ const bool doLMP            = true;
 const bool doStaticNullMove = true;
 const bool doRazoring       = true;
 const bool doQFutility      = false;
-const bool doQDeltaPruning  = false;
+const bool doQDeltaPruning  = true;
 const bool doProbcut        = true;
 const bool doHistoryPruning = true;
 const bool doCMHPruning     = true;
@@ -3671,7 +3671,7 @@ ScoreType ThreadContext::qsearchNoPruning(ScoreType alpha, ScoreType beta, const
 
 inline ScoreType qDeltaMargin(const Position & p) {
    ScoreType delta = (p.pieces(p.c,P_wp) & SeventhRank[p.c]) ? Values[P_wq+PieceShift] : Values[P_wp+PieceShift];
-   return delta + (p.pieces(~p.c,P_wq) ? Values[P_wq+PieceShift] : p.pieces(~p.c,P_wr) ? Values[P_wr+PieceShift] : p.pieces(~p.c,P_wb) ? Values[P_wb+PieceShift] : p.pieces(~p.c,P_wn) ? Values[P_wn+PieceShift] : Values[P_wp+PieceShift]);
+   return delta + Values[P_wq+PieceShift];//(p.pieces(~p.c,P_wq) ? Values[P_wq+PieceShift] : p.pieces(~p.c,P_wr) ? Values[P_wr+PieceShift] : p.pieces(~p.c,P_wb) ? Values[P_wb+PieceShift] : p.pieces(~p.c,P_wn) ? Values[P_wn+PieceShift] : Values[P_wp+PieceShift]);
 }
 
 template < bool qRoot, bool pvnode >
