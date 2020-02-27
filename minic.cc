@@ -38,7 +38,7 @@ typedef uint64_t u_int64_t;
 
 #include "json.hpp"
 
-const std::string MinicVersion = "1.45";
+const std::string MinicVersion = "1.46";
 
 // *** options
 #define WITH_UCI
@@ -4851,13 +4851,13 @@ int main(int argc, char ** argv) {
     return ret;
 #else
     TimeMan::init();
-#ifdef WITH_XBOARD
-    XBoard::init();
-    XBoard::xboard();
-#else
 #ifdef WITH_UCI
     UCI::init();
     UCI::uci();
+#else
+#ifdef WITH_XBOARD
+    XBoard::init();
+    XBoard::xboard();
 #endif
 #endif
     STOP_AND_SUM_TIMER(Total)
