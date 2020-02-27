@@ -1,6 +1,17 @@
 #!/bin/bash
 dir=$(readlink -f $(dirname $0)/..)
 
+cd $dir
+
+FATHOM_PRESENT=0
+if [ -e Fathom/src/tbprobe.h ]; then
+   FATHOM_PRESENT=1
+   echo "found Fathom lib, trying to build"
+   $dir/tools/buildFathomArm.sh "$@"
+fi
+
+mkdir -p $dir/Dist
+
 v="dev"
 
 if [ -n "$1" ] ; then
@@ -8,11 +19,17 @@ if [ -n "$1" ] ; then
    shift
 fi
 
-android/bin/arm-linux-androideabi-clang++ -v
+OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto --std=c++14 -IFathom/src"
+
+if [ $FATHOM_PRESENT = "1" ]; then
+   lib=fathom_${v}_android.o
+   OPT="$OPT $dir/Fathom/src/$lib -I$dir/Fathom/src"
+fi
+
+$dir/android/bin/arm-linux-androideabi-clang++ -v
 echo "version $v"
-echo "definition $d"
 exe=minic_${v}_android
 echo "Building $exe"
-OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto --std=c++14 -IFathom/src"
-./android/bin/arm-linux-androideabi-clang++ $OPT minic.cc -o $dir/Dist/$exe -static-libgcc -static-libstdc++ 
+
+$dir/android/bin/arm-linux-androideabi-clang++ $OPT minic.cc -o $dir/Dist/$exe -static-libgcc -static-libstdc++ 
 

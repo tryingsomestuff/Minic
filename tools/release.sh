@@ -12,5 +12,7 @@ $dir/buildGW.sh $v "-msse4.2"
 $dir/buildGW.sh $v "-mavx2 -mbmi2"
 
 $dir/buildGW32.sh $v "-march=i686"
-$dir/buildGW32.sh $v "-msse4.2"
-$dir/buildGW32.sh $v "-mavx2 -mbmi2"
+#$dir/buildGW32.sh $v "-msse4.2"
+#$dir/buildGW32.sh $v "-mavx2 -mbmi2"
+
+$dir/buildArm.sh $v
