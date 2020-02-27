@@ -44,7 +44,7 @@ Minic 1.35 is tested at 3027 on the CEGT 40/4 MP list (http://www.cegt.net/40_4_
 Minic 1.35 is tested at 2882 on the CEGT 5+3 PB=ON list (http://www.cegt.net/5Plus3Rating/BestVersionsNEW/rangliste.html)  
 Minic 1.22 is tested at 2699 on the fastgm rating list (http://www.fastgm.de/60-0.60.html)
 
-STS : 1128/1500 @10sec per position (single thread)  
+STS : 1141/1500 @10sec per position (single thread)  
 WAC : 289/300 @10sec per position (single thread)  
 
 Here are some fast TC results (CCRL Blitz TC)
