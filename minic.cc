@@ -38,7 +38,7 @@ typedef uint64_t u_int64_t;
 
 #include "json.hpp"
 
-const std::string MinicVersion = "1.46";
+const std::string MinicVersion = "1.47";
 
 // *** options
 #define WITH_UCI
@@ -2354,7 +2354,7 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
        if ( p.b[from] == P_wk && p.b[to] == P_wr ){ moveType = (to<from ? T_wqs : T_wks); }
        if ( p.b[from] == P_bk && p.b[to] == P_br ){ moveType = (to<from ? T_bqs : T_bks); }
     }
-    if (!isPseudoLegal(p, ToMove(from, to, moveType))) {
+    if (!DynamicConfig::FRC && !isPseudoLegal(p, ToMove(from, to, moveType))) {
         Logging::LogIt(Logging::logError) << "Trying to read bad move, not legal " << ToString(p) << str;
         return false;
     }
