@@ -38,7 +38,7 @@ typedef uint64_t u_int64_t;
 
 #include "json.hpp"
 
-const std::string MinicVersion = "1.47";
+const std::string MinicVersion = "1.48";
 
 // *** options
 #define WITH_UCI
@@ -267,7 +267,7 @@ const bool doLMP            = true;
 const bool doStaticNullMove = true;
 const bool doRazoring       = true;
 const bool doQFutility      = false;
-const bool doQDeltaPruning  = true;
+const bool doQDeltaPruning  = false;
 const bool doProbcut        = true;
 const bool doHistoryPruning = true;
 const bool doCMHPruning     = true;
@@ -1949,8 +1949,9 @@ void clearTT() {
 
 int hashFull(){
     unsigned long long count = 0;
-    for (unsigned int k = 0; k < ttSize; ++k) for (unsigned int i = 0 ; i < Bucket::nbBucket ; ++i) if ( table[k].e[i].h ) ++count;
-    return int((count*1000)/(ttSize*Bucket::nbBucket));
+    const unsigned int samples = 1023*64;
+    for (unsigned int k = 0; k < samples; ++k) for (unsigned int i = 0 ; i < Bucket::nbBucket ; ++i) if ( table[(k*67)%ttSize].e[i].h ) ++count;
+    return int((count*1000)/(samples*Bucket::nbBucket));
 }
 
 void age(){ ++TT::curGen;}
