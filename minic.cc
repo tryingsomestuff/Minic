@@ -38,7 +38,7 @@ typedef uint64_t u_int64_t;
 
 #include "json.hpp"
 
-const std::string MinicVersion = "1.48";
+const std::string MinicVersion = "dev";
 
 // *** options
 #define WITH_UCI
@@ -49,7 +49,7 @@ const std::string MinicVersion = "1.48";
 // *** Add-ons
 //#define IMPORTBOOK
 //#define DEBUG_TOOL
-#define WITH_TEST_SUITE
+//#define WITH_TEST_SUITE
 //#define WITH_PGN_PARSER
 
 // *** Tuning
@@ -1922,8 +1922,6 @@ struct Entry{
 };
 #pragma pack(pop)
 
-struct Bucket { static const int nbBucket = 3;  Entry e[nbBucket];};
-
 unsigned long long int powerFloor(unsigned long long int x) {
     unsigned long long int power = 1;
     while (power < x) power *= 2;
@@ -1931,33 +1929,33 @@ unsigned long long int powerFloor(unsigned long long int x) {
 }
 
 static unsigned long long int ttSize = 0;
-static std::unique_ptr<Bucket[]> table;
+static std::unique_ptr<Entry[]> table;
 
 void initTable(){
     assert(table==nullptr);
     Logging::LogIt(Logging::logInfo) << "Init TT" ;
-    Logging::LogIt(Logging::logInfo) << "Bucket size " << sizeof(Bucket);
-    ttSize = 1024 * powerFloor((DynamicConfig::ttSizeMb * 1024) / (unsigned long long int)sizeof(Bucket));
-    table.reset(new Bucket[ttSize]);
-    Logging::LogIt(Logging::logInfo) << "Size of TT " << ttSize * sizeof(Bucket) / 1024 / 1024 << "Mb" ;
+    Logging::LogIt(Logging::logInfo) << "Entry size " << sizeof(Entry);
+    ttSize = 1024 * powerFloor((DynamicConfig::ttSizeMb * 1024) / (unsigned long long int)sizeof(Entry));
+    table.reset(new Entry[ttSize]);
+    Logging::LogIt(Logging::logInfo) << "Size of TT " << ttSize * sizeof(Entry) / 1024 / 1024 << "Mb" ;
 }
 
 void clearTT() {
     TT::curGen = 0;
-    for (unsigned int k = 0; k < ttSize; ++k) for (unsigned int i = 0 ; i < Bucket::nbBucket ; ++i) table[k].e[i] = { 0, INVALIDMINIMOVE, 0, 0, B_alpha, 0 };
+    for (unsigned int k = 0; k < ttSize; ++k) table[k] = { 0, INVALIDMINIMOVE, 0, 0, B_alpha, 0 };
 }
 
 int hashFull(){
     unsigned long long count = 0;
     const unsigned int samples = 1023*64;
-    for (unsigned int k = 0; k < samples; ++k) for (unsigned int i = 0 ; i < Bucket::nbBucket ; ++i) if ( table[(k*67)%ttSize].e[i].h ) ++count;
-    return int((count*1000)/(samples*Bucket::nbBucket));
+    for (unsigned int k = 0; k < samples; ++k) if ( table[(k*67)%ttSize].h ) ++count;
+    return int((count*1000)/samples);
 }
 
 void age(){ ++TT::curGen;}
 
 void prefetch(Hash h) {
-   void * addr = (&table[h&(ttSize-1)].e[0]);
+   void * addr = (&table[h&(ttSize-1)]);
 #  if defined(__INTEL_COMPILER)
    __asm__ ("");
 #  elif defined(_MSC_VER)
@@ -1967,12 +1965,10 @@ void prefetch(Hash h) {
 #  endif
 }
 
-bool getEntry(ThreadContext & context, const Position & p, Hash h, DepthType d, Entry & e, int nbuck = 0) {
+bool getEntry(ThreadContext & context, const Position & p, Hash h, DepthType d, Entry & e) {
     assert(h > 0);
-    // e.h must not be reset here because of recursion ! (would dismiss first hash found when _e.d < d)
     if ( DynamicConfig::disableTT  ) return false;
-    if ( nbuck >= Bucket::nbBucket ) return false; // no more bucket
-    Entry & _e = table[h&(ttSize-1)].e[nbuck];
+    Entry & _e = table[h&(ttSize-1)];
 #ifdef DEBUG_HASH_ENTRY
     _e.d = Zobrist::randomInt<unsigned int>(0, UINT32_MAX);
 #endif
@@ -1981,28 +1977,20 @@ bool getEntry(ThreadContext & context, const Position & p, Hash h, DepthType d, 
 #ifndef DEBUG_HASH_ENTRY
         (_e.h ^ _e._d) != Hash64to32(h) ||
 #endif
-        !isPseudoLegal(p, _e.m)) { return _e.h = 0, getEntry(context, p, h, d, e, nbuck + 1); } // next one
+        !isPseudoLegal(p, _e.m)) { _e.h = 0; return false; }
     e = _e; // update entry only if no collision is detected !
     if ( _e.d >= d ){ ++context.stats.counters[Stats::sid_tthits]; return true; } // valid entry if depth is ok
-    else return getEntry(context,p,h,d,e,nbuck+1); // next one
+    else return false;
 }
 
+// always replace
 void setEntry(ThreadContext & context, Hash h, Move m, ScoreType s, ScoreType eval, Bound b, DepthType d){
+    assert(h > 0);
     Entry e = {h,m,s,eval,b,d};
     e.h ^= e._d;
-    assert(e.h > 0);
     if ( DynamicConfig::disableTT ) return;
-    const size_t index = h&(ttSize-1);
-    table[index].e[0] = e; // first is always replace
-    Entry * toUpdate = &(table[index].e[1]);
-    for (unsigned int i = 1 ; i < Bucket::nbBucket ; ++i){ // other replace by depth (and generation ?)
-        Entry & curEntry = table[index].e[i];
-        if( curEntry.h == 0 ) break;
-        if( curEntry.h == e.h && curEntry.d < e.d ) { toUpdate = &curEntry; break; }
-        else if( curEntry.d < toUpdate->d /*|| curEntry.generation < toUpdate->generation*/ ) toUpdate = &curEntry; // not same hash, replace the oldest or lowest depth
-    }
     ++context.stats.counters[Stats::sid_ttInsert];
-    *toUpdate = e;
+    table[h&(ttSize-1)] = e; // always replace (favour leaf)
 }
 
 void getPV(const Position & p, ThreadContext & context, PVList & pv){
@@ -2986,7 +2974,7 @@ bool ThreadContext::SEE_GE(const Position & p, const Move & m, ScoreType thresho
 
 struct MoveSorter{
 
-    MoveSorter(const ThreadContext & context, const Position & p, float gp, DepthType ply, const ThreadContext::CMHPtrArray & cmhPtr, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL, const Move refutation = INVALIDMOVE):context(context),p(p),gp(gp),ply(ply),cmhPtr(cmhPtr),useSEE(useSEE),isInCheck(isInCheck),e(e),refutation(refutation){ assert(e==0||e->h!=0||e->m==INVALIDMOVE); }
+    MoveSorter(const ThreadContext & context, const Position & p, float gp, DepthType ply, const ThreadContext::CMHPtrArray & cmhPtr, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL, const Move refutation = INVALIDMOVE):context(context),p(p),gp(gp),ply(ply),cmhPtr(cmhPtr),useSEE(useSEE),isInCheck(isInCheck),e(e),refutation(refutation){assert(e==NULL||e->h!=nullHash);}
 
     void computeScore(Move & m)const{
         assert(VALIDMOVE(m));
@@ -3009,7 +2997,7 @@ struct MoveSorter{
                     s += see;
                     if ( see < -70 ) s -= 2*MoveScoring[T_capture]; // bad capture
                     else {
-                        if ( isCapture(p.lastMove) && to == Move2To(p.lastMove) ) s += 400; // recapture bonus
+                        if ( VALIDMOVE(p.lastMove) && isCapture(p.lastMove) && to == Move2To(p.lastMove) ) s += 400; // recapture bonus
                     }
                 }
                 else{ // MVVLVA
@@ -3700,7 +3688,8 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     getCMHPtr(p.halfmoves,cmhPtr);
 
     TT::Entry e;
-    if (TT::getEntry(*this, p, computeHash(p), hashDepth, e)) {
+    const Hash pHash = computeHash(p);
+    if (TT::getEntry(*this, p, pHash, hashDepth, e)) {
         if (!pvnode && e.h != 0 && ((e.b == TT::B_alpha && e.s <= alpha) || (e.b == TT::B_beta  && e.s >= beta) || (e.b == TT::B_exact))) { return adjustHashScore(e.s, ply); }
         if ( e.m!=INVALIDMINIMOVE && (isInCheck || isCapture(e.m)) ) bestMove = e.m;
     }
@@ -3736,6 +3725,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     bool evalScoreIsHashScore = false;
     // use tt score if possible and not in check
     if ( !isInCheck && e.h != 0 && ((e.b == TT::B_alpha && e.s <= evalScore) || (e.b == TT::B_beta && e.s >= evalScore) || (e.b == TT::B_exact)) ) evalScore = e.s, evalScoreIsHashScore = true;
+    else if ( !isInCheck && e.h == 0 ) TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(evalScore,ply),createHashScore(evalScore,ply),TT::B_none,-2); // already insert an eval here in case of pruning ...
 
     TT::Bound b = TT::B_alpha;
     if ( evalScore >= beta ) return evalScore;
@@ -3746,7 +3736,7 @@ ScoreType ThreadContext::qsearch(ScoreType alpha, ScoreType beta, const Position
     MoveList moves;
     if ( isInCheck ) MoveGen::generate<MoveGen::GP_all>(p,moves); ///@odo generate only evasion !
     else             MoveGen::generate<MoveGen::GP_cap>(p,moves);
-    MoveSorter::sort(*this,moves,p,data.gp,ply,cmhPtr,isInCheck,isInCheck,&e); ///@todo warning gp = 0 here !
+    MoveSorter::sort(*this,moves,p,data.gp,ply,cmhPtr,isInCheck,isInCheck,e.h?&e:NULL); ///@todo warning gp = 0 here !
 
     const ScoreType alphaInit = alpha;
 
@@ -4043,7 +4033,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
           int probCutCount = 0;
           const ScoreType betaPC = beta + SearchConfig::probCutMargin;
           MoveGen::generate<MoveGen::GP_cap>(p,moves);
-          MoveSorter::sort(*this,moves,p,data.gp,ply,cmhPtr,true,isInCheck,&e);
+          MoveSorter::sort(*this,moves,p,data.gp,ply,cmhPtr,true,isInCheck,e.h?&e:NULL);
           capMoveGenerated = true;
           for (auto it = moves.begin() ; it != moves.end() && probCutCount < SearchConfig::probCutMaxMoves /*+ 2*cutNode*/; ++it){
             if ( (validTTmove && sameMove(e.m, *it)) || isBadCap(*it) ) continue; // skip TT move if quiet or bad captures
@@ -4179,7 +4169,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         else                  MoveGen::generate<MoveGen::GP_all>  (p, moves, false);
     }
     if (moves.empty()) return isInCheck ? -MATE + ply : 0;
-    MoveSorter::sort(*this, moves, p, data.gp, ply, cmhPtr, true, isInCheck, &e, refutation != INVALIDMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMOVE);
+    MoveSorter::sort(*this, moves, p, data.gp, ply, cmhPtr, true, isInCheck, e.h?&e:NULL, refutation != INVALIDMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMOVE);
 
     for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
         if (sameMove(skipMove, *it)) continue; // skipmove
@@ -4745,7 +4735,11 @@ namespace COM {
         f = std::async(std::launch::async, [st,forcedMs] {
             COM::move = COM::thinkUntilTimeUp(forcedMs);
             const PVList & pv = ThreadPool::instance().main().getData().pv;
-            COM::ponderMove = pv.size()>1?pv[1]:INVALIDMOVE;
+            COM::ponderMove = INVALIDMOVE;
+            if ( pv.size() > 1) {
+               Position p2 = COM::position;
+               if ( apply(p2,pv[0]) && isPseudoLegal(p2,pv[1])) COM::ponderMove = pv[1];
+            }
             Logging::LogIt(Logging::logInfo) << "search async done (state " << st << ")";
             if (st == st_searching) {
                 Logging::LogIt(Logging::logInfo) << "sending move to GUI " << ToString(COM::move);
