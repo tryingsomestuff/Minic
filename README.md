@@ -52,18 +52,26 @@ WAC : 289/300 @10sec per position (single thread)
 Here are some fast TC results (CCRL Blitz TC)
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
-   1 Defenchess_2.2                280      37     313   83.4%   26.8%
-   2 demolito                      166      33     313   72.2%   33.2%
-   3 igel-last                      93      29     313   63.1%   43.8%
-   4 Winter0.7                      66      30     313   59.4%   39.6%
-   5 komodo-13-64-ja                48      30     313   56.9%   38.3%
-   6 Hakkapeliitta                  17      32     313   52.4%   30.7%
-   7 amoeba                         16      29     313   52.2%   45.0%
-   8 rodentIII                       7      31     313   51.0%   36.7%
-   9 cheng4_linux_x64               -9      30     313   48.7%   37.4%
-  10 minic_1.35                    -33      25     313   45.2%   57.2%
-  11 Counter-v3.4-linux-64         -88      32     313   37.5%   32.3%
-  12 FabChessv1.13                -109      32     313   34.8%   35.8%
+   0 minic_1.49                      9       6    7842   51.3%   46.2%
+   1 RubiChess                     185      28     412   74.4%   35.2%
+   2 demolito                      104      27     413   64.5%   36.1%
+   3 igel-last                      76      25     413   60.8%   45.0%
+   4 PeSTO_bmi2                     19      26     413   52.7%   38.5%
+   5 Winter0.7                       5      26     412   50.7%   40.3%
+   6 minic_1.48                     -1      19     412   49.9%   68.7%
+   7 Hakkapeliitta                  -5      27     413   49.3%   33.2%
+   8 amoeba                         -6      24     413   49.2%   47.0%
+   9 minic_1.45                    -13      20     413   48.2%   64.4%
+  10 Topple_master                 -17      26     412   47.6%   39.8%
+  11 rodentIV                      -23      26     413   46.7%   39.7%
+  12 minic_1.46                    -24      21     413   46.6%   61.3%
+  13 cheng4_linux_x64              -30      25     413   45.6%   43.3%
+  14 minic_1.39                    -45      20     413   43.6%   65.4%
+  15 minic_1.35                    -66      22     413   40.7%   55.7%
+  16 combusken-linux-64            -70      27     413   40.1%   38.0%
+  17 zurichess-neuchatel           -74      26     412   39.6%   39.8%
+  18 minic_1.19                    -76      23     413   39.2%   51.3%
+  19 FabChessv1.13                -102      28     413   35.7%   34.6%
 ```
 
 Minic strength can be ajdusted using the level option (from command line, json configuration file, or using protocol option support, using value from 0 to 100). Level 0 is a random mover, 1 to 30 very weak, ..., level 100 is full strength. Level functionnaly will be enhanced in a near future.
