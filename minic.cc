@@ -91,7 +91,7 @@ const std::string MinicVersion = "dev";
 #define NULLMOVE        int32_t(0xFFFF1111)
 #define INVALIDSQUARE  -1
 #define MAX_PLY      1024
-#define MAX_MOVE      256   // 256 is enough I guess/home ...
+#define MAX_MOVE      256   // 256 is enough I guess/hope ...
 #define MAX_DEPTH     127   // DepthType is a char, !!!do not go above 127!!!
 #define MAX_HISTORY  1000
 
@@ -298,6 +298,7 @@ CONST_CLOP_TUNING DepthType singularExtensionDepth       = 8;
 // on move / opponent
 CONST_CLOP_TUNING ScoreType dangerLimitPruning[2]        = {900,900};
 CONST_CLOP_TUNING ScoreType dangerLimitReduction[2]      = {700,700};
+CONST_CLOP_TUNING ScoreType failLowRootMargin            = 100;
 
 const int nlevel = 100;
 const DepthType levelDepthMax[nlevel/10+1]   = {0,1,1,2,4,6,8,10,12,14,MAX_DEPTH};
@@ -3584,11 +3585,10 @@ Move getMove(const Position &p, unsigned res) { return ToMove(TB_GET_FROM(res), 
 
 bool initTB(const std::string &path){
    Logging::LogIt(Logging::logInfo) << "Init tb from path " << path;
-   bool ok = tb_init(path.c_str());
-   if (!ok) MAX_TB_MEN = 0;
+   if (!tb_init(path.c_str())) return MAX_TB_MEN = 0,false;
    else     MAX_TB_MEN = TB_LARGEST;
    Logging::LogIt(Logging::logInfo) << "MAX_TB_MEN: " << MAX_TB_MEN;
-   return ok;
+   return true;
 }
 
 int probe_root(ThreadContext & context, const Position &p, ScoreType &score, MoveList &rootMoves){
@@ -4147,6 +4147,9 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                     alpha = ttScore;
                 }
             }
+            else if ( rootnode && !isInCheck && ttScore < alpha - SearchConfig::failLowRootMargin){
+                return alpha - SearchConfig::failLowRootMargin;
+            }
         }
     }
 
@@ -4239,7 +4242,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             // SEE (capture)
             if (isPrunableCap){
                if (futility) {++stats.counters[Stats::sid_see]; continue;}
-               else if ( !rootnode && badCapScore(*it) < -(1+dangerPruneFactor*dangerPruneFactor)*100*depth /*!SEE_GE(p,*it,-100*depth)*/) {++stats.counters[Stats::sid_see2]; continue;} ///@todo already known in current move score
+               else if ( !rootnode && badCapScore(*it) < -(1+dangerPruneFactor*dangerPruneFactor)*100*depth /*!SEE_GE(p,*it,-100*depth)*/) {++stats.counters[Stats::sid_see2]; continue;} 
             }
             // LMR
             if (SearchConfig::doLMR && (isReductible && isQuiet ) && depth >= SearchConfig::lmrMinDepth ){
@@ -4287,6 +4290,9 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                 }
             }
         }
+        else if ( rootnode && !isInCheck && firstMove && score < alpha - SearchConfig::failLowRootMargin){
+            return alpha - SearchConfig::failLowRootMargin;
+        }
     }
 
     if ( validMoveCount==0 ) return (isInCheck || !withoutSkipMove)?-MATE + ply : 0;
@@ -4323,7 +4329,7 @@ void ThreadContext::displayGUI(DepthType depth, DepthType seldepth, ScoreType be
 PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
     d=std::max((signed short int)1,DynamicConfig::level==SearchConfig::nlevel?d:std::min(d,SearchConfig::levelDepthMax[DynamicConfig::level/10]));
     if ( isMainThread() ){
-        TimeMan::startTime = Clock::now(); ///@todo put this before ?
+        TimeMan::startTime = Clock::now(); 
         Logging::LogIt(Logging::logInfo) << "Search params :" ;
         Logging::LogIt(Logging::logInfo) << "requested time  " << getCurrentMoveMs() ;
         Logging::LogIt(Logging::logInfo) << "requested depth " << (int) d ;
@@ -4395,14 +4401,15 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
         else{ if ( depth > 1) startLock.store(false);} // delayed other thread start
         Logging::LogIt(Logging::logInfo) << "Thread " << id() << " searching depth " << (int)depth;
         PVList pvLoc;
-        ScoreType delta = (SearchConfig::doWindow && depth>4)?8:MATE; // MATE not INFSCORE in order to enter the loop below once
+        ScoreType delta = (SearchConfig::doWindow && depth>4)?6+std::max(0,(20-depth)*1):MATE; // MATE not INFSCORE in order to enter the loop below once ///@todo try delta function of depth
         ScoreType alpha = std::max(ScoreType(bestScore - delta), ScoreType (-MATE));
         ScoreType beta  = std::min(ScoreType(bestScore + delta), MATE);
         ScoreType score = 0;
+        DepthType windowDepth = depth;
         while( true ){
             pvLoc.clear();
             stack[p.halfmoves].h = p.h;
-            score = pvs<true,false>(alpha,beta,p,depth,0,pvLoc,seldepth,isInCheck,false);
+            score = pvs<true,false>(alpha,beta,p,windowDepth,0,pvLoc,seldepth,isInCheck,false);
             if ( stopFlag ) break;
             delta += 2 + delta/2; // from xiphos ...
             if (alpha > -MATE && score <= alpha) {
@@ -4413,6 +4420,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
                     PVList pv2;
                     TT::getPV(p, *this, pv2);
                     displayGUI(depth,seldepth,score,pv2,"!");
+                    windowDepth = depth;
                 }
             }
             else if (beta < MATE && score >= beta ) {
@@ -4423,6 +4431,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
                     PVList pv2;
                     TT::getPV(p, *this, pv2);
                     displayGUI(depth,seldepth,score,pv2,"?");
+                    --windowDepth; // from Ethereal
                 }
             }
             else break;

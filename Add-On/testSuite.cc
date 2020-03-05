@@ -298,7 +298,7 @@ bool test(const std::string & option){
         std::vector<std::string> positions;
         if ( ! ExtendedPosition::readEPDFile("TestSuite/hard2020.epd",positions) ) return 1;
 
-        std::vector<int> timeControls = { 10000 }; //mseconds
+        std::vector<int> timeControls = { 30*60*1000 }; //mseconds
         std::vector<int> scores = { 1 };
 
         ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return score;},false);
