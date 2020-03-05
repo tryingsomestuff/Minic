@@ -32,7 +32,10 @@ namespace UCI {
                 if ( !Options::SetValue(key,val)) Logging::LogIt(Logging::logError) << "Unable to set value " << key<< " = " << val;
             }
             else if (uciCommand == "isready") { Logging::LogIt(Logging::logGUI) << "readyok"; }
-            else if (uciCommand == "stop") { Logging::LogIt(Logging::logInfo) << "stop requested";  ThreadContext::stopFlag = true; }
+            else if (uciCommand == "stop") {
+                Logging::LogIt(Logging::logInfo) << "stop requested";
+                COM::stop();
+            }
             else if (uciCommand == "position") {
                 auto startTimePos = Clock::now();
                 COM::position.h = 0ull; // invalidate position
