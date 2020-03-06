@@ -393,10 +393,12 @@ void TexelTuning(const std::string & filename) {
     }
     */
 
+    /*
     for (int k = 0 ; k < 9 ; ++k ){
        guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::badBishop[k][MG] , -500,  500,"badBishop"+std::to_string(k)));
        guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::badBishop[k][EG] , -500,  500,"badBishopEG"+std::to_string(k)));
     }
+    */
 
     /*
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::knightPairMalus[MG] , -500,  500,"knight pair"));
@@ -435,6 +437,9 @@ void TexelTuning(const std::string & filename) {
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::outpost[MG],-150,550,"outpost"));
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::outpost[EG],-150,550,"outpostEG"));
     */
+
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::centerControl[MG],-150,550,"center"));
+    guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::centerControl[EG],-150,550,"centerEG"));
 
     /*    
     guess.push_back(Texel::TexelParam<ScoreType>(EvalConfig::doublePawnMalus  [0][MG],-150,550,"doublePawnMalus[0]"));
