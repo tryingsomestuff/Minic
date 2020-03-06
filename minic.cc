@@ -416,6 +416,7 @@ CONST_TEXEL_TUNING EvalScore   backwardPawnMalus[2]  = {{  2,  1 },{ 26, -6 }}; 
 CONST_TEXEL_TUNING EvalScore   holesMalus            = { -5, 1};
 CONST_TEXEL_TUNING EvalScore   pieceFrontPawn        = { -13,13};
 CONST_TEXEL_TUNING EvalScore   outpost               = { 14,19};
+CONST_TEXEL_TUNING EvalScore   centerControl         = {  7,-2};
 CONST_TEXEL_TUNING EvalScore   candidate[8]          = { {0, 0}, {-30, 11}, {-15,  0}, { 14,  6}, { 24, 51}, {-11, 14}, {-11, 14}, { 0, 0} };
 CONST_TEXEL_TUNING EvalScore   protectedPasserBonus[8]={ {0, 0}, {  8, 17}, { 8 ,  4}, { 14,  2}, { 14, 11}, { 12, 19}, { 8 , 16}, { 0, 0} };
 CONST_TEXEL_TUNING EvalScore   freePasserBonus[8]    = { {0, 0}, { -5, 27}, {-24, 19}, {-22, 22}, {-19, 41}, { -5, 74}, {-23, 77}, { 0, 0} };
@@ -639,12 +640,11 @@ const BitBoard rank7                     = 0x00ff000000000000;
 const BitBoard rank8                     = 0xff00000000000000;
 const BitBoard ranks[8] = {rank1,rank2,rank3,rank4,rank5,rank6,rank7,rank8};
 //const BitBoard center = BBSq_d4 | BBSq_d5 | BBSq_e4 | BBSq_e5;
-/*
+
 const BitBoard extendedCenter = BBSq_c3 | BBSq_c4 | BBSq_c5 | BBSq_c6
                               | BBSq_d3 | BBSq_d4 | BBSq_d5 | BBSq_d6
                               | BBSq_e3 | BBSq_e4 | BBSq_e5 | BBSq_e6
                               | BBSq_f3 | BBSq_f4 | BBSq_f5 | BBSq_f6;
-*/
 
 const BitBoard SeventhRank[2] = { rank7 , rank2 };
 
@@ -1525,8 +1525,8 @@ namespace MoveDifficultyUtil {
     const float     maxStealFraction  = 0.2f; // of remaining time
 }
 
-enum eScores : unsigned char { sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_PieceBlockPawn, sc_Holes, sc_Outpost, sc_FreePasser, sc_PwnPush, sc_PwnSafeAtt, sc_PwnPushAtt, sc_Adjust, sc_OpenFile, sc_RookFrontKing, sc_RookFrontQueen, sc_RookQueenSameFile, sc_AttQueenMalus, sc_MinorOnOpenFile, sc_RookBehindPassed, sc_QueenNearKing, sc_Hanging, sc_Threat, sc_PinsK, sc_PinsQ, sc_PawnTT, sc_Tempo, sc_initiative, sc_NN, sc_max };
-static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "PieceBlockPawn", "Holes", "Outpost", "FreePasser", "PwnPush", "PwnSafeAtt", "PwnPushAtt" , "Adjust", "OpenFile", "RookFrontKing", "RookFrontQueen", "RookQueenSameFile", "AttQueenMalus", "MinorOnOpenFile", "RookBehindPassed", "QueenNearKing", "Hanging", "Threats", "PinsK", "PinsQ", "PawnTT", "Tempo", "initiative", "NN" };
+enum eScores : unsigned char { sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_PieceBlockPawn, sc_Center, sc_Holes, sc_Outpost, sc_FreePasser, sc_PwnPush, sc_PwnSafeAtt, sc_PwnPushAtt, sc_Adjust, sc_OpenFile, sc_RookFrontKing, sc_RookFrontQueen, sc_RookQueenSameFile, sc_AttQueenMalus, sc_MinorOnOpenFile, sc_RookBehindPassed, sc_QueenNearKing, sc_Hanging, sc_Threat, sc_PinsK, sc_PinsQ, sc_PawnTT, sc_Tempo, sc_initiative, sc_NN, sc_max };
+static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "PieceBlockPawn", "Center", "Holes", "Outpost", "FreePasser", "PwnPush", "PwnSafeAtt", "PwnPushAtt" , "Adjust", "OpenFile", "RookFrontKing", "RookFrontQueen", "RookQueenSameFile", "AttQueenMalus", "MinorOnOpenFile", "RookBehindPassed", "QueenNearKing", "Hanging", "Threats", "PinsK", "PinsQ", "PawnTT", "Tempo", "initiative", "NN" };
 
 #ifdef DEBUG_ACC
 struct ScoreAcc{
@@ -3381,6 +3381,10 @@ ScoreType eval(const Position & p, EvalData & data, ThreadContext &context){
     // own piece in front of pawn
     score[sc_PieceBlockPawn] += EvalConfig::pieceFrontPawn * countBit( BBTools::shiftN<Co_White>(pawns[Co_White]) & nonPawnMat[Co_White] ); 
     score[sc_PieceBlockPawn] -= EvalConfig::pieceFrontPawn * countBit( BBTools::shiftN<Co_Black>(pawns[Co_Black]) & nonPawnMat[Co_Black] ); 
+
+    // center control
+    score[sc_Center] += EvalConfig::centerControl * countBit(protectedSquare[Co_White] & extendedCenter);
+    score[sc_Center] -= EvalConfig::centerControl * countBit(protectedSquare[Co_Black] & extendedCenter);
 
     // pawn hole, unprotected
     score[sc_Holes] += EvalConfig::holesMalus * countBit(pe.holes[Co_White] & ~protectedSquare[Co_White]);
