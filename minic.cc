@@ -325,20 +325,20 @@ namespace EvalConfig {
 
 CONST_TEXEL_TUNING EvalScore imbalance_mines[5][5] = {
     // pawn knight bishop rook queen
-    {  { 12, 99}                                                      }, // Pawn
-    {  {205,234}, {-119,-247}                                         }, // Knight
-    {  {262,129}, {-356,-290}, {-161,-242}                            }, // Bishop
-    {  {393,395}, {-299,-251}, {-328,-404},{ -255, -462}              }, // Rook
-    {  {507,473}, {-425,-350}, {-608,-510},{-1162,-1092}, {-392,-388} }  // Queen
+    {  { -4, 90}                                                      }, // Pawn
+    {  {115,291}, {-132,-263}                                         }, // Knight
+    {  {256,248}, {-239,-245}, {-199,-288}                            }, // Bishop
+    {  {313,512}, {-208,-206}, {-232,-430},{ -178, -440}              }, // Rook
+    {  {543,568}, {-482,-354}, {-701,-524},{-1207,-1130}, {-413,-412} }  // Queen
 };
 
 CONST_TEXEL_TUNING EvalScore imbalance_theirs[5][5] = {
     // pawn knight bishop rook queen
-    { {-188,-301}                                                  }, // Pawn
-    { { 294, 284}, { -23,-17}                                      }, // Knight
-    { { 243, 416}, {   3,-45},  { -58, -53}                        }, // Bishop
-    { { 284, 626}, {  31,-54},  {-116,-153}, {-108,-146}           }, // Rook
-    { { 705, 753}, { 394,351},  { 381, 307}, { 327, 329},  {36,25} }  // Queen
+    { {-163,-227}                                                  }, // Pawn
+    { { 269, 323}, {   1,-38}                                      }, // Knight
+    { { 190, 463}, {  26,-74},  {   7, -42}                        }, // Bishop
+    { { 211, 602}, { 106,-67},  { -17,-203}, { -33,-180}           }, // Rook
+    { { 725, 873}, { 446,347},  { 481, 300}, { 383, 331},  {36,14} }  // Queen
 };
 
 CONST_TEXEL_TUNING EvalScore PST[6][64] = {
@@ -404,54 +404,53 @@ CONST_TEXEL_TUNING EvalScore PST[6][64] = {
   }
 };
 
-CONST_TEXEL_TUNING EvalScore   pawnShieldBonus       = {2, -2};
-CONST_TEXEL_TUNING EvalScore   passerBonus[8]        = { { 0, 0 }, {20, -40} , {6, -19}, {-10, 13}, {10, 37}, {33, 71}, {42, 109}, {0, 0}};
-CONST_TEXEL_TUNING EvalScore   rookBehindPassed      = { -8,41};
-CONST_TEXEL_TUNING EvalScore   kingNearPassedPawn    = { -9,13};
+CONST_TEXEL_TUNING EvalScore   pawnShieldBonus       = {4, -1};
+CONST_TEXEL_TUNING EvalScore   passerBonus[8]        = { { 0, 0 }, {16, -32} , { 0, -10}, {-8, 14}, {6, 47}, {41, 54}, {52, 66}, {0, 0}};
+CONST_TEXEL_TUNING EvalScore   rookBehindPassed      = {-12,52};
+CONST_TEXEL_TUNING EvalScore   kingNearPassedPawn    = { -9,15};
 enum PawnEvalSemiOpen{ Close=0, SemiOpen=1};
 ///@todo make this depends on file! (/rank?)
-CONST_TEXEL_TUNING EvalScore   doublePawnMalus[2]    = {{ 28, 10 },{ 12, 17 }}; // close semiopenfile
-CONST_TEXEL_TUNING EvalScore   isolatedPawnMalus[2]  = {{ 10,  5 },{ 15, 17 }}; // close semiopenfile
-CONST_TEXEL_TUNING EvalScore   backwardPawnMalus[2]  = {{  2,  1 },{ 26, -6 }}; // close semiopenfile
-CONST_TEXEL_TUNING EvalScore   holesMalus            = { -5, 1};
-CONST_TEXEL_TUNING EvalScore   pieceFrontPawn        = { -13,13};
-CONST_TEXEL_TUNING EvalScore   outpost               = { 14,19};
-CONST_TEXEL_TUNING EvalScore   centerControl         = {  7,-2};
-CONST_TEXEL_TUNING EvalScore   candidate[8]          = { {0, 0}, {-30, 11}, {-15,  0}, { 14,  6}, { 24, 51}, {-11, 14}, {-11, 14}, { 0, 0} };
-CONST_TEXEL_TUNING EvalScore   protectedPasserBonus[8]={ {0, 0}, {  8, 17}, { 8 ,  4}, { 14,  2}, { 14, 11}, { 12, 19}, { 8 , 16}, { 0, 0} };
-CONST_TEXEL_TUNING EvalScore   freePasserBonus[8]    = { {0, 0}, { -5, 27}, {-24, 19}, {-22, 22}, {-19, 41}, { -5, 74}, {-23, 77}, { 0, 0} };
-CONST_TEXEL_TUNING EvalScore   pawnMobility          = { -1,15};
-CONST_TEXEL_TUNING EvalScore   pawnSafeAtt           = { 34,12};
-CONST_TEXEL_TUNING EvalScore   pawnSafePushAtt       = { 20, 6};
-CONST_TEXEL_TUNING EvalScore   pawnlessFlank         = {-10,-19};
-CONST_TEXEL_TUNING EvalScore   pawnStormMalus        = { 14,-22};
-CONST_TEXEL_TUNING EvalScore   rookOnOpenFile        = { 54, 0};
-CONST_TEXEL_TUNING EvalScore   rookOnOpenSemiFileOur = {  8, 3};
-CONST_TEXEL_TUNING EvalScore   rookOnOpenSemiFileOpp = { 22, 0};
+CONST_TEXEL_TUNING EvalScore   doublePawnMalus[2]    = {{ 23, 13 },{ 11, 17 }}; // close semiopenfile
+CONST_TEXEL_TUNING EvalScore   isolatedPawnMalus[2]  = {{  9,  7 },{ 17, 17 }}; // close semiopenfile
+CONST_TEXEL_TUNING EvalScore   backwardPawnMalus[2]  = {{  2, -3 },{ 23, -3 }}; // close semiopenfile
+CONST_TEXEL_TUNING EvalScore   holesMalus            = { -4, 2};
+CONST_TEXEL_TUNING EvalScore   pieceFrontPawn        = {-14,15};
+CONST_TEXEL_TUNING EvalScore   outpost               = { 15,19};
+CONST_TEXEL_TUNING EvalScore   centerControl         = {  4, 0};
+CONST_TEXEL_TUNING EvalScore   candidate[8]          = { {0, 0}, { -7,  0}, {-17,  8}, {  3, 25}, { 23, 76}, { 34, 64}, { 34, 64}, { 0, 0} };
+CONST_TEXEL_TUNING EvalScore   protectedPasserBonus[8]={ {0, 0}, { 24, -8}, { 14, -9}, { 26, -7}, {  1, 14}, { 36, 47}, {  7,  9}, { 0, 0} };
+CONST_TEXEL_TUNING EvalScore   freePasserBonus[8]    = { {0, 0}, { 14,  6}, { -6,  6}, { -7, 21}, { -9, 39}, {  6,122}, { 50,150}, { 0, 0} };
+CONST_TEXEL_TUNING EvalScore   pawnMobility          = { -5, 17};
+CONST_TEXEL_TUNING EvalScore   pawnSafeAtt           = { 59, 23};
+CONST_TEXEL_TUNING EvalScore   pawnSafePushAtt       = { 16,  8};
+CONST_TEXEL_TUNING EvalScore   pawnlessFlank         = {-18,-20};
+CONST_TEXEL_TUNING EvalScore   pawnStormMalus        = { 14,-20};
+CONST_TEXEL_TUNING EvalScore   rookOnOpenFile        = { 57,  9};
+CONST_TEXEL_TUNING EvalScore   rookOnOpenSemiFileOur = { 17,  0};
+CONST_TEXEL_TUNING EvalScore   rookOnOpenSemiFileOpp = { 37,  0};
 
-CONST_TEXEL_TUNING EvalScore   rookQueenSameFile     = {  6, -3};
-CONST_TEXEL_TUNING EvalScore   rookFrontQueenMalus   = { -8,-18};
-CONST_TEXEL_TUNING EvalScore   rookFrontKingMalus    = {-12,  5};
-CONST_TEXEL_TUNING EvalScore   minorOnOpenFile       = { 11, -3};
-//CONST_TEXEL_TUNING EvalScore   attQueenMalus[5]      = {{2,-5},{-16,4},{-40,-16},{-57,-3},{32,39}};
+CONST_TEXEL_TUNING EvalScore   rookQueenSameFile     = {  8,  3};
+CONST_TEXEL_TUNING EvalScore   rookFrontQueenMalus   = { -3,-29};
+CONST_TEXEL_TUNING EvalScore   rookFrontKingMalus    = {-14,  8};
+CONST_TEXEL_TUNING EvalScore   minorOnOpenFile       = {  8,  4};
 
-CONST_TEXEL_TUNING EvalScore   pinnedKing [5]        = { { -5, -9}, { 13, 65}, { -8, 66}, {-16, 61}, {-1, 27} };
-CONST_TEXEL_TUNING EvalScore   pinnedQueen[5]        = { { 12,-34}, {-25, 10}, {  5, 10}, {  1, 10}, {31, 34} };
+CONST_TEXEL_TUNING EvalScore   pinnedKing [5]        = { { -4,-11}, {  8, 64}, {-12, 69}, {-14, 67}, {-14, 13} };
+CONST_TEXEL_TUNING EvalScore   pinnedQueen[5]        = { {  5, -6}, {-27,  7}, { -2, 13}, { -3,  6}, { 32, 27} };
 
-CONST_TEXEL_TUNING EvalScore   hangingPieceMalus     = {-24, -11};
+CONST_TEXEL_TUNING EvalScore   hangingPieceMalus     = {-36,-10};
 
-CONST_TEXEL_TUNING EvalScore   threatByMinor[6]      = { { -11, -5 },{ -20,-27 },{ -19, -10 },{ -25, 11 },{ -16, -9 },{ 0, 0 } };
-CONST_TEXEL_TUNING EvalScore   threatByRook[6]       = { {  -5, -5 },{ -11, -1 },{  -4,  -3 },{  -4, -1 },{  -7, -9 },{ 0, 0 } };
-CONST_TEXEL_TUNING EvalScore   threatByQueen[6]      = { {  -4, 21 },{   1, -2 },{  20,  -9 },{  31, -7 },{  16, -6 },{ 0, 0 } };
-CONST_TEXEL_TUNING EvalScore   threatByKing[6]       = { {  -6,-17 },{  -5,  1 },{  -4, -10 },{  -5, -7 },{   0,  0 },{ 0, 0 } };
+CONST_TEXEL_TUNING EvalScore   threatByMinor[6]      = { { -16,-23 },{ -20,-43 },{ -36, -32 },{ -58,-13 },{ -57, -7 },{ -62, -25 } };
+CONST_TEXEL_TUNING EvalScore   threatByRook[6]       = { {  -1,-27 },{ -27, -9 },{  -5, -32 },{ -16, 15 },{ -74, -2 },{ -18, -38 } };
+CONST_TEXEL_TUNING EvalScore   threatByQueen[6]      = { {  15, 11 },{   0, 17 },{  21, -13 },{  31, -4 },{  39, 24 },{ -29, -47 } };
+CONST_TEXEL_TUNING EvalScore   threatByKing[6]       = { {  19,-52 },{  -9,-21 },{  49, -60 },{  15,-53 },{   0,  0 },{   0,   0 } };
 
-CONST_TEXEL_TUNING EvalScore   adjKnight[9]          = { {-24,-27}, { -12, 9}, { -4, 18}, {  1, 17}, { 12, 22}, { 17, 24}, { 14, 46}, { 26, 40}, { 22, 10} };
-CONST_TEXEL_TUNING EvalScore   adjRook[9]            = { { 24, 22}, {  9,  7}, { 15,  1}, {  1,  4}, {-17, 13}, {-23, 24}, {-24, 32}, {-23, 46}, { -3, 17} };
-CONST_TEXEL_TUNING EvalScore   badBishop[9]          = { {-16,  3}, {-12, -1}, {-11,  8}, { -6, 14}, {  1, 18}, {  4, 30}, { 14, 31}, { 19, 48}, { 36, 68} };
-CONST_TEXEL_TUNING EvalScore   bishopPairBonus[9]    = { { 31, 56}, { 31, 57}, { 27, 63}, { 14, 77}, { 24, 62}, { 29, 62}, { 37, 61}, { 38, 58}, { 33, 53} };
-CONST_TEXEL_TUNING EvalScore   knightPairMalus       = { 4, -9};
-CONST_TEXEL_TUNING EvalScore   rookPairMalus         = { 3,-14};
-CONST_TEXEL_TUNING EvalScore   queenNearKing         = {-2,  9};
+CONST_TEXEL_TUNING EvalScore   adjKnight[9]          = { {-26,-20}, { -10,-3}, {  1, -2}, {  6,  3}, { -4, 16}, {  1, 23}, { 11, 42}, { 25, 56}, { 44, 29} };
+CONST_TEXEL_TUNING EvalScore   adjRook[9]            = { { 24,-10}, {  15, 3}, {-23, 11}, {-46, 13}, {-47,  4}, {-42, -2}, {-44, -6}, {-42, -7}, {-44, 36} };
+CONST_TEXEL_TUNING EvalScore   badBishop[9]          = { { -6, -5}, {  -7,15}, { -8, 29}, {  0, 35}, {  6, 39}, { 13, 45}, { 19, 40}, { 21, 50}, { 39, 65} };
+CONST_TEXEL_TUNING EvalScore   bishopPairBonus[9]    = { { 29, 56}, { 28, 57}, { 30, 71}, { 16, 82}, { 34, 66}, { 29, 74}, { 30, 86}, { 40, 85}, { 54, 68} };
+CONST_TEXEL_TUNING EvalScore   knightPairMalus       = {17,  1};
+CONST_TEXEL_TUNING EvalScore   rookPairMalus         = {11,-14};
+CONST_TEXEL_TUNING EvalScore   queenNearKing         = { 0, -2};
 
 CONST_TEXEL_TUNING EvalScore MOB[6][29] = { {{ 23,-46}, { 23,  5}, { 29, 15}, { 32, 19}, { 40, 17}, { 39, 15}, { 28, 23}, { 35, 46}, { 29, 47} },
                                             {{-25,-34}, {-12, 10}, { -4, 22}, {  0, 28}, {  2, 31}, {  4, 33}, {  1, 33}, { 21, 19}, { 41, 22}, {45, 36}, {55, 37}, {71, 65}, {71, 56}, {120, 95} },
@@ -460,21 +459,21 @@ CONST_TEXEL_TUNING EvalScore MOB[6][29] = { {{ 23,-46}, { 23,  5}, { 29, 15}, { 
                                             {{ -3,-64}, { -3,-25}, {  2,-11}, { -1, -7}, {  8,-10}, {  8, -4}, {  3, 15}, {  7, 14}, { 13, 15}, {21, 26}, { 8, 37}, {21, 43}, {25, 48}, {19, 45}, {24, 54}},
                                             {{  4,-17}, { -5, 31}, {-11, 41}, {-15, 46}, {-22, 48}, {-27, 40}, {-25, 43}, {-30, 40}, {-40, 23} } };
 
-CONST_TEXEL_TUNING EvalScore initiative[4] = {{1,5}, {58,39}, {115,64}, {71,78}};
+CONST_TEXEL_TUNING EvalScore initiative[4] = {{0,5}, {59,40}, {115,65}, {71,88}};
 
 enum katt_att_def : unsigned char { katt_attack = 0, katt_defence = 1 };
-CONST_TEXEL_TUNING ScoreType kingAttMax    = 423;
-CONST_TEXEL_TUNING ScoreType kingAttTrans  = 44;
-CONST_TEXEL_TUNING ScoreType kingAttScale  = 16;
-CONST_TEXEL_TUNING ScoreType kingAttOffset = 10;
-CONST_TEXEL_TUNING ScoreType kingAttWeight[2][6]    = { { 64, 224, 256, 129, 289, -32}, { 160, 96, 160, -2, 31, 0} };
+CONST_TEXEL_TUNING ScoreType kingAttMax    = 428;
+CONST_TEXEL_TUNING ScoreType kingAttTrans  = 49;
+CONST_TEXEL_TUNING ScoreType kingAttScale  = 11;
+CONST_TEXEL_TUNING ScoreType kingAttOffset =  9;
+CONST_TEXEL_TUNING ScoreType kingAttWeight[2][6]    = { { 134, 230, 246, 206, 335, -33}, { 220, 156, 138, 8, -22, 0} };
 CONST_TEXEL_TUNING ScoreType kingAttSafeCheck[6]    = {   128, 1184, 1152, 1056, 1024, 0};
-CONST_TEXEL_TUNING ScoreType kingAttOpenfile        = 192;
-CONST_TEXEL_TUNING ScoreType kingAttSemiOpenfileOpp = 97;
-CONST_TEXEL_TUNING ScoreType kingAttSemiOpenfileOur = 63;
+CONST_TEXEL_TUNING ScoreType kingAttOpenfile        = 118;
+CONST_TEXEL_TUNING ScoreType kingAttSemiOpenfileOpp = 80;
+CONST_TEXEL_TUNING ScoreType kingAttSemiOpenfileOur = 108;
 ScoreType kingAttTable[64]       = {0};
 
-CONST_TEXEL_TUNING EvalScore tempo = {0,0}; //{27, 26};
+CONST_TEXEL_TUNING EvalScore tempo = {0,0}; //{37, 34};
 
 double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f, double offset = 0.f){ return m / (1 + exp((trans - x) / scale)) - offset;}
 void initEval(){ for(Square i = 0; i < 64; i++){ EvalConfig::kingAttTable[i] = (int) sigmoid(i,EvalConfig::kingAttMax,EvalConfig::kingAttTrans,EvalConfig::kingAttScale,EvalConfig::kingAttOffset); } }// idea taken from Topple
@@ -3877,7 +3876,7 @@ bool isPseudoLegal2(const Position & p, Move m) { // validate TT move
         if ((BBTools::mask[from].push[p.c] & p.occupancy) == empty) validPush |= BBTools::mask[from].dpush[p.c] & ~p.occupancy;
         if (validPush & SquareToBitboard(to)) return true;
         const BitBoard validCap = BBTools::mask[from].pawnAttack[p.c] & ~p.allPieces[p.c];
-        if ((validCap & SquareToBitboard(to)) && (( t != T_ep && toP != P_none) || (t == T_ep && to == p.ep))) return true;
+        if ((validCap & SquareToBitboard(to)) && (( t != T_ep && toP != P_none) || (t == T_ep && to == p.ep && toP == P_none))) return true;
         return false;
     }
     if (fromPieceType != P_wk) {
