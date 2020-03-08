@@ -249,7 +249,8 @@ You can use both the json configuation file or the command line argument to sele
 * 1.41..1.42 : fixing a time management issue with incremental TC  
 * 1.43 : qsearch cleaning  
 * 1.44 : bad bishop eval  
-
+* 1.45..1.50 : search tuning / trick, simpler hash table.
+* 1.51 : retune everything !
 
 ## Thanks
 
