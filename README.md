@@ -36,19 +36,27 @@ Please note that Win32 binaries are very slow (I don't know why yet, so please u
 Starting from release 1.00 Minic support setting options using protocol (both XBoard and UCI). Option priority are as follow : json file, can be override by command line option, that can be override by protocol option.
    
 ## Strength
+
+### CCRL
 Minic 1.39 is tested around 2840 on the CCRL 40/15 scale (http://ccrl.chessdom.com/ccrl/4040/)  
-Minic 1.35 is tested > 3000 on the CCRL BLITZ 4CPU scale (http://ccrl.chessdom.com/ccrl/404/).  
-Minic 1.44 is tested > 3000 on the CCRL BLITZ 1CPU scale (http://ccrl.chessdom.com/ccrl/404/).  
-Minic 1.15 is tested is tested at 2830 on the CCRL FRC list (http://ccrl.chessdom.com/ccrl/404FRC/)  
+Minic 1.35 is tested at 3029 on the CCRL BLITZ 4CPU scale (http://ccrl.chessdom.com/ccrl/404/).  
+Minic 1.44 is tested at 3014 on the CCRL BLITZ 1CPU scale (http://ccrl.chessdom.com/ccrl/404/).  
+Minic 1.15 is tested at 2830 on the CCRL FRC list (http://ccrl.chessdom.com/ccrl/404FRC/)  
+
+### CEGT
 Minic 1.35 is tested at 2836 on the CEGT 40/4 list (http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
 Minic 1.35 is tested at 3027 on the CEGT 40/4 MP list (http://www.cegt.net/40_4_Ratinglist/40_4_mp/rangliste.html)  
 Minic 1.35 is tested at 2882 on the CEGT 5+3 PB=ON list (http://www.cegt.net/5Plus3Rating/BestVersionsNEW/rangliste.html)  
-Minic 1.44 is tested at 2770 on the CEGT 40/20 list(http://www.cegt.net/40_40%20Rating%20List/40_40%20SingleVersion/rangliste.html)  
-Minic 1.22 is tested at 2699 on the fastgm rating list (http://www.fastgm.de/60-0.60.html)
+Minic 1.44 is tested at 2787 on the CEGT 40/20 list(http://www.cegt.net/40_40%20Rating%20List/40_40%20SingleVersion/rangliste.html)  
 
+### FGRL
+Minic 1.44 is tested at 2740 on the fastgm rating list (http://www.fastgm.de/60-0.60.html)
+
+### Test Suite
 STS : 1141/1500 @10sec per position (single thread)  
 WAC : 289/300 @10sec per position (single thread)  
 
+### Home test
 Here are some fast TC results (CCRL Blitz TC)
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
