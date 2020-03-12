@@ -450,7 +450,7 @@ CONST_TEXEL_TUNING EvalScore   badBishop[9]          = { { -6, -5}, {  -7,15}, {
 CONST_TEXEL_TUNING EvalScore   bishopPairBonus[9]    = { { 29, 56}, { 28, 57}, { 30, 71}, { 16, 82}, { 34, 66}, { 29, 74}, { 30, 86}, { 40, 85}, { 54, 68} };
 CONST_TEXEL_TUNING EvalScore   knightPairMalus       = {17,  1};
 CONST_TEXEL_TUNING EvalScore   rookPairMalus         = {11,-14};
-CONST_TEXEL_TUNING EvalScore   queenNearKing         = { 0, -2};
+CONST_TEXEL_TUNING EvalScore   queenNearKing         = { 4, -2};
 
 CONST_TEXEL_TUNING EvalScore MOB[6][29] = { {{ 23,-46}, { 23,  5}, { 29, 15}, { 32, 19}, { 40, 17}, { 39, 15}, { 28, 23}, { 35, 46}, { 29, 47} },
                                             {{-25,-34}, {-12, 10}, { -4, 22}, {  0, 28}, {  2, 31}, {  4, 33}, {  1, 33}, { 21, 19}, { 41, 22}, {45, 36}, {55, 37}, {71, 65}, {71, 56}, {120, 95} },
@@ -3503,8 +3503,8 @@ ScoreType eval(const Position & p, EvalData & data, ThreadContext &context){
     }
 
     // attack : queen distance to opponent king (wrong if multiple queens ...)
-    if ( blackQueenSquare != INVALIDSQUARE ) score[sc_QueenNearKing] -= EvalConfig::queenNearKing * (7 - minDistance(p.king[Co_White], blackQueenSquare) );
-    if ( whiteQueenSquare != INVALIDSQUARE ) score[sc_QueenNearKing] += EvalConfig::queenNearKing * (7 - minDistance(p.king[Co_Black], whiteQueenSquare) );
+    if ( blackQueenSquare != INVALIDSQUARE ) score[sc_QueenNearKing] -= EvalConfig::queenNearKing * (7 - chebyshevDistance(p.king[Co_White], blackQueenSquare) );
+    if ( whiteQueenSquare != INVALIDSQUARE ) score[sc_QueenNearKing] += EvalConfig::queenNearKing * (7 - chebyshevDistance(p.king[Co_Black], whiteQueenSquare) );
 
     // number of pawn and piece type value
     score[sc_Adjust] += EvalConfig::adjRook  [p.mat[Co_White][M_p]] * ScoreType(p.mat[Co_White][M_r]);

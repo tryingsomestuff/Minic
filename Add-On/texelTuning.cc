@@ -569,6 +569,7 @@ void TexelTuning(const std::string & filename) {
     computeOptimalK(data);
     Logging::LogIt(Logging::logInfo) << "Optimal K " << Texel::K;
 
+    /*
     std::vector<std::string> todo = {
         //"piecesValue",
         //"PST",
@@ -626,6 +627,9 @@ void TexelTuning(const std::string & filename) {
 
         "tempo"
     };
+    */
+    std::vector<std::string> todo = {
+        "queenNearKing" };
 
     for(auto loops = 0 ; loops < 10 ; ++loops){
         for(auto it = todo.begin() ; it != todo.end(); ++it){
