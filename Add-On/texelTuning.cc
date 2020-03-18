@@ -629,7 +629,9 @@ void TexelTuning(const std::string & filename) {
     };
     */
     std::vector<std::string> todo = {
-        "queenNearKing" };
+        "PST",
+        "mobility"
+    };
 
     for(auto loops = 0 ; loops < 10 ; ++loops){
         for(auto it = todo.begin() ; it != todo.end(); ++it){
