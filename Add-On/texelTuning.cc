@@ -61,26 +61,32 @@ double Sigmoid(Position * p) {
 
 double E(const std::vector<Texel::TexelInput> &data, size_t miniBatchSize) {
     std::atomic<double> e(0);
+    std::mutex m;
     const bool progress = miniBatchSize > 100000;
     std::chrono::time_point<Clock> startTime = Clock::now();
 
-    auto worker = [&] (size_t begin, size_t end, std::atomic<double> & acc) {
-      double e = 0;
+    auto worker = [&] (size_t begin, size_t end, std::atomic<double> & acc, int t) {
+      double ee = 0;
       for(auto k = begin; k != end; ++k) {
-        e += std::pow((data[k].result+1)*0.5 - Sigmoid(data[k].p),2);
+        ee += std::pow((data[k].result+1)*0.5 - Sigmoid(data[k].p),2);
       }
-      acc.store( acc.load() + e );
+      {
+          const std::lock_guard<std::mutex> lock(m);
+          //std::cout << "thread id " << t << " " << ee << std::endl;
+          acc.store( acc.load() + ee );
+      }
     };
 
     std::vector<std::thread> threads(DynamicConfig::threads);
     const size_t grainsize = miniBatchSize / DynamicConfig::threads;
 
     size_t work_iter = 0;
+    int tcount = 0;
     for(auto it = std::begin(threads); it != std::end(threads) - 1; ++it) {
-      *it = std::thread(worker, work_iter, work_iter + grainsize, std::ref(e));
+      *it = std::thread(worker, work_iter, work_iter + grainsize, std::ref(e), tcount++);
       work_iter += grainsize;
     }
-    threads.back() = std::thread(worker, work_iter, miniBatchSize, std::ref(e));
+    threads.back() = std::thread(worker, work_iter, miniBatchSize, std::ref(e), tcount);
 
     for(auto&& i : threads) {
       i.join();
@@ -149,7 +155,7 @@ std::vector<double> ComputeGradient(std::vector<TexelParam<ScoreType> > & x0, st
 
 std::vector<TexelParam<ScoreType> > TexelOptimizeGD(const std::vector<TexelParam<ScoreType> >& initialGuess, std::vector<Texel::TexelInput> &data, const size_t batchSize, const int loops = 100) {
     DynamicConfig::disableTT = true;
-    std::ofstream str("tuning.csv");
+    std::ofstream str("tuning.csv",std::ofstream::out | std::ofstream::app);
     int it = 0;
     Randomize(data, batchSize);
     std::vector<TexelParam<ScoreType> > bestParam = initialGuess;
@@ -161,7 +167,10 @@ std::vector<TexelParam<ScoreType> > TexelOptimizeGD(const std::vector<TexelParam
             gmax = std::max(gmax,std::fabs(g[k]));
         }
         Logging::LogIt(Logging::logInfo) << "gmax " << gmax;
-        if ( gmax < 0.0000000001 ) break;
+        if ( gmax < 0.0000000001 ){
+            Logging::LogIt(Logging::logInfo) << "gradient is too small, quitting";
+            break;
+        }
 
         double learningRate = 2./gmax;
         double alpha = 0.1;
@@ -469,13 +478,13 @@ void TexelTuning(const std::string & filename) {
     }
 
     for (int k = 0 ; k < 6 ; ++k ){
-        for(int i = 0 ; i < 29 ; ++i){
+        for(int i = 0 ; i < 15 ; ++i){
            guess["mobility"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::MOB[k][i][MG],-200,200,"mob"+std::to_string(k)+"_"+std::to_string(i)));
         }
     }
 
     for (int k = 0 ; k < 6 ; ++k ){
-        for(int i = 0 ; i < 29 ; ++i){
+        for(int i = 0 ; i < 15 ; ++i){
            guess["mobility"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::MOB[k][i][EG],-200,200,"mobeg"+std::to_string(k)+"_"+std::to_string(i)));
         }
     }
@@ -553,6 +562,12 @@ void TexelTuning(const std::string & filename) {
     guess["tempo"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::tempo[MG] , -500,  500,"tempo"));
     guess["tempo"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::tempo[EG] , -500,  500,"tempoEG"));
 
+    static ScoreType fake = 0;
+    guess["fake"].push_back(Texel::TexelParam<ScoreType>(fake , -500,  500,"fake"));
+
+    guess["PSTWrong"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::PST[0][0][MG],-200,200,"pstWrong"));
+    guess["PSTWrong"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::PST[0][0][EG],-200,200,"pstWrongEG"));
+
     for (Mat m1 = M_p; m1 <= M_q; ++m1) {
         for (Mat m2 = M_p; m2 <= m1; ++m2) {
             guess["imbalance"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::imbalance_mines[m1-1][m2-1][MG],  -3000, 3000, "imbalance_mines"  + std::to_string(m1) + "_" + std::to_string(m2)));
@@ -626,19 +641,26 @@ void TexelTuning(const std::string & filename) {
         "storm",
 
         "tempo"
+
     };
     */
     std::vector<std::string> todo = {
         "PST",
-        "mobility"
+        "mobility",
+        "fake",
+        //"PSTWrong"
     };
 
     for(auto loops = 0 ; loops < 10 ; ++loops){
+        Logging::LogIt(Logging::logInfo) << "Starting loop : " << loops;
         for(auto it = todo.begin() ; it != todo.end(); ++it){
-            if ( guess.find(*it) == guess.end() ) continue;
+            if ( guess.find(*it) == guess.end() ){
+                Logging::LogIt(Logging::logError) << "Not found :" << *it;
+                continue;
+            }
             Logging::LogIt(Logging::logInfo) << "Initial values :";
             for (size_t k = 0; k < guess[*it].size(); ++k) Logging::LogIt(Logging::logInfo) << guess[*it][k].name << " " << guess[*it][k];
-            std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeGD(guess[*it], data, batchSize, 10*guess[*it].size());
+            std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeGD(guess[*it], data, batchSize, guess[*it].size());
             Logging::LogIt(Logging::logInfo) << "Optimized values :";
             for (size_t k = 0; k < optim.size(); ++k) Logging::LogIt(Logging::logInfo) << optim[k].name << " " << optim[k];
         }
