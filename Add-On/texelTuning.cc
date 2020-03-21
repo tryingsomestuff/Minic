@@ -153,9 +153,18 @@ std::vector<double> ComputeGradient(std::vector<TexelParam<ScoreType> > & x0, st
     return g;
 }
 
-std::vector<TexelParam<ScoreType> > TexelOptimizeGD(const std::vector<TexelParam<ScoreType> >& initialGuess, std::vector<Texel::TexelInput> &data, const size_t batchSize, const int loops = 100) {
+void displayTexel(const std::string prefixe, const std::vector<TexelParam<ScoreType> >& bestParam, int it, double curE){
+    std::ofstream str("tuning_"+prefixe+".csv",std::ofstream::out | std::ofstream::app);
+    // display
+    for (size_t k = 0; k < bestParam.size(); ++k) Logging::LogIt(Logging::logInfo) << bestParam[k].name << " " << bestParam[k];
+    // write
+    str << it << ";";
+    for (size_t k = 0; k < bestParam.size(); ++k) str << bestParam[k] << ";";
+    str << curE << std::endl;
+}
+
+std::vector<TexelParam<ScoreType> > TexelOptimizeGD(const std::vector<TexelParam<ScoreType> >& initialGuess, std::vector<Texel::TexelInput> &data, const size_t batchSize, const int loops = 100, const std::string & prefix = "values") {
     DynamicConfig::disableTT = true;
-    std::ofstream str("tuning.csv",std::ofstream::out | std::ofstream::app);
     int it = 0;
     Randomize(data, batchSize);
     std::vector<TexelParam<ScoreType> > bestParam = initialGuess;
@@ -188,15 +197,10 @@ std::vector<TexelParam<ScoreType> > TexelOptimizeGD(const std::vector<TexelParam
 
         Logging::LogIt(Logging::logInfo) << "Computing new error";
         double curE = E(data, batchSize);
-        Logging::LogIt(Logging::logInfo) << curE;
+        Logging::LogIt(Logging::logInfo) << "-> " << curE;
         // randomize for next iteration
         Randomize(data, batchSize);
-        // display
-        for (size_t k = 0; k < bestParam.size(); ++k) Logging::LogIt(Logging::logInfo) << bestParam[k].name << " " << bestParam[k];
-        // write
-        str << it << ";";
-        for (size_t k = 0; k < bestParam.size(); ++k) str << bestParam[k] << ";";
-        str << curE << std::endl;
+        displayTexel(prefix,bestParam,it,curE);
         ++it;
     }
     return bestParam;
@@ -491,12 +495,12 @@ void TexelTuning(const std::string & filename) {
 
     for (int k = 0 ; k < 6 ; ++k ){
         for(int i = 0 ; i < 64 ; ++i){
-           guess["PST"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::PST[k][i][MG],-200,200,"pst"+std::to_string(k)+"_"+std::to_string(i)));
+           guess["PST"+std::to_string(k)].push_back(Texel::TexelParam<ScoreType>(EvalConfig::PST[k][i][MG],-200,200,"pst"+std::to_string(k)+"_"+std::to_string(i)));
         }
     }
     for (int k = 0 ; k < 6 ; ++k ){
         for(int i = 0 ; i < 64 ; ++i){
-           guess["PST"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::PST[k][i][EG],-200,200,"psteg"+std::to_string(k)+"_"+std::to_string(i)));
+           guess["PST"+std::to_string(k)].push_back(Texel::TexelParam<ScoreType>(EvalConfig::PST[k][i][EG],-200,200,"psteg"+std::to_string(k)+"_"+std::to_string(i)));
         }
     }
 
@@ -645,9 +649,14 @@ void TexelTuning(const std::string & filename) {
     };
     */
     std::vector<std::string> todo = {
-        "PST",
+        "PST0",
+        "PST1",
+        "PST2",
+        "PST3",
+        "PST4",
+        "PST5",
         "mobility",
-        "fake",
+        //"fake",
         //"PSTWrong"
     };
 
@@ -658,12 +667,13 @@ void TexelTuning(const std::string & filename) {
                 Logging::LogIt(Logging::logError) << "Not found :" << *it;
                 continue;
             }
-            Logging::LogIt(Logging::logInfo) << "Initial values :";
-            for (size_t k = 0; k < guess[*it].size(); ++k) Logging::LogIt(Logging::logInfo) << guess[*it][k].name << " " << guess[*it][k];
-            std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeGD(guess[*it], data, batchSize, guess[*it].size());
+            //Logging::LogIt(Logging::logInfo) << "Initial values :";
+            //for (size_t k = 0; k < guess[*it].size(); ++k) Logging::LogIt(Logging::logInfo) << guess[*it][k].name << " " << guess[*it][k];
+            std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeGD(guess[*it], data, batchSize, guess[*it].size(),*it);
             Logging::LogIt(Logging::logInfo) << "Optimized values :";
             for (size_t k = 0; k < optim.size(); ++k) Logging::LogIt(Logging::logInfo) << optim[k].name << " " << optim[k];
         }
+        Logging::LogIt(Logging::logInfo) << "Final Optimized values :";
         for(auto it = todo.begin() ; it != todo.end(); ++it){
             for (size_t k = 0; k < guess[*it].size(); ++k) Logging::LogIt(Logging::logInfo) << guess[*it][k].name << " " << guess[*it][k];
         }
