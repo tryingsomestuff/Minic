@@ -251,6 +251,7 @@ You can use both the json configuation file or the command line argument to sele
 * 1.44 : bad bishop eval  
 * 1.45..1.50 : search tuning / trick, simpler hash table.
 * 1.51 : retune everything !
+* 1.52..1.54 : returne queen near king, PST and mobility  
 
 ## Thanks
 
