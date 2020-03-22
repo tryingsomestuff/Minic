@@ -68,17 +68,11 @@ def getCoreFiles():
     location = request.content.decode('utf-8')
 
     # Download the proper cutechess program, and a dll if needed
-    if IS_WINDOWS:
-        if not os.path.isfile('cutechess.exe'):
-            getFile(location + 'cutechess-windows.exe', 'cutechess.exe')
-        if not os.path.isfile('Qt5Core.dll'):
-            getFile(location +'cutechess-qt5core.dll', 'Qt5Core.dll')
-    else:
-        if not os.path.isfile('cutechess'):
-            getFile(location + 'cutechess-linux', 'cutechess')
-            os.system('chmod 777 cutechess')
-        if not os.path.isfile('libcutechess.so.1'):
-            getFile(location + 'libcutechess.so.1', 'libcutechess.so.1')
+    if not os.path.isfile('cutechess'):
+        getFile(location + 'cutechess-linux', 'cutechess')
+        os.system('chmod 777 cutechess')
+    if not os.path.isfile('libcutechess.so.1'):
+        getFile(location + 'libcutechess.so.1', 'libcutechess.so.1')
 
 def getEngine(data):
 
@@ -117,7 +111,6 @@ def getEngine(data):
     # Move the compiled engine
     if os.path.isfile('tmp/{0}/Dist/minic_dev_linux_x64'.format(unzipname, exe)):
         os.rename('tmp/{0}/Dist/minic_dev_linux_x64'.format(unzipname, exe), 'Engines/{0}'.format(exe))
-        #os.rename('tmp/{0}/minic.json', 'Engines/minic.json')
     else: 
         print('tmp/{0}/Dist/minic_dev_linux_x64'.format(unzipname, name) + ' does not exist')
 
