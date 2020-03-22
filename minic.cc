@@ -38,7 +38,7 @@ typedef uint64_t u_int64_t;
 
 #include "json.hpp"
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "1.54";
 
 // *** options
 #define WITH_UCI
