@@ -1521,7 +1521,7 @@ namespace MoveDifficultyUtil {
     enum MoveDifficulty { MD_forced = 0, MD_easy, MD_std, MD_hardDefense, MD_hardAttack };
     const DepthType emergencyMinDepth = 14;
     const ScoreType emergencyMargin   = 90;
-    const ScoreType easyMoveMargin    = 250;
+    const ScoreType easyMoveMargin    = 180;
     const int       emergencyFactor   = 5;
     const float     maxStealFraction  = 0.2f; // of remaining time
 }
@@ -1572,7 +1572,7 @@ struct ScoreAcc {
 
 #endif
 inline bool sameMove  (const Move & a, const Move & b) { return Move2MiniMove(a) == Move2MiniMove(b);}
-inline bool isSkipMove(const Move & a, const std::vector<Move> * skipMoves){ return skipMoves && std::find(skipMoves->begin(), skipMoves->end(), Move2MiniMove(a)) != skipMoves->end();}
+inline bool isSkipMove(const Move & a, const std::vector<MiniMove> * skipMoves){ return skipMoves && std::find(skipMoves->begin(), skipMoves->end(), Move2MiniMove(a)) != skipMoves->end();}
 
 struct EvalData{
     float gp = 0;
@@ -1684,7 +1684,7 @@ struct ThreadContext{
 
     ScoreType drawScore() { return -1 + 2*((stats.counters[Stats::sid_nodes]+stats.counters[Stats::sid_qnodes]) % 2); }
 
-    template <bool pvnode, bool canPrune = true> ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, bool cutNode, const std::vector<Move> * skipMoves = nullptr);
+    template <bool pvnode, bool canPrune = true> ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, bool cutNode, const std::vector<MiniMove> * skipMoves = nullptr);
     template <bool qRoot, bool pvnode> ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
     ScoreType qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
     bool SEE_GE(const Position & p, const Move & m, ScoreType threshold)const;
@@ -3897,7 +3897,7 @@ bool isPseudoLegal2(const Position & p, Move m) { // validate TT move
 
 // pvs inspired by Xiphos
 template< bool pvnode, bool canPrune>
-ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, bool cutNode, const std::vector<Move>* skipMoves){
+ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, bool cutNode, const std::vector<MiniMove>* skipMoves){
     if (stopFlag) return STOPSCORE;
     //if ( TimeMan::maxKNodes>0 && (stats.counters[Stats::sid_nodes] + stats.counters[Stats::sid_qnodes])/1000 > TimeMan::maxKNodes) { stopFlag = true; Logging::LogIt(Logging::logInfo) << "stopFlag triggered (nodes limits) in thread " << id(); } ///@todo
     if ( (TimeType)std::max(1, (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()) > getCurrentMoveMs() ){ stopFlag = true; Logging::LogIt(Logging::logInfo) << "stopFlag triggered in thread " << id(); }
@@ -4133,7 +4133,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                    const ScoreType betaC = e.s - 2*depth;
                    PVList sePV;
                    DepthType seSeldetph = 0;
-                   std::vector<Move> skip({Move2MiniMove(e.m)});
+                   std::vector<MiniMove> skip({Move2MiniMove(e.m)});
                    const ScoreType score = pvs<false,false>(betaC - 1, betaC, p, depth/2, ply, sePV, seSeldetph, isInCheck, cutNode, &skip);
                    if (stopFlag) return STOPSCORE;
                    if (score < betaC) {
@@ -4394,15 +4394,13 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
     const DepthType easyMoveDetectionDepth = 5;
 
     DepthType startDepth = 1;//std::min(d,easyMoveDetectionDepth);
+    std::vector<RootScores> multiPVMoves(DynamicConfig::multiPV);
 
     if ( isMainThread() && d > easyMoveDetectionDepth+5 && ThreadContext::currentMoveMs < INFINITETIME && ThreadContext::currentMoveMs > 800 && TimeMan::msecUntilNextTC > 0){
        // easy move detection (small open window search)
        rootScores.clear();
        ScoreType easyScore = pvs<true,false>(-MATE, MATE, p, easyMoveDetectionDepth, 0, pv, seldepth, isInCheck,false);
        std::sort(rootScores.begin(), rootScores.end(), [](const RootScores& r1, const RootScores & r2) {return r1.s > r2.s; });
-       for(auto it = rootScores.begin() ; it != rootScores.end() ; ++it){
-           Logging::LogIt(Logging::logInfo) << ToString(it->m) << " " << it->s;
-       }
        if (stopFlag) { bestScore = easyScore; goto pvsout; }
        if (rootScores.size() == 1) moveDifficulty = MoveDifficultyUtil::MD_forced; // only one : check evasion or zugzwang
        else if (rootScores.size() > 1 && rootScores[0].s > rootScores[1].s + MoveDifficultyUtil::easyMoveMargin) moveDifficulty = MoveDifficultyUtil::MD_easy;
@@ -4414,10 +4412,9 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
     }
 
     // ID loop
-
     for(DepthType depth = startDepth ; depth <= std::min(d,DepthType(MAX_DEPTH-6)) && !stopFlag ; ++depth ){ // -6 so that draw can be found for sure ///@todo I don't understand this -6 anymore ..
         // MultiPV loop
-        std::vector<Move> skipMoves;
+        std::vector<MiniMove> skipMoves;
         for (unsigned int multi = 0 ; multi < (Logging::ct == Logging::CT_uci?DynamicConfig::multiPV:1) ; ++multi){
             if ( !skipMoves.empty() && isMatedScore(bestScore) ) break;
             if (!isMainThread()){ // stockfish like thread management
@@ -4433,7 +4430,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
             ScoreType score = 0;
             DepthType windowDepth = depth;
             // Aspiration loop
-            while( true ){
+            while( true && !stopFlag ){
                 pvLoc.clear();
                 stack[p.halfmoves].h = p.h;
                 score = pvs<true,false>(alpha,beta,p,windowDepth,0,pvLoc,seldepth,isInCheck,false,skipMoves.empty()?nullptr:&skipMoves);
@@ -4463,17 +4460,30 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
                 }
                 else break;
             }
-            if (stopFlag) break;
-            pv = pvLoc;
-            reachedDepth = depth;
-            bestScore    = score;
-            if ( isMainThread() ){
-                displayGUI(depth,seldepth,bestScore,pv,multi+1);
-                if (TimeMan::isDynamic && depth > MoveDifficultyUtil::emergencyMinDepth && bestScore < depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin) { moveDifficulty = MoveDifficultyUtil::MD_hardDefense; Logging::LogIt(Logging::logInfo) << "Emergency mode activated : " << bestScore << " < " << depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin; }
-                if (TimeMan::isDynamic && (TimeType)std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()*1.8)) > getCurrentMoveMs()) { stopFlag = true; Logging::LogIt(Logging::logInfo) << "stopflag triggered, not enough time for next depth"; break; } // not enought time
-                depthScores[depth] = bestScore;
+            if (stopFlag){ // handle multiPV display
+                if ( multi == 0 ) break;
+                if ( multiPVMoves.size() == DynamicConfig::multiPV){
+                    PVList pvMulti;
+                    pvMulti.push_back(multiPVMoves[multi].m);
+                    displayGUI(depth-1,0,multiPVMoves[multi].s,pvMulti,multi+1);
+                }
             }
-            if ( !pv.empty() ) skipMoves.push_back(Move2MiniMove(pv[0]));
+            else{
+                pv = pvLoc;
+                reachedDepth = depth;
+                bestScore    = score;
+                if ( isMainThread() ){
+                    displayGUI(depth,seldepth,bestScore,pv,multi+1);
+                    if (TimeMan::isDynamic && depth > MoveDifficultyUtil::emergencyMinDepth && bestScore < depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin) { moveDifficulty = MoveDifficultyUtil::MD_hardDefense; Logging::LogIt(Logging::logInfo) << "Emergency mode activated : " << bestScore << " < " << depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin; }
+                    if (TimeMan::isDynamic && (TimeType)std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()*1.8)) > getCurrentMoveMs()) { stopFlag = true; Logging::LogIt(Logging::logInfo) << "stopflag triggered, not enough time for next depth"; break; } // not enought time
+                    depthScores[depth] = bestScore;
+                }
+                if ( !pv.empty() ){
+                    skipMoves.push_back(Move2MiniMove(pv[0]));
+                    multiPVMoves[multi].m = pv[0];
+                    multiPVMoves[multi].s = bestScore;
+                }
+            }
         }
     }
 pvsout:
