@@ -38,7 +38,7 @@ typedef uint64_t u_int64_t;
 
 #include "json.hpp"
 
-const std::string MinicVersion = "1.54";
+const std::string MinicVersion = "dev";
 
 // *** options
 #define WITH_UCI
@@ -92,7 +92,7 @@ const std::string MinicVersion = "1.54";
 #define INVALIDSQUARE  -1
 #define MAX_PLY      1024
 #define MAX_MOVE      256   // 256 is enough I guess/hope ...
-#define MAX_DEPTH     127   // DepthType is a char, !!!do not go above 127!!!
+#define MAX_DEPTH     127   // if DepthType is a char, !!!do not go above 127!!!
 #define MAX_HISTORY  1000
 
 #define SQFILE(s) ((s)&7)
@@ -114,7 +114,7 @@ const std::string MinicVersion = "1.54";
 #define _DO_JOIN(symbol1,symbol2) symbol1##symbol2
 
 typedef std::chrono::system_clock Clock;
-typedef signed short int DepthType;
+typedef signed char DepthType;
 typedef int32_t Move;         // invalid if < 0
 typedef int16_t MiniMove;     // invalid if < 0
 typedef signed char Square;   // invalid if < 0
@@ -124,7 +124,7 @@ typedef uint64_t Counter;
 typedef uint64_t BitBoard;
 typedef int16_t  ScoreType;
 typedef int64_t  TimeType;
-typedef int16_t  GenerationType;
+typedef unsigned char  GenerationType;
 
 const Hash nullHash = 0ull;
 const BitBoard empty = 0ull;
@@ -180,7 +180,7 @@ struct EvalScore{ ///@todo use Stockfish trick (two short in one int) but it's h
     EvalScore scale(float s_mg,float s_eg)const{ EvalScore e(*this); e[MG]= ScoreType(s_mg*e[MG]); e[EG]= ScoreType(s_eg*e[EG]); return e;}
 };
 
-template < typename T, int SIZE > struct OptList : public std::vector<T>{ OptList() : std::vector<T>(){std::vector<T>::reserve(SIZE);};};
+template < typename T, int SIZE > struct OptList : public std::vector<T>{ OptList() : std::vector<T>(){std::vector<T>::reserve(SIZE);}};
 
 typedef OptList<Move,MAX_MOVE> MoveList;
 typedef std::vector<Move> PVList;
@@ -200,6 +200,7 @@ namespace DynamicConfig{
     std::string syzygyPath = "";
     bool FRC               = false;
     bool UCIPonder         = false;
+    unsigned int multiPV   = 1;
 }
 
 namespace Logging {
@@ -1570,7 +1571,8 @@ struct ScoreAcc {
 };
 
 #endif
-bool sameMove(const Move & a, const Move & b) { return (a & 0x0000FFFF) == (b & 0x0000FFFF);}
+inline bool sameMove  (const Move & a, const Move & b) { return Move2MiniMove(a) == Move2MiniMove(b);}
+inline bool isSkipMove(const Move & a, const std::vector<Move> * skipMoves){ return skipMoves && std::find(skipMoves->begin(), skipMoves->end(), Move2MiniMove(a)) != skipMoves->end();}
 
 struct EvalData{
     float gp = 0;
@@ -1595,6 +1597,11 @@ struct ThreadContext{
 
     Stats stats;
 
+    // used for easy move detection
+    struct RootScores { Move m; ScoreType s; };
+    std::vector<RootScores> rootScores;
+
+    // used for move ordering
     Move previousBest;
 
     static const int MAX_CMH_PLY = 2;
@@ -1677,7 +1684,7 @@ struct ThreadContext{
 
     ScoreType drawScore() { return -1 + 2*((stats.counters[Stats::sid_nodes]+stats.counters[Stats::sid_qnodes]) % 2); }
 
-    template <bool pvnode, bool canPrune = true> ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, bool cutNode, const Move skipMove = INVALIDMOVE);
+    template <bool pvnode, bool canPrune = true> ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, bool cutNode, const std::vector<Move> * skipMoves = nullptr);
     template <bool qRoot, bool pvnode> ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
     ScoreType qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
     bool SEE_GE(const Position & p, const Move & m, ScoreType threshold)const;
@@ -1685,7 +1692,7 @@ struct ThreadContext{
     PVList search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth);
     template< bool withRep = true, bool isPv = true, bool INR = true> MaterialHash::Terminaison interiorNodeRecognizer(const Position & p)const;
     bool isRep(const Position & p, bool isPv)const;
-    static void displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv, const std::string & mark = "");
+    static void displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv, int multipv, const std::string & mark = "");
 
     void idleLoop(){
         while (true){
@@ -3890,7 +3897,7 @@ bool isPseudoLegal2(const Position & p, Move m) { // validate TT move
 
 // pvs inspired by Xiphos
 template< bool pvnode, bool canPrune>
-ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, bool cutNode, const Move skipMove){
+ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, bool cutNode, const std::vector<Move>* skipMoves){
     if (stopFlag) return STOPSCORE;
     //if ( TimeMan::maxKNodes>0 && (stats.counters[Stats::sid_nodes] + stats.counters[Stats::sid_qnodes])/1000 > TimeMan::maxKNodes) { stopFlag = true; Logging::LogIt(Logging::logInfo) << "stopFlag triggered (nodes limits) in thread " << id(); } ///@todo
     if ( (TimeType)std::max(1, (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()) > getCurrentMoveMs() ){ stopFlag = true; Logging::LogIt(Logging::logInfo) << "stopFlag triggered in thread " << id(); }
@@ -3917,9 +3924,11 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     ThreadContext::CMHPtrArray cmhPtr;
     getCMHPtr(p.halfmoves,cmhPtr);
 
-    const bool withoutSkipMove = skipMove == INVALIDMOVE;
-    const Hash pHash = computeHash(p) ^ (withoutSkipMove ? 0 : skipMove);
+    const bool withoutSkipMove = skipMoves == nullptr;
+    Hash pHash = computeHash(p);
+    if ( skipMoves ) for (auto it = skipMoves->begin() ; it != skipMoves->end() ; ++it ){ pHash ^= (*it); }
     bool validTTmove = false;
+    //bool ttPv = false;
     TT::Entry e;
     if ( TT::getEntry(*this, p, pHash, depth, e)) {
         if ( e.h != 0 && !rootnode && !pvnode && ( (e.b == TT::B_alpha && e.s <= alpha) || (e.b == TT::B_beta  && e.s >= beta) || (e.b == TT::B_exact) ) ) {
@@ -3927,6 +3936,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             return adjustHashScore(e.s, ply);
         }
     }
+    //ttPv = pvnode ;//| e.isPv; ///@todo
     validTTmove = e.h != 0 && e.m != INVALIDMINIMOVE;
 
 #ifdef WITH_SYZYGY
@@ -3934,7 +3944,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if ( !rootnode && withoutSkipMove && (countBit(p.allPieces[Co_White]|p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN && SyzygyTb::probe_wdl(p, tbScore, false) > 0){
        ++stats.counters[Stats::sid_tbHit1];
        if ( abs(tbScore) == SyzygyTb::TB_WIN_SCORE) tbScore += eval(p, data, *this);
-       TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(tbScore,ply),createHashScore(tbScore,ply),TT::B_exact,DepthType(127));
+       TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(tbScore,ply),createHashScore(tbScore,ply),TT::B_exact,DepthType(MAX_DEPTH));
        return tbScore;
     }
 #endif
@@ -3997,7 +4007,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
         }
 
         // null move
-        if (isNotEndGame && withoutSkipMove && evalScore >= stack[p.halfmoves].eval && SearchConfig::doNullMove && ply >= (unsigned int)nullMoveMinPly && depth >= SearchConfig::nullMoveMinDepth) {
+        if (SearchConfig::doNullMove && isNotEndGame && withoutSkipMove /*&& evalScore >= beta*/ && evalScore >= stack[p.halfmoves].eval /*&& stack[p.halfmoves].eval >= beta - 32*depth - 30*improving */ &&  ply >= (unsigned int)nullMoveMinPly && depth >= SearchConfig::nullMoveMinDepth) {
             PVList nullPV;
             ++stats.counters[Stats::sid_nullMoveTry];
             const DepthType R = depth / 4 + 3 + std::min((evalScore - beta) / 80, 3); // adaptative
@@ -4058,7 +4068,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     if ( (e.h == nullHash /*|| e.d < depth/4*/) && ((pvnode && depth >= SearchConfig::iidMinDepth) || (cutNode && depth >= SearchConfig::iidMinDepth2)) ){ ///@todo try with cutNode only ?
         ++stats.counters[Stats::sid_iid];
         PVList iidPV;
-        pvs<pvnode,false>(alpha,beta,p,/*pvnode?depth-2:*/depth/2,ply,iidPV,seldepth,isInCheck,cutNode,skipMove);
+        pvs<pvnode,false>(alpha,beta,p,/*pvnode?depth-2:*/depth/2,ply,iidPV,seldepth,isInCheck,cutNode,skipMoves);
         if (stopFlag) return STOPSCORE;
         validTTmove = TT::getEntry(*this, p, pHash, depth, e) && e.h != 0 && e.m != INVALIDMINIMOVE;
     }
@@ -4084,7 +4094,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     stack[p.halfmoves].threat = refutation;
 
     // try the tt move before move generation (if not skipped move)
-    if ( e.h != 0 && validTTmove && !sameMove(e.m,skipMove)) { // should be the case thanks to iid at pvnode
+    if ( e.h != 0 && validTTmove && !isSkipMove(e.m,skipMoves)) { // should be the case thanks to iid at pvnode
         bestMove = e.m; // in order to preserve tt move for alpha bound entry
         Position p2 = p;
         if ( apply(p2, e.m)) {
@@ -4123,18 +4133,22 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
                    const ScoreType betaC = e.s - 2*depth;
                    PVList sePV;
                    DepthType seSeldetph = 0;
-                   const ScoreType score = pvs<false,false>(betaC - 1, betaC, p, depth/2, ply, sePV, seSeldetph, isInCheck, cutNode, e.m);
+                   std::vector<Move> skip({Move2MiniMove(e.m)});
+                   const ScoreType score = pvs<false,false>(betaC - 1, betaC, p, depth/2, ply, sePV, seSeldetph, isInCheck, cutNode, &skip);
                    if (stopFlag) return STOPSCORE;
                    if (score < betaC) {
                        ++stats.counters[Stats::sid_singularExtension],++extension;
                        if ( score < betaC - std::min(4*depth,36)) ++stats.counters[Stats::sid_singularExtension2],/*ttMoveSingularExt=true,*/++extension;
                    }
-                   else if ( score >= beta && betaC >= beta) return ++stats.counters[Stats::sid_singularExtension3],score;
+                   else if ( score >= beta && betaC >= beta){
+                       return ++stats.counters[Stats::sid_singularExtension3],score;
+                   }
                }
             }
             const ScoreType ttScore = -pvs<pvnode,true>(-beta, -alpha, p2, depth - 1 + extension, ply + 1, childPV, seldepth, isCheck, !cutNode);
             if (stopFlag) return STOPSCORE;
-            if (rootnode ) previousBest = e.m;
+            if (rootnode) rootScores.push_back({e.m,ttScore});
+            if (rootnode) previousBest = e.m;
             if ( ttScore > bestScore ){
                 bestScore = ttScore;
                 bestMove = e.m;
@@ -4179,7 +4193,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     MoveSorter::sort(*this, moves, p, data.gp, ply, cmhPtr, true, isInCheck, e.h?&e:NULL, refutation != INVALIDMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMOVE);
 
     for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
-        if (sameMove(skipMove, *it)) continue; // skipmove
+        if (isSkipMove(*it,skipMoves)) continue; // skipmoves
         if (validTTmove && sameMove(e.m, *it)) continue; // already tried
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
@@ -4274,6 +4288,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
             if ( pvnode && score > alpha && (rootnode || score < beta) ){ ++stats.counters[Stats::sid_pvsFail]; childPV.clear(); score = -pvs<true ,true>(-beta   ,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,false); } // potential new pv node
         }
         if (stopFlag) return STOPSCORE;
+        if (rootnode) rootScores.push_back({*it,score});
         if (rootnode) previousBest = *it;
         if ( score > bestScore ){
             bestScore = score;
@@ -4304,7 +4319,7 @@ ScoreType ThreadContext::pvs(ScoreType alpha, ScoreType beta, const Position & p
     return bestScore;
 }
 
-void ThreadContext::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv, const std::string & mark){
+void ThreadContext::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv, int multipv, const std::string & mark){
     static unsigned char count = 0;
     count++; // overflow is ok
     const auto now = Clock::now();
@@ -4318,7 +4333,7 @@ void ThreadContext::displayGUI(DepthType depth, DepthType seldepth, ScoreType be
         if ( !mark.empty() ) str << mark;
     }
     else if (Logging::ct == Logging::CT_uci) {
-        str << "info depth " << int(depth) << " score cp " << bestScore << " time " << ms << " nodes " << nodeCount << " nps " << int(nodeCount / (ms / 1000.f)) << " seldepth " << (int)seldepth << " pv " << ToString(pv) << " tbhits " << ThreadPool::instance().counter(Stats::sid_tbHit1) + ThreadPool::instance().counter(Stats::sid_tbHit2);
+        str << "info " << "multipv " << multipv << " depth " << int(depth) << " score cp " << bestScore << " time " << ms << " nodes " << nodeCount << " nps " << int(nodeCount / (ms / 1000.f)) << " seldepth " << (int)seldepth << " pv " << ToString(pv) << " tbhits " << ThreadPool::instance().counter(Stats::sid_tbHit1) + ThreadPool::instance().counter(Stats::sid_tbHit2);
         static auto lastHashFull = Clock::now();
         if (  (int)std::chrono::duration_cast<std::chrono::milliseconds>(now - lastHashFull).count() > 500
               && (TimeType)std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(now - TimeMan::startTime).count()*2)) < getCurrentMoveMs()
@@ -4331,7 +4346,7 @@ void ThreadContext::displayGUI(DepthType depth, DepthType seldepth, ScoreType be
 }
 
 PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
-    d=std::max((signed short int)1,DynamicConfig::level==SearchConfig::nlevel?d:std::min(d,SearchConfig::levelDepthMax[DynamicConfig::level/10]));
+    d=std::max((DepthType)1,DynamicConfig::level==SearchConfig::nlevel?d:std::min(d,SearchConfig::levelDepthMax[DynamicConfig::level/10]));
     if ( isMainThread() ){
         TimeMan::startTime = Clock::now(); 
         Logging::LogIt(Logging::logInfo) << "Search params :" ;
@@ -4369,7 +4384,7 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
            d = 0;
            sc = 0;
            seldepth = 0;
-           displayGUI(d,d,sc,pv);
+           displayGUI(d,d,sc,pv,1);
            return pv;
        }
     }
@@ -4380,12 +4395,14 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
 
     DepthType startDepth = 1;//std::min(d,easyMoveDetectionDepth);
 
-    if ( isMainThread() && d > easyMoveDetectionDepth+5 && ThreadContext::currentMoveMs < INFINITETIME && TimeMan::msecUntilNextTC > 0){
-       struct RootScores { Move m; ScoreType s; };
-       std::vector<RootScores> rootScores;
+    if ( isMainThread() && d > easyMoveDetectionDepth+5 && ThreadContext::currentMoveMs < INFINITETIME && ThreadContext::currentMoveMs > 800 && TimeMan::msecUntilNextTC > 0){
        // easy move detection (small open window search)
-       ScoreType easyScore = pvs<true,false>(-MATE, MATE, p, easyMoveDetectionDepth, 0, pv, seldepth, isInCheck,false,INVALIDMOVE);
+       rootScores.clear();
+       ScoreType easyScore = pvs<true,false>(-MATE, MATE, p, easyMoveDetectionDepth, 0, pv, seldepth, isInCheck,false);
        std::sort(rootScores.begin(), rootScores.end(), [](const RootScores& r1, const RootScores & r2) {return r1.s > r2.s; });
+       for(auto it = rootScores.begin() ; it != rootScores.end() ; ++it){
+           Logging::LogIt(Logging::logInfo) << ToString(it->m) << " " << it->s;
+       }
        if (stopFlag) { bestScore = easyScore; goto pvsout; }
        if (rootScores.size() == 1) moveDifficulty = MoveDifficultyUtil::MD_forced; // only one : check evasion or zugzwang
        else if (rootScores.size() > 1 && rootScores[0].s > rootScores[1].s + MoveDifficultyUtil::easyMoveMargin) moveDifficulty = MoveDifficultyUtil::MD_easy;
@@ -4397,58 +4414,66 @@ PVList ThreadContext::search(const Position & p, Move & m, DepthType & d, ScoreT
     }
 
     // ID loop
+
     for(DepthType depth = startDepth ; depth <= std::min(d,DepthType(MAX_DEPTH-6)) && !stopFlag ; ++depth ){ // -6 so that draw can be found for sure ///@todo I don't understand this -6 anymore ..
-        if (!isMainThread()){ // stockfish like thread management
-            const int i = (id()-1)%threadSkipSize;
-            if (((depth + ThreadPool::skipPhase[i]) / ThreadPool::skipSize[i]) % 2) continue;
-        }
-        else{ if ( depth > 1) startLock.store(false);} // delayed other thread start
-        Logging::LogIt(Logging::logInfo) << "Thread " << id() << " searching depth " << (int)depth;
-        PVList pvLoc;
-        ScoreType delta = (SearchConfig::doWindow && depth>4)?6+std::max(0,(20-depth)*1):MATE; // MATE not INFSCORE in order to enter the loop below once ///@todo try delta function of depth
-        ScoreType alpha = std::max(ScoreType(bestScore - delta), ScoreType (-MATE));
-        ScoreType beta  = std::min(ScoreType(bestScore + delta), MATE);
-        ScoreType score = 0;
-        DepthType windowDepth = depth;
-        while( true ){
-            pvLoc.clear();
-            stack[p.halfmoves].h = p.h;
-            score = pvs<true,false>(alpha,beta,p,windowDepth,0,pvLoc,seldepth,isInCheck,false);
-            if ( stopFlag ) break;
-            delta += 2 + delta/2; // from xiphos ...
-            if (alpha > -MATE && score <= alpha) {
-                beta  = std::min(MATE,ScoreType((alpha + beta)/2));
-                alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) );
-                Logging::LogIt(Logging::logInfo) << "Increase window alpha " << alpha << ".." << beta;
-                if ( isMainThread() ){
-                    PVList pv2;
-                    TT::getPV(p, *this, pv2);
-                    displayGUI(depth,seldepth,score,pv2,"!");
-                    windowDepth = depth;
-                }
+        // MultiPV loop
+        std::vector<Move> skipMoves;
+        for (unsigned int multi = 0 ; multi < (Logging::ct == Logging::CT_uci?DynamicConfig::multiPV:1) ; ++multi){
+            if ( !skipMoves.empty() && isMatedScore(bestScore) ) break;
+            if (!isMainThread()){ // stockfish like thread management
+                const int i = (id()-1)%threadSkipSize;
+                if (((depth + ThreadPool::skipPhase[i]) / ThreadPool::skipSize[i]) % 2) continue;
             }
-            else if (beta < MATE && score >= beta ) {
-                //alpha = std::max(ScoreType(-MATE),ScoreType((alpha + beta)/2));
-                beta  = std::min(ScoreType(score + delta), ScoreType( MATE) );
-                Logging::LogIt(Logging::logInfo) << "Increase window beta "  << alpha << ".." << beta;
-                if ( isMainThread() ){
-                    PVList pv2;
-                    TT::getPV(p, *this, pv2);
-                    displayGUI(depth,seldepth,score,pv2,"?");
-                    --windowDepth; // from Ethereal
+            else{ if ( depth > 1) startLock.store(false);} // delayed other thread start
+            Logging::LogIt(Logging::logInfo) << "Thread " << id() << " searching depth " << (int)depth;
+            PVList pvLoc;
+            ScoreType delta = (SearchConfig::doWindow && depth>4)?6+std::max(0,(20-depth)*1):MATE; // MATE not INFSCORE in order to enter the loop below once ///@todo try delta function of depth
+            ScoreType alpha = std::max(ScoreType(bestScore - delta), ScoreType (-MATE));
+            ScoreType beta  = std::min(ScoreType(bestScore + delta), MATE);
+            ScoreType score = 0;
+            DepthType windowDepth = depth;
+            // Aspiration loop
+            while( true ){
+                pvLoc.clear();
+                stack[p.halfmoves].h = p.h;
+                score = pvs<true,false>(alpha,beta,p,windowDepth,0,pvLoc,seldepth,isInCheck,false,skipMoves.empty()?nullptr:&skipMoves);
+                if ( stopFlag ) break;
+                delta += 2 + delta/2; // from xiphos ...
+                if (alpha > -MATE && score <= alpha) {
+                    beta  = std::min(MATE,ScoreType((alpha + beta)/2));
+                    alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) );
+                    Logging::LogIt(Logging::logInfo) << "Increase window alpha " << alpha << ".." << beta;
+                    if ( isMainThread() ){
+                        PVList pv2;
+                        TT::getPV(p, *this, pv2);
+                        displayGUI(depth,seldepth,score,pv2,multi+1,"!");
+                        windowDepth = depth;
+                    }
                 }
+                else if (beta < MATE && score >= beta ) {
+                    //alpha = std::max(ScoreType(-MATE),ScoreType((alpha + beta)/2));
+                    beta  = std::min(ScoreType(score + delta), ScoreType( MATE) );
+                    Logging::LogIt(Logging::logInfo) << "Increase window beta "  << alpha << ".." << beta;
+                    if ( isMainThread() ){
+                        PVList pv2;
+                        TT::getPV(p, *this, pv2);
+                        displayGUI(depth,seldepth,score,pv2,multi+1,"?");
+                        --windowDepth; // from Ethereal
+                    }
+                }
+                else break;
             }
-            else break;
-        }
-        if (stopFlag) break;
-        pv = pvLoc;
-        reachedDepth = depth;
-        bestScore    = score;
-        if ( isMainThread() ){
-            displayGUI(depth,seldepth,bestScore,pv);
-            if (TimeMan::isDynamic && depth > MoveDifficultyUtil::emergencyMinDepth && bestScore < depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin) { moveDifficulty = MoveDifficultyUtil::MD_hardDefense; Logging::LogIt(Logging::logInfo) << "Emergency mode activated : " << bestScore << " < " << depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin; }
-            if (TimeMan::isDynamic && (TimeType)std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()*1.8)) > getCurrentMoveMs()) { stopFlag = true; Logging::LogIt(Logging::logInfo) << "stopflag triggered, not enough time for next depth"; break; } // not enought time
-            depthScores[depth] = bestScore;
+            if (stopFlag) break;
+            pv = pvLoc;
+            reachedDepth = depth;
+            bestScore    = score;
+            if ( isMainThread() ){
+                displayGUI(depth,seldepth,bestScore,pv,multi+1);
+                if (TimeMan::isDynamic && depth > MoveDifficultyUtil::emergencyMinDepth && bestScore < depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin) { moveDifficulty = MoveDifficultyUtil::MD_hardDefense; Logging::LogIt(Logging::logInfo) << "Emergency mode activated : " << bestScore << " < " << depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin; }
+                if (TimeMan::isDynamic && (TimeType)std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()*1.8)) > getCurrentMoveMs()) { stopFlag = true; Logging::LogIt(Logging::logInfo) << "stopflag triggered, not enough time for next depth"; break; } // not enought time
+                depthScores[depth] = bestScore;
+            }
+            if ( !pv.empty() ) skipMoves.push_back(Move2MiniMove(pv[0]));
         }
     }
 pvsout:
@@ -4558,11 +4583,12 @@ namespace Options {
         return true;
     }
     void registerCOMOptions(){ // options exposed to GUI
-       _keys.push_back(KeyBase(k_int,   w_spin, "Level"                       , &DynamicConfig::level                          , (unsigned int)0  , (unsigned int)SearchConfig::nlevel     ));
-       _keys.push_back(KeyBase(k_int,   w_spin, "Hash"                        , &DynamicConfig::ttSizeMb                       , (unsigned int)1  , (unsigned int)256000, &TT::initTable));
-       _keys.push_back(KeyBase(k_int,   w_spin, "Threads"                     , &DynamicConfig::threads                        , (unsigned int)1  , (unsigned int)256   , std::bind(&ThreadPool::setup, &ThreadPool::instance())));
-       _keys.push_back(KeyBase(k_bool,  w_check, "UCI_Chess960"               , &DynamicConfig::FRC                            , false            , true ));
-       _keys.push_back(KeyBase(k_bool,  w_check, "Ponder"                     , &DynamicConfig::UCIPonder                      , false            , true ));
+       _keys.push_back(KeyBase(k_int,   w_spin,  "Level"                       , &DynamicConfig::level                          , (unsigned int)0  , (unsigned int)SearchConfig::nlevel ));
+       _keys.push_back(KeyBase(k_int,   w_spin,  "Hash"                        , &DynamicConfig::ttSizeMb                       , (unsigned int)1  , (unsigned int)256000                , &TT::initTable));
+       _keys.push_back(KeyBase(k_int,   w_spin,  "Threads"                     , &DynamicConfig::threads                        , (unsigned int)1  , (unsigned int)256                   , std::bind(&ThreadPool::setup, &ThreadPool::instance())));
+       _keys.push_back(KeyBase(k_bool,  w_check, "UCI_Chess960"                , &DynamicConfig::FRC                            , false            , true ));
+       _keys.push_back(KeyBase(k_bool,  w_check, "Ponder"                      , &DynamicConfig::UCIPonder                      , false            , true ));
+       _keys.push_back(KeyBase(k_int,   w_spin,  "MultiPV"                     , &DynamicConfig::multiPV                        , (unsigned int)1  , (unsigned int)4 ));
 
 #ifdef WITH_CLOP_SEARCH
        _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin0"            , &SearchConfig::qfutilityMargin[0]              , ScoreType(0)    , ScoreType(1500)     ));
