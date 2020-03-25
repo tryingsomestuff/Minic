@@ -47,7 +47,7 @@ Minic 1.15 is tested at 2830 on the CCRL FRC list (http://ccrl.chessdom.com/ccrl
 Minic 1.35 is tested at 2836 on the CEGT 40/4 list (http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
 Minic 1.35 is tested at 3067 on the CEGT 40/4 MP list (http://www.cegt.net/40_4_Ratinglist/40_4_mp/rangliste.html)  
 Minic 1.35 is tested at 2882 on the CEGT 5+3 PB=ON list (http://www.cegt.net/5Plus3Rating/BestVersionsNEW/rangliste.html)  
-Minic 1.44 is tested at 2797 on the CEGT 40/15 list(http://www.cegt.net/40_40%20Rating%20List/40_40%20SingleVersion/rangliste.html)  
+Minic 1.44 is tested at 2797 on the CEGT 40/15 list (http://www.cegt.net/40_40%20Rating%20List/40_40%20SingleVersion/rangliste.html)  
 
 ### FGRL
 Minic 1.44 is tested at 2740 on the fastgm 60sec+0.6sec rating list (http://www.fastgm.de/60-0.60.html)  
