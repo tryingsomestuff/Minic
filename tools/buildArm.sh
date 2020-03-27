@@ -31,5 +31,5 @@ echo "version $v"
 exe=minic_${v}_android
 echo "Building $exe"
 
-$dir/android/bin/arm-linux-androideabi-clang++ $OPT minic.cc -o $dir/Dist/$exe -static-libgcc -static-libstdc++ 
+$dir/android/bin/arm-linux-androideabi-clang++ $OPT Source/*.cpp -ISource -o $dir/Dist/$exe -static-libgcc -static-libstdc++ 
 

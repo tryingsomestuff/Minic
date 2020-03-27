@@ -1,3 +1,9 @@
+#include "timers.hpp"
+
+#ifdef WITH_TIMER
+
+#include "logging.hpp"
+
 #ifdef _WIN32
 #include <intrin.h>
 uint64_t rdtsc(){return __rdtsc();}
@@ -8,9 +14,9 @@ uint64_t rdtsc(){
     return ((uint64_t)hi << 32) | lo;
 }
 #endif
-#define START_TIMER uint64_t rdtscBegin = rdtsc();
-#define STOP_AND_SUM_TIMER(name) Timers::rdtscCounter##name += rdtsc() - rdtscBegin; ++Timers::callCounter##name;
+
 namespace Timers{
+
 uint64_t rdtscCounterSee       = 0ull;
 uint64_t rdtscCounterApply     = 0ull;
 uint64_t rdtscCounterEval      = 0ull;
@@ -37,3 +43,5 @@ void Display(){
      std::cout << "Total    " << rdtscCounterTotal     << std::endl;
 }
 }
+
+#endif

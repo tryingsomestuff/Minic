@@ -1,18 +1,34 @@
+#include "moveGen.hpp"
+
+#include "cli.hpp"
+
+#include "book.hpp"
+#include "evalDef.hpp"
+#include "logging.hpp"
+#include "searcher.hpp"
+#include "timeMan.hpp"
+#include "tools.hpp"
+#include "tables.hpp"
+#include "transposition.hpp"
+#include "uci.hpp"
+#include "xboard.hpp"
+
 struct PerftAccumulator{
     PerftAccumulator(): pseudoNodes(0), validNodes(0), captureNodes(0), epNodes(0), checkNode(0), checkMateNode(0){}
     Counter pseudoNodes,validNodes,captureNodes,epNodes,checkNode,checkMateNode;
-
-    void Display(){
-        Logging::LogIt(Logging::logInfo) << "pseudoNodes   " << pseudoNodes   ;
-        Logging::LogIt(Logging::logInfo) << "validNodes    " << validNodes    ;
-        Logging::LogIt(Logging::logInfo) << "captureNodes  " << captureNodes  ;
-        Logging::LogIt(Logging::logInfo) << "epNodes       " << epNodes       ;
-        Logging::LogIt(Logging::logInfo) << "checkNode     " << checkNode     ;
-        Logging::LogIt(Logging::logInfo) << "checkMateNode " << checkMateNode ;
-    }
+    void Display();
 };
 
-Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc, bool divide = false){
+void PerftAccumulator::Display(){
+    Logging::LogIt(Logging::logInfo) << "pseudoNodes   " << pseudoNodes   ;
+    Logging::LogIt(Logging::logInfo) << "validNodes    " << validNodes    ;
+    Logging::LogIt(Logging::logInfo) << "captureNodes  " << captureNodes  ;
+    Logging::LogIt(Logging::logInfo) << "epNodes       " << epNodes       ;
+    Logging::LogIt(Logging::logInfo) << "checkNode     " << checkNode     ;
+    Logging::LogIt(Logging::logInfo) << "checkMateNode " << checkMateNode ;
+}
+
+Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc, bool divide){
     if ( depth == 0) return 0;
     static TT::Entry e;
     MoveList moves;
@@ -60,7 +76,7 @@ void analyze(const Position & p, DepthType depth){
         TimeMan::msecInTC        = -1;
         TimeMan::msecInc         = -1;
         TimeMan::msecUntilNextTC = -1;
-        ThreadContext::currentMoveMs = TimeMan::GetNextMSecPerMove(p);
+        Searcher::currentMoveMs = TimeMan::GetNextMSecPerMove(p);
         DepthType seldepth = 0;
         PVList pv;
         ThreadData d = {depth,seldepth/*dummy*/,s/*dummy*/,p,bestMove/*dummy*/,pv/*dummy*/}; // only input coef
@@ -248,7 +264,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
 
 #ifdef IMPORTBOOK
     if ( cli == "-buildBook"){
-        Book::readBook(argv[2]);
+        Book::buildBook(argv[2]);
         return 0;
     }
 #endif
@@ -350,7 +366,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
     if ( cli == "-gen" ){
         MoveList moves;
         MoveGen::generate<MoveGen::GP_all>(p,moves);
-        ThreadContext::CMHPtrArray cmhPtr = {0};
+        CMHPtrArray cmhPtr = {0};
         MoveSorter::sort(ThreadPool::instance().main(),moves,p,0.f,0,cmhPtr);
         Logging::LogIt(Logging::logInfo) << "nb moves : " << moves.size() ;
         for(auto it = moves.begin(); it != moves.end(); ++it){

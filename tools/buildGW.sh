@@ -52,6 +52,6 @@ if [ $FATHOM_PRESENT = "1" ]; then
    OPT="$OPT $dir/Fathom/src/$lib -I$dir/Fathom/src"
 fi
 
-x86_64-w64-mingw32-g++ $OPT minic.cc -static -static-libgcc -static-libstdc++ -o $dir/Dist/$exe -Wl,-Bstatic -lpthread
+x86_64-w64-mingw32-g++ $OPT Source/*.cpp -ISource -static -static-libgcc -static-libstdc++ -o $dir/Dist/$exe -Wl,-Bstatic -lpthread
 x86_64-w64-mingw32-strip $dir/Dist/$exe
 

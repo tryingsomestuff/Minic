@@ -1,3 +1,13 @@
+#include "uci.hpp"
+
+#include "com.hpp"
+#include "logging.hpp"
+#include "option.hpp"
+#include "position.hpp"
+#include "searcher.hpp"
+#include "timeMan.hpp"
+#include "tools.hpp"
+
 namespace UCI {
 
     void init() {
@@ -71,7 +81,7 @@ namespace UCI {
                 TimeMan::overHead = (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTimePos).count();
             }
             else if (uciCommand == "go") {
-                if (!ThreadContext::stopFlag) { Logging::LogIt(Logging::logGUI) << "info string go command received, but search already in progress"; }
+                if (!Searcher::stopFlag) { Logging::LogIt(Logging::logGUI) << "info string go command received, but search already in progress"; }
                 else {
                     if (COM::position.h != 0ull) {
                         //MoveList root_moves;
@@ -115,11 +125,11 @@ namespace UCI {
             }
             else if (uciCommand == "ponderhit") {
                 Logging::LogIt(Logging::logInfo) << "received command ponderhit";
-                //ThreadContext::stopFlag = true;
+                //Searcher::stopFlag = true;
                 TimeMan::isUCIPondering = false;
             }
             else if (uciCommand == "ucinewgame") {
-                if (!ThreadContext::stopFlag) { Logging::LogIt(Logging::logGUI) << "info string " << uciCommand << " received but search in progress ..."; }
+                if (!Searcher::stopFlag) { Logging::LogIt(Logging::logGUI) << "info string " << uciCommand << " received but search in progress ..."; }
                 else { COM::init(); }
             }
             else if (uciCommand == "eval") { Logging::LogIt(Logging::logGUI) << "info string " << uciCommand << " not implemented yet"; }

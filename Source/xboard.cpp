@@ -1,3 +1,13 @@
+#include "xboard.hpp"
+
+#include "com.hpp"
+#include "logging.hpp"
+#include "option.hpp"
+#include "position.hpp"
+#include "searcher.hpp"
+#include "timeMan.hpp"
+#include "tools.hpp"
+
 namespace XBoard{
 
     bool display;
