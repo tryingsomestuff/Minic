@@ -1,3 +1,17 @@
+#include "texelTuning.hpp"
+
+#ifdef WITH_TEXEL_TUNING
+
+#include "dynamicConfig.hpp"
+#include "evalConfig.hpp"
+#include "evalDef.hpp"
+#include "extendedPosition.hpp"
+#include "logging.hpp"
+#include "material.hpp"
+#include "position.hpp"
+#include "score.hpp"
+#include "smp.hpp"
+
 namespace Texel {
 
 struct TexelInput {
@@ -125,7 +139,7 @@ double computeOptimalK(const std::vector<Texel::TexelInput> & data) {
     return Kstart;
 }
 
-std::vector<double> ComputeGradient(std::vector<TexelParam<ScoreType> > & x0, std::vector<Texel::TexelInput> &data, size_t gradientBatchSize, bool normalized = true) {
+std::vector<double> ComputeGradient(std::vector<TexelParam<ScoreType> > & x0, std::vector<Texel::TexelInput> &data, size_t gradientBatchSize, bool normalized) {
     Logging::LogIt(Logging::logInfo) << "Computing gradient";
     std::vector<double> g;    const ScoreType dx = 1;
     for (size_t k = 0; k < x0.size(); ++k) {
@@ -163,7 +177,7 @@ void displayTexel(const std::string prefixe, const std::vector<TexelParam<ScoreT
     str << curE << std::endl;
 }
 
-std::vector<TexelParam<ScoreType> > TexelOptimizeGD(const std::vector<TexelParam<ScoreType> >& initialGuess, std::vector<Texel::TexelInput> &data, const size_t batchSize, const int loops = 100, const std::string & prefix = "values") {
+std::vector<TexelParam<ScoreType> > TexelOptimizeGD(const std::vector<TexelParam<ScoreType> >& initialGuess, std::vector<Texel::TexelInput> &data, const size_t batchSize, const int loops, const std::string & prefix) {
     DynamicConfig::disableTT = true;
     int it = 0;
     Randomize(data, batchSize);
@@ -680,3 +694,5 @@ void TexelTuning(const std::string & filename) {
     }
     for (size_t k = 0; k < data.size(); ++k) delete data[k].p;
 }
+
+#endif

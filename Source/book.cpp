@@ -1,3 +1,80 @@
+#include "book.hpp"
+
+#include "dynamicConfig.hpp"
+#include "hash.hpp"
+#include "logging.hpp"
+#include "moveGen.hpp"
+#include "position.hpp"
+#include "positionTools.hpp"
+#include "tools.hpp"
+
+namespace Book {
+
+template<typename T> struct bits_t { T t; };
+template<typename T> bits_t<T&> bits(T &t) { return bits_t<T&>{t}; }
+template<typename T> bits_t<const T&> bits(const T& t) { return bits_t<const T&>{t};}
+template<typename S, typename T> S& operator<<(S &s, bits_t<T>  b) { s.write((char*)&b.t, sizeof(T)); return s;}
+template<typename S, typename T> S& operator>>(S& s, bits_t<T&> b) { s.read ((char*)&b.t, sizeof(T)); return s;}
+
+// the book move cache, indexed by position hash, store in a set of move
+std::unordered_map<Hash, std::set<Move> > book;
+
+bool fileExists(const std::string& name){ return std::ifstream(name.c_str()).good(); }
+
+bool readBinaryBook(std::ifstream & stream) {
+    Position ps;
+    readFEN(startPosition,ps,true);
+    Position p = ps;
+    Move m = 0;
+    while (!stream.eof()) {
+        m = 0;
+        stream >> bits(m);
+        if (m == INVALIDBOOKMOVE) { ///@todo use MiniMove in book !!!!
+            p = ps;
+            stream >> bits(m);
+            if (stream.eof()) break;
+        }
+        const Hash h = computeHash(p);
+        if ( ! apply(p,m)){
+            Logging::LogIt(Logging::logError) << "Unable to read book";
+            return false;
+        }
+        book[h].insert(m);
+    }
+    return true;
+}
+
+template<typename Iter>
+Iter select_randomly(Iter start, Iter end) {
+    static std::random_device rd;
+    static std::mt19937 gen(rd()); // here really random
+    std::uniform_int_distribution<> dis(0, (int)std::distance(start, end) - 1);
+    std::advance(start, dis(gen));
+    return start;
+}
+
+const Move Get(const Hash h){
+    std::unordered_map<Hash, std::set<Move> >::iterator it = book.find(h);
+    if ( it == book.end() ) return INVALIDMOVE;
+    Logging::LogIt(Logging::logInfo) << "Book hit";
+    return *select_randomly(it->second.begin(),it->second.end());
+}
+
+void initBook() {
+    if (DynamicConfig::book ) {
+        if (DynamicConfig::bookFile.empty()) { Logging::LogIt(Logging::logWarn) << "json entry bookFile is empty, cannot load book"; }
+        else {
+            if (Book::fileExists(DynamicConfig::bookFile)) {
+                Logging::LogIt(Logging::logInfo) << "Loading book ...";
+                std::ifstream bbook(DynamicConfig::bookFile, std::ios::in | std::ios::binary);
+                Book::readBinaryBook(bbook);
+                Logging::LogIt(Logging::logInfo) << "... done";
+            }
+            else { Logging::LogIt(Logging::logWarn) << "book file " << DynamicConfig::bookFile << " not found, cannot load book"; }
+        }
+    }
+}
+
 size_t countLine(std::istream &is){
     // skip when bad
     if( is.bad() ) return 0;
@@ -28,7 +105,7 @@ std::string getFrom(const std::string & to, Position & p, const Piece & t, const
     if ( p.allB[t + PieceShift] != 0 ){
         BitBoard froms = p.allB[t + PieceShift];
         while(froms){
-           const Square s = BBTools::popBit(froms);
+           const Square s = popBit(froms);
            MoveList l;
            MoveGen::generateSquare<MoveGen::GP_all>(p,l,s);
            for(auto m = l.begin() ; m != l.end() ; ++m){
@@ -166,7 +243,7 @@ void addLine(const std::string & line, std::ofstream & binFile){
    while( str >> moveStr ){ if ( ! add(moveStr, p, binFile)) break; }
 }
 
-bool readBook(const std::string & bookFileName){
+bool buildBook(const std::string & bookFileName){
     std::ifstream bookFile(bookFileName);
     const size_t lines = countLine(bookFile);
     size_t l = 0;
@@ -186,3 +263,6 @@ bool readBook(const std::string & bookFileName){
     bookFile.close();
     return true;
 }
+
+
+} // Book

@@ -1,14 +1,13 @@
-class PGNGame{
-public:
-    std::vector<Position> p;
-    int result;
-    int whiteElo = 0;
-    int blackElo = 0;
-    std::string resultStr;
-    std::vector<Move> moves;
-    int n = 0;
-    static const int minElo = 3200;
-};
+#include "pgnparser.hpp"
+
+#ifdef WITH_PGN_PARSER
+
+#include "evalDef.hpp"
+#include "extendedPosition.hpp"
+#include "logging.hpp"
+#include "moveGen.hpp"
+#include "searcher.hpp"
+#include "tools.hpp"
 
 int parseResult(const std::string& result) {
   if      (result == "1-0")     { return  1; }
@@ -158,7 +157,7 @@ void pgnparse__(std::ifstream & is,std::ofstream & os) {
           if ( hashes.find(computeHash(p)) != hashes.end()) continue;
           hashes.insert(computeHash(p));
           const ScoreType equalMargin = 120;
-          const ScoreType seval = ThreadPool::instance().main().eval(p,data);
+          const ScoreType seval = eval(p,data,ThreadPool::instance().main());
           if (seval < equalMargin){ /// @todo use material table here !
              ++e;
              const ScoreType squiet = ThreadPool::instance().main().qsearchNoPruning(-10000,10000,p,1,seldepth);
@@ -184,3 +183,5 @@ int PGNParse(const std::string & file){
     pgnparse__(is,os);
     return 0;
 }
+
+#endif
