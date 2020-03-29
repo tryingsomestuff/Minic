@@ -7,7 +7,7 @@ Compatible with both xboard/winboard and UCI.
 ## Code style
 For a year and a half Minic was (mainly) a one-file-code with very dense lines. This is of course very wrong in terms of software design... So why is it so? First reason is that Minic was first developped as a week-end project (in mid-october 2018), the quick-and-dirty way, and since then I was having fun going on this way ; being a "small" code size engine was part of the stakes in developing it. Second reason is that it helps the compilers optimize the whole code (at least that is what I though...)
 
-The only dependency is the very good json header-only library nlohmann/json used to parse the config file. Until version 2 of Minic, some optional features such as Texel tuning, perft, tests, uci support, book generation ... were available in the Add-Ons directory ; they are now fuse with the rest of the source code.
+The only dependency is the very good json header-only library nlohmann/json used to parse the config file. Until version 2 of Minic, some optional features such as Texel tuning, perft, tests, uci support, book generation ... were available in the Add-Ons directory ; they are now fused with the source code.
 
 Indeed, since version "2" Minic is now written in a more classic c++ style, although very dense lines are still present and recall Minic past compacity...
 
