@@ -130,47 +130,12 @@ const BitBoard empty = 0ull;
 enum GamePhase { MG=0, EG=1, GP_MAX=2 };
 inline GamePhase operator++(GamePhase & g){g=GamePhase(g+1); return g;}
 
-struct EvalScore{ ///@todo use Stockfish trick (two short in one int) but it's hard to make it compatible with Texel tuning !
-    std::array<ScoreType,GP_MAX> sc = {0};
-    EvalScore(ScoreType mg,ScoreType eg):sc{mg,eg}{}
-    EvalScore(ScoreType s):sc{s,s}{}
-    EvalScore():sc{0,0}{}
-    EvalScore(const EvalScore & e):sc{e.sc[MG],e.sc[EG]}{}
-
-    inline ScoreType & operator[](GamePhase g){ return sc[g];}
-    inline const ScoreType & operator[](GamePhase g)const{ return sc[g];}
-
-    EvalScore& operator*=(const EvalScore& s){for(GamePhase g=MG; g<GP_MAX; ++g)sc[g]*=s[g]; return *this;}
-    EvalScore& operator/=(const EvalScore& s){for(GamePhase g=MG; g<GP_MAX; ++g)sc[g]/=s[g]; return *this;}
-    EvalScore& operator+=(const EvalScore& s){for(GamePhase g=MG; g<GP_MAX; ++g)sc[g]+=s[g]; return *this;}
-    EvalScore& operator-=(const EvalScore& s){for(GamePhase g=MG; g<GP_MAX; ++g)sc[g]-=s[g]; return *this;}
-    EvalScore  operator *(const EvalScore& s)const{EvalScore e(*this); for(GamePhase g=MG; g<GP_MAX; ++g)e[g]*=s[g]; return e;}
-    EvalScore  operator /(const EvalScore& s)const{EvalScore e(*this); for(GamePhase g=MG; g<GP_MAX; ++g)e[g]/=s[g]; return e;}
-    EvalScore  operator +(const EvalScore& s)const{EvalScore e(*this); for(GamePhase g=MG; g<GP_MAX; ++g)e[g]+=s[g]; return e;}
-    EvalScore  operator -(const EvalScore& s)const{EvalScore e(*this); for(GamePhase g=MG; g<GP_MAX; ++g)e[g]-=s[g]; return e;}
-    void       operator =(const EvalScore& s){for(GamePhase g=MG; g<GP_MAX; ++g){sc[g]=s[g];}}
-
-    EvalScore& operator*=(const ScoreType& s){for(GamePhase g=MG; g<GP_MAX; ++g)sc[g]*=s; return *this;}
-    EvalScore& operator/=(const ScoreType& s){for(GamePhase g=MG; g<GP_MAX; ++g)sc[g]/=s; return *this;}
-    EvalScore& operator+=(const ScoreType& s){for(GamePhase g=MG; g<GP_MAX; ++g)sc[g]+=s; return *this;}
-    EvalScore& operator-=(const ScoreType& s){for(GamePhase g=MG; g<GP_MAX; ++g)sc[g]-=s; return *this;}
-    EvalScore  operator *(const ScoreType& s)const{EvalScore e(*this); for(GamePhase g=MG; g<GP_MAX; ++g)e[g]*=s; return e;}
-    EvalScore  operator /(const ScoreType& s)const{EvalScore e(*this); for(GamePhase g=MG; g<GP_MAX; ++g)e[g]/=s; return e;}
-    EvalScore  operator +(const ScoreType& s)const{EvalScore e(*this); for(GamePhase g=MG; g<GP_MAX; ++g)e[g]+=s; return e;}
-    EvalScore  operator -(const ScoreType& s)const{EvalScore e(*this); for(GamePhase g=MG; g<GP_MAX; ++g)e[g]-=s; return e;}
-    void       operator =(const ScoreType& s){for(GamePhase g=MG; g<GP_MAX; ++g){sc[g]=s;}}
-
-    EvalScore scale(float s_mg,float s_eg)const{ EvalScore e(*this); e[MG]= ScoreType(s_mg*e[MG]); e[EG]= ScoreType(s_eg*e[EG]); return e;}
-};
-
 template < typename T, int SIZE > struct OptList : public std::vector<T>{ OptList() : std::vector<T>(){std::vector<T>::reserve(SIZE);}};
 typedef OptList<Move,MAX_MOVE> MoveList;
 typedef std::vector<Move> PVList;
 
 inline MiniHash Hash64to32   (Hash h) { return (h >> 32) & 0xFFFFFFFF; }
 inline MiniMove Move2MiniMove(Move m) { return m & 0xFFFF;} // skip score
-
-inline ScoreType ScaleScore(EvalScore s, float gp){ return ScoreType(gp*s[MG] + (1.f-gp)*s[EG]);}
 
 inline bool VALIDMOVE(const Move & m){ return m != NULLMOVE && m != INVALIDMOVE; }
 inline bool VALIDMOVE(const MiniMove & m){ return m != INVALIDMINIMOVE; }

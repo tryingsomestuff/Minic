@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bitboardTools.hpp"
+#include "score.hpp"
 
 /* A material table implementation
  * Mostly inspired by Gull by Vadim Demichev
