@@ -53,7 +53,7 @@ const std::string MinicVersion = "2.00";
 //#define WITH_PGN_PARSER
 
 // *** Tuning
-//#define WITH_TIMER
+#define WITH_TIMER
 //#define WITH_CLOP_SEARCH
 //#define WITH_TEXEL_TUNING
 

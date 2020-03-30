@@ -2,6 +2,8 @@
 
 #include "definition.hpp"
 
+#if defined(WITH_TEST_SUITE) || defined(WITH_PGN_PARSER) || defined(WITH_TEXEL_TUNING)
+
 #include "bitboardTools.hpp"
 #include "position.hpp"
 
@@ -35,3 +37,5 @@ struct ExtendedPosition : Position{
 };
 
 std::string showAlgAbr(Move m, const Position & p);
+
+#endif

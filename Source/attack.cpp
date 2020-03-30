@@ -2,6 +2,7 @@
 
 #include "bitboard.hpp"
 #include "logging.hpp"
+#include "timers.hpp"
 
 namespace BBTools {
 
