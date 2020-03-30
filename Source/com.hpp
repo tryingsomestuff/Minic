@@ -28,8 +28,6 @@ namespace COM {
     extern std::vector<Move> moves;
     extern std::future<void> f;
 
-    void newgame();
-
     void init();
 
     void readLine();
@@ -37,8 +35,6 @@ namespace COM {
     SideToMove opponent(SideToMove & s);
 
     bool sideToMoveFromFEN(const std::string & fen);
-
-    Move thinkUntilTimeUp(TimeType forcedMs = -1);
 
     bool makeMove(Move m, bool disp, std::string tag, Move ponder = INVALIDMOVE);
 

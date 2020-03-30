@@ -3,6 +3,7 @@
 #include "definition.hpp"
 
 #include "position.hpp"
+#include "transposition.hpp"
 
 /* This file defines classic tables management such as :
  *  - Killers
@@ -57,3 +58,5 @@ struct CounterT{
     void initCounter();
     void update(Move m, const Position & p);
 };
+
+void updateTables(Searcher & context, const Position & p, DepthType depth, DepthType ply, const Move m, TT::Bound bound, CMHPtrArray & cmhPtr);

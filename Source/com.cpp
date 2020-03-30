@@ -53,7 +53,7 @@ namespace COM {
         return b;
     }
 
-    Move thinkUntilTimeUp(TimeType forcedMs) { // think and when threads stop searching, return best move
+    Move thinkUntilTimeUp(TimeType forcedMs = -1) { // think and when threads stop searching, return best move
         Logging::LogIt(Logging::logInfo) << "Thinking... (state " << COM::state << ")";
         ScoreType score = 0;
         Move m = INVALIDMOVE;

@@ -11,7 +11,9 @@
 #include <cmath>
 #include <condition_variable>
 #include <cstdlib>
+#include <cstring>
 #include <fstream>
+#include <functional>
 #include <future>
 #include <iomanip>
 #include <iostream>
@@ -36,7 +38,7 @@ typedef uint64_t u_int64_t;
 #include <unistd.h>
 #endif
 
-const std::string MinicVersion = "1.56";
+const std::string MinicVersion = "2.00";
 
 // *** options
 #define WITH_UCI
