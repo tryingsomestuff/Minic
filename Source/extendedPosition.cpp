@@ -1,5 +1,7 @@
 #include "extendedPosition.hpp"
 
+#if defined(WITH_TEST_SUITE) || defined(WITH_PGN_PARSER) || defined(WITH_TEXEL_TUNING)
+
 #include "logging.hpp"
 #include "moveGen.hpp"
 #include "positionTools.hpp"
@@ -402,3 +404,5 @@ void ExtendedPosition::testStatic(const std::vector<std::string> & positions,
     // clear results table
     delete[] results;
 }
+
+#endif
