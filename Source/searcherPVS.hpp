@@ -13,15 +13,6 @@
 #include "tools.hpp"
 #include "transposition.hpp"
 
-inline void updateTables(Searcher & context, const Position & p, DepthType depth, DepthType ply, const Move m, TT::Bound bound, CMHPtrArray & cmhPtr) {
-    if (bound == TT::B_beta) {
-        context.killerT.update(m, ply);
-        context.counterT.update(m, p);
-        context.historyT.update<1>(depth, m, p, cmhPtr);
-    }
-    else if (bound == TT::B_alpha) context.historyT.update<-1>(depth, m, p, cmhPtr);
-}
-
 // pvs inspired by Xiphos
 template< bool pvnode, bool canPrune>
 ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, bool cutNode, const std::vector<MiniMove>* skipMoves){

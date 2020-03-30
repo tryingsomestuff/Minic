@@ -1,6 +1,7 @@
 #include "tables.hpp"
 
 #include "logging.hpp"
+#include "searcher.hpp"
 
 void KillerT::initKillers(){
     Logging::LogIt(Logging::logInfo) << "Init killers" ;
@@ -32,4 +33,13 @@ void CounterT::initCounter(){
 
 void CounterT::update(Move m, const Position & p){
     if ( VALIDMOVE(p.lastMove) ) counter[Move2From(p.lastMove)][Move2To(p.lastMove)] = m;
+}
+
+void updateTables(Searcher & context, const Position & p, DepthType depth, DepthType ply, const Move m, TT::Bound bound, CMHPtrArray & cmhPtr) {
+    if (bound == TT::B_beta) {
+        context.killerT.update(m, ply);
+        context.counterT.update(m, p);
+        context.historyT.update<1>(depth, m, p, cmhPtr);
+    }
+    else if (bound == TT::B_alpha) context.historyT.update<-1>(depth, m, p, cmhPtr);
 }

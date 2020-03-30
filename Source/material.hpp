@@ -25,12 +25,6 @@ namespace MaterialHash {
 
     Hash getMaterialHash(const Position::Material & mat);
 
-    Position::Material indexToMat(int index);
-
-    Position::Material getMatReverseColor(const Position::Material & mat);
-
-    Position::Material materialFromString(const std::string & strMat);
-
     enum Terminaison : unsigned char {
       Ter_Unknown = 0,
       Ter_WhiteWinWithHelper,
@@ -42,14 +36,6 @@ namespace MaterialHash {
       Ter_LikelyDraw,
       Ter_HardToWin
     };
-
-    Terminaison reverseTerminaison(Terminaison t);
-
-    ScoreType helperKXK(const Position &p, Color winningSide, ScoreType s);
-
-    ScoreType helperKmmK(const Position &p, Color winningSide, ScoreType s);
-
-    ScoreType helperKPK(const Position &p, Color winningSide, ScoreType );
 
     extern ScoreType (* helperTable[TotalMat])(const Position &, Color, ScoreType );
 

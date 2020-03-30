@@ -1,14 +1,11 @@
 #include "option.hpp"
 
-#include "json.hpp"
-
 #include "logging.hpp"
 #include "searcher.hpp"
 #include "smp.hpp"
 
 namespace Options {
 
-    nlohmann::json json;
     std::vector<std::string> args;
     std::vector<KeyBase> _keys;
 
@@ -133,16 +130,13 @@ namespace Options {
 #endif
 
     }
-    void readOptions(int argc, char ** argv) { // load json config and command line args in memory
+
+    // load command line args in memory
+    void readOptions(int argc, char ** argv) {
         for (int i = 1; i < argc; ++i) args.push_back(argv[i]);
-        std::ifstream str("minic.json");
-        if (!str.is_open()) Logging::LogIt(Logging::logWarn) << "I was not able to open minic.json";
-        else {
-            str >> json;
-            if (!json.is_object()) Logging::LogIt(Logging::logError) << "Something wrong in minic.json";
-        }
     }
 
+    // get option from command line
     void initOptions(int argc, char ** argv){
 #define GETOPT(name,type) Options::getOption<type>(DynamicConfig::name,#name);
        registerCOMOptions();

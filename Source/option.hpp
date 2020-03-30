@@ -1,17 +1,14 @@
 #pragma once
 
-// external dependancy
-#include "json.hpp"
+#include "definition.hpp"
 
 #include "logging.hpp"
 
-/* This is a convenient oldy from Weini to let the user specify some configuration from CLI and json file
- * Json facility will be probably removed as GUI options can often to the same
- * CLI will be kept for debug purpose
+/* This is a convenient oldy from Weini to let the user specify some configuration from CLI
+ * CLI interaction is kept for debug purpose
  */
 namespace Options {
 
-    extern nlohmann::json json; // external dependancy
     extern std::vector<std::string> args;
 
     ///@todo use std::variant ? and std::optinal ?? c++17
@@ -31,20 +28,14 @@ namespace Options {
       std::function<void(void)> callBack;
     };
 
-    void displayOptionsDebug();
+    bool SetValue(const std::string & key, const std::string & value);
 
     void displayOptionsXBoard();
 
     void displayOptionsUCI();
 
-    bool SetValue(const std::string & key, const std::string & value);
-
-    void registerCOMOptions();
-
-    void readOptions(int argc, char ** argv);
-
-    // from argv (override json)
-    template<typename T> inline bool getOptionCLI(T & value, const std::string & key) {
+    // from argv
+    template<typename T> inline bool getOption(T & value, const std::string & key) {
         auto it = std::find(args.begin(), args.end(), std::string("-") + key);
         if (it == args.end()) { Logging::LogIt(Logging::logWarn) << "ARG key not given, " << key; return false; }
         std::stringstream str;
@@ -53,16 +44,6 @@ namespace Options {
         str << *it;
         str >> value;
         Logging::LogIt(Logging::logInfo) << "From ARG, " << key << " : " << value;
-        return true;
-    }
-
-    // from json
-    template<typename T> inline bool getOption(T & value, const std::string & key) {
-        if (getOptionCLI(value, key)) return true;
-        auto it = json.find(key);
-        if (it == json.end()) { Logging::LogIt(Logging::logWarn) << "JSON key not given, " << key; return false; }
-        value = it.value();
-        Logging::LogIt(Logging::logInfo) << "From config file, " << it.key() << " : " << value;
         return true;
     }
 

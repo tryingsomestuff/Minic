@@ -62,7 +62,7 @@ const Move Get(const Hash h){
 
 void initBook() {
     if (DynamicConfig::book ) {
-        if (DynamicConfig::bookFile.empty()) { Logging::LogIt(Logging::logWarn) << "json entry bookFile is empty, cannot load book"; }
+        if (DynamicConfig::bookFile.empty()) { Logging::LogIt(Logging::logWarn) << "command line argument bookFile is empty, cannot load book"; }
         else {
             if (Book::fileExists(DynamicConfig::bookFile)) {
                 Logging::LogIt(Logging::logInfo) << "Loading book ...";
