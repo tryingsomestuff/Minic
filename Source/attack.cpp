@@ -224,7 +224,10 @@ BitBoard allAttackedBB(const Position &p, const Square x, Color c) {
 } // BBTools
 
 bool isAttacked(const Position & p, const Square k) {
-    return k!=INVALIDSQUARE && BBTools::isAttackedBB(p, k, p.c);
+    START_TIMER
+    const bool b = k!=INVALIDSQUARE && BBTools::isAttackedBB(p, k, p.c);
+    STOP_AND_SUM_TIMER(IsAttacked);
+    return b;
 }
 
 bool isAttacked(const Position & p, BitBoard bb) { // copy ///@todo should be done without iterate over Square !

@@ -399,11 +399,20 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             }
             const DepthType nextDepth = depth-1-reduction+extension;
             // SEE (quiet)
-            if ( isPrunableStdNoCheck && /*!rootnode &&*/ !SEE_GE(p,*it,-15*(1/*+isDangerPrune*/)*nextDepth*nextDepth)) {++stats.counters[Stats::sid_seeQuiet]; continue;}
+            if ( isPrunableStdNoCheck && /*!rootnode &&*/ !SEE_GE(p,*it,-15*(1/*+isDangerPrune*/)*nextDepth*nextDepth)) {
+                ++stats.counters[Stats::sid_seeQuiet]; 
+                continue;
+            }
             // PVS
             score = -pvs<false,true>(-alpha-1,-alpha,p2,nextDepth,ply+1,childPV,seldepth,isCheck,true);
-            if ( reduction > 0 && score > alpha )                       { ++stats.counters[Stats::sid_lmrFail]; childPV.clear(); score = -pvs<false,true>(-alpha-1,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,!cutNode); }
-            if ( pvnode && score > alpha && (rootnode || score < beta) ){ ++stats.counters[Stats::sid_pvsFail]; childPV.clear(); score = -pvs<true ,true>(-beta   ,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,false); } // potential new pv node
+            if ( reduction > 0 && score > alpha ){ 
+                ++stats.counters[Stats::sid_lmrFail]; childPV.clear(); 
+                score = -pvs<false,true>(-alpha-1,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,!cutNode); 
+            }
+            if ( pvnode && score > alpha && (rootnode || score < beta) ){ 
+                ++stats.counters[Stats::sid_pvsFail]; childPV.clear(); 
+                score = -pvs<true ,true>(-beta   ,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,false); 
+            } // potential new pv node
         }
         if (stopFlag) return STOPSCORE;
         if (rootnode) rootScores.push_back({*it,score});
@@ -420,7 +429,9 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                 if ( score >= beta ){
                     if ( !isInCheck && isQuiet ){
                         updateTables(*this, p, depth + (score>beta+80), ply, *it, TT::B_beta, cmhPtr);
-                        for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2) if ( Move2Type(*it2) == T_std ) historyT.update<-1>(depth + (score > (beta + 80)), *it2, p, cmhPtr);
+                        for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2) {
+                            if ( Move2Type(*it2) == T_std ) historyT.update<-1>(depth + (score > (beta + 80)), *it2, p, cmhPtr);
+                        }
                     }
                     hashBound = TT::B_beta;
                     break;

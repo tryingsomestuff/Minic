@@ -11,21 +11,27 @@ uint64_t rdtsc();
 #define STOP_AND_SUM_TIMER(name) Timers::rdtscCounter##name += rdtsc() - rdtscBegin; ++Timers::callCounter##name;
 
 namespace Timers{
-extern uint64_t rdtscCounterSee      ;
-extern uint64_t rdtscCounterApply    ;
-extern uint64_t rdtscCounterEval     ;
-extern uint64_t rdtscCounterAttack   ;
-extern uint64_t rdtscCounterMovePiece;
-extern uint64_t rdtscCounterGenerate ;
-extern uint64_t rdtscCounterTotal    ;
-
-extern uint64_t callCounterSee       ;
-extern uint64_t callCounterApply     ;
-extern uint64_t callCounterEval      ;
-extern uint64_t callCounterAttack    ;
-extern uint64_t callCounterMovePiece ;
-extern uint64_t callCounterGenerate  ;
-extern uint64_t callCounterTotal     ;
+extern uint64_t rdtscCounterSee        ;
+extern uint64_t rdtscCounterApply      ;
+extern uint64_t rdtscCounterEval       ;
+extern uint64_t rdtscCounterAttack     ;
+extern uint64_t rdtscCounterMovePiece  ;
+extern uint64_t rdtscCounterGenerate   ;
+extern uint64_t rdtscCounterPseudoLegal;
+extern uint64_t rdtscCounterIsAttacked ;
+extern uint64_t rdtscCounterMoveSorting;
+extern uint64_t rdtscCounterTotal      ;
+ 
+extern uint64_t callCounterSee        ;
+extern uint64_t callCounterApply      ;
+extern uint64_t callCounterEval       ;
+extern uint64_t callCounterAttack     ;
+extern uint64_t callCounterMovePiece  ;
+extern uint64_t callCounterGenerate   ;
+extern uint64_t callCounterPseudoLegal;
+extern uint64_t callCounterIsAttacked ;
+extern uint64_t callCounterMoveSorting;
+extern uint64_t callCounterTotal      ;
 
 void Display();
 }

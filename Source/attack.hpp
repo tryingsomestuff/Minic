@@ -97,7 +97,9 @@ template <       > inline BitBoard coverage<P_wq>(const Square x, const BitBoard
 template <       > inline BitBoard coverage<P_wk>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].king; }
 
 // Attack function is just coverage interseted with a target bitboard
-template < Piece pp > inline BitBoard attack(const Square x, const BitBoard target, const BitBoard occupancy = 0, const Color c = Co_White) { return coverage<pp>(x, occupancy, c) & target; }
+template < Piece pp > inline BitBoard attack(const Square x, const BitBoard target, const BitBoard occupancy = 0, const Color c = Co_White) { 
+   return coverage<pp>(x, occupancy, c) & target; 
+}
 
 #endif // MAGIC
 

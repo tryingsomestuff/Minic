@@ -76,9 +76,9 @@ bool getEntry(Searcher & context, const Position & p, Hash h, DepthType d, Entry
 // always replace
 void setEntry(Searcher & context, Hash h, Move m, ScoreType s, ScoreType eval, Bound b, DepthType d){
     assert(h > 0);
+    if ( DynamicConfig::disableTT ) return;
     Entry e = {h,m,s,eval,b,d};
     e.h ^= e._d;
-    if ( DynamicConfig::disableTT ) return;
     ++context.stats.counters[Stats::sid_ttInsert];
     table[h&(ttSize-1)] = e; // always replace (favour leaf)
 }

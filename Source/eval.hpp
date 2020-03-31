@@ -156,9 +156,11 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
             STOP_AND_SUM_TIMER(Eval)
             return (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSideEG,score[sc_Mat][EG]));
           }
-          else if ( MEntry.t == MaterialHash::Ter_Draw)         { if (!isAttacked(p, kingSquare(p))) {
-              STOP_AND_SUM_TIMER(Eval)
-              return context.drawScore();
+          else if ( MEntry.t == MaterialHash::Ter_Draw){ 
+              if (!isAttacked(p, kingSquare(p))) {
+                 STOP_AND_SUM_TIMER(Eval)
+                 return context.drawScore();
+              }
           }
           else if ( MEntry.t == MaterialHash::Ter_MaterialDraw) {
               STOP_AND_SUM_TIMER(Eval)
