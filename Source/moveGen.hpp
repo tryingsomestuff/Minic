@@ -99,6 +99,7 @@ void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, boo
 
 template < Color c>
 inline void movePieceCastle(Position & p, CastlingTypes ct, Square kingDest, Square rookDest){
+    START_TIMER
     const Piece pk = c==Co_White?P_wk:P_bk;
     const Piece pr = c==Co_White?P_wr:P_br;
     const CastlingRights ks = c==Co_White?C_wks:C_bks;
@@ -123,6 +124,7 @@ inline void movePieceCastle(Position & p, CastlingTypes ct, Square kingDest, Squ
     if (p.castling & qs) p.h ^= Zobrist::ZT[sqs][13];
     if (p.castling & ks) p.h ^= Zobrist::ZT[sks][13];
     p.castling &= ~(ks | qs);
+    STOP_AND_SUM_TIMER(MovePiece)
 }
 
 void applyNull(Searcher & context, Position & pN);
