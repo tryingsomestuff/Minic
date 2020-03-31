@@ -3,6 +3,7 @@
 #include "definition.hpp"
 
 #include "tables.hpp"
+#include "timers.hpp"
 #include "transposition.hpp"
 
 /* Minic is not sorting move on the fly, but once and for all
@@ -33,8 +34,10 @@ struct MoveSorter{
     float gp;
 
     static void sort(const Searcher & context, MoveList & moves, const Position & p, float gp, DepthType ply, const CMHPtrArray & cmhPtr, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL, const Move refutation = INVALIDMOVE){
+        START_TIMER
         const MoveSorter ms(context,p,gp,ply,cmhPtr,useSEE,isInCheck,e,refutation);
         for(auto it = moves.begin() ; it != moves.end() ; ++it){ ms.computeScore(*it); }
         std::sort(moves.begin(),moves.end(),ms);
+        STOP_AND_SUM_TIMER(MoveSorting)
     }
 };
