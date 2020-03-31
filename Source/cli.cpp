@@ -13,6 +13,10 @@
 #include "uci.hpp"
 #include "xboard.hpp"
 
+void help(){
+
+}
+
 struct PerftAccumulator{
     PerftAccumulator(): pseudoNodes(0), validNodes(0), captureNodes(0), epNodes(0), checkNode(0), checkMateNode(0){}
     Counter pseudoNodes,validNodes,captureNodes,epNodes,checkNode,checkMateNode;
@@ -88,6 +92,8 @@ void analyze(const Position & p, DepthType depth){
 }
 
 int cliManagement(std::string cli, int argc, char ** argv){
+
+    // first we parse options that do not need extra parameters
 
 #ifdef WITH_UCI
     if (cli == "-uci") {
@@ -255,21 +261,29 @@ int cliManagement(std::string cli, int argc, char ** argv){
         return 0;
     }
 
-    if ( argc < 3 ) return 1;
+    // next option needs at least one argument more
+    if ( argc < 3 ){
+        help();
+        return 1;
+    }
 
 #ifdef IMPORTBOOK
+    // in this case argv[2] is the ascii book file name to be converted
     if ( cli == "-buildBook"){
         Book::buildBook(argv[2]);
         return 0;
     }
 #endif
 
+    // in other cases, argv[2] is always the fen string
     std::string fen = argv[2];
 
+    // some "short cuts" !
     if ( fen == "start")  fen = startPosition;
     if ( fen == "fine70") fen = fine70;
     if ( fen == "shirov") fen = shirov;
 
+    // instantiate the position
     Position p;
     if ( ! readFEN(fen,p) ){
         Logging::LogIt(Logging::logInfo) << "Error reading fen" ;
@@ -289,7 +303,8 @@ int cliManagement(std::string cli, int argc, char ** argv){
         Square from = INVALIDSQUARE;
         Square to = INVALIDSQUARE;
         MType mtype = T_std;
-        readMove(p,argv[3],from,to,mtype);
+        const std::string move = argc>3?argv[3]:"e2e4";
+        readMove(p,move,from,to,mtype);
         Move m = ToMove(from,to,mtype);
         ScoreType t = atoi(argv[4]);
         bool b = ThreadPool::instance().main().SEE_GE(p,m,t);
@@ -388,7 +403,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
     }
 
     if ( cli == "-analyze" ){
-        DepthType depth = 5;
+        DepthType depth = 15;
         if ( argc >= 3 ) depth = atoi(argv[3]);
         analyze(p,depth);
         return 0;
@@ -396,7 +411,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
 
     if ( cli == "-mateFinder" ){
         DynamicConfig::mateFinder = true;
-        DepthType depth = 5;
+        DepthType depth = 10;
         if ( argc >= 3 ) depth = atoi(argv[3]);
         analyze(p,depth);
         return 0;

@@ -9,7 +9,9 @@ void initBook();
 // Request a book move from a position hash (a random process is used to choose a move if many are available)
 const Move Get(const Hash h);
 
+#ifdef IMPORTBOOK
 // Convert own format ascii book to binary book
 bool buildBook(const std::string & bookFileName);
+#endif
 
 } // Book

@@ -8,7 +8,7 @@
 namespace BBTools {
 
 /* Many little helper for evaluation (pawn structure mostly)
- * Most of then are taken from Topple chess engine by Vincent Tang (a.k.a Konsolas)
+ * Most of them are taken from Topple chess engine by Vincent Tang (a.k.a Konsolas)
  */
 
 inline constexpr BitBoard _shiftSouth    (BitBoard b) { return b >> 8; }

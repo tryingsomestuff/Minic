@@ -47,7 +47,7 @@ const std::string MinicVersion = "2.00";
 #define WITH_SYZYGY
 
 // *** Add-ons
-//#define IMPORTBOOK
+#define IMPORTBOOK
 //#define DEBUG_TOOL
 //#define WITH_TEST_SUITE
 //#define WITH_PGN_PARSER
