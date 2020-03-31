@@ -125,8 +125,14 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
 
     // king captured
     const bool white2Play = p.c == Co_White;
-    if ( p.king[Co_White] == INVALIDSQUARE ) return data.gp=0,(white2Play?-1:+1)* MATE;
-    if ( p.king[Co_Black] == INVALIDSQUARE ) return data.gp=0,(white2Play?+1:-1)* MATE;
+    if ( p.king[Co_White] == INVALIDSQUARE ){
+      STOP_AND_SUM_TIMER(Eval)
+      return data.gp=0,(white2Play?-1:+1)* MATE;
+    }
+    if ( p.king[Co_Black] == INVALIDSQUARE ) {
+      STOP_AND_SUM_TIMER(Eval)
+      return data.gp=0,(white2Play?+1:-1)* MATE;
+    }
 
     // level for the poor ...
     const int lra = std::max(0, 500 - int(10*DynamicConfig::level));
@@ -146,9 +152,18 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
        // end game knowledge (helper or scaling)
        if ( safeMatEvaluator && (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t]<6) ){
           const Color winningSideEG = score[sc_Mat][EG]>0?Co_White:Co_Black;
-          if      ( MEntry.t == MaterialHash::Ter_WhiteWinWithHelper || MEntry.t == MaterialHash::Ter_BlackWinWithHelper ) return (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSideEG,score[sc_Mat][EG]));
-          else if ( MEntry.t == MaterialHash::Ter_Draw)         { if (!isAttacked(p, kingSquare(p))) return context.drawScore(); }
-          else if ( MEntry.t == MaterialHash::Ter_MaterialDraw) { if (!isAttacked(p, kingSquare(p))) return context.drawScore(); }
+          if      ( MEntry.t == MaterialHash::Ter_WhiteWinWithHelper || MEntry.t == MaterialHash::Ter_BlackWinWithHelper ){
+            STOP_AND_SUM_TIMER(Eval)
+            return (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSideEG,score[sc_Mat][EG]));
+          }
+          else if ( MEntry.t == MaterialHash::Ter_Draw)         { if (!isAttacked(p, kingSquare(p))) {
+              STOP_AND_SUM_TIMER(Eval)
+              return context.drawScore();
+          }
+          else if ( MEntry.t == MaterialHash::Ter_MaterialDraw) {
+              STOP_AND_SUM_TIMER(Eval)
+              if (!isAttacked(p, kingSquare(p))) return context.drawScore();
+          }
           else if ( MEntry.t == MaterialHash::Ter_WhiteWin || MEntry.t == MaterialHash::Ter_BlackWin) score.scalingFactor = 5 - 5*p.fifty/100.f;
           else if ( MEntry.t == MaterialHash::Ter_HardToWin)  score.scalingFactor = 0.5f - 0.5f*(p.fifty/100.f);
           else if ( MEntry.t == MaterialHash::Ter_LikelyDraw) score.scalingFactor = 0.3f - 0.3f*(p.fifty/100.f);
