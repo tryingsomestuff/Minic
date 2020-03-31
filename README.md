@@ -61,7 +61,7 @@ Minic 1.44 is tested at 2740 on the fastgm 60sec+0.6sec rating list (http://www.
 Minic 1.51 is tested at 2916 on the fastgm 10min+6sec rating list (http://www.fastgm.de/10min.html)  
 
 ### Test Suite
-STS : 1141/1500 @10sec per position (single thread)  
+STS : 1169/1500 @10sec per position (single thread)  
 WAC : 289/300 @10sec per position (single thread)  
 
 ### Home test
