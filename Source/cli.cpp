@@ -28,9 +28,8 @@ void PerftAccumulator::Display(){
     Logging::LogIt(Logging::logInfo) << "checkMateNode " << checkMateNode ;
 }
 
-Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc, bool divide){
+Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc){
     if ( depth == 0) return 0;
-    static TT::Entry e;
     MoveList moves;
     int validMoves = 0;
     int allMoves = 0;
@@ -46,13 +45,9 @@ Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc, bool 
         Position p2 = p;
         if ( ! apply(p2,m) ) continue;
         ++validMoves;
-        if ( divide && depth == 2 ) Logging::LogIt(Logging::logInfo) << ToString(p2) ;
-        Counter nNodes = perft(p2,depth-1,acc,divide);
-        if ( divide && depth == 2 ) Logging::LogIt(Logging::logInfo) << "=> after " << ToString(m) << " " << nNodes ;
-        if ( divide && depth == 1 ) Logging::LogIt(Logging::logInfo) << (int)depth << " " <<  ToString(m) ;
+        perft(p2,depth-1,acc);
     }
     if ( depth == 1 ) { acc.pseudoNodes += allMoves; acc.validNodes += validMoves; }
-    if ( divide && depth == 2 ) Logging::LogIt(Logging::logInfo) << "********************" ;
     return acc.validNodes;
 }
 
@@ -61,7 +56,7 @@ void perft_test(const std::string & fen, DepthType d, unsigned long long int exp
     readFEN(fen, p);
     Logging::LogIt(Logging::logInfo) << ToString(p) ;
     PerftAccumulator acc;
-    unsigned long long int n = perft(p, d, acc, false);
+    unsigned long long int n = perft(p, d, acc);
     acc.Display();
     if (n != expected) Logging::LogIt(Logging::logFatal) << "Error !! " << fen << " " << expected ;
     Logging::LogIt(Logging::logInfo) << "#########################" ;
@@ -387,7 +382,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
         DepthType d = 5;
         if ( argc >= 3 ) d = atoi(argv[3]);
         PerftAccumulator acc;
-        perft(p,d,acc,false);
+        perft(p,d,acc);
         acc.Display();
         return 0;
     }
