@@ -75,6 +75,8 @@ void initBook() {
     }
 }
 
+#ifdef IMPORTBOOK
+
 size_t countLine(std::istream &is){
     // skip when bad
     if( is.bad() ) return 0;
@@ -82,7 +84,7 @@ size_t countLine(std::istream &is){
     std::istream::iostate state_backup = is.rdstate();
     // clear state
     is.clear();
-    std::istream::streampos pos_backup = is.tellg();
+    std::streampos pos_backup = is.tellg();
 
     is.seekg(0);
     size_t line_cnt;
@@ -264,5 +266,6 @@ bool buildBook(const std::string & bookFileName){
     return true;
 }
 
+#endif
 
 } // Book
