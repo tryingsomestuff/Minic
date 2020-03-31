@@ -7,7 +7,7 @@ Compatible with both xboard/winboard and UCI.
 ## Code style
 For a year and a half Minic was (mainly) a one-file-code with very dense lines. This is of course very wrong in terms of software design... So why is it so? First reason is that Minic was first developped as a week-end project (in mid-october 2018), the quick-and-dirty way, and since then I was having fun going on this way ; being a "small" code size engine was part of the stakes in developing it. Second reason is that it helps the compilers optimize the whole code (at least that is what I though...)
 
-The only dependency is the very good json header-only library nlohmann/json used to parse the config file. Until version 2 of Minic, some optional features such as Texel tuning, perft, tests, uci support, book generation ... were available in the Add-Ons directory ; they are now fused with the source code.
+Until version 2 of Minic, some optional features such as Texel tuning, perft, tests, uci support, book generation ... were available in the Add-Ons directory ; they are now fused with the source code.
 
 Indeed, since version "2" Minic is now written in a more classic c++ style, although very dense lines are still present and recall Minic past compacity...
 
@@ -23,7 +23,7 @@ WARNING : Dist directory as been REMOVED from the repository because it was star
 
 Some stable/official ones will also be made available as github release. I "officially release" (create a github version) as soon as I have some validated elo (at least +10).
 
-In a github release, a tester shall only use the given (attached) binaries. The full "source" package always contains everything (source code, test suites, opening suite, books, ...). If you want to use Minic parameter file (minic.json) or some given book file, there are not attached in all release, there are downloadable from the github repo.
+In a github release, a tester shall only use the given (attached) binaries. The full "source" package always contains everything (source code, test suites, opening suite, books, ...). 
 
 Starting from release 0.50 new binaries are available :
 
@@ -40,7 +40,7 @@ Starting from release 0.50 new binaries are available :
 ```   
 Please note that Win32 binaries are very slow (I don't know why yet, so please use Win64 one if possible).
    
-Starting from release 1.00 Minic support setting options using protocol (both XBoard and UCI). Option priority are as follow : json file, can be override by command line option, that can be override by protocol option.
+Starting from release 1.00 Minic support setting options using protocol (both XBoard and UCI). Option priority are as follow : command line option can be override by protocol option.
    
 ## Strength
 
