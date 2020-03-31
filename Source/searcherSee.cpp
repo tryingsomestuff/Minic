@@ -5,6 +5,8 @@
 ScoreType Searcher::SEE(const Position & p, const Move & m) const {
     if ( ! VALIDMOVE(m) ) return 0;
 
+    START_TIMER
+
     Square from = Move2From(m);
     const Square to = Move2To(m);
     const MType mtype = Move2Type(m);
@@ -70,6 +72,7 @@ ScoreType Searcher::SEE(const Position & p, const Move & m) const {
     }
 
     while (--nCapt) if (swapList[nCapt] > -swapList[nCapt - 1])  swapList[nCapt - 1] = -swapList[nCapt];
+    STOP_AND_SUM_TIMER(See)
     return swapList[0];
 }
 
