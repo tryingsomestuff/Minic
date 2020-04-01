@@ -19,9 +19,9 @@ TimeType Searcher::getCurrentMoveMs() {
     return std::max(ret, TimeType(20));// if not much time left, let's try that ...;
 }
 
-void Searcher::getCMHPtr(DepthType ply, CMHPtrArray & cmhPtr){
+void Searcher::getCMHPtr(const unsigned int ply, CMHPtrArray & cmhPtr){
     cmhPtr.fill(0);
-    for( int k = 0 ; k < MAX_CMH_PLY ; ++k){
+    for( unsigned int k = 0 ; k < MAX_CMH_PLY ; ++k){
         if( ply > k && VALIDMOVE(stack[ply-k].p.lastMove)){
            const Square to = Move2To(stack[ply-k].p.lastMove);
            cmhPtr[k] = historyT.counter_history[stack[ply-k-1].p.b[to]+PieceShift][to];
