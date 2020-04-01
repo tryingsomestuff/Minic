@@ -45,6 +45,6 @@ Move ThreadPool::search(const ThreadData & d){ // distribute data and call main 
 
 void ThreadPool::startOthers(){ for (auto & s : *this) if (!(*s).isMainThread()) (*s).start();}
 
-ThreadPool::ThreadPool():stop(false){ push_back(std::unique_ptr<Searcher>(new Searcher(size())));} // this one will be called "Main" thread
+ThreadPool::ThreadPool():std::vector<std::unique_ptr<Searcher>>(),stop(false){ push_back(std::unique_ptr<Searcher>(new Searcher(size())));} // this one will be called "Main" thread
 
 Counter ThreadPool::counter(Stats::StatId id) const { Counter n = 0; for (auto & it : *this ){ n += it->stats.counters[id];  } return n;}

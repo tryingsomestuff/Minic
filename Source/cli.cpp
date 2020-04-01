@@ -314,7 +314,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
 
     if (cli == "-attacked") {
         Square k = Sq_e4;
-        if (argc >= 3) k = atoi(argv[3]);
+        if (argc > 3) k = atoi(argv[3]);
         Logging::LogIt(Logging::logInfo) << SquareNames[k];
         Logging::LogIt(Logging::logInfo) << showBitBoard(BBTools::allAttackedBB(p, k, p.c));
         return 0;
@@ -322,7 +322,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
 
     if (cli == "-cov") {
         Square k = Sq_e4;
-        if (argc >= 3) k = atoi(argv[3]);
+        if (argc > 3) k = atoi(argv[3]);
         switch (p.b[k]) {
         case P_wp:
             Logging::LogIt(Logging::logInfo) << showBitBoard((BBTools::coverage<P_wp>(k, p.occupancy, p.c) + BBTools::mask[k].push[p.c]) & ~p.allPieces[Co_White]);
@@ -395,7 +395,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
 
     if ( cli == "-perft" ){
         DepthType d = 5;
-        if ( argc >= 3 ) d = atoi(argv[3]);
+        if ( argc > 3 ) d = atoi(argv[3]);
         PerftAccumulator acc;
         perft(p,d,acc);
         acc.Display();
@@ -404,7 +404,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
 
     if ( cli == "-analyze" ){
         DepthType depth = 15;
-        if ( argc >= 3 ) depth = atoi(argv[3]);
+        if ( argc > 3 ) depth = atoi(argv[3]);
         analyze(p,depth);
         return 0;
     }
@@ -412,7 +412,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
     if ( cli == "-mateFinder" ){
         DynamicConfig::mateFinder = true;
         DepthType depth = 10;
-        if ( argc >= 3 ) depth = atoi(argv[3]);
+        if ( argc > 3 ) depth = atoi(argv[3]);
         analyze(p,depth);
         return 0;
     }

@@ -35,7 +35,7 @@ struct Searcher{
     std::vector<RootScores> rootScores;
 
     // used for move ordering
-    Move previousBest;
+    Move previousBest = INVALIDMOVE;
 
     KillerT killerT;
     HistoryT historyT;

@@ -8,10 +8,10 @@
 struct Searcher; // forward decl
 
 struct ThreadData{
-    DepthType depth, seldepth;
-    ScoreType sc;
+    DepthType depth = 0, seldepth = 0;
+    ScoreType sc = 0;
     Position p;
-    Move best;
+    Move best = INVALIDMOVE;
     PVList pv;
 };
 
