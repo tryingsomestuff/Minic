@@ -1,6 +1,8 @@
 #!/bin/bash
 dir=$(readlink -f $(dirname $0)/..)
 
+ulimit -s unlimited
+
 cd $dir
 
 FATHOM_PRESENT=0
@@ -37,11 +39,17 @@ if [ "$t" != "-march=native" ]; then
    exe=${exe}_${tname}
 fi
 
-rm -f minic.gcda
-
 echo "Building $exe"
-OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto $t --std=c++14 -Wfatal-errors"
-#OPT="-Wall -Wno-char-subscripts -Wno-reorder $d -O0 -g -flto $t --std=c++14"
+
+OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 $t --std=c++14 -Wfatal-errors"
+#OPT="-Wall -Wno-char-subscripts -Wno-reorder $d -O0 -g $t --std=c++14"
+
+# -flto is making g++ 9.3.0 under cygwin segfault
+uname -a | grep CYGWIN
+if [ $? == 1 ]; then
+   OPT="$OPT -flto"
+fi
+
 echo $OPT
 
 if [ $FATHOM_PRESENT = "1" ]; then
@@ -54,13 +62,16 @@ if [ $FATHOM_PRESENT = "1" ]; then
    OPT="$OPT $dir/Fathom/src/$lib -I$dir/Fathom/src"
 fi
 
-rm -f profile/*
+rm -f *.gcda
 
-g++ -fprofile-generate=profile $OPT Source/*.cpp -ISource -o $dir/Dist/$exe -lpthread 
+g++ -fprofile-generate $OPT Source/*.cpp -ISource -o $dir/Dist/$exe -lpthread 
+echo "end of first compilation"
 if [ $? = "0" ]; then
+   echo "running Minic for profiling : $dir/Dist/$exe"
    $dir/Dist/$exe -analyze "r2q1rk1/p4ppp/1pb1pn2/8/5P2/1PBB3P/P1PPQ1P1/2KR3R b - - 1 14" 20 -quiet 0 
    #$dir/Dist/$exe -analyze "shirov" 20 
-   g++ -fprofile-use=profile $OPT Source/*.cpp -ISource -o $dir/Dist/$exe -lpthread
+   echo "starting optimized compilation"
+   g++ -fprofile-use $OPT Source/*.cpp -ISource -o $dir/Dist/$exe -lpthread
 else
    echo "some error"
 fi
