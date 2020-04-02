@@ -64,4 +64,12 @@ void MoveSorter::computeScore(Move & m)const{
     m = ToMove(from, to, t, s);
 }
 
+void MoveSorter::sort(const Searcher & context, MoveList & moves, const Position & p, float gp, DepthType ply, const CMHPtrArray & cmhPtr, bool useSEE, bool isInCheck, const TT::Entry * e, const Move refutation){
+        START_TIMER
+        const MoveSorter ms(context,p,gp,ply,cmhPtr,useSEE,isInCheck,e,refutation);
+        for(auto it = moves.begin() ; it != moves.end() ; ++it){ ms.computeScore(*it); }
+        std::sort(moves.begin(),moves.end(),ms);
+        STOP_AND_SUM_TIMER(MoveSorting)
+}
+
 
