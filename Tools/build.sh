@@ -76,3 +76,4 @@ else
    echo "some error"
 fi
 
+rm -f *.gcda
