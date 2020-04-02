@@ -26,9 +26,6 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
 
     debug_king_cap(p);
 
-    CMHPtrArray cmhPtr;
-    getCMHPtr(p.halfmoves,cmhPtr);
-
     TT::Entry e;
     const Hash pHash = computeHash(p);
     if (TT::getEntry(*this, p, pHash, hashDepth, e)) {
@@ -58,6 +55,7 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
                ++stats.counters[Stats::sid_materialTableMiss];
             }
             */
+           data.gp = 0.5; // force mid game value ...
         }
         else {
             ++stats.counters[Stats::sid_ttscmiss];
@@ -76,9 +74,11 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
     ScoreType bestScore = evalScore;
 
     MoveList moves;
-    if ( isInCheck ) MoveGen::generate<MoveGen::GP_all>(p,moves); ///@odo generate only evasion !
+    if ( isInCheck ) MoveGen::generate<MoveGen::GP_all>(p,moves); ///@todo generate only evasion !
     else             MoveGen::generate<MoveGen::GP_cap>(p,moves);
-    MoveSorter::sort(*this,moves,p,data.gp,ply,cmhPtr,isInCheck,isInCheck,e.h?&e:NULL); ///@todo warning gp = 0 here !
+    CMHPtrArray cmhPtr;
+    getCMHPtr(p.halfmoves,cmhPtr);
+    MoveSorter::sort(*this,moves,p,data.gp,ply,cmhPtr,isInCheck,isInCheck,e.h?&e:NULL); ///@todo warning gp is often = 0 here !
 
     const ScoreType alphaInit = alpha;
 
