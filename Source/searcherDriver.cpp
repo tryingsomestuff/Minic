@@ -54,7 +54,6 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
         Logging::LogIt(Logging::logInfo) << "... go for id " << id() ;
     }
     stats.init();
-    //clearPawnTT(); ///@todo loop context
     killerT.initKillers();
     historyT.initHistory();
     counterT.initCounter();

@@ -32,6 +32,7 @@ public:
     // gathering counter information from all threads
     Counter counter(Stats::StatId id) const;
     void DisplayStats()const{for(size_t k = 0 ; k < Stats::sid_maxid ; ++k) Logging::LogIt(Logging::logInfo) << Stats::Names[k] << " " << counter((Stats::StatId)k);}
+    void clearPawnTT();
 private:
     ThreadPool();
 };

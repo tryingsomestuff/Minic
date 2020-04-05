@@ -101,6 +101,7 @@ namespace XBoard{
                 }
                 else if (COM::command == "new"){ // not following protocol, should set infinite depth search
                     COM::stop();
+                    COM::init();
                     if (!COM::sideToMoveFromFEN(startPosition)){ commandOK = false; }
                     COM::initialPos = COM::position;
                     DynamicConfig::FRC = false;
