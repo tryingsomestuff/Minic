@@ -12,7 +12,7 @@ std::string GetFENShort(const Position &p ){ // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/P
     for (int i = 7; i >= 0; --i) {
         for (int j = 0; j < 8; j++) {
             const Square k = 8 * i + j;
-            if (p.b[k] == P_none) ++count;
+            if (p.board_const(k) == P_none) ++count;
             else {
                 if (count != 0) { ss << count; count = 0; }
                 ss << PieceTools::getName(p,k);
@@ -47,8 +47,8 @@ std::string GetFEN(const Position &p) { // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1P
 }
 
 std::string SanitizeCastling(const Position & p, const std::string & str){
-    if (( str == "e1g1" && p.b[Sq_e1] == P_wk ) || ( str == "e8g8" && p.b[Sq_e8] == P_bk )) return "0-0";
-    if (( str == "e1c1" && p.b[Sq_e1] == P_wk ) || ( str == "e8c8" && p.b[Sq_e8] == P_bk )) return "0-0-0";
+    if (( str == "e1g1" && p.board_const(Sq_e1) == P_wk ) || ( str == "e8g8" && p.board_const(Sq_e8) == P_bk )) return "0-0";
+    if (( str == "e1c1" && p.board_const(Sq_e1) == P_wk ) || ( str == "e8c8" && p.board_const(Sq_e8) == P_bk )) return "0-0-0";
     return str;
 }
 
@@ -121,7 +121,7 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
                     to = stringToSquare(strListTo[0]);
                     prom = strListTo[1];
                 }
-                isCapture = p.b[to] != P_none;
+                isCapture = p.board_const(to) != P_none;
                 if      ( prom == "Q" || prom == "q") moveType = isCapture ? T_cappromq : T_promq;
                 else if ( prom == "R" || prom == "r") moveType = isCapture ? T_cappromr : T_promr;
                 else if ( prom == "B" || prom == "b") moveType = isCapture ? T_cappromb : T_promb;
@@ -130,7 +130,7 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
             }
             else{
                 to = stringToSquare(strList[1]);
-                isCapture = p.b[to] != P_none;
+                isCapture = p.board_const(to) != P_none;
                 if(isCapture) moveType = T_capture;
             }
         }
@@ -139,8 +139,8 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
     }
     if ( DynamicConfig::FRC ){
        // In FRC, some castling way be encoded king takes rooks ... Let's check that, the dirty way
-       if ( p.b[from] == P_wk && p.b[to] == P_wr ){ moveType = (to<from ? T_wqs : T_wks); }
-       if ( p.b[from] == P_bk && p.b[to] == P_br ){ moveType = (to<from ? T_bqs : T_bks); }
+       if ( p.board_const(from) == P_wk && p.board_const(to) == P_wr ){ moveType = (to<from ? T_wqs : T_wks); }
+       if ( p.board_const(from) == P_bk && p.board_const(to) == P_br ){ moveType = (to<from ? T_bqs : T_bks); }
     }
     if (!DynamicConfig::FRC && !isPseudoLegal(p, ToMove(from, to, moveType))) {
         Logging::LogIt(Logging::logError) << "Trying to read bad move, not legal " << ToString(p) << str;

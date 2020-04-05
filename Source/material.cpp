@@ -134,8 +134,8 @@ namespace MaterialHash { // idea from Gull
     ScoreType helperDummy(const Position &, Color , ScoreType){ return 0; } ///@todo not 0 for debug purpose ??
 
     ScoreType helperKPK(const Position &p, Color winningSide, ScoreType ){
-       const Square psq = KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces<P_wp>(winningSide))); // we know there is at least one pawn
-       if (!KPK::probe(KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces<P_wk>(winningSide))), psq, KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces<P_wk>(~winningSide))), winningSide == p.c ? Co_White:Co_Black)) return 0; // shall be drawScore but this is not a 3rep case so don't bother too much ...
+       const Square psq = KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const<P_wp>(winningSide))); // we know there is at least one pawn
+       if (!KPK::probe(KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const<P_wk>(winningSide))), psq, KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const<P_wk>(~winningSide))), winningSide == p.c ? Co_White:Co_Black)) return 0; // shall be drawScore but this is not a 3rep case so don't bother too much ...
        return ((winningSide == Co_White)?+1:-1)*(WIN + ValuesEG[P_wp+PieceShift] + 10*SQRANK(psq));
     }
 
@@ -312,7 +312,7 @@ namespace MaterialHash { // idea from Gull
     }
 
     void initMaterial(Position & p){ // M_p .. M_k is the same as P_wp .. P_wk
-        for( Color c = Co_White ; c < Co_End ; ++c) for( Piece pp = P_wp ; pp <= P_wk ; ++pp) p.mat[c][pp] = (unsigned char)countBit(p.pieces(c,pp));
+        for( Color c = Co_White ; c < Co_End ; ++c) for( Piece pp = P_wp ; pp <= P_wk ; ++pp) p.mat[c][pp] = (unsigned char)countBit(p.pieces_const(c,pp));
         updateMaterialOther(p);
     }
 

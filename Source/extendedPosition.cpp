@@ -9,11 +9,7 @@
 
 #include <cctype>
 
-BitBoard getPieceBitboard(const Position & p, Piece t){
-    return p.allB[t+PieceShift];
-}
-
-uint64_t numberOf(const Position & p, Piece t){ return countBit(getPieceBitboard(p,t));}
+uint64_t numberOf(const Position & p, Piece t){ return countBit(p.pieces_const(t));}
 
 std::string showAlgAbr(Move m, const Position & p) {
     Square from  = Move2From(m);
@@ -45,7 +41,7 @@ std::string showAlgAbr(Move m, const Position & p) {
     bool isSameRank = false;
     if ( numberOf(p,t)>1 ){
         std::vector<Square> v;
-        BitBoard b = getPieceBitboard(p,t);
+        BitBoard b = p.pieces_const(t);
         while (b) v.push_back(popBit(b));
         for(auto it = v.begin() ; it != v.end() ; ++it){
             if ( *it == from ) continue; // to not compare to myself ...

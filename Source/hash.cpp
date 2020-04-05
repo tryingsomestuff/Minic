@@ -21,7 +21,7 @@ Hash computeHash(const Position &p){
     if (p.h != nullHash) return p.h;
     //++ThreadPool::instance().main().stats.counters[Stats::sid_hashComputed]; // shall of course never happend !
     for (Square k = 0; k < 64; ++k){ ///todo try if BB is faster here ?
-        const Piece pp = p.b[k];
+        const Piece pp = p.board_const(k);
         if ( pp != P_none) p.h ^= Zobrist::ZT[k][pp+PieceShift];
     }
     if ( p.ep != INVALIDSQUARE ) p.h ^= Zobrist::ZT[p.ep][13];

@@ -19,7 +19,7 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
 
     // reset position
     p.h = nullHash; p.ph = nullHash;
-    for(Square k = 0 ; k < 64 ; ++k) p.b[k] = P_none;
+    for(Square k = 0 ; k < 64 ; ++k) p.board(k) = P_none;
 
     Square j = 1, i = 0;
     while ((j <= 64) && (i <= (char)strList[0].length())){
@@ -27,18 +27,18 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
         ++i;
         const Square k = (7 - (j - 1) / 8) * 8 + ((j - 1) % 8);
         switch (letter) {
-        case 'p': p.b[k]= P_bp; break;
-        case 'r': p.b[k]= P_br; break;
-        case 'n': p.b[k]= P_bn; break;
-        case 'b': p.b[k]= P_bb; break;
-        case 'q': p.b[k]= P_bq; break;
-        case 'k': p.b[k]= P_bk; p.king[Co_Black] = k; break;
-        case 'P': p.b[k]= P_wp; break;
-        case 'R': p.b[k]= P_wr; break;
-        case 'N': p.b[k]= P_wn; break;
-        case 'B': p.b[k]= P_wb; break;
-        case 'Q': p.b[k]= P_wq; break;
-        case 'K': p.b[k]= P_wk; p.king[Co_White] = k; break;
+        case 'p': p.board(k) = P_bp; break;
+        case 'r': p.board(k) = P_br; break;
+        case 'n': p.board(k) = P_bn; break;
+        case 'b': p.board(k) = P_bb; break;
+        case 'q': p.board(k) = P_bq; break;
+        case 'k': p.board(k) = P_bk; p.king[Co_Black] = k; break;
+        case 'P': p.board(k) = P_wp; break;
+        case 'R': p.board(k) = P_wr; break;
+        case 'N': p.board(k) = P_wn; break;
+        case 'B': p.board(k) = P_wb; break;
+        case 'Q': p.board(k) = P_wq; break;
+        case 'K': p.board(k) = P_wk; p.king[Co_White] = k; break;
         case '/': j--; break;
         case '1': break;
         case '2': j++; break;
@@ -88,10 +88,10 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
         else{ ///@todo detect illegal stuff in here
             p.kingInit[Co_White] = p.king[Co_White];
             p.kingInit[Co_Black] = p.king[Co_Black];
-            if ( p.castling & C_wqs ) { for( Square s = Sq_a1 ; s <= Sq_h1 ; ++s ){ if ( s < p.king[Co_White] && p.b[s]==P_wr ) { p.rooksInit[Co_White][CT_OOO] = s; break; } } }
-            if ( p.castling & C_wks ) { for( Square s = Sq_a1 ; s <= Sq_h1 ; ++s ){ if ( s > p.king[Co_White] && p.b[s]==P_wr ) { p.rooksInit[Co_White][CT_OO]  = s; break; } } }
-            if ( p.castling & C_bqs ) { for( Square s = Sq_a8 ; s <= Sq_h8 ; ++s ){ if ( s < p.king[Co_Black] && p.b[s]==P_br ) { p.rooksInit[Co_Black][CT_OOO] = s; break; } } }
-            if ( p.castling & C_bks ) { for( Square s = Sq_a8 ; s <= Sq_h8 ; ++s ){ if ( s > p.king[Co_Black] && p.b[s]==P_br ) { p.rooksInit[Co_Black][CT_OO]  = s; break; } } }
+            if ( p.castling & C_wqs ) { for( Square s = Sq_a1 ; s <= Sq_h1 ; ++s ){ if ( s < p.king[Co_White] && p.board_const(s)==P_wr ) { p.rooksInit[Co_White][CT_OOO] = s; break; } } }
+            if ( p.castling & C_wks ) { for( Square s = Sq_a1 ; s <= Sq_h1 ; ++s ){ if ( s > p.king[Co_White] && p.board_const(s)==P_wr ) { p.rooksInit[Co_White][CT_OO]  = s; break; } } }
+            if ( p.castling & C_bqs ) { for( Square s = Sq_a8 ; s <= Sq_h8 ; ++s ){ if ( s < p.king[Co_Black] && p.board_const(s)==P_br ) { p.rooksInit[Co_Black][CT_OOO] = s; break; } } }
+            if ( p.castling & C_bks ) { for( Square s = Sq_a8 ; s <= Sq_h8 ; ++s ){ if ( s > p.king[Co_Black] && p.board_const(s)==P_br ) { p.rooksInit[Co_Black][CT_OO]  = s; break; } } }
         }
     }
     else if ( !silent) Logging::LogIt(Logging::logInfo) << "No castling right given" ;

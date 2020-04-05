@@ -323,7 +323,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
     if (cli == "-cov") {
         Square k = Sq_e4;
         if (argc > 3) k = atoi(argv[3]);
-        switch (p.b[k]) {
+        switch (p.board_const(k)) {
         case P_wp:
             Logging::LogIt(Logging::logInfo) << showBitBoard((BBTools::coverage<P_wp>(k, p.occupancy, p.c) + BBTools::mask[k].push[p.c]) & ~p.allPieces[Co_White]);
             break;

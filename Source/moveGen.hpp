@@ -21,7 +21,7 @@ void generateSquare(const Position & p, MoveList & moves, Square from){
     const Color side = p.c;
     const BitBoard myPieceBB  = p.allPieces[side];
     const BitBoard oppPieceBB = p.allPieces[~side];
-    const Piece piece = p.b[from];
+    const Piece piece = p.board_const(from);
     const Piece ptype = (Piece)std::abs(piece);
     assert ( ptype != P_none );
     if (ptype != P_wp) {
@@ -107,13 +107,17 @@ inline void movePieceCastle(Position & p, CastlingTypes ct, Square kingDest, Squ
     const Square sks = c==Co_White?7:63;
     const Square sqs = c==Co_White?0:56;
     BBTools::unSetBit(p, p.king[c]);
+    _unSetBit(p.allPieces[c],p.king[c]);
     BBTools::unSetBit(p, p.rooksInit[c][ct]);
+    _unSetBit(p.allPieces[c],p.rooksInit[c][ct]);
     BBTools::setBit(p, kingDest, pk);
+    _setBit(p.allPieces[c],kingDest);
     BBTools::setBit(p, rookDest, pr);
-    p.b[p.king[c]] = P_none;
-    p.b[p.rooksInit[c][ct]] = P_none;
-    p.b[kingDest] = pk;
-    p.b[rookDest] = pr;
+    _setBit(p.allPieces[c],rookDest);
+    p.board(p.king[c]) = P_none;
+    p.board(p.rooksInit[c][ct]) = P_none;
+    p.board(kingDest) = pk;
+    p.board(rookDest) = pr;
     p.h ^= Zobrist::ZT[p.king[c]][pk+PieceShift];
     p.ph ^= Zobrist::ZT[p.king[c]][pk+PieceShift];
     p.h ^= Zobrist::ZT[p.rooksInit[c][ct]][pr+PieceShift];

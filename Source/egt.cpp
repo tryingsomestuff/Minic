@@ -19,7 +19,7 @@ const ScoreType valueMap[5]     = {-TB_WIN_SCORE, -TB_CURSED_SCORE, 0, TB_CURSED
 const ScoreType valueMapNo50[5] = {-TB_WIN_SCORE, -TB_WIN_SCORE,    0, TB_WIN_SCORE,    TB_WIN_SCORE};
 
 MType getMoveType(const Position &p, unsigned res){
-    const bool isCap = (p.b[TB_GET_TO(res)] != P_none);
+    const bool isCap = (p.board_const(TB_GET_TO(res)) != P_none);
     switch (TB_GET_PROMOTES(res)) {
        case TB_PROMOTES_QUEEN:  return isCap? T_cappromq:T_promq;
        case TB_PROMOTES_ROOK:   return isCap? T_cappromr:T_promr;
