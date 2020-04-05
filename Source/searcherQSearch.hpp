@@ -1,8 +1,8 @@
 #pragma once
 
 inline ScoreType qDeltaMargin(const Position & p) {
-   ScoreType delta = (p.pieces(p.c,P_wp) & SeventhRank[p.c]) ? Values[P_wq+PieceShift] : Values[P_wp+PieceShift];
-   return delta + Values[P_wq+PieceShift];//(p.pieces(~p.c,P_wq) ? Values[P_wq+PieceShift] : p.pieces(~p.c,P_wr) ? Values[P_wr+PieceShift] : p.pieces(~p.c,P_wb) ? Values[P_wb+PieceShift] : p.pieces(~p.c,P_wn) ? Values[P_wn+PieceShift] : Values[P_wp+PieceShift]);
+   ScoreType delta = (p.pieces_const(p.c,P_wp) & SeventhRank[p.c]) ? Values[P_wq+PieceShift] : Values[P_wp+PieceShift];
+   return delta + Values[P_wq+PieceShift];
 }
 
 template < bool qRoot, bool pvnode >
@@ -64,11 +64,16 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
     }
     bool evalScoreIsHashScore = false;
     // use tt score if possible and not in check
-    if ( !isInCheck && e.h != 0 && ((e.b == TT::B_alpha && e.s <= evalScore) || (e.b == TT::B_beta && e.s >= evalScore) || (e.b == TT::B_exact)) ) evalScore = e.s, evalScoreIsHashScore = true;
-    else if ( !isInCheck && e.h == 0 ) TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(evalScore,ply),createHashScore(evalScore,ply),TT::B_none,-2); // already insert an eval here in case of pruning ...
+    if ( !isInCheck){
+       if ( e.h != 0 && ((e.b == TT::B_alpha && e.s <= evalScore) || (e.b == TT::B_beta && e.s >= evalScore) || (e.b == TT::B_exact)) ) evalScore = e.s, evalScoreIsHashScore = true;
+       //else if ( e.h == 0 ) TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(evalScore,ply),createHashScore(evalScore,ply),TT::B_none,-2); // already insert an eval here in case of pruning ...
+    }
 
     TT::Bound b = TT::B_alpha;
-    if ( evalScore >= beta ) return evalScore;
+    if ( evalScore >= beta ){
+        if ( e.h == 0 ) TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(evalScore,ply),createHashScore(evalScore,ply),TT::B_beta,-2); 
+        return evalScore;
+    }
     if ( !isInCheck && SearchConfig::doQDeltaPruning && evalScore + qDeltaMargin(p) < alpha ) return ++stats.counters[Stats::sid_delta],alpha;
     if ( /*pvnode &&*/ evalScore > alpha) alpha = evalScore; ///@todo ??
     ScoreType bestScore = evalScore;
@@ -78,7 +83,7 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
     else             MoveGen::generate<MoveGen::GP_cap>(p,moves);
     CMHPtrArray cmhPtr;
     getCMHPtr(p.halfmoves,cmhPtr);
-    MoveSorter::sort(*this,moves,p,data.gp,ply,cmhPtr,isInCheck,isInCheck,e.h?&e:NULL); ///@todo warning gp is often = 0 here !
+    MoveSorter::sort(*this,moves,p,data.gp,ply,cmhPtr,false,isInCheck,e.h?&e:NULL); ///@todo warning gp is often = 0 here !
 
     const ScoreType alphaInit = alpha;
 
@@ -104,6 +109,6 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
            }
         }
     }
-    TT::setEntry(*this,computeHash(p),bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),b,hashDepth);
+    TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),b,hashDepth);
     return bestScore;
 }

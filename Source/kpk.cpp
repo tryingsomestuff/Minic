@@ -15,8 +15,8 @@ inline unsigned KPKindex(Color us, Square bksq, Square wksq, Square psq) {
 namespace KPK{
 
 Square normalizeSquare(const Position& p, Color strongSide, Square sq) {
-   assert(countBit(p.pieces<P_wp>(strongSide)) == 1); // only for KPK !
-   if (SQFILE(BBTools::SquareFromBitBoard(p.pieces<P_wp>(strongSide))) >= File_e) sq = Square(HFlip(sq)); // we know there is at least one pawn
+   assert(countBit(p.pieces_const<P_wp>(strongSide)) == 1); // only for KPK !
+   if (SQFILE(BBTools::SquareFromBitBoard(p.pieces_const<P_wp>(strongSide))) >= File_e) sq = Square(HFlip(sq)); // we know there is at least one pawn
    return strongSide == Co_White ? sq : VFlip(sq);
 }
 

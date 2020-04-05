@@ -18,9 +18,11 @@ bool readFEN(const std::string & fen, Position & p, bool silent = false, bool wi
  * Minic is a copy/make engine, so that this structure is copied a lot !
  */
 struct Position{
-    std::array<Piece,64>    b    {{ P_none }}; // works because P_none is in fact 0 ...
-
-    std::array<BitBoard,13> allB {{ empty }};
+    inline const Piece & board_const(Square k)const{ return _b[k];}
+    inline Piece & board(Square k){ return _b[k];}
+    
+    std::array<Piece,64>    _b   {{ P_none }}; // works because P_none is in fact 0 ...
+    std::array<BitBoard,6>  _allB {{ empty }};
 
     BitBoard allPieces[2] = {empty};
     BitBoard occupancy    = empty;
@@ -37,22 +39,25 @@ struct Position{
     CastlingRights castling = C_none;
     Color c = Co_White;
 
-    inline const BitBoard & blackKing  ()const {return allB[0];}
-    inline const BitBoard & blackQueen ()const {return allB[1];}
-    inline const BitBoard & blackRook  ()const {return allB[2];}
-    inline const BitBoard & blackBishop()const {return allB[3];}
-    inline const BitBoard & blackKnight()const {return allB[4];}
-    inline const BitBoard & blackPawn  ()const {return allB[5];}
-    inline const BitBoard & whitePawn  ()const {return allB[7];}
-    inline const BitBoard & whiteKnight()const {return allB[8];}
-    inline const BitBoard & whiteBishop()const {return allB[9];}
-    inline const BitBoard & whiteRook  ()const {return allB[10];}
-    inline const BitBoard & whiteQueen ()const {return allB[11];}
-    inline const BitBoard & whiteKing  ()const {return allB[12];}
+    inline const BitBoard blackKing  ()const {return _allB[5] & allPieces[Co_Black];}
+    inline const BitBoard blackQueen ()const {return _allB[4] & allPieces[Co_Black];}
+    inline const BitBoard blackRook  ()const {return _allB[3] & allPieces[Co_Black];}
+    inline const BitBoard blackBishop()const {return _allB[2] & allPieces[Co_Black];}
+    inline const BitBoard blackKnight()const {return _allB[1] & allPieces[Co_Black];}
+    inline const BitBoard blackPawn  ()const {return _allB[0] & allPieces[Co_Black];}
+
+    inline const BitBoard whitePawn  ()const {return _allB[0] & allPieces[Co_White];}
+    inline const BitBoard whiteKnight()const {return _allB[1] & allPieces[Co_White];}
+    inline const BitBoard whiteBishop()const {return _allB[2] & allPieces[Co_White];}
+    inline const BitBoard whiteRook  ()const {return _allB[3] & allPieces[Co_White];}
+    inline const BitBoard whiteQueen ()const {return _allB[4] & allPieces[Co_White];}
+    inline const BitBoard whiteKing  ()const {return _allB[5] & allPieces[Co_White];}
 
     template<Piece pp>
-    inline const BitBoard & pieces(Color c)const{ return allB[(1-2*c)*pp+PieceShift]; }
-    inline const BitBoard & pieces(Color c, Piece pp)const{ return allB[(1-2*c)*pp+PieceShift]; }
+    inline const BitBoard pieces_const(Color c)const          { assert(pp!=P_none); return _allB[pp-1] & allPieces[c]; }
+    inline const BitBoard pieces_const(Color c, Piece pp)const{ assert(pp!=P_none); return _allB[pp-1] & allPieces[c]; }
+
+    inline BitBoard & pieces(Piece pp)         { assert(pp!=P_none); return _allB[std::abs(pp)-1]; }
 
     Position(){}
     Position(const std::string & fen, bool withMoveCount = true){readFEN(fen,*this,true,withMoveCount);}

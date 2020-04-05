@@ -12,15 +12,19 @@ Square SquareFromBitBoard(const BitBoard & b) {
 }
 
 void initBitBoards(Position & p) {
-    p.allB.fill(empty);
+    p._allB.fill(empty);
     p.allPieces[Co_White] = p.allPieces[Co_Black] = p.occupancy = empty;
 }
 
 void setBitBoards(Position & p) {
     initBitBoards(p);
-    for (Square k = 0; k < 64; ++k) { setBit(p,k,p.b[k]); }
-    p.allPieces[Co_White] = p.whitePawn() | p.whiteKnight() | p.whiteBishop() | p.whiteRook() | p.whiteQueen() | p.whiteKing();
-    p.allPieces[Co_Black] = p.blackPawn() | p.blackKnight() | p.blackBishop() | p.blackRook() | p.blackQueen() | p.blackKing();
+    for (Square k = 0; k < 64; ++k) { 
+        const Piece pp = p.board_const(k);
+        if ( pp != P_none ){
+           setBit(p,k,pp); 
+           p.allPieces[pp>0?Co_White:Co_Black] |= SquareToBitboard(k);
+        }
+    }
     p.occupancy  = p.allPieces[Co_White] | p.allPieces[Co_Black];
 }
 

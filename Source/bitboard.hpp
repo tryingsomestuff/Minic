@@ -110,7 +110,6 @@ std::string showBitBoard(const BitBoard & b);
 
 inline void      _setBit  (      BitBoard & b, Square k) { b |= SquareToBitboard(k);}
 inline void      _unSetBit(      BitBoard & b, Square k) { b &= ~SquareToBitboard(k);}
-//inline bool      _isSet   (const BitBoard & b, Square k) { return (SquareToBitboard(k) & b) != 0;}
 
 inline ScoreType countBit(const BitBoard & b)           { return ScoreType(POPCOUNT(b));}
 inline int popBit(BitBoard & b) {

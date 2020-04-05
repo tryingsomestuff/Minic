@@ -103,9 +103,8 @@ size_t countLine(std::istream &is){
 }
 
 std::string getFrom(const std::string & to, Position & p, const Piece & t, const std::string & helper = "" ){
-    assert(p.allB[t + PieceShift] != 0);
-    if ( p.allB[t + PieceShift] != 0 ){
-        BitBoard froms = p.allB[t + PieceShift];
+    if ( p.pieces_const(t) ){
+        BitBoard froms = p.pieces_const(t);
         while(froms){
            const Square s = popBit(froms);
            MoveList l;

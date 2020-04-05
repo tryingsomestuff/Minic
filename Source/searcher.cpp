@@ -24,14 +24,14 @@ void Searcher::getCMHPtr(const unsigned int ply, CMHPtrArray & cmhPtr){
     for( unsigned int k = 0 ; k < MAX_CMH_PLY ; ++k){
         if( ply > k && VALIDMOVE(stack[ply-k].p.lastMove)){
            const Square to = Move2To(stack[ply-k].p.lastMove);
-           cmhPtr[k] = historyT.counter_history[stack[ply-k-1].p.b[to]+PieceShift][to];
+           cmhPtr[k] = historyT.counter_history[stack[ply-k-1].p.board_const(to)+PieceShift][to];
         }
     }
 }
 
 ScoreType Searcher::getCMHScore(const Position & p, const Square from, const Square to, DepthType ply, const CMHPtrArray & cmhPtr) const {
     ScoreType ret = 0;
-    for (int i = 0; i < MAX_CMH_PLY; i ++){ if (cmhPtr[i]){ ret += cmhPtr[i][(p.b[from]+PieceShift) * 64 + to]; } }
+    for (int i = 0; i < MAX_CMH_PLY; i ++){ if (cmhPtr[i]){ ret += cmhPtr[i][(p.board_const(from)+PieceShift) * 64 + to]; } }
     return ret;
 }
 

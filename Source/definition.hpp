@@ -148,6 +148,7 @@ const std::string shirov        = "6r1/2rp1kpp/2qQp3/p3Pp1P/1pP2P2/1P2KP2/P5R1/6
 
 enum Piece    : signed char{ P_bk = -6, P_bq = -5, P_br = -4, P_bb = -3, P_bn = -2, P_bp = -1, P_none = 0, P_wp = 1, P_wn = 2, P_wb = 3, P_wr = 4, P_wq = 5, P_wk = 6 };
 inline Piece operator++(Piece & pp){pp=Piece(pp+1); return pp;}
+constexpr Piece operator~(Piece pp){return Piece(-pp);} // switch piece color
 const int PieceShift = 6;
 
 enum Mat      : unsigned char{ M_t = 0, M_p, M_n, M_b, M_r, M_q, M_k, M_bl, M_bd, M_M, M_m };
