@@ -38,8 +38,8 @@ ScoreType Searcher::SEE(const Position & p, const Move & m) const {
     attackers &= ~SquareToBitboard(from);
     occupation_mask &= ~SquareToBitboard(from);
 
-    attackers |= BBTools::attack<P_wr>(to, p.whiteQueen() | p.blackQueen() | p.whiteRook()   | p.blackRook(),   p.occupancy & occupation_mask, c) |
-                 BBTools::attack<P_wb>(to, p.whiteQueen() | p.blackQueen() | p.whiteBishop() | p.blackBishop(), p.occupancy & occupation_mask, c) ;
+    attackers |= BBTools::attack<P_wr>(to, p.whiteQueen() | p.blackQueen() | p.whiteRook()   | p.blackRook(),   p.occupancy() & occupation_mask, c) |
+                 BBTools::attack<P_wb>(to, p.whiteQueen() | p.blackQueen() | p.whiteBishop() | p.blackBishop(), p.occupancy() & occupation_mask, c) ;
     attackers &= occupation_mask;
     c = ~c;
 
@@ -64,8 +64,8 @@ ScoreType Searcher::SEE(const Position & p, const Move & m) const {
         attackers &= ~SquareToBitboard(from);
         occupation_mask &= ~SquareToBitboard(from);
 
-        attackers |= BBTools::attack<P_wr>(to, p.whiteQueen() | p.blackQueen() | p.whiteRook()   | p.blackRook(),   p.occupancy & occupation_mask, c) |
-                     BBTools::attack<P_wb>(to, p.whiteQueen() | p.blackQueen() | p.whiteBishop() | p.blackBishop(), p.occupancy & occupation_mask, c) ;
+        attackers |= BBTools::attack<P_wr>(to, p.whiteQueen() | p.blackQueen() | p.whiteRook()   | p.blackRook(),   p.occupancy() & occupation_mask, c) |
+                     BBTools::attack<P_wb>(to, p.whiteQueen() | p.blackQueen() | p.whiteBishop() | p.blackBishop(), p.occupancy() & occupation_mask, c) ;
         attackers &= occupation_mask;
 
         c = ~c;
@@ -105,7 +105,7 @@ bool Searcher::SEE_GE(const Position & p, const Move & m, ScoreType threshold) c
     while (!endOfSEE){
         bool validThreatFound = false;
         for ( pp = P_wp ; pp <= P_wk && !validThreatFound ; ++pp){
-           BitBoard att = BBTools::pfAttack[pp-1](to, p2.pieces_const(p2.c,pp), p2.occupancy, ~p2.c);
+           BitBoard att = BBTools::pfAttack[pp-1](to, p2.pieces_const(p2.c,pp), p2.occupancy(), ~p2.c);
            if ( !att ) continue; // next piece type
            Square sqAtt = INVALIDSQUARE;
            while (!validThreatFound && att && (sqAtt = popBit(att))) {

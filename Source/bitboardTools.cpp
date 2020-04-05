@@ -13,7 +13,7 @@ Square SquareFromBitBoard(const BitBoard & b) {
 
 void initBitBoards(Position & p) {
     p._allB.fill(empty);
-    p.allPieces[Co_White] = p.allPieces[Co_Black] = p.occupancy = empty;
+    p.allPieces[Co_White] = p.allPieces[Co_Black] = empty;
 }
 
 void setBitBoards(Position & p) {
@@ -25,7 +25,6 @@ void setBitBoards(Position & p) {
            p.allPieces[pp>0?Co_White:Co_Black] |= SquareToBitboard(k);
         }
     }
-    p.occupancy  = p.allPieces[Co_White] | p.allPieces[Co_Black];
 }
 
 } // BBTools

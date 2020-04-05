@@ -31,14 +31,14 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, const BitBoa
         const Square k = popBit(pieceBBiterator);
         const Square kk = ColorSquarePstHelper<C>(k);
         score += EvalConfig::PST[T-1][kk] * ColorSignHelper<C>();
-        const BitBoard target = BBTools::pfCoverage[T-1](k, p.occupancy, C); // real targets
+        const BitBoard target = BBTools::pfCoverage[T-1](k, p.occupancy(), C); // real targets
         if ( target ){
            attBy |= target;
            att2  |= att & target;
            att   |= target;
            if ( target & p.pieces_const<P_wk>(~C) ) checkers |= SquareToBitboard(k);
         }
-        const BitBoard shadowTarget = BBTools::pfCoverage[T-1](k, p.occupancy ^ /*p.pieces<T>(C)*/ alignedThreatPieceSlider<T>(p,C), C); // aligned threats of same piece type also taken into account and knight in front also removed ///@todo better?
+        const BitBoard shadowTarget = BBTools::pfCoverage[T-1](k, p.occupancy() ^ /*p.pieces<T>(C)*/ alignedThreatPieceSlider<T>(p,C), C); // aligned threats of same piece type also taken into account and knight in front also removed ///@todo better?
         if ( shadowTarget ){
            kdanger[C]  -= countBit(shadowTarget & kingZone[C])  * EvalConfig::kingAttWeight[EvalConfig::katt_defence][T-1];
            kdanger[~C] += countBit(shadowTarget & kingZone[~C]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][T-1];
@@ -50,7 +50,7 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, const BitBoa
 template < Piece T ,Color C>
 inline void evalMob(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, const BitBoard safe){
     while (pieceBBiterator){
-        const BitBoard mob = BBTools::pfCoverage[T-1](popBit(pieceBBiterator), p.occupancy, C) & ~p.allPieces[C] & safe;
+        const BitBoard mob = BBTools::pfCoverage[T-1](popBit(pieceBBiterator), p.occupancy(), C) & ~p.allPieces[C] & safe;
         score[sc_MOB] += EvalConfig::MOB[T-2][countBit(mob)]*ColorSignHelper<C>();
     }
 }
@@ -59,9 +59,9 @@ template < Color C >
 inline void evalMobQ(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, const BitBoard safe){
     while (pieceBBiterator){
         const Square s = popBit(pieceBBiterator);
-        BitBoard mob = BBTools::pfCoverage[P_wb-1](s, p.occupancy, C) & ~p.allPieces[C] & safe;
+        BitBoard mob = BBTools::pfCoverage[P_wb-1](s, p.occupancy(), C) & ~p.allPieces[C] & safe;
         score[sc_MOB] += EvalConfig::MOB[3][countBit(mob)]*ColorSignHelper<C>();
-        mob = BBTools::pfCoverage[P_wr-1](s, p.occupancy, C) & ~p.allPieces[C] & safe;
+        mob = BBTools::pfCoverage[P_wr-1](s, p.occupancy(), C) & ~p.allPieces[C] & safe;
         score[sc_MOB] += EvalConfig::MOB[4][countBit(mob)]*ColorSignHelper<C>();
     }
 }
@@ -69,7 +69,7 @@ inline void evalMobQ(const Position & p, BitBoard pieceBBiterator, ScoreAcc & sc
 template < Color C>
 inline void evalMobK(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, const BitBoard safe){
     while (pieceBBiterator){
-        const BitBoard mob = BBTools::pfCoverage[P_wk-1](popBit(pieceBBiterator), p.occupancy, C) & ~p.allPieces[C] & safe;
+        const BitBoard mob = BBTools::pfCoverage[P_wk-1](popBit(pieceBBiterator), p.occupancy(), C) & ~p.allPieces[C] & safe;
         score[sc_MOB] += EvalConfig::MOB[5][countBit(mob)]*ColorSignHelper<C>();
     }
 }
@@ -400,7 +400,7 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     score[sc_PwnSafeAtt] += EvalConfig::pawnSafeAtt * (countBit(safePawnAtt[Co_White]) - countBit(safePawnAtt[Co_Black]));
 
     // safe pawn push (protected once or not attacked)
-    const BitBoard safePawnPush[2]  = {BBTools::shiftN<Co_White>(pawns[Co_White]) & ~p.occupancy & safeSquare[Co_White], BBTools::shiftN<Co_Black>(pawns[Co_Black]) & ~p.occupancy & safeSquare[Co_Black]};
+    const BitBoard safePawnPush[2]  = {BBTools::shiftN<Co_White>(pawns[Co_White]) & ~p.occupancy() & safeSquare[Co_White], BBTools::shiftN<Co_Black>(pawns[Co_Black]) & ~p.occupancy() & safeSquare[Co_Black]};
     score[sc_PwnPush] += EvalConfig::pawnMobility * (countBit(safePawnPush[Co_White]) - countBit(safePawnPush[Co_Black]));
 
     // threat by safe pawn push
@@ -479,7 +479,7 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     score[sc_Adjust] += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
 
     // initiative
-    const EvalScore initiativeBonus = EvalConfig::initiative[0] * countBit(allPawns) + EvalConfig::initiative[1] * ((allPawns & queenSide) && (allPawns & kingSide)) + EvalConfig::initiative[2] * (countBit(p.occupancy & ~allPawns) == 2) - EvalConfig::initiative[3];
+    const EvalScore initiativeBonus = EvalConfig::initiative[0] * countBit(allPawns) + EvalConfig::initiative[1] * ((allPawns & queenSide) && (allPawns & kingSide)) + EvalConfig::initiative[2] * (countBit(p.occupancy() & ~allPawns) == 2) - EvalConfig::initiative[3];
     score[sc_initiative][MG] += sgn(score.score[MG]) * std::max(initiativeBonus[MG], ScoreType(-std::abs(score.score[MG])));
     score[sc_initiative][EG] += sgn(score.score[EG]) * std::max(initiativeBonus[EG], ScoreType(-std::abs(score.score[EG])));
 

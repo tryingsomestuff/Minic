@@ -212,13 +212,16 @@ void initMagic(){
 
 bool isAttackedBB(const Position &p, const Square x, Color c) { ///@todo try to optimize order better ?
     assert(x != INVALIDSQUARE);
-    if (c == Co_White) return attack<P_wb>(x, p.blackBishop() | p.blackQueen(), p.occupancy) || attack<P_wr>(x, p.blackRook() | p.blackQueen(), p.occupancy) || attack<P_wp>(x, p.blackPawn(), p.occupancy, Co_White) || attack<P_wn>(x, p.blackKnight()) || attack<P_wk>(x, p.blackKing());
-    else               return attack<P_wb>(x, p.whiteBishop() | p.whiteQueen(), p.occupancy) || attack<P_wr>(x, p.whiteRook() | p.whiteQueen(), p.occupancy) || attack<P_wp>(x, p.whitePawn(), p.occupancy, Co_Black) || attack<P_wn>(x, p.whiteKnight()) || attack<P_wk>(x, p.whiteKing());
+    const BitBoard occupancy = p.occupancy();
+    if (c == Co_White) return attack<P_wb>(x, p.blackBishop() | p.blackQueen(), occupancy) || attack<P_wr>(x, p.blackRook() | p.blackQueen(), occupancy) || attack<P_wp>(x, p.blackPawn(), occupancy, Co_White) || attack<P_wn>(x, p.blackKnight()) || attack<P_wk>(x, p.blackKing());
+    else               return attack<P_wb>(x, p.whiteBishop() | p.whiteQueen(), occupancy) || attack<P_wr>(x, p.whiteRook() | p.whiteQueen(), occupancy) || attack<P_wp>(x, p.whitePawn(), occupancy, Co_Black) || attack<P_wn>(x, p.whiteKnight()) || attack<P_wk>(x, p.whiteKing());
 }
 
 BitBoard allAttackedBB(const Position &p, const Square x, Color c) {
-    if (c == Co_White) return attack<P_wb>(x, p.blackBishop() | p.blackQueen(), p.occupancy) | attack<P_wr>(x, p.blackRook() | p.blackQueen(), p.occupancy) | attack<P_wn>(x, p.blackKnight()) | attack<P_wp>(x, p.blackPawn(), p.occupancy, Co_White) | attack<P_wk>(x, p.blackKing());
-    else               return attack<P_wb>(x, p.whiteBishop() | p.whiteQueen(), p.occupancy) | attack<P_wr>(x, p.whiteRook() | p.whiteQueen(), p.occupancy) | attack<P_wn>(x, p.whiteKnight()) | attack<P_wp>(x, p.whitePawn(), p.occupancy, Co_Black) | attack<P_wk>(x, p.whiteKing());
+    assert(x != INVALIDSQUARE);
+    const BitBoard occupancy = p.occupancy();
+    if (c == Co_White) return attack<P_wb>(x, p.blackBishop() | p.blackQueen(), occupancy) | attack<P_wr>(x, p.blackRook() | p.blackQueen(), occupancy) | attack<P_wn>(x, p.blackKnight()) | attack<P_wp>(x, p.blackPawn(), occupancy, Co_White) | attack<P_wk>(x, p.blackKing());
+    else               return attack<P_wb>(x, p.whiteBishop() | p.whiteQueen(), occupancy) | attack<P_wr>(x, p.whiteRook() | p.whiteQueen(), occupancy) | attack<P_wn>(x, p.whiteKnight()) | attack<P_wp>(x, p.whitePawn(), occupancy, Co_Black) | attack<P_wk>(x, p.whiteKing());
 }
 
 } // BBTools
