@@ -24,6 +24,7 @@
  * LCTest
  * sbdTest
  * STS
+ * temere
  * ERET
  * MATE
  *
