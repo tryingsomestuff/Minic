@@ -54,6 +54,17 @@ bool test(const std::string & option){
         return true;
     }
 
+    if (option == "temere") {
+        std::vector<std::string> positions;
+        if ( ! ExtendedPosition::readEPDFile("TestSuite/temere.epd",positions) ) return 1;
+
+        std::vector<int> timeControls = { 1000 }; //mseconds
+        std::vector<int> scores = { 1 };
+
+        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return score;},false);
+        return true;
+    }
+
     if (option == "opening200") {
         std::vector<std::string> positions;
         if ( ! ExtendedPosition::readEPDFile("TestSuite/Openings200.epd",positions) ) return 1;
