@@ -62,23 +62,27 @@ void generateSquare(const Position & p, MoveList & moves, Square from){
         if ( phase != GP_quiet) pawnmoves = BBTools::mask[from].pawnAttack[p.c] & ~myPieceBB & oppPieceBB;
         while (pawnmoves) {
             const Square to = popBit(pawnmoves);
-            if ( SquareToBitboard(to) & rank1_or_rank8 ) {
+            if ( (SquareToBitboard(to) & rank1_or_rank8) == empty )
+                addMove(from,to,T_capture,moves);
+            else{
                 addMove(from, to, T_cappromq, moves); // pawn capture with promotion
                 addMove(from, to, T_cappromr, moves); // pawn capture with promotion
                 addMove(from, to, T_cappromb, moves); // pawn capture with promotion
                 addMove(from, to, T_cappromn, moves); // pawn capture with promotion
-            } else addMove(from,to,T_capture,moves);
+            }
         }
         if ( phase != GP_cap) pawnmoves |= BBTools::mask[from].push[p.c] & ~occupancy;
         if ((phase != GP_cap) && (BBTools::mask[from].push[p.c] & occupancy) == empty) pawnmoves |= BBTools::mask[from].dpush[p.c] & ~occupancy;
         while (pawnmoves) {
             const Square to = popBit(pawnmoves);
-            if ( SquareToBitboard(to) & rank1_or_rank8 ) {
+            if ( (SquareToBitboard(to) & rank1_or_rank8) == empty ) 
+                addMove(from,to,T_std,moves);
+            else{
                 addMove(from, to, T_promq, moves); // promotion Q
                 addMove(from, to, T_promr, moves); // promotion R
                 addMove(from, to, T_promb, moves); // promotion B
                 addMove(from, to, T_promn, moves); // promotion N
-            } else addMove(from,to,T_std,moves);
+            }
         }
         if ( p.ep != INVALIDSQUARE && phase != GP_quiet ) pawnmoves = BBTools::mask[from].pawnAttack[p.c] & ~myPieceBB & SquareToBitboard(p.ep);
         while (pawnmoves) addMove(from,popBit(pawnmoves),T_ep,moves);

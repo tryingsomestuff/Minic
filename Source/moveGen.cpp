@@ -69,12 +69,14 @@ bool apply(Position & p, const Move & m, bool noValidation){
 #ifdef DEBUG_MATERIAL
     Position previous = p;
 #endif
-    const Square from  = Move2From(m);
-    const Square to    = Move2To(m);
-    const MType  type  = Move2Type(m);
-    const Piece  fromP = p.board_const(from);
-    const Piece  toP   = p.board_const(to);
-    const int fromId   = fromP + PieceShift;
+    const Square from   = Move2From(m);
+    const Square to     = Move2To(m);
+    const MType  type   = Move2Type(m);
+    const Piece  fromP  = p.board_const(from);
+    const Piece  toP    = p.board_const(to);
+    const int fromId    = fromP + PieceShift;
+    const bool fromRook = fromP == (p.c==Co_White?P_wr:P_br);
+    const bool capRook  = toP == (p.c==Co_White?P_br:P_wr);
 #ifdef DEBUG_APPLY
     if (!isPseudoLegal(p, m)) {
         Logging::LogIt(Logging::logError) << "Apply error, not legal " << ToString(p) << ToString(m);
@@ -105,22 +107,26 @@ bool apply(Position & p, const Move & m, bool noValidation){
         if      ( toP == P_wk ) p.king[Co_White] = INVALIDSQUARE;
         else if ( toP == P_bk ) p.king[Co_Black] = INVALIDSQUARE;
 
-        if ( p.castling != C_none ){
-           if ( (p.castling & C_wqs) && from == p.rooksInit[Co_White][CT_OOO] && fromP == P_wr ){
-               p.castling &= ~C_wqs;
-               p.h ^= Zobrist::ZT[0][13];
+        if ( p.castling != C_none && fromRook ){
+           if ( p.c==Co_White ){
+              if ( (p.castling & C_wqs) && from == p.rooksInit[Co_White][CT_OOO] ){
+                  p.castling &= ~C_wqs;
+                  p.h ^= Zobrist::ZT[0][13];
+              }
+              else if ( (p.castling & C_wks) && from == p.rooksInit[Co_White][CT_OO] ){
+                  p.castling &= ~C_wks;
+                  p.h ^= Zobrist::ZT[7][13];
+              }
            }
-           else if ( (p.castling & C_wks) && from == p.rooksInit[Co_White][CT_OO] && fromP == P_wr ){
-               p.castling &= ~C_wks;
-               p.h ^= Zobrist::ZT[7][13];
-           }
-           else if ( (p.castling & C_bqs) && from == p.rooksInit[Co_Black][CT_OOO] && fromP == P_br){
-               p.castling &= ~C_bqs;
-               p.h ^= Zobrist::ZT[56][13];
-           }
-           else if ( (p.castling & C_bks) && from == p.rooksInit[Co_Black][CT_OO] && fromP == P_br ){
-               p.castling &= ~C_bks;
-               p.h ^= Zobrist::ZT[63][13];
+           else if ( p.c==Co_Black ) {
+              if ( (p.castling & C_bqs) && from == p.rooksInit[Co_Black][CT_OOO]){
+                  p.castling &= ~C_bqs;
+                  p.h ^= Zobrist::ZT[56][13];
+              }
+              else if ( (p.castling & C_bks) && from == p.rooksInit[Co_Black][CT_OO] ){
+                  p.castling &= ~C_bks;
+                  p.h ^= Zobrist::ZT[63][13];
+              }
            }
         }
         break;
@@ -192,20 +198,20 @@ bool apply(Position & p, const Move & m, bool noValidation){
     }
 
     // Update castling right if rook captured
-    if ( p.castling != C_none ){
-       if ( toP == P_wr && to == p.rooksInit[Co_White][CT_OOO] && (p.castling & C_wqs) ){
+    if ( p.castling != C_none && capRook ){
+       if ( to == p.rooksInit[Co_White][CT_OOO] && (p.castling & C_wqs) ){
            p.castling &= ~C_wqs;
            p.h ^= Zobrist::ZT[0][13];
        }
-       else if ( toP == P_wr && to == p.rooksInit[Co_White][CT_OO] && (p.castling & C_wks) ){
+       else if ( to == p.rooksInit[Co_White][CT_OO] && (p.castling & C_wks) ){
            p.castling &= ~C_wks;
            p.h ^= Zobrist::ZT[7][13];
        }
-       else if ( toP == P_br && to == p.rooksInit[Co_Black][CT_OOO] && (p.castling & C_bqs)){
+       else if ( to == p.rooksInit[Co_Black][CT_OOO] && (p.castling & C_bqs)){
            p.castling &= ~C_bqs;
            p.h ^= Zobrist::ZT[56][13];
        }
-       else if ( toP == P_br && to == p.rooksInit[Co_Black][CT_OO] && (p.castling & C_bks)){
+       else if ( to == p.rooksInit[Co_Black][CT_OO] && (p.castling & C_bks)){
            p.castling &= ~C_bks;
            p.h ^= Zobrist::ZT[63][13];
        }
@@ -214,13 +220,15 @@ bool apply(Position & p, const Move & m, bool noValidation){
     // update EP
     if (p.ep != INVALIDSQUARE) p.h  ^= Zobrist::ZT[p.ep][13];
     p.ep = INVALIDSQUARE;
-    if ( abs(fromP) == P_wp && abs(to-from) == 16 ) p.ep = (from + to)/2;
+    if ( abs(fromP) == P_wp && abs(to-from) == 16 ){
+        p.ep = (from + to)/2;
+        p.h  ^= Zobrist::ZT[p.ep][13];
+    }
     assert(p.ep == INVALIDSQUARE || SQRANK(p.ep) == EPRank[~p.c]);
-    if (p.ep != INVALIDSQUARE) p.h  ^= Zobrist::ZT[p.ep][13];
 
     // update color
     p.c = ~p.c;
-    p.h  ^= Zobrist::ZT[3][13] ; p.h  ^= Zobrist::ZT[4][13];
+    p.h ^= Zobrist::ZT[3][13] ; p.h  ^= Zobrist::ZT[4][13];
 
     // update game state
     if ( toP != P_none || abs(fromP) == P_wp ) p.fifty = 0;
@@ -232,7 +240,9 @@ bool apply(Position & p, const Move & m, bool noValidation){
 #ifdef DEBUG_MATERIAL
     Position::Material mat = p.mat;
     MaterialHash::initMaterial(p);
-    if ( p.mat != mat ){ Logging::LogIt(Logging::logFatal) << "Material update error" << ToString(previous) << ToString(previous.mat) << ToString(p) << ToString(p.lastMove) << ToString(m) << ToString(mat) << ToString(p.mat); }
+    if ( p.mat != mat ){ 
+        Logging::LogIt(Logging::logFatal) << "Material update error" << ToString(previous) << ToString(previous.mat) << ToString(p) << ToString(p.lastMove) << ToString(m) << ToString(mat) << ToString(p.mat);
+    }
 #endif
     p.lastMove = m;
     STOP_AND_SUM_TIMER(Apply)

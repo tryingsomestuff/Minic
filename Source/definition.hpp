@@ -38,7 +38,7 @@ typedef uint64_t u_int64_t;
 #include <unistd.h>
 #endif
 
-const std::string MinicVersion = "2.05";
+const std::string MinicVersion = "dev";
 
 // *** options
 #define WITH_UCI
@@ -134,7 +134,7 @@ inline GamePhase operator++(GamePhase & g){g=GamePhase(g+1); return g;}
 
 template < typename T, int SIZE > struct OptList : public std::vector<T>{ OptList() : std::vector<T>(){std::vector<T>::reserve(SIZE);}};
 typedef OptList<Move,MAX_MOVE> MoveList;
-typedef std::vector<Move> PVList;
+typedef std::vector<Move> PVList; ///@todo try OptList<Move,MAX_DEPTH>
 
 inline MiniHash Hash64to32   (Hash h) { return (h >> 32) & 0xFFFFFFFF; }
 inline MiniMove Move2MiniMove(Move m) { return m & 0xFFFF;} // skip score

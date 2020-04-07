@@ -296,7 +296,7 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
        pe.danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * countBit(kingFlank[bkf] & pe.semiOpenFiles[Co_White])/8;
 
        ++context.stats.counters[Stats::sid_ttPawnInsert];
-       pe.h = Hash64to32(computePHash(p)) /*^ Zobrist::ZT[pe.score[MG]%64][13] ^ Zobrist::ZT[pe.score[EG]%64][13]*/; // set the pawn entry
+       pe.h = Hash64to32(computePHash(p)); // set the pawn entry
     }
     assert(pePtr);
     const Searcher::PawnEntry & pe = *pePtr;
