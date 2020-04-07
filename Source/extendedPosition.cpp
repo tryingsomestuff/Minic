@@ -29,7 +29,7 @@ std::string showAlgAbr(Move m, const Position & p) {
     if ( mtype == T_wqs || mtype == T_bqs) return std::string("0-0-0") + (isCheck?"+":"") + (isNotLegal?"~":"");
 
     std::string s;
-    Piece t = p.b[from];
+    Piece t = p.board_const(from);
 
     // add piece type if not pawn
     s+= PieceNames[PieceShift + std::abs(t)];
@@ -51,7 +51,7 @@ std::string showAlgAbr(Move m, const Position & p) {
                 if ( *mit == m ) continue; // to not compare to myself ... should no happend thanks to previous verification
                 Position p3 = p;
                 if (apply(p3,*mit)){ // only if move is legal
-                   if ( Move2To(*mit) == to && (t == p.b[Move2From(*mit)]) ){ // another move is landing on the same square with the same piece type
+                   if ( Move2To(*mit) == to && (t == p.board_const(Move2From(*mit))) ){ // another move is landing on the same square with the same piece type
                       isSamePiece = true;
                       if ( SQFILE(Move2From(*mit)) == SQFILE(from)){ isSameFile = true; }
                       if ( SQRANK(Move2From(*mit)) == SQRANK(from)){ isSameRank = true; }
