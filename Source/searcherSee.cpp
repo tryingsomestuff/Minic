@@ -37,9 +37,10 @@ ScoreType Searcher::SEE(const Position & p, const Move & m) const {
 
     attackers &= ~SquareToBitboard(from);
     occupation_mask &= ~SquareToBitboard(from);
+    const BitBoard occupancy = p.occupancy();
 
-    attackers |= BBTools::attack<P_wr>(to, p.whiteQueen() | p.blackQueen() | p.whiteRook()   | p.blackRook(),   p.occupancy() & occupation_mask, c) |
-                 BBTools::attack<P_wb>(to, p.whiteQueen() | p.blackQueen() | p.whiteBishop() | p.blackBishop(), p.occupancy() & occupation_mask, c) ;
+    attackers |= BBTools::attack<P_wr>(to, p.whiteQueen() | p.blackQueen() | p.whiteRook()   | p.blackRook(),   occupancy & occupation_mask, c) |
+                 BBTools::attack<P_wb>(to, p.whiteQueen() | p.blackQueen() | p.whiteBishop() | p.blackBishop(), occupancy & occupation_mask, c) ;
     attackers &= occupation_mask;
     c = ~c;
 
@@ -64,8 +65,8 @@ ScoreType Searcher::SEE(const Position & p, const Move & m) const {
         attackers &= ~SquareToBitboard(from);
         occupation_mask &= ~SquareToBitboard(from);
 
-        attackers |= BBTools::attack<P_wr>(to, p.whiteQueen() | p.blackQueen() | p.whiteRook()   | p.blackRook(),   p.occupancy() & occupation_mask, c) |
-                     BBTools::attack<P_wb>(to, p.whiteQueen() | p.blackQueen() | p.whiteBishop() | p.blackBishop(), p.occupancy() & occupation_mask, c) ;
+        attackers |= BBTools::attack<P_wr>(to, p.whiteQueen() | p.blackQueen() | p.whiteRook()   | p.blackRook(),   occupancy & occupation_mask, c) |
+                     BBTools::attack<P_wb>(to, p.whiteQueen() | p.blackQueen() | p.whiteBishop() | p.blackBishop(), occupancy & occupation_mask, c) ;
         attackers &= occupation_mask;
 
         c = ~c;
