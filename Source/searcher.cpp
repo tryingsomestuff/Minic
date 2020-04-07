@@ -115,7 +115,7 @@ bool Searcher::getPawnEntry(Hash h, PawnEntry *& pe){
     assert(h > 0);
     PawnEntry & _e = tablePawn[h&(ttSizePawn-1)];
     pe = &_e;
-    if ( (_e.h /*^ Zobrist::ZT[_e.score[MG]%64][13] ^ Zobrist::ZT[_e.score[EG]%64][13]*/) != Hash64to32(h) ) return false;
+    if ( _e.h != Hash64to32(h) ) return false;
     ++stats.counters[Stats::sid_ttPawnhits];
     return true;
 }

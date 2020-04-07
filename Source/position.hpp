@@ -62,6 +62,7 @@ struct Position{
     template<Piece pp>
     inline const BitBoard pieces_const(Color c)const          { assert(pp!=P_none); return _allB[pp-1] & allPieces[c]; }
     inline const BitBoard pieces_const(Color c, Piece pp)const{ assert(pp!=P_none); return _allB[pp-1] & allPieces[c]; }
+    inline const BitBoard pieces_const(Piece pp)const         { assert(pp!=P_none); return _allB[std::abs(pp)-1] & allPieces[c]; }
 
-    inline BitBoard & pieces(Piece pp)         { assert(pp!=P_none); return _allB[std::abs(pp)-1]; }
+    inline BitBoard & _pieces(Piece pp)         { assert(pp!=P_none); return _allB[std::abs(pp)-1]; }
 };
