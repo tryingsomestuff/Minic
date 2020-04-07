@@ -164,8 +164,16 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
                 bestScore    = score;
                 if ( isMainThread() ){
                     displayGUI(depth,seldepth,bestScore,pv,multi+1);
-                    if (TimeMan::isDynamic && depth > MoveDifficultyUtil::emergencyMinDepth && bestScore < depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin) { moveDifficulty = MoveDifficultyUtil::MD_hardDefense; Logging::LogIt(Logging::logInfo) << "Emergency mode activated : " << bestScore << " < " << depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin; }
-                    if (TimeMan::isDynamic && (TimeType)std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()*1.8)) > getCurrentMoveMs()) { stopFlag = true; Logging::LogIt(Logging::logInfo) << "stopflag triggered, not enough time for next depth"; break; } // not enought time
+                    if (TimeMan::isDynamic && depth > MoveDifficultyUtil::emergencyMinDepth 
+                    && bestScore < depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin) { 
+                        moveDifficulty = MoveDifficultyUtil::MD_hardDefense; 
+                        Logging::LogIt(Logging::logInfo) << "Emergency mode activated : " << bestScore << " < " << depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin; 
+                    }
+                    if (TimeMan::isDynamic 
+                    && (TimeType)std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()*1.8)) > getCurrentMoveMs()) { 
+                        stopFlag = true; 
+                        Logging::LogIt(Logging::logInfo) << "stopflag triggered, not enough time for next depth"; break; 
+                    } // not enought time
                     depthScores[depth] = bestScore;
                 }
                 if ( !pv.empty() ){

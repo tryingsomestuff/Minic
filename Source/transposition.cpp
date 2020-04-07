@@ -30,7 +30,7 @@ void initTable(){
 
 void clearTT() {
     TT::curGen = 0;
-    for (unsigned int k = 0; k < ttSize; ++k) table[k] = { 0, INVALIDMINIMOVE, 0, 0, B_alpha, 0 };
+    for (unsigned int k = 0; k < ttSize; ++k) table[k] = { 0, 0, 0, INVALIDMINIMOVE, B_none, -1 };
 }
 
 int hashFull(){

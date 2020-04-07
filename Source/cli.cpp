@@ -397,7 +397,10 @@ int cliManagement(std::string cli, int argc, char ** argv){
         DepthType d = 5;
         if ( argc > 3 ) d = atoi(argv[3]);
         PerftAccumulator acc;
+        auto start = Clock::now();
         perft(p,d,acc);
+        auto elapsed = std::max(1, (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - start).count());
+        Logging::LogIt(Logging::logInfo) << "Perft done in " << elapsed << "ms";
         acc.Display();
         return 0;
     }
@@ -405,7 +408,10 @@ int cliManagement(std::string cli, int argc, char ** argv){
     if ( cli == "-analyze" ){
         DepthType depth = 15;
         if ( argc > 3 ) depth = atoi(argv[3]);
+        auto start = Clock::now();
         analyze(p,depth);
+        auto elapsed = std::max(1, (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - start).count());
+        Logging::LogIt(Logging::logInfo) << "Analysis done in " << elapsed << "ms";
         return 0;
     }
 

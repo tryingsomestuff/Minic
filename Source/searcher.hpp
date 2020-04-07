@@ -90,8 +90,10 @@ struct Searcher{
         ScoreType danger[2]       = {0,0};
         MiniHash h                = 0;
         inline void reset(){
-            score[MG] = 0;   score[EG] = 0;
-            danger[0] = 0;   danger[1] = 0;
+            score[MG] = 0;   
+            score[EG] = 0;
+            danger[Co_White] = 0;   
+            danger[Co_Black] = 0;
         }
     };
     #pragma pack(pop)

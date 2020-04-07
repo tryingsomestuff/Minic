@@ -358,6 +358,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             const bool noCheck              = !isInCheck && !isCheck;
             const bool isPrunableStd        = isPrunable && isQuiet;
             const bool isPrunableStdNoCheck = isPrunableStd && noCheck;
+            //const bool isEmergency          = moveDifficulty == MoveDifficultyUtil::MD_hardDefense; ///@todo try this
             const bool isPrunableCap        = isPrunable && Move2Type(*it) == T_capture && isBadCap(*it) && noCheck ;
             const bool isDangerPrune        = data.danger[p.c] > SearchConfig::dangerLimitPruning[0] || data.danger[~p.c] > SearchConfig::dangerLimitPruning[1];
             const bool isDangerRed          = data.danger[p.c] > SearchConfig::dangerLimitReduction[0] || data.danger[~p.c] > SearchConfig::dangerLimitReduction[1];
@@ -367,7 +368,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             // futility
             if (futility && isPrunableStdNoCheck) {++stats.counters[Stats::sid_futility]; continue;}
             // LMP
-            if (lmp && isPrunableStdNoCheck && validMoveCount > (1/*+dangerPruneFactor*/)*SearchConfig::lmpLimit[improving][depth] ) {++stats.counters[Stats::sid_lmp]; continue;}
+            if (lmp && isPrunableStdNoCheck && validMoveCount > (1/*+dangerPruneFactor*/)*SearchConfig::lmpLimit[improving][depth] /*+ 2*isEmergency*/ ) {++stats.counters[Stats::sid_lmp]; continue;}
             // History pruning (with CMH)
             if (historyPruning && isPrunableStdNoCheck && Move2Score(*it) < SearchConfig::historyPruningThresholdInit + depth*SearchConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
             // CMH pruning alone
@@ -393,6 +394,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                     else if ( isDangerRed      ) --reduction;
                     else if ( !noCheck         ) --reduction;
                     //else if ( ttMoveSingularExt) --reduction;
+                    //if ( isEmergency )           --reduction;
                 }
                 if ( extension - reduction > 0 ) reduction = extension;
                 if ( reduction >= depth - 1 + extension ) reduction = depth - 1 + extension - 1;
