@@ -12,8 +12,8 @@ TimeType Searcher::getCurrentMoveMs() {
         case MoveDifficultyUtil::MD_forced:      ret = (ret >> 4); break;
         case MoveDifficultyUtil::MD_easy:        ret = (ret >> 3); break;
         case MoveDifficultyUtil::MD_std:         break;
-        case MoveDifficultyUtil::MD_hardDefense: ret = (std::min(TimeType(TimeMan::msecUntilNextTC*MoveDifficultyUtil::maxStealFraction), ret*MoveDifficultyUtil::emergencyFactor)); break;
         case MoveDifficultyUtil::MD_hardAttack:  break;
+        case MoveDifficultyUtil::MD_hardDefense: ret = (std::min(TimeType(TimeMan::msecUntilNextTC*MoveDifficultyUtil::maxStealFraction), ret*MoveDifficultyUtil::emergencyFactor)); break;
         }
     }
     return std::max(ret, TimeType(20));// if not much time left, let's try that ...;

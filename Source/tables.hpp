@@ -36,8 +36,8 @@ struct HistoryT{
     inline void update(DepthType depth, Move m, const Position & p, CMHPtrArray & cmhPtr){
         if ( Move2Type(m) == T_std ){
            const Color c = p.c;
-           const Square from = Move2From(m);
-           const Square to = Move2To(m);
+           const Square from = Move2From(m); assert(squareOK(from));
+           const Square to = Move2To(m); assert(squareOK(to));
            const ScoreType s = S * HSCORE(depth);
            const Piece pp = p.board_const(from);
            history[c][from][to] += s - history[c][from][to] * std::abs(s) / MAX_HISTORY;

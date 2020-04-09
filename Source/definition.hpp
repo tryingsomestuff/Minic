@@ -203,11 +203,16 @@ inline void operator|=(CastlingRights & a, const CastlingRights &b){ a = a | b;}
 inline Square stringToSquare(const std::string & str) { return (str.at(1) - 49) * 8 + (str.at(0) - 97); }
 
 enum MType : unsigned char{
-    T_std        = 0,   T_capture    = 1,   T_reserved   = 2,   T_ep         = 3,
-    T_promq      = 4,   T_promr      = 5,   T_promb      = 6,   T_promn      = 7,
-    T_cappromq   = 8,   T_cappromr   = 9,   T_cappromb   = 10,  T_cappromn   = 11,
-    T_wks        = 12,  T_wqs        = 13,  T_bks        = 14,  T_bqs        = 15
+    T_std        = 0,   T_capture    = 1,   T_reserved   = 2,   T_ep         = 3,    // binary    0 to   11
+    T_promq      = 4,   T_promr      = 5,   T_promb      = 6,   T_promn      = 7,    // binary  100 to  111
+    T_cappromq   = 8,   T_cappromr   = 9,   T_cappromb   = 10,  T_cappromn   = 11,   // binary 1000 to 1011
+    T_wks        = 12,  T_wqs        = 13,  T_bks        = 14,  T_bqs        = 15    // binary 1100 to 1111
 };
+
+inline bool moveTypeOK(MType  m) { return m>= T_std && m<=T_bqs;}
+inline bool squareOK  (Square s) { return s>=0 && s<64;}
+inline bool pieceOK   (Piece  pp){ return pp>=P_bk && pp<=P_wk; }
+inline bool pieceValid(Piece  pp){ return pieceOK(pp) && pp != P_none;}
 
 inline Piece promShift(MType mt){ assert(mt>=T_promq); assert(mt<=T_cappromn); return Piece(P_wq - (mt%4));} // awfull hack
 
@@ -232,14 +237,31 @@ inline bool isMatingScore (ScoreType s) { return (s >=  MATE - MAX_DEPTH); }
 inline bool isMatedScore  (ScoreType s) { return (s <= -MATE + MAX_DEPTH); }
 inline bool isMateScore   (ScoreType s) { return (std::abs(s) >= MATE - MAX_DEPTH); }
 
+/*
+inline bool isPromotion(const MType & mt){ return mt >= T_promq && mt <= T_cappromn;}
+inline bool isPromotion(const Move & m  ){ return isPromotion(Move2Type(m));}
 inline bool isCapture  (const MType & mt){ return mt == T_capture || mt == T_ep || mt == T_cappromq || mt == T_cappromr || mt == T_cappromb || mt == T_cappromn; }
 inline bool isCapture  (const Move & m  ){ return isCapture(Move2Type(m)); }
 inline bool isCastling (const MType & mt){ return mt == T_bks || mt == T_bqs || mt == T_wks || mt == T_wqs; }
 inline bool isCastling (const Move & m  ){ return isCastling(Move2Type(m)); }
-inline bool isPromotion(const MType & mt){ return mt >= T_promq && mt <= T_cappromn;}
-inline bool isPromotion(const Move & m  ){ return isPromotion(Move2Type(m));}
-inline bool isBadCap   (const Move & m  ){ return Move2Score(m) < -MoveScoring[T_capture] + 800;}
-inline ScoreType badCapScore (const Move & m ){ return Move2Score(m) + MoveScoring[T_capture];}
+*/
+
+inline bool isPromotionStd (const MType mt){ assert(moveTypeOK(mt)); return (mt>>2==0x1);}
+inline bool isPromotionStd (const Move m  ){ return isPromotionStd(Move2Type(m));}
+inline bool isPromotionCap (const MType mt){ assert(moveTypeOK(mt)); return (mt>>2==0x2);}
+inline bool isPromotionCap (const Move m  ){ return isPromotionCap(Move2Type(m));}
+inline bool isPromotion    (const MType mt){ assert(moveTypeOK(mt)); return isPromotionStd(mt)||isPromotionCap(mt);}
+inline bool isPromotion    (const Move m  ){ return isPromotion(Move2Type(m));}
+inline bool isCastling     (const MType mt){ assert(moveTypeOK(mt)); return (mt>>2)==0x3;}
+inline bool isCastling     (const Move m  ){ return isCastling(Move2Type(m)); }
+inline bool isCapture      (const MType mt){ assert(moveTypeOK(mt)); return mt == T_capture || mt == T_ep || isPromotionCap(mt); }
+inline bool isCapture      (const Move m  ){ return isCapture(Move2Type(m)); }
+
+inline bool isCaptureOrProm(const MType mt){ assert(moveTypeOK(mt)); return mt == T_capture || mt == T_ep || isPromotion(mt); }
+inline bool isCaptureOrProm(const Move m  ){ return isCaptureOrProm(Move2Type(m)); }
+
+inline bool isBadCap   (const Move m  ){ return Move2Score(m) < -MoveScoring[T_capture] + 800;}
+inline ScoreType badCapScore (const Move m ){ return Move2Score(m) + MoveScoring[T_capture];}
 
 inline Square chebyshevDistance(Square sq1, Square sq2) { return std::max(std::abs(SQRANK(sq2) - SQRANK(sq1)) , std::abs(SQFILE(sq2) - SQFILE(sq1))); }
 inline Square manatthanDistance(Square sq1, Square sq2) { return std::abs(SQRANK(sq2) - SQRANK(sq1)) + std::abs(SQFILE(sq2) - SQFILE(sq1)); }
@@ -247,11 +269,12 @@ inline Square minDistance      (Square sq1, Square sq2) { return std::min(std::a
 
 namespace MoveDifficultyUtil {
     enum MoveDifficulty { MD_forced = 0, MD_easy, MD_std, MD_hardDefense, MD_hardAttack };
-    const DepthType emergencyMinDepth = 14;
-    const ScoreType emergencyMargin   = 90;
-    const ScoreType easyMoveMargin    = 180;
-    const int       emergencyFactor   = 5;
-    const float     maxStealFraction  = 0.2f; // of remaining time
+    const DepthType emergencyMinDepth         = 14;
+    const ScoreType emergencyMargin           = 90;
+    const ScoreType emergencyAttackThreashold = 150;
+    const ScoreType easyMoveMargin            = 180;
+    const int       emergencyFactor           = 5;
+    const float     maxStealFraction          = 0.2f; // of remaining time
 }
 
 inline void updatePV(PVList & pv, const Move & m, const PVList & childPV) {
