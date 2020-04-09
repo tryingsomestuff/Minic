@@ -7,9 +7,9 @@ ScoreType Searcher::SEE(const Position & p, const Move & m) const {
 
     START_TIMER
 
-    Square from = Move2From(m);
-    const Square to = Move2To(m);
-    const MType mtype = Move2Type(m);
+    Square from = Move2From(m); assert(squareOK(from));
+    const Square to = Move2To(m); assert(squareOK(to));
+    const MType mtype = Move2Type(m); assert(moveTypeOK(mtype));
     BitBoard attackers = BBTools::allAttackedBB(p, to, p.c) | BBTools::allAttackedBB(p, to, ~p.c);
     BitBoard occupation_mask = 0xFFFFFFFFFFFFFFFF;
     ScoreType current_target_val = 0;

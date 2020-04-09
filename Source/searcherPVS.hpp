@@ -358,7 +358,8 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             const bool noCheck              = !isInCheck && !isCheck;
             const bool isPrunableStd        = isPrunable && isQuiet;
             const bool isPrunableStdNoCheck = isPrunableStd && noCheck;
-            const bool isEmergency          = moveDifficulty == MoveDifficultyUtil::MD_hardDefense;
+            const bool isEmergencyDefence   = false;//moveDifficulty == MoveDifficultyUtil::MD_hardDefense;
+            //const bool isEmergencyAttack    = moveDifficulty == MoveDifficultyUtil::MD_hardAttack; ///@todo use this
             const bool isPrunableCap        = isPrunable && Move2Type(*it) == T_capture && isBadCap(*it) && noCheck ;
             const bool isDangerPrune        = data.danger[p.c] > SearchConfig::dangerLimitPruning[0] || data.danger[~p.c] > SearchConfig::dangerLimitPruning[1];
             const bool isDangerRed          = data.danger[p.c] > SearchConfig::dangerLimitReduction[0] || data.danger[~p.c] > SearchConfig::dangerLimitReduction[1];
@@ -368,18 +369,18 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             // futility
             if (futility && isPrunableStdNoCheck) {++stats.counters[Stats::sid_futility]; continue;}
             // LMP
-            if (lmp && isPrunableStdNoCheck && validMoveCount > (1/*+dangerPruneFactor*/)*SearchConfig::lmpLimit[improving][depth] + 2*isEmergency ) {++stats.counters[Stats::sid_lmp]; continue;}
+            if (lmp && isPrunableStdNoCheck && validMoveCount > (1/*+dangerPruneFactor*/)*SearchConfig::lmpLimit[improving][depth] + 2*isEmergencyDefence ) {++stats.counters[Stats::sid_lmp]; continue;}
             // History pruning (with CMH)
-            if (historyPruning && isPrunableStdNoCheck && Move2Score(*it) < SearchConfig::historyPruningThresholdInit + depth*SearchConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
+            if (historyPruning && isPrunableStdNoCheck && !isEmergencyDefence && Move2Score(*it) < SearchConfig::historyPruningThresholdInit + depth*SearchConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
             // CMH pruning alone
-            if (CMHPruning && isPrunableStdNoCheck){
+            if (CMHPruning && isPrunableStdNoCheck && !isEmergencyDefence){
               const int pp = (p.board_const(Move2From(*it))+PieceShift) * 64 + Move2To(*it);
               if ((!cmhPtr[0] || cmhPtr[0][pp] < 0) && (!cmhPtr[1] || cmhPtr[1][pp] < 0)) { ++stats.counters[Stats::sid_CMHPruning]; continue;}
             }
             // SEE (capture)
             if (isPrunableCap){
                if (futility) {++stats.counters[Stats::sid_see]; continue;}
-               else if ( !rootnode && badCapScore(*it) < -(1+dangerPruneFactor*dangerPruneFactor)*100*depth /*!SEE_GE(p,*it,-100*depth)*/) {++stats.counters[Stats::sid_see2]; continue;}
+               else if ( !rootnode && badCapScore(*it) < -(1+dangerPruneFactor*dangerPruneFactor)*100*(depth+isEmergencyDefence) /*!SEE_GE(p,*it,-100*depth)*/) {++stats.counters[Stats::sid_see2]; continue;}
             }
             // LMR
             if (SearchConfig::doLMR && (isReductible && isQuiet ) && depth >= SearchConfig::lmrMinDepth ){
@@ -388,20 +389,20 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                 reduction += !improving;
                 reduction += ttMoveIsCapture/*&&isPrunableStd*/;
                 //reduction += cutNode&&isPrunableStd;
-                reduction -= (2 * Move2Score(*it)) / MAX_HISTORY; //history reduction/extension (beware killers and counter are socred above history max, so reduced less
+                reduction -= (2 * Move2Score(*it)) / MAX_HISTORY; //history reduction/extension (beware killers and counter are scored above history max, so reduced less
                 if ( reduction > 0){
                     if      ( pvnode           ) --reduction;
                     else if ( isDangerRed      ) --reduction;
                     else if ( !noCheck         ) --reduction;
                     //else if ( ttMoveSingularExt) --reduction;
-                    //if ( isEmergency )           --reduction;
+                    if ( reduction>1 && isEmergencyDefence ) --reduction;
                 }
                 if ( extension - reduction > 0 ) reduction = extension;
                 if ( reduction >= depth - 1 + extension ) reduction = depth - 1 + extension - 1;
             }
             const DepthType nextDepth = depth-1-reduction+extension;
             // SEE (quiet)
-            if ( isPrunableStdNoCheck && /*!rootnode &&*/ !SEE_GE(p,*it,-15*(1/*+isDangerPrune*/)*nextDepth*nextDepth)) {
+            if ( isPrunableStdNoCheck && /*!rootnode &&*/ !SEE_GE(p,*it,-15*(1/*+isDangerPrune*/)*(nextDepth+isEmergencyDefence)*nextDepth)) {
                 ++stats.counters[Stats::sid_seeQuiet]; 
                 continue;
             }

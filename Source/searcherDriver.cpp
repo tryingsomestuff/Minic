@@ -166,7 +166,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
                     displayGUI(depth,seldepth,bestScore,pv,multi+1);
                     if (TimeMan::isDynamic && depth > MoveDifficultyUtil::emergencyMinDepth 
                     && bestScore < depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin) { 
-                        moveDifficulty = MoveDifficultyUtil::MD_hardDefense; ///@todo try defense if score < 0 else hard attack
+                        moveDifficulty = bestScore > MoveDifficultyUtil::emergencyAttackThreashold ? MoveDifficultyUtil::MD_hardAttack : MoveDifficultyUtil::MD_hardDefense; ///@todo try defense if score < 0 else hard attack
                         Logging::LogIt(Logging::logInfo) << "Emergency mode activated : " << bestScore << " < " << depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin; 
                     }
                     if (TimeMan::isDynamic 

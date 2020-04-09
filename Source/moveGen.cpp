@@ -21,9 +21,9 @@ void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, boo
     const int toId     = toP + PieceShift;
     const Piece toPnew = prom != P_none ? prom : fromP;
     const int toIdnew  = prom != P_none ? (prom + PieceShift) : fromId;
-    assert(from>=0 && from<64);
-    assert(to>=0 && to<64);
-    assert(fromP != P_none);
+    assert(squareOK(from));
+    assert(squareOK(to));
+    assert(pieceValid(fromP));
     // update board
     p.board(from) = P_none;
     p.board(to)   = toPnew;
@@ -69,14 +69,15 @@ bool apply(Position & p, const Move & m, bool noValidation){
 #ifdef DEBUG_MATERIAL
     Position previous = p;
 #endif
-    const Square from   = Move2From(m);
-    const Square to     = Move2To(m);
-    const MType  type   = Move2Type(m);
+    const Square from   = Move2From(m); assert(squareOK(from));
+    const Square to     = Move2To(m); assert(squareOK(to));
+    const MType  type   = Move2Type(m); assert(moveTypeOK(type));
     const Piece  fromP  = p.board_const(from);
     const Piece  toP    = p.board_const(to);
     const int fromId    = fromP + PieceShift;
     const bool fromRook = fromP == (p.c==Co_White?P_wr:P_br);
     const bool capRook  = toP == (p.c==Co_White?P_br:P_wr);
+    const bool isCapNoEP= toP != P_none;
 #ifdef DEBUG_APPLY
     if (!isPseudoLegal(p, m)) {
         Logging::LogIt(Logging::logError) << "Apply error, not legal " << ToString(p) << ToString(m);
@@ -87,7 +88,7 @@ bool apply(Position & p, const Move & m, bool noValidation){
     case T_std:
     case T_capture:
     case T_reserved:
-        p.mat[~p.c][std::abs(toP)]--;
+        if ( isCapNoEP ) p.mat[~p.c][std::abs(toP)]--;
         movePiece(p, from, to, fromP, toP, type == T_capture);
 
         // update castling rigths and king position
@@ -135,7 +136,7 @@ bool apply(Position & p, const Move & m, bool noValidation){
         assert(p.ep != INVALIDSQUARE);
         assert(SQRANK(p.ep) == EPRank[p.c]);
         const Square epCapSq = p.ep + (p.c == Co_White ? -8 : +8);
-        assert(epCapSq>=0 && epCapSq<64);
+        assert(squareOK(epCapSq));
         BBTools::unSetBit(p, epCapSq, ~fromP); // BEFORE setting p.b new shape !!!
         _unSetBit(p.allPieces[fromP>0?Co_Black:Co_White],epCapSq);
         BBTools::unSetBit(p, from, fromP);
@@ -231,17 +232,21 @@ bool apply(Position & p, const Move & m, bool noValidation){
     p.h ^= Zobrist::ZT[3][13] ; p.h  ^= Zobrist::ZT[4][13];
 
     // update game state
-    if ( toP != P_none || abs(fromP) == P_wp ) p.fifty = 0;
+    if ( isCapNoEP || abs(fromP) == P_wp ) p.fifty = 0; // E.p covered by pawn move here ...
     else ++p.fifty;
     if ( p.c == Co_White ) ++p.moves;
     ++p.halfmoves;
 
-    MaterialHash::updateMaterialOther(p);
+    if ( isCaptureOrProm(type) ) MaterialHash::updateMaterialOther(p);
 #ifdef DEBUG_MATERIAL
     Position::Material mat = p.mat;
     MaterialHash::initMaterial(p);
     if ( p.mat != mat ){ 
-        Logging::LogIt(Logging::logFatal) << "Material update error" << ToString(previous) << ToString(previous.mat) << ToString(p) << ToString(p.lastMove) << ToString(m) << ToString(mat) << ToString(p.mat);
+        Logging::LogIt(Logging::logWarn)  << "Material update error";
+        Logging::LogIt(Logging::logWarn)  << "Material previous " << ToString(previous) << ToString(previous.mat);
+        Logging::LogIt(Logging::logWarn)  << "Material computed " << ToString(p)        << ToString(p.mat);
+        Logging::LogIt(Logging::logWarn)  << "Material incrementally updated " << ToString(mat);
+        Logging::LogIt(Logging::logFatal) << "Last move " << ToString(p.lastMove) << " current move "  << ToString(m);
     }
 #endif
     p.lastMove = m;
@@ -302,15 +307,15 @@ bool isPseudoLegal2(const Position & p, Move m) { // validate TT move
     #define PSEUDO_LEGAL_RETURN(b) { STOP_AND_SUM_TIMER(PseudoLegal) return b; }
     START_TIMER
     if (!VALIDMOVE(m)) PSEUDO_LEGAL_RETURN(false)
-    const Square from = Move2From(m);
+    const Square from = Move2From(m); assert(squareOK(from));
     const Piece fromP = p.board_const(from);
     if (fromP == P_none || (fromP > 0 && p.c == Co_Black) || (fromP < 0 && p.c == Co_White)) PSEUDO_LEGAL_RETURN(false)
-    const Square to = Move2To(m);
+    const Square to = Move2To(m); assert(squareOK(to));
     const Piece toP = p.board_const(to);
     if ((toP > 0 && p.c == Co_White) || (toP < 0 && p.c == Co_Black)) PSEUDO_LEGAL_RETURN(false)
     if ((Piece)std::abs(toP) == P_wk) PSEUDO_LEGAL_RETURN(false)
     const Piece fromPieceType = (Piece)std::abs(fromP);
-    const MType t = Move2Type(m);
+    const MType t = Move2Type(m); assert(moveTypeOK(t));
     if ( t == T_reserved ) PSEUDO_LEGAL_RETURN(false)
     if (toP == P_none && (isCapture(t) && t!=T_ep)) PSEUDO_LEGAL_RETURN(false)
     if (toP != P_none && !isCapture(t)) PSEUDO_LEGAL_RETURN(false)

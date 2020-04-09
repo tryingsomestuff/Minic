@@ -17,9 +17,9 @@
 
 void MoveSorter::computeScore(Move & m)const{
     assert(VALIDMOVE(m));
-    const MType  t    = Move2Type(m);
-    const Square from = Move2From(m);
-    const Square to   = Move2To(m);
+    const MType  t    = Move2Type(m); assert(moveTypeOK(t));
+    const Square from = Move2From(m); assert(squareOK(from));
+    const Square to   = Move2To(m); assert(squareOK(to));
     ScoreType s       = Move2Score(m);
     if ( s != 0 ) return; // prob cut already computed captures score
     s = MoveScoring[t];

@@ -39,15 +39,16 @@ Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc){
     int allMoves = 0;
 #ifndef DEBUG_PERFT
     MoveGen::generate<MoveGen::GP_all>(p,moves);
-    for (auto it = moves.begin() ; it != moves.end(); ++it){
+    const size_t n = moves.size();
+    for (size_t k = 0 ; k < n; ++k){
+        const Move & m = moves[k];
 #else
     for ( MiniMove m = std::numeric_limits<MiniMove>::min(); m < std::numeric_limits<MiniMove>::max(); ++m){
         if( !isPseudoLegal(p,m) ) continue;
-        const Move * it = &m;
 #endif
         ++allMoves;
         Position p2 = p;
-        if ( ! apply(p2,*it) ) continue;
+        if ( ! apply(p2,m) ) continue;
         ++validMoves;
         perft(p2,depth-1,acc);
     }
