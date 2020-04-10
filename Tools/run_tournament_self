@@ -10,6 +10,6 @@ engines="$engines -engine conf=minic_$2"
 
 echo $engines
 
-$CUTECHESS $engines -each proto=xboard tc=0/60+0.25 timemargin=200 -rounds 10000 -pgnout pgn_$(date +"%Y_%m_%d"_%H%M%S).out -ratinginterval 1 -repeat -openings file=$dir/OpeningBook/2moves_LT_1000.pgn format=pgn order=random plies=24 -recover -concurrency 7 > tournament_self.log 2>&1 &
+$CUTECHESS $engines -each proto=xboard tc=0/10+0.25 timemargin=200 -rounds 10000 -pgnout pgn_$(date +"%Y_%m_%d"_%H%M%S).out -ratinginterval 1 -repeat -openings file=$dir/OpeningBook/bishop.pgn format=pgn order=random plies=100 -recover -concurrency 1 > tournament_self_bishop.log 2>&1 &
 
 
