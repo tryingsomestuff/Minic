@@ -46,7 +46,7 @@ Starting from release 1.00 Minic support setting options using protocol (both XB
 
 ### CCRL
 Minic 1.39 is tested at 2845 on the CCRL 40/15 scale (http://ccrl.chessdom.com/ccrl/4040/)  
-Minic 2.00 is tested at 3146 on the CCRL BLITZ 4CPU scale (http://ccrl.chessdom.com/ccrl/404/).  
+Minic 2.00 is tested at 3140 on the CCRL BLITZ 4CPU scale (http://ccrl.chessdom.com/ccrl/404/).  
 Minic 1.51 is tested at 3007 on the CCRL BLITZ 1CPU scale (http://ccrl.chessdom.com/ccrl/404/).  
 Minic 1.15 is tested at 2830 on the CCRL FRC list (http://ccrl.chessdom.com/ccrl/404FRC/)  
 
