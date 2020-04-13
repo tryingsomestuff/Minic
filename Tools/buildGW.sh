@@ -10,7 +10,7 @@ if [ -e Fathom/src/tbprobe.h ]; then
    $dir/Tools/buildFathomGW.sh "$@"
 fi
 
-mkdir -p $dir/Dist
+mkdir -p $dir/Dist/Minic2
 
 d="-DDEBUG_TOOL"
 v="dev"
@@ -52,6 +52,6 @@ if [ $FATHOM_PRESENT = "1" ]; then
    OPT="$OPT $dir/Fathom/src/$lib -I$dir/Fathom/src"
 fi
 
-x86_64-w64-mingw32-g++ $OPT Source/*.cpp -ISource -static -static-libgcc -static-libstdc++ -o $dir/Dist/$exe -Wl,-Bstatic -lpthread
-x86_64-w64-mingw32-strip $dir/Dist/$exe
+x86_64-w64-mingw32-g++ $OPT Source/*.cpp -ISource -static -static-libgcc -static-libstdc++ -o $dir/Dist/Minic2/$exe -Wl,-Bstatic -lpthread
+x86_64-w64-mingw32-strip $dir/Dist/Minic2/$exe
 

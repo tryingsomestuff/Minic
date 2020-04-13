@@ -12,7 +12,7 @@ if [ -e Fathom/src/tbprobe.h ]; then
    $dir/Tools/buildFathom.sh "$@"
 fi
 
-mkdir -p $dir/Dist
+mkdir -p $dir/Dist/Minic2
 
 d="-DDEBUG_TOOL"
 v="dev"
@@ -64,14 +64,14 @@ fi
 
 rm -f *.gcda
 
-g++ -fprofile-generate $OPT Source/*.cpp -ISource -o $dir/Dist/$exe -lpthread 
+g++ -fprofile-generate $OPT Source/*.cpp -ISource -o $dir/Dist/Minic2/$exe -lpthread 
 echo "end of first compilation"
 if [ $? = "0" ]; then
-   echo "running Minic for profiling : $dir/Dist/$exe"
-   $dir/Dist/$exe -analyze "r2q1rk1/p4ppp/1pb1pn2/8/5P2/1PBB3P/P1PPQ1P1/2KR3R b - - 1 14" 20 -quiet 0 
-   #$dir/Dist/$exe -analyze "shirov" 20 
+   echo "running Minic for profiling : $dir/Dist/Minic2/$exe"
+   $dir/Dist/Minic2/$exe -analyze "r2q1rk1/p4ppp/1pb1pn2/8/5P2/1PBB3P/P1PPQ1P1/2KR3R b - - 1 14" 20 -quiet 0 
+   #$dir/Dist/Minic2/$exe -analyze "shirov" 20 
    echo "starting optimized compilation"
-   g++ -fprofile-use $OPT Source/*.cpp -ISource -o $dir/Dist/$exe -lpthread
+   g++ -fprofile-use $OPT Source/*.cpp -ISource -o $dir/Dist/Minic2/$exe -lpthread
 else
    echo "some error"
 fi

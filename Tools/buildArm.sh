@@ -10,7 +10,7 @@ if [ -e Fathom/src/tbprobe.h ]; then
    $dir/Tools/buildFathomArm.sh "$@"
 fi
 
-mkdir -p $dir/Dist
+mkdir -p $dir/Dist/Minic2
 
 v="dev"
 
@@ -31,5 +31,5 @@ echo "version $v"
 exe=minic_${v}_android
 echo "Building $exe"
 
-$dir/android/bin/arm-linux-androideabi-clang++ $OPT Source/*.cpp -ISource -o $dir/Dist/$exe -static-libgcc -static-libstdc++ 
+$dir/android/bin/arm-linux-androideabi-clang++ $OPT Source/*.cpp -ISource -o $dir/Dist/Minic2/$exe -static-libgcc -static-libstdc++ 
 
