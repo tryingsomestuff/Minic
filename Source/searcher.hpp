@@ -41,6 +41,7 @@ struct Searcher{
     HistoryT historyT;
     CounterT counterT;
     DepthType nullMoveMinPly = 0;
+    EvalScore contempt = 0;
 
     void getCMHPtr(const unsigned int ply, CMHPtrArray & cmhPtr);
     ScoreType getCMHScore(const Position & p, const Square from, const Square to, DepthType ply, const CMHPtrArray & cmhPtr)const;

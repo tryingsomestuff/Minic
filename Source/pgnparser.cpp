@@ -73,7 +73,7 @@ void pgnparse__(std::ifstream & is,std::ofstream & os) {
       kResultToken = "[WhiteElo \"";
       tagFound = false;
       //std::cout << "looking for whiteelo comment" << std::endl;
-      for (; !tagFound ;) { // looking for Result comment
+      for (; !tagFound ;) { // looking for whiteElo comment
         if ( ! std::getline(is, s)) { read = false; break; }
         //std::cout << "..." << s << std::endl;
         if (s.empty()) { if (tagFound) break; else continue; } // end of header
@@ -86,7 +86,7 @@ void pgnparse__(std::ifstream & is,std::ofstream & os) {
       kResultToken = "[BlackElo \"";
       tagFound = false;
       //std::cout << "looking for whiteelo comment" << std::endl;
-      for (; !tagFound ;) { // looking for Result comment
+      for (; !tagFound ;) { // looking for blackElo comment
         if ( ! std::getline(is, s)) { read = false; break; }
         //std::cout << "..." << s << std::endl;
         if (s.empty()) { if (tagFound) break; else continue; } // end of header
