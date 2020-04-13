@@ -1,7 +1,7 @@
 ![Logo](https://raw.githubusercontent.com/tryingsomestuff/Minic/master/logo.png)
 
 # Minic
-A chess engine to learn chess programming.
+A chess engine I made to learn chess programming.
 Compatible with both xboard/winboard and UCI.
 
 ## Code style
