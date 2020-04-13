@@ -38,7 +38,7 @@ typedef uint64_t u_int64_t;
 #include <unistd.h>
 #endif
 
-const std::string MinicVersion = "2.06";
+const std::string MinicVersion = "2.07";
 
 // *** options
 #define WITH_UCI
@@ -187,7 +187,11 @@ enum Sq   : unsigned char { Sq_a1  = 0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1
                                  Sq_a8,Sq_b8,Sq_c8,Sq_d8,Sq_e8,Sq_f8,Sq_g8,Sq_h8};
 
 enum File : unsigned char { File_a = 0,File_b,File_c,File_d,File_e,File_f,File_g,File_h};
+inline File operator++(File & f){f=File(f+1); return f;}
+
 enum Rank : unsigned char { Rank_1 = 0,Rank_2,Rank_3,Rank_4,Rank_5,Rank_6,Rank_7,Rank_8};
+inline Rank operator++(Rank & r){r=Rank(r+1); return r;}
+
 
 const Rank PromRank[2]    = { Rank_8 , Rank_1 };
 const Rank EPRank[2]      = { Rank_6 , Rank_3 };

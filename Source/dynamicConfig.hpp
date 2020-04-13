@@ -21,4 +21,6 @@ namespace DynamicConfig{
     extern bool FRC              ;
     extern bool UCIPonder        ;
     extern unsigned int multiPV  ;
+    extern ScoreType contempt    ;
+    extern ScoreType contemptMG  ;
 }

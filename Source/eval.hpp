@@ -245,11 +245,13 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
        // PST, attack
        evalPawn<Co_White>(p.pieces_const<P_wp>(Co_White),pe.score);
        evalPawn<Co_Black>(p.pieces_const<P_wp>(Co_Black),pe.score);
+       
        // danger in king zone
        pe.danger[Co_White] -= countBit(pe.pawnTargets[Co_White] & kingZone[Co_White]) * EvalConfig::kingAttWeight[EvalConfig::katt_defence][0];
        pe.danger[Co_White] += countBit(pe.pawnTargets[Co_Black] & kingZone[Co_White]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack] [0];
        pe.danger[Co_Black] -= countBit(pe.pawnTargets[Co_Black] & kingZone[Co_Black]) * EvalConfig::kingAttWeight[EvalConfig::katt_defence][0];
        pe.danger[Co_Black] += countBit(pe.pawnTargets[Co_White] & kingZone[Co_Black]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack] [0];
+       
        // pawn passer
        evalPawnPasser<Co_White>(p,pe.passed[Co_White],pe.score);
        evalPawnPasser<Co_Black>(p,pe.passed[Co_Black],pe.score);
@@ -259,21 +261,42 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
        // pawn candidate
        evalPawnCandidate<Co_White>(candidates[Co_White],pe.score);
        evalPawnCandidate<Co_Black>(candidates[Co_Black],pe.score);
-       // pawn backward
-       pe.score -= EvalConfig::backwardPawnMalus[EvalConfig::Close]    * countBit(backward[Co_White] & ~semiOpenPawn[Co_White]);
-       pe.score -= EvalConfig::backwardPawnMalus[EvalConfig::SemiOpen] * countBit(backward[Co_White] &  semiOpenPawn[Co_White]);
-       pe.score += EvalConfig::backwardPawnMalus[EvalConfig::Close]    * countBit(backward[Co_Black] & ~semiOpenPawn[Co_Black]);
-       pe.score += EvalConfig::backwardPawnMalus[EvalConfig::SemiOpen] * countBit(backward[Co_Black] &  semiOpenPawn[Co_Black]);
-       // double pawn malus
-       pe.score -= EvalConfig::doublePawnMalus[EvalConfig::Close]      * countBit(doubled[Co_White]  & ~semiOpenPawn[Co_White]);
-       pe.score -= EvalConfig::doublePawnMalus[EvalConfig::SemiOpen]   * countBit(doubled[Co_White]  &  semiOpenPawn[Co_White]);
-       pe.score += EvalConfig::doublePawnMalus[EvalConfig::Close]      * countBit(doubled[Co_Black]  & ~semiOpenPawn[Co_Black]);
-       pe.score += EvalConfig::doublePawnMalus[EvalConfig::SemiOpen]   * countBit(doubled[Co_Black]  &  semiOpenPawn[Co_Black]);
-       // isolated pawn malus
-       pe.score -= EvalConfig::isolatedPawnMalus[EvalConfig::Close]    * countBit(isolated[Co_White] & ~semiOpenPawn[Co_White]);
-       pe.score -= EvalConfig::isolatedPawnMalus[EvalConfig::SemiOpen] * countBit(isolated[Co_White] &  semiOpenPawn[Co_White]);
-       pe.score += EvalConfig::isolatedPawnMalus[EvalConfig::Close]    * countBit(isolated[Co_Black] & ~semiOpenPawn[Co_Black]);
-       pe.score += EvalConfig::isolatedPawnMalus[EvalConfig::SemiOpen] * countBit(isolated[Co_Black] &  semiOpenPawn[Co_Black]);
+       
+       // bad pawns
+       const BitBoard backwardOpenW  = backward[Co_White] &  semiOpenPawn[Co_White];
+       const BitBoard backwardCloseW = backward[Co_White] & ~semiOpenPawn[Co_White];
+       const BitBoard backwardOpenB  = backward[Co_Black] &  semiOpenPawn[Co_Black];
+       const BitBoard backwardCloseB = backward[Co_Black] & ~semiOpenPawn[Co_Black];
+       const BitBoard doubledOpenW   = doubled[Co_White]  &  semiOpenPawn[Co_White];
+       const BitBoard doubledCloseW  = doubled[Co_White]  & ~semiOpenPawn[Co_White];
+       const BitBoard doubledOpenB   = doubled[Co_Black]  &  semiOpenPawn[Co_Black];
+       const BitBoard doubledCloseB  = doubled[Co_Black]  & ~semiOpenPawn[Co_Black];       
+       const BitBoard isolatedOpenW  = isolated[Co_White] &  semiOpenPawn[Co_White];
+       const BitBoard isolatedCloseW = isolated[Co_White] & ~semiOpenPawn[Co_White];
+       const BitBoard isolatedOpenB  = isolated[Co_Black] &  semiOpenPawn[Co_Black];
+       const BitBoard isolatedCloseB = isolated[Co_Black] & ~semiOpenPawn[Co_Black];       
+       for (Rank r = Rank_1 ; r <= Rank_8 ; ++r){
+         const int ir = r-1;
+         // pawn backward  
+         pe.score -= EvalConfig::backwardPawnMalus[ir][EvalConfig::Close]      * countBit(backwardCloseW & ranks[ir]);
+         pe.score -= EvalConfig::backwardPawnMalus[ir][EvalConfig::SemiOpen]   * countBit(backwardOpenW  & ranks[ir]);
+         // double pawn malus
+         pe.score -= EvalConfig::doublePawnMalus[ir][EvalConfig::Close]        * countBit(doubledCloseW & ranks[ir]);
+         pe.score -= EvalConfig::doublePawnMalus[ir][EvalConfig::SemiOpen]     * countBit(doubledOpenW  & ranks[ir]);
+         // isolated pawn malus
+         pe.score -= EvalConfig::isolatedPawnMalus[ir][EvalConfig::Close]      * countBit(isolatedCloseW & ranks[ir]);
+         pe.score -= EvalConfig::isolatedPawnMalus[ir][EvalConfig::SemiOpen]   * countBit(isolatedOpenW  & ranks[ir]);
+         // pawn backward  
+         pe.score += EvalConfig::backwardPawnMalus[7-ir][EvalConfig::Close]    * countBit(backwardCloseB & ranks[ir]);
+         pe.score += EvalConfig::backwardPawnMalus[7-ir][EvalConfig::SemiOpen] * countBit(backwardOpenB  & ranks[ir]);
+         // double pawn malus
+         pe.score += EvalConfig::doublePawnMalus[7-ir][EvalConfig::Close]      * countBit(doubledCloseB & ranks[ir]);
+         pe.score += EvalConfig::doublePawnMalus[7-ir][EvalConfig::SemiOpen]   * countBit(doubledOpenB  & ranks[ir]);
+         // isolated pawn malus
+         pe.score += EvalConfig::isolatedPawnMalus[7-ir][EvalConfig::Close]    * countBit(isolatedCloseB & ranks[ir]);
+         pe.score += EvalConfig::isolatedPawnMalus[7-ir][EvalConfig::SemiOpen] * countBit(isolatedOpenB  & ranks[ir]);       
+       }
+
        // pawn shield (PST and king troppism alone is not enough)
        const int pawnShieldW = countBit(kingShield[Co_White] & pawns[Co_White]);
        const int pawnShieldB = countBit(kingShield[Co_Black] & pawns[Co_Black]);
@@ -357,6 +380,18 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     // knight on opponent hole, protected
     score[sc_Outpost] += EvalConfig::outpost * countBit(pe.holes[Co_Black] & p.whiteKnight() & pe.pawnTargets[Co_White]);
     score[sc_Outpost] -= EvalConfig::outpost * countBit(pe.holes[Co_White] & p.blackKnight() & pe.pawnTargets[Co_Black]);
+
+    // knight far from both kings gets a penalty
+    BitBoard knights = p.whiteKnight();
+    while(knights){
+        const Square knighSq = popBit(knights);
+        score[sc_knightFar] += EvalConfig::knightTooFar[std::min(chebyshevDistance(p.king[Co_White],knighSq),chebyshevDistance(p.king[Co_Black],knighSq))];
+    }
+    knights = p.blackKnight();
+    while(knights){
+        const Square knighSq = popBit(knights);
+        score[sc_knightFar] -= EvalConfig::knightTooFar[std::min(chebyshevDistance(p.king[Co_White],knighSq),chebyshevDistance(p.king[Co_Black],knighSq))];
+    }
 
     // reward safe checks
     for (Piece pp = P_wp ; pp < P_wk ; ++pp) {
@@ -461,7 +496,7 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     if ( blackQueenSquare != INVALIDSQUARE ) score[sc_QueenNearKing] -= EvalConfig::queenNearKing * (7 - chebyshevDistance(p.king[Co_White], blackQueenSquare) );
     if ( whiteQueenSquare != INVALIDSQUARE ) score[sc_QueenNearKing] += EvalConfig::queenNearKing * (7 - chebyshevDistance(p.king[Co_Black], whiteQueenSquare) );
 
-    // number of pawn and piece type value
+    // number of pawn and piece type value  ///@todo closedness instead ?
     score[sc_Adjust] += EvalConfig::adjRook  [p.mat[Co_White][M_p]] * ScoreType(p.mat[Co_White][M_r]);
     score[sc_Adjust] -= EvalConfig::adjRook  [p.mat[Co_Black][M_p]] * ScoreType(p.mat[Co_Black][M_r]);
     score[sc_Adjust] += EvalConfig::adjKnight[p.mat[Co_White][M_p]] * ScoreType(p.mat[Co_White][M_n]);
@@ -483,8 +518,13 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     score[sc_initiative][MG] += sgn(score.score[MG]) * std::max(initiativeBonus[MG], ScoreType(-std::abs(score.score[MG])));
     score[sc_initiative][EG] += sgn(score.score[EG]) * std::max(initiativeBonus[EG], ScoreType(-std::abs(score.score[EG])));
 
+    ///@todo complexity
+
     // tempo
     score[sc_Tempo] += EvalConfig::tempo*(white2Play?+1:-1);
+
+    // contempt
+    score[sc_Contempt] += context.contempt;
 
     if ( display ) score.Display(p,data.gp);
     ScoreType ret = (white2Play?+1:-1)*score.Score(p,data.gp); // scale both phase and 50 moves rule

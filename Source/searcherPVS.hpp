@@ -358,7 +358,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             const bool noCheck              = !isInCheck && !isCheck;
             const bool isPrunableStd        = isPrunable && isQuiet;
             const bool isPrunableStdNoCheck = isPrunableStd && noCheck;
-            const bool isEmergencyDefence   = false;//moveDifficulty == MoveDifficultyUtil::MD_hardDefense;
+            const bool isEmergencyDefence   = false; //moveDifficulty == MoveDifficultyUtil::MD_hardDefense;
             //const bool isEmergencyAttack    = moveDifficulty == MoveDifficultyUtil::MD_hardAttack; ///@todo use this
             const bool isPrunableCap        = isPrunable && Move2Type(*it) == T_capture && isBadCap(*it) && noCheck ;
             const bool isDangerPrune        = data.danger[p.c] > SearchConfig::dangerLimitPruning[0] || data.danger[~p.c] > SearchConfig::dangerLimitPruning[1];

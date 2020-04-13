@@ -60,6 +60,10 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
 
     stack[p.halfmoves].h = p.h;
 
+#ifndef WITH_TEXEL_TUNING
+    contempt = { ScoreType((p.c == Co_White ? +1 : -1) * (DynamicConfig::contempt + DynamicConfig::contemptMG)) , ScoreType((p.c == Co_White ? +1 : -1) * DynamicConfig::contempt) };
+#endif
+
     DepthType reachedDepth = 0;
     PVList pv;
     ScoreType bestScore = 0;
