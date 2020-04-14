@@ -24,6 +24,7 @@ enum PawnEvalSemiOpen{ Close=0, SemiOpen=1};
 extern CONST_TEXEL_TUNING EvalScore   doublePawnMalus[8][2]  ;
 extern CONST_TEXEL_TUNING EvalScore   isolatedPawnMalus[8][2];
 extern CONST_TEXEL_TUNING EvalScore   backwardPawnMalus[8][2];
+extern CONST_TEXEL_TUNING EvalScore   detachedPawnMalus[2]   ;
 extern CONST_TEXEL_TUNING EvalScore   holesMalus             ;
 extern CONST_TEXEL_TUNING EvalScore   pieceFrontPawn         ;
 extern CONST_TEXEL_TUNING EvalScore   outpost                ;

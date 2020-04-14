@@ -454,6 +454,10 @@ void TexelTuning(const std::string & filename) {
       guess["pawnStructure3"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::backwardPawnMalus[r][1][MG], -150, 550, "backwardPawnMalus  " + std::to_string(r) + "1"));
       guess["pawnStructure3"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::backwardPawnMalus[r][1][EG], -150, 550, "backwardPawnMalusEG" + std::to_string(r) + "1"));
     }
+    guess["pawnStructure4"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::detachedPawnMalus[0][MG], -150, 550, "detachedPawnMalusMG0"));
+    guess["pawnStructure4"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::detachedPawnMalus[0][EG], -150, 550, "detachedPawnMalusEG0"));
+    guess["pawnStructure4"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::detachedPawnMalus[1][MG], -150, 550, "detachedPawnMalusMG1"));
+    guess["pawnStructure4"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::detachedPawnMalus[1][EG], -150, 550, "detachedPawnMalusEG1"));
   
     guess["shield"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnShieldBonus[MG]     ,-150,550,"pawnShieldBonus0"));
     guess["shield"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnShieldBonus[EG]     ,-150,550,"pawnShieldBonus1"));
@@ -610,6 +614,7 @@ void TexelTuning(const std::string & filename) {
     computeOptimalK(data);
     Logging::LogIt(Logging::logInfo) << "Optimal K " << Texel::K;
 
+/*
     std::vector<std::string> todo = {
         //"piecesValue",
         //"PST0",
@@ -627,6 +632,7 @@ void TexelTuning(const std::string & filename) {
         "pawnStructure1",
         "pawnStructure2",
         "pawnStructure3",
+        "pawnStructure4",
         "candidate",
 
         "pawnMob",
@@ -676,13 +682,13 @@ void TexelTuning(const std::string & filename) {
         "tempo"
 
     };
-    
-   /*
+   */
     std::vector<std::string> todo = {
         "pawnStructure1",
         "pawnStructure2",
         "pawnStructure3",
-        //"PST0",
+        "pawnStructure4",
+        "PST0",
         //"knightTooFar",
         //"PST1",
         //"PST2",
@@ -690,7 +696,7 @@ void TexelTuning(const std::string & filename) {
         //"PST4",
         //"PST5"
     };
-    */
+    
     for(auto loops = 0 ; loops < 10 ; ++loops){
         Logging::LogIt(Logging::logInfo) << "Starting loop : " << loops;
         for(auto it = todo.begin() ; it != todo.end(); ++it){

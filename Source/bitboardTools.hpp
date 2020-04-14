@@ -20,6 +20,8 @@ inline constexpr BitBoard _shiftNorthWest(BitBoard b) { return b << 7 & ~fileH; 
 inline constexpr BitBoard _shiftSouthEast(BitBoard b) { return b >> 7 & ~fileA; }
 inline constexpr BitBoard _shiftSouthWest(BitBoard b) { return b >> 9 & ~fileH; }
 
+inline constexpr BitBoard adjacent(BitBoard b) { return _shiftWest(b) | _shiftEast(b); }
+
 template<Color C> inline constexpr BitBoard shiftN  (const BitBoard b) { return C==Co_White? BBTools::_shiftNorth(b)     : BBTools::_shiftSouth(b);    }
 template<Color C> inline constexpr BitBoard shiftS  (const BitBoard b) { return C!=Co_White? BBTools::_shiftNorth(b)     : BBTools::_shiftSouth(b);    }
 template<Color C> inline constexpr BitBoard shiftSW (const BitBoard b) { return C==Co_White? BBTools::_shiftSouthWest(b) : BBTools::_shiftNorthWest(b);}
@@ -28,8 +30,37 @@ template<Color C> inline constexpr BitBoard shiftNW (const BitBoard b) { return 
 template<Color C> inline constexpr BitBoard shiftNE (const BitBoard b) { return C!=Co_White? BBTools::_shiftSouthEast(b) : BBTools::_shiftNorthEast(b);}
 
 template<Color  > inline constexpr BitBoard fillForward(BitBoard b);
-template<>        inline constexpr BitBoard fillForward<Co_White>(BitBoard b) {  b |= (b << 8u);    b |= (b << 16u);    b |= (b << 32u);    return b;}
-template<>        inline constexpr BitBoard fillForward<Co_Black>(BitBoard b) {  b |= (b >> 8u);    b |= (b >> 16u);    b |= (b >> 32u);    return b;}
+template<>        inline constexpr BitBoard fillForward<Co_White>(BitBoard b) {  
+    b |= (b << 8u);    
+    b |= (b << 16u);    
+    b |= (b << 32u);    
+    return b;
+}
+template<>        inline constexpr BitBoard fillForward<Co_Black>(BitBoard b) {  
+    b |= (b >> 8u);    
+    b |= (b >> 16u);    
+    b |= (b >> 32u);    
+    return b;
+}
+
+template<Color  > inline constexpr BitBoard fillForwardOccluded(BitBoard b, BitBoard open);
+template<>        inline constexpr BitBoard fillForwardOccluded<Co_White>(BitBoard b, BitBoard open) {  
+    b |= open & (b << 8u);
+    open &= (open << 8u);
+    b |= open & (b << 16u);
+    open &= (open << 16u);
+    b |= open & (b << 32u);
+    return b;
+}
+template<>        inline constexpr BitBoard fillForwardOccluded<Co_Black>(BitBoard b, BitBoard open) {  
+    b |= open & (b >> 8u);
+    open &= (open >> 8u);
+    b |= open & (b >> 16u);
+    open &= (open >> 16u);
+    b |= open & (b >> 32u);
+    return b;
+}
+
 template<Color C> inline constexpr BitBoard frontSpan(BitBoard b) { return fillForward<C>(shiftN<C>(b));}
 template<Color C> inline constexpr BitBoard rearSpan (BitBoard b) { return frontSpan<~C>(b);}
 template<Color C> inline constexpr BitBoard pawnSemiOpen(BitBoard own, BitBoard opp) { return own & ~frontSpan<~C>(opp);}
@@ -46,11 +77,40 @@ template<Color C> inline constexpr BitBoard pawnDoubled(BitBoard b) { return fro
 
 inline constexpr BitBoard pawnIsolated(BitBoard b) { return b & ~fillFile(_shiftEast(b)) & ~fillFile(_shiftWest(b));}
 
-template<Color C> inline constexpr BitBoard pawnBackward       (BitBoard own, BitBoard opp) {return shiftN<~C>( (shiftN<C>(own)& ~opp) & ~fillForward<C>(pawnAttacks<C>(own)) & (pawnAttacks<~C>(opp)));}
-template<Color C> inline constexpr BitBoard pawnForwardCoverage(BitBoard bb               ) { BitBoard spans = frontSpan<C>(bb); return spans | _shiftEast(spans) | _shiftWest(spans);}
-template<Color C> inline constexpr BitBoard pawnPassed         (BitBoard own, BitBoard opp) { return own & ~pawnForwardCoverage<~C>(opp);}
-template<Color C> inline constexpr BitBoard pawnCandidates     (BitBoard own, BitBoard opp) { return pawnSemiOpen<C>(own, opp) & shiftN<~C>((pawnSingleAttacks<C>(own) & pawnSingleAttacks<~C>(opp)) | (pawnDoubleAttacks<C>(own) & pawnDoubleAttacks<~C>(opp)));}
-//template<Color C> inline constexpr BitBoard pawnStraggler      (BitBoard own, BitBoard opp, BitBoard own_backwards) { return own_backwards & pawnSemiOpen<C>(own, opp) & (C ? 0x00ffff0000000000ull : 0x0000000000ffff00ull);} ///@todo use this !
+template<Color C> inline constexpr BitBoard pawnBackward(BitBoard own, BitBoard opp) {
+    return shiftN<~C>( (shiftN<C>(own)& ~opp) & ~fillForward<C>(pawnAttacks<C>(own)) & (pawnAttacks<~C>(opp)));
+}
+
+template<Color C> inline constexpr BitBoard pawnForwardCoverage(BitBoard bb) { 
+    BitBoard spans = frontSpan<C>(bb); 
+    return spans | _shiftEast(spans) | _shiftWest(spans);
+}
+
+template<Color C> inline constexpr BitBoard pawnPassed(BitBoard own, BitBoard opp) { 
+    return own & ~pawnForwardCoverage<~C>(opp);
+}
+
+template<Color C> inline constexpr BitBoard pawnCandidates(BitBoard own, BitBoard opp) { 
+    return pawnSemiOpen<C>(own, opp) & shiftN<~C>((pawnSingleAttacks<C>(own) & pawnSingleAttacks<~C>(opp)) | (pawnDoubleAttacks<C>(own) & pawnDoubleAttacks<~C>(opp)));
+}
+
+template<Color C> inline constexpr BitBoard pawnUndefendable(BitBoard own, BitBoard other) {
+    return own & ~pawnAttacks<C>(fillForwardOccluded<C>(own, ~other)) & advancedRanks[C];
+}
+
+inline constexpr BitBoard pawnAlone(BitBoard b) {
+    return b & ~(adjacent(b) | pawnAttacks<Co_White>(b) | pawnAttacks<Co_Black>(b));
+}
+
+template<Color C> inline constexpr BitBoard pawnDetached(BitBoard own, BitBoard other) {
+    return pawnUndefendable<C>(own, other) & pawnAlone(own);
+}
+
+/*
+template<Color C> inline constexpr BitBoard pawnStraggler      (BitBoard own, BitBoard opp, BitBoard own_backwards) { 
+    return own_backwards & pawnSemiOpen<C>(own, opp) & (C ? 0x00ffff0000000000ull : 0x0000000000ffff00ull);
+} ///@todo use this !
+*/
 
 // return first square of the bitboard only
 // beware emptyness of the bitboard is only checked in debug mode !

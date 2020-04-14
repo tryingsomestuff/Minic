@@ -97,6 +97,7 @@ inline void evalPawnFreePasser(const Position & p, BitBoard pieceBBiterator, Eva
         score += EvalConfig::freePasserBonus[ColorRank<C>(k)] * ScoreType( (BBTools::mask[k].frontSpan[C] & p.allPieces[~C]) == empty ) * ColorSignHelper<C>();
     }
 }
+
 template< Color C>
 inline void evalPawnProtected(BitBoard pieceBBiterator, EvalScore & score){
     while (pieceBBiterator) { score += EvalConfig::protectedPasserBonus[ColorRank<C>(popBit(pieceBBiterator))] * ColorSignHelper<C>();}
@@ -236,6 +237,7 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
        const BitBoard doubled       [2] = {BBTools::pawnDoubled   <Co_White>(pawns[Co_White])                 , BBTools::pawnDoubled   <Co_Black>(pawns[Co_Black])};
        const BitBoard candidates    [2] = {BBTools::pawnCandidates<Co_White>(pawns[Co_White],pawns[Co_Black]) , BBTools::pawnCandidates<Co_Black>(pawns[Co_Black],pawns[Co_White])};
        const BitBoard semiOpenPawn  [2] = {BBTools::pawnSemiOpen  <Co_White>(pawns[Co_White],pawns[Co_Black]) , BBTools::pawnSemiOpen  <Co_Black>(pawns[Co_Black],pawns[Co_White])};
+       const BitBoard detached      [2] = {BBTools::pawnDetached  <Co_White>(pawns[Co_White],pawns[Co_Black]) , BBTools::pawnDetached  <Co_Black>(pawns[Co_Black],pawns[Co_White])};
        pe.pawnTargets   [Co_White] = BBTools::pawnAttacks   <Co_White>(pawns[Co_White])                       ; pe.pawnTargets   [Co_Black] = BBTools::pawnAttacks   <Co_Black>(pawns[Co_Black]);
        pe.semiOpenFiles [Co_White] = BBTools::fillFile(pawns[Co_White]) & ~BBTools::fillFile(pawns[Co_Black]) ; pe.semiOpenFiles [Co_Black] = BBTools::fillFile(pawns[Co_Black]) & ~BBTools::fillFile(pawns[Co_White]); // semiOpen white means with white pawn, and without black pawn
        pe.passed        [Co_White] = BBTools::pawnPassed    <Co_White>(pawns[Co_White],pawns[Co_Black])       ; pe.passed        [Co_Black] = BBTools::pawnPassed    <Co_Black>(pawns[Co_Black],pawns[Co_White]);
@@ -261,7 +263,14 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
        // pawn candidate
        evalPawnCandidate<Co_White>(candidates[Co_White],pe.score);
        evalPawnCandidate<Co_Black>(candidates[Co_Black],pe.score);
-       
+       ///@todo hidden passed
+
+       // detached pawn (not backward)
+       pe.score += EvalConfig::detachedPawnMalus[EvalConfig::Close]    * countBit(detached[Co_White] &~semiOpenPawn[Co_White] & ~backward[Co_White]);
+       pe.score -= EvalConfig::detachedPawnMalus[EvalConfig::Close]    * countBit(detached[Co_Black] &~semiOpenPawn[Co_Black] & ~backward[Co_Black]);
+       pe.score += EvalConfig::detachedPawnMalus[EvalConfig::SemiOpen] * countBit(detached[Co_White] & semiOpenPawn[Co_White] & ~backward[Co_White]);
+       pe.score -= EvalConfig::detachedPawnMalus[EvalConfig::SemiOpen] * countBit(detached[Co_Black] & semiOpenPawn[Co_Black] & ~backward[Co_Black]);
+
        // bad pawns
        const BitBoard backwardOpenW  = backward[Co_White] &  semiOpenPawn[Co_White];
        const BitBoard backwardCloseW = backward[Co_White] & ~semiOpenPawn[Co_White];

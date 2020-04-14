@@ -92,13 +92,14 @@ const BitBoard rank7                     = 0x00ff000000000000;
 const BitBoard rank8                     = 0xff00000000000000;
 const BitBoard ranks[8] = {rank1,rank2,rank3,rank4,rank5,rank6,rank7,rank8};
 //const BitBoard center = BBSq_d4 | BBSq_d5 | BBSq_e4 | BBSq_e5;
+const BitBoard advancedRanks[2] = { 0x000000ffffffff00, 0x00ffffffff000000};
 
 const BitBoard extendedCenter = BBSq_c3 | BBSq_c4 | BBSq_c5 | BBSq_c6
                               | BBSq_d3 | BBSq_d4 | BBSq_d5 | BBSq_d6
                               | BBSq_e3 | BBSq_e4 | BBSq_e5 | BBSq_e6
                               | BBSq_f3 | BBSq_f4 | BBSq_f5 | BBSq_f6;
 
-const BitBoard SeventhRank[2] = { rank7 , rank2 };
+const BitBoard seventhRank[2] = { rank7 , rank2 };
 
 const BitBoard holesZone[2] = { rank2 | rank3 | rank4 | rank5,  rank4 | rank5 | rank6 | rank7 };
 const BitBoard queenSide   = fileA | fileB | fileC | fileD;

@@ -1,7 +1,7 @@
 #pragma once
 
 inline ScoreType qDeltaMargin(const Position & p) {
-   ScoreType delta = (p.pieces_const(p.c,P_wp) & SeventhRank[p.c]) ? Values[P_wq+PieceShift] : Values[P_wp+PieceShift];
+   ScoreType delta = (p.pieces_const(p.c,P_wp) & seventhRank[p.c]) ? Values[P_wq+PieceShift] : Values[P_wp+PieceShift];
    return delta + Values[P_wq+PieceShift];
 }
 
