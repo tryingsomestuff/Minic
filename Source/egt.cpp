@@ -31,9 +31,13 @@ MType getMoveType(const Position &p, unsigned res){
 
 Move getMove(const Position &p, unsigned res) { return ToMove(TB_GET_FROM(res), TB_GET_TO(res), TB_GET_EP(res) ? T_ep : getMoveType(p,res)); } // Note: castling not possible
 
-bool initTB(const std::string &path){
-   Logging::LogIt(Logging::logInfo) << "Init tb from path " << path;
-   if (!tb_init(path.c_str())) return MAX_TB_MEN = 0,false;
+bool initTB(){
+   if ( DynamicConfig::syzygyPath.empty() ){
+      MAX_TB_MEN = -1;
+      return false;
+   }
+   Logging::LogIt(Logging::logInfo) << "Init tb from path " << DynamicConfig::syzygyPath;
+   if (!tb_init(DynamicConfig::syzygyPath.c_str())) return MAX_TB_MEN = 0,false;
    else     MAX_TB_MEN = TB_LARGEST;
    Logging::LogIt(Logging::logInfo) << "MAX_TB_MEN: " << MAX_TB_MEN;
    return true;
