@@ -19,6 +19,7 @@ namespace Options {
     struct KeyBase {
       template < typename T > KeyBase(KeyType t, WidgetType w, const std::string & k, T * v, const std::function<void(void)> & cb = []{} ) :type(t), wtype(w), key(k), value((void*)v) {callBack = cb;}
       template < typename T > KeyBase(KeyType t, WidgetType w, const std::string & k, T * v, const T & vmin, const T & vmax, const std::function<void(void)> & cb = []{} ) :type(t), wtype(w), key(k), value((void*)v), vmin(vmin), vmax(vmax) {callBack = cb;}
+      KeyBase(KeyType t, WidgetType w, const std::string & k, std::string * v, const std::function<void(void)> & cb = []{} ) :type(t), wtype(w), key(k), value((void*)v){callBack = cb;}
       KeyType     type;
       WidgetType  wtype;
       std::string key;

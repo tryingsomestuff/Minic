@@ -42,7 +42,7 @@ void init(int argc, char ** argv) {
     ThreadPool::instance().setup();
     Book::initBook();
 #ifdef WITH_SYZYGY
-    SyzygyTb::initTB(DynamicConfig::syzygyPath);
+    SyzygyTb::initTB();
 #endif
 }
 
