@@ -24,33 +24,34 @@ const bool doHistoryPruning = true;
 const bool doCMHPruning     = true;
 
 // first value if eval score is used, second if hash score is used
-extern CONST_CLOP_TUNING ScoreType qfutilityMargin          [2];
-extern CONST_CLOP_TUNING DepthType staticNullMoveMaxDepth   [2];
-extern CONST_CLOP_TUNING ScoreType staticNullMoveDepthCoeff [2];
-extern CONST_CLOP_TUNING ScoreType staticNullMoveDepthInit  [2];
-extern CONST_CLOP_TUNING DepthType razoringMaxDepth         [2];
-extern CONST_CLOP_TUNING ScoreType razoringMarginDepthCoeff [2];
-extern CONST_CLOP_TUNING ScoreType razoringMarginDepthInit  [2];
-extern CONST_CLOP_TUNING DepthType nullMoveMinDepth            ;
-extern CONST_CLOP_TUNING DepthType nullMoveVerifDepth          ;
-extern CONST_CLOP_TUNING DepthType historyPruningMaxDepth      ;
-extern CONST_CLOP_TUNING ScoreType historyPruningThresholdInit ;
-extern CONST_CLOP_TUNING ScoreType historyPruningThresholdDepth;
-extern CONST_CLOP_TUNING DepthType CMHMaxDepth                 ;
-extern CONST_CLOP_TUNING DepthType futilityMaxDepth         [2];
-extern CONST_CLOP_TUNING ScoreType futilityDepthCoeff       [2];
-extern CONST_CLOP_TUNING ScoreType futilityDepthInit        [2];
-extern CONST_CLOP_TUNING DepthType iidMinDepth                 ;
-extern CONST_CLOP_TUNING DepthType iidMinDepth2                ;
-extern CONST_CLOP_TUNING DepthType probCutMinDepth             ;
-extern CONST_CLOP_TUNING int       probCutMaxMoves             ;
-extern CONST_CLOP_TUNING ScoreType probCutMargin               ;
-extern CONST_CLOP_TUNING DepthType lmrMinDepth                 ;
-extern CONST_CLOP_TUNING DepthType singularExtensionDepth      ;
-// on move / opponent
-extern CONST_CLOP_TUNING ScoreType dangerLimitPruning[2]       ;
-extern CONST_CLOP_TUNING ScoreType dangerLimitReduction[2]     ;
-extern CONST_CLOP_TUNING ScoreType failLowRootMargin           ;
+extern CONST_CLOP_TUNING ScoreType qfutilityMargin           [2];
+extern CONST_CLOP_TUNING DepthType staticNullMoveMaxDepth    [2];
+extern CONST_CLOP_TUNING ScoreType staticNullMoveDepthCoeff  [2];
+extern CONST_CLOP_TUNING ScoreType staticNullMoveDepthInit   [2];
+extern CONST_CLOP_TUNING DepthType razoringMaxDepth          [2];
+extern CONST_CLOP_TUNING ScoreType razoringMarginDepthCoeff  [2];
+extern CONST_CLOP_TUNING ScoreType razoringMarginDepthInit   [2];
+extern CONST_CLOP_TUNING DepthType nullMoveMinDepth             ;
+extern CONST_CLOP_TUNING DepthType nullMoveVerifDepth           ;
+extern CONST_CLOP_TUNING DepthType historyPruningMaxDepth       ;
+extern CONST_CLOP_TUNING ScoreType historyPruningThresholdInit  ;
+extern CONST_CLOP_TUNING ScoreType historyPruningThresholdDepth ;
+extern CONST_CLOP_TUNING DepthType CMHMaxDepth                  ;
+extern CONST_CLOP_TUNING DepthType futilityMaxDepth          [2];
+extern CONST_CLOP_TUNING ScoreType futilityDepthCoeff        [2];
+extern CONST_CLOP_TUNING ScoreType futilityDepthInit         [2];
+//extern CONST_CLOP_TUNING ScoreType failHighReductionThreshold[2];
+extern CONST_CLOP_TUNING DepthType iidMinDepth                  ;
+extern CONST_CLOP_TUNING DepthType iidMinDepth2                 ;
+extern CONST_CLOP_TUNING DepthType probCutMinDepth              ;
+extern CONST_CLOP_TUNING int       probCutMaxMoves              ;
+extern CONST_CLOP_TUNING ScoreType probCutMargin                ;
+extern CONST_CLOP_TUNING DepthType lmrMinDepth                  ;
+extern CONST_CLOP_TUNING DepthType singularExtensionDepth       ;
+// on move / opponent 
+extern CONST_CLOP_TUNING ScoreType dangerLimitPruning[2]        ;
+extern CONST_CLOP_TUNING ScoreType dangerLimitReduction[2]      ;
+extern CONST_CLOP_TUNING ScoreType failLowRootMargin            ;
 
 const int nlevel = 100;
 const DepthType levelDepthMax[nlevel/10+1]   = {0,1,1,2,4,6,8,10,12,14,MAX_DEPTH};
@@ -67,7 +68,7 @@ inline void initLMR() {
 extern ScoreType MvvLvaScores[6][6];
 inline void initMvvLva(){
     Logging::LogIt(Logging::logInfo) << "Init mvv-lva" ;
-    static const ScoreType IValues[6] = { 1, 2, 3, 5, 9, 20 }; ///@todo try N=B=3 !
+    static const ScoreType IValues[6] = { 1, 2, 3, 5, 9, 20 }; ///@todo try N=B=3 ??
     for(int v = 0; v < 6 ; ++v) for(int a = 0; a < 6 ; ++a) MvvLvaScores[v][a] = IValues[v] * 20 - IValues[a];
 }
 

@@ -75,7 +75,7 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
         return evalScore;
     }
     if ( !isInCheck && SearchConfig::doQDeltaPruning && evalScore + qDeltaMargin(p) < alpha ) return ++stats.counters[Stats::sid_delta],alpha;
-    if ( /*pvnode &&*/ evalScore > alpha) alpha = evalScore; ///@todo ??
+    if ( /*pvnode &&*/ evalScore > alpha) alpha = evalScore; ///@todo try it ??
     ScoreType bestScore = evalScore;
 
     MoveList moves;

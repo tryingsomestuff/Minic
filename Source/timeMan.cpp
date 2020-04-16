@@ -21,7 +21,6 @@ void init(){
     isDynamic   = false;
     isUCIPondering  = false;
     overHead = 0;
-    ///@todo a bool for possible emergency functionality
 }
 
 TimeType GetNextMSecPerMove(const Position & p){
