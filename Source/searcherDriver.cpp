@@ -84,6 +84,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
     }
 
     ScoreType depthScores[MAX_DEPTH] = { 0 };
+    Counter nodesByDepth[MAX_DEPTH] = { 0ull };
     const bool isInCheck = isAttacked(p, kingSquare(p));
     const DepthType easyMoveDetectionDepth = 5;
 
@@ -118,7 +119,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
             else{ if ( depth > 1) startLock.store(false);} // delayed other thread start
             Logging::LogIt(Logging::logInfo) << "Thread " << id() << " searching depth " << (int)depth;
             PVList pvLoc;
-            ScoreType delta = (SearchConfig::doWindow && depth>4)?6+std::max(0,(20-depth)*2):MATE; // MATE not INFSCORE in order to enter the loop below once ///@todo try delta function of depth
+            ScoreType delta = (SearchConfig::doWindow && depth>4)?6+std::max(0,(20-depth)*2):MATE; // MATE not INFSCORE in order to enter the loop below once
             ScoreType alpha = std::max(ScoreType(bestScore - delta), ScoreType (-MATE));
             ScoreType beta  = std::min(ScoreType(bestScore + delta), MATE);
             ScoreType score = 0;
@@ -179,6 +180,11 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
                         Logging::LogIt(Logging::logInfo) << "stopflag triggered, not enough time for next depth"; break; 
                     } // not enought time
                     depthScores[depth] = bestScore;
+                    nodesByDepth[depth] = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
+                    if ( depth > 1 ){
+                        Logging::LogIt(Logging::logInfo) << "EBF  " << float(nodesByDepth[depth]) / (std::max(Counter(1),nodesByDepth[depth-1]));
+                        Logging::LogIt(Logging::logInfo) << "EBF2 " << float(ThreadPool::instance().counter(Stats::sid_qnodes)) / std::max(Counter(1),ThreadPool::instance().counter(Stats::sid_nodes));
+                    }
                 }
                 if ( !pv.empty() ){
                     skipMoves.push_back(Move2MiniMove(pv[0]));

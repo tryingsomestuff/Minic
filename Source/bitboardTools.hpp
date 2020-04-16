@@ -106,12 +106,6 @@ template<Color C> inline constexpr BitBoard pawnDetached(BitBoard own, BitBoard 
     return pawnUndefendable<C>(own, other) & pawnAlone(own);
 }
 
-/*
-template<Color C> inline constexpr BitBoard pawnStraggler      (BitBoard own, BitBoard opp, BitBoard own_backwards) { 
-    return own_backwards & pawnSemiOpen<C>(own, opp) & (C ? 0x00ffff0000000000ull : 0x0000000000ffff00ull);
-} ///@todo use this !
-*/
-
 // return first square of the bitboard only
 // beware emptyness of the bitboard is only checked in debug mode !
 Square SquareFromBitBoard(const BitBoard & b);

@@ -9,7 +9,7 @@ struct Searcher;
  * It stores a 32 bits hash and thus move from TT must be validating before being used
  * An entry is storing both static and evaluation score
  * as well as move, bound and depth.
- * ///@todo test generation !
+ * ///@todo test using aging !
  */
 
 namespace TT{
