@@ -49,9 +49,10 @@ void MoveSorter::computeScore(Move & m)const{
             else if (ply > 1 && sameMove(m, context.killerT.killers[ply-2][0])) s += 1700; // quiet killer
             else if (VALIDMOVE(p.lastMove) && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 1650; // quiet counter
             else {
-                s += context.historyT.history[p.c][from][to] /4; // +/- MAX_HISTORY = 1000
-                s += context.historyT.historyP[p.board_const(from)+PieceShift][to] /2 ; // +/- MAX_HISTORY = 1000
-                s += context.getCMHScore(p, from, to, ply, cmhPtr) /4; // +/- MAX_HISTORY = 1000
+                ///@todo give another try to tune those !
+                s += context.historyT.history[p.c][from][to] /4; // +/- HISTORY_MAX = 1000
+                s += context.historyT.historyP[p.board_const(from)+PieceShift][to] /2 ; // +/- HISTORY_MAX = 1000
+                s += context.getCMHScore(p, from, to, ply, cmhPtr) /4; // +/- HISTORY_MAX = 1000
                 if ( !isInCheck ){
                    if ( refutation != INVALIDMOVE && from == Move2To(refutation) && context.SEE_GE(p,m,-70)) s += 1000; // move (safely) leaving threat square from null move search
                    const bool isWhite = (p.allPieces[Co_White] & SquareToBitboard(from)) != empty;
@@ -66,6 +67,7 @@ void MoveSorter::computeScore(Move & m)const{
 
 void MoveSorter::sort(const Searcher & context, MoveList & moves, const Position & p, float gp, DepthType ply, const CMHPtrArray & cmhPtr, bool useSEE, bool isInCheck, const TT::Entry * e, const Move refutation){
         START_TIMER
+        if ( moves.size() < 2) return;
         const MoveSorter ms(context,p,gp,ply,cmhPtr,useSEE,isInCheck,e,refutation);
         for(auto it = moves.begin() ; it != moves.end() ; ++it){ ms.computeScore(*it); }
         std::sort(moves.begin(),moves.end(),ms);

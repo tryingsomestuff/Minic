@@ -127,7 +127,10 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         }
 
         // null move
-        if (SearchConfig::doNullMove && isNotEndGame && withoutSkipMove /*&& evalScore >= beta*/ && evalScore >= stack[p.halfmoves].eval /*&& stack[p.halfmoves].eval >= beta - 32*depth - 30*improving */ &&  ply >= (unsigned int)nullMoveMinPly && depth >= SearchConfig::nullMoveMinDepth) {
+        if (SearchConfig::doNullMove && isNotEndGame && withoutSkipMove /*&& evalScore >= beta*/ && 
+            //stack[p.halfmoves].p.lastMove != NULLMOVE && stack[p.halfmoves-1].p.lastMove != NULLMOVE &&
+            evalScore >= stack[p.halfmoves].eval /*&& stack[p.halfmoves].eval >= beta - 32*depth - 30*improving */ && 
+            ply >= (unsigned int)nullMoveMinPly && depth >= SearchConfig::nullMoveMinDepth) {
             PVList nullPV;
             ++stats.counters[Stats::sid_nullMoveTry];
             const DepthType R = depth / 4 + 3 + std::min((evalScore - beta) / 80, 3); // adaptative
@@ -240,7 +243,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                /*
                if (!extension && isQuiet) {
                const int pp = (p.b[Move2From(e.m)] + PieceShift) * 64 + Move2To(e.m);
-               if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= MAX_HISTORY / 2 && cmhPtr[1][pp] >= MAX_HISTORY / 2) ++stats.counters[Stats::sid_CMHExtension], ++extension;
+               if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= HISTORY_MAX / 2 && cmhPtr[1][pp] >= HISTORY_MAX / 2) ++stats.counters[Stats::sid_CMHExtension], ++extension;
                }
                */
                if (!extension && isAdvancedPawnPush ) {
@@ -340,7 +343,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
            //if (!extension && isCheck && !isBadCap(*it)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
            if (!extension && !firstMove && isQuiet) {
                const int pp = (p.board_const(Move2From(*it)) + PieceShift) * 64 + Move2To(*it);
-               if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= MAX_HISTORY / 2 && cmhPtr[1][pp] >= MAX_HISTORY / 2) ++stats.counters[Stats::sid_CMHExtension], ++extension;
+               if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= HISTORY_MAX / 2 && cmhPtr[1][pp] >= HISTORY_MAX / 2) ++stats.counters[Stats::sid_CMHExtension], ++extension;
            }
            if (!extension && isAdvancedPawnPush /*&& (killerT.isKiller(*it, ply) || !isBadCap(*it))*/){
                const BitBoard pawns[2] = { p2.pieces_const<P_wp>(Co_White), p2.pieces_const<P_wp>(Co_Black) };
@@ -390,7 +393,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                 reduction += !improving;
                 reduction += ttMoveIsCapture;
                 //reduction += (cutNode && evalScore - SearchConfig::failHighReductionThreshold[evalScoreIsHashScore] > beta);
-                reduction -= (2 * Move2Score(*it)) / MAX_HISTORY; //history reduction/extension (beware killers and counter are scored above history max, so reduced less
+                reduction -= HISTORY_DIV(2 * Move2Score(*it)); //history reduction/extension (beware killers and counter are scored above history max, so reduced less
                 if ( reduction > 0){
                     if      ( pvnode           ) --reduction;
                     else if ( isDangerRed      ) --reduction;
