@@ -262,6 +262,12 @@ You can use both the json configuation file or the command line argument to sele
 * 1.52..1.54 : retune queen near king, PST and mobility  
 * 1.55 : multi PV
 * 2.00 : splitting the one file Minic into many header / source files
+* 2.01..2.05 : fixes, clean up code, little optimization
+* 2.06 : work on emrgency mode
+* 2.07 : contempt, pawn structure, retuning
+* 2.08 : more UCI param, weak pawn
+* 2.09 : break aspiration search in fail high wase if no other move above beta
+* 2.10 : ...
 
 
 ## Thanks
