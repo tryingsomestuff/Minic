@@ -60,10 +60,6 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
 
     stack[p.halfmoves].h = p.h;
 
-#ifndef WITH_TEXEL_TUNING
-    contempt = { ScoreType((p.c == Co_White ? +1 : -1) * (DynamicConfig::contempt + DynamicConfig::contemptMG)) , ScoreType((p.c == Co_White ? +1 : -1) * DynamicConfig::contempt) };
-#endif
-
     DepthType reachedDepth = 0;
     PVList pv;
     ScoreType bestScore = 0;
@@ -123,6 +119,13 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
             ScoreType alpha = std::max(ScoreType(bestScore - delta), ScoreType (-MATE));
             ScoreType beta  = std::min(ScoreType(bestScore + delta), MATE);
             ScoreType score = 0;
+#ifndef WITH_TEXEL_TUNING
+            contempt = { ScoreType((p.c == Co_White ? +1 : -1) * (DynamicConfig::contempt + DynamicConfig::contemptMG)) , ScoreType((p.c == Co_White ? +1 : -1) * DynamicConfig::contempt) };
+#else
+            contempt = 0;
+#endif            
+            // dynamic contempt
+            contempt += ScoreType(std::round(50*std::atan(bestScore/100.f)));
             DepthType windowDepth = depth;
             // Aspiration loop
             while( true && !stopFlag ){
@@ -144,6 +147,15 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
                 }
                 else if (beta < MATE && score >= beta ) {
                     //alpha = std::max(ScoreType(-MATE),ScoreType((alpha + beta)/2));
+                    // check other moves (if not multi-PV ...)
+                    if ( DynamicConfig::multiPV == 1){
+                        PVList pv2;
+                        TT::getPV(p, *this, pv2);
+                        std::vector<MiniMove> skipMovesFailHigh = { Move2MiniMove(pv2[0]) };
+                        pv2.clear();
+                        DepthType seldepth2 = 0;
+                        if ( pvs<true,false>(beta-1,beta,p,windowDepth,0,pv2,seldepth2,isInCheck,false,&skipMovesFailHigh) <= beta ) break;
+                    }
                     beta  = std::min(ScoreType(score + delta), ScoreType( MATE) );
                     Logging::LogIt(Logging::logInfo) << "Increase window beta "  << alpha << ".." << beta;
                     if ( isMainThread() ){

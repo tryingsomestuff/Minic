@@ -256,8 +256,12 @@ int cliManagement(std::string cli, int argc, char ** argv){
 
     if ( cli == "bench" ){
         Position p;
-        readFEN(shirov,p);
         DepthType d = 23;
+        readFEN(startPosition,p);
+        analyze(p,d);
+        readFEN(shirov,p);
+        analyze(p,d);
+        readFEN(fine70,p);
         analyze(p,d);
         return 0;
     }

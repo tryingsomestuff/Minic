@@ -93,7 +93,11 @@ const std::string MinicVersion = "2.08";
 #define MAX_PLY      1024
 #define MAX_MOVE      256   // 256 is enough I guess/hope ...
 #define MAX_DEPTH     127   // if DepthType is a char, !!!do not go above 127!!!
-#define MAX_HISTORY  1000
+#define HISTORY_POWER  10
+#define HISTORY_MAX    (1<<HISTORY_POWER)  
+#define HISTORY_DIV(x) ((x)>>HISTORY_POWER)
+#define SQR(x) ((x)*(x))
+#define HSCORE(depth) ScoreType(SQR(std::min((int)depth, 16))*4)
 
 #define SQFILE(s) ((s)&7)
 #define SQRANK(s) ((s)>>3)
@@ -104,8 +108,6 @@ const std::string MinicVersion = "2.08";
 #define MakeSquare(f,r) Square(((r)<<3) + (f))
 #define VFlip(s) ((s)^Sq_a8)
 #define HFlip(s) ((s)^7)
-#define SQR(x) ((x)*(x))
-#define HSCORE(depth) ScoreType(SQR(std::min((int)depth, 16))*4)
 
 #define TO_STR2(x) #x
 #define TO_STR(x) TO_STR2(x)

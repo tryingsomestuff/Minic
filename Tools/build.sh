@@ -68,7 +68,7 @@ g++ -fprofile-generate $OPT Source/*.cpp -ISource -o $dir/Dist/Minic2/$exe -lpth
 echo "end of first compilation"
 if [ $? = "0" ]; then
    echo "running Minic for profiling : $dir/Dist/Minic2/$exe"
-   $dir/Dist/Minic2/$exe -analyze "r2q1rk1/p4ppp/1pb1pn2/8/5P2/1PBB3P/P1PPQ1P1/2KR3R b - - 1 14" 20 -quiet 0 
+   $dir/Dist/Minic2/$exe bench -quiet 0 
    #$dir/Dist/Minic2/$exe -analyze "shirov" 20 
    echo "starting optimized compilation"
    g++ -fprofile-use $OPT Source/*.cpp -ISource -o $dir/Dist/Minic2/$exe -lpthread
