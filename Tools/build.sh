@@ -72,6 +72,7 @@ if [ $? = "0" ]; then
    #$dir/Dist/Minic2/$exe -analyze "shirov" 20 
    echo "starting optimized compilation"
    g++ -fprofile-use $OPT Source/*.cpp -ISource -o $dir/Dist/Minic2/$exe -lpthread
+   echo "done "
 else
    echo "some error"
 fi
