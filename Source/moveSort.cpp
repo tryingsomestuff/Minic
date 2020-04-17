@@ -50,9 +50,9 @@ void MoveSorter::computeScore(Move & m)const{
             else if (VALIDMOVE(p.lastMove) && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 1650; // quiet counter
             else {
                 ///@todo give another try to tune those !
-                s += context.historyT.history[p.c][from][to] /4; // +/- HISTORY_MAX = 1000
-                s += context.historyT.historyP[p.board_const(from)+PieceShift][to] /2 ; // +/- HISTORY_MAX = 1000
-                s += context.getCMHScore(p, from, to, ply, cmhPtr) /4; // +/- HISTORY_MAX = 1000
+                s += context.historyT.history[p.c][from][to] /3; // +/- HISTORY_MAX = 1000
+                s += context.historyT.historyP[p.board_const(from)+PieceShift][to] /3 ; // +/- HISTORY_MAX = 1000
+                s += context.getCMHScore(p, from, to, ply, cmhPtr) /3; // +/- HISTORY_MAX = 1000
                 if ( !isInCheck ){
                    if ( refutation != INVALIDMOVE && from == Move2To(refutation) && context.SEE_GE(p,m,-70)) s += 1000; // move (safely) leaving threat square from null move search
                    const bool isWhite = (p.allPieces[Co_White] & SquareToBitboard(from)) != empty;
