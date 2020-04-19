@@ -3,7 +3,8 @@
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 build:
-	chmod +x Tools/*.sh
+	chmod +x $(ROOT_DIR)/Tools/*.sh
+	git clone https://github.com/jdart1/Fathom $(ROOT_DIR)/
 	$(ROOT_DIR)/Tools/build.sh
 
 prerequisites: build
