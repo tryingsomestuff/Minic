@@ -1,4 +1,4 @@
-# To run docker OpenBench client for Minic
+#To run docker OpenBench client for Minic
 
 First you'll have to create an account on my OpenBench instance.  
 Contact me on talkchess, discord, mail, ... anything ...
