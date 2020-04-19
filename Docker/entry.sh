@@ -13,4 +13,4 @@ echo 42 > machine.txt
 echo "*************************************"
 ls
 echo "*************************************"
-python3 OpenBench.py -U $1 -P $2 -S http://serv.x-ray.fr:8000 -T $3
+python3 Client.py -U $1 -P $2 -S http://serv.x-ray.fr:8000 -T $3
