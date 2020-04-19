@@ -162,7 +162,7 @@ def getEngine(data, engine):
     if os.path.isfile(output + '.exe'): os.rename(output + '.exe', destination)
 
     # Cleanup the zipfile directory
-    #shutil.rmtree('tmp')
+    shutil.rmtree('tmp')
 
 def getCutechessCommand(arguments, data, nps):
 
