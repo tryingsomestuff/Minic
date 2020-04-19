@@ -87,6 +87,8 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
     DepthType startDepth = 1;//std::min(d,easyMoveDetectionDepth);
     std::vector<RootScores> multiPVMoves(DynamicConfig::multiPV);
 
+    bool fhBreak = false;
+
     if ( isMainThread() && d > easyMoveDetectionDepth+5 && Searcher::currentMoveMs < INFINITETIME && Searcher::currentMoveMs > 800 && TimeMan::msecUntilNextTC > 0){
        // easy move detection (small open window search)
        rootScores.clear();
@@ -146,24 +148,27 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
                     }
                 }
                 else if (beta < MATE && score >= beta ) {
-                    //alpha = std::max(ScoreType(-MATE),ScoreType((alpha + beta)/2));
-                    // check other moves (if not multi-PV ...)
-                    if ( DynamicConfig::multiPV == 1){
-                        PVList pv2;
-                        TT::getPV(p, *this, pv2);
-                        std::vector<MiniMove> skipMovesFailHigh = { Move2MiniMove(pv2[0]) };
-                        pv2.clear();
-                        DepthType seldepth2 = 0;
-                        if ( pvs<true,false>(beta-1,beta,p,windowDepth,0,pv2,seldepth2,isInCheck,false,&skipMovesFailHigh) <= beta ) break;
-                    }
-                    beta  = std::min(ScoreType(score + delta), ScoreType( MATE) );
-                    Logging::LogIt(Logging::logInfo) << "Increase window beta "  << alpha << ".." << beta;
                     if ( isMainThread() ){
                         PVList pv2;
                         TT::getPV(p, *this, pv2);
                         displayGUI(depth,seldepth,score,pv2,multi+1,"?");
                         --windowDepth; // from Ethereal
                     }
+                    // check other moves (if not multi-PV ...)
+                    if ( DynamicConfig::multiPV == 1 && pvLoc.size() && beta > alpha + 50){
+                        std::vector<MiniMove> skipMovesFailHigh = { Move2MiniMove(pvLoc[0]) };
+                        DepthType seldepth2 = 0;
+                        PVList pv2;
+                        const ScoreType fhVerification = pvs<true,false>(beta-1,beta,p,windowDepth,0,pv2,seldepth2,isInCheck,false,&skipMovesFailHigh);
+                        if ( !stopFlag && fhVerification <= beta ){
+                            Logging::LogIt(Logging::logInfo) << "Breaking aspiration loop beta...";
+                            fhBreak = true;
+                            break;
+                        }
+                    }
+                    //alpha = std::max(ScoreType(-MATE),ScoreType((alpha + beta)/2));
+                    beta  = std::min(ScoreType(score + delta), ScoreType( MATE) );
+                    Logging::LogIt(Logging::logInfo) << "Increase window beta "  << alpha << ".." << beta;
                 }
                 else break;
             }
@@ -176,7 +181,15 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
                 }
             }
             else{
-                pv = pvLoc;
+                if ( fhBreak && pvLoc.size() ){ // no good pv available, let's build one ...
+                    Position p2 = p;
+                    apply(p2,pvLoc[0]);
+                    PVList pv2;
+                    TT::getPV(p2, *this, pv2);
+                    pv2.insert(pv2.begin(),pvLoc[0]);
+                    pv = pv2;
+                }
+                else pv = pvLoc;
                 reachedDepth = depth;
                 bestScore    = score;
                 if ( isMainThread() ){
