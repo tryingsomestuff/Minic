@@ -88,8 +88,8 @@ void analyze(const Position & p, DepthType depth){
         Logging::LogIt(Logging::logInfo) << "Next two lines are for OpenBench";
         const TimeType ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count());
         const Counter nodeCount = ThreadPool::instance().main().stats.counters[Stats::sid_nodes] + ThreadPool::instance().main().stats.counters[Stats::sid_qnodes];
-        std::cerr << nodeCount << std::endl;
-        std::cerr << int(nodeCount/(ms/1000.f)) << std::endl;
+        std::cerr << "NODES " << nodeCount << std::endl;
+        std::cerr << "NPS " << int(nodeCount/(ms/1000.f)) << std::endl;
 }
 
 int cliManagement(std::string cli, int argc, char ** argv){
