@@ -2,7 +2,7 @@ FROM python:3
 
 WORKDIR /
 
-ADD OpenBench.py /
+ADD Client.py /
 ADD entry.sh /
 
 RUN pip3 install requests
