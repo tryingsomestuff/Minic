@@ -1,7 +1,9 @@
 .PHONY: build
 
+ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+
 build: 
-	./Tools/build.sh
+	$(ROOT_DIR)/Tools/build.sh
 
 prerequisites: build
 
