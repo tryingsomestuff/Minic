@@ -266,8 +266,8 @@ You can use both the json configuation file or the command line argument to sele
 * 2.06 : work on emrgency mode
 * 2.07 : contempt, pawn structure, retuning
 * 2.08 : more UCI param, weak pawn
-* 2.09 : break aspiration search in fail high wase if no other move above beta
-* 2.10 : ...
+* 2.09 : break aspiration search in fail high case if no other move above beta
+* 2.10..2.11 : tweaking
 
 
 ## Thanks
@@ -278,11 +278,13 @@ Here's an incomplete list of inspiring open-source engines :
 Arasan by Jon Dart  
 CPW by Pawel Koziol and Edmund Moshammer  
 Deepov by Romain Goussault  
+Defenchess by Can Cetin and Dogac Eldenk  
+Demolito by Lucas Braesch
 Dorpsgek by Dan Ravensloft  
 Ethereal by Andrew Grant  
 Galjoen by Werner Taelemans  
 Madchess by Erik Madsen  
-Rodent III by Pawel Koziol  
+Rodent by Pawel Koziol  
 Stockfish by Tord Romstad, Marco Costalba, Joona Kiiski and Gary Linscott  
 Texel by Peter Österlund   
 Topple by Vincent Konsolas  
