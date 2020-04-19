@@ -2,7 +2,8 @@
 
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
-build: 
+build:
+	chmod +x Tools/*.sh
 	$(ROOT_DIR)/Tools/build.sh
 
 prerequisites: build
