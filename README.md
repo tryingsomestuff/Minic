@@ -273,18 +273,19 @@ You can use both the json configuation file or the command line argument to sele
 ## Thanks
 
 Of course many/most idea in Minic are taken from the beautifull chess developer community.
-Here's an incomplete list of inspiring open-source engines :
+Here's a very incomplete list of inspiring open-source engines :
 
 Arasan by Jon Dart  
 CPW by Pawel Koziol and Edmund Moshammer  
 Deepov by Romain Goussault  
 Defenchess by Can Cetin and Dogac Eldenk  
-Demolito by Lucas Braesch
+Demolito by Lucas Braesch  
 Dorpsgek by Dan Ravensloft  
 Ethereal by Andrew Grant  
 Galjoen by Werner Taelemans  
 Madchess by Erik Madsen  
 Rodent by Pawel Koziol  
+RubiChess by Andreas Matthies  
 Stockfish by Tord Romstad, Marco Costalba, Joona Kiiski and Gary Linscott  
 Texel by Peter Österlund   
 Topple by Vincent Konsolas  
