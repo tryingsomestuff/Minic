@@ -5,9 +5,20 @@
 #include "attack.hpp"
 #include "bitboardTools.hpp"
 #include "hash.hpp"
+#include "logging.hpp"
+#include "positionTools.hpp"
 #include "timers.hpp"
+#include "tools.hpp"
 
 struct Searcher;
+
+void applyNull(Searcher & context, Position & pN);
+
+bool apply(Position & p, const Move & m, bool noValidation = false);
+
+ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck);
+
+bool isPseudoLegal(const Position & p, Move m);
 
 namespace MoveGen{
 
@@ -18,12 +29,26 @@ void addMove(Square from, Square to, MType type, MoveList & moves);
 template < GenPhase phase = GP_all >
 void generateSquare(const Position & p, MoveList & moves, Square from){
     assert(from != INVALIDSQUARE);
+#ifdef DEBUG_GENERATION    
+    if ( from == INVALIDSQUARE) Logging::LogIt(Logging::logFatal) << "invalid square";
+#endif
     const Color side = p.c;
     const BitBoard myPieceBB  = p.allPieces[side];
     const BitBoard oppPieceBB = p.allPieces[~side];
     const Piece piece = p.board_const(from);
     const Piece ptype = (Piece)std::abs(piece);
-    assert ( ptype != P_none );
+    assert ( pieceValid(ptype) );
+#ifdef DEBUG_GENERATION    
+    if ( !pieceValid(ptype)){
+        Logging::LogIt(Logging::logWarn) << showBitBoard(myPieceBB);
+        Logging::LogIt(Logging::logWarn) << showBitBoard(oppPieceBB);
+        Logging::LogIt(Logging::logWarn) << "piece " << (int) piece;
+        Logging::LogIt(Logging::logWarn) << SquareNames[from];
+        Logging::LogIt(Logging::logWarn) << ToString(p);
+        Logging::LogIt(Logging::logWarn) << ToString(p.lastMove);
+        Logging::LogIt(Logging::logFatal) << "invalid type " << ptype;
+    }
+#endif
     const BitBoard occupancy = p.occupancy();
     if (ptype != P_wp) {
         BitBoard bb = BBTools::pfCoverage[ptype-1](from, occupancy, p.c) & ~myPieceBB;
@@ -95,6 +120,14 @@ void generate(const Position & p, MoveList & moves, bool doNotClear = false){
     if (!doNotClear) moves.clear();
     BitBoard myPieceBBiterator = ( (p.c == Co_White) ? p.allPieces[Co_White] : p.allPieces[Co_Black]);
     while (myPieceBBiterator) generateSquare<phase>(p,moves,popBit(myPieceBBiterator));
+#ifdef DEBUG_GENERATION
+    for(auto m : moves){
+       if (!isPseudoLegal(p, m)) {
+           Logging::LogIt(Logging::logFatal) << "Generation error, move not legal " << ToString(p) << ToString(m);
+           assert(false);
+       }
+    }
+#endif
     STOP_AND_SUM_TIMER(Generate)
 }
 
@@ -135,11 +168,3 @@ inline void movePieceCastle(Position & p, CastlingTypes ct, Square kingDest, Squ
     p.castling &= ~(ks | qs);
     STOP_AND_SUM_TIMER(MovePiece)
 }
-
-void applyNull(Searcher & context, Position & pN);
-
-bool apply(Position & p, const Move & m, bool noValidation = false);
-
-ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck);
-
-bool isPseudoLegal(const Position & p, Move m);

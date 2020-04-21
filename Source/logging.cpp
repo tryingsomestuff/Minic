@@ -22,10 +22,10 @@ namespace Logging {
     LogIt::~LogIt() {
         std::lock_guard<std::mutex> lock(_mutex);
         if (_level != logGUI) {
-               if ( ! DynamicConfig::quiet || _level > logGUI ){
+           if ( ! DynamicConfig::quiet || _level > logGUI ){
               std::cout       << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
               if (_of) (*_of) << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
-               }
+           }
         }
         else {
             std::cout       << _buffer.str() << std::flush << std::endl;

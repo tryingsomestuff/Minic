@@ -50,7 +50,7 @@ void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, boo
     STOP_AND_SUM_TIMER(MovePiece)
 }
 
-void applyNull(Searcher & context, Position & pN) {
+void applyNull(Searcher & , Position & pN) {
     START_TIMER
     pN.c = ~pN.c;
     pN.h ^= Zobrist::ZT[3][13];
@@ -80,7 +80,8 @@ bool apply(Position & p, const Move & m, bool noValidation){
     const bool isCapNoEP= toP != P_none;
 #ifdef DEBUG_APPLY
     if (!isPseudoLegal(p, m)) {
-        Logging::LogIt(Logging::logError) << "Apply error, not legal " << ToString(p) << ToString(m);
+        Logging::LogIt(Logging::logError) << ToString(m);
+        Logging::LogIt(Logging::logFatal) << "Apply error, not legal " << ToString(p);
         assert(false);
     }
 #endif
@@ -247,6 +248,27 @@ bool apply(Position & p, const Move & m, bool noValidation){
         Logging::LogIt(Logging::logWarn)  << "Material computed " << ToString(p)        << ToString(p.mat);
         Logging::LogIt(Logging::logWarn)  << "Material incrementally updated " << ToString(mat);
         Logging::LogIt(Logging::logFatal) << "Last move " << ToString(p.lastMove) << " current move "  << ToString(m);
+    }
+#endif
+
+#ifdef DEBUG_BITBOARD
+    for( Piece pp = P_bk ; pp <= P_wk ; ++pp){
+       if ( pp == P_none) continue;
+       BitBoard b = p.pieces_const(pp);
+       const BitBoard bb = b;
+       while(b){
+           const Square s = popBit(b);
+           if ( p.board_const(s) != pp ){
+               Logging::LogIt(Logging::logWarn) << SquareNames[s];
+               Logging::LogIt(Logging::logWarn) << ToString(p);
+               Logging::LogIt(Logging::logWarn) << showBitBoard(bb);
+               Logging::LogIt(Logging::logWarn) << (int) pp;
+               Logging::LogIt(Logging::logWarn) << (int) p.board_const(s);
+               Logging::LogIt(Logging::logWarn) << "last move " << ToString(p.lastMove);
+               Logging::LogIt(Logging::logWarn) << " current move "  << ToString(m);
+               Logging::LogIt(Logging::logFatal) << "Wrong bitboard ";
+           }
+       }
     }
 #endif
     p.lastMove = m;

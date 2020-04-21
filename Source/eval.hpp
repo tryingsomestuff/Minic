@@ -14,15 +14,15 @@ namespace{ // some Color / Piece helpers
    template<Color C> inline bool isPasser(const Position &p, Square k)     { return (BBTools::mask[k].passerSpan[C] & p.pieces_const<P_wp>(~C)) == empty;}
    template<Color C> inline Square ColorSquarePstHelper(Square k)          { return C==Co_White?(k^56):k;}
    template<Color C> inline constexpr ScoreType ColorSignHelper()          { return C==Co_White?+1:-1;}
-   template<Color C> inline const Square PromotionSquare(const Square k)   { return C==Co_White? (SQFILE(k) + 56) : SQFILE(k);}
-   template<Color C> inline const Rank ColorRank(const Square k)           { return Rank(C==Co_White? SQRANK(k) : (7-SQRANK(k)));}
+   template<Color C> inline Square PromotionSquare(const Square k)         { return C==Co_White? (SQFILE(k) + 56) : SQFILE(k);}
+   template<Color C> inline Rank ColorRank(const Square k)                 { return Rank(C==Co_White? SQRANK(k) : (7-SQRANK(k)));}
    template<Color C> inline bool isBackward(const Position &p, Square k, const BitBoard pAtt[2], const BitBoard pAttSpan[2]){ return ((BBTools::shiftN<C>(SquareToBitboard(k))&~p.pieces_const<P_wp>(~C)) & pAtt[~C] & ~pAttSpan[C]) != empty; }
    template<Piece T> inline BitBoard alignedThreatPieceSlider(const Position & p, Color C);
-   template<> inline BitBoard alignedThreatPieceSlider<P_wn>(const Position & p, Color C){ return empty;}
+   template<> inline BitBoard alignedThreatPieceSlider<P_wn>(const Position &  , Color  ){ return empty;}
    template<> inline BitBoard alignedThreatPieceSlider<P_wb>(const Position & p, Color C){ return p.pieces_const<P_wb>(C) | p.pieces_const<P_wq>(C) /*| p.pieces_const<P_wn>(C)*/;}
    template<> inline BitBoard alignedThreatPieceSlider<P_wr>(const Position & p, Color C){ return p.pieces_const<P_wr>(C) | p.pieces_const<P_wq>(C) /*| p.pieces_const<P_wn>(C)*/;}
    template<> inline BitBoard alignedThreatPieceSlider<P_wq>(const Position & p, Color C){ return p.pieces_const<P_wb>(C) | p.pieces_const<P_wr>(C) /*| p.pieces_const<P_wn>(C)*/;} ///@todo this is false ...
-   template<> inline BitBoard alignedThreatPieceSlider<P_wk>(const Position & p, Color C){ return empty;}
+   template<> inline BitBoard alignedThreatPieceSlider<P_wk>(const Position &  , Color  ){ return empty;}
 }
 
 template < Piece T , Color C>

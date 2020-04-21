@@ -71,9 +71,9 @@ namespace COM {
         return m;
     }
 
-    bool makeMove(Move m, bool disp, std::string tag, Move ponder) {
+    bool makeMove(Move m, bool disp, std::string tag, Move pMove) {
         bool b = apply(position, m, true);
-        if (disp && m != INVALIDMOVE) Logging::LogIt(Logging::logGUI) << tag << " " << ToString(m) << (Logging::ct==Logging::CT_uci && VALIDMOVE(ponder) ? (" ponder " + ToString(ponder)) : "");
+        if (disp && m != INVALIDMOVE) Logging::LogIt(Logging::logGUI) << tag << " " << ToString(m) << (Logging::ct==Logging::CT_uci && VALIDMOVE(pMove) ? (" ponder " + ToString(pMove)) : "");
         Logging::LogIt(Logging::logInfo) << ToString(position);
         return b;
     }

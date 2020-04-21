@@ -43,26 +43,26 @@ struct Position{
     inline const Piece & board_const(Square k)const{ return _b[k];}
     inline Piece & board(Square k){ return _b[k];}
 
-    inline const BitBoard occupancy()const { return allPieces[Co_White] | allPieces[Co_Black];}
+    inline BitBoard occupancy()const { return allPieces[Co_White] | allPieces[Co_Black];}
 
-    inline const BitBoard blackKing  ()const {return _allB[5] & allPieces[Co_Black];}
-    inline const BitBoard blackQueen ()const {return _allB[4] & allPieces[Co_Black];}
-    inline const BitBoard blackRook  ()const {return _allB[3] & allPieces[Co_Black];}
-    inline const BitBoard blackBishop()const {return _allB[2] & allPieces[Co_Black];}
-    inline const BitBoard blackKnight()const {return _allB[1] & allPieces[Co_Black];}
-    inline const BitBoard blackPawn  ()const {return _allB[0] & allPieces[Co_Black];}
+    inline BitBoard blackKing  ()const {return _allB[5] & allPieces[Co_Black];}
+    inline BitBoard blackQueen ()const {return _allB[4] & allPieces[Co_Black];}
+    inline BitBoard blackRook  ()const {return _allB[3] & allPieces[Co_Black];}
+    inline BitBoard blackBishop()const {return _allB[2] & allPieces[Co_Black];}
+    inline BitBoard blackKnight()const {return _allB[1] & allPieces[Co_Black];}
+    inline BitBoard blackPawn  ()const {return _allB[0] & allPieces[Co_Black];}
 
-    inline const BitBoard whitePawn  ()const {return _allB[0] & allPieces[Co_White];}
-    inline const BitBoard whiteKnight()const {return _allB[1] & allPieces[Co_White];}
-    inline const BitBoard whiteBishop()const {return _allB[2] & allPieces[Co_White];}
-    inline const BitBoard whiteRook  ()const {return _allB[3] & allPieces[Co_White];}
-    inline const BitBoard whiteQueen ()const {return _allB[4] & allPieces[Co_White];}
-    inline const BitBoard whiteKing  ()const {return _allB[5] & allPieces[Co_White];}
+    inline BitBoard whitePawn  ()const {return _allB[0] & allPieces[Co_White];}
+    inline BitBoard whiteKnight()const {return _allB[1] & allPieces[Co_White];}
+    inline BitBoard whiteBishop()const {return _allB[2] & allPieces[Co_White];}
+    inline BitBoard whiteRook  ()const {return _allB[3] & allPieces[Co_White];}
+    inline BitBoard whiteQueen ()const {return _allB[4] & allPieces[Co_White];}
+    inline BitBoard whiteKing  ()const {return _allB[5] & allPieces[Co_White];}
 
     template<Piece pp>
-    inline const BitBoard pieces_const(Color c)const          { assert(pp!=P_none); return _allB[pp-1] & allPieces[c]; }
-    inline const BitBoard pieces_const(Color c, Piece pp)const{ assert(pp!=P_none); return _allB[pp-1] & allPieces[c]; }
-    inline const BitBoard pieces_const(Piece pp)const         { assert(pp!=P_none); return _allB[std::abs(pp)-1] & allPieces[c]; }
+    inline BitBoard pieces_const(Color cc)const          { assert(pp!=P_none); return _allB[pp-1] & allPieces[cc]; }
+    inline BitBoard pieces_const(Color cc, Piece pp)const{ assert(pp!=P_none); return _allB[pp-1] & allPieces[cc]; }
+    inline BitBoard pieces_const(Piece pp)const          { assert(pp!=P_none); return _allB[std::abs(pp)-1] & allPieces[pp>0?Co_White:Co_Black]; }
 
     inline BitBoard & _pieces(Piece pp)         { assert(pp!=P_none); return _allB[std::abs(pp)-1]; }
 };

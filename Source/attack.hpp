@@ -88,13 +88,13 @@ void initMagic();
 } // MagicBB
 
 // Next functions define the user API for piece move
-template < Piece > inline BitBoard coverage      (const Square x, const BitBoard occupancy, const Color c) { assert(false); return empty; }
-template <       > inline BitBoard coverage<P_wp>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].pawnAttack[c]; }
-template <       > inline BitBoard coverage<P_wn>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].knight; }
-template <       > inline BitBoard coverage<P_wb>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return MAGICBISHOPATTACKS(occupancy, x); }
-template <       > inline BitBoard coverage<P_wr>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return MAGICROOKATTACKS  (occupancy, x); }
-template <       > inline BitBoard coverage<P_wq>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return MAGICBISHOPATTACKS(occupancy, x) | MAGICROOKATTACKS(occupancy, x); }
-template <       > inline BitBoard coverage<P_wk>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].king; }
+template < Piece > inline BitBoard coverage      (const Square x, const BitBoard          , const Color  ) { assert(false); return empty; }
+template <       > inline BitBoard coverage<P_wp>(const Square x, const BitBoard          , const Color c) { assert( x >= 0 && x < 64); return mask[x].pawnAttack[c]; }
+template <       > inline BitBoard coverage<P_wn>(const Square x, const BitBoard          , const Color  ) { assert( x >= 0 && x < 64); return mask[x].knight; }
+template <       > inline BitBoard coverage<P_wb>(const Square x, const BitBoard occupancy, const Color  ) { assert( x >= 0 && x < 64); return MAGICBISHOPATTACKS(occupancy, x); }
+template <       > inline BitBoard coverage<P_wr>(const Square x, const BitBoard occupancy, const Color  ) { assert( x >= 0 && x < 64); return MAGICROOKATTACKS  (occupancy, x); }
+template <       > inline BitBoard coverage<P_wq>(const Square x, const BitBoard occupancy, const Color  ) { assert( x >= 0 && x < 64); return MAGICBISHOPATTACKS(occupancy, x) | MAGICROOKATTACKS(occupancy, x); }
+template <       > inline BitBoard coverage<P_wk>(const Square x, const BitBoard          , const Color  ) { assert( x >= 0 && x < 64); return mask[x].king; }
 
 // Attack function is just coverage interseted with a target bitboard
 template < Piece pp > inline BitBoard attack(const Square x, const BitBoard target, const BitBoard occupancy = 0, const Color c = Co_White) { 

@@ -16,15 +16,25 @@ namespace TT{
 
 extern GenerationType curGen;
 enum Bound : unsigned char{ B_exact = 0, B_alpha = 1, B_beta = 2, B_none = 3};
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
+#endif  // defined(__GNUC__)
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpedantic"
+#pragma clang diagnostic ignored "-Wignored-qualifiers"
+#endif  // defined(__clang__)
 #pragma pack(push, 1)
 struct Entry{
     Entry():m(INVALIDMINIMOVE),h(0),s(0),e(0),b(B_none),d(-1)/*,generation(curGen)*/{}
-    Entry(Hash h, Move m, ScoreType s, ScoreType e, Bound b, DepthType d) : h(Hash64to32(h)), m(Move2MiniMove(m)), s(s), e(e), /*generation(curGen),*/ b(b), d(d){}
+    Entry(Hash _h, Move _m, ScoreType _s, ScoreType _e, Bound _b, DepthType _d) : h(Hash64to32(_h)), m(Move2MiniMove(_m)), s(_s), e(_e), /*generation(curGen),*/ b(_b), d(_d){}
     MiniHash h;            //32
     ScoreType s, e;        //16 + 16
     union{
-        MiniHash _d;       //32
-        struct{
+        MiniHash _data;    //32
+        struct {
            MiniMove m;     //16
            Bound b;        //8
            DepthType d;    //8
@@ -33,6 +43,12 @@ struct Entry{
     //GenerationType generation;
 };
 #pragma pack(pop)
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif  // defined(__clang__)
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif  // defined(__GNUC__)
 
 void initTable();
 

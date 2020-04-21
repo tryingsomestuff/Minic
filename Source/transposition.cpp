@@ -58,18 +58,18 @@ void prefetch(Hash h) {
 bool getEntry(Searcher & context, const Position & p, Hash h, DepthType d, Entry & e) {
     assert(h > 0);
     if ( DynamicConfig::disableTT  ) return false;
-    Entry & _e = table[h&(ttSize-1)];
+    e = table[h&(ttSize-1)]; // update entry immediatly to avoid further race condition and invalidate it later if needed
 #ifdef DEBUG_HASH_ENTRY
-    _e.d = Zobrist::randomInt<unsigned int>(0, UINT32_MAX);
+    e.d = Zobrist::randomInt<unsigned int>(0, UINT32_MAX);
 #endif
-    if ( _e.h == 0 ) return false; //early exist cause next ones are also empty ...
-    if ( !VALIDMOVE(_e.m) ||
+    if ( e.h == 0 ) return false; //early exist cause next ones are also empty ...
+    if ( !VALIDMOVE(e.m) ||
 #ifndef DEBUG_HASH_ENTRY
-        (_e.h ^ _e._d) != Hash64to32(h) ||
+        (e.h ^ e._data) != Hash64to32(h) ||
 #endif
-        !isPseudoLegal(p, _e.m)) { _e.h = 0; return false; }
-    e = _e; // update entry only if no collision is detected !
-    if ( _e.d >= d ){ ++context.stats.counters[Stats::sid_tthits]; return true; } // valid entry if depth is ok
+        !isPseudoLegal(p, e.m)) { e.h = 0; return false; }
+    
+    if ( e.d >= d ){ ++context.stats.counters[Stats::sid_tthits]; return true; } // valid entry if depth is ok
     else return false;
 }
 
@@ -78,7 +78,7 @@ void setEntry(Searcher & context, Hash h, Move m, ScoreType s, ScoreType eval, B
     assert(h > 0);
     if ( DynamicConfig::disableTT ) return;
     Entry e = {h,m,s,eval,b,d};
-    e.h ^= e._d;
+    e.h ^= e._data;
     ++context.stats.counters[Stats::sid_ttInsert];
     table[h&(ttSize-1)] = e; // always replace (favour leaf)
 }
