@@ -44,7 +44,7 @@ struct Searcher{
     EvalScore contempt = 0;
 
     void getCMHPtr(const unsigned int ply, CMHPtrArray & cmhPtr);
-    ScoreType getCMHScore(const Position & p, const Square from, const Square to, DepthType ply, const CMHPtrArray & cmhPtr)const;
+    ScoreType getCMHScore(const Position & p, const Square from, const Square to, const CMHPtrArray & cmhPtr)const;
 
     ScoreType drawScore();
 

@@ -19,7 +19,7 @@ namespace Options {
         return *keyRef;
     }
 
-    const int GetValue(const std::string & key){ // assume we can convert to int safely (not valid for string of course !)
+    int GetValue(const std::string & key){ // assume we can convert to int safely (not valid for string of course !)
         const KeyBase & k = GetKey(key);
         switch (k.type) {
         case k_bool:   return (int)*static_cast<bool*>(k.value);

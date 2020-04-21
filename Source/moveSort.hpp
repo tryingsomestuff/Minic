@@ -13,7 +13,12 @@
 
 struct MoveSorter{
 
-    MoveSorter(const Searcher & context, const Position & p, float gp, DepthType ply, const CMHPtrArray & cmhPtr, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL, const Move refutation = INVALIDMOVE):context(context),p(p),gp(gp),ply(ply),cmhPtr(cmhPtr),useSEE(useSEE),isInCheck(isInCheck),e(e),refutation(refutation){assert(e==NULL||e->h!=nullHash);}
+    MoveSorter(const Searcher & _context, const Position & _p, float _gp, DepthType _ply, 
+               const CMHPtrArray & _cmhPtr, bool _useSEE = true, bool _isInCheck = false, 
+               const TT::Entry * _e = NULL, const Move _refutation = INVALIDMOVE)
+          :context(_context),p(_p),gp(_gp),ply(_ply),cmhPtr(_cmhPtr),useSEE(_useSEE),isInCheck(_isInCheck),e(_e),refutation(_refutation){
+            assert(e==NULL||e->h!=nullHash);
+    }
 
     void computeScore(Move & m)const;
 

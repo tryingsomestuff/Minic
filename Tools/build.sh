@@ -41,8 +41,11 @@ fi
 
 echo "Building $exe"
 
-OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 $t --std=c++14 -Wfatal-errors"
-#OPT="-Wall -Wno-char-subscripts -Wno-reorder $d -O0 -g $t --std=c++14"
+WARN="-Wall -Wcast-qual -Wno-char-subscripts -Wno-reorder -Wmaybe-uninitialized -pedantic -Wextra -Wshadow -Wfatal-errors"
+
+OPT="-s $WARN $d -DNDEBUG -O3 $t --std=c++14" ; DEPTH=20
+#OPT="$WARN $d -DNDEBUG -g $t --std=c++14" ; DEPTH=10
+#OPT="$WARN $d -g $t --std=c++14" ; DEPTH=10
 
 # -flto is making g++ 9.3.0 under cygwin segfault
 uname -a | grep CYGWIN
@@ -68,7 +71,7 @@ g++ -fprofile-generate $OPT Source/*.cpp -ISource -o $dir/Dist/Minic2/$exe -lpth
 echo "end of first compilation"
 if [ $? = "0" ]; then
    echo "running Minic for profiling : $dir/Dist/Minic2/$exe"
-   $dir/Dist/Minic2/$exe bench -quiet 0 
+   $dir/Dist/Minic2/$exe bench $DEPTH -quiet 0 
    #$dir/Dist/Minic2/$exe -analyze "shirov" 20 
    echo "starting optimized compilation"
    g++ -fprofile-use $OPT Source/*.cpp -ISource -o $dir/Dist/Minic2/$exe -lpthread

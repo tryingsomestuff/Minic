@@ -53,7 +53,7 @@ Iter select_randomly(Iter start, Iter end) {
     return start;
 }
 
-const Move Get(const Hash h){
+Move Get(const Hash h){
     std::unordered_map<Hash, std::set<Move> >::iterator it = book.find(h);
     if ( it == book.end() ) return INVALIDMOVE;
     Logging::LogIt(Logging::logInfo) << "Book hit";

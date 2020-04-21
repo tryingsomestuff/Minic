@@ -29,7 +29,7 @@ void Searcher::getCMHPtr(const unsigned int ply, CMHPtrArray & cmhPtr){
     }
 }
 
-ScoreType Searcher::getCMHScore(const Position & p, const Square from, const Square to, DepthType ply, const CMHPtrArray & cmhPtr) const {
+ScoreType Searcher::getCMHScore(const Position & p, const Square from, const Square to, const CMHPtrArray & cmhPtr) const {
     ScoreType ret = 0;
     for (int i = 0; i < MAX_CMH_PLY; i ++){ if (cmhPtr[i]){ ret += cmhPtr[i][(p.board_const(from)+PieceShift) * 64 + to]; } }
     return ret;

@@ -219,6 +219,12 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
     // try the tt move before move generation (if not skipped move)
     if ( e.h != 0 && validTTmove && !isSkipMove(e.m,skipMoves)) { // should be the case thanks to iid at pvnode
         bestMove = e.m; // in order to preserve tt move for alpha bound entry
+#ifdef DEBUG_APPLY
+        // to debug race condition in entry affectation !
+        if ( !isPseudoLegal(p, e.m) ){
+            Logging::LogIt(Logging::logFatal) << "invalide TT move !";
+        }
+#endif
         Position p2 = p;
         if ( apply(p2, e.m)) {
             TT::prefetch(computeHash(p2));
@@ -296,7 +302,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
 
 #ifdef WITH_SYZYGY
     if (rootnode && withoutSkipMove && (countBit(p.allPieces[Co_White] | p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN) {
-        ScoreType tbScore = 0;
+        tbScore = 0;
         if (SyzygyTb::probe_root(*this, p, tbScore, moves) < 0) { // only good moves if TB success
             if (capMoveGenerated) MoveGen::generate<MoveGen::GP_quiet>(p, moves, true);
             else                  MoveGen::generate<MoveGen::GP_all>  (p, moves, false);
