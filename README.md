@@ -268,6 +268,7 @@ You can use both the json configuation file or the command line argument to sele
 * 2.08 : more UCI param, weak pawn
 * 2.09 : break aspiration search in fail high case if no other move above beta
 * 2.10..2.11 : tweaking
+* 2.12 : fix a TT race condition  
 
 
 ## Thanks
