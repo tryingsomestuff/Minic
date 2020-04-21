@@ -2,7 +2,13 @@
 
 #include "definition.hpp"
 
-#ifdef __linux__
+#ifdef __ANDROID__
+inline std::string backtrace(){
+    ////@todo
+    return "";
+}
+
+#elif __linux__
 #include <stdio.h>
 #include <execinfo.h>
 #include <signal.h>
