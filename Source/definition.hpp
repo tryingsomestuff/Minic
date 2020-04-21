@@ -217,7 +217,7 @@ enum MType : unsigned char{
     T_wks        = 12,  T_wqs        = 13,  T_bks        = 14,  T_bqs        = 15    // binary 1100 to 1111
 };
 
-inline bool moveTypeOK(MType  m) { return m>= T_std && m<=T_bqs;}
+inline bool moveTypeOK(MType  m) { return m<=T_bqs;}
 inline bool squareOK  (Square s) { return s>=0 && s<64;}
 inline bool pieceOK   (Piece  pp){ return pp>=P_bk && pp<=P_wk; }
 inline bool pieceValid(Piece  pp){ return pieceOK(pp) && pp != P_none;}
