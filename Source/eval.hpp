@@ -48,29 +48,33 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, const BitBoa
 ///@todo special version of evalPiece for king ??
 
 template < Piece T ,Color C>
-inline void evalMob(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, const BitBoard safe){
+inline void evalMob(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, const BitBoard safe, EvalData & data){
     while (pieceBBiterator){
-        const BitBoard mob = BBTools::pfCoverage[T-1](popBit(pieceBBiterator), p.occupancy(), C) & ~p.allPieces[C] & safe;
-        score[sc_MOB] += EvalConfig::MOB[T-2][countBit(mob)]*ColorSignHelper<C>();
+        const unsigned short int mob = countBit(BBTools::pfCoverage[T-1](popBit(pieceBBiterator), p.occupancy(), C) & ~p.allPieces[C] & safe);
+        data.mobility[C] += mob;
+        score[sc_MOB] += EvalConfig::MOB[T-2][mob]*ColorSignHelper<C>();
     }
 }
 
 template < Color C >
-inline void evalMobQ(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, const BitBoard safe){
+inline void evalMobQ(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, const BitBoard safe, EvalData & data){
     while (pieceBBiterator){
         const Square s = popBit(pieceBBiterator);
-        BitBoard mob = BBTools::pfCoverage[P_wb-1](s, p.occupancy(), C) & ~p.allPieces[C] & safe;
-        score[sc_MOB] += EvalConfig::MOB[3][countBit(mob)]*ColorSignHelper<C>();
-        mob = BBTools::pfCoverage[P_wr-1](s, p.occupancy(), C) & ~p.allPieces[C] & safe;
-        score[sc_MOB] += EvalConfig::MOB[4][countBit(mob)]*ColorSignHelper<C>();
+        unsigned short int mob = countBit(BBTools::pfCoverage[P_wb-1](s, p.occupancy(), C) & ~p.allPieces[C] & safe);
+        data.mobility[C] += mob;
+        score[sc_MOB] += EvalConfig::MOB[3][mob]*ColorSignHelper<C>();
+        mob = countBit(BBTools::pfCoverage[P_wr-1](s, p.occupancy(), C) & ~p.allPieces[C] & safe);
+        data.mobility[C] += mob;
+        score[sc_MOB] += EvalConfig::MOB[4][mob]*ColorSignHelper<C>();
     }
 }
 
 template < Color C>
-inline void evalMobK(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, const BitBoard safe){
+inline void evalMobK(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, const BitBoard safe, EvalData & data){
     while (pieceBBiterator){
-        const BitBoard mob = BBTools::pfCoverage[P_wk-1](popBit(pieceBBiterator), p.occupancy(), C) & ~p.allPieces[C] & safe;
-        score[sc_MOB] += EvalConfig::MOB[5][countBit(mob)]*ColorSignHelper<C>();
+        const unsigned short int mob = countBit(BBTools::pfCoverage[P_wk-1](popBit(pieceBBiterator), p.occupancy(), C) & ~p.allPieces[C] & safe);
+        data.mobility[C] += mob;
+        score[sc_MOB] += EvalConfig::MOB[5][mob]*ColorSignHelper<C>();
     }
 }
 
@@ -135,10 +139,8 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
       return data.gp=0,(white2Play?+1:-1)* MATE;
     }
 
-    // level for the poor ...
-    const int lra = std::max(0, 500 - int(10*DynamicConfig::level));
-    if ( lra > 0 ) { score[sc_Rand] += Zobrist::randomInt<int>(-lra,lra); }
-
+    ///@todo activate features based on skill level
+    
     context.prefetchPawn(computeHash(p));
 
     // Material evaluation
@@ -451,16 +453,16 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     score[sc_PwnPushAtt] += EvalConfig::pawnSafePushAtt * (countBit(nonPawnMat[Co_Black] & BBTools::pawnAttacks<Co_White>(safePawnPush[Co_White])) - countBit(nonPawnMat[Co_White] & BBTools::pawnAttacks<Co_Black>(safePawnPush[Co_Black])));
 
     // pieces mobility
-    evalMob <P_wn,Co_White>(p,p.pieces_const<P_wn>(Co_White),score,safeSquare[Co_White]);
-    evalMob <P_wb,Co_White>(p,p.pieces_const<P_wb>(Co_White),score,safeSquare[Co_White]);
-    evalMob <P_wr,Co_White>(p,p.pieces_const<P_wr>(Co_White),score,safeSquare[Co_White]);
-    evalMobQ<     Co_White>(p,p.pieces_const<P_wq>(Co_White),score,safeSquare[Co_White]);
-    evalMobK<     Co_White>(p,p.pieces_const<P_wk>(Co_White),score,~att[Co_Black]);
-    evalMob <P_wn,Co_Black>(p,p.pieces_const<P_wn>(Co_Black),score,safeSquare[Co_Black]);
-    evalMob <P_wb,Co_Black>(p,p.pieces_const<P_wb>(Co_Black),score,safeSquare[Co_Black]);
-    evalMob <P_wr,Co_Black>(p,p.pieces_const<P_wr>(Co_Black),score,safeSquare[Co_Black]);
-    evalMobQ<     Co_Black>(p,p.pieces_const<P_wq>(Co_Black),score,safeSquare[Co_Black]);
-    evalMobK<     Co_Black>(p,p.pieces_const<P_wk>(Co_Black),score,~att[Co_White]);
+    evalMob <P_wn,Co_White>(p,p.pieces_const<P_wn>(Co_White),score,safeSquare[Co_White],data);
+    evalMob <P_wb,Co_White>(p,p.pieces_const<P_wb>(Co_White),score,safeSquare[Co_White],data);
+    evalMob <P_wr,Co_White>(p,p.pieces_const<P_wr>(Co_White),score,safeSquare[Co_White],data);
+    evalMobQ<     Co_White>(p,p.pieces_const<P_wq>(Co_White),score,safeSquare[Co_White],data);
+    evalMobK<     Co_White>(p,p.pieces_const<P_wk>(Co_White),score,~att[Co_Black]      ,data);
+    evalMob <P_wn,Co_Black>(p,p.pieces_const<P_wn>(Co_Black),score,safeSquare[Co_Black],data);
+    evalMob <P_wb,Co_Black>(p,p.pieces_const<P_wb>(Co_Black),score,safeSquare[Co_Black],data);
+    evalMob <P_wr,Co_Black>(p,p.pieces_const<P_wr>(Co_Black),score,safeSquare[Co_Black],data);
+    evalMobQ<     Co_Black>(p,p.pieces_const<P_wq>(Co_Black),score,safeSquare[Co_Black],data);
+    evalMobK<     Co_Black>(p,p.pieces_const<P_wk>(Co_Black),score,~att[Co_White]      ,data);
 
     // rook on open file
     score[sc_OpenFile] += EvalConfig::rookOnOpenFile         * countBit(p.whiteRook() & pe.openFiles);

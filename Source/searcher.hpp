@@ -30,8 +30,6 @@ struct Searcher{
 
     Stats stats;
 
-    // used for easy move detection
-    struct RootScores { Move m; ScoreType s; };
     std::vector<RootScores> rootScores;
 
     // used for move ordering

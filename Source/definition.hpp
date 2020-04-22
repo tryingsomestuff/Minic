@@ -290,3 +290,16 @@ inline void updatePV(PVList & pv, const Move & m, const PVList & childPV) {
     pv.push_back(m);
     std::copy(childPV.begin(), childPV.end(), std::back_inserter(pv));
 }
+
+template < typename T, int seed>
+inline T randomInt(T m, T M) {
+    static std::mt19937 mt(seed); // fixed seed for ZHash !!!
+    static std::uniform_int_distribution<T> dist(m,M);
+    return dist(mt);
+}
+
+template<class T>
+inline constexpr const T& clamp( const T& v, const T& lo, const T& hi ){
+    assert( !(hi < lo) );
+    return (v < lo) ? lo : (hi < v) ? hi : v;
+}

@@ -49,7 +49,6 @@ template<Color Us> kpk_result KPKPosition::preCompute(const std::vector<KPKPosit
 bool probe(Square wksq, Square wpsq, Square bksq, Color us) {
     assert(SQFILE(wpsq) <= 4);
     const unsigned idx = KPKindex(us, bksq, wksq, wpsq);
-    assert(idx >= 0);
     assert(idx < KPKmaxIndex);
     return KPKBitbase[idx/32] & (1<<(idx&0x1F));
 }

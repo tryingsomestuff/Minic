@@ -18,4 +18,6 @@ namespace DynamicConfig{
     unsigned int multiPV   = 1;
     ScoreType contempt     = 0;
     ScoreType contemptMG   = 0;
+    bool limitStrength     = false;
+    int strength           = -1;
 }

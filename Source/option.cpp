@@ -58,11 +58,16 @@ namespace Options {
 
 #define SETVALUE(TYPEIN,TYPEOUT) {TYPEIN v; str >> std::boolalpha >> v; *static_cast<TYPEOUT*>(keyRef.value) = (TYPEOUT)v;} break;
 
-    bool SetValue(const std::string & key, const std::string & value){
+    bool SetValue(const std::string & key, const std::string & val){
         KeyBase & keyRef = GetKey(key);
         if ( !keyRef.hotPlug && ThreadPool::instance().main().searching() ){
             Logging::LogIt(Logging::logError) << "Cannot change " << key << " during a search";
             return false;
+        }
+        std::string value = val;
+        if ( keyRef.type == k_bool ){
+            if ( value == "0") value = "false";
+            else if ( value == "1") value = "true";
         }
         std::stringstream str(value);
         switch (keyRef.type) {
@@ -81,7 +86,9 @@ namespace Options {
         return true;
     }
     void registerCOMOptions(){ // options exposed to GUI
-       _keys.push_back(KeyBase(k_int,   w_spin,  "Level"                       , &DynamicConfig::level                          , (unsigned int)0  , (unsigned int)SearchConfig::nlevel ));
+       _keys.push_back(KeyBase(k_int,   w_spin,  "Level"                       , &DynamicConfig::level                          , (unsigned int)0  , (unsigned int)100 ));
+       _keys.push_back(KeyBase(k_bool,  w_check, "UCI_LimitStrength"           , &DynamicConfig::limitStrength                  , false            , true ));
+       _keys.push_back(KeyBase(k_int,   w_spin,  "UCI_Elo"                     , &DynamicConfig::strength                       , (int)500         , (int)2800 ));
        _keys.push_back(KeyBase(k_int,   w_spin,  "Hash"                        , &DynamicConfig::ttSizeMb                       , (unsigned int)1  , (unsigned int)256000                , &TT::initTable));
        _keys.push_back(KeyBase(k_int,   w_spin,  "Threads"                     , &DynamicConfig::threads                        , (unsigned int)1  , (unsigned int)256                   , std::bind(&ThreadPool::setup, &ThreadPool::instance())));
        _keys.push_back(KeyBase(k_bool,  w_check, "UCI_Chess960"                , &DynamicConfig::FRC                            , false            , true ));
@@ -157,6 +164,9 @@ namespace Options {
        GETOPT(mateFinder,       bool)
        GETOPT(fullXboardOutput, bool)
        GETOPT(level,            unsigned int)
+       GETOPT(multiPV,          unsigned int)
+       GETOPT(limitStrength,    bool)
+       GETOPT(strength,         int)
 #ifdef WITH_SYZYGY
        GETOPT(syzygyPath,       std::string)
 #endif

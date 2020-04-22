@@ -9,7 +9,7 @@ namespace Zobrist {
     Hash ZT[64][14];
     void initHash() {
         Logging::LogIt(Logging::logInfo) << "Init hash";
-        for (int k = 0; k < 64; ++k) for (int j = 0; j < 14; ++j) ZT[k][j] = randomInt(Hash(0),Hash(UINT64_MAX));
+        for (int k = 0; k < 64; ++k) for (int j = 0; j < 14; ++j) ZT[k][j] = randomInt<Hash,42>(Hash(0),Hash(UINT64_MAX));
     }
 }
 

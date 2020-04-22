@@ -4,9 +4,15 @@
 #include "logging.hpp"
 #include "searcher.hpp"
 
-ThreadPool & ThreadPool::instance(){ static ThreadPool pool; return pool;}
+ThreadPool & ThreadPool::instance(){ 
+    static ThreadPool pool; 
+    return pool;
+}
 
-ThreadPool::~ThreadPool(){ Logging::LogIt(Logging::logInfo) << "... ok threadPool deleted"; }
+ThreadPool::~ThreadPool(){ 
+    // risk of static variable dependency fiasco ... ??
+    Logging::LogIt(Logging::logInfo) << "... ok threadPool deleted"; 
+}
 
 void ThreadPool::setup(){
     assert(DynamicConfig::threads > 0);

@@ -60,7 +60,7 @@ bool getEntry(Searcher & context, const Position & p, Hash h, DepthType d, Entry
     if ( DynamicConfig::disableTT  ) return false;
     e = table[h&(ttSize-1)]; // update entry immediatly to avoid further race condition and invalidate it later if needed
 #ifdef DEBUG_HASH_ENTRY
-    e.d = Zobrist::randomInt<unsigned int>(0, UINT32_MAX);
+    e.d = randomInt<unsigned int,666>(0, UINT32_MAX);
 #endif
     if ( e.h == 0 ) return false; //early exist cause next ones are also empty ...
     if ( !VALIDMOVE(e.m) ||

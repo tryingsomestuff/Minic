@@ -55,7 +55,7 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
                ++stats.counters[Stats::sid_materialTableMiss];
             }
             */
-           data.gp = 0.5; // force mid game value ...
+           data.gp = 0.5; // force mid game value in sorting ...
         }
         else {
             ++stats.counters[Stats::sid_ttscmiss];
