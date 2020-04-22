@@ -7,7 +7,7 @@ namespace Logging {
     std::mutex LogIt::_mutex;
     std::unique_ptr<std::ofstream> LogIt::_of;
 
-    COMType ct = CT_xboard;
+    COMType ct = CT_uci;
 
     std::string showDate() {
         std::stringstream str;

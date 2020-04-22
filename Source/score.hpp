@@ -77,4 +77,11 @@ struct ScoreAcc {
 struct EvalData{
     float gp = 0;
     ScoreType danger[2] = {0,0};
+    unsigned short int mobility[2] = {0,0};
+};
+
+// used for easy move detection
+struct RootScores { 
+    Move m; 
+    ScoreType s; 
 };

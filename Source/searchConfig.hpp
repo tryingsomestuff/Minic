@@ -53,9 +53,6 @@ extern CONST_CLOP_TUNING ScoreType dangerLimitPruning[2]        ;
 extern CONST_CLOP_TUNING ScoreType dangerLimitReduction[2]      ;
 extern CONST_CLOP_TUNING ScoreType failLowRootMargin            ;
 
-const int nlevel = 100;
-const DepthType levelDepthMax[nlevel/10+1]   = {0,1,1,2,4,6,8,10,12,14,MAX_DEPTH};
-
 const DepthType lmpMaxDepth = 10;
 const int lmpLimit[][SearchConfig::lmpMaxDepth + 1] = { { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 }, { 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };
 

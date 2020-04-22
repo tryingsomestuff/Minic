@@ -88,7 +88,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                data.gp = gamePhase(p,matScoreW,matScoreB);
                ++stats.counters[Stats::sid_materialTableMiss];
             }
-            ///@todo data.danger is not filled here !!
+            ///@todo data.danger and data.mob is not filled here !!
         }
         else {
             ++stats.counters[Stats::sid_ttscmiss];
@@ -126,8 +126,8 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             if ( qScore <= alpha || (depth < 2 && evalScoreIsHashScore) ) return ++stats.counters[Stats::sid_razoring],qScore;
         }
 
-        // null move
-        if (SearchConfig::doNullMove && isNotEndGame && withoutSkipMove /*&& evalScore >= beta*/ && 
+        // null move (warning, mobility info is only available if no TT hit)
+        if (SearchConfig::doNullMove && (isNotEndGame || data.mobility[p.c] > 4) && withoutSkipMove /*&& evalScore >= beta*/ && 
             //stack[p.halfmoves].p.lastMove != NULLMOVE && stack[p.halfmoves-1].p.lastMove != NULLMOVE &&
             evalScore >= stack[p.halfmoves].eval /*&& stack[p.halfmoves].eval >= beta - 32*depth - 30*improving */ && 
             ply >= (unsigned int)nullMoveMinPly && depth >= SearchConfig::nullMoveMinDepth) {
@@ -152,13 +152,19 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                     if ( nullEThreat.h != nullHash ) refutation = nullEThreat.m;
                     //if (isMatedScore(nullscore)) mateThreat = true;
                     if (nullscore >= beta){
-                       if (depth <= SearchConfig::nullMoveVerifDepth || nullMoveMinPly>0) return ++stats.counters[Stats::sid_nullMove], isMateScore(nullscore) ? beta : nullscore;
-                       ++stats.counters[Stats::sid_nullMoveTry3];
-                       nullMoveMinPly = ply + 3*nullDepth/4;
-                       nullscore = pvs<false, false>(beta - 1, beta, p, nullDepth, ply+1, nullPV, seldepth, isInCheck, !cutNode);
-                       nullMoveMinPly = 0;
-                       if (stopFlag) return STOPSCORE;
-                       if (nullscore >= beta ) return ++stats.counters[Stats::sid_nullMove2], nullscore;
+                        /*
+                       if ( (!isNotEndGame || depth > SearchConfig::nullMoveVerifDepth) && nullMoveMinPly == 0){
+                          ++stats.counters[Stats::sid_nullMoveTry3];
+                          nullMoveMinPly = ply + 3*nullDepth/4;
+                          nullscore = pvs<false, false>(beta - 1, beta, p, nullDepth, ply+1, nullPV, seldepth, isInCheck, !cutNode);
+                          nullMoveMinPly = 0;
+                          if (stopFlag) return STOPSCORE;
+                          if (nullscore >= beta ) return ++stats.counters[Stats::sid_nullMove2], nullscore;
+                       }
+                       else{
+                           */
+                          return ++stats.counters[Stats::sid_nullMove], isMateScore(nullscore) ? beta : nullscore;
+                       //}
                     }
                 }
             }
@@ -371,6 +377,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             const bool isEmergencyDefence   = false; //moveDifficulty == MoveDifficultyUtil::MD_hardDefense; ///@todo use this
             //const bool isEmergencyAttack    = moveDifficulty == MoveDifficultyUtil::MD_hardAttack; ///@todo use this
             const bool isPrunableCap        = isPrunable && Move2Type(*it) == T_capture && isBadCap(*it) && noCheck ;
+            // Warning : danger is only available if no TT hit !
             const bool isDangerPrune        = data.danger[p.c] > SearchConfig::dangerLimitPruning[0] || data.danger[~p.c] > SearchConfig::dangerLimitPruning[1];
             const bool isDangerRed          = data.danger[p.c] > SearchConfig::dangerLimitReduction[0] || data.danger[~p.c] > SearchConfig::dangerLimitReduction[1];
             const float dangerPruneFactor   = ((1.f+data.danger[p.c])/SearchConfig::dangerLimitPruning[0] + (1.f+data.danger[~p.c])/SearchConfig::dangerLimitPruning[1])/2;

@@ -2,6 +2,7 @@
 
 #include "book.hpp"
 #include "logging.hpp"
+#include "skill.hpp"
 
 namespace{
 // Sizes and phases of the skip-blocks, used for distributing search depths across the threads, from stockfish
@@ -24,7 +25,8 @@ void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestSco
         if ( !mark.empty() ) str << mark;
     }
     else if (Logging::ct == Logging::CT_uci) {
-        str << "info " << "multipv " << multipv << " depth " << int(depth) << " score cp " << bestScore << " time " << ms << " nodes " << nodeCount << " nps " << int(nodeCount / (ms / 1000.f)) << " seldepth " << (int)seldepth << " pv " << ToString(pv) << " tbhits " << ThreadPool::instance().counter(Stats::sid_tbHit1) + ThreadPool::instance().counter(Stats::sid_tbHit2);
+        const std::string multiPVstr = DynamicConfig::multiPV > 1 ? ("multipv " + std::to_string(multipv)) : "";
+        str << "info " << multiPVstr << " depth " << int(depth) << " score cp " << bestScore << " time " << ms << " nodes " << nodeCount << " nps " << int(nodeCount / (ms / 1000.f)) << " seldepth " << (int)seldepth << " pv " << ToString(pv) << " tbhits " << ThreadPool::instance().counter(Stats::sid_tbHit1) + ThreadPool::instance().counter(Stats::sid_tbHit2);
         static auto lastHashFull = Clock::now();
         if (  (int)std::chrono::duration_cast<std::chrono::milliseconds>(now - lastHashFull).count() > 500
               && (TimeType)std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(now - TimeMan::startTime).count()*2)) < getCurrentMoveMs()
@@ -37,7 +39,10 @@ void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestSco
 }
 
 PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
-    d=std::max((DepthType)1,DynamicConfig::level==SearchConfig::nlevel?d:std::min(d,SearchConfig::levelDepthMax[DynamicConfig::level/10]));
+
+    DynamicConfig::level = DynamicConfig::limitStrength ? std::max(0,(DynamicConfig::strength - 500))/23 : DynamicConfig::level;
+    d=std::max((DepthType)1,Skill::enabled()?std::min(d,Skill::limitedDepth()):d);
+
     if ( isMainThread() ){
         TimeMan::startTime = Clock::now();
         Logging::LogIt(Logging::logInfo) << "Search params :" ;
@@ -85,9 +90,19 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
     const DepthType easyMoveDetectionDepth = 5;
 
     DepthType startDepth = 1;//std::min(d,easyMoveDetectionDepth);
+    
+    DynamicConfig::multiPV = (Logging::ct == Logging::CT_uci?DynamicConfig::multiPV:1);
+    if ( Skill::enabled() ){
+        DynamicConfig::multiPV = std::max(DynamicConfig::multiPV,4u);
+    }    
     std::vector<RootScores> multiPVMoves(DynamicConfig::multiPV);
 
     bool fhBreak = false;
+
+    if ( DynamicConfig::level == 0 ){ // random mover
+       bestScore = randomMover(p,pv,isInCheck);
+       goto pvsout;
+    }
 
     if ( isMainThread() && d > easyMoveDetectionDepth+5 && Searcher::currentMoveMs < INFINITETIME && Searcher::currentMoveMs > 800 && TimeMan::msecUntilNextTC > 0){
        // easy move detection (small open window search)
@@ -99,16 +114,11 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
        else if (rootScores.size() > 1 && rootScores[0].s > rootScores[1].s + MoveDifficultyUtil::easyMoveMargin) moveDifficulty = MoveDifficultyUtil::MD_easy;
     }
 
-    if ( DynamicConfig::level == 0 ){ // random mover
-       bestScore = randomMover(p,pv,isInCheck);
-       goto pvsout;
-    }
-
     // ID loop
     for(DepthType depth = startDepth ; depth <= std::min(d,DepthType(MAX_DEPTH-6)) && !stopFlag ; ++depth ){ // -6 so that draw can be found for sure ///@todo I don't understand this -6 anymore ..
         // MultiPV loop
         std::vector<MiniMove> skipMoves;
-        for (unsigned int multi = 0 ; multi < (Logging::ct == Logging::CT_uci?DynamicConfig::multiPV:1) ; ++multi){
+        for (unsigned int multi = 0 ; multi < DynamicConfig::multiPV ; ++multi){
             if ( !skipMoves.empty() && isMatedScore(bestScore) ) break;
             if (!isMainThread()){ // stockfish like thread management
                 const int i = (id()-1)%threadSkipSize;
@@ -224,7 +234,11 @@ pvsout:
     if (pv.empty()){
         m = INVALIDMOVE;
         Logging::LogIt(Logging::logWarn) << "Empty pv" ;
-    } else m = pv[0];
+    } 
+    else{
+        if ( Skill::enabled()) m = Skill::pick(multiPVMoves);
+        else m = pv[0];
+    }
     d = reachedDepth;
     sc = bestScore;
     if (isMainThread()) ThreadPool::instance().DisplayStats();
