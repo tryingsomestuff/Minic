@@ -19,5 +19,5 @@ namespace DynamicConfig{
     ScoreType contempt     = 0;
     ScoreType contemptMG   = 0;
     bool limitStrength     = false;
-    int strength           = -1;
+    int strength           = 1500;
 }

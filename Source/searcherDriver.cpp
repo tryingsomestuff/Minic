@@ -90,12 +90,12 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
     const DepthType easyMoveDetectionDepth = 5;
 
     DepthType startDepth = 1;//std::min(d,easyMoveDetectionDepth);
-    
+
     DynamicConfig::multiPV = (Logging::ct == Logging::CT_uci?DynamicConfig::multiPV:1);
     if ( Skill::enabled() ){
         DynamicConfig::multiPV = std::max(DynamicConfig::multiPV,4u);
     }    
-    std::vector<RootScores> multiPVMoves(DynamicConfig::multiPV);
+    std::vector<RootScores> multiPVMoves(DynamicConfig::multiPV,{INVALIDMOVE,-MATE});
 
     bool fhBreak = false;
 
@@ -104,7 +104,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
        goto pvsout;
     }
 
-    if ( isMainThread() && d > easyMoveDetectionDepth+5 && Searcher::currentMoveMs < INFINITETIME && Searcher::currentMoveMs > 800 && TimeMan::msecUntilNextTC > 0){
+    if ( isMainThread() && DynamicConfig::multiPV == 1 && d > easyMoveDetectionDepth+5 && Searcher::currentMoveMs < INFINITETIME && Searcher::currentMoveMs > 800 && TimeMan::msecUntilNextTC > 0){
        // easy move detection (small open window search)
        rootScores.clear();
        ScoreType easyScore = pvs<true,false>(-MATE, MATE, p, easyMoveDetectionDepth, 0, pv, seldepth, isInCheck,false);
@@ -197,13 +197,12 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
                     PVList pv2;
                     TT::getPV(p2, *this, pv2);
                     pv2.insert(pv2.begin(),pvLoc[0]);
-                    pv = pv2;
+                    pvLoc = pv2;
                 }
-                else pv = pvLoc;
                 reachedDepth = depth;
                 bestScore    = score;
                 if ( isMainThread() ){
-                    displayGUI(depth,seldepth,bestScore,pv,multi+1);
+                    displayGUI(depth,seldepth,bestScore,pvLoc,multi+1);
                     if (TimeMan::isDynamic && depth > MoveDifficultyUtil::emergencyMinDepth 
                     && bestScore < depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin) { 
                         moveDifficulty = bestScore > MoveDifficultyUtil::emergencyAttackThreashold ? MoveDifficultyUtil::MD_hardAttack : MoveDifficultyUtil::MD_hardDefense;
@@ -221,10 +220,15 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
                         Logging::LogIt(Logging::logInfo) << "EBF2 " << float(ThreadPool::instance().counter(Stats::sid_qnodes)) / std::max(Counter(1),ThreadPool::instance().counter(Stats::sid_nodes));
                     }
                 }
-                if ( !pv.empty() ){
-                    skipMoves.push_back(Move2MiniMove(pv[0]));
-                    multiPVMoves[multi].m = pv[0];
+                // fill skipmove for multiPV
+                if ( !pvLoc.empty() ){
+                    skipMoves.push_back(Move2MiniMove(pvLoc[0]));
+                    multiPVMoves[multi].m = pvLoc[0];
                     multiPVMoves[multi].s = bestScore;
+                }
+                // update the outputed pv
+                if ( multi == 0 ){
+                   pv = pvLoc;
                 }
             }
         }
