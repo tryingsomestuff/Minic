@@ -6,7 +6,7 @@
 
 // from Stockfish implementation
 namespace Skill {
-    inline bool enabled() { return DynamicConfig::level > 0 && DynamicConfig::level < 100; }
-    inline DepthType limitedDepth() { return 1 + std::max(0u,DynamicConfig::level/4); }
+    inline bool enabled() { return DynamicConfig::level > 0 && DynamicConfig::level < 100; } // 0 is random mover !
+    inline DepthType limitedDepth() { return 1 + 2 * std::sqrt(std::max(0u,DynamicConfig::level-20)); }
     Move pick(std::vector<RootScores> & multiPVMoves);
 }
