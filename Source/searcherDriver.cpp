@@ -40,7 +40,7 @@ void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestSco
 
 PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
 
-    DynamicConfig::level = DynamicConfig::limitStrength ? std::max(0,(DynamicConfig::strength - 500))/23 : DynamicConfig::level;
+    DynamicConfig::level = DynamicConfig::limitStrength ? std::max(0,(DynamicConfig::strength - 500))/29 : DynamicConfig::level;
     d=std::max((DepthType)1,Skill::enabled()?std::min(d,Skill::limitedDepth()):d);
 
     if ( isMainThread() ){
