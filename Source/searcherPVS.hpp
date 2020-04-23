@@ -163,7 +163,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                        }
                        else{
                            */
-                          return ++stats.counters[Stats::sid_nullMove], isMateScore(nullscore) ? beta : nullscore;
+                          return ++stats.counters[Stats::sid_nullMove], (isMateScore(nullscore) ? beta : nullscore);
                        //}
                     }
                 }
