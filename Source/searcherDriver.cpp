@@ -66,7 +66,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
     stack[p.halfmoves].h = p.h;
 
     DepthType reachedDepth = 0;
-    PVList pv;
+    PVList pvOut;
     ScoreType bestScore = 0;
     m = INVALIDMOVE;
 
@@ -74,13 +74,13 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
        const Move bookMove = SanitizeCastling(p,Book::Get(computeHash(p)));
        if ( bookMove != INVALIDMOVE){
            if ( isMainThread() ) startLock.store(false);
-           pv.push_back(bookMove);
-           m = pv[0];
+           pvOut.push_back(bookMove);
+           m = pvOut[0];
            d = 0;
            sc = 0;
            seldepth = 0;
-           displayGUI(d,d,sc,pv,1);
-           return pv;
+           displayGUI(d,d,sc,pvOut,1);
+           return pvOut;
        }
     }
 
@@ -100,31 +100,40 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
     bool fhBreak = false;
 
     if ( DynamicConfig::level == 0 ){ // random mover
-       bestScore = randomMover(p,pv,isInCheck);
+       bestScore = randomMover(p,pvOut,isInCheck);
        goto pvsout;
     }
 
-    if ( isMainThread() && DynamicConfig::multiPV == 1 && d > easyMoveDetectionDepth+5 && Searcher::currentMoveMs < INFINITETIME && Searcher::currentMoveMs > 800 && TimeMan::msecUntilNextTC > 0){
+    if ( isMainThread() && DynamicConfig::multiPV == 1 && d > easyMoveDetectionDepth+5 
+         && Searcher::currentMoveMs < INFINITETIME && Searcher::currentMoveMs > 800 && TimeMan::msecUntilNextTC > 0){
        // easy move detection (small open window search)
        rootScores.clear();
-       ScoreType easyScore = pvs<true,false>(-MATE, MATE, p, easyMoveDetectionDepth, 0, pv, seldepth, isInCheck,false);
+       ScoreType easyScore = pvs<true,false>(-MATE, MATE, p, easyMoveDetectionDepth, 0, pvOut, seldepth, isInCheck,false);
        std::sort(rootScores.begin(), rootScores.end(), [](const RootScores& r1, const RootScores & r2) {return r1.s > r2.s; });
-       if (stopFlag) { bestScore = easyScore; goto pvsout; }
+       if (stopFlag) { // no more time, this is strange ...
+           bestScore = easyScore; 
+           goto pvsout; 
+       }
        if (rootScores.size() == 1) moveDifficulty = MoveDifficultyUtil::MD_forced; // only one : check evasion or zugzwang
        else if (rootScores.size() > 1 && rootScores[0].s > rootScores[1].s + MoveDifficultyUtil::easyMoveMargin) moveDifficulty = MoveDifficultyUtil::MD_easy;
     }
 
     // ID loop
     for(DepthType depth = startDepth ; depth <= std::min(d,DepthType(MAX_DEPTH-6)) && !stopFlag ; ++depth ){ // -6 so that draw can be found for sure ///@todo I don't understand this -6 anymore ..
+        
         // MultiPV loop
         std::vector<MiniMove> skipMoves;
         for (unsigned int multi = 0 ; multi < DynamicConfig::multiPV && !stopFlag ; ++multi){
+
             if ( !skipMoves.empty() && isMatedScore(bestScore) ) break;
             if (!isMainThread()){ // stockfish like thread management
                 const int i = (id()-1)%threadSkipSize;
                 if (((depth + skipPhase[i]) / skipSize[i]) % 2) continue;
             }
-            else{ if ( depth > 1) startLock.store(false);} // delayed other thread start
+            else{ 
+                // delayed other thread start
+                if ( depth > 1) startLock.store(false);
+            } 
             Logging::LogIt(Logging::logInfo) << "Thread " << id() << " searching depth " << (int)depth;
             PVList pvLoc;
             ScoreType delta = (SearchConfig::doWindow && depth>4)?6+std::max(0,(20-depth)*2):MATE; // MATE not INFSCORE in order to enter the loop below once
@@ -139,8 +148,10 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
             // dynamic contempt
             contempt += ScoreType(std::round(50*std::atan(bestScore/100.f)));
             DepthType windowDepth = depth;
+            
             // Aspiration loop
-            while( true && !stopFlag ){
+            while( !stopFlag ){
+
                 pvLoc.clear();
                 stack[p.halfmoves].h = p.h;
                 score = pvs<true,false>(alpha,beta,p,windowDepth,0,pvLoc,seldepth,isInCheck,false,skipMoves.empty()?nullptr:&skipMoves);
@@ -181,17 +192,23 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
                     Logging::LogIt(Logging::logInfo) << "Increase window beta "  << alpha << ".." << beta;
                 }
                 else break;
-            }
-            if (stopFlag){ // handle multiPV display
-                if ( multi == 0 ) break;
-                if ( DynamicConfig::multiPV > 1){
-                    PVList pvMulti;
-                    pvMulti.push_back(multiPVMoves[multi].m);
-                    displayGUI(depth-1,0,multiPVMoves[multi].s,pvMulti,multi+1); ///@todo store seldepth in multiPVMoves ?
+
+            } // Aspiration loop end
+
+            if (stopFlag){ 
+                if ( multi != 0 ){
+                   // handle multiPV display only based on previous ID iteration data
+                   PVList pvMulti;
+                   pvMulti.push_back(multiPVMoves[multi].m);
+                   displayGUI(depth-1,0,multiPVMoves[multi].s,pvMulti,multi+1); ///@todo store pv and seldepth in multiPVMoves ?
                 }
             }
             else{
-                if ( fhBreak && pvLoc.size() ){ // no good pv available, let's build one ...
+                reachedDepth = depth;
+                bestScore    = score;
+
+                // if no good pv available, let's build one for display purpose ...
+                if ( fhBreak && pvLoc.size() ){ 
                     Position p2 = p;
                     apply(p2,pvLoc[0]);
                     PVList pv2;
@@ -199,8 +216,19 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
                     pv2.insert(pv2.begin(),pvLoc[0]);
                     pvLoc = pv2;
                 }
-                reachedDepth = depth;
-                bestScore    = score;
+
+                // fill skipmove for next multiPV iteration, and backup multiPV info
+                if ( !pvLoc.empty() && DynamicConfig::multiPV > 1){
+                    skipMoves.push_back(Move2MiniMove(pvLoc[0]));
+                    multiPVMoves[multi].m = pvLoc[0];
+                    multiPVMoves[multi].s = bestScore;
+                }
+
+                // update the outputed pv only with the best move line
+                if ( multi == 0 ){
+                   pvOut = pvLoc;
+                }
+                
                 if ( isMainThread() ){
                     displayGUI(depth,seldepth,bestScore,pvLoc,multi+1);
                     if (TimeMan::isDynamic && depth > MoveDifficultyUtil::emergencyMinDepth 
@@ -220,31 +248,23 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
                         Logging::LogIt(Logging::logInfo) << "EBF2 " << float(ThreadPool::instance().counter(Stats::sid_qnodes)) / std::max(Counter(1),ThreadPool::instance().counter(Stats::sid_nodes));
                     }
                 }
-                // fill skipmove for multiPV
-                if ( !pvLoc.empty() ){
-                    skipMoves.push_back(Move2MiniMove(pvLoc[0]));
-                    multiPVMoves[multi].m = pvLoc[0];
-                    multiPVMoves[multi].s = bestScore;
-                }
-                // update the outputed pv
-                if ( multi == 0 ){
-                   pv = pvLoc;
-                }
             }
-        }
-    }
+        } // multiPV loop end
+
+    } // iterative deepening loop end
+
 pvsout:
     if ( isMainThread() ) startLock.store(false);
-    if (pv.empty()){
+    if (pvOut.empty()){
         m = INVALIDMOVE;
         Logging::LogIt(Logging::logWarn) << "Empty pv" ;
     } 
     else{
         if ( Skill::enabled()) m = Skill::pick(multiPVMoves);
-        else m = pv[0];
+        else m = pvOut[0];
     }
     d = reachedDepth;
     sc = bestScore;
     if (isMainThread()) ThreadPool::instance().DisplayStats();
-    return pv;
+    return pvOut;
 }
