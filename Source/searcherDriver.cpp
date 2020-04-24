@@ -118,7 +118,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
     for(DepthType depth = startDepth ; depth <= std::min(d,DepthType(MAX_DEPTH-6)) && !stopFlag ; ++depth ){ // -6 so that draw can be found for sure ///@todo I don't understand this -6 anymore ..
         // MultiPV loop
         std::vector<MiniMove> skipMoves;
-        for (unsigned int multi = 0 ; multi < DynamicConfig::multiPV ; ++multi){
+        for (unsigned int multi = 0 ; multi < DynamicConfig::multiPV && !stopFlag ; ++multi){
             if ( !skipMoves.empty() && isMatedScore(bestScore) ) break;
             if (!isMainThread()){ // stockfish like thread management
                 const int i = (id()-1)%threadSkipSize;
@@ -184,10 +184,10 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
             }
             if (stopFlag){ // handle multiPV display
                 if ( multi == 0 ) break;
-                if ( multiPVMoves.size() == DynamicConfig::multiPV){
+                if ( DynamicConfig::multiPV > 1){
                     PVList pvMulti;
                     pvMulti.push_back(multiPVMoves[multi].m);
-                    displayGUI(depth-1,0,multiPVMoves[multi].s,pvMulti,multi+1);
+                    displayGUI(depth-1,0,multiPVMoves[multi].s,pvMulti,multi+1); ///@todo store seldepth in multiPVMoves ?
                 }
             }
             else{
