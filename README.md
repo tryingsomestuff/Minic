@@ -102,7 +102,7 @@ Minic random-mover stats are the following :
    6.13%  1/2-1/2 {Draw by stalemate}
 ```
 
-Current level elo are more or less so that even a kid can beat low levels Minic. From level 50 or 60, you will start to struggle more !
+Current level elo are more or less so that even a kid can beat low levels Minic. From level 50 or 60, you will start to struggle more! You can also use the UCI_Elo parameter if UCI_LimitStrenght is activated.
 
 ## How to compile
 * Linux : use the given build script (or make your own ...)
@@ -269,6 +269,8 @@ You can use both the json configuation file or the command line argument to sele
 * 2.09 : break aspiration search in fail high case if no other move above beta
 * 2.10..2.11 : tweaking
 * 2.12 : fix a TT race condition  
+* 2.13 : skill feature, null move based on mobility  
+* 2.14 : ...
 
 
 ## Thanks
