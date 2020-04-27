@@ -18,50 +18,18 @@ bool test(const std::string & option){
         Logging::LogIt(Logging::logInfo) << " LCTest";
         Logging::LogIt(Logging::logInfo) << " sbdTest";
         Logging::LogIt(Logging::logInfo) << " STS";
+        Logging::LogIt(Logging::logInfo) << " MEA";
         return 0;
     }
 
-    if (option == "mea2") {
+    if (option == "MEA") {
         std::vector<std::string> positions;
-        if ( ! ExtendedPosition::readEPDFile("TestSuite/mea-2-moves-fixed.epd",positions) ) return 1;
+        if ( ! ExtendedPosition::readEPDFile("TestSuite/allsets_nodupes.epd",positions) ) return 1;
 
         std::vector<int> timeControls = { 1000 }; //mseconds
         std::vector<int> scores = { 1 };
 
-        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return score;},false);
-        return true;
-    }
-
-    if (option == "mea3") {
-        std::vector<std::string> positions;
-        if ( ! ExtendedPosition::readEPDFile("TestSuite/mea-3-moves-fixed.epd",positions) ) return 1;
-
-        std::vector<int> timeControls = { 1000 }; //mseconds
-        std::vector<int> scores = { 1 };
-
-        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return score;},false);
-        return true;
-    }
-
-    if (option == "mea4") {
-        std::vector<std::string> positions;
-        if ( ! ExtendedPosition::readEPDFile("TestSuite/mea-4-moves-fixed.epd",positions) ) return 1;
-
-        std::vector<int> timeControls = { 1000 }; //mseconds
-        std::vector<int> scores = { 1 };
-
-        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return score;},false);
-        return true;
-    }
-
-    if (option == "temere") {
-        std::vector<std::string> positions;
-        if ( ! ExtendedPosition::readEPDFile("TestSuite/temere.epd",positions) ) return 1;
-
-        std::vector<int> timeControls = { 1000 }; //mseconds
-        std::vector<int> scores = { 1 };
-
-        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return score;},false);
+        ExtendedPosition::test(positions,timeControls,true,true,scores,[&](int score){return 10*score/positions.size();},false);
         return true;
     }
 
@@ -72,7 +40,7 @@ bool test(const std::string & option){
         std::vector<int> timeControls = { 1000 }; //mseconds
         std::vector<int> scores = { 1 };
 
-        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return score;},false);
+        ExtendedPosition::test(positions,timeControls,true,false,scores,[](int score){return score;},false);
         return true;
     }
 
@@ -83,7 +51,7 @@ bool test(const std::string & option){
         std::vector<int> timeControls = { 1000 }; //mseconds
         std::vector<int> scores = { 1 };
 
-        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return score;},false);
+        ExtendedPosition::test(positions,timeControls,true,false,scores,[](int score){return score;},false);
         return true;
     }
 
@@ -94,7 +62,7 @@ bool test(const std::string & option){
         std::vector<int> timeControls = { 1000 }; //mseconds
         std::vector<int> scores = { 1 };
 
-        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return score;},false);
+        ExtendedPosition::test(positions,timeControls,true,false,scores,[](int score){return score;},false);
         return true;
     }
 
@@ -105,7 +73,7 @@ bool test(const std::string & option){
         std::vector<int> timeControls = { 1000 }; //mseconds
         std::vector<int> scores = { 1 };
 
-        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return score;},false);
+        ExtendedPosition::test(positions,timeControls,true,false,scores,[](int score){return score;},false);
         return true;
     }
 
@@ -116,7 +84,7 @@ bool test(const std::string & option){
         std::vector<int> timeControls = { 30*60*1000 }; //mseconds
         std::vector<int> scores = { 1 };
 
-        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return score;},false);
+        ExtendedPosition::test(positions,timeControls,true,false,scores,[](int score){return score;},false);
         return true;
     }
 
@@ -130,7 +98,7 @@ bool test(const std::string & option){
         std::vector<int> timeControls = { 15000*60 }; //mseconds
         std::vector<int> scores = { 1 };
 
-        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return 2630-35*(30-score);},false);
+        ExtendedPosition::test(positions,timeControls,true,false,scores,[](int score){return 2630-35*(30-score);},false);
         return true;
     }
 
@@ -144,7 +112,7 @@ bool test(const std::string & option){
         std::vector<int> timeControls = { 10000 }; //mseconds
         std::vector<int> scores = { 1 };
 
-        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return score;},false);
+        ExtendedPosition::test(positions,timeControls,true,false,scores,[](int score){return score;},false);
         return true;
     }
 
@@ -158,7 +126,7 @@ bool test(const std::string & option){
         std::vector<int> timeControls = { 1000*60 }; //mseconds
         std::vector<int> scores = { 1 };
 
-        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return score;},false);
+        ExtendedPosition::test(positions,timeControls,true,false,scores,[](int score){return score;},false);
         return true;
     }
 
@@ -204,7 +172,7 @@ bool test(const std::string & option){
         std::vector<int> timeControls = { 15000,30000,60000,120000 }; //mseconds
         std::vector<int> scores = { 1,1,1,1 };
 
-        ExtendedPosition::test(positions,timeControls,false,scores,[](int score){return 2000+8*score;});
+        ExtendedPosition::test(positions,timeControls,false,false,scores,[](int score){return 2000+8*score;});
         return true;
     }
 
@@ -238,7 +206,7 @@ bool test(const std::string & option){
         std::vector<int> timeControls = { 10000,30000,60000,120000 }; //mseconds
         std::vector<int> scores = { 1,1,1,1 };
 
-        ExtendedPosition::test(positions,timeControls,false,scores,[](int){return 0;});
+        ExtendedPosition::test(positions,timeControls,false,false,scores,[](int score){return score;});
         return true;
     }
 
@@ -349,7 +317,7 @@ bool test(const std::string & option){
         std::vector<int> timeControls = { 1000,3000,6000,12000 }; //mseconds
         std::vector<int> scores = { 1,1,1,1 };
 
-        ExtendedPosition::test(positions,timeControls,false,scores,[](int){return 0;});
+        ExtendedPosition::test(positions,timeControls,false,false,scores,[](int score){return score;});
         return true;
     }
 
@@ -384,7 +352,7 @@ bool test(const std::string & option){
         std::vector<int> timeControls = { 1000,3000,6000,12000 }; //mseconds
         std::vector<int> scores = { 1,1,1,1 };
 
-        ExtendedPosition::test(positions,timeControls,false,scores,[](int){return 0;});
+        ExtendedPosition::test(positions,timeControls,false,false,scores,[](int score){return score;});
         return true;
     }
 
@@ -429,7 +397,7 @@ bool test(const std::string & option){
         std::vector<int> timeControls = { 9000,29000,89000,209000,389000,600000 }; //mseconds
         std::vector<int> scores = { 30,25,20,15,10,5 };
 
-        ExtendedPosition::test(positions,timeControls,true,scores,[](int score){return 1900 + score;},false);
+        ExtendedPosition::test(positions,timeControls,true,false,scores,[](int score){return 1900 + score;},false);
         return true;
     }
 
@@ -573,7 +541,7 @@ bool test(const std::string & option){
         std::vector<int> timeControls = { 100,300,600,1200 }; //mseconds
         std::vector<int> scores = { 1,1,1,1 };
 
-        ExtendedPosition::test(positions,timeControls,false,scores,[](int){return 0;},false);
+        ExtendedPosition::test(positions,timeControls,false,false,scores,[](int score){return score;},false);
         return true;
     }
 
@@ -592,7 +560,7 @@ bool test(const std::string & option){
         std::vector<int> timeControls = { 10000 }; //mseconds
         std::vector<int> scores = { 1};
 
-        ExtendedPosition::test(positions,timeControls,false,scores,[=](int score){return int(25.212 * 100.f*float(score)/positions.size() + 1439.4);},false);
+        ExtendedPosition::test(positions,timeControls,false,false,scores,[=](int score){return int(25.212 * 100.f*float(score)/positions.size() + 1439.4);},false);
         return true;
     }
 
@@ -603,7 +571,7 @@ bool test(const std::string & option){
         std::vector<int> timeControls = { 15000 }; //mseconds
         std::vector<int> scores = { 1};
 
-        ExtendedPosition::test(positions,timeControls,false,scores,[=](int score){return 0;},false);
+        ExtendedPosition::test(positions,timeControls,false,false,scores,[=](int){return 0;},false);
         return true;
     }
 
@@ -614,7 +582,7 @@ bool test(const std::string & option){
         std::vector<int> timeControls = { 15000 }; //mseconds
         std::vector<int> scores = { 1};
 
-        ExtendedPosition::test(positions,timeControls,false,scores,[=](int score){return 0;},false);
+        ExtendedPosition::test(positions,timeControls,false,false,scores,[=](int){return 0;},false);
         return true;
     }
 

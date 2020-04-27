@@ -217,6 +217,7 @@ std::ostream & operator<<(std::ostream & os, const std::vector<T> &v){
 void ExtendedPosition::test(const std::vector<std::string> & positions,
                             const std::vector<int> &         timeControls,
                             bool                             breakAtFirstSuccess,
+                            bool                             multipleBest,
                             const std::vector<int> &         scores,
                             std::function< int(int) >        eloF,
                             bool                             withMoveCount){
@@ -238,22 +239,31 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
 
     Results ** results = new Results*[positions.size()];
 
-    // run the test and fill results table
-    for (size_t k = 0 ; k < positions.size() ; ++k ){
+    // reset number of threads used for the search
+    DynamicConfig::threads = 1;
+
+    auto worker = [&] (size_t begin, size_t end) {
+      // run the test and fill results table
+      for (size_t k = begin ; k < end ; ++k ){
         Logging::LogIt(Logging::logInfo) << "Test #" << k << " " << positions[k];
         results[k] = new Results[timeControls.size()];
         ExtendedPosition extP(positions[k],withMoveCount);
+        Searcher searcher(0); // 0 so that all will be considered as "main"
+        searcher.initPawnTable();
+        searcher.loneSearcher = true;
         for(size_t t = 0 ; t < timeControls.size() ; ++t){
-            Logging::LogIt(Logging::logInfo) << " " << t;
-            Searcher::currentMoveMs = timeControls[t];
+            Logging::LogIt(Logging::logInfo) << "Current test time control " << timeControls[t];
             DepthType seldepth = 0;
-            DepthType depth = 64;
+            DepthType depth = 127;
             ScoreType s = 0;
             Move bestMove = INVALIDMOVE;
             PVList pv;
             ThreadData d = {depth,seldepth,s,extP,bestMove,pv}; // only input coef
-            ThreadPool::instance().search(d);
-            bestMove = ThreadPool::instance().main().getData().best; // here output results
+            searcher.setData(d);
+            searcher.currentMoveMs = timeControls[t];
+            searcher.search();
+            d = searcher.getData();
+            bestMove = d.best; 
 
             results[k][t].name = extP.id();
             results[k][t].k = (int)k;
@@ -262,7 +272,7 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
             results[k][t].computerMove = showAlgAbr(bestMove,extP);
             Logging::LogIt(Logging::logInfo) << "Best move found is  " << results[k][t].computerMove;
 
-            if ( extP.shallFindBest()){
+            if ( !multipleBest && extP.shallFindBest()){
                 Logging::LogIt(Logging::logInfo) << "Best move should be " << extP.bestMoves()[0];
                 results[k][t].bm = extP.bestMoves();
                 results[k][t].score = 0;
@@ -276,7 +286,7 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
                 }
                 if ( breakAtFirstSuccess && success ) break;
             }
-            else if( extP.shallAvoidBad()){
+            else if( !multipleBest && extP.shallAvoidBad()){
                 Logging::LogIt(Logging::logInfo) << "Bad move was " << extP.badMoves()[0];
                 results[k][t].am = extP.badMoves();
                 results[k][t].score = scores[t];
@@ -293,13 +303,21 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
             else { // look into c0 section ...
                 Logging::LogIt(Logging::logInfo) << "Mea style " << extP.comment0()[0];
                 std::vector<std::string> tokens = extP.comment0();
-                for (size_t s = 0 ; s < tokens.size() ; ++s){
-                    std::string tmp = tokens[s];
+                for (size_t ms = 0 ; ms < tokens.size() ; ++ms){
+                    std::string tmp = tokens[ms];
                     tmp.erase(std::remove(tmp.begin(), tmp.end(), '"'), tmp.end());
                     tmp.erase(std::remove(tmp.begin(), tmp.end(), ','), tmp.end());
                     std::cout << tmp << std::endl;
                     std::vector<std::string> keyval;
                     tokenize(tmp,keyval,"=");
+                    if ( keyval.size() > 2 ){ // "=" prom sign inside ...
+                       std::stringstream strTmp;
+                       copy(keyval.begin(),keyval.begin()+1, std::ostream_iterator<std::string>(strTmp,"="));
+                       strTmp >> keyval[0];
+                       keyval[1] = keyval.back();
+                    }
+                    std::cout << keyval[0] << std::endl;
+                    std::cout << keyval[1] << std::endl;
                     results[k][t].mea.push_back(std::make_pair(keyval[0], std::stoi( keyval[1] )));
                 }
                 results[k][t].score = 0;
@@ -308,12 +326,28 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
                     if ( results[k][t].computerMove == results[k][t].mea[i].first){
                         results[k][t].score = results[k][t].mea[i].second;
                         success = true;
+                        Logging::LogIt(Logging::logInfo) << "Good " << i+1 << " best move : " << results[k][t].mea[i].first;
                         break;
                     }
                 }
                 if ( breakAtFirstSuccess && success ) break;
             }
         }
+      }
+    };
+
+    std::vector<std::thread> threads(DynamicConfig::threads);
+    const size_t grainsize = positions.size() / DynamicConfig::threads;
+
+    size_t work_iter = 0;
+    for(auto it = std::begin(threads); it != std::end(threads) - 1; ++it) {
+      *it = std::thread(worker, work_iter, work_iter + grainsize);
+      work_iter += grainsize;
+    }
+    threads.back() = std::thread(worker, work_iter, positions.size());
+
+    for(auto&& i : threads) {
+      i.join();
     }
 
     // display results
@@ -342,9 +376,7 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
         std::cout << std::setw(6) << score << std::endl;
     }
 
-    if ( eloF(100) != 0) {
-        Logging::LogIt(Logging::logInfo) << "Total score " << totalScore << " => ELO " << eloF(totalScore);
-    }
+    Logging::LogIt(Logging::logInfo) << "Total score " << totalScore << " => ELO " << eloF(totalScore);
 
     // clear results table
     for (size_t k = 0 ; k < positions.size() ; ++k ){
@@ -354,7 +386,6 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
 }
 
 void ExtendedPosition::testStatic(const std::vector<std::string> & positions,
-                                  int                              chunck,
                                   bool                             withMoveCount) {
     struct Results {
         Results() :k(0), t(0), score(0){}

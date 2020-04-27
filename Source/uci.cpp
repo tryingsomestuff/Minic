@@ -81,7 +81,9 @@ namespace UCI {
                 TimeMan::overHead = (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTimePos).count();
             }
             else if (uciCommand == "go") {
-                if (!Searcher::stopFlag) { Logging::LogIt(Logging::logGUI) << "info string go command received, but search already in progress"; }
+                if (!ThreadPool::instance().main().stopFlag) { 
+                    Logging::LogIt(Logging::logGUI) << "info string go command received, but search already in progress"; 
+                }
                 else {
                     if (COM::position.h != 0ull) {
                         //MoveList root_moves;
@@ -125,11 +127,11 @@ namespace UCI {
             }
             else if (uciCommand == "ponderhit") {
                 Logging::LogIt(Logging::logInfo) << "received command ponderhit";
-                //Searcher::stopFlag = true;
+                //ThreadPool::instance().stop();
                 TimeMan::isUCIPondering = false;
             }
             else if (uciCommand == "ucinewgame") {
-                if (!Searcher::stopFlag) { Logging::LogIt(Logging::logGUI) << "info string " << uciCommand << " received but search in progress ..."; }
+                if (!ThreadPool::instance().main().stopFlag) { Logging::LogIt(Logging::logGUI) << "info string " << uciCommand << " received but search in progress ..."; }
                 else { COM::init(); }
             }
             else if (uciCommand == "eval") { Logging::LogIt(Logging::logGUI) << "info string " << uciCommand << " not implemented yet"; }

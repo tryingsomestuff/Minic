@@ -65,6 +65,7 @@ void Searcher::search(){
     Logging::LogIt(Logging::logInfo) << "Search launched for thread " << id() ;
     if ( isMainThread() ){ ThreadPool::instance().startOthers(); } // started other threads but locked for now ...
     _data.pv = search(_data.p, _data.best, _data.depth, _data.sc, _data.seldepth);
+    if ( isMainThread() ){ ThreadPool::instance().stop(); } // stop other threads
 }
 
 size_t Searcher::id()const {
@@ -131,8 +132,5 @@ void Searcher::prefetchPawn(Hash h) {
     #  endif
 }
 
-bool Searcher::stopFlag           = true;
-TimeType  Searcher::currentMoveMs = 777; // a dummy initial value, useful for debug
-MoveDifficultyUtil::MoveDifficulty Searcher::moveDifficulty = MoveDifficultyUtil::MD_std;
 std::atomic<bool> Searcher::startLock;
 const unsigned long long int Searcher::ttSizePawn = 1024*32;

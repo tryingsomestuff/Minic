@@ -41,10 +41,13 @@ Move ThreadPool::search(const ThreadData & d){ // distribute data and call main 
     Logging::LogIt(Logging::logInfo) << "Search Sync" ;
     wait();
     Searcher::startLock.store(true);
-    for (auto & s : *this) (*s).setData(d); // this is a copy
-    Logging::LogIt(Logging::logInfo) << "Calling main thread search" ;
+    for (auto & s : *this){
+        (*s).setData(d); // this is a copy
+        (*s).currentMoveMs = currentMoveMs; // propagate time control
+    }
+    Logging::LogIt(Logging::logInfo) << "Calling main thread search";
     main().search(); ///@todo 1 thread for nothing here
-    Searcher::stopFlag = true;
+    stop(); // propagate stop flag to all threads
     wait();
     return main().getData().best;
 }
@@ -53,6 +56,22 @@ void ThreadPool::startOthers(){ for (auto & s : *this) if (!(*s).isMainThread())
 
 void ThreadPool::clearPawnTT(){ for (auto & s : *this) (*s).clearPawnTT();}
 
-ThreadPool::ThreadPool():std::vector<std::unique_ptr<Searcher>>(),stop(false){ push_back(std::unique_ptr<Searcher>(new Searcher(size())));} // this one will be called "Main" thread
+void ThreadPool::stop(){ for (auto & s : *this) (*s).stopFlag = true;}
 
-Counter ThreadPool::counter(Stats::StatId id) const { Counter n = 0; for (auto & it : *this ){ n += it->stats.counters[id];  } return n;}
+ThreadPool::ThreadPool():std::vector<std::unique_ptr<Searcher>>(){ 
+    push_back(std::unique_ptr<Searcher>(new Searcher(size()))); // this one will be called "Main" thread (id=0)
+} 
+
+void ThreadPool::DisplayStats()const{
+    for(size_t k = 0 ; k < Stats::sid_maxid ; ++k){
+        Logging::LogIt(Logging::logInfo) << Stats::Names[k] << " " << counter((Stats::StatId)k);
+    }
+}
+
+Counter ThreadPool::counter(Stats::StatId id) const { 
+    Counter n = 0; 
+    for (auto & it : *this ){ 
+        n += it->stats.counters[id];  
+    } 
+    return n;
+}

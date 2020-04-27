@@ -5,9 +5,7 @@
 /* Some classic test suites available here
  *
  * help_test : display available test suite
- * mea2
- * mea3
- * mea4
+ * MEA
  * opening200
  * opening1000
  * middle200
@@ -24,7 +22,6 @@
  * LCTest
  * sbdTest
  * STS
- * temere
  * ERET
  * MATE
  *

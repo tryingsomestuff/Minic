@@ -59,8 +59,8 @@ namespace COM {
         Move m = INVALIDMOVE;
         if (depth < 0) depth = MAX_DEPTH;
         Logging::LogIt(Logging::logInfo) << "depth          " << (int)depth;
-        Searcher::currentMoveMs = forcedMs <= 0 ? TimeMan::GetNextMSecPerMove(position) : forcedMs;
-        Logging::LogIt(Logging::logInfo) << "currentMoveMs  " << Searcher::currentMoveMs;
+        ThreadPool::instance().currentMoveMs = forcedMs <= 0 ? TimeMan::GetNextMSecPerMove(position) : forcedMs;
+        Logging::LogIt(Logging::logInfo) << "currentMoveMs  " << ThreadPool::instance().currentMoveMs;
         Logging::LogIt(Logging::logInfo) << ToString(position);
         DepthType seldepth = 0;
         PVList pv;
@@ -80,7 +80,7 @@ namespace COM {
 
     void stop() {
         Logging::LogIt(Logging::logInfo) << "stopping previous search";
-        Searcher::stopFlag = true;
+        ThreadPool::instance().stop();
         if ( f.valid() ){
            Logging::LogIt(Logging::logInfo) << "wait for future to land ...";
            f.wait(); // synchronous wait of current future
@@ -97,7 +97,7 @@ namespace COM {
     void thinkAsync(State st, TimeType forcedMs) { // fork a future that runs a synchorous search, if needed send returned move to GUI
         f = std::async(std::launch::async, [st,forcedMs] {
             COM::move = COM::thinkUntilTimeUp(forcedMs);
-            const PVList & pv = ThreadPool::instance().main().getData().pv;
+            const PVList & pv = ThreadPool::instance().main().getData().pv; ///@todo take PV from the deepest thread not main ???
             COM::ponderMove = INVALIDMOVE;
             if ( pv.size() > 1) {
                Position p2 = COM::position;

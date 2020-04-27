@@ -14,21 +14,29 @@
  * Many things are templates here, so other hpp file are included at the bottom of this one.
  */
 struct Searcher{
-    static bool stopFlag;
-    static MoveDifficultyUtil::MoveDifficulty moveDifficulty;
-    static TimeType currentMoveMs;
-    static TimeType getCurrentMoveMs(); // use this (and not the variable) to take emergency time into account !
+    bool stopFlag = false;
+    bool loneSearcher = false;
+    MoveDifficultyUtil::MoveDifficulty moveDifficulty = MoveDifficultyUtil::MD_std;
+    TimeType currentMoveMs = 777;
+    
+    TimeType getCurrentMoveMs(); // use this (and not the variable) to take emergency time into account !
 
     struct StackData{
        Hash h = nullHash;
        ScoreType eval = 0;
-       EvalData data = { 0, {0,0} };
+       EvalData data = { 0, {0,0}, {0,0} };
        Move threat = INVALIDMOVE;
        Position p;
     };
     std::array<StackData,MAX_PLY> stack;
 
     Stats stats;
+
+    inline void DisplayStats()const{
+    for(size_t k = 0 ; k < Stats::sid_maxid ; ++k){
+        Logging::LogIt(Logging::logInfo) << Stats::Names[k] << " " << stats.counters[(Stats::StatId)k];
+    }
+}
 
     std::vector<RootScores> rootScores;
 

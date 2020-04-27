@@ -48,7 +48,7 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
         case '6': j += 5; break;
         case '7': j += 6; break;
         case '8': j += 7; break;
-        default: Logging::LogIt(Logging::logFatal) << "FEN ERROR -1 : invalid character in fen string :" << letter ;
+        default: Logging::LogIt(Logging::logFatal) << "FEN ERROR -1 : invalid character in fen string :" << letter << "\n" << fen;
         }
         j++;
     }
