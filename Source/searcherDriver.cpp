@@ -28,9 +28,8 @@ void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestSco
         const std::string multiPVstr = DynamicConfig::multiPV > 1 ? ("multipv " + std::to_string(multipv)) : "";
         str << "info " << multiPVstr << " depth " << int(depth) << " score cp " << bestScore << " time " << ms << " nodes " << nodeCount << " nps " << int(nodeCount / (ms / 1000.f)) << " seldepth " << (int)seldepth << " pv " << ToString(pv) << " tbhits " << ThreadPool::instance().counter(Stats::sid_tbHit1) + ThreadPool::instance().counter(Stats::sid_tbHit2);
         static auto lastHashFull = Clock::now();
-        if (  (int)std::chrono::duration_cast<std::chrono::milliseconds>(now - lastHashFull).count() > 500
-              && (TimeType)std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(now - TimeMan::startTime).count()*2)) < getCurrentMoveMs()
-              && !stopFlag){
+        if ( (int)std::chrono::duration_cast<std::chrono::milliseconds>(now - lastHashFull).count() > 500
+              && (TimeType)std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(now - TimeMan::startTime).count()*2)) < ThreadPool::instance().main().getCurrentMoveMs() ){
             lastHashFull = now;
             str << " hashfull " << TT::hashFull();
         }
@@ -40,16 +39,17 @@ void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestSco
 
 PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
 
-    DynamicConfig::level = DynamicConfig::limitStrength ? std::max(0,(DynamicConfig::strength - 500))/29 : DynamicConfig::level;
+    DynamicConfig::level = DynamicConfig::limitStrength ? Skill::Elo2Level() : DynamicConfig::level;
     d=std::max((DepthType)1,Skill::enabled()?std::min(d,Skill::limitedDepth()):d);
+
+    stopFlag = false;
+    moveDifficulty = MoveDifficultyUtil::MD_std;
 
     if ( isMainThread() ){
         TimeMan::startTime = Clock::now();
         Logging::LogIt(Logging::logInfo) << "Search params :" ;
         Logging::LogIt(Logging::logInfo) << "requested time  " << getCurrentMoveMs() ;
         Logging::LogIt(Logging::logInfo) << "requested depth " << (int) d ;
-        stopFlag = false;
-        moveDifficulty = MoveDifficultyUtil::MD_std;
         //TT::clearTT(); // to be used for reproductible results
         TT::age();
     }
@@ -104,8 +104,9 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
        goto pvsout;
     }
 
+    // only main thread here, stopflag will be triggered anyway for other threads
     if ( isMainThread() && DynamicConfig::multiPV == 1 && d > easyMoveDetectionDepth+5 
-         && Searcher::currentMoveMs < INFINITETIME && Searcher::currentMoveMs > 800 && TimeMan::msecUntilNextTC > 0){
+         && currentMoveMs < INFINITETIME && currentMoveMs > 800 && TimeMan::msecUntilNextTC > 0){
        // easy move detection (small open window search)
        rootScores.clear();
        ScoreType easyScore = pvs<true,false>(-MATE, MATE, p, easyMoveDetectionDepth, 0, pvOut, seldepth, isInCheck,false);
@@ -114,8 +115,12 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
            bestScore = easyScore; 
            goto pvsout; 
        }
-       if (rootScores.size() == 1) moveDifficulty = MoveDifficultyUtil::MD_forced; // only one : check evasion or zugzwang
-       else if (rootScores.size() > 1 && rootScores[0].s > rootScores[1].s + MoveDifficultyUtil::easyMoveMargin) moveDifficulty = MoveDifficultyUtil::MD_easy;
+       if (rootScores.size() == 1){
+           moveDifficulty = MoveDifficultyUtil::MD_forced; // only one : check evasion or zugzwang
+       }
+       else if (rootScores.size() > 1 && rootScores[0].s > rootScores[1].s + MoveDifficultyUtil::easyMoveMargin){
+           moveDifficulty = MoveDifficultyUtil::MD_easy;
+       }
     }
 
     // ID loop
@@ -265,6 +270,7 @@ pvsout:
     }
     d = reachedDepth;
     sc = bestScore;
-    if (isMainThread()) ThreadPool::instance().DisplayStats();
+    if ( loneSearcher ) DisplayStats();
+    else if (isMainThread()) ThreadPool::instance().DisplayStats();
     return pvOut;
 }

@@ -14,7 +14,6 @@ struct ExtendedPosition : Position{
     ExtendedPosition(const std::string & s, bool withMoveCount = true);
     bool shallFindBest();
     bool shallAvoidBad();
-    bool meaStyle();
     std::vector<std::string> bestMoves();
     std::vector<std::string> badMoves();
     std::vector<std::string> comment0();
@@ -25,12 +24,12 @@ struct ExtendedPosition : Position{
     static void test(const std::vector<std::string> & positions,
                      const std::vector<int> &         timeControls,
                      bool                             breakAtFirstSuccess,
+                     bool                             multipleBest,
                      const std::vector<int> &         scores,
                      std::function< int(int) >        eloF,
                      bool                             withMoveCount = true);
 
     static void testStatic(const std::vector<std::string> & positions,
-                           int chunck = 4,
                            bool withMoveCount = false);
 
     std::map<std::string,std::vector<std::string> > _extendedParams;

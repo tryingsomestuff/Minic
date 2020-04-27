@@ -76,7 +76,7 @@ void analyze(const Position & p, DepthType depth){
         TimeMan::msecInTC        = -1;
         TimeMan::msecInc         = -1;
         TimeMan::msecUntilNextTC = -1;
-        Searcher::currentMoveMs = TimeMan::GetNextMSecPerMove(p);
+        ThreadPool::instance().currentMoveMs = TimeMan::GetNextMSecPerMove(p);
         DepthType seldepth = 0;
         PVList pv;
         ThreadData d = {depth,seldepth/*dummy*/,s/*dummy*/,p,bestMove/*dummy*/,pv/*dummy*/}; // only input coef
