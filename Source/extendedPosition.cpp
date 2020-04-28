@@ -239,6 +239,8 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
 
     Results ** results = new Results*[positions.size()];
 
+    std::vector<std::thread> threads(DynamicConfig::threads);
+    const size_t grainsize = positions.size() / DynamicConfig::threads;
     // reset number of threads used for the search
     DynamicConfig::threads = 1;
 
@@ -335,9 +337,6 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
         }
       }
     };
-
-    std::vector<std::thread> threads(DynamicConfig::threads);
-    const size_t grainsize = positions.size() / DynamicConfig::threads;
 
     size_t work_iter = 0;
     for(auto it = std::begin(threads); it != std::end(threads) - 1; ++it) {

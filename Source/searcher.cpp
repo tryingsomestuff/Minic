@@ -16,7 +16,9 @@ TimeType Searcher::getCurrentMoveMs() {
         case MoveDifficultyUtil::MD_hardDefense: ret = (std::min(TimeType(TimeMan::msecUntilNextTC*MoveDifficultyUtil::maxStealFraction), ret*MoveDifficultyUtil::emergencyFactor)); break; // something bad is happening
         }
     }
-    return std::max(ret, TimeType(20));// if not much time left, let's try that ...;
+    // take variability into account
+    ret = std::min(TimeMan::maxTime,TimeType(ret * MoveDifficultyUtil::variabilityFactor())); // inside [0.5 .. 2]
+    return std::max(ret, TimeType(20));// if not much time left, let's try something ...;
 }
 
 void Searcher::getCMHPtr(const unsigned int ply, CMHPtrArray & cmhPtr){

@@ -38,7 +38,7 @@ typedef uint64_t u_int64_t;
 #include <unistd.h>
 #endif
 
-const std::string MinicVersion = "2.12";
+const std::string MinicVersion = "2.15";
 
 // *** options
 #define WITH_UCI
@@ -283,6 +283,9 @@ namespace MoveDifficultyUtil {
     const ScoreType easyMoveMargin            = 180;
     const int       emergencyFactor           = 5;
     const float     maxStealFraction          = 0.2f; // of remaining time
+
+    extern float    variability; 
+    inline float variabilityFactor(){ return 2 / (1 + exp(1-MoveDifficultyUtil::variability));} // inside [0.5 .. 2]
 }
 
 inline void updatePV(PVList & pv, const Move & m, const PVList & childPV) {
