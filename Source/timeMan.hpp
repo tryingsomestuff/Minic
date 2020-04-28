@@ -13,6 +13,7 @@ struct Position;
 
 namespace TimeMan{
 extern TimeType msecPerMove, msecInTC, nbMoveInTC, msecInc, msecUntilNextTC, overHead;
+extern TimeType targetTime, maxTime;
 extern DepthType moveToGo;
 extern unsigned long long maxKNodes; ///@todo use this !
 extern bool isDynamic;

@@ -6,6 +6,7 @@
 namespace TimeMan{
 
 TimeType msecPerMove, msecInTC, nbMoveInTC, msecInc, msecUntilNextTC, overHead;
+TimeType targetTime, maxTime;
 DepthType moveToGo;
 unsigned long long maxKNodes;
 bool isDynamic;
@@ -20,7 +21,9 @@ void init(){
     maxKNodes   = 0;
     isDynamic   = false;
     isUCIPondering  = false;
-    overHead = 0;
+    overHead    = 0;
+    targetTime  = 0;
+    maxTime     = 0;
 }
 
 TimeType GetNextMSecPerMove(const Position & p){
@@ -37,39 +40,52 @@ TimeType GetNextMSecPerMove(const Position & p){
     Logging::LogIt(Logging::logInfo) << "moveToGo        " << int(moveToGo);
     Logging::LogIt(Logging::logInfo) << "maxKNodes       " << maxKNodes;
     TimeType msecIncLoc = (msecInc > 0) ? msecInc : 0;
+    
     if ( maxKNodes > 0 ){
         Logging::LogIt(Logging::logInfo) << "Fixed nodes per move";
-        ms =  INFINITETIME;
+        targetTime =  INFINITETIME;
+        maxTime = INFINITETIME;
+        return targetTime;
     }
+
     else if ( msecPerMove > 0 ) {
         Logging::LogIt(Logging::logInfo) << "Fixed time per move";
-        ms =  msecPerMove;
+        targetTime =  msecPerMove;
+        maxTime = msecPerMove;
+        return targetTime;
     }
+
     else if ( nbMoveInTC > 0){ // mps is given (xboard style)
+        assert(msecInTC > 0); 
+        assert(nbMoveInTC > 0);
         Logging::LogIt(Logging::logInfo) << "Xboard style TC";
-        assert(msecInTC > 0); assert(nbMoveInTC > 0);
-        Logging::LogIt(Logging::logInfo) << "TC mode, xboard";
         const TimeType msecMargin = std::max(std::min(msecMarginMax, TimeType(msecMarginCoef*msecInTC)), msecMarginMin);
         if (!isDynamic) ms = int((msecInTC - msecMarginMin) / (float)nbMoveInTC) + msecIncLoc ;
         else { ms = std::min(msecUntilNextTC - msecMargin, int((msecUntilNextTC - msecMargin) /float(nbMoveInTC - ((p.moves - 1) % nbMoveInTC))) + msecIncLoc); }
     }
+
     else if (moveToGo > 0) { // moveToGo is given (uci style)
         assert(msecUntilNextTC > 0);
         Logging::LogIt(Logging::logInfo) << "UCI style TC";
         const TimeType msecMargin = std::max(std::min(msecMarginMax, TimeType(msecMarginCoef*msecUntilNextTC)), msecMarginMin);
-        if (!isDynamic) Logging::LogIt(Logging::logFatal) << "bad timing configuration ...";
+        if (!isDynamic) Logging::LogIt(Logging::logFatal) << "bad timing configuration ... (missing dynamic UCI time info)";
         else { ms = std::min(msecUntilNextTC - msecMargin, TimeType((msecUntilNextTC - msecMargin) / float(moveToGo) + msecIncLoc)*(isUCIPondering?3:2)/2); }
     }
-    else{ // mps is not given
+
+    else{ // sudden death style
         Logging::LogIt(Logging::logInfo) << "Suddendeath style";
-        const int nmoves = 17; // always be able to play this more moves !
+        const int nmoves = 17 - std::min(12,p.halfmoves/15); // always be able to play this more moves !
         Logging::LogIt(Logging::logInfo) << "nmoves    " << nmoves;
         Logging::LogIt(Logging::logInfo) << "p.moves   " << int(p.moves);
-        assert(nmoves > 0); assert(msecInTC >= 0);
+        assert(nmoves > 0); 
+        assert(msecInTC >= 0);
         const TimeType msecMargin = std::max(std::min(msecMarginMax, TimeType(msecMarginCoef*msecInTC)), msecMarginMin);
-        if (!isDynamic) ms = int((msecInTC+msecIncLoc-msecMarginMin) / (float)(nmoves)) ;
+        if (!isDynamic) Logging::LogIt(Logging::logFatal) << "bad timing configuration ... (missing dynamic time info for sudden death style TC)";
         else ms = std::min(msecUntilNextTC - msecMargin, TimeType((msecUntilNextTC - msecMargin) / (float)nmoves + msecIncLoc )*(isUCIPondering?3:2)/2);
     }
-    return std::max(ms-overHead, TimeType(20));// if not much time left, let's try that hoping for a friendly GUI...
+
+    targetTime = std::max(ms-overHead, TimeType(20)); // if not much time left, let's try that hoping for a friendly GUI...
+    maxTime = std::min(msecUntilNextTC - msecMarginMin,targetTime*7);
+    return targetTime;
 }
 } // TimeMan

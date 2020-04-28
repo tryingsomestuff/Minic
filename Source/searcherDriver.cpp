@@ -52,6 +52,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
         Logging::LogIt(Logging::logInfo) << "requested depth " << (int) d ;
         //TT::clearTT(); // to be used for reproductible results
         TT::age();
+        MoveDifficultyUtil::variability = 1.f;
     }
     else{
         Logging::LogIt(Logging::logInfo) << "helper thread waiting ... " << id() ;
@@ -84,8 +85,9 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
        }
     }
 
-    ScoreType depthScores[MAX_DEPTH] = { 0 };
-    Counter nodesByDepth[MAX_DEPTH] = { 0ull };
+    std::array<ScoreType,MAX_DEPTH> depthScores;  depthScores.fill(0);
+    std::array<MiniMove,MAX_DEPTH>  depthMoves;   depthMoves.fill(INVALIDMINIMOVE);
+    std::array<Counter,MAX_DEPTH>   nodesByDepth; nodesByDepth.fill(0ull);
     const bool isInCheck = isAttacked(p, kingSquare(p));
     const DepthType easyMoveDetectionDepth = 5;
 
@@ -235,19 +237,37 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
                 }
                 
                 if ( isMainThread() ){
+                    // output to GUI
                     displayGUI(depth,seldepth,bestScore,pvLoc,multi+1);
+
+                    // store current depth info 
+                    depthScores[depth] = bestScore;
+                    nodesByDepth[depth] = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
+                    if ( pvLoc.size() ) depthMoves[depth] = Move2MiniMove(pvLoc[0]);
+
+                    // check for an emergency
                     if (TimeMan::isDynamic && depth > MoveDifficultyUtil::emergencyMinDepth 
                     && bestScore < depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin) { 
                         moveDifficulty = bestScore > MoveDifficultyUtil::emergencyAttackThreashold ? MoveDifficultyUtil::MD_hardAttack : MoveDifficultyUtil::MD_hardDefense;
                         Logging::LogIt(Logging::logInfo) << "Emergency mode activated : " << bestScore << " < " << depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin; 
                     }
+
+                    // update a "variability" measure to scale remaining time on it ///@todo
+                    if ( depth > 12 && pvLoc.size() ){
+                        if ( depthMoves[depth] != depthMoves[depth-1] ) MoveDifficultyUtil::variability *= (1.f + float(depth)/100);
+                        else MoveDifficultyUtil::variability *= 0.97;
+                        Logging::LogIt(Logging::logInfo) << "Variability :" << MoveDifficultyUtil::variability;
+                        Logging::LogIt(Logging::logInfo) << "Variability time factor :" << MoveDifficultyUtil::variabilityFactor();
+                    }
+
+                    // check for remaining time
                     if (TimeMan::isDynamic 
                     && (TimeType)std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()*1.8)) > getCurrentMoveMs()) { 
                         stopFlag = true; 
                         Logging::LogIt(Logging::logInfo) << "stopflag triggered, not enough time for next depth"; break; 
-                    } // not enought time
-                    depthScores[depth] = bestScore;
-                    nodesByDepth[depth] = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
+                    } 
+
+                    // compute EBF
                     if ( depth > 1 ){
                         Logging::LogIt(Logging::logInfo) << "EBF  " << float(nodesByDepth[depth]) / (std::max(Counter(1),nodesByDepth[depth-1]));
                         Logging::LogIt(Logging::logInfo) << "EBF2 " << float(ThreadPool::instance().counter(Stats::sid_qnodes)) / std::max(Counter(1),ThreadPool::instance().counter(Stats::sid_nodes));
