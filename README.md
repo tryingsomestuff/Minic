@@ -270,7 +270,9 @@ You can use both the json configuation file or the command line argument to sele
 * 2.10..2.11 : tweaking
 * 2.12 : fix a TT race condition  
 * 2.13 : skill feature, null move based on mobility  
-* 2.14 : ...
+* 2.14 : some refactoring  
+* 2.15 : work on time management  
+* 2.16 : ...
 
 
 ## Thanks
