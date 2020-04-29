@@ -31,12 +31,12 @@ struct Position{
 
     mutable Hash h = nullHash, ph = nullHash;
     Move lastMove = INVALIDMOVE;
-    Square ep = INVALIDSQUARE;
+    unsigned short int moves = 0, halfmoves = 0;
     Square king[2] = { INVALIDSQUARE, INVALIDSQUARE };
     Square rooksInit[2][2] = { {INVALIDSQUARE, INVALIDSQUARE}, {INVALIDSQUARE, INVALIDSQUARE}};
     Square kingInit[2] = {INVALIDSQUARE, INVALIDSQUARE};
+    Square ep = INVALIDSQUARE;
     unsigned char fifty = 0;
-    unsigned short int moves = 0, halfmoves = 0;
     CastlingRights castling = C_none;
     Color c = Co_White;
 
