@@ -328,6 +328,11 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
        pe.danger[Co_Black] += EvalConfig::kingAttOpenfile        * countBit(kingFlank[bkf] & pe.openFiles              )/8;
        pe.danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOpp * countBit(kingFlank[bkf] & pe.semiOpenFiles[Co_Black])/8;
        pe.danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * countBit(kingFlank[bkf] & pe.semiOpenFiles[Co_White])/8;
+       // Fawn
+       pe.score -= EvalConfig::pawnFawnMalusKS * countBit((pawns[Co_White] & (BBSq_h2 | BBSq_g3)) | (pawns[Co_Black] & BBSq_h3) | (p.king[Co_White] & kingSide))/4;
+       pe.score += EvalConfig::pawnFawnMalusKS * countBit((pawns[Co_Black] & (BBSq_h7 | BBSq_g6)) | (pawns[Co_White] & BBSq_h6) | (p.king[Co_Black] & kingSide))/4;
+       pe.score -= EvalConfig::pawnFawnMalusQS * countBit((pawns[Co_White] & (BBSq_a2 | BBSq_b3)) | (pawns[Co_Black] & BBSq_a3) | (p.king[Co_White] & queenSide))/4;
+       pe.score += EvalConfig::pawnFawnMalusQS * countBit((pawns[Co_Black] & (BBSq_a7 | BBSq_b6)) | (pawns[Co_White] & BBSq_a6) | (p.king[Co_Black] & queenSide))/4;
 
        ++context.stats.counters[Stats::sid_ttPawnInsert];
        pe.h = Hash64to32(computePHash(p)); // set the pawn entry

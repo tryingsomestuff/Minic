@@ -22,7 +22,8 @@ struct TexelInput {
 template < typename T >
 struct TexelParam {
 public:
-    TexelParam(T & accessor, const T& inf, const T& sup, const std::string & name, const std::function<void(const T&)> & hook = [](const T&){}) :accessor(&accessor), inf(inf), sup(sup), name(name), hook(hook) {}
+    TexelParam(T & _accessor, const T& _inf, const T& _sup, const std::string & _name, const std::function<void(const T&)> & _hook = [](const T&){}) 
+               :accessor(&_accessor), inf(_inf), sup(_sup), name(_name), hook(_hook) {}
     T * accessor;
     T inf;
     T sup;
@@ -79,7 +80,7 @@ double E(const std::vector<Texel::TexelInput> &data, size_t miniBatchSize) {
     const bool progress = miniBatchSize > 100000;
     std::chrono::time_point<Clock> startTime = Clock::now();
 
-    auto worker = [&] (size_t begin, size_t end, std::atomic<double> & acc, int t) {
+    auto worker = [&] (size_t begin, size_t end, std::atomic<double> & acc, int /*t*/) {
       double ee = 0;
       for(auto k = begin; k != end; ++k) {
         ee += std::pow((data[k].result+1)*0.5 - Sigmoid(data[k].p),2);
@@ -113,7 +114,9 @@ double E(const std::vector<Texel::TexelInput> &data, size_t miniBatchSize) {
     return e/miniBatchSize;
 }
 
-void Randomize(std::vector<Texel::TexelInput> & data, size_t miniBatchSize){ std::shuffle(data.begin(), data.end(), std::default_random_engine(0)); }
+void Randomize(std::vector<Texel::TexelInput> & data){ 
+    std::shuffle(data.begin(), data.end(), std::default_random_engine(0)); 
+}
 
 double computeOptimalK(const std::vector<Texel::TexelInput> & data) {
     double Kstart = 0.05, Kend = 3.0, Kdelta = 0.15;
@@ -180,7 +183,7 @@ void displayTexel(const std::string prefixe, const std::vector<TexelParam<ScoreT
 std::vector<TexelParam<ScoreType> > TexelOptimizeGD(const std::vector<TexelParam<ScoreType> >& initialGuess, std::vector<Texel::TexelInput> &data, const size_t batchSize, const int loops, const std::string & prefix) {
     DynamicConfig::disableTT = true;
     int it = 0;
-    Randomize(data, batchSize);
+    Randomize(data);
     std::vector<TexelParam<ScoreType> > bestParam = initialGuess;
     std::vector<ScoreType> previousUpdate(batchSize,0);
     while (it < loops ) {
@@ -213,7 +216,7 @@ std::vector<TexelParam<ScoreType> > TexelOptimizeGD(const std::vector<TexelParam
         double curE = E(data, batchSize);
         Logging::LogIt(Logging::logInfo) << "-> " << curE;
         // randomize for next iteration
-        Randomize(data, batchSize);
+        Randomize(data);
         displayTexel(prefix,bestParam,it,curE);
         ++it;
     }
@@ -228,13 +231,13 @@ std::vector<TexelParam<ScoreType> > TexelOptimizeNaive(const std::vector<TexelPa
     int step = 0;
     for (int loop = 0; loop < 5000; ++loop) {
         for (size_t k = 0; k < bestParam.size(); ++k) {
-            Randomize(data, batchSize);
+            Randomize(data);
             double initE = E(data, batchSize);
             double curE = -1;
             step = 0;
             while ( step < stepMax ) {
                 step++;
-                const ScoreType oldValue = bestParam[k];
+                ScoreType oldValue = bestParam[k];
                 bestParam[k] = ScoreType(oldValue - 1);
                 if (bestParam[k] == oldValue) break;
                 curE = E(data, batchSize);
@@ -243,7 +246,7 @@ std::vector<TexelParam<ScoreType> > TexelOptimizeNaive(const std::vector<TexelPa
                     initE = curE;
                 }
                 else{
-                    ScoreType oldValue = bestParam[k];
+                    oldValue = bestParam[k];
                     bestParam[k] = ScoreType(oldValue + 1);
                     //curE = E(data, batchSize);
                     break;
@@ -252,7 +255,7 @@ std::vector<TexelParam<ScoreType> > TexelOptimizeNaive(const std::vector<TexelPa
             step = 0;
             while ( step < stepMax ) {
                 step++;
-                const ScoreType oldValue = bestParam[k];
+                ScoreType oldValue = bestParam[k];
                 bestParam[k] = ScoreType(oldValue + 1);
                 if (bestParam[k] == oldValue) break;
                 curE = E(data, batchSize);
@@ -261,7 +264,7 @@ std::vector<TexelParam<ScoreType> > TexelOptimizeNaive(const std::vector<TexelPa
                     initE = curE;
                 }
                 else{
-                    ScoreType oldValue = bestParam[k];
+                    oldValue = bestParam[k];
                     bestParam[k] = ScoreType(oldValue - 1);
                     //curE = E(data, batchSize);
                     break;
@@ -269,7 +272,7 @@ std::vector<TexelParam<ScoreType> > TexelOptimizeNaive(const std::vector<TexelPa
             }
             // write
             str << loop << ";" << k << ";";
-            for (size_t k = 0; k < bestParam.size(); ++k) str << bestParam[k] << ";";
+            for (size_t kk = 0; kk < bestParam.size(); ++kk) str << bestParam[kk] << ";";
             str << curE << std::endl;
         }
     }
@@ -383,6 +386,12 @@ void TexelTuning(const std::string & filename) {
     guess["freePasser"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::freePasserBonus[5][EG] , -150,  150,"freePasserBonusEG"));
     guess["freePasser"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::freePasserBonus[6][MG] , -150,  150,"freePasserBonus"));
     guess["freePasser"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::freePasserBonus[6][EG] , -150,  150,"freePasserBonusEG"));
+
+    guess["Fawn"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnFawnMalusKS[MG] , -150,  150,"pawnFawnMalusKS"));
+    guess["Fawn"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnFawnMalusKS[EG] , -150,  150,"pawnFawnMalusKSEG"));
+    guess["Fawn"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnFawnMalusQS[MG] , -150,  150,"pawnFawnMalusQS"));
+    guess["Fawn"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnFawnMalusQS[EG] , -150,  150,"pawnFawnMalusQSEG"));
+
 
     for (int k = 0 ; k < 9 ; ++k ){
        guess["adjustN"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::adjKnight[k][MG] , -150,  150,"adjKnightMG"+std::to_string(k)));
@@ -689,6 +698,8 @@ void TexelTuning(const std::string & filename) {
         "pawnStructure3",
         "pawnStructure4",
         "PST0",
+        "Fawn",
+        "storm",
         //"knightTooFar",
         //"PST1",
         //"PST2",
