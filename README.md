@@ -272,7 +272,8 @@ You can use both the json configuation file or the command line argument to sele
 * 2.13 : skill feature, null move based on mobility  
 * 2.14 : some refactoring  
 * 2.15 : work on time management  
-* 2.16 : ...
+* 2.16 : uci fix  
+* 2.17 : ...
 
 
 ## Thanks
