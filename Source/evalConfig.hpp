@@ -16,6 +16,8 @@ extern CONST_TEXEL_TUNING EvalScore imbalance_theirs[5][5];
 extern CONST_TEXEL_TUNING EvalScore PST[6][64];
 
 extern CONST_TEXEL_TUNING EvalScore   pawnShieldBonus        ;
+extern CONST_TEXEL_TUNING EvalScore   pawnFawnMalusKS        ;
+extern CONST_TEXEL_TUNING EvalScore   pawnFawnMalusQS        ;
 extern CONST_TEXEL_TUNING EvalScore   passerBonus[8]         ;
 extern CONST_TEXEL_TUNING EvalScore   rookBehindPassed       ;
 extern CONST_TEXEL_TUNING EvalScore   kingNearPassedPawn     ;
