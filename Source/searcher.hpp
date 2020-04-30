@@ -14,7 +14,7 @@
  * Many things are templates here, so other hpp file are included at the bottom of this one.
  */
 struct Searcher{
-    bool stopFlag = false;
+    bool stopFlag = true;
     bool loneSearcher = false;
     MoveDifficultyUtil::MoveDifficulty moveDifficulty = MoveDifficultyUtil::MD_std;
     TimeType currentMoveMs = 777;
