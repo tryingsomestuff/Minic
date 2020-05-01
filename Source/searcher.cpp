@@ -90,7 +90,11 @@ Searcher::~Searcher(){
 }
 
 void Searcher::setData(const ThreadData & d){
-    _data = d;
+    _data = d; // this is a copy
+}
+
+ThreadData & Searcher::getData(){
+    return _data;
 }
 
 const ThreadData & Searcher::getData()const{

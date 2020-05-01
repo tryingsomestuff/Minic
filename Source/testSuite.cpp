@@ -29,7 +29,7 @@ bool test(const std::string & option){
         std::vector<int> timeControls = { 1000 }; //mseconds
         std::vector<int> scores = { 1 };
 
-        ExtendedPosition::test(positions,timeControls,true,true,scores,[&](int score){return 10*score/positions.size();},false);
+        ExtendedPosition::test(positions,timeControls,true,true,scores,[&](int score){return (100*score)/(30*positions.size());},false); // % of "success"
         return true;
     }
 

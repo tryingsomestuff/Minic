@@ -16,6 +16,7 @@ void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestSco
     count++; // overflow is ok
     const auto now = Clock::now();
     const TimeType ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(now - TimeMan::startTime).count());
+    getData().datas.times[depth] = ms;
     std::stringstream str;
     Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
     if (Logging::ct == Logging::CT_xboard) {
@@ -85,9 +86,6 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
        }
     }
 
-    std::array<ScoreType,MAX_DEPTH> depthScores;  depthScores.fill(0);
-    std::array<MiniMove,MAX_DEPTH>  depthMoves;   depthMoves.fill(INVALIDMINIMOVE);
-    std::array<Counter,MAX_DEPTH>   nodesByDepth; nodesByDepth.fill(0ull);
     const bool isInCheck = isAttacked(p, kingSquare(p));
     const DepthType easyMoveDetectionDepth = 5;
 
@@ -241,20 +239,20 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
                     displayGUI(depth,seldepth,bestScore,pvLoc,multi+1);
 
                     // store current depth info 
-                    depthScores[depth] = bestScore;
-                    nodesByDepth[depth] = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
-                    if ( pvLoc.size() ) depthMoves[depth] = Move2MiniMove(pvLoc[0]);
+                    getData().datas.scores[depth] = bestScore;
+                    getData().datas.nodes[depth] = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
+                    if ( pvLoc.size() ) getData().datas.moves[depth] = Move2MiniMove(pvLoc[0]);
 
                     // check for an emergency
                     if (TimeMan::isDynamic && depth > MoveDifficultyUtil::emergencyMinDepth 
-                    && bestScore < depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin) { 
+                    && bestScore < getData().datas.scores[depth - 1] - MoveDifficultyUtil::emergencyMargin) { 
                         moveDifficulty = bestScore > MoveDifficultyUtil::emergencyAttackThreashold ? MoveDifficultyUtil::MD_hardAttack : MoveDifficultyUtil::MD_hardDefense;
-                        Logging::LogIt(Logging::logInfo) << "Emergency mode activated : " << bestScore << " < " << depthScores[depth - 1] - MoveDifficultyUtil::emergencyMargin; 
+                        Logging::LogIt(Logging::logInfo) << "Emergency mode activated : " << bestScore << " < " << getData().datas.scores[depth - 1] - MoveDifficultyUtil::emergencyMargin; 
                     }
 
                     // update a "variability" measure to scale remaining time on it ///@todo
                     if ( depth > 12 && pvLoc.size() ){
-                        if ( depthMoves[depth] != depthMoves[depth-1] ) MoveDifficultyUtil::variability *= (1.f + float(depth)/100);
+                        if ( getData().datas.moves[depth] != getData().datas.moves[depth-1] ) MoveDifficultyUtil::variability *= (1.f + float(depth)/100);
                         else MoveDifficultyUtil::variability *= 0.97;
                         Logging::LogIt(Logging::logInfo) << "Variability :" << MoveDifficultyUtil::variability;
                         Logging::LogIt(Logging::logInfo) << "Variability time factor :" << MoveDifficultyUtil::variabilityFactor();
@@ -269,7 +267,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
 
                     // compute EBF
                     if ( depth > 1 ){
-                        Logging::LogIt(Logging::logInfo) << "EBF  " << float(nodesByDepth[depth]) / (std::max(Counter(1),nodesByDepth[depth-1]));
+                        Logging::LogIt(Logging::logInfo) << "EBF  " << float(getData().datas.nodes[depth]) / (std::max(Counter(1),getData().datas.nodes[depth-1]));
                         Logging::LogIt(Logging::logInfo) << "EBF2 " << float(ThreadPool::instance().counter(Stats::sid_qnodes)) / std::max(Counter(1),ThreadPool::instance().counter(Stats::sid_nodes));
                     }
                 }

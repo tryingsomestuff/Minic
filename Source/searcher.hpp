@@ -62,7 +62,7 @@ struct Searcher{
     PVList search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth);
     template< bool withRep = true, bool isPv = true, bool INR = true> MaterialHash::Terminaison interiorNodeRecognizer(const Position & p)const;
     bool isRep(const Position & p, bool isPv)const;
-    static void displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv, int multipv, const std::string & mark = "");
+    void displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv, int multipv, const std::string & mark = "");
 
     void idleLoop();
 
@@ -81,6 +81,7 @@ struct Searcher{
 
     void setData(const ThreadData & d);
     const ThreadData & getData()const;
+    ThreadData & getData();
 
     static std::atomic<bool> startLock;
 

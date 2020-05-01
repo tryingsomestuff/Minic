@@ -247,6 +247,7 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
     auto worker = [&] (size_t begin, size_t end) {
       // run the test and fill results table
       for (size_t k = begin ; k < end ; ++k ){
+        Logging::LogIt(Logging::logInfo) << "####################################################";
         Logging::LogIt(Logging::logInfo) << "Test #" << k << " " << positions[k];
         results[k] = new Results[timeControls.size()];
         ExtendedPosition extP(positions[k],withMoveCount);
@@ -260,9 +261,15 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
             ScoreType s = 0;
             Move bestMove = INVALIDMOVE;
             PVList pv;
-            ThreadData d = {depth,seldepth,s,extP,bestMove,pv}; // only input coef
+            ThreadData d = {depth,seldepth,s,extP,bestMove,pv,SearchData()}; // only input coef is depth here
             searcher.setData(d);
-            searcher.currentMoveMs = timeControls[t];
+            TimeMan::isDynamic       = false;
+            TimeMan::nbMoveInTC      = -1;
+            TimeMan::msecPerMove     = timeControls[t];
+            TimeMan::msecInTC        = -1;
+            TimeMan::msecInc         = -1;
+            TimeMan::msecUntilNextTC = -1;
+            ThreadPool::instance().currentMoveMs = TimeMan::GetNextMSecPerMove(extP);
             searcher.search();
             d = searcher.getData();
             bestMove = d.best; 
@@ -309,7 +316,7 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
                     std::string tmp = tokens[ms];
                     tmp.erase(std::remove(tmp.begin(), tmp.end(), '"'), tmp.end());
                     tmp.erase(std::remove(tmp.begin(), tmp.end(), ','), tmp.end());
-                    std::cout << tmp << std::endl;
+                    //std::cout << tmp << std::endl;
                     std::vector<std::string> keyval;
                     tokenize(tmp,keyval,"=");
                     if ( keyval.size() > 2 ){ // "=" prom sign inside ...
@@ -318,17 +325,34 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
                        strTmp >> keyval[0];
                        keyval[1] = keyval.back();
                     }
-                    std::cout << keyval[0] << std::endl;
-                    std::cout << keyval[1] << std::endl;
+                    std::cout << keyval[0] << " " << keyval[1] << std::endl;
                     results[k][t].mea.push_back(std::make_pair(keyval[0], std::stoi( keyval[1] )));
                 }
                 results[k][t].score = 0;
                 bool success = false;
+                static std::array<int,23>   ms = {  10,  20,  30,  40,  50,  60,  70,  80,  90,  100,  125,  150,  175,  200,  250,  300,  400,  500,  600,  700,  800,  900, 10000 };
+                static std::array<float,23> bonus = { 3.0, 2.9, 2.8, 2.7, 2.6, 2.5, 2.4, 2.3, 2.2,  2.1,  2.0,  1.9,  1.8,  1.7,  1.6,  1.5,  1.4,  1.3,  1.2,  1.1,  1.0,  1.0,  0.0 };
                 for(size_t i = 0 ; i < results[k][t].mea.size() ; ++i){
                     if ( results[k][t].computerMove == results[k][t].mea[i].first){
                         results[k][t].score = results[k][t].mea[i].second;
-                        success = true;
+                        const SearchData & datas = d.datas;
+                        int msec = 1000;
+                        DepthType dd = d.depth;
+                        for( ; dd >=0 ; --dd){
+                           if ( sameMove(datas.moves[dd],bestMove) ){
+                               msec = datas.times[dd];
+                           }
+                           else break;
+                        }
+                        size_t id = 0;
+                        for ( ; id < 23 && ms[id] < msec ; ++id){;}
+                        
                         Logging::LogIt(Logging::logInfo) << "Good " << i+1 << " best move : " << results[k][t].mea[i].first;
+                        Logging::LogIt(Logging::logInfo) << "Found at depth " << int(dd) << " in " << datas.times[dd] << " id " << id;
+                        Logging::LogIt(Logging::logInfo) << "Bonus " << bonus[id] << " score " << results[k][t].mea[i].second;
+
+                        results[k][t].score *= bonus[id];
+                        success = true;
                         break;
                     }
                 }
