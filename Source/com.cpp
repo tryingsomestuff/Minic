@@ -64,7 +64,7 @@ namespace COM {
         Logging::LogIt(Logging::logInfo) << ToString(position);
         DepthType seldepth = 0;
         PVList pv;
-        const ThreadData d = { depth,seldepth/*dummy*/,score/*dummy*/,position,m/*dummy*/,pv/*dummy*/ };
+        const ThreadData d = { depth,seldepth,score,position,m,pv,SearchData()}; // only input coef here is depth
         ThreadPool::instance().search(d);
         m = ThreadPool::instance().main().getData().best; // here output results
         Logging::LogIt(Logging::logInfo) << "...done returning move " << ToString(m) << " (state " << COM::state << ")";;

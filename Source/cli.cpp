@@ -79,7 +79,7 @@ void analyze(const Position & p, DepthType depth){
         ThreadPool::instance().currentMoveMs = TimeMan::GetNextMSecPerMove(p);
         DepthType seldepth = 0;
         PVList pv;
-        ThreadData d = {depth,seldepth/*dummy*/,s/*dummy*/,p,bestMove/*dummy*/,pv/*dummy*/}; // only input coef
+        ThreadData d = {depth,seldepth,s,p,bestMove,pv,SearchData()}; // only input coef is depth here
         ThreadPool::instance().search(d);
         bestMove = ThreadPool::instance().main().getData().best; // here output results
         s = ThreadPool::instance().main().getData().sc; // here output results
