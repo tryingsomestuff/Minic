@@ -18,6 +18,21 @@ std::string ToString(const Position & p, bool noEval = false);
 
 std::string ToString(const Position::Material & mat);
 
+template< typename F, typename... Arguments>
+void threadedWork(F && worker, size_t nbthreads, unsigned long long size, Arguments ... args){
+    std::vector<std::thread> threads(nbthreads);
+    const size_t grainsize = size / nbthreads;
+    size_t work_iter = 0;
+    for(auto it = std::begin(threads); it != std::end(threads) - 1; ++it) {
+      *it = std::thread(worker, work_iter, work_iter + grainsize, args...);
+      work_iter += grainsize;
+    }
+    threads.back() = std::thread(worker, work_iter, size, args...);
+    for(auto&& i : threads) {
+      i.join();
+    }
+}
+
 /*
 #include <cassert>
 #include <list>

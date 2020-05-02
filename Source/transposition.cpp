@@ -3,12 +3,12 @@
 #include "logging.hpp"
 #include "position.hpp"
 #include "searcher.hpp"
+#include "tools.hpp"
 
 namespace{
     unsigned long long int ttSize = 0;
     std::unique_ptr<TT::Entry[]> table;
 }
-
 namespace TT{
 
 GenerationType curGen = 0;
@@ -19,13 +19,27 @@ unsigned long long int powerFloor(unsigned long long int x) {
     return power/2;
 }
 
+#ifdef __linux__
+#include <sys/mman.h>
+#endif
+
 void initTable(){
     assert(table==nullptr);
     Logging::LogIt(Logging::logInfo) << "Init TT" ;
     Logging::LogIt(Logging::logInfo) << "Entry size " << sizeof(Entry);
     ttSize = 1024 * powerFloor((DynamicConfig::ttSizeMb * 1024) / (unsigned long long int)sizeof(Entry));
-    table.reset(new Entry[ttSize]);
+    Entry * mem = (Entry*)aligned_alloc(1024, ttSize*sizeof(Entry));
+    #ifdef __linux__
+       madvise(mem, ttSize*sizeof(Entry), MADV_HUGEPAGE);
+    #endif
+    table.reset(mem);
     Logging::LogIt(Logging::logInfo) << "Size of TT " << ttSize * sizeof(Entry) / 1024 / 1024 << "Mb" ;
+    Logging::LogIt(Logging::logInfo) << "Now zeroing memory using " << DynamicConfig::threads << " threads" ;
+    auto worker = [&] (size_t begin, size_t end){
+       std::fill(&table[0]+begin,&table[0]+end,Entry());
+    };
+    threadedWork(worker,DynamicConfig::threads,ttSize);
+    Logging::LogIt(Logging::logInfo) << "... done ";
 }
 
 void clearTT() {

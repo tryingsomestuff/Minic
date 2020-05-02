@@ -11,6 +11,7 @@
 #include "position.hpp"
 #include "score.hpp"
 #include "smp.hpp"
+#include "tools.hpp"
 
 namespace Texel {
 
@@ -80,32 +81,17 @@ double E(const std::vector<Texel::TexelInput> &data, size_t miniBatchSize) {
     const bool progress = miniBatchSize > 100000;
     std::chrono::time_point<Clock> startTime = Clock::now();
 
-    auto worker = [&] (size_t begin, size_t end, std::atomic<double> & acc, int /*t*/) {
+    auto worker = [&] (size_t begin, size_t end, std::atomic<double> & acc) {
       double ee = 0;
       for(auto k = begin; k != end; ++k) {
         ee += std::pow((data[k].result+1)*0.5 - Sigmoid(data[k].p),2);
       }
       {
           const std::lock_guard<std::mutex> lock(m);
-          //std::cout << "thread id " << t << " " << ee << std::endl;
           acc.store( acc.load() + ee );
       }
     };
-
-    std::vector<std::thread> threads(DynamicConfig::threads);
-    const size_t grainsize = miniBatchSize / DynamicConfig::threads;
-
-    size_t work_iter = 0;
-    int tcount = 0;
-    for(auto it = std::begin(threads); it != std::end(threads) - 1; ++it) {
-      *it = std::thread(worker, work_iter, work_iter + grainsize, std::ref(e), tcount++);
-      work_iter += grainsize;
-    }
-    threads.back() = std::thread(worker, work_iter, miniBatchSize, std::ref(e), tcount);
-
-    for(auto&& i : threads) {
-      i.join();
-    }
+    threadedWork(worker,DynamicConfig::threads,miniBatchSize, std::ref(e));
 
     if ( progress ) {
         const int ms = (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count();
