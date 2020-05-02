@@ -6,6 +6,7 @@
 #include "moveGen.hpp"
 #include "positionTools.hpp"
 #include "searcher.hpp"
+#include "tools.hpp"
 
 #include <cctype>
 
@@ -239,9 +240,7 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
 
     Results ** results = new Results*[positions.size()];
 
-    std::vector<std::thread> threads(DynamicConfig::threads);
-    const size_t grainsize = positions.size() / DynamicConfig::threads;
-    // reset number of threads used for the search
+    unsigned int threads = DynamicConfig::threads; //copy
     DynamicConfig::threads = 1;
 
     auto worker = [&] (size_t begin, size_t end) {
@@ -362,16 +361,7 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
       }
     };
 
-    size_t work_iter = 0;
-    for(auto it = std::begin(threads); it != std::end(threads) - 1; ++it) {
-      *it = std::thread(worker, work_iter, work_iter + grainsize);
-      work_iter += grainsize;
-    }
-    threads.back() = std::thread(worker, work_iter, positions.size());
-
-    for(auto&& i : threads) {
-      i.join();
-    }
+    threadedWork(worker,threads,positions.size());
 
     // display results
     int totalScore = 0;

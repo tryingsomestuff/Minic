@@ -88,7 +88,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                data.gp = gamePhase(p,matScoreW,matScoreB);
                ++stats.counters[Stats::sid_materialTableMiss];
             }
-            ///@todo data.danger and data.mob is not filled here !!
+            ///@todo data.danger, data.mob, Shashin coeff are not filled in case of TT hit !!
         }
         else {
             ++stats.counters[Stats::sid_ttscmiss];
