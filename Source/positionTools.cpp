@@ -6,6 +6,8 @@
 #include "pieceTools.hpp"
 #include "tools.hpp"
 
+#include <cstdlib>
+
 std::string GetFENShort(const Position &p ){ // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR"
     std::stringstream ss;
     int count = 0;
