@@ -597,9 +597,11 @@ void TexelTuning(const std::string & filename) {
        guess["knightTooFar"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::knightTooFar[k][EG] , -100, 100, "knightTooFarEG"+std::to_string(k)));
     }
 
-
     guess["tempo"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::tempo[MG] , -500,  500,"tempo"));
     guess["tempo"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::tempo[EG] , -500,  500,"tempoEG"));
+
+    guess["shashin"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::shashinMobCoeff[MG] , -500,  500,"shashinmobMG"));
+    guess["shashin"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::shashinMobCoeff[EG] , -500,  500,"shashinmobEG"));
 
     static ScoreType fake = 0;
     guess["fake"].push_back(Texel::TexelParam<ScoreType>(fake , -500,  500,"fake"));
@@ -693,6 +695,7 @@ void TexelTuning(const std::string & filename) {
     };
    */
     std::vector<std::string> todo = {
+        /*
         "pawnStructure1",
         "pawnStructure2",
         "pawnStructure3",
@@ -700,6 +703,8 @@ void TexelTuning(const std::string & filename) {
         "PST0",
         "Fawn",
         "storm",
+        */
+        "shashin",
         //"knightTooFar",
         //"PST1",
         //"PST2",
@@ -708,7 +713,7 @@ void TexelTuning(const std::string & filename) {
         //"PST5"
     };
     
-    for(auto loops = 0 ; loops < 10 ; ++loops){
+    for(auto loops = 0 ; loops < 1000 ; ++loops){
         Logging::LogIt(Logging::logInfo) << "Starting loop : " << loops;
         for(auto it = todo.begin() ; it != todo.end(); ++it){
             if ( guess.find(*it) == guess.end() ){

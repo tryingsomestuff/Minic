@@ -78,6 +78,9 @@ struct EvalData{
     float gp = 0;
     ScoreType danger[2] = {0,0};
     unsigned short int mobility[2] = {0,0};
+    float shashinMobRatio = 1;
+    float shashinForwardness = 0;
+    float shashinPacking = 0;
 };
 
 // used for easy move detection

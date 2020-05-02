@@ -26,11 +26,12 @@ namespace{ // some Color / Piece helpers
 }
 
 template < Piece T , Color C>
-inline void evalPiece(const Position & p, BitBoard pieceBBiterator, const BitBoard (& kingZone)[2], EvalScore & score, BitBoard & attBy, BitBoard & att, BitBoard & att2, ScoreType (& kdanger)[2], BitBoard & checkers){
+inline void evalPiece(const Position & p, BitBoard pieceBBiterator, const BitBoard (& kingZone)[2], EvalScore & score, BitBoard & attBy, BitBoard & att, BitBoard & att2, ScoreType (& kdanger)[2], BitBoard & checkers, float & forwardness){
     while (pieceBBiterator) {
         const Square k = popBit(pieceBBiterator);
         const Square kk = ColorSquarePstHelper<C>(k);
         score += EvalConfig::PST[T-1][kk] * ColorSignHelper<C>();
+        forwardness += SQRANK(kk) * ColorSignHelper<C>();
         const BitBoard target = BBTools::pfCoverage[T-1](k, p.occupancy(), C); // real targets
         if ( target ){
            attBy |= target;
@@ -48,33 +49,33 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, const BitBoa
 ///@todo special version of evalPiece for king ??
 
 template < Piece T ,Color C>
-inline void evalMob(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, const BitBoard safe, EvalData & data){
+inline void evalMob(const Position & p, BitBoard pieceBBiterator, EvalScore & score, const BitBoard safe, EvalData & data){
     while (pieceBBiterator){
         const unsigned short int mob = countBit(BBTools::pfCoverage[T-1](popBit(pieceBBiterator), p.occupancy(), C) & ~p.allPieces[C] & safe);
         data.mobility[C] += mob;
-        score[sc_MOB] += EvalConfig::MOB[T-2][mob]*ColorSignHelper<C>();
+        score += EvalConfig::MOB[T-2][mob]*ColorSignHelper<C>();
     }
 }
 
 template < Color C >
-inline void evalMobQ(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, const BitBoard safe, EvalData & data){
+inline void evalMobQ(const Position & p, BitBoard pieceBBiterator, EvalScore & score, const BitBoard safe, EvalData & data){
     while (pieceBBiterator){
         const Square s = popBit(pieceBBiterator);
         unsigned short int mob = countBit(BBTools::pfCoverage[P_wb-1](s, p.occupancy(), C) & ~p.allPieces[C] & safe);
         data.mobility[C] += mob;
-        score[sc_MOB] += EvalConfig::MOB[3][mob]*ColorSignHelper<C>();
+        score += EvalConfig::MOB[3][mob]*ColorSignHelper<C>();
         mob = countBit(BBTools::pfCoverage[P_wr-1](s, p.occupancy(), C) & ~p.allPieces[C] & safe);
         data.mobility[C] += mob;
-        score[sc_MOB] += EvalConfig::MOB[4][mob]*ColorSignHelper<C>();
+        score += EvalConfig::MOB[4][mob]*ColorSignHelper<C>();
     }
 }
 
 template < Color C>
-inline void evalMobK(const Position & p, BitBoard pieceBBiterator, ScoreAcc & score, const BitBoard safe, EvalData & data){
+inline void evalMobK(const Position & p, BitBoard pieceBBiterator, EvalScore & score, const BitBoard safe, EvalData & data){
     while (pieceBBiterator){
         const unsigned short int mob = countBit(BBTools::pfCoverage[P_wk-1](popBit(pieceBBiterator), p.occupancy(), C) & ~p.allPieces[C] & safe);
         data.mobility[C] += mob;
-        score[sc_MOB] += EvalConfig::MOB[5][mob]*ColorSignHelper<C>();
+        score += EvalConfig::MOB[5][mob]*ColorSignHelper<C>();
     }
 }
 
@@ -200,16 +201,20 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     const BitBoard kingShield[2] = { kingZone[Co_White] & ~BBTools::shiftS<Co_White>(ranks[SQRANK(p.king[Co_White])]) , kingZone[Co_Black] & ~BBTools::shiftS<Co_Black>(ranks[SQRANK(p.king[Co_Black])]) };
 
     // PST, attack, danger
-    evalPiece<P_wn,Co_White>(p,p.pieces_const<P_wn>(Co_White),kingZone,score[sc_PST],attFromPiece[Co_White][P_wn-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wn-1]);
-    evalPiece<P_wb,Co_White>(p,p.pieces_const<P_wb>(Co_White),kingZone,score[sc_PST],attFromPiece[Co_White][P_wb-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wb-1]);
-    evalPiece<P_wr,Co_White>(p,p.pieces_const<P_wr>(Co_White),kingZone,score[sc_PST],attFromPiece[Co_White][P_wr-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wr-1]);
-    evalPiece<P_wq,Co_White>(p,p.pieces_const<P_wq>(Co_White),kingZone,score[sc_PST],attFromPiece[Co_White][P_wq-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wq-1]);
-    evalPiece<P_wk,Co_White>(p,p.pieces_const<P_wk>(Co_White),kingZone,score[sc_PST],attFromPiece[Co_White][P_wk-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wk-1]);
-    evalPiece<P_wn,Co_Black>(p,p.pieces_const<P_wn>(Co_Black),kingZone,score[sc_PST],attFromPiece[Co_Black][P_wn-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wn-1]);
-    evalPiece<P_wb,Co_Black>(p,p.pieces_const<P_wb>(Co_Black),kingZone,score[sc_PST],attFromPiece[Co_Black][P_wb-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wb-1]);
-    evalPiece<P_wr,Co_Black>(p,p.pieces_const<P_wr>(Co_Black),kingZone,score[sc_PST],attFromPiece[Co_Black][P_wr-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wr-1]);
-    evalPiece<P_wq,Co_Black>(p,p.pieces_const<P_wq>(Co_Black),kingZone,score[sc_PST],attFromPiece[Co_Black][P_wq-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wq-1]);
-    evalPiece<P_wk,Co_Black>(p,p.pieces_const<P_wk>(Co_Black),kingZone,score[sc_PST],attFromPiece[Co_Black][P_wk-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wk-1]);
+    evalPiece<P_wn,Co_White>(p,p.pieces_const<P_wn>(Co_White),kingZone,score[sc_PST],attFromPiece[Co_White][P_wn-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wn-1],data.shashinForwardness);
+    evalPiece<P_wb,Co_White>(p,p.pieces_const<P_wb>(Co_White),kingZone,score[sc_PST],attFromPiece[Co_White][P_wb-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wb-1],data.shashinForwardness);
+    evalPiece<P_wr,Co_White>(p,p.pieces_const<P_wr>(Co_White),kingZone,score[sc_PST],attFromPiece[Co_White][P_wr-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wr-1],data.shashinForwardness);
+    evalPiece<P_wq,Co_White>(p,p.pieces_const<P_wq>(Co_White),kingZone,score[sc_PST],attFromPiece[Co_White][P_wq-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wq-1],data.shashinForwardness);
+    evalPiece<P_wk,Co_White>(p,p.pieces_const<P_wk>(Co_White),kingZone,score[sc_PST],attFromPiece[Co_White][P_wk-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wk-1],data.shashinForwardness);
+    evalPiece<P_wn,Co_Black>(p,p.pieces_const<P_wn>(Co_Black),kingZone,score[sc_PST],attFromPiece[Co_Black][P_wn-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wn-1],data.shashinForwardness);
+    evalPiece<P_wb,Co_Black>(p,p.pieces_const<P_wb>(Co_Black),kingZone,score[sc_PST],attFromPiece[Co_Black][P_wb-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wb-1],data.shashinForwardness);
+    evalPiece<P_wr,Co_Black>(p,p.pieces_const<P_wr>(Co_Black),kingZone,score[sc_PST],attFromPiece[Co_Black][P_wr-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wr-1],data.shashinForwardness);
+    evalPiece<P_wq,Co_Black>(p,p.pieces_const<P_wq>(Co_Black),kingZone,score[sc_PST],attFromPiece[Co_Black][P_wq-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wq-1],data.shashinForwardness);
+    evalPiece<P_wk,Co_Black>(p,p.pieces_const<P_wk>(Co_Black),kingZone,score[sc_PST],attFromPiece[Co_Black][P_wk-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wk-1],data.shashinForwardness);
+
+    data.shashinForwardness /= countBit(p.occupancy());
+
+    ///@todo shashin packing
 
     /*
 #ifndef WITH_TEXEL_TUNING
@@ -458,16 +463,19 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     score[sc_PwnPushAtt] += EvalConfig::pawnSafePushAtt * (countBit(nonPawnMat[Co_Black] & BBTools::pawnAttacks<Co_White>(safePawnPush[Co_White])) - countBit(nonPawnMat[Co_White] & BBTools::pawnAttacks<Co_Black>(safePawnPush[Co_Black])));
 
     // pieces mobility
-    evalMob <P_wn,Co_White>(p,p.pieces_const<P_wn>(Co_White),score,safeSquare[Co_White],data);
-    evalMob <P_wb,Co_White>(p,p.pieces_const<P_wb>(Co_White),score,safeSquare[Co_White],data);
-    evalMob <P_wr,Co_White>(p,p.pieces_const<P_wr>(Co_White),score,safeSquare[Co_White],data);
-    evalMobQ<     Co_White>(p,p.pieces_const<P_wq>(Co_White),score,safeSquare[Co_White],data);
-    evalMobK<     Co_White>(p,p.pieces_const<P_wk>(Co_White),score,~att[Co_Black]      ,data);
-    evalMob <P_wn,Co_Black>(p,p.pieces_const<P_wn>(Co_Black),score,safeSquare[Co_Black],data);
-    evalMob <P_wb,Co_Black>(p,p.pieces_const<P_wb>(Co_Black),score,safeSquare[Co_Black],data);
-    evalMob <P_wr,Co_Black>(p,p.pieces_const<P_wr>(Co_Black),score,safeSquare[Co_Black],data);
-    evalMobQ<     Co_Black>(p,p.pieces_const<P_wq>(Co_Black),score,safeSquare[Co_Black],data);
-    evalMobK<     Co_Black>(p,p.pieces_const<P_wk>(Co_Black),score,~att[Co_White]      ,data);
+    EvalScore mobSc = {0, 0};
+    evalMob <P_wn,Co_White>(p,p.pieces_const<P_wn>(Co_White),mobSc,safeSquare[Co_White],data);
+    evalMob <P_wb,Co_White>(p,p.pieces_const<P_wb>(Co_White),mobSc,safeSquare[Co_White],data);
+    evalMob <P_wr,Co_White>(p,p.pieces_const<P_wr>(Co_White),mobSc,safeSquare[Co_White],data);
+    evalMobQ<     Co_White>(p,p.pieces_const<P_wq>(Co_White),mobSc,safeSquare[Co_White],data);
+    evalMobK<     Co_White>(p,p.pieces_const<P_wk>(Co_White),mobSc,~att[Co_Black]      ,data);
+    evalMob <P_wn,Co_Black>(p,p.pieces_const<P_wn>(Co_Black),mobSc,safeSquare[Co_Black],data);
+    evalMob <P_wb,Co_Black>(p,p.pieces_const<P_wb>(Co_Black),mobSc,safeSquare[Co_Black],data);
+    evalMob <P_wr,Co_Black>(p,p.pieces_const<P_wr>(Co_Black),mobSc,safeSquare[Co_Black],data);
+    evalMobQ<     Co_Black>(p,p.pieces_const<P_wq>(Co_Black),mobSc,safeSquare[Co_Black],data);
+    evalMobK<     Co_Black>(p,p.pieces_const<P_wk>(Co_Black),mobSc,~att[Co_White]      ,data);
+    data.shashinMobRatio = std::max(0.5f,std::min(2.f,float(data.mobility[p.c]) / std::max(0.5f,float(data.mobility[~p.c]))));
+    score[sc_MOB] += mobSc; ///@todo EvalConfig::ShashinMobCorrection(mobSc,data.shashinMobRatio);
 
     // rook on open file
     score[sc_OpenFile] += EvalConfig::rookOnOpenFile         * countBit(p.whiteRook() & pe.openFiles);

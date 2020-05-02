@@ -169,4 +169,6 @@ ScoreType kingAttTable[64]       = {0};
 
 CONST_TEXEL_TUNING EvalScore tempo = {0,0}; //{20, 20};
 
+CONST_TEXEL_TUNING EvalScore shashinMobCoeff = {196, 212};
+
 } // EvalConfig
