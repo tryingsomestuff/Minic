@@ -7,7 +7,7 @@
 
 namespace{
     unsigned long long int ttSize = 0;
-    std::unique_ptr<TT::Entry[]> table;
+    std::unique_ptr<TT::Entry[]> table(nullptr);
 }
 namespace TT{
 
@@ -24,7 +24,6 @@ unsigned long long int powerFloor(unsigned long long int x) {
 #endif
 
 void initTable(){
-    assert(table==nullptr);
     Logging::LogIt(Logging::logInfo) << "Init TT" ;
     Logging::LogIt(Logging::logInfo) << "Entry size " << sizeof(Entry);
     ttSize = 1024 * powerFloor((DynamicConfig::ttSizeMb * 1024) / (unsigned long long int)sizeof(Entry));
