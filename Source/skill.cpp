@@ -3,7 +3,7 @@
 #include "tools.hpp"
 
 Move Skill::pick(std::vector<RootScores> & multiPVMoves) {
-    const unsigned int multiPV = multiPVMoves.size();
+    const size_t multiPV = multiPVMoves.size();
     const ScoreType topScore = multiPVMoves[0].s;
     const ScoreType worstScore = multiPVMoves[multiPV - 1].s;
     const ScoreType delta = std::min(ScoreType(topScore - worstScore), *absValues[P_wp]);

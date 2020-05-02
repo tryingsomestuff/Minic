@@ -253,7 +253,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
                     // update a "variability" measure to scale remaining time on it ///@todo
                     if ( depth > 12 && pvLoc.size() ){
                         if ( getData().datas.moves[depth] != getData().datas.moves[depth-1] ) MoveDifficultyUtil::variability *= (1.f + float(depth)/100);
-                        else MoveDifficultyUtil::variability *= 0.97;
+                        else MoveDifficultyUtil::variability *= 0.97f;
                         Logging::LogIt(Logging::logInfo) << "Variability :" << MoveDifficultyUtil::variability;
                         Logging::LogIt(Logging::logInfo) << "Variability time factor :" << MoveDifficultyUtil::variabilityFactor();
                     }
