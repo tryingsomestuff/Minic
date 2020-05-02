@@ -78,8 +78,8 @@ TimeType GetNextMSecPerMove(const Position & p){
         Logging::LogIt(Logging::logInfo) << "nmoves    " << nmoves;
         Logging::LogIt(Logging::logInfo) << "p.moves   " << int(p.moves);
         assert(nmoves > 0); 
-        assert(msecInTC >= 0);
-        const TimeType msecMargin = std::max(std::min(msecMarginMax, TimeType(msecMarginCoef*msecInTC)), msecMarginMin);
+        assert(msecUntilNextTC >= 0);
+        const TimeType msecMargin = std::max(std::min(msecMarginMax, TimeType(msecMarginCoef*msecUntilNextTC)), msecMarginMin);
         if (!isDynamic) Logging::LogIt(Logging::logFatal) << "bad timing configuration ... (missing dynamic time info for sudden death style TC)";
         else ms = std::min(msecUntilNextTC - msecMargin, TimeType((msecUntilNextTC - msecMargin) / (float)nmoves + msecIncLoc )*(isUCIPondering?3:2)/2);
     }
