@@ -18,11 +18,13 @@ void ThreadPool::setup(){
     assert(DynamicConfig::threads > 0);
     clear();
     Logging::LogIt(Logging::logInfo) << "Using " << DynamicConfig::threads << " threads";
+    /*
     unsigned int maxThreads = std::max(1u,std::thread::hardware_concurrency());
     if (DynamicConfig::threads > maxThreads) {
         Logging::LogIt(Logging::logWarn) << "Trying to use more threads than hardware core, I don't like that and will use only " << maxThreads << " threads";
         DynamicConfig::threads = maxThreads;
     }
+    */
     while (size() < DynamicConfig::threads) {
        push_back(std::unique_ptr<Searcher>(new Searcher(size())));
        back()->initPawnTable();
