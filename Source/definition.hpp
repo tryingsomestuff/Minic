@@ -44,7 +44,7 @@ const std::string MinicVersion = "dev";
 #define WITH_UCI
 #define WITH_XBOARD
 #define WITH_MAGIC
-//#define WITH_SYZYGY
+#define WITH_SYZYGY
 
 // *** Add-ons
 //#define IMPORTBOOK

@@ -30,6 +30,8 @@ struct Searcher{
     };
     std::array<StackData,MAX_PLY> stack;
 
+    EvalData dataShashin;
+
     Stats stats;
 
     inline void DisplayStats()const{
