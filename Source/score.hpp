@@ -39,36 +39,13 @@ struct EvalScore{
     EvalScore scale(float s_mg,float s_eg)const{ EvalScore e(*this); e[MG]= ScoreType(s_mg*e[MG]); e[EG]= ScoreType(s_eg*e[EG]); return e;}
 };
 
+inline std::ostream & operator<<(std::ostream & of, const EvalScore & s){
+    of << "MG : " << s[MG] << ", EG : " << s[EG];
+    return of;
+}
+
 inline ScoreType ScaleScore(EvalScore s, float gp){ return ScoreType(gp*s[MG] + (1.f-gp)*s[EG]);}
-
-enum eScores : unsigned char { sc_Mat = 0, sc_PST, sc_Rand, sc_MOB, sc_ATT, sc_PieceBlockPawn, sc_Center, sc_Holes, sc_Outpost, sc_knightFar, sc_FreePasser, sc_PwnPush, sc_PwnSafeAtt, sc_PwnPushAtt, sc_Adjust, sc_OpenFile, sc_RookFrontKing, sc_RookFrontQueen, sc_RookQueenSameFile, sc_AttQueenMalus, sc_MinorOnOpenFile, sc_RookBehindPassed, sc_QueenNearKing, sc_Hanging, sc_Threat, sc_PinsK, sc_PinsQ, sc_PawnTT, sc_Tempo, sc_Contempt, sc_initiative, sc_NN, sc_max };
-static const std::string scNames[sc_max] = { "Mat", "PST", "RAND", "MOB", "Att", "PieceBlockPawn", "Center", "Holes", "Outpost", "knightTooFar", "FreePasser", "PwnPush", "PwnSafeAtt", "PwnPushAtt" , "Adjust", "OpenFile", "RookFrontKing", "RookFrontQueen", "RookQueenSameFile", "AttQueenMalus", "MinorOnOpenFile", "RookBehindPassed", "QueenNearKing", "Hanging", "Threats", "PinsK", "PinsQ", "PawnTT", "Tempo", "Contempt", "initiative", "NN" };
-
-/* Score accumulator for evaluation
- * In release mode, this is just an EvalScore
- * In debug mode, one can see each part of the evaluation as each contribution is store in a table
- */
-#ifdef DEBUG_ACC
-
-struct ScoreAcc{
-    float scalingFactor = 1;
-    std::array<EvalScore, sc_max> scores = { 0 };
-    EvalScore & operator[](eScores e) { return scores[e]; }
-    ScoreType Score(const Position &p, float gp);
-    void Display(const Position &p, float gp);
-};
-
-#else
-
-struct ScoreAcc {
-    float scalingFactor = 1;
-    EvalScore score = { 0 };
-    inline EvalScore & operator[](eScores ) { return score; }
-    ScoreType Score(const Position &p, float gp);
-    void Display(const Position &p, float gp);
-};
-
-#endif
+ScoreType Score(EvalScore score, float scalingFactor, const Position &p, float gp);
 
 /* Evaluation is returning the score of course, but also fill this little structure to provide
  * additionnal usefull information, such as game phase and current danger. Things that are
@@ -78,9 +55,10 @@ struct EvalData{
     float gp = 0;
     ScoreType danger[2] = {0,0};
     unsigned short int mobility[2] = {0,0};
+    float shashinMaterialFactor = 1; // max(0,1-SQR(materialScore/150)), so 0 if too much imbalance
+    float shashinForwardness[2] = {0,0};
+    float shashinPacking[2] = {0,0};
     float shashinMobRatio = 1;
-    float shashinForwardness = 0;
-    float shashinPacking = 0;
 };
 
 // used for easy move detection

@@ -1,5 +1,8 @@
 #include "evalConfig.hpp"
 
+#include "bitboard.hpp"
+#include "position.hpp"
+
 namespace EvalConfig {
 
 CONST_TEXEL_TUNING EvalScore imbalance_mines[5][5] = {
@@ -169,6 +172,62 @@ ScoreType kingAttTable[64]       = {0};
 
 CONST_TEXEL_TUNING EvalScore tempo = {0,0}; //{20, 20};
 
-CONST_TEXEL_TUNING EvalScore shashinMobCoeff = {196, 212};
+// slow application of factor depending on materialFactor around 1 (meaning equal material)
+inline void scaleShashin(EvalScore & score, const float materialFactor, const float factor){
+   return score = EvalScore{ScoreType(materialFactor*score[MG]*factor+(1-materialFactor)*score[MG]),
+                            ScoreType(materialFactor*score[EG]*factor+(1-materialFactor)*score[EG])};
+}
+
+//-------------------------------------------
+// if more or less even in material
+// if mobility is already high
+//    * attack ++
+//    * positional ++
+//    * try sac ?
+// if mobility is even
+//    * positional ++
+//    * exchange ++
+//    * push pawn ++
+// if mobility is too small
+//    * go back
+//    * mobility ++
+//-------------------------------------------
+void applyShashinCorrection(const Position & p, const EvalData & data, EvalScore & materialScore, EvalScore & developmentScore, EvalScore & positionalScore, EvalScore & mobilityScore, EvalScore & pawnStructScore, EvalScore & attackScore){
+    
+    return;
+
+/*
+    const ShashinType stype = data.shashinMobRatio  < 0.8 ? Shashin_Petrosian :
+                              data.shashinMobRatio == 0.8 ? Shashin_Capablanca_Petrosian :
+                              data.shashinMobRatio  < 1.2 ? Shashin_Capablanca :
+                              data.shashinMobRatio == 1.2 ? Shashin_Tal_Capablanca :
+                              Shashin_Tal; // data.shashinMobRatio > 1.2
+
+    // material
+    materialScore = materialScore;
+
+    // take forwardness into account if Petrosian
+    if ( stype >= Shashin_Capablanca_Petrosian ) materialScore += EvalConfig::forwardnessMalus * (p.c==Co_White?-1:+1) * (data.shashinForwardness[p.c] - data.shashinForwardness[~p.c]);
+
+    // positional
+    //positionalScore = positionalScore;
+    scaleShashin(positionalScore,data.shashinMaterialFactor,data.shashinMobRatio);
+
+    // development
+    //developmentScore = developmentScore;
+    scaleShashin(developmentScore,data.shashinMaterialFactor,1.f/data.shashinMobRatio);
+
+    // mobility
+    //mobilityScore = mobilityScore;
+    scaleShashin(mobilityScore,data.shashinMaterialFactor,1.f/data.shashinMobRatio);
+
+    // pawn structure
+    pawnStructScore = pawnStructScore;
+
+    // attack
+    //attackScore = attackScore;
+    scaleShashin(attackScore,data.shashinMaterialFactor,data.shashinMobRatio);
+*/
+}
 
 } // EvalConfig

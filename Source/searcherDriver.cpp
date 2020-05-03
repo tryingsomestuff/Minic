@@ -123,6 +123,9 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
        }
     }
 
+    // compute Shashin ratios of the starting position being searched
+    eval(p,dataShashin,*this);
+
     // ID loop
     for(DepthType depth = startDepth ; depth <= std::min(d,DepthType(MAX_DEPTH-6)) && !stopFlag ; ++depth ){ // -6 so that draw can be found for sure ///@todo I don't understand this -6 anymore ..
         
@@ -153,6 +156,8 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
             // dynamic contempt
             contempt += ScoreType(std::round(50*std::atan(bestScore/100.f)));
             DepthType windowDepth = depth;
+
+            ///@todo Shashin contempt ???
             
             // Aspiration loop
             while( !stopFlag ){

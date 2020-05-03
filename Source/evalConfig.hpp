@@ -91,15 +91,12 @@ extern CONST_TEXEL_TUNING EvalScore tempo;
 inline double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f, double offset = 0.f){ return m / (1 + exp((trans - x) / scale)) - offset;}
 inline void initEval(){ for(Square i = 0; i < 64; i++){ EvalConfig::kingAttTable[i] = (int) sigmoid(i,EvalConfig::kingAttMax,EvalConfig::kingAttTrans,EvalConfig::kingAttScale,EvalConfig::kingAttOffset); } }// idea taken from Topple
 
-extern CONST_TEXEL_TUNING EvalScore shashinMobCoeff;
-const ScoreType shashinMobRef = 256;
+const ScoreType shashinThreshold = 180;
+const EvalScore forwardnessMalus = {20,10};
 
-// if mobility is already high, let's focus on something else
-// if mobility is too small, let's try to improve it
-inline EvalScore ShashinMobCorrection(EvalScore mobScore, float shashinValue){
-   //std::cout << shashinValue << std::endl;
-   return {ScoreType(mobScore[MG]/shashinValue),ScoreType(mobScore[EG]/shashinValue)};
-}
+enum ShashinType : unsigned char { Shashin_None = 0, Shashin_Tal, Shashin_Tal_Capablanca, Shashin_Capablanca, Shashin_Capablanca_Petrosian, Shashin_Petrosian, Shashin_Forced };
+
+void applyShashinCorrection(const Position & p, const EvalData & data, EvalScore & materialScore, EvalScore & developmentScore, EvalScore & positionalScore, EvalScore & mobilityScore, EvalScore & pawnStructScore, EvalScore & attackScore);
 
 } // EvalConfig
 
