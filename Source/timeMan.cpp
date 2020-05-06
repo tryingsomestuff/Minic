@@ -11,7 +11,6 @@ DepthType moveToGo;
 unsigned long long maxKNodes;
 bool isDynamic;
 bool isUCIPondering;
-std::chrono::time_point<Clock> startTime;
 
 void init(){
     Logging::LogIt(Logging::logInfo) << "Init timeman" ;

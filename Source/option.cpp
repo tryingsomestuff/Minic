@@ -160,6 +160,7 @@ namespace Options {
        GETOPT(book,             bool)
        GETOPT(bookFile,         std::string)
        GETOPT(ttSizeMb,         unsigned int)
+       GETOPT(FRC,              bool)
        GETOPT(threads,          unsigned int)
        GETOPT(mateFinder,       bool)
        GETOPT(fullXboardOutput, bool)

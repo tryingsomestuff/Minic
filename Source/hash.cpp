@@ -7,9 +7,11 @@
 
 namespace Zobrist {
     Hash ZT[64][14];
+    Hash ZTCastling[16];
     void initHash() {
         Logging::LogIt(Logging::logInfo) << "Init hash";
         for (int k = 0; k < 64; ++k) for (int j = 0; j < 14; ++j) ZT[k][j] = randomInt<Hash,42>(Hash(0),Hash(UINT64_MAX));
+        for (int k = 0; k < 16; ++k) ZTCastling[k] = randomInt<Hash,42>(Hash(0),Hash(UINT64_MAX));
     }
 }
 
@@ -25,10 +27,7 @@ Hash computeHash(const Position &p){
         if ( pp != P_none) p.h ^= Zobrist::ZT[k][pp+PieceShift];
     }
     if ( p.ep != INVALIDSQUARE ) p.h ^= Zobrist::ZT[p.ep][13];
-    if ( p.castling & C_wks)     p.h ^= Zobrist::ZT[7][13];
-    if ( p.castling & C_wqs)     p.h ^= Zobrist::ZT[0][13];
-    if ( p.castling & C_bks)     p.h ^= Zobrist::ZT[63][13];
-    if ( p.castling & C_bqs)     p.h ^= Zobrist::ZT[56][13];
+    p.h ^= Zobrist::ZTCastling[p.castling];
     if ( p.c == Co_White)        p.h ^= Zobrist::ZT[3][13];
     if ( p.c == Co_Black)        p.h ^= Zobrist::ZT[4][13];
 #ifdef DEBUG_HASH
