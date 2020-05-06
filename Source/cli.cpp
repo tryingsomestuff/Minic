@@ -18,9 +18,20 @@ void help(){
 }
 
 struct PerftAccumulator{
-    PerftAccumulator(): pseudoNodes(0), validNodes(0), captureNodes(0), epNodes(0), checkNode(0), checkMateNode(0){}
-    Counter pseudoNodes,validNodes,captureNodes,epNodes,checkNode,checkMateNode;
+    PerftAccumulator(): pseudoNodes(0), validNodes(0), captureNodes(0), epNodes(0), checkNode(0), checkMateNode(0),castling(0),promotion(0){}
+    Counter pseudoNodes,validNodes,captureNodes,epNodes,checkNode,checkMateNode,castling,promotion;
     void Display();
+    PerftAccumulator & operator+=(const PerftAccumulator & acc){
+        pseudoNodes   += acc.pseudoNodes;
+        validNodes    += acc.validNodes;
+        captureNodes  += acc.captureNodes;
+        epNodes       += acc.epNodes;
+        checkNode     += acc.checkNode;
+        checkMateNode += acc.checkMateNode;
+        castling      += acc.castling;
+        promotion     += acc.promotion;
+        return *this;
+    }
 };
 
 void PerftAccumulator::Display(){
@@ -28,6 +39,7 @@ void PerftAccumulator::Display(){
     Logging::LogIt(Logging::logInfo) << "validNodes    " << validNodes    ;
     Logging::LogIt(Logging::logInfo) << "captureNodes  " << captureNodes  ;
     Logging::LogIt(Logging::logInfo) << "epNodes       " << epNodes       ;
+    Logging::LogIt(Logging::logInfo) << "castling      " << castling       ;
     Logging::LogIt(Logging::logInfo) << "checkNode     " << checkNode     ;
     Logging::LogIt(Logging::logInfo) << "checkMateNode " << checkMateNode ;
 }
@@ -35,8 +47,7 @@ void PerftAccumulator::Display(){
 Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc){
     if ( depth == 0) return 0;
     MoveList moves;
-    int validMoves = 0;
-    int allMoves = 0;
+    PerftAccumulator accLoc;
 #ifndef DEBUG_PERFT
     MoveGen::generate<MoveGen::GP_all>(p,moves);
     const size_t n = moves.size();
@@ -46,13 +57,18 @@ Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc){
     for ( MiniMove m = std::numeric_limits<MiniMove>::min(); m < std::numeric_limits<MiniMove>::max(); ++m){
         if( !isPseudoLegal(p,m) ) continue;
 #endif
-        ++allMoves;
+        ++accLoc.pseudoNodes;
         Position p2 = p;
         if ( ! apply(p2,m) ) continue;
-        ++validMoves;
+        ++accLoc.validNodes;
+        MType t = Move2Type(m);
+        if ( t == T_ep) ++accLoc.epNodes;
+        if ( isCapture(t)) ++accLoc.captureNodes;
+        if ( isCastling(t)) ++accLoc.castling;
+        if ( isPromotion(t)) ++accLoc.promotion;
         perft(p2,depth-1,acc);
     }
-    if ( depth == 1 ) { acc.pseudoNodes += allMoves; acc.validNodes += validMoves; }
+    if ( depth == 1 ) acc+=accLoc;
     return acc.validNodes;
 }
 
@@ -86,7 +102,7 @@ void analyze(const Position & p, DepthType depth){
         pv = ThreadPool::instance().main().getData().pv; // here output results
         Logging::LogIt(Logging::logInfo) << "Best move is " << ToString(bestMove) << " " << (int)depth << " " << s << " pv : " << ToString(pv);
         Logging::LogIt(Logging::logInfo) << "Next two lines are for OpenBench";
-        const TimeType ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count());
+        const TimeType ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - ThreadPool::instance().main().startTime).count());
         const Counter nodeCount = ThreadPool::instance().main().stats.counters[Stats::sid_nodes] + ThreadPool::instance().main().stats.counters[Stats::sid_qnodes];
         std::cerr << "NODES " << nodeCount << std::endl;
         std::cerr << "NPS " << int(nodeCount/(ms/1000.f)) << std::endl;
@@ -124,6 +140,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
     }
 
     if ( cli == "-perft_test_long_fisher" ){
+        DynamicConfig::FRC = true;
         std::ifstream infile("TestSuite/fischer.txt");
         std::string line;
         while (std::getline(infile, line)){

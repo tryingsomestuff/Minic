@@ -35,10 +35,10 @@ struct Searcher{
     Stats stats;
 
     inline void DisplayStats()const{
-    for(size_t k = 0 ; k < Stats::sid_maxid ; ++k){
-        Logging::LogIt(Logging::logInfo) << Stats::Names[k] << " " << stats.counters[(Stats::StatId)k];
+       for(size_t k = 0 ; k < Stats::sid_maxid ; ++k){
+           Logging::LogIt(Logging::logInfo) << Stats::Names[k] << " " << stats.counters[(Stats::StatId)k];
+       }
     }
-}
 
     std::vector<RootScores> rootScores;
 
@@ -87,6 +87,8 @@ struct Searcher{
 
     static std::atomic<bool> startLock;
 
+    std::chrono::time_point<Clock> startTime;
+  
     bool searching()const;
 
     #pragma pack(push, 1)

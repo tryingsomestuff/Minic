@@ -12,25 +12,23 @@ const int skipPhase[threadSkipSize] = { 0, 1, 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 0, 1
 }
 
 void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv, int multipv, const std::string & mark){
-    static unsigned char count = 0;
-    count++; // overflow is ok
     const auto now = Clock::now();
-    const TimeType ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(now - TimeMan::startTime).count());
+    const TimeType ms = std::max((TimeType)1,(TimeType)std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count());
     getData().datas.times[depth] = ms;
     std::stringstream str;
     Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
     if (Logging::ct == Logging::CT_xboard) {
         str << int(depth) << " " << bestScore << " " << ms / 10 << " " << nodeCount << " ";
-        if (DynamicConfig::fullXboardOutput) str << (int)seldepth << " " << int(nodeCount / (ms / 1000.f) / 1000.) << " " << ThreadPool::instance().counter(Stats::sid_tbHit1) + ThreadPool::instance().counter(Stats::sid_tbHit2);
+        if (DynamicConfig::fullXboardOutput) str << (int)seldepth << " " << Counter(nodeCount / (ms / 1000.f) / 1000.) << " " << ThreadPool::instance().counter(Stats::sid_tbHit1) + ThreadPool::instance().counter(Stats::sid_tbHit2);
         str << "\t" << ToString(pv);
         if ( !mark.empty() ) str << mark;
     }
     else if (Logging::ct == Logging::CT_uci) {
         const std::string multiPVstr = DynamicConfig::multiPV > 1 ? ("multipv " + std::to_string(multipv)) : "";
-        str << "info " << multiPVstr << " depth " << int(depth) << " score cp " << bestScore << " time " << ms << " nodes " << nodeCount << " nps " << int(nodeCount / (ms / 1000.f)) << " seldepth " << (int)seldepth << " pv " << ToString(pv) << " tbhits " << ThreadPool::instance().counter(Stats::sid_tbHit1) + ThreadPool::instance().counter(Stats::sid_tbHit2);
+        str << "info " << multiPVstr << " depth " << int(depth) << " score cp " << bestScore << " time " << ms << " nodes " << nodeCount << " nps " << Counter(nodeCount / (ms / 1000.f)) << " seldepth " << (int)seldepth << " pv " << ToString(pv) << " tbhits " << ThreadPool::instance().counter(Stats::sid_tbHit1) + ThreadPool::instance().counter(Stats::sid_tbHit2);
         static auto lastHashFull = Clock::now();
         if ( (int)std::chrono::duration_cast<std::chrono::milliseconds>(now - lastHashFull).count() > 500
-              && (TimeType)std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(now - TimeMan::startTime).count()*2)) < ThreadPool::instance().main().getCurrentMoveMs() ){
+              && (TimeType)std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count()*2)) < ThreadPool::instance().main().getCurrentMoveMs() ){
             lastHashFull = now;
             str << " hashfull " << TT::hashFull();
         }
@@ -40,6 +38,8 @@ void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestSco
 
 PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
 
+    initCaslingPermHashTable(p); // let's be sure ...
+
     DynamicConfig::level = DynamicConfig::limitStrength ? Skill::Elo2Level() : DynamicConfig::level;
     d=std::max((DepthType)1,Skill::enabled()?std::min(d,Skill::limitedDepth()):d);
 
@@ -47,7 +47,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
     moveDifficulty = MoveDifficultyUtil::MD_std;
 
     if ( isMainThread() ){
-        TimeMan::startTime = Clock::now();
+        startTime = Clock::now();
         Logging::LogIt(Logging::logInfo) << "Search params :" ;
         Logging::LogIt(Logging::logInfo) << "requested time  " << getCurrentMoveMs() ;
         Logging::LogIt(Logging::logInfo) << "requested depth " << (int) d ;
@@ -206,7 +206,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
             } // Aspiration loop end
 
             if (stopFlag){ 
-                if ( multi != 0 ){
+                if ( multi != 0 && isMainThread() ){
                    // handle multiPV display only based on previous ID iteration data
                    PVList pvMulti;
                    pvMulti.push_back(multiPVMoves[multi].m);
@@ -265,7 +265,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
 
                     // check for remaining time
                     if (TimeMan::isDynamic 
-                    && (TimeType)std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - TimeMan::startTime).count()*1.8)) > getCurrentMoveMs()) { 
+                    && (TimeType)std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count()*1.8)) > getCurrentMoveMs()) { 
                         stopFlag = true; 
                         Logging::LogIt(Logging::logInfo) << "stopflag triggered, not enough time for next depth"; break; 
                     } 

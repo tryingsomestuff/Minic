@@ -15,6 +15,28 @@ void addMove(Square from, Square to, MType type, MoveList & moves) {
 
 } // MoveGen
 
+namespace{ // anonymous
+    std::array<CastlingRights,64> castlePermHashTable;
+}
+
+void initCaslingPermHashTable(const Position & p){
+    // works also for FRC !
+    castlePermHashTable.fill(C_all);
+    castlePermHashTable[p.rooksInit[Co_White][CT_OOO]]  = C_all_but_wqs;
+    castlePermHashTable[p.kingInit[Co_White]]           = C_all_but_w;
+    castlePermHashTable[p.rooksInit[Co_White][CT_OO]]   = C_all_but_wks;
+    castlePermHashTable[p.rooksInit[Co_Black][CT_OOO]]  = C_all_but_bqs;
+    castlePermHashTable[p.kingInit[Co_Black]]           = C_all_but_b;
+    castlePermHashTable[p.rooksInit[Co_Black][CT_OO]]   = C_all_but_bks;
+/*
+    for(int k = 0 ; k < 64 ; ++k){
+        if ( k && k%8 == 0 ) std::cout << std::endl;
+        std::cout << castlePermHashTable[k] << " ";
+    }
+    std::cout << std::endl;
+*/
+}
+
 void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, bool isCapture, Piece prom) {
     START_TIMER
     const int fromId   = fromP + PieceShift;
@@ -47,6 +69,12 @@ void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, boo
         p.h ^= Zobrist::ZT[to][toId];
         if ( (abs(toP) == P_wp || abs(toP) == P_wk) ) p.ph ^= Zobrist::ZT[to][toId];
     }
+
+    if (p.castling && castlePermHashTable[from] ^ castlePermHashTable[to]){
+       p.h ^= Zobrist::ZTCastling[p.castling];
+       p.castling &= castlePermHashTable[from] & castlePermHashTable[to];
+       p.h ^= Zobrist::ZTCastling[p.castling];
+    }
     STOP_AND_SUM_TIMER(MovePiece)
 }
 
@@ -63,6 +91,9 @@ void applyNull(Searcher & , Position & pN) {
     STOP_AND_SUM_TIMER(Apply)
 }
 
+///@todo remove if from castling hash using ZHCastleKey[CastlingRights] 
+///@todo and a 64 sqaure table to update castle permission (care of FRC !)
+
 bool apply(Position & p, const Move & m, bool noValidation){
     START_TIMER
     assert(VALIDMOVE(m));
@@ -75,8 +106,8 @@ bool apply(Position & p, const Move & m, bool noValidation){
     const Piece  fromP  = p.board_const(from);
     const Piece  toP    = p.board_const(to);
     const int fromId    = fromP + PieceShift;
-    const bool fromRook = fromP == (p.c==Co_White?P_wr:P_br);
-    const bool capRook  = toP == (p.c==Co_White?P_br:P_wr);
+    //const bool fromRook = fromP == (p.c==Co_White?P_wr:P_br);
+    //const bool capRook  = toP == (p.c==Co_White?P_br:P_wr);
     const bool isCapNoEP= toP != P_none;
 #ifdef DEBUG_APPLY
     if (!isPseudoLegal(p, m)) {
@@ -95,20 +126,21 @@ bool apply(Position & p, const Move & m, bool noValidation){
         // update castling rigths and king position
         if ( fromP == P_wk ){
             p.king[Co_White] = to;
-            if (p.castling & C_wks) p.h ^= Zobrist::ZT[7][13];
-            if (p.castling & C_wqs) p.h ^= Zobrist::ZT[0][13];
-            p.castling &= ~(C_wks | C_wqs);
+            //if (p.castling & C_wks) p.h ^= Zobrist::ZT[7][13];
+            //if (p.castling & C_wqs) p.h ^= Zobrist::ZT[0][13];
+            //p.castling &= ~(C_wks | C_wqs);
         }
         else if ( fromP == P_bk ){
             p.king[Co_Black] = to;
-            if (p.castling & C_bks) p.h ^= Zobrist::ZT[63][13];
-            if (p.castling & C_bqs) p.h ^= Zobrist::ZT[56][13];
-            p.castling &= ~(C_bks | C_bqs);
+            //if (p.castling & C_bks) p.h ^= Zobrist::ZT[63][13];
+            //if (p.castling & C_bqs) p.h ^= Zobrist::ZT[56][13];
+            //p.castling &= ~(C_bks | C_bqs);
         }
         // king capture : is that necessary ???
         if      ( toP == P_wk ) p.king[Co_White] = INVALIDSQUARE;
         else if ( toP == P_bk ) p.king[Co_Black] = INVALIDSQUARE;
 
+/*
         if ( p.castling != C_none && fromRook ){
            if ( p.c==Co_White ){
               if ( (p.castling & C_wqs) && from == p.rooksInit[Co_White][CT_OOO] ){
@@ -131,6 +163,7 @@ bool apply(Position & p, const Move & m, bool noValidation){
               }
            }
         }
+*/
         break;
 
     case T_ep: {
@@ -199,6 +232,7 @@ bool apply(Position & p, const Move & m, bool noValidation){
         return false; // this is the only legal move validation needed
     }
 
+/*
     // Update castling right if rook captured
     if ( p.castling != C_none && capRook ){
        if ( to == p.rooksInit[Co_White][CT_OOO] && (p.castling & C_wqs) ){
@@ -218,6 +252,7 @@ bool apply(Position & p, const Move & m, bool noValidation){
            p.h ^= Zobrist::ZT[63][13];
        }
     }
+*/
 
     // update EP
     if (p.ep != INVALIDSQUARE) p.h  ^= Zobrist::ZT[p.ep][13];
@@ -348,20 +383,28 @@ bool isPseudoLegal2(const Position & p, Move m) { // validate TT move
     if (isCastling(m)) {
         if (p.c == Co_White) {
             if (t == T_wqs && (p.castling & C_wqs) && from == p.kingInit[Co_White] && fromP == P_wk && to == Sq_c1 && toP == P_none
-                && (((BBTools::mask[p.king[Co_White]].between[Sq_c1] | BBTools::mask[p.rooksInit[Co_White][CT_OOO]].between[Sq_d1]) & occupancy) == empty)
-                && !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_c1] | SquareToBitboard(p.king[Co_White]))) PSEUDO_LEGAL_RETURN(true)
+                    && (((BBTools::mask[p.king[Co_White]].between[Sq_c1]             | BBSq_c1) & ~BBTools::mask[p.rooksInit[Co_White][CT_OOO]].bbsquare) & occupancy) == empty
+                    && (((BBTools::mask[p.rooksInit[Co_White][CT_OOO]].between[Sq_d1]| BBSq_d1) & ~BBTools::mask[p.king[Co_White]].bbsquare             ) & occupancy) == empty
+                    && !isAttacked(p,BBTools::mask[p.king[Co_White]].between[Sq_c1] | SquareToBitboard(p.king[Co_White]) | SquareToBitboard(Sq_c1)) ) 
+                 PSEUDO_LEGAL_RETURN(true)
             if (t == T_wks && (p.castling & C_wks) && from == p.kingInit[Co_White] && fromP == P_wk && to == Sq_g1 && toP == P_none
-                && (((BBTools::mask[p.king[Co_White]].between[Sq_g1] | BBTools::mask[p.rooksInit[Co_White][CT_OO]].between[Sq_f1]) & occupancy) == empty)
-                && !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_g1] | SquareToBitboard(p.king[Co_White]))) PSEUDO_LEGAL_RETURN(true)
+                    && (((BBTools::mask[p.king[Co_White]].between[Sq_g1]             | BBSq_g1) & ~BBTools::mask[p.rooksInit[Co_White][CT_OO ]].bbsquare) & occupancy) == empty
+                    && (((BBTools::mask[p.rooksInit[Co_White][CT_OO ]].between[Sq_f1]| BBSq_f1) & ~BBTools::mask[p.king[Co_White]].bbsquare             ) & occupancy) == empty
+                    && !isAttacked(p,BBTools::mask[p.king[Co_White]].between[Sq_g1] | SquareToBitboard(p.king[Co_White]) | SquareToBitboard(Sq_g1)) ) 
+                 PSEUDO_LEGAL_RETURN(true)
             PSEUDO_LEGAL_RETURN(false)
         }
         else {
             if (t == T_bqs && (p.castling & C_bqs) && from == p.kingInit[Co_Black] && fromP == P_bk && to == Sq_c8 && toP == P_none
-                && (((BBTools::mask[p.king[Co_Black]].between[Sq_c8] | BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].between[Sq_d8]) & occupancy) == empty)
-                && !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_c8] | SquareToBitboard(p.king[Co_Black]))) PSEUDO_LEGAL_RETURN(true)
+                    && (((BBTools::mask[p.king[Co_Black]].between[Sq_c8]             | BBSq_c8) & ~BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].bbsquare) & occupancy) == empty
+                    && (((BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].between[Sq_d8]| BBSq_d8) & ~BBTools::mask[p.king[Co_Black]].bbsquare             ) & occupancy) == empty
+                    && !isAttacked(p,BBTools::mask[p.king[Co_Black]].between[Sq_c8] | SquareToBitboard(p.king[Co_Black]) | SquareToBitboard(Sq_c8)) ) 
+                 PSEUDO_LEGAL_RETURN(true)
             if (t == T_bks && (p.castling & C_bks) && from == p.kingInit[Co_Black] && fromP == P_bk && to == Sq_g8 && toP == P_none
-                && (((BBTools::mask[p.king[Co_Black]].between[Sq_g8] | BBTools::mask[p.rooksInit[Co_Black][CT_OO]].between[Sq_f8]) & occupancy) == empty)
-                && !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_g8] | SquareToBitboard(p.king[Co_Black]))) PSEUDO_LEGAL_RETURN(true)
+                    && (((BBTools::mask[p.king[Co_Black]].between[Sq_g8]             | BBSq_g8) & ~BBTools::mask[p.rooksInit[Co_Black][CT_OO ]].bbsquare) & occupancy) == empty
+                    && (((BBTools::mask[p.rooksInit[Co_Black][CT_OO ]].between[Sq_f8]| BBSq_f8) & ~BBTools::mask[p.king[Co_Black]].bbsquare             ) & occupancy) == empty
+                    && !isAttacked(p,BBTools::mask[p.king[Co_Black]].between[Sq_g8] | SquareToBitboard(p.king[Co_Black]) | SquareToBitboard(Sq_g8)) ) 
+                 PSEUDO_LEGAL_RETURN(true)
             PSEUDO_LEGAL_RETURN(false)
         }
     }

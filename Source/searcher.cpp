@@ -79,6 +79,7 @@ bool   Searcher::isMainThread()const {
 }
 
 Searcher::Searcher(size_t n):_index(n),_exit(false),_searching(true),_stdThread(&Searcher::idleLoop, this){
+    startTime   = Clock::now();
     wait();
 }
 

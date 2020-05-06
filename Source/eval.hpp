@@ -538,6 +538,17 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     materialScore += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0) );
     materialScore += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
 
+    if ( display ){
+        Logging::LogIt(Logging::logInfo) << "Game phase    " << data.gp;
+        Logging::LogIt(Logging::logInfo) << "ScalingFactor " << scalingFactor;
+        Logging::LogIt(Logging::logInfo) << "Material      " << materialScore;
+        Logging::LogIt(Logging::logInfo) << "Positional    " << positionalScore;
+        Logging::LogIt(Logging::logInfo) << "Development   " << developmentScore;
+        Logging::LogIt(Logging::logInfo) << "Mobility      " << mobilityScore;
+        Logging::LogIt(Logging::logInfo) << "Pawn          " << pawnStructScore;
+        Logging::LogIt(Logging::logInfo) << "Attack        " << attackScore;
+    }
+
     // Compute various Shashin ratio of current position (may be used later in search)
     data.shashinMaterialFactor = std::max(0.f, 1.f- SQR(float(materialScore[MG])/EvalConfig::shashinThreshold));
     data.shashinMobRatio       = std::max(0.5f,std::min(2.f,float(data.mobility[p.c]) / std::max(0.5f,float(data.mobility[~p.c]))));
@@ -551,6 +562,7 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     EvalScore score = materialScore + positionalScore + developmentScore + mobilityScore + pawnStructScore + attackScore;
 
     if ( display ){
+        Logging::LogIt(Logging::logInfo) << "Post correction ... " << data.gp;
         Logging::LogIt(Logging::logInfo) << "Game phase    " << data.gp;
         Logging::LogIt(Logging::logInfo) << "ScalingFactor " << scalingFactor;
         Logging::LogIt(Logging::logInfo) << "Material      " << materialScore;

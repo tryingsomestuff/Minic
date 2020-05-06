@@ -5,6 +5,7 @@
 #include "hash.hpp"
 #include "logging.hpp"
 #include "material.hpp"
+#include "moveGen.hpp"
 
 template < typename T > T readFromString(const std::string & s){ std::stringstream ss(s); T tmp; ss >> tmp; return tmp;}
 
@@ -84,7 +85,9 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
            }
         }
         if (strList[2].find('-') != std::string::npos){ found = true; /*Logging::LogIt(Logging::logInfo) << "No castling right given" ;*/}
-        if ( ! found ){ if ( !silent) Logging::LogIt(Logging::logWarn) << "No castling right given" ; }
+        if ( ! found ){ 
+            if ( !silent) Logging::LogIt(Logging::logWarn) << "No castling right given" ; 
+        }
         else{ ///@todo detect illegal stuff in here
             p.kingInit[Co_White] = p.king[Co_White];
             p.kingInit[Co_Black] = p.king[Co_Black];
@@ -124,9 +127,12 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
 
     p.halfmoves = (int(p.moves) - 1) * 2 + 1 + (p.c == Co_Black ? 1 : 0);
 
+    initCaslingPermHashTable(p);
+
     BBTools::setBitBoards(p);
     MaterialHash::initMaterial(p);
     p.h = computeHash(p);
     p.ph = computePHash(p);
+
     return true;
 }

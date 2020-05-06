@@ -26,15 +26,15 @@ enum GenPhase { GP_all = 0, GP_cap = 1, GP_quiet = 2 };
 
 void addMove(Square from, Square to, MType type, MoveList & moves);
 
-template < GenPhase phase = GP_all >
+template < Color side, GenPhase phase = GP_all >
 void generateSquare(const Position & p, MoveList & moves, Square from){
     assert(from != INVALIDSQUARE);
 #ifdef DEBUG_GENERATION    
     if ( from == INVALIDSQUARE) Logging::LogIt(Logging::logFatal) << "invalid square";
 #endif
-    const Color side = p.c;
-    const BitBoard myPieceBB  = p.allPieces[side];
-    const BitBoard oppPieceBB = p.allPieces[~side];
+    //const Color side = p.c;
+    const BitBoard & myPieceBB  = p.allPieces[side];
+    const BitBoard & oppPieceBB = p.allPieces[~side];
     const Piece piece = p.board_const(from);
     const Piece ptype = (Piece)std::abs(piece);
     assert ( pieceValid(ptype) );
@@ -62,22 +62,28 @@ void generateSquare(const Position & p, MoveList & moves, Square from){
         }
         if ( phase != GP_cap && ptype == P_wk ){ // castling
             if ( side == Co_White) {
-                if ( p.castling & (C_wqs|C_wks) ){
-                   if ( (p.castling & C_wqs)
-                        && ( ( (BBTools::mask[p.king[Co_White]].between[Sq_c1] | BBTools::mask[p.rooksInit[Co_White][CT_OOO]].between[Sq_d1]) & occupancy) == empty)
-                        && !isAttacked(p,BBTools::mask[p.king[Co_White]].between[Sq_c1] | SquareToBitboard(p.king[Co_White])) ) addMove(from, Sq_c1, T_wqs, moves); // wqs
-                   if ( (p.castling & C_wks)
-                        && ( ( (BBTools::mask[p.king[Co_White]].between[Sq_g1] | BBTools::mask[p.rooksInit[Co_White][CT_OO ]].between[Sq_f1]) & occupancy) == empty)
-                        && !isAttacked(p,BBTools::mask[p.king[Co_White]].between[Sq_g1] | SquareToBitboard(p.king[Co_White])) ) addMove(from, Sq_g1, T_wks, moves); // wks
-                }
+                if ( (p.castling & C_wqs)
+                    && (((BBTools::mask[p.king[Co_White]].between[Sq_c1]             | BBSq_c1) & ~BBTools::mask[p.rooksInit[Co_White][CT_OOO]].bbsquare) & occupancy) == empty
+                    && (((BBTools::mask[p.rooksInit[Co_White][CT_OOO]].between[Sq_d1]| BBSq_d1) & ~BBTools::mask[p.king[Co_White]].bbsquare             ) & occupancy) == empty
+                    && !isAttacked(p,BBTools::mask[p.king[Co_White]].between[Sq_c1] | SquareToBitboard(p.king[Co_White]) | BBSq_c1) ) 
+                    addMove(from, Sq_c1, T_wqs, moves); // wqs
+                if ( (p.castling & C_wks)
+                    && (((BBTools::mask[p.king[Co_White]].between[Sq_g1]             | BBSq_g1) & ~BBTools::mask[p.rooksInit[Co_White][CT_OO ]].bbsquare) & occupancy) == empty
+                    && (((BBTools::mask[p.rooksInit[Co_White][CT_OO ]].between[Sq_f1]| BBSq_f1) & ~BBTools::mask[p.king[Co_White]].bbsquare             ) & occupancy) == empty
+                    && !isAttacked(p,BBTools::mask[p.king[Co_White]].between[Sq_g1] | SquareToBitboard(p.king[Co_White]) | BBSq_g1) ) 
+                    addMove(from, Sq_g1, T_wks, moves); // wks
             }
-            else if ( p.castling & (C_bqs|C_bks)){
+            else{
                 if ( (p.castling & C_bqs)
-                     && ( ( (BBTools::mask[p.king[Co_Black]].between[Sq_c8] | BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].between[Sq_d8]) & occupancy) == empty)
-                     && !isAttacked(p,BBTools::mask[p.king[Co_Black]].between[Sq_c8] | SquareToBitboard(p.king[Co_Black])) ) addMove(from, Sq_c8, T_bqs, moves); // bqs
+                    && (((BBTools::mask[p.king[Co_Black]].between[Sq_c8]             | BBSq_c8) & ~BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].bbsquare) & occupancy) == empty
+                    && (((BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].between[Sq_d8]| BBSq_d8) & ~BBTools::mask[p.king[Co_Black]].bbsquare             ) & occupancy) == empty
+                    && !isAttacked(p,BBTools::mask[p.king[Co_Black]].between[Sq_c8] | SquareToBitboard(p.king[Co_Black]) | BBSq_c8) ) 
+                    addMove(from, Sq_c8, T_bqs, moves); // wqs
                 if ( (p.castling & C_bks)
-                     && ( ( (BBTools::mask[p.king[Co_Black]].between[Sq_g8] | BBTools::mask[p.rooksInit[Co_Black][CT_OO ]].between[Sq_f8]) & occupancy) == empty)
-                     && !isAttacked(p,BBTools::mask[p.king[Co_Black]].between[Sq_g8] | SquareToBitboard(p.king[Co_Black])) ) addMove(from, Sq_g8, T_bks, moves); // bks
+                    && (((BBTools::mask[p.king[Co_Black]].between[Sq_g8]             | BBSq_g8) & ~BBTools::mask[p.rooksInit[Co_Black][CT_OO ]].bbsquare) & occupancy) == empty
+                    && (((BBTools::mask[p.rooksInit[Co_Black][CT_OO ]].between[Sq_f8]| BBSq_f8) & ~BBTools::mask[p.king[Co_Black]].bbsquare             ) & occupancy) == empty
+                    && !isAttacked(p,BBTools::mask[p.king[Co_Black]].between[Sq_g8] | SquareToBitboard(p.king[Co_Black]) | BBSq_g8) ) 
+                    addMove(from, Sq_g8, T_bks, moves); // wks
             }
         }
     }
@@ -118,8 +124,14 @@ template < GenPhase phase = GP_all >
 void generate(const Position & p, MoveList & moves, bool doNotClear = false){
     START_TIMER
     if (!doNotClear) moves.clear();
-    BitBoard myPieceBBiterator = ( (p.c == Co_White) ? p.allPieces[Co_White] : p.allPieces[Co_Black]);
-    while (myPieceBBiterator) generateSquare<phase>(p,moves,popBit(myPieceBBiterator));
+    if ( p.c == Co_White) {
+       BitBoard myPieceBBiterator = p.allPieces[Co_White];
+       while (myPieceBBiterator) generateSquare<Co_White,phase>(p,moves,popBit(myPieceBBiterator));
+    }
+    else{
+       BitBoard myPieceBBiterator = p.allPieces[Co_Black];
+       while (myPieceBBiterator) generateSquare<Co_Black,phase>(p,moves,popBit(myPieceBBiterator));
+    }
 #ifdef DEBUG_GENERATION
     for(auto m : moves){
        if (!isPseudoLegal(p, m)) {
@@ -135,6 +147,8 @@ void generate(const Position & p, MoveList & moves, bool doNotClear = false){
 
 void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, bool isCapture = false, Piece prom = P_none);
 
+void initCaslingPermHashTable(const Position & p);
+
 template < Color c>
 inline void movePieceCastle(Position & p, CastlingTypes ct, Square kingDest, Square rookDest){
     START_TIMER
@@ -142,8 +156,8 @@ inline void movePieceCastle(Position & p, CastlingTypes ct, Square kingDest, Squ
     const Piece pr = c==Co_White?P_wr:P_br;
     const CastlingRights ks = c==Co_White?C_wks:C_bks;
     const CastlingRights qs = c==Co_White?C_wqs:C_bqs;
-    const Square sks = c==Co_White?7:63;
-    const Square sqs = c==Co_White?0:56;
+    //const Square sks = c==Co_White?7:63;
+    //const Square sqs = c==Co_White?0:56;
     BBTools::unSetBit(p, p.king[c]);
     _unSetBit(p.allPieces[c],p.king[c]);
     BBTools::unSetBit(p, p.rooksInit[c][ct]);
@@ -163,8 +177,8 @@ inline void movePieceCastle(Position & p, CastlingTypes ct, Square kingDest, Squ
     p.ph ^= Zobrist::ZT[kingDest][pk+PieceShift];
     p.h ^= Zobrist::ZT[rookDest][pr+PieceShift];
     p.king[c] = kingDest;
-    if (p.castling & qs) p.h ^= Zobrist::ZT[sqs][13];
-    if (p.castling & ks) p.h ^= Zobrist::ZT[sks][13];
-    p.castling &= ~(ks | qs);
+    p.h ^= Zobrist::ZTCastling[p.castling];
+    p.castling &= ~(ks|qs);
+    p.h ^= Zobrist::ZTCastling[p.castling];
     STOP_AND_SUM_TIMER(MovePiece)
 }

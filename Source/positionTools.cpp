@@ -32,6 +32,7 @@ std::string GetFENShort2(const Position &p) { // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/
     std::stringstream ss;
     ss << GetFENShort(p) << " " << (p.c == Co_White ? "w" : "b") << " ";
     bool withCastling = false;
+    ///@todo Wrong if FRC !
     if (p.castling & C_wks) { ss << "K"; withCastling = true; }
     if (p.castling & C_wqs) { ss << "Q"; withCastling = true; }
     if (p.castling & C_bks) { ss << "k"; withCastling = true; }
@@ -144,10 +145,11 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
        if ( p.board_const(from) == P_wk && p.board_const(to) == P_wr ){ moveType = (to<from ? T_wqs : T_wks); }
        if ( p.board_const(from) == P_bk && p.board_const(to) == P_br ){ moveType = (to<from ? T_bqs : T_bks); }
     }
-    if (!DynamicConfig::FRC && !isPseudoLegal(p, ToMove(from, to, moveType))) {
+    if (!DynamicConfig::FRC && !isPseudoLegal(p, ToMove(from, to, moveType))) { ///@todo FRC !
         Logging::LogIt(Logging::logError) << "Trying to read bad move, not legal " << ToString(p) << str;
         return false;
     }
+
     return true;
 }
 

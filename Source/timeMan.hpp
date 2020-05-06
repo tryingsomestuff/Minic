@@ -18,7 +18,6 @@ extern DepthType moveToGo;
 extern unsigned long long maxKNodes; ///@todo use this !
 extern bool isDynamic;
 extern bool isUCIPondering;
-extern std::chrono::time_point<Clock> startTime;
 
 void init();
 

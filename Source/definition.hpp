@@ -136,8 +136,12 @@ const BitBoard empty = 0ull;
 enum GamePhase { MG=0, EG=1, GP_MAX=2 };
 inline GamePhase operator++(GamePhase & g){g=GamePhase(g+1); return g;}
 
-template < typename T, int SIZE > struct OptList : public std::vector<T>{ OptList() : std::vector<T>(){std::vector<T>::reserve(SIZE);}};
-typedef OptList<Move,MAX_MOVE> MoveList;
+template < typename T, int SIZE > struct OptList : public std::vector<T>{ 
+    OptList() : std::vector<T>(){
+        std::vector<T>::reserve(SIZE);
+    }
+};
+typedef OptList<Move,MAX_MOVE/4> MoveList;
 typedef std::vector<Move> PVList; ///@todo try OptList<Move,MAX_DEPTH>
 
 inline MiniHash Hash64to32   (Hash h) { return (h >> 32) & 0xFFFFFFFF; }
@@ -201,7 +205,22 @@ const Rank PromRank[2]    = { Rank_8 , Rank_1 };
 const Rank EPRank[2]      = { Rank_6 , Rank_3 };
 
 enum CastlingTypes : unsigned char { CT_OOO = 0, CT_OO = 1 };
-enum CastlingRights : unsigned char{ C_none = 0, C_wks = 1, C_wqs = 2, C_bks = 4, C_bqs = 8 };
+enum CastlingRights : unsigned char{ 
+    C_none = 0, 
+    C_wks = 1, 
+    C_wqs = 2, 
+    C_w_all = 3,
+    C_all_but_b = 3,
+    C_bks = 4,
+    C_all_but_bqs = 7, 
+    C_bqs = 8 ,
+    C_all_but_bks = 11,
+    C_b_all = 12,
+    C_all_but_w = 12,
+    C_all_but_wqs = 13,
+    C_all_but_wks = 14,
+    C_all = 15
+};
 inline CastlingRights operator&(const CastlingRights & a, const CastlingRights &b){return CastlingRights(char(a)&char(b));}
 inline CastlingRights operator|(const CastlingRights & a, const CastlingRights &b){return CastlingRights(char(a)|char(b));}
 inline CastlingRights operator~(const CastlingRights & a){return CastlingRights(~char(a));}
