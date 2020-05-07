@@ -1,0 +1,21 @@
+#!/bin/bash
+
+dir=$(readlink -f $(dirname $0)/..)
+
+CUTECHESS=$dir/../cutechess/projects/cli/cutechess-cli
+engines=""
+
+engines="$engines -engine conf=minic_dev"
+engines="$engines -engine conf=minic_dev_2_threads"
+engines="$engines -engine conf=minic_dev_3_threads"
+engines="$engines -engine conf=minic_dev_4_threads"
+engines="$engines -engine conf=minic_dev_5_threads"
+engines="$engines -engine conf=minic_dev_6_threads"
+engines="$engines -engine conf=minic_dev_7_threads"
+engines="$engines -engine conf=minic_dev_8_threads"
+
+echo $engines
+
+$CUTECHESS $engines -each proto=xboard tc=40/20 timemargin=200 -rounds 1000 -pgnout pgn_$(date +"%Y_%m_%d"_%H%M%S).out -ratinginterval 1 -repeat -openings file=$dir/OpeningBook/2moves_LT_1000.pgn format=pgn order=random plies=24 -recover -concurrency 1 > tournament_self_threads.log 2>&1 &
+
+
