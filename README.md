@@ -62,7 +62,7 @@ Minic 2.00 is tested at 2922 on the fastgm 10min+6sec rating list (http://www.fa
 
 ### Test Suite
 STS : 1169/1500 @10sec per position (single thread)  
-WAC : 289/300 @10sec per position (single thread)  
+WAC : 291/300 @10sec per position (single thread)  
 
 ### Home test
 Here are some fast TC results (CCRL Blitz TC)
@@ -303,7 +303,7 @@ Zurichess by Alexandru Moșoi
 
 Many thanks also to all testers for all those long time control tests, they really are valuable inputs in the chess engine development process. 
 
-Also thanks to TCEC for letting Minic participate to the Season 15 division 4a, Season 16 qualification league and Season 17 QL and L1, it was fun to see Minic on such a great hardware.
+Also thanks to TCEC for letting Minic participate to the Season 15, 16, 17 and 18, it is fun to see Minic on such a great hardware.
 
 And of course thanks to all the members of the talkchess forum and CPW, and to H.G. Muller for hosting the friendly monthly tourney.
 
