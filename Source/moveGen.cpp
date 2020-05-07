@@ -60,7 +60,7 @@ void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, boo
     // update Zobrist hash
     p.h ^= Zobrist::ZT[from][fromId]; // remove fromP at from
     p.h ^= Zobrist::ZT[to][toIdnew]; // add fromP (or prom) at to
-    if (_helperPawnHash[fromP] ){
+    if (_helperPawnHash[fromId] ){
        p.ph ^= Zobrist::ZT[from][fromId]; // remove fromP at from
        if ( prom == P_none) p.ph ^= Zobrist::ZT[to][toIdnew]; // add fromP (if not prom) at to
     }
