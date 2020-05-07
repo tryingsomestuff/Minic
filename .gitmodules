@@ -1,0 +1,9 @@
+[submodule "Fathom"]
+	path = Fathom
+	url = https://github.com/jdart1/Fathom.git
+[submodule "Book_and_Test"]
+	path = Book_and_Test
+	url = https://github.com/tryingsomestuff/Minic-Book_and_Test
+[submodule "Dist"]
+	path = Dist
+	url = https://github.com/tryingsomestuff/Minic-Dist
