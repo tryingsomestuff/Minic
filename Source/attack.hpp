@@ -16,7 +16,8 @@ namespace BBTools {
  */
 
 // mask variable is filled with many usefull pre-computed bitboard information
-// many of then will be usefull during evaluation
+// many of then will be usefull during evaluation and move generation
+// note that between to not include start and end square
 struct Mask {
     static int ranks[512];
     BitBoard bbsquare, diagonal, antidiagonal, file, kingZone, pawnAttack[2], push[2], dpush[2], enpassant, knight, king, frontSpan[2], rearSpan[2], passerSpan[2], attackFrontSpan[2], between[64];
