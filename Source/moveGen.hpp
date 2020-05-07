@@ -26,13 +26,13 @@ enum GenPhase { GP_all = 0, GP_cap = 1, GP_quiet = 2 };
 
 void addMove(Square from, Square to, MType type, MoveList & moves);
 
-template < Color side, GenPhase phase = GP_all >
+template < GenPhase phase = GP_all >
 void generateSquare(const Position & p, MoveList & moves, Square from){
     assert(from != INVALIDSQUARE);
 #ifdef DEBUG_GENERATION    
     if ( from == INVALIDSQUARE) Logging::LogIt(Logging::logFatal) << "invalid square";
 #endif
-    //const Color side = p.c;
+    const Color side = p.c;
     const BitBoard & myPieceBB  = p.allPieces[side];
     const BitBoard & oppPieceBB = p.allPieces[~side];
     const Piece piece = p.board_const(from);
@@ -126,14 +126,8 @@ template < GenPhase phase = GP_all >
 void generate(const Position & p, MoveList & moves, bool doNotClear = false){
     START_TIMER
     if (!doNotClear) moves.clear();
-    if ( p.c == Co_White) {
-       BitBoard myPieceBBiterator = p.allPieces[Co_White];
-       while (myPieceBBiterator) generateSquare<Co_White,phase>(p,moves,popBit(myPieceBBiterator));
-    }
-    else{
-       BitBoard myPieceBBiterator = p.allPieces[Co_Black];
-       while (myPieceBBiterator) generateSquare<Co_Black,phase>(p,moves,popBit(myPieceBBiterator));
-    }
+    BitBoard myPieceBBiterator = p.occupancy();
+    while (myPieceBBiterator) generateSquare<phase>(p,moves,popBit(myPieceBBiterator));
 #ifdef DEBUG_GENERATION
     for(auto m : moves){
        if (!isPseudoLegal(p, m)) {
