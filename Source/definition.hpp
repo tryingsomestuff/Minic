@@ -38,13 +38,13 @@ typedef uint64_t u_int64_t;
 #include <unistd.h>
 #endif
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "2.19";
 
 // *** options
 #define WITH_UCI
 #define WITH_XBOARD
 #define WITH_MAGIC
-//#define WITH_SYZYGY
+#define WITH_SYZYGY
 
 // *** Add-ons
 //#define IMPORTBOOK
