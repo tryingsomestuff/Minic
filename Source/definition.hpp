@@ -266,15 +266,6 @@ inline bool isMatingScore (ScoreType s) { return (s >=  MATE - MAX_DEPTH); }
 inline bool isMatedScore  (ScoreType s) { return (s <= -MATE + MAX_DEPTH); }
 inline bool isMateScore   (ScoreType s) { return (std::abs(s) >= MATE - MAX_DEPTH); }
 
-/*
-inline bool isPromotion(const MType & mt){ return mt >= T_promq && mt <= T_cappromn;}
-inline bool isPromotion(const Move & m  ){ return isPromotion(Move2Type(m));}
-inline bool isCapture  (const MType & mt){ return mt == T_capture || mt == T_ep || mt == T_cappromq || mt == T_cappromr || mt == T_cappromb || mt == T_cappromn; }
-inline bool isCapture  (const Move & m  ){ return isCapture(Move2Type(m)); }
-inline bool isCastling (const MType & mt){ return mt == T_bks || mt == T_bqs || mt == T_wks || mt == T_wqs; }
-inline bool isCastling (const Move & m  ){ return isCastling(Move2Type(m)); }
-*/
-
 inline bool isPromotionStd (const MType mt){ assert(moveTypeOK(mt)); return (mt>>2==0x1);}
 inline bool isPromotionStd (const Move m  ){ return isPromotionStd(Move2Type(m));}
 inline bool isPromotionCap (const MType mt){ assert(moveTypeOK(mt)); return (mt>>2==0x2);}

@@ -28,13 +28,12 @@ void initCaslingPermHashTable(const Position & p){
     castlePermHashTable[p.rooksInit[Co_Black][CT_OOO]]  = C_all_but_bqs;
     castlePermHashTable[p.kingInit[Co_Black]]           = C_all_but_b;
     castlePermHashTable[p.rooksInit[Co_Black][CT_OO]]   = C_all_but_bks;
-/*
-    for(int k = 0 ; k < 64 ; ++k){
-        if ( k && k%8 == 0 ) std::cout << std::endl;
-        std::cout << castlePermHashTable[k] << " ";
-    }
-    std::cout << std::endl;
-*/
+
+}
+
+namespace {
+    // piece that have influence on pawn hash
+    bool _helperPawnHash[13] = { true,false,false,false,false,true,false,true,false,false,false,false,true };
 }
 
 void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, bool isCapture, Piece prom) {
@@ -52,8 +51,8 @@ void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, boo
     // update bitboard
     BBTools::unSetBit(p, from, fromP);
     _unSetBit(p.allPieces[fromP>0?Co_White:Co_Black],from);
-    if ( toP != P_none){
-        BBTools::unSetBit(p, to,   toP); // usefull only if move is a capture
+    if (toP != P_none){
+        BBTools::unSetBit(p, to,   toP);
         _unSetBit(p.allPieces[toP>0?Co_White:Co_Black],to);
     }
     BBTools::setBit  (p, to,   toPnew);
@@ -61,7 +60,7 @@ void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, boo
     // update Zobrist hash
     p.h ^= Zobrist::ZT[from][fromId]; // remove fromP at from
     p.h ^= Zobrist::ZT[to][toIdnew]; // add fromP (or prom) at to
-    if ( abs(fromP) == P_wp || abs(fromP) == P_wk ){
+    if (_helperPawnHash[fromP] ){
        p.ph ^= Zobrist::ZT[from][fromId]; // remove fromP at from
        if ( prom == P_none) p.ph ^= Zobrist::ZT[to][toIdnew]; // add fromP (if not prom) at to
     }
@@ -69,12 +68,21 @@ void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, boo
         p.h ^= Zobrist::ZT[to][toId];
         if ( (abs(toP) == P_wp || abs(toP) == P_wk) ) p.ph ^= Zobrist::ZT[to][toId];
     }
-
+    // consequences on castling 
     if (p.castling && castlePermHashTable[from] ^ castlePermHashTable[to]){
        p.h ^= Zobrist::ZTCastling[p.castling];
        p.castling &= castlePermHashTable[from] & castlePermHashTable[to];
        p.h ^= Zobrist::ZTCastling[p.castling];
     }
+
+    // update king position
+    if (fromP == P_wk)      p.king[Co_White] = to;
+    else if (fromP == P_bk) p.king[Co_Black] = to;
+
+    // king capture : is that necessary ???
+    if (toP == P_wk) p.king[Co_White] = INVALIDSQUARE;
+    else if (toP == P_bk) p.king[Co_Black] = INVALIDSQUARE;
+
     STOP_AND_SUM_TIMER(MovePiece)
 }
 
@@ -91,9 +99,6 @@ void applyNull(Searcher & , Position & pN) {
     STOP_AND_SUM_TIMER(Apply)
 }
 
-///@todo remove if from castling hash using ZHCastleKey[CastlingRights] 
-///@todo and a 64 sqaure table to update castle permission (care of FRC !)
-
 bool apply(Position & p, const Move & m, bool noValidation){
     START_TIMER
     assert(VALIDMOVE(m));
@@ -106,8 +111,6 @@ bool apply(Position & p, const Move & m, bool noValidation){
     const Piece  fromP  = p.board_const(from);
     const Piece  toP    = p.board_const(to);
     const int fromId    = fromP + PieceShift;
-    //const bool fromRook = fromP == (p.c==Co_White?P_wr:P_br);
-    //const bool capRook  = toP == (p.c==Co_White?P_br:P_wr);
     const bool isCapNoEP= toP != P_none;
 #ifdef DEBUG_APPLY
     if (!isPseudoLegal(p, m)) {
@@ -120,52 +123,11 @@ bool apply(Position & p, const Move & m, bool noValidation){
     case T_std:
     case T_capture:
     case T_reserved:
+        // update material
         if ( isCapNoEP ) p.mat[~p.c][std::abs(toP)]--;
+        // update hash, BB, board and castling rights
         movePiece(p, from, to, fromP, toP, type == T_capture);
-
-        // update castling rigths and king position
-        if ( fromP == P_wk ){
-            p.king[Co_White] = to;
-            //if (p.castling & C_wks) p.h ^= Zobrist::ZT[7][13];
-            //if (p.castling & C_wqs) p.h ^= Zobrist::ZT[0][13];
-            //p.castling &= ~(C_wks | C_wqs);
-        }
-        else if ( fromP == P_bk ){
-            p.king[Co_Black] = to;
-            //if (p.castling & C_bks) p.h ^= Zobrist::ZT[63][13];
-            //if (p.castling & C_bqs) p.h ^= Zobrist::ZT[56][13];
-            //p.castling &= ~(C_bks | C_bqs);
-        }
-        // king capture : is that necessary ???
-        if      ( toP == P_wk ) p.king[Co_White] = INVALIDSQUARE;
-        else if ( toP == P_bk ) p.king[Co_Black] = INVALIDSQUARE;
-
-/*
-        if ( p.castling != C_none && fromRook ){
-           if ( p.c==Co_White ){
-              if ( (p.castling & C_wqs) && from == p.rooksInit[Co_White][CT_OOO] ){
-                  p.castling &= ~C_wqs;
-                  p.h ^= Zobrist::ZT[0][13];
-              }
-              else if ( (p.castling & C_wks) && from == p.rooksInit[Co_White][CT_OO] ){
-                  p.castling &= ~C_wks;
-                  p.h ^= Zobrist::ZT[7][13];
-              }
-           }
-           else if ( p.c==Co_Black ) {
-              if ( (p.castling & C_bqs) && from == p.rooksInit[Co_Black][CT_OOO]){
-                  p.castling &= ~C_bqs;
-                  p.h ^= Zobrist::ZT[56][13];
-              }
-              else if ( (p.castling & C_bks) && from == p.rooksInit[Co_Black][CT_OO] ){
-                  p.castling &= ~C_bks;
-                  p.h ^= Zobrist::ZT[63][13];
-              }
-           }
-        }
-*/
         break;
-
     case T_ep: {
         assert(p.ep != INVALIDSQUARE);
         assert(SQRANK(p.ep) == EPRank[p.c]);
@@ -192,7 +154,6 @@ bool apply(Position & p, const Move & m, bool noValidation){
         p.mat[~p.c][M_p]--;
     }
         break;
-
     case T_promq:
     case T_cappromq:
         MaterialHash::updateMaterialProm(p,to,type);
@@ -232,32 +193,11 @@ bool apply(Position & p, const Move & m, bool noValidation){
         return false; // this is the only legal move validation needed
     }
 
-/*
-    // Update castling right if rook captured
-    if ( p.castling != C_none && capRook ){
-       if ( to == p.rooksInit[Co_White][CT_OOO] && (p.castling & C_wqs) ){
-           p.castling &= ~C_wqs;
-           p.h ^= Zobrist::ZT[0][13];
-       }
-       else if ( to == p.rooksInit[Co_White][CT_OO] && (p.castling & C_wks) ){
-           p.castling &= ~C_wks;
-           p.h ^= Zobrist::ZT[7][13];
-       }
-       else if ( to == p.rooksInit[Co_Black][CT_OOO] && (p.castling & C_bqs)){
-           p.castling &= ~C_bqs;
-           p.h ^= Zobrist::ZT[56][13];
-       }
-       else if ( to == p.rooksInit[Co_Black][CT_OO] && (p.castling & C_bks)){
-           p.castling &= ~C_bks;
-           p.h ^= Zobrist::ZT[63][13];
-       }
-    }
-*/
-
+    const bool pawnMove = abs(fromP) == P_wp;
     // update EP
     if (p.ep != INVALIDSQUARE) p.h  ^= Zobrist::ZT[p.ep][13];
     p.ep = INVALIDSQUARE;
-    if ( abs(fromP) == P_wp && abs(to-from) == 16 ){
+    if (pawnMove && abs(to-from) == 16 ){
         p.ep = (from + to)/2;
         p.h  ^= Zobrist::ZT[p.ep][13];
     }
@@ -268,7 +208,7 @@ bool apply(Position & p, const Move & m, bool noValidation){
     p.h ^= Zobrist::ZT[3][13] ; p.h  ^= Zobrist::ZT[4][13];
 
     // update game state
-    if ( isCapNoEP || abs(fromP) == P_wp ) p.fifty = 0; // E.p covered by pawn move here ...
+    if ( isCapNoEP || pawnMove) p.fifty = 0; // E.p covered by pawn move here ...
     else ++p.fifty;
     if ( p.c == Co_White ) ++p.moves;
     ++p.halfmoves;

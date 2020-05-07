@@ -20,14 +20,28 @@ inline constexpr BitBoard _shiftNorthWest(BitBoard b) { return b << 7 & ~fileH; 
 inline constexpr BitBoard _shiftSouthEast(BitBoard b) { return b >> 7 & ~fileA; }
 inline constexpr BitBoard _shiftSouthWest(BitBoard b) { return b >> 9 & ~fileH; }
 
-inline constexpr BitBoard adjacent(BitBoard b) { return _shiftWest(b) | _shiftEast(b); }
+inline constexpr BitBoard adjacent(BitBoard b) { 
+    return _shiftWest(b) | _shiftEast(b); 
+}
 
-template<Color C> inline constexpr BitBoard shiftN  (const BitBoard b) { return C==Co_White? BBTools::_shiftNorth(b)     : BBTools::_shiftSouth(b);    }
-template<Color C> inline constexpr BitBoard shiftS  (const BitBoard b) { return C!=Co_White? BBTools::_shiftNorth(b)     : BBTools::_shiftSouth(b);    }
-template<Color C> inline constexpr BitBoard shiftSW (const BitBoard b) { return C==Co_White? BBTools::_shiftSouthWest(b) : BBTools::_shiftNorthWest(b);}
-template<Color C> inline constexpr BitBoard shiftSE (const BitBoard b) { return C==Co_White? BBTools::_shiftSouthEast(b) : BBTools::_shiftNorthEast(b);}
-template<Color C> inline constexpr BitBoard shiftNW (const BitBoard b) { return C!=Co_White? BBTools::_shiftSouthWest(b) : BBTools::_shiftNorthWest(b);}
-template<Color C> inline constexpr BitBoard shiftNE (const BitBoard b) { return C!=Co_White? BBTools::_shiftSouthEast(b) : BBTools::_shiftNorthEast(b);}
+template<Color C> inline constexpr BitBoard shiftN  (const BitBoard b) { 
+    return C==Co_White? BBTools::_shiftNorth(b)     : BBTools::_shiftSouth(b);    
+}
+template<Color C> inline constexpr BitBoard shiftS  (const BitBoard b) { 
+    return C!=Co_White? BBTools::_shiftNorth(b)     : BBTools::_shiftSouth(b);    
+}
+template<Color C> inline constexpr BitBoard shiftSW (const BitBoard b) { 
+    return C==Co_White? BBTools::_shiftSouthWest(b) : BBTools::_shiftNorthWest(b);
+}
+template<Color C> inline constexpr BitBoard shiftSE (const BitBoard b) { 
+    return C==Co_White? BBTools::_shiftSouthEast(b) : BBTools::_shiftNorthEast(b);
+}
+template<Color C> inline constexpr BitBoard shiftNW (const BitBoard b) { 
+    return C!=Co_White? BBTools::_shiftSouthWest(b) : BBTools::_shiftNorthWest(b);
+}
+template<Color C> inline constexpr BitBoard shiftNE (const BitBoard b) { 
+    return C!=Co_White? BBTools::_shiftSouthEast(b) : BBTools::_shiftNorthEast(b);
+}
 
 template<Color  > inline constexpr BitBoard fillForward(BitBoard b);
 template<>        inline constexpr BitBoard fillForward<Co_White>(BitBoard b) {  
@@ -91,7 +105,8 @@ template<Color C> inline constexpr BitBoard pawnPassed(BitBoard own, BitBoard op
 }
 
 template<Color C> inline constexpr BitBoard pawnCandidates(BitBoard own, BitBoard opp) { 
-    return pawnSemiOpen<C>(own, opp) & shiftN<~C>((pawnSingleAttacks<C>(own) & pawnSingleAttacks<~C>(opp)) | (pawnDoubleAttacks<C>(own) & pawnDoubleAttacks<~C>(opp)));
+    return pawnSemiOpen<C>(own, opp) 
+        & shiftN<~C>((pawnSingleAttacks<C>(own) & pawnSingleAttacks<~C>(opp)) | (pawnDoubleAttacks<C>(own) & pawnDoubleAttacks<~C>(opp)));
 }
 
 template<Color C> inline constexpr BitBoard pawnUndefendable(BitBoard own, BitBoard other) {

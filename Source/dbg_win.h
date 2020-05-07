@@ -11,6 +11,8 @@
 #include <sstream>
 
 // grrrrrrrrrrr Windows !
+// it is a little more difficult to get a pretty stack under Windows OS
+// this is making the function stack_trace available for logging purpose
 #ifdef max
 #undef max
 #endif

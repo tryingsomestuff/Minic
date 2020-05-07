@@ -6,7 +6,7 @@
 
 /* Common tools for communication protocol (UCI and XBOARD)
  * Initialy made only for XBOARD some things here are not used in UCI...
- * ///@todo to be cleaned
+ * ///@todo to be cleaned a little more
  */
 
 namespace COM {
