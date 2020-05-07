@@ -153,6 +153,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
                 perft_test(fen, 6, ull);
             }
         }
+        return 0;
     }
 
     if ( cli == "-perft_test_long" ){
@@ -169,6 +170,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
                 perft_test(fen, ++i, ull);
             }
         }
+        return 0;
     }
 
     if (cli == "-see_test"){
