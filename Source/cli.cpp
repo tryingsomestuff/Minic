@@ -139,7 +139,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
         return 0;
     }
 
-    if ( cli == "-perft_test_long_fisher" ){
+    if ( cli == "-perft_test_long_fischer" ){
         DynamicConfig::FRC = true;
         std::ifstream infile("Book_and_Test/TestSuite/fischer.txt");
         std::string line;
