@@ -126,7 +126,7 @@ template < GenPhase phase = GP_all >
 void generate(const Position & p, MoveList & moves, bool doNotClear = false){
     START_TIMER
     if (!doNotClear) moves.clear();
-    BitBoard myPieceBBiterator = p.occupancy();
+    BitBoard myPieceBBiterator = p.allPieces[p.c];
     while (myPieceBBiterator) generateSquare<phase>(p,moves,popBit(myPieceBBiterator));
 #ifdef DEBUG_GENERATION
     for(auto m : moves){
