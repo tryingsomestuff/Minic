@@ -27,7 +27,9 @@ void initTable(){
     Logging::LogIt(Logging::logInfo) << "Init TT" ;
     Logging::LogIt(Logging::logInfo) << "Entry size " << sizeof(Entry);
     ttSize = 1024 * powerFloor((DynamicConfig::ttSizeMb * 1024) / (unsigned long long int)sizeof(Entry));
-#ifdef __linux__
+#ifdef __ANDROID__
+    Entry * mem = (Entry *)malloc(ttSize * sizeof(Entry));
+#elif __linux__
     Entry * mem = (Entry*)aligned_alloc(1024, ttSize*sizeof(Entry));
     madvise(mem, ttSize*sizeof(Entry), MADV_HUGEPAGE);
 #else
