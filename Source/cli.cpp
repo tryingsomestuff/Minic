@@ -427,6 +427,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
         auto elapsed = std::max(1, (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - start).count());
         Logging::LogIt(Logging::logInfo) << "Perft done in " << elapsed << "ms";
         acc.Display();
+        Logging::LogIt(Logging::logInfo) << "Speed " << int(acc.validNodes/elapsed) << "KNPS";
         return 0;
     }
 
