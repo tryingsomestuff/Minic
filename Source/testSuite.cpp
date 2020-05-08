@@ -26,7 +26,7 @@ bool test(const std::string & option){
         std::vector<std::string> positions;
         if ( ! ExtendedPosition::readEPDFile("Book_and_Test/TestSuite/allsets_nodupes.epd",positions) ) return 1;
 
-        std::vector<int> timeControls = { 1000 }; //mseconds
+        std::vector<int> timeControls = { 300 }; //mseconds
         std::vector<int> scores = { 1 };
 
         ExtendedPosition::test(positions,timeControls,true,true,scores,[&](int score){return int((100*score)/(30*positions.size()));},false); // % of "success"

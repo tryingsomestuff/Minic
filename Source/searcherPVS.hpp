@@ -204,15 +204,17 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
 
     killerT.killers[ply+1][0] = killerT.killers[ply+1][1] = 0;
 
-    // LMP
-    if (!rootnode && SearchConfig::doLMP && depth <= SearchConfig::lmpMaxDepth) lmp = true;
-    // futility
-    const ScoreType futilityScore = alpha - SearchConfig::futilityDepthInit[evalScoreIsHashScore] - SearchConfig::futilityDepthCoeff[evalScoreIsHashScore]*depth/*marginDepth*/;
-    if (!rootnode && SearchConfig::doFutility && depth <= SearchConfig::futilityMaxDepth[evalScoreIsHashScore] && evalScore <= futilityScore) futility = true;
-    // history pruning
-    if (!rootnode && SearchConfig::doHistoryPruning && isNotEndGame && depth < SearchConfig::historyPruningMaxDepth) historyPruning = true;
-    // CMH pruning
-    if (!rootnode && SearchConfig::doCMHPruning && isNotEndGame && depth < SearchConfig::CMHMaxDepth) CMHPruning = true;
+    if (!rootnode){
+        // LMP
+        if (SearchConfig::doLMP && depth <= SearchConfig::lmpMaxDepth) lmp = true;
+        // futility
+        const ScoreType futilityScore = alpha - SearchConfig::futilityDepthInit[evalScoreIsHashScore] - SearchConfig::futilityDepthCoeff[evalScoreIsHashScore]*depth;
+        if (SearchConfig::doFutility && depth <= SearchConfig::futilityMaxDepth[evalScoreIsHashScore] && evalScore <= futilityScore) futility = true;
+        // history pruning
+        if (SearchConfig::doHistoryPruning && isNotEndGame && depth < SearchConfig::historyPruningMaxDepth) historyPruning = true;
+        // CMH pruning
+        if (SearchConfig::doCMHPruning && isNotEndGame && depth < SearchConfig::CMHMaxDepth) CMHPruning = true;
+    }
 
     int validMoveCount = 0;
     Move bestMove = INVALIDMOVE;

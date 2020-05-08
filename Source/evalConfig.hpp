@@ -95,7 +95,7 @@ inline void initEval(){ for(Square i = 0; i < 64; i++){ EvalConfig::kingAttTable
 const ScoreType shashinThreshold = 180;
 const EvalScore forwardnessMalus = {20,10};
 enum ShashinType : unsigned char { Shashin_None = 0, Shashin_Tal, Shashin_Tal_Capablanca, Shashin_Capablanca, Shashin_Capablanca_Petrosian, Shashin_Petrosian, Shashin_Forced };
-void applyShashinCorrection(const Position & p, const EvalData & data, EvalScore & materialScore, EvalScore & developmentScore, EvalScore & positionalScore, EvalScore & mobilityScore, EvalScore & pawnStructScore, EvalScore & attackScore);
+void applyShashinCorrection(const Position & p, const EvalData & data, EvalFeatures & features);
 
 } // EvalConfig
 
