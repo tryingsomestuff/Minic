@@ -15,7 +15,6 @@
  */
 struct Searcher{
     bool stopFlag = true;
-    bool loneSearcher = false;
     MoveDifficultyUtil::MoveDifficulty moveDifficulty = MoveDifficultyUtil::MD_std;
     TimeType currentMoveMs = 777;
     
@@ -125,7 +124,6 @@ private:
     ThreadData              _data;
     size_t                  _index;
     std::mutex              _mutex;
-    static std::mutex       _mutexDisplay;
     std::condition_variable _cv;
     // next two MUST be initialized BEFORE _stdThread
     bool                    _exit;

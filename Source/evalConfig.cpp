@@ -192,10 +192,9 @@ inline void scaleShashin(EvalScore & score, const float materialFactor, const fl
 //    * go back
 //    * mobility ++
 //-------------------------------------------
-void applyShashinCorrection(const Position & p, const EvalData & data, EvalScore & materialScore, EvalScore & developmentScore, EvalScore & positionalScore, EvalScore & mobilityScore, EvalScore & pawnStructScore, EvalScore & attackScore){
+void applyShashinCorrection(const Position & /* p */, const EvalData & /* data */, EvalFeatures & /* features */ ){
     
     return;
-
 /*
     const ShashinType stype = data.shashinMobRatio  < 0.8 ? Shashin_Petrosian :
                               data.shashinMobRatio == 0.8 ? Shashin_Capablanca_Petrosian :
@@ -204,29 +203,29 @@ void applyShashinCorrection(const Position & p, const EvalData & data, EvalScore
                               Shashin_Tal; // data.shashinMobRatio > 1.2
 
     // material
-    materialScore = materialScore;
+    features.materialScore = features.materialScore;
 
     // take forwardness into account if Petrosian
-    if ( stype >= Shashin_Capablanca_Petrosian ) materialScore += EvalConfig::forwardnessMalus * (p.c==Co_White?-1:+1) * (data.shashinForwardness[p.c] - data.shashinForwardness[~p.c]);
+    if ( stype >= Shashin_Capablanca_Petrosian ) features.materialScore += EvalConfig::forwardnessMalus * (p.c==Co_White?-1:+1) * (data.shashinForwardness[p.c] - data.shashinForwardness[~p.c]);
 
     // positional
-    //positionalScore = positionalScore;
-    scaleShashin(positionalScore,data.shashinMaterialFactor,data.shashinMobRatio);
+    //features.positionalScore = features.positionalScore;
+    scaleShashin(features.positionalScore,data.shashinMaterialFactor,data.shashinMobRatio);
 
     // development
-    //developmentScore = developmentScore;
-    scaleShashin(developmentScore,data.shashinMaterialFactor,1.f/data.shashinMobRatio);
+    //features.developmentScore = features.developmentScore;
+    scaleShashin(features.developmentScore,data.shashinMaterialFactor,1.f/data.shashinMobRatio);
 
     // mobility
-    //mobilityScore = mobilityScore;
-    scaleShashin(mobilityScore,data.shashinMaterialFactor,1.f/data.shashinMobRatio);
+    //features.mobilityScore = features.mobilityScore;
+    scaleShashin(features.mobilityScore,data.shashinMaterialFactor,1.f/data.shashinMobRatio);
 
     // pawn structure
-    pawnStructScore = pawnStructScore;
+    features.pawnStructScore = features.pawnStructScore;
 
     // attack
-    //attackScore = attackScore;
-    scaleShashin(attackScore,data.shashinMaterialFactor,data.shashinMobRatio);
+    //features.attackScore = features.attackScore;
+    scaleShashin(features.attackScore,data.shashinMaterialFactor,data.shashinMobRatio);
 */
 }
 

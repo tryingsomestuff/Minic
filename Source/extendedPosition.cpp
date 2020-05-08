@@ -242,7 +242,6 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
     Results ** results = new Results*[positions.size()];
 
     unsigned int threads = DynamicConfig::threads; //copy
-    DynamicConfig::threads = 1;
 
     auto worker = [&] (size_t begin, size_t end) {
       // run the test and fill results table
@@ -251,9 +250,6 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
         Logging::LogIt(Logging::logInfo) << "Test #" << k << " " << positions[k];
         results[k] = new Results[timeControls.size()];
         ExtendedPosition extP(positions[k],withMoveCount);
-        Searcher searcher(0); // 0 so that all will be considered as "main"
-        searcher.initPawnTable();
-        searcher.loneSearcher = true;
         for(size_t t = 0 ; t < timeControls.size() ; ++t){
             Logging::LogIt(Logging::logInfo) << "Current test time control " << timeControls[t];
             DepthType seldepth = 0;
@@ -262,19 +258,17 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
             Move bestMove = INVALIDMOVE;
             PVList pv;
             ThreadData d = {depth,seldepth,s,extP,bestMove,pv,SearchData()}; // only input coef is depth here
-            searcher.setData(d);
             TimeMan::isDynamic       = false;
             TimeMan::nbMoveInTC      = -1;
             TimeMan::msecPerMove     = timeControls[t];
             TimeMan::msecInTC        = -1;
             TimeMan::msecInc         = -1;
             TimeMan::msecUntilNextTC = -1;
-            ThreadPool::instance().currentMoveMs = TimeMan::GetNextMSecPerMove(extP); // useless here ...
-            searcher.currentMoveMs = TimeMan::GetNextMSecPerMove(extP);
-            searcher.search();
-            d = searcher.getData();
+            ThreadPool::instance().currentMoveMs = TimeMan::GetNextMSecPerMove(extP);
+            ThreadPool::instance().search(d);
+            d = ThreadPool::instance().main().getData();
             bestMove = d.best; 
-
+            
             results[k][t].name = extP.id();
             results[k][t].k = (int)k;
             results[k][t].t = timeControls[t];
@@ -331,8 +325,8 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
                 }
                 results[k][t].score = 0;
                 bool success = false;
-                static std::array<int,23>   ms = {  10,  20,  30,  40,  50,  60,  70,  80,  90,  100,  125,  150,  175,  200,  250,  300,  400,  500,  600,  700,  800,  900, 10000 };
-                static std::array<float,23> bonus = { 3.0f, 2.9f, 2.8f, 2.7f, 2.6f, 2.5f, 2.4f, 2.3f, 2.2f, 2.1f, 2.0f, 1.9f, 1.8f, 1.7f, 1.6f, 1.5f, 1.4f, 1.3f, 1.2f, 1.1f, 1.0f, 1.0f, 0.0f };
+                static const std::array<int,23>   ms = {  10,  20,  30,  40,  50,  60,  70,  80,  90,  100,  125,  150,  175,  200,  250,  300,  400,  500,  600,  700,  800,  900, 10000 };
+                static const std::array<float,23> bonus = { 3.0f, 2.9f, 2.8f, 2.7f, 2.6f, 2.5f, 2.4f, 2.3f, 2.2f, 2.1f, 2.0f, 1.9f, 1.8f, 1.7f, 1.6f, 1.5f, 1.4f, 1.3f, 1.2f, 1.1f, 1.0f, 1.0f, 0.0f };
                 for(size_t i = 0 ; i < results[k][t].mea.size() ; ++i){
                     if ( results[k][t].computerMove == results[k][t].mea[i].first){
                         results[k][t].score = results[k][t].mea[i].second;

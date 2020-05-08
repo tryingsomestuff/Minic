@@ -144,7 +144,7 @@ template < typename T, int SIZE > struct OptList : public std::vector<T>{
     }
 };
 typedef OptList<Move,MAX_MOVE/4> MoveList;
-typedef std::vector<Move> PVList; ///@todo try OptList<Move,MAX_DEPTH>
+typedef std::vector<Move> PVList;
 
 inline MiniHash Hash64to32   (Hash h) { return (h >> 32) & 0xFFFFFFFF; }
 inline MiniMove Move2MiniMove(Move m) { return m & 0xFFFF;} // skip score

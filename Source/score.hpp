@@ -44,6 +44,16 @@ inline std::ostream & operator<<(std::ostream & of, const EvalScore & s){
     return of;
 }
 
+struct EvalFeatures{
+    EvalScore materialScore    = {0,0}; // material, imbalance
+    EvalScore positionalScore  = {0,0}; // PST, output, minor on open
+    EvalScore developmentScore = {0,0};
+    EvalScore mobilityScore    = {0,0}; 
+    EvalScore attackScore      = {0,0}; // attack, king safety
+    EvalScore pawnStructScore  = {0,0};
+    float scalingFactor        = 1.f;
+};
+
 inline ScoreType ScaleScore(EvalScore s, float gp){ return ScoreType(gp*s[MG] + (1.f-gp)*s[EG]);}
 ScoreType Score(EvalScore score, float scalingFactor, const Position &p, float gp);
 
@@ -66,3 +76,14 @@ struct RootScores {
     Move m; 
     ScoreType s; 
 };
+
+inline void displayEval(const EvalData & data, const EvalFeatures & features ){
+    Logging::LogIt(Logging::logInfo) << "Game phase    " << data.gp;
+    Logging::LogIt(Logging::logInfo) << "ScalingFactor " << features.scalingFactor;
+    Logging::LogIt(Logging::logInfo) << "Material      " << features.materialScore;
+    Logging::LogIt(Logging::logInfo) << "Positional    " << features.positionalScore;
+    Logging::LogIt(Logging::logInfo) << "Development   " << features.developmentScore;
+    Logging::LogIt(Logging::logInfo) << "Mobility      " << features.mobilityScore;
+    Logging::LogIt(Logging::logInfo) << "Pawn          " << features.pawnStructScore;
+    Logging::LogIt(Logging::logInfo) << "Attack        " << features.attackScore;
+}

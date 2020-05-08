@@ -293,7 +293,6 @@ pvsout:
     }
     d = reachedDepth;
     sc = bestScore;
-    if ( loneSearcher ) DisplayStats();
-    else if (isMainThread()) ThreadPool::instance().DisplayStats();
+    if (isMainThread()) ThreadPool::instance().DisplayStats();
     return pvOut;
 }
