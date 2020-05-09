@@ -45,6 +45,13 @@ struct Position{
 
     inline BitBoard occupancy()const { return allPieces[Co_White] | allPieces[Co_Black];}
 
+    inline BitBoard allKing  ()const {return _allB[5];}
+    inline BitBoard allQueen ()const {return _allB[4];}
+    inline BitBoard allRook  ()const {return _allB[3];}
+    inline BitBoard allBishop()const {return _allB[2];}
+    inline BitBoard allKnight()const {return _allB[1];}
+    inline BitBoard allPawn  ()const {return _allB[0];}
+
     inline BitBoard blackKing  ()const {return _allB[5] & allPieces[Co_Black];}
     inline BitBoard blackQueen ()const {return _allB[4] & allPieces[Co_Black];}
     inline BitBoard blackRook  ()const {return _allB[3] & allPieces[Co_Black];}
