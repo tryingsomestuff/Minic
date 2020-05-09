@@ -43,7 +43,8 @@ echo "Building $exe"
 
 WARN="-Wall -Wcast-qual -Wno-char-subscripts -Wno-reorder -Wmaybe-uninitialized -pedantic -Wextra -Wshadow -Wfatal-errors"
 
-OPT="-s $WARN $d -DNDEBUG -O3 $t --std=c++14" ; DEPTH=20
+OPT="-s -fno-exceptions $WARN $d -DNDEBUG -O3 $t --std=c++14" ; DEPTH=20
+#OPT="-fno-exceptions $WARN $d -DNDEBUG -O3 -g -ggdb -fno-omit-frame-pointer $t --std=c++14" ; DEPTH=20
 #OPT="$WARN $d -DNDEBUG -g $t --std=c++14" ; DEPTH=10
 #OPT="$WARN $d -g $t --std=c++14" ; DEPTH=10
 
