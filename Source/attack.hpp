@@ -113,6 +113,7 @@ bool     isAttackedBB (const Position &p, const Square x, Color c);
 
 // Convenient function to return the bitboard of all attacker of a specific square
 BitBoard allAttackedBB(const Position &p, const Square x, Color c);
+BitBoard allAttackedBB(const Position &p, const Square x);
 
 } // BBTools
 

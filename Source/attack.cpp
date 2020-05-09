@@ -224,6 +224,12 @@ BitBoard allAttackedBB(const Position &p, const Square x, Color c) {
     else               return attack<P_wb>(x, p.whiteBishop() | p.whiteQueen(), occupancy) | attack<P_wr>(x, p.whiteRook() | p.whiteQueen(), occupancy) | attack<P_wn>(x, p.whiteKnight()) | attack<P_wp>(x, p.whitePawn(), occupancy, Co_Black) | attack<P_wk>(x, p.whiteKing());
 }
 
+BitBoard allAttackedBB(const Position &p, const Square x) {
+    assert(x != INVALIDSQUARE);
+    const BitBoard occupancy = p.occupancy();
+    return attack<P_wb>(x, p.allBishop() | p.allQueen(), occupancy) | attack<P_wr>(x, p.allRook() | p.allQueen(), occupancy) | attack<P_wn>(x, p.allKnight()) | attack<P_wp>(x, p.blackPawn(), occupancy, Co_White) | attack<P_wp>(x, p.whitePawn(), occupancy, Co_Black) | attack<P_wk>(x, p.allKing());
+}
+
 } // BBTools
 
 bool isAttacked(const Position & p, const Square k) {

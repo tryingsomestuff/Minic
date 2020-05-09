@@ -10,7 +10,7 @@ ScoreType Searcher::SEE(const Position & p, const Move & m) const {
     Square from = Move2From(m); assert(squareOK(from));
     const Square to = Move2To(m); assert(squareOK(to));
     const MType mtype = Move2Type(m); assert(moveTypeOK(mtype));
-    BitBoard attackers = BBTools::allAttackedBB(p, to, p.c) | BBTools::allAttackedBB(p, to, ~p.c);
+    BitBoard attackers = BBTools::allAttackedBB(p, to);
     BitBoard occupation_mask = 0xFFFFFFFFFFFFFFFF;
     ScoreType current_target_val = 0;
     const bool promPossible = PROMOTION_RANK(to);
@@ -39,8 +39,8 @@ ScoreType Searcher::SEE(const Position & p, const Move & m) const {
     occupation_mask &= ~SquareToBitboard(from);
     const BitBoard occupancy = p.occupancy();
 
-    attackers |= BBTools::attack<P_wr>(to, p.whiteQueen() | p.blackQueen() | p.whiteRook()   | p.blackRook(),   occupancy & occupation_mask, c) |
-                 BBTools::attack<P_wb>(to, p.whiteQueen() | p.blackQueen() | p.whiteBishop() | p.blackBishop(), occupancy & occupation_mask, c) ;
+    attackers |= BBTools::attack<P_wr>(to, p.allQueen() | p.allRook(),   occupancy & occupation_mask, c) |
+                 BBTools::attack<P_wb>(to, p.allQueen() | p.allBishop(), occupancy & occupation_mask, c) ;
     attackers &= occupation_mask;
     c = ~c;
 
@@ -65,8 +65,8 @@ ScoreType Searcher::SEE(const Position & p, const Move & m) const {
         attackers &= ~SquareToBitboard(from);
         occupation_mask &= ~SquareToBitboard(from);
 
-        attackers |= BBTools::attack<P_wr>(to, p.whiteQueen() | p.blackQueen() | p.whiteRook()   | p.blackRook(),   occupancy & occupation_mask, c) |
-                     BBTools::attack<P_wb>(to, p.whiteQueen() | p.blackQueen() | p.whiteBishop() | p.blackBishop(), occupancy & occupation_mask, c) ;
+        attackers |= BBTools::attack<P_wr>(to, p.allQueen() | p.allRook(),   occupancy & occupation_mask, c) |
+                     BBTools::attack<P_wb>(to, p.allQueen() | p.allBishop(), occupancy & occupation_mask, c) ;
         attackers &= occupation_mask;
 
         c = ~c;
