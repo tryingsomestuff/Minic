@@ -87,6 +87,8 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
 
     const ScoreType alphaInit = alpha;
 
+    int validMoveCount = 0;
+
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         if (!isInCheck) {
             if (!SEE_GE(p,*it,0)) {++stats.counters[Stats::sid_qsee];continue;}
@@ -94,6 +96,7 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
         }
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
+        ++validMoveCount;
         TT::prefetch(computeHash(p2));
         const ScoreType score = -qsearch<false,false>(-beta,-alpha,p2,ply+1,seldepth);
         if ( score > bestScore){
@@ -109,6 +112,7 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
            }
         }
     }
+    if ( validMoveCount==0 && isInCheck) bestScore = -MATE + ply;  
     TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),b,hashDepth);
     return bestScore;
 }
