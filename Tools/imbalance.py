@@ -2,7 +2,7 @@ import sys
 
 s = sys.argv[1].split(';')[1:-1]
 
-print s
+#print s
 
 k = 0
 for i in range(6):
