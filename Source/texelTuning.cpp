@@ -618,9 +618,10 @@ void TexelTuning(const std::string & filename) {
         "PST3",
         "PST4",
         "PST5",
-        "mobility",
         */
-
+        "mobility",
+        
+/*
         "passer",
         "freePasser",
         "protectedPasser",
@@ -677,7 +678,7 @@ void TexelTuning(const std::string & filename) {
         "storm",
 
         "tempo"
-
+*/
     };
    
    /*
