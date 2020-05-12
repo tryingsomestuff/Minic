@@ -15,6 +15,7 @@
  * 9°) bad cap
  */
 
+template< Color C>
 void MoveSorter::computeScore(Move & m)const{
     assert(VALIDMOVE(m));
     const MType  t    = Move2Type(m); assert(moveTypeOK(t));
@@ -26,7 +27,7 @@ void MoveSorter::computeScore(Move & m)const{
     if ( ply == 0 && sameMove(context.previousBest,m)) s += 20000; // previous root best
     else if (e && sameMove(e->m,m)) s += 15000; // TT move
     else{
-        if (isInCheck && PieceTools::getPieceType(p, from) == P_wk) s += 10000; // king evasion
+        if (isInCheck && from == p.king[C]) s += 10000; // king evasion
         if ( isCapture(t) && !isPromotion(t)){
             const Piece victim   = (t != T_ep) ? PieceTools::getPieceType(p,to) : P_wp;
             const Piece attacker = PieceTools::getPieceType(p,from);
@@ -55,9 +56,8 @@ void MoveSorter::computeScore(Move & m)const{
                 s += context.getCMHScore(p, from, to, cmhPtr) /3; // +/- HISTORY_MAX = 1000
                 if ( !isInCheck ){
                    if ( refutation != INVALIDMOVE && from == Move2To(refutation) && context.SEE_GE(p,m,-70)) s += 1000; // move (safely) leaving threat square from null move search
-                   const bool isWhite = (p.allPieces[Co_White] & SquareToBitboard(from)) != empty;
                    const EvalScore * const  pst = EvalConfig::PST[PieceTools::getPieceType(p, from) - 1];
-                   s += ScaleScore(pst[isWhite ? (to ^ 56) : to] - pst[isWhite ? (from ^ 56) : from],gp);
+                   s += ScaleScore(pst[ColorSquarePstHelper<C>(to)] - pst[ColorSquarePstHelper<C>(from)],gp);
                 }
             }
         }
@@ -69,7 +69,16 @@ void MoveSorter::sort(const Searcher & context, MoveList & moves, const Position
         START_TIMER
         if ( moves.size() < 2) return;
         const MoveSorter ms(context,p,gp,ply,cmhPtr,useSEE,isInCheck,e,refutation);
-        for(auto it = moves.begin() ; it != moves.end() ; ++it){ ms.computeScore(*it); }
+        if ( p.c == Co_White ){
+           for(auto it = moves.begin() ; it != moves.end() ; ++it){ 
+              ms.computeScore<Co_White>(*it); 
+           }
+        }
+        else{
+           for(auto it = moves.begin() ; it != moves.end() ; ++it){ 
+              ms.computeScore<Co_Black>(*it); 
+           }
+        }
         std::sort(moves.begin(),moves.end(),ms);
         STOP_AND_SUM_TIMER(MoveSorting)
 }

@@ -20,6 +20,7 @@ struct MoveSorter{
             assert(e==NULL||e->h!=nullHash);
     }
 
+    template<Color C>
     void computeScore(Move & m)const;
 
     inline bool operator()(const Move & a, const Move & b)const{

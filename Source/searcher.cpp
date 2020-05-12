@@ -112,7 +112,7 @@ void Searcher::initPawnTable(){
     Logging::LogIt(Logging::logInfo) << "Init Pawn TT : " << ttSizePawn;
     Logging::LogIt(Logging::logInfo) << "PawnEntry size " << sizeof(PawnEntry);
     tablePawn.reset(new PawnEntry[ttSizePawn]);
-    Logging::LogIt(Logging::logInfo) << "Size of Pawn TT " << ttSizePawn * sizeof(PawnEntry) / 1024 / 1024 << "Mb" ;
+    Logging::LogIt(Logging::logInfo) << "Size of Pawn TT " << ttSizePawn * sizeof(PawnEntry) / 1024 << "Kb" ;
 }
 
 void Searcher::clearPawnTT() {

@@ -39,11 +39,13 @@ namespace MaterialHash {
 
     extern ScoreType (* helperTable[TotalMat])(const Position &, Color, ScoreType );
 
+#pragma pack(push, 1)
     struct MaterialHashEntry  {
-      Terminaison t = Ter_Unknown;
       EvalScore score={0,0};
       float gp = 1.f;
+      Terminaison t = Ter_Unknown;
     };
+#pragma pack(pop)    
 
     extern MaterialHashEntry materialHashTable[TotalMat];
 
