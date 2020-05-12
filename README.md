@@ -57,8 +57,9 @@ Minic 1.35 is tested at 2881 on the CEGT 5+3 PB=ON list (http://www.cegt.net/5Pl
 Minic 2.11 is tested at 2890 on the CEGT 40/15 list (http://www.cegt.net/40_40%20Rating%20List/40_40%20SingleVersion/rangliste.html)  
 
 ### FGRL
-Minic 1.44 is tested at 2743 on the fastgm 60sec+0.6sec rating list (http://www.fastgm.de/60-0.60.html)  
-Minic 2.00 is tested at 2922 on the fastgm 10min+6sec rating list (http://www.fastgm.de/10min.html)  
+Minic 2.00 is tested at 2800 on the fastgm 60sec+0.6sec rating list (http://www.fastgm.de/60-0.60.html)  
+Minic 2.00 is tested at 2923 on the fastgm 10min+6sec rating list (http://www.fastgm.de/10min.html)  
+Minic 2.00 is tested at 2952 on the fastgm 60min+15sec rating list (http://www.fastgm.de/60min.html)  
 
 ### Test Suite
 STS : 1169/1500 @10sec per position (single thread)  
