@@ -21,6 +21,17 @@ for f in files:
         os.system("python ./Tools/PawnStr1.py \"" + ll + "\"")
     elif "pawnStructure3" in f:
         os.system("python ./Tools/PawnStr1.py \"" + ll + "\"")
+    elif "attDefKing" in f:
+        o = ""
+        v = ll.split(';')[1:-1]
+        for i in range(6):
+            o += '{0:>3}, '.format(v[i])
+        o = "{ " + o + "},"
+        o2 = ""
+        for i in range(5):
+            o2 += '{0:>3}, '.format(v[6+i])
+        o2 = "{ " + o2 + " 0 }"
+        print("{ " + o + o2 + " }")
     elif "att" in f:
         print(ll)
     else:

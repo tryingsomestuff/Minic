@@ -78,7 +78,7 @@ double Sigmoid(Position * p) {
 double E(const std::vector<Texel::TexelInput> &data, size_t miniBatchSize) {
     std::atomic<double> e(0);
     std::mutex m;
-    const bool progress = miniBatchSize > 100000;
+    const bool progress = false;
     std::chrono::time_point<Clock> startTime = Clock::now();
 
     auto worker = [&] (size_t begin, size_t end, std::atomic<double> & acc) {
@@ -95,7 +95,7 @@ double E(const std::vector<Texel::TexelInput> &data, size_t miniBatchSize) {
 
     if ( progress ) {
         const int ms = (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count();
-        std::cout << " " << ms << "ms " << miniBatchSize/ms << "kps" << std::endl;
+        std::cout << " " << ms << "ms " << miniBatchSize/ms << "kps on " << DynamicConfig::threads << " threads" << std::endl;
     }
     return e/miniBatchSize;
 }
@@ -290,8 +290,8 @@ void TexelTuning(const std::string & filename) {
     ExtendedPosition::readEPDFile(filename,positions);
     for(size_t k = 0 ; k < positions.size() ; ++k){
         ExtendedPosition * p = new ExtendedPosition(positions[k],false);
-        data.push_back({p, getResult(p->_extendedParams["c9"][0])}); // zurichess
-        //data.push_back({p, getResult2(p->_extendedParams["c2"][0])}); // lichess-quiet
+        //data.push_back({p, getResult(p->_extendedParams["c9"][0])}); // zurichess
+        data.push_back({p, getResult2(p->_extendedParams["c2"][0])}); // lichess-quiet
         // +1 white win, -1 black wins, 0 draw
         if (k % 50000 == 0) Logging::LogIt(Logging::logInfo) << k << " position read";
     }
@@ -301,8 +301,6 @@ void TexelTuning(const std::string & filename) {
     //size_t batchSize = 20000; // batch
     //size_t batchSize = 1024 ; // mini
     //size_t batchSize = 1; // stochastic
-
-    //for(int k=0 ; k<13; ++k){Values[k] = 450; ValuesEG[k] = 450;}
 
     std::map<std::string, std::vector<Texel::TexelParam<ScoreType> > > guess;
 
@@ -400,28 +398,30 @@ void TexelTuning(const std::string & filename) {
     }
 
     guess["pairAdjust"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::knightPairMalus[MG] , -500,  500,"knight pair"));
-    guess["pairAdjust"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookPairMalus  [MG] , -500,  500,"rook pair"));
     guess["pairAdjust"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::knightPairMalus[EG] , -500,  500,"knight pair EG"));
+    guess["pairAdjust"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookPairMalus  [MG] , -500,  500,"rook pair"));
     guess["pairAdjust"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookPairMalus  [EG] , -500,  500,"rook pair EG"));
 
     guess["rookOpen"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookOnOpenFile       [MG] , -500,  500,"rookOnOpenFile"));
-    guess["rookOpen"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookOnOpenSemiFileOpp[MG] , -500,  500,"rookOnOpenSemiFileOpp"));
-    guess["rookOpen"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookOnOpenSemiFileOur[MG] , -500,  500,"rookOnOpenSemiFileOur"));
     guess["rookOpen"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookOnOpenFile       [EG] , -500,  500,"rookOnOpenFileEG"));
-    guess["rookOpen"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookOnOpenSemiFileOpp[EG] , -500,  500,"rookOnOpenSemiFileOppEG"));
+
+    guess["rookOpen"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookOnOpenSemiFileOur[MG] , -500,  500,"rookOnOpenSemiFileOur"));
     guess["rookOpen"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookOnOpenSemiFileOur[EG] , -500,  500,"rookOnOpenSemiFileOurEG"));
 
+    guess["rookOpen"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookOnOpenSemiFileOpp[MG] , -500,  500,"rookOnOpenSemiFileOpp"));
+    guess["rookOpen"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookOnOpenSemiFileOpp[EG] , -500,  500,"rookOnOpenSemiFileOppEG"));
+    
     guess["passer"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[1][MG], -1500, 1500,"passer 1"));
-    guess["passer"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[2][MG], -1500, 1500,"passer 2"));
-    guess["passer"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[3][MG], -1500, 1500,"passer 3"));
-    guess["passer"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[4][MG], -1500, 1500,"passer 4"));
-    guess["passer"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[5][MG], -1500, 1500,"passer 5"));
-    guess["passer"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[6][MG], -1500, 1500,"passer 6"));
     guess["passer"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[1][EG], -1500, 1500,"passer 1"));
+    guess["passer"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[2][MG], -1500, 1500,"passer 2"));
     guess["passer"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[2][EG], -1500, 1500,"passer 2"));
+    guess["passer"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[3][MG], -1500, 1500,"passer 3"));
     guess["passer"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[3][EG], -1500, 1500,"passer 3"));
+    guess["passer"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[4][MG], -1500, 1500,"passer 4"));
     guess["passer"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[4][EG], -1500, 1500,"passer 4"));
+    guess["passer"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[5][MG], -1500, 1500,"passer 5"));
     guess["passer"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[5][EG], -1500, 1500,"passer 5"));
+    guess["passer"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[6][MG], -1500, 1500,"passer 6"));
     guess["passer"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::passerBonus[6][EG], -1500, 1500,"passer 6"));
 
     guess["pieceBlocking"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pieceFrontPawn[MG],-150,550,"pieceFrontPawn"));
@@ -440,10 +440,12 @@ void TexelTuning(const std::string & filename) {
       guess["pawnStructure1"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::doublePawnMalus  [r][0][EG], -150,550,  "doublePawnMalusEG  " + std::to_string(r) + "0"));
       guess["pawnStructure1"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::doublePawnMalus  [r][1][MG], -150, 550, "doublePawnMalus    " + std::to_string(r) + "1"));
       guess["pawnStructure1"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::doublePawnMalus  [r][1][EG], -150, 550, "doublePawnMalusEG  " + std::to_string(r) + "1"));
+
       guess["pawnStructure2"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::isolatedPawnMalus[r][0][MG], -150,550,  "isolatedPawnMalus  " + std::to_string(r) + "0"));
       guess["pawnStructure2"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::isolatedPawnMalus[r][0][EG], -150,550,  "isolatedPawnMalusEG" + std::to_string(r) + "0"));
       guess["pawnStructure2"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::isolatedPawnMalus[r][1][MG], -150, 550, "isolatedPawnMalus  " + std::to_string(r) + "1"));
       guess["pawnStructure2"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::isolatedPawnMalus[r][1][EG], -150, 550, "isolatedPawnMalusEG" + std::to_string(r) + "1"));
+
       guess["pawnStructure3"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::backwardPawnMalus[r][0][MG], -150, 550, "backwardPawnMalus  " + std::to_string(r) + "0"));
       guess["pawnStructure3"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::backwardPawnMalus[r][0][EG], -150, 550, "backwardPawnMalusEG" + std::to_string(r) + "0"));
       guess["pawnStructure3"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::backwardPawnMalus[r][1][MG], -150, 550, "backwardPawnMalus  " + std::to_string(r) + "1"));
@@ -464,16 +466,16 @@ void TexelTuning(const std::string & filename) {
     guess["rookBehindPassed"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookBehindPassed[EG] , -500,  500,"rookBehindPassed1"));
 
     guess["candidate"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[1][MG], -1500, 1500,"candidate 1"));
-    guess["candidate"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[2][MG], -1500, 1500,"candidate 2"));
-    guess["candidate"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[3][MG], -1500, 1500,"candidate 3"));
-    guess["candidate"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[4][MG], -1500, 1500,"candidate 4"));
-    guess["candidate"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[5][MG], -1500, 1500,"candidate 5"));
-    guess["candidate"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[6][MG], -1500, 1500,"candidate 6"));
     guess["candidate"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[1][EG], -1500, 1500,"candidateEG 1"));
+    guess["candidate"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[2][MG], -1500, 1500,"candidate 2"));
     guess["candidate"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[2][EG], -1500, 1500,"candidateEG 2"));
+    guess["candidate"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[3][MG], -1500, 1500,"candidate 3"));
     guess["candidate"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[3][EG], -1500, 1500,"candidateEG 3"));
+    guess["candidate"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[4][MG], -1500, 1500,"candidate 4"));
     guess["candidate"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[4][EG], -1500, 1500,"candidateEG 4"));
+    guess["candidate"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[5][MG], -1500, 1500,"candidate 5"));
     guess["candidate"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[5][EG], -1500, 1500,"candidateEG 5"));
+    guess["candidate"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[6][MG], -1500, 1500,"candidate 6"));
     guess["candidate"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::candidate[6][EG], -1500, 1500,"candidateEG 6"));
 
     for (int k = 0; k < 6; ++k) {
@@ -501,7 +503,6 @@ void TexelTuning(const std::string & filename) {
            guess["mobility"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::MOB[k][i][MG],-200,200,"mob"+std::to_string(k)+"_"+std::to_string(i)));
         }
     }
-
     for (int k = 0 ; k < 6 ; ++k ){
         for(int i = 0 ; i < 15 ; ++i){
            guess["mobility"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::MOB[k][i][EG],-200,200,"mobeg"+std::to_string(k)+"_"+std::to_string(i)));
@@ -559,22 +560,23 @@ void TexelTuning(const std::string & filename) {
 
     guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedKing [0][MG] , -100, 100, "ppinK"));
     guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedKing [0][EG] , -100, 100, "ppinKEG"));
-    guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[0][MG] , -100, 100, "ppinq"));
-    guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[0][EG] , -100, 100, "ppinqEG"));
     guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedKing [1][MG] , -100, 100, "npinK"));
     guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedKing [1][EG] , -100, 100, "npinKEG"));
-    guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[1][MG] , -100, 100, "npinq"));
-    guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[1][EG] , -100, 100, "npinqEG"));
     guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedKing [2][MG] , -100, 100, "bpinK"));
     guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedKing [2][EG] , -100, 100, "bpinKEG"));
-    guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[2][MG] , -100, 100, "bpinq"));
-    guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[2][EG] , -100, 100, "bpinqEG"));
     guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedKing [3][MG] , -100, 100, "rpinK"));
     guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedKing [3][EG] , -100, 100, "rpinKEG"));
-    guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[3][MG] , -100, 100, "rpinq"));
-    guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[3][EG] , -100, 100, "rpinqEG"));
     guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedKing [4][MG] , -100, 100, "qpinK"));
     guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedKing [4][EG] , -100, 100, "qpinKEG"));
+    
+    guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[0][MG] , -100, 100, "ppinq"));
+    guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[0][EG] , -100, 100, "ppinqEG"));
+    guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[1][MG] , -100, 100, "npinq"));
+    guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[1][EG] , -100, 100, "npinqEG"));
+    guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[2][MG] , -100, 100, "bpinq"));
+    guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[2][EG] , -100, 100, "bpinqEG"));
+    guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[3][MG] , -100, 100, "rpinq"));
+    guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[3][EG] , -100, 100, "rpinqEG"));
     guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[4][MG] , -100, 100, "qpinq"));
     guess["pinned"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pinnedQueen[4][EG] , -100, 100, "qpinqEG"));
 
@@ -586,14 +588,10 @@ void TexelTuning(const std::string & filename) {
     guess["tempo"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::tempo[MG] , -500,  500,"tempo"));
     guess["tempo"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::tempo[EG] , -500,  500,"tempoEG"));
 
+/*
     guess["shashin"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::shashinMobCoeff[MG] , -500,  500,"shashinmobMG"));
     guess["shashin"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::shashinMobCoeff[EG] , -500,  500,"shashinmobEG"));
-
-    static ScoreType fake = 0;
-    guess["fake"].push_back(Texel::TexelParam<ScoreType>(fake , -500,  500,"fake"));
-
-    guess["PSTWrong"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::PST[0][0][MG],-200,200,"pstWrong"));
-    guess["PSTWrong"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::PST[0][0][EG],-200,200,"pstWrongEG"));
+*/
 
     for (Mat m1 = M_p; m1 <= M_q; ++m1) {
         for (Mat m2 = M_p; m2 <= m1; ++m2) {
@@ -611,16 +609,17 @@ void TexelTuning(const std::string & filename) {
     computeOptimalK(data);
     Logging::LogIt(Logging::logInfo) << "Optimal K " << Texel::K;
 
-/*
     std::vector<std::string> todo = {
         //"piecesValue",
-        //"PST0",
-        //"PST1",
-        //"PST2",
-        //"PST3",
-        //"PST4",
-        //"PST5",
-        //"mobility",
+        /*
+        "PST0",
+        "PST1",
+        "PST2",
+        "PST3",
+        "PST4",
+        "PST5",
+        "mobility",
+        */
 
         "passer",
         "freePasser",
@@ -674,30 +673,27 @@ void TexelTuning(const std::string & filename) {
 
         //"safeChecks",
 
+        "Fawn",
         "storm",
 
         "tempo"
 
     };
-   */
+   
+   /*
     std::vector<std::string> todo = {
-        /*
-        "pawnStructure1",
-        "pawnStructure2",
-        "pawnStructure3",
-        "pawnStructure4",
-        "PST0",
-        "Fawn",
-        "storm",
-        */
-        "shashin",
-        //"knightTooFar",
+        //"pawnStructure1",
+        //"pawnStructure2",
+        //"pawnStructure3",
+        //"pawnStructure4",
+        //"PST0",
         //"PST1",
         //"PST2",
         //"PST3",
         //"PST4",
         //"PST5"
     };
+*/
     
     for(auto loops = 0 ; loops < 1000 ; ++loops){
         Logging::LogIt(Logging::logInfo) << "Starting loop : " << loops;
@@ -706,9 +702,7 @@ void TexelTuning(const std::string & filename) {
                 Logging::LogIt(Logging::logError) << "Not found :" << *it;
                 continue;
             }
-            //Logging::LogIt(Logging::logInfo) << "Initial values :";
-            //for (size_t k = 0; k < guess[*it].size(); ++k) Logging::LogIt(Logging::logInfo) << guess[*it][k].name << " " << guess[*it][k];
-            std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeGD(guess[*it], data, batchSize, guess[*it].size(),*it);
+            std::vector<Texel::TexelParam<ScoreType> > optim = Texel::TexelOptimizeGD(guess[*it], data, batchSize, std::max(64ul,guess[*it].size()),*it);
             Logging::LogIt(Logging::logInfo) << "Optimized values :";
             for (size_t k = 0; k < optim.size(); ++k) Logging::LogIt(Logging::logInfo) << optim[k].name << " " << optim[k];
         }
