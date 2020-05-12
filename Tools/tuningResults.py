@@ -15,11 +15,11 @@ for f in files:
         os.system("python ./Tools/imbalance.py \"" + ll + "\"")
     elif "mobility" in f:
         os.system("python ./Tools/MOB.py \"" + ll + "\"")
-    elif "pawnStruture1" in f:
+    elif "pawnStructure1" in f:
         os.system("python ./Tools/PawnStr1.py \"" + ll + "\"")
-    elif "pawnStruture2" in f:
+    elif "pawnStructure2" in f:
         os.system("python ./Tools/PawnStr1.py \"" + ll + "\"")
-    elif "pawnStruture3" in f:
+    elif "pawnStructure3" in f:
         os.system("python ./Tools/PawnStr1.py \"" + ll + "\"")
     elif "att" in f:
         print(ll)
@@ -28,7 +28,7 @@ for f in files:
         i = len(v)/2
         p = ""
         for i in range(i):
-            p += '{{{0:>4},{1:>4}}}, '.format(v[2*i],v[2*i+1])
+            p += '{{{0:>3},{1:>3}}}, '.format(v[2*i],v[2*i+1])
         print(p)
         
         
