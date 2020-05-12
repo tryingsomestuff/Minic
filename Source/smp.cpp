@@ -42,6 +42,7 @@ void ThreadPool::wait(bool otherOnly) {
 Move ThreadPool::search(const ThreadData & d){ // distribute data and call main thread search
     Logging::LogIt(Logging::logInfo) << "Search Sync" ;
     wait();
+    Logging::LogIt(Logging::logInfo) << "Locking other threads";
     Searcher::startLock.store(true);
     for (auto & s : *this){
         (*s).setData(d); // this is a copy

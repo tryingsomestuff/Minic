@@ -45,9 +45,9 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
 
     stopFlag = false;
     moveDifficulty = MoveDifficultyUtil::MD_std;
+    startTime = Clock::now();
 
     if ( isMainThread() ){
-        startTime = Clock::now();
         Logging::LogIt(Logging::logInfo) << "Search params :" ;
         Logging::LogIt(Logging::logInfo) << "requested time  " << getCurrentMoveMs() ;
         Logging::LogIt(Logging::logInfo) << "requested depth " << (int) d ;
@@ -75,6 +75,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
     if ( isMainThread() ){
        const Move bookMove = SanitizeCastling(p,Book::Get(computeHash(p)));
        if ( bookMove != INVALIDMOVE){
+           Logging::LogIt(Logging::logInfo) << "Unlocking other threads (book move)";
            if ( isMainThread() ) startLock.store(false);
            pvOut.push_back(bookMove);
            m = pvOut[0];
@@ -140,6 +141,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
             }
             else{ 
                 // delayed other thread start
+                Logging::LogIt(Logging::logInfo) << "Unlocking other threads";
                 if ( depth > 1) startLock.store(false);
             } 
             Logging::LogIt(Logging::logInfo) << "Thread " << id() << " searching depth " << (int)depth;
@@ -282,7 +284,10 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
     } // iterative deepening loop end
 
 pvsout:
-    if ( isMainThread() ) startLock.store(false);
+    if ( isMainThread() ){
+        Logging::LogIt(Logging::logInfo) << "Unlocking other threads (end of search)";
+        startLock.store(false);
+    }
     if (pvOut.empty()){
         m = INVALIDMOVE;
         Logging::LogIt(Logging::logWarn) << "Empty pv" ;
