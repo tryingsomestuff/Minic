@@ -37,17 +37,17 @@ void initTable(){
  #endif
     table.reset(mem);
     Logging::LogIt(Logging::logInfo) << "Size of TT " << ttSize * sizeof(Entry) / 1024 / 1024 << "Mb" ;
+    clearTT();
+}
+
+void clearTT() {
+    TT::curGen = 0;
     Logging::LogIt(Logging::logInfo) << "Now zeroing memory using " << DynamicConfig::threads << " threads" ;
     auto worker = [&] (size_t begin, size_t end){
        std::fill(&table[0]+begin,&table[0]+end,Entry());
     };
     threadedWork(worker,DynamicConfig::threads,ttSize);
-    Logging::LogIt(Logging::logInfo) << "... done ";
-}
-
-void clearTT() {
-    TT::curGen = 0;
-    for (unsigned int k = 0; k < ttSize; ++k) table[k] = { 0, 0, 0, INVALIDMINIMOVE, B_none, -1 };
+    Logging::LogIt(Logging::logInfo) << "... done ";    
 }
 
 int hashFull(){
