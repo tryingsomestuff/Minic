@@ -105,8 +105,8 @@ CONST_TEXEL_TUNING EvalScore   backwardPawnMalus[8][2] = { {{  0,  0},{  0,  0}}
 CONST_TEXEL_TUNING EvalScore   detachedPawnMalus[2]    = { { -20, -2}, { -31, -6} };
 
 CONST_TEXEL_TUNING EvalScore   holesMalus              = { -2,-0};
-CONST_TEXEL_TUNING EvalScore   pieceFrontPawn          = {-15, 5};
 CONST_TEXEL_TUNING EvalScore   outpost                 = { 15,19};
+CONST_TEXEL_TUNING EvalScore   pieceFrontPawn          = {-15, 5};
 CONST_TEXEL_TUNING EvalScore   centerControl           = {  7, 3};
 CONST_TEXEL_TUNING EvalScore   knightTooFar[8]         = { {  0,  0}, { 19,  7}, { 14,  8}, {  5, 11}, {-16, 20}, { -6,  7}, {-10,  1}, {  0,  0} };
 
