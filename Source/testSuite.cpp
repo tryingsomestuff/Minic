@@ -19,6 +19,7 @@ bool test(const std::string & option){
         Logging::LogIt(Logging::logInfo) << " sbdTest";
         Logging::LogIt(Logging::logInfo) << " STS";
         Logging::LogIt(Logging::logInfo) << " MEA";
+        Logging::LogIt(Logging::logInfo) << " TTT";
         return 0;
     }
 
@@ -30,6 +31,17 @@ bool test(const std::string & option){
         std::vector<int> scores = { 1 };
 
         ExtendedPosition::test(positions,timeControls,true,true,scores,[&](int score){return int((100*score)/(30*positions.size()));},false); // % of "success"
+        return true;
+    }
+
+    if (option == "TTT") {
+        std::vector<std::string> positions;
+        if ( ! ExtendedPosition::readEPDFile("Book_and_Test/TestSuite/TTT1.epd",positions) ) return 1;
+
+        std::vector<int> timeControls = { 1000 }; //mseconds
+        std::vector<int> scores = { 1 };
+
+        ExtendedPosition::test(positions,timeControls,true,false,scores,[](int score){return score;},false);
         return true;
     }
 
