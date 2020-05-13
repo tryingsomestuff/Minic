@@ -274,8 +274,11 @@ You can use both the json configuation file or the command line argument to sele
 * 2.14 : some refactoring  
 * 2.15 : work on time management  
 * 2.16 : uci fix  
-* 2.17 : ...
-
+* 2.17 : tcec release  
+* 2.18 : threaded TT zeroing  
+* 2.19..2.23 : a lot a little optimizations and fixes  
+* 2.24 : activate contempt  
+* 2.25 : activate tempo  
 
 ## Thanks
 
