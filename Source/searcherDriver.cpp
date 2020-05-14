@@ -60,9 +60,10 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
         while(startLock.load()){;}
         Logging::LogIt(Logging::logInfo) << "... go for id " << id() ;
     }
+    //clearPawnTT(); // to be used for reproductible results ///@todo verify again
     stats.init();
     killerT.initKillers();
-    historyT.initHistory();
+    historyT.initHistory(true); // to be used for reproductible results :: false ///@todo verify again
     counterT.initCounter();
 
     stack[p.halfmoves].h = p.h;

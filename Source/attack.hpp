@@ -89,7 +89,7 @@ void initMagic();
 } // MagicBB
 
 // Next functions define the user API for piece move
-template < Piece > inline BitBoard coverage      (const Square x, const BitBoard          , const Color  ) { assert(false); return empty; }
+template < Piece > inline BitBoard coverage      (const Square  , const BitBoard          , const Color  ) { assert(false); return empty; }
 template <       > inline BitBoard coverage<P_wp>(const Square x, const BitBoard          , const Color c) { assert( x >= 0 && x < 64); return mask[x].pawnAttack[c]; }
 template <       > inline BitBoard coverage<P_wn>(const Square x, const BitBoard          , const Color  ) { assert( x >= 0 && x < 64); return mask[x].knight; }
 template <       > inline BitBoard coverage<P_wb>(const Square x, const BitBoard occupancy, const Color  ) { assert( x >= 0 && x < 64); return MAGICBISHOPATTACKS(occupancy, x); }

@@ -4,9 +4,13 @@
 #include "logging.hpp"
 #include "searcher.hpp"
 
+namespace{
+    std::unique_ptr<ThreadPool> _pool = 0;
+}
+
 ThreadPool & ThreadPool::instance(){ 
-    static ThreadPool pool; 
-    return pool;
+    if ( !_pool ) _pool.reset(new ThreadPool);
+    return *_pool;
 }
 
 ThreadPool::~ThreadPool(){ 
@@ -16,8 +20,8 @@ ThreadPool::~ThreadPool(){
 
 void ThreadPool::setup(){
     assert(DynamicConfig::threads > 0);
-    clear();
     Logging::LogIt(Logging::logInfo) << "Using " << DynamicConfig::threads << " threads";
+    resize(0);
     /*
     unsigned int maxThreads = std::max(1u,std::thread::hardware_concurrency());
     if (DynamicConfig::threads > maxThreads) {
@@ -25,9 +29,10 @@ void ThreadPool::setup(){
         DynamicConfig::threads = maxThreads;
     }
     */
-    while (size() < DynamicConfig::threads) {
+    while (size() < DynamicConfig::threads) { // init other threads (for main see below)
        push_back(std::unique_ptr<Searcher>(new Searcher(size())));
        back()->initPawnTable();
+       back()->clear();
     }
 }
 
@@ -57,13 +62,11 @@ Move ThreadPool::search(const ThreadData & d){ // distribute data and call main 
 
 void ThreadPool::startOthers(){ for (auto & s : *this) if (!(*s).isMainThread()) (*s).start();}
 
-void ThreadPool::clearPawnTT(){ for (auto & s : *this) (*s).clearPawnTT();}
+void ThreadPool::clear(){ 
+    for (auto & s : *this) (*s).clear();
+}
 
 void ThreadPool::stop(){ for (auto & s : *this) (*s).stopFlag = true;}
-
-ThreadPool::ThreadPool():std::vector<std::unique_ptr<Searcher>>(){ 
-    push_back(std::unique_ptr<Searcher>(new Searcher(size()))); // this one will be called "Main" thread (id=0)
-} 
 
 void ThreadPool::DisplayStats()const{
     for(size_t k = 0 ; k < Stats::sid_maxid ; ++k){
