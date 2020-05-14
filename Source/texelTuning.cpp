@@ -77,8 +77,10 @@ double Sigmoid(Position * p) {
 
 double E(const std::vector<Texel::TexelInput> &data, size_t miniBatchSize) {
     std::atomic<double> e(0);
+    static Counter count(0);
+    static Counter ms(0);
     std::mutex m;
-    const bool progress = false;
+    const bool progress = true;
     std::chrono::time_point<Clock> startTime = Clock::now();
 
     auto worker = [&] (size_t begin, size_t end, std::atomic<double> & acc) {
@@ -94,8 +96,13 @@ double E(const std::vector<Texel::TexelInput> &data, size_t miniBatchSize) {
     threadedWork(worker,DynamicConfig::threads,miniBatchSize, std::ref(e));
 
     if ( progress ) {
-        const int ms = (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count();
-        std::cout << " " << ms << "ms " << miniBatchSize/ms << "kps on " << DynamicConfig::threads << " threads" << std::endl;
+        count += miniBatchSize;
+        ms    += (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count();
+        if ( ms > 10000){
+           Logging::LogIt(Logging::logInfo) << ms << "ms " << count/ms << "kps on " << DynamicConfig::threads << " threads";
+           count = 0;
+           ms    = 0;
+        }
     }
     return e/miniBatchSize;
 }
@@ -611,21 +618,22 @@ void TexelTuning(const std::string & filename) {
 
     std::vector<std::string> todo = {
         //"piecesValue",
-        /*
+        
         "PST0",
         "PST1",
         "PST2",
         "PST3",
         "PST4",
         "PST5",
-        */
+
+/*        
         "mobility",
         
-/*
         "passer",
         "freePasser",
         "protectedPasser",
         "kingNearPassed",
+
         "pawnStructure1",
         "pawnStructure2",
         "pawnStructure3",
