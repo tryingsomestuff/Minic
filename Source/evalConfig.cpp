@@ -92,17 +92,17 @@ CONST_TEXEL_TUNING EvalScore   pawnShieldBonus         = { 6,-4};
 CONST_TEXEL_TUNING EvalScore   pawnFawnMalusKS         = {20, 2};
 CONST_TEXEL_TUNING EvalScore   pawnFawnMalusQS         = {-5, 2};
 // this depends on rank
-CONST_TEXEL_TUNING EvalScore   passerBonus[8]          = { { 0, 0 }, {  4,-30}, { -8, -9}, { -3, 23}, { -3, 45}, { 19, 50}, { 35, 50}, {0, 0}};
+CONST_TEXEL_TUNING EvalScore   passerBonus[8]          = { { 0, 0 }, {  6,-35}, { -9, -9}, {  3, 21}, { -3, 43}, { 13, 59}, { 28, 50}, {0, 0}};
 
 CONST_TEXEL_TUNING EvalScore   rookBehindPassed        = { -6,39};
-CONST_TEXEL_TUNING EvalScore   kingNearPassedPawn      = { -7,16};
+CONST_TEXEL_TUNING EvalScore   kingNearPassedPawn      = { -8,16};
 
 // this depends on rank (shall try file also ??)
-CONST_TEXEL_TUNING EvalScore   doublePawnMalus[8][2]   = { {{  0,  0},{  0,  0}}, {{  0,  0},{  0,  0}}, {{  7, 22},{  0, 33}}, {{ 18, 17},{  0, 34}}, {{ 21, 15},{  5, 22}}, {{ -9, -9},{ 27, 34}}, {{ 23, 13},{ 29, 25}}, {{  0,  0},{  0,  0}} }; // close semiopenfile
-CONST_TEXEL_TUNING EvalScore   isolatedPawnMalus[8][2] = { {{  0,  0},{  0,  0}}, {{ -3,  3},{  8,  1}}, {{  7, 11},{  9, 15}}, {{ -4, 10},{  6, 14}}, {{  5, 17},{-13, 24}}, {{  2, 15},{-34, 18}}, {{  9,  7},{ 10, 16}}, {{  0,  0},{  0,  0}} }; // close semiopenfile
-CONST_TEXEL_TUNING EvalScore   backwardPawnMalus[8][2] = { {{  0,  0},{  0,  0}}, {{  4,  1},{ 31, 14}}, {{ 10,  8},{ 40, 15}}, {{ 17,  7},{ 39,  6}}, {{ -9,  2},{ 31,  6}}, {{  0,  0},{  0,  0}}, {{  0,  0},{  0,  0}}, {{  0,  0},{  0,  0}} }; // close semiopenfile
+CONST_TEXEL_TUNING EvalScore   doublePawnMalus[8][2]   = { {{  0,  0},{  0,  0}}, {{  0,  0},{  0,  0}}, {{  8, 25},{ -9, 42}}, {{ 16, 20},{  1, 35}}, {{ 22, 17},{  6, 20}}, {{-12,  6},{ 26, 28}}, {{ 23, 13},{ 42, 26}}, {{  0,  0},{  0,  0}} }; // close semiopenfile
+CONST_TEXEL_TUNING EvalScore   isolatedPawnMalus[8][2] = { {{  0,  0},{  0,  0}}, {{ -3,  2},{  6, -1}}, {{  5,  9},{ 10, 15}}, {{ -2,  5},{  4, 13}}, {{  7, 14},{-26, 33}}, {{  1, 14},{-39, 26}}, {{  9,  7},{ 10,  9}}, {{  0,  0},{  0,  0}} }; // close semiopenfile
+CONST_TEXEL_TUNING EvalScore   backwardPawnMalus[8][2] = { {{  0,  0},{  0,  0}}, {{  2,  1},{ 32, 12}}, {{ 13,  3},{ 41, 12}}, {{ 18,  8},{ 46,  3}}, {{-11,  0},{ 52, -9}}, {{  0,  0},{  0,  0}}, {{  0,  0},{  0,  0}}, {{  0,  0},{  0,  0}} }; // close semiopenfile
 
-CONST_TEXEL_TUNING EvalScore   detachedPawnMalus[2]    = { { -20, -2}, { -31, -6} };
+CONST_TEXEL_TUNING EvalScore   detachedPawnMalus[2]    = { { -18, -3}, { -32, -7} };
 
 CONST_TEXEL_TUNING EvalScore   holesMalus              = { -2,-0};
 CONST_TEXEL_TUNING EvalScore   outpost                 = { 15,19};
@@ -111,13 +111,13 @@ CONST_TEXEL_TUNING EvalScore   centerControl           = {  7, 3};
 CONST_TEXEL_TUNING EvalScore   knightTooFar[8]         = { {  0,  0}, { 19,  7}, { 14,  8}, {  5, 11}, {-16, 20}, { -6,  7}, {-10,  1}, {  0,  0} };
 
 // this depends on rank
-CONST_TEXEL_TUNING EvalScore   candidate[8]            = { {0, 0}, {-18,  9}, {-13,  0}, {  8, 21}, { 37, 79}, { 34, 64}, { 34, 64}, { 0, 0} };
-CONST_TEXEL_TUNING EvalScore   protectedPasserBonus[8] = { {0, 0}, { 24, -8}, { 11,-15}, {  4, -9}, { 35,  3}, { 76, 67}, {  7, 15}, { 0, 0} };
-CONST_TEXEL_TUNING EvalScore   freePasserBonus[8]      = { {0, 0}, {  7, 13}, { -5, 16}, { -4, 25}, {-10, 57}, { -9,150}, { 51,150}, { 0, 0} };
+CONST_TEXEL_TUNING EvalScore   candidate[8]            = { {0, 0}, {-17,  4}, {-14,  7}, {  3, 23}, { 55, 56}, { 34, 64}, { 34, 64}, { 0, 0} };
+CONST_TEXEL_TUNING EvalScore   protectedPasserBonus[8] = { {0, 0}, { 24, -8}, { 12,-20}, {  1, -9}, { 39, -1}, {107, 36}, {  7, 26}, { 0, 0} };
+CONST_TEXEL_TUNING EvalScore   freePasserBonus[8]      = { {0, 0}, { 14,  9}, { -2, 11}, { -7, 28}, { -9, 57}, { -8,141}, { 52,150}, { 0, 0} };
 
-CONST_TEXEL_TUNING EvalScore   pawnMobility            = {-10, 10};
-CONST_TEXEL_TUNING EvalScore   pawnSafeAtt             = { 70, 24};
-CONST_TEXEL_TUNING EvalScore   pawnSafePushAtt         = { 26, 23};
+CONST_TEXEL_TUNING EvalScore   pawnMobility            = {-11, 10};
+CONST_TEXEL_TUNING EvalScore   pawnSafeAtt             = { 75, 28};
+CONST_TEXEL_TUNING EvalScore   pawnSafePushAtt         = { 24, 24};
 CONST_TEXEL_TUNING EvalScore   pawnlessFlank           = {-21,-30};
 CONST_TEXEL_TUNING EvalScore   pawnStormMalus          = { 21,-27};
 CONST_TEXEL_TUNING EvalScore   rookOnOpenFile          = { 45, 19};
@@ -151,12 +151,12 @@ CONST_TEXEL_TUNING EvalScore   rookPairMalus           = { 4, -4};
 CONST_TEXEL_TUNING EvalScore   queenNearKing           = { 4, 11};
 
 //N B R QB QR K
-CONST_TEXEL_TUNING EvalScore MOB[6][15] = { { { -2,-34},{  4, 16},{ 11, 29},{ 19, 29},{ 23, 30},{ 28, 37},{ 42, 27},{ 35, 46},{ 29, 47},{  0,  0},{  0,  0},{  0,  0},{  0,  0},{  0,  0},{  0,  0} },
-                                            { {-20,-13},{-14, 23},{ -4, 28},{  2, 33},{  6, 33},{  8, 35},{ 15, 32},{ 21, 31},{ 41, 25},{ 45, 36},{ 55, 37},{ 71, 65},{ 71, 56},{120, 95},{  0,  0} },
-                                            { { 23, -4},{ 19, 48},{ 21, 57},{ 24, 57},{ 18, 68},{ 21, 70},{ 22, 70},{ 23, 72},{ 33, 71},{ 45, 69},{ 57, 70},{ 56, 73},{ 48, 76},{ 57, 69},{ 72, 56} },
-                                            { {-10,-36},{ -9,  0},{  0, -3},{  2,  7},{  0, 15},{  7, 13},{  9, 21},{ 17, 41},{ 13, 13},{ 23, 47},{ 28, 50},{ 34, 24},{ 16, 32},{ 24, 87},{  0,  0} },
-                                            { {  5,-61},{  5,-12},{  8,-10},{  6,  1},{  0, 11},{  5,  9},{  5, 12},{  7, 14},{ 13, 15},{ 21, 26},{  8, 37},{ 21, 43},{ 25, 48},{ 19, 45},{ 24, 54} },
-                                            { {  5, -7},{ -9, 27},{-17, 31},{-25, 33},{-32, 29},{-29, 22},{-29, 21},{-30, 19},{-40, 11},{  0,  0},{  0,  0},{  0,  0},{  0,  0},{  0,  0},{  0,  0} } };
+CONST_TEXEL_TUNING EvalScore MOB[6][15] = { { { -5,-22},{  2, 19},{  8, 32},{ 14, 36},{ 20, 34},{ 24, 43},{ 41, 30},{ 35, 46},{ 29, 47},{  0,  0},{  0,  0},{  0,  0},{  0,  0},{  0,  0},{  0,  0} },
+                                            { {-22, -6},{-14, 21},{ -4, 28},{ -1, 32},{  3, 36},{  0, 43},{ 10, 37},{ 21, 33},{ 41, 25},{ 45, 36},{ 55, 37},{ 71, 65},{ 71, 56},{120, 95},{  0,  0} },
+                                            { { 18, 11},{ 18, 47},{ 20, 60},{ 21, 62},{ 13, 69},{ 18, 70},{ 18, 73},{ 20, 76},{ 27, 75},{ 45, 70},{ 57, 70},{ 56, 73},{ 48, 76},{ 57, 69},{ 72, 56} },
+                                            { {-15,-29},{-15, 15},{ -8, 15},{ -6, 23},{ -7, 30},{  1, 25},{  9, 22},{ 16, 41},{ 13, 13},{ 23, 47},{ 28, 50},{ 34, 24},{ 16, 32},{ 24, 87},{  0,  0} },
+                                            { {  3,-58},{  1, -7},{  5, -6},{  1,  8},{ -4, 22},{  2, 15},{  5, 14},{  7, 15},{ 13, 15},{ 21, 26},{  8, 37},{ 21, 43},{ 25, 48},{ 19, 45},{ 24, 54} },
+                                            { {  8, -1},{ -6, 27},{-12, 29},{-19, 30},{-27, 29},{-28, 21},{-29, 17},{-30, 12},{-40,  1},{  0,  0},{  0,  0},{  0,  0},{  0,  0},{  0,  0},{  0,  0} } };
 
 CONST_TEXEL_TUNING EvalScore initiative[4] = { {  1,  7}, { 59, 40}, {115, 65}, { 71, 88} };
 
