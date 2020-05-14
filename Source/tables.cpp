@@ -19,11 +19,11 @@ void KillerT::update(Move m, DepthType ply){
    }
 }
 
-void HistoryT::initHistory(){
+void HistoryT::initHistory(bool noClean){
     Logging::LogIt(Logging::logInfo) << "Init history" ;
     for(int i = 0; i < 64; ++i) for(int k = 0 ; k < 64; ++k) history[0][i][k] = history[1][i][k] = 0;
     for(int i = 0; i < 13; ++i) for(int k = 0 ; k < 64; ++k) historyP[i][k] = 0;
-    for(int i = 0; i < 13; ++i) for(int j = 0 ; j < 64; ++j) for(int k = 0 ; k < 64; ++k)  counter_history[i][j][k] = -1;
+    if (!noClean) for(int i = 0; i < 13; ++i) for(int j = 0 ; j < 64; ++j) for(int k = 0 ; k < 13*64; ++k) counter_history[i][j][k] = -1;
 }
 
 void CounterT::initCounter(){

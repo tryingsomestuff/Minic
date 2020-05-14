@@ -131,10 +131,12 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     const bool white2Play = p.c == Co_White;
     if ( p.king[Co_White] == INVALIDSQUARE ){
       STOP_AND_SUM_TIMER(Eval)
+      ++context.stats.counters[Stats::sid_evalNoKing];
       return data.gp=0,(white2Play?-1:+1)* MATE;
     }
     if ( p.king[Co_Black] == INVALIDSQUARE ) {
       STOP_AND_SUM_TIMER(Eval)
+      ++context.stats.counters[Stats::sid_evalNoKing];
       return data.gp=0,(white2Play?+1:-1)* MATE;
     }
 
@@ -188,6 +190,8 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     features.materialScore += MaterialHash::Imbalance(p.mat, Co_White) - MaterialHash::Imbalance(p.mat, Co_Black);
 #endif
 
+    STOP_AND_SUM_TIMER(Eval1)
+
     // usefull bitboards accumulator
     const BitBoard pawns[2]          = {p.whitePawn(), p.blackPawn()};
     const BitBoard allPawns          = pawns[Co_White] | pawns[Co_Black];
@@ -223,6 +227,8 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     }
 #endif
     */
+
+    STOP_AND_SUM_TIMER(Eval2)
 
     Searcher::PawnEntry * pePtr = nullptr;
 #ifdef WITH_TEXEL_TUNING
@@ -352,6 +358,8 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     att[Co_White]  |= pe.pawnTargets[Co_White];
     att[Co_Black]  |= pe.pawnTargets[Co_Black];
 
+    STOP_AND_SUM_TIMER(Eval3)
+
     /*
     // lazy evaluation 2
     lazyScore = score.Score(p,data.gp); // scale both phase and 50 moves rule
@@ -459,6 +467,8 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     // threat by safe pawn push
     features.attackScore += EvalConfig::pawnSafePushAtt * (countBit(nonPawnMat[Co_Black] & BBTools::pawnAttacks<Co_White>(safePawnPush[Co_White])) - countBit(nonPawnMat[Co_White] & BBTools::pawnAttacks<Co_Black>(safePawnPush[Co_Black])));
 
+    STOP_AND_SUM_TIMER(Eval4)
+
     // pieces mobility
     evalMob <P_wn,Co_White>(p,p.pieces_const<P_wn>(Co_White),features.mobilityScore,safeSquare[Co_White],data);
     evalMob <P_wb,Co_White>(p,p.pieces_const<P_wb>(Co_White),features.mobilityScore,safeSquare[Co_White],data);
@@ -470,6 +480,8 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     evalMob <P_wr,Co_Black>(p,p.pieces_const<P_wr>(Co_Black),features.mobilityScore,safeSquare[Co_Black],data);
     evalMobQ<     Co_Black>(p,p.pieces_const<P_wq>(Co_Black),features.mobilityScore,safeSquare[Co_Black],data);
     evalMobK<     Co_Black>(p,p.pieces_const<P_wk>(Co_Black),features.mobilityScore,~att[Co_White]      ,data);
+
+    STOP_AND_SUM_TIMER(Eval5)
 
     // rook on open file
     features.positionalScore += EvalConfig::rookOnOpenFile         * countBit(p.whiteRook() & pe.openFiles);

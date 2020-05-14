@@ -23,7 +23,7 @@ namespace COM {
         stm = stm_white;
         readFEN(startPosition, COM::position);
         TT::clearTT();
-        ThreadPool::instance().clearPawnTT(); 
+        ThreadPool::instance().clear(); // re-init all threads data
     }
 
     void init() {

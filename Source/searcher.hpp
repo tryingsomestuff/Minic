@@ -116,6 +116,8 @@ struct Searcher{
 
     void clearPawnTT();
 
+    void clear();
+
     bool getPawnEntry(Hash h, PawnEntry *& pe);
 
     void prefetchPawn(Hash h);

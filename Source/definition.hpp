@@ -38,7 +38,7 @@ typedef uint64_t u_int64_t;
 #include <unistd.h>
 #endif
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "2.27";
 
 // *** options
 #define WITH_UCI
@@ -46,7 +46,7 @@ const std::string MinicVersion = "dev";
 #define WITH_MAGIC
 #define WITH_SYZYGY
 
-#define USE_PARTIAL_SORT
+//#define USE_PARTIAL_SORT
 
 // *** Add-ons
 //#define IMPORTBOOK

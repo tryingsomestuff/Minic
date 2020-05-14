@@ -119,6 +119,14 @@ void Searcher::clearPawnTT() {
     for (unsigned int k = 0; k < ttSizePawn; ++k) tablePawn[k].h = 0;
 }
 
+void Searcher::clear(){
+     clearPawnTT();
+     stats.init();
+     killerT.initKillers();
+     historyT.initHistory();
+     counterT.initCounter();
+}
+
 bool Searcher::getPawnEntry(Hash h, PawnEntry *& pe){
     assert(h > 0);
     PawnEntry & _e = tablePawn[h&(ttSizePawn-1)];

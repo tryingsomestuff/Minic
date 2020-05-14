@@ -46,11 +46,8 @@ public:
     // gathering counter information from all threads
     Counter counter(Stats::StatId id) const;
     void DisplayStats()const;
-    void clearPawnTT();
+    void clear();
 
     TimeType currentMoveMs = 999;
-
-private:
-    ThreadPool();
 };
 

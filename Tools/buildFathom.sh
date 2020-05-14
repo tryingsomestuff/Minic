@@ -17,7 +17,7 @@ if [ -n "$1" ] ; then
    shift
 fi
 
-g++ -v
+$CC -v
 echo "version $v"
 echo "definition $d"
 echo "target $t"
@@ -31,6 +31,6 @@ lib=${lib}.o
 echo "Building $lib"
 
 OPT="-Wall -Wno-char-subscripts $d -DNDEBUG -O3 -flto $t -I."
-gcc -c $OPT tbprobe.c -o $lib
+$CC -c $OPT tbprobe.c -o $lib
 
 cd -

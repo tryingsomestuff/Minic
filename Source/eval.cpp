@@ -5,10 +5,11 @@ struct Dummy{
   Dummy(){
     Position p;
     EvalData data;
-    eval<false,false>(p,data,ThreadPool::instance().main());
-    eval<false,true >(p,data,ThreadPool::instance().main());
-    eval<true ,false>(p,data,ThreadPool::instance().main());
-    eval<true ,true >(p,data,ThreadPool::instance().main());
+    Searcher s(999);
+    eval<false,false>(p,data,s);
+    eval<false,true >(p,data,s);
+    eval<true ,false>(p,data,s);
+    eval<true ,true >(p,data,s);
   }
 };
 

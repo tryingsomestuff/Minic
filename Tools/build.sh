@@ -5,6 +5,12 @@ ulimit -s unlimited
 
 cd $dir
 
+export CXX=g++
+export CC=gcc
+
+#export CXX=clang++-10
+#export CC=clang-10
+
 FATHOM_PRESENT=0
 if [ -e Fathom/src/tbprobe.h ]; then
    FATHOM_PRESENT=1
@@ -28,7 +34,7 @@ if [ -n "$1" ] ; then
    shift
 fi
 
-g++ -v
+$CXX -v
 echo "version $v"
 echo "definition $d"
 echo "target $t"
@@ -41,7 +47,7 @@ fi
 
 echo "Building $exe"
 
-WARN="-Wall -Wcast-qual -Wno-char-subscripts -Wno-reorder -Wmaybe-uninitialized -pedantic -Wextra -Wshadow -Wfatal-errors"
+WARN="-Wall -Wcast-qual -Wno-char-subscripts -Wno-reorder -Wmaybe-uninitialized -Wuninitialized -pedantic -Wextra -Wshadow -Wfatal-errors -Wno-unknown-warning-option"
 
 OPT="-s -fno-exceptions $WARN $d -DNDEBUG -O3 $t --std=c++14" ; DEPTH=20
 #OPT="-fno-exceptions $WARN $d -DNDEBUG -O3 -g -ggdb -fno-omit-frame-pointer $t --std=c++14" ; DEPTH=20
@@ -68,14 +74,13 @@ fi
 
 rm -f *.gcda
 
-g++ -fprofile-generate $OPT Source/*.cpp -ISource -o $dir/Dist/Minic2/$exe -lpthread 
+$CXX -fprofile-generate $OPT Source/*.cpp -ISource -o $dir/Dist/Minic2/$exe -lpthread 
 echo "end of first compilation"
 if [ $? = "0" ]; then
    echo "running Minic for profiling : $dir/Dist/Minic2/$exe"
    $dir/Dist/Minic2/$exe bench $DEPTH -quiet 0 
-   #$dir/Dist/Minic2/$exe -analyze "shirov" 20 
    echo "starting optimized compilation"
-   g++ -fprofile-use $OPT Source/*.cpp -ISource -o $dir/Dist/Minic2/$exe -lpthread
+   $CXX -fprofile-use $OPT Source/*.cpp -ISource -o $dir/Dist/Minic2/$exe -lpthread
    echo "done "
 else
    echo "some error"
