@@ -16,7 +16,7 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Posi
 
     MoveList moves;
     MoveGen::generate<MoveGen::GP_cap>(p,moves);
-    MoveSorter::sort(*this,moves,p,data.gp,ply,cmhPtr,true);
+    MoveSorter::scoreAndSort(*this,moves,p,data.gp,ply,cmhPtr,true);
 
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         Position p2 = p;
