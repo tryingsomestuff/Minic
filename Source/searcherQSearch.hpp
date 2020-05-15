@@ -83,13 +83,19 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
     else             MoveGen::generate<MoveGen::GP_cap>(p,moves);
     CMHPtrArray cmhPtr;
     getCMHPtr(p.halfmoves,cmhPtr);
-    MoveSorter::sort(*this,moves,p,data.gp,ply,cmhPtr,false,isInCheck,e.h?&e:NULL); ///@todo warning gp is often = 0 here !
 
     const ScoreType alphaInit = alpha;
 
     int validMoveCount = 0;
-
+#ifdef USE_PARTIAL_SORT
+    MoveSorter::score(*this,moves,p,data.gp,ply,cmhPtr,false,isInCheck,e.h?&e:NULL); ///@todo warning gp is often = 0 here !
+    size_t offset = 0;
+    const Move * it = nullptr;
+    while( (it = MoveSorter::pickNext(moves,offset))){
+#else
+    MoveSorter::scoreAndSort(*this,moves,p,data.gp,ply,cmhPtr,false,isInCheck,e.h?&e:NULL); ///@todo warning gp is often = 0 here !
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
+#endif
         if (!isInCheck) {
             if (!SEE_GE(p,*it,0)) {++stats.counters[Stats::sid_qsee];continue;}
             if (SearchConfig::doQFutility && evalScore + SearchConfig::qfutilityMargin[evalScoreIsHashScore] + (Move2Type(*it)==T_ep ? Values[P_wp+PieceShift] : PieceTools::getAbsValue(p, Move2To(*it))) <= alphaInit) {++stats.counters[Stats::sid_qfutility];continue;}

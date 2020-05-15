@@ -175,10 +175,17 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
           ++stats.counters[Stats::sid_probcutTry];
           int probCutCount = 0;
           const ScoreType betaPC = beta + SearchConfig::probCutMargin;
-          MoveGen::generate<MoveGen::GP_cap>(p,moves);
-          MoveSorter::sort(*this,moves,p,data.gp,ply,cmhPtr,true,isInCheck,e.h?&e:NULL);
           capMoveGenerated = true;
+          MoveGen::generate<MoveGen::GP_cap>(p,moves);
+#ifdef USE_PARTIAL_SORT
+          MoveSorter::score(*this,moves,p,data.gp,ply,cmhPtr,true,isInCheck,e.h?&e:NULL);
+          size_t offset = 0;
+          const Move * it = nullptr;
+          while( (it = MoveSorter::pickNext(moves,offset)) && probCutCount < SearchConfig::probCutMaxMoves /*+ 2*cutNode*/){
+#else
+          MoveSorter::scoreAndSort(*this,moves,p,data.gp,ply,cmhPtr,true,isInCheck,e.h?&e:NULL);
           for (auto it = moves.begin() ; it != moves.end() && probCutCount < SearchConfig::probCutMaxMoves /*+ 2*cutNode*/; ++it){
+#endif
             if ( (validTTmove && sameMove(e.m, *it)) || isBadCap(*it) ) continue; // skip TT move if quiet or bad captures
             Position p2 = p;
             if ( ! apply(p2,*it) ) continue;
@@ -327,9 +334,16 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         else                  MoveGen::generate<MoveGen::GP_all>  (p, moves, false);
     }
     if (moves.empty()) return isInCheck ? -MATE + ply : 0;
-    MoveSorter::sort(*this, moves, p, data.gp, ply, cmhPtr, true, isInCheck, e.h?&e:NULL, refutation != INVALIDMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMOVE);
 
+#ifdef USE_PARTIAL_SORT
+    MoveSorter::score(*this, moves, p, data.gp, ply, cmhPtr, true, isInCheck, e.h?&e:NULL, refutation != INVALIDMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMOVE);
+    size_t offset = 0;
+    const Move * it = nullptr;
+    while( (it = MoveSorter::pickNext(moves,offset)) && !stopFlag){
+#else
+    MoveSorter::scoreAndSort(*this, moves, p, data.gp, ply, cmhPtr, true, isInCheck, e.h?&e:NULL, refutation != INVALIDMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMOVE);
     for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
+#endif
         if (isSkipMove(*it,skipMoves)) continue; // skipmoves
         if (validTTmove && sameMove(e.m, *it)) continue; // already tried
         Position p2 = p;

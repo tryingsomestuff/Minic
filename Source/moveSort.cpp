@@ -51,12 +51,13 @@ void MoveSorter::computeScore(Move & m)const{
             else if (VALIDMOVE(p.lastMove) && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 1650; // quiet counter
             else {
                 ///@todo give another try to tune those !
+                const Piece pp = PieceTools::getPieceIndex(p,from);
                 s += context.historyT.history[p.c][from][to] /3; // +/- HISTORY_MAX = 1000
-                s += context.historyT.historyP[p.board_const(from)+PieceShift][to] /3 ; // +/- HISTORY_MAX = 1000
+                s += context.historyT.historyP[pp][to] /3 ; // +/- HISTORY_MAX = 1000
                 s += context.getCMHScore(p, from, to, cmhPtr) /3; // +/- HISTORY_MAX = 1000
                 if ( !isInCheck ){
                    if ( refutation != INVALIDMOVE && from == Move2To(refutation) && context.SEE_GE(p,m,-70)) s += 1000; // move (safely) leaving threat square from null move search
-                   const EvalScore * const  pst = EvalConfig::PST[PieceTools::getPieceType(p, from) - 1];
+                   const EvalScore * const  pst = EvalConfig::PST[std::abs(pp) - 1];
                    s += ScaleScore(pst[ColorSquarePstHelper<C>(to)] - pst[ColorSquarePstHelper<C>(from)],gp);
                 }
             }
@@ -65,22 +66,39 @@ void MoveSorter::computeScore(Move & m)const{
     m = ToMove(from, to, t, s);
 }
 
-void MoveSorter::sort(const Searcher & context, MoveList & moves, const Position & p, float gp, DepthType ply, const CMHPtrArray & cmhPtr, bool useSEE, bool isInCheck, const TT::Entry * e, const Move refutation){
-        START_TIMER
-        if ( moves.size() < 2) return;
-        const MoveSorter ms(context,p,gp,ply,cmhPtr,useSEE,isInCheck,e,refutation);
-        if ( p.c == Co_White ){
-           for(auto it = moves.begin() ; it != moves.end() ; ++it){ 
-              ms.computeScore<Co_White>(*it); 
-           }
-        }
-        else{
-           for(auto it = moves.begin() ; it != moves.end() ; ++it){ 
-              ms.computeScore<Co_Black>(*it); 
-           }
-        }
-        std::sort(moves.begin(),moves.end(),ms);
-        STOP_AND_SUM_TIMER(MoveSorting)
+void MoveSorter::score(const Searcher & context, MoveList & moves, const Position & p, float gp, DepthType ply, const CMHPtrArray & cmhPtr, bool useSEE, bool isInCheck, const TT::Entry * e, const Move refutation){
+    START_TIMER
+    if ( moves.size() < 2) return;
+    const MoveSorter ms(context,p,gp,ply,cmhPtr,useSEE,isInCheck,e,refutation);
+    if ( p.c == Co_White ){
+       for(auto it = moves.begin() ; it != moves.end() ; ++it){ 
+          ms.computeScore<Co_White>(*it); 
+       }
+    }
+    else{
+       for(auto it = moves.begin() ; it != moves.end() ; ++it){ 
+          ms.computeScore<Co_Black>(*it); 
+       }
+    }
+    STOP_AND_SUM_TIMER(MoveScoring)
 }
 
+void MoveSorter::scoreAndSort(const Searcher & context, MoveList & moves, const Position & p, float gp, DepthType ply, const CMHPtrArray & cmhPtr, bool useSEE, bool isInCheck, const TT::Entry * e, const Move refutation){
+   score(context,moves,p,gp,ply,cmhPtr,useSEE,isInCheck,e,refutation);
+   sort(moves);
+}
 
+void MoveSorter::sort(MoveList & moves){
+    START_TIMER
+    std::sort(moves.begin(),moves.end(),MoveSortOperator());
+    STOP_AND_SUM_TIMER(MoveSorting)
+}
+
+const Move * MoveSorter::pickNext(MoveList & moves, size_t & begin){
+    if ( moves.begin()+begin == moves.end()) return nullptr;
+    START_TIMER
+    auto it = std::min_element(moves.begin()+begin,moves.end(),MoveSortOperator());
+    std::iter_swap(moves.begin()+begin,it);
+    STOP_AND_SUM_TIMER(MoveSorting)
+    return &*(moves.begin()+(begin++)); // increment begin !
+}

@@ -11,6 +11,14 @@
  * will give each move a score. After that, sort is called on the MoveList
  * */
 
+struct MoveSortOperator{
+    inline bool operator()(const Move & a, const Move & b)const{
+      assert( a != INVALIDMOVE);
+      assert( b != INVALIDMOVE);
+      return Move2Score(a) > Move2Score(b);
+    }
+};
+
 struct MoveSorter{
 
     MoveSorter(const Searcher & _context, const Position & _p, float _gp, DepthType _ply, 
@@ -23,12 +31,6 @@ struct MoveSorter{
     template<Color C>
     void computeScore(Move & m)const;
 
-    inline bool operator()(const Move & a, const Move & b)const{
-      assert( a != INVALIDMOVE);
-      assert( b != INVALIDMOVE);
-      return Move2Score(a) > Move2Score(b);
-    }
-
     const Position & p;
     const TT::Entry * e;
     const Searcher & context;
@@ -39,5 +41,8 @@ struct MoveSorter{
     const CMHPtrArray & cmhPtr;
     float gp;
 
-    static void sort(const Searcher & context, MoveList & moves, const Position & p, float gp, DepthType ply, const CMHPtrArray & cmhPtr, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL, const Move refutation = INVALIDMOVE);
+    static void score(const Searcher & context, MoveList & moves, const Position & p, float gp, DepthType ply, const CMHPtrArray & cmhPtr, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL, const Move refutation = INVALIDMOVE);
+    static void scoreAndSort(const Searcher & context, MoveList & moves, const Position & p, float gp, DepthType ply, const CMHPtrArray & cmhPtr, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL, const Move refutation = INVALIDMOVE);
+    static void sort(MoveList & moves);
+    static const Move * pickNext(MoveList & moves, size_t & begin);
 };
