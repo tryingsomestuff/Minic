@@ -63,8 +63,8 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
     //clearPawnTT(); // to be used for reproductible results ///@todo verify again
     stats.init();
     killerT.initKillers();
-    historyT.initHistory(true); // to be used for reproductible results :: false ///@todo verify again
-    counterT.initCounter();
+    historyT.initHistory(true); // to be used for reproductible results :: false but this is a lot weaker, around 30 Elo !!!
+    counterT.initCounter(); ///@todo verify without ?
 
     stack[p.halfmoves].h = p.h;
 
