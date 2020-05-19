@@ -47,15 +47,15 @@ Starting from release 1.00 Minic support setting options using protocol (both XB
 
 ### CCRL
 Minic 2.00 is tested at 2975 on the CCRL 40/15 scale (http://ccrl.chessdom.com/ccrl/4040/)  
-Minic 2.00 is tested at 3140 on the CCRL BLITZ 4CPU scale (http://ccrl.chessdom.com/ccrl/404/).  
-Minic 1.51 is tested at 3007 on the CCRL BLITZ 1CPU scale (http://ccrl.chessdom.com/ccrl/404/).  
+Minic 2.00 is tested at 3137 on the CCRL BLITZ 4CPU scale (http://ccrl.chessdom.com/ccrl/404/).  
+Minic 2.07 is tested at 3020 on the CCRL BLITZ 1CPU scale (http://ccrl.chessdom.com/ccrl/404/).  
 Minic 2.21 is tested at 3000 on the CCRL FRC list (http://ccrl.chessdom.com/ccrl/404FRC/)  
 
 ### CEGT
-Minic 1.54 is tested at 2894 on the CEGT 40/4 list (http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
-Minic 1.35 is tested at 3034 on the CEGT 40/4 MP list (http://www.cegt.net/40_4_Ratinglist/40_4_mp/rangliste.html)  
+Minic 2.07 is tested at 2911 on the CEGT 40/4 list (http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
+Minic 1.35 is tested at 3034 on the CEGT 40/4 MP8CPU list (http://www.cegt.net/40_4_Ratinglist/40_4_mp/rangliste.html)  
 Minic 1.35 is tested at 2877 on the CEGT 5+3 PB=ON list (http://www.cegt.net/5Plus3Rating/BestVersionsNEW/rangliste.html)  
-Minic 2.11 is tested at 2889 on the CEGT 40/15 list (http://www.cegt.net/40_40%20Rating%20List/40_40%20SingleVersion/rangliste.html)  
+Minic 2.11 is tested at 2890 on the CEGT 40/15 list (http://www.cegt.net/40_40%20Rating%20List/40_40%20SingleVersion/rangliste.html)  
 
 ### FGRL
 Minic 2.00 is tested at 2800 on the fastgm 60sec+0.6sec rating list (http://www.fastgm.de/60-0.60.html)  
