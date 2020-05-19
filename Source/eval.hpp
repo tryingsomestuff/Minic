@@ -274,12 +274,6 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
        evalPawnCandidate<Co_Black>(candidates[Co_Black],pe.score);
        ///@todo hidden passed
 
-       // detached pawn (not backward)
-       pe.score += EvalConfig::detachedPawnMalus[EvalConfig::Close]    * countBit(detached[Co_White] &~semiOpenPawn[Co_White] & ~backward[Co_White]);
-       pe.score -= EvalConfig::detachedPawnMalus[EvalConfig::Close]    * countBit(detached[Co_Black] &~semiOpenPawn[Co_Black] & ~backward[Co_Black]);
-       pe.score += EvalConfig::detachedPawnMalus[EvalConfig::SemiOpen] * countBit(detached[Co_White] & semiOpenPawn[Co_White] & ~backward[Co_White]);
-       pe.score -= EvalConfig::detachedPawnMalus[EvalConfig::SemiOpen] * countBit(detached[Co_Black] & semiOpenPawn[Co_Black] & ~backward[Co_Black]);
-
        // bad pawns
        const BitBoard backwardOpenW  = backward[Co_White] &  semiOpenPawn[Co_White];
        const BitBoard backwardCloseW = backward[Co_White] & ~semiOpenPawn[Co_White];
@@ -292,27 +286,37 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
        const BitBoard isolatedOpenW  = isolated[Co_White] &  semiOpenPawn[Co_White];
        const BitBoard isolatedCloseW = isolated[Co_White] & ~semiOpenPawn[Co_White];
        const BitBoard isolatedOpenB  = isolated[Co_Black] &  semiOpenPawn[Co_Black];
-       const BitBoard isolatedCloseB = isolated[Co_Black] & ~semiOpenPawn[Co_Black];       
-       for (Rank r = Rank_1 ; r <= Rank_8 ; ++r){
-         const int ir = r-1;
+       const BitBoard isolatedCloseB = isolated[Co_Black] & ~semiOpenPawn[Co_Black];   
+       const BitBoard detachedOpenW  = detached[Co_White] &  semiOpenPawn[Co_White] & ~backward[Co_White];
+       const BitBoard detachedCloseW = detached[Co_White] & ~semiOpenPawn[Co_White] & ~backward[Co_White];   
+       const BitBoard detachedOpenB  = detached[Co_Black] &  semiOpenPawn[Co_Black] & ~backward[Co_Black];
+       const BitBoard detachedCloseB = detached[Co_Black] & ~semiOpenPawn[Co_Black] & ~backward[Co_Black];   
+       for (Rank r = Rank_1 ; r <= Rank_8 ; ++r){ // simply r2..r7 for classic chess will work
          // pawn backward  
-         pe.score -= EvalConfig::backwardPawnMalus[ir][EvalConfig::Close]      * countBit(backwardCloseW & ranks[ir]);
-         pe.score -= EvalConfig::backwardPawnMalus[ir][EvalConfig::SemiOpen]   * countBit(backwardOpenW  & ranks[ir]);
+         pe.score -= EvalConfig::backwardPawn[r][EvalConfig::Close]      * countBit(backwardCloseW & ranks[r]);
+         pe.score -= EvalConfig::backwardPawn[r][EvalConfig::SemiOpen]   * countBit(backwardOpenW  & ranks[r]);
          // double pawn malus
-         pe.score -= EvalConfig::doublePawnMalus[ir][EvalConfig::Close]        * countBit(doubledCloseW & ranks[ir]);
-         pe.score -= EvalConfig::doublePawnMalus[ir][EvalConfig::SemiOpen]     * countBit(doubledOpenW  & ranks[ir]);
+         pe.score -= EvalConfig::doublePawn[r][EvalConfig::Close]        * countBit(doubledCloseW  & ranks[r]);
+         pe.score -= EvalConfig::doublePawn[r][EvalConfig::SemiOpen]     * countBit(doubledOpenW   & ranks[r]);
          // isolated pawn malus
-         pe.score -= EvalConfig::isolatedPawnMalus[ir][EvalConfig::Close]      * countBit(isolatedCloseW & ranks[ir]);
-         pe.score -= EvalConfig::isolatedPawnMalus[ir][EvalConfig::SemiOpen]   * countBit(isolatedOpenW  & ranks[ir]);
+         pe.score -= EvalConfig::isolatedPawn[r][EvalConfig::Close]      * countBit(isolatedCloseW & ranks[r]);
+         pe.score -= EvalConfig::isolatedPawn[r][EvalConfig::SemiOpen]   * countBit(isolatedOpenW  & ranks[r]);
+         // detached pawn (not backward)
+         pe.score -= EvalConfig::detachedPawn[r][EvalConfig::Close]      * countBit(detachedCloseW & ranks[r]);
+         pe.score -= EvalConfig::detachedPawn[r][EvalConfig::SemiOpen]   * countBit(detachedOpenW  & ranks[r]);
+
          // pawn backward  
-         pe.score += EvalConfig::backwardPawnMalus[7-ir][EvalConfig::Close]    * countBit(backwardCloseB & ranks[ir]);
-         pe.score += EvalConfig::backwardPawnMalus[7-ir][EvalConfig::SemiOpen] * countBit(backwardOpenB  & ranks[ir]);
+         pe.score += EvalConfig::backwardPawn[7-r][EvalConfig::Close]    * countBit(backwardCloseB & ranks[r]);
+         pe.score += EvalConfig::backwardPawn[7-r][EvalConfig::SemiOpen] * countBit(backwardOpenB  & ranks[r]);
          // double pawn malus
-         pe.score += EvalConfig::doublePawnMalus[7-ir][EvalConfig::Close]      * countBit(doubledCloseB & ranks[ir]);
-         pe.score += EvalConfig::doublePawnMalus[7-ir][EvalConfig::SemiOpen]   * countBit(doubledOpenB  & ranks[ir]);
+         pe.score += EvalConfig::doublePawn[7-r][EvalConfig::Close]      * countBit(doubledCloseB  & ranks[r]);
+         pe.score += EvalConfig::doublePawn[7-r][EvalConfig::SemiOpen]   * countBit(doubledOpenB   & ranks[r]);
          // isolated pawn malus
-         pe.score += EvalConfig::isolatedPawnMalus[7-ir][EvalConfig::Close]    * countBit(isolatedCloseB & ranks[ir]);
-         pe.score += EvalConfig::isolatedPawnMalus[7-ir][EvalConfig::SemiOpen] * countBit(isolatedOpenB  & ranks[ir]);       
+         pe.score += EvalConfig::isolatedPawn[7-r][EvalConfig::Close]    * countBit(isolatedCloseB & ranks[r]);
+         pe.score += EvalConfig::isolatedPawn[7-r][EvalConfig::SemiOpen] * countBit(isolatedOpenB  & ranks[r]);       
+         // detached pawn (not backward)
+         pe.score += EvalConfig::detachedPawn[7-r][EvalConfig::Close]    * countBit(detachedCloseB & ranks[r]);
+         pe.score += EvalConfig::detachedPawn[7-r][EvalConfig::SemiOpen] * countBit(detachedOpenB  & ranks[r]);
        }
 
        // pawn shield (PST and king troppism alone is not enough)

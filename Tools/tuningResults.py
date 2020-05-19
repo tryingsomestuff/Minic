@@ -30,6 +30,8 @@ for f in features:
             os.system("python ./Tools/PawnStr1.py \"" + ll + "\"")
         elif "pawnStructure3" in f:
             os.system("python ./Tools/PawnStr1.py \"" + ll + "\"")
+        elif "pawnStructure4" in f:
+            os.system("python ./Tools/PawnStr1.py \"" + ll + "\"")
         elif "attDefKing" in f:
             o = ""
             v = ll.split(';')[1:-1]

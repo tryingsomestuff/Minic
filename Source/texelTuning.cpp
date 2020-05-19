@@ -443,25 +443,26 @@ void TexelTuning(const std::string & filename) {
     guess["center"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::centerControl[EG],-150,550,"centerEG"));
 
     for (int r = 0 ; r < 8 ; ++r){
-      guess["pawnStructure1"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::doublePawnMalus  [r][0][MG], -150,550,  "doublePawnMalus    " + std::to_string(r) + "0"));
-      guess["pawnStructure1"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::doublePawnMalus  [r][0][EG], -150,550,  "doublePawnMalusEG  " + std::to_string(r) + "0"));
-      guess["pawnStructure1"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::doublePawnMalus  [r][1][MG], -150, 550, "doublePawnMalus    " + std::to_string(r) + "1"));
-      guess["pawnStructure1"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::doublePawnMalus  [r][1][EG], -150, 550, "doublePawnMalusEG  " + std::to_string(r) + "1"));
+      guess["pawnStructure1"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::doublePawn  [r][0][MG], -150,550,  "doublePawn    " + std::to_string(r) + "0"));
+      guess["pawnStructure1"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::doublePawn  [r][0][EG], -150,550,  "doublePawnEG  " + std::to_string(r) + "0"));
+      guess["pawnStructure1"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::doublePawn  [r][1][MG], -150, 550, "doublePawn    " + std::to_string(r) + "1"));
+      guess["pawnStructure1"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::doublePawn  [r][1][EG], -150, 550, "doublePawnEG  " + std::to_string(r) + "1"));
 
-      guess["pawnStructure2"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::isolatedPawnMalus[r][0][MG], -150,550,  "isolatedPawnMalus  " + std::to_string(r) + "0"));
-      guess["pawnStructure2"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::isolatedPawnMalus[r][0][EG], -150,550,  "isolatedPawnMalusEG" + std::to_string(r) + "0"));
-      guess["pawnStructure2"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::isolatedPawnMalus[r][1][MG], -150, 550, "isolatedPawnMalus  " + std::to_string(r) + "1"));
-      guess["pawnStructure2"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::isolatedPawnMalus[r][1][EG], -150, 550, "isolatedPawnMalusEG" + std::to_string(r) + "1"));
+      guess["pawnStructure2"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::isolatedPawn[r][0][MG], -150,550,  "isolatedPawn  " + std::to_string(r) + "0"));
+      guess["pawnStructure2"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::isolatedPawn[r][0][EG], -150,550,  "isolatedPawnEG" + std::to_string(r) + "0"));
+      guess["pawnStructure2"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::isolatedPawn[r][1][MG], -150, 550, "isolatedPawn  " + std::to_string(r) + "1"));
+      guess["pawnStructure2"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::isolatedPawn[r][1][EG], -150, 550, "isolatedPawnEG" + std::to_string(r) + "1"));
 
-      guess["pawnStructure3"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::backwardPawnMalus[r][0][MG], -150, 550, "backwardPawnMalus  " + std::to_string(r) + "0"));
-      guess["pawnStructure3"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::backwardPawnMalus[r][0][EG], -150, 550, "backwardPawnMalusEG" + std::to_string(r) + "0"));
-      guess["pawnStructure3"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::backwardPawnMalus[r][1][MG], -150, 550, "backwardPawnMalus  " + std::to_string(r) + "1"));
-      guess["pawnStructure3"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::backwardPawnMalus[r][1][EG], -150, 550, "backwardPawnMalusEG" + std::to_string(r) + "1"));
+      guess["pawnStructure3"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::backwardPawn[r][0][MG], -150, 550, "backwardPawn  " + std::to_string(r) + "0"));
+      guess["pawnStructure3"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::backwardPawn[r][0][EG], -150, 550, "backwardPawnEG" + std::to_string(r) + "0"));
+      guess["pawnStructure3"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::backwardPawn[r][1][MG], -150, 550, "backwardPawn  " + std::to_string(r) + "1"));
+      guess["pawnStructure3"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::backwardPawn[r][1][EG], -150, 550, "backwardPawnEG" + std::to_string(r) + "1"));
+
+      guess["pawnStructure4"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::detachedPawn[r][0][MG], -150, 550, "detachedPawn  " + std::to_string(r) + "0"));
+      guess["pawnStructure4"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::detachedPawn[r][0][EG], -150, 550, "detachedPawnEG" + std::to_string(r) + "0"));
+      guess["pawnStructure4"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::detachedPawn[r][1][MG], -150, 550, "detachedPawn  " + std::to_string(r) + "1"));
+      guess["pawnStructure4"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::detachedPawn[r][1][EG], -150, 550, "detachedPawnEG" + std::to_string(r) + "1"));
     }
-    guess["pawnStructure4"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::detachedPawnMalus[0][MG], -150, 550, "detachedPawnMalusMG0"));
-    guess["pawnStructure4"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::detachedPawnMalus[0][EG], -150, 550, "detachedPawnMalusEG0"));
-    guess["pawnStructure4"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::detachedPawnMalus[1][MG], -150, 550, "detachedPawnMalusMG1"));
-    guess["pawnStructure4"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::detachedPawnMalus[1][EG], -150, 550, "detachedPawnMalusEG1"));
   
     guess["shield"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnShieldBonus[MG]     ,-150,550,"pawnShieldBonus0"));
     guess["shield"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnShieldBonus[EG]     ,-150,550,"pawnShieldBonus1"));
@@ -619,15 +620,16 @@ void TexelTuning(const std::string & filename) {
     std::vector<std::string> todo = {
         //"piecesValue",
         
+        /*
         "PST0",
         "PST1",
         "PST2",
         "PST3",
         "PST4",
         "PST5",
+        */
 
-/*        
-        "mobility",
+        //"mobility",
         
         "passer",
         "freePasser",
@@ -643,6 +645,14 @@ void TexelTuning(const std::string & filename) {
         "pawnMob",
         "pawnAtt",
 
+        "holes",
+        "center",
+
+        "shield",
+        "Fawn",
+        "storm",
+
+        /*
         "rookBehindPassed",
         "rookFrontKing",
         "rookFrontQueen",
@@ -655,11 +665,8 @@ void TexelTuning(const std::string & filename) {
         "adjustB",
         "badBishop",
 
-        "shield",
         "queenNearKing",
 
-        "holes",
-        "center",
         "pieceBlocking",
         "minorOnOpen",
         "knightTooFar",
@@ -681,9 +688,6 @@ void TexelTuning(const std::string & filename) {
         "rookThreat",
 
         //"safeChecks",
-
-        "Fawn",
-        "storm",
 
         "tempo"
 */

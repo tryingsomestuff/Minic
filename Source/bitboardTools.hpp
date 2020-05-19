@@ -110,7 +110,7 @@ template<Color C> inline constexpr BitBoard pawnCandidates(BitBoard own, BitBoar
 }
 
 template<Color C> inline constexpr BitBoard pawnUndefendable(BitBoard own, BitBoard other) {
-    return own & ~pawnAttacks<C>(fillForwardOccluded<C>(own, ~other)) & advancedRanks[C];
+    return own & ~pawnAttacks<C>(fillForwardOccluded<C>(own, ~other)) & advancedRanks;
 }
 
 inline constexpr BitBoard pawnAlone(BitBoard b) {

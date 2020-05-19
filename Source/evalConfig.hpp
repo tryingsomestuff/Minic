@@ -23,10 +23,10 @@ extern CONST_TEXEL_TUNING EvalScore   rookBehindPassed       ;
 extern CONST_TEXEL_TUNING EvalScore   kingNearPassedPawn     ;
 enum PawnEvalSemiOpen{ Close=0, SemiOpen=1};
 ///@todo make this depends on file! (/rank?)
-extern CONST_TEXEL_TUNING EvalScore   doublePawnMalus[8][2]  ;
-extern CONST_TEXEL_TUNING EvalScore   isolatedPawnMalus[8][2];
-extern CONST_TEXEL_TUNING EvalScore   backwardPawnMalus[8][2];
-extern CONST_TEXEL_TUNING EvalScore   detachedPawnMalus[2]   ;
+extern CONST_TEXEL_TUNING EvalScore   doublePawn[8][2]       ;
+extern CONST_TEXEL_TUNING EvalScore   isolatedPawn[8][2]     ;
+extern CONST_TEXEL_TUNING EvalScore   backwardPawn[8][2]     ;
+extern CONST_TEXEL_TUNING EvalScore   detachedPawn[8][2]     ;
 extern CONST_TEXEL_TUNING EvalScore   holesMalus             ;
 extern CONST_TEXEL_TUNING EvalScore   pieceFrontPawn         ;
 extern CONST_TEXEL_TUNING EvalScore   outpost                ;

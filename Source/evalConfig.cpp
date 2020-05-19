@@ -89,37 +89,36 @@ CONST_TEXEL_TUNING EvalScore PST[6][64] = {
 ///@todo make more things depend on rank/file ???
 
 CONST_TEXEL_TUNING EvalScore   pawnShieldBonus         = { 6,-4};
-CONST_TEXEL_TUNING EvalScore   pawnFawnMalusKS         = {20, 2};
-CONST_TEXEL_TUNING EvalScore   pawnFawnMalusQS         = {-5, 2};
+CONST_TEXEL_TUNING EvalScore   pawnFawnMalusKS         = {21,-5};
+CONST_TEXEL_TUNING EvalScore   pawnFawnMalusQS         = {-6, 3};
 // this depends on rank
-CONST_TEXEL_TUNING EvalScore   passerBonus[8]          = { { 0, 0 }, {  6,-35}, { -9, -9}, {  3, 21}, { -3, 43}, { 13, 59}, { 28, 50}, {0, 0}};
+CONST_TEXEL_TUNING EvalScore   passerBonus[8]          = { { 0, 0 }, {  4,-33}, { -9, -2}, { -5, 21}, {-20, 52}, { 10, 68}, { 26, 51}, {0, 0}};
 
 CONST_TEXEL_TUNING EvalScore   rookBehindPassed        = { -6,39};
 CONST_TEXEL_TUNING EvalScore   kingNearPassedPawn      = { -8,16};
 
 // this depends on rank (shall try file also ??)
-CONST_TEXEL_TUNING EvalScore   doublePawnMalus[8][2]   = { {{  0,  0},{  0,  0}}, {{  0,  0},{  0,  0}}, {{  8, 25},{ -9, 42}}, {{ 16, 20},{  1, 35}}, {{ 22, 17},{  6, 20}}, {{-12,  6},{ 26, 28}}, {{ 23, 13},{ 42, 26}}, {{  0,  0},{  0,  0}} }; // close semiopenfile
-CONST_TEXEL_TUNING EvalScore   isolatedPawnMalus[8][2] = { {{  0,  0},{  0,  0}}, {{ -3,  2},{  6, -1}}, {{  5,  9},{ 10, 15}}, {{ -2,  5},{  4, 13}}, {{  7, 14},{-26, 33}}, {{  1, 14},{-39, 26}}, {{  9,  7},{ 10,  9}}, {{  0,  0},{  0,  0}} }; // close semiopenfile
-CONST_TEXEL_TUNING EvalScore   backwardPawnMalus[8][2] = { {{  0,  0},{  0,  0}}, {{  2,  1},{ 32, 12}}, {{ 13,  3},{ 41, 12}}, {{ 18,  8},{ 46,  3}}, {{-11,  0},{ 52, -9}}, {{  0,  0},{  0,  0}}, {{  0,  0},{  0,  0}}, {{  0,  0},{  0,  0}} }; // close semiopenfile
+CONST_TEXEL_TUNING EvalScore   doublePawn[8][2]   = { {{  0,  0},{  0,  0}}, {{  0,  0},{  0,  0}}, {{  6, 29},{ -2, 38}}, {{ 14, 22},{  3, 31}}, {{ 21, 22},{ 11, 16}}, {{-10,  3},{ 26, 26}}, {{ 23, 13},{ 45, 26}}, {{  0,  0},{  0,  0}} }; // close semiopenfile
+CONST_TEXEL_TUNING EvalScore   isolatedPawn[8][2] = { {{  0,  0},{  0,  0}}, {{ 14,  2},{ 35, 10}}, {{  0,  7},{  2, 12}}, {{ -3,  1},{  0, 12}}, {{  8, -5},{-21, 37}}, {{ -1, 20},{-42, 12}}, {{  9,  7},{ 10,  7}}, {{  0,  0},{  0,  0}} }; // close semiopenfile
+CONST_TEXEL_TUNING EvalScore   backwardPawn[8][2] = { {{  0,  0},{  0,  0}}, {{  3, -4},{ 29, 15}}, {{ 10,  6},{ 41, 17}}, {{ 15, 10},{ 39,  6}}, {{-11,  1},{ 47, -5}}, {{  0,  0},{  0,  0}}, {{  0,  0},{  0,  0}}, {{  0,  0},{  0,  0}} }; // close semiopenfile
+CONST_TEXEL_TUNING EvalScore   detachedPawn[8][2] = { {{  0,  0},{  0,  0}}, {{  0,  0},{  0,  0}}, {{ 24,  3},{ 40, 12}}, {{ 19, 10},{ 29,  7}}, {{ 11, 28},{ 14,  4}}, {{-14, -3},{  2, 21}}, {{  0,  0},{  0,  0}}, {{  0,  0},{  0,  0}} }; // close semiopenfile
 
-CONST_TEXEL_TUNING EvalScore   detachedPawnMalus[2]    = { { -18, -3}, { -32, -7} };
-
-CONST_TEXEL_TUNING EvalScore   holesMalus              = { -2,-0};
-CONST_TEXEL_TUNING EvalScore   outpost                 = { 15,19};
+CONST_TEXEL_TUNING EvalScore   holesMalus              = { -3, 1};
+CONST_TEXEL_TUNING EvalScore   outpost                 = { 17,18};
 CONST_TEXEL_TUNING EvalScore   pieceFrontPawn          = {-15, 5};
 CONST_TEXEL_TUNING EvalScore   centerControl           = {  7, 3};
 CONST_TEXEL_TUNING EvalScore   knightTooFar[8]         = { {  0,  0}, { 19,  7}, { 14,  8}, {  5, 11}, {-16, 20}, { -6,  7}, {-10,  1}, {  0,  0} };
 
 // this depends on rank
-CONST_TEXEL_TUNING EvalScore   candidate[8]            = { {0, 0}, {-17,  4}, {-14,  7}, {  3, 23}, { 55, 56}, { 34, 64}, { 34, 64}, { 0, 0} };
-CONST_TEXEL_TUNING EvalScore   protectedPasserBonus[8] = { {0, 0}, { 24, -8}, { 12,-20}, {  1, -9}, { 39, -1}, {107, 36}, {  7, 26}, { 0, 0} };
-CONST_TEXEL_TUNING EvalScore   freePasserBonus[8]      = { {0, 0}, { 14,  9}, { -2, 11}, { -7, 28}, { -9, 57}, { -8,141}, { 52,150}, { 0, 0} };
+CONST_TEXEL_TUNING EvalScore   candidate[8]            = { {0, 0}, {-16,  4}, {-13, 11}, {  5, 29}, { 58, 57}, { 34, 64}, { 34, 64}, { 0, 0} };
+CONST_TEXEL_TUNING EvalScore   protectedPasserBonus[8] = { {0, 0}, { 24, -8}, { 10,-15}, {  3, -4}, { 53, -5}, {111, 30}, {  7, 30}, { 0, 0} };
+CONST_TEXEL_TUNING EvalScore   freePasserBonus[8]      = { {0, 0}, {  9, 14}, {  1,  2}, { -6, 24}, {-11, 52}, {-10,143}, { 52,148}, { 0, 0} };
 
-CONST_TEXEL_TUNING EvalScore   pawnMobility            = {-11, 10};
-CONST_TEXEL_TUNING EvalScore   pawnSafeAtt             = { 75, 28};
-CONST_TEXEL_TUNING EvalScore   pawnSafePushAtt         = { 24, 24};
+CONST_TEXEL_TUNING EvalScore   pawnMobility            = {-11, 13};
+CONST_TEXEL_TUNING EvalScore   pawnSafeAtt             = { 77, 23};
+CONST_TEXEL_TUNING EvalScore   pawnSafePushAtt         = { 23, 24};
 CONST_TEXEL_TUNING EvalScore   pawnlessFlank           = {-21,-30};
-CONST_TEXEL_TUNING EvalScore   pawnStormMalus          = { 21,-27};
+CONST_TEXEL_TUNING EvalScore   pawnStormMalus          = { 21,-28};
 CONST_TEXEL_TUNING EvalScore   rookOnOpenFile          = { 45, 19};
 CONST_TEXEL_TUNING EvalScore   rookOnOpenSemiFileOur   = { 20, -2};
 CONST_TEXEL_TUNING EvalScore   rookOnOpenSemiFileOpp   = { 32,  5};
@@ -178,6 +177,8 @@ inline void scaleShashin(EvalScore & score, const float materialFactor, const fl
    return score = EvalScore{ScoreType(materialFactor*score[MG]*factor+(1-materialFactor)*score[MG]),
                             ScoreType(materialFactor*score[EG]*factor+(1-materialFactor)*score[EG])};
 }
+
+///@todo use shashinMobRatio in draw score !
 
 //-------------------------------------------
 // if more or less even in material
