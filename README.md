@@ -25,19 +25,19 @@ Some stable/official ones will also be made available as github release. I "offi
 
 In a github release, a tester shall only use the given (attached) binaries. The full "source" package always contains everything (source code, test suites, opening suite, books, ...). 
 
-Starting from release 2.26 new binaries are available :
+Starting from release 2.27 new binaries are available :
 
 ```
-* minic_2.26_linux_x64_skylake     : fully optimized Linux64 (avx2+bmi2)   
-* minic_2.26_linux_x64_nehalem     : optimized Linux64 (sse4.2)  
-* minic_2.26_linux_x64_x86-64      : basic Linux64  
-* minic_2.26_mingw_x64_skylake.exe : fully optimized Windows64 (avx2+bmi2)  
-* minic_2.26_mingw_x64_nehalem.exe : optimized Windows64 (sse4.2)  
-* minic_2.26_mingw_x64_x86-64.exe  : basic Windows64   
-* minic_2.26_mingw_x32_skylake.exe : fully optimized Windows32 (avx2+bmi2)  
-* minic_2.26_mingw_x32_nehalem.exe : optimized Windows32 (sse4.2)  
-* minic_2.26_mingw_x32_i686.exe    : basic Windows32 
-* minic_2.26_android               : android armv7
+* minic_2.27_linux_x64_skylake     : fully optimized Linux64 (avx2+bmi2)   
+* minic_2.27_linux_x64_nehalem     : optimized Linux64 (sse4.2)  
+* minic_2.27_linux_x64_x86-64      : basic Linux64  
+* minic_2.27_mingw_x64_skylake.exe : fully optimized Windows64 (avx2+bmi2)  
+* minic_2.27_mingw_x64_nehalem.exe : optimized Windows64 (sse4.2)  
+* minic_2.27_mingw_x64_x86-64.exe  : basic Windows64   
+* minic_2.27_mingw_x32_skylake.exe : fully optimized Windows32 (avx2+bmi2)  
+* minic_2.27_mingw_x32_nehalem.exe : optimized Windows32 (sse4.2)  
+* minic_2.27_mingw_x32_i686.exe    : basic Windows32 
+* minic_2.27_android               : android armv7
 ```   
 Please note that Win32 binaries are very slow (I don't know why yet, so please use Win64 one if possible).
    
