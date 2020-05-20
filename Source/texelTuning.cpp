@@ -304,7 +304,7 @@ void TexelTuning(const std::string & filename) {
     }
     Logging::LogIt(Logging::logInfo) << "Data size : " << data.size();
 
-    size_t batchSize = data.size()/10; // batch
+    size_t batchSize = data.size()/50; // batch
     //size_t batchSize = 20000; // batch
     //size_t batchSize = 1024 ; // mini
     //size_t batchSize = 1; // stochastic
@@ -620,16 +620,14 @@ void TexelTuning(const std::string & filename) {
     std::vector<std::string> todo = {
         //"piecesValue",
         
-        /*
         "PST0",
         "PST1",
         "PST2",
         "PST3",
         "PST4",
         "PST5",
-        */
 
-        //"mobility",
+        "mobility",
         
         "passer",
         "freePasser",
@@ -651,6 +649,7 @@ void TexelTuning(const std::string & filename) {
         "shield",
         "Fawn",
         "storm",
+        "pawnlessFlank",
 
         /*
         "rookBehindPassed",
@@ -676,7 +675,6 @@ void TexelTuning(const std::string & filename) {
 
         "attDefKing",
         "attFunction",
-        "pawnlessFlank",
         "attOpenFile",
 
         "imbalance",
