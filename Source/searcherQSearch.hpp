@@ -78,15 +78,46 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
     if ( /*pvnode &&*/ evalScore > alpha) alpha = evalScore; ///@todo try it ??
     ScoreType bestScore = evalScore;
 
+    const ScoreType alphaInit = alpha;
+    const bool validTTmove = e.h != 0 && e.m != INVALIDMINIMOVE;
+    int validMoveCount = 0;
+    
+    // try the tt move before move generation
+    if ( validTTmove && (isInCheck || isCapture(e.m)) ){
+        bool goOn = true;
+        if (!isInCheck) {
+            if (!SEE_GE(p,e.m,0)) {++stats.counters[Stats::sid_qsee];goOn = false;}
+            if (SearchConfig::doQFutility && evalScore + SearchConfig::qfutilityMargin[evalScoreIsHashScore] + (Move2Type(e.m)==T_ep ? Values[P_wp+PieceShift] : PieceTools::getAbsValue(p, Move2To(e.m))) <= alphaInit) {++stats.counters[Stats::sid_qfutility];goOn = false;}
+        }
+        if (goOn){
+            Position p2 = p;
+            if ( apply(p2,e.m) ){;
+                ++validMoveCount;
+                TT::prefetch(computeHash(p2));
+                const ScoreType score = -qsearch<false,false>(-beta,-alpha,p2,ply+1,seldepth);
+                if ( score > bestScore){
+                    bestMove = e.m;
+                    bestScore = score;
+                    if ( score > alpha ){
+                        if (score >= beta) {
+                            b = TT::B_beta;
+                            TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),b,hashDepth);
+                            return bestScore;
+                        }
+                        b = TT::B_exact;
+                        alpha = score;
+                    }
+                }
+            }
+        }
+    }
+
     MoveList moves;
     if ( isInCheck ) MoveGen::generate<MoveGen::GP_all>(p,moves); ///@todo generate only evasion !
     else             MoveGen::generate<MoveGen::GP_cap>(p,moves);
     CMHPtrArray cmhPtr;
     getCMHPtr(p.halfmoves,cmhPtr);
 
-    const ScoreType alphaInit = alpha;
-
-    int validMoveCount = 0;
 #ifdef USE_PARTIAL_SORT
     MoveSorter::score(*this,moves,p,data.gp,ply,cmhPtr,false,isInCheck,e.h?&e:NULL); ///@todo warning gp is often = 0 here !
     size_t offset = 0;
@@ -96,6 +127,7 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
     MoveSorter::scoreAndSort(*this,moves,p,data.gp,ply,cmhPtr,false,isInCheck,e.h?&e:NULL); ///@todo warning gp is often = 0 here !
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
 #endif
+        if (validTTmove && sameMove(e.m, *it)) continue; // already tried
         if (!isInCheck) {
             if (!SEE_GE(p,*it,0)) {++stats.counters[Stats::sid_qsee];continue;}
             if (SearchConfig::doQFutility && evalScore + SearchConfig::qfutilityMargin[evalScoreIsHashScore] + (Move2Type(*it)==T_ep ? Values[P_wp+PieceShift] : PieceTools::getAbsValue(p, Move2To(*it))) <= alphaInit) {++stats.counters[Stats::sid_qfutility];continue;}

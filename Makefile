@@ -17,6 +17,7 @@ release: config fathom
 build: config fathom
 	$(ROOT_DIR)/Tools/build.sh
 
-dist: config fathom build
+dist: build
+	mkdir -p Tourney
 	cp Dist/Minic2/minic_dev_linux_x64 Tourney/
 

@@ -186,8 +186,9 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
                         PVList pv2;
                         TT::getPV(p, *this, pv2);
                         displayGUI(depth,seldepth,score,pv2,multi+1,"?");
-                        --windowDepth; // from Ethereal
                     }
+                    --windowDepth; // from Ethereal
+                    /*
                     // check other moves (if not multi-PV ...)
                     if ( DynamicConfig::multiPV == 1 && pvLoc.size() && beta > alpha + 50){
                         std::vector<MiniMove> skipMovesFailHigh = { Move2MiniMove(pvLoc[0]) };
@@ -200,6 +201,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
                             break;
                         }
                     }
+                    */
                     //alpha = std::max(ScoreType(-MATE),ScoreType((alpha + beta)/2));
                     beta  = std::min(ScoreType(score + delta), ScoreType( MATE) );
                     Logging::LogIt(Logging::logInfo) << "Increase window beta "  << alpha << ".." << beta;

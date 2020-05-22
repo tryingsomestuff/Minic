@@ -30,7 +30,7 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, const BitBoa
         const Square k = popBit(pieceBBiterator);
         const Square kk = ColorSquarePstHelper<C>(k);
         score += EvalConfig::PST[T-1][kk] * ColorSignHelper<C>();
-        forwardness += SQRANK(kk) * ColorSignHelper<C>();
+        forwardness += SQRANK(kk);
         const BitBoard target = BBTools::pfCoverage[T-1](k, p.occupancy(), C); // real targets
         if ( target ){
            attBy |= target;
@@ -552,8 +552,7 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     // Compute various Shashin ratio of current position (may be used later in search)
     data.shashinMaterialFactor = std::max(0.f, 1.f- SQR(float(features.materialScore[MG])/EvalConfig::shashinThreshold));
     data.shashinMobRatio       = std::max(0.5f,std::min(2.f,float(data.mobility[p.c]) / std::max(0.5f,float(data.mobility[~p.c]))));
-    data.shashinForwardness[Co_White] /= countBit(p.allPieces[Co_White]); // scaled in [1..8]
-    data.shashinForwardness[Co_Black] /= countBit(p.allPieces[Co_Black]); // scaled in [1..8]
+    // data.shashinForwardness inside [ 8..120 ]
     ///@todo compacity ??    
     // Apply Shashin corrections
     EvalConfig::applyShashinCorrection(p,data,features);
