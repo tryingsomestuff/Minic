@@ -13,7 +13,7 @@ namespace Logging {
         std::stringstream str;
         auto msecEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch());
         char buffer[64];
-        auto tt = std::chrono::system_clock::to_time_t(std::chrono::system_clock::time_point(msecEpoch));
+        auto tt = Clock::to_time_t(Clock::time_point(msecEpoch));
         std::strftime(buffer, 63, "%Y-%m-%d %H:%M:%S", localtime(&tt));
         str << buffer << "-" << std::setw(3) << std::setfill('0') << msecEpoch.count() % 1000;
         return str.str();
@@ -44,7 +44,7 @@ namespace Logging {
     void init(){
         if ( DynamicConfig::debugMode ){
             if ( DynamicConfig::debugFile.empty()) DynamicConfig::debugFile = "minic.debug";
-            LogIt::_of = std::unique_ptr<std::ofstream>(new std::ofstream(DynamicConfig::debugFile + "_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())));
+            LogIt::_of = std::unique_ptr<std::ofstream>(new std::ofstream(DynamicConfig::debugFile + "_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count())));
         }
 
     }
