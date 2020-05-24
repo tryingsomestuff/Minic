@@ -280,6 +280,9 @@ You can use both the json configuation file or the command line argument to sele
 * 2.19..2.23 : a lot a little optimizations and fixes  
 * 2.24 : activate contempt  
 * 2.25 : activate tempo  
+* 2.26..2.29 : various little clean up  
+* 2.30 : tune move ordering  
+* 2.31 : ...
 
 ## Thanks
 
