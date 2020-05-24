@@ -251,7 +251,12 @@ enum Color : signed char{ Co_None  = -1,   Co_White = 0,   Co_Black = 1,   Co_En
 constexpr Color operator~(Color c){return Color(c^Co_Black);} // switch color
 inline Color operator++(Color & c){c=Color(c+1); return c;}
 
-// ttmove 10000, promcap >7000, cap 7000, checks 6000, killers 1800-1700-1600, counter 1500, castling 200, other by -1000 < history < 1000, bad cap <-7000.
+// previous best root 20000, ttmove 15000, king evasion 10000
+// promcap >7000, cap 7000, (checks 6000,)
+// killers 1900-1700-1500, counter 1300, castling 200, other by -1000 < history < 1000, bad cap <-7000,
+// leaving threat 1000
+// MVV-LVA [0 400]
+// recapture 400
 const ScoreType MoveScoring[16] = { 0, 7000, 7100, 6000, 3950, 3500, 3350, 3300, 7950, 7500, 7350, 7300, 200, 200, 200, 200 };
 
 inline bool sameMove  (const Move & a, const Move & b) { return Move2MiniMove(a) == Move2MiniMove(b);}

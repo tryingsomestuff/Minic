@@ -18,37 +18,36 @@
 template< Color C>
 void MoveSorter::computeScore(Move & m)const{
     assert(VALIDMOVE(m));
+    if ( Move2Score(m) != 0 ) return; // prob cut already computed captures score
     const MType  t    = Move2Type(m); assert(moveTypeOK(t));
     const Square from = Move2From(m); assert(squareOK(from));
     const Square to   = Move2To(m); assert(squareOK(to));
-    ScoreType s       = Move2Score(m);
-    if ( s != 0 ) return; // prob cut already computed captures score
-    s = MoveScoring[t];
+    ScoreType s = MoveScoring[t];
     if ( ply == 0 && sameMove(context.previousBest,m)) s += 20000; // previous root best
     else if (e && sameMove(e->m,m)) s += 15000; // TT move
     else{
         if (isInCheck && from == p.king[C]) s += 10000; // king evasion
         if ( isCapture(t) && !isPromotion(t)){
-            const Piece victim   = (t != T_ep) ? PieceTools::getPieceType(p,to) : P_wp;
-            const Piece attacker = PieceTools::getPieceType(p,from);
-            assert(victim>0); assert(attacker>0);
             if ( useSEE && !isInCheck ){
                 const ScoreType see = context.SEE(p,m);
                 s += see;
-                if ( see < -70 ) s -= 2*MoveScoring[T_capture]; // bad capture
+                if ( see < -70 ) s -= 2*MoveScoring[T_capture]; // too bad capture
                 else {
                     if ( VALIDMOVE(p.lastMove) && isCapture(p.lastMove) && to == Move2To(p.lastMove) ) s += 400; // recapture bonus
                 }
             }
             else{ // MVVLVA
+                const Piece victim   = (t != T_ep) ? PieceTools::getPieceType(p,to) : P_wp;
+                const Piece attacker = PieceTools::getPieceType(p,from);
+                assert(victim>0); assert(attacker>0);
                 s += SearchConfig::MvvLvaScores[victim-1][attacker-1]; //[0 400]
             }
         }
         else if ( t == T_std ){
-            if      (sameMove(m, context.killerT.killers[ply][0])) s += 1800; // quiet killer
-            else if (sameMove(m, context.killerT.killers[ply][1])) s += 1750; // quiet killer
-            else if (ply > 1 && sameMove(m, context.killerT.killers[ply-2][0])) s += 1700; // quiet killer
-            else if (VALIDMOVE(p.lastMove) && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 1650; // quiet counter
+            if      (sameMove(m, context.killerT.killers[ply][0])) s += 1900; // quiet killer
+            else if (sameMove(m, context.killerT.killers[ply][1])) s += 1700; // quiet killer
+            else if (ply > 1 && sameMove(m, context.killerT.killers[ply-2][0])) s += 1500; // quiet killer
+            else if (VALIDMOVE(p.lastMove) && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)],m)) s+= 1300; // quiet counter
             else {
                 ///@todo give another try to tune those !
                 const Piece pp = p.board_const(from);
