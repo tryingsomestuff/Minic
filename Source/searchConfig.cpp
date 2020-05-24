@@ -31,6 +31,7 @@ CONST_CLOP_TUNING DepthType iidMinDepth2                  = 8;
 CONST_CLOP_TUNING DepthType probCutMinDepth               = 5;
 CONST_CLOP_TUNING int       probCutMaxMoves               = 5;
 CONST_CLOP_TUNING ScoreType probCutMargin                 = 80;
+//CONST_CLOP_TUNING ScoreType probCutThreshold              = 450;
 CONST_CLOP_TUNING DepthType lmrMinDepth                   = 2;
 CONST_CLOP_TUNING DepthType singularExtensionDepth        = 8;
 // on move / opponent
