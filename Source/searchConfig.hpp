@@ -46,6 +46,7 @@ extern CONST_CLOP_TUNING DepthType iidMinDepth2                 ;
 extern CONST_CLOP_TUNING DepthType probCutMinDepth              ;
 extern CONST_CLOP_TUNING int       probCutMaxMoves              ;
 extern CONST_CLOP_TUNING ScoreType probCutMargin                ;
+//extern CONST_CLOP_TUNING ScoreType probCutThreshold             ;
 extern CONST_CLOP_TUNING DepthType lmrMinDepth                  ;
 extern CONST_CLOP_TUNING DepthType singularExtensionDepth       ;
 // on move / opponent 

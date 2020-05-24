@@ -84,29 +84,22 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
     
     // try the tt move before move generation
     if ( validTTmove && (isInCheck || isCapture(e.m)) ){
-        bool goOn = true;
-        if (!isInCheck) {
-            if (!SEE_GE(p,e.m,0)) {++stats.counters[Stats::sid_qsee];goOn = false;}
-            if (SearchConfig::doQFutility && evalScore + SearchConfig::qfutilityMargin[evalScoreIsHashScore] + (Move2Type(e.m)==T_ep ? Values[P_wp+PieceShift] : PieceTools::getAbsValue(p, Move2To(e.m))) <= alphaInit) {++stats.counters[Stats::sid_qfutility];goOn = false;}
-        }
-        if (goOn){
-            Position p2 = p;
-            if ( apply(p2,e.m) ){;
-                ++validMoveCount;
-                TT::prefetch(computeHash(p2));
-                const ScoreType score = -qsearch<false,false>(-beta,-alpha,p2,ply+1,seldepth);
-                if ( score > bestScore){
-                    bestMove = e.m;
-                    bestScore = score;
-                    if ( score > alpha ){
-                        if (score >= beta) {
-                            b = TT::B_beta;
-                            TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),b,hashDepth);
-                            return bestScore;
-                        }
-                        b = TT::B_exact;
-                        alpha = score;
+        Position p2 = p;
+        if ( apply(p2,e.m) ){;
+            ++validMoveCount;
+            TT::prefetch(computeHash(p2));
+            const ScoreType score = -qsearch<false,false>(-beta,-alpha,p2,ply+1,seldepth);
+            if ( score > bestScore){
+                bestMove = e.m;
+                bestScore = score;
+                if ( score > alpha ){
+                    if (score >= beta) {
+                        b = TT::B_beta;
+                        TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),b,hashDepth);
+                        return bestScore;
                     }
+                    b = TT::B_exact;
+                    alpha = score;
                 }
             }
         }
