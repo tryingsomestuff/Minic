@@ -26,19 +26,26 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
 
     debug_king_cap(p);
 
+    // probe TT
     TT::Entry e;
     const Hash pHash = computeHash(p);
-    if (TT::getEntry(*this, p, pHash, hashDepth, e)) {
-        if (!pvnode && e.h != 0 && ((e.b == TT::B_alpha && e.s <= alpha) || (e.b == TT::B_beta  && e.s >= beta) || (e.b == TT::B_exact))) { return adjustHashScore(e.s, ply); }
-        if ( e.m!=INVALIDMINIMOVE && (isInCheck || isCapture(e.m)) ) bestMove = e.m;
+    if (TT::getEntry(*this, p, pHash, hashDepth, e)) { // if depth of TT entry is enough
+        if (!pvnode && ((e.b == TT::B_alpha && e.s <= alpha) || (e.b == TT::B_beta  && e.s >= beta) || (e.b == TT::B_exact))) { 
+            return adjustHashScore(e.s, ply); 
+        }
     }
     if ( qRoot && interiorNodeRecognizer<true,false,true>(p) == MaterialHash::Ter_Draw) return drawScore(); ///@todo is that gain elo ???
 
+    const bool ttHit = e.h != nullHash;
+    const bool validTTmove = ttHit && e.m != INVALIDMINIMOVE;
+    if ( validTTmove && (isInCheck || isCapture(e.m)) ) bestMove = e.m;
+    
+    // get a static score for the position.
     ScoreType evalScore;
     if (isInCheck) evalScore = -MATE + ply;
     else if ( p.lastMove == NULLMOVE && ply > 0 ) evalScore = 2*ScaleScore(EvalConfig::tempo,stack[p.halfmoves-1].data.gp) - stack[p.halfmoves-1].eval; // skip eval if nullmove just applied ///@todo wrong ! gp is 0 here
     else{
-        if (e.h != 0){
+        if (ttHit){ // if we had a TT hit (with or without associated move), wa can use its eval instead of calling eval()
             ++stats.counters[Stats::sid_ttschits];
             evalScore = e.e;
             /*
@@ -55,7 +62,7 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
                ++stats.counters[Stats::sid_materialTableMiss];
             }
             */
-           data.gp = 0.5; // force mid game value in sorting ...
+            data.gp = 0.5; // force mid game value in sorting ... affect only quiet move, so here check evasion ...
         }
         else {
             ++stats.counters[Stats::sid_ttscmiss];
@@ -65,21 +72,21 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
     bool evalScoreIsHashScore = false;
     // use tt score if possible and not in check
     if ( !isInCheck){
-       if ( e.h != 0 && ((e.b == TT::B_alpha && e.s <= evalScore) || (e.b == TT::B_beta && e.s >= evalScore) || (e.b == TT::B_exact)) ) evalScore = e.s, evalScoreIsHashScore = true;
-       //else if ( e.h == 0 ) TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(evalScore,ply),createHashScore(evalScore,ply),TT::B_none,-2); // already insert an eval here in case of pruning ...
+       if ( ttHit && ((e.b == TT::B_alpha && e.s <= evalScore) || (e.b == TT::B_beta && e.s >= evalScore) || (e.b == TT::B_exact)) ) evalScore = e.s, evalScoreIsHashScore = true;
+       if ( !ttHit ) TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(evalScore,ply),createHashScore(evalScore,ply),TT::B_none,-2); // already insert an eval here in case of pruning ...
     }
 
-    TT::Bound b = TT::B_alpha;
+    // early cut-off based on eval score (static or from TT score)
     if ( evalScore >= beta ){
-        if ( e.h == 0 ) TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(evalScore,ply),createHashScore(evalScore,ply),TT::B_beta,-2); 
+        //if ( !ttHit ) TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(evalScore,ply),createHashScore(evalScore,ply),TT::B_none,-2); 
         return evalScore;
     }
     if ( !isInCheck && SearchConfig::doQDeltaPruning && evalScore + qDeltaMargin(p) < alpha ) return ++stats.counters[Stats::sid_delta],alpha;
-    if ( /*pvnode &&*/ evalScore > alpha) alpha = evalScore; ///@todo try it ??
-    ScoreType bestScore = evalScore;
+    if ( evalScore > alpha) alpha = evalScore;
 
+    TT::Bound b = TT::B_alpha;
+    ScoreType bestScore = evalScore;
     const ScoreType alphaInit = alpha;
-    const bool validTTmove = e.h != 0 && e.m != INVALIDMINIMOVE;
     int validMoveCount = 0;
     
     // try the tt move before move generation
@@ -112,12 +119,12 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
     getCMHPtr(p.halfmoves,cmhPtr);
 
 #ifdef USE_PARTIAL_SORT
-    MoveSorter::score(*this,moves,p,data.gp,ply,cmhPtr,false,isInCheck,e.h?&e:NULL); ///@todo warning gp is often = 0 here !
+    MoveSorter::score(*this,moves,p,data.gp,ply,cmhPtr,false,isInCheck,validTTmove?&e:NULL); ///@todo warning gp is often = 0 here !
     size_t offset = 0;
     const Move * it = nullptr;
     while( (it = MoveSorter::pickNext(moves,offset))){
 #else
-    MoveSorter::scoreAndSort(*this,moves,p,data.gp,ply,cmhPtr,false,isInCheck,e.h?&e:NULL); ///@todo warning gp is often = 0 here !
+    MoveSorter::scoreAndSort(*this,moves,p,data.gp,ply,cmhPtr,false,isInCheck,validTTmove?&e:NULL); ///@todo warning gp is often = 0 here !
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
 #endif
         if (validTTmove && sameMove(e.m, *it)) continue; // already tried
