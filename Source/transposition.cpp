@@ -72,21 +72,23 @@ void prefetch(Hash h) {
 #  endif
 }
 
+// will return true only if depth is enough
+// e.h is nullHash is the TT entry is not usable
 bool getEntry(Searcher & context, const Position & p, Hash h, DepthType d, Entry & e) {
     assert(h > 0);
-    if ( DynamicConfig::disableTT  ) return false;
+    if ( DynamicConfig::disableTT ) return false;
     e = table[h&(ttSize-1)]; // update entry immediatly to avoid further race condition and invalidate it later if needed
 #ifdef DEBUG_HASH_ENTRY
     e.d = randomInt<unsigned int,666>(0, UINT32_MAX);
 #endif
-    if ( e.h == 0 ) return false; //early exist cause next ones are also empty ...
-    if ( !VALIDMOVE(e.m) ||
+    if ( e.h == nullHash ) return false; //early exit
+    if ( ( VALIDMOVE(e.m) && !isPseudoLegal(p, e.m))
 #ifndef DEBUG_HASH_ENTRY
-        (e.h ^ e._data) != Hash64to32(h) ||
+        || ((e.h ^ e._data) != Hash64to32(h))
 #endif
-        !isPseudoLegal(p, e.m)) { e.h = 0; return false; }
+       ) { e.h = nullHash; return false; } // move is filled, but wrong in this position, invalidate returned entry.
     
-    if ( e.d >= d ){ ++context.stats.counters[Stats::sid_tthits]; return true; } // valid entry if depth is ok
+    if ( e.d >= d ){ ++context.stats.counters[Stats::sid_tthits]; return true; } // valid entry only if depth is ok
     else return false;
 }
 
@@ -94,7 +96,7 @@ bool getEntry(Searcher & context, const Position & p, Hash h, DepthType d, Entry
 void setEntry(Searcher & context, Hash h, Move m, ScoreType s, ScoreType eval, Bound b, DepthType d){
     assert(h > 0);
     if ( DynamicConfig::disableTT ) return;
-    Entry e = {h,m,s,eval,b,d};
+    Entry e(h,m,s,eval,b,d);
     e.h ^= e._data;
     ++context.stats.counters[Stats::sid_ttInsert];
     table[h&(ttSize-1)] = e; // always replace (favour leaf)
@@ -106,11 +108,11 @@ void getPV(const Position & p, Searcher & context, PVList & pv){
     Position p2 = p;
     bool stop = false;
     for( int k = 0 ; k < MAX_PLY && !stop; ++k){
-      if ( !TT::getEntry(context, p2, computeHash(p2), 0, e)) break;
-      if (e.h != 0) {
+      if (!TT::getEntry(context, p2, computeHash(p2), 0, e)) break;
+      if (e.h != nullHash) {
         hashStack[k] = computeHash(p2);
-        pv.push_back(e.m);
         if ( !VALIDMOVE(e.m) || !apply(p2,e.m) ) break;
+        pv.push_back(e.m);
         const Hash h = computeHash(p2);
         for (int i = k-1; i >= 0; --i) if (hashStack[i] == h) {stop=true;break;}
       }

@@ -45,18 +45,20 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
     const bool withoutSkipMove = skipMoves == nullptr;
     Hash pHash = computeHash(p);
     if ( skipMoves ) for (auto it = skipMoves->begin() ; it != skipMoves->end() ; ++it ){ pHash ^= (*it); }
-    bool validTTmove = false;
-    //bool ttPv = false;
+
+    // probe TT
     TT::Entry e;
-    if ( TT::getEntry(*this, p, pHash, depth, e)) {
-        if ( e.h != 0 && !rootnode && !pvnode && 
+    if ( TT::getEntry(*this, p, pHash, depth, e)) { // if depth of TT entry is enough
+        if ( !rootnode && !pvnode && 
              ( (e.b == TT::B_alpha && e.s <= alpha) || (e.b == TT::B_beta  && e.s >= beta) || (e.b == TT::B_exact) ) ) {
             if (!isInCheck && e.m != INVALIDMINIMOVE && Move2Type(e.m) == T_std ) updateTables(*this, p, depth, ply, e.m, e.b, cmhPtr);
             return adjustHashScore(e.s, ply);
         }
     }
-    //ttPv = pvnode ;//| e.isPv; ///@todo
-    validTTmove = e.h != 0 && e.m != INVALIDMINIMOVE;
+    // if entry hash is not null and entry move is valid, this is a valid TT move (we don't care about depth here !)
+    bool ttHit = e.h != nullHash;
+    bool validTTmove = ttHit && e.m != INVALIDMINIMOVE;
+    
 
 #ifdef WITH_SYZYGY
     ScoreType tbScore = 0;
@@ -64,25 +66,28 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
          && (countBit(p.allPieces[Co_White]|p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN && SyzygyTb::probe_wdl(p, tbScore, false) > 0){
        ++stats.counters[Stats::sid_tbHit1];
        if ( abs(tbScore) == SyzygyTb::TB_WIN_SCORE) tbScore += eval(p, data, *this);
-       TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(tbScore,ply),createHashScore(tbScore,ply),TT::B_exact,DepthType(MAX_DEPTH));
+       // store TB hits into TT (without associated move, but with max depth)
+       TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(tbScore,ply),createHashScore(tbScore,ply),TT::B_none,DepthType(MAX_DEPTH));
        return tbScore;
     }
 #endif
 
+    // get a static score for the position.
     ScoreType evalScore;
     if (isInCheck) evalScore = -MATE + ply;
     else if ( p.lastMove == NULLMOVE && ply > 0 ) evalScore = 2*ScaleScore(EvalConfig::tempo,stack[p.halfmoves-1].data.gp) - stack[p.halfmoves-1].eval; // skip eval if nullmove just applied ///@todo wrong ! gp is 0 here
     else{
-        if (e.h != 0){
+        if (ttHit){ // if we had a TT hit (with or without associated move), we can use its eval instead of calling eval()
             ++stats.counters[Stats::sid_ttschits];
             evalScore = e.e;
+            // look for a material match (to get game phase)
             const Hash matHash = MaterialHash::getMaterialHash(p.mat);
             if ( matHash ){
                ++stats.counters[Stats::sid_materialTableHits];
                const MaterialHash::MaterialHashEntry & MEntry = MaterialHash::materialHashTable[matHash];
                data.gp = MEntry.gp;
             }
-            else{
+            else{ // if no match, compute game phase (this does not happend very often ...)
                ScoreType matScoreW = 0;
                ScoreType matScoreB = 0;
                data.gp = gamePhase(p,matScoreW,matScoreB);
@@ -90,16 +95,19 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             }
             ///@todo data.danger, data.mob, Shashin coeff are not filled in case of TT hit !!
         }
-        else {
+        else { // if no TT hit call evaluation !
             ++stats.counters[Stats::sid_ttscmiss];
             evalScore = eval(p, data, *this);
         }
     }
     stack[p.halfmoves].eval = evalScore; // insert only static eval, never hash score !
     stack[p.halfmoves].data = data;
+
     bool evalScoreIsHashScore = false;
-    if ( !validTTmove) TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(evalScore,ply),createHashScore(evalScore,ply),TT::B_none,-2); // already insert an eval here in case of pruning ...
-    if ( (e.h != 0 && !isInCheck) && ((e.b == TT::B_alpha && e.s < evalScore) || (e.b == TT::B_beta && e.s > evalScore) || (e.b == TT::B_exact)) ) evalScore = adjustHashScore(e.s,ply), evalScoreIsHashScore=true;
+    // if no TT hit yet, we insert an eval without a move here in case of forward pruning (depth is negative, bound is none) ...
+    if ( !ttHit ) TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(evalScore,ply),createHashScore(evalScore,ply),TT::B_none,-2); 
+    // if TT hit, we can use its score as a best draft
+    if ( ttHit && !isInCheck && ((e.b == TT::B_alpha && e.s < evalScore) || (e.b == TT::B_beta && e.s > evalScore) || (e.b == TT::B_exact)) ) evalScore = adjustHashScore(e.s,ply), evalScoreIsHashScore=true;
 
     ScoreType bestScore = -MATE + ply;
     MoveList moves;
@@ -108,8 +116,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
     bool futility = false, lmp = false, /*mateThreat = false,*/ historyPruning = false, CMHPruning = false;
     const bool isNotEndGame = p.mat[p.c][M_t]> 0; ///@todo better ?
     const bool improving = (!isInCheck && ply > 1 && stack[p.halfmoves].eval >= stack[p.halfmoves-2].eval);
-    DepthType marginDepth = std::max(1,depth-(evalScoreIsHashScore?e.d:0));
-
+    DepthType marginDepth = std::max(1,depth-(evalScoreIsHashScore?e.d:0)); // a depth that take TT depth into account
     Move refutation = INVALIDMOVE;
 
     // forward prunings
@@ -139,7 +146,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                 TT::Entry nullE;
                 const DepthType nullDepth = depth-R;
                 TT::getEntry(*this, p, pHash, nullDepth, nullE);
-                if (nullE.h == nullHash || nullE.s >= beta ) { // avoid null move search if TT gives a score < beta for the same depth
+                if (nullE.h == nullHash || nullE.s >= beta ) { // avoid null move search if TT gives a score < beta for the same depth ///@todo check this again !
                     ++stats.counters[Stats::sid_nullMoveTry2];
                     Position pN = p;
                     applyNull(*this,pN);
@@ -149,7 +156,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                     if (stopFlag) return STOPSCORE;
                     TT::Entry nullEThreat;
                     TT::getEntry(*this, pN, computeHash(pN), 0, nullEThreat);
-                    if ( nullEThreat.h != nullHash ) refutation = nullEThreat.m;
+                    if ( nullEThreat.h != nullHash && nullEThreat.m != INVALIDMINIMOVE ) refutation = nullEThreat.m;
                     //if (isMatedScore(nullscore)) mateThreat = true;
                     if (nullscore >= beta){
                         /*
@@ -178,12 +185,12 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
           capMoveGenerated = true;
           MoveGen::generate<MoveGen::GP_cap>(p,moves);
 #ifdef USE_PARTIAL_SORT
-          MoveSorter::score(*this,moves,p,data.gp,ply,cmhPtr,true,isInCheck,e.h?&e:NULL);
+          MoveSorter::score(*this,moves,p,data.gp,ply,cmhPtr,true,isInCheck,validTTmove?&e:NULL);
           size_t offset = 0;
           const Move * it = nullptr;
           while( (it = MoveSorter::pickNext(moves,offset)) && probCutCount < SearchConfig::probCutMaxMoves /*+ 2*cutNode*/){
 #else
-          MoveSorter::scoreAndSort(*this,moves,p,data.gp,ply,cmhPtr,true,isInCheck,e.h?&e:NULL);
+          MoveSorter::scoreAndSort(*this,moves,p,data.gp,ply,cmhPtr,true,isInCheck,validTTmove?&e:NULL);
           for (auto it = moves.begin() ; it != moves.end() && probCutCount < SearchConfig::probCutMaxMoves /*+ 2*cutNode*/; ++it){
 #endif
             if ( (validTTmove && sameMove(e.m, *it)) || isBadCap(*it) ) continue; // skip TT move if quiet or bad captures
@@ -201,12 +208,12 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
     }
 
     // IID
-    if ( (e.h == nullHash /*|| e.d < depth/4*/) && ((pvnode && depth >= SearchConfig::iidMinDepth) || (cutNode && depth >= SearchConfig::iidMinDepth2)) ){ ///@todo try with cutNode only ?
+    if ( (!validTTmove /*|| e.d < depth/4*/) && ((pvnode && depth >= SearchConfig::iidMinDepth) || (cutNode && depth >= SearchConfig::iidMinDepth2)) ){ ///@todo try with cutNode only ?
         ++stats.counters[Stats::sid_iid];
         PVList iidPV;
         pvs<pvnode,false>(alpha,beta,p,/*pvnode?depth-2:*/depth/2,ply,iidPV,seldepth,isInCheck,cutNode,skipMoves);
         if (stopFlag) return STOPSCORE;
-        validTTmove = TT::getEntry(*this, p, pHash, depth, e) && e.h != 0 && e.m != INVALIDMINIMOVE;
+        validTTmove = TT::getEntry(*this, p, pHash, depth, e) && e.m != INVALIDMINIMOVE;
     }
 
     killerT.killers[ply+1][0] = killerT.killers[ply+1][1] = 0;
@@ -232,7 +239,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
     stack[p.halfmoves].threat = refutation;
 
     // try the tt move before move generation (if not skipped move)
-    if ( e.h != 0 && validTTmove && !isSkipMove(e.m,skipMoves)) { // should be the case thanks to iid at pvnode
+    if ( validTTmove && !isSkipMove(e.m,skipMoves)) { // should be the case thanks to iid at pvnode
         bestMove = e.m; // in order to preserve tt move for alpha bound entry
 #ifdef DEBUG_APPLY
         // to debug race condition in entry affectation !
@@ -336,12 +343,12 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
     if (moves.empty()) return isInCheck ? -MATE + ply : 0;
 
 #ifdef USE_PARTIAL_SORT
-    MoveSorter::score(*this, moves, p, data.gp, ply, cmhPtr, true, isInCheck, e.h?&e:NULL, refutation != INVALIDMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMOVE);
+    MoveSorter::score(*this, moves, p, data.gp, ply, cmhPtr, true, isInCheck, validTTmove?&e:NULL, refutation != INVALIDMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMOVE);
     size_t offset = 0;
     const Move * it = nullptr;
     while( (it = MoveSorter::pickNext(moves,offset)) && !stopFlag){
 #else
-    MoveSorter::scoreAndSort(*this, moves, p, data.gp, ply, cmhPtr, true, isInCheck, e.h?&e:NULL, refutation != INVALIDMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMOVE);
+    MoveSorter::scoreAndSort(*this, moves, p, data.gp, ply, cmhPtr, true, isInCheck, validTTmove?&e:NULL, refutation != INVALIDMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMOVE);
     for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
 #endif
         if (isSkipMove(*it,skipMoves)) continue; // skipmoves
