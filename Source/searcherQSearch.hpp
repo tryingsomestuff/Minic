@@ -119,7 +119,7 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
     getCMHPtr(p.halfmoves,cmhPtr);
 
 #ifdef USE_PARTIAL_SORT
-    MoveSorter::score(*this,moves,p,data.gp,ply,cmhPtr,false,isInCheck,validTTmove?&e:NULL); ///@todo warning gp is often = 0 here !
+    MoveSorter::score(*this,moves,p,data.gp,ply,cmhPtr,false,isInCheck,validTTmove?&e:NULL); ///@todo warning gp is often = 0.5 here !
     size_t offset = 0;
     const Move * it = nullptr;
     while( (it = MoveSorter::pickNext(moves,offset))){

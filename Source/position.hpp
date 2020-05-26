@@ -30,7 +30,7 @@ struct Position{
     Material mat = {{{{0}}}}; // such a nice syntax ...
 
     mutable Hash h = nullHash, ph = nullHash;
-    Move lastMove = INVALIDMOVE;
+    MiniMove lastMove = INVALIDMINIMOVE;
     unsigned short int moves = 0, halfmoves = 0;
     Square king[2] = { INVALIDSQUARE, INVALIDSQUARE };
     Square rooksInit[2][2] = { {INVALIDSQUARE, INVALIDSQUARE}, {INVALIDSQUARE, INVALIDSQUARE}};

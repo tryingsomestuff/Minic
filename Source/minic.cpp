@@ -18,6 +18,7 @@
 #include "texelTuning.hpp"
 #include "timeMan.hpp"
 #include "timers.hpp"
+#include "tools.hpp"
 #include "transposition.hpp"
 #include "searchConfig.hpp"
 #include "xboard.hpp"

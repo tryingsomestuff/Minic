@@ -74,8 +74,8 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
     m = INVALIDMOVE;
 
     if ( isMainThread() ){
-       const Move bookMove = SanitizeCastling(p,Book::Get(computeHash(p)));
-       if ( bookMove != INVALIDMOVE){
+       const MiniMove bookMove = SanitizeCastling(p,Book::Get(computeHash(p)));
+       if ( VALIDMOVE(bookMove) ){
            Logging::LogIt(Logging::logInfo) << "Unlocking other threads (book move)";
            if ( isMainThread() ) startLock.store(false);
            pvOut.push_back(bookMove);
@@ -157,7 +157,9 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
             contempt = 0;
 #endif            
             // dynamic contempt
-            contempt += ScoreType(std::round(50*std::atan(bestScore/100.f)));
+            contempt += ScoreType(std::round(50*std::tanh(bestScore/300.f)));
+            Logging::LogIt(Logging::logInfo) << "Dynamic contempt " << contempt;
+
             DepthType windowDepth = depth;
 
             ///@todo Shashin contempt ???
