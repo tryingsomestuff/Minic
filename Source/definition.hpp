@@ -91,10 +91,9 @@ const std::string MinicVersion = "dev";
 #define INFSCORE    ScoreType(15000)
 #define MATE        ScoreType(10000)
 #define WIN         ScoreType(5000)
-#define INVALIDMOVE     int32_t(0xFFFF0000)
-#define INVALIDBOOKMOVE int32_t(0xFFFFFFFF) // different for retrocompatibility ///@todo regenerate some books !
-#define INVALIDMINIMOVE int16_t(0x0000)
-#define NULLMOVE        int32_t(0xFFFF1111)
+#define INVALIDMOVE     int32_t(0xFFFF0002)
+#define INVALIDMINIMOVE int16_t(0x0002)
+#define NULLMOVE        int16_t(0x1112)
 #define INVALIDSQUARE  -1
 #define MAX_PLY      1024
 #define MAX_MOVE      256   // 256 is enough I guess/hope ...
@@ -151,8 +150,12 @@ typedef std::vector<Move> PVList;
 inline MiniHash Hash64to32   (Hash h) { return (h >> 32) & 0xFFFFFFFF; }
 inline MiniMove Move2MiniMove(Move m) { return m & 0xFFFF;} // skip score
 
-inline bool VALIDMOVE(const Move & m){ return m != NULLMOVE && m != INVALIDMOVE; }
-inline bool VALIDMOVE(const MiniMove & m){ return m != INVALIDMINIMOVE; }
+// sameMove is not comparing score part of the Move, only the MiniMove part !
+inline bool sameMove  (const Move & a, const Move & b) { return Move2MiniMove(a) == Move2MiniMove(b);}
+inline bool sameMove  (const Move & a, const MiniMove & b) { return Move2MiniMove(a) == b;}
+
+inline bool VALIDMOVE(const Move & m){ return !sameMove(m,NULLMOVE) && !sameMove(m,INVALIDMOVE); }
+inline bool VALIDMOVE(const MiniMove & m){ return m != INVALIDMINIMOVE && m != NULLMOVE; }
 
 const std::string startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 const std::string fine70        = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1";
@@ -259,14 +262,13 @@ inline Color operator++(Color & c){c=Color(c+1); return c;}
 // recapture 400
 const ScoreType MoveScoring[16] = { 0, 7000, 7100, 6000, 3950, 3500, 3350, 3300, 7950, 7500, 7350, 7300, 200, 200, 200, 200 };
 
-inline bool sameMove  (const Move & a, const Move & b) { return Move2MiniMove(a) == Move2MiniMove(b);}
 inline bool isSkipMove(const Move & a, const std::vector<MiniMove> * skipMoves){ return skipMoves && std::find(skipMoves->begin(), skipMoves->end(), Move2MiniMove(a)) != skipMoves->end();}
 
 inline ScoreType Move2Score(Move m) { assert(VALIDMOVE(m)); return (m >> 16) & 0xFFFF; }
 inline Square    Move2From (Move m) { assert(VALIDMOVE(m)); return (m >> 10) & 0x3F  ; }
 inline Square    Move2To   (Move m) { assert(VALIDMOVE(m)); return (m >>  4) & 0x3F  ; }
 inline MType     Move2Type (Move m) { assert(VALIDMOVE(m)); return MType(m & 0xF)    ; }
-inline Move      ToMove(Square from, Square to, MType type)                  { assert(from >= 0 && from < 64); assert(to >= 0 && to < 64); return                 (from << 10) | (to << 4) | type; }
+inline MiniMove  ToMove(Square from, Square to, MType type)                  { assert(from >= 0 && from < 64); assert(to >= 0 && to < 64); return                 (from << 10) | (to << 4) | type; }
 inline Move      ToMove(Square from, Square to, MType type, ScoreType score) { assert(from >= 0 && from < 64); assert(to >= 0 && to < 64); return (score << 16) | (from << 10) | (to << 4) | type; }
 
 inline bool isMatingScore (ScoreType s) { return (s >=  MATE - MAX_DEPTH); }

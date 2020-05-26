@@ -12,6 +12,8 @@ void debug_king_cap(const Position & p);
 
 std::string ToString(const PVList & moves);
 
+std::string ToString(const MiniMove & m);
+
 std::string ToString(const Move & m    , bool withScore = false);
 
 std::string ToString(const Position & p, bool noEval = false);

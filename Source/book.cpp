@@ -13,11 +13,11 @@ namespace Book {
 template<typename T> struct bits_t { T t; };
 template<typename T> bits_t<T&> bits(T &t) { return bits_t<T&>{t}; }
 template<typename T> bits_t<const T&> bits(const T& t) { return bits_t<const T&>{t};}
-template<typename S, typename T> S& operator<<(S &s, bits_t<T>  b) { s.write((char*)&b.t, sizeof(T)); return s;}
+template<typename S, typename T> S& operator<<(S &s, const bits_t<T>  b) { s.write((const char*)&b.t, sizeof(T)); return s;}
 template<typename S, typename T> S& operator>>(S& s, bits_t<T&> b) { s.read ((char*)&b.t, sizeof(T)); return s;}
 
 // the book move cache, indexed by position hash, store in a set of move
-std::unordered_map<Hash, std::set<Move> > book;
+std::unordered_map<Hash, std::set<MiniMove> > book;
 
 bool fileExists(const std::string& name){ return std::ifstream(name.c_str()).good(); }
 
@@ -25,11 +25,11 @@ bool readBinaryBook(std::ifstream & stream) {
     Position ps;
     readFEN(startPosition,ps,true);
     Position p = ps;
-    Move m = 0;
+    MiniMove m = 0;
     while (!stream.eof()) {
         m = 0;
         stream >> bits(m);
-        if (m == INVALIDBOOKMOVE) { ///@todo use MiniMove in book !!!!
+        if (m == INVALIDMINIMOVE) { 
             p = ps;
             stream >> bits(m);
             if (stream.eof()) break;
@@ -53,9 +53,9 @@ Iter select_randomly(Iter start, Iter end) {
     return start;
 }
 
-Move Get(const Hash h){
-    std::unordered_map<Hash, std::set<Move> >::iterator it = book.find(h);
-    if ( it == book.end() ) return INVALIDMOVE;
+MiniMove Get(const Hash h){
+    std::unordered_map<Hash, std::set<MiniMove> >::iterator it = book.find(h);
+    if ( it == book.end() ) return INVALIDMINIMOVE;
     Logging::LogIt(Logging::logInfo) << "Book hit";
     return *select_randomly(it->second.begin(),it->second.end());
 }
@@ -222,14 +222,14 @@ bool add(const std::string & move, Position & p, std::ofstream & binFile){
    std::string moveStr = move;
    if ( move == "0-0" || move == "0-0-0" || move == "O-O" || move == "O-O-O") moveStr = move;
    else {
-       //moveStr = getAlgAlt(moveStr,p); // convert from short algebraic notation to internal notation
+       moveStr = getAlgAlt(moveStr,p); // convert from short algebraic notation to internal notation
        moveStr.insert(2," ");
    }
    Square from = INVALIDSQUARE;
    Square to   = INVALIDSQUARE;
    MType mtype = T_std;
    readMove(p,moveStr,from,to,mtype);
-   const Move m = ToMove(from,to,mtype); //SanitizeCastling(p,ToMove(from,to,mtype));
+   const MiniMove m = ToMove(from,to,mtype); //SanitizeCastling(p,ToMove(from,to,mtype));
    if ( ! apply(p,m) ) return false;
    binFile << bits(m);
    return true;
@@ -258,7 +258,7 @@ bool buildBook(const std::string & bookFileName){
         if (l % 10000 == 0) std::cout << int(100.*l / lines) << "%" << std::endl;
         ++count;
         addLine(line, bookFileBinary);
-        bookFileBinary << bits(INVALIDMOVE);
+        bookFileBinary << bits(INVALIDMINIMOVE);
     }
     bookFileBinary.close();
     bookFile.close();

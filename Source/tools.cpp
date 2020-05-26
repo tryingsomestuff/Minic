@@ -41,9 +41,14 @@ void debug_king_cap(const Position & p){
 void debug_king_cap(const Position &){;}
 #endif
 
+std::string ToString(const MiniMove & m){
+    return ToString(Move(m),false);
+}
+
 std::string ToString(const Move & m, bool withScore){
-    if ( m == INVALIDMOVE ) return "invalid move";
-    if ( m == NULLMOVE )    return "null move";
+    if (sameMove(m,INVALIDMOVE)) return "invalid move";
+    if (sameMove(m,NULLMOVE))    return "null move";
+    
     std::string prom;
     const std::string score = (withScore ? " (" + std::to_string(Move2Score(m)) + ")" : "");
     switch (Move2Type(m)) {
