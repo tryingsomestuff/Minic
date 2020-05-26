@@ -6,7 +6,7 @@ DepthType lmrReduction[MAX_DEPTH][MAX_MOVE];
 ScoreType MvvLvaScores[6][6];
 
 ///@todo try parity pruning, prune less when ply is odd
-///@todo tune everything when evalScoreIsTT
+///@todo tune everything when evalScore is from TT score
 
 // first value if eval score is used, second if hash score is used
 CONST_CLOP_TUNING ScoreType qfutilityMargin           [2] = {90 , 90};
