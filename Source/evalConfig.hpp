@@ -22,7 +22,7 @@ extern CONST_TEXEL_TUNING EvalScore   passerBonus[8]         ;
 extern CONST_TEXEL_TUNING EvalScore   rookBehindPassed       ;
 extern CONST_TEXEL_TUNING EvalScore   kingNearPassedPawn     ;
 enum PawnEvalSemiOpen{ Close=0, SemiOpen=1};
-///@todo make this depends on file! (/rank?)
+
 extern CONST_TEXEL_TUNING EvalScore   doublePawn[8][2]       ;
 extern CONST_TEXEL_TUNING EvalScore   isolatedPawn[8][2]     ;
 extern CONST_TEXEL_TUNING EvalScore   backwardPawn[8][2]     ;
@@ -91,7 +91,7 @@ extern CONST_TEXEL_TUNING EvalScore tempo;
 inline double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f, double offset = 0.f){ return m / (1 + exp((trans - x) / scale)) - offset;}
 inline void initEval(){ for(Square i = 0; i < 64; i++){ EvalConfig::kingAttTable[i] = (int) sigmoid(i,EvalConfig::kingAttMax,EvalConfig::kingAttTrans,EvalConfig::kingAttScale,EvalConfig::kingAttOffset); } }// idea taken from Topple
 
-///@todo
+///@todo Shashin stuff
 const ScoreType shashinThreshold = 180;
 const EvalScore forwardnessMalus = {20,10};
 enum ShashinType : unsigned char { Shashin_None = 0, Shashin_Tal, Shashin_Tal_Capablanca, Shashin_Capablanca, Shashin_Capablanca_Petrosian, Shashin_Petrosian, Shashin_Forced };

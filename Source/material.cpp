@@ -111,8 +111,8 @@ namespace MaterialHash { // idea from Gull
     //const ScoreType pushAway [8] = { 0, 5,  20, 40, 60, 80, 90, 100 };
 
     ScoreType helperKXK(const Position &p, Color winningSide, ScoreType s){
-        if (p.c != winningSide ){ // stale mate detection for losing side
-           ///@todo
+        if (p.c != winningSide ){
+           ///@todo stale mate detection for losing side
         }
         const Square winningK = p.king[winningSide];
         const Square losingK  = p.king[~winningSide];

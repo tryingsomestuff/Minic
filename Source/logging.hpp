@@ -4,7 +4,7 @@
 
 #ifdef __ANDROID__
 inline std::string backtrace(){
-    ////@todo
+    ////@todo backtrace for android
     return "";
 }
 
@@ -28,7 +28,7 @@ inline std::string backtrace() {
 
 #elif defined __MINGW32__
 inline std::string backtrace(){
-    ////@todo
+    ////@todo backtrace for mingw
     return "";
 }
 
@@ -49,7 +49,7 @@ std::string backtrace() {
 #elif defined __CYGWIN__
 inline
 std::string backtrace() {
-    ///@todo
+    ///@todo backtrace for cygwin
     return "";
 }
 

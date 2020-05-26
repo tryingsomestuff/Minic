@@ -46,7 +46,7 @@ const std::string MinicVersion = "dev";
 #define WITH_MAGIC
 #define WITH_SYZYGY
 
-#define USE_PARTIAL_SORT ///@todo try again !
+#define USE_PARTIAL_SORT 
 
 // *** Add-ons
 //#define IMPORTBOOK

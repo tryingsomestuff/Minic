@@ -262,7 +262,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
                         Logging::LogIt(Logging::logInfo) << "Emergency mode activated : " << bestScore << " < " << getData().datas.scores[depth - 1] - MoveDifficultyUtil::emergencyMargin; 
                     }
 
-                    // update a "variability" measure to scale remaining time on it ///@todo
+                    // update a "variability" measure to scale remaining time on it ///@todo tune this more
                     if ( depth > 12 && pvLoc.size() ){
                         if ( getData().datas.moves[depth] != getData().datas.moves[depth-1] ) MoveDifficultyUtil::variability *= (1.f + float(depth)/100);
                         else MoveDifficultyUtil::variability *= 0.97f;

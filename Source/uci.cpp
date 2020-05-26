@@ -54,7 +54,7 @@ namespace UCI {
                     if (type == "startpos") { COM::sideToMoveFromFEN(startPosition); }
                     else if (type == "fen") {
                         std::string fen;
-                        for (int i = 0; i < 6; i++) { // always full fen ... ///@todo better?
+                        for (int i = 0; i < 6; i++) { // suppose always full fen ... ///@todo better?
                             std::string component;
                             iss >> component;
                             fen += component + " ";
