@@ -49,9 +49,10 @@ extern CONST_CLOP_TUNING ScoreType probCutMargin                ;
 //extern CONST_CLOP_TUNING ScoreType probCutThreshold             ;
 extern CONST_CLOP_TUNING DepthType lmrMinDepth                  ;
 extern CONST_CLOP_TUNING DepthType singularExtensionDepth       ;
-// on move / opponent 
-extern CONST_CLOP_TUNING ScoreType dangerLimitPruning[2]        ;
-extern CONST_CLOP_TUNING ScoreType dangerLimitReduction[2]      ;
+///@todo on move / opponent 
+extern CONST_CLOP_TUNING ScoreType dangerLimitPruning           ;
+extern CONST_CLOP_TUNING ScoreType dangerLimitReduction         ;
+const ScoreType dangerDivisor = 100;
 extern CONST_CLOP_TUNING ScoreType failLowRootMargin            ;
 
 const DepthType lmpMaxDepth = 10;

@@ -135,7 +135,8 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
 
         // null move (warning, mobility info is only available if no TT hit)
         if (SearchConfig::doNullMove && (isNotEndGame || data.mobility[p.c] > 4) && withoutSkipMove /*&& evalScore >= beta*/ && 
-            //stack[p.halfmoves].p.lastMove != NULLMOVE && stack[p.halfmoves-1].p.lastMove != NULLMOVE &&
+            //stack[p.halfmoves].p.lastMove != NULLMOVE && 
+            //stack[p.halfmoves-1].p.lastMove != NULLMOVE &&
             evalScore >= stack[p.halfmoves].eval /*&& stack[p.halfmoves].eval >= beta - 32*depth - 30*improving */ && 
             ply >= (unsigned int)nullMoveMinPly && depth >= SearchConfig::nullMoveMinDepth) {
             PVList nullPV;
@@ -391,38 +392,43 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         if (validMoveCount < (2/*+2*rootnode*/) || !SearchConfig::doPVS ) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,!cutNode);
         else{
             // reductions & prunings
-            DepthType reduction = 0;
             const bool isPrunable           = /*isNotEndGame &&*/ !isAdvancedPawnPush && !isMateScore(alpha) && !DynamicConfig::mateFinder && !killerT.isKiller(*it,ply);
             const bool isReductible         = /*isNotEndGame &&*/ !isAdvancedPawnPush && !DynamicConfig::mateFinder;
             const bool noCheck              = !isInCheck && !isCheck;
             const bool isPrunableStd        = isPrunable && isQuiet;
             const bool isPrunableStdNoCheck = isPrunableStd && noCheck;
-            const bool isEmergencyDefence   = false; //moveDifficulty == MoveDifficultyUtil::MD_hardDefense; ///@todo use this
-            //const bool isEmergencyAttack    = moveDifficulty == MoveDifficultyUtil::MD_hardAttack; ///@todo use this
             const bool isPrunableCap        = isPrunable && Move2Type(*it) == T_capture && isBadCap(*it) && noCheck ;
+
+            // take initial position situation into account ///@todo use this
+            const bool isEmergencyDefence   = false; //moveDifficulty == MoveDifficultyUtil::MD_hardDefense; 
+            const bool isEmergencyAttack    = false; //moveDifficulty == MoveDifficultyUtil::MD_hardAttack;
+            
+            // take current danger level into account
             // Warning : danger is only available if no TT hit !
-            const bool isDangerPrune        = data.danger[p.c] > SearchConfig::dangerLimitPruning[0] || data.danger[~p.c] > SearchConfig::dangerLimitPruning[1];
-            const bool isDangerRed          = data.danger[p.c] > SearchConfig::dangerLimitReduction[0] || data.danger[~p.c] > SearchConfig::dangerLimitReduction[1];
-            const float dangerPruneFactor   = ((1.f+data.danger[p.c])/SearchConfig::dangerLimitPruning[0] + (1.f+data.danger[~p.c])/SearchConfig::dangerLimitPruning[1])/2;
+            const int dangerFactor          = (data.danger[p.c]+data.danger[~p.c])/SearchConfig::dangerDivisor;
+            const bool isDangerPrune        = dangerFactor >= SearchConfig::dangerLimitPruning;
+            const bool isDangerRed          = dangerFactor >= SearchConfig::dangerLimitReduction;
             if ( isDangerPrune) ++stats.counters[Stats::sid_dangerPrune];
             if ( isDangerRed)   ++stats.counters[Stats::sid_dangerReduce];
+
             // futility
             if (futility && isPrunableStdNoCheck) {++stats.counters[Stats::sid_futility]; continue;}
             // LMP
-            if (lmp && isPrunableStdNoCheck && validMoveCount > (1/*+dangerPruneFactor*/)*SearchConfig::lmpLimit[improving][depth] + 2*isEmergencyDefence ) {++stats.counters[Stats::sid_lmp]; continue;}
+            if (lmp && isPrunableStdNoCheck && validMoveCount > /*(1+(2*dangerFactor)/SearchConfig::dangerLimitPruning)**/SearchConfig::lmpLimit[improving][depth] + 2*isEmergencyDefence ) {++stats.counters[Stats::sid_lmp]; continue;}
             // History pruning (with CMH)
-            if (historyPruning && isPrunableStdNoCheck && !isEmergencyDefence && Move2Score(*it) < SearchConfig::historyPruningThresholdInit + depth*SearchConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
+            if (historyPruning && isPrunableStdNoCheck && Move2Score(*it) < SearchConfig::historyPruningThresholdInit + depth*SearchConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
             // CMH pruning alone
-            if (CMHPruning && isPrunableStdNoCheck && !isEmergencyDefence){
+            if (CMHPruning && isPrunableStdNoCheck){
               const int pp = (p.board_const(Move2From(*it))+PieceShift) * 64 + Move2To(*it);
               if ((!cmhPtr[0] || cmhPtr[0][pp] < 0) && (!cmhPtr[1] || cmhPtr[1][pp] < 0)) { ++stats.counters[Stats::sid_CMHPruning]; continue;}
             }
             // SEE (capture)
             if (isPrunableCap){
                if (futility) {++stats.counters[Stats::sid_see]; continue;}
-               else if ( !rootnode && badCapScore(*it) < -(1+dangerPruneFactor*dangerPruneFactor)*100*(depth+isEmergencyDefence) /*!SEE_GE(p,*it,-100*depth)*/) {++stats.counters[Stats::sid_see2]; continue;}
+               else if ( !rootnode && badCapScore(*it) < -(1+(6*dangerFactor)/SearchConfig::dangerLimitPruning)*100*(depth+isEmergencyDefence+isEmergencyAttack)) {++stats.counters[Stats::sid_see2]; continue;}
             }
             // LMR
+            DepthType reduction = 0;
             if (SearchConfig::doLMR && (isReductible && isQuiet ) && depth >= SearchConfig::lmrMinDepth ){
                 ++stats.counters[Stats::sid_lmr];
                 reduction = SearchConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
@@ -435,7 +441,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                     else if ( isDangerRed      ) --reduction;
                     else if ( !noCheck         ) --reduction;
                     //else if ( ttMoveSingularExt) --reduction;
-                    if ( reduction>1 && isEmergencyDefence ) --reduction;
+                    //if ( reduction>1 && isEmergencyDefence ) --reduction;
                 }
                 // never extend more than reduce
                 if ( extension - reduction > 0 ) reduction = extension;
@@ -443,10 +449,11 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             }
             const DepthType nextDepth = depth-1-reduction+extension;
             // SEE (quiet)
-            if ( isPrunableStdNoCheck && /*!rootnode &&*/ !SEE_GE(p,*it,-15*(1/*+isDangerPrune*/)*(nextDepth+isEmergencyDefence)*nextDepth)) {
+            if ( isPrunableStdNoCheck && /*!rootnode &&*/ !SEE_GE(p,*it,-15*(nextDepth+isEmergencyDefence+isEmergencyAttack)*nextDepth)) {
                 ++stats.counters[Stats::sid_seeQuiet]; 
                 continue;
             }
+
             // PVS
             score = -pvs<false,true>(-alpha-1,-alpha,p2,nextDepth,ply+1,childPV,seldepth,isCheck,true);
             if ( reduction > 0 && score > alpha ){ 
@@ -457,6 +464,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                 ++stats.counters[Stats::sid_pvsFail]; childPV.clear(); 
                 score = -pvs<true ,true>(-beta   ,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,false); 
             } // potential new pv node
+
         }
         if (stopFlag) return STOPSCORE;
         if (rootnode) rootScores.push_back({*it,score});
