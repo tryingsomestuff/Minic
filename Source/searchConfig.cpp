@@ -34,9 +34,9 @@ CONST_CLOP_TUNING ScoreType probCutMargin                 = 80;
 //CONST_CLOP_TUNING ScoreType probCutThreshold              = 450;
 CONST_CLOP_TUNING DepthType lmrMinDepth                   = 2;
 CONST_CLOP_TUNING DepthType singularExtensionDepth        = 8;
-// on move / opponent
-CONST_CLOP_TUNING ScoreType dangerLimitPruning[2]         = {900,900};
-CONST_CLOP_TUNING ScoreType dangerLimitReduction[2]       = {700,700};
+///@todo on move / opponent
+CONST_CLOP_TUNING ScoreType dangerLimitPruning            = 9;
+CONST_CLOP_TUNING ScoreType dangerLimitReduction          = 7;
 CONST_CLOP_TUNING ScoreType failLowRootMargin             = 100;
 
 } // SearchConfig
