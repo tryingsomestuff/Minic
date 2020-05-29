@@ -38,7 +38,7 @@ typedef uint64_t u_int64_t;
 #include <unistd.h>
 #endif
 
-const std::string MinicVersion = "2.32";
+const std::string MinicVersion = "dev";
 
 // *** options
 #define WITH_UCI
@@ -102,7 +102,7 @@ const std::string MinicVersion = "2.32";
 #define HISTORY_MAX    (1<<HISTORY_POWER)  
 #define HISTORY_DIV(x) ((x)>>HISTORY_POWER)
 #define SQR(x) ((x)*(x))
-#define HSCORE(depth) ScoreType(SQR(std::min((int)depth, 16))*4)
+#define HSCORE(depth) ScoreType(SQR(std::min((int)depth, 32))*4)
 
 #define SQFILE(s) ((s)&7)
 #define SQRANK(s) ((s)>>3)
