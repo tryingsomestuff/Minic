@@ -23,13 +23,12 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
     EvalData data;
     if (ply >= MAX_DEPTH - 1 || depth >= MAX_DEPTH - 1) return eval(p, data, *this);
 
-    if ((int)ply > seldepth) seldepth = ply;
-
     if ( depth <= 0 ) return qsearch<true,pvnode>(alpha,beta,p,ply,seldepth);
 
-    debug_king_cap(p);
-
+    seldepth = std::max((DepthType)ply,seldepth);
     ++stats.counters[Stats::sid_nodes];
+
+    debug_king_cap(p);
 
     alpha = std::max(alpha, (ScoreType)(-MATE + ply));
     beta  = std::min(beta,  (ScoreType)( MATE - ply + 1));
@@ -44,6 +43,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
 
     const bool withoutSkipMove = skipMoves == nullptr;
     Hash pHash = computeHash(p);
+    // consider skipmove(s) in position hash
     if ( skipMoves ) for (auto it = skipMoves->begin() ; it != skipMoves->end() ; ++it ){ pHash ^= (*it); }
 
     // probe TT
@@ -51,6 +51,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
     if ( TT::getEntry(*this, p, pHash, depth, e)) { // if depth of TT entry is enough
         if ( !rootnode && !pvnode && 
              ( (e.b == TT::B_alpha && e.s <= alpha) || (e.b == TT::B_beta  && e.s >= beta) || (e.b == TT::B_exact) ) ) {
+            // increase history bonus of this move
             if (!isInCheck && e.m != INVALIDMINIMOVE && Move2Type(e.m) == T_std ) updateTables(*this, p, depth, ply, e.m, e.b, cmhPtr);
             return adjustHashScore(e.s, ply);
         }
@@ -212,23 +213,25 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
     if ( (!validTTmove /*|| e.d < depth/4*/) && ((pvnode && depth >= SearchConfig::iidMinDepth) || (cutNode && depth >= SearchConfig::iidMinDepth2)) ){ ///@todo try with cutNode only ?
         ++stats.counters[Stats::sid_iid];
         PVList iidPV;
-        pvs<pvnode,false>(alpha,beta,p,/*pvnode?depth-2:*/depth/2,ply,iidPV,seldepth,isInCheck,cutNode,skipMoves);
+        pvs<pvnode,false>(alpha,beta,p,depth-2,ply,iidPV,seldepth,isInCheck,cutNode,skipMoves);
         if (stopFlag) return STOPSCORE;
-        validTTmove = TT::getEntry(*this, p, pHash, depth, e) && e.m != INVALIDMINIMOVE;
+        TT::getEntry(*this, p, pHash, 0, e);
+        ttHit = e.h != nullHash;
+        validTTmove = ttHit && e.m != INVALIDMINIMOVE;
     }
 
     killerT.killers[ply+1][0] = killerT.killers[ply+1][1] = 0;
 
     if (!rootnode){
         // LMP
-        if (SearchConfig::doLMP && depth <= SearchConfig::lmpMaxDepth) lmp = true;
+        lmp = (SearchConfig::doLMP && depth <= SearchConfig::lmpMaxDepth);
         // futility
         const ScoreType futilityScore = alpha - SearchConfig::futilityDepthInit[evalScoreIsHashScore] - SearchConfig::futilityDepthCoeff[evalScoreIsHashScore]*depth;
-        if (SearchConfig::doFutility && depth <= SearchConfig::futilityMaxDepth[evalScoreIsHashScore] && evalScore <= futilityScore) futility = true;
+        futility = (SearchConfig::doFutility && depth <= SearchConfig::futilityMaxDepth[evalScoreIsHashScore] && evalScore <= futilityScore);
         // history pruning
-        if (SearchConfig::doHistoryPruning && isNotEndGame && depth < SearchConfig::historyPruningMaxDepth) historyPruning = true;
+        historyPruning = (SearchConfig::doHistoryPruning && isNotEndGame && depth < SearchConfig::historyPruningMaxDepth);
         // CMH pruning
-        if (SearchConfig::doCMHPruning && isNotEndGame && depth < SearchConfig::CMHMaxDepth) CMHPruning = true;
+        CMHPruning = (SearchConfig::doCMHPruning && isNotEndGame && depth < SearchConfig::CMHMaxDepth);
     }
 
     int validMoveCount = 0;
@@ -309,6 +312,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                     if (pvnode) updatePV(pv, e.m, childPV);
                     if (ttScore >= beta) {
                         ++stats.counters[Stats::sid_ttbeta];
+                        // increase history bonus of this move
                         if ( !isInCheck && isQuiet ) updateTables(*this, p, depth + (ttScore > (beta+80)), ply, e.m, TT::B_beta, cmhPtr);
                         TT::setEntry(*this,pHash,e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth);
                         return ttScore;
@@ -480,7 +484,9 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                 hashBound = TT::B_exact;
                 if ( score >= beta ){
                     if ( !isInCheck && isQuiet ){
+                        // increase history bonus of this move
                         updateTables(*this, p, depth + (score>beta+80), ply, *it, TT::B_beta, cmhPtr);
+                        // reduce history bonus of all previous
                         for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2) {
                             if ( Move2Type(*it2) == T_std ) historyT.update<-1>(depth + (score > (beta + 80)), *it2, p, cmhPtr);
                         }
