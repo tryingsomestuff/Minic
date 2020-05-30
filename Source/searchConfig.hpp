@@ -40,7 +40,7 @@ extern CONST_CLOP_TUNING DepthType CMHMaxDepth                  ;
 extern CONST_CLOP_TUNING DepthType futilityMaxDepth          [2];
 extern CONST_CLOP_TUNING ScoreType futilityDepthCoeff        [2];
 extern CONST_CLOP_TUNING ScoreType futilityDepthInit         [2];
-//extern CONST_CLOP_TUNING ScoreType failHighReductionThreshold[2];
+extern CONST_CLOP_TUNING ScoreType failHighReductionThreshold[2];
 extern CONST_CLOP_TUNING DepthType iidMinDepth                  ;
 extern CONST_CLOP_TUNING DepthType iidMinDepth2                 ;
 extern CONST_CLOP_TUNING DepthType probCutMinDepth              ;
