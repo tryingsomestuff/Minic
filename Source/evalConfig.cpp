@@ -170,7 +170,7 @@ CONST_TEXEL_TUNING ScoreType kingAttSemiOpenfileOpp = 93;
 CONST_TEXEL_TUNING ScoreType kingAttSemiOpenfileOur = 111;
 ScoreType kingAttTable[64] = {0};
 
-CONST_TEXEL_TUNING EvalScore tempo = {28, 28};
+CONST_TEXEL_TUNING EvalScore tempo = {15, 15};
 
 // slow application of factor depending on materialFactor around 1 (meaning equal material)
 inline void scaleShashin(EvalScore & score, const float materialFactor, const float factor){
