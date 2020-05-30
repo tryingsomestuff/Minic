@@ -120,6 +120,8 @@ const std::string MinicVersion = "dev";
 #define JOIN(symbol1,symbol2) _DO_JOIN(symbol1,symbol2 )
 #define _DO_JOIN(symbol1,symbol2) symbol1##symbol2
 
+#define EXTENDMORE(extension) (!extension)
+
 typedef std::chrono::system_clock Clock;
 typedef signed char DepthType;
 typedef int32_t Move;         // invalid if < 0
