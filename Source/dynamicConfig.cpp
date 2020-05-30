@@ -16,8 +16,8 @@ namespace DynamicConfig{
     bool FRC               = false;
     bool UCIPonder         = false;
     unsigned int multiPV   = 1;
-    ScoreType contempt     = 15;
-    ScoreType contemptMG   = 15;
+    ScoreType contempt     = 12;
+    ScoreType contemptMG   = 12;
     bool limitStrength     = false;
     int strength           = 1500;
 }
