@@ -156,8 +156,9 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
 #else
             contempt = 0;
 #endif            
+
             // dynamic contempt ///@todo tune this
-            contempt += ScoreType(std::round(50*std::tanh(bestScore/300.f)));
+            contempt += ScoreType(std::round(25*std::tanh(bestScore/400.f)));
             Logging::LogIt(Logging::logInfo) << "Dynamic contempt " << contempt;
 
             DepthType windowDepth = depth;
