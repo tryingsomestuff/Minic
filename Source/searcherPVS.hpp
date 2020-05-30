@@ -210,10 +210,10 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
     }
 
     // IID
-    if ( (!validTTmove /*|| e.d < depth/4*/) && ((pvnode && depth >= SearchConfig::iidMinDepth) || (cutNode && depth >= SearchConfig::iidMinDepth2)) ){ ///@todo try with cutNode only ?
+    if ( (!validTTmove /*|| e.d < depth-4*/) && ((pvnode && depth >= SearchConfig::iidMinDepth) || (cutNode && depth >= SearchConfig::iidMinDepth2)) ){ ///@todo try with cutNode only ?
         ++stats.counters[Stats::sid_iid];
         PVList iidPV;
-        pvs<pvnode,false>(alpha,beta,p,depth-2,ply,iidPV,seldepth,isInCheck,cutNode,skipMoves);
+        pvs<pvnode,false>(alpha,beta,p,depth/2,ply,iidPV,seldepth,isInCheck,cutNode,skipMoves);
         if (stopFlag) return STOPSCORE;
         TT::getEntry(*this, p, pHash, 0, e);
         ttHit = e.h != nullHash;
@@ -254,7 +254,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         Position p2 = p;
         if ( apply(p2, e.m)) {
             TT::prefetch(computeHash(p2));
-            const Square to = Move2To(e.m);
+            //const Square to = Move2To(e.m);
             validMoveCount++;
             PVList childPV;
             stack[p2.halfmoves].h = p2.h;
@@ -262,29 +262,29 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             const bool isCheck = isAttacked(p2, kingSquare(p2));
             if ( isCapture(e.m) ) ttMoveIsCapture = true;
             const bool isQuiet = Move2Type(e.m) == T_std;
-            const bool isAdvancedPawnPush = PieceTools::getPieceType(p,Move2From(e.m)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
+            //const bool isAdvancedPawnPush = PieceTools::getPieceType(p,Move2From(e.m)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
             // extensions
             DepthType extension = 0;
             if ( DynamicConfig::level>80){
-               if (!extension && pvnode && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension;
-               if (!extension && isCastling(e.m) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
-               if (!extension && ply > 1 && VALIDMOVE(stack[p.halfmoves].threat) && VALIDMOVE(stack[p.halfmoves - 2].threat) && (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) || (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat)))) ++stats.counters[Stats::sid_BMExtension], ++extension;
-               //if (!extension && mateThreat) ++stats.counters[Stats::sid_mateThreatExtension],++extension;
-               //if (!extension && VALIDMOVE(p.lastMove) && Move2Type(p.lastMove) == T_capture && Move2To(e.m) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; // recapture
-               //if (!extension && isCheck ) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
+               //if (EXTENDMORE(extension) && pvnode && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension;
+               //if (EXTENDMORE(extension) && isCastling(e.m) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
+               //if (EXTENDMORE(extension) && ply > 1 && VALIDMOVE(stack[p.halfmoves].threat) && VALIDMOVE(stack[p.halfmoves - 2].threat) && (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) || (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat)))) ++stats.counters[Stats::sid_BMExtension], ++extension;
+               //if (EXTENDMORE(extension) && mateThreat) ++stats.counters[Stats::sid_mateThreatExtension],++extension;
+               //if (EXTENDMORE(extension) && VALIDMOVE(p.lastMove) && Move2Type(p.lastMove) == T_capture && Move2To(e.m) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; // recapture
+               //if (EXTENDMORE(extension) && isCheck ) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
                /*
-               if (!extension && isQuiet) {
+               if (EXTENDMORE(extension) && isQuiet) {
                const int pp = (p.b[Move2From(e.m)] + PieceShift) * 64 + Move2To(e.m);
                if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= HISTORY_MAX / 2 && cmhPtr[1][pp] >= HISTORY_MAX / 2) ++stats.counters[Stats::sid_CMHExtension], ++extension;
                }
                */
-               if (!extension && isAdvancedPawnPush ) {
+               /*if (EXTENDMORE(extension) && isAdvancedPawnPush ) {
                    const BitBoard pawns[2] = { p2.pieces_const<P_wp>(Co_White), p2.pieces_const<P_wp>(Co_Black) };
                    const BitBoard passed[2] = { BBTools::pawnPassed<Co_White>(pawns[Co_White], pawns[Co_Black]), BBTools::pawnPassed<Co_Black>(pawns[Co_Black], pawns[Co_White]) };
                    if ( SquareToBitboard(to) & passed[p.c] ) ++stats.counters[Stats::sid_pawnPushExtension], ++extension;
-               }
-               if (!extension && pvnode && (p.pieces_const<P_wq>(p.c) && isQuiet && PieceTools::getPieceType(p, Move2From(e.m)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, e.m, 0)) ++stats.counters[Stats::sid_queenThreatExtension], ++extension;
-               if (!extension && withoutSkipMove && depth >= SearchConfig::singularExtensionDepth && !rootnode && !isMateScore(e.s) && e.b == TT::B_beta && e.d >= depth - 3){
+               }*/
+               //if (EXTENDMORE(extension) && pvnode && (p.pieces_const<P_wq>(p.c) && isQuiet && PieceTools::getPieceType(p, Move2From(e.m)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, e.m, 0)) ++stats.counters[Stats::sid_queenThreatExtension], ++extension;
+               if (EXTENDMORE(extension) && withoutSkipMove && depth >= SearchConfig::singularExtensionDepth && !rootnode && !isMateScore(e.s) && e.b == TT::B_beta && e.d >= depth - 3){
                    const ScoreType betaC = e.s - 2*depth;
                    PVList sePV;
                    DepthType seSeldetph = 0;
@@ -302,8 +302,10 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             }
             const ScoreType ttScore = -pvs<pvnode,true>(-beta, -alpha, p2, depth - 1 + extension, ply + 1, childPV, seldepth, isCheck, !cutNode);
             if (stopFlag) return STOPSCORE;
-            if (rootnode) rootScores.push_back({e.m,ttScore});
-            if (rootnode) previousBest = e.m;
+            if (rootnode){
+                rootScores.push_back({e.m,ttScore});
+                previousBest = e.m;
+            }            
             if ( ttScore > bestScore ){
                 bestScore = ttScore;
                 bestMove = e.m;
@@ -375,22 +377,22 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         DepthType extension = 0;
         const bool isQuiet = Move2Type(*it) == T_std;
         if ( DynamicConfig::level>80){
-           if (!extension && pvnode && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension; // we are in check (extension)
-           if (!extension && isCastling(*it) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
-           if (!extension && ply > 1 && stack[p.halfmoves].threat != INVALIDMOVE && stack[p.halfmoves - 2].threat != INVALIDMOVE && (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) || (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat)))) ++stats.counters[Stats::sid_BMExtension], ++extension;
-           //if (!extension && mateThreat && depth <= 4) ++stats.counters[Stats::sid_mateThreatExtension],++extension;
-           //if (!extension && VALIDMOVE(p.lastMove) && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; //recapture
-           //if (!extension && isCheck && !isBadCap(*it)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
-           if (!extension && !firstMove && isQuiet) {
+           //if (EXTENDMORE(extension) && pvnode && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension; // we are in check (extension)
+           //if (EXTENDMORE(extension) && isCastling(*it) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
+           //if (EXTENDMORE(extension) && ply > 1 && stack[p.halfmoves].threat != INVALIDMOVE && stack[p.halfmoves - 2].threat != INVALIDMOVE && (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) || (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat)))) ++stats.counters[Stats::sid_BMExtension], ++extension;
+           //if (EXTENDMORE(extension) && mateThreat && depth <= 4) ++stats.counters[Stats::sid_mateThreatExtension],++extension;
+           //if (EXTENDMORE(extension) && VALIDMOVE(p.lastMove) && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && Move2To(*it) == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; //recapture
+           //if (EXTENDMORE(extension) && isCheck && !isBadCap(*it)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
+           /*if (EXTENDMORE(extension) && !firstMove && isQuiet) {
                const int pp = (p.board_const(Move2From(*it)) + PieceShift) * 64 + Move2To(*it);
                if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= HISTORY_MAX / 2 && cmhPtr[1][pp] >= HISTORY_MAX / 2) ++stats.counters[Stats::sid_CMHExtension], ++extension;
-           }
-           if (!extension && isAdvancedPawnPush /*&& (killerT.isKiller(*it, ply) || !isBadCap(*it))*/){
-               const BitBoard pawns[2] = { p2.pieces_const<P_wp>(Co_White), p2.pieces_const<P_wp>(Co_Black) };
-               const BitBoard passed[2] = { BBTools::pawnPassed<Co_White>(pawns[Co_White], pawns[Co_Black]), BBTools::pawnPassed<Co_Black>(pawns[Co_Black], pawns[Co_White]) };
-               if ( (SquareToBitboard(to) & passed[p.c]) ) ++stats.counters[Stats::sid_pawnPushExtension], ++extension;
-           }
-           if (!extension && pvnode && firstMove && (p.pieces_const<P_wq>(p.c) && isQuiet && Move2Type(*it) == T_std && PieceTools::getPieceType(p, Move2From(*it)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, *it, 0)) ++stats.counters[Stats::sid_queenThreatExtension], ++extension;
+           }*/
+           //if (EXTENDMORE(extension) && isAdvancedPawnPush /*&& (killerT.isKiller(*it, ply) || !isBadCap(*it))*/){
+           //    const BitBoard pawns[2] = { p2.pieces_const<P_wp>(Co_White), p2.pieces_const<P_wp>(Co_Black) };
+           //    const BitBoard passed[2] = { BBTools::pawnPassed<Co_White>(pawns[Co_White], pawns[Co_Black]), BBTools::pawnPassed<Co_Black>(pawns[Co_Black], pawns[Co_White]) };
+           //    if ( (SquareToBitboard(to) & passed[p.c]) ) ++stats.counters[Stats::sid_pawnPushExtension], ++extension;
+           //}
+           //if (EXTENDMORE(extension) && pvnode && firstMove && (p.pieces_const<P_wq>(p.c) && isQuiet && Move2Type(*it) == T_std && PieceTools::getPieceType(p, Move2From(*it)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, *it, 0)) ++stats.counters[Stats::sid_queenThreatExtension], ++extension;
         }
         // pvs
         if (validMoveCount < (2/*+2*rootnode*/) || !SearchConfig::doPVS ) score = -pvs<pvnode,true>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,!cutNode);
@@ -435,18 +437,13 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             DepthType reduction = 0;
             if (SearchConfig::doLMR && (isReductible && isQuiet ) && depth >= SearchConfig::lmrMinDepth ){
                 ++stats.counters[Stats::sid_lmr];
-                reduction = SearchConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
-                reduction += !improving;
-                reduction += ttMoveIsCapture;
-                //reduction += (cutNode && evalScore - SearchConfig::failHighReductionThreshold[evalScoreIsHashScore] > beta);
+                reduction += SearchConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
+                // more reduction
+                reduction += !improving + ttMoveIsCapture;
+                reduction += (cutNode && evalScore - SearchConfig::failHighReductionThreshold[evalScoreIsHashScore] > beta);
+                // less reduction
                 reduction -= HISTORY_DIV(2 * Move2Score(*it)); //history reduction/extension (beware killers and counter are scored above history max, so reduced less
-                if ( reduction > 0){
-                    if      ( pvnode           ) --reduction;
-                    else if ( isDangerRed      ) --reduction;
-                    else if ( !noCheck         ) --reduction;
-                    //else if ( ttMoveSingularExt) --reduction;
-                    //if ( reduction>1 && isEmergencyDefence ) --reduction;
-                }
+                reduction -= reduction > 0 && (pvnode || isDangerRed || !noCheck /* || ttMoveSingularExt*/ /*|| isEmergencyDefence*/);
                 // never extend more than reduce
                 if ( extension - reduction > 0 ) reduction = extension;
                 if ( reduction >= depth - 1 + extension ) reduction = depth - 1 + extension - 1;
