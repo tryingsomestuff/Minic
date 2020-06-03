@@ -41,7 +41,7 @@ namespace MaterialHash {
 
 #pragma pack(push, 1)
     struct MaterialHashEntry  {
-      EvalScore score={0,0};
+      EvalScore score = {0,0};
       float gp = 1.f;
       Terminaison t = Ter_Unknown;
     };
