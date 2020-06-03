@@ -3,7 +3,7 @@
 #include "logging.hpp"
 
 TimeType Searcher::getCurrentMoveMs() {
-    if (TimeMan::isUCIPondering) {
+    if (TimeMan::isUCIPondering || TimeMan::isUCIAnalysis) {
         return INFINITETIME;
     }
     TimeType ret = currentMoveMs;

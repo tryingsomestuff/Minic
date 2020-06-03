@@ -100,11 +100,12 @@ namespace UCI {
                         COM::ponder = COM::p_off;
                         DynamicConfig::mateFinder = false;
                         TimeMan::isUCIPondering = false;
+                        TimeMan::isUCIAnalysis = false;
 
                         std::string param;
                         while (iss >> param) {
                             Logging::LogIt(Logging::logInfo) << "received parameter " << param;
-                            if      (param == "infinite")    { TimeMan::msecPerMove = INFINITETIME; TimeMan::isUCIPondering = true;}
+                            if      (param == "infinite")    { TimeMan::msecPerMove = INFINITETIME; TimeMan::isUCIAnalysis = true;}
                             else if (param == "depth")       { int d = 0;  iss >> d; COM::depth = d; }
                             else if (param == "movetime")    { iss >> TimeMan::msecPerMove; }
                             else if (param == "nodes")       { unsigned long long int maxNodes = 0;  iss >> maxNodes; TimeMan::maxKNodes = int(maxNodes/1000); }

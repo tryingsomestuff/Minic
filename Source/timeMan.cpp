@@ -11,6 +11,7 @@ DepthType moveToGo;
 unsigned long long maxKNodes;
 bool isDynamic;
 bool isUCIPondering;
+bool isUCIAnalysis;
 
 void init(){
     Logging::LogIt(Logging::logInfo) << "Init timeman" ;
@@ -20,6 +21,7 @@ void init(){
     maxKNodes   = 0;
     isDynamic   = false;
     isUCIPondering  = false;
+    isUCIAnalysis = false;
     overHead    = 0;
     targetTime  = 0;
     maxTime     = 0;

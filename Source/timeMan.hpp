@@ -18,6 +18,7 @@ extern DepthType moveToGo;
 extern unsigned long long maxKNodes; ///@todo use this !
 extern bool isDynamic;
 extern bool isUCIPondering;
+extern bool isUCIAnalysis;
 
 void init();
 
