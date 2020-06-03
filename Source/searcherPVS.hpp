@@ -94,7 +94,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                data.gp = gamePhase(p,matScoreW,matScoreB);
                ++stats.counters[Stats::sid_materialTableMiss];
             }
-            ///@todo data.danger, data.mob, Shashin coeff are not filled in case of TT hit !!
+            ///@todo data.danger, data.mob are not filled in case of TT hit !!
         }
         else { // if no TT hit call evaluation !
             ++stats.counters[Stats::sid_ttscmiss];
@@ -305,6 +305,8 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                    if (stopFlag) return STOPSCORE;
                    if (score < betaC) { // TT move is singular
                        ++stats.counters[Stats::sid_singularExtension],/*ttMoveSingularExt=true,*/++extension;
+                       // TT move is "very singular" : kind of single reply extension
+                       if ( score < betaC - 4*depth) ++stats.counters[Stats::sid_singularExtension2],++extension;
                    }
                    // multi cut (at least the TT move and another move are above beta)
                    else if ( betaC >= beta){
