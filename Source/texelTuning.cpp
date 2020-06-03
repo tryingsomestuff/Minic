@@ -596,17 +596,19 @@ void TexelTuning(const std::string & filename) {
     guess["tempo"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::tempo[MG] , -500,  500,"tempo"));
     guess["tempo"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::tempo[EG] , -500,  500,"tempoEG"));
 
-/*
-    guess["shashin"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::shashinMobCoeff[MG] , -500,  500,"shashinmobMG"));
-    guess["shashin"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::shashinMobCoeff[EG] , -500,  500,"shashinmobEG"));
-*/
-
     for (Mat m1 = M_p; m1 <= M_q; ++m1) {
         for (Mat m2 = M_p; m2 <= m1; ++m2) {
             guess["imbalance"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::imbalance_mines[m1-1][m2-1][MG],  -3000, 3000, "imbalance_mines"  + std::to_string(m1) + "_" + std::to_string(m2)));
             guess["imbalance"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::imbalance_theirs[m1-1][m2-1][MG], -3000, 3000, "imbalance_theirs" + std::to_string(m1) + "_" + std::to_string(m2)));
             guess["imbalance"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::imbalance_mines[m1-1][m2-1][EG],  -3000, 3000, "imbalance_minesEG"  + std::to_string(m1) + "_" + std::to_string(m2)));
             guess["imbalance"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::imbalance_theirs[m1-1][m2-1][EG], -3000, 3000, "imbalance_theirsEG" + std::to_string(m1) + "_" + std::to_string(m2)));
+        }
+    }
+
+    for (size_t i = 0 ; i < 7 ; ++i) {
+        for (size_t j = 0; j <= i; ++j) {
+            guess["secondOrder"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::secondOrder[i][j][MG], -3000, 3000, "secondOrder"   + std::to_string(i) + "_" + std::to_string(j)));
+            guess["secondOrder"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::secondOrder[i][j][EG], -3000, 3000, "secondOrderEG" + std::to_string(i) + "_" + std::to_string(j)));
         }
     }
 
@@ -620,13 +622,18 @@ void TexelTuning(const std::string & filename) {
     std::vector<std::string> todo = {
         //"piecesValue",
         
+        "secondOrder",
+
+        /*
         "PST0",
         "PST1",
         "PST2",
         "PST3",
         "PST4",
         "PST5",
+        */
 
+        /*
         "mobility",
         
         "passer",
@@ -650,6 +657,7 @@ void TexelTuning(const std::string & filename) {
         "Fawn",
         "storm",
         "pawnlessFlank",
+        */
 
         /*
         "rookBehindPassed",
@@ -688,7 +696,7 @@ void TexelTuning(const std::string & filename) {
         //"safeChecks",
 
         "tempo"
-*/
+        */
     };
    
    /*
