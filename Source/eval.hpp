@@ -11,11 +11,9 @@
 #include "timers.hpp"
 
 namespace{ // some Color / Piece helpers
-   template<Color C> inline bool isPasser(const Position &p, Square k)     { return (BBTools::mask[k].passerSpan[C] & p.pieces_const<P_wp>(~C)) == empty;}
    template<Color C> inline constexpr ScoreType ColorSignHelper()          { return C==Co_White?+1:-1;}
    template<Color C> inline Square PromotionSquare(const Square k)         { return C==Co_White? (SQFILE(k) + 56) : SQFILE(k);}
    template<Color C> inline Rank ColorRank(const Square k)                 { return Rank(C==Co_White? SQRANK(k) : (7-SQRANK(k)));}
-   template<Color C> inline bool isBackward(const Position &p, Square k, const BitBoard pAtt[2], const BitBoard pAttSpan[2]){ return ((BBTools::shiftN<C>(SquareToBitboard(k))&~p.pieces_const<P_wp>(~C)) & pAtt[~C] & ~pAttSpan[C]) != empty; }
    template<Piece T> inline BitBoard alignedThreatPieceSlider(const Position & p, Color C);
    template<> inline BitBoard alignedThreatPieceSlider<P_wn>(const Position &  , Color  ){ return empty;}
    template<> inline BitBoard alignedThreatPieceSlider<P_wb>(const Position & p, Color C){ return p.pieces_const<P_wb>(C) | p.pieces_const<P_wq>(C) /*| p.pieces_const<P_wn>(C)*/;}
@@ -25,12 +23,11 @@ namespace{ // some Color / Piece helpers
 }
 
 template < Piece T , Color C>
-inline void evalPiece(const Position & p, BitBoard pieceBBiterator, const BitBoard (& kingZone)[2], EvalScore & score, BitBoard & attBy, BitBoard & att, BitBoard & att2, ScoreType (& kdanger)[2], BitBoard & checkers, float & forwardness){
+inline void evalPiece(const Position & p, BitBoard pieceBBiterator, const BitBoard (& kingZone)[2], EvalScore & score, BitBoard & attBy, BitBoard & att, BitBoard & att2, ScoreType (& kdanger)[2], BitBoard & checkers){
     while (pieceBBiterator) {
         const Square k = popBit(pieceBBiterator);
         const Square kk = ColorSquarePstHelper<C>(k);
-        score += EvalConfig::PST[T-1][kk] * ColorSignHelper<C>();
-        forwardness += SQRANK(kk);
+        score += ( EvalConfig::PST[T-1][kk] /*+ EvalScore{8,0}*(DynamicConfig::styleForwardness-50.f)/50.f*SQRANK(kk)*/ ) * ColorSignHelper<C>();
         const BitBoard target = BBTools::pfCoverage[T-1](k, p.occupancy(), C); // real targets
         if ( target ){
            attBy |= target;
@@ -91,7 +88,11 @@ inline void evalPawnPasser(const Position & p, BitBoard pieceBBiterator, EvalSco
 
 template < Color C>
 inline void evalPawn(BitBoard pieceBBiterator, EvalScore & score){
-    while (pieceBBiterator) { score += EvalConfig::PST[0][ColorSquarePstHelper<C>(popBit(pieceBBiterator))] * ColorSignHelper<C>(); }
+    while (pieceBBiterator) { 
+        const Square k = popBit(pieceBBiterator);
+        const Square kk = ColorSquarePstHelper<C>(k);
+        score += EvalConfig::PST[0][kk] * ColorSignHelper<C>(); 
+    }
 }
 
 template< Color C>
@@ -205,16 +206,16 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     const BitBoard kingShield[2] = { kingZone[Co_White] & ~BBTools::shiftS<Co_White>(ranks[SQRANK(p.king[Co_White])]) , kingZone[Co_Black] & ~BBTools::shiftS<Co_Black>(ranks[SQRANK(p.king[Co_Black])]) };
 
     // PST, attack, danger
-    evalPiece<P_wn,Co_White>(p,p.pieces_const<P_wn>(Co_White),kingZone,features.positionalScore,attFromPiece[Co_White][P_wn-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wn-1],data.shashinForwardness[Co_White]);
-    evalPiece<P_wb,Co_White>(p,p.pieces_const<P_wb>(Co_White),kingZone,features.positionalScore,attFromPiece[Co_White][P_wb-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wb-1],data.shashinForwardness[Co_White]);
-    evalPiece<P_wr,Co_White>(p,p.pieces_const<P_wr>(Co_White),kingZone,features.positionalScore,attFromPiece[Co_White][P_wr-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wr-1],data.shashinForwardness[Co_White]);
-    evalPiece<P_wq,Co_White>(p,p.pieces_const<P_wq>(Co_White),kingZone,features.positionalScore,attFromPiece[Co_White][P_wq-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wq-1],data.shashinForwardness[Co_White]);
-    evalPiece<P_wk,Co_White>(p,p.pieces_const<P_wk>(Co_White),kingZone,features.positionalScore,attFromPiece[Co_White][P_wk-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wk-1],data.shashinForwardness[Co_White]);
-    evalPiece<P_wn,Co_Black>(p,p.pieces_const<P_wn>(Co_Black),kingZone,features.positionalScore,attFromPiece[Co_Black][P_wn-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wn-1],data.shashinForwardness[Co_Black]);
-    evalPiece<P_wb,Co_Black>(p,p.pieces_const<P_wb>(Co_Black),kingZone,features.positionalScore,attFromPiece[Co_Black][P_wb-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wb-1],data.shashinForwardness[Co_Black]);
-    evalPiece<P_wr,Co_Black>(p,p.pieces_const<P_wr>(Co_Black),kingZone,features.positionalScore,attFromPiece[Co_Black][P_wr-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wr-1],data.shashinForwardness[Co_Black]);
-    evalPiece<P_wq,Co_Black>(p,p.pieces_const<P_wq>(Co_Black),kingZone,features.positionalScore,attFromPiece[Co_Black][P_wq-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wq-1],data.shashinForwardness[Co_Black]);
-    evalPiece<P_wk,Co_Black>(p,p.pieces_const<P_wk>(Co_Black),kingZone,features.positionalScore,attFromPiece[Co_Black][P_wk-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wk-1],data.shashinForwardness[Co_Black]);
+    evalPiece<P_wn,Co_White>(p,p.pieces_const<P_wn>(Co_White),kingZone,features.positionalScore,attFromPiece[Co_White][P_wn-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wn-1]);
+    evalPiece<P_wb,Co_White>(p,p.pieces_const<P_wb>(Co_White),kingZone,features.positionalScore,attFromPiece[Co_White][P_wb-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wb-1]);
+    evalPiece<P_wr,Co_White>(p,p.pieces_const<P_wr>(Co_White),kingZone,features.positionalScore,attFromPiece[Co_White][P_wr-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wr-1]);
+    evalPiece<P_wq,Co_White>(p,p.pieces_const<P_wq>(Co_White),kingZone,features.positionalScore,attFromPiece[Co_White][P_wq-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wq-1]);
+    evalPiece<P_wk,Co_White>(p,p.pieces_const<P_wk>(Co_White),kingZone,features.positionalScore,attFromPiece[Co_White][P_wk-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wk-1]);
+    evalPiece<P_wn,Co_Black>(p,p.pieces_const<P_wn>(Co_Black),kingZone,features.positionalScore,attFromPiece[Co_Black][P_wn-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wn-1]);
+    evalPiece<P_wb,Co_Black>(p,p.pieces_const<P_wb>(Co_Black),kingZone,features.positionalScore,attFromPiece[Co_Black][P_wb-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wb-1]);
+    evalPiece<P_wr,Co_Black>(p,p.pieces_const<P_wr>(Co_Black),kingZone,features.positionalScore,attFromPiece[Co_Black][P_wr-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wr-1]);
+    evalPiece<P_wq,Co_Black>(p,p.pieces_const<P_wq>(Co_Black),kingZone,features.positionalScore,attFromPiece[Co_Black][P_wq-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wq-1]);
+    evalPiece<P_wk,Co_Black>(p,p.pieces_const<P_wk>(Co_Black),kingZone,features.positionalScore,attFromPiece[Co_Black][P_wk-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wk-1]);
 
     /*
 #ifndef WITH_TEXEL_TUNING
@@ -435,7 +436,7 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     data.danger[Co_White] = kdanger[Co_White];
     data.danger[Co_Black] = kdanger[Co_Black];
 
-    // number of hanging pieces (complexity ...)
+    // number of hanging pieces
     const BitBoard hanging[2] = {nonPawnMat[Co_White] & weakSquare[Co_White] , nonPawnMat[Co_Black] & weakSquare[Co_Black] };
     features.attackScore += EvalConfig::hangingPieceMalus * (countBit(hanging[Co_White]) - countBit(hanging[Co_Black]));
 
@@ -473,7 +474,7 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
 
     STOP_AND_SUM_TIMER(Eval4)
 
-    // pieces mobility
+    // pieces mobility (second attack loop needed, knowing safeSquare ...)
     evalMob <P_wn,Co_White>(p,p.pieces_const<P_wn>(Co_White),features.mobilityScore,safeSquare[Co_White],data);
     evalMob <P_wb,Co_White>(p,p.pieces_const<P_wb>(Co_White),features.mobilityScore,safeSquare[Co_White],data);
     evalMob <P_wr,Co_White>(p,p.pieces_const<P_wr>(Co_White),features.mobilityScore,safeSquare[Co_White],data);
@@ -547,36 +548,56 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     features.materialScore += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0) );
     features.materialScore += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
 
+/*
+    // complexity 
+    // an "anti human GM" trick : side to move wants hanging pieces and material
+    features.complexityScore += EvalScore{1,0} * (white2Play?+1:-1) * countBit((att[Co_White] & p.allPieces[Co_Black]) | (att[Co_Black] & p.allPieces[Co_White]));
+    features.complexityScore += EvalScore{1,0} * (white2Play?+1:-1) * (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t]);
+*/
     if ( display ) displayEval(data,features);
 
-    // Compute various Shashin ratio of current position (may be used later in search)
-    data.shashinMaterialFactor = std::max(0.f, 1.f- SQR(float(features.materialScore[MG])/EvalConfig::shashinThreshold));
-    data.shashinMobRatio       = std::max(0.5f,std::min(2.f,float(data.mobility[p.c]) / std::max(0.5f,float(data.mobility[~p.c]))));
-    // data.shashinForwardness inside [ 8..120 ]
-    ///@todo compacity ??    
-    // Apply Shashin corrections
-    EvalConfig::applyShashinCorrection(p,data,features);
-
+/*
+    // taking Style into account, giving each score a [0..2] factor
+    features.materialScore    = features.materialScore    .scale(1.f + (DynamicConfig::styleMaterial    - 50.f)/50.f, 1.f); 
+    features.positionalScore  = features.positionalScore  .scale(1.f + (DynamicConfig::stylePositional  - 50.f)/50.f, 1.f); 
+    features.developmentScore = features.developmentScore .scale(1.f + (DynamicConfig::styleDevelopment - 50.f)/50.f, 1.f); 
+    features.mobilityScore    = features.mobilityScore    .scale(1.f + (DynamicConfig::styleMobility    - 50.f)/50.f, 1.f); 
+    features.pawnStructScore  = features.pawnStructScore  .scale(1.f + (DynamicConfig::stylePawnStruct  - 50.f)/50.f, 1.f); 
+    features.attackScore      = features.attackScore      .scale(1.f + (DynamicConfig::styleAttack      - 50.f)/50.f, 1.f); 
+    features.complexityScore  = features.complexityScore  .scale(      (DynamicConfig::styleComplexity  - 50.f)/50.f, 0.f);
+*/
     // Sum everything
-    EvalScore score = features.materialScore + features.positionalScore + features.developmentScore + features.mobilityScore + features.pawnStructScore + features.attackScore;
+    EvalScore score = features.materialScore 
+                    + features.positionalScore 
+                    + features.developmentScore 
+                    + features.mobilityScore 
+                    + features.pawnStructScore 
+                    + features.attackScore 
+                    + features.complexityScore;
 
     if ( display ){
         Logging::LogIt(Logging::logInfo) << "Post correction ... ";
         displayEval(data,features);
-        Logging::LogIt(Logging::logInfo) << "> All (before scaling ) " << score;
+        Logging::LogIt(Logging::logInfo) << "> All (before 2nd order) " << score;
     }
 
-    // initiative
+    // apply a second order correction over features ...
+    //score += EvalConfig::SecondOrder(features);
+
+    if ( display ){
+        Logging::LogIt(Logging::logInfo) << "Post second order correction ... ";
+        Logging::LogIt(Logging::logInfo) << "> All " << score;
+    }
+
+    // initiative (kind of second order pawn structure stuff for end-games)
     EvalScore initiativeBonus = EvalConfig::initiative[0] * countBit(allPawns) + EvalConfig::initiative[1] * ((allPawns & queenSide) && (allPawns & kingSide)) + EvalConfig::initiative[2] * (countBit(p.occupancy() & ~allPawns) == 2) - EvalConfig::initiative[3];
     initiativeBonus[MG] = sgn(score[MG]) * std::max(initiativeBonus[MG], ScoreType(-std::abs(score[MG])));
     initiativeBonus[EG] = sgn(score[EG]) * std::max(initiativeBonus[EG], ScoreType(-std::abs(score[EG])));
     score += initiativeBonus;
     if ( display ){
         Logging::LogIt(Logging::logInfo) << "Initiative    " << initiativeBonus;
-        Logging::LogIt(Logging::logInfo) << "> All (before initiative) " << score;
+        Logging::LogIt(Logging::logInfo) << "> All (with initiative) " << score;
     }
-
-    ///@todo complexity
 
     // tempo
     score += EvalConfig::tempo*(white2Play?+1:-1);
@@ -590,7 +611,7 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
         Logging::LogIt(Logging::logInfo) << "> All (with contempt) " << score;
     }
 
-    // scale score
+    // scale score (MG/EG)
     ScoreType ret = (white2Play?+1:-1)*Score(score,features.scalingFactor,p,data.gp); // scale both phase and 50 moves rule
     if ( display ){
         Logging::LogIt(Logging::logInfo) << "==> All (fully scaled) " << score;

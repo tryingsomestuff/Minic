@@ -149,6 +149,13 @@ CONST_TEXEL_TUNING EvalScore   rookPairMalus           = { 4, -4};
 
 CONST_TEXEL_TUNING EvalScore   queenNearKing           = { 4, 11};
 
+CONST_TEXEL_TUNING EvalScore   secondOrder[7][7]       = { { {   2,  -3} },
+                                                           { {  43,  -2}, {   2,  -8} },
+                                                           { {   1,   0}, {   2,   1}, { -15,   1} },
+                                                           { { -17,   0}, {  33,   7}, { -17,   5}, {  -5,   7} },
+                                                           { { -21,   0}, {  36,   0}, {   2,   0}, {   4,   0}, { -21,   0} },
+                                                           { {  -1,   1}, {  33,   0}, {   0,   0}, {   2,   0}, { -22,  -9}, {  -8,   0} }};
+
 //N B R QB QR K
 CONST_TEXEL_TUNING EvalScore MOB[6][15] = { { { -8,-19},{ -1, 19},{  9, 33},{ 13, 37},{ 19, 40},{ 23, 45},{ 41, 31},{ 35, 46},{ 29, 47},{  0,  0},{  0,  0},{  0,  0},{  0,  0},{  0,  0},{  0,  0} },
                                             { {-22,-10},{-14, 23},{ -8, 30},{ -2, 35},{  1, 35},{ -2, 45},{  9, 37},{ 21, 32},{ 41, 26},{ 45, 36},{ 55, 37},{ 71, 65},{ 71, 56},{120, 95},{  0,  0} },
@@ -171,65 +178,5 @@ CONST_TEXEL_TUNING ScoreType kingAttSemiOpenfileOur = 111;
 ScoreType kingAttTable[64] = {0};
 
 CONST_TEXEL_TUNING EvalScore tempo = {15, 15};
-
-// slow application of factor depending on materialFactor around 1 (meaning equal material)
-inline void scaleShashin(EvalScore & score, const float materialFactor, const float factor){
-   return score = EvalScore{ScoreType(materialFactor*score[MG]*factor+(1-materialFactor)*score[MG]),
-                            ScoreType(materialFactor*score[EG]*factor+(1-materialFactor)*score[EG])};
-}
-
-///@todo use shashinMobRatio in draw score !
-
-//-------------------------------------------
-// if more or less even in material
-// if mobility is already high
-//    * attack ++
-//    * positional ++
-//    * try sac ?
-// if mobility is even
-//    * positional ++
-//    * exchange ++
-//    * push pawn ++
-// if mobility is too small
-//    * go back
-//    * mobility ++
-//-------------------------------------------
-void applyShashinCorrection(const Position &  /*p*/, const EvalData &  /*data*/ , EvalFeatures & /*features*/ ){
-    
-    return;
-    /*
-    const ShashinType stype = data.shashinMobRatio  < 0.8 ? Shashin_Petrosian :
-                              data.shashinMobRatio == 0.8 ? Shashin_Capablanca_Petrosian :
-                              data.shashinMobRatio  < 1.2 ? Shashin_Capablanca :
-                              data.shashinMobRatio == 1.2 ? Shashin_Tal_Capablanca :
-                              Shashin_Tal; // data.shashinMobRatio > 1.2
-    */
-
-    // material
-    //features.materialScore = features.materialScore;
-
-    // take forwardness into account if Petrosian
-    //if ( stype >= Shashin_Capablanca_Petrosian ) features.materialScore += EvalConfig::forwardnessMalus * (p.c==Co_White?-1:+1) * (data.shashinForwardness[p.c] - data.shashinForwardness[~p.c]);
-
-    // positional
-    //features.positionalScore = features.positionalScore;
-    //scaleShashin(features.positionalScore,data.shashinMaterialFactor,data.shashinMobRatio);
-
-    // development
-    //features.developmentScore = features.developmentScore;
-    //scaleShashin(features.developmentScore,data.shashinMaterialFactor,1.f/data.shashinMobRatio);
-
-    // mobility
-    //features.mobilityScore = features.mobilityScore;
-    //scaleShashin(features.mobilityScore,data.shashinMaterialFactor,1.f/data.shashinMobRatio);
-
-    // pawn structure
-    //features.pawnStructScore = features.pawnStructScore;
-
-    // attack
-    //features.attackScore = features.attackScore;
-    //scaleShashin(features.attackScore,data.shashinMaterialFactor,data.shashinMobRatio);
-
-}
 
 } // EvalConfig

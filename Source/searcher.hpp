@@ -29,8 +29,6 @@ struct Searcher{
     };
     std::array<StackData,MAX_PLY> stack;
 
-    EvalData dataShashin;
-
     Stats stats;
 
     inline void DisplayStats()const{
@@ -101,8 +99,7 @@ struct Searcher{
         ScoreType danger[2]       = {0,0};
         MiniHash h                = 0;
         inline void reset(){
-            score[MG] = 0;   
-            score[EG] = 0;
+            score = {0,0};
             danger[Co_White] = 0;   
             danger[Co_Black] = 0;
         }

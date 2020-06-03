@@ -100,6 +100,14 @@ namespace Options {
        #ifdef WITH_SYZYGY
        _keys.push_back(KeyBase(k_string,w_string,"SyzygyPath"                  , &DynamicConfig::syzygyPath                                                                              , &SyzygyTb::initTB));
        #endif
+       
+       _keys.push_back(KeyBase(k_int, w_spin,  "StyleAttack"                   , &DynamicConfig::styleAttack                    , (int)0   , (int)100));
+       _keys.push_back(KeyBase(k_int, w_spin,  "StyleComplexity"               , &DynamicConfig::styleComplexity                , (int)0   , (int)100));
+       _keys.push_back(KeyBase(k_int, w_spin,  "StyleDevelopment"              , &DynamicConfig::styleDevelopment               , (int)0   , (int)100));
+       _keys.push_back(KeyBase(k_int, w_spin,  "StyleMaterial"                 , &DynamicConfig::styleMaterial                  , (int)0   , (int)100));
+       _keys.push_back(KeyBase(k_int, w_spin,  "StyleMobility"                 , &DynamicConfig::styleMobility                  , (int)0   , (int)100));
+       _keys.push_back(KeyBase(k_int, w_spin,  "StylePositional"               , &DynamicConfig::stylePositional                , (int)0   , (int)100));
+       _keys.push_back(KeyBase(k_int, w_spin,  "StyleForwardness"              , &DynamicConfig::styleForwardness               , (int)0   , (int)100));
 
 #ifdef WITH_CLOP_SEARCH
        _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin0"            , &SearchConfig::qfutilityMargin[0]              , ScoreType(0)    , ScoreType(1500)     ));

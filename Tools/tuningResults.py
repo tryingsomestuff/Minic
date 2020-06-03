@@ -11,7 +11,7 @@ features = [ 'imbalance', 'PST0', 'PST1', 'PST2', 'PST3', 'PST4', 'PST5',
              'rookOpen', 'rookQueenFile', 'rookFrontQueen', 'rookFrontKing', 'minorOnOpen', 'pinned', 'hanging', 'minorThreat', 'rookThreat', 'queenThreat', 'kingThreat',
              'adjustN', 'adjustR', 'adjustB', 'badBishop', 'pairAdjust', 'queenNearKing', 
              'mobility', 'initiative', 
-             'attDefKing', 'attFunction', 'attOpenFile' ]
+             'attDefKing', 'attFunction', 'attOpenFile', 'secondOrder' ]
 
 for f in features:
     print(f)
@@ -22,6 +22,8 @@ for f in features:
             os.system("python ./Tools/PST.py \"" + ll + "\"")
         elif "imbalance" in f:
             os.system("python ./Tools/imbalance.py \"" + ll + "\"")
+        elif "secondOrder" in f:
+            os.system("python ./Tools/secondOrder.py \"" + ll + "\"")
         elif "mobility" in f:
             os.system("python ./Tools/MOB.py \"" + ll + "\"")
         elif "pawnStructure1" in f:

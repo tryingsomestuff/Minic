@@ -51,7 +51,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
         Logging::LogIt(Logging::logInfo) << "Search params :" ;
         Logging::LogIt(Logging::logInfo) << "requested time  " << getCurrentMoveMs() ;
         Logging::LogIt(Logging::logInfo) << "requested depth " << (int) d ;
-        //TT::clearTT(); // to be used for reproductible results
+        //TT::clearTT(); // to be forced for reproductible results
         TT::age();
         MoveDifficultyUtil::variability = 1.f;
     }
@@ -125,9 +125,6 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
        }
     }
 
-    // compute Shashin ratios of the starting position being searched
-    eval(p,dataShashin,*this);
-
     // ID loop
     for(DepthType depth = startDepth ; depth <= std::min(d,DepthType(MAX_DEPTH-6)) && !stopFlag ; ++depth ){ // -6 so that draw can be found for sure ///@todo I don't understand this -6 anymore ..
         
@@ -163,8 +160,6 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
 
             DepthType windowDepth = depth;
 
-            ///@todo Shashin contempt ???
-            
             // Aspiration loop
             while( !stopFlag ){
 

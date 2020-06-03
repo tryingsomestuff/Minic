@@ -67,6 +67,8 @@ extern CONST_TEXEL_TUNING EvalScore   knightPairMalus        ;
 extern CONST_TEXEL_TUNING EvalScore   rookPairMalus          ;
 extern CONST_TEXEL_TUNING EvalScore   queenNearKing          ;
 
+extern CONST_TEXEL_TUNING EvalScore   secondOrder[7][7]      ;
+
 //N B R QB QR K
 extern CONST_TEXEL_TUNING EvalScore MOB[6][15];
 
@@ -88,14 +90,31 @@ extern ScoreType kingAttTable[64];
 
 extern CONST_TEXEL_TUNING EvalScore tempo;
 
+/*
+inline double fast_exp_64(const double x) noexcept {
+    // Based on Schraudolph 1999, A Fast, Compact Approximation of the Exponential Function.
+    // Valid for x in approx range (-700, 700).
+    union{double d_; int64_t i_;} uid;
+    uid.i_ = int64_t(double((int64_t(1) << 52) / log(2.0)) * x + double((int64_t(1) << 52) * 1023 - 0));
+    return uid.d_;
+}
+*/
+
 inline double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f, double offset = 0.f){ return m / (1 + exp((trans - x) / scale)) - offset;}
 inline void initEval(){ for(Square i = 0; i < 64; i++){ EvalConfig::kingAttTable[i] = (int) sigmoid(i,EvalConfig::kingAttMax,EvalConfig::kingAttTrans,EvalConfig::kingAttScale,EvalConfig::kingAttOffset); } }// idea taken from Topple
 
-///@todo Shashin stuff
-const ScoreType shashinThreshold = 180;
-const EvalScore forwardnessMalus = {20,10};
-enum ShashinType : unsigned char { Shashin_None = 0, Shashin_Tal, Shashin_Tal_Capablanca, Shashin_Capablanca, Shashin_Capablanca_Petrosian, Shashin_Petrosian, Shashin_Forced };
-void applyShashinCorrection(const Position & p, const EvalData & data, EvalFeatures & features);
+inline EvalScore SecondOrder(const EvalFeatures & features){
+    int64_t bonusMG = 0;
+    int64_t bonusEG = 0;
+    const EvalScore *const ft[7] = { &features.attackScore, &features.complexityScore, &features.developmentScore, &features.materialScore, &features.mobilityScore, &features.pawnStructScore, &features.positionalScore };
+    for (size_t i = 0 ; i < 7 ; ++i) {
+        for (size_t j = 0; j <= i; ++j) {
+            bonusMG += ScoreType(EvalConfig::secondOrder[i][j][MG] * ( sigmoid((*ft[i])[MG],2,0,100,0)*sigmoid((*ft[j])[MG],2,0,100,0) ));
+            bonusEG += ScoreType(EvalConfig::secondOrder[i][j][EG] * ( sigmoid((*ft[i])[EG],2,0,100,0)*sigmoid((*ft[j])[EG],2,0,100,0) ));
+        }
+    }
+    return {ScoreType(bonusMG),ScoreType(bonusEG)};
+}
 
 } // EvalConfig
 

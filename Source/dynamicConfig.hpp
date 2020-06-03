@@ -25,4 +25,13 @@ namespace DynamicConfig{
     extern ScoreType contemptMG   ;
     extern bool limitStrength     ;
     extern int strength           ;
+
+    extern int styleComplexity    ;
+    extern int styleMaterial      ;    
+    extern int stylePositional    ;
+    extern int styleDevelopment   ;
+    extern int styleMobility      ;
+    extern int styleAttack        ;
+    extern int stylePawnStruct    ;   
+    extern int styleForwardness   ;
 }

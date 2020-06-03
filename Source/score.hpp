@@ -37,6 +37,7 @@ struct EvalScore{
     void       operator =(const ScoreType& s){for(GamePhase g=MG; g<GP_MAX; ++g){sc[g]=s;}}
 
     EvalScore scale(float s_mg,float s_eg)const{ EvalScore e(*this); e[MG]= ScoreType(s_mg*e[MG]); e[EG]= ScoreType(s_eg*e[EG]); return e;}
+    //EvalScore scale(float s)const{ return scale(s,s);}
 };
 
 inline std::ostream & operator<<(std::ostream & of, const EvalScore & s){
@@ -45,12 +46,13 @@ inline std::ostream & operator<<(std::ostream & of, const EvalScore & s){
 }
 
 struct EvalFeatures{
-    EvalScore materialScore    = {0,0}; // material, imbalance
-    EvalScore positionalScore  = {0,0}; // PST, output, minor on open
-    EvalScore developmentScore = {0,0};
-    EvalScore mobilityScore    = {0,0}; 
-    EvalScore attackScore      = {0,0}; // attack, king safety
-    EvalScore pawnStructScore  = {0,0};
+    EvalScore materialScore   = {0,0}; // material, imbalance
+    EvalScore positionalScore = {0,0}; // PST, output, minor on open
+    EvalScore developmentScore= {0,0};
+    EvalScore mobilityScore   = {0,0}; 
+    EvalScore attackScore     = {0,0}; // attack, king safety
+    EvalScore pawnStructScore = {0,0};
+    EvalScore complexityScore = {0,0}; // not "sided", this is a whole position thing
     float scalingFactor        = 1.f;
 };
 
@@ -65,10 +67,6 @@ struct EvalData{
     float gp = 0;
     ScoreType danger[2] = {0,0};
     unsigned short int mobility[2] = {0,0};
-    float shashinMaterialFactor = 1; // max(0,1-SQR(materialScore/150)), so 0 if too much imbalance
-    float shashinForwardness[2] = {0,0};
-    float shashinPacking[2] = {0,0};
-    float shashinMobRatio = 1;
 };
 
 // used for easy move detection
@@ -80,10 +78,11 @@ struct RootScores {
 inline void displayEval(const EvalData & data, const EvalFeatures & features ){
     Logging::LogIt(Logging::logInfo) << "Game phase    " << data.gp;
     Logging::LogIt(Logging::logInfo) << "ScalingFactor " << features.scalingFactor;
-    Logging::LogIt(Logging::logInfo) << "Material      " << features.materialScore;
-    Logging::LogIt(Logging::logInfo) << "Positional    " << features.positionalScore;
+    Logging::LogIt(Logging::logInfo) << "Material      " << features.materialScore   ;
+    Logging::LogIt(Logging::logInfo) << "Positional    " << features.positionalScore ;
     Logging::LogIt(Logging::logInfo) << "Development   " << features.developmentScore;
-    Logging::LogIt(Logging::logInfo) << "Mobility      " << features.mobilityScore;
-    Logging::LogIt(Logging::logInfo) << "Pawn          " << features.pawnStructScore;
-    Logging::LogIt(Logging::logInfo) << "Attack        " << features.attackScore;
+    Logging::LogIt(Logging::logInfo) << "Mobility      " << features.mobilityScore   ;
+    Logging::LogIt(Logging::logInfo) << "Pawn          " << features.pawnStructScore ;
+    Logging::LogIt(Logging::logInfo) << "Attack        " << features.attackScore     ;
+    Logging::LogIt(Logging::logInfo) << "Complexity    " << features.complexityScore ;
 }
