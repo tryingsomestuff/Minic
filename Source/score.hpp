@@ -36,7 +36,20 @@ struct EvalScore{
     EvalScore  operator -(const ScoreType& s)const{EvalScore e(*this); for(GamePhase g=MG; g<GP_MAX; ++g)e[g]-=s; return e;}
     void       operator =(const ScoreType& s){for(GamePhase g=MG; g<GP_MAX; ++g){sc[g]=s;}}
 
-    EvalScore scale(float s_mg,float s_eg)const{ EvalScore e(*this); e[MG]= ScoreType(s_mg*e[MG]); e[EG]= ScoreType(s_eg*e[EG]); return e;}
+    EvalScore scale(float s_mg,float s_eg)const{ 
+        EvalScore e(*this); 
+        e[MG]= ScoreType(s_mg*e[MG]); 
+        e[EG]= ScoreType(s_eg*e[EG]); 
+        return e;
+    }
+    /*
+    EvalScore scale(int mult_mg,int mult_eg, int div_mg,int div_eg)const{ 
+        EvalScore e(*this); 
+        e[MG]= ScoreType((mult_mg*e[MG])/div_mg); 
+        e[EG]= ScoreType((mult_eg*e[EG])/div_eg); 
+        return e;
+    }
+    */
     //EvalScore scale(float s)const{ return scale(s,s);}
 };
 
@@ -45,15 +58,20 @@ inline std::ostream & operator<<(std::ostream & of, const EvalScore & s){
     return of;
 }
 
+enum Feature : unsigned char { F_material = 0, F_positional, F_development, F_mobility, F_attack, F_pawnStruct, F_complexity, F_max };
+inline Feature operator++(Feature & f){f=Feature(f+1); return f;}
 struct EvalFeatures{
-    EvalScore materialScore   = {0,0}; // material, imbalance
-    EvalScore positionalScore = {0,0}; // PST, output, minor on open
-    EvalScore developmentScore= {0,0};
-    EvalScore mobilityScore   = {0,0}; 
-    EvalScore attackScore     = {0,0}; // attack, king safety
-    EvalScore pawnStructScore = {0,0};
-    EvalScore complexityScore = {0,0}; // not "sided", this is a whole position thing
+    EvalScore scores[F_max] = { {0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0} };
     float scalingFactor        = 1.f;
+    inline EvalScore SumUp()const{
+        return scores[F_material] 
+             + scores[F_positional] 
+             + scores[F_development] 
+             + scores[F_mobility] 
+             + scores[F_pawnStruct] 
+             + scores[F_attack] 
+             + scores[F_complexity];
+    }
 };
 
 inline ScoreType ScaleScore(EvalScore s, float gp){ return ScoreType(gp*s[MG] + (1.f-gp)*s[EG]);}
@@ -61,7 +79,7 @@ ScoreType Score(EvalScore score, float scalingFactor, const Position &p, float g
 
 /* Evaluation is returning the score of course, but also fill this little structure to provide
  * additionnal usefull information, such as game phase and current danger. Things that are
- * possibly used in search later
+ * possibly used in search later.
  */
 struct EvalData{
     float gp = 0;
@@ -78,11 +96,11 @@ struct RootScores {
 inline void displayEval(const EvalData & data, const EvalFeatures & features ){
     Logging::LogIt(Logging::logInfo) << "Game phase    " << data.gp;
     Logging::LogIt(Logging::logInfo) << "ScalingFactor " << features.scalingFactor;
-    Logging::LogIt(Logging::logInfo) << "Material      " << features.materialScore   ;
-    Logging::LogIt(Logging::logInfo) << "Positional    " << features.positionalScore ;
-    Logging::LogIt(Logging::logInfo) << "Development   " << features.developmentScore;
-    Logging::LogIt(Logging::logInfo) << "Mobility      " << features.mobilityScore   ;
-    Logging::LogIt(Logging::logInfo) << "Pawn          " << features.pawnStructScore ;
-    Logging::LogIt(Logging::logInfo) << "Attack        " << features.attackScore     ;
-    Logging::LogIt(Logging::logInfo) << "Complexity    " << features.complexityScore ;
+    Logging::LogIt(Logging::logInfo) << "Material      " << features.scores[F_material];
+    Logging::LogIt(Logging::logInfo) << "Positional    " << features.scores[F_positional];
+    Logging::LogIt(Logging::logInfo) << "Development   " << features.scores[F_development];
+    Logging::LogIt(Logging::logInfo) << "Mobility      " << features.scores[F_mobility];
+    Logging::LogIt(Logging::logInfo) << "Pawn          " << features.scores[F_pawnStruct];
+    Logging::LogIt(Logging::logInfo) << "Attack        " << features.scores[F_attack];
+    Logging::LogIt(Logging::logInfo) << "Complexity    " << features.scores[F_complexity];
 }

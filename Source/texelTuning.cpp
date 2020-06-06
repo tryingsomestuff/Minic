@@ -605,13 +605,6 @@ void TexelTuning(const std::string & filename) {
         }
     }
 
-    for (size_t i = 0 ; i < 7 ; ++i) {
-        for (size_t j = 0; j <= i; ++j) {
-            guess["secondOrder"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::secondOrder[i][j][MG], -3000, 3000, "secondOrder"   + std::to_string(i) + "_" + std::to_string(j)));
-            guess["secondOrder"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::secondOrder[i][j][EG], -3000, 3000, "secondOrderEG" + std::to_string(i) + "_" + std::to_string(j)));
-        }
-    }
-
     for(auto it = guess.begin() ; it != guess.end(); ++it){
         std::cout << "\"" << it->first << "\",";
     }
@@ -621,19 +614,14 @@ void TexelTuning(const std::string & filename) {
 
     std::vector<std::string> todo = {
         //"piecesValue",
-        
-        "secondOrder",
 
-        /*
         "PST0",
         "PST1",
         "PST2",
         "PST3",
         "PST4",
         "PST5",
-        */
 
-        /*
         "mobility",
         
         "passer",
@@ -657,9 +645,7 @@ void TexelTuning(const std::string & filename) {
         "Fawn",
         "storm",
         "pawnlessFlank",
-        */
 
-        /*
         "rookBehindPassed",
         "rookFrontKing",
         "rookFrontQueen",
@@ -695,24 +681,8 @@ void TexelTuning(const std::string & filename) {
 
         //"safeChecks",
 
-        "tempo"
-        */
+        //"tempo"
     };
-   
-   /*
-    std::vector<std::string> todo = {
-        //"pawnStructure1",
-        //"pawnStructure2",
-        //"pawnStructure3",
-        //"pawnStructure4",
-        //"PST0",
-        //"PST1",
-        //"PST2",
-        //"PST3",
-        //"PST4",
-        //"PST5"
-    };
-*/
     
     for(auto loops = 0 ; loops < 1000 ; ++loops){
         Logging::LogIt(Logging::logInfo) << "Starting loop : " << loops;
