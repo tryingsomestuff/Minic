@@ -67,8 +67,6 @@ extern CONST_TEXEL_TUNING EvalScore   knightPairMalus        ;
 extern CONST_TEXEL_TUNING EvalScore   rookPairMalus          ;
 extern CONST_TEXEL_TUNING EvalScore   queenNearKing          ;
 
-extern CONST_TEXEL_TUNING EvalScore   secondOrder[7][7]      ;
-
 //N B R QB QR K
 extern CONST_TEXEL_TUNING EvalScore MOB[6][15];
 
@@ -100,21 +98,9 @@ inline double fast_exp_64(const double x) noexcept {
 }
 */
 
-inline double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f, double offset = 0.f){ return m / (1 + exp((trans - x) / scale)) - offset;}
+// from 0 to m with offset, translation and scale
+inline double sigmoid (double x, double m = 1.f, double trans = 0.f, double scale = 1.f, double offset = 0.f){ return m / (1 + exp((trans - x) / scale)) - offset;}
 inline void initEval(){ for(Square i = 0; i < 64; i++){ EvalConfig::kingAttTable[i] = (int) sigmoid(i,EvalConfig::kingAttMax,EvalConfig::kingAttTrans,EvalConfig::kingAttScale,EvalConfig::kingAttOffset); } }// idea taken from Topple
-
-inline EvalScore SecondOrder(const EvalFeatures & features){
-    int64_t bonusMG = 0;
-    int64_t bonusEG = 0;
-    const EvalScore *const ft[7] = { &features.attackScore, &features.complexityScore, &features.developmentScore, &features.materialScore, &features.mobilityScore, &features.pawnStructScore, &features.positionalScore };
-    for (size_t i = 0 ; i < 7 ; ++i) {
-        for (size_t j = 0; j <= i; ++j) {
-            bonusMG += ScoreType(EvalConfig::secondOrder[i][j][MG] * ( sigmoid((*ft[i])[MG],2,0,100,0)*sigmoid((*ft[j])[MG],2,0,100,0) ));
-            bonusEG += ScoreType(EvalConfig::secondOrder[i][j][EG] * ( sigmoid((*ft[i])[EG],2,0,100,0)*sigmoid((*ft[j])[EG],2,0,100,0) ));
-        }
-    }
-    return {ScoreType(bonusMG),ScoreType(bonusEG)};
-}
 
 } // EvalConfig
 
