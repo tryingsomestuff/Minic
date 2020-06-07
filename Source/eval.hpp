@@ -16,12 +16,13 @@ namespace{ // some Color / Piece helpers
    template<Color C> inline Rank ColorRank(const Square k)                 { return Rank(C==Co_White? SQRANK(k) : (7-SQRANK(k)));}
 }
 
-template < Piece T , Color C>
+template < Piece T , Color C, bool withForwardness = false>
 inline void evalPiece(const Position & p, BitBoard pieceBBiterator, const BitBoard (& kingZone)[2], const BitBoard nonPawnMat, const BitBoard occupancy, EvalScore & score, BitBoard & attBy, BitBoard & att, BitBoard & att2, ScoreType (& kdanger)[2], BitBoard & checkers){
     while (pieceBBiterator) {
         const Square k = popBit(pieceBBiterator);
         const Square kk = ColorSquarePstHelper<C>(k);
-        score += ( EvalConfig::PST[T-1][kk] /*+ EvalScore{ScoreType(((DynamicConfig::styleForwardness-50)*SQRANK(kk))/8),0}*/ ) * ColorSignHelper<C>();
+        score += EvalConfig::PST[T-1][kk] * ColorSignHelper<C>();
+        if (withForwardness) score += EvalScore{ScoreType(((DynamicConfig::styleForwardness-50)*SQRANK(kk))/8),0} * ColorSignHelper<C>();
         const BitBoard shadowTarget = BBTools::pfCoverage[T-1](k, occupancy ^ nonPawnMat, C); // aligned threats removing own piece (not pawn) in occupancy
         if ( shadowTarget ){
            const BitBoard target = BBTools::pfCoverage[T-1](k, occupancy, C); // real targets
@@ -207,16 +208,30 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     const BitBoard kingShield[2] = { kingZone[Co_White] & ~BBTools::shiftS<Co_White>(ranks[SQRANK(p.king[Co_White])]) , kingZone[Co_Black] & ~BBTools::shiftS<Co_Black>(ranks[SQRANK(p.king[Co_Black])]) };
 
     // PST, attack, danger
-    evalPiece<P_wn,Co_White>(p,knights[Co_White],kingZone,nonPawnMat[Co_White],occupancy,features.scores[F_positional],attFromPiece[Co_White][P_wn-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wn-1]);
-    evalPiece<P_wb,Co_White>(p,bishops[Co_White],kingZone,nonPawnMat[Co_White],occupancy,features.scores[F_positional],attFromPiece[Co_White][P_wb-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wb-1]);
-    evalPiece<P_wr,Co_White>(p,rooks  [Co_White],kingZone,nonPawnMat[Co_White],occupancy,features.scores[F_positional],attFromPiece[Co_White][P_wr-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wr-1]);
-    evalPiece<P_wq,Co_White>(p,queens [Co_White],kingZone,nonPawnMat[Co_White],occupancy,features.scores[F_positional],attFromPiece[Co_White][P_wq-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wq-1]);
-    evalPiece<P_wk,Co_White>(p,kings  [Co_White],kingZone,nonPawnMat[Co_White],occupancy,features.scores[F_positional],attFromPiece[Co_White][P_wk-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wk-1]);
-    evalPiece<P_wn,Co_Black>(p,knights[Co_Black],kingZone,nonPawnMat[Co_Black],occupancy,features.scores[F_positional],attFromPiece[Co_Black][P_wn-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wn-1]);
-    evalPiece<P_wb,Co_Black>(p,bishops[Co_Black],kingZone,nonPawnMat[Co_Black],occupancy,features.scores[F_positional],attFromPiece[Co_Black][P_wb-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wb-1]);
-    evalPiece<P_wr,Co_Black>(p,rooks  [Co_Black],kingZone,nonPawnMat[Co_Black],occupancy,features.scores[F_positional],attFromPiece[Co_Black][P_wr-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wr-1]);
-    evalPiece<P_wq,Co_Black>(p,queens [Co_Black],kingZone,nonPawnMat[Co_Black],occupancy,features.scores[F_positional],attFromPiece[Co_Black][P_wq-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wq-1]);
-    evalPiece<P_wk,Co_Black>(p,kings  [Co_Black],kingZone,nonPawnMat[Co_Black],occupancy,features.scores[F_positional],attFromPiece[Co_Black][P_wk-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wk-1]);
+    if ( DynamicConfig::styleForwardness != 50 ){
+       evalPiece<P_wn,Co_White,true>(p,knights[Co_White],kingZone,nonPawnMat[Co_White],occupancy,features.scores[F_positional],attFromPiece[Co_White][P_wn-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wn-1]);
+       evalPiece<P_wb,Co_White,true>(p,bishops[Co_White],kingZone,nonPawnMat[Co_White],occupancy,features.scores[F_positional],attFromPiece[Co_White][P_wb-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wb-1]);
+       evalPiece<P_wr,Co_White,true>(p,rooks  [Co_White],kingZone,nonPawnMat[Co_White],occupancy,features.scores[F_positional],attFromPiece[Co_White][P_wr-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wr-1]);
+       evalPiece<P_wq,Co_White,true>(p,queens [Co_White],kingZone,nonPawnMat[Co_White],occupancy,features.scores[F_positional],attFromPiece[Co_White][P_wq-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wq-1]);
+       evalPiece<P_wk,Co_White,true>(p,kings  [Co_White],kingZone,nonPawnMat[Co_White],occupancy,features.scores[F_positional],attFromPiece[Co_White][P_wk-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wk-1]);
+       evalPiece<P_wn,Co_Black,true>(p,knights[Co_Black],kingZone,nonPawnMat[Co_Black],occupancy,features.scores[F_positional],attFromPiece[Co_Black][P_wn-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wn-1]);
+       evalPiece<P_wb,Co_Black,true>(p,bishops[Co_Black],kingZone,nonPawnMat[Co_Black],occupancy,features.scores[F_positional],attFromPiece[Co_Black][P_wb-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wb-1]);
+       evalPiece<P_wr,Co_Black,true>(p,rooks  [Co_Black],kingZone,nonPawnMat[Co_Black],occupancy,features.scores[F_positional],attFromPiece[Co_Black][P_wr-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wr-1]);
+       evalPiece<P_wq,Co_Black,true>(p,queens [Co_Black],kingZone,nonPawnMat[Co_Black],occupancy,features.scores[F_positional],attFromPiece[Co_Black][P_wq-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wq-1]);
+       evalPiece<P_wk,Co_Black,true>(p,kings  [Co_Black],kingZone,nonPawnMat[Co_Black],occupancy,features.scores[F_positional],attFromPiece[Co_Black][P_wk-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wk-1]);
+    }
+    else{
+       evalPiece<P_wn,Co_White>(p,knights[Co_White],kingZone,nonPawnMat[Co_White],occupancy,features.scores[F_positional],attFromPiece[Co_White][P_wn-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wn-1]);
+       evalPiece<P_wb,Co_White>(p,bishops[Co_White],kingZone,nonPawnMat[Co_White],occupancy,features.scores[F_positional],attFromPiece[Co_White][P_wb-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wb-1]);
+       evalPiece<P_wr,Co_White>(p,rooks  [Co_White],kingZone,nonPawnMat[Co_White],occupancy,features.scores[F_positional],attFromPiece[Co_White][P_wr-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wr-1]);
+       evalPiece<P_wq,Co_White>(p,queens [Co_White],kingZone,nonPawnMat[Co_White],occupancy,features.scores[F_positional],attFromPiece[Co_White][P_wq-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wq-1]);
+       evalPiece<P_wk,Co_White>(p,kings  [Co_White],kingZone,nonPawnMat[Co_White],occupancy,features.scores[F_positional],attFromPiece[Co_White][P_wk-1],att[Co_White],att2[Co_White],kdanger,checkers[Co_White][P_wk-1]);
+       evalPiece<P_wn,Co_Black>(p,knights[Co_Black],kingZone,nonPawnMat[Co_Black],occupancy,features.scores[F_positional],attFromPiece[Co_Black][P_wn-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wn-1]);
+       evalPiece<P_wb,Co_Black>(p,bishops[Co_Black],kingZone,nonPawnMat[Co_Black],occupancy,features.scores[F_positional],attFromPiece[Co_Black][P_wb-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wb-1]);
+       evalPiece<P_wr,Co_Black>(p,rooks  [Co_Black],kingZone,nonPawnMat[Co_Black],occupancy,features.scores[F_positional],attFromPiece[Co_Black][P_wr-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wr-1]);
+       evalPiece<P_wq,Co_Black>(p,queens [Co_Black],kingZone,nonPawnMat[Co_Black],occupancy,features.scores[F_positional],attFromPiece[Co_Black][P_wq-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wq-1]);
+       evalPiece<P_wk,Co_Black>(p,kings  [Co_Black],kingZone,nonPawnMat[Co_Black],occupancy,features.scores[F_positional],attFromPiece[Co_Black][P_wk-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wk-1]);
+    }
 
     STOP_AND_SUM_TIMER(Eval2)
 
@@ -538,7 +553,6 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
 */
     if ( display ) displayEval(data,features);
 
-/*
     // taking Style into account, giving each score a [0..2] factor
     features.scores[F_material]    = features.scores[F_material]    .scale(1 + (DynamicConfig::styleMaterial    - 50)/50.f, 1.f); 
     features.scores[F_positional]  = features.scores[F_positional]  .scale(1 + (DynamicConfig::stylePositional  - 50)/50.f, 1.f); 
@@ -547,7 +561,6 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     features.scores[F_pawnStruct]  = features.scores[F_pawnStruct]  .scale(1 + (DynamicConfig::stylePawnStruct  - 50)/50.f, 1.f); 
     features.scores[F_attack]      = features.scores[F_attack]      .scale(1 + (DynamicConfig::styleAttack      - 50)/50.f, 1.f); 
     features.scores[F_complexity]  = features.scores[F_complexity]  .scale(    (DynamicConfig::styleComplexity  - 50)/50.f, 0.f);
-*/
 
     // Sum everything
     EvalScore score = features.SumUp();
