@@ -56,7 +56,7 @@ const ScoreType dangerDivisor = 100;
 extern CONST_CLOP_TUNING ScoreType failLowRootMargin            ;
 
 const DepthType lmpMaxDepth = 10;
-const int lmpLimit[][SearchConfig::lmpMaxDepth + 1] = { { 0, 3, 4, 6, 10, 15, 21, 28, 36, 45, 55 }, { 0, 5, 6, 9, 15, 23, 32, 42, 54, 68, 83 } };
+const int lmpLimit[][SearchConfig::lmpMaxDepth + 1] = {  { 0, 2, 3, 5, 9, 13, 18, 25, 34, 45, 55 }, { 0, 5, 6, 9, 14, 21, 30, 41, 55, 69, 84 } };
 
 extern DepthType lmrReduction[MAX_DEPTH][MAX_MOVE];
 inline void initLMR() {

@@ -235,6 +235,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
     }
 
     int validMoveCount = 0;
+    int validQuietMoveCount = 0;
     Move bestMove = INVALIDMOVE;
     TT::Bound hashBound = TT::B_alpha;
     bool ttMoveIsCapture = false;
@@ -256,12 +257,13 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             TT::prefetch(computeHash(p2));
             //const Square to = Move2To(e.m);
             validMoveCount++;
+            const bool isQuiet = Move2Type(e.m) == T_std;
+            if ( isQuiet ) validQuietMoveCount++;
             PVList childPV;
             stack[p2.halfmoves].h = p2.h;
             stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
             const bool isCheck = isAttacked(p2, kingSquare(p2));
             if ( isCapture(e.m) ) ttMoveIsCapture = true;
-            const bool isQuiet = Move2Type(e.m) == T_std;
             //const bool isAdvancedPawnPush = PieceTools::getPieceType(p,Move2From(e.m)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
             // extensions
             DepthType extension = 0;
@@ -386,6 +388,8 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         if (p.c == Co_White && to == p.king[Co_Black]) return MATE - ply + 1;
         if (p.c == Co_Black && to == p.king[Co_White]) return MATE - ply + 1;
         validMoveCount++;
+        const bool isQuiet = Move2Type(*it) == T_std;
+        if ( isQuiet ) validQuietMoveCount++;
         const bool firstMove = validMoveCount == 1;
         PVList childPV;
         stack[p2.halfmoves].h = p2.h;
@@ -394,7 +398,6 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         bool isAdvancedPawnPush = PieceTools::getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
         // extensions
         DepthType extension = 0;
-        const bool isQuiet = Move2Type(*it) == T_std;
         if ( DynamicConfig::level>80){ 
            // is in check extension if pvnode
            //if (EXTENDMORE(extension) && pvnode && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension; // we are in check (extension)
@@ -512,7 +515,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                 alpha = score;
                 hashBound = TT::B_exact;
                 if ( score >= beta ){
-                    if ( !isInCheck && isQuiet ){
+                    if ( !isInCheck && isQuiet /*&& !( depth == 1 && validQuietMoveCount == 1 )*/){ // last cond from Alayan in Ethereal)
                         // increase history bonus of this move
                         updateTables(*this, p, depth + (score>beta+80), ply, *it, TT::B_beta, cmhPtr);
                         // reduce history bonus of all previous

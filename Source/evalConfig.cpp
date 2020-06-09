@@ -89,8 +89,8 @@ CONST_TEXEL_TUNING EvalScore PST[6][64] = {
 ///@todo make more things depend on rank/file ???
 
 CONST_TEXEL_TUNING EvalScore   pawnShieldBonus         = {  7, -4};
-CONST_TEXEL_TUNING EvalScore   pawnFawnMalusKS         = {  8,  0};
-CONST_TEXEL_TUNING EvalScore   pawnFawnMalusQS         = {  7, -8};
+CONST_TEXEL_TUNING EvalScore   pawnFawnMalusKS         = { 14, 68};
+CONST_TEXEL_TUNING EvalScore   pawnFawnMalusQS         = {-19, 43};
 // this depends on rank
 CONST_TEXEL_TUNING EvalScore   passerBonus[8]          = { { 0, 0 }, {  1,-35}, { -4, -5}, { -3, 13}, {-22, 64}, {-15, 84}, { 19, 43}, {0, 0}};
 
@@ -103,8 +103,8 @@ CONST_TEXEL_TUNING EvalScore   isolatedPawn[8][2] = { {{  0,  0},{  0,  0}}, {{ 
 CONST_TEXEL_TUNING EvalScore   backwardPawn[8][2] = { {{  0,  0},{  0,  0}}, {{  1,  2},{ 27, 14}}, {{ 11,  5},{ 41, 16}}, {{  8, -1},{ 35,  7}}, {{-13, 21},{ 43, 10}}, {{  0,  0},{  0,  0}}, {{  0,  0},{  0,  0}}, {{  0,  0},{  0,  0}} }; // close semiopenfile
 CONST_TEXEL_TUNING EvalScore   detachedPawn[8][2] = { {{  0,  0},{  0,  0}}, {{  0,  0},{  0,  0}}, {{ 18, 15},{ 40, 15}}, {{ -2,  7},{ 27,  9}}, {{  5, 33},{  4, 28}}, {{-28, -2},{ -9, 46}}, {{  0,  0},{  0,  0}}, {{  0,  0},{  0,  0}} }; // close semiopenfile
 
-CONST_TEXEL_TUNING EvalScore   holesMalus              = {  0, 0};
-CONST_TEXEL_TUNING EvalScore   outpost                 = { 32,13};
+CONST_TEXEL_TUNING EvalScore   holesMalus              = { -2,-2};
+CONST_TEXEL_TUNING EvalScore   outpost                 = { 27,14};
 CONST_TEXEL_TUNING EvalScore   pieceFrontPawn          = {-14, 2};
 CONST_TEXEL_TUNING EvalScore   centerControl           = {  8, 2};
 CONST_TEXEL_TUNING EvalScore   knightTooFar[8]         = { {  0,  0}, { 22, 17}, { 24, 11}, { 17,  9}, { -7, 23}, {  4,  5}, { -4, -1}, {  0,  0} };
@@ -159,15 +159,15 @@ CONST_TEXEL_TUNING EvalScore MOB[6][15] = { { { -7,-15},{  6, 20},{ 15, 27},{ 18
 
 CONST_TEXEL_TUNING EvalScore initiative[4] = { {  0,  5}, { 68, 42}, {115, 65}, { 61, 84} };
 
-CONST_TEXEL_TUNING ScoreType kingAttMax    = 459;
-CONST_TEXEL_TUNING ScoreType kingAttTrans  = 49;
-CONST_TEXEL_TUNING ScoreType kingAttScale  = 16;
+CONST_TEXEL_TUNING ScoreType kingAttMax    = 474;
+CONST_TEXEL_TUNING ScoreType kingAttTrans  = 42;
+CONST_TEXEL_TUNING ScoreType kingAttScale  = 11;
 CONST_TEXEL_TUNING ScoreType kingAttOffset =  5;
-CONST_TEXEL_TUNING ScoreType kingAttWeight[2][6]    = { { 138, 191, 312, 161, 249, -42, },{  86, 100,  99,  32, -21,  0 } };
-CONST_TEXEL_TUNING ScoreType kingAttSafeCheck[6]    = {   128, 1184, 1152, 1056, 1024, 0};
-CONST_TEXEL_TUNING ScoreType kingAttOpenfile        = 316;
-CONST_TEXEL_TUNING ScoreType kingAttSemiOpenfileOur = 192;
-CONST_TEXEL_TUNING ScoreType kingAttSemiOpenfileOpp = 166;
+CONST_TEXEL_TUNING ScoreType kingAttWeight[2][6]    = { { 121, 160, 265, 144, 219, -42, },{  88, 92, 89, 43, -9,  0 } };
+CONST_TEXEL_TUNING ScoreType kingAttSafeCheck[6]    = {   122, 785, 569, 934, 776, 0};
+CONST_TEXEL_TUNING ScoreType kingAttOpenfile        = 253;
+CONST_TEXEL_TUNING ScoreType kingAttSemiOpenfileOur = 157;
+CONST_TEXEL_TUNING ScoreType kingAttSemiOpenfileOpp = 147;
 ScoreType kingAttTable[64] = {0};
 
 CONST_TEXEL_TUNING EvalScore tempo = {15, 15};
