@@ -614,7 +614,7 @@ void TexelTuning(const std::string & filename) {
 
     std::vector<std::string> todo = {
         //"piecesValue",
-
+/*
         "PST0",
         "PST1",
         "PST2",
@@ -678,8 +678,16 @@ void TexelTuning(const std::string & filename) {
         "minorThreat",
         "queenThreat",
         "rookThreat",
+*/
+        "safeChecks",
 
-        //"safeChecks",
+        "Fawn",
+        "attDefKing",
+        "attFunction",
+        "attOpenFile",
+
+        "holes",
+
 
         //"tempo"
     };

@@ -349,10 +349,10 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
        pe.danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOpp * countBit(kingFlank[bkf] & pe.semiOpenFiles[Co_Black])/8;
        pe.danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * countBit(kingFlank[bkf] & pe.semiOpenFiles[Co_White])/8;
        // Fawn
-       pe.score -= EvalConfig::pawnFawnMalusKS * (countBit((pawns[Co_White] & (BBSq_h2 | BBSq_g3)) | (pawns[Co_Black] & BBSq_h3) | (p.king[Co_White] & kingSide))/4);
-       pe.score += EvalConfig::pawnFawnMalusKS * (countBit((pawns[Co_Black] & (BBSq_h7 | BBSq_g6)) | (pawns[Co_White] & BBSq_h6) | (p.king[Co_Black] & kingSide))/4);
-       pe.score -= EvalConfig::pawnFawnMalusQS * (countBit((pawns[Co_White] & (BBSq_a2 | BBSq_b3)) | (pawns[Co_Black] & BBSq_a3) | (p.king[Co_White] & queenSide))/4);
-       pe.score += EvalConfig::pawnFawnMalusQS * (countBit((pawns[Co_Black] & (BBSq_a7 | BBSq_b6)) | (pawns[Co_White] & BBSq_a6) | (p.king[Co_Black] & queenSide))/4);
+       pe.score -= EvalConfig::pawnFawnMalusKS * (countBit((pawns[Co_White] & (BBSq_h2 | BBSq_g3)) | (pawns[Co_Black] & BBSq_h3) | (kings[Co_White] & kingSide))/4);
+       pe.score += EvalConfig::pawnFawnMalusKS * (countBit((pawns[Co_Black] & (BBSq_h7 | BBSq_g6)) | (pawns[Co_White] & BBSq_h6) | (kings[Co_Black] & kingSide))/4);
+       pe.score -= EvalConfig::pawnFawnMalusQS * (countBit((pawns[Co_White] & (BBSq_a2 | BBSq_b3)) | (pawns[Co_Black] & BBSq_a3) | (kings[Co_White] & queenSide))/4);
+       pe.score += EvalConfig::pawnFawnMalusQS * (countBit((pawns[Co_Black] & (BBSq_a7 | BBSq_b6)) | (pawns[Co_White] & BBSq_a6) | (kings[Co_Black] & queenSide))/4);
 
        ++context.stats.counters[Stats::sid_ttPawnInsert];
        pe.h = Hash64to32(computePHash(p)); // set the pawn entry
@@ -390,8 +390,8 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     features.scores[F_development] -= EvalConfig::centerControl * countBit(protectedSquare[Co_Black] & extendedCenter);
 
     // pawn hole, unprotected
-    features.scores[F_positional] += EvalConfig::holesMalus * countBit(pe.holes[Co_White] & ~protectedSquare[Co_White]);
-    features.scores[F_positional] -= EvalConfig::holesMalus * countBit(pe.holes[Co_Black] & ~protectedSquare[Co_Black]);
+    features.scores[F_positional] += EvalConfig::holesMalus * countBit(pe.holes[Co_White] & ~protectedSquare[Co_White])/4;
+    features.scores[F_positional] -= EvalConfig::holesMalus * countBit(pe.holes[Co_Black] & ~protectedSquare[Co_Black])/4;
 
     // free passer bonus
     evalPawnFreePasser<Co_White>(p,pe.passed[Co_White], features.scores[F_pawnStruct]);
@@ -422,9 +422,11 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     }
 
     // reward safe checks
-    for (Piece pp = P_wp ; pp < P_wk ; ++pp) {
-        kdanger[Co_White] += EvalConfig::kingAttSafeCheck[pp-1] * countBit( checkers[Co_Black][pp-1] & safeSquare[Co_White] );
-        kdanger[Co_Black] += EvalConfig::kingAttSafeCheck[pp-1] * countBit( checkers[Co_White][pp-1] & safeSquare[Co_Black] );
+    kdanger[Co_White] += EvalConfig::kingAttSafeCheck[0] * countBit( checkers[Co_Black][0] & att[Co_Black] );
+    kdanger[Co_Black] += EvalConfig::kingAttSafeCheck[0] * countBit( checkers[Co_White][0] & att[Co_White] );
+    for (Piece pp = P_wn ; pp < P_wk ; ++pp) {
+        kdanger[Co_White] += EvalConfig::kingAttSafeCheck[pp-1] * countBit( checkers[Co_Black][pp-1] & safeSquare[Co_Black] );
+        kdanger[Co_Black] += EvalConfig::kingAttSafeCheck[pp-1] * countBit( checkers[Co_White][pp-1] & safeSquare[Co_White] );
     }
 
     // danger : use king danger score. **DO NOT** apply this in end-game
