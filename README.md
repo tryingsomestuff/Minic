@@ -63,8 +63,8 @@ Minic 2.00 is tested at 2923 on the fastgm 10min+6sec rating list (http://www.fa
 Minic 2.00 is tested at 2952 on the fastgm 60min+15sec rating list (http://www.fastgm.de/60min.html)  
 
 ### Test Suite
-STS : 1169/1500 @10sec per position (single thread)  
-WAC : 291/300 @10sec per position (single thread)  
+STS : 1169/1500 @10sec per position (single thread on an i7-9700K)  
+WAC : 291/300 @10sec per position (single thread on an i7-9700K)  
 
 ### Home test
 Here are some fast TC results (CCRL Blitz TC)
@@ -162,127 +162,6 @@ Anand      : based on Anand most used opening lines (thanks to Jonathan Cremers)
 ```
 
 You can use both the json configuation file or the command line argument to select the book.
-
-## History
-
-* 0.1 : first commit with the initial code done in less than 2 days
-* 0.2-0.5 : many bug fix
-* 0.6 : IID
-* 0.7 : try TT move first hoping for cut-off
-* 0.8 : SEE and LMP
-* 0.9 : little internal book
-* 0.10 : singular extension for TT move
-* 0.11 : on the road to bitboard (only attack), use of "Dumb" HQBB code.
-* 0.12 : better use of bitboard, in generation and eval also
-* 0.13 : some draw issue fix
-* 0.14 : better lmp (use of "improving bool")
-* 0.15 : keep track of material count directly in position
-* 0.16 : use bitboard for pawn move generation also
-* 0.17 : Minic goes SMP ! 
-* 0.18 : configuration file (json) and threads management
-* 0.19 : option from command line and fix a TT issue  
-* 0.20 : clean up code, especially draw management  
-* 0.21 : add a little more evaluation (basic material bonus/malus)
-* 0.22 : not much ...
-* 0.23 : try to texel tune pieces value, not sure it is a success 
-* 0.24 : passer eval
-* 0.25 : more aggressive pruning
-* 0.26 : fix a TC bug
-* 0.27 : smaller window, better singular extension
-* 0.28 : xboard time command is used now
-* 0.29 : refactoring, very bad TT bug fix, better timeman, better gamephase, work on SEE ... huuuuuge progress. Also preparing for a better eval (pawn structure)...
-* 0.30 : add a simple mobility term inside evaluation
-* 0.31 : not much
-* 0.32 : fix bug in eval
-* 0.33 : more aggressive SEE, better move sorting, better time control. Preparing for Syzygy endgame table and end-game helpers KQK, KRK and KBNK.
-* 0.34 : just another TC management improvement
-* 0.35 : work on material draw
-* 0.36 : little optimisations
-* 0.37 : MoveList optimisations, fuse eval and score TT, refactoring a lot, bug fixes
-* 0.38 : build a bigger book (not used yet), implement the so called easy-move
-* 0.39 : fix a bad mate score TT issue, speed up pawn move generation
-* 0.40 : pruning in endgame also
-* 0.41 : try PSO texel tuning, prepare some evaluation feature, little speed optim
-* 0.42 : fix a SMP issue (lock)
-* 0.43 : fix another SMP issue
-* 0.44 : fix null move that was in fact NOT activated ! activate probcut. Add some counters. New release are sse4.2 and avx2 for both windows and linux.
-* 0.45 : lot of clean up in code, search tuning, starts UCI implementation, and fix null move ...
-* 0.46 : little optim
-* 0.47 : clean up, try uci support 
-* 0.48 : some evaluation features about Pawn
-* 0.49 : more pawn features   
-* 0.50 : more rook and pawn features (new Win32 releases)  
-* 0.51 : use bishop pair bonus  
-* 0.52 : fix history, check extension, some endgames (prepare for pawn hash table ...)  
-* 0.53 : fix pawn eval  
-* 0.54 : working on extension and eval  
-* 0.55 : working on extension and eval  
-* 0.56 : TC issue in multi-thread mode  
-* 0.57 : fix 0.56  
-* 0.58 and 0.59 : trying so add evaluation feature (without success ...)  
-* 0.60 : use hash in qsearch  
-* 0.61 : KPK and code clean up  
-* 0.62 : fix an issue with material when castling, a lot of code refactoring
-* 0.63 : others fix
-* 0.64 : others fix again, lot of refactoring
-* 0.65 : working on search
-* 0.66 : working on search again
-* 0.67 : working on search again (quiet move SEE)
-* 0.68 : working on search again (LMR when in check)
-* 0.69..0.74 : tuning eval (texel tuning on Zurichess quiet.edp)
-* 0.75 : backward pawn, tweak SEE  
-* 0.76 : refactoring eval scoring  
-* 0.77 : better use of bitboard in pawn eval  
-* 0.78 : candidate  
-* 0.79 : bug fix in SEE, pondering and analysis mode
-* 0.80 : level from 0 to 10. 0 is random mover, 10 is full strength  
-* 0.81 : working on random mover and pondering  
-* 0.82 : finally a working pondering release ...
-* 0.83 : bug fix, pawn PST were not use anymore ... :-S
-* 0.84 : little search and eval tweaking
-* 0.85 : window search bug fix
-* 0.86..0.87 : working on search and move ordering
-* 0.88..0.91 : add and fix some eval features, try queen/king proximity, try BM extension
-* 0.92 : fix extension/reduction
-* 0.93..0.95 : re-tune almost everything
-* 0.96..0.98 : some tuning and SEE fix
-* 0.99 : random draw eval
-* 1.00 : tweak eval and search, work on TT scheme, some fixes, !!! 1 year anniversary release !!!
-* 1.01..1.09 : work on dedicated pawn table for eval, many eval fixes, search tweaks
-* 1.10..1.14 : work on move ordering
-* 1.15 : FRC !
-* 1.16..1.19 : work on killer, history and counter
-* 1.19..1.26 : mainly TCEC QL preparation and debugging  
-* 1.26..1.34 : mainly TCEC L2 preparation, debugging and cleaning   
-* 1.35..1.38 : playing with SEE, initiative, imbalance, danger, ...  
-* 1.39..1.40 : tuning search SEE and LMR with danger score from evaluation  
-* 1.41..1.42 : fixing a time management issue with incremental TC  
-* 1.43 : qsearch cleaning  
-* 1.44 : bad bishop eval  
-* 1.45..1.50 : search tuning / trick, simpler hash table.
-* 1.51 : retune everything !
-* 1.52..1.54 : retune queen near king, PST and mobility  
-* 1.55 : multi PV
-* 2.00 : splitting the one file Minic into many header / source files
-* 2.01..2.05 : fixes, clean up code, little optimization
-* 2.06 : work on emrgency mode
-* 2.07 : contempt, pawn structure, retuning
-* 2.08 : more UCI param, weak pawn
-* 2.09 : break aspiration search in fail high case if no other move above beta
-* 2.10..2.11 : tweaking
-* 2.12 : fix a TT race condition  
-* 2.13 : skill feature, null move based on mobility  
-* 2.14 : some refactoring  
-* 2.15 : work on time management  
-* 2.16 : uci fix  
-* 2.17 : tcec release  
-* 2.18 : threaded TT zeroing  
-* 2.19..2.23 : a lot a little optimizations and fixes  
-* 2.24 : activate contempt  
-* 2.25 : activate tempo  
-* 2.26..2.29 : various little clean up  
-* 2.30 : tune move ordering  
-* 2.31 : ...
 
 ## Thanks
 
