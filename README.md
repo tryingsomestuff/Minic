@@ -46,21 +46,21 @@ Starting from release 1.00 Minic support setting options using protocol (both XB
 ## Strength
 
 ### CCRL
-Minic 2.00 is tested at 2975 on the CCRL 40/15 scale (http://ccrl.chessdom.com/ccrl/4040/)  
-Minic 2.00 is tested at 3137 on the CCRL BLITZ 4CPU scale (http://ccrl.chessdom.com/ccrl/404/).  
-Minic 2.07 is tested at 3020 on the CCRL BLITZ 1CPU scale (http://ccrl.chessdom.com/ccrl/404/).  
+Minic 2.00 is tested at 2986 on the CCRL 40/15 scale (http://ccrl.chessdom.com/ccrl/4040/)  
+Minic 2.00 is tested at 3138 on the CCRL BLITZ 4CPU scale (http://ccrl.chessdom.com/ccrl/404/).  
+Minic 2.33 is tested at 3092 on the CCRL BLITZ 1CPU scale (http://ccrl.chessdom.com/ccrl/404/).  
 Minic 2.21 is tested at 3000 on the CCRL FRC list (http://ccrl.chessdom.com/ccrl/404FRC/)  
 
 ### CEGT
-Minic 2.07 is tested at 2911 on the CEGT 40/4 list (http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
+Minic 2.07 is tested at 2906 on the CEGT 40/4 list (http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
 Minic 1.35 is tested at 3034 on the CEGT 40/4 MP8CPU list (http://www.cegt.net/40_4_Ratinglist/40_4_mp/rangliste.html)  
-Minic 1.35 is tested at 2877 on the CEGT 5+3 PB=ON list (http://www.cegt.net/5Plus3Rating/BestVersionsNEW/rangliste.html)  
-Minic 2.11 is tested at 2890 on the CEGT 40/15 list (http://www.cegt.net/40_40%20Rating%20List/40_40%20SingleVersion/rangliste.html)  
+Minic 2.07 is tested at 2934 on the CEGT 5+3 PB=ON list (http://www.cegt.net/5Plus3Rating/BestVersionsNEW/rangliste.html)  
+Minic 2.11 is tested at 2891 on the CEGT 40/15 list (http://www.cegt.net/40_40%20Rating%20List/40_40%20SingleVersion/rangliste.html)  
 
 ### FGRL
-Minic 2.00 is tested at 2800 on the fastgm 60sec+0.6sec rating list (http://www.fastgm.de/60-0.60.html)  
-Minic 2.00 is tested at 2923 on the fastgm 10min+6sec rating list (http://www.fastgm.de/10min.html)  
-Minic 2.00 is tested at 2952 on the fastgm 60min+15sec rating list (http://www.fastgm.de/60min.html)  
+Minic 2.00 is tested at 2794 on the fastgm 60sec+0.6sec rating list (http://www.fastgm.de/60-0.60.html)  
+Minic 2.00 is tested at 2924 on the fastgm 10min+6sec rating list (http://www.fastgm.de/10min.html)  
+Minic 2.00 is tested at 2951 on the fastgm 60min+15sec rating list (http://www.fastgm.de/60min.html)  
 
 ### Test Suite
 STS : 1169/1500 @10sec per position (single thread on an i7-9700K)  
