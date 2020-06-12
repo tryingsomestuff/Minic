@@ -63,7 +63,7 @@ Minic 2.00 is tested at 2924 on the fastgm 10min+6sec rating list (http://www.fa
 Minic 2.00 is tested at 2951 on the fastgm 60min+15sec rating list (http://www.fastgm.de/60min.html)  
 
 ### Test Suite
-STS : 1169/1500 @10sec per position (single thread on an i7-9700K)  
+STS : 1191/1500 @10sec per position (single thread on an i7-9700K)  
 WAC : 291/300 @10sec per position (single thread on an i7-9700K)  
 
 ### Home test
