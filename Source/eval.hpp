@@ -177,8 +177,7 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
        ScoreType matScoreW = 0;
        ScoreType matScoreB = 0;
        data.gp = gamePhase(p,matScoreW, matScoreB);
-       features.scores[F_material][EG] += (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValuesEG[P_wq] + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * *absValuesEG[P_wr] + (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * *absValuesEG[P_wb] + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValuesEG[P_wn] + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValuesEG[P_wp];
-       features.scores[F_material][MG] += matScoreW - matScoreB;
+       features.scores[F_material] += EvalScore((p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValuesEG[P_wq] + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * *absValuesEG[P_wr] + (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * *absValuesEG[P_wb] + (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValuesEG[P_wn] + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValuesEG[P_wp], matScoreW - matScoreB);
        ++context.stats.counters[Stats::sid_materialTableMiss];
     }
 
@@ -430,8 +429,8 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     }
 
     // danger : use king danger score. **DO NOT** apply this in end-game
-    features.scores[F_attack][MG] -=  EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_White]/32),ScoreType(0)),ScoreType(63))];
-    features.scores[F_attack][MG] +=  EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_Black]/32),ScoreType(0)),ScoreType(63))];
+    features.scores[F_attack] -=  EvalScore(EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_White]/32),ScoreType(0)),ScoreType(63))],0);
+    features.scores[F_attack] +=  EvalScore(EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_Black]/32),ScoreType(0)),ScoreType(63))],0);
     data.danger[Co_White] = kdanger[Co_White];
     data.danger[Co_Black] = kdanger[Co_Black];
 
@@ -580,8 +579,7 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
 
     // initiative (kind of second order pawn structure stuff for end-games)
     EvalScore initiativeBonus = EvalConfig::initiative[0] * countBit(allPawns) + EvalConfig::initiative[1] * ((allPawns & queenSide) && (allPawns & kingSide)) + EvalConfig::initiative[2] * (countBit(occupancy & ~allPawns) == 2) - EvalConfig::initiative[3];
-    initiativeBonus[MG] = sgn(score[MG]) * std::max(initiativeBonus[MG], ScoreType(-std::abs(score[MG])));
-    initiativeBonus[EG] = sgn(score[EG]) * std::max(initiativeBonus[EG], ScoreType(-std::abs(score[EG])));
+    initiativeBonus = EvalScore(sgn(score[MG]) * std::max(initiativeBonus[MG], ScoreType(-std::abs(score[MG]))), sgn(score[EG]) * std::max(initiativeBonus[EG], ScoreType(-std::abs(score[EG]))));
     score += initiativeBonus;
     if ( display ){
         Logging::LogIt(Logging::logInfo) << "Initiative    " << initiativeBonus;

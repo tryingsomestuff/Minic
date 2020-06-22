@@ -109,43 +109,49 @@ namespace Options {
        _keys.push_back(KeyBase(k_int, w_spin,  "StylePositional"               , &DynamicConfig::stylePositional                , (int)0   , (int)100));
        _keys.push_back(KeyBase(k_int, w_spin,  "StyleForwardness"              , &DynamicConfig::styleForwardness               , (int)0   , (int)100));
 
-#ifdef WITH_CLOP_SEARCH
-       _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin0"            , &SearchConfig::qfutilityMargin[0]              , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin1"            , &SearchConfig::qfutilityMargin[1]              , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "staticNullMoveMaxDepth0"     , &SearchConfig::staticNullMoveMaxDepth[0]       , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "staticNullMoveMaxDepth1"     , &SearchConfig::staticNullMoveMaxDepth[1]       , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthCoeff0"   , &SearchConfig::staticNullMoveDepthCoeff[0]     , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthCoeff1"   , &SearchConfig::staticNullMoveDepthCoeff[1]     , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthInit0"    , &SearchConfig::staticNullMoveDepthInit[0]      , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthInit1"    , &SearchConfig::staticNullMoveDepthInit[1]      , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthCoeff0"   , &SearchConfig::razoringMarginDepthCoeff[0]     , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthCoeff1"   , &SearchConfig::razoringMarginDepthCoeff[1]     , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthInit0"    , &SearchConfig::razoringMarginDepthInit[0]      , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthInit1"    , &SearchConfig::razoringMarginDepthInit[1]      , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "razoringMaxDepth0"           , &SearchConfig::razoringMaxDepth[0]             , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "razoringMaxDepth1"           , &SearchConfig::razoringMaxDepth[1]             , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "nullMoveMinDepth"            , &SearchConfig::nullMoveMinDepth                , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "historyPruningMaxDepth"      , &SearchConfig::historyPruningMaxDepth          , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_score, w_spin, "historyPruningThresholdInit" , &SearchConfig::historyPruningThresholdInit     , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "historyPruningThresholdDepth", &SearchConfig::historyPruningThresholdDepth    , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "futilityMaxDepth0"           , &SearchConfig::futilityMaxDepth[0]             , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "futilityMaxDepth1"           , &SearchConfig::futilityMaxDepth[1]             , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthCoeff0"         , &SearchConfig::futilityDepthCoeff[0]           , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthCoeff1"         , &SearchConfig::futilityDepthCoeff[1]           , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthInit0"          , &SearchConfig::futilityDepthInit[0]            , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthInit1"          , &SearchConfig::futilityDepthInit[1]            , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "iidMinDepth"                 , &SearchConfig::iidMinDepth                     , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "iidMinDepth2"                , &SearchConfig::iidMinDepth2                    , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "probCutMinDepth"             , &SearchConfig::probCutMinDepth                 , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_int  , w_spin, "probCutMaxMoves"             , &SearchConfig::probCutMaxMoves                 , 0               , 30                  ));
-       _keys.push_back(KeyBase(k_score, w_spin, "probCutMargin"               , &SearchConfig::probCutMargin                   , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "lmrMinDepth"                 , &SearchConfig::lmrMinDepth                     , DepthType(0)    , DepthType(30)       ));
-       _keys.push_back(KeyBase(k_depth, w_spin, "singularExtensionDepth"      , &SearchConfig::singularExtensionDepth          , DepthType(0)    , DepthType(30)       ));
+#ifdef WITH_SEARCH_TUNING
+       _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin0"                  , &SearchConfig::qfutilityMargin[0]                  , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin1"                  , &SearchConfig::qfutilityMargin[1]                  , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "staticNullMoveMaxDepth0"           , &SearchConfig::staticNullMoveMaxDepth[0]           , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "staticNullMoveMaxDepth1"           , &SearchConfig::staticNullMoveMaxDepth[1]           , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthCoeff0"         , &SearchConfig::staticNullMoveDepthCoeff[0]         , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthCoeff1"         , &SearchConfig::staticNullMoveDepthCoeff[1]         , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthInit0"          , &SearchConfig::staticNullMoveDepthInit[0]          , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthInit1"          , &SearchConfig::staticNullMoveDepthInit[1]          , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthCoeff0"         , &SearchConfig::razoringMarginDepthCoeff[0]         , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthCoeff1"         , &SearchConfig::razoringMarginDepthCoeff[1]         , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthInit0"          , &SearchConfig::razoringMarginDepthInit[0]          , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthInit1"          , &SearchConfig::razoringMarginDepthInit[1]          , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "razoringMaxDepth0"                 , &SearchConfig::razoringMaxDepth[0]                 , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "razoringMaxDepth1"                 , &SearchConfig::razoringMaxDepth[1]                 , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "nullMoveMinDepth"                  , &SearchConfig::nullMoveMinDepth                    , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "historyPruningMaxDepth"            , &SearchConfig::historyPruningMaxDepth              , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_score, w_spin, "historyPruningThresholdInit"       , &SearchConfig::historyPruningThresholdInit         , ScoreType(-500) , ScoreType(500)      ));
+       _keys.push_back(KeyBase(k_score, w_spin, "historyPruningThresholdDepth"      , &SearchConfig::historyPruningThresholdDepth        , ScoreType(-500) , ScoreType(500)      ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "CMHMaxDepth"                       , &SearchConfig::CMHMaxDepth                         , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "futilityMaxDepth0"                 , &SearchConfig::futilityMaxDepth[0]                 , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "futilityMaxDepth1"                 , &SearchConfig::futilityMaxDepth[1]                 , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthCoeff0"               , &SearchConfig::futilityDepthCoeff[0]               , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthCoeff1"               , &SearchConfig::futilityDepthCoeff[1]               , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthInit0"                , &SearchConfig::futilityDepthInit[0]                , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthInit1"                , &SearchConfig::futilityDepthInit[1]                , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "failHighReductionThresholdInit0"   , &SearchConfig::failHighReductionThresholdInit[0]   , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "failHighReductionThresholdInit1"   , &SearchConfig::failHighReductionThresholdInit[1]   , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "failHighReductionThresholdDepth0"  , &SearchConfig::failHighReductionThresholdDepth[0]  , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "failHighReductionThresholdDepth1"  , &SearchConfig::failHighReductionThresholdDepth[1]  , ScoreType(0)    , ScoreType(1500)     ));
 
-       _keys.push_back(KeyBase(k_score, w_spin, "dangerLimitPruning0"         , &SearchConfig::dangerLimitPruning[0]           , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "dangerLimitPruning1"         , &SearchConfig::dangerLimitPruning[1]           , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "dangerLimitReduction0"       , &SearchConfig::dangerLimitReduction[0]         , ScoreType(0)    , ScoreType(1500)     ));
-       _keys.push_back(KeyBase(k_score, w_spin, "dangerLimitReduction1"       , &SearchConfig::dangerLimitReduction[1]         , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "iidMinDepth"                       , &SearchConfig::iidMinDepth                         , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "iidMinDepth2"                      , &SearchConfig::iidMinDepth2                        , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "probCutMinDepth"                   , &SearchConfig::probCutMinDepth                     , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_int  , w_spin, "probCutMaxMoves"                   , &SearchConfig::probCutMaxMoves                     , 0               , 30                  ));
+       _keys.push_back(KeyBase(k_score, w_spin, "probCutMargin"                     , &SearchConfig::probCutMargin                       , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "lmrMinDepth"                       , &SearchConfig::lmrMinDepth                         , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "singularExtensionDepth"            , &SearchConfig::singularExtensionDepth              , DepthType(0)    , DepthType(30)       ));
+        
+       _keys.push_back(KeyBase(k_score, w_spin, "dangerLimitPruning"                , &SearchConfig::dangerLimitPruning                  , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "dangerLimitReduction"              , &SearchConfig::dangerLimitReduction                , ScoreType(0)    , ScoreType(1500)     ));
+
+       _keys.push_back(KeyBase(k_score, w_spin, "failLowRootMargin"                 , &SearchConfig::failLowRootMargin                   , ScoreType(0)    , ScoreType(1500)     ));
 
        ///@todo more ...
 #endif

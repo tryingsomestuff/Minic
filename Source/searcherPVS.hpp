@@ -142,7 +142,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             ply >= (unsigned int)nullMoveMinPly && depth >= SearchConfig::nullMoveMinDepth) {
             PVList nullPV;
             ++stats.counters[Stats::sid_nullMoveTry];
-            const DepthType R = depth / 4 + 3 + std::min((evalScore - beta) / 80, 3); // adaptative
+            const DepthType R = depth / 4 + 3 + std::min((evalScore - beta) / 80, 3) /*+ (!pvnode)*/; // adaptative
             const ScoreType nullIIDScore = evalScore; // pvs<false, false>(beta - 1, beta, p, std::max(depth/4,1), ply, nullPV, seldepth, isInCheck, !cutNode);
             if (nullIIDScore >= beta /*&& stack[p.halfmoves].eval >= beta + 10 * (depth-improving)*/ ) { ///@todo try to minimize sid_nullMoveTry2 versus sid_nullMove
                 TT::Entry nullE;
@@ -218,6 +218,11 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         TT::getEntry(*this, p, pHash, 0, e);
         ttHit = e.h != nullHash;
         validTTmove = ttHit && e.m != INVALIDMINIMOVE;
+        if ( ttHit && !isInCheck && ((e.b == TT::B_alpha && e.s < evalScore) || (e.b == TT::B_beta && e.s > evalScore) || (e.b == TT::B_exact)) ){
+            evalScore = adjustHashScore(e.s,ply);
+            evalScoreIsHashScore=true;
+            marginDepth = std::max(1,depth-(evalScoreIsHashScore?e.d:0)); // a depth that take TT depth into account
+        }
     }
 
     killerT.killers[ply+1][0] = killerT.killers[ply+1][1] = 0;
@@ -226,7 +231,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         // LMP
         lmp = (SearchConfig::doLMP && depth <= SearchConfig::lmpMaxDepth);
         // futility
-        const ScoreType futilityScore = alpha - SearchConfig::futilityDepthInit[evalScoreIsHashScore] - SearchConfig::futilityDepthCoeff[evalScoreIsHashScore]*depth;
+        const ScoreType futilityScore = alpha - SearchConfig::futilityDepthInit[evalScoreIsHashScore] - SearchConfig::futilityDepthCoeff[evalScoreIsHashScore]*marginDepth;
         futility = (SearchConfig::doFutility && depth <= SearchConfig::futilityMaxDepth[evalScoreIsHashScore] && evalScore <= futilityScore);
         // history pruning
         historyPruning = (SearchConfig::doHistoryPruning && isNotEndGame && depth < SearchConfig::historyPruningMaxDepth);
@@ -336,7 +341,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                     if (ttScore >= beta) {
                         ++stats.counters[Stats::sid_ttbeta];
                         // increase history bonus of this move
-                        if ( !isInCheck && isQuiet ) updateTables(*this, p, depth + (ttScore > (beta+80)), ply, e.m, TT::B_beta, cmhPtr);
+                        if ( !isInCheck && isQuiet /*&& depth > 1*/) updateTables(*this, p, depth + (ttScore > (beta+80)), ply, e.m, TT::B_beta, cmhPtr);
                         TT::setEntry(*this,pHash,e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth);
                         return ttScore;
                     }
@@ -457,7 +462,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             // LMP
             if (lmp && isPrunableStdNoCheck && validMoveCount > /*(1+(2*dangerFactor)/SearchConfig::dangerLimitPruning)**/SearchConfig::lmpLimit[improving][depth] + 2*isEmergencyDefence ) {++stats.counters[Stats::sid_lmp]; continue;}
             // History pruning (with CMH)
-            if (historyPruning && isPrunableStdNoCheck && Move2Score(*it) < SearchConfig::historyPruningThresholdInit + depth*SearchConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
+            if (historyPruning && isPrunableStdNoCheck && Move2Score(*it) < SearchConfig::historyPruningThresholdInit + marginDepth*SearchConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
             // CMH pruning alone
             if (CMHPruning && isPrunableStdNoCheck){
               const int pp = (p.board_const(Move2From(*it))+PieceShift) * 64 + Move2To(*it);
@@ -475,7 +480,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                 reduction += SearchConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
                 // more reduction
                 reduction += !improving + ttMoveIsCapture;
-                reduction += (cutNode && evalScore - SearchConfig::failHighReductionThreshold[evalScoreIsHashScore] > beta); ///@todo try without
+                reduction += (cutNode && evalScore - SearchConfig::failHighReductionThresholdInit[evalScoreIsHashScore] - marginDepth*SearchConfig::failHighReductionThresholdDepth[evalScoreIsHashScore] > beta); ///@todo try without
                 // less reduction
                 reduction -= /*std::min(2,*/HISTORY_DIV(2 * Move2Score(*it))/*)*/; //history reduction/extension (beware killers and counter are scored above history max)
                 reduction -= reduction && (pvnode || isDangerRed || !noCheck /*|| ttMoveSingularExt*/ /*|| isEmergencyDefence*/);
@@ -515,7 +520,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                 alpha = score;
                 hashBound = TT::B_exact;
                 if ( score >= beta ){
-                    if ( !isInCheck && isQuiet /*&& !( depth == 1 && validQuietMoveCount == 1 )*/){ // last cond from Alayan in Ethereal)
+                    if ( !isInCheck && isQuiet /*&& depth > 1*/ /*&& !( depth == 1 && validQuietMoveCount == 1 )*/){ // last cond from Alayan in Ethereal)
                         // increase history bonus of this move
                         updateTables(*this, p, depth + (score>beta+80), ply, *it, TT::B_beta, cmhPtr);
                         // reduce history bonus of all previous

@@ -562,7 +562,7 @@ bool test(const std::string & option){
         bool b = true;
         for(int k = 1 ; k < 16 ; ++k){
             std::stringstream str;
-            str << "TestSuite/STS" << k << ".epd";
+            str << "Book_and_Test/TestSuite/STS" << k << ".epd";
             b &= ExtendedPosition::readEPDFile(str.str(),positions);
         }
         if ( !b ){

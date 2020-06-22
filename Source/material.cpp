@@ -178,10 +178,9 @@ namespace MaterialHash { // idea from Gull
             const EvalScore imbalanceB = Imbalance(mat, Co_Black);
 #endif
             materialHashTable[k].gp = (matScoreW + matScoreB ) / totalMatScore;
-            materialHashTable[k].score[MG] = imbalanceW[MG] + matScoreW   - (imbalanceB[MG] + matScoreB);
-            materialHashTable[k].score[EG] = imbalanceW[EG] + matScoreWEG - (imbalanceB[EG] + matScoreBEG);
+            materialHashTable[k].score = EvalScore(imbalanceW[MG] + matScoreW   - (imbalanceB[MG] + matScoreB), imbalanceW[EG] + matScoreWEG - (imbalanceB[EG] + matScoreBEG));
         }
-       if ( display) Logging::LogIt(Logging::logInfo) << "...Done";
+        if ( display) Logging::LogIt(Logging::logInfo) << "...Done";
     }
 
     void MaterialHashInitializer::init() {

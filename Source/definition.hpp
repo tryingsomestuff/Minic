@@ -47,6 +47,7 @@ const std::string MinicVersion = "dev";
 #define WITH_SYZYGY
 
 #define USE_PARTIAL_SORT 
+//#define WITH_EVALSCORE_AS_INT // in fact just as slow as my basic impl ...
 
 // *** Add-ons
 //#define IMPORTBOOK
@@ -58,7 +59,7 @@ const std::string MinicVersion = "dev";
 
 // *** Tuning
 //#define WITH_TIMER
-//#define WITH_CLOP_SEARCH
+//#define WITH_SEARCH_TUNING
 //#define WITH_TEXEL_TUNING
 
 // *** Debug
@@ -76,11 +77,12 @@ const std::string MinicVersion = "dev";
 
 #ifdef WITH_TEXEL_TUNING
 #define CONST_TEXEL_TUNING
+#undef WITH_EVALSCORE_AS_INT
 #else
 #define CONST_TEXEL_TUNING const
 #endif
 
-#ifdef WITH_CLOP_SEARCH
+#ifdef WITH_SEARCH_TUNING
 #define CONST_CLOP_TUNING
 #else
 #define CONST_CLOP_TUNING const
