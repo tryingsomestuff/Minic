@@ -5,7 +5,8 @@
 
 struct Position;
 
-///@todo use Stockfish trick (two short in one int) but it's hard to make it compatible with Texel tuning !
+// Stockfish trick (two short in one int) is not compatible with Texel tuning !
+#ifndef WITH_EVALSCORE_AS_INT
 struct EvalScore{
     std::array<ScoreType,GP_MAX> sc = {0};
     EvalScore(ScoreType mg,ScoreType eg):sc{mg,eg}{}
@@ -42,16 +43,46 @@ struct EvalScore{
         e[EG]= ScoreType(s_eg*e[EG]); 
         return e;
     }
-    /*
-    EvalScore scale(int mult_mg,int mult_eg, int div_mg,int div_eg)const{ 
-        EvalScore e(*this); 
-        e[MG]= ScoreType((mult_mg*e[MG])/div_mg); 
-        e[EG]= ScoreType((mult_eg*e[EG])/div_eg); 
-        return e;
-    }
-    */
-    //EvalScore scale(float s)const{ return scale(s,s);}
 };
+
+#else
+
+#define MakeScore(mg, eg) ((int)((unsigned int)(eg) << 16) + (mg))
+#define MGScore(s) ((int16_t)((uint16_t)((unsigned)((s)))))
+#define EGScore(s) ((int16_t)((uint16_t)((unsigned)((s) + 0x8000) >> 16)))
+
+struct EvalScore{
+    int sc = 0;
+    EvalScore(ScoreType mg,ScoreType eg):sc{MakeScore(mg,eg)}{}
+    EvalScore(ScoreType s):sc{MakeScore(s,s)}{}
+    EvalScore():sc{0}{}
+    EvalScore(const EvalScore & s):sc{s.sc}{}
+
+    inline ScoreType operator[](GamePhase g)const{ return g == MG ? MGScore(sc) : EGScore(sc);}
+
+    EvalScore& operator*=(const EvalScore& s){sc = MakeScore(MGScore(sc)*MGScore(s.sc),EGScore(sc)*EGScore(s.sc)); return *this;}
+    EvalScore& operator/=(const EvalScore& s){sc = MakeScore(MGScore(sc)/MGScore(s.sc),EGScore(sc)/EGScore(s.sc)); return *this;}
+    EvalScore& operator+=(const EvalScore& s){sc = MakeScore(MGScore(sc)+MGScore(s.sc),EGScore(sc)+EGScore(s.sc)); return *this;}
+    EvalScore& operator-=(const EvalScore& s){sc = MakeScore(MGScore(sc)-MGScore(s.sc),EGScore(sc)-EGScore(s.sc)); return *this;}
+    EvalScore  operator *(const EvalScore& s)const{return MakeScore(MGScore(sc)*MGScore(s.sc),EGScore(sc)*EGScore(s.sc));}
+    EvalScore  operator /(const EvalScore& s)const{return MakeScore(MGScore(sc)/MGScore(s.sc),EGScore(sc)/EGScore(s.sc));}
+    EvalScore  operator +(const EvalScore& s)const{return MakeScore(MGScore(sc)+MGScore(s.sc),EGScore(sc)+EGScore(s.sc));}
+    EvalScore  operator -(const EvalScore& s)const{return MakeScore(MGScore(sc)-MGScore(s.sc),EGScore(sc)-EGScore(s.sc));}
+    void       operator =(const EvalScore& s){sc=s.sc;}
+
+    EvalScore& operator*=(const ScoreType& s){sc = MakeScore(MGScore(sc)*s,EGScore(sc)*s); return *this;}
+    EvalScore& operator/=(const ScoreType& s){sc = MakeScore(MGScore(sc)/s,EGScore(sc)/s); return *this;}
+    EvalScore& operator+=(const ScoreType& s){sc = MakeScore(MGScore(sc)+s,EGScore(sc)+s); return *this;}
+    EvalScore& operator-=(const ScoreType& s){sc = MakeScore(MGScore(sc)-s,EGScore(sc)-s); return *this;}
+    EvalScore  operator *(const ScoreType& s)const{return MakeScore(MGScore(sc)*s,EGScore(sc)*s);}
+    EvalScore  operator /(const ScoreType& s)const{return MakeScore(MGScore(sc)/s,EGScore(sc)/s);}
+    EvalScore  operator +(const ScoreType& s)const{return MakeScore(MGScore(sc)+s,EGScore(sc)+s);}
+    EvalScore  operator -(const ScoreType& s)const{return MakeScore(MGScore(sc)-s,EGScore(sc)-s);}
+    void       operator =(const ScoreType& s){sc=MakeScore(s,s);}
+
+    EvalScore scale(float s_mg,float s_eg)const{ return EvalScore(ScoreType(MGScore(sc)*s_mg),ScoreType(EGScore(sc)*s_eg));}
+};
+#endif
 
 inline std::ostream & operator<<(std::ostream & of, const EvalScore & s){
     of << "MG : " << s[MG] << ", EG : " << s[EG];

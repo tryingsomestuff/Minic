@@ -25,7 +25,6 @@ CONST_CLOP_TUNING DepthType CMHMaxDepth                   = 4;
 CONST_CLOP_TUNING DepthType futilityMaxDepth          [2] = {10 , 10};
 CONST_CLOP_TUNING ScoreType futilityDepthCoeff        [2] = {160, 160};
 CONST_CLOP_TUNING ScoreType futilityDepthInit         [2] = {0  , 0};
-CONST_CLOP_TUNING ScoreType failHighReductionThreshold[2] = {130, 130};
 CONST_CLOP_TUNING DepthType iidMinDepth                   = 7;
 CONST_CLOP_TUNING DepthType iidMinDepth2                  = 10;
 CONST_CLOP_TUNING DepthType probCutMinDepth               = 5;
@@ -38,5 +37,8 @@ CONST_CLOP_TUNING DepthType singularExtensionDepth        = 8;
 CONST_CLOP_TUNING ScoreType dangerLimitPruning            = 9;
 CONST_CLOP_TUNING ScoreType dangerLimitReduction          = 7;
 CONST_CLOP_TUNING ScoreType failLowRootMargin             = 100;
+
+CONST_CLOP_TUNING ScoreType failHighReductionThresholdInit[2] = {130, 130};
+CONST_CLOP_TUNING ScoreType failHighReductionThresholdDepth[2] = {0, 0};
 
 } // SearchConfig
