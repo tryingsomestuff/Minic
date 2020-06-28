@@ -135,14 +135,17 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         }
 
         // null move (warning, mobility info is only available if no TT hit)
-        if (SearchConfig::doNullMove && (isNotEndGame || data.mobility[p.c] > 4) && withoutSkipMove /*&& evalScore >= beta*/ && 
-            //stack[p.halfmoves].p.lastMove != NULLMOVE && 
+        if (SearchConfig::doNullMove && (isNotEndGame || data.mobility[p.c] > 4) && withoutSkipMove && 
+            depth >= SearchConfig::nullMoveMinDepth && 
+            evalScore >= beta && 
+            evalScore >= stack[p.halfmoves].eval && 
+            stack[p.halfmoves].p.lastMove != NULLMOVE && 
             //stack[p.halfmoves-1].p.lastMove != NULLMOVE &&
-            evalScore >= stack[p.halfmoves].eval /*&& stack[p.halfmoves].eval >= beta - 32*depth - 30*improving */ && 
-            ply >= (unsigned int)nullMoveMinPly && depth >= SearchConfig::nullMoveMinDepth) {
+            /*stack[p.halfmoves].eval >= beta - 32*depth - 30*improving && */
+            ply >= (unsigned int)nullMoveMinPly ) {
             PVList nullPV;
             ++stats.counters[Stats::sid_nullMoveTry];
-            const DepthType R = depth / 4 + 3 + std::min((evalScore - beta) / 80, 3) /*+ (!pvnode)*/; // adaptative
+            const DepthType R = depth / 4 + 3 + std::min((evalScore - beta) / 150, 5); // adaptative
             const ScoreType nullIIDScore = evalScore; // pvs<false, false>(beta - 1, beta, p, std::max(depth/4,1), ply, nullPV, seldepth, isInCheck, !cutNode);
             if (nullIIDScore >= beta /*&& stack[p.halfmoves].eval >= beta + 10 * (depth-improving)*/ ) { ///@todo try to minimize sid_nullMoveTry2 versus sid_nullMove
                 TT::Entry nullE;

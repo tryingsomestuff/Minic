@@ -38,7 +38,7 @@ typedef uint64_t u_int64_t;
 #include <unistd.h>
 #endif
 
-const std::string MinicVersion = "2.37";
+const std::string MinicVersion = "2.38";
 
 // *** options
 #define WITH_UCI
@@ -61,6 +61,7 @@ const std::string MinicVersion = "2.37";
 //#define WITH_TIMER
 //#define WITH_SEARCH_TUNING
 //#define WITH_TEXEL_TUNING
+#define WITH_PIECE_TUNING
 
 // *** Debug
 //#define DEBUG_HASH
@@ -86,6 +87,12 @@ const std::string MinicVersion = "2.37";
 #define CONST_CLOP_TUNING
 #else
 #define CONST_CLOP_TUNING const
+#endif
+
+#ifdef WITH_PIECE_TUNING
+#define CONST_PIECE_TUNING
+#else
+#define CONST_PIECE_TUNING const
 #endif
 
 #define INFINITETIME TimeType(60ull*60ull*1000ull*24ull*30ull) // 1 month ...
@@ -173,8 +180,18 @@ const int PieceShift = 6;
 enum Mat      : unsigned char{ M_t = 0, M_p, M_n, M_b, M_r, M_q, M_k, M_bl, M_bd, M_M, M_m };
 inline Mat operator++(Mat & m){m=Mat(m+1); return m;}
 
-extern ScoreType   Values[13]  ;
-extern ScoreType   ValuesEG[13];
+extern CONST_PIECE_TUNING ScoreType   Values[13]  ;
+extern CONST_PIECE_TUNING ScoreType   ValuesEG[13];
+
+#ifdef WITH_PIECE_TUNING
+inline void SymetrizeValue(){
+    for ( Piece pp = P_wp ; pp <= P_wk ; ++pp){ 
+        std::cout << int(pp) << " " << Values[pp+PieceShift] << " " << ValuesEG[-pp+PieceShift] << std::endl;
+        Values[-pp+PieceShift]   = Values[pp+PieceShift]; 
+        ValuesEG[-pp+PieceShift] = ValuesEG[pp+PieceShift];
+    }
+}
+#endif
 
 const ScoreType dummyScore = 0;
 const ScoreType *const absValues[7]   = { &dummyScore, &Values  [P_wp + PieceShift], &Values  [P_wn + PieceShift], &Values  [P_wb + PieceShift], &Values  [P_wr + PieceShift], &Values  [P_wq + PieceShift], &Values  [P_wk + PieceShift] };
