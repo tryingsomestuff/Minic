@@ -5,16 +5,15 @@ dir=$(readlink -f $(dirname $0)/..)
 CUTECHESS=$dir/../cutechess/projects/cli/cutechess-cli
 engines=""
 
-#engines="$engines -engine conf=minic_dev"
-engines="$engines -engine conf=fruit"
 engines="$engines -engine conf=stockfish"
-
+engines="$engines -engine conf=minic_dev"
+#engines="$engines -engine conf=fruit"
 #engines="$engines -engine conf=RubiChess"
 #engines="$engines -engine conf=komodo-11.01-linux"
 #engines="$engines -engine conf=Defenchess_2.2"
 
 echo $engines
 
-$CUTECHESS $engines -each tc=0/30+0.25 timemargin=50 -rounds 1000 -pgnout pgn_$(date +"%Y_%m_%d"_%H%M%S).out -ratinginterval 1 -noswap -openings file=$dir/Book_and_Test/OpeningBook/N_and_Color_Odds.epd format=epd -recover -concurrency 7 > tournament_pos.log 2>&1 &
+$CUTECHESS $engines -each tc=0/30+0.25 timemargin=50 -rounds 1000 -pgnout pgn_$(date +"%Y_%m_%d"_%H%M%S).out -ratinginterval 1 -noswap -openings file=$dir/Book_and_Test/OpeningBook/nite-odds-masterlist-1000.epd format=epd -recover -concurrency 7 > tournament_pos.log 2>&1 &
 
 
