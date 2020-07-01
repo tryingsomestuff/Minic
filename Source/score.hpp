@@ -95,13 +95,14 @@ struct EvalFeatures{
     EvalScore scores[F_max] = { {0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0} };
     float scalingFactor        = 1.f;
     inline EvalScore SumUp()const{
-        return scores[F_material] 
-             + scores[F_positional] 
-             + scores[F_development] 
-             + scores[F_mobility] 
-             + scores[F_pawnStruct] 
-             + scores[F_attack] 
-             + scores[F_complexity];
+        EvalScore score = scores[F_material] 
+                        + scores[F_positional] 
+                        + scores[F_development] 
+                        + scores[F_mobility] 
+                        + scores[F_pawnStruct] 
+                        + scores[F_attack];
+        score += scores[F_complexity] * sgn(score[MG]);
+        return score;
     }
 };
 
