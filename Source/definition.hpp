@@ -61,7 +61,7 @@ const std::string MinicVersion = "2.38";
 //#define WITH_TIMER
 //#define WITH_SEARCH_TUNING
 //#define WITH_TEXEL_TUNING
-#define WITH_PIECE_TUNING
+//#define WITH_PIECE_TUNING
 
 // *** Debug
 //#define DEBUG_HASH
@@ -186,7 +186,6 @@ extern CONST_PIECE_TUNING ScoreType   ValuesEG[13];
 #ifdef WITH_PIECE_TUNING
 inline void SymetrizeValue(){
     for ( Piece pp = P_wp ; pp <= P_wk ; ++pp){ 
-        std::cout << int(pp) << " " << Values[pp+PieceShift] << " " << ValuesEG[-pp+PieceShift] << std::endl;
         Values[-pp+PieceShift]   = Values[pp+PieceShift]; 
         ValuesEG[-pp+PieceShift] = ValuesEG[pp+PieceShift];
     }
@@ -197,6 +196,7 @@ const ScoreType dummyScore = 0;
 const ScoreType *const absValues[7]   = { &dummyScore, &Values  [P_wp + PieceShift], &Values  [P_wn + PieceShift], &Values  [P_wb + PieceShift], &Values  [P_wr + PieceShift], &Values  [P_wq + PieceShift], &Values  [P_wk + PieceShift] };
 const ScoreType *const absValuesEG[7] = { &dummyScore, &ValuesEG[P_wp + PieceShift], &ValuesEG[P_wn + PieceShift], &ValuesEG[P_wb + PieceShift], &ValuesEG[P_wr + PieceShift], &ValuesEG[P_wq + PieceShift], &ValuesEG[P_wk + PieceShift] };
 
+template <typename T> inline int sgn(T val) { return (T(0) < val) - (val < T(0)); }
 
 const std::string PieceNames[13]    = { "k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K" };
 

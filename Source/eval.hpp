@@ -117,8 +117,6 @@ BitBoard getPinned(const Position & p, const Square s){
     return pinned;
 }
 
-template <typename T> int sgn(T val) { return (T(0) < val) - (val < T(0)); }
-
 template < bool display, bool safeMatEvaluator>
 inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     START_TIMER
@@ -546,12 +544,10 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context){
     features.scores[F_material] += ( (p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0)-(p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0) );
     features.scores[F_material] += ( (p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus   : 0)-(p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus   : 0) );
 
-/*
     // complexity 
-    // an "anti human GM" trick : side to move wants hanging pieces and material
-    features.scores[F_complexity] += EvalScore{1,0} * (white2Play?+1:-1) * countBit((att[Co_White] & p.allPieces[Co_Black]) | (att[Co_Black] & p.allPieces[Co_White]));
-    features.scores[F_complexity] += EvalScore{1,0} * (white2Play?+1:-1) * (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t]);
-*/
+    // an "anti human" trick : winning side wants to keep the position more complex
+    features.scores[F_complexity] += EvalScore{1,0} * (white2Play?+1:-1) * (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t]+(p.mat[Co_White][M_p]+p.mat[Co_Black][M_p])/2);
+
     if ( display ) displayEval(data,features);
 
     // taking Style into account, giving each score a [0..2] factor
