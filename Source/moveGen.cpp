@@ -28,7 +28,6 @@ void initCaslingPermHashTable(const Position & p){
     castlePermHashTable[p.rooksInit[Co_Black][CT_OOO]]  = C_all_but_bqs;
     castlePermHashTable[p.kingInit[Co_Black]]           = C_all_but_b;
     castlePermHashTable[p.rooksInit[Co_Black][CT_OO]]   = C_all_but_bks;
-
 }
 
 namespace {

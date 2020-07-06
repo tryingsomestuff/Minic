@@ -5,8 +5,10 @@ inline ScoreType qDeltaMargin(const Position & p) {
    return delta + Values[P_wq+PieceShift];
 }
 
+///@todo only recapture after a while
+
 template < bool qRoot, bool pvnode >
-ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth){
+ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth, unsigned int qply){
     if (stopFlag) return STOPSCORE; // no time verification in qsearch, too slow
     ++stats.counters[Stats::sid_qnodes];
 
@@ -69,6 +71,7 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
             evalScore = eval(p, data, *this);
         }
     }
+    const ScoreType staticScore = evalScore;
     bool evalScoreIsHashScore = false;
     // use tt score if possible and not in check
     if ( !isInCheck){
@@ -81,7 +84,7 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
         //if ( !ttHit ) TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(evalScore,ply),createHashScore(evalScore,ply),TT::B_none,-2); 
         return evalScore;
     }
-    if ( !isInCheck && SearchConfig::doQDeltaPruning && evalScore + qDeltaMargin(p) < alpha ) return ++stats.counters[Stats::sid_delta],alpha;
+    if ( !isInCheck && SearchConfig::doQDeltaPruning && staticScore + qDeltaMargin(p) < alpha ) return ++stats.counters[Stats::sid_delta],alpha;
     if ( evalScore > alpha) alpha = evalScore;
 
     TT::Bound b = TT::B_alpha;
@@ -95,7 +98,7 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
         if ( apply(p2,e.m) ){;
             ++validMoveCount;
             TT::prefetch(computeHash(p2));
-            const ScoreType score = -qsearch<false,false>(-beta,-alpha,p2,ply+1,seldepth);
+            const ScoreType score = -qsearch<false,false>(-beta,-alpha,p2,ply+1,seldepth,isInCheck?0:qply+1);
             if ( score > bestScore){
                 bestMove = e.m;
                 bestScore = score;
@@ -118,6 +121,9 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
     CMHPtrArray cmhPtr;
     getCMHPtr(p.halfmoves,cmhPtr);
 
+    const Square recapture = VALIDMOVE(p.lastMove) ? Move2To(p.lastMove) : INVALIDSQUARE;
+    const bool onlyRecapture = qply > 5 && isCapture(p.lastMove) && recapture != INVALIDSQUARE;
+
 #ifdef USE_PARTIAL_SORT
     MoveSorter::score(*this,moves,p,data.gp,ply,cmhPtr,false,isInCheck,validTTmove?&e:NULL); ///@todo warning gp is often = 0.5 here !
     size_t offset = 0;
@@ -129,14 +135,15 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
 #endif
         if (validTTmove && sameMove(e.m, *it)) continue; // already tried
         if (!isInCheck) {
+            if (onlyRecapture && Move2To(*it) != recapture ) continue; // only recapture now ...
             if (!SEE_GE(p,*it,0)) {++stats.counters[Stats::sid_qsee];continue;}
-            if (SearchConfig::doQFutility && evalScore + SearchConfig::qfutilityMargin[evalScoreIsHashScore] + (Move2Type(*it)==T_ep ? Values[P_wp+PieceShift] : PieceTools::getAbsValue(p, Move2To(*it))) <= alphaInit) {++stats.counters[Stats::sid_qfutility];continue;}
+            if (SearchConfig::doQFutility && staticScore + SearchConfig::qfutilityMargin[evalScoreIsHashScore] + (isPromotionCap(*it) ? (Values[P_wq+PieceShift]-Values[P_wp+PieceShift]) : 0 ) + (Move2Type(*it)==T_ep ? Values[P_wp+PieceShift] : PieceTools::getAbsValue(p, Move2To(*it))) <= alphaInit) {++stats.counters[Stats::sid_qfutility];continue;}
         }
         Position p2 = p;
         if ( ! apply(p2,*it) ) continue;
         ++validMoveCount;
         TT::prefetch(computeHash(p2));
-        const ScoreType score = -qsearch<false,false>(-beta,-alpha,p2,ply+1,seldepth);
+        const ScoreType score = -qsearch<false,false>(-beta,-alpha,p2,ply+1,seldepth,isInCheck?0:qply+1);
         if ( score > bestScore){
            bestMove = *it;
            bestScore = score;

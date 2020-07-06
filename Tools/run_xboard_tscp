@@ -2,5 +2,5 @@
 
 dir=$(readlink -f $(dirname $0)/..)
 
-/usr/games/xboard -fcp "$dir/Dist/Minic2/minic_dev_linux_x64_see4.2 -xboard" -fd "$dir" -scp "/media/BK1/www/p/chessEngine/weini/other/tscp181b/tscp" -sd "/media/BK1/www/p/chessEngine/weini/other/tscp181b" -tc 0:20 -mps 40 -xponder -debug
+/usr/games/xboard -fcp "$dir/a.out" -fd "$dir" -scp "/media/BK1/www/p/chessEngine/weini/other/tscp181b/tscp" -sd "/ssd/engines/tscp" -tc 0:20 -mps 40 -xponder -debug
 

@@ -286,6 +286,42 @@ int cliManagement(std::string cli, int argc, char ** argv){
         return 0;
     }
 
+    if ( cli == "-evalSpeed"){
+        DynamicConfig::disableTT = true;
+        std::string filename = "evalSpeed.epd";
+        if (argc > 2) filename = argv[2];
+        std::vector<Position> data;
+        Logging::LogIt(Logging::logInfo) << "Running eval speed with file " << filename;
+        std::vector<std::string> positions;
+        readEPDFile(filename,positions);
+        for(size_t k = 0 ; k < positions.size() ; ++k){
+            data.push_back(Position(positions[k],false));
+            if (k % 50000 == 0) Logging::LogIt(Logging::logInfo) << k << " position read";
+        }
+        Logging::LogIt(Logging::logInfo) << "Data size : " << data.size();
+
+        std::chrono::time_point<Clock> startTime = Clock::now();
+        for(int k = 0; k < 10 ; ++k)
+        for(auto p : data){
+            EvalData d;
+            eval<false>(p,d,ThreadPool::instance().main(),true);
+        }
+        int ms = (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count();
+        Logging::LogIt(Logging::logInfo) << "Eval speed (with EG material hash): " << data.size()*10.f/(ms*1000) << " Meval/s";
+
+        startTime = Clock::now();
+        for(int k = 0; k < 10 ; ++k)
+        for(auto p : data){
+            EvalData d;
+            eval<false>(p,d,ThreadPool::instance().main(),false);
+        }
+        ms = (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count();
+        Logging::LogIt(Logging::logInfo) << "Eval speed : " << data.size()*10.f/(ms*1000) << " Meval/s"; 
+
+        ThreadPool::instance().DisplayStats();
+        return 0;
+    }
+
     // next option needs at least one argument more
     if ( argc < 3 ){
         help();

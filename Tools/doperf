@@ -4,6 +4,10 @@ dir=$(readlink -f $(dirname $0)/../)
 
 cd $dir
 
+OPT="-g -O3 -DNDEBUG -ggdb -flto --std=c++14"
+export CXX=g++
+export CC=gcc
+
 FATHOM_PRESENT=0
 if [ -e Fathom/src/tbprobe.h ]; then
    FATHOM_PRESENT=1
@@ -16,7 +20,8 @@ if [ $FATHOM_PRESENT = "1" ]; then
    OPT="$OPT $dir/Fathom/src/$lib -I$dir/Fathom/src"
 fi
 
-g++ -g -O3 -DNDEBUG -ggdb -flto --std=c++14 Source/*.cpp -ISource $OPT -lpthread -DDEBUG_TOOL -o minic.perf
+g++ Source/*.cpp -ISource $OPT -lpthread -DDEBUG_TOOL -o minic.perf
 #perf record -g ./minic.perf -analyze "r1bqkb1r/pp3ppp/1np1pn2/6N1/2BP4/8/PPP1QPPP/R1B1K1NR w KQkq - 1 1" 15 -book 0
 perf record -g ./minic.perf -perft "start" 6 -quiet 0
+#perf record -g ./minic.perf -evalSpeed Book_and_Test/Tuning/lichess-new-labeled.epd
 perf report
