@@ -106,7 +106,7 @@ namespace UCI {
                         while (iss >> param) {
                             Logging::LogIt(Logging::logInfo) << "received parameter " << param;
                             if      (param == "infinite")    { TimeMan::msecPerMove = INFINITETIME; TimeMan::isUCIAnalysis = true;}
-                            else if (param == "depth")       { int d = 0;  iss >> d; COM::depth = d; }
+                            else if (param == "depth")       { int d = 0;  iss >> d; COM::depth = d; TimeMan::msecPerMove = INFINITETIME;}
                             else if (param == "movetime")    { iss >> TimeMan::msecPerMove; }
                             else if (param == "nodes")       { unsigned long long int maxNodes = 0;  iss >> maxNodes; TimeMan::maxKNodes = int(maxNodes/1000); }
                             else if (param == "searchmoves") { Logging::LogIt(Logging::logGUI) << "info string " << param << " not implemented yet"; }

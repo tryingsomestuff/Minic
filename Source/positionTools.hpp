@@ -18,3 +18,5 @@ Square kingSquare(const Position & p);
 bool readMove(const Position & p, const std::string & ss, Square & from, Square & to, MType & moveType );
 
 float gamePhase(const Position & p, ScoreType & matScoreW, ScoreType & matScoreB);
+
+bool readEPDFile(const std::string & fileName, std::vector<std::string> & positions);

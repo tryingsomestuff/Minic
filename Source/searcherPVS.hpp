@@ -23,7 +23,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
     EvalData data;
     if (ply >= MAX_DEPTH - 1 || depth >= MAX_DEPTH - 1) return eval(p, data, *this);
 
-    if ( depth <= 0 ) return qsearch<true,pvnode>(alpha,beta,p,ply,seldepth);
+    if ( depth <= 0 ) return qsearch<true,pvnode>(alpha,beta,p,ply,seldepth,0);
 
     seldepth = std::max((DepthType)ply,seldepth);
     ++stats.counters[Stats::sid_nodes];
@@ -129,7 +129,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         ScoreType rAlpha = alpha - SearchConfig::razoringMarginDepthInit[evalScoreIsHashScore] - SearchConfig::razoringMarginDepthCoeff[evalScoreIsHashScore]*marginDepth;
         if ( SearchConfig::doRazoring && depth <= SearchConfig::razoringMaxDepth[evalScoreIsHashScore] && evalScore <= rAlpha ){
             ++stats.counters[Stats::sid_razoringTry];
-            const ScoreType qScore = qsearch<true,pvnode>(alpha,beta,p,ply,seldepth);
+            const ScoreType qScore = qsearch<true,pvnode>(alpha,beta,p,ply,seldepth,0);
             if ( stopFlag ) return STOPSCORE;
             if ( qScore <= alpha || (depth < 2 && evalScoreIsHashScore) ) return ++stats.counters[Stats::sid_razoring],qScore;
         }
@@ -202,7 +202,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             Position p2 = p;
             if ( ! apply(p2,*it) ) continue;
             ++probCutCount;
-            ScoreType scorePC = -qsearch<true,pvnode>(-betaPC, -betaPC + 1, p2, ply + 1, seldepth);
+            ScoreType scorePC = -qsearch<true,pvnode>(-betaPC, -betaPC + 1, p2, ply + 1, seldepth,0);
             PVList pcPV;
             if (stopFlag) return STOPSCORE;
             if (scorePC >= betaPC) ++stats.counters[Stats::sid_probcutTry2], scorePC = -pvs<false,true>(-betaPC,-betaPC+1,p2,depth-SearchConfig::probCutMinDepth+1,ply+1,pcPV,seldepth, isAttacked(p2, kingSquare(p2)), !cutNode);

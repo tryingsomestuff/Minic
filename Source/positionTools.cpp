@@ -163,3 +163,17 @@ float gamePhase(const Position & p, ScoreType & matScoreW, ScoreType & matScoreB
     matScoreB = matPieceScoreB + matPawnScoreB;
     return (matScoreW + matScoreB ) / totalMatScore; // based on MG values
 }
+
+bool readEPDFile(const std::string & fileName, std::vector<std::string> & positions){
+    Logging::LogIt(Logging::logInfo) << "Loading EPD file : " << fileName;
+    std::ifstream str(fileName);
+    if (str) {
+        std::string line;
+        while (std::getline(str, line)) positions.push_back(line);
+        return true;
+    }
+    else {
+        Logging::LogIt(Logging::logError) << "Cannot open EPD file " << fileName;
+        return false;
+    }
+}

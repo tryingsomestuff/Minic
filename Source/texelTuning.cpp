@@ -294,7 +294,7 @@ void TexelTuning(const std::string & filename) {
     std::vector<Texel::TexelInput> data;
     Logging::LogIt(Logging::logInfo) << "Running texel tuning with file " << filename;
     std::vector<std::string> positions;
-    ExtendedPosition::readEPDFile(filename,positions);
+    readEPDFile(filename,positions);
     for(size_t k = 0 ; k < positions.size() ; ++k){
         ExtendedPosition * p = new ExtendedPosition(positions[k],false);
         //data.push_back({p, getResult(p->_extendedParams["c9"][0])}); // zurichess

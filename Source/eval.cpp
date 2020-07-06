@@ -6,10 +6,8 @@ struct Dummy{
     Position p;
     EvalData data;
     Searcher s(999);
-    eval<false,false>(p,data,s);
-    eval<false,true >(p,data,s);
-    eval<true ,false>(p,data,s);
-    eval<true ,true >(p,data,s);
+    eval<false>(p,data,s);
+    eval<true>(p,data,s);
   }
 };
 

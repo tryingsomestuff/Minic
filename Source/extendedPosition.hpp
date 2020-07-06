@@ -19,8 +19,6 @@ struct ExtendedPosition : Position{
     std::vector<std::string> comment0();
     std::string id();
 
-    static bool readEPDFile(const std::string & fileName, std::vector<std::string> & positions);
-
     static void test(const std::vector<std::string> & positions,
                      const std::vector<int> &         timeControls,
                      bool                             breakAtFirstSuccess,

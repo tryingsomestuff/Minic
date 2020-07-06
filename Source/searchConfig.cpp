@@ -9,7 +9,7 @@ ScoreType MvvLvaScores[6][6];
 ///@todo tune everything when evalScore is from TT score
 
 // first value if eval score is used, second if hash score is used
-CONST_CLOP_TUNING ScoreType qfutilityMargin           [2] = {90 , 90};
+CONST_CLOP_TUNING ScoreType qfutilityMargin           [2] = {132, 132};
 CONST_CLOP_TUNING DepthType staticNullMoveMaxDepth    [2] = {6  , 6};
 CONST_CLOP_TUNING ScoreType staticNullMoveDepthCoeff  [2] = {80 , 80};
 CONST_CLOP_TUNING ScoreType staticNullMoveDepthInit   [2] = {0  , 0};
