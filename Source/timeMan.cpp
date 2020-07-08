@@ -8,7 +8,7 @@ namespace TimeMan{
 TimeType msecPerMove, msecInTC, nbMoveInTC, msecInc, msecUntilNextTC, overHead;
 TimeType targetTime, maxTime;
 DepthType moveToGo;
-unsigned long long maxKNodes;
+unsigned long long maxNodes;
 bool isDynamic;
 bool isUCIPondering;
 bool isUCIAnalysis;
@@ -18,7 +18,7 @@ void init(){
     msecPerMove = 777;
     msecInTC    = nbMoveInTC = msecInc = msecUntilNextTC = -1;
     moveToGo    = -1;
-    maxKNodes   = 0;
+    maxNodes    = 0;
     isDynamic   = false;
     isUCIPondering  = false;
     isUCIAnalysis = false;
@@ -39,10 +39,10 @@ TimeType GetNextMSecPerMove(const Position & p){
     Logging::LogIt(Logging::logInfo) << "msecUntilNextTC " << msecUntilNextTC;
     Logging::LogIt(Logging::logInfo) << "currentNbMoves  " << int(p.moves);
     Logging::LogIt(Logging::logInfo) << "moveToGo        " << int(moveToGo);
-    Logging::LogIt(Logging::logInfo) << "maxKNodes       " << maxKNodes;
+    Logging::LogIt(Logging::logInfo) << "maxNodes        " << maxNodes;
     TimeType msecIncLoc = (msecInc > 0) ? msecInc : 0;
     
-    if ( maxKNodes > 0 ){
+    if ( maxNodes > 0 ){
         Logging::LogIt(Logging::logInfo) << "Fixed nodes per move";
         targetTime =  INFINITETIME;
         maxTime = INFINITETIME;

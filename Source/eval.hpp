@@ -165,8 +165,8 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context, bo
               }
           }
           else if ( MEntry.t == MaterialHash::Ter_MaterialDraw) {
-              STOP_AND_SUM_TIMER(Eval)
               if (!isAttacked(p, kingSquare(p))){
+                  STOP_AND_SUM_TIMER(Eval)
                   ++context.stats.counters[Stats::sid_materialTableDraw2];
                   return context.drawScore();
               }
