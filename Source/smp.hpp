@@ -46,7 +46,8 @@ public:
     // gathering counter information from all threads
     Counter counter(Stats::StatId id) const;
     void DisplayStats()const;
-    void clear();
+    void clearGame();
+    void clearSearch();
 
     TimeType currentMoveMs = 999;
 };

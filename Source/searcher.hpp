@@ -113,7 +113,8 @@ struct Searcher{
 
     void clearPawnTT();
 
-    void clear();
+    void clearGame();
+    void clearSearch();
 
     bool getPawnEntry(Hash h, PawnEntry *& pe);
 

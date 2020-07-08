@@ -16,7 +16,7 @@ void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestSco
     const TimeType ms = std::max((TimeType)1,(TimeType)std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count());
     getData().datas.times[depth] = ms;
     std::stringstream str;
-    Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
+    const Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
     if (Logging::ct == Logging::CT_xboard) {
         str << int(depth) << " " << bestScore << " " << ms / 10 << " " << nodeCount << " ";
         if (DynamicConfig::fullXboardOutput) str << (int)seldepth << " " << Counter(nodeCount / (ms / 1000.f) / 1000.) << " " << ThreadPool::instance().counter(Stats::sid_tbHit1) + ThreadPool::instance().counter(Stats::sid_tbHit2);
@@ -51,21 +51,16 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
         Logging::LogIt(Logging::logInfo) << "Search params :" ;
         Logging::LogIt(Logging::logInfo) << "requested time  " << getCurrentMoveMs() ;
         Logging::LogIt(Logging::logInfo) << "requested depth " << (int) d ;
-        //TT::clearTT(); // to be forced for reproductible results
         TT::age();
         MoveDifficultyUtil::variability = 1.f;
+        ThreadPool::instance().clearSearch(); // reset for all other threads !!!
     }
     else{
         Logging::LogIt(Logging::logInfo) << "helper thread waiting ... " << id() ;
         while(startLock.load()){;}
         Logging::LogIt(Logging::logInfo) << "... go for id " << id() ;
     }
-    //clearPawnTT(); // to be used for reproductible results ///@todo verify again
-    stats.init();
-    killerT.initKillers();
-    historyT.initHistory(true); // to be used for reproductible results :: false but this is a lot weaker, around 30 Elo !!!
-    counterT.initCounter(); ///@todo verify without ?
-
+    
     stack[p.halfmoves].h = p.h;
 
     DepthType reachedDepth = 0;
@@ -101,13 +96,16 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
 
     bool fhBreak = false;
 
+    const auto maxNodes = TimeMan::maxNodes;
+    TimeMan::maxNodes = 0; // reset this for depth 1 to be sure to iterate at least once ...
+
     if ( DynamicConfig::level == 0 ){ // random mover
        bestScore = randomMover(p,pvOut,isInCheck);
        goto pvsout;
     }
 
     // only main thread here, stopflag will be triggered anyway for other threads
-    if ( isMainThread() && DynamicConfig::multiPV == 1 && d > easyMoveDetectionDepth+5 
+    if ( isMainThread() && DynamicConfig::multiPV == 1 && d > easyMoveDetectionDepth+5 && maxNodes == 0 
          && currentMoveMs < INFINITETIME && currentMoveMs > 800 && TimeMan::msecUntilNextTC > 0){
        // easy move detection (small open window search)
        rootScores.clear();
@@ -140,7 +138,10 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
             else{ 
                 // delayed other thread start
                 Logging::LogIt(Logging::logInfo) << "Unlocking other threads";
-                if ( depth > 1) startLock.store(false);
+                if ( depth > 1){
+                    TimeMan::maxNodes = maxNodes; // restore real value
+                    startLock.store(false);
+                }
             } 
             Logging::LogIt(Logging::logInfo) << "Thread " << id() << " searching depth " << (int)depth;
             PVList pvLoc;

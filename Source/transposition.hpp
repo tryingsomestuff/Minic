@@ -15,7 +15,7 @@ struct Searcher;
 namespace TT{
 
 extern GenerationType curGen;
-enum Bound : unsigned char{ B_exact = 0, B_alpha = 1, B_beta = 2, B_none = 3};
+enum Bound : unsigned char{ B_none = 0, B_alpha = 1, B_beta = 2, B_exact = 3, B_ttFlag = 4};
 #if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
