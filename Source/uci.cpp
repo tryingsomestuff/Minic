@@ -108,7 +108,7 @@ namespace UCI {
                             if      (param == "infinite")    { TimeMan::msecPerMove = INFINITETIME; TimeMan::isUCIAnalysis = true;}
                             else if (param == "depth")       { int d = 0;  iss >> d; COM::depth = d; TimeMan::msecPerMove = INFINITETIME;}
                             else if (param == "movetime")    { iss >> TimeMan::msecPerMove; }
-                            else if (param == "nodes")       { unsigned long long int maxNodes = 0;  iss >> maxNodes; TimeMan::maxKNodes = int(maxNodes/1000); }
+                            else if (param == "nodes")       { iss >> TimeMan::maxNodes; }
                             else if (param == "searchmoves") { Logging::LogIt(Logging::logGUI) << "info string " << param << " not implemented yet"; }
                             else if (param == "wtime")       { int t; iss >> t; if (COM::position.c == Co_White) { TimeMan::msecUntilNextTC = t; TimeMan::isDynamic = true; }}
                             else if (param == "btime")       { int t; iss >> t; if (COM::position.c == Co_Black) { TimeMan::msecUntilNextTC = t; TimeMan::isDynamic = true; }}

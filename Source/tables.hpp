@@ -30,7 +30,7 @@ struct HistoryT{
     ScoreType historyP[13][64]; // Piece, to
     ScoreType counter_history[13][64][13*64]; //previous moved piece, previous to, current moved piece * boardsize + current to
 
-    void initHistory(bool noClean = false);
+    void initHistory(bool noCleanCounter = false);
 
     template<int S>
     inline void update(DepthType depth, Move m, const Position & p, CMHPtrArray & cmhPtr){

@@ -15,7 +15,7 @@ namespace TimeMan{
 extern TimeType msecPerMove, msecInTC, nbMoveInTC, msecInc, msecUntilNextTC, overHead;
 extern TimeType targetTime, maxTime;
 extern DepthType moveToGo;
-extern unsigned long long maxKNodes; ///@todo use this !
+extern unsigned long long maxNodes;
 extern bool isDynamic;
 extern bool isUCIPondering;
 extern bool isUCIAnalysis;

@@ -73,7 +73,6 @@ const std::string MinicVersion = "2.38";
 //#define DEBUG_PSEUDO_LEGAL
 //#define DEBUG_HASH_ENTRY
 //#define DEBUG_KING_CAP
-//#define DEBUG_ACC ///@todo make this work again !!
 //#define DEBUG_PERFT
 
 #ifdef WITH_TEXEL_TUNING
