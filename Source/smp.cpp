@@ -32,7 +32,7 @@ void ThreadPool::setup(){
     while (size() < DynamicConfig::threads) { // init other threads (for main see below)
        push_back(std::unique_ptr<Searcher>(new Searcher(size())));
        back()->initPawnTable();
-       back()->clear();
+       back()->clearGame();
     }
 }
 
@@ -62,8 +62,14 @@ Move ThreadPool::search(const ThreadData & d){ // distribute data and call main 
 
 void ThreadPool::startOthers(){ for (auto & s : *this) if (!(*s).isMainThread()) (*s).start();}
 
-void ThreadPool::clear(){ 
-    for (auto & s : *this) (*s).clear();
+void ThreadPool::clearGame(){
+    TT::clearTT();
+    for (auto & s : *this) (*s).clearGame();
+}
+
+void ThreadPool::clearSearch(){ 
+    //TT::clearTT(); // to be forced for reproductible results
+    for (auto & s : *this) (*s).clearSearch();
 }
 
 void ThreadPool::stop(){ for (auto & s : *this) (*s).stopFlag = true;}

@@ -119,11 +119,19 @@ void Searcher::clearPawnTT() {
     for (unsigned int k = 0; k < ttSizePawn; ++k) tablePawn[k].h = 0;
 }
 
-void Searcher::clear(){
+void Searcher::clearGame(){
      clearPawnTT();
      stats.init();
      killerT.initKillers();
      historyT.initHistory();
+     counterT.initCounter();
+}
+
+void Searcher::clearSearch(){
+     //clearPawnTT(); // to be used for reproductible results ///@todo verify again
+     stats.init();
+     killerT.initKillers();
+     historyT.initHistory(true);
      counterT.initCounter();
 }
 

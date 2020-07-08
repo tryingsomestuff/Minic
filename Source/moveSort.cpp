@@ -28,19 +28,23 @@ void MoveSorter::computeScore(Move & m)const{
     else{
         if (isInCheck && from == p.king[C]) s += 10000; // king evasion
         if ( isCapture(t) && !isPromotion(t)){
+            const Piece pp = PieceTools::getPieceType(p,from);
+            const Piece ppOpp = (t != T_ep) ? PieceTools::getPieceType(p,to) : P_wp;
+            assert(pp>0);
+            assert(ppOpp>0);
+            const EvalScore * const pst    = EvalConfig::PST[pp - 1];
+            const EvalScore * const pstOpp = EvalConfig::PST[ppOpp- 1];
+            s += ScaleScore(pst[ColorSquarePstHelper<C>(to)] - pst[ColorSquarePstHelper<C>(from)] + pstOpp[ColorSquarePstHelper<~C>(to)],gp);
             if ( useSEE && !isInCheck ){
                 const ScoreType see = context.SEE(p,m);
                 s += see;
-                if ( VALIDMOVE(p.lastMove) && isCapture(p.lastMove) && to == Move2To(p.lastMove) ) s += 500; // recapture bonus
+                if ( VALIDMOVE(p.lastMove) && isCapture(p.lastMove) && to == Move2To(p.lastMove) ) s += 150; // recapture bonus
                 else if ( see < -80 ) s -= 2*MoveScoring[T_capture]; // too bad capture
             }
             else{ // MVVLVA
                 if ( VALIDMOVE(p.lastMove) && isCapture(p.lastMove) && to == Move2To(p.lastMove) ) s += 500; // recapture bonus
                 else{
-                   const Piece victim   = (t != T_ep) ? PieceTools::getPieceType(p,to) : P_wp;
-                   const Piece attacker = PieceTools::getPieceType(p,from);
-                   assert(victim>0); assert(attacker>0);
-                   s += SearchConfig::MvvLvaScores[victim-1][attacker-1]; //[0 400]
+                   s += SearchConfig::MvvLvaScores[ppOpp-1][pp-1]; //[0 400]
                 }                
             }
         }
@@ -57,7 +61,7 @@ void MoveSorter::computeScore(Move & m)const{
                 s += context.getCMHScore(p, from, to, cmhPtr) /3; // +/- HISTORY_MAX = 1000
                 if ( !isInCheck ){
                    if ( refutation != INVALIDMOVE && from == Move2To(refutation) && context.SEE_GE(p,m,-80)) s += 1000; // move (safely) leaving threat square from null move search
-                   const EvalScore * const  pst = EvalConfig::PST[std::abs(pp) - 1];
+                   const EvalScore * const pst = EvalConfig::PST[std::abs(pp) - 1];
                    s += ScaleScore(pst[ColorSquarePstHelper<C>(to)] - pst[ColorSquarePstHelper<C>(from)],gp);
                 }
             }

@@ -13,12 +13,30 @@
 #include "tools.hpp"
 #include "transposition.hpp"
 
+#define PERIODICCHECK 1024ull
+
 // pvs inspired by Xiphos
 template< bool pvnode, bool canPrune>
 ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, bool cutNode, const std::vector<MiniMove>* skipMoves){
     if (stopFlag) return STOPSCORE;
-    //if ( TimeMan::maxKNodes>0 && (stats.counters[Stats::sid_nodes] + stats.counters[Stats::sid_qnodes])/1000 > TimeMan::maxKNodes) { stopFlag = true; Logging::LogIt(Logging::logInfo) << "stopFlag triggered (nodes limits) in thread " << id(); } ///@todo nodes per move
-    if ( (TimeType)std::max(1, (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count()) > getCurrentMoveMs() ){ stopFlag = true; Logging::LogIt(Logging::logInfo) << "stopFlag triggered in thread " << id(); }
+    if ( isMainThread() ){
+        static int periodicCheck = 0;
+        if ( periodicCheck == 0 ){
+            periodicCheck = (TimeMan::maxNodes > 0) ? std::min(TimeMan::maxNodes/PERIODICCHECK,PERIODICCHECK) : PERIODICCHECK;
+            const Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
+            if ( TimeMan::maxNodes > 0 && nodeCount > TimeMan::maxNodes) { 
+                stopFlag = true; 
+                Logging::LogIt(Logging::logInfo) << "stopFlag triggered (nodes limits) in thread " << id(); 
+                return STOPSCORE;
+            } 
+            if ( (TimeType)std::max(1, (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count()) > getCurrentMoveMs() ){ 
+                stopFlag = true; 
+                Logging::LogIt(Logging::logInfo) << "stopFlag triggered in thread " << id(); 
+                return STOPSCORE;
+            }
+        }
+        --periodicCheck;
+    }
 
     EvalData data;
     if (ply >= MAX_DEPTH - 1 || depth >= MAX_DEPTH - 1) return eval(p, data, *this);
@@ -48,19 +66,22 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
 
     // probe TT
     TT::Entry e;
-    if ( TT::getEntry(*this, p, pHash, depth, e)) { // if depth of TT entry is enough
+    bool ttDepthOk = TT::getEntry(*this, p, pHash, depth, e);
+    TT::Bound bound = TT::Bound(e.b & ~TT::B_ttFlag);
+    if (ttDepthOk) { // if depth of TT entry is enough
         if ( !rootnode && !pvnode && 
-             ( (e.b == TT::B_alpha && e.s <= alpha) || (e.b == TT::B_beta  && e.s >= beta) || (e.b == TT::B_exact) ) ) {
+             ( (bound == TT::B_alpha && e.s <= alpha) || (bound == TT::B_beta  && e.s >= beta) || (bound == TT::B_exact) ) ) {
             // increase history bonus of this move
-            if (!isInCheck && e.m != INVALIDMINIMOVE && Move2Type(e.m) == T_std ) updateTables(*this, p, depth, ply, e.m, e.b, cmhPtr);
+            if (!isInCheck && e.m != INVALIDMINIMOVE && Move2Type(e.m) == T_std ) updateTables(*this, p, depth, ply, e.m, bound, cmhPtr);
             return adjustHashScore(e.s, ply);
         }
     }
     // if entry hash is not null and entry move is valid, this is a valid TT move (we don't care about depth here !)
     bool ttHit = e.h != nullHash;
     bool validTTmove = ttHit && e.m != INVALIDMINIMOVE;
+    bool ttPV = pvnode || (validTTmove && (e.b&TT::B_ttFlag));
+    bool formerPV = ttPV && !pvnode;
     
-
 #ifdef WITH_SYZYGY
     ScoreType tbScore = 0;
     if ( !rootnode && withoutSkipMove 
@@ -108,7 +129,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
     // if no TT hit yet, we insert an eval without a move here in case of forward pruning (depth is negative, bound is none) ...
     if ( !ttHit ) TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(evalScore,ply),createHashScore(evalScore,ply),TT::B_none,-2); 
     // if TT hit, we can use its score as a best draft
-    if ( ttHit && !isInCheck && ((e.b == TT::B_alpha && e.s < evalScore) || (e.b == TT::B_beta && e.s > evalScore) || (e.b == TT::B_exact)) ) evalScore = adjustHashScore(e.s,ply), evalScoreIsHashScore=true;
+    if ( ttHit && !isInCheck && ((bound == TT::B_alpha && e.s < evalScore) || (bound == TT::B_beta && e.s > evalScore) || (bound == TT::B_exact)) ) evalScore = adjustHashScore(e.s,ply), evalScoreIsHashScore=true;
 
     ScoreType bestScore = -MATE + ply;
     MoveList moves;
@@ -221,7 +242,10 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         TT::getEntry(*this, p, pHash, 0, e);
         ttHit = e.h != nullHash;
         validTTmove = ttHit && e.m != INVALIDMINIMOVE;
-        if ( ttHit && !isInCheck && ((e.b == TT::B_alpha && e.s < evalScore) || (e.b == TT::B_beta && e.s > evalScore) || (e.b == TT::B_exact)) ){
+        bound = TT::Bound(e.b & ~TT::B_ttFlag);
+        ttPV = pvnode || (ttHit && (e.b&TT::B_ttFlag));
+        formerPV = ttPV && !pvnode;
+        if ( ttHit && !isInCheck && ((bound == TT::B_alpha && e.s < evalScore) || (bound == TT::B_beta && e.s > evalScore) || (bound == TT::B_exact)) ){
             evalScore = adjustHashScore(e.s,ply);
             evalScoreIsHashScore=true;
             marginDepth = std::max(1,depth-(evalScoreIsHashScore?e.d:0)); // a depth that take TT depth into account
@@ -306,7 +330,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                // threat on queen extension
                //if (EXTENDMORE(extension) && pvnode && (p.pieces_const<P_wq>(p.c) && isQuiet && PieceTools::getPieceType(p, Move2From(e.m)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, e.m, 0)) ++stats.counters[Stats::sid_queenThreatExtension], ++extension;
                // singular move extension
-               if (EXTENDMORE(extension) && withoutSkipMove && depth >= SearchConfig::singularExtensionDepth && !rootnode && !isMateScore(e.s) && e.b == TT::B_beta && e.d >= depth - 3){
+               if (EXTENDMORE(extension) && withoutSkipMove && depth >= SearchConfig::singularExtensionDepth && !rootnode && !isMateScore(e.s) && bound == TT::B_beta && e.d >= depth - 3){
                    const ScoreType betaC = e.s - 2*depth;
                    PVList sePV;
                    DepthType seSeldetph = 0;
@@ -345,7 +369,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                         ++stats.counters[Stats::sid_ttbeta];
                         // increase history bonus of this move
                         if ( !isInCheck && isQuiet /*&& depth > 1*/) updateTables(*this, p, depth + (ttScore > (beta+80)), ply, e.m, TT::B_beta, cmhPtr);
-                        TT::setEntry(*this,pHash,e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::B_beta,depth);
+                        TT::setEntry(*this,pHash,e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::Bound(TT::B_beta|(ttPV?TT::B_ttFlag:TT::B_none)),depth);
                         return ttScore;
                     }
                     ++stats.counters[Stats::sid_ttalpha];
@@ -463,7 +487,8 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             // futility
             if (futility && isPrunableStdNoCheck) {++stats.counters[Stats::sid_futility]; continue;}
             // LMP
-            if (lmp && isPrunableStdNoCheck && validMoveCount > /*(1+(2*dangerFactor)/SearchConfig::dangerLimitPruning)**/SearchConfig::lmpLimit[improving][depth] + 2*isEmergencyDefence ) {++stats.counters[Stats::sid_lmp]; continue;}
+            const bool moveCountPruning = validMoveCount > /*(1+(2*dangerFactor)/SearchConfig::dangerLimitPruning)**/SearchConfig::lmpLimit[improving][depth] + 2*isEmergencyDefence;
+            if (lmp && isPrunableStdNoCheck && moveCountPruning) {++stats.counters[Stats::sid_lmp]; continue;}
             // History pruning (with CMH)
             if (historyPruning && isPrunableStdNoCheck && Move2Score(*it) < SearchConfig::historyPruningThresholdInit + marginDepth*SearchConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
             // CMH pruning alone
@@ -478,15 +503,19 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             }
             // LMR
             DepthType reduction = 0;
-            if (SearchConfig::doLMR && (isReductible && isQuiet ) && depth >= SearchConfig::lmrMinDepth ){
+            if (SearchConfig::doLMR && depth >= SearchConfig::lmrMinDepth 
+                && ( (isReductible && isQuiet) /*|| (isPrunableCap && stack[p.halfmoves].eval <= alpha ) || cutNode*/ ) 
+                /*&& validMoveCount > 1 + 2*rootnode*/ ){
                 ++stats.counters[Stats::sid_lmr];
                 reduction += SearchConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
                 // more reduction
                 reduction += !improving + ttMoveIsCapture;
                 reduction += (cutNode && evalScore - SearchConfig::failHighReductionThresholdInit[evalScoreIsHashScore] - marginDepth*SearchConfig::failHighReductionThresholdDepth[evalScoreIsHashScore] > beta); ///@todo try without
+                //reduction += moveCountPruning && !formerPV;
                 // less reduction
                 reduction -= /*std::min(2,*/HISTORY_DIV(2 * Move2Score(*it))/*)*/; //history reduction/extension (beware killers and counter are scored above history max)
                 reduction -= reduction && (pvnode || isDangerRed || !noCheck /*|| ttMoveSingularExt*/ /*|| isEmergencyDefence*/);
+                //reduction -= ttPV*2;
                 // never extend more than reduce
                 if ( extension - reduction > 0 ) reduction = extension;
                 if ( reduction >= depth - 1 + extension ) reduction = depth - 1 + extension - 1;
@@ -542,6 +571,6 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
     }
 
     if ( validMoveCount==0 ) return (isInCheck || !withoutSkipMove)?-MATE + ply : 0;
-    TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),hashBound,depth);
+    TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),TT::Bound(hashBound|(ttPV?TT::B_ttFlag:TT::B_none)),depth);
     return bestScore;
 }

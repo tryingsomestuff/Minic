@@ -22,8 +22,7 @@ namespace COM {
         mode = m_force;
         stm = stm_white;
         readFEN(startPosition, COM::position);
-        TT::clearTT();
-        ThreadPool::instance().clear(); // re-init all threads data
+        ThreadPool::instance().clearGame(); // re-init all threads data
     }
 
     void init() {

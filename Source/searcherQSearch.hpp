@@ -31,8 +31,10 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
     // probe TT
     TT::Entry e;
     const Hash pHash = computeHash(p);
-    if (TT::getEntry(*this, p, pHash, hashDepth, e)) { // if depth of TT entry is enough
-        if (!pvnode && ((e.b == TT::B_alpha && e.s <= alpha) || (e.b == TT::B_beta  && e.s >= beta) || (e.b == TT::B_exact))) { 
+    const bool ttDepthOk = TT::getEntry(*this, p, pHash, hashDepth, e);
+    TT::Bound bound = TT::Bound(e.b & ~TT::B_ttFlag);
+    if (ttDepthOk) { // if depth of TT entry is enough
+        if (!pvnode && ((bound == TT::B_alpha && e.s <= alpha) || (bound == TT::B_beta  && e.s >= beta) || (bound == TT::B_exact))) { 
             return adjustHashScore(e.s, ply); 
         }
     }
@@ -40,6 +42,7 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
 
     const bool ttHit = e.h != nullHash;
     const bool validTTmove = ttHit && e.m != INVALIDMINIMOVE;
+    const bool ttPV = pvnode || (validTTmove && (e.b&TT::B_ttFlag));
     if ( validTTmove && (isInCheck || isCapture(e.m)) ) bestMove = e.m;
     
     // get a static score for the position.
@@ -75,7 +78,7 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
     bool evalScoreIsHashScore = false;
     // use tt score if possible and not in check
     if ( !isInCheck){
-       if ( ttHit && ((e.b == TT::B_alpha && e.s <= evalScore) || (e.b == TT::B_beta && e.s >= evalScore) || (e.b == TT::B_exact)) ) evalScore = e.s, evalScoreIsHashScore = true;
+       if ( ttHit && ((bound == TT::B_alpha && e.s <= evalScore) || (bound == TT::B_beta && e.s >= evalScore) || (bound == TT::B_exact)) ) evalScore = e.s, evalScoreIsHashScore = true;
        if ( !ttHit ) TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(evalScore,ply),createHashScore(evalScore,ply),TT::B_none,-2); // already insert an eval here in case of pruning ...
     }
 
@@ -105,7 +108,7 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
                 if ( score > alpha ){
                     if (score >= beta) {
                         b = TT::B_beta;
-                        TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),b,hashDepth);
+                        TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),TT::Bound(b|(ttPV?TT::B_ttFlag:TT::B_none)),hashDepth);
                         return bestScore;
                     }
                     b = TT::B_exact;
@@ -158,6 +161,6 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
         }
     }
     if ( validMoveCount==0 && isInCheck) bestScore = -MATE + ply;  
-    TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),b,hashDepth);
+    TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),TT::Bound(b|(ttPV?TT::B_ttFlag:TT::B_none)),hashDepth);
     return bestScore;
 }
