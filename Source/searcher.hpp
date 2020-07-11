@@ -53,8 +53,8 @@ struct Searcher{
 
     ScoreType drawScore();
 
-    template <bool pvnode, bool canPrune> ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, bool cutNode, const std::vector<MiniMove> * skipMoves = nullptr);
-    template <bool qRoot, bool pvnode> ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth, unsigned int qply);
+    template <bool pvnode> ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, bool cutNode, bool canPrune, const std::vector<MiniMove> * skipMoves = nullptr);
+    ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth, unsigned int qply, bool qRoot, bool pvnode, char isInCheckHint = -1);
     ScoreType qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
     bool SEE_GE(const Position & p, const Move & m, ScoreType threshold)const;
     ScoreType SEE(const Position & p, const Move & m)const;
