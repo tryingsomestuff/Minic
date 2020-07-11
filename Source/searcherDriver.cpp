@@ -109,7 +109,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
          && currentMoveMs < INFINITETIME && currentMoveMs > 800 && TimeMan::msecUntilNextTC > 0){
        // easy move detection (small open window search)
        rootScores.clear();
-       ScoreType easyScore = pvs<true,false>(-MATE, MATE, p, easyMoveDetectionDepth, 0, pvOut, seldepth, isInCheck,false);
+       ScoreType easyScore = pvs<true>(-MATE, MATE, p, easyMoveDetectionDepth, 0, pvOut, seldepth, isInCheck,false,false);
        std::sort(rootScores.begin(), rootScores.end(), [](const RootScores& r1, const RootScores & r2) {return r1.s > r2.s; });
        if (stopFlag) { // no more time, this is strange ...
            bestScore = easyScore; 
@@ -166,7 +166,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
 
                 pvLoc.clear();
                 stack[p.halfmoves].h = p.h;
-                score = pvs<true,false>(alpha,beta,p,windowDepth,0,pvLoc,seldepth,isInCheck,false,skipMoves.empty()?nullptr:&skipMoves);
+                score = pvs<true>(alpha,beta,p,windowDepth,0,pvLoc,seldepth,isInCheck,false,false,skipMoves.empty()?nullptr:&skipMoves);
                 if ( stopFlag ) break;
                 delta += 2 + delta/2; // from xiphos ...
                 if (alpha > -MATE && score <= alpha) {
