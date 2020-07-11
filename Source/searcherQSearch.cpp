@@ -38,7 +38,7 @@ inline ScoreType qDeltaMargin(const Position & p) {
    return delta + Values[P_wq+PieceShift];
 }
 
-ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth, unsigned int qply, bool qRoot, bool pvnode, char isInCheckHint){
+ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth, unsigned int qply, bool qRoot, bool pvnode, signed char isInCheckHint){
     if (stopFlag) return STOPSCORE; // no time verification in qsearch, too slow
     ++stats.counters[Stats::sid_qnodes];
 
