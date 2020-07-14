@@ -11,7 +11,7 @@ features = [ 'imbalance', 'PST0', 'PST1', 'PST2', 'PST3', 'PST4', 'PST5',
              'rookOpen', 'rookQueenFile', 'rookFrontQueen', 'rookFrontKing', 'minorOnOpen', 'pinned', 'hanging', 'minorThreat', 'rookThreat', 'queenThreat', 'kingThreat',
              'adjustN', 'adjustR', 'adjustB', 'badBishop', 'pairAdjust', 'queenNearKing', 
              'mobility', 'initiative', 
-             'attDefKing', 'attFunction', 'attOpenFile', 'secondOrder' ]
+             'attDefKing', 'attFunction', 'attOpenFile', 'attNoqueen', 'secondOrder' ]
 
 for f in features:
     print(f)
