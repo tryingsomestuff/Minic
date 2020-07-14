@@ -29,7 +29,8 @@ extern CONST_TEXEL_TUNING EvalScore   backwardPawn[8][2]     ;
 extern CONST_TEXEL_TUNING EvalScore   detachedPawn[8][2]     ;
 extern CONST_TEXEL_TUNING EvalScore   holesMalus             ;
 extern CONST_TEXEL_TUNING EvalScore   pieceFrontPawn         ;
-extern CONST_TEXEL_TUNING EvalScore   outpost                ;
+extern CONST_TEXEL_TUNING EvalScore   outpostN               ;
+extern CONST_TEXEL_TUNING EvalScore   outpostB               ;
 extern CONST_TEXEL_TUNING EvalScore   centerControl          ;
 extern CONST_TEXEL_TUNING EvalScore   knightTooFar[8]        ;
 extern CONST_TEXEL_TUNING EvalScore   candidate[8]           ;
@@ -84,6 +85,7 @@ extern CONST_TEXEL_TUNING ScoreType kingAttSafeCheck[6]    ;
 extern CONST_TEXEL_TUNING ScoreType kingAttOpenfile        ;
 extern CONST_TEXEL_TUNING ScoreType kingAttSemiOpenfileOpp ;
 extern CONST_TEXEL_TUNING ScoreType kingAttSemiOpenfileOur ;
+extern CONST_TEXEL_TUNING ScoreType kingAttNoQueen         ;
 extern ScoreType kingAttTable[64];
 
 extern CONST_TEXEL_TUNING EvalScore tempo;

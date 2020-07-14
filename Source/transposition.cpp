@@ -13,12 +13,6 @@ namespace TT{
 
 GenerationType curGen = 0;
 
-unsigned long long int powerFloor(unsigned long long int x) {
-    unsigned long long int power = 1;
-    while (power < x) power *= 2;
-    return power/2;
-}
-
 #ifdef __linux__
 #include <sys/mman.h>
 #endif

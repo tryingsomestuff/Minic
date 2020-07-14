@@ -21,6 +21,7 @@ CONST_CLOP_TUNING DepthType nullMoveVerifDepth            = 64;
 CONST_CLOP_TUNING DepthType historyPruningMaxDepth        = 3;
 CONST_CLOP_TUNING ScoreType historyPruningThresholdInit   = 0;
 CONST_CLOP_TUNING ScoreType historyPruningThresholdDepth  = 0;
+CONST_CLOP_TUNING ScoreType historyExtensionThreshold     = 512;
 CONST_CLOP_TUNING DepthType CMHMaxDepth                   = 4;
 CONST_CLOP_TUNING DepthType futilityMaxDepth          [2] = {10 , 10};
 CONST_CLOP_TUNING ScoreType futilityDepthCoeff        [2] = {160, 160};

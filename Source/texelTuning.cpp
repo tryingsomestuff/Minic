@@ -9,6 +9,7 @@
 #include "logging.hpp"
 #include "material.hpp"
 #include "position.hpp"
+#include "positionTools.hpp"
 #include "score.hpp"
 #include "smp.hpp"
 #include "tools.hpp"
@@ -310,7 +311,7 @@ void TexelTuning(const std::string & filename) {
     //size_t batchSize = 1; // stochastic
 
     std::map<std::string, std::vector<Texel::TexelParam<ScoreType> > > guess;
-
+#ifdef WITH_PIECE_TUNING
     guess["piecesValue"].push_back(Texel::TexelParam<ScoreType>(Values[P_wp+PieceShift],    20,  200, "pawn",     [](const ScoreType& s){Values[P_bp+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
     guess["piecesValue"].push_back(Texel::TexelParam<ScoreType>(Values[P_wn+PieceShift],   150,  600, "knight",   [](const ScoreType& s){Values[P_bn+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
     guess["piecesValue"].push_back(Texel::TexelParam<ScoreType>(Values[P_wb+PieceShift],   150,  600, "bishop",   [](const ScoreType& s){Values[P_bb+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
@@ -321,7 +322,7 @@ void TexelTuning(const std::string & filename) {
     guess["piecesValue"].push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wb+PieceShift], 150,  600, "EGbishop", [](const ScoreType& s){ValuesEG[P_bb+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
     guess["piecesValue"].push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wr+PieceShift], 200,  800, "EGrook",   [](const ScoreType& s){ValuesEG[P_br+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
     guess["piecesValue"].push_back(Texel::TexelParam<ScoreType>(ValuesEG[P_wq+PieceShift], 600, 1800, "EGqueen",  [](const ScoreType& s){ValuesEG[P_bq+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
-
+#endif 
     guess["safeChecks"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttSafeCheck[0], -3000, 3000, "cp"));
     guess["safeChecks"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttSafeCheck[1], -3000, 3000, "cn"));
     guess["safeChecks"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttSafeCheck[2], -3000, 3000, "cb"));
@@ -343,6 +344,8 @@ void TexelTuning(const std::string & filename) {
     guess["attOpenFile"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttOpenfile , -400, 800, "kingAttOpenfile"));
     guess["attOpenFile"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttSemiOpenfileOur , -400, 800, "kingAttSemiOpenfileOur"));
     guess["attOpenFile"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttSemiOpenfileOpp , -400, 800, "kingAttSemiOpenfileOpp"));
+
+    guess["attNoqueen"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttNoQueen , -400, 800, "kingAttNoQueen"));
 
     guess["attFunction"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttMax    , -400, 800, "kattmax",[](const ScoreType & ){EvalConfig::initEval();}));
     guess["attFunction"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingAttScale  , -400, 800, "kattscale",[](const ScoreType & ){EvalConfig::initEval();}));
@@ -436,8 +439,10 @@ void TexelTuning(const std::string & filename) {
 
     guess["holes"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::holesMalus[MG],-150,550,"holesMalus"));
     guess["holes"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::holesMalus[EG],-150,550,"holesMalusEG"));
-    guess["holes"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::outpost[MG],-150,550,"outpost"));
-    guess["holes"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::outpost[EG],-150,550,"outpostEG"));
+    guess["holes"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::outpostN[MG],-150,550,"outpostN"));
+    guess["holes"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::outpostN[EG],-150,550,"outpostNEG"));
+    guess["holes"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::outpostB[MG],-150,550,"outpostB"));
+    guess["holes"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::outpostB[EG],-150,550,"outpostBEG"));
 
     guess["center"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::centerControl[MG],-150,550,"center"));
     guess["center"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::centerControl[EG],-150,550,"centerEG"));
@@ -670,6 +675,7 @@ void TexelTuning(const std::string & filename) {
         "attDefKing",
         "attFunction",
         "attOpenFile",
+        "attNoqueen",
 
         "imbalance",
         "initiative",
@@ -679,17 +685,13 @@ void TexelTuning(const std::string & filename) {
         "queenThreat",
         "rookThreat",
 */
-        "safeChecks",
+        //"tempo"
 
-        "Fawn",
         "attDefKing",
         "attFunction",
         "attOpenFile",
+        "attNoqueen",
 
-        "holes",
-
-
-        //"tempo"
     };
     
     for(auto loops = 0 ; loops < 1000 ; ++loops){

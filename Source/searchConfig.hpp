@@ -36,6 +36,7 @@ extern CONST_CLOP_TUNING DepthType nullMoveVerifDepth           ;
 extern CONST_CLOP_TUNING DepthType historyPruningMaxDepth       ;
 extern CONST_CLOP_TUNING ScoreType historyPruningThresholdInit  ;
 extern CONST_CLOP_TUNING ScoreType historyPruningThresholdDepth ;
+extern CONST_CLOP_TUNING ScoreType historyExtensionThreshold    ;
 extern CONST_CLOP_TUNING DepthType CMHMaxDepth                  ;
 extern CONST_CLOP_TUNING DepthType futilityMaxDepth          [2];
 extern CONST_CLOP_TUNING ScoreType futilityDepthCoeff        [2];

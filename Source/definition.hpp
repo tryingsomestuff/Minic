@@ -350,3 +350,9 @@ inline constexpr const T& clamp( const T& v, const T& lo, const T& hi ){
 
 template<Color C> 
 inline Square ColorSquarePstHelper(Square k){ return C==Co_White?(k^56):k;}
+
+inline unsigned long long int powerFloor(unsigned long long int x) {
+    unsigned long long int power = 1;
+    while (power < x) power *= 2;
+    return power/2;
+}

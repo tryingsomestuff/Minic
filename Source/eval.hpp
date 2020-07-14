@@ -412,9 +412,13 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context, bo
     features.scores[F_positional] += EvalConfig::minorOnOpenFile * countBit(pe.openFiles & (p.whiteBishop()|knights[Co_White]) & pe.pawnTargets[Co_White]);
     features.scores[F_positional] -= EvalConfig::minorOnOpenFile * countBit(pe.openFiles & (p.blackBishop()|knights[Co_Black]) & pe.pawnTargets[Co_Black]);
 
-    // knight on opponent hole, protected
-    features.scores[F_positional] += EvalConfig::outpost * countBit(pe.holes[Co_Black] & knights[Co_White] & pe.pawnTargets[Co_White]);
-    features.scores[F_positional] -= EvalConfig::outpost * countBit(pe.holes[Co_White] & knights[Co_Black] & pe.pawnTargets[Co_Black]);
+    // knight on opponent hole, protected by pawn
+    features.scores[F_positional] += EvalConfig::outpostN * countBit(pe.holes[Co_Black] & knights[Co_White] & pe.pawnTargets[Co_White]);
+    features.scores[F_positional] -= EvalConfig::outpostN * countBit(pe.holes[Co_White] & knights[Co_Black] & pe.pawnTargets[Co_Black]);
+
+    // bishop on opponent hole, protected by pawn
+    features.scores[F_positional] += EvalConfig::outpostB * countBit(pe.holes[Co_Black] & bishops[Co_White] & pe.pawnTargets[Co_White]);
+    features.scores[F_positional] -= EvalConfig::outpostB * countBit(pe.holes[Co_White] & bishops[Co_Black] & pe.pawnTargets[Co_Black]);
 
     // knight far from both kings gets a penalty
     BitBoard knight = knights[Co_White];
@@ -435,6 +439,12 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context, bo
         kdanger[Co_White] += EvalConfig::kingAttSafeCheck[pp-1] * countBit( checkers[Co_Black][pp-1] & safeSquare[Co_Black] );
         kdanger[Co_Black] += EvalConfig::kingAttSafeCheck[pp-1] * countBit( checkers[Co_White][pp-1] & safeSquare[Co_White] );
     }
+
+    // less danger if no enemy queen
+    const Square whiteQueenSquare = queens[Co_White] ? BBTools::SquareFromBitBoard(queens[Co_White]) : INVALIDSQUARE;
+    const Square blackQueenSquare = queens[Co_Black] ? BBTools::SquareFromBitBoard(queens[Co_Black]) : INVALIDSQUARE;
+    kdanger[Co_White] -= blackQueenSquare==INVALIDSQUARE ? EvalConfig::kingAttNoQueen : 0;
+    kdanger[Co_Black] -= whiteQueenSquare==INVALIDSQUARE ? EvalConfig::kingAttNoQueen : 0;
 
     // danger : use king danger score. **DO NOT** apply this in end-game
     features.scores[F_attack] -=  EvalScore(EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_White]/32),ScoreType(0)),ScoreType(63))],0);
@@ -513,9 +523,6 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context, bo
     // queen aligned with own rook
     features.scores[F_positional] += EvalConfig::rookQueenSameFile * countBit(BBTools::fillFile(queens[Co_White]) & rooks[Co_White]);
     features.scores[F_positional] -= EvalConfig::rookQueenSameFile * countBit(BBTools::fillFile(queens[Co_Black]) & rooks[Co_Black]);
-
-    const Square whiteQueenSquare = queens[Co_White] ? BBTools::SquareFromBitBoard(queens[Co_White]) : INVALIDSQUARE;
-    const Square blackQueenSquare = queens[Co_Black] ? BBTools::SquareFromBitBoard(queens[Co_Black]) : INVALIDSQUARE;
 
     // pins on king and queen
     const BitBoard pinnedK [2] = { getPinned<Co_White>(p,p.king[Co_White]), getPinned<Co_Black>(p,p.king[Co_Black]) };
