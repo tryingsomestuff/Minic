@@ -34,7 +34,7 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Posi
 }
 
 inline ScoreType qDeltaMargin(const Position & p) {
-   ScoreType delta = (p.pieces_const(p.c,P_wp) & seventhRank[p.c]) ? Values[P_wq+PieceShift] : Values[P_wp+PieceShift];
+   const ScoreType delta = (p.pieces_const(p.c,P_wp) & seventhRank[p.c]) ? Values[P_wq+PieceShift] : Values[P_wp+PieceShift];
    return delta + Values[P_wq+PieceShift];
 }
 
@@ -80,7 +80,7 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
     if (isInCheck) evalScore = -MATE + ply;
     else if ( p.lastMove == NULLMOVE && ply > 0 ) evalScore = 2*ScaleScore(EvalConfig::tempo,stack[p.halfmoves-1].data.gp) - stack[p.halfmoves-1].eval; // skip eval if nullmove just applied ///@todo wrong ! gp is 0 here so tempoMG must be == tempoEG
     else{
-        if (ttHit){ // if we had a TT hit (with or without associated move), wa can use its eval instead of calling eval()
+        if (ttHit){ // if we had a TT hit (with or without associated move), we can use its eval instead of calling eval()
             ++stats.counters[Stats::sid_ttschits];
             evalScore = e.e;
             /*

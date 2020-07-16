@@ -466,9 +466,19 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
            // threat on queen extension
            //if (EXTENDMORE(extension) && pvnode && firstMove && (p.pieces_const<P_wq>(p.c) && isQuiet && Move2Type(*it) == T_std && PieceTools::getPieceType(p, Move2From(*it)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, *it, 0)) ++stats.counters[Stats::sid_queenThreatExtension], ++extension;
            // move that lead to endgame
-           //extension += isNotEndGame && (p2.mat[p.c][M_t]+p2.mat[~p.c][M_t] == 0);
+           /*
+           if ( EXTENDMORE(extension) && isNotEndGame && (p2.mat[p.c][M_t]+p2.mat[~p.c][M_t] == 0)){
+              ++extension;
+              ++stats.counters[Stats::sid_endGameExtension];
+           }
+           */
            // extend if quiet with good history 
-           //extension += ( isQuiet && Move2Score(*it) > SearchConfig::historyExtensionThreshold);
+           /*
+           if ( EXTENDMORE(extension) && isQuiet && Move2Score(*it) > SearchConfig::historyExtensionThreshold){
+              ++extension; 
+              ++stats.counters[Stats::sid_goodHistoryExtension];
+           }
+           */
         }
         // pvs
         if (validMoveCount < (2/*+2*rootnode*/) || !SearchConfig::doPVS ) score = -pvs<pvnode>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,!cutNode,true);
