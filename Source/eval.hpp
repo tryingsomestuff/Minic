@@ -136,8 +136,6 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context, bo
 
     ///@todo activate features based on skill level
     
-    context.prefetchPawn(computeHash(p));
-
     // main features
     EvalFeatures features;
 
@@ -189,6 +187,8 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context, bo
 #endif
 
     STOP_AND_SUM_TIMER(Eval1)
+
+    context.prefetchPawn(computeHash(p));
 
     // usefull bitboards accumulator
     const BitBoard pawns[2]   = {p.whitePawn()  , p.blackPawn()};
@@ -447,8 +447,10 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context, bo
     kdanger[Co_Black] -= whiteQueenSquare==INVALIDSQUARE ? EvalConfig::kingAttNoQueen : 0;
 
     // danger : use king danger score. **DO NOT** apply this in end-game
-    features.scores[F_attack] -=  EvalScore(EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_White]/32),ScoreType(0)),ScoreType(63))],0);
-    features.scores[F_attack] +=  EvalScore(EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_Black]/32),ScoreType(0)),ScoreType(63))],0);
+    const ScoreType dw = EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_White]/32),ScoreType(0)),ScoreType(63))];
+    const ScoreType db = EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_Black]/32),ScoreType(0)),ScoreType(63))];
+    features.scores[F_attack] -=  EvalScore(dw,0);
+    features.scores[F_attack] +=  EvalScore(db,0);
     data.danger[Co_White] = kdanger[Co_White];
     data.danger[Co_Black] = kdanger[Co_Black];
 
