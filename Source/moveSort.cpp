@@ -26,7 +26,7 @@ void MoveSorter::computeScore(Move & m)const{
     if ( ply == 0 && sameMove(context.previousBest,m)) s += 20000; // previous root best
     else if (e && sameMove(e->m,m)) s += 15000; // TT move
     else{
-        if (isInCheck && from == p.king[C]) s += 10000; // king evasion
+        //if (isInCheck && from == p.king[C]) s += 10000; // king evasion
         if ( isCapture(t) && !isPromotion(t)){
             const Piece pp = PieceTools::getPieceType(p,from);
             const Piece ppOpp = (t != T_ep) ? PieceTools::getPieceType(p,to) : P_wp;
