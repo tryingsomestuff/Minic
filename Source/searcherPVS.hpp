@@ -531,7 +531,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                 reduction += (cutNode && evalScore - SearchConfig::failHighReductionThresholdInit[evalScoreIsHashScore] - marginDepth*SearchConfig::failHighReductionThresholdDepth[evalScoreIsHashScore] > beta); ///@todo try without
                 //reduction += moveCountPruning && !formerPV;
                 reduction -= /*std::min(2,*/HISTORY_DIV(2 * Move2Score(*it))/*)*/; //history reduction/extension (beware killers and counter are scored above history max)
-                //reduction -= (3*data.mobility[p.c] < 2*data.mobility[~p.c]);
+                //if ( !isInCheck) reduction += std::min(2,(data.mobility[p.c]-data.mobility[~p.c])/8);
                 reduction -= (ttPV || isDangerRed || !noCheck /*|| ttMoveSingularExt*//*|| isEmergencyDefence*/);
                 
                 // never extend more than reduce
