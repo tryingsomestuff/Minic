@@ -5,6 +5,7 @@
 #include "dynamicConfig.hpp"
 #include "evalConfig.hpp"
 #include "hash.hpp"
+#include "nn.hpp"
 #include "positionTools.hpp"
 #include "searcher.hpp"
 #include "score.hpp"
@@ -118,7 +119,7 @@ BitBoard getPinned(const Position & p, const Square s){
 }
 
 template < bool display>
-inline ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safeMatEvaluator){
+inline ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safeMatEvaluator, std::ostream * of){
     START_TIMER
 
     // king captured
@@ -578,6 +579,9 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context, bo
     features.scores[F_attack]      = features.scores[F_attack]      .scale(1 + (DynamicConfig::styleAttack      - 50)/50.f, 1.f); 
     features.scores[F_complexity]  = features.scores[F_complexity]  .scale(    (DynamicConfig::styleComplexity  - 50)/50.f, 0.f);
 
+    // save in learning file
+    if ( of ) (*of) << features;
+
     // Sum everything
     EvalScore score = features.SumUp();
 
@@ -618,6 +622,12 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context, bo
     if ( display ){
         Logging::LogIt(Logging::logInfo) << "==> All (fully scaled) " << score;
     }
+
+    // use NN input
+    #ifdef WITH_MLP
+       const float gamma = 0.8f;
+       ret = (ScoreType)(gamma*ret + (1-gamma)*NN::EvalNN(features,ret));
+    #endif
 
     STOP_AND_SUM_TIMER(Eval)
     return ret;

@@ -11,6 +11,7 @@
 #include "position.hpp"
 #include "positionTools.hpp"
 #include "score.hpp"
+#include "searcher.hpp"
 #include "smp.hpp"
 #include "tools.hpp"
 
@@ -305,10 +306,36 @@ void TexelTuning(const std::string & filename) {
     }
     Logging::LogIt(Logging::logInfo) << "Data size : " << data.size();
 
+    // write learning file
+    {
+    Logging::LogIt(Logging::logInfo) << "Writing learning data to learn.data file";        
+    std::ofstream lf("learn.data");
+    int k = 0;
+    for (const auto & i : data){
+        lf << i.result << " ";
+        lf << ((*i.p).c == Co_White ? 1 : -1) << " ";
+        
+	EvalData d;
+        ScoreType s = eval(*i.p,d,ThreadPool::instance().main(),false,&lf);
+        lf << d.gp << " " << s << " ";
+
+        Move m = INVALIDMOVE;
+	DepthType seldepth(0), depth(4);
+	ThreadPool::instance().main().search(*i.p,m,depth,s,seldepth);
+	lf << s << " ";
+
+        lf << std::endl;
+        if (k % 50000 == 0) Logging::LogIt(Logging::logInfo) << k << " data written";
+        ++k;
+    }
+    }
+
     size_t batchSize = data.size()/50; // batch
     //size_t batchSize = 20000; // batch
     //size_t batchSize = 1024 ; // mini
     //size_t batchSize = 1; // stochastic
+
+    Logging::LogIt(Logging::logInfo) << "Texel mini batch size " << batchSize;        
 
     std::map<std::string, std::vector<Texel::TexelParam<ScoreType> > > guess;
 #ifdef WITH_PIECE_TUNING
