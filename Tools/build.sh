@@ -18,6 +18,12 @@ if [ -e Fathom/src/tbprobe.h ]; then
    $dir/Tools/buildFathom.sh "$@"
 fi
 
+TINYDNN_PRESENT=0
+if [ -e tiny-dnn/tiny-dnn/tiny-dnn.h ]; then
+   TINYDNN_PRESENT=1
+   echo "found tiny-dnn lib, trying to use it"
+fi
+
 mkdir -p $dir/Dist/Minic2
 
 d="-DDEBUG_TOOL"
@@ -49,19 +55,27 @@ echo "Building $exe"
 
 WARN="-Wall -Wcast-qual -Wno-char-subscripts -Wno-reorder -Wmaybe-uninitialized -Wuninitialized -pedantic -Wextra -Wshadow -Wfatal-errors -Wno-unknown-warning-option"
 
-OPT="-s -fno-exceptions $WARN $d -DNDEBUG -O3 $t --std=c++14" ; DEPTH=20
-#OPT="-s -fno-exceptions $WARN $d -ffunction-sections -fdata-sections -Os -s -DNDEBUG -Wl,--gc-sections $t --std=c++14" ; DEPTH=20
-#OPT="-fno-exceptions $WARN $d -DNDEBUG -O3 -g -ggdb -fno-omit-frame-pointer $t --std=c++14" ; DEPTH=20
+OPT="-s $WARN $d -DNDEBUG -O3 $t --std=c++14" ; DEPTH=20
+#OPT="-s $WARN $d -ffunction-sections -fdata-sections -Os -s -DNDEBUG -Wl,--gc-sections $t --std=c++14" ; DEPTH=20
+#OPT="$WARN $d -DNDEBUG -O3 -g -ggdb -fno-omit-frame-pointer $t --std=c++14" ; DEPTH=20
 #OPT="$WARN $d -DNDEBUG -g $t --std=c++14" ; DEPTH=10
 #OPT="$WARN $d -g $t --std=c++14" ; DEPTH=10
+
+LIBS="-lpthread"
+
+if [ $FATHOM_PRESENT = "1" ]; then
+   OPT="$OPT -DCNN_USE_AVX2 -DCNN_USE_TBB -Itiny-dnn/ -ltbb"
+   LIBS="$LIBS -ltbb"
+   DEPTH=15
+else
+   OPT="$OPT -fno-exceptions"
+fi
 
 # -flto is making g++ 9.3.0 under cygwin segfault
 uname -a | grep CYGWIN
 if [ $? == 1 ]; then
    OPT="$OPT -flto"
 fi
-
-echo $OPT
 
 if [ $FATHOM_PRESENT = "1" ]; then
    lib=fathom_${v}_linux_x64
@@ -73,15 +87,17 @@ if [ $FATHOM_PRESENT = "1" ]; then
    OPT="$OPT $dir/Fathom/src/$lib -I$dir/Fathom/src"
 fi
 
+echo $OPT $LIBS
+
 rm -f *.gcda
 
-$CXX -fprofile-generate $OPT Source/*.cpp -ISource -o $dir/Dist/Minic2/$exe -lpthread 
+$CXX -fprofile-generate $OPT Source/*.cpp -ISource -o $dir/Dist/Minic2/$exe $LIBS 
 echo "end of first compilation"
 if [ $? = "0" ]; then
    echo "running Minic for profiling : $dir/Dist/Minic2/$exe"
    $dir/Dist/Minic2/$exe bench $DEPTH -quiet 0 
    echo "starting optimized compilation"
-   $CXX -fprofile-use $OPT Source/*.cpp -ISource -o $dir/Dist/Minic2/$exe -lpthread
+   $CXX -fprofile-use $OPT Source/*.cpp -ISource -o $dir/Dist/Minic2/$exe $LIBS
    echo "done "
 else
    echo "some error"

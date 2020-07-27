@@ -85,7 +85,7 @@ struct EvalScore{
 #endif
 
 inline std::ostream & operator<<(std::ostream & of, const EvalScore & s){
-    of << "MG : " << s[MG] << ", EG : " << s[EG];
+    of << s[MG] << " " << s[EG];
     return of;
 }
 
@@ -105,6 +105,13 @@ struct EvalFeatures{
         return score;
     }
 };
+
+
+inline std::ostream & operator<<(std::ostream & of, const EvalFeatures & features){
+    for (size_t k = 0 ; k < F_max; ++k) of << features.scores[k] << " ";
+    of << features.scalingFactor << " ";
+    return of;
+}
 
 inline ScoreType ScaleScore(EvalScore s, float gp){ return ScoreType(gp*s[MG] + (1.f-gp)*s[EG]);}
 ScoreType Score(EvalScore score, float scalingFactor, const Position &p, float gp);

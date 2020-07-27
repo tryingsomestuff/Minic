@@ -56,6 +56,7 @@ const std::string MinicVersion = "2.41";
 #endif
 #define WITH_TEST_SUITE
 //#define WITH_PGN_PARSER
+//#define WITH_MLP
 
 // *** Tuning
 //#define WITH_TIMER
@@ -78,6 +79,7 @@ const std::string MinicVersion = "2.41";
 #ifdef WITH_TEXEL_TUNING
 #define CONST_TEXEL_TUNING
 #undef WITH_EVALSCORE_AS_INT
+#undef WITH_MLP
 #else
 #define CONST_TEXEL_TUNING const
 #endif
