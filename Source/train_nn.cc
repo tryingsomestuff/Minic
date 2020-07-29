@@ -16,9 +16,11 @@ int main() {
 
   // create a simple network 
   tiny_dnn::network<tiny_dnn::sequential> net;
-  net << tiny_dnn::fully_connected_layer(16, 8);
-  net << tiny_dnn::relu_layer();
-  net << tiny_dnn::fully_connected_layer(8, 1);
+  net << tiny_dnn::fully_connected_layer(17, 64);
+  net << tiny_dnn::tanh_layer();
+  net << tiny_dnn::fully_connected_layer(64, 16);
+  net << tiny_dnn::tanh_layer();
+  net << tiny_dnn::fully_connected_layer(16, 1);
 
   std::vector<tiny_dnn::vec_t> X;
   std::vector<tiny_dnn::vec_t> Y;
@@ -29,22 +31,17 @@ int main() {
   if (str) {
       std::string line;
       int k = 0;
-      int r = 0;
       while (std::getline(str, line)){
         std::stringstream stream(line);
         float result, color, f[14], scaling, gp, eval, score;
         stream >> result >> color;
         for (auto i=0 ; i < 14; ++i) stream >> f[i];
         stream >> scaling >> gp >> eval >> score;
-        if ( std::abs(score-eval) < 200){
-           X.push_back({f[0],f[1],f[2],f[3],f[4],f[5],f[6],f[7],f[8],f[9],f[10],f[11],f[12],f[13],scaling,gp});
-           Y.push_back({score});
-        }
-        else ++r;
+        X.push_back({f[0],f[1],f[2],f[3],f[4],f[5],f[6],f[7],f[8],f[9],f[10],f[11],f[12],f[13],scaling,gp,eval});
+        Y.push_back({score});
         ++k;
       	if ( !(k%100000) ) std::cout << eval << " " << score << std::endl;
       }
-      std::cout << "rejected data " << r << "/" << k << std::endl;
   }
   else {
       return 1;

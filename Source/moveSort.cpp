@@ -6,7 +6,7 @@
 /* Moves are sorted this way
  * 1°) previous best (from current thread previousBest)
  * 2°) TT move
- * 3°) king evasion is in check and king moves
+ * --3°) king evasion is in check and king moves--
  * 4°) prom cap
  * 5°) good capture (not prom) based on SEE if not in check, based on MVV LVA if in check
  * 6°) prom
