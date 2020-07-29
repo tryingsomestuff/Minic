@@ -118,6 +118,13 @@ BitBoard getPinned(const Position & p, const Square s){
     return pinned;
 }
 
+/*
+bool isLazyHigh(ScoreType lazyThreshold, const EvalFeatures & features, EvalScore & score) {
+    score = features.SumUp();
+    return std::abs(score[MG] + score[EG]) / 2 > lazyThreshold;
+}
+*/
+
 template < bool display>
 inline ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safeMatEvaluator, std::ostream * of){
     START_TIMER
@@ -369,6 +376,17 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context, bo
     const Searcher::PawnEntry & pe = *pePtr;
     features.scores[F_pawnStruct] += pe.score;
 
+/*
+    // lazy eval
+    {
+        EvalScore score = 0;    
+        if ( isLazyHigh(1000,features,score)){
+            STOP_AND_SUM_TIMER(Eval)
+            return (white2Play?+1:-1)*Score(score, features.scalingFactor, p, data.gp);
+        }
+    }
+*/
+
     // update global things with pawn entry stuff
     kdanger[Co_White] += pe.danger[Co_White];
     kdanger[Co_Black] += pe.danger[Co_Black];
@@ -458,6 +476,17 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context, bo
     // number of hanging pieces
     const BitBoard hanging[2] = {nonPawnMat[Co_White] & weakSquare[Co_White] , nonPawnMat[Co_Black] & weakSquare[Co_Black] };
     features.scores[F_attack] += EvalConfig::hangingPieceMalus * (countBit(hanging[Co_White]) - countBit(hanging[Co_Black]));
+
+/*
+    // lazy eval
+    {
+        EvalScore score = 0;    
+        if ( isLazyHigh(900,features,score)){
+            STOP_AND_SUM_TIMER(Eval)
+            return (white2Play?+1:-1)*Score(score, features.scalingFactor, p, data.gp);
+        }
+    }
+*/
 
     // threats by minor
     BitBoard targetThreat = (nonPawnMat[Co_White] | (pawns[Co_White] & weakSquare[Co_White]) ) & (attFromPiece[Co_Black][P_wn-1] | attFromPiece[Co_Black][P_wb-1]);

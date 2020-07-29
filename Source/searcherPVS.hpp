@@ -359,11 +359,9 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             }
             const ScoreType ttScore = -pvs<pvnode>(-beta, -alpha, p2, depth - 1 + extension, ply + 1, childPV, seldepth, isCheck, !cutNode, true);
             if (stopFlag) return STOPSCORE;
-            if (rootnode){
-                rootScores.push_back({e.m,ttScore});
-                previousBest = e.m;
-            }            
+            if (rootnode) rootScores.push_back({e.m,ttScore});
             if ( ttScore > bestScore ){
+                if (rootnode) previousBest = e.m;
                 bestScore = ttScore;
                 bestMove = e.m;
                 bestMoveIsCheck = isCheck;
@@ -559,8 +557,8 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         }
         if (stopFlag) return STOPSCORE;
         if (rootnode) rootScores.push_back({*it,score});
-        if (rootnode) previousBest = *it;
         if ( score > bestScore ){
+            if (rootnode) previousBest = *it;
             bestScore = score;
             bestMove = *it;
             bestMoveIsCheck = isCheck;
