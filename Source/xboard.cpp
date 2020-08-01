@@ -34,6 +34,7 @@ namespace XBoard{
         if (p != std::string::npos) mstr = mstr.substr(p + 8);
         Move m = COM::moveFromCOM(mstr);
         if ( m == INVALIDMOVE ) return false;
+        Logging::LogIt(Logging::logInfo) << "XBOARD applying move " << ToString(m);
         if(!COM::makeMove(m,false,"")){ // make move
             Logging::LogIt(Logging::logInfo) << "Bad opponent move ! " << mstr << ToString(COM::position) ;
             COM::mode = COM::m_force;

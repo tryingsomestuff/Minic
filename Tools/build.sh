@@ -63,8 +63,8 @@ OPT="-s $WARN $d -DNDEBUG -O3 $t --std=c++14" ; DEPTH=20
 
 LIBS="-lpthread"
 
-if [ $FATHOM_PRESENT = "1" ]; then
-   OPT="$OPT -DCNN_USE_AVX2 -DCNN_USE_TBB -Itiny-dnn/ -ltbb"
+if [ $TINYDNN_PRESENT = "1" ]; then
+   OPT="$OPT -DCNN_USE_AVX2 -DCNN_USE_TBB -Itiny-dnn/ "
    LIBS="$LIBS -ltbb"
    DEPTH=15
 else

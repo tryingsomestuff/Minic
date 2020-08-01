@@ -67,21 +67,24 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
     p.castling = C_none;
     if (strList.size() >= 3){
         bool found = false;
-        if ( !DynamicConfig::FRC){
-           //Logging::LogIt(Logging::logInfo) << "is not FRC";
-           if (strList[2].find('K') != std::string::npos){ p.castling |= C_wks; found = true; }
-           if (strList[2].find('Q') != std::string::npos){ p.castling |= C_wqs; found = true; }
-           if (strList[2].find('k') != std::string::npos){ p.castling |= C_bks; found = true; }
-           if (strList[2].find('q') != std::string::npos){ p.castling |= C_bqs; found = true; }
-        }
-        else{
+        //Logging::LogIt(Logging::logInfo) << "is not FRC";
+        if (strList[2].find('K') != std::string::npos){ p.castling |= C_wks; found = true; }
+        if (strList[2].find('Q') != std::string::npos){ p.castling |= C_wqs; found = true; }
+        if (strList[2].find('k') != std::string::npos){ p.castling |= C_bks; found = true; }
+        if (strList[2].find('q') != std::string::npos){ p.castling |= C_bqs; found = true; }
+
+        if (!found){
            Logging::LogIt(Logging::logInfo) << "is FCR";
            for ( const char & cr : strList[2] ){
-               Logging::LogIt(Logging::logInfo) << cr;
-               const Color c = std::isupper(cr) ? Co_White : Co_Black;
-               const char kf = std::toupper(FileNames[SQFILE(p.king[c])].at(0));
-               if ( std::toupper(cr) > kf ) { p.castling |= (c==Co_White ? C_wks:C_bks); found = true; }
-               else                         { p.castling |= (c==Co_White ? C_wqs:C_bqs); found = true; }
+               if ( (cr >= 'A' && cr <= 'H') || (cr >= 'a' && cr <= 'h') ){
+                  Logging::LogIt(Logging::logInfo) << "Found FRC like castling " << cr;
+                  const Color c = std::isupper(cr) ? Co_White : Co_Black;
+                  const char kf = std::toupper(FileNames[SQFILE(p.king[c])].at(0));
+                  if ( std::toupper(cr) > kf ) { p.castling |= (c==Co_White ? C_wks:C_bks); }
+                  else                         { p.castling |= (c==Co_White ? C_wqs:C_bqs); }
+                  DynamicConfig::FRC = true; // force FRC !
+                  found = true;
+               }
            }
         }
         if (strList[2].find('-') != std::string::npos){ found = true; /*Logging::LogIt(Logging::logInfo) << "No castling right given" ;*/}
