@@ -142,8 +142,8 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
     }
     if ( DynamicConfig::FRC ){
        // In FRC, some castling way be encoded king takes rooks ... Let's check that, the dirty way
-       if ( p.board_const(from) == P_wk && p.board_const(to) == P_wr ){ moveType = (to<from ? T_wqs : T_wks); }
-       if ( p.board_const(from) == P_bk && p.board_const(to) == P_br ){ moveType = (to<from ? T_bqs : T_bks); }
+       if ( p.board_const(from) == P_wk && p.board_const(to) == P_wr ){ moveType = (p.rooksInit[Co_White][CT_OOO] == to ? T_wqs : T_wks); }
+       if ( p.board_const(from) == P_bk && p.board_const(to) == P_br ){ moveType = (p.rooksInit[Co_Black][CT_OOO] == to ? T_bqs : T_bks); }
     }
     if (!DynamicConfig::FRC && !isPseudoLegal(p, ToMove(from, to, moveType))) { ///@todo FRC !
         Logging::LogIt(Logging::logError) << "Trying to read bad move, not legal " << ToString(p) << str;
