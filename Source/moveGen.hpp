@@ -67,24 +67,24 @@ void generateSquare(const Position & p, MoveList & moves, Square from){
                 if ( (p.castling & C_wqs)
                     && (((BBTools::mask[p.king[Co_White]].between[Sq_c1] | BBSq_c1 | BBTools::mask[p.rooksInit[Co_White][CT_OOO]].between[Sq_d1] | BBSq_d1) 
                         & ~BBTools::mask[p.rooksInit[Co_White][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) & occupancy) == empty
-                    && !isAttacked(p,BBTools::mask[p.king[Co_White]].between[Sq_c1] | SquareToBitboard(p.king[Co_White]) /*| BBSq_c1*/) ) 
+                    && !isAttacked(p,BBTools::mask[p.king[Co_White]].between[Sq_c1] | SquareToBitboard(p.king[Co_White]) | BBSq_c1) ) ///@todo speedup ! as last is not necessay as king will be verified by apply
                     addMove(from, Sq_c1, T_wqs, moves); // wqs
                 if ( (p.castling & C_wks)
                     && (((BBTools::mask[p.king[Co_White]].between[Sq_g1] | BBSq_g1 | BBTools::mask[p.rooksInit[Co_White][CT_OO]].between[Sq_f1]  | BBSq_f1) 
                         & ~BBTools::mask[p.rooksInit[Co_White][CT_OO ]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) & occupancy) == empty
-                    && !isAttacked(p,BBTools::mask[p.king[Co_White]].between[Sq_g1] | SquareToBitboard(p.king[Co_White]) /*| BBSq_g1*/) ) 
+                    && !isAttacked(p,BBTools::mask[p.king[Co_White]].between[Sq_g1] | SquareToBitboard(p.king[Co_White]) | BBSq_g1) ) 
                     addMove(from, Sq_g1, T_wks, moves); // wks
             }
             else{
                 if ( (p.castling & C_bqs)
                     && (((BBTools::mask[p.king[Co_Black]].between[Sq_c8] | BBSq_c8 | BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].between[Sq_d8] | BBSq_d8) 
                         & ~BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) & occupancy) == empty
-                    && !isAttacked(p,BBTools::mask[p.king[Co_Black]].between[Sq_c8] | SquareToBitboard(p.king[Co_Black]) /*| BBSq_c8*/) ) 
+                    && !isAttacked(p,BBTools::mask[p.king[Co_Black]].between[Sq_c8] | SquareToBitboard(p.king[Co_Black]) | BBSq_c8) ) 
                     addMove(from, Sq_c8, T_bqs, moves); // wqs
                 if ( (p.castling & C_bks)
                     && (((BBTools::mask[p.king[Co_Black]].between[Sq_g8] | BBSq_g8 | BBTools::mask[p.rooksInit[Co_Black][CT_OO]].between[Sq_f8]  | BBSq_f8) 
                         & ~BBTools::mask[p.rooksInit[Co_Black][CT_OO ]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) & occupancy) == empty
-                    && !isAttacked(p,BBTools::mask[p.king[Co_Black]].between[Sq_g8] | SquareToBitboard(p.king[Co_Black]) /*| BBSq_g8*/) ) 
+                    && !isAttacked(p,BBTools::mask[p.king[Co_Black]].between[Sq_g8] | SquareToBitboard(p.king[Co_Black]) | BBSq_g8) ) 
                     addMove(from, Sq_g8, T_bks, moves); // wks
             }
         }
@@ -128,7 +128,7 @@ void generate(const Position & p, MoveList & moves, bool doNotClear = false){
     if (!doNotClear) moves.clear();
     BitBoard myPieceBBiterator = p.allPieces[p.c];
     while (myPieceBBiterator) generateSquare<phase>(p,moves,popBit(myPieceBBiterator));
-#ifdef DEBUG_GENERATION
+#ifdef DEBUG_GENERATION_LEGAL
     for(auto m : moves){
        if (!isPseudoLegal(p, m)) {
            Logging::LogIt(Logging::logFatal) << "Generation error, move not legal " << ToString(p) << ToString(m);

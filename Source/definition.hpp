@@ -38,7 +38,7 @@ typedef uint64_t u_int64_t;
 #include <unistd.h>
 #endif
 
-const std::string MinicVersion = "2.45";
+const std::string MinicVersion = "2.46";
 
 // *** options
 #define WITH_UCI
@@ -69,9 +69,10 @@ const std::string MinicVersion = "2.45";
 //#define DEBUG_PHASH
 //#define DEBUG_MATERIAL
 //#define DEBUG_APPLY
-//#define DEBUG_GENERATION
+//#define DEBUG_GENERATION 
+//#define DEBUG_GENERATION_LEGAL // not compatible with DEBUG_PSEUDO_LEGAL
 //#define DEBUG_BITBOARD
-//#define DEBUG_PSEUDO_LEGAL
+//#define DEBUG_PSEUDO_LEGAL // not compatible with DEBUG_GENERATION_LEGAL
 //#define DEBUG_HASH_ENTRY
 //#define DEBUG_KING_CAP
 //#define DEBUG_PERFT

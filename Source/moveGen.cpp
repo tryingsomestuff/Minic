@@ -15,12 +15,14 @@ void addMove(Square from, Square to, MType type, MoveList & moves) {
 
 } // MoveGen
 
-namespace{ // anonymous
+namespace{
     std::array<CastlingRights,64> castlePermHashTable;
-}
+    std::mutex castlePermHashTableMutex;
+} 
 
 void initCaslingPermHashTable(const Position & p){
     // works also for FRC !
+    const std::lock_guard<std::mutex> lock(castlePermHashTableMutex); // this function must be thread safe !!!
     castlePermHashTable.fill(C_all);
     castlePermHashTable[p.rooksInit[Co_White][CT_OOO]]  = C_all_but_wqs;
     castlePermHashTable[p.kingInit[Co_White]]           = C_all_but_w;
@@ -30,9 +32,9 @@ void initCaslingPermHashTable(const Position & p){
     castlePermHashTable[p.rooksInit[Co_Black][CT_OO]]   = C_all_but_bks;
 }
 
-namespace {
+namespace{
     // piece that have influence on pawn hash
-    bool _helperPawnHash[13] = { true,false,false,false,false,true,false,true,false,false,false,false,true };
+    const bool _helperPawnHash[13] = { true,false,false,false,false,true,false,true,false,false,false,false,true };
 }
 
 void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, bool isCapture, Piece prom) {
@@ -113,7 +115,7 @@ bool apply(Position & p, const Move & m, bool noValidation){
     const bool isCapNoEP= toP != P_none;
 #ifdef DEBUG_APPLY
     if (!isPseudoLegal(p, m)) {
-        Logging::LogIt(Logging::logError) << ToString(m);
+        Logging::LogIt(Logging::logError) << ToString(m) << " " << Move2Type(m);
         Logging::LogIt(Logging::logFatal) << "Apply error, not legal " << ToString(p);
         assert(false);
     }
@@ -226,11 +228,18 @@ bool apply(Position & p, const Move & m, bool noValidation){
 #endif
 
 #ifdef DEBUG_BITBOARD
+    int count_bb1 = countBit(p.occupancy());
+    int count_bb2 = 0;
+    int count_board = 0;
+    for (Square s = Sq_a1 ; s <= Sq_h8 ; ++s){
+        if ( p.board_const(s) != P_none ) ++count_board;
+    }
     for( Piece pp = P_bk ; pp <= P_wk ; ++pp){
        if ( pp == P_none) continue;
        BitBoard b = p.pieces_const(pp);
        const BitBoard bb = b;
        while(b){
+           ++count_bb2;
            const Square s = popBit(b);
            if ( p.board_const(s) != pp ){
                Logging::LogIt(Logging::logWarn) << SquareNames[s];
@@ -243,6 +252,20 @@ bool apply(Position & p, const Move & m, bool noValidation){
                Logging::LogIt(Logging::logFatal) << "Wrong bitboard ";
            }
        }
+    }
+    if ( count_bb1 != count_bb2 ){ 
+        Logging::LogIt(Logging::logFatal) << "Wrong bitboard count (all/piece)" << count_bb1 << " " << count_bb2;
+        Logging::LogIt(Logging::logWarn) << ToString(p);
+        Logging::LogIt(Logging::logWarn) << showBitBoard(p.occupancy());
+        for( Piece pp = P_bk ; pp <= P_wk ; ++pp){
+            if ( pp == P_none) continue;
+            Logging::LogIt(Logging::logWarn) << showBitBoard(p.pieces_const(pp));
+        }
+    }
+    if ( count_board != count_bb1 ){ 
+        Logging::LogIt(Logging::logFatal) << "Wrong bitboard count (board)" << count_board << " " << count_bb1;
+        Logging::LogIt(Logging::logWarn) << ToString(p);
+        Logging::LogIt(Logging::logWarn) << showBitBoard(p.occupancy());
     }
 #endif
     p.lastMove = m;
@@ -300,24 +323,28 @@ bool isPseudoLegal2(const Position & p, Move m) { // validate TT move
 #else
  bool isPseudoLegal(const Position & p, Move m) { // validate TT move
 #endif
-    #define PSEUDO_LEGAL_RETURN(b) { STOP_AND_SUM_TIMER(PseudoLegal) return b; }
+#ifdef DEBUG_PSEUDO_LEGAL
+    #define PSEUDO_LEGAL_RETURN(b,r) { if (!b) std::cout << "isPseudoLegal2: " << r << std::endl; STOP_AND_SUM_TIMER(PseudoLegal) return b; }
+#else
+    #define PSEUDO_LEGAL_RETURN(b,r) { STOP_AND_SUM_TIMER(PseudoLegal) return b; }    
+#endif
     START_TIMER
-    if (!VALIDMOVE(m)) PSEUDO_LEGAL_RETURN(false)
+    if (!VALIDMOVE(m)) PSEUDO_LEGAL_RETURN(false,-1)
     const Square from = Move2From(m); assert(squareOK(from));
     const Piece fromP = p.board_const(from);
-    if (fromP == P_none || (fromP > 0 && p.c == Co_Black) || (fromP < 0 && p.c == Co_White)) PSEUDO_LEGAL_RETURN(false)
+    if (fromP == P_none || (fromP > 0 && p.c == Co_Black) || (fromP < 0 && p.c == Co_White)) PSEUDO_LEGAL_RETURN(false,0)
     const Square to = Move2To(m); assert(squareOK(to));
     const Piece toP = p.board_const(to);
-    if ((toP > 0 && p.c == Co_White) || (toP < 0 && p.c == Co_Black)) PSEUDO_LEGAL_RETURN(false)
-    if ((Piece)std::abs(toP) == P_wk) PSEUDO_LEGAL_RETURN(false)
+    if ((toP > 0 && p.c == Co_White) || (toP < 0 && p.c == Co_Black)) PSEUDO_LEGAL_RETURN(false,1)
+    if ((Piece)std::abs(toP) == P_wk) PSEUDO_LEGAL_RETURN(false,2)
     const Piece fromPieceType = (Piece)std::abs(fromP);
     const MType t = Move2Type(m); assert(moveTypeOK(t));
-    if ( t == T_reserved ) PSEUDO_LEGAL_RETURN(false)
-    if (toP == P_none && (isCapture(t) && t!=T_ep)) PSEUDO_LEGAL_RETURN(false)
-    if (toP != P_none && !isCapture(t)) PSEUDO_LEGAL_RETURN(false)
-    if (t == T_ep && (p.ep == INVALIDSQUARE || fromPieceType != P_wp)) PSEUDO_LEGAL_RETURN(false)
-    if (t == T_ep && p.board_const(p.ep + (p.c==Co_White?-8:+8)) != (p.c==Co_White?P_bp:P_wp)) PSEUDO_LEGAL_RETURN(false)
-    if (isPromotion(m) && fromPieceType != P_wp) PSEUDO_LEGAL_RETURN(false)
+    if ( t == T_reserved ) PSEUDO_LEGAL_RETURN(false,3)
+    if (toP == P_none && (isCapture(t) && t!=T_ep)) PSEUDO_LEGAL_RETURN(false,4)
+    if (toP != P_none && !isCapture(t)) PSEUDO_LEGAL_RETURN(false,5)
+    if (t == T_ep && (p.ep == INVALIDSQUARE || fromPieceType != P_wp)) PSEUDO_LEGAL_RETURN(false,6)
+    if (t == T_ep && p.board_const(p.ep + (p.c==Co_White?-8:+8)) != (p.c==Co_White?P_bp:P_wp)) PSEUDO_LEGAL_RETURN(false,7)
+    if (isPromotion(m) && fromPieceType != P_wp) PSEUDO_LEGAL_RETURN(false,8)
     const BitBoard occupancy = p.occupancy();
     if (isCastling(m)) {
         if (p.c == Co_White) {
@@ -325,45 +352,44 @@ bool isPseudoLegal2(const Position & p, Move m) { // validate TT move
                 && (((BBTools::mask[p.king[Co_White]].between[Sq_c1] | BBSq_c1 | BBTools::mask[p.rooksInit[Co_White][CT_OOO]].between[Sq_d1] | BBSq_d1) 
                     & ~BBTools::mask[p.rooksInit[Co_White][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) & occupancy) == empty
                 && !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_c1] | SquareToBitboard(p.king[Co_White]) | BBSq_c1))
-                PSEUDO_LEGAL_RETURN(true)
+                PSEUDO_LEGAL_RETURN(true,9)
             if (t == T_wks && (p.castling & C_wks) && from == p.kingInit[Co_White] && fromP == P_wk && to == Sq_g1 && toP == P_none
                 && (((BBTools::mask[p.king[Co_White]].between[Sq_g1] | BBSq_g1 | BBTools::mask[p.rooksInit[Co_White][CT_OO]].between[Sq_f1] | BBSq_f1) 
                     & ~BBTools::mask[p.rooksInit[Co_White][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) & occupancy) == empty
                 && !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_g1] | SquareToBitboard(p.king[Co_White]) | BBSq_g1))
-                PSEUDO_LEGAL_RETURN(true)
-            PSEUDO_LEGAL_RETURN(false)
+                PSEUDO_LEGAL_RETURN(true,10)
+            PSEUDO_LEGAL_RETURN(false,11)
         }
         else {
             if (t == T_bqs && (p.castling & C_bqs) && from == p.kingInit[Co_Black] && fromP == P_bk && to == Sq_c8 && toP == P_none
                 && (((BBTools::mask[p.king[Co_Black]].between[Sq_c8] | BBSq_c8 | BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].between[Sq_d8] | BBSq_d8) 
                     & ~BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) & occupancy) == empty
                 && !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_c8] | SquareToBitboard(p.king[Co_Black]) | BBSq_c8))
-                PSEUDO_LEGAL_RETURN(true)
+                PSEUDO_LEGAL_RETURN(true,12)
             if (t == T_bks && (p.castling & C_bks) && from == p.kingInit[Co_Black] && fromP == P_bk && to == Sq_g8 && toP == P_none
                 && (((BBTools::mask[p.king[Co_Black]].between[Sq_g8] | BBSq_g8 | BBTools::mask[p.rooksInit[Co_Black][CT_OO]].between[Sq_f8] | BBSq_f8) 
                     & ~BBTools::mask[p.rooksInit[Co_Black][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) & occupancy) == empty
                 && !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_g8] | SquareToBitboard(p.king[Co_Black]) | BBSq_g8))
-                PSEUDO_LEGAL_RETURN(true)
-            PSEUDO_LEGAL_RETURN(false)
+                PSEUDO_LEGAL_RETURN(true,13)
+            PSEUDO_LEGAL_RETURN(false,14)
         }
     }
     if (fromPieceType == P_wp) {
-        if (t == T_ep && to != p.ep) PSEUDO_LEGAL_RETURN(false)
-        if (t != T_ep && p.ep != INVALIDSQUARE && to == p.ep) PSEUDO_LEGAL_RETURN(false)
-        if (!isPromotion(m) && SQRANK(to) == PromRank[p.c]) PSEUDO_LEGAL_RETURN(false)
-        if (isPromotion(m) && SQRANK(to) != PromRank[p.c]) PSEUDO_LEGAL_RETURN(false)
+        if (t == T_ep && to != p.ep) PSEUDO_LEGAL_RETURN(false,15)
+        if (t != T_ep && p.ep != INVALIDSQUARE && to == p.ep) PSEUDO_LEGAL_RETURN(false,16)
+        if (!isPromotion(m) && SQRANK(to) == PromRank[p.c]) PSEUDO_LEGAL_RETURN(false,17)
+        if (isPromotion(m) && SQRANK(to) != PromRank[p.c]) PSEUDO_LEGAL_RETURN(false,18)
         BitBoard validPush = BBTools::mask[from].push[p.c] & ~occupancy;
         if ((BBTools::mask[from].push[p.c] & occupancy) == empty) validPush |= BBTools::mask[from].dpush[p.c] & ~occupancy;
-        if (validPush & SquareToBitboard(to)) PSEUDO_LEGAL_RETURN(true)
+        if (validPush & SquareToBitboard(to)) PSEUDO_LEGAL_RETURN(true,19)
         const BitBoard validCap = BBTools::mask[from].pawnAttack[p.c] & ~p.allPieces[p.c];
-        if ((validCap & SquareToBitboard(to)) && (( t != T_ep && toP != P_none) || (t == T_ep && to == p.ep && toP == P_none))) PSEUDO_LEGAL_RETURN(true)
-        PSEUDO_LEGAL_RETURN(false)
+        if ((validCap & SquareToBitboard(to)) && (( t != T_ep && toP != P_none) || (t == T_ep && to == p.ep && toP == P_none))) PSEUDO_LEGAL_RETURN(true,20)
+        PSEUDO_LEGAL_RETURN(false,21)
     }
     if (fromPieceType != P_wk) {
-        if ((BBTools::pfCoverage[fromPieceType - 1](from, occupancy, p.c) & SquareToBitboard(to)) != empty) PSEUDO_LEGAL_RETURN(true)
-        PSEUDO_LEGAL_RETURN(false)
+        if ((BBTools::pfCoverage[fromPieceType - 1](from, occupancy, p.c) & SquareToBitboard(to)) != empty) PSEUDO_LEGAL_RETURN(true,22)
+        PSEUDO_LEGAL_RETURN(false,23)
     }
-    if ((BBTools::mask[p.king[p.c]].kingZone & SquareToBitboard(to)) != empty) PSEUDO_LEGAL_RETURN(true) // only king is not verified yet
-    PSEUDO_LEGAL_RETURN(false)
+    if ((BBTools::mask[p.king[p.c]].kingZone & SquareToBitboard(to)) != empty) PSEUDO_LEGAL_RETURN(true,24) // only king is not verified yet
+    PSEUDO_LEGAL_RETURN(false,25)
 }
-
