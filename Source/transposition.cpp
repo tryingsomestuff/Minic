@@ -76,10 +76,11 @@ bool getEntry(Searcher & context, const Position & p, Hash h, DepthType d, Entry
     e.d = randomInt<unsigned int,666>(0, UINT32_MAX);
 #endif
     if ( e.h == nullHash ) return false; //early exit
-    if ( ( VALIDMOVE(e.m) && !isPseudoLegal(p, e.m))
+    if ( 
 #ifndef DEBUG_HASH_ENTRY
-        || ((e.h ^ e._data) != Hash64to32(h))
+        ((e.h ^ e._data) != Hash64to32(h))
 #endif
+        || ( VALIDMOVE(e.m) && !isPseudoLegal(p, e.m))
        ) { e.h = nullHash; return false; } // move is filled, but wrong in this position, invalidate returned entry.
     
     if ( e.d >= d ){ ++context.stats.counters[Stats::sid_tthits]; return true; } // valid entry only if depth is ok
