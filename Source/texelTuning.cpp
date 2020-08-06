@@ -308,26 +308,26 @@ void TexelTuning(const std::string & filename) {
 
     // write learning file
     {
-    Logging::LogIt(Logging::logInfo) << "Writing learning data to learn.data file";        
-    std::ofstream lf("learn.data");
-    int k = 0;
-    for (const auto & i : data){
-        lf << i.result << " ";
-        lf << ((*i.p).c == Co_White ? 1 : -1) << " ";
-        
-	EvalData d;
-        ScoreType s = eval(*i.p,d,ThreadPool::instance().main(),false,&lf);
-        lf << d.gp << " " << s << " ";
+        Logging::LogIt(Logging::logInfo) << "Writing learning data to learn.data file";        
+        std::ofstream lf("learn.data");
+        int k = 0;
+        for (const auto & i : data){
+            lf << i.result << " ";
+            lf << ((*i.p).c == Co_White ? 1 : -1) << " ";
+            
+            EvalData d;
+            ScoreType s = eval(*i.p,d,ThreadPool::instance().main(),false,&lf);
+            lf << d.gp << " " << s << " ";
 
-        Move m = INVALIDMOVE;
-	DepthType seldepth(0), depth(4);
-	ThreadPool::instance().main().search(*i.p,m,depth,s,seldepth);
-	lf << s << " ";
+            Move m = INVALIDMOVE;
+            DepthType seldepth(0), depth(12);
+            ThreadPool::instance().main().search(*i.p,m,depth,s,seldepth);
+            lf << s << " ";
 
-        lf << std::endl;
-        if (k % 50000 == 0) Logging::LogIt(Logging::logInfo) << k << " data written";
-        ++k;
-    }
+            lf << std::endl;
+            if (k % 50000 == 0) Logging::LogIt(Logging::logInfo) << k << " data written";
+            ++k;
+        }
     }
 
     size_t batchSize = data.size()/50; // batch
@@ -550,12 +550,12 @@ void TexelTuning(const std::string & filename) {
     }
 
     for (int k = 0 ; k < 6 ; ++k ){
-        for(int i = 0 ; i < 64 ; ++i){
+        for(int i = 0 ; i < NbSquare ; ++i){
            guess["PST"+std::to_string(k)].push_back(Texel::TexelParam<ScoreType>(EvalConfig::PST[k][i][MG],-200,200,"pst"+std::to_string(k)+"_"+std::to_string(i)));
         }
     }
     for (int k = 0 ; k < 6 ; ++k ){
-        for(int i = 0 ; i < 64 ; ++i){
+        for(int i = 0 ; i < NbSquare ; ++i){
            guess["PST"+std::to_string(k)].push_back(Texel::TexelParam<ScoreType>(EvalConfig::PST[k][i][EG],-200,200,"psteg"+std::to_string(k)+"_"+std::to_string(i)));
         }
     }

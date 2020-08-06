@@ -38,14 +38,16 @@ typedef uint64_t u_int64_t;
 #include <unistd.h>
 #endif
 
-const std::string MinicVersion = "2.46";
+const std::string MinicVersion = "dev";
 
 // *** options
 #define WITH_UCI
 #define WITH_XBOARD
 #define WITH_MAGIC
 #define WITH_SYZYGY
+//#define WITH_NNUE
 
+// *** Optim (?)
 #define USE_PARTIAL_SORT 
 //#define WITH_EVALSCORE_AS_INT // in fact just as slow as my basic impl ...
 
@@ -178,12 +180,13 @@ enum Piece    : signed char{ P_bk = -6, P_bq = -5, P_br = -4, P_bb = -3, P_bn = 
 inline Piece operator++(Piece & pp){pp=Piece(pp+1); return pp;}
 constexpr Piece operator~(Piece pp){return Piece(-pp);} // switch piece color
 const int PieceShift = 6;
+const int NbPiece = 2*PieceShift+1;
 
 enum Mat      : unsigned char{ M_t = 0, M_p, M_n, M_b, M_r, M_q, M_k, M_bl, M_bd, M_M, M_m };
 inline Mat operator++(Mat & m){m=Mat(m+1); return m;}
 
-extern CONST_PIECE_TUNING ScoreType   Values[13]  ;
-extern CONST_PIECE_TUNING ScoreType   ValuesEG[13];
+extern CONST_PIECE_TUNING ScoreType   Values[NbPiece]  ;
+extern CONST_PIECE_TUNING ScoreType   ValuesEG[NbPiece];
 
 #ifdef WITH_PIECE_TUNING
 inline void SymetrizeValue(){
@@ -200,17 +203,18 @@ const ScoreType *const absValuesEG[7] = { &dummyScore, &ValuesEG[P_wp + PieceShi
 
 template <typename T> inline int sgn(T val) { return (T(0) < val) - (val < T(0)); }
 
-const std::string PieceNames[13]    = { "k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K" };
+const std::string PieceNames[NbPiece]    = { "k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K" };
 
+const Square NbSquare = 64;
 
-const std::string SquareNames[64]   = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
-                                        "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
-                                        "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
-                                        "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
-                                        "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
-                                        "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
-                                        "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
-                                        "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" };
+const std::string SquareNames[NbSquare]   = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
+                                              "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
+                                              "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
+                                              "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
+                                              "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
+                                              "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
+                                              "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
+                                              "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" };
 
 const std::string FileNames[8]      = { "a", "b", "c", "d", "e", "f", "g", "h" };
 const std::string RankNames[8]      = { "1", "2", "3", "4", "5", "6", "7", "8" };
@@ -267,7 +271,7 @@ enum MType : unsigned char{
 };
 
 inline bool moveTypeOK(MType  m) { return m<=T_bqs;}
-inline bool squareOK  (Square s) { return s>=0 && s<64;}
+inline bool squareOK  (Square s) { return s>=0 && s<NbSquare;}
 inline bool pieceOK   (Piece  pp){ return pp>=P_bk && pp<=P_wk; }
 inline bool pieceValid(Piece  pp){ return pieceOK(pp) && pp != P_none;}
 

@@ -23,7 +23,7 @@ CONST_TEXEL_TUNING EvalScore imbalance_theirs[5][5] = {
     { {  725,  980}, {  436,  338}, {  474,  300}, {  316,  347}, {   12,   10} }
 };
 
-CONST_TEXEL_TUNING EvalScore PST[6][64] = {
+CONST_TEXEL_TUNING EvalScore PST[PieceShift][NbSquare] = {
    {
       {   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},{   0,   0},
       {  98,  88},{ 133,  73},{  60,  78},{  95,  53},{  68,  91},{ 126,  65},{  34, 131},{ -11, 137},

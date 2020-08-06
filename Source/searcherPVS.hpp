@@ -69,19 +69,27 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
     bool ttDepthOk = TT::getEntry(*this, p, pHash, depth, e);
     TT::Bound bound = TT::Bound(e.b & ~TT::B_allFlags);
     if (ttDepthOk) { // if depth of TT entry is enough
-        if ( !rootnode && !pvnode && 
-             ( (bound == TT::B_alpha && e.s <= alpha) || (bound == TT::B_beta  && e.s >= beta) || (bound == TT::B_exact) ) ) {
-            // increase history bonus of this move
-            if (!isInCheck && e.m != INVALIDMINIMOVE && Move2Type(e.m) == T_std ) updateTables(*this, p, depth, ply, e.m, bound, cmhPtr);
-            return adjustHashScore(e.s, ply);
+        if ( !rootnode && ( (bound == TT::B_alpha && e.s <= alpha) || (bound == TT::B_beta  && e.s >= beta) || (bound == TT::B_exact) ) ) {
+            if ( !pvnode ){
+               // increase history bonus of this move
+               if (/*!isInCheck &&*/ e.m != INVALIDMINIMOVE && Move2Type(e.m) == T_std ) updateTables(*this, p, depth, ply, e.m, bound, cmhPtr);
+               if (p.fifty < 92) return adjustHashScore(e.s, ply);
+            }
+            ///@todo try returning also at pv node
+            /*
+            else{ // in "good" condition, also return a score at pvnode
+               if ( bound == TT::B_exact && e.d > 3*depth/2 && p.fifty < 92) return adjustHashScore(e.s, ply);
+            }
+            */
         }
     }
+
     // if entry hash is not null and entry move is valid, this is a valid TT move (we don't care about depth here !)
     bool ttHit = e.h != nullHash;
     bool validTTmove = ttHit && e.m != INVALIDMINIMOVE;
     bool ttPV = pvnode || (validTTmove && (e.b&TT::B_ttFlag)); ///@todo store more things in TT bound ...
     bool ttIsCheck = validTTmove && (e.b&TT::B_isCheckFlag);
-    //bool formerPV = ttPV && !pvnode;
+    bool formerPV = ttPV && !pvnode;
     
 #ifdef WITH_SYZYGY
     ScoreType tbScore = 0;
@@ -163,13 +171,13 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             evalScore >= stack[p.halfmoves].eval && 
             stack[p.halfmoves].p.lastMove != NULLMOVE && 
             //stack[p.halfmoves-1].p.lastMove != NULLMOVE &&
-            /*stack[p.halfmoves].eval >= beta - 32*depth - 30*improving && */
+            /*stack[p.halfmoves].eval >= beta - 32*depth - 30*improving && */ ///@todo try to minimize sid_nullMoveTry2 versus sid_nullMove
             ply >= (unsigned int)nullMoveMinPly ) {
             PVList nullPV;
             ++stats.counters[Stats::sid_nullMoveTry];
-            const DepthType R = depth / 4 + 3 + std::min((evalScore - beta) / 150, 5); // adaptative
+            const DepthType R = depth / 4 + 3 + std::min((evalScore - beta) / 180, 5); // adaptative
             const ScoreType nullIIDScore = evalScore; // pvs<false, false>(beta - 1, beta, p, std::max(depth/4,1), ply, nullPV, seldepth, isInCheck, !cutNode);
-            if (nullIIDScore >= beta /*&& stack[p.halfmoves].eval >= beta + 10 * (depth-improving)*/ ) { ///@todo try to minimize sid_nullMoveTry2 versus sid_nullMove
+            if (nullIIDScore >= beta ) { 
                 TT::Entry nullE;
                 const DepthType nullDepth = depth-R;
                 TT::getEntry(*this, p, pHash, nullDepth, nullE);
@@ -185,12 +193,12 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                     TT::getEntry(*this, pN, computeHash(pN), 0, nullEThreat);
                     if ( nullEThreat.h != nullHash && nullEThreat.m != INVALIDMINIMOVE ) refutation = nullEThreat.m;
                     //if (isMatedScore(nullscore)) mateThreat = true;
-                    if (nullscore >= beta){
-                        /*
+                    if (nullscore >= beta){ // verification search
+                       /*
                        if ( (!isNotEndGame || depth > SearchConfig::nullMoveVerifDepth) && nullMoveMinPly == 0){
                           ++stats.counters[Stats::sid_nullMoveTry3];
                           nullMoveMinPly = ply + 3*nullDepth/4;
-                          nullscore = pvs<false, false>(beta - 1, beta, p, nullDepth, ply+1, nullPV, seldepth, isInCheck, !cutNode);
+                          nullscore = pvs<false>(beta - 1, beta, p, nullDepth, ply+1, nullPV, seldepth, isInCheck, !cutNode, false);
                           nullMoveMinPly = 0;
                           if (stopFlag) return STOPSCORE;
                           if (nullscore >= beta ) return ++stats.counters[Stats::sid_nullMove2], nullscore;
@@ -246,7 +254,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         bound = TT::Bound(e.b & ~TT::B_allFlags);
         ttPV = pvnode || (ttHit && (e.b&TT::B_ttFlag));
         ttIsCheck = validTTmove && (e.b&TT::B_isCheckFlag);
-        //formerPV = ttPV && !pvnode;
+        formerPV = ttPV && !pvnode;
         if ( ttHit && !isInCheck && ((bound == TT::B_alpha && e.s < evalScore) || (bound == TT::B_beta && e.s > evalScore) || (bound == TT::B_exact)) ){
             evalScore = adjustHashScore(e.s,ply);
             evalScoreIsHashScore=true;
@@ -319,7 +327,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                /*
                // CMH extension
                if (EXTENDMORE(extension) && isQuiet) {
-                   const int pp = (p.board_const(Move2From(e.m)) + PieceShift) * 64 + to;
+                   const int pp = (p.board_const(Move2From(e.m)) + PieceShift) * NbSquare + to;
                    if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= HISTORY_MAX / 2 && cmhPtr[1][pp] >= HISTORY_MAX / 2) ++stats.counters[Stats::sid_CMHExtension], ++extension;
                }
                */
@@ -449,7 +457,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
            // CMH extension
            /*
            if (EXTENDMORE(extension) && isQuiet) {
-               const int pp = (p.board_const(Move2From(*it)) + PieceShift) * 64 + to;
+               const int pp = (p.board_const(Move2From(*it)) + PieceShift) * NbSquare + to;
                if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= HISTORY_MAX/2 && cmhPtr[1][pp] >= HISTORY_MAX/2) ++stats.counters[Stats::sid_CMHExtension], ++extension;
            }
            */
@@ -510,7 +518,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             if (historyPruning && isPrunableStdNoCheck && Move2Score(*it) < SearchConfig::historyPruningThresholdInit + marginDepth*SearchConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
             // CMH pruning alone
             if (CMHPruning && isPrunableStdNoCheck){
-              const int pp = (p.board_const(Move2From(*it))+PieceShift) * 64 + Move2To(*it);
+              const int pp = (p.board_const(Move2From(*it))+PieceShift) * NbSquare + Move2To(*it);
               if ((!cmhPtr[0] || cmhPtr[0][pp] < 0) && (!cmhPtr[1] || cmhPtr[1][pp] < 0)) { ++stats.counters[Stats::sid_CMHPruning]; continue;}
             }
             // SEE (capture)
@@ -531,6 +539,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                 reduction -= /*std::min(2,*/HISTORY_DIV(2 * Move2Score(*it))/*)*/; //history reduction/extension (beware killers and counter are scored above history max)
                 //if ( !isInCheck) reduction += std::min(2,(data.mobility[p.c]-data.mobility[~p.c])/8);
                 reduction -= (ttPV || isDangerRed || !noCheck /*|| ttMoveSingularExt*//*|| isEmergencyDefence*/);
+                reduction -= formerPV;
                 
                 // never extend more than reduce
                 if ( extension - reduction > 0 ) reduction = extension;

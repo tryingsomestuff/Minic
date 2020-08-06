@@ -139,6 +139,7 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
                     if (score >= beta) {
                         b = TT::B_beta;
                         TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),TT::Bound(b|(ttPV?TT::B_ttFlag:TT::B_none)|(isInCheck?TT::B_isInCheckFlag:TT::B_none)),hashDepth);
+                        ///@todo try to update history here also ??
                         return bestScore;
                     }
                     b = TT::B_exact;

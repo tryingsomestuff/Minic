@@ -20,10 +20,10 @@ namespace BBTools {
 // note that between to not include start and end square
 struct Mask {
     static int ranks[512];
-    BitBoard bbsquare, diagonal, antidiagonal, file, kingZone, pawnAttack[2], push[2], dpush[2], enpassant, knight, king, frontSpan[2], rearSpan[2], passerSpan[2], attackFrontSpan[2], between[64];
+    BitBoard bbsquare, diagonal, antidiagonal, file, kingZone, pawnAttack[2], push[2], dpush[2], enpassant, knight, king, frontSpan[2], rearSpan[2], passerSpan[2], attackFrontSpan[2], between[NbSquare];
     Mask():bbsquare(empty), diagonal(empty), antidiagonal(empty), file(empty), kingZone(empty), pawnAttack{ empty,empty }, push{ empty,empty }, dpush{ empty,empty }, enpassant(empty), knight(empty), king(empty), frontSpan{empty}, rearSpan{empty}, passerSpan{empty}, attackFrontSpan{empty}, between{empty}{}
 };
-extern Mask mask[64];
+extern Mask mask[NbSquare];
 void initMask();
 
 #ifndef WITH_MAGIC
@@ -67,18 +67,18 @@ struct SMagic {
   BitBoard mask, magic;
 };
 
-extern SMagic bishop[64];
-extern SMagic rook[64];
+extern SMagic bishop[NbSquare];
+extern SMagic rook[NbSquare];
 
-extern BitBoard bishopAttacks[64][1 << BISHOP_INDEX_BITS];
-extern BitBoard rookAttacks  [64][1 << ROOK_INDEX_BITS  ];
+extern BitBoard bishopAttacks[NbSquare][1 << BISHOP_INDEX_BITS];
+extern BitBoard rookAttacks  [NbSquare][1 << ROOK_INDEX_BITS  ];
 
 #ifdef __BMI2__
    #define MAGICBISHOPINDEX(m,x) (_pext_u64(m, MagicBB::bishop[x].mask))
    #define MAGICROOKINDEX(m,x)   (_pext_u64(m, MagicBB::rook  [x].mask))
 #else
-   #define MAGICBISHOPINDEX(m,x) (int)((((m) & MagicBB::bishop[x].mask) * MagicBB::bishop[x].magic) >> (64 - BISHOP_INDEX_BITS))
-   #define MAGICROOKINDEX(m,x)   (int)((((m) & MagicBB::rook  [x].mask) * MagicBB::rook  [x].magic) >> (64 - ROOK_INDEX_BITS))
+   #define MAGICBISHOPINDEX(m,x) (int)((((m) & MagicBB::bishop[x].mask) * MagicBB::bishop[x].magic) >> (NbSquare - BISHOP_INDEX_BITS))
+   #define MAGICROOKINDEX(m,x)   (int)((((m) & MagicBB::rook  [x].mask) * MagicBB::rook  [x].magic) >> (NbSquare - ROOK_INDEX_BITS))
 #endif
 
 #define MAGICBISHOPATTACKS(m,x) (MagicBB::bishopAttacks[x][MAGICBISHOPINDEX(m,x)])

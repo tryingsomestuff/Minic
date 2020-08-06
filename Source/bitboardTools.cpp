@@ -18,7 +18,7 @@ void initBitBoards(Position & p) {
 
 void setBitBoards(Position & p) {
     initBitBoards(p);
-    for (Square k = 0; k < 64; ++k) { 
+    for (Square k = 0; k < NbSquare; ++k) { 
         const Piece pp = p.board_const(k);
         if ( pp != P_none ){
            setBit(p,k,pp); 

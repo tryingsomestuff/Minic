@@ -126,9 +126,9 @@ template<Color C> inline constexpr BitBoard pawnDetached(BitBoard own, BitBoard 
 Square SquareFromBitBoard(const BitBoard & b);
 
 // Position relative helpers
-inline void unSetBit(Position & p, Square k)           { assert(k >= 0 && k < 64); ::_unSetBit(p._pieces(p.board_const(k)), k);}
-inline void unSetBit(Position & p, Square k, Piece pp) { assert(k >= 0 && k < 64); ::_unSetBit(p._pieces(pp), k);}
-inline void setBit  (Position & p, Square k, Piece pp) { assert(k >= 0 && k < 64); ::_setBit  (p._pieces(pp), k);}
+inline void unSetBit(Position & p, Square k)           { assert(k >= 0 && k < NbSquare); ::_unSetBit(p._pieces(p.board_const(k)), k);}
+inline void unSetBit(Position & p, Square k, Piece pp) { assert(k >= 0 && k < NbSquare); ::_unSetBit(p._pieces(pp), k);}
+inline void setBit  (Position & p, Square k, Piece pp) { assert(k >= 0 && k < NbSquare); ::_setBit  (p._pieces(pp), k);}
 void initBitBoards(Position & p);
 void setBitBoards (Position & p);
 

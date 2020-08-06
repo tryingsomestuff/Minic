@@ -26,9 +26,9 @@ struct KillerT{
 };
 
 struct HistoryT{
-    ScoreType history[2][64][64]; // color, from, to
-    ScoreType historyP[13][64]; // Piece, to
-    ScoreType counter_history[13][64][13*64]; //previous moved piece, previous to, current moved piece * boardsize + current to
+    ScoreType history[2][NbSquare][NbSquare]; // color, from, to
+    ScoreType historyP[NbPiece][NbSquare]; // Piece, to
+    ScoreType counter_history[NbPiece][NbSquare][NbPiece*NbSquare]; //previous moved piece, previous to, current moved piece * boardsize + current to
 
     void initHistory(bool noCleanCounter = false);
 
@@ -44,7 +44,7 @@ struct HistoryT{
            historyP[pp+PieceShift][to] += s - HISTORY_DIV(historyP[pp+PieceShift][to] * (int)std::abs(s));
            for (int i = 0; i < MAX_CMH_PLY; ++i){
                if (cmhPtr[i]){
-                  ScoreType & item = cmhPtr[i][(p.board_const(from)+PieceShift) * 64 + to];
+                  ScoreType & item = cmhPtr[i][(p.board_const(from)+PieceShift) * NbSquare + to];
                   item += s - HISTORY_DIV(item * (int)std::abs(s));
                }
            }
@@ -53,7 +53,7 @@ struct HistoryT{
 };
 
 struct CounterT{
-    ScoreType counter[64][64];
+    ScoreType counter[NbSquare][NbSquare];
 
     void initCounter();
     void update(Move m, const Position & p);
