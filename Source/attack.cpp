@@ -7,13 +7,13 @@
 namespace BBTools {
 
 int Mask::ranks[512] = {0};
-Mask mask[64];
+Mask mask[NbSquare];
 
 // This function is taken from Dumb chess engine
 void initMask() {
     Logging::LogIt(Logging::logInfo) << "Init mask" ;
-    int d[64][64] = { {0} };
-    for (Square x = 0; x < 64; ++x) {
+    int d[NbSquare][NbSquare] = { {0} };
+    for (Square x = 0; x < NbSquare; ++x) {
         mask[x].bbsquare = SquareToBitboard(x);
         for (int i = -1; i <= 1; ++i) {
             for (int j = -1; j <= 1; ++j) {
@@ -30,13 +30,13 @@ void initMask() {
         }
 
         for (int y = x - 9; y >= 0 && d[x][y] == -9; y -= 9) mask[x].diagonal |= SquareToBitboard(y);
-        for (int y = x + 9; y < 64 && d[x][y] ==  9; y += 9) mask[x].diagonal |= SquareToBitboard(y);
+        for (int y = x + 9; y < NbSquare && d[x][y] ==  9; y += 9) mask[x].diagonal |= SquareToBitboard(y);
 
         for (int y = x - 7; y >= 0 && d[x][y] == -7; y -= 7) mask[x].antidiagonal |= SquareToBitboard(y);
-        for (int y = x + 7; y < 64 && d[x][y] ==  7; y += 7) mask[x].antidiagonal |= SquareToBitboard(y);
+        for (int y = x + 7; y < NbSquare && d[x][y] ==  7; y += 7) mask[x].antidiagonal |= SquareToBitboard(y);
 
         for (int y = x - 8; y >= 0; y -= 8) mask[x].file |= SquareToBitboard(y);
-        for (int y = x + 8; y < 64; y += 8) mask[x].file |= SquareToBitboard(y);
+        for (int y = x + 8; y < NbSquare; y += 8) mask[x].file |= SquareToBitboard(y);
 
         int f = SQFILE(x);
         int r = SQRANK(x);
@@ -134,11 +134,11 @@ BitBoard antidiagonalAttack(const BitBoard occupancy, const Square x) { return a
 
 namespace MagicBB{
 
-SMagic bishop[64];
-SMagic rook[64];
+SMagic bishop[NbSquare];
+SMagic rook[NbSquare];
 
-BitBoard bishopAttacks[64][1 << BISHOP_INDEX_BITS];
-BitBoard rookAttacks  [64][1 << ROOK_INDEX_BITS  ];
+BitBoard bishopAttacks[NbSquare][1 << BISHOP_INDEX_BITS];
+BitBoard rookAttacks  [NbSquare][1 << ROOK_INDEX_BITS  ];
 
 const BitBoard bishopMagics[] = {
     0x1002004102008200, 0x1002004102008200, 0x4310002248214800, 0x402010c110014208, 0xa000a06240114001, 0xa000a06240114001, 0x402010c110014208, 0xa000a06240114001,

@@ -5,7 +5,7 @@
 #include "position.hpp"
 
 namespace{
-constexpr unsigned KPKmaxIndex = 2*24*64*64; // color x pawn x wk x bk
+constexpr unsigned KPKmaxIndex = 2*24*NbSquare*NbSquare; // color x pawn x wk x bk
 uint32_t KPKBitbase[KPKmaxIndex/32]; // force 32bit uint
 inline unsigned KPKindex(Color us, Square bksq, Square wksq, Square psq) {
   return wksq | (bksq << 6) | (us << 12) | (SQFILE(psq) << 13) | ((6 - SQRANK(psq)) << 15);

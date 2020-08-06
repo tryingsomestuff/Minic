@@ -13,7 +13,7 @@ namespace EvalConfig {
 extern CONST_TEXEL_TUNING EvalScore imbalance_mines[5][5];
 extern CONST_TEXEL_TUNING EvalScore imbalance_theirs[5][5];
 
-extern CONST_TEXEL_TUNING EvalScore PST[6][64];
+extern CONST_TEXEL_TUNING EvalScore PST[PieceShift][NbSquare];
 
 extern CONST_TEXEL_TUNING EvalScore   pawnShieldBonus        ;
 extern CONST_TEXEL_TUNING EvalScore   pawnFawnMalusKS        ;
@@ -102,7 +102,7 @@ inline double fast_exp_64(const double x) noexcept {
 
 // from 0 to m with offset, translation and scale
 inline double sigmoid (double x, double m = 1.f, double trans = 0.f, double scale = 1.f, double offset = 0.f){ return m / (1 + exp((trans - x) / scale)) - offset;}
-inline void initEval(){ for(Square i = 0; i < 64; i++){ EvalConfig::kingAttTable[i] = (int) sigmoid(i,EvalConfig::kingAttMax,EvalConfig::kingAttTrans,EvalConfig::kingAttScale,EvalConfig::kingAttOffset); } }// idea taken from Topple
+inline void initEval(){ for(Square i = 0; i < NbSquare; i++){ EvalConfig::kingAttTable[i] = (int) sigmoid(i,EvalConfig::kingAttMax,EvalConfig::kingAttTrans,EvalConfig::kingAttScale,EvalConfig::kingAttOffset); } }// idea taken from Topple
 
 } // EvalConfig
 

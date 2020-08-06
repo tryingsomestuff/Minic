@@ -6,11 +6,11 @@
 #include "tools.hpp"
 
 namespace Zobrist {
-    Hash ZT[64][14];
+    Hash ZT[NbSquare][14];
     Hash ZTCastling[16];
     void initHash() {
         Logging::LogIt(Logging::logInfo) << "Init hash";
-        for (int k = 0; k < 64; ++k) for (int j = 0; j < 14; ++j) ZT[k][j] = randomInt<Hash,42>(Hash(0),Hash(UINT64_MAX));
+        for (int k = 0; k < NbSquare; ++k) for (int j = 0; j < 14; ++j) ZT[k][j] = randomInt<Hash,42>(Hash(0),Hash(UINT64_MAX));
         for (int k = 0; k < 16; ++k) ZTCastling[k] = randomInt<Hash,42>(Hash(0),Hash(UINT64_MAX));
     }
 }
@@ -22,14 +22,14 @@ Hash computeHash(const Position &p){
 #endif
     if (p.h != nullHash) return p.h;
     //++ThreadPool::instance().main().stats.counters[Stats::sid_hashComputed]; // shall of course never happend !
-    for (Square k = 0; k < 64; ++k){ ///todo try if BB is faster here ?
+    for (Square k = 0; k < NbSquare; ++k){ ///todo try if BB is faster here ?
         const Piece pp = p.board_const(k);
         if ( pp != P_none) p.h ^= Zobrist::ZT[k][pp+PieceShift];
     }
-    if ( p.ep != INVALIDSQUARE ) p.h ^= Zobrist::ZT[p.ep][13];
+    if ( p.ep != INVALIDSQUARE ) p.h ^= Zobrist::ZT[p.ep][NbPiece];
     p.h ^= Zobrist::ZTCastling[p.castling];
-    if ( p.c == Co_White)        p.h ^= Zobrist::ZT[3][13];
-    if ( p.c == Co_Black)        p.h ^= Zobrist::ZT[4][13];
+    if ( p.c == Co_White)        p.h ^= Zobrist::ZT[3][NbPiece];
+    if ( p.c == Co_Black)        p.h ^= Zobrist::ZT[4][NbPiece];
 #ifdef DEBUG_HASH
     if ( h != nullHash && h != p.h ){ Logging::LogIt(Logging::logFatal) << "Hash error " << ToString(p.lastMove) << ToString(p,true); }
 #endif
