@@ -316,7 +316,7 @@ void TexelTuning(const std::string & filename) {
             lf << ((*i.p).c == Co_White ? 1 : -1) << " ";
             
             EvalData d;
-            ScoreType s = eval(*i.p,d,ThreadPool::instance().main(),false,&lf);
+            ScoreType s = eval(*i.p,d,ThreadPool::instance().main(),false,false,&lf);
             lf << d.gp << " " << s << " ";
 
             Move m = INVALIDMOVE;
