@@ -304,7 +304,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
         for(int k = 0; k < 10 ; ++k)
         for(auto p : data){
             EvalData d;
-            eval<false>(p,d,ThreadPool::instance().main(),true);
+            eval(p,d,ThreadPool::instance().main(),true);
         }
         int ms = (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count();
         Logging::LogIt(Logging::logInfo) << "Eval speed (with EG material hash): " << data.size()*10.f/(ms*1000) << " Meval/s";
@@ -313,7 +313,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
         for(int k = 0; k < 10 ; ++k)
         for(auto p : data){
             EvalData d;
-            eval<false>(p,d,ThreadPool::instance().main(),false);
+            eval(p,d,ThreadPool::instance().main(),false);
         }
         ms = (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count();
         Logging::LogIt(Logging::logInfo) << "Eval speed : " << data.size()*10.f/(ms*1000) << " Meval/s"; 
