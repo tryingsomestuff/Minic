@@ -6,7 +6,7 @@
 
 #ifdef WITH_NNUE
 
-class Position; // forward decl
+struct Position; // forward decl
 
 #define WHITE Co_White
 #define BLACK Co_Black

@@ -15,5 +15,4 @@ $dir/buildGW32.sh $v "-march=i686" "-DUSE_SSE3"
 #$dir/buildGW32.sh $v "-msse4.2" "-DUSE_SSE42"
 #$dir/buildGW32.sh $v "-mavx2 -mbmi2" "-DUSE_AVX2"
 
-#TODO NEON
-$dir/buildArm.sh $v ""
+$dir/buildArm.sh $v "-DUSE_NEON"

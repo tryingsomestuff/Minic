@@ -13,7 +13,7 @@ fi
 mkdir -p $dir/Dist/Minic2
 
 v="dev"
-n="-DUSE_AVX2"
+n="-DUSE_NEON"
 
 if [ -n "$1" ] ; then
    v=$1
