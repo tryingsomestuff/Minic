@@ -39,8 +39,8 @@ namespace Eval::NNUE {
   struct AlignedDeleter {
     void operator()(T* ptr) const {
       ptr->~T();
-      ///@todo portability
-      free(ptr);    }
+      std_aligned_free(ptr);    
+    }
   };
 
   template <typename T>

@@ -41,8 +41,7 @@ namespace Eval::NNUE {
   // Initialize the evaluation function parameters
   template <typename T>
   void Initialize(AlignedPtr<T>& pointer) {
-    ///@todo portability !!!
-    pointer.reset(reinterpret_cast<T*>(aligned_alloc(alignof(T), sizeof(T))));
+    pointer.reset(reinterpret_cast<T*>(std_aligned_alloc(alignof(T), sizeof(T))));
     std::memset(pointer.get(), 0, sizeof(T));
   }
 

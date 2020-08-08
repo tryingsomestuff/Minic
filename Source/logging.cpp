@@ -38,7 +38,11 @@ namespace Logging {
     }
 
     void hellooo() {
+#ifdef WITH_NNUE
+      std::cout << Logging::_protocolComment[Logging::ct] << "This is Minic version " << MinicVersion << " (NNUE available)" << std::endl;
+#else
       std::cout << Logging::_protocolComment[Logging::ct] << "This is Minic version " << MinicVersion << std::endl;
+#endif
     }
 
     void init(){

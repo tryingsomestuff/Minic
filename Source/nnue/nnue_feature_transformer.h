@@ -26,7 +26,7 @@
 #include "nnue_architecture.h"
 #include "features/index_list.h"
 
-#include "../../position.hpp"
+#include "../position.hpp"
 
 #include <cstring> // std::memset()
 

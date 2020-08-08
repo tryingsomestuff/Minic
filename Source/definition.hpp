@@ -38,7 +38,7 @@ typedef uint64_t u_int64_t;
 #include <unistd.h>
 #endif
 
-const std::string MinicVersion = "dev";
+const std::string MinicVersion = "2.47";
 
 // *** options
 #define WITH_UCI
@@ -364,4 +364,24 @@ inline unsigned long long int powerFloor(unsigned long long int x) {
     unsigned long long int power = 1;
     while (power < x) power *= 2;
     return power/2;
+}
+
+inline void* std_aligned_alloc(size_t alignment, size_t size) {
+#if defined(__APPLE__)
+  return aligned_alloc(alignment, size);
+#elif defined(_WIN32)
+  return _mm_malloc(size, alignment);
+#else
+  return std::aligned_alloc(alignment, size);
+#endif
+}
+
+inline void std_aligned_free(void* ptr) {
+#if defined(__APPLE__)
+  free(ptr);
+#elif defined(_WIN32)
+  _mm_free(ptr);
+#else
+  free(ptr);
+#endif
 }
