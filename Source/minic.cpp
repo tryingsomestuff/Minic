@@ -4,6 +4,7 @@
 #include "bitboardTools.hpp"
 #include "book.hpp"
 #include "cli.hpp"
+#include "com.hpp"
 #include "dynamicConfig.hpp"
 #include "egt.hpp"
 #include "evalConfig.hpp"
@@ -12,6 +13,7 @@
 #include "logging.hpp"
 #include "material.hpp"
 #include "nn.hpp"
+#include "nnue.hpp"
 #include "option.hpp"
 #include "pgnparser.hpp"
 #include "smp.hpp"
@@ -49,6 +51,13 @@ void init(int argc, char ** argv) {
 #ifdef WITH_MLP
     NN::loadNet();
 #endif
+#ifdef WITH_NNUE
+    if ( !DynamicConfig::NNUEFile.empty()){
+        nnue::init_NNUE();
+        nnue::verify_NNUE();
+    }
+#endif
+    COM::init(); // let's do this ... (usefull to reset position in case of NNUE)
 }
 
 int main(int argc, char ** argv) {

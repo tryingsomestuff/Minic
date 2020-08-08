@@ -2,6 +2,13 @@
 
 #include "definition.hpp"
 
+#ifdef WITH_NNUE
+#include "nnue.hpp"
+namespace Eval::NNUE{
+class Accumulator; // Forward decl
+}
+#endif
+
 struct Position; // forward decl
 bool readFEN(const std::string & fen, Position & p, bool silent = false, bool withMoveount = false); // forward decl
 
@@ -18,12 +25,13 @@ bool readFEN(const std::string & fen, Position & p, bool silent = false, bool wi
  * Minic is a copy/make engine, so that this structure is copied a lot !
  */
 struct Position{
-    Position(){}
-    Position(const std::string & fen, bool withMoveCount = true){readFEN(fen,*this,true,withMoveCount);}
+    Position();
+    Position(const std::string & fen, bool withMoveCount = true);
+    ~Position();
 
     std::array<Piece,64>    _b           {{ P_none }}; // works because P_none is in fact 0 ...
     std::array<BitBoard,6>  _allB        {{ empty }};
-    BitBoard                allPieces[2] {empty};
+    std::array<BitBoard,2>  allPieces    {{empty}};
 
     // t p n b r q k bl bd M n  (total is first so that pawn to king is same a Piece)
     typedef std::array<std::array<char,11>,2> Material;
@@ -32,9 +40,9 @@ struct Position{
     mutable Hash h = nullHash, ph = nullHash;
     MiniMove lastMove = INVALIDMINIMOVE;
     unsigned short int moves = 0, halfmoves = 0;
-    Square king[2] = { INVALIDSQUARE, INVALIDSQUARE };
-    Square rooksInit[2][2] = { {INVALIDSQUARE, INVALIDSQUARE}, {INVALIDSQUARE, INVALIDSQUARE}};
-    Square kingInit[2] = {INVALIDSQUARE, INVALIDSQUARE};
+    std::array<Square,2> king = { INVALIDSQUARE, INVALIDSQUARE };
+    std::array<std::array<Square,2>,2> rooksInit = {{ {INVALIDSQUARE, INVALIDSQUARE}, {INVALIDSQUARE, INVALIDSQUARE} }};
+    std::array<Square,2> kingInit = {INVALIDSQUARE, INVALIDSQUARE};
     Square ep = INVALIDSQUARE;
     unsigned char fifty = 0;
     CastlingRights castling = C_none;
@@ -72,4 +80,21 @@ struct Position{
     inline BitBoard pieces_const(Piece pp)const          { assert(pp!=P_none); return _allB[std::abs(pp)-1] & allPieces[pp>0?Co_White:Co_Black]; }
 
     inline BitBoard & _pieces(Piece pp)         { assert(pp!=P_none); return _allB[std::abs(pp)-1]; }
+
+#ifdef WITH_NNUE
+    mutable DirtyPiece dirtyPiece;
+    EvalList evalList;
+    
+    mutable Eval::NNUE::Accumulator * accumulator = nullptr;
+    mutable Eval::NNUE::Accumulator * previousAccumulator = nullptr;
+
+    const EvalList* eval_list() const;
+    PieceId piece_id_on(Square sq) const;
+
+    void resetAccumulator();
+    Position & operator =(const Position & p);
+    Position(const Position & p);
+
+#endif
+
 };

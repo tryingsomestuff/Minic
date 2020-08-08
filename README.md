@@ -18,9 +18,9 @@ Version "1" was release as a one year anniversary release in october 2019. At th
 
 Version "2" is release for April 1st 2020 (during covid-19 confinement). For this version, the one file Minic was splitted into many header and source files, and commented a lot more without negative impact on speed and strength. 
 
-## NNUE 
+## NNUE (from Stockfish)
 
-Minic, since release 2.47, has the possibility to be build using a shameless copy of the NNUE framework of Stockfish. Integration of NNUE was done easily and I hope this can be done for any engine, especially if NNUE is release as a standalone library. New UCI parameter NNUEFile is added and shall be the full path to the network file you want to use. To build such Minic you need to activate WITH_NNUE in definition.hpp and use the build script (or make your own, but do not forget to pass -DUSE_AVX2 or whatever your hardware supports to the nnue part ...). First test shows that MinicNNUE is around 200Elo stronger than Minic, at the level of Xiphos of Ethereal currently. This says that a lot more can (and will!) be done inside Minic standard evaluation function !
+Minic, since release 2.47, has the possibility to be build using a shameless copy of the NNUE framework of Stockfish. Integration of NNUE was done easily and I hope this can be done for any engine, especially if NNUE is release as a standalone library. New UCI parameter NNUEFile is added and shall be the full path to the network file you want to use. To build such Minic you need to activate WITH_NNUE in definition.hpp and use the build script (or make your own, but do not forget to pass -DUSE_AVX2 or whatever your hardware supports to the nnue part ...). First test shows that MinicNNUE is around 200Elo stronger than Minic, around the level of Xiphos or Ethereal currently. This says that a lot more can (and will!) be done inside Minic standard evaluation function !
 
 MinicNNUE, won't be the official Minic, as this NNUE work to not reflect my own work and skills at all !
 
@@ -167,7 +167,7 @@ Carlsen    : based on Carlsen most used opening lines (thanks to Jonathan Cremer
 Anand      : based on Anand most used opening lines (thanks to Jonathan Cremers)
 ```
 
-You can use both the json configuation file or the command line argument to select the book.
+You can use both the command line argument or the GUI option to select and activate the book.
 
 ## Thanks
 

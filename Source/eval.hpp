@@ -118,12 +118,10 @@ BitBoard getPinned(const Position & p, const Square s){
     return pinned;
 }
 
-/*
 bool isLazyHigh(ScoreType lazyThreshold, const EvalFeatures & features, EvalScore & score) {
     score = features.SumUp();
     return std::abs(score[MG] + score[EG]) / 2 > lazyThreshold;
 }
-*/
 
 template < bool display>
 inline ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safeMatEvaluator, std::ostream * of){
@@ -192,6 +190,16 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context, bo
 
 #ifdef WITH_TEXEL_TUNING
     features.scores[F_material] += MaterialHash::Imbalance(p.mat, Co_White) - MaterialHash::Imbalance(p.mat, Co_Black);
+#endif
+
+#ifdef WITH_NNUE
+    if (DynamicConfig::useNNUE){
+        EvalScore score = 0;     
+        if ( ! isLazyHigh(400,features,score)){ // stay to classic eval when the game is already decided
+           STOP_AND_SUM_TIMER(Eval)
+           return nnue::evaluate(p);
+        }
+    }
 #endif
 
     STOP_AND_SUM_TIMER(Eval1)

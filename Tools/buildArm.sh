@@ -13,13 +13,19 @@ fi
 mkdir -p $dir/Dist/Minic2
 
 v="dev"
+n="-DUSE_AVX2"
 
 if [ -n "$1" ] ; then
    v=$1
    shift
 fi
 
-OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto --std=c++14 -IFathom/src"
+if [ -n "$1" ] ; then
+   n=$1
+   shift
+fi
+
+OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto --std=c++17 $n"
 
 if [ $FATHOM_PRESENT = "1" ]; then
    lib=fathom_${v}_android.o
@@ -30,6 +36,7 @@ $dir/android/bin/arm-linux-androideabi-clang++ -v
 echo "version $v"
 exe=minic_${v}_android
 echo "Building $exe"
+echo $OPT
 
 $dir/android/bin/arm-linux-androideabi-clang++ $OPT Source/*.cpp -ISource -o $dir/Dist/Minic2/$exe -static-libgcc -static-libstdc++ 
 
