@@ -24,7 +24,7 @@
 #include "features_common.h"
 #include "../../nnue.hpp"
 
-class Position;
+struct Position;
 
 namespace Eval::NNUE::Features {
 

@@ -5,7 +5,7 @@
 #ifdef WITH_NNUE
 #include "nnue.hpp"
 namespace Eval::NNUE{
-class Accumulator; // Forward decl
+struct Accumulator; // Forward decl
 }
 #endif
 

@@ -367,7 +367,9 @@ inline unsigned long long int powerFloor(unsigned long long int x) {
 }
 
 inline void* std_aligned_alloc(size_t alignment, size_t size) {
-#if defined(__APPLE__)
+#ifdef __ANDROID__
+  return malloc(size);
+#elif defined(__APPLE__)
   return aligned_alloc(alignment, size);
 #elif defined(_WIN32)
   return _mm_malloc(size, alignment);
@@ -377,7 +379,9 @@ inline void* std_aligned_alloc(size_t alignment, size_t size) {
 }
 
 inline void std_aligned_free(void* ptr) {
-#if defined(__APPLE__)
+#ifdef __ANDROID__
+  return free(ptr);
+#elif defined(__APPLE__)
   free(ptr);
 #elif defined(_WIN32)
   _mm_free(ptr);
