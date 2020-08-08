@@ -661,6 +661,7 @@ inline ScoreType eval(const Position & p, EvalData & data, Searcher &context, bo
     }
 
     // use NN input
+    ///@todo this needs stm to be taken into account in EvalNN
     #ifdef WITH_MLP
        const float gamma = 0.8f;
        ret = (ScoreType)(gamma*ret + (1-gamma)*NN::EvalNN(features,ret));
