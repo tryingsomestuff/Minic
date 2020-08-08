@@ -29,6 +29,7 @@ mkdir -p $dir/Dist/Minic2
 d="-DDEBUG_TOOL"
 v="dev"
 t="-march=native"
+n="-DUSE_AVX2"
 
 if [ -n "$1" ] ; then
    v=$1
@@ -37,6 +38,11 @@ fi
 
 if [ -n "$1" ] ; then
    t=$1
+   shift
+fi
+
+if [ -n "$1" ] ; then
+   n=$1
    shift
 fi
 
@@ -55,11 +61,11 @@ echo "Building $exe"
 
 WARN="-Wall -Wcast-qual -Wno-char-subscripts -Wno-reorder -Wmaybe-uninitialized -Wuninitialized -pedantic -Wextra -Wshadow -Wfatal-errors -Wno-unknown-warning-option"
 
-OPT="-s $WARN $d -DNDEBUG -O3 $t --std=c++14" ; DEPTH=20
-#OPT="-s $WARN $d -ffunction-sections -fdata-sections -Os -s -DNDEBUG -Wl,--gc-sections $t --std=c++14" ; DEPTH=20
-#OPT="$WARN $d -DNDEBUG -O3 -g -ggdb -fno-omit-frame-pointer $t --std=c++14" ; DEPTH=20
-#OPT="$WARN $d -DNDEBUG -g $t --std=c++14" ; DEPTH=10
-#OPT="$WARN $d -g $t --std=c++14" ; DEPTH=10
+OPT="-s $WARN $d -DNDEBUG -O3 $t --std=c++17 $n" ; DEPTH=20
+#OPT="-s $WARN $d -ffunction-sections -fdata-sections -Os -s -DNDEBUG -Wl,--gc-sections $t --std=c++17" ; DEPTH=20
+#OPT="$WARN $d -DNDEBUG -O3 -g -ggdb -fno-omit-frame-pointer $t --std=c++17" ; DEPTH=20
+#OPT="$WARN $d -DNDEBUG -g $t --std=c++17" ; DEPTH=10
+#OPT="$WARN $d -g $t --std=c++17" ; DEPTH=10
 
 LIBS="-lpthread"
 
@@ -91,13 +97,13 @@ echo $OPT $LIBS
 
 rm -f *.gcda
 
-$CXX -fprofile-generate $OPT Source/*.cpp -ISource -o $dir/Dist/Minic2/$exe $LIBS 
+$CXX -fprofile-generate $OPT Source/*.cpp -ISource -ISource/nnue -ISource/nnue/architectures -ISource/nnue/features -ISource/nnue/layers -o $dir/Dist/Minic2/$exe $LIBS 
 echo "end of first compilation"
 if [ $? = "0" ]; then
    echo "running Minic for profiling : $dir/Dist/Minic2/$exe"
    $dir/Dist/Minic2/$exe bench $DEPTH -quiet 0 
    echo "starting optimized compilation"
-   $CXX -fprofile-use $OPT Source/*.cpp -ISource -o $dir/Dist/Minic2/$exe $LIBS
+   $CXX -fprofile-use $OPT Source/*.cpp -ISource -ISource/nnue -ISource/nnue/architectures -ISource/nnue/features -ISource/nnue/layers -o $dir/Dist/Minic2/$exe $LIBS
    echo "done "
 else
    echo "some error"

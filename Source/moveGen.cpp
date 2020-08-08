@@ -1,22 +1,28 @@
 #include "moveGen.hpp"
 
+#include "dynamicConfig.hpp"
 #include "logging.hpp"
 #include "material.hpp"
 #include "positionTools.hpp"
 #include "tools.hpp"
 
+#ifdef WITH_NNUE
+#include "nnue.hpp"
+#include "nnue/nnue_accumulator.h"
+#endif
+
 namespace MoveGen{
 
 void addMove(Square from, Square to, MType type, MoveList & moves) {
-  assert(from >= 0 && from < 64);
-  assert(to >= 0 && to < 64);
+  assert(from >= 0 && from < NbSquare);
+  assert(to >= 0 && to < NbSquare);
   moves.push_back(ToMove(from, to, type, 0));
 }
 
 } // MoveGen
 
 namespace{
-    std::array<CastlingRights,64> castlePermHashTable;
+    std::array<CastlingRights,NbSquare> castlePermHashTable;
     std::mutex castlePermHashTableMutex;
 } 
 
@@ -34,7 +40,7 @@ void initCaslingPermHashTable(const Position & p){
 
 namespace{
     // piece that have influence on pawn hash
-    const bool _helperPawnHash[13] = { true,false,false,false,false,true,false,true,false,false,false,false,true };
+    const bool _helperPawnHash[NbPiece] = { true,false,false,false,false,true,false,true,false,false,false,false,true };
 }
 
 void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, bool isCapture, Piece prom) {
@@ -97,6 +103,14 @@ void applyNull(Searcher & , Position & pN) {
     pN.lastMove = NULLMOVE;
     if ( pN.c == Co_White ) ++pN.moves;
     ++pN.halfmoves;
+
+///@todo NNUE is that correct ???
+#ifdef WITH_NNUE
+    if (DynamicConfig::useNNUE){
+      pN.accumulator->computed_score = false;
+    }
+#endif
+
     STOP_AND_SUM_TIMER(Apply)
 }
 
@@ -113,6 +127,7 @@ bool apply(Position & p, const Move & m, bool noValidation){
     const Piece  toP    = p.board_const(to);
     const int fromId    = fromP + PieceShift;
     const bool isCapNoEP= toP != P_none;
+    Piece promPiece = P_none;
 #ifdef DEBUG_APPLY
     if (!isPseudoLegal(p, m)) {
         Logging::LogIt(Logging::logError) << ToString(m) << " " << Move2Type(m);
@@ -120,12 +135,30 @@ bool apply(Position & p, const Move & m, bool noValidation){
         assert(false);
     }
 #endif
+
+#ifdef WITH_NNUE
+    if (DynamicConfig::useNNUE){
+       p.accumulator->computed_accumulation = false;
+       p.accumulator->computed_score = false;
+    }
+    PieceId dp0 = PIECE_ID_NONE;
+    PieceId dp1 = PIECE_ID_NONE;
+    auto & dp = p.dirtyPiece;
+    dp.dirty_num = 1; // at least one piece is changing ...
+    Square rfrom = INVALIDSQUARE; // for castling
+    Square rto   = INVALIDSQUARE; // for castling
+    Square capSq = INVALIDSQUARE;
+    if ( isCapture(type) ) capSq = to; // ep is fiexed later...
+#endif
+
     switch(type){
     case T_std:
     case T_capture:
     case T_reserved:
         // update material
-        if ( isCapNoEP ) p.mat[~p.c][std::abs(toP)]--;
+        if ( isCapNoEP ) {
+            p.mat[~p.c][std::abs(toP)]--;
+        }
         // update hash, BB, board and castling rights
         movePiece(p, from, to, fromP, toP, type == T_capture);
         break;
@@ -133,6 +166,9 @@ bool apply(Position & p, const Move & m, bool noValidation){
         assert(p.ep != INVALIDSQUARE);
         assert(SQRANK(p.ep) == EPRank[p.c]);
         const Square epCapSq = p.ep + (p.c == Co_White ? -8 : +8);
+#ifdef WITH_NNUE        
+        capSq = epCapSq; // fix capture square in ep case
+#endif
         assert(squareOK(epCapSq));
         BBTools::unSetBit(p, epCapSq, ~fromP); // BEFORE setting p.b new shape !!!
         _unSetBit(p.allPieces[fromP>0?Co_Black:Co_White],epCapSq);
@@ -158,34 +194,54 @@ bool apply(Position & p, const Move & m, bool noValidation){
     case T_promq:
     case T_cappromq:
         MaterialHash::updateMaterialProm(p,to,type);
-        movePiece(p, from, to, fromP, toP, type == T_cappromq,(p.c == Co_White ? P_wq : P_bq));
+        promPiece = (p.c == Co_White ? P_wq : P_bq);
+        movePiece(p, from, to, fromP, toP, type == T_cappromq,promPiece);
         break;
     case T_promr:
     case T_cappromr:
         MaterialHash::updateMaterialProm(p,to,type);
-        movePiece(p, from, to, fromP, toP, type == T_cappromr, (p.c == Co_White ? P_wr : P_br));
+        promPiece = (p.c == Co_White ? P_wr : P_br);
+        movePiece(p, from, to, fromP, toP, type == T_cappromr, promPiece);
         break;
     case T_promb:
     case T_cappromb:
         MaterialHash::updateMaterialProm(p,to,type);
-        movePiece(p, from, to, fromP, toP, type == T_cappromb, (p.c == Co_White ? P_wb : P_bb));
+        promPiece = (p.c == Co_White ? P_wb : P_bb);
+        movePiece(p, from, to, fromP, toP, type == T_cappromb, promPiece);
         break;
     case T_promn:
     case T_cappromn:
         MaterialHash::updateMaterialProm(p,to,type);
-        movePiece(p, from, to, fromP, toP, type == T_cappromn, (p.c == Co_White ? P_wn : P_bn));
+        promPiece = (p.c == Co_White ? P_wn : P_bn);
+        movePiece(p, from, to, fromP, toP, type == T_cappromn, promPiece);
         break;
     case T_wks:
         movePieceCastle<Co_White>(p,CT_OO,Sq_g1,Sq_f1);
+#ifdef WITH_NNUE        
+        rfrom = p.rooksInit[Co_White][CT_OO];
+        rto = Sq_f1;
+#endif
         break;
     case T_wqs:
         movePieceCastle<Co_White>(p,CT_OOO,Sq_c1,Sq_d1);
+#ifdef WITH_NNUE        
+        rfrom = p.rooksInit[Co_White][CT_OOO];
+        rto = Sq_d1;
+#endif
         break;
     case T_bks:
         movePieceCastle<Co_Black>(p,CT_OO,Sq_g8,Sq_f8);
+#ifdef WITH_NNUE        
+        rfrom = p.rooksInit[Co_Black][CT_OO];
+        rto = Sq_f8;
+#endif
         break;
     case T_bqs:
         movePieceCastle<Co_Black>(p,CT_OOO,Sq_c8,Sq_d8);
+#ifdef WITH_NNUE        
+        rfrom = p.rooksInit[Co_Black][CT_OOO];
+        rto = Sq_d8;
+#endif
         break;
     }
 
@@ -193,6 +249,47 @@ bool apply(Position & p, const Move & m, bool noValidation){
         STOP_AND_SUM_TIMER(Apply)
         return false; // this is the only legal move validation needed
     }
+
+#ifdef WITH_NNUE
+      if (DynamicConfig::useNNUE){
+        if ( isCapture(type)){ // remove to piece (works also for ep)
+            dp.dirty_num = 2; // 2 pieces changed
+            dp1 = p.piece_id_on(capSq);
+            dp.pieceId[1] = dp1;
+            dp.old_piece[1] = p.evalList.piece_with_id(dp1);
+            p.evalList.put_piece(dp1, capSq, PieceIdx(P_none));
+            dp.new_piece[1] = p.evalList.piece_with_id(dp1);
+        }
+
+        if ( !isCastling(type)){ // move from piece
+            dp0 = p.piece_id_on(from);
+            dp.pieceId[0] = dp0;
+            dp.old_piece[0] = p.evalList.piece_with_id(dp0);
+            p.evalList.put_piece(dp0, to, PieceIdx(fromP));
+            dp.new_piece[0] = p.evalList.piece_with_id(dp0);
+        }
+
+        if ( isPromotion(type)){ // change to piece type
+            dp0 = p.piece_id_on(to);
+            p.evalList.put_piece(dp0, to, PieceIdx(promPiece));
+            dp.new_piece[0] = p.evalList.piece_with_id(dp0);
+        }      
+
+        if ( isCastling(type)){ 
+            dp.dirty_num = 2; // 2 pieces moved
+            dp0 = p.piece_id_on(from);
+            dp1 = p.piece_id_on(rfrom);
+            dp.pieceId[0] = dp0;
+            dp.old_piece[0] = p.evalList.piece_with_id(dp0);
+            p.evalList.put_piece(dp0, to, PieceIdx(p.c==Co_White?P_wk:P_bk));
+            dp.new_piece[0] = p.evalList.piece_with_id(dp0);
+            dp.pieceId[1] = dp1;
+            dp.old_piece[1] = p.evalList.piece_with_id(dp1);
+            p.evalList.put_piece(dp1, rto, PieceIdx(p.c==Co_White?P_wr:P_br));
+            dp.new_piece[1] = p.evalList.piece_with_id(dp1);
+        }
+      }
+#endif
 
     const bool pawnMove = abs(fromP) == P_wp;
     // update EP

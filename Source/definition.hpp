@@ -45,7 +45,7 @@ const std::string MinicVersion = "dev";
 #define WITH_XBOARD
 #define WITH_MAGIC
 #define WITH_SYZYGY
-//#define WITH_NNUE
+#define WITH_NNUE
 
 // *** Optim (?)
 #define USE_PARTIAL_SORT 
@@ -181,6 +181,8 @@ inline Piece operator++(Piece & pp){pp=Piece(pp+1); return pp;}
 constexpr Piece operator~(Piece pp){return Piece(-pp);} // switch piece color
 const int PieceShift = 6;
 const int NbPiece = 2*PieceShift+1;
+
+constexpr int PieceIdx(Piece p){ return p + PieceShift;} ///@todo use it everywhere !
 
 enum Mat      : unsigned char{ M_t = 0, M_p, M_n, M_b, M_r, M_q, M_k, M_bl, M_bd, M_M, M_m };
 inline Mat operator++(Mat & m){m=Mat(m+1); return m;}

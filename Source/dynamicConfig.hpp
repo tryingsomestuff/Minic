@@ -25,6 +25,8 @@ namespace DynamicConfig{
     extern ScoreType contemptMG   ;
     extern bool limitStrength     ;
     extern int strength           ;
+    extern bool useNNUE           ;
+    extern std::string NNUEFile   ;
 
     extern int styleComplexity    ;
     extern int styleMaterial      ;    

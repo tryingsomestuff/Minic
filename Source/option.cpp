@@ -1,8 +1,13 @@
 #include "option.hpp"
 
+#include "com.hpp"
 #include "logging.hpp"
 #include "searcher.hpp"
 #include "smp.hpp"
+
+#ifdef WITH_NNUE
+#include "nnue.hpp"
+#endif
 
 namespace Options {
 
@@ -100,7 +105,11 @@ namespace Options {
        #ifdef WITH_SYZYGY
        _keys.push_back(KeyBase(k_string,w_string,"SyzygyPath"                  , &DynamicConfig::syzygyPath                                                                              , &SyzygyTb::initTB));
        #endif
-       
+       #ifdef WITH_NNUE
+       //_keys.push_back(KeyBase(k_bool,  w_check, "UseNNUE"                     , &DynamicConfig::useNNUE                        , false            , true                                , &COM::init));
+       _keys.push_back(KeyBase(k_string,w_string,"NNUEFile"                    , &DynamicConfig::NNUEFile                                                                                , &nnue::init_NNUE));
+       #endif
+
        _keys.push_back(KeyBase(k_int, w_spin,  "StyleAttack"                   , &DynamicConfig::styleAttack                    , (int)0   , (int)100));
        _keys.push_back(KeyBase(k_int, w_spin,  "StyleComplexity"               , &DynamicConfig::styleComplexity                , (int)0   , (int)100));
        _keys.push_back(KeyBase(k_int, w_spin,  "StyleDevelopment"              , &DynamicConfig::styleDevelopment               , (int)0   , (int)100));
@@ -197,6 +206,10 @@ namespace Options {
        GETOPT(strength,         int)
 #ifdef WITH_SYZYGY
        GETOPT(syzygyPath,       std::string)
+#endif
+#ifdef WITH_NNUE
+       //GETOPT(useNNUE,          bool)         
+       GETOPT(NNUEFile,         std::string)
 #endif
    }
 } // Options

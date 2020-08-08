@@ -20,6 +20,8 @@ namespace DynamicConfig{
     ScoreType contemptMG   = 12;
     bool limitStrength     = false;
     int strength           = 1500;
+    bool useNNUE           = false;
+    std::string NNUEFile   = "";
 
     int styleComplexity   = 50;
     int styleMaterial     = 50;

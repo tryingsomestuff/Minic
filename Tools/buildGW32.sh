@@ -15,6 +15,7 @@ mkdir -p $dir/Dist/Minic2
 d="-DDEBUG_TOOL"
 v="dev"
 t="-march=native"
+n="-DUSE_AVX2"
 
 if [ -n "$1" ] ; then
    v=$1
@@ -23,6 +24,11 @@ fi
 
 if [ -n "$1" ] ; then
    t=$1
+   shift
+fi
+
+if [ -n "$1" ] ; then
+   n=$1
    shift
 fi
 
@@ -39,7 +45,7 @@ fi
 exe32=${exe32}.exe
 
 echo "Building $exe32"
-OPT="-Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto $t --std=c++14"
+OPT="-Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto $t --std=c++17 $n"
 echo $OPT
 
 if [ $FATHOM_PRESENT = "1" ]; then
