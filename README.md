@@ -114,7 +114,8 @@ Current level elo are more or less so that even a kid can beat low levels Minic.
 
 ## How to compile
 * Linux : use the given build script (or make your own ...)
-* Windows : use the given VS2017 project (or make your own ...), or use the Linux cross-compilation script given.
+* Windows : use the Linux cross-compilation script given or make your own. From time to time I also check that recent VisualStudio versions can compile Minic without warnings.
+* Android : use the given corss-compilation script or make your own.
 
 ## Syzygy EGT
 To compile with SYZYGY support you'll need to clone https://github.com/jdart1/Fathom as Fathom directory and activate WITH_SYZYGY definition at compile time.
