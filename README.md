@@ -20,35 +20,34 @@ Version "2" is release for April 1st 2020 (during covid-19 confinement). For thi
 
 ## NNUE (from Stockfish)
 
-Minic, since release 2.47, has the possibility to be build using a shameless copy of the NNUE framework of Stockfish. Integration of NNUE was done easily and I hope this can be done for any engine, especially if NNUE is release as a standalone library. New UCI parameter NNUEFile is added and shall be the full path to the network file you want to use. To build such Minic you need to activate WITH_NNUE in definition.hpp and use the build script (or make your own, but do not forget to pass -DUSE_AVX2 or whatever your hardware supports to the nnue part ...). First test shows that MinicNNUE is around 200Elo stronger than Minic, around the level of Xiphos or Ethereal currently. This says that a lot more can (and will!) be done inside Minic standard evaluation function !
+Minic, since release 2.47, has the possibility to be build using a shameless copy of the NNUE framework of Stockfish. Integration of NNUE was done easily and I hope this can be done for any engine, especially if NNUE is release as a standalone library. New UCI parameter NNUEFile is added and shall be the full path to the network file you want to use. To build such Minic you need to activate WITH_NNUE in definition.hpp and use the build script (or make your own, but do not forget to pass -DUSE_AVX2 or whatever your hardware supports to the NNUE part ...). First test shows that MinicNNUE is around 200Elo stronger than Minic, around the level of Xiphos or Ethereal currently. This says that a lot more can (and will!) be done inside Minic standard evaluation function !
 
 MinicNNUE, won't be the official Minic, as this NNUE work to not reflect my own work and skills at all !
 
 ## Release process
-WARNING : Dist directory as been REMOVED from the repository because it was starting to be too big. Unofficial releases are not available anymore. This operation has changed Minic git history, so you shall probably re-clone a clean repo. All (unofficial) releases are available in a new repo, here : https://github.com/tryingsomestuff/Minic-Dist
+WARNING : Dist directory as been REMOVED from the repository because it was starting to be too big. Unofficial releases are not available anymore here. All (unofficial) releases are available in a new repo, here : https://github.com/tryingsomestuff/Minic-Dist
 
-Some stable/official ones will also be made available as github release. I "officially release" (create a github version) as soon as I have some validated elo (at least +10).
+Some stable/official ones will still be made available as github release. I "officially release" (create a github version) as soon as I have some validated elo (at least +10).
 
-In a github release, a tester shall only use the given (attached) binaries. The full "source" package always contains everything (source code, test suites, opening suite, books, ...). 
+In a github release, a tester shall only use the given (attached) binaries. The full "source" package always contains everything (source code, test suites, opening suite, books, ...) using git "submodule" so that the main repository remains small. 
 
-Starting from release 2.27 new binaries are available :
+Starting from release 2.27 new binaries are named foloowing this convention :
 
 ```
 * minic_2.27_linux_x64_skylake     : fully optimized Linux64 (avx2+bmi2)   
 * minic_2.27_linux_x64_nehalem     : optimized Linux64 (sse4.2)  
-* minic_2.27_linux_x64_x86-64      : basic Linux64  
-* minic_2.27_mingw_x64_skylake.exe : fully optimized Windows64 (avx2+bmi2)  
-* minic_2.27_mingw_x64_nehalem.exe : optimized Windows64 (sse4.2)  
-* minic_2.27_mingw_x64_x86-64.exe  : basic Windows64   
+* minic_2.27_linux_x64_x86-64      : basic Linux64 (but at least sse3 if NNUE is activated)  
+* minic_2.27_mingw_x64_skylake.exe : fully optimized Windows64 (avx2+bmi2)   
+* minic_2.27_mingw_x64_nehalem.exe : optimized Windows64 (sse4.2)   
+* minic_2.27_mingw_x64_x86-64.exe  : basic Windows64 (but at least sse3 if NNUE is activated)  
 * minic_2.27_mingw_x32_skylake.exe : fully optimized Windows32 (avx2+bmi2)  
 * minic_2.27_mingw_x32_nehalem.exe : optimized Windows32 (sse4.2)  
 * minic_2.27_mingw_x32_i686.exe    : basic Windows32 
-* minic_2.27_android               : android armv7
+* minic_2.27_android               : android armv7  
 ```   
 Please note that Win32 binaries are very slow (I don't know why yet, so please use Win64 one if possible).
-   
-Starting from release 1.00 Minic support setting options using protocol (both XBoard and UCI). Option priority are as follow : command line option can be override by protocol option.
-   
+Please note that Minic has always been a little weaker under Windows OS.
+     
 ## Strength
 
 ### CCRL
@@ -160,7 +159,7 @@ Minic comes with some command line options :
 
 ### GUI/protocol (Xboard or UCI)
 
-Starting from release 1.00, important options are also available through protocol. This way, Minic supports strength limitation, FRC, pondering, can use contempt, ...
+Starting from release 1.00 Minic support setting options using protocol (both XBoard and UCI). Option priority are as follow : command line option can be override by protocol option. This way, Minic supports strength limitation, FRC, pondering, can use contempt, ...  
 If compiled with the WITH_SEARCH_TUNING definition, Minic can expose all search algorithm parameters so that they can be tweaked. Also, when compiled with WITH_PIECE_TUNING, Minic can expose all middle- and end-game pieces values.
 
 ## Style
