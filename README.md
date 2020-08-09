@@ -150,7 +150,7 @@ Minic comes with some command line options :
 * -limitStrength \[0 or 1\] (default is 0): take or not strength limitation into account
 * -strength \[Elo_like_number\] (default is 1500): specify a Elo-like strength (not really well scaled for now ...)
 * -syzygyPath \[path_to_egt_directory\] (default is none): specify the path to syzygy end-game table directory
-* -NNUEFile \[path_to_neural_network_file\] (default is none): specify the neural network (NNUE) to be used and active NNUE evaluation
+* -NNUEFile \[path_to_neural_network_file\] (default is none): specify the neural network (NNUE) to be used and activate NNUE evaluation
 
 ### GUI/protocol (Xboard or UCI)
 
