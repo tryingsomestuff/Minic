@@ -118,12 +118,12 @@ Current level elo are more or less so that even a kid can beat low levels Minic.
 
 ## Syzygy EGT
 To compile with SYZYGY support you'll need to clone https://github.com/jdart1/Fathom as Fathom directory and activate WITH_SYZYGY definition at compile time.
-To use EGT just specify syzygyPath in the configuration file or in the command line.
+To use EGT just specify syzygyPath in the command line or GUI option.
 
 ## How to run
 add the command line option "-xboard" to go to xboard/winboard mode or -uci for UCI.
 
-Other available options are :
+Other available options (depending on compilation option, see definition.hpp) are :
 * -perft_test : run the inner perft test
 * -eval <"fen"> : static evaluation of the given position
 * -gen <"fen"> : move generation on the given position
@@ -132,30 +132,48 @@ Other available options are :
 * -qsearch <"fen"> : just a qsearch ...
 * -mateFinder <"fen"> depth : same as analysis but without prunings in search
 * -pgn <file> : extraction tool to build tuning data
-* -texel <file> : run a texel tuning session
+* -texel <file> : run a Texel tuning session
 * ...
 
 ## Options
 
-Minic now comes with both a json configuration file where some parameters can be set
-```
-{
-   "threads": 1,
-   "mateFinder": false,
-   "ttSizeMb": 1024,
-   "book": true,
-   "bookFile": "book.bin",
-   "fullXboardOutput": true,
-   "debugMode": false,
-   "debugFile": "minic.debug",
-   "level": 100,
-   "syzygyPath": "/data/minic/TB/syzygy"
-}
+### Command line
 
-```
-and a command line interface, using the same key word. For instance, forcing mateFinder mode can be done by adding "-mateFinder 1" when calling Minic.
+Minic comes with some command line options :
+* -quiet \[0 or 1\] (default is 1 which means "true"): make Minic more verbose for debug purpose. This option is often needed when using unsual things as Texel tuning or command line analysis for instance.
+* -debugMode \[0 or 1\] (default is 0 which means "false"): will write every output also in a file (named minic.debug by default)
+* -debugFile \[name_of_file\] (default is minic.debug): name of the debug output file
+* -book \[0 or 1\] (default is 0): activate own book
+* -bookFile \[name_of_file\]: name of the book file (only in Minic own binary format (see https://github.com/tryingsomestuff/Minic-Book_and_Test/tree/master/Book)
+* -ttSizeMb \[number_in_Mb\]: force the size of the hash table. This is usefull for command line analysis mode for instance
+* -FRC \[0 or 1\] (default is 0): activate Fisher random chess mode. This is usefull for command line analysis mode for instance
+* -threads \[number_of_threads\] (default is 1): force the number of threads used. This is usefull for command line analysis mode for instance
+* -mateFinder \[0 or 1\] (default is 0): activate mate finder mode, which essentially means no forward pruning
+* -fullXboardOutput \[0 or 1\] (default is 0): activate additionnal output for Xboard protocol such as nps or tthit
+* -multiPV \[from 1 to 4 \] (default is 1): search more lines at the same time
+* -level \[from 0 to 100\] (default is 100): change Minic skill level
+* -limitStrength \[0 or 1\] (default is 0): take or not strength limitation into account
+* -strength \[Elo_like_number\] (default is 1500): specify a Elo-like strength (not really well scaled for now ...)
+* -syzygyPath \[path_to_egt_directory\] (default is none): specify the path to syzygy end-game table directory
+* -NNUEFile \[path_to_neural_network_file\] (default is none): specify the neural network (NNUE) to be used and active NNUE evaluation
 
-Starting from release 1.00, important options are also available through protocol.
+### GUI/protocol (Xboard or UCI)
+
+Starting from release 1.00, important options are also available through protocol. This way, Minic supports strength limitation, FRC, pondering, can use contempt, ...
+If compiled with the WITH_SEARCH_TUNING definition, Minic can expose all search algorithm parameters so that they can be tweaked. Also, when compiled with WITH_PIECE_TUNING, Minic can expose all middle- and end-game pieces values.
+
+## Style
+
+Moreover, Minic implements some "style" parameter that allow the user to boost or minimize effects of :
+- material
+- attack
+- development
+- mobility
+- positional play
+- forwardness
+- complexity (not yet implemented)
+
+Default values are 50 and a range from 0 to 100 can be used. A value of 100 will double the effect, while a value of 0 will disable the feature (it is probably not a good idea to put material awareness to 0 ...).
 
 ## Opening books
 
