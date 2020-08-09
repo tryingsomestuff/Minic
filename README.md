@@ -76,29 +76,20 @@ STS : 1191/1500 @10sec per position (single thread on an i7-9700K)
 WAC : 291/300 @10sec per position (single thread on an i7-9700K)  
 
 ### Home test
-Here are some fast TC results (CCRL Blitz TC)
+Here are some fast TC results (STC 10s+0.1)
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
-   0 minic_1.49                      9       6    7842   51.3%   46.2%
-   1 RubiChess                     185      28     412   74.4%   35.2%
-   2 demolito                      104      27     413   64.5%   36.1%
-   3 igel-last                      76      25     413   60.8%   45.0%
-   4 PeSTO_bmi2                     19      26     413   52.7%   38.5%
-   5 Winter0.7                       5      26     412   50.7%   40.3%
-   6 minic_1.48                     -1      19     412   49.9%   68.7%
-   7 Hakkapeliitta                  -5      27     413   49.3%   33.2%
-   8 amoeba                         -6      24     413   49.2%   47.0%
-   9 minic_1.45                    -13      20     413   48.2%   64.4%
-  10 Topple_master                 -17      26     412   47.6%   39.8%
-  11 rodentIV                      -23      26     413   46.7%   39.7%
-  12 minic_1.46                    -24      21     413   46.6%   61.3%
-  13 cheng4_linux_x64              -30      25     413   45.6%   43.3%
-  14 minic_1.39                    -45      20     413   43.6%   65.4%
-  15 minic_1.35                    -66      22     413   40.7%   55.7%
-  16 combusken-linux-64            -70      27     413   40.1%   38.0%
-  17 zurichess-neuchatel           -74      26     412   39.6%   39.8%
-  18 minic_1.19                    -76      23     413   39.2%   51.3%
-  19 FabChessv1.13                -102      28     413   35.7%   34.6%
+   1 demolito                      105      16    1300   64.7%   31.5%
+   2 igel-dev                       62      15    1300   58.8%   34.0%
+   3 texel                          30      15    1300   54.3%   33.3%
+   4 Vajolet2_2.8                   -3      15    1301   49.6%   33.1%
+   5 minic_2.48                    -17      15    1300   47.5%   36.4%
+   6 minic_2.47                    -26      15    1300   46.3%   33.7%
+   7 minic_2.45                    -30      15    1301   45.7%   35.2%
+   8 Winter                        -57      16    1299   41.8%   28.6%
+   9 combusken                     -61      16    1299   41.3%   30.6%
+
+5850 of 360000 games finished.
 ```
 
 Minic strength can be ajdusted using the level option (from command line, json configuration file, or using protocol option support, using value from 0 to 100). Level 0 is a random mover, 1 to 30 very weak, ..., level 100 is full strength. Level functionnaly will be enhanced in a near future.
