@@ -211,7 +211,7 @@ Many thanks also to all testers for all those long time control tests, they real
 
 Also thanks to TCEC for letting Minic participate to the Season 15, 16, 17 and 18, it is fun to see Minic on such a great hardware.
 
-And of course thanks to all the members of the talkchess forum and CPW, and to H.G. Muller for hosting the friendly monthly tourney.
+And of course thanks to all the members of the talkchess forum and CPW, and to H.G. Muller and Joost Buijs for hosting the well-known friendly monthly tourney.
 
 ## Info
 - Am I a chess player ?
