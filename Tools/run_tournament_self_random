@@ -2,8 +2,7 @@
 
 dir=$(readlink -f $(dirname $0)/..)
 
-CUTECHESS=$dir/../cutechess/projects/cli/cutechess-cli
-ARCH=_avx2_bmi2
+CUTECHESS=cutechess-cli
 engines=""
 
 engines="$engines -engine conf=minic_devl0"

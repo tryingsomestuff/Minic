@@ -8,7 +8,7 @@ print(files)
 features = [ 'imbalance', 'PST0', 'PST1', 'PST2', 'PST3', 'PST4', 'PST5', 
              'shield', 'Fawn', 'passer', 'rookBehindPassed', 'kingNearPassed', 'pawnStructure1', 'pawnStructure2', 'pawnStructure3', 'pawnStructure4',
              'holes', 'pieceBlocking', 'center', 'knightTooFar', 'candidate', 'protectedPasser', 'freePasser', 'pawnMob', 'pawnAtt', 'pawnlessFlank', 'storm',
-             'rookOpen', 'rookQueenFile', 'rookFrontQueen', 'rookFrontKing', 'minorOnOpen', 'pinned', 'hanging', 'minorThreat', 'rookThreat', 'queenThreat', 'kingThreat',
+             'rookOpen', 'rookQueenFile', 'rookFrontQueen', 'rookFrontKing', 'rookConnected', 'minorOnOpen', 'pinned', 'hanging', 'minorThreat', 'rookThreat', 'queenThreat', 'kingThreat',
              'adjustN', 'adjustR', 'adjustB', 'badBishop', 'pairAdjust', 'queenNearKing', 
              'mobility', 'initiative', 
              'attDefKing', 'attFunction', 'attOpenFile', 'attNoqueen', 'secondOrder' ]
