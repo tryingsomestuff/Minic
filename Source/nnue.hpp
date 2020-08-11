@@ -11,6 +11,9 @@ struct Position; // forward decl
 #define WHITE Co_White
 #define BLACK Co_Black
 
+// NNUE eval scaling factor
+extern int NNUEscaling;
+
 // An ID used to track the pieces. Max. 32 pieces on board.
 enum PieceId {
   PIECE_ID_ZERO   = 0,
@@ -105,6 +108,7 @@ extern std::string eval_file_loaded;
 
 void init_NNUE();
 void verify_NNUE();
+void compute_scaling(int count = 50000);
 
 ScoreType evaluate(const Position& pos);
 bool  load_eval_file(const std::string& evalFile);

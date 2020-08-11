@@ -110,6 +110,8 @@ namespace Options {
        _keys.push_back(KeyBase(k_string,w_string,"NNUEFile"                    , &DynamicConfig::NNUEFile                                                                                , &nnue::init_NNUE));
        #endif
 
+       _keys.push_back(KeyBase(k_bool,  w_check, "GenFen"                      , &DynamicConfig::genFen                         , false            , true ));
+
        _keys.push_back(KeyBase(k_int, w_spin,  "StyleAttack"                   , &DynamicConfig::styleAttack                    , (int)0   , (int)100));
        _keys.push_back(KeyBase(k_int, w_spin,  "StyleComplexity"               , &DynamicConfig::styleComplexity                , (int)0   , (int)100));
        _keys.push_back(KeyBase(k_int, w_spin,  "StyleDevelopment"              , &DynamicConfig::styleDevelopment               , (int)0   , (int)100));
@@ -134,6 +136,8 @@ namespace Options {
        _keys.push_back(KeyBase(k_depth, w_spin, "razoringMaxDepth0"                 , &SearchConfig::razoringMaxDepth[0]                 , DepthType(0)    , DepthType(30)       ));
        _keys.push_back(KeyBase(k_depth, w_spin, "razoringMaxDepth1"                 , &SearchConfig::razoringMaxDepth[1]                 , DepthType(0)    , DepthType(30)       ));
        _keys.push_back(KeyBase(k_depth, w_spin, "nullMoveMinDepth"                  , &SearchConfig::nullMoveMinDepth                    , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_score, w_spin, "nullMoveDynamicDivisor"            , &SearchConfig::nullMoveDynamicDivisor              , ScoreType(0)    , ScoreType(1500)     ));
+       
        _keys.push_back(KeyBase(k_depth, w_spin, "historyPruningMaxDepth"            , &SearchConfig::historyPruningMaxDepth              , DepthType(0)    , DepthType(30)       ));
        _keys.push_back(KeyBase(k_score, w_spin, "historyPruningThresholdInit"       , &SearchConfig::historyPruningThresholdInit         , ScoreType(-500) , ScoreType(500)      ));
        _keys.push_back(KeyBase(k_score, w_spin, "historyPruningThresholdDepth"      , &SearchConfig::historyPruningThresholdDepth        , ScoreType(-500) , ScoreType(500)      ));
@@ -154,6 +158,11 @@ namespace Options {
        _keys.push_back(KeyBase(k_depth, w_spin, "probCutMinDepth"                   , &SearchConfig::probCutMinDepth                     , DepthType(0)    , DepthType(30)       ));
        _keys.push_back(KeyBase(k_int  , w_spin, "probCutMaxMoves"                   , &SearchConfig::probCutMaxMoves                     , 0               , 30                  ));
        _keys.push_back(KeyBase(k_score, w_spin, "probCutMargin"                     , &SearchConfig::probCutMargin                       , ScoreType(0)    , ScoreType(1500)     ));
+
+       _keys.push_back(KeyBase(k_score, w_spin, "seeCaptureFactor"                  , &SearchConfig::seeCaptureFactor                    , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "seeQuietFactor"                    , &SearchConfig::seeQuietFactor                      , ScoreType(0)    , ScoreType(1500)     ));
+       _keys.push_back(KeyBase(k_score, w_spin, "betaMarginDynamicHistory"          , &SearchConfig::betaMarginDynamicHistory            , ScoreType(0)    , ScoreType(1500)     ));
+
        _keys.push_back(KeyBase(k_depth, w_spin, "lmrMinDepth"                       , &SearchConfig::lmrMinDepth                         , DepthType(0)    , DepthType(30)       ));
        _keys.push_back(KeyBase(k_depth, w_spin, "singularExtensionDepth"            , &SearchConfig::singularExtensionDepth              , DepthType(0)    , DepthType(30)       ));
         
@@ -211,5 +220,6 @@ namespace Options {
        //GETOPT(useNNUE,          bool)         
        GETOPT(NNUEFile,         std::string)
 #endif
+       GETOPT(genFen,            bool)
    }
 } // Options

@@ -306,6 +306,7 @@ void TexelTuning(const std::string & filename) {
     }
     Logging::LogIt(Logging::logInfo) << "Data size : " << data.size();
 
+/*
     // write learning file
     {
         Logging::LogIt(Logging::logInfo) << "Writing learning data to learn.data file";        
@@ -329,6 +330,7 @@ void TexelTuning(const std::string & filename) {
             ++k;
         }
     }
+*/
 
     size_t batchSize = data.size()/50; // batch
     //size_t batchSize = 20000; // batch
@@ -677,7 +679,7 @@ void TexelTuning(const std::string & filename) {
         "Fawn",
         "storm",
         "pawnlessFlank",
-
+*/
         "rookBehindPassed",
         "rookFrontKing",
         "rookFrontQueen",
@@ -695,7 +697,7 @@ void TexelTuning(const std::string & filename) {
         "pieceBlocking",
         "minorOnOpen",
         "knightTooFar",
-
+/*
         "hanging",
         "pinned",
 
@@ -706,18 +708,16 @@ void TexelTuning(const std::string & filename) {
 
         "imbalance",
         "initiative",
+*/
 
         "kingThreat",
         "minorThreat",
         "queenThreat",
         "rookThreat",
-*/
+
         //"tempo"
 
-        "attDefKing",
-        "attFunction",
-        "attOpenFile",
-        "attNoqueen",
+        
 
     };
     

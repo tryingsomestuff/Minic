@@ -137,7 +137,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
       return data.gp=0,(white2Play?+1:-1)* MATE;
     }
 
-    ///@todo activate features based on skill level
+    ///@todo activate (or modulate!) features based on skill level
     
     // main features
     EvalFeatures features;
@@ -153,7 +153,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
        // end game knowledge (helper or scaling)
        if ( safeMatEvaluator && (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t]<6) ){
           const Color winningSideEG = features.scores[F_material][EG]>0?Co_White:Co_Black;
-          if      ( MEntry.t == MaterialHash::Ter_WhiteWinWithHelper || MEntry.t == MaterialHash::Ter_BlackWinWithHelper ){
+          if ( MEntry.t == MaterialHash::Ter_WhiteWinWithHelper || MEntry.t == MaterialHash::Ter_BlackWinWithHelper ){
             STOP_AND_SUM_TIMER(Eval)
             ++context.stats.counters[Stats::sid_materialTableHelper];
             return (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSideEG,features.scores[F_material][EG]));
@@ -194,9 +194,15 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
     if (DynamicConfig::useNNUE){
         EvalScore score = 0;     
         if ( ! isLazyHigh(400,features,score)){ // stay to classic eval when the game is already decided
+           ScoreType nnueScore = nnue::evaluate(p);
+           // take tempo and contempt into account
+           nnueScore += ScaleScore( EvalConfig::tempo*(white2Play?+1:-1) + context.contempt, data.gp);
+           const ScoreType ret = (Score(nnueScore,features.scalingFactor,p) * NNUEscaling) / 64;
+           ++context.stats.counters[Stats::sid_evalNNUE];
            STOP_AND_SUM_TIMER(Eval)
-           return nnue::evaluate(p);
+           return ret;
         }
+        ++context.stats.counters[Stats::sid_evalStd];
     }
 #endif
 
@@ -357,8 +363,8 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
        // malus for king on a pawnless flank
        const File wkf = (File)SQFILE(p.king[Co_White]);
        const File bkf = (File)SQFILE(p.king[Co_Black]);
-       if (!(pawns[Co_White] & kingFlank[wkf])) pe.score += EvalConfig::pawnlessFlank;
-       if (!(pawns[Co_Black] & kingFlank[bkf])) pe.score -= EvalConfig::pawnlessFlank;
+       pe.score += EvalConfig::pawnlessFlank * ((pawns[Co_White] & kingFlank[wkf]) == empty);
+       pe.score -= EvalConfig::pawnlessFlank * ((pawns[Co_Black] & kingFlank[bkf]) == empty);
        // pawn storm
        pe.score -= EvalConfig::pawnStormMalus * countBit(kingFlank[wkf] & (rank3|rank4) & pawns[Co_Black]);
        pe.score += EvalConfig::pawnStormMalus * countBit(kingFlank[bkf] & (rank5|rank6) & pawns[Co_White]);
@@ -620,40 +626,47 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
     // Sum everything
     EvalScore score = features.SumUp();
 
+#ifdef VERBOSE_EVAL
     if ( display ){
         Logging::LogIt(Logging::logInfo) << "Post correction ... ";
         displayEval(data,features);
         Logging::LogIt(Logging::logInfo) << "> All (before 2nd order) " << score;
     }
-
-    if ( display ){
-        Logging::LogIt(Logging::logInfo) << "Post second order correction ... ";
-        Logging::LogIt(Logging::logInfo) << "> All " << score;
-    }
+#endif
 
     // initiative (kind of second order pawn structure stuff for end-games)
     EvalScore initiativeBonus = EvalConfig::initiative[0] * countBit(allPawns) + EvalConfig::initiative[1] * ((allPawns & queenSide) && (allPawns & kingSide)) + EvalConfig::initiative[2] * (countBit(occupancy & ~allPawns) == 2) - EvalConfig::initiative[3];
     initiativeBonus = EvalScore(sgn(score[MG]) * std::max(initiativeBonus[MG], ScoreType(-std::abs(score[MG]))), sgn(score[EG]) * std::max(initiativeBonus[EG], ScoreType(-std::abs(score[EG]))));
     score += initiativeBonus;
+
+#ifdef VERBOSE_EVAL
     if ( display ){
         Logging::LogIt(Logging::logInfo) << "Initiative    " << initiativeBonus;
         Logging::LogIt(Logging::logInfo) << "> All (with initiative) " << score;
     }
+#endif
 
     // tempo
     score += EvalConfig::tempo*(white2Play?+1:-1);
+
+#ifdef VERBOSE_EVAL
     if ( display ){
         Logging::LogIt(Logging::logInfo) << "> All (with tempo) " << score;
     }
+#endif
 
     // contempt
     score += context.contempt;
+
+#ifdef VERBOSE_EVAL
     if ( display ){
         Logging::LogIt(Logging::logInfo) << "> All (with contempt) " << score;
     }
+#endif
 
     // scale score (MG/EG)
-    ScoreType ret = (white2Play?+1:-1)*Score(score,features.scalingFactor,p,data.gp); // scale both phase and 50 moves rule
+    ScoreType ret = (white2Play?+1:-1)*Score(ScaleScore(score,data.gp),features.scalingFactor,p); // scale both phase and 50 moves rule
+
     if ( display ){
         Logging::LogIt(Logging::logInfo) << "==> All (fully scaled) " << score;
     }

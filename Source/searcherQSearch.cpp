@@ -71,6 +71,11 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
             return adjustHashScore(e.s, ply); 
         }
     }
+
+#ifdef WITH_GENFILE
+    if ( DynamicConfig::genFen ) writeToGenFile(p);
+#endif
+
     if ( qRoot && interiorNodeRecognizer<true,false,true>(p) == MaterialHash::Ter_Draw) return drawScore(); ///@todo is that gain elo ???
 
     if ( validTTmove && (isInCheck || isCapture(e.m)) ) bestMove = e.m;

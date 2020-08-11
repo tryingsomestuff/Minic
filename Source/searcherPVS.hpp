@@ -84,6 +84,10 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         }
     }
 
+#ifdef WITH_GENFILE
+    if ( DynamicConfig::genFen ) writeToGenFile(p);
+#endif
+
     // if entry hash is not null and entry move is valid, this is a valid TT move (we don't care about depth here !)
     bool ttHit = e.h != nullHash;
     bool validTTmove = ttHit && e.m != INVALIDMINIMOVE;
@@ -165,17 +169,16 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         }
 
         // null move (warning, mobility info is only available if no TT hit)
-        if (SearchConfig::doNullMove && (isNotEndGame || data.mobility[p.c] > 4) && withoutSkipMove && 
+        if (SearchConfig::doNullMove && !subSearch && (isNotEndGame || data.mobility[p.c] > 4) && withoutSkipMove && 
             depth >= SearchConfig::nullMoveMinDepth && 
             evalScore >= beta && 
             evalScore >= stack[p.halfmoves].eval && 
             stack[p.halfmoves].p.lastMove != NULLMOVE && 
-            //stack[p.halfmoves-1].p.lastMove != NULLMOVE &&
-            /*stack[p.halfmoves].eval >= beta - 32*depth - 30*improving && */ ///@todo try to minimize sid_nullMoveTry2 versus sid_nullMove
             ply >= (unsigned int)nullMoveMinPly ) {
             PVList nullPV;
             ++stats.counters[Stats::sid_nullMoveTry];
-            const DepthType R = depth / 4 + 3 + std::min((evalScore - beta) / 180, 5); // adaptative
+            const DepthType R = depth / 4 + 3 + std::min((evalScore - beta) / SearchConfig::nullMoveDynamicDivisor, 5); // adaptative
+            ///@todo try to minimize sid_nullMoveTry2 versus sid_nullMove
             const ScoreType nullIIDScore = evalScore; // pvs<false, false>(beta - 1, beta, p, std::max(depth/4,1), ply, nullPV, seldepth, isInCheck, !cutNode);
             if (nullIIDScore >= beta ) { 
                 TT::Entry nullE;
@@ -343,7 +346,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                //if (EXTENDMORE(extension) && pvnode && (p.pieces_const<P_wq>(p.c) && isQuiet && PieceTools::getPieceType(p, Move2From(e.m)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, e.m, 0)) ++stats.counters[Stats::sid_queenThreatExtension], ++extension;
                // singular move extension
                if (EXTENDMORE(extension) && withoutSkipMove && depth >= SearchConfig::singularExtensionDepth && !rootnode && !isMateScore(e.s) && bound == TT::B_beta && e.d >= depth - 3){
-                   const ScoreType betaC = e.s - 2*depth;
+                   const ScoreType betaC = e.s - 2*depth; ///@todo NNUEscaling?
                    PVList sePV;
                    DepthType seSeldetph = 0;
                    std::vector<MiniMove> skip({e.m});
@@ -352,7 +355,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                    if (score < betaC) { // TT move is singular
                        ++stats.counters[Stats::sid_singularExtension],/*ttMoveSingularExt=!ttMoveIsCapture,*/++extension;
                        // TT move is "very singular" : kind of single reply extension
-                       if ( score < betaC - 4*depth) ++stats.counters[Stats::sid_singularExtension2],++extension;
+                       if ( score < betaC - 4*depth) ++stats.counters[Stats::sid_singularExtension2],++extension; ///@todo NNUEscaling
                    }
                    // multi cut (at least the TT move and another move are above beta)
                    else if ( betaC >= beta){
@@ -379,7 +382,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                     if (ttScore >= beta) {
                         ++stats.counters[Stats::sid_ttbeta];
                         // increase history bonus of this move
-                        if ( !isInCheck && isQuiet /*&& depth > 1*/) updateTables(*this, p, depth + (ttScore > (beta+80)), ply, e.m, TT::B_beta, cmhPtr);
+                        if ( !isInCheck && isQuiet /*&& depth > 1*/) updateTables(*this, p, depth + (ttScore > (beta + SearchConfig::betaMarginDynamicHistory)), ply, e.m, TT::B_beta, cmhPtr);
                         TT::setEntry(*this,pHash,e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::Bound(TT::B_beta|(ttPV?TT::B_ttFlag:TT::B_none)|(bestMoveIsCheck?TT::B_isCheckFlag:TT::B_none)|(isInCheck?TT::B_isInCheckFlag:TT::B_none)),depth);
                         return ttScore;
                     }
@@ -524,7 +527,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             // SEE (capture)
             if (isPrunableCap){
                if (futility) {++stats.counters[Stats::sid_see]; continue;}
-               else if ( !rootnode && badCapScore(*it) < -(1+(6*dangerFactor)/SearchConfig::dangerLimitPruning)*100*(depth+isEmergencyDefence+isEmergencyAttack)) {++stats.counters[Stats::sid_see2]; continue;}
+               else if ( !rootnode && badCapScore(*it) < -(1+(6*dangerFactor)/SearchConfig::dangerLimitPruning)*SearchConfig::seeCaptureFactor*(depth+isEmergencyDefence+isEmergencyAttack)) {++stats.counters[Stats::sid_see2]; continue;}
             }
             // LMR
             DepthType reduction = 0;
@@ -547,7 +550,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             }
             const DepthType nextDepth = depth-1-reduction+extension;
             // SEE (quiet)
-            if ( isPrunableStdNoCheck && /*!rootnode &&*/ !SEE_GE(p,*it,-15*(nextDepth+isEmergencyDefence+isEmergencyAttack)*nextDepth)) {
+            if ( isPrunableStdNoCheck && /*!rootnode &&*/ !SEE_GE(p,*it,-SearchConfig::seeQuietFactor*(nextDepth+isEmergencyDefence+isEmergencyAttack)*nextDepth)) {
                 ++stats.counters[Stats::sid_seeQuiet]; 
                 continue;
             }
@@ -580,10 +583,10 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                 if ( score >= beta ){
                     if ( !isInCheck && isQuiet /*&& depth > 1*/ /*&& !( depth == 1 && validQuietMoveCount == 1 )*/){ // last cond from Alayan in Ethereal)
                         // increase history bonus of this move
-                        updateTables(*this, p, depth + (score>beta+80), ply, *it, TT::B_beta, cmhPtr);
+                        updateTables(*this, p, depth + (score>beta + SearchConfig::betaMarginDynamicHistory), ply, *it, TT::B_beta, cmhPtr);
                         // reduce history bonus of all previous
                         for(auto it2 = moves.begin() ; it2 != moves.end() && !sameMove(*it2,*it); ++it2) {
-                            if ( Move2Type(*it2) == T_std ) historyT.update<-1>(depth + (score > (beta + 80)), *it2, p, cmhPtr);
+                            if ( Move2Type(*it2) == T_std ) historyT.update<-1>(depth + (score > (beta + SearchConfig::betaMarginDynamicHistory)), *it2, p, cmhPtr);
                         }
                     }
                     hashBound = TT::B_beta;

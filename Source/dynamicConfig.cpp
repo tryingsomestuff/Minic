@@ -22,13 +22,14 @@ namespace DynamicConfig{
     int strength           = 1500;
     bool useNNUE           = false;
     std::string NNUEFile   = "";
+    bool genFen            = false;
 
-    int styleComplexity   = 50;
-    int styleMaterial     = 50;
-    int stylePositional   = 50;
-    int styleDevelopment  = 50;
-    int styleMobility     = 50;
-    int styleAttack       = 50;
-    int stylePawnStruct   = 50;
-    int styleForwardness  = 50;
+    int styleComplexity    = 50;
+    int styleMaterial      = 50;
+    int stylePositional    = 50;
+    int styleDevelopment   = 50;
+    int styleMobility      = 50;
+    int styleAttack        = 50;
+    int stylePawnStruct    = 50;
+    int styleForwardness   = 50;
 }

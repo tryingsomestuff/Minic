@@ -114,7 +114,8 @@ inline std::ostream & operator<<(std::ostream & of, const EvalFeatures & feature
 }
 
 inline ScoreType ScaleScore(EvalScore s, float gp){ return ScoreType(gp*s[MG] + (1.f-gp)*s[EG]);}
-ScoreType Score(EvalScore score, float scalingFactor, const Position &p, float gp);
+
+ScoreType Score(ScoreType score, float scalingFactor, const Position &p);
 
 /* Evaluation is returning the score of course, but also fill this little structure to provide
  * additionnal usefull information, such as game phase and current danger. Things that are
