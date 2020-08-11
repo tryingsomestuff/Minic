@@ -38,7 +38,7 @@ typedef uint64_t u_int64_t;
 #include <unistd.h>
 #endif
 
-const std::string MinicVersion = "2.48";
+const std::string MinicVersion = "dev";
 
 // *** options
 #define WITH_UCI
@@ -65,6 +65,8 @@ const std::string MinicVersion = "2.48";
 //#define WITH_SEARCH_TUNING
 //#define WITH_TEXEL_TUNING
 //#define WITH_PIECE_TUNING
+//#define VERBOSE_EVAL
+#define WITH_GENFILE
 
 // *** Debug
 //#define DEBUG_HASH
@@ -346,7 +348,7 @@ inline void updatePV(PVList & pv, const Move & m, const PVList & childPV) {
 
 template < typename T, int seed>
 inline T randomInt(T m, T M) {
-    static std::mt19937 mt(seed); // fixed seed for ZHash !!!
+    static std::mt19937 mt(seed); // fixed seed for ZHash for instance !!!
     static std::uniform_int_distribution<T> dist(m,M);
     return dist(mt);
 }

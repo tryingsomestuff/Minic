@@ -33,12 +33,12 @@ void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestSco
             str << " hashfull " << TT::hashFull();
         }
     }
-    Logging::LogIt(Logging::logGUI) << str.str();
+    if (!subSearch) Logging::LogIt(Logging::logGUI) << str.str();
 }
 
 PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
 
-    initCaslingPermHashTable(p); // let's be sure ...
+    if ( isMainThread() ) initCaslingPermHashTable(p); // let's be sure ... ///@todo clean up this crap !!!!
 
 #ifdef WITH_NNUE
     nnue::verify_NNUE();
@@ -51,13 +51,19 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
     moveDifficulty = MoveDifficultyUtil::MD_std;
     startTime = Clock::now();
 
-    if ( isMainThread() ){
+#ifdef WITH_GENFILE
+    if ( id() < 9000 && ! genStream.is_open() && DynamicConfig::genFen ){
+       genStream.open("genfen_" + std::to_string(id()) + ".epd",std::ofstream::app);
+    }
+#endif
+
+    if ( isMainThread() || id() >= 9000 ){
         Logging::LogIt(Logging::logInfo) << "Search params :" ;
         Logging::LogIt(Logging::logInfo) << "requested time  " << getCurrentMoveMs() ;
         Logging::LogIt(Logging::logInfo) << "requested depth " << (int) d ;
         TT::age();
         MoveDifficultyUtil::variability = 1.f;
-        ThreadPool::instance().clearSearch(); // reset for all other threads !!!
+        if ( isMainThread() ) ThreadPool::instance().clearSearch(); // reset for all other threads !!!
     }
     else{
         Logging::LogIt(Logging::logInfo) << "helper thread waiting ... " << id() ;
@@ -76,7 +82,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
        const MiniMove bookMove = SanitizeCastling(p,Book::Get(computeHash(p)));
        if ( VALIDMOVE(bookMove) ){
            Logging::LogIt(Logging::logInfo) << "Unlocking other threads (book move)";
-           if ( isMainThread() ) startLock.store(false);
+           startLock.store(false);
            pvOut.push_back(bookMove);
            m = pvOut[0];
            d = 0;
@@ -140,11 +146,13 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
                 if (((depth + skipPhase[i]) / skipSize[i]) % 2) continue;
             }
             else{ 
-                // delayed other thread start
-                Logging::LogIt(Logging::logInfo) << "Unlocking other threads";
                 if ( depth > 1){
                     TimeMan::maxNodes = maxNodes; // restore real value
-                    startLock.store(false);
+                    // delayed other thread start
+                    if ( startLock.load() ){
+                       Logging::LogIt(Logging::logInfo) << "Unlocking other threads";
+                       startLock.store(false);
+                    }
                 }
             } 
             Logging::LogIt(Logging::logInfo) << "Thread " << id() << " searching depth " << (int)depth;
@@ -225,7 +233,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
                 reachedDepth = depth;
                 bestScore    = score;
 
-                // if no good pv available, let's build one for display purpose ...
+                // if no good pv available (too short), let's build one for display purpose ...
                 if ( fhBreak && pvLoc.size() ){ 
                     Position p2 = p;
                     apply(p2,pvLoc[0]);
@@ -296,7 +304,7 @@ pvsout:
     }
     if (pvOut.empty()){
         m = INVALIDMOVE;
-        Logging::LogIt(Logging::logWarn) << "Empty pv" ;
+        if (!subSearch) Logging::LogIt(Logging::logWarn) << "Empty pv" ;
     } 
     else{
         if ( Skill::enabled()) m = Skill::pick(multiPVMoves);

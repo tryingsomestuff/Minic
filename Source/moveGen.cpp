@@ -375,7 +375,7 @@ ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck) {
     MoveGen::generate<MoveGen::GP_all>(p, moves, false);
     if (moves.empty()) return isInCheck ? -MATE : 0;
     static std::random_device rd;
-    static std::mt19937 g(rd());
+    static std::mt19937 g(rd()); // here really random
     std::shuffle(moves.begin(), moves.end(),g);
     for (auto it = moves.begin(); it != moves.end(); ++it) {
         Position p2 = p;
@@ -385,8 +385,9 @@ ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck) {
         const Square to = Move2To(*it);
         if (p.c == Co_White && to == p.king[Co_Black]) return MATE + 1;
         if (p.c == Co_Black && to == p.king[Co_White]) return MATE + 1;
-        return 0;
+        return 0; // found one valid move
     }
+    // no move is valid ...
     return isInCheck ? -MATE : 0;
 }
 

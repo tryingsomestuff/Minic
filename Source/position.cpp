@@ -95,7 +95,6 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
         if (strList[2].find('q') != std::string::npos){ p.castling |= C_bqs; found = true; }
 
         if (!found){
-           Logging::LogIt(Logging::logInfo) << "is FCR";
            for ( const char & cr : strList[2] ){
                if ( (cr >= 'A' && cr <= 'H') || (cr >= 'a' && cr <= 'h') ){
                   Logging::LogIt(Logging::logInfo) << "Found FRC like castling " << cr;
@@ -107,6 +106,7 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
                   found = true;
                }
            }
+           if ( found ) Logging::LogIt(Logging::logInfo) << "FRC position found, activating FRC";
         }
         if (strList[2].find('-') != std::string::npos){ found = true; /*Logging::LogIt(Logging::logInfo) << "No castling right given" ;*/}
         if ( ! found ){ 

@@ -157,3 +157,44 @@ void Searcher::prefetchPawn(Hash h) {
 
 std::atomic<bool> Searcher::startLock;
 const unsigned long long int Searcher::ttSizePawn = 1024*32;
+
+#ifdef WITH_GENFILE
+void Searcher::writeToGenFile(const Position & p){
+    static std::map<int,Searcher *> coSearchers;
+    if (!genFen || id() >= 9000) return;
+
+    if ( coSearchers.find(id()) == coSearchers.end()){
+       coSearchers[id()] = new Searcher(id()+9000);
+       coSearchers[id()]->initPawnTable();
+    }
+
+    Searcher & cos = *coSearchers[id()];
+
+    cos.genFen = false;
+    const bool oldQuiet = DynamicConfig::quiet;
+    const bool oldDisableTT = DynamicConfig::disableTT;
+    cos.subSearch = true;
+    DynamicConfig::quiet = true;
+    DynamicConfig::disableTT = true;
+
+    cos.clearSearch();
+
+    EvalData data;
+    ScoreType e = eval(p,data,cos);
+
+    Move m = INVALIDMOVE;
+    DepthType seldepth(0), depth(8);
+    ScoreType s;
+
+    cos.search(p,m,depth,s,seldepth);
+    cos.genFen = true;
+    DynamicConfig::quiet = oldQuiet;
+    DynamicConfig::disableTT = oldDisableTT;
+    cos.subSearch = false;
+
+    genStream << GetFEN(p) << " c0 \"" << e << "\" ;"
+                           << " c1 \"" << s << "\" ;"
+                           << " c2 \"" << ToString(m) << "\" ;"
+                           << "\n";
+}
+#endif

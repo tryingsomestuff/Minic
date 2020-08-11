@@ -4,11 +4,20 @@
 
 #include "com.hpp"
 #include "dynamicConfig.hpp"
+#include "evalDef.hpp"
 #include "logging.hpp"
+#include "moveGen.hpp"
+#include "score.hpp"
+#include "smp.hpp"
 
 #include "nnue/evaluate_nnue.h"
 
 // THIS IS MAINLY COPY/PASTE FROM STOCKFISH, as well as the full nnue sub-directory
+
+// this is used to scale NNUE score to classic eval score. 
+// This way search params can remain the same ... more or less ...
+// see compute_scaling
+int NNUEscaling = 64; // from 32 to 128      x_scaled = x * NNUEscaling / 64
 
 ExtPieceSquare kpp_board_index[NbPiece] = {
  // convention: W - us, B - them
@@ -80,6 +89,7 @@ void init_NNUE() {
             eval_file_loaded = DynamicConfig::NNUEFile;
             DynamicConfig::useNNUE = true; // forced when nnue file is found and valid
             COM::init(); // reset start position
+            compute_scaling();
         }
 }
 
@@ -90,10 +100,72 @@ void verify_NNUE() {
                                           << "The UCI option NNUEFile might need to specify the full path, including the directory/folder name, to the file.";
     }
 
-    if (DynamicConfig::useNNUE)
+    if (DynamicConfig::useNNUE){
         Logging::LogIt(Logging::logInfo) << "NNUE evaluation using " << DynamicConfig::NNUEFile << " enabled.";
-    else
+    }
+    else{
         Logging::LogIt(Logging::logInfo) << "classical evaluation enabled.";
+    }
+}
+
+void compute_scaling(int count){
+    static std::random_device rd;
+    static std::mt19937 g(63); // fixed seed !
+
+    Logging::LogIt(Logging::logInfo) << "Automatic computation of NNUEscaling with " << count << " random positions ...";
+
+    Position p;
+    readFEN(startPosition,p,true);
+
+    EvalData data;
+
+    float factor = 0;
+    int k = 0;
+
+    bool bkTT = DynamicConfig::disableTT;
+    DynamicConfig::disableTT = true;
+
+    while(k < count){
+        MoveList moves;
+        //const bool isInCheck = isAttacked(p, kingSquare(p));
+        MoveGen::generate<MoveGen::GP_all>(p, moves, false);
+        if (moves.empty()){
+            readFEN(startPosition,p,true);
+            continue;
+        }
+        std::shuffle(moves.begin(), moves.end(),g);
+        for (auto it = moves.begin(); it != moves.end(); ++it) {
+            Position p2 = p;
+            if (!apply(p2, *it)) continue;
+            p = p2;
+            const Square to = Move2To(*it);
+            if (p.c == Co_White && to == p.king[Co_Black]){
+               readFEN(startPosition,p,true);
+               continue;
+            }
+            if (p.c == Co_Black && to == p.king[Co_White]){
+               readFEN(startPosition,p,true);
+               continue;
+            }
+
+            DynamicConfig::useNNUE = 0;
+            const ScoreType eStd = eval(p,data,ThreadPool::instance().main());
+            DynamicConfig::useNNUE = 1;
+            const ScoreType eNNUE = eval(p,data,ThreadPool::instance().main());
+
+            if ( std::abs(eStd) < 1000 && eStd*eNNUE > 0 ){
+               ++k;
+               factor += eStd/eNNUE;
+            }
+            break;
+        }
+        readFEN(startPosition,p,true);
+        continue;
+    }
+    NNUEscaling = int(factor*64/k);
+    Logging::LogIt(Logging::logInfo) << "NNUEscaling " << NNUEscaling << " (" << factor/k << ")";
+
+    DynamicConfig::disableTT = bkTT;
 }
 
 } // nnue

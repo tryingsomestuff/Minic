@@ -27,6 +27,7 @@ namespace DynamicConfig{
     extern int strength           ;
     extern bool useNNUE           ;
     extern std::string NNUEFile   ;
+    extern bool genFen            ;
 
     extern int styleComplexity    ;
     extern int styleMaterial      ;    
