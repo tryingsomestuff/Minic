@@ -43,7 +43,7 @@ namespace Eval::NNUE::Features {
     const PieceId target = (AssociatedKing == Side::kFriend) ?
         static_cast<PieceId>(PIECE_ID_KING + perspective) :
         static_cast<PieceId>(PIECE_ID_KING + ~perspective);
-    *sq_target_k = static_cast<Square>(((*pieces)[target] - PS_W_KING) % NbSquare);
+    *sq_target_k = static_cast<Square>(((*pieces)[target] - PS_W_KING) % SQUARE_NB);
   }
 
   // Get a list of indices for active features

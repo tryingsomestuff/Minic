@@ -196,7 +196,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
         if ( ! isLazyHigh(400,features,score)){ // stay to classic eval when the game is already decided
            ScoreType nnueScore = nnue::evaluate(p);
            // take tempo and contempt into account
-           nnueScore += ScaleScore( EvalConfig::tempo*(white2Play?+1:-1) + context.contempt, data.gp);
+           nnueScore += ScaleScore( /*EvalConfig::tempo*(white2Play?+1:-1) +*/ context.contempt, data.gp);
            const ScoreType ret = (Score(nnueScore,features.scalingFactor,p) * NNUEscaling) / 64;
            ++context.stats.counters[Stats::sid_evalNNUE];
            STOP_AND_SUM_TIMER(Eval)

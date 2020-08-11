@@ -10,6 +10,7 @@ struct Position; // forward decl
 
 #define WHITE Co_White
 #define BLACK Co_Black
+#define SQUARE_NB NbSquare
 
 // NNUE eval scaling factor
 extern int NNUEscaling;
@@ -37,19 +38,19 @@ constexpr bool PieceIdOK(PieceId pid){ return pid < PIECE_ID_NONE;}
 enum PieceSquare : uint32_t {
   PS_NONE     =  0,
   PS_W_PAWN   =  1,
-  PS_B_PAWN   =  1 * NbSquare + 1,
-  PS_W_KNIGHT =  2 * NbSquare + 1,
-  PS_B_KNIGHT =  3 * NbSquare + 1,
-  PS_W_BISHOP =  4 * NbSquare + 1,
-  PS_B_BISHOP =  5 * NbSquare + 1,
-  PS_W_ROOK   =  6 * NbSquare + 1,
-  PS_B_ROOK   =  7 * NbSquare + 1,
-  PS_W_QUEEN  =  8 * NbSquare + 1,
-  PS_B_QUEEN  =  9 * NbSquare + 1,
-  PS_W_KING   = 10 * NbSquare + 1,
+  PS_B_PAWN   =  1 * SQUARE_NB + 1,
+  PS_W_KNIGHT =  2 * SQUARE_NB + 1,
+  PS_B_KNIGHT =  3 * SQUARE_NB + 1,
+  PS_W_BISHOP =  4 * SQUARE_NB + 1,
+  PS_B_BISHOP =  5 * SQUARE_NB + 1,
+  PS_W_ROOK   =  6 * SQUARE_NB + 1,
+  PS_B_ROOK   =  7 * SQUARE_NB + 1,
+  PS_W_QUEEN  =  8 * SQUARE_NB + 1,
+  PS_B_QUEEN  =  9 * SQUARE_NB + 1,
+  PS_W_KING   = 10 * SQUARE_NB + 1,
   PS_END      = PS_W_KING, // pieces without kings (pawns included)
-  PS_B_KING   = 11 * NbSquare + 1,
-  PS_END2     = 12 * NbSquare + 1
+  PS_B_KING   = 11 * SQUARE_NB + 1,
+  PS_END2     = 12 * SQUARE_NB + 1
 };
 
 struct ExtPieceSquare {
