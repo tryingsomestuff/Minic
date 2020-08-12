@@ -77,6 +77,12 @@ int main(int argc, char ** argv) {
     if (argc > 1 && std::string(argv[1]) == "-pgn") { return PGNParse(argv[2]); }
 #endif
 
+#ifdef WITH_DATA2BIN
+    if ( argc > 1 && std::string(argv[1]) == "-plain2bin")  { return convert_bin({argv[2]},std::string(argv[2])+".bin",1,160,0); }
+    if ( argc > 1 && std::string(argv[1]) == "-pgn2bin")    { return convert_bin_from_pgn_extract({argv[2]},std::string(argv[2])+".bin",true); }
+    if ( argc > 1 && std::string(argv[1]) == "-bin2plain")  { return convert_plain({argv[2]},std::string(argv[2])+".plain"); }
+#endif
+
 #ifdef DEBUG_TOOL
     std::string firstOption;
     if (argc < 2) {

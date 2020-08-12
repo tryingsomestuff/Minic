@@ -100,7 +100,9 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
     if ( !rootnode && withoutSkipMove 
          && (countBit(p.allPieces[Co_White]|p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN && SyzygyTb::probe_wdl(p, tbScore, false) > 0){
        ++stats.counters[Stats::sid_tbHit1];
-       if ( abs(tbScore) == SyzygyTb::TB_WIN_SCORE) tbScore += eval(p, data, *this);
+       if ( abs(tbScore) == SyzygyTb::TB_WIN_SCORE){
+           tbScore += eval(p, data, *this);
+       }
        // store TB hits into TT (without associated move, but with max depth)
        TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(tbScore,ply),createHashScore(tbScore,ply),TT::B_none,DepthType(MAX_DEPTH));
        return tbScore;

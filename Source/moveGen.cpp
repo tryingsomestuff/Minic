@@ -4,6 +4,7 @@
 #include "logging.hpp"
 #include "material.hpp"
 #include "positionTools.hpp"
+#include "searcher.hpp"
 #include "tools.hpp"
 
 #ifdef WITH_NNUE
@@ -370,7 +371,7 @@ bool apply(Position & p, const Move & m, bool noValidation){
     return true;
 }
 
-ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck) {
+ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck, Searcher & context) {
     MoveList moves;
     MoveGen::generate<MoveGen::GP_all>(p, moves, false);
     if (moves.empty()) return isInCheck ? -MATE : 0;
@@ -381,6 +382,9 @@ ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck) {
         Position p2 = p;
         if (!apply(p2, *it)) continue;
         PVList childPV;
+#ifdef WITH_GENFILE
+        if ( DynamicConfig::genFen ) context.writeToGenFile(p2);
+#endif        
         updatePV(pv, *it, childPV);
         const Square to = Move2To(*it);
         if (p.c == Co_White && to == p.king[Co_Black]) return MATE + 1;

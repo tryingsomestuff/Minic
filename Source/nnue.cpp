@@ -172,5 +172,6 @@ void compute_scaling(int count){
 
 #include "nnue/features/half_kp.cpp"
 #include "nnue/evaluate_nnue.cpp"
+#include "nnue/learn/learn_tools.cpp"
 
 #endif

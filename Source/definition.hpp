@@ -58,17 +58,20 @@ const std::string MinicVersion = "dev";
 #endif
 #define WITH_TEST_SUITE
 //#define WITH_PGN_PARSER
-//#define WITH_MLP
+
+// ** NN and NNUE things
+//#define WITH_MLP // need tiny-dnn
+#define WITH_DATA2BIN
+#define WITH_GENFILE
 
 // *** Tuning
 //#define WITH_TIMER
 //#define WITH_SEARCH_TUNING
 //#define WITH_TEXEL_TUNING
 //#define WITH_PIECE_TUNING
-//#define VERBOSE_EVAL
-#define WITH_GENFILE
 
 // *** Debug
+//#define VERBOSE_EVAL
 //#define DEBUG_HASH
 //#define DEBUG_PHASH
 //#define DEBUG_MATERIAL
@@ -118,6 +121,7 @@ const std::string MinicVersion = "dev";
 #define HISTORY_DIV(x) ((x)>>HISTORY_POWER)
 #define SQR(x) ((x)*(x))
 #define HSCORE(depth) ScoreType(SQR(std::min((int)depth, 32))*4)
+#define MAX_THREADS 256
 
 #define SQFILE(s) ((s)&7)
 #define SQRANK(s) ((s)>>3)
@@ -234,10 +238,19 @@ enum Sq   : unsigned char { Sq_a1  = 0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1
 
 enum File : unsigned char { File_a = 0,File_b,File_c,File_d,File_e,File_f,File_g,File_h};
 inline File operator++(File & f){f=File(f+1); return f;}
+inline File operator--(File & f){f=File(f-1); return f;}
 
 enum Rank : unsigned char { Rank_1 = 0,Rank_2,Rank_3,Rank_4,Rank_5,Rank_6,Rank_7,Rank_8};
 inline Rank operator++(Rank & r){r=Rank(r+1); return r;}
+inline Rank operator--(Rank & r){r=Rank(r-1); return r;}
 
+constexpr Square flip_rank(Square s) { // Swap A1 <-> A8
+  return Square(s ^ Sq_a8);
+}
+
+constexpr Square flip_file(Square s) { // Swap A1 <-> H1
+  return Square(s ^ Sq_h1);
+}
 
 const Rank PromRank[2]    = { Rank_8 , Rank_1 };
 const Rank EPRank[2]      = { Rank_6 , Rank_3 };
@@ -359,12 +372,16 @@ inline constexpr const T& clamp( const T& v, const T& lo, const T& hi ){
     return (v < lo) ? lo : (hi < v) ? hi : v;
 }
 
+constexpr Square relative_square(Color c, Square s) {
+  return Square(s ^ (c * 56));
+}
+
 template<Color C> 
-inline Square ColorSquarePstHelper(Square k){ return C==Co_White?(k^56):k;}
+inline Square ColorSquarePstHelper(Square k){ return relative_square(C,k);}
 
 inline unsigned long long int powerFloor(unsigned long long int x) {
     unsigned long long int power = 1;
-    while (power < x) power *= 2;
+    while (power <= x) power *= 2;
     return power/2;
 }
 

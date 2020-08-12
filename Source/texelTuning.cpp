@@ -166,7 +166,7 @@ std::vector<double> ComputeGradient(std::vector<TexelParam<ScoreType> > & x0, st
 }
 
 void displayTexel(const std::string prefixe, const std::vector<TexelParam<ScoreType> >& bestParam, int it, double curE){
-    std::ofstream str("tuning_"+prefixe+".csv",std::ofstream::out | std::ofstream::app);
+    std::ofstream str("TuningOutput/tuning_"+prefixe+".csv",std::ofstream::out | std::ofstream::app);
     // display
     for (size_t k = 0; k < bestParam.size(); ++k) Logging::LogIt(Logging::logInfo) << bestParam[k].name << " " << bestParam[k];
     // write
@@ -220,7 +220,7 @@ std::vector<TexelParam<ScoreType> > TexelOptimizeGD(const std::vector<TexelParam
 
 std::vector<TexelParam<ScoreType> > TexelOptimizeNaive(const std::vector<TexelParam<ScoreType> >& initialGuess, std::vector<Texel::TexelInput> &data, const size_t batchSize) {
     DynamicConfig::disableTT = true;
-    std::ofstream str("tuning.csv");
+    std::ofstream str("TuningOutput/tuning.csv");
     std::vector<TexelParam<ScoreType> > bestParam = initialGuess;
     int stepMax = 5;
     int step = 0;

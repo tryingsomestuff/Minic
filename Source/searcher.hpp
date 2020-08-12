@@ -49,6 +49,22 @@ struct Searcher{
     EvalScore contempt = 0;
     bool subSearch = false;
 
+#ifdef WITH_NNUE
+    bool noNNUE = false;
+    bool bkNoNNUE = false;
+    inline void disableNNUE(){
+        bkNoNNUE = noNNUE;
+        noNNUE = true;
+    }
+    inline void restoreNNUE(){
+        noNNUE = bkNoNNUE;
+    }
+#else
+    inline void disableNNUE(){ }
+    inline void restoreNNUE(){ }
+#endif
+
+
 #ifdef WITH_GENFILE
     std::ofstream genStream;
     bool genFen = true;

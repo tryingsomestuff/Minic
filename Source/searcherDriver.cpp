@@ -52,12 +52,12 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
     startTime = Clock::now();
 
 #ifdef WITH_GENFILE
-    if ( id() < 9000 && ! genStream.is_open() && DynamicConfig::genFen ){
-       genStream.open("genfen_" + std::to_string(id()) + ".epd",std::ofstream::app);
+    if ( DynamicConfig::genFen && id() < MAX_THREADS && ! genStream.is_open() ){
+       genStream.open("genfen_" + std::to_string(::getpid()) + "_" + std::to_string(id()) + ".epd",std::ofstream::app);
     }
 #endif
 
-    if ( isMainThread() || id() >= 9000 ){
+    if ( isMainThread() || id() >= MAX_THREADS ){
         Logging::LogIt(Logging::logInfo) << "Search params :" ;
         Logging::LogIt(Logging::logInfo) << "requested time  " << getCurrentMoveMs() ;
         Logging::LogIt(Logging::logInfo) << "requested depth " << (int) d ;
@@ -110,7 +110,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
     TimeMan::maxNodes = 0; // reset this for depth 1 to be sure to iterate at least once ...
 
     if ( DynamicConfig::level == 0 ){ // random mover
-       bestScore = randomMover(p,pvOut,isInCheck);
+       bestScore = randomMover(p,pvOut,isInCheck,*this);
        goto pvsout;
     }
 

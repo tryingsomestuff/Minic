@@ -145,7 +145,7 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
     else p.moves = 1;
 
     if (p.moves < 1) { // fix a LittleBlitzer bug here ...
-        Logging::LogIt(Logging::logWarn) << "Wrong move counter " << (int)p.moves << " using 1 instead";
+        Logging::LogIt(Logging::logInfo) << "Wrong move counter " << (int)p.moves << " using 1 instead";
         p.moves = 1;
     }
 
