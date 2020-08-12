@@ -161,10 +161,11 @@ const unsigned long long int Searcher::ttSizePawn = 1024*32;
 #ifdef WITH_GENFILE
 void Searcher::writeToGenFile(const Position & p){
     static std::map<int,Searcher *> coSearchers;
-    if (!genFen || id() >= 9000) return;
+    static std::set<Hash> hashCache;
+    if (!genFen || id() >= MAX_THREADS) return;
 
     if ( coSearchers.find(id()) == coSearchers.end()){
-       coSearchers[id()] = new Searcher(id()+9000);
+       coSearchers[id()] = new Searcher(id()+MAX_THREADS);
        coSearchers[id()]->initPawnTable();
     }
 
@@ -173,28 +174,53 @@ void Searcher::writeToGenFile(const Position & p){
     cos.genFen = false;
     const bool oldQuiet = DynamicConfig::quiet;
     const bool oldDisableTT = DynamicConfig::disableTT;
+    const unsigned int oldLevel = DynamicConfig::level;
     cos.subSearch = true;
     DynamicConfig::quiet = true;
     DynamicConfig::disableTT = true;
+    DynamicConfig::level = 100;
 
     cos.clearSearch();
 
     EvalData data;
-    ScoreType e = eval(p,data,cos);
+    std::ostringstream str;
+    ScoreType e = eval(p,data,cos,true,false,&str);
 
     Move m = INVALIDMOVE;
-    DepthType seldepth(0), depth(8);
     ScoreType s;
+    const Hash h = computeHash(p) ^ e;
+    if ( std::abs(e) < 1000 && hashCache.find(h) == hashCache.end() ){
+       hashCache.insert(h);
+       
+       DepthType seldepth(0), depth(12); ///@todo parameter
+       cos.search(p,m,depth,s,seldepth);
+    }
 
-    cos.search(p,m,depth,s,seldepth);
     cos.genFen = true;
     DynamicConfig::quiet = oldQuiet;
     DynamicConfig::disableTT = oldDisableTT;
+    DynamicConfig::level = oldLevel;
     cos.subSearch = false;
 
-    genStream << GetFEN(p) << " c0 \"" << e << "\" ;"
-                           << " c1 \"" << s << "\" ;"
-                           << " c2 \"" << ToString(m) << "\" ;"
+    if ( m == INVALIDMOVE) return;
+
+/*
+// epd format
+    genStream << GetFEN(p) << " c0 \"" << e << "\" ;"             // eval
+                           << " c1 \"" << s << "\" ;"             // score (search)
+                           << " c2 \"" << ToString(m) << "\" ;"   // best move
+                           //<< " c3 \"" << str.str() << "\" ;"     // features break down
                            << "\n";
+*/
+
+// "plain" format (not taking result into account)
+    genStream << "fen "    << GetFEN(p) << "\n"
+              << "move "   << ToString(m) << "\n"
+              << "score "  << s << "\n"
+              //<< "eval "   << e << "\n"
+              << "ply "    << p.halfmoves << "\n"
+              << "result " << 0 << "\n"
+              << "e" << "\n";
+
 }
 #endif

@@ -191,16 +191,16 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
 #endif
 
 #ifdef WITH_NNUE
-    if (DynamicConfig::useNNUE){
-        EvalScore score = 0;     
-        if ( ! isLazyHigh(400,features,score)){ // stay to classic eval when the game is already decided
+    if (DynamicConfig::useNNUE && !context.noNNUE){
+        EvalScore score;
+        if ( ! isLazyHigh(600,features,score)){ // stay to classic eval when the game is already decided
            ScoreType nnueScore = nnue::evaluate(p);
            // take tempo and contempt into account
            nnueScore += ScaleScore( /*EvalConfig::tempo*(white2Play?+1:-1) +*/ context.contempt, data.gp);
-           const ScoreType ret = (Score(nnueScore,features.scalingFactor,p) * NNUEscaling) / 64;
+           nnueScore = (Score(nnueScore,features.scalingFactor,p) * NNUEscaling) / 64;
            ++context.stats.counters[Stats::sid_evalNNUE];
            STOP_AND_SUM_TIMER(Eval)
-           return ret;
+           return nnueScore;
         }
         ++context.stats.counters[Stats::sid_evalStd];
     }
@@ -363,8 +363,8 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
        // malus for king on a pawnless flank
        const File wkf = (File)SQFILE(p.king[Co_White]);
        const File bkf = (File)SQFILE(p.king[Co_Black]);
-       pe.score += EvalConfig::pawnlessFlank * ((pawns[Co_White] & kingFlank[wkf]) == empty);
-       pe.score -= EvalConfig::pawnlessFlank * ((pawns[Co_Black] & kingFlank[bkf]) == empty);
+       if (!(pawns[Co_White] & kingFlank[wkf])) pe.score += EvalConfig::pawnlessFlank;
+       if (!(pawns[Co_Black] & kingFlank[bkf])) pe.score -= EvalConfig::pawnlessFlank;
        // pawn storm
        pe.score -= EvalConfig::pawnStormMalus * countBit(kingFlank[wkf] & (rank3|rank4) & pawns[Co_Black]);
        pe.score += EvalConfig::pawnStormMalus * countBit(kingFlank[bkf] & (rank5|rank6) & pawns[Co_White]);
@@ -673,10 +673,10 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
 
     // use NN input
     ///@todo this needs stm to be taken into account in EvalNN
-    #ifdef WITH_MLP
+#ifdef WITH_MLP
        const float gamma = 0.8f;
        ret = (ScoreType)(gamma*ret + (1-gamma)*NN::EvalNN(features,ret));
-    #endif
+#endif
 
     STOP_AND_SUM_TIMER(Eval)
     return ret;

@@ -81,6 +81,16 @@ public:
   // Convert the specified piece_id piece to ExtPieceSquare type and return it
   ExtPieceSquare piece_with_id(PieceId piece_id) const;
 
+  // Initialize the pieceList.
+  // Set the value of unused pieces to PieceSquare::PS_NONE in case you want to deal with dropped pieces.
+  // A normal evaluation function can be used as an evaluation function for missing frames.
+  // piece_no_list is initialized with PieceId::PIECE_ID_NONE to facilitate debugging.
+  inline void clear(){
+      for (auto& p : pieceListFw) p = PieceSquare::PS_NONE;
+      for (auto& p : pieceListFb) p = PieceSquare::PS_NONE;
+      for (auto& v : piece_id_list) v = PieceId::PIECE_ID_NONE;
+  }
+
 private:
   PieceSquare pieceListFw[MAX_LENGTH];
   PieceSquare pieceListFb[MAX_LENGTH];
@@ -115,5 +125,7 @@ ScoreType evaluate(const Position& pos);
 bool  load_eval_file(const std::string& evalFile);
 
 } // nnue
+
+#include "learn/learn_tools.hpp"
 
 #endif

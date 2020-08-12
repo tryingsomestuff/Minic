@@ -95,7 +95,7 @@ namespace Options {
        _keys.push_back(KeyBase(k_bool,  w_check, "UCI_LimitStrength"           , &DynamicConfig::limitStrength                  , false            , true ));
        _keys.push_back(KeyBase(k_int,   w_spin,  "UCI_Elo"                     , &DynamicConfig::strength                       , (int)500         , (int)2800 ));
        _keys.push_back(KeyBase(k_int,   w_spin,  "Hash"                        , &DynamicConfig::ttSizeMb                       , (unsigned int)1  , (unsigned int)256000                , &TT::initTable));
-       _keys.push_back(KeyBase(k_int,   w_spin,  "Threads"                     , &DynamicConfig::threads                        , (unsigned int)1  , (unsigned int)256                   , std::bind(&ThreadPool::setup, &ThreadPool::instance())));
+       _keys.push_back(KeyBase(k_int,   w_spin,  "Threads"                     , &DynamicConfig::threads                        , (unsigned int)1  , (unsigned int)(MAX_THREADS-1)       , std::bind(&ThreadPool::setup, &ThreadPool::instance())));
        _keys.push_back(KeyBase(k_bool,  w_check, "UCI_Chess960"                , &DynamicConfig::FRC                            , false            , true ));
        _keys.push_back(KeyBase(k_bool,  w_check, "Ponder"                      , &DynamicConfig::UCIPonder                      , false            , true ));
        _keys.push_back(KeyBase(k_bool,  w_check, "MateFinder"                  , &DynamicConfig::mateFinder                     , false            , true ));
@@ -110,7 +110,9 @@ namespace Options {
        _keys.push_back(KeyBase(k_string,w_string,"NNUEFile"                    , &DynamicConfig::NNUEFile                                                                                , &nnue::init_NNUE));
        #endif
 
+       #ifdef WITH_GENFILE
        _keys.push_back(KeyBase(k_bool,  w_check, "GenFen"                      , &DynamicConfig::genFen                         , false            , true ));
+       #endif
 
        _keys.push_back(KeyBase(k_int, w_spin,  "StyleAttack"                   , &DynamicConfig::styleAttack                    , (int)0   , (int)100));
        _keys.push_back(KeyBase(k_int, w_spin,  "StyleComplexity"               , &DynamicConfig::styleComplexity                , (int)0   , (int)100));
@@ -220,6 +222,8 @@ namespace Options {
        //GETOPT(useNNUE,          bool)         
        GETOPT(NNUEFile,         std::string)
 #endif
+#ifdef WITH_GENFILE
        GETOPT(genFen,            bool)
+#endif
    }
 } // Options
