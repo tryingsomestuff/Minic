@@ -192,7 +192,7 @@ void Searcher::writeToGenFile(const Position & p){
     if ( std::abs(e) < 1000 && hashCache.find(h) == hashCache.end() ){
        hashCache.insert(h);
        
-       DepthType seldepth(0), depth(12); ///@todo parameter
+       DepthType seldepth(0), depth(DynamicConfig::genFenDepth);
        cos.search(p,m,depth,s,seldepth);
     }
 

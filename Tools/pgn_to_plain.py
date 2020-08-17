@@ -20,7 +20,7 @@ def parse_result(result_str:str, board:chess.Board) -> int:
         else:
             return 0
     else:
-        print("illeagal result", result_str)
+        print("illegal result", result_str)
         raise ValueError
 
 def game_sanity_check(game: chess.pgn.Game) -> bool:

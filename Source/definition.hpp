@@ -244,16 +244,8 @@ enum Rank : unsigned char { Rank_1 = 0,Rank_2,Rank_3,Rank_4,Rank_5,Rank_6,Rank_7
 inline Rank operator++(Rank & r){r=Rank(r+1); return r;}
 inline Rank operator--(Rank & r){r=Rank(r-1); return r;}
 
-constexpr Square flip_rank(Square s) { // Swap A1 <-> A8
-  return Square(s ^ Sq_a8);
-}
-
-constexpr Square flip_file(Square s) { // Swap A1 <-> H1
-  return Square(s ^ Sq_h1);
-}
-
-const Rank PromRank[2]    = { Rank_8 , Rank_1 };
-const Rank EPRank[2]      = { Rank_6 , Rank_3 };
+const Rank PromRank[2] = { Rank_8 , Rank_1 };
+const Rank EPRank[2]   = { Rank_6 , Rank_3 };
 
 enum CastlingTypes : unsigned char { CT_OOO = 0, CT_OO = 1 };
 enum CastlingRights : unsigned char{ 
@@ -372,12 +364,10 @@ inline constexpr const T& clamp( const T& v, const T& lo, const T& hi ){
     return (v < lo) ? lo : (hi < v) ? hi : v;
 }
 
-constexpr Square relative_square(Color c, Square s) {
-  return Square(s ^ (c * 56));
-}
+constexpr Square relative_square(Color c, Square s) { return Square(s ^ (c * 56)); }
 
 template<Color C> 
-inline Square ColorSquarePstHelper(Square k){ return relative_square(C,k);}
+inline Square ColorSquarePstHelper(Square k){ return relative_square(~C,k); }
 
 inline unsigned long long int powerFloor(unsigned long long int x) {
     unsigned long long int power = 1;
