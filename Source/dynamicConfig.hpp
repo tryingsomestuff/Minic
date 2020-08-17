@@ -6,35 +6,36 @@
  */
 
 namespace DynamicConfig{
-    extern bool mateFinder        ;
-    extern bool disableTT         ;
-    extern unsigned int ttSizeMb  ;
-    extern bool fullXboardOutput  ;
-    extern bool debugMode         ;
-    extern bool quiet             ;
-    extern std::string debugFile  ;
-    extern unsigned int level     ;
-    extern bool book              ;
-    extern std::string bookFile   ;
-    extern unsigned int threads   ;
-    extern std::string syzygyPath ;
-    extern bool FRC               ;
-    extern bool UCIPonder         ;
-    extern unsigned int multiPV   ;
-    extern ScoreType contempt     ;
-    extern ScoreType contemptMG   ;
-    extern bool limitStrength     ;
-    extern int strength           ;
-    extern bool useNNUE           ;
-    extern std::string NNUEFile   ;
-    extern bool genFen            ;
+    extern bool mateFinder         ;
+    extern bool disableTT          ;
+    extern unsigned int ttSizeMb   ;
+    extern bool fullXboardOutput   ;
+    extern bool debugMode          ;
+    extern bool quiet              ;
+    extern std::string debugFile   ;
+    extern unsigned int level      ;
+    extern bool book               ;
+    extern std::string bookFile    ;
+    extern unsigned int threads    ;
+    extern std::string syzygyPath  ;
+    extern bool FRC                ;
+    extern bool UCIPonder          ;
+    extern unsigned int multiPV    ;
+    extern ScoreType contempt      ;
+    extern ScoreType contemptMG    ;
+    extern bool limitStrength      ;
+    extern int strength            ;
+    extern bool useNNUE            ;
+    extern std::string NNUEFile    ;
+    extern bool genFen             ;
+    extern unsigned int genFenDepth;
 
-    extern int styleComplexity    ;
-    extern int styleMaterial      ;    
-    extern int stylePositional    ;
-    extern int styleDevelopment   ;
-    extern int styleMobility      ;
-    extern int styleAttack        ;
-    extern int stylePawnStruct    ;   
-    extern int styleForwardness   ;
+    extern int styleComplexity     ;
+    extern int styleMaterial       ;    
+    extern int stylePositional     ;
+    extern int styleDevelopment    ;
+    extern int styleMobility       ;
+    extern int styleAttack         ;
+    extern int stylePawnStruct     ;   
+    extern int styleForwardness    ;
 }

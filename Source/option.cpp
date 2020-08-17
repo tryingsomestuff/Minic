@@ -112,6 +112,8 @@ namespace Options {
 
        #ifdef WITH_GENFILE
        _keys.push_back(KeyBase(k_bool,  w_check, "GenFen"                      , &DynamicConfig::genFen                         , false            , true ));
+       _keys.push_back(KeyBase(k_int,   w_spin,  "GenFenDepth"                 , &DynamicConfig::genFenDepth                    , (unsigned int)2  , (unsigned int)20 ));
+       
        #endif
 
        _keys.push_back(KeyBase(k_int, w_spin,  "StyleAttack"                   , &DynamicConfig::styleAttack                    , (int)0   , (int)100));
@@ -224,6 +226,7 @@ namespace Options {
 #endif
 #ifdef WITH_GENFILE
        GETOPT(genFen,            bool)
+       GETOPT(genFenDepth,       unsigned int)
 #endif
    }
 } // Options

@@ -233,73 +233,81 @@ void sfen_pack(const Position & p, PackedSfen& sfen){
 // I need to handle SF move encoding in the binary format ...
 // So here is some SF extracted Move usage things
 
-enum SFMoveType {
+namespace FromSF {
+
+enum MoveType {
 	NORMAL,
 	PROMOTION = 1 << 14,
 	ENPASSANT = 2 << 14,
 	CASTLING  = 3 << 14
 };
 
-template<SFMoveType T>
-constexpr MiniMove SFMakeMove(Square from, Square to, Piece prom = P_wn) {
+template<MoveType T>
+constexpr MiniMove MakeMove(Square from, Square to, Piece prom = P_wn) {
 	return MiniMove(T + ((prom - P_wn) << 12) + (from << 6) + to);
 }
 
-constexpr MiniMove SFMakeMoveStd(Square from, Square to) {
+constexpr MiniMove MakeMoveStd(Square from, Square to) {
 	return MiniMove((from << 6) + to);
 }
 
-constexpr Square SFfrom_sq(Move m) {
+constexpr Square from_sq(Move m) {
   return Square((m >> 6) & 0x3F);
 }
 
-constexpr Square SFto_sq(Move m) {
+constexpr Square to_sq(Move m) {
   return Square(m & 0x3F);
 }
 
-constexpr SFMoveType SFtype_of(Move m) {
-  return SFMoveType(m & (3 << 14));
+constexpr MoveType type_of(Move m) {
+  return MoveType(m & (3 << 14));
 }
 
-constexpr Piece SFpromotion_type(Move m) {
+constexpr Piece promotion_type(Move m) {
   return Piece(((m >> 12) & 3) + P_wn);
 }
+
+constexpr Square flip_rank(Square s) { return Square(s ^ Sq_a8); }
+
+constexpr Square flip_file(Square s) { return Square(s ^ Sq_h1); }
+
+} // FromSF
 
 inline MiniMove ToSFMove(const Position & p, Square from, Square to, MType type){ 
 	assert(from >= 0 && from < 64); 
 	assert(to >= 0 && to < 64);
-	if ( isPromotion(type)) return SFMakeMove<PROMOTION>(from,to,promShift(type)); 
-	else if ( type == T_ep) return SFMakeMove<ENPASSANT>(from,p.ep);
+	if ( isPromotion(type)) return FromSF::MakeMove<FromSF::PROMOTION>(from,to,promShift(type)); 
+	else if ( type == T_ep) return FromSF::MakeMove<FromSF::ENPASSANT>(from,p.ep);
 	else if ( isCastling(type) ){
 		switch (type){
 			case T_wks:
-			return SFMakeMove<CASTLING>(from,p.rooksInit[Co_White][CT_OO]);
+			return FromSF::MakeMove<FromSF::CASTLING>(from,p.rooksInit[Co_White][CT_OO]);
 			case T_wqs:
-			return SFMakeMove<CASTLING>(from,p.rooksInit[Co_White][CT_OOO]);
+			return FromSF::MakeMove<FromSF::CASTLING>(from,p.rooksInit[Co_White][CT_OOO]);
 			case T_bks:
-			return SFMakeMove<CASTLING>(from,p.rooksInit[Co_Black][CT_OO]);
+			return FromSF::MakeMove<FromSF::CASTLING>(from,p.rooksInit[Co_Black][CT_OO]);
 			case T_bqs:
-			return SFMakeMove<CASTLING>(from,p.rooksInit[Co_Black][CT_OOO]);
+			return FromSF::MakeMove<FromSF::CASTLING>(from,p.rooksInit[Co_Black][CT_OOO]);
 			default:
 			return INVALIDMINIMOVE;
 		}
 	}
-	else return SFMakeMoveStd(from,to);		
+	else return FromSF::MakeMoveStd(from,to);		
 }
 
 ///@todo
 inline MiniMove FromSFMove(const Position & p, MiniMove sfmove){ 
-	const Square from = SFfrom_sq(sfmove);
-	const Square to = SFto_sq(sfmove);
-	const SFMoveType SFtype = SFtype_of(sfmove);
+	const Square from = FromSF::from_sq(sfmove);
+	const Square to = FromSF::to_sq(sfmove);
+	const FromSF::MoveType SFtype = FromSF::type_of(sfmove);
 	MType type = T_std;
 	switch(SFtype){
-		case NORMAL:
+		case FromSF::NORMAL:
 		if (p.board_const(to) != P_none) type = T_capture;
 		break;
-		case PROMOTION:
+		case FromSF::PROMOTION:
 		{
-			const Piece pp = SFpromotion_type(sfmove);
+			const Piece pp = FromSF::promotion_type(sfmove);
 			if ( pp == P_wq ){
 				type = p.board_const(to) == P_none ? T_promq : T_cappromq;
 			}
@@ -314,10 +322,10 @@ inline MiniMove FromSFMove(const Position & p, MiniMove sfmove){
 			}
 		}
 		break;
-		case ENPASSANT:
+		case FromSF::ENPASSANT:
 		type = T_ep;
 		break;
-		case CASTLING:
+		case FromSF::CASTLING:
 		if ( to == p.rooksInit[Co_White][CT_OO]  ) type = T_wks;
 		if ( to == p.rooksInit[Co_White][CT_OOO] ) type = T_wqs;
 		if ( to == p.rooksInit[Co_Black][CT_OO]  ) type = T_bks;
@@ -424,7 +432,7 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen , bool mirror){
 	// First the position of the ball
 	if (mirror){
 		for (auto c : {Co_White, Co_Black}){
-			const Square sq = flip_file((Square)stream.read_n_bit(6));
+			const Square sq = FromSF::flip_file((Square)stream.read_n_bit(6));
 			p.board(sq) = c == Co_White ? P_wk : P_bk;
 			p.king[c] = sq;
 		}
@@ -449,7 +457,7 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen , bool mirror){
 			auto sq = MakeSquare(f, r);
 			//std::cout << int(r) << " " << int(f) << " " << int(sq) << std::endl;
 			if (mirror) {
-				sq = flip_file(sq);
+				sq = FromSF::flip_file(sq);
 			}
 			Piece pc = P_none;
 
@@ -514,7 +522,7 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen , bool mirror){
 	// En passant square. 
 	if (stream.read_one_bit()) {
 		Square ep_square = static_cast<Square>(stream.read_n_bit(6));
-		if (mirror) ep_square = flip_file(ep_square);
+		if (mirror) ep_square = FromSF::flip_file(ep_square);
 		p.ep = ep_square;
 		///@todo ??
 		/*
@@ -868,15 +876,40 @@ bool convert_plain(const vector<string>& filenames, const string& output_file_na
 	return true;
 }
 
-// training line : 
 /*
+
+LizardFish advices:
+1) You want at least 100m positions. And validation should be at least 2 ply deeper than training data
+2) up your eval save to the biggest you can manage. 100m? 250m? 500m? Depends on how many you have.
+3) reduce decay to 0.1. Gives maybe extra 10 elo.
+4) Test the final two to three nets. The last is not always the best.
+5) get another 10% of really deep data (and even deeper validation data). 
+   Run with your phase 1 net with eta 0.05, lambda 0.7, nn batch 10000, eval save 10m. 
+   This can add another 50 elo.
+6) For the “sharpening” with deeper data, go to 10000 for the nn_batch_size.
+
+training line : 
+
+* from scratch
+
 uci
 isready
 setoption name Use NNUE value true
 setoption name threads value 7
 setoption name skiploadingeval value true
 isready
-learn targetdir train_data/ loop 100 batchsize 1000000 use_draw_in_training 1 eta 1 lambda 1 eval_limit 32000 nn_batch_size 1000 newbob_decay 0.5 eval_save_interval 5000000 loss_output_interval 10000000 mirror_percentage 50 validation_set_file_name train_data/validation/validation.plain.bin
+learn targetdir train_data/random_12/ loop 100 batchsize 1000000 use_draw_in_training 1 eta 1 lambda 1 eval_limit 32000 nn_batch_size 1000 newbob_decay 0.1 eval_save_interval 50000000 loss_output_interval 10000000 mirror_percentage 50 validation_set_file_name train_data/validation/validation.plain.bin
+
+* from an existing nn :
+
+uci
+isready
+setoption name Use NNUE value true
+setoption name EValFile value nn.bin
+setoption name threads value 7
+setoption name skiploadingeval value false
+isready
+learn targetdir train_data/random_12/ loop 100 batchsize 1000000 use_draw_in_training 1 eta 1 lambda 1 eval_limit 32000 nn_batch_size 1000 newbob_decay 0.1 eval_save_interval 50000000 loss_output_interval 10000000 mirror_percentage 50 validation_set_file_name train_data/validation/validation.plain.bin
 
 */
 
