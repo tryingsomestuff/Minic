@@ -29,7 +29,11 @@ mkdir -p $dir/Dist/Minic2
 d="-DDEBUG_TOOL"
 v="dev"
 t="-march=native"
-n="-DUSE_AVX2"
+if [ $(grep -c avx2 /proc/cpuinfo) != 0 ];then
+   n="-DUSE_AVX2 -DUSE_SSE41 -DUSE_SSSE3 -DUSE_SSE2"
+else
+   n="-DUSE_SSE41 -DUSE_SSSE3 -DUSE_SSE2"
+fi
 
 if [ -n "$1" ] ; then
    v=$1
