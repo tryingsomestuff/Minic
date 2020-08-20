@@ -3,9 +3,10 @@
 #include "definition.hpp"
 
 #ifdef WITH_NNUE
-#include "nnue.hpp"
+#include "nnue_def.h"
+
 namespace Eval::NNUE{
-struct Accumulator; // Forward decl
+   struct Accumulator; // Forward decl
 }
 #endif
 
@@ -82,15 +83,19 @@ struct Position{
     inline BitBoard & _pieces(Piece pp)         { assert(pp!=P_none); return _allB[std::abs(pp)-1]; }
 
 #ifdef WITH_NNUE
-    mutable DirtyPiece dirtyPiece;
-    EvalList evalList;
-    
-    mutable Eval::NNUE::Accumulator * accumulator = nullptr;
-    mutable Eval::NNUE::Accumulator * previousAccumulator = nullptr;
+    EvalList _evalList;
+    mutable DirtyPiece _dirtyPiece;
+    mutable Eval::NNUE::Accumulator * _accumulator = nullptr;
+    mutable Eval::NNUE::Accumulator * _previousAccumulator = nullptr;
 
+    // minimal API for the NNUE "lib" part
+    const DirtyPiece & dirtyPiece() const;
     const EvalList* eval_list() const;
-    PieceId piece_id_on(Square sq) const;
+    Eval::NNUE::Accumulator & accumulator() const;
+    Eval::NNUE::Accumulator * previousAccumulatorPtr() const;
 
+    // engine internal usage
+    PieceId piece_id_on(Square sq) const;
     void resetAccumulator();
     Position & operator =(const Position & p);
     Position(const Position & p);

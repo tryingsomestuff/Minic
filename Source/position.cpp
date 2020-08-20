@@ -69,7 +69,7 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
                 (p.board(k) == P_wk) ? PIECE_ID_WKING :
                 (p.board(k) == P_bk) ? PIECE_ID_BKING :
                 next_piece_id++;
-              p.evalList.put_piece(piece_id, k, PieceIdx(p.board(k)));
+              p._evalList.put_piece(piece_id, k, PieceIdx(p.board(k)));
         }
 #endif
         j++;
@@ -162,13 +162,27 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
 }
 
 #ifdef WITH_NNUE
-const EvalList* Position::eval_list() const {
-  return &evalList;
+
+const DirtyPiece & Position::dirtyPiece() const{
+    return _dirtyPiece;
+}
+
+const EvalList* Position::eval_list() const { 
+    return &_evalList; 
+}
+
+Eval::NNUE::Accumulator & Position::accumulator()const{
+    assert(_accumulator);
+    return *_accumulator;
+}
+
+Eval::NNUE::Accumulator * Position::previousAccumulatorPtr()const{
+    return _previousAccumulator;
 }
 
 PieceId Position::piece_id_on(Square sq) const{
   //assert(board_const(sq) != P_none); // piece is moved before NNUE things in apply !!!
-  PieceId pid = evalList.piece_id_list[sq];
+  PieceId pid = _evalList.piece_id_list[sq];
   assert(PieceIdOK(pid));
   return pid;
 }
@@ -177,12 +191,12 @@ Position & Position::operator =(const Position & p){
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
-    std::memcpy(this, &p, offsetof(Position, accumulator));
+    std::memcpy(this, &p, offsetof(Position, _accumulator));
 #pragma GCC diagnostic pop
     if (DynamicConfig::useNNUE){
-       if ( accumulator ) delete accumulator;
-       accumulator = new Eval::NNUE::Accumulator();
-       previousAccumulator = p.accumulator;
+       if ( _accumulator ) delete _accumulator;
+       _accumulator = new Eval::NNUE::Accumulator();
+       _previousAccumulator = p._accumulator;
     }
     return *this;
 }
@@ -191,19 +205,19 @@ Position::Position(const Position & p){
     //assert(false);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
-    std::memcpy(this, &p, offsetof(Position, accumulator));
+    std::memcpy(this, &p, offsetof(Position, _accumulator));
 #pragma GCC diagnostic pop
     if (DynamicConfig::useNNUE){
-       accumulator = new Eval::NNUE::Accumulator();
-       previousAccumulator = p.accumulator;    
+       _accumulator = new Eval::NNUE::Accumulator();
+       _previousAccumulator = p._accumulator;    
     }
 }
 
 void Position::resetAccumulator(){
     if (DynamicConfig::useNNUE){
-       if ( accumulator) delete accumulator;
-       accumulator = new Eval::NNUE::Accumulator();
-       previousAccumulator = nullptr;    
+       if ( _accumulator) delete _accumulator;
+       _accumulator = new Eval::NNUE::Accumulator();
+       _previousAccumulator = nullptr;    
     }
 }
 
@@ -212,7 +226,7 @@ void Position::resetAccumulator(){
 Position::~Position(){
 #ifdef WITH_NNUE
     if (DynamicConfig::useNNUE){
-       if (accumulator) delete accumulator;
+       if (_accumulator) delete _accumulator;
     }
 #endif
 }

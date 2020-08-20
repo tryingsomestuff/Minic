@@ -197,7 +197,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
            ScoreType nnueScore = nnue::evaluate(p);
            // take tempo and contempt into account
            nnueScore += ScaleScore( /*EvalConfig::tempo*(white2Play?+1:-1) +*/ context.contempt, data.gp);
-           nnueScore = (Score(nnueScore,features.scalingFactor,p) * NNUEscaling) / 64;
+           nnueScore = (Score(nnueScore,features.scalingFactor,p) * nnue::NNUEscaling) / 64;
            ++context.stats.counters[Stats::sid_evalNNUE];
            STOP_AND_SUM_TIMER(Eval)
            return nnueScore;

@@ -94,10 +94,9 @@ namespace Eval::NNUE {
 
   // Calculate the evaluation value
   ScoreType ComputeScore(const Position& pos, bool refresh) {
-    assert(pos.accumulator);
-    auto& accumulator = pos.accumulator;
-    if (!refresh && accumulator->computed_score) {
-      return accumulator->score;
+    auto& accumulator = pos.accumulator();
+    if (!refresh && accumulator.computed_score) {
+      return accumulator.score;
     }
 
     alignas(kCacheLineSize) TransformedFeatureType transformed_features[FeatureTransformer::kBufferSize];
@@ -107,9 +106,9 @@ namespace Eval::NNUE {
 
     auto score = static_cast<ScoreType>(output[0] / FV_SCALE);
 
-    accumulator->score = score;
-    accumulator->computed_score = true;
-    return accumulator->score;
+    accumulator.score = score;
+    accumulator.computed_score = true;
+    return accumulator.score;
   }
 
 } // namespace Eval::NNUE
