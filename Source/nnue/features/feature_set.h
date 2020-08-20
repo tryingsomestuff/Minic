@@ -64,7 +64,7 @@ namespace Eval::NNUE::Features {
         const PositionType& pos, TriggerEvent trigger,
         IndexListType removed[2], IndexListType added[2], bool reset[2]) {
 
-      const auto& dp = pos.dirtyPiece;
+      const auto& dp = pos.dirtyPiece();
       if (dp.dirty_num == 0) return;
 
       for (Color perspective : { WHITE, BLACK }) {

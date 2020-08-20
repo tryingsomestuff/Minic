@@ -10,16 +10,17 @@
 #include "score.hpp"
 #include "smp.hpp"
 
+#include "nnue/nnue_def.h"
 #include "nnue/evaluate_nnue.h"
-
-// THIS IS MAINLY COPY/PASTE FROM STOCKFISH, as well as the full nnue sub-directory
 
 // this is used to scale NNUE score to classic eval score. 
 // This way search params can remain the same ... more or less ...
 // see compute_scaling
-int NNUEscaling = 64; // from 32 to 128      x_scaled = x * NNUEscaling / 64
+int nnue::NNUEscaling = 64; // from 32 to 128      x_scaled = x * NNUEscaling / 64
 
-ExtPieceSquare kpp_board_index[NbPiece] = {
+// defined in nnue_def.h
+// Must be user defined in order to respect Piece engine piece order
+ExtPieceSquare kpp_board_index[PIECE_NB] = {
  // convention: W - us, B - them
  // viewed from other side, W and B are reversed
     { PS_B_KING,   PS_W_KING   },
@@ -36,32 +37,6 @@ ExtPieceSquare kpp_board_index[NbPiece] = {
     { PS_W_QUEEN,  PS_B_QUEEN  },
     { PS_W_KING,   PS_B_KING   }
 };
-
-static constexpr Square rotate180(Square sq){return (Square)(sq ^ 0x3F);}
-
-// Place the piece pc with piece_id on the square sq on the board
-void EvalList::put_piece(PieceId piece_id, Square sq, int pc){
-    assert(PieceIdOK(piece_id));
-    if (pc != PieceIdx(P_none)){
-        pieceListFw[piece_id] = PieceSquare(kpp_board_index[pc].from[Co_White] + sq);
-        pieceListFb[piece_id] = PieceSquare(kpp_board_index[pc].from[Co_Black] + rotate180(sq));
-        piece_id_list[sq] = piece_id;
-    }
-    else{
-        pieceListFw[piece_id] = PS_NONE;
-        pieceListFb[piece_id] = PS_NONE;
-        piece_id_list[sq] = piece_id;
-    }
-}
-
-// Convert the specified piece_id piece to ExtPieceSquare type and return it
-ExtPieceSquare EvalList::piece_with_id(PieceId piece_id) const{
-    ExtPieceSquare eps;
-    eps.from[Co_White] = pieceListFw[piece_id];
-    eps.from[Co_Black] = pieceListFb[piece_id];
-    return eps;
-}
-
 
 namespace nnue{
 
@@ -162,8 +137,8 @@ void compute_scaling(int count){
         readFEN(startPosition,p,true);
         continue;
     }
-    NNUEscaling = int(factor*64/k);
-    Logging::LogIt(Logging::logInfo) << "NNUEscaling " << NNUEscaling << " (" << factor/k << ")";
+    nnue::NNUEscaling = int(factor*64/k);
+    Logging::LogIt(Logging::logInfo) << "NNUEscaling " << nnue::NNUEscaling << " (" << factor/k << ")";
 
     DynamicConfig::disableTT = bkTT;
 }

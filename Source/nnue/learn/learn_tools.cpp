@@ -422,7 +422,7 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen , bool mirror){
 
 #ifdef WITH_NNUE
 	// clear evalList. It is cleared when memset is cleared to zero above...
-	p.evalList.clear();
+	p._evalList.clear();
 
 	// In updating the PieceList, we have to set which piece is where,
 	// A counter of how much each piece has been used
@@ -483,7 +483,7 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen , bool mirror){
 				(pc == P_wk) ? PieceId::PIECE_ID_WKING :// Backing ball
 				next_piece_number++; // otherwise
 
-			p.evalList.put_piece(piece_no, sq, pc); // Place the pc piece in the sq box
+			p._evalList.put_piece(piece_no, sq, pc); // Place the pc piece in the sq box
 		#endif
 			//cout << sq << ' ' << board[sq] << ' ' << stream.get_cursor() << endl;
 

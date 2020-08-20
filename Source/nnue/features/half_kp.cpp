@@ -73,7 +73,7 @@ namespace Eval::NNUE::Features {
     PieceSquare* pieces;
     Square sq_target_k;
     GetPieces(pos, perspective, &pieces, &sq_target_k);
-    const auto& dp = pos.dirtyPiece;
+    const auto& dp = pos.dirtyPiece();
     for (int i = 0; i < dp.dirty_num; ++i) {
       if (dp.pieceId[i] >= PIECE_ID_KING) continue;
       const auto old_p = static_cast<PieceSquare>(
