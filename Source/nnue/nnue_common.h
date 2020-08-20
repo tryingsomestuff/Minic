@@ -25,6 +25,8 @@
 #include <cstring>
 #include <iostream>
 
+struct Position; // forward decl
+
 #if defined(USE_AVX2)
 #include <immintrin.h>
 

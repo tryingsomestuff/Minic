@@ -112,7 +112,7 @@ void pack(const Position& pos){
 	stream.set_data(data);
 
 	// Side to move.
-	stream.write_one_bit((int)(pos.c));
+	stream.write_one_bit((int)(pos.side_to_move()));
 
 	// 7-bit positions for leading and trailing balls
 	// White king and black king, 6 bits for each.
@@ -773,7 +773,7 @@ bool convert_bin_from_pgn_extract(const vector<string>& filenames, const string&
 						psv.gamePly = gamePly;
 						psv.game_result = game_result;
 
-						if (pos.c == BLACK) {
+						if (pos.side_to_move() == BLACK) {
 							if (!pgn_eval_side_to_move) {
 								psv.score *= -1;
 							}

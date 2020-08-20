@@ -22,10 +22,7 @@
 #define NNUE_FEATURE_SET_H_INCLUDED
 
 #include "features_common.h"
-#include "../../definition.hpp"
-#include "../../position.hpp"
 #include <array>
-#include <cstdint>
 
 namespace Eval::NNUE::Features {
 

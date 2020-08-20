@@ -93,6 +93,7 @@ struct Position{
     const EvalList* eval_list() const;
     Eval::NNUE::Accumulator & accumulator() const;
     Eval::NNUE::Accumulator * previousAccumulatorPtr() const;
+    inline Color side_to_move()const { return c; }
 
     // engine internal usage
     PieceId piece_id_on(Square sq) const;

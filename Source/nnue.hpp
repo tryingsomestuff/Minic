@@ -6,15 +6,17 @@
 
 struct Position; // forward decl
 
-// convert Minic things to NNUE ones
+// convert Minic things to SF/NNUE ones
+///@todo prefix everything with NNUE ...
+///@todo put a namespace around all NNUE "lib"
 #define WHITE Co_White
 #define BLACK Co_Black
 #define SQUARE_NB NbSquare
 #define PIECE_NB NbPiece
 #define NO_PIECE PieceIdx(P_none)
+#define NNUEValue ScoreType
 
 // Internal wrapper to the NNUE things
-
 namespace nnue{
 
   // NNUE eval scaling factor
@@ -36,6 +38,8 @@ namespace nnue{
 
 } // nnue
 
+// optionnal learning tools
+// note that this next header is free from engine specific stuff !
 #include "learn/learn_tools.hpp"
 
 #endif

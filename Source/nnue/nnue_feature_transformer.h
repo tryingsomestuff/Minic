@@ -108,7 +108,7 @@ namespace Eval::NNUE {
       const int8x8_t kZero = {0};
   #endif
 
-            const Color perspectives[2] = {pos.c, ~pos.c};
+      const Color perspectives[2] = {pos.side_to_move(), ~pos.side_to_move()};
       for (IndexType p = 0; p < 2; ++p) {
         const IndexType offset = kHalfDimensions * p;
 
@@ -179,7 +179,6 @@ namespace Eval::NNUE {
    private:
     // Calculate cumulative value without using difference calculation
     void RefreshAccumulator(const Position& pos) const {
-      assert(pos.accumulator);
       auto& accumulator = pos.accumulator();
       IndexType i = 0;
       Features::IndexList active_indices[2];

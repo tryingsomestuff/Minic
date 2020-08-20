@@ -93,7 +93,7 @@ namespace Eval::NNUE {
   }
 
   // Calculate the evaluation value
-  ScoreType ComputeScore(const Position& pos, bool refresh) {
+  NNUEValue ComputeScore(const Position& pos, bool refresh) {
     auto& accumulator = pos.accumulator();
     if (!refresh && accumulator.computed_score) {
       return accumulator.score;
@@ -104,7 +104,7 @@ namespace Eval::NNUE {
     alignas(kCacheLineSize) char buffer[Network::kBufferSize];
     const auto output = network->Propagate(transformed_features, buffer);
 
-    auto score = static_cast<ScoreType>(output[0] / FV_SCALE);
+    auto score = static_cast<NNUEValue>(output[0] / FV_SCALE);
 
     accumulator.score = score;
     accumulator.computed_score = true;
