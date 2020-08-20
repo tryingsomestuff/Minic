@@ -22,6 +22,8 @@
 #define NNUE_COMMON_H_INCLUDED
 
 #include <cstdint>
+#include <cstring>
+#include <iostream>
 
 #if defined(USE_AVX2)
 #include <immintrin.h>
@@ -46,7 +48,7 @@
 //       compiled with older g++ crashes because the output memory is not aligned
 //       even though alignas is specified.
 #if defined(USE_AVX2)
-#if defined(__GNUC__ ) && (__GNUC__ < 9)
+#if defined(__GNUC__ ) && (__GNUC__ < 9) && defined(_WIN32)
 #define _mm256_loadA_si256  _mm256_loadu_si256
 #define _mm256_storeA_si256 _mm256_storeu_si256
 #else
@@ -56,7 +58,7 @@
 #endif
 
 #if defined(USE_AVX512)
-#if defined(__GNUC__ ) && (__GNUC__ < 9)
+#if defined(__GNUC__ ) && (__GNUC__ < 9) && defined(_WIN32)
 #define _mm512_loadA_si512   _mm512_loadu_si512
 #define _mm512_storeA_si512  _mm512_storeu_si512
 #else
@@ -100,7 +102,25 @@ namespace Eval::NNUE {
   // Round n up to be a multiple of base
   template <typename IntType>
   constexpr IntType CeilToMultiple(IntType n, IntType base) {
-    return (n + base - 1) / base * base;
+      return (n + base - 1) / base * base;
+  }
+
+  // read_little_endian() is our utility to read an integer (signed or unsigned, any size)
+  // from a stream in little-endian order. We swap the byte order after the read if
+  // necessary to return a result with the byte ordering of the compiling machine.
+  template <typename IntType>
+  inline IntType read_little_endian(std::istream& stream) {
+
+      IntType result;
+      std::uint8_t u[sizeof(IntType)];
+      typename std::make_unsigned<IntType>::type v = 0;
+
+      stream.read(reinterpret_cast<char*>(u), sizeof(IntType));
+      for (std::size_t i = 0; i < sizeof(IntType); ++i)
+          v = (v << 8) | u[sizeof(IntType) - i - 1];
+
+      std::memcpy(&result, &v, sizeof(IntType));
+      return result;
   }
 
 }  // namespace Eval::NNUE
