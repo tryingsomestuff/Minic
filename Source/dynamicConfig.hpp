@@ -29,6 +29,7 @@ namespace DynamicConfig{
     extern std::string NNUEFile    ;
     extern bool genFen             ;
     extern unsigned int genFenDepth;
+    extern unsigned int genFenSkip ;
 
     extern int styleComplexity     ;
     extern int styleMaterial       ;    
@@ -38,4 +39,6 @@ namespace DynamicConfig{
     extern int styleAttack         ;
     extern int stylePawnStruct     ;   
     extern int styleForwardness    ;
+
+    extern bool stylized           ;
 }

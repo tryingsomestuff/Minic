@@ -639,6 +639,13 @@ void TexelTuning(const std::string & filename) {
         }
     }
 
+    for (auto f = F_material ; f <= F_pawnStruct; ++f){
+        for (auto g = F_material ; g <= f; ++g){
+            guess["secondorder"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::secondOrderFeature[f][g][MG],  -3000, 3000, "secondorder"  + std::to_string(f) + "_" + std::to_string(g)));
+            guess["secondorder"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::secondOrderFeature[f][g][EG],  -3000, 3000, "secondorderEG"  + std::to_string(f) + "_" + std::to_string(g)));
+        }
+    }
+
     for(auto it = guess.begin() ; it != guess.end(); ++it){
         std::cout << "\"" << it->first << "\",";
     }
@@ -679,7 +686,7 @@ void TexelTuning(const std::string & filename) {
         "Fawn",
         "storm",
         "pawnlessFlank",
-*/
+
         "rookBehindPassed",
         "rookFrontKing",
         "rookFrontQueen",
@@ -697,7 +704,7 @@ void TexelTuning(const std::string & filename) {
         "pieceBlocking",
         "minorOnOpen",
         "knightTooFar",
-/*
+
         "hanging",
         "pinned",
 
@@ -708,16 +715,15 @@ void TexelTuning(const std::string & filename) {
 
         "imbalance",
         "initiative",
-*/
 
         "kingThreat",
         "minorThreat",
         "queenThreat",
         "rookThreat",
-
+*/
         //"tempo"
 
-        
+        "secondorder",
 
     };
     

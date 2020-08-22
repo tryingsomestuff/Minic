@@ -24,6 +24,7 @@ namespace DynamicConfig{
     std::string NNUEFile     = "";
     bool genFen              = false;
     unsigned int genFenDepth = 8;
+    unsigned int genFenSkip  = 0;
 
     int styleComplexity      = 50;
     int styleMaterial        = 50;
@@ -33,4 +34,6 @@ namespace DynamicConfig{
     int styleAttack          = 50;
     int stylePawnStruct      = 50;
     int styleForwardness     = 50;
+
+    bool stylized            = false;
 }

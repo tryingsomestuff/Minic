@@ -93,17 +93,9 @@ enum Feature : unsigned char { F_material = 0, F_positional, F_development, F_mo
 inline Feature operator++(Feature & f){f=Feature(f+1); return f;}
 struct EvalFeatures{
     EvalScore scores[F_max] = { {0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0} };
-    float scalingFactor        = 1.f;
-    inline EvalScore SumUp()const{
-        EvalScore score = scores[F_material] 
-                        + scores[F_positional] 
-                        + scores[F_development] 
-                        + scores[F_mobility] 
-                        + scores[F_pawnStruct] 
-                        + scores[F_attack];
-        score += scores[F_complexity] * sgn(score[MG]);
-        return score;
-    }
+    float scalingFactor = 1.f;
+    EvalScore SumUp()const;
+    static void callBack();
 };
 
 

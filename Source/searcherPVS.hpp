@@ -85,7 +85,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
     }
 
 #ifdef WITH_GENFILE
-    if ( DynamicConfig::genFen ) writeToGenFile(p);
+    if ( DynamicConfig::genFen && ((stats.counters[Stats::sid_nodes]+stats.counters[Stats::sid_qnodes])%DynamicConfig::genFenSkip==0) ) writeToGenFile(p);
 #endif
 
     // if entry hash is not null and entry move is valid, this is a valid TT move (we don't care about depth here !)
@@ -248,22 +248,24 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
     }
 
     // IID
-    if ( (!validTTmove /*|| e.d < depth-4*/) && ((pvnode && depth >= SearchConfig::iidMinDepth) || (cutNode && depth >= SearchConfig::iidMinDepth2)) ){ ///@todo try with cutNode only ?
-        ++stats.counters[Stats::sid_iid];
-        PVList iidPV;
-        pvs<pvnode>(alpha,beta,p,depth/2,ply,iidPV,seldepth,isInCheck,cutNode,false,skipMoves);
-        if (stopFlag) return STOPSCORE;
-        TT::getEntry(*this, p, pHash, 0, e);
-        ttHit = e.h != nullHash;
-        validTTmove = ttHit && e.m != INVALIDMINIMOVE;
-        bound = TT::Bound(e.b & ~TT::B_allFlags);
-        ttPV = pvnode || (ttHit && (e.b&TT::B_ttFlag));
-        ttIsCheck = validTTmove && (e.b&TT::B_isCheckFlag);
-        formerPV = ttPV && !pvnode;
-        if ( ttHit && !isInCheck && ((bound == TT::B_alpha && e.s < evalScore) || (bound == TT::B_beta && e.s > evalScore) || (bound == TT::B_exact)) ){
-            evalScore = adjustHashScore(e.s,ply);
-            evalScoreIsHashScore=true;
-            marginDepth = std::max(1,depth-(evalScoreIsHashScore?e.d:0)); // a depth that take TT depth into account
+    if (!validTTmove /*|| e.d < depth-4*/){
+        if ( ((pvnode && depth >= SearchConfig::iidMinDepth) || (cutNode && depth >= SearchConfig::iidMinDepth2)) ){ ///@todo try with cutNode only ?
+            ++stats.counters[Stats::sid_iid];
+            PVList iidPV;
+            pvs<pvnode>(alpha,beta,p,depth/2,ply,iidPV,seldepth,isInCheck,cutNode,false,skipMoves);
+            if (stopFlag) return STOPSCORE;
+            TT::getEntry(*this, p, pHash, 0, e);
+            ttHit = e.h != nullHash;
+            validTTmove = ttHit && e.m != INVALIDMINIMOVE;
+            bound = TT::Bound(e.b & ~TT::B_allFlags);
+            ttPV = pvnode || (ttHit && (e.b&TT::B_ttFlag));
+            ttIsCheck = validTTmove && (e.b&TT::B_isCheckFlag);
+            formerPV = ttPV && !pvnode;
+            if ( ttHit && !isInCheck && ((bound == TT::B_alpha && e.s < evalScore) || (bound == TT::B_beta && e.s > evalScore) || (bound == TT::B_exact)) ){
+                evalScore = adjustHashScore(e.s,ply);
+                evalScoreIsHashScore=true;
+                marginDepth = std::max(1,depth-(evalScoreIsHashScore?e.d:0)); // a depth that take TT depth into account
+            }
         }
     }
 

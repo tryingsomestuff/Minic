@@ -113,16 +113,17 @@ namespace Options {
        #ifdef WITH_GENFILE
        _keys.push_back(KeyBase(k_bool,  w_check, "GenFen"                      , &DynamicConfig::genFen                         , false            , true ));
        _keys.push_back(KeyBase(k_int,   w_spin,  "GenFenDepth"                 , &DynamicConfig::genFenDepth                    , (unsigned int)2  , (unsigned int)20 ));
+       _keys.push_back(KeyBase(k_int,   w_spin,  "GenFenSkip"                  , &DynamicConfig::genFenSkip                     , (unsigned int)0  , (unsigned int)10000000 ));
        
        #endif
 
-       _keys.push_back(KeyBase(k_int, w_spin,  "StyleAttack"                   , &DynamicConfig::styleAttack                    , (int)0   , (int)100));
-       _keys.push_back(KeyBase(k_int, w_spin,  "StyleComplexity"               , &DynamicConfig::styleComplexity                , (int)0   , (int)100));
-       _keys.push_back(KeyBase(k_int, w_spin,  "StyleDevelopment"              , &DynamicConfig::styleDevelopment               , (int)0   , (int)100));
-       _keys.push_back(KeyBase(k_int, w_spin,  "StyleMaterial"                 , &DynamicConfig::styleMaterial                  , (int)0   , (int)100));
-       _keys.push_back(KeyBase(k_int, w_spin,  "StyleMobility"                 , &DynamicConfig::styleMobility                  , (int)0   , (int)100));
-       _keys.push_back(KeyBase(k_int, w_spin,  "StylePositional"               , &DynamicConfig::stylePositional                , (int)0   , (int)100));
-       _keys.push_back(KeyBase(k_int, w_spin,  "StyleForwardness"              , &DynamicConfig::styleForwardness               , (int)0   , (int)100));
+       _keys.push_back(KeyBase(k_int, w_spin,  "StyleAttack"                   , &DynamicConfig::styleAttack                    , (int)0   , (int)100                                    , &EvalFeatures::callBack));
+       _keys.push_back(KeyBase(k_int, w_spin,  "StyleComplexity"               , &DynamicConfig::styleComplexity                , (int)0   , (int)100                                    , &EvalFeatures::callBack));
+       _keys.push_back(KeyBase(k_int, w_spin,  "StyleDevelopment"              , &DynamicConfig::styleDevelopment               , (int)0   , (int)100                                    , &EvalFeatures::callBack));
+       _keys.push_back(KeyBase(k_int, w_spin,  "StyleMaterial"                 , &DynamicConfig::styleMaterial                  , (int)0   , (int)100                                    , &EvalFeatures::callBack));
+       _keys.push_back(KeyBase(k_int, w_spin,  "StyleMobility"                 , &DynamicConfig::styleMobility                  , (int)0   , (int)100                                    , &EvalFeatures::callBack));
+       _keys.push_back(KeyBase(k_int, w_spin,  "StylePositional"               , &DynamicConfig::stylePositional                , (int)0   , (int)100                                    , &EvalFeatures::callBack));
+       _keys.push_back(KeyBase(k_int, w_spin,  "StyleForwardness"              , &DynamicConfig::styleForwardness               , (int)0   , (int)100                                    , &EvalFeatures::callBack));
 
 #ifdef WITH_SEARCH_TUNING
        _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin0"                  , &SearchConfig::qfutilityMargin[0]                  , ScoreType(0)    , ScoreType(1500)     ));
@@ -159,6 +160,7 @@ namespace Options {
 
        _keys.push_back(KeyBase(k_depth, w_spin, "iidMinDepth"                       , &SearchConfig::iidMinDepth                         , DepthType(0)    , DepthType(30)       ));
        _keys.push_back(KeyBase(k_depth, w_spin, "iidMinDepth2"                      , &SearchConfig::iidMinDepth2                        , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "iidMinDepth3"                      , &SearchConfig::iidMinDepth3                        , DepthType(0)    , DepthType(30)       ));
        _keys.push_back(KeyBase(k_depth, w_spin, "probCutMinDepth"                   , &SearchConfig::probCutMinDepth                     , DepthType(0)    , DepthType(30)       ));
        _keys.push_back(KeyBase(k_int  , w_spin, "probCutMaxMoves"                   , &SearchConfig::probCutMaxMoves                     , 0               , 30                  ));
        _keys.push_back(KeyBase(k_score, w_spin, "probCutMargin"                     , &SearchConfig::probCutMargin                       , ScoreType(0)    , ScoreType(1500)     ));

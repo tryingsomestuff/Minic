@@ -92,9 +92,9 @@ int main(int argc, char ** argv) {
     else firstOption=argv[1];
     int ret = cliManagement(firstOption,argc,argv);
     STOP_AND_SUM_TIMER(Total)
-    #ifdef WITH_TIMER
-        Timers::Display();
-    #endif
+#ifdef WITH_TIMER
+    Timers::Display();
+#endif
     return ret;
 #else
     // only init TimeMan if needed ...
