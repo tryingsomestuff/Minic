@@ -46,6 +46,7 @@ extern CONST_CLOP_TUNING ScoreType failHighReductionThresholdInit[2];
 extern CONST_CLOP_TUNING ScoreType failHighReductionThresholdDepth[2];
 extern CONST_CLOP_TUNING DepthType iidMinDepth                  ;
 extern CONST_CLOP_TUNING DepthType iidMinDepth2                 ;
+extern CONST_CLOP_TUNING DepthType iidMinDepth3                 ;
 extern CONST_CLOP_TUNING DepthType probCutMinDepth              ;
 extern CONST_CLOP_TUNING int       probCutMaxMoves              ;
 extern CONST_CLOP_TUNING ScoreType probCutMargin                ;

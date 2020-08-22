@@ -29,6 +29,7 @@ CONST_CLOP_TUNING ScoreType futilityDepthCoeff        [2] = {160, 160};
 CONST_CLOP_TUNING ScoreType futilityDepthInit         [2] = {0  , 0};
 CONST_CLOP_TUNING DepthType iidMinDepth                   = 7;
 CONST_CLOP_TUNING DepthType iidMinDepth2                  = 10;
+CONST_CLOP_TUNING DepthType iidMinDepth3                  = 3;
 CONST_CLOP_TUNING DepthType probCutMinDepth               = 5;
 CONST_CLOP_TUNING int       probCutMaxMoves               = 5;
 CONST_CLOP_TUNING ScoreType probCutMargin                 = 80;

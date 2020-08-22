@@ -11,6 +11,7 @@ namespace Eval::NNUE{
 #endif
 
 struct Position; // forward decl
+
 bool readFEN(const std::string & fen, Position & p, bool silent = false, bool withMoveount = false); // forward decl
 
 /* The main position structure

@@ -73,7 +73,7 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
     }
 
 #ifdef WITH_GENFILE
-    if ( DynamicConfig::genFen ) writeToGenFile(p);
+    if ( DynamicConfig::genFen && ((stats.counters[Stats::sid_nodes]+stats.counters[Stats::sid_qnodes])%DynamicConfig::genFenSkip==0)) writeToGenFile(p);
 #endif
 
     if ( qRoot && interiorNodeRecognizer<true,false,true>(p) == MaterialHash::Ter_Draw) return drawScore(); ///@todo is that gain elo ???
