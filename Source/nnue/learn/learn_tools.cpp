@@ -205,7 +205,7 @@ struct PackedSfenValue{
 
 	// PV first move
 	// Used when finding the match rate with the teacher
-	uint16_t move; ///@todo use/convert the same "type" as SF ???
+	uint16_t move;
 
 	// Trouble of the phase from the initial phase.
 	uint16_t gamePly;
@@ -295,7 +295,6 @@ inline MiniMove ToSFMove(const Position & p, Square from, Square to, MType type)
 	else return FromSF::MakeMoveStd(from,to);		
 }
 
-///@todo
 inline MiniMove FromSFMove(const Position & p, MiniMove sfmove){ 
 	const Square from = FromSF::from_sq(sfmove);
 	const Square to = FromSF::to_sq(sfmove);

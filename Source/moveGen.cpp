@@ -371,7 +371,11 @@ bool apply(Position & p, const Move & m, bool noValidation){
     return true;
 }
 
-ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck, Searcher & context) {
+ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck, Searcher & 
+#ifdef WITH_GENFILE
+                      context
+#endif
+) {
     MoveList moves;
     MoveGen::generate<MoveGen::GP_all>(p, moves, false);
     if (moves.empty()) return isInCheck ? -MATE : 0;

@@ -107,8 +107,8 @@ namespace MaterialHash { // idea from Gull
       130, 140, 150, 160, 170, 180, 190, 200
     };
 
-    const ScoreType pushClose[8] = { 0, 0, 100, 80, 60, 40, 20,  10 };
-    //const ScoreType pushAway [8] = { 0, 5,  20, 40, 60, 80, 90, 100 };
+    const ScoreType pushClose[8] = { 0, 0, 100, 80, 60, 40, 20, 10 };
+    //const ScoreType pushAway [8] = { 0, 5, 20, 40, 60, 80, 90, 100 };
 
     ScoreType helperKXK(const Position &p, Color winningSide, ScoreType s){
         if (p.c != winningSide ){

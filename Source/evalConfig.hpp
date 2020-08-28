@@ -29,8 +29,10 @@ extern CONST_TEXEL_TUNING EvalScore   doublePawn[8][2]       ;
 extern CONST_TEXEL_TUNING EvalScore   isolatedPawn[8][2]     ;
 extern CONST_TEXEL_TUNING EvalScore   backwardPawn[8][2]     ;
 extern CONST_TEXEL_TUNING EvalScore   detachedPawn[8][2]     ;
+
 extern CONST_TEXEL_TUNING EvalScore   holesMalus             ;
 extern CONST_TEXEL_TUNING EvalScore   pieceFrontPawn         ;
+extern CONST_TEXEL_TUNING EvalScore   pawnFrontMinor         ;
 extern CONST_TEXEL_TUNING EvalScore   outpostN               ;
 extern CONST_TEXEL_TUNING EvalScore   outpostB               ;
 extern CONST_TEXEL_TUNING EvalScore   centerControl          ;

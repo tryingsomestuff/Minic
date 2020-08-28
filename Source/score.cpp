@@ -17,6 +17,7 @@ EvalScore EvalFeatures::SumUp()const{
                     + scores[F_attack];
     score += scores[F_complexity] * sgn(score[MG]);
 
+/*
     if ( !DynamicConfig::stylized){
        // try some kind of "second" order correction on features (if no style is activated)
        EvalScore score2 = 0;
@@ -25,9 +26,9 @@ EvalScore EvalFeatures::SumUp()const{
              score2 += ((scores[f]-scores[g])*EvalConfig::secondOrderFeature[f][g]);
           }
        }
-       score += score2/128;
+       score += score2/1024;
     }
-
+*/
     return score;
 }
 
