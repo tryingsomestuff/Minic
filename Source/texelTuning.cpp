@@ -466,6 +466,9 @@ void TexelTuning(const std::string & filename) {
     guess["pieceBlocking"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pieceFrontPawn[MG],-150,550,"pieceFrontPawn"));
     guess["pieceBlocking"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pieceFrontPawn[EG],-150,550,"pieceFrontPawnEG"));
 
+    guess["pawnFrontMinor"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnFrontMinor[MG],-150,550,"pawnFrontMinor"));
+    guess["pawnFrontMinor"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnFrontMinor[EG],-150,550,"pawnFrontMinorEG"));
+
     guess["holes"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::holesMalus[MG],-150,550,"holesMalus"));
     guess["holes"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::holesMalus[EG],-150,550,"holesMalusEG"));
     guess["holes"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::outpostN[MG],-150,550,"outpostN"));
@@ -704,6 +707,7 @@ void TexelTuning(const std::string & filename) {
         "pieceBlocking",
         "minorOnOpen",
         "knightTooFar",
+        "pawnFrontMinor",
 
         "hanging",
         "pinned",
@@ -720,10 +724,21 @@ void TexelTuning(const std::string & filename) {
         "minorThreat",
         "queenThreat",
         "rookThreat",
+        "secondorder",
 */
         //"tempo"
 
-        "secondorder",
+        "pieceBlocking",
+        "minorOnOpen",
+        "knightTooFar",
+        "pawnFrontMinor",        
+        "pairAdjust",
+        "adjustN",
+        "adjustR",
+        "adjustB",
+        "badBishop",     
+        "holes",
+        "center",   
 
     };
     

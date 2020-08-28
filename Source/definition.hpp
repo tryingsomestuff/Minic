@@ -62,7 +62,7 @@ const std::string MinicVersion = "dev";
 // ** NN and NNUE things
 //#define WITH_MLP // need tiny-dnn
 #define WITH_DATA2BIN
-#define WITH_GENFILE
+//#define WITH_GENFILE
 
 // *** Tuning
 //#define WITH_TIMER

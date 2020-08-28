@@ -93,6 +93,8 @@ const BitBoard rank6                     = 0x0000ff0000000000;
 const BitBoard rank7                     = 0x00ff000000000000;
 const BitBoard rank8                     = 0xff00000000000000;
 const BitBoard ranks[8] = {rank1,rank2,rank3,rank4,rank5,rank6,rank7,rank8};
+//const BitBoard diagA1H8                  = 0x8040201008040201;
+//const BitBoard diagA8H1                  = 0x0102040810204080;
 //const BitBoard center = BBSq_d4 | BBSq_d5 | BBSq_e4 | BBSq_e5;
 const BitBoard advancedRanks             = 0x0000ffffffff0000;
 
@@ -125,3 +127,9 @@ inline int popBit(BitBoard & b) {
     b &= b - 1;
     return i;
 }
+
+/*
+constexpr bool moreThanOne(BitBoard b) {
+  return b & (b - 1);
+}
+*/

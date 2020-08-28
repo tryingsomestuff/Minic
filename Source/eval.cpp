@@ -220,6 +220,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
     const BitBoard allPawns          = pawns[Co_White] | pawns[Co_Black];
     const BitBoard nonPawnMat[2]     = {p.allPieces[Co_White] & ~pawns[Co_White] , p.allPieces[Co_Black] & ~pawns[Co_Black]};
     const BitBoard occupancy         = p.occupancy();
+    const BitBoard minor[2]          = { knights[Co_White] | bishops[Co_White] , knights[Co_Black] | bishops[Co_Black]};
     ScoreType kdanger[2]             = {0, 0};
     BitBoard att[2]                  = {empty, empty}; // bitboard of squares attacked by color
     BitBoard att2[2]                 = {empty, empty}; // bitboard of squares attacked twice by color
@@ -423,6 +424,10 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
     features.scores[F_development] += EvalConfig::pieceFrontPawn * countBit( BBTools::shiftN<Co_White>(pawns[Co_White]) & nonPawnMat[Co_White] );
     features.scores[F_development] -= EvalConfig::pieceFrontPawn * countBit( BBTools::shiftN<Co_Black>(pawns[Co_Black]) & nonPawnMat[Co_Black] );
 
+    // pawn in front of own minor 
+    features.scores[F_development] += EvalConfig::pawnFrontMinor * countBit( BBTools::shiftS<Co_White>(pawns[Co_White]) & minor[Co_White] );
+    features.scores[F_development] -= EvalConfig::pawnFrontMinor * countBit( BBTools::shiftS<Co_Black>(pawns[Co_Black]) & minor[Co_Black] );
+
     // center control
     features.scores[F_development] += EvalConfig::centerControl * countBit(protectedSquare[Co_White] & extendedCenter);
     features.scores[F_development] -= EvalConfig::centerControl * countBit(protectedSquare[Co_Black] & extendedCenter);
@@ -440,8 +445,8 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
     features.scores[F_pawnStruct] -= EvalConfig::rookBehindPassed * (countBit(rooks[Co_Black] & BBTools::rearSpan<Co_Black>(pe.passed[Co_Black])) - countBit(rooks[Co_White] & BBTools::rearSpan<Co_Black>(pe.passed[Co_Black])));
 
     // protected minor blocking openfile
-    features.scores[F_positional] += EvalConfig::minorOnOpenFile * countBit(pe.openFiles & (p.whiteBishop()|knights[Co_White]) & pe.pawnTargets[Co_White]);
-    features.scores[F_positional] -= EvalConfig::minorOnOpenFile * countBit(pe.openFiles & (p.blackBishop()|knights[Co_Black]) & pe.pawnTargets[Co_Black]);
+    features.scores[F_positional] += EvalConfig::minorOnOpenFile * countBit(pe.openFiles & (minor[Co_White]) & pe.pawnTargets[Co_White]);
+    features.scores[F_positional] -= EvalConfig::minorOnOpenFile * countBit(pe.openFiles & (minor[Co_Black]) & pe.pawnTargets[Co_Black]);
 
     // knight on opponent hole, protected by pawn
     features.scores[F_positional] += EvalConfig::outpostN * countBit(pe.holes[Co_Black] & knights[Co_White] & pe.pawnTargets[Co_White]);

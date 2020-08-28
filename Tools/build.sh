@@ -29,8 +29,12 @@ mkdir -p $dir/Dist/Minic2
 d="-DDEBUG_TOOL"
 v="dev"
 t="-march=native"
+
+avx512support=$(grep -c avx512 /proc/cpuinfo)
 avx2support=$(grep -c avx2 /proc/cpuinfo)
-if (test $avx2support -ne 0); then
+if (test $avx512support -ne 0); then
+   n="-DUSE_AVX512 -DUSE_AVX2 -DUSE_SSE41 -DUSE_SSSE3 -DUSE_SSE2"
+elif (test $avx2support -ne 0); then
    n="-DUSE_AVX2 -DUSE_SSE41 -DUSE_SSSE3 -DUSE_SSE2"
 else
    n="-DUSE_SSE41 -DUSE_SSSE3 -DUSE_SSE2"
@@ -66,9 +70,9 @@ echo "Building $exe"
 
 WARN="-Wall -Wcast-qual -Wno-char-subscripts -Wno-reorder -Wmaybe-uninitialized -Wuninitialized -pedantic -Wextra -Wshadow -Wfatal-errors -Wno-unknown-warning-option"
 
-OPT="-s $WARN $d -DNDEBUG -O3 $t --std=c++17 $n" ; DEPTH=20
-#OPT="-s $WARN $d -ffunction-sections -fdata-sections -Os -s -DNDEBUG -Wl,--gc-sections $t --std=c++17" ; DEPTH=20
-#OPT="$WARN $d -DNDEBUG -O3 -g -ggdb -fno-omit-frame-pointer $t --std=c++17" ; DEPTH=20
+OPT="-s $WARN $d -DNDEBUG -O3 $t --std=c++17 $n" ; DEPTH=16
+#OPT="-s $WARN $d -ffunction-sections -fdata-sections -Os -s -DNDEBUG -Wl,--gc-sections $t --std=c++17" ; DEPTH=16
+#OPT="$WARN $d -DNDEBUG -O3 -g -ggdb -fno-omit-frame-pointer $t --std=c++17" ; DEPTH=16
 #OPT="$WARN $d -DNDEBUG -g $t --std=c++17" ; DEPTH=10
 #OPT="$WARN $d -g $t --std=c++17" ; DEPTH=10
 
@@ -107,6 +111,7 @@ echo "end of first compilation"
 if [ $? = "0" ]; then
    echo "running Minic for profiling : $dir/Dist/Minic2/$exe"
    $dir/Dist/Minic2/$exe bench $DEPTH -quiet 0 
+   #$dir/Dist/Minic2/$exe bench $DEPTH -quiet 0 -NNUEFile nn.bin
    echo "starting optimized compilation"
    $CXX -fprofile-use $OPT Source/*.cpp -ISource -ISource/nnue -ISource/nnue/architectures -ISource/nnue/features -ISource/nnue/layers -o $dir/Dist/Minic2/$exe $LIBS
    echo "done "
