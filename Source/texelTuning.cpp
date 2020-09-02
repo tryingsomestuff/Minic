@@ -466,8 +466,10 @@ void TexelTuning(const std::string & filename) {
     guess["pieceBlocking"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pieceFrontPawn[MG],-150,550,"pieceFrontPawn"));
     guess["pieceBlocking"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pieceFrontPawn[EG],-150,550,"pieceFrontPawnEG"));
 
-    guess["pawnFrontMinor"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnFrontMinor[MG],-150,550,"pawnFrontMinor"));
-    guess["pawnFrontMinor"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnFrontMinor[EG],-150,550,"pawnFrontMinorEG"));
+    for (int r = 0 ; r < 8 ; ++r){
+       guess["pawnFrontMinor"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnFrontMinor[r][MG],-150,550,"pawnFrontMinor_"+ std::to_string(r)));
+       guess["pawnFrontMinor"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnFrontMinor[r][EG],-150,550,"pawnFrontMinorEG_"+ std::to_string(r)));
+    }
 
     guess["holes"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::holesMalus[MG],-150,550,"holesMalus"));
     guess["holes"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::holesMalus[EG],-150,550,"holesMalusEG"));
@@ -504,8 +506,18 @@ void TexelTuning(const std::string & filename) {
     guess["shield"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnShieldBonus[MG]     ,-150,550,"pawnShieldBonus0"));
     guess["shield"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::pawnShieldBonus[EG]     ,-150,550,"pawnShieldBonus1"));
 
-    guess["kingNearPassed"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingNearPassedPawn[MG],-150,550,"kingNearPassedPawn"));
-    guess["kingNearPassed"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingNearPassedPawn[EG],-150,550,"kingNearPassedPawnEG"));
+    for (int k = 0; k < 8; ++k) {
+        for (int r = 0; r < 8; ++r) {
+           guess["kingNearPassed"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingNearPassedPawnSupport[k][r][MG],-150,550,"kingNearPassedPawnSupport"+ std::to_string(k)+ std::to_string(r)));
+           guess["kingNearPassed"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingNearPassedPawnSupport[k][r][EG],-150,550,"kingNearPassedPawnSupport"+ std::to_string(k)+ std::to_string(r)));
+        }
+    }
+    for (int k = 0; k < 8; ++k) {
+        for (int r = 0; r < 8; ++r) {
+           guess["kingNearPassed"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingNearPassedPawnDefend[k][r][MG],-150,550,"kingNearPassedPawnDefend"+ std::to_string(k)+ std::to_string(r)));
+           guess["kingNearPassed"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::kingNearPassedPawnDefend[k][r][EG],-150,550,"kingNearPassedPawnDefend"+ std::to_string(k)+ std::to_string(r)));
+        }
+    }
 
     guess["rookBehindPassed"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookBehindPassed[MG] , -500,  500,"rookBehindPassed0"));
     guess["rookBehindPassed"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::rookBehindPassed[EG] , -500,  500,"rookBehindPassed1"));
@@ -739,6 +751,7 @@ void TexelTuning(const std::string & filename) {
         "badBishop",     
         "holes",
         "center",   
+        "kingNearPassed"
 
     };
     

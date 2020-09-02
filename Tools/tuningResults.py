@@ -13,6 +13,9 @@ features = [ 'imbalance', 'PST0', 'PST1', 'PST2', 'PST3', 'PST4', 'PST5',
              'mobility', 'initiative', 
              'attDefKing', 'attFunction', 'attOpenFile', 'attNoqueen', 'secondorder' ]
 
+if len(sys.argv) > 1:
+    features = sys.argv[1:]
+
 for f in features:
     try:
         with open("TuningOutput/tuning_"+f+".csv", "r") as ff:
@@ -35,6 +38,8 @@ for f in features:
                 os.system("python ./Tools/PawnStr1.py \"" + ll + "\"")
             elif "pawnStructure4" in f:
                 os.system("python ./Tools/PawnStr1.py \"" + ll + "\"")
+            elif "kingNearPassed" in f:
+                os.system("python ./Tools/rank_file.py \"" + ll + "\"")
             elif "attDefKing" in f:
                 o = ""
                 v = ll.split(';')[1:-1]
