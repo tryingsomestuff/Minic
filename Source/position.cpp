@@ -171,12 +171,12 @@ const EvalList* Position::eval_list() const {
     return &_evalList; 
 }
 
-Eval::NNUE::Accumulator & Position::accumulator()const{
+NNUE::Accumulator & Position::accumulator()const{
     assert(_accumulator);
     return *_accumulator;
 }
 
-Eval::NNUE::Accumulator * Position::previousAccumulatorPtr()const{
+NNUE::Accumulator * Position::previousAccumulatorPtr()const{
     return _previousAccumulator;
 }
 
@@ -195,7 +195,7 @@ Position & Position::operator =(const Position & p){
 #pragma GCC diagnostic pop
     if (DynamicConfig::useNNUE){
        if ( _accumulator ) delete _accumulator;
-       _accumulator = new Eval::NNUE::Accumulator();
+       _accumulator = new NNUE::Accumulator();
        _previousAccumulator = p._accumulator;
     }
     return *this;
@@ -208,7 +208,7 @@ Position::Position(const Position & p){
     std::memcpy(this, &p, offsetof(Position, _accumulator));
 #pragma GCC diagnostic pop
     if (DynamicConfig::useNNUE){
-       _accumulator = new Eval::NNUE::Accumulator();
+       _accumulator = new NNUE::Accumulator();
        _previousAccumulator = p._accumulator;    
     }
 }
@@ -216,7 +216,7 @@ Position::Position(const Position & p){
 void Position::resetAccumulator(){
     if (DynamicConfig::useNNUE){
        if ( _accumulator) delete _accumulator;
-       _accumulator = new Eval::NNUE::Accumulator();
+       _accumulator = new NNUE::Accumulator();
        _previousAccumulator = nullptr;    
     }
 }

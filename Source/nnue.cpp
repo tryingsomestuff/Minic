@@ -16,7 +16,7 @@
 // this is used to scale NNUE score to classic eval score. 
 // This way search params can remain the same ... more or less ...
 // see compute_scaling
-int nnue::NNUEscaling = 64; // from 32 to 128      x_scaled = x * NNUEscaling / 64
+int NNUEWrapper::NNUEscaling = 64; // from 32 to 128      x_scaled = x * NNUEscaling / 64
 
 // defined in nnue_def.h
 // Must be user defined in order to respect Piece engine piece order
@@ -38,22 +38,22 @@ ExtPieceSquare kpp_board_index[PIECE_NB] = {
     { PS_W_KING,   PS_B_KING   }
 };
 
-namespace nnue{
+namespace NNUEWrapper{
 
 std::string eval_file_loaded="None";
 
 // Load the evaluation function file
 bool load_eval_file(const std::string& evalFile) {
-    Eval::NNUE::Initialize();
-    Eval::NNUE::fileName = evalFile;
+    NNUE::Initialize();
+    NNUE::fileName = evalFile;
     std::ifstream stream(evalFile, std::ios::binary);
-    const bool result = Eval::NNUE::ReadParameters(stream);
+    const bool result = NNUE::ReadParameters(stream);
     return result;
 }
 
 // Evaluation function. Perform differential calculation.
 ScoreType evaluate(const Position& pos) {
-    ScoreType v = Eval::NNUE::ComputeScore(pos, false);
+    ScoreType v = NNUE::ComputeScore(pos, false);
     v = std::min(std::max(v, ScoreType(-WIN + 1)), ScoreType(WIN - 1));
     return v;
 }
@@ -137,16 +137,25 @@ void compute_scaling(int count){
         readFEN(startPosition,p,true);
         continue;
     }
-    nnue::NNUEscaling = int(factor*64/k);
-    Logging::LogIt(Logging::logInfo) << "NNUEscaling " << nnue::NNUEscaling << " (" << factor/k << ")";
+    NNUEWrapper::NNUEscaling = int(factor*64/k);
+    Logging::LogIt(Logging::logInfo) << "NNUEscaling " << NNUEWrapper::NNUEscaling << " (" << factor/k << ")";
 
     DynamicConfig::disableTT = bkTT;
 }
 
 } // nnue
 
+// EVAL
 #include "nnue/features/half_kp.cpp"
 #include "nnue/evaluate_nnue.cpp"
+
+// TOOLS
 #include "nnue/learn/learn_tools.cpp"
+
+// LEARNER
+/*
+#include "nnue/learn/multi_think.cpp"
+#include "nnue/learn/learner.cpp"
+*/
 
 #endif

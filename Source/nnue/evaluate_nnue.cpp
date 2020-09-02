@@ -26,7 +26,7 @@
 #include "evaluate_nnue.h"
 #include "nnue_accumulator.h"
 
-namespace Eval::NNUE {
+namespace NNUE {
 
   std::string fileName;
 
@@ -54,12 +54,26 @@ namespace Eval::NNUE {
     return pointer->ReadParameters(stream);
   }
 
+  // write evaluation function parameters
+  template <typename T>
+  bool WriteParameters(std::ostream& stream, const AlignedPtr<T>& pointer) {
+    constexpr std::uint32_t header = T::GetHashValue();
+    stream.write(reinterpret_cast<const char*>(&header), sizeof(header));
+    return pointer->WriteParameters(stream);
+  }
+
   }  // namespace Detail
 
   // Initialize the evaluation function parameters
   void Initialize() {
     Detail::Initialize(feature_transformer);
     Detail::Initialize(network);
+  }
+
+  // Get a string that represents the structure of the evaluation function
+  std::string GetArchitectureString() {
+    return "Features=" + FeatureTransformer::GetStructureString() +
+      ",Network=" + Network::GetStructureString();
   }
 
   // Read network header
@@ -76,6 +90,17 @@ namespace Eval::NNUE {
     return !stream.fail();
   }
 
+  // write the header
+  bool WriteHeader(std::ostream& stream,
+    std::uint32_t hash_value, const std::string& architecture) {
+    stream.write(reinterpret_cast<const char*>(&kVersion), sizeof(kVersion));
+    stream.write(reinterpret_cast<const char*>(&hash_value), sizeof(hash_value));
+    const std::uint32_t size = static_cast<std::uint32_t>(architecture.size());
+    stream.write(reinterpret_cast<const char*>(&size), sizeof(size));
+    stream.write(architecture.data(), size);
+    return !stream.fail();
+  }
+
   // Read network parameters
   bool ReadParameters(std::istream& stream) {
     std::uint32_t hash_value;
@@ -85,6 +110,14 @@ namespace Eval::NNUE {
     if (!Detail::ReadParameters(stream, feature_transformer)) return false;
     if (!Detail::ReadParameters(stream, network)) return false;
     return stream && stream.peek() == std::ios::traits_type::eof();
+  }
+
+  // write evaluation function parameters
+  bool WriteParameters(std::ostream& stream) {
+    if (!WriteHeader(stream, kHashValue, GetArchitectureString())) return false;
+    if (!Detail::WriteParameters(stream, feature_transformer)) return false;
+    if (!Detail::WriteParameters(stream, network)) return false;
+    return !stream.fail();
   }
 
   // Proceed with the difference calculation if possible
@@ -111,4 +144,4 @@ namespace Eval::NNUE {
     return accumulator.score;
   }
 
-} // namespace Eval::NNUE
+} // namespace NNUE

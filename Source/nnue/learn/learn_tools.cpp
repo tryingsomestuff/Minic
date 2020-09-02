@@ -15,12 +15,58 @@
 #include "position.hpp"
 #include "positionTools.hpp"
 
+#include "learn_tools.hpp"
+
 using namespace std;
 
 #ifdef WITH_DATA2BIN
 
 // Mostly copy/paste from nodchip Stockfish repository and adapted to Minic
 // Tools for handling various learning data format
+
+// in order for Minic data generation and use to stay compatible with SF one, 
+// I need to handle SF move encoding in the binary format ...
+// So here is some SF extracted Move usage things
+
+namespace FromSF {
+
+enum MoveType {
+	NORMAL,
+	PROMOTION = 1 << 14,
+	ENPASSANT = 2 << 14,
+	CASTLING  = 3 << 14
+};
+
+template<MoveType T>
+constexpr MiniMove MakeMove(Square from, Square to, Piece prom = P_wn) {
+	return MiniMove(T + ((prom - P_wn) << 12) + (from << 6) + to);
+}
+
+constexpr MiniMove MakeMoveStd(Square from, Square to) {
+	return MiniMove((from << 6) + to);
+}
+
+constexpr Square from_sq(Move m) {
+  return Square((m >> 6) & 0x3F);
+}
+
+constexpr Square to_sq(Move m) {
+  return Square(m & 0x3F);
+}
+
+constexpr MoveType type_of(Move m) {
+  return MoveType(m & (3 << 14));
+}
+
+constexpr Piece promotion_type(Move m) {
+  return Piece(((m >> 12) & 3) + P_wn);
+}
+
+constexpr Square flip_rank(Square s) { return Square(s ^ Sq_a8); }
+
+constexpr Square flip_file(Square s) { return Square(s ^ Sq_h1); }
+
+} // FromSF
 
 namespace { // anonymous
 
@@ -192,86 +238,11 @@ Piece read_board_piece_from_stream(){
 
 }; // SfenPacker
 
-struct PackedSfen { 
-	uint8_t data[32]; 
-}; 
-
-struct PackedSfenValue{
-	// phase
-	PackedSfen sfen;
-
-	// Evaluation value returned from Learner::search()
-	int16_t score;
-
-	// PV first move
-	// Used when finding the match rate with the teacher
-	uint16_t move;
-
-	// Trouble of the phase from the initial phase.
-	uint16_t gamePly;
-
-	// 1 if the player on this side ultimately wins the game. -1 if you are losing.
-	// 0 if a draw is reached.
-	// The draw is in the teacher position generation command gensfen,
-	// Only write if LEARN_GENSFEN_DRAW_RESULT is enabled.
-	int8_t game_result;
-
-	// When exchanging the file that wrote the teacher aspect with other people
-	//Because this structure size is not fixed, pad it so that it is 40 bytes in any environment.
-	uint8_t padding;
-
-	// 32 + 2 + 2 + 2 + 1 + 1 = 40bytes
-};
-
 void sfen_pack(const Position & p, PackedSfen& sfen){
 	SfenPacker sp;
 	sp.data = (uint8_t*)&sfen;
 	sp.pack(p);
 }
-
-// in order for Minic data generation and use to stay compatible with SF one, 
-// I need to handle SF move encoding in the binary format ...
-// So here is some SF extracted Move usage things
-
-namespace FromSF {
-
-enum MoveType {
-	NORMAL,
-	PROMOTION = 1 << 14,
-	ENPASSANT = 2 << 14,
-	CASTLING  = 3 << 14
-};
-
-template<MoveType T>
-constexpr MiniMove MakeMove(Square from, Square to, Piece prom = P_wn) {
-	return MiniMove(T + ((prom - P_wn) << 12) + (from << 6) + to);
-}
-
-constexpr MiniMove MakeMoveStd(Square from, Square to) {
-	return MiniMove((from << 6) + to);
-}
-
-constexpr Square from_sq(Move m) {
-  return Square((m >> 6) & 0x3F);
-}
-
-constexpr Square to_sq(Move m) {
-  return Square(m & 0x3F);
-}
-
-constexpr MoveType type_of(Move m) {
-  return MoveType(m & (3 << 14));
-}
-
-constexpr Piece promotion_type(Move m) {
-  return Piece(((m >> 12) & 3) + P_wn);
-}
-
-constexpr Square flip_rank(Square s) { return Square(s ^ Sq_a8); }
-
-constexpr Square flip_file(Square s) { return Square(s ^ Sq_h1); }
-
-} // FromSF
 
 inline MiniMove ToSFMove(const Position & p, Square from, Square to, MType type){ 
 	assert(from >= 0 && from < 64); 
@@ -404,6 +375,8 @@ inline void trim(std::string &s) {
 	ltrim(s);
 	rtrim(s);
 }
+
+} // anonymous
 
 // If there is a problem with the passed phase and there is an error, non-zero is returned.
 int set_from_packed_sfen(Position &p, PackedSfen& sfen , bool mirror){
@@ -553,8 +526,6 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen , bool mirror){
 
 	return 0;
 }
-
-} // anonymous
 
 bool convert_bin(const vector<string>& filenames, const string& output_file_name, 
 				const int ply_minimum, const int ply_maximum, const int interpolate_eval){

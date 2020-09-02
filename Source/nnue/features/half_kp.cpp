@@ -23,7 +23,7 @@
 
 #include "../../position.hpp"
 
-namespace Eval::NNUE::Features {
+namespace NNUE::Features {
 
   // Find the index of the feature quantity from the king position and PieceSquare
   template <Side AssociatedKing>
@@ -91,4 +91,4 @@ namespace Eval::NNUE::Features {
 
   template class HalfKP<Side::kFriend>;
 
-}  // namespace Eval::NNUE::Features
+}  // namespace NNUE::Features

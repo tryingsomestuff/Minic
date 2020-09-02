@@ -25,7 +25,7 @@
 
 #include <memory>
 
-namespace Eval::NNUE {
+namespace NNUE {
 
   // Evaluation function file name
   extern std::string fileName;
@@ -50,6 +50,6 @@ namespace Eval::NNUE {
   void Initialize();
   bool ReadParameters(std::istream& stream);
   void UpdateAccumulatorIfPossible(const Position& pos);
-}  // namespace Eval::NNUE
+}  // namespace NNUE
 
 #endif // #ifndef NNUE_EVALUATE_NNUE_H_INCLUDED

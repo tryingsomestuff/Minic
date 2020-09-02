@@ -26,7 +26,7 @@
 
 struct Position;
 
-namespace Eval::NNUE::Features {
+namespace NNUE::Features {
 
   // Feature HalfKP: Combination of the position of own king
   // and the position of pieces other than kings
@@ -64,6 +64,6 @@ namespace Eval::NNUE::Features {
                           PieceSquare** pieces, Square* sq_target_k);
   };
 
-}  // namespace Eval::NNUE::Features
+}  // namespace NNUE::Features
 
 #endif // #ifndef NNUE_FEATURES_HALF_KP_H_INCLUDED

@@ -24,7 +24,7 @@
 #include <iostream>
 #include "../nnue_common.h"
 
-namespace Eval::NNUE::Layers {
+namespace NNUE::Layers {
 
   // Affine transformation layer
   template <typename PreviousLayer, IndexType OutputDimensions>
@@ -59,6 +59,14 @@ namespace Eval::NNUE::Layers {
       return hash_value;
     }
 
+    // A string that represents the structure from the input layer to this layer
+    static std::string GetStructureString() {
+      return "AffineTransform[" +
+        std::to_string(kOutputDimensions) + "<-" +
+        std::to_string(kInputDimensions) + "](" +
+        PreviousLayer::GetStructureString() + ")";
+    }
+
    // Read network parameters
     bool ReadParameters(std::istream& stream) {
       if (!previous_layer_.ReadParameters(stream)) return false;
@@ -66,6 +74,17 @@ namespace Eval::NNUE::Layers {
         biases_[i] = read_little_endian<BiasType>(stream);
       for (std::size_t i = 0; i < kOutputDimensions * kPaddedInputDimensions; ++i)
         weights_[i] = read_little_endian<WeightType>(stream);
+      return !stream.fail();
+    }
+
+    // write parameters
+    bool WriteParameters(std::ostream& stream) const {
+      if (!previous_layer_.WriteParameters(stream)) return false;
+      stream.write(reinterpret_cast<const char*>(biases_),
+        kOutputDimensions * sizeof(BiasType));
+      stream.write(reinterpret_cast<const char*>(weights_),
+        kOutputDimensions * kPaddedInputDimensions *
+        sizeof(WeightType));
       return !stream.fail();
     }
 
@@ -255,6 +274,6 @@ namespace Eval::NNUE::Layers {
         WeightType weights_[kOutputDimensions * kPaddedInputDimensions];
   };
 
-}  // namespace Eval::NNUE::Layers
+}  // namespace NNUE::Layers
 
 #endif // #ifndef NNUE_LAYERS_AFFINE_TRANSFORM_H_INCLUDED
