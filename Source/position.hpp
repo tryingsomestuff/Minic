@@ -5,7 +5,7 @@
 #ifdef WITH_NNUE
 #include "nnue_def.h"
 
-namespace Eval::NNUE{
+namespace NNUE{
    struct Accumulator; // Forward decl
 }
 #endif
@@ -86,14 +86,14 @@ struct Position{
 #ifdef WITH_NNUE
     EvalList _evalList;
     mutable DirtyPiece _dirtyPiece;
-    mutable Eval::NNUE::Accumulator * _accumulator = nullptr;
-    mutable Eval::NNUE::Accumulator * _previousAccumulator = nullptr;
+    mutable NNUE::Accumulator * _accumulator = nullptr;
+    mutable NNUE::Accumulator * _previousAccumulator = nullptr;
 
     // minimal API for the NNUE "lib" part
     const DirtyPiece & dirtyPiece() const;
     const EvalList* eval_list() const;
-    Eval::NNUE::Accumulator & accumulator() const;
-    Eval::NNUE::Accumulator * previousAccumulatorPtr() const;
+    NNUE::Accumulator & accumulator() const;
+    NNUE::Accumulator * previousAccumulatorPtr() const;
     inline Color side_to_move()const { return c; }
 
     // engine internal usage

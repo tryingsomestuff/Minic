@@ -30,7 +30,7 @@
 
 #include <cstring> // std::memset()
 
-namespace Eval::NNUE {
+namespace NNUE {
 
   // Input feature converter
   class FeatureTransformer {
@@ -56,12 +56,28 @@ namespace Eval::NNUE {
       return RawFeatures::kHashValue ^ kOutputDimensions;
     }
 
+    // a string representing the structure
+    static std::string GetStructureString() {
+      return RawFeatures::GetName() + "[" +
+        std::to_string(kInputDimensions) + "->" +
+        std::to_string(kHalfDimensions) + "x2]";
+    }
+
     // Read network parameters
     bool ReadParameters(std::istream& stream) {
       for (std::size_t i = 0; i < kHalfDimensions; ++i)
         biases_[i] = read_little_endian<BiasType>(stream);
       for (std::size_t i = 0; i < kHalfDimensions * kInputDimensions; ++i)
         weights_[i] = read_little_endian<WeightType>(stream);
+      return !stream.fail();
+    }
+
+    // write parameters
+    bool WriteParameters(std::ostream& stream) const {
+      stream.write(reinterpret_cast<const char*>(biases_),
+        kHalfDimensions * sizeof(BiasType));
+      stream.write(reinterpret_cast<const char*>(weights_),
+        kHalfDimensions * kInputDimensions * sizeof(WeightType));
       return !stream.fail();
     }
 
@@ -376,6 +392,6 @@ namespace Eval::NNUE {
         WeightType weights_[kHalfDimensions * kInputDimensions];
   };
 
-}  // namespace Eval::NNUE
+}  // namespace NNUE
 
 #endif // #ifndef NNUE_FEATURE_TRANSFORMER_H_INCLUDED

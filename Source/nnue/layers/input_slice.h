@@ -23,7 +23,7 @@
 
 #include "../nnue_common.h"
 
-namespace Eval::NNUE::Layers {
+namespace NNUE::Layers {
 
 // Input layer
 template <IndexType OutputDimensions, IndexType Offset = 0>
@@ -48,8 +48,20 @@ class InputSlice {
     return hash_value;
   }
 
+  // A string that represents the structure from the input layer to this layer
+  static std::string GetStructureString() {
+    return "InputSlice[" + std::to_string(kOutputDimensions) + "(" +
+      std::to_string(Offset) + ":" +
+      std::to_string(Offset + kOutputDimensions) + ")]";
+  }
+
   // Read network parameters
   bool ReadParameters(std::istream& /*stream*/) {
+    return true;
+  }
+
+  // write parameters
+  bool WriteParameters(std::ostream& /*stream*/) const {
     return true;
   }
 

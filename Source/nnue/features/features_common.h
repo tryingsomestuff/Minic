@@ -23,7 +23,7 @@
 
 #include "../nnue_common.h"
 
-namespace Eval::NNUE::Features {
+namespace NNUE::Features {
 
   class IndexList;
 
@@ -39,6 +39,6 @@ namespace Eval::NNUE::Features {
     kFriend // side to move
   };
 
-}  // namespace Eval::NNUE::Features
+}  // namespace NNUE::Features
 
 #endif // #ifndef NNUE_FEATURES_COMMON_H_INCLUDED

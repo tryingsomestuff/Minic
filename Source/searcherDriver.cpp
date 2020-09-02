@@ -41,7 +41,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
     if ( isMainThread() ) initCaslingPermHashTable(p); // let's be sure ... ///@todo clean up this crap !!!!
 
 #ifdef WITH_NNUE
-    nnue::verify_NNUE();
+    NNUEWrapper::verify_NNUE();
 #endif
 
     DynamicConfig::level = DynamicConfig::limitStrength ? Skill::Elo2Level() : DynamicConfig::level;

@@ -17,7 +17,7 @@ struct Position; // forward decl
 #define NNUEValue ScoreType
 
 // Internal wrapper to the NNUE things
-namespace nnue{
+namespace NNUEWrapper{
 
   // NNUE eval scaling factor
   extern int NNUEscaling;

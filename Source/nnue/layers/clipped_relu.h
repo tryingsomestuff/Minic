@@ -23,7 +23,7 @@
 
 #include "../nnue_common.h"
 
-namespace Eval::NNUE::Layers {
+namespace NNUE::Layers {
 
   // Clipped ReLU
   template <typename PreviousLayer>
@@ -54,9 +54,21 @@ namespace Eval::NNUE::Layers {
       return hash_value;
     }
 
+    // A string that represents the structure from the input layer to this layer
+    static std::string GetStructureString() {
+      return "ClippedReLU[" +
+        std::to_string(kOutputDimensions) + "](" +
+        PreviousLayer::GetStructureString() + ")";
+    }
+
     // Read network parameters
     bool ReadParameters(std::istream& stream) {
       return previous_layer_.ReadParameters(stream);
+    }
+
+    // write parameters
+    bool WriteParameters(std::ostream& stream) const {
+      return previous_layer_.WriteParameters(stream);
     }
 
     // Forward propagation
@@ -161,6 +173,6 @@ namespace Eval::NNUE::Layers {
     PreviousLayer previous_layer_;
   };
 
-}  // namespace Eval::NNUE::Layers
+}  // namespace NNUE::Layers
 
 #endif // NNUE_LAYERS_CLIPPED_RELU_H_INCLUDED

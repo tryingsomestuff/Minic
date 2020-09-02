@@ -23,7 +23,7 @@
 
 #include "nnue_architecture.h"
 
-namespace Eval::NNUE {
+namespace NNUE {
 
   // Class that holds the result of affine transformation of input features
   struct alignas(kCacheLineSize) Accumulator {
@@ -34,6 +34,6 @@ namespace Eval::NNUE {
     bool computed_score;
   };
 
-}  // namespace Eval::NNUE
+}  // namespace NNUE
 
 #endif // NNUE_ACCUMULATOR_H_INCLUDED

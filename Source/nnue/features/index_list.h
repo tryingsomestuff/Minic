@@ -23,7 +23,7 @@
 
 #include "../nnue_architecture.h"
 
-namespace Eval::NNUE::Features {
+namespace NNUE::Features {
 
   // Class template used for feature index list
   template <typename T, std::size_t MaxSize>
@@ -58,6 +58,6 @@ namespace Eval::NNUE::Features {
       : public ValueList<IndexType, RawFeatures::kMaxActiveDimensions> {
   };
 
-}  // namespace Eval::NNUE::Features
+}  // namespace NNUE::Features
 
 #endif // NNUE_FEATURES_INDEX_LIST_H_INCLUDED
