@@ -22,7 +22,8 @@ extern CONST_TEXEL_TUNING EvalScore   pawnFawnMalusKS        ;
 extern CONST_TEXEL_TUNING EvalScore   pawnFawnMalusQS        ;
 extern CONST_TEXEL_TUNING EvalScore   passerBonus[8]         ;
 extern CONST_TEXEL_TUNING EvalScore   rookBehindPassed       ;
-extern CONST_TEXEL_TUNING EvalScore   kingNearPassedPawn     ;
+extern CONST_TEXEL_TUNING EvalScore   kingNearPassedPawnSupport[8][8];
+extern CONST_TEXEL_TUNING EvalScore   kingNearPassedPawnDefend[8][8];
 enum PawnEvalSemiOpen{ Close=0, SemiOpen=1};
 
 extern CONST_TEXEL_TUNING EvalScore   doublePawn[8][2]       ;
@@ -32,7 +33,7 @@ extern CONST_TEXEL_TUNING EvalScore   detachedPawn[8][2]     ;
 
 extern CONST_TEXEL_TUNING EvalScore   holesMalus             ;
 extern CONST_TEXEL_TUNING EvalScore   pieceFrontPawn         ;
-extern CONST_TEXEL_TUNING EvalScore   pawnFrontMinor         ;
+extern CONST_TEXEL_TUNING EvalScore   pawnFrontMinor[8]      ;
 extern CONST_TEXEL_TUNING EvalScore   outpostN               ;
 extern CONST_TEXEL_TUNING EvalScore   outpostB               ;
 extern CONST_TEXEL_TUNING EvalScore   centerControl          ;

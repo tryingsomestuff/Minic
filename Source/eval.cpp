@@ -73,7 +73,7 @@ template< Color C>
 inline void evalPawnPasser(const Position & p, BitBoard pieceBBiterator, EvalScore & score){
     while (pieceBBiterator) {
         const Square k = popBit(pieceBBiterator);
-        const EvalScore kingNearBonus   = EvalConfig::kingNearPassedPawn * ScoreType( chebyshevDistance(p.king[~C], k) - chebyshevDistance(p.king[C], k) );
+        const EvalScore kingNearBonus   = EvalConfig::kingNearPassedPawnSupport[chebyshevDistance(p.king[C], k)][ColorRank<C>(k)] + EvalConfig::kingNearPassedPawnDefend[chebyshevDistance(p.king[~C], k)][ColorRank<~C>(k)];
         const bool unstoppable          = (p.mat[~C][M_t] == 0)&&((chebyshevDistance(p.king[~C],PromotionSquare<C>(k))-int(p.c!=C)) > std::min(Square(5), chebyshevDistance(PromotionSquare<C>(k),k)));
         if (unstoppable) score += ColorSignHelper<C>()*(Values[P_wr+PieceShift] - Values[P_wp+PieceShift]); // yes rook not queen to force promotion asap
         else             score += (EvalConfig::passerBonus[ColorRank<C>(k)] + kingNearBonus)*ColorSignHelper<C>();
@@ -425,8 +425,14 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
     features.scores[F_development] -= EvalConfig::pieceFrontPawn * countBit( BBTools::shiftN<Co_Black>(pawns[Co_Black]) & nonPawnMat[Co_Black] );
 
     // pawn in front of own minor 
-    features.scores[F_development] += EvalConfig::pawnFrontMinor * countBit( BBTools::shiftS<Co_White>(pawns[Co_White]) & minor[Co_White] );
-    features.scores[F_development] -= EvalConfig::pawnFrontMinor * countBit( BBTools::shiftS<Co_Black>(pawns[Co_Black]) & minor[Co_Black] );
+    BitBoard wpminor = BBTools::shiftS<Co_White>(pawns[Co_White]) & minor[Co_White];
+    while(wpminor){
+       features.scores[F_development] += EvalConfig::pawnFrontMinor[ColorRank<Co_White>(popBit(wpminor))];
+    }
+    BitBoard bpminor = BBTools::shiftS<Co_Black>(pawns[Co_Black]) & minor[Co_Black];
+    while(bpminor){
+       features.scores[F_development] -= EvalConfig::pawnFrontMinor[ColorRank<Co_Black>(popBit(bpminor))];
+    }
 
     // center control
     features.scores[F_development] += EvalConfig::centerControl * countBit(protectedSquare[Co_White] & extendedCenter);
