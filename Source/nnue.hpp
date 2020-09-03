@@ -12,6 +12,8 @@ struct Position; // forward decl
 #define WHITE Co_White
 #define BLACK Co_Black
 #define SQUARE_NB NbSquare
+#define FILE_NB 8
+#define RANK_NB 8
 #define PIECE_NB NbPiece
 #define NO_PIECE PieceIdx(P_none)
 #define NNUEValue ScoreType
@@ -24,7 +26,6 @@ namespace NNUEWrapper{
 
   ScoreType ComputeScore(const Position& pos, bool refresh);
   void Initialize();
-  bool ReadParameters(std::istream& stream);
   void UpdateAccumulatorIfPossible(const Position& pos);
   // curently loaded network
   extern std::string eval_file_loaded;
@@ -40,6 +41,7 @@ namespace NNUEWrapper{
 
 // optionnal learning tools
 // note that this next header is free from engine specific stuff !
-#include "learn/learn_tools.hpp"
+#include "learn/convert.hpp"
+#include "learn/learner.hpp"
 
 #endif

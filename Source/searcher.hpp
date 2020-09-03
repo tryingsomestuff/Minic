@@ -1,5 +1,7 @@
 #pragma once
 
+#include "definition.hpp"
+
 #include "evalDef.hpp"
 #include "material.hpp"
 #include "score.hpp"
@@ -113,11 +115,11 @@ struct Searcher{
 
     #pragma pack(push, 1)
     struct PawnEntry{
-        BitBoard pawnTargets[2]   = {empty,empty};
-        BitBoard holes[2]         = {empty,empty};
-        BitBoard semiOpenFiles[2] = {empty,empty};
-        BitBoard passed[2]        = {empty,empty};
-        BitBoard openFiles        = empty;
+        BitBoard pawnTargets[2]   = {emptyBitBoard,emptyBitBoard};
+        BitBoard holes[2]         = {emptyBitBoard,emptyBitBoard};
+        BitBoard semiOpenFiles[2] = {emptyBitBoard,emptyBitBoard};
+        BitBoard passed[2]        = {emptyBitBoard,emptyBitBoard};
+        BitBoard openFiles        = emptyBitBoard;
         EvalScore score           = {0,0};
         ScoreType danger[2]       = {0,0};
         MiniHash h                = 0;

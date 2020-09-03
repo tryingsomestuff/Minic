@@ -50,6 +50,12 @@ namespace NNUE::Layers {
     static constexpr std::size_t kBufferSize =
         PreviousLayer::kBufferSize + kSelfBufferSize;
 
+    using BiasType = OutputType;
+    using WeightType = std::int8_t;
+
+    alignas(kCacheLineSize) BiasType biases_[kOutputDimensions];
+    alignas(kCacheLineSize) WeightType weights_[kOutputDimensions * kPaddedInputDimensions];
+
     // Hash value embedded in the evaluation file
     static constexpr std::uint32_t GetHashValue() {
       std::uint32_t hash_value = 0xCC03DAE4u;
@@ -264,14 +270,7 @@ namespace NNUE::Layers {
     }
 
    private:
-    using BiasType = OutputType;
-    using WeightType = std::int8_t;
-
     PreviousLayer previous_layer_;
-
-    alignas(kCacheLineSize) BiasType biases_[kOutputDimensions];
-    alignas(kCacheLineSize)
-        WeightType weights_[kOutputDimensions * kPaddedInputDimensions];
   };
 
 }  // namespace NNUE::Layers

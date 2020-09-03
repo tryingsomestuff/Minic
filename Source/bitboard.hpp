@@ -8,7 +8,7 @@
 
 #ifdef __MINGW32__
    #define POPCOUNT(x)   int(__builtin_popcountll(x))
-   inline int BitScanForward(BitBoard bb) { assert(bb != empty); return __builtin_ctzll(bb);}
+   inline int BitScanForward(BitBoard bb) { assert(bb != emptyBitBoard); return __builtin_ctzll(bb);}
    #define bsf(x,i)      (i=BitScanForward(x))
    #define swapbits(x)   (__builtin_bswap64 (x))
    #define swapbits32(x) (__builtin_bswap32 (x))
@@ -41,7 +41,7 @@
         };
         int bitScanForward(int64_t bb) {
            const uint64_t debruijn64 = 0x03f79d71b4cb0a89;
-           assert(bb != empty);
+           assert(bb != emptyBitBoard);
            return index64[((bb & -bb) * debruijn64) >> 58];
         }
         #define POPCOUNT(x)   popcount(x)
@@ -51,7 +51,7 @@
       #endif // _WIN64
    #else // linux
       #define POPCOUNT(x)   int(__builtin_popcountll(x))
-      inline int BitScanForward(BitBoard bb) { assert(bb != empty); return __builtin_ctzll(bb);}
+      inline int BitScanForward(BitBoard bb) { assert(bb != emptyBitBoard); return __builtin_ctzll(bb);}
       #define bsf(x,i)      (i=BitScanForward(x))
       #define swapbits(x)   (__builtin_bswap64 (x))
       #define swapbits32(x) (__builtin_bswap32 (x))
@@ -121,7 +121,7 @@ inline ScoreType countBit(const BitBoard & b){
 }
 
 inline int popBit(BitBoard & b) {
-    assert( b != empty);
+    assert( b != emptyBitBoard);
     unsigned long i = 0;
     bsf(b, i);
     b &= b - 1;

@@ -20,7 +20,7 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Posi
 
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         Position p2 = p;
-        if ( ! apply(p2,*it) ) continue;
+        if ( ! applyMove(p2,*it) ) continue;
         const ScoreType score = -qsearchNoPruning(-beta,-alpha,p2,ply+1,seldepth);
         if ( score > bestScore){
            bestScore = score;
@@ -133,7 +133,7 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
     // try the tt move before move generation
     if ( validTTmove && (isInCheck || isCapture(e.m)) ){
         Position p2 = p;
-        if ( apply(p2,e.m) ){;
+        if ( applyMove(p2,e.m) ){;
             ++validMoveCount;
             TT::prefetch(computeHash(p2));
             const ScoreType score = -qsearch(-beta,-alpha,p2,ply+1,seldepth,isInCheck?0:qply+1,false,false);
@@ -179,7 +179,7 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
             if (SearchConfig::doQFutility && staticScore + SearchConfig::qfutilityMargin[evalScoreIsHashScore] + (isPromotionCap(*it) ? (Values[P_wq+PieceShift]-Values[P_wp+PieceShift]) : 0 ) + (Move2Type(*it)==T_ep ? Values[P_wp+PieceShift] : PieceTools::getAbsValue(p, Move2To(*it))) <= alphaInit) {++stats.counters[Stats::sid_qfutility];continue;}
         }
         Position p2 = p;
-        if ( ! apply(p2,*it) ) continue;
+        if ( ! applyMove(p2,*it) ) continue;
         ++validMoveCount;
         TT::prefetch(computeHash(p2));
         const ScoreType score = -qsearch(-beta,-alpha,p2,ply+1,seldepth,isInCheck?0:qply+1,false,false);

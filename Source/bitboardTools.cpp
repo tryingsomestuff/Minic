@@ -5,15 +5,15 @@
 namespace BBTools {
 
 Square SquareFromBitBoard(const BitBoard & b) {
-    assert(b != empty);
+    assert(b != emptyBitBoard);
     unsigned long i = 0;
     bsf(b, i);
     return Square(i);
 }
 
 void initBitBoards(Position & p) {
-    p._allB.fill(empty);
-    p.allPieces[Co_White] = p.allPieces[Co_Black] = empty;
+    p._allB.fill(emptyBitBoard);
+    p.allPieces[Co_White] = p.allPieces[Co_Black] = emptyBitBoard;
 }
 
 void setBitBoards(Position & p) {

@@ -236,7 +236,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
                 // if no good pv available (too short), let's build one for display purpose ...
                 if ( fhBreak && pvLoc.size() ){ 
                     Position p2 = p;
-                    apply(p2,pvLoc[0]);
+                    applyMove(p2,pvLoc[0]);
                     PVList pv2;
                     TT::getPV(p2, *this, pv2);
                     pv2.insert(pv2.begin(),pvLoc[0]);

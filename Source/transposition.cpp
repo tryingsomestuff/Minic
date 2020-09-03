@@ -112,7 +112,7 @@ void getPV(const Position & p, Searcher & context, PVList & pv){
       if (!TT::getEntry(context, p2, computeHash(p2), 0, e)) break;
       if (e.h != nullHash) {
         hashStack[k] = computeHash(p2);
-        if ( !VALIDMOVE(e.m) || !apply(p2,e.m) ) break;
+        if ( !VALIDMOVE(e.m) || !applyMove(p2,e.m) ) break;
         pv.push_back(e.m);
         const Hash h = computeHash(p2);
         for (int i = k-1; i >= 0; --i) if (hashStack[i] == h) {stop=true;break;}

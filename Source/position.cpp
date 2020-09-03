@@ -181,7 +181,7 @@ NNUE::Accumulator * Position::previousAccumulatorPtr()const{
 }
 
 PieceId Position::piece_id_on(Square sq) const{
-  //assert(board_const(sq) != P_none); // piece is moved before NNUE things in apply !!!
+  //assert(board_const(sq) != P_none); // piece is moved before NNUE things in applyMove !!!
   PieceId pid = _evalList.piece_id_list[sq];
   assert(PieceIdOK(pid));
   return pid;

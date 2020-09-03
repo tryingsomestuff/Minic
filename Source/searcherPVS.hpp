@@ -235,7 +235,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
 #endif
             if ( (validTTmove && sameMove(e.m, *it)) || isBadCap(*it) ) continue; // skip TT move if quiet or bad captures
             Position p2 = p;
-            if ( ! apply(p2,*it) ) continue;
+            if ( ! applyMove(p2,*it) ) continue;
             ++probCutCount;
             ScoreType scorePC = -qsearch(-betaPC, -betaPC + 1, p2, ply + 1, seldepth,0,true,pvnode);
             PVList pcPV;
@@ -304,7 +304,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         }
 #endif
         Position p2 = p;
-        if ( apply(p2, e.m)) {
+        if ( applyMove(p2, e.m)) {
             TT::prefetch(computeHash(p2));
             //const Square to = Move2To(e.m);
             validMoveCount++;
@@ -432,7 +432,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         if (isSkipMove(*it,skipMoves)) continue; // skipmoves
         if (validTTmove && sameMove(e.m, *it)) continue; // already tried
         Position p2 = p;
-        if ( ! apply(p2,*it) ) continue;
+        if ( ! applyMove(p2,*it) ) continue;
         TT::prefetch(computeHash(p2));
         const Square to = Move2To(*it);
         if (p.c == Co_White && to == p.king[Co_Black]) return MATE - ply + 1;

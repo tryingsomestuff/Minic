@@ -71,6 +71,8 @@ struct Position; // forward decl
 
 namespace NNUE {
 
+  const std::string savedfileName("nn.bin");
+
   // Version of the evaluation file
   constexpr std::uint32_t kVersion = 0x7AF32F16u;
 

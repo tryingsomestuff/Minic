@@ -63,6 +63,7 @@ const std::string MinicVersion = "dev";
 //#define WITH_MLP // need tiny-dnn
 #define WITH_DATA2BIN
 //#define WITH_GENFILE
+#define WITH_LEARNER
 
 // *** Tuning
 //#define WITH_TIMER
@@ -155,7 +156,7 @@ typedef int64_t  TimeType;
 typedef unsigned char  GenerationType;
 
 const Hash nullHash = 0ull;
-const BitBoard empty = 0ull;
+const BitBoard emptyBitBoard = 0ull;
 
 enum GamePhase { MG=0, EG=1, GP_MAX=2 };
 inline GamePhase operator++(GamePhase & g){g=GamePhase(g+1); return g;}

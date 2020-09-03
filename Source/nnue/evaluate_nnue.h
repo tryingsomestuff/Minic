@@ -25,7 +25,13 @@
 
 #include <memory>
 
+typedef float LearnFloatType;
+
 namespace NNUE {
+
+  // Forward declaration of learning class template
+  template <typename Layer>
+  class Trainer;
 
   // Evaluation function file name
   extern std::string fileName;
@@ -46,10 +52,18 @@ namespace NNUE {
   template <typename T>
   using AlignedPtr = std::unique_ptr<T, AlignedDeleter<T>>;
 
+  // Input feature converter
+  extern AlignedPtr<FeatureTransformer> __feature_transformer;
+
+  // Evaluation function
+  extern AlignedPtr<Network> __network;
+
   ScoreType ComputeScore(const Position& pos, bool refresh);
   void Initialize();
   bool ReadParameters(std::istream& stream);
+  bool WriteParameters(std::ostream& stream);
   void UpdateAccumulatorIfPossible(const Position& pos);
+  std::string GetArchitectureString();
 }  // namespace NNUE
 
 #endif // #ifndef NNUE_EVALUATE_NNUE_H_INCLUDED
