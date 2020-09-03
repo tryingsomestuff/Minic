@@ -83,6 +83,11 @@ int main(int argc, char ** argv) {
     if ( argc > 1 && std::string(argv[1]) == "-bin2plain")  { return convert_plain({argv[2]},std::string(argv[2])+".plain"); }
 #endif
 
+#ifdef WITH_LEARNER
+    std::istringstream is;
+    if ( argc > 1 && std::string(argv[1]) == "-learn")  { learn(is); return 0;}
+#endif
+
 #ifdef DEBUG_TOOL
     std::string firstOption;
     if (argc < 2) {

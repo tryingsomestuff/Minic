@@ -35,11 +35,14 @@ namespace NNUE {
   // Input feature converter
   class FeatureTransformer {
 
-   private:
+   public:
+
+    using BiasType = std::int16_t;
+    using WeightType = std::int16_t;
+
     // Number of output dimensions for one side
     static constexpr IndexType kHalfDimensions = kTransformedFeatureDimensions;
 
-   public:
     // Output type
     using OutputType = TransformedFeatureType;
 
@@ -48,8 +51,10 @@ namespace NNUE {
     static constexpr IndexType kOutputDimensions = kHalfDimensions * 2;
 
     // Size of forward propagation buffer
-    static constexpr std::size_t kBufferSize =
-        kOutputDimensions * sizeof(OutputType);
+    static constexpr std::size_t kBufferSize = kOutputDimensions * sizeof(OutputType);
+
+    alignas(kCacheLineSize) BiasType biases_[kHalfDimensions];
+    alignas(kCacheLineSize) WeightType weights_[kHalfDimensions * kInputDimensions];
 
     // Hash value embedded in the evaluation file
     static constexpr std::uint32_t GetHashValue() {
@@ -384,12 +389,6 @@ namespace NNUE {
       accumulator.computed_score = false;
     }
 
-    using BiasType = std::int16_t;
-    using WeightType = std::int16_t;
-
-    alignas(kCacheLineSize) BiasType biases_[kHalfDimensions];
-    alignas(kCacheLineSize)
-        WeightType weights_[kHalfDimensions * kInputDimensions];
   };
 
 }  // namespace NNUE

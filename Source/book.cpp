@@ -35,7 +35,7 @@ bool readBinaryBook(std::ifstream & stream) {
             if (stream.eof()) break;
         }
         const Hash h = computeHash(p);
-        if ( ! apply(p,m)){
+        if ( ! applyMove(p,m)){
             Logging::LogIt(Logging::logError) << "Unable to read book";
             return false;
         }
@@ -230,7 +230,7 @@ bool add(const std::string & move, Position & p, std::ofstream & binFile){
    MType mtype = T_std;
    readMove(p,moveStr,from,to,mtype);
    const MiniMove m = ToMove(from,to,mtype); //SanitizeCastling(p,ToMove(from,to,mtype));
-   if ( ! apply(p,m) ) return false;
+   if ( ! applyMove(p,m) ) return false;
    binFile << bits(m);
    return true;
 }

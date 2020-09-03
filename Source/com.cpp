@@ -72,7 +72,7 @@ namespace COM {
 
     bool makeMove(Move m, bool disp, std::string tag, Move pMove) {
         position.resetAccumulator(); ///@todo This is not pretty at all !!!!
-        bool b = apply(position, m, true);
+        bool b = applyMove(position, m, true);
         if (disp && m != INVALIDMOVE) Logging::LogIt(Logging::logGUI) << tag << " " << ToString(m) << (Logging::ct==Logging::CT_uci && VALIDMOVE(pMove) ? (" ponder " + ToString(pMove)) : "");
         Logging::LogIt(Logging::logInfo) << ToString(position);
         return b;
@@ -101,7 +101,7 @@ namespace COM {
             COM::ponderMove = INVALIDMOVE;
             if ( pv.size() > 1) {
                Position p2 = COM::position;
-               if ( apply(p2,pv[0]) && isPseudoLegal(p2,pv[1])) COM::ponderMove = pv[1];
+               if ( applyMove(p2,pv[0]) && isPseudoLegal(p2,pv[1])) COM::ponderMove = pv[1];
             }
             Logging::LogIt(Logging::logInfo) << "search async done (state " << st << ")";
             if (st == st_searching) {

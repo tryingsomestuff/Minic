@@ -101,7 +101,7 @@ bool Searcher::SEE_GE(const Position & p, const Move & m, ScoreType threshold) c
     balance -= Values[nextVictim+PieceShift]; // Now assume the worst possible result: that the opponent can capture our piece for free.
     if (balance >= 0) return true;
     Position p2 = p;
-    if (!apply(p2, m, true)) return false;
+    if (!applyMove(p2, m, true)) return false;
     bool endOfSEE = false;
     while (!endOfSEE){
         bool validThreatFound = false;
@@ -114,7 +114,7 @@ bool Searcher::SEE_GE(const Position & p, const Move & m, ScoreType threshold) c
               Position p3 = p2;
               prom = promPossible && pp == P_wp;
               const Move mm = ToMove(sqAtt, to, prom ? T_cappromq : T_capture);
-              if (!apply(p3,mm,true)) continue;
+              if (!applyMove(p3,mm,true)) continue;
               validThreatFound = true;
               nextVictim = prom ? P_wq : pp; // CAREFULL here :: we don't care black or white, always use abs(value) next !!!
               if (prom) balance -= Values[P_wp + PieceShift];

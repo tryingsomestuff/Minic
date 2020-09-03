@@ -21,7 +21,7 @@ namespace BBTools {
 struct Mask {
     static int ranks[512];
     BitBoard bbsquare, diagonal, antidiagonal, file, kingZone, pawnAttack[2], push[2], dpush[2], enpassant, knight, king, frontSpan[2], rearSpan[2], passerSpan[2], attackFrontSpan[2], between[NbSquare];
-    Mask():bbsquare(empty), diagonal(empty), antidiagonal(empty), file(empty), kingZone(empty), pawnAttack{ empty,empty }, push{ empty,empty }, dpush{ empty,empty }, enpassant(empty), knight(empty), king(empty), frontSpan{empty}, rearSpan{empty}, passerSpan{empty}, attackFrontSpan{empty}, between{empty}{}
+    Mask():bbsquare(emptyBitBoard), diagonal(emptyBitBoard), antidiagonal(emptyBitBoard), file(emptyBitBoard), kingZone(emptyBitBoard), pawnAttack{ emptyBitBoard,emptyBitBoard }, push{ emptyBitBoard,emptyBitBoard }, dpush{ emptyBitBoard,emptyBitBoard }, enpassant(emptyBitBoard), knight(emptyBitBoard), king(emptyBitBoard), frontSpan{emptyBitBoard}, rearSpan{emptyBitBoard}, passerSpan{emptyBitBoard}, attackFrontSpan{emptyBitBoard}, between{emptyBitBoard}{}
 };
 extern Mask mask[NbSquare];
 void initMask();
@@ -89,7 +89,7 @@ void initMagic();
 } // MagicBB
 
 // Next functions define the user API for piece move
-template < Piece > inline BitBoard coverage      (const Square  , const BitBoard          , const Color  ) { assert(false); return empty; }
+template < Piece > inline BitBoard coverage      (const Square  , const BitBoard          , const Color  ) { assert(false); return emptyBitBoard; }
 template <       > inline BitBoard coverage<P_wp>(const Square x, const BitBoard          , const Color c) { assert( x >= 0 && x < 64); return mask[x].pawnAttack[c]; }
 template <       > inline BitBoard coverage<P_wn>(const Square x, const BitBoard          , const Color  ) { assert( x >= 0 && x < 64); return mask[x].knight; }
 template <       > inline BitBoard coverage<P_wb>(const Square x, const BitBoard occupancy, const Color  ) { assert( x >= 0 && x < 64); return MAGICBISHOPATTACKS(occupancy, x); }

@@ -111,7 +111,7 @@ void compute_scaling(int count){
         std::shuffle(moves.begin(), moves.end(),g);
         for (auto it = moves.begin(); it != moves.end(); ++it) {
             Position p2 = p;
-            if (!apply(p2, *it)) continue;
+            if (!applyMove(p2, *it)) continue;
             p = p2;
             const Square to = Move2To(*it);
             if (p.c == Co_White && to == p.king[Co_Black]){
@@ -151,11 +151,14 @@ void compute_scaling(int count){
 
 // TOOLS
 #include "nnue/learn/learn_tools.cpp"
+#include "nnue/learn/convert.cpp"
 
 // LEARNER
-/*
+#ifdef WITH_LEARNER
 #include "nnue/learn/multi_think.cpp"
 #include "nnue/learn/learner.cpp"
-*/
+#include "nnue/evaluate_nnue_learner.cpp"
 
 #endif
+
+#endif // WITH_NNUE

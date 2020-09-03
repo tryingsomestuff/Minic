@@ -93,7 +93,7 @@ template< Color C>
 inline void evalPawnFreePasser(const Position & p, BitBoard pieceBBiterator, EvalScore & score){
     while (pieceBBiterator) {
         const Square k = popBit(pieceBBiterator);
-        score += EvalConfig::freePasserBonus[ColorRank<C>(k)] * ScoreType( (BBTools::mask[k].frontSpan[C] & p.allPieces[~C]) == empty ) * ColorSignHelper<C>();
+        score += EvalConfig::freePasserBonus[ColorRank<C>(k)] * ScoreType( (BBTools::mask[k].frontSpan[C] & p.allPieces[~C]) == emptyBitBoard ) * ColorSignHelper<C>();
     }
 }
 
@@ -109,7 +109,7 @@ inline void evalPawnCandidate(BitBoard pieceBBiterator, EvalScore & score){
 
 template< Color C>
 BitBoard getPinned(const Position & p, const Square s){
-    BitBoard pinned = empty;
+    BitBoard pinned = emptyBitBoard;
     if ( s == INVALIDSQUARE ) return pinned;
     BitBoard pinner = BBTools::attack<P_wb>(s, p.pieces_const<P_wb>(~C) | p.pieces_const<P_wq>(~C), p.allPieces[~C]) | BBTools::attack<P_wr>(s, p.pieces_const<P_wr>(~C) | p.pieces_const<P_wq>(~C), p.allPieces[~C]);
     while ( pinner ) { pinned |= BBTools::mask[popBit(pinner)].between[p.king[C]] & p.allPieces[C]; }
@@ -222,10 +222,10 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
     const BitBoard occupancy         = p.occupancy();
     const BitBoard minor[2]          = { knights[Co_White] | bishops[Co_White] , knights[Co_Black] | bishops[Co_Black]};
     ScoreType kdanger[2]             = {0, 0};
-    BitBoard att[2]                  = {empty, empty}; // bitboard of squares attacked by color
-    BitBoard att2[2]                 = {empty, empty}; // bitboard of squares attacked twice by color
-    BitBoard attFromPiece[2][6]      = {{empty}};      // bitboard of squares attacked by specific piece of color
-    BitBoard checkers[2][6]          = {{empty}};      // bitboard of color pieces squares attacking king
+    BitBoard att[2]                  = {emptyBitBoard, emptyBitBoard}; // bitboard of squares attacked by color
+    BitBoard att2[2]                 = {emptyBitBoard, emptyBitBoard}; // bitboard of squares attacked twice by color
+    BitBoard attFromPiece[2][6]      = {{emptyBitBoard}};      // bitboard of squares attacked by specific piece of color
+    BitBoard checkers[2][6]          = {{emptyBitBoard}};      // bitboard of color pieces squares attacking king
 
     const BitBoard kingZone[2]   = { BBTools::mask[p.king[Co_White]].kingZone, BBTools::mask[p.king[Co_Black]].kingZone};
     const BitBoard kingShield[2] = { kingZone[Co_White] & ~BBTools::shiftS<Co_White>(ranks[SQRANK(p.king[Co_White])]) , kingZone[Co_Black] & ~BBTools::shiftS<Co_Black>(ranks[SQRANK(p.king[Co_Black])]) };

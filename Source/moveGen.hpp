@@ -14,7 +14,7 @@ struct Searcher;
 
 void applyNull(Searcher & context, Position & pN);
 
-bool apply(Position & p, const Move & m, bool noValidation = false);
+bool applyMove(Position & p, const Move & m, bool noValidation = false);
 
 ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck, Searcher & context);
 
@@ -56,46 +56,46 @@ void generateSquare(const Position & p, MoveList & moves, Square from){
         else if (phase == GP_quiet) bb &= ~oppPieceBB; // do not target opponent piece
         while (bb) {
             const Square to = popBit(bb);
-            const bool isCap = (phase == GP_cap) || ((oppPieceBB&SquareToBitboard(to)) != empty);
+            const bool isCap = (phase == GP_cap) || ((oppPieceBB&SquareToBitboard(to)) != emptyBitBoard);
             if (isCap) addMove(from,to,T_capture,moves);
             else addMove(from,to,T_std,moves);
         }
 
-        // attack on castling king destination square will be checked by apply
+        // attack on castling king destination square will be checked by applyMove
         if ( phase != GP_cap && ptype == P_wk ){ // castling
             if ( side == Co_White) {
                 if ( (p.castling & C_wqs)
                     && (((BBTools::mask[p.king[Co_White]].between[Sq_c1] | BBSq_c1 | BBTools::mask[p.rooksInit[Co_White][CT_OOO]].between[Sq_d1] | BBSq_d1) 
-                        & ~BBTools::mask[p.rooksInit[Co_White][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) & occupancy) == empty
-                    && !isAttacked(p,BBTools::mask[p.king[Co_White]].between[Sq_c1] | SquareToBitboard(p.king[Co_White]) | BBSq_c1) ) ///@todo speedup ! as last is not necessay as king will be verified by apply
+                        & ~BBTools::mask[p.rooksInit[Co_White][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) & occupancy) == emptyBitBoard
+                    && !isAttacked(p,BBTools::mask[p.king[Co_White]].between[Sq_c1] | SquareToBitboard(p.king[Co_White]) | BBSq_c1) ) ///@todo speedup ! as last is not necessay as king will be verified by applyMove
                     addMove(from, Sq_c1, T_wqs, moves); // wqs
                 if ( (p.castling & C_wks)
                     && (((BBTools::mask[p.king[Co_White]].between[Sq_g1] | BBSq_g1 | BBTools::mask[p.rooksInit[Co_White][CT_OO]].between[Sq_f1]  | BBSq_f1) 
-                        & ~BBTools::mask[p.rooksInit[Co_White][CT_OO ]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) & occupancy) == empty
+                        & ~BBTools::mask[p.rooksInit[Co_White][CT_OO ]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) & occupancy) == emptyBitBoard
                     && !isAttacked(p,BBTools::mask[p.king[Co_White]].between[Sq_g1] | SquareToBitboard(p.king[Co_White]) | BBSq_g1) ) 
                     addMove(from, Sq_g1, T_wks, moves); // wks
             }
             else{
                 if ( (p.castling & C_bqs)
                     && (((BBTools::mask[p.king[Co_Black]].between[Sq_c8] | BBSq_c8 | BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].between[Sq_d8] | BBSq_d8) 
-                        & ~BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) & occupancy) == empty
+                        & ~BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) & occupancy) == emptyBitBoard
                     && !isAttacked(p,BBTools::mask[p.king[Co_Black]].between[Sq_c8] | SquareToBitboard(p.king[Co_Black]) | BBSq_c8) ) 
                     addMove(from, Sq_c8, T_bqs, moves); // wqs
                 if ( (p.castling & C_bks)
                     && (((BBTools::mask[p.king[Co_Black]].between[Sq_g8] | BBSq_g8 | BBTools::mask[p.rooksInit[Co_Black][CT_OO]].between[Sq_f8]  | BBSq_f8) 
-                        & ~BBTools::mask[p.rooksInit[Co_Black][CT_OO ]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) & occupancy) == empty
+                        & ~BBTools::mask[p.rooksInit[Co_Black][CT_OO ]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) & occupancy) == emptyBitBoard
                     && !isAttacked(p,BBTools::mask[p.king[Co_Black]].between[Sq_g8] | SquareToBitboard(p.king[Co_Black]) | BBSq_g8) ) 
                     addMove(from, Sq_g8, T_bks, moves); // wks
             }
         }
     }
     else {
-        BitBoard pawnmoves = empty;
+        BitBoard pawnmoves = emptyBitBoard;
         static const BitBoard rank1_or_rank8 = rank1 | rank8;
         if ( phase != GP_quiet) pawnmoves = BBTools::mask[from].pawnAttack[p.c] & ~myPieceBB & oppPieceBB;
         while (pawnmoves) {
             const Square to = popBit(pawnmoves);
-            if ( (SquareToBitboard(to) & rank1_or_rank8) == empty )
+            if ( (SquareToBitboard(to) & rank1_or_rank8) == emptyBitBoard )
                 addMove(from,to,T_capture,moves);
             else{
                 addMove(from, to, T_cappromq, moves); // pawn capture with promotion
@@ -105,10 +105,10 @@ void generateSquare(const Position & p, MoveList & moves, Square from){
             }
         }
         if ( phase != GP_cap) pawnmoves |= BBTools::mask[from].push[p.c] & ~occupancy;
-        if ((phase != GP_cap) && (BBTools::mask[from].push[p.c] & occupancy) == empty) pawnmoves |= BBTools::mask[from].dpush[p.c] & ~occupancy;
+        if ((phase != GP_cap) && (BBTools::mask[from].push[p.c] & occupancy) == emptyBitBoard) pawnmoves |= BBTools::mask[from].dpush[p.c] & ~occupancy;
         while (pawnmoves) {
             const Square to = popBit(pawnmoves);
-            if ( (SquareToBitboard(to) & rank1_or_rank8) == empty ) 
+            if ( (SquareToBitboard(to) & rank1_or_rank8) == emptyBitBoard ) 
                 addMove(from,to,T_std,moves);
             else{
                 addMove(from, to, T_promq, moves); // promotion Q

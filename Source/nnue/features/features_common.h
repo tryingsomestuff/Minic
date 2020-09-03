@@ -32,11 +32,16 @@ namespace NNUE::Features {
 
   // Trigger to perform full calculations instead of difference only
   enum class TriggerEvent {
-    kFriendKingMoved // calculate full evaluation when own king moves
+    kNone, // Calculate the difference whenever possible
+    kFriendKingMoved, // calculate all when own ball moves
+    kEnemyKingMoved, // do all calculations when enemy balls move
+    kAnyKingMoved, // do all calculations if either ball moves
+    kAnyPieceMoved, // always do all calculations
   };
 
   enum class Side {
-    kFriend // side to move
+    kFriend, // side to move
+    kEnemy, // opponent
   };
 
 }  // namespace NNUE::Features

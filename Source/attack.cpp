@@ -163,7 +163,7 @@ const BitBoard rookMagics[] = {
 };
 
 BitBoard computeAttacks(int index, BitBoard occ, int delta){
-    BitBoard attacks = empty, blocked = empty;
+    BitBoard attacks = emptyBitBoard, blocked = emptyBitBoard;
     for (int shift = index + delta; ISNEIGHBOUR(shift, shift - delta); shift += delta) {
         if (!blocked) attacks |= SquareToBitboard(shift);
         blocked |= ((1ULL << shift) & occ);
@@ -172,7 +172,7 @@ BitBoard computeAttacks(int index, BitBoard occ, int delta){
 }
 
 BitBoard occupiedFromIndex(int j, BitBoard mask){
-    BitBoard occ = empty;
+    BitBoard occ = emptyBitBoard;
     int i = 0;
     while (mask){
         const int k = popBit(mask);
@@ -185,8 +185,8 @@ BitBoard occupiedFromIndex(int j, BitBoard mask){
 void initMagic(){
     Logging::LogIt(Logging::logInfo) << "Init magic" ;
     for (Square from = 0; from < 64; from++) {
-        bishop[from].mask = empty;
-        rook[from].mask = empty;
+        bishop[from].mask = emptyBitBoard;
+        rook[from].mask = emptyBitBoard;
         for (Square j = 0; j < 64; j++){
             if (from == j) continue;
             if (SQRANK(from) == SQRANK(j) && !ISOUTERFILE(j))    rook[from].mask |= SquareToBitboard(j);

@@ -31,10 +31,10 @@ namespace NNUE {
   std::string fileName;
 
   // Input feature converter
-  AlignedPtr<FeatureTransformer> feature_transformer;
+  AlignedPtr<FeatureTransformer> __feature_transformer;
 
   // Evaluation function
-  AlignedPtr<Network> network;
+  AlignedPtr<Network> __network;
 
   namespace Detail {
 
@@ -66,8 +66,8 @@ namespace NNUE {
 
   // Initialize the evaluation function parameters
   void Initialize() {
-    Detail::Initialize(feature_transformer);
-    Detail::Initialize(network);
+    Detail::Initialize(__feature_transformer);
+    Detail::Initialize(__network);
   }
 
   // Get a string that represents the structure of the evaluation function
@@ -107,22 +107,22 @@ namespace NNUE {
     std::string architecture;
     if (!ReadHeader(stream, &hash_value, &architecture)) return false;
     if (hash_value != kHashValue) return false;
-    if (!Detail::ReadParameters(stream, feature_transformer)) return false;
-    if (!Detail::ReadParameters(stream, network)) return false;
+    if (!Detail::ReadParameters(stream, __feature_transformer)) return false;
+    if (!Detail::ReadParameters(stream, __network)) return false;
     return stream && stream.peek() == std::ios::traits_type::eof();
   }
 
   // write evaluation function parameters
   bool WriteParameters(std::ostream& stream) {
     if (!WriteHeader(stream, kHashValue, GetArchitectureString())) return false;
-    if (!Detail::WriteParameters(stream, feature_transformer)) return false;
-    if (!Detail::WriteParameters(stream, network)) return false;
+    if (!Detail::WriteParameters(stream, __feature_transformer)) return false;
+    if (!Detail::WriteParameters(stream, __network)) return false;
     return !stream.fail();
   }
 
   // Proceed with the difference calculation if possible
   void UpdateAccumulatorIfPossible(const Position& pos) {
-    feature_transformer->UpdateAccumulatorIfPossible(pos);
+    __feature_transformer->UpdateAccumulatorIfPossible(pos);
   }
 
   // Calculate the evaluation value
@@ -133,9 +133,9 @@ namespace NNUE {
     }
 
     alignas(kCacheLineSize) TransformedFeatureType transformed_features[FeatureTransformer::kBufferSize];
-    feature_transformer->Transform(pos, transformed_features, refresh);
+    __feature_transformer->Transform(pos, transformed_features, refresh);
     alignas(kCacheLineSize) char buffer[Network::kBufferSize];
-    const auto output = network->Propagate(transformed_features, buffer);
+    const auto output = __network->Propagate(transformed_features, buffer);
 
     auto score = static_cast<NNUEValue>(output[0] / FV_SCALE);
 

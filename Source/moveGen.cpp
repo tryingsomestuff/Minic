@@ -115,7 +115,7 @@ void applyNull(Searcher & , Position & pN) {
     STOP_AND_SUM_TIMER(Apply)
 }
 
-bool apply(Position & p, const Move & m, bool noValidation){
+bool applyMove(Position & p, const Move & m, bool noValidation){
     START_TIMER
     assert(VALIDMOVE(m));
 #ifdef DEBUG_MATERIAL
@@ -384,7 +384,7 @@ ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck, Searcher 
     std::shuffle(moves.begin(), moves.end(),g);
     for (auto it = moves.begin(); it != moves.end(); ++it) {
         Position p2 = p;
-        if (!apply(p2, *it)) continue;
+        if (!applyMove(p2, *it)) continue;
         PVList childPV;
 #ifdef WITH_GENFILE
         if ( DynamicConfig::genFen ) context.writeToGenFile(p2);
@@ -456,12 +456,12 @@ bool isPseudoLegal2(const Position & p, Move m) { // validate TT move
         if (p.c == Co_White) {
             if (t == T_wqs && (p.castling & C_wqs) && from == p.kingInit[Co_White] && fromP == P_wk && to == Sq_c1 && toP == P_none
                 && (((BBTools::mask[p.king[Co_White]].between[Sq_c1] | BBSq_c1 | BBTools::mask[p.rooksInit[Co_White][CT_OOO]].between[Sq_d1] | BBSq_d1) 
-                    & ~BBTools::mask[p.rooksInit[Co_White][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) & occupancy) == empty
+                    & ~BBTools::mask[p.rooksInit[Co_White][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) & occupancy) == emptyBitBoard
                 && !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_c1] | SquareToBitboard(p.king[Co_White]) | BBSq_c1))
                 PSEUDO_LEGAL_RETURN(true,9)
             if (t == T_wks && (p.castling & C_wks) && from == p.kingInit[Co_White] && fromP == P_wk && to == Sq_g1 && toP == P_none
                 && (((BBTools::mask[p.king[Co_White]].between[Sq_g1] | BBSq_g1 | BBTools::mask[p.rooksInit[Co_White][CT_OO]].between[Sq_f1] | BBSq_f1) 
-                    & ~BBTools::mask[p.rooksInit[Co_White][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) & occupancy) == empty
+                    & ~BBTools::mask[p.rooksInit[Co_White][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) & occupancy) == emptyBitBoard
                 && !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_g1] | SquareToBitboard(p.king[Co_White]) | BBSq_g1))
                 PSEUDO_LEGAL_RETURN(true,10)
             PSEUDO_LEGAL_RETURN(false,11)
@@ -469,12 +469,12 @@ bool isPseudoLegal2(const Position & p, Move m) { // validate TT move
         else {
             if (t == T_bqs && (p.castling & C_bqs) && from == p.kingInit[Co_Black] && fromP == P_bk && to == Sq_c8 && toP == P_none
                 && (((BBTools::mask[p.king[Co_Black]].between[Sq_c8] | BBSq_c8 | BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].between[Sq_d8] | BBSq_d8) 
-                    & ~BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) & occupancy) == empty
+                    & ~BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) & occupancy) == emptyBitBoard
                 && !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_c8] | SquareToBitboard(p.king[Co_Black]) | BBSq_c8))
                 PSEUDO_LEGAL_RETURN(true,12)
             if (t == T_bks && (p.castling & C_bks) && from == p.kingInit[Co_Black] && fromP == P_bk && to == Sq_g8 && toP == P_none
                 && (((BBTools::mask[p.king[Co_Black]].between[Sq_g8] | BBSq_g8 | BBTools::mask[p.rooksInit[Co_Black][CT_OO]].between[Sq_f8] | BBSq_f8) 
-                    & ~BBTools::mask[p.rooksInit[Co_Black][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) & occupancy) == empty
+                    & ~BBTools::mask[p.rooksInit[Co_Black][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) & occupancy) == emptyBitBoard
                 && !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_g8] | SquareToBitboard(p.king[Co_Black]) | BBSq_g8))
                 PSEUDO_LEGAL_RETURN(true,13)
             PSEUDO_LEGAL_RETURN(false,14)
@@ -486,16 +486,16 @@ bool isPseudoLegal2(const Position & p, Move m) { // validate TT move
         if (!isPromotion(m) && SQRANK(to) == PromRank[p.c]) PSEUDO_LEGAL_RETURN(false,17)
         if (isPromotion(m) && SQRANK(to) != PromRank[p.c]) PSEUDO_LEGAL_RETURN(false,18)
         BitBoard validPush = BBTools::mask[from].push[p.c] & ~occupancy;
-        if ((BBTools::mask[from].push[p.c] & occupancy) == empty) validPush |= BBTools::mask[from].dpush[p.c] & ~occupancy;
+        if ((BBTools::mask[from].push[p.c] & occupancy) == emptyBitBoard) validPush |= BBTools::mask[from].dpush[p.c] & ~occupancy;
         if (validPush & SquareToBitboard(to)) PSEUDO_LEGAL_RETURN(true,19)
         const BitBoard validCap = BBTools::mask[from].pawnAttack[p.c] & ~p.allPieces[p.c];
         if ((validCap & SquareToBitboard(to)) && (( t != T_ep && toP != P_none) || (t == T_ep && to == p.ep && toP == P_none))) PSEUDO_LEGAL_RETURN(true,20)
         PSEUDO_LEGAL_RETURN(false,21)
     }
     if (fromPieceType != P_wk) {
-        if ((BBTools::pfCoverage[fromPieceType - 1](from, occupancy, p.c) & SquareToBitboard(to)) != empty) PSEUDO_LEGAL_RETURN(true,22)
+        if ((BBTools::pfCoverage[fromPieceType - 1](from, occupancy, p.c) & SquareToBitboard(to)) != emptyBitBoard) PSEUDO_LEGAL_RETURN(true,22)
         PSEUDO_LEGAL_RETURN(false,23)
     }
-    if ((BBTools::mask[p.king[p.c]].kingZone & SquareToBitboard(to)) != empty) PSEUDO_LEGAL_RETURN(true,24) // only king is not verified yet
+    if ((BBTools::mask[p.king[p.c]].kingZone & SquareToBitboard(to)) != emptyBitBoard) PSEUDO_LEGAL_RETURN(true,24) // only king is not verified yet
     PSEUDO_LEGAL_RETURN(false,25)
 }

@@ -22,7 +22,7 @@ std::string showAlgAbr(Move m, const Position & p) {
     bool isCheck = false;
     bool isNotLegal = false;
     Position p2 = p;
-    if (apply(p2,m)){
+    if (applyMove(p2,m)){
         if ( isAttacked(p2, kingSquare(p2)) ) isCheck = true;
     }
     else{ isNotLegal = true; }
@@ -52,7 +52,7 @@ std::string showAlgAbr(Move m, const Position & p) {
             for(auto mit = l.begin() ; mit != l.end() ; ++mit){
                 if ( *mit == m ) continue; // to not compare to myself ... should no happend thanks to previous verification
                 Position p3 = p;
-                if (apply(p3,*mit)){ // only if move is legal
+                if (applyMove(p3,*mit)){ // only if move is legal
                    if ( Move2To(*mit) == to && (t == p.board_const(Move2From(*mit))) ){ // another move is landing on the same square with the same piece type
                       isSamePiece = true;
                       if ( SQFILE(Move2From(*mit)) == SQFILE(from)){ isSameFile = true; }
