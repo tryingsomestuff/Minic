@@ -20,7 +20,7 @@ int NNUEWrapper::NNUEscaling = 64; // from 32 to 128      x_scaled = x * NNUEsca
 
 // defined in nnue_def.h
 // Must be user defined in order to respect Piece engine piece order
-ExtPieceSquare kpp_board_index[PIECE_NB] = {
+ uint32_t kpp_board_index[PIECE_NB][COLOR_NB] = {
  // convention: W - us, B - them
  // viewed from other side, W and B are reversed
     { PS_B_KING,   PS_W_KING   },

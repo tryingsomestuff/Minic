@@ -31,27 +31,23 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
     for(Square k = 0 ; k < NbSquare ; ++k) p.board(k) = P_none;
 
     Square j = 1, i = 0;
-#ifdef WITH_NNUE
-    PieceId piece_id, next_piece_id = PIECE_ID_ZERO;
-#endif
     while ((j <= NbSquare) && (i <= (char)strList[0].length())){
         char letter = strList[0].at(i);
         ++i;
         const Square k = (7 - (j - 1) / 8) * 8 + ((j - 1) % 8);
-        bool pieceAdded = false;
         switch (letter) {
-        case 'p': pieceAdded = true; p.board(k) = P_bp; break;
-        case 'r': pieceAdded = true; p.board(k) = P_br; break;
-        case 'n': pieceAdded = true; p.board(k) = P_bn; break;
-        case 'b': pieceAdded = true; p.board(k) = P_bb; break;
-        case 'q': pieceAdded = true; p.board(k) = P_bq; break;
-        case 'k': pieceAdded = true; p.board(k) = P_bk; p.king[Co_Black] = k; break;
-        case 'P': pieceAdded = true; p.board(k) = P_wp; break;
-        case 'R': pieceAdded = true; p.board(k) = P_wr; break;
-        case 'N': pieceAdded = true; p.board(k) = P_wn; break;
-        case 'B': pieceAdded = true; p.board(k) = P_wb; break;
-        case 'Q': pieceAdded = true; p.board(k) = P_wq; break;
-        case 'K': pieceAdded = true; p.board(k) = P_wk; p.king[Co_White] = k; break;
+        case 'p': p.board(k) = P_bp; break;
+        case 'r': p.board(k) = P_br; break;
+        case 'n': p.board(k) = P_bn; break;
+        case 'b': p.board(k) = P_bb; break;
+        case 'q': p.board(k) = P_bq; break;
+        case 'k': p.board(k) = P_bk; p.king[Co_Black] = k; break;
+        case 'P': p.board(k) = P_wp; break;
+        case 'R': p.board(k) = P_wr; break;
+        case 'N': p.board(k) = P_wn; break;
+        case 'B': p.board(k) = P_wb; break;
+        case 'Q': p.board(k) = P_wq; break;
+        case 'K': p.board(k) = P_wk; p.king[Co_White] = k; break;
         case '/': j--; break;
         case '1': break;
         case '2': j++; break;
@@ -63,15 +59,6 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
         case '8': j += 7; break;
         default: Logging::LogIt(Logging::logFatal) << "FEN ERROR -1 : invalid character in fen string :" << letter << "\n" << fen;
         }
-#ifdef WITH_NNUE
-        if ( /*DynamicConfig::useNNUE &&*/ pieceAdded){ ///@todo can be done even if !DynamicConfig::useNNUE to avoid issue ?
-              piece_id =
-                (p.board(k) == P_wk) ? PIECE_ID_WKING :
-                (p.board(k) == P_bk) ? PIECE_ID_BKING :
-                next_piece_id++;
-              p._evalList.put_piece(piece_id, k, PieceIdx(p.board(k)));
-        }
-#endif
         j++;
     }
 
@@ -167,10 +154,6 @@ const DirtyPiece & Position::dirtyPiece() const{
     return _dirtyPiece;
 }
 
-const EvalList* Position::eval_list() const { 
-    return &_evalList; 
-}
-
 NNUE::Accumulator & Position::accumulator()const{
     assert(_accumulator);
     return *_accumulator;
@@ -178,13 +161,6 @@ NNUE::Accumulator & Position::accumulator()const{
 
 NNUE::Accumulator * Position::previousAccumulatorPtr()const{
     return _previousAccumulator;
-}
-
-PieceId Position::piece_id_on(Square sq) const{
-  //assert(board_const(sq) != P_none); // piece is moved before NNUE things in applyMove !!!
-  PieceId pid = _evalList.piece_id_list[sq];
-  assert(PieceIdOK(pid));
-  return pid;
 }
 
 Position & Position::operator =(const Position & p){
