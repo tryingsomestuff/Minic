@@ -22,7 +22,6 @@
 #define NNUE_FEATURE_SET_H_INCLUDED
 
 #include "features_common.h"
-#include "../../nnue.hpp"
 #include <array>
 
 namespace NNUE::Features {
@@ -107,7 +106,7 @@ namespace NNUE::Features {
         reset[perspective] = false;
         switch (trigger) {
           case TriggerEvent::kFriendKingMoved:
-            reset[perspective] = dp.pieceId[0] == PIECE_ID_KING + perspective;
+            reset[perspective] = dp.piece[0] == (perspective==Co_White ? P_wk : P_bk);
             break;
           default:
             assert(false);

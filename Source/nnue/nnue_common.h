@@ -27,6 +27,10 @@
 
 struct Position; // forward decl
 
+// Forward declaration of learning class template
+template <typename Layer>
+class Trainer;
+
 #if defined(USE_AVX2)
 #include <immintrin.h>
 

@@ -125,7 +125,7 @@ bool applyMove(Position & p, const Move & m, bool noValidation){
     const Square to     = Move2To(m); assert(squareOK(to));
     const MType  type   = Move2Type(m); assert(moveTypeOK(type));
     const Piece  fromP  = p.board_const(from);
-    const Piece  toP    = p.board_const(to);
+    Piece  toP          = p.board_const(to);
     const int fromId    = fromP + PieceShift;
     const bool isCapNoEP= toP != P_none;
     Piece promPiece = P_none;
@@ -142,8 +142,6 @@ bool applyMove(Position & p, const Move & m, bool noValidation){
        p._accumulator->computed_accumulation = false;
        p._accumulator->computed_score = false;
     }
-    PieceId dp0 = PIECE_ID_NONE;
-    PieceId dp1 = PIECE_ID_NONE;
     auto & dp = p._dirtyPiece;
     dp.dirty_num = 1; // at least one piece is changing ...
     Square rfrom = INVALIDSQUARE; // for castling
@@ -169,6 +167,7 @@ bool applyMove(Position & p, const Move & m, bool noValidation){
         const Square epCapSq = p.ep + (p.c == Co_White ? -8 : +8);
 #ifdef WITH_NNUE        
         capSq = epCapSq; // fix capture square in ep case
+        toP = (p.c == Co_White ? P_bp : P_wp);
 #endif
         assert(squareOK(epCapSq));
         BBTools::unSetBit(p, epCapSq, ~fromP); // BEFORE setting p.b new shape !!!
@@ -254,40 +253,34 @@ bool applyMove(Position & p, const Move & m, bool noValidation){
 #ifdef WITH_NNUE
       if (DynamicConfig::useNNUE){
         if ( isCapture(type)){ // remove to piece (works also for ep)
-            dp.dirty_num = 2; // 2 pieces changed
-            dp1 = p.piece_id_on(capSq);
-            dp.pieceId[1] = dp1;
-            dp.old_piece[1] = p._evalList.piece_with_id(dp1);
-            p._evalList.put_piece(dp1, capSq, PieceIdx(P_none));
-            dp.new_piece[1] = p._evalList.piece_with_id(dp1);
+            dp.dirty_num = 2;
+            dp.piece[1] = toP;
+            dp.from[1] = capSq;
+            dp.to[1] = INVALIDSQUARE;
         }
 
         if ( !isCastling(type)){ // move from piece
-            dp0 = p.piece_id_on(from);
-            dp.pieceId[0] = dp0;
-            dp.old_piece[0] = p._evalList.piece_with_id(dp0);
-            p._evalList.put_piece(dp0, to, PieceIdx(fromP));
-            dp.new_piece[0] = p._evalList.piece_with_id(dp0);
+            dp.piece[0] = fromP;
+            dp.from[0] = from;
+            dp.to[0] = to;
         }
 
         if ( isPromotion(type)){ // change to piece type
-            dp0 = p.piece_id_on(to);
-            p._evalList.put_piece(dp0, to, PieceIdx(promPiece));
-            dp.new_piece[0] = p._evalList.piece_with_id(dp0);
+            dp.to[0] = INVALIDSQUARE;
+            dp.piece[dp.dirty_num] = promPiece;
+            dp.from[dp.dirty_num] = INVALIDSQUARE;
+            dp.to[dp.dirty_num] = to;
+            dp.dirty_num++;
         }      
 
         if ( isCastling(type)){ 
             dp.dirty_num = 2; // 2 pieces moved
-            dp0 = p.piece_id_on(from);
-            dp1 = p.piece_id_on(rfrom);
-            dp.pieceId[0] = dp0;
-            dp.old_piece[0] = p._evalList.piece_with_id(dp0);
-            p._evalList.put_piece(dp0, to, PieceIdx(p.c==Co_White?P_wk:P_bk));
-            dp.new_piece[0] = p._evalList.piece_with_id(dp0);
-            dp.pieceId[1] = dp1;
-            dp.old_piece[1] = p._evalList.piece_with_id(dp1);
-            p._evalList.put_piece(dp1, rto, PieceIdx(p.c==Co_White?P_wr:P_br));
-            dp.new_piece[1] = p._evalList.piece_with_id(dp1);
+            dp.piece[0] = p.c==Co_White?P_wk:P_bk;
+            dp.from[0] = from;
+            dp.to[0] = to;
+            dp.piece[1] = p.c==Co_White?P_wr:P_br;
+            dp.from[1] = rfrom;
+            dp.to[1] = rto;
         }
       }
 #endif

@@ -42,78 +42,24 @@ enum PieceSquare : uint32_t {
   PS_END2     = 12 * SQUARE_NB + 1
 };
 
-struct ExtPieceSquare {
-  PieceSquare from[Co_End];
-};
-
 // Array for finding the PieceSquare corresponding to the piece on the board
 // Must be user defined in order to respect Piece engine piece order
-extern ExtPieceSquare kpp_board_index[PIECE_NB];
+extern uint32_t kpp_board_index[PIECE_NB][COLOR_NB];
 
 constexpr Square rotate180(Square sq){return (Square)(sq ^ 0x3F);}
 
-// Structure holding which tracked piece (PieceId) is where (PieceSquare)
-class EvalList {
-
-public:
-
-  // Max. number of pieces without kings is 30 but must be a multiple of 4 in AVX2
-  static const int MAX_LENGTH = 32;
-
-  // Array that holds the piece id for the pieces on the board
-  PieceId piece_id_list[SQUARE_NB];
-
-  // List of pieces, separate from White and Black POV
-  inline PieceSquare* piece_list_fw() const { return const_cast<PieceSquare*>(pieceListFw); }
-  inline PieceSquare* piece_list_fb() const { return const_cast<PieceSquare*>(pieceListFb); }
-
-  // Place the piece pc with piece_id on the square sq on the board
-  inline void put_piece(PieceId piece_id, Square sq, int pc){
-    assert(PieceIdOK(piece_id));
-    if (pc != NO_PIECE){
-        pieceListFw[piece_id] = PieceSquare(kpp_board_index[pc].from[WHITE] + sq);
-        pieceListFb[piece_id] = PieceSquare(kpp_board_index[pc].from[BLACK] + rotate180(sq));
-        piece_id_list[sq] = piece_id;
-    }
-    else{
-        pieceListFw[piece_id] = PS_NONE;
-        pieceListFb[piece_id] = PS_NONE;
-        piece_id_list[sq] = piece_id;
-    }
-  }
-
-  // Convert the specified piece_id piece to ExtPieceSquare type and return it
-  inline ExtPieceSquare piece_with_id(PieceId piece_id) const{
-    ExtPieceSquare eps;
-    eps.from[WHITE] = pieceListFw[piece_id];
-    eps.from[BLACK] = pieceListFb[piece_id];
-    return eps;
-  }
-
-  // Initialize the pieceList.
-  // Set the value of unused pieces to PieceSquare::PS_NONE in case you want to deal with dropped pieces.
-  // A normal evaluation function can be used as an evaluation function for missing frames.
-  // piece_no_list is initialized with PieceId::PIECE_ID_NONE to facilitate debugging.
-  inline void clear(){
-      for (auto& p : pieceListFw) p = PieceSquare::PS_NONE;
-      for (auto& p : pieceListFb) p = PieceSquare::PS_NONE;
-      for (auto& v : piece_id_list) v = PieceId::PIECE_ID_NONE;
-  }
-
-private:
-  PieceSquare pieceListFw[MAX_LENGTH];
-  PieceSquare pieceListFb[MAX_LENGTH];
-};
-
 // For differential evaluation of pieces that changed since last turn
 struct DirtyPiece {
+
   // Number of changed pieces
   int dirty_num;
 
-  // The ids of changed pieces, max. 2 pieces can change in one move
-  PieceId pieceId[2];
+  // Max 3 pieces can change in one move. A promotion with capture moves
+  // both the pawn and the captured piece to SQ_NONE and the piece promoted
+  // to from SQ_NONE to the capture square.
+  Piece piece[3];
 
-  // What changed from the piece with that piece number
-  ExtPieceSquare old_piece[2];
-  ExtPieceSquare new_piece[2];
+  // From and to squares, which may be SQ_NONE
+  Square from[3];
+  Square to[3];
 };

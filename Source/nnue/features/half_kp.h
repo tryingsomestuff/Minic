@@ -43,7 +43,7 @@ namespace NNUE::Features {
     static constexpr IndexType kDimensions =
         static_cast<IndexType>(SQUARE_NB) * static_cast<IndexType>(PS_END);
     // Maximum number of simultaneously active features
-    static constexpr IndexType kMaxActiveDimensions = PIECE_ID_KING;
+    static constexpr IndexType kMaxActiveDimensions = 30; // Kings don't count
     // Trigger for full calculation instead of difference calculation
     static constexpr TriggerEvent kRefreshTrigger = TriggerEvent::kFriendKingMoved;
 
@@ -55,13 +55,9 @@ namespace NNUE::Features {
     static void AppendChangedIndices(const Position& pos, Color perspective,
                                      IndexList* removed, IndexList* added);
 
-    // Index of a feature for a given king position and another piece on some square
-    static IndexType MakeIndex(Square sq_k, PieceSquare p);
-
    private:
-    // Get pieces information
-    static void GetPieces(const Position& pos, Color perspective,
-                          PieceSquare** pieces, Square* sq_target_k);
+    // Index of a feature for a given king position and another piece on some square
+    static IndexType MakeIndex(Color perspective, Square s, Piece pc, Square sq_k);
   };
 
 }  // namespace NNUE::Features

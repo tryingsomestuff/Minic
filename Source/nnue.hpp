@@ -11,12 +11,14 @@ struct Position; // forward decl
 ///@todo put a namespace around all NNUE "lib"
 #define WHITE Co_White
 #define BLACK Co_Black
+#define COLOR_NB Co_End
 #define SQUARE_NB NbSquare
 #define FILE_NB 8
 #define RANK_NB 8
 #define PIECE_NB NbPiece
 #define NO_PIECE PieceIdx(P_none)
 #define NNUEValue ScoreType
+#define SQ_NONE INVALIDSQUARE
 
 // Internal wrapper to the NNUE things
 namespace NNUEWrapper{

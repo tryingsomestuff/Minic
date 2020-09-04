@@ -50,12 +50,6 @@ namespace NNUE::Layers {
     static constexpr std::size_t kBufferSize =
         PreviousLayer::kBufferSize + kSelfBufferSize;
 
-    using BiasType = OutputType;
-    using WeightType = std::int8_t;
-
-    alignas(kCacheLineSize) BiasType biases_[kOutputDimensions];
-    alignas(kCacheLineSize) WeightType weights_[kOutputDimensions * kPaddedInputDimensions];
-
     // Hash value embedded in the evaluation file
     static constexpr std::uint32_t GetHashValue() {
       std::uint32_t hash_value = 0xCC03DAE4u;
@@ -72,7 +66,7 @@ namespace NNUE::Layers {
         std::to_string(kInputDimensions) + "](" +
         PreviousLayer::GetStructureString() + ")";
     }
-
+    
    // Read network parameters
     bool ReadParameters(std::istream& stream) {
       if (!previous_layer_.ReadParameters(stream)) return false;
@@ -110,8 +104,10 @@ namespace NNUE::Layers {
 
   #elif defined(USE_AVX2)
       constexpr IndexType kNumChunks = kPaddedInputDimensions / kSimdWidth;
-      const __m256i kOnes = _mm256_set1_epi16(1);
       const auto input_vector = reinterpret_cast<const __m256i*>(input);
+  #if !defined(USE_VNNI)
+      const __m256i kOnes = _mm256_set1_epi16(1);
+  #endif
 
   #elif defined(USE_SSE2)
       constexpr IndexType kNumChunks = kPaddedInputDimensions / kSimdWidth;
@@ -170,9 +166,13 @@ namespace NNUE::Layers {
         __m256i sum = _mm256_setzero_si256();
         const auto row = reinterpret_cast<const __m256i*>(&weights_[offset]);
         for (IndexType j = 0; j < kNumChunks; ++j) {
+  #if defined(USE_VNNI)
+          sum = _mm256_dpbusd_epi32(sum, _mm256_loadA_si256(&input_vector[j]), _mm256_load_si256(&row[j]));
+  #else
           __m256i product = _mm256_maddubs_epi16(_mm256_loadA_si256(&input_vector[j]), _mm256_load_si256(&row[j]));
           product = _mm256_madd_epi16(product, kOnes);
           sum = _mm256_add_epi32(sum, product);
+  #endif
         }
         __m128i sum128 = _mm_add_epi32(_mm256_castsi256_si128(sum), _mm256_extracti128_si256(sum, 1));
         sum128 = _mm_add_epi32(sum128, _mm_shuffle_epi32(sum128, _MM_PERM_BADC));
@@ -270,7 +270,17 @@ namespace NNUE::Layers {
     }
 
    private:
+    using BiasType = OutputType;
+    using WeightType = std::int8_t;
+
+    // Make the learning class a friend
+    friend class Trainer<AffineTransform>;
+
     PreviousLayer previous_layer_;
+
+    alignas(kCacheLineSize) BiasType biases_[kOutputDimensions];
+    alignas(kCacheLineSize)
+        WeightType weights_[kOutputDimensions * kPaddedInputDimensions];
   };
 
 }  // namespace NNUE::Layers

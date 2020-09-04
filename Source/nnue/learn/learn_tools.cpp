@@ -294,15 +294,6 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen , bool mirror){
 
 	//std::cout << "color " << int(p.c) << std::endl;
 
-#ifdef WITH_NNUE
-	// clear evalList. It is cleared when memset is cleared to zero above...
-	p._evalList.clear();
-
-	// In updating the PieceList, we have to set which piece is where,
-	// A counter of how much each piece has been used
-	PieceId next_piece_number = PieceId::PIECE_ID_ZERO;
-#endif
-
 	// First the position of the ball
 	if (mirror){
 		for (auto c : {Co_White, Co_Black}){
@@ -350,15 +341,6 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen , bool mirror){
 
 			p.board(sq) = pc;
 
-		#ifdef WITH_NNUE
-			// update evalList
-			PieceId piece_no =
-				(pc == P_bk) ? PieceId::PIECE_ID_BKING :// Move ball
-				(pc == P_wk) ? PieceId::PIECE_ID_WKING :// Backing ball
-				next_piece_number++; // otherwise
-
-			p._evalList.put_piece(piece_no, sq, pc); // Place the pc piece in the sq box
-		#endif
 			//cout << sq << ' ' << board[sq] << ' ' << stream.get_cursor() << endl;
 
 			if (stream.get_cursor()> 256) return 1;
