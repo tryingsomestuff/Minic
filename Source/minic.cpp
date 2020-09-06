@@ -84,8 +84,27 @@ int main(int argc, char ** argv) {
 #endif
 
 #ifdef WITH_LEARNER
-    std::istringstream is;
-    if ( argc > 1 && std::string(argv[1]) == "-learn")  { learn(is); return 0;}
+    if ( argc > 1 && std::string(argv[1]) == "-learn")  { 
+        std::ifstream input(argv[2]);
+        std::string str((std::istreambuf_iterator<char>(t)),
+                         std::istreambuf_iterator<char>());
+/*
+        std::ostringstream os;
+        os << "targetdir " << "/ssd/Minic/train_data/sf/1B/" << "\n";
+        os << "loop " << "100" << "\n";
+        os << "batchsize " << "1000000" << "\n";
+        os << "lambda " << "1" << "\n";
+        os << "validation_set_file_name " << "/ssd/Minic/train_data/sf/validation/1m_d16.bin" << "\n";
+        os << "nn_batch_size " << "1000" << "\n";
+        os << "newbob_decay " << "0.5" << "\n";
+        os << "loss_output_interval " << "1000000" << "\n";
+        os << "eval_save_interval " << "250000000" << "\n";
+        std::string str = os.str();
+*/
+        std::istringstream is(str);
+        learn(is); 
+        return 0;
+    }
 #endif
 
 #ifdef DEBUG_TOOL

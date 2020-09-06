@@ -22,6 +22,7 @@
 #include "index_list.h"
 
 #include "../../position.hpp"
+#include "../../bitboard.hpp"
 
 namespace NNUE::Features {
 
@@ -71,4 +72,4 @@ namespace NNUE::Features {
 
   template class HalfKP<Side::kFriend>;
 
-}  // namespace Eval::NNUE::Features
+}  // namespace NNUE::Features

@@ -41,6 +41,7 @@ namespace NNUE {
   // Initialize the evaluation function parameters
   template <typename T>
   void Initialize(AlignedPtr<T>& pointer) {
+
     pointer.reset(reinterpret_cast<T*>(std_aligned_alloc(alignof(T), sizeof(T))));
     std::memset(pointer.get(), 0, sizeof(T));
   }
@@ -48,6 +49,7 @@ namespace NNUE {
   // Read evaluation function parameters
   template <typename T>
   bool ReadParameters(std::istream& stream, const AlignedPtr<T>& pointer) {
+
     std::uint32_t header;
     header = read_little_endian<std::uint32_t>(stream);
     if (!stream || header != T::GetHashValue()) return false;
@@ -103,6 +105,7 @@ namespace NNUE {
 
   // Read network parameters
   bool ReadParameters(std::istream& stream) {
+
     std::uint32_t hash_value;
     std::string architecture;
     if (!ReadHeader(stream, &hash_value, &architecture)) return false;

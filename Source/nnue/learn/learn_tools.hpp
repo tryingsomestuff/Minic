@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 
+class Position;
+
 // in order for Minic data generation and use to stay compatible with SF one, 
 // I need to handle SF move encoding in the binary format ...
 // So here is some SF extracted Move usage things
@@ -181,7 +183,7 @@ MiniMove ToSFMove(const Position & p, Square from, Square to, MType type);
 MiniMove FromSFMove(const Position & p, MiniMove sfmove);
 
 namespace Dependency {
-    int mkdir(std::string dir_name)
+    inline int mkdir(std::string dir_name)
     {
         return mkdir(dir_name.c_str());
     }

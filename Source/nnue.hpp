@@ -26,7 +26,6 @@ namespace NNUEWrapper{
   // NNUE eval scaling factor
   extern int NNUEscaling;
 
-  ScoreType ComputeScore(const Position& pos, bool refresh);
   void Initialize();
   void UpdateAccumulatorIfPossible(const Position& pos);
   // curently loaded network
