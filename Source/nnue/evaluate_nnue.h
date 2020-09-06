@@ -58,7 +58,7 @@ namespace NNUE {
   // Evaluation function
   extern AlignedPtr<Network> __network;
 
-  ScoreType ComputeScore(const Position& pos, bool refresh);
+  NNUEValue ComputeScore(const Position& pos, bool refresh);
   void Initialize();
   bool ReadParameters(std::istream& stream);
   bool WriteParameters(std::ostream& stream);

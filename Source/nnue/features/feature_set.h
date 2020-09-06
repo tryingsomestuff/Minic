@@ -21,8 +21,11 @@
 #ifndef NNUE_FEATURE_SET_H_INCLUDED
 #define NNUE_FEATURE_SET_H_INCLUDED
 
-#include "features_common.h"
 #include <array>
+
+#include "features_common.h"
+
+#include "../../position.hpp"
 
 namespace NNUE::Features {
 

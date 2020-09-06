@@ -145,20 +145,4 @@ void compute_scaling(int count){
 
 } // nnue
 
-// EVAL
-#include "nnue/features/half_kp.cpp"
-#include "nnue/evaluate_nnue.cpp"
-
-// TOOLS
-#include "nnue/learn/learn_tools.cpp"
-#include "nnue/learn/convert.cpp"
-
-// LEARNER
-#ifdef WITH_LEARNER
-#include "nnue/learn/multi_think.cpp"
-#include "nnue/learn/learner.cpp"
-#include "nnue/evaluate_nnue_learner.cpp"
-
-#endif
-
 #endif // WITH_NNUE

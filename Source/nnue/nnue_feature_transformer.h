@@ -36,12 +36,10 @@ namespace NNUE {
   class FeatureTransformer {
 
    private:
-
     // Number of output dimensions for one side
     static constexpr IndexType kHalfDimensions = kTransformedFeatureDimensions;
 
    public:
-
     // Output type
     using OutputType = TransformedFeatureType;
 
@@ -50,7 +48,8 @@ namespace NNUE {
     static constexpr IndexType kOutputDimensions = kHalfDimensions * 2;
 
     // Size of forward propagation buffer
-    static constexpr std::size_t kBufferSize = kOutputDimensions * sizeof(OutputType);
+    static constexpr std::size_t kBufferSize =
+        kOutputDimensions * sizeof(OutputType);
 
     // Hash value embedded in the evaluation file
     static constexpr std::uint32_t GetHashValue() {

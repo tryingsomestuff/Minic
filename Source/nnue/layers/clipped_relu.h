@@ -170,9 +170,9 @@ namespace NNUE::Layers {
     }
 
    private:
-   
-    friend class Trainer<ClippedReLU>;
-
+     // Make the learning class a friend
+     friend class Trainer<ClippedReLU>;
+     
     PreviousLayer previous_layer_;
   };
 

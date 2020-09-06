@@ -25,11 +25,9 @@
 #include <cstring>
 #include <iostream>
 
-struct Position; // forward decl
+#include "nnue_def.h"
 
-// Forward declaration of learning class template
-template <typename Layer>
-class Trainer;
+struct Position; // forward decl
 
 #if defined(USE_AVX2)
 #include <immintrin.h>
@@ -54,7 +52,7 @@ class Trainer;
 //       compiled with older g++ crashes because the output memory is not aligned
 //       even though alignas is specified.
 #if defined(USE_AVX2)
-#if defined(__GNUC__ ) && (__GNUC__ < 9) && defined(_WIN32)
+#if defined(__GNUC__ ) && (__GNUC__ < 9) && defined(_WIN32) && !defined(__clang__)
 #define _mm256_loadA_si256  _mm256_loadu_si256
 #define _mm256_storeA_si256 _mm256_storeu_si256
 #else
@@ -64,7 +62,7 @@ class Trainer;
 #endif
 
 #if defined(USE_AVX512)
-#if defined(__GNUC__ ) && (__GNUC__ < 9) && defined(_WIN32)
+#if defined(__GNUC__ ) && (__GNUC__ < 9) && defined(_WIN32) && !defined(__clang__)
 #define _mm512_loadA_si512   _mm512_loadu_si512
 #define _mm512_storeA_si512  _mm512_storeu_si512
 #else
@@ -106,6 +104,10 @@ namespace NNUE {
   // Type of input feature after conversion
   using TransformedFeatureType = std::uint8_t;
   using IndexType = std::uint32_t;
+
+  // Forward declaration of learning class template
+  template <typename Layer>
+  class Trainer;
 
   // Round n up to be a multiple of base
   template <typename IntType>
