@@ -189,6 +189,30 @@ void Position::resetAccumulator(){
     }
 }
 
+bool Position::operator ==(const Position & p){
+    bool b = true;
+    b &= _b == p._b;
+    b &= _allB == p._allB;
+    b &= allPieces == p.allPieces;
+    b &= mat == p.mat;
+    b &= h == p.h;
+    b &= ph == p.ph;
+    b &= lastMove == p.lastMove;
+    b &= king == p.king;
+    b &= rooksInit == p.rooksInit;
+    b &= kingInit == p.kingInit;
+    b &= ep == p.ep;
+    b &= fifty == p.fifty;
+    b &= castling == p.castling;
+    b &= c == p.c;
+    b &= _dirtyPiece == p._dirtyPiece;
+    return b;
+}
+
+bool Position::operator !=(const Position & p){
+    return ! operator==(p);
+}
+
 #endif
 
 Position::~Position(){
