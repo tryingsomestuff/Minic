@@ -164,13 +164,9 @@ NNUE::Accumulator * Position::previousAccumulatorPtr()const{
 }
 
 Position & Position::operator =(const Position & p){
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Winvalid-offsetof"
-    std::memcpy(this, &p, offsetof(Position, _accumulator));
-#pragma GCC diagnostic pop
+    if ( _accumulator ) delete _accumulator;
+    std::memcpy(this, &p, sizeof(Position));
     if (DynamicConfig::useNNUE){
-       if ( _accumulator ) delete _accumulator;
        _accumulator = new NNUE::Accumulator();
        _previousAccumulator = p._accumulator;
     }
@@ -178,11 +174,7 @@ Position & Position::operator =(const Position & p){
 }
 
 Position::Position(const Position & p){
-    //assert(false);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Winvalid-offsetof"
-    std::memcpy(this, &p, offsetof(Position, _accumulator));
-#pragma GCC diagnostic pop
+    std::memcpy(this, &p, sizeof(Position));
     if (DynamicConfig::useNNUE){
        _accumulator = new NNUE::Accumulator();
        _previousAccumulator = p._accumulator;    
