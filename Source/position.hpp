@@ -31,8 +31,8 @@ struct Position{
     Position(const std::string & fen, bool withMoveCount = true);
     ~Position();
 
-    std::array<Piece,64>    _b           {{ P_none }}; // works because P_none is in fact 0 ...
-    std::array<BitBoard,6>  _allB        {{ emptyBitBoard }};
+    std::array<Piece,64>    _b           {{P_none}}; // works because P_none is in fact 0 ...
+    std::array<BitBoard,6>  _allB        {{emptyBitBoard}};
     std::array<BitBoard,2>  allPieces    {{emptyBitBoard}};
 
     // t p n b r q k bl bd M n  (total is first so that pawn to king is same a Piece)

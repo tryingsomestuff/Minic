@@ -85,8 +85,12 @@ int main(int argc, char ** argv) {
 
 #ifdef WITH_LEARNER
     if ( argc > 1 && std::string(argv[1]) == "-learn")  { 
+        // let disable TT ...
+	    DynamicConfig::disableTT = true;
+
+        // read param from input file
         std::ifstream input(argv[2]);
-        std::string str((std::istreambuf_iterator<char>(t)),
+        std::string str((std::istreambuf_iterator<char>(input)),
                          std::istreambuf_iterator<char>());
 /*
         std::ostringstream os;
