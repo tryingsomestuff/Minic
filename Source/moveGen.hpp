@@ -131,7 +131,9 @@ void generate(const Position & p, MoveList & moves, bool doNotClear = false){
 #ifdef DEBUG_GENERATION_LEGAL
     for(auto m : moves){
        if (!isPseudoLegal(p, m)) {
-           Logging::LogIt(Logging::logFatal) << "Generation error, move not legal " << ToString(p) << ToString(m);
+           Logging::LogIt(Logging::logError) << "Generation error, move not legal " << ToString(p);
+           Logging::LogIt(Logging::logError) << "move " << ToString(m);
+           Logging::LogIt(Logging::logFatal) << "previous " << ToString(p.lastMove);
            assert(false);
        }
     }

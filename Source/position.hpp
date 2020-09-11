@@ -99,6 +99,9 @@ struct Position{
     Position & operator =(const Position & p);
     Position(const Position & p);
 
+    bool operator ==(const Position & p);
+    bool operator !=(const Position & p);
+
 #endif
 
 };

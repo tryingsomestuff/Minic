@@ -62,4 +62,17 @@ struct DirtyPiece {
   // From and to squares, which may be SQ_NONE
   Square from[3];
   Square to[3];
+
+  bool operator==(const DirtyPiece & dp){
+     return dirty_num == dp.dirty_num
+     && piece[0] == dp.piece[0]
+     && piece[1] == dp.piece[1]
+     && piece[2] == dp.piece[2]
+     && from[0] == dp.from[0]
+     && from[1] == dp.from[1]
+     && from[2] == dp.from[2]
+     && to[0] == dp.to[0]
+     && to[1] == dp.to[1]
+     && to[2] == dp.to[2];
+  }
 };
