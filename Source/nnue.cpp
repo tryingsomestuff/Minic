@@ -145,4 +145,4 @@ void compute_scaling(int count){
 
 } // nnue
 
-#endif // WITH_NNUE
+#endif 

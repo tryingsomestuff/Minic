@@ -18,11 +18,15 @@
 
 //Definition of input features HalfKP of NNUE evaluation function
 
+#include "definition.hpp"
+
+#ifdef WITH_NNUE
+
 #include "half_kp.h"
 #include "index_list.h"
 
-#include "../../position.hpp"
-#include "../../bitboard.hpp"
+#include "position.hpp"
+#include "bitboard.hpp"
 
 namespace NNUE::Features {
 
@@ -73,3 +77,5 @@ namespace NNUE::Features {
   template class HalfKP<Side::kFriend>;
 
 }  // namespace NNUE::Features
+
+#endif

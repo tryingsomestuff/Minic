@@ -3,7 +3,6 @@
 #include "dynamicConfig.hpp"
 #include "evalConfig.hpp"
 #include "hash.hpp"
-#include "nn.hpp"
 #include "positionTools.hpp"
 #include "searcher.hpp"
 #include "score.hpp"
@@ -191,7 +190,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
 #endif
 
 #ifdef WITH_NNUE
-    if (DynamicConfig::useNNUE && !context.noNNUE){
+    if (DynamicConfig::useNNUE){
         EvalScore score;
         if ( ! isLazyHigh(600,features,score)){ // stay to classic eval when the game is already decided
            ScoreType nnueScore = NNUEWrapper::evaluate(p);
@@ -681,13 +680,6 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
     if ( display ){
         Logging::LogIt(Logging::logInfo) << "==> All (fully scaled) " << score;
     }
-
-    // use NN input
-    ///@todo this needs stm to be taken into account in EvalNN
-#ifdef WITH_MLP
-       const float gamma = 0.8f;
-       ret = (ScoreType)(gamma*ret + (1-gamma)*NN::EvalNN(features,ret));
-#endif
 
     STOP_AND_SUM_TIMER(Eval)
     return ret;

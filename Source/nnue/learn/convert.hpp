@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../definition.hpp"
+#include "definition.hpp"
 
 #ifdef WITH_DATA2BIN
 

@@ -3,7 +3,7 @@
 #include "definition.hpp"
 
 #ifdef WITH_NNUE
-#include "nnue_def.h"
+#include "nnue/nnue_def.h"
 
 namespace NNUE{
    struct Accumulator; // Forward decl

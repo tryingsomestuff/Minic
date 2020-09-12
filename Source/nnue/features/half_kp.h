@@ -22,7 +22,7 @@
 #define NNUE_FEATURES_HALF_KP_H_INCLUDED
 
 #include "features_common.h"
-#include "../../nnue.hpp"
+#include "nnue.hpp"
 
 struct Position;
 
