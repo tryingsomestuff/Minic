@@ -25,7 +25,7 @@
 #include <cstring>
 #include <iostream>
 
-#include "nnue_def.h"
+#include "nnue/nnue_def.h"
 
 struct Position; // forward decl
 

@@ -2,7 +2,7 @@
 
 // THIS IS MAINLY COPY/PASTE FROM STOCKFISH, as well as the full nnue sub-directory
 
-#include "../../nnue.hpp"
+#include "nnue.hpp"
 
 // An ID used to track the pieces. Max. 32 pieces on board.
 enum PieceId {

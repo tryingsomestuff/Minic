@@ -12,7 +12,6 @@
 #include "kpk.hpp"
 #include "logging.hpp"
 #include "material.hpp"
-#include "nn.hpp"
 #include "nnue.hpp"
 #include "option.hpp"
 #include "pgnparser.hpp"
@@ -47,9 +46,6 @@ void init(int argc, char ** argv) {
     Book::initBook();
 #ifdef WITH_SYZYGY
     SyzygyTb::initTB();
-#endif
-#ifdef WITH_MLP
-    NN::loadNet();
 #endif
 #ifdef WITH_NNUE
     if ( !DynamicConfig::NNUEFile.empty()){

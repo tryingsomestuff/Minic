@@ -38,5 +38,9 @@ exe=minic_${v}_android
 echo "Building $exe"
 echo $OPT
 
-$dir/android/bin/arm-linux-androideabi-clang++ $OPT Source/*.cpp -ISource -o $dir/Dist/Minic2/$exe -static-libgcc -static-libstdc++ 
+NNUESOURCE="Source/nnue/features/half_kp.cpp Source/nnue/features/half_relative_kp.cpp Source/nnue/evaluate_nnue.cpp Source/nnue/learn/learn_tools.cpp Source/nnue/learn/convert.cpp Source/nnue/learn/multi_think.cpp Source/nnue/learn/learner.cpp Source/nnue/evaluate_nnue_learner.cpp" 
+
+STANDARDSOURCE="Source/*.cpp"
+
+$dir/android/bin/arm-linux-androideabi-clang++ $OPT $STANDARDSOURCE $NNUESOURCE -ISource -ISource/nnue -o $dir/Dist/Minic2/$exe -static-libgcc -static-libstdc++ 
 

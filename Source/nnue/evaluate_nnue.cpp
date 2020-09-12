@@ -23,6 +23,10 @@
 #include <iostream>
 #include <set>
 
+#include "definition.hpp"
+
+#ifdef WITH_NNUE
+
 #include "evaluate_nnue.h"
 #include "nnue_accumulator.h"
 
@@ -148,3 +152,5 @@ namespace NNUE {
   }
 
 } // namespace NNUE
+
+#endif

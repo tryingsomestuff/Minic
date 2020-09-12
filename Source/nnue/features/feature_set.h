@@ -25,7 +25,7 @@
 
 #include "features_common.h"
 
-#include "../../position.hpp"
+#include "position.hpp"
 
 namespace NNUE::Features {
 

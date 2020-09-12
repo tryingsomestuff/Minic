@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../definition.hpp"
+#include "definition.hpp"
 
 #if defined(WITH_DATA2BIN) or defined(WITH_LEARNER)
 
