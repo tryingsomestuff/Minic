@@ -71,7 +71,11 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
         Logging::LogIt(Logging::logInfo) << "... go for id " << id() ;
     }
     
-    stack[p.halfmoves].h = p.h;
+    {
+        EvalData data;
+        ScoreType e = eval(p,data,*this);
+        stack[p.halfmoves] = {p,p.h,data,e,INVALIDMINIMOVE};
+    }
 
     DepthType reachedDepth = 0;
     PVList pvOut;
@@ -177,7 +181,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
             while( !stopFlag ){
 
                 pvLoc.clear();
-                stack[p.halfmoves].h = p.h;
+                //stack[p.halfmoves].h = p.h; ///@todo this seems useless ?
                 score = pvs<true>(alpha,beta,p,windowDepth,0,pvLoc,seldepth,isInCheck,false,false,skipMoves.empty()?nullptr:&skipMoves);
                 if ( stopFlag ) break;
                 delta += 2 + delta/2; // from xiphos ...
