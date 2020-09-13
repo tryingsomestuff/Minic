@@ -6,10 +6,11 @@
 
 #include <cmath>
 #include <cstdint>
+#include <filesystem>
 #include <string>
 #include <vector>
 
-class Position;
+struct Position;
 
 // in order for Minic data generation and use to stay compatible with SF one, 
 // I need to handle SF move encoding in the binary format ...
@@ -185,7 +186,7 @@ MiniMove FromSFMove(const Position & p, MiniMove sfmove);
 namespace Dependency {
     inline int mkdir(std::string dir_name)
     {
-        return mkdir(dir_name.c_str());
+        return std::filesystem::create_directory(dir_name);
     }
 }
 
