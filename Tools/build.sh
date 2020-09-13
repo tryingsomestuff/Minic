@@ -101,7 +101,7 @@ echo "end of first compilation"
 if [ $ret = "0" ]; then
    echo "running Minic for profiling : $dir/Dist/Minic2/$exe"
    $dir/Dist/Minic2/$exe bench $DEPTH -quiet 0 
-   #$dir/Dist/Minic2/$exe bench $DEPTH -quiet 0 -NNUEFile Tourney/nn.bin
+   $dir/Dist/Minic2/$exe bench $DEPTH -quiet 0 -NNUEFile Tourney/nn.bin
    echo "starting optimized compilation"
    $CXX -fprofile-use $OPT $STANDARDSOURCE $NNUESOURCE -ISource -ISource/nnue -o $dir/Dist/Minic2/$exe $LIBS
    echo "done "
