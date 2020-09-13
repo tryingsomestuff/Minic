@@ -154,7 +154,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
     const bool isNotEndGame = p.mat[p.c][M_t]> 0; ///@todo better ?
     const bool improving = (!isInCheck && ply > 1 && stack[p.halfmoves].eval >= stack[p.halfmoves-2].eval);
     DepthType marginDepth = std::max(1,depth-(evalScoreIsHashScore?e.d:0)); // a depth that take TT depth into account
-    Move refutation = INVALIDMOVE;
+    MiniMove refutation = INVALIDMINIMOVE;
 
     // forward prunings
     if ( !DynamicConfig::mateFinder && canPrune && !isInCheck /*&& !isMateScore(beta)*/ && !pvnode){ ///@todo removing the !isMateScore(beta) is not losing that much elo and allow for better check mate finding ...
@@ -171,7 +171,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         }
 
         // null move (warning, mobility info is only available if no TT hit)
-        if (SearchConfig::doNullMove && !subSearch && (isNotEndGame || data.mobility[p.c] > 4) && withoutSkipMove && 
+        if ( SearchConfig::doNullMove && !subSearch && (isNotEndGame || data.mobility[p.c] > 4) && withoutSkipMove && 
             depth >= SearchConfig::nullMoveMinDepth && 
             evalScore >= beta && 
             evalScore >= stack[p.halfmoves].eval && 
@@ -189,9 +189,11 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                 if (nullE.h == nullHash || nullE.s >= beta ) { // avoid null move search if TT gives a score < beta for the same depth ///@todo check this again !
                     ++stats.counters[Stats::sid_nullMoveTry2];
                     Position pN = p;
+                    //Position & pN = stack[p.halfmoves+1].p;
+                    //pN = p;
                     applyNull(*this,pN);
-                    stack[pN.halfmoves].h = pN.h;
                     stack[pN.halfmoves].p = pN;
+                    stack[pN.halfmoves].h = pN.h;
                     ScoreType nullscore = -pvs<false>(-beta, -beta + 1, pN, nullDepth, ply + 1, nullPV, seldepth, isInCheck, !cutNode, false);
                     if (stopFlag) return STOPSCORE;
                     TT::Entry nullEThreat;
@@ -304,6 +306,8 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         }
 #endif
         Position p2 = p;
+        //Position & p2 = stack[p.halfmoves+1].p2;
+        //p2 = p;
         if ( applyMove(p2, e.m)) {
             TT::prefetch(computeHash(p2));
             //const Square to = Move2To(e.m);
@@ -311,8 +315,8 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             const bool isQuiet = Move2Type(e.m) == T_std;
             if ( isQuiet ) validQuietMoveCount++;
             PVList childPV;
-            stack[p2.halfmoves].h = p2.h;
             stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
+            stack[p2.halfmoves].h = p2.h;
             const bool isCheck = ttIsCheck || isAttacked(p2, kingSquare(p2));
             if ( isCapture(e.m) ) ttMoveIsCapture = true;
             //const bool isAdvancedPawnPush = PieceTools::getPieceType(p,Move2From(e.m)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
@@ -421,17 +425,19 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
     if (moves.empty()) return isInCheck ? -MATE + ply : 0;
 
 #ifdef USE_PARTIAL_SORT
-    MoveSorter::score(*this, moves, p, data.gp, ply, cmhPtr, true, isInCheck, validTTmove?&e:NULL, refutation != INVALIDMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMOVE);
+    MoveSorter::score(*this, moves, p, data.gp, ply, cmhPtr, true, isInCheck, validTTmove?&e:NULL, refutation != INVALIDMINIMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMINIMOVE);
     size_t offset = 0;
     const Move * it = nullptr;
     while( (it = MoveSorter::pickNext(moves,offset)) && !stopFlag){
 #else
-    MoveSorter::scoreAndSort(*this, moves, p, data.gp, ply, cmhPtr, true, isInCheck, validTTmove?&e:NULL, refutation != INVALIDMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMOVE);
+    MoveSorter::scoreAndSort(*this, moves, p, data.gp, ply, cmhPtr, true, isInCheck, validTTmove?&e:NULL, refutation != INVALIDMINIMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMINIMOVE);
     for(auto it = moves.begin() ; it != moves.end() && !stopFlag ; ++it){
 #endif
         if (isSkipMove(*it,skipMoves)) continue; // skipmoves
         if (validTTmove && sameMove(e.m, *it)) continue; // already tried
         Position p2 = p;
+        //Position & p2 = stack[p.halfmoves+1].p2;
+        //p2 = p;
         if ( ! applyMove(p2,*it) ) continue;
         TT::prefetch(computeHash(p2));
         const Square to = Move2To(*it);
@@ -442,8 +448,8 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         if ( isQuiet ) validQuietMoveCount++;
         const bool firstMove = validMoveCount == 1;
         PVList childPV;
-        stack[p2.halfmoves].h = p2.h;
         stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
+        stack[p2.halfmoves].h = p2.h;
         const bool isCheck = isAttacked(p2, kingSquare(p2));
         bool isAdvancedPawnPush = PieceTools::getPieceType(p,Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
         // extensions

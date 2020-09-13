@@ -59,11 +59,13 @@ const std::string MinicVersion = "2.49";
 #define WITH_TEST_SUITE
 //#define WITH_PGN_PARSER
 
-// *** NNUE things
-#ifdef WITH_NNUE
-#define WITH_DATA2BIN
+// *** NNUE learning things
 //#define WITH_GENFILE
+#ifdef WITH_NNUE
+#ifndef __ANDROID__
+#define WITH_DATA2BIN
 #define WITH_LEARNER
+#endif
 #endif
 
 // *** Tuning

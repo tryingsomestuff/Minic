@@ -1,6 +1,6 @@
 #include "searcher.hpp"
 
-ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth){
+ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth, PVList * pv){
     EvalData data;
     ++stats.counters[Stats::sid_qnodes];
     const ScoreType evalScore = eval(p,data,*this);
@@ -21,10 +21,12 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Posi
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         Position p2 = p;
         if ( ! applyMove(p2,*it) ) continue;
-        const ScoreType score = -qsearchNoPruning(-beta,-alpha,p2,ply+1,seldepth);
+        PVList childPV;
+        const ScoreType score = -qsearchNoPruning(-beta,-alpha,p2,ply+1,seldepth, pv ? &childPV : nullptr);
         if ( score > bestScore){
            bestScore = score;
            if ( score > alpha ){
+              if (pv) updatePV(*pv, *it, childPV);
               if ( score >= beta ) return score;
               alpha = score;
            }
@@ -133,8 +135,12 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
     // try the tt move before move generation
     if ( validTTmove && (isInCheck || isCapture(e.m)) ){
         Position p2 = p;
+        //Position & p2 = stack[p.halfmoves+1].p;
+        //p2 = p;
         if ( applyMove(p2,e.m) ){;
             ++validMoveCount;
+            //stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
+            //stack[p2.halfmoves].h = p2.h;
             TT::prefetch(computeHash(p2));
             const ScoreType score = -qsearch(-beta,-alpha,p2,ply+1,seldepth,isInCheck?0:qply+1,false,false);
             if ( score > bestScore){
@@ -179,8 +185,12 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
             if (SearchConfig::doQFutility && staticScore + SearchConfig::qfutilityMargin[evalScoreIsHashScore] + (isPromotionCap(*it) ? (Values[P_wq+PieceShift]-Values[P_wp+PieceShift]) : 0 ) + (Move2Type(*it)==T_ep ? Values[P_wp+PieceShift] : PieceTools::getAbsValue(p, Move2To(*it))) <= alphaInit) {++stats.counters[Stats::sid_qfutility];continue;}
         }
         Position p2 = p;
+        //Position & p2 = stack[p.halfmoves+1].p;
+        //p2 = p;
         if ( ! applyMove(p2,*it) ) continue;
         ++validMoveCount;
+        //stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
+        //stack[p2.halfmoves].h = p2.h;
         TT::prefetch(computeHash(p2));
         const ScoreType score = -qsearch(-beta,-alpha,p2,ply+1,seldepth,isInCheck?0:qply+1,false,false);
         if ( score > bestScore){

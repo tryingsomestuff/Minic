@@ -23,11 +23,11 @@ struct Searcher{
     TimeType getCurrentMoveMs(); // use this (and not the variable) to take emergency time into account !
 
     struct StackData{
-       Hash h = nullHash;
-       ScoreType eval = 0;
-       EvalData data = { 0, {0,0}, {0,0} };
-       Move threat = INVALIDMOVE;
        Position p;
+       Hash h = nullHash;
+       EvalData data = { 0, {0,0}, {0,0} };
+       ScoreType eval = 0;
+       MiniMove threat = INVALIDMINIMOVE;
     };
     std::array<StackData,MAX_PLY> stack;
 
@@ -51,22 +51,6 @@ struct Searcher{
     EvalScore contempt = 0;
     bool subSearch = false;
 
-#ifdef WITH_NNUE
-    bool noNNUE = false;
-    bool bkNoNNUE = false;
-    inline void disableNNUE(){
-        bkNoNNUE = noNNUE;
-        noNNUE = true;
-    }
-    inline void restoreNNUE(){
-        noNNUE = bkNoNNUE;
-    }
-#else
-    inline void disableNNUE(){ }
-    inline void restoreNNUE(){ }
-#endif
-
-
 #ifdef WITH_GENFILE
     std::ofstream genStream;
     bool genFen = true;
@@ -80,7 +64,7 @@ struct Searcher{
 
     template <bool pvnode> ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, bool cutNode, bool canPrune, const std::vector<MiniMove> * skipMoves = nullptr);
     ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth, unsigned int qply, bool qRoot, bool pvnode, signed char isInCheckHint = -1);
-    ScoreType qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth);
+    ScoreType qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth, PVList * pv = nullptr);
     bool SEE_GE(const Position & p, const Move & m, ScoreType threshold)const;
     ScoreType SEE(const Position & p, const Move & m)const;
     PVList search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth);
