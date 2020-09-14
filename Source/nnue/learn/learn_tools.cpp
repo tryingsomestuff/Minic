@@ -294,7 +294,7 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen , bool mirror){
 
 	//std::cout << "color " << int(p.c) << std::endl;
 
-	// First the position of the ball
+	// First the position of the kings
 	if (mirror){
 		for (auto c : {Co_White, Co_Black}){
 			const Square sq = FromSF::flip_file((Square)stream.read_n_bit(6));
@@ -394,7 +394,7 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen , bool mirror){
 	// Fullmove number
 	p.moves = static_cast<Square>(stream.read_n_bit(8));
 	if (p.moves < 1) { // fix a LittleBlitzer bug here ...
-		Logging::LogIt(Logging::logInfo) << "Wrong move counter " << (int)p.moves << " using 1 instead";
+		Logging::LogIt(Logging::logDebug) << "Wrong move counter " << (int)p.moves << " using 1 instead";
 		p.moves = 1;
 	}
 	assert(stream.get_cursor() <= 256);
