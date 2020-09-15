@@ -170,7 +170,7 @@ bool convert_bin(const std::vector<std::string>& filenames, const std::string& o
 	return true;
 }
 
-// pgn-extract --fencomments -Wlalg --nochecks --nomovenumbers --noresults -w500000 -N -V -o Fishtest.txt Fishtest.pgn
+// pgn-extract --fencomments -Wlalg --nochecks --nomovenumbers --noresults -w500000 -N -V -o data.plain games.pgn
 bool convert_bin_from_pgn_extract(const std::vector<std::string>& filenames, const std::string& output_file_name, const bool pgn_eval_side_to_move){
 	
 	std::cout << "pgn_eval_side_to_move=" << pgn_eval_side_to_move << std::endl;

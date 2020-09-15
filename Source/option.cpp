@@ -225,6 +225,7 @@ namespace Options {
 #ifdef WITH_NNUE
        //GETOPT(useNNUE,          bool)         
        GETOPT(NNUEFile,         std::string)
+       GETOPT(skipLoadingEval,  bool);
 #endif
 #ifdef WITH_GENFILE
        GETOPT(genFen,            bool)
