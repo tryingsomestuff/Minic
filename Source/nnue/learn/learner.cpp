@@ -35,7 +35,7 @@
 namespace LearnerConfig{
 
 bool use_draw_games_in_training = true;
-bool use_draw_games_in_validation = true;
+bool use_draw_games_in_validation = false;
 // 1.0 / PawnValueEg / 4.0 * log(10.0)
 double winning_probability_coefficient = 0.00276753015984861260098316280611;
 // Score scale factors
@@ -146,16 +146,6 @@ double calc_d_cross_entropy_of_winning_percentage(double deep_win_rate, double s
 	return ((y2 - y1) / epsilon) / LearnerConfig::winning_probability_coefficient;
 }
 
-double dsigmoid(double x)
-{
-	// Sigmoid function
-	// f(x) = 1/(1+exp(-x))
-	// the first derivative is
-	// f'(x) = df/dx = f(x)・{ 1-f(x)}
-	// becomes
-	return sigmoid(x) * (1.0 - sigmoid(x));
-}
-
 // A constant used in elmo (WCSC27). Adjustment required.
 // Since elmo does not internally divide the expression, the value is different.
 // You can set this value with the learn command.
@@ -164,39 +154,78 @@ double ELMO_LAMBDA = 0.33;
 double ELMO_LAMBDA2 = 0.33;
 double ELMO_LAMBDA_LIMIT = 32000;
 
-double calc_grad(NNUEValue teacher_signal, NNUEValue shallow , const PackedSfenValue& psv)
+// Training Formula · Issue #71 · nodchip/Stockfish https://github.com/nodchip/Stockfish/issues/71
+double get_scaled_signal(double signal)
+{
+	double scaled_signal = signal;
+
+	// Normalize to [0.0, 1.0].
+	scaled_signal =
+		(scaled_signal - LearnerConfig::src_score_min_value)
+		/ (LearnerConfig::src_score_max_value - LearnerConfig::src_score_min_value);
+
+	// Scale to [dest_score_min_value, dest_score_max_value].
+	scaled_signal =
+		scaled_signal * (LearnerConfig::dest_score_max_value - LearnerConfig::dest_score_min_value)
+		+ LearnerConfig::dest_score_min_value;
+
+	return scaled_signal;
+}
+
+// Teacher winning probability.
+double calculate_p(double teacher_signal, int ply)
+{
+	const double scaled_teacher_signal = get_scaled_signal(teacher_signal);
+
+	double p = scaled_teacher_signal;
+	if (LearnerConfig::convert_teacher_signal_to_winning_probability)
+	{
+		p = winning_percentage(scaled_teacher_signal, ply);
+	}
+
+	return p;
+}
+
+double calculate_lambda(double teacher_signal)
+{
+	// If the evaluation value in deep search exceeds ELMO_LAMBDA_LIMIT
+	// then apply ELMO_LAMBDA2 instead of ELMO_LAMBDA.
+	const double lambda =
+		(std::abs(teacher_signal) >= ELMO_LAMBDA_LIMIT)
+		? ELMO_LAMBDA2
+		: ELMO_LAMBDA;
+
+	return lambda;
+}
+
+double calculate_t(int game_result)
+{
+	// Use 1 as the correction term if the expected win rate is 1,
+	// 0 if you lose, and 0.5 if you draw.
+	// game_result = 1,0,-1 so add 1 and divide by 2.
+	const double t = double(game_result + 1) * 0.5;
+
+	return t;
+}
+
+double calc_grad(NNUEValue teacher_signal, NNUEValue shallow, const PackedSfenValue& psv)
 {
 	// elmo (WCSC27) method
 	// Correct with the actual game wins and losses.
-
-	// Training Formula · Issue #71 · nodchip/Stockfish https://github.com/nodchip/Stockfish/issues/71
-	double scaled_teacher_signal = teacher_signal;
-	// Normalize to [0.0, 1.0].
-	scaled_teacher_signal = (scaled_teacher_signal - LearnerConfig::src_score_min_value) / (LearnerConfig::src_score_max_value - LearnerConfig::src_score_min_value);
-	// Scale to [dest_score_min_value, dest_score_max_value].
-	scaled_teacher_signal = scaled_teacher_signal * (LearnerConfig::dest_score_max_value - LearnerConfig::dest_score_min_value) + LearnerConfig::dest_score_min_value;
-
 	const double q = winning_percentage(shallow, psv.gamePly);
-	// Teacher winning probability.
-	double p = scaled_teacher_signal;
-	if (LearnerConfig::convert_teacher_signal_to_winning_probability) {
-		p = winning_percentage(scaled_teacher_signal, psv.gamePly);
-	}
-
-	// Use 1 as the correction term if the expected win rate is 1, 0 if you lose, and 0.5 if you draw.
-	// game_result = 1,0,-1 so add 1 and divide by 2.
-	const double t = double(psv.game_result + 1) / 2;
-
-	// If the evaluation value in deep search exceeds ELMO_LAMBDA_LIMIT, apply ELMO_LAMBDA2 instead of ELMO_LAMBDA.
-	const double lambda = (abs(teacher_signal) >= ELMO_LAMBDA_LIMIT) ? ELMO_LAMBDA2 : ELMO_LAMBDA;
+	const double p = calculate_p(teacher_signal, psv.gamePly);
+	const double t = calculate_t(psv.game_result);
+	const double lambda = calculate_lambda(teacher_signal);
 
 	double grad;
-	if (LearnerConfig::use_wdl) {
-		double dce_p = calc_d_cross_entropy_of_winning_percentage(p, shallow, psv.gamePly);
-		double dce_t = calc_d_cross_entropy_of_winning_percentage(t, shallow, psv.gamePly);
+	if (LearnerConfig::use_wdl)
+	{
+		const double dce_p = calc_d_cross_entropy_of_winning_percentage(p, shallow, psv.gamePly);
+		const double dce_t = calc_d_cross_entropy_of_winning_percentage(t, shallow, psv.gamePly);
 		grad = lambda * dce_p + (1.0 - lambda) * dce_t;
 	}
-	else {
+	else
+	{
 		// Use the actual win rate as a correction term.
 		// This is the idea of ​​elmo (WCSC27), modern O-parts.
 		grad = lambda * (q - p) + (1.0 - lambda) * (q - t);
@@ -261,6 +290,8 @@ struct LearnerThink: public MultiThink
 		latest_loss_count = 0;
 	}
 
+    NNUEValue get_shallow_value(Position& task_pos, size_t thread_id);
+  
 	virtual void thread_worker(size_t thread_id);
 
 	// Start a thread that loads the phase file in the background.
@@ -327,16 +358,48 @@ struct LearnerThink: public MultiThink
 	TaskDispatcher task_dispatcher;
 };
 
+NNUEValue LearnerThink::get_shallow_value(Position& task_pos, size_t thread_id)
+{
+	// Evaluation value for shallow search
+	// The value of evaluate() may be used, but when calculating loss, learn_cross_entropy and
+	// Use qsearch() because it is difficult to compare the values.
+	// EvalHash has been disabled in advance. (If not, the same value will be returned every time)
+	DepthType seldepth;
+	PVList pv;
+	Searcher & contxt = *ThreadPool::instance().at(thread_id);
+	contxt.qsearchNoPruning(-MATE,MATE,task_pos,0,seldepth,&pv);
+
+	for (auto m : pv)
+	{
+		if ( !applyMove(task_pos,m)){
+			break;
+		}
+		// Since the value of evaluate in leaf is used, the difference is updated.
+		NNUE::update_eval(task_pos);
+	}
+
+	const auto rootColor = task_pos.side_to_move();
+	EvalData data;
+	Searcher & context = *ThreadPool::instance().at(thread_id);
+	const NNUEValue shallow_value =
+		(rootColor == task_pos.side_to_move())
+		? eval(task_pos,data,context)
+		: -eval(task_pos,data,context);
+
+	return shallow_value;
+}
+
 void LearnerThink::calc_loss(size_t thread_id, uint64_t done)
 {
-	std::cout << "PROGRESS: " ;//<< now_string() << ", ";
+
+	std::cout << "PROGRESS: " << ", ";
 	std::cout << sr.total_done << " sfens";
 	std::cout << ", iteration " << epoch;
 	std::cout << ", eta = " << NNUE::get_eta() << ", ";
 
 	// For calculation of verification data loss
-	std::atomic<double> test_sum_cross_entropy_eval,test_sum_cross_entropy_win,test_sum_cross_entropy;
-	std::atomic<double> test_sum_entropy_eval,test_sum_entropy_win,test_sum_entropy;
+	std::atomic<double> test_sum_cross_entropy_eval, test_sum_cross_entropy_win, test_sum_cross_entropy;
+	std::atomic<double> test_sum_entropy_eval, test_sum_entropy_win, test_sum_entropy;
 	test_sum_cross_entropy_eval = 0;
 	test_sum_cross_entropy_win = 0;
 	test_sum_cross_entropy = 0;
@@ -348,7 +411,8 @@ void LearnerThink::calc_loss(size_t thread_id, uint64_t done)
 	std::atomic<double> sum_norm;
 	sum_norm = 0;
 
-	// The number of times the pv first move of deep search matches the pv first move of search(1).
+	// The number of times the pv first move of deep
+	// search matches the pv first move of search(1).
 	std::atomic<int> move_accord_count;
 	move_accord_count = 0;
 
@@ -361,9 +425,8 @@ void LearnerThink::calc_loss(size_t thread_id, uint64_t done)
     std::cout << "hirate eval = " << eval(pos,data,context);
 	}
 
-	//print_eval_stat(pos);
-
-	// It's better to parallelize here, but it's a bit troublesome because the search before slave has not finished.
+	// It's better to parallelize here, but it's a bit
+	// troublesome because the search before slave has not finished.
 	// I created a mechanism to call task, so I will use it.
 
 	// The number of tasks to do.
@@ -376,39 +439,57 @@ void LearnerThink::calc_loss(size_t thread_id, uint64_t done)
 	{
 		// Assign work to each thread using TaskDispatcher.
 		// A task definition for that.
-		// It is not possible to capture pos used in ↑, so specify the variables you want to capture one by one.
-		auto task = [&ps,&test_sum_cross_entropy_eval,
-                         &test_sum_cross_entropy_win,
-                         &test_sum_cross_entropy,
-                         &test_sum_entropy_eval,
-                         &test_sum_entropy_win,
-                         &test_sum_entropy, 
-                         &sum_norm,
-                         &task_count ,&move_accord_count](size_t t_id)
+		// It is not possible to capture pos used in ↑,
+		// so specify the variables you want to capture one by one.
+		auto task =
+			[
+				this,
+				&ps,
+				&test_sum_cross_entropy_eval,
+				&test_sum_cross_entropy_win,
+				&test_sum_cross_entropy,
+				&test_sum_entropy_eval,
+				&test_sum_entropy_win,
+				&test_sum_entropy,
+				&sum_norm,
+				&task_count,
+				&move_accord_count
+			](size_t task_thread_id)
 		{
 			// Does C++ properly capture a new ps instance for each loop?.
-            Position p;
-			//readFEN(startPosition,p,true);
-			if (set_from_packed_sfen(p,*const_cast<PackedSfen*>(&ps.sfen), false) != 0)
+            Position task_pos;
+			if (set_from_packed_sfen(task_pos,*const_cast<PackedSfen*>(&ps.sfen), false) != 0)
 			{
 				// Unfortunately, as an sfen for rmse calculation, an invalid sfen was drawn.
-				std::cout << "Error! : illegal packed sfen " << GetFEN(p) << std::endl;
+				std::cout << "Error! : illegal packed sfen " << GetFEN(task_pos) << std::endl;
 			}
 
-			// Evaluation value for shallow search using qsearch (using current network state)
-			DepthType seldepth;
-			PVList pv;
-			Searcher & contxt = *ThreadPool::instance().at(t_id);
-			auto shallow_value = contxt.qsearchNoPruning(-MATE,MATE,p,0,seldepth,&pv);
+			const NNUEValue shallow_value = get_shallow_value(task_pos,task_thread_id);
 
-			// Evaluation value of deep search (from training data)
+			// Evaluation value of deep search
 			auto deep_value = (NNUEValue)ps.score;
+
+			// Note) This code does not consider when
+			//       eval_limit is specified in the learn command.
+
+			// --- calculation of cross entropy
 
 			// For the time being, regarding the win rate and loss terms only in the elmo method
 			// Calculate and display the cross entropy.
+
 			double test_cross_entropy_eval, test_cross_entropy_win, test_cross_entropy;
 			double test_entropy_eval, test_entropy_win, test_entropy;
-			calc_cross_entropy(deep_value, shallow_value, ps, test_cross_entropy_eval, test_cross_entropy_win, test_cross_entropy, test_entropy_eval, test_entropy_win, test_entropy);
+			calc_cross_entropy(
+				deep_value,
+				shallow_value,
+				ps,
+				test_cross_entropy_eval,
+				test_cross_entropy_win,
+				test_cross_entropy,
+				test_entropy_eval,
+				test_entropy_win,
+				test_entropy);
+
 			// The total cross entropy need not be abs() by definition.
 			test_sum_cross_entropy_eval += test_cross_entropy_eval;
 			test_sum_cross_entropy_win += test_cross_entropy_win;
@@ -418,15 +499,15 @@ void LearnerThink::calc_loss(size_t thread_id, uint64_t done)
 			test_sum_entropy += test_entropy;
 			sum_norm += (double)abs(shallow_value);
 
-/*
-            ///@todo
+			/*
 			// Determine if the teacher's move and the score of the shallow search match
 			{
-				auto r = search(p,1);
-				if ((uint16_t)r.second[0] == ps.move)
+				const auto [value, pv] = search(task_pos, 1);
+				if ((uint16_t)pv[0] == ps.move)
 					move_accord_count.fetch_add(1, std::memory_order_relaxed);
 			}
-*/
+			*/
+
 			// Reduced one task because I did it
 			--task_count;
 		};
@@ -445,33 +526,37 @@ void LearnerThink::calc_loss(size_t thread_id, uint64_t done)
 	latest_loss_sum += test_sum_cross_entropy - test_sum_entropy;
 	latest_loss_count += sr.sfen_for_mse.size();
 
-// learn_cross_entropy may be called train cross entropy in the world of machine learning,
-// When omitting the acronym, it is nice to be able to distinguish it from test cross entropy(tce) by writing it as lce.
+	// learn_cross_entropy may be called train cross
+	// entropy in the world of machine learning,
+	// When omitting the acronym, it is nice to be able to
+	// distinguish it from test cross entropy(tce) by writing it as lce.
 
 	if (sr.sfen_for_mse.size() && done)
 	{
 		std::cout
-			<< " , test_cross_entropy_eval = "  << test_sum_cross_entropy_eval / sr.sfen_for_mse.size()
-			<< " , test_cross_entropy_win = "   << test_sum_cross_entropy_win / sr.sfen_for_mse.size()
-			<< " , test_entropy_eval = "        << test_sum_entropy_eval / sr.sfen_for_mse.size()
-			<< " , test_entropy_win = "         << test_sum_entropy_win / sr.sfen_for_mse.size()
-			<< " , test_cross_entropy = "       << test_sum_cross_entropy / sr.sfen_for_mse.size()
-			<< " , test_entropy = "             << test_sum_entropy / sr.sfen_for_mse.size()
-			<< " , norm = "						<< sum_norm
-			<< " , move accuracy = "			<< (move_accord_count * 100.0 / sr.sfen_for_mse.size()) << "%";
+			<< " , test_cross_entropy_eval = " << test_sum_cross_entropy_eval / sr.sfen_for_mse.size()
+			<< " , test_cross_entropy_win = " << test_sum_cross_entropy_win / sr.sfen_for_mse.size()
+			<< " , test_entropy_eval = " << test_sum_entropy_eval / sr.sfen_for_mse.size()
+			<< " , test_entropy_win = " << test_sum_entropy_win / sr.sfen_for_mse.size()
+			<< " , test_cross_entropy = " << test_sum_cross_entropy / sr.sfen_for_mse.size()
+			<< " , test_entropy = " << test_sum_entropy / sr.sfen_for_mse.size()
+			<< " , norm = " << sum_norm
+			<< " , move accuracy = " << (move_accord_count * 100.0 / sr.sfen_for_mse.size()) << "%";
+
 		if (done != static_cast<uint64_t>(-1))
 		{
 			std::cout
 				<< " , learn_cross_entropy_eval = " << learn_sum_cross_entropy_eval / done
-				<< " , learn_cross_entropy_win = "  << learn_sum_cross_entropy_win / done
-				<< " , learn_entropy_eval = "       << learn_sum_entropy_eval / done
-				<< " , learn_entropy_win = "        << learn_sum_entropy_win / done
-				<< " , learn_cross_entropy = "      << learn_sum_cross_entropy / done
-				<< " , learn_entropy = "            << learn_sum_entropy / done;
+				<< " , learn_cross_entropy_win = " << learn_sum_cross_entropy_win / done
+				<< " , learn_entropy_eval = " << learn_sum_entropy_eval / done
+				<< " , learn_entropy_win = " << learn_sum_entropy_win / done
+				<< " , learn_cross_entropy = " << learn_sum_cross_entropy / done
+				<< " , learn_entropy = " << learn_sum_entropy / done;
 		}
 		std::cout << std::endl;
 	}
-	else {
+	else
+	{
 		std::cout << "Error! : sr.sfen_for_mse.size() = " << sr.sfen_for_mse.size() << " ,  done = " << done << std::endl;
 	}
 
@@ -482,9 +567,7 @@ void LearnerThink::calc_loss(size_t thread_id, uint64_t done)
 	learn_sum_entropy_eval = 0.0;
 	learn_sum_entropy_win = 0.0;
 	learn_sum_entropy = 0.0;
-
 }
-
 
 void LearnerThink::thread_worker(size_t thread_id)
 {
