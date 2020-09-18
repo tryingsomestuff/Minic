@@ -170,198 +170,230 @@ bool convert_bin(const std::vector<std::string>& filenames, const std::string& o
 	return true;
 }
 
-// pgn-extract --fencomments -Wlalg --nochecks --nomovenumbers --noresults -w500000 -N -V -o data.plain games.pgn
-bool convert_bin_from_pgn_extract(const std::vector<std::string>& filenames, const std::string& output_file_name, const bool pgn_eval_side_to_move){
-	
-	std::cout << "pgn_eval_side_to_move=" << pgn_eval_side_to_move << std::endl;
+namespace{
 
-	Position pos;
-
-	std::fstream ofs;
-	ofs.open(output_file_name, std::ios::out | std::ios::binary);
-
-	int game_count = 0;
-	int fen_count = 0;
-
-	for (auto filename : filenames) {
-		std::cout << " convert " << filename << std::endl;
-		std::ifstream ifs;
-		ifs.open(filename);
-
-		int game_result = 0;
-
-		std::string line;
-		while (std::getline(ifs, line)) {
-
-			if (line.empty()) {
-				continue;
-			}
-
-			else if (line.substr(0, 1) == "[") {
-				std::regex pattern_result(R"(\[Result (.+?)\])");
-				std::smatch match;
-
-				// example: [Result "1-0"]
-				if (std::regex_search(line, match, pattern_result)) {
-					game_result = parse_game_result_from_pgn_extract(match.str(1));
-					//std::cout << "game_result=" << game_result << std::endl;
-
-					game_count++;
-					if (game_count % 10000 == 0) {
-						std::cout << " game_count=" << game_count << ", fen_count=" << fen_count << std::endl;
-					}
-				}
-
-				continue;
-			}
-
-			else {
-				int gamePly = 0;
-				bool first = true;
-
-				PackedSfenValue psv;
-				memset((char*)&psv, 0, sizeof(PackedSfenValue));
-
-				auto itr = line.cbegin();
-
-				while (true) {
-					gamePly++;
-
-					std::regex pattern_bracket(R"(\{(.+?)\})");
-
-					std::regex pattern_eval1(R"(\[\%eval (.+?)\])");
-					std::regex pattern_eval2(R"((.+?)\/)");
-
-					// very slow
-					//std::regex pattern_eval1(R"(\[\%eval (#?[+-]?(?:\d+\.?\d*|\.\d+))\])");
-					//std::regex pattern_eval2(R"((#?[+-]?(?:\d+\.?\d*|\.\d+)\/))");
-
-					std::regex pattern_move(R"((.+?)\{)");
-					std::smatch match;
-
-					// example: { [%eval 0.25] [%clk 0:10:00] }
-					// example: { +0.71/22 1.2s }
-					// example: { book }
-					if (!std::regex_search(itr, line.cend(), match, pattern_bracket)) {
-						break;
-					}
-
-					itr += match.position(0) + match.length(0);
-					std::string str_eval_clk = match.str(1);
-					trim(str_eval_clk);
-					//std::cout << "str_eval_clk="<< str_eval_clk << std::endl;
-
-					if (str_eval_clk == "book") {
-						//std::cout << "book" << std::endl;
-
-						// example: { rnbqkbnr/pppppppp/8/8/8/4P3/PPPP1PPP/RNBQKBNR b KQkq - 0 1 }
-						if (!std::regex_search(itr, line.cend(), match, pattern_bracket)) {
-							break;
-						}
-						itr += match.position(0) + match.length(0);
-						continue;
-					}
-
-					// example: [%eval 0.25]
-					// example: [%eval #-4]
-					// example: [%eval #3]
-					// example: +0.71/
-					if (std::regex_search(str_eval_clk, match, pattern_eval1) ||
-						std::regex_search(str_eval_clk, match, pattern_eval2)) {
-						std::string str_eval = match.str(1);
-						trim(str_eval);
-						//std::cout << "str_eval=" << str_eval << std::endl;
-
-						bool success = false;
-						psv.score = std::min(std::max(parse_score_from_pgn_extract(str_eval, success),int16_t(-MATE)),int16_t(MATE));
-						//std::cout << "success=" << success << ", psv.score=" << psv.score << std::endl;
-
-						if (!success) {
-							//std::cout << "str_eval=" << str_eval << std::endl;
-							//std::cout << "success=" << success << ", psv.score=" << psv.score << std::endl;
-							break;
-						}
-					}
-					else {
-						break;
-					}
-
-					if (first) {
-						first = false;
-					}
-					else {
-						psv.gamePly = gamePly;
-						psv.game_result = game_result;
-
-						if (pos.side_to_move() == BLACK) {
-							if (!pgn_eval_side_to_move) {
-								psv.score *= -1;
-							}
-							psv.game_result *= -1;
-						}
-
-#if 0
-						std::cout << "write: "
-								<< "score=" << psv.score
-								<< ", move=" << psv.move
-								<< ", gamePly=" << psv.gamePly
-								<< ", game_result=" << (int)psv.game_result
-								<< std::endl;
-#endif
-
-						ofs.write((char*)&psv, sizeof(PackedSfenValue));
-						memset((char*)&psv, 0, sizeof(PackedSfenValue));
-
-						fen_count++;
-					}
-
-					// example: { rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1 }
-					if (!std::regex_search(itr, line.cend(), match, pattern_bracket)) {
-						break;
-					}
-
-					itr += match.position(0) + match.length(0);
-					std::string str_fen = match.str(1);
-					trim(str_fen);
-					//std::cout << "str_fen=" << str_fen << std::endl;
-
-					readFEN(str_fen,pos,true,true);
-					sfen_pack(pos,psv.sfen);
-
-					// example: d7d5 {
-					if (!std::regex_search(itr, line.cend(), match, pattern_move)) {
-						break;
-					}
-
-					itr += match.position(0) + match.length(0) - 1;
-					std::string str_move = match.str(1);
-					trim(str_move);
-					//std::cout << "str_move=" << str_move << std::endl;
-
-					Square from = INVALIDSQUARE;
-					Square to = INVALIDSQUARE;
-					MType type = T_std;
-					bool b = readMove(pos,str_move,from,to,type);
-					if (b) {
-					psv.move = ToSFMove(pos,from,to,type); // use SF style move encoding
-					//psv.move = ToMove(from,to,type); // use Minic style move encoding
-					}
-
-				}
-
-				game_result = 0;
-			}
-		}
-	}
-
-	std::cout << "game_count=" << game_count << ", fen_count=" << fen_count << std::endl;
-	std::cout << "all done" << std::endl;
-	ofs.close();
-
-	return true;
+inline void ltrim(std::string& s) {
+	s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
+		return !std::isspace(ch);
+		}));
 }
 
-// in SF : learn convert_plain output_file_name [out] [in]
+inline void rtrim(std::string& s) {
+	s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
+		return !std::isspace(ch);
+		}).base(), s.end());
+}
+
+inline void trim(std::string& s) {
+	ltrim(s);
+	rtrim(s);
+}
+
+inline bool is_like_fen(std::string fen) {
+	int count_space = std::count(fen.cbegin(), fen.cend(), ' ');
+	int count_slash = std::count(fen.cbegin(), fen.cend(), '/');
+	return count_space == 5 && count_slash == 7;
+}
+}
+
+// pgn-extract --fencomments -Wlalg --nochecks --nomovenumbers --noresults -w500000 -N -V -o data.plain games.pgn
+bool convert_bin_from_pgn_extract(
+        const std::vector<std::string>& filenames,
+        const std::string& output_file_name,
+        const bool pgn_eval_side_to_move,
+        const bool convert_no_eval_fens_as_score_zero){
+
+        std::cout << "pgn_eval_side_to_move=" << pgn_eval_side_to_move << std::endl;
+        std::cout << "convert_no_eval_fens_as_score_zero=" << convert_no_eval_fens_as_score_zero << std::endl;
+
+        Position pos;
+
+        std::fstream ofs;
+        ofs.open(output_file_name, std::ios::out | std::ios::binary);
+
+        int game_count = 0;
+        int fen_count = 0;
+
+        for (auto filename : filenames) {
+            //std::cout << " convert " << filename << std::endl;
+            std::ifstream ifs;
+            ifs.open(filename);
+
+            int game_result = 0;
+
+            std::string line;
+            while (std::getline(ifs, line)) {
+
+                //std::cout << "line : " << line << std::endl;
+
+                if (line.empty()) {
+                    continue;
+                }
+
+                else if (line.substr(0, 1) == "[") {
+                    std::regex pattern_result(R"(\[Result (.+?)\])");
+                    std::smatch match;
+
+                    // example: [Result "1-0"]
+                    if (std::regex_search(line, match, pattern_result)) {
+                        game_result = parse_game_result_from_pgn_extract(match.str(1));
+                        game_count++;
+                        if (game_count % 10000 == 0) {
+                            std::cout << " game_count=" << game_count << ", fen_count=" << fen_count << std::endl;
+                        }
+                    }
+
+                    continue;
+                }
+
+                else {
+                    int gamePly = 1;
+                    auto itr = line.cbegin();
+
+                    while (true) {
+                        gamePly++;
+
+                        PackedSfenValue psv;
+                        memset((char*)&psv, 0, sizeof(PackedSfenValue));
+
+                        // fen
+                        {
+                            bool fen_found = false;
+
+                            while (!fen_found) {
+                                std::regex pattern_bracket(R"(\{(.+?)\})");
+                                std::smatch match;
+                                if (!std::regex_search(itr, line.cend(), match, pattern_bracket)) {
+                                    break;
+                                }
+
+                                itr += match.position(0) + match.length(0) - 1;
+                                std::string str_fen = match.str(1);
+                                trim(str_fen);
+
+                                //std::cout << "possible fen " << str_fen << std::endl;
+                                if (is_like_fen(str_fen)) {
+									//std::cout << "validated fen " << str_fen << std::endl;
+                                    fen_found = true;
+                					readFEN(str_fen,pos,true,true);
+                 					sfen_pack(pos,psv.sfen);
+                                }
+                            }
+
+                            if (!fen_found) {
+								//std::cout << "fen not found" << std::endl;
+                                break;
+                            }
+                        }
+
+                        // move
+                        {
+                            std::regex pattern_move(R"(\}(.+?)\{)");
+                            std::smatch match;
+                            if (!std::regex_search(itr, line.cend(), match, pattern_move)) {
+								//std::cout << "move not found" << std::endl;
+                                break;
+                            }
+
+                            itr += match.position(0) + match.length(0) - 1;
+                            std::string str_move = match.str(1);
+							//std::cout << "move " << str_move << std::endl;
+                            trim(str_move);
+					        Square from = INVALIDSQUARE;
+					        Square to = INVALIDSQUARE;
+					        MType type = T_std;
+					        bool b = readMove(pos,str_move,from,to,type);
+					        if (b) {
+					           psv.move = ToSFMove(pos,from,to,type); // use SF style move encoding
+							}
+                        }
+
+                        // eval
+                        bool eval_found = false;
+                        {
+                            std::regex pattern_bracket(R"(\{(.+?)\})");
+                            std::smatch match;
+                            if (!std::regex_search(itr, line.cend(), match, pattern_bracket)) {
+								//std::cout << "eval not found" << std::endl;
+                                break;
+                            }
+
+                            std::string str_eval_clk = match.str(1);
+                            trim(str_eval_clk);
+							//std::cout << "eval " << str_eval_clk << std::endl;
+
+                            // example: { [%eval 0.25] [%clk 0:10:00] }
+                            // example: { [%eval #-4] [%clk 0:10:00] }
+                            // example: { [%eval #3] [%clk 0:10:00] }
+                            // example: { +0.71/22 1.2s }
+                            // example: { -M4/7 0.003s }
+                            // example: { M3/245 0.017s }
+                            // example: { +M1/245 0.010s, White mates }
+                            // example: { 0.60 }
+                            // example: { book }
+                            // example: { rnbqkb1r/pp3ppp/2p1pn2/3p4/2PP4/2N2N2/PP2PPPP/R1BQKB1R w KQkq - 0 5 }
+
+                            // Considering the absence of eval
+                            if (!is_like_fen(str_eval_clk)) {
+                                itr += match.position(0) + match.length(0) - 1;
+
+                                if (str_eval_clk != "book") {
+                                    std::regex pattern_eval1(R"(\[\%eval (.+?)\])");
+                                    std::regex pattern_eval2(R"((.+?)\/)");
+
+                                    std::string str_eval;
+                                    if (std::regex_search(str_eval_clk, match, pattern_eval1) ||
+                                        std::regex_search(str_eval_clk, match, pattern_eval2)) {
+                                        str_eval = match.str(1);
+                                        trim(str_eval);
+                                    }
+                                    else {
+                                        str_eval = str_eval_clk;
+                                    }
+
+                                    bool success = false;
+                                    NNUEValue value = parse_score_from_pgn_extract(str_eval, success);
+                                    if (success) {
+                                        eval_found = true;
+                                        psv.score = std::clamp(value, NNUEValue(-MATE), NNUEValue(MATE));
+                                    }
+                                }
+                            }
+                        }
+
+                        // write
+                        if (eval_found || convert_no_eval_fens_as_score_zero) {
+                            if (!eval_found && convert_no_eval_fens_as_score_zero) {
+                                psv.score = 0;
+                            }
+
+                            psv.gamePly = gamePly;
+                            psv.game_result = game_result;
+
+                            if (pos.side_to_move() == BLACK) {
+                                if (!pgn_eval_side_to_move) {
+                                    psv.score *= -1;
+                                }
+                                psv.game_result *= -1;
+                            }
+
+                            ofs.write((char*)&psv, sizeof(PackedSfenValue));
+
+                            fen_count++;
+                        }
+                    }
+
+                    game_result = 0;
+                }
+            }
+        }
+
+        std::cout << " game_count=" << game_count << ", fen_count=" << fen_count << std::endl;
+        std::cout << " all done" << std::endl;
+        ofs.close();
+		return true;
+}
+
 bool convert_plain(const std::vector<std::string>& filenames, const std::string& output_file_name){
 	std::ofstream ofs;
 	ofs.open(output_file_name, std::ios::app);
