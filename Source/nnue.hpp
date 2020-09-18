@@ -20,6 +20,12 @@ struct Position; // forward decl
 #define NNUEValue ScoreType
 #define SQ_NONE INVALIDSQUARE
 
+#ifndef NDEBUG
+   #define SCALINGCOUNT 5000
+#else
+   #define SCALINGCOUNT 50000
+#endif
+
 // Internal wrapper to the NNUE things
 namespace NNUEWrapper{
 
@@ -33,7 +39,7 @@ namespace NNUEWrapper{
 
   void init_NNUE();
   void verify_NNUE();
-  void compute_scaling(int count = 50000);
+  void compute_scaling(int count = SCALINGCOUNT);
 
   ScoreType evaluate(const Position& pos);
   bool  load_eval_file(const std::string& evalFile);
