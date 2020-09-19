@@ -360,39 +360,61 @@ struct LearnerThink: public MultiThink
 
 NNUEValue LearnerThink::get_shallow_value(Position& task_pos, size_t thread_id)
 {
+
+    //std::cout << "get_shallow_value " << &task_pos << std::endl;
+
 	// Evaluation value for shallow search
 	// The value of evaluate() may be used, but when calculating loss, learn_cross_entropy and
 	// Use qsearch() because it is difficult to compare the values.
 	// EvalHash has been disabled in advance. (If not, the same value will be returned every time)
-	DepthType seldepth;
+	DepthType seldepth = 0;
 	PVList pv;
 	Searcher & contxt = *ThreadPool::instance().at(thread_id);
+
+    Position p2 = task_pos;
+
 	contxt.qsearchNoPruning(-MATE,MATE,task_pos,0,seldepth,&pv);
+
+	const auto rootColor = task_pos.side_to_move();
 
 	for (auto m : pv)
 	{
-		if ( !applyMove(task_pos,m)){
+		if ( !applyMove(p2,m)){
 			break;
 		}
 		// Since the value of evaluate in leaf is used, the difference is updated.
-		NNUE::update_eval(task_pos);
+		NNUE::update_eval(p2);
 	}
 
-	const auto rootColor = task_pos.side_to_move();
 	EvalData data;
 	Searcher & context = *ThreadPool::instance().at(thread_id);
 	const NNUEValue shallow_value =
-		(rootColor == task_pos.side_to_move())
-		? eval(task_pos,data,context)
-		: -eval(task_pos,data,context);
+		(rootColor == p2.side_to_move())
+		? eval(p2,data,context)
+		: -eval(p2,data,context);
 
 	return shallow_value;
+}
+
+namespace{
+	std::string now_string()
+	{
+	#if defined(_MSC_VER)
+	// C4996 : 'ctime' : This function or variable may be unsafe.Consider using ctime_s instead.
+	#pragma warning(disable : 4996)
+	#endif
+		auto now = std::chrono::system_clock::now();
+		auto tp = std::chrono::system_clock::to_time_t(now);
+		auto result = std::string(std::ctime(&tp));
+		while (*result.rbegin() == '\n' || (*result.rbegin() == '\r')) result.pop_back();
+		return result;
+	}	
 }
 
 void LearnerThink::calc_loss(size_t thread_id, uint64_t done)
 {
 
-	std::cout << "PROGRESS: " << ", ";
+	std::cout << "PROGRESS: " << now_string() << ", ";
 	std::cout << sr.total_done << " sfens";
 	std::cout << ", iteration " << epoch;
 	std::cout << ", eta = " << NNUE::get_eta() << ", ";
@@ -458,8 +480,8 @@ void LearnerThink::calc_loss(size_t thread_id, uint64_t done)
 		{
 			// Does C++ properly capture a new ps instance for each loop?.
             Position task_pos;
-			if (set_from_packed_sfen(task_pos,*const_cast<PackedSfen*>(&ps.sfen), false) != 0)
-			{
+			//std::cout << "new task " << &task_pos << " " << task_pos._accumulator << " " << &ps << std::endl;
+			if (set_from_packed_sfen(task_pos,*const_cast<PackedSfen*>(&ps.sfen), false) != 0){
 				// Unfortunately, as an sfen for rmse calculation, an invalid sfen was drawn.
 				std::cout << "Error! : illegal packed sfen " << GetFEN(task_pos) << std::endl;
 			}
@@ -499,14 +521,26 @@ void LearnerThink::calc_loss(size_t thread_id, uint64_t done)
 			test_sum_entropy += test_entropy;
 			sum_norm += (double)abs(shallow_value);
 
-			/*
 			// Determine if the teacher's move and the score of the shallow search match
 			{
-				const auto [value, pv] = search(task_pos, 1);
-				if ((uint16_t)pv[0] == ps.move)
+				TimeMan::isDynamic       = false;
+				TimeMan::nbMoveInTC      = -1;
+				TimeMan::msecPerMove     = INFINITETIME;
+				TimeMan::msecInTC        = -1;
+				TimeMan::msecInc         = -1;
+				TimeMan::msecUntilNextTC = -1;
+				DynamicConfig::quiet = true;
+				ThreadPool::instance().currentMoveMs = TimeMan::GetNextMSecPerMove(task_pos);
+				PVList pv;
+				ThreadData d = {1,0,0,task_pos,INVALIDMOVE,pv,SearchData()}; // only input coef is depth here
+				ThreadPool::instance().main().subSearch = true;
+				ThreadPool::instance().search(d);
+				Move bestMove = ThreadPool::instance().main().getData().best; // here output results
+				ThreadPool::instance().main().subSearch = false;
+				DynamicConfig::quiet = false;
+				if (sameMove(FromSFMove(task_pos,ps.move),bestMove))
 					move_accord_count.fetch_add(1, std::memory_order_relaxed);
 			}
-			*/
 
 			// Reduced one task because I did it
 			--task_count;
@@ -701,7 +735,7 @@ void LearnerThink::thread_worker(size_t thread_id)
 			goto RetryRead;
 
 		// Evaluation value of shallow search (qsearch)
-		DepthType seldepth;
+		DepthType seldepth = 0;
 		PVList pv;
 		/*auto r =*/ context.qsearchNoPruning(-MATE,MATE,pos,0,seldepth,&pv);
 
@@ -760,7 +794,7 @@ void LearnerThink::thread_worker(size_t thread_id)
 		}
 
 		if (illegal_move) {
-			std::cout << "An illical move was detected... Excluded the position from the learning data..." << std::endl;
+			std::cout << "An illecal move was detected... Excluded the position from the learning data..." << std::endl;
 			continue;
 		}
 

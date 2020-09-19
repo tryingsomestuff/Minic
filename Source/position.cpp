@@ -18,7 +18,7 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
     static Position defaultPos;
     p = defaultPos;
 #ifdef WITH_NNUE
-    if ( DynamicConfig::useNNUE) p.resetAccumulator();
+    p.resetAccumulator();
 #endif
     std::vector<std::string> strList;
     std::stringstream iss(fen);
@@ -155,37 +155,51 @@ const DirtyPiece & Position::dirtyPiece() const{
 }
 
 NNUE::Accumulator & Position::accumulator()const{
-    assert(_accumulator);
-    return *_accumulator;
+    assert(_accumulator.get());
+    return *_accumulator.get();
 }
 
 NNUE::Accumulator * Position::previousAccumulatorPtr()const{
-    return _previousAccumulator;
+    return _previousAccumulator.get();
 }
 
 Position & Position::operator =(const Position & p){
-    if ( _accumulator ) delete _accumulator;
-    std::memcpy(this, &p, sizeof(Position));
+    if ( &p == this ) return *this;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Winvalid-offsetof"
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
+    std::memcpy(this, &p, offsetof(Position, _accumulator));
+#pragma GCC diagnostic pop
+
+    // get me own accumulator and use given position one as previous
     if (DynamicConfig::useNNUE){
-       _accumulator = new NNUE::Accumulator();
+       _accumulator = std::shared_ptr<NNUE::Accumulator>(new NNUE::Accumulator());
        _previousAccumulator = p._accumulator;
     }
     return *this;
 }
 
 Position::Position(const Position & p){
-    std::memcpy(this, &p, sizeof(Position));
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Winvalid-offsetof"
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
+    std::memcpy(this, &p, offsetof(Position, _accumulator));
+#pragma GCC diagnostic pop
+    
+    // get me own accumulator and use given position one as previous
     if (DynamicConfig::useNNUE){
-       _accumulator = new NNUE::Accumulator();
-       _previousAccumulator = p._accumulator;    
+       _accumulator = std::shared_ptr<NNUE::Accumulator>(new NNUE::Accumulator());
+       _previousAccumulator = p._accumulator;
     }
 }
 
 void Position::resetAccumulator(){
+    // get me own accumulator and reset "previous" one
     if (DynamicConfig::useNNUE){
-       if ( _accumulator) delete _accumulator;
-       _accumulator = new NNUE::Accumulator();
-       _previousAccumulator = nullptr;    
+       _accumulator = std::shared_ptr<NNUE::Accumulator>(new NNUE::Accumulator());
+       _previousAccumulator = nullptr;
     }
 }
 
@@ -216,11 +230,7 @@ bool Position::operator !=(const Position & p){
 #endif
 
 Position::~Position(){
-#ifdef WITH_NNUE
-    if (DynamicConfig::useNNUE){
-       if (_accumulator) delete _accumulator;
-    }
-#endif
+
 }
 
 Position::Position(){
