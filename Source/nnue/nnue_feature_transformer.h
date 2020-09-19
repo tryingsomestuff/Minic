@@ -268,7 +268,7 @@ namespace NNUE {
       auto& accumulator = pos.accumulator();
       IndexType i = 0;
       Features::IndexList removed_indices[2], added_indices[2];
-      bool reset[2];
+      bool reset[2] = {false, false};
       RawFeatures::AppendChangedIndices(pos, kRefreshTriggers[i],
                                         removed_indices, added_indices, reset);
       for (Color perspective : { WHITE, BLACK }) {

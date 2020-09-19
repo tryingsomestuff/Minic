@@ -52,7 +52,7 @@ constexpr Square rotate180(Square sq){return (Square)(sq ^ 0x3F);}
 struct DirtyPiece {
 
   // Number of changed pieces
-  int dirty_num;
+  int dirty_num = 0;
 
   // Max 3 pieces can change in one move. A promotion with capture moves
   // both the pawn and the captured piece to SQ_NONE and the piece promoted
