@@ -22,6 +22,7 @@ void addMove(Square from, Square to, MType type, MoveList & moves) {
 
 } // MoveGen
 
+///@todo This will totally fail on the case of multi Searcher working on different root positions. VERY bad design here.
 namespace{
     std::array<CastlingRights,NbSquare> castlePermHashTable;
     std::mutex castlePermHashTableMutex;

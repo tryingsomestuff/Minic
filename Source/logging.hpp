@@ -3,7 +3,7 @@
 #include "definition.hpp"
 
 #ifdef __ANDROID__
-inline std::string backtrace(){
+inline std::string backtrace(int skip = 1 ){
     ////@todo backtrace for android
     return "";
 }
@@ -14,20 +14,49 @@ inline std::string backtrace(){
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <dlfcn.h>     // for dladdr
+#include <cxxabi.h>    // for __cxa_demangle
 
-inline std::string backtrace() {
-  void *array[64];
-  size_t size = backtrace(array, 64);
-  char ** bk = backtrace_symbols(array, size);
-  std::string ret;
-  for(size_t k = 0 ; k < size ; ++k){
-      ret += std::string(bk[k]) + "\n";
-  }
-  return ret;
+inline std::string backtrace(int skip = 1){
+    void *callstack[128];
+    const int nMaxFrames = sizeof(callstack) / sizeof(callstack[0]);
+    char buf[1024];
+    int nFrames = backtrace(callstack, nMaxFrames);
+    char **symbols = backtrace_symbols(callstack, nFrames);
+
+    std::ostringstream trace_buf;
+    for (int i = skip; i < nFrames; i++) {
+        Dl_info info;
+        if (dladdr(callstack[i], &info)) {
+            char *demangled = NULL;
+            int status;
+            demangled = abi::__cxa_demangle(info.dli_sname, NULL, 0, &status);
+            std::snprintf(
+                buf,
+                sizeof(buf),
+                "%-3d %*p %s + %zd\n",
+                i,
+                (int)(2 + sizeof(void*) * 2),
+                callstack[i],
+                status == 0 ? demangled : info.dli_sname,
+                (char *)callstack[i] - (char *)info.dli_saddr
+            );
+            free(demangled);
+        } 
+        else {
+            std::snprintf(buf, sizeof(buf), "%-3d %*p\n", i, (int)(2 + sizeof(void*) * 2), callstack[i]);
+        }
+        trace_buf << buf;
+        std::snprintf(buf, sizeof(buf), "%s\n", symbols[i]);
+        trace_buf << buf;
+    }
+    free(symbols);
+    if (nFrames == nMaxFrames) trace_buf << "[truncated]\n";
+    return trace_buf.str();
 }
 
 #elif defined __MINGW32__
-inline std::string backtrace(){
+inline std::string backtrace(int skip = 1){
     ////@todo backtrace for mingw
     return "";
 }
@@ -36,7 +65,7 @@ inline std::string backtrace(){
 #include "dbg_win.h"
 
 inline
-std::string backtrace() {
+std::string backtrace(int skip = 1) {
     std::stringstream buff;
     std::vector<windbg::StackFrame> stack = windbg::stack_trace();
     buff << "Callstack: \n";
@@ -48,7 +77,7 @@ std::string backtrace() {
 
 #elif defined __CYGWIN__
 inline
-std::string backtrace() {
+std::string backtrace(int skip = 1) {
     ///@todo backtrace for cygwin
     return "";
 }
