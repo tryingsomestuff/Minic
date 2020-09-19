@@ -85,8 +85,8 @@ struct Position{
 
 #ifdef WITH_NNUE
     mutable DirtyPiece _dirtyPiece;
-    mutable NNUE::Accumulator * _accumulator = nullptr;
-    mutable NNUE::Accumulator * _previousAccumulator = nullptr;
+    mutable std::shared_ptr<NNUE::Accumulator> _accumulator;
+    mutable std::shared_ptr<NNUE::Accumulator> _previousAccumulator;
 
     // minimal API for the NNUE "lib" part
     const DirtyPiece & dirtyPiece() const;
