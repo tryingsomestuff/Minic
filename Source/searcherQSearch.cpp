@@ -82,6 +82,8 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
 
     if ( validTTmove && (isInCheck || isCapture(e.m)) ) bestMove = e.m;
     
+    assert(p.halfmoves - 1 < MAX_PLY && p.halfmoves - 1 >= 0);
+
     // get a static score for the position.
     ScoreType evalScore;
     if (isInCheck) evalScore = -MATE + ply;

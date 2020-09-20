@@ -74,6 +74,7 @@ PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType &
     {
         EvalData data;
         ScoreType e = eval(p,data,*this);
+        assert(p.halfmoves < MAX_PLY && p.halfmoves >= 0);
         stack[p.halfmoves] = {p,computeHash(p),data,e,INVALIDMINIMOVE};
     }
 

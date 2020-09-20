@@ -24,6 +24,7 @@ TimeType Searcher::getCurrentMoveMs() {
 void Searcher::getCMHPtr(const unsigned int ply, CMHPtrArray & cmhPtr){
     cmhPtr.fill(0);
     for( unsigned int k = 0 ; k < MAX_CMH_PLY ; ++k){
+        assert(ply-k < MAX_PLY && ply-k >= 0);
         if( ply > k && VALIDMOVE(stack[ply-k].p.lastMove)){
            const Square to = Move2To(stack[ply-k].p.lastMove);
            cmhPtr[k] = historyT.counter_history[stack[ply-k-1].p.board_const(to)+PieceShift][to];
