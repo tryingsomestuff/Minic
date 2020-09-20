@@ -28,6 +28,9 @@ Minic, since release 2.47, has the possibility to be build using a shameless cop
 When using a NNUE network, it is important that Minic is called MinicNNUE or Minnuec as introduced by Gekkehenker.
 MinicNNUE, won't be the official Minic, as this NNUE work to not reflect my own work and skills at all !
 
+Later on, since version 2.50, the NNUE learner from NodCHip repo has also been ported to Minic so that networks using Minic data and search can be done.
+The genFen part was not ported and in internal process to produce training is used. This include both extracting position from fixed depth game and from random position.
+
 ## Release process
 WARNING : Dist directory as been REMOVED from the repository because it was starting to be too big. Unofficial releases are not available anymore here. All (unofficial) releases are available in a new repo, here : https://github.com/tryingsomestuff/Minic-Dist
 
