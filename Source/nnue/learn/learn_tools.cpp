@@ -389,10 +389,10 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen , bool mirror){
 	else p.ep = INVALIDSQUARE;
 
 	// Halfmove clock
-	p.fifty = static_cast<Square>(stream.read_n_bit(6));
+	p.fifty = static_cast<unsigned char>(stream.read_n_bit(6));
 
 	// Fullmove number
-	p.moves = static_cast<Square>(stream.read_n_bit(8));
+	p.moves = static_cast<unsigned short>(stream.read_n_bit(8));
 	if (p.moves < 1) { // fix a LittleBlitzer bug here ...
 		Logging::LogIt(Logging::logDebug) << "Wrong move counter " << (int)p.moves << " using 1 instead";
 		p.moves = 1;

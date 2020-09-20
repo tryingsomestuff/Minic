@@ -486,6 +486,8 @@ void LearnerThink::calc_loss(size_t thread_id, uint64_t done)
 				std::cout << "Error! : illegal packed sfen " << GetFEN(task_pos) << std::endl;
 			}
 
+			//std::cout << "packed sfen " << GetFEN(task_pos) << std::endl;
+
 			const NNUEValue shallow_value = get_shallow_value(task_pos,task_thread_id);
 
 			// Evaluation value of deep search

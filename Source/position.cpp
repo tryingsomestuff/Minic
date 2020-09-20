@@ -188,7 +188,7 @@ Position::Position(const Position & p){
     std::memcpy(this, &p, offsetof(Position, _accumulator));
 #pragma GCC diagnostic pop
     
-    // get me own accumulator and use given position one as previous
+    // get my own accumulator and use given position one as previous
     if (DynamicConfig::useNNUE){
        _accumulator = std::shared_ptr<NNUE::Accumulator>(new NNUE::Accumulator());
        _previousAccumulator = p._accumulator;
@@ -196,7 +196,7 @@ Position::Position(const Position & p){
 }
 
 void Position::resetAccumulator(){
-    // get me own accumulator and reset "previous" one
+    // get my own accumulator and reset "previous" one
     if (DynamicConfig::useNNUE){
        _accumulator = std::shared_ptr<NNUE::Accumulator>(new NNUE::Accumulator());
        _previousAccumulator = nullptr;
