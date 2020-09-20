@@ -29,6 +29,7 @@
 #include "../position.hpp"
 
 #include <cstring> // std::memset()
+#include <stdint.h>
 
 namespace NNUE {
 
@@ -36,6 +37,14 @@ namespace NNUE {
   // accumulator tile by tile such that each tile fits in the CPU's
   // vector registers.
   #define TILING
+  
+  #if UINTPTR_MAX == 0xffffffff
+  const bool Is64Bit = false;
+  #elif UINTPTR_MAX == 0xffffffffffffffff
+  const bool Is64Bit = true;
+  #else
+  // What ?????
+  #endif
 
   #ifdef USE_AVX512
   typedef __m512i vec_t;
@@ -59,7 +68,7 @@ namespace NNUE {
   #define vec_store(a,b) *(a)=(b)
   #define vec_add_16(a,b) _mm_add_epi16(a,b)
   #define vec_sub_16(a,b) _mm_sub_epi16(a,b)
-  static constexpr IndexType kNumRegs = Is64Bit ? 16 : 8;
+  static constexpr IndexType kNumRegs = Is64Bit ? 16 : 8; 
 
   #elif USE_MMX
   typedef __m64 vec_t;
