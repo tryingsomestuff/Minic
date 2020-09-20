@@ -32,8 +32,8 @@
 
       // Get a list of indices whose values ??have changed from the previous one in the feature quantity
       void EnPassant::AppendChangedIndices(
-        const Position& pos, Color perspective,
-        IndexList* removed, IndexList* added) {
+        const Position& /* pos */, Color /* perspective */,
+        IndexList* /* removed */, IndexList* /* added */) {
         // Not implemented.
         assert(false);
       }

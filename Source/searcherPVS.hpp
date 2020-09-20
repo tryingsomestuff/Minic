@@ -109,6 +109,8 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
     }
 #endif
 
+    assert(p.halfmoves - 1 < MAX_PLY && p.halfmoves - 1 >= 0);
+
     // get a static score for the position.
     ScoreType evalScore;
     if (isInCheck) evalScore = -MATE + ply;
@@ -192,6 +194,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                     //Position & pN = stack[p.halfmoves+1].p;
                     //pN = p;
                     applyNull(*this,pN);
+                    assert(pN.halfmoves < MAX_PLY && pN.halfmoves >= 0);
                     stack[pN.halfmoves].p = pN;
                     stack[pN.halfmoves].h = pN.h;
                     ScoreType nullscore = -pvs<false>(-beta, -beta + 1, pN, nullDepth, ply + 1, nullPV, seldepth, isInCheck, !cutNode, false);
@@ -315,6 +318,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             const bool isQuiet = Move2Type(e.m) == T_std;
             if ( isQuiet ) validQuietMoveCount++;
             PVList childPV;
+            assert(p2.halfmoves < MAX_PLY && p2.halfmoves >= 0);
             stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
             stack[p2.halfmoves].h = p2.h;
             const bool isCheck = ttIsCheck || isAttacked(p2, kingSquare(p2));

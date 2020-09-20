@@ -301,14 +301,14 @@ struct SfenReader
 	uint64_t last_done;
 
 	// If total_read exceeds this value, update_weights() and calculate mse.
-	uint64_t next_update_weights;
+	std::atomic<uint64_t> next_update_weights;
 
 	uint64_t save_count;
 
 	// Do not shuffle when reading the phase.
 	bool no_shuffle;
 
-	bool stop_flag;
+	std::atomic<bool> stop_flag;
 
 	// Determine if it is a phase for calculating rmse.
 	// (The computational aspects of rmse should not be used for learning.)

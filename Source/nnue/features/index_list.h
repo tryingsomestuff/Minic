@@ -49,7 +49,7 @@ namespace NNUE::Features {
     }
 
    private:
-    T values_[MaxSize];
+    T values_[MaxSize] = {};
     std::size_t size_ = 0;
   };
 
