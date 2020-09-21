@@ -106,13 +106,6 @@ void applyNull(Searcher & , Position & pN) {
     if ( pN.c == Co_White ) ++pN.moves;
     ++pN.halfmoves;
 
-///@todo NNUE is that correct ???
-#ifdef WITH_NNUE
-    if (DynamicConfig::useNNUE){
-      pN._accumulator->computed_score = false;
-    }
-#endif
-
     STOP_AND_SUM_TIMER(Apply)
 }
 
@@ -141,7 +134,6 @@ bool applyMove(Position & p, const Move & m, bool noValidation){
 #ifdef WITH_NNUE
     if (DynamicConfig::useNNUE){
        p._accumulator->computed_accumulation = false;
-       p._accumulator->computed_score = false;
     }
     auto & dp = p._dirtyPiece;
     dp.dirty_num = 1; // at least one piece is changing ...

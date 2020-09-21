@@ -53,7 +53,7 @@ bool load_eval_file(const std::string& evalFile) {
 
 // Evaluation function. Perform differential calculation.
 ScoreType evaluate(const Position& pos) {
-    ScoreType v = NNUE::ComputeScore(pos, false);
+    ScoreType v = NNUE::ComputeScore(pos);
     v = std::min(std::max(v, ScoreType(-WIN + 1)), ScoreType(WIN - 1));
     return v;
 }

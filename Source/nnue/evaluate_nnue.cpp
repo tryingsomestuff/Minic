@@ -119,6 +119,18 @@ namespace NNUE {
     return stream && stream.peek() == std::ios::traits_type::eof();
   }
 
+  // Calculate the evaluation value
+  NNUEValue ComputeScore(const Position& pos) {
+
+    alignas(kCacheLineSize) TransformedFeatureType 
+        transformed_features[FeatureTransformer::kBufferSize];
+    __feature_transformer->Transform(pos, transformed_features, false);
+    alignas(kCacheLineSize) char buffer[Network::kBufferSize];
+    const auto output = __network->Propagate(transformed_features, buffer);
+
+    return static_cast<NNUEValue>(output[0] / FV_SCALE);
+  }
+
   // write evaluation function parameters
   bool WriteParameters(std::ostream& stream) {
     if (!WriteHeader(stream, kHashValue, GetArchitectureString())) return false;
@@ -130,25 +142,6 @@ namespace NNUE {
   // Proceed with the difference calculation if possible
   void UpdateAccumulatorIfPossible(const Position& pos) {
     __feature_transformer->UpdateAccumulatorIfPossible(pos);
-  }
-
-  // Calculate the evaluation value
-  NNUEValue ComputeScore(const Position& pos, bool refresh) {
-    auto& accumulator = pos.accumulator();
-    if (!refresh && accumulator.computed_score) {
-      return accumulator.score;
-    }
-
-    alignas(kCacheLineSize) TransformedFeatureType transformed_features[FeatureTransformer::kBufferSize];
-    __feature_transformer->Transform(pos, transformed_features, refresh);
-    alignas(kCacheLineSize) char buffer[Network::kBufferSize];
-    const auto output = __network->Propagate(transformed_features, buffer);
-
-    auto score = static_cast<NNUEValue>(output[0] / FV_SCALE);
-
-    accumulator.score = score;
-    accumulator.computed_score = true;
-    return accumulator.score;
   }
 
 } // namespace NNUE
