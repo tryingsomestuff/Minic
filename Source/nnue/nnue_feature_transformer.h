@@ -68,7 +68,7 @@ namespace NNUE {
   #define vec_store(a,b) *(a)=(b)
   #define vec_add_16(a,b) _mm_add_epi16(a,b)
   #define vec_sub_16(a,b) _mm_sub_epi16(a,b)
-  static constexpr IndexType kNumRegs = Is64Bit ? 16 : 8; 
+  static constexpr IndexType kNumRegs = Is64Bit ? 16 : 8;
 
   #elif USE_MMX
   typedef __m64 vec_t;
@@ -164,6 +164,7 @@ namespace NNUE {
 
     // Convert input features
     void Transform(const Position& pos, OutputType* output, bool refresh) const {
+
       if (refresh || !UpdateAccumulatorIfPossible(pos))
         RefreshAccumulator(pos);
 
@@ -310,7 +311,6 @@ namespace NNUE {
   #endif
 
       accumulator.computed_accumulation = true;
-      accumulator.computed_score = false;
     }
 
     // Calculate cumulative value using difference calculation
@@ -400,7 +400,6 @@ namespace NNUE {
   #endif
 
       accumulator.computed_accumulation = true;
-      accumulator.computed_score = false;
     }
 
     using BiasType = std::int16_t;

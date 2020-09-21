@@ -42,9 +42,6 @@ void CheckHealth();
 // save net on disk
 void save_eval(std::string dir_name);
 
-// Evaluation function. Perform full calculation.
-NNUEValue compute_eval(const Position& pos);
-
 // Proceed with the difference calculation if possible
 void update_eval(const Position& pos);
 

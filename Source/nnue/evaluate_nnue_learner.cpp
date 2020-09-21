@@ -341,11 +341,6 @@ void CheckHealth() {
   SendMessages({{"check_health"}});
 }
 
-// Evaluation function. Perform full calculation.
-NNUEValue compute_eval(const Position& pos) {
-  return ComputeScore(pos, true);
-}
-
 // Proceed with the difference calculation if possible
 void update_eval(const Position& pos) {
   UpdateAccumulatorIfPossible(pos);

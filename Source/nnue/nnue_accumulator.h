@@ -27,11 +27,8 @@ namespace NNUE {
 
   // Class that holds the result of affine transformation of input features
   struct alignas(kCacheLineSize) Accumulator {
-    std::int16_t
-        accumulation[2][kRefreshTriggers.size()][kTransformedFeatureDimensions];
-    NNUEValue score;
+    std::int16_t accumulation[2][kRefreshTriggers.size()][kTransformedFeatureDimensions];
     bool computed_accumulation;
-    bool computed_score;
   };
 
 }  // namespace NNUE
