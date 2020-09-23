@@ -155,16 +155,18 @@ const DirtyPiece & Position::dirtyPiece() const{
 }
 
 NNUE::Accumulator & Position::accumulator()const{
-    assert(_accumulator.get());
-    return *_accumulator.get();
+    assert(_accumulator);
+    return *_accumulator;
 }
 
 NNUE::Accumulator * Position::previousAccumulatorPtr()const{
-    return _previousAccumulator.get();
+    return _previousAccumulator;
 }
 
 Position & Position::operator =(const Position & p){
     if ( &p == this ) return *this;
+
+    delete _accumulator;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
@@ -174,13 +176,15 @@ Position & Position::operator =(const Position & p){
 
     // get me own accumulator and use given position one as previous
     if (DynamicConfig::useNNUE){
-       _accumulator = std::shared_ptr<NNUE::Accumulator>(new NNUE::Accumulator());
+       _accumulator = new NNUE::Accumulator();
        _previousAccumulator = p._accumulator;
     }
     return *this;
 }
 
 Position::Position(const Position & p){
+
+    delete _accumulator;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
@@ -190,7 +194,7 @@ Position::Position(const Position & p){
     
     // get my own accumulator and use given position one as previous
     if (DynamicConfig::useNNUE){
-       _accumulator = std::shared_ptr<NNUE::Accumulator>(new NNUE::Accumulator());
+       _accumulator = new NNUE::Accumulator();
        _previousAccumulator = p._accumulator;
     }
 }
@@ -198,7 +202,7 @@ Position::Position(const Position & p){
 void Position::resetAccumulator(){
     // get my own accumulator and reset "previous" one
     if (DynamicConfig::useNNUE){
-       _accumulator = std::shared_ptr<NNUE::Accumulator>(new NNUE::Accumulator());
+       _accumulator = new NNUE::Accumulator();
        _previousAccumulator = nullptr;
     }
 }
@@ -230,7 +234,7 @@ bool Position::operator !=(const Position & p){
 #endif
 
 Position::~Position(){
-
+    delete _accumulator;
 }
 
 Position::Position(){
