@@ -59,15 +59,15 @@ fi
 
 echo "Building $exe"
 
-WARN="-Wall -Wcast-qual -Wno-char-subscripts -Wno-reorder -Wmaybe-uninitialized -Wuninitialized -pedantic -Wextra -Wshadow"
+WARN="-Wall -Wcast-qual -Wno-char-subscripts -Wno-reorder -Wmaybe-uninitialized -Wuninitialized -pedantic -Wextra -Wshadow -Wno-unknown-pragmas"
 
-OPT="-s $WARN $d -DNDEBUG -O3 $t --std=c++17 $n" ; DEPTH=16
+OPT="-s $WARN $d -DNDEBUG -O3 $t --std=c++17 $n -DUSE_BLAS" ; DEPTH=16
 #OPT="-s $WARN $d -ffunction-sections -fdata-sections -Os -s -DNDEBUG -Wl,--gc-sections $t --std=c++17" ; DEPTH=16
 #OPT="$WARN $d -DNDEBUG -O3 -g -ggdb -fno-omit-frame-pointer $t --std=c++17" ; DEPTH=16
 #OPT="$WARN $d -DNDEBUG -g $t --std=c++17" ; DEPTH=10
 #OPT="$WARN $d -g $t --std=c++17 -rdynamic" ; DEPTH=10
 
-LIBS="-lpthread -ldl"
+LIBS="-lpthread -ldl -lopenblas"
 
 OPT="$OPT -fno-exceptions"
 
