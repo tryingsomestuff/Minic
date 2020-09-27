@@ -361,8 +361,6 @@ struct LearnerThink: public MultiThink
 NNUEValue LearnerThink::get_shallow_value(Position& task_pos, size_t thread_id)
 {
 
-    //std::cout << "get_shallow_value " << &task_pos << std::endl;
-
 	// Evaluation value for shallow search
 	// The value of evaluate() may be used, but when calculating loss, learn_cross_entropy and
 	// Use qsearch() because it is difficult to compare the values.
@@ -407,17 +405,17 @@ namespace{
 		auto tp = std::chrono::system_clock::to_time_t(now);
 		auto result = std::string(std::ctime(&tp));
 		while (*result.rbegin() == '\n' || (*result.rbegin() == '\r')) result.pop_back();
-		return result;
+		return result + " ";
 	}	
 }
 
 void LearnerThink::calc_loss(size_t thread_id, uint64_t done)
 {
 
-	std::cout << "PROGRESS: " << now_string() << ", ";
+	std::cout << now_string() << "PROGRESS: "  << ", ";
 	std::cout << sr.total_done << " sfens";
 	std::cout << ", iteration " << epoch;
-	std::cout << ", eta = " << NNUE::get_eta() << ", ";
+	std::cout << ", eta = " << NNUE::get_eta() << std::endl;
 
 	// For calculation of verification data loss
 	std::atomic<double> test_sum_cross_entropy_eval, test_sum_cross_entropy_win, test_sum_cross_entropy;
@@ -444,7 +442,7 @@ void LearnerThink::calc_loss(size_t thread_id, uint64_t done)
     readFEN(startPosition,pos,true);
 	EvalData data;
 	Searcher & context = *ThreadPool::instance().at(thread_id);
-    std::cout << "hirate eval = " << eval(pos,data,context);
+    std::cout << now_string() << "hirate eval = " << eval(pos,data,context) << std::endl;
 	}
 
 	// It's better to parallelize here, but it's a bit
@@ -480,13 +478,10 @@ void LearnerThink::calc_loss(size_t thread_id, uint64_t done)
 		{
 			// Does C++ properly capture a new ps instance for each loop?.
             Position task_pos;
-			//std::cout << "new task " << &task_pos << " " << task_pos._accumulator << " " << &ps << std::endl;
 			if (set_from_packed_sfen(task_pos,*const_cast<PackedSfen*>(&ps.sfen), false) != 0){
 				// Unfortunately, as an sfen for rmse calculation, an invalid sfen was drawn.
 				std::cout << "Error! : illegal packed sfen " << GetFEN(task_pos) << std::endl;
 			}
-
-			//std::cout << "packed sfen " << GetFEN(task_pos) << std::endl;
 
 			const NNUEValue shallow_value = get_shallow_value(task_pos,task_thread_id);
 
@@ -569,7 +564,7 @@ void LearnerThink::calc_loss(size_t thread_id, uint64_t done)
 
 	if (sr.sfen_for_mse.size() && done)
 	{
-		std::cout
+		std::cout << now_string()
 			<< " , test_cross_entropy_eval = " << test_sum_cross_entropy_eval / sr.sfen_for_mse.size()
 			<< " , test_cross_entropy_win = " << test_sum_cross_entropy_win / sr.sfen_for_mse.size()
 			<< " , test_entropy_eval = " << test_sum_entropy_eval / sr.sfen_for_mse.size()
@@ -581,7 +576,7 @@ void LearnerThink::calc_loss(size_t thread_id, uint64_t done)
 
 		if (done != static_cast<uint64_t>(-1))
 		{
-			std::cout
+			std::cout << now_string()
 				<< " , learn_cross_entropy_eval = " << learn_sum_cross_entropy_eval / done
 				<< " , learn_cross_entropy_win = " << learn_sum_cross_entropy_win / done
 				<< " , learn_entropy_eval = " << learn_sum_entropy_eval / done
@@ -834,7 +829,7 @@ bool LearnerThink::save(bool is_final)
 			const double latest_loss = latest_loss_sum / latest_loss_count;
 			latest_loss_sum = 0.0;
 			latest_loss_count = 0;
-			std::cout << "loss: " << latest_loss;
+			std::cout << now_string() << "loss: " << latest_loss;
 			if (latest_loss < best_loss) {
 				std::cout << " < best (" << best_loss << "), accepted" << std::endl;
 				best_loss = latest_loss;
@@ -887,11 +882,11 @@ void shuffle_write(const std::string& output_file_name , FromSF::PRNG& prng , st
 		// Output progress every 10M phase or when all writing is completed
 		if (((write_sfen_count % buffer_size) == 0) ||
 			(write_sfen_count == total_sfen_count))
-			std::cout << write_sfen_count << " / " << total_sfen_count << std::endl;
+			std::cout << now_string() << write_sfen_count << " / " << total_sfen_count << std::endl;
 	};
 
 
-	std::cout << std::endl <<  "write : " << output_file_name << std::endl;
+	std::cout << now_string() << std::endl <<  "write : " << output_file_name << std::endl;
 
 	std::fstream fs(output_file_name, std::ios::out | std::ios::binary);
 
@@ -929,7 +924,7 @@ void shuffle_write(const std::string& output_file_name , FromSF::PRNG& prng , st
 	}
 	print_status();
 	fs.close();
-	std::cout << "done!" << std::endl;
+	std::cout << now_string() << "done!" << std::endl;
 }
 
 // Subcontracting the teacher shuffle "learn shuffle" command.
@@ -1511,7 +1506,7 @@ void learn(std::istringstream& is)
 		learn_think.best_loss = learn_think.latest_loss_sum / learn_think.latest_loss_count;
 		learn_think.latest_loss_sum = 0.0;
 		learn_think.latest_loss_count = 0;
-		std::cout << "initial loss: " << learn_think.best_loss << std::endl;
+		std::cout << now_string() << "initial loss: " << learn_think.best_loss << std::endl;
 	}
 
 	// -----------------------------------

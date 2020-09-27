@@ -192,7 +192,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
 #ifdef WITH_NNUE
     if (DynamicConfig::useNNUE){
         EvalScore score;
-        if ( ! isLazyHigh(600,features,score)){ // stay to classic eval when the game is already decided
+        if ( DynamicConfig::forceNNUE || ! isLazyHigh(600,features,score)){ // stay to classic eval when the game is already decided
            ScoreType nnueScore = NNUEWrapper::evaluate(p);
            // take tempo and contempt into account
            nnueScore += ScaleScore( /*EvalConfig::tempo*(white2Play?+1:-1) +*/ context.contempt, data.gp);
