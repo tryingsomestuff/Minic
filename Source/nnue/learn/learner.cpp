@@ -377,7 +377,7 @@ NNUEValue LearnerThink::get_shallow_value(Position& task_pos, size_t thread_id)
 
 	for (auto m : pv)
 	{
-		if ( !applyMove(p2,m)){
+		if ( !applyMove(p2,m,false)){
 			break;
 		}
 		// Since the value of evaluate in leaf is used, the difference is updated.
@@ -782,7 +782,7 @@ void LearnerThink::thread_worker(size_t thread_id)
 			if (discount_rate != 0)
 				pos_add_grad();
 
-            if ( !applyMove(pos,m)){
+            if ( !applyMove(pos,m,false)){
 				illegal_move = true;
 				break;
 			}
