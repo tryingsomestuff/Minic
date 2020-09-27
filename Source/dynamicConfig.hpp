@@ -26,6 +26,7 @@ namespace DynamicConfig{
     extern bool limitStrength      ;
     extern int strength            ;
     extern bool useNNUE            ;
+    extern bool forceNNUE          ;
     extern std::string NNUEFile    ;
     extern bool genFen             ;
     extern unsigned int genFenDepth;

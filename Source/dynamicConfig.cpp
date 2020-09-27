@@ -21,6 +21,7 @@ namespace DynamicConfig{
     bool limitStrength       = false;
     int strength             = 1500;
     bool useNNUE             = false;
+    bool forceNNUE           = false;
     std::string NNUEFile     = "";
     bool genFen              = false;
     unsigned int genFenDepth = 8;

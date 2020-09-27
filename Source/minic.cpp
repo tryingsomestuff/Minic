@@ -81,8 +81,10 @@ int main(int argc, char ** argv) {
 
 #ifdef WITH_LEARNER
     if ( argc > 1 && std::string(argv[1]) == "-learn")  { 
-        // let disable TT ...
-	    DynamicConfig::disableTT = true;
+        // disable TT
+	    //DynamicConfig::disableTT = true;
+        // force pure NNUE eval
+        DynamicConfig::forceNNUE = true;
 
         // read param from input file
         std::ifstream input(argv[2]);
