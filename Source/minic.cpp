@@ -50,7 +50,6 @@ void init(int argc, char ** argv) {
 #ifdef WITH_NNUE
     if ( !DynamicConfig::NNUEFile.empty()){
         NNUEWrapper::init_NNUE();
-        NNUEWrapper::verify_NNUE();
     }
 #endif
     COM::init(); // let's do this ... (usefull to reset position in case of NNUE)

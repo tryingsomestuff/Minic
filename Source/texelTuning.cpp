@@ -18,7 +18,7 @@
 namespace Texel {
 
 struct TexelInput {
-    Position * p;
+    std::shared_ptr<Position> p;
     int result;
 };
 
@@ -42,8 +42,7 @@ std::ostream& operator<<(std::ostream& os, const TexelParam<T>& p){const T& t = 
 
 double K = 0.23;
 
-double Sigmoid(Position * p) {
-    assert(p);
+double Sigmoid(Position & p) {
 
     // /////////////////////////////////////////
     // eval returns (white2Play?+1:-1)*sc
@@ -56,8 +55,8 @@ double Sigmoid(Position * p) {
     /*
     // qsearch
     DepthType seldepth = 0;
-    double s = ThreadPool::instance().main().qsearchNoPruning(-10000,10000,*p,1,seldepth);
-    s *= (p->c == Co_White ? +1:-1);
+    double s = ThreadPool::instance().main().qsearchNoPruning(-10000,10000,p,1,seldepth);
+    s *= (p.c == Co_White ? +1:-1);
     */
 
     /*
@@ -65,14 +64,14 @@ double Sigmoid(Position * p) {
     Move m = INVALIDMOVE;
     DepthType d = 64;
     ScoreType s = 0;
-    ThreadPool::instance().main().search(*p,m,4,s,seldepth);
-    s *= (p->c == Co_White ? +1:-1);
+    ThreadPool::instance().main().search(p,m,4,s,seldepth);
+    s *= (p.c == Co_White ? +1:-1);
     */
 
     // eval
     EvalData data;
-    double s = eval(*p,data,ThreadPool::instance().main());
-    s *= (p->c == Co_White ? +1:-1);
+    double s = eval(p,data,ThreadPool::instance().main());
+    s *= (p.c == Co_White ? +1:-1);
 
     return 1. / (1. + std::pow(10, -K*s/400. ));
 }
@@ -88,7 +87,9 @@ double E(const std::vector<Texel::TexelInput> &data, size_t miniBatchSize) {
     auto worker = [&] (size_t begin, size_t end, std::atomic<double> & acc) {
       double ee = 0;
       for(auto k = begin; k != end; ++k) {
-        ee += std::pow((data[k].result+1)*0.5 - Sigmoid(data[k].p),2);
+        Position * p = data[k].p.get();
+        assert(p);
+        ee += std::pow((data[k].result+1)*0.5 - Sigmoid(*p),2);
       }
       {
           const std::lock_guard<std::mutex> lock(m);
@@ -298,7 +299,7 @@ void TexelTuning(const std::string & filename) {
     std::vector<std::string> positions;
     readEPDFile(filename,positions);
     for(size_t k = 0 ; k < positions.size() ; ++k){
-        ExtendedPosition * p = new ExtendedPosition(positions[k],false);
+        std::shared_ptr<ExtendedPosition> p(new ExtendedPosition(positions[k],false));
         //data.push_back({p, getResult(p->_extendedParams["c9"][0])}); // zurichess
         data.push_back({p, getResult2(p->_extendedParams["c2"][0])}); // lichess-quiet
         // +1 white win, -1 black wins, 0 draw
@@ -771,7 +772,6 @@ void TexelTuning(const std::string & filename) {
             for (size_t k = 0; k < guess[*it].size(); ++k) Logging::LogIt(Logging::logInfo) << guess[*it][k].name << " " << guess[*it][k];
         }
     }
-    for (size_t k = 0; k < data.size(); ++k) delete data[k].p;
 }
 
 #endif

@@ -33,9 +33,6 @@ namespace NNUE {
   template <typename Layer>
   class Trainer;
 
-  // Evaluation function file name
-  extern std::string fileName;
-
   // Hash value of evaluation function structure
   constexpr std::uint32_t kHashValue =
       FeatureTransformer::GetHashValue() ^ Network::GetHashValue();
@@ -50,20 +47,45 @@ namespace NNUE {
   };
 
   template <typename T>
+  struct LargePageDeleter {
+    void operator()(T* ptr) const {
+      ptr->~T();
+      std_aligned_free(ptr);
+    }
+  };
+
+  template <typename T>
   using AlignedPtr = std::unique_ptr<T, AlignedDeleter<T>>;
 
+  template <typename T>
+  using LargePagePtr = std::unique_ptr<T, LargePageDeleter<T>>;
+
   // Input feature converter
-  extern AlignedPtr<FeatureTransformer> __feature_transformer;
+  extern LargePagePtr<FeatureTransformer> __feature_transformer;
 
   // Evaluation function
   extern AlignedPtr<Network> __network;
 
+  // Get a string that represents the structure of the evaluation function
+  std::string GetArchitectureString();
+
   NNUEValue ComputeScore(const Position& pos);
   void Initialize();
+
+  // read the header
+  bool ReadHeader(std::istream& stream,
+    std::uint32_t* hash_value, std::string* architecture);
+
+  // write the header
+  bool WriteHeader(std::ostream& stream,
+    std::uint32_t hash_value, const std::string& architecture);
+
+  // read evaluation function parameters
   bool ReadParameters(std::istream& stream);
+
+  // write evaluation function parameters
   bool WriteParameters(std::ostream& stream);
-  void UpdateAccumulatorIfPossible(const Position& pos);
-  std::string GetArchitectureString();
+
 }  // namespace NNUE
 
 #endif // #ifndef NNUE_EVALUATE_NNUE_H_INCLUDED

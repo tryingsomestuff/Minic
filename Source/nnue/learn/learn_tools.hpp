@@ -18,6 +18,30 @@ struct Position;
 
 namespace FromSF{
 
+namespace Algo {
+    // Fisher-Yates
+    template <typename Rng, typename T>
+    inline void shuffle(std::vector<T>& buf, Rng&& prng)
+    {
+        const auto size = buf.size();
+        for (uint64_t i = 0; i < size; ++i)
+            std::swap(buf[i], buf[prng.rand(size - i) + i]);
+    }
+}
+
+inline uint64_t string_hash(const std::string& str)
+{
+  uint64_t h = 525201411107845655ull;
+
+  for (auto c : str) {
+    h ^= static_cast<uint64_t>(c);
+    h *= 0x5bd1e9955bd1e995ull;
+    h ^= h >> 47;
+  }
+
+  return h;
+}
+
 /// xorshift64star Pseudo-Random Number Generator
 /// This class is based on original code written and dedicated
 /// to the public domain by Sebastiano Vigna (2014).
@@ -44,7 +68,9 @@ class PRNG {
   }
 
 public:
+  PRNG() { set_seed_from_time(); }
   PRNG(uint64_t seed) : s(seed) { assert(seed); }
+  PRNG(const std::string& seed) { set_seed(seed); }
 
   template<typename T> T rand() { return T(rand64()); }
 
@@ -57,12 +83,36 @@ public:
 
   // Return the random seed used internally.
   uint64_t get_seed() const { return s; }
+
+  void set_seed(uint64_t seed) { s = seed; }
+
+  void set_seed_from_time()
+  {
+      set_seed(std::chrono::system_clock::now().time_since_epoch().count());
+  }
+
+  void set_seed(const std::string& str)
+  {
+    if (str.empty())
+    {
+      set_seed_from_time();
+    }
+    else if (std::all_of(str.begin(), str.end(), [](char c) { return std::isdigit(c);} )) {
+      set_seed(std::stoull(str));
+    }
+    else
+    {
+      set_seed(string_hash(str));
+    }
+  }
 };
 
 // async version of PRNG
 struct AsyncPRNG
 {
+  AsyncPRNG() : prng() { }
   AsyncPRNG(uint64_t seed) : prng(seed) { assert(seed); }
+  AsyncPRNG(const std::string& seed) : prng(seed) { }
   // [ASYNC] Extract one random number.
   template<typename T> T rand() {
     std::unique_lock<std::mutex> lk(mutex);
@@ -177,7 +227,7 @@ struct PackedSfenValue{
 
 void sfen_pack(const Position & p, PackedSfen& sfen);
 
-int set_from_packed_sfen(Position &p, PackedSfen& sfen , bool mirror);
+int set_from_packed_sfen(Position &p, PackedSfen& sfen );
 
 MiniMove ToSFMove(const Position & p, Square from, Square to, MType type);
 

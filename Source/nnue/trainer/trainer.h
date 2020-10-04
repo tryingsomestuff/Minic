@@ -67,8 +67,8 @@ struct Example {
 
 // Message used for setting hyperparameters
 struct Message {
-  Message(const std::string& n, const std::string& v = ""):
-      name(n), value(v), num_peekers(0), num_receivers(0) {}
+  Message(const std::string& message_name, const std::string& message_value = ""):
+      name(message_name), value(message_value), num_peekers(0), num_receivers(0) {}
   const std::string name;
   const std::string value;
   std::uint32_t num_peekers;
@@ -101,13 +101,13 @@ inline std::vector<std::string> Split(const std::string& input, char delimiter) 
 
 // round a floating point number to an integer
 template <typename IntType>
-inline IntType Round(double value) {
+IntType Round(double value) {
   return static_cast<IntType>(std::floor(value + 0.5));
 }
 
 // make_shared with alignment
 template <typename T, typename... ArgumentTypes>
-inline std::shared_ptr<T> MakeAlignedSharedPtr(ArgumentTypes&&... arguments) {
+std::shared_ptr<T> MakeAlignedSharedPtr(ArgumentTypes&&... arguments) {
   const auto ptr = new(std_aligned_alloc(alignof(T), sizeof(T)))
       T(std::forward<ArgumentTypes>(arguments)...);
   return std::shared_ptr<T>(ptr, AlignedDeleter<T>());

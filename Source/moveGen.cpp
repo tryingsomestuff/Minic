@@ -106,6 +106,14 @@ void applyNull(Searcher & , Position & pN) {
     if ( pN.c == Co_White ) ++pN.moves;
     ++pN.halfmoves;
 
+#ifdef WITH_NNUE
+    if (DynamicConfig::useNNUE){
+       pN._accumulator->computed_accumulation = false;
+    }
+    auto & dp = pN._dirtyPiece;
+    dp.dirty_num = 0; // no piece changed ...
+#endif
+
     STOP_AND_SUM_TIMER(Apply)
 }
 
@@ -140,7 +148,7 @@ bool applyMove(Position & p, const Move & m, bool noValidation){
     Square rfrom = INVALIDSQUARE; // for castling
     Square rto   = INVALIDSQUARE; // for castling
     Square capSq = INVALIDSQUARE;
-    if ( isCapture(type) ) capSq = to; // ep is fiexed later...
+    if ( isCapture(type) ) capSq = to; // ep is fixed later...
 #endif
 
     switch(type){

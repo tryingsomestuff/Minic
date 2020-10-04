@@ -36,7 +36,7 @@ struct FeatureProperties {
 
 // Add the original input features to the learning features
 template <typename FeatureType>
-inline IndexType AppendBaseFeature(
+IndexType AppendBaseFeature(
     FeatureProperties properties, IndexType base_index,
     std::vector<TrainingFeature>* training_features) {
   assert(properties.dimensions == FeatureType::kDimensions);
@@ -47,7 +47,7 @@ inline IndexType AppendBaseFeature(
 
 // If the learning rate scale is not 0, inherit other types of learning features
 template <typename FeatureType>
-inline IndexType InheritFeaturesIfRequired(
+IndexType InheritFeaturesIfRequired(
     IndexType index_offset, FeatureProperties properties, IndexType base_index,
     std::vector<TrainingFeature>* training_features) {
   if (!properties.active) {
@@ -77,7 +77,7 @@ inline IndexType SkipFeatures(FeatureProperties properties) {
 
 // Get the dimensionality of the learning feature
 template <std::size_t N>
-inline constexpr IndexType GetActiveDimensions(
+constexpr IndexType GetActiveDimensions(
     const FeatureProperties (&properties)[N]) {
   static_assert(N > 0, "");
   IndexType dimensions = properties[0].dimensions;
@@ -91,7 +91,7 @@ inline constexpr IndexType GetActiveDimensions(
 
 // get the number of elements in the array
 template <typename T, std::size_t N>
-inline constexpr std::size_t GetArrayLength(const T (&/*array*/)[N]) {
+constexpr std::size_t GetArrayLength(const T (&/*array*/)[N]) {
   return N;
 }
 

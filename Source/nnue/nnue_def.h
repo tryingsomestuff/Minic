@@ -46,8 +46,6 @@ enum PieceSquare : uint32_t {
 // Must be user defined in order to respect Piece engine piece order
 extern uint32_t kpp_board_index[PIECE_NB][COLOR_NB];
 
-constexpr Square rotate180(Square sq){return (Square)(sq ^ 0x3F);}
-
 // For differential evaluation of pieces that changed since last turn
 struct DirtyPiece {
 
