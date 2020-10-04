@@ -32,13 +32,17 @@
 
 namespace NNUE {
 
-  std::string fileName;
-
   // Input feature converter
-  AlignedPtr<FeatureTransformer> __feature_transformer;
+  LargePagePtr<FeatureTransformer> __feature_transformer;
 
   // Evaluation function
   AlignedPtr<Network> __network;
+
+  // Get a string that represents the structure of the evaluation function
+  std::string GetArchitectureString() {
+    return "Features=" + FeatureTransformer::GetStructureString() +
+      ",Network=" + Network::GetStructureString();
+  }
 
   namespace Detail {
 
@@ -50,14 +54,22 @@ namespace NNUE {
     std::memset(pointer.get(), 0, sizeof(T));
   }
 
+  template <typename T>
+  void Initialize(LargePagePtr<T>& pointer) {
+
+    //static_assert(alignof(T) <= 4096, "aligned_large_pages_alloc() may fail for such a big alignment requirement of T");
+    pointer.reset(reinterpret_cast<T*>(std_aligned_alloc(alignof(T), sizeof(T))));
+    std::memset(pointer.get(), 0, sizeof(T));
+  }
+
   // Read evaluation function parameters
   template <typename T>
-  bool ReadParameters(std::istream& stream, const AlignedPtr<T>& pointer) {
+  bool ReadParameters(std::istream& stream, T& reference) {
 
     std::uint32_t header;
     header = read_little_endian<std::uint32_t>(stream);
     if (!stream || header != T::GetHashValue()) return false;
-    return pointer->ReadParameters(stream);
+    return reference.ReadParameters(stream);
   }
 
   // write evaluation function parameters
@@ -68,18 +80,20 @@ namespace NNUE {
     return pointer->WriteParameters(stream);
   }
 
+  template <typename T>
+  bool WriteParameters(std::ostream& stream, const LargePagePtr<T>& pointer) {
+    constexpr std::uint32_t header = T::GetHashValue();
+    stream.write(reinterpret_cast<const char*>(&header), sizeof(header));
+    return pointer->WriteParameters(stream);
+  }
+
   }  // namespace Detail
 
   // Initialize the evaluation function parameters
   void Initialize() {
+
     Detail::Initialize(__feature_transformer);
     Detail::Initialize(__network);
-  }
-
-  // Get a string that represents the structure of the evaluation function
-  std::string GetArchitectureString() {
-    return "Features=" + FeatureTransformer::GetStructureString() +
-      ",Network=" + Network::GetStructureString();
   }
 
   // Read network header
@@ -114,23 +128,10 @@ namespace NNUE {
     std::string architecture;
     if (!ReadHeader(stream, &hash_value, &architecture)) return false;
     if (hash_value != kHashValue) return false;
-    if (!Detail::ReadParameters(stream, __feature_transformer)) return false;
-    if (!Detail::ReadParameters(stream, __network)) return false;
+    if (!Detail::ReadParameters(stream, *__feature_transformer)) return false;
+    if (!Detail::ReadParameters(stream, *__network)) return false;
     return stream && stream.peek() == std::ios::traits_type::eof();
   }
-
-  // Calculate the evaluation value
-  NNUEValue ComputeScore(const Position& pos) {
-
-    alignas(kCacheLineSize) TransformedFeatureType 
-        transformed_features[FeatureTransformer::kBufferSize];
-    __feature_transformer->Transform(pos, transformed_features, false);
-    alignas(kCacheLineSize) char buffer[Network::kBufferSize];
-    const auto output = __network->Propagate(transformed_features, buffer);
-
-    return static_cast<NNUEValue>(output[0] / FV_SCALE);
-  }
-
   // write evaluation function parameters
   bool WriteParameters(std::ostream& stream) {
     if (!WriteHeader(stream, kHashValue, GetArchitectureString())) return false;
@@ -138,10 +139,16 @@ namespace NNUE {
     if (!Detail::WriteParameters(stream, __network)) return false;
     return !stream.fail();
   }
+  // Evaluation function. Perform differential calculation.
+  NNUEValue ComputeScore(const Position& pos) {
 
-  // Proceed with the difference calculation if possible
-  void UpdateAccumulatorIfPossible(const Position& pos) {
-    __feature_transformer->UpdateAccumulatorIfPossible(pos);
+    alignas(kCacheLineSize) TransformedFeatureType
+        transformed_features[FeatureTransformer::kBufferSize];
+    __feature_transformer->Transform(pos, transformed_features);
+    alignas(kCacheLineSize) char buffer[Network::kBufferSize];
+    const auto output = __network->Propagate(transformed_features, buffer);
+
+    return static_cast<NNUEValue>(output[0] / FV_SCALE);
   }
 
 } // namespace NNUE

@@ -34,7 +34,7 @@
 
 namespace LearnerConfig{
 
-bool use_draw_games_in_training = true;
+bool use_draw_games_in_training = false;
 bool use_draw_games_in_validation = false;
 // 1.0 / PawnValueEg / 4.0 * log(10.0)
 double winning_probability_coefficient = 0.00276753015984861260098316280611;
@@ -102,47 +102,60 @@ double sigmoid(double x)
 // A function that converts the evaluation value to the winning rate [0,1]
 double winning_percentage(double value)
 {
-	// 1/(1+10^(-Eval/4))
-	// = 1/(1+e^(-Eval/4*ln(10))
-	// = sigmoid(Eval/4*ln(10))
 	return sigmoid(value * LearnerConfig::winning_probability_coefficient);
 }
 
 // A function that converts the evaluation value to the winning rate [0,1]
 double winning_percentage_wdl(double value, int ply)
 {
-	double wdl_w = FromSF::win_rate_model_double( value, ply);
-	double wdl_l = FromSF::win_rate_model_double(-value, ply);
-	double wdl_d = 1000.0 - wdl_w - wdl_l;
+	constexpr double wdl_total = 1000.0;
+	constexpr double draw_score = 0.5;
 
-	return (wdl_w + wdl_d / 2.0) / 1000.0;
+	const double wdl_w = FromSF::win_rate_model_double(value, ply);
+	const double wdl_l = FromSF::win_rate_model_double(-value, ply);
+	const double wdl_d = wdl_total - wdl_w - wdl_l;
+
+	return (wdl_w + wdl_d * draw_score) / wdl_total;
 }
 
 // A function that converts the evaluation value to the winning rate [0,1]
 double winning_percentage(double value, int ply)
 {
-	if (LearnerConfig::use_wdl) {
+	if (LearnerConfig::use_wdl)
+	{
 		return winning_percentage_wdl(value, ply);
 	}
-	else {
+	else
+	{
 		return winning_percentage(value);
 	}
 }
 
-double calc_cross_entropy_of_winning_percentage(double deep_win_rate, double shallow_eval, int ply)
+double calc_cross_entropy_of_winning_percentage(
+	double deep_win_rate,
+	double shallow_eval,
+	int ply)
 {
-	double p = deep_win_rate;
-	double q = winning_percentage(shallow_eval, ply);
-	return -p * std::log(q) - (1 - p) * std::log(1 - q);
+	const double p = deep_win_rate;
+	const double q = winning_percentage(shallow_eval, ply);
+	return -p * std::log(q) - (1.0 - p) * std::log(1.0 - q);
 }
 
-double calc_d_cross_entropy_of_winning_percentage(double deep_win_rate, double shallow_eval, int ply)
+double calc_d_cross_entropy_of_winning_percentage(
+	double deep_win_rate,
+	double shallow_eval,
+	int ply)
 {
 	constexpr double epsilon = 0.000001;
-	double y1 = calc_cross_entropy_of_winning_percentage(deep_win_rate, shallow_eval          , ply);
-	double y2 = calc_cross_entropy_of_winning_percentage(deep_win_rate, shallow_eval + epsilon, ply);
 
-	// Divide by the winning_probability_coefficient to match scale with the sigmoidal win rate
+	const double y1 = calc_cross_entropy_of_winning_percentage(
+		deep_win_rate, shallow_eval, ply);
+
+	const double y2 = calc_cross_entropy_of_winning_percentage(
+		deep_win_rate, shallow_eval + epsilon, ply);
+
+	// Divide by the winning_probability_coefficient to
+	// match scale with the sigmoidal win rate
 	return ((y2 - y1) / epsilon) / LearnerConfig::winning_probability_coefficient;
 }
 
@@ -176,14 +189,7 @@ double get_scaled_signal(double signal)
 double calculate_p(double teacher_signal, int ply)
 {
 	const double scaled_teacher_signal = get_scaled_signal(teacher_signal);
-
-	double p = scaled_teacher_signal;
-	if (LearnerConfig::convert_teacher_signal_to_winning_probability)
-	{
-		p = winning_percentage(scaled_teacher_signal, ply);
-	}
-
-	return p;
+	return winning_percentage(scaled_teacher_signal, ply);
 }
 
 double calculate_lambda(double teacher_signal)
@@ -235,45 +241,51 @@ double calc_grad(NNUEValue teacher_signal, NNUEValue shallow, const PackedSfenVa
 }
 
 // Calculate cross entropy during learning
-// The individual cross entropy of the win/loss term and win rate term of the elmo expression is returned to the arguments cross_entropy_eval and cross_entropy_win.
-void calc_cross_entropy(NNUEValue teacher_signal, NNUEValue shallow, const PackedSfenValue& psv,
-	double& cross_entropy_eval, double& cross_entropy_win, double& cross_entropy,
-	double& entropy_eval, double& entropy_win, double& entropy)
+// The individual cross entropy of the win/loss term and win
+// rate term of the elmo expression is returned
+// to the arguments cross_entropy_eval and cross_entropy_win.
+void calc_cross_entropy(
+	NNUEValue teacher_signal,
+	NNUEValue shallow,
+	const PackedSfenValue& psv,
+	double& cross_entropy_eval,
+	double& cross_entropy_win,
+	double& cross_entropy,
+	double& entropy_eval,
+	double& entropy_win,
+	double& entropy)
 {
-	// Training Formula · Issue #71 · nodchip/Stockfish https://github.com/nodchip/Stockfish/issues/71
-	double scaled_teacher_signal = teacher_signal;
-	// Normalize to [0.0, 1.0].
-	scaled_teacher_signal = (scaled_teacher_signal - LearnerConfig::src_score_min_value) / (LearnerConfig::src_score_max_value - LearnerConfig::src_score_min_value);
-	// Scale to [dest_score_min_value, dest_score_max_value].
-	scaled_teacher_signal = scaled_teacher_signal * (LearnerConfig::dest_score_max_value - LearnerConfig::dest_score_min_value) + LearnerConfig::dest_score_min_value;
-
 	// Teacher winning probability.
-	double p = scaled_teacher_signal;
-	if (LearnerConfig::convert_teacher_signal_to_winning_probability) {
-		p = winning_percentage(scaled_teacher_signal);
-	}
-	const double q /* eval_winrate    */ = winning_percentage(shallow);
-	const double t = double(psv.game_result + 1) / 2;
+	const double q = winning_percentage(shallow, psv.gamePly);
+	const double p = calculate_p(teacher_signal, psv.gamePly);
+	const double t = calculate_t(psv.game_result);
+	const double lambda = calculate_lambda(teacher_signal);
 
 	constexpr double epsilon = 0.000001;
 
-	// If the evaluation value in deep search exceeds ELMO_LAMBDA_LIMIT, apply ELMO_LAMBDA2 instead of ELMO_LAMBDA.
-	const double lambda = (abs(teacher_signal) >= ELMO_LAMBDA_LIMIT) ? ELMO_LAMBDA2 : ELMO_LAMBDA;
-
 	const double m = (1.0 - lambda) * t + lambda * p;
 
-	cross_entropy_eval = (-p * std::log(q + epsilon) - (1.0 - p) * std::log(1.0 - q + epsilon));
-	cross_entropy_win = (-t * std::log(q + epsilon) - (1.0 - t) * std::log(1.0 - q + epsilon));
-	entropy_eval = (-p * std::log(p + epsilon) - (1.0 - p) * std::log(1.0 - p + epsilon));
-	entropy_win = (-t * std::log(t + epsilon) - (1.0 - t) * std::log(1.0 - t + epsilon));
-	cross_entropy = (-m * std::log(q + epsilon) - (1.0 - m) * std::log(1.0 - q + epsilon));
-	entropy = (-m * std::log(m + epsilon) - (1.0 - m) * std::log(1.0 - m + epsilon));
+	cross_entropy_eval =
+		(-p * std::log(q + epsilon) - (1.0 - p) * std::log(1.0 - q + epsilon));
+	cross_entropy_win =
+		(-t * std::log(q + epsilon) - (1.0 - t) * std::log(1.0 - q + epsilon));
+	entropy_eval =
+		(-p * std::log(p + epsilon) - (1.0 - p) * std::log(1.0 - p + epsilon));
+	entropy_win =
+		(-t * std::log(t + epsilon) - (1.0 - t) * std::log(1.0 - t + epsilon));
+
+	cross_entropy =
+		(-m * std::log(q + epsilon) - (1.0 - m) * std::log(1.0 - q + epsilon));
+	entropy =
+		(-m * std::log(m + epsilon) - (1.0 - m) * std::log(1.0 - m + epsilon));
 }
 
 // Class to generate sfen with multiple threads
 struct LearnerThink: public MultiThink
 {
-	LearnerThink(SfenReader& sr_):sr(sr_),stop_flag(false), save_only_once(false)
+	LearnerThink(SfenReader& sr_, const std::string& seed) : 
+	   MultiThink(seed),
+	   sr(sr_),stop_flag(false), save_only_once(false)
 	{
 		learn_sum_cross_entropy_eval = 0.0;
 		learn_sum_cross_entropy_win = 0.0;
@@ -309,10 +321,7 @@ struct LearnerThink: public MultiThink
 	// Mini batch size size. Be sure to set it on the side that uses this class.
 	uint64_t mini_batch_size = 1000*1000;
 
-	bool stop_flag;
-
-	// Discount rate
-	double discount_rate;
+	std::atomic<bool> stop_flag;
 
 	// Option to exclude early stage from learning
 	int reduction_gameply;
@@ -348,7 +357,6 @@ struct LearnerThink: public MultiThink
 
 	uint64_t eval_save_interval;
 	uint64_t loss_output_interval;
-	uint64_t mirror_percentage;
 
 	// Loss calculation.
 	// done: Number of phases targeted this time
@@ -375,13 +383,8 @@ NNUEValue LearnerThink::get_shallow_value(Position& task_pos, size_t thread_id)
 
 	const auto rootColor = task_pos.side_to_move();
 
-	for (auto m : pv)
-	{
-		if ( !applyMove(p2,m,false)){
-			break;
-		}
-		// Since the value of evaluate in leaf is used, the difference is updated.
-		NNUE::update_eval(p2);
+	for (auto m : pv){
+		if ( !applyMove(p2,m,false)) break;
 	}
 
 	EvalData data;
@@ -415,7 +418,6 @@ void LearnerThink::calc_loss(size_t thread_id, uint64_t done)
 	std::cout << now_string() << "PROGRESS: "  << ", ";
 	std::cout << sr.total_done << " sfens";
 	std::cout << ", iteration " << epoch;
-	std::cout << ", eta = " << NNUE::get_eta() << std::endl;
 
 	// For calculation of verification data loss
 	std::atomic<double> test_sum_cross_entropy_eval, test_sum_cross_entropy_win, test_sum_cross_entropy;
@@ -442,7 +444,7 @@ void LearnerThink::calc_loss(size_t thread_id, uint64_t done)
     readFEN(startPosition,pos,true);
 	EvalData data;
 	Searcher & context = *ThreadPool::instance().at(thread_id);
-    std::cout << now_string() << "hirate eval = " << eval(pos,data,context) << std::endl;
+    std::cout << ", hirate eval = " << eval(pos,data,context) << std::endl;
 	}
 
 	// It's better to parallelize here, but it's a bit
@@ -478,7 +480,7 @@ void LearnerThink::calc_loss(size_t thread_id, uint64_t done)
 		{
 			// Does C++ properly capture a new ps instance for each loop?.
             Position task_pos;
-			if (set_from_packed_sfen(task_pos,*const_cast<PackedSfen*>(&ps.sfen), false) != 0){
+			if (set_from_packed_sfen(task_pos,*const_cast<PackedSfen*>(&ps.sfen)) != 0){
 				// Unfortunately, as an sfen for rmse calculation, an invalid sfen was drawn.
 				std::cout << "Error! : illegal packed sfen " << GetFEN(task_pos) << std::endl;
 			}
@@ -551,8 +553,9 @@ void LearnerThink::calc_loss(size_t thread_id, uint64_t done)
 	task_dispatcher.on_idle(thread_id);
 
 	// wait for all tasks to complete
-	while (task_count)
+	while (task_count){
 		sleep(1);
+	}
 
 	latest_loss_sum += test_sum_cross_entropy - test_sum_entropy;
 	latest_loss_count += sr.sfen_for_mse.size();
@@ -645,7 +648,7 @@ void LearnerThink::thread_worker(size_t thread_id)
 
 					// Lock the evaluation function so that it is not used during updating.
 					std::lock_guard<std::shared_timed_mutex> write_lock(nn_mutex);
-					NNUE::UpdateParameters(epoch);
+					NNUE::UpdateParameters();
 				}
 				++epoch;
 
@@ -717,13 +720,14 @@ void LearnerThink::thread_worker(size_t thread_id)
 		if (ps.gamePly < prng.rand(reduction_gameply))
 			goto RetryRead;
 
-		const bool mirror = prng.rand(100) < mirror_percentage;
 	    Position pos;
-		if (set_from_packed_sfen(pos,ps.sfen,mirror) != 0)
+		if (set_from_packed_sfen(pos,ps.sfen) != 0)
 		{
 			std::cout << "Error! : illegal packed sfen = " << GetFEN(pos) << std::endl;
 			goto RetryRead;
 		}
+
+		auto rootColor = pos.side_to_move();
 
 		// There is a possibility that all the pieces are blocked and stuck.
         MoveList moves;
@@ -734,15 +738,16 @@ void LearnerThink::thread_worker(size_t thread_id)
 		// Evaluation value of shallow search (qsearch)
 		DepthType seldepth = 0;
 		PVList pv;
-		/*auto r =*/ context.qsearchNoPruning(-MATE,MATE,pos,0,seldepth,&pv);
+		auto r = context.qsearchNoPruning(-MATE,MATE,pos,0,seldepth,&pv);
+
+        if ( isMateScore(r))
+			goto RetryRead;
 
 		// Evaluation value of deep search
 		auto deep_value = (NNUEValue)ps.score;
 
 		// I feel that the mini batch has a better gradient.
 		// Go to the leaf node as it is, add only to the gradient array, and later try AdaGrad at the time of rmse aggregation.
-
-		auto rootColor = pos.side_to_move();
 
 		// A helper function that adds the gradient to the current phase.
 		auto pos_add_grad = [&]() {
@@ -777,17 +782,10 @@ void LearnerThink::thread_worker(size_t thread_id)
 		bool illegal_move = false;
 		for (auto m : pv)
 		{
-			// Processing when adding the gradient to the node on each PV.
-			// If discount_rate is 0, this process is not performed.
-			if (discount_rate != 0)
-				pos_add_grad();
-
             if ( !applyMove(pos,m,false)){
 				illegal_move = true;
 				break;
 			}
-			// Since the value of evaluate in leaf is used, the difference is updated.
-			NNUE::update_eval(pos);
 		}
 
 		if (illegal_move) {
@@ -815,11 +813,13 @@ bool LearnerThink::save(bool is_final)
 		// Do not dig a subfolder because I want to save it only once.
 		NNUE::save_eval("");
 	}
-	else if (is_final) {
+	else if (is_final)
+	{
 		NNUE::save_eval("final");
 		return true;
 	}
-	else {
+	else
+	{
 		static int dir_number = 0;
 		const std::string dir_name = std::to_string(dir_number++);
 		NNUE::save_eval(dir_name);
@@ -829,29 +829,32 @@ bool LearnerThink::save(bool is_final)
 			const double latest_loss = latest_loss_sum / latest_loss_count;
 			latest_loss_sum = 0.0;
 			latest_loss_count = 0;
-			std::cout << now_string() << "loss: " << latest_loss;
-			if (latest_loss < best_loss) {
+			std::cout << "loss: " << latest_loss;
+			if (latest_loss < best_loss)
+			{
 				std::cout << " < best (" << best_loss << "), accepted" << std::endl;
 				best_loss = latest_loss;
 				best_nn_directory = Path::Combine("evalsave", dir_name);
 				trials = newbob_num_trials;
-			} else {
+			}
+			else
+			{
 				std::cout << " >= best (" << best_loss << "), rejected" << std::endl;
-				if (best_nn_directory.empty()) {
-					std::cout << "WARNING: no improvement from initial model" << std::endl;
-				} else {
-					std::cout << "restoring parameters from " << best_nn_directory << std::endl;
-					NNUE::RestoreParameters(best_nn_directory);
-				}
-				if (--trials > 0 && !is_final) {
-					std::cout << "reducing learning rate scale from " << newbob_scale
-					          << " to " << (newbob_scale * newbob_decay)
-					          << " (" << trials << " more trials)" << std::endl;
-					newbob_scale *= newbob_decay;
-					NNUE::SetGlobalLearningRateScale(newbob_scale);
+				best_nn_directory = Path::Combine("evalsave", dir_name);
+
+				if (--trials > 0 && !is_final)
+				{
+					std::cout
+						<< "reducing learning rate from " << NNUE::global_learning_rate
+						<< " to " << (NNUE::global_learning_rate * newbob_decay)
+						<< " (" << trials << " more trials)" << std::endl;
+
+					NNUE::global_learning_rate *= newbob_decay;
 				}
 			}
-			if (trials == 0) {
+
+			if (trials == 0)
+			{
 				std::cout << "converged" << std::endl;
 				return true;
 			}
@@ -860,319 +863,15 @@ bool LearnerThink::save(bool is_final)
 	return false;
 }
 
-// Shuffle_files(), shuffle_files_quick() subcontracting, writing part.
-// output_file_name: Name of the file to write
-// prng: random number
-// afs: fstream of each teacher phase file
-// a_count: The number of teacher positions inherent in each file.
-void shuffle_write(const std::string& output_file_name , FromSF::PRNG& prng , std::vector<std::fstream>& afs , std::vector<uint64_t>& a_count)
-{
-	uint64_t total_sfen_count = 0;
-	for (auto c : a_count)
-		total_sfen_count += c;
-
-	// number of exported phases
-	uint64_t write_sfen_count = 0;
-
-	// Output the progress on the screen for each phase.
-	const uint64_t buffer_size = 10000000;
-
-	auto print_status = [&]()
-	{
-		// Output progress every 10M phase or when all writing is completed
-		if (((write_sfen_count % buffer_size) == 0) ||
-			(write_sfen_count == total_sfen_count))
-			std::cout << now_string() << write_sfen_count << " / " << total_sfen_count << std::endl;
-	};
-
-
-	std::cout << now_string() << std::endl <<  "write : " << output_file_name << std::endl;
-
-	std::fstream fs(output_file_name, std::ios::out | std::ios::binary);
-
-	// total teacher positions
-	uint64_t sum = 0;
-	for (auto c : a_count)
-		sum += c;
-
-	while (sum != 0)
-	{
-		auto r = prng.rand(sum);
-
-		// Aspects stored in fs[0] file ... Aspects stored in fs[1] file ...
-		//Think of it as a series like, and determine in which file r is pointing.
-		// The contents of the file are shuffled, so you can take the next element from that file.
-		// Each file has a_count[x] phases, so this process can be written as follows.
-
-		uint64_t n = 0;
-		while (a_count[n] <= r)
-			r -= a_count[n++];
-
-		// This confirms n. Before you forget it, reduce the remaining number.
-
-		--a_count[n];
-		--sum;
-
-		PackedSfenValue psv;
-		// It's better to read and write all at once until the performance is not so good...
-		if (afs[n].read((char*)&psv, sizeof(PackedSfenValue)))
-		{
-			fs.write((char*)&psv, sizeof(PackedSfenValue));
-			++write_sfen_count;
-			print_status();
-		}
-	}
-	print_status();
-	fs.close();
-	std::cout << now_string() << "done!" << std::endl;
-}
-
-// Subcontracting the teacher shuffle "learn shuffle" command.
-// output_file_name: name of the output file where the shuffled teacher positions will be written
-void shuffle_files(const std::vector<std::string>& filenames , const std::string& output_file_name , uint64_t buffer_size )
-{
-	// The destination folder is
-	// tmp/ for temporary writing
-
-	// Temporary file is written to tmp/ folder for each buffer_size phase.
-	// For example, if buffer_size = 20M, you need a buffer of 20M*40bytes = 800MB.
-	// In a PC with a small memory, it would be better to reduce this.
-	// However, if the number of files increases too much, it will not be possible to open at the same time due to OS restrictions.
-	// There should have been a limit of 512 per process on Windows, so you can open here as 500,
-	// The current setting is 500 files x 20M = 10G = 10 billion phases.
-
-	PSVector buf;
-	buf.resize(buffer_size);
-	// ↑ buffer, a marker that indicates how much you have used
-	uint64_t buf_write_marker = 0;
-
-	// File name to write (incremental counter because it is a serial number)
-	uint64_t write_file_count = 0;
-
-	// random number to shuffle
-	// Do not use std::random_device().  Because it always the same integers on MinGW.
-	FromSF::PRNG prng(std::chrono::system_clock::now().time_since_epoch().count());
-
-	// generate the name of the temporary file
-	auto make_filename = [](uint64_t i)
-	{
-		return "tmp/" + std::to_string(i) + ".bin";
-	};
-
-	// Exported files in tmp/ folder, number of teacher positions stored in each
-	std::vector<uint64_t> a_count;
-
-	auto write_buffer = [&](uint64_t size)
-	{
-		// shuffle from buf[0] to buf[size-1]
-		for (uint64_t i = 0; i < size; ++i)
-			std::swap(buf[i], buf[(uint64_t)(prng.rand(size - i) + i)]);
-
-		// write to a file
-		std::fstream fs;
-		fs.open(make_filename(write_file_count++), std::ios::out | std::ios::binary);
-		fs.write((char*)&buf[0], size * sizeof(PackedSfenValue));
-		fs.close();
-		a_count.push_back(size);
-
-		buf_write_marker = 0;
-		std::cout << ".";
-	};
-
-	Dependency::mkdir("tmp");
-
-	// Shuffle and export as a 10M phase shredded file.
-	for (auto filename : filenames)
-	{
-		std::fstream fs(filename, std::ios::in | std::ios::binary);
-		std::cout << std::endl << "open file = " << filename;
-		while (fs.read((char*)&buf[buf_write_marker], sizeof(PackedSfenValue)))
-			if (++buf_write_marker == buffer_size)
-				write_buffer(buffer_size);
-
-		// Read in units of sizeof(PackedSfenValue),
-		// Ignore the last remaining fraction. (Fails in fs.read, so exit while)
-		// (The remaining fraction seems to be half-finished data that was created because it was stopped halfway during teacher generation.)
-
-	}
-
-	if (buf_write_marker != 0)
-		write_buffer(buf_write_marker);
-
-	// Only shuffled files have been written write_file_count.
-	// As a second pass, if you open all of them at the same time, select one at random and load one phase at a time
-	// Now you have shuffled.
-
-	// Original file for shirt full + tmp file + file to write requires 3 times the storage capacity of the original file.
-	// 1 billion SSD is not enough for shuffling because it is 400GB for 10 billion phases.
-	// If you want to delete (or delete by hand) the original file at this point after writing to tmp,
-	// The storage capacity is about twice that of the original file.
-	// So, maybe we should have an option to delete the original file.
-
-	// Files are opened at the same time. It is highly possible that this will exceed FOPEN_MAX.
-	// In that case, rather than adjusting buffer_size to reduce the number of files.
-
-	std::vector<std::fstream> afs;
-	for (uint64_t i = 0; i < write_file_count; ++i)
-		afs.emplace_back(std::fstream(make_filename(i),std::ios::in | std::ios::binary));
-
-	// Throw to the subcontract function and end.
-	shuffle_write(output_file_name, prng, afs, a_count);
-}
-
-// Subcontracting the teacher shuffle "learn shuffleq" command.
-// This is written in 1 pass.
-// output_file_name: name of the output file where the shuffled teacher positions will be written
-void shuffle_files_quick(const std::vector<std::string>& filenames, const std::string& output_file_name)
-{
-	// random number to shuffle
-	// Do not use std::random_device().  Because it always the same integers on MinGW.
-	FromSF::PRNG prng(std::chrono::system_clock::now().time_since_epoch().count());
-
-	// number of files
-	size_t file_count = filenames.size();
-
-	// Number of teacher positions stored in each file in filenames
-	std::vector<uint64_t> a_count(file_count);
-
-	// Count the number of teacher aspects in each file.
-	std::vector<std::fstream> afs(file_count);
-
-	for (size_t i = 0; i <file_count ;++i)
-	{
-		auto filename = filenames[i];
-		auto& fs = afs[i];
-
-		fs.open(filename, std::ios::in | std::ios::binary);
-		fs.seekg(0, std::fstream::end);
-		uint64_t eofPos = (uint64_t)fs.tellg();
-		fs.clear(); // Otherwise, the next seek may fail.
-		fs.seekg(0, std::fstream::beg);
-		uint64_t begPos = (uint64_t)fs.tellg();
-		uint64_t file_size = eofPos - begPos;
-		uint64_t sfen_count = file_size / sizeof(PackedSfenValue);
-		a_count[i] = sfen_count;
-
-		// Output the number of sfen stored in each file.
-		std::cout << filename << " = " << sfen_count << " sfens." << std::endl;
-	}
-
-	// Since we know the file size of each file,
-	// open them all at once (already open),
-	// Select one at a time and load one phase at a time
-	// Now you have shuffled.
-
-	// Throw to the subcontract function and end.
-	shuffle_write(output_file_name, prng, afs, a_count);
-}
-
-int read_file_to_memory(std::string filename, std::function<void* (uint64_t)> callback_func)
-{
-    std::fstream fs(filename, std::ios::in | std::ios::binary);
-    if (fs.fail())
-        return 1;
-
-    fs.seekg(0, std::fstream::end);
-    uint64_t eofPos = (uint64_t)fs.tellg();
-    fs.clear(); // Otherwise the next seek may fail.
-    fs.seekg(0, std::fstream::beg);
-    uint64_t begPos = (uint64_t)fs.tellg();
-    uint64_t file_size = eofPos - begPos;
-    //std::cout << "filename = " << filename << " , file_size = " << file_size << endl;
-
-    // I know the file size, so call callback_func to get a buffer for this,
-    // Get the pointer.
-    void* ptr = callback_func(file_size);
-
-    // If the buffer could not be secured, or if the file size is different from the expected file size,
-    // It is supposed to return nullptr. At this time, reading is interrupted and an error is returned.
-    if (ptr == nullptr)
-        return 2;
-
-    // read in pieces
-
-    const uint64_t block_size = 1024 * 1024 * 1024; // number of elements to read in one read (1GB)
-    for (uint64_t pos = 0; pos < file_size; pos += block_size)
-    {
-        // size to read this time
-        uint64_t read_size = (pos + block_size < file_size) ? block_size : (file_size - pos);
-        fs.read((char*)ptr + pos, read_size);
-
-        // Read error occurred in the middle of the file.
-        if (fs.fail())
-            return 2;
-
-        //cout << ".";
-    }
-    fs.close();
-
-    return 0;
-}
-
-int write_memory_to_file(std::string filename, void* ptr, uint64_t size)
-{
-    std::fstream fs(filename, std::ios::out | std::ios::binary);
-    if (fs.fail())
-        return 1;
-
-    const uint64_t block_size = 1024 * 1024 * 1024; // number of elements to write in one write (1GB)
-    for (uint64_t pos = 0; pos < size; pos += block_size)
-    {
-        // Memory size to write this time
-        uint64_t write_size = (pos + block_size < size) ? block_size : (size - pos);
-        fs.write((char*)ptr + pos, write_size);
-        //cout << ".";
-    }
-    fs.close();
-    return 0;
-}
-
-// Subcontracting the teacher shuffle "learn shufflem" command.
-// Read the whole memory and write it out with the specified file name.
-void shuffle_files_on_memory(const std::vector<std::string>& filenames,const std::string output_file_name)
-{
-	PSVector buf;
-
-	for (auto filename : filenames)
-	{
-		std::cout << "read : " << filename << std::endl;
-		read_file_to_memory(filename, [&buf](uint64_t size) {
-			assert((size % sizeof(PackedSfenValue)) == 0);
-			// Expand the buffer and read after the last end.
-			uint64_t last = buf.size();
-			buf.resize(last + size / sizeof(PackedSfenValue));
-			return (void*)&buf[last];
-		});
-	}
-
-	// shuffle from buf[0] to buf[size-1]
-	// Do not use std::random_device().  Because it always the same integers on MinGW.
-	FromSF::PRNG prng(std::chrono::system_clock::now().time_since_epoch().count());
-	uint64_t size = (uint64_t)buf.size();
-	std::cout << "shuffle buf.size() = " << size << std::endl;
-	for (uint64_t i = 0; i < size; ++i)
-		std::swap(buf[i], buf[(uint64_t)(prng.rand(size - i) + i)]);
-
-	std::cout << "write : " << output_file_name << std::endl;
-
-	// If the file to be written exceeds 2GB, it cannot be written in one shot with fstream::write, so use wrapper.
-	write_memory_to_file(output_file_name, (void*)&buf[0], (uint64_t)sizeof(PackedSfenValue)*(uint64_t)buf.size());
-
-	std::cout << "..shuffle_on_memory done." << std::endl;
-}
-
-
 // Learning from the generated game record
 void learn(std::istringstream& is)
 {
-	auto thread_num = DynamicConfig::threads;
-	SfenReader sr(thread_num);
+	const auto thread_num = DynamicConfig::threads;
 
-	LearnerThink learn_think(sr);
 	std::vector<std::string> filenames;
 
 	// mini_batch_size 1M aspect by default. This can be increased.
-	auto mini_batch_size = 1000*1000;
+	auto mini_batch_size =  1000 * 1000 * 1;
 
 	// Number of loops (read the game record file this number of times)
 	int loop = 1;
@@ -1182,54 +881,30 @@ void learn(std::istringstream& is)
 
 	std::string target_dir;
 
-	// If 0, it will be the default value.
-	double eta1 = 0.0;
-	double eta2 = 0.0;
-	double eta3 = 0.0;
-	uint64_t eta1_epoch = 0; // eta2 is not applied by default
-	uint64_t eta2_epoch = 0; // eta3 is not applied by default
-
-	// normal shuffle
-	bool shuffle_normal = false;
-	uint64_t buffer_size = 20000000;
-	// fast shuffling assuming each file is shuffled
-	bool shuffle_quick = false;
-	// A function to read the entire file in memory and shuffle it. (Requires file size memory)
-	bool shuffle_on_memory = false;
-    bool interpolate_eval = 0;
-	bool check_invalid_fen = false;
-	bool check_illegal_move = false;
-	// convert teacher in pgn-extract format to Yaneura King's bin
-	bool pgn_eval_side_to_move = false;
-	bool convert_no_eval_fens_as_score_zero = false;
-	// File name to write in those cases (default is "shuffled_sfen.bin")
-	std::string output_file_name = "shuffled_sfen.bin";
-
-	// If the absolute value of the evaluation value in the deep search of the teacher phase exceeds this value, that phase is discarded.
+    // If the absolute value of the evaluation value
+	// in the deep search of the teacher phase exceeds this value,
+	// that phase is discarded.
 	int eval_limit = 32000;
 
 	// Flag to save the evaluation function file only once near the end.
 	bool save_only_once = false;
 
-	// Shuffle about what you are pre-reading on the teacher aspect. (Shuffle of about 10 million phases)
+	// Shuffle about what you are pre-reading on the teacher aspect.
+	// (Shuffle of about 10 million phases)
 	// Turn on if you want to pass a pre-shuffled file.
 	bool no_shuffle = false;
+
+	NNUE::global_learning_rate = 1.0;
 
 	// elmo lambda
 	ELMO_LAMBDA = 0.33;
 	ELMO_LAMBDA2 = 0.33;
 	ELMO_LAMBDA_LIMIT = 32000;
 
-	// Discount rate. If this is set to a value other than 0, the slope will be added even at other than the PV termination. (At that time, apply this discount rate)
-	double discount_rate = 0;
-
 	// if (gamePly <rand(reduction_gameply)) continue;
 	// An option to exclude the early stage from the learning target moderately like
 	// If set to 1, rand(1)==0, so nothing is excluded.
 	int reduction_gameply = 1;
-
-	// Optional item that does not let you learn KK/KKP/KPP/KPPP
-	std::array<bool,4> freeze = {};
 
 	uint64_t nn_batch_size = 1000;
 	double newbob_decay = 1.0;
@@ -1238,9 +913,9 @@ void learn(std::istringstream& is)
 
 	uint64_t eval_save_interval = 1000000000ULL;
 	uint64_t loss_output_interval = 0;
-	uint64_t mirror_percentage = 0;
 
 	std::string validation_set_file_name;
+	std::string seed;
 
 	// Assume the filenames are staggered.
 	while (true)
@@ -1271,27 +946,23 @@ void learn(std::istringstream& is)
 		else if (option == "batchsize") is >> mini_batch_size;
 
 		// learning rate
-		else if (option == "eta")        is >> eta1;
-		else if (option == "eta1")       is >> eta1; // alias
-		else if (option == "eta2")       is >> eta2;
-		else if (option == "eta3")       is >> eta3;
-		else if (option == "eta1_epoch") is >> eta1_epoch;
-		else if (option == "eta2_epoch") is >> eta2_epoch;
-		else if (option == "use_draw_in_training" || option == "use_draw_games_in_training") is >> LearnerConfig::use_draw_games_in_training;
-		else if (option == "use_draw_in_validation" || option == "use_draw_games_in_validation") is >> LearnerConfig::use_draw_games_in_validation;
-		else if (option == "winning_probability_coefficient") is >> LearnerConfig::winning_probability_coefficient;
-		else if (option == "discount_rate") is >> discount_rate;
-		else if (option == "use_wdl") is >> LearnerConfig::use_wdl;
-		else if (option == "freeze_kk")    is >> freeze[0];
-		else if (option == "freeze_kkp")   is >> freeze[1];
-		else if (option == "freeze_kpp")   is >> freeze[2];
-#if defined(EVAL_KPPT) || defined(EVAL_KPP_KKPT) || defined(EVAL_KPP_KKPT_FV_VAR) || defined(EVAL_NABLA)
+		else if (option == "lr")        is >> NNUE::global_learning_rate;
 
-#elif defined(EVAL_KPPPT) || defined(EVAL_KPPP_KKPT) || defined(EVAL_HELICES)
-		else if (option == "freeze_kppp")  is >> freeze[3];
-#elif defined(EVAL_KKPP_KKPT) || defined(EVAL_KKPPT)
-		else if (option == "freeze_kkpp")  is >> freeze[3];
-#endif
+		// Accept also the old option name.
+		else if (option == "use_draw_in_training"
+				|| option == "use_draw_games_in_training")
+			is >> LearnerConfig::use_draw_games_in_training;
+
+		// Accept also the old option name.
+		else if (option == "use_draw_in_validation"
+				|| option == "use_draw_games_in_validation")
+			is >> LearnerConfig::use_draw_games_in_validation;
+
+		else if (option == "winning_probability_coefficient") is >> LearnerConfig::winning_probability_coefficient;
+
+		// Using WDL with win rate model instead of sigmoid
+		else if (option == "use_wdl") is >> LearnerConfig::use_wdl;
+
 
 		// LAMBDA
 		else if (option == "lambda")       is >> ELMO_LAMBDA;
@@ -1300,14 +971,6 @@ void learn(std::istringstream& is)
 
 		else if (option == "reduction_gameply") is >> reduction_gameply;
 
-		// shuffle related
-		else if (option == "shuffle")	shuffle_normal = true;
-		else if (option == "buffer_size") is >> buffer_size;
-		else if (option == "shuffleq")	shuffle_quick = true;
-		else if (option == "shufflem")	shuffle_on_memory = true;
-		else if (option == "output_file_name") is >> output_file_name;
-
-		else if (option == "eval_limit") is >> eval_limit;
 		else if (option == "save_only_once") save_only_once = true;
 		else if (option == "no_shuffle") no_shuffle = true;
 
@@ -1318,27 +981,22 @@ void learn(std::istringstream& is)
 
 		else if (option == "eval_save_interval") is >> eval_save_interval;
 		else if (option == "loss_output_interval") is >> loss_output_interval;
-		else if (option == "mirror_percentage") is >> mirror_percentage;
 		else if (option == "validation_set_file_name") is >> validation_set_file_name;
 
-		// Rabbit convert related
-		else if (option == "interpolate_eval") is >> interpolate_eval;
-		else if (option == "check_invalid_fen") is >> check_invalid_fen;
-		else if (option == "check_illegal_move") is >> check_illegal_move;
-		else if (option == "pgn_eval_side_to_move") is >> pgn_eval_side_to_move;
-		else if (option == "convert_no_eval_fens_as_score_zero") is >> convert_no_eval_fens_as_score_zero;
 		else if (option == "src_score_min_value") is >> LearnerConfig::src_score_min_value;
 		else if (option == "src_score_max_value") is >> LearnerConfig::src_score_max_value;
 		else if (option == "dest_score_min_value") is >> LearnerConfig::dest_score_min_value;
 		else if (option == "dest_score_max_value") is >> LearnerConfig::dest_score_max_value;
-		else if (option == "convert_teacher_signal_to_winning_probability") is >> LearnerConfig::convert_teacher_signal_to_winning_probability;
-
+		else if (option == "seed") is >> seed;
 		// Otherwise, it's a filename.
 		else
 			filenames.push_back(option);
 	}
+
 	if (loss_output_interval == 0)
+	{
 		loss_output_interval = mini_batch_size;
+	}
 
 	std::cout << "learn command , ";
 
@@ -1347,71 +1005,35 @@ void learn(std::istringstream& is)
 	std::cout << "Warning! OpenMP disabled." << std::endl;
 #endif
 
+	SfenReader sr(thread_num, seed);
+	LearnerThink learn_think(sr, seed);
+
 	// Display learning game file
 	if (target_dir != "")
 	{
 		std::string kif_base_dir = Path::Combine(base_dir, target_dir);
 
-		// Remove this folder. Keep it relative to base_dir.
-		auto ends_with = [](std::string const & value, std::string const & ending)
-		{
-			if (ending.size() > value.size()) return false;
-			return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
-		};
-
-		// It can't be helped, so read it using dirent.h.
-		DIR *dp; // pointer to directory
-		dirent* entry; // entry point returned by readdir()
-
-		dp = opendir(kif_base_dir.c_str());
-		if (dp != NULL)
-		{
-			do {
-				entry = readdir(dp);
-				// Only list files ending with ".bin"
-				// →I hate this restriction when generating files with serial numbers...
-				if (entry != NULL  && ends_with(entry->d_name, ".bin")  )
-				{
-					//cout << entry->d_name << endl;
-					filenames.push_back(Path::Combine(target_dir, entry->d_name));
-				}
-			} while (entry != NULL);
-			closedir(dp);
-		}
+		namespace sys = std::filesystem;
+		sys::path p(kif_base_dir); // Origin of enumeration
+		std::for_each(sys::directory_iterator(p), sys::directory_iterator(),
+			[&](const sys::path& path) {
+				if (sys::is_regular_file(path))
+					filenames.push_back(Path::Combine(target_dir, path.filename().generic_string()));
+			});
 	}
 
 	std::cout << "learn from ";
 	for (auto s : filenames)
 		std::cout << s << " , ";
+
 	std::cout << std::endl;
 	if (!validation_set_file_name.empty())
 	{
 		std::cout << "validation set  : " << validation_set_file_name << std::endl;
 	}
 
-	std::cout << "base dir        : " << base_dir   << std::endl;
+	std::cout << "base dir        : " << base_dir << std::endl;
 	std::cout << "target dir      : " << target_dir << std::endl;
-
-	// shuffle mode
-	if (shuffle_normal)
-	{
-		std::cout << "buffer_size     : " << buffer_size << std::endl;
-		std::cout << "shuffle mode.." << std::endl;
-		shuffle_files(filenames,output_file_name , buffer_size);
-		return;
-	}
-	if (shuffle_quick)
-	{
-		std::cout << "quick shuffle mode.." << std::endl;
-		shuffle_files_quick(filenames, output_file_name);
-		return;
-	}
-	if (shuffle_on_memory)
-	{
-		std::cout << "shuffle on memory.." << std::endl;
-		shuffle_files_on_memory(filenames,output_file_name);
-		return;
-	}
 
 	std::cout << "loop              : " << loop << std::endl;
 	std::cout << "eval_limit        : " << eval_limit << std::endl;
@@ -1420,35 +1042,40 @@ void learn(std::istringstream& is)
 
 	// Insert the file name for the number of loops.
 	for (int i = 0; i < loop; ++i)
-		// sfen reader, I'll read it in reverse order so I'll reverse it here. I'm sorry.
+	{
+		// sfen reader, I'll read it in reverse
+		// order so I'll reverse it here. I'm sorry.
 		for (auto it = filenames.rbegin(); it != filenames.rend(); ++it)
+		{
 			sr.filenames.push_back(Path::Combine(base_dir, *it));
+		}
+	}
 
-	std::cout << "Loss Function     : " << "Elmo method"     << std::endl;
-	std::cout << "mini-batch size   : " << mini_batch_size   << std::endl;
-	std::cout << "nn_batch_size     : " << nn_batch_size     << std::endl;
-	std::cout << "nn_options        : " << nn_options        << std::endl;
-	std::cout << "learning rate     : " << eta1 << " , " << eta2 << " , " << eta3 << std::endl;
-	std::cout << "eta_epoch         : " << eta1_epoch << " , " << eta2_epoch << std::endl;
+	std::cout << "Loss Function     : " << "ELMO_METHOD(WCSC27)" << std::endl;
+	std::cout << "mini-batch size   : " << mini_batch_size << std::endl;
+
+	std::cout << "nn_batch_size     : " << nn_batch_size << std::endl;
+	std::cout << "nn_options        : " << nn_options << std::endl;
+
+	std::cout << "learning rate     : " << NNUE::global_learning_rate << std::endl;
 	std::cout << "use_draw_games_in_training : " << LearnerConfig::use_draw_games_in_training << std::endl;
 	std::cout << "use_draw_games_in_validation : " << LearnerConfig::use_draw_games_in_validation << std::endl;
+
 	if (newbob_decay != 1.0) {
 		std::cout << "scheduling        : newbob with decay = " << newbob_decay
-		     << ", " << newbob_num_trials << " trials" << std::endl;
-	} else {
+			<< ", " << newbob_num_trials << " trials" << std::endl;
+	}
+	else {
 		std::cout << "scheduling        : default" << std::endl;
 	}
-	std::cout << "discount rate     : " << discount_rate     << std::endl;
 
 	// If reduction_gameply is set to 0, rand(0) will be divided by 0, so correct it to 1.
 	reduction_gameply = std::max(reduction_gameply, 1);
 	std::cout << "reduction_gameply : " << reduction_gameply << std::endl;
 
-	std::cout << "LAMBDA            : " << ELMO_LAMBDA       << std::endl;
-	std::cout << "LAMBDA2           : " << ELMO_LAMBDA2      << std::endl;
+	std::cout << "LAMBDA            : " << ELMO_LAMBDA << std::endl;
+	std::cout << "LAMBDA2           : " << ELMO_LAMBDA2 << std::endl;
 	std::cout << "LAMBDA_LIMIT      : " << ELMO_LAMBDA_LIMIT << std::endl;
-
-	std::cout << "mirror_percentage : " << mirror_percentage << std::endl;
 	std::cout << "eval_save_interval  : " << eval_save_interval << " sfens" << std::endl;
 	std::cout << "loss_output_interval: " << loss_output_interval << " sfens" << std::endl;
 
@@ -1456,35 +1083,38 @@ void learn(std::istringstream& is)
 	// various initialization
 	// -----------------------------------
 
-	std::cout << "init.." << std::endl;
+	std::cout << "init..." << std::endl;
 
 	// Read evaluation function parameters
 	NNUEWrapper::init_NNUE();
 
 	std::cout << "init_training.." << std::endl;
-	NNUE::InitializeTraining(eta1,eta1_epoch,eta2,eta2_epoch,eta3);
+	NNUE::InitializeTraining(seed);
 	NNUE::SetBatchSize(nn_batch_size);
 	NNUE::SetOptions(nn_options);
-
 	if (newbob_decay != 1.0 && !DynamicConfig::skipLoadingEval) {
-		learn_think.best_nn_directory = "Tourney"; // get the lastest nn.bin inside Tourney ?
+		// Save the current net to [EvalSaveDir]\original.
+		NNUE::save_eval("original");
+
+		// Set the folder above to best_nn_directory so that the trainer can
+		// resotre the network parameters from the original net file.
+		learn_think.best_nn_directory =
+			Path::Combine("evalsave", "original");
 	}
 
 	std::cout << "init done." << std::endl;
 
 	// Reflect other option settings.
-	learn_think.discount_rate = discount_rate;
 	learn_think.eval_limit = eval_limit;
 	learn_think.save_only_once = save_only_once;
 	learn_think.sr.no_shuffle = no_shuffle;
-	learn_think.freeze = freeze;
 	learn_think.reduction_gameply = reduction_gameply;
-	learn_think.newbob_scale = 1.0;
+
 	learn_think.newbob_decay = newbob_decay;
 	learn_think.newbob_num_trials = newbob_num_trials;
+
 	learn_think.eval_save_interval = eval_save_interval;
 	learn_think.loss_output_interval = loss_output_interval;
-	learn_think.mirror_percentage = mirror_percentage;
 
 	// Start a thread that loads the phase file in the background
 	// (If this is not started, mse cannot be calculated.)
@@ -1492,15 +1122,19 @@ void learn(std::istringstream& is)
 
 	learn_think.mini_batch_size = mini_batch_size;
 
-	if (validation_set_file_name.empty()) {
-	// Get about 10,000 data for mse calculation.
+	if (validation_set_file_name.empty())
+	{
+		// Get about 10,000 data for mse calculation.
 		sr.read_for_mse();
-	} else {
+	}
+	else
+	{
 		sr.read_validation_set(validation_set_file_name, eval_limit);
 	}
 
 	// Calculate rmse once at this point (timing of 0 sfen)
 	// sr.calc_rmse();
+
 	if (newbob_decay != 1.0) {
 		learn_think.calc_loss(0, -1);
 		learn_think.best_loss = learn_think.latest_loss_sum / learn_think.latest_loss_count;
@@ -1516,9 +1150,11 @@ void learn(std::istringstream& is)
 	// Start learning.
 	learn_think.go_think();
 
+	NNUE::FinalizeNet();
+
 	// Save once at the end.
 	learn_think.save(true);
-
 }
+
 
 #endif

@@ -14,9 +14,9 @@ namespace NNUE {
 
 namespace Features {
 
-// Orient a square according to perspective (rotates by 180 for black)
+// Orient a square according to perspective (flip rank for black)
 inline Square orient(Color perspective, Square s) {
-  return Square(int(s) ^ (bool(perspective) * 63));
+  return Square(int(s) ^ (bool(perspective) * Sq_h8));
 }
 
 // Find the index of the feature quantity from the ball position and PieceSquare
@@ -44,7 +44,7 @@ inline IndexType HalfRelativeKP<AssociatedKing>::MakeIndex(
 template <Side AssociatedKing>
 void HalfRelativeKP<AssociatedKing>::AppendActiveIndices(
     const Position& pos, Color perspective, IndexList* active) {
-  Square ksq = orient(perspective, pos.king[perspective]);
+  Square ksq = orient(perspective, pos.king[AssociatedKing == Side::kFriend ? perspective : ~perspective]);
   BitBoard bb = pos.occupancy() & ~(pos.whiteKing()|pos.blackKing());
   while (bb) {
     Square s = popBit(bb);
@@ -57,7 +57,7 @@ template <Side AssociatedKing>
 void HalfRelativeKP<AssociatedKing>::AppendChangedIndices(
     const Position& pos, Color perspective,
     IndexList* removed, IndexList* added) {
-  Square ksq = orient(perspective, pos.king[perspective]);
+  Square ksq = orient(perspective, pos.king[AssociatedKing == Side::kFriend ? perspective : ~perspective]);
   const auto& dp = pos.dirtyPiece();
   for (int i = 0; i < dp.dirty_num; ++i) {
     Piece pc = dp.piece[i];

@@ -33,7 +33,6 @@ namespace NNUEWrapper{
   extern int NNUEscaling;
 
   void Initialize();
-  void UpdateAccumulatorIfPossible(const Position& pos);
   // curently loaded network
   extern std::string eval_file_loaded;
 
@@ -42,7 +41,7 @@ namespace NNUEWrapper{
   void compute_scaling(int count = SCALINGCOUNT);
 
   ScoreType evaluate(const Position& pos);
-  bool  load_eval_file(const std::string& evalFile);
+  bool load_eval(std::istream& stream);
 
 } // nnue
 

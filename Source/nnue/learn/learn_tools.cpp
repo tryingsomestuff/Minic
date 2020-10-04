@@ -281,7 +281,7 @@ void sfen_pack(const Position & p, PackedSfen& sfen){
 }
 
 // If there is a problem with the passed phase and there is an error, non-zero is returned.
-int set_from_packed_sfen(Position &p, PackedSfen& sfen , bool mirror){
+int set_from_packed_sfen(Position &p, PackedSfen& sfen ){
 
     //std::cout << "+++++++++++++++++++++++++" << std::endl;
 
@@ -293,21 +293,10 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen , bool mirror){
 	p.c = (Color)stream.read_one_bit();
 
 	//std::cout << "color " << int(p.c) << std::endl;
-
-	// First the position of the kings
-	if (mirror){
-		for (auto c : {Co_White, Co_Black}){
-			const Square sq = FromSF::flip_file((Square)stream.read_n_bit(6));
-			p.board(sq) = c == Co_White ? P_wk : P_bk;
-			p.king[c] = sq;
-		}
-	}
-	else{
-		for (auto c : {Co_White, Co_Black}){
-			const Square sq = (Square)stream.read_n_bit(6);
-			p.board(sq) = (c == Co_White ? P_wk : P_bk);
-			p.king[c] = sq;
-		}
+	for (auto c : {Co_White, Co_Black}){
+		const Square sq = (Square)stream.read_n_bit(6);
+		p.board(sq) = (c == Co_White ? P_wk : P_bk);
+		p.king[c] = sq;
 	}
 
 	p.kingInit[Co_White] = p.king[Co_White];
@@ -321,9 +310,6 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen , bool mirror){
 		for (File f = File_a; f <= File_h; ++f){
 			auto sq = MakeSquare(f, r);
 			//std::cout << int(r) << " " << int(f) << " " << int(sq) << std::endl;
-			if (mirror) {
-				sq = FromSF::flip_file(sq);
-			}
 			Piece pc = P_none;
 
 			// skip already given kings
@@ -378,7 +364,6 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen , bool mirror){
 	// En passant square. 
 	if (stream.read_one_bit()) {
 		Square ep_square = static_cast<Square>(stream.read_n_bit(6));
-		if (mirror) ep_square = FromSF::flip_file(ep_square);
 		p.ep = ep_square;
 		///@todo ??
 		/*

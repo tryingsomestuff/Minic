@@ -103,13 +103,25 @@ namespace NNUE::Features {
         IndexListType removed[2], IndexListType added[2], bool reset[2]) {
 
       const auto& dp = pos.dirtyPiece();
-      if (dp.dirty_num == 0) return;
 
       for (Color perspective : { WHITE, BLACK }) {
-        reset[perspective] = false;
         switch (trigger) {
+          case TriggerEvent::kNone:
+            break;
           case TriggerEvent::kFriendKingMoved:
+            if (dp.dirty_num == 0) continue;
             reset[perspective] = dp.piece[0] == (perspective==Co_White ? P_wk : P_bk);
+            break;
+          case TriggerEvent::kEnemyKingMoved:
+            if (dp.dirty_num == 0) continue;
+            reset[perspective] = dp.piece[0] == (perspective==Co_Black ? P_wk : P_bk);
+            break;
+          case TriggerEvent::kAnyKingMoved:
+            if (dp.dirty_num == 0) continue;
+            reset[perspective] = std::abs(dp.piece[0]) == P_wk;
+            break;
+          case TriggerEvent::kAnyPieceMoved:
+            reset[perspective] = true;
             break;
           default:
             assert(false);

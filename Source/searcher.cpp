@@ -161,12 +161,12 @@ const unsigned long long int Searcher::ttSizePawn = 1024*32;
 
 #ifdef WITH_GENFILE
 void Searcher::writeToGenFile(const Position & p){
-    static std::map<int,Searcher *> coSearchers;
+    static std::map<int,std::unique_ptr<Searcher> > coSearchers; 
     static std::set<Hash> hashCache;
     if (!genFen || id() >= MAX_THREADS) return;
 
     if ( coSearchers.find(id()) == coSearchers.end()){
-       coSearchers[id()] = new Searcher(id()+MAX_THREADS);
+       coSearchers[id()] = std::unique_ptr<Searcher>(new Searcher(id()+MAX_THREADS));
        coSearchers[id()]->initPawnTable();
     }
 

@@ -13,40 +13,34 @@ struct Position;
 
 namespace NNUE {
 
-// Initialize learning
-void InitializeTraining(double eta1, uint64_t eta1_epoch,
-                        double eta2, uint64_t eta2_epoch, double eta3);
+// Learning rate scale
+extern double global_learning_rate;
 
-// set the number of samples in the mini-batch
-void SetBatchSize(uint64_t size);
+  // Initialize learning
+  void InitializeTraining(const std::string& seed);
 
-// set the learning rate scale
-void SetGlobalLearningRateScale(double scale);
+  // set the number of samples in the mini-batch
+  void SetBatchSize(uint64_t size);
 
-// Set options such as hyperparameters
-void SetOptions(const std::string& options);
+  // Set options such as hyperparameters
+  void SetOptions(const std::string& options);
 
-// Reread the evaluation function parameters for learning from the file
-void RestoreParameters(const std::string& dir_name);
+  // Reread the evaluation function parameters for learning from the file
+  void RestoreParameters(const std::string& dir_name);
 
 // Add 1 sample of learning data
-void AddExample(Position& pos, Color rootColor,
-                const PackedSfenValue& psv, double weight);
+  void AddExample(Position& pos, Color rootColor,
+  	const PackedSfenValue& psv, double weight);
 
-// update the evaluation function parameters
-void UpdateParameters(uint64_t epoch);
+  // update the evaluation function parameters
+  void UpdateParameters();
 
-// Check if there are any problems with learning
-void CheckHealth();
+  // Check if there are any problems with learning
+  void CheckHealth();
 
-// save net on disk
-void save_eval(std::string dir_name);
+  void FinalizeNet();
 
-// Proceed with the difference calculation if possible
-void update_eval(const Position& pos);
-
-// get the current eta
-double get_eta();
+  void save_eval(std::string suffix);
 
 }  // namespace NNUE
 

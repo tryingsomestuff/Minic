@@ -406,7 +406,7 @@ bool convert_plain(const std::vector<std::string>& filenames, const std::string&
 		while (true){
 			if (fs.read((char*)&p, sizeof(PackedSfenValue))) {
 				Position tpos; // fully empty position !
-				set_from_packed_sfen(tpos,p.sfen,false);
+				set_from_packed_sfen(tpos,p.sfen);
 				// write as plain text
 				ofs << "fen " << GetFEN(tpos) << std::endl;
 				ofs << "move " << ToString(FromSFMove(tpos,p.move)) << std::endl;
@@ -427,44 +427,5 @@ bool convert_plain(const std::vector<std::string>& filenames, const std::string&
 
 	return true;
 }
-
-/*
-
-LizardFish advices:
-1) You want at least 100m positions. And validation should be at least 2 ply deeper than training data
-2) up your eval save to the biggest you can manage. 100m? 250m? 500m? Depends on how many you have.
-3) reduce decay to 0.1. Gives maybe extra 10 elo.
-4) Test the final two to three nets. The last is not always the best.
-5) get another 10% of really deep data (and even deeper validation data). 
-   Run with your phase 1 net with eta 0.05, lambda 0.7, nn batch 10000, eval save 10m. 
-   This can add another 50 elo.
-6) For the “sharpening” with deeper data, go to 10000 for the nn_batch_size.
-
-training line : 
-
-* from scratch
-
-uci
-isready
-setoption name Use NNUE value true
-setoption name threads value 7
-setoption name skiploadingeval value true
-isready
-learn targetdir train_data/random_12/ loop 100 batchsize 1000000 use_draw_in_training 1 eta 1 lambda 1 eval_limit 32000 nn_batch_size 1000 newbob_decay 0.1 eval_save_interval 50000000 loss_output_interval 10000000 mirror_percentage 50 validation_set_file_name train_data/validation/validation.plain.bin
-
-* from an existing nn :
-
-uci
-isready
-setoption name Use NNUE value true
-setoption name EValFile value nn.bin
-setoption name threads value 7
-setoption name skiploadingeval value false
-isready
-learn targetdir train_data/random_12/ loop 100 batchsize 1000000 use_draw_in_training 1 eta 1 lambda 1 eval_limit 32000 nn_batch_size 1000 newbob_decay 0.1 eval_save_interval 50000000 loss_output_interval 10000000 mirror_percentage 50 validation_set_file_name train_data/validation/validation.plain.bin
-
-*/
-
-
 
 #endif // WITH_DATA2BIN

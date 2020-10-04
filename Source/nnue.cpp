@@ -42,13 +42,17 @@ namespace NNUEWrapper{
 
 std::string eval_file_loaded="None";
 
-// Load the evaluation function file
-bool load_eval_file(const std::string& evalFile) {
+// Load eval, from a file stream or a memory stream
+bool load_eval(std::istream& stream) {
+
     NNUE::Initialize();
-    NNUE::fileName = evalFile;
-    std::ifstream stream(evalFile, std::ios::binary);
-    const bool result = NNUE::ReadParameters(stream);
-    return result;
+
+    if (DynamicConfig::skipLoadingEval)
+    {
+        Logging::LogIt(Logging::logInfoPrio) << "SkipLoadingEval set to true, Net not loaded!";
+        return true;
+    }
+    return NNUE::ReadParameters(stream);
 }
 
 // Evaluation function. Perform differential calculation.
@@ -59,13 +63,16 @@ ScoreType evaluate(const Position& pos) {
 }
 
 void init_NNUE() {
-    if (eval_file_loaded != DynamicConfig::NNUEFile)
-        if (load_eval_file(DynamicConfig::NNUEFile)){
+    if (eval_file_loaded != DynamicConfig::NNUEFile){
+        std::ifstream stream( DynamicConfig::NNUEFile, std::ios::binary);
+        if (load_eval(stream)){
             eval_file_loaded = DynamicConfig::NNUEFile;
             DynamicConfig::useNNUE = true; // forced when nnue file is found and valid
             COM::init(); // reset start position
             compute_scaling();
         }
+    }
+    verify_NNUE();
 }
 
 void verify_NNUE() {
@@ -76,10 +83,10 @@ void verify_NNUE() {
     }
 
     if (DynamicConfig::useNNUE){
-        Logging::LogIt(Logging::logInfo) << "NNUE evaluation using " << DynamicConfig::NNUEFile << " enabled.";
+        Logging::LogIt(Logging::logInfoPrio) << "NNUE evaluation using " << DynamicConfig::NNUEFile << " enabled.";
     }
     else{
-        Logging::LogIt(Logging::logInfo) << "classical evaluation enabled.";
+        Logging::LogIt(Logging::logInfoPrio) << "Classical evaluation enabled.";
     }
 }
 

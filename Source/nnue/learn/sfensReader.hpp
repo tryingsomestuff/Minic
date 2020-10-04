@@ -4,6 +4,7 @@
 #include <chrono>
 #include <iostream>
 #include <list>
+#include <optional>
 #include <thread>
 #include <unordered_set>
 #include <vector>
@@ -41,11 +42,82 @@ namespace LearnerConfig{
 	extern bool use_wdl;
 }
 
+struct BasicSfenInputStream
+{
+	virtual std::optional<PackedSfenValue> next() = 0;
+	virtual bool eof() const = 0;
+	virtual ~BasicSfenInputStream() {}
+};
+
+struct BinSfenInputStream : BasicSfenInputStream
+{
+	static constexpr auto openmode = std::ios::in | std::ios::binary;
+	static inline const std::string extension = "bin";
+
+	BinSfenInputStream(std::string filename) :
+		m_stream(filename, openmode),
+		m_eof(!m_stream)
+	{
+	}
+
+	std::optional<PackedSfenValue> next() override
+	{
+		PackedSfenValue e;
+		if(m_stream.read(reinterpret_cast<char*>(&e), sizeof(PackedSfenValue)))
+		{
+			return e;
+		}
+		else
+		{
+			m_eof = true;
+			return std::nullopt;
+		}
+	}
+
+	bool eof() const override
+	{
+		return m_eof;
+	}
+
+	~BinSfenInputStream() override {}
+
+private:
+	std::fstream m_stream;
+	bool m_eof;
+};
+
+inline std::unique_ptr<BasicSfenInputStream> open_sfen_input_file(const std::string& filename)
+{
+    return std::make_unique<BinSfenInputStream>(filename);
+}
+
 // Sfen reader
 struct SfenReader
 {
-	// Do not use std::random_device().  Because it always the same integers on MinGW.
-	SfenReader(int thread_num) : prng(std::chrono::system_clock::now().time_since_epoch().count())
+	// Number of phases used for calculation such as mse
+	// mini-batch size = 1M is standard, so 0.2% of that should be negligible in terms of time.
+	// Since search() is performed with depth = 1 in calculation of
+	// move match rate, simple comparison is not possible...
+	static constexpr uint64_t sfen_for_mse_size = 2000;
+
+	// Number of phases buffered by each thread 0.1M phases. 4M phase at 40HT
+	static constexpr size_t THREAD_BUFFER_SIZE = 10 * 1000;
+
+	// Buffer for reading files (If this is made larger,
+	// the shuffle becomes larger and the phases may vary.
+	// If it is too large, the memory consumption will increase.
+	// SFEN_READ_SIZE is a multiple of THREAD_BUFFER_SIZE.
+	static constexpr const size_t SFEN_READ_SIZE = LEARN_SFEN_READ_SIZE;
+
+	// hash to limit the reading of the same situation
+	// Is there too many 64 million phases? Or Not really..
+	// It must be 2**N because it will be used as the mask to calculate hash_index.
+	static constexpr uint64_t READ_SFEN_HASH_SIZE = 64 * 1024 * 1024;
+
+	// Do not use std::random_device().
+	// Because it always the same integers on MinGW.
+	SfenReader(int thread_num, const std::string& seed) :
+		prng(seed)
 	{
 		packed_sfens.resize(thread_num);
 		total_read = 0;
@@ -64,17 +136,7 @@ struct SfenReader
 	{
 		if (file_worker_thread.joinable())
 			file_worker_thread.join();
-
-		for (auto p : packed_sfens)
-			delete p;
-		for (auto p : packed_sfens_pool)
-			delete p;
 	}
-
-	// number of phases used for calculation such as mse
-	// mini-batch size = 1M is standard, so 0.2% of that should be negligible in terms of time.
-	//Since search() is performed with depth = 1 in calculation of move match rate, simple comparison is not possible...
-	const uint64_t sfen_for_mse_size = 2000;
 
 	// Load the phase for calculation such as mse.
 	void read_for_mse()
@@ -92,63 +154,63 @@ struct SfenReader
 			sfen_for_mse.push_back(ps);
 
 			// Get the hash key.
-			set_from_packed_sfen(pos,ps.sfen,false);
+			set_from_packed_sfen(pos,ps.sfen);
 			sfen_for_mse_hash.insert(computeHash(pos));
 		}
 	}
 
-	void read_validation_set(const std::string file_name, int eval_limit)
+	void read_validation_set(const std::string& file_name, int eval_limit)
 	{
-		std::ifstream f(file_name, std::ios::binary);
+		auto input = open_sfen_input_file(file_name);
 
-		while (f)
+		while(!input->eof())
 		{
-			PackedSfenValue p;
-			if (f.read((char*)&p, sizeof(PackedSfenValue)))
+			std::optional<PackedSfenValue> p_opt = input->next();
+			if (p_opt.has_value())
 			{
+				auto& p = *p_opt;
+
 				if (eval_limit < abs(p.score))
 					continue;
+
 				if (!LearnerConfig::use_draw_games_in_validation && p.game_result == 0)
 					continue;
+
 				sfen_for_mse.push_back(p);
-			} else {
+			}
+			else
+			{
 				break;
 			}
 		}
 	}
 
-	// Number of phases buffered by each thread 0.1M phases. 4M phase at 40HT
-	const size_t THREAD_BUFFER_SIZE = 10 * 1000;
-
-	// Buffer for reading files (If this is made larger, the shuffle becomes larger and the phases may vary.
-	// If it is too large, the memory consumption will increase.
-	// SFEN_READ_SIZE is a multiple of THREAD_BUFFER_SIZE.
-	const size_t SFEN_READ_SIZE = LEARN_SFEN_READ_SIZE;
-
 	// [ASYNC] Thread returns one aspect. Otherwise returns false.
 	bool read_to_thread_buffer(size_t thread_id, PackedSfenValue& ps)
 	{
-		// If there are any positions left in the thread buffer, retrieve one and return it.
+		// If there are any positions left in the thread buffer
+		// then retrieve one and return it.
 		auto& thread_ps = packed_sfens[thread_id];
 
-		// Fill the read buffer if there is no remaining buffer, but if it doesn't even exist, finish.
-		if ((thread_ps == nullptr || thread_ps->size() == 0) // If the buffer is empty, fill it.
+		// Fill the read buffer if there is no remaining buffer,
+		// but if it doesn't even exist, finish.
+		// If the buffer is empty, fill it.
+		if ((thread_ps == nullptr || thread_ps->empty())
 			&& !read_to_thread_buffer_impl(thread_id))
 			return false;
 
 		// read_to_thread_buffer_impl() returned true,
-		// Since the filling of the thread buffer with the phase has been completed successfully
+		// Since the filling of the thread buffer with the
+		// phase has been completed successfully
 		// thread_ps->rbegin() is alive.
 
-		ps = *(thread_ps->rbegin());
+		ps = thread_ps->back();
 		thread_ps->pop_back();
 
 		// If you've run out of buffers, call delete yourself to free this buffer.
-		if (thread_ps->size() == 0)
+		if (thread_ps->empty())
 		{
-
-			delete thread_ps;
-			thread_ps = nullptr;
+			thread_ps.reset();
 		}
 
 		return true;
@@ -166,7 +228,7 @@ struct SfenReader
 				{
 					// It seems that filling is possible, so fill and finish.
 
-					packed_sfens[thread_id] = packed_sfens_pool.front();
+					packed_sfens[thread_id] = std::move(packed_sfens_pool.front());
 					packed_sfens_pool.pop_front();
 
 					total_read += THREAD_BUFFER_SIZE;
@@ -181,6 +243,7 @@ struct SfenReader
 
 			// Waiting for file worker to fill packed_sfens_pool.
 			// The mutex isn't locked, so it should fill up soon.
+			// Poor man's condition variable.
 			sleep(1);
 		}
 
@@ -189,31 +252,41 @@ struct SfenReader
 	// Start a thread that loads the phase file in the background.
 	void start_file_read_worker()
 	{
-		file_worker_thread = std::thread([&] { this->file_read_worker(); });
+		file_worker_thread = std::thread([&] {
+			this->file_read_worker();
+			});
 	}
 
-	// for file read-only threads
 	void file_read_worker()
 	{
-		auto open_next_file = [&]()
-		{
-			if (fs.is_open())
-				fs.close();
-
+		auto open_next_file = [&]() {
 			// no more
-			if (filenames.size() == 0)
-				return false;
+			for(;;)
+			{
+				sfen_input_stream.reset();
 
-			// Get the next file name.
-			std::string filename = *filenames.rbegin();
-			filenames.pop_back();
+				if (filenames.empty())
+					return false;
 
-			fs.open(filename, std::ios::in | std::ios::binary);
-			std::cout << "open filename = " << filename << std::endl;
-			assert(fs);
+				// Get the next file name.
+				std::string filename = filenames.back();
+				filenames.pop_back();
 
-			return true;
+				sfen_input_stream = open_sfen_input_file(filename);
+				std::cout << "open filename = " << filename << std::endl;
+
+				// in case the file is empty or was deleted.
+				if (!sfen_input_stream->eof())
+					return true;
+			}
 		};
+
+		if (sfen_input_stream == nullptr && !open_next_file())
+		{
+			std::cout << "..end of files." << std::endl;
+			end_of_files = true;
+			return;
+		}
 
 		while (true)
 		{
@@ -221,6 +294,7 @@ struct SfenReader
 			// This size() is read only, so you don't need to lock it.
 			while (!stop_flag && packed_sfens_pool.size() >= SFEN_READ_SIZE / THREAD_BUFFER_SIZE)
 				sleep(100);
+
 			if (stop_flag)
 				return;
 
@@ -230,62 +304,64 @@ struct SfenReader
 			// Read from the file into the file buffer.
 			while (sfens.size() < SFEN_READ_SIZE)
 			{
-				PackedSfenValue p;
-				if (fs.read((char*)&p, sizeof(PackedSfenValue)))
+				std::optional<PackedSfenValue> p = sfen_input_stream->next();
+				if (p.has_value())
 				{
-					sfens.push_back(p);
-				} else
+					sfens.push_back(*p);
+				}
+				else if(!open_next_file())
 				{
-					// read failure
-					if (!open_next_file())
-					{
-						// There was no next file. Abon.
-						std::cout << "..end of files." << std::endl;
-						end_of_files = true;
-						return;
-					}
+					// There was no next file. Abort.
+					std::cout << "..end of files." << std::endl;
+					end_of_files = true;
+					return;
 				}
 			}
 
 			// Shuffle the read phase data.
-			// random shuffle by Fisher-Yates algorithm
-
 			if (!no_shuffle)
 			{
-				auto size = sfens.size();
-				for (size_t i = 0; i < size; ++i)
-					std::swap(sfens[i], sfens[(size_t)(prng.rand((uint64_t)size - i) + i)]);
+				FromSF::Algo::shuffle(sfens, prng);
 			}
 
 			// Divide this by THREAD_BUFFER_SIZE. There should be size pieces.
 			// SFEN_READ_SIZE shall be a multiple of THREAD_BUFFER_SIZE.
-			assert((SFEN_READ_SIZE % THREAD_BUFFER_SIZE)==0);
+			assert((SFEN_READ_SIZE % THREAD_BUFFER_SIZE) == 0);
 
 			auto size = size_t(SFEN_READ_SIZE / THREAD_BUFFER_SIZE);
-			std::vector<PSVector*> ptrs;
-			ptrs.reserve(size);
+			std::vector<std::unique_ptr<PSVector>> buffers;
+			buffers.reserve(size);
 
 			for (size_t i = 0; i < size; ++i)
 			{
 				// Delete this pointer on the receiving side.
-				PSVector* ptr = new PSVector();
-				ptr->resize(THREAD_BUFFER_SIZE);
-				memcpy(&((*ptr)[0]), &sfens[i * THREAD_BUFFER_SIZE], sizeof(PackedSfenValue) * THREAD_BUFFER_SIZE);
+				auto buf = std::make_unique<PSVector>();
+				buf->resize(THREAD_BUFFER_SIZE);
+				memcpy(
+					buf->data(),
+					&sfens[i * THREAD_BUFFER_SIZE],
+					sizeof(PackedSfenValue) * THREAD_BUFFER_SIZE);
 
-				ptrs.push_back(ptr);
+				buffers.emplace_back(std::move(buf));
 			}
 
-			// Since sfens is ready, look at the occasion and copy
 			{
 				std::unique_lock<std::mutex> lk(mutex);
 
-				// You can ignore this time because you just copy the pointer...
-				// The mutex lock is required because the contents of packed_sfens_pool are changed.
+				// The mutex lock is required because the%
+				// contents of packed_sfens_pool are changed.
 
-				for (size_t i = 0; i < size; ++i)
-					packed_sfens_pool.push_back(ptrs[i]);
+				for (auto& buf : buffers)
+					packed_sfens_pool.emplace_back(std::move(buf));
 			}
 		}
+	}
+
+	// Determine if it is a phase for calculating rmse.
+	// (The computational aspects of rmse should not be used for learning.)
+	bool is_for_rmse(uint64_t key) const
+	{
+		return sfen_for_mse_hash.count(key) != 0;
 	}
 
 	// sfen files
@@ -310,18 +386,7 @@ struct SfenReader
 
 	std::atomic<bool> stop_flag;
 
-	// Determine if it is a phase for calculating rmse.
-	// (The computational aspects of rmse should not be used for learning.)
-	bool is_for_rmse(Hash key) const
-	{
-			return sfen_for_mse_hash.count(key) != 0;
-	}
-
-	// hash to limit the reading of the same situation
-	// Is there too many 64 million phases? Or Not really..
-	// It must be 2**N because it will be used as the mask to calculate hash_index.
-	static const uint64_t READ_SFEN_HASH_SIZE = 64 * 1024 * 1024;
-	std::vector<Hash> hash; // 64MB*8 = 512MB
+	std::vector<uint64_t> hash;
 
 	// test phase for mse calculation
 	PSVector sfen_for_mse;
@@ -337,13 +402,12 @@ protected:
 	// Did you read the files and reached the end?
 	std::atomic<bool> end_of_files;
 
-
 	// handle of sfen file
-	std::fstream fs;
+	std::unique_ptr<BasicSfenInputStream> sfen_input_stream;
 
 	// sfen for each thread
 	// (When the thread is used up, the thread should call delete to release it.)
-	std::vector<PSVector*> packed_sfens;
+	std::vector<std::unique_ptr<PSVector>> packed_sfens;
 
 	// Mutex when accessing packed_sfens_pool
 	std::mutex mutex;
@@ -351,8 +415,8 @@ protected:
 	// pool of sfen. The worker thread read from the file is added here.
 	// Each worker thread fills its own packed_sfens[thread_id] from here.
 	// * Lock and access the mutex.
-	std::list<PSVector*> packed_sfens_pool;
+	std::list<std::unique_ptr<PSVector>> packed_sfens_pool;
 
 	// Hold the hash key so that the mse calculation phase is not used for learning.
-	std::unordered_set<Hash> sfen_for_mse_hash;
+	std::unordered_set<uint64_t> sfen_for_mse_hash;
 };
