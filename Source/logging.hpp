@@ -92,7 +92,7 @@ namespace Logging {
     extern COMType ct;
     enum LogLevel : unsigned char { logTrace = 0, logDebug = 1, logInfo = 2, logGUI = 3, logInfoPrio = 4, logWarn = 5, logError = 6, logFatal = 7, logMax = 8};
     const std::string _protocolComment[2] = { "# ", "info string " };
-    const std::string _levelNames[logMax] = { "Trace ", "Debug ", "Info  ", "", "Info ", "Warn  ", "Error ", "Fatal " };
+    const std::string _levelNames[logMax] = { "Trace ", "Debug ", "Info  ", "", "Info  ", "Warn  ", "Error ", "Fatal " };
 
     class LogIt {
         friend void init();

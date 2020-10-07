@@ -52,7 +52,12 @@ bool load_eval(std::istream& stream) {
         Logging::LogIt(Logging::logInfoPrio) << "SkipLoadingEval set to true, Net not loaded!";
         return true;
     }
-    return NNUE::ReadParameters(stream);
+    if ( ! NNUE::ReadParameters(stream)) return false;
+    eval_file_loaded = DynamicConfig::NNUEFile;
+    DynamicConfig::useNNUE = true; // forced when nnue file is found and valid
+    COM::init(); // reset start position
+    compute_scaling();
+    return true;
 }
 
 // Evaluation function. Perform differential calculation.
@@ -65,11 +70,8 @@ ScoreType evaluate(const Position& pos) {
 void init_NNUE() {
     if (eval_file_loaded != DynamicConfig::NNUEFile){
         std::ifstream stream( DynamicConfig::NNUEFile, std::ios::binary);
-        if (load_eval(stream)){
-            eval_file_loaded = DynamicConfig::NNUEFile;
-            DynamicConfig::useNNUE = true; // forced when nnue file is found and valid
-            COM::init(); // reset start position
-            compute_scaling();
+        if (!load_eval(stream)){
+           Logging::LogIt(Logging::logInfoPrio) << "Failed to load NNUE net " << DynamicConfig::NNUEFile;
         }
     }
     verify_NNUE();
