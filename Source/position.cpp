@@ -200,6 +200,7 @@ Position::Position(const Position & p){
 }
 
 void Position::resetAccumulator(){
+    delete _accumulator;
     // get my own accumulator and reset "previous" one
     if (DynamicConfig::useNNUE){
        _accumulator = new NNUE::Accumulator();
