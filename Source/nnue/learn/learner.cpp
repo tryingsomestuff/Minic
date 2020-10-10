@@ -159,6 +159,7 @@ double calc_d_cross_entropy_of_winning_percentage(
 	return ((y2 - y1) / epsilon) / LearnerConfig::winning_probability_coefficient;
 }
 
+namespace{
 // A constant used in elmo (WCSC27). Adjustment required.
 // Since elmo does not internally divide the expression, the value is different.
 // You can set this value with the learn command.
@@ -166,6 +167,10 @@ double calc_d_cross_entropy_of_winning_percentage(
 double ELMO_LAMBDA = 0.33;
 double ELMO_LAMBDA2 = 0.33;
 double ELMO_LAMBDA_LIMIT = 32000;
+
+typedef std::chrono::system_clock Clock;
+std::chrono::time_point<Clock> startTime;
+}
 
 // Training Formula · Issue #71 · nodchip/Stockfish https://github.com/nodchip/Stockfish/issues/71
 double get_scaled_signal(double signal)
@@ -414,10 +419,11 @@ namespace{
 
 void LearnerThink::calc_loss(size_t thread_id, uint64_t done)
 {
-
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count();
 	std::cout << now_string() << "PROGRESS: "  << ", ";
-	std::cout << sr.total_done << " sfens";
-	std::cout << ", iteration " << epoch;
+	std::cout << sr.total_done << " sfens" << ", ";
+	std::cout << sr.total_done * 1000 / elapsed  << " sfens/second, ";
+	std::cout << "iteration " << epoch;
 
 	// For calculation of verification data loss
 	std::atomic<double> test_sum_cross_entropy_eval, test_sum_cross_entropy_win, test_sum_cross_entropy;
@@ -710,15 +716,21 @@ void LearnerThink::thread_worker(size_t thread_id)
 
 		// The evaluation value exceeds the learning target value.
 		// Ignore this aspect information.
-		if (eval_limit < abs(ps.score))
+		if (eval_limit < abs(ps.score)){
+			std::cout << "skipping bad eval" << std::endl;
 			goto RetryRead;
+		}
 
-		if (!LearnerConfig::use_draw_games_in_training && ps.game_result == 0)
+		if (!LearnerConfig::use_draw_games_in_training && ps.game_result == 0){
+			std::cout << "skipping draw" << std::endl;
 			goto RetryRead;
+		}			
 
 		// Skip over the opening phase
-		if (ps.gamePly < prng.rand(reduction_gameply))
+		if (ps.gamePly < prng.rand(reduction_gameply)){
+			std::cout << "skipping game ply " << ps.gamePly << std::endl;
 			goto RetryRead;
+		}			
 
 	    Position pos;
 		if (set_from_packed_sfen(pos,ps.sfen) != 0)
@@ -732,16 +744,20 @@ void LearnerThink::thread_worker(size_t thread_id)
 		// There is a possibility that all the pieces are blocked and stuck.
         MoveList moves;
 		MoveGen::generate(pos,moves);
-		if ( moves.empty() )
+		if ( moves.empty() ){
+			std::cout << "skipping empty move" << std::endl;
 			goto RetryRead;
+		}	
 
 		// Evaluation value of shallow search (qsearch)
 		DepthType seldepth = 0;
 		PVList pv;
 		auto r = context.qsearchNoPruning(-MATE,MATE,pos,0,seldepth,&pv);
 
-        if ( isMateScore(r))
+        if ( isMateScore(r)){
+			//std::cout << "skipping near mate " << r << " " << ToString(pos) << std::endl;
 			goto RetryRead;
+		}	
 
 		// Evaluation value of deep search
 		auto deep_value = (NNUEValue)ps.score;
@@ -867,6 +883,8 @@ bool LearnerThink::save(bool is_final)
 void learn(std::istringstream& is)
 {
 	const auto thread_num = DynamicConfig::threads;
+
+    startTime = Clock::now();
 
 	std::vector<std::string> filenames;
 

@@ -67,7 +67,7 @@ OPT="-s $WARN $d -DNDEBUG -O3 $t --std=c++17 $n -DUSE_BLAS" ; DEPTH=16
 #OPT="$WARN $d -DNDEBUG -g $t --std=c++17" ; DEPTH=10
 #OPT="$WARN $d -g $t --std=c++17 -rdynamic" ; DEPTH=10
 
-MKLROOT=/opt/intel/compilers_and_libraries_2020.3.279/linux/mkl/
+MKLROOT=/opt/intel/compilers_and_libraries_2020.3.279/linux/mkl/blabla
 if [ -d $MKLROOT ]; then
    #https://software.intel.com/sites/products/mkl/mkl_link_line_advisor.htm
    LIBBLAS=" -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_ilp64.a ${MKLROOT}/lib/intel64/libmkl_gnu_thread.a ${MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lgomp -lpthread -lm -ldl"
