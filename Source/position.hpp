@@ -96,9 +96,11 @@ struct Position{
 
     // engine internal usage
     void resetAccumulator();
+    void setAccumulator(NNUE::Accumulator & acc);
+    void setAccumulator(NNUE::Accumulator & acc, const Position & previous); 
+
     Position & operator =(const Position & p);
     //Position & operator =(const Position && p) = delete;
-
     Position(const Position & p);
     //Position(const Position && p) = delete;
 

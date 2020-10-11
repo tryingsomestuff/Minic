@@ -13,6 +13,10 @@
 #include "tools.hpp"
 #include "transposition.hpp"
 
+#ifdef WITH_NNUE
+#include "nnue_accumulator.h"
+#endif
+
 #define PERIODICCHECK 1024ull
 
 // pvs inspired by Xiphos
@@ -191,6 +195,10 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                 if (nullE.h == nullHash || nullE.s >= beta ) { // avoid null move search if TT gives a score < beta for the same depth ///@todo check this again !
                     ++stats.counters[Stats::sid_nullMoveTry2];
                     Position pN = p;
+#ifdef WITH_NNUE
+                    NNUE::Accumulator acc;
+                    pN.setAccumulator(acc,p);
+#endif
                     //Position & pN = stack[p.halfmoves+1].p;
                     //pN = p;
                     applyNull(*this,pN);
@@ -240,6 +248,10 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
 #endif
             if ( (validTTmove && sameMove(e.m, *it)) || isBadCap(*it) ) continue; // skip TT move if quiet or bad captures
             Position p2 = p;
+#ifdef WITH_NNUE            
+            NNUE::Accumulator acc;
+            p2.setAccumulator(acc,p);
+#endif
             if ( ! applyMove(p2,*it) ) continue;
             ++probCutCount;
             ScoreType scorePC = -qsearch(-betaPC, -betaPC + 1, p2, ply + 1, seldepth,0,true,pvnode);
@@ -309,6 +321,10 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         }
 #endif
         Position p2 = p;
+#ifdef WITH_NNUE        
+        NNUE::Accumulator acc;
+        p2.setAccumulator(acc,p);
+#endif
         //Position & p2 = stack[p.halfmoves+1].p2;
         //p2 = p;
         if ( applyMove(p2, e.m)) {
@@ -440,6 +456,10 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         if (isSkipMove(*it,skipMoves)) continue; // skipmoves
         if (validTTmove && sameMove(e.m, *it)) continue; // already tried
         Position p2 = p;
+#ifdef WITH_NNUE        
+        NNUE::Accumulator acc;
+        p2.setAccumulator(acc,p);
+#endif
         //Position & p2 = stack[p.halfmoves+1].p2;
         //p2 = p;
         if ( ! applyMove(p2,*it) ) continue;

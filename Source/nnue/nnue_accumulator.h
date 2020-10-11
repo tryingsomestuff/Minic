@@ -29,7 +29,7 @@ namespace NNUE {
   struct alignas(kCacheLineSize) Accumulator {
     std::int16_t
         accumulation[2][kRefreshTriggers.size()][kTransformedFeatureDimensions];
-    bool computed_accumulation;
+    bool computed_accumulation = false;
   };
 
 }  // namespace NNUE

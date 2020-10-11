@@ -166,25 +166,16 @@ NNUE::Accumulator * Position::previousAccumulatorPtr()const{
 Position & Position::operator =(const Position & p){
     if ( &p == this ) return *this;
 
-    delete _accumulator;
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
 #pragma GCC diagnostic ignored "-Wclass-memaccess"
     std::memcpy(this, &p, offsetof(Position, _accumulator));
 #pragma GCC diagnostic pop
 
-    // get me own accumulator and use given position one as previous
-    if (DynamicConfig::useNNUE){
-       _accumulator = new NNUE::Accumulator();
-       _previousAccumulator = p._accumulator;
-    }
     return *this;
 }
 
 Position::Position(const Position & p){
-
-    delete _accumulator;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
@@ -192,20 +183,10 @@ Position::Position(const Position & p){
     std::memcpy(this, &p, offsetof(Position, _accumulator));
 #pragma GCC diagnostic pop
     
-    // get my own accumulator and use given position one as previous
-    if (DynamicConfig::useNNUE){
-       _accumulator = new NNUE::Accumulator();
-       _previousAccumulator = p._accumulator;
-    }
 }
 
 void Position::resetAccumulator(){
-    delete _accumulator;
-    // get my own accumulator and reset "previous" one
-    if (DynamicConfig::useNNUE){
-       _accumulator = new NNUE::Accumulator();
-       _previousAccumulator = nullptr;
-    }
+    if ( _accumulator ) _accumulator->computed_accumulation = false;
 }
 
 bool Position::operator ==(const Position & p){
@@ -232,10 +213,20 @@ bool Position::operator !=(const Position & p){
     return ! operator==(p);
 }
 
+void Position::setAccumulator(NNUE::Accumulator & acc){
+    _accumulator = &acc;
+    _previousAccumulator = nullptr;
+}
+
+void Position::setAccumulator(NNUE::Accumulator & acc, const Position & previous){
+    _accumulator = &acc;
+    _previousAccumulator = previous._accumulator;
+}
+
 #endif
 
 Position::~Position(){
-    delete _accumulator;
+
 }
 
 Position::Position(){

@@ -36,7 +36,13 @@ void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestSco
     if (!subSearch) Logging::LogIt(Logging::logGUI) << str.str();
 }
 
-PVList Searcher::search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
+PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
+
+    Position p(pp);
+#ifdef WITH_NNUE    
+    NNUE::Accumulator acc;
+    p.setAccumulator(acc);
+#endif    
 
     if ( isMainThread() ) initCaslingPermHashTable(p); // let's be sure ... ///@todo clean up this crap !!!!
 

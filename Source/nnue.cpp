@@ -99,6 +99,9 @@ void compute_scaling(int count){
     Logging::LogIt(Logging::logInfo) << "Automatic computation of NNUEscaling with " << count << " random positions ...";
 
     Position p;
+    NNUE::Accumulator acc;
+    p.setAccumulator(acc);
+
     readFEN(startPosition,p,true);
 
     EvalData data;
@@ -122,6 +125,7 @@ void compute_scaling(int count){
             Position p2 = p;
             if (!applyMove(p2, *it)) continue;
             p = p2;
+            p.resetAccumulator();
             const Square to = Move2To(*it);
             if (p.c == Co_White && to == p.king[Co_Black]){
                readFEN(startPosition,p,true);

@@ -199,7 +199,7 @@ void pgnparse__(std::ifstream & is,std::ofstream & os) {
         ++i;
         game.n++;
         game.p.push_back(game.p[i-1]);
-        if ( ! apply(game.p[i],game.moves[i-1])){ 
+        if ( ! applyMove(game.p[i],game.moves[i-1])){ 
           read = false;
           Logging::LogIt(Logging::logError) << "Unable to apply move " + ToString(game.p[i]); 
           break;

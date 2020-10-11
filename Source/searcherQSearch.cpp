@@ -1,5 +1,9 @@
 #include "searcher.hpp"
 
+#ifdef WITH_NNUE
+#include "nnue_accumulator.h"
+#endif
+
 ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth, PVList * pv){
     EvalData data;
     ++stats.counters[Stats::sid_qnodes];
@@ -21,6 +25,10 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Posi
 
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         Position p2 = p;
+#ifdef WITH_NNUE        
+        NNUE::Accumulator acc;
+        p2.setAccumulator(acc,p);
+#endif
         if ( ! applyMove(p2,*it) ) continue;
         PVList childPV;
         const ScoreType score = -qsearchNoPruning(-beta,-alpha,p2,ply+1,seldepth, pv ? &childPV : nullptr);
@@ -138,6 +146,10 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
     // try the tt move before move generation
     if ( validTTmove && (isInCheck || isCapture(e.m)) ){
         Position p2 = p;
+#ifdef WITH_NNUE        
+        NNUE::Accumulator acc;
+        p2.setAccumulator(acc,p);
+#endif        
         //Position & p2 = stack[p.halfmoves+1].p;
         //p2 = p;
         if ( applyMove(p2,e.m) ){;
@@ -188,6 +200,10 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
             if (SearchConfig::doQFutility && staticScore + SearchConfig::qfutilityMargin[evalScoreIsHashScore] + (isPromotionCap(*it) ? (Values[P_wq+PieceShift]-Values[P_wp+PieceShift]) : 0 ) + (Move2Type(*it)==T_ep ? Values[P_wp+PieceShift] : PieceTools::getAbsValue(p, Move2To(*it))) <= alphaInit) {++stats.counters[Stats::sid_qfutility];continue;}
         }
         Position p2 = p;
+#ifdef WITH_NNUE        
+        NNUE::Accumulator acc;
+        p2.setAccumulator(acc,p);
+#endif
         //Position & p2 = stack[p.halfmoves+1].p;
         //p2 = p;
         if ( ! applyMove(p2,*it) ) continue;

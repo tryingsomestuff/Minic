@@ -383,10 +383,12 @@ NNUEValue LearnerThink::get_shallow_value(Position& task_pos, size_t thread_id)
 	Searcher & contxt = *ThreadPool::instance().at(thread_id);
 
     Position p2 = task_pos;
+	NNUE::Accumulator acc;
+	p2.setAccumulator(acc);
 
-	contxt.qsearchNoPruning(-MATE,MATE,task_pos,0,seldepth,&pv);
+	contxt.qsearchNoPruning(-MATE,MATE,p2,0,seldepth,&pv);
 
-	const auto rootColor = task_pos.side_to_move();
+	const auto rootColor = p2.side_to_move();
 
 	for (auto m : pv){
 		if ( !applyMove(p2,m,false)) break;
@@ -448,6 +450,8 @@ void LearnerThink::calc_loss(size_t thread_id, uint64_t done)
 	{
 	Position pos;
     readFEN(startPosition,pos,true);
+	NNUE::Accumulator acc;
+	pos.setAccumulator(acc);	
 	EvalData data;
 	Searcher & context = *ThreadPool::instance().at(thread_id);
     std::cout << ", hirate eval = " << eval(pos,data,context) << std::endl;
@@ -738,6 +742,8 @@ void LearnerThink::thread_worker(size_t thread_id)
 			std::cout << "Error! : illegal packed sfen = " << GetFEN(pos) << std::endl;
 			goto RetryRead;
 		}
+		NNUE::Accumulator acc;
+		pos.setAccumulator(acc);
 
 		auto rootColor = pos.side_to_move();
 
@@ -814,6 +820,7 @@ void LearnerThink::thread_worker(size_t thread_id)
 
         // restore pos
 		pos = psave;
+		pos.resetAccumulator();
 	}
 }
 
@@ -846,7 +853,7 @@ bool LearnerThink::save(bool is_final)
 			latest_loss_sum = 0.0;
 			latest_loss_count = 0;
 			std::cout << "loss: " << latest_loss;
-			if (latest_loss < best_loss)
+			if (latest_loss < best_loss) ///@todo try "true" !
 			{
 				std::cout << " < best (" << best_loss << "), accepted" << std::endl;
 				best_loss = latest_loss;
