@@ -10,6 +10,9 @@ namespace COM {
     Ponder ponder;
     std::string command;
     Position position;
+#ifdef WITH_NNUE    
+    NNUE::Accumulator acc;
+#endif
     Move move, ponderMove;
     DepthType depth;
     Mode mode;
@@ -22,6 +25,10 @@ namespace COM {
         mode = m_force;
         stm = stm_white;
         readFEN(startPosition, COM::position);
+#ifdef WITH_NNUE        
+        acc.computed_accumulation = false;
+        position.setAccumulator(acc);
+#endif
         ThreadPool::instance().clearGame(); // re-init all threads data
     }
 

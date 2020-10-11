@@ -108,7 +108,7 @@ void applyNull(Searcher & , Position & pN) {
 
 #ifdef WITH_NNUE
     if (DynamicConfig::useNNUE){
-       pN._accumulator->computed_accumulation = false;
+       pN.resetAccumulator();
     }
     auto & dp = pN._dirtyPiece;
     dp.dirty_num = 0; // no piece changed ...
@@ -140,9 +140,7 @@ bool applyMove(Position & p, const Move & m, bool noValidation){
 #endif
 
 #ifdef WITH_NNUE
-    if (DynamicConfig::useNNUE){
-       p._accumulator->computed_accumulation = false;
-    }
+    p.resetAccumulator();
     auto & dp = p._dirtyPiece;
     dp.dirty_num = 1; // at least one piece is changing ...
     Square rfrom = INVALIDSQUARE; // for castling
@@ -378,6 +376,10 @@ ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck, Searcher 
     std::shuffle(moves.begin(), moves.end(),g);
     for (auto it = moves.begin(); it != moves.end(); ++it) {
         Position p2 = p;
+#ifdef WITH_NNUE        
+        NNUE::Accumulator acc;
+        p2.setAccumulator(acc,p);
+#endif        
         if (!applyMove(p2, *it)) continue;
         PVList childPV;
 #ifdef WITH_GENFILE

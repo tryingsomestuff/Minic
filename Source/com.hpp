@@ -18,6 +18,9 @@ namespace COM {
 
     extern std::string command;
     extern Position position;
+#ifdef WITH_NNUE    
+    extern NNUE::Accumulator acc;
+#endif
     extern Move move, ponderMove;
     extern DepthType depth;
     enum Mode : unsigned char { m_play_white = 0, m_play_black = 1, m_force = 2, m_analyze = 3 };
