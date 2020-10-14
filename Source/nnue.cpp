@@ -47,15 +47,15 @@ bool load_eval(std::istream& stream) {
 
     NNUE::Initialize();
 
+    eval_file_loaded = DynamicConfig::NNUEFile;
     if (DynamicConfig::skipLoadingEval)
     {
         Logging::LogIt(Logging::logInfoPrio) << "SkipLoadingEval set to true, Net not loaded!";
         return true;
     }
     if ( ! NNUE::ReadParameters(stream)) return false;
-    eval_file_loaded = DynamicConfig::NNUEFile;
     DynamicConfig::useNNUE = true; // forced when nnue file is found and valid
-    COM::init(); // reset start position
+    COM::init(); // reset start position ///@todo still necessary ???
     compute_scaling();
     return true;
 }

@@ -940,7 +940,7 @@ void learn(std::istringstream& is)
 	uint64_t loss_output_interval = 0;
 
 	std::string validation_set_file_name;
-	std::string seed;
+	std::string seed = "minic42";
 
 	// Assume the filenames are staggered.
 	while (true)

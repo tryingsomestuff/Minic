@@ -48,9 +48,7 @@ void init(int argc, char ** argv) {
     SyzygyTb::initTB();
 #endif
 #ifdef WITH_NNUE
-    if ( !DynamicConfig::NNUEFile.empty()){
-        NNUEWrapper::init_NNUE();
-    }
+    NNUEWrapper::init_NNUE();
 #endif
     COM::init(); // let's do this ... (usefull to reset position in case of NNUE)
 }

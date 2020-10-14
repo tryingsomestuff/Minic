@@ -19,8 +19,8 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Posi
     getCMHPtr(p.halfmoves,cmhPtr);
 
     MoveList moves;
-    if ( isInCheck ) MoveGen::generate<MoveGen::GP_all>(p,moves); ///@todo generate only evasion !
-    else             MoveGen::generate<MoveGen::GP_cap>(p,moves);
+    //if ( isInCheck ) MoveGen::generate<MoveGen::GP_all>(p,moves); ///@todo generate only evasion !
+    /*else*/             MoveGen::generate<MoveGen::GP_cap>(p,moves);
     MoveSorter::scoreAndSort(*this,moves,p,data.gp,ply,cmhPtr,false,isInCheck);
 
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
