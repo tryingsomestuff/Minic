@@ -71,7 +71,12 @@ void init_NNUE() {
     if (eval_file_loaded != DynamicConfig::NNUEFile){
         std::ifstream stream( DynamicConfig::NNUEFile, std::ios::binary);
         if (!load_eval(stream)){
-           Logging::LogIt(Logging::logInfoPrio) << "Failed to load NNUE net " << DynamicConfig::NNUEFile;
+           if (DynamicConfig::NNUEFile.empty() ){
+              Logging::LogIt(Logging::logInfoPrio) << "No NNUE net given";
+           }
+           else{
+              Logging::LogIt(Logging::logInfoPrio) << "Failed to load NNUE net " << DynamicConfig::NNUEFile;
+           }
         }
     }
     verify_NNUE();
