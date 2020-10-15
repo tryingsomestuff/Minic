@@ -8,7 +8,7 @@
 namespace{
     template<class T>
     struct DeleteAligned{
-        void operator()(T * ptr) const { free(ptr); }
+        void operator()(T * ptr) const { std_aligned_free(ptr); }
     };    
     unsigned long long int ttSize = 0;
     std::unique_ptr<TT::Entry[],DeleteAligned<TT::Entry>> table(nullptr);
