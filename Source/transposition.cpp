@@ -8,7 +8,7 @@
 namespace{
     template<class T>
     struct DeleteAligned{
-        void operator()(T * ptr) const { std_aligned_free(ptr); }
+        void operator()(T * ptr) const { if (ptr) std_aligned_free(ptr); }
     };    
     unsigned long long int ttSize = 0;
     std::unique_ptr<TT::Entry[],DeleteAligned<TT::Entry>> table(nullptr);
@@ -26,14 +26,7 @@ void initTable(){
     Logging::LogIt(Logging::logInfo) << "Entry size " << sizeof(Entry);
     ttSize = powerFloor((1024 * 1024 * DynamicConfig::ttSizeMb) / (unsigned long long int)sizeof(Entry));
     assert(countBit(ttSize) == 1); // a power of 2
-#ifdef __ANDROID__
-    Entry * mem = (Entry *)malloc(ttSize * sizeof(Entry));
-#elif __linux__
-    Entry * mem = (Entry*)aligned_alloc(1024, ttSize*sizeof(Entry));
-    madvise(mem, ttSize*sizeof(Entry), MADV_HUGEPAGE);
-#else
-    Entry * mem = (Entry *)malloc(ttSize * sizeof(Entry));
- #endif
+    Entry * mem = (Entry *) std_aligned_alloc(1024,ttSize*sizeof(Entry));
     table.reset(mem);
     Logging::LogIt(Logging::logInfo) << "Size of TT " << ttSize * sizeof(Entry) / 1024 / 1024 << "Mb" ;
     clearTT();
