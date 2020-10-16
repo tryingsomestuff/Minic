@@ -38,7 +38,7 @@ typedef uint64_t u_int64_t;
 #include <unistd.h>
 #endif
 
-const std::string MinicVersion = "2.52";
+const std::string MinicVersion = "2.53";
 
 // *** options
 #define WITH_UCI
@@ -377,6 +377,8 @@ inline unsigned long long int powerFloor(unsigned long long int x) {
     while (power <= x) power *= 2;
     return power/2;
 }
+
+//madvise(mem, ttSize*sizeof(Entry), MADV_HUGEPAGE); ///@todo
 
 inline void* std_aligned_alloc(size_t alignment, size_t size) {
 #ifdef __ANDROID__
