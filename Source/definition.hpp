@@ -38,7 +38,7 @@ typedef uint64_t u_int64_t;
 #include <unistd.h>
 #endif
 
-const std::string MinicVersion = "2.53";
+const std::string MinicVersion = "3.00";
 
 // *** options
 #define WITH_UCI
@@ -64,7 +64,6 @@ const std::string MinicVersion = "2.53";
 #ifdef WITH_NNUE
 #ifndef __ANDROID__
 #define WITH_DATA2BIN
-#define WITH_LEARNER
 #endif
 #endif
 
@@ -187,7 +186,7 @@ const std::string shirov        = "6r1/2rp1kpp/2qQp3/p3Pp1P/1pP2P2/1P2KP2/P5R1/6
 
 enum Piece    : signed char{ P_bk = -6, P_bq = -5, P_br = -4, P_bb = -3, P_bn = -2, P_bp = -1, P_none = 0, P_wp = 1, P_wn = 2, P_wb = 3, P_wr = 4, P_wq = 5, P_wk = 6 };
 inline Piece operator++(Piece & pp){pp=Piece(pp+1); return pp;}
-constexpr Piece operator~(Piece pp){return Piece(-pp);} // switch piece color
+constexpr Piece operator~(Piece pp){return Piece(-pp);} // switch piece Color
 const int PieceShift = 6;
 const int NbPiece = 2*PieceShift+1;
 
@@ -290,7 +289,7 @@ inline bool pieceValid(Piece  pp){ return pieceOK(pp) && pp != P_none;}
 inline Piece promShift(MType mt){ assert(mt>=T_promq); assert(mt<=T_cappromn); return Piece(P_wq - (mt%4));} // awfull hack
 
 enum Color : signed char{ Co_None  = -1,   Co_White = 0,   Co_Black = 1,   Co_End };
-constexpr Color operator~(Color c){return Color(c^Co_Black);} // switch color
+constexpr Color operator~(Color c){return Color(c^Co_Black);} // switch Color
 inline Color operator++(Color & c){c=Color(c+1); return c;}
 
 // previous best root 20000, ttmove 15000, king evasion 10000

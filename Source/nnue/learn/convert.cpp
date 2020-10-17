@@ -352,10 +352,10 @@ bool convert_bin_from_pgn_extract(
                                     }
 
                                     bool success = false;
-                                    NNUEValue value = parse_score_from_pgn_extract(str_eval, success);
+                                    ScoreType value = parse_score_from_pgn_extract(str_eval, success);
                                     if (success) {
                                         eval_found = true;
-                                        psv.score = std::clamp(value, NNUEValue(-MATE), NNUEValue(MATE));
+                                        psv.score = std::clamp(value, ScoreType(-MATE), ScoreType(MATE));
                                     }
                                 }
                             }
@@ -370,7 +370,7 @@ bool convert_bin_from_pgn_extract(
                             psv.gamePly = gamePly;
                             psv.game_result = game_result;
 
-                            if (pos.side_to_move() == BLACK) {
+                            if (pos.c == Co_Black) {
                                 if (!pgn_eval_side_to_move) {
                                     psv.score *= -1;
                                 }

@@ -4,7 +4,8 @@
 
 #include "logging.hpp"
 
-/* This array is used to store statistic of search and evaluation
+/*!
+ * This array is used to store statistic of search and evaluation
  * for each thread.
  */
 struct Stats{

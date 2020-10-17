@@ -15,7 +15,7 @@ mkdir -p $dir/Dist/Minic2
 d="-DDEBUG_TOOL"
 v="dev"
 t="-march=native"
-n="-DUSE_AVX2"
+n="-fopenmp-simd"
 
 if [ -n "$1" ] ; then
    v=$1
@@ -58,10 +58,8 @@ if [ $FATHOM_PRESENT = "1" ]; then
    OPT="$OPT $dir/Fathom/src/$lib -I$dir/Fathom/src"
 fi
 
-NNUESOURCE="Source/nnue/features/half_kp.cpp Source/nnue/features/half_relative_kp.cpp Source/nnue/evaluate_nnue.cpp Source/nnue/learn/learn_tools.cpp Source/nnue/learn/convert.cpp Source/nnue/learn/multi_think.cpp Source/nnue/learn/learner.cpp Source/nnue/evaluate_nnue_learner.cpp" 
+STANDARDSOURCE="Source/*.cpp Source/nnue/learn/*.cpp"
 
-STANDARDSOURCE="Source/*.cpp"
-
-i686-w64-mingw32-g++-posix $OPT $STANDARDSOURCE $NNUESOURCE -ISource -ISource/nnue -static -static-libgcc -static-libstdc++ -o $dir/Dist/Minic2/$exe32 -Wl,-Bstatic -lpthread
+i686-w64-mingw32-g++-posix $OPT $STANDARDSOURCE -ISource -ISource/nnue -static -static-libgcc -static-libstdc++ -o $dir/Dist/Minic2/$exe32 -Wl,-Bstatic -lpthread
 i686-w64-mingw32-strip $dir/Dist/Minic2/$exe32
 

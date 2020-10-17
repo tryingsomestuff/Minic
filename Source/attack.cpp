@@ -9,7 +9,7 @@ namespace BBTools {
 int Mask::ranks[512] = {0};
 Mask mask[NbSquare];
 
-// This function is taken from Dumb chess engine
+// This initialisation function is taken from Dumb chess engine by Richard Delorme
 void initMask() {
     Logging::LogIt(Logging::logInfo) << "Init mask" ;
     int d[NbSquare][NbSquare] = { {0} };

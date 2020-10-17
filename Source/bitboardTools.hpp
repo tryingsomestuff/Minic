@@ -7,7 +7,8 @@
 
 namespace BBTools {
 
-/* Many little helper for evaluation (pawn structure mostly)
+/*!
+ * Many little helper for evaluation (pawn structure mostly)
  * Most of them are taken from Topple chess engine by Vincent Tang (a.k.a Konsolas)
  */
 

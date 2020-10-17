@@ -48,7 +48,7 @@ void init(int argc, char ** argv) {
     SyzygyTb::initTB();
 #endif
 #ifdef WITH_NNUE
-    NNUEWrapper::init_NNUE();
+    NNUEWrapper::init();
 #endif
     COM::init(); // let's do this ... (usefull to reset position in case of NNUE)
 }
@@ -74,36 +74,6 @@ int main(int argc, char ** argv) {
     if ( argc > 1 && std::string(argv[1]) == "-plain2bin")  { return convert_bin({argv[2]},std::string(argv[2])+".bin",1,300,0); }
     if ( argc > 1 && std::string(argv[1]) == "-pgn2bin")    { return convert_bin_from_pgn_extract({argv[2]},std::string(argv[2])+".bin",true, true); }
     if ( argc > 1 && std::string(argv[1]) == "-bin2plain")  { return convert_plain({argv[2]},std::string(argv[2])+".plain"); }
-#endif
-
-#ifdef WITH_LEARNER
-    if ( argc > 1 && std::string(argv[1]) == "-learn")  { 
-        // disable TT
-	    //DynamicConfig::disableTT = true;
-        // force pure NNUE eval
-        DynamicConfig::forceNNUE = true;
-
-        // read param from input file
-        std::ifstream input(argv[2]);
-        std::string str((std::istreambuf_iterator<char>(input)),
-                         std::istreambuf_iterator<char>());
-/*
-        std::ostringstream os;
-        os << "targetdir " << "/ssd/Minic/train_data/sf/1B/" << "\n";
-        os << "loop " << "100" << "\n";
-        os << "batchsize " << "1000000" << "\n";
-        os << "lambda " << "1" << "\n";
-        os << "validation_set_file_name " << "/ssd/Minic/train_data/sf/validation/1m_d16.bin" << "\n";
-        os << "nn_batch_size " << "1000" << "\n";
-        os << "newbob_decay " << "0.5" << "\n";
-        os << "loss_output_interval " << "1000000" << "\n";
-        os << "eval_save_interval " << "250000000" << "\n";
-        std::string str = os.str();
-*/
-        std::istringstream is(str);
-        learn(is); 
-        return 0;
-    }
 #endif
 
 #ifdef DEBUG_TOOL

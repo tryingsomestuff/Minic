@@ -4,7 +4,8 @@
 
 #include "logging.hpp"
 
-/* This is a convenient oldy from Weini to let the user specify some configuration from CLI
+/*!
+ * This is a convenient oldy from Weini to let the user specify some configuration from CLI
  * CLI interaction is kept for debug purpose
  */
 namespace Options {

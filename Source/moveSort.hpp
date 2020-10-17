@@ -6,7 +6,8 @@
 #include "timers.hpp"
 #include "transposition.hpp"
 
-/* Minic is not sorting move on the fly, but once and for all
+/*!
+ * Minic is not sorting move on the fly, but once and for all
  * MoveSorter is storing needed information and computeScore function
  * will give each move a score. After that, sort is called on the MoveList
  * */

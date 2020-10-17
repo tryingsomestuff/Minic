@@ -29,7 +29,8 @@ struct ThreadData{
     SearchData datas;
 };
 
-/* This is the singleton pool of threads
+/*!
+ * This is the singleton pool of threads
  * The search function here is the main entry point for an analysis
  * This is based on the former Stockfish design
  */

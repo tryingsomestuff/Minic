@@ -5,13 +5,13 @@
 struct Position;
 struct Searcher;
 
-/* TT in Minic is a very classic 1 entry per bucket cache,
+/*!
+ * TT in Minic is a very classic 1 entry per bucket cache,
  * It stores a 32 bits hash and thus move from TT must be validating before being used
  * An entry is storing both static and evaluation score
  * as well as move, bound and depth.
  * ///@todo test using aging !
  */
-
 namespace TT{
 
 extern GenerationType curGen;

@@ -93,6 +93,13 @@ std::string ToString(const Position & p, bool noEval){
     ScoreType sc = 0;
     if ( ! noEval ){
         EvalData data;
+#ifdef WITH_NNUE
+        NNUEEvaluator evaluator;
+        if ( !p.associatedEvaluator ){
+           p.associatedEvaluator = &evaluator;
+           p.resetNNUEEvaluator(evaluator);
+        }
+#endif
         sc = eval(p, data, ThreadPool::instance().main());
         ss << Logging::_protocolComment[Logging::ct] << " Phase " << data.gp << std::endl << Logging::_protocolComment[Logging::ct] << " Static score " << sc << std::endl << Logging::_protocolComment[Logging::ct] << " Hash " << computeHash(p) << std::endl << Logging::_protocolComment[Logging::ct] << " FEN " << GetFEN(p);
     }

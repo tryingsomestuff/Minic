@@ -5,10 +5,11 @@
 #include "position.hpp"
 #include "transposition.hpp"
 
-/* This file defines classic tables management such as :
+/*!
+ * This file defines classic tables management such as :
  *  - Killers
  *  - History
- *     - color/from/to
+ *     - Color/from/to
  *     - Piece/to
  *     - CMH history : previous moved piece/previous to/cureet moved piece & to
  *  - Counter : from/to
@@ -26,7 +27,7 @@ struct KillerT{
 };
 
 struct HistoryT{
-    ScoreType history[2][NbSquare][NbSquare]; // color, from, to
+    ScoreType history[2][NbSquare][NbSquare]; // Color, from, to
     ScoreType historyP[NbPiece][NbSquare]; // Piece, to
     ScoreType counter_history[NbPiece][NbSquare][NbPiece*NbSquare]; //previous moved piece, previous to, current moved piece * boardsize + current to
 

@@ -4,7 +4,8 @@
 
 #include "position.hpp"
 
-/* This header is making some tooks available from command line
+/*!
+ * This is making some tools available from command line
  * perft, test suite, analysis, static evaluation, ...
  *
  * Available options are :
@@ -31,5 +32,4 @@
  * and all test suite ...
  *
  */
-
 int cliManagement(std::string cli, int argc, char ** argv);

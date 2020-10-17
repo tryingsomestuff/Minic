@@ -2,7 +2,8 @@
 
 #include "definition.hpp"
 
-/* Some classic test suites available here
+/*!
+ * Some classic test suites available here
  *
  * help_test : display available test suite
  * MEA

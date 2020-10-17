@@ -2,7 +2,8 @@
 
 #include "definition.hpp"
 
-/* Texel tuning utilities
+/*!
+ * Texel tuning utilities
  */
 
 #ifdef WITH_TEXEL_TUNING

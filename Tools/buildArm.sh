@@ -13,7 +13,7 @@ fi
 mkdir -p $dir/Dist/Minic2
 
 v="dev"
-n="-DUSE_NEON"
+n="-fopenmp-simd"
 
 if [ -n "$1" ] ; then
    v=$1
@@ -38,9 +38,7 @@ exe=minic_${v}_android
 echo "Building $exe"
 echo $OPT
 
-NNUESOURCE="Source/nnue/features/half_kp.cpp Source/nnue/features/half_relative_kp.cpp Source/nnue/evaluate_nnue.cpp Source/nnue/learn/learn_tools.cpp Source/nnue/learn/convert.cpp Source/nnue/learn/multi_think.cpp Source/nnue/learn/learner.cpp Source/nnue/evaluate_nnue_learner.cpp" 
+STANDARDSOURCE="Source/*.cpp Source/nnue/learn/*.cpp"
 
-STANDARDSOURCE="Source/*.cpp"
-
-$dir/android/bin/arm-linux-androideabi-clang++ $OPT $STANDARDSOURCE $NNUESOURCE -ISource -ISource/nnue -o $dir/Dist/Minic2/$exe -static-libgcc -static-libstdc++ 
+$dir/android/bin/arm-linux-androideabi-clang++ $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $dir/Dist/Minic2/$exe -static-libgcc -static-libstdc++ 
 
