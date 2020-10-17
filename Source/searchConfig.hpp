@@ -33,6 +33,8 @@ extern CONST_CLOP_TUNING ScoreType razoringMarginDepthCoeff  [2];
 extern CONST_CLOP_TUNING ScoreType razoringMarginDepthInit   [2];
 extern CONST_CLOP_TUNING DepthType nullMoveMinDepth             ;
 extern CONST_CLOP_TUNING DepthType nullMoveVerifDepth           ;
+extern CONST_CLOP_TUNING ScoreType nullMoveMargin               ;
+extern CONST_CLOP_TUNING ScoreType nullMoveMargin2              ;
 extern CONST_CLOP_TUNING ScoreType nullMoveDynamicDivisor       ;
 extern CONST_CLOP_TUNING DepthType historyPruningMaxDepth       ;
 extern CONST_CLOP_TUNING ScoreType historyPruningThresholdInit  ;
@@ -68,7 +70,9 @@ const int lmpLimit[][SearchConfig::lmpMaxDepth + 1] = {  { 0, 2, 3, 5, 9, 13, 18
 extern DepthType lmrReduction[MAX_DEPTH][MAX_MOVE];
 inline void initLMR() {
     Logging::LogIt(Logging::logInfo) << "Init lmr";
-    for (int d = 0; d < MAX_DEPTH; d++) for (int m = 0; m < MAX_MOVE; m++) lmrReduction[d][m] = DepthType( log(d) * log(m) * 0.5);
+    for (int d = 0; d < MAX_DEPTH; d++) 
+       for (int m = 0; m < MAX_MOVE; m++)
+          lmrReduction[d][m] = DepthType( log(d*1.2) * log(m) * 0.5);
 }
 
 extern ScoreType MvvLvaScores[6][6];
