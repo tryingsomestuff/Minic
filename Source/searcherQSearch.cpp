@@ -150,8 +150,6 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
         NNUE::Accumulator acc;
         p2.setAccumulator(acc,p);
 #endif        
-        //Position & p2 = stack[p.halfmoves+1].p;
-        //p2 = p;
         if ( applyMove(p2,e.m) ){;
             ++validMoveCount;
             //stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
@@ -165,7 +163,6 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
                     if (score >= beta) {
                         b = TT::B_beta;
                         TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),TT::Bound(b|(ttPV?TT::B_ttFlag:TT::B_none)|(isInCheck?TT::B_isInCheckFlag:TT::B_none)),hashDepth);
-                        ///@todo try to update history here also ??
                         return bestScore;
                     }
                     b = TT::B_exact;
@@ -178,11 +175,12 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
     MoveList moves;
     if ( isInCheck ) MoveGen::generate<MoveGen::GP_all>(p,moves); ///@todo generate only evasion !
     else             MoveGen::generate<MoveGen::GP_cap>(p,moves);
-    CMHPtrArray cmhPtr;
-    getCMHPtr(p.halfmoves,cmhPtr);
 
     const Square recapture = VALIDMOVE(p.lastMove) ? Move2To(p.lastMove) : INVALIDSQUARE;
     const bool onlyRecapture = qply > 5 && isCapture(p.lastMove) && recapture != INVALIDSQUARE;
+
+    CMHPtrArray cmhPtr;
+    getCMHPtr(p.halfmoves,cmhPtr);
 
 #ifdef USE_PARTIAL_SORT
     MoveSorter::score(*this,moves,p,data.gp,ply,cmhPtr,false,isInCheck,validTTmove?&e:NULL); ///@todo warning gp is often = 0.5 here !
@@ -204,8 +202,6 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
         NNUE::Accumulator acc;
         p2.setAccumulator(acc,p);
 #endif
-        //Position & p2 = stack[p.halfmoves+1].p;
-        //p2 = p;
         if ( ! applyMove(p2,*it) ) continue;
         ++validMoveCount;
         //stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!

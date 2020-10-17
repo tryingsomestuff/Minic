@@ -179,7 +179,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         // null move (warning, mobility info is only available if no TT hit)
         if ( SearchConfig::doNullMove && !subSearch && (isNotEndGame || data.mobility[p.c] > 4) && withoutSkipMove && 
             depth >= SearchConfig::nullMoveMinDepth && 
-            evalScore >= beta && 
+            evalScore >= beta + SearchConfig::nullMoveMargin && 
             evalScore >= stack[p.halfmoves].eval && 
             stack[p.halfmoves].p.lastMove != NULLMOVE && 
             ply >= (unsigned int)nullMoveMinPly ) {
@@ -188,7 +188,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             const DepthType R = depth / 4 + 3 + std::min((evalScore - beta) / SearchConfig::nullMoveDynamicDivisor, 5); // adaptative
             ///@todo try to minimize sid_nullMoveTry2 versus sid_nullMove
             const ScoreType nullIIDScore = evalScore; // pvs<false, false>(beta - 1, beta, p, std::max(depth/4,1), ply, nullPV, seldepth, isInCheck, !cutNode);
-            if (nullIIDScore >= beta ) { 
+            if (nullIIDScore >= beta + SearchConfig::nullMoveMargin2) { 
                 TT::Entry nullE;
                 const DepthType nullDepth = depth-R;
                 TT::getEntry(*this, p, pHash, nullDepth, nullE);
@@ -199,8 +199,6 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                     NNUE::Accumulator acc;
                     pN.setAccumulator(acc,p);
 #endif
-                    //Position & pN = stack[p.halfmoves+1].p;
-                    //pN = p;
                     applyNull(*this,pN);
                     assert(pN.halfmoves < MAX_PLY && pN.halfmoves >= 0);
                     stack[pN.halfmoves].p = pN;
@@ -325,8 +323,6 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         NNUE::Accumulator acc;
         p2.setAccumulator(acc,p);
 #endif
-        //Position & p2 = stack[p.halfmoves+1].p2;
-        //p2 = p;
         if ( applyMove(p2, e.m)) {
             TT::prefetch(computeHash(p2));
             //const Square to = Move2To(e.m);
@@ -460,8 +456,6 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         NNUE::Accumulator acc;
         p2.setAccumulator(acc,p);
 #endif
-        //Position & p2 = stack[p.halfmoves+1].p2;
-        //p2 = p;
         if ( ! applyMove(p2,*it) ) continue;
         TT::prefetch(computeHash(p2));
         const Square to = Move2To(*it);
