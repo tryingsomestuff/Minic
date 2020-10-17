@@ -4,11 +4,11 @@
 
 struct Position;
 
-/* A simple Zobrist hash implementation
+/*!
+ * A simple Zobrist hash implementation
  */
-
 namespace Zobrist {
-    extern Hash ZT[NbSquare][14]; // should be 13 but last ray is for castling[0 7 56 63][13] and ep [k][13] and color [3 4][13]
+    extern Hash ZT[NbSquare][14]; // should be 13 but last ray is for castling[0 7 56 63][13] and ep [k][13] and Color [3 4][13]
     extern Hash ZTCastling[16]; // castling
     void initHash();
 }

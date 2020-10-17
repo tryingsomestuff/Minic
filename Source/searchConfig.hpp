@@ -4,10 +4,10 @@
 
 #include "logging.hpp"
 
-/* All parameters for search are defined here
+/*!
+ All parameters for search are defined here
  * There are const when no CLOP tuning is use and of course need to be mutable when begin tuned
  */
-
 namespace SearchConfig{
 const bool doWindow         = true;
 const bool doPVS            = true;
@@ -72,7 +72,7 @@ inline void initLMR() {
     Logging::LogIt(Logging::logInfo) << "Init lmr";
     for (int d = 0; d < MAX_DEPTH; d++) 
        for (int m = 0; m < MAX_MOVE; m++)
-          lmrReduction[d][m] = DepthType( log(d*1.2) * log(m) * 0.5);
+          lmrReduction[d][m] = DepthType( log(d*1.6) * log(m) * 0.4);
 }
 
 extern ScoreType MvvLvaScores[6][6];

@@ -7,11 +7,6 @@
 #include "searcher.hpp"
 #include "tools.hpp"
 
-#ifdef WITH_NNUE
-#include "nnue.hpp"
-#include "nnue/nnue_accumulator.h"
-#endif
-
 namespace MoveGen{
 
 void addMove(Square from, Square to, MType type, MoveList & moves) {
@@ -106,13 +101,7 @@ void applyNull(Searcher & , Position & pN) {
     if ( pN.c == Co_White ) ++pN.moves;
     ++pN.halfmoves;
 
-#ifdef WITH_NNUE
-    if (DynamicConfig::useNNUE){
-       pN.resetAccumulator();
-    }
-    auto & dp = pN._dirtyPiece;
-    dp.dirty_num = 0; // no piece changed ...
-#endif
+    // no NNUE things here
 
     STOP_AND_SUM_TIMER(Apply)
 }
@@ -140,13 +129,14 @@ bool applyMove(Position & p, const Move & m, bool noValidation){
 #endif
 
 #ifdef WITH_NNUE
-    p.resetAccumulator();
-    auto & dp = p._dirtyPiece;
-    dp.dirty_num = 1; // at least one piece is changing ...
-    Square rfrom = INVALIDSQUARE; // for castling
-    Square rto   = INVALIDSQUARE; // for castling
-    Square capSq = INVALIDSQUARE;
-    if ( isCapture(type) ) capSq = to; // ep is fixed later...
+    // if king is not moving, update nnue evaluator
+    // this is based on current position state
+    /*
+    if ( DynamicConfig::useNNUE && std::abs(fromP) != P_wk){
+       if ( p.c == Co_White ) p.updateNNUEEvaluator<Co_White>(p.Evaluator(),m);
+       else                   p.updateNNUEEvaluator<Co_Black>(p.Evaluator(),m);
+    }
+    */
 #endif
 
     switch(type){
@@ -164,10 +154,6 @@ bool applyMove(Position & p, const Move & m, bool noValidation){
         assert(p.ep != INVALIDSQUARE);
         assert(SQRANK(p.ep) == EPRank[p.c]);
         const Square epCapSq = p.ep + (p.c == Co_White ? -8 : +8);
-#ifdef WITH_NNUE        
-        capSq = epCapSq; // fix capture square in ep case
-        toP = (p.c == Co_White ? P_bp : P_wp);
-#endif
         assert(squareOK(epCapSq));
         BBTools::unSetBit(p, epCapSq, ~fromP); // BEFORE setting p.b new shape !!!
         _unSetBit(p.allPieces[fromP>0?Co_Black:Co_White],epCapSq);
@@ -216,31 +202,15 @@ bool applyMove(Position & p, const Move & m, bool noValidation){
         break;
     case T_wks:
         movePieceCastle<Co_White>(p,CT_OO,Sq_g1,Sq_f1);
-#ifdef WITH_NNUE        
-        rfrom = p.rooksInit[Co_White][CT_OO];
-        rto = Sq_f1;
-#endif
         break;
     case T_wqs:
         movePieceCastle<Co_White>(p,CT_OOO,Sq_c1,Sq_d1);
-#ifdef WITH_NNUE        
-        rfrom = p.rooksInit[Co_White][CT_OOO];
-        rto = Sq_d1;
-#endif
         break;
     case T_bks:
         movePieceCastle<Co_Black>(p,CT_OO,Sq_g8,Sq_f8);
-#ifdef WITH_NNUE        
-        rfrom = p.rooksInit[Co_Black][CT_OO];
-        rto = Sq_f8;
-#endif
         break;
     case T_bqs:
         movePieceCastle<Co_Black>(p,CT_OOO,Sq_c8,Sq_d8);
-#ifdef WITH_NNUE        
-        rfrom = p.rooksInit[Co_Black][CT_OOO];
-        rto = Sq_d8;
-#endif
         break;
     }
 
@@ -248,41 +218,6 @@ bool applyMove(Position & p, const Move & m, bool noValidation){
         STOP_AND_SUM_TIMER(Apply)
         return false; // this is the only legal move validation needed
     }
-
-#ifdef WITH_NNUE
-      if (DynamicConfig::useNNUE){
-        if ( isCapture(type)){ // remove to piece (works also for ep)
-            dp.dirty_num = 2;
-            dp.piece[1] = toP;
-            dp.from[1] = capSq;
-            dp.to[1] = INVALIDSQUARE;
-        }
-
-        if ( !isCastling(type)){ // move from piece
-            dp.piece[0] = fromP;
-            dp.from[0] = from;
-            dp.to[0] = to;
-        }
-
-        if ( isPromotion(type)){ // change to piece type
-            dp.to[0] = INVALIDSQUARE;
-            dp.piece[dp.dirty_num] = promPiece;
-            dp.from[dp.dirty_num] = INVALIDSQUARE;
-            dp.to[dp.dirty_num] = to;
-            dp.dirty_num++;
-        }      
-
-        if ( isCastling(type)){ 
-            dp.dirty_num = 2; // 2 pieces moved
-            dp.piece[0] = p.c==Co_White?P_wk:P_bk;
-            dp.from[0] = from;
-            dp.to[0] = to;
-            dp.piece[1] = p.c==Co_White?P_wr:P_br;
-            dp.from[1] = rfrom;
-            dp.to[1] = rto;
-        }
-      }
-#endif
 
     const bool pawnMove = abs(fromP) == P_wp;
     // update EP
@@ -294,7 +229,7 @@ bool applyMove(Position & p, const Move & m, bool noValidation){
     }
     assert(p.ep == INVALIDSQUARE || SQRANK(p.ep) == EPRank[~p.c]);
 
-    // update color
+    // update Color
     p.c = ~p.c;
     p.h ^= Zobrist::ZT[3][13] ; p.h  ^= Zobrist::ZT[4][13];
 
@@ -305,6 +240,15 @@ bool applyMove(Position & p, const Move & m, bool noValidation){
     ++p.halfmoves;
 
     if ( isCaptureOrProm(type) ) MaterialHash::updateMaterialOther(p);
+
+#ifdef WITH_NNUE
+    // if a king was moved (including castling), reset nnue evaluator
+    // this is based on new position state !
+    //if ( DynamicConfig::useNNUE && std::abs(fromP) == P_wk){ 
+       p.resetNNUEEvaluator(p.Evaluator());
+    //}
+#endif    
+
 #ifdef DEBUG_MATERIAL
     Position::Material mat = p.mat;
     MaterialHash::initMaterial(p);
@@ -376,10 +320,6 @@ ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck, Searcher 
     std::shuffle(moves.begin(), moves.end(),g);
     for (auto it = moves.begin(); it != moves.end(); ++it) {
         Position p2 = p;
-#ifdef WITH_NNUE        
-        NNUE::Accumulator acc;
-        p2.setAccumulator(acc,p);
-#endif        
         if (!applyMove(p2, *it)) continue;
         PVList childPV;
 #ifdef WITH_GENFILE

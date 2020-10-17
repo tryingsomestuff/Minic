@@ -6,7 +6,8 @@
 
 #include "position.hpp"
 
-/* This thing was used to parse pgn file
+/*!
+ * This thing was used to parse pgn file
  * in order to generate learning file for the Texel tuning process
  */
 

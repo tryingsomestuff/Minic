@@ -7,12 +7,12 @@
 struct Position;
 struct Searcher;
 
-/* This EGT implementation is using SYZYGY TB
+/*!
+ * This EGT implementation is using SYZYGY TB
  * and is more or less a simple copy/paste from Arasan by Jon Dart
  * Fathom implementation (from https://github.com/jdart1/Fathom) must be cloned into "Fathom" directory
  * inside Minic root directory for this to compile/work.
  */
-
 namespace SyzygyTb {
 
 const ScoreType TB_CURSED_SCORE = 1;

@@ -2,9 +2,11 @@
 
 #include "definition.hpp"
 
-/* Things that are widely used with values that can be varying due to GUI or CLI interaction
+/*!
+ * Things that are widely used 
+ * with values that can be varying due to 
+ * GUI or CLI interaction
  */
-
 namespace DynamicConfig{
     extern bool mateFinder         ;
     extern bool disableTT          ;

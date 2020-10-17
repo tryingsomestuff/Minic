@@ -20,16 +20,7 @@ mkdir -p $dir/Dist/Minic2
 d="-DDEBUG_TOOL"
 v="dev"
 t="-march=native"
-
-avx512support=$(grep -c avx512 /proc/cpuinfo)
-avx2support=$(grep -c avx2 /proc/cpuinfo)
-if (test $avx512support -ne 0); then
-   n="-DUSE_AVX512 -DUSE_AVX2 -DUSE_SSE41 -DUSE_SSSE3 -DUSE_SSE2"
-elif (test $avx2support -ne 0); then
-   n="-DUSE_AVX2 -DUSE_SSE41 -DUSE_SSSE3 -DUSE_SSE2"
-else
-   n="-DUSE_SSE41 -DUSE_SSSE3 -DUSE_SSE2"
-fi
+n="-fopenmp-simd"
 
 if [ -n "$1" ] ; then
    v=$1
@@ -61,21 +52,13 @@ echo "Building $exe"
 
 WARN="-Wall -Wcast-qual -Wno-char-subscripts -Wno-reorder -Wmaybe-uninitialized -Wuninitialized -pedantic -Wextra -Wshadow -Wno-unknown-pragmas"
 
-OPT="-s $WARN $d -DNDEBUG -O3 $t --std=c++17 $n -DUSE_BLAS" ; DEPTH=16
+OPT="-s $WARN $d -DNDEBUG -O3 $t --std=c++17 $n" ; DEPTH=16
 #OPT="-s $WARN $d -ffunction-sections -fdata-sections -Os -s -DNDEBUG -Wl,--gc-sections $t --std=c++17" ; DEPTH=16
 #OPT="$WARN $d -DNDEBUG -O3 -g -ggdb -fno-omit-frame-pointer $t --std=c++17" ; DEPTH=16
 #OPT="$WARN $d -DNDEBUG -g $t --std=c++17" ; DEPTH=10
 #OPT="$WARN $d -g $t --std=c++17 -rdynamic" ; DEPTH=10
 
-MKLROOT=/opt/intel/compilers_and_libraries_2020.3.279/linux/mkl/blabla
-if [ -d $MKLROOT ]; then
-   #https://software.intel.com/sites/products/mkl/mkl_link_line_advisor.htm
-   LIBBLAS=" -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_ilp64.a ${MKLROOT}/lib/intel64/libmkl_gnu_thread.a ${MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lgomp -lpthread -lm -ldl"
-else
-   LIBBLAS="-lopenblas"
-fi
-
-LIBS="-lpthread -ldl $LIBBLAS"
+LIBS="-lpthread -ldl"
 
 OPT="$OPT -fno-exceptions"
 
@@ -99,19 +82,17 @@ echo $OPT $LIBS
 
 rm -f *.gcda
 
-NNUESOURCE="Source/nnue/features/half_kp.cpp Source/nnue/features/half_relative_kp.cpp Source/nnue/evaluate_nnue.cpp Source/nnue/learn/learn_tools.cpp Source/nnue/learn/convert.cpp Source/nnue/learn/multi_think.cpp Source/nnue/learn/learner.cpp Source/nnue/evaluate_nnue_learner.cpp" 
+STANDARDSOURCE="Source/*.cpp Source/nnue/learn/*.cpp"
 
-STANDARDSOURCE="Source/*.cpp"
-
-$CXX -fprofile-generate $OPT $STANDARDSOURCE $NNUESOURCE -ISource -ISource/nnue -o $dir/Dist/Minic2/$exe $LIBS 
+$CXX -fprofile-generate $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $dir/Dist/Minic2/$exe $LIBS 
 ret=$?
 echo "end of first compilation"
 if [ $ret = "0" ]; then
    echo "running Minic for profiling : $dir/Dist/Minic2/$exe"
    $dir/Dist/Minic2/$exe bench $DEPTH -quiet 0 
-   $dir/Dist/Minic2/$exe bench $DEPTH -quiet 0 -NNUEFile Tourney/nn.bin
+   $dir/Dist/Minic2/$exe bench $DEPTH -quiet 0 -NNUEFile Tourney/nn_seer.bin
    echo "starting optimized compilation"
-   $CXX -fprofile-use $OPT $STANDARDSOURCE $NNUESOURCE -ISource -ISource/nnue -o $dir/Dist/Minic2/$exe $LIBS
+   $CXX -fprofile-use $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $dir/Dist/Minic2/$exe $LIBS
    echo "done "
 else
    echo "some error"

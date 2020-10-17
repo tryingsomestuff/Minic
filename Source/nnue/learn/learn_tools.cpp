@@ -17,7 +17,7 @@
 
 #include "learn_tools.hpp"
 
-#if defined(WITH_DATA2BIN) or defined(WITH_LEARNER)
+#if defined(WITH_DATA2BIN)
 
 // Mostly copy/paste from nodchip Stockfish repository and adapted to Minic
 // Tools for handling various learning data format
@@ -112,7 +112,7 @@ void pack(const Position& pos){
 	stream.set_data(data);
 
 	// Side to move.
-	stream.write_one_bit((int)(pos.side_to_move()));
+	stream.write_one_bit((int)(pos.c));
 
 	// 7-bit positions for leading and trailing balls
 	// White king and black king, 6 bits for each.
@@ -338,25 +338,25 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen ){
 	p.castling = C_none;
 	if (stream.read_one_bit()) {
 		Square rsq;
-		for (rsq = relative_square(WHITE, Sq_h1); p.board_const(rsq) != P_wr; --rsq) {}
+		for (rsq = relative_square(Co_White, Sq_h1); p.board_const(rsq) != P_wr; --rsq) {}
 		p.rooksInit[Co_White][CT_OO] = rsq;
 		p.castling |= C_wks;
 	}
 	if (stream.read_one_bit()) {
 		Square rsq;
-		for (rsq = relative_square(WHITE, Sq_a1); p.board_const(rsq) != P_wr; ++rsq) {}
+		for (rsq = relative_square(Co_White, Sq_a1); p.board_const(rsq) != P_wr; ++rsq) {}
 		p.rooksInit[Co_White][CT_OOO] = rsq;
 		p.castling |= C_wqs;
 	}
 	if (stream.read_one_bit()) {
 		Square rsq;
-		for (rsq = relative_square(BLACK, Sq_h1); p.board_const(rsq) != P_br; --rsq) {}
+		for (rsq = relative_square(Co_Black, Sq_h1); p.board_const(rsq) != P_br; --rsq) {}
 		p.rooksInit[Co_Black][CT_OO] = rsq;
 		p.castling |= C_bks;
 	}
 	if (stream.read_one_bit()) {
 		Square rsq;
-		for (rsq = relative_square(BLACK, Sq_a1); p.board_const(rsq) != P_br; ++rsq) {}
+		for (rsq = relative_square(Co_Black, Sq_a1); p.board_const(rsq) != P_br; ++rsq) {}
 		p.rooksInit[Co_Black][CT_OOO] = rsq;
 		p.castling |= C_bqs;
 	}
@@ -396,4 +396,4 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen ){
 	return 0;
 }
 
-#endif // WITH_DATA2BIN or WITH_LEARNER
+#endif // WITH_DATA2BIN

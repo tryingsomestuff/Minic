@@ -2,7 +2,8 @@
 
 #include "definition.hpp"
 
-/* A little instrumentation facility to study part of Minic speed
+/*!
+ * A little instrumentation facility to study part of Minic speed
  */
 
 #ifdef WITH_TIMER

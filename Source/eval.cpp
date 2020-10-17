@@ -23,15 +23,15 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, const BitBoa
         if (withForwardness) score += EvalScore{ScoreType(((DynamicConfig::styleForwardness-50)*SQRANK(kk))/8),0} * ColorSignHelper<C>();
         const BitBoard shadowTarget = BBTools::pfCoverage[T-1](k, occupancy ^ nonPawnMat, C); // aligned threats removing own piece (not pawn) in occupancy
         if ( shadowTarget ){
+           kdanger[~C] += countBit(shadowTarget & kingZone[~C]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][T-1];
            const BitBoard target = BBTools::pfCoverage[T-1](k, occupancy, C); // real targets
            if ( target ){
               attBy |= target;
               att2  |= att & target;
               att   |= target;
               if ( target & p.pieces_const<P_wk>(~C) ) checkers |= SquareToBitboard(k);
+              kdanger[C]  -= countBit(target       & kingZone[C])  * EvalConfig::kingAttWeight[EvalConfig::katt_defence][T-1];
            }
-           kdanger[C]  -= countBit(target       & kingZone[C])  * EvalConfig::kingAttWeight[EvalConfig::katt_defence][T-1];
-           kdanger[~C] += countBit(shadowTarget & kingZone[~C]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][T-1];
         }
     }
 }
@@ -82,8 +82,7 @@ inline void evalPawnPasser(const Position & p, BitBoard pieceBBiterator, EvalSco
 template < Color C>
 inline void evalPawn(BitBoard pieceBBiterator, EvalScore & score){
     while (pieceBBiterator) { 
-        const Square k = popBit(pieceBBiterator);
-        const Square kk = ColorSquarePstHelper<C>(k);
+        const Square kk = ColorSquarePstHelper<C>(popBit(pieceBBiterator));
         score += EvalConfig::PST[0][kk] * ColorSignHelper<C>(); 
     }
 }
@@ -110,7 +109,8 @@ template< Color C>
 BitBoard getPinned(const Position & p, const Square s){
     BitBoard pinned = emptyBitBoard;
     if ( s == INVALIDSQUARE ) return pinned;
-    BitBoard pinner = BBTools::attack<P_wb>(s, p.pieces_const<P_wb>(~C) | p.pieces_const<P_wq>(~C), p.allPieces[~C]) | BBTools::attack<P_wr>(s, p.pieces_const<P_wr>(~C) | p.pieces_const<P_wq>(~C), p.allPieces[~C]);
+    BitBoard pinner = BBTools::attack<P_wb>(s, p.pieces_const<P_wb>(~C) | p.pieces_const<P_wq>(~C), p.allPieces[~C]) 
+                    | BBTools::attack<P_wr>(s, p.pieces_const<P_wr>(~C) | p.pieces_const<P_wq>(~C), p.allPieces[~C]);
     while ( pinner ) { pinned |= BBTools::mask[popBit(pinner)].between[p.king[C]] & p.allPieces[C]; }
     return pinned;
 }
@@ -193,10 +193,11 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
     if (DynamicConfig::useNNUE){
         EvalScore score;
         if ( DynamicConfig::forceNNUE || ! isLazyHigh(600,features,score)){ // stay to classic eval when the game is already decided
-           ScoreType nnueScore = NNUEWrapper::evaluate(p);
+           ScoreType nnueScore = 600*p.Evaluator().propagate(p.c);
+           // NNUE evaluation scaling
+           nnueScore = (Score(nnueScore,features.scalingFactor,p) * NNUEWrapper::NNUEscaling) / 64;
            // take tempo and contempt into account
            nnueScore += ScaleScore( /*EvalConfig::tempo*(white2Play?+1:-1) +*/ context.contempt, data.gp);
-           nnueScore = (Score(nnueScore,features.scalingFactor,p) * NNUEWrapper::NNUEscaling) / 64;
            ++context.stats.counters[Stats::sid_evalNNUE];
            STOP_AND_SUM_TIMER(Eval)
            return nnueScore;
@@ -216,18 +217,15 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
     const BitBoard rooks[2]   = {p.whiteRook()  , p.blackRook()};
     const BitBoard queens[2]  = {p.whiteQueen() , p.blackQueen()};
     const BitBoard kings[2]   = {p.whiteKing()  , p.blackKing()};    
-    const BitBoard allPawns          = pawns[Co_White] | pawns[Co_Black];
-    const BitBoard nonPawnMat[2]     = {p.allPieces[Co_White] & ~pawns[Co_White] , p.allPieces[Co_Black] & ~pawns[Co_Black]};
-    const BitBoard occupancy         = p.occupancy();
-    const BitBoard minor[2]          = { knights[Co_White] | bishops[Co_White] , knights[Co_Black] | bishops[Co_Black]};
-    ScoreType kdanger[2]             = {0, 0};
-    BitBoard att[2]                  = {emptyBitBoard, emptyBitBoard}; // bitboard of squares attacked by color
-    BitBoard att2[2]                 = {emptyBitBoard, emptyBitBoard}; // bitboard of squares attacked twice by color
-    BitBoard attFromPiece[2][6]      = {{emptyBitBoard}};      // bitboard of squares attacked by specific piece of color
-    BitBoard checkers[2][6]          = {{emptyBitBoard}};      // bitboard of color pieces squares attacking king
-
+    const BitBoard nonPawnMat[2] = {p.allPieces[Co_White] & ~pawns[Co_White] , p.allPieces[Co_Black] & ~pawns[Co_Black]};
     const BitBoard kingZone[2]   = { BBTools::mask[p.king[Co_White]].kingZone, BBTools::mask[p.king[Co_Black]].kingZone};
-    const BitBoard kingShield[2] = { kingZone[Co_White] & ~BBTools::shiftS<Co_White>(ranks[SQRANK(p.king[Co_White])]) , kingZone[Co_Black] & ~BBTools::shiftS<Co_Black>(ranks[SQRANK(p.king[Co_Black])]) };
+    const BitBoard occupancy     = p.occupancy();
+
+    ScoreType kdanger[2]        = {0, 0};
+    BitBoard att[2]             = {emptyBitBoard, emptyBitBoard}; // bitboard of squares attacked by Color
+    BitBoard att2[2]            = {emptyBitBoard, emptyBitBoard}; // bitboard of squares attacked twice by Color
+    BitBoard attFromPiece[2][6] = {{emptyBitBoard}};      // bitboard of squares attacked by specific piece of Color
+    BitBoard checkers[2][6]     = {{emptyBitBoard}};      // bitboard of Color pieces squares attacking king
 
     // PST, attack, danger
     if ( DynamicConfig::styleForwardness != 50 ){
@@ -356,6 +354,8 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
        }
 
        // pawn shield (PST and king troppism alone is not enough)
+       const BitBoard kingShield[2] = { kingZone[Co_White] & ~BBTools::shiftS<Co_White>(ranks[SQRANK(p.king[Co_White])]) , 
+                                        kingZone[Co_Black] & ~BBTools::shiftS<Co_Black>(ranks[SQRANK(p.king[Co_Black])]) };
        const int pawnShieldW = countBit(kingShield[Co_White] & pawns[Co_White]);
        const int pawnShieldB = countBit(kingShield[Co_Black] & pawns[Co_Black]);
        pe.score += EvalConfig::pawnShieldBonus * std::min(pawnShieldW*pawnShieldW,9);
@@ -423,7 +423,8 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
     features.scores[F_development] += EvalConfig::pieceFrontPawn * countBit( BBTools::shiftN<Co_White>(pawns[Co_White]) & nonPawnMat[Co_White] );
     features.scores[F_development] -= EvalConfig::pieceFrontPawn * countBit( BBTools::shiftN<Co_Black>(pawns[Co_Black]) & nonPawnMat[Co_Black] );
 
-    // pawn in front of own minor 
+    // pawn in front of own minor
+    const BitBoard minor[2]          = { knights[Co_White] | bishops[Co_White] , knights[Co_Black] | bishops[Co_Black]};
     BitBoard wpminor = BBTools::shiftS<Co_White>(pawns[Co_White]) & minor[Co_White];
     while(wpminor){
        features.scores[F_development] += EvalConfig::pawnFrontMinor[ColorRank<Co_White>(popBit(wpminor))];
@@ -645,6 +646,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
 #endif
 
     // initiative (kind of second order pawn structure stuff for end-games)
+    const BitBoard allPawns          = pawns[Co_White] | pawns[Co_Black];    
     EvalScore initiativeBonus = EvalConfig::initiative[0] * countBit(allPawns) + EvalConfig::initiative[1] * ((allPawns & queenSide) && (allPawns & kingSide)) + EvalConfig::initiative[2] * (countBit(occupancy & ~allPawns) == 2) - EvalConfig::initiative[3];
     initiativeBonus = EvalScore(sgn(score[MG]) * std::max(initiativeBonus[MG], ScoreType(-std::abs(score[MG]))), sgn(score[EG]) * std::max(initiativeBonus[EG], ScoreType(-std::abs(score[EG]))));
     score += initiativeBonus;

@@ -4,8 +4,10 @@
 
 struct Position;
 
-// This KPK implementation idea was taken from public-domain code from H.G. Muller
-// http://talkchess.com/forum3/viewtopic.php?f=7&t=47557#p511740
+/*!
+ * This KPK implementation idea was taken from public-domain code from H.G. Muller
+ * http://talkchess.com/forum3/viewtopic.php?f=7&t=47557#p511740
+ */
 namespace KPK{
 
 Square normalizeSquare(const Position& p, Color strongSide, Square sq);

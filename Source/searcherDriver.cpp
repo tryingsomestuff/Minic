@@ -39,10 +39,12 @@ void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestSco
 PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
 
     Position p(pp);
-#ifdef WITH_NNUE    
-    NNUE::Accumulator acc;
-    p.setAccumulator(acc);
-#endif    
+#ifdef WITH_NNUE
+    // use the Searcher evaluator for the root position
+    // and reset it with the current position
+    p.associateEvaluator(nnueEvaluator);
+    p.resetNNUEEvaluator(nnueEvaluator); 
+#endif
 
     if ( isMainThread() ) initCaslingPermHashTable(p); // let's be sure ... ///@todo clean up this crap !!!!
 
@@ -126,7 +128,7 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType 
          && currentMoveMs < INFINITETIME && currentMoveMs > 800 && TimeMan::msecUntilNextTC > 0){
        // easy move detection (small open window search)
        rootScores.clear();
-       ScoreType easyScore = pvs<true>(-MATE, MATE, p, easyMoveDetectionDepth, 0, pvOut, seldepth, isInCheck,false,false);
+       ScoreType easyScore = pvs<true>(-MATE, MATE, p, easyMoveDetectionDepth, 0, pvOut, seldepth, isInCheck, false, false);
        std::sort(rootScores.begin(), rootScores.end(), [](const RootScores& r1, const RootScores & r2) {return r1.s > r2.s; });
        if (stopFlag) { // no more time, this is strange ...
            bestScore = easyScore; 
@@ -185,7 +187,7 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType 
 
                 pvLoc.clear();
                 //stack[p.halfmoves].h = computeHash(p); ///@todo this seems useless ?
-                score = pvs<true>(alpha,beta,p,windowDepth,0,pvLoc,seldepth,isInCheck,false,false,skipMoves.empty()?nullptr:&skipMoves);
+                score = pvs<true>(alpha, beta, p, windowDepth, 0, pvLoc, seldepth, isInCheck, false, false, skipMoves.empty()?nullptr:&skipMoves);
                 if ( stopFlag ) break;
                 delta += 2 + delta/2; // from xiphos ...
                 if (alpha > -MATE && score <= alpha) {

@@ -7,9 +7,9 @@
 #include "bitboardTools.hpp"
 #include "position.hpp"
 
-/* Those things are used for test suite to work when reading edp file
+/*!
+ * Those things are used for test suite to work when reading edp file
  */
-
 struct ExtendedPosition : Position{
     ExtendedPosition(const std::string & s, bool withMoveCount = true);
     bool shallFindBest();

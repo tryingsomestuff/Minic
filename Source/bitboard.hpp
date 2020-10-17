@@ -2,8 +2,10 @@
 
 #include "definition.hpp"
 
-/* Main bitboard utilities
- * especially countBit (using POPCOUNT) and popBit (bsf) optimized for the platform being used
+/*!
+ * Main bitboard utilities
+ * especially countBit (using POPCOUNT) and popBit (bsf) 
+ * are optimized for the platform being used
  */
 
 #ifdef __MINGW32__

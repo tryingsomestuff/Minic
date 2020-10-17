@@ -3,10 +3,10 @@
 #include "definition.hpp"
 #include "score.hpp"
 
-/* All parameters for evaluation are defined here
+/*!
+ * All parameters for evaluation are defined here
  * There are const when no Texel tuning is use and of course need to be mutable when begin tuned
  */
-
 namespace EvalConfig {
 
 // This idea was taken from the second-degree polynomial material imbalance by Tord Romstad

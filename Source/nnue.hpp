@@ -4,21 +4,9 @@
 
 #ifdef WITH_NNUE
 
-struct Position; // forward decl
-
-// convert Minic things to SF/NNUE ones
-///@todo prefix everything with NNUE ...
-///@todo put a namespace around all NNUE "lib"
-#define WHITE Co_White
-#define BLACK Co_Black
-#define COLOR_NB Co_End
-#define SQUARE_NB NbSquare
-#define FILE_NB 8
-#define RANK_NB 8
-#define PIECE_NB NbPiece
-#define NO_PIECE PieceIdx(P_none)
-#define NNUEValue ScoreType
-#define SQ_NONE INVALIDSQUARE
+#include "logging.hpp"
+#include "dynamicConfig.hpp"
+#include "nnue_impl.hpp"
 
 #ifndef NDEBUG
    #define SCALINGCOUNT 5000
@@ -29,25 +17,77 @@ struct Position; // forward decl
 // Internal wrapper to the NNUE things
 namespace NNUEWrapper{
 
+  typedef float nnueType;
+
   // NNUE eval scaling factor
   extern int NNUEscaling;
 
-  void Initialize();
-  // curently loaded network
-  extern std::string eval_file_loaded;
-
-  void init_NNUE();
-  void verify_NNUE();
   void compute_scaling(int count = SCALINGCOUNT);
 
-  ScoreType evaluate(const Position& pos);
-  bool load_eval(std::istream& stream);
+  inline void init(){
+     if ( !DynamicConfig::NNUEFile.empty() ){
+        Logging::LogIt(Logging::logInfoPrio) << "Loading NNUE net " << DynamicConfig::NNUEFile;
+        nnue::half_kp_eval<nnueType>::weights = nnue::half_kp_weights<nnueType>{}.load(DynamicConfig::NNUEFile);
+        DynamicConfig::useNNUE = true;
+        compute_scaling();
+     }
+     else{
+        Logging::LogIt(Logging::logInfoPrio) << "No NNUE net loaded, using standard evaluation";
+        DynamicConfig::useNNUE = false;
+     }
+  }
 
-} // nnue
+} // NNUEWrapper
 
-// optionnal learning tools
-// note that this next header is free from engine specific stuff !
+using NNUEEvaluator = nnue::half_kp_eval<NNUEWrapper::nnueType>;
+
+namespace feature_idx{
+
+    constexpr size_t major = 64 * 12;
+    constexpr size_t minor = 64;
+
+    constexpr size_t us_pawn_offset = 0;
+    constexpr size_t us_knight_offset = us_pawn_offset + minor;
+    constexpr size_t us_bishop_offset = us_knight_offset + minor;
+    constexpr size_t us_rook_offset = us_bishop_offset + minor;
+    constexpr size_t us_queen_offset = us_rook_offset + minor;
+    constexpr size_t us_king_offset = us_queen_offset + minor;
+
+    constexpr size_t them_pawn_offset = us_king_offset + minor;
+    constexpr size_t them_knight_offset = them_pawn_offset + minor;
+    constexpr size_t them_bishop_offset = them_knight_offset + minor;
+    constexpr size_t them_rook_offset = them_bishop_offset + minor;
+    constexpr size_t them_queen_offset = them_rook_offset + minor;
+    constexpr size_t them_king_offset = them_queen_offset + minor;
+
+    constexpr size_t us_offset(Piece pt){
+    switch(pt){
+        case P_wp: return us_pawn_offset;
+        case P_wn: return us_knight_offset;
+        case P_wb: return us_bishop_offset;
+        case P_wr: return us_rook_offset;
+        case P_wq: return us_queen_offset;
+        case P_wk: return us_king_offset;
+        default: return us_pawn_offset;
+    }
+    }
+
+    constexpr size_t them_offset(Piece pt){
+    switch(pt){
+        case P_wp: return them_pawn_offset;
+        case P_wn: return them_knight_offset;
+        case P_wb: return them_bishop_offset;
+        case P_wr: return them_rook_offset;
+        case P_wq: return them_queen_offset;
+        case P_wk: return them_king_offset;
+        default: return them_pawn_offset;
+    }
+}
+
+} // feature_idx
+
+#ifdef WITH_DATA2BIN
 #include "learn/convert.hpp"
-#include "learn/learner.hpp"
-
 #endif
+
+#endif // WITH_NNUE

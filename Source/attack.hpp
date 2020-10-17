@@ -10,7 +10,8 @@
 
 namespace BBTools {
 
-/* Two bitboard attack generation tools can be used here (controlled by WITH_MAGIC define from definition.hpp):
+/*!
+ * Two bitboard attack generation tools can be used here (controlled by WITH_MAGIC define from definition.hpp):
  * - hyperbola quintessence (https://www.chessprogramming.org/Hyperbola_Quintessence)
  * - or magic (https://www.chessprogramming.org/Magic_Bitboards) with BMI2 extension if available
  */
@@ -28,7 +29,8 @@ void initMask();
 
 #ifndef WITH_MAGIC
 
-/* This HQ BB implementation is comming from Dumb/Amoeba by Richard Delorme (a.k.a Abulmo)
+/*!
+ * This HQ BB implementation is comming from Dumb/Amoeba by Richard Delorme (a.k.a Abulmo)
  * after a discussion on talkchess about a small BB implementation
  * http://talkchess.com/forum3/viewtopic.php?f=7&t=68741&p=777898#p777682
  */
@@ -55,9 +57,10 @@ template < Piece pp > inline BitBoard attack(const Square x, const BitBoard targ
 
 namespace MagicBB{
 
-/* This compact magic BB implemtation is very near the one used
+/*!
+ * This compact magic BB implemtation is very near the one used
  * in RubiChess and Stockfish
- * It is not really faster than HQ BB, maybe around +10%
+ * It is not really much faster than HQ BB, maybe around +10%
  */
 
 #define BISHOP_INDEX_BITS  9

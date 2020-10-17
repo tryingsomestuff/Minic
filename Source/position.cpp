@@ -7,18 +7,18 @@
 #include "material.hpp"
 #include "moveGen.hpp"
 
-#ifdef WITH_NNUE
-#include <cstddef>
-#include "nnue/nnue_accumulator.h"
-#endif
-
 template < typename T > T readFromString(const std::string & s){ std::stringstream ss(s); T tmp; ss >> tmp; return tmp;}
 
 bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCount){
     static Position defaultPos;
-    p = defaultPos;
 #ifdef WITH_NNUE
-    p.resetAccumulator();
+    // backup evaluator
+    NNUEEvaluator * evaluator = p.associatedEvaluator; 
+#endif
+    p = defaultPos;
+#ifdef WITH_NNUE    
+    // restore initial evaluator ...
+    if ( evaluator ) p.associateEvaluator(*evaluator); 
 #endif
     std::vector<std::string> strList;
     std::stringstream iss(fen);
@@ -68,7 +68,7 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
     if (strList.size() >= 2){
         if (strList[1] == "w")      p.c = Co_White;
         else if (strList[1] == "b") p.c = Co_Black;
-        else { Logging::LogIt(Logging::logFatal) << "FEN ERROR 1 : bad color" ; return false; }
+        else { Logging::LogIt(Logging::logFatal) << "FEN ERROR 1 : bad Color" ; return false; }
     }
 
     // Initialize all castle possibilities (default is none)
@@ -145,99 +145,21 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
     p.h = computeHash(p);
     p.ph = computePHash(p);
 
+#ifdef WITH_NNUE
+    // If position is associated with an NNUE evaluator, 
+    // we reset the evaluator using the new position state.
+    if ( DynamicConfig::useNNUE && evaluator ) p.resetNNUEEvaluator(p.Evaluator());
+#endif
+
     return true;
 }
 
-#ifdef WITH_NNUE
-
-const DirtyPiece & Position::dirtyPiece() const{
-    return _dirtyPiece;
-}
-
-NNUE::Accumulator & Position::accumulator()const{
-    assert(_accumulator);
-    return *_accumulator;
-}
-
-NNUE::Accumulator * Position::previousAccumulatorPtr()const{
-    return _previousAccumulator;
-}
-
-Position & Position::operator =(const Position & p){
-    if ( &p == this ) return *this;
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Winvalid-offsetof"
-#pragma GCC diagnostic ignored "-Wclass-memaccess"
-    std::memcpy(this, &p, offsetof(Position, _accumulator));
-#pragma GCC diagnostic pop
-
-    return *this;
-}
-
-Position::Position(const Position & p){
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Winvalid-offsetof"
-#pragma GCC diagnostic ignored "-Wclass-memaccess"
-    std::memcpy(this, &p, offsetof(Position, _accumulator));
-#pragma GCC diagnostic pop
-    
-}
-
-void Position::resetAccumulator(){
-    if ( _accumulator ) _accumulator->computed_accumulation = false;
-}
-
-bool Position::operator ==(const Position & p){
-    bool b = true;
-    b &= _b == p._b;
-    b &= _allB == p._allB;
-    b &= allPieces == p.allPieces;
-    b &= mat == p.mat;
-    b &= h == p.h;
-    b &= ph == p.ph;
-    b &= lastMove == p.lastMove;
-    b &= king == p.king;
-    b &= rooksInit == p.rooksInit;
-    b &= kingInit == p.kingInit;
-    b &= ep == p.ep;
-    b &= fifty == p.fifty;
-    b &= castling == p.castling;
-    b &= c == p.c;
-    b &= _dirtyPiece == p._dirtyPiece;
-    return b;
-}
-
-bool Position::operator !=(const Position & p){
-    return ! operator==(p);
-}
-
-void Position::setAccumulator(NNUE::Accumulator & acc){
-    _accumulator = &acc;
-    _previousAccumulator = nullptr;
-}
-
-void Position::setAccumulator(NNUE::Accumulator & acc, const Position & previous){
-    _accumulator = &acc;
-    _previousAccumulator = previous._accumulator;
-}
-
-#endif
-
 Position::~Position(){
-
 }
 
 Position::Position(){
-#ifdef WITH_NNUE
-    resetAccumulator();
-#endif
 }
 
 Position::Position(const std::string & fen, bool withMoveCount){
-#ifdef WITH_NNUE
-    resetAccumulator();
-#endif
     readFEN(fen,*this,true,withMoveCount);
 }

@@ -13,15 +13,21 @@
 #include "tools.hpp"
 #include "transposition.hpp"
 
-#ifdef WITH_NNUE
-#include "nnue_accumulator.h"
-#endif
-
 #define PERIODICCHECK 1024ull
 
 // pvs inspired by Xiphos
 template< bool pvnode>
-ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, bool cutNode, bool canPrune, const std::vector<MiniMove>* skipMoves){
+ScoreType Searcher::pvs(ScoreType alpha, 
+                        ScoreType beta, 
+                        const Position & p, 
+                        DepthType depth, 
+                        unsigned int ply, 
+                        PVList & pv, 
+                        DepthType & seldepth, 
+                        bool isInCheck, 
+                        bool cutNode, 
+                        bool canPrune, 
+                        const std::vector<MiniMove>* skipMoves){
     if (stopFlag) return STOPSCORE;
     if ( isMainThread() ){
         static int periodicCheck = 0;
@@ -45,7 +51,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
     EvalData data;
     if (ply >= MAX_DEPTH - 1 || depth >= MAX_DEPTH - 1) return eval(p, data, *this);
 
-    if ( depth <= 0 ) return qsearch(alpha,beta,p,ply,seldepth,0,true,pvnode,isInCheck);
+    if ( depth <= 0 ) return qsearch(alpha, beta, p, ply, seldepth, 0, true, pvnode, isInCheck);
 
     seldepth = std::max((DepthType)ply,seldepth);
     ++stats.counters[Stats::sid_nodes];
@@ -171,7 +177,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         ScoreType rAlpha = alpha - SearchConfig::razoringMarginDepthInit[evalScoreIsHashScore] - SearchConfig::razoringMarginDepthCoeff[evalScoreIsHashScore]*marginDepth;
         if ( SearchConfig::doRazoring && depth <= SearchConfig::razoringMaxDepth[evalScoreIsHashScore] && evalScore <= rAlpha ){
             ++stats.counters[Stats::sid_razoringTry];
-            const ScoreType qScore = qsearch(alpha,beta,p,ply,seldepth,0,true,pvnode,isInCheck);
+            const ScoreType qScore = qsearch(alpha, beta, p, ply, seldepth, 0, true, pvnode, isInCheck);
             if ( stopFlag ) return STOPSCORE;
             if ( qScore <= alpha || (depth < 2 && evalScoreIsHashScore) ) return ++stats.counters[Stats::sid_razoring],qScore;
         }
@@ -187,7 +193,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             ++stats.counters[Stats::sid_nullMoveTry];
             const DepthType R = depth / 4 + 3 + std::min((evalScore - beta) / SearchConfig::nullMoveDynamicDivisor, 5); // adaptative
             ///@todo try to minimize sid_nullMoveTry2 versus sid_nullMove
-            const ScoreType nullIIDScore = evalScore; // pvs<false, false>(beta - 1, beta, p, std::max(depth/4,1), ply, nullPV, seldepth, isInCheck, !cutNode);
+            const ScoreType nullIIDScore = evalScore; // pvs<false, false>(beta - 1, beta, p, std::max(depth/4,1), evaluator, ply, nullPV, seldepth, isInCheck, !cutNode);
             if (nullIIDScore >= beta + SearchConfig::nullMoveMargin2) { 
                 TT::Entry nullE;
                 const DepthType nullDepth = depth-R;
@@ -195,10 +201,6 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                 if (nullE.h == nullHash || nullE.s >= beta ) { // avoid null move search if TT gives a score < beta for the same depth ///@todo check this again !
                     ++stats.counters[Stats::sid_nullMoveTry2];
                     Position pN = p;
-#ifdef WITH_NNUE
-                    NNUE::Accumulator acc;
-                    pN.setAccumulator(acc,p);
-#endif
                     applyNull(*this,pN);
                     assert(pN.halfmoves < MAX_PLY && pN.halfmoves >= 0);
                     stack[pN.halfmoves].p = pN;
@@ -214,7 +216,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
                        if ( (!isNotEndGame || depth > SearchConfig::nullMoveVerifDepth) && nullMoveMinPly == 0){
                           ++stats.counters[Stats::sid_nullMoveTry3];
                           nullMoveMinPly = ply + 3*nullDepth/4;
-                          nullscore = pvs<false>(beta - 1, beta, p, nullDepth, ply+1, nullPV, seldepth, isInCheck, !cutNode, false);
+                          nullscore = pvs<false>(beta - 1, beta, p, nullDepth, evaluator, ply+1, nullPV, seldepth, isInCheck, !cutNode, false);
                           nullMoveMinPly = 0;
                           if (stopFlag) return STOPSCORE;
                           if (nullscore >= beta ) return ++stats.counters[Stats::sid_nullMove2], nullscore;
@@ -247,15 +249,18 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             if ( (validTTmove && sameMove(e.m, *it)) || isBadCap(*it) ) continue; // skip TT move if quiet or bad captures
             Position p2 = p;
 #ifdef WITH_NNUE            
-            NNUE::Accumulator acc;
-            p2.setAccumulator(acc,p);
+            NNUEEvaluator newEvaluator = p.Evaluator();
+            p2.associateEvaluator(newEvaluator);
 #endif
             if ( ! applyMove(p2,*it) ) continue;
             ++probCutCount;
-            ScoreType scorePC = -qsearch(-betaPC, -betaPC + 1, p2, ply + 1, seldepth,0,true,pvnode);
+            ScoreType scorePC = -qsearch(-betaPC, -betaPC + 1, p2, ply + 1, seldepth, 0, true, pvnode);
             PVList pcPV;
             if (stopFlag) return STOPSCORE;
-            if (scorePC >= betaPC) ++stats.counters[Stats::sid_probcutTry2], scorePC = -pvs<false>(-betaPC,-betaPC+1,p2,depth-SearchConfig::probCutMinDepth+1,ply+1,pcPV,seldepth, isAttacked(p2, kingSquare(p2)), !cutNode, true);
+            if (scorePC >= betaPC){
+                ++stats.counters[Stats::sid_probcutTry2];
+                scorePC = -pvs<false>(-betaPC, -betaPC+1, p2, depth-SearchConfig::probCutMinDepth+1, ply+1, pcPV, seldepth, isAttacked(p2, kingSquare(p2)), !cutNode, true);
+            }
             if (stopFlag) return STOPSCORE;
             if (scorePC >= betaPC) return ++stats.counters[Stats::sid_probcut], scorePC;
           }
@@ -267,7 +272,7 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         if ( ((pvnode && depth >= SearchConfig::iidMinDepth) || (cutNode && depth >= SearchConfig::iidMinDepth2)) ){ ///@todo try with cutNode only ?
             ++stats.counters[Stats::sid_iid];
             PVList iidPV;
-            pvs<pvnode>(alpha,beta,p,depth/2,ply,iidPV,seldepth,isInCheck,cutNode,false,skipMoves);
+            pvs<pvnode>(alpha, beta, p, depth/2, ply, iidPV, seldepth, isInCheck, cutNode, false, skipMoves);
             if (stopFlag) return STOPSCORE;
             TT::getEntry(*this, p, pHash, 0, e);
             ttHit = e.h != nullHash;
@@ -320,8 +325,8 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
 #endif
         Position p2 = p;
 #ifdef WITH_NNUE        
-        NNUE::Accumulator acc;
-        p2.setAccumulator(acc,p);
+        NNUEEvaluator newEvaluator = p.Evaluator();
+        p2.associateEvaluator(newEvaluator);
 #endif
         if ( applyMove(p2, e.m)) {
             TT::prefetch(computeHash(p2));
@@ -452,10 +457,10 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
         if (isSkipMove(*it,skipMoves)) continue; // skipmoves
         if (validTTmove && sameMove(e.m, *it)) continue; // already tried
         Position p2 = p;
-#ifdef WITH_NNUE        
-        NNUE::Accumulator acc;
-        p2.setAccumulator(acc,p);
-#endif
+#ifdef WITH_NNUE
+        NNUEEvaluator newEvaluator = p.Evaluator();
+        p2.associateEvaluator(newEvaluator);        
+#endif        
         if ( ! applyMove(p2,*it) ) continue;
         TT::prefetch(computeHash(p2));
         const Square to = Move2To(*it);
@@ -518,7 +523,8 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
            */
         }
         // pvs
-        if (validMoveCount < (2/*+2*rootnode*/) || !SearchConfig::doPVS ) score = -pvs<pvnode>(-beta,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,!cutNode,true);
+        if (validMoveCount < (2/*+2*rootnode*/) || !SearchConfig::doPVS ) 
+           score = -pvs<pvnode>(-beta, -alpha, p2, depth-1+extension, ply+1, childPV, seldepth, isCheck, !cutNode, true);
         else{
             // reductions & prunings
             const bool isPrunable           = /*isNotEndGame &&*/ !isAdvancedPawnPush && !isMateScore(alpha) && !DynamicConfig::mateFinder && !killerT.isKiller(*it,ply);
@@ -584,14 +590,14 @@ ScoreType Searcher::pvs(ScoreType alpha, ScoreType beta, const Position & p, Dep
             }
 
             // PVS
-            score = -pvs<false>(-alpha-1,-alpha,p2,nextDepth,ply+1,childPV,seldepth,isCheck,true,true);
+            score = -pvs<false>(-alpha-1, -alpha, p2, nextDepth, ply+1, childPV, seldepth, isCheck, true, true);
             if ( reduction > 0 && score > alpha ){ 
                 ++stats.counters[Stats::sid_lmrFail]; childPV.clear(); 
-                score = -pvs<false>(-alpha-1,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,!cutNode,true); 
+                score = -pvs<false>(-alpha-1, -alpha, p2, depth-1+extension, ply+1, childPV, seldepth, isCheck, !cutNode, true); 
             }
             if ( pvnode && score > alpha && (rootnode || score < beta) ){ 
                 ++stats.counters[Stats::sid_pvsFail]; childPV.clear(); 
-                score = -pvs<true>(-beta   ,-alpha,p2,depth-1+extension,ply+1,childPV,seldepth,isCheck,false,true); 
+                score = -pvs<true>(-beta, -alpha, p2, depth-1+extension, ply+1, childPV, seldepth, isCheck, false, true); 
             } // potential new pv node
 
         }

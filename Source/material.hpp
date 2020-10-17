@@ -3,7 +3,8 @@
 #include "bitboardTools.hpp"
 #include "score.hpp"
 
-/* A material table implementation
+/*!
+ * A material table implementation
  * Mostly inspired by Gull by Vadim Demichev
  * after a discussion on talkchess (http://talkchess.com/forum3/viewtopic.php?f=7&t=67558&p=763426)
  */

@@ -106,8 +106,7 @@ namespace Options {
        _keys.push_back(KeyBase(k_string,w_string,"SyzygyPath"                  , &DynamicConfig::syzygyPath                                                                              , &SyzygyTb::initTB));
        #endif
        #ifdef WITH_NNUE
-       //_keys.push_back(KeyBase(k_bool,  w_check, "UseNNUE"                     , &DynamicConfig::useNNUE                        , false            , true                                , &COM::init));
-       _keys.push_back(KeyBase(k_string,w_string,"NNUEFile"                    , &DynamicConfig::NNUEFile                                                                                , &NNUEWrapper::init_NNUE));
+       _keys.push_back(KeyBase(k_string,w_string,"NNUEFile"                    , &DynamicConfig::NNUEFile                                                                                , &NNUEWrapper::init));
        _keys.push_back(KeyBase(k_bool,  w_check, "forceNNUE"                   , &DynamicConfig::forceNNUE                        , false            , true                              ));
        #endif
 

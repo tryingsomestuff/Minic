@@ -299,7 +299,7 @@ namespace MaterialHash { // idea from Gull
         // KPK
         DEF_MAT_H(KPK, Ter_WhiteWinWithHelper,&helperKPK)    DEF_MAT_REV_H(KKP,KPK,&helperKPK)
 
-        ///@todo other (with more pawn ...), especially KPsKB with wrong color bishop
+        ///@todo other (with more pawn ...), especially KPsKB with wrong Color bishop
 
     }
 

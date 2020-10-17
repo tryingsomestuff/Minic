@@ -275,10 +275,6 @@ int cliManagement(std::string cli, int argc, char ** argv){
 
     if ( cli == "bench" ){
         Position p;
-#ifdef WITH_NNUE        
-        NNUE::Accumulator acc;
-        p.setAccumulator(acc);
-#endif
         DepthType d = 15;
         if ( argc > 2 ) d = atoi(argv[2]);        
         readFEN(startPosition,p);
@@ -350,9 +346,10 @@ int cliManagement(std::string cli, int argc, char ** argv){
 
     // instantiate the position
     Position p;
-#ifdef WITH_NNUE    
-    NNUE::Accumulator accumulator;
-    p.setAccumulator(accumulator);    
+#ifdef WITH_NNUE
+    NNUEEvaluator evaluator;
+    p.associateEvaluator(evaluator);
+    p.resetNNUEEvaluator(evaluator);
 #endif
     if ( ! readFEN(fen,p) ){
         Logging::LogIt(Logging::logInfo) << "Error reading fen" ;
@@ -363,7 +360,11 @@ int cliManagement(std::string cli, int argc, char ** argv){
 
     if (cli == "-qsearch"){
         DepthType seldepth = 0;
-        ScoreType s = ThreadPool::instance().main().qsearchNoPruning(-10000,10000,p,1,seldepth);
+        ScoreType s = ThreadPool::instance().main().qsearchNoPruning(-10000,
+                                                                      10000,
+                                                                      p,
+                                                                      1,
+                                                                      seldepth);
         Logging::LogIt(Logging::logInfo) << "Score " << s;
         return 1;
     }

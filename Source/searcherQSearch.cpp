@@ -1,10 +1,11 @@
 #include "searcher.hpp"
 
-#ifdef WITH_NNUE
-#include "nnue_accumulator.h"
-#endif
-
-ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth, PVList * pv){
+ScoreType Searcher::qsearchNoPruning(ScoreType alpha, 
+                                     ScoreType beta, 
+                                     const Position & p, 
+                                     unsigned int ply, 
+                                     DepthType & seldepth, 
+                                     PVList * pv){
     EvalData data;
     ++stats.counters[Stats::sid_qnodes];
     const ScoreType evalScore = eval(p,data,*this);
@@ -26,12 +27,12 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Posi
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         Position p2 = p;
 #ifdef WITH_NNUE        
-        NNUE::Accumulator acc;
-        p2.setAccumulator(acc,p);
+        NNUEEvaluator newEvaluator = p.Evaluator();
+        p2.associateEvaluator(newEvaluator);         
 #endif
         if ( ! applyMove(p2,*it) ) continue;
         PVList childPV;
-        const ScoreType score = -qsearchNoPruning(-beta,-alpha,p2,ply+1,seldepth, pv ? &childPV : nullptr);
+        const ScoreType score = -qsearchNoPruning(-beta, -alpha, p2, ply+1, seldepth, pv ? &childPV : nullptr);
         if ( score > bestScore){
            bestScore = score;
            if ( score > alpha ){
@@ -49,7 +50,15 @@ inline ScoreType qDeltaMargin(const Position & p) {
    return delta + Values[P_wq+PieceShift];
 }
 
-ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth, unsigned int qply, bool qRoot, bool pvnode, signed char isInCheckHint){
+ScoreType Searcher::qsearch(ScoreType alpha, 
+                            ScoreType beta, 
+                            const Position & p, 
+                            unsigned int ply, 
+                            DepthType & seldepth, 
+                            unsigned int qply, 
+                            bool qRoot, 
+                            bool pvnode, 
+                            signed char isInCheckHint){
     if (stopFlag) return STOPSCORE; // no time verification in qsearch, too slow
     ++stats.counters[Stats::sid_qnodes];
 
@@ -147,15 +156,15 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
     if ( validTTmove && (isInCheck || isCapture(e.m)) ){
         Position p2 = p;
 #ifdef WITH_NNUE        
-        NNUE::Accumulator acc;
-        p2.setAccumulator(acc,p);
-#endif        
+        NNUEEvaluator newEvaluator = p.Evaluator();
+        p2.associateEvaluator(newEvaluator);         
+#endif
         if ( applyMove(p2,e.m) ){;
             ++validMoveCount;
             //stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
             //stack[p2.halfmoves].h = p2.h;
             TT::prefetch(computeHash(p2));
-            const ScoreType score = -qsearch(-beta,-alpha,p2,ply+1,seldepth,isInCheck?0:qply+1,false,false);
+            const ScoreType score = -qsearch(-beta, -alpha, p2, ply+1, seldepth, isInCheck?0:qply+1, false, false);
             if ( score > bestScore){
                 bestMove = e.m;
                 bestScore = score;
@@ -199,15 +208,15 @@ ScoreType Searcher::qsearch(ScoreType alpha, ScoreType beta, const Position & p,
         }
         Position p2 = p;
 #ifdef WITH_NNUE        
-        NNUE::Accumulator acc;
-        p2.setAccumulator(acc,p);
+        NNUEEvaluator newEvaluator = p.Evaluator();
+        p2.associateEvaluator(newEvaluator);         
 #endif
         if ( ! applyMove(p2,*it) ) continue;
         ++validMoveCount;
         //stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
         //stack[p2.halfmoves].h = p2.h;
         TT::prefetch(computeHash(p2));
-        const ScoreType score = -qsearch(-beta,-alpha,p2,ply+1,seldepth,isInCheck?0:qply+1,false,false);
+        const ScoreType score = -qsearch(-beta, -alpha, p2, ply+1, seldepth, isInCheck?0:qply+1, false, false);
         if ( score > bestScore){
            bestMove = *it;
            bestScore = score;

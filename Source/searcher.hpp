@@ -9,7 +9,8 @@
 #include "stats.hpp"
 #include "tables.hpp"
 
-/* Searcher struct store all the information needed by a search thread
+/*!
+ * Searcher struct store all the information needed by a search thread
  * Implements main search function (driver, pvs, qsearch, see, display to GUI, ...)
  * This was inspired from the former thread Stockfish style management
  *
@@ -62,14 +63,54 @@ struct Searcher{
 
     ScoreType drawScore();
 
-    template <bool pvnode> ScoreType pvs(ScoreType alpha, ScoreType beta, const Position & p, DepthType depth, unsigned int ply, PVList & pv, DepthType & seldepth, bool isInCheck, bool cutNode, bool canPrune, const std::vector<MiniMove> * skipMoves = nullptr);
-    ScoreType qsearch(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth, unsigned int qply, bool qRoot, bool pvnode, signed char isInCheckHint = -1);
-    ScoreType qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position & p, unsigned int ply, DepthType & seldepth, PVList * pv = nullptr);
+#ifdef WITH_NNUE
+    NNUEEvaluator nnueEvaluator;
+#endif
+
+    template <bool pvnode> ScoreType pvs(ScoreType alpha, 
+                                         ScoreType beta, 
+                                         const Position & p, 
+                                         DepthType depth, 
+                                         unsigned int ply, 
+                                         PVList & pv, 
+                                         DepthType & seldepth, 
+                                         bool isInCheck, 
+                                         bool cutNode, 
+                                         bool canPrune, 
+                                         const std::vector<MiniMove> * skipMoves = nullptr);
+
+    ScoreType qsearch(ScoreType alpha, 
+                      ScoreType beta, 
+                      const Position & p, 
+                      unsigned int ply, 
+                      DepthType & seldepth, 
+                      unsigned int qply, 
+                      bool qRoot, 
+                      bool pvnode, 
+                      signed char isInCheckHint = -1);
+
+    // used for tuning not search !
+    ScoreType qsearchNoPruning(ScoreType alpha, 
+                               ScoreType beta, 
+                               const Position & p, 
+                               unsigned int ply, 
+                               DepthType & seldepth, 
+                               PVList * pv = nullptr);
+
     bool SEE_GE(const Position & p, const Move & m, ScoreType threshold)const;
+
     ScoreType SEE(const Position & p, const Move & m)const;
-    PVList search(const Position & p, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth);
+
+    PVList search(const Position & p, 
+                  Move & m, 
+                  DepthType & d, 
+                  ScoreType & sc, 
+                  DepthType & seldepth);
+
     template< bool withRep = true, bool isPv = true, bool INR = true> MaterialHash::Terminaison interiorNodeRecognizer(const Position & p)const;
+
     bool isRep(const Position & p, bool isPv)const;
+
     void displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv, int multipv, const std::string & mark = "");
 
     void idleLoop();

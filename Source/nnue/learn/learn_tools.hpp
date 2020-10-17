@@ -2,7 +2,7 @@
 
 #include "definition.hpp"
 
-#if defined(WITH_DATA2BIN) or defined(WITH_LEARNER)
+#if defined(WITH_DATA2BIN)
 
 #include <cmath>
 #include <cstdint>
@@ -240,4 +240,4 @@ namespace Dependency {
     }
 }
 
-#endif // WITH_DATA2BIN or WITH_LEARNER
+#endif // WITH_DATA2BIN

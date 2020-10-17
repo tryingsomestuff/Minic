@@ -10,92 +10,14 @@
 #include "score.hpp"
 #include "smp.hpp"
 
-#include "nnue/nnue_def.h"
-#include "nnue/evaluate_nnue.h"
+#include "nnue_impl.hpp"
 
 // this is used to scale NNUE score to classic eval score. 
 // This way search params can remain the same ... more or less ...
 // see compute_scaling
 int NNUEWrapper::NNUEscaling = 64; // from 32 to 128      x_scaled = x * NNUEscaling / 64
 
-// defined in nnue_def.h
-// Must be user defined in order to respect Piece engine piece order
- uint32_t kpp_board_index[PIECE_NB][COLOR_NB] = {
- // convention: W - us, B - them
- // viewed from other side, W and B are reversed
-    { PS_B_KING,   PS_W_KING   },
-    { PS_B_QUEEN,  PS_W_QUEEN  },
-    { PS_B_ROOK,   PS_W_ROOK   },
-    { PS_B_BISHOP, PS_W_BISHOP },
-    { PS_B_KNIGHT, PS_W_KNIGHT },
-    { PS_B_PAWN,   PS_W_PAWN   },
-    { PS_NONE,     PS_NONE     },
-    { PS_W_PAWN,   PS_B_PAWN   },
-    { PS_W_KNIGHT, PS_B_KNIGHT },
-    { PS_W_BISHOP, PS_B_BISHOP },
-    { PS_W_ROOK,   PS_B_ROOK   },
-    { PS_W_QUEEN,  PS_B_QUEEN  },
-    { PS_W_KING,   PS_B_KING   }
-};
-
 namespace NNUEWrapper{
-
-std::string eval_file_loaded="None";
-
-// Load eval, from a file stream or a memory stream
-bool load_eval(std::istream& stream) {
-
-    NNUE::Initialize();
-
-    eval_file_loaded = DynamicConfig::NNUEFile;
-    if (DynamicConfig::skipLoadingEval)
-    {
-        Logging::LogIt(Logging::logInfoPrio) << "SkipLoadingEval set to true, Net not loaded!";
-        return true;
-    }
-    if ( ! NNUE::ReadParameters(stream)) return false;
-    DynamicConfig::useNNUE = true; // forced when nnue file is found and valid
-    COM::init(); // reset start position ///@todo still necessary ???
-    compute_scaling();
-    return true;
-}
-
-// Evaluation function. Perform differential calculation.
-ScoreType evaluate(const Position& pos) {
-    ScoreType v = NNUE::ComputeScore(pos);
-    v = std::min(std::max(v, ScoreType(-WIN + 1)), ScoreType(WIN - 1));
-    return v;
-}
-
-void init_NNUE() {
-    if (eval_file_loaded != DynamicConfig::NNUEFile){
-        std::ifstream stream( DynamicConfig::NNUEFile, std::ios::binary);
-        if (!load_eval(stream)){
-           if (DynamicConfig::NNUEFile.empty() ){
-              Logging::LogIt(Logging::logInfoPrio) << "No NNUE net given";
-           }
-           else{
-              Logging::LogIt(Logging::logInfoPrio) << "Failed to load NNUE net " << DynamicConfig::NNUEFile;
-           }
-        }
-    }
-    verify_NNUE();
-}
-
-void verify_NNUE() {
-    if (DynamicConfig::useNNUE && eval_file_loaded != DynamicConfig::NNUEFile){ // this won't happen
-        Logging::LogIt(Logging::logFatal) << "Use of NNUE evaluation, but the file " << DynamicConfig::NNUEFile << " was not loaded successfully. "
-                                          << "These network evaluation parameters must be available, compatible with this version of the code. "
-                                          << "The UCI option NNUEFile might need to specify the full path, including the directory/folder name, to the file.";
-    }
-
-    if (DynamicConfig::useNNUE){
-        Logging::LogIt(Logging::logInfoPrio) << "NNUE evaluation using " << DynamicConfig::NNUEFile << " enabled.";
-    }
-    else{
-        Logging::LogIt(Logging::logInfoPrio) << "Classical evaluation enabled.";
-    }
-}
 
 void compute_scaling(int count){
     static std::random_device rd;
@@ -104,9 +26,8 @@ void compute_scaling(int count){
     Logging::LogIt(Logging::logInfo) << "Automatic computation of NNUEscaling with " << count << " random positions ...";
 
     Position p;
-    NNUE::Accumulator acc;
-    p.setAccumulator(acc);
-
+    NNUEEvaluator evaluator;
+    p.associateEvaluator(evaluator);
     readFEN(startPosition,p,true);
 
     EvalData data;
@@ -119,32 +40,34 @@ void compute_scaling(int count){
 
     while(k < count){
         MoveList moves;
-        //const bool isInCheck = isAttacked(p, kingSquare(p));
         MoveGen::generate<MoveGen::GP_all>(p, moves, false);
         if (moves.empty()){
             readFEN(startPosition,p,true);
             continue;
         }
         std::shuffle(moves.begin(), moves.end(),g);
+        bool found = false;
         for (auto it = moves.begin(); it != moves.end(); ++it) {
             Position p2 = p;
             if (!applyMove(p2, *it)) continue;
+            found = true;
             p = p2;
-            p.resetAccumulator();
             const Square to = Move2To(*it);
             if (p.c == Co_White && to == p.king[Co_Black]){
                readFEN(startPosition,p,true);
-               continue;
+               break;
             }
             if (p.c == Co_Black && to == p.king[Co_White]){
                readFEN(startPosition,p,true);
-               continue;
+               break;
             }
 
-            DynamicConfig::useNNUE = 0;
+            DynamicConfig::useNNUE = false;
             const ScoreType eStd = eval(p,data,ThreadPool::instance().main());
-            DynamicConfig::useNNUE = 1;
+            DynamicConfig::useNNUE = true;
             const ScoreType eNNUE = eval(p,data,ThreadPool::instance().main());
+
+            std::cout << GetFEN(p) << " " << eStd << " " << eNNUE << std::endl;
 
             if ( std::abs(eStd) < 1000 && eStd*eNNUE > 0 ){
                ++k;
@@ -152,8 +75,7 @@ void compute_scaling(int count){
             }
             break;
         }
-        readFEN(startPosition,p,true);
-        continue;
+        if ( !found ) readFEN(startPosition,p,true);        
     }
     NNUEWrapper::NNUEscaling = int(factor*64/k);
     Logging::LogIt(Logging::logInfo) << "NNUEscaling " << NNUEWrapper::NNUEscaling << " (" << factor/k << ")";
@@ -161,6 +83,6 @@ void compute_scaling(int count){
     DynamicConfig::disableTT = bkTT;
 }
 
-} // nnue
+} // NNUEWrapper
 
-#endif 
+#endif // WITH_NNUE
