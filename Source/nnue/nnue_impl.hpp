@@ -373,7 +373,6 @@ struct half_kp_eval : sided<half_kp_eval<T>, feature_transformer<T>>{
 
   // default CTOR always use loaded weights
   half_kp_eval() : weights_{&weights}, white{&(weights . w)}, black{&(weights . b)} {}
-  half_kp_eval(const half_kp_weights<T>* src) : weights_{src}, white{&(src -> w)}, black{&(src -> b)} {}
 };
 
 template<typename T>

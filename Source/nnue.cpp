@@ -20,6 +20,7 @@ int NNUEWrapper::NNUEscaling = 64; // from 32 to 128      x_scaled = x * NNUEsca
 namespace NNUEWrapper{
 
 void compute_scaling(int count){
+    return; ///@todo remove
     static std::random_device rd;
     static std::mt19937 g(63); // fixed seed !
 
