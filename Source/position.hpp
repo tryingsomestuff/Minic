@@ -97,21 +97,21 @@ struct Position{
   template<Color c>
   void resetNNUEIndices_(NNUEEvaluator & nnueEvaluator)const{
     using namespace feature_idx;
-    const size_t king_idx = king[c];
+    const size_t king_idx = VFlip(king[c]);
     //us
-    BitBoard us_pawn   = pieces_const<P_wp>(c); while(us_pawn)  { nnueEvaluator.template us<c>().insert(major*king_idx + us_pawn_offset   + popBit(us_pawn)); }
-    BitBoard us_knigt  = pieces_const<P_wn>(c); while(us_knigt) { nnueEvaluator.template us<c>().insert(major*king_idx + us_knight_offset + popBit(us_knigt)); }
-    BitBoard us_bishop = pieces_const<P_wb>(c); while(us_bishop){ nnueEvaluator.template us<c>().insert(major*king_idx + us_bishop_offset + popBit(us_bishop)); }
-    BitBoard us_rook   = pieces_const<P_wr>(c); while(us_rook)  { nnueEvaluator.template us<c>().insert(major*king_idx + us_rook_offset   + popBit(us_rook)); }
-    BitBoard us_queen  = pieces_const<P_wq>(c); while(us_queen) { nnueEvaluator.template us<c>().insert(major*king_idx + us_queen_offset  + popBit(us_queen)); }
-    BitBoard us_king   = pieces_const<P_wk>(c); while(us_king)  { nnueEvaluator.template us<c>().insert(major*king_idx + us_king_offset   + popBit(us_king)); }
+    BitBoard us_pawn   = pieces_const<P_wp>(c); while(us_pawn)  { nnueEvaluator.template us<c>().insert(major*king_idx + us_pawn_offset   + VFlip(popBit(us_pawn))); }
+    BitBoard us_knigt  = pieces_const<P_wn>(c); while(us_knigt) { nnueEvaluator.template us<c>().insert(major*king_idx + us_knight_offset + VFlip(popBit(us_knigt))); }
+    BitBoard us_bishop = pieces_const<P_wb>(c); while(us_bishop){ nnueEvaluator.template us<c>().insert(major*king_idx + us_bishop_offset + VFlip(popBit(us_bishop))); }
+    BitBoard us_rook   = pieces_const<P_wr>(c); while(us_rook)  { nnueEvaluator.template us<c>().insert(major*king_idx + us_rook_offset   + VFlip(popBit(us_rook))); }
+    BitBoard us_queen  = pieces_const<P_wq>(c); while(us_queen) { nnueEvaluator.template us<c>().insert(major*king_idx + us_queen_offset  + VFlip(popBit(us_queen))); }
+    BitBoard us_king   = pieces_const<P_wk>(c); while(us_king)  { nnueEvaluator.template us<c>().insert(major*king_idx + us_king_offset   + VFlip(popBit(us_king))); }
     //them
-    BitBoard them_pawn   = pieces_const<P_wp>(~c); while(them_pawn)  { nnueEvaluator.template us<c>().insert(major*king_idx + them_pawn_offset   + popBit(them_pawn)); }
-    BitBoard them_knigt  = pieces_const<P_wn>(~c); while(them_knigt) { nnueEvaluator.template us<c>().insert(major*king_idx + them_knight_offset + popBit(them_knigt)); }
-    BitBoard them_bishop = pieces_const<P_wb>(~c); while(them_bishop){ nnueEvaluator.template us<c>().insert(major*king_idx + them_bishop_offset + popBit(them_bishop)); }
-    BitBoard them_rook   = pieces_const<P_wr>(~c); while(them_rook)  { nnueEvaluator.template us<c>().insert(major*king_idx + them_rook_offset   + popBit(them_rook)); }
-    BitBoard them_queen  = pieces_const<P_wq>(~c); while(them_queen) { nnueEvaluator.template us<c>().insert(major*king_idx + them_queen_offset  + popBit(them_queen)); }
-    BitBoard them_king   = pieces_const<P_wk>(~c); while(them_king)  { nnueEvaluator.template us<c>().insert(major*king_idx + them_king_offset   + popBit(them_king)); }
+    BitBoard them_pawn   = pieces_const<P_wp>(~c); while(them_pawn)  { nnueEvaluator.template us<c>().insert(major*king_idx + them_pawn_offset   + VFlip(popBit(them_pawn))); }
+    BitBoard them_knigt  = pieces_const<P_wn>(~c); while(them_knigt) { nnueEvaluator.template us<c>().insert(major*king_idx + them_knight_offset + VFlip(popBit(them_knigt))); }
+    BitBoard them_bishop = pieces_const<P_wb>(~c); while(them_bishop){ nnueEvaluator.template us<c>().insert(major*king_idx + them_bishop_offset + VFlip(popBit(them_bishop))); }
+    BitBoard them_rook   = pieces_const<P_wr>(~c); while(them_rook)  { nnueEvaluator.template us<c>().insert(major*king_idx + them_rook_offset   + VFlip(popBit(them_rook))); }
+    BitBoard them_queen  = pieces_const<P_wq>(~c); while(them_queen) { nnueEvaluator.template us<c>().insert(major*king_idx + them_queen_offset  + VFlip(popBit(them_queen))); }
+    BitBoard them_king   = pieces_const<P_wk>(~c); while(them_king)  { nnueEvaluator.template us<c>().insert(major*king_idx + them_king_offset   + VFlip(popBit(them_king))); }
   }
 
   void resetNNUEEvaluator(NNUEEvaluator & nnueEvaluator)const {
@@ -130,27 +130,27 @@ struct Position{
     const Piece toP = board_const(to);
     const Piece pTypeFrom = (Piece)std::abs(fromP);
     const Piece pTypeTo = (Piece)std::abs(toP);      
-    const Square our_king_idx   = king[c];
-    const Square their_king_idx = king[~c];
-    nnueEvaluator.template us<c>().erase(feature_idx::major * our_king_idx + from + feature_idx::us_offset(pTypeFrom));
-    nnueEvaluator.template them<c>().erase(feature_idx::major * their_king_idx + from + feature_idx::them_offset(pTypeFrom));
+    const Square our_king_idx   = VFlip(king[c]);
+    const Square their_king_idx = VFlip(king[~c]);
+    nnueEvaluator.template us<c>().erase(feature_idx::major * our_king_idx + VFlip(from) + feature_idx::us_offset(pTypeFrom));
+    nnueEvaluator.template them<c>().erase(feature_idx::major * their_king_idx + VFlip(from) + feature_idx::them_offset(pTypeFrom));
     if(isPromotion(m)){
         const Piece promPieceType = (Piece)std::abs(promShift(type));
-        nnueEvaluator.template us<c>().insert(feature_idx::major * our_king_idx + to + feature_idx::us_offset(promPieceType));
-        nnueEvaluator.template them<c>().insert(feature_idx::major * their_king_idx + to + feature_idx::them_offset(promPieceType));
+        nnueEvaluator.template us<c>().insert(feature_idx::major * our_king_idx + VFlip(to) + feature_idx::us_offset(promPieceType));
+        nnueEvaluator.template them<c>().insert(feature_idx::major * their_king_idx + VFlip(to) + feature_idx::them_offset(promPieceType));
     }
     else{
-        nnueEvaluator.template us<c>().insert(feature_idx::major * our_king_idx + to + feature_idx::us_offset(pTypeFrom));
-        nnueEvaluator.template them<c>().insert(feature_idx::major * their_king_idx + to + feature_idx::them_offset(pTypeFrom));
+        nnueEvaluator.template us<c>().insert(feature_idx::major * our_king_idx + VFlip(to) + feature_idx::us_offset(pTypeFrom));
+        nnueEvaluator.template them<c>().insert(feature_idx::major * their_king_idx + VFlip(to) + feature_idx::them_offset(pTypeFrom));
     }
     if(type == T_ep){
         const Square epSq = ep + (c == Co_White ? -8 : +8);
-        nnueEvaluator.template them<c>().erase(feature_idx::major * their_king_idx + epSq + feature_idx::us_pawn_offset);
-        nnueEvaluator.template us<c>().erase(feature_idx::major * our_king_idx + epSq + feature_idx::them_pawn_offset);
+        nnueEvaluator.template them<c>().erase(feature_idx::major * their_king_idx + VFlip(epSq) + feature_idx::us_pawn_offset);
+        nnueEvaluator.template us<c>().erase(feature_idx::major * our_king_idx + VFlip(epSq) + feature_idx::them_pawn_offset);
     }
     else if(isCapture(m)){
-        nnueEvaluator.template them<c>().erase(feature_idx::major * their_king_idx + to + feature_idx::us_offset(pTypeTo));
-        nnueEvaluator.template us<c>().erase(feature_idx::major * our_king_idx + to + feature_idx::them_offset(pTypeTo));
+        nnueEvaluator.template them<c>().erase(feature_idx::major * their_king_idx + VFlip(to) + feature_idx::us_offset(pTypeTo));
+        nnueEvaluator.template us<c>().erase(feature_idx::major * our_king_idx + VFlip(to) + feature_idx::them_offset(pTypeTo));
     }
 
   }
