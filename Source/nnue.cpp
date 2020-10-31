@@ -20,7 +20,6 @@ int NNUEWrapper::NNUEscaling = 64; // from 32 to 128      x_scaled = x * NNUEsca
 namespace NNUEWrapper{
 
 void compute_scaling(int count){
-    return; ///@todo remove
     static std::random_device rd;
     static std::mt19937 g(63); // fixed seed !
 
@@ -68,7 +67,7 @@ void compute_scaling(int count){
             DynamicConfig::useNNUE = true;
             const ScoreType eNNUE = eval(p,data,ThreadPool::instance().main());
 
-            std::cout << GetFEN(p) << " " << eStd << " " << eNNUE << std::endl;
+            //std::cout << GetFEN(p) << " " << eStd << " " << eNNUE << std::endl;
 
             if ( std::abs(eStd) < 1000 && eStd*eNNUE > 0 ){
                ++k;
