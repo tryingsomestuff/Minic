@@ -134,6 +134,7 @@ const std::string MinicVersion = "3.00";
 #define MakeSquare(f,r) Square(((r)<<3) + (f))
 #define VFlip(s) ((s)^Sq_a8)
 #define HFlip(s) ((s)^7)
+#define MFlip(s) ((s)^Sq_h8)
 
 #define TO_STR2(x) #x
 #define TO_STR(x) TO_STR2(x)

@@ -131,12 +131,10 @@ bool applyMove(Position & p, const Move & m, bool noValidation){
 #ifdef WITH_NNUE
     // if king is not moving, update nnue evaluator
     // this is based on current position state
-    /*
     if ( DynamicConfig::useNNUE && std::abs(fromP) != P_wk){
        if ( p.c == Co_White ) p.updateNNUEEvaluator<Co_White>(p.Evaluator(),m);
        else                   p.updateNNUEEvaluator<Co_Black>(p.Evaluator(),m);
     }
-    */
 #endif
 
     switch(type){
@@ -244,9 +242,9 @@ bool applyMove(Position & p, const Move & m, bool noValidation){
 #ifdef WITH_NNUE
     // if a king was moved (including castling), reset nnue evaluator
     // this is based on new position state !
-    //if ( DynamicConfig::useNNUE && std::abs(fromP) == P_wk){ 
+    if ( DynamicConfig::useNNUE && std::abs(fromP) == P_wk){ 
        p.resetNNUEEvaluator(p.Evaluator());
-    //}
+    }
 #endif    
 
 #ifdef DEBUG_MATERIAL
