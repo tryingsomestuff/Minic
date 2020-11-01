@@ -75,7 +75,7 @@ Minic 2.48 is tested at 3025 on the CCRL FRC list (http://ccrl.chessdom.com/ccrl
 
 ### CEGT
 Minic 2.48 is tested at 2983 on the CEGT 40/4 list (http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
-MinicNNUE 2.51 using Nascent Nutrient is tested at 3208 on the same list
+MinicNNUE 2.51 using Nascent Nutrient is tested at 3208 on the same list  
 Minic 2.35 is tested at 3034 on the CEGT 40/4 MP8CPU list (http://www.cegt.net/40_4_Ratinglist/40_4_mp/rangliste.html)  
 Minic 2.07 is tested at 2935 on the CEGT 5+3 PB=ON list (http://www.cegt.net/5Plus3Rating/BestVersionsNEW/rangliste.html)  
 Minic 2.48 is tested at 2969 on the CEGT 40/15 list (http://www.cegt.net/40_40%20Rating%20List/40_40%20SingleVersion/rangliste.html)  
