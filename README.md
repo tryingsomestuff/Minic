@@ -216,7 +216,7 @@ Galjoen by Werner Taelemans
 Madchess by Erik Madsen  
 Rodent by Pawel Koziol  
 RubiChess by Andreas Matthies  
-Seer by Connor McMonigle
+Seer by Connor McMonigle  
 Stockfish by Tord Romstad, Marco Costalba, Joona Kiiski and Gary Linscott  
 Texel by Peter Österlund   
 Topple by Vincent Konsolas  
