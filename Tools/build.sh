@@ -15,7 +15,7 @@ if [ -e Fathom/src/tbprobe.h ]; then
    $dir/Tools/buildFathom.sh "$@"
 fi
 
-mkdir -p $dir/Dist/Minic2
+mkdir -p $dir/Dist/Minic3
 
 d="-DDEBUG_TOOL"
 v="dev"
@@ -52,15 +52,15 @@ echo "Building $exe"
 
 WARN="-Wall -Wcast-qual -Wno-char-subscripts -Wno-reorder -Wmaybe-uninitialized -Wuninitialized -pedantic -Wextra -Wshadow -Wno-unknown-pragmas"
 
-OPT="-s $WARN $d -DNDEBUG -O3 $t --std=c++17 $n" ; DEPTH=16
-#OPT="-s $WARN $d -ffunction-sections -fdata-sections -Os -s -DNDEBUG -Wl,--gc-sections $t --std=c++17" ; DEPTH=16
-#OPT="$WARN $d -DNDEBUG -O3 -g -ggdb -fno-omit-frame-pointer $t --std=c++17" ; DEPTH=16
-#OPT="$WARN $d -DNDEBUG -g $t --std=c++17" ; DEPTH=10
-#OPT="$WARN $d -g $t --std=c++17 -rdynamic" ; DEPTH=10
+OPT="-s -DNDEBUG -O3 $n" ; DEPTH=16
+#OPT="-s -ffunction-sections -fdata-sections -Os -s -DNDEBUG -Wl,--gc-sections" ; DEPTH=16
+#OPT="-DNDEBUG -O3 -g -ggdb -fno-omit-frame-pointer" ; DEPTH=16
+#OPT="-DNDEBUG -g" ; DEPTH=10
+#OPT="-g -rdynamic" ; DEPTH=10
 
 LIBS="-lpthread -ldl"
 
-OPT="$OPT -fno-exceptions"
+OPT="$WARN $d $OPT $t --std=c++17 -fno-exceptions"
 
 # -flto is making g++ 9.3.0 under cygwin segfault
 uname -a | grep CYGWIN
@@ -84,15 +84,15 @@ rm -f *.gcda
 
 STANDARDSOURCE="Source/*.cpp Source/nnue/learn/*.cpp"
 
-$CXX -fprofile-generate $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $dir/Dist/Minic2/$exe $LIBS 
+$CXX -fprofile-generate $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $dir/Dist/Minic3/$exe $LIBS 
 ret=$?
 echo "end of first compilation"
 if [ $ret = "0" ]; then
-   echo "running Minic for profiling : $dir/Dist/Minic2/$exe"
-   $dir/Dist/Minic2/$exe bench $DEPTH -quiet 0 
-   $dir/Dist/Minic2/$exe bench $DEPTH -quiet 0 -NNUEFile Tourney/nn_seer.bin
+   echo "running Minic for profiling : $dir/Dist/Minic3/$exe"
+   $dir/Dist/Minic3/$exe bench $DEPTH -quiet 0 
+   $dir/Dist/Minic3/$exe bench $DEPTH -quiet 0 -NNUEFile Tourney/nn_seer.bin
    echo "starting optimized compilation"
-   $CXX -fprofile-use $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $dir/Dist/Minic2/$exe $LIBS
+   $CXX -fprofile-use $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $dir/Dist/Minic3/$exe $LIBS
    echo "done "
 else
    echo "some error"

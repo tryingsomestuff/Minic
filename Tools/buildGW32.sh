@@ -10,7 +10,7 @@ if [ -e Fathom/src/tbprobe.h ]; then
    $dir/Tools/buildFathomGW32.sh "$@"
 fi
 
-mkdir -p $dir/Dist/Minic2
+mkdir -p $dir/Dist/Minic3
 
 d="-DDEBUG_TOOL"
 v="dev"
@@ -45,7 +45,7 @@ fi
 exe32=${exe32}.exe
 
 echo "Building $exe32"
-OPT="-Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto $t --std=c++17 $n"
+OPT="-Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto $t --std=c++17 $n -Wno-unknown-pragmas"
 echo $OPT
 
 if [ $FATHOM_PRESENT = "1" ]; then
@@ -60,6 +60,6 @@ fi
 
 STANDARDSOURCE="Source/*.cpp Source/nnue/learn/*.cpp"
 
-i686-w64-mingw32-g++-posix $OPT $STANDARDSOURCE -ISource -ISource/nnue -static -static-libgcc -static-libstdc++ -o $dir/Dist/Minic2/$exe32 -Wl,-Bstatic -lpthread
-i686-w64-mingw32-strip $dir/Dist/Minic2/$exe32
+i686-w64-mingw32-g++-posix $OPT $STANDARDSOURCE -ISource -ISource/nnue -static -static-libgcc -static-libstdc++ -o $dir/Dist/Minic3/$exe32 -Wl,-Bstatic -lpthread
+i686-w64-mingw32-strip $dir/Dist/Minic3/$exe32
 

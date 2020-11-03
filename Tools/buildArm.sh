@@ -10,7 +10,7 @@ if [ -e Fathom/src/tbprobe.h ]; then
    $dir/Tools/buildFathomArm.sh "$@"
 fi
 
-mkdir -p $dir/Dist/Minic2
+mkdir -p $dir/Dist/Minic3
 
 v="dev"
 n="-fopenmp-simd"
@@ -25,7 +25,7 @@ if [ -n "$1" ] ; then
    shift
 fi
 
-OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto --std=c++17 $n"
+OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto --std=c++17 $n -Wno-unknown-pragmas"
 
 if [ $FATHOM_PRESENT = "1" ]; then
    lib=fathom_${v}_android.o
@@ -40,5 +40,5 @@ echo $OPT
 
 STANDARDSOURCE="Source/*.cpp Source/nnue/learn/*.cpp"
 
-$dir/android/bin/arm-linux-androideabi-clang++ $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $dir/Dist/Minic2/$exe -static-libgcc -static-libstdc++ 
+$dir/android/bin/arm-linux-androideabi-clang++ $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $dir/Dist/Minic3/$exe -static-libgcc -static-libstdc++ 
 
