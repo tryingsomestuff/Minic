@@ -74,6 +74,8 @@ const std::string MinicVersion = "3.00";
 //#define WITH_PIECE_TUNING
 
 // *** Debug
+//#define DEBUG_NNUE_UPDATE
+//#define DEBUG_BACKTRACE
 //#define VERBOSE_EVAL
 //#define DEBUG_HASH
 //#define DEBUG_PHASH
@@ -378,8 +380,6 @@ inline unsigned long long int powerFloor(unsigned long long int x) {
     return power/2;
 }
 
-//madvise(mem, ttSize*sizeof(Entry), MADV_HUGEPAGE); ///@todo
-
 inline void* std_aligned_alloc(size_t alignment, size_t size) {
 #ifdef __ANDROID__
   return malloc(size);
@@ -388,6 +388,7 @@ inline void* std_aligned_alloc(size_t alignment, size_t size) {
 #elif defined(_WIN32)
   return _mm_malloc(size, alignment);
 #else
+  //madvise(mem, ttSize*sizeof(Entry), MADV_HUGEPAGE); ///@todo
   return std::aligned_alloc(alignment, size);
 #endif
 }

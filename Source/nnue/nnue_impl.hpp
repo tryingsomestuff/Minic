@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <array>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -38,8 +39,32 @@ constexpr T relu(const T& x){ return std::max(x, T{0}); }
 
 template<typename T, size_t dim>
 struct stack_vector{
-  T data[dim];
+  std::array<T,dim> data;
   
+#ifdef DEBUG_NNUE_UPDATE
+  bool operator==(const stack_vector<T,dim> & other){
+    static const T eps = std::numeric_limits<T>::epsilon() * 100;
+    for (size_t i = 0 ; i < dim ; ++i){
+       if ( std::fabs(data[i] - other.data[i]) > eps ){
+         std::cout << data[i] << "!=" << other.data[i] << std::endl;
+         return false;
+       }
+    }
+    return true;
+  }
+
+  bool operator!=(const stack_vector<T,dim> & other){
+    static const T eps = std::numeric_limits<T>::epsilon() * 100;
+    for (size_t i = 0 ; i < dim ; ++i){
+       if ( std::fabs(data[i] - other.data[i]) > eps ){
+         std::cout << data[i] << "!=" << other.data[i] << std::endl;
+         return true;
+       }
+    }
+    return false;
+  }
+#endif
+
   template<typename F>
   constexpr stack_vector<T, dim> apply(F&& f) const {
     return stack_vector<T, dim>{*this}.apply_(std::forward<F>(f));
@@ -259,9 +284,21 @@ struct half_kp_weights{
     return *this;
   }
   
-  half_kp_weights<T>& load(const std::string& path){
+  bool load(const std::string& path, half_kp_weights<T>& loadedWeights){
+    static const int expectedSize = 50378500;
+    std::error_code ec;
+    auto fsize = std::filesystem::file_size(path,ec);
+    if ( ec ){
+      Logging::LogIt(Logging::logError) << "File " << path << " is not accessible";
+      return false;
+    }
+    if ( fsize != expectedSize ){
+      Logging::LogIt(Logging::logError) << "File " << path << " does not look like a compatible net";
+      return false;
+    }
     auto ws = weights_streamer<T>(path);
-    return load(ws);
+    loadedWeights = load(ws);
+    return true;
   }
 };
 
@@ -281,6 +318,17 @@ struct feature_transformer{
   feature_transformer(const big_affine<T, half_kp_numel, base_dim>* src) : weights_{src} {
     clear();
   }
+
+#ifdef DEBUG_NNUE_UPDATE
+  bool operator==(const feature_transformer<T> & other){
+    return active_ == other.active_;
+  }
+
+  bool operator!=(const feature_transformer<T> & other){
+    return active_ != other.active_;
+  }
+#endif
+
 };
 
 template<Color> struct them_{};
@@ -342,6 +390,16 @@ struct half_kp_eval : sided<half_kp_eval<T>, feature_transformer<T>>{
     const T val = (weights_ -> fc3).forward(x3).item();
     return val;
   }
+
+#ifdef DEBUG_NNUE_UPDATE
+  bool operator==(const half_kp_eval<T> & other){
+    return white == other.white && black == other.black;
+  }
+
+  bool operator!=(const half_kp_eval<T> & other){
+    return white != other.white || black != other.black;
+  }
+#endif
 
   // default CTOR always use loaded weights
   half_kp_eval() : weights_{&weights}, white{&(weights . w)}, black{&(weights . b)} {}

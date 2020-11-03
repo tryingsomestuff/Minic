@@ -248,7 +248,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
 #endif
             if ( (validTTmove && sameMove(e.m, *it)) || isBadCap(*it) ) continue; // skip TT move if quiet or bad captures
             Position p2 = p;
-#ifdef WITH_NNUE            
+#ifdef WITH_NNUE
             NNUEEvaluator newEvaluator = p.Evaluator();
             p2.associateEvaluator(newEvaluator);
 #endif

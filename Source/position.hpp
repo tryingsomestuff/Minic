@@ -123,34 +123,33 @@ struct Position{
 
   template<Color c>
   void updateNNUEEvaluator(NNUEEvaluator & nnueEvaluator, const Move & m)const{
+    ///@todo to optimize, available in parent function !
     const Square from = Move2From(m);
     const Square to   = Move2To(m);
     const MType type  = Move2Type(m);
-    const Piece fromP = board_const(from);
-    const Piece toP   = board_const(to);
-    const Piece pTypeFrom = (Piece)std::abs(fromP);
-    const Piece pTypeTo   = (Piece)std::abs(toP);      
+    const Piece pTypeFrom = (Piece)std::abs(board_const(from));
+    const Piece pTypeTo   = (Piece)std::abs(board_const(to));
     const Square our_king_idx   = HFlip(king[c]);
     const Square their_king_idx = HFlip(king[~c]);
-    nnueEvaluator.template us<c>().erase(feature_idx::major * our_king_idx + HFlip(from) + feature_idx::us_offset(pTypeFrom));
+    nnueEvaluator.template us<c>()  .erase(feature_idx::major * our_king_idx   + HFlip(from) + feature_idx::us_offset(pTypeFrom));
     nnueEvaluator.template them<c>().erase(feature_idx::major * their_king_idx + HFlip(from) + feature_idx::them_offset(pTypeFrom));
     if(isPromotion(m)){
-        const Piece promPieceType = (Piece)std::abs(promShift(type));
-        nnueEvaluator.template us<c>().insert(feature_idx::major * our_king_idx + HFlip(to) + feature_idx::us_offset(promPieceType));
+        const Piece promPieceType = promShift(type);
+        nnueEvaluator.template us<c>()  .insert(feature_idx::major * our_king_idx   + HFlip(to) + feature_idx::us_offset(promPieceType));
         nnueEvaluator.template them<c>().insert(feature_idx::major * their_king_idx + HFlip(to) + feature_idx::them_offset(promPieceType));
     }
     else{
-        nnueEvaluator.template us<c>().insert(feature_idx::major * our_king_idx + HFlip(to) + feature_idx::us_offset(pTypeFrom));
+        nnueEvaluator.template us<c>()  .insert(feature_idx::major * our_king_idx   + HFlip(to) + feature_idx::us_offset(pTypeFrom));
         nnueEvaluator.template them<c>().insert(feature_idx::major * their_king_idx + HFlip(to) + feature_idx::them_offset(pTypeFrom));
     }
     if(type == T_ep){
         const Square epSq = ep + (c == Co_White ? -8 : +8);
         nnueEvaluator.template them<c>().erase(feature_idx::major * their_king_idx + HFlip(epSq) + feature_idx::us_pawn_offset);
-        nnueEvaluator.template us<c>().erase(feature_idx::major * our_king_idx + HFlip(epSq) + feature_idx::them_pawn_offset);
+        nnueEvaluator.template us<c>()  .erase(feature_idx::major * our_king_idx   + HFlip(epSq) + feature_idx::them_pawn_offset);
     }
     else if(isCapture(m)){
         nnueEvaluator.template them<c>().erase(feature_idx::major * their_king_idx + HFlip(to) + feature_idx::us_offset(pTypeTo));
-        nnueEvaluator.template us<c>().erase(feature_idx::major * our_king_idx + HFlip(to) + feature_idx::them_offset(pTypeTo));
+        nnueEvaluator.template us<c>()  .erase(feature_idx::major * our_king_idx   + HFlip(to) + feature_idx::them_offset(pTypeTo));
     }
   }
 
