@@ -100,9 +100,6 @@ void applyNull(Searcher & , Position & pN) {
     pN.lastMove = NULLMOVE;
     if ( pN.c == Co_White ) ++pN.moves;
     ++pN.halfmoves;
-
-    // no NNUE things here
-
     STOP_AND_SUM_TIMER(Apply)
 }
 
@@ -116,7 +113,7 @@ bool applyMove(Position & p, const Move & m, bool noValidation){
     const Square to     = Move2To(m); assert(squareOK(to));
     const MType  type   = Move2Type(m); assert(moveTypeOK(type));
     const Piece  fromP  = p.board_const(from);
-    Piece  toP          = p.board_const(to);
+    const Piece  toP    = p.board_const(to);
     const int fromId    = fromP + PieceShift;
     const bool isCapNoEP= toP != P_none;
     Piece promPiece = P_none;
@@ -245,7 +242,26 @@ bool applyMove(Position & p, const Move & m, bool noValidation){
     if ( DynamicConfig::useNNUE && std::abs(fromP) == P_wk){ 
        p.resetNNUEEvaluator(p.Evaluator());
     }
-#endif    
+#endif
+
+#ifdef DEBUG_NNUE_UPDATE
+    Position p2 = p;
+    NNUEEvaluator evaluator;
+    p2.associateEvaluator(evaluator);
+    p2.resetNNUEEvaluator(p2.Evaluator());
+    if ( p2.Evaluator() != p.Evaluator()){
+        Logging::LogIt(Logging::logWarn) << "Evaluator update error";
+        Logging::LogIt(Logging::logWarn) << ToString(p);
+        Logging::LogIt(Logging::logWarn) << ToString(m);
+        Logging::LogIt(Logging::logWarn) << ToString(p.lastMove);
+        Logging::LogIt(Logging::logWarn) << p2.Evaluator().white.active();
+        Logging::LogIt(Logging::logWarn) << p2.Evaluator().black.active();
+        Logging::LogIt(Logging::logWarn) << "--------------------";
+        Logging::LogIt(Logging::logWarn) << p.Evaluator().white.active();
+        Logging::LogIt(Logging::logWarn) << p.Evaluator().black.active();
+        Logging::LogIt(Logging::logWarn) << backtrace();
+    }
+#endif
 
 #ifdef DEBUG_MATERIAL
     Position::Material mat = p.mat;
@@ -318,6 +334,10 @@ ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck, Searcher 
     std::shuffle(moves.begin(), moves.end(),g);
     for (auto it = moves.begin(); it != moves.end(); ++it) {
         Position p2 = p;
+#if defined(WITH_NNUE) && defined(DEBUG_NNUE_UPDATE)
+        NNUEEvaluator evaluator = p.Evaluator();
+        p2.associateEvaluator(evaluator);
+#endif        
         if (!applyMove(p2, *it)) continue;
         PVList childPV;
 #ifdef WITH_GENFILE

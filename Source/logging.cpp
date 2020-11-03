@@ -31,7 +31,11 @@ namespace Logging {
             std::cout       << _buffer.str() << std::flush << std::endl;
             if (_of) (*_of) << _buffer.str() << std::flush << std::endl;
         }
-        if (_level >= logError) std::cout << backtrace() << std::endl;
+        if (_level >= logError) {
+#ifdef DEBUG_BACKTRACE
+            std::cout << backtrace() << std::endl;
+#endif
+        }
         if (_level >= logFatal) {
             exit(1);
         }

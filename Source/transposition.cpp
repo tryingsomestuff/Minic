@@ -99,6 +99,11 @@ void getPV(const Position & p, Searcher & context, PVList & pv){
     TT::Entry e;
     Hash hashStack[MAX_PLY] = { nullHash };
     Position p2 = p;
+#ifdef WITH_NNUE
+    NNUEEvaluator evaluator;
+    p2.associateEvaluator(evaluator);
+    p2.resetNNUEEvaluator(p2.Evaluator());        
+#endif    
     bool stop = false;
     for( int k = 0 ; k < MAX_PLY && !stop; ++k){
       if (!TT::getEntry(context, p2, computeHash(p2), 0, e)) break;

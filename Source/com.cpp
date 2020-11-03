@@ -77,6 +77,9 @@ namespace COM {
     }
 
     bool makeMove(Move m, bool disp, std::string tag, Move pMove) {
+#ifdef WITH_NNUE
+        position.resetNNUEEvaluator(position.Evaluator());
+#endif
         bool b = applyMove(position, m, true);
         if (disp && m != INVALIDMOVE) Logging::LogIt(Logging::logGUI) << tag << " " << ToString(m) << (Logging::ct==Logging::CT_uci && VALIDMOVE(pMove) ? (" ponder " + ToString(pMove)) : "");
         Logging::LogIt(Logging::logInfo) << ToString(position);
@@ -106,6 +109,11 @@ namespace COM {
             COM::ponderMove = INVALIDMOVE;
             if ( pv.size() > 1) {
                Position p2 = COM::position;
+#ifdef WITH_NNUE
+               NNUEEvaluator evaluator2;
+               p2.associateEvaluator(evaluator2);
+               p2.resetNNUEEvaluator(p2.Evaluator());
+#endif
                if ( applyMove(p2,pv[0]) && isPseudoLegal(p2,pv[1])) COM::ponderMove = pv[1];
             }
             Logging::LogIt(Logging::logInfo) << "search async done (state " << st << ")";

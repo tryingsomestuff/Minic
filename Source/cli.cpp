@@ -59,6 +59,11 @@ Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc){
 #endif
         ++accLoc.pseudoNodes;
         Position p2 = p;
+#if defined(WITH_NNUE) && defined(DEBUG_NNUE_UPDATE)
+        NNUEEvaluator evaluator;
+        p2.associateEvaluator(evaluator);
+        p2.resetNNUEEvaluator(p2.Evaluator());        
+#endif        
         if ( ! applyMove(p2,m) ) continue;
         ++accLoc.validNodes;
         MType t = Move2Type(m);
@@ -459,6 +464,10 @@ int cliManagement(std::string cli, int argc, char ** argv){
     if ( cli == "-testmove" ){
         Move m = ToMove(8,16,T_std);
         Position p2 = p;
+#if defined(WITH_NNUE) && defined(DEBUG_NNUE_UPDATE)
+        p2.associateEvaluator(evaluator);
+        p2.resetNNUEEvaluator(p2.Evaluator());        
+#endif
         applyMove(p2,m);
         Logging::LogIt(Logging::logInfo) << ToString(p2) ;
         return 0;

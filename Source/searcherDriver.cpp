@@ -245,6 +245,10 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType 
                 // if no good pv available (too short), let's build one for display purpose ...
                 if ( fhBreak && pvLoc.size() ){ 
                     Position p2 = p;
+#ifdef WITH_NNUE
+                    NNUEEvaluator evaluator = p.Evaluator();
+                    p2.associateEvaluator(evaluator);
+#endif                    
                     applyMove(p2,pvLoc[0]);
                     PVList pv2;
                     TT::getPV(p2, *this, pv2);
