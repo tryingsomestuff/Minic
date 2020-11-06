@@ -220,7 +220,7 @@ struct PackedSfenValue{
 
 	// When exchanging the file that wrote the teacher aspect with other people
 	//Because this structure size is not fixed, pad it so that it is 40 bytes in any environment.
-	uint8_t padding;
+	uint8_t padding = 0;
 
 	// 32 + 2 + 2 + 2 + 1 + 1 = 40bytes
 };

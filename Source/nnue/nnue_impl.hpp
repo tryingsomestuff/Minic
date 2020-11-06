@@ -39,9 +39,10 @@ constexpr T relu(const T& x){ return std::max(x, T{0}); }
 
 template<typename T, size_t dim>
 struct stack_vector{
+
+#ifdef DEBUG_NNUE_UPDATE  
   std::array<T,dim> data;
   
-#ifdef DEBUG_NNUE_UPDATE
   bool operator==(const stack_vector<T,dim> & other){
     static const T eps = std::numeric_limits<T>::epsilon() * 100;
     for (size_t i = 0 ; i < dim ; ++i){
@@ -63,6 +64,8 @@ struct stack_vector{
     }
     return false;
   }
+#else
+  T data[dim];
 #endif
 
   template<typename F>

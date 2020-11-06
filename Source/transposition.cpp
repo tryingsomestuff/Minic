@@ -24,7 +24,7 @@ GenerationType curGen = 0;
 void initTable(){
     Logging::LogIt(Logging::logInfo) << "Init TT" ;
     Logging::LogIt(Logging::logInfo) << "Entry size " << sizeof(Entry);
-    ttSize = powerFloor((1024 * 1024 * DynamicConfig::ttSizeMb) / (unsigned long long int)sizeof(Entry));
+    ttSize = powerFloor((1024ull * 1024ull * DynamicConfig::ttSizeMb) / (unsigned long long int)sizeof(Entry));
     assert(countBit(ttSize) == 1); // a power of 2
     table.reset((Entry *) std_aligned_alloc(1024,ttSize*sizeof(Entry)));
     Logging::LogIt(Logging::logInfo) << "Size of TT " << ttSize * sizeof(Entry) / 1024 / 1024 << "Mb" ;
