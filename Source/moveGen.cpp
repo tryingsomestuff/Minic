@@ -337,7 +337,7 @@ ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck, Searcher 
 #if defined(WITH_NNUE) && defined(DEBUG_NNUE_UPDATE)
         NNUEEvaluator evaluator = p.Evaluator();
         p2.associateEvaluator(evaluator);
-#endif        
+#endif
         if (!applyMove(p2, *it)) continue;
         PVList childPV;
 #ifdef WITH_GENFILE
