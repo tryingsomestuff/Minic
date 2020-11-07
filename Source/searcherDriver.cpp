@@ -118,7 +118,7 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType 
     const auto maxNodes = TimeMan::maxNodes;
     TimeMan::maxNodes = 0; // reset this for depth 1 to be sure to iterate at least once ...
 
-    if ( DynamicConfig::level == 0 ){ // random mover
+    if ( DynamicConfig::level == 0 || p.halfmoves < DynamicConfig::randomPly ){ // random mover
        bestScore = randomMover(p,pvOut,isInCheck,*this);
        goto pvsout;
     }

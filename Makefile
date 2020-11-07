@@ -19,5 +19,5 @@ build: config fathom
 
 dist: build
 	mkdir -p Tourney
-	cp Dist/Minic2/minic_dev_linux_x64 Tourney/
+	cp Dist/Minic3/minic_dev_linux_x64 Tourney/
 
