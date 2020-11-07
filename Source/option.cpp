@@ -115,6 +115,8 @@ namespace Options {
        _keys.push_back(KeyBase(k_int,   w_spin,  "GenFenDepth"                 , &DynamicConfig::genFenDepth                    , (unsigned int)2  , (unsigned int)20 ));
        _keys.push_back(KeyBase(k_int,   w_spin,  "GenFenSkip"                  , &DynamicConfig::genFenSkip                     , (unsigned int)0  , (unsigned int)10000000 ));
        
+       _keys.push_back(KeyBase(k_int,   w_spin,  "RandomPly"                   , &DynamicConfig::randomPly                     , (unsigned int)0   , (unsigned int)20 ));
+
        #endif
 
        _keys.push_back(KeyBase(k_int, w_spin,  "StyleAttack"                   , &DynamicConfig::styleAttack                    , (int)0   , (int)100                                    , &EvalFeatures::callBack));
@@ -225,13 +227,15 @@ namespace Options {
 #ifdef WITH_NNUE
        //GETOPT(useNNUE,          bool)         
        GETOPT(NNUEFile,         std::string)
-       GETOPT(skipLoadingEval,  bool);
-       GETOPT(forceNNUE,        bool);
+       GETOPT(skipLoadingEval,  bool)
+       GETOPT(forceNNUE,        bool)
        
 #endif
 #ifdef WITH_GENFILE
        GETOPT(genFen,            bool)
        GETOPT(genFenDepth,       unsigned int)
+       GETOPT(genFenSkip,        unsigned int)
+       GETOPT(randomPly,         unsigned int)
 #endif
    }
 } // Options

@@ -34,6 +34,7 @@ namespace DynamicConfig{
     extern unsigned int genFenDepth;
     extern unsigned int genFenSkip ;
     extern bool skipLoadingEval    ;
+    extern unsigned int randomPly  ;
 
     extern int styleComplexity     ;
     extern int styleMaterial       ;    

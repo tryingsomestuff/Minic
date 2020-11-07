@@ -27,6 +27,7 @@ namespace DynamicConfig{
     unsigned int genFenDepth = 8;
     unsigned int genFenSkip  = 1;
     bool skipLoadingEval     = false;
+    unsigned int randomPly   = 0;
 
     int styleComplexity      = 50;
     int styleMaterial        = 50;
