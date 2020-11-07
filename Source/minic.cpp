@@ -72,7 +72,7 @@ int main(int argc, char ** argv) {
 
 #ifdef WITH_DATA2BIN
     if ( argc > 1 && std::string(argv[1]) == "-plain2bin")  { return convert_bin({argv[2]},std::string(argv[2])+".bin",1,300,0); }
-    if ( argc > 1 && std::string(argv[1]) == "-pgn2bin")    { return convert_bin_from_pgn_extract({argv[2]},std::string(argv[2])+".bin",true, true); }
+    if ( argc > 1 && std::string(argv[1]) == "-pgn2bin")    { return convert_bin_from_pgn_extract({argv[2]},std::string(argv[2])+".bin",true, false); }
     if ( argc > 1 && std::string(argv[1]) == "-bin2plain")  { return convert_plain({argv[2]},std::string(argv[2])+".plain"); }
 #endif
 
