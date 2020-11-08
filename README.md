@@ -163,12 +163,17 @@ Minic comes with some command line options :
 * -mateFinder \[0 or 1\] (default is 0): activate mate finder mode, which essentially means no forward pruning
 * -fullXboardOutput \[0 or 1\] (default is 0): activate additionnal output for Xboard protocol such as nps or tthit
 * -multiPV \[from 1 to 4 \] (default is 1): search more lines at the same time
+* -randomOpen \[from 0 to 100 \] (default is 0): value in cp that allows to add randomness for ply <10. Usefull when no book is used
 * -level \[from 0 to 100\] (default is 100): change Minic skill level
 * -limitStrength \[0 or 1\] (default is 0): take or not strength limitation into account
 * -strength \[Elo_like_number\] (default is 1500): specify a Elo-like strength (not really well scaled for now ...)
 * -syzygyPath \[path_to_egt_directory\] (default is none): specify the path to syzygy end-game table directory
 * -NNUEFile \[path_to_neural_network_file\] (default is none): specify the neural network (NNUE) to be used and activate NNUE evaluation
 * -forceNNUE \[0 or 1\] (default is false): if a NNUEFile is loaded, forceNNUE equal true will results in a pure NNUE evaluation, while the default is hybrid evaluation.
+* -genFen \[ 0 or 1 \] (default is 0): activate "in search" sfen generation
+* -genFenDepth \[ 2 to 20\] (default is 8): specify depth of search for "in search" sfen generation
+* -genFenSkip \[ 1 to 10000000 \] (default is 1): frequency of sfen "in search" activation (generating for every search tree node is extremely expensive and maybe not really usefull !)
+* -randomPly \[0 to 20 \] (default is 0): usefull when creating training data, play this number of total random ply at the beginning of the game
 
 ### GUI/protocol (Xboard or UCI)
 
