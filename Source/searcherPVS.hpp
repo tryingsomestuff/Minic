@@ -397,9 +397,11 @@ ScoreType Searcher::pvs(ScoreType alpha,
                    }
                }
             }
-            const ScoreType ttScore = -pvs<pvnode>(-beta, -alpha, p2, depth - 1 + extension, ply + 1, childPV, seldepth, isCheck, !cutNode, true);
+            ScoreType ttScore = -pvs<pvnode>(-beta, -alpha, p2, depth - 1 + extension, ply + 1, childPV, seldepth, isCheck, !cutNode, true);
             if (stopFlag) return STOPSCORE;
-            if (rootnode) rootScores.push_back({e.m,ttScore});
+            if (rootnode){
+                rootScores.push_back({e.m,ttScore});
+            }
             if ( ttScore > bestScore ){
                 if (rootnode) previousBest = e.m;
                 bestScore = ttScore;
@@ -602,7 +604,9 @@ ScoreType Searcher::pvs(ScoreType alpha,
 
         }
         if (stopFlag) return STOPSCORE;
-        if (rootnode) rootScores.push_back({*it,score});
+        if (rootnode){
+            rootScores.push_back({*it,score});
+        }
         if ( score > bestScore ){
             if (rootnode) previousBest = *it;
             bestScore = score;
