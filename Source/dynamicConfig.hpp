@@ -17,6 +17,7 @@ namespace DynamicConfig{
     extern std::string debugFile   ;
     extern unsigned int level      ;
     extern bool book               ;
+    extern unsigned int randomOpen ; 
     extern std::string bookFile    ;
     extern unsigned int threads    ;
     extern std::string syzygyPath  ;

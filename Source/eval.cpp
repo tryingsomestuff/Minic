@@ -253,6 +253,9 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
        evalPiece<P_wk,Co_Black>(p,kings  [Co_Black],kingZone,nonPawnMat[Co_Black],occupancy,features.scores[F_positional],attFromPiece[Co_Black][P_wk-1],att[Co_Black],att2[Co_Black],kdanger,checkers[Co_Black][P_wk-1]);
     }
 
+    // random factor in opening if requiered
+    if ( p.halfmoves < 10 && DynamicConfig::randomOpen != 0 ) features.scores[F_positional] += randomInt<ScoreType /*NO SEED => random device*/>(-DynamicConfig::randomOpen,DynamicConfig::randomOpen);
+
     STOP_AND_SUM_TIMER(Eval2)
 
     Searcher::PawnEntry * pePtr = nullptr;

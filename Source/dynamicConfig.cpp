@@ -10,6 +10,7 @@ namespace DynamicConfig{
     std::string debugFile    = "minic.debug";
     unsigned int level       = 100;
     bool book                = false;
+    unsigned int randomOpen  = 0;
     std::string bookFile     = "book.bin";
     unsigned int threads     = 1;
     std::string syzygyPath   = "";
