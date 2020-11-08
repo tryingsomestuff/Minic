@@ -180,6 +180,17 @@ Minic comes with some command line options :
 Starting from release 1.00 Minic support setting options using protocol (both XBoard and UCI). Option priority are as follow : command line option can be override by protocol option. This way, Minic supports strength limitation, FRC, pondering, can use contempt, ...  
 If compiled with the WITH_SEARCH_TUNING definition, Minic can expose all search algorithm parameters so that they can be tweaked. Also, when compiled with WITH_PIECE_TUNING, Minic can expose all middle- and end-game pieces values.
 
+### Training data generation
+
+There are multiple ways of generating sfen data with Minic.
+* First is classic play at fixed depth to generate pgn (I am using cutechess for this). Then use convert this way 
+```
+pgn-extract --fencomments -Wlalg --nochecks --nomovenumbers --noresults -w500000 -N -V -o data.plain games.pgn
+```
+Then use Minic -pgn2bin option to get a binary format sfen file. Note than position without score won't be taken into account.
+* Use Minic random mover (level = 0) and play tons of random games activating the genFen option (without using skip) and setting the depth of search you like with genFenDepth. This will generate a "plain" format sfen file with game results always being 0, so you will use this with lambda=1 in your trainer to be sure to don't take game outcome into account
+* Use Minic "in search" generator during real games. You'd better use a big genFenSkip when doing this, at least 1000 or even 10000. In this case again, note that game result will always be drawn because the file is written on the fly not at the end of the game.
+
 ## Style
 
 Moreover, Minic implements some "style" parameter that allow the user to boost or minimize effects of :
