@@ -203,7 +203,7 @@ Carlsen    : based on Carlsen most used opening lines (thanks to Jonathan Cremer
 Anand      : based on Anand most used opening lines (thanks to Jonathan Cremers)
 ```
 
-You can use both the command line argument or the GUI option to select and activate the book. Note that using books, Minic will use random lines to be for fun to play against.
+You can use both the command line argument or the GUI option to select and activate the book. Note that using books, Minic will use random lines to be more fun to play against.
 
 ## Thanks
 
