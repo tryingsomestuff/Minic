@@ -1,0 +1,23 @@
+device: 'cpu'
+model_save_path: 'model/save.pt'
+bin_model_save_path: 'model/save.bin'
+only_quiet: yes 
+
+train_bin_data_path: /ssd/Minic/train_data/fromgames/all.bin
+validation_bin_data_path: /ssd/Minic/train_data/validation/depth16/validation.txt.bin
+
+shuffle_buffer_size: 100000
+enable_mirroring: yes
+num_workers: 6
+batch_size: 512
+lambda_: 0.9
+
+visual_directory: 'visual'
+
+epochs: 10000000
+save_rate: 10000
+report_rate: 50
+test_rate: 500
+max_queue_size: 128
+
+learning_rate: 0.1
