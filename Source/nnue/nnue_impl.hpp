@@ -256,17 +256,17 @@ struct big_affine{
 
 };
 
-constexpr size_t half_kp_numel = 768*64;
+constexpr size_t half_kp_numel = 12*64*64;
 constexpr size_t base_dim = 128;
 
 template<typename T>
 struct half_kp_weights{
   big_affine<T, half_kp_numel, base_dim> w{};
   big_affine<T, half_kp_numel, base_dim> b{};
-  stack_affine<T, 2*base_dim, 32> fc0{};
-  stack_affine<T, 32, 32> fc1{};
+  stack_affine<T, 2*base_dim, 64> fc0{};
+  stack_affine<T, 64, 64> fc1{};
   stack_affine<T, 64, 32> fc2{};
-  stack_affine<T, 96, 1> fc3{};
+  stack_affine<T, 32, 1>  fc3{};
 
   size_t num_parameters() const {
     return w.num_parameters() +
@@ -289,7 +289,7 @@ struct half_kp_weights{
   
   bool load(const std::string& path, half_kp_weights<T>& loadedWeights){
 #ifndef __ANDROID__        
-    static const int expectedSize = 50378500;
+    static const int expectedSize = 50423556;
     std::error_code ec;
     auto fsize = std::filesystem::file_size(path,ec);
     if ( ec ){
@@ -390,9 +390,9 @@ struct half_kp_eval : sided<half_kp_eval<T>, feature_transformer<T>>{
     const auto b_x = black.active();
     const auto x0 = c == Co_White ? splice(w_x, b_x).apply(relu<T>) : splice(b_x, w_x).apply_(relu<T>);
     const auto x1 = (weights_ -> fc0).forward(x0).apply_(relu<T>);
-    const auto x2 = splice(x1, (weights_ -> fc1).forward(x1).apply_(relu<T>));
-    const auto x3 = splice(x2, (weights_ -> fc2).forward(x2).apply_(relu<T>));
-    const T val = (weights_ -> fc3).forward(x3).item();
+    const auto x2 = (weights_ -> fc1).forward(x1).apply_(relu<T>);
+    const auto x3 = (weights_ -> fc2).forward(x2).apply_(relu<T>);
+    const T val   = (weights_ -> fc3).forward(x3).item();
     return val;
   }
 
