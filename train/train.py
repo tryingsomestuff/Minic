@@ -63,7 +63,9 @@ def main():
   scheduler = optim.lr_scheduler.StepLR(opt, 1, gamma=0.5)
 
   queue = []
-  
+ 
+  nsave = 0
+
   for epoch in range(1, config.epochs + 1):
     for i, sample in enumerate(train_data_loader):
       # update visual data
@@ -85,6 +87,8 @@ def main():
       if (i % config.save_rate) == 0 and i != 0:
         print('Saving model ...')
         M.to_binary_file(config.bin_model_save_path)
+        M.to_binary_file(config.bin_model_save_path + "_" + str(nsave))
+        nsave += 1
         torch.save(M.state_dict(), config.model_save_path)
 
       train_step(M, sample_to_device(sample), opt, queue, max_queue_size=config.max_queue_size, lambda_=config.lambda_, report=(0 == i % config.report_rate))

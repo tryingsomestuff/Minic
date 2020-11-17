@@ -13,19 +13,18 @@ class NNUE(nn.Module):
     BASE = 128
     self.white_affine = nn.Linear(util.half_kp_numel(), BASE)
     self.black_affine = nn.Linear(util.half_kp_numel(), BASE)
-    self.fc0 = nn.Linear(2*BASE, 32)
-    self.fc1 = nn.Linear(32, 32)
+    self.fc0 = nn.Linear(2*BASE, 64)
+    self.fc1 = nn.Linear(64, 64)
     self.fc2 = nn.Linear(64, 32)
-    self.fc3 = nn.Linear(96, 1)
-    
+    self.fc3 = nn.Linear(32, 1)
 
   def forward(self, pov, white, black):
     w_ = self.white_affine(util.half_kp(white, black))
     b_ = self.black_affine(util.half_kp(black, white))
     base = F.relu(pov * torch.cat([w_, b_], dim=1) + (1.0 - pov) * torch.cat([b_, w_], dim=1))
     x = F.relu(self.fc0(base))
-    x = torch.cat([x, F.relu(self.fc1(x))], dim=1)
-    x = torch.cat([x, F.relu(self.fc2(x))], dim=1)
+    x = F.relu(self.fc1(x))
+    x = F.relu(self.fc2(x))
     x = self.fc3(x)
     return x
 
