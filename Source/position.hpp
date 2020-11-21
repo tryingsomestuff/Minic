@@ -91,27 +91,34 @@ struct Position{
   NNUEEvaluator & Evaluator(){ assert(associatedEvaluator); return *associatedEvaluator; }
   const NNUEEvaluator & Evaluator()const{ assert(associatedEvaluator); return *associatedEvaluator; }
 
-// Taken from Seer implementation.
-// see https://github.com/connormcmonigle/seer-nnue
+  // Vastly taken from Seer implementation.
+  // see https://github.com/connormcmonigle/seer-nnue
+
+  static inline int NNUEIndiceUs(Square ksq, Square s, Piece p){
+    return feature_idx::major * HFlip(ksq) + HFlip(s) + feature_idx::us_offset(p);
+  }
+
+  static inline int NNUEIndiceThem(Square ksq, Square s, Piece p){
+    return feature_idx::major * HFlip(ksq) + HFlip(s) + feature_idx::them_offset(p);
+  }
 
   template<Color c>
   void resetNNUEIndices_(NNUEEvaluator & nnueEvaluator)const {
     using namespace feature_idx;
-    const size_t king_idx = HFlip(king[c]);
     //us
-    BitBoard us_pawn   = pieces_const<P_wp>(c); while(us_pawn)  { nnueEvaluator.template us<c>().insert(major*king_idx + us_pawn_offset   + HFlip(popBit(us_pawn))); }
-    BitBoard us_knigt  = pieces_const<P_wn>(c); while(us_knigt) { nnueEvaluator.template us<c>().insert(major*king_idx + us_knight_offset + HFlip(popBit(us_knigt))); }
-    BitBoard us_bishop = pieces_const<P_wb>(c); while(us_bishop){ nnueEvaluator.template us<c>().insert(major*king_idx + us_bishop_offset + HFlip(popBit(us_bishop))); }
-    BitBoard us_rook   = pieces_const<P_wr>(c); while(us_rook)  { nnueEvaluator.template us<c>().insert(major*king_idx + us_rook_offset   + HFlip(popBit(us_rook))); }
-    BitBoard us_queen  = pieces_const<P_wq>(c); while(us_queen) { nnueEvaluator.template us<c>().insert(major*king_idx + us_queen_offset  + HFlip(popBit(us_queen))); }
-    BitBoard us_king   = pieces_const<P_wk>(c); while(us_king)  { nnueEvaluator.template us<c>().insert(major*king_idx + us_king_offset   + HFlip(popBit(us_king))); }
+    BitBoard us_pawn   = pieces_const<P_wp>(c); while(us_pawn)  { nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c],popBit(us_pawn)  ,P_wp)); }
+    BitBoard us_knigt  = pieces_const<P_wn>(c); while(us_knigt) { nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c],popBit(us_knigt) ,P_wn)); }
+    BitBoard us_bishop = pieces_const<P_wb>(c); while(us_bishop){ nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c],popBit(us_bishop),P_wb)); }
+    BitBoard us_rook   = pieces_const<P_wr>(c); while(us_rook)  { nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c],popBit(us_rook)  ,P_wr)); }
+    BitBoard us_queen  = pieces_const<P_wq>(c); while(us_queen) { nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c],popBit(us_queen) ,P_wq)); }
+    BitBoard us_king   = pieces_const<P_wk>(c); while(us_king)  { nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c],popBit(us_king)  ,P_wk)); }
     //them
-    BitBoard them_pawn   = pieces_const<P_wp>(~c); while(them_pawn)  { nnueEvaluator.template us<c>().insert(major*king_idx + them_pawn_offset   + HFlip(popBit(them_pawn))); }
-    BitBoard them_knigt  = pieces_const<P_wn>(~c); while(them_knigt) { nnueEvaluator.template us<c>().insert(major*king_idx + them_knight_offset + HFlip(popBit(them_knigt))); }
-    BitBoard them_bishop = pieces_const<P_wb>(~c); while(them_bishop){ nnueEvaluator.template us<c>().insert(major*king_idx + them_bishop_offset + HFlip(popBit(them_bishop))); }
-    BitBoard them_rook   = pieces_const<P_wr>(~c); while(them_rook)  { nnueEvaluator.template us<c>().insert(major*king_idx + them_rook_offset   + HFlip(popBit(them_rook))); }
-    BitBoard them_queen  = pieces_const<P_wq>(~c); while(them_queen) { nnueEvaluator.template us<c>().insert(major*king_idx + them_queen_offset  + HFlip(popBit(them_queen))); }
-    BitBoard them_king   = pieces_const<P_wk>(~c); while(them_king)  { nnueEvaluator.template us<c>().insert(major*king_idx + them_king_offset   + HFlip(popBit(them_king))); }
+    BitBoard them_pawn   = pieces_const<P_wp>(~c); while(them_pawn)  { nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c],popBit(them_pawn)  ,P_wp)); }
+    BitBoard them_knigt  = pieces_const<P_wn>(~c); while(them_knigt) { nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c],popBit(them_knigt) ,P_wn)); }
+    BitBoard them_bishop = pieces_const<P_wb>(~c); while(them_bishop){ nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c],popBit(them_bishop),P_wb)); }
+    BitBoard them_rook   = pieces_const<P_wr>(~c); while(them_rook)  { nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c],popBit(them_rook)  ,P_wr)); }
+    BitBoard them_queen  = pieces_const<P_wq>(~c); while(them_queen) { nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c],popBit(them_queen) ,P_wq)); }
+    BitBoard them_king   = pieces_const<P_wk>(~c); while(them_king)  { nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c],popBit(them_king)  ,P_wk)); }
   }
 
   void resetNNUEEvaluator(NNUEEvaluator & nnueEvaluator)const {
@@ -129,27 +136,25 @@ struct Position{
     const MType type  = Move2Type(m);
     const Piece pTypeFrom = (Piece)std::abs(board_const(from));
     const Piece pTypeTo   = (Piece)std::abs(board_const(to));
-    const Square our_king_idx   = HFlip(king[c]);
-    const Square their_king_idx = HFlip(king[~c]);
-    nnueEvaluator.template us<c>()  .erase(feature_idx::major * our_king_idx   + HFlip(from) + feature_idx::us_offset(pTypeFrom));
-    nnueEvaluator.template them<c>().erase(feature_idx::major * their_king_idx + HFlip(from) + feature_idx::them_offset(pTypeFrom));
+    nnueEvaluator.template us<c>()  .erase(NNUEIndiceUs  (king[c], from,pTypeFrom));
+    nnueEvaluator.template them<c>().erase(NNUEIndiceThem(king[~c],from,pTypeFrom));
     if(isPromotion(m)){
         const Piece promPieceType = promShift(type);
-        nnueEvaluator.template us<c>()  .insert(feature_idx::major * our_king_idx   + HFlip(to) + feature_idx::us_offset(promPieceType));
-        nnueEvaluator.template them<c>().insert(feature_idx::major * their_king_idx + HFlip(to) + feature_idx::them_offset(promPieceType));
+        nnueEvaluator.template us<c>()  .insert(NNUEIndiceUs  (king[c], to,promPieceType));
+        nnueEvaluator.template them<c>().insert(NNUEIndiceThem(king[~c],to,promPieceType));
     }
     else{
-        nnueEvaluator.template us<c>()  .insert(feature_idx::major * our_king_idx   + HFlip(to) + feature_idx::us_offset(pTypeFrom));
-        nnueEvaluator.template them<c>().insert(feature_idx::major * their_king_idx + HFlip(to) + feature_idx::them_offset(pTypeFrom));
+        nnueEvaluator.template us<c>()  .insert(NNUEIndiceUs  (king[c], to,pTypeFrom));
+        nnueEvaluator.template them<c>().insert(NNUEIndiceThem(king[~c],to,pTypeFrom));
     }
     if(type == T_ep){
         const Square epSq = ep + (c == Co_White ? -8 : +8);
-        nnueEvaluator.template them<c>().erase(feature_idx::major * their_king_idx + HFlip(epSq) + feature_idx::us_pawn_offset);
-        nnueEvaluator.template us<c>()  .erase(feature_idx::major * our_king_idx   + HFlip(epSq) + feature_idx::them_pawn_offset);
+        nnueEvaluator.template them<c>().erase(NNUEIndiceUs  (king[~c],epSq,P_wp));
+        nnueEvaluator.template us<c>()  .erase(NNUEIndiceThem(king[c], epSq,P_wp));
     }
     else if(isCapture(m)){
-        nnueEvaluator.template them<c>().erase(feature_idx::major * their_king_idx + HFlip(to) + feature_idx::us_offset(pTypeTo));
-        nnueEvaluator.template us<c>()  .erase(feature_idx::major * our_king_idx   + HFlip(to) + feature_idx::them_offset(pTypeTo));
+        nnueEvaluator.template them<c>().erase(NNUEIndiceUs  (king[~c],to,pTypeTo));
+        nnueEvaluator.template us<c>()  .erase(NNUEIndiceThem(king[c], to,pTypeTo));
     }
   }
 

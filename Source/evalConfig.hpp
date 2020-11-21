@@ -95,16 +95,6 @@ extern ScoreType kingAttTable[64];
 
 extern CONST_TEXEL_TUNING EvalScore tempo;
 
-/*
-inline double fast_exp_64(const double x) noexcept {
-    // Based on Schraudolph 1999, A Fast, Compact Approximation of the Exponential Function.
-    // Valid for x in approx range (-700, 700).
-    union{double d_; int64_t i_;} uid;
-    uid.i_ = int64_t(double((int64_t(1) << 52) / log(2.0)) * x + double((int64_t(1) << 52) * 1023 - 0));
-    return uid.d_;
-}
-*/
-
 // from 0 to m with offset, translation and scale
 inline double sigmoid (double x, double m = 1.f, double trans = 0.f, double scale = 1.f, double offset = 0.f){ return m / (1 + exp((trans - x) / scale)) - offset;}
 inline void initEval(){ for(Square i = 0; i < NbSquare; i++){ EvalConfig::kingAttTable[i] = (int) sigmoid(i,EvalConfig::kingAttMax,EvalConfig::kingAttTrans,EvalConfig::kingAttScale,EvalConfig::kingAttOffset); } }// idea taken from Topple
