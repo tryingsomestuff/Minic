@@ -1,4 +1,4 @@
-## This is the training code for building NNUE nets for Minic ##
+# This is the training code for building NNUE nets for Minic #
 
 This code is vastly inspired from Seer chess engine training code and from Gary Linscott pytorch trainer for SF NNUE.
 
