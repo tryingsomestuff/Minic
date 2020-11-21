@@ -12,12 +12,12 @@ class NNUE(pl.LightningModule):
   """
   def __init__(self, lambda_=1.0):
     super(NNUE, self).__init__()
-    BASE = 256
+    BASE = 128
     self.white_affine = nn.Linear(12*8*8*64, BASE)
     self.black_affine = nn.Linear(12*8*8*64, BASE)
     self.fc0 = nn.Linear(2*BASE, 32)
-    self.fc1 = nn.Linear(32, 32)
-    self.fc2 = nn.Linear(32, 1)
+    self.fc1 = nn.Linear(32, 16)
+    self.fc2 = nn.Linear(16, 1)
     self.lambda_ = lambda_
 
   def forward(self, us, them, w_in, b_in):

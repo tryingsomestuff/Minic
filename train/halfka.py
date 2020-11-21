@@ -1,6 +1,12 @@
 import chess
 import torch
 
+def side_size():
+  return (6, 8, 8)
+
+def side_numel():
+  return functools.reduce(lambda a, b: a*b, side_size())
+
 def state_size():
   return (12, 8, 8)
 
