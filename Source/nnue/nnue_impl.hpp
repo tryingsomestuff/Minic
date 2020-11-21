@@ -258,15 +258,15 @@ struct big_affine{
 };
 
 constexpr size_t half_kp_numel = 12*64*64;
-constexpr size_t base_dim = 256;
+constexpr size_t base_dim = 128;
 
 template<typename T>
 struct half_kp_weights{
   big_affine<T, half_kp_numel, base_dim> w{};
   big_affine<T, half_kp_numel, base_dim> b{};
   stack_affine<T, 2*base_dim, 32> fc0{};
-  stack_affine<T, 32, 32> fc1{};
-  stack_affine<T, 32,  1> fc2{};
+  stack_affine<T, 32, 16> fc1{};
+  stack_affine<T, 16,  1> fc2{};
 
   size_t num_parameters() const {
     return w.num_parameters() +
@@ -287,7 +287,7 @@ struct half_kp_weights{
   
   bool load(const std::string& path, half_kp_weights<T>& loadedWeights){
 #ifndef __ANDROID__        
-    static const int expectedSize = 100735364;
+    static const int expectedSize = 50367748;
     std::error_code ec;
     auto fsize = std::filesystem::file_size(path,ec);
     if ( ec ){

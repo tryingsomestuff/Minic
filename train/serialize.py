@@ -1,5 +1,4 @@
 import argparse
-import halfkp
 import math
 import model as M
 import numpy

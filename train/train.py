@@ -1,6 +1,5 @@
 import argparse
 import model as M
-import nnue_dataset
 import nnue_bin_dataset
 import pytorch_lightning as pl
 from torch import set_num_threads as t_set_num_threads
