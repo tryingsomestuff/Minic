@@ -1,100 +1,52 @@
-from os import path
-import torch
-import torch.optim as optim
-import numpy as np
-from torch.utils.tensorboard import SummaryWriter
-
-import config as C
-import util
+import argparse
+import model as M
+import nnue_dataset
 import nnue_bin_dataset
-import model
+import pytorch_lightning as pl
+from torch import set_num_threads as t_set_num_threads
+from pytorch_lightning import loggers as pl_loggers
+from torch.utils.data import DataLoader, Dataset
 
-
-def train_step(M, sample, opt, queue, max_queue_size, lambda_, report=False):
-  pov, white, black, outcome, score = sample
-  pred = M(pov, white, black)
-  loss = model.loss_fn(outcome, score, pred, lambda_)
-  if report:
-    print(loss.item())
-  loss.backward()
-  if(len(queue) >= max_queue_size):
-    queue.pop(0)
-  queue.append(loss.item())
-  opt.step()
-  M.zero_grad()
-
-
-def get_validation_loss(M, sample, lambda_):
-  with torch.no_grad():
-    pov, white, black, outcome, score = sample
-    pred = M(pov, white, black)
-    loss = model.loss_fn(outcome, score, pred, lambda_).detach()
-  return loss
-
+def data_loader_py(train_filename, val_filename, batch_size):
+  train = DataLoader(nnue_bin_dataset.NNUEBinData(train_filename), batch_size=batch_size, shuffle=True, num_workers=4)
+  val = DataLoader(nnue_bin_dataset.NNUEBinData(val_filename), batch_size=32)
+  return train, val
 
 def main():
-  config = C.Config('config.yaml')
+  parser = argparse.ArgumentParser(description="Trains the network.")
+  parser.add_argument("train", help="Training data (.bin or .binpack)")
+  parser.add_argument("val", help="Validation data (.bin or .binpack)")
+  parser = pl.Trainer.add_argparse_args(parser)
+  parser.add_argument("--py-data", action="store_true", help="Use python data loader (default=False)")
+  parser.add_argument("--lambda", default=1.0, type=float, dest='lambda_', help="lambda=1.0 = train on evaluations, lambda=0.0 = train on game results, interpolates between (default=1.0).")
+  parser.add_argument("--num-workers", default=1, type=int, dest='num_workers', help="Number of worker threads to use for data loading. Currently only works well for binpack.")
+  parser.add_argument("--batch-size", default=-1, type=int, dest='batch_size', help="Number of positions per batch / per iteration. Default on GPU = 8192 on CPU = 128.")
+  parser.add_argument("--threads", default=-1, type=int, dest='threads', help="Number of torch threads to use. Default automatic (cores) .")
+  args = parser.parse_args()
 
-  sample_to_device = lambda x: tuple(map(lambda t: t.to(config.device, non_blocking=True), x))
+  nnue = M.NNUE(lambda_=args.lambda_)
 
-  M = model.NNUE().to(config.device)
+  print("Training with {} validating with {}".format(args.train, args.val))
 
-  if (path.exists(config.model_save_path)):
-    print('Loading model ... ')
-    M.load_state_dict(torch.load(config.model_save_path))
+  batch_size = args.batch_size
+  if batch_size <= 0:
+    batch_size = 128 if args.gpus == 0 else 8192
+  print('Using batch size {}'.format(batch_size))
 
-  train_data = nnue_bin_dataset.NNUEBinData(config.train_bin_data_path, config)
-  validation_data = nnue_bin_dataset.NNUEBinData(config.validation_bin_data_path, config)
-  
-  train_data_loader = torch.utils.data.DataLoader(train_data,\
-    batch_size=config.batch_size,\
-    num_workers=config.num_workers,\
-    pin_memory=True,\
-    worker_init_fn=nnue_bin_dataset.worker_init_fn)
+  if args.threads > 0:
+    print('limiting torch to {} threads.'.format(args.threads))
+    t_set_num_threads(args.threads)
 
-  validation_data_loader = torch.utils.data.DataLoader(validation_data, batch_size=config.batch_size)
-  validation_data_loader_iter = iter(validation_data_loader)
+  if args.py_data:
+    print('Using python data loader')
+    train, val = data_loader_py(args.train, args.val, batch_size)
+  else:
+    print('Using c++ data loader')
+    train, val = data_loader_cc(args.train, args.val, args.num_workers, batch_size)
 
-  writer = SummaryWriter(config.visual_directory)
-
-  writer.add_graph(M, sample_to_device(next(iter(train_data_loader)))[:3])
-
-  opt = optim.Adadelta(M.parameters(), lr=config.learning_rate)
-  scheduler = optim.lr_scheduler.StepLR(opt, 1, gamma=0.5)
-
-  queue = []
- 
-  nsave = 0
-
-  for epoch in range(1, config.epochs + 1):
-    for i, sample in enumerate(train_data_loader):
-      # update visual data
-      if (i % config.test_rate) == 0 and i != 0:
-        step = train_data.cardinality() * (epoch - 1) + i * config.batch_size
-        train_loss = sum(queue) / len(queue)
-        
-        validation_sample = next(validation_data_loader_iter, None)
-        if validation_sample == None:
-          validation_data_loader_iter = iter(validation_data_loader)
-          validation_sample = next(validation_data_loader_iter, None)
-        validation_sample = sample_to_device(validation_sample)
-        
-        validation_loss = get_validation_loss(M, validation_sample, lambda_=config.lambda_)
-        
-        writer.add_scalar('train_loss', train_loss, step)
-        writer.add_scalar('validation_loss', validation_loss, step)
-      
-      if (i % config.save_rate) == 0 and i != 0:
-        print('Saving model ...')
-        M.to_binary_file(config.bin_model_save_path)
-        M.to_binary_file(config.bin_model_save_path + "_" + str(nsave))
-        nsave += 1
-        torch.save(M.state_dict(), config.model_save_path)
-
-      train_step(M, sample_to_device(sample), opt, queue, max_queue_size=config.max_queue_size, lambda_=config.lambda_, report=(0 == i % config.report_rate))
-
-    scheduler.step()
-
+  tb_logger = pl_loggers.TensorBoardLogger('logs/')
+  trainer = pl.Trainer.from_argparse_args(args, logger=tb_logger)
+  trainer.fit(nnue, train, val)
 
 if __name__ == '__main__':
   main()
