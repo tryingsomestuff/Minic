@@ -194,7 +194,7 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType 
                     beta  = std::min(MATE,ScoreType((alpha + beta)/2));
                     alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) );
                     Logging::LogIt(Logging::logInfo) << "Increase window alpha " << alpha << ".." << beta;
-                    if ( isMainThread() ){
+                    if ( isMainThread() && DynamicConfig::multiPV == 1){
                         PVList pv2;
                         TT::getPV(p, *this, pv2);
                         displayGUI(depth,seldepth,score,pv2,multi+1,"!");
@@ -202,7 +202,7 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType 
                     }
                 }
                 else if (beta < MATE && score >= beta ) {
-                    if ( isMainThread() ){
+                    if ( isMainThread() && DynamicConfig::multiPV == 1){
                         PVList pv2;
                         TT::getPV(p, *this, pv2);
                         displayGUI(depth,seldepth,score,pv2,multi+1,"?");
