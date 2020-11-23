@@ -106,15 +106,15 @@ struct Position{
   void resetNNUEIndices_(NNUEEvaluator & nnueEvaluator)const {
     using namespace feature_idx;
     //us
-    BitBoard us_pawn   = pieces_const<P_wp>(c); while(us_pawn)  { nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c],popBit(us_pawn)  ,P_wp)); }
-    BitBoard us_knigt  = pieces_const<P_wn>(c); while(us_knigt) { nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c],popBit(us_knigt) ,P_wn)); }
-    BitBoard us_bishop = pieces_const<P_wb>(c); while(us_bishop){ nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c],popBit(us_bishop),P_wb)); }
-    BitBoard us_rook   = pieces_const<P_wr>(c); while(us_rook)  { nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c],popBit(us_rook)  ,P_wr)); }
-    BitBoard us_queen  = pieces_const<P_wq>(c); while(us_queen) { nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c],popBit(us_queen) ,P_wq)); }
-    BitBoard us_king   = pieces_const<P_wk>(c); while(us_king)  { nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c],popBit(us_king)  ,P_wk)); }
+    BitBoard us_pawn     = pieces_const<P_wp>(c); while(us_pawn)     { nnueEvaluator.template us<c>().insert(NNUEIndiceUs  (king[c],popBit(us_pawn)    ,P_wp)); }
+    BitBoard us_knight   = pieces_const<P_wn>(c); while(us_knight)   { nnueEvaluator.template us<c>().insert(NNUEIndiceUs  (king[c],popBit(us_knight)  ,P_wn)); }
+    BitBoard us_bishop   = pieces_const<P_wb>(c); while(us_bishop)   { nnueEvaluator.template us<c>().insert(NNUEIndiceUs  (king[c],popBit(us_bishop)  ,P_wb)); }
+    BitBoard us_rook     = pieces_const<P_wr>(c); while(us_rook)     { nnueEvaluator.template us<c>().insert(NNUEIndiceUs  (king[c],popBit(us_rook)    ,P_wr)); }
+    BitBoard us_queen    = pieces_const<P_wq>(c); while(us_queen)    { nnueEvaluator.template us<c>().insert(NNUEIndiceUs  (king[c],popBit(us_queen)   ,P_wq)); }
+    BitBoard us_king     = pieces_const<P_wk>(c); while(us_king)     { nnueEvaluator.template us<c>().insert(NNUEIndiceUs  (king[c],popBit(us_king)    ,P_wk)); }
     //them
     BitBoard them_pawn   = pieces_const<P_wp>(~c); while(them_pawn)  { nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c],popBit(them_pawn)  ,P_wp)); }
-    BitBoard them_knigt  = pieces_const<P_wn>(~c); while(them_knigt) { nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c],popBit(them_knigt) ,P_wn)); }
+    BitBoard them_knight = pieces_const<P_wn>(~c); while(them_knight){ nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c],popBit(them_knight),P_wn)); }
     BitBoard them_bishop = pieces_const<P_wb>(~c); while(them_bishop){ nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c],popBit(them_bishop),P_wb)); }
     BitBoard them_rook   = pieces_const<P_wr>(~c); while(them_rook)  { nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c],popBit(them_rook)  ,P_wr)); }
     BitBoard them_queen  = pieces_const<P_wq>(~c); while(them_queen) { nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c],popBit(them_queen) ,P_wq)); }

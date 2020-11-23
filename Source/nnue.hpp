@@ -87,7 +87,7 @@ namespace feature_idx{
         case P_wk: return them_king_offset;
         default: return them_pawn_offset;
     }
-}
+    }
 
 } // feature_idx
 
