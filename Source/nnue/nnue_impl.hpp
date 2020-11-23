@@ -257,23 +257,25 @@ struct big_affine{
 
 };
 
-constexpr size_t half_kp_numel = 12*64*64;
+constexpr size_t half_ka_numel = 12*64*64;
 constexpr size_t base_dim = 128;
 
 template<typename T>
 struct half_kp_weights{
-  big_affine<T, half_kp_numel, base_dim> w{};
-  big_affine<T, half_kp_numel, base_dim> b{};
+  big_affine<T, half_ka_numel, base_dim> w{};
+  big_affine<T, half_ka_numel, base_dim> b{};
   stack_affine<T, 2*base_dim, 32> fc0{};
-  stack_affine<T, 32, 16> fc1{};
-  stack_affine<T, 16,  1> fc2{};
+  stack_affine<T, 32, 32> fc1{};
+  stack_affine<T, 64, 32> fc2{};
+  stack_affine<T, 96, 1> fc3{};
 
   size_t num_parameters() const {
     return w.num_parameters() +
            b.num_parameters() +
            fc0.num_parameters() +
            fc1.num_parameters() +
-           fc2.num_parameters();
+           fc2.num_parameters() +
+           fc3.num_parameters();
   }
   
   half_kp_weights<T>& load(weights_streamer<T>& ws){
@@ -282,12 +284,13 @@ struct half_kp_weights{
     fc0.load_(ws);
     fc1.load_(ws);
     fc2.load_(ws);
+    fc3.load_(ws);
     return *this;
   }
   
   bool load(const std::string& path, half_kp_weights<T>& loadedWeights){
 #ifndef __ANDROID__        
-    static const int expectedSize = 50367748;
+    static const int expectedSize = 50378500;
     std::error_code ec;
     auto fsize = std::filesystem::file_size(path,ec);
     if ( ec ){
@@ -307,7 +310,7 @@ struct half_kp_weights{
 
 template<typename T>
 struct feature_transformer{
-  const big_affine<T, half_kp_numel, base_dim>* weights_;
+  const big_affine<T, half_ka_numel, base_dim>* weights_;
   stack_vector<T, base_dim> active_;
   constexpr stack_vector<T, base_dim> active() const { return active_; }
 
@@ -318,7 +321,7 @@ struct feature_transformer{
   }
   void erase(const size_t idx){ weights_ -> erase_idx(idx, active_); }
 
-  feature_transformer(const big_affine<T, half_kp_numel, base_dim>* src) : weights_{src} {
+  feature_transformer(const big_affine<T, half_ka_numel, base_dim>* src) : weights_{src} {
     clear();
   }
 
@@ -388,8 +391,9 @@ struct half_kp_eval : sided<half_kp_eval<T>, feature_transformer<T>>{
     const auto b_x = black.active();
     const auto x0 = c == Co_White ? splice(w_x, b_x).apply(relu<T>) : splice(b_x, w_x).apply_(relu<T>);
     const auto x1 = (weights_ -> fc0).forward(x0).apply_(relu<T>);
-    const auto x2 = (weights_ -> fc1).forward(x1).apply_(relu<T>);
-    const T val   = (weights_ -> fc2).forward(x2).item();
+    const auto x2 = splice(x1, (weights_ -> fc1).forward(x1).apply_(relu<T>));
+    const auto x3 = splice(x2, (weights_ -> fc2).forward(x2).apply_(relu<T>));
+    const T val = (weights_ -> fc3).forward(x3).item();
     return val;
   }
 
