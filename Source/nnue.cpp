@@ -49,6 +49,7 @@ void compute_scaling(int count){
         bool found = false;
         for (auto it = moves.begin(); it != moves.end(); ++it) {
             Position p2 = p;
+            p2.resetNNUEEvaluator(p2.Evaluator());
             if (!applyMove(p2, *it)) continue;
             found = true;
             p = p2;
