@@ -14,16 +14,16 @@ def compute_mse(nnue, data):
     x = data[i]
     x = [v.reshape((1,-1)) for v in x]
     # Multiply by 600 to match scaling factor
-    ev = nnue(x[0], x[1], x[2], x[3]).item() * 600
+    ev = nnue(x[0], x[1], x[2].reshape(1,6,8,8), x[3].reshape(1,6,8,8)).item() * 600
     print(board.fen())
     kPawnValueEg = 93.0
-    print('dataset score:', score / kPawnValueEg, 'net:', ev / kPawnValueEg)
+    print('eval:', score / kPawnValueEg, 'nnue:', ev / kPawnValueEg)
     errors.append((ev - score)**2)
   return sum(errors) / len(errors)
 
 def main():
   parser = argparse.ArgumentParser(description="Runs evaluation for a model.")
-  parser.add_argument("model", help="Source file (can be .ckpt, .pt or .nnue)")
+  parser.add_argument("model", help="Source file (can be .ckpt, .pt)")
   parser.add_argument("--dataset", default="data.bin", help="Dataset to evaluate on (.bin)")
   args = parser.parse_args()
 
