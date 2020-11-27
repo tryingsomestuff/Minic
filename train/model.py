@@ -22,6 +22,9 @@ class NNUE(pl.LightningModule):
     self.lambda_ = lambda_
 
   def forward(self, us, them, white, black):
+
+    #print(us,them,white.size(),black.size())
+
     w_ = self.white_affine(halfka.half_ka(white, black))
     b_ = self.black_affine(halfka.half_ka(black, white))
     base = F.relu(us * torch.cat([w_, b_], dim=1) + (1.0 - us) * torch.cat([b_, w_], dim=1))
@@ -36,6 +39,9 @@ class NNUE(pl.LightningModule):
   
     q = self(us, them, white, black)
     t = outcome
+
+    #print(us,them,score,outcome,q)
+
     # Divide score by 600.0 to match the expected NNUE scaling factor
     p = (score / 600.0).sigmoid()
     epsilon = 1e-12

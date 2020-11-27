@@ -38,6 +38,8 @@ class BitReader():
     self.refill()
 
 def is_quiet(board, from_, to_):
+  if board.is_check():
+    return False
   for mv in board.legal_moves:
     if mv.from_square == from_ and mv.to_square == to_:
       return not board.is_capture(mv)
@@ -52,14 +54,6 @@ class ToTensor(object):
     score = torch.tensor([score])
     white, black = halfka.to_tensors(bd)
     return us.float(), them.float(), white.float(), black.float(), outcome.float(), score.float()
-
-class RandomFlip(object):
-  def __call__(self, sample):
-    bd, move, outcome, score = sample
-    mirror = random.choice([False, True])
-    if mirror:
-      bd = bd.mirror()
-    return bd, move, outcome, score
 
 class NNUEBinData(torch.utils.data.Dataset):
   def __init__(self, filename, transform=ToTensor()):
@@ -118,6 +112,15 @@ class NNUEBinData(torch.utils.data.Dataset):
     # 1, 0, -1
     game_result = br.readBits(8)
     outcome = {1: 1.0, 0: 0.5, 255: 0.0}[game_result]
+
+    if abs(score) > 700:
+      next_idx = (idx + 1) % self.len 
+      return self.get_raw(next_idx)
+
+    if not is_quiet(bd,from_,to_):
+      next_idx = (idx + 1) % self.len 
+      return self.get_raw(next_idx)
+
     return bd, move, outcome, score
 
   def __getitem__(self, idx):

@@ -44,7 +44,8 @@ def main():
     train, val = data_loader_cc(args.train, args.val, args.num_workers, batch_size)
 
   tb_logger = pl_loggers.TensorBoardLogger('logs/')
-  trainer = pl.Trainer.from_argparse_args(args, logger=tb_logger)
+  checkpoint_callback = pl.callbacks.ModelCheckpoint(save_last=True)
+  trainer = pl.Trainer.from_argparse_args(args, callbacks=[checkpoint_callback], logger=tb_logger)
   trainer.fit(nnue, train, val)
 
 if __name__ == '__main__':
