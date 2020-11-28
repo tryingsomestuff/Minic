@@ -289,7 +289,8 @@ struct half_kp_weights{
   }
   
   bool load(const std::string& path, half_kp_weights<T>& loadedWeights){
-#ifndef __ANDROID__        
+#ifndef __ANDROID__
+#ifndef WITHOUT_FILESYSTEM 
     static const int expectedSize = 50378500;
     std::error_code ec;
     auto fsize = std::filesystem::file_size(path,ec);
@@ -301,6 +302,7 @@ struct half_kp_weights{
       Logging::LogIt(Logging::logError) << "File " << path << " does not look like a compatible net";
       return false;
     }
+#endif
 #endif
     auto ws = weights_streamer<T>(path);
     loadedWeights = load(ws);
