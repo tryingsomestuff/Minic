@@ -63,7 +63,7 @@ const std::string MinicVersion = "3.01";
 //#define WITH_GENFILE
 #ifdef WITH_NNUE
 #ifndef __ANDROID__
-#define WITH_DATA2BIN
+//#define WITH_DATA2BIN
 #endif
 #endif
 
