@@ -47,6 +47,8 @@ const std::string MinicVersion = "3.01";
 #define WITH_SYZYGY
 #define WITH_NNUE
 
+#define WITHOUT_FILESYSTEM
+
 // *** Optim (?)
 #define USE_PARTIAL_SORT 
 //#define WITH_EVALSCORE_AS_INT // in fact just as slow as my basic impl ...
@@ -60,10 +62,15 @@ const std::string MinicVersion = "3.01";
 //#define WITH_PGN_PARSER
 
 // *** NNUE learning things
-//#define WITH_GENFILE
+#ifndef WITHOUT_FILESYSTEM
+#define WITH_GENFILE
+#endif
+
 #ifdef WITH_NNUE
 #ifndef __ANDROID__
-//#define WITH_DATA2BIN
+#ifndef WITHOUT_FILESYSTEM
+#define WITH_DATA2BIN
+#endif
 #endif
 #endif
 
