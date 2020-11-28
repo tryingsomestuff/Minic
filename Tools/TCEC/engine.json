@@ -1,0 +1,28 @@
+[
+    {
+        "command": "./minic_linux_x64_avx2_bmi2 -uci -book 0 -syzygyPath /home/syzygy/",
+        "name": "Minic 3.01",
+        "restart": "on",
+        "rating": "3287",
+        "options": [
+            {
+                "name": "Threads",
+                "value": "176"
+            },
+            {
+                "name": "Hash",
+                "value": "32768"
+            },
+            { 
+                "name": "NNUEFile",
+                "value": "nefarious_nucleus.bin"
+            },            
+            {
+                "name": "CommandLineOptions",
+                "value": "-uci -book 0 -syzygyPath /home/syzygy/"
+            }
+        ],
+        "protocol": "uci",
+        "workingDirectory": "/home/tcec/Engines/Minic/"
+    }
+]
