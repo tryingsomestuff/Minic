@@ -15,8 +15,8 @@ namespace Zobrist {
 
 // Position hash is computed only once and then updated on the fly
 // But this encapsulating function is usefull for debugging
-Hash computeHash(const Position &p);
+[[nodiscard]] Hash computeHash(const Position &p);
 
 // Same holds from K+P hash (used for pawn hash table)
-Hash computePHash(const Position &p);
+[[nodiscard]] Hash computePHash(const Position &p);
 

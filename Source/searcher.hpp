@@ -59,9 +59,9 @@ struct Searcher{
 #endif
 
     void getCMHPtr(const unsigned int ply, CMHPtrArray & cmhPtr);
-    ScoreType getCMHScore(const Position & p, const Square from, const Square to, const CMHPtrArray & cmhPtr)const;
+    [[nodiscard]] ScoreType getCMHScore(const Position & p, const Square from, const Square to, const CMHPtrArray & cmhPtr)const;
 
-    ScoreType drawScore();
+    [[nodiscard]] ScoreType drawScore();
 
 #ifdef WITH_NNUE
     NNUEEvaluator nnueEvaluator;
@@ -79,27 +79,27 @@ struct Searcher{
                                          bool canPrune, 
                                          const std::vector<MiniMove> * skipMoves = nullptr);
 
-    ScoreType qsearch(ScoreType alpha, 
-                      ScoreType beta, 
-                      const Position & p, 
-                      unsigned int ply, 
-                      DepthType & seldepth, 
-                      unsigned int qply, 
-                      bool qRoot, 
-                      bool pvnode, 
-                      signed char isInCheckHint = -1);
+    [[nodiscard]] ScoreType qsearch(ScoreType alpha, 
+                                    ScoreType beta, 
+                                    const Position & p, 
+                                    unsigned int ply, 
+                                    DepthType & seldepth, 
+                                    unsigned int qply, 
+                                    bool qRoot, 
+                                    bool pvnode, 
+                                    signed char isInCheckHint = -1);
 
     // used for tuning not search !
-    ScoreType qsearchNoPruning(ScoreType alpha, 
-                               ScoreType beta, 
-                               const Position & p, 
-                               unsigned int ply, 
-                               DepthType & seldepth, 
-                               PVList * pv = nullptr);
+    [[nodiscard]] ScoreType qsearchNoPruning(ScoreType alpha, 
+                                             ScoreType beta, 
+                                             const Position & p, 
+                                             unsigned int ply, 
+                                             DepthType & seldepth, 
+                                             PVList * pv = nullptr);
 
-    bool SEE_GE(const Position & p, const Move & m, ScoreType threshold)const;
+    [[nodiscard]] bool SEE_GE(const Position & p, const Move & m, ScoreType threshold)const;
 
-    ScoreType SEE(const Position & p, const Move & m)const;
+    [[nodiscard]] ScoreType SEE(const Position & p, const Move & m)const;
 
     PVList search(const Position & p, 
                   Move & m, 
@@ -107,9 +107,9 @@ struct Searcher{
                   ScoreType & sc, 
                   DepthType & seldepth);
 
-    template< bool withRep = true, bool isPv = true, bool INR = true> MaterialHash::Terminaison interiorNodeRecognizer(const Position & p)const;
+    template< bool withRep = true, bool isPv = true, bool INR = true> [[nodiscard]] MaterialHash::Terminaison interiorNodeRecognizer(const Position & p)const;
 
-    bool isRep(const Position & p, bool isPv)const;
+    [[nodiscard]] bool isRep(const Position & p, bool isPv)const;
 
     void displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv, int multipv, const std::string & mark = "");
 
@@ -121,22 +121,22 @@ struct Searcher{
 
     void search();
 
-    size_t id()const;
-    bool   isMainThread()const;
+    [[nodiscard]] size_t id()const;
+    [[nodiscard]] bool   isMainThread()const;
 
     Searcher(size_t n);
 
     ~Searcher();
 
     void setData(const ThreadData & d);
-    const ThreadData & getData()const;
-    ThreadData & getData();
+    [[nodiscard]] const ThreadData & getData()const;
+    [[nodiscard]] ThreadData & getData();
 
     static std::atomic<bool> startLock;
 
     std::chrono::time_point<Clock> startTime;
   
-    bool searching()const;
+    [[nodiscard]] bool searching()const;
 
     #pragma pack(push, 1)
     struct PawnEntry{
@@ -166,7 +166,7 @@ struct Searcher{
     void clearGame();
     void clearSearch();
 
-    bool getPawnEntry(Hash h, PawnEntry *& pe);
+    [[nodiscard]] bool getPawnEntry(Hash h, PawnEntry *& pe);
 
     void prefetchPawn(Hash h);
 

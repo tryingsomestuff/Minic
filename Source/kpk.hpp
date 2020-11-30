@@ -20,15 +20,15 @@ struct KPKPosition {
     KPKPosition() = default;
     explicit KPKPosition(unsigned idx);
     inline operator kpk_result() const { return result; }
-    inline kpk_result preCompute(const std::vector<KPKPosition>& db);
-    template<Color Us> kpk_result preCompute(const std::vector<KPKPosition>& db);
+    [[nodiscard]] inline kpk_result preCompute(const std::vector<KPKPosition>& db);
+    template<Color Us> [[nodiscard]] kpk_result preCompute(const std::vector<KPKPosition>& db);
     Square ksq[2], psq;
     kpk_result result;
     Color us;
 };
 #pragma pack(pop)
 
-bool probe(Square wksq, Square wpsq, Square bksq, Color us);
+[[nodiscard]] bool probe(Square wksq, Square wpsq, Square bksq, Color us);
 
 void init();
 

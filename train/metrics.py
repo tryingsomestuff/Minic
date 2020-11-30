@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 
 def compute_mse(nnue, data):
   errors = []
-  for i in range(0, len(data), 1000000):
+  for i in range(0, len(data), 10000):
     raw = data.get_raw(i)
     board, move, turn, score = raw
     x = data[i]

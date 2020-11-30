@@ -21,9 +21,9 @@ extern int MAX_TB_MEN;
 
 bool initTB();
 
-int probe_root(Searcher & context, const Position &p, ScoreType &score, MoveList &rootMoves);
+[[nodiscard]] int probe_root(Searcher & context, const Position &p, ScoreType &score, MoveList &rootMoves);
 
-int probe_wdl(const Position &p, ScoreType &score, bool use50MoveRule);
+[[nodiscard]] int probe_wdl(const Position &p, ScoreType &score, bool use50MoveRule);
 
 } // SyzygyTb
 #endif

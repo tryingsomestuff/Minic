@@ -23,6 +23,6 @@ extern bool isUCIAnalysis;
 
 void init();
 
-TimeType GetNextMSecPerMove(const Position & p);
+[[nodiscard]] TimeType GetNextMSecPerMove(const Position & p);
 
 } // TimeMan

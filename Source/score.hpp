@@ -37,7 +37,7 @@ struct EvalScore{
     EvalScore  operator -(const ScoreType& s)const{EvalScore e(*this); for(GamePhase g=MG; g<GP_MAX; ++g)e[g]-=s; return e;}
     void       operator =(const ScoreType& s){for(GamePhase g=MG; g<GP_MAX; ++g){sc[g]=s;}}
 
-    EvalScore scale(float s_mg,float s_eg)const{ 
+    [[nodiscard]] EvalScore scale(float s_mg,float s_eg)const{ 
         EvalScore e(*this); 
         e[MG]= ScoreType(s_mg*e[MG]); 
         e[EG]= ScoreType(s_eg*e[EG]); 
@@ -80,7 +80,7 @@ struct EvalScore{
     EvalScore  operator -(const ScoreType& s)const{return MakeScore(MGScore(sc)-s,EGScore(sc)-s);}
     void       operator =(const ScoreType& s){sc=MakeScore(s,s);}
 
-    EvalScore scale(float s_mg,float s_eg)const{ return EvalScore(ScoreType(MGScore(sc)*s_mg),ScoreType(EGScore(sc)*s_eg));}
+    [[nodiscard]] EvalScore scale(float s_mg,float s_eg)const{ return EvalScore(ScoreType(MGScore(sc)*s_mg),ScoreType(EGScore(sc)*s_eg));}
 };
 #endif
 
@@ -105,9 +105,9 @@ inline std::ostream & operator<<(std::ostream & of, const EvalFeatures & feature
     return of;
 }
 
-inline ScoreType ScaleScore(EvalScore s, float gp){ return ScoreType(gp*s[MG] + (1.f-gp)*s[EG]);}
+[[nodiscard]] inline ScoreType ScaleScore(EvalScore s, float gp){ return ScoreType(gp*s[MG] + (1.f-gp)*s[EG]);}
 
-ScoreType Score(ScoreType score, float scalingFactor, const Position &p);
+[[nodiscard]] ScoreType Score(ScoreType score, float scalingFactor, const Position &p);
 
 /* Evaluation is returning the score of course, but also fill this little structure to provide
  * additionnal usefull information, such as game phase and current danger. Things that are

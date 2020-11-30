@@ -35,23 +35,23 @@ void initMask();
  * http://talkchess.com/forum3/viewtopic.php?f=7&t=68741&p=777898#p777682
  */
 
-BitBoard attack            (const BitBoard occupancy, const Square x, const BitBoard m);
-BitBoard rankAttack        (const BitBoard occupancy, const Square x);
-BitBoard fileAttack        (const BitBoard occupancy, const Square x);
-BitBoard diagonalAttack    (const BitBoard occupancy, const Square x);
-BitBoard antidiagonalAttack(const BitBoard occupancy, const Square x);
+[[nodiscard]] BitBoard attack            (const BitBoard occupancy, const Square x, const BitBoard m);
+[[nodiscard]] BitBoard rankAttack        (const BitBoard occupancy, const Square x);
+[[nodiscard]] BitBoard fileAttack        (const BitBoard occupancy, const Square x);
+[[nodiscard]] BitBoard diagonalAttack    (const BitBoard occupancy, const Square x);
+[[nodiscard]] BitBoard antidiagonalAttack(const BitBoard occupancy, const Square x);
 
 // Next functions define the user API for piece move
-template < Piece > inline BitBoard coverage      (const Square x, const BitBoard occupancy = 0, const Color c = Co_White) { assert(false); return empty; }
-template <       > inline BitBoard coverage<P_wp>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].pawnAttack[c]; }
-template <       > inline BitBoard coverage<P_wn>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].knight; }
-template <       > inline BitBoard coverage<P_wb>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return diagonalAttack(occupancy, x) | antidiagonalAttack(occupancy, x); }
-template <       > inline BitBoard coverage<P_wr>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return fileAttack    (occupancy, x) | rankAttack        (occupancy, x); }
-template <       > inline BitBoard coverage<P_wq>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return diagonalAttack(occupancy, x) | antidiagonalAttack(occupancy, x) | fileAttack(occupancy, x) | rankAttack(occupancy, x); }
-template <       > inline BitBoard coverage<P_wk>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].king; }
+template < Piece > [[nodiscard]] inline BitBoard coverage      (const Square x, const BitBoard occupancy = 0, const Color c = Co_White) { assert(false); return empty; }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wp>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].pawnAttack[c]; }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wn>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].knight; }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wb>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return diagonalAttack(occupancy, x) | antidiagonalAttack(occupancy, x); }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wr>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return fileAttack    (occupancy, x) | rankAttack        (occupancy, x); }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wq>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return diagonalAttack(occupancy, x) | antidiagonalAttack(occupancy, x) | fileAttack(occupancy, x) | rankAttack(occupancy, x); }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wk>(const Square x, const BitBoard occupancy, const Color c) { assert( x >= 0 && x < 64); return mask[x].king; }
 
 // Attack function is just coverage interseted with a target bitboard
-template < Piece pp > inline BitBoard attack(const Square x, const BitBoard target, const BitBoard occupancy = 0, const Color c = Co_White) { return coverage<pp>(x, occupancy, c) & target; }
+template < Piece pp > [[nodiscard]] inline BitBoard attack(const Square x, const BitBoard target, const BitBoard occupancy = 0, const Color c = Co_White) { return coverage<pp>(x, occupancy, c) & target; }
 
 #else // MAGIC
 
@@ -92,34 +92,34 @@ void initMagic();
 } // MagicBB
 
 // Next functions define the user API for piece move
-template < Piece > inline BitBoard coverage      (const Square  , const BitBoard          , const Color  ) { assert(false); return emptyBitBoard; }
-template <       > inline BitBoard coverage<P_wp>(const Square x, const BitBoard          , const Color c) { assert( x >= 0 && x < 64); return mask[x].pawnAttack[c]; }
-template <       > inline BitBoard coverage<P_wn>(const Square x, const BitBoard          , const Color  ) { assert( x >= 0 && x < 64); return mask[x].knight; }
-template <       > inline BitBoard coverage<P_wb>(const Square x, const BitBoard occupancy, const Color  ) { assert( x >= 0 && x < 64); return MAGICBISHOPATTACKS(occupancy, x); }
-template <       > inline BitBoard coverage<P_wr>(const Square x, const BitBoard occupancy, const Color  ) { assert( x >= 0 && x < 64); return MAGICROOKATTACKS  (occupancy, x); }
-template <       > inline BitBoard coverage<P_wq>(const Square x, const BitBoard occupancy, const Color  ) { assert( x >= 0 && x < 64); return MAGICBISHOPATTACKS(occupancy, x) | MAGICROOKATTACKS(occupancy, x); }
-template <       > inline BitBoard coverage<P_wk>(const Square x, const BitBoard          , const Color  ) { assert( x >= 0 && x < 64); return mask[x].king; }
+template < Piece > [[nodiscard]] inline BitBoard coverage      (const Square  , const BitBoard          , const Color  ) { assert(false); return emptyBitBoard; }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wp>(const Square x, const BitBoard          , const Color c) { assert( x >= 0 && x < 64); return mask[x].pawnAttack[c]; }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wn>(const Square x, const BitBoard          , const Color  ) { assert( x >= 0 && x < 64); return mask[x].knight; }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wb>(const Square x, const BitBoard occupancy, const Color  ) { assert( x >= 0 && x < 64); return MAGICBISHOPATTACKS(occupancy, x); }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wr>(const Square x, const BitBoard occupancy, const Color  ) { assert( x >= 0 && x < 64); return MAGICROOKATTACKS  (occupancy, x); }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wq>(const Square x, const BitBoard occupancy, const Color  ) { assert( x >= 0 && x < 64); return MAGICBISHOPATTACKS(occupancy, x) | MAGICROOKATTACKS(occupancy, x); }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wk>(const Square x, const BitBoard          , const Color  ) { assert( x >= 0 && x < 64); return mask[x].king; }
 
 // Attack function is just coverage interseted with a target bitboard
-template < Piece pp > inline BitBoard attack(const Square x, const BitBoard target, const BitBoard occupancy = 0, const Color c = Co_White) { 
+template < Piece pp > [[nodiscard]] inline BitBoard attack(const Square x, const BitBoard target, const BitBoard occupancy = 0, const Color c = Co_White) { 
    return coverage<pp>(x, occupancy, c) & target; 
 }
 
 #endif // MAGIC
 
 // Those are convenient function pointers for coverage and attack
-constexpr BitBoard(*const pfCoverage[])(const Square, const BitBoard, const Color)                 = { &BBTools::coverage<P_wp>, &BBTools::coverage<P_wn>, &BBTools::coverage<P_wb>, &BBTools::coverage<P_wr>, &BBTools::coverage<P_wq>, &BBTools::coverage<P_wk> };
+constexpr BitBoard(*const pfCoverage[])(const Square, const BitBoard, const Color) = { &BBTools::coverage<P_wp>, &BBTools::coverage<P_wn>, &BBTools::coverage<P_wb>, &BBTools::coverage<P_wr>, &BBTools::coverage<P_wq>, &BBTools::coverage<P_wk> };
 //constexpr BitBoard(*const pfAttack[])  (const Square, const BitBoard, const BitBoard, const Color) = { &BBTools::attack<P_wp>,   &BBTools::attack<P_wn>,   &BBTools::attack<P_wb>,   &BBTools::attack<P_wr>,   &BBTools::attack<P_wq>,   &BBTools::attack<P_wk>   };
 
 // Convenient function to check is a square is under attack or not
-bool     isAttackedBB (const Position &p, const Square x, Color c);
+[[nodiscard]] bool isAttackedBB (const Position &p, const Square x, Color c);
 
 // Convenient function to return the bitboard of all attacker of a specific square
-BitBoard allAttackedBB(const Position &p, const Square x, Color c);
-BitBoard allAttackedBB(const Position &p, const Square x);
+[[nodiscard]] BitBoard allAttackedBB(const Position &p, const Square x, Color c);
+[[nodiscard]] BitBoard allAttackedBB(const Position &p, const Square x);
 
 } // BBTools
 
 // Those are wrapper functions around isAttackedBB
-bool isAttacked(const Position & p, const Square k);
-bool isAttacked(const Position & p, BitBoard bb);
+[[nodiscard]] bool isAttacked(const Position & p, const Square k);
+[[nodiscard]] bool isAttacked(const Position & p, BitBoard bb);

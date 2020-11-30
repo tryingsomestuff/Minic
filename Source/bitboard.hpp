@@ -113,16 +113,16 @@ const BitBoard centerFiles = fileC | fileD | fileE | fileF;
 const BitBoard kingSide    = fileE | fileF | fileG | fileH;
 const BitBoard kingFlank[8] = { queenSide ^ fileD, queenSide, queenSide, centerFiles, centerFiles, kingSide, kingSide, kingSide ^ fileE };
 
-std::string showBitBoard(const BitBoard & b);
+[[nodiscard]] std::string showBitBoard(const BitBoard & b);
 
 inline void      _setBit  (      BitBoard & b, Square k) { b |= SquareToBitboard(k);}
 inline void      _unSetBit(      BitBoard & b, Square k) { b &= ~SquareToBitboard(k);}
 
-inline ScoreType countBit(const BitBoard & b){ 
+[[nodiscard]] inline ScoreType countBit(const BitBoard & b){ 
    return ScoreType(POPCOUNT(b));
 }
 
-inline int popBit(BitBoard & b) {
+[[nodiscard]] inline int popBit(BitBoard & b) {
     assert( b != emptyBitBoard);
     unsigned long i = 0;
     bsf(b, i);
