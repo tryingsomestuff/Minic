@@ -32,7 +32,7 @@ namespace COM {
 
     void readLine();
 
-    SideToMove opponent(SideToMove & s);
+    [[nodiscard]] SideToMove opponent(SideToMove & s);
 
     bool sideToMoveFromFEN(const std::string & fen);
 
@@ -44,5 +44,5 @@ namespace COM {
 
     void thinkAsync(State st, TimeType forcedMs = -1);
 
-    Move moveFromCOM(std::string mstr);
+    [[nodiscard]] Move moveFromCOM(std::string mstr);
 }

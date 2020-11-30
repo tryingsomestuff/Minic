@@ -45,5 +45,5 @@ struct MoveSorter{
     static void score(const Searcher & context, MoveList & moves, const Position & p, float gp, DepthType ply, const CMHPtrArray & cmhPtr, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL, const MiniMove refutation = INVALIDMINIMOVE);
     static void scoreAndSort(const Searcher & context, MoveList & moves, const Position & p, float gp, DepthType ply, const CMHPtrArray & cmhPtr, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL, const MiniMove refutation = INVALIDMINIMOVE);
     static void sort(MoveList & moves);
-    static const Move * pickNext(MoveList & moves, size_t & begin);
+    [[nodiscard]] static const Move * pickNext(MoveList & moves, size_t & begin);
 };

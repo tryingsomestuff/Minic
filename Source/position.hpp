@@ -48,38 +48,38 @@ struct Position{
     CastlingRights castling = C_none;
     Color c = Co_White;
 
-    inline const Piece & board_const(Square k)const{ return _b[k];}
-    inline Piece & board(Square k){ return _b[k];}
+    [[nodiscard]] inline const Piece & board_const(Square k)const{ return _b[k];}
+    [[nodiscard]] inline Piece & board(Square k){ return _b[k];}
 
-    inline BitBoard occupancy()const { return allPieces[Co_White] | allPieces[Co_Black];}
+    [[nodiscard]] inline BitBoard occupancy()const { return allPieces[Co_White] | allPieces[Co_Black];}
 
-    inline BitBoard allKing  ()const {return _allB[5];}
-    inline BitBoard allQueen ()const {return _allB[4];}
-    inline BitBoard allRook  ()const {return _allB[3];}
-    inline BitBoard allBishop()const {return _allB[2];}
-    inline BitBoard allKnight()const {return _allB[1];}
-    inline BitBoard allPawn  ()const {return _allB[0];}
+    [[nodiscard]] inline BitBoard allKing  ()const {return _allB[5];}
+    [[nodiscard]] inline BitBoard allQueen ()const {return _allB[4];}
+    [[nodiscard]] inline BitBoard allRook  ()const {return _allB[3];}
+    [[nodiscard]] inline BitBoard allBishop()const {return _allB[2];}
+    [[nodiscard]] inline BitBoard allKnight()const {return _allB[1];}
+    [[nodiscard]] inline BitBoard allPawn  ()const {return _allB[0];}
 
-    inline BitBoard blackKing  ()const {return _allB[5] & allPieces[Co_Black];}
-    inline BitBoard blackQueen ()const {return _allB[4] & allPieces[Co_Black];}
-    inline BitBoard blackRook  ()const {return _allB[3] & allPieces[Co_Black];}
-    inline BitBoard blackBishop()const {return _allB[2] & allPieces[Co_Black];}
-    inline BitBoard blackKnight()const {return _allB[1] & allPieces[Co_Black];}
-    inline BitBoard blackPawn  ()const {return _allB[0] & allPieces[Co_Black];}
+    [[nodiscard]] inline BitBoard blackKing  ()const {return _allB[5] & allPieces[Co_Black];}
+    [[nodiscard]] inline BitBoard blackQueen ()const {return _allB[4] & allPieces[Co_Black];}
+    [[nodiscard]] inline BitBoard blackRook  ()const {return _allB[3] & allPieces[Co_Black];}
+    [[nodiscard]] inline BitBoard blackBishop()const {return _allB[2] & allPieces[Co_Black];}
+    [[nodiscard]] inline BitBoard blackKnight()const {return _allB[1] & allPieces[Co_Black];}
+    [[nodiscard]] inline BitBoard blackPawn  ()const {return _allB[0] & allPieces[Co_Black];}
 
-    inline BitBoard whitePawn  ()const {return _allB[0] & allPieces[Co_White];}
-    inline BitBoard whiteKnight()const {return _allB[1] & allPieces[Co_White];}
-    inline BitBoard whiteBishop()const {return _allB[2] & allPieces[Co_White];}
-    inline BitBoard whiteRook  ()const {return _allB[3] & allPieces[Co_White];}
-    inline BitBoard whiteQueen ()const {return _allB[4] & allPieces[Co_White];}
-    inline BitBoard whiteKing  ()const {return _allB[5] & allPieces[Co_White];}
+    [[nodiscard]] inline BitBoard whitePawn  ()const {return _allB[0] & allPieces[Co_White];}
+    [[nodiscard]] inline BitBoard whiteKnight()const {return _allB[1] & allPieces[Co_White];}
+    [[nodiscard]] inline BitBoard whiteBishop()const {return _allB[2] & allPieces[Co_White];}
+    [[nodiscard]] inline BitBoard whiteRook  ()const {return _allB[3] & allPieces[Co_White];}
+    [[nodiscard]] inline BitBoard whiteQueen ()const {return _allB[4] & allPieces[Co_White];}
+    [[nodiscard]] inline BitBoard whiteKing  ()const {return _allB[5] & allPieces[Co_White];}
 
     template<Piece pp>
-    inline BitBoard pieces_const(Color cc)const          { assert(pp!=P_none); return _allB[pp-1] & allPieces[cc]; }
-    inline BitBoard pieces_const(Color cc, Piece pp)const{ assert(pp!=P_none); return _allB[pp-1] & allPieces[cc]; }
-    inline BitBoard pieces_const(Piece pp)const          { assert(pp!=P_none); return _allB[std::abs(pp)-1] & allPieces[pp>0?Co_White:Co_Black]; }
+    [[nodiscard]] inline BitBoard pieces_const(Color cc)const          { assert(pp!=P_none); return _allB[pp-1] & allPieces[cc]; }
+    [[nodiscard]] inline BitBoard pieces_const(Color cc, Piece pp)const{ assert(pp!=P_none); return _allB[pp-1] & allPieces[cc]; }
+    [[nodiscard]] inline BitBoard pieces_const(Piece pp)const          { assert(pp!=P_none); return _allB[std::abs(pp)-1] & allPieces[pp>0?Co_White:Co_Black]; }
     // next one is kinda "private"
-    inline BitBoard & _pieces(Piece pp)                  { assert(pp!=P_none); return _allB[std::abs(pp)-1]; }
+    [[nodiscard]] inline BitBoard & _pieces(Piece pp)                  { assert(pp!=P_none); return _allB[std::abs(pp)-1]; }
 
 #ifdef WITH_NNUE
 
@@ -88,17 +88,17 @@ struct Position{
   mutable NNUEEvaluator * associatedEvaluator = nullptr;
   void associateEvaluator(NNUEEvaluator & evaluator){ associatedEvaluator = &evaluator; }
 
-  NNUEEvaluator & Evaluator(){ assert(associatedEvaluator); return *associatedEvaluator; }
-  const NNUEEvaluator & Evaluator()const{ assert(associatedEvaluator); return *associatedEvaluator; }
+  [[nodiscard]] NNUEEvaluator & Evaluator(){ assert(associatedEvaluator); return *associatedEvaluator; }
+  [[nodiscard]] const NNUEEvaluator & Evaluator()const{ assert(associatedEvaluator); return *associatedEvaluator; }
 
   // Vastly taken from Seer implementation.
   // see https://github.com/connormcmonigle/seer-nnue
 
-  static inline int NNUEIndiceUs(Square ksq, Square s, Piece p){
+  [[nodiscard]] static inline int NNUEIndiceUs(Square ksq, Square s, Piece p){
     return feature_idx::major * HFlip(ksq) + HFlip(s) + feature_idx::us_offset(p);
   }
 
-  static inline int NNUEIndiceThem(Square ksq, Square s, Piece p){
+  [[nodiscard]] static inline int NNUEIndiceThem(Square ksq, Square s, Piece p){
     return feature_idx::major * HFlip(ksq) + HFlip(s) + feature_idx::them_offset(p);
   }
 

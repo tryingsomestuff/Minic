@@ -12,8 +12,8 @@
  */
 struct ExtendedPosition : Position{
     ExtendedPosition(const std::string & s, bool withMoveCount = true);
-    bool shallFindBest();
-    bool shallAvoidBad();
+    [[nodiscard]] bool shallFindBest();
+    [[nodiscard]] bool shallAvoidBad();
     std::vector<std::string> bestMoves();
     std::vector<std::string> badMoves();
     std::vector<std::string> comment0();

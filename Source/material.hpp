@@ -24,7 +24,7 @@ namespace MaterialHash {
     const int MatBP = (3 * 3 * 3 * 3 * 2 * 2 * 2 * 2 * 3 * 3 * 9);
     const int TotalMat = ((2 * (MatWQ + MatBQ) + MatWL + MatBL + MatWD + MatBD + 2 * (MatWR + MatBR + MatWN + MatBN) + 8 * (MatWP + MatBP)) + 1);
 
-    Hash getMaterialHash(const Position::Material & mat);
+    [[nodiscard]] Hash getMaterialHash(const Position::Material & mat);
 
     enum Terminaison : unsigned char {
       Ter_Unknown = 0,
@@ -50,7 +50,7 @@ namespace MaterialHash {
 
     extern MaterialHashEntry materialHashTable[TotalMat];
 
-    EvalScore Imbalance(const Position::Material & mat, Color c);
+    [[nodiscard]] EvalScore Imbalance(const Position::Material & mat, Color c);
 
     void InitMaterialScore(bool display = true);
 
@@ -60,7 +60,7 @@ namespace MaterialHash {
         static void init();
     };
 
-    Terminaison probeMaterialHashTable(const Position::Material & mat);
+    [[nodiscard]] Terminaison probeMaterialHashTable(const Position::Material & mat);
 
     void updateMaterialOther(Position & p);
 

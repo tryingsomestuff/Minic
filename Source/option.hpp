@@ -30,7 +30,7 @@ namespace Options {
       std::function<void(void)> callBack;
     };
 
-    bool SetValue(const std::string & key, const std::string & value);
+    [[nodiscard]] bool SetValue(const std::string & key, const std::string & value);
 
     void displayOptionsXBoard();
 

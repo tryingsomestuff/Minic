@@ -22,7 +22,7 @@ struct KillerT{
     Move killers[MAX_DEPTH][2];
 
     void initKillers();
-    bool isKiller(const Move m, const DepthType ply);
+    [[nodiscard]] bool isKiller(const Move m, const DepthType ply);
     void update(Move m, DepthType ply);
 };
 

@@ -54,7 +54,7 @@ void initTable();
 
 void clearTT();
 
-int hashFull();
+[[nodiscard]] int hashFull();
 
 void age();
 
@@ -69,6 +69,6 @@ void getPV(const Position & p, Searcher & context, PVList & pv);
 
 } // TT
 
-ScoreType createHashScore(ScoreType score, DepthType ply);
+[[nodiscard]] ScoreType createHashScore(ScoreType score, DepthType ply);
 
-ScoreType adjustHashScore(ScoreType score, DepthType ply);
+[[nodiscard]] ScoreType adjustHashScore(ScoreType score, DepthType ply);
