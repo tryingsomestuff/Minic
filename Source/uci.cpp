@@ -151,5 +151,13 @@ namespace UCI {
         }
     }
 
+    std::string uciScore(ScoreType score){
+        if ( isMatedScore(score))
+            return "mate " + std::to_string((-MATE-score)/2);
+        if ( isMateScore(score))
+            return "mate " + std::to_string((MATE-score+1)/2);
+        return "cp " + std::to_string(score);
+    }
+
 } // UCI
 
