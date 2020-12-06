@@ -17,6 +17,8 @@
 // But now uses different architecture.
 // see https://github.com/connormcmonigle/seer-nnue
 
+#define NNUEALIGNMENT alignas(64)
+
 namespace nnue{
 
 template<typename T>
@@ -66,7 +68,7 @@ struct stack_vector{
     return false;
   }
 #else
-  T data[dim];
+  NNUEALIGNMENT T data[dim];
 #endif
 
   template<typename F>
@@ -168,8 +170,8 @@ struct stack_affine{
   static constexpr size_t W_numel = dim0*dim1;
   static constexpr size_t b_numel = dim1;
   
-  T W[W_numel];
-  T b[b_numel];
+  NNUEALIGNMENT T W[W_numel];
+  NNUEALIGNMENT T b[b_numel];
   
   constexpr size_t num_parameters() const {
     return W_numel + b_numel;
@@ -180,16 +182,6 @@ struct stack_affine{
     #pragma omp simd
     for(size_t i = 0; i < dim0; ++i){
       result.fma_(x.data[i], W + i * dim1);
-    }
-    return result;
-  }
-  
-  constexpr stack_vector<T, dim1> relu_forward(const stack_vector<T, dim0>& x) const {
-    auto result = stack_vector<T, dim1>::from(b);
-    for(size_t i = 0; i < dim0; ++i){
-      if(x.data[i] > T{0}){
-        result.fma_(x.data[i], W + i * dim1);
-      }
     }
     return result;
   }
@@ -206,7 +198,7 @@ struct big_affine{
   static constexpr size_t b_numel = dim1;
 
   T* W{nullptr};
-  T b[b_numel];
+  NNUEALIGNMENT T b[b_numel];
 
   constexpr size_t num_parameters() const {
     return W_numel + b_numel;
@@ -230,6 +222,7 @@ struct big_affine{
   big_affine<T, dim0, dim1>& operator=(const big_affine<T, dim0, dim1>& other){
     #pragma omp simd
     for(size_t i = 0; i < W_numel; ++i){ W[i] = other.W[i]; }
+    #pragma omp simd
     for(size_t i = 0; i < b_numel; ++i){ b[i] = other.b[i]; }
     return *this;
   }
@@ -244,6 +237,7 @@ struct big_affine{
     W = new T[W_numel];
     #pragma omp simd
     for(size_t i = 0; i < W_numel; ++i){ W[i] = other.W[i]; }
+    #pragma omp simd
     for(size_t i = 0; i < b_numel; ++i){ b[i] = other.b[i]; }
   }
 

@@ -113,12 +113,12 @@ class NNUEBinData(torch.utils.data.Dataset):
     game_result = br.readBits(8)
     outcome = {1: 1.0, 0: 0.5, 255: 0.0}[game_result]
 
-    if abs(score) > 700:
-      next_idx = (idx + 1) % self.len 
+    if abs(score) > 1000:
+      next_idx = (idx + 1) % self.len
       return self.get_raw(next_idx)
 
     if not is_quiet(bd,from_,to_):
-      next_idx = (idx + 1) % self.len 
+      next_idx = (idx + 1) % self.len
       return self.get_raw(next_idx)
 
     return bd, move, outcome, score
