@@ -29,6 +29,7 @@ namespace DynamicConfig{
     unsigned int genFenSkip  = 1;
     bool skipLoadingEval     = false;
     unsigned int randomPly   = 0;
+    unsigned int moveOverHead= 50;
 
     int styleComplexity      = 50;
     int styleMaterial        = 50;
