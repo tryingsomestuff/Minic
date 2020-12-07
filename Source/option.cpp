@@ -101,6 +101,7 @@ namespace Options {
        _keys.push_back(KeyBase(k_bool,  w_check, "MateFinder"                  , &DynamicConfig::mateFinder                     , false            , true ));
        _keys.push_back(KeyBase(k_int,   w_spin,  "MultiPV"                     , &DynamicConfig::multiPV                        , (unsigned int)1  , (unsigned int)4 ));
        _keys.push_back(KeyBase(k_int,   w_spin,  "RandomOpen"                  , &DynamicConfig::randomOpen                     , (unsigned int)0  , (unsigned int)100 ));
+       _keys.push_back(KeyBase(k_int,   w_spin,  "MinMoveOverHead"             , &DynamicConfig::moveOverHead                   , (unsigned int)10 , (unsigned int)1000 ));
        _keys.push_back(KeyBase(k_score, w_spin,  "Contempt"                    , &DynamicConfig::contempt                       , (ScoreType)-50   , (ScoreType)50));
        _keys.push_back(KeyBase(k_score, w_spin,  "ContemptMG"                  , &DynamicConfig::contemptMG                     , (ScoreType)-50   , (ScoreType)50));
        #ifdef WITH_SYZYGY

@@ -28,9 +28,9 @@ void init(){
 }
 
 TimeType GetNextMSecPerMove(const Position & p){
-    static const TimeType msecMarginMin = 100; // this is HUGE at short TC !
+    static const TimeType msecMarginMin = DynamicConfig::moveOverHead; // this can be HUGE at short TC !
     static const TimeType msecMarginMax = 1000;
-    static const float msecMarginCoef   = 0.01f;
+    static const float msecMarginCoef   = 0.01f; // 1% of remaining time (or time in TC)
     TimeType ms = -1;
     Logging::LogIt(Logging::logInfo) << "msecPerMove     " << msecPerMove;
     Logging::LogIt(Logging::logInfo) << "msecInTC        " << msecInTC   ;
