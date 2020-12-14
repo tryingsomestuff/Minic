@@ -31,11 +31,15 @@ def side_to_tensor(bd, color):
   for piece_type in range(0, 6):
     plane = torch.zeros(64, dtype=torch.bool)
     for sq in bd.pieces(piece_type+1, color):
-      plane[sq] = True;
+      plane[sq] = True
+      #print("piece",piece_type,"on",sq,color)
     tensor[piece_type] = plane.reshape(8, 8)
   return tensor.flip(dims=(-1, ))
 
 def to_tensors(bd):
+  #print(bd)
+  #print("###############")
   white = side_to_tensor(bd, color=chess.WHITE)
   black = side_to_tensor(bd, color=chess.BLACK)
+  #exit()
   return white, black

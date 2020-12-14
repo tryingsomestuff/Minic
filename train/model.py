@@ -5,6 +5,8 @@ from torch import nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
 
+#iii = 0
+
 class NNUE(pl.LightningModule):
   """
   lambda_ = 0.0 - purely based on game results
@@ -12,26 +14,41 @@ class NNUE(pl.LightningModule):
   """
   def __init__(self, lambda_=1.0):
     super(NNUE, self).__init__()
-    BASE = 128
+    BASE = 256
     self.white_affine = nn.Linear(halfka.half_ka_numel(), BASE)
     self.black_affine = nn.Linear(halfka.half_ka_numel(), BASE)
     self.fc0 = nn.Linear(2*BASE, 32)
     self.fc1 = nn.Linear(32, 32)
-    self.fc2 = nn.Linear(64, 32)
-    self.fc3 = nn.Linear(96, 1)
+    self.fc2 = nn.Linear(64, 1)
     self.lambda_ = lambda_
 
   def forward(self, us, them, white, black):
 
-    #print(us,them,white.size(),black.size())
+    #global iii
 
-    w_ = self.white_affine(halfka.half_ka(white, black))
-    b_ = self.black_affine(halfka.half_ka(black, white))
+    #print("++++++",us.size(),them.size(),white.size(),black.size())
+    if len(white.size()) > 2: # data are from pydataloader
+      w__ = halfka.half_ka(white, black)
+      b__ = halfka.half_ka(black, white)
+      #print(w__,b__)
+      w_ = self.white_affine(w__)
+      b_ = self.black_affine(b__)
+    else: # sparse data from ccdataloader
+      #print(white.to_dense(),black.to_dense())
+      w_ = self.white_affine(white)
+      b_ = self.black_affine(black)
+
+    #print(w_.size(),b_.size())
+    #print(w_,b_)
+
+    #iii += 1
+    #if iii > 15:
+    #  exit()
+
     base = F.relu(us * torch.cat([w_, b_], dim=1) + (1.0 - us) * torch.cat([b_, w_], dim=1))
     x = F.relu(self.fc0(base))
     x = torch.cat([x, F.relu(self.fc1(x))], dim=1)
-    x = torch.cat([x, F.relu(self.fc2(x))], dim=1)
-    x = self.fc3(x)
+    x = self.fc2(x)
     return x
 
   def step_(self, batch, batch_idx, loss_type):
