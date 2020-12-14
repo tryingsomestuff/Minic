@@ -56,11 +56,10 @@ class ToTensor(object):
     return us.float(), them.float(), white.float(), black.float(), outcome.float(), score.float()
 
 class NNUEBinData(torch.utils.data.Dataset):
-  def __init__(self, filename, transform=ToTensor()):
+  def __init__(self, filename):
     super(NNUEBinData, self).__init__()
     self.filename = filename
     self.len = os.path.getsize(filename) // PACKED_SFEN_VALUE_BYTES
-    self.transform = transform
     self.file = None
 
   def __len__(self):
@@ -113,7 +112,7 @@ class NNUEBinData(torch.utils.data.Dataset):
     game_result = br.readBits(8)
     outcome = {1: 1.0, 0: 0.5, 255: 0.0}[game_result]
 
-    if abs(score) > 1000:
+    if abs(score) > 400:
       next_idx = (idx + 1) % self.len
       return self.get_raw(next_idx)
 
@@ -125,7 +124,7 @@ class NNUEBinData(torch.utils.data.Dataset):
 
   def __getitem__(self, idx):
     item = self.get_raw(idx)
-    return self.transform(item)
+    return ToTensor()(item)
 
   # Allows this class to be pickled (otherwise you will get file handle errors).
   def __getstate__(self):

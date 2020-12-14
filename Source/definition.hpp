@@ -47,7 +47,7 @@ const std::string MinicVersion = "3.01";
 #define WITH_SYZYGY
 #define WITH_NNUE
 
-#define WITHOUT_FILESYSTEM
+//#define WITHOUT_FILESYSTEM
 
 // *** Optim (?)
 #define USE_PARTIAL_SORT 
