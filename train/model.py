@@ -45,9 +45,9 @@ class NNUE(pl.LightningModule):
     #if iii > 15:
     #  exit()
 
-    base = F.relu(us * torch.cat([w_, b_], dim=1) + (1.0 - us) * torch.cat([b_, w_], dim=1))
-    x = F.relu(self.fc0(base))
-    x = torch.cat([x, F.relu(self.fc1(x))], dim=1)
+    base = torch.clamp(us * torch.cat([w_, b_], dim=1) + (1.0 - us) * torch.cat([b_, w_], dim=1),0,1)
+    x = torch.clamp(self.fc0(base),0,1)
+    x = torch.cat([x, torch.clamp(self.fc1(x),0,1)], dim=1)
     x = self.fc2(x)
     return x
 
@@ -82,5 +82,5 @@ class NNUE(pl.LightningModule):
     self.step_(batch, batch_idx, 'test_loss')
 
   def configure_optimizers(self):
-    optimizer = torch.optim.Adadelta(self.parameters(), lr=1.0)
+    optimizer = torch.optim.Adadelta(self.parameters(), lr=0.1)
     return optimizer
