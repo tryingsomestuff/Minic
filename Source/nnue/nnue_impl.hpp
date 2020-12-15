@@ -40,6 +40,9 @@ struct weights_streamer{
 template<typename T>
 constexpr T relu(const T& x){ return std::max(x, T{0}); }
 
+template<typename T>
+constexpr T clippedrelu(const T& x){ return std::min(std::max(x, T{0}), T{1}); }
+
 template<typename T, size_t dim>
 struct stack_vector{
 
@@ -382,9 +385,9 @@ struct half_kp_eval : sided<half_kp_eval<T>, feature_transformer<T>>{
   constexpr T propagate(Color c) const {
     const auto w_x = white.active();
     const auto b_x = black.active();
-    const auto x0 = c == Co_White ? splice(w_x, b_x).apply(relu<T>) : splice(b_x, w_x).apply_(relu<T>);
-    const auto x1 = (weights_ -> fc0).forward(x0).apply_(relu<T>);
-    const auto x2 = splice(x1, (weights_ -> fc1).forward(x1).apply_(relu<T>));
+    const auto x0 = c == Co_White ? splice(w_x, b_x).apply(clippedrelu<T>) : splice(b_x, w_x).apply_(clippedrelu<T>);
+    const auto x1 = (weights_ -> fc0).forward(x0).apply_(clippedrelu<T>);
+    const auto x2 = splice(x1, (weights_ -> fc1).forward(x1).apply_(clippedrelu<T>));
     const T val = (weights_ -> fc2).forward(x2).item();
     return val;
   }
