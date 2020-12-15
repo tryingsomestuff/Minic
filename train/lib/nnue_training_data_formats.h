@@ -26,13 +26,16 @@ THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #pragma once
 
+#include <atomic>
 #include <cstdio>
+#include <condition_variable>
 #include <cassert>
 #include <string>
 #include <string_view>
 #include <vector>
 #include <memory>
 #include <fstream>
+#include <functional>
 #include <cstring>
 #include <iostream>
 #include <set>

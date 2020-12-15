@@ -15,11 +15,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED 17)
 
 add_library(training_data_loader SHARED training_data_loader.cpp)
 
+add_executable(convert convert.cc)
+
 find_package(Threads REQUIRED)
 
 target_link_libraries(training_data_loader Threads::Threads)
 
 install(
-  TARGETS training_data_loader
+  TARGETS training_data_loader convert
   RUNTIME DESTINATION .
   LIBRARY DESTINATION .)

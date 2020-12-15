@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader, Dataset
 def data_loader_cc(train_filename, val_filename, num_workers, batch_size, filtered, random_fen_skipping, main_device):
   # Epoch and validation sizes are arbitrary
   epoch_size = 100000000
-  val_size = 1000000
+  val_size = 2000000
   train_infinite = nnue_dataset.SparseBatchDataset(train_filename, batch_size, num_workers=num_workers,
                                                    filtered=filtered, random_fen_skipping=random_fen_skipping, device=main_device)
   val_infinite = nnue_dataset.SparseBatchDataset(val_filename, batch_size, filtered=filtered,
