@@ -16,8 +16,6 @@ def data_loader_cc(train_filename, val_filename, num_workers, batch_size, filter
                                                    filtered=filtered, random_fen_skipping=random_fen_skipping, device=main_device)
   val_infinite = nnue_dataset.SparseBatchDataset(val_filename, batch_size, filtered=filtered,
                                                    random_fen_skipping=random_fen_skipping, device=main_device)
-  # num_workers has to be 0 for sparse, and 1 for dense
-  # it currently cannot work in parallel mode but it shouldn't need to
   train = DataLoader(nnue_dataset.FixedNumBatchesDataset(train_infinite, (epoch_size + batch_size - 1) // batch_size), batch_size=None, batch_sampler=None)
   val = DataLoader(nnue_dataset.FixedNumBatchesDataset(val_infinite, (val_size + batch_size - 1) // batch_size), batch_size=None, batch_sampler=None)
   return train, val
