@@ -5,8 +5,6 @@ from torch import nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
 
-#iii = 0
-
 class NNUE(pl.LightningModule):
   """
   lambda_ = 0.0 - purely based on game results
@@ -24,26 +22,14 @@ class NNUE(pl.LightningModule):
 
   def forward(self, us, them, white, black):
 
-    #global iii
-
-    #print("++++++",us.size(),them.size(),white.size(),black.size())
     if len(white.size()) > 2: # data are from pydataloader
       w__ = halfka.half_ka(white, black)
       b__ = halfka.half_ka(black, white)
-      #print(w__,b__)
       w_ = self.white_affine(w__)
       b_ = self.black_affine(b__)
     else: # sparse data from ccdataloader
-      #print(white.to_dense(),black.to_dense())
       w_ = self.white_affine(white)
       b_ = self.black_affine(black)
-
-    #print(w_.size(),b_.size())
-    #print(w_,b_)
-
-    #iii += 1
-    #if iii > 15:
-    #  exit()
 
     base = torch.clamp(us * torch.cat([w_, b_], dim=1) + (1.0 - us) * torch.cat([b_, w_], dim=1),0,1)
     x = torch.clamp(self.fc0(base),0,1)
@@ -56,8 +42,6 @@ class NNUE(pl.LightningModule):
   
     q = self(us, them, white, black)
     t = outcome
-
-    #print(us,them,score,outcome,q)
 
     # Divide score by 600.0 to match the expected NNUE scaling factor
     p = (score / 600.0).sigmoid()
@@ -82,5 +66,5 @@ class NNUE(pl.LightningModule):
     self.step_(batch, batch_idx, 'test_loss')
 
   def configure_optimizers(self):
-    optimizer = torch.optim.Adadelta(self.parameters(), lr=0.1)
+    optimizer = torch.optim.Adadelta(self.parameters(), lr=1)
     return optimizer
