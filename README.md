@@ -23,9 +23,9 @@ was released as a one year anniversary release in october 2019. At this point Mi
 is released for April 1st 2020 (during covid-19 confinement). For this version, the one file Minic was splitted into many header and source files, and commented a lot more without negative impact on speed and strength. 
 
 ### Version "3"
-is released in november 2020 (during second covid-19 confinement) as a 2 years anniversary release and *is not using, nor compatible with, SF NNUE implementation anymmore*.
+is released in november 2020 (during second covid-19 confinement) as a 2 years anniversary release and *is not using, nor compatible with, SF NNUE implementation anymore*.
 
-### NNUE from release 2.47 to release 2.53 (from Stockfish)
+### NNUE from release 2.47 to release 2.53 (from Stockfish implementation)
 Minic, since release 2.47, has the possibility to be build using a shameless copy of the NNUE framework of Stockfish. Integration of NNUE was done easily and I hope this can be done for any engine, especially if NNUE is release as a standalone library. New UCI parameter NNUEFile is added and shall be the full path to the network file you want to use. To build such Minic you need to activate WITH_NNUE in definition.hpp and use the build script (or make your own, but do not forget to pass -DUSE_AVX2 or whatever your hardware supports to the NNUE part ...). First test shows that MinicNNUE is around 200Elo stronger than Minic, around the level of Xiphos or Ethereal currently at short TC and maybe something like 50Elo higher at longer TC (around Komodo11). This says that a lot more can (and will!) be done inside Minic standard evaluation function !
 
 When using a NNUE network, it is important that Minic is called MinicNNUE or Minnuec as introduced by Gekkehenker.
@@ -36,7 +36,7 @@ The genFen part was not ported and in internal process to produce training is us
 
 Nets I build are available at https://github.com/tryingsomestuff/NNUE-Nets.
 
-### NNUE from release 3.00 (from Seer)
+### NNUE from release 3.00 (from Seer implementation)
 Starting from release 3.00, **Minic is not using Stockfish NNUE implementation anymore and is no more compatible with SF nets**. It was too much foreign code inside Minic to be fair, to be maintained, to be fun.
 Seer engine is offering a very well written implementation of NNUE that I borrowed and adapt to Minic. The code is more or less 400 lines. I choose to keep Stockfish code for binary sfens format as everyone is using this for now. Training code is the external tool written in Python, also from Seer repository but without any dependency to engine (not TDLeaf).
 For now, generated nets are quite weak, but that is a starting point, a new story to be written, in Minic 3.00.
@@ -245,7 +245,7 @@ Zurichess by Alexandru Moșoi
 
 Many thanks also to all testers for all those long time control tests, they really are valuable inputs in the chess engine development process. 
 
-Also thanks to TCEC for letting Minic participate to the Season 15, 16, 17 and 18, it is fun to see Minic on such a great hardware.
+Also thanks to TCEC for letting Minic participate to the Season 15 to 20, it is fun to see Minic on such a great hardware.
 
 And of course thanks to all the members of the talkchess forum and CPW, and to H.G. Muller and Joost Buijs for hosting the well-known friendly monthly tourney.
 
