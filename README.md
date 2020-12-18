@@ -190,7 +190,7 @@ pgn-extract --fencomments -Wlalg --nochecks --nomovenumbers --noresults -w500000
 ```
 Then use Minic -pgn2bin option to get a binary format sfen file. Note than position without score won't be taken into account.
 * Use Minic random mover (level = 0) and play tons of random games activating the genFen option (without using skip) and setting the depth of search you like with genFenDepth. This will generate a "plain" format sfen file with game results always being 0, so you will use this with lambda=1 in your trainer to be sure to don't take game outcome into account. What you will get is some genfen_XXXXXX files (one for each Minic processus, note that in cutechess if only 2 engines are playing, only 2 process will run and been reused). Those files will be in workdir directory of the engine and are in "plain" format. So after that use Minic -plain2bin on that file to get a "binary" file.
-* Use Minic "in search" generator during real games. You'd better use a big genFenSkip when doing this, at least 1000 or even 10000. In this case again, note that game result will always be drawn because the file is written on the fly not at the end of the game. Again here you will obtain genfen_XXXXXX files.
+* Use Minic "pv" or "in search" generator during real games. You'd better use a big genFenSkip when doing "in search", at least 1000 or even 10000. In this case again, note that game result will always be draw because the file is written on the fly not at the end of the game. Again here you will obtain genfen_XXXXXX files.
 
 ## Style
 
