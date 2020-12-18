@@ -329,7 +329,7 @@ pvsout:
     if (isMainThread()) ThreadPool::instance().DisplayStats();
     
 #ifdef WITH_GENFILE
-    if ( isMainThread() && DynamicConfig::genFen && ((stats.counters[Stats::sid_nodes]+stats.counters[Stats::sid_qnodes])%DynamicConfig::genFenSkip==0) ) writeToGenFile(p);
+    if ( isMainThread() && DynamicConfig::genFen ) writeToGenFile(p);
 #endif
 
     return pvOut;
