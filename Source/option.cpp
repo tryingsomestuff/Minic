@@ -109,15 +109,16 @@ namespace Options {
        #endif
        #ifdef WITH_NNUE
        _keys.push_back(KeyBase(k_string,w_string,"NNUEFile"                    , &DynamicConfig::NNUEFile                                                                                , &NNUEWrapper::init));
-       _keys.push_back(KeyBase(k_bool,  w_check, "forceNNUE"                   , &DynamicConfig::forceNNUE                        , false            , true                              ));
+       _keys.push_back(KeyBase(k_bool,  w_check, "forceNNUE"                   , &DynamicConfig::forceNNUE                      , false            , true                              ));
        #endif
 
        #ifdef WITH_GENFILE
        _keys.push_back(KeyBase(k_bool,  w_check, "GenFen"                      , &DynamicConfig::genFen                         , false            , true ));
+       _keys.push_back(KeyBase(k_bool,  w_check, "GenFenSearchTree"            , &DynamicConfig::genFenSearchTree               , false            , true ));
        _keys.push_back(KeyBase(k_int,   w_spin,  "GenFenDepth"                 , &DynamicConfig::genFenDepth                    , (unsigned int)2  , (unsigned int)20 ));
        _keys.push_back(KeyBase(k_int,   w_spin,  "GenFenSkip"                  , &DynamicConfig::genFenSkip                     , (unsigned int)1  , (unsigned int)10000000 ));
        
-       _keys.push_back(KeyBase(k_int,   w_spin,  "RandomPly"                   , &DynamicConfig::randomPly                     , (unsigned int)0   , (unsigned int)20 ));
+       _keys.push_back(KeyBase(k_int,   w_spin,  "RandomPly"                   , &DynamicConfig::randomPly                      , (unsigned int)0   , (unsigned int)20 ));
 
        #endif
 
@@ -236,6 +237,7 @@ namespace Options {
 #endif
 #ifdef WITH_GENFILE
        GETOPT(genFen,            bool)
+       GETOPT(genFenSearchTree,  bool)
        GETOPT(genFenDepth,       unsigned int)
        GETOPT(genFenSkip,        unsigned int)
        GETOPT(randomPly,         unsigned int)

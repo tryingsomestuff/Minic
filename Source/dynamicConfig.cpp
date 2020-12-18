@@ -25,8 +25,9 @@ namespace DynamicConfig{
     bool forceNNUE           = false;
     std::string NNUEFile     = "";
     bool genFen              = false;
+    bool genFenSearchTree    = false;
     unsigned int genFenDepth = 8;
-    unsigned int genFenSkip  = 1;
+    unsigned int genFenSkip  = 10000;
     bool skipLoadingEval     = false;
     unsigned int randomPly   = 0;
     unsigned int moveOverHead= 50;
