@@ -213,8 +213,6 @@ namespace Options {
        GETOPT(quiet,            bool)  // first to be read
        GETOPT(debugMode,        bool)
        GETOPT(debugFile,        std::string)
-       GETOPT(book,             bool)
-       GETOPT(bookFile,         std::string)
        GETOPT(ttSizeMb,         unsigned int)
        GETOPT(FRC,              bool)
        GETOPT(threads,          unsigned int)

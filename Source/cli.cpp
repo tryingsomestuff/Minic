@@ -2,7 +2,6 @@
 
 #include "cli.hpp"
 
-#include "book.hpp"
 #include "evalDef.hpp"
 #include "logging.hpp"
 #include "searcher.hpp"
@@ -332,14 +331,6 @@ int cliManagement(std::string cli, int argc, char ** argv){
         help();
         return 1;
     }
-
-#ifdef IMPORTBOOK
-    // in this case argv[2] is the ascii book file name to be converted
-    if ( cli == "-buildBook"){
-        Book::buildBook(argv[2]);
-        return 0;
-    }
-#endif
 
     // in other cases, argv[2] is always the fen string
     std::string fen = argv[2];

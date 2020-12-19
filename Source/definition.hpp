@@ -54,7 +54,6 @@ const std::string MinicVersion = "3.02";
 //#define WITH_EVALSCORE_AS_INT // in fact just as slow as my basic impl ...
 
 // *** Add-ons
-//#define IMPORTBOOK
 #ifndef DEBUG_TOOL // forced
 #define DEBUG_TOOL
 #endif

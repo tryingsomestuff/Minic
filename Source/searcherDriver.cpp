@@ -1,6 +1,5 @@
 #include "searcher.hpp"
 
-#include "book.hpp"
 #include "logging.hpp"
 #include "skill.hpp"
 #include "uci.hpp"
@@ -87,21 +86,6 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType 
     PVList pvOut;
     ScoreType bestScore = 0;
     m = INVALIDMOVE;
-
-    if ( isMainThread() ){
-       const MiniMove bookMove = SanitizeCastling(p,Book::Get(computeHash(p)));
-       if ( VALIDMOVE(bookMove) ){
-           Logging::LogIt(Logging::logInfo) << "Unlocking other threads (book move)";
-           startLock.store(false);
-           pvOut.push_back(bookMove);
-           m = pvOut[0];
-           d = 0;
-           sc = 0;
-           seldepth = 0;
-           displayGUI(d,d,sc,pvOut,1);
-           return pvOut;
-       }
-    }
 
     const bool isInCheck = isAttacked(p, kingSquare(p));
     const DepthType easyMoveDetectionDepth = 5;
