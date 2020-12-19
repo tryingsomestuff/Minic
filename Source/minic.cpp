@@ -2,7 +2,6 @@
 
 #include "attack.hpp"
 #include "bitboardTools.hpp"
-#include "book.hpp"
 #include "cli.hpp"
 #include "com.hpp"
 #include "dynamicConfig.hpp"
@@ -43,7 +42,6 @@ void init(int argc, char ** argv) {
     MaterialHash::MaterialHashInitializer::init();
     EvalConfig::initEval();
     ThreadPool::instance().setup();
-    Book::initBook();
 #ifdef WITH_SYZYGY
     SyzygyTb::initTB();
 #endif

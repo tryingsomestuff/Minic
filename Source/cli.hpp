@@ -17,8 +17,7 @@
  * -perft_test_long : run a long perf test
  * -see_test : run a SEE test (position talen from Vajolet by Marco Belli a.k.a elcabesa)
  * bench : used for OpenBench ( by Andrew Grant)
- * -buildBook : convert ascii book to binary book
- * -qsearch : run a qsearch
+  * -qsearch : run a qsearch
  * -see : run a SEE
  * -attacked :
  * -cov :
