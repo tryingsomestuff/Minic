@@ -1,1 +1,1 @@
-From https://github.com/glinscott/nnue-pytorch/lib by @Sopel97
+From https://github.com/glinscott/nnue-pytorch/tree/master/lib by @Sopel97
