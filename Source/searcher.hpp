@@ -183,4 +183,3 @@ private:
 
 #include "searcherDraw.hpp"
 #include "searcherPVS.hpp"
-#include "searcherQSearch.hpp"

@@ -131,7 +131,7 @@ inline void      _unSetBit(      BitBoard & b, Square k) { b &= ~SquareToBitboar
 }
 
 /*
-constexpr bool moreThanOne(BitBoard b) {
+[[nodiscard]] constexpr bool moreThanOne(BitBoard b) {
   return b & (b - 1);
 }
 */

@@ -11,7 +11,9 @@
 #include <cctype>
 #include <numeric>
 
+namespace{
 uint64_t numberOf(const Position & p, Piece t){ return countBit(p.pieces_const(t));}
+}
 
 std::string showAlgAbr(Move m, const Position & p) {
     Square from  = Move2From(m);
