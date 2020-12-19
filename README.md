@@ -68,25 +68,25 @@ Please note that Minic has always been a little weaker under Windows OS.
 ## Strength
 
 ### CCRL
-Minic 2.46 is tested at 3052 on the CCRL 40/15 scale (http://ccrl.chessdom.com/ccrl/4040/)  
+Minic 2.46 is tested at 3054 on the CCRL 40/15 scale (http://ccrl.chessdom.com/ccrl/4040/)  
 Minic 2.33 is tested at 3159 on the CCRL BLITZ 4CPU scale (http://ccrl.chessdom.com/ccrl/404/).  
 Minic 2.43 is tested at 3116 on the CCRL BLITZ 1CPU scale (http://ccrl.chessdom.com/ccrl/404/).  
 Minic 2.48 is tested at 3025 on the CCRL FRC list (http://ccrl.chessdom.com/ccrl/404FRC/)  
 
 ### CEGT
-Minic 2.48 is tested at 2983 on the CEGT 40/4 list (http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
-MinicNNUE 2.51 using Nascent Nutrient is tested at 3208 on the same list  
+Minic 2.48 is tested at 2982 on the CEGT 40/4 list (http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
+MinicNNUE 2.51 using Nascent Nutrient is tested at 3216 on the CEGT 40/4 list (http://www.cegt.net/40_40%20Rating%20List/40_40%20All%20Versions/rangliste.html)
 Minic 2.35 is tested at 3034 on the CEGT 40/4 MP8CPU list (http://www.cegt.net/40_4_Ratinglist/40_4_mp/rangliste.html)  
 Minic 2.07 is tested at 2935 on the CEGT 5+3 PB=ON list (http://www.cegt.net/5Plus3Rating/BestVersionsNEW/rangliste.html)  
 Minic 2.48 is tested at 2969 on the CEGT 40/15 list (http://www.cegt.net/40_40%20Rating%20List/40_40%20SingleVersion/rangliste.html)  
 
 ### FGRL
-Minic 2.38 is tested at 2853 on the fastgm 60sec+0.6sec rating list (http://www.fastgm.de/60-0.60.html)  
-Minic 2.48 is tested at 2941 on the fastgm 10min+6sec rating list (http://www.fastgm.de/10min.html)  
-Minic 2.00 is tested at 2955 on the fastgm 60min+15sec rating list (http://www.fastgm.de/60min.html)  
+Minic 2.51 is tested at 2900 on the fastgm 60sec+0.6sec rating list (http://www.fastgm.de/60-0.60.html)  
+Minic 2.48 is tested at 2936 on the fastgm 10min+6sec rating list (http://www.fastgm.de/10min.html)  
+Minic 2.00 is tested at 2954 on the fastgm 60min+15sec rating list (http://www.fastgm.de/60min.html)  
 
 ### SP-CC
-MinicNNUE 2.51 using Nascent Nutrient net is tested at 3279 on the SP-CC 3min+1s rating list (https://www.sp-cc.de/) 
+MinicNNUE 2.51 using Nascent Nutrient net is tested at 3284 on the SP-CC 3min+1s rating list (https://www.sp-cc.de/) 
 
 ### Test Suite
 STS : 1191/1500 @10sec per position (single thread on an i7-9700K)  
