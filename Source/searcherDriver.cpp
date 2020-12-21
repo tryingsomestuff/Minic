@@ -313,7 +313,7 @@ pvsout:
     if (isMainThread()) ThreadPool::instance().DisplayStats();
     
 #ifdef WITH_GENFILE
-    if ( isMainThread() && DynamicConfig::genFen ) writeToGenFile(p);
+    if ( isMainThread() && DynamicConfig::genFen && p.halfmoves >= DynamicConfig::randomPly && DynamicConfig::level != 0 ) writeToGenFile(p,sc,m);
 #endif
 
     return pvOut;

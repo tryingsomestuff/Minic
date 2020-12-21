@@ -160,68 +160,84 @@ std::atomic<bool> Searcher::startLock;
 const unsigned long long int Searcher::ttSizePawn = 1024*32;
 
 #ifdef WITH_GENFILE
-void Searcher::writeToGenFile(const Position & p){
+Move Searcher::writeToGenFile(const Position & p, ScoreType s, Move m){
     static std::map<int,std::unique_ptr<Searcher> > coSearchers; 
     static std::set<Hash> hashCache;
-    if (!genFen || id() >= MAX_THREADS) return;
+    static unsigned long long int cacheHits = 0;
+    static unsigned long long int sfensWritten = 0;
+    if (!genFen || id() >= MAX_THREADS) return INVALIDMOVE;
 
-    if ( coSearchers.find(id()) == coSearchers.end()){
-       coSearchers[id()] = std::unique_ptr<Searcher>(new Searcher(id()+MAX_THREADS));
-       coSearchers[id()]->initPawnTable();
+    if ( m == INVALIDMOVE ){
+
+        if ( coSearchers.find(id()) == coSearchers.end()){
+           coSearchers[id()] = std::unique_ptr<Searcher>(new Searcher(id()+MAX_THREADS));
+           coSearchers[id()]->initPawnTable();
+        }
+
+        Searcher & cos = *coSearchers[id()];
+
+        cos.genFen = false;
+        const bool oldQuiet = DynamicConfig::quiet;
+        const bool oldDisableTT = DynamicConfig::disableTT;
+        const unsigned int oldLevel = DynamicConfig::level;
+        cos.subSearch = true;
+        DynamicConfig::quiet = true;
+        DynamicConfig::disableTT = true;
+        DynamicConfig::level = 100;
+
+        cos.clearSearch();
+
+        EvalData data;
+        std::ostringstream str;
+        ScoreType e = eval(p,data,cos,true,false,&str);
+
+        m = INVALIDMOVE;
+        const Hash h = computeHash(p);
+        if (hashCache.find(h) == hashCache.end() || p.halfmoves < DynamicConfig::randomPly){
+            if ( std::abs(e) < 1000 ){
+                hashCache.insert(h);
+                DepthType seldepth(0), depth(DynamicConfig::genFenDepth);
+                cos.search(p,m,depth,s,seldepth);
+            }
+        }
+        else{
+            cacheHits++;
+            if ( cacheHits % 1000 == 0) Logging::LogIt(Logging::logInfo) << "Already in cache " << cacheHits; 
+        }
+
+        cos.genFen = true;
+        DynamicConfig::quiet = oldQuiet;
+        DynamicConfig::disableTT = oldDisableTT;
+        DynamicConfig::level = oldLevel;
+        cos.subSearch = false;
+
     }
 
-    Searcher & cos = *coSearchers[id()];
+    if ( m != INVALIDMOVE && p.halfmoves >= DynamicConfig::randomPly){
 
-    cos.genFen = false;
-    const bool oldQuiet = DynamicConfig::quiet;
-    const bool oldDisableTT = DynamicConfig::disableTT;
-    const unsigned int oldLevel = DynamicConfig::level;
-    cos.subSearch = true;
-    DynamicConfig::quiet = true;
-    DynamicConfig::disableTT = true;
-    DynamicConfig::level = 100;
+        /*
+        // epd format
+            genStream << GetFEN(p) << " c0 \"" << e << "\" ;"          // eval
+                                << " c1 \"" << s << "\" ;"             // score (search)
+                                << " c2 \"" << ToString(m) << "\" ;"   // best move
+                                //<< " c3 \"" << str.str() << "\" ;"   // features break down
+                                << "\n";
+        */
 
-    cos.clearSearch();
+        // "plain" format (**not** taking result into account, also draw!)
+        genStream << "fen "    << GetFEN(p) << "\n"
+                  << "move "   << ToString(m) << "\n"
+                  << "score "  << s << "\n"
+                  //<< "eval "   << e << "\n"
+                  << "ply "    << p.halfmoves << "\n"
+                  << "result " << 0 << "\n"
+                  << "e" << "\n";
 
-    EvalData data;
-    std::ostringstream str;
-    ScoreType e = eval(p,data,cos,true,false,&str);
-
-    Move m = INVALIDMOVE;
-    ScoreType s;
-    const Hash h = computeHash(p) ^ e;
-    if ( std::abs(e) < 1000 && hashCache.find(h) == hashCache.end() ){
-       hashCache.insert(h);
-       
-       DepthType seldepth(0), depth(DynamicConfig::genFenDepth);
-       cos.search(p,m,depth,s,seldepth);
+        sfensWritten++;
+        if ( sfensWritten % 100'000 == 0) Logging::LogIt(Logging::logInfo) << "Sfens written " << sfensWritten; 
     }
-
-    cos.genFen = true;
-    DynamicConfig::quiet = oldQuiet;
-    DynamicConfig::disableTT = oldDisableTT;
-    DynamicConfig::level = oldLevel;
-    cos.subSearch = false;
-
-    if ( m == INVALIDMOVE) return;
-
-/*
-// epd format
-    genStream << GetFEN(p) << " c0 \"" << e << "\" ;"             // eval
-                           << " c1 \"" << s << "\" ;"             // score (search)
-                           << " c2 \"" << ToString(m) << "\" ;"   // best move
-                           //<< " c3 \"" << str.str() << "\" ;"     // features break down
-                           << "\n";
-*/
-
-// "plain" format (not taking result into account)
-    genStream << "fen "    << GetFEN(p) << "\n"
-              << "move "   << ToString(m) << "\n"
-              << "score "  << s << "\n"
-              //<< "eval "   << e << "\n"
-              << "ply "    << p.halfmoves << "\n"
-              << "result " << 0 << "\n"
-              << "e" << "\n";
+    
+    return m;
 
 }
 #endif
