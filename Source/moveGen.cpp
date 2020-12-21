@@ -341,7 +341,7 @@ ScoreType randomMover(const Position & p, PVList & pv, bool isInCheck, Searcher 
         if (!applyMove(p2, *it)) continue;
         PVList childPV;
 #ifdef WITH_GENFILE
-        if ( DynamicConfig::genFen ) context.writeToGenFile(p2);
+        if ( DynamicConfig::genFen && p.halfmoves >= DynamicConfig::randomPly ) context.writeToGenFile(p2);
 #endif        
         updatePV(pv, *it, childPV);
         const Square to = Move2To(*it);

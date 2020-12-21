@@ -87,29 +87,62 @@ void perft_test(const std::string & fen, DepthType d, unsigned long long int exp
     Logging::LogIt(Logging::logInfo) << "#########################" ;
 }
 
-void analyze(const Position & p, DepthType depth){
-        Move bestMove = INVALIDMOVE;
-        ScoreType s = 0;
-        TimeMan::isDynamic       = false;
-        TimeMan::nbMoveInTC      = -1;
-        TimeMan::msecPerMove     = INFINITETIME;
-        TimeMan::msecInTC        = -1;
-        TimeMan::msecInc         = -1;
-        TimeMan::msecUntilNextTC = -1;
-        ThreadPool::instance().currentMoveMs = TimeMan::GetNextMSecPerMove(p);
-        DepthType seldepth = 0;
-        PVList pv;
-        ThreadData d = {depth,seldepth,s,p,bestMove,pv,SearchData()}; // only input coef is depth here
-        ThreadPool::instance().search(d);
-        bestMove = ThreadPool::instance().main().getData().best; // here output results
-        s = ThreadPool::instance().main().getData().sc; // here output results
-        pv = ThreadPool::instance().main().getData().pv; // here output results
-        Logging::LogIt(Logging::logInfo) << "Best move is " << ToString(bestMove) << " " << (int)depth << " " << s << " pv : " << ToString(pv);
+Move analyze(const Position & p, DepthType depth, bool openBenchOutput = false){
+    Move bestMove = INVALIDMOVE;
+    ScoreType s = 0;
+    TimeMan::isDynamic       = false;
+    TimeMan::nbMoveInTC      = -1;
+    TimeMan::msecPerMove     = INFINITETIME;
+    TimeMan::msecInTC        = -1;
+    TimeMan::msecInc         = -1;
+    TimeMan::msecUntilNextTC = -1;
+    ThreadPool::instance().currentMoveMs = TimeMan::GetNextMSecPerMove(p);
+    DepthType seldepth = 0;
+    PVList pv;
+    ThreadData d = {depth,seldepth,s,p,bestMove,pv,SearchData()}; // only input coef is depth here
+    ThreadPool::instance().search(d);
+    bestMove = ThreadPool::instance().main().getData().best; // here output results
+    s = ThreadPool::instance().main().getData().sc; // here output results
+    pv = ThreadPool::instance().main().getData().pv; // here output results
+    Logging::LogIt(Logging::logInfo) << "Best move is " << ToString(bestMove) << " " << (int)depth << " " << s << " pv : " << ToString(pv);
+    if ( openBenchOutput ){
         Logging::LogIt(Logging::logInfo) << "Next two lines are for OpenBench";
         const TimeType ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - ThreadPool::instance().main().startTime).count());
         const Counter nodeCount = ThreadPool::instance().main().stats.counters[Stats::sid_nodes] + ThreadPool::instance().main().stats.counters[Stats::sid_qnodes];
         std::cerr << "NODES " << nodeCount << std::endl;
         std::cerr << "NPS " << int(nodeCount/(ms/1000.f)) << std::endl;
+    }
+    return bestMove;
+}
+
+void selfPlay(DepthType depth){
+    Position p(startPosition);
+    NNUEEvaluator evaluator;
+    p.associateEvaluator(evaluator);
+    p.resetNNUEEvaluator(p.Evaluator());
+    Move move = INVALIDMOVE;
+    while( true ){
+#ifndef WITH_GENFILE
+        move = analyze(p,depth);
+#else
+        DynamicConfig::genFenDepth = depth;
+        if ( DynamicConfig::genFen && ! ThreadPool::instance().main().genStream.is_open() ){
+            ThreadPool::instance().main().genStream.open("genfen_" + std::to_string(::getpid()) + "_" + std::to_string(0) + ".epd",std::ofstream::app);
+        }
+        move = ThreadPool::instance().main().writeToGenFile(p);
+#endif
+        if (move == INVALIDMOVE){
+            //Logging::LogIt(Logging::logInfo) << "End of game"; 
+            break;
+        }
+        Position p2 = p;
+        applyMove(p2,move,true);
+        p = p2;
+        if (p.halfmoves > MAX_PLY/4 ){
+            //Logging::LogIt(Logging::logInfo) << "Too long game"; 
+            break;
+        }
+    }    
 }
 
 int cliManagement(std::string cli, int argc, char ** argv){
@@ -134,6 +167,19 @@ int cliManagement(std::string cli, int argc, char ** argv){
     }
     Logging::LogIt(Logging::logInfo) << "You can use -xboard command line option to enter xboard mode";
 #endif
+
+    if ( cli == "-selfplay"){
+        DepthType d = 15;
+        if ( argc > 2 ) d = atoi(argv[2]); 
+        unsigned long long int n = 1;
+        if ( argc > 3 ) n = atoll(argv[3]); 
+        Logging::LogIt(Logging::logInfo) << "Let's go for " << n << " selfplay games ..."; 
+        while ( n-- > 0 ){
+            if ( n%1000 == 0 ) Logging::LogIt(Logging::logInfo) << "Remaining games " << n;
+            selfPlay(d);
+        }
+        return 0;
+    }
 
     if ( cli == "-perft_test" ){
         perft_test(startPosition, 5, 4865609);
@@ -282,11 +328,11 @@ int cliManagement(std::string cli, int argc, char ** argv){
         DepthType d = 15;
         if ( argc > 2 ) d = atoi(argv[2]);        
         readFEN(startPosition,p);
-        analyze(p,d);
+        analyze(p,d,true);
         readFEN(fine70,p);
-        analyze(p,d);
+        analyze(p,d,true);
         readFEN(shirov,p);
-        analyze(p,d);
+        analyze(p,d,true);
         return 0;
     }
 
