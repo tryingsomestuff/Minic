@@ -383,6 +383,10 @@ private:
     std::vector<std::thread> m_workers;
 };
 
+namespace{
+   std::atomic<unsigned long long int> sfens_count = 0;
+}
+
 extern "C" {
 
     EXPORT Stream<SparseBatch>* CDECL create_sparse_batch_stream(int concurrency, const char* filename, int batch_size, bool cyclic, bool filtered, int random_fen_skipping)
@@ -403,7 +407,8 @@ extern "C" {
                 };
 
                 auto do_filter = [&]() {
-                    return (e.isCapturingMove() || e.isInCheck());
+                    sfens_count.fetch_add(1);
+                    return (e.isCapturingMove() || e.isInCheck() || !e.isBetween(0,10 + sfens_count/50'000'000) );
                 };
 
                 static thread_local std::mt19937 gen(std::random_device{}());
