@@ -8,7 +8,10 @@
 #include "searcher.hpp"
 #include "tools.hpp"
 
+#include <algorithm>
 #include <cctype>
+#include <functional>
+#include <locale>
 #include <numeric>
 
 namespace{
@@ -24,6 +27,10 @@ std::string showAlgAbr(Move m, const Position & p) {
     bool isCheck = false;
     bool isNotLegal = false;
     Position p2 = p;
+#ifdef WITH_NNUE
+    NNUEEvaluator evaluator = p.Evaluator();
+    p2.associateEvaluator(evaluator);
+#endif       
     if (applyMove(p2,m)){
         if ( isAttacked(p2, kingSquare(p2)) ) isCheck = true;
     }
@@ -190,11 +197,6 @@ std::string ExtendedPosition::id(){
     else return "";
 }
 
-#include <algorithm>
-#include <cctype>
-#include <locale>
-#include <functional>
-
 template<typename T>
 std::ostream & operator<<(std::ostream & os, const std::vector<T> &v){
     for(auto it = v.begin() ; it != v.end() ; ++it){
@@ -237,8 +239,11 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
         Logging::LogIt(Logging::logInfo) << "####################################################";
         Logging::LogIt(Logging::logInfo) << "Test #" << k << " " << positions[k];
         results[k] = new Results[timeControls.size()];
-        ExtendedPosition extP(positions[k],withMoveCount);
         for(size_t t = 0 ; t < timeControls.size() ; ++t){
+            ExtendedPosition extP(positions[k],withMoveCount);
+            NNUEEvaluator evaluator;
+            extP.associateEvaluator(evaluator);
+            extP.resetNNUEEvaluator(extP.Evaluator());
             Logging::LogIt(Logging::logInfo) << "Current test time control " << timeControls[t];
             DepthType seldepth = 0;
             DepthType depth = 127;
