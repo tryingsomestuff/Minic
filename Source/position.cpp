@@ -84,18 +84,23 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
         if (!found){
            for ( const char & cr : strList[2] ){
                if ( (cr >= 'A' && cr <= 'H') || (cr >= 'a' && cr <= 'h') ){
-                  Logging::LogIt(Logging::logInfo) << "Found FRC like castling " << cr;
+                  //Logging::LogIt(Logging::logInfo) << "Found FRC like castling " << cr;
                   const Color c = std::isupper(cr) ? Co_White : Co_Black;
                   const char kf = std::toupper(FileNames[SQFILE(p.king[c])].at(0));
                   if ( std::toupper(cr) > kf ) { p.castling |= (c==Co_White ? C_wks:C_bks); }
                   else                         { p.castling |= (c==Co_White ? C_wqs:C_bqs); }
-                  DynamicConfig::FRC = true; // force FRC !
+                  if ( found && !DynamicConfig::FRC){
+                      Logging::LogIt(Logging::logInfo) << "FRC position found, activating FRC";
+                      DynamicConfig::FRC = true; // force FRC !
+                  }
                   found = true;
                }
            }
-           if ( found ) Logging::LogIt(Logging::logInfo) << "FRC position found, activating FRC";
         }
-        if (strList[2].find('-') != std::string::npos){ found = true; /*Logging::LogIt(Logging::logInfo) << "No castling right given" ;*/}
+        if (strList[2].find('-') != std::string::npos){ 
+            found = true; 
+            /*Logging::LogIt(Logging::logInfo) << "No castling right given" ;*/
+        }
         if ( ! found ){ 
             if ( !silent) Logging::LogIt(Logging::logWarn) << "No castling right given" ; 
         }

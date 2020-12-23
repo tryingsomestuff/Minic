@@ -116,7 +116,8 @@ Move analyze(const Position & p, DepthType depth, bool openBenchOutput = false){
 }
 
 void selfPlay(DepthType depth){
-    Position p(startPosition);
+    DynamicConfig::FRC = true;
+    Position p(chess960::positions[std::rand()%960]);
     NNUEEvaluator evaluator;
     p.associateEvaluator(evaluator);
     p.resetNNUEEvaluator(p.Evaluator());
@@ -169,6 +170,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
 #endif
 
     if ( cli == "-selfplay"){
+        DynamicConfig::genFen = true;
         DepthType d = 15;
         if ( argc > 2 ) d = atoi(argv[2]); 
         unsigned long long int n = 1;

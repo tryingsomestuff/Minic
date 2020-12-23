@@ -20,3 +20,7 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
 [[nodiscard]] float gamePhase(const Position & p, ScoreType & matScoreW, ScoreType & matScoreB);
 
 bool readEPDFile(const std::string & fileName, std::vector<std::string> & positions);
+
+namespace chess960{
+   extern const std::string positions[960];
+}

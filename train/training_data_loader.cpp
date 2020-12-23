@@ -408,7 +408,7 @@ extern "C" {
 
                 auto do_filter = [&]() {
                     sfens_count.fetch_add(1);
-                    return (e.isCapturingMove() || e.isInCheck() || !e.isBetween(0,10 + sfens_count/50'000'000) );
+                    return (e.isCapturingMove() || e.isInCheck() || !e.isBetween(0,10 + sfens_count/10'000'000) );
                 };
 
                 static thread_local std::mt19937 gen(std::random_device{}());
