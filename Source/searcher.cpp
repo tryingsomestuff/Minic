@@ -162,8 +162,6 @@ const unsigned long long int Searcher::ttSizePawn = 1024*32;
 #ifdef WITH_GENFILE
 Move Searcher::writeToGenFile(const Position & p, ScoreType s, Move m){
     static std::map<int,std::unique_ptr<Searcher> > coSearchers; 
-    static std::set<Hash> hashCache;
-    static unsigned long long int cacheHits = 0;
     static unsigned long long int sfensWritten = 0;
     if (!genFen || id() >= MAX_THREADS) return INVALIDMOVE;
 
@@ -182,7 +180,7 @@ Move Searcher::writeToGenFile(const Position & p, ScoreType s, Move m){
         const unsigned int oldLevel = DynamicConfig::level;
         cos.subSearch = true;
         DynamicConfig::quiet = true;
-        DynamicConfig::disableTT = true;
+        DynamicConfig::disableTT = false; // force active TT !
         DynamicConfig::level = 100;
 
         cos.clearSearch();
@@ -192,17 +190,9 @@ Move Searcher::writeToGenFile(const Position & p, ScoreType s, Move m){
         ScoreType e = eval(p,data,cos,true,false,&str);
 
         m = INVALIDMOVE;
-        const Hash h = computeHash(p);
-        if (hashCache.find(h) == hashCache.end() || p.halfmoves < DynamicConfig::randomPly){
-            if ( std::abs(e) < 1000 ){
-                hashCache.insert(h);
-                DepthType seldepth(0), depth(DynamicConfig::genFenDepth);
-                cos.search(p,m,depth,s,seldepth);
-            }
-        }
-        else{
-            cacheHits++;
-            if ( cacheHits % 1000 == 0) Logging::LogIt(Logging::logInfo) << "Already in cache " << cacheHits; 
+        if ( std::abs(e) < 1000 ){
+            DepthType seldepth(0), depth(DynamicConfig::genFenDepth);
+            cos.search(p,m,depth,s,seldepth);
         }
 
         cos.genFen = true;
