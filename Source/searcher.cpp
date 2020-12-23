@@ -128,11 +128,11 @@ void Searcher::clearGame(){
      counterT.initCounter();
 }
 
-void Searcher::clearSearch(){
+void Searcher::clearSearch(bool forceCounterClear){
      //clearPawnTT(); // to be used for reproductible results ///@todo verify again
      stats.init();
      killerT.initKillers();
-     historyT.initHistory(true);
+     historyT.initHistory(!forceCounterClear);
      counterT.initCounter();
 }
 
@@ -183,7 +183,7 @@ Move Searcher::writeToGenFile(const Position & p, ScoreType s, Move m){
         DynamicConfig::disableTT = false; // force active TT !
         DynamicConfig::level = 100;
 
-        cos.clearSearch();
+        cos.clearSearch(true);
 
         EvalData data;
         std::ostringstream str;
