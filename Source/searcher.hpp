@@ -164,7 +164,7 @@ struct Searcher{
     void clearPawnTT();
 
     void clearGame();
-    void clearSearch();
+    void clearSearch(bool forceCounterClear = false);
 
     [[nodiscard]] bool getPawnEntry(Hash h, PawnEntry *& pe);
 

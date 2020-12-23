@@ -20,15 +20,12 @@ if [ $FATHOM_PRESENT = "1" ]; then
    OPT="$OPT $dir/Fathom/src/$lib -I$dir/Fathom/src"
 fi
 
-NNUESOURCE="Source/nnue/features/half_kp.cpp Source/nnue/features/half_relative_kp.cpp Source/nnue/evaluate_nnue.cpp Source/nnue/learn/learn_tools.cpp Source/nnue/learn/convert.cpp Source/nnue/learn/multi_think.cpp Source/nnue/learn/learner.cpp Source/nnue/evaluate_nnue_learner.cpp" 
-
-STANDARDSOURCE="Source/*.cpp"
+STANDARDSOURCE="Source/*.cpp Source/nnue/learn/*.cpp"
 
 g++ -g $STANDARDSOURCE $NNUESOURCE -ISource -ISource/nnue $OPT -lpthread -ldl -DDEBUG_TOOL -o minic.valgrind
 #valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all ./minic.valgrind -analyze "shirov" 10
 #valgrind --tool=exp-sgcheck ./minic.valgrind -analyze "shirov" 10
 #valgrind --log-file=valgrind.log --tool=memcheck --track-origins=yes ./minic.valgrind -analyze "shirov" 10 -quiet 0 
 #valgrind --log-file=valgrind.log --tool=memcheck --track-origins=yes --leak-check=full ./minic.valgrind -analyze "shirov" 10 -quiet 0 -NNUEFile "Tourney/nn.bin" 
-valgrind --log-file=valgrind.log --tool=memcheck --track-origins=yes --leak-check=full --show-leak-kinds=all ./minic.valgrind -learn learn.params -skipLoadingEval 0 -NNUEFile Tourney/nn.bin -quiet 0
 #valgrind --log-file=valgrind.log --tool=memcheck --track-origins=yes --leak-check=full ./minic.valgrind -uci -NNUEFile Tourney/nn.bin -quiet 0
-
+valgrind --log-file=valgrind.log --tool=memcheck --track-origins=yes --leak-check=full --show-leak-kinds=all ./minic.valgrind -selfplay 9 2 -randomPly 6 -quiet 0 -NNUEFile ../NNUE-Nets/narcotized_nightshift.bin
