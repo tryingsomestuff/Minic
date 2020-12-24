@@ -104,23 +104,21 @@ namespace Options {
        _keys.push_back(KeyBase(k_int,   w_spin,  "MinMoveOverHead"             , &DynamicConfig::moveOverHead                   , (unsigned int)10 , (unsigned int)1000 ));
        _keys.push_back(KeyBase(k_score, w_spin,  "Contempt"                    , &DynamicConfig::contempt                       , (ScoreType)-50   , (ScoreType)50));
        _keys.push_back(KeyBase(k_score, w_spin,  "ContemptMG"                  , &DynamicConfig::contemptMG                     , (ScoreType)-50   , (ScoreType)50));
-       #ifdef WITH_SYZYGY
+#ifdef WITH_SYZYGY
        _keys.push_back(KeyBase(k_string,w_string,"SyzygyPath"                  , &DynamicConfig::syzygyPath                                                                              , &SyzygyTb::initTB));
-       #endif
-       #ifdef WITH_NNUE
+#endif
+#ifdef WITH_NNUE
        _keys.push_back(KeyBase(k_string,w_string,"NNUEFile"                    , &DynamicConfig::NNUEFile                                                                                , &NNUEWrapper::init));
        _keys.push_back(KeyBase(k_bool,  w_check, "forceNNUE"                   , &DynamicConfig::forceNNUE                      , false            , true                              ));
-       #endif
+#endif
 
-       #ifdef WITH_GENFILE
+#ifdef WITH_GENFILE
        _keys.push_back(KeyBase(k_bool,  w_check, "GenFen"                      , &DynamicConfig::genFen                         , false            , true ));
        _keys.push_back(KeyBase(k_bool,  w_check, "GenFenSearchTree"            , &DynamicConfig::genFenSearchTree               , false            , true ));
        _keys.push_back(KeyBase(k_int,   w_spin,  "GenFenDepth"                 , &DynamicConfig::genFenDepth                    , (unsigned int)2  , (unsigned int)20 ));
        _keys.push_back(KeyBase(k_int,   w_spin,  "GenFenSkip"                  , &DynamicConfig::genFenSkip                     , (unsigned int)1  , (unsigned int)10000000 ));
-       
        _keys.push_back(KeyBase(k_int,   w_spin,  "RandomPly"                   , &DynamicConfig::randomPly                      , (unsigned int)0   , (unsigned int)20 ));
-
-       #endif
+#endif
 
        _keys.push_back(KeyBase(k_int, w_spin,  "StyleAttack"                   , &DynamicConfig::styleAttack                    , (int)0   , (int)100                                    , &EvalFeatures::callBack));
        _keys.push_back(KeyBase(k_int, w_spin,  "StyleComplexity"               , &DynamicConfig::styleComplexity                , (int)0   , (int)100                                    , &EvalFeatures::callBack));
