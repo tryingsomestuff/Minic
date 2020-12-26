@@ -17,7 +17,9 @@
 // Internal wrapper to the NNUE things
 namespace NNUEWrapper{
 
-  typedef float nnueType;
+  typedef float nnueNType;
+  typedef float/*int16_t*/ nnueWType;
+  typedef float/*int32_t*/ nnueBType;
 
   // NNUE eval scaling factor
   extern int NNUEscaling;
@@ -27,7 +29,9 @@ namespace NNUEWrapper{
   inline void init(){
      if ( !DynamicConfig::NNUEFile.empty() ){
         Logging::LogIt(Logging::logInfoPrio) << "Loading NNUE net " << DynamicConfig::NNUEFile;
-        if ( nnue::half_kp_weights<nnueType>{}.load(DynamicConfig::NNUEFile, nnue::half_kp_eval<nnueType>::weights)){
+        if ( nnue::half_kp_weights<nnueWType,nnueBType,nnueNType>{}.load(
+                     DynamicConfig::NNUEFile, 
+                     nnue::half_kp_eval<nnueWType,nnueBType,nnueNType>::weights)){
            DynamicConfig::useNNUE = true;
            compute_scaling();
         }
@@ -44,7 +48,7 @@ namespace NNUEWrapper{
 
 } // NNUEWrapper
 
-using NNUEEvaluator = nnue::half_kp_eval<NNUEWrapper::nnueType>;
+using NNUEEvaluator = nnue::half_kp_eval<NNUEWrapper::nnueWType,NNUEWrapper::nnueBType,NNUEWrapper::nnueNType>;
 
 namespace feature_idx{
 
