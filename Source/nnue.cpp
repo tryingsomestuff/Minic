@@ -32,7 +32,8 @@ void compute_scaling(int count){
 
     EvalData data;
 
-    float factor = 0;
+    float s1 = 0;
+    float s2 = 0;
     int k = 0;
 
     bool bkTT = DynamicConfig::disableTT;
@@ -72,14 +73,15 @@ void compute_scaling(int count){
 
             if ( std::abs(eStd) < 1000 && eStd*eNNUE > 0 ){
                ++k;
-               factor += eStd/eNNUE;
+               s1 += std::abs(eStd);
+               s2 += std::abs(eNNUE);
             }
             break;
         }
         if ( !found ) readFEN(startPosition,p,true);        
     }
-    NNUEWrapper::NNUEscaling = int(factor*64/k);
-    Logging::LogIt(Logging::logInfo) << "NNUEscaling " << NNUEWrapper::NNUEscaling << " (" << factor/k << ")";
+    NNUEWrapper::NNUEscaling = int(s1/s2*64);
+    Logging::LogIt(Logging::logInfo) << "NNUEscaling " << NNUEWrapper::NNUEscaling << " (" << s1/s2 << ") on " << k << " samples";
 
     DynamicConfig::disableTT = bkTT;
 }
