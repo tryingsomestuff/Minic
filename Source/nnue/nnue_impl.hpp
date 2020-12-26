@@ -21,19 +21,29 @@
 
 namespace nnue{
 
-template<typename T>
+template<typename WT, typename BT, typename NT>
 struct weights_streamer{
   std::fstream file;
   
-  weights_streamer<T>& stream(T* dst, const size_t request){
-    std::array<char, sizeof(T)> single_element{};
+  weights_streamer<WT,BT,NT>& stream(WT* dst, const size_t request){
+    std::array<char, sizeof(NT)> single_element{};
     for(size_t i(0); i < request; ++i){
       file.read(single_element.data(), single_element.size());
       std::memcpy(dst + i, single_element.data(), single_element.size());
     }
     return *this;
   }
-  
+
+  template<typename T = BT>
+  typename std::enable_if<!std::is_same<WT, T>::value,weights_streamer<WT,BT,NT>>::type & stream(BT* dst, const size_t request){
+    std::array<char, sizeof(NT)> single_element{};
+    for(size_t i(0); i < request; ++i){
+      file.read(single_element.data(), single_element.size());
+      std::memcpy(dst + i, single_element.data(), single_element.size());
+    }
+    return *this;
+  }
+
   weights_streamer(const std::string& name) : file(name, std::ios_base::in | std::ios_base::binary) {}
 };
 
@@ -88,7 +98,8 @@ struct stack_vector{
     return *this;
   }
 
-  constexpr stack_vector<T, dim>& add_(const T* other){
+  template <typename T2>
+  constexpr stack_vector<T, dim>& add_(const T2* other){
     #pragma omp simd
     for(size_t i = 0; i < dim; ++i){
       data[i] += other[i];
@@ -96,7 +107,8 @@ struct stack_vector{
     return *this;
   }
   
-  constexpr stack_vector<T, dim>& sub_(const T* other){
+  template <typename T2>
+  constexpr stack_vector<T, dim>& sub_(const T2* other){
     #pragma omp simd
     for(size_t i = 0; i < dim; ++i){
       data[i] -= other[i];
@@ -104,7 +116,8 @@ struct stack_vector{
     return *this;
   }
   
-  constexpr stack_vector<T, dim>& fma_(const T c, const T* other){
+  template <typename T2>
+  constexpr stack_vector<T, dim>& fma_(const T c, const T2* other){
     #pragma omp simd
     for(size_t i = 0; i < dim; ++i){
       data[i] += c * other[i];
@@ -112,7 +125,8 @@ struct stack_vector{
     return *this;
   }
   
-  constexpr stack_vector<T, dim>& set_(const T* other){
+  template <typename T2>
+  constexpr stack_vector<T, dim>& set_(const T2* other){
     #pragma omp simd
     for(size_t i = 0; i < dim; ++i){
       data[i] = other[i];
@@ -134,7 +148,8 @@ struct stack_vector{
     return result;
   }
   
-  static constexpr stack_vector<T, dim> from(const T* data){
+  template <typename T2>
+  static constexpr stack_vector<T, dim> from(const T2* data){
     stack_vector<T, dim> result{};
     #pragma omp simd
     for(size_t i = 0; i < dim; ++i){
@@ -168,20 +183,16 @@ constexpr stack_vector<T, dim0 + dim1> splice(const stack_vector<T, dim0>& a, co
   return c;
 }
 
-template<typename T, size_t dim0, size_t dim1>
+template<typename WT, typename BT, typename NT, size_t dim0, size_t dim1>
 struct stack_affine{
   static constexpr size_t W_numel = dim0*dim1;
   static constexpr size_t b_numel = dim1;
   
-  NNUEALIGNMENT T W[W_numel];
-  NNUEALIGNMENT T b[b_numel];
+  NNUEALIGNMENT WT W[W_numel];
+  NNUEALIGNMENT BT b[b_numel];
   
-  constexpr size_t num_parameters() const {
-    return W_numel + b_numel;
-  }
-  
-  constexpr stack_vector<T, dim1> forward(const stack_vector<T, dim0>& x) const {
-    auto result = stack_vector<T, dim1>::from(b);
+  constexpr stack_vector<BT, dim1> forward(const stack_vector<BT, dim0>& x) const {
+    auto result = stack_vector<BT, dim1>::from(b);
     #pragma omp simd
     for(size_t i = 0; i < dim0; ++i){
       result.fma_(x.data[i], W + i * dim1);
@@ -189,40 +200,36 @@ struct stack_affine{
     return result;
   }
   
-  stack_affine<T, dim0, dim1>& load_(weights_streamer<T>& ws){
+  stack_affine<WT, BT, NT, dim0, dim1>& load_(weights_streamer<WT,BT,NT>& ws){
     ws.stream(W, W_numel).stream(b, b_numel);
     return *this;
   }
 };
 
-template<typename T, size_t dim0, size_t dim1>
+template<typename WT, typename BT, typename NT, size_t dim0, size_t dim1>
 struct big_affine{
   static constexpr size_t W_numel = dim0*dim1;
   static constexpr size_t b_numel = dim1;
 
-  T* W{nullptr};
-  NNUEALIGNMENT T b[b_numel];
+  WT* W{nullptr};
+  NNUEALIGNMENT BT b[b_numel];
 
-  constexpr size_t num_parameters() const {
-    return W_numel + b_numel;
-  }
-
-  void insert_idx(const size_t idx, stack_vector<T, b_numel>& x) const {
-    const T* mem_region = W + idx * dim1;
+  void insert_idx(const size_t idx, stack_vector<BT, b_numel>& x) const {
+    const WT* mem_region = W + idx * dim1;
     x.add_(mem_region);
   }
   
-  void erase_idx(const size_t idx, stack_vector<T, b_numel>& x) const {
-    const T* mem_region = W + idx * dim1;
+  void erase_idx(const size_t idx, stack_vector<BT, b_numel>& x) const {
+    const WT* mem_region = W + idx * dim1;
     x.sub_(mem_region);
   }
 
-  big_affine<T, dim0, dim1>& load_(weights_streamer<T>& ws){
+  big_affine<WT, BT, NT, dim0, dim1>& load_(weights_streamer<WT,BT,NT>& ws){
     ws.stream(W, W_numel).stream(b, b_numel);
     return *this;
   }
 
-  big_affine<T, dim0, dim1>& operator=(const big_affine<T, dim0, dim1>& other){
+  big_affine<WT, BT, NT, dim0, dim1>& operator=(const big_affine<WT, BT, NT, dim0, dim1>& other){
     #pragma omp simd
     for(size_t i = 0; i < W_numel; ++i){ W[i] = other.W[i]; }
     #pragma omp simd
@@ -230,26 +237,27 @@ struct big_affine{
     return *this;
   }
 
-  big_affine<T, dim0, dim1>& operator=(big_affine<T, dim0, dim1>&& other){
+  big_affine<WT, BT, NT, dim0, dim1>& operator=(big_affine<WT, BT, NT, dim0, dim1>&& other){
     std::swap(W, other.W);
     std::swap(b, other.b);
     return *this;
   }
 
-  big_affine(const big_affine<T, dim0, dim1>& other){
-    W = new T[W_numel];
+  big_affine(const big_affine<WT, BT, NT, dim0, dim1>& other){
+    W = new WT[W_numel];
     #pragma omp simd
     for(size_t i = 0; i < W_numel; ++i){ W[i] = other.W[i]; }
     #pragma omp simd
     for(size_t i = 0; i < b_numel; ++i){ b[i] = other.b[i]; }
   }
 
-  big_affine(big_affine<T, dim0, dim1>&& other){
+  big_affine(big_affine<WT, BT, NT, dim0, dim1>&& other){
     std::swap(W, other.W);
     std::swap(b, other.b);
   }
   
-  big_affine(){ W = new T[W_numel]; }
+  big_affine(){ W = new WT[W_numel]; }
+
   ~big_affine(){ if(W != nullptr){ delete[] W; } }
 
 };
@@ -257,25 +265,17 @@ struct big_affine{
 constexpr size_t half_ka_numel = 12*64*64;
 constexpr size_t base_dim = 128;
 
-template<typename T>
+template<typename WT, typename BT, typename NT>
 struct half_kp_weights{
-  big_affine<T, half_ka_numel, base_dim> w{};
-  big_affine<T, half_ka_numel, base_dim> b{};
-  stack_affine<T, 2*base_dim, 32> fc0{};
-  stack_affine<T, 32, 32> fc1{};
-  stack_affine<T, 64, 32> fc2{};
-  stack_affine<T, 96, 1> fc3{};
+  big_affine  <WT, BT, NT, half_ka_numel, base_dim> w{};
+  big_affine  <WT, BT, NT, half_ka_numel, base_dim> b{};
+  stack_affine<WT, BT, NT, 2*base_dim   , 32>       fc0{};
+  stack_affine<WT, BT, NT, 32           , 32>       fc1{};
+  stack_affine<WT, BT, NT, 64           , 32>       fc2{};
+  stack_affine<WT, BT, NT, 96           , 1>        fc3{};
 
-  size_t num_parameters() const {
-    return w.num_parameters() +
-           b.num_parameters() +
-           fc0.num_parameters() +
-           fc1.num_parameters() +
-           fc2.num_parameters() +
-           fc3.num_parameters();
-  }
-  
-  half_kp_weights<T>& load(weights_streamer<T>& ws){
+  half_kp_weights<WT,BT,NT>& load(weights_streamer<WT,BT,NT>& ws){
+    ///@todo read a version number first !
     w.load_(ws);
     b.load_(ws);
     fc0.load_(ws);
@@ -285,7 +285,7 @@ struct half_kp_weights{
     return *this;
   }
   
-  bool load(const std::string& path, half_kp_weights<T>& loadedWeights){
+  bool load(const std::string& path, half_kp_weights<WT,BT,NT>& loadedWeights){
 #ifndef __ANDROID__
 #ifndef WITHOUT_FILESYSTEM 
     static const int expectedSize = 50378500;
@@ -301,26 +301,26 @@ struct half_kp_weights{
     }
 #endif
 #endif
-    auto ws = weights_streamer<T>(path);
+    auto ws = weights_streamer<WT,BT,NT>(path);
     loadedWeights = load(ws);
     return true;
   }
 };
 
-template<typename T>
+template<typename WT, typename BT, typename NT>
 struct feature_transformer{
-  const big_affine<T, half_ka_numel, base_dim>* weights_;
-  stack_vector<T, base_dim> active_;
-  constexpr stack_vector<T, base_dim> active() const { return active_; }
+  const big_affine<WT, BT, NT, half_ka_numel, base_dim>* weights_;
+  stack_vector<BT, base_dim> active_;
 
-  void clear(){ active_ = stack_vector<T, base_dim>::from(weights_ -> b); }
-  void insert(const size_t idx){ 
-    //std::cout << idx << std::endl; 
-    weights_ -> insert_idx(idx, active_); 
-  }
+  constexpr stack_vector<BT, base_dim> active() const { return active_; }
+
+  void clear(){ active_ = stack_vector<BT, base_dim>::from(weights_ -> b); }
+
+  void insert(const size_t idx){ weights_ -> insert_idx(idx, active_); }
+
   void erase(const size_t idx){ weights_ -> erase_idx(idx, active_); }
 
-  feature_transformer(const big_affine<T, half_ka_numel, base_dim>* src) : weights_{src} {
+  feature_transformer(const big_affine<WT, BT, NT, half_ka_numel, base_dim>* src) : weights_{src} {
     clear();
   }
 
@@ -378,21 +378,21 @@ struct sided{
   friend T;
 };
 
-template<typename T>
-struct half_kp_eval : sided<half_kp_eval<T>, feature_transformer<T>>{
-  static half_kp_weights<T> weights;
-  const half_kp_weights<T>* weights_;
-  feature_transformer<T> white;
-  feature_transformer<T> black;
+template<typename WT, typename BT, typename NT>
+struct half_kp_eval : sided<half_kp_eval<WT,BT,NT>, feature_transformer<WT,BT,NT>>{
+  static half_kp_weights<WT,BT,NT> weights;
+  const half_kp_weights<WT,BT,NT>* weights_;
+  feature_transformer<WT,BT,NT> white;
+  feature_transformer<WT,BT,NT> black;
 
-  constexpr T propagate(Color c) const {
+  constexpr float propagate(Color c) const {
     const auto w_x = white.active();
     const auto b_x = black.active();
-    const auto x0 = c == Co_White ? splice(w_x, b_x).apply(clippedrelu<T>) : splice(b_x, w_x).apply_(clippedrelu<T>);
-    const auto x1 = (weights_ -> fc0).forward(x0).apply_(clippedrelu<T>);
-    const auto x2 = splice(x1, (weights_ -> fc1).forward(x1).apply_(clippedrelu<T>));
-    const auto x3 = splice(x2, (weights_ -> fc2).forward(x2).apply_(clippedrelu<T>));
-    const T val = (weights_ -> fc3).forward(x3).item();    
+    const auto x0 = c == Co_White ? splice(w_x, b_x).apply(clippedrelu<BT>) : splice(b_x, w_x).apply_(clippedrelu<BT>);
+    const auto x1 = (weights_ -> fc0).forward(x0).apply_(clippedrelu<BT>);
+    const auto x2 = splice(x1, (weights_ -> fc1).forward(x1).apply_(clippedrelu<BT>));
+    const auto x3 = splice(x2, (weights_ -> fc2).forward(x2).apply_(clippedrelu<BT>));
+    const float val = (weights_ -> fc3).forward(x3).item();    
     return val;
   }
 
@@ -410,8 +410,8 @@ struct half_kp_eval : sided<half_kp_eval<T>, feature_transformer<T>>{
   half_kp_eval() : weights_{&weights}, white{&(weights . w)}, black{&(weights . b)} {}
 };
 
-template<typename T>
-half_kp_weights<T> half_kp_eval<T>::weights;
+template<typename WT, typename BT, typename NT>
+half_kp_weights<WT,BT,NT> half_kp_eval<WT,BT,NT>::weights;
 
 } // nnue
 
