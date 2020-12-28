@@ -193,7 +193,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
     if (DynamicConfig::useNNUE){
         EvalScore score;
         if ( DynamicConfig::forceNNUE || ! isLazyHigh(600,features,score)){ // stay to classic eval when the game is already decided
-           ScoreType nnueScore = 600*p.Evaluator().propagate(p.c); // scaling factor to convert to cp
+           ScoreType nnueScore = p.Evaluator().propagate(p.c);
            // NNUE evaluation scaling
            nnueScore = (Score(nnueScore,features.scalingFactor,p) * NNUEWrapper::NNUEscaling) / 64;
            // take tempo and contempt into account

@@ -51,6 +51,7 @@ fi
 echo "Building $exe"
 
 WARN="-Wall -Wcast-qual -Wno-char-subscripts -Wno-reorder -Wmaybe-uninitialized -Wuninitialized -pedantic -Wextra -Wshadow -Wno-unknown-pragmas"
+#-fopt-info"
 
 OPT="-s -DNDEBUG -O3 $n" ; DEPTH=16
 #OPT="-s -ffunction-sections -fdata-sections -Os -s -DNDEBUG -Wl,--gc-sections" ; DEPTH=16
