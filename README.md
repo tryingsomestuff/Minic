@@ -172,6 +172,7 @@ Minic comes with some command line options :
 * -forceNNUE \[0 or 1\] (default is false): if a NNUEFile is loaded, forceNNUE equal true will results in a pure NNUE evaluation, while the default is hybrid evaluation.
 * -genFen \[ 0 or 1 \] (default is 0): activate "pv" sfen generation
 * -genFenSearchTree \[ 0 or 1 \] (default is 0): activate "in search" sfen generation (you'd better use genFenSkip with that !)
+* -genFenOnlyQuiet \[ 0 or 1 \] (default 0): activate "qsearch leaf" sfen generation to get only quiet positions
 * -genFenDepth \[ 2 to 20\] (default is 8): specify depth of search for "in search" sfen generation
 * -genFenSkip \[ 1 to 10000000 \] (default is 1): frequency of sfen "in search" activation (generating for every search tree node is extremely expensive and maybe not really usefull !)
 * -randomPly \[0 to 20 \] (default is 0): usefull when creating training data, play this number of total random ply at the beginning of the game

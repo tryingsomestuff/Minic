@@ -18,6 +18,7 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha,
 
     CMHPtrArray cmhPtr;
     getCMHPtr(p.halfmoves,cmhPtr);
+    bool noCap = true;
 
     MoveList moves;
     //if ( isInCheck ) MoveGen::generate<MoveGen::GP_all>(p,moves); ///@todo generate only evasion !
@@ -26,11 +27,12 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha,
 
     for(auto it = moves.begin() ; it != moves.end() ; ++it){
         Position p2 = p;
-#ifdef WITH_NNUE        
+#ifdef WITH_NNUE
         NNUEEvaluator newEvaluator = p.Evaluator();
         p2.associateEvaluator(newEvaluator);         
 #endif
         if ( ! applyMove(p2,*it) ) continue;
+        noCap = false;
         PVList childPV;
         const ScoreType score = -qsearchNoPruning(-beta, -alpha, p2, ply+1, seldepth, pv ? &childPV : nullptr);
         if ( score > bestScore){
@@ -42,6 +44,15 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha,
            }
         }
     }
+
+#ifdef WITH_GENFILE
+    if ( DynamicConfig::genFen && noCap && DynamicConfig::genFenOnlyQuiet ){
+        DynamicConfig::genFenOnlyQuiet = false;
+        writeToGenFile(p);
+        DynamicConfig::genFenOnlyQuiet = true;
+    }
+#endif
+
     return bestScore;
 }
 

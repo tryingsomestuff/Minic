@@ -31,6 +31,7 @@ namespace DynamicConfig{
     extern std::string NNUEFile     ;
     extern bool genFen              ;
     extern bool genFenSearchTree    ;
+    extern bool genFenOnlyQuiet     ;
     extern unsigned int genFenDepth ;
     extern unsigned int genFenSkip  ;
     extern bool skipLoadingEval     ;
