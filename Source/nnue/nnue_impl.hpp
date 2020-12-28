@@ -24,11 +24,11 @@ namespace nnue{
 #ifdef WITH_QUANTIZATION
 // quantization constantes
 ///@todo doc
-const float weightMax  = 2.0f; // min/max of weights values
-const int weightScale  = 127;  // int16 scaling
-const int weightFactor = 64;//int(weightScale/weightMax); // quantization factor
-const int biasFactor   = int(weightScale*weightFactor);
-const float outFactor  = (weightFactor*weightFactor*weightMax)/600.f;
+const float weightMax    = 4.0f; // supposed min/max of weights values
+const int weightScale    = 1024;  // int8 scaling
+const int weightFactor   = 256;//weightScale/weightMax; // quantization factor
+const int biasFactor     = weightScale*weightFactor;
+const float outFactor    = (weightFactor*weightFactor*weightMax)/600.f;
 #define ROUNDFUNC(x) std::round(x)
 #else
 const float weightMax  = 100.0f;
@@ -45,14 +45,14 @@ struct weights_streamer{
   
   weights_streamer<WIT,WT,BIT,BT,NT>& streamW(WT* dst, const size_t request, bool isInput = false){
     std::array<char, sizeof(NT)> single_element{};
-    const int Wscale = isInput ? weightScale : weightFactor;
+    const float Wscale = isInput ? weightScale : weightFactor;
     //std::cout << "****reading inner weight" << std::endl;
     for(size_t i(0); i < request; ++i){
       file.read(single_element.data(), single_element.size());
       NT tmp{0};
       std::memcpy(&tmp, single_element.data(), single_element.size());
       dst[i] = WT( ROUNDFUNC(Wscale * (isInput ? tmp : std::clamp(tmp,NT(-weightMax),NT(weightMax)) )) );
-      //std::cout << "weight " << tmp << " " << int(dst[i]) << std::endl;
+      //if ( std::abs(tmp)> weightMax) std::cout << "weight " << tmp << " " << int(dst[i]) << std::endl;
     }
     return *this;
   }
@@ -60,7 +60,7 @@ struct weights_streamer{
   template<typename T = WIT>
   typename std::enable_if<!std::is_same<WT, T>::value,weights_streamer<WIT,WT,BIT,BT,NT>>::type & streamW(WIT* dst, const size_t request, bool isInput = false){
     std::array<char, sizeof(NT)> single_element{};
-    const int Wscale = isInput ? weightScale : weightFactor;
+    const float Wscale = isInput ? weightScale : weightFactor;
     //std::cout << "****reading input weight" << std::endl;
     for(size_t i(0); i < request; ++i){
       file.read(single_element.data(), single_element.size());
@@ -74,7 +74,7 @@ struct weights_streamer{
 
   weights_streamer<WIT,WT,BIT,BT,NT> & streamB(BT* dst, const size_t request, bool isInput = false){
     std::array<char, sizeof(NT)> single_element{};
-    const int Bscale = isInput ? weightScale : biasFactor;
+    const float Bscale = isInput ? weightScale : biasFactor;
     //std::cout << "****reading inner bias" << std::endl;
     for(size_t i(0); i < request; ++i){
       file.read(single_element.data(), single_element.size());
@@ -89,7 +89,7 @@ struct weights_streamer{
   template<typename T = BIT>
   typename std::enable_if<!std::is_same<BT, T>::value,weights_streamer<WIT,WT,BIT,BT,NT>>::type & streamB(BIT* dst, const size_t request, bool isInput = false){
     std::array<char, sizeof(NT)> single_element{};
-    const int Bscale = isInput ? weightScale : biasFactor;
+    const float Bscale = isInput ? weightScale : biasFactor;
     //std::cout << "****reading input bias" << std::endl;
     for(size_t i(0); i < request; ++i){
       file.read(single_element.data(), single_element.size());
@@ -105,10 +105,10 @@ struct weights_streamer{
 };
 
 template<typename T>
-inline constexpr T clippedreluInput(const T& x){ return std::min(std::max(x , T{0}), T{weightScale}); }
+inline constexpr T clippedreluInput(const T& x){ return std::min(std::max(T(x) , T{0}), T{weightScale}); }
 
 template<typename T>
-inline constexpr T clippedrelu(const T& x){ return std::min(std::max(x/weightFactor , T{0}), T{weightScale}); }
+inline constexpr T clippedrelu(const T& x){ return std::min(std::max(T(x/weightFactor) , T{0}), T{weightScale}); }
 
 template<typename T, size_t dim>
 struct stack_vector{

@@ -46,7 +46,7 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha,
     }
 
 #ifdef WITH_GENFILE
-    if ( DynamicConfig::genFen && noCap && DynamicConfig::genFenOnlyQuiet ){
+    if ( DynamicConfig::genFen && noCap && DynamicConfig::genFenOnlyQuiet && !isInCheck ){
         DynamicConfig::genFenOnlyQuiet = false;
         writeToGenFile(p);
         DynamicConfig::genFenOnlyQuiet = true;
