@@ -83,7 +83,11 @@ struct Position{
 
 #ifdef WITH_NNUE
 
-  using NNUEEvaluator = nnue::half_kp_eval<NNUEWrapper::nnueWType,NNUEWrapper::nnueBType,NNUEWrapper::nnueNType>;
+  using NNUEEvaluator = nnue::half_kp_eval<NNUEWrapper::nnueWIType,
+                                           NNUEWrapper::nnueWType,
+                                           NNUEWrapper::nnueBIType,
+                                           NNUEWrapper::nnueBType,
+                                           NNUEWrapper::nnueNType>;
 
   mutable NNUEEvaluator * associatedEvaluator = nullptr;
   void associateEvaluator(NNUEEvaluator & evaluator){ associatedEvaluator = &evaluator; }
