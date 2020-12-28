@@ -20,8 +20,8 @@ namespace NNUEWrapper{
 #ifdef WITH_QUANTIZATION
   typedef float   nnueNType;
   typedef int16_t nnueWIType;
-  typedef int8_t  nnueWType;
-  typedef int16_t nnueBIType;  
+  typedef int16_t nnueWType;
+  typedef int32_t nnueBIType;  
   typedef int32_t nnueBType;
 #else
   typedef float   nnueNType;
