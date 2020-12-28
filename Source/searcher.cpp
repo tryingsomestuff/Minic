@@ -205,26 +205,33 @@ Move Searcher::writeToGenFile(const Position & p, ScoreType s, Move m){
 
     if ( m != INVALIDMOVE && p.halfmoves >= DynamicConfig::randomPly){
 
-        /*
-        // epd format
-            genStream << GetFEN(p) << " c0 \"" << e << "\" ;"          // eval
-                                << " c1 \"" << s << "\" ;"             // score (search)
-                                << " c2 \"" << ToString(m) << "\" ;"   // best move
-                                //<< " c3 \"" << str.str() << "\" ;"   // features break down
-                                << "\n";
-        */
+        if ( DynamicConfig::genFenOnlyQuiet ){
+            DepthType seldepth = 0;
+            DepthType ply = 0;
+            s = Searcher::qsearchNoPruning(-10000,10000, p, ply, seldepth);
+        }
+        else{
+            /*
+            // epd format
+                genStream << GetFEN(p) << " c0 \"" << e << "\" ;"          // eval
+                                    << " c1 \"" << s << "\" ;"             // score (search)
+                                    << " c2 \"" << ToString(m) << "\" ;"   // best move
+                                    //<< " c3 \"" << str.str() << "\" ;"   // features break down
+                                    << "\n";
+            */
 
-        // "plain" format (**not** taking result into account, also draw!)
-        genStream << "fen "    << GetFEN(p) << "\n"
-                  << "move "   << ToString(m) << "\n"
-                  << "score "  << s << "\n"
-                  //<< "eval "   << e << "\n"
-                  << "ply "    << p.halfmoves << "\n"
-                  << "result " << 0 << "\n"
-                  << "e" << "\n";
+            // "plain" format (**not** taking result into account, also draw!)
+            genStream << "fen "    << GetFEN(p) << "\n"
+                      << "move "   << ToString(m) << "\n"
+                      << "score "  << s << "\n"
+                      //<< "eval "   << e << "\n"
+                      << "ply "    << p.halfmoves << "\n"
+                      << "result " << 0 << "\n"
+                      << "e" << "\n";
 
-        sfensWritten++;
-        if ( sfensWritten % 100'000 == 0) Logging::LogIt(Logging::logInfo) << "Sfens written " << sfensWritten; 
+            sfensWritten++;
+            if ( sfensWritten % 100'000 == 0) Logging::LogIt(Logging::logInfo) << "Sfens written " << sfensWritten; 
+        }
     }
     
     return m;
