@@ -173,6 +173,7 @@ Minic comes with some command line options :
 * -genFen \[ 0 or 1 \] (default is 0): activate sfen generation
 * -genFenDepth \[ 2 to 20\] (default is 8): specify depth of search for sfen generation
 * -randomPly \[0 to 20 \] (default is 0): usefull when creating training data, play this number of total random ply at the begining of the game
+* -selfplay \[depth\] \[number of games\] (default are 15 and 1): launch some selfplay game with genfen activated. 
 
 ### GUI/protocol (Xboard or UCI)
 
@@ -202,18 +203,6 @@ Moreover, Minic implements some "style" parameter that allow the user to boost o
 - complexity (not yet implemented)
 
 Default values are 50 and a range from 0 to 100 can be used. A value of 100 will double the effect, while a value of 0 will disable the feature (it is probably not a good idea to put material awareness to 0 ...).
-
-## Opening books
-
-Minic comes with some opening books written in an internal own binary format. There are currently 4 books
-```
-book_small : a very small book only with main variation of classic opening lines
-book_big   : a bigger book (take 5 secondes to load) of nearly 400.000 lines
-Carlsen    : based on Carlsen most used opening lines (thanks to Jonathan Cremers)
-Anand      : based on Anand most used opening lines (thanks to Jonathan Cremers)
-```
-
-You can use both the command line argument or the GUI option to select and activate the book. Note that using books, Minic will use random lines to be more fun to play against.
 
 ## Thanks
 
