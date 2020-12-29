@@ -1,0 +1,61 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{mathtools, nccmath}
+\begin{document}
+\title{Static post-quantization inside Minic}
+\author{Vivien Clauzon}
+
+\maketitle
+The net is trained using only floating point weight and bias.
+Let's formalize the action of each layer by
+$$y_i = \text{ClippedReLU}(W_i y_{i-1} + b_i , 0, 1)$$
+The lower bound 0 of the clipped ReLU will now be omitted.
+Let assume that $W \in ]-\alpha, \alpha[$.
+We define $f = n/\alpha$ the quantization factor.
+
+\section{Input layer}
+
+For the input layer, the input data are named $x$. Let's apply the quantization factor.
+$$\tilde{y_0} = fy_0 \approx \text{ClippedReLU}(\tilde{W_0} x + \tilde{b_0} , f)$$
+with $\tilde{W} = Wf$ and $\tilde{b} = bf$.
+I order to use the full range available in the upper bound of the ReLU, we now multiply by $\alpha$; 
+$$\bar{y_0} = \alpha \tilde{y_0} \approx \text{ClippedReLU}(\bar{W_0} x + \bar{b_0} , n)$$
+
+with $\bar{W} = \lfloor Wf\alpha \rfloor = \lfloor Wn \rfloor$ and $\bar{b} = \lfloor bf\alpha \rfloor = \lfloor bn \rfloor $.
+
+As $\bar{W}$ can be bigger than int8 it will be stored in int16.
+As $\bar{b}$ is not too big, nor $\bar{y_0}$, it will be stored in int16.
+
+\section{Inner layers}
+Inner layers work the same way.
+$$\tilde{y_i} = fy_i \approx \text{ClippedReLU}(\tilde{W_i} y_{i-1} + \tilde{b_i} , f)$$
+with $\tilde{W} = Wf$ and $\tilde{b} = bf$. Again we will multiply by $\alpha$ to get will range on the upper bound.
+$$\bar{y_i} = \alpha \tilde{y_i} \approx \text{ClippedReLU}(\tilde{W_i} \alpha y_{i-1} + \tilde{b_i}\alpha , n)$$
+In order to identify $\bar{y}_{i-1}$ we multiply and divide the ReLU value by $f$, so that
+$$\bar{y_i} = \alpha \tilde{y_i} \approx \text{ClippedReLU}\left(\frac{\tilde{W_i} \alpha f y_{i-1} + \tilde{b_i}\alpha f}{f}, n\right)$$
+We substitute
+$$ \alpha f y_{i-1} = \bar{y}_{i-1}$$
+$$\bar{y_i} = \alpha \tilde{y_i} \approx \text{ClippedReLU}\left(\frac{\tilde{W_i} \bar{y}_{i-1} + \tilde{b_i}\alpha f}{f}, n\right)$$
+$$\bar{y_i} \approx \text{ClippedReLU}\left(\frac{\bar{W_i} \bar{y}_{i-1} + \bar{b_i}}{f}, n\right)$$
+
+with $\bar{W} = \tilde{W} = \lfloor Wf \rfloor$ and $\bar{b} = bf^2\alpha = \lfloor b n^2/\alpha \rfloor$.  Weights can now fit to int8. Bias will be stored int32 to give space for the computation.
+
+\section{Output layers}
+
+It works exactly as for inner layer but we want to scale to centi-pawn the output and don't use ReLu.
+
+$$\alpha \tilde{o} = \alpha f o \approx \frac{\tilde{W_i} \bar{y}_{i-1} + \tilde{b_i}\alpha f}{f}$$
+In fact, what is computed by the last layer is
+$$\bar{o} = \alpha f \tilde{o} = \alpha f^2 o \approx\tilde{W_i} \bar{y}_{i-1} + \tilde{b_i}\alpha f$$
+
+We are looking for 
+$$600\times o = \bar{o} \frac{600}{f^2\alpha} = \bar{o}/s$$
+$s = \frac{f^2\alpha}{600}$ is the output scale factor.
+
+\section{Some "real" numbers}
+
+For int8 quantization, $n=127$. Standard weights can be clamped to $\alpha = 2$, so that $f = 127/2 \approx 64 = 2^6$, $\alpha f^2 \approx 8128$ and $s = (f^2\alpha)/600 \approx 13$.
+
+
+
+\end{document}
