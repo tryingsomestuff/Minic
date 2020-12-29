@@ -25,8 +25,8 @@ namespace nnue{
 // quantization constantes
 ///@todo doc
 const float weightMax    = 4.0f; // supposed min/max of weights values
-const int weightScale    = 1024;  // int8 scaling
-const int weightFactor   = 256;//weightScale/weightMax; // quantization factor
+const int weightScale    = 1024;  // int16 scaling
+const int weightFactor   = (int)std::ceil(weightScale/weightMax); // quantization factor
 const int biasFactor     = weightScale*weightFactor;
 const float outFactor    = (weightFactor*weightFactor*weightMax)/600.f;
 #define ROUNDFUNC(x) std::round(x)
@@ -39,6 +39,17 @@ const float outFactor  = 1.f/600.f;
 #define ROUNDFUNC(x) (x)
 #endif
 
+inline void quantizationInfo(){
+  if (weightScale != 1){
+     Logging::LogIt(Logging::logInfo) << "Quantization info :";
+     Logging::LogIt(Logging::logInfo) << "weightMax    " << weightMax;
+     Logging::LogIt(Logging::logInfo) << "weightScale  " << weightScale;
+     Logging::LogIt(Logging::logInfo) << "weightFactor " << weightFactor;
+     Logging::LogIt(Logging::logInfo) << "biasFactor   " << biasFactor;
+     Logging::LogIt(Logging::logInfo) << "outFactor    " << outFactor;
+  }
+}
+
 template<typename WIT, typename WT, typename BIT, typename BT, typename NT>
 struct weights_streamer{
   std::fstream file;
@@ -46,13 +57,14 @@ struct weights_streamer{
   weights_streamer<WIT,WT,BIT,BT,NT>& streamW(WT* dst, const size_t request, bool isInput = false){
     std::array<char, sizeof(NT)> single_element{};
     const float Wscale = isInput ? weightScale : weightFactor;
-    //std::cout << "****reading inner weight" << std::endl;
+    if ( isInput ) Logging::LogIt(Logging::logInfo) << "Reading input weight";
+    else Logging::LogIt(Logging::logInfo) << "Reading inner weight";
     for(size_t i(0); i < request; ++i){
       file.read(single_element.data(), single_element.size());
       NT tmp{0};
       std::memcpy(&tmp, single_element.data(), single_element.size());
       dst[i] = WT( ROUNDFUNC(Wscale * (isInput ? tmp : std::clamp(tmp,NT(-weightMax),NT(weightMax)) )) );
-      //if ( std::abs(tmp)> weightMax) std::cout << "weight " << tmp << " " << int(dst[i]) << std::endl;
+      if ( !isInput && std::abs(tmp) > (NT)weightMax) Logging::LogIt(Logging::logWarn) << "Clamped weight " << tmp << " " << int(dst[i]);
     }
     return *this;
   }
@@ -61,13 +73,14 @@ struct weights_streamer{
   typename std::enable_if<!std::is_same<WT, T>::value,weights_streamer<WIT,WT,BIT,BT,NT>>::type & streamW(WIT* dst, const size_t request, bool isInput = false){
     std::array<char, sizeof(NT)> single_element{};
     const float Wscale = isInput ? weightScale : weightFactor;
-    //std::cout << "****reading input weight" << std::endl;
+    if ( isInput ) Logging::LogIt(Logging::logInfo) << "Reading input weight";
+    else Logging::LogIt(Logging::logInfo) << "Reading inner weight";
     for(size_t i(0); i < request; ++i){
       file.read(single_element.data(), single_element.size());
       NT tmp{0};
       std::memcpy(&tmp, single_element.data(), single_element.size());
       dst[i] = WIT( ROUNDFUNC(Wscale * (isInput ? tmp : std::clamp(tmp,NT(-weightMax),NT(weightMax)) )) );
-      //std::cout << "weight " << tmp << " " << int(dst[i]) << std::endl;
+      if ( !isInput && std::abs(tmp) > (NT)weightMax) Logging::LogIt(Logging::logWarn) << "Clamped weight " << tmp << " " << int(dst[i]);
     }
     return *this;
   }
@@ -75,13 +88,14 @@ struct weights_streamer{
   weights_streamer<WIT,WT,BIT,BT,NT> & streamB(BT* dst, const size_t request, bool isInput = false){
     std::array<char, sizeof(NT)> single_element{};
     const float Bscale = isInput ? weightScale : biasFactor;
-    //std::cout << "****reading inner bias" << std::endl;
+    if ( isInput ) Logging::LogIt(Logging::logInfo) << "Reading input bias";
+    else Logging::LogIt(Logging::logInfo) << "Reading inner bias";
     for(size_t i(0); i < request; ++i){
       file.read(single_element.data(), single_element.size());
       NT tmp{0};
       std::memcpy(&tmp, single_element.data(), single_element.size());
       dst[i] = BT(ROUNDFUNC(Bscale * tmp));
-      //std::cout << "bias " << tmp << " " << dst[i] << std::endl;
+      if ( !isInput && std::abs(tmp*Bscale*weightFactor) > (NT)std::numeric_limits<BT>::max()) Logging::LogIt(Logging::logWarn) << "Overflow bias " << tmp << " " << (long long int)(Bscale * tmp);
     }
     return *this;
   }
@@ -90,13 +104,14 @@ struct weights_streamer{
   typename std::enable_if<!std::is_same<BT, T>::value,weights_streamer<WIT,WT,BIT,BT,NT>>::type & streamB(BIT* dst, const size_t request, bool isInput = false){
     std::array<char, sizeof(NT)> single_element{};
     const float Bscale = isInput ? weightScale : biasFactor;
-    //std::cout << "****reading input bias" << std::endl;
+    if ( isInput ) Logging::LogIt(Logging::logInfo) << "Reading input bias";
+    else Logging::LogIt(Logging::logInfo) << "Reading inner bias";
     for(size_t i(0); i < request; ++i){
       file.read(single_element.data(), single_element.size());
       NT tmp{0};
       std::memcpy(&tmp, single_element.data(), single_element.size());
       dst[i] = BIT(ROUNDFUNC(Bscale * tmp));
-      //std::cout << "bias " << tmp << " " << dst[i] << std::endl;
+      if ( !isInput && std::abs(tmp*Bscale*weightFactor) > (NT)std::numeric_limits<BIT>::max()) Logging::LogIt(Logging::logWarn) << "Overflow bias " << tmp << " " << (long long int)(Bscale * tmp);
     }
     return *this;
   }  
@@ -337,6 +352,7 @@ struct half_kp_weights{
   stack_affine<WIT, WT, BIT, BT, NT, 96           , 1>        fc3{};
 
   half_kp_weights<WIT,WT,BIT,BT,NT>& load(weights_streamer<WIT,WT,BIT,BT,NT>& ws){
+    quantizationInfo();
     ///@todo read a version number first !
     w.load_(ws);
     b.load_(ws);
