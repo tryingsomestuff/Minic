@@ -155,8 +155,6 @@ Minic comes with some command line options :
 * -quiet \[0 or 1\] (default is 1 which means "true"): make Minic more verbose for debug purpose. This option is often needed when using unsual things as Texel tuning or command line analysis for instance.
 * -debugMode \[0 or 1\] (default is 0 which means "false"): will write every output also in a file (named minic.debug by default)
 * -debugFile \[name_of_file\] (default is minic.debug): name of the debug output file
-* -book \[0 or 1\] (default is 0): activate own book
-* -bookFile \[name_of_file\]: name of the book file (only in Minic own binary format (see https://github.com/tryingsomestuff/Minic-Book_and_Test/tree/master/Book)
 * -ttSizeMb \[number_in_Mb\]: force the size of the hash table. This is usefull for command line analysis mode for instance
 * -FRC \[0 or 1\] (default is 0): activate Fisher random chess mode. This is usefull for command line analysis mode for instance
 * -threads \[number_of_threads\] (default is 1): force the number of threads used. This is usefull for command line analysis mode for instance
