@@ -55,7 +55,7 @@ struct Searcher{
 #ifdef WITH_GENFILE
     std::ofstream genStream;
     bool genFen = true;
-    Move writeToGenFile(const Position & p, ScoreType s = 0, Move m = INVALIDMOVE);
+    void writeToGenFile(const Position & p);
 #endif
 
     void getCMHPtr(const unsigned int ply, CMHPtrArray & cmhPtr);

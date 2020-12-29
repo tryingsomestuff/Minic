@@ -169,13 +169,10 @@ Minic comes with some command line options :
 * -strength \[Elo_like_number\] (default is 1500): specify a Elo-like strength (not really well scaled for now ...)
 * -syzygyPath \[path_to_egt_directory\] (default is none): specify the path to syzygy end-game table directory
 * -NNUEFile \[path_to_neural_network_file\] (default is none): specify the neural network (NNUE) to be used and activate NNUE evaluation
-* -forceNNUE \[0 or 1\] (default is false): if a NNUEFile is loaded, forceNNUE equal true will results in a pure NNUE evaluation, while the default is hybrid evaluation.
-* -genFen \[ 0 or 1 \] (default is 0): activate "pv" sfen generation
-* -genFenSearchTree \[ 0 or 1 \] (default is 0): activate "in search" sfen generation (you'd better use genFenSkip with that !)
-* -genFenOnlyQuiet \[ 0 or 1 \] (default 0): activate "qsearch leaf" sfen generation to get only quiet positions
-* -genFenDepth \[ 2 to 20\] (default is 8): specify depth of search for "in search" sfen generation
-* -genFenSkip \[ 1 to 10000000 \] (default is 1): frequency of sfen "in search" activation (generating for every search tree node is extremely expensive and maybe not really usefull !)
-* -randomPly \[0 to 20 \] (default is 0): usefull when creating training data, play this number of total random ply at the beginning of the game
+* -forceNNUE \[0 or 1\] (default is false): if a NNUEFile is loaded, forceNNUE equal true will results in a pure NNUE evaluation, while the default is hybrid evaluation
+* -genFen \[ 0 or 1 \] (default is 0): activate sfen generation
+* -genFenDepth \[ 2 to 20\] (default is 8): specify depth of search for sfen generation
+* -randomPly \[0 to 20 \] (default is 0): usefull when creating training data, play this number of total random ply at the begining of the game
 
 ### GUI/protocol (Xboard or UCI)
 
@@ -190,8 +187,8 @@ There are multiple ways of generating sfen data with Minic.
 pgn-extract --fencomments -Wlalg --nochecks --nomovenumbers --noresults -w500000 -N -V -o data.plain games.pgn
 ```
 Then use Minic -pgn2bin option to get a binary format sfen file. Note than position without score won't be taken into account.
-* Use Minic random mover (level = 0) and play tons of random games activating the genFen option (without using skip) and setting the depth of search you like with genFenDepth. This will generate a "plain" format sfen file with game results always being 0, so you will use this with lambda=1 in your trainer to be sure to don't take game outcome into account. What you will get is some genfen_XXXXXX files (one for each Minic processus, note that in cutechess if only 2 engines are playing, only 2 process will run and been reused). Those files will be in workdir directory of the engine and are in "plain" format. So after that use Minic -plain2bin on that file to get a "binary" file.
-* Use Minic "pv" or "in search" generator during real games. You'd better use a big genFenSkip when doing "in search", at least 1000 or even 10000. In this case again, note that game result will always be draw because the file is written on the fly not at the end of the game. Again here you will obtain genfen_XXXXXX files.
+* Use Minic random mover (level = 0) and play tons of random games activating the genFen option and setting the depth of search you like with genFenDepth. This will generate a "plain" format sfen file with game results always being 0, so you will use this with lambda=1 in your trainer to be sure to don't take game outcome into account. What you will get is some genfen_XXXXXX files (one for each Minic processus, note that with cutechess if only 2 engines are playing, only 2 process will run and been reused). Those files will be in workdir directory of the engine and are in "plain" format. So after that use Minic -plain2bin on that file to get a "binary" file.
+* Use Minic "selfplay genfen" facility. In this case again, note that game result will always be draw because the file is written on the fly not at the end of the game. Again here you will obtain genfen_XXXXXX files.
 
 ## Style
 

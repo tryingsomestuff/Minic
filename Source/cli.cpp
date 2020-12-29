@@ -116,22 +116,24 @@ Move analyze(const Position & p, DepthType depth, bool openBenchOutput = false){
 }
 
 void selfPlay(DepthType depth){
+    DynamicConfig::genFen = true;
     DynamicConfig::FRC = true;
     Position p(chess960::positions[std::rand()%960]);
     NNUEEvaluator evaluator;
     p.associateEvaluator(evaluator);
     p.resetNNUEEvaluator(p.Evaluator());
     Move move = INVALIDMOVE;
-    while( true ){
-#ifndef WITH_GENFILE
-        move = analyze(p,depth);
-#else
-        DynamicConfig::genFenDepth = depth;
+#ifdef WITH_GENFILE
         if ( DynamicConfig::genFen && ! ThreadPool::instance().main().genStream.is_open() ){
             ThreadPool::instance().main().genStream.open("genfen_" + std::to_string(::getpid()) + "_" + std::to_string(0) + ".epd",std::ofstream::app);
         }
-        move = ThreadPool::instance().main().writeToGenFile(p);
-#endif
+#endif    
+    while( true ){
+        DynamicConfig::genFen = false;
+        ThreadPool::instance().main().subSearch = true;
+        move = analyze(p,depth); // selfplay using a specific depth
+        ThreadPool::instance().main().subSearch = false;
+        DynamicConfig::genFen = true;
         if (move == INVALIDMOVE){
             //Logging::LogIt(Logging::logInfo) << "End of game"; 
             break;
@@ -139,6 +141,9 @@ void selfPlay(DepthType depth){
         Position p2 = p;
         applyMove(p2,move,true);
         p = p2;
+#ifdef WITH_GENFILE
+        if ( DynamicConfig::genFen ) ThreadPool::instance().main().writeToGenFile(p); // writeToGenFile using genFenDepth from this root position
+#endif
         if (p.halfmoves > MAX_PLY/4 ){
             //Logging::LogIt(Logging::logInfo) << "Too long game"; 
             break;
@@ -170,8 +175,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
 #endif
 
     if ( cli == "-selfplay"){
-        DynamicConfig::genFen = true;
-        DepthType d = 15;
+        DepthType d = 15; // this is "search depth", not genFenDepth !
         if ( argc > 2 ) d = atoi(argv[2]); 
         unsigned long long int n = 1;
         if ( argc > 3 ) n = atoll(argv[3]); 

@@ -160,81 +160,95 @@ std::atomic<bool> Searcher::startLock;
 const unsigned long long int Searcher::ttSizePawn = 1024*32;
 
 #ifdef WITH_GENFILE
-Move Searcher::writeToGenFile(const Position & p, ScoreType s, Move m){
+void Searcher::writeToGenFile(const Position & p){
     static std::map<int,std::unique_ptr<Searcher> > coSearchers; 
     static unsigned long long int sfensWritten = 0;
-    if (!genFen || id() >= MAX_THREADS) return INVALIDMOVE;
+    if (!genFen || id() >= MAX_THREADS) return;
 
-    if ( m == INVALIDMOVE ){
+    if ( coSearchers.find(id()) == coSearchers.end()){
+        coSearchers[id()] = std::unique_ptr<Searcher>(new Searcher(id()+MAX_THREADS));
+        coSearchers[id()]->initPawnTable();
+    }
 
-        if ( coSearchers.find(id()) == coSearchers.end()){
-           coSearchers[id()] = std::unique_ptr<Searcher>(new Searcher(id()+MAX_THREADS));
-           coSearchers[id()]->initPawnTable();
-        }
+    Searcher & cos = *coSearchers[id()];
 
-        Searcher & cos = *coSearchers[id()];
+    cos.genFen = false;
+    const bool oldQuiet = DynamicConfig::quiet;
+    const bool oldDisableTT = DynamicConfig::disableTT;
+    const unsigned int oldLevel = DynamicConfig::level;
 
-        cos.genFen = false;
-        const bool oldQuiet = DynamicConfig::quiet;
-        const bool oldDisableTT = DynamicConfig::disableTT;
-        const unsigned int oldLevel = DynamicConfig::level;
-        cos.subSearch = true;
-        DynamicConfig::quiet = true;
-        DynamicConfig::disableTT = false; // force active TT !
-        DynamicConfig::level = 100;
+    // init sub search
+    cos.subSearch = true;
+    DynamicConfig::quiet = true;
+    DynamicConfig::disableTT = true; // do not use TT in order to get qsearch leaf node
+    DynamicConfig::level = 100;
+    cos.clearSearch(true);
 
-        cos.clearSearch(true);
+    // look for a quiet position using qsearch
+    PVList pv;
+    DepthType ply = 1;
+    DepthType seldepth = 0;
+    //std::cout << "Qsearch on " << GetFEN(p) << std::endl;
+    ScoreType qScore = cos.qsearchNoPruning(-10000,10000,p,ply,seldepth,&pv);
+    Position pQuiet = p;
+    NNUEEvaluator evaluator;
+    pQuiet.associateEvaluator(evaluator);
+    pQuiet.resetNNUEEvaluator(pQuiet.Evaluator());
+    //std::cout << "PV " << ToString(pv) << std::endl;
+    for ( auto & m : pv){
+        Position p2 = pQuiet;
+        //std::cout << "Applying move " << ToString(m) << std::endl;
+        if (!applyMove(p2,m,true)) break; // will always be ok because noValidation=true
+        pQuiet = p2;
+    }
 
+    //std::cout << "Leaf pos " << GetFEN(pQuiet) << std::endl;
+
+    Move m = INVALIDMOVE;
+    ScoreType s = 0, e = 0;
+    if ( std::abs(qScore) < 1000 ){
+        // evaluate quiet leaf position
         EvalData data;
-        std::ostringstream str;
-        ScoreType e = eval(p,data,cos,true,false,&str);
+        //std::ostringstream str;
+        e = eval(pQuiet,data,cos,true,false/*,&str*/);
 
-        m = INVALIDMOVE;
+        DynamicConfig::disableTT = false; // use TT here
         if ( std::abs(e) < 1000 ){
-            DepthType seldepth(0), depth(DynamicConfig::genFenDepth);
-            cos.search(p,m,depth,s,seldepth);
-        }
-
-        cos.genFen = true;
-        DynamicConfig::quiet = oldQuiet;
-        DynamicConfig::disableTT = oldDisableTT;
-        DynamicConfig::level = oldLevel;
-        cos.subSearch = false;
-
-    }
-
-    if ( m != INVALIDMOVE && p.halfmoves >= DynamicConfig::randomPly){
-
-        if ( DynamicConfig::genFenOnlyQuiet ){
-            DepthType seldepth = 0;
-            DepthType ply = 0;
-            s = Searcher::qsearchNoPruning(-10000,10000, p, ply, seldepth);
-        }
-        else{
-            /*
-            // epd format
-                genStream << GetFEN(p) << " c0 \"" << e << "\" ;"          // eval
-                                    << " c1 \"" << s << "\" ;"             // score (search)
-                                    << " c2 \"" << ToString(m) << "\" ;"   // best move
-                                    //<< " c3 \"" << str.str() << "\" ;"   // features break down
-                                    << "\n";
-            */
-
-            // "plain" format (**not** taking result into account, also draw!)
-            genStream << "fen "    << GetFEN(p) << "\n"
-                      << "move "   << ToString(m) << "\n"
-                      << "score "  << s << "\n"
-                      //<< "eval "   << e << "\n"
-                      << "ply "    << p.halfmoves << "\n"
-                      << "result " << 0 << "\n"
-                      << "e" << "\n";
-
-            sfensWritten++;
-            if ( sfensWritten % 100'000 == 0) Logging::LogIt(Logging::logInfo) << "Sfens written " << sfensWritten; 
+            seldepth = 0;
+            DepthType depth(DynamicConfig::genFenDepth);
+            cos.search(pQuiet,m,depth,s,seldepth);
         }
     }
-    
-    return m;
 
+    cos.genFen = true;
+    DynamicConfig::quiet = oldQuiet;
+    DynamicConfig::disableTT = oldDisableTT;
+    DynamicConfig::level = oldLevel;
+    cos.subSearch = false;
+    // end of sub search
+
+    if ( m != INVALIDMOVE && pQuiet.halfmoves >= DynamicConfig::randomPly){
+
+        /*
+        // epd format
+            genStream << GetFEN(pQuiet) << " c0 \"" << e << "\" ;"          // eval
+                                << " c1 \"" << s << "\" ;"             // score (search)
+                                << " c2 \"" << ToString(m) << "\" ;"   // best move
+                                //<< " c3 \"" << str.str() << "\" ;"   // features break down
+                                << "\n";
+        */
+
+        // "plain" format (**not** taking result into account, also draw!)
+        genStream << "fen "    << GetFEN(pQuiet) << "\n"
+                  << "move "   << ToString(m) << "\n"
+                  << "score "  << s << "\n"
+                  //<< "eval "   << e << "\n"
+                  << "ply "    << pQuiet.halfmoves << "\n"
+                  << "result " << 0 << "\n"
+                  << "e" << "\n";
+
+        sfensWritten++;
+        if ( sfensWritten % 100'000 == 0) Logging::LogIt(Logging::logInfo) << "Sfens written " << sfensWritten; 
+    }
 }
 #endif

@@ -18,7 +18,6 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha,
 
     CMHPtrArray cmhPtr;
     getCMHPtr(p.halfmoves,cmhPtr);
-    bool noCap = true;
 
     MoveList moves;
     //if ( isInCheck ) MoveGen::generate<MoveGen::GP_all>(p,moves); ///@todo generate only evasion !
@@ -32,7 +31,6 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha,
         p2.associateEvaluator(newEvaluator);         
 #endif
         if ( ! applyMove(p2,*it) ) continue;
-        noCap = false;
         PVList childPV;
         const ScoreType score = -qsearchNoPruning(-beta, -alpha, p2, ply+1, seldepth, pv ? &childPV : nullptr);
         if ( score > bestScore){
@@ -44,15 +42,6 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha,
            }
         }
     }
-
-#ifdef WITH_GENFILE
-    if ( DynamicConfig::genFen && noCap && DynamicConfig::genFenOnlyQuiet && !isInCheck ){
-        DynamicConfig::genFenOnlyQuiet = false;
-        writeToGenFile(p);
-        DynamicConfig::genFenOnlyQuiet = true;
-    }
-#endif
-
     return bestScore;
 }
 
@@ -102,10 +91,6 @@ ScoreType Searcher::qsearch(ScoreType alpha,
             return adjustHashScore(e.s, ply); 
         }
     }
-
-#ifdef WITH_GENFILE
-    if ( DynamicConfig::genFen && DynamicConfig::genFenSearchTree && ((stats.counters[Stats::sid_nodes]+stats.counters[Stats::sid_qnodes])%DynamicConfig::genFenSkip==0)) writeToGenFile(p);
-#endif
 
     if ( qRoot && interiorNodeRecognizer<true,false,true>(p) == MaterialHash::Ter_Draw) return drawScore(); ///@todo is that gain elo ???
 
