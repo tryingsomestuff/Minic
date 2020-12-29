@@ -94,10 +94,6 @@ ScoreType Searcher::pvs(ScoreType alpha,
         }
     }
 
-#ifdef WITH_GENFILE
-    if ( DynamicConfig::genFen && DynamicConfig::genFenSearchTree && ((stats.counters[Stats::sid_nodes]+stats.counters[Stats::sid_qnodes])%DynamicConfig::genFenSkip==0) ) writeToGenFile(p);
-#endif
-
     // if entry hash is not null and entry move is valid, this is a valid TT move (we don't care about depth here !)
     bool ttHit = e.h != nullHash;
     bool validTTmove = ttHit && e.m != INVALIDMINIMOVE;

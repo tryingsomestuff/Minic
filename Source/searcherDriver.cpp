@@ -104,7 +104,7 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType 
     TimeMan::maxNodes = 0; // reset this for depth 1 to be sure to iterate at least once ...
 
     if ( DynamicConfig::level == 0 || p.halfmoves < DynamicConfig::randomPly ){ // random mover
-       bestScore = randomMover(p,pvOut,isInCheck,*this);
+       bestScore = randomMover(p,pvOut,isInCheck);
        goto pvsout;
     }
 
@@ -313,7 +313,8 @@ pvsout:
     if (isMainThread()) ThreadPool::instance().DisplayStats();
     
 #ifdef WITH_GENFILE
-    if ( isMainThread() && DynamicConfig::genFen && p.halfmoves >= DynamicConfig::randomPly && DynamicConfig::level != 0 ) writeToGenFile(p,sc,m);
+    // calling writeToGenFile at each root node
+    if ( isMainThread() && DynamicConfig::genFen && p.halfmoves >= DynamicConfig::randomPly && DynamicConfig::level != 0 ) writeToGenFile(p);
 #endif
 
     return pvOut;
