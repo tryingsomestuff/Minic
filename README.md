@@ -1,8 +1,8 @@
 ![Logo](https://raw.githubusercontent.com/tryingsomestuff/Minic/master/logo.png)
 
 # Minic
-A chess engine I made to learn chess programming.
-Compatible with both xboard/winboard and UCI.
+A chess engine I made to learn about chess programming.
+It is compatible with both xboard/winboard and UCI protocol.
 
 ## Code style
 For a year and a half Minic was (mainly) a one-file-code with very dense lines. This is of course very wrong in terms of software design... So why is it so? First reason is that Minic was first developped as a week-end project (in mid-october 2018), the quick-and-dirty way, and since then I was having fun going on this way ; being a "small" code size engine was part of the stakes in developing it. Second reason is that it helps the compilers optimize the whole code (at least that is what I though...)
@@ -28,27 +28,27 @@ is released in november 2020 (during second covid-19 confinement) as a 2 years a
 ### NNUE from release 2.47 to release 2.53 (from Stockfish implementation)
 Minic, since release 2.47, has the possibility to be build using a shameless copy of the NNUE framework of Stockfish. Integration of NNUE was done easily and I hope this can be done for any engine, especially if NNUE is release as a standalone library. New UCI parameter NNUEFile is added and shall be the full path to the network file you want to use. To build such Minic you need to activate WITH_NNUE in definition.hpp and use the build script (or make your own, but do not forget to pass -DUSE_AVX2 or whatever your hardware supports to the NNUE part ...). First test shows that MinicNNUE is around 200Elo stronger than Minic, around the level of Xiphos or Ethereal currently at short TC and maybe something like 50Elo higher at longer TC (around Komodo11). This says that a lot more can (and will!) be done inside Minic standard evaluation function !
 
-When using a NNUE network, it is important that Minic is called MinicNNUE or Minnuec as introduced by Gekkehenker.
+When using a NNUE network with this Stockfish implementation, it is important that Minic is called MinicNNUE (or Minnuec as introduced by Gekkehenker).
 MinicNNUE, won't be the official Minic, as this NNUE work to not reflect my own work and skills at all !
 
 Later on, since version 2.50, the NNUE learner from NodCHip repo has also been ported to Minic so that networks using Minic data and search can be done.
 The genFen part was not ported and in internal process to produce training is used. This include both extracting position from fixed depth game and from random position.
 
-Nets I build are available at https://github.com/tryingsomestuff/NNUE-Nets.
+Nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets.
 
 ### NNUE from release 3.00 (from Seer implementation)
 Starting from release 3.00, **Minic is not using Stockfish NNUE implementation anymore and is no more compatible with SF nets**. It was too much foreign code inside Minic to be fair, to be maintained, to be fun.
-Seer engine is offering a very well written implementation of NNUE that I borrowed and adapt to Minic. The code is more or less 400 lines. I choose to keep Stockfish code for binary sfens format as everyone is using this for now. Training code is the external tool written in Python, also from Seer repository but without any dependency to engine (not TDLeaf).
-For now, generated nets are quite weak, but that is a starting point, a new story to be written, in Minic 3.00.
+Seer engine is offering a very well written implementation of NNUE that I borrowed and adapt to Minic. The code is more or less 400 lines. I choose to keep Stockfish code for binary sfens format as everyone is using this for now. Training code is an external tool written in Python without any dependency to engine, also adapted from Seer repository and Gary Linscott pytorch trainer.
+For now, generated nets are still quite weak, but that is a starting point, a new story to be written, in Minic 3.
 
 ## Release process
-WARNING : Dist directory as been REMOVED from the repository because it was starting to be too big. Unofficial releases are not available anymore here. All (unofficial) releases are available in a new repo, here : https://github.com/tryingsomestuff/Minic-Dist
+WARNING : Dist directory as been REMOVED from the repository because it was starting to be too big. Unofficial releases are not available anymore here. All (unofficial) releases are available in a new repo, here : https://github.com/tryingsomestuff/Minic-Dist, also available as a git submodule.
 
-Some stable/official ones will still be made available as github release. I "officially release" (create a github version) as soon as I have some validated elo (at least +10).
+Some stable/official ones will still be made available as github release. I "officially release" (create a github version) as soon as I have some validated elo (at least +10) or an important bug fix.
 
 In a github release, a tester shall only use the given (attached) binaries. The full "source" package always contains everything (source code, test suites, opening suite, books, ...) using git "submodule" so that the main repository remains small. 
 
-Starting from release 2.27 new binaries are named foloowing this convention :
+Starting from release 2.27 new binaries are named following this convention :
 
 ```
 * minic_2.27_linux_x64_skylake     : fully optimized Linux64 (avx2+bmi2)   
@@ -70,12 +70,14 @@ Please note that Minic has always been a little weaker under Windows OS.
 ### CCRL
 Minic 2.46 is tested at 3054 on the CCRL 40/15 scale (http://ccrl.chessdom.com/ccrl/4040/)  
 Minic 2.33 is tested at 3159 on the CCRL BLITZ 4CPU scale (http://ccrl.chessdom.com/ccrl/404/).  
-Minic 2.43 is tested at 3116 on the CCRL BLITZ 1CPU scale (http://ccrl.chessdom.com/ccrl/404/).  
+Minic 2.43 is tested at 3116 on the CCRL BLITZ 1CPU scale (http://ccrl.chessdom.com/ccrl/404/). 
+Minic 3.02 is tested at 3154 on the CCRL BLITZ 1CPU scale (http://ccrl.chessdom.com/ccrl/404/). 
 Minic 2.48 is tested at 3025 on the CCRL FRC list (http://ccrl.chessdom.com/ccrl/404FRC/)  
 
 ### CEGT
 Minic 2.48 is tested at 2982 on the CEGT 40/4 list (http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
-MinicNNUE 2.51 using Nascent Nutrient is tested at 3216 on the CEGT 40/4 list (http://www.cegt.net/40_40%20Rating%20List/40_40%20All%20Versions/rangliste.html)
+MinicNNUE 2.51 using Nascent Nutrient is tested at 3216 on the CEGT 40/4 list (http://www.cegt.net/40_40%20Rating%20List/40_40%20All%20Versions/rangliste.html)  
+Minic 3.02 using Narcotized Nightshift is tested at 3044 on the CEGT 40/20 list (http://www.cegt.net/40_40%20Rating%20List/40_40%20All%20Versions/rangliste.html)  
 Minic 2.35 is tested at 3034 on the CEGT 40/4 MP8CPU list (http://www.cegt.net/40_4_Ratinglist/40_4_mp/rangliste.html)  
 Minic 2.07 is tested at 2935 on the CEGT 5+3 PB=ON list (http://www.cegt.net/5Plus3Rating/BestVersionsNEW/rangliste.html)  
 Minic 2.48 is tested at 2969 on the CEGT 40/15 list (http://www.cegt.net/40_40%20Rating%20List/40_40%20SingleVersion/rangliste.html)  
@@ -145,6 +147,7 @@ Other available options (depending on compilation option, see definition.hpp) ar
 * -mateFinder <"fen"> depth : same as analysis but without prunings in search
 * -pgn <file> : extraction tool to build tuning data
 * -texel <file> : run a Texel tuning session
+* -selfplay \[depth\] \[number of games\] (default are 15 and 1): launch some selfplay game with genfen activated
 * ...
 
 ## Options
@@ -171,7 +174,6 @@ Minic comes with some command line options :
 * -genFen \[ 0 or 1 \] (default is 0): activate sfen generation
 * -genFenDepth \[ 2 to 20\] (default is 8): specify depth of search for sfen generation
 * -randomPly \[0 to 20 \] (default is 0): usefull when creating training data, play this number of total random ply at the begining of the game
-* -selfplay \[depth\] \[number of games\] (default are 15 and 1): launch some selfplay game with genfen activated. 
 
 ### GUI/protocol (Xboard or UCI)
 
@@ -186,12 +188,12 @@ There are multiple ways of generating sfen data with Minic.
 pgn-extract --fencomments -Wlalg --nochecks --nomovenumbers --noresults -w500000 -N -V -o data.plain games.pgn
 ```
 Then use Minic -pgn2bin option to get a binary format sfen file. Note than position without score won't be taken into account.
-* Use Minic random mover (level = 0) and play tons of random games activating the genFen option and setting the depth of search you like with genFenDepth. This will generate a "plain" format sfen file with game results always being 0, so you will use this with lambda=1 in your trainer to be sure to don't take game outcome into account. What you will get is some genfen_XXXXXX files (one for each Minic processus, note that with cutechess if only 2 engines are playing, only 2 process will run and been reused). Those files will be in workdir directory of the engine and are in "plain" format. So after that use Minic -plain2bin on that file to get a "binary" file.
-* Use Minic "selfplay genfen" facility. In this case again, note that game result will always be draw because the file is written on the fly not at the end of the game. Again here you will obtain genfen_XXXXXX files.
+* Use Minic random mover (level = 0) and play tons of random games activating the genFen option and setting the depth of search you like with genFenDepth. This will generate a "plain" format sfen file with game results always being 0, so you will use this with lambda=1 in your trainer to be sure to don't take game outcome into account. What you will get is some genfen_XXXXXX files (one for each Minic processus, note that with cutechess if only 2 engines are playing, only 2 process will run and been reused). Those files will be in workdir directory of the engine and are in "plain" format. So after that use Minic -plain2bin on that file to get a "binary" file. Minic will generate only quiet positions (at qsearch leaf).
+* Use Minic "selfplay genfen" facility. In this case again, note that game result will always be draw because the file is written on the fly not at the end of the game. Again here you will obtain genfen_XXXXXX files. Minic will generate only quiet positions (at qsearch leaf).
 
 ## Style
 
-Moreover, Minic implements some "style" parameter that allow the user to boost or minimize effects of :
+Moreover, Minic implements some "style" parameters that allow the user to boost or minimize effects of :
 - material
 - attack
 - development
@@ -200,7 +202,7 @@ Moreover, Minic implements some "style" parameter that allow the user to boost o
 - forwardness
 - complexity (not yet implemented)
 
-Default values are 50 and a range from 0 to 100 can be used. A value of 100 will double the effect, while a value of 0 will disable the feature (it is probably not a good idea to put material awareness to 0 ...).
+Default values are 50 and a range from 0 to 100 can be used. A value of 100 will double the effect, while a value of 0 will disable the feature (it is probably not a good idea to put material awareness to 0 for instance ...).
 
 ## Thanks
 
