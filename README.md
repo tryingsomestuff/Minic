@@ -1,4 +1,4 @@
-![Logo](https://raw.githubusercontent.com/tryingsomestuff/Minic/master/logo.png)
+![Logo](https://raw.githubusercontent.com/tryingsomestuff/Minic/master/logo2.png)
 
 # Minic
 A chess engine I made to learn about chess programming.
