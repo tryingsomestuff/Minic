@@ -104,6 +104,7 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType 
     TimeMan::maxNodes = 0; // reset this for depth 1 to be sure to iterate at least once ...
 
     if ( DynamicConfig::level == 0 || p.halfmoves < DynamicConfig::randomPly ){ // random mover
+       if ( p.halfmoves < DynamicConfig::randomPly ) Logging::LogIt(Logging::logInfo) << "Randomized ply";
        bestScore = randomMover(p,pvOut,isInCheck);
        goto pvsout;
     }
@@ -135,7 +136,7 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType 
         for (unsigned int multi = 0 ; multi < DynamicConfig::multiPV && !stopFlag ; ++multi){
 
             if ( !skipMoves.empty() && isMatedScore(bestScore) ) break;
-            if (!isMainThread()){ // stockfish like thread management
+            if (!isMainThread() && !subSearch){ // stockfish like thread management
                 const int i = (id()-1)%threadSkipSize;
                 if (((depth + skipPhase[i]) / skipSize[i]) % 2) continue;
             }
@@ -316,6 +317,6 @@ pvsout:
     // calling writeToGenFile at each root node
     if ( isMainThread() && DynamicConfig::genFen && p.halfmoves >= DynamicConfig::randomPly && DynamicConfig::level != 0 ) writeToGenFile(p);
 #endif
-
+     
     return pvOut;
 }
