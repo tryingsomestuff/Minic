@@ -188,21 +188,18 @@ void Searcher::writeToGenFile(const Position & p){
     PVList pv;
     DepthType ply = 1;
     DepthType seldepth = 0;
-    //std::cout << "Qsearch on " << GetFEN(p) << std::endl;
+    cos.stopFlag = false;
     ScoreType qScore = cos.qsearchNoPruning(-10000,10000,p,ply,seldepth,&pv);
     Position pQuiet = p;
     NNUEEvaluator evaluator;
     pQuiet.associateEvaluator(evaluator);
     pQuiet.resetNNUEEvaluator(pQuiet.Evaluator());
-    //std::cout << "PV " << ToString(pv) << std::endl;
     for ( auto & m : pv){
         Position p2 = pQuiet;
         //std::cout << "Applying move " << ToString(m) << std::endl;
         if (!applyMove(p2,m,true)) break; // will always be ok because noValidation=true
         pQuiet = p2;
     }
-
-    //std::cout << "Leaf pos " << GetFEN(pQuiet) << std::endl;
 
     Move m = INVALIDMOVE;
     ScoreType s = 0, e = 0;
@@ -216,7 +213,10 @@ void Searcher::writeToGenFile(const Position & p){
         if ( std::abs(e) < 1000 ){
             seldepth = 0;
             DepthType depth(DynamicConfig::genFenDepth);
-            cos.search(pQuiet,m,depth,s,seldepth);
+            unsigned int oldRandomPly = DynamicConfig::randomPly;
+            DynamicConfig::randomPly = 0;
+            pv = cos.search(pQuiet,m,depth,s,seldepth);
+            DynamicConfig::randomPly = oldRandomPly;
         }
     }
 
