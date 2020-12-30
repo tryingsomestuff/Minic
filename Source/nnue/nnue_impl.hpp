@@ -41,7 +41,7 @@ struct Quantization{
 template <>
 struct Quantization<true>{
    static constexpr float weightMax    = 4.0f; // supposed min/max of weights values
-   static constexpr int weightScale    = 2048; // int16 scaling
+   static constexpr int weightScale    = 4096; // int16 scaling
    static constexpr int weightFactor   = (int)std::ceil(weightScale/weightMax); // quantization factor
    static constexpr int biasFactor     = weightScale*weightFactor;
    static constexpr float outFactor    = (weightFactor*weightFactor*weightMax)/600.f;
@@ -89,6 +89,7 @@ struct weights_streamer{
       file.read(single_element.data(), single_element.size());
       NT tmp{0};
       std::memcpy(&tmp, single_element.data(), single_element.size());
+      if ( Q && std::abs(tmp*Wscale) > (NT)std::numeric_limits<T>::max()) Logging::LogIt(Logging::logWarn) << "Overflow weight " << tmp << " " << (long long int)(Wscale * tmp);      
       dst[i] = Q ? T( Quantization<Q>::round(Wscale * tmp)) : tmp;
     }
     return *this;
@@ -103,8 +104,8 @@ struct weights_streamer{
       file.read(single_element.data(), single_element.size());
       NT tmp{0};
       std::memcpy(&tmp, single_element.data(), single_element.size());
+      if ( Q && std::abs(tmp*Bscale) > (NT)std::numeric_limits<T>::max()) Logging::LogIt(Logging::logWarn) << "Overflow bias " << tmp << " " << (long long int)(Bscale * tmp);
       dst[i] = Q ? T(Quantization<Q>::round(Bscale * tmp)) : tmp;
-      if ( Q && std::abs(tmp*Bscale*Quantization<Q>::weightFactor) > (NT)std::numeric_limits<T>::max()) Logging::LogIt(Logging::logWarn) << "Overflow bias " << tmp << " " << (long long int)(Bscale * tmp);
     }
     return *this;
   }
@@ -118,6 +119,7 @@ struct weights_streamer{
       file.read(single_element.data(), single_element.size());
       NT tmp{0};
       std::memcpy(&tmp, single_element.data(), single_element.size());
+      if ( Q && std::abs(tmp*Bscale) > (NT)std::numeric_limits<T>::max()) Logging::LogIt(Logging::logWarn) << "Overflow bias " << tmp << " " << (long long int)(Bscale * tmp);
       dst[i] = Q ? T(Quantization<Q>::round(Bscale * tmp)) : tmp;
     }
     return *this;
