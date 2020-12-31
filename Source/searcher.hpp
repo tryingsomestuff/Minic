@@ -63,10 +63,6 @@ struct Searcher{
 
     [[nodiscard]] ScoreType drawScore();
 
-#ifdef WITH_NNUE
-    NNUEEvaluator nnueEvaluator;
-#endif
-
     template <bool pvnode> ScoreType pvs(ScoreType alpha, 
                                          ScoreType beta, 
                                          const Position & p, 

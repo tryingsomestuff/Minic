@@ -11,10 +11,12 @@ const int skipSize[threadSkipSize]  = { 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4
 const int skipPhase[threadSkipSize] = { 0, 1, 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 6, 7 };
 }
 
+// Output following chosen protocol
 void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv, int multipv, const std::string & mark){
     const auto now = Clock::now();
     const TimeType ms = std::max((TimeType)1,(TimeType)std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count());
     getData().datas.times[depth] = ms;
+    if (subSearch) return; // no need to display stuff for subsearch
     std::stringstream str;
     const Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
     if (Logging::ct == Logging::CT_xboard) {
@@ -33,48 +35,57 @@ void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestSco
             str << " hashfull " << TT::hashFull();
         }
     }
-    if (!subSearch) Logging::LogIt(Logging::logGUI) << str.str();
+    Logging::LogIt(Logging::logGUI) << str.str();
 }
 
 PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
 
+    // we start by a copy, because position object must be mutable here.
     Position p(pp);
 #ifdef WITH_NNUE
-    // use the Searcher evaluator for the root position
-    // and reset it with the current position
+    // Create an evaluator and reset it with the current position
+    NNUEEvaluator nnueEvaluator;
     p.associateEvaluator(nnueEvaluator);
     p.resetNNUEEvaluator(nnueEvaluator); 
 #endif
 
     if ( isMainThread() ) initCaslingPermHashTable(p); // let's be sure ... ///@todo clean up this crap !!!!
 
+    // requested depth can be changed according to level or skill parameter
     DynamicConfig::level = DynamicConfig::limitStrength ? Skill::Elo2Level() : DynamicConfig::level;
     d=std::max((DepthType)1,Skill::enabled()?std::min(d,Skill::limitedDepth()):d);
 
+    // initialize basic search variable
     stopFlag = false;
     moveDifficulty = MoveDifficultyUtil::MD_std;
     startTime = Clock::now();
 
 #ifdef WITH_GENFILE
+    // open the genfen file for output if needed
     if ( DynamicConfig::genFen && id() < MAX_THREADS && ! genStream.is_open() ){
        genStream.open("genfen_" + std::to_string(::getpid()) + "_" + std::to_string(id()) + ".epd",std::ofstream::app);
     }
 #endif
 
+    // Main thread only will reset some table
     if ( isMainThread() || id() >= MAX_THREADS ){
         Logging::LogIt(Logging::logInfo) << "Search params :" ;
         Logging::LogIt(Logging::logInfo) << "requested time  " << getCurrentMoveMs() ;
-        Logging::LogIt(Logging::logInfo) << "requested depth " << (int) d ;
-        TT::age();
-        MoveDifficultyUtil::variability = 1.f;
-        if ( isMainThread() ) ThreadPool::instance().clearSearch(); // reset for all other threads !!!
+        Logging::LogIt(Logging::logInfo) << "requested depth " << (int) d;
+        if ( isMainThread()){
+           TT::age();
+           MoveDifficultyUtil::variability = 1.f; // not usefull for co-searcher threads that won't depend on time
+           ThreadPool::instance().clearSearch();  // reset data for all other threads !!!
+        }
     }
+    // other threads will wait here for start signal
     else{
         Logging::LogIt(Logging::logInfo) << "helper thread waiting ... " << id() ;
         while(startLock.load()){;}
         Logging::LogIt(Logging::logInfo) << "... go for id " << id() ;
     }
     
+    // fill "root" position stack data
     {
         EvalData data;
         ScoreType e = eval(p,data,*this);
@@ -82,6 +93,7 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType 
         stack[p.halfmoves] = {p,computeHash(p),data,e,INVALIDMINIMOVE};
     }
 
+    // initialize search results
     DepthType reachedDepth = 0;
     PVList pvOut;
     ScoreType bestScore = 0;
@@ -89,30 +101,31 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType 
 
     const bool isInCheck = isAttacked(p, kingSquare(p));
     const DepthType easyMoveDetectionDepth = 5;
-
     DepthType startDepth = 1;//std::min(d,easyMoveDetectionDepth);
+    bool fhBreak = false;
 
+    // initialize multiPV stuff
     DynamicConfig::multiPV = (Logging::ct == Logging::CT_uci?DynamicConfig::multiPV:1);
     if ( Skill::enabled() ){
         DynamicConfig::multiPV = std::max(DynamicConfig::multiPV,4u);
     }    
     std::vector<RootScores> multiPVMoves(DynamicConfig::multiPV,{INVALIDMOVE,-MATE});
 
-    bool fhBreak = false;
-
+    // handle "maxNodes" style search (will always complete depth 1 search)
     const auto maxNodes = TimeMan::maxNodes;
     TimeMan::maxNodes = 0; // reset this for depth 1 to be sure to iterate at least once ...
 
-    if ( DynamicConfig::level == 0 || p.halfmoves < DynamicConfig::randomPly ){ // random mover
+    // random mover can be forced for the few first moves of a game or be setting level to 0
+    if ( DynamicConfig::level == 0 || p.halfmoves < DynamicConfig::randomPly ){ 
        if ( p.halfmoves < DynamicConfig::randomPly ) Logging::LogIt(Logging::logInfo) << "Randomized ply";
        bestScore = randomMover(p,pvOut,isInCheck);
        goto pvsout;
     }
 
-    // only main thread here, stopflag will be triggered anyway for other threads
+    // easy move detection (shallow open window search)
+    // only main thread here (stopflag will be triggered anyway for other threads if needed)
     if ( isMainThread() && DynamicConfig::multiPV == 1 && d > easyMoveDetectionDepth+5 && maxNodes == 0 
-         && currentMoveMs < INFINITETIME && currentMoveMs > 800 && TimeMan::msecUntilNextTC > 0){
-       // easy move detection (small open window search)
+         && currentMoveMs < INFINITETIME && currentMoveMs > 1000 && TimeMan::msecUntilNextTC > 0){
        rootScores.clear();
        ScoreType easyScore = pvs<true>(-MATE, MATE, p, easyMoveDetectionDepth, 0, pvOut, seldepth, isInCheck, false, false);
        std::sort(rootScores.begin(), rootScores.end(), [](const RootScores& r1, const RootScores & r2) {return r1.s > r2.s; });
@@ -129,53 +142,58 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType 
     }
 
     // ID loop
-    for(DepthType depth = startDepth ; depth <= std::min(d,DepthType(MAX_DEPTH-6)) && !stopFlag ; ++depth ){ // -6 so that draw can be found for sure ///@todo I don't understand this -6 anymore ..
+    // using MAX_DEPTH-6 so that draw can be found for sure ///@todo I don't understand this -6 anymore ..
+    for(DepthType depth = startDepth ; depth <= std::min(d,DepthType(MAX_DEPTH-6)) && !stopFlag ; ++depth ){ 
         
         // MultiPV loop
         std::vector<MiniMove> skipMoves;
         for (unsigned int multi = 0 ; multi < DynamicConfig::multiPV && !stopFlag ; ++multi){
 
+            // No need to continue multiPV loop if a mate is found
             if ( !skipMoves.empty() && isMatedScore(bestScore) ) break;
-            if (!isMainThread() && !subSearch){ // stockfish like thread management
-                const int i = (id()-1)%threadSkipSize;
-                if (((depth + skipPhase[i]) / skipSize[i]) % 2) continue;
-            }
-            else{ 
+
+            if (isMainThread()){
                 if ( depth > 1){
                     TimeMan::maxNodes = maxNodes; // restore real value
-                    // delayed other thread start
+                    // delayed other thread start (can use a depth condition...)
                     if ( startLock.load() ){
                        Logging::LogIt(Logging::logInfo) << "Unlocking other threads";
                        startLock.store(false);
                     }
                 }
             } 
+            // stockfish like thread management (not for co-searcher)
+            else if ( !subSearch){ 
+                const int i = (id()-1)%threadSkipSize;
+                if (((depth + skipPhase[i]) / skipSize[i]) % 2) continue;
+            }
+
             Logging::LogIt(Logging::logInfo) << "Thread " << id() << " searching depth " << (int)depth;
-            PVList pvLoc;
-            ScoreType delta = (SearchConfig::doWindow && depth>4)?6+std::max(0,(20-depth)*2):MATE; // MATE not INFSCORE in order to enter the loop below once
-            ScoreType alpha = std::max(ScoreType(bestScore - delta), ScoreType (-MATE));
-            ScoreType beta  = std::min(ScoreType(bestScore + delta), MATE);
-            ScoreType score = 0;
+
+            // dynamic contempt ///@todo tune this
 #ifndef WITH_TEXEL_TUNING
             contempt = { ScoreType((p.c == Co_White ? +1 : -1) * (DynamicConfig::contempt + DynamicConfig::contemptMG)) , ScoreType((p.c == Co_White ? +1 : -1) * DynamicConfig::contempt) };
 #else
             contempt = 0;
 #endif            
-
-            // dynamic contempt ///@todo tune this
             contempt += ScoreType(std::round(25*std::tanh(bestScore/400.f)));
             Logging::LogIt(Logging::logInfo) << "Dynamic contempt " << contempt;
 
+            // initialize aspiration window loop variables
+            PVList pvLoc;
+            ScoreType delta = (SearchConfig::doWindow && depth>4)?6+std::max(0,(20-depth)*2):MATE; // MATE not INFSCORE in order to enter the loop below once
+            ScoreType alpha = std::max(ScoreType(bestScore - delta), ScoreType (-MATE));
+            ScoreType beta  = std::min(ScoreType(bestScore + delta), MATE);
+            ScoreType score = 0;
             DepthType windowDepth = depth;
 
             // Aspiration loop
             while( !stopFlag ){
 
                 pvLoc.clear();
-                //stack[p.halfmoves].h = computeHash(p); ///@todo this seems useless ?
                 score = pvs<true>(alpha, beta, p, windowDepth, 0, pvLoc, seldepth, isInCheck, false, false, skipMoves.empty()?nullptr:&skipMoves);
                 if ( stopFlag ) break;
-                delta += 2 + delta/2; // from xiphos ...
+                delta += 2 + delta/2; // formula from xiphos ...
                 if (alpha > -MATE && score <= alpha) {
                     beta  = std::min(MATE,ScoreType((alpha + beta)/2));
                     alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) );
@@ -242,7 +260,7 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType 
                     pvLoc = pv2;
                 }
 
-                // fill skipmove for next multiPV iteration, and backup multiPV info
+                // In multiPV mode, fill skipmove for next multiPV iteration, and backup multiPV info
                 if ( !pvLoc.empty() && DynamicConfig::multiPV > 1){
                     skipMoves.push_back(Move2MiniMove(pvLoc[0]));
                     multiPVMoves[multi].m = pvLoc[0];
