@@ -12,7 +12,7 @@ TimeType Searcher::getCurrentMoveMs() {
         case MoveDifficultyUtil::MD_forced:      ret = (ret >> 4); break; // only one move in movelist !
         case MoveDifficultyUtil::MD_easy:        ret = (ret >> 3); break; // a short depth open search shows one move is far behind others
         case MoveDifficultyUtil::MD_std:         break; // nothing special
-        case MoveDifficultyUtil::MD_hardAttack:  break; // score is decreasing but still quite high
+        case MoveDifficultyUtil::MD_hardAttack:  ret = (std::min(TimeType(TimeMan::msecUntilNextTC*MoveDifficultyUtil::maxStealFraction), ret*MoveDifficultyUtil::emergencyFactor)); break; // something bad is happening
         case MoveDifficultyUtil::MD_hardDefense: ret = (std::min(TimeType(TimeMan::msecUntilNextTC*MoveDifficultyUtil::maxStealFraction), ret*MoveDifficultyUtil::emergencyFactor)); break; // something bad is happening
         }
     }
@@ -126,6 +126,7 @@ void Searcher::clearGame(){
      killerT.initKillers();
      historyT.initHistory();
      counterT.initCounter();
+     previousBest = INVALIDMOVE;
 }
 
 void Searcher::clearSearch(bool forceCounterClear){
@@ -134,6 +135,7 @@ void Searcher::clearSearch(bool forceCounterClear){
      killerT.initKillers();
      historyT.initHistory(!forceCounterClear);
      counterT.initCounter();
+     previousBest = INVALIDMOVE;
 }
 
 bool Searcher::getPawnEntry(Hash h, PawnEntry *& pe){

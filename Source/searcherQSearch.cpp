@@ -179,7 +179,7 @@ ScoreType Searcher::qsearch(ScoreType alpha,
 
     MoveList moves;
     if ( isInCheck ) MoveGen::generate<MoveGen::GP_all>(p,moves); ///@todo generate only evasion !
-    else             MoveGen::generate<MoveGen::GP_cap>(p,moves);
+    else             MoveGen::generate<MoveGen::GP_cap>(p,moves); ///@todo generate only recapture if qly > 5
 
     const Square recapture = VALIDMOVE(p.lastMove) ? Move2To(p.lastMove) : INVALIDSQUARE;
     const bool onlyRecapture = qply > 5 && isCapture(p.lastMove) && recapture != INVALIDSQUARE;
