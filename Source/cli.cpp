@@ -311,15 +311,6 @@ int cliManagement(std::string cli, int argc, char ** argv){
         for (auto & t : posList) {
             Position p;
             readFEN(t.fen, p, true);
-	    /*
-            Logging::LogIt(Logging::logError) << "============================== " << t.fen << " -";
-            bool b = ThreadPool::instance().main().SEE_GE(p,t.m,t.threshold-1);
-            if ( !b ) Logging::LogIt(Logging::logError) << "wrong SEE value - " << ToString(p) << "\n" << ToString(t.m);
-
-            Logging::LogIt(Logging::logError) << "============================== " << t.fen << " +";
-            b = ThreadPool::instance().main().SEE_GE(p,t.m,t.threshold+1);
-            if ( b ) Logging::LogIt(Logging::logError)  << "wrong SEE value + " << ToString(p) << "\n" << ToString(t.m);
-            */
             Logging::LogIt(Logging::logError) << "============================== " << t.fen << " ==";
             const ScoreType s = ThreadPool::instance().main().SEE(p,t.m);
             bool b = s == t.threshold;

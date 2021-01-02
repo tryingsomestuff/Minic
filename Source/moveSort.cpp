@@ -23,7 +23,7 @@ void MoveSorter::computeScore(Move & m)const{
     const Square from = Move2From(m); assert(squareOK(from));
     const Square to   = Move2To(m); assert(squareOK(to));
     ScoreType s = MoveScoring[t];
-    if ( ply == 0 && sameMove(context.previousBest,m)) s += 20000; // previous root best
+    if ( ply == 0 && sameMove(context.previousBest,m)) s += 15000; // previous root best at root
     else if (e && sameMove(e->m,m)) s += 15000; // TT move
     else{
         //if (isInCheck && from == p.king[C]) s += 10000; // king evasion
