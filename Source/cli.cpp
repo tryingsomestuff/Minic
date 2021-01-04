@@ -117,8 +117,7 @@ Move analyze(const Position & p, DepthType depth, bool openBenchOutput = false){
 
 void selfPlay(DepthType depth){
     DynamicConfig::genFen = true;
-    DynamicConfig::FRC = true;
-    Position p(chess960::positions[std::rand()%960]);
+    Position p(DynamicConfig::FRC ? chess960::positions[std::rand()%960] : startPosition);
     NNUEEvaluator evaluator;
     p.associateEvaluator(evaluator);
     p.resetNNUEEvaluator(p.Evaluator());

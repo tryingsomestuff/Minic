@@ -229,7 +229,7 @@ void Searcher::writeToGenFile(const Position & p){
     cos.subSearch = false;
     // end of sub search
 
-    if ( m != INVALIDMOVE && pQuiet.halfmoves >= DynamicConfig::randomPly){
+    if ( m != INVALIDMOVE && pQuiet.halfmoves >= DynamicConfig::randomPly && std::abs(s) < 2000){
 
         /*
         // epd format
