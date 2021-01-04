@@ -67,6 +67,8 @@ struct weights_streamer{
   
   template<typename T, bool Q>
   weights_streamer<NT>& streamW(T* dst, const size_t request){
+    float minW = std::numeric_limits<float>::max();
+    float maxW = std::numeric_limits<float>::min();
     std::array<char, sizeof(NT)> single_element{};
     const float Wscale = Quantization<Q>::weightFactor;
     Logging::LogIt(Logging::logInfo) << "Reading inner weight";
@@ -76,12 +78,17 @@ struct weights_streamer{
       std::memcpy(&tmp, single_element.data(), single_element.size());
       dst[i] = Q? T( Quantization<Q>::round(Wscale * std::clamp(tmp,NT(-Quantization<Q>::weightMax),NT(Quantization<Q>::weightMax)) )) : tmp;
       if ( Q && std::abs(tmp) > (NT)Quantization<Q>::weightMax) Logging::LogIt(Logging::logWarn) << "Clamped weight " << tmp << " " << int(dst[i]);
+      minW = std::min(minW,tmp);
+      maxW = std::max(maxW,tmp);
     }
+    Logging::LogIt(Logging::logInfo) << "Weight in [" << minW << ", " << maxW << "]";
     return *this;
   }
 
   template<typename T, bool Q>
   weights_streamer<NT> & streamWI(T* dst, const size_t request){
+    float minW = std::numeric_limits<float>::max();
+    float maxW = std::numeric_limits<float>::min();
     std::array<char, sizeof(NT)> single_element{};
     const float Wscale = Quantization<Q>::weightScale;
     Logging::LogIt(Logging::logInfo) << "Reading input weight";
@@ -91,12 +98,17 @@ struct weights_streamer{
       std::memcpy(&tmp, single_element.data(), single_element.size());
       if ( Q && std::abs(tmp*Wscale) > (NT)std::numeric_limits<T>::max()) Logging::LogIt(Logging::logWarn) << "Overflow weight " << tmp << " " << (long long int)(Wscale * tmp);      
       dst[i] = Q ? T( Quantization<Q>::round(Wscale * tmp)) : tmp;
+      minW = std::min(minW,tmp);
+      maxW = std::max(maxW,tmp);
     }
+    Logging::LogIt(Logging::logInfo) << "Weight in [" << minW << ", " << maxW << "]";
     return *this;
   }
 
   template<typename T, bool Q>
   weights_streamer<NT> & streamB(T* dst, const size_t request){
+    float minB = std::numeric_limits<float>::max();
+    float maxB = std::numeric_limits<float>::min();
     std::array<char, sizeof(NT)> single_element{};
     const float Bscale = Quantization<Q>::biasFactor;
     Logging::LogIt(Logging::logInfo) << "Reading inner bias";
@@ -106,12 +118,17 @@ struct weights_streamer{
       std::memcpy(&tmp, single_element.data(), single_element.size());
       if ( Q && std::abs(tmp*Bscale) > (NT)std::numeric_limits<T>::max()) Logging::LogIt(Logging::logWarn) << "Overflow bias " << tmp << " " << (long long int)(Bscale * tmp);
       dst[i] = Q ? T(Quantization<Q>::round(Bscale * tmp)) : tmp;
+      minB = std::min(minB,tmp);
+      maxB = std::max(maxB,tmp);
     }
+    Logging::LogIt(Logging::logInfo) << "Bias in [" << minB << ", " << maxB << "]";
     return *this;
   }
 
   template<typename T, bool Q>
   weights_streamer<NT> & streamBI(T* dst, const size_t request){
+    float minB = std::numeric_limits<float>::max();
+    float maxB = std::numeric_limits<float>::min();
     std::array<char, sizeof(NT)> single_element{};
     const float Bscale = Quantization<Q>::weightScale;
     Logging::LogIt(Logging::logInfo) << "Reading input bias";
@@ -121,7 +138,10 @@ struct weights_streamer{
       std::memcpy(&tmp, single_element.data(), single_element.size());
       if ( Q && std::abs(tmp*Bscale) > (NT)std::numeric_limits<T>::max()) Logging::LogIt(Logging::logWarn) << "Overflow bias " << tmp << " " << (long long int)(Bscale * tmp);
       dst[i] = Q ? T(Quantization<Q>::round(Bscale * tmp)) : tmp;
+      minB = std::min(minB,tmp);
+      maxB = std::max(maxB,tmp);
     }
+    Logging::LogIt(Logging::logInfo) << "Bias in [" << minB << ", " << maxB << "]";
     return *this;
   }  
 
