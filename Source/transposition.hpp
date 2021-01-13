@@ -28,7 +28,7 @@ enum Bound : unsigned char{ B_none = 0, B_alpha = 1, B_beta = 2, B_exact = 3, B_
 #endif  // defined(__clang__)
 #pragma pack(push, 1)
 struct Entry{
-    Entry():m(INVALIDMINIMOVE),h(0),s(0),e(0),b(B_none),d(-2)/*,generation(curGen)*/{}
+    Entry():m(INVALIDMINIMOVE),h(nullHash),s(0),e(0),b(B_none),d(-2)/*,generation(curGen)*/{}
     Entry(Hash _h, Move _m, ScoreType _s, ScoreType _e, Bound _b, DepthType _d) : h(Hash64to32(_h)), m(Move2MiniMove(_m)), s(_s), e(_e), /*generation(curGen),*/ b(_b), d(_d){}
     MiniHash h;            //32
     ScoreType s, e;        //16 + 16

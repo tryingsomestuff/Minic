@@ -127,7 +127,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
             evalScore = e.e;
             // look for a material match (to get game phase)
             const Hash matHash = MaterialHash::getMaterialHash(p.mat);
-            if ( matHash ){
+            if ( matHash != nullHash ){
                ++stats.counters[Stats::sid_materialTableHits];
                const MaterialHash::MaterialHashEntry & MEntry = MaterialHash::materialHashTable[matHash];
                data.gp = MEntry.gp;

@@ -143,7 +143,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
 
     // Material evaluation
     const Hash matHash = MaterialHash::getMaterialHash(p.mat);
-    if ( matHash ){
+    if ( matHash != nullHash ){
        ++context.stats.counters[Stats::sid_materialTableHits];
        // Hash data
        const MaterialHash::MaterialHashEntry & MEntry = MaterialHash::materialHashTable[matHash];

@@ -165,7 +165,7 @@ typedef int16_t  ScoreType;
 typedef int64_t  TimeType;
 typedef unsigned char  GenerationType;
 
-const Hash nullHash = 0ull;
+const Hash nullHash = 0ull; //std::numeric_limits<MiniHash>::max(); // use MiniHash to allow same "null" value for Hash(64) and MiniHash(32)
 const BitBoard emptyBitBoard = 0ull;
 
 enum GamePhase { MG=0, EG=1, GP_MAX=2 };

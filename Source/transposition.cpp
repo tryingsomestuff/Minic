@@ -44,7 +44,7 @@ void clearTT() {
 int hashFull(){
     unsigned long long count = 0;
     const unsigned int samples = 1023*64;
-    for (unsigned int k = 0; k < samples; ++k) if ( table[(k*67)%ttSize].h ) ++count;
+    for (unsigned int k = 0; k < samples; ++k) if ( table[(k*67)%ttSize].h != nullHash ) ++count;
     return int((count*1000)/samples);
 }
 
@@ -66,7 +66,7 @@ void prefetch(Hash h) {
 // will return true only if depth is enough
 // e.h is nullHash is the TT entry is not usable
 bool getEntry(Searcher & context, const Position & p, Hash h, DepthType d, Entry & e) {
-    assert(h > 0);
+    assert(h != nullHash);
     assert((h&(ttSize-1))==(h%ttSize));
     if ( DynamicConfig::disableTT ) return false;
     e = table[h&(ttSize-1)]; // update entry immediatly to avoid further race condition and invalidate it later if needed
@@ -87,7 +87,7 @@ bool getEntry(Searcher & context, const Position & p, Hash h, DepthType d, Entry
 
 // always replace
 void setEntry(Searcher & context, Hash h, Move m, ScoreType s, ScoreType eval, Bound b, DepthType d){
-    assert(h > 0);
+    assert(h != nullHash); // can really happen in fact ... but rarely
     if ( DynamicConfig::disableTT ) return;
     Entry e(h,m,s,eval,b,d);
     e.h ^= e._data;
