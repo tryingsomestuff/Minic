@@ -12,7 +12,7 @@ TimeType Searcher::getCurrentMoveMs() {
         case MoveDifficultyUtil::MD_forced:      ret = (ret >> 4); break; // only one move in movelist !
         case MoveDifficultyUtil::MD_easy:        ret = (ret >> 3); break; // a short depth open search shows one move is far behind others
         case MoveDifficultyUtil::MD_std:         break; // nothing special
-        case MoveDifficultyUtil::MD_hardAttack:  ret = (std::min(TimeType(TimeMan::msecUntilNextTC*MoveDifficultyUtil::maxStealFraction), ret*MoveDifficultyUtil::emergencyFactor)); break; // something bad is happening
+        case MoveDifficultyUtil::MD_hardAttack:  break; // score is decreasing but still quite high // ret = (std::min(TimeType(TimeMan::msecUntilNextTC*MoveDifficultyUtil::maxStealFraction), ret*MoveDifficultyUtil::emergencyFactor)); break; // something bad is happening
         case MoveDifficultyUtil::MD_hardDefense: ret = (std::min(TimeType(TimeMan::msecUntilNextTC*MoveDifficultyUtil::maxStealFraction), ret*MoveDifficultyUtil::emergencyFactor)); break; // something bad is happening
         }
     }
@@ -117,7 +117,7 @@ void Searcher::initPawnTable(){
 }
 
 void Searcher::clearPawnTT() {
-    for (unsigned int k = 0; k < ttSizePawn; ++k) tablePawn[k].h = 0;
+    for (unsigned int k = 0; k < ttSizePawn; ++k) tablePawn[k].h = nullHash;
 }
 
 void Searcher::clearGame(){
@@ -139,7 +139,7 @@ void Searcher::clearSearch(bool forceCounterClear){
 }
 
 bool Searcher::getPawnEntry(Hash h, PawnEntry *& pe){
-    assert(h > 0);
+    assert(h != nullHash);
     PawnEntry & _e = tablePawn[h&(ttSizePawn-1)];
     pe = &_e;
     if ( _e.h != Hash64to32(h) ) return false;

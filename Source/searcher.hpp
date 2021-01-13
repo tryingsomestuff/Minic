@@ -143,7 +143,7 @@ struct Searcher{
         BitBoard openFiles        = emptyBitBoard;
         EvalScore score           = {0,0};
         ScoreType danger[2]       = {0,0};
-        MiniHash h                = 0;
+        MiniHash h                = nullHash;
         inline void reset(){
             score = {0,0};
             danger[Co_White] = 0;   

@@ -108,7 +108,7 @@ ScoreType Searcher::qsearch(ScoreType alpha,
             evalScore = e.e;
             /*
             const Hash matHash = MaterialHash::getMaterialHash(p.mat);
-            if ( matHash ){
+            if ( matHash != nullHash){
                ++stats.counters[Stats::sid_materialTableHits];
                const MaterialHash::MaterialHashEntry & MEntry = MaterialHash::materialHashTable[matHash];
                data.gp = MEntry.gp;
