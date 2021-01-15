@@ -31,7 +31,7 @@ struct Quantization{
    static constexpr int weightFactor = 1;
    static constexpr int biasFactor   = 1;
    static constexpr float outFactor  = 1.f/600.f;
-   static constexpr float round(const float &x){return x;}
+   static float round(const float &x){return x;}
    typedef float WT;
    typedef float WIT;
    typedef float BT;
@@ -42,10 +42,10 @@ template <>
 struct Quantization<true>{
    static constexpr float weightMax    = 4.0f; // supposed min/max of weights values
    static constexpr int weightScale    = 4096; // int16 scaling
-   static constexpr int weightFactor   = (int)std::ceil(weightScale/weightMax); // quantization factor
+   static constexpr int weightFactor   = (int)(weightScale/weightMax); // quantization factor
    static constexpr int biasFactor     = weightScale*weightFactor;
    static constexpr float outFactor    = (weightFactor*weightFactor*weightMax)/600.f;
-   static constexpr float round(const float & x){return std::round(x);}
+   static float round(const float & x){return std::round(x);}
    typedef int16_t WT;
    typedef int16_t WIT;
    typedef int32_t BT;
