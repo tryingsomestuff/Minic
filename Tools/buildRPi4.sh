@@ -3,17 +3,20 @@ dir=$(readlink -f $(dirname $0)/..)
 
 cd $dir
 
+export CXX=/opt/cross-pi-gcc/bin/arm-linux-gnueabihf-g++
+export CC=/opt/cross-pi-gcc/bin/arm-linux-gnueabihf-gcc
+
 FATHOM_PRESENT=0
 if [ -e Fathom/src/tbprobe.h ]; then
    FATHOM_PRESENT=1
    echo "found Fathom lib, trying to build"
-   $dir/Tools/buildFathomArm.sh "$@"
+   $dir/Tools/buildFathomRPi4.sh "$@"
 fi
 
 mkdir -p $dir/Dist/Minic3
 
 v="dev"
-n="-fopenmp-simd"
+n=""
 
 if [ -n "$1" ] ; then
    v=$1
@@ -25,20 +28,20 @@ if [ -n "$1" ] ; then
    shift
 fi
 
-OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto --std=c++17 $n -Wno-unknown-pragmas"
+OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto --std=c++17 $n -Wno-unknown-pragmas -DWITHOUT_FILESYSTEM"
 
 if [ $FATHOM_PRESENT = "1" ]; then
-   lib=fathom_${v}_android.o
+   lib=fathom_${v}_rpi4.o
    OPT="$OPT $dir/Fathom/src/$lib -I$dir/Fathom/src"
 fi
 
-$dir/android/bin/arm-linux-androideabi-clang++ -v
+$CXX -v
 echo "version $v"
-exe=minic_${v}_android
+exe=minic_${v}_rpi4
 echo "Building $exe"
 echo $OPT
 
 STANDARDSOURCE="Source/*.cpp Source/nnue/learn/*.cpp"
 
-$dir/android/bin/arm-linux-androideabi-clang++ $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $dir/Dist/Minic3/$exe -static-libgcc -static-libstdc++ 
+$CXX $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $dir/Dist/Minic3/$exe -static-libgcc -static-libstdc++ -lpthread
 

@@ -15,4 +15,5 @@ $dir/buildGW32.sh $v "-march=pentium2"
 #$dir/buildGW32.sh $v "-march=nehalem" 
 #$dir/buildGW32.sh $v "-march=skylake" 
 
-$dir/buildArm.sh $v "-DUSE_NEON"
+$dir/buildAndroid.sh $v 
+$dir/buildRPi4.sh $v 
