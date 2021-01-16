@@ -68,11 +68,11 @@ Please note that Minic has always been a little weaker under Windows OS.
 ## Strength
 
 ### CCRL
-Minic 2.46 is tested at 3054 on the CCRL 40/15 scale (http://ccrl.chessdom.com/ccrl/4040/)  
-Minic 2.33 is tested at 3159 on the CCRL BLITZ 4CPU scale (http://ccrl.chessdom.com/ccrl/404/).  
-Minic 2.43 is tested at 3116 on the CCRL BLITZ 1CPU scale (http://ccrl.chessdom.com/ccrl/404/). 
-Minic 3.02 is tested at 3154 on the CCRL BLITZ 1CPU scale (http://ccrl.chessdom.com/ccrl/404/). 
-Minic 2.48 is tested at 3025 on the CCRL FRC list (http://ccrl.chessdom.com/ccrl/404FRC/)  
+Minic 2.46 is tested at 3054 on the [CCRL 40/15 scale]http://ccrl.chessdom.com/ccrl/4040/)  
+Minic 2.33 is tested at 3159 on the [CCRL BLITZ 4CPU scale](http://ccrl.chessdom.com/ccrl/404/)  
+Minic 2.43 is tested at 3116 on the [CCRL BLITZ 1CPU scale]http://ccrl.chessdom.com/ccrl/404/)  
+Minic 3.02 is tested at 3154 on the [CCRL BLITZ 1CPU scale](http://ccrl.chessdom.com/ccrl/404/)  
+Minic 2.48 is tested at 3025 on the [CCRL FRC list](http://ccrl.chessdom.com/ccrl/404FRC/)  
 
 ### CEGT
 Minic 2.48 is tested at 2982 on the CEGT 40/4 list (http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
