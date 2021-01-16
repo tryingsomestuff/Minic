@@ -56,7 +56,7 @@ def main():
     t_set_num_threads(args.threads)
 
   tb_logger = pl_loggers.TensorBoardLogger('logs/')
-  checkpoint_callback = pl.callbacks.ModelCheckpoint(save_last=True)
+  checkpoint_callback = pl.callbacks.ModelCheckpoint(save_last=True,save_top_k=-1)
   trainer = pl.Trainer.from_argparse_args(args, callbacks=[checkpoint_callback], logger=tb_logger, profiler='advanced')
 
   main_device = trainer.root_device if trainer.root_gpu is None else 'cuda:' + str(trainer.root_gpu)

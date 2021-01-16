@@ -10,14 +10,14 @@ if [ -n "$1" ] ; then
    shift
 fi
 
-$dir/android/bin/arm-linux-androideabi-clang++ -v
+$CC -v
 
 echo "version $v"
 
-lib=fathom_${v}_android.o
+lib=fathom_${v}_rpi4.o
 echo "Building $lib"
 
 OPT="-Wall -Wno-char-subscripts $d -DNDEBUG -O3 -flto -I."
-$dir/android/bin/arm-linux-androideabi-clang++ -c $OPT tbprobe.c -o $lib -static-libgcc -static-libstdc++ 
+$CC -c $OPT tbprobe.c -o $lib -static-libgcc -static-libstdc++ 
 
 cd -
