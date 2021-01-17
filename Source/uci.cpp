@@ -103,21 +103,26 @@ namespace UCI {
                         TimeMan::isUCIAnalysis = false;
 
                         std::string param;
+                        bool noParam = true;
                         while (iss >> param) {
                             Logging::LogIt(Logging::logInfo) << "received parameter " << param;
-                            if      (param == "infinite")    { TimeMan::msecPerMove = INFINITETIME; TimeMan::isUCIAnalysis = true;}
-                            else if (param == "depth")       { int d = 0;  iss >> d; COM::depth = d; TimeMan::msecPerMove = INFINITETIME;}
-                            else if (param == "movetime")    { iss >> TimeMan::msecPerMove; }
-                            else if (param == "nodes")       { iss >> TimeMan::maxNodes; }
+                            if      (param == "infinite")    { noParam = false; TimeMan::msecPerMove = INFINITETIME; TimeMan::isUCIAnalysis = true;}
+                            else if (param == "depth")       { noParam = false; int d = 0;  iss >> d; COM::depth = d; TimeMan::msecPerMove = INFINITETIME;}
+                            else if (param == "movetime")    { noParam = false; iss >> TimeMan::msecPerMove; }
+                            else if (param == "nodes")       { noParam = false; iss >> TimeMan::maxNodes; }
                             else if (param == "searchmoves") { Logging::LogIt(Logging::logGUI) << "info string " << param << " not implemented yet"; }
-                            else if (param == "wtime")       { int t; iss >> t; if (COM::position.c == Co_White) { TimeMan::msecUntilNextTC = t; TimeMan::isDynamic = true; }}
-                            else if (param == "btime")       { int t; iss >> t; if (COM::position.c == Co_Black) { TimeMan::msecUntilNextTC = t; TimeMan::isDynamic = true; }}
+                            else if (param == "wtime")       { noParam = false; int t; iss >> t; if (COM::position.c == Co_White) { TimeMan::msecUntilNextTC = t; TimeMan::isDynamic = true; }}
+                            else if (param == "btime")       { noParam = false; int t; iss >> t; if (COM::position.c == Co_Black) { TimeMan::msecUntilNextTC = t; TimeMan::isDynamic = true; }}
                             else if (param == "winc" )       { int t; iss >> t; if (COM::position.c == Co_White) { TimeMan::msecInc = t; TimeMan::isDynamic = true; }}
                             else if (param == "binc" )       { int t; iss >> t; if (COM::position.c == Co_Black) { TimeMan::msecInc = t; TimeMan::isDynamic = true; }}
-                            else if (param == "movestogo")   { int t; iss >> t; TimeMan::moveToGo = t; TimeMan::isDynamic = true; }
+                            else if (param == "movestogo")   { noParam = false; int t; iss >> t; TimeMan::moveToGo = t; TimeMan::isDynamic = true; }
                             else if (param == "ponder")      { if (TimeMan::msecUntilNextTC > 200 ) COM::ponder = COM::p_on; TimeMan::isUCIPondering = true;}
                             else if (param == "mate")        { int d = 0;  iss >> d; COM::depth = d; DynamicConfig::mateFinder = true; TimeMan::msecPerMove = INFINITETIME; }
                             else                             { Logging::LogIt(Logging::logGUI) << "info string " << param << " not implemented"; }
+                        }
+                        if ( noParam ){
+                           Logging::LogIt(Logging::logWarn) << "no parameters given for go command, going for a depth 10 search ...";    
+                            COM::depth = 10; TimeMan::msecPerMove = INFINITETIME;
                         }
                         Logging::LogIt(Logging::logInfo) << "uci search launched";
                         COM::thinkAsync(COM::st_searching);
