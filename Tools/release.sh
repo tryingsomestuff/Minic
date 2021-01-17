@@ -12,8 +12,9 @@ $dir/buildGW.sh $v "-march=nehalem"
 $dir/buildGW.sh $v "-march=skylake" 
 
 $dir/buildGW32.sh $v "-march=pentium2" 
-#$dir/buildGW32.sh $v "-march=nehalem" 
-#$dir/buildGW32.sh $v "-march=skylake" 
+##$dir/buildGW32.sh $v "-march=nehalem" 
+##$dir/buildGW32.sh $v "-march=skylake" 
 
 $dir/buildAndroid.sh $v 
-$dir/buildRPi4.sh $v 
+$dir/buildRPi32.sh $v 
+$dir/buildRPi64.sh $v 
