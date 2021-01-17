@@ -27,7 +27,7 @@ void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestSco
     }
     else if (Logging::ct == Logging::CT_uci) {
         const std::string multiPVstr = DynamicConfig::multiPV > 1 ? (" multipv " + std::to_string(multipv)) : "";
-        str << "info" << multiPVstr << " depth " << int(depth) << " score " << UCI::uciScore(bestScore) << " time " << ms << " nodes " << nodeCount << " nps " << Counter(nodeCount / (ms / 1000.f)) << " seldepth " << (int)seldepth << " pv " << ToString(pv) << " tbhits " << ThreadPool::instance().counter(Stats::sid_tbHit1) + ThreadPool::instance().counter(Stats::sid_tbHit2);
+        str << "info" << multiPVstr << " depth " << int(depth) << " score " << UCI::uciScore(bestScore) << " time " << ms << " nodes " << nodeCount << " nps " << Counter(nodeCount / (ms / 1000.f)) << " seldepth " << (int)seldepth << " tbhits " << ThreadPool::instance().counter(Stats::sid_tbHit1) + ThreadPool::instance().counter(Stats::sid_tbHit2) << " pv " << ToString(pv);
         static auto lastHashFull = Clock::now();
         if ( (int)std::chrono::duration_cast<std::chrono::milliseconds>(now - lastHashFull).count() > 500
               && (TimeType)std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count()*2)) < ThreadPool::instance().main().getCurrentMoveMs() ){
