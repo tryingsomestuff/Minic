@@ -219,13 +219,13 @@ namespace Options {
        GETOPT(randomOpen,       unsigned int)
        GETOPT(limitStrength,    bool)
        GETOPT(strength,         int)
+       GETOPT(moveOverHead,     unsigned int)
 #ifdef WITH_SYZYGY
        GETOPT(syzygyPath,       std::string)
 #endif
 #ifdef WITH_NNUE
        //GETOPT(useNNUE,          bool)         
        GETOPT(NNUEFile,         std::string)
-       GETOPT(skipLoadingEval,  bool)
        GETOPT(forceNNUE,        bool)
        
 #endif

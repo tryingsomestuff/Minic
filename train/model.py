@@ -68,5 +68,5 @@ class NNUE(pl.LightningModule):
     self.step_(batch, batch_idx, 'test_loss')
 
   def configure_optimizers(self):
-    optimizer = torch.optim.Adadelta(self.parameters(), lr=1) # , weight_decay=1e-5 todo try
+    optimizer = torch.optim.Adadelta(self.parameters(), lr=0.5) # , weight_decay=1e-5 todo try
     return optimizer

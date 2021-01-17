@@ -24,7 +24,6 @@ namespace DynamicConfig{
     std::string NNUEFile     = "";
     bool genFen              = false;
     unsigned int genFenDepth = 8;
-    bool skipLoadingEval     = false;
     unsigned int randomPly   = 0;
     unsigned int moveOverHead= 50;
 

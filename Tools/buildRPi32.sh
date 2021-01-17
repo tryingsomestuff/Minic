@@ -3,14 +3,14 @@ dir=$(readlink -f $(dirname $0)/..)
 
 cd $dir
 
-export CXX=/opt/cross-pi-gcc/bin/arm-linux-gnueabihf-g++
-export CC=/opt/cross-pi-gcc/bin/arm-linux-gnueabihf-gcc
+export CXX=arm-linux-gnueabihf-g++
+export CC=arm-linux-gnueabihf-gcc
 
 FATHOM_PRESENT=0
 if [ -e Fathom/src/tbprobe.h ]; then
    FATHOM_PRESENT=1
    echo "found Fathom lib, trying to build"
-   $dir/Tools/buildFathomRPi4.sh "$@"
+   $dir/Tools/buildFathomRPi32.sh "$@"
 fi
 
 mkdir -p $dir/Dist/Minic3
@@ -31,13 +31,13 @@ fi
 OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto --std=c++17 $n -Wno-unknown-pragmas -DWITHOUT_FILESYSTEM"
 
 if [ $FATHOM_PRESENT = "1" ]; then
-   lib=fathom_${v}_rpi4.o
+   lib=fathom_${v}_linux_x32_armv7.o
    OPT="$OPT $dir/Fathom/src/$lib -I$dir/Fathom/src"
 fi
 
 $CXX -v
 echo "version $v"
-exe=minic_${v}_rpi4
+exe=minic_${v}_linux_x32_armv7
 echo "Building $exe"
 echo $OPT
 
