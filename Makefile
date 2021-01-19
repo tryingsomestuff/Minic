@@ -8,8 +8,7 @@ config:
 	chmod +x $(ROOT_DIR)/Tools/*.sh
 
 fathom:
-	echo rm -rf $(ROOT_DIR)/Fathom
-	echo git clone https://github.com/jdart1/Fathom $(ROOT_DIR)/Fathom
+	git submodule update --init -- Fathom
 
 release: config fathom
 	$(ROOT_DIR)/Tools/release.sh
