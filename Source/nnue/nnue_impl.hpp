@@ -26,30 +26,30 @@ namespace nnue{
 
 template<bool Q>
 struct Quantization{
-   static constexpr float weightMax  = 100.0f;
+   typedef float WT;
+   typedef float WIT;
+   typedef float BT;
+   typedef float BIT;   
+   static constexpr float weightMax  = 100.0f; // dummy big value
    static constexpr int weightScale  = 1;
    static constexpr int weightFactor = 1;
    static constexpr int biasFactor   = 1;
    static constexpr float outFactor  = 1.f/600.f;
    static float round(const float &x){return x;}
-   typedef float WT;
-   typedef float WIT;
-   typedef float BT;
-   typedef float BIT;
 };
 
 template <>
 struct Quantization<true>{
-   static constexpr float weightMax    = 4.0f; // supposed min/max of weights values
-   static constexpr int weightScale    = 4096; // int16 scaling
+   typedef int16_t WIT;
+   typedef int8_t WT;
+   typedef int32_t BIT;  
+   typedef int32_t BT;
+   static constexpr float weightMax    = 2.0f; // supposed min/max of weights values
+   static constexpr int weightScale    = std::numeric_limits<WT>::max();
    static constexpr int weightFactor   = (int)(weightScale/weightMax); // quantization factor
    static constexpr int biasFactor     = weightScale*weightFactor;
    static constexpr float outFactor    = (weightFactor*weightFactor*weightMax)/600.f;
    static float round(const float & x){return std::round(x);}
-   typedef int16_t WT;
-   typedef int16_t WIT;
-   typedef int32_t BT;
-   typedef int32_t BIT;
 };
 
 inline void quantizationInfo(){
@@ -76,10 +76,17 @@ struct weights_streamer{
       file.read(single_element.data(), single_element.size());
       NT tmp{0};
       std::memcpy(&tmp, single_element.data(), single_element.size());
-      dst[i] = Q? T( Quantization<Q>::round(Wscale * std::clamp(tmp,NT(-Quantization<Q>::weightMax),NT(Quantization<Q>::weightMax)) )) : tmp;
-      if ( Q && std::abs(tmp) > (NT)Quantization<Q>::weightMax) Logging::LogIt(Logging::logWarn) << "Clamped weight " << tmp << " " << int(dst[i]);
       minW = std::min(minW,tmp);
       maxW = std::max(maxW,tmp);
+      if ( Q && std::abs(tmp*Wscale) > (NT)std::numeric_limits<T>::max()){
+        NT tmp2 = tmp;
+        tmp = std::clamp(tmp2*Wscale,(NT)std::numeric_limits<T>::min(),(NT)std::numeric_limits<T>::max());
+        Logging::LogIt(Logging::logWarn) << "Overflow weight " << tmp2 << " -> " << (int)tmp;
+      }
+      else{
+        tmp = tmp*Wscale;
+      }
+      dst[i] = T(Quantization<Q>::round(tmp));
     }
     Logging::LogIt(Logging::logInfo) << "Weight in [" << minW << ", " << maxW << "]";
     return *this;
@@ -96,10 +103,17 @@ struct weights_streamer{
       file.read(single_element.data(), single_element.size());
       NT tmp{0};
       std::memcpy(&tmp, single_element.data(), single_element.size());
-      if ( Q && std::abs(tmp*Wscale) > (NT)std::numeric_limits<T>::max()) Logging::LogIt(Logging::logWarn) << "Overflow weight " << tmp << " " << (long long int)(Wscale * tmp);      
-      dst[i] = Q ? T( Quantization<Q>::round(Wscale * tmp)) : tmp;
       minW = std::min(minW,tmp);
       maxW = std::max(maxW,tmp);
+      if ( Q && std::abs(tmp*Wscale) > (NT)std::numeric_limits<T>::max()){
+        NT tmp2 = tmp;
+        tmp = std::clamp(tmp2*Wscale,(NT)std::numeric_limits<T>::min(),(NT)std::numeric_limits<T>::max());
+        Logging::LogIt(Logging::logWarn) << "Overflow weight " << tmp2 << " -> " << (int)tmp;
+      }
+      else{
+        tmp = tmp*Wscale;
+      }
+      dst[i] = T(Quantization<Q>::round(tmp));
     }
     Logging::LogIt(Logging::logInfo) << "Weight in [" << minW << ", " << maxW << "]";
     return *this;
@@ -116,10 +130,17 @@ struct weights_streamer{
       file.read(single_element.data(), single_element.size());
       NT tmp{0};
       std::memcpy(&tmp, single_element.data(), single_element.size());
-      if ( Q && std::abs(tmp*Bscale) > (NT)std::numeric_limits<T>::max()) Logging::LogIt(Logging::logWarn) << "Overflow bias " << tmp << " " << (long long int)(Bscale * tmp);
-      dst[i] = Q ? T(Quantization<Q>::round(Bscale * tmp)) : tmp;
       minB = std::min(minB,tmp);
       maxB = std::max(maxB,tmp);
+      if ( Q && std::abs(tmp*Bscale) > (NT)std::numeric_limits<T>::max()){
+         NT tmp2 = tmp;
+         tmp = std::clamp(tmp2*Bscale,(NT)std::numeric_limits<T>::min(),(NT)std::numeric_limits<T>::max());
+         Logging::LogIt(Logging::logWarn) << "Overflow bias " << tmp2 << " -> " << (int)tmp;
+      }
+      else{
+        tmp = tmp*Bscale;
+      }      
+      dst[i] = T(Quantization<Q>::round(tmp));
     }
     Logging::LogIt(Logging::logInfo) << "Bias in [" << minB << ", " << maxB << "]";
     return *this;
@@ -136,10 +157,17 @@ struct weights_streamer{
       file.read(single_element.data(), single_element.size());
       NT tmp{0};
       std::memcpy(&tmp, single_element.data(), single_element.size());
-      if ( Q && std::abs(tmp*Bscale) > (NT)std::numeric_limits<T>::max()) Logging::LogIt(Logging::logWarn) << "Overflow bias " << tmp << " " << (long long int)(Bscale * tmp);
-      dst[i] = Q ? T(Quantization<Q>::round(Bscale * tmp)) : tmp;
       minB = std::min(minB,tmp);
       maxB = std::max(maxB,tmp);
+      if ( Q && std::abs(tmp*Bscale) > (NT)std::numeric_limits<T>::max()){
+         NT tmp2 = tmp;
+         tmp = std::clamp(tmp2*Bscale,(NT)std::numeric_limits<T>::min(),(NT)std::numeric_limits<T>::max());
+         Logging::LogIt(Logging::logWarn) << "Overflow bias " << tmp2 << " -> " << (int)tmp;
+      }
+      else{
+        tmp = tmp*Bscale;
+      }      
+      dst[i] = T(Quantization<Q>::round(tmp));
     }
     Logging::LogIt(Logging::logInfo) << "Bias in [" << minB << ", " << maxB << "]";
     return *this;
@@ -516,7 +544,7 @@ struct half_kp_eval : sided<half_kp_eval<NT,Q>, feature_transformer<NT,Q>>{
     const auto b_x = black.active();
     const auto x0 = c == Co_White ? splice(w_x, b_x).apply_(clippedreluInput<BT,Q>) : splice(b_x, w_x).apply_(clippedreluInput<BT,Q>);
     //std::cout << "x0 " << x0 << std::endl;
-    //const stack_vector<BT, 32> x1 = stack_vector<BT, 32>::from((weights_ -> fc0).forward(x0).apply_(clippedreluQSingleLayer<QBT,true>).data,1.f/Quantization<true>::weightFactor);
+    //const stack_vector<BT, 32> x1 = stack_vector<BT, 32>::from((weights_ -> fc0).forward(x0).apply_(clippedreluQSingleLayer<BT,true>).data,1.f/Quantization<Q>::weightFactor);
     const auto x1 = (weights_ -> fc0).forward(x0).apply_(clippedrelu<BT,Q>);
     //std::cout << "x1 " << x1 << std::endl;
     const auto x2 = splice(x1, (weights_ -> fc1).forward(x1).apply_(clippedrelu<BT,Q>));
@@ -524,7 +552,7 @@ struct half_kp_eval : sided<half_kp_eval<NT,Q>, feature_transformer<NT,Q>>{
     const auto x3 = splice(x2, (weights_ -> fc2).forward(x2).apply_(clippedrelu<BT,Q>));
     //std::cout << "x3 " << x3 << std::endl;
     const float val = (weights_ -> fc3).forward(x3).item();    
-    //std::cout << "val " << val / Quantization<false>::outFactor << std::endl;
+    //std::cout << "val " << val / Quantization<Q>::outFactor << std::endl;
     return val / Quantization<Q>::outFactor;
   }
 

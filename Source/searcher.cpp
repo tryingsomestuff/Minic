@@ -205,14 +205,14 @@ void Searcher::writeToGenFile(const Position & p){
 
     Move m = INVALIDMOVE;
     ScoreType s = 0, e = 0;
-    if ( std::abs(qScore) < 1000 ){
+    if ( std::abs(qScore) < 350 ){
         // evaluate quiet leaf position
         EvalData data;
         //std::ostringstream str;
         e = eval(pQuiet,data,cos,true,false/*,&str*/);
 
         DynamicConfig::disableTT = false; // use TT here
-        if ( std::abs(e) < 1000 ){
+        if ( std::abs(e) < 350 ){
             seldepth = 0;
             DepthType depth(DynamicConfig::genFenDepth);
             unsigned int oldRandomPly = DynamicConfig::randomPly;
@@ -229,7 +229,7 @@ void Searcher::writeToGenFile(const Position & p){
     cos.subSearch = false;
     // end of sub search
 
-    if ( m != INVALIDMOVE && pQuiet.halfmoves >= DynamicConfig::randomPly && std::abs(s) < 2000){
+    if ( m != INVALIDMOVE && pQuiet.halfmoves >= DynamicConfig::randomPly && std::abs(s) < 350){
 
         /*
         // epd format
