@@ -31,6 +31,8 @@ struct ExtendedPosition : Position{
                            bool withMoveCount = false);
 
     std::map<std::string,std::vector<std::string> > _extendedParams;
+
+    std::string epdString() const;
 };
 
 std::string showAlgAbr(Move m, const Position & p);

@@ -165,11 +165,11 @@ ExtendedPosition::ExtendedPosition(const std::string & extFEN, bool withMoveCoun
     if ( strList.size() < (withMoveCount?7u:5u)) Logging::LogIt(Logging::logFatal) << "Not an extended position";
     std::vector<std::string>(strList.begin()+(withMoveCount?6:4), strList.end()).swap(strList);
     const std::string extendedParamsStr = std::accumulate(strList.begin(), strList.end(), std::string(""),[](const std::string & a, const std::string & b) {return a + ' ' + b;});
-    //LogIt(logInfo) << "extended parameters : " << extendedParamsStr;
+    //Logging::LogIt(Logging::logInfo) << "extended parameters : " << extendedParamsStr;
     std::vector<std::string> strParamList;
     split(strParamList,extendedParamsStr,";");
     for(size_t k = 0 ; k < strParamList.size() ; ++k){
-        //LogIt(logInfo) << "extended parameters : " << k << " " << strParamList[k];
+        //Logging::LogIt(Logging::logInfo) << "extended parameters : " << k << " " << strParamList[k];
         strParamList[k] = ltrim(strParamList[k]);
         if ( strParamList[k].empty()) continue;
         std::vector<std::string> pair;
@@ -178,7 +178,7 @@ ExtendedPosition::ExtendedPosition(const std::string & extFEN, bool withMoveCoun
         std::vector<std::string> values = pair;
         values.erase(values.begin());
         _extendedParams[pair[0]] = values;
-        //LogIt(logInfo) << "extended parameters pair : " << pair[0] << " => " << values[0];
+        //Logging::LogIt(Logging::logInfo) << "extended parameters pair : " << pair[0] << " => " << values[0];
     }
 }
 
@@ -205,6 +205,17 @@ std::ostream & operator<<(std::ostream & os, const std::vector<T> &v){
     return os;
 }
 
+std::string ExtendedPosition::epdString() const {
+   std::string epd = GetFENShort2(*this) + " ";
+   for ( auto & p : _extendedParams){
+       epd += p.first + " ";
+       for ( auto & cc : p.second ){
+           epd += cc + " ";
+       }
+       epd += ";";
+   } 
+   return epd;
+}
 
 void ExtendedPosition::test(const std::vector<std::string> & positions,
                             const std::vector<int> &         timeControls,

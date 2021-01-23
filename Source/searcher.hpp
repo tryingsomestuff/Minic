@@ -58,6 +58,8 @@ struct Searcher{
     void writeToGenFile(const Position & p);
 #endif
 
+    static Position getQuiet(const Position & p, Searcher * searcher = nullptr, ScoreType * qScore = nullptr);
+
     void getCMHPtr(const unsigned int ply, CMHPtrArray & cmhPtr);
     [[nodiscard]] ScoreType getCMHScore(const Position & p, const Square from, const Square to, const CMHPtrArray & cmhPtr)const;
 

@@ -281,16 +281,26 @@ int getResult(const std::string & s){
     if ( s == "\"1-0\"" ) return 1;
     if ( s == "\"0-1\"" ) return -1;
     if ( s == "\"1/2-1/2\"" ) return 0;
-    Logging::LogIt(Logging::logFatal) << "Bad position result " << s;
-    return 0;
+    Logging::LogIt(Logging::logError) << "Bad position result \"" << s << "\" " << s.size();
+    for (char c:s) Logging::LogIt(Logging::logError) << (int)c;
+    return -2;
 }
 
 int getResult2(const std::string & s){
     if ( s == "\"1.000\"" ) return 1;
     if ( s == "\"0.000\"" ) return -1;
     if ( s == "\"0.500\"" ) return 0;
-    Logging::LogIt(Logging::logFatal) << "Bad position result " << s;
-    return 0;
+    Logging::LogIt(Logging::logError) << "Bad position result \"" << s << "\"";
+    return -2;
+}
+
+int getResult3(const std::string & s){
+    if ( s == "1-0" ) return 1;
+    if ( s == "0-1" ) return -1;
+    if ( s == "1/2-1/2" ) return 0;
+    Logging::LogIt(Logging::logError) << "Bad position result \"" << s << "\" " << s.size();
+    for (char c:s) Logging::LogIt(Logging::logError) << (int)c;
+    return -2;
 }
 
 void TexelTuning(const std::string & filename) {
@@ -299,43 +309,32 @@ void TexelTuning(const std::string & filename) {
     std::vector<std::string> positions;
     readEPDFile(filename,positions);
     for(size_t k = 0 ; k < positions.size() ; ++k){
-        std::shared_ptr<ExtendedPosition> p(new ExtendedPosition(positions[k],false));
-        //data.push_back({p, getResult(p->_extendedParams["c9"][0])}); // zurichess
-        data.push_back({p, getResult2(p->_extendedParams["c2"][0])}); // lichess-quiet
-        // +1 white win, -1 black wins, 0 draw
         if (k % 50000 == 0) Logging::LogIt(Logging::logInfo) << k << " position read";
+#define TEST_TEXEL
+#ifndef TEST_TEXEL
+        std::shared_ptr<ExtendedPosition> p(new ExtendedPosition(positions[k],false));
+        //data.push_back({p, getResult2(p->_extendedParams["c2"][0])}); 
+        data.push_back({p, getResult(p->_extendedParams["c9"][0])});
+#else
+        const ExtendedPosition pp(positions[k],false);
+        const Position pQuiet = Searcher::getQuiet(pp);
+        std::shared_ptr<ExtendedPosition> p(new ExtendedPosition(GetFENShort2(pQuiet) + " c15 dummy;",false));
+        p->_extendedParams.clear();
+        p->_extendedParams["c1"] = pp._extendedParams.at("c1");
+        //std::cout << pp.epdString() << std::endl;
+        //std::cout << p->epdString() << std::endl;
+        data.push_back({p, getResult3(p->_extendedParams["c1"][0])}); // fastGM converted
+#endif
+        if ( data.back().result == -2 ){
+            Logging::LogIt(Logging::logFatal) << ToString(*reinterpret_cast<Position*>(p.get()));
+        }
+        // +1 white win, -1 black wins, 0 draw
     }
     Logging::LogIt(Logging::logInfo) << "Data size : " << data.size();
 
-/*
-    // write learning file
-    {
-        Logging::LogIt(Logging::logInfo) << "Writing learning data to learn.data file";        
-        std::ofstream lf("learn.data");
-        int k = 0;
-        for (const auto & i : data){
-            lf << i.result << " ";
-            lf << ((*i.p).c == Co_White ? 1 : -1) << " ";
-            
-            EvalData d;
-            ScoreType s = eval(*i.p,d,ThreadPool::instance().main(),false,false,&lf);
-            lf << d.gp << " " << s << " ";
-
-            Move m = INVALIDMOVE;
-            DepthType seldepth(0), depth(12);
-            ThreadPool::instance().main().search(*i.p,m,depth,s,seldepth);
-            lf << s << " ";
-
-            lf << std::endl;
-            if (k % 50000 == 0) Logging::LogIt(Logging::logInfo) << k << " data written";
-            ++k;
-        }
-    }
-*/
-
-    size_t batchSize = data.size()/50; // batch
+    //size_t batchSize = data.size()/50; // batch
     //size_t batchSize = 20000; // batch
-    //size_t batchSize = 1024 ; // mini
+    size_t batchSize = 1024*8 ; // mini
     //size_t batchSize = 1; // stochastic
 
     Logging::LogIt(Logging::logInfo) << "Texel mini batch size " << batchSize;        
@@ -671,7 +670,7 @@ void TexelTuning(const std::string & filename) {
 
     std::vector<std::string> todo = {
         //"piecesValue",
-/*
+
         "PST0",
         "PST1",
         "PST2",
@@ -737,22 +736,10 @@ void TexelTuning(const std::string & filename) {
         "minorThreat",
         "queenThreat",
         "rookThreat",
-        "secondorder",
-*/
-        //"tempo"
+        //"secondorder",
+        //"safeChecks",
+        //"tempo",
 
-        "pieceBlocking",
-        "minorOnOpen",
-        "knightTooFar",
-        "pawnFrontMinor",        
-        "pairAdjust",
-        "adjustN",
-        "adjustR",
-        "adjustB",
-        "badBishop",     
-        "holes",
-        "center",   
-        "kingNearPassed"
 
     };
     

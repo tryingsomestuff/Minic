@@ -7,8 +7,8 @@ print(files)
 # same order as evalConfig.cpp ...
 features = [ 'imbalance', 'PST0', 'PST1', 'PST2', 'PST3', 'PST4', 'PST5', 
              'shield', 'Fawn', 'passer', 'rookBehindPassed', 'kingNearPassed', 'pawnStructure1', 'pawnStructure2', 'pawnStructure3', 'pawnStructure4',
-             'holes', 'pieceBlocking', 'diagonal', 'pawnFrontMinor', 'center', 'knightTooFar', 'candidate', 'protectedPasser', 'freePasser', 'pawnMob', 'pawnAtt', 'pawnlessFlank', 'storm',
-             'rookOpen', 'rookQueenFile', 'rookFrontQueen', 'rookFrontKing', 'rookConnected', 'minorOnOpen', 'pinned', 'hanging', 'minorThreat', 'rookThreat', 'queenThreat', 'kingThreat',
+             'holes', 'pieceBlocking', 'pawnFrontMinor', 'center', 'knightTooFar', 'candidate', 'protectedPasser', 'freePasser', 'pawnMob', 'pawnAtt', 'pawnlessFlank', 'storm',
+             'rookOpen', 'rookQueenFile', 'rookFrontQueen', 'rookFrontKing', 'minorOnOpen', 'pinned', 'hanging', 'minorThreat', 'rookThreat', 'queenThreat', 'kingThreat',
              'adjustN', 'adjustR', 'adjustB', 'badBishop', 'pairAdjust', 'queenNearKing', 
              'mobility', 'initiative', 
              'attDefKing', 'attFunction', 'attOpenFile', 'attNoqueen', 'secondorder' ]
@@ -55,11 +55,12 @@ for f in features:
                 print(ll)
             else:
                 v = ll.split(';')[1:-1]
-                i = len(v)/2
+                s = int(len(v)/2)
                 p = ""
-                for i in range(i):
+                for i in range(s):
                     p += '{{{0:>3},{1:>3}}}, '.format(v[2*i],v[2*i+1])
                 print(p)
     except:
-        print("no file {}".format(f))
+        print("In file {}".format(f))
+        print("Unexpected error:", sys.exc_info())
         pass

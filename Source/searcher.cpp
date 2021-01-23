@@ -161,18 +161,60 @@ void Searcher::prefetchPawn(Hash h) {
 std::atomic<bool> Searcher::startLock;
 const unsigned long long int Searcher::ttSizePawn = 1024*32;
 
+namespace{
+    std::map<int,std::unique_ptr<Searcher> > coSearchers; 
+
+    Searcher & getCoSearcher(size_t id){
+        // init new co-searcher if not already present
+        if ( coSearchers.find(id) == coSearchers.end()){
+           coSearchers[id] = std::unique_ptr<Searcher>(new Searcher(id+MAX_THREADS));
+           coSearchers[id]->initPawnTable();
+        }
+        return *coSearchers[id];
+    }
+}
+
+Position Searcher::getQuiet(const Position & p, Searcher * searcher, ScoreType * qScore){
+
+    // fixed co-searcher if not given
+    Searcher & cos = getCoSearcher(searcher ? searcher->id() : 2*MAX_THREADS);
+
+    PVList pv;
+    DepthType ply = 1;
+    DepthType seldepth = 0;
+    ScoreType s = 0;
+
+    Position pQuiet = p; // because p is given const
+    NNUEEvaluator evaluator;
+    pQuiet.associateEvaluator(evaluator);
+    pQuiet.resetNNUEEvaluator(pQuiet.Evaluator());    
+
+    // go for a qsearch (no pruning, open bounds)
+    cos.stopFlag = false;
+    cos.subSearch = true;
+    s = cos.qsearchNoPruning(-10000,10000,pQuiet,ply,seldepth,&pv);
+    cos.subSearch = false;
+    if ( qScore ) *qScore = s;
+
+    //std::cout << "pv : " << ToString(pv) << std::endl;
+
+    // goto qsearch leaf
+    for ( auto & m : pv){
+        Position p2 = pQuiet;
+        //std::cout << "Applying move " << ToString(m) << std::endl;
+        if (!applyMove(p2,m,true)) break; // will always be ok because noValidation=true
+        pQuiet = p2;
+    }
+
+    return pQuiet;
+}
+
 #ifdef WITH_GENFILE
 void Searcher::writeToGenFile(const Position & p){
-    static std::map<int,std::unique_ptr<Searcher> > coSearchers; 
     static unsigned long long int sfensWritten = 0;
     if (!genFen || id() >= MAX_THREADS) return;
 
-    if ( coSearchers.find(id()) == coSearchers.end()){
-        coSearchers[id()] = std::unique_ptr<Searcher>(new Searcher(id()+MAX_THREADS));
-        coSearchers[id()]->initPawnTable();
-    }
-
-    Searcher & cos = *coSearchers[id()];
+    Searcher & cos = getCoSearcher(id());
 
     cos.genFen = false;
     const bool oldQuiet = DynamicConfig::quiet;
@@ -187,21 +229,8 @@ void Searcher::writeToGenFile(const Position & p){
     cos.clearSearch(true);
 
     // look for a quiet position using qsearch
-    PVList pv;
-    DepthType ply = 1;
-    DepthType seldepth = 0;
-    cos.stopFlag = false;
-    ScoreType qScore = cos.qsearchNoPruning(-10000,10000,p,ply,seldepth,&pv);
-    Position pQuiet = p;
-    NNUEEvaluator evaluator;
-    pQuiet.associateEvaluator(evaluator);
-    pQuiet.resetNNUEEvaluator(pQuiet.Evaluator());
-    for ( auto & m : pv){
-        Position p2 = pQuiet;
-        //std::cout << "Applying move " << ToString(m) << std::endl;
-        if (!applyMove(p2,m,true)) break; // will always be ok because noValidation=true
-        pQuiet = p2;
-    }
+    ScoreType qScore = 0;
+    Position pQuiet = getQuiet(p, this, &qScore);
 
     Move m = INVALIDMOVE;
     ScoreType s = 0, e = 0;
@@ -213,11 +242,11 @@ void Searcher::writeToGenFile(const Position & p){
 
         DynamicConfig::disableTT = false; // use TT here
         if ( std::abs(e) < 350 ){
-            seldepth = 0;
+            DepthType seldepth = 0;
             DepthType depth(DynamicConfig::genFenDepth);
             unsigned int oldRandomPly = DynamicConfig::randomPly;
             DynamicConfig::randomPly = 0;
-            pv = cos.search(pQuiet,m,depth,s,seldepth);
+            PVList pv = cos.search(pQuiet,m,depth,s,seldepth);
             DynamicConfig::randomPly = oldRandomPly;
         }
     }
