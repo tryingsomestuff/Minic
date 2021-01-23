@@ -38,7 +38,7 @@ typedef uint64_t u_int64_t;
 #include <unistd.h>
 #endif
 
-const std::string MinicVersion = "3.03";
+const std::string MinicVersion = "3.04";
 
 // *** options
 #define WITH_UCI
