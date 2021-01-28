@@ -117,7 +117,7 @@ namespace MaterialHash { // idea from Gull
         const Square winningK = p.king[winningSide];
         const Square losingK  = p.king[~winningSide];
         const ScoreType sc = pushToEdges[losingK] + pushClose[chebyshevDistance(winningK,losingK)];
-        return s + ((winningSide == Co_White)?(sc+WIN):(-sc-WIN));
+        return clampScore(s + ((winningSide == Co_White)?(sc+WIN):(-sc-WIN)));
     }
 
     ScoreType helperKmmK(const Position &p, Color winningSide, ScoreType s){
@@ -128,7 +128,7 @@ namespace MaterialHash { // idea from Gull
             losingK  = VFlip(losingK);
         }
         const ScoreType sc = pushToCorners[losingK] + pushClose[chebyshevDistance(winningK,losingK)];
-        return s + ((winningSide == Co_White)?(sc+WIN):(-sc-WIN));
+        return clampScore( s + ((winningSide == Co_White)?(sc+WIN):(-sc-WIN)));
     }
 
     ScoreType helperDummy(const Position &, Color , ScoreType){ return 0; } ///@todo not 0 for debug purpose ??
@@ -136,7 +136,7 @@ namespace MaterialHash { // idea from Gull
     ScoreType helperKPK(const Position &p, Color winningSide, ScoreType ){
        const Square psq = KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const<P_wp>(winningSide))); // we know there is at least one pawn
        if (!KPK::probe(KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const<P_wk>(winningSide))), psq, KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const<P_wk>(~winningSide))), winningSide == p.c ? Co_White:Co_Black)) return 0; // shall be drawScore but this is not a 3rep case so don't bother too much ...
-       return ((winningSide == Co_White)?+1:-1)*(WIN + ValuesEG[P_wp+PieceShift] + 10*SQRANK(psq));
+       return clampScore(((winningSide == Co_White)?+1:-1)*(WIN + ValuesEG[P_wp+PieceShift] + 10*SQRANK(psq)));
     }
 
     // Second-degree polynomial material imbalance, by Tord Romstad (old version, not the current Stockfish stuff)

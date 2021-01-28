@@ -104,10 +104,14 @@ ScoreType Searcher::pvs(ScoreType alpha,
 #ifdef WITH_SYZYGY
     ScoreType tbScore = 0;
     if ( !rootnode && withoutSkipMove 
-         && (countBit(p.allPieces[Co_White]|p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN && SyzygyTb::probe_wdl(p, tbScore, false) > 0){
+         && (countBit(p.allPieces[Co_White]|p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN 
+         && SyzygyTb::probe_wdl(p, tbScore, false) > 0){
        ++stats.counters[Stats::sid_tbHit1];
+       // if this is a winning/losing EGT position, we add up static evaluation
+       // this allow to go for mate better or to defend longer
        if ( abs(tbScore) == SyzygyTb::TB_WIN_SCORE){
            tbScore += eval(p, data, *this);
+           tbScore = clampScore(tbScore);
        }
        // store TB hits into TT (without associated move, but with max depth)
        TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(tbScore,ply),createHashScore(tbScore,ply),TT::B_none,DepthType(MAX_DEPTH));
@@ -395,9 +399,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
             }
             ScoreType ttScore = -pvs<pvnode>(-beta, -alpha, p2, depth - 1 + extension, ply + 1, childPV, seldepth, isCheck, !cutNode, true);
             if (stopFlag) return STOPSCORE;
-            if (rootnode){
-                rootScores.push_back({e.m,ttScore});
-            }
+            if (rootnode){ rootScores.push_back({e.m,ttScore}); }
             if ( ttScore > bestScore ){
                 if (rootnode) previousBest = e.m;
                 bestScore = ttScore;
@@ -417,7 +419,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
                     alpha = ttScore;
                 }
             }
-            else if ( rootnode && !isInCheck && ttScore < alpha - SearchConfig::failLowRootMargin){
+            else if ( rootnode && !isInCheck && ttScore < alpha - SearchConfig::failLowRootMargin /*&& !isMateScore(ttScore)*/){
                 return alpha - SearchConfig::failLowRootMargin;
             }
         }
@@ -600,9 +602,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
 
         }
         if (stopFlag) return STOPSCORE;
-        if (rootnode){
-            rootScores.push_back({*it,score});
-        }
+        if (rootnode){ rootScores.push_back({*it,score}); }
         if ( score > bestScore ){
             if (rootnode) previousBest = *it;
             bestScore = score;

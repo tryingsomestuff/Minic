@@ -118,7 +118,7 @@ const std::string MinicVersion = "3.04";
 #define STOPSCORE   ScoreType(-20000)
 #define INFSCORE    ScoreType(15000)
 #define MATE        ScoreType(10000)
-#define WIN         ScoreType(5000)
+#define WIN         ScoreType(3000)
 #define INVALIDMOVE     int32_t(0xFFFF0002)
 #define INVALIDMINIMOVE int16_t(0x0002)
 #define NULLMOVE        int16_t(0x1112)
@@ -167,6 +167,9 @@ typedef unsigned char  GenerationType;
 
 const Hash nullHash = 0ull; //std::numeric_limits<MiniHash>::max(); // use MiniHash to allow same "null" value for Hash(64) and MiniHash(32)
 const BitBoard emptyBitBoard = 0ull;
+
+template< typename T >
+ScoreType clampScore(T s){ return (ScoreType)std::clamp(s,(T)(-MATE+2*MAX_DEPTH),(T)(MATE-2*MAX_DEPTH));}
 
 enum GamePhase { MG=0, EG=1, GP_MAX=2 };
 inline GamePhase operator++(GamePhase & g){g=GamePhase(g+1); return g;}
