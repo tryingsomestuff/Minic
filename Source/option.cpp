@@ -142,6 +142,9 @@ namespace Options {
        _keys.push_back(KeyBase(k_depth, w_spin, "razoringMaxDepth0"                 , &SearchConfig::razoringMaxDepth[0]                 , DepthType(0)    , DepthType(30)       ));
        _keys.push_back(KeyBase(k_depth, w_spin, "razoringMaxDepth1"                 , &SearchConfig::razoringMaxDepth[1]                 , DepthType(0)    , DepthType(30)       ));
        _keys.push_back(KeyBase(k_depth, w_spin, "nullMoveMinDepth"                  , &SearchConfig::nullMoveMinDepth                    , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "nullMoveVerifDepth"                , &SearchConfig::nullMoveVerifDepth                  , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_score, w_spin, "nullMoveMargin"                    , &SearchConfig::nullMoveMargin                      , ScoreType(-500) , ScoreType(500)      ));
+       _keys.push_back(KeyBase(k_score, w_spin, "nullMoveMargin2"                   , &SearchConfig::nullMoveMargin2                     , ScoreType(-500) , ScoreType(500)      ));
        _keys.push_back(KeyBase(k_score, w_spin, "nullMoveDynamicDivisor"            , &SearchConfig::nullMoveDynamicDivisor              , ScoreType(0)    , ScoreType(1500)     ));
        
        _keys.push_back(KeyBase(k_depth, w_spin, "historyPruningMaxDepth"            , &SearchConfig::historyPruningMaxDepth              , DepthType(0)    , DepthType(30)       ));
