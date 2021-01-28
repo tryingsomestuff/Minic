@@ -129,6 +129,10 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
                 else{ // probably e7 e8=q notation
                     std::vector<std::string> strListTo;
                     tokenize(strList[1],strListTo,"=");
+                    if ( strListTo.size() != 2){
+                        Logging::LogIt(Logging::logError) << "Trying to read bad move, invalid promotion syntaxe " << str;
+                        return false;
+                    }
                     to = stringToSquare(strListTo[0]);
                     prom = strListTo[1];
                 }
@@ -154,7 +158,7 @@ bool readMove(const Position & p, const std::string & ss, Square & from, Square 
        if ( p.board_const(from) == P_bk && p.board_const(to) == P_br ){ moveType = (p.rooksInit[Co_Black][CT_OOO] == to ? T_bqs : T_bks); }
     }
     if (!DynamicConfig::FRC && !isPseudoLegal(p, ToMove(from, to, moveType))) { ///@todo FRC !
-        Logging::LogIt(Logging::logError) << "Trying to read bad move, not legal " << ToString(p) << str;
+        Logging::LogIt(Logging::logError) << "Trying to read bad move, not legal. " << ToString(p) << ", move is " << str;
         return false;
     }
 

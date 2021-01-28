@@ -11,6 +11,12 @@ template < typename T > T readFromString(const std::string & s){ std::stringstre
 
 bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCount){
     static Position defaultPos;
+
+    if(fen.find_first_not_of(' ') == std::string::npos){
+        Logging::LogIt(Logging::logError) << "Empty fen";
+        return false;
+    }
+
 #ifdef WITH_NNUE
     // backup evaluator
     NNUEEvaluator * evaluator = p.associatedEvaluator; 
@@ -57,18 +63,23 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
         case '6': j += 5; break;
         case '7': j += 6; break;
         case '8': j += 7; break;
-        default: Logging::LogIt(Logging::logFatal) << "FEN ERROR -1 : invalid character in fen string :" << letter << "\n" << fen;
+        default: 
+           Logging::LogIt(Logging::logError) << "FEN ERROR -1 : invalid character in fen string :" << letter << "\n" << fen;
+           return false;
         }
         j++;
     }
 
-    if ( p.king[Co_White] == INVALIDSQUARE || p.king[Co_Black] == INVALIDSQUARE ) { Logging::LogIt(Logging::logFatal) << "FEN ERROR 0 : missing king" ; return false; }
+    if ( p.king[Co_White] == INVALIDSQUARE || p.king[Co_Black] == INVALIDSQUARE ) { 
+        Logging::LogIt(Logging::logError) << "FEN ERROR 0 : missing king" ; 
+        return false; 
+    }
 
     p.c = Co_White; // set the turn; default is white
     if (strList.size() >= 2){
         if (strList[1] == "w")      p.c = Co_White;
         else if (strList[1] == "b") p.c = Co_Black;
-        else { Logging::LogIt(Logging::logFatal) << "FEN ERROR 1 : bad Color" ; return false; }
+        else { Logging::LogIt(Logging::logError) << "FEN ERROR 1 : bad Color" ; return false; }
     }
 
     // Initialize all castle possibilities (default is none)
@@ -120,9 +131,9 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
     if ((strList.size() >= 4) && strList[3] != "-" ){
         if (strList[3].length() >= 2){
             if ((strList[3].at(0) >= 'a') && (strList[3].at(0) <= 'h') && ((strList[3].at(1) == '3') || (strList[3].at(1) == '6'))) p.ep = stringToSquare(strList[3]);
-            else { Logging::LogIt(Logging::logFatal) << "FEN ERROR 2 : bad en passant square : " << strList[3] ; return false; }
+            else { Logging::LogIt(Logging::logError) << "FEN ERROR 2 : bad en passant square : " << strList[3] ; return false; }
         }
-        else{ Logging::LogIt(Logging::logFatal) << "FEN ERROR 3 : bad en passant square : " << strList[3] ; return false; }
+        else{ Logging::LogIt(Logging::logError) << "FEN ERROR 3 : bad en passant square : " << strList[3] ; return false; }
     }
     else if ( !silent) Logging::LogIt(Logging::logInfo) << "No en passant square given" ;
 
