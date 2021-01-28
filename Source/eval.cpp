@@ -171,7 +171,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
                   return context.drawScore();
               }
           }
-          else if ( MEntry.t == MaterialHash::Ter_WhiteWin || MEntry.t == MaterialHash::Ter_BlackWin) features.scalingFactor = 5 - 5*p.fifty/100.f;
+          else if ( MEntry.t == MaterialHash::Ter_WhiteWin || MEntry.t == MaterialHash::Ter_BlackWin) features.scalingFactor = 3 - 3*p.fifty/100.f;
           else if ( MEntry.t == MaterialHash::Ter_HardToWin)  features.scalingFactor = 0.5f - 0.5f*(p.fifty/100.f);
           else if ( MEntry.t == MaterialHash::Ter_LikelyDraw) features.scalingFactor = 0.3f - 0.3f*(p.fifty/100.f);
        }
@@ -683,7 +683,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
     ScoreType ret = (white2Play?+1:-1)*Score(ScaleScore(score,data.gp),features.scalingFactor,p); // scale both phase and 50 moves rule
 
     if ( display ){
-        Logging::LogIt(Logging::logInfo) << "==> All (fully scaled) " << score;
+        Logging::LogIt(Logging::logInfo) << "==> All (fully scaled) " << ret;
     }
 
     STOP_AND_SUM_TIMER(Eval)
