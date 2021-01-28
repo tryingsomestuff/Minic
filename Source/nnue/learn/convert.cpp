@@ -85,7 +85,7 @@ bool convert_bin(const std::vector<std::string>& filenames, const std::string& o
 	uint64_t filtered_size_fen = 0;
 	uint64_t filtered_size_move = 0;
 	uint64_t filtered_size_ply = 0;
-	// convert plain rag to packed sfenvalue for Yaneura king
+	// convert plain to bin
 	fs.open(output_file_name, std::ios::app | std::ios::binary);
 	for (auto filename : filenames) {
 		std::cout << "converting " << filename << " from plain to binary format... " << std::endl;
@@ -103,25 +103,52 @@ bool convert_bin(const std::vector<std::string>& filenames, const std::string& o
 		bool ignore_flag_fen = false;
 		bool ignore_flag_move = false;
 		bool ignore_flag_ply = false;
+		bool scored = false;
+		bool hasPos = false;
+		unsigned int count = 0;
 		while (std::getline(ifs, line)) {
+			count++;
+			if ( (count % 1000000 == 0) ){
+				std::cout << "lines " << count << ", skipped pos " << filtered_size << std::endl;
+			}
 			std::stringstream ss(line);
 			std::string token;
 			std::string value;
+
+            auto skipit = [&](){
+				bool ok = false;
+				std::cout << "skipping from line " << count << std::endl;
+				while (!ok && std::getline(ifs, line)) {
+					std::stringstream sss(line);
+					while( !ok && sss >> token){
+                          if (token == "e") ok = true;
+					}
+					std::cout << "skipped line " << line << std::endl;
+				}
+			};
+
 			ss >> token;
 			if (token == "fen") {
 				std::string input_fen = line.substr(4);
-				readFEN(input_fen,pos,true,true);
-				sfen_pack(pos,p.sfen);
+				if ( readFEN(input_fen,pos,true,true)){
+				   sfen_pack(pos,p.sfen);
+				   hasPos = true;
+			    }
+				else{
+                   skipit();
+				}
 			}
 			else if (token == "move") {
 				ss >> value;
 				Square from = INVALIDSQUARE;
 				Square to = INVALIDSQUARE;
 				MType type = T_std;
-				bool b = readMove(pos,value,from,to,type);
-				if (b) {
+				if (hasPos && readMove(pos,value,from,to,type)) {
 					p.move = ToSFMove(pos,from,to,type); // use SF style move encoding
 					//p.move = ToMove(from,to,type); // use Minic style move encoding
+				}
+				else{
+                   skipit();
 				}
 			}
 			else if (token == "score") {
@@ -138,7 +165,7 @@ bool convert_bin(const std::vector<std::string>& filenames, const std::string& o
 				}
 				p.gamePly = uint16_t(temp); // No cast here?
 				if (interpolate_eval != 0){
-				p.score = std::min(3000, interpolate_eval * temp);
+					p.score = std::min(3000, interpolate_eval * temp);
 				}
 			}
 			else if (token == "result") {
@@ -146,20 +173,23 @@ bool convert_bin(const std::vector<std::string>& filenames, const std::string& o
 				ss >> temp;
 				p.game_result = int8_t(temp); // Do you need a cast here?
 				if (interpolate_eval){
-				p.score = p.score * p.game_result;
+					p.score = p.score * p.game_result;
 				}
+				scored = true;
 			}
 			else if (token == "e") {
-				if(!(ignore_flag_fen || ignore_flag_move || ignore_flag_ply)){
-				fs.write((char*)&p, sizeof(PackedSfenValue));
-				data_size+=1;
-			}
+				if(!(ignore_flag_fen || ignore_flag_move || ignore_flag_ply) && scored && hasPos){
+					fs.write((char*)&p, sizeof(PackedSfenValue));
+					data_size+=1;
+				}
 				else {
 					filtered_size++;
 				}
 				ignore_flag_fen = false;
 				ignore_flag_move = false;
 				ignore_flag_ply = false;
+				scored = false;
+				hasPos = false;
 			}
 		}
 		std::cout << "done " << data_size << " parsed " << filtered_size << " is filtered"
