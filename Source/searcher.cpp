@@ -130,7 +130,10 @@ void Searcher::clearGame(){
 }
 
 void Searcher::clearSearch(bool forceCounterClear){
-     //clearPawnTT(); // to be used for reproductible results ///@todo verify again
+#ifdef REPRODUCTIBLE_RESULTS
+     clearPawnTT(); 
+     forceCounterClear = true;
+#endif
      stats.init();
      killerT.initKillers();
      historyT.initHistory(!forceCounterClear);

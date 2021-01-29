@@ -48,6 +48,8 @@ const std::string MinicVersion = "3.04";
 #define WITH_NNUE
 
 //#define WITHOUT_FILESYSTEM
+//#define LIMIT_THREADS_TO_PHYSICAL_CORES
+//#define REPRODUCTIBLE_RESULTS
 
 // *** Optim (?)
 #define USE_PARTIAL_SORT 
