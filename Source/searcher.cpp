@@ -161,17 +161,14 @@ void Searcher::prefetchPawn(Hash h) {
 std::atomic<bool> Searcher::startLock;
 const unsigned long long int Searcher::ttSizePawn = 1024*32;
 
-namespace{
-    std::map<int,std::unique_ptr<Searcher> > coSearchers; 
-
-    Searcher & getCoSearcher(size_t id){
-        // init new co-searcher if not already present
-        if ( coSearchers.find(id) == coSearchers.end()){
-           coSearchers[id] = std::unique_ptr<Searcher>(new Searcher(id+MAX_THREADS));
-           coSearchers[id]->initPawnTable();
-        }
-        return *coSearchers[id];
+Searcher & Searcher::getCoSearcher(size_t id){
+    static std::map<int,std::unique_ptr<Searcher> > coSearchers; 
+    // init new co-searcher if not already present
+    if ( coSearchers.find(id) == coSearchers.end()){
+        coSearchers[id] = std::unique_ptr<Searcher>(new Searcher(id+MAX_THREADS));
+        coSearchers[id]->initPawnTable();
     }
+    return *coSearchers[id];
 }
 
 Position Searcher::getQuiet(const Position & p, Searcher * searcher, ScoreType * qScore){

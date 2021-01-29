@@ -16,4 +16,6 @@ bool convert_bin_from_pgn_extract(const std::vector<std::string>& filenames, con
 
 bool convert_plain(const std::vector<std::string>& filenames, const std::string& output_file_name);
 
+bool rescore(const std::vector<std::string>& filenames, const std::string& output_file_name);
+
 #endif // WITH_DATA2BIN

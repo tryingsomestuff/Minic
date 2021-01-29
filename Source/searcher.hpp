@@ -60,6 +60,8 @@ struct Searcher{
 
     static Position getQuiet(const Position & p, Searcher * searcher = nullptr, ScoreType * qScore = nullptr);
 
+    static Searcher & getCoSearcher(size_t id);
+
     void getCMHPtr(const unsigned int ply, CMHPtrArray & cmhPtr);
     [[nodiscard]] ScoreType getCMHScore(const Position & p, const Square from, const Square to, const CMHPtrArray & cmhPtr)const;
 
