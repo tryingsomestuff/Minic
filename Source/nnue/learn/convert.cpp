@@ -14,6 +14,7 @@
 #include "pieceTools.hpp"
 #include "position.hpp"
 #include "positionTools.hpp"
+#include "searcher.hpp"
 
 #include "learn_tools.hpp"
 
@@ -444,6 +445,57 @@ bool convert_plain(const std::vector<std::string>& filenames, const std::string&
 				ofs << "ply " << int(p.gamePly) << std::endl;
 				ofs << "result " << int(p.game_result) << std::endl;
 				ofs << "e" << std::endl;
+			}
+			else {
+				break;
+			}
+		}
+		fs.close();
+		std::cout << "done" << std::endl;
+	}
+	ofs.close();
+	std::cout << "all done" << std::endl;
+
+	return true;
+}
+
+bool rescore(const std::vector<std::string>& filenames, const std::string& output_file_name){
+	std::ofstream ofs;
+	ofs.open(output_file_name, std::ios::app);
+
+    Searcher & cos = Searcher::getCoSearcher(0);
+
+    // init sub search
+    cos.genFen = false;
+    cos.subSearch = true;
+    DynamicConfig::quiet = true;
+    DynamicConfig::disableTT = false; 
+    DynamicConfig::level = 100;
+    cos.clearSearch(true);
+
+    uint64_t count = 0;
+
+	for (auto filename : filenames) {
+		std::cout << "rescoring " << filename << " ... " << std::endl;
+		// Just convert packedsfenvalue to text
+		std::fstream fs;
+		fs.open(filename, std::ios::in | std::ios::binary);
+		PackedSfenValue p;
+		///@todo threading !!!!
+		while (true){
+			if ( (++count % 100000) == 0 ){
+               std::cout << count << std::endl;
+			}
+			if (fs.read((char*)&p, sizeof(PackedSfenValue))) {
+				Position tpos; // fully empty position !
+				set_from_packed_sfen(tpos,p.sfen);
+				ScoreType s = 0;
+				DepthType depth = DynamicConfig::genFenDepth;
+				DepthType seldepth = 0;
+				Move m = INVALIDMOVE;
+                PVList pv = cos.search(tpos,m,depth,s,seldepth);
+                p.score = s;
+				ofs.write((char*)&p, sizeof(PackedSfenValue));
 			}
 			else {
 				break;
