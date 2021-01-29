@@ -22,14 +22,16 @@ void ThreadPool::setup(){
     assert(DynamicConfig::threads > 0);
     Logging::LogIt(Logging::logInfo) << "Using " << DynamicConfig::threads << " threads";
     resize(0);
-    /*
+#ifdef LIMIT_THREADS_TO_PHYSICAL_CORES
     unsigned int maxThreads = std::max(1u,std::thread::hardware_concurrency());
     if (DynamicConfig::threads > maxThreads) {
-        Logging::LogIt(Logging::logWarn) << "Trying to use more threads than hardware core, I don't like that and will use only " << maxThreads << " threads";
+        Logging::LogIt(Logging::logWarn) << "Trying to use more threads than hardware physical cores";
+        Logging::LogIt(Logging::logWarn) << "I don't like that and will use only " << maxThreads << " threads";
         DynamicConfig::threads = maxThreads;
     }
-    */
-    while (size() < DynamicConfig::threads) { // init other threads (for main see below)
+#endif
+    // init other threads (for main see below)
+    while (size() < DynamicConfig::threads) { 
        push_back(std::unique_ptr<Searcher>(new Searcher(size())));
        back()->initPawnTable();
        back()->clearGame();
@@ -44,7 +46,8 @@ void ThreadPool::wait(bool otherOnly) {
     Logging::LogIt(Logging::logInfo) << "...ok";
 }
 
-Move ThreadPool::search(const ThreadData & d){ // distribute data and call main thread search
+// distribute data and call main thread search
+Move ThreadPool::search(const ThreadData & d){ 
     Logging::LogIt(Logging::logInfo) << "Search Sync" ;
     wait();
     Logging::LogIt(Logging::logInfo) << "Locking other threads";
@@ -68,7 +71,9 @@ void ThreadPool::clearGame(){
 }
 
 void ThreadPool::clearSearch(){ 
-    //TT::clearTT(); // to be forced for reproductible results
+#ifdef REPRODUCTIBLE_RESULTS
+    TT::clearTT(); 
+#endif
     for (auto & s : *this) (*s).clearSearch();
 }
 

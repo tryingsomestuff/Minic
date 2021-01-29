@@ -107,7 +107,8 @@ struct Searcher{
                   ScoreType & sc, 
                   DepthType & seldepth);
 
-    template< bool withRep = true, bool isPv = true, bool INR = true> [[nodiscard]] MaterialHash::Terminaison interiorNodeRecognizer(const Position & p)const;
+    template< bool withRep = true, bool isPv = true, bool INR = true> 
+    [[nodiscard]] MaterialHash::Terminaison interiorNodeRecognizer(const Position & p)const;
 
     [[nodiscard]] bool isRep(const Position & p, bool isPv)const;
 
