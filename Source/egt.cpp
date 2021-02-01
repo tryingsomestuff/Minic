@@ -48,7 +48,15 @@ int probe_root(Searcher & context, const Position &p, ScoreType &score, MoveList
    score = 0;
    unsigned results[TB_MAX_MOVES];
    debug_king_cap(p);
-   unsigned result = tb_probe_root(p.allPieces[Co_White],p.allPieces[Co_Black],p.whiteKing()|p.blackKing(),p.whiteQueen()|p.blackQueen(),p.whiteRook()|p.blackRook(),p.whiteBishop()|p.blackBishop(),p.whiteKnight()|p.blackKnight(),p.whitePawn()|p.blackPawn(),p.fifty,p.castling != C_none,p.ep == INVALIDSQUARE ? 0 : p.ep,p.c == Co_White,results);
+   unsigned result = tb_probe_root(p.allPieces[Co_White],p.allPieces[Co_Black],
+                                   p.allKing(),
+                                   p.allQueen(),
+                                   p.allRook(),
+                                   p.allBishop(),
+                                   p.allKnight(),
+                                   p.allPawn(),
+                                   p.fifty,p.castling != C_none,p.ep == INVALIDSQUARE ? 0 : p.ep,p.c == Co_White,
+                                   results);
    if (result == TB_RESULT_FAILED) return -1;
    const unsigned wdl = TB_GET_WDL(result);
    assert(wdl<5);
@@ -65,7 +73,14 @@ int probe_wdl(const Position &p, ScoreType &score, bool use50MoveRule){
    if ( MAX_TB_MEN <= 0 ) return -1;
    score = 0;
    debug_king_cap(p);
-   unsigned result = tb_probe_wdl(p.allPieces[Co_White],p.allPieces[Co_Black],p.whiteKing()|p.blackKing(),p.whiteQueen()|p.blackQueen(),p.whiteRook()|p.blackRook(),p.whiteBishop()|p.blackBishop(),p.whiteKnight()|p.blackKnight(),p.whitePawn()|p.blackPawn(),p.fifty,p.castling != C_none,p.ep == INVALIDSQUARE ? 0 : p.ep,p.c == Co_White);
+   unsigned result = tb_probe_wdl(p.allPieces[Co_White],p.allPieces[Co_Black],
+                                  p.allKing(),
+                                  p.allQueen(),
+                                  p.allRook(),
+                                  p.allBishop(),
+                                  p.allKnight(),
+                                  p.allPawn(),
+                                  p.fifty,p.castling != C_none,p.ep == INVALIDSQUARE ? 0 : p.ep,p.c == Co_White);
    if (result == TB_RESULT_FAILED) return 0;
    unsigned wdl = TB_GET_WDL(result);
    assert(wdl<5);

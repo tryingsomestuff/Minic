@@ -123,7 +123,7 @@ namespace MaterialHash { // idea from Gull
     ScoreType helperKmmK(const Position &p, Color winningSide, ScoreType s){
         Square winningK = p.king[winningSide];
         Square losingK  = p.king[~winningSide];
-        if ( ((p.whiteBishop()|p.blackBishop()) & whiteSquare) != 0 ){
+        if ( (p.allBishop() & whiteSquare) != 0 ){
             winningK = VFlip(winningK);
             losingK  = VFlip(losingK);
         }

@@ -5,8 +5,9 @@ int main(int argc, char ** argv){
     if ( argc < 4 ) return 1;
 
     const std::string option = argv[1];
-    const std::string input = argv[2];
+    const std::string input  = argv[2];
     const std::string output = argv[3];
+    
     if (option == "binpack2bin"){
         binpack::convertBinpackToBin(input,output,std::ios::out,false);
     }

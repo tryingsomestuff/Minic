@@ -4,9 +4,14 @@
 #include "logging.hpp"
 #include "timers.hpp"
 
+#ifndef WITH_MAGIC
+namespace{
+    int _ranks[512] = {0};
+}
+#endif
+
 namespace BBTools {
 
-int Mask::ranks[512] = {0};
 Mask mask[NbSquare];
 
 // This initialisation function is taken from Dumb chess engine by Richard Delorme
@@ -41,7 +46,9 @@ void initMask() {
         int f = SQFILE(x);
         int r = SQRANK(x);
         for (int i = -1, c = 1, dp = 6; i <= 1; i += 2, c = 0, dp = 1) {
-            for (int j = -1; j <= 1; j += 2) if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) {  mask[x].pawnAttack[c] |= SquareToBitboard((r + i) * 8 + (f + j)); }
+            for (int j = -1; j <= 1; j += 2) if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) {  
+                mask[x].pawnAttack[c] |= SquareToBitboard((r + i) * 8 + (f + j)); 
+            }
             if (0 <= r + i && r + i < 8) {
                 mask[x].push[c] = SquareToBitboard((r + i) * 8 + f);
                 if ( r == dp ) mask[x].dpush[c] = SquareToBitboard((r + 2*i) * 8 + f); // double push
@@ -55,14 +62,18 @@ void initMask() {
         for (int i = -2; i <= 2; i = (i == -1 ? 1 : i + 1)) {
             for (int j = -2; j <= 2; ++j) {
                 if (i == j || i == -j || j == 0) continue;
-                if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) { mask[x].knight |= SquareToBitboard(8 * (r + i) + (f + j)); }
+                if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) { 
+                    mask[x].knight |= SquareToBitboard(8 * (r + i) + (f + j)); 
+                }
             }
         }
 
         for (int i = -1; i <= 1; ++i) {
             for (int j = -1; j <= 1; ++j) {
                 if (i == 0 && j == 0) continue;
-                if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) { mask[x].king |= SquareToBitboard(8 * (r + i) + (f + j)); }
+                if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) { 
+                    mask[x].king |= SquareToBitboard(8 * (r + i) + (f + j)); 
+                }
             }
         }
 
@@ -89,6 +100,7 @@ void initMask() {
         mask[x].attackFrontSpan[Co_Black] |= _shiftEast(bspan);
     }
 
+#ifndef WITH_MAGIC
     for (Square o = 0; o < 64; ++o) {
         for (int k = 0; k < 8; ++k) {
             int y = 0;
@@ -102,9 +114,10 @@ void initMask() {
                 y |= b;
                 if (((o << 1) & b) == b) break;
             }
-            Mask::ranks[o * 8 + k] = y;
+            _ranks[o * 8 + k] = y;
         }
     }
+#endif
 }
 
 #ifndef WITH_MAGIC // then use HQBB
@@ -123,7 +136,7 @@ BitBoard attack(const BitBoard occupancy, const Square x, const BitBoard m) {
 
 BitBoard rankAttack(const BitBoard occupancy, const Square x) {
     const int f = SQFILE(x); const int r = x & 56;
-    return BitBoard(ranks[((occupancy >> r) & 126) * 4 + f]) << r;
+    return BitBoard(_ranks[((occupancy >> r) & 126) * 4 + f]) << r;
 }
 
 BitBoard fileAttack        (const BitBoard occupancy, const Square x) { return attack(occupancy, x, mask[x].file);         }
