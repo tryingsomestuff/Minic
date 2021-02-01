@@ -162,7 +162,7 @@ void Searcher::prefetchPawn(Hash h) {
 }
 
 std::atomic<bool> Searcher::startLock;
-const unsigned long long int Searcher::ttSizePawn = 1024*32;
+const unsigned long long int Searcher::ttSizePawn = 1024*16*8;
 
 Searcher & Searcher::getCoSearcher(size_t id){
     static std::map<int,std::unique_ptr<Searcher> > coSearchers; 
@@ -237,8 +237,7 @@ void Searcher::writeToGenFile(const Position & p){
     if ( std::abs(qScore) < 350 ){
         // evaluate quiet leaf position
         EvalData data;
-        //std::ostringstream str;
-        e = eval(pQuiet,data,cos,true,false/*,&str*/);
+        e = eval(pQuiet,data,cos,true,false);
 
         DynamicConfig::disableTT = false; // use TT here
         if ( std::abs(e) < 350 ){

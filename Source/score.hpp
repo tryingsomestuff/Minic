@@ -98,12 +98,13 @@ struct EvalFeatures{
     static void callBack();
 };
 
-
+/*
 inline std::ostream & operator<<(std::ostream & of, const EvalFeatures & features){
     for (size_t k = 0 ; k < F_max; ++k) of << features.scores[k] << " ";
     of << features.scalingFactor << " ";
     return of;
 }
+*/
 
 [[nodiscard]] inline ScoreType ScaleScore(EvalScore s, float gp){ return ScoreType(gp*s[MG] + (1.f-gp)*s[EG]);}
 

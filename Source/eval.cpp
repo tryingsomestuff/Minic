@@ -120,7 +120,7 @@ bool isLazyHigh(ScoreType lazyThreshold, const EvalFeatures & features, EvalScor
     return std::abs(score[MG] + score[EG]) / 2 > lazyThreshold;
 }
 
-ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safeMatEvaluator, bool display, std::ostream * of){
+ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safeMatEvaluator, bool display){
     START_TIMER
 
     // king captured
@@ -634,9 +634,6 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
     features.scores[F_attack]      = features.scores[F_attack]      .scale(1 + (DynamicConfig::styleAttack      - 50)/50.f, 1.f); 
     features.scores[F_complexity]  = features.scores[F_complexity]  .scale(    (DynamicConfig::styleComplexity  - 50)/50.f, 0.f);
 
-    // save in learning file
-    if ( of ) (*of) << features;
-
     // Sum everything
     EvalScore score = features.SumUp();
 
@@ -649,7 +646,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
 #endif
 
     // initiative (kind of second order pawn structure stuff for end-games)
-    const BitBoard allPawns          = pawns[Co_White] | pawns[Co_Black];    
+    const BitBoard  & allPawns = p.allPawn();    
     EvalScore initiativeBonus = EvalConfig::initiative[0] * countBit(allPawns) + EvalConfig::initiative[1] * ((allPawns & queenSide) && (allPawns & kingSide)) + EvalConfig::initiative[2] * (countBit(occupancy & ~allPawns) == 2) - EvalConfig::initiative[3];
     initiativeBonus = EvalScore(sgn(score[MG]) * std::max(initiativeBonus[MG], ScoreType(-std::abs(score[MG]))), sgn(score[EG]) * std::max(initiativeBonus[EG], ScoreType(-std::abs(score[EG]))));
     score += initiativeBonus;

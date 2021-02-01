@@ -20,7 +20,6 @@ namespace BBTools {
 // many of then will be usefull during evaluation and move generation
 // note that between to not include start and end square
 struct Mask {
-    static int ranks[512];
     BitBoard bbsquare, diagonal, antidiagonal, file, kingZone, pawnAttack[2], push[2], dpush[2], enpassant, knight, king, frontSpan[2], rearSpan[2], passerSpan[2], attackFrontSpan[2], between[NbSquare];
     Mask():bbsquare(emptyBitBoard), diagonal(emptyBitBoard), antidiagonal(emptyBitBoard), file(emptyBitBoard), kingZone(emptyBitBoard), pawnAttack{ emptyBitBoard,emptyBitBoard }, push{ emptyBitBoard,emptyBitBoard }, dpush{ emptyBitBoard,emptyBitBoard }, enpassant(emptyBitBoard), knight(emptyBitBoard), king(emptyBitBoard), frontSpan{emptyBitBoard}, rearSpan{emptyBitBoard}, passerSpan{emptyBitBoard}, attackFrontSpan{emptyBitBoard}, between{emptyBitBoard}{}
 };
