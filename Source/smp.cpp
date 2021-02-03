@@ -52,8 +52,10 @@ Move ThreadPool::search(const ThreadData & d){
     wait();
     Logging::LogIt(Logging::logInfo) << "Locking other threads";
     Searcher::startLock.store(true);
+    ThreadData dOther = d;
+    dOther.depth = MAX_DEPTH;
     for (auto & s : *this){
-        (*s).setData(d); // this is a copy
+        (*s).setData((*s).isMainThread() ? d : dOther); // this is a copy
         (*s).currentMoveMs = currentMoveMs; // propagate time control
     }
     Logging::LogIt(Logging::logInfo) << "Calling main thread search";
