@@ -1,5 +1,14 @@
 import matplotlib.pyplot as plt
 from datetime import datetime
+import argparse
+
+parser = argparse.ArgumentParser(description='NNUE training plots.')
+parser.add_argument('-s', type=int, help='skip at first', default=0)
+parser.add_argument('-k', type=int, help='keep at last', default=0)
+parser.add_argument('-p', type=int, help='pause', default=15)
+parser.add_argument('-m', type=int, help='pause', default=20)
+parser.add_argument('-l', type=int, help='pause', default=40)
+args = parser.parse_args()
 
 class bcolors:
     HEADER = '\033[95m'
@@ -20,10 +29,8 @@ while True:
         for line in content:
             if line.isspace():
                 continue
-            #['1', 'logs/nn-epoch86.nnue', ':', '35.2', '81.2', '33.0', '60', '55', '65']
+            # ['1', 'logs/nn-epoch86.nnue', ':', '35.2', '81.2', '33.0', '60', '55', '65']
             values = [s for s in line.split()]
-            #print(values)
-            #logs/nn-epoch28.nnue
             l = values[1].strip().replace(' ', '').replace('logs/nn-epoch', '').replace('.nnue', '')
             names.append(values[1].replace('logs', ''))
             if l == "master":
@@ -37,20 +44,22 @@ while True:
             err.append(float(e))
 
         X, Y, err, names = zip(*sorted(zip(X, Y, err, names)))
-        keep = 25
-        X = X[-keep:]
-        Y = Y[-keep:]
-        err = err[-keep:]
+        X = X[args.s:]
+        Y = Y[args.s:]
+        err = err[args.s:]
+        X = X[-args.k:]
+        Y = Y[-args.k:]
+        err = err[-args.k:]
+
         plt.errorbar(X, Y, yerr=err, fmt='-.k', marker=None)
         plt.scatter(X, Y, c=['green' if x>0 else 'black' for x in Y], marker='o')
         plt.axhline(y=0, color='r', linestyle='-')
-        plt.axhline(y=20, color='b', linestyle='dotted')
-        plt.axhline(y=40, color='g', linestyle='dashed')
+        plt.axhline(y=args.m, color='b', linestyle='dotted')
+        plt.axhline(y=args.l, color='g', linestyle='dashed')
         plt.show(block=False)
-        plt.pause(15)
+        plt.pause(args.p)
         plt.savefig('elo.png')
         plt.clf()
-
 
         now = datetime.now()
         current_time = now.strftime("%Y:%m:%D %H:%M:%S")
