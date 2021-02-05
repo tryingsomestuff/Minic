@@ -21,6 +21,12 @@ for line in open('col.out', 'r'):
 
 X, Y, err = zip(*sorted(zip(X, Y, err)))
 
-plt.errorbar(X, Y, yerr=err, fmt='-.k')
-plt.show()
-
+plt.errorbar(X, Y, yerr=err, fmt='-.k', marker=None)
+plt.scatter(X, Y, c=['green' if x>0 else 'black' for x in Y], marker='o')
+plt.axhline(y=0, color='r', linestyle='-')
+plt.axhline(y=20, color='b', linestyle='dotted')
+plt.axhline(y=40, color='g', linestyle='dashed')
+plt.show(block=False)
+plt.pause(30)
+plt.savefig('elo.png')
+plt.close()
