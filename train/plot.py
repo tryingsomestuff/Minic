@@ -47,9 +47,11 @@ while True:
         X = X[args.s:]
         Y = Y[args.s:]
         err = err[args.s:]
+        names = names[args.s:]
         X = X[-args.k:]
         Y = Y[-args.k:]
         err = err[-args.k:]
+        names = names[-args.k:]
 
         plt.errorbar(X, Y, yerr=err, fmt='-.k', marker=None)
         plt.scatter(X, Y, c=['green' if y>0 else 'black' if y+e > 0 else 'red' for y,e in zip(Y,err)], marker='o')
