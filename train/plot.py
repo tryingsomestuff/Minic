@@ -11,17 +11,6 @@ parser.add_argument('-m', type=int, help='pause', default=20)
 parser.add_argument('-l', type=int, help='pause', default=40)
 args = parser.parse_args()
 
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-
 while True:
     with open('logs/ordo.out') as f:
         content = f.readlines()[2:-3]
@@ -55,6 +44,8 @@ while True:
             err = err[-args.k:]
             names = names[-args.k:]
 
+            plt.subplot(121)
+
             plt.errorbar(X, Y, yerr=err, fmt='-.', color='gray', marker=None)
             plt.scatter(X, Y, c=['gold' if y-e>0 else 'lime' if y>0 else 'black' if y+e > 0 else 'red' for y,e in zip(Y,err)], s=64, marker='o', label='Nets Elo')
             plt.scatter(X, [ y+1.5*e for (y,e) in zip(Y,err)], color='violet', marker='x', label='Best luck (150%err)')
@@ -63,32 +54,37 @@ while True:
             plt.axhline(y=args.l, color='springgreen', linestyle='dashed', label='Master + {}Elo'.format(args.l))
             plt.axhline(y=max([y-e for (y,e) in zip(Y,err)]), color='aqua', linestyle='dashdot', label='Current worst outcome')
             plt.legend()
-            plt.show(block=False)
-            plt.pause(args.p)
-            plt.savefig('elo.png')
-            plt.clf()
 
             now = datetime.now()
-            current_time = now.strftime("%Y:%m:%D %H:%M:%S")
-            print(current_time)
+            txt = now.strftime("%m/%d/%Y, %H:%M:%S") + '\n'
             nn = 0
             pr = 0
             po = 0
             for (x, y, e, n) in zip(X, Y, err, names): 
                 if y - e > 0:
-                    print(bcolors.OKGREEN + 'net at {: <5} +/- {: <5} : {}'.format(y,e,n) + bcolors.ENDC)
+                    txt += 'good net {: <5} +/- {: <5} : {}'.format(y,e,n) + '\n'
                     nn+=1
             if nn < 10:
                 for (x, y, e, n) in zip(X, Y, err, names): 
                     if y > 0:
-                        print(bcolors.OKBLUE + 'probable net at {: <5} +/- {: <5} : {}'.format(str(y),str(e),n) + bcolors.ENDC)
+                        txt +=  'probable net {: <5} +/- {: <5} : {}'.format(str(y),str(e),n) + '\n'
                         pr+=1
             if nn < 10 and pr < 15:
                 for (x, y, e, n) in zip(X, Y, err, names): 
                     if y + e > 0:
-                        print(bcolors.OKCYAN + 'possible net at {: <5} +/- {: <5} : {}'.format(str(y),str(e),n) + bcolors.ENDC)              
+                        txt += 'possible net {: <5} +/- {: <5} : {}'.format(str(y),str(e),n) + '\n'
                         po+=1
-            print('----------------------------------------------------------')
+
+            plt.subplot(122)
+            plt.axis('off')
+            size = plt.gcf().get_size_inches()*plt.gcf().dpi # size in pixels
+            plt.text(0, 0, txt, fontsize=size[1]/50)
+
+            plt.show(block=False)
+            plt.pause(args.p)
+            plt.savefig('elo.png')
+            plt.clf()
+
         except KeyboardInterrupt:
             break
         except Exception as e: 
