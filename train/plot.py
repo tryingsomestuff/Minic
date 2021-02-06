@@ -7,8 +7,8 @@ parser = argparse.ArgumentParser(description='NNUE training plots.')
 parser.add_argument('-s', type=int, help='skip at first', default=0)
 parser.add_argument('-k', type=int, help='keep at last', default=0)
 parser.add_argument('-p', type=int, help='pause', default=15)
-parser.add_argument('-m', type=int, help='pause', default=20)
-parser.add_argument('-l', type=int, help='pause', default=40)
+parser.add_argument('-m', type=int, help='first target', default=20)
+parser.add_argument('-l', type=int, help='second target', default=40)
 args = parser.parse_args()
 
 while True:
@@ -31,7 +31,7 @@ while True:
             X.append(float(l))
             Y.append(float(values[3]))
             err.append(float(e))
-            names.append(values[1].replace('logs', ''))
+            names.append(values[1].replace('logs/', ''))
 
         try:
             X, Y, err, names = zip(*sorted(zip(X, Y, err, names)))
@@ -53,6 +53,9 @@ while True:
             plt.axhline(y=args.m, color='deepskyblue', linestyle='dotted', label='Master + {}Elo'.format(args.m))
             plt.axhline(y=args.l, color='springgreen', linestyle='dashed', label='Master + {}Elo'.format(args.l))
             plt.axhline(y=max([y-e for (y,e) in zip(Y,err)]), color='aqua', linestyle='dashdot', label='Current worst outcome')
+            axes = plt.gca()
+            axes.set_ylim([-250,1.5*max(args.m,args.l)])
+
             plt.legend()
 
             now = datetime.now()
