@@ -32,7 +32,6 @@ while True:
             # ['1', 'logs/nn-epoch86.nnue', ':', '35.2', '81.2', '33.0', '60', '55', '65']
             values = [s for s in line.split()]
             l = values[1].strip().replace(' ', '').replace('logs/nn-epoch', '').replace('.nnue', '')
-            names.append(values[1].replace('logs', ''))
             if l == "master":
                 l='0'
                 continue
@@ -42,6 +41,7 @@ while True:
             X.append(float(l))
             Y.append(float(values[3]))
             err.append(float(e))
+            names.append(values[1].replace('logs', ''))
 
         X, Y, err, names = zip(*sorted(zip(X, Y, err, names)))
         X = X[args.s:]
@@ -64,13 +64,21 @@ while True:
         now = datetime.now()
         current_time = now.strftime("%Y:%m:%D %H:%M:%S")
         print(current_time)
+        nn = 0
+        pr = 0
+        po = 0
         for (x, y, e, n) in zip(X, Y, err, names): 
            if y - e > 0:
               print(bcolors.OKGREEN + 'net at {: <5} +/- {: <5} : {}'.format(y,e,n) + bcolors.ENDC)
-        for (x, y, e, n) in zip(X, Y, err, names): 
-           if y > 0:
-              print(bcolors.OKBLUE + 'probable net at {: <5} +/- {: <5} : {}'.format(str(y),str(e),n) + bcolors.ENDC)
-        for (x, y, e, n) in zip(X, Y, err, names): 
-           if y + e > 0:
-              print(bcolors.OKCYAN + 'possible net at {: <5} +/- {: <5} : {}'.format(str(y),str(e),n) + bcolors.ENDC)              
+              nn+=1
+        if nn < 10:
+           for (x, y, e, n) in zip(X, Y, err, names): 
+              if y > 0:
+                 print(bcolors.OKBLUE + 'probable net at {: <5} +/- {: <5} : {}'.format(str(y),str(e),n) + bcolors.ENDC)
+                 pr+=1
+        if nn < 10 and pr < 15:
+           for (x, y, e, n) in zip(X, Y, err, names): 
+              if y + e > 0:
+                 print(bcolors.OKCYAN + 'possible net at {: <5} +/- {: <5} : {}'.format(str(y),str(e),n) + bcolors.ENDC)              
+                 po+=1
         print('----------------------------------------------------------')
