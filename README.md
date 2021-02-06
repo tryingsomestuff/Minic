@@ -41,6 +41,8 @@ Starting from release 3.00, **Minic is not using Stockfish NNUE implementation a
 Seer engine is offering a very well written implementation of NNUE that I borrowed and adapt to Minic. The code is more or less 400 lines. I choose to keep Stockfish code for binary sfens format as everyone is using this for now. Training code is an external tool written in Python without any dependency to engine, also adapted from Seer repository and Gary Linscott pytorch trainer.
 For now, generated nets are still quite weak, but that is a starting point, a new story to be written, in Minic 3.
 
+Nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets.
+
 ## Release process
 WARNING : Dist directory as been REMOVED from the repository because it was starting to be too big. Unofficial releases are not available anymore here. All (unofficial) releases are available in a new repo, here : https://github.com/tryingsomestuff/Minic-Dist, also available as a git submodule.
 
@@ -126,9 +128,9 @@ Minic random-mover stats are the following :
 Current level elo are more or less so that even a kid can beat low levels Minic. From level 50 or 60, you will start to struggle more! You can also use the UCI_Elo parameter if UCI_LimitStrenght is activated.
 
 ## How to compile
-* Linux : use the given build script (or make your own ...)
-* Windows : use the Linux cross-compilation script given or make your own. From time to time I also check that recent VisualStudio versions can compile Minic without warnings.
-* Android : use the given cross-compilation script or make your own.
+* Linux : just type "make", or use the given build script Tools/build.sh (or make your own ...), or try to have a look at Tools/TCEC/update.sh for some hints. The executable will be available in Dist/Minic3 subdirectory.
+* Windows : use the Linux cross-compilation script given or make your own. From time to time I also check that recent VisualStudio versions can compile Minic without warnings but I don't distribute any VS project.
+* Android/RPi : use the given cross-compilation script or make your own.
 
 ## Syzygy EGT
 To compile with SYZYGY support you'll need to clone https://github.com/jdart1/Fathom as Fathom directory and activate WITH_SYZYGY definition at compile time.
