@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from datetime import datetime
+import time
 import argparse
 
 parser = argparse.ArgumentParser(description='NNUE training plots.')
@@ -43,44 +44,53 @@ while True:
             err.append(float(e))
             names.append(values[1].replace('logs', ''))
 
-        X, Y, err, names = zip(*sorted(zip(X, Y, err, names)))
-        X = X[args.s:]
-        Y = Y[args.s:]
-        err = err[args.s:]
-        names = names[args.s:]
-        X = X[-args.k:]
-        Y = Y[-args.k:]
-        err = err[-args.k:]
-        names = names[-args.k:]
+        try:
+            X, Y, err, names = zip(*sorted(zip(X, Y, err, names)))
+            X = X[args.s:]
+            Y = Y[args.s:]
+            err = err[args.s:]
+            names = names[args.s:]
+            X = X[-args.k:]
+            Y = Y[-args.k:]
+            err = err[-args.k:]
+            names = names[-args.k:]
 
-        plt.errorbar(X, Y, yerr=err, fmt='-.k', marker=None)
-        plt.scatter(X, Y, c=['green' if y>0 else 'black' if y+e > 0 else 'red' for y,e in zip(Y,err)], marker='o')
-        plt.axhline(y=0, color='r', linestyle='-')
-        plt.axhline(y=args.m, color='b', linestyle='dotted')
-        plt.axhline(y=args.l, color='g', linestyle='dashed')
-        plt.show(block=False)
-        plt.pause(args.p)
-        plt.savefig('elo.png')
-        plt.clf()
+            plt.errorbar(X, Y, yerr=err, fmt='-.', color='gray', marker=None)
+            plt.scatter(X, Y, c=['lime' if y>0 else 'black' if y+e > 0 else 'red' for y,e in zip(Y,err)], marker='o', label='Nets Elo')
+            plt.scatter(X, [ y+1.5*e for (y,e) in zip(Y,err)], color='violet', marker='x', label='Best luck')
+            plt.axhline(y=0, color='tomato', linestyle='-', label='Current master')
+            plt.axhline(y=args.m, color='deepskyblue', linestyle='dotted', label='Master + {}'.format(args.m))
+            plt.axhline(y=args.l, color='springgreen', linestyle='dashed', label='Master + {}'.format(args.l))
+            plt.axhline(y=max([y-e for (y,e) in zip(Y,err)]), color='aqua', linestyle='dashdot', label='Current worst outcome')
+            plt.legend()
+            plt.show(block=False)
+            plt.pause(args.p)
+            plt.savefig('elo.png')
+            plt.clf()
 
-        now = datetime.now()
-        current_time = now.strftime("%Y:%m:%D %H:%M:%S")
-        print(current_time)
-        nn = 0
-        pr = 0
-        po = 0
-        for (x, y, e, n) in zip(X, Y, err, names): 
-           if y - e > 0:
-              print(bcolors.OKGREEN + 'net at {: <5} +/- {: <5} : {}'.format(y,e,n) + bcolors.ENDC)
-              nn+=1
-        if nn < 10:
-           for (x, y, e, n) in zip(X, Y, err, names): 
-              if y > 0:
-                 print(bcolors.OKBLUE + 'probable net at {: <5} +/- {: <5} : {}'.format(str(y),str(e),n) + bcolors.ENDC)
-                 pr+=1
-        if nn < 10 and pr < 15:
-           for (x, y, e, n) in zip(X, Y, err, names): 
-              if y + e > 0:
-                 print(bcolors.OKCYAN + 'possible net at {: <5} +/- {: <5} : {}'.format(str(y),str(e),n) + bcolors.ENDC)              
-                 po+=1
-        print('----------------------------------------------------------')
+            now = datetime.now()
+            current_time = now.strftime("%Y:%m:%D %H:%M:%S")
+            print(current_time)
+            nn = 0
+            pr = 0
+            po = 0
+            for (x, y, e, n) in zip(X, Y, err, names): 
+                if y - e > 0:
+                    print(bcolors.OKGREEN + 'net at {: <5} +/- {: <5} : {}'.format(y,e,n) + bcolors.ENDC)
+                    nn+=1
+            if nn < 10:
+                for (x, y, e, n) in zip(X, Y, err, names): 
+                    if y > 0:
+                        print(bcolors.OKBLUE + 'probable net at {: <5} +/- {: <5} : {}'.format(str(y),str(e),n) + bcolors.ENDC)
+                        pr+=1
+            if nn < 10 and pr < 15:
+                for (x, y, e, n) in zip(X, Y, err, names): 
+                    if y + e > 0:
+                        print(bcolors.OKCYAN + 'possible net at {: <5} +/- {: <5} : {}'.format(str(y),str(e),n) + bcolors.ENDC)              
+                        po+=1
+            print('----------------------------------------------------------')
+        except KeyboardInterrupt:
+            break
+        except Exception as e: 
+            print(e)
+            time.sleep(2)
