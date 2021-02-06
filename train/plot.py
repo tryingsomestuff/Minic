@@ -52,7 +52,7 @@ while True:
         err = err[-args.k:]
 
         plt.errorbar(X, Y, yerr=err, fmt='-.k', marker=None)
-        plt.scatter(X, Y, c=['green' if x>0 else 'black' for x in Y], marker='o')
+        plt.scatter(X, Y, c=['green' if y>0 else 'black' if y+e > 0 else 'red' for y,e in zip(Y,err)], marker='o')
         plt.axhline(y=0, color='r', linestyle='-')
         plt.axhline(y=args.m, color='b', linestyle='dotted')
         plt.axhline(y=args.l, color='g', linestyle='dashed')
