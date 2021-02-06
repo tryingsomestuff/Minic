@@ -8,7 +8,7 @@ config:
 	chmod +x $(ROOT_DIR)/Tools/*.sh
 
 fathom:
-	git rev-parse --is-inside-work-tree > /dev/null 2>&1 && git submodule update --init -- Fathom || rm -rf Fathom && git clone https://github.com/jdart1/Fathom.git
+	git rev-parse --is-inside-work-tree > /dev/null 2>&1 && git submodule update --init -- Fathom || (rm -rf Fathom && git clone https://github.com/jdart1/Fathom.git)
 
 release: config fathom
 	$(ROOT_DIR)/Tools/release.sh
