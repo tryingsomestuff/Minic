@@ -56,11 +56,11 @@ while True:
             names = names[-args.k:]
 
             plt.errorbar(X, Y, yerr=err, fmt='-.', color='gray', marker=None)
-            plt.scatter(X, Y, c=['lime' if y>0 else 'black' if y+e > 0 else 'red' for y,e in zip(Y,err)], marker='o', label='Nets Elo')
-            plt.scatter(X, [ y+1.5*e for (y,e) in zip(Y,err)], color='violet', marker='x', label='Best luck')
+            plt.scatter(X, Y, c=['gold' if y-e>0 else 'lime' if y>0 else 'black' if y+e > 0 else 'red' for y,e in zip(Y,err)], s=64, marker='o', label='Nets Elo')
+            plt.scatter(X, [ y+1.5*e for (y,e) in zip(Y,err)], color='violet', marker='x', label='Best luck (150%err)')
             plt.axhline(y=0, color='tomato', linestyle='-', label='Current master')
-            plt.axhline(y=args.m, color='deepskyblue', linestyle='dotted', label='Master + {}'.format(args.m))
-            plt.axhline(y=args.l, color='springgreen', linestyle='dashed', label='Master + {}'.format(args.l))
+            plt.axhline(y=args.m, color='deepskyblue', linestyle='dotted', label='Master + {}Elo'.format(args.m))
+            plt.axhline(y=args.l, color='springgreen', linestyle='dashed', label='Master + {}Elo'.format(args.l))
             plt.axhline(y=max([y-e for (y,e) in zip(Y,err)]), color='aqua', linestyle='dashdot', label='Current worst outcome')
             plt.legend()
             plt.show(block=False)
