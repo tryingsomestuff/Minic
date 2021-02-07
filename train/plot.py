@@ -43,7 +43,10 @@ while True:
             names.append(values[1].replace(args.n, ''))
 
         try:
+            # sort based on X value
             X, Y, err, names = zip(*sorted(zip(X, Y, err, names)))
+            
+            # filter as requested
             X = X[args.s:]
             Y = Y[args.s:]
             err = err[args.s:]
@@ -53,15 +56,35 @@ while True:
             err = err[-args.k:]
             names = names[-args.k:]
 
+            Yp150e = [y+1.5*e for (y,e) in zip(Y,err)]
+            Yme = [y-e for (y,e) in zip(Y,err)]
+
+            _, Ycur, Xcur = zip(*sorted(zip(Yp150e, Y, X)))
+            Xcur = Xcur[-3:]
+            Ycur = Ycur[-3:]
+
+            _, Ybest, Xbest = zip(*sorted(zip(Yme, Y, X)))
+            Xbest = Xbest[-3:]
+            Ybest = Ybest[-3:]
+
             plt.subplot(121)
 
+            # error bar and dot color
             plt.errorbar(X, Y, yerr=err, fmt='-.', color='gray', marker=None)
             plt.scatter(X, Y, c=['gold' if y-e>args.l else 'silver' if y-e>args.m else 'lime' if y-e>0 else 'cyan' if y>0 else 'black' if y+e > 0 else 'red' for y,e in zip(Y,err)], s=64, marker='o', label='Nets Elo')
-            plt.scatter(X, [ y+1.5*e for (y,e) in zip(Y,err)], color='violet', marker='x', label='Best luck (150%err)')
-            plt.axhline(y=0, color='tomato', linestyle='-', label='Current master')
-            plt.axhline(y=args.m, color='deepskyblue', linestyle='dotted', label='Master + {}Elo'.format(args.m))
-            plt.axhline(y=args.l, color='springgreen', linestyle='dashed', label='Master + {}Elo'.format(args.l))
-            plt.axhline(y=max([y-e for (y,e) in zip(Y,err)]), color='aqua', linestyle='dashdot', label='Current worst outcome')
+
+            # specific markers
+            plt.scatter(X,     Yp150e, color='violet', marker='x', label='Best luck (150%err)')
+            plt.scatter(Xcur,  Ycur,   color='blue',   marker='X', label='Current analysis'   , s=84)
+            plt.scatter(Xbest, Ybest,  color='green',  marker='^', label='Current best'       , s=84)
+
+            # h lines
+            plt.axhline(y=0       , color='tomato'     , linestyle='-'      , label='Current master')
+            plt.axhline(y=args.m  , color='deepskyblue', linestyle='dotted' , label='Master + {}Elo'.format(args.m))
+            plt.axhline(y=args.l  , color='springgreen', linestyle='dashed' , label='Master + {}Elo'.format(args.l))
+            plt.axhline(y=max(Yme), color='aqua'       , linestyle='dashdot', label='Current worst outcome')
+
+            # axis config
             axes = plt.gca()
             axes.set_ylim([args.y,1.5*max(args.m,args.l)])
 
