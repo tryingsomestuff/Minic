@@ -9,15 +9,27 @@ class TargetBoundCheck(argparse.Action):
             raise argparse.ArgumentError(self, "target must be between 0 and 1000")
         setattr(namespace, self.dest, values)
 
+def str2bool(v):
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
 parser = argparse.ArgumentParser(description='NNUE training plots.')
-parser.add_argument('-s', type=int, help='skip this net at first', default=0 )
-parser.add_argument('-k', type=int, help='only keep this last nets', default=0)
-parser.add_argument('-p', type=int, help='pause between refresh in sec', default=15)
-parser.add_argument('-y', type=int, help='y axis low limit', default=-150)
-parser.add_argument('-m', type=int, help='first target', default=20, action=TargetBoundCheck)
-parser.add_argument('-l', type=int, help='second target', default=40, action=TargetBoundCheck)
-parser.add_argument('-f', type=str, help='ordo file path', default='logs/ordo.out')
-parser.add_argument('-n', type=str, help='nets directory path (with trailing /', default='logs/')
+parser.add_argument('-e', type=str2bool, help='with error bar', default=False )
+parser.add_argument('-x', type=str2bool, help='with exploration data', default=False )
+parser.add_argument('-s', type=int,      help='skip this net at first', default=0 )
+parser.add_argument('-k', type=int,      help='only keep this last nets', default=0)
+parser.add_argument('-p', type=int,      help='pause between refresh in sec', default=15)
+parser.add_argument('-y', type=int,      help='y axis low limit', default=-150)
+parser.add_argument('-m', type=int,      help='first target', default=20, action=TargetBoundCheck)
+parser.add_argument('-l', type=int,      help='second target', default=40, action=TargetBoundCheck)
+parser.add_argument('-f', type=str,      help='ordo file path', default='logs/ordo.out')
+parser.add_argument('-n', type=str,      help='nets directory path (with trailing /', default='logs/')
 args = parser.parse_args()
 
 while True:
@@ -70,11 +82,13 @@ while True:
             plt.subplot(121)
 
             # error bar and dot color
-            plt.errorbar(X, Y, yerr=err, fmt='-.', color='gray', marker=None)
+            if args.e:
+                plt.errorbar(X, Y, yerr=err, fmt='.', color='gray', marker=None, capsize=2)
             plt.scatter(X, Y, c=['gold' if y-e>args.l else 'silver' if y-e>args.m else 'lime' if y-e>0 else 'cyan' if y>0 else 'black' if y+e > 0 else 'red' for y,e in zip(Y,err)], s=64, marker='o', label='Nets Elo')
 
             # specific markers
-            plt.scatter(X,     Yp150e, color='violet', marker='x', label='Best luck (150%err)')
+            if args.x:
+               plt.scatter(X,     Yp150e, color='violet', marker='x', label='Best luck (150%err)')
             plt.scatter(Xcur,  Ycur,   color='blue',   marker='X', label='Current analysis'   , s=84)
             plt.scatter(Xbest, Ybest,  color='green',  marker='^', label='Current best'       , s=84)
 
