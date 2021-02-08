@@ -23,6 +23,7 @@ parser = argparse.ArgumentParser(description='NNUE training plots.')
 parser.add_argument('-e', type=str2bool, help='with error bar', default=False )
 parser.add_argument('-x', type=str2bool, help='with exploration data', default=False )
 parser.add_argument('-s', type=int,      help='skip this net at first', default=0 )
+parser.add_argument('-X', type=float,    help='exploration factor', default=1.5 )
 parser.add_argument('-k', type=int,      help='only keep this last nets', default=0)
 parser.add_argument('-p', type=int,      help='pause between refresh in sec', default=15)
 parser.add_argument('-y', type=int,      help='y axis low limit', default=-150)
@@ -37,6 +38,7 @@ while True:
         content = f.readlines()[2:-3]
         X, Y ,err = [], [], []
         names = []
+        games = []
         for line in content:
             if line.isspace():
                 continue
@@ -52,23 +54,26 @@ while True:
             X.append(float(l))
             Y.append(float(values[3]))
             err.append(float(e))
+            games.append(values[6])
             names.append(values[1].replace(args.n, ''))
 
         try:
             # sort based on X value
-            X, Y, err, names = zip(*sorted(zip(X, Y, err, names)))
+            X, Y, err, names, games = zip(*sorted(zip(X, Y, err, names, games)))
             
             # filter as requested
             X = X[args.s:]
             Y = Y[args.s:]
             err = err[args.s:]
             names = names[args.s:]
+            games = games[args.s:]
             X = X[-args.k:]
             Y = Y[-args.k:]
             err = err[-args.k:]
             names = names[-args.k:]
+            games = games[-args.k:]
 
-            Yp150e = [y+1.5*e for (y,e) in zip(Y,err)]
+            Yp150e = [y+args.X*e for (y,e) in zip(Y,err)]
             Yme = [y-e for (y,e) in zip(Y,err)]
 
             _, Ycur, Xcur = zip(*sorted(zip(Yp150e, Y, X)))
@@ -88,7 +93,7 @@ while True:
 
             # specific markers
             if args.x:
-               plt.scatter(X,     Yp150e, color='violet', marker='x', label='Best luck (150%err)')
+               plt.scatter(X,     Yp150e, color='violet', marker='x', label='Exploration')
             plt.scatter(Xcur,  Ycur,   color='blue',   marker='X', label='Current analysis'   , s=84)
             plt.scatter(Xbest, Ybest,  color='green',  marker='^', label='Current best'       , s=84)
 
@@ -100,7 +105,7 @@ while True:
 
             # axis config
             axes = plt.gca()
-            axes.set_ylim([args.y,1.5*max(args.m,args.l)])
+            axes.set_ylim([args.y,args.X*max(args.m,args.l)])
 
             plt.legend()
 
@@ -113,23 +118,23 @@ while True:
             good = []
             probable = []
             possible = []
-            for (x, y, e, n) in zip(X, Y, err, names): 
+            for (x, y, e, n, g) in zip(X, Y, err, names, games): 
                 if y - e > args.l:
-                    target2.append([x,y,e,n])
+                    target2.append([x,y,e,n,g])
                 elif y - e > args.m:
-                    target1.append([x,y,e,n])
+                    target1.append([x,y,e,n,g])
                 elif y - e > 0:
-                    good.append([x,y,e,n])
+                    good.append([x,y,e,n,g])
                 elif y > 0:
-                    probable.append([x,y,e,n])
+                    probable.append([x,y,e,n,g])
                 elif y + e > 0:
-                    possible.append([x,y,e,n])
+                    possible.append([x,y,e,n,g])
 
-            txt += ['target2  net {: <5} +/- {: <5} : {}'.format(y,e,n) for (x,y,e,n) in target2 ]
-            txt += ['target1  net {: <5} +/- {: <5} : {}'.format(y,e,n) for (x,y,e,n) in target1 ]
-            txt += ['good     net {: <5} +/- {: <5} : {}'.format(y,e,n) for (x,y,e,n) in good ]
-            txt += ['probable net {: <5} +/- {: <5} : {}'.format(y,e,n) for (x,y,e,n) in probable ]
-            txt += ['possible net {: <5} +/- {: <5} : {}'.format(y,e,n) for (x,y,e,n) in possible ]
+            txt += ['target2  net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in target2 ]
+            txt += ['target1  net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in target1 ]
+            txt += ['good     net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in good ]
+            txt += ['probable net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in probable ]
+            txt += ['possible net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in possible ]
 
             txt = txt[:display_max+2]
 
