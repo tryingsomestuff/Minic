@@ -124,6 +124,10 @@ MinicNNUE 2.51 using Nascent Nutrient net is tested at 3284 on the [SP-CC 3min+1
 STS : 1191/1500 @10sec per position (single thread on an i7-9700K)  
 WAC : 291/300 @10sec per position (single thread on an i7-9700K)  
 
+### TCEC stats:
+
+TCEC hardware: Minic is at 3293 (https://tcec-chess.com/bayeselo.txt)
+
 ### Home test
 Here are some (old) fast TC results (STC 10s+0.1)
 ```
