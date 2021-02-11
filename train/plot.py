@@ -27,6 +27,7 @@ parser.add_argument('-X', type=float,    help='exploration factor', default=1.5 
 parser.add_argument('-k', type=int,      help='only keep this last nets', default=0)
 parser.add_argument('-p', type=int,      help='pause between refresh in sec', default=15)
 parser.add_argument('-y', type=int,      help='y axis low limit', default=-150)
+parser.add_argument('-Y', type=int,      help='y axis high limit', default=150)
 parser.add_argument('-m', type=int,      help='first target', default=20, action=TargetBoundCheck)
 parser.add_argument('-l', type=int,      help='second target', default=40, action=TargetBoundCheck)
 parser.add_argument('-f', type=str,      help='ordo file path', default='logs/ordo.out')
@@ -105,7 +106,7 @@ while True:
 
             # axis config
             axes = plt.gca()
-            axes.set_ylim([args.y,args.X*max(args.m,args.l)])
+            axes.set_ylim([args.y,args.Y])
 
             plt.legend()
 
