@@ -18,7 +18,7 @@
 // But now uses different architecture. Especially quantization.
 // see https://github.com/connormcmonigle/seer-nnue
 
-#define NNUEALIGNMENT alignas(64)
+#define NNUEALIGNMENT 64
 
 namespace nnue{
 
@@ -213,7 +213,7 @@ struct stack_vector{
     return false;
   }
 #else
-  NNUEALIGNMENT T data[dim];
+  alignas(NNUEALIGNMENT) T data[dim];
 #endif
 
 /*
@@ -320,8 +320,8 @@ struct stack_affine{
   typedef typename Quantization<Q>::WT WT;
 
   // dirty thing here, stack_affine is always for inner layer
-  NNUEALIGNMENT WT W[W_numel];
-  NNUEALIGNMENT BT b[b_numel];
+  alignas(NNUEALIGNMENT) WT W[W_numel];
+  alignas(NNUEALIGNMENT) BT b[b_numel];
   
   constexpr stack_vector<BT, dim1> forward(const stack_vector<BT, dim0>& x) const {
     auto result = stack_vector<BT, dim1>::from(b);
@@ -359,7 +359,7 @@ struct big_affine{
 
   // dirty thing here, big_affine is always for input layer
   typename Quantization<Q>::WIT* W{nullptr};
-  NNUEALIGNMENT typename Quantization<Q>::BIT b[b_numel];
+  alignas(NNUEALIGNMENT) typename Quantization<Q>::BIT b[b_numel];
 
   void insert_idx(const size_t idx, stack_vector<BIT, b_numel>& x) const {
     const WIT* mem_region = W + idx * dim1;
