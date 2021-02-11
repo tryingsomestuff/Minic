@@ -45,7 +45,7 @@ Nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets.
 
 ## Various NNUE nets strenght 
 
-This table show nets strength compared to HCE on an AVX2 hardware. Results will be a lot different on older hardware.
+This table show nets strength compared to HCE on an AVX2 hardware at short TC (10s+0.1). Results will be a lot different on older hardware.
 
 ```
 Rank Name                                Elo     +/-   Games   Score    Draw 
