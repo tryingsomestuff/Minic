@@ -95,7 +95,7 @@ And more recently also some RPi executable
 Please note that Win32 binaries are very slow (I don't know why yet, so please use Win64 one if possible).
 Please note that Minic has always been a little weaker under Windows OS.
      
-## Strength
+## Strength & competitions
 
 ### CCRL
 Minic 2.46 is tested at 3054 on the [CCRL 40/15 scale](http://ccrl.chessdom.com/ccrl/4040/)  
