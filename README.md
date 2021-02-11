@@ -45,7 +45,7 @@ Nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets.
 
 ## Various NNUE nets strenght 
 
-This table show nets strength compared to HCE on an AVX2 hardware at short TC (10s+0.1). Results will be a lot different on older hardware.
+This table shows nets strength compared to HCE on an AVX2 hardware at short TC (10s+0.1). Results will be a lot different on older hardware where NNUE evaluation is much slower. I thus encourage users to only use Minic with NNUE nets on recent hardware.
 
 ```
 Rank Name                                Elo     +/-   Games   Score    Draw 
@@ -63,14 +63,14 @@ Rank Name                                Elo     +/-   Games   Score    Draw
 
 ```
 
-Nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets.
+More details about those nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets.
 
 ## Release process
-WARNING : Dist directory as been REMOVED from the repository because it was starting to be too big. Unofficial releases are not available anymore here. All (unofficial) releases are available in a new repo, here : https://github.com/tryingsomestuff/Minic-Dist, also available as a git submodule.
+WARNING : the former Dist directory as been REMOVED from the repository because it was starting to be too big. Unofficial releases are not available anymore here. All (unofficial) releases are available in a new repo, here : https://github.com/tryingsomestuff/Minic-Dist, also available as a git submodule.
 
-Some stable/official ones will still be made available as github release. I "officially release" (create a github version) as soon as I have some validated elo (at least +10) or an important bug fix.
+Some stable/official ones will still be made available as github release (https://github.com/tryingsomestuff/Minic/releases). I "officially release" (create a github version) as soon as I have some validated elo (at least +10) or an important bug fix.
 
-In a github release, a tester shall only use the given (attached) binaries. The full "source" package always contains everything (source code, test suites, opening suite, books, ...) using git "submodule" so that the main repository remains small. 
+In a github release, a tester shall only use the given (attached) binaries. The full "source" package always contains everything (source code, test suites, opening suite, books, ...) but using git "submodule" so that the main repository remains small. 
 
 Starting from release 2.27 new binaries are named following this convention :
 
@@ -86,6 +86,12 @@ Starting from release 2.27 new binaries are named following this convention :
 * minic_2.27_mingw_x32_i686.exe    : basic Windows32 
 * minic_2.27_android               : android armv7  
 ```   
+And more recently also some RPi executable
+```
+* minic_3.03_linux_x32_armv7       : RPi armv7
+* minic_3.03_linux_x64_armv8       : RPi armv8
+```
+
 Please note that Win32 binaries are very slow (I don't know why yet, so please use Win64 one if possible).
 Please note that Minic has always been a little weaker under Windows OS.
      
