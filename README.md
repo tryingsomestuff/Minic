@@ -43,6 +43,26 @@ For now, generated nets are still quite weak, but that is a starting point, a ne
 
 Nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets.
 
+## Various NNUE nets strenght 
+
+This table show nets strength compared to HCE on an AVX2 hardware. Results will be a lot different on older hardware.
+
+```
+Rank Name                                Elo     +/-   Games   Score    Draw 
+   1 minic_2.53_napping_nexus            270      12    3080   82.6%   25.7% 
+   2 minic_2.53_nascent_nutrient         165      11    3080   72.1%   29.9% 
+   3 minic_3.02_nettling_nemesis          79      10    3079   61.2%   29.3% 
+   4 minic_3.04_noisy_notch                4      10    3079   50.6%   35.6% 
+   5 minic_3.03_niggling_nymph           -33      10    3079   45.3%   35.1% 
+   6 minic_3.02_narcotized_nightshift    -47      10    3080   43.2%   34.4% 
+   7 minic_2.53                          -52      10    3079   42.6%   34.2% 
+   8 minic_2.46                          -64      10    3080   40.9%   32.7% 
+   9 minic_3.03                          -70      10    3079   40.1%   34.0% 
+  10 minic_3.04                          -78      10    3079   38.9%   32.5% 
+  11 minic_3.01_nefarious_nucleus       -127      11    3080   32.4%   26.4% 
+
+```
+
 ## Release process
 WARNING : Dist directory as been REMOVED from the repository because it was starting to be too big. Unofficial releases are not available anymore here. All (unofficial) releases are available in a new repo, here : https://github.com/tryingsomestuff/Minic-Dist, also available as a git submodule.
 
