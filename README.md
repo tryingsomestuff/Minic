@@ -63,6 +63,8 @@ Rank Name                                Elo     +/-   Games   Score    Draw
 
 ```
 
+Nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets.
+
 ## Release process
 WARNING : Dist directory as been REMOVED from the repository because it was starting to be too big. Unofficial releases are not available anymore here. All (unofficial) releases are available in a new repo, here : https://github.com/tryingsomestuff/Minic-Dist, also available as a git submodule.
 
