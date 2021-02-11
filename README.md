@@ -143,6 +143,8 @@ Rank Name                          Elo     +/-   Games   Score   Draws
 
 Minic strength can be ajdusted using the level option (from command line, json configuration file, or using protocol option support, using value from 0 to 100). Level 0 is a random mover, 1 to 30 very weak, ..., level 100 is full strength. Level functionnaly will be enhanced in a near future.
 
+Current level elo are more or less so that even a kid can beat low levels Minic. From level 50 or 60, you will start to struggle more! You can also use the UCI_Elo parameter if UCI_LimitStrenght is activated.
+
 ### Random mover
 Minic random-mover stats are the following :
 ```
@@ -154,7 +156,16 @@ Minic random-mover stats are the following :
    6.13%  1/2-1/2 {Draw by stalemate}
 ```
 
-Current level elo are more or less so that even a kid can beat low levels Minic. From level 50 or 60, you will start to struggle more! You can also use the UCI_Elo parameter if UCI_LimitStrenght is activated.
+### TCEC
+
+Here are Minic results at TCEC
+
+TCEC15: 8th/10 in Division 4a (https://en.wikipedia.org/wiki/TCEC_Season_15)    
+TCEC16: 13th/18 in Qualification League (https://en.wikipedia.org/wiki/TCEC_Season_16)   
+TCEC17: 7th/16 in Q League, 13th/16 in League 2 (https://en.wikipedia.org/wiki/TCEC_Season_17)  
+TCEC18: 4th/10 in League 3 (https://en.wikipedia.org/wiki/TCEC_Season_18)  
+TCEC19: 3rd/10 in League 3 (https://en.wikipedia.org/wiki/TCEC_Season_19)  
+TCEC20: 2nd/10 in League 3, 9th/10 in League 2 (https://en.wikipedia.org/wiki/TCEC_Season_20)  
 
 ## How to compile
 * Linux (Gcc>9.2 requiered): just type "make", or use the given build script Tools/build.sh (or make your own ...), or try to have a look at Tools/TCEC/update.sh for some hints. The executable will be available in Dist/Minic3 subdirectory.
