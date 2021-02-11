@@ -11,7 +11,7 @@ Until version 2 of Minic, some optional features such as Texel tuning, perft, te
 
 Nowadays, since the release of version "2" Minic is written in a more classic c++ style, although very dense lines are still present and recall Minic past compacity...
 
-## More history & the NNUE Minic history
+## More history & the NNUE Minic story
 
 ### Week-end project
 Initially, the code size of Minic was supposed not to go above 2000sloc. It started as a week-end project in october 2018 (http://talkchess.com/forum3/viewtopic.php?f=2&t=68701). But, as soon as more features (especially SMP, material tables and bitboard) came up, I tried to keep it under 4000sloc and then 5000sloc, ... This is why this engine was named Minic, this stands for "Minimal Chess" (and is not related to the GM Dragoljub Minić) but it has not much to do with minimalism anymore...  
