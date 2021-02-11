@@ -125,24 +125,25 @@ STS : 1191/1500 @10sec per position (single thread on an i7-9700K)
 WAC : 291/300 @10sec per position (single thread on an i7-9700K)  
 
 ### Home test
-Here are some fast TC results (STC 10s+0.1)
+Here are some (old) fast TC results (STC 10s+0.1)
 ```
 Rank Name                          Elo     +/-   Games   Score   Draws
    1 demolito                      105      16    1300   64.7%   31.5%
-   2 igel-dev                       62      15    1300   58.8%   34.0%
+   2 igel-2.6                       62      15    1300   58.8%   34.0%
    3 texel                          30      15    1300   54.3%   33.3%
    4 Vajolet2_2.8                   -3      15    1301   49.6%   33.1%
    5 minic_2.48                    -17      15    1300   47.5%   36.4%
    6 minic_2.47                    -26      15    1300   46.3%   33.7%
    7 minic_2.45                    -30      15    1301   45.7%   35.2%
-   8 Winter                        -57      16    1299   41.8%   28.6%
-   9 combusken                     -61      16    1299   41.3%   30.6%
+   8 Winter0.8                     -57      16    1299   41.8%   28.6%
+   9 combusken1.3                  -61      16    1299   41.3%   30.6%
 
 5850 of 360000 games finished.
 ```
 
 Minic strength can be ajdusted using the level option (from command line, json configuration file, or using protocol option support, using value from 0 to 100). Level 0 is a random mover, 1 to 30 very weak, ..., level 100 is full strength. Level functionnaly will be enhanced in a near future.
 
+### Random mover
 Minic random-mover stats are the following :
 ```
    7.73%  0-1 {Black mates}
@@ -156,13 +157,13 @@ Minic random-mover stats are the following :
 Current level elo are more or less so that even a kid can beat low levels Minic. From level 50 or 60, you will start to struggle more! You can also use the UCI_Elo parameter if UCI_LimitStrenght is activated.
 
 ## How to compile
-* Linux : just type "make", or use the given build script Tools/build.sh (or make your own ...), or try to have a look at Tools/TCEC/update.sh for some hints. The executable will be available in Dist/Minic3 subdirectory.
+* Linux (Gcc>9.2 requiered): just type "make", or use the given build script Tools/build.sh (or make your own ...), or try to have a look at Tools/TCEC/update.sh for some hints. The executable will be available in Dist/Minic3 subdirectory.
 * Windows : use the Linux cross-compilation script given or make your own. From time to time I also check that recent VisualStudio versions can compile Minic without warnings but I don't distribute any VS project.
 * Android/RPi : use the given cross-compilation script or make your own.
 
 ## Syzygy EGT
 To compile with SYZYGY support you'll need to clone https://github.com/jdart1/Fathom as Fathom directory and activate WITH_SYZYGY definition at compile time.
-To use EGT just specify syzygyPath in the command line or GUI option.
+This can be done using the given git submodule or by hand. To use EGT just specify syzygyPath in the command line or using the GUI option.
 
 ## How to run
 add the command line option "-xboard" to go to xboard/winboard mode or -uci for UCI.
