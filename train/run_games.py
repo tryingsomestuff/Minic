@@ -6,6 +6,10 @@ import threading
 import subprocess
 
 
+nb_best_print = 15
+nb_best_test = 15
+nb_tested_net = 3
+
 class Command(object):
     def __init__(self, cmd):
         self.cmd = cmd
@@ -86,7 +90,7 @@ def run_match(best, root_dir, c_chess_exe, concurrency, book_file_name, engine):
     """ Run a match using c-chess-cli adding pgns to a file to be analysed with ordo """
     pgn_file_name = os.path.join(root_dir, "out.pgn")
     c_chess_out_file_name = os.path.join(root_dir, "c_chess.out")
-    command = "{} -each tc=3+0.03 -gauntlet -games 20 -rounds 1 -concurrency {}".format(
+    command = "{} -each tc=3+0.03 -games 10 -rounds 2 -concurrency {}".format(
         c_chess_exe, concurrency
     )
     command = (
@@ -95,11 +99,20 @@ def run_match(best, root_dir, c_chess_exe, concurrency, book_file_name, engine):
             book_file_name
         )
     )
-    command = command + " -engine cmd={} name=master option.NNUEFile=/ssd/NNUE-Nets/niggling_nymph.bin".format(engine)
+    command = command + " -engine cmd=/ssd/Minic/Dist/Minic3/minic_3.04_linux_x64_skylake name=master option.NNUEFile=/ssd/NNUE-Nets/noisy_notch.bin"
+
+    count = 0
     for net in best:
-        command = command + " -engine cmd={} name={} option.NNUEFile={}".format(
-            engine, net, os.path.join(os.getcwd(), net)
-        )
+        if os.path.exists(net) :
+            command = command + " -engine cmd={} name={} option.NNUEFile={}".format(
+                engine, net, os.path.join(os.getcwd(), net)
+            )
+            count +=1
+            if count >= nb_tested_net:
+                break
+        else:
+            print("skip absent net file {}".format(net))
+
     command = command + " -pgn {} 0 > {} 2>&1".format(
         pgn_file_name, c_chess_out_file_name
     )
@@ -150,7 +163,7 @@ def run_round(
     # Get info from ordo data if that is around
     ordo_scores = parse_ordo(root_dir, nnues)
 
-    # provide the top 3 nets
+    # provide the top nets
     print("Best nets so far:")
     ordo_scores = dict(
         sorted(ordo_scores.items(), key=lambda item: item[1][0], reverse=True)
@@ -159,11 +172,11 @@ def run_round(
     for net in ordo_scores:
         print("   {} : {} +- {}".format(net, ordo_scores[net][0], ordo_scores[net][1]))
         count += 1
-        if count == 3:
+        if count == nb_best_print:
             break
 
-    # get top 3 with error bar added, for further investigation
-    print("Measuring nets:")
+    # get top with error bar added, for further investigation
+    print("Trying to measure {} nets in:".format(nb_tested_net))
     ordo_scores = dict(
         sorted(
             ordo_scores.items(),
@@ -175,7 +188,7 @@ def run_round(
     for net in ordo_scores:
         print("   {} : {} +- {}".format(net, ordo_scores[net][0], ordo_scores[net][1]))
         best.append(net)
-        if len(best) == 3:
+        if len(best) == nb_best_test:
             break
 
     # run these nets against master...
