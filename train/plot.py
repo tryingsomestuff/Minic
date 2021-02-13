@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 from datetime import datetime
 import time
 import argparse
@@ -20,6 +19,7 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 parser = argparse.ArgumentParser(description='NNUE training plots.')
+parser.add_argument('-D', action='store_true' , help='without display'         , default=False )
 parser.add_argument('-e', action='store_true' , help='with error bar'          , default=False )
 parser.add_argument('-x', action='store_true' , help='with exploration data'   , default=False )
 parser.add_argument('-s', type=int,             help='skip this net at first'  , default=0 )
@@ -33,6 +33,14 @@ parser.add_argument('-l', type=int,             help='second target'           ,
 parser.add_argument('-f', type=str,             help='ordo file path'          , default='logs/ordo.out')
 parser.add_argument('-n', type=str,             help='nets directory path (with trailing /)', default='logs/')
 args = parser.parse_args()
+
+import matplotlib as mpl
+if args.D:
+   mpl.use('Agg')    
+   import matplotlib.pyplot as plt
+   plt.figure(figsize=(19, 10))
+else:
+   import matplotlib.pyplot as plt
 
 while True:
     with open(args.f) as f:
@@ -119,6 +127,7 @@ while True:
             good = []
             probable = []
             possible = []
+            fail = []
             for (x, y, e, n, g) in zip(X, Y, err, names, games): 
                 if y - e > args.l:
                     target2.append([x,y,e,n,g])
@@ -130,12 +139,15 @@ while True:
                     probable.append([x,y,e,n,g])
                 elif y + e > 0:
                     possible.append([x,y,e,n,g])
+                else:
+                    fail.append([x,y,e,n,g])
 
             txt += ['target2  net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in target2 ]
             txt += ['target1  net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in target1 ]
             txt += ['good     net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in good ]
             txt += ['probable net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in probable ]
             txt += ['possible net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in possible ]
+            txt += ['fail     net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in fail ]
 
             txt = txt[:display_max+2]
 
@@ -144,9 +156,11 @@ while True:
             size = plt.gcf().get_size_inches()*plt.gcf().dpi # size in pixels
             plt.text(0, 0, '\n'.join(txt), fontsize=size[1]/max(2*display_max+10,2*txt.count('\n')+10))
 
-            plt.show(block=False)
-            plt.pause(args.p)
             plt.savefig('elo.png')
+            if not args.D:
+               plt.show(block=False)
+               plt.pause(args.p)
+            
             plt.clf()
 
         except KeyboardInterrupt:
