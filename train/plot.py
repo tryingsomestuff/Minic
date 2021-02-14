@@ -159,8 +159,7 @@ while True:
             plt.savefig('elo.png')
             if not args.D:
                plt.show(block=False)
-               plt.pause(args.p)
-            
+            plt.pause(args.p)
             plt.clf()
 
         except KeyboardInterrupt:
