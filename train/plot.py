@@ -128,7 +128,7 @@ while True:
             probable = []
             possible = []
             fail = []
-            for (x, y, e, n, g) in zip(X, Y, err, names, games): 
+            for (x, y, e, n, g) in zip(reversed(X), reversed(Y), reversed(err), reversed(names), reversed(games)): 
                 if y - e > args.l:
                     target2.append([x,y,e,n,g])
                 elif y - e > args.m:
