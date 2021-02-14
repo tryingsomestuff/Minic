@@ -37,7 +37,7 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
     for(Square k = 0 ; k < NbSquare ; ++k) p.board(k) = P_none;
 
     Square j = 1, i = 0;
-    while ((j <= NbSquare) && (i <= (char)strList[0].length())){
+    while ((j <= NbSquare) && (i < (char)strList[0].length())){
         char letter = strList[0].at(i);
         ++i;
         const Square k = (7 - (j - 1) / 8) * 8 + ((j - 1) % 8);
