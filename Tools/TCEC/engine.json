@@ -1,7 +1,7 @@
 [
     {
         "command": "./minic_linux_x64_avx2_bmi2 -uci -book 0 -syzygyPath /home/syzygy/",
-        "name": "Minic 3.01",
+        "name": "Minic 3.04",
         "restart": "on",
         "rating": "3287",
         "options": [
@@ -15,7 +15,7 @@
             },
             { 
                 "name": "NNUEFile",
-                "value": "nefarious_nucleus.bin"
+                "value": "noisy_notch.bin"
             },            
             {
                 "name": "CommandLineOptions",

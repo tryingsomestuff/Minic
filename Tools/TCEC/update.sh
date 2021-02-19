@@ -1,9 +1,9 @@
 #!/bin/bash
 git clone --branch=$VERSION https://github.com/tryingsomestuff/Minic
 cd Minic
-wget https://raw.githubusercontent.com/tryingsomestuff/NNUE-Nets/master/nefarious_nucleus.bin
+wget https://raw.githubusercontent.com/tryingsomestuff/NNUE-Nets/master/noisy_notch.bin
 mkdir -p Tourney
-cp nefarious_nucleus.bin Tourney/nn.bin
+cp noisy_notch.bin Tourney/nn.bin
 git clone https://github.com/jdart1/Fathom.git
 read -p "Download done, press enter to continue"
 sed -i.bak 's/OPT="-s /OPT="-g /' ./Tools/build.sh
