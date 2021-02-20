@@ -176,14 +176,26 @@ struct weights_streamer{
   weights_streamer(const std::string& name) : file(name, std::ios_base::in | std::ios_base::binary) {}
 };
 
+#ifdef WITH_NNUE_CLIPPED_RELU
 template<typename T, bool Q>
-inline constexpr T clippedreluInput(const T& x){ return std::min(std::max(T(x) , T{0}), T{Quantization<Q>::weightScale}); }
+inline constexpr T activationInput(const T& x){ return std::min(std::max(T(x), T{0}), T{Quantization<Q>::weightScale}); }
 
 template<typename T, bool Q>
-inline constexpr T clippedrelu(const T& x){ return std::min(std::max(T(x/Quantization<Q>::weightFactor) , T{0}), T{Quantization<Q>::weightScale}); }
+inline constexpr T activation(const T& x){ return std::min(std::max(T(x/Quantization<Q>::weightFactor), T{0}), T{Quantization<Q>::weightScale}); }
 
 template<typename T, bool Q>
-inline constexpr T clippedreluQSingleLayer(const T& x){ return std::min(std::max(T(x) , T{0}), T{Quantization<Q>::weightFactor}); }
+inline constexpr T activationQSingleLayer(const T& x){ return std::min(std::max(T(x), T{0}), T{Quantization<Q>::weightFactor}); }
+
+#else // standard relu (not clipped)
+
+template<typename T, bool Q>
+inline constexpr typename std::enable_if<!Q,T>::type
+activation(const T& x){ return std::max(T(x), T{0});}
+
+#define activationInput activation
+#define activationQSingleLayer activation
+
+#endif
 
 template<typename T, size_t dim>
 struct stack_vector{
@@ -409,16 +421,16 @@ struct big_affine{
 };
 
 constexpr size_t half_ka_numel = 12*64*64;
-constexpr size_t base_dim = 128;
+constexpr size_t base_dim = 64;
 
 template<typename NT, bool Q>
 struct half_kp_weights{
   big_affine  <NT, half_ka_numel, base_dim, Q> w{};
   big_affine  <NT, half_ka_numel, base_dim, Q> b{};
   stack_affine<NT, 2*base_dim   , 32      , Q> fc0{};
-  stack_affine<NT, 32           , 32      , Q> fc1{};
-  stack_affine<NT, 64           , 32      , Q> fc2{};
-  stack_affine<NT, 96           , 1       , Q> fc3{};
+  stack_affine<NT, 32           , 16      , Q> fc1{};
+  stack_affine<NT, 48           , 16      , Q> fc2{};
+  stack_affine<NT, 64           , 1       , Q> fc3{};
 
   half_kp_weights<NT,Q>& load(weights_streamer<NT>& ws){
     quantizationInfo();
@@ -435,7 +447,7 @@ struct half_kp_weights{
   bool load(const std::string& path, half_kp_weights<NT,Q>& loadedWeights){
 #ifndef __ANDROID__
 #ifndef WITHOUT_FILESYSTEM 
-    static const int expectedSize = 50378500;
+    static const int expectedSize = 25188356;
     std::error_code ec;
     auto fsize = std::filesystem::file_size(path,ec);
     if ( ec ){
@@ -542,14 +554,14 @@ struct half_kp_eval : sided<half_kp_eval<NT,Q>, feature_transformer<NT,Q>>{
   constexpr float propagate(Color c) const {
     const auto w_x = white.active();
     const auto b_x = black.active();
-    const auto x0 = c == Co_White ? splice(w_x, b_x).apply_(clippedreluInput<BT,Q>) : splice(b_x, w_x).apply_(clippedreluInput<BT,Q>);
+    const auto x0 = c == Co_White ? splice(w_x, b_x).apply_(activationInput<BT,Q>) : splice(b_x, w_x).apply_(activationInput<BT,Q>);
     //std::cout << "x0 " << x0 << std::endl;
-    //const stack_vector<BT, 32> x1 = stack_vector<BT, 32>::from((weights_ -> fc0).forward(x0).apply_(clippedreluQSingleLayer<BT,true>).data,1.f/Quantization<Q>::weightFactor);
-    const auto x1 = (weights_ -> fc0).forward(x0).apply_(clippedrelu<BT,Q>);
+    //const stack_vector<BT, 32> x1 = stack_vector<BT, 32>::from((weights_ -> fc0).forward(x0).apply_(activationQSingleLayer<BT,true>).data,1.f/Quantization<Q>::weightFactor);
+    const auto x1 = (weights_ -> fc0).forward(x0).apply_(activation<BT,Q>);
     //std::cout << "x1 " << x1 << std::endl;
-    const auto x2 = splice(x1, (weights_ -> fc1).forward(x1).apply_(clippedrelu<BT,Q>));
+    const auto x2 = splice(x1, (weights_ -> fc1).forward(x1).apply_(activation<BT,Q>));
     //std::cout << "x2 " << x2 << std::endl;
-    const auto x3 = splice(x2, (weights_ -> fc2).forward(x2).apply_(clippedrelu<BT,Q>));
+    const auto x3 = splice(x2, (weights_ -> fc2).forward(x2).apply_(activation<BT,Q>));
     //std::cout << "x3 " << x3 << std::endl;
     const float val = (weights_ -> fc3).forward(x3).item();    
     //std::cout << "val " << val / Quantization<Q>::outFactor << std::endl;

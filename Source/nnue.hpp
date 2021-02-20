@@ -18,7 +18,7 @@
 namespace NNUEWrapper{
 
   typedef float nnueNType; // type of data inside the binary net
-  const bool quantization = false;
+  const bool quantization = false; // probably needs WITH_NNUE_CLIPPED_RELU to be true
 
   // NNUE eval scaling factor
   extern int NNUEscaling;
