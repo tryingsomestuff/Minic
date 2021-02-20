@@ -12,13 +12,13 @@ class NNUE(pl.LightningModule):
   """
   def __init__(self, lambda_=1.0):
     super(NNUE, self).__init__()
-    BASE = 128
+    BASE = 64
     self.white_affine = nn.Linear(halfka.half_ka_numel(), BASE)
     self.black_affine = nn.Linear(halfka.half_ka_numel(), BASE)
     self.fc0 = nn.Linear(2*BASE, 32)
-    self.fc1 = nn.Linear(32, 32)
-    self.fc2 = nn.Linear(64, 32)
-    self.fc3 = nn.Linear(96, 1)
+    self.fc1 = nn.Linear(32, 16)
+    self.fc2 = nn.Linear(48, 16)
+    self.fc3 = nn.Linear(64, 1)
     self.lambda_ = lambda_
 
   def forward(self, us, them, white, black):
@@ -32,10 +32,17 @@ class NNUE(pl.LightningModule):
       w_ = self.white_affine(white)
       b_ = self.black_affine(black)
 
-    base = torch.clamp(us * torch.cat([w_, b_], dim=1) + (1.0 - us) * torch.cat([b_, w_], dim=1),0,1)
-    x = torch.clamp(self.fc0(base),0,1)
-    x = torch.cat([x, torch.clamp(self.fc1(x),0,1)], dim=1)
-    x = torch.cat([x, torch.clamp(self.fc2(x),0,1)], dim=1)
+    # clipped relu
+    #base = torch.clamp(us * torch.cat([w_, b_], dim=1) + (1.0 - us) * torch.cat([b_, w_], dim=1),0,1)
+    #x = torch.clamp(self.fc0(base),0,1)
+    #x = torch.cat([x, torch.clamp(self.fc1(x),0,1)], dim=1)
+    #x = torch.cat([x, torch.clamp(self.fc2(x),0,1)], dim=1)
+    
+    # standard relu
+    base = F.relu(us * torch.cat([w_, b_], dim=1) + (1.0 - us) * torch.cat([b_, w_], dim=1))
+    x = F.relu(self.fc0(base))
+    x = torch.cat([x, F.relu(self.fc1(x))], dim=1)
+    x = torch.cat([x, F.relu(self.fc2(x))], dim=1)
     x = self.fc3(x)
     return x
 
@@ -68,5 +75,7 @@ class NNUE(pl.LightningModule):
     self.step_(batch, batch_idx, 'test_loss')
 
   def configure_optimizers(self):
-    optimizer = torch.optim.Adadelta(self.parameters(), lr=1, weight_decay=1e-10) # , weight_decay=1e-5 todo try
+    optimizer = torch.optim.Adadelta(self.parameters(), lr=1, weight_decay=1e-10)
+    #scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=200, gamma=0.3)
+    #return [optimizer], [scheduler]
     return optimizer

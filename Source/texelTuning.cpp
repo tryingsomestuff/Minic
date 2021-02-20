@@ -310,11 +310,11 @@ void TexelTuning(const std::string & filename) {
     readEPDFile(filename,positions);
     for(size_t k = 0 ; k < positions.size() ; ++k){
         if (k % 50000 == 0) Logging::LogIt(Logging::logInfo) << k << " position read";
-#define TEST_TEXEL
+//#define TEST_TEXEL
 #ifndef TEST_TEXEL
         std::shared_ptr<ExtendedPosition> p(new ExtendedPosition(positions[k],false));
-        //data.push_back({p, getResult2(p->_extendedParams["c2"][0])}); 
-        data.push_back({p, getResult(p->_extendedParams["c9"][0])});
+        data.push_back({p, getResult2(p->_extendedParams["c2"][0])}); 
+        //data.push_back({p, getResult(p->_extendedParams["c9"][0])});
 #else
         const ExtendedPosition pp(positions[k],false);
         const Position pQuiet = Searcher::getQuiet(pp);
