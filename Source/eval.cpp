@@ -9,9 +9,9 @@
 #include "timers.hpp"
 
 namespace{ // some Color / Piece helpers
-   template<Color C> inline constexpr ScoreType ColorSignHelper()          { return C==Co_White?+1:-1;}
-   template<Color C> inline Square PromotionSquare(const Square k)         { return C==Co_White? (SQFILE(k) + 56) : SQFILE(k);}
-   template<Color C> inline Rank ColorRank(const Square k)                 { return Rank(C==Co_White? SQRANK(k) : (7-SQRANK(k)));}
+   template<Color C> inline constexpr ScoreType ColorSignHelper()            { return C==Co_White?+1:-1;}
+   template<Color C> inline constexpr Square PromotionSquare(const Square k) { return C==Co_White? (SQFILE(k) + 56) : SQFILE(k);}
+   template<Color C> inline constexpr Rank ColorRank(const Square k)         { return Rank(C==Co_White? SQRANK(k) : (7-SQRANK(k)));}
 }
 
 template < Piece T , Color C, bool withForwardness = false>
@@ -20,7 +20,7 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, const BitBoa
         const Square k = popBit(pieceBBiterator);
         const Square kk = ColorSquarePstHelper<C>(k);
         score += EvalConfig::PST[T-1][kk] * ColorSignHelper<C>();
-        if (withForwardness) score += EvalScore{ScoreType(((DynamicConfig::styleForwardness-50)*SQRANK(kk))/8),0} * ColorSignHelper<C>();
+        if constexpr(withForwardness) score += EvalScore{ScoreType(((DynamicConfig::styleForwardness-50)*SQRANK(kk))/8),0} * ColorSignHelper<C>();
         const BitBoard shadowTarget = BBTools::pfCoverage[T-1](k, occupancy ^ nonPawnMat, C); // aligned threats removing own piece (not pawn) in occupancy
         if ( shadowTarget ){
            kdanger[~C] += countBit(shadowTarget & kingZone[~C]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][T-1];

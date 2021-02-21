@@ -14,8 +14,8 @@
 #include <string>
 #include <utility>
 
-// Taken from Seer version 1 implementation.
-// But now uses different architecture. Especially quantization.
+// Initially taken from Seer version 1 implementation.
+// But now uses different architecture.
 // see https://github.com/connormcmonigle/seer-nnue
 
 #define NNUEALIGNMENT 64
@@ -30,7 +30,7 @@ struct Quantization{
    typedef float WIT;
    typedef float BT;
    typedef float BIT;   
-   static constexpr float weightMax  = 100.0f; // dummy big value
+   static constexpr float weightMax  = 100.0f; // dummy value
    static constexpr int weightScale  = 1;
    static constexpr int weightFactor = 1;
    static constexpr int biasFactor   = 1;
@@ -52,13 +52,19 @@ struct Quantization<true>{
    static float round(const float & x){return std::round(x);}
 };
 
+template<bool Q>
 inline void quantizationInfo(){
-   Logging::LogIt(Logging::logInfo) << "Quantization info :";
-   Logging::LogIt(Logging::logInfo) << "weightMax    " <<  Quantization<true>::weightMax;
-   Logging::LogIt(Logging::logInfo) << "weightScale  " <<  Quantization<true>::weightScale;
-   Logging::LogIt(Logging::logInfo) << "weightFactor " <<  Quantization<true>::weightFactor;
-   Logging::LogIt(Logging::logInfo) << "biasFactor   " <<  Quantization<true>::biasFactor;
-   Logging::LogIt(Logging::logInfo) << "outFactor    " <<  Quantization<true>::outFactor;
+   if constexpr(Q){
+      Logging::LogIt(Logging::logInfo) << "Quantization info :";
+      Logging::LogIt(Logging::logInfo) << "weightMax    " <<  Quantization<true>::weightMax;
+      Logging::LogIt(Logging::logInfo) << "weightScale  " <<  Quantization<true>::weightScale;
+      Logging::LogIt(Logging::logInfo) << "weightFactor " <<  Quantization<true>::weightFactor;
+      Logging::LogIt(Logging::logInfo) << "biasFactor   " <<  Quantization<true>::biasFactor;
+      Logging::LogIt(Logging::logInfo) << "outFactor    " <<  Quantization<true>::outFactor;
+   }
+   else{
+      Logging::LogIt(Logging::logInfo) << "No quantization, using float net";
+   }
 }
 
 template<typename NT>
@@ -285,12 +291,12 @@ struct stack_vector{
     return result;
   }
   
-  template <typename T2, typename T3 = int>
-  static constexpr stack_vector<T, dim> from(const T2* data, const T3 & factor = T3{1}){
+  template <typename T2>
+  static constexpr stack_vector<T, dim> from(const T2* data){
     stack_vector<T, dim> result{};
     #pragma omp simd
     for(size_t i = 0; i < dim; ++i){
-      result.data[i] = T(data[i]*factor);
+      result.data[i] = T(data[i]);
     }
     return result;
   }  
@@ -433,7 +439,7 @@ struct half_kp_weights{
   stack_affine<NT, 64           , 1       , Q> fc3{};
 
   half_kp_weights<NT,Q>& load(weights_streamer<NT>& ws){
-    quantizationInfo();
+    quantizationInfo<Q>();
     ///@todo read a version number first !
     w.load_(ws);
     b.load_(ws);
