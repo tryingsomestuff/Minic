@@ -49,7 +49,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
     }
 
     EvalData data;
-    if (ply >= MAX_DEPTH - 1 || depth >= MAX_DEPTH - 1) return eval(p, data, *this);
+    if (ply >= MAX_DEPTH - 1 || depth >= MAX_DEPTH - 1) return eval(p, data, *this, false);
 
     if ( depth <= 0 ) return qsearch(alpha, beta, p, ply, seldepth, 0, true, pvnode, isInCheck);
 

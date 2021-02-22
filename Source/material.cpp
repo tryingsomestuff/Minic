@@ -194,65 +194,97 @@ namespace MaterialHash { // idea from Gull
 #define DEF_MAT_REV(rev,x)     const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializerRev,MAT##x)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)].t)   );
 #define DEF_MAT_REV_H(rev,x,h) const Position::Material MAT##rev = MaterialHash::getMatReverseColor(MAT##x); MaterialHashInitializer LINE_NAME(dummyMaterialInitializerRev,MAT##x)( MAT##rev,reverseTerminaison(materialHashTable[getMaterialHash(MAT##x)].t), h);
 
+        // WARNING : we assume STM has no capture
+
         ///@todo some Ter_MaterialDraw are Ter_Draw (FIDE)
 
         // other FIDE draw
-        DEF_MAT(KLKL,   Ter_MaterialDraw)        DEF_MAT(KDKD,   Ter_MaterialDraw)
+        DEF_MAT(KLKL,   Ter_MaterialDraw)        
+        DEF_MAT(KDKD,   Ter_MaterialDraw)
 
         // sym (and pseudo sym) : all should be draw (or very nearly)
-        DEF_MAT(KK,     Ter_MaterialDraw)        DEF_MAT(KQQKQQ, Ter_MaterialDraw)    DEF_MAT(KQKQ,   Ter_MaterialDraw)        DEF_MAT(KRRKRR, Ter_MaterialDraw)
-        DEF_MAT(KRKR,   Ter_MaterialDraw)        DEF_MAT(KLDKLD, Ter_MaterialDraw)    
-        //DEF_MAT(KLLKLL, Ter_MaterialDraw)        DEF_MAT(KDDKDD, Ter_MaterialDraw) // not a valid Hash !
-        DEF_MAT(KNNKNN, Ter_MaterialDraw)        DEF_MAT(KNKN  , Ter_MaterialDraw)
+        DEF_MAT(KK,     Ter_MaterialDraw)        
+        //DEF_MAT(KQQKQQ, Ter_LikelyDraw)    // useless
+        //DEF_MAT(KQKQ,   Ter_LikelyDraw)    // useless 
+        //DEF_MAT(KRRKRR, Ter_LikelyDraw)    // useless
+        //DEF_MAT(KRKR,   Ter_LikelyDraw)    // useless
+        //DEF_MAT(KLDKLD, Ter_MaterialDraw)  // useless
+        //DEF_MAT(KLLKLL, Ter_MaterialDraw)  // not a valid Hash !       
+        //DEF_MAT(KDDKDD, Ter_MaterialDraw)  // not a valid Hash !
+        //DEF_MAT(KNNKNN, Ter_MaterialDraw)  // useless
+        DEF_MAT(KNKN  , Ter_MaterialDraw)  
+
         //DEF_MAT(KLDKLL, Ter_MaterialDraw)        DEF_MAT_REV(KLLKLD, KLDKLL)  // not a valid Hash !         
-        // DEF_MAT(KLDKDD, Ter_MaterialDraw)        DEF_MAT_REV(KDDKLD, KLDKDD) 
+        //DEF_MAT(KLDKDD, Ter_MaterialDraw)        DEF_MAT_REV(KDDKLD, KLDKDD)  // not a valid Hash !  
         DEF_MAT(KLKD,   Ter_MaterialDraw)        DEF_MAT_REV(KDKL,   KLKD)
 
         // 2M M
-        DEF_MAT(KQQKQ, Ter_WhiteWin)             DEF_MAT_REV(KQKQQ, KQQKQ)            DEF_MAT(KQQKR, Ter_WhiteWin)             DEF_MAT_REV(KRKQQ, KQQKR)
-        DEF_MAT(KRRKQ, Ter_LikelyDraw)           DEF_MAT_REV(KQKRR, KRRKQ)            DEF_MAT(KRRKR, Ter_HardToWin)            DEF_MAT_REV(KRKRR, KRRKR)
-        DEF_MAT(KQRKQ, Ter_WhiteWin)             DEF_MAT_REV(KQKQR, KQRKQ)            DEF_MAT(KQRKR, Ter_WhiteWin)             DEF_MAT_REV(KRKQR, KQRKR)
+        DEF_MAT(KQQKQ, Ter_WhiteWin)             DEF_MAT_REV(KQKQQ, KQQKQ)            
+        DEF_MAT(KQQKR, Ter_WhiteWin)             DEF_MAT_REV(KRKQQ, KQQKR)
+        DEF_MAT(KRRKQ, Ter_LikelyDraw)           DEF_MAT_REV(KQKRR, KRRKQ)            
+        DEF_MAT(KRRKR, Ter_WhiteWin)             DEF_MAT_REV(KRKRR, KRRKR)
+        DEF_MAT(KQRKQ, Ter_WhiteWin)             DEF_MAT_REV(KQKQR, KQRKQ)            
+        DEF_MAT(KQRKR, Ter_WhiteWin)             DEF_MAT_REV(KRKQR, KQRKR)
 
-        // 2M m
-        DEF_MAT(KQQKL, Ter_WhiteWin)             DEF_MAT_REV(KLKQQ, KQQKL)            DEF_MAT(KRRKL, Ter_WhiteWin)             DEF_MAT_REV(KLKRR, KRRKL)
-        DEF_MAT(KQRKL, Ter_WhiteWin)             DEF_MAT_REV(KLKQR, KQRKL)            DEF_MAT(KQQKD, Ter_WhiteWin)             DEF_MAT_REV(KDKQQ, KQQKD)
-        DEF_MAT(KRRKD, Ter_WhiteWin)             DEF_MAT_REV(KDKRR, KRRKD)            DEF_MAT(KQRKD, Ter_WhiteWin)             DEF_MAT_REV(KDKQR, KQRKD)
-        DEF_MAT(KQQKN, Ter_WhiteWin)             DEF_MAT_REV(KNKQQ, KQQKN)            DEF_MAT(KRRKN, Ter_WhiteWin)             DEF_MAT_REV(KNKRR, KRRKN)
+        // 2M m (all easy wins)
+        DEF_MAT(KQQKL, Ter_WhiteWin)             DEF_MAT_REV(KLKQQ, KQQKL)            
+        DEF_MAT(KRRKL, Ter_WhiteWin)             DEF_MAT_REV(KLKRR, KRRKL)
+        DEF_MAT(KQRKL, Ter_WhiteWin)             DEF_MAT_REV(KLKQR, KQRKL)            
+        DEF_MAT(KQQKD, Ter_WhiteWin)             DEF_MAT_REV(KDKQQ, KQQKD)
+        DEF_MAT(KRRKD, Ter_WhiteWin)             DEF_MAT_REV(KDKRR, KRRKD)            
+        DEF_MAT(KQRKD, Ter_WhiteWin)             DEF_MAT_REV(KDKQR, KQRKD)
+        DEF_MAT(KQQKN, Ter_WhiteWin)             DEF_MAT_REV(KNKQQ, KQQKN)            
+        DEF_MAT(KRRKN, Ter_WhiteWin)             DEF_MAT_REV(KNKRR, KRRKN)
         DEF_MAT(KQRKN, Ter_WhiteWin)             DEF_MAT_REV(KNKQR, KQRKN)
 
         // 2m M
-        DEF_MAT(KLDKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKLD,KLDKQ)            DEF_MAT(KLDKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKLD,KLDKR)
-        //DEF_MAT(KLLKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKLL,KLLKQ)            DEF_MAT(KLLKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKLL,KLLKR) // not a valid Hash !
-        //DEF_MAT(KDDKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKDD,KDDKQ)            DEF_MAT(KDDKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKDD,KDDKR) // not a valid Hash !
-        DEF_MAT(KNNKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKNN,KNNKQ)            DEF_MAT(KNNKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKNN,KNNKR)
-        DEF_MAT(KLNKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKLN,KLNKQ)            DEF_MAT(KLNKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKLN,KLNKR)
-        DEF_MAT(KDNKQ, Ter_MaterialDraw)         DEF_MAT_REV(KQKDN,KDNKQ)            DEF_MAT(KDNKR, Ter_MaterialDraw)         DEF_MAT_REV(KRKDN,KDNKR)
+        DEF_MAT(KLDKQ, Ter_HardToWin)            DEF_MAT_REV(KQKLD,KLDKQ)            
+        DEF_MAT(KLDKR, Ter_LikelyDraw)         DEF_MAT_REV(KRKLD,KLDKR)
+        //DEF_MAT(KLLKQ, Ter_HardToWin)            DEF_MAT_REV(KQKLL,KLLKQ) // not a valid Hash !           
+        //DEF_MAT(KLLKR, Ter_LikelyDraw)         DEF_MAT_REV(KRKLL,KLLKR) // not a valid Hash !
+        //DEF_MAT(KDDKQ, Ter_HardToWin)            DEF_MAT_REV(KQKDD,KDDKQ) // not a valid Hash !           
+        //DEF_MAT(KDDKR, Ter_LikelyDraw)         DEF_MAT_REV(KRKDD,KDDKR) // not a valid Hash !
+        DEF_MAT(KNNKQ, Ter_HardToWin)            DEF_MAT_REV(KQKNN,KNNKQ)            
+        DEF_MAT(KNNKR, Ter_LikelyDraw)         DEF_MAT_REV(KRKNN,KNNKR)
+        DEF_MAT(KLNKQ, Ter_HardToWin)            DEF_MAT_REV(KQKLN,KLNKQ)            
+        DEF_MAT(KLNKR, Ter_LikelyDraw)         DEF_MAT_REV(KRKLN,KLNKR)
+        DEF_MAT(KDNKQ, Ter_HardToWin)            DEF_MAT_REV(KQKDN,KDNKQ)            
+        DEF_MAT(KDNKR, Ter_LikelyDraw)         DEF_MAT_REV(KRKDN,KDNKR)
 
         // 2m m : all draw
-        DEF_MAT(KLDKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKLD,KLDKL)            DEF_MAT(KLDKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKLD,KLDKD)
-        DEF_MAT(KLDKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKLD,KLDKN)            
-        //DEF_MAT(KLLKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKLL,KLLKL) // not a valid Hash !
-        //DEF_MAT(KLLKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKLL,KLLKD) // not a valid Hash !           
-        //DEF_MAT(KLLKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKLL,KLLKN) // not a valid Hash !
-        //DEF_MAT(KDDKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKDD,KDDKL) // not a valid Hash !           
-        //DEF_MAT(KDDKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKDD,KDDKD) // not a valid Hash !
-        //DEF_MAT(KDDKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKDD,KDDKN) // not a valid Hash !            
-        DEF_MAT(KNNKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKNN,KNNKL)
-        DEF_MAT(KNNKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKNN,KNNKD)            DEF_MAT(KNNKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKNN,KNNKN)
-        DEF_MAT(KLNKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKLN,KLNKL)            DEF_MAT(KLNKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKLN,KLNKD)
-        DEF_MAT(KLNKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKLN,KLNKN)            DEF_MAT(KDNKL, Ter_MaterialDraw)         DEF_MAT_REV(KLKDN,KDNKL)
-        DEF_MAT(KDNKD, Ter_MaterialDraw)         DEF_MAT_REV(KDKDN,KDNKD)            DEF_MAT(KDNKN, Ter_MaterialDraw)         DEF_MAT_REV(KNKDN,KDNKN)
+        DEF_MAT(KLDKL, Ter_LikelyDraw)         DEF_MAT_REV(KLKLD,KLDKL)            
+        DEF_MAT(KLDKD, Ter_LikelyDraw)         DEF_MAT_REV(KDKLD,KLDKD)
+        DEF_MAT(KLDKN, Ter_LikelyDraw)         DEF_MAT_REV(KNKLD,KLDKN)            
+        //DEF_MAT(KLLKL, Ter_LikelyDraw)         DEF_MAT_REV(KLKLL,KLLKL) // not a valid Hash !
+        //DEF_MAT(KLLKD, Ter_LikelyDraw)         DEF_MAT_REV(KDKLL,KLLKD) // not a valid Hash !           
+        //DEF_MAT(KLLKN, Ter_LikelyDraw)         DEF_MAT_REV(KNKLL,KLLKN) // not a valid Hash !
+        //DEF_MAT(KDDKL, Ter_LikelyDraw)         DEF_MAT_REV(KLKDD,KDDKL) // not a valid Hash !           
+        //DEF_MAT(KDDKD, Ter_LikelyDraw)         DEF_MAT_REV(KDKDD,KDDKD) // not a valid Hash !
+        //DEF_MAT(KDDKN, Ter_LikelyDraw)         DEF_MAT_REV(KNKDD,KDDKN) // not a valid Hash !            
+        DEF_MAT(KNNKL, Ter_LikelyDraw)         DEF_MAT_REV(KLKNN,KNNKL)
+        DEF_MAT(KNNKD, Ter_LikelyDraw)         DEF_MAT_REV(KDKNN,KNNKD)            
+        DEF_MAT(KNNKN, Ter_LikelyDraw)         DEF_MAT_REV(KNKNN,KNNKN)
+        DEF_MAT(KLNKL, Ter_LikelyDraw)         DEF_MAT_REV(KLKLN,KLNKL)            
+        DEF_MAT(KLNKD, Ter_LikelyDraw)         DEF_MAT_REV(KDKLN,KLNKD)
+        DEF_MAT(KLNKN, Ter_LikelyDraw)         DEF_MAT_REV(KNKLN,KLNKN)            
+        DEF_MAT(KDNKL, Ter_LikelyDraw)         DEF_MAT_REV(KLKDN,KDNKL)
+        DEF_MAT(KDNKD, Ter_LikelyDraw)         DEF_MAT_REV(KDKDN,KDNKD)            
+        DEF_MAT(KDNKN, Ter_LikelyDraw)         DEF_MAT_REV(KNKDN,KDNKN)
 
-        // Q x : all should be win
-        DEF_MAT(KQKR, Ter_WhiteWin)              DEF_MAT_REV(KRKQ,KQKR)              DEF_MAT(KQKL, Ter_WhiteWin)              DEF_MAT_REV(KLKQ,KQKL)
-        DEF_MAT(KQKD, Ter_WhiteWin)              DEF_MAT_REV(KDKQ,KQKD)              DEF_MAT(KQKN, Ter_WhiteWin)              DEF_MAT_REV(KNKQ,KQKN)
+        // Q x : all should be win (against rook with helper)
+        DEF_MAT_H(KQKR, Ter_WhiteWinWithHelper,&helperKXK)      DEF_MAT_REV_H(KRKQ,KQKR,&helperKXK)    
+        DEF_MAT_H(KQKL, Ter_WhiteWinWithHelper,&helperKXK)      DEF_MAT_REV_H(KLKQ,KQKL,&helperKXK)
+        DEF_MAT_H(KQKD, Ter_WhiteWinWithHelper,&helperKXK)      DEF_MAT_REV_H(KDKQ,KQKD,&helperKXK)              
+        DEF_MAT_H(KQKN, Ter_WhiteWinWithHelper,&helperKXK)      DEF_MAT_REV_H(KNKQ,KQKN,&helperKXK)
 
         // R x : all should be draw
-        DEF_MAT(KRKL, Ter_LikelyDraw)            DEF_MAT_REV(KLKR,KRKL)              DEF_MAT(KRKD, Ter_LikelyDraw)            DEF_MAT_REV(KDKR,KRKD)
+        DEF_MAT(KRKL, Ter_LikelyDraw)            DEF_MAT_REV(KLKR,KRKL)              
+        DEF_MAT(KRKD, Ter_LikelyDraw)            DEF_MAT_REV(KDKR,KRKD)
         DEF_MAT(KRKN, Ter_LikelyDraw)            DEF_MAT_REV(KNKR,KRKN)
 
         // B x : all are draw
-        DEF_MAT(KLKN, Ter_MaterialDraw)          DEF_MAT_REV(KNKL,KLKN)              DEF_MAT(KDKN, Ter_MaterialDraw)          DEF_MAT_REV(KNKD,KDKN)
+        DEF_MAT(KLKN, Ter_MaterialDraw)          DEF_MAT_REV(KNKL,KLKN)              
+        DEF_MAT(KDKN, Ter_MaterialDraw)          DEF_MAT_REV(KNKD,KDKN)
 
         // X 0 : QR win, BN draw
         DEF_MAT_H(KQK, Ter_WhiteWinWithHelper,&helperKXK)   DEF_MAT_REV_H(KKQ,KQK,&helperKXK)
@@ -271,36 +303,42 @@ namespace MaterialHash { // idea from Gull
         DEF_MAT_H(KLNK, Ter_WhiteWinWithHelper,&helperKmmK) DEF_MAT_REV_H(KKLN,KLNK,&helperKmmK)
         DEF_MAT_H(KDNK, Ter_WhiteWinWithHelper,&helperKmmK) DEF_MAT_REV_H(KKDN,KDNK,&helperKmmK)
 
-        // Rm R : likely draws
+        // Rm R : draws
         DEF_MAT(KRNKR, Ter_LikelyDraw)            DEF_MAT_REV(KRKRN,KRNKR)
         DEF_MAT(KRLKR, Ter_LikelyDraw)            DEF_MAT_REV(KRKRL,KRLKR)
         DEF_MAT(KRDKR, Ter_LikelyDraw)            DEF_MAT_REV(KRKRD,KRDKR)
 
-        // Rm m : hard to win
-        DEF_MAT(KRNKN, Ter_HardToWin)             DEF_MAT_REV(KNKRN,KRNKN)            DEF_MAT(KRNKL, Ter_HardToWin)             DEF_MAT_REV(KLKRN,KRNKL)
-        DEF_MAT(KRNKD, Ter_HardToWin)             DEF_MAT_REV(KDKRN,KRNKD)            DEF_MAT(KRLKN, Ter_HardToWin)             DEF_MAT_REV(KNKRL,KRLKN)
-        DEF_MAT(KRLKL, Ter_HardToWin)             DEF_MAT_REV(KLKRL,KRLKL)            DEF_MAT(KRLKD, Ter_HardToWin)             DEF_MAT_REV(KDKRL,KRLKD)
-        DEF_MAT(KRDKN, Ter_HardToWin)             DEF_MAT_REV(KNKRD,KRDKN)            DEF_MAT(KRDKL, Ter_HardToWin)             DEF_MAT_REV(KLKRD,KRDKL)
+        // Rm m : draws
+        DEF_MAT(KRNKN, Ter_HardToWin)             DEF_MAT_REV(KNKRN,KRNKN)            
+        DEF_MAT(KRNKL, Ter_HardToWin)             DEF_MAT_REV(KLKRN,KRNKL)
+        DEF_MAT(KRNKD, Ter_HardToWin)             DEF_MAT_REV(KDKRN,KRNKD)            
+        DEF_MAT(KRLKN, Ter_HardToWin)             DEF_MAT_REV(KNKRL,KRLKN)
+        DEF_MAT(KRLKL, Ter_HardToWin)             DEF_MAT_REV(KLKRL,KRLKL)            
+        DEF_MAT(KRLKD, Ter_HardToWin)             DEF_MAT_REV(KDKRL,KRLKD)
+        DEF_MAT(KRDKN, Ter_HardToWin)             DEF_MAT_REV(KNKRD,KRDKN)            
+        DEF_MAT(KRDKL, Ter_HardToWin)             DEF_MAT_REV(KLKRD,KRDKL)
         DEF_MAT(KRDKD, Ter_HardToWin)             DEF_MAT_REV(KDKRD,KRDKD)
 
-        // Qm Q : hard to win
-        DEF_MAT_H(KQNKQ, Ter_HardToWin,&helperKXK)             DEF_MAT_REV_H(KQKQN,KQNKQ,&helperKXK)
-        DEF_MAT_H(KQLKQ, Ter_HardToWin,&helperKXK)             DEF_MAT_REV_H(KQKQL,KQLKQ,&helperKXK)
-        DEF_MAT_H(KQDKQ, Ter_HardToWin,&helperKXK)             DEF_MAT_REV_H(KQKQD,KQDKQ,&helperKXK)
+        // Qm Q : draws
+        DEF_MAT(KQNKQ, Ter_LikelyDraw)             DEF_MAT_REV(KQKQN,KQNKQ)
+        DEF_MAT(KQLKQ, Ter_LikelyDraw)             DEF_MAT_REV(KQKQL,KQLKQ)
+        DEF_MAT(KQDKQ, Ter_LikelyDraw)             DEF_MAT_REV(KQKQD,KQDKQ)
 
         // Qm R : wins
         DEF_MAT_H(KQNKR, Ter_WhiteWin,&helperKXK)              DEF_MAT_REV_H(KRKQN,KQNKR,&helperKXK)
         DEF_MAT_H(KQLKR, Ter_WhiteWin,&helperKXK)              DEF_MAT_REV_H(KRKQL,KQLKR,&helperKXK)
         DEF_MAT_H(KQDKR, Ter_WhiteWin,&helperKXK)              DEF_MAT_REV_H(KRKQD,KQRKR,&helperKXK)
 
-        // Q Rm : hard to win
-        DEF_MAT_H(KQKRN, Ter_HardToWin,&helperKXK)             DEF_MAT_REV_H(KRNKQ,KQKRN,&helperKXK)
-        DEF_MAT_H(KQKRL, Ter_HardToWin,&helperKXK)             DEF_MAT_REV_H(KRLKQ,KQKRL,&helperKXK)
-        DEF_MAT_H(KQKRD, Ter_HardToWin,&helperKXK)             DEF_MAT_REV_H(KRDKQ,KQKRD,&helperKXK)
+        // Q Rm : draws
+        DEF_MAT(KQKRN, Ter_LikelyDraw)             DEF_MAT_REV(KRNKQ,KQKRN)
+        DEF_MAT(KQKRL, Ter_LikelyDraw)             DEF_MAT_REV(KRLKQ,KQKRL)
+        DEF_MAT(KQKRD, Ter_LikelyDraw)             DEF_MAT_REV(KRDKQ,KQKRD)
 
-        // Opposite bishop with P
-        DEF_MAT(KLPKD, Ter_LikelyDraw)            DEF_MAT_REV(KDKLP,KLPKD)            DEF_MAT(KDPKL, Ter_LikelyDraw)            DEF_MAT_REV(KLKDP,KDPKL)
-        DEF_MAT(KLPPKD, Ter_LikelyDraw)           DEF_MAT_REV(KDKLPP,KLPPKD)          DEF_MAT(KDPPKL, Ter_LikelyDraw)           DEF_MAT_REV(KLKDPP,KDPPKL)
+        // Opposite bishop with Ps
+        DEF_MAT(KLPKD, Ter_LikelyDraw)            DEF_MAT_REV(KDKLP,KLPKD)            
+        DEF_MAT(KDPKL, Ter_LikelyDraw)            DEF_MAT_REV(KLKDP,KDPKL)
+        DEF_MAT(KLPPKD, Ter_LikelyDraw)           DEF_MAT_REV(KDKLPP,KLPPKD)          
+        DEF_MAT(KDPPKL, Ter_LikelyDraw)           DEF_MAT_REV(KLKDPP,KDPPKL)
 
         // KPK
         DEF_MAT_H(KPK, Ter_WhiteWinWithHelper,&helperKPK)    DEF_MAT_REV_H(KKP,KPK,&helperKPK)

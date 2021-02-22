@@ -69,7 +69,7 @@ ScoreType Searcher::qsearch(ScoreType alpha,
     if ((int)ply > seldepth) seldepth = ply;
 
     EvalData data;
-    if (ply >= MAX_DEPTH - 1) return eval(p, data, *this);
+    if (ply >= MAX_DEPTH - 1) return eval(p, data, *this, false);
     Move bestMove = INVALIDMOVE;
 
     debug_king_cap(p);

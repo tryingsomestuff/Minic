@@ -93,7 +93,7 @@ enum Feature : unsigned char { F_material = 0, F_positional, F_development, F_mo
 inline Feature operator++(Feature & f){f=Feature(f+1); return f;}
 struct EvalFeatures{
     EvalScore scores[F_max] = { {0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0} };
-    float scalingFactor = 1.f;
+    float scalingFactor = 1.f; // only used in end-game !
     EvalScore SumUp()const;
     static void callBack();
 };
@@ -106,9 +106,9 @@ inline std::ostream & operator<<(std::ostream & of, const EvalFeatures & feature
 }
 */
 
-[[nodiscard]] inline ScoreType ScaleScore(EvalScore s, float gp){ return ScoreType(gp*s[MG] + (1.f-gp)*s[EG]);}
+[[nodiscard]] inline ScoreType ScaleScore(EvalScore s, float gp, float scalingFactorEG = 1.f){ return ScoreType(gp*s[MG] + (1.f-gp)*scalingFactorEG*s[EG]);}
 
-[[nodiscard]] ScoreType Score(ScoreType score, float scalingFactor, const Position &p);
+[[nodiscard]] ScoreType Score(ScoreType score, const Position &p);
 
 /* Evaluation is returning the score of course, but also fill this little structure to provide
  * additionnal usefull information, such as game phase and current danger. Things that are

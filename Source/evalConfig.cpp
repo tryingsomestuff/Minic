@@ -178,6 +178,20 @@ CONST_TEXEL_TUNING EvalScore   rookPairMalus           = {44,-18};
 
 CONST_TEXEL_TUNING EvalScore   queenNearKing           = { 7, 15};
 
+// scaling (/128 inside eval)
+CONST_TEXEL_TUNING ScoreType   scalingFactorWin                 = 384;
+CONST_TEXEL_TUNING ScoreType   scalingFactorHardWin             = 64;
+CONST_TEXEL_TUNING ScoreType   scalingFactorLikelyDraw          = 38;
+CONST_TEXEL_TUNING ScoreType   scalingFactorOppBishopAlone      = 42;
+CONST_TEXEL_TUNING ScoreType   scalingFactorOppBishopAloneSlope = 7;
+CONST_TEXEL_TUNING ScoreType   scalingFactorOppBishop           = 64;
+CONST_TEXEL_TUNING ScoreType   scalingFactorOppBishopSlope      = 4;
+CONST_TEXEL_TUNING ScoreType   scalingFactorQueenNoQueen        = 66;
+CONST_TEXEL_TUNING ScoreType   scalingFactorQueenNoQueenSlope   = 8;
+CONST_TEXEL_TUNING ScoreType   scalingFactorPawns               = 86;
+CONST_TEXEL_TUNING ScoreType   scalingFactorPawnsSlope          = 14;
+CONST_TEXEL_TUNING ScoreType   scalingFactorPawnsOneSide        = -14; // a curious texel tuned value ...
+
 //N B R QB QR K
 CONST_TEXEL_TUNING EvalScore MOB[6][15] = { { { -1,-15},{  7, 20},{ 12, 40},{ 19, 43},{ 26, 40},{ 30, 44},{ 40, 33},{ 35, 46},{ 29, 47},{  0,  0},{  0,  0},{  0,  0},{  0,  0},{  0,  0},{  0,  0} },
                                             { {-28, -7},{-22, 30},{ -9, 27},{ -4, 37},{  0, 41},{ -2, 46},{  7, 41},{ 21, 31},{ 41, 26},{ 45, 36},{ 55, 37},{ 71, 65},{ 71, 56},{120, 95},{  0,  0} },

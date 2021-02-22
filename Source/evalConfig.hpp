@@ -79,6 +79,21 @@ extern CONST_TEXEL_TUNING EvalScore MOB[6][15];
 // This is of course Stockfish inspired
 extern CONST_TEXEL_TUNING EvalScore initiative[4];
 
+// scaling (/128 inside eval)
+extern CONST_TEXEL_TUNING ScoreType   scalingFactorWin       ;
+extern CONST_TEXEL_TUNING ScoreType   scalingFactorHardWin   ;
+extern CONST_TEXEL_TUNING ScoreType   scalingFactorLikelyDraw;
+
+extern CONST_TEXEL_TUNING ScoreType   scalingFactorOppBishopAlone     ;
+extern CONST_TEXEL_TUNING ScoreType   scalingFactorOppBishopAloneSlope;
+extern CONST_TEXEL_TUNING ScoreType   scalingFactorOppBishop          ;
+extern CONST_TEXEL_TUNING ScoreType   scalingFactorOppBishopSlope     ;
+extern CONST_TEXEL_TUNING ScoreType   scalingFactorQueenNoQueen       ;
+extern CONST_TEXEL_TUNING ScoreType   scalingFactorQueenNoQueenSlope  ;
+extern CONST_TEXEL_TUNING ScoreType   scalingFactorPawns              ;
+extern CONST_TEXEL_TUNING ScoreType   scalingFactorPawnsSlope         ;
+extern CONST_TEXEL_TUNING ScoreType   scalingFactorPawnsOneSide       ;
+
 // This idea was taken from Topple by Vincent Tang a.k.a Konsolas
 enum katt_att_def : unsigned char { katt_attack = 0, katt_defence = 1 };
 extern CONST_TEXEL_TUNING ScoreType kingAttMax             ;

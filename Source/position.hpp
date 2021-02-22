@@ -74,6 +74,11 @@ struct Position{
     [[nodiscard]] inline BitBoard whiteQueen ()const {return _allB[4] & allPieces[Co_White];}
     [[nodiscard]] inline BitBoard whiteKing  ()const {return _allB[5] & allPieces[Co_White];}
 
+    [[nodiscard]] inline BitBoard whiteLightBishop()const { return whiteBishop() & whiteSquare;}
+    [[nodiscard]] inline BitBoard whiteDarkBishop()const  { return whiteBishop() & blackSquare;}
+    [[nodiscard]] inline BitBoard blackLightBishop()const { return blackBishop() & whiteSquare;}
+    [[nodiscard]] inline BitBoard blackDarkBishop()const  { return blackBishop() & blackSquare;}
+
     template<Piece pp>
     [[nodiscard]] inline BitBoard pieces_const(Color cc)const          { assert(pp!=P_none); return _allB[pp-1] & allPieces[cc]; }
     [[nodiscard]] inline BitBoard pieces_const(Color cc, Piece pp)const{ assert(pp!=P_none); return _allB[pp-1] & allPieces[cc]; }
