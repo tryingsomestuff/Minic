@@ -150,30 +150,38 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
        data.gp = MEntry.gp;
        features.scores[F_material] += MEntry.score;
        // end game knowledge (helper or scaling)
-       if ( safeMatEvaluator && (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t]<6) ){
-          const Color winningSideEG = features.scores[F_material][EG]>0?Co_White:Co_Black;
-          if ( MEntry.t == MaterialHash::Ter_WhiteWinWithHelper || MEntry.t == MaterialHash::Ter_BlackWinWithHelper ){
-            STOP_AND_SUM_TIMER(Eval)
-            ++context.stats.counters[Stats::sid_materialTableHelper];
-            return (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSideEG,features.scores[F_material][EG]));
+       if ( safeMatEvaluator && (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t]<5) ){
+          MoveList moves;
+          MoveGen::generate<MoveGen::GP_cap>(p,moves);
+          if ( moves.empty()){ // probe endgame knowledge only if position is quiet from stm pov
+            const Color winningSideEG = features.scores[F_material][EG]>0?Co_White:Co_Black;
+            // helpers for endgame
+            if ( MEntry.t == MaterialHash::Ter_WhiteWinWithHelper || MEntry.t == MaterialHash::Ter_BlackWinWithHelper ){
+              STOP_AND_SUM_TIMER(Eval)
+              ++context.stats.counters[Stats::sid_materialTableHelper];
+              return (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSideEG,features.scores[F_material][EG]));
+            }
+            // real FIDE draws (shall not happens for now in fact)
+            else if ( MEntry.t == MaterialHash::Ter_Draw){ 
+                if (!isAttacked(p, kingSquare(p))) {
+                   STOP_AND_SUM_TIMER(Eval)
+                   ++context.stats.counters[Stats::sid_materialTableDraw];
+                   return context.drawScore();
+                }
+            }
+            // non FIDE draws
+            else if ( MEntry.t == MaterialHash::Ter_MaterialDraw) {
+                if (!isAttacked(p, kingSquare(p))){
+                    STOP_AND_SUM_TIMER(Eval)
+                    ++context.stats.counters[Stats::sid_materialTableDraw2];
+                    return context.drawScore();
+                }
+            }
+            // apply some scaling 
+            else if ( MEntry.t == MaterialHash::Ter_WhiteWin || MEntry.t == MaterialHash::Ter_BlackWin) features.scalingFactor = (1 - p.fifty/100.f)*EvalConfig::scalingFactorWin/128.f;
+            else if ( MEntry.t == MaterialHash::Ter_HardToWin)  features.scalingFactor = (1 - p.fifty/100.f)*EvalConfig::scalingFactorHardWin/128.f;
+            else if ( MEntry.t == MaterialHash::Ter_LikelyDraw) features.scalingFactor = (1 - p.fifty/100.f)*EvalConfig::scalingFactorLikelyDraw/128.f;
           }
-          else if ( MEntry.t == MaterialHash::Ter_Draw){ 
-              if (!isAttacked(p, kingSquare(p))) {
-                 STOP_AND_SUM_TIMER(Eval)
-                 ++context.stats.counters[Stats::sid_materialTableDraw];
-                 return context.drawScore();
-              }
-          }
-          else if ( MEntry.t == MaterialHash::Ter_MaterialDraw) {
-              if (!isAttacked(p, kingSquare(p))){
-                  STOP_AND_SUM_TIMER(Eval)
-                  ++context.stats.counters[Stats::sid_materialTableDraw2];
-                  return context.drawScore();
-              }
-          }
-          else if ( MEntry.t == MaterialHash::Ter_WhiteWin || MEntry.t == MaterialHash::Ter_BlackWin) features.scalingFactor = 3 - 3*p.fifty/100.f;
-          else if ( MEntry.t == MaterialHash::Ter_HardToWin)  features.scalingFactor = 0.5f - 0.5f*(p.fifty/100.f);
-          else if ( MEntry.t == MaterialHash::Ter_LikelyDraw) features.scalingFactor = 0.3f - 0.3f*(p.fifty/100.f);
        }
     }
     else{ // game phase and material scores out of table
@@ -192,12 +200,13 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
 #ifdef WITH_NNUE
     if (DynamicConfig::useNNUE){
         EvalScore score;
+        ///@todo use data.gp inside condition
         if ( DynamicConfig::forceNNUE || ! isLazyHigh(600,features,score)){ // stay to classic eval when the game is already decided
            ScoreType nnueScore = p.Evaluator().propagate(p.c);
            // NNUE evaluation scaling
-           nnueScore = (Score(nnueScore,features.scalingFactor,p) * NNUEWrapper::NNUEscaling) / 64;
+           nnueScore = (Score(nnueScore,p) * NNUEWrapper::NNUEscaling) / 64;
            // take tempo and contempt into account
-           nnueScore += ScaleScore( /*EvalConfig::tempo*(white2Play?+1:-1) +*/ context.contempt, data.gp);
+           nnueScore += ScaleScore( /*EvalConfig::tempo*(white2Play?+1:-1) +*/ context.contempt, data.gp, features.scalingFactor);
            ++context.stats.counters[Stats::sid_evalNNUE];
            STOP_AND_SUM_TIMER(Eval)
            return nnueScore;
@@ -391,17 +400,6 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
     const Searcher::PawnEntry & pe = *pePtr;
     features.scores[F_pawnStruct] += pe.score;
 
-/*
-    // lazy eval
-    {
-        EvalScore score = 0;    
-        if ( isLazyHigh(1000,features,score)){
-            STOP_AND_SUM_TIMER(Eval)
-            return (white2Play?+1:-1)*Score(score, features.scalingFactor, p, data.gp);
-        }
-    }
-*/
-
     // update global things with pawn entry stuff
     kdanger[Co_White] += pe.danger[Co_White];
     kdanger[Co_Black] += pe.danger[Co_Black];
@@ -503,17 +501,6 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
     const BitBoard hanging[2] = {nonPawnMat[Co_White] & weakSquare[Co_White] , nonPawnMat[Co_Black] & weakSquare[Co_Black] };
     features.scores[F_attack] += EvalConfig::hangingPieceMalus * (countBit(hanging[Co_White]) - countBit(hanging[Co_Black]));
 
-/*
-    // lazy eval
-    {
-        EvalScore score = 0;    
-        if ( isLazyHigh(900,features,score)){
-            STOP_AND_SUM_TIMER(Eval)
-            return (white2Play?+1:-1)*Score(score, features.scalingFactor, p, data.gp);
-        }
-    }
-*/
-
     // threats by minor
     BitBoard targetThreat = (nonPawnMat[Co_White] | (pawns[Co_White] & weakSquare[Co_White]) ) & (attFromPiece[Co_Black][P_wn-1] | attFromPiece[Co_Black][P_wb-1]);
     while (targetThreat) features.scores[F_attack] += EvalConfig::threatByMinor[PieceTools::getPieceType(p, popBit(targetThreat))-1];
@@ -609,10 +596,10 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
     features.scores[F_material] -= EvalConfig::adjKnight[p.mat[Co_Black][M_p]] * ScoreType(p.mat[Co_Black][M_n]);
 
     // bad bishop
-    if (p.whiteBishop() & whiteSquare) features.scores[F_material] -= EvalConfig::badBishop[countBit(pawns[Co_White] & whiteSquare)];
-    if (p.whiteBishop() & blackSquare) features.scores[F_material] -= EvalConfig::badBishop[countBit(pawns[Co_White] & blackSquare)];
-    if (p.blackBishop() & whiteSquare) features.scores[F_material] += EvalConfig::badBishop[countBit(pawns[Co_Black] & whiteSquare)];
-    if (p.blackBishop() & blackSquare) features.scores[F_material] += EvalConfig::badBishop[countBit(pawns[Co_Black] & blackSquare)];
+    if (p.whiteLightBishop()) features.scores[F_material] -= EvalConfig::badBishop[countBit(pawns[Co_White] & whiteSquare)];
+    if (p.whiteDarkBishop() ) features.scores[F_material] -= EvalConfig::badBishop[countBit(pawns[Co_White] & blackSquare)];
+    if (p.blackLightBishop()) features.scores[F_material] += EvalConfig::badBishop[countBit(pawns[Co_Black] & whiteSquare)];
+    if (p.blackDarkBishop() ) features.scores[F_material] += EvalConfig::badBishop[countBit(pawns[Co_Black] & blackSquare)];
 
     // adjust piece pair score
     features.scores[F_material] += ( (p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonus[p.mat[Co_White][M_p]] : 0)-(p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonus[p.mat[Co_Black][M_p]] : 0) );
@@ -676,8 +663,32 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
     }
 #endif
 
+    // use scale factor in some other end-game cases not using material table:
+    if ( features.scalingFactor == 1.f){
+       const Color strongSide = score[EG] > 0 ? Co_White : Co_Black;
+       // opposite colored bishops (scale based on passed pawn of strong side)
+       if ( countBit(p.whiteBishop()) == 1 && countBit(p.blackBishop()) == 1 && countBit(p.allBishop() | whiteSquare) == 1 ){
+          if ( p.mat[Co_White][M_t] == 1 && p.mat[Co_Black][M_t] == 1) // only bishops and pawn
+             features.scalingFactor = (EvalConfig::scalingFactorOppBishopAlone + EvalConfig::scalingFactorOppBishopAloneSlope * countBit(pe.passed[strongSide]))/128.f;
+          else // more pieces present
+             features.scalingFactor = (EvalConfig::scalingFactorOppBishop + EvalConfig::scalingFactorOppBishopSlope * countBit(p.allPieces[strongSide]))/128.f;
+       }
+       // queen versus no queen (scale on number of minor of no queen side)
+       else if( countBit(p.allQueen()) == 1){
+             features.scalingFactor = (EvalConfig::scalingFactorQueenNoQueen + EvalConfig::scalingFactorQueenNoQueenSlope * p.mat[p.whiteQueen() ? Co_Black : Co_White][M_m])/128.f;
+       }
+       // scale based on the number of pawn of strong side
+       else
+          features.scalingFactor = std::min(1.f,(EvalConfig::scalingFactorPawns + EvalConfig::scalingFactorPawnsSlope * countBit(pawns[strongSide]))/128.f);
+       
+       // moreover scaledown if pawn on only one side
+       if ( allPawns && !((allPawns & queenSide) && (allPawns & kingSide)) ){
+          features.scalingFactor -= EvalConfig::scalingFactorPawnsOneSide/128.f;
+       }
+    }
+
     // scale score (MG/EG)
-    ScoreType ret = (white2Play?+1:-1)*Score(ScaleScore(score,data.gp),features.scalingFactor,p); // scale both phase and 50 moves rule
+    ScoreType ret = (white2Play?+1:-1)*Score(ScaleScore(score,data.gp,features.scalingFactor),p); // scale both phase and 50 moves rule
 
     if ( display ){
         Logging::LogIt(Logging::logInfo) << "==> All (fully scaled) " << ret;

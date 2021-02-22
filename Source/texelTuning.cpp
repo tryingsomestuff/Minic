@@ -661,6 +661,19 @@ void TexelTuning(const std::string & filename) {
         }
     }
 
+    guess["scaling"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::scalingFactorWin , -1000, 1000, "scalingFactorWin"));
+    guess["scaling"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::scalingFactorHardWin, -1000, 1000, "scalingFactorHardWin"));
+    guess["scaling"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::scalingFactorLikelyDraw, -1000, 1000, "scalingFactorLikelyDraw"));
+    guess["scaling"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::scalingFactorOppBishopAlone, -1000, 1000, "scalingFactorOppBishopAlone"));
+    guess["scaling"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::scalingFactorOppBishopAloneSlope, -1000, 1000, "scalingFactorOppBishopAloneSlope"));
+    guess["scaling"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::scalingFactorOppBishop, -1000, 1000, "scalingFactorOppBishop"));
+    guess["scaling"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::scalingFactorOppBishopSlope, -1000, 1000, "scalingFactorOppBishopSlope"));
+    guess["scaling"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::scalingFactorQueenNoQueen, -1000, 1000, "scalingFactorQueenNoQueen"));
+    guess["scaling"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::scalingFactorQueenNoQueenSlope, -1000, 1000, "scalingFactorQueenNoQueenSlope"));
+    guess["scaling"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::scalingFactorPawns, -1000, 1000, "scalingFactorPawns"));
+    guess["scaling"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::scalingFactorPawnsSlope, -1000, 1000, "scalingFactorPawnsSlope"));
+    guess["scaling"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::scalingFactorPawnsOneSide, -1000, 1000, "scalingFactorPawnsOneSide"));
+
     for(auto it = guess.begin() ; it != guess.end(); ++it){
         std::cout << "\"" << it->first << "\",";
     }
@@ -671,6 +684,8 @@ void TexelTuning(const std::string & filename) {
     std::vector<std::string> todo = {
         //"piecesValue",
 
+        "scaling",
+/*
         "PST0",
         "PST1",
         "PST2",
@@ -739,7 +754,7 @@ void TexelTuning(const std::string & filename) {
         //"secondorder",
         //"safeChecks",
         //"tempo",
-
+*/
 
     };
     
