@@ -242,7 +242,13 @@ void Searcher::writeToGenFile(const Position & p){
         DynamicConfig::disableTT = false; // use TT here
         if ( std::abs(e) < 350 ){
             DepthType seldepth = 0;
-            DepthType depth(DynamicConfig::genFenDepth);
+            const Hash matHash = MaterialHash::getMaterialHash(p.mat);
+            float gp = 1;
+            if ( matHash != nullHash ){
+               const MaterialHash::MaterialHashEntry & MEntry = MaterialHash::materialHashTable[matHash];
+               gp = MEntry.gp;
+            }
+            DepthType depth(DynamicConfig::genFenDepth*gp + DynamicConfig::genFenDepthEG*(1.f-gp));
             unsigned int oldRandomPly = DynamicConfig::randomPly;
             DynamicConfig::randomPly = 0;
             PVList pv = cos.search(pQuiet,m,depth,s,seldepth);

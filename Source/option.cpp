@@ -114,8 +114,9 @@ namespace Options {
 
 #ifdef WITH_GENFILE
        _keys.push_back(KeyBase(k_bool,  w_check, "GenFen"                      , &DynamicConfig::genFen                         , false            , true ));
-       _keys.push_back(KeyBase(k_int,   w_spin,  "GenFenDepth"                 , &DynamicConfig::genFenDepth                    , (unsigned int)2  , (unsigned int)20 ));
-       _keys.push_back(KeyBase(k_int,   w_spin,  "RandomPly"                   , &DynamicConfig::randomPly                      , (unsigned int)0   , (unsigned int)20 ));
+       _keys.push_back(KeyBase(k_int,   w_spin,  "GenFenDepth"                 , &DynamicConfig::genFenDepth                    , (unsigned int)2  , (unsigned int)40 ));
+       _keys.push_back(KeyBase(k_int,   w_spin,  "GenFenDepthEG"               , &DynamicConfig::genFenDepthEG                  , (unsigned int)2  , (unsigned int)40 ));
+       _keys.push_back(KeyBase(k_int,   w_spin,  "RandomPly"                   , &DynamicConfig::randomPly                      , (unsigned int)0  , (unsigned int)40 ));
 #endif
 
        _keys.push_back(KeyBase(k_int, w_spin,  "StyleAttack"                   , &DynamicConfig::styleAttack                    , (int)0   , (int)100                                    , &EvalFeatures::callBack));
@@ -235,6 +236,7 @@ namespace Options {
 #ifdef WITH_GENFILE
        GETOPT(genFen,            bool)
        GETOPT(genFenDepth,       unsigned int)
+       GETOPT(genFenDepthEG,     unsigned int)
        GETOPT(randomPly,         unsigned int)
 #endif
    }

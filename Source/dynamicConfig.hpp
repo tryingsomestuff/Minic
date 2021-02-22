@@ -31,6 +31,7 @@ namespace DynamicConfig{
     extern std::string NNUEFile     ;
     extern bool genFen              ;
     extern unsigned int genFenDepth ;
+    extern unsigned int genFenDepthEG;
     extern unsigned int randomPly   ;
     extern unsigned int moveOverHead;
 
