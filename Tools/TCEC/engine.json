@@ -3,7 +3,7 @@
         "command": "./minic_linux_x64_avx2_bmi2 -uci -book 0 -syzygyPath /home/syzygy/",
         "name": "Minic 3.04",
         "restart": "on",
-        "rating": "3287",
+        "rating": "3293",
         "options": [
             {
                 "name": "Threads",
@@ -13,10 +13,10 @@
                 "name": "Hash",
                 "value": "32768"
             },
-            { 
+            {
                 "name": "NNUEFile",
                 "value": "noisy_notch.bin"
-            },            
+            },
             {
                 "name": "CommandLineOptions",
                 "value": "-uci -book 0 -syzygyPath /home/syzygy/"
