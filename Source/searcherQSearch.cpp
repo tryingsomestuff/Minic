@@ -46,7 +46,7 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha,
 }
 
 inline ScoreType qDeltaMargin(const Position & p) {
-   const ScoreType delta = (p.pieces_const(p.c,P_wp) & seventhRank[p.c]) ? Values[P_wq+PieceShift] : Values[P_wp+PieceShift];
+   const ScoreType delta = (p.pieces_const(p.c,P_wp) & BB::seventhRank[p.c]) ? Values[P_wq+PieceShift] : Values[P_wp+PieceShift];
    return delta + Values[P_wq+PieceShift];
 }
 

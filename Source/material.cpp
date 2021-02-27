@@ -123,7 +123,7 @@ namespace MaterialHash { // idea from Gull
     ScoreType helperKmmK(const Position &p, Color winningSide, ScoreType s){
         Square winningK = p.king[winningSide];
         Square losingK  = p.king[~winningSide];
-        if ( (p.allBishop() & whiteSquare) != 0 ){
+        if ( (p.allBishop() & BB::whiteSquare) != 0 ){
             winningK = VFlip(winningK);
             losingK  = VFlip(losingK);
         }
@@ -358,19 +358,19 @@ namespace MaterialHash { // idea from Gull
         p.mat[Co_White][M_m] = p.mat[Co_White][M_b] + p.mat[Co_White][M_n];  
         p.mat[Co_White][M_t] = p.mat[Co_White][M_M] + p.mat[Co_White][M_m];  
         const BitBoard wb = p.whiteBishop();
-        p.mat[Co_White][M_bl] = (unsigned char)countBit(wb&whiteSquare);   
-        p.mat[Co_White][M_bd] = (unsigned char)countBit(wb&blackSquare);
+        p.mat[Co_White][M_bl] = (unsigned char)BB::countBit(wb&BB::whiteSquare);   
+        p.mat[Co_White][M_bd] = (unsigned char)BB::countBit(wb&BB::blackSquare);
 
         p.mat[Co_Black][M_M] = p.mat[Co_Black][M_q] + p.mat[Co_Black][M_r];
         p.mat[Co_Black][M_m] = p.mat[Co_Black][M_b] + p.mat[Co_Black][M_n];
         p.mat[Co_Black][M_t] = p.mat[Co_Black][M_M] + p.mat[Co_Black][M_m];
         const BitBoard bb = p.blackBishop();
-        p.mat[Co_Black][M_bl] = (unsigned char)countBit(bb&whiteSquare);   
-        p.mat[Co_Black][M_bd] = (unsigned char)countBit(bb&blackSquare);
+        p.mat[Co_Black][M_bl] = (unsigned char)BB::countBit(bb&BB::whiteSquare);   
+        p.mat[Co_Black][M_bd] = (unsigned char)BB::countBit(bb&BB::blackSquare);
     }
 
     void initMaterial(Position & p){ // M_p .. M_k is the same as P_wp .. P_wk
-        for( Color c = Co_White ; c < Co_End ; ++c) for( Piece pp = P_wp ; pp <= P_wk ; ++pp) p.mat[c][pp] = (unsigned char)countBit(p.pieces_const(c,pp));
+        for( Color c = Co_White ; c < Co_End ; ++c) for( Piece pp = P_wp ; pp <= P_wk ; ++pp) p.mat[c][pp] = (unsigned char)BB::countBit(p.pieces_const(c,pp));
         updateMaterialOther(p);
     }
 

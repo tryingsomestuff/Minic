@@ -188,7 +188,7 @@ BitBoard occupiedFromIndex(int j, BitBoard mask){
     BitBoard occ = emptyBitBoard;
     int i = 0;
     while (mask){
-        const int k = popBit(mask);
+        const int k = BB::popBit(mask);
         if (j & SquareToBitboard(i)) occ |= (1ULL << k);
         i++;
     }
@@ -253,6 +253,6 @@ bool isAttacked(const Position & p, const Square k) {
 }
 
 bool isAttacked(const Position & p, BitBoard bb) { // copy ///@todo should be done without iterate over Square !
-    while ( bb ) if ( isAttacked(p, Square(popBit(bb)))) return true;
+    while ( bb ) if ( isAttacked(p, Square(BB::popBit(bb)))) return true;
     return false;
 }

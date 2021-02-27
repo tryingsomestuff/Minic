@@ -44,13 +44,13 @@ Hash computePHash(const Position &p){
     if (p.ph != nullHash) return p.ph;
     //++ThreadPool::instance().main().stats.counters[Stats::sid_hashComputed]; // shall of course never happend !
     BitBoard bb = p.whitePawn();
-    while (bb) { p.ph ^= Zobrist::ZT[popBit(bb)][P_wp + PieceShift]; }
+    while (bb) { p.ph ^= Zobrist::ZT[BB::popBit(bb)][P_wp + PieceShift]; }
     bb = p.blackPawn();
-    while (bb) { p.ph ^= Zobrist::ZT[popBit(bb)][P_bp + PieceShift]; }
+    while (bb) { p.ph ^= Zobrist::ZT[BB::popBit(bb)][P_bp + PieceShift]; }
     bb = p.whiteKing();
-    while (bb) { p.ph ^= Zobrist::ZT[popBit(bb)][P_wk + PieceShift]; }
+    while (bb) { p.ph ^= Zobrist::ZT[BB::popBit(bb)][P_wk + PieceShift]; }
     bb = p.blackKing();
-    while (bb) { p.ph ^= Zobrist::ZT[popBit(bb)][P_bk + PieceShift]; }
+    while (bb) { p.ph ^= Zobrist::ZT[BB::popBit(bb)][P_bk + PieceShift]; }
 #ifdef DEBUG_PHASH
     if ( h != nullHash && h != p.ph ){ Logging::LogIt(Logging::logFatal) << "Pawn Hash error " << ToString(p.lastMove) << ToString(p,true) << p.ph << " != " << h; }
 #endif

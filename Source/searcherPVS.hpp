@@ -104,7 +104,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
 #ifdef WITH_SYZYGY
     ScoreType tbScore = 0;
     if ( !rootnode && withoutSkipMove 
-         && (countBit(p.allPieces[Co_White]|p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN 
+         && (BB::countBit(p.allPieces[Co_White]|p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN 
          && SyzygyTb::probe_wdl(p, tbScore, false) > 0){
        ++stats.counters[Stats::sid_tbHit1];
        // if this is a winning/losing EGT position, we add up static evaluation
@@ -426,7 +426,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
     }
 
 #ifdef WITH_SYZYGY
-    if (rootnode && withoutSkipMove && (countBit(p.allPieces[Co_White] | p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN) {
+    if (rootnode && withoutSkipMove && (BB::countBit(p.allPieces[Co_White] | p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN) {
         tbScore = 0;
         if (SyzygyTb::probe_root(*this, p, tbScore, moves) < 0) { // only good moves if TB success
             if (capMoveGenerated) MoveGen::generate<MoveGen::GP_quiet>(p, moves, true);

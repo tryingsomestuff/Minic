@@ -54,13 +54,13 @@ void movePiece(Position & p, Square from, Square to, Piece fromP, Piece toP, boo
     p.board(to)   = toPnew;
     // update bitboard
     BBTools::unSetBit(p, from, fromP);
-    _unSetBit(p.allPieces[fromP>0?Co_White:Co_Black],from);
+    BB::_unSetBit(p.allPieces[fromP>0?Co_White:Co_Black],from);
     if (toP != P_none){
         BBTools::unSetBit(p, to,   toP);
-        _unSetBit(p.allPieces[toP>0?Co_White:Co_Black],to);
+        BB::_unSetBit(p.allPieces[toP>0?Co_White:Co_Black],to);
     }
     BBTools::setBit  (p, to,   toPnew);
-    _setBit(p.allPieces[fromP>0?Co_White:Co_Black],to);
+    BB::_setBit(p.allPieces[fromP>0?Co_White:Co_Black],to);
     // update Zobrist hash
     p.h ^= Zobrist::ZT[from][fromId]; // remove fromP at from
     p.h ^= Zobrist::ZT[to][toIdnew]; // add fromP (or prom) at to
@@ -151,11 +151,11 @@ bool applyMove(Position & p, const Move & m, bool noValidation){
         const Square epCapSq = p.ep + (p.c == Co_White ? -8 : +8);
         assert(squareOK(epCapSq));
         BBTools::unSetBit(p, epCapSq, ~fromP); // BEFORE setting p.b new shape !!!
-        _unSetBit(p.allPieces[fromP>0?Co_Black:Co_White],epCapSq);
+        BB::_unSetBit(p.allPieces[fromP>0?Co_Black:Co_White],epCapSq);
         BBTools::unSetBit(p, from, fromP);
-        _unSetBit(p.allPieces[fromP>0?Co_White:Co_Black],from);
+        BB::_unSetBit(p.allPieces[fromP>0?Co_White:Co_Black],from);
         BBTools::setBit(p, to, fromP);
-        _setBit(p.allPieces[fromP>0?Co_White:Co_Black],to);
+        BB::_setBit(p.allPieces[fromP>0?Co_White:Co_Black],to);
         p.board(from) = P_none;
         p.board(to) = fromP;
         p.board(epCapSq) = P_none;
@@ -276,7 +276,7 @@ bool applyMove(Position & p, const Move & m, bool noValidation){
 #endif
 
 #ifdef DEBUG_BITBOARD
-    int count_bb1 = countBit(p.occupancy());
+    int count_bb1 = BB::countBit(p.occupancy());
     int count_bb2 = 0;
     int count_board = 0;
     for (Square s = Sq_a1 ; s <= Sq_h8 ; ++s){
@@ -288,11 +288,11 @@ bool applyMove(Position & p, const Move & m, bool noValidation){
        const BitBoard bb = b;
        while(b){
            ++count_bb2;
-           const Square s = popBit(b);
+           const Square s = BB::popBit(b);
            if ( p.board_const(s) != pp ){
                Logging::LogIt(Logging::logWarn) << SquareNames[s];
                Logging::LogIt(Logging::logWarn) << ToString(p);
-               Logging::LogIt(Logging::logWarn) << showBitBoard(bb);
+               Logging::LogIt(Logging::logWarn) << BB::showBitBoard(bb);
                Logging::LogIt(Logging::logWarn) << (int) pp;
                Logging::LogIt(Logging::logWarn) << (int) p.board_const(s);
                Logging::LogIt(Logging::logWarn) << "last move " << ToString(p.lastMove);
@@ -304,16 +304,16 @@ bool applyMove(Position & p, const Move & m, bool noValidation){
     if ( count_bb1 != count_bb2 ){ 
         Logging::LogIt(Logging::logFatal) << "Wrong bitboard count (all/piece)" << count_bb1 << " " << count_bb2;
         Logging::LogIt(Logging::logWarn) << ToString(p);
-        Logging::LogIt(Logging::logWarn) << showBitBoard(p.occupancy());
+        Logging::LogIt(Logging::logWarn) << BB::showBitBoard(p.occupancy());
         for( Piece pp = P_bk ; pp <= P_wk ; ++pp){
             if ( pp == P_none) continue;
-            Logging::LogIt(Logging::logWarn) << showBitBoard(p.pieces_const(pp));
+            Logging::LogIt(Logging::logWarn) << BB::showBitBoard(p.pieces_const(pp));
         }
     }
     if ( count_board != count_bb1 ){ 
         Logging::LogIt(Logging::logFatal) << "Wrong bitboard count (board)" << count_board << " " << count_bb1;
         Logging::LogIt(Logging::logWarn) << ToString(p);
-        Logging::LogIt(Logging::logWarn) << showBitBoard(p.occupancy());
+        Logging::LogIt(Logging::logWarn) << BB::showBitBoard(p.occupancy());
     }
 #endif
     p.lastMove = m;
@@ -402,27 +402,27 @@ bool isPseudoLegal2(const Position & p, Move m) { // validate TT move
     if (isCastling(m)) {
         if (p.c == Co_White) {
             if (t == T_wqs && (p.castling & C_wqs) && from == p.kingInit[Co_White] && fromP == P_wk && to == Sq_c1 && toP == P_none
-                && (((BBTools::mask[p.king[Co_White]].between[Sq_c1] | BBSq_c1 | BBTools::mask[p.rooksInit[Co_White][CT_OOO]].between[Sq_d1] | BBSq_d1) 
+                && (((BBTools::mask[p.king[Co_White]].between[Sq_c1] | BB::BBSq_c1 | BBTools::mask[p.rooksInit[Co_White][CT_OOO]].between[Sq_d1] | BB::BBSq_d1) 
                     & ~BBTools::mask[p.rooksInit[Co_White][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) & occupancy) == emptyBitBoard
-                && !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_c1] | SquareToBitboard(p.king[Co_White]) | BBSq_c1))
+                && !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_c1] | SquareToBitboard(p.king[Co_White]) | BB::BBSq_c1))
                 PSEUDO_LEGAL_RETURN(true,9)
             if (t == T_wks && (p.castling & C_wks) && from == p.kingInit[Co_White] && fromP == P_wk && to == Sq_g1 && toP == P_none
-                && (((BBTools::mask[p.king[Co_White]].between[Sq_g1] | BBSq_g1 | BBTools::mask[p.rooksInit[Co_White][CT_OO]].between[Sq_f1] | BBSq_f1) 
+                && (((BBTools::mask[p.king[Co_White]].between[Sq_g1] | BB::BBSq_g1 | BBTools::mask[p.rooksInit[Co_White][CT_OO]].between[Sq_f1] | BB::BBSq_f1) 
                     & ~BBTools::mask[p.rooksInit[Co_White][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) & occupancy) == emptyBitBoard
-                && !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_g1] | SquareToBitboard(p.king[Co_White]) | BBSq_g1))
+                && !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_g1] | SquareToBitboard(p.king[Co_White]) | BB::BBSq_g1))
                 PSEUDO_LEGAL_RETURN(true,10)
             PSEUDO_LEGAL_RETURN(false,11)
         }
         else {
             if (t == T_bqs && (p.castling & C_bqs) && from == p.kingInit[Co_Black] && fromP == P_bk && to == Sq_c8 && toP == P_none
-                && (((BBTools::mask[p.king[Co_Black]].between[Sq_c8] | BBSq_c8 | BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].between[Sq_d8] | BBSq_d8) 
+                && (((BBTools::mask[p.king[Co_Black]].between[Sq_c8] | BB::BBSq_c8 | BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].between[Sq_d8] | BB::BBSq_d8) 
                     & ~BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) & occupancy) == emptyBitBoard
-                && !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_c8] | SquareToBitboard(p.king[Co_Black]) | BBSq_c8))
+                && !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_c8] | SquareToBitboard(p.king[Co_Black]) | BB::BBSq_c8))
                 PSEUDO_LEGAL_RETURN(true,12)
             if (t == T_bks && (p.castling & C_bks) && from == p.kingInit[Co_Black] && fromP == P_bk && to == Sq_g8 && toP == P_none
-                && (((BBTools::mask[p.king[Co_Black]].between[Sq_g8] | BBSq_g8 | BBTools::mask[p.rooksInit[Co_Black][CT_OO]].between[Sq_f8] | BBSq_f8) 
+                && (((BBTools::mask[p.king[Co_Black]].between[Sq_g8] | BB::BBSq_g8 | BBTools::mask[p.rooksInit[Co_Black][CT_OO]].between[Sq_f8] | BB::BBSq_f8) 
                     & ~BBTools::mask[p.rooksInit[Co_Black][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) & occupancy) == emptyBitBoard
-                && !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_g8] | SquareToBitboard(p.king[Co_Black]) | BBSq_g8))
+                && !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_g8] | SquareToBitboard(p.king[Co_Black]) | BB::BBSq_g8))
                 PSEUDO_LEGAL_RETURN(true,13)
             PSEUDO_LEGAL_RETURN(false,14)
         }

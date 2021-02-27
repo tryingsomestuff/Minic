@@ -14,12 +14,12 @@ namespace BBTools {
 
 [[nodiscard]] inline constexpr BitBoard _shiftSouth    (BitBoard b) { return b >> 8; }
 [[nodiscard]] inline constexpr BitBoard _shiftNorth    (BitBoard b) { return b << 8; }
-[[nodiscard]] inline constexpr BitBoard _shiftWest     (BitBoard b) { return b >> 1 & ~fileH; }
-[[nodiscard]] inline constexpr BitBoard _shiftEast     (BitBoard b) { return b << 1 & ~fileA; }
-[[nodiscard]] inline constexpr BitBoard _shiftNorthEast(BitBoard b) { return b << 9 & ~fileA; }
-[[nodiscard]] inline constexpr BitBoard _shiftNorthWest(BitBoard b) { return b << 7 & ~fileH; }
-[[nodiscard]] inline constexpr BitBoard _shiftSouthEast(BitBoard b) { return b >> 7 & ~fileA; }
-[[nodiscard]] inline constexpr BitBoard _shiftSouthWest(BitBoard b) { return b >> 9 & ~fileH; }
+[[nodiscard]] inline constexpr BitBoard _shiftWest     (BitBoard b) { return b >> 1 & ~BB::fileH; }
+[[nodiscard]] inline constexpr BitBoard _shiftEast     (BitBoard b) { return b << 1 & ~BB::fileA; }
+[[nodiscard]] inline constexpr BitBoard _shiftNorthEast(BitBoard b) { return b << 9 & ~BB::fileA; }
+[[nodiscard]] inline constexpr BitBoard _shiftNorthWest(BitBoard b) { return b << 7 & ~BB::fileH; }
+[[nodiscard]] inline constexpr BitBoard _shiftSouthEast(BitBoard b) { return b >> 7 & ~BB::fileA; }
+[[nodiscard]] inline constexpr BitBoard _shiftSouthWest(BitBoard b) { return b >> 9 & ~BB::fileH; }
 
 [[nodiscard]] inline constexpr BitBoard adjacent(BitBoard b) { 
     return _shiftWest(b) | _shiftEast(b); 
@@ -111,7 +111,7 @@ template<Color C> [[nodiscard]] inline constexpr BitBoard pawnCandidates(BitBoar
 }
 
 template<Color C> [[nodiscard]] inline constexpr BitBoard pawnUndefendable(BitBoard own, BitBoard other) {
-    return own & ~pawnAttacks<C>(fillForwardOccluded<C>(own, ~other)) & advancedRanks;
+    return own & ~pawnAttacks<C>(fillForwardOccluded<C>(own, ~other)) & BB::advancedRanks;
 }
 
 [[nodiscard]] inline constexpr BitBoard pawnAlone(BitBoard b) {
@@ -127,9 +127,9 @@ template<Color C> [[nodiscard]] inline constexpr BitBoard pawnDetached(BitBoard 
 [[nodiscard]] Square SquareFromBitBoard(const BitBoard & b);
 
 // Position relative helpers
-inline void unSetBit(Position & p, Square k)           { assert(k >= 0 && k < NbSquare); ::_unSetBit(p._pieces(p.board_const(k)), k);}
-inline void unSetBit(Position & p, Square k, Piece pp) { assert(k >= 0 && k < NbSquare); ::_unSetBit(p._pieces(pp), k);}
-inline void setBit  (Position & p, Square k, Piece pp) { assert(k >= 0 && k < NbSquare); ::_setBit  (p._pieces(pp), k);}
+inline void unSetBit(Position & p, Square k)           { assert(k >= 0 && k < NbSquare); BB::_unSetBit(p._pieces(p.board_const(k)), k);}
+inline void unSetBit(Position & p, Square k, Piece pp) { assert(k >= 0 && k < NbSquare); BB::_unSetBit(p._pieces(pp), k);}
+inline void setBit  (Position & p, Square k, Piece pp) { assert(k >= 0 && k < NbSquare); BB::_setBit  (p._pieces(pp), k);}
 void initBitBoards(Position & p);
 void setBitBoards (Position & p);
 
