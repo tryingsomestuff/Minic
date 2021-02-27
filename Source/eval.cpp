@@ -8,6 +8,8 @@
 #include "score.hpp"
 #include "timers.hpp"
 
+using namespace BB;
+
 namespace{ // some Color / Piece helpers
    template<Color C> inline constexpr ScoreType ColorSignHelper()            { return C==Co_White?+1:-1;}
    template<Color C> inline constexpr Square PromotionSquare(const Square k) { return C==Co_White? (SQFILE(k) + 56) : SQFILE(k);}

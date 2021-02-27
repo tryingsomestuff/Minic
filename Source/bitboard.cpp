@@ -2,6 +2,8 @@
 
 #include "logging.hpp"
 
+namespace BB{
+
 std::string showBitBoard(const BitBoard & b) {
     std::bitset<64> bs(b);
     std::stringstream ss;
@@ -11,4 +13,6 @@ std::string showBitBoard(const BitBoard & b) {
     }
     ss << "\n" << Logging::_protocolComment[Logging::ct] << "+-+-+-+-+-+-+-+-+";
     return ss.str();
+}
+
 }

@@ -109,7 +109,7 @@ bool Searcher::SEE_GE(const Position & p, const Move & m, ScoreType threshold) c
            BitBoard att = BBTools::pfAttack[pp-1](to, p2.pieces_const(p2.c,pp), p2.occupancy(), ~p2.c);
            if ( !att ) continue; // next piece type
            Square sqAtt = INVALIDSQUARE;
-           while (!validThreatFound && att && (sqAtt = popBit(att))) {
+           while (!validThreatFound && att && (sqAtt = BB::popBit(att))) {
               if (PieceTools::getPieceType(p2,to) == P_wk) return us == p2.c; // capture king !
               Position p3 = p2;
               prom = promPossible && pp == P_wp;

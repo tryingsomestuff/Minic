@@ -15,7 +15,7 @@ inline unsigned KPKindex(Color us, Square bksq, Square wksq, Square psq) {
 namespace KPK{
 
 Square normalizeSquare(const Position& p, Color strongSide, Square sq) {
-   assert(countBit(p.pieces_const<P_wp>(strongSide)) == 1); // only for KPK !
+   assert(BB::countBit(p.pieces_const<P_wp>(strongSide)) == 1); // only for KPK !
    if (SQFILE(BBTools::SquareFromBitBoard(p.pieces_const<P_wp>(strongSide))) >= File_e) sq = Square(HFlip(sq)); // we know there is at least one pawn
    return strongSide == Co_White ? sq : VFlip(sq);
 }
@@ -41,7 +41,7 @@ template<Color Us> kpk_result KPKPosition::preCompute(const std::vector<KPKPosit
     constexpr kpk_result bad  = (Us == Co_White ? kpk_draw : kpk_win);
     kpk_result r = kpk_invalid;
     BitBoard b = BBTools::mask[ksq[us]].king;
-    while (b){ r |= (Us == Co_White ? db[KPKindex(Them, ksq[Them], popBit(b), psq)] : db[KPKindex(Them, popBit(b), ksq[Them], psq)]); }
+    while (b){ r |= (Us == Co_White ? db[KPKindex(Them, ksq[Them], BB::popBit(b), psq)] : db[KPKindex(Them, BB::popBit(b), ksq[Them], psq)]); }
     if (Us == Co_White){
         if (SQRANK(psq) < 6) r |= db[KPKindex(Them, ksq[Them], ksq[Us], psq + 8)];
         if (SQRANK(psq) == 1 && psq + 8 != ksq[Us] && psq + 8 != ksq[Them]) r |= db[KPKindex(Them, ksq[Them], ksq[Us], psq + 8 + 8)];

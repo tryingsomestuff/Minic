@@ -77,9 +77,9 @@ namespace XBoard{
 
         bool iterate = true;
         while(iterate) {
-            Logging::LogIt(Logging::logInfo) << "XBoard: mode  " << COM::mode ;
-            Logging::LogIt(Logging::logInfo) << "XBoard: stm   " << COM::stm  ;
-            Logging::LogIt(Logging::logInfo) << "XBoard: state " << COM::state;
+            Logging::LogIt(Logging::logInfo) << "XBoard: mode  " << (int)COM::mode ;
+            Logging::LogIt(Logging::logInfo) << "XBoard: stm   " << (int)COM::stm  ;
+            Logging::LogIt(Logging::logInfo) << "XBoard: state " << (int)COM::state;
             bool commandOK = true;
             int once = 0;
             while(once++ == 0 || !commandOK){ // loop until a good command is found
