@@ -49,7 +49,7 @@ int hashFull(){
 }
 
 void age(){
-    ++TT::curGen;
+    TT::curGen = (TT::curGen+1)%8;
 }
 
 void prefetch(Hash h) {

@@ -97,7 +97,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
     // if entry hash is not null and entry move is valid, this is a valid TT move (we don't care about depth here !)
     bool ttHit = e.h != nullHash;
     bool validTTmove = ttHit && e.m != INVALIDMINIMOVE;
-    bool ttPV = pvnode || (validTTmove && (e.b&TT::B_ttFlag)); ///@todo store more things in TT bound ...
+    bool ttPV = pvnode || (validTTmove && (e.b&TT::B_ttPVFlag)); ///@todo store more things in TT bound ...
     bool ttIsCheck = validTTmove && (e.b&TT::B_isCheckFlag);
     bool formerPV = ttPV && !pvnode;
     
@@ -278,7 +278,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
             ttHit = e.h != nullHash;
             validTTmove = ttHit && e.m != INVALIDMINIMOVE;
             bound = TT::Bound(e.b & ~TT::B_allFlags);
-            ttPV = pvnode || (ttHit && (e.b&TT::B_ttFlag));
+            ttPV = pvnode || (ttHit && (e.b&TT::B_ttPVFlag));
             ttIsCheck = validTTmove && (e.b&TT::B_isCheckFlag);
             formerPV = ttPV && !pvnode;
             if ( ttHit && !isInCheck && ((bound == TT::B_alpha && e.s < evalScore) || (bound == TT::B_beta && e.s > evalScore) || (bound == TT::B_exact)) ){
@@ -412,7 +412,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
                         ++stats.counters[Stats::sid_ttbeta];
                         // increase history bonus of this move
                         if ( !isInCheck && isQuiet /*&& depth > 1*/) updateTables(*this, p, depth + (ttScore > (beta + SearchConfig::betaMarginDynamicHistory)), ply, e.m, TT::B_beta, cmhPtr);
-                        TT::setEntry(*this,pHash,e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::Bound(TT::B_beta|(ttPV?TT::B_ttFlag:TT::B_none)|(bestMoveIsCheck?TT::B_isCheckFlag:TT::B_none)|(isInCheck?TT::B_isInCheckFlag:TT::B_none)),depth);
+                        TT::setEntry(*this,pHash,e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::Bound(TT::B_beta|(ttPV?TT::B_ttPVFlag:TT::B_none)|(bestMoveIsCheck?TT::B_isCheckFlag:TT::B_none)|(isInCheck?TT::B_isInCheckFlag:TT::B_none)),depth);
                         return ttScore;
                     }
                     ++stats.counters[Stats::sid_ttalpha];
@@ -634,6 +634,6 @@ ScoreType Searcher::pvs(ScoreType alpha,
     }
 
     if ( validMoveCount==0 ) return (isInCheck || !withoutSkipMove)?-MATE + ply : 0;
-    TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),TT::Bound(hashBound|(ttPV?TT::B_ttFlag:TT::B_none)|(bestMoveIsCheck?TT::B_isCheckFlag:TT::B_none)|(isInCheck?TT::B_isInCheckFlag:TT::B_none)),depth);
+    TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),TT::Bound(hashBound|(ttPV?TT::B_ttPVFlag:TT::B_none)|(bestMoveIsCheck?TT::B_isCheckFlag:TT::B_none)|(isInCheck?TT::B_isInCheckFlag:TT::B_none)),depth);
     return bestScore;
 }

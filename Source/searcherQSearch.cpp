@@ -81,7 +81,7 @@ ScoreType Searcher::qsearch(ScoreType alpha,
     const TT::Bound bound = TT::Bound(e.b & ~TT::B_allFlags);
     const bool ttHit = e.h != nullHash;
     const bool validTTmove = ttHit && e.m != INVALIDMINIMOVE;
-    const bool ttPV = pvnode || (validTTmove && (e.b&TT::B_ttFlag));    
+    const bool ttPV = pvnode || (validTTmove && (e.b&TT::B_ttPVFlag));    
     const bool ttIsInCheck = validTTmove && (e.b&TT::B_isInCheckFlag);
     const bool isInCheck = isInCheckHint!=-1 ? isInCheckHint : ttIsInCheck || isAttacked(p, kingSquare(p));
     const bool specialQSearch = isInCheck || qRoot;
@@ -167,7 +167,7 @@ ScoreType Searcher::qsearch(ScoreType alpha,
                 if ( score > alpha ){
                     if (score >= beta) {
                         b = TT::B_beta;
-                        TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),TT::Bound(b|(ttPV?TT::B_ttFlag:TT::B_none)|(isInCheck?TT::B_isInCheckFlag:TT::B_none)),hashDepth);
+                        TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),TT::Bound(b|(ttPV?TT::B_ttPVFlag:TT::B_none)|(isInCheck?TT::B_isInCheckFlag:TT::B_none)),hashDepth);
                         return bestScore;
                     }
                     b = TT::B_exact;
@@ -227,6 +227,6 @@ ScoreType Searcher::qsearch(ScoreType alpha,
         }
     }
     if ( validMoveCount==0 && isInCheck) bestScore = -MATE + ply;  
-    TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),TT::Bound(b|(ttPV?TT::B_ttFlag:TT::B_none)|(isInCheck?TT::B_isInCheckFlag:TT::B_none)),hashDepth);
+    TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),TT::Bound(b|(ttPV?TT::B_ttPVFlag:TT::B_none)|(isInCheck?TT::B_isInCheckFlag:TT::B_none)),hashDepth);
     return bestScore;
 }
