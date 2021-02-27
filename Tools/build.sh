@@ -5,8 +5,8 @@ ulimit -s unlimited
 
 cd $dir
 
-export CXX=g++
-export CC=gcc
+export CXX=mpic++
+export CC=mpicc
 
 FATHOM_PRESENT=0
 if [ -e Fathom/src/tbprobe.h ]; then

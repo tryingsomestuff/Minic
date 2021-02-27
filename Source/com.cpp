@@ -1,5 +1,6 @@
 #include "com.hpp"
 
+#include "distributed.h"
 #include "logging.hpp"
 #include "searcher.hpp"
 #include "transposition.hpp"
@@ -42,9 +43,20 @@ namespace COM {
     }
 
     void readLine() {
-        command.clear();
-        std::getline(std::cin, command);
-        Logging::LogIt(Logging::logInfo) << "Received command : " << command;
+        char buffer[4096]; // only usefull if WITH_MPI
+        // only main process read stdin
+        if ( Distributed::isMainProcess()){ 
+           command.clear();
+           std::getline(std::cin, command);
+           Logging::LogIt(Logging::logInfo) << "Received command : " << command;
+           strcpy(buffer, command.c_str()); // only usefull if WITH_MPI 
+        }
+        Distributed::bcast(buffer,4096);
+        // other slave rank event loop
+        if ( !Distributed::isMainProcess()){ 
+           command = buffer;
+        }
+        Distributed::sync(); // let ensure everyone is sync here
     }
 
     SideToMove opponent(SideToMove & s) {
@@ -59,7 +71,7 @@ namespace COM {
     }
 
     Move thinkUntilTimeUp(TimeType forcedMs = -1) { // think and when threads stop searching, return best move
-        Logging::LogIt(Logging::logInfo) << "Thinking... (state " << COM::state << ")";
+        Logging::LogIt(Logging::logInfo) << "Thinking... (state " << (int)COM::state << ")";
         ScoreType score = 0;
         Move m = INVALIDMOVE;
         if (depth < 0) depth = MAX_DEPTH;
@@ -72,7 +84,7 @@ namespace COM {
         const ThreadData d = { depth,seldepth,score,position,m,pv,SearchData()}; // only input coef here is depth
         ThreadPool::instance().search(d);
         m = ThreadPool::instance().main().getData().best; // here output results
-        Logging::LogIt(Logging::logInfo) << "...done returning move " << ToString(m) << " (state " << COM::state << ")";;
+        Logging::LogIt(Logging::logInfo) << "...done returning move " << ToString(m) << " (state " << (int)COM::state << ")";;
         return m;
     }
 
@@ -116,7 +128,7 @@ namespace COM {
 #endif
                if ( applyMove(p2,pv[0]) && isPseudoLegal(p2,pv[1])) COM::ponderMove = pv[1];
             }
-            Logging::LogIt(Logging::logInfo) << "search async done (state " << st << ")";
+            Logging::LogIt(Logging::logInfo) << "search async done (state " << (int)st << ")";
             if (st == st_searching) {
                 Logging::LogIt(Logging::logInfo) << "sending move to GUI " << ToString(COM::move);
                 if (COM::move == INVALIDMOVE) { COM::mode = COM::m_force; } // game ends
@@ -132,7 +144,7 @@ namespace COM {
                     }
                 }
             }
-            Logging::LogIt(Logging::logInfo) << "Putting state to none (state " << st << ")";
+            Logging::LogIt(Logging::logInfo) << "Putting state to none (state " << (int)st << ")";
             state = st_none;
         });
     }

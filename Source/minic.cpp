@@ -4,6 +4,7 @@
 #include "bitboardTools.hpp"
 #include "cli.hpp"
 #include "com.hpp"
+#include "distributed.h"
 #include "dynamicConfig.hpp"
 #include "egt.hpp"
 #include "evalConfig.hpp"
@@ -27,6 +28,7 @@
 
 // Initialize all the things that should be ...
 void init(int argc, char ** argv) {
+    Distributed::init();
     Logging::hellooo();
     Options::initOptions(argc, argv);
     Logging::init(); // after reading options
@@ -51,28 +53,39 @@ void init(int argc, char ** argv) {
     COM::init(); // let's do this ... (usefull to reset position in case of NNUE)
 }
 
+void finalize(){
+    Distributed::finalize();
+}
+
+#define RETURN(x) {bool ret = x; finalize(); return ret;}
+
 int main(int argc, char ** argv) {
     START_TIMER
 
     init(argc, argv);
 
 #ifdef WITH_TEST_SUITE
-    if (argc > 1 && test(argv[1])) return EXIT_SUCCESS;
+    if (argc > 1 && test(argv[1])) RETURN(EXIT_SUCCESS)
 #endif
 
 #ifdef WITH_TEXEL_TUNING
-    if (argc > 1 && std::string(argv[1]) == "-texel") { TexelTuning(argv[2]); return EXIT_SUCCESS; }
+    if (argc > 1 && std::string(argv[1]) == "-texel") { 
+        TexelTuning(argv[2]); 
+        RETURN(EXIT_SUCCESS)
+    }
 #endif
 
 #ifdef WITH_PGN_PARSER
-    if (argc > 1 && std::string(argv[1]) == "-pgn") { return PGNParse(argv[2]); }
+    if (argc > 1 && std::string(argv[1]) == "-pgn") { 
+        RETURN(PGNParse(argv[2]))
+    }
 #endif
 
 #ifdef WITH_DATA2BIN
-    if ( argc > 1 && std::string(argv[1]) == "-plain2bin")  { return convert_bin({argv[2]},std::string(argv[2])+".bin",1,300,0); }
-    if ( argc > 1 && std::string(argv[1]) == "-pgn2bin")    { return convert_bin_from_pgn_extract({argv[2]},std::string(argv[2])+".bin",true, false); }
-    if ( argc > 1 && std::string(argv[1]) == "-bin2plain")  { return convert_plain({argv[2]},std::string(argv[2])+".plain"); }
-    if ( argc > 1 && std::string(argv[1]) == "-rescore")    { return rescore({argv[2]},std::string(argv[2])+".rescored"); }
+    if ( argc > 1 && std::string(argv[1]) == "-plain2bin")  { RETURN(convert_bin({argv[2]},std::string(argv[2])+".bin",1,300,0)) }
+    if ( argc > 1 && std::string(argv[1]) == "-pgn2bin")    { RETURN(convert_bin_from_pgn_extract({argv[2]},std::string(argv[2])+".bin",true, false)) }
+    if ( argc > 1 && std::string(argv[1]) == "-bin2plain")  { RETURN(convert_plain({argv[2]},std::string(argv[2])+".plain")) }
+    if ( argc > 1 && std::string(argv[1]) == "-rescore")    { RETURN(rescore({argv[2]},std::string(argv[2])+".rescored")) }
 #endif
 
 #ifdef DEBUG_TOOL
@@ -87,6 +100,7 @@ int main(int argc, char ** argv) {
 #ifdef WITH_TIMER
     Timers::Display();
 #endif
+    finalize();
     return ret;
 #else
     // only init TimeMan if needed ...
@@ -109,6 +123,6 @@ int main(int argc, char ** argv) {
     Timers::Display();
 #endif
 
-    return EXIT_SUCCESS;
+    RETURN(EXIT_SUCCESS)
 #endif
 }

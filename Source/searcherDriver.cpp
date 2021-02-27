@@ -1,5 +1,6 @@
 #include "searcher.hpp"
 
+#include "distributed.h"
 #include "logging.hpp"
 #include "skill.hpp"
 #include "uci.hpp"
@@ -39,7 +40,7 @@ void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestSco
     Logging::LogIt(Logging::logGUI) << str.str();
 }
 
-PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType & sc, DepthType & seldepth){
+PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDepth, ScoreType & sc, DepthType & seldepth){
 
     // we start by a copy, because position object must be mutable here.
     Position p(pp);
@@ -54,7 +55,17 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType 
 
     // requested depth can be changed according to level or skill parameter
     DynamicConfig::level = DynamicConfig::limitStrength ? Skill::Elo2Level() : DynamicConfig::level;
-    d=std::max((DepthType)1,Skill::enabled()?std::min(d,Skill::limitedDepth()):d);
+    if ( Distributed::isMainProcess() ){
+       requestedDepth=std::max((DepthType)1,Skill::enabled()?std::min(requestedDepth,Skill::limitedDepth()):requestedDepth);
+    }
+    else{
+       requestedDepth=std::max((DepthType)1,Skill::enabled()?std::min(requestedDepth,Skill::limitedDepth()):requestedDepth);
+       ///@todo for now, using same depth as main process, but shall use infinite and wait for stop somehow
+       /*
+       requestedDepth = MAX_DEPTH; 
+       TimeMan::msecPerMove = INFINITETIME;
+       */
+    }
 
     // initialize basic search variable
     stopFlag = false;
@@ -72,7 +83,7 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType 
     if ( isMainThread() || id() >= MAX_THREADS ){
         Logging::LogIt(Logging::logInfo) << "Search params :" ;
         Logging::LogIt(Logging::logInfo) << "requested time  " << getCurrentMoveMs() ;
-        Logging::LogIt(Logging::logInfo) << "requested depth " << (int) d;
+        Logging::LogIt(Logging::logInfo) << "requested depth " << (int) requestedDepth;
         if ( isMainThread()){
            TT::age();
            MoveDifficultyUtil::variability = 1.f; // not usefull for co-searcher threads that won't depend on time
@@ -116,6 +127,9 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType 
     const auto maxNodes = TimeMan::maxNodes;
     TimeMan::maxNodes = 0; // reset this for depth 1 to be sure to iterate at least once ...
 
+    // using MAX_DEPTH-6 so that draw can be found for sure ///@todo I don't understand this -6 anymore ..
+    const DepthType targetMaxDepth = std::min(requestedDepth,DepthType(MAX_DEPTH-6));
+
     // random mover can be forced for the few first moves of a game or be setting level to 0
     if ( DynamicConfig::level == 0 || p.halfmoves < DynamicConfig::randomPly ){ 
        if ( p.halfmoves < DynamicConfig::randomPly ) Logging::LogIt(Logging::logInfo) << "Randomized ply";
@@ -125,7 +139,7 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType 
 
     // easy move detection (shallow open window search)
     // only main thread here (stopflag will be triggered anyway for other threads if needed)
-    if ( isMainThread() && DynamicConfig::multiPV == 1 && d > easyMoveDetectionDepth+5 && maxNodes == 0 
+    if ( isMainThread() && DynamicConfig::multiPV == 1 && requestedDepth > easyMoveDetectionDepth+5 && maxNodes == 0 
          && currentMoveMs < INFINITETIME && currentMoveMs > 1000 && TimeMan::msecUntilNextTC > 0){
        rootScores.clear();
        ScoreType easyScore = pvs<true>(-MATE, MATE, p, easyMoveDetectionDepth, 0, pvOut, seldepth, isInCheck, false, false);
@@ -143,8 +157,7 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType 
     }
 
     // ID loop
-    // using MAX_DEPTH-6 so that draw can be found for sure ///@todo I don't understand this -6 anymore ..
-    for(DepthType depth = startDepth ; depth <= std::min(d,DepthType(MAX_DEPTH-6)) && !stopFlag ; ++depth ){ 
+    for(DepthType depth = startDepth ; depth <= targetMaxDepth && !stopFlag ; ++depth ){ 
         
         // MultiPV loop
         std::vector<MiniMove> skipMoves;
@@ -300,7 +313,7 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType 
                     // check for remaining time
                     if (TimeMan::isDynamic 
                     && (TimeType)std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count()*1.8)) > getCurrentMoveMs()) { 
-                        stopFlag = true; 
+                        stopFlag = true;
                         Logging::LogIt(Logging::logInfo) << "stopflag triggered, not enough time for next depth"; break; 
                     } 
 
@@ -310,10 +323,13 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & d, ScoreType 
                         Logging::LogIt(Logging::logInfo) << "EBF2 " << float(ThreadPool::instance().counter(Stats::sid_qnodes)) / std::max(Counter(1),ThreadPool::instance().counter(Stats::sid_nodes));
                     }
                 }
-            }
+            } 
         } // multiPV loop end
-
     } // iterative deepening loop end
+
+    stopFlag = true; // here stopFlag must always be true ...
+
+    ///@todo distributed find a way to communicate stopflag to other process ! inside an async watcher ????
 
 pvsout:
     if ( isMainThread() ){
@@ -328,14 +344,14 @@ pvsout:
         if ( Skill::enabled()) m = Skill::pick(multiPVMoves);
         else m = pvOut[0];
     }
-    d = reachedDepth;
+    requestedDepth = reachedDepth;
     sc = bestScore;
     if (isMainThread()) ThreadPool::instance().DisplayStats();
-    
+
 #ifdef WITH_GENFILE
     // calling writeToGenFile at each root node
     if ( isMainThread() && DynamicConfig::genFen && p.halfmoves >= DynamicConfig::randomPly && DynamicConfig::level != 0 ) writeToGenFile(p);
 #endif
-     
+
     return pvOut;
 }
