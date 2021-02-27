@@ -47,15 +47,15 @@ void ThreadPool::wait(bool otherOnly) {
 }
 
 // distribute data and call main thread search
-Move ThreadPool::search(const ThreadData & d){ 
+Move ThreadPool::search(const ThreadData & data){ 
     Logging::LogIt(Logging::logInfo) << "Search Sync" ;
     wait();
     Logging::LogIt(Logging::logInfo) << "Locking other threads";
     Searcher::startLock.store(true);
-    ThreadData dOther = d;
-    dOther.depth = MAX_DEPTH;
+    ThreadData dataOther = data;
+    dataOther.depth = MAX_DEPTH;
     for (auto & s : *this){
-        (*s).setData((*s).isMainThread() ? d : dOther); // this is a copy
+        (*s).setData((*s).isMainThread() ? data : dataOther); // this is a copy
         (*s).currentMoveMs = currentMoveMs; // propagate time control
     }
     Logging::LogIt(Logging::logInfo) << "Calling main thread search";
@@ -92,5 +92,6 @@ Counter ThreadPool::counter(Stats::StatId id) const {
     for (auto & it : *this ){ 
         n += it->stats.counters[id];  
     } 
+    ///@todo distributed aggregate stats from every process on main process
     return n;
 }

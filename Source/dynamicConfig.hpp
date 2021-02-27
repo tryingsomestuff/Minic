@@ -12,8 +12,9 @@ namespace DynamicConfig{
     extern bool disableTT           ;
     extern unsigned int ttSizeMb    ;
     extern bool fullXboardOutput    ;
-    extern bool debugMode           ;
-    extern bool quiet               ;
+    extern bool debugMode           ; // activate output in a file (see debugFile)
+    extern bool quiet               ; // if true, only print out info for GUI
+    extern bool silent              ; // if true, do not print to screen
     extern std::string debugFile    ;
     extern unsigned int level       ;
     extern unsigned int randomOpen  ; 

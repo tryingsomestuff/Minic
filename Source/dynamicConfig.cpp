@@ -7,6 +7,7 @@ namespace DynamicConfig{
     bool fullXboardOutput    = false;
     bool debugMode           = false;
     bool quiet               = true;
+    bool silent              = false;
     std::string debugFile    = "minic.debug";
     unsigned int level       = 100;
     unsigned int randomOpen  = 0;
