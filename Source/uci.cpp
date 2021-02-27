@@ -1,5 +1,6 @@
 #include "uci.hpp"
 
+#include "cli.hpp"
 #include "com.hpp"
 #include "logging.hpp"
 #include "option.hpp"
@@ -152,6 +153,7 @@ namespace UCI {
                 COM::stop();
                 _exit(0);
             }
+            else if (uciCommand == "bench") { bench(20); }
             else if (!uciCommand.empty()) { Logging::LogIt(Logging::logGUI) << "info string unrecognised command " << uciCommand; }
         }
     }
