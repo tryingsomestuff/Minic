@@ -92,6 +92,5 @@ Counter ThreadPool::counter(Stats::StatId id) const {
     for (auto & it : *this ){ 
         n += it->stats.counters[id];  
     } 
-    ///@todo distributed aggregate stats from every process on main process
     return n;
 }
