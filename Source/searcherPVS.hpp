@@ -2,6 +2,7 @@
 
 #include "definition.hpp"
 
+#include "distributed.h"
 #include "dynamicConfig.hpp"
 #include "egt.hpp"
 #include "evalConfig.hpp"
@@ -44,7 +45,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
                 Logging::LogIt(Logging::logInfo) << "stopFlag triggered in thread " << id(); 
                 return STOPSCORE;
             }
-            ///@todo Distributed stats polling
+            Distributed::pollStat();
         }
         --periodicCheck;
     }

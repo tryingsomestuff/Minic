@@ -17,6 +17,8 @@ namespace Distributed{
    MPI_Request _requestStat  = MPI_REQUEST_NULL;
    MPI_Request _requestInput = MPI_REQUEST_NULL;
 
+   uint64_t _nbStatPoll;
+
    namespace{
       std::array<Counter,Stats::sid_maxid> _countersBufSend; 
       std::array<Counter,Stats::sid_maxid> _countersBufRecv; 
@@ -56,23 +58,6 @@ namespace Distributed{
        if ( isMainProcess() ) Logging::LogIt(Logging::logDebug) << "...done";
    }
 
-   void initSignals(){
-       _countersBufSend.fill(0ull);
-       _countersBufRecv.fill(0ull);
-
-       _stopFlag = false;
-   }
-
-   void pollStat(){
-      // gather stats from all local threads
-      for(size_t k = 0 ; k < Stats::sid_maxid ; ++k){
-         for (auto & it : ThreadPool::instance() ){ 
-           _countersBufSend[k] += it->stats.counters[k];  
-         }
-      }
-      asyncAllReduceSum(_countersBufSend.data(),_countersBufRecv.data(),Stats::sid_maxid,_requestStat);
-   }
-
    void waitRequest(MPI_Request & req){
         // don't rely on MPI to do a "passive wait", most implementations are doing a busy-wait, so use 100% cpu
         if (Distributed::isMainProcess()){
@@ -86,9 +71,48 @@ namespace Distributed{
                 else std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
         } 
-    }
+   }
 
+   void initStat(){
+       _countersBufSend.fill(0ull);
+       _countersBufRecv.fill(0ull);
 
+       _nbStatPoll = 0ull;
+
+       _stopFlag = false;
+   }
+
+   void sendStat(){
+      // launch an async reduce
+      asyncAllReduceSum(_countersBufSend.data(),_countersBufRecv.data(),Stats::sid_maxid,_requestStat);
+      ++_nbStatPoll;
+   }
+
+   void pollStat(){
+      int flag;
+      MPI_Test(&_requestStat, &flag, MPI_STATUS_IGNORE);
+      // if previous comm is done, launch another one
+      if (flag){ 
+         // gather stats from all local threads
+         for(size_t k = 0 ; k < Stats::sid_maxid ; ++k){
+            for (auto & it : ThreadPool::instance() ){ 
+              _countersBufSend[k] += it->stats.counters[k];  
+            }
+         }
+         sendStat();
+      }      
+   }
+
+   // get all rank to a common synchronous state at the end of search
+   void syncStat(){
+      uint64_t globalNbPoll = 0ull;
+      allReduceMax(&_nbStatPoll,&globalNbPoll,1);
+      if ( _nbStatPoll < globalNbPoll ){
+          MPI_Wait(&_requestStat, MPI_STATUS_IGNORE);
+          sendStat();
+      }
+      MPI_Wait(&_requestStat, MPI_STATUS_IGNORE);
+   }
 }
 
 #else

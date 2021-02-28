@@ -1,5 +1,6 @@
 #include "smp.hpp"
 
+#include "distributed.h"
 #include "dynamicConfig.hpp"
 #include "logging.hpp"
 #include "searcher.hpp"
@@ -77,6 +78,7 @@ void ThreadPool::clearSearch(){
     TT::clearTT(); 
 #endif
     for (auto & s : *this) (*s).clearSearch();
+    Distributed::initStat();
 }
 
 void ThreadPool::stop(){ for (auto & s : *this) (*s).stopFlag = true;}
