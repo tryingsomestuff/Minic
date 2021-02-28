@@ -83,18 +83,27 @@ namespace Distributed{
    }
 
    void sendStat(){
+      std::cout << "sendStat " << rank << std::endl;
       // launch an async reduce
       asyncAllReduceSum(_countersBufSend.data(),_countersBufRecv.data(),Stats::sid_maxid,_requestStat);
       ++_nbStatPoll;
    }
 
    void pollStat(){
+      std::cout << "poolStat " << rank << std::endl;
       int flag;
       MPI_Test(&_requestStat, &flag, MPI_STATUS_IGNORE);
       // if previous comm is done, launch another one
       if (flag){ 
+         std::cout << "poolStat previous done " << rank << std::endl;
+         // show reduced stats
+         for(size_t k = 0 ; k < Stats::sid_maxid ; ++k){
+            Logging::LogIt(Logging::logInfo) << "All rank reduced: " << Stats::Names[k] << " " << _countersBufRecv[k];
+         }
+
          // gather stats from all local threads
          for(size_t k = 0 ; k < Stats::sid_maxid ; ++k){
+            _countersBufSend[k] = 0ull;
             for (auto & it : ThreadPool::instance() ){ 
               _countersBufSend[k] += it->stats.counters[k];  
             }
@@ -105,12 +114,15 @@ namespace Distributed{
 
    // get all rank to a common synchronous state at the end of search
    void syncStat(){
+      std::cout << "syncStat " << rank << std::endl;
       uint64_t globalNbPoll = 0ull;
       allReduceMax(&_nbStatPoll,&globalNbPoll,1);
       if ( _nbStatPoll < globalNbPoll ){
+          std::cout << "syncStat sync" << rank << std::endl;
           MPI_Wait(&_requestStat, MPI_STATUS_IGNORE);
           sendStat();
       }
+      std::cout << "syncStat Wait" << rank << std::endl;
       MPI_Wait(&_requestStat, MPI_STATUS_IGNORE);
    }
 }

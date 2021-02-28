@@ -6,6 +6,25 @@
 
 #include "mpi.h"
 
+/**
+ * There is not much to do to use distributed memory the same way as we use 
+ * concurrent threads and the TT in the lazy SMP shared memory approach.
+ * The TT being lock-free, it can be asynchronously update by all process.
+ * Some kind all async all reduce based on a "quality" of the data inside the TT entry.
+ *
+ * Other things to do are :
+ *  - ensure only main process is reading input from stdin and broadcast command to other process.
+ *  - ensure stats are reduce and main process can display and use them
+ *  - ensure stop flag from master process is forwarded to other process
+ *
+ * To do so, and a process search tree will diverge (we want them to !), async comm are requiered.
+ * So we try to send new data as soon as previous ones are received everywhere required.
+ *
+ * When WITH_MPI is not defined, everything in here does nothing so that implementation for
+ * distributed memory is not intrusive too much inside the code base.
+ *
+ */
+
 namespace Distributed{
 
    extern int worldSize;
