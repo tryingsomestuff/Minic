@@ -45,9 +45,9 @@ ScoreType Searcher::pvs(ScoreType alpha,
                 Logging::LogIt(Logging::logInfo) << "stopFlag triggered in thread " << id(); 
                 return STOPSCORE;
             }
-            Distributed::pollStat();
         }
         --periodicCheck;
+        Distributed::pollStat();
     }
 
     EvalData data;
