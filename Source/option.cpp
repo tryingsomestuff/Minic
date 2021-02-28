@@ -92,6 +92,7 @@ namespace Options {
     }
     void registerCOMOptions(){ // options exposed to GUI
        _keys.push_back(KeyBase(k_int,   w_spin,  "Level"                       , &DynamicConfig::level                          , (unsigned int)0  , (unsigned int)100 ));
+       _keys.push_back(KeyBase(k_bool,  w_check, "nodesBasedLevel"             , &DynamicConfig::nodesBasedLevel                , false            , true ));
        _keys.push_back(KeyBase(k_bool,  w_check, "UCI_LimitStrength"           , &DynamicConfig::limitStrength                  , false            , true ));
        _keys.push_back(KeyBase(k_int,   w_spin,  "UCI_Elo"                     , &DynamicConfig::strength                       , (int)500         , (int)2800 ));
        _keys.push_back(KeyBase(k_int,   w_spin,  "Hash"                        , &DynamicConfig::ttSizeMb                       , (unsigned int)1  , (unsigned int)256000                , &TT::initTable));
@@ -222,6 +223,7 @@ namespace Options {
        GETOPT(multiPV,          unsigned int)
        GETOPT(randomOpen,       unsigned int)
        GETOPT(limitStrength,    bool)
+       GETOPT(nodesBasedLevel,  bool)
        GETOPT(strength,         int)
        GETOPT(moveOverHead,     unsigned int)
 #ifdef WITH_SYZYGY

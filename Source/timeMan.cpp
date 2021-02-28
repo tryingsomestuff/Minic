@@ -8,7 +8,7 @@ namespace TimeMan{
 TimeType msecPerMove, msecInTC, nbMoveInTC, msecInc, msecUntilNextTC, overHead;
 TimeType targetTime, maxTime;
 DepthType moveToGo;
-unsigned long long maxNodes;
+uint64_t maxNodes;
 bool isDynamic;
 bool isUCIPondering;
 bool isUCIAnalysis;
