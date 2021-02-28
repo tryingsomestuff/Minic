@@ -51,7 +51,7 @@ namespace COM {
            Logging::LogIt(Logging::logInfo) << "Received command : " << command;
            strcpy(buffer, command.c_str()); // only usefull if WITH_MPI 
         }
-        Distributed::bcast(buffer,4096,Distributed::_commInput);
+        Distributed::bcast(buffer,4096,Distributed::_commInput); ///@todo this is cpu intensive => use Ibcast + wait instead (sleep_for)
         // other slave rank event loop
         if ( !Distributed::isMainProcess()){ 
            command = buffer;

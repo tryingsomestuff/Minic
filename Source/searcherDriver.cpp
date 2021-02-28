@@ -334,7 +334,7 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDept
 
     stopFlag = true; // here stopFlag must always be true ...
 
-    ///@todo distributed find a way to communicate stopflag to other process ! inside an async watcher ????
+    ///@todo distributed sync
 
 pvsout:
     if ( isMainThread() ){
