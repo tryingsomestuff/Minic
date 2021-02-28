@@ -334,9 +334,10 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDept
 
     stopFlag = true; // here stopFlag must always be true ...
 
-    ///@todo distributed sync
-
 pvsout:
+
+    if ( isMainThread() ) Distributed::syncStat();
+
     if ( isMainThread() ){
         Logging::LogIt(Logging::logInfo) << "Unlocking other threads (end of search)";
         startLock.store(false);
