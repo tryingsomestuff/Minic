@@ -40,5 +40,6 @@ namespace Distributed{
    inline bool isMainProcess(){return true;}
    inline void sync(){}
    inline void syncTable(){}
+   template<typename T>
    inline void bcast(T * v, int n){}
 #endif
