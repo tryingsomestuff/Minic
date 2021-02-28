@@ -27,6 +27,7 @@ namespace DynamicConfig{
     extern ScoreType contemptMG     ;
     extern bool limitStrength       ;
     extern int strength             ;
+    extern bool nodesBasedLevel     ;
     extern bool useNNUE             ;
     extern bool forceNNUE           ;
     extern std::string NNUEFile     ;

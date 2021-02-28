@@ -54,17 +54,22 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDept
     if ( isMainThread() ) initCaslingPermHashTable(p); // let's be sure ... ///@todo clean up this crap !!!!
 
     // requested depth can be changed according to level or skill parameter
-    DynamicConfig::level = DynamicConfig::limitStrength ? Skill::Elo2Level() : DynamicConfig::level;
+    DynamicConfig::level = DynamicConfig::limitStrength ? Skill::convertElo2Level() : DynamicConfig::level;
     if ( Distributed::isMainProcess() ){
-       requestedDepth=std::max((DepthType)1,Skill::enabled()?std::min(requestedDepth,Skill::limitedDepth()):requestedDepth);
+       requestedDepth=std::max((DepthType)1,(Skill::enabled()&&!DynamicConfig::nodesBasedLevel)?std::min(requestedDepth,Skill::limitedDepth()):requestedDepth);
     }
     else{
-       requestedDepth=std::max((DepthType)1,Skill::enabled()?std::min(requestedDepth,Skill::limitedDepth()):requestedDepth);
+       requestedDepth=std::max((DepthType)1,(Skill::enabled()&&!DynamicConfig::nodesBasedLevel)?std::min(requestedDepth,Skill::limitedDepth()):requestedDepth);
        ///@todo for now, using same depth as main process, but shall use infinite and wait for stop somehow
        /*
        requestedDepth = MAX_DEPTH; 
        TimeMan::msecPerMove = INFINITETIME;
        */
+    }
+
+    if ( DynamicConfig::nodesBasedLevel && Skill::enabled()){
+        TimeMan::maxNodes = Skill::limitedNodes();
+        Logging::LogIt(Logging::logDebug) << "Limited nodes to fit level: " << TimeMan::maxNodes;
     }
 
     // initialize basic search variable
@@ -118,7 +123,7 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDept
 
     // initialize multiPV stuff
     DynamicConfig::multiPV = (Logging::ct == Logging::CT_uci?DynamicConfig::multiPV:1);
-    if ( Skill::enabled() ){
+    if ( Skill::enabled() && !DynamicConfig::nodesBasedLevel ){
         DynamicConfig::multiPV = std::max(DynamicConfig::multiPV,4u);
     }    
     std::vector<RootScores> multiPVMoves(DynamicConfig::multiPV,{INVALIDMOVE,-MATE});
@@ -341,12 +346,12 @@ pvsout:
         if (!subSearch) Logging::LogIt(Logging::logWarn) << "Empty pv" ;
     } 
     else{
-        if ( Skill::enabled()) m = Skill::pick(multiPVMoves);
+        if ( Skill::enabled() && !DynamicConfig::nodesBasedLevel) m = Skill::pick(multiPVMoves);
         else m = pvOut[0];
     }
     requestedDepth = reachedDepth;
     sc = bestScore;
-    if (isMainThread()) ThreadPool::instance().DisplayStats();
+    if (isMainThread()) ThreadPool::instance().DisplayStats(); // thss is syncro point
 
 #ifdef WITH_GENFILE
     // calling writeToGenFile at each root node

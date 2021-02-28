@@ -20,6 +20,7 @@ namespace DynamicConfig{
     ScoreType contemptMG     = 12;
     bool limitStrength       = false;
     int strength             = 1500;
+    bool nodesBasedLevel     = false;
     bool useNNUE             = false;
     bool forceNNUE           = false;
     std::string NNUEFile     = "";
