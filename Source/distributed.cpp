@@ -13,9 +13,9 @@ namespace Distributed{
    int rank;
    std::string name;
 
-   MPI_Comm _commInput  = MPI_COMM_NULL;
-   MPI_Comm _commSig    = MPI_COMM_NULL;
-   MPI_Request _request = MPI_REQUEST_NULL;
+   MPI_Request _requestTT    = MPI_REQUEST_NULL;
+   MPI_Request _requestStat  = MPI_REQUEST_NULL;
+   MPI_Request _requestInput = MPI_REQUEST_NULL;
 
    namespace{
       std::array<Counter,Stats::sid_maxid> _countersBufSend; 
@@ -37,18 +37,11 @@ namespace Distributed{
       name = processor_name;
 
       if ( !isMainProcess() ) DynamicConfig::silent = true;
-
-      MPI_Comm_dup(MPI_COMM_WORLD, &_commInput);
-      MPI_Comm_dup(MPI_COMM_WORLD, &_commSig);
    
       _sendCallCount = 0ull;
    }
 
    void finalize(){
-
-      MPI_Comm_free(&_commInput);
-      MPI_Comm_free(&_commSig);
-
       MPI_Finalize();
    }
 
@@ -70,22 +63,30 @@ namespace Distributed{
        _stopFlag = false;
    }
 
-   void pollSignals(){
+   void pollStat(){
       // gather stats from all local threads
       for(size_t k = 0 ; k < Stats::sid_maxid ; ++k){
          for (auto & it : ThreadPool::instance() ){ 
            _countersBufSend[k] += it->stats.counters[k];  
          }
       }
-      asyncAllReduceSum(_countersBufSend.data(),_countersBufRecv.data(),Stats::sid_maxid,_commSig);
-
-
-      ++_sendCallCount;
+      asyncAllReduceSum(_countersBufSend.data(),_countersBufRecv.data(),Stats::sid_maxid,_requestStat);
    }
 
-   void syncSignals(){
-
-   }
+   void waitRequest(MPI_Request & req){
+        // don't rely on MPI to do a "passive wait", most implementations are doing a busy-wait, so use 100% cpu
+        if (Distributed::isMainProcess()){
+            MPI_Wait(&req, MPI_STATUS_IGNORE);
+        }
+        else{
+            while (true){ 
+                int flag;
+                MPI_Test(&req, &flag, MPI_STATUS_IGNORE);
+                if (flag) break;
+                else std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+        } 
+    }
 
 
 }
