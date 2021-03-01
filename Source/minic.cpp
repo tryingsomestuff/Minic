@@ -43,7 +43,8 @@ void init(int argc, char ** argv) {
     KPK::init();
     MaterialHash::MaterialHashInitializer::init();
     EvalConfig::initEval();
-    ThreadPool::instance().setup();
+    ThreadPool::instance().setup(); 
+    Distributed::lateInit();
 #ifdef WITH_SYZYGY
     SyzygyTb::initTB();
 #endif

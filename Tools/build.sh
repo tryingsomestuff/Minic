@@ -5,10 +5,10 @@ ulimit -s unlimited
 
 cd $dir
 
-#export CXX=mpic++
-#export CC=mpicc
-export CXX=g++
-export CC=gcc
+export CXX=mpic++
+export CC=mpicc
+#export CXX=g++
+#export CC=gcc
 
 FATHOM_PRESENT=0
 if [ -e Fathom/src/tbprobe.h ]; then

@@ -333,6 +333,7 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDept
     } // iterative deepening loop end
 
     stopFlag = true; // here stopFlag must always be true ...
+    if ( Distributed::isMainProcess()) Distributed::putMainToAll(&stopFlag,1,*Distributed::_winPtrStop);
 
 pvsout:
 
