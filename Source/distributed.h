@@ -6,6 +6,8 @@
 
 #include "mpi.h"
 
+#include "logging.hpp"
+
 /**
  * There is not much to do to use distributed memory the same way as we use 
  * concurrent threads and the TT in the lazy SMP shared memory approach.
@@ -40,7 +42,10 @@ namespace Distributed{
    extern MPI_Request _requestStat;
    extern MPI_Request _requestInput;
 
+   extern MPI_Win * _winPtrStop;
+
    void init();
+   void lateInit();
    void finalize();
    bool isMainProcess();
    void sync();
@@ -55,41 +60,51 @@ namespace Distributed{
    template<>
    struct TraitMpiType<Counter>{static constexpr MPI_Datatype type = MPI_LONG_LONG_INT;};
 
+   void checkError(int err);
+
    template<typename T>
    inline void bcast(T * v, int n, MPI_Comm & com){
-      ///@todo check for errors
-      MPI_Bcast(v, n, TraitMpiType<T>::type, 0, com);
+      checkError(MPI_Bcast(v, n, TraitMpiType<T>::type, 0, com));
    }
 
    template<typename T>
    inline void asyncBcast(T * v, int n, MPI_Request & req, MPI_Comm & com){
-      ///@todo check for errors
-      MPI_Ibcast(v, n, TraitMpiType<T>::type, 0, com, &req);
+      checkError(MPI_Ibcast(v, n, TraitMpiType<T>::type, 0, com, &req));
    }
 
    template<typename T>
    inline void allReduceSum(T * local, T* global, int n, MPI_Comm & com){
-      ///@todo check for errors
-      MPI_Allreduce(local, global, n, TraitMpiType<T>::type, MPI_SUM, com);    
+      checkError(MPI_Allreduce(local, global, n, TraitMpiType<T>::type, MPI_SUM, com));
    }
 
    template<typename T>
    inline void allReduceMax(T * local, T* global, int n, MPI_Comm & com){
-      ///@todo check for errors
-      MPI_Allreduce(local, global, n, TraitMpiType<T>::type, MPI_MAX, com);    
+      checkError(MPI_Allreduce(local, global, n, TraitMpiType<T>::type, MPI_MAX, com));
    }
 
    template<typename T>
    inline void asyncAllReduceSum(T * local, T* global, int n, MPI_Request & req, MPI_Comm & com){
-      ///@todo check for errors
-      MPI_Iallreduce(local, global, n, TraitMpiType<T>::type, MPI_SUM, com, &req);    
+      checkError(MPI_Iallreduce(local, global, n, TraitMpiType<T>::type, MPI_SUM, com, &req));
+   }
+
+   template<typename T>
+   inline void put(T * ptr, int n, MPI_Win & window, int target ){
+      checkError(MPI_Put(ptr, n, TraitMpiType<T>::type, target, MPI_Aint(0), n, TraitMpiType<T>::type, window));
+   }
+
+   template<typename T>
+   inline void putMainToAll(T * ptr, int n, MPI_Win & window ){
+      for(int r = 1 ; r < worldSize ; ++r){
+         put(ptr,n,window,r);
+      }
+      checkError(MPI_Win_fence(0, window));
    }
 
    void waitRequest(MPI_Request & req);
 
    void initStat();
    void sendStat();
-   void pollStat(bool display = false);
+   void pollStat();
    void syncStat();
 
 }
@@ -105,6 +120,8 @@ namespace Distributed{
    extern DummyType _requestTT;
    extern DummyType _requestStat;
    extern DummyType _requestInput;
+
+   inline void checkError(int ){};
 
    inline void init(){}
    inline void finalize(){}
