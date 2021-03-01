@@ -31,8 +31,11 @@ namespace Distributed{
    extern int rank;
    extern std::string name;
 
+   extern MPI_Comm _commTT;   
+   extern MPI_Comm _commStat;
    extern MPI_Comm _commInput;
-   extern MPI_Comm _commSig;
+   extern MPI_Comm _commStop;
+
    extern MPI_Request _requestTT;
    extern MPI_Request _requestStat;
    extern MPI_Request _requestInput;
@@ -53,40 +56,40 @@ namespace Distributed{
    struct TraitMpiType<Counter>{static constexpr MPI_Datatype type = MPI_LONG_LONG_INT;};
 
    template<typename T>
-   inline void bcast(T * v, int n){
+   inline void bcast(T * v, int n, MPI_Comm & com){
       ///@todo check for errors
-      MPI_Bcast(v, n, TraitMpiType<T>::type, 0, MPI_COMM_WORLD);
+      MPI_Bcast(v, n, TraitMpiType<T>::type, 0, com);
    }
 
    template<typename T>
-   inline void asyncBcast(T * v, int n, MPI_Request & req){
+   inline void asyncBcast(T * v, int n, MPI_Request & req, MPI_Comm & com){
       ///@todo check for errors
-      MPI_Ibcast(v, n, TraitMpiType<T>::type, 0, MPI_COMM_WORLD, &req);
-   }   
-
-   template<typename T>
-   inline void allReduceSum(T * local, T* global, int n){
-      ///@todo check for errors
-      MPI_Allreduce(local, global, n, TraitMpiType<T>::type, MPI_SUM, MPI_COMM_WORLD);    
+      MPI_Ibcast(v, n, TraitMpiType<T>::type, 0, com, &req);
    }
 
    template<typename T>
-   inline void allReduceMax(T * local, T* global, int n){
+   inline void allReduceSum(T * local, T* global, int n, MPI_Comm & com){
       ///@todo check for errors
-      MPI_Allreduce(local, global, n, TraitMpiType<T>::type, MPI_MAX, MPI_COMM_WORLD);    
+      MPI_Allreduce(local, global, n, TraitMpiType<T>::type, MPI_SUM, com);    
    }
 
    template<typename T>
-   inline void asyncAllReduceSum(T * local, T* global, int n, MPI_Request & req){
+   inline void allReduceMax(T * local, T* global, int n, MPI_Comm & com){
       ///@todo check for errors
-      MPI_Iallreduce(local, global, n, TraitMpiType<T>::type, MPI_SUM, MPI_COMM_WORLD, &req);    
+      MPI_Allreduce(local, global, n, TraitMpiType<T>::type, MPI_MAX, com);    
+   }
+
+   template<typename T>
+   inline void asyncAllReduceSum(T * local, T* global, int n, MPI_Request & req, MPI_Comm & com){
+      ///@todo check for errors
+      MPI_Iallreduce(local, global, n, TraitMpiType<T>::type, MPI_SUM, com, &req);    
    }
 
    void waitRequest(MPI_Request & req);
 
    void initStat();
    void sendStat();
-   void pollStat();
+   void pollStat(bool display = false);
    void syncStat();
 
 }
@@ -109,7 +112,7 @@ namespace Distributed{
    inline void sync(){}
 
    template<typename T>
-   inline void asyncBcast(T *, int , DummyType & ){}
+   inline void asyncBcast(T *, int , DummyType &, DummyType & ){}
 
    inline void waitRequest(DummyType & ){}
 

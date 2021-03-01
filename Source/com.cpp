@@ -48,17 +48,16 @@ namespace COM {
         if ( Distributed::isMainProcess()){ 
            command.clear();
            std::getline(std::cin, command);
-           Logging::LogIt(Logging::logInfo) << "Received command : " << command;
+           Logging::LogIt(Logging::logInfo) << "Received command : \"" << command << "\"";
            strcpy(buffer, command.c_str()); // only usefull if WITH_MPI 
         }
         // don't rely on Bcast to do a "passive wait", most implementation is doing a busy-wait, so use 100% cpu
-        Distributed::asyncBcast(buffer,4096,Distributed::_requestInput); 
+        Distributed::asyncBcast(buffer,4096,Distributed::_requestInput,Distributed::_commInput); 
         Distributed::waitRequest(Distributed::_requestInput);
         // other slave rank event loop
         if ( !Distributed::isMainProcess()){ 
            command = buffer;
         }
-        Distributed::sync(); // let ensure everyone is sync here
     }
 
     SideToMove opponent(SideToMove & s) {
