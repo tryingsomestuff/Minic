@@ -42,6 +42,8 @@ void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestSco
 
 PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDepth, ScoreType & sc, DepthType & seldepth){
 
+    Distributed::sync(Distributed::_commStat);
+
     // we start by a copy, because position object must be mutable here.
     Position p(pp);
 #ifdef WITH_NNUE
@@ -59,15 +61,15 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDept
        requestedDepth=std::max((DepthType)1,(Skill::enabled()&&!DynamicConfig::nodesBasedLevel)?std::min(requestedDepth,Skill::limitedDepth()):requestedDepth);
     }
     else{
-       requestedDepth=std::max((DepthType)1,(Skill::enabled()&&!DynamicConfig::nodesBasedLevel)?std::min(requestedDepth,Skill::limitedDepth()):requestedDepth);
+       //requestedDepth=std::max((DepthType)1,(Skill::enabled()&&!DynamicConfig::nodesBasedLevel)?std::min(requestedDepth,Skill::limitedDepth()):requestedDepth);
        ///@todo for now, using same depth as main process, but shall use infinite and wait for stop somehow
-       /*
+       
        requestedDepth = MAX_DEPTH; 
        TimeMan::msecPerMove = INFINITETIME;
-       */
+       
     }
 
-    if ( DynamicConfig::nodesBasedLevel && Skill::enabled()){
+    if ( Distributed::isMainProcess() && DynamicConfig::nodesBasedLevel && Skill::enabled()){
         TimeMan::maxNodes = Skill::limitedNodes();
         Logging::LogIt(Logging::logDebug) << "Limited nodes to fit level: " << TimeMan::maxNodes;
     }
@@ -130,7 +132,9 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDept
 
     // handle "maxNodes" style search (will always complete depth 1 search)
     const auto maxNodes = TimeMan::maxNodes;
-    TimeMan::maxNodes = 0; // reset this for depth 1 to be sure to iterate at least once ...
+    // reset this for depth 1 to be sure to iterate at least once ...
+    // on main process, requested value will be restored, but not on other process
+    TimeMan::maxNodes = 0; 
 
     // using MAX_DEPTH-6 so that draw can be found for sure ///@todo I don't understand this -6 anymore ..
     const DepthType targetMaxDepth = std::min(requestedDepth,DepthType(MAX_DEPTH-6));
@@ -173,7 +177,7 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDept
 
             if (isMainThread()){
                 if ( depth > 1){
-                    TimeMan::maxNodes = maxNodes; // restore real value
+                    if ( Distributed::isMainProcess()) TimeMan::maxNodes = maxNodes; // restore real value (only on main processus!)
                     // delayed other thread start (can use a depth condition...)
                     if ( startLock.load() ){
                        Logging::LogIt(Logging::logInfo) << "Unlocking other threads";
@@ -333,7 +337,11 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDept
     } // iterative deepening loop end
 
     stopFlag = true; // here stopFlag must always be true ...
-    if ( Distributed::isMainProcess()) Distributed::putMainToAll(&stopFlag,1,*Distributed::_winPtrStop);
+    if ( Distributed::isMainProcess()){
+        Logging::LogIt(Logging::logInfo) << "Sending stopflag to other process";
+        Distributed::putMainToAll(&stopFlag,1,*Distributed::_winPtrStop);
+        Logging::LogIt(Logging::logInfo) << "Stopflag sent to other process";
+    }
 
 pvsout:
 
@@ -353,7 +361,15 @@ pvsout:
     }
     requestedDepth = reachedDepth;
     sc = bestScore;
-    if (isMainThread()) ThreadPool::instance().DisplayStats(); // thss is syncro point
+    
+    if (isMainThread()){
+       if ( Distributed::worldSize > 1 ){
+          Distributed::showStat();
+       }
+       else{
+          ThreadPool::instance().DisplayStats(); 
+       }
+    }    
 
 #ifdef WITH_GENFILE
     // calling writeToGenFile at each root node

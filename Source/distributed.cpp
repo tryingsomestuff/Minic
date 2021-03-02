@@ -153,11 +153,16 @@ namespace Distributed{
       pollStat();
       checkError(MPI_Wait(&_requestStat, MPI_STATUS_IGNORE));
 
+      //showStat(); // debug
+      sync(_commStat);
+   }
+
+   void showStat(){
       // show reduced stats ///@todo an accessor for those data used instead of local ones...
       for(size_t k = 0 ; k < Stats::sid_maxid ; ++k){
-         //Logging::LogIt(Logging::logInfo) << "All rank reduced: " << Stats::Names[k] << " " << _countersBufRecv[k];
-         std::cout << "All rank reduced: " << rank << " " << Stats::Names[k] << " " << _countersBufRecv[k] << std::endl;
-      }      
+         Logging::LogIt(Logging::logInfo) << Stats::Names[k] << " " << _countersBufRecv[k];
+         //std::cout << "All rank reduced: " << rank << " " << Stats::Names[k] << " " << _countersBufRecv[k] << std::endl;
+      } 
    }
 
 }
