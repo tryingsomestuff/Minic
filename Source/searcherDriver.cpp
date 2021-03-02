@@ -339,7 +339,7 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDept
     stopFlag = true; // here stopFlag must always be true ...
     if ( Distributed::isMainProcess()){
         Logging::LogIt(Logging::logInfo) << "Sending stopflag to other process";
-        Distributed::putMainToAll(&stopFlag,1,*Distributed::_winPtrStop);
+        Distributed::putMainToAll(&stopFlag,1,Distributed::_winPtrStop);
         Logging::LogIt(Logging::logInfo) << "Stopflag sent to other process";
     }
 

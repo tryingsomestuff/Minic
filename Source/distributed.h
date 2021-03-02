@@ -42,7 +42,7 @@ namespace Distributed{
    extern MPI_Request _requestStat;
    extern MPI_Request _requestInput;
 
-   extern MPI_Win * _winPtrStop;
+   extern MPI_Win _winPtrStop;
 
    void init();
    void lateInit();
@@ -115,14 +115,20 @@ namespace Distributed{
 #else // ! WITH_MPI
 namespace Distributed{
 
+   extern int worldSize;
    extern int rank;
 
    typedef int DummyType;
+   extern DummyType _commTT;   
+   extern DummyType _commStat;
    extern DummyType _commInput;
-   extern DummyType _commSig;
+   extern DummyType _commStop;
+
    extern DummyType _requestTT;
    extern DummyType _requestStat;
    extern DummyType _requestInput;
+
+   extern DummyType _winPtrStop;
 
    inline void checkError(int ){}
 
@@ -135,12 +141,16 @@ namespace Distributed{
    template<typename T>
    inline void asyncBcast(T *, int , DummyType &, DummyType & ){}
 
+   template<typename T>
+   inline void putMainToAll(T * , int , DummyType & ){}
+
    inline void waitRequest(DummyType & ){}
 
    inline void initStat(){}
    inline void sendStat(){}
    inline void pollStat(){}
    inline void syncStat(){}
+   inline void showStat(){}
 
 }
 #endif

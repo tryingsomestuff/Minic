@@ -25,7 +25,7 @@ namespace Distributed{
    MPI_Comm _commInput = MPI_COMM_NULL;
    MPI_Comm _commStop  = MPI_COMM_NULL;
  
-   MPI_Win * _winPtrStop = nullptr;
+   MPI_Win _winPtrStop;
 
    uint64_t _nbStatPoll;
 
@@ -64,9 +64,8 @@ namespace Distributed{
    }
 
    void lateInit(){
-      _winPtrStop = new MPI_Win;
-      checkError(MPI_Win_create(&ThreadPool::instance().main().stopFlag, sizeof(bool), sizeof(bool), MPI_INFO_NULL, _commStop, _winPtrStop));
-      checkError(MPI_Win_fence(0, *_winPtrStop));
+      checkError(MPI_Win_create(&ThreadPool::instance().main().stopFlag, sizeof(bool), sizeof(bool), MPI_INFO_NULL, _commStop, &_winPtrStop));
+      checkError(MPI_Win_fence(0, _winPtrStop));
    }
 
    void finalize(){
@@ -76,10 +75,7 @@ namespace Distributed{
       checkError(MPI_Comm_free(&_commInput));
       checkError(MPI_Comm_free(&_commStop));
 
-      if ( _winPtrStop ){
-         checkError(MPI_Win_free(_winPtrStop));
-         delete _winPtrStop;
-      }
+      checkError(MPI_Win_free(&_winPtrStop));
 
       checkError(MPI_Finalize());
    }
@@ -169,10 +165,19 @@ namespace Distributed{
 
 #else
 namespace Distributed{
-   int rank       = 0;
-   int _commInput = 0;
-   int _commSig   = 0;
-   int _request   = 0;
+   int worldSize = 0;
+   int rank = 0;
+
+   DummyType _commTT    = 0;
+   DummyType _commStat  = 0;
+   DummyType _commInput = 0;
+   DummyType _commStop  = 0;
+
+   DummyType _requestTT    = 0;
+   DummyType _requestStat  = 0;
+   DummyType _requestInput = 0;
+
+   DummyType _winPtrStop = 0;
 }
 
 #endif
