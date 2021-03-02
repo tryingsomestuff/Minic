@@ -129,7 +129,7 @@ namespace Distributed{
    inline void init(){}
    inline void finalize(){}
    inline bool isMainProcess(){return true;}
-   inline sync(DummyType & ){}
+   inline void sync(DummyType & ){}
 
    template<typename T>
    inline void asyncBcast(T *, int , DummyType &, DummyType & ){}
