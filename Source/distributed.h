@@ -127,6 +127,7 @@ namespace Distributed{
    inline void checkError(int ){}
 
    inline void init(){}
+   inline void lateInit(){}
    inline void finalize(){}
    inline bool isMainProcess(){return true;}
    inline void sync(DummyType & ){}
