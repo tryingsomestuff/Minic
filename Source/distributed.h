@@ -124,7 +124,7 @@ namespace Distributed{
    extern DummyType _requestStat;
    extern DummyType _requestInput;
 
-   inline void checkError(int ){};
+   inline void checkError(int ){}
 
    inline void init(){}
    inline void finalize(){}
