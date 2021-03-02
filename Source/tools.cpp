@@ -34,6 +34,7 @@ void debug_king_cap(const Position & p){
        std::cout << "no more king" << std::endl;
        std::cout << ToString(p) << std::endl;
        std::cout << ToString(p.lastMove) << std::endl;
+       Distributed::finalize();
        exit(1);
     }
 }

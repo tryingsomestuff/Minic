@@ -151,6 +151,7 @@ namespace UCI {
             else if (uciCommand == "quit") {
                 COM::stopPonder();
                 COM::stop();
+                Distributed::finalize();
                 _exit(0);
             }
             else if (uciCommand == "bench") { bench(20); }

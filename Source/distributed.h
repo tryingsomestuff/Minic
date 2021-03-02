@@ -48,7 +48,7 @@ namespace Distributed{
    void lateInit();
    void finalize();
    bool isMainProcess();
-   void sync();
+   void sync(MPI_Comm & com);
 
    template<typename T>
    struct TraitMpiType{};
@@ -94,10 +94,12 @@ namespace Distributed{
 
    template<typename T>
    inline void putMainToAll(T * ptr, int n, MPI_Win & window ){
+      checkError(MPI_Win_lock_all(0, window));
       for(int r = 1 ; r < worldSize ; ++r){
          put(ptr,n,window,r);
       }
-      checkError(MPI_Win_fence(0, window));
+      //checkError(MPI_Win_flush_all(window)); 
+      checkError(MPI_Win_unlock_all(window));
    }
 
    void waitRequest(MPI_Request & req);
@@ -106,6 +108,7 @@ namespace Distributed{
    void sendStat();
    void pollStat();
    void syncStat();
+   void showStat();
 
 }
 
@@ -126,7 +129,7 @@ namespace Distributed{
    inline void init(){}
    inline void finalize(){}
    inline bool isMainProcess(){return true;}
-   inline void sync(){}
+   inline sync(DummyType & ){}
 
    template<typename T>
    inline void asyncBcast(T *, int , DummyType &, DummyType & ){}

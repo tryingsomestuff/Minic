@@ -38,6 +38,7 @@ namespace Logging {
 #endif
         }
         if (_level >= logFatal) {
+            Distributed::finalize();
             exit(1);
         }
     }
