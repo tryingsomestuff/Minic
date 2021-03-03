@@ -2,6 +2,7 @@
 
 #include "definition.hpp"
 #include "stats.hpp"
+#include "transposition.hpp"
 
 #ifdef WITH_MPI
 
@@ -65,42 +66,55 @@ namespace Distributed{
 
    template<typename T>
    inline void bcast(T * v, int n, MPI_Comm & com){
+      if (worldSize < 2) return;
       checkError(MPI_Bcast(v, n, TraitMpiType<T>::type, 0, com));
    }
 
    template<typename T>
    inline void asyncBcast(T * v, int n, MPI_Request & req, MPI_Comm & com){
+      if (worldSize < 2) return;
       checkError(MPI_Ibcast(v, n, TraitMpiType<T>::type, 0, com, &req));
    }
 
    template<typename T>
    inline void allReduceSum(T * local, T* global, int n, MPI_Comm & com){
+      if (worldSize < 2) return;
       checkError(MPI_Allreduce(local, global, n, TraitMpiType<T>::type, MPI_SUM, com));
    }
 
    template<typename T>
    inline void allReduceMax(T * local, T* global, int n, MPI_Comm & com){
+      if (worldSize < 2) return;
       checkError(MPI_Allreduce(local, global, n, TraitMpiType<T>::type, MPI_MAX, com));
    }
 
    template<typename T>
    inline void asyncAllReduceSum(T * local, T* global, int n, MPI_Request & req, MPI_Comm & com){
+      if (worldSize < 2) return;
       checkError(MPI_Iallreduce(local, global, n, TraitMpiType<T>::type, MPI_SUM, com, &req));
    }
 
    template<typename T>
    inline void put(T * ptr, int n, MPI_Win & window, int target ){
+      if (worldSize < 2) return;
       checkError(MPI_Put(ptr, n, TraitMpiType<T>::type, target, MPI_Aint(0), n, TraitMpiType<T>::type, window));
    }
 
    template<typename T>
    inline void putMainToAll(T * ptr, int n, MPI_Win & window ){
+      if (worldSize < 2) return;
       checkError(MPI_Win_lock_all(0, window));
       for(int r = 1 ; r < worldSize ; ++r){
          put(ptr,n,window,r);
       }
       //checkError(MPI_Win_flush_all(window)); 
       checkError(MPI_Win_unlock_all(window));
+   }
+
+   template<typename T>
+   inline void asyncAllGather( T * inptr, T * outptr, int n, MPI_Request & req, MPI_Comm & com ){
+      if (worldSize < 2) return;
+      checkError(MPI_Iallgather(inptr, n, TraitMpiType<T>::type, outptr, n, TraitMpiType<T>::type, com, &req));
    }
 
    void waitRequest(MPI_Request & req);
@@ -111,6 +125,9 @@ namespace Distributed{
    void syncStat();
    void showStat();
    Counter counter(Stats::StatId id);
+
+   void setEntry(const Hash h, const TT::Entry & e);
+
 }
 
 #else // ! WITH_MPI
@@ -153,6 +170,8 @@ namespace Distributed{
    inline void syncStat(){}
    inline void showStat(){}
    Counter counter(Stats::StatId id);
+
+   inline void setEntry(const Hash, const TT::Entry &){}
 
 }
 #endif

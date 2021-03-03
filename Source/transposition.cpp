@@ -1,5 +1,6 @@
 #include "transposition.hpp"
 
+#include "distributed.h"
 #include "logging.hpp"
 #include "position.hpp"
 #include "searcher.hpp"
@@ -93,6 +94,7 @@ void setEntry(Searcher & context, Hash h, Move m, ScoreType s, ScoreType eval, B
     e.h ^= e._data;
     ++context.stats.counters[Stats::sid_ttInsert];
     table[h&(ttSize-1)] = e; // always replace (favour leaf)
+    Distributed::setEntry(h,e);
 }
 
 void getPV(const Position & p, Searcher & context, PVList & pv){
