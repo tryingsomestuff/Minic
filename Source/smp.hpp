@@ -45,7 +45,7 @@ public:
     void wait(bool otherOnly = false);
     void stop();
     // gathering counter information from all threads
-    [[nodiscard]] Counter counter(Stats::StatId id) const;
+    [[nodiscard]] Counter counter(Stats::StatId id, bool forceLocal = false) const;
     void DisplayStats()const;
     void clearGame();
     void clearSearch();

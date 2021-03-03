@@ -47,7 +47,7 @@ const std::string MinicVersion = "3.05";
 #define WITH_SYZYGY
 #define WITH_NNUE
 
-//#define WITH_MPI
+#define WITH_MPI
 
 //#define WITHOUT_FILESYSTEM
 //#define LIMIT_THREADS_TO_PHYSICAL_CORES

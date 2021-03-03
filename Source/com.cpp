@@ -51,9 +51,11 @@ namespace COM {
            Logging::LogIt(Logging::logInfo) << "Received command : \"" << command << "\"";
            strcpy(buffer, command.c_str()); // only usefull if WITH_MPI 
         }
-        // don't rely on Bcast to do a "passive wait", most implementation is doing a busy-wait, so use 100% cpu
-        Distributed::asyncBcast(buffer,4096,Distributed::_requestInput,Distributed::_commInput); 
-        Distributed::waitRequest(Distributed::_requestInput);
+        if ( Distributed::worldSize > 1 ){
+           // don't rely on Bcast to do a "passive wait", most implementation is doing a busy-wait, so use 100% cpu
+           Distributed::asyncBcast(buffer,4096,Distributed::_requestInput,Distributed::_commInput); 
+           Distributed::waitRequest(Distributed::_requestInput);
+        }
         // other slave rank event loop
         if ( !Distributed::isMainProcess()){ 
            command = buffer;

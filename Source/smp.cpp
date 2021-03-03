@@ -89,10 +89,15 @@ void ThreadPool::DisplayStats()const{
     }
 }
 
-Counter ThreadPool::counter(Stats::StatId id) const { 
-    Counter n = 0; 
-    for (auto & it : *this ){ 
-        n += it->stats.counters[id];  
-    } 
-    return n;
+Counter ThreadPool::counter(Stats::StatId id, bool forceLocal) const { 
+    if (!forceLocal && Distributed::worldSize > 1){
+      return Distributed::counter(id);
+    }
+    else{
+       Counter n = 0; 
+       for (auto & it : *this ){ 
+           n += it->stats.counters[id];  
+       } 
+       return n;
+    }
 }
