@@ -17,8 +17,8 @@
  *
  * Other things to do are :
  *  - ensure only main process is reading input from stdin and broadcast command to other process.
- *  - ensure stats are reduce and main process can display and use them
- *  - ensure stop flag from master process is forwarded to other process
+ *  - ensure stats are reduce and main process can display and use them (this is done by two-sided comm)
+ *  - ensure stop flag from master process is forwarded to other process (this is done using one-sided comm)
  *
  * To do so, and a process search tree will diverge (we want them to !), async comm are requiered.
  * So we try to send new data as soon as previous ones are received everywhere required.
