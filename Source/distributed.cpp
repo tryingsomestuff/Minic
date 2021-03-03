@@ -30,9 +30,9 @@ namespace Distributed{
    uint64_t _nbStatPoll;
 
    std::array<Counter,Stats::sid_maxid> _countersBufSend; 
-   std::array<Counter,Stats::sid_maxid> _countersBufRecv; 
+   std::array<Counter,Stats::sid_maxid> _countersBufRecv[2]; 
 
-   bool test;
+   unsigned char _doubleBufferStatParity = 0;
 
    void checkError(int err){
       if ( err != MPI_SUCCESS ){
@@ -109,12 +109,13 @@ namespace Distributed{
 
    void initStat(){
        _countersBufSend.fill(0ull);
-       _countersBufRecv.fill(0ull);
+       _countersBufRecv[0].fill(0ull);
+       _countersBufRecv[1].fill(0ull);
    }
 
    void sendStat(){
       // launch an async reduce
-      asyncAllReduceSum(_countersBufSend.data(),_countersBufRecv.data(),Stats::sid_maxid,_requestStat,_commStat);
+      asyncAllReduceSum(_countersBufSend.data(),_countersBufRecv[_doubleBufferStatParity%2].data(),Stats::sid_maxid,_requestStat,_commStat);
       ++_nbStatPoll;
    }
 
@@ -123,6 +124,7 @@ namespace Distributed{
       checkError(MPI_Test(&_requestStat, &flag, MPI_STATUS_IGNORE));
       // if previous comm is done, launch another one
       if (flag){ 
+         ++_doubleBufferStatParity;
          // gather stats from all local threads
          for(size_t k = 0 ; k < Stats::sid_maxid ; ++k){
             _countersBufSend[k] = 0ull;
@@ -149,6 +151,8 @@ namespace Distributed{
       pollStat();
       checkError(MPI_Wait(&_requestStat, MPI_STATUS_IGNORE));
 
+      _countersBufRecv[(_doubleBufferStatParity+1)%2]=_countersBufRecv[(_doubleBufferStatParity)%2];
+
       //showStat(); // debug
       sync(_commStat);
    }
@@ -156,16 +160,22 @@ namespace Distributed{
    void showStat(){
       // show reduced stats ///@todo an accessor for those data used instead of local ones...
       for(size_t k = 0 ; k < Stats::sid_maxid ; ++k){
-         Logging::LogIt(Logging::logInfo) << Stats::Names[k] << " " << _countersBufRecv[k];
+         Logging::LogIt(Logging::logInfo) << Stats::Names[k] << " " << _countersBufRecv[(_doubleBufferStatParity+1)%2][k];
          //std::cout << "All rank reduced: " << rank << " " << Stats::Names[k] << " " << _countersBufRecv[k] << std::endl;
       } 
+   }
+
+   Counter counter(Stats::StatId id){
+      //because doubleBuffer is by design not initially filled, we return locals data at the beginning)
+      const Counter global = _countersBufRecv[(_doubleBufferStatParity+1)%2][id];
+      return global != 0 ? global : ThreadPool::instance().counter(id,true);
    }
 
 }
 
 #else
 namespace Distributed{
-   int worldSize = 0;
+   int worldSize = 1;
    int rank = 0;
 
    DummyType _commTT    = 0;
@@ -178,6 +188,11 @@ namespace Distributed{
    DummyType _requestInput = 0;
 
    DummyType _winPtrStop = 0;
+
+   Counter counter(Stats::StatId id){
+      return ThreadPool::instance().main().counter(id);
+   }
+   
 }
 
 #endif

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "definition.hpp"
+#include "stats.hpp"
 
 #ifdef WITH_MPI
 
@@ -109,7 +110,7 @@ namespace Distributed{
    void pollStat();
    void syncStat();
    void showStat();
-
+   Counter counter(Stats::StatId id);
 }
 
 #else // ! WITH_MPI
@@ -151,6 +152,7 @@ namespace Distributed{
    inline void pollStat(){}
    inline void syncStat(){}
    inline void showStat(){}
+   Counter counter(Stats::StatId id);
 
 }
 #endif
