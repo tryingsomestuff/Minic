@@ -97,6 +97,10 @@ void setEntry(Searcher & context, Hash h, Move m, ScoreType s, ScoreType eval, B
     Distributed::setEntry(h,e);
 }
 
+void _setEntry(Hash h, const Entry & e){
+    table[h&(ttSize-1)] = e;
+}
+
 void getPV(const Position & p, Searcher & context, PVList & pv){
     TT::Entry e;
     Hash hashStack[MAX_PLY] = { nullHash };

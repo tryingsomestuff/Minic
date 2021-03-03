@@ -64,6 +64,8 @@ bool getEntry(Searcher & context, const Position & p, Hash h, DepthType d, Entry
 
 void setEntry(Searcher & context, Hash h, Move m, ScoreType s, ScoreType eval, Bound b, DepthType d);
 
+void _setEntry(Hash h, const Entry & e);
+
 void getPV(const Position & p, Searcher & context, PVList & pv);
 
 } // TT

@@ -28,8 +28,6 @@ namespace Distributed{
 
    MPI_Win _winPtrStop;
 
-   MPI_Datatype _ttEntry;
-
    uint64_t _nbStatPoll;
 
    std::array<Counter,Stats::sid_maxid> _countersBufSend; 
@@ -39,10 +37,6 @@ namespace Distributed{
    const unsigned long long int _ttBufSize = 1024;
    unsigned long long int _ttCurPos;
    const DepthType _ttMinDepth = 3;
-   struct EntryHash{
-      Hash h;
-      TT::Entry e;
-   };
    std::vector<EntryHash> _ttBufSend[2];
    std::vector<EntryHash> _ttBufRecv;
    unsigned char _doubleBufferTTParity = 0;    
@@ -209,17 +203,17 @@ namespace Distributed{
             _ttBufSend[_doubleBufferTTParity%2][_ttCurPos++] = {h,e};
             if (_ttCurPos == _ttBufSize){ // buffer is full
                ++_doubleBufferTTParity; // switch buffer
-               std::cout << "buffer full" << std::endl;
+               //std::cout << "buffer full" << std::endl;
                _ttCurPos = 0ull; // reset index
                // send data
                if ( ! _ttSending.load() ){
                   _ttSending.store(true);
-                  std::cout << "sending data" << std::endl;
-                  //asyncAllGather(_ttBufSend[(_doubleBufferTTParity+1)%2].data(),_ttBufRecv.data(),_ttBufSize,_requestTT,_commTT);
+                  //std::cout << "sending data" << std::endl;
+                  asyncAllGather(_ttBufSend[(_doubleBufferTTParity+1)%2].data(),_ttBufRecv.data(),_ttBufSize*sizeof(EntryHash),_requestTT,_commTT);
                }
             }
             _ttMutex.unlock();
-         } // lock
+         } // end of lock
       } // depth ok
 
       // treat sent data
@@ -227,8 +221,10 @@ namespace Distributed{
       checkError(MPI_Test(&_requestTT, &flag, MPI_STATUS_IGNORE));
       // if previous comm is done, use the data
       if (flag && _ttSending.load()){ 
-          std::cout << "buffer received" << std::endl;
-          ///@todo
+          //std::cout << "buffer received" << std::endl;
+          for (const auto & i: _ttBufRecv ){
+              TT::_setEntry(i.h,i.e); // always replace (favour data from other process)
+          }
           _ttSending.store(false);
       }
    }

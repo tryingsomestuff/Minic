@@ -52,6 +52,11 @@ namespace Distributed{
    bool isMainProcess();
    void sync(MPI_Comm & com);
 
+   struct EntryHash{
+      Hash h;
+      TT::Entry e;
+   };
+
    template<typename T>
    struct TraitMpiType{};
 
@@ -61,6 +66,8 @@ namespace Distributed{
    struct TraitMpiType<char>{static constexpr MPI_Datatype type = MPI_CHAR;};
    template<>
    struct TraitMpiType<Counter>{static constexpr MPI_Datatype type = MPI_LONG_LONG_INT;};
+   template<>
+   struct TraitMpiType<EntryHash>{static constexpr MPI_Datatype type = MPI_CHAR;}; // WARNING : size must be adapted *sizeof(EntryHash)
 
    void checkError(int err);
 
