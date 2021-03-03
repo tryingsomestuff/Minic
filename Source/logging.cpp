@@ -44,11 +44,16 @@ namespace Logging {
     }
 
     void hellooo() {
+      if ( Distributed::isMainProcess()){
 #ifdef WITH_NNUE
-      std::cout << Logging::_protocolComment[Logging::ct] << "This is Minic version " << MinicVersion << " (NNUE available)" << std::endl;
+         std::cout << Logging::_protocolComment[Logging::ct] << "This is Minic version " << MinicVersion << " (NNUE available)" << std::endl;
 #else
-      std::cout << Logging::_protocolComment[Logging::ct] << "This is Minic version " << MinicVersion << std::endl;
+         std::cout << Logging::_protocolComment[Logging::ct] << "This is Minic version " << MinicVersion << std::endl;
 #endif
+         if ( Distributed::worldSize > 1 ){
+           std::cout << Logging::_protocolComment[Logging::ct] << "MPI version running on " << Distributed::worldSize << " process" << std::endl;
+         }
+      }
     }
 
     void init(){

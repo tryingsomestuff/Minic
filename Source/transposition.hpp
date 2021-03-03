@@ -62,7 +62,6 @@ void prefetch(Hash h);
 
 bool getEntry(Searcher & context, const Position & p, Hash h, DepthType d, Entry & e);
 
-// always replace
 void setEntry(Searcher & context, Hash h, Move m, ScoreType s, ScoreType eval, Bound b, DepthType d);
 
 void getPV(const Position & p, Searcher & context, PVList & pv);
