@@ -87,7 +87,14 @@ namespace COM {
         const ThreadData d = { depth,seldepth,score,position,m,pv,SearchData()}; // only input coef here is depth
         ThreadPool::instance().search(d);
         m = ThreadPool::instance().main().getData().best; // here output results
-        Logging::LogIt(Logging::logInfo) << "...done returning move " << ToString(m) << " (state " << (int)COM::state << ")";;
+        Logging::LogIt(Logging::logInfo) << "...done returning move " << ToString(m) << " (state " << (int)COM::state << ")";
+
+        Distributed::sync(Distributed::_commStat);
+        if ( Distributed::worldSize > 1 ){
+           // don't rely on Bcast to do a "passive wait", most implementation is doing a busy-wait, so use 100% cpu
+           Distributed::asyncBcast(&m,1,Distributed::_requestInput,Distributed::_commInput); 
+           Distributed::waitRequest(Distributed::_requestInput);
+        }
         return m;
     }
 

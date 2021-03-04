@@ -68,6 +68,8 @@ namespace Distributed{
    struct TraitMpiType<Counter>{static constexpr MPI_Datatype type = MPI_LONG_LONG_INT;};
    template<>
    struct TraitMpiType<EntryHash>{static constexpr MPI_Datatype type = MPI_CHAR;}; // WARNING : size must be adapted *sizeof(EntryHash)
+   template<>
+   struct TraitMpiType<Move>{static constexpr MPI_Datatype type = MPI_INT;};
 
    void checkError(int err);
 
@@ -134,6 +136,7 @@ namespace Distributed{
    Counter counter(Stats::StatId id);
 
    void setEntry(const Hash h, const TT::Entry & e);
+   void syncTT();
 
 }
 
@@ -179,6 +182,7 @@ namespace Distributed{
    Counter counter(Stats::StatId id);
 
    inline void setEntry(const Hash, const TT::Entry &){}
+   inline void syncTT(){}
 
 }
 #endif

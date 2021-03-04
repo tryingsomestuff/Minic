@@ -25,8 +25,8 @@ namespace Logging {
         if (_level != logGUI) {
            if ( ! DynamicConfig::quiet || _level > logGUI ){
               if ( ! DynamicConfig::silent) std::cout << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
-              if (_of) (*_of) << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
            }
+           if (_of) (*_of) << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
         }
         else {
             if ( ! DynamicConfig::silent) std::cout << _buffer.str() << std::flush << std::endl;
