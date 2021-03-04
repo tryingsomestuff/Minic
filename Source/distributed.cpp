@@ -28,11 +28,10 @@ namespace Distributed{
 
    MPI_Win _winPtrStop;
 
-   uint64_t _nbStatPoll;
-
    std::array<Counter,Stats::sid_maxid> _countersBufSend; 
    std::array<Counter,Stats::sid_maxid> _countersBufRecv[2]; 
    unsigned char _doubleBufferStatParity = 0;
+   uint64_t _nbStatPoll;
 
    const unsigned long long int _ttBufSize = 1024;
    unsigned long long int _ttCurPos;
@@ -41,7 +40,8 @@ namespace Distributed{
    std::vector<EntryHash> _ttBufRecv;
    unsigned char _doubleBufferTTParity = 0;    
    std::mutex _ttMutex;
-   std::atomic<bool> _ttSending;
+   uint64_t _nbTTTransfert;
+   std::atomic<bool> _pendingTransfert;
 
    void checkError(int err){
       if ( err != MPI_SUCCESS ){
@@ -75,8 +75,9 @@ namespace Distributed{
       _ttBufSend[1].resize(_ttBufSize);
       _ttBufRecv.resize(worldSize*_ttBufSize);
       _ttCurPos = 0ull;
+      _nbTTTransfert = 0ull;
 
-      _ttSending = false;
+      _pendingTransfert = false;
 
    }
 
@@ -156,7 +157,7 @@ namespace Distributed{
             }
          }
          sendStat();
-      }      
+      }
    }
 
    // get all rank to a common synchronous state at the end of search
@@ -202,31 +203,49 @@ namespace Distributed{
          if ( _ttMutex.try_lock()){ // this can be called from multiple threads of this process !
             _ttBufSend[_doubleBufferTTParity%2][_ttCurPos++] = {h,e};
             if (_ttCurPos == _ttBufSize){ // buffer is full
-               ++_doubleBufferTTParity; // switch buffer
                //std::cout << "buffer full" << std::endl;
                _ttCurPos = 0ull; // reset index
                // send data
-               if ( ! _ttSending.load() ){
-                  _ttSending.store(true);
+               if ( !_pendingTransfert.load()){
+                  ++_doubleBufferTTParity; // switch buffer
+                  _pendingTransfert.store(true);
                   //std::cout << "sending data" << std::endl;
                   asyncAllGather(_ttBufSend[(_doubleBufferTTParity+1)%2].data(),_ttBufRecv.data(),_ttBufSize*sizeof(EntryHash),_requestTT,_commTT);
+                  ++_nbTTTransfert;
                }
+               // else we reuse the same buffer and loosing current data
             }
             _ttMutex.unlock();
          } // end of lock
       } // depth ok
 
-      // treat sent data
-      int flag;
-      checkError(MPI_Test(&_requestTT, &flag, MPI_STATUS_IGNORE));
-      // if previous comm is done, use the data
-      if (flag && _ttSending.load()){ 
-          //std::cout << "buffer received" << std::endl;
-          for (const auto & i: _ttBufRecv ){
-              TT::_setEntry(i.h,i.e); // always replace (favour data from other process)
-          }
-          _ttSending.store(false);
+      if ( _ttMutex.try_lock() && _pendingTransfert.load()){ // this can be called from multiple threads of this process !
+         int flag;
+         checkError(MPI_Test(&_requestTT, &flag, MPI_STATUS_IGNORE));
+         // if previous comm is done, use the data
+         if (flag){ 
+             //std::cout << "buffer received" << std::endl;
+             for (const auto & i: _ttBufRecv ){
+                TT::_setEntry(i.h,i.e); // always replace (favour data from other process)
+             }
+         }
+         _pendingTransfert.store(false);
       }
+   }
+
+   void syncTT(){
+      if (worldSize < 2) return;
+      // wait for equilibrium
+      uint64_t globalNbPoll = 0ull;
+      allReduceMax(&_nbTTTransfert,&globalNbPoll,1,_commTT);
+      if ( _nbTTTransfert < globalNbPoll ){
+          checkError(MPI_Wait(&_requestTT, MPI_STATUS_IGNORE));
+          // we don't really care which buffer is sent here
+          asyncAllGather(_ttBufSend[(_doubleBufferTTParity+1)%2].data(),_ttBufRecv.data(),_ttBufSize*sizeof(EntryHash),_requestTT,_commTT);
+      }
+      // final resync
+      checkError(MPI_Wait(&_requestTT, MPI_STATUS_IGNORE));
+      sync(_commTT);
    }
 }
 

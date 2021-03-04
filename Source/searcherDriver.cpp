@@ -65,7 +65,7 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDept
        ///@todo for now, using same depth as main process, but shall use infinite and wait for stop somehow
        
        requestedDepth = MAX_DEPTH; 
-       TimeMan::msecPerMove = INFINITETIME;
+       currentMoveMs = INFINITETIME; // overrides currentMoveMs
        
     }
 
@@ -345,7 +345,10 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDept
 
 pvsout:
 
-    if ( isMainThread() ) Distributed::syncStat();
+    if ( isMainThread() ){
+        Distributed::syncStat();
+        Distributed::syncTT();
+    }
 
     if ( isMainThread() ){
         Logging::LogIt(Logging::logInfo) << "Unlocking other threads (end of search)";

@@ -29,7 +29,9 @@ namespace UCI {
             ///@todo protect some stuff when search is running !
 
             if (uciCommand == "uci") {
-                Logging::LogIt(Logging::logGUI) << "id name Minic " << MinicVersion;
+                std::string version = MinicVersion;
+                if (Distributed::worldSize > 1 ) version += "_" + std::to_string(Distributed::worldSize) + "proc";
+                Logging::LogIt(Logging::logGUI) << "id name Minic " << version;
                 Logging::LogIt(Logging::logGUI) << "id author Vivien Clauzon";
                 Options::displayOptionsUCI();
                 Logging::LogIt(Logging::logGUI) << "uciok";

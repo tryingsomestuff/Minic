@@ -22,7 +22,9 @@ namespace XBoard{
     void setFeature(){
         ///@todo more feature disable !!
         ///@todo use otim ?
-        Logging::LogIt(Logging::logGUI) << "feature ping=1 setboard=1 edit=0 Colors=0 usermove=1 memory=0 sigint=0 sigterm=0 otim=0 time=1 nps=0 draw=0 playother=0 variants=\"normal,fischerandom\" myname=\"Minic " << MinicVersion << "\"";
+        std::string version = MinicVersion;
+        if (Distributed::worldSize > 1 ) version += "_" + std::to_string(Distributed::worldSize) + "proc";
+        Logging::LogIt(Logging::logGUI) << "feature ping=1 setboard=1 edit=0 Colors=0 usermove=1 memory=0 sigint=0 sigterm=0 otim=0 time=1 nps=0 draw=0 playother=0 variants=\"normal,fischerandom\" myname=\"Minic " << version << "\"";
         Options::displayOptionsXBoard();
         Logging::LogIt(Logging::logGUI) << "feature done=1";
     }

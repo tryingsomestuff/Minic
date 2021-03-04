@@ -57,7 +57,7 @@ Move ThreadPool::search(const ThreadData & data){
     dataOther.depth = MAX_DEPTH;
     for (auto & s : *this){
         (*s).setData((*s).isMainThread() ? data : dataOther); // this is a copy
-        (*s).currentMoveMs = currentMoveMs; // propagate time control
+        (*s).currentMoveMs = currentMoveMs; // propagate time control from Threadpool to each Searcher
     }
     Logging::LogIt(Logging::logInfo) << "Calling main thread search";
     main().search(); ///@todo 1 thread for nothing here

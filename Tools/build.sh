@@ -5,10 +5,14 @@ ulimit -s unlimited
 
 cd $dir
 
-#export CXX=mpic++
-#export CC=mpicc
-export CXX=g++
-export CC=gcc
+if grep "^#define WITH_MPI" Source/definition.hpp ; then
+   echo "Build with mpi"
+   export CXX=mpic++
+   export CC=mpicc
+else
+   export CXX=g++
+   export CC=gcc
+fi
 
 FATHOM_PRESENT=0
 if [ -e Fathom/src/tbprobe.h ]; then
