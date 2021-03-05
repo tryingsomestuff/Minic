@@ -12,19 +12,26 @@
 #include "logging.hpp"
 #include "stats.hpp"
 
+//#define DEBUGCOUT(x) std::cout << rank << " " << (x) << std::endl;
+#define DEBUGCOUT(x)
+
 namespace Distributed{
    int worldSize;
    int rank;
    std::string name;
 
    MPI_Comm _commTT    = MPI_COMM_NULL;
+   MPI_Comm _commTT2   = MPI_COMM_NULL;
    MPI_Comm _commStat  = MPI_COMM_NULL;
+   MPI_Comm _commStat2 = MPI_COMM_NULL;
    MPI_Comm _commInput = MPI_COMM_NULL;
    MPI_Comm _commStop  = MPI_COMM_NULL;
+   MPI_Comm _commMove  = MPI_COMM_NULL;
    
    MPI_Request _requestTT    = MPI_REQUEST_NULL;
    MPI_Request _requestStat  = MPI_REQUEST_NULL;
    MPI_Request _requestInput = MPI_REQUEST_NULL;
+   MPI_Request _requestMove  = MPI_REQUEST_NULL;
 
    MPI_Win _winPtrStop;
 
@@ -52,8 +59,10 @@ namespace Distributed{
    void init(){
       //MPI_Init(NULL, NULL);
       int provided;
-      checkError(MPI_Init_thread(NULL, NULL, MPI_THREAD_FUNNELED, &provided));
-
+      checkError(MPI_Init_thread(NULL, NULL, MPI_THREAD_SERIALIZED, &provided)); // MPI_THREAD_MULTIPLE?
+      if(provided < MPI_THREAD_SERIALIZED){
+        Logging::LogIt(Logging::logFatal) << "The threading support level is lesser than needed";
+      }
       checkError(MPI_Comm_size(MPI_COMM_WORLD, &worldSize));
       checkError(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
       char processor_name[MPI_MAX_PROCESSOR_NAME];
@@ -64,9 +73,12 @@ namespace Distributed{
       if ( !isMainProcess() ) DynamicConfig::silent = true;
    
       checkError(MPI_Comm_dup(MPI_COMM_WORLD, &_commTT));
+      checkError(MPI_Comm_dup(MPI_COMM_WORLD, &_commTT2));
       checkError(MPI_Comm_dup(MPI_COMM_WORLD, &_commStat));
+      checkError(MPI_Comm_dup(MPI_COMM_WORLD, &_commStat2));
       checkError(MPI_Comm_dup(MPI_COMM_WORLD, &_commInput));
       checkError(MPI_Comm_dup(MPI_COMM_WORLD, &_commStop));
+      checkError(MPI_Comm_dup(MPI_COMM_WORLD, &_commMove));
 
       _nbStatPoll = 0ull;
 
@@ -89,9 +101,12 @@ namespace Distributed{
    void finalize(){
 
       checkError(MPI_Comm_free(&_commTT));
+      checkError(MPI_Comm_free(&_commTT2));
       checkError(MPI_Comm_free(&_commStat));
+      checkError(MPI_Comm_free(&_commStat2));
       checkError(MPI_Comm_free(&_commInput));
       checkError(MPI_Comm_free(&_commStop));
+      checkError(MPI_Comm_free(&_commMove));
 
       checkError(MPI_Win_free(&_winPtrStop));
 
@@ -103,11 +118,11 @@ namespace Distributed{
    }
 
    // classic busy wait
-   void sync(MPI_Comm & com){
+   void sync(MPI_Comm & com, const std::string & msg){
        if (worldSize < 2) return;
-       if ( isMainProcess() ) Logging::LogIt(Logging::logDebug) << "syncing";
+       Logging::LogIt(Logging::logDebug) << "syncing: " << msg;
        checkError(MPI_Barrier(com));
-       if ( isMainProcess() ) Logging::LogIt(Logging::logDebug) << "...done";
+       Logging::LogIt(Logging::logDebug) << "...done";
    }
 
    // "softer" wait on other process
@@ -142,7 +157,7 @@ namespace Distributed{
       ++_nbStatPoll;
    }
 
-   void pollStat(){
+   void pollStat(){ // only called from main thread
       if (worldSize < 2) return;
       int flag;
       checkError(MPI_Test(&_requestStat, &flag, MPI_STATUS_IGNORE));
@@ -161,11 +176,11 @@ namespace Distributed{
    }
 
    // get all rank to a common synchronous state at the end of search
-   void syncStat(){
+   void syncStat(){  // only called from main thread
       if (worldSize < 2) return;
       // wait for equilibrium
       uint64_t globalNbPoll = 0ull;
-      allReduceMax(&_nbStatPoll,&globalNbPoll,1,_commStat);
+      allReduceMax(&_nbStatPoll,&globalNbPoll,1,_commStat2);
       if ( _nbStatPoll < globalNbPoll ){
           checkError(MPI_Wait(&_requestStat, MPI_STATUS_IGNORE));
           sendStat();
@@ -179,14 +194,14 @@ namespace Distributed{
       _countersBufRecv[(_doubleBufferStatParity+1)%2]=_countersBufRecv[(_doubleBufferStatParity)%2];
 
       //showStat(); // debug
-      sync(_commStat);
+      sync(_commStat,__PRETTY_FUNCTION__);
    }
 
    void showStat(){
       // show reduced stats ///@todo an accessor for those data used instead of local ones...
       for(size_t k = 0 ; k < Stats::sid_maxid ; ++k){
          Logging::LogIt(Logging::logInfo) << Stats::Names[k] << " " << _countersBufRecv[(_doubleBufferStatParity+1)%2][k];
-         //std::cout << "All rank reduced: " << rank << " " << Stats::Names[k] << " " << _countersBufRecv[k] << std::endl;
+         //DEBUGCOUT("All rank reduced: " + Stats::Names[k] + " " + std::to_string(_countersBufRecv[k]);
       } 
    }
 
@@ -198,54 +213,73 @@ namespace Distributed{
 
    void setEntry(const Hash h, const TT::Entry & e){
       if (worldSize < 2) return;
+      //DEBUGCOUT("set entry");
       // do not share entry near leaf, their are changing to quickly
       if ( e.d > _ttMinDepth){ 
+         //DEBUGCOUT("depth ok");
          if ( _ttMutex.try_lock()){ // this can be called from multiple threads of this process !
+            //DEBUGCOUT("lock ok");
             _ttBufSend[_doubleBufferTTParity%2][_ttCurPos++] = {h,e};
             if (_ttCurPos == _ttBufSize){ // buffer is full
-               //std::cout << "buffer full" << std::endl;
+               //DEBUGCOUT("buffer full");
                _ttCurPos = 0ull; // reset index
                // send data
-               if ( !_pendingTransfert.load()){
+               int flag;
+               checkError(MPI_Test(&_requestTT, &flag, MPI_STATUS_IGNORE));
+               // if previous comm is done AND data are used, launch another one
+               if (flag && !_pendingTransfert.load()){
                   ++_doubleBufferTTParity; // switch buffer
                   _pendingTransfert.store(true);
-                  //std::cout << "sending data" << std::endl;
+                  DEBUGCOUT("sending data " + std::to_string(_nbTTTransfert));
                   asyncAllGather(_ttBufSend[(_doubleBufferTTParity+1)%2].data(),_ttBufRecv.data(),_ttBufSize*sizeof(EntryHash),_requestTT,_commTT);
                   ++_nbTTTransfert;
                }
                // else we reuse the same buffer and loosing current data
+               /*else{
+                  DEBUGCOUT("previous comm not done, skipping");
+               }*/
             }
             _ttMutex.unlock();
          } // end of lock
       } // depth ok
 
-      if ( _ttMutex.try_lock() && _pendingTransfert.load()){ // this can be called from multiple threads of this process !
+      if ( _ttMutex.try_lock() ){ // this can be called from multiple threads of this process !
          int flag;
          checkError(MPI_Test(&_requestTT, &flag, MPI_STATUS_IGNORE));
          // if previous comm is done, use the data
-         if (flag){ 
-             //std::cout << "buffer received" << std::endl;
-             for (const auto & i: _ttBufRecv ){
-                TT::_setEntry(i.h,i.e); // always replace (favour data from other process)
-             }
+         if (flag){
+            if ( _pendingTransfert.load() ){
+               //DEBUGCOUT("buffer received");
+               for (const auto & i: _ttBufRecv ){
+                  TT::_setEntry(i.h,i.e); // always replace (favour data from other process)
+               }
+               _pendingTransfert.store(false);
+            }
          }
-         _pendingTransfert.store(false);
-      }
+         _ttMutex.unlock();
+      } // end if lock
    }
 
-   void syncTT(){
+   // get all rank to a common synchronous state at the end of search
+   void syncTT(){ // only called from main thread
       if (worldSize < 2) return;
       // wait for equilibrium
       uint64_t globalNbPoll = 0ull;
-      allReduceMax(&_nbTTTransfert,&globalNbPoll,1,_commTT);
+      allReduceMax(&_nbTTTransfert,&globalNbPoll,1,_commTT2);
+      DEBUGCOUT("sync TT " + std::to_string(_nbTTTransfert) + " " + std::to_string(globalNbPoll));
       if ( _nbTTTransfert < globalNbPoll ){
+          DEBUGCOUT("sync TT middle wait");
           checkError(MPI_Wait(&_requestTT, MPI_STATUS_IGNORE));
           // we don't really care which buffer is sent here
           asyncAllGather(_ttBufSend[(_doubleBufferTTParity+1)%2].data(),_ttBufRecv.data(),_ttBufSize*sizeof(EntryHash),_requestTT,_commTT);
       }
       // final resync
+      DEBUGCOUT("sync TT final wait");
       checkError(MPI_Wait(&_requestTT, MPI_STATUS_IGNORE));
-      sync(_commTT);
+      DEBUGCOUT("sync TT final wait done 1");
+      _pendingTransfert.store(false);
+      sync(_commTT,__PRETTY_FUNCTION__);
+      DEBUGCOUT("sync TT final wait done 2");
    }
 }
 

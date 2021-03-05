@@ -6,7 +6,10 @@
 
 #ifdef WITH_MPI
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
 #include "mpi.h"
+#pragma GCC diagnostic pop
 
 #include "logging.hpp"
 
@@ -35,14 +38,18 @@ namespace Distributed{
    extern int rank;
    extern std::string name;
 
-   extern MPI_Comm _commTT;   
+   extern MPI_Comm _commTT;
+   extern MPI_Comm _commTT2;
    extern MPI_Comm _commStat;
+   extern MPI_Comm _commStat2;
    extern MPI_Comm _commInput;
    extern MPI_Comm _commStop;
+   extern MPI_Comm _commMove;
 
    extern MPI_Request _requestTT;
    extern MPI_Request _requestStat;
    extern MPI_Request _requestInput;
+   extern MPI_Request _requestMove;
 
    extern MPI_Win _winPtrStop;
 
@@ -50,10 +57,10 @@ namespace Distributed{
    void lateInit();
    void finalize();
    bool isMainProcess();
-   void sync(MPI_Comm & com);
+   void sync(MPI_Comm & com, const std::string & msg = "");
 
    struct EntryHash{
-      Hash h;
+      Hash h = nullHash;
       TT::Entry e;
    };
 
@@ -147,14 +154,18 @@ namespace Distributed{
    extern int rank;
 
    typedef int DummyType;
-   extern DummyType _commTT;   
+   extern DummyType _commTT;
+   extern DummyType _commTT2;
    extern DummyType _commStat;
+   extern DummyType _commStat2;
    extern DummyType _commInput;
    extern DummyType _commStop;
+   extern DummyType _commMove;
 
    extern DummyType _requestTT;
    extern DummyType _requestStat;
    extern DummyType _requestInput;
+   extern DummyType _requestMove;
 
    extern DummyType _winPtrStop;
 
@@ -164,7 +175,7 @@ namespace Distributed{
    inline void lateInit(){}
    inline void finalize(){}
    inline bool isMainProcess(){return true;}
-   inline void sync(DummyType & ){}
+   inline void sync(DummyType &, const std::string & ){}
 
    template<typename T>
    inline void asyncBcast(T *, int , DummyType &, DummyType & ){}
