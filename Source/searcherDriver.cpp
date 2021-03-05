@@ -42,7 +42,7 @@ void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestSco
 
 PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDepth, ScoreType & sc, DepthType & seldepth){
 
-    Distributed::sync(Distributed::_commStat);
+    if ( isMainThread() ) Distributed::sync(Distributed::_commStat2,__PRETTY_FUNCTION__);
 
     // we start by a copy, because position object must be mutable here.
     Position p(pp);
@@ -88,14 +88,14 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDept
 
     // Main thread only will reset some table
     if ( isMainThread() || id() >= MAX_THREADS ){
-        Logging::LogIt(Logging::logInfo) << "Search params :" ;
-        Logging::LogIt(Logging::logInfo) << "requested time  " << getCurrentMoveMs() ;
-        Logging::LogIt(Logging::logInfo) << "requested depth " << (int) requestedDepth;
         if ( isMainThread()){
            TT::age();
            MoveDifficultyUtil::variability = 1.f; // not usefull for co-searcher threads that won't depend on time
            ThreadPool::instance().clearSearch();  // reset data for all other threads !!!
         }
+        Logging::LogIt(Logging::logInfo) << "Search params :" ;
+        Logging::LogIt(Logging::logInfo) << "requested time  " << getCurrentMoveMs() << " (" << currentMoveMs << ")"; // won't exceed TimeMan::maxTime
+        Logging::LogIt(Logging::logInfo) << "requested depth " << (int) requestedDepth;
     }
     // other threads will wait here for start signal
     else{
