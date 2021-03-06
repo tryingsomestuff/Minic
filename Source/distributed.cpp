@@ -12,7 +12,7 @@
 #include "logging.hpp"
 #include "stats.hpp"
 
-//#define DEBUGCOUT(x) std::cout << rank << " " << (x) << std::endl;
+//#define DEBUGCOUT(x) Logging::LogIt(Logging::logDebug) << rank << " " << (x);
 #define DEBUGCOUT(x)
 
 namespace Distributed{
@@ -40,7 +40,7 @@ namespace Distributed{
    unsigned char _doubleBufferStatParity = 0;
    uint64_t _nbStatPoll;
 
-   const unsigned long long int _ttBufSize = 1024;
+   const unsigned long long int _ttBufSize = 256;
    unsigned long long int _ttCurPos;
    const DepthType _ttMinDepth = 3;
    std::vector<EntryHash> _ttBufSend[2];
@@ -48,7 +48,6 @@ namespace Distributed{
    unsigned char _doubleBufferTTParity = 0;    
    std::mutex _ttMutex;
    uint64_t _nbTTTransfert;
-   std::atomic<bool> _pendingTransfert;
 
    void checkError(int err){
       if ( err != MPI_SUCCESS ){
@@ -88,8 +87,6 @@ namespace Distributed{
       _ttBufRecv.resize(worldSize*_ttBufSize);
       _ttCurPos = 0ull;
       _nbTTTransfert = 0ull;
-
-      _pendingTransfert = false;
 
    }
 
@@ -198,15 +195,14 @@ namespace Distributed{
    }
 
    void showStat(){
-      // show reduced stats ///@todo an accessor for those data used instead of local ones...
+      // show reduced stats
       for(size_t k = 0 ; k < Stats::sid_maxid ; ++k){
          Logging::LogIt(Logging::logInfo) << Stats::Names[k] << " " << _countersBufRecv[(_doubleBufferStatParity+1)%2][k];
-         //DEBUGCOUT("All rank reduced: " + Stats::Names[k] + " " + std::to_string(_countersBufRecv[k]);
       } 
    }
 
    Counter counter(Stats::StatId id){
-      //because doubleBuffer is by design not initially filled, we return locals data at the beginning)
+      // because doubleBuffer is by design not initially filled, we return locals data at the beginning)
       const Counter global = _countersBufRecv[(_doubleBufferStatParity+1)%2][id];
       return global != 0 ? global : ThreadPool::instance().counter(id,true);
    }
@@ -217,19 +213,24 @@ namespace Distributed{
       // do not share entry near leaf, their are changing to quickly
       if ( e.d > _ttMinDepth){ 
          //DEBUGCOUT("depth ok");
-         if ( _ttMutex.try_lock()){ // this can be called from multiple threads of this process !
+         //if ( _ttMutex.try_lock()){ // this can be called from multiple threads of this process !
             //DEBUGCOUT("lock ok");
             _ttBufSend[_doubleBufferTTParity%2][_ttCurPos++] = {h,e};
             if (_ttCurPos == _ttBufSize){ // buffer is full
                //DEBUGCOUT("buffer full");
                _ttCurPos = 0ull; // reset index
-               // send data
+               // if previous comm is done then use data and launch another one
                int flag;
                checkError(MPI_Test(&_requestTT, &flag, MPI_STATUS_IGNORE));
-               // if previous comm is done AND data are used, launch another one
-               if (flag && !_pendingTransfert.load()){
+               if (flag){
+                  // receive previous data
+                  static uint64_t received = 0;
+                  DEBUGCOUT("buffer received " +std::to_string(received++));
+                  for (const auto & i: _ttBufRecv ){
+                     TT::_setEntry(i.h,i.e); // always replace (favour data from other process)
+                  }                  
+                  // send new ones
                   ++_doubleBufferTTParity; // switch buffer
-                  _pendingTransfert.store(true);
                   DEBUGCOUT("sending data " + std::to_string(_nbTTTransfert));
                   asyncAllGather(_ttBufSend[(_doubleBufferTTParity+1)%2].data(),_ttBufRecv.data(),_ttBufSize*sizeof(EntryHash),_requestTT,_commTT);
                   ++_nbTTTransfert;
@@ -239,25 +240,9 @@ namespace Distributed{
                   DEBUGCOUT("previous comm not done, skipping");
                }*/
             }
-            _ttMutex.unlock();
-         } // end of lock
+           // _ttMutex.unlock();
+         //} // end of lock
       } // depth ok
-
-      if ( _ttMutex.try_lock() ){ // this can be called from multiple threads of this process !
-         int flag;
-         checkError(MPI_Test(&_requestTT, &flag, MPI_STATUS_IGNORE));
-         // if previous comm is done, use the data
-         if (flag){
-            if ( _pendingTransfert.load() ){
-               //DEBUGCOUT("buffer received");
-               for (const auto & i: _ttBufRecv ){
-                  TT::_setEntry(i.h,i.e); // always replace (favour data from other process)
-               }
-               _pendingTransfert.store(false);
-            }
-         }
-         _ttMutex.unlock();
-      } // end if lock
    }
 
    // get all rank to a common synchronous state at the end of search
@@ -272,12 +257,12 @@ namespace Distributed{
           checkError(MPI_Wait(&_requestTT, MPI_STATUS_IGNORE));
           // we don't really care which buffer is sent here
           asyncAllGather(_ttBufSend[(_doubleBufferTTParity+1)%2].data(),_ttBufRecv.data(),_ttBufSize*sizeof(EntryHash),_requestTT,_commTT);
+          ++_nbTTTransfert;
       }
       // final resync
       DEBUGCOUT("sync TT final wait");
       checkError(MPI_Wait(&_requestTT, MPI_STATUS_IGNORE));
       DEBUGCOUT("sync TT final wait done 1");
-      _pendingTransfert.store(false);
       sync(_commTT,__PRETTY_FUNCTION__);
       DEBUGCOUT("sync TT final wait done 2");
    }
