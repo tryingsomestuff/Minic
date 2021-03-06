@@ -1,6 +1,7 @@
 import chess
 import halfka
 import torch
+import numpy as np
 from torch import nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
@@ -79,3 +80,31 @@ class NNUE(pl.LightningModule):
     #scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=200, gamma=0.3)
     #return [optimizer], [scheduler]
     return optimizer
+
+  def flattened_parameters(self, log=True):
+    def join_param(joined, param):
+      if log:
+        print(param.size())
+      joined = np.concatenate((joined, param.flatten()))
+      return joined
+    
+    joined = np.array([])
+    # white_affine
+    joined = join_param(joined, self.white_affine.weight.detach().numpy())
+    joined = join_param(joined, self.white_affine.bias.detach().numpy())
+    # black_affine
+    joined = join_param(joined, self.black_affine.weight.detach().numpy())
+    joined = join_param(joined, self.black_affine.bias.detach().numpy())
+    # fc0
+    joined = join_param(joined, self.fc0.weight.data)
+    joined = join_param(joined, self.fc0.bias.data)
+    # fc1
+    joined = join_param(joined, self.fc1.weight.data)
+    joined = join_param(joined, self.fc1.bias.data)
+    # fc2
+    joined = join_param(joined, self.fc2.weight.data)
+    joined = join_param(joined, self.fc2.bias.data)
+    # fc3
+    joined = join_param(joined, self.fc3.weight.data)
+    joined = join_param(joined, self.fc3.bias.data)
+    return joined.astype(np.float32)
