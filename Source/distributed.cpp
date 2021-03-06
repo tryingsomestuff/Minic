@@ -12,8 +12,11 @@
 #include "logging.hpp"
 #include "stats.hpp"
 
-//#define DEBUGCOUT(x) Logging::LogIt(Logging::logDebug) << rank << " " << (x);
+#ifdef DEBUG_DISTRIBUTED
+#define DEBUGCOUT(x) Logging::LogIt(Logging::logDebug) << rank << " " << (x);
+#else
 #define DEBUGCOUT(x)
+#endif
 
 namespace Distributed{
    int worldSize;
@@ -224,7 +227,9 @@ namespace Distributed{
                checkError(MPI_Test(&_requestTT, &flag, MPI_STATUS_IGNORE));
                if (flag){
                   // receive previous data
+#ifdef DEBUG_DISTRIBUTED
                   static uint64_t received = 0;
+#endif
                   DEBUGCOUT("buffer received " +std::to_string(received++));
                   for (const auto & i: _ttBufRecv ){
                      TT::_setEntry(i.h,i.e); // always replace (favour data from other process)
