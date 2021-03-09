@@ -411,8 +411,11 @@ inline void* std_aligned_alloc(size_t alignment, size_t size) {
 #elif defined(_WIN32)
   return _mm_malloc(size, alignment);
 #else
-  ///@todo MADV_HUGEPAGE
-  return std::aligned_alloc(alignment, size);
+  void * ret = std::aligned_alloc(alignment, size);
+#ifdef MADV_HUGEPAGE
+  madvise(ret, size, MADV_HUGEPAGE);
+#endif
+  return ret;
 #endif
 }
 
