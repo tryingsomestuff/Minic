@@ -38,14 +38,13 @@ ScoreType Searcher::pvs(ScoreType alpha,
             if ( TimeMan::maxNodes > 0 && nodeCount > TimeMan::maxNodes) { 
                 stopFlag = true; 
                 Logging::LogIt(Logging::logInfo) << "stopFlag triggered (nodes limits) in thread " << id(); 
-                return STOPSCORE;
             } 
             if ( (TimeType)std::max(1, (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count()) > getCurrentMoveMs() ){ 
                 stopFlag = true; 
                 Logging::LogIt(Logging::logInfo) << "stopFlag triggered in thread " << id(); 
-                return STOPSCORE;
             }
-            if ( Distributed::worldSize > 1 ) Distributed::pollStat();
+            Distributed::pollStat();
+            if ( stopFlag ) return STOPSCORE;
         }
         --periodicCheck;
     }
