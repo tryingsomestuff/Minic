@@ -214,7 +214,7 @@ namespace Distributed{
       // do not share entry near leaf, their are changing to quickly
       if ( e.d > _ttMinDepth){ 
          //DEBUGCOUT("depth ok")
-         //if ( _ttMutex.try_lock()){ // this can be called from multiple threads of this process !
+         if ( _ttMutex.try_lock()){ // this can be called from multiple threads of this process !
             //DEBUGCOUT("lock ok")
             _ttBufSend[_doubleBufferTTParity%2][_ttCurPos++] = {h,e};
             if (_ttCurPos == _ttBufSize){ // buffer is full
@@ -243,8 +243,8 @@ namespace Distributed{
                   DEBUGCOUT("previous comm not done, skipping")
                }*/
             }
-           // _ttMutex.unlock();
-         //} // end of lock
+            _ttMutex.unlock();
+         } // end of lock
       } // depth ok
    }
 
