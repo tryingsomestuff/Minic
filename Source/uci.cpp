@@ -19,7 +19,9 @@ namespace UCI {
 
     void uci() {
 
-        while (true) {
+        bool iterate = true;
+
+        while (iterate) {
             COM::readLine();
             std::istringstream iss(COM::command);
             std::string uciCommand;
@@ -153,8 +155,7 @@ namespace UCI {
             else if (uciCommand == "quit") {
                 COM::stopPonder();
                 COM::stop();
-                Distributed::finalize();
-                _exit(0);
+                iterate = false;
             }
             else if (uciCommand == "bench") { bench(20); }
             else if (!uciCommand.empty()) { Logging::LogIt(Logging::logGUI) << "info string unrecognised command " << uciCommand; }

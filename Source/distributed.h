@@ -11,7 +11,7 @@
 #include "mpi.h"
 #pragma GCC diagnostic pop
 
-#define DEBUG_DISTRIBUTED
+//#define DEBUG_DISTRIBUTED
 #ifdef DEBUG_DISTRIBUTED
 #define DEBUGCOUT(x) Logging::LogIt(Logging::logDebug) << rank << " " << (x);
 #else
