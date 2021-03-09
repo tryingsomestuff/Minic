@@ -7,8 +7,13 @@ cd $dir
 
 if grep "^#define WITH_MPI" Source/definition.hpp ; then
    echo "Build with mpi"
-   export CXX=mpic++
-   export CC=mpicc
+   if (mpirun --version | grep Intel); then
+      export CXX=mpic++
+      export CC=mpicc
+   else
+      echo "Please use IntelMPI, only validated MPI distribution with Minic"
+      exit 1
+   fi
 else
    export CXX=g++
    export CC=gcc
