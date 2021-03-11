@@ -30,7 +30,7 @@ namespace Distributed{
    MPI_Request _requestInput = MPI_REQUEST_NULL;
    MPI_Request _requestMove  = MPI_REQUEST_NULL;
 
-   MPI_Win _winPtrStop;
+   MPI_Win _winStop;
 
    std::array<Counter,Stats::sid_maxid> _countersBufSend; 
    std::array<Counter,Stats::sid_maxid> _countersBufRecv[2]; 
@@ -92,8 +92,8 @@ namespace Distributed{
 
    void lateInit(){
       if ( worldSize > 1 ){
-         checkError(MPI_Win_create(&ThreadPool::instance().main().stopFlag, sizeof(bool), sizeof(bool), MPI_INFO_NULL, _commStop, &_winPtrStop));
-         checkError(MPI_Win_fence(0, _winPtrStop));
+         checkError(MPI_Win_create(&ThreadPool::instance().main().stopFlag, sizeof(bool), sizeof(bool), MPI_INFO_NULL, _commStop, &_winStop));
+         checkError(MPI_Win_fence(0, _winStop));
       }
    }
 
@@ -107,7 +107,7 @@ namespace Distributed{
       checkError(MPI_Comm_free(&_commStop));
       checkError(MPI_Comm_free(&_commMove));
 
-      if ( worldSize > 1 ) checkError(MPI_Win_free(&_winPtrStop));
+      if ( worldSize > 1 ) checkError(MPI_Win_free(&_winStop));
 
       checkError(MPI_Finalize());
    }

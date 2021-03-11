@@ -44,6 +44,11 @@ ScoreType Searcher::pvs(ScoreType alpha,
                 Logging::LogIt(Logging::logInfo) << "stopFlag triggered in thread " << id(); 
             }
             Distributed::pollStat();
+
+            if ( ! Distributed::isMainProcess() ){
+               Distributed::get(&ThreadPool::instance().main().stopFlag,1,Distributed::_winStop,0);
+            }
+
             if ( stopFlag ) return STOPSCORE;
         }
         --periodicCheck;

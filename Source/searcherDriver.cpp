@@ -331,21 +331,22 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDept
                         Logging::LogIt(Logging::logInfo) << "EBF  " << float(getData().datas.nodes[depth]) / (std::max(Counter(1),getData().datas.nodes[depth-1]));
                         Logging::LogIt(Logging::logInfo) << "EBF2 " << float(ThreadPool::instance().counter(Stats::sid_qnodes)) / std::max(Counter(1),ThreadPool::instance().counter(Stats::sid_nodes));
                     }
+
+                    // sync stopfloag in other process
+                    if ( ! Distributed::isMainProcess() ){
+                       Distributed::get(&ThreadPool::instance().main().stopFlag,1,Distributed::_winStop,0);
+                    }
                 }
             } 
         } // multiPV loop end
     } // iterative deepening loop end
 
     stopFlag = true; // here stopFlag must always be true ...
-    if ( Distributed::isMainProcess() && isMainThread() ){
-        Logging::LogIt(Logging::logInfo) << "Sending stopflag to other process";
-        Distributed::putMainToAll(&stopFlag,1,Distributed::_winPtrStop);
-        Logging::LogIt(Logging::logInfo) << "Stopflag sent to other process";
-    }
 
 pvsout:
 
     if ( isMainThread() ){
+        Distributed::winFence(Distributed::_winStop);
         Distributed::syncStat();
         Distributed::syncTT();
     }
