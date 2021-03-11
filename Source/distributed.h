@@ -58,7 +58,7 @@ namespace Distributed{
    extern MPI_Request _requestInput;
    extern MPI_Request _requestMove;
 
-   extern MPI_Win _winPtrStop;
+   extern MPI_Win _winStop;
 
    void init();
    void lateInit();
@@ -124,6 +124,12 @@ namespace Distributed{
    }
 
    template<typename T>
+   inline void get(T * ptr, int n, MPI_Win & window, int source ){
+      if (worldSize < 2) return;
+      checkError(MPI_Get(ptr, n, TraitMpiType<T>::type, source, MPI_Aint(0), n, TraitMpiType<T>::type, window));
+   }
+
+   template<typename T>
    inline void putMainToAll(T * ptr, int n, MPI_Win & window ){
       if (worldSize < 2) return;
       checkError(MPI_Win_lock_all(0, window));
@@ -138,6 +144,10 @@ namespace Distributed{
    inline void asyncAllGather( T * inptr, T * outptr, int n, MPI_Request & req, MPI_Comm & com ){
       if (worldSize < 2) return;
       checkError(MPI_Iallgather(inptr, n, TraitMpiType<T>::type, outptr, n, TraitMpiType<T>::type, com, &req));
+   }
+
+   inline void winFence(MPI_Win & window){
+      checkError(MPI_Win_fence(0, window));
    }
 
    void waitRequest(MPI_Request & req);
@@ -174,7 +184,7 @@ namespace Distributed{
    extern DummyType _requestInput;
    extern DummyType _requestMove;
 
-   extern DummyType _winPtrStop;
+   extern DummyType _winStop;
 
    inline void checkError(int ){}
 
@@ -191,6 +201,8 @@ namespace Distributed{
    inline void putMainToAll(T * , int , DummyType & ){}
 
    inline void waitRequest(DummyType & ){}
+
+   inline void winFence(DummyType & ){}
 
    inline void initStat(){}
    inline void sendStat(){}
