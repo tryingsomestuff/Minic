@@ -8,6 +8,7 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-function-type"
+#pragma GCC diagnostic ignored "-Wcast-qual"
 #include "mpi.h"
 #pragma GCC diagnostic pop
 

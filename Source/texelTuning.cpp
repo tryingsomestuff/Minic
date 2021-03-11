@@ -12,7 +12,7 @@
 #include "positionTools.hpp"
 #include "score.hpp"
 #include "searcher.hpp"
-#include "smp.hpp"
+#include "threading.hpp"
 #include "tools.hpp"
 
 namespace Texel {

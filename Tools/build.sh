@@ -8,8 +8,9 @@ cd $dir
 if grep "^#define WITH_MPI" Source/definition.hpp ; then
    echo "Build with mpi"
    if (mpirun --version | grep Intel); then
-      export CXX=mpic++
+      export CXX=mpicxx
       export CC=mpicc
+      which mpirun
    else
       echo "Please use IntelMPI, only validated MPI distribution with Minic"
       exit 1
@@ -18,6 +19,9 @@ else
    export CXX=g++
    export CC=gcc
 fi
+
+which $CXX
+which $CC
 
 FATHOM_PRESENT=0
 if [ -e Fathom/src/tbprobe.h ]; then

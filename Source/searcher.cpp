@@ -87,7 +87,7 @@ Searcher::Searcher(size_t n):_index(n),_exit(false),_searching(true),_stdThread(
 Searcher::~Searcher(){
     _exit = true;
     start();
-    Logging::LogIt(Logging::logInfo) << "Waiting for workers to join...";
+    Logging::LogIt(Logging::logInfo) << "Waiting for thread worker to join...";
     _stdThread.join();
 }
 

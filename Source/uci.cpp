@@ -160,6 +160,7 @@ namespace UCI {
             else if (uciCommand == "bench") { bench(20); }
             else if (!uciCommand.empty()) { Logging::LogIt(Logging::logGUI) << "info string unrecognised command " << uciCommand; }
         }
+        Logging::LogIt(Logging::logInfo) << "Leaving UCI loop";
     }
 
     std::string uciScore(ScoreType score){

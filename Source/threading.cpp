@@ -1,4 +1,4 @@
-#include "smp.hpp"
+#include "threading.hpp"
 
 #include "distributed.h"
 #include "dynamicConfig.hpp"

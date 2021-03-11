@@ -8,7 +8,7 @@
 #include "logging.hpp"
 #include "moveGen.hpp"
 #include "score.hpp"
-#include "smp.hpp"
+#include "threading.hpp"
 
 #include "nnue_impl.hpp"
 
