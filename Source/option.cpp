@@ -3,7 +3,7 @@
 #include "com.hpp"
 #include "logging.hpp"
 #include "searcher.hpp"
-#include "smp.hpp"
+#include "threading.hpp"
 
 #ifdef WITH_NNUE
 #include "nnue.hpp"

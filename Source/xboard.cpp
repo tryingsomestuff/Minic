@@ -275,6 +275,6 @@ namespace XBoard{
                 Logging::LogIt(Logging::logInfo) << "xboard async started (analysis)";
             }
         } // while true
-
+        Logging::LogIt(Logging::logInfo) << "Leaving Xboard loop";
     }
 } // XBoard

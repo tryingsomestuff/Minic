@@ -61,7 +61,12 @@ namespace Logging {
             if ( DynamicConfig::debugFile.empty()) DynamicConfig::debugFile = "minic.debug";
             LogIt::_of = std::unique_ptr<std::ofstream>(new std::ofstream(DynamicConfig::debugFile + "_" + std::to_string(Distributed::rank) + "_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count())));
         }
+    }
 
+    void finalize(){
+        if ( LogIt::_of ){
+            LogIt::_of.reset();
+        }
     }
 
 }

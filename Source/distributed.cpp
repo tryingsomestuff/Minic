@@ -1,7 +1,7 @@
 #include "distributed.h"
 
 #include "searcher.hpp"
-#include "smp.hpp"
+#include "threading.hpp"
 
 #ifdef WITH_MPI
 
@@ -56,9 +56,6 @@ namespace Distributed{
       //MPI_Init(NULL, NULL);
       int provided;
       checkError(MPI_Init_thread(NULL, NULL, MPI_THREAD_MULTIPLE, &provided));
-      if(provided < MPI_THREAD_MULTIPLE){
-        Logging::LogIt(Logging::logFatal) << "The threading support level is lesser than needed";
-      }
       checkError(MPI_Comm_size(MPI_COMM_WORLD, &worldSize));
       checkError(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
       char processor_name[MPI_MAX_PROCESSOR_NAME];
@@ -67,7 +64,11 @@ namespace Distributed{
       name = processor_name;
 
       if ( !isMainProcess() ) DynamicConfig::silent = true;
-   
+
+      if(provided < MPI_THREAD_MULTIPLE){
+        Logging::LogIt(Logging::logFatal) << "The threading support level is lesser than needed";
+      }
+
       checkError(MPI_Comm_dup(MPI_COMM_WORLD, &_commTT));
       checkError(MPI_Comm_dup(MPI_COMM_WORLD, &_commTT2));
       checkError(MPI_Comm_dup(MPI_COMM_WORLD, &_commStat));

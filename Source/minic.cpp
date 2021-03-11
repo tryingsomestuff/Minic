@@ -15,7 +15,8 @@
 #include "nnue.hpp"
 #include "option.hpp"
 #include "pgnparser.hpp"
-#include "smp.hpp"
+#include "searcher.hpp"
+#include "threading.hpp"
 #include "testSuite.hpp"
 #include "texelTuning.hpp"
 #include "timeMan.hpp"
@@ -55,6 +56,17 @@ void init(int argc, char ** argv) {
 }
 
 void finalize(){
+    Logging::LogIt(Logging::logInfo) << "Stopping all threads";
+    ThreadPool::instance().stop();
+    Logging::LogIt(Logging::logInfo) << "Waiting all threads";
+    ThreadPool::instance().wait();
+    Logging::LogIt(Logging::logInfo) << "Deleting all threads";
+    ThreadPool::instance().resize(0);
+    Logging::LogIt(Logging::logInfo) << "Syncing process...";
+    Distributed::sync(Distributed::_commInput,__PRETTY_FUNCTION__);
+    Logging::LogIt(Logging::logInfo) << "Bye bye...";
+    Logging::finalize();
+    Logging::LogIt(Logging::logInfo) << "See you soon...";
     Distributed::finalize();
 }
 

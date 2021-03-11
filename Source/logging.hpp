@@ -96,6 +96,7 @@ namespace Logging {
 
     class LogIt {
         friend void init();
+        friend void finalize();
     public:
         LogIt(LogLevel loglevel):_level(loglevel){}
         template <typename T> inline Logging::LogIt & operator<<(T const & value) { _buffer << value; return *this; }
@@ -110,4 +111,6 @@ namespace Logging {
     void hellooo();
 
     void init();
+
+    void finalize();
 }

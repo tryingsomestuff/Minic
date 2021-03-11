@@ -5,7 +5,7 @@
 #include "evalDef.hpp"
 #include "material.hpp"
 #include "score.hpp"
-#include "smp.hpp"
+#include "threading.hpp"
 #include "stats.hpp"
 #include "tables.hpp"
 

@@ -8,7 +8,7 @@
 #include "position.hpp"
 #include "positionTools.hpp"
 #include "score.hpp"
-#include "smp.hpp"
+#include "threading.hpp"
 
 std::string trim(const std::string& str, const std::string& whitespace){
     const auto strBegin = str.find_first_not_of(whitespace);
