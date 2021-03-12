@@ -200,6 +200,9 @@ namespace Distributed{
    template<typename T>
    inline void putMainToAll(T * , int , DummyType & ){}
 
+   template<typename T>
+   inline void get(T * , int , DummyType & , int  ){}
+
    inline void waitRequest(DummyType & ){}
 
    inline void winFence(DummyType & ){}
