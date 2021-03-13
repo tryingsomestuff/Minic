@@ -61,12 +61,8 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDept
        requestedDepth=std::max((DepthType)1,(Skill::enabled()&&!DynamicConfig::nodesBasedLevel)?std::min(requestedDepth,Skill::limitedDepth()):requestedDepth);
     }
     else{
-       //requestedDepth=std::max((DepthType)1,(Skill::enabled()&&!DynamicConfig::nodesBasedLevel)?std::min(requestedDepth,Skill::limitedDepth()):requestedDepth);
-       ///@todo for now, using same depth as main process, but shall use infinite and wait for stop somehow
-       
        requestedDepth = MAX_DEPTH; 
        currentMoveMs = INFINITETIME; // overrides currentMoveMs
-       
     }
 
     if ( Distributed::isMainProcess() && DynamicConfig::nodesBasedLevel && Skill::enabled()){
