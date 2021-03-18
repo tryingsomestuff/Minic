@@ -220,12 +220,14 @@ void Searcher::writeToGenFile(const Position & p){
     const bool oldQuiet = DynamicConfig::quiet;
     const bool oldDisableTT = DynamicConfig::disableTT;
     const unsigned int oldLevel = DynamicConfig::level;
+    const unsigned int oldRandomOpen = DynamicConfig::randomOpen;
 
     // init sub search
     cos.subSearch = true;
     DynamicConfig::quiet = true;
     DynamicConfig::disableTT = true; // do not use TT in order to get qsearch leaf node
     DynamicConfig::level = 100;
+    DynamicConfig::randomOpen = 0;
     cos.clearSearch(true);
 
     // look for a quiet position using qsearch
@@ -260,7 +262,9 @@ void Searcher::writeToGenFile(const Position & p){
     DynamicConfig::quiet = oldQuiet;
     DynamicConfig::disableTT = oldDisableTT;
     DynamicConfig::level = oldLevel;
+    DynamicConfig::randomOpen = oldRandomOpen;
     cos.subSearch = false;
+
     // end of sub search
 
     if ( m != INVALIDMOVE && pQuiet.halfmoves >= DynamicConfig::randomPly && std::abs(s) < 350){
