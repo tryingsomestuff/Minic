@@ -427,16 +427,16 @@ struct big_affine{
 };
 
 constexpr size_t half_ka_numel = 12*64*64;
-constexpr size_t base_dim = 64;
+constexpr size_t base_dim = 128;
 
 template<typename NT, bool Q>
 struct half_kp_weights{
   big_affine  <NT, half_ka_numel, base_dim, Q> w{};
   big_affine  <NT, half_ka_numel, base_dim, Q> b{};
-  stack_affine<NT, 2*base_dim   , 32      , Q> fc0{};
-  stack_affine<NT, 32           , 16      , Q> fc1{};
-  stack_affine<NT, 48           , 16      , Q> fc2{};
-  stack_affine<NT, 64           , 1       , Q> fc3{};
+  stack_affine<NT, 2*base_dim   , 64      , Q> fc0{};
+  stack_affine<NT, 64           , 32      , Q> fc1{};
+  stack_affine<NT, 96           , 32      , Q> fc2{};
+  stack_affine<NT,128           , 1       , Q> fc3{};
 
   half_kp_weights<NT,Q>& load(weights_streamer<NT>& ws){
     quantizationInfo<Q>();
@@ -453,7 +453,7 @@ struct half_kp_weights{
   bool load(const std::string& path, half_kp_weights<NT,Q>& loadedWeights){
 #ifndef __ANDROID__
 #ifndef WITHOUT_FILESYSTEM 
-    static const int expectedSize = 25188356;
+    static const int expectedSize = 50419716;
     std::error_code ec;
     auto fsize = std::filesystem::file_size(path,ec);
     if ( ec ){

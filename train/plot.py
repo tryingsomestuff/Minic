@@ -60,7 +60,7 @@ while True:
             e = values[4]
             if e == "----":
                 e='0'
-            X.append(float(l))
+            X.append(float(l.split('-')[0]))
             Y.append(float(values[3]))
             err.append(float(e))
             games.append(values[6])
