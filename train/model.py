@@ -16,10 +16,10 @@ class NNUE(pl.LightningModule):
     BASE = 128
     self.white_affine = nn.Linear(halfka.half_ka_numel(), BASE)
     self.black_affine = nn.Linear(halfka.half_ka_numel(), BASE)
-    self.fc0 = nn.Linear(2*BASE, 64)
-    self.fc1 = nn.Linear(64, 32)
-    self.fc2 = nn.Linear(96, 32)
-    self.fc3 = nn.Linear(128, 1)
+    self.fc0 = nn.Linear(2*BASE, 32)
+    self.fc1 = nn.Linear(32, 32)
+    self.fc2 = nn.Linear(64, 32)
+    self.fc3 = nn.Linear(96,  1)
     self.lambda_ = lambda_
 
   def forward(self, us, them, white, black):
