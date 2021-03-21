@@ -72,7 +72,7 @@ struct weights_streamer{
   std::fstream file;
   
   weights_streamer<NT>& read_version(uint32_t & version){
-     file.read((char *) version, sizeof(uint32_t));
+     file.read((char *) &version, sizeof(uint32_t));
      return *this;
   }
 
@@ -444,9 +444,9 @@ struct half_kp_weights{
   stack_affine<NT, 96           , 1       , Q> fc3{};
   uint32_t version = 0;
 
-  half_kp_weights<NT,Q>& load(weights_streamer<NT>& ws){
+  half_kp_weights<NT,Q>& load(weights_streamer<NT>& ws, bool readVersion){
     quantizationInfo<Q>();
-    read_version(version);
+    if ( readVersion ) ws.read_version(version);
     w.load_(ws);
     b.load_(ws);
     fc0.load_(ws);
@@ -457,27 +457,33 @@ struct half_kp_weights{
   }
   
   bool load(const std::string& path, half_kp_weights<NT,Q>& loadedWeights){
+    static const uint32_t expectedVersion = 0xc0ffee00;
+    bool withVersion = false;
 #ifndef __ANDROID__
 #ifndef WITHOUT_FILESYSTEM 
     static const int expectedSize = 50378500;
-    static const uint32_t expectedVersion = 0xc0ffee00;
     std::error_code ec;
     auto fsize = std::filesystem::file_size(path,ec);
     if ( ec ){
       Logging::LogIt(Logging::logError) << "File " << path << " is not accessible";
       return false;
     }
-    if ( fsize != expectedSize ){
+    if ( fsize != expectedSize && fsize != expectedSize+4 ){ // with or without version
       Logging::LogIt(Logging::logError) << "File " << path << " does not look like a compatible net";
       return false;
     }
+    withVersion = (fsize == expectedSize+4);
 #endif
 #endif
     auto ws = weights_streamer<NT>(path);
-    loadedWeights = load(ws);
-    if ( loadedWeights.version != expectedVersion ){
-      Logging::LogIt(Logging::logError) << "File " << path << " is not a compatible version of the net";
-      return false;
+    loadedWeights = load(ws,withVersion);
+    if ( withVersion ){
+      Logging::LogIt(Logging::logInfo) << "Expected net version : " << toHexString(expectedVersion);
+      Logging::LogIt(Logging::logInfo) << "Read net version     : " << toHexString(loadedWeights.version);
+      if ( loadedWeights.version != expectedVersion ){
+        Logging::LogIt(Logging::logError) << "File " << path << " is not a compatible version of the net";
+        return false;
+      }
     }
     return true;
   }

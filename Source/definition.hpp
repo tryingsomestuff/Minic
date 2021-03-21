@@ -430,3 +430,9 @@ inline void std_aligned_free(void* ptr) {
   free(ptr);
 #endif
 }
+
+inline std::string toHexString( uint32_t i ) {
+  std::stringstream s;
+  s << "0x" << std::hex << i;
+  return s.str();
+}
