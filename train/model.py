@@ -70,11 +70,14 @@ class NNUE(pl.LightningModule):
     BASE = 128
     funcs = [piece_position,]
 
+    # without factorization
     #self.white_affine = nn.Linear(halfka.half_ka_numel(), BASE)
     #self.black_affine = nn.Linear(halfka.half_ka_numel(), BASE)
 
+    # with factorization
     self.white_affine = FeatureTransformer(funcs, BASE)
     self.black_affine = FeatureTransformer(funcs, BASE)
+
     #self.d0 = nn.Dropout(p=0.05)
     self.fc0 = nn.Linear(2*BASE, 32)
     #self.d1 = nn.Dropout(p=0.1)
@@ -152,24 +155,22 @@ class NNUE(pl.LightningModule):
     def join_param(joined, param):
       if log:
         print(param.size())
-      #print(param.cpu().flatten().numpy())  
       joined = np.concatenate((joined, param.cpu().flatten().numpy()))
       return joined
     
     joined = np.array([]) # netversion
-    # white_affine
-    #joined = join_param(joined, self.white_affine.weight.data)
-    #joined = join_param(joined, self.white_affine.bias.data)
-    # black_affine
-    #joined = join_param(joined, self.black_affine.weight.data)
-    #joined = join_param(joined, self.black_affine.bias.data)
 
-    # white_affine
+    # with factorizer
     joined = join_param(joined, self.white_affine.virtual_weight().t())
     joined = join_param(joined, self.white_affine.virtual_bias())
-    # black_affine
     joined = join_param(joined, self.black_affine.virtual_weight().t())
     joined = join_param(joined, self.black_affine.virtual_bias())
+
+    # without factorizer
+    #joined = join_param(joined, self.white_affine.weight.data.t())
+    #joined = join_param(joined, self.white_affine.bias.data.t())
+    #joined = join_param(joined, self.black_affine.weight.data.t())
+    #joined = join_param(joined, self.black_affine.bias.data.t())
 
     # fc0
     joined = join_param(joined, self.fc0.weight.data.t())
