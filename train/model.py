@@ -5,6 +5,60 @@ import numpy as np
 from torch import nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
+import struct
+
+netversion = struct.unpack('!f', bytes.fromhex('c0ffee00'))[0]
+
+def piece_position(i):
+  return i % (12 * 64)
+
+class FactoredBlock(nn.Module):
+  def __init__(self, func, output_dim):
+    super(FactoredBlock, self).__init__()
+    self.f = torch.tensor([func(i) for i in range(halfka.half_ka_numel())], dtype=torch.long)
+    self.inter_dim = 1 + self.f.max()
+    self.weights = nn.Parameter(torch.zeros(self.inter_dim, output_dim))
+
+  def virtual(self):
+    with torch.no_grad():
+      identity = torch.tensor([i for i in range(halfka.half_ka_numel())], dtype=torch.long)
+      conversion = torch.sparse.FloatTensor(
+        torch.stack([identity, self.f], dim=0),
+        torch.ones(halfka.half_ka_numel()),
+        size=torch.Size([halfka.half_ka_numel(), self.inter_dim])).to(self.weights.device)
+      return (conversion.matmul(self.weights)).t()
+
+  def factored(self, x):
+    N, D = x.size()
+    assert D == halfka.half_ka_numel()
+
+    batch, active = x._indices()
+    factored = torch.gather(self.f.to(x.device), dim=0, index=active)
+    x = torch.sparse.FloatTensor(
+      torch.stack([batch, factored], dim=0), 
+      x._values(),
+      size=torch.Size([N, self.inter_dim])).to(x.device).to_dense()
+    return x
+
+  def forward(self, x):
+    x = self.factored(x)
+    return x.matmul(self.weights)
+
+
+class FeatureTransformer(nn.Module):
+  def __init__(self, funcs, base_dim):
+    super(FeatureTransformer, self).__init__()
+    self.factored_blocks = nn.ModuleList([FactoredBlock(f, base_dim) for f in funcs])
+    self.affine = nn.Linear(halfka.half_ka_numel(), base_dim)
+
+  def virtual_bias(self):
+    return self.affine.bias.data
+
+  def virtual_weight(self):
+    return self.affine.weight.data + sum([block.virtual() for block in self.factored_blocks])
+
+  def forward(self, x):
+    return self.affine(x) + sum([block(x) for block in self.factored_blocks])
 
 class NNUE(pl.LightningModule):
   """
@@ -14,11 +68,20 @@ class NNUE(pl.LightningModule):
   def __init__(self, lambda_=1.0):
     super(NNUE, self).__init__()
     BASE = 128
-    self.white_affine = nn.Linear(halfka.half_ka_numel(), BASE)
-    self.black_affine = nn.Linear(halfka.half_ka_numel(), BASE)
+    funcs = [piece_position,]
+
+    #self.white_affine = nn.Linear(halfka.half_ka_numel(), BASE)
+    #self.black_affine = nn.Linear(halfka.half_ka_numel(), BASE)
+
+    self.white_affine = FeatureTransformer(funcs, BASE)
+    self.black_affine = FeatureTransformer(funcs, BASE)
+    #self.d0 = nn.Dropout(p=0.05)
     self.fc0 = nn.Linear(2*BASE, 32)
+    #self.d1 = nn.Dropout(p=0.1)
     self.fc1 = nn.Linear(32, 32)
+    #self.d2 = nn.Dropout(p=0.1)
     self.fc2 = nn.Linear(64, 32)
+    #self.d3 = nn.Dropout(p=0.1)
     self.fc3 = nn.Linear(96,  1)
     self.lambda_ = lambda_
 
@@ -41,9 +104,13 @@ class NNUE(pl.LightningModule):
     
     # standard relu
     base = F.relu(us * torch.cat([w_, b_], dim=1) + (1.0 - us) * torch.cat([b_, w_], dim=1))
+    #base = self.d0(base)
     x = F.relu(self.fc0(base))
+    #x = self.d1(x)
     x = torch.cat([x, F.relu(self.fc1(x))], dim=1)
+    #x = self.d2(x)
     x = torch.cat([x, F.relu(self.fc2(x))], dim=1)
+    #x = self.d3(x)
     x = self.fc3(x)
     return x
 
@@ -85,26 +152,37 @@ class NNUE(pl.LightningModule):
     def join_param(joined, param):
       if log:
         print(param.size())
-      joined = np.concatenate((joined, param.flatten()))
+      #print(param.cpu().flatten().numpy())  
+      joined = np.concatenate((joined, param.cpu().flatten().numpy()))
       return joined
     
-    joined = np.array([])
+    joined = np.array([]) # netversion
     # white_affine
-    joined = join_param(joined, self.white_affine.weight.detach().numpy())
-    joined = join_param(joined, self.white_affine.bias.detach().numpy())
+    #joined = join_param(joined, self.white_affine.weight.data)
+    #joined = join_param(joined, self.white_affine.bias.data)
     # black_affine
-    joined = join_param(joined, self.black_affine.weight.detach().numpy())
-    joined = join_param(joined, self.black_affine.bias.detach().numpy())
+    #joined = join_param(joined, self.black_affine.weight.data)
+    #joined = join_param(joined, self.black_affine.bias.data)
+
+    # white_affine
+    joined = join_param(joined, self.white_affine.virtual_weight().t())
+    joined = join_param(joined, self.white_affine.virtual_bias())
+    # black_affine
+    joined = join_param(joined, self.black_affine.virtual_weight().t())
+    joined = join_param(joined, self.black_affine.virtual_bias())
+
     # fc0
-    joined = join_param(joined, self.fc0.weight.data)
+    joined = join_param(joined, self.fc0.weight.data.t())
     joined = join_param(joined, self.fc0.bias.data)
     # fc1
-    joined = join_param(joined, self.fc1.weight.data)
+    joined = join_param(joined, self.fc1.weight.data.t())
     joined = join_param(joined, self.fc1.bias.data)
     # fc2
-    joined = join_param(joined, self.fc2.weight.data)
+    joined = join_param(joined, self.fc2.weight.data.t())
     joined = join_param(joined, self.fc2.bias.data)
     # fc3
-    joined = join_param(joined, self.fc3.weight.data)
+    joined = join_param(joined, self.fc3.weight.data.t())
     joined = join_param(joined, self.fc3.bias.data)
+
+    print(joined.shape)
     return joined.astype(np.float32)

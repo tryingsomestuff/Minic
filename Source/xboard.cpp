@@ -249,7 +249,7 @@ namespace XBoard{
                 }
                 //************ end of Xboard command ********//
                 // let's try to read the unknown command as a move ... trying to fix a scid versus PC issue ...
-		///@todo try to be safer here
+                ///@todo try to be safer here
                 else if ( !receiveMove(COM::command)) Logging::LogIt(Logging::logInfo) << "Xboard does not know this command \"" << COM::command << "\"";
             } // readline
 

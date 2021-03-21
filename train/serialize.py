@@ -9,12 +9,15 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
 def to_binary_file(model, path):
-  joined = numpy.array([])
-  for p in model.parameters():
-    print(p.size())
-    joined = numpy.concatenate((joined, p.data.cpu().t().flatten().numpy()))
-  print(joined.shape)
-  joined.astype('float32').tofile(path)
+  model.flattened_parameters().tofile(path)
+  #print("==============================")
+  #joined = numpy.array([])
+  #for p in model.parameters():
+  #  print(p.size())
+  #  joined = numpy.concatenate((joined, p.data.cpu().t().flatten().numpy()))
+  #  print(p.data.cpu().t().flatten().numpy())
+  #print(joined.shape)
+  #joined.astype('float32').tofile(path)
 
 def main():
   parser = argparse.ArgumentParser(description="Converts files from ckpt to nnue format.")
