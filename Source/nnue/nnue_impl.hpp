@@ -14,8 +14,7 @@
 #include <string>
 #include <utility>
 
-// Initially taken from Seer version 1 implementation.
-// But now uses different architecture.
+// Initially taken from Seer implementation.
 // see https://github.com/connormcmonigle/seer-nnue
 
 #define NNUEALIGNMENT 64

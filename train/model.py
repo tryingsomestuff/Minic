@@ -78,13 +78,14 @@ class NNUE(pl.LightningModule):
     self.white_affine = FeatureTransformer(funcs, BASE)
     self.black_affine = FeatureTransformer(funcs, BASE)
 
-    #self.d0 = nn.Dropout(p=0.05)
+    # dropout seems necessary when using factorizer to avoid over-fitting
+    self.d0 = nn.Dropout(p=0.05)
     self.fc0 = nn.Linear(2*BASE, 32)
-    #self.d1 = nn.Dropout(p=0.1)
+    self.d1 = nn.Dropout(p=0.1)
     self.fc1 = nn.Linear(32, 32)
-    #self.d2 = nn.Dropout(p=0.1)
+    self.d2 = nn.Dropout(p=0.1)
     self.fc2 = nn.Linear(64, 32)
-    #self.d3 = nn.Dropout(p=0.1)
+    self.d3 = nn.Dropout(p=0.1)
     self.fc3 = nn.Linear(96,  1)
     self.lambda_ = lambda_
 
@@ -107,13 +108,13 @@ class NNUE(pl.LightningModule):
     
     # standard relu
     base = F.relu(us * torch.cat([w_, b_], dim=1) + (1.0 - us) * torch.cat([b_, w_], dim=1))
-    #base = self.d0(base)
+    base = self.d0(base)
     x = F.relu(self.fc0(base))
-    #x = self.d1(x)
+    x = self.d1(x)
     x = torch.cat([x, F.relu(self.fc1(x))], dim=1)
-    #x = self.d2(x)
+    x = self.d2(x)
     x = torch.cat([x, F.relu(self.fc2(x))], dim=1)
-    #x = self.d3(x)
+    x = self.d3(x)
     x = self.fc3(x)
     return x
 
@@ -168,9 +169,9 @@ class NNUE(pl.LightningModule):
 
     # without factorizer
     #joined = join_param(joined, self.white_affine.weight.data.t())
-    #joined = join_param(joined, self.white_affine.bias.data.t())
+    #joined = join_param(joined, self.white_affine.bias.data)
     #joined = join_param(joined, self.black_affine.weight.data.t())
-    #joined = join_param(joined, self.black_affine.bias.data.t())
+    #joined = join_param(joined, self.black_affine.bias.data)
 
     # fc0
     joined = join_param(joined, self.fc0.weight.data.t())
