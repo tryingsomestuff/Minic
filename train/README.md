@@ -11,7 +11,6 @@ source env/bin/activate
 pip install python-chess==0.31.4 pytorch-lightning torch
 ```
 
-
 # Train a network
 
 ```
@@ -33,16 +32,9 @@ python train.py --gpus 1 ...
 
 Using either a checkpoint (`.ckpt`) or serialized model (`.pt`),
 you can export to SF NNUE format.  This will convert `last.ckpt`
-to `nn.nnue`, which you can load directly in SF.
+to `nn.nnue`.
 ```
 python serialize.py last.ckpt nn.nnue
-```
-
-# Import a network
-
-Import an existing SF NNUE network to the pytorch network format.
-```
-python serialize.py nn.nnue converted.pt
 ```
 
 # Logging
@@ -53,4 +45,14 @@ tensorboard --logdir=logs
 ```
 Then, go to http://localhost:6006/
 
+# Follow training process
 
+Launch matches between various net and a reference
+```
+python3 run_games.py --concurrency 3 --explore_factor 1.5 --ordo_exe /ssd/Ordo/ordo --c_chess_exe /ssd/c-chess-cli/c-chess-cli --engine /ssd/Minic/Tourney/minic_dev_linux_x64 --book_file_name /ssd/Minic/Book_and_Test/OpeningBook/8moves_last.epd logs
+```
+
+Plot the results
+```
+python3 plot.py -e -x -X 1.5 -p 30 -y -100 -Y 50 -m 20 -l 50 -D
+```
