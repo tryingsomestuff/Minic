@@ -406,6 +406,8 @@ template<Color C>
 inline void* std_aligned_alloc(size_t alignment, size_t size) {
 #ifdef __ANDROID__
   return malloc(size);
+#elif defined(__EMSCRIPTEN__)
+  return malloc(size);
 #elif defined(__APPLE__)
   return aligned_alloc(alignment, size);
 #elif defined(_WIN32)
@@ -421,6 +423,8 @@ inline void* std_aligned_alloc(size_t alignment, size_t size) {
 
 inline void std_aligned_free(void* ptr) {
 #ifdef __ANDROID__
+  return free(ptr);
+#elif defined(__EMSCRIPTEN__)
   return free(ptr);
 #elif defined(__APPLE__)
   free(ptr);
