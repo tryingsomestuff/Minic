@@ -60,7 +60,7 @@ Move ThreadPool::search(const ThreadData & data){
         (*s).currentMoveMs = currentMoveMs; // propagate time control from Threadpool to each Searcher
     }
     Logging::LogIt(Logging::logInfo) << "Calling main thread search";
-    main().search(); ///@todo 1 thread for nothing here
+    main().search(); ///@todo blocking call here !!!
     stop(); // propagate stop flag to all threads
     wait();
     return main().getData().best;
