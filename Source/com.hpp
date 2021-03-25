@@ -42,7 +42,9 @@ namespace COM {
 
     void stopPonder();
 
-    void thinkAsync(State st, TimeType forcedMs = -1);
+    void receivePv(const PVList & pv);
+
+    void thinkAsync(TimeType forcedMs = -1);
 
     [[nodiscard]] Move moveFromCOM(std::string mstr);
 }

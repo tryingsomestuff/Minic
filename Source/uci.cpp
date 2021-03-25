@@ -130,7 +130,8 @@ namespace UCI {
                             COM::depth = 10; TimeMan::msecPerMove = INFINITETIME;
                         }
                         Logging::LogIt(Logging::logInfo) << "uci search launched";
-                        COM::thinkAsync(COM::st_searching);
+                        COM::state = COM::st_searching;
+                        COM::thinkAsync();
                         Logging::LogIt(Logging::logInfo) << "uci async started";
                     }
                     else { Logging::LogIt(Logging::logGUI) << "info string search command received, but no position specified"; }

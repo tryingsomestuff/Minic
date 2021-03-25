@@ -56,7 +56,7 @@ void Searcher::start(){
     std::lock_guard<std::mutex> lock(_mutex);
     Logging::LogIt(Logging::logInfo) << "Starting worker " << id() ;
     _searching = true;
-    _cv.notify_one(); // Wake up the thread in IdleLoop()
+    _cv.notify_one(); // Wake up the thread in idleLoop()
 }
 
 void Searcher::wait(){
@@ -68,7 +68,11 @@ void Searcher::search(){
     Logging::LogIt(Logging::logInfo) << "Search launched for thread " << id() ;
     if ( isMainThread() ){ ThreadPool::instance().startOthers(); } // started other threads but locked for now ...
     _data.pv = search(_data.p, _data.best, _data.depth, _data.sc, _data.seldepth);
-    if ( isMainThread() ){ ThreadPool::instance().stop(); } // stop other threads
+    if ( isMainThread() ){ 
+        ///@todo add a busy wait to wait for stop for being sent if ponder or analysis and stop is still false
+        // stop other threads
+        ThreadPool::instance().stop(); 
+    } 
 }
 
 size_t Searcher::id()const {

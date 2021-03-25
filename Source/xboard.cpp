@@ -259,19 +259,19 @@ namespace XBoard{
                 Logging::LogIt(Logging::logInfo) << "xboard search launched";
                 COM::thinkAsync(COM::state);
                 Logging::LogIt(Logging::logInfo) << "xboard async started";
-                if ( COM::f.valid() ) COM::f.wait(); // synchronous search
+                if ( COM::f.valid() ) COM::f.wait(); // synchronous search ///@todo isn't this is wrong ???
             }
             // if not our turn, and ponder is on, let's think ...
             if(COM::move != INVALIDMOVE && (int)COM::mode == (int)COM::opponent(COM::stm) && COM::ponder == COM::p_on && COM::state == COM::st_none) {
                 COM::state = COM::st_pondering;
                 Logging::LogIt(Logging::logInfo) << "xboard search launched (pondering)";
-                COM::thinkAsync(COM::state,INFINITETIME);
+                COM::thinkAsync(INFINITETIME);
                 Logging::LogIt(Logging::logInfo) << "xboard async started (pondering)";
             }
             else if(COM::mode == COM::m_analyze && COM::state == COM::st_none){
                 COM::state = COM::st_analyzing;
                 Logging::LogIt(Logging::logInfo) << "xboard search launched (analysis)";
-                COM::thinkAsync(COM::state,INFINITETIME);
+                COM::thinkAsync(INFINITETIME);
                 Logging::LogIt(Logging::logInfo) << "xboard async started (analysis)";
             }
         } // while true

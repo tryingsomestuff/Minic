@@ -48,22 +48,22 @@ void ThreadPool::wait(bool otherOnly) {
 }
 
 // distribute data and call main thread search
-Move ThreadPool::search(const ThreadData & data){ 
+void ThreadPool::search(const ThreadData & data){ 
     Logging::LogIt(Logging::logInfo) << "Search Sync" ;
     wait();
     Logging::LogIt(Logging::logInfo) << "Locking other threads";
     Searcher::startLock.store(true);
+    // send input data to all threads
     ThreadData dataOther = data;
-    dataOther.depth = MAX_DEPTH;
+    dataOther.depth = MAX_DEPTH; // helper threads go for infinite search (need to receive stopFlag to stop)
     for (auto & s : *this){
         (*s).setData((*s).isMainThread() ? data : dataOther); // this is a copy
         (*s).currentMoveMs = currentMoveMs; // propagate time control from Threadpool to each Searcher
     }
     Logging::LogIt(Logging::logInfo) << "Calling main thread search";
-    main().search(); ///@todo blocking call here !!!
+    main().search(); ///@todo blocking call here !!! ///@todo should be start() thus non blocking call ! not search(), so that stop and wait and return next are wrong
     stop(); // propagate stop flag to all threads
     wait();
-    return main().getData().best;
 }
 
 void ThreadPool::startOthers(){ for (auto & s : *this) if (!(*s).isMainThread()) (*s).start();}
