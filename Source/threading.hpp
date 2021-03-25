@@ -40,7 +40,7 @@ public:
     ~ThreadPool();
     void setup();
     [[nodiscard]] Searcher & main();
-    Move search(const ThreadData & d);
+    void search(const ThreadData & d);
     void startOthers();
     void wait(bool otherOnly = false);
     void stop();

@@ -26,9 +26,9 @@ namespace COM {
         mode = m_force;
         stm = stm_white;
 #ifdef WITH_NNUE
-        COM::position.associateEvaluator(evaluator);
+        position.associateEvaluator(evaluator);
 #endif
-        readFEN(startPosition, COM::position);
+        readFEN(startPosition, position);
         ThreadPool::instance().clearGame(); // re-init all threads data
     }
 
@@ -67,35 +67,60 @@ namespace COM {
     }
 
     bool sideToMoveFromFEN(const std::string & fen) {
-        const bool b = readFEN(fen, COM::position,true);
-        stm = COM::position.c == Co_White ? stm_white : stm_black;
+        const bool b = readFEN(fen, position,true);
+        stm = position.c == Co_White ? stm_white : stm_black;
         if (!b) Logging::LogIt(Logging::logFatal) << "Illegal FEN " << fen;
         return b;
     }
 
-    Move thinkUntilTimeUp(TimeType forcedMs = -1) { // think and when threads stop searching, return best move
-        Logging::LogIt(Logging::logInfo) << "Thinking... (state " << (int)COM::state << ")";
-        ScoreType score = 0;
-        Move m = INVALIDMOVE;
-        if (depth < 0) depth = MAX_DEPTH;
-        Logging::LogIt(Logging::logInfo) << "depth          " << (int)depth;
-        ThreadPool::instance().currentMoveMs = forcedMs <= 0 ? TimeMan::GetNextMSecPerMove(position) : forcedMs;
-        Logging::LogIt(Logging::logInfo) << "currentMoveMs  " << ThreadPool::instance().currentMoveMs;
-        Logging::LogIt(Logging::logInfo) << ToString(position);
-        DepthType seldepth = 0;
-        PVList pv;
-        const ThreadData d = { depth,seldepth,score,position,m,pv,SearchData()}; // only input coef here is depth
-        ThreadPool::instance().search(d); ///@todo blocking call
-        m = ThreadPool::instance().main().getData().best; // here output results
-        Logging::LogIt(Logging::logInfo) << "...done returning move " << ToString(m) << " (state " << (int)COM::state << ")";
+    void receivePv(const PVList & pv){
+        move = INVALIDMOVE;
+        if ( pv.size()) move = pv[0];
 
+        const Move m = ThreadPool::instance().main().getData().best; // here output results
+        assert(m == pv[0]);
+        Logging::LogIt(Logging::logInfo) << "...done returning move " << ToString(m) << " (state " << (int)state << ")";
+
+        // share the same move with all process 
         if ( Distributed::worldSize > 1 ){
            Distributed::sync(Distributed::_commMove,__PRETTY_FUNCTION__);
            // don't rely on Bcast to do a "passive wait", most implementation is doing a busy-wait, so use 100% cpu
            Distributed::asyncBcast(&m,1,Distributed::_requestMove,Distributed::_commMove);
            Distributed::waitRequest(Distributed::_requestMove);
         }
-        return m;
+
+        // if position get a ponder move
+        ponderMove = INVALIDMOVE;
+        if ( pv.size() > 1) {
+            Position p2 = position;
+#ifdef WITH_NNUE
+            NNUEEvaluator evaluator2;
+            p2.associateEvaluator(evaluator2);
+            p2.resetNNUEEvaluator(p2.Evaluator());
+#endif
+            if ( applyMove(p2,pv[0]) && isPseudoLegal(p2,pv[1])) ponderMove = pv[1];
+        }
+
+        Logging::LogIt(Logging::logInfo) << "search async done (state " << (int)state << ")";
+        if (state == st_searching) { // in searching mode we have to return a move to GUI
+            Logging::LogIt(Logging::logInfo) << "sending move to GUI " << ToString(move);
+            if (move == INVALIDMOVE) { mode = m_force; } // game ends
+            else {
+                if (!makeMove(move, true, Logging::ct == Logging::CT_uci ? "bestmove" : "move", ponderMove)) {
+                    Logging::LogIt(Logging::logGUI) << "info string Bad computer move !";
+                    Logging::LogIt(Logging::logInfo) << ToString(position);
+                    mode = m_force;
+                }
+                else{
+                    // switch stm
+                    stm = opponent(stm);
+                    // backup move (mainly for takeback feature)
+                    moves.push_back(move);
+                }
+            }
+        }
+        Logging::LogIt(Logging::logInfo) << "Putting state to none (state was" << (int)state << ")";
+        state = st_none;
     }
 
     bool makeMove(Move m, bool disp, std::string tag, Move pMove) {
@@ -124,38 +149,32 @@ namespace COM {
         }
     }
 
-    void thinkAsync(State st, TimeType forcedMs) { // fork a future that runs a synchorous search, if needed send returned move to GUI
-        f = std::async(std::launch::async, [st,forcedMs] {
-            COM::move = COM::thinkUntilTimeUp(forcedMs); ///@todo blocking call
-            const PVList & pv = ThreadPool::instance().main().getData().pv; ///@todo take PV from the deepest thread not main ???
-            COM::ponderMove = INVALIDMOVE;
-            if ( pv.size() > 1) {
-               Position p2 = COM::position;
-#ifdef WITH_NNUE
-               NNUEEvaluator evaluator2;
-               p2.associateEvaluator(evaluator2);
-               p2.resetNNUEEvaluator(p2.Evaluator());
-#endif
-               if ( applyMove(p2,pv[0]) && isPseudoLegal(p2,pv[1])) COM::ponderMove = pv[1];
-            }
-            Logging::LogIt(Logging::logInfo) << "search async done (state " << (int)st << ")";
-            if (st == st_searching) {
-                Logging::LogIt(Logging::logInfo) << "sending move to GUI " << ToString(COM::move);
-                if (COM::move == INVALIDMOVE) { COM::mode = COM::m_force; } // game ends
-                else {
-                    if (!COM::makeMove(COM::move, true, Logging::ct == Logging::CT_uci ? "bestmove" : "move", COM::ponderMove)) {
-                        Logging::LogIt(Logging::logGUI) << "info string Bad computer move !";
-                        Logging::LogIt(Logging::logInfo) << ToString(COM::position);
-                        COM::mode = COM::m_force;
-                    }
-                    else{
-                        COM::stm = COM::opponent(COM::stm);
-                        COM::moves.push_back(COM::move);
-                    }
-                }
-            }
-            Logging::LogIt(Logging::logInfo) << "Putting state to none (state " << (int)st << ")";
-            state = st_none;
+    ///@todo should not use an async, instead just call main().start() and treat return move at the end of search
+    void thinkAsync(TimeType forcedMs) { 
+        f = std::async(std::launch::async, [forcedMs] { ///@todo do not use asyncs
+            Logging::LogIt(Logging::logInfo) << "Thinking... (state " << (int)state << ")";
+
+            if (depth < 0) depth = MAX_DEPTH;
+            Logging::LogIt(Logging::logInfo) << "depth          " << (int)depth;
+
+            // here is computed the time for next search (stored in the Threadpool for now)
+            ThreadPool::instance().currentMoveMs = forcedMs <= 0 ? TimeMan::GetNextMSecPerMove(position) : forcedMs;
+            Logging::LogIt(Logging::logInfo) << "currentMoveMs  " << ThreadPool::instance().currentMoveMs;
+
+            Logging::LogIt(Logging::logInfo) << ToString(position);
+
+            // will later be copied on all thread data and thus "reset" them
+            ScoreType score = 0;
+            Move m = INVALIDMOVE;
+            DepthType seldepth = 0;
+            PVList pv;
+
+            ///@todo the only input coef here is depth...
+            const ThreadData data = { depth,seldepth,score,position,m,pv,SearchData()}; 
+            ThreadPool::instance().search(data); ///@todo blocking call for now
+            
+            ///@todo move this at the end of search
+            receivePv(ThreadPool::instance().main().getData().pv); ///@todo take PV from the deepest thread not main ???
         });
     }
 
@@ -163,7 +182,7 @@ namespace COM {
         Square from = INVALIDSQUARE;
         Square to   = INVALIDSQUARE;
         MType mtype = T_std;
-        if (!readMove(COM::position, trim(mstr), from, to, mtype)) return INVALIDMOVE;
+        if (!readMove(position, trim(mstr), from, to, mtype)) return INVALIDMOVE;
         return ToMove(from, to, mtype);
     }
 }
