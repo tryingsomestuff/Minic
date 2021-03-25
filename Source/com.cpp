@@ -85,7 +85,7 @@ namespace COM {
         DepthType seldepth = 0;
         PVList pv;
         const ThreadData d = { depth,seldepth,score,position,m,pv,SearchData()}; // only input coef here is depth
-        ThreadPool::instance().search(d);
+        ThreadPool::instance().search(d); ///@todo blocking call
         m = ThreadPool::instance().main().getData().best; // here output results
         Logging::LogIt(Logging::logInfo) << "...done returning move " << ToString(m) << " (state " << (int)COM::state << ")";
 
@@ -126,7 +126,7 @@ namespace COM {
 
     void thinkAsync(State st, TimeType forcedMs) { // fork a future that runs a synchorous search, if needed send returned move to GUI
         f = std::async(std::launch::async, [st,forcedMs] {
-            COM::move = COM::thinkUntilTimeUp(forcedMs);
+            COM::move = COM::thinkUntilTimeUp(forcedMs); ///@todo blocking call
             const PVList & pv = ThreadPool::instance().main().getData().pv; ///@todo take PV from the deepest thread not main ???
             COM::ponderMove = INVALIDMOVE;
             if ( pv.size() > 1) {
