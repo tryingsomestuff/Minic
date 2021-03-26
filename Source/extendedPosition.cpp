@@ -269,7 +269,7 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
             TimeMan::msecInc         = -1;
             TimeMan::msecUntilNextTC = -1;
             ThreadPool::instance().currentMoveMs = TimeMan::GetNextMSecPerMove(extP);
-            ThreadPool::instance().search(d);
+            ThreadPool::instance().main().search(d.p, d.best, d.depth, d.sc, d.seldepth);
             d = ThreadPool::instance().main().getData();
             bestMove = d.best; 
             

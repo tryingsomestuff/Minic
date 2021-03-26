@@ -26,7 +26,6 @@ namespace COM {
     extern SideToMove stm; ///@todo isn't this redundant with position.c ??
     extern Position initialPos;
     extern std::vector<Move> moves;
-    extern std::future<void> f;
 
     void init();
 
@@ -42,7 +41,7 @@ namespace COM {
 
     void stopPonder();
 
-    void receivePv(const PVList & pv);
+    void receiveMoves(Move bestmove, Move pondermove);
 
     void thinkAsync(TimeType forcedMs = -1);
 

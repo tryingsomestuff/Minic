@@ -101,11 +101,11 @@ struct Searcher{
 
     [[nodiscard]] ScoreType SEE(const Position & p, const Move & m)const;
 
-    PVList search(const Position & p, 
-                  Move & m, 
-                  DepthType & d, 
-                  ScoreType & sc, 
-                  DepthType & seldepth);
+    void search(const Position & p, 
+                 Move & m, 
+                 DepthType & d, 
+                 ScoreType & sc, 
+                 DepthType & seldepth);
 
     template< bool withRep = true, bool isPv = true, bool INR = true> 
     [[nodiscard]] MaterialHash::Terminaison interiorNodeRecognizer(const Position & p)const;
@@ -116,7 +116,7 @@ struct Searcher{
 
     void idleLoop();
 
-    void start();
+    void startThread();
 
     void wait();
 
@@ -173,6 +173,7 @@ struct Searcher{
 
 private:
     ThreadData              _data;
+    std::mutex              _mutexPV;
     size_t                  _index;
     std::mutex              _mutex;
     std::condition_variable _cv;

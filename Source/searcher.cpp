@@ -46,13 +46,16 @@ void Searcher::idleLoop(){
         _searching = false;
         _cv.notify_one(); // Wake up anyone waiting for search finished
         _cv.wait(lock, [&]{ return _searching; });
-        if (_exit) return;
+        if (_exit){
+            Logging::LogIt(Logging::logInfo) << "Exiting thread loop " << id() ;
+            return;
+        }
         lock.unlock();
         search();
     }
 }
 
-void Searcher::start(){
+void Searcher::startThread(){
     std::lock_guard<std::mutex> lock(_mutex);
     Logging::LogIt(Logging::logInfo) << "Starting worker " << id() ;
     _searching = true;
@@ -66,13 +69,13 @@ void Searcher::wait(){
 
 void Searcher::search(){
     Logging::LogIt(Logging::logInfo) << "Search launched for thread " << id() ;
-    if ( isMainThread() ){ ThreadPool::instance().startOthers(); } // started other threads but locked for now ...
-    _data.pv = search(_data.p, _data.best, _data.depth, _data.sc, _data.seldepth);
-    if ( isMainThread() ){ 
-        ///@todo add a busy wait to wait for stop for being sent if ponder or analysis and stop is still false
-        // stop other threads
+    if ( isMainThread() ){ ThreadPool::instance().startOthers(); } // started other threads first but they are locked for now ...
+    search(_data.p, _data.best, _data.depth, _data.sc, _data.seldepth);
+    if ( isMainThread() ){
+        ///@todo add a busy wait to wait for stop for being sent if ponder or analysis and stop is still false (see ##busy wait outside)
+        // now stop other threads
         ThreadPool::instance().stop(); 
-    } 
+    }
 }
 
 size_t Searcher::id()const {
@@ -90,7 +93,7 @@ Searcher::Searcher(size_t n):_index(n),_exit(false),_searching(true),_stdThread(
 
 Searcher::~Searcher(){
     _exit = true;
-    start();
+    startThread();
     Logging::LogIt(Logging::logInfo) << "Waiting for thread worker to join...";
     _stdThread.join();
 }
@@ -257,7 +260,7 @@ void Searcher::writeToGenFile(const Position & p){
             DepthType depth(DynamicConfig::genFenDepth*gp + DynamicConfig::genFenDepthEG*(1.f-gp));
             unsigned int oldRandomPly = DynamicConfig::randomPly;
             DynamicConfig::randomPly = 0;
-            PVList pv = cos.search(pQuiet,m,depth,s,seldepth);
+            cos.search(pQuiet,m,depth,s,seldepth);
             DynamicConfig::randomPly = oldRandomPly;
         }
     }
