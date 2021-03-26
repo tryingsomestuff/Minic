@@ -493,7 +493,7 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
 				DepthType depth = DynamicConfig::genFenDepth;
 				DepthType seldepth = 0;
 				Move m = INVALIDMOVE;
-                PVList pv = cos.search(tpos,m,depth,s,seldepth);
+                cos.search(tpos,m,depth,s,seldepth);
                 p.score = s;
 				ofs.write((char*)&p, sizeof(PackedSfenValue));
 			}

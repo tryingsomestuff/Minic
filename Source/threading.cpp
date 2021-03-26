@@ -47,8 +47,8 @@ void ThreadPool::wait(bool otherOnly) {
     Logging::LogIt(Logging::logInfo) << "...ok";
 }
 
-// distribute data and call main thread search
-void ThreadPool::search(const ThreadData & data){ 
+// distribute data and call main thread search (this is a non-blocking function)
+void ThreadPool::startSearch(const ThreadData & data){ 
     Logging::LogIt(Logging::logInfo) << "Search Sync" ;
     wait();
     Logging::LogIt(Logging::logInfo) << "Locking other threads";
@@ -61,12 +61,10 @@ void ThreadPool::search(const ThreadData & data){
         (*s).currentMoveMs = currentMoveMs; // propagate time control from Threadpool to each Searcher
     }
     Logging::LogIt(Logging::logInfo) << "Calling main thread search";
-    main().search(); ///@todo blocking call here !!! ///@todo should be start() thus non blocking call ! not search(), so that stop and wait and return next are wrong
-    stop(); // propagate stop flag to all threads
-    wait();
+    main().startThread(); // non blocking call
 }
 
-void ThreadPool::startOthers(){ for (auto & s : *this) if (!(*s).isMainThread()) (*s).start();}
+void ThreadPool::startOthers(){ for (auto & s : *this) if (!(*s).isMainThread()) (*s).startThread();}
 
 void ThreadPool::clearGame(){
     TT::clearTT();

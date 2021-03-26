@@ -1,5 +1,6 @@
 #include "searcher.hpp"
 
+#include "com.hpp"
 #include "distributed.h"
 #include "logging.hpp"
 #include "skill.hpp"
@@ -40,7 +41,7 @@ void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestSco
     Logging::LogIt(Logging::logGUI) << str.str();
 }
 
-PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDepth, ScoreType & sc, DepthType & seldepth){
+void Searcher::search(const Position & pp, Move & m, DepthType & requestedDepth, ScoreType & bestScore, DepthType & seldepth){
 
     if ( isMainThread() ) Distributed::sync(Distributed::_commStat2,__PRETTY_FUNCTION__);
 
@@ -57,11 +58,12 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDept
 
     // requested depth can be changed according to level or skill parameter
     DynamicConfig::level = DynamicConfig::limitStrength ? Skill::convertElo2Level() : DynamicConfig::level;
+    DepthType maxDepth = requestedDepth;
     if ( Distributed::isMainProcess() ){
-       requestedDepth=std::max((DepthType)1,(Skill::enabled()&&!DynamicConfig::nodesBasedLevel)?std::min(requestedDepth,Skill::limitedDepth()):requestedDepth);
+       maxDepth=std::max((DepthType)1,(Skill::enabled()&&!DynamicConfig::nodesBasedLevel)?std::min(maxDepth,Skill::limitedDepth()):maxDepth);
     }
     else{
-       requestedDepth = MAX_DEPTH; 
+       maxDepth = MAX_DEPTH; 
        currentMoveMs = INFINITETIME; // overrides currentMoveMs
     }
 
@@ -91,7 +93,7 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDept
         }
         Logging::LogIt(Logging::logInfo) << "Search params :" ;
         Logging::LogIt(Logging::logInfo) << "requested time  " << getCurrentMoveMs() << " (" << currentMoveMs << ")"; // won't exceed TimeMan::maxTime
-        Logging::LogIt(Logging::logInfo) << "requested depth " << (int) requestedDepth;
+        Logging::LogIt(Logging::logInfo) << "requested depth " << (int) maxDepth;
     }
     // other threads will wait here for start signal
     else{
@@ -109,9 +111,7 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDept
     }
 
     // initialize search results
-    DepthType reachedDepth = 0;
-    PVList pvOut;
-    ScoreType bestScore = 0;
+    bestScore = 0;
     m = INVALIDMOVE;
 
     const bool isInCheck = isAttacked(p, kingSquare(p));
@@ -133,21 +133,21 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDept
     TimeMan::maxNodes = 0; 
 
     // using MAX_DEPTH-6 so that draw can be found for sure ///@todo I don't understand this -6 anymore ..
-    const DepthType targetMaxDepth = std::min(requestedDepth,DepthType(MAX_DEPTH-6));
+    const DepthType targetMaxDepth = std::min(maxDepth,DepthType(MAX_DEPTH-6));
 
     // random mover can be forced for the few first moves of a game or be setting level to 0
     if ( DynamicConfig::level == 0 || p.halfmoves < DynamicConfig::randomPly ){ 
        if ( p.halfmoves < DynamicConfig::randomPly ) Logging::LogIt(Logging::logInfo) << "Randomized ply";
-       bestScore = randomMover(p,pvOut,isInCheck);
+       bestScore = randomMover(p,_data.pv,isInCheck);
        goto pvsout;
     }
 
     // easy move detection (shallow open window search)
     // only main thread here (stopflag will be triggered anyway for other threads if needed)
-    if ( isMainThread() && DynamicConfig::multiPV == 1 && requestedDepth > easyMoveDetectionDepth+5 && maxNodes == 0 
+    if ( isMainThread() && DynamicConfig::multiPV == 1 && maxDepth > easyMoveDetectionDepth+5 && maxNodes == 0 
          && currentMoveMs < INFINITETIME && currentMoveMs > 1000 && TimeMan::msecUntilNextTC > 0){
        rootScores.clear();
-       ScoreType easyScore = pvs<true>(-MATE, MATE, p, easyMoveDetectionDepth, 0, pvOut, seldepth, isInCheck, false, false);
+       ScoreType easyScore = pvs<true>(-MATE, MATE, p, easyMoveDetectionDepth, 0, _data.pv, seldepth, isInCheck, false, false);
        std::sort(rootScores.begin(), rootScores.end(), [](const RootScores& r1, const RootScores & r2) {return r1.s > r2.s; });
        if (stopFlag) { // no more time, this is strange ...
            bestScore = easyScore; 
@@ -262,8 +262,8 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDept
                 }
             }
             else{
-                reachedDepth = depth;
-                bestScore    = score;
+                requestedDepth = depth;
+                bestScore      = score;
 
                 // if no good pv available (too short), let's build one for display purpose ...
                 if ( fhBreak && pvLoc.size() ){ 
@@ -288,7 +288,8 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDept
 
                 // update the outputed pv only with the best move line
                 if ( multi == 0 ){
-                   pvOut = pvLoc;
+                   std::unique_lock<std::mutex> lock(_mutexPV);
+                   _data.pv = pvLoc;
                 }
                 
                 if ( isMainThread() ){
@@ -337,44 +338,69 @@ PVList Searcher::search(const Position & pp, Move & m, DepthType & requestedDept
         } // multiPV loop end
     } // iterative deepening loop end
 
-    stopFlag = true; // here stopFlag must always be true ...
+    ///@todo this is not compatible with UCI protocol in ponder or analysis mode ... ##busy wait outside
+    stopFlag = true; // here stopFlag must always be true ... 
 
 pvsout:
 
     if ( isMainThread() ){
+        // sync point for distributed search
         Distributed::winFence(Distributed::_winStop);
         Distributed::syncStat();
         Distributed::syncTT();
     }
 
     if ( isMainThread() ){
+        // in case of very very short depth or time, "others" threads may still be blocked
         Logging::LogIt(Logging::logInfo) << "Unlocking other threads (end of search)";
         startLock.store(false);
     }
-    if (pvOut.empty()){
-        m = INVALIDMOVE;
-        if (!subSearch) Logging::LogIt(Logging::logWarn) << "Empty pv" ;
-    } 
-    else{
-        if ( Skill::enabled() && !DynamicConfig::nodesBasedLevel) m = Skill::pick(multiPVMoves);
-        else m = pvOut[0];
-    }
-    requestedDepth = reachedDepth;
-    sc = bestScore;
-    
+
     if (isMainThread()){
+       // display search statistics
        if ( Distributed::worldSize > 1 ){
           Distributed::showStat();
        }
        else{
           ThreadPool::instance().DisplayStats(); 
        }
-    }    
+    }
+
+    // all threads are updating there output values but main one is looking for the longest pv
+    // note that depth, score, seldepth and pv are already updated on-the-fly
+    PVList bestPV = _data.pv;
+    if (bestPV.empty()){
+        m = INVALIDMOVE;
+        if (!subSearch) Logging::LogIt(Logging::logWarn) << "Empty pv" ;
+    }
+    else{
+        // !!! warning: when skill uses multiPV returned move shall be used and not first move of pv in receiveMoves !!!
+        if ( Skill::enabled() && !DynamicConfig::nodesBasedLevel){
+            m = Skill::pick(multiPVMoves);
+        }
+        else {
+            if ( isMainThread()){
+                DepthType bestDepth = requestedDepth;
+                for ( auto & s : ThreadPool::instance()){
+                    std::unique_lock<std::mutex> lock(_mutexPV);
+                    if ( s->_data.depth > bestDepth){
+                        bestDepth = s->_data.depth;
+                        bestPV = s->_data.pv;
+                    }
+                }
+            }
+            m = bestPV[0];
+        }
+    }
+
+    // send pv (move and ponder move in practice) to COM 
+    // so that display is done and COM::position is changed
+    if ( isMainThread()) COM::receiveMoves(m,bestPV.size()>1?bestPV[1]:INVALIDMOVE);
 
 #ifdef WITH_GENFILE
     // calling writeToGenFile at each root node
     if ( isMainThread() && DynamicConfig::genFen && p.halfmoves >= DynamicConfig::randomPly && DynamicConfig::level != 0 ) writeToGenFile(p);
 #endif
 
-    return pvOut;
+
 }

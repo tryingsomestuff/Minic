@@ -100,7 +100,7 @@ Move analyze(const Position & p, DepthType depth, bool openBenchOutput = false){
     DepthType seldepth = 0;
     PVList pv;
     ThreadData d = {depth,seldepth,s,p,bestMove,pv,SearchData()}; // only input coef is depth here
-    ThreadPool::instance().search(d);
+    ThreadPool::instance().main().search(d.p, d.best, d.depth, d.sc, d.seldepth);
     bestMove = ThreadPool::instance().main().getData().best; // here output results
     s = ThreadPool::instance().main().getData().sc; // here output results
     pv = ThreadPool::instance().main().getData().pv; // here output results
