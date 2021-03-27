@@ -88,8 +88,6 @@ void perft_test(const std::string & fen, DepthType d, unsigned long long int exp
 }
 
 Move analyze(const Position & p, DepthType depth, bool openBenchOutput = false){
-    Move bestMove = INVALIDMOVE;
-    ScoreType s = 0;
     TimeMan::isDynamic       = false;
     TimeMan::nbMoveInTC      = -1;
     TimeMan::msecPerMove     = INFINITETIME;
@@ -97,14 +95,14 @@ Move analyze(const Position & p, DepthType depth, bool openBenchOutput = false){
     TimeMan::msecInc         = -1;
     TimeMan::msecUntilNextTC = -1;
     ThreadPool::instance().currentMoveMs = TimeMan::GetNextMSecPerMove(p);
-    DepthType seldepth = 0;
-    PVList pv;
-    ThreadData d = {depth,seldepth,s,p,bestMove,pv,SearchData()}; // only input coef is depth here
+
+    ThreadData d;
+    d.p = p;
+    d.depth = depth;
     ThreadPool::instance().main().search(d.p, d.best, d.depth, d.sc, d.seldepth);
-    bestMove = ThreadPool::instance().main().getData().best; // here output results
-    s = ThreadPool::instance().main().getData().sc; // here output results
-    pv = ThreadPool::instance().main().getData().pv; // here output results
-    Logging::LogIt(Logging::logInfo) << "Best move is " << ToString(bestMove) << " " << (int)depth << " " << s << " pv : " << ToString(pv);
+    d = ThreadPool::instance().main().getData();
+    Logging::LogIt(Logging::logInfo) << "Best move is " << ToString(d.best) << " " << (int)depth << " " << d.sc << " pv : " << ToString(d.pv);
+
     if ( openBenchOutput ){
         Logging::LogIt(Logging::logInfo) << "Next two lines are for OpenBench";
         const TimeType ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - ThreadPool::instance().main().startTime).count());
@@ -112,7 +110,8 @@ Move analyze(const Position & p, DepthType depth, bool openBenchOutput = false){
         std::cerr << "NODES " << nodeCount << std::endl;
         std::cerr << "NPS " << int(nodeCount/(ms/1000.f)) << std::endl;
     }
-    return bestMove;
+    
+    return d.best;
 }
 
 void selfPlay(DepthType depth){

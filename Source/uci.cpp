@@ -153,6 +153,7 @@ namespace UCI {
                 Logging::LogIt(Logging::logGUI) << "info string " << uciCommand << " not implemented yet";
             }
             else if (uciCommand == "print") { Logging::LogIt(Logging::logInfo) << ToString(COM::position); }
+            else if (uciCommand == "d") { Logging::LogIt(Logging::logInfo) << GetFEN(COM::position); }
             else if (uciCommand == "quit") {
                 COM::stopPonder();
                 COM::stop();

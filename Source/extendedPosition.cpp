@@ -256,12 +256,7 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
             extP.associateEvaluator(evaluator);
             extP.resetNNUEEvaluator(extP.Evaluator());
             Logging::LogIt(Logging::logInfo) << "Current test time control " << timeControls[t];
-            DepthType seldepth = 0;
-            DepthType depth = 127;
-            ScoreType s = 0;
-            Move bestMove = INVALIDMOVE;
-            PVList pv;
-            ThreadData d = {depth,seldepth,s,extP,bestMove,pv,SearchData()}; // only input coef is depth here
+            
             TimeMan::isDynamic       = false;
             TimeMan::nbMoveInTC      = -1;
             TimeMan::msecPerMove     = timeControls[t];
@@ -269,9 +264,12 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
             TimeMan::msecInc         = -1;
             TimeMan::msecUntilNextTC = -1;
             ThreadPool::instance().currentMoveMs = TimeMan::GetNextMSecPerMove(extP);
+
+            ThreadData d;
+            d.p = extP;
+
             ThreadPool::instance().main().search(d.p, d.best, d.depth, d.sc, d.seldepth);
-            d = ThreadPool::instance().main().getData();
-            bestMove = d.best; 
+            const Move bestMove = d.best;
             
             results[k][t].name = extP.id();
             results[k][t].k = (int)k;

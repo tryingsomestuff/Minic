@@ -368,8 +368,7 @@ pvsout:
 
     // all threads are updating there output values but main one is looking for the longest pv
     // note that depth, score, seldepth and pv are already updated on-the-fly
-    PVList bestPV = _data.pv;
-    if (bestPV.empty()){
+    if (_data.pv.empty()){
         m = INVALIDMOVE;
         if (!subSearch) Logging::LogIt(Logging::logWarn) << "Empty pv" ;
     }
@@ -379,28 +378,32 @@ pvsout:
             m = Skill::pick(multiPVMoves);
         }
         else {
+            // get pv from best (deepest) threads
             if ( isMainThread()){
                 DepthType bestDepth = requestedDepth;
+                size_t bestThreadId = 0;
                 for ( auto & s : ThreadPool::instance()){
                     std::unique_lock<std::mutex> lock(_mutexPV);
                     if ( s->_data.depth > bestDepth){
+                        bestThreadId = s->id();
                         bestDepth = s->_data.depth;
-                        bestPV = s->_data.pv;
+                        Logging::LogIt(Logging::logInfo) << "Better thread ! " << bestThreadId << ", depth " << (int)bestDepth;
                     }
                 }
+                // update main thread data with best data available
+                _data = ThreadPool::instance()[bestThreadId]->_data;
+                m = _data.pv[0];
             }
-            m = bestPV[0];
         }
     }
 
     // send pv (move and ponder move in practice) to COM 
     // so that display is done and COM::position is changed
-    if ( isMainThread()) COM::receiveMoves(m,bestPV.size()>1?bestPV[1]:INVALIDMOVE);
+    if ( isMainThread()) COM::receiveMoves(m,_data.pv.size()>1?_data.pv[1]:INVALIDMOVE);
 
 #ifdef WITH_GENFILE
     // calling writeToGenFile at each root node
     if ( isMainThread() && DynamicConfig::genFen && p.halfmoves >= DynamicConfig::randomPly && DynamicConfig::level != 0 ) writeToGenFile(p);
 #endif
-
 
 }
