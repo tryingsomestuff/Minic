@@ -21,7 +21,7 @@ struct SearchData{
 };
 
 struct ThreadData{
-    DepthType depth = 0, seldepth = 0;
+    DepthType depth = MAX_DEPTH, seldepth = 0;
     ScoreType sc = 0;
     Position p;
     Move best = INVALIDMOVE;

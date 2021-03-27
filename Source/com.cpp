@@ -148,14 +148,12 @@ namespace COM {
         ThreadPool::instance().currentMoveMs = forcedMs <= 0 ? TimeMan::GetNextMSecPerMove(position) : forcedMs;
         Logging::LogIt(Logging::logInfo) << "currentMoveMs  " << ThreadPool::instance().currentMoveMs;
         Logging::LogIt(Logging::logInfo) << ToString(position);
+
         // will later be copied on all thread data and thus "reset" them
-        ScoreType score = 0;
-        Move m = INVALIDMOVE;
-        DepthType seldepth = 0;
-        PVList pv;
-        // the only input coef here is depth...
-        const ThreadData data = { depth,seldepth,score,position,m,pv,SearchData()}; 
-        ThreadPool::instance().startSearch(data);
+        ThreadData d;
+        d.p = position;
+        d.depth = depth;        
+        ThreadPool::instance().startSearch(d); // data is copied !
     }
 
     Move moveFromCOM(std::string mstr) { // copy string on purpose
