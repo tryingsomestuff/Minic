@@ -79,15 +79,15 @@ namespace XBoard{
 
         bool iterate = true;
         while(iterate) {
-            Logging::LogIt(Logging::logInfo) << "XBoard: mode  " << (int)COM::mode ;
-            Logging::LogIt(Logging::logInfo) << "XBoard: stm   " << (int)COM::stm  ;
-            Logging::LogIt(Logging::logInfo) << "XBoard: state " << (int)COM::state;
+            Logging::LogIt(Logging::logInfo) << "XBoard: mode  (before command)" << (int)COM::mode ;
+            Logging::LogIt(Logging::logInfo) << "XBoard: stm   (before command)" << (int)COM::stm  ;
+            Logging::LogIt(Logging::logInfo) << "XBoard: state (before command)" << (int)COM::state;
             bool commandOK = true;
             int once = 0;
             while(once++ == 0 || !commandOK){ // loop until a good command is found
                 commandOK = true;
                 COM::readLine(); // read next command !
-                if (COM::command == "force")        COM::mode = COM::m_force;
+                if      (COM::command == "force")   COM::mode = COM::m_force;
                 else if (COM::command == "xboard")  Logging::LogIt(Logging::logInfo) << "This is minic!" ;
                 else if (COM::command == "post")    display = true;
                 else if (COM::command == "nopost")  display = false;
@@ -167,7 +167,9 @@ namespace XBoard{
                     COM::stopPonder();
                     COM::ponder = COM::p_off;
                 }
-                else if (COM::command == "hard"){COM::ponder = COM::p_on;}
+                else if (COM::command == "hard"){
+                    COM::ponder = COM::p_on;
+                }
                 else if (COM::command == "quit"){iterate = false;}
                 else if (COM::command == "pause"){
                     COM::stopPonder();
@@ -252,26 +254,50 @@ namespace XBoard{
                 else if ( !receiveOppMove(COM::command)) Logging::LogIt(Logging::logInfo) << "Xboard does not know this command \"" << COM::command << "\"";
             } // readline
 
+            Logging::LogIt(Logging::logInfo) << "XBoard: mode  (after command)" << (int)COM::mode ;
+            Logging::LogIt(Logging::logInfo) << "XBoard: stm   (after command)" << (int)COM::stm  ;
+            Logging::LogIt(Logging::logInfo) << "XBoard: state (after command)" << (int)COM::state;
+
+            bool searchLaunched = false;
+
             // move as computer if mode is equal to stm
             if((int)COM::mode == (int)COM::stm && COM::state == COM::st_none) {
                 COM::state = COM::st_searching;
                 Logging::LogIt(Logging::logInfo) << "xboard search launched";
                 COM::thinkAsync();
                 Logging::LogIt(Logging::logInfo) << "xboard async started";
+                searchLaunched = true;
             }
+            
+            /*
+            ///@todo Ponder won't work here because after as search() is async we are probably stuck in readLine() ...
             // if not our turn, and ponder is on, let's think ...
             if((int)COM::mode == (int)COM::opponent(COM::stm) && COM::ponder == COM::p_on && COM::state == COM::st_none) {
                 COM::state = COM::st_pondering;
                 Logging::LogIt(Logging::logInfo) << "xboard search launched (pondering)";
-                COM::thinkAsync(INFINITETIME);
+                TimeMan::isPondering = true;
+                COM::thinkAsync();
                 Logging::LogIt(Logging::logInfo) << "xboard async started (pondering)";
+                searchLaunched = true;
             }
-            else if(COM::mode == COM::m_analyze && COM::state == COM::st_none){
+            */
+            
+            if(COM::mode == COM::m_analyze && COM::state == COM::st_none){
                 COM::state = COM::st_analyzing;
                 Logging::LogIt(Logging::logInfo) << "xboard search launched (analysis)";
-                COM::thinkAsync(INFINITETIME);
+                TimeMan::isAnalysis = true;
+                COM::thinkAsync();
                 Logging::LogIt(Logging::logInfo) << "xboard async started (analysis)";
+                searchLaunched = true;
             }
+
+            if ( searchLaunched ){
+               std::this_thread::sleep_for(std::chrono::milliseconds(20)); // let the search starts if needed...
+               ///@todo there is a race condition here if a stop command (coming from easy for instance) is
+               // triggered just after pondering is launched. Stopflag is then set to true by search() after being set to false by stop()
+               // this is really bad and should be fixed !!!                
+            }
+
         } // while true
         Logging::LogIt(Logging::logInfo) << "Leaving Xboard loop";
     }

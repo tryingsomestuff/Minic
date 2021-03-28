@@ -42,7 +42,7 @@ namespace COM {
 
     void receiveMoves(Move bestmove, Move pondermove);
 
-    void thinkAsync(TimeType forcedMs = -1);
+    void thinkAsync();
 
     [[nodiscard]] Move moveFromCOM(std::string mstr);
 }

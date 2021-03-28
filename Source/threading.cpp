@@ -83,7 +83,10 @@ void ThreadPool::clearSearch(){
     Distributed::initStat();
 }
 
-void ThreadPool::stop(){ for (auto & s : *this) (*s).stopFlag = true;}
+void ThreadPool::stop(){ 
+    for (auto & s : *this) 
+       (*s).stopFlag = true;
+}
 
 void ThreadPool::DisplayStats()const{
     for(size_t k = 0 ; k < Stats::sid_maxid ; ++k){

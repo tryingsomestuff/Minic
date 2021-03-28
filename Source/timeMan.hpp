@@ -18,8 +18,8 @@ extern TimeType targetTime, maxTime;
 extern DepthType moveToGo;
 extern uint64_t maxNodes;
 extern bool isDynamic;
-extern bool isUCIPondering;
-extern bool isUCIAnalysis;
+extern bool isPondering;
+extern bool isAnalysis;
 
 void init();
 
