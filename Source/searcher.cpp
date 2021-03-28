@@ -51,7 +51,7 @@ void Searcher::idleLoop(){
             return;
         }
         lock.unlock();
-        search();
+        searchLauncher();
     }
 }
 
@@ -67,10 +67,12 @@ void Searcher::wait(){
     _cv.wait(lock, [&]{ return !_searching; });
 }
 
-void Searcher::search(){
+// multi-threaded search (blocking call)
+void Searcher::searchLauncher(){
     Logging::LogIt(Logging::logInfo) << "Search launched for thread " << id() ;
     if ( isMainThread() ){ ThreadPool::instance().startOthers(); } // started other threads first but they are locked for now ...
-    search(_data.p, _data.best, _data.depth, _data.sc, _data.seldepth);
+    // so here search(...) will update the thread _data structure
+    search();
     if ( isMainThread() ){
         ///@todo add a busy wait to wait for stop for being sent if ponder or analysis and stop is still false (see ##busy wait outside)
         // now stop other threads
@@ -108,6 +110,14 @@ ThreadData & Searcher::getData(){
 
 const ThreadData & Searcher::getData()const{
     return _data;
+}
+
+SearchData & Searcher::getSearchData(){
+    return _data.datas;
+}
+
+const SearchData & Searcher::getSearchData()const{
+    return _data.datas;
 }
 
 bool Searcher::searching()const{
@@ -241,16 +251,15 @@ void Searcher::writeToGenFile(const Position & p){
     ScoreType qScore = 0;
     Position pQuiet = getQuiet(p, this, &qScore);
 
-    Move m = INVALIDMOVE;
-    ScoreType s = 0, e = 0;
+    ThreadData data;
+    ScoreType e = 0;
     if ( std::abs(qScore) < 350 ){
         // evaluate quiet leaf position
-        EvalData data;
-        e = eval(pQuiet,data,cos,true,false);
+        EvalData eData;
+        e = eval(pQuiet,eData,cos,true,false);
 
         DynamicConfig::disableTT = false; // use TT here
         if ( std::abs(e) < 350 ){
-            DepthType seldepth = 0;
             const Hash matHash = MaterialHash::getMaterialHash(p.mat);
             float gp = 1;
             if ( matHash != nullHash ){
@@ -260,7 +269,11 @@ void Searcher::writeToGenFile(const Position & p){
             DepthType depth(DynamicConfig::genFenDepth*gp + DynamicConfig::genFenDepthEG*(1.f-gp));
             unsigned int oldRandomPly = DynamicConfig::randomPly;
             DynamicConfig::randomPly = 0;
-            cos.search(pQuiet,m,depth,s,seldepth);
+            data.p = pQuiet;
+            data.depth = depth;
+            ThreadPool::instance().distributeData(data);
+            cos.search();
+            data = ThreadPool::instance().main().getData();
             DynamicConfig::randomPly = oldRandomPly;
         }
     }
@@ -274,7 +287,7 @@ void Searcher::writeToGenFile(const Position & p){
 
     // end of sub search
 
-    if ( m != INVALIDMOVE && pQuiet.halfmoves >= DynamicConfig::randomPly && std::abs(s) < 350){
+    if ( data.best != INVALIDMOVE && pQuiet.halfmoves >= DynamicConfig::randomPly && std::abs(data.score) < 350){
 
         /*
         // epd format
@@ -287,8 +300,8 @@ void Searcher::writeToGenFile(const Position & p){
 
         // "plain" format (**not** taking result into account, also draw!)
         genStream << "fen "    << GetFEN(pQuiet) << "\n"
-                  << "move "   << ToString(m) << "\n"
-                  << "score "  << s << "\n"
+                  << "move "   << ToString(data.best) << "\n"
+                  << "score "  << data.score << "\n"
                   //<< "eval "   << e << "\n"
                   << "ply "    << pQuiet.halfmoves << "\n"
                   << "result " << 0 << "\n"

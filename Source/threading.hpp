@@ -20,9 +20,10 @@ struct SearchData{
     std::array<TimeType,MAX_DEPTH>  times;
 };
 
+// an little input/output structure for each thread
 struct ThreadData{
     DepthType depth = MAX_DEPTH, seldepth = 0;
-    ScoreType sc = 0;
+    ScoreType score = 0;
     Position p;
     Move best = INVALIDMOVE;
     PVList pv;
@@ -40,6 +41,7 @@ public:
     ~ThreadPool();
     void setup();
     [[nodiscard]] Searcher & main();
+    void distributeData(const ThreadData & data);
     void startSearch(const ThreadData & d);
     void startOthers();
     void wait(bool otherOnly = false);

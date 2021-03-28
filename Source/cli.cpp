@@ -99,9 +99,10 @@ Move analyze(const Position & p, DepthType depth, bool openBenchOutput = false){
     ThreadData d;
     d.p = p;
     d.depth = depth;
-    ThreadPool::instance().main().search(d.p, d.best, d.depth, d.sc, d.seldepth);
+    ThreadPool::instance().distributeData(d);
+    ThreadPool::instance().main().search();
     d = ThreadPool::instance().main().getData();
-    Logging::LogIt(Logging::logInfo) << "Best move is " << ToString(d.best) << " " << (int)depth << " " << d.sc << " pv : " << ToString(d.pv);
+    Logging::LogIt(Logging::logInfo) << "Best move is " << ToString(d.best) << " " << (int)d.depth << " " << d.score << " pv : " << ToString(ThreadPool::instance().main().getData().pv);
 
     if ( openBenchOutput ){
         Logging::LogIt(Logging::logInfo) << "Next two lines are for OpenBench";

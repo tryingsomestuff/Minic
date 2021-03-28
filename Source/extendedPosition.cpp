@@ -267,8 +267,9 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
 
             ThreadData d;
             d.p = extP;
-
-            ThreadPool::instance().main().search(d.p, d.best, d.depth, d.sc, d.seldepth);
+            ThreadPool::instance().distributeData(d);
+            ThreadPool::instance().main().search();
+            d = ThreadPool::instance().main().getData();
             const Move bestMove = d.best;
             
             results[k][t].name = extP.id();

@@ -101,11 +101,7 @@ struct Searcher{
 
     [[nodiscard]] ScoreType SEE(const Position & p, const Move & m)const;
 
-    void search(const Position & p, 
-                 Move & m, 
-                 DepthType & d, 
-                 ScoreType & sc, 
-                 DepthType & seldepth);
+    void search();
 
     template< bool withRep = true, bool isPv = true, bool INR = true> 
     [[nodiscard]] MaterialHash::Terminaison interiorNodeRecognizer(const Position & p)const;
@@ -120,7 +116,7 @@ struct Searcher{
 
     void wait();
 
-    void search();
+    void searchLauncher();
 
     [[nodiscard]] size_t id()const;
     [[nodiscard]] bool   isMainThread()const;
@@ -132,6 +128,8 @@ struct Searcher{
     void setData(const ThreadData & d);
     [[nodiscard]] const ThreadData & getData()const;
     [[nodiscard]] ThreadData & getData();
+    [[nodiscard]] const SearchData & getSearchData()const;
+    [[nodiscard]] SearchData & getSearchData();    
 
     static std::atomic<bool> startLock;
 
