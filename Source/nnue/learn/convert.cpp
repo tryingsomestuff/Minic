@@ -489,12 +489,12 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
 			if (fs.read((char*)&p, sizeof(PackedSfenValue))) {
 				Position tpos; // fully empty position !
 				set_from_packed_sfen(tpos,p.sfen);
-				ScoreType s = 0;
-				DepthType depth = DynamicConfig::genFenDepth;
-				DepthType seldepth = 0;
-				Move m = INVALIDMOVE;
-                cos.search(tpos,m,depth,s,seldepth);
-                p.score = s;
+				ThreadData data;
+				data.p = tpos;
+				data.depth = DynamicConfig::genFenDepth;
+                cos.search();
+				data = ThreadPool::instance().main().getData();
+                p.score = data.score;
 				ofs.write((char*)&p, sizeof(PackedSfenValue));
 			}
 			else {

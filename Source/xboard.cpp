@@ -29,7 +29,7 @@ namespace XBoard{
         Logging::LogIt(Logging::logGUI) << "feature done=1";
     }
 
-    bool receiveMove(const std::string & command){
+    bool receiveOppMove(const std::string & command){
         std::string mstr(command);
         COM::stop();
         const size_t p = command.find("usermove");
@@ -110,7 +110,6 @@ namespace XBoard{
                     DynamicConfig::FRC = false;
                     COM::moves.clear();
                     COM::mode = (COM::Mode)((int)COM::stm); ///@todo this is so wrong !
-                    COM::move = INVALIDMOVE;
                     if(COM::mode != COM::m_analyze){
                         COM::mode = COM::m_play_black;
                         COM::stm = COM::stm_white;
@@ -141,7 +140,7 @@ namespace XBoard{
                     COM::mode = (COM::Mode)((int)COM::opponent(COM::stm));
                 }
                 else if ( strncmp(COM::command.c_str(),"usermove",8) == 0){
-                    if (!receiveMove(COM::command)) commandOK = false;
+                    if (!receiveOppMove(COM::command)) commandOK = false;
                 }
                 else if (  strncmp(COM::command.c_str(),"setboard",8) == 0){
                     COM::stop();
@@ -250,7 +249,7 @@ namespace XBoard{
                 //************ end of Xboard command ********//
                 // let's try to read the unknown command as a move ... trying to fix a scid versus PC issue ...
                 ///@todo try to be safer here
-                else if ( !receiveMove(COM::command)) Logging::LogIt(Logging::logInfo) << "Xboard does not know this command \"" << COM::command << "\"";
+                else if ( !receiveOppMove(COM::command)) Logging::LogIt(Logging::logInfo) << "Xboard does not know this command \"" << COM::command << "\"";
             } // readline
 
             // move as computer if mode is equal to stm
@@ -261,7 +260,7 @@ namespace XBoard{
                 Logging::LogIt(Logging::logInfo) << "xboard async started";
             }
             // if not our turn, and ponder is on, let's think ...
-            if(COM::move != INVALIDMOVE && (int)COM::mode == (int)COM::opponent(COM::stm) && COM::ponder == COM::p_on && COM::state == COM::st_none) {
+            if((int)COM::mode == (int)COM::opponent(COM::stm) && COM::ponder == COM::p_on && COM::state == COM::st_none) {
                 COM::state = COM::st_pondering;
                 Logging::LogIt(Logging::logInfo) << "xboard search launched (pondering)";
                 COM::thinkAsync(INFINITETIME);

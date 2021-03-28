@@ -11,7 +11,6 @@ namespace COM {
     Ponder ponder;
     std::string command;
     Position position;
-    Move move, ponderMove;
     DepthType depth;
     Mode mode;
     SideToMove stm; ///@todo isn't this redundant with position.c ??
@@ -33,8 +32,6 @@ namespace COM {
 
     void init() {
         Logging::LogIt(Logging::logInfo) << "Init COM";
-        ponderMove = INVALIDMOVE;
-        move = INVALIDMOVE;
         ponder = p_off;
         state = st_none;
         depth = -1;
@@ -72,9 +69,9 @@ namespace COM {
         return b;
     }
 
-    void receiveMoves(Move bestMove, Move pondermove){
-        move = bestMove; // update COM::move
+    void receiveMoves(Move move, Move ponderMove){
         Logging::LogIt(Logging::logInfo) << "...done returning move " << ToString(move) << " (state " << (int)state << ")";
+        Logging::LogIt(Logging::logInfo) << "ponder move " << ToString(ponderMove);
 
         // share the same move with all process 
         if ( Distributed::worldSize > 1 ){
@@ -92,7 +89,10 @@ namespace COM {
             p2.associateEvaluator(evaluator2);
             p2.resetNNUEEvaluator(p2.Evaluator());
 #endif
-            if ( !(applyMove(p2,move) && isPseudoLegal(p2,pondermove))) ponderMove = INVALIDMOVE; // do be sure ...
+            if ( !(applyMove(p2,move) && isPseudoLegal(p2,ponderMove))){
+                Logging::LogIt(Logging::logInfo) << "Illegal ponder move" << ToString(ponderMove) << ToString(p2);
+                ponderMove = INVALIDMOVE; // do be sure ...
+            }
         }
 
         Logging::LogIt(Logging::logInfo) << "search async done (state " << (int)state << ")";
@@ -122,7 +122,10 @@ namespace COM {
         position.resetNNUEEvaluator(position.Evaluator());
 #endif
         bool b = applyMove(position, m, true);
-        if (disp && m != INVALIDMOVE) Logging::LogIt(Logging::logGUI) << tag << " " << ToString(m) << (Logging::ct==Logging::CT_uci && VALIDMOVE(pMove) ? (" ponder " + ToString(pMove)) : "");
+        if (disp && m != INVALIDMOVE){
+            Logging::LogIt(Logging::logGUI) << tag << " " << ToString(m) 
+                                                   << (Logging::ct==Logging::CT_uci && VALIDMOVE(pMove) ? (" ponder " + ToString(pMove)) : "");
+        }
         Logging::LogIt(Logging::logInfo) << ToString(position);
         return b;
     }

@@ -17,7 +17,7 @@ const int skipPhase[threadSkipSize] = { 0, 1, 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 0, 1
 void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv, int multipv, const std::string & mark){
     const auto now = Clock::now();
     const TimeType ms = std::max((TimeType)1,(TimeType)std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count());
-    getData().datas.times[depth] = ms;
+    getSearchData().times[depth] = ms;
     if (subSearch) return; // no need to display stuff for subsearch
     std::stringstream str;
     const Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
@@ -41,12 +41,12 @@ void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestSco
     Logging::LogIt(Logging::logGUI) << str.str();
 }
 
-void Searcher::search(const Position & pp, Move & m, DepthType & requestedDepth, ScoreType & bestScore, DepthType & seldepth){
+void Searcher::search(){
 
     if ( isMainThread() ) Distributed::sync(Distributed::_commStat2,__PRETTY_FUNCTION__);
 
     // we start by a copy, because position object must be mutable here.
-    Position p(pp);
+    Position p(_data.p);
 #ifdef WITH_NNUE
     // Create an evaluator and reset it with the current position
     NNUEEvaluator nnueEvaluator;
@@ -58,15 +58,18 @@ void Searcher::search(const Position & pp, Move & m, DepthType & requestedDepth,
 
     // requested depth can be changed according to level or skill parameter
     DynamicConfig::level = DynamicConfig::limitStrength ? Skill::convertElo2Level() : DynamicConfig::level;
-    DepthType maxDepth = requestedDepth;
+    DepthType maxDepth = _data.depth; // _data.depth will be reset to zero later
     if ( Distributed::isMainProcess() ){
        maxDepth=std::max((DepthType)1,(Skill::enabled()&&!DynamicConfig::nodesBasedLevel)?std::min(maxDepth,Skill::limitedDepth()):maxDepth);
     }
     else{
+       // other process performs infinite search
        maxDepth = MAX_DEPTH; 
        currentMoveMs = INFINITETIME; // overrides currentMoveMs
     }
 
+    // when limiting skill by nodes only, only apply that to main process
+    // this doesn't make much sense to apply limited nodes on a multi-process run anyway ...
     if ( Distributed::isMainProcess() && DynamicConfig::nodesBasedLevel && Skill::enabled()){
         TimeMan::maxNodes = Skill::limitedNodes();
         Logging::LogIt(Logging::logDebug) << "Limited nodes to fit level: " << TimeMan::maxNodes;
@@ -84,12 +87,12 @@ void Searcher::search(const Position & pp, Move & m, DepthType & requestedDepth,
     }
 #endif
 
-    // Main thread only will reset some table
+    // Main thread only will reset tables
     if ( isMainThread() || id() >= MAX_THREADS ){
         if ( isMainThread()){
            TT::age();
            MoveDifficultyUtil::variability = 1.f; // not usefull for co-searcher threads that won't depend on time
-           ThreadPool::instance().clearSearch();  // reset data for all other threads !!!
+           ThreadPool::instance().clearSearch();  // reset tables for all threads !
         }
         Logging::LogIt(Logging::logInfo) << "Search params :" ;
         Logging::LogIt(Logging::logInfo) << "requested time  " << getCurrentMoveMs() << " (" << currentMoveMs << ")"; // won't exceed TimeMan::maxTime
@@ -104,33 +107,37 @@ void Searcher::search(const Position & pp, Move & m, DepthType & requestedDepth,
     
     // fill "root" position stack data
     {
-        EvalData data;
-        ScoreType e = eval(p,data,*this,false);
+        EvalData eData;
+        ScoreType e = eval(p,eData,*this,false);
         assert(p.halfmoves < MAX_PLY && p.halfmoves >= 0);
-        stack[p.halfmoves] = {p,computeHash(p),data,e,INVALIDMINIMOVE};
+        stack[p.halfmoves] = {p,computeHash(p),eData,e,INVALIDMINIMOVE};
     }
 
-    // initialize search results
-    bestScore = 0;
-    m = INVALIDMOVE;
+    // reset output search results
+    _data.score = 0;
+    _data.best = INVALIDMOVE;
+    _data.seldepth = 0;
+    _data.depth = 0;
+    _data.pv.clear();
 
     const bool isInCheck = isAttacked(p, kingSquare(p));
     const DepthType easyMoveDetectionDepth = 5;
-    DepthType startDepth = 1;//std::min(d,easyMoveDetectionDepth);
-    bool fhBreak = false;
+    const DepthType startDepth = 1;//std::min(d,easyMoveDetectionDepth);
 
     // initialize multiPV stuff
     DynamicConfig::multiPV = (Logging::ct == Logging::CT_uci?DynamicConfig::multiPV:1);
     if ( Skill::enabled() && !DynamicConfig::nodesBasedLevel ){
         DynamicConfig::multiPV = std::max(DynamicConfig::multiPV,4u);
-    }    
+    }
     std::vector<RootScores> multiPVMoves(DynamicConfig::multiPV,{INVALIDMOVE,-MATE});
+    // in multipv mode _data.score cannot be use a the aspiration loop score
+    std::vector<ScoreType> currentScore(DynamicConfig::multiPV,0);
 
     // handle "maxNodes" style search (will always complete depth 1 search)
     const auto maxNodes = TimeMan::maxNodes;
     // reset this for depth 1 to be sure to iterate at least once ...
     // on main process, requested value will be restored, but not on other process
-    TimeMan::maxNodes = 0; 
+    TimeMan::maxNodes = 0;
 
     // using MAX_DEPTH-6 so that draw can be found for sure ///@todo I don't understand this -6 anymore ..
     const DepthType targetMaxDepth = std::min(maxDepth,DepthType(MAX_DEPTH-6));
@@ -138,19 +145,18 @@ void Searcher::search(const Position & pp, Move & m, DepthType & requestedDepth,
     // random mover can be forced for the few first moves of a game or be setting level to 0
     if ( DynamicConfig::level == 0 || p.halfmoves < DynamicConfig::randomPly ){ 
        if ( p.halfmoves < DynamicConfig::randomPly ) Logging::LogIt(Logging::logInfo) << "Randomized ply";
-       bestScore = randomMover(p,_data.pv,isInCheck);
+       _data.score = randomMover(p,_data.pv,isInCheck);
        goto pvsout;
     }
 
     // easy move detection (shallow open window search)
     // only main thread here (stopflag will be triggered anyway for other threads if needed)
-    if ( isMainThread() && DynamicConfig::multiPV == 1 && maxDepth > easyMoveDetectionDepth+5 && maxNodes == 0 
+    if ( isMainThread() && DynamicConfig::multiPV == 1 && targetMaxDepth > easyMoveDetectionDepth+5 && maxNodes == 0 
          && currentMoveMs < INFINITETIME && currentMoveMs > 1000 && TimeMan::msecUntilNextTC > 0){
        rootScores.clear();
-       ScoreType easyScore = pvs<true>(-MATE, MATE, p, easyMoveDetectionDepth, 0, _data.pv, seldepth, isInCheck, false, false);
+       _data.score = pvs<true>(-MATE, MATE, p, easyMoveDetectionDepth, 0, _data.pv, _data.seldepth, isInCheck, false, false);
        std::sort(rootScores.begin(), rootScores.end(), [](const RootScores& r1, const RootScores & r2) {return r1.s > r2.s; });
        if (stopFlag) { // no more time, this is strange ...
-           bestScore = easyScore; 
            goto pvsout; 
        }
        if (rootScores.size() == 1){
@@ -169,7 +175,7 @@ void Searcher::search(const Position & pp, Move & m, DepthType & requestedDepth,
         for (unsigned int multi = 0 ; multi < DynamicConfig::multiPV && !stopFlag ; ++multi){
 
             // No need to continue multiPV loop if a mate is found
-            if ( !skipMoves.empty() && isMatedScore(bestScore) ) break;
+            if ( !skipMoves.empty() && isMatedScore(currentScore[multi]) ) break;
 
             if (isMainThread()){
                 if ( depth > 1){
@@ -184,7 +190,7 @@ void Searcher::search(const Position & pp, Move & m, DepthType & requestedDepth,
             // stockfish like thread management (not for co-searcher)
             else if ( !subSearch){ 
                 const int i = (id()-1)%threadSkipSize;
-                if (((depth + skipPhase[i]) / skipSize[i]) % 2) continue;
+                if (((depth + skipPhase[i]) / skipSize[i]) % 2) continue; // next depth
             }
 
             Logging::LogIt(Logging::logInfo) << "Thread " << id() << " searching depth " << (int)depth;
@@ -195,14 +201,14 @@ void Searcher::search(const Position & pp, Move & m, DepthType & requestedDepth,
 #else
             contempt = 0;
 #endif            
-            contempt += ScoreType(std::round(25*std::tanh(bestScore/400.f)));
+            contempt += ScoreType(std::round(25*std::tanh(currentScore[multi]/400.f)));
             Logging::LogIt(Logging::logInfo) << "Dynamic contempt " << contempt;
 
             // initialize aspiration window loop variables
             PVList pvLoc;
             ScoreType delta = (SearchConfig::doWindow && depth>4)?6+std::max(0,(20-depth)*2):MATE; // MATE not INFSCORE in order to enter the loop below once
-            ScoreType alpha = std::max(ScoreType(bestScore - delta), ScoreType (-MATE));
-            ScoreType beta  = std::min(ScoreType(bestScore + delta), MATE);
+            ScoreType alpha = std::max(ScoreType(currentScore[multi] - delta), ScoreType (-MATE));
+            ScoreType beta  = std::min(ScoreType(currentScore[multi] + delta), MATE);
             ScoreType score = 0;
             DepthType windowDepth = depth;
 
@@ -210,7 +216,7 @@ void Searcher::search(const Position & pp, Move & m, DepthType & requestedDepth,
             while( !stopFlag ){
 
                 pvLoc.clear();
-                score = pvs<true>(alpha, beta, p, windowDepth, 0, pvLoc, seldepth, isInCheck, false, false, skipMoves.empty()?nullptr:&skipMoves);
+                score = pvs<true>(alpha, beta, p, windowDepth, 0, pvLoc, _data.seldepth, isInCheck, false, false, skipMoves.empty()?nullptr:&skipMoves);
                 if ( stopFlag ) break;
                 delta += 2 + delta/2; // formula from xiphos ...
                 if (alpha > -MATE && score <= alpha) {
@@ -220,34 +226,19 @@ void Searcher::search(const Position & pp, Move & m, DepthType & requestedDepth,
                     if ( isMainThread() && DynamicConfig::multiPV == 1){
                         PVList pv2;
                         TT::getPV(p, *this, pv2);
-                        displayGUI(depth,seldepth,score,pv2,multi+1,"!");
+                        displayGUI(depth,_data.seldepth,score,pv2,multi+1,"!");
                         windowDepth = depth;
                     }
                 }
                 else if (beta < MATE && score >= beta ) {
+                    --windowDepth; // from Ethereal
+                    beta  = std::min(ScoreType(score + delta), ScoreType( MATE) );
+                    Logging::LogIt(Logging::logInfo) << "Increase window beta "  << alpha << ".." << beta;
                     if ( isMainThread() && DynamicConfig::multiPV == 1){
                         PVList pv2;
                         TT::getPV(p, *this, pv2);
-                        displayGUI(depth,seldepth,score,pv2,multi+1,"?");
-                    }
-                    --windowDepth; // from Ethereal
-                    /*
-                    // check other moves (if not multi-PV ...)
-                    if ( DynamicConfig::multiPV == 1 && pvLoc.size() && beta > alpha + 50){
-                        std::vector<MiniMove> skipMovesFailHigh = { Move2MiniMove(pvLoc[0]) };
-                        DepthType seldepth2 = 0;
-                        PVList pv2;
-                        const ScoreType fhVerification = pvs<true,false>(beta-1,beta,p,windowDepth,0,pv2,seldepth2,isInCheck,false,&skipMovesFailHigh);
-                        if ( !stopFlag && fhVerification <= beta ){
-                            Logging::LogIt(Logging::logInfo) << "Breaking aspiration loop beta...";
-                            fhBreak = true;
-                            break;
-                        }
-                    }
-                    */
-                    //alpha = std::max(ScoreType(-MATE),ScoreType((alpha + beta)/2));
-                    beta  = std::min(ScoreType(score + delta), ScoreType( MATE) );
-                    Logging::LogIt(Logging::logInfo) << "Increase window beta "  << alpha << ".." << beta;
+                        displayGUI(depth,_data.seldepth,score,pv2,multi+1,"?");
+                    }                    
                 }
                 else break;
 
@@ -262,55 +253,44 @@ void Searcher::search(const Position & pp, Move & m, DepthType & requestedDepth,
                 }
             }
             else{
-                requestedDepth = depth;
-                bestScore      = score;
-
-                // if no good pv available (too short), let's build one for display purpose ...
-                if ( fhBreak && pvLoc.size() ){ 
-                    Position p2 = p;
-#ifdef WITH_NNUE
-                    NNUEEvaluator evaluator = p.Evaluator();
-                    p2.associateEvaluator(evaluator);
-#endif                    
-                    applyMove(p2,pvLoc[0]);
-                    PVList pv2;
-                    TT::getPV(p2, *this, pv2);
-                    pv2.insert(pv2.begin(),pvLoc[0]);
-                    pvLoc = pv2;
-                }
+                // this aspirasion multipv loop was fully done, let's update results
+                _data.depth = depth;
+                currentScore[multi] = score;
 
                 // In multiPV mode, fill skipmove for next multiPV iteration, and backup multiPV info
                 if ( !pvLoc.empty() && DynamicConfig::multiPV > 1){
                     skipMoves.push_back(Move2MiniMove(pvLoc[0]));
                     multiPVMoves[multi].m = pvLoc[0];
-                    multiPVMoves[multi].s = bestScore;
+                    multiPVMoves[multi].s = score;
                 }
 
                 // update the outputed pv only with the best move line
                 if ( multi == 0 ){
                    std::unique_lock<std::mutex> lock(_mutexPV);
-                   _data.pv = pvLoc;
+                   _data.pv    = pvLoc;
+                   _data.depth = depth;
+                   _data.score = score;
                 }
                 
-                if ( isMainThread() ){
+                if ( isMainThread() && multi == 0 ){
                     // output to GUI
-                    displayGUI(depth,seldepth,bestScore,pvLoc,multi+1);
+                    displayGUI(depth,_data.seldepth,_data.score,pvLoc,multi+1);
 
                     // store current depth info 
-                    getData().datas.scores[depth] = bestScore;
-                    getData().datas.nodes[depth] = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
-                    if ( pvLoc.size() ) getData().datas.moves[depth] = Move2MiniMove(pvLoc[0]);
+                    getSearchData().scores[depth] = _data.score;
+                    getSearchData().nodes[depth] = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
+                    if ( pvLoc.size() ) getSearchData().moves[depth] = Move2MiniMove(pvLoc[0]);
 
                     // check for an emergency
                     if (TimeMan::isDynamic && depth > MoveDifficultyUtil::emergencyMinDepth 
-                    && bestScore < getData().datas.scores[depth - 1] - MoveDifficultyUtil::emergencyMargin) { 
-                        moveDifficulty = bestScore > MoveDifficultyUtil::emergencyAttackThreashold ? MoveDifficultyUtil::MD_hardAttack : MoveDifficultyUtil::MD_hardDefense;
-                        Logging::LogIt(Logging::logInfo) << "Emergency mode activated : " << bestScore << " < " << getData().datas.scores[depth - 1] - MoveDifficultyUtil::emergencyMargin; 
+                    && _data.score < getSearchData().scores[depth - 1] - MoveDifficultyUtil::emergencyMargin) { 
+                        moveDifficulty = _data.score > MoveDifficultyUtil::emergencyAttackThreashold ? MoveDifficultyUtil::MD_hardAttack : MoveDifficultyUtil::MD_hardDefense;
+                        Logging::LogIt(Logging::logInfo) << "Emergency mode activated : " << _data.score << " < " << getSearchData().scores[depth - 1] - MoveDifficultyUtil::emergencyMargin; 
                     }
 
                     // update a "variability" measure to scale remaining time on it ///@todo tune this more
                     if ( depth > 12 && pvLoc.size() ){
-                        if ( getData().datas.moves[depth] != getData().datas.moves[depth-1] ) MoveDifficultyUtil::variability *= (1.f + float(depth)/100);
+                        if ( getSearchData().moves[depth] != getSearchData().moves[depth-1] ) MoveDifficultyUtil::variability *= (1.f + float(depth)/100);
                         else MoveDifficultyUtil::variability *= 0.97f;
                         Logging::LogIt(Logging::logInfo) << "Variability :" << MoveDifficultyUtil::variability;
                         Logging::LogIt(Logging::logInfo) << "Variability time factor :" << MoveDifficultyUtil::variabilityFactor();
@@ -325,7 +305,7 @@ void Searcher::search(const Position & pp, Move & m, DepthType & requestedDepth,
 
                     // compute EBF
                     if ( depth > 1 ){
-                        Logging::LogIt(Logging::logInfo) << "EBF  " << float(getData().datas.nodes[depth]) / (std::max(Counter(1),getData().datas.nodes[depth-1]));
+                        Logging::LogIt(Logging::logInfo) << "EBF  " << float(getSearchData().nodes[depth]) / (std::max(Counter(1),getSearchData().nodes[depth-1]));
                         Logging::LogIt(Logging::logInfo) << "EBF2 " << float(ThreadPool::instance().counter(Stats::sid_qnodes)) / std::max(Counter(1),ThreadPool::instance().counter(Stats::sid_nodes));
                     }
 
@@ -338,10 +318,10 @@ void Searcher::search(const Position & pp, Move & m, DepthType & requestedDepth,
         } // multiPV loop end
     } // iterative deepening loop end
 
+pvsout:
+
     ///@todo this is not compatible with UCI protocol in ponder or analysis mode ... ##busy wait outside
     stopFlag = true; // here stopFlag must always be true ... 
-
-pvsout:
 
     if ( isMainThread() ){
         // sync point for distributed search
@@ -369,37 +349,37 @@ pvsout:
     // all threads are updating there output values but main one is looking for the longest pv
     // note that depth, score, seldepth and pv are already updated on-the-fly
     if (_data.pv.empty()){
-        m = INVALIDMOVE;
+        _data.best = INVALIDMOVE;
         if (!subSearch) Logging::LogIt(Logging::logWarn) << "Empty pv" ;
     }
     else{
         // !!! warning: when skill uses multiPV returned move shall be used and not first move of pv in receiveMoves !!!
         if ( Skill::enabled() && !DynamicConfig::nodesBasedLevel){
-            m = Skill::pick(multiPVMoves);
+            _data.best = Skill::pick(multiPVMoves);
         }
         else {
             // get pv from best (deepest) threads
             if ( isMainThread()){
-                DepthType bestDepth = requestedDepth;
+                DepthType bestDepth = _data.depth;
                 size_t bestThreadId = 0;
                 for ( auto & s : ThreadPool::instance()){
                     std::unique_lock<std::mutex> lock(_mutexPV);
-                    if ( s->_data.depth > bestDepth){
+                    if ( s->getData().depth > bestDepth){
                         bestThreadId = s->id();
-                        bestDepth = s->_data.depth;
+                        bestDepth = s->getData().depth;
                         Logging::LogIt(Logging::logInfo) << "Better thread ! " << bestThreadId << ", depth " << (int)bestDepth;
                     }
                 }
-                // update main thread data with best data available
-                _data = ThreadPool::instance()[bestThreadId]->_data;
-                m = _data.pv[0];
+                // update data with best data available
+                _data = ThreadPool::instance()[bestThreadId]->getData();
+                _data.best = _data.pv[0];
             }
         }
     }
 
     // send pv (move and ponder move in practice) to COM 
     // so that display is done and COM::position is changed
-    if ( isMainThread()) COM::receiveMoves(m,_data.pv.size()>1?_data.pv[1]:INVALIDMOVE);
+    if ( isMainThread()) COM::receiveMoves(_data.best,_data.pv.size()>1?_data.pv[1]:INVALIDMOVE);
 
 #ifdef WITH_GENFILE
     // calling writeToGenFile at each root node
