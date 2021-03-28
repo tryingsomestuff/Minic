@@ -386,4 +386,8 @@ pvsout:
     if ( isMainThread() && DynamicConfig::genFen && p.halfmoves >= DynamicConfig::randomPly && DynamicConfig::level != 0 ) writeToGenFile(p);
 #endif
 
+    // some state shall be reset here
+    TimeMan::isPondering = false;
+    TimeMan::isAnalysis = false;
+
 }

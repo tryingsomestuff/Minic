@@ -104,14 +104,14 @@ namespace UCI {
 
                         COM::ponder = COM::p_off;
                         DynamicConfig::mateFinder = false;
-                        TimeMan::isUCIPondering = false;
-                        TimeMan::isUCIAnalysis = false;
+                        TimeMan::isPondering = false;
+                        TimeMan::isAnalysis = false;
 
                         std::string param;
                         bool noParam = true;
                         while (iss >> param) {
                             Logging::LogIt(Logging::logInfo) << "received parameter " << param;
-                            if      (param == "infinite")    { noParam = false; TimeMan::msecPerMove = INFINITETIME; TimeMan::isUCIAnalysis = true;}
+                            if      (param == "infinite")    { noParam = false; TimeMan::msecPerMove = INFINITETIME; TimeMan::isAnalysis = true;}
                             else if (param == "depth")       { noParam = false; int d = 0;  iss >> d; COM::depth = d; TimeMan::msecPerMove = INFINITETIME;}
                             else if (param == "movetime")    { noParam = false; iss >> TimeMan::msecPerMove; }
                             else if (param == "nodes")       { noParam = false; iss >> TimeMan::maxNodes; }
@@ -121,7 +121,7 @@ namespace UCI {
                             else if (param == "winc" )       { int t; iss >> t; if (COM::position.c == Co_White) { TimeMan::msecInc = t; TimeMan::isDynamic = true; }}
                             else if (param == "binc" )       { int t; iss >> t; if (COM::position.c == Co_Black) { TimeMan::msecInc = t; TimeMan::isDynamic = true; }}
                             else if (param == "movestogo")   { noParam = false; int t; iss >> t; TimeMan::moveToGo = t; TimeMan::isDynamic = true; }
-                            else if (param == "ponder")      { if (TimeMan::msecUntilNextTC > 200 ) COM::ponder = COM::p_on; TimeMan::isUCIPondering = true;}
+                            else if (param == "ponder")      { if (TimeMan::msecUntilNextTC > 200 ) COM::ponder = COM::p_on; TimeMan::isPondering = true;}
                             else if (param == "mate")        { int d = 0;  iss >> d; COM::depth = d; DynamicConfig::mateFinder = true; TimeMan::msecPerMove = INFINITETIME; }
                             else                             { Logging::LogIt(Logging::logGUI) << "info string " << param << " not implemented"; }
                         }
@@ -133,6 +133,10 @@ namespace UCI {
                         COM::state = COM::st_searching;
                         COM::thinkAsync();
                         Logging::LogIt(Logging::logInfo) << "uci async started";
+                        std::this_thread::sleep_for(std::chrono::milliseconds(20)); // let the search starts if needed...
+                        ///@todo there is a race condition here if a stop command is
+                        // triggered just after pondering is launched. Stopflag is then set to true by search() after being set to false by stop()
+                        // this is really bad and should be fixed !!!
                     }
                     else { Logging::LogIt(Logging::logGUI) << "info string search command received, but no position specified"; }
                 }
@@ -140,7 +144,7 @@ namespace UCI {
             else if (uciCommand == "ponderhit") {
                 Logging::LogIt(Logging::logInfo) << "received command ponderhit";
                 //ThreadPool::instance().stop();
-                TimeMan::isUCIPondering = false;
+                TimeMan::isPondering = false;
             }
             else if (uciCommand == "ucinewgame") {
                 if (!ThreadPool::instance().main().stopFlag) { Logging::LogIt(Logging::logGUI) << "info string " << uciCommand << " received but search in progress ..."; }

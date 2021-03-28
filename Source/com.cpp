@@ -131,9 +131,12 @@ namespace COM {
     }
 
     void stop() {
-        Logging::LogIt(Logging::logInfo) << "stopping previous search";
+        Logging::LogIt(Logging::logInfo) << "Stopping previous search";
         ThreadPool::instance().stop();
-        ///@todo shall we wait for something here ??
+        // wait for search to finish
+        Logging::LogIt(Logging::logInfo) << "Wait for search to complete...";
+        while(ThreadPool::instance().main().searching()){}
+        Logging::LogIt(Logging::logInfo) << "...search done";
     }
 
     void stopPonder() {
@@ -143,12 +146,12 @@ namespace COM {
     }
 
     // this is non blocking
-    void thinkAsync(TimeType forcedMs) { 
+    void thinkAsync() { 
         Logging::LogIt(Logging::logInfo) << "Thinking... (state " << (int)state << ")";
         if (depth < 0) depth = MAX_DEPTH;
         Logging::LogIt(Logging::logInfo) << "depth          " << (int)depth;
-        // here is computed the time for next search (stored in the Threadpool for now)
-        ThreadPool::instance().currentMoveMs = forcedMs <= 0 ? TimeMan::GetNextMSecPerMove(position) : forcedMs;
+        // here is computed the time for next search (and store it in the Threadpool for now)
+        ThreadPool::instance().currentMoveMs = TimeMan::GetNextMSecPerMove(position);
         Logging::LogIt(Logging::logInfo) << "currentMoveMs  " << ThreadPool::instance().currentMoveMs;
         Logging::LogIt(Logging::logInfo) << ToString(position);
 

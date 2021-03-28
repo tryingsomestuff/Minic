@@ -10,8 +10,8 @@ TimeType targetTime, maxTime;
 DepthType moveToGo;
 uint64_t maxNodes;
 bool isDynamic;
-bool isUCIPondering;
-bool isUCIAnalysis;
+bool isPondering;
+bool isAnalysis;
 
 void init(){
     Logging::LogIt(Logging::logInfo) << "Init timeman" ;
@@ -20,8 +20,8 @@ void init(){
     moveToGo    = -1;
     maxNodes    = 0;
     isDynamic   = false;
-    isUCIPondering  = false;
-    isUCIAnalysis = false;
+    isPondering  = false;
+    isAnalysis = false;
     overHead    = 0;
     targetTime  = 0;
     maxTime     = 0;
@@ -32,6 +32,7 @@ TimeType GetNextMSecPerMove(const Position & p){
     static const TimeType msecMarginMax = 1000;
     static const float msecMarginCoef   = 0.01f; // 1% of remaining time (or time in TC)
     TimeType ms = -1;
+
     Logging::LogIt(Logging::logInfo) << "msecPerMove     " << msecPerMove;
     Logging::LogIt(Logging::logInfo) << "msecInTC        " << msecInTC   ;
     Logging::LogIt(Logging::logInfo) << "msecInc         " << msecInc    ;
@@ -40,8 +41,15 @@ TimeType GetNextMSecPerMove(const Position & p){
     Logging::LogIt(Logging::logInfo) << "currentNbMoves  " << int(p.moves);
     Logging::LogIt(Logging::logInfo) << "moveToGo        " << int(moveToGo);
     Logging::LogIt(Logging::logInfo) << "maxNodes        " << maxNodes;
-    TimeType msecIncLoc = (msecInc > 0) ? msecInc : 0;
-    
+    Logging::LogIt(Logging::logInfo) << "isPondering     " << TimeMan::isPondering;
+    Logging::LogIt(Logging::logInfo) << "isAnalysis      " << TimeMan::isAnalysis;
+
+    if (TimeMan::isPondering || TimeMan::isAnalysis) {
+        return INFINITETIME;
+    }
+
+    const TimeType msecIncLoc = (msecInc > 0) ? msecInc : 0;
+
     if ( maxNodes > 0 ){
         Logging::LogIt(Logging::logInfo) << "Fixed nodes per move";
         targetTime =  INFINITETIME;
@@ -70,7 +78,7 @@ TimeType GetNextMSecPerMove(const Position & p){
         Logging::LogIt(Logging::logInfo) << "UCI style TC";
         const TimeType msecMargin = std::max(std::min(msecMarginMax, TimeType(msecMarginCoef*msecUntilNextTC)), msecMarginMin);
         if (!isDynamic) Logging::LogIt(Logging::logFatal) << "bad timing configuration ... (missing dynamic UCI time info)";
-        else { ms = std::min(msecUntilNextTC - msecMargin, TimeType((msecUntilNextTC - msecMargin) / float(moveToGo) + msecIncLoc)*(isUCIPondering?3:2)/2); }
+        else { ms = std::min(msecUntilNextTC - msecMargin, TimeType((msecUntilNextTC - msecMargin) / float(moveToGo) + msecIncLoc)*(isPondering?3:2)/2); }
     }
 
     else{ // sudden death style
@@ -82,7 +90,7 @@ TimeType GetNextMSecPerMove(const Position & p){
         assert(msecUntilNextTC >= 0);
         const TimeType msecMargin = std::max(std::min(msecMarginMax, TimeType(msecMarginCoef*msecUntilNextTC)), msecMarginMin);
         if (!isDynamic) Logging::LogIt(Logging::logFatal) << "bad timing configuration ... (missing dynamic time info for sudden death style TC)";
-        else ms = std::min(msecUntilNextTC - msecMargin, TimeType((msecUntilNextTC - msecMargin) / (float)nmoves + msecIncLoc )*(isUCIPondering?3:2)/2);
+        else ms = std::min(msecUntilNextTC - msecMargin, TimeType((msecUntilNextTC - msecMargin) / (float)nmoves + msecIncLoc )*(isPondering?3:2)/2);
     }
 
     targetTime = std::max(ms-overHead, TimeType(20)); // if not much time left, let's try that hoping for a friendly GUI...

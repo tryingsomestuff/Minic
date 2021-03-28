@@ -3,9 +3,10 @@
 #include "logging.hpp"
 
 TimeType Searcher::getCurrentMoveMs() {
-    if (TimeMan::isUCIPondering || TimeMan::isUCIAnalysis) {
+    if (TimeMan::isPondering || TimeMan::isAnalysis) {
         return INFINITETIME;
     }
+    
     TimeType ret = currentMoveMs;
     if (TimeMan::msecUntilNextTC > 0){
         switch (moveDifficulty) {
