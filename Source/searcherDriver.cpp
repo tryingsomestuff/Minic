@@ -5,6 +5,7 @@
 #include "logging.hpp"
 #include "skill.hpp"
 #include "uci.hpp"
+#include "xboard.hpp"
 
 namespace{
 // Sizes and phases of the skip-blocks, used for distributing search depths across the threads, from stockfish
@@ -43,6 +44,8 @@ void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestSco
 
 void Searcher::search(){
 
+    stopFlag = false; ///@todo shall be only done outside ?
+
     if ( isMainThread() ) Distributed::sync(Distributed::_commStat2,__PRETTY_FUNCTION__);
 
     // we start by a copy, because position object must be mutable here.
@@ -76,7 +79,6 @@ void Searcher::search(){
     }
 
     // initialize basic search variable
-    stopFlag = false;
     moveDifficulty = MoveDifficultyUtil::MD_std;
     startTime = Clock::now();
 
@@ -157,7 +159,7 @@ void Searcher::search(){
        _data.score = pvs<true>(-MATE, MATE, p, easyMoveDetectionDepth, 0, _data.pv, _data.seldepth, isInCheck, false, false);
        std::sort(rootScores.begin(), rootScores.end(), [](const RootScores& r1, const RootScores & r2) {return r1.s > r2.s; });
        if (stopFlag) { // no more time, this is strange ...
-           goto pvsout; 
+           goto pvsout;
        }
        if (rootScores.size() == 1){
            moveDifficulty = MoveDifficultyUtil::MD_forced; // only one : check evasion or zugzwang
@@ -309,7 +311,7 @@ void Searcher::search(){
                         Logging::LogIt(Logging::logInfo) << "EBF2 " << float(ThreadPool::instance().counter(Stats::sid_qnodes)) / std::max(Counter(1),ThreadPool::instance().counter(Stats::sid_nodes));
                     }
 
-                    // sync stopfloag in other process
+                    // sync stopflag in other process
                     if ( ! Distributed::isMainProcess() ){
                        Distributed::get(&ThreadPool::instance().main().stopFlag,1,Distributed::_winStop,0);
                     }
@@ -377,17 +379,9 @@ pvsout:
         }
     }
 
-    // send pv (move and ponder move in practice) to COM 
-    // so that display is done and COM::position is changed
-    if ( isMainThread()) COM::receiveMoves(_data.best,_data.pv.size()>1?_data.pv[1]:INVALIDMOVE);
-
 #ifdef WITH_GENFILE
     // calling writeToGenFile at each root node
     if ( isMainThread() && DynamicConfig::genFen && p.halfmoves >= DynamicConfig::randomPly && DynamicConfig::level != 0 ) writeToGenFile(p);
 #endif
-
-    // some state shall be reset here
-    TimeMan::isPondering = false;
-    TimeMan::isAnalysis = false;
 
 }

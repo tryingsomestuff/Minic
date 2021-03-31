@@ -8,21 +8,17 @@
 namespace COM {
 
     State state; // this is redundant with Mode & Ponder...
-    Ponder ponder;
     std::string command;
     Position position;
     DepthType depth;
-    Mode mode;
-    SideToMove stm; ///@todo isn't this redundant with position.c ??
-    Position initialPos;
     std::vector<Move> moves;
 #ifdef WITH_NNUE
     NNUEEvaluator evaluator;
 #endif
 
+    std::mutex mutex;
+
     void newgame() {
-        mode = m_force;
-        stm = stm_white;
 #ifdef WITH_NNUE
         position.associateEvaluator(evaluator);
 #endif
@@ -32,7 +28,6 @@ namespace COM {
 
     void init() {
         Logging::LogIt(Logging::logInfo) << "Init COM";
-        ponder = p_off;
         state = st_none;
         depth = -1;
         newgame();
@@ -58,18 +53,7 @@ namespace COM {
         }
     }
 
-    SideToMove opponent(SideToMove & s) {
-        return s == stm_white ? stm_black : stm_white;
-    }
-
-    bool sideToMoveFromFEN(const std::string & fen) {
-        const bool b = readFEN(fen, position,true);
-        stm = position.c == Co_White ? stm_white : stm_black;
-        if (!b) Logging::LogIt(Logging::logFatal) << "Illegal FEN " << fen;
-        return b;
-    }
-
-    void receiveMoves(Move move, Move ponderMove){
+    bool receiveMoves(Move move, Move ponderMove){
         Logging::LogIt(Logging::logInfo) << "...done returning move " << ToString(move) << " (state " << (int)state << ")";
         Logging::LogIt(Logging::logInfo) << "ponder move " << ToString(ponderMove);
 
@@ -95,19 +79,21 @@ namespace COM {
             }
         }
 
+        bool ret = true;
+
         Logging::LogIt(Logging::logInfo) << "search async done (state " << (int)state << ")";
         if (state == st_searching) { // in searching mode we have to return a move to GUI
             Logging::LogIt(Logging::logInfo) << "sending move to GUI " << ToString(move);
-            if (move == INVALIDMOVE) { mode = m_force; } // game ends
+            if (move == INVALIDMOVE) { 
+                ret = false;
+            } // game ends
             else {
                 if (!makeMove(move, true, Logging::ct == Logging::CT_uci ? "bestmove" : "move", ponderMove)) {
                     Logging::LogIt(Logging::logGUI) << "info string Bad computer move !";
                     Logging::LogIt(Logging::logInfo) << ToString(position);
-                    mode = m_force;
+                    ret = false;
                 }
                 else{
-                    // switch stm
-                    stm = opponent(stm);
                     // backup move (mainly for takeback feature)
                     moves.push_back(move);
                 }
@@ -115,6 +101,8 @@ namespace COM {
         }
         Logging::LogIt(Logging::logInfo) << "Putting state to none (state was " << (int)state << ")";
         state = st_none;
+
+        return ret;
     }
 
     bool makeMove(Move m, bool disp, std::string tag, Move pMove) {
@@ -131,12 +119,12 @@ namespace COM {
     }
 
     void stop() {
+        std::lock_guard<std::mutex> lock(mutex); // cannot stop and start at the same time
         Logging::LogIt(Logging::logInfo) << "Stopping previous search";
         ThreadPool::instance().stop();
-        // wait for search to finish
-        Logging::LogIt(Logging::logInfo) << "Wait for search to complete...";
-        while(ThreadPool::instance().main().searching()){}
-        Logging::LogIt(Logging::logInfo) << "...search done";
+        // some state shall be reset here
+        ThreadPool::instance().main().isAnalysis = false;
+        ThreadPool::instance().main().isPondering = false;
     }
 
     void stopPonder() {
@@ -145,8 +133,9 @@ namespace COM {
         }
     }
 
-    // this is non blocking
-    void thinkAsync() { 
+    // this is a non-blocking call (search wise)
+    void thinkAsync() {
+        std::lock_guard<std::mutex> lock(mutex); // cannot stop and start at the same time
         Logging::LogIt(Logging::logInfo) << "Thinking... (state " << (int)state << ")";
         if (depth < 0) depth = MAX_DEPTH;
         Logging::LogIt(Logging::logInfo) << "depth          " << (int)depth;

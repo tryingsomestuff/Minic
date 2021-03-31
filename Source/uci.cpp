@@ -56,7 +56,7 @@ namespace UCI {
                 COM::position.h = 0ull; // invalidate position
                 std::string type;
                 while (iss >> type) {
-                    if (type == "startpos") { COM::sideToMoveFromFEN(startPosition); }
+                    if (type == "startpos") { readFEN(startPosition, COM::position,true); }
                     else if (type == "fen") {
                         std::string fen;
                         for (int i = 0; i < 6; i++) { // suppose always full fen ... ///@todo better?
@@ -64,7 +64,7 @@ namespace UCI {
                             iss >> component;
                             fen += component + " ";
                         }
-                        if (!COM::sideToMoveFromFEN(fen)) Logging::LogIt(Logging::logFatal) << "Illegal FEN " << fen;
+                        if (!readFEN(fen, COM::position,true)) Logging::LogIt(Logging::logFatal) << "Illegal FEN " << fen;
                     }
                     else if (type == "moves") {
                         if (COM::position.h != 0ull) {
@@ -75,9 +75,7 @@ namespace UCI {
                                 if (!COM::makeMove(m, false, "")) { // make move
                                     Logging::LogIt(Logging::logInfo) << "Bad move ! : " << mstr;
                                     Logging::LogIt(Logging::logInfo) << ToString(COM::position);
-                                    COM::mode = COM::m_force;
                                 }
-                                else COM::stm = COM::opponent(COM::stm);
                             }
                         }
                         else Logging::LogIt(Logging::logGUI) << "info string no start position specified";
@@ -102,16 +100,15 @@ namespace UCI {
                         TimeMan::moveToGo = -1;
                         COM::depth = MAX_DEPTH; // infinity
 
-                        COM::ponder = COM::p_off;
                         DynamicConfig::mateFinder = false;
-                        TimeMan::isPondering = false;
-                        TimeMan::isAnalysis = false;
+                        ThreadPool::instance().main().isPondering = false;
+                        ThreadPool::instance().main().isAnalysis = false;
 
                         std::string param;
                         bool noParam = true;
                         while (iss >> param) {
                             Logging::LogIt(Logging::logInfo) << "received parameter " << param;
-                            if      (param == "infinite")    { noParam = false; TimeMan::msecPerMove = INFINITETIME; TimeMan::isAnalysis = true;}
+                            if      (param == "infinite")    { noParam = false; TimeMan::msecPerMove = INFINITETIME; ThreadPool::instance().main().isAnalysis = true;}
                             else if (param == "depth")       { noParam = false; int d = 0;  iss >> d; COM::depth = d; TimeMan::msecPerMove = INFINITETIME;}
                             else if (param == "movetime")    { noParam = false; iss >> TimeMan::msecPerMove; }
                             else if (param == "nodes")       { noParam = false; iss >> TimeMan::maxNodes; }
@@ -121,33 +118,28 @@ namespace UCI {
                             else if (param == "winc" )       { int t; iss >> t; if (COM::position.c == Co_White) { TimeMan::msecInc = t; TimeMan::isDynamic = true; }}
                             else if (param == "binc" )       { int t; iss >> t; if (COM::position.c == Co_Black) { TimeMan::msecInc = t; TimeMan::isDynamic = true; }}
                             else if (param == "movestogo")   { noParam = false; int t; iss >> t; TimeMan::moveToGo = t; TimeMan::isDynamic = true; }
-                            else if (param == "ponder")      { if (TimeMan::msecUntilNextTC > 200 ) COM::ponder = COM::p_on; TimeMan::isPondering = true;}
+                            else if (param == "ponder")      { ThreadPool::instance().main().isPondering = true; }
                             else if (param == "mate")        { int d = 0;  iss >> d; COM::depth = d; DynamicConfig::mateFinder = true; TimeMan::msecPerMove = INFINITETIME; }
                             else                             { Logging::LogIt(Logging::logGUI) << "info string " << param << " not implemented"; }
                         }
                         if ( noParam ){
                            Logging::LogIt(Logging::logWarn) << "no parameters given for go command, going for a depth 10 search ...";    
-                            COM::depth = 10; TimeMan::msecPerMove = INFINITETIME;
+                           COM::depth = 10; TimeMan::msecPerMove = INFINITETIME;
                         }
                         Logging::LogIt(Logging::logInfo) << "uci search launched";
-                        COM::state = COM::st_searching;
+                        COM::state = COM::st_searching; //uci is/should be stateless but we use this anyhow
                         COM::thinkAsync();
                         Logging::LogIt(Logging::logInfo) << "uci async started";
-                        std::this_thread::sleep_for(std::chrono::milliseconds(20)); // let the search starts if needed...
-                        ///@todo there is a race condition here if a stop command is
-                        // triggered just after pondering is launched. Stopflag is then set to true by search() after being set to false by stop()
-                        // this is really bad and should be fixed !!!
                     }
                     else { Logging::LogIt(Logging::logGUI) << "info string search command received, but no position specified"; }
                 }
             }
             else if (uciCommand == "ponderhit") {
                 Logging::LogIt(Logging::logInfo) << "received command ponderhit";
-                //ThreadPool::instance().stop();
-                TimeMan::isPondering = false;
+                ThreadPool::instance().main().isPondering = false;
             }
             else if (uciCommand == "ucinewgame") {
-                if (!ThreadPool::instance().main().stopFlag) { Logging::LogIt(Logging::logGUI) << "info string " << uciCommand << " received but search in progress ..."; }
+                if (ThreadPool::instance().main().searching()) { Logging::LogIt(Logging::logGUI) << "info string " << uciCommand << " received but search in progress ..."; }
                 else { COM::init(); }
             }
             else if (uciCommand == "eval") { Logging::LogIt(Logging::logGUI) << "info string " << uciCommand << " not implemented yet"; }

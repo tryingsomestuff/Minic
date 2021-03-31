@@ -9,4 +9,6 @@ namespace XBoard{
     extern bool display; ///@todo use it !
     void init();
     void xboard();
+
+    void moveApplied(bool success);
 } // XBoard

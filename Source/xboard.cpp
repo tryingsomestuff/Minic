@@ -12,11 +12,40 @@ namespace XBoard{
 
     bool display;
 
+    enum Ponder : unsigned char { p_off = 0, p_on = 1 };
+    Ponder ponder; // easy / hard
+
+    enum Mode : unsigned char { m_play_white = 0, m_play_black = 1, m_force = 2, m_analyze = 3 };
+    Mode mode;
+
+    enum SideToMove : unsigned char { stm_white = 0, stm_black = 1 };
+    SideToMove stm; ///@todo isn't this redundant with position.c ??
+
+    Position initialPos;
+
+    SideToMove opponent(SideToMove & s) {
+        return s == stm_white ? stm_black : stm_white;
+    }
+
+    bool sideToMoveFromFEN(const std::string & fen) {
+        const bool b = readFEN(fen, COM::position,true);
+        if (!b) Logging::LogIt(Logging::logFatal) << "Illegal FEN " << fen;
+        stm = COM::position.c == Co_White ? stm_white : stm_black;
+        return b;
+    }
+
+    void newgame(){
+        mode = m_force;
+        stm = stm_white;
+    }
+
     void init(){
         Logging::ct = Logging::CT_xboard;
         Logging::LogIt(Logging::logInfo) << "Init xboard" ;
         COM::init();
         display = false;
+        ponder = p_off;
+        newgame();
     }
 
     void setFeature(){
@@ -39,38 +68,48 @@ namespace XBoard{
         Logging::LogIt(Logging::logInfo) << "XBOARD applying move " << ToString(m);
         if(!COM::makeMove(m,false,"")){ // make move
             Logging::LogIt(Logging::logInfo) << "Bad opponent move ! " << mstr << ToString(COM::position) ;
-            COM::mode = COM::m_force;
+            mode = m_force;
             return false;
         }
         else {
-            COM::stm = COM::opponent(COM::stm);
+            stm = opponent(stm);
             COM::moves.push_back(m);
         }
         return true;
+    }
+
+    void moveApplied(bool success){
+        if ( success){
+            // switch stm
+            stm = opponent(stm);
+        }
+        else{
+            mode = m_force;
+        }
     }
 
     bool replay(size_t nbmoves){
         assert(nbmoves < COM::moves.size());
         COM::State previousState = COM::state;
         COM::stop();
-        COM::mode = COM::m_force;
+        mode = m_force;
         std::vector<Move> vm = COM::moves;
-        if (!COM::sideToMoveFromFEN(GetFEN(COM::initialPos))) return false;
-        COM::initialPos = COM::position;
+        if (!sideToMoveFromFEN(GetFEN(initialPos))) return false;
+        initialPos = COM::position;
         COM::moves.clear();
         for(size_t k = 0 ; k < nbmoves; ++k){
             if(!COM::makeMove(vm[k],false,"")){ // make move
                 Logging::LogIt(Logging::logInfo) << "Bad move ! " << ToString(vm[k]);
                 Logging::LogIt(Logging::logInfo) << ToString(COM::position) ;
-                COM::mode = COM::m_force;
+                mode = m_force;
                 return false;
             }
             else {
-                COM::stm = COM::opponent(COM::stm);
+                stm = opponent(stm);
                 COM::moves.push_back(vm[k]);
             }
         }
-        if ( previousState == COM::st_analyzing ) { COM::mode = COM::m_analyze; }
+        if ( previousState == COM::st_analyzing ) { mode = m_analyze; }
         return true;
     }
 
@@ -79,15 +118,15 @@ namespace XBoard{
 
         bool iterate = true;
         while(iterate) {
-            Logging::LogIt(Logging::logInfo) << "XBoard: mode  (before command)" << (int)COM::mode ;
-            Logging::LogIt(Logging::logInfo) << "XBoard: stm   (before command)" << (int)COM::stm  ;
+            Logging::LogIt(Logging::logInfo) << "XBoard: mode  (before command)" << (int)mode ;
+            Logging::LogIt(Logging::logInfo) << "XBoard: stm   (before command)" << (int)stm  ;
             Logging::LogIt(Logging::logInfo) << "XBoard: state (before command)" << (int)COM::state;
             bool commandOK = true;
             int once = 0;
             while(once++ == 0 || !commandOK){ // loop until a good command is found
                 commandOK = true;
                 COM::readLine(); // read next command !
-                if      (COM::command == "force")   COM::mode = COM::m_force;
+                if      (COM::command == "force")   mode = m_force;
                 else if (COM::command == "xboard")  Logging::LogIt(Logging::logInfo) << "This is minic!" ;
                 else if (COM::command == "post")    display = true;
                 else if (COM::command == "nopost")  display = false;
@@ -105,14 +144,15 @@ namespace XBoard{
                 else if (COM::command == "new"){ // not following protocol, should set infinite depth search
                     COM::stop();
                     COM::init();
-                    if (!COM::sideToMoveFromFEN(startPosition)){ commandOK = false; }
-                    COM::initialPos = COM::position;
+                    newgame();
+                    if (!sideToMoveFromFEN(startPosition)){ commandOK = false; }
+                    initialPos = COM::position;
                     DynamicConfig::FRC = false;
                     COM::moves.clear();
-                    COM::mode = (COM::Mode)((int)COM::stm); ///@todo this is so wrong !
-                    if(COM::mode != COM::m_analyze){
-                        COM::mode = COM::m_play_black;
-                        COM::stm = COM::stm_white;
+                    mode = (Mode)((int)stm); ///@todo this is so wrong !
+                    if(mode != m_analyze){
+                        mode = m_play_black;
+                        stm = stm_white;
                     }
                 }
                 else if (strncmp(COM::command.c_str(),"variant",7) == 0){
@@ -123,21 +163,21 @@ namespace XBoard{
                 }
                 else if (COM::command == "white"){ // deprecated
                     COM::stop();
-                    COM::mode = COM::m_play_black;
-                    COM::stm = COM::stm_white;
+                    mode = m_play_black;
+                    stm = stm_white;
                 }
                 else if (COM::command == "black"){ // deprecated
                     COM::stop();
-                    COM::mode = COM::m_play_white;
-                    COM::stm = COM::stm_black;
+                    mode = m_play_white;
+                    stm = stm_black;
                 }
                 else if (COM::command == "go"){
                     COM::stop();
-                    COM::mode = (COM::Mode)((int)COM::stm);
+                    mode = (Mode)((int)stm);
                 }
                 else if (COM::command == "playother"){
                     COM::stop();
-                    COM::mode = (COM::Mode)((int)COM::opponent(COM::stm));
+                    mode = (Mode)((int)opponent(stm));
                 }
                 else if ( strncmp(COM::command.c_str(),"usermove",8) == 0){
                     if (!receiveOppMove(COM::command)) commandOK = false;
@@ -147,28 +187,28 @@ namespace XBoard{
                     std::string fen(COM::command);
                     const size_t p = COM::command.find("setboard");
                     fen = fen.substr(p+8);
-                    if (!COM::sideToMoveFromFEN(fen)){ commandOK = false; }
-                    COM::initialPos = COM::position;
+                    if (!sideToMoveFromFEN(fen)){ commandOK = false; }
+                    initialPos = COM::position;
                     COM::moves.clear();
                 }
                 else if ( strncmp(COM::command.c_str(),"result",6) == 0){
                     COM::stop();
-                    COM::mode = COM::m_force;
+                    mode = m_force;
                 }
                 else if (COM::command == "analyze"){
                     COM::stop();
-                    COM::mode = COM::m_analyze;
+                    mode = m_analyze;
                 }
                 else if (COM::command == "exit"){
                     COM::stop();
-                    COM::mode = COM::m_force;
+                    mode = m_force;
                 }
                 else if (COM::command == "easy"){
                     COM::stopPonder();
-                    COM::ponder = COM::p_off;
+                    ponder = p_off;
                 }
                 else if (COM::command == "hard"){
-                    COM::ponder = COM::p_on;
+                    ponder = p_on;
                 }
                 else if (COM::command == "quit"){iterate = false;}
                 else if (COM::command == "pause"){
@@ -254,19 +294,16 @@ namespace XBoard{
                 else if ( !receiveOppMove(COM::command)) Logging::LogIt(Logging::logInfo) << "Xboard does not know this command \"" << COM::command << "\"";
             } // readline
 
-            Logging::LogIt(Logging::logInfo) << "XBoard: mode  (after command)" << (int)COM::mode ;
-            Logging::LogIt(Logging::logInfo) << "XBoard: stm   (after command)" << (int)COM::stm  ;
+            Logging::LogIt(Logging::logInfo) << "XBoard: mode  (after command)" << (int)mode ;
+            Logging::LogIt(Logging::logInfo) << "XBoard: stm   (after command)" << (int)stm  ;
             Logging::LogIt(Logging::logInfo) << "XBoard: state (after command)" << (int)COM::state;
 
-            bool searchLaunched = false;
-
             // move as computer if mode is equal to stm
-            if((int)COM::mode == (int)COM::stm && COM::state == COM::st_none) {
+            if((int)mode == (int)stm && COM::state == COM::st_none) {
                 COM::state = COM::st_searching;
                 Logging::LogIt(Logging::logInfo) << "xboard search launched";
                 COM::thinkAsync();
                 Logging::LogIt(Logging::logInfo) << "xboard async started";
-                searchLaunched = true;
             }
             
             /*
@@ -275,27 +312,18 @@ namespace XBoard{
             if((int)COM::mode == (int)COM::opponent(COM::stm) && COM::ponder == COM::p_on && COM::state == COM::st_none) {
                 COM::state = COM::st_pondering;
                 Logging::LogIt(Logging::logInfo) << "xboard search launched (pondering)";
-                TimeMan::isPondering = true;
+                ThreadPool::instance().main().isPondering = true;
                 COM::thinkAsync();
                 Logging::LogIt(Logging::logInfo) << "xboard async started (pondering)";
-                searchLaunched = true;
             }
             */
             
-            if(COM::mode == COM::m_analyze && COM::state == COM::st_none){
+            if(mode == m_analyze && COM::state == COM::st_none){
                 COM::state = COM::st_analyzing;
                 Logging::LogIt(Logging::logInfo) << "xboard search launched (analysis)";
-                TimeMan::isAnalysis = true;
+                ThreadPool::instance().main().isAnalysis = true;
                 COM::thinkAsync();
                 Logging::LogIt(Logging::logInfo) << "xboard async started (analysis)";
-                searchLaunched = true;
-            }
-
-            if ( searchLaunched ){
-               std::this_thread::sleep_for(std::chrono::milliseconds(20)); // let the search starts if needed...
-               ///@todo there is a race condition here if a stop command (coming from easy for instance) is
-               // triggered just after pondering is launched. Stopflag is then set to true by search() after being set to false by stop()
-               // this is really bad and should be fixed !!!                
             }
 
         } // while true

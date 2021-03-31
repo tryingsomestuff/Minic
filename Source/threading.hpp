@@ -42,13 +42,15 @@ public:
     void setup();
     [[nodiscard]] Searcher & main();
     void distributeData(const ThreadData & data);
-    void startSearch(const ThreadData & d);
-    void startOthers();
+    void startSearch(const ThreadData & d); // non-blocking
+    void startOthers(); // non-blocking
     void wait(bool otherOnly = false);
-    void stop();
+    void stop(); // non-blocking
+
     // gathering counter information from all threads
     [[nodiscard]] Counter counter(Stats::StatId id, bool forceLocal = false) const;
     void DisplayStats()const;
+
     void clearGame();
     void clearSearch();
 

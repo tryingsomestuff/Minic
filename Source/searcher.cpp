@@ -2,8 +2,11 @@
 
 #include "logging.hpp"
 
+#include "com.hpp"
+#include "xboard.hpp"
+
 TimeType Searcher::getCurrentMoveMs() {
-    if (TimeMan::isPondering || TimeMan::isAnalysis) {
+    if (ThreadPool::instance().main().isPondering || ThreadPool::instance().main().isAnalysis) {
         return INFINITETIME;
     }
     
@@ -44,6 +47,7 @@ ScoreType Searcher::drawScore() { return -1 + 2*((stats.counters[Stats::sid_node
 void Searcher::idleLoop(){
     while (true){
         std::unique_lock<std::mutex> lock(_mutex);
+        Logging::LogIt(Logging::logInfo) << "being of idleloop " << id() ;
         _searching = false;
         _cv.notify_one(); // Wake up anyone waiting for search finished
         _cv.wait(lock, [&]{ return _searching; });
@@ -52,7 +56,8 @@ void Searcher::idleLoop(){
             return;
         }
         lock.unlock();
-        searchLauncher();
+        searchLauncher(); // blocking
+        Logging::LogIt(Logging::logInfo) << "end of idleloop " << id() ;
     }
 }
 
@@ -60,24 +65,37 @@ void Searcher::startThread(){
     std::lock_guard<std::mutex> lock(_mutex);
     Logging::LogIt(Logging::logInfo) << "Starting worker " << id() ;
     _searching = true;
+    stopFlag = false;
     _cv.notify_one(); // Wake up the thread in idleLoop()
 }
 
 void Searcher::wait(){
     std::unique_lock<std::mutex> lock(_mutex);
-    _cv.wait(lock, [&]{ return !_searching; });
+    _cv.wait(lock, [&]{ return !_searching; }); 
 }
 
 // multi-threaded search (blocking call)
 void Searcher::searchLauncher(){
     Logging::LogIt(Logging::logInfo) << "Search launched for thread " << id() ;
-    if ( isMainThread() ){ ThreadPool::instance().startOthers(); } // started other threads first but they are locked for now ...
-    // so here search(...) will update the thread _data structure
+    // starts other threads first but they are locked for now ...
+    if ( isMainThread() ){ ThreadPool::instance().startOthers(); } 
+    // so here search() will update the thread _data structure
     search();
     if ( isMainThread() ){
-        ///@todo add a busy wait to wait for stop for being sent if ponder or analysis and stop is still false (see ##busy wait outside)
-        // now stop other threads
-        ThreadPool::instance().stop(); 
+        // wait for "ponderhit" or "stop" in case search returned too soon        
+        if ( (ThreadPool::instance().main().isPondering || ThreadPool::instance().main().isAnalysis) ){
+            Logging::LogIt(Logging::logInfo) << "Waiting for ponderhit or stop ...";
+            while(ThreadPool::instance().main().isPondering || ThreadPool::instance().main().isAnalysis){} // see COM::stop()
+            Logging::LogIt(Logging::logInfo) << "... ok";
+        }
+
+        // now send stopflag to all threads
+        ThreadPool::instance().stop();
+        ThreadPool::instance().wait(true);
+
+        // send pv (move and ponder move in practice) to COM 
+        bool success = COM::receiveMoves(_data.best,_data.pv.size()>1?_data.pv[1]:INVALIDMOVE);
+        if ( Logging::ct == Logging::CT_xboard) XBoard::moveApplied(success);
     }
 }
 
@@ -91,7 +109,7 @@ bool   Searcher::isMainThread()const {
 
 Searcher::Searcher(size_t n):_index(n),_exit(false),_searching(true),_stdThread(&Searcher::idleLoop, this){
     startTime   = Clock::now();
-    wait();
+    wait(); // wait for idleLoop to start in the _stdThread object
 }
 
 Searcher::~Searcher(){
