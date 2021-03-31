@@ -60,7 +60,7 @@ void ThreadPool::distributeData(const ThreadData & data){
 // distribute data and call main thread search (this is a non-blocking function)
 void ThreadPool::startSearch(const ThreadData & data){ 
     Logging::LogIt(Logging::logInfo) << "Search Sync" ;
-    wait();
+    main().wait();
     Logging::LogIt(Logging::logInfo) << "Locking other threads";
     Searcher::startLock.store(true);
     distributeData(data);
@@ -84,6 +84,7 @@ void ThreadPool::clearSearch(){
 }
 
 void ThreadPool::stop(){ 
+    Logging::LogIt(Logging::logInfo) << "Setting stopflag on every threads";
     for (auto & s : *this) 
        (*s).stopFlag = true;
 }

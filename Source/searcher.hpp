@@ -18,6 +18,10 @@
  */
 struct Searcher{
     bool stopFlag = true;
+
+    bool isPondering = false;
+    bool isAnalysis = false;
+
     MoveDifficultyUtil::MoveDifficulty moveDifficulty = MoveDifficultyUtil::MD_std;
     TimeType currentMoveMs = 777;
     

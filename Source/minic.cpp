@@ -59,7 +59,7 @@ void finalize(){
     Logging::LogIt(Logging::logInfo) << "Stopping all threads";
     ThreadPool::instance().stop();
     Logging::LogIt(Logging::logInfo) << "Waiting all threads";
-    ThreadPool::instance().wait();
+    ThreadPool::instance().wait(); ///@todo is this necessary ?
     Logging::LogIt(Logging::logInfo) << "Deleting all threads";
     ThreadPool::instance().resize(0);
     Logging::LogIt(Logging::logInfo) << "Syncing process...";
