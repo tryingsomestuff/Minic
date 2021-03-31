@@ -131,6 +131,7 @@ void Searcher::search(){
     if ( Skill::enabled() && !DynamicConfig::nodesBasedLevel ){
         DynamicConfig::multiPV = std::max(DynamicConfig::multiPV,4u);
     }
+    Logging::LogIt(Logging::logInfo) << "MultiPV " << DynamicConfig::multiPV;
     std::vector<RootScores> multiPVMoves(DynamicConfig::multiPV,{INVALIDMOVE,-MATE});
     // in multipv mode _data.score cannot be use a the aspiration loop score
     std::vector<ScoreType> currentScore(DynamicConfig::multiPV,0);
@@ -225,7 +226,7 @@ void Searcher::search(){
                     beta  = std::min(MATE,ScoreType((alpha + beta)/2));
                     alpha = std::max(ScoreType(score - delta), ScoreType(-MATE) );
                     Logging::LogIt(Logging::logInfo) << "Increase window alpha " << alpha << ".." << beta;
-                    if ( isMainThread() && DynamicConfig::multiPV == 1){
+                    if ( isMainThread() && DynamicConfig::multiPV == 1 ){
                         PVList pv2;
                         TT::getPV(p, *this, pv2);
                         displayGUI(depth,_data.seldepth,score,pv2,multi+1,"!");
@@ -236,7 +237,7 @@ void Searcher::search(){
                     --windowDepth; // from Ethereal
                     beta  = std::min(ScoreType(score + delta), ScoreType( MATE) );
                     Logging::LogIt(Logging::logInfo) << "Increase window beta "  << alpha << ".." << beta;
-                    if ( isMainThread() && DynamicConfig::multiPV == 1){
+                    if ( isMainThread() && DynamicConfig::multiPV == 1 ){
                         PVList pv2;
                         TT::getPV(p, *this, pv2);
                         displayGUI(depth,_data.seldepth,score,pv2,multi+1,"?");
@@ -274,10 +275,12 @@ void Searcher::search(){
                    _data.score = score;
                 }
                 
-                if ( isMainThread() && multi == 0 ){
+                if ( isMainThread() ){
                     // output to GUI
                     displayGUI(depth,_data.seldepth,_data.score,pvLoc,multi+1);
-
+                }
+                
+                if ( isMainThread() && multi == 0 ){
                     // store current depth info 
                     getSearchData().scores[depth] = _data.score;
                     getSearchData().nodes[depth] = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
