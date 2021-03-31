@@ -47,7 +47,7 @@ ScoreType Searcher::drawScore() { return -1 + 2*((stats.counters[Stats::sid_node
 void Searcher::idleLoop(){
     while (true){
         std::unique_lock<std::mutex> lock(_mutex);
-        Logging::LogIt(Logging::logInfo) << "being of idleloop " << id() ;
+        Logging::LogIt(Logging::logInfo) << "beging of idleloop " << id() ;
         _searching = false;
         _cv.notify_one(); // Wake up anyone waiting for search finished
         _cv.wait(lock, [&]{ return _searching; });
