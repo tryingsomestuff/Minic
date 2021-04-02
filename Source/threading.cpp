@@ -107,3 +107,8 @@ Counter ThreadPool::counter(Stats::StatId id, bool forceLocal) const {
        return n;
     }
 }
+
+std::ostream & operator<<(std::ostream & of, const ThreadData & d){
+    of << GetFEN(d.p) << " " << d.score << " " << ToString(d.best) << " " << ToString(d.pv);
+    return of;
+}

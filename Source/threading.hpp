@@ -30,6 +30,8 @@ struct ThreadData{
     SearchData datas;
 };
 
+std::ostream & operator<<(std::ostream & of, const ThreadData & d);
+
 /*!
  * This is the singleton pool of threads
  * The search function here is the main entry point for an analysis

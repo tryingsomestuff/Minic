@@ -257,6 +257,7 @@ void Searcher::writeToGenFile(const Position & p){
     const bool oldDisableTT = DynamicConfig::disableTT;
     const unsigned int oldLevel = DynamicConfig::level;
     const unsigned int oldRandomOpen = DynamicConfig::randomOpen;
+    const unsigned int oldRandomPly = DynamicConfig::randomPly;
 
     // init sub search
     cos.subSearch = true;
@@ -286,14 +287,14 @@ void Searcher::writeToGenFile(const Position & p){
                gp = MEntry.gp;
             }
             DepthType depth(DynamicConfig::genFenDepth*gp + DynamicConfig::genFenDepthEG*(1.f-gp));
-            unsigned int oldRandomPly = DynamicConfig::randomPly;
             DynamicConfig::randomPly = 0;
             data.p = pQuiet;
             data.depth = depth;
-            ThreadPool::instance().distributeData(data);
+            cos.setData(data);
             cos.search();
-            data = ThreadPool::instance().main().getData();
-            DynamicConfig::randomPly = oldRandomPly;
+            data = cos.getData();
+
+            // std::cout << data << std::endl; // debug
         }
     }
 
@@ -302,6 +303,7 @@ void Searcher::writeToGenFile(const Position & p){
     DynamicConfig::disableTT = oldDisableTT;
     DynamicConfig::level = oldLevel;
     DynamicConfig::randomOpen = oldRandomOpen;
+    DynamicConfig::randomPly = oldRandomPly;    
     cos.subSearch = false;
 
     // end of sub search
