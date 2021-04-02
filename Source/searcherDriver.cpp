@@ -358,6 +358,7 @@ pvsout:
         if (!subSearch) Logging::LogIt(Logging::logWarn) << "Empty pv" ;
     }
     else{
+        _data.best = _data.pv[0]; // setting this thread best move
         // !!! warning: when skill uses multiPV returned move shall be used and not first move of pv in receiveMoves !!!
         if ( Skill::enabled() && !DynamicConfig::nodesBasedLevel){
             _data.best = Skill::pick(multiPVMoves);
