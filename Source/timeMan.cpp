@@ -70,7 +70,7 @@ TimeType GetNextMSecPerMove(const Position & p){
         Logging::LogIt(Logging::logInfo) << "UCI style TC";
         const TimeType msecMargin = std::max(std::min(msecMarginMax, TimeType(msecMarginCoef*msecUntilNextTC)), msecMarginMin);
         if (!isDynamic) Logging::LogIt(Logging::logFatal) << "bad timing configuration ... (missing dynamic UCI time info)";
-        else { ms = std::min(msecUntilNextTC - msecMargin, TimeType((msecUntilNextTC - msecMargin) / float(moveToGo) + msecIncLoc)*(ThreadPool::instance().main().isPondering?3:2)/2); }
+        else { ms = std::min(msecUntilNextTC - msecMargin, TimeType((msecUntilNextTC - msecMargin) / float(moveToGo) + msecIncLoc)*(ThreadPool::instance().main().getData().isPondering?3:2)/2); }
     }
 
     else{ // sudden death style
@@ -82,7 +82,7 @@ TimeType GetNextMSecPerMove(const Position & p){
         assert(msecUntilNextTC >= 0);
         const TimeType msecMargin = std::max(std::min(msecMarginMax, TimeType(msecMarginCoef*msecUntilNextTC)), msecMarginMin);
         if (!isDynamic) Logging::LogIt(Logging::logFatal) << "bad timing configuration ... (missing dynamic time info for sudden death style TC)";
-        else ms = std::min(msecUntilNextTC - msecMargin, TimeType((msecUntilNextTC - msecMargin) / (float)nmoves + msecIncLoc )*(ThreadPool::instance().main().isPondering?3:2)/2);
+        else ms = std::min(msecUntilNextTC - msecMargin, TimeType((msecUntilNextTC - msecMargin) / (float)nmoves + msecIncLoc )*(ThreadPool::instance().main().getData().isPondering?3:2)/2);
     }
 
     targetTime = std::max(ms-overHead, TimeType(20)); // if not much time left, let's try that hoping for a friendly GUI...

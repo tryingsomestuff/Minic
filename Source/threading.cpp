@@ -1,5 +1,6 @@
 #include "threading.hpp"
 
+#include "com.hpp"
 #include "distributed.h"
 #include "dynamicConfig.hpp"
 #include "logging.hpp"
@@ -61,6 +62,9 @@ void ThreadPool::distributeData(const ThreadData & data){
 void ThreadPool::startSearch(const ThreadData & data){ 
     Logging::LogIt(Logging::logInfo) << "Search Sync" ;
     main().wait();
+    // COM state must be updated quite late, when all threads or done
+    COM::state = data.isAnalysis ? COM::st_analyzing : data.isPondering ? COM::st_pondering : COM::st_searching; // update COM state
+    Logging::LogIt(Logging::logInfo) << "state set to " << (int)COM::state;
     Logging::LogIt(Logging::logInfo) << "Locking other threads";
     Searcher::startLock.store(true);
     distributeData(data);

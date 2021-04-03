@@ -101,14 +101,13 @@ namespace UCI {
                         COM::depth = MAX_DEPTH; // infinity
 
                         DynamicConfig::mateFinder = false;
-                        ThreadPool::instance().main().isPondering = false;
-                        ThreadPool::instance().main().isAnalysis = false;
+                        COM::State state = COM::st_searching; //uci is/should be stateless but we use this anyhow
 
                         std::string param;
                         bool noParam = true;
                         while (iss >> param) {
                             Logging::LogIt(Logging::logInfo) << "received parameter " << param;
-                            if      (param == "infinite")    { noParam = false; TimeMan::msecPerMove = INFINITETIME; ThreadPool::instance().main().isAnalysis = true;}
+                            if      (param == "infinite")    { noParam = false; TimeMan::msecPerMove = INFINITETIME; state = COM::st_analyzing;}
                             else if (param == "depth")       { noParam = false; int d = 0;  iss >> d; COM::depth = d; TimeMan::msecPerMove = INFINITETIME;}
                             else if (param == "movetime")    { noParam = false; iss >> TimeMan::msecPerMove; }
                             else if (param == "nodes")       { noParam = false; iss >> TimeMan::maxNodes; }
@@ -118,7 +117,7 @@ namespace UCI {
                             else if (param == "winc" )       { int t; iss >> t; if (COM::position.c == Co_White) { TimeMan::msecInc = t; TimeMan::isDynamic = true; }}
                             else if (param == "binc" )       { int t; iss >> t; if (COM::position.c == Co_Black) { TimeMan::msecInc = t; TimeMan::isDynamic = true; }}
                             else if (param == "movestogo")   { noParam = false; int t; iss >> t; TimeMan::moveToGo = t; TimeMan::isDynamic = true; }
-                            else if (param == "ponder")      { ThreadPool::instance().main().isPondering = true; }
+                            else if (param == "ponder")      { state = COM::st_pondering; }
                             else if (param == "mate")        { int d = 0;  iss >> d; COM::depth = d; DynamicConfig::mateFinder = true; TimeMan::msecPerMove = INFINITETIME; }
                             else                             { Logging::LogIt(Logging::logGUI) << "info string " << param << " not implemented"; }
                         }
@@ -127,8 +126,7 @@ namespace UCI {
                            COM::depth = 10; TimeMan::msecPerMove = INFINITETIME;
                         }
                         Logging::LogIt(Logging::logInfo) << "uci search launched";
-                        COM::state = COM::st_searching; //uci is/should be stateless but we use this anyhow
-                        COM::thinkAsync();
+                        COM::thinkAsync(state);
                         Logging::LogIt(Logging::logInfo) << "uci async started";
                     }
                     else { Logging::LogIt(Logging::logGUI) << "info string search command received, but no position specified"; }
@@ -136,7 +134,8 @@ namespace UCI {
             }
             else if (uciCommand == "ponderhit") {
                 Logging::LogIt(Logging::logInfo) << "received command ponderhit";
-                ThreadPool::instance().main().isPondering = false;
+                COM::state = COM::st_searching; // will allow move reporting to GUI
+                ThreadPool::instance().main().getData().isPondering = false; // will unlock busy loop
             }
             else if (uciCommand == "ucinewgame") {
                 if (ThreadPool::instance().main().searching()) { Logging::LogIt(Logging::logGUI) << "info string " << uciCommand << " received but search in progress ..."; }
@@ -151,7 +150,6 @@ namespace UCI {
             else if (uciCommand == "print") { Logging::LogIt(Logging::logInfo) << ToString(COM::position); }
             else if (uciCommand == "d") { Logging::LogIt(Logging::logInfo) << GetFEN(COM::position); }
             else if (uciCommand == "quit") {
-                COM::stopPonder();
                 COM::stop();
                 iterate = false;
             }

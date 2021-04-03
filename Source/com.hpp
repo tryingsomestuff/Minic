@@ -31,7 +31,7 @@ namespace COM {
 
     [[nodiscard]] bool receiveMoves(Move bestmove, Move pondermove);
 
-    void thinkAsync();
+    void thinkAsync(State givenState);
 
     [[nodiscard]] Move moveFromCOM(std::string mstr);
 }

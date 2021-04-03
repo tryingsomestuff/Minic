@@ -7,7 +7,7 @@
 
 namespace COM {
 
-    State state; // this is redundant with Mode & Ponder...
+    State state;
     std::string command;
     Position position;
     DepthType depth;
@@ -37,6 +37,7 @@ namespace COM {
         char buffer[4096]; // only usefull if WITH_MPI
         // only main process read stdin
         if ( Distributed::isMainProcess()){ 
+           Logging::LogIt(Logging::logInfo) << "Waiting for input ...";
            command.clear();
            std::getline(std::cin, command);
            Logging::LogIt(Logging::logInfo) << "Received command : \"" << command << "\"";
@@ -82,7 +83,9 @@ namespace COM {
         bool ret = true;
 
         Logging::LogIt(Logging::logInfo) << "search async done (state " << (int)state << ")";
-        if (state == st_searching) { // in searching mode we have to return a move to GUI
+        // in searching only mode we have to return a move to GUI
+        // but curiously uci protocol also expect a bestMove when pondering ??? to wake up the GUI ??
+        if (state == st_searching || state == st_pondering) { 
             Logging::LogIt(Logging::logInfo) << "sending move to GUI " << ToString(move);
             if (move == INVALIDMOVE) { 
                 ret = false;
@@ -122,9 +125,6 @@ namespace COM {
         std::lock_guard<std::mutex> lock(mutex); // cannot stop and start at the same time
         Logging::LogIt(Logging::logInfo) << "Stopping previous search";
         ThreadPool::instance().stop();
-        // some state shall be reset here
-        ThreadPool::instance().main().isAnalysis = false;
-        ThreadPool::instance().main().isPondering = false;
     }
 
     void stopPonder() {
@@ -134,9 +134,9 @@ namespace COM {
     }
 
     // this is a non-blocking call (search wise)
-    void thinkAsync() {
+    void thinkAsync(COM::State givenState) {
         std::lock_guard<std::mutex> lock(mutex); // cannot stop and start at the same time
-        Logging::LogIt(Logging::logInfo) << "Thinking... (state " << (int)state << ")";
+        Logging::LogIt(Logging::logInfo) << "Thinking... (state was " << (int)state << " going for " << (int)givenState << ")";
         if (depth < 0) depth = MAX_DEPTH;
         Logging::LogIt(Logging::logInfo) << "depth          " << (int)depth;
         // here is computed the time for next search (and store it in the Threadpool for now)
@@ -147,7 +147,9 @@ namespace COM {
         // will later be copied on all thread data and thus "reset" them
         ThreadData d;
         d.p = position;
-        d.depth = depth;        
+        d.depth = depth;
+        d.isAnalysis = givenState == st_analyzing;
+        d.isPondering = givenState == st_pondering;
         ThreadPool::instance().startSearch(d); // data is copied !
     }
 
