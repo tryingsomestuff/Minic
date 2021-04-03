@@ -300,9 +300,8 @@ namespace XBoard{
 
             // move as computer if mode is equal to stm
             if((int)mode == (int)stm && COM::state == COM::st_none) {
-                COM::state = COM::st_searching;
                 Logging::LogIt(Logging::logInfo) << "xboard search launched";
-                COM::thinkAsync();
+                COM::thinkAsync(COM::st_searching);
                 Logging::LogIt(Logging::logInfo) << "xboard async started";
             }
             
@@ -310,21 +309,21 @@ namespace XBoard{
             ///@todo Ponder won't work here because after as search() is async we are probably stuck in readLine() ...
             // if not our turn, and ponder is on, let's think ...
             if((int)COM::mode == (int)COM::opponent(COM::stm) && COM::ponder == COM::p_on && COM::state == COM::st_none) {
-                COM::state = COM::st_pondering;
                 Logging::LogIt(Logging::logInfo) << "xboard search launched (pondering)";
-                ThreadPool::instance().main().isPondering = true;
-                COM::thinkAsync();
+                COM::thinkAsync(COM::st_pondering);
                 Logging::LogIt(Logging::logInfo) << "xboard async started (pondering)";
             }
             */
             
             if(mode == m_analyze && COM::state == COM::st_none){
-                COM::state = COM::st_analyzing;
                 Logging::LogIt(Logging::logInfo) << "xboard search launched (analysis)";
-                ThreadPool::instance().main().isAnalysis = true;
-                COM::thinkAsync();
+                COM::thinkAsync(COM::st_analyzing);
                 Logging::LogIt(Logging::logInfo) << "xboard async started (analysis)";
             }
+
+            Logging::LogIt(Logging::logInfo) << "XBoard: mode  (after search launch)" << (int)mode ;
+            Logging::LogIt(Logging::logInfo) << "XBoard: stm   (after search launch)" << (int)stm  ;
+            Logging::LogIt(Logging::logInfo) << "XBoard: state (after search launch)" << (int)COM::state;
 
         } // while true
         Logging::LogIt(Logging::logInfo) << "Leaving Xboard loop";

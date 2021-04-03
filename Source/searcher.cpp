@@ -6,7 +6,7 @@
 #include "xboard.hpp"
 
 TimeType Searcher::getCurrentMoveMs() {
-    if (ThreadPool::instance().main().isPondering || ThreadPool::instance().main().isAnalysis) {
+    if (ThreadPool::instance().main().getData().isPondering || ThreadPool::instance().main().getData().isAnalysis) {
         return INFINITETIME;
     }
     
@@ -71,6 +71,7 @@ void Searcher::startThread(){
 
 void Searcher::wait(){
     std::unique_lock<std::mutex> lock(_mutex);
+    Logging::LogIt(Logging::logInfo) << "Thread waiting " << id();
     _cv.wait(lock, [&]{ return !_searching; }); 
 }
 
@@ -83,16 +84,24 @@ void Searcher::searchLauncher(){
     search();
     if ( isMainThread() ){
         // wait for "ponderhit" or "stop" in case search returned too soon        
-        if ( (ThreadPool::instance().main().isPondering || ThreadPool::instance().main().isAnalysis) ){
+        if ( !stopFlag && (getData().isPondering || getData().isAnalysis) ){
             Logging::LogIt(Logging::logInfo) << "Waiting for ponderhit or stop ...";
-            while(ThreadPool::instance().main().isPondering || ThreadPool::instance().main().isAnalysis){} // see COM::stop()
+            while(!stopFlag && (getData().isPondering || getData().isAnalysis)){
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
             Logging::LogIt(Logging::logInfo) << "... ok";
         }
 
         // now send stopflag to all threads
         ThreadPool::instance().stop();
+        // and wait for them
         ThreadPool::instance().wait(true);
 
+        // sync point for distributed search
+        Distributed::winFence(Distributed::_winStop);
+        Distributed::syncStat();
+        Distributed::syncTT();
+ 
         // send pv (move and ponder move in practice) to COM 
         bool success = COM::receiveMoves(_data.best,_data.pv.size()>1?_data.pv[1]:INVALIDMOVE);
         if ( Logging::ct == Logging::CT_xboard) XBoard::moveApplied(success);

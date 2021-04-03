@@ -28,6 +28,8 @@ struct ThreadData{
     Move best = INVALIDMOVE;
     PVList pv;
     SearchData datas;
+    bool isPondering = false;
+    bool isAnalysis = false;    
 };
 
 std::ostream & operator<<(std::ostream & of, const ThreadData & d);
