@@ -9,6 +9,8 @@ import struct
 
 netversion = struct.unpack('!f', bytes.fromhex('c0ffee00'))[0]
 
+withFactorizer = False
+
 def piece_position(i):
   return i % (12 * 64)
 
@@ -70,13 +72,14 @@ class NNUE(pl.LightningModule):
     BASE = 128
     funcs = [piece_position,]
 
-    # without factorization
-    #self.white_affine = nn.Linear(halfka.half_ka_numel(), BASE)
-    #self.black_affine = nn.Linear(halfka.half_ka_numel(), BASE)
-
-    # with factorization
-    self.white_affine = FeatureTransformer(funcs, BASE)
-    self.black_affine = FeatureTransformer(funcs, BASE)
+    if withFactorizer:
+      # with factorization
+      self.white_affine = FeatureTransformer(funcs, BASE)
+      self.black_affine = FeatureTransformer(funcs, BASE)
+    else:
+      # without factorization
+      self.white_affine = nn.Linear(halfka.half_ka_numel(), BASE)
+      self.black_affine = nn.Linear(halfka.half_ka_numel(), BASE)
 
     # dropout seems necessary when using factorizer to avoid over-fitting
     self.d0 = nn.Dropout(p=0.05)
@@ -108,13 +111,17 @@ class NNUE(pl.LightningModule):
     
     # standard relu
     base = F.relu(us * torch.cat([w_, b_], dim=1) + (1.0 - us) * torch.cat([b_, w_], dim=1))
-    base = self.d0(base)
+    if withFactorizer:
+      base = self.d0(base)
     x = F.relu(self.fc0(base))
-    x = self.d1(x)
+    if withFactorizer:
+      x = self.d1(x)
     x = torch.cat([x, F.relu(self.fc1(x))], dim=1)
-    x = self.d2(x)
+    if withFactorizer:
+      x = self.d2(x)
     x = torch.cat([x, F.relu(self.fc2(x))], dim=1)
-    x = self.d3(x)
+    if withFactorizer:
+      x = self.d3(x)
     x = self.fc3(x)
     return x
 
@@ -161,17 +168,18 @@ class NNUE(pl.LightningModule):
     
     joined = np.array([]) # netversion
 
-    # with factorizer
-    joined = join_param(joined, self.white_affine.virtual_weight().t())
-    joined = join_param(joined, self.white_affine.virtual_bias())
-    joined = join_param(joined, self.black_affine.virtual_weight().t())
-    joined = join_param(joined, self.black_affine.virtual_bias())
-
-    # without factorizer
-    #joined = join_param(joined, self.white_affine.weight.data.t())
-    #joined = join_param(joined, self.white_affine.bias.data)
-    #joined = join_param(joined, self.black_affine.weight.data.t())
-    #joined = join_param(joined, self.black_affine.bias.data)
+    if withFactorizer:
+      # with factorizer
+      joined = join_param(joined, self.white_affine.virtual_weight().t())
+      joined = join_param(joined, self.white_affine.virtual_bias())
+      joined = join_param(joined, self.black_affine.virtual_weight().t())
+      joined = join_param(joined, self.black_affine.virtual_bias())
+    else:
+      # without factorizer
+      joined = join_param(joined, self.white_affine.weight.data.t())
+      joined = join_param(joined, self.white_affine.bias.data)
+      joined = join_param(joined, self.black_affine.weight.data.t())
+      joined = join_param(joined, self.black_affine.bias.data)
 
     # fc0
     joined = join_param(joined, self.fc0.weight.data.t())
