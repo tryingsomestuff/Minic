@@ -654,13 +654,6 @@ void TexelTuning(const std::string & filename) {
         }
     }
 
-    for (auto f = F_material ; f <= F_pawnStruct; ++f){
-        for (auto g = F_material ; g <= f; ++g){
-            guess["secondorder"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::secondOrderFeature[f][g][MG],  -3000, 3000, "secondorder"  + std::to_string(f) + "_" + std::to_string(g)));
-            guess["secondorder"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::secondOrderFeature[f][g][EG],  -3000, 3000, "secondorderEG"  + std::to_string(f) + "_" + std::to_string(g)));
-        }
-    }
-
     guess["scaling"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::scalingFactorWin , -1000, 1000, "scalingFactorWin"));
     guess["scaling"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::scalingFactorHardWin, -1000, 1000, "scalingFactorHardWin"));
     guess["scaling"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::scalingFactorLikelyDraw, -1000, 1000, "scalingFactorLikelyDraw"));

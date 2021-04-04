@@ -84,7 +84,7 @@ namespace COM {
 
         Logging::LogIt(Logging::logInfo) << "search async done (state " << (int)state << ")";
         // in searching only mode we have to return a move to GUI
-        // but curiously uci protocol also expect a bestMove when pondering ??? to wake up the GUI ??
+        // but curiously uci protocol also expect a bestMove when pondering to wake up the GUI
         if (state == st_searching || state == st_pondering) { 
             Logging::LogIt(Logging::logInfo) << "sending move to GUI " << ToString(move);
             if (move == INVALIDMOVE) { 

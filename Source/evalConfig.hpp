@@ -13,8 +13,6 @@ namespace EvalConfig {
 extern CONST_TEXEL_TUNING EvalScore imbalance_mines[5][5];
 extern CONST_TEXEL_TUNING EvalScore imbalance_theirs[5][5];
 
-extern CONST_TEXEL_TUNING EvalScore secondOrderFeature[6][6];
-
 extern CONST_TEXEL_TUNING EvalScore PST[PieceShift][NbSquare];
 
 extern CONST_TEXEL_TUNING EvalScore   pawnShieldBonus        ;
