@@ -19,6 +19,12 @@
 
 #define NNUEALIGNMENT 64
 
+#ifdef __clang__
+#define CONSTEXPR 
+#else
+#define CONSTEXPR constexpr
+#endif
+
 namespace nnue{
 
 // quantization constantes
@@ -246,7 +252,7 @@ struct stack_vector{
 */
   
   template<typename F>
-  constexpr stack_vector<T, dim>& apply_(F&& f){
+  CONSTEXPR stack_vector<T, dim>& apply_(F&& f){
     #pragma omp simd
     for(size_t i = 0; i < dim; ++i){
       data[i] = f(data[i]);
@@ -255,7 +261,7 @@ struct stack_vector{
   }
 
   template <typename T2>
-  constexpr stack_vector<T, dim>& add_(const T2* other){
+  CONSTEXPR stack_vector<T, dim>& add_(const T2* other){
     #pragma omp simd
     for(size_t i = 0; i < dim; ++i){
       data[i] += other[i];
@@ -264,7 +270,7 @@ struct stack_vector{
   }
   
   template <typename T2>
-  constexpr stack_vector<T, dim>& sub_(const T2* other){
+  CONSTEXPR stack_vector<T, dim>& sub_(const T2* other){
     #pragma omp simd
     for(size_t i = 0; i < dim; ++i){
       data[i] -= other[i];
@@ -273,7 +279,7 @@ struct stack_vector{
   }
   
   template <typename T2, typename T3>
-  constexpr stack_vector<T, dim>& fma_(const T2 c, const T3* other){
+  CONSTEXPR stack_vector<T, dim>& fma_(const T2 c, const T3* other){
     #pragma omp simd
     for(size_t i = 0; i < dim; ++i){
       data[i] += c * other[i];
@@ -286,7 +292,7 @@ struct stack_vector{
     return data[0];
   }
   
-  static constexpr stack_vector<T, dim> zeros(){
+  static CONSTEXPR stack_vector<T, dim> zeros(){
     stack_vector<T, dim> result{};
     #pragma omp simd
     for(size_t i = 0; i < dim; ++i){
@@ -296,7 +302,7 @@ struct stack_vector{
   }
   
   template <typename T2>
-  static constexpr stack_vector<T, dim> from(const T2* data){
+  static CONSTEXPR stack_vector<T, dim> from(const T2* data){
     stack_vector<T, dim> result{};
     #pragma omp simd
     for(size_t i = 0; i < dim; ++i){
@@ -319,7 +325,7 @@ std::ostream& operator<<(std::ostream& ostr, const stack_vector<T, dim>& vec){
 }
 
 template<typename T, size_t dim0, size_t dim1>
-constexpr stack_vector<T, dim0 + dim1> splice(const stack_vector<T, dim0>& a, const stack_vector<T, dim1>& b){
+CONSTEXPR stack_vector<T, dim0 + dim1> splice(const stack_vector<T, dim0>& a, const stack_vector<T, dim1>& b){
   auto c = stack_vector<T, dim0 + dim1>::zeros();
   #pragma omp simd
   for(size_t i = 0; i < dim0; ++i){
@@ -345,7 +351,7 @@ struct stack_affine{
   alignas(NNUEALIGNMENT) WT W[W_numel];
   alignas(NNUEALIGNMENT) BT b[b_numel];
   
-  constexpr stack_vector<BT, dim1> forward(const stack_vector<BT, dim0>& x) const {
+  CONSTEXPR stack_vector<BT, dim1> forward(const stack_vector<BT, dim0>& x) const {
     auto result = stack_vector<BT, dim1>::from(b);
     #pragma omp simd
     for(size_t i = 0; i < dim0; ++i){
@@ -356,7 +362,7 @@ struct stack_affine{
   
   ///@todo forward that return type of next layer
   template<typename T>
-  constexpr stack_vector<BT, dim1> forward(const stack_vector<T, dim0>& x) const {
+  CONSTEXPR stack_vector<BT, dim1> forward(const stack_vector<T, dim0>& x) const {
     auto result = stack_vector<BT, dim1>::from(b);
     #pragma omp simd
     for(size_t i = 0; i < dim0; ++i){

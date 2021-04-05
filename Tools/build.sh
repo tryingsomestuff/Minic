@@ -18,6 +18,8 @@ if grep "^#define WITH_MPI" Source/definition.hpp ; then
 else
    export CXX=g++
    export CC=gcc
+   #export CXX=clang++-10
+   #export CC=clang-10
 fi
 
 which $CXX
