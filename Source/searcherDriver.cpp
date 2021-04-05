@@ -42,7 +42,7 @@ void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestSco
     Logging::LogIt(Logging::logGUI) << str.str();
 }
 
-void Searcher::search(){
+void Searcher::searchDriver(){
 
     stopFlag = false; ///@todo shall be only done outside ?
 
@@ -325,37 +325,29 @@ void Searcher::search(){
 
 pvsout:
 
+    // for all thread, best is set to first pv move 
+    // this will be changed later for main thread to take skill or best move into account
+    _data.best = _data.pv[0]; // setting this thread best move
+
     if ( isMainThread() ){
+
         // in case of very very short depth or time, "others" threads may still be blocked
         Logging::LogIt(Logging::logInfo) << "Unlocking other threads (end of search)";
         startLock.store(false);
-    }
 
-    if (isMainThread()){
-       // display search statistics
-       if ( Distributed::worldSize > 1 ){
-          Distributed::showStat();
-       }
-       else{
-          ThreadPool::instance().DisplayStats(); 
-       }
-    }
-
-    // all threads are updating there output values but main one is looking for the longest pv
-    // note that depth, score, seldepth and pv are already updated on-the-fly
-    if (_data.pv.empty()){
-        _data.best = INVALIDMOVE;
-        if (!subSearch) Logging::LogIt(Logging::logWarn) << "Empty pv" ;
-    }
-    else{
-        _data.best = _data.pv[0]; // setting this thread best move
-        // !!! warning: when skill uses multiPV returned move shall be used and not first move of pv in receiveMoves !!!
-        if ( Skill::enabled() && !DynamicConfig::nodesBasedLevel){
-            _data.best = Skill::pick(multiPVMoves);
+        // all threads are updating there output values but main one is looking for the longest pv
+        // note that depth, score, seldepth and pv are already updated on-the-fly
+        if (_data.pv.empty()){
+            _data.best = INVALIDMOVE;
+            if (!subSearch) Logging::LogIt(Logging::logWarn) << "Empty pv" ;
         }
-        else {
-            // get pv from best (deepest) threads
-            if ( isMainThread()){
+        else{
+            // !!! warning: when skill uses multiPV returned move shall be used and not first move of pv in receiveMoves !!!
+            if ( Skill::enabled() && !DynamicConfig::nodesBasedLevel){
+                _data.best = Skill::pick(multiPVMoves);
+            }
+            else {
+                // get pv from best (deepest) threads
                 DepthType bestDepth = _data.depth;
                 size_t bestThreadId = 0;
                 for ( auto & s : ThreadPool::instance()){
@@ -371,11 +363,44 @@ pvsout:
                 _data.best = _data.pv[0];
             }
         }
-    }
 
 #ifdef WITH_GENFILE
-    // calling writeToGenFile at each root node
-    if ( isMainThread() && DynamicConfig::genFen && p.halfmoves >= DynamicConfig::randomPly && DynamicConfig::level != 0 ) writeToGenFile(p);
+       // calling writeToGenFile at each root node
+       if ( DynamicConfig::genFen && p.halfmoves >= DynamicConfig::randomPly && DynamicConfig::level != 0 ) writeToGenFile(p);
 #endif
+
+        // wait for "ponderhit" or "stop" in case search returned too soon        
+        if ( !stopFlag && (getData().isPondering || getData().isAnalysis) ){
+            Logging::LogIt(Logging::logInfo) << "Waiting for ponderhit or stop ...";
+            while(!stopFlag && (getData().isPondering || getData().isAnalysis)){
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+            Logging::LogIt(Logging::logInfo) << "... ok";
+        }
+
+        // now send stopflag to all threads
+        ThreadPool::instance().stop();
+        // and wait for them
+        ThreadPool::instance().wait(true);
+
+        // sync point for distributed search
+        Distributed::winFence(Distributed::_winStop);
+        Distributed::syncStat();
+        Distributed::syncTT();
+
+        // display search statistics (only when all threads and process are done and sync)
+        if ( Distributed::worldSize > 1 ){
+          Distributed::showStat();
+        }
+        else{
+          ThreadPool::instance().DisplayStats(); 
+        }
+
+        // send move and ponder move to GUI
+        const bool success = COM::receiveMoves(_data.best,_data.pv.size()>1?_data.pv[1]:INVALIDMOVE);
+        // update position state for Xboard
+        if ( Logging::ct == Logging::CT_xboard) XBoard::moveApplied(success); 
+    
+    } // isMainThread()
 
 }

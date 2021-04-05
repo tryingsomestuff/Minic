@@ -492,7 +492,7 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
 				ThreadData data;
 				data.p = tpos;
 				data.depth = DynamicConfig::genFenDepth;
-                cos.search();
+                cos.searchDriver();
 				data = ThreadPool::instance().main().getData();
                 p.score = data.score;
 				ofs.write((char*)&p, sizeof(PackedSfenValue));

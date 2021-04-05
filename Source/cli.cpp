@@ -100,7 +100,7 @@ Move analyze(const Position & p, DepthType depth, bool openBenchOutput = false){
     d.p = p;
     d.depth = depth;
     ThreadPool::instance().distributeData(d);
-    ThreadPool::instance().main().search();
+    ThreadPool::instance().main().searchDriver();
     d = ThreadPool::instance().main().getData();
     Logging::LogIt(Logging::logInfo) << "Best move is " << ToString(d.best) << " " << (int)d.depth << " " << d.score << " pv : " << ToString(ThreadPool::instance().main().getData().pv);
 
