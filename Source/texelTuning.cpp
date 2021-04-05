@@ -64,7 +64,7 @@ double Sigmoid(Position & p) {
     Move m = INVALIDMOVE;
     DepthType d = 64;
     ScoreType s = 0;
-    ThreadPool::instance().main().search(p,m,4,s,seldepth);
+    ThreadPool::instance().main().searchDriver(p,m,4,s,seldepth);
     s *= (p.c == Co_White ? +1:-1);
     */
 

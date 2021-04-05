@@ -80,32 +80,8 @@ void Searcher::searchLauncher(){
     Logging::LogIt(Logging::logInfo) << "Search launched for thread " << id() ;
     // starts other threads first but they are locked for now ...
     if ( isMainThread() ){ ThreadPool::instance().startOthers(); } 
-    // so here search() will update the thread _data structure
-    search();
-    if ( isMainThread() ){
-        // wait for "ponderhit" or "stop" in case search returned too soon        
-        if ( !stopFlag && (getData().isPondering || getData().isAnalysis) ){
-            Logging::LogIt(Logging::logInfo) << "Waiting for ponderhit or stop ...";
-            while(!stopFlag && (getData().isPondering || getData().isAnalysis)){
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            }
-            Logging::LogIt(Logging::logInfo) << "... ok";
-        }
-
-        // now send stopflag to all threads
-        ThreadPool::instance().stop();
-        // and wait for them
-        ThreadPool::instance().wait(true);
-
-        // sync point for distributed search
-        Distributed::winFence(Distributed::_winStop);
-        Distributed::syncStat();
-        Distributed::syncTT();
- 
-        // send pv (move and ponder move in practice) to COM 
-        bool success = COM::receiveMoves(_data.best,_data.pv.size()>1?_data.pv[1]:INVALIDMOVE);
-        if ( Logging::ct == Logging::CT_xboard) XBoard::moveApplied(success);
-    }
+    // so here searchDriver() will update the thread _data structure
+    searchDriver();
 }
 
 size_t Searcher::id()const {
@@ -300,7 +276,7 @@ void Searcher::writeToGenFile(const Position & p){
             data.p = pQuiet;
             data.depth = depth;
             cos.setData(data);
-            cos.search();
+            cos.searchDriver();
             data = cos.getData();
 
             // std::cout << data << std::endl; // debug
