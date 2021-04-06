@@ -25,6 +25,12 @@ struct Stats{
     static const std::array<std::string,sid_maxid> Names;
     std::array<Counter,sid_maxid> counters;
     
+#ifdef WITH_STATS    
+    inline void incr(StatId id){ ++counters[id];}
+#else
+    inline void incr(StatId ){ }
+#endif
+
     void init(){ Logging::LogIt(Logging::logInfo) << "Init stat" ;  counters.fill(0ull); }
 };
 

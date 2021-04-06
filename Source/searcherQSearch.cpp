@@ -104,12 +104,12 @@ ScoreType Searcher::qsearch(ScoreType alpha,
     else if ( p.lastMove == NULLMOVE && ply > 0 ) evalScore = 2*ScaleScore(EvalConfig::tempo,stack[p.halfmoves-1].data.gp) - stack[p.halfmoves-1].eval; // skip eval if nullmove just applied ///@todo wrong ! gp is 0 here so tempoMG must be == tempoEG
     else{
         if (ttHit){ // if we had a TT hit (with or without associated move), we can use its eval instead of calling eval()
-            ++stats.counters[Stats::sid_ttschits];
+            stats.incr(Stats::sid_ttschits);
             evalScore = e.e;
             /*
             const Hash matHash = MaterialHash::getMaterialHash(p.mat);
             if ( matHash != nullHash){
-               ++stats.counters[Stats::sid_materialTableHits];
+               stats.incr(Stats::sid_materialTableHits);
                const MaterialHash::MaterialHashEntry & MEntry = MaterialHash::materialHashTable[matHash];
                data.gp = MEntry.gp;
             }
@@ -117,13 +117,13 @@ ScoreType Searcher::qsearch(ScoreType alpha,
                ScoreType matScoreW = 0;
                ScoreType matScoreB = 0;
                data.gp = gamePhase(p,matScoreW,matScoreB);
-               ++stats.counters[Stats::sid_materialTableMiss];
+               stats.incr(Stats::sid_materialTableMiss);
             }
             */
             data.gp = 0.5; // force mid game value in sorting ... affect only quiet move, so here check evasion ...
         }
         else {
-            ++stats.counters[Stats::sid_ttscmiss];
+            stats.incr(Stats::sid_ttscmiss);
             evalScore = eval(p, data, *this);
         }
     }
@@ -140,7 +140,7 @@ ScoreType Searcher::qsearch(ScoreType alpha,
         //if ( !ttHit ) TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(evalScore,ply),createHashScore(evalScore,ply),TT::B_none,-2); 
         return evalScore;
     }
-    if ( !isInCheck && SearchConfig::doQDeltaPruning && staticScore + qDeltaMargin(p) < alpha ) return ++stats.counters[Stats::sid_delta],alpha;
+    if ( !isInCheck && SearchConfig::doQDeltaPruning && staticScore + qDeltaMargin(p) < alpha ) return stats.incr(Stats::sid_delta),alpha;
     if ( evalScore > alpha) alpha = evalScore;
 
     TT::Bound b = TT::B_alpha;
@@ -199,8 +199,8 @@ ScoreType Searcher::qsearch(ScoreType alpha,
         if (validTTmove && sameMove(e.m, *it)) continue; // already tried
         if (!isInCheck) {
             if (onlyRecapture && Move2To(*it) != recapture ) continue; // only recapture now ...
-            if (!SEE_GE(p,*it,0)) {++stats.counters[Stats::sid_qsee];continue;}
-            if (SearchConfig::doQFutility && staticScore + SearchConfig::qfutilityMargin[evalScoreIsHashScore] + (isPromotionCap(*it) ? (Values[P_wq+PieceShift]-Values[P_wp+PieceShift]) : 0 ) + (Move2Type(*it)==T_ep ? Values[P_wp+PieceShift] : PieceTools::getAbsValue(p, Move2To(*it))) <= alphaInit) {++stats.counters[Stats::sid_qfutility];continue;}
+            if (!SEE_GE(p,*it,0)) {stats.incr(Stats::sid_qsee);continue;}
+            if (SearchConfig::doQFutility && staticScore + SearchConfig::qfutilityMargin[evalScoreIsHashScore] + (isPromotionCap(*it) ? (Values[P_wq+PieceShift]-Values[P_wp+PieceShift]) : 0 ) + (Move2Type(*it)==T_ep ? Values[P_wp+PieceShift] : PieceTools::getAbsValue(p, Move2To(*it))) <= alphaInit) {stats.incr(Stats::sid_qfutility);continue;}
         }
         Position p2 = p;
 #ifdef WITH_NNUE        
