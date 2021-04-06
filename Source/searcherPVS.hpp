@@ -82,7 +82,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
 
     // probe TT
     TT::Entry e;
-    bool ttDepthOk = TT::getEntry(*this, p, pHash, depth, e);
+    const bool ttDepthOk = TT::getEntry(*this, p, pHash, depth, e);
     TT::Bound bound = TT::Bound(e.b & ~TT::B_allFlags);
     if (ttDepthOk) { // if depth of TT entry is enough
         if ( !rootnode && ( (bound == TT::B_alpha && e.s <= alpha) || (bound == TT::B_beta  && e.s >= beta) || (bound == TT::B_exact) ) ) {
@@ -133,12 +133,12 @@ ScoreType Searcher::pvs(ScoreType alpha,
     else if ( p.lastMove == NULLMOVE && ply > 0 ) evalScore = 2*ScaleScore(EvalConfig::tempo,stack[p.halfmoves-1].data.gp) - stack[p.halfmoves-1].eval; // skip eval if nullmove just applied ///@todo wrong ! gp is 0 here so tempoMG must be == tempoEG
     else{
         if (ttHit){ // if we had a TT hit (with or without associated move), we can use its eval instead of calling eval()
-            ++stats.counters[Stats::sid_ttschits];
+            stats.incr(Stats::sid_ttschits);
             evalScore = e.e;
             // look for a material match (to get game phase)
             const Hash matHash = MaterialHash::getMaterialHash(p.mat);
             if ( matHash != nullHash ){
-               ++stats.counters[Stats::sid_materialTableHits];
+               stats.incr(Stats::sid_materialTableHits);
                const MaterialHash::MaterialHashEntry & MEntry = MaterialHash::materialHashTable[matHash];
                data.gp = MEntry.gp;
             }
@@ -146,12 +146,12 @@ ScoreType Searcher::pvs(ScoreType alpha,
                ScoreType matScoreW = 0;
                ScoreType matScoreB = 0;
                data.gp = gamePhase(p,matScoreW,matScoreB);
-               ++stats.counters[Stats::sid_materialTableMiss];
+               stats.incr(Stats::sid_materialTableMiss);
             }
             ///@todo data.danger, data.mob are not filled in case of TT hit !!
         }
         else { // if no TT hit call evaluation !
-            ++stats.counters[Stats::sid_ttscmiss];
+            stats.incr(Stats::sid_ttscmiss);
             evalScore = eval(p, data, *this);
         }
     }
@@ -169,23 +169,23 @@ ScoreType Searcher::pvs(ScoreType alpha,
     bool moveGenerated = false;
     bool capMoveGenerated = false;
     bool futility = false, lmp = false, /*mateThreat = false,*/ historyPruning = false, CMHPruning = false;
+    MiniMove refutation = INVALIDMINIMOVE;
+    DepthType marginDepth = std::max(1,depth-(evalScoreIsHashScore?e.d:0)); // a depth that take TT depth into account
     const bool isNotEndGame = p.mat[p.c][M_t]> 0; ///@todo better ?
     const bool improving = (!isInCheck && ply > 1 && stack[p.halfmoves].eval >= stack[p.halfmoves-2].eval);
-    DepthType marginDepth = std::max(1,depth-(evalScoreIsHashScore?e.d:0)); // a depth that take TT depth into account
-    MiniMove refutation = INVALIDMINIMOVE;
-
+    
     // forward prunings
     if ( !DynamicConfig::mateFinder && canPrune && !isInCheck /*&& !isMateScore(beta)*/ && !pvnode){ ///@todo removing the !isMateScore(beta) is not losing that much elo and allow for better check mate finding ...
         // static null move
-        if (SearchConfig::doStaticNullMove && !isMateScore(evalScore) && isNotEndGame && depth <= SearchConfig::staticNullMoveMaxDepth[evalScoreIsHashScore] && evalScore >= beta + SearchConfig::staticNullMoveDepthInit[evalScoreIsHashScore] + SearchConfig::staticNullMoveDepthCoeff[evalScoreIsHashScore] * depth) return ++stats.counters[Stats::sid_staticNullMove], evalScore;
+        if (SearchConfig::doStaticNullMove && !isMateScore(evalScore) && isNotEndGame && depth <= SearchConfig::staticNullMoveMaxDepth[evalScoreIsHashScore] && evalScore >= beta + SearchConfig::staticNullMoveDepthInit[evalScoreIsHashScore] + SearchConfig::staticNullMoveDepthCoeff[evalScoreIsHashScore] * depth) return stats.incr(Stats::sid_staticNullMove), evalScore;
 
         // razoring
         ScoreType rAlpha = alpha - SearchConfig::razoringMarginDepthInit[evalScoreIsHashScore] - SearchConfig::razoringMarginDepthCoeff[evalScoreIsHashScore]*marginDepth;
         if ( SearchConfig::doRazoring && depth <= SearchConfig::razoringMaxDepth[evalScoreIsHashScore] && evalScore <= rAlpha ){
-            ++stats.counters[Stats::sid_razoringTry];
+            stats.incr(Stats::sid_razoringTry);
             const ScoreType qScore = qsearch(alpha, beta, p, ply, seldepth, 0, true, pvnode, isInCheck);
             if ( stopFlag ) return STOPSCORE;
-            if ( qScore <= alpha || (depth < 2 && evalScoreIsHashScore) ) return ++stats.counters[Stats::sid_razoring],qScore;
+            if ( qScore <= alpha || (depth < 2 && evalScoreIsHashScore) ) return stats.incr(Stats::sid_razoring),qScore;
         }
 
         // null move (warning, mobility info is only available if no TT hit)
@@ -196,7 +196,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
             stack[p.halfmoves].p.lastMove != NULLMOVE && 
             ply >= (unsigned int)nullMoveMinPly ) {
             PVList nullPV;
-            ++stats.counters[Stats::sid_nullMoveTry];
+            stats.incr(Stats::sid_nullMoveTry);
             const DepthType R = depth / 4 + 3 + std::min((evalScore - beta) / SearchConfig::nullMoveDynamicDivisor, 5); // adaptative
             ///@todo try to minimize sid_nullMoveTry2 versus sid_nullMove
             const ScoreType nullIIDScore = evalScore; // pvs<false, false>(beta - 1, beta, p, std::max(depth/4,1), evaluator, ply, nullPV, seldepth, isInCheck, !cutNode);
@@ -205,7 +205,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
                 const DepthType nullDepth = depth-R;
                 TT::getEntry(*this, p, pHash, nullDepth, nullE);
                 if (nullE.h == nullHash || nullE.s >= beta ) { // avoid null move search if TT gives a score < beta for the same depth ///@todo check this again !
-                    ++stats.counters[Stats::sid_nullMoveTry2];
+                    stats.incr(Stats::sid_nullMoveTry2);
                     Position pN = p;
                     applyNull(*this,pN);
                     assert(pN.halfmoves < MAX_PLY && pN.halfmoves >= 0);
@@ -220,16 +220,16 @@ ScoreType Searcher::pvs(ScoreType alpha,
                     if (nullscore >= beta){ // verification search
                        /*
                        if ( (!isNotEndGame || depth > SearchConfig::nullMoveVerifDepth) && nullMoveMinPly == 0){
-                          ++stats.counters[Stats::sid_nullMoveTry3];
+                          stats.incr(Stats::sid_nullMoveTry3);
                           nullMoveMinPly = ply + 3*nullDepth/4;
                           nullscore = pvs<false>(beta - 1, beta, p, nullDepth, evaluator, ply+1, nullPV, seldepth, isInCheck, !cutNode, false);
                           nullMoveMinPly = 0;
                           if (stopFlag) return STOPSCORE;
-                          if (nullscore >= beta ) return ++stats.counters[Stats::sid_nullMove2], nullscore;
+                          if (nullscore >= beta ) return stats.incr(Stats::sid_nullMove2), nullscore;
                        }
                        else{
                            */
-                          return ++stats.counters[Stats::sid_nullMove], (isMateScore(nullscore) ? beta : nullscore);
+                          return stats.incr(Stats::sid_nullMove), (isMateScore(nullscore) ? beta : nullscore);
                        //}
                     }
                 }
@@ -238,7 +238,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
 
         // ProbCut
         if ( SearchConfig::doProbcut && depth >= SearchConfig::probCutMinDepth && !isMateScore(beta)){
-          ++stats.counters[Stats::sid_probcutTry];
+          stats.incr(Stats::sid_probcutTry);
           int probCutCount = 0;
           const ScoreType betaPC = beta + SearchConfig::probCutMargin;
           capMoveGenerated = true;
@@ -264,11 +264,11 @@ ScoreType Searcher::pvs(ScoreType alpha,
             PVList pcPV;
             if (stopFlag) return STOPSCORE;
             if (scorePC >= betaPC){
-                ++stats.counters[Stats::sid_probcutTry2];
+                stats.incr(Stats::sid_probcutTry2);
                 scorePC = -pvs<false>(-betaPC, -betaPC+1, p2, depth-SearchConfig::probCutMinDepth+1, ply+1, pcPV, seldepth, isAttacked(p2, kingSquare(p2)), !cutNode, true);
             }
             if (stopFlag) return STOPSCORE;
-            if (scorePC >= betaPC) return ++stats.counters[Stats::sid_probcut], scorePC;
+            if (scorePC >= betaPC) return stats.incr(Stats::sid_probcut), scorePC;
           }
         }
     }
@@ -276,7 +276,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
     // IID
     if (!validTTmove /*|| e.d < depth-4*/){
         if ( ((pvnode && depth >= SearchConfig::iidMinDepth) || (cutNode && depth >= SearchConfig::iidMinDepth2)) ){ ///@todo try with cutNode only ?
-            ++stats.counters[Stats::sid_iid];
+            stats.incr(Stats::sid_iid);
             PVList iidPV;
             pvs<pvnode>(alpha, beta, p, depth/2, ply, iidPV, seldepth, isInCheck, cutNode, false, skipMoves);
             if (stopFlag) return STOPSCORE;
@@ -351,22 +351,22 @@ ScoreType Searcher::pvs(ScoreType alpha,
             DepthType extension = 0;
             if ( DynamicConfig::level>80){
                // is in check extension if pvnode
-               //if (EXTENDMORE(extension) && pvnode && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension;
+               //if (EXTENDMORE(extension) && pvnode && isInCheck) stats.incr(Stats::sid_checkExtension),++extension;
                // castling extension
-               //if (EXTENDMORE(extension) && isCastling(e.m) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
+               //if (EXTENDMORE(extension) && isCastling(e.m) ) stats.incr(Stats::sid_castlingExtension),++extension;
                // Botvinnik-Markoff Extension
-               //if (EXTENDMORE(extension) && ply > 1 && VALIDMOVE(stack[p.halfmoves].threat) && VALIDMOVE(stack[p.halfmoves - 2].threat) && (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) || (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat)))) ++stats.counters[Stats::sid_BMExtension], ++extension;
+               //if (EXTENDMORE(extension) && ply > 1 && VALIDMOVE(stack[p.halfmoves].threat) && VALIDMOVE(stack[p.halfmoves - 2].threat) && (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) || (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat)))) stats.incr(Stats::sid_BMExtension), ++extension;
                // mate threat extension (from null move)
-               //if (EXTENDMORE(extension) && mateThreat) ++stats.counters[Stats::sid_mateThreatExtension],++extension;
+               //if (EXTENDMORE(extension) && mateThreat) stats.incr(Stats::sid_mateThreatExtension),++extension;
                // simple recapture extension
-               //if (EXTENDMORE(extension) && VALIDMOVE(p.lastMove) && Move2Type(p.lastMove) == T_capture && to == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; // recapture
+               //if (EXTENDMORE(extension) && VALIDMOVE(p.lastMove) && Move2Type(p.lastMove) == T_capture && to == Move2To(p.lastMove)) stats.incr(Stats::sid_recaptureExtension),++extension; // recapture
                // gives check extension
-               //if (EXTENDMORE(extension) && isCheck ) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
+               //if (EXTENDMORE(extension) && isCheck ) stats.incr(Stats::sid_checkExtension2),++extension; // we give check with a non risky move
                /*
                // CMH extension
                if (EXTENDMORE(extension) && isQuiet) {
                    const int pp = (p.board_const(Move2From(e.m)) + PieceShift) * NbSquare + to;
-                   if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= HISTORY_MAX / 2 && cmhPtr[1][pp] >= HISTORY_MAX / 2) ++stats.counters[Stats::sid_CMHExtension], ++extension;
+                   if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= HISTORY_MAX / 2 && cmhPtr[1][pp] >= HISTORY_MAX / 2) stats.incr(Stats::sid_CMHExtension), ++extension;
                }
                */
                // advanced pawn push extension
@@ -374,11 +374,11 @@ ScoreType Searcher::pvs(ScoreType alpha,
                if (EXTENDMORE(extension) && isAdvancedPawnPush ) {
                    const BitBoard pawns[2] = { p2.pieces_const<P_wp>(Co_White), p2.pieces_const<P_wp>(Co_Black) };
                    const BitBoard passed[2] = { BBTools::pawnPassed<Co_White>(pawns[Co_White], pawns[Co_Black]), BBTools::pawnPassed<Co_Black>(pawns[Co_Black], pawns[Co_White]) };
-                   if ( SquareToBitboard(to) & passed[p.c] ) ++stats.counters[Stats::sid_pawnPushExtension], ++extension;
+                   if ( SquareToBitboard(to) & passed[p.c] ) stats.incr(Stats::sid_pawnPushExtension), ++extension;
                }
                */
                // threat on queen extension
-               //if (EXTENDMORE(extension) && pvnode && (p.pieces_const<P_wq>(p.c) && isQuiet && PieceTools::getPieceType(p, Move2From(e.m)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, e.m, 0)) ++stats.counters[Stats::sid_queenThreatExtension], ++extension;
+               //if (EXTENDMORE(extension) && pvnode && (p.pieces_const<P_wq>(p.c) && isQuiet && PieceTools::getPieceType(p, Move2From(e.m)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, e.m, 0)) stats.incr(Stats::sid_queenThreatExtension), ++extension;
                // singular move extension
                if (EXTENDMORE(extension) && withoutSkipMove && depth >= SearchConfig::singularExtensionDepth && !rootnode && !isMateScore(e.s) && bound == TT::B_beta && e.d >= depth - 3){
                    const ScoreType betaC = e.s - 2*depth; ///@todo NNUEscaling?
@@ -388,18 +388,18 @@ ScoreType Searcher::pvs(ScoreType alpha,
                    const ScoreType score = pvs<false>(betaC - 1, betaC, p, depth/2, ply, sePV, seSeldetph, isInCheck, cutNode, false, &skip);
                    if (stopFlag) return STOPSCORE;
                    if (score < betaC) { // TT move is singular
-                       ++stats.counters[Stats::sid_singularExtension],/*ttMoveSingularExt=!ttMoveIsCapture,*/++extension;
+                       stats.incr(Stats::sid_singularExtension),/*ttMoveSingularExt=!ttMoveIsCapture,*/++extension;
                        // TT move is "very singular" : kind of single reply extension
-                       if ( score < betaC - 4*depth) ++stats.counters[Stats::sid_singularExtension2],++extension; ///@todo NNUEscaling
+                       if ( score < betaC - 4*depth) stats.incr(Stats::sid_singularExtension2),++extension; ///@todo NNUEscaling
                    }
                    // multi cut (at least the TT move and another move are above beta)
                    else if ( betaC >= beta){
-                       return ++stats.counters[Stats::sid_singularExtension3],betaC; // fail-soft
+                       return stats.incr(Stats::sid_singularExtension3),betaC; // fail-soft
                    }
                    // if TT move is above beta, we try a reduce search early to see if another move is above beta (from SF)
                    else if ( e.s >= beta ){
                        const ScoreType score2 = pvs<false>(beta - 1, beta, p, depth-4, ply, sePV, seSeldetph, isInCheck, cutNode, false, &skip);
-                       if ( score2 > beta ) return ++stats.counters[Stats::sid_singularExtension4],beta; // fail-hard
+                       if ( score2 > beta ) return stats.incr(Stats::sid_singularExtension4),beta; // fail-hard
                    }
                }
             }
@@ -415,13 +415,13 @@ ScoreType Searcher::pvs(ScoreType alpha,
                     hashBound = TT::B_exact;
                     if (pvnode) updatePV(pv, e.m, childPV);
                     if (ttScore >= beta) {
-                        ++stats.counters[Stats::sid_ttbeta];
+                        stats.incr(Stats::sid_ttbeta);
                         // increase history bonus of this move
                         if ( !isInCheck && isQuiet /*&& depth > 1*/) updateTables(*this, p, depth + (ttScore > (beta + SearchConfig::betaMarginDynamicHistory)), ply, e.m, TT::B_beta, cmhPtr);
                         TT::setEntry(*this,pHash,e.m,createHashScore(ttScore,ply),createHashScore(evalScore,ply),TT::Bound(TT::B_beta|(ttPV?TT::B_ttPVFlag:TT::B_none)|(bestMoveIsCheck?TT::B_isCheckFlag:TT::B_none)|(isInCheck?TT::B_isInCheckFlag:TT::B_none)),depth);
                         return ttScore;
                     }
-                    ++stats.counters[Stats::sid_ttalpha];
+                    stats.incr(Stats::sid_ttalpha);
                     alpha = ttScore;
                 }
             }
@@ -485,22 +485,22 @@ ScoreType Searcher::pvs(ScoreType alpha,
         DepthType extension = 0;
         if ( DynamicConfig::level>80){ 
            // is in check extension if pvnode
-           //if (EXTENDMORE(extension) && pvnode && isInCheck) ++stats.counters[Stats::sid_checkExtension],++extension; // we are in check (extension)
+           //if (EXTENDMORE(extension) && pvnode && isInCheck) stats.incr(Stats::sid_checkExtension),++extension; // we are in check (extension)
            // castling extension
-           //if (EXTENDMORE(extension) && isCastling(*it) ) ++stats.counters[Stats::sid_castlingExtension],++extension;
+           //if (EXTENDMORE(extension) && isCastling(*it) ) stats.incr(Stats::sid_castlingExtension),++extension;
            // Botvinnik-Markoff Extension
-           //if (EXTENDMORE(extension) && ply > 1 && stack[p.halfmoves].threat != INVALIDMOVE && stack[p.halfmoves - 2].threat != INVALIDMOVE && (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) || (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat)))) ++stats.counters[Stats::sid_BMExtension], ++extension;
+           //if (EXTENDMORE(extension) && ply > 1 && stack[p.halfmoves].threat != INVALIDMOVE && stack[p.halfmoves - 2].threat != INVALIDMOVE && (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) || (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat)))) stats.incr(Stats::sid_BMExtension), ++extension;
            // mate threat extension (from null move)
-           //if (EXTENDMORE(extension) && mateThreat && depth <= 4) ++stats.counters[Stats::sid_mateThreatExtension],++extension;
+           //if (EXTENDMORE(extension) && mateThreat && depth <= 4) stats.incr(Stats::sid_mateThreatExtension),++extension;
            // simple recapture extension
-           //if (EXTENDMORE(extension) && VALIDMOVE(p.lastMove) && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && to == Move2To(p.lastMove)) ++stats.counters[Stats::sid_recaptureExtension],++extension; //recapture
+           //if (EXTENDMORE(extension) && VALIDMOVE(p.lastMove) && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && to == Move2To(p.lastMove)) stats.incr(Stats::sid_recaptureExtension),++extension; //recapture
            // gives check extension
-           //if (EXTENDMORE(extension) && isCheck && !isBadCap(*it)) ++stats.counters[Stats::sid_checkExtension2],++extension; // we give check with a non risky move
+           //if (EXTENDMORE(extension) && isCheck && !isBadCap(*it)) stats.incr(Stats::sid_checkExtension2),++extension; // we give check with a non risky move
            // CMH extension
            /*
            if (EXTENDMORE(extension) && isQuiet) {
                const int pp = (p.board_const(Move2From(*it)) + PieceShift) * NbSquare + to;
-               if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= HISTORY_MAX/2 && cmhPtr[1][pp] >= HISTORY_MAX/2) ++stats.counters[Stats::sid_CMHExtension], ++extension;
+               if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= HISTORY_MAX/2 && cmhPtr[1][pp] >= HISTORY_MAX/2) stats.incr(Stats::sid_CMHExtension), ++extension;
            }
            */
            // advanced pawn push extension
@@ -508,23 +508,23 @@ ScoreType Searcher::pvs(ScoreType alpha,
            if (EXTENDMORE(extension) && isAdvancedPawnPush && killerT.isKiller(*it, ply) ){
                const BitBoard pawns[2] = { p2.pieces_const<P_wp>(Co_White), p2.pieces_const<P_wp>(Co_Black) };
                const BitBoard passed[2] = { BBTools::pawnPassed<Co_White>(pawns[Co_White], pawns[Co_Black]), BBTools::pawnPassed<Co_Black>(pawns[Co_Black], pawns[Co_White]) };
-               if ( (SquareToBitboard(to) & passed[p.c]) ) ++stats.counters[Stats::sid_pawnPushExtension], ++extension;
+               if ( (SquareToBitboard(to) & passed[p.c]) ) stats.incr(Stats::sid_pawnPushExtension), ++extension;
            }
            */
            // threat on queen extension
-           //if (EXTENDMORE(extension) && pvnode && firstMove && (p.pieces_const<P_wq>(p.c) && isQuiet && Move2Type(*it) == T_std && PieceTools::getPieceType(p, Move2From(*it)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, *it, 0)) ++stats.counters[Stats::sid_queenThreatExtension], ++extension;
+           //if (EXTENDMORE(extension) && pvnode && firstMove && (p.pieces_const<P_wq>(p.c) && isQuiet && Move2Type(*it) == T_std && PieceTools::getPieceType(p, Move2From(*it)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, *it, 0)) stats.incr(Stats::sid_queenThreatExtension), ++extension;
            // move that lead to endgame
            /*
            if ( EXTENDMORE(extension) && isNotEndGame && (p2.mat[p.c][M_t]+p2.mat[~p.c][M_t] == 0)){
               ++extension;
-              ++stats.counters[Stats::sid_endGameExtension];
+              stats.incr(Stats::sid_endGameExtension);
            }
            */
            // extend if quiet with good history 
            /*
            if ( EXTENDMORE(extension) && isQuiet && Move2Score(*it) > SearchConfig::historyExtensionThreshold){
               ++extension; 
-              ++stats.counters[Stats::sid_goodHistoryExtension];
+              stats.incr(Stats::sid_goodHistoryExtension);
            }
            */
         }
@@ -549,32 +549,32 @@ ScoreType Searcher::pvs(ScoreType alpha,
             const int dangerFactor          = (data.danger[p.c]+data.danger[~p.c])/SearchConfig::dangerDivisor;
             const bool isDangerPrune        = dangerFactor >= SearchConfig::dangerLimitPruning;
             const bool isDangerRed          = dangerFactor >= SearchConfig::dangerLimitReduction;
-            if ( isDangerPrune) ++stats.counters[Stats::sid_dangerPrune];
-            if ( isDangerRed)   ++stats.counters[Stats::sid_dangerReduce];
+            if ( isDangerPrune) stats.incr(Stats::sid_dangerPrune);
+            if ( isDangerRed)   stats.incr(Stats::sid_dangerReduce);
 
             // futility
-            if (futility && isPrunableStdNoCheck) {++stats.counters[Stats::sid_futility]; continue;}
+            if (futility && isPrunableStdNoCheck) {stats.incr(Stats::sid_futility); continue;}
             // LMP
             const bool moveCountPruning = validMoveCount > /*(1+(2*dangerFactor)/SearchConfig::dangerLimitPruning)**/SearchConfig::lmpLimit[improving][depth] + 2*isEmergencyDefence;
-            if (lmp && isPrunableStdNoCheck && moveCountPruning) {++stats.counters[Stats::sid_lmp]; continue;}
+            if (lmp && isPrunableStdNoCheck && moveCountPruning) {stats.incr(Stats::sid_lmp); continue;}
             // History pruning (with CMH)
-            if (historyPruning && isPrunableStdNoCheck && Move2Score(*it) < SearchConfig::historyPruningThresholdInit + marginDepth*SearchConfig::historyPruningThresholdDepth) {++stats.counters[Stats::sid_historyPruning]; continue;}
+            if (historyPruning && isPrunableStdNoCheck && Move2Score(*it) < SearchConfig::historyPruningThresholdInit + marginDepth*SearchConfig::historyPruningThresholdDepth) {stats.incr(Stats::sid_historyPruning); continue;}
             // CMH pruning alone
             if (CMHPruning && isPrunableStdNoCheck){
               const int pp = (p.board_const(Move2From(*it))+PieceShift) * NbSquare + Move2To(*it);
-              if ((!cmhPtr[0] || cmhPtr[0][pp] < 0) && (!cmhPtr[1] || cmhPtr[1][pp] < 0)) { ++stats.counters[Stats::sid_CMHPruning]; continue;}
+              if ((!cmhPtr[0] || cmhPtr[0][pp] < 0) && (!cmhPtr[1] || cmhPtr[1][pp] < 0)) { stats.incr(Stats::sid_CMHPruning); continue;}
             }
             // SEE (capture)
             if (isPrunableCap){
-               if (futility) {++stats.counters[Stats::sid_see]; continue;}
-               else if ( !rootnode && badCapScore(*it) < -(1+(6*dangerFactor)/SearchConfig::dangerLimitPruning)*SearchConfig::seeCaptureFactor*(depth+isEmergencyDefence+isEmergencyAttack)) {++stats.counters[Stats::sid_see2]; continue;}
+               if (futility) {stats.incr(Stats::sid_see); continue;}
+               else if ( !rootnode && badCapScore(*it) < -(1+(6*dangerFactor)/SearchConfig::dangerLimitPruning)*SearchConfig::seeCaptureFactor*(depth+isEmergencyDefence+isEmergencyAttack)) {stats.incr(Stats::sid_see2); continue;}
             }
             // LMR
             DepthType reduction = 0;
             if (SearchConfig::doLMR && depth >= SearchConfig::lmrMinDepth 
                && ( (isReductible && isQuiet) /*|| isPrunableCap*/ /*|| stack[p.halfmoves].eval <= alpha*/ /*|| cutNode*/ ) 
                && validMoveCount > 1 + 2*rootnode ){
-                ++stats.counters[Stats::sid_lmr];
+                stats.incr(Stats::sid_lmr);
                 reduction += SearchConfig::lmrReduction[std::min((int)depth,MAX_DEPTH-1)][std::min(validMoveCount,MAX_DEPTH)];
                 reduction += !improving + ttMoveIsCapture;
                 reduction += (cutNode && evalScore - SearchConfig::failHighReductionThresholdInit[evalScoreIsHashScore] - marginDepth*SearchConfig::failHighReductionThresholdDepth[evalScoreIsHashScore] > beta); ///@todo try without
@@ -591,18 +591,18 @@ ScoreType Searcher::pvs(ScoreType alpha,
             const DepthType nextDepth = depth-1-reduction+extension;
             // SEE (quiet)
             if ( isPrunableStdNoCheck && /*!rootnode &&*/ !SEE_GE(p,*it,-SearchConfig::seeQuietFactor*(nextDepth+isEmergencyDefence+isEmergencyAttack)*nextDepth)) {
-                ++stats.counters[Stats::sid_seeQuiet]; 
+                stats.incr(Stats::sid_seeQuiet); 
                 continue;
             }
 
             // PVS
             score = -pvs<false>(-alpha-1, -alpha, p2, nextDepth, ply+1, childPV, seldepth, isCheck, true, true);
             if ( reduction > 0 && score > alpha ){ 
-                ++stats.counters[Stats::sid_lmrFail]; childPV.clear(); 
+                stats.incr(Stats::sid_lmrFail); childPV.clear(); 
                 score = -pvs<false>(-alpha-1, -alpha, p2, depth-1+extension, ply+1, childPV, seldepth, isCheck, !cutNode, true); 
             }
             if ( pvnode && score > alpha && (rootnode || score < beta) ){ 
-                ++stats.counters[Stats::sid_pvsFail]; childPV.clear(); 
+                stats.incr(Stats::sid_pvsFail); childPV.clear(); 
                 score = -pvs<true>(-beta, -alpha, p2, depth-1+extension, ply+1, childPV, seldepth, isCheck, false, true); 
             } // potential new pv node
 
