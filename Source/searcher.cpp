@@ -276,6 +276,7 @@ void Searcher::writeToGenFile(const Position & p){
             data.p = pQuiet;
             data.depth = depth;
             cos.setData(data);
+            // do not update COM::position here
             cos.searchDriver();
             data = cos.getData();
 
