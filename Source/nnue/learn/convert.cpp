@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "definition.hpp"
+#include "com.hpp"
 #include "logging.hpp"
 #include "material.hpp"
 #include "moveGen.hpp"
@@ -492,6 +493,7 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
 				ThreadData data;
 				data.p = tpos;
 				data.depth = DynamicConfig::genFenDepth;
+				COM::position = tpos;
                 cos.searchDriver();
 				data = ThreadPool::instance().main().getData();
                 p.score = data.score;

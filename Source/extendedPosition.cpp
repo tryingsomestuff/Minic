@@ -3,6 +3,8 @@
 #if defined(WITH_TEST_SUITE) || defined(WITH_PGN_PARSER) || defined(WITH_TEXEL_TUNING)
 
 #include "logging.hpp"
+
+#include "com.hpp"
 #include "moveGen.hpp"
 #include "positionTools.hpp"
 #include "searcher.hpp"
@@ -268,6 +270,7 @@ void ExtendedPosition::test(const std::vector<std::string> & positions,
             ThreadData d;
             d.p = extP;
             ThreadPool::instance().distributeData(d);
+            COM::position = extP;
             ThreadPool::instance().main().searchDriver();
             d = ThreadPool::instance().main().getData();
             const Move bestMove = d.best;

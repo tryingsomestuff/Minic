@@ -75,7 +75,7 @@ namespace COM {
             p2.resetNNUEEvaluator(p2.Evaluator());
 #endif
             if ( !(applyMove(p2,move) && isPseudoLegal(p2,ponderMove))){
-                Logging::LogIt(Logging::logInfo) << "Illegal ponder move" << ToString(ponderMove) << ToString(p2);
+                Logging::LogIt(Logging::logInfo) << "Illegal ponder move " << ToString(ponderMove) << " " << ToString(p2);
                 ponderMove = INVALIDMOVE; // do be sure ...
             }
         }

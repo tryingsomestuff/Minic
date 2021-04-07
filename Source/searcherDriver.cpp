@@ -398,8 +398,8 @@ pvsout:
 
         // send move and ponder move to GUI
         const bool success = COM::receiveMoves(_data.best,_data.pv.size()>1?_data.pv[1]:INVALIDMOVE);
-        // update position state for Xboard
-        if ( Logging::ct == Logging::CT_xboard) XBoard::moveApplied(success); 
+        // update position state
+        XBoard::moveApplied(success); 
     
     } // isMainThread()
 
