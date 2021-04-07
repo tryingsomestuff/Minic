@@ -461,7 +461,7 @@ struct half_kp_weights{
     return *this;
   }
   
-  bool load(const std::string& path, half_kp_weights<NT,Q>& loadedWeights){
+  static bool load(const std::string& path, half_kp_weights<NT,Q>& loadedWeights){
     static const uint32_t expectedVersion = 0xc0ffee00;
     bool withVersion = false;
 #ifndef __ANDROID__
@@ -481,7 +481,7 @@ struct half_kp_weights{
 #endif
 #endif
     auto ws = weights_streamer<NT>(path);
-    loadedWeights = load(ws,withVersion);
+    loadedWeights.load(ws,withVersion);
     if ( withVersion ){
       Logging::LogIt(Logging::logInfo) << "Expected net version : " << toHexString(expectedVersion);
       Logging::LogIt(Logging::logInfo) << "Read net version     : " << toHexString(loadedWeights.version);
@@ -506,15 +506,28 @@ struct feature_transformer{
 
   constexpr stack_vector<BIT, base_dim> active() const { return active_; }
 
-  void clear(){ active_ = stack_vector<BIT, base_dim>::from(weights_ -> b); }
+  void clear(){ 
+    assert(weights_);
+    active_ = stack_vector<BIT, base_dim>::from(weights_ -> b); 
+  }
 
-  void insert(const size_t idx){ weights_ -> insert_idx(idx, active_); }
+  void insert(const size_t idx){ 
+    assert(weights_);
+    weights_ -> insert_idx(idx, active_); 
+  }
 
-  void erase(const size_t idx){ weights_ -> erase_idx(idx, active_); }
+  void erase(const size_t idx){ 
+    assert(weights_);
+    weights_ -> erase_idx(idx, active_); 
+  }
 
   feature_transformer(const big_affine<NT, half_ka_numel, base_dim, Q>* src) : weights_{src} {
     clear();
   }
+
+  feature_transformer():weights_(nullptr){}
+
+  ~feature_transformer(){}
 
 #ifdef DEBUG_NNUE_UPDATE
   bool operator==(const feature_transformer<T,Q> & other){
@@ -548,22 +561,22 @@ struct sided{
   const T& cast() const { return static_cast<const T&>(*this); }
   
   template<Color c>
-  return_type& us(){
-    if constexpr(c == Co_White){ return cast().white; }
-    else{ return cast().black; }
+  return_type& us(int n){
+    if constexpr(c == Co_White){ return cast().white[n]; }
+    else{ return cast().black[n]; }
   }
   
   template<Color c>
-  const return_type& us() const {
-    if constexpr(c == Co_White){ return cast().white; }
-    else{ return cast().black; }
+  const return_type& us(int n) const {
+    if constexpr(c == Co_White){ return cast().white[n]; }
+    else{ return cast().black[n]; }
   }
   
   template<Color c>
-  return_type& them(){ return us<them_<c>::value>(); }
+  return_type& them(int n){ return us<them_<c>::value>(n); }
 
   template<Color c>
-  const return_type& them() const { return us<them_<c>::value>(); }
+  const return_type& them(int n) const { return us<them_<c>::value>(n); }
   
  private:
   sided(){};
@@ -572,46 +585,65 @@ struct sided{
 
 template<typename NT, bool Q>
 struct half_kp_eval : sided<half_kp_eval<NT,Q>, feature_transformer<NT,Q>>{
-  static half_kp_weights<NT,Q> weights;
-  const half_kp_weights<NT,Q>* weights_;
-  feature_transformer<NT,Q> white;
-  feature_transformer<NT,Q> black;
+  // common data (weights and bias)
+  static std::array<half_kp_weights<NT,Q>,NNN> weights; 
+  // instance data (active index)
+  std::array<feature_transformer<NT,Q>,NNN> white;
+  std::array<feature_transformer<NT,Q>,NNN> black;
+
+  void clear(){
+    for (auto n = 0 ; n < NNN ; ++n){
+      white[n].clear();
+      black[n].clear();
+    }
+  }
 
   typedef typename Quantization<Q>::BT BT;
 
-  constexpr float propagate(Color c) const {
-    const auto w_x = white.active();
-    const auto b_x = black.active();
+  constexpr float propagate(Color c, int n) const {
+    const auto w_x = white[n].active();
+    const auto b_x = black[n].active();
     const auto x0 = c == Co_White ? splice(w_x, b_x).apply_(activationInput<BT,Q>) : splice(b_x, w_x).apply_(activationInput<BT,Q>);
     //std::cout << "x0 " << x0 << std::endl;
-    //const stack_vector<BT, 32> x1 = stack_vector<BT, 32>::from((weights_ -> fc0).forward(x0).apply_(activationQSingleLayer<BT,true>).data,1.f/Quantization<Q>::weightFactor);
-    const auto x1 = (weights_ -> fc0).forward(x0).apply_(activation<BT,Q>);
+    //const stack_vector<BT, 32> x1 = stack_vector<BT, 32>::from((weights.fc0).forward(x0).apply_(activationQSingleLayer<BT,true>).data,1.f/Quantization<Q>::weightFactor);
+    const auto x1 = (weights[n].fc0).forward(x0).apply_(activation<BT,Q>);
     //std::cout << "x1 " << x1 << std::endl;
-    const auto x2 = splice(x1, (weights_ -> fc1).forward(x1).apply_(activation<BT,Q>));
+    const auto x2 = splice(x1, (weights[n].fc1).forward(x1).apply_(activation<BT,Q>));
     //std::cout << "x2 " << x2 << std::endl;
-    const auto x3 = splice(x2, (weights_ -> fc2).forward(x2).apply_(activation<BT,Q>));
+    const auto x3 = splice(x2, (weights[n].fc2).forward(x2).apply_(activation<BT,Q>));
     //std::cout << "x3 " << x3 << std::endl;
-    const float val = (weights_ -> fc3).forward(x3).item();    
+    const float val = (weights[n].fc3).forward(x3).item();    
     //std::cout << "val " << val / Quantization<Q>::outFactor << std::endl;
     return val / Quantization<Q>::outFactor;
   }
 
 #ifdef DEBUG_NNUE_UPDATE
   bool operator==(const half_kp_eval<T> & other){
-    return white == other.white && black == other.black;
+    for (auto n = 0 ; n < NNN ; ++n)
+       if (white[n] != other.white[n] || black[n] != other.black[n]) 
+          return false;
+    return true;
   }
 
   bool operator!=(const half_kp_eval<T> & other){
-    return white != other.white || black != other.black;
+    for (auto n = 0 ; n < NNN ; ++n)
+       if (white[n] != other.white[n] || black[n] != other.black[n]) 
+          return true;
+    return false;
   }
 #endif
 
   // default CTOR always use loaded weights
-  half_kp_eval() : weights_{&weights}, white{&(weights . w)}, black{&(weights . b)} {}
+  half_kp_eval(){
+    for (auto n = 0 ; n < NNN ; ++n){
+      white[n] = & weights[n].w;
+      black[n] = & weights[n].b;
+    }
+  }
 };
 
 template<typename NT, bool Q>
-half_kp_weights<NT,Q> half_kp_eval<NT,Q>::weights;
+std::array<half_kp_weights<NT,Q>,NNN> half_kp_eval<NT,Q>::weights;
 
 } // nnue
 

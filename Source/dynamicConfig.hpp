@@ -30,7 +30,7 @@ namespace DynamicConfig{
     extern bool nodesBasedLevel     ;
     extern bool useNNUE             ;
     extern bool forceNNUE           ;
-    extern std::string NNUEFile     ;
+    extern std::array<std::string,NNN> NNUEFile;
     extern bool genFen              ;
     extern unsigned int genFenDepth ;
     extern unsigned int genFenDepthEG;
