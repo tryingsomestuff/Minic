@@ -109,10 +109,10 @@ namespace Options {
        _keys.push_back(KeyBase(k_string,w_string,"SyzygyPath"                  , &DynamicConfig::syzygyPath                                                                              , &SyzygyTb::initTB));
 #endif
 #ifdef WITH_NNUE
+       assert(NNN==2);
+       //_keys.push_back(KeyBase(k_string,w_string,"NNUEFile"                    , &DynamicConfig::NNUEFile[0]                                                                             , &NNUEWrapper::init));
        _keys.push_back(KeyBase(k_string,w_string,"NNUEFile"                    , &DynamicConfig::NNUEFile[0]                                                                             , &NNUEWrapper::init));
-       _keys.push_back(KeyBase(k_string,w_string,"NNUEFileOp"                  , &DynamicConfig::NNUEFile[0]                                                                             , &NNUEWrapper::init));
-       _keys.push_back(KeyBase(k_string,w_string,"NNUEFileMG"                  , &DynamicConfig::NNUEFile[1]                                                                             , &NNUEWrapper::init));
-       _keys.push_back(KeyBase(k_string,w_string,"NNUEFileEG"                  , &DynamicConfig::NNUEFile[2]                                                                             , &NNUEWrapper::init));
+       _keys.push_back(KeyBase(k_string,w_string,"NNUEFileEG"                  , &DynamicConfig::NNUEFile[1]                                                                             , &NNUEWrapper::init));
        _keys.push_back(KeyBase(k_bool,  w_check, "forceNNUE"                   , &DynamicConfig::forceNNUE                      , false            , true                              ));
 #endif
 
@@ -234,10 +234,10 @@ namespace Options {
        GETOPT(syzygyPath,       std::string)
 #endif
 #ifdef WITH_NNUE
+       assert(NNN==2);
+       //GETOPTVAR(NNUEFile,   NNUEFile[0], std::string)
        GETOPTVAR(NNUEFile,   NNUEFile[0], std::string)
-       GETOPTVAR(NNUEFileOp, NNUEFile[0], std::string)
-       GETOPTVAR(NNUEFileMG, NNUEFile[1], std::string)
-       GETOPTVAR(NNUEFileEG, NNUEFile[2], std::string)
+       GETOPTVAR(NNUEFileEG, NNUEFile[1], std::string)
        GETOPT(forceNNUE,        bool)
        
 #endif
