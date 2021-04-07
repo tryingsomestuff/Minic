@@ -109,7 +109,10 @@ namespace Options {
        _keys.push_back(KeyBase(k_string,w_string,"SyzygyPath"                  , &DynamicConfig::syzygyPath                                                                              , &SyzygyTb::initTB));
 #endif
 #ifdef WITH_NNUE
-       _keys.push_back(KeyBase(k_string,w_string,"NNUEFile"                    , &DynamicConfig::NNUEFile                                                                                , &NNUEWrapper::init));
+       _keys.push_back(KeyBase(k_string,w_string,"NNUEFile"                    , &DynamicConfig::NNUEFile[0]                                                                             , &NNUEWrapper::init));
+       _keys.push_back(KeyBase(k_string,w_string,"NNUEFileOp"                  , &DynamicConfig::NNUEFile[0]                                                                             , &NNUEWrapper::init));
+       _keys.push_back(KeyBase(k_string,w_string,"NNUEFileMG"                  , &DynamicConfig::NNUEFile[1]                                                                             , &NNUEWrapper::init));
+       _keys.push_back(KeyBase(k_string,w_string,"NNUEFileEG"                  , &DynamicConfig::NNUEFile[2]                                                                             , &NNUEWrapper::init));
        _keys.push_back(KeyBase(k_bool,  w_check, "forceNNUE"                   , &DynamicConfig::forceNNUE                      , false            , true                              ));
 #endif
 
@@ -209,6 +212,7 @@ namespace Options {
     // get option from command line
     void initOptions(int argc, char ** argv){
 #define GETOPT(name,type) Options::getOption<type>(DynamicConfig::name,#name);
+#define GETOPTVAR(name,variable,type) Options::getOption<type>(DynamicConfig::variable,#name);
        registerCOMOptions();
        readOptions(argc,argv);
        GETOPT(quiet,            bool)  // first to be read
@@ -230,8 +234,10 @@ namespace Options {
        GETOPT(syzygyPath,       std::string)
 #endif
 #ifdef WITH_NNUE
-       //GETOPT(useNNUE,          bool)         
-       GETOPT(NNUEFile,         std::string)
+       GETOPTVAR(NNUEFile,   NNUEFile[0], std::string)
+       GETOPTVAR(NNUEFileOp, NNUEFile[0], std::string)
+       GETOPTVAR(NNUEFileMG, NNUEFile[1], std::string)
+       GETOPTVAR(NNUEFileEG, NNUEFile[2], std::string)
        GETOPT(forceNNUE,        bool)
        
 #endif

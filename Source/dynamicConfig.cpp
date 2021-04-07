@@ -23,7 +23,7 @@ namespace DynamicConfig{
     bool nodesBasedLevel     = false;
     bool useNNUE             = false;
     bool forceNNUE           = false;
-    std::string NNUEFile     = "";
+    std::array<std::string,NNN> NNUEFile;
     bool genFen              = false;
     unsigned int genFenDepth = 8;
     unsigned int genFenDepthEG = 16;
