@@ -108,7 +108,7 @@ def run_match(best, root_dir, c_chess_exe, concurrency, book_file_name, engine):
     for net in best:
         if os.path.exists(net) :
             command = command + " -engine cmd={} name={} option.NNUEFile={} option.NNUEFileEG={}".format(
-                engine, net, os.path.join(os.getcwd(), net), os.path.join(os.getcwd(), net)
+                engine, net, "/ssd/Minic/Tourney/nn.bin", os.path.join(os.getcwd(), net)
             )
             count +=1
             if count >= nb_tested_net:
