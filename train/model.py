@@ -9,7 +9,7 @@ import struct
 
 netversion = struct.unpack('!f', bytes.fromhex('c0ffee00'))[0]
 
-withFactorizer = False
+withFactorizer = True
 
 def piece_position(i):
   return i % (12 * 64)
@@ -69,7 +69,7 @@ class NNUE(pl.LightningModule):
   """
   def __init__(self, lambda_=1.0):
     super(NNUE, self).__init__()
-    BASE = 64
+    BASE = 128
     funcs = [piece_position,]
 
     if withFactorizer:
@@ -83,13 +83,13 @@ class NNUE(pl.LightningModule):
 
     # dropout seems necessary when using factorizer to avoid over-fitting
     self.d0 = nn.Dropout(p=0.05)
-    self.fc0 = nn.Linear(2*BASE, 16)
+    self.fc0 = nn.Linear(2*BASE, 32)
     self.d1 = nn.Dropout(p=0.1)
-    self.fc1 = nn.Linear(16, 16)
+    self.fc1 = nn.Linear(32, 32)
     self.d2 = nn.Dropout(p=0.1)
-    self.fc2 = nn.Linear(32, 16)
+    self.fc2 = nn.Linear(64, 32)
     self.d3 = nn.Dropout(p=0.1)
-    self.fc3 = nn.Linear(48,  1)
+    self.fc3 = nn.Linear(96,  1)
     self.lambda_ = lambda_
 
   def forward(self, us, them, white, black):

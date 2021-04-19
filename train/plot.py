@@ -43,129 +43,133 @@ else:
    import matplotlib.pyplot as plt
 
 while True:
-    with open(args.f) as f:
-        content = f.readlines()[2:-3]
-        X, Y ,err = [], [], []
-        names = []
-        games = []
-        for line in content:
-            if line.isspace():
-                continue
-            # ['1', 'logs/nn-epoch86.nnue', ':', '35.2', '81.2', '33.0', '60', '55', '65']
-            values = [s for s in line.split()]
-            l = values[1].strip().replace(' ', '').replace(args.n+'nn-epoch', '').replace('.nnue', '')
-            if l == "master":
-                l='0'
-                continue
-            e = values[4]
-            if e == "----":
-                e='0'
-            X.append(float(l.split('-')[0]))
-            Y.append(float(values[3]))
-            err.append(float(e))
-            games.append(values[6])
-            names.append(values[1].replace(args.n, ''))
+    try:
+        with open(args.f) as f:
+            content = f.readlines()[2:-3]
+            X, Y ,err = [], [], []
+            names = []
+            games = []
+            for line in content:
+                if line.isspace():
+                    continue
+                # ['1', 'logs/nn-epoch86.nnue', ':', '35.2', '81.2', '33.0', '60', '55', '65']
+                values = [s for s in line.split()]
+                l = values[1].strip().replace(' ', '').replace(args.n+'nn-epoch', '').replace('.nnue', '')
+                if l == "master":
+                    l='0'
+                    continue
+                e = values[4]
+                if e == "----":
+                    e='0'
+                X.append(float(l.split('-')[0]))
+                Y.append(float(values[3]))
+                err.append(float(e))
+                games.append(values[6])
+                names.append(values[1].replace(args.n, ''))
 
-        try:
-            # sort based on X value
-            X, Y, err, names, games = zip(*sorted(zip(X, Y, err, names, games)))
-            
-            # filter as requested
-            X = X[args.s:]
-            Y = Y[args.s:]
-            err = err[args.s:]
-            names = names[args.s:]
-            games = games[args.s:]
-            X = X[-args.k:]
-            Y = Y[-args.k:]
-            err = err[-args.k:]
-            names = names[-args.k:]
-            games = games[-args.k:]
+            try:
+                # sort based on X value
+                X, Y, err, names, games = zip(*sorted(zip(X, Y, err, names, games)))
 
-            Yp150e = [y+args.X*e for (y,e) in zip(Y,err)]
-            Yme = [y-e for (y,e) in zip(Y,err)]
+                # filter as requested
+                X = X[args.s:]
+                Y = Y[args.s:]
+                err = err[args.s:]
+                names = names[args.s:]
+                games = games[args.s:]
+                X = X[-args.k:]
+                Y = Y[-args.k:]
+                err = err[-args.k:]
+                names = names[-args.k:]
+                games = games[-args.k:]
 
-            _, Ycur, Xcur = zip(*sorted(zip(Yp150e, Y, X)))
-            Xcur = Xcur[-3:]
-            Ycur = Ycur[-3:]
+                Yp150e = [y+args.X*e for (y,e) in zip(Y,err)]
+                Yme = [y-e for (y,e) in zip(Y,err)]
 
-            _, Ybest, Xbest = zip(*sorted(zip(Yme, Y, X)))
-            Xbest = Xbest[-3:]
-            Ybest = Ybest[-3:]
+                _, Ycur, Xcur = zip(*sorted(zip(Yp150e, Y, X)))
+                Xcur = Xcur[-3:]
+                Ycur = Ycur[-3:]
 
-            plt.subplot(121)
+                _, Ybest, Xbest = zip(*sorted(zip(Yme, Y, X)))
+                Xbest = Xbest[-3:]
+                Ybest = Ybest[-3:]
 
-            # error bar and dot color
-            if args.e:
-                plt.errorbar(X, Y, yerr=err, fmt='.', color='gray', marker=None, capsize=2)
-            plt.scatter(X, Y, c=['gold' if y-e>args.l else 'silver' if y-e>args.m else 'lime' if y-e>0 else 'cyan' if y>0 else 'black' if y+e > 0 else 'red' for y,e in zip(Y,err)], s=64, marker='o', label='Nets Elo')
+                plt.subplot(121)
 
-            # specific markers
-            if args.x:
-               plt.scatter(X,     Yp150e, color='violet', marker='x', label='Exploration')
-            plt.scatter(Xcur,  Ycur,   color='blue',   marker='X', label='Current analysis'   , s=84)
-            plt.scatter(Xbest, Ybest,  color='green',  marker='^', label='Current best'       , s=84)
+                # error bar and dot color
+                if args.e:
+                    plt.errorbar(X, Y, yerr=err, fmt='.', color='gray', marker=None, capsize=2)
+                plt.scatter(X, Y, c=['gold' if y-e>args.l else 'silver' if y-e>args.m else 'lime' if y-e>0 else 'cyan' if y>0 else 'black' if y+e > 0 else 'red' for y,e in zip(Y,err)], s=64, marker='o', label='Nets Elo')
 
-            # h lines
-            plt.axhline(y=0       , color='tomato'     , linestyle='-'      , label='Current master')
-            plt.axhline(y=args.m  , color='deepskyblue', linestyle='dotted' , label='Master + {}Elo'.format(args.m))
-            plt.axhline(y=args.l  , color='springgreen', linestyle='dashed' , label='Master + {}Elo'.format(args.l))
-            plt.axhline(y=max(Yme), color='aqua'       , linestyle='dashdot', label='Current worst outcome')
+                # specific markers
+                if args.x:
+                   plt.scatter(X,     Yp150e, color='violet', marker='x', label='Exploration')
+                plt.scatter(Xcur,  Ycur,   color='blue',   marker='X', label='Current analysis'   , s=84)
+                plt.scatter(Xbest, Ybest,  color='green',  marker='^', label='Current best'       , s=84)
 
-            # axis config
-            axes = plt.gca()
-            axes.set_ylim([args.y,args.Y])
+                # h lines
+                plt.axhline(y=0       , color='tomato'     , linestyle='-'      , label='Current master')
+                plt.axhline(y=args.m  , color='deepskyblue', linestyle='dotted' , label='Master + {}Elo'.format(args.m))
+                plt.axhline(y=args.l  , color='springgreen', linestyle='dashed' , label='Master + {}Elo'.format(args.l))
+                plt.axhline(y=max(Yme), color='aqua'       , linestyle='dashdot', label='Current worst outcome')
 
-            plt.legend()
+                # axis config
+                axes = plt.gca()
+                axes.set_ylim([args.y,args.Y])
 
-            display_max=30
+                plt.legend()
 
-            now = datetime.now()
-            txt = [now.strftime("%m/%d/%Y, %H:%M:%S\n")]
-            target2 = []
-            target1 = []
-            good = []
-            probable = []
-            possible = []
-            fail = []
-            for (x, y, e, n, g) in zip(reversed(X), reversed(Y), reversed(err), reversed(names), reversed(games)): 
-                if y - e > args.l:
-                    target2.append([x,y,e,n,g])
-                elif y - e > args.m:
-                    target1.append([x,y,e,n,g])
-                elif y - e > 0:
-                    good.append([x,y,e,n,g])
-                elif y > 0:
-                    probable.append([x,y,e,n,g])
-                elif y + e > 0:
-                    possible.append([x,y,e,n,g])
+                display_max=30
+
+                now = datetime.now()
+                txt = [now.strftime("%m/%d/%Y, %H:%M:%S\n")]
+                target2 = []
+                target1 = []
+                good = []
+                probable = []
+                possible = []
+                fail = []
+                for (x, y, e, n, g) in zip(reversed(X), reversed(Y), reversed(err), reversed(names), reversed(games)): 
+                    if y - e > args.l:
+                        target2.append([x,y,e,n,g])
+                    elif y - e > args.m:
+                        target1.append([x,y,e,n,g])
+                    elif y - e > 0:
+                        good.append([x,y,e,n,g])
+                    elif y > 0:
+                        probable.append([x,y,e,n,g])
+                    elif y + e > 0:
+                        possible.append([x,y,e,n,g])
+                    else:
+                        fail.append([x,y,e,n,g])
+
+                txt += ['target2  net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in target2 ]
+                txt += ['target1  net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in target1 ]
+                txt += ['good     net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in good ]
+                txt += ['probable net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in probable ]
+                txt += ['possible net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in possible ]
+                txt += ['fail     net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in fail ]
+
+                txt = txt[:display_max+2]
+
+                plt.subplot(122)
+                plt.axis('off')
+                size = plt.gcf().get_size_inches()*plt.gcf().dpi # size in pixels
+                plt.text(0, 0, '\n'.join(txt), fontsize=size[1]/max(2*display_max+10,2*txt.count('\n')+10))
+
+                plt.savefig('elo.png')
+                if not args.D:
+                   plt.show(block=False)
+                   plt.pause(args.p)
                 else:
-                    fail.append([x,y,e,n,g])
+                   time.sleep(args.p)  
+                plt.clf()
 
-            txt += ['target2  net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in target2 ]
-            txt += ['target1  net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in target1 ]
-            txt += ['good     net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in good ]
-            txt += ['probable net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in probable ]
-            txt += ['possible net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in possible ]
-            txt += ['fail     net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in fail ]
-
-            txt = txt[:display_max+2]
-
-            plt.subplot(122)
-            plt.axis('off')
-            size = plt.gcf().get_size_inches()*plt.gcf().dpi # size in pixels
-            plt.text(0, 0, '\n'.join(txt), fontsize=size[1]/max(2*display_max+10,2*txt.count('\n')+10))
-
-            plt.savefig('elo.png')
-            if not args.D:
-               plt.show(block=False)
-               plt.pause(args.p)
-            else:
-               time.sleep(args.p)  
-            plt.clf()
-
-        except KeyboardInterrupt:
-            break
-        except Exception as e: 
-            print(e)
-            time.sleep(2)
+            except KeyboardInterrupt:
+                break
+            except Exception as e: 
+                print(e)
+                time.sleep(2)
+    except Exception as e: 
+        print(e)
+        time.sleep(2)    
