@@ -93,7 +93,7 @@ def run_match(best, root_dir, c_chess_exe, concurrency, book_file_name, engine):
     """ Run a match using c-chess-cli adding pgns to a file to be analysed with ordo """
     pgn_file_name = os.path.join(root_dir, "out.pgn")
     c_chess_out_file_name = os.path.join(root_dir, "c_chess.out")
-    command = "{} -each tc=3+0.03 -games 10 -rounds 2 -concurrency {}".format(
+    command = "{} -each tc=6+0.06 -games 10 -rounds 2 -concurrency {}".format(
         c_chess_exe, concurrency
     )
     command = (
@@ -107,8 +107,8 @@ def run_match(best, root_dir, c_chess_exe, concurrency, book_file_name, engine):
     count = 0
     for net in best:
         if os.path.exists(net) :
-            command = command + " -engine cmd={} name={} option.NNUEFile={} option.NNUEFileEG={}".format(
-                engine, net, "/ssd/Minic/Tourney/nn.bin", os.path.join(os.getcwd(), net)
+            command = command + " -engine cmd={} name={} option.NNUEFile={}".format(
+                engine, net, os.path.join(os.getcwd(), net)
             )
             count +=1
             if count >= nb_tested_net:

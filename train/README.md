@@ -17,6 +17,10 @@ pip install python-chess==0.31.4 pytorch-lightning torch
 source env/bin/activate
 python train.py train_data.bin val_data.bin
 ```
+more likely something like 
+```
+python3 train.py --log_every_n_steps 1000 --gpus 1 --batch-size 2048 --threads 4 --num-workers 4 --smart-fen-skipping ../train_data/d8_randop110_quiet.bin  ../train_data/d8_randop110_quiet.bin --resume_from_checkpoint logs/default/version_0/checkpoints/epoch=33.ckpt
+```
 
 ## Resuming from a checkpoint
 ```
