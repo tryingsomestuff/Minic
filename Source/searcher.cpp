@@ -258,13 +258,13 @@ void Searcher::writeToGenFile(const Position & p){
 
     ThreadData data;
     ScoreType e = 0;
-    if ( std::abs(qScore) < 350 ){
+    if ( std::abs(qScore) < 1000 ){
         // evaluate quiet leaf position
         EvalData eData;
         e = eval(pQuiet,eData,cos,true,false);
 
         DynamicConfig::disableTT = false; // use TT here
-        if ( std::abs(e) < 350 ){
+        if ( std::abs(e) < 1000 ){
             const Hash matHash = MaterialHash::getMaterialHash(p.mat);
             float gp = 1;
             if ( matHash != nullHash ){
@@ -294,7 +294,7 @@ void Searcher::writeToGenFile(const Position & p){
 
     // end of sub search
 
-    if ( data.best != INVALIDMOVE && pQuiet.halfmoves >= DynamicConfig::randomPly && std::abs(data.score) < 350){
+    if ( data.best != INVALIDMOVE && pQuiet.halfmoves >= DynamicConfig::randomPly && std::abs(data.score) < 1000){
 
         /*
         // epd format

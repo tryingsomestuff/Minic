@@ -88,7 +88,7 @@ void perft_test(const std::string & fen, DepthType d, unsigned long long int exp
     Logging::LogIt(Logging::logInfo) << "#########################" ;
 }
 
-Move analyze(const Position & p, DepthType depth, bool openBenchOutput = false){
+void analyze(const Position & p, DepthType depth, bool openBenchOutput = false){
     TimeMan::isDynamic       = false;
     TimeMan::nbMoveInTC      = -1;
     TimeMan::msecPerMove     = INFINITETIME;
@@ -104,7 +104,7 @@ Move analyze(const Position & p, DepthType depth, bool openBenchOutput = false){
     COM::position = p;
     ThreadPool::instance().main().searchDriver();
     d = ThreadPool::instance().main().getData();
-    Logging::LogIt(Logging::logInfo) << "Best move is " << ToString(d.best) << " " << (int)d.depth << " " << d.score << " pv : " << ToString(ThreadPool::instance().main().getData().pv);
+    Logging::LogIt(Logging::logInfo) << "Best move is " << ToString(d.best) << " " << (int)d.depth << " " << d.score << " pv : " << ToString(d.pv);
 
     if ( openBenchOutput ){
         Logging::LogIt(Logging::logInfo) << "Next two lines are for OpenBench";
@@ -113,8 +113,6 @@ Move analyze(const Position & p, DepthType depth, bool openBenchOutput = false){
         std::cerr << "NODES " << nodeCount << std::endl;
         std::cerr << "NPS " << int(nodeCount/(ms/1000.f)) << std::endl;
     }
-    
-    return d.best;
 }
 
 void selfPlay(DepthType depth){
@@ -132,10 +130,11 @@ void selfPlay(DepthType depth){
     while( true ){
         DynamicConfig::genFen = false;
         ThreadPool::instance().main().subSearch = true;
-        move = analyze(p,depth); // selfplay using a specific depth
+        analyze(p,depth); // selfplay using a specific depth
         ThreadPool::instance().main().subSearch = false;
+        ThreadData d = ThreadPool::instance().main().getData();
         DynamicConfig::genFen = true;
-        if (move == INVALIDMOVE){
+        if (std::abs(d.score) > 1000 || d.best == INVALIDMOVE){
             //Logging::LogIt(Logging::logInfo) << "End of game"; 
             break;
         }

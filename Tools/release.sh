@@ -6,17 +6,16 @@ echo "Releasing version $v"
 $dir/build.sh $v "-march=core2" 
 $dir/build.sh $v "-march=nehalem" 
 $dir/build.sh $v "-march=sandybridge"
+$dir/build.sh $v "-march=haswell"
 $dir/build.sh $v "-march=skylake" 
 
 $dir/buildGW.sh $v "-march=core2" 
 $dir/buildGW.sh $v "-march=nehalem" 
 $dir/buildGW.sh $v "-march=sandybridge"
+$dir/buildGW.sh $v "-march=haswell"
 $dir/buildGW.sh $v "-march=skylake" 
 
 $dir/buildGW32.sh $v "-march=pentium2" 
-##$dir/buildGW32.sh $v "-march=nehalem" 
-##$dir/buildGW32.sh $v "-march=sandybridge"
-##$dir/buildGW32.sh $v "-march=skylake" 
 
 $dir/buildAndroid.sh $v 
 $dir/buildRPi32.sh $v 
