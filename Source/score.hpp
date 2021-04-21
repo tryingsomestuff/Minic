@@ -140,8 +140,8 @@ inline void displayEval(const EvalData & data, const EvalFeatures & features ){
 
 namespace WDL{
     // Coefficients of a 3rd order polynomial fit based on Minic test data (from CCRL, CEGT, FGRL)
-    const float as[] = {-8.24404295f, 64.23892342f, -95.73056462f, 153.86478679f};
-    const float bs[] = {-3.37154371f, 28.44489198f, -56.67657741f,  72.05858751f};
+    const float as[] = {-21.609f, 148.303f, -203.020f, 126.722f};
+    const float bs[] = {-16.176f, 111.797f, -192.438f, 136.170f};
 }
 
 // formula from Stockfish
