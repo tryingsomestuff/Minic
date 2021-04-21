@@ -29,6 +29,7 @@ namespace DynamicConfig{
     unsigned int genFenDepthEG = 16;
     unsigned int randomPly   = 0;
     unsigned int moveOverHead= 50;
+    bool armageddon          = false;
 
     int styleComplexity      = 50;
     int styleMaterial        = 50;

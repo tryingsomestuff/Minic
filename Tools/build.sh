@@ -72,7 +72,7 @@ WARN="-Wall -Wcast-qual -Wno-char-subscripts -Wno-reorder -Wmaybe-uninitialized 
 
 OPT="-s -DNDEBUG -O3 $n" ; DEPTH=16
 #OPT="-s -ffunction-sections -fdata-sections -Os -s -DNDEBUG -Wl,--gc-sections" ; DEPTH=16
-#OPT="-DNDEBUG -O3 -g -ggdb -fno-omit-frame-pointer" ; DEPTH=16
+#OPT="-DNDEBUG -O3 -g -ggdb -fno-omit-frame-pointer" ; DEPTH=10
 #OPT="-DNDEBUG -g" ; DEPTH=10
 #OPT="-g -rdynamic" ; DEPTH=10
 

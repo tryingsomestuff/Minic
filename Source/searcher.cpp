@@ -42,7 +42,13 @@ ScoreType Searcher::getCMHScore(const Position & p, const Square from, const Squ
     return ret;
 }
 
-ScoreType Searcher::drawScore() { return -1 + 2*((stats.counters[Stats::sid_nodes]+stats.counters[Stats::sid_qnodes]) % 2); }
+ScoreType Searcher::drawScore(const Position & p, DepthType ply) { 
+    if ( DynamicConfig::armageddon ){
+        if ( p.c == Co_White ) return -MATE + ply;
+        else                   return  MATE - ply + 1;
+    }
+    return -1 + 2*((stats.counters[Stats::sid_nodes]+stats.counters[Stats::sid_qnodes]) % 2); 
+}
 
 void Searcher::idleLoop(){
     while (true){

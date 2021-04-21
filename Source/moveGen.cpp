@@ -264,7 +264,7 @@ bool applyMove(Position & p, const Move & m, bool noValidation){
 #endif
 
 #ifdef DEBUG_MATERIAL
-    Position::Material mat = p.mat;
+    const Position::Material mat = p.mat;
     MaterialHash::initMaterial(p);
     if ( p.mat != mat ){ 
         Logging::LogIt(Logging::logWarn)  << "Material update error";

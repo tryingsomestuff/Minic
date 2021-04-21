@@ -14,8 +14,32 @@ namespace MaterialHash { // idea from Gull
     MaterialHashEntry materialHashTable[TotalMat];
 
     Hash getMaterialHash(const Position::Material & mat) {
-        if (mat[Co_White][M_q] > 2 || mat[Co_Black][M_q] > 2 || mat[Co_White][M_r] > 2 || mat[Co_Black][M_r] > 2 || mat[Co_White][M_bl] > 1 || mat[Co_Black][M_bl] > 1 || mat[Co_White][M_bd] > 1 || mat[Co_Black][M_bd] > 1 || mat[Co_White][M_n] > 2 || mat[Co_Black][M_n] > 2 || mat[Co_White][M_p] > 8 || mat[Co_Black][M_p] > 8) return nullHash;
-        return mat[Co_White][M_p] * MatWP + mat[Co_Black][M_p] * MatBP + mat[Co_White][M_n] * MatWN + mat[Co_Black][M_n] * MatBN + mat[Co_White][M_bl] * MatWL + mat[Co_Black][M_bl] * MatBL + mat[Co_White][M_bd] * MatWD + mat[Co_Black][M_bd] * MatBD + mat[Co_White][M_r] * MatWR + mat[Co_Black][M_r] * MatBR + mat[Co_White][M_q] * MatWQ + mat[Co_Black][M_q] * MatBQ;
+        assert(mat[Co_White][M_q]  >= 0);
+        assert(mat[Co_Black][M_q]  >= 0);
+        assert(mat[Co_White][M_r]  >= 0);
+        assert(mat[Co_Black][M_r]  >= 0);
+        assert(mat[Co_White][M_bl] >= 0);
+        assert(mat[Co_Black][M_bl] >= 0);
+        assert(mat[Co_White][M_bd] >= 0);
+        assert(mat[Co_Black][M_bd] >= 0);
+        assert(mat[Co_White][M_n]  >= 0);
+        assert(mat[Co_Black][M_n]  >= 0);
+        assert(mat[Co_White][M_p]  >= 0);
+        assert(mat[Co_Black][M_p]  >= 0);
+
+        if (mat[Co_White][M_q] > 2  || mat[Co_Black][M_q] > 2 
+         || mat[Co_White][M_r] > 2  || mat[Co_Black][M_r] > 2 
+         || mat[Co_White][M_bl] > 1 || mat[Co_Black][M_bl] > 1 
+         || mat[Co_White][M_bd] > 1 || mat[Co_Black][M_bd] > 1 
+         || mat[Co_White][M_n] > 2  || mat[Co_Black][M_n] > 2 
+         || mat[Co_White][M_p] > 8  || mat[Co_Black][M_p] > 8) return nullHash;
+
+        return mat[Co_White][M_p]  * MatWP + mat[Co_Black][M_p]  * MatBP 
+             + mat[Co_White][M_n]  * MatWN + mat[Co_Black][M_n]  * MatBN 
+             + mat[Co_White][M_bl] * MatWL + mat[Co_Black][M_bl] * MatBL 
+             + mat[Co_White][M_bd] * MatWD + mat[Co_Black][M_bd] * MatBD 
+             + mat[Co_White][M_r]  * MatWR + mat[Co_Black][M_r]  * MatBR 
+             + mat[Co_White][M_q]  * MatWQ + mat[Co_Black][M_q]  * MatBQ;
     }
 
     Position::Material indexToMat(int index){
@@ -135,7 +159,13 @@ namespace MaterialHash { // idea from Gull
 
     ScoreType helperKPK(const Position &p, Color winningSide, ScoreType ){
        const Square psq = KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const<P_wp>(winningSide))); // we know there is at least one pawn
-       if (!KPK::probe(KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const<P_wk>(winningSide))), psq, KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const<P_wk>(~winningSide))), winningSide == p.c ? Co_White:Co_Black)) return 0; // shall be drawScore but this is not a 3rep case so don't bother too much ...
+       if (!KPK::probe(KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const<P_wk>(winningSide))), psq, KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const<P_wk>(~winningSide))), winningSide == p.c ? Co_White:Co_Black)){
+         if ( DynamicConfig::armageddon ){
+           if ( p.c == Co_White ) return -MATE;
+           else                   return  MATE;
+         }
+         return 0; // shall be drawScore but we don't, this is not 3rep
+       }
        return clampScore(((winningSide == Co_White)?+1:-1)*(WIN + ValuesEG[P_wp+PieceShift] + 10*SQRANK(psq)));
     }
 

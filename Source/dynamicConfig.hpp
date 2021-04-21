@@ -36,6 +36,7 @@ namespace DynamicConfig{
     extern unsigned int genFenDepthEG;
     extern unsigned int randomPly   ;
     extern unsigned int moveOverHead;
+    extern bool armageddon          ;
 
     extern int styleComplexity      ;
     extern int styleMaterial        ;    

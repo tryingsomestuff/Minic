@@ -121,7 +121,6 @@ void selfPlay(DepthType depth){
     NNUEEvaluator evaluator;
     p.associateEvaluator(evaluator);
     p.resetNNUEEvaluator(p.Evaluator());
-    Move move = INVALIDMOVE;
 #ifdef WITH_GENFILE
         if ( DynamicConfig::genFen && ! ThreadPool::instance().main().genStream.is_open() ){
             ThreadPool::instance().main().genStream.open("genfen_" + std::to_string(::getpid()) + "_" + std::to_string(0) + ".epd",std::ofstream::app);
@@ -139,7 +138,7 @@ void selfPlay(DepthType depth){
             break;
         }
         Position p2 = p;
-        applyMove(p2,move,true);
+        applyMove(p2,d.best,true);
         p = p2;
 #ifdef WITH_GENFILE
         if ( DynamicConfig::genFen ) ThreadPool::instance().main().writeToGenFile(p); // writeToGenFile using genFenDepth from this root position

@@ -52,6 +52,7 @@ struct Searcher{
     DepthType nullMoveMinPly = 0;
     EvalScore contempt = 0;
     bool subSearch = false;
+    DepthType height = 0; ///@todo use this everywhere, instead of passing ply in pvs and qsearch call ?
 
 #ifdef WITH_GENFILE
     std::ofstream genStream;
@@ -66,7 +67,7 @@ struct Searcher{
     void getCMHPtr(const unsigned int ply, CMHPtrArray & cmhPtr);
     [[nodiscard]] ScoreType getCMHScore(const Position & p, const Square from, const Square to, const CMHPtrArray & cmhPtr)const;
 
-    [[nodiscard]] ScoreType drawScore();
+    [[nodiscard]] ScoreType drawScore(const Position & p, DepthType ply);
 
     template <bool pvnode> ScoreType pvs(ScoreType alpha, 
                                          ScoreType beta, 
