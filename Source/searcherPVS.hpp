@@ -121,8 +121,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
            tbScore += eval(p, data, *this);
            tbScore = clampScore(tbScore);
        }
-
-       if ( abs(tbScore) == SyzygyTb::TB_CURSED_SCORE){
+       else if ( abs(tbScore) == SyzygyTb::TB_CURSED_SCORE){
            tbScore = drawScore(p,ply);
        }
 
@@ -456,7 +455,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
         if (capMoveGenerated) MoveGen::generate<MoveGen::GP_quiet>(p, moves, true);
         else                  MoveGen::generate<MoveGen::GP_all>  (p, moves, false);
     }
-    if (moves.empty()) return isInCheck ? -MATE + ply : 0;
+    if (moves.empty()) return isInCheck ? -MATE + ply : drawScore(p,ply);
 
 #ifdef USE_PARTIAL_SORT
     MoveSorter::score(*this, moves, p, data.gp, ply, cmhPtr, true, isInCheck, validTTmove?&e:NULL, refutation != INVALIDMINIMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMINIMOVE);
@@ -646,7 +645,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
         }
     }
 
-    if ( validMoveCount==0 ) return (isInCheck || !withoutSkipMove)?-MATE + ply : 0;
+    if ( validMoveCount==0 ) return (isInCheck || !withoutSkipMove)?-MATE + ply : drawScore(p,ply);
     TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,ply),createHashScore(evalScore,ply),TT::Bound(hashBound|(ttPV?TT::B_ttPVFlag:TT::B_none)|(bestMoveIsCheck?TT::B_isCheckFlag:TT::B_none)|(isInCheck?TT::B_isInCheckFlag:TT::B_none)),depth);
     return bestScore;
 }

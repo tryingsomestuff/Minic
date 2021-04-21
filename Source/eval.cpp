@@ -122,6 +122,27 @@ bool isLazyHigh(ScoreType lazyThreshold, const EvalFeatures & features, EvalScor
     return std::abs(score[MG] + score[EG]) / 2 > lazyThreshold;
 }
 
+ScoreType armageddonScore(ScoreType score, DepthType ply, Color c){
+   if ( ! DynamicConfig::armageddon) return score;
+   //std::cout << "color :" << (c==Co_White?"w":"b") << std::endl;
+   //std::cout << "score : " << score << std::endl;
+   int wdlW = toWDLModel(score,ply);
+   int wdlL = toWDLModel(-score,ply);
+   const int wdlD = 1000 - wdlW - wdlL;
+   //std::cout << wdlW << " " << wdlD << " " << wdlL << std::endl;
+   if (c == Co_Black ){
+      wdlW += wdlD;
+      score = fromWDLModel(wdlW,ply);   
+   }
+   else{
+      wdlL += wdlD;
+      score = -fromWDLModel(wdlL,ply);   
+   }
+   //std::cout << "corrected : " << wdlW << " " << 0 << " " << wdlL << std::endl;
+   //std::cout << "corrected score : " << score << std::endl;
+   return score;
+}
+
 ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safeMatEvaluator, bool display){
     START_TIMER
 
@@ -161,14 +182,15 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
             if ( MEntry.t == MaterialHash::Ter_WhiteWinWithHelper || MEntry.t == MaterialHash::Ter_BlackWinWithHelper ){
               STOP_AND_SUM_TIMER(Eval)
               ++context.stats.counters[Stats::sid_materialTableHelper];
-              return (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSideEG,features.scores[F_material][EG]));
+              const ScoreType materialTableScore = (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSideEG,features.scores[F_material][EG]));
+              return armageddonScore(materialTableScore,p.halfmoves,p.c);
             }
             // real FIDE draws (shall not happens for now in fact)
             else if ( MEntry.t == MaterialHash::Ter_Draw){ 
                 if (!isAttacked(p, kingSquare(p))) {
                    STOP_AND_SUM_TIMER(Eval)
                    ++context.stats.counters[Stats::sid_materialTableDraw];
-                   return context.drawScore(p, context.height);
+                   return context.drawScore(p, context.height); // drawScore take armageddon into account
                 }
             }
             // non FIDE draws
@@ -176,7 +198,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
                 if (!isAttacked(p, kingSquare(p))){
                     STOP_AND_SUM_TIMER(Eval)
                     ++context.stats.counters[Stats::sid_materialTableDraw2];
-                    return context.drawScore(p, context.height);
+                    return context.drawScore(p, context.height); // drawScore take armageddon into account
                 }
             }
             // apply some scaling 
@@ -233,7 +255,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
            nnueScore += ScaleScore( /*EvalConfig::tempo*(white2Play?+1:-1) +*/ context.contempt, data.gp);
            ++context.stats.counters[Stats::sid_evalNNUE];
            STOP_AND_SUM_TIMER(Eval)
-           return nnueScore;
+           return armageddonScore(nnueScore,p.halfmoves,p.c);
         }
         ++context.stats.counters[Stats::sid_evalStd];
     }
@@ -712,12 +734,12 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
     }
 
     // scale score (MG/EG)
-    ScoreType ret = (white2Play?+1:-1)*Score(ScaleScore(score,data.gp,features.scalingFactor),p); // scale both phase and 50 moves rule
+    const ScoreType ret = (white2Play?+1:-1)*Score(ScaleScore(score,data.gp,features.scalingFactor),p); // scale both phase and 50 moves rule
 
     if ( display ){
         Logging::LogIt(Logging::logInfo) << "==> All (fully scaled) " << ret;
     }
 
     STOP_AND_SUM_TIMER(Eval)
-    return ret;
+    return armageddonScore(ret,p.halfmoves,p.c);
 }

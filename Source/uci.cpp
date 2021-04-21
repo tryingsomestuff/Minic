@@ -159,12 +159,21 @@ namespace UCI {
         Logging::LogIt(Logging::logInfo) << "Leaving UCI loop";
     }
 
-    std::string uciScore(ScoreType score){
+    std::string wdlStat(ScoreType score, DepthType ply){
+       std::stringstream ss;
+       const int wdlW = toWDLModel( score, ply);
+       const int wdlL = toWDLModel(-score, ply);
+       const int wdlD = 1000 - wdlW - wdlL;
+       ss << " wdl " << wdlW << " " << wdlD << " " << wdlL;
+       return ss.str(); 
+    }
+
+    std::string uciScore(ScoreType score, DepthType ply){
         if ( isMatedScore(score))
             return "mate " + std::to_string((-MATE-score)/2);
         if ( isMateScore(score))
             return "mate " + std::to_string((MATE-score+1)/2);
-        return "cp " + std::to_string(score);
+        return "cp " + std::to_string(score) + (DynamicConfig::withWDL ? wdlStat(score,ply) : "");
     }
 
 } // UCI

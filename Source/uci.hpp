@@ -8,6 +8,6 @@
 namespace UCI {
     void init();
     void uci();
-    std::string uciScore(ScoreType score);
+    std::string uciScore(ScoreType score, DepthType ply);
 }
 

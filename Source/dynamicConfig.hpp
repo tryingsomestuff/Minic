@@ -37,6 +37,7 @@ namespace DynamicConfig{
     extern unsigned int randomPly   ;
     extern unsigned int moveOverHead;
     extern bool armageddon          ;
+    extern bool withWDL             ;
 
     extern int styleComplexity      ;
     extern int styleMaterial        ;    

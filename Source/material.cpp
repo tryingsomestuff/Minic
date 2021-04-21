@@ -164,7 +164,7 @@ namespace MaterialHash { // idea from Gull
            if ( p.c == Co_White ) return -MATE;
            else                   return  MATE;
          }
-         return 0; // shall be drawScore but we don't, this is not 3rep
+         return 0; // shall be drawScore but we don't care, this is not 3rep
        }
        return clampScore(((winningSide == Co_White)?+1:-1)*(WIN + ValuesEG[P_wp+PieceShift] + 10*SQRANK(psq)));
     }

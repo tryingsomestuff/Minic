@@ -110,7 +110,7 @@ struct Searcher{
 
     [[nodiscard]] bool isRep(const Position & p, bool isPv)const;
 
-    void displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv, int multipv, const std::string & mark = "");
+    void displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, DepthType ply, const PVList & pv, int multipv, const std::string & mark = "");
 
     void idleLoop();
 
