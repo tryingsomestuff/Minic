@@ -29,6 +29,8 @@ ScoreType Searcher::pvs(ScoreType alpha,
                         bool cutNode, 
                         bool canPrune, 
                         const std::vector<MiniMove>* skipMoves){
+    height = ply;
+
     if (stopFlag) return STOPSCORE;
     if ( isMainThread() ){
         static int periodicCheck = 0;
@@ -70,7 +72,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
 
     const bool rootnode = ply == 0;
 
-    if (!rootnode && interiorNodeRecognizer<true, pvnode, true>(p) == MaterialHash::Ter_Draw) return drawScore();
+    if (!rootnode && interiorNodeRecognizer<true, pvnode, true>(p) == MaterialHash::Ter_Draw) return drawScore(p,ply);
 
     CMHPtrArray cmhPtr;
     getCMHPtr(p.halfmoves,cmhPtr);
@@ -119,6 +121,11 @@ ScoreType Searcher::pvs(ScoreType alpha,
            tbScore += eval(p, data, *this);
            tbScore = clampScore(tbScore);
        }
+
+       if ( abs(tbScore) == SyzygyTb::TB_CURSED_SCORE){
+           tbScore = drawScore(p,ply);
+       }
+
        // store TB hits into TT (without associated move, but with max depth)
        TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(tbScore,ply),createHashScore(tbScore,ply),TT::B_none,DepthType(MAX_DEPTH));
        return tbScore;

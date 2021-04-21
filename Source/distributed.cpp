@@ -278,16 +278,20 @@ namespace Distributed{
    int worldSize = 1;
    int rank = 0;
 
-   DummyType _commTT    = 0;
-   DummyType _commStat  = 0;
+   DummyType _commTT = 0;
+   DummyType _commTT2 = 0;
+   DummyType _commStat = 0;
+   DummyType _commStat2 = 0;
    DummyType _commInput = 0;
-   DummyType _commStop  = 0;
+   DummyType _commStop = 0;
+   DummyType _commMove = 0;
 
-   DummyType _requestTT    = 0;
-   DummyType _requestStat  = 0;
+   DummyType _requestTT = 0;
+   DummyType _requestStat = 0;
    DummyType _requestInput = 0;
+   DummyType _requestMove = 0;
 
-   DummyType _winPtrStop = 0;
+   DummyType _winStop = 0;
 
    Counter counter(Stats::StatId id){
       return ThreadPool::instance().counter(id,true);

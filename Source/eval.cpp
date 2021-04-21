@@ -168,7 +168,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
                 if (!isAttacked(p, kingSquare(p))) {
                    STOP_AND_SUM_TIMER(Eval)
                    ++context.stats.counters[Stats::sid_materialTableDraw];
-                   return context.drawScore();
+                   return context.drawScore(p, context.height);
                 }
             }
             // non FIDE draws
@@ -176,7 +176,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
                 if (!isAttacked(p, kingSquare(p))){
                     STOP_AND_SUM_TIMER(Eval)
                     ++context.stats.counters[Stats::sid_materialTableDraw2];
-                    return context.drawScore();
+                    return context.drawScore(p, context.height);
                 }
             }
             // apply some scaling 

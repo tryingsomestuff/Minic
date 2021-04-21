@@ -105,6 +105,7 @@ namespace Options {
        _keys.push_back(KeyBase(k_int,   w_spin,  "MinMoveOverHead"             , &DynamicConfig::moveOverHead                   , (unsigned int)10 , (unsigned int)1000 ));
        _keys.push_back(KeyBase(k_score, w_spin,  "Contempt"                    , &DynamicConfig::contempt                       , (ScoreType)-50   , (ScoreType)50));
        _keys.push_back(KeyBase(k_score, w_spin,  "ContemptMG"                  , &DynamicConfig::contemptMG                     , (ScoreType)-50   , (ScoreType)50));
+       _keys.push_back(KeyBase(k_bool,  w_check, "Armageddon"                  , &DynamicConfig::armageddon                     , false            , true ));
 #ifdef WITH_SYZYGY
        _keys.push_back(KeyBase(k_string,w_string,"SyzygyPath"                  , &DynamicConfig::syzygyPath                                                                              , &SyzygyTb::initTB));
 #endif
@@ -131,6 +132,8 @@ namespace Options {
        _keys.push_back(KeyBase(k_int, w_spin,  "StylePositional"               , &DynamicConfig::stylePositional                , (int)0   , (int)100                                    , &EvalFeatures::callBack));
        _keys.push_back(KeyBase(k_int, w_spin,  "StyleForwardness"              , &DynamicConfig::styleForwardness               , (int)0   , (int)100                                    , &EvalFeatures::callBack));
 
+       ///@todo UCI_Opponent
+       
 #ifdef WITH_SEARCH_TUNING
        _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin0"                  , &SearchConfig::qfutilityMargin[0]                  , ScoreType(0)    , ScoreType(1500)     ));
        _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin1"                  , &SearchConfig::qfutilityMargin[1]                  , ScoreType(0)    , ScoreType(1500)     ));
@@ -230,6 +233,7 @@ namespace Options {
        GETOPT(nodesBasedLevel,  bool)
        GETOPT(strength,         int)
        GETOPT(moveOverHead,     unsigned int)
+       GETOPT(armageddon,       bool)
 #ifdef WITH_SYZYGY
        GETOPT(syzygyPath,       std::string)
 #endif

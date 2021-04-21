@@ -6,6 +6,8 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha,
                                      unsigned int ply, 
                                      DepthType & seldepth, 
                                      PVList * pv){
+    height = ply;
+
     EvalData data;
     ++stats.counters[Stats::sid_qnodes];
     const ScoreType evalScore = eval(p,data,*this);
@@ -59,6 +61,8 @@ ScoreType Searcher::qsearch(ScoreType alpha,
                             bool qRoot, 
                             bool pvnode, 
                             signed char isInCheckHint){
+    height = ply;
+
     if (stopFlag) return STOPSCORE; // no time verification in qsearch, too slow
     ++stats.counters[Stats::sid_qnodes];
 
@@ -92,7 +96,7 @@ ScoreType Searcher::qsearch(ScoreType alpha,
         }
     }
 
-    if ( qRoot && interiorNodeRecognizer<true,false,true>(p) == MaterialHash::Ter_Draw) return drawScore(); ///@todo is that gain elo ???
+    if ( qRoot && interiorNodeRecognizer<true,false,true>(p) == MaterialHash::Ter_Draw) return drawScore(p,ply); ///@todo is that gain elo ???
 
     if ( validTTmove && (isInCheck || isCapture(e.m)) ) bestMove = e.m;
     
