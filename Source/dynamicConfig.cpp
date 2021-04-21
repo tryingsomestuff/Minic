@@ -30,6 +30,7 @@ namespace DynamicConfig{
     unsigned int randomPly   = 0;
     unsigned int moveOverHead= 50;
     bool armageddon          = false;
+    bool withWDL             = false;
 
     int styleComplexity      = 50;
     int styleMaterial        = 50;

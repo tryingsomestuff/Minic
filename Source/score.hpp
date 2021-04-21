@@ -137,3 +137,30 @@ inline void displayEval(const EvalData & data, const EvalFeatures & features ){
     Logging::LogIt(Logging::logInfo) << "Attack        " << features.scores[F_attack];
     Logging::LogIt(Logging::logInfo) << "Complexity    " << features.scores[F_complexity];
 }
+
+namespace WDL{
+    // Coefficients of a 3rd order polynomial fit based on Minic test data (from CCRL, CEGT, FGRL)
+    const float as[] = {-8.24404295f, 64.23892342f, -95.73056462f, 153.86478679f};
+    const float bs[] = {-3.37154371f, 28.44489198f, -56.67657741f,  72.05858751f};
+}
+
+// formula from Stockfish
+inline int toWDLModel(ScoreType v, DepthType ply) {
+    // limit input ply and rescale (and rescale)
+    const float m = std::min(DepthType(256), ply) / 64.0f;
+    const float a = (((WDL::as[0] * m + WDL::as[1]) * m + WDL::as[2]) * m) + WDL::as[3];
+    const float b = (((WDL::bs[0] * m + WDL::bs[1]) * m + WDL::bs[2]) * m) + WDL::bs[3];    
+    // clamp score
+    const float cp = std::clamp(float(v), -1000.0f, 1000.0f);
+    // win probability from 0 to 1000
+    return int(0.5 + 1000.f / (1 + std::exp((a - cp) / b)));
+}
+
+inline ScoreType fromWDLModel(int w, DepthType ply) {
+    // limit input ply and rescale (and rescale)
+    const float m = std::min(DepthType(256), ply) / 64.0f;
+    const float a = (((WDL::as[0] * m + WDL::as[1]) * m + WDL::as[2]) * m) + WDL::as[3];
+    const float b = (((WDL::bs[0] * m + WDL::bs[1]) * m + WDL::bs[2]) * m) + WDL::bs[3];    
+    const float s = a - b * std::log(1000.f/(w-0.5) - 1.f);
+    return ScoreType(std::clamp(s, -1000.f, 1000.f));
+}

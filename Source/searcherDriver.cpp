@@ -15,7 +15,7 @@ const int skipPhase[threadSkipSize] = { 0, 1, 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 0, 1
 }
 
 // Output following chosen protocol
-void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, const PVList & pv, int multipv, const std::string & mark){
+void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, DepthType ply, const PVList & pv, int multipv, const std::string & mark){
     const auto now = Clock::now();
     const TimeType ms = std::max((TimeType)1,(TimeType)std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count());
     getSearchData().times[depth] = ms;
@@ -30,7 +30,7 @@ void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestSco
     }
     else if (Logging::ct == Logging::CT_uci) {
         const std::string multiPVstr = DynamicConfig::multiPV > 1 ? (" multipv " + std::to_string(multipv)) : "";
-        str << "info" << multiPVstr << " depth " << int(depth) << " score " << UCI::uciScore(bestScore) << " time " << ms << " nodes " << nodeCount << " nps " << Counter(nodeCount / (ms / 1000.f)) << " seldepth " << (int)seldepth << " tbhits " << ThreadPool::instance().counter(Stats::sid_tbHit1) + ThreadPool::instance().counter(Stats::sid_tbHit2);
+        str << "info" << multiPVstr << " depth " << int(depth) << " score " << UCI::uciScore(bestScore, ply) << " time " << ms << " nodes " << nodeCount << " nps " << Counter(nodeCount / (ms / 1000.f)) << " seldepth " << (int)seldepth << " tbhits " << ThreadPool::instance().counter(Stats::sid_tbHit1) + ThreadPool::instance().counter(Stats::sid_tbHit2);
         static auto lastHashFull = Clock::now();
         if ( (int)std::chrono::duration_cast<std::chrono::milliseconds>(now - lastHashFull).count() > 500
               && (TimeType)std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count()*2)) < ThreadPool::instance().main().getCurrentMoveMs() ){
@@ -229,7 +229,7 @@ void Searcher::searchDriver(){
                     if ( isMainThread() && DynamicConfig::multiPV == 1 ){
                         PVList pv2;
                         TT::getPV(p, *this, pv2);
-                        displayGUI(depth,_data.seldepth,score,pv2,multi+1,"!");
+                        displayGUI(depth,_data.seldepth,score,p.halfmoves,pv2,multi+1,"!");
                         windowDepth = depth;
                     }
                 }
@@ -240,7 +240,7 @@ void Searcher::searchDriver(){
                     if ( isMainThread() && DynamicConfig::multiPV == 1 ){
                         PVList pv2;
                         TT::getPV(p, *this, pv2);
-                        displayGUI(depth,_data.seldepth,score,pv2,multi+1,"?");
+                        displayGUI(depth,_data.seldepth,score,p.halfmoves,pv2,multi+1,"?");
                     }                    
                 }
                 else break;
@@ -252,7 +252,7 @@ void Searcher::searchDriver(){
                    // handle multiPV display only based on previous ID iteration data
                    PVList pvMulti;
                    pvMulti.push_back(multiPVMoves[multi].m);
-                   displayGUI(depth-1,0,multiPVMoves[multi].s,pvMulti,multi+1); ///@todo store pv and seldepth in multiPVMoves ?
+                   displayGUI(depth-1,0,multiPVMoves[multi].s,p.halfmoves,pvMulti,multi+1); ///@todo store pv and seldepth in multiPVMoves ?
                 }
             }
             else{
@@ -277,7 +277,7 @@ void Searcher::searchDriver(){
                 
                 if ( isMainThread() ){
                     // output to GUI
-                    displayGUI(depth,_data.seldepth,_data.score,pvLoc,multi+1);
+                    displayGUI(depth,_data.seldepth,_data.score,p.halfmoves,pvLoc,multi+1);
                 }
                 
                 if ( isMainThread() && multi == 0 ){

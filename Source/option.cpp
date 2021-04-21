@@ -234,6 +234,8 @@ namespace Options {
        GETOPT(strength,         int)
        GETOPT(moveOverHead,     unsigned int)
        GETOPT(armageddon,       bool)
+       GETOPT(withWDL,          bool)
+       
 #ifdef WITH_SYZYGY
        GETOPT(syzygyPath,       std::string)
 #endif
