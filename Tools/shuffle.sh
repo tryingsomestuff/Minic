@@ -3,7 +3,7 @@
 input_file=$1
 output_file=${1}_shuffled
 file_size=$(stat --printf="%s" ${input_file})
-chunk_size=$((40*1024*1024))
+chunk_size=$((10*1024*1024))
 number_of_chunks=$(((file_size/chunk_size)-1))
 i=0
 runtime=1

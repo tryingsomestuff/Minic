@@ -162,5 +162,5 @@ inline ScoreType fromWDLModel(int w, DepthType ply) {
     const float a = (((WDL::as[0] * m + WDL::as[1]) * m + WDL::as[2]) * m) + WDL::as[3];
     const float b = (((WDL::bs[0] * m + WDL::bs[1]) * m + WDL::bs[2]) * m) + WDL::bs[3];    
     const float s = a - b * std::log(1000.f/(w-0.5) - 1.f);
-    return ScoreType(std::clamp(s, -1000.f, 1000.f));
+    return ScoreType(std::clamp(s, float(-MATE + ply) , float(MATE - ply + 1)) );
 }
