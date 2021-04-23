@@ -16,6 +16,7 @@ class PosAnalyser:
         self.matching_plies = plies
 
     def ana_pos(self, filename):
+        print("parsing {}".format(filename))
         pgnfilein = open(filename, "r", encoding="utf-8-sig", errors="surrogateescape")
         gameCounter = 0
         matstats = Counter()
@@ -32,9 +33,15 @@ class PosAnalyser:
 
             white_player = game.headers["White"]
             black_player = game.headers["Black"]
+            white_elo = int(game.headers["WhiteElo"])
+            black_elo = int(game.headers["BlackElo"])
             
-            if not ( "minic" in white_player.lower() or "minic" in black_player.lower() ):
-                continue
+            is_minic = "minic" in white_player.lower() or "minic" in black_player.lower()
+            is_good = white_elo > 3000 and black_elo > 3000
+            is_ok = white_elo > 2800 and black_elo > 2800
+
+            if not ((is_minic and is_ok) or is_good):
+                continue                
 
             gameCounter = gameCounter + 1
 
