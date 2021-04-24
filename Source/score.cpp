@@ -5,7 +5,8 @@
 #include "position.hpp"
 
 ScoreType Score(ScoreType score, const Position &p) {
-  return ScoreType(clampScore(int(score*std::min(1.f, (110 - p.fifty) / 100.f))));
+  if ( DynamicConfig::armageddon ) return ScoreType(clampScore(score)); ///@todo better ?
+  else                             return ScoreType(clampScore(int(score*std::min(1.f, (110 - p.fifty) / 100.f))));
 }
 
 EvalScore EvalFeatures::SumUp()const{
