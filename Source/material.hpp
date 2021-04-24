@@ -38,7 +38,7 @@ namespace MaterialHash {
       Ter_HardToWin
     };
 
-    extern ScoreType (* helperTable[TotalMat])(const Position &, Color, ScoreType );
+    extern ScoreType (* helperTable[TotalMat])(const Position &, Color, ScoreType, DepthType );
 
 #pragma pack(push, 1)
     struct MaterialHashEntry  {
@@ -56,7 +56,7 @@ namespace MaterialHash {
 
     struct MaterialHashInitializer {
         MaterialHashInitializer(const Position::Material & mat, Terminaison t) { materialHashTable[getMaterialHash(mat)].t = t; }
-        MaterialHashInitializer(const Position::Material & mat, Terminaison t, ScoreType (*helper)(const Position &, Color, ScoreType) ) { materialHashTable[getMaterialHash(mat)].t = t; helperTable[getMaterialHash(mat)] = helper; }
+        MaterialHashInitializer(const Position::Material & mat, Terminaison t, ScoreType (*helper)(const Position &, Color, ScoreType, DepthType) ) { materialHashTable[getMaterialHash(mat)].t = t; helperTable[getMaterialHash(mat)] = helper; }
         static void init();
     };
 

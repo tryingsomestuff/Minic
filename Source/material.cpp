@@ -8,7 +8,7 @@
 namespace MaterialHash { // idea from Gull
 
     // helper function function pointer table
-    ScoreType (* helperTable[TotalMat])(const Position &, Color, ScoreType );
+    ScoreType (* helperTable[TotalMat])(const Position &, Color, ScoreType, DepthType );
 
     // the material cache
     MaterialHashEntry materialHashTable[TotalMat];
@@ -134,17 +134,17 @@ namespace MaterialHash { // idea from Gull
     const ScoreType pushClose[8] = { 0, 0, 100, 80, 60, 40, 20, 10 };
     //const ScoreType pushAway [8] = { 0, 5, 20, 40, 60, 80, 90, 100 };
 
-    ScoreType helperKXK(const Position &p, Color winningSide, ScoreType s){
+    ScoreType helperKXK(const Position &p, Color winningSide, ScoreType s, DepthType ply){
         if (p.c != winningSide ){
            ///@todo stale mate detection for losing side
         }
         const Square winningK = p.king[winningSide];
         const Square losingK  = p.king[~winningSide];
         const ScoreType sc = pushToEdges[losingK] + pushClose[chebyshevDistance(winningK,losingK)];
-        return clampScore(s + ((winningSide == Co_White)?(sc+WIN):(-sc-WIN)));
+        return clampScore(s + ((winningSide == Co_White)?(sc+WIN-ply+1):(-sc-WIN+ply)));
     }
 
-    ScoreType helperKmmK(const Position &p, Color winningSide, ScoreType s){
+    ScoreType helperKmmK(const Position &p, Color winningSide, ScoreType s, DepthType ply){
         Square winningK = p.king[winningSide];
         Square losingK  = p.king[~winningSide];
         if ( (p.allBishop() & BB::whiteSquare) != 0 ){
@@ -152,17 +152,17 @@ namespace MaterialHash { // idea from Gull
             losingK  = VFlip(losingK);
         }
         const ScoreType sc = pushToCorners[losingK] + pushClose[chebyshevDistance(winningK,losingK)];
-        return clampScore( s + ((winningSide == Co_White)?(sc+WIN):(-sc-WIN)));
+        return clampScore( s + ((winningSide == Co_White)?(sc+WIN-ply+1):(-sc-WIN+ply)));
     }
 
-    ScoreType helperDummy(const Position &, Color , ScoreType){ return 0; } ///@todo not 0 for debug purpose ??
+    ScoreType helperDummy(const Position &, Color , ScoreType, DepthType){ return 0; } ///@todo not 0 for debug purpose ??
 
-    ScoreType helperKPK(const Position &p, Color winningSide, ScoreType ){
+    ScoreType helperKPK(const Position &p, Color winningSide, ScoreType , DepthType ply){
        const Square psq = KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const<P_wp>(winningSide))); // we know there is at least one pawn
        if (!KPK::probe(KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const<P_wk>(winningSide))), psq, KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const<P_wk>(~winningSide))), winningSide == p.c ? Co_White:Co_Black)){
          if ( DynamicConfig::armageddon ){
-           if ( p.c == Co_White ) return -MATE;
-           else                   return  MATE;
+           if ( p.c == Co_White ) return -MATE + ply;
+           else                   return  MATE - ply + 1;
          }
          return 0; // shall be drawScore but we don't care, this is not 3rep
        }

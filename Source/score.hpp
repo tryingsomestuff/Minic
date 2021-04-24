@@ -138,29 +138,29 @@ inline void displayEval(const EvalData & data, const EvalFeatures & features ){
     Logging::LogIt(Logging::logInfo) << "Complexity    " << features.scores[F_complexity];
 }
 
+// idea from Stockfish
 namespace WDL{
     // Coefficients of a 3rd order polynomial fit based on Minic test data (from CCRL, CEGT, FGRL)
-    const float as[] = {-13.65744616f,  94.04894005f,  -95.05180396f,  84.853482690f};
-    const float bs[] = {-10.78187987f,  77.22626799f, -132.72201029f,  122.54185402f};
+    const double as[] = {-13.65744616,  94.04894005,  -95.05180396,  84.853482690};
+    const double bs[] = {-10.78187987,  77.22626799, -132.72201029,  122.54185402};
 }
 
-// formula from Stockfish
-inline int toWDLModel(ScoreType v, DepthType ply) {
-    // limit input ply and rescale (and rescale)
-    const float m = std::min(DepthType(256), ply) / 64.0f;
-    const float a = (((WDL::as[0] * m + WDL::as[1]) * m + WDL::as[2]) * m) + WDL::as[3];
-    const float b = (((WDL::bs[0] * m + WDL::bs[1]) * m + WDL::bs[2]) * m) + WDL::bs[3];    
+inline double toWDLModel(ScoreType v, DepthType ply) {
+    // limit input ply and rescale
+    const double m = std::min(DepthType(256), ply) / 32.0;
+    const double a = (((WDL::as[0] * m + WDL::as[1]) * m + WDL::as[2]) * m) + WDL::as[3];
+    const double b = (((WDL::bs[0] * m + WDL::bs[1]) * m + WDL::bs[2]) * m) + WDL::bs[3];    
     // clamp score
-    const float cp = std::clamp(float(v), -1000.0f, 1000.0f);
+    const double x = std::clamp(double((a - v) / b), -600.0, 600.0);
     // win probability from 0 to 1000
-    return int(0.5 + 1000.f / (1 + std::exp((a - cp) / b)));
+    return 0.5 + 1000. / (1. + std::exp(x));
 }
 
-inline ScoreType fromWDLModel(int w, DepthType ply) {
-    // limit input ply and rescale (and rescale)
-    const float m = std::min(DepthType(256), ply) / 64.0f;
-    const float a = (((WDL::as[0] * m + WDL::as[1]) * m + WDL::as[2]) * m) + WDL::as[3];
-    const float b = (((WDL::bs[0] * m + WDL::bs[1]) * m + WDL::bs[2]) * m) + WDL::bs[3];    
-    const float s = a - b * std::log(1000.f/(w-0.5) - 1.f);
-    return ScoreType(std::clamp(s, float(-MATE + ply) , float(MATE - ply + 1)) );
+inline ScoreType fromWDLModel(double w, DepthType ply) {
+    // limit input ply and rescale
+    const double m = std::min(DepthType(256), ply) / 32.0;
+    const double a = (((WDL::as[0] * m + WDL::as[1]) * m + WDL::as[2]) * m) + WDL::as[3];
+    const double b = (((WDL::bs[0] * m + WDL::bs[1]) * m + WDL::bs[2]) * m) + WDL::bs[3];    
+    const double s = a - b * std::log(1000./(std::max(w,0.5+std::numeric_limits<double>::epsilon())-0.5) - 1.);
+    return ScoreType(std::clamp(s, double(-MATE + ply) , double(MATE - ply + 1)) );
 }

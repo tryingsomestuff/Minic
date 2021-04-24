@@ -161,8 +161,8 @@ namespace UCI {
 
     std::string wdlStat(ScoreType score, DepthType ply){
        std::stringstream ss;
-       const int wdlW = toWDLModel( score, ply);
-       const int wdlL = toWDLModel(-score, ply);
+       const int wdlW = (int)toWDLModel( score, ply);
+       const int wdlL = (int)toWDLModel(-score, ply);
        const int wdlD = 1000 - wdlW - wdlL;
        ss << " wdl " << wdlW << " " << wdlD << " " << wdlL;
        return ss.str(); 
