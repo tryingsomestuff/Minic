@@ -124,18 +124,7 @@ bool isLazyHigh(ScoreType lazyThreshold, const EvalFeatures & features, EvalScor
 
 ScoreType armageddonScore(ScoreType score, DepthType ply, Color c){
    if ( ! DynamicConfig::armageddon) return score;
-   double wdlW = toWDLModel(score,ply);
-   double wdlL = toWDLModel(-score,ply);
-   const double wdlD = 1000 - wdlW - wdlL;
-   if (c == Co_Black ){
-      wdlW += wdlD;
-      score = fromWDLModel(wdlW,ply);   
-   }
-   else{
-      wdlL += wdlD;
-      score = -fromWDLModel(wdlL,ply);   
-   }
-   return score;
+   return std::clamp(shiftArmageddon(score,ply,c), ScoreType(-MATE + ply) , ScoreType(MATE - ply + 1));
 }
 
 ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safeMatEvaluator, bool display){
