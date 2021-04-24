@@ -124,12 +124,9 @@ bool isLazyHigh(ScoreType lazyThreshold, const EvalFeatures & features, EvalScor
 
 ScoreType armageddonScore(ScoreType score, DepthType ply, Color c){
    if ( ! DynamicConfig::armageddon) return score;
-   //std::cout << "color :" << (c==Co_White?"w":"b") << std::endl;
-   //std::cout << "score : " << score << std::endl;
-   int wdlW = toWDLModel(score,ply);
-   int wdlL = toWDLModel(-score,ply);
-   const int wdlD = 1000 - wdlW - wdlL;
-   //std::cout << wdlW << " " << wdlD << " " << wdlL << std::endl;
+   double wdlW = toWDLModel(score,ply);
+   double wdlL = toWDLModel(-score,ply);
+   const double wdlD = 1000 - wdlW - wdlL;
    if (c == Co_Black ){
       wdlW += wdlD;
       score = fromWDLModel(wdlW,ply);   
@@ -138,15 +135,13 @@ ScoreType armageddonScore(ScoreType score, DepthType ply, Color c){
       wdlL += wdlD;
       score = -fromWDLModel(wdlL,ply);   
    }
-   //std::cout << "corrected : " << wdlW << " " << 0 << " " << wdlL << std::endl;
-   //std::cout << "corrected score : " << score << std::endl;
    return score;
 }
 
 ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safeMatEvaluator, bool display){
     START_TIMER
 
-    // king captured
+    // king captured ///@todo still necessary ???
     const bool white2Play = p.c == Co_White;
     if ( p.king[Co_White] == INVALIDSQUARE ){
       STOP_AND_SUM_TIMER(Eval)
@@ -182,7 +177,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
             if ( MEntry.t == MaterialHash::Ter_WhiteWinWithHelper || MEntry.t == MaterialHash::Ter_BlackWinWithHelper ){
               STOP_AND_SUM_TIMER(Eval)
               ++context.stats.counters[Stats::sid_materialTableHelper];
-              const ScoreType materialTableScore = (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSideEG,features.scores[F_material][EG]));
+              const ScoreType materialTableScore = (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSideEG,features.scores[F_material][EG],p.halfmoves));
               return armageddonScore(materialTableScore,p.halfmoves,p.c);
             }
             // real FIDE draws (shall not happens for now in fact)
@@ -226,6 +221,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
         EvalScore score;
         ///@todo use data.gp inside NNUE condition ?
         if ( DynamicConfig::forceNNUE || ! isLazyHigh(600,features,score)){ // stay to classic eval when the game is already decided
+           if ( DynamicConfig::armageddon ) features.scalingFactor = 1.f; ///@todo better
         #if NNN == 2
            ScoreType nnueScore = 0;
            ScoreType nnueScoreEG = 0;
@@ -732,6 +728,8 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
           features.scalingFactor -= EvalConfig::scalingFactorPawnsOneSide/128.f;
        }
     }
+
+    if ( DynamicConfig::armageddon ) features.scalingFactor = 1.f; ///@todo better
 
     // scale score (MG/EG)
     const ScoreType ret = (white2Play?+1:-1)*Score(ScaleScore(score,data.gp,features.scalingFactor),p); // scale both phase and 50 moves rule
