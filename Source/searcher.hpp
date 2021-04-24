@@ -52,7 +52,7 @@ struct Searcher{
     DepthType nullMoveMinPly = 0;
     EvalScore contempt = 0;
     bool subSearch = false;
-    DepthType height = 0; ///@todo use this everywhere, instead of passing ply in pvs and qsearch call ?
+    DepthType _height = 0; ///@todo use this everywhere, instead of passing height in pvs and qsearch call ?
 
 #ifdef WITH_GENFILE
     std::ofstream genStream;
@@ -67,13 +67,13 @@ struct Searcher{
     void getCMHPtr(const unsigned int ply, CMHPtrArray & cmhPtr);
     [[nodiscard]] ScoreType getCMHScore(const Position & p, const Square from, const Square to, const CMHPtrArray & cmhPtr)const;
 
-    [[nodiscard]] ScoreType drawScore(const Position & p, DepthType ply);
+    [[nodiscard]] ScoreType drawScore(const Position & p, DepthType height);
 
     template <bool pvnode> ScoreType pvs(ScoreType alpha, 
                                          ScoreType beta, 
                                          const Position & p, 
                                          DepthType depth, 
-                                         unsigned int ply, 
+                                         DepthType height, 
                                          PVList & pv, 
                                          DepthType & seldepth, 
                                          bool isInCheck, 
@@ -84,9 +84,9 @@ struct Searcher{
     [[nodiscard]] ScoreType qsearch(ScoreType alpha, 
                                     ScoreType beta, 
                                     const Position & p, 
-                                    unsigned int ply, 
+                                    DepthType height, 
                                     DepthType & seldepth, 
-                                    unsigned int qply, 
+                                    DepthType qply, 
                                     bool qRoot, 
                                     bool pvnode, 
                                     signed char isInCheckHint = -1);
@@ -95,7 +95,7 @@ struct Searcher{
     [[nodiscard]] ScoreType qsearchNoPruning(ScoreType alpha, 
                                              ScoreType beta, 
                                              const Position & p, 
-                                             unsigned int ply, 
+                                             DepthType height, 
                                              DepthType & seldepth, 
                                              PVList * pv = nullptr);
 
@@ -110,7 +110,7 @@ struct Searcher{
 
     [[nodiscard]] bool isRep(const Position & p, bool isPv)const;
 
-    void displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, DepthType ply, const PVList & pv, int multipv, const std::string & mark = "");
+    void displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, unsigned int ply, const PVList & pv, int multipv, const std::string & mark = "");
 
     void idleLoop();
 

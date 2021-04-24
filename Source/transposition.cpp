@@ -125,14 +125,14 @@ void getPV(const Position & p, Searcher & context, PVList & pv){
 
 } // TT
 
-ScoreType createHashScore(ScoreType score, DepthType ply){
-  if      (isMatingScore(score)) score += ply;
-  else if (isMatedScore (score)) score -= ply;
+ScoreType createHashScore(ScoreType score, DepthType height){
+  if      (isMatingScore(score)) score += height;
+  else if (isMatedScore (score)) score -= height;
   return score;
 }
 
-ScoreType adjustHashScore(ScoreType score, DepthType ply){
-  if      (isMatingScore(score)) score -= ply;
-  else if (isMatedScore (score)) score += ply;
+ScoreType adjustHashScore(ScoreType score, DepthType height){
+  if      (isMatingScore(score)) score -= height;
+  else if (isMatedScore (score)) score += height;
   return score;
 }

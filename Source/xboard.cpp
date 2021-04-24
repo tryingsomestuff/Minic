@@ -28,7 +28,7 @@ namespace XBoard{
     }
 
     bool sideToMoveFromFEN(const std::string & fen) {
-        const bool b = readFEN(fen, COM::position,true);
+        const bool b = readFEN(fen, COM::position, false, true);
         if (!b) Logging::LogIt(Logging::logFatal) << "Illegal FEN " << fen;
         stm = COM::position.c == Co_White ? stm_white : stm_black;
         return b;

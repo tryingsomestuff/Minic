@@ -22,10 +22,10 @@ struct MoveSortOperator{
 
 struct MoveSorter{
 
-    MoveSorter(const Searcher & _context, const Position & _p, float _gp, DepthType _ply, 
+    MoveSorter(const Searcher & _context, const Position & _p, float _gp, DepthType _height, 
                const CMHPtrArray & _cmhPtr, bool _useSEE = true, bool _isInCheck = false, 
                const TT::Entry * _e = NULL, const MiniMove _refutation = INVALIDMINIMOVE)
-          :context(_context),p(_p),gp(_gp),ply(_ply),cmhPtr(_cmhPtr),useSEE(_useSEE),isInCheck(_isInCheck),e(_e),refutation(_refutation){
+          :context(_context),p(_p),gp(_gp),height(_height),cmhPtr(_cmhPtr),useSEE(_useSEE),isInCheck(_isInCheck),e(_e),refutation(_refutation){
             assert(e==NULL||e->h!=nullHash);
     }
 
@@ -38,12 +38,12 @@ struct MoveSorter{
     const bool useSEE;
     const bool isInCheck;
     const MiniMove refutation;
-    const DepthType ply;
+    const DepthType height;
     const CMHPtrArray & cmhPtr;
     float gp;
 
-    static void score(const Searcher & context, MoveList & moves, const Position & p, float gp, DepthType ply, const CMHPtrArray & cmhPtr, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL, const MiniMove refutation = INVALIDMINIMOVE);
-    static void scoreAndSort(const Searcher & context, MoveList & moves, const Position & p, float gp, DepthType ply, const CMHPtrArray & cmhPtr, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL, const MiniMove refutation = INVALIDMINIMOVE);
+    static void score(const Searcher & context, MoveList & moves, const Position & p, float gp, DepthType height, const CMHPtrArray & cmhPtr, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL, const MiniMove refutation = INVALIDMINIMOVE);
+    static void scoreAndSort(const Searcher & context, MoveList & moves, const Position & p, float gp, DepthType height, const CMHPtrArray & cmhPtr, bool useSEE = true, bool isInCheck = false, const TT::Entry * e = NULL, const MiniMove refutation = INVALIDMINIMOVE);
     static void sort(MoveList & moves);
     [[nodiscard]] static const Move * pickNext(MoveList & moves, size_t & begin);
 };

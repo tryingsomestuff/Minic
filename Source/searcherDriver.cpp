@@ -15,7 +15,7 @@ const int skipPhase[threadSkipSize] = { 0, 1, 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 0, 1
 }
 
 // Output following chosen protocol
-void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, DepthType ply, const PVList & pv, int multipv, const std::string & mark){
+void Searcher::displayGUI(DepthType depth, DepthType seldepth, ScoreType bestScore, unsigned int ply, const PVList & pv, int multipv, const std::string & mark){
     const auto now = Clock::now();
     const TimeType ms = std::max((TimeType)1,(TimeType)std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count());
     getSearchData().times[depth] = ms;

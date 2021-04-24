@@ -10,14 +10,14 @@ void KillerT::initKillers(){
           killers[k][i] = INVALIDMOVE;
 }
 
-bool KillerT::isKiller(const Move m, const DepthType ply){
-    return sameMove(m, killers[ply][0]) || sameMove(m, killers[ply][1]);
+bool KillerT::isKiller(const Move m, const DepthType height){
+    return sameMove(m, killers[height][0]) || sameMove(m, killers[height][1]);
 }
 
-void KillerT::update(Move m, DepthType ply){
-   if (!sameMove(killers[0][ply], m)) {
-      killers[ply][1] = killers[ply][0];
-      killers[ply][0] = m;
+void KillerT::update(Move m, DepthType height){
+   if (!sameMove(killers[0][height], m)) {
+      killers[height][1] = killers[height][0];
+      killers[height][0] = m;
    }
 }
 
@@ -47,9 +47,9 @@ void CounterT::update(Move m, const Position & p){
     if ( VALIDMOVE(p.lastMove) ) counter[Move2From(p.lastMove)][Move2To(p.lastMove)] = m;
 }
 
-void updateTables(Searcher & context, const Position & p, DepthType depth, DepthType ply, const Move m, TT::Bound bound, CMHPtrArray & cmhPtr) {
+void updateTables(Searcher & context, const Position & p, DepthType depth, DepthType height, const Move m, TT::Bound bound, CMHPtrArray & cmhPtr) {
     if (bound == TT::B_beta) {
-        context.killerT.update(m, ply);
+        context.killerT.update(m, height);
         context.counterT.update(m, p);
         context.historyT.update<1>(depth, m, p, cmhPtr);
     }

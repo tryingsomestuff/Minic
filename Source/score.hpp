@@ -145,17 +145,17 @@ namespace WDL{
     const double bs[] = {-10.78187987,  77.22626799, -132.72201029,  122.54185402};
 }
 
-inline ScoreType shiftArmageddon(ScoreType v, DepthType ply, Color c){
+inline ScoreType shiftArmageddon(ScoreType v, unsigned int ply, Color c){
     // limit input ply and rescale
-    const double m = std::min(DepthType(256), ply) / 32.0;
+    const double m = std::min(256u, ply) / 64.0; // care! here ply not move
     const double a = (((WDL::as[0] * m + WDL::as[1]) * m + WDL::as[2]) * m) + WDL::as[3];
     if ( c == Co_White ) return ScoreType(v - 2*a);
     else                 return ScoreType(v + 2*a);
 }
 
-inline double toWDLModel(ScoreType v, DepthType ply) {
+inline double toWDLModel(ScoreType v, unsigned int ply) {
     // limit input ply and rescale
-    const double m = std::min(DepthType(256), ply) / 32.0;
+    const double m = std::min(256u, ply) / 64.0; // care! here ply not move
     const double a = (((WDL::as[0] * m + WDL::as[1]) * m + WDL::as[2]) * m) + WDL::as[3];
     const double b = (((WDL::bs[0] * m + WDL::bs[1]) * m + WDL::bs[2]) * m) + WDL::bs[3];    
     // clamp score
@@ -165,9 +165,9 @@ inline double toWDLModel(ScoreType v, DepthType ply) {
 }
 
 /*
-inline ScoreType fromWDLModel(double w, DepthType ply) {
+inline ScoreType fromWDLModel(double w, unsigned int ply) {
     // limit input ply and rescale
-    const double m = std::min(DepthType(256), ply) / 32.0;
+    const double m = std::min(256u, ply) / 32.0;
     const double a = (((WDL::as[0] * m + WDL::as[1]) * m + WDL::as[2]) * m) + WDL::as[3];
     const double b = (((WDL::bs[0] * m + WDL::bs[1]) * m + WDL::bs[2]) * m) + WDL::bs[3];    
     const double s = a - b * std::log(1000./(std::max(w,std::numeric_limits<double>::epsilon())) - 1. + std::numeric_limits<double>::epsilon());

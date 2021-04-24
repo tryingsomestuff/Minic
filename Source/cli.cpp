@@ -393,7 +393,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
     p.associateEvaluator(evaluator);
     p.resetNNUEEvaluator(evaluator);
 #endif
-    if ( ! readFEN(fen,p) ){
+    if ( ! readFEN(fen,p,false,true) ){
         Logging::LogIt(Logging::logInfo) << "Error reading fen" ;
         return 1;
     }
