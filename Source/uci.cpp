@@ -56,7 +56,7 @@ namespace UCI {
                 COM::position.h = 0ull; // invalidate position
                 std::string type;
                 while (iss >> type) {
-                    if (type == "startpos") { readFEN(startPosition, COM::position,true); }
+                    if (type == "startpos") { readFEN(startPosition, COM::position, false, true); }
                     else if (type == "fen") {
                         std::string fen;
                         for (int i = 0; i < 6; i++) { // suppose always full fen ... ///@todo better?
@@ -64,7 +64,7 @@ namespace UCI {
                             iss >> component;
                             fen += component + " ";
                         }
-                        if (!readFEN(fen, COM::position,true)) Logging::LogIt(Logging::logFatal) << "Illegal FEN " << fen;
+                        if (!readFEN(fen, COM::position, false, true)) Logging::LogIt(Logging::logFatal) << "Illegal FEN " << fen;
                     }
                     else if (type == "moves") {
                         if (COM::position.h != 0ull) {
@@ -159,7 +159,7 @@ namespace UCI {
         Logging::LogIt(Logging::logInfo) << "Leaving UCI loop";
     }
 
-    std::string wdlStat(ScoreType score, DepthType ply){
+    std::string wdlStat(ScoreType score, unsigned int ply){
        std::stringstream ss;
        const int wdlW = (int)toWDLModel( score, ply);
        const int wdlL = (int)toWDLModel(-score, ply);
@@ -168,7 +168,7 @@ namespace UCI {
        return ss.str(); 
     }
 
-    std::string uciScore(ScoreType score, DepthType ply){
+    std::string uciScore(ScoreType score, unsigned int ply){
         if ( isMatedScore(score))
             return "mate " + std::to_string((-MATE-score)/2);
         if ( isMateScore(score))

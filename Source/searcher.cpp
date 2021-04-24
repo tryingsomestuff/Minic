@@ -42,10 +42,10 @@ ScoreType Searcher::getCMHScore(const Position & p, const Square from, const Squ
     return ret;
 }
 
-ScoreType Searcher::drawScore(const Position & p, DepthType ply) { 
+ScoreType Searcher::drawScore(const Position & p, DepthType height) { 
     if ( DynamicConfig::armageddon ){
-        if ( p.c == Co_White ) return -MATE + ply;
-        else                   return  MATE - ply + 1;
+        if ( p.c == Co_White ) return -MATE + height;
+        else                   return  MATE - height + 1;
     }
     return -1 + 2*((stats.counters[Stats::sid_nodes]+stats.counters[Stats::sid_qnodes]) % 2); 
 }
@@ -207,7 +207,7 @@ Position Searcher::getQuiet(const Position & p, Searcher * searcher, ScoreType *
     Searcher & cos = getCoSearcher(searcher ? searcher->id() : 2*MAX_THREADS);
 
     PVList pv;
-    DepthType ply = 1;
+    DepthType height = 1;
     DepthType seldepth = 0;
     ScoreType s = 0;
 
@@ -219,7 +219,7 @@ Position Searcher::getQuiet(const Position & p, Searcher * searcher, ScoreType *
     // go for a qsearch (no pruning, open bounds)
     cos.stopFlag = false;
     cos.subSearch = true;
-    s = cos.qsearchNoPruning(-10000,10000,pQuiet,ply,seldepth,&pv);
+    s = cos.qsearchNoPruning(-10000,10000,pQuiet,height,seldepth,&pv);
     cos.subSearch = false;
     if ( qScore ) *qScore = s;
 

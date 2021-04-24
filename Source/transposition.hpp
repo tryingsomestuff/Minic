@@ -70,6 +70,6 @@ void getPV(const Position & p, Searcher & context, PVList & pv);
 
 } // TT
 
-[[nodiscard]] ScoreType createHashScore(ScoreType score, DepthType ply);
+[[nodiscard]] ScoreType createHashScore(ScoreType score, DepthType height);
 
-[[nodiscard]] ScoreType adjustHashScore(ScoreType score, DepthType ply);
+[[nodiscard]] ScoreType adjustHashScore(ScoreType score, DepthType height);

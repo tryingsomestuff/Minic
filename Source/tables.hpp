@@ -22,7 +22,7 @@ struct KillerT{
     Move killers[MAX_DEPTH][2];
 
     void initKillers();
-    [[nodiscard]] bool isKiller(const Move m, const DepthType ply);
+    [[nodiscard]] bool isKiller(const Move m, const DepthType height);
     void update(Move m, DepthType ply);
 };
 
@@ -60,4 +60,4 @@ struct CounterT{
     void update(Move m, const Position & p);
 };
 
-void updateTables(Searcher & context, const Position & p, DepthType depth, DepthType ply, const Move m, TT::Bound bound, CMHPtrArray & cmhPtr);
+void updateTables(Searcher & context, const Position & p, DepthType depth, DepthType height, const Move m, TT::Bound bound, CMHPtrArray & cmhPtr);

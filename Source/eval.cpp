@@ -122,9 +122,9 @@ bool isLazyHigh(ScoreType lazyThreshold, const EvalFeatures & features, EvalScor
     return std::abs(score[MG] + score[EG]) / 2 > lazyThreshold;
 }
 
-ScoreType armageddonScore(ScoreType score, DepthType ply, Color c){
+ScoreType armageddonScore(ScoreType score, unsigned int ply, DepthType height, Color c){
    if ( ! DynamicConfig::armageddon) return score;
-   return std::clamp(shiftArmageddon(score,ply,c), ScoreType(-MATE + ply) , ScoreType(MATE - ply + 1));
+   return std::clamp(shiftArmageddon(score,ply,c), ScoreType(-MATE + height) , ScoreType(MATE - height + 1));
 }
 
 ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safeMatEvaluator, bool display){
@@ -166,15 +166,15 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
             if ( MEntry.t == MaterialHash::Ter_WhiteWinWithHelper || MEntry.t == MaterialHash::Ter_BlackWinWithHelper ){
               STOP_AND_SUM_TIMER(Eval)
               ++context.stats.counters[Stats::sid_materialTableHelper];
-              const ScoreType materialTableScore = (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSideEG,features.scores[F_material][EG],p.halfmoves));
-              return armageddonScore(materialTableScore,p.halfmoves,p.c);
+              const ScoreType materialTableScore = (white2Play?+1:-1)*(MaterialHash::helperTable[matHash](p,winningSideEG,features.scores[F_material][EG],context._height));
+              return armageddonScore(materialTableScore,p.halfmoves,context._height,p.c);
             }
             // real FIDE draws (shall not happens for now in fact)
             else if ( MEntry.t == MaterialHash::Ter_Draw){ 
                 if (!isAttacked(p, kingSquare(p))) {
                    STOP_AND_SUM_TIMER(Eval)
                    ++context.stats.counters[Stats::sid_materialTableDraw];
-                   return context.drawScore(p, context.height); // drawScore take armageddon into account
+                   return context.drawScore(p, context._height); // drawScore take armageddon into account
                 }
             }
             // non FIDE draws
@@ -182,7 +182,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
                 if (!isAttacked(p, kingSquare(p))){
                     STOP_AND_SUM_TIMER(Eval)
                     ++context.stats.counters[Stats::sid_materialTableDraw2];
-                    return context.drawScore(p, context.height); // drawScore take armageddon into account
+                    return context.drawScore(p, context._height); // drawScore take armageddon into account
                 }
             }
             // apply some scaling 
@@ -240,7 +240,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
            nnueScore += ScaleScore( /*EvalConfig::tempo*(white2Play?+1:-1) +*/ context.contempt, data.gp);
            ++context.stats.counters[Stats::sid_evalNNUE];
            STOP_AND_SUM_TIMER(Eval)
-           return armageddonScore(nnueScore,p.halfmoves,p.c);
+           return armageddonScore(nnueScore,p.halfmoves,context._height,p.c);
         }
         ++context.stats.counters[Stats::sid_evalStd];
     }
@@ -695,7 +695,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
 #endif
 
     // use scale factor in some other end-game cases not using material table:
-    if ( features.scalingFactor == 1.f){
+    if ( features.scalingFactor == 1.f && !DynamicConfig::armageddon ){ ///@todo armageddon ?
        const Color strongSide = score[EG] > 0 ? Co_White : Co_Black;
        // opposite colored bishops (scale based on passed pawn of strong side)
        if ( countBit(p.whiteBishop()) == 1 && countBit(p.blackBishop()) == 1 && countBit(p.allBishop() | whiteSquare) == 1 ){
@@ -728,5 +728,5 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
     }
 
     STOP_AND_SUM_TIMER(Eval)
-    return armageddonScore(ret,p.halfmoves,p.c);
+    return armageddonScore(ret,p.halfmoves,context._height,p.c);
 }
