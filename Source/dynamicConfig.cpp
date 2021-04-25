@@ -31,6 +31,7 @@ namespace DynamicConfig{
     unsigned int moveOverHead= 50;
     bool armageddon          = false;
     bool withWDL             = false;
+    std::string opponent     = "";
 
     int styleComplexity      = 50;
     int styleMaterial        = 50;
