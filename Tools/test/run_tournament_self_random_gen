@@ -1,0 +1,15 @@
+#!/bin/bash
+
+dir=$(readlink -f $(dirname $0)/../../)
+
+CUTECHESS=cutechess-cli
+engines=""
+
+engines="$engines -engine conf=minic_dev_random_nnue_eval"
+engines="$engines -engine conf=minic_dev_random_nnue_eval"
+
+echo $engines
+
+$CUTECHESS $engines -each tc=40/20 timemargin=2 -rounds 9000000 -ratinginterval 1 -recover -concurrency 6 > tournament_rand_gen.log 2>&1 &
+
+
