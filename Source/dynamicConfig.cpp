@@ -32,6 +32,7 @@ namespace DynamicConfig{
     bool armageddon          = false;
     bool withWDL             = false;
     std::string opponent     = "";
+    double ratingFactor      = 1.;
 
     int styleComplexity      = 50;
     int styleMaterial        = 50;
