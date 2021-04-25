@@ -1,7 +1,0 @@
-#!/bin/bash
-
-dir=$(readlink -f $(dirname $0)/..)
-
-/usr/games/xboard -fcp "$dir/a.out" -fd "$dir/" -scp "/usr/games/fairymax"  -sd "/usr/games/" -tc 0:20 -mps 40 -xponder -debug
-#-debug
-

@@ -1,0 +1,15 @@
+#!/bin/bash
+
+dir=$(readlink -f $(dirname $0)/../../)
+
+CUTECHESS=cutechess-cli
+engines=""
+
+engines="$engines -engine conf=minic_dev_gen"
+engines="$engines -engine conf=minic_dev_gen"
+
+echo $engines
+
+$CUTECHESS $engines -each tc=0/30+0.1 depth=8 timemargin=0 -rounds 9999999 -pgnout pgn_gen_$(date +"%Y_%m_%d"_%H%M%S).out -ratinginterval 100 -recover -concurrency 7 > tournament_self_gen.log 2>&1 &
+
+

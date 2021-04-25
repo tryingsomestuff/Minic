@@ -1,0 +1,4 @@
+#!/bin/bash
+
+wget -c --recursive --level=1 --no-parent --no-check-certificate -e robots=off  -ignore robots.txt $1
+

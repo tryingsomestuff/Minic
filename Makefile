@@ -5,16 +5,16 @@
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 config:
-	chmod +x $(ROOT_DIR)/Tools/*.sh
+	chmod +x $(ROOT_DIR)/Tools/build/*.sh
 
 fathom:
 	git rev-parse --is-inside-work-tree > /dev/null 2>&1 && git submodule update --init -- Fathom || (rm -rf Fathom && git clone https://github.com/jdart1/Fathom.git)
 
 release: config fathom
-	$(ROOT_DIR)/Tools/release.sh
+	$(ROOT_DIR)/Tools/build/release.sh
 
 build: config fathom
-	$(ROOT_DIR)/Tools/build.sh
+	$(ROOT_DIR)/Tools/build/build.sh
 
 dist: build
 	mkdir -p Tourney
