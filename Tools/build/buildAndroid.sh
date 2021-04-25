@@ -9,7 +9,7 @@ FATHOM_PRESENT=0
 if [ -e Fathom/src/tbprobe.h ]; then
    FATHOM_PRESENT=1
    echo "found Fathom lib, trying to build"
-   $dir/Tools/buildFathomAndroid.sh "$@"
+   $(dirname $0)/buildFathomAndroid.sh "$@"
 fi
 
 mkdir -p $dir/Dist/Minic3
