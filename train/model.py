@@ -155,7 +155,7 @@ class NNUE(pl.LightningModule):
 
   def configure_optimizers(self):
     optimizer = torch.optim.Adadelta(self.parameters(), lr=1, weight_decay=1e-10)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=200, gamma=0.3)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=75, gamma=0.3)
     return [optimizer], [scheduler]
     #return optimizer
 
