@@ -198,8 +198,8 @@ Others:
 * minic_X.YY_linux_x64_armv8           : RPi armv8
 ```   
 
-Please note that Win32 binaries are very slow (I don't know why yet, so please use Win64 one if possible).
-Please note that Minic has always been a little weaker under Windows OS.
+Please note that Win32 binaries are very slow so please use Win64 one if possible.
+Please note that Minic has always been a little weaker under Windows OS (probably due to cross-compilation).
      
 ## How to compile
 * Linux (Gcc>9.2 requiered): just type "make", or use the given build script Tools/build.sh (or make your own ...), or try to have a look at Tools/TCEC/update.sh for some hints. The executable will be available in Dist/Minic3 subdirectory.
