@@ -43,7 +43,9 @@ namespace UCI {
                 iss >> tmpstr; //"name"
                 iss >> key;
                 iss >> tmpstr; //"value"
-                iss >> val;
+                getline(iss, val); // get all the remaining stuff on the line
+                //iss >> val;
+                val = trim(val);
                 if ( !Options::SetValue(key,val)) Logging::LogIt(Logging::logError) << "Unable to set value " << key<< " = " << val;
             }
             else if (uciCommand == "isready") { Logging::LogIt(Logging::logGUI) << "readyok"; }

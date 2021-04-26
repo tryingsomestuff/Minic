@@ -120,22 +120,30 @@ void init(){
        DynamicConfig::ratingFactor = 1.;
     }
     else{
+       Logging::LogIt(Logging::logInfo) << "Opponent string received: \"" << DynamicConfig::opponent << "\"";
        std::vector<std::string> tokens;
        tokenize(DynamicConfig::opponent,tokens);
-       std::string & oppName = tokens[4];
-       unsigned int i = 5;
-       while(i < tokens.size()) oppName += " " + tokens[i];
-       oppName = str_tolower(oppName);
-       
-       unsigned short int oppRating = 0;
-       const unsigned short int myRating = ratings["Minic"];
-       for (auto const& it : ratings){
-          if ( (oppName.find(str_tolower(it.first)) != std::string::npos) || (str_tolower(it.first).find(oppName) != std::string::npos) ){
-             oppRating = it.second;
-             DynamicConfig::ratingFactor = (myRating - oppRating)/100.;
-             break;
+       if ( tokens.size() > 4 ){
+          std::string & oppName = tokens[4];
+          unsigned int i = 5;
+          while(i < tokens.size()) oppName += " " + tokens[i];
+          oppName = str_tolower(oppName);
+
+          unsigned short int oppRating = 0;
+          const unsigned short int myRating = ratings["Minic"];
+          for (auto const& it : ratings){
+             if ( (oppName.find(str_tolower(it.first)) != std::string::npos) || (str_tolower(it.first).find(oppName) != std::string::npos) ){
+                oppRating = it.second;
+                DynamicConfig::ratingFactor = std::tanh((myRating/oppRating)-1)*20.;
+                break;
+             }
           }
-       }       
+       }
+       else{
+          Logging::LogIt(Logging::logWarn) << "Invalid opponent string";
+       }
+
+       Logging::LogIt(Logging::logInfo) << "Rating factor set to: " << DynamicConfig::ratingFactor;
 
        ///@todo play with style ?
     }

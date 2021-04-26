@@ -200,8 +200,8 @@ void Searcher::searchDriver(){
 
             // dynamic contempt ///@todo tune this
 #ifndef WITH_TEXEL_TUNING
-            contempt = { ScoreType((p.c == Co_White ? +1 : -1) * (DynamicConfig::contempt + DynamicConfig::contemptMG) * std::clamp(DynamicConfig::ratingFactor,-3.,3.)) ,
-                         ScoreType((p.c == Co_White ? +1 : -1) *  DynamicConfig::contempt                              * std::clamp(DynamicConfig::ratingFactor,-3.,3.)) };
+            contempt = { ScoreType((p.c == Co_White ? +1 : -1) * (DynamicConfig::contempt + DynamicConfig::contemptMG) * DynamicConfig::ratingFactor) ,
+                         ScoreType((p.c == Co_White ? +1 : -1) *  DynamicConfig::contempt                              * DynamicConfig::ratingFactor) };
 #else
             contempt = 0;
 #endif            
