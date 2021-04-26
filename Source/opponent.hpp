@@ -132,11 +132,10 @@ void init(){
        for (auto const& it : ratings){
           if ( (oppName.find(str_tolower(it.first)) != std::string::npos) || (str_tolower(it.first).find(oppName) != std::string::npos) ){
              oppRating = it.second;
+             DynamicConfig::ratingFactor = (myRating - oppRating)/100.;
              break;
           }
-       }
-
-       DynamicConfig::ratingFactor = (myRating - oppRating)/100.;
+       }       
 
        ///@todo play with style ?
     }
