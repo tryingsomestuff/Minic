@@ -175,25 +175,28 @@ Some stable/official ones will still be made available as github release (https:
 
 In a github release, a tester shall only use the given (attached) binaries. The full "source" package always contains everything (source code, test suites, opening suite, books, ...) but using git "submodule" so that the main repository remains small. 
 
-Starting from release 2.27 new binaries are named following this convention :
+Binaries are named following this convention :
+```
+Linux 64:
+* minic_X.YY_linux_x64_skylake         : fully optimized Linux64 (popcnt+avx2+bmi2)   
+* minic_X.YY_linux_x64_sandybridge     : optimized Linux64 (popcnt+avx)   
+* minic_X.YY_linux_x64_nehalem         : optimized Linux64 (popcnt+sse4.2)  
+* minic_X.YY_linux_x64_core2           : basic Linux64 (nopopcnt+sse3)  
 
-```
-* minic_2.27_linux_x64_skylake     : fully optimized Linux64 (avx2+bmi2)   
-* minic_2.27_linux_x64_nehalem     : optimized Linux64 (sse4.2)  
-* minic_2.27_linux_x64_x86-64      : basic Linux64 (but at least sse3 if NNUE is activated)  
-* minic_2.27_mingw_x64_skylake.exe : fully optimized Windows64 (avx2+bmi2)   
-* minic_2.27_mingw_x64_nehalem.exe : optimized Windows64 (sse4.2)   
-* minic_2.27_mingw_x64_x86-64.exe  : basic Windows64 (but at least sse3 if NNUE is activated)  
-* minic_2.27_mingw_x32_skylake.exe : fully optimized Windows32 (avx2+bmi2)  
-* minic_2.27_mingw_x32_nehalem.exe : optimized Windows32 (sse4.2)  
-* minic_2.27_mingw_x32_i686.exe    : basic Windows32 
-* minic_2.27_android               : android armv7  
+Windows 64:
+* minic_X.YY_mingw_x64_skylake.exe     : fully optimized Windows64 (popcnt+avx2+bmi2)   
+* minic_X.YY_mingw_x64_sandybridge.exe : optimized Windows64 (popcnt+avx)   
+* minic_X.YY_mingw_x64_nehalem.exe     : optimized Windows64 (popcnt+sse4.2)   
+* minic_X.YY_mingw_x64_core2.exe       : basic Windows64 (nopopcnt+sse3)  
+
+Windows 32:
+* minic_X.YY_mingw_x32_pentium2.exe    : very basic Windows32  
+
+Others:
+* minic_X.YY_android                   : android armv7  
+* minic_X.YY_linux_x32_armv7           : RPi armv7
+* minic_X.YY_linux_x64_armv8           : RPi armv8
 ```   
-And more recently also some RPi executable
-```
-* minic_3.03_linux_x32_armv7       : RPi armv7
-* minic_3.03_linux_x64_armv8       : RPi armv8
-```
 
 Please note that Win32 binaries are very slow (I don't know why yet, so please use Win64 one if possible).
 Please note that Minic has always been a little weaker under Windows OS.
