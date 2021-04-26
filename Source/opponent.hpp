@@ -115,18 +115,21 @@ std::string str_tolower(std::string s) {
 }
 
 void init(){
+    ///@todo restore default
+    DynamicConfig::ratingFactor = 1.;
+
     if ( DynamicConfig::opponent.empty()){
-       ///@todo restore default
-       DynamicConfig::ratingFactor = 1.;
+       Logging::LogIt(Logging::logInfo) << "No opponent string given ...";
     }
     else{
        Logging::LogIt(Logging::logInfo) << "Opponent string received: \"" << DynamicConfig::opponent << "\"";
        std::vector<std::string> tokens;
        tokenize(DynamicConfig::opponent,tokens);
+       Logging::LogIt(Logging::logInfo) << "nb token " << tokens.size();
        if ( tokens.size() > 4 ){
-          std::string & oppName = tokens[4];
+          std::string oppName = tokens[4];
           unsigned int i = 5;
-          while(i < tokens.size()) oppName += " " + tokens[i];
+          while(i < tokens.size()) oppName += " " + tokens[i++];
           oppName = str_tolower(oppName);
 
           unsigned short int oppRating = 0;
