@@ -16,7 +16,7 @@ git clone https://github.com/jdart1/Fathom.git
 read -p "Download done, press enter to continue"
 
 # build
-sed -i.bak 's/OPT="-s /OPT="-g /' ./Tools/build.sh
+sed -i.bak 's/OPT="-s /OPT="-g /' ./Tools/tools/build.sh
 ./Tools/build.sh $VERSION "-mavx2 -mbmi2"
 cd Dist/Minic3
 ln -s minic_${VERSION}_linux_x64_avx2_bmi2 minic_linux_x64_avx2_bmi2
