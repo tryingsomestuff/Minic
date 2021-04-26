@@ -63,6 +63,7 @@ namespace Options {
     }
 
 #define SETVALUE(TYPEIN,TYPEOUT) {TYPEIN v; str >> std::boolalpha >> v; *static_cast<TYPEOUT*>(keyRef.value) = (TYPEOUT)v;} break;
+#define SETVALUESTR(TYPEIN,TYPEOUT) {TYPEIN v; getline(str,v); *static_cast<TYPEOUT*>(keyRef.value) = (TYPEOUT)v;} break;
 
     bool SetValue(const std::string & key, const std::string & val){
         KeyBase & keyRef = GetKey(key);
@@ -82,12 +83,15 @@ namespace Options {
         case k_int:    SETVALUE(int,int)
         case k_score:  SETVALUE(int,ScoreType)
         case k_ull:    SETVALUE(int,unsigned long long)
-        case k_string: SETVALUE(std::string,std::string)
+        case k_string: SETVALUESTR(std::string,std::string)
         case k_bad:
         default: Logging::LogIt(Logging::logError) << "Bad key type"; return false;
         }
-        if ( keyRef.callBack ) keyRef.callBack();
         Logging::LogIt(Logging::logInfo) << "Option set " << key << "=" << value;
+        if ( keyRef.callBack ){
+            Logging::LogIt(Logging::logInfo) << "Calling callback for option " << key << "=" << value;
+            keyRef.callBack();
+        }
         displayOptionsDebug();
         return true;
     }
