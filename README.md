@@ -202,7 +202,7 @@ Please note that Win32 binaries are very slow so please use Win64 one if possibl
 Please note that Minic has always been a little weaker under Windows OS (probably due to cross-compilation).
      
 ## How to compile
-* Linux (Gcc>9.2 requiered): just type "make", or use the given build script Tools/build.sh (or make your own ...), or try to have a look at Tools/TCEC/update.sh for some hints. The executable will be available in Dist/Minic3 subdirectory.
+* Linux (Gcc>9.2 requiered): just type "make", or use the given build script Tools/tools/build.sh (or make your own ...), or try to have a look at Tools/TCEC/update.sh for some hints. The executable will be available in Dist/Minic3 subdirectory.
 * Windows : use the Linux cross-compilation script given or make your own. From time to time I also check that recent VisualStudio versions can compile Minic without warnings but I don't distribute any VS project.
 * Android/RPi : use the given cross-compilation script or make your own.
 
