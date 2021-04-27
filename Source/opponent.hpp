@@ -51,6 +51,7 @@ static std::map<std::string, unsigned short int> ratings = {
 {"Vajolet2", 3128},
 {"Weiss", 3119},
 {"Koivisto", 3118},
+{"Gull", 3117},
 {"Texel", 3114},
 {"Hannibal", 3110},
 {"Rybka", 3110},
@@ -125,18 +126,19 @@ void init(){
        Logging::LogIt(Logging::logInfo) << "Opponent string received: \"" << DynamicConfig::opponent << "\"";
        std::vector<std::string> tokens;
        tokenize(DynamicConfig::opponent,tokens);
-       Logging::LogIt(Logging::logInfo) << "nb token " << tokens.size();
-       if ( tokens.size() > 4 ){
-          std::string oppName = tokens[4];
-          unsigned int i = 5;
+       //Logging::LogIt(Logging::logInfo) << "nb token " << tokens.size();
+       if ( tokens.size() >= 4 ){
+          std::string oppName = tokens[3];
+          unsigned int i = 4;
           while(i < tokens.size()) oppName += " " + tokens[i++];
           oppName = str_tolower(oppName);
-
+          Logging::LogIt(Logging::logInfo) << "Looking for Elo rating of " << oppName;
           unsigned short int oppRating = 0;
           const unsigned short int myRating = ratings["Minic"];
           for (auto const& it : ratings){
              if ( (oppName.find(str_tolower(it.first)) != std::string::npos) || (str_tolower(it.first).find(oppName) != std::string::npos) ){
                 oppRating = it.second;
+                Logging::LogIt(Logging::logInfo) << "Opponent is " << it.first << ", Elo " << oppRating;
                 DynamicConfig::ratingFactor = std::tanh((myRating/double(oppRating))-1)*20.;
                 break;
              }
