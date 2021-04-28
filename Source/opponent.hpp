@@ -117,7 +117,7 @@ std::string str_tolower(std::string s) {
 
 void init(){
     ///@todo restore default
-    DynamicConfig::ratingFactor = 1.;
+    DynamicConfig::ratingFactor = 1.; // this means "full" contempt given by user
 
     if ( DynamicConfig::opponent.empty()){
        Logging::LogIt(Logging::logInfo) << "No opponent string given ...";
@@ -139,7 +139,8 @@ void init(){
              if ( (oppName.find(str_tolower(it.first)) != std::string::npos) || (str_tolower(it.first).find(oppName) != std::string::npos) ){
                 oppRating = it.second;
                 Logging::LogIt(Logging::logInfo) << "Opponent is " << it.first << ", Elo " << oppRating;
-                DynamicConfig::ratingFactor = std::tanh(((myRating/double(oppRating))-1)*20.);
+                // ratingFactor will go from -2 to 2
+                DynamicConfig::ratingFactor = 2*std::tanh(((myRating/double(oppRating))-1)*20.);
                 break;
              }
           }
