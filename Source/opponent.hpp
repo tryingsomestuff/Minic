@@ -134,6 +134,8 @@ void init(){
           const std::string oppRatingStr = tokens[1];
           int oppRating = 0;
           bool ratingFound = false;
+
+          /*
           if ( oppRatingStr != "none" ){
              const int oppRatingRead = std::atoi(oppRatingStr.c_str());
              if ( oppRatingRead ){
@@ -142,6 +144,8 @@ void init(){
                 ratingFound = true;
              }
           }
+          */
+         
           if ( !ratingFound ){
             if ( !ratingFound ) Logging::LogIt(Logging::logWarn) << "No rating given";
             unsigned int i = 4;
