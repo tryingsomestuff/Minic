@@ -128,21 +128,40 @@ void init(){
        tokenize(DynamicConfig::opponent,tokens);
        //Logging::LogIt(Logging::logInfo) << "nb token " << tokens.size();
        if ( tokens.size() >= 4 ){
+          const int myRating = ratings["Minic"];
+
           std::string oppName = tokens[3];
-          unsigned int i = 4;
-          while(i < tokens.size()) oppName += " " + tokens[i++];
-          oppName = str_tolower(oppName);
-          Logging::LogIt(Logging::logInfo) << "Looking for Elo rating of " << oppName;
-          unsigned short int oppRating = 0;
-          const unsigned short int myRating = ratings["Minic"];
-          for (auto const& it : ratings){
-             if ( (oppName.find(str_tolower(it.first)) != std::string::npos) || (str_tolower(it.first).find(oppName) != std::string::npos) ){
-                oppRating = it.second;
-                Logging::LogIt(Logging::logInfo) << "Opponent is " << it.first << ", Elo " << oppRating;
-                // ratingFactor will go from -2 to 2
-                DynamicConfig::ratingFactor = 2*std::tanh(((myRating/double(oppRating))-1)*20.);
-                break;
+          const std::string oppRatingStr = tokens[1];
+          int oppRating = 0;
+          bool ratingFound = false;
+          if ( oppRatingStr != "none" ){
+             const int oppRatingRead = std::atoi(oppRatingStr.c_str());
+             if ( oppRatingRead ){
+                oppRating = oppRatingRead;
+                Logging::LogIt(Logging::logInfo) << "Opponent rating is " << oppRating;
+                ratingFound = true;
              }
+          }
+          if ( !ratingFound ){
+            if ( !ratingFound ) Logging::LogIt(Logging::logWarn) << "No rating given";
+            unsigned int i = 4;
+            while(i < tokens.size()) oppName += " " + tokens[i++];
+            oppName = str_tolower(oppName);
+            Logging::LogIt(Logging::logInfo) << "Looking for Elo rating of " << oppName;
+            for (auto const& it : ratings){
+               if ( (oppName.find(str_tolower(it.first)) != std::string::npos) || (str_tolower(it.first).find(oppName) != std::string::npos) ){
+                  oppRating = it.second;
+                  Logging::LogIt(Logging::logInfo) << "Opponent is " << it.first << ", Elo " << oppRating;
+                  ratingFound = true;
+                  break;
+               }
+            }
+            if ( !ratingFound ) Logging::LogIt(Logging::logWarn) << "Unknown opponent";
+          }
+
+          if ( ratingFound ){
+             // ratingFactor will go from -2 to 2
+             DynamicConfig::ratingFactor = 2*std::tanh(((myRating/double(oppRating))-1)*20.);
           }
        }
        else{
