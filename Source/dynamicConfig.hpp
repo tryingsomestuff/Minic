@@ -39,6 +39,7 @@ namespace DynamicConfig{
     extern bool armageddon          ;
     extern bool withWDL             ;
     extern std::string opponent     ;
+    extern int ratingAdv            ;
     extern double ratingFactor      ;
 
     extern int styleComplexity      ;
