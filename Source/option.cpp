@@ -138,7 +138,9 @@ namespace Options {
        _keys.push_back(KeyBase(k_int, w_spin,  "StylePositional"               , &DynamicConfig::stylePositional                , (int)0   , (int)100                                    , &EvalFeatures::callBack));
        _keys.push_back(KeyBase(k_int, w_spin,  "StyleForwardness"              , &DynamicConfig::styleForwardness               , (int)0   , (int)100                                    , &EvalFeatures::callBack));
 
-       _keys.push_back(KeyBase(k_string,w_string,"UCI_Opponent"                , &DynamicConfig::opponent                                                                                , &Opponent::init));
+       _keys.push_back(KeyBase(k_string,w_string,"UCI_Opponent"                , &DynamicConfig::opponent                                                                                /*, &Opponent::init*/));
+       _keys.push_back(KeyBase(k_int, w_spin,    "RatingAdv"                   , &DynamicConfig::ratingAdv                      , (int)-10000, (int)10000                                /*, &Opponent::init*/));
+       
        
 #ifdef WITH_SEARCH_TUNING
        _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin0"                  , &SearchConfig::qfutilityMargin[0]                  , ScoreType(0)    , ScoreType(1500)     ));

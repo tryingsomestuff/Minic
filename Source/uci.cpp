@@ -3,6 +3,7 @@
 #include "cli.hpp"
 #include "com.hpp"
 #include "logging.hpp"
+#include "opponent.hpp"
 #include "option.hpp"
 #include "position.hpp"
 #include "searcher.hpp"
@@ -48,7 +49,10 @@ namespace UCI {
                 val = trim(val);
                 if ( !Options::SetValue(key,val)) Logging::LogIt(Logging::logError) << "Unable to set value " << key<< " = " << val;
             }
-            else if (uciCommand == "isready") { Logging::LogIt(Logging::logGUI) << "readyok"; }
+            else if (uciCommand == "isready") { 
+                Opponent::init(); // this call back is not triggered immediatly when the option is received. 
+                Logging::LogIt(Logging::logGUI) << "readyok"; 
+            }
             else if (uciCommand == "stop") {
                 Logging::LogIt(Logging::logInfo) << "stop requested";
                 COM::stop();
