@@ -38,8 +38,10 @@ namespace DynamicConfig{
     extern unsigned int moveOverHead;
     extern bool armageddon          ;
     extern bool withWDL             ;
+    
     extern std::string opponent     ;
     extern int ratingAdv            ;
+    extern bool ratingAdvReveived   ;
     extern double ratingFactor      ;
 
     extern int styleComplexity      ;

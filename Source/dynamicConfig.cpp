@@ -31,8 +31,10 @@ namespace DynamicConfig{
     unsigned int moveOverHead= 50;
     bool armageddon          = false;
     bool withWDL             = false;
+    
     std::string opponent     = "";
-    int ratingAdv            = 0;
+    int ratingAdv            = 0; 
+    bool ratingAdvReveived   = false;
     double ratingFactor      = 1.;
 
     int styleComplexity      = 50;
