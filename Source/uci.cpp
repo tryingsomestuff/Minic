@@ -50,7 +50,9 @@ namespace UCI {
                 if ( !Options::SetValue(key,val)) Logging::LogIt(Logging::logError) << "Unable to set value " << key<< " = " << val;
             }
             else if (uciCommand == "isready") { 
-                Opponent::init(); // this call back is not triggered immediatly when the option is received. 
+                // callback that are not triggered immediatly when the option is received. 
+                Opponent::init(); // only implemented for UCI
+
                 Logging::LogIt(Logging::logGUI) << "readyok"; 
             }
             else if (uciCommand == "stop") {

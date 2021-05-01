@@ -23,7 +23,15 @@ namespace COM {
         position.associateEvaluator(evaluator);
 #endif
         readFEN(startPosition, position);
-        ThreadPool::instance().clearGame(); // re-init all threads data
+
+        // reset dynamic state depending on opponent
+        DynamicConfig::ratingFactor = 1.;
+        DynamicConfig::ratingAdv = 0;
+        DynamicConfig::opponent = "";
+        DynamicConfig::ratingAdvReveived = false;
+
+        // re-init all threads data
+        ThreadPool::instance().clearGame(); 
     }
 
     void init() {
