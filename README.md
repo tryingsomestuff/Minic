@@ -291,6 +291,9 @@ Then use Minic -pgn2bin option to get a binary format sfen file. Note than posit
 * -fullXboardOutput \[0 or 1\] (default is 0): activate additionnal output for Xboard protocol such as nps or tthit
 * -withWDL \[0 or 1\] (default is 0, protocol option is "WDL_display"): activate Win-Draw-Loss output. Converting score to WDL is done based on a fit perform on all recent Minic's game from main rating lists.
 * -moveOverHead \[ 10 to 1000 \] (default is 50): time in milliseconds to keep as a security buffer
+* -armageddon \[ 0 or 1 \] (default 0): play taking into account Armageddon mode (Black draw is a win)
+* -UCI_Opponent \[ title rating type name \] (default empty): often a string like "none 3234 computer Opponent X.YY". Minic can take this information into account to adapt its contempt value to the opponent strength
+* -UCI_RatingAdv \[ -10000 10000 \] (default not used): if received, Minic will use this value to adapt its contempt value to this rating advantage.
 
 #### Style
 
