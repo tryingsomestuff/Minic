@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NETNAME=noisy_notch.bin
+NETNAME=noctural_nadir.bin
 
 # get minic
 git clone --branch=$VERSION https://github.com/tryingsomestuff/Minic
