@@ -155,7 +155,7 @@ WAC : 291/300 @10sec per position (single thread on an i7-9700K)
 
 ### TCEC stats
 
-TCEC hardware: Minic is at 3293 (https://tcec-chess.com/bayeselo.txt)
+TCEC hardware: Minic is at 3401 (https://tcec-chess.com/bayeselo.txt)
 
 ### TCEC
 
