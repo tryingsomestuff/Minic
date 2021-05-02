@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NETNAME=noctural_nadir.bin
+NETNAME=nocturnal_nadir.bin
 
 # get minic
 git clone --branch=$VERSION https://github.com/tryingsomestuff/Minic
