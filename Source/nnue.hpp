@@ -40,7 +40,7 @@ namespace NNUEWrapper{
            break;
         }
      }
-     if ( netRead == NNN ){
+     if ( netRead == NNN && loadOk){
         DynamicConfig::useNNUE = true;
         compute_scaling();
      }
