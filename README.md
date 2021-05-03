@@ -93,18 +93,21 @@ For NNUE, AVX2 is +40 versus SSE4.2 and there is again a gap of nearly 60Elo for
 This can explain some strange results during some testing process and in rating list where I sometimes see my nets underperform a lot. So please, use AVX2 hardware (and the corresponding Minic binary, i.e. the "skylake" one) for NNUE testing if possible.
 
 ### Home test
-Here are some (very old) fast TC results (STC 10s+0.1) of Minic 2 before switching to NNUE.
+Here are some fast TC results of a gauntlet tournament (STC 10s+0.1) for Minic.
 ```
-Rank Name                          Elo     +/-   Games   Score   Draws
-   1 demolito                      105      16    1300   64.7%   31.5%
-   2 igel-2.6                       62      15    1300   58.8%   34.0%
-   3 texel                          30      15    1300   54.3%   33.3%
-   4 Vajolet2_2.8                   -3      15    1301   49.6%   33.1%
-   5 minic_2.48                    -17      15    1300   47.5%   36.4%
-   6 minic_2.47                    -26      15    1300   46.3%   33.7%
-   7 minic_2.45                    -30      15    1301   45.7%   35.2%
-   8 Winter0.8                     -57      16    1299   41.8%   28.6%
-   9 combusken1.3                  -61      16    1299   41.3%   30.6%
+Rank Name                          Elo     +/-   Games   Score    Draw 
+   0 minic_3.06_nocturnal_nadir      9       4   15775   51.3%   34.7% 
+   1 komodo-10                     206      17    1434   76.6%   28.1% 
+   2 stockfish.7                   206      16    1434   76.6%   32.2% 
+   3 Defenchess_2.2                 78      15    1434   61.0%   34.2% 
+   4 Halogen                        41      14    1435   55.9%   38.7% 
+   5 seer                          -23      14    1434   46.7%   36.8% 
+   6 minic_3.04_noisy_notch        -30      13    1434   45.7%   46.7% 
+   7 Koivisto                      -35      14    1435   44.9%   37.0% 
+   8 weiss                         -55      14    1433   42.1%   37.5% 
+   9 Vajolet2_2.8                  -88      15    1434   37.6%   34.2% 
+  10 minic_3.06                   -126      15    1434   32.6%   36.7% 
+  11 rodentIV                     -290      20    1434   15.9%   19.5% 
 ```
 
 ### Random mover
@@ -257,7 +260,9 @@ Minic comes with some command line options :
 * -forceNNUE \[0 or 1\] (default is false): if a NNUEFile is loaded, forceNNUE equal true will results in a pure NNUE evaluation, while the default is hybrid evaluation
 
 *Remark for Windows users* : it may be quite difficult to get the path format for the NNUE file ok under Windows. Here is a working example (thanks to Stefan Pohl) for cutechess-cli as a guide:
+
 ```cutechess-cli.exe -engine name="Minic 3.06 noct_nadir" cmd="C:/Cutechess/Engines/AB_testruns/Minic_3.06/minic_3.06_mingw_x64_nehalem.exe" dir="C:/Cutechess/Engines/AB_testruns/Minic_3.06" option.NNUEFile=C:/Cutechess/Engines/AB_testruns/Minic_3.06/net.bin option.Hash=256 option.Threads=1 proto=uci```
+
 
 #### Adjust strength
 Minic strength can be ajdusted using the level option (from command line or using protocol option support, using value from 0 to 100). Level 0 is a random mover, 1 to 30 very weak, ..., level 100 is full strength. For now it uses multipv, maximum depth adjustment and randomness to make Minic play weaker moves.
