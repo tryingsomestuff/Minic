@@ -256,6 +256,9 @@ Minic comes with some command line options :
 * -NNUEFile \[path_to_neural_network_file\] (default is none): specify the neural network (NNUE) to be used and activate NNUE evaluation
 * -forceNNUE \[0 or 1\] (default is false): if a NNUEFile is loaded, forceNNUE equal true will results in a pure NNUE evaluation, while the default is hybrid evaluation
 
+*Remark for Windows users* : it may be quite difficult to get the path format for the NNUE file ok under Windows. Here is a working example (thanks to Stefan Pohl) for cutechess-cli as a guide:
+```cutechess-cli.exe -engine name="Minic 3.06 noct_nadir" cmd="C:/Cutechess/Engines/AB_testruns/Minic_3.06/minic_3.06_mingw_x64_nehalem.exe" dir="C:/Cutechess/Engines/AB_testruns/Minic_3.06" option.NNUEFile=C:/Cutechess/Engines/AB_testruns/Minic_3.06/net.bin option.Hash=256 option.Threads=1 proto=uci```
+
 #### Adjust strength
 Minic strength can be ajdusted using the level option (from command line or using protocol option support, using value from 0 to 100). Level 0 is a random mover, 1 to 30 very weak, ..., level 100 is full strength. For now it uses multipv, maximum depth adjustment and randomness to make Minic play weaker moves.
 
