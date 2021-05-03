@@ -54,6 +54,8 @@ const std::string MinicVersion = "3.07";
 //#define LIMIT_THREADS_TO_PHYSICAL_CORES
 //#define REPRODUCTIBLE_RESULTS
 //#define WITH_NNUE_CLIPPED_RELU
+#define USE_AVX_INTRIN
+//#define WITH_BLAS
 
 // *** Optim (?)
 #define USE_PARTIAL_SORT 

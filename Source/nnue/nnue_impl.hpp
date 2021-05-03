@@ -14,6 +14,16 @@
 #include <string>
 #include <utility>
 
+#ifdef USE_AVX_INTRIN
+#include "dot.hpp"
+#endif
+
+//#include "bfloat16.hpp"
+
+#ifdef WITH_BLAS
+#include <cblas.h>
+#endif
+
 // Initially taken from Seer implementation.
 // see https://github.com/connormcmonigle/seer-nnue
 
@@ -35,11 +45,11 @@ struct Quantization{
    typedef float WIT;
    typedef float BT;
    typedef float BIT;   
-   static constexpr float weightMax  = 100.0f; // dummy value
-   static constexpr int weightScale  = 1;
-   static constexpr int weightFactor = 1;
-   static constexpr int biasFactor   = 1;
-   static constexpr float outFactor  = 1.f/600.f;
+   static constexpr float weightMax  {100}; // dummy value
+   static constexpr int weightScale  {1};
+   static constexpr int weightFactor {1};
+   static constexpr int biasFactor   {1};
+   static constexpr float outFactor  {1.f/600.f};
    static float round(const float &x){return x;}
 };
 
@@ -49,11 +59,11 @@ struct Quantization<true>{
    typedef int8_t WT;
    typedef int32_t BIT;  
    typedef int32_t BT;
-   static constexpr float weightMax    = 2.0f; // supposed min/max of weights values
-   static constexpr int weightScale    = std::numeric_limits<WT>::max();
-   static constexpr int weightFactor   = (int)(weightScale/weightMax); // quantization factor
-   static constexpr int biasFactor     = weightScale*weightFactor;
-   static constexpr float outFactor    = (weightFactor*weightFactor*weightMax)/600.f;
+   static constexpr float weightMax    {2.0f}; // supposed min/max of weights values
+   static constexpr int weightScale    {std::numeric_limits<WT>::max()};
+   static constexpr int weightFactor   {(int)(weightScale/weightMax)}; // quantization factor
+   static constexpr int biasFactor     {weightScale*weightFactor};
+   static constexpr float outFactor    {(weightFactor*weightFactor*weightMax)/600.f};
    static float round(const float & x){return std::round(x);}
 };
 
@@ -82,11 +92,11 @@ struct weights_streamer{
   }
 
   template<typename T, bool Q>
-  weights_streamer<NT>& streamW(T* dst, const size_t request){
-    float minW = std::numeric_limits<float>::max();
-    float maxW = std::numeric_limits<float>::min();
+  weights_streamer<NT>& streamW(T* dst, const size_t request, size_t dim0, size_t dim1){
+    NT minW = std::numeric_limits<NT>::max();
+    NT maxW = std::numeric_limits<NT>::min();
     std::array<char, sizeof(NT)> single_element{};
-    const float Wscale = Quantization<Q>::weightFactor;
+    const NT Wscale = Quantization<Q>::weightFactor;
     Logging::LogIt(Logging::logInfo) << "Reading inner weight";
     for(size_t i(0); i < request; ++i){
       file.read(single_element.data(), single_element.size());
@@ -102,7 +112,13 @@ struct weights_streamer{
       else{
         tmp = tmp*Wscale;
       }
-      dst[i] = T(Quantization<Q>::round(tmp));
+#if (defined USE_AVX_INTRIN) || (defined WITH_BLAS)
+      // transpose data
+      const size_t j = (i%dim1)*dim0 + i/dim1;
+#else
+      const size_t j=i;
+#endif
+      dst[j] = T(Quantization<Q>::round(tmp));
     }
     Logging::LogIt(Logging::logInfo) << "Weight in [" << minW << ", " << maxW << "]";
     return *this;
@@ -110,10 +126,10 @@ struct weights_streamer{
 
   template<typename T, bool Q>
   weights_streamer<NT> & streamWI(T* dst, const size_t request){
-    float minW = std::numeric_limits<float>::max();
-    float maxW = std::numeric_limits<float>::min();
+    NT minW = std::numeric_limits<NT>::max();
+    NT maxW = std::numeric_limits<NT>::min();
     std::array<char, sizeof(NT)> single_element{};
-    const float Wscale = Quantization<Q>::weightScale;
+    const NT Wscale = Quantization<Q>::weightScale;
     Logging::LogIt(Logging::logInfo) << "Reading input weight";
     for(size_t i(0); i < request; ++i){
       file.read(single_element.data(), single_element.size());
@@ -137,10 +153,10 @@ struct weights_streamer{
 
   template<typename T, bool Q>
   weights_streamer<NT> & streamB(T* dst, const size_t request){
-    float minB = std::numeric_limits<float>::max();
-    float maxB = std::numeric_limits<float>::min();
+    NT minB = std::numeric_limits<NT>::max();
+    NT maxB = std::numeric_limits<NT>::min();
     std::array<char, sizeof(NT)> single_element{};
-    const float Bscale = Quantization<Q>::biasFactor;
+    const NT Bscale = Quantization<Q>::biasFactor;
     Logging::LogIt(Logging::logInfo) << "Reading inner bias";
     for(size_t i(0); i < request; ++i){
       file.read(single_element.data(), single_element.size());
@@ -164,10 +180,10 @@ struct weights_streamer{
 
   template<typename T, bool Q>
   weights_streamer<NT> & streamBI(T* dst, const size_t request){
-    float minB = std::numeric_limits<float>::max();
-    float maxB = std::numeric_limits<float>::min();
+    NT minB = std::numeric_limits<NT>::max();
+    NT maxB = std::numeric_limits<NT>::min();
     std::array<char, sizeof(NT)> single_element{};
-    const float Bscale = Quantization<Q>::weightScale;
+    const NT Bscale = Quantization<Q>::weightScale;
     Logging::LogIt(Logging::logInfo) << "Reading input bias";
     for(size_t i(0); i < request; ++i){
       file.read(single_element.data(), single_element.size());
@@ -287,6 +303,12 @@ struct stack_vector{
     return *this;
   }
   
+#ifdef USE_AVX_INTRIN
+  inline T dot_(const T* other) const {
+    return dotProductFma<T,dim>(data, other); 
+  }
+#endif
+
   constexpr T item() const {
     static_assert(dim == 1, "called item() on vector with dim != 1");
     return data[0];
@@ -298,7 +320,7 @@ struct stack_vector{
     for(size_t i = 0; i < dim; ++i){
       result.data[i] = T(0);
     }
-    return result;
+    return result; // RVO
   }
   
   template <typename T2>
@@ -308,7 +330,7 @@ struct stack_vector{
     for(size_t i = 0; i < dim; ++i){
       result.data[i] = T(data[i]);
     }
-    return result;
+    return result; //RVO
   }  
 
 };
@@ -335,7 +357,7 @@ CONSTEXPR stack_vector<T, dim0 + dim1> splice(const stack_vector<T, dim0>& a, co
   for(size_t i = 0; i < dim1; ++i){
     c.data[dim0 + i] = b.data[i];
   }
-  return c;
+  return c; // RVO
 }
 
 template<typename NT, size_t dim0, size_t dim1, bool Q>
@@ -353,26 +375,48 @@ struct stack_affine{
   
   CONSTEXPR stack_vector<BT, dim1> forward(const stack_vector<BT, dim0>& x) const {
     auto result = stack_vector<BT, dim1>::from(b);
+#ifndef WITH_BLAS
     #pragma omp simd
+#ifdef USE_AVX_INTRIN
+    for(size_t i = 0; i < dim1; ++i){
+      result.data[i] += x.dot_(W + i * dim0);
+    }
+#else
     for(size_t i = 0; i < dim0; ++i){
       result.fma_(x.data[i], W + i * dim1);
     }
+#endif // USE_AVX_INTRIN
+#else
+    static_assert(std::is_same<BT, float>::value, "only works with float");
+    cblas_sgemv(CblasRowMajor, CblasNoTrans, dim1, dim0, 1, W, dim0, x.data, 1, 1, result.data, 1);
+#endif
     return result;
   }
   
-  ///@todo forward that return type of next layer
+  ///@todo forward with return type of next layer
   template<typename T>
   CONSTEXPR stack_vector<BT, dim1> forward(const stack_vector<T, dim0>& x) const {
     auto result = stack_vector<BT, dim1>::from(b);
+#ifndef WITH_BLAS
     #pragma omp simd
+#ifdef USE_AVX_INTRIN
+    for(size_t i = 0; i < dim1; ++i){
+      result.data[i] += x.dot_(W + i * dim0);
+    }
+#else
     for(size_t i = 0; i < dim0; ++i){
       result.fma_(x.data[i], W + i * dim1);
     }
-    return result;
+#endif // USE_AVX_INTRIN
+#else
+    static_assert(std::is_same<BT, float>::value, "only works with float");
+    cblas_sgemv(CblasRowMajor, CblasNoTrans, dim1, dim0, 1, W, dim0, x.data, 1, 1, result.data, 1);
+#endif
+    return result; // RVO
   }
 
   stack_affine<NT, dim0, dim1, Q>& load_(weights_streamer<NT>& ws){
-    ws.template streamW<WT, Q>(W, W_numel).template streamB<BT, Q>(b, b_numel);
+    ws.template streamW<WT, Q>(W, W_numel,dim0,dim1).template streamB<BT, Q>(b, b_numel);
     return *this;
   }
 };

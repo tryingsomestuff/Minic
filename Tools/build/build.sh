@@ -42,7 +42,8 @@ OPT="-s -DNDEBUG -O3 $n" ; DEPTH=16
 #OPT="-DNDEBUG -g" ; DEPTH=10
 #OPT="-g -rdynamic" ; DEPTH=10
 
-LIBS="-lpthread -ldl"
+LIBS="-lpthread -ldl" 
+# -lopenblas"
 
 OPT="$WARN $d $OPT $t --std=c++17 -fno-exceptions"
 
