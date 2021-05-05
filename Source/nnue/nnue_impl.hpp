@@ -507,21 +507,20 @@ struct half_kp_weights{
   
   static bool load(const std::string& path, half_kp_weights<NT,Q>& loadedWeights){
     static const uint32_t expectedVersion = 0xc0ffee00;
-    bool withVersion = false;
+    static const bool withVersion = true;
 #ifndef __ANDROID__
 #ifndef WITHOUT_FILESYSTEM 
-    static const int expectedSize = 50378500;
+    static const int expectedSize = 50378504; // 50378500 + 4 for version
     std::error_code ec;
     auto fsize = std::filesystem::file_size(path,ec);
     if ( ec ){
       Logging::LogIt(Logging::logError) << "File " << path << " is not accessible";
       return false;
     }
-    if ( fsize != expectedSize && fsize != expectedSize+4 ){ // with or without version
+    if ( fsize != expectedSize ){ // with or without version
       Logging::LogIt(Logging::logError) << "File " << path << " does not look like a compatible net";
       return false;
     }
-    withVersion = (fsize == expectedSize+4);
 #endif
 #endif
     auto ws = weights_streamer<NT>(path);
