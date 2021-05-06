@@ -1,23 +1,16 @@
 #!/bin/bash
-dir=$(readlink -f $(dirname $0)/../..)
+
+export CXX=$dir/android/bin/arm-linux-androideabi-clang++
+export CC=$dir/android/bin/arm-linux-androideabi-clang++
+
+source $(dirname $0)/common
 
 cd $dir/Fathom/src
-
-v="dev"
-
-if [ -n "$1" ] ; then
-   v=$1
-   shift
-fi
-
-$COMPC -v
-
-echo "version $v"
 
 lib=fathom_${v}_android.o
 echo "Building $lib"
 
 OPT="-Wall -Wno-char-subscripts -Wno-unused-function -Wno-deprecated $d -DNDEBUG -O3 -flto -I."
-$COMPC -c $OPT tbprobe.c -o $lib
+$CC -c $OPT tbprobe.c -o $lib
 
 cd -

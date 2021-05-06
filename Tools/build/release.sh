@@ -1,22 +1,32 @@
 #!/bin/bash
 dir=$(readlink -f $(dirname $0)/)
+
+e=minic
 v=$(cat Source/definition.hpp | grep "MinicVersion =" | awk '{print $NF}' | sed 's/;//' | sed 's/"//g')
-echo "Releasing version $v"
+#t=... => inlined
+n=""
+d=""
+echo "====================================="
+echo "  Releasing $e version $v"
+echo "====================================="
 
-$dir/build.sh $v "-march=core2" 
-$dir/build.sh $v "-march=nehalem" 
-$dir/build.sh $v "-march=sandybridge"
-#$dir/build.sh $v "-march=haswell"
-$dir/build.sh $v "-march=skylake" 
+# all build script takes arguments in this order (if missing => default)
+#   exe_name version arch_target special_options special_definitions
 
-$dir/buildGW.sh $v "-march=core2" 
-$dir/buildGW.sh $v "-march=nehalem" 
-$dir/buildGW.sh $v "-march=sandybridge"
-#$dir/buildGW.sh $v "-march=haswell"
-$dir/buildGW.sh $v "-march=skylake" 
+$dir/build.sh $e $v "-march=core2" $n $d
+$dir/build.sh $e $v "-march=nehalem"  $n $d
+$dir/build.sh $e $v "-march=sandybridge" $n $d
+#$dir/build.sh $e $v "-march=haswell" $n $d
+$dir/build.sh $e $v "-march=skylake" $n $d
 
-$dir/buildGW32.sh $v "-march=pentium2" 
+$dir/buildGW.sh $e $v "-march=core2" $n $d
+$dir/buildGW.sh $e $v "-march=nehalem" $n $d
+$dir/buildGW.sh $e $v "-march=sandybridge" $n $d
+#$dir/buildGW.sh $e $v "-march=haswell" $n $d
+$dir/buildGW.sh $e $v "-march=skylake" $n $d
 
-$dir/buildAndroid.sh $v 
-$dir/buildRPi32.sh $v 
-$dir/buildRPi64.sh $v 
+$dir/buildGW32.sh $e $v "-march=pentium2" $n $d
+
+$dir/buildAndroid.sh $e $v $n $d
+$dir/buildRPi32.sh $e $v $n $d
+$dir/buildRPi64.sh $e $v $n $d

@@ -1,9 +1,6 @@
 #!/bin/bash
 ulimit -s unlimited
 
-dir=$(readlink -f $(dirname $0)/../..)
-cd $dir
-
 if grep "^#define WITH_MPI" Source/definition.hpp ; then
    echo "Build with mpi"
    if (mpirun --version | grep Intel); then
@@ -17,12 +14,9 @@ if grep "^#define WITH_MPI" Source/definition.hpp ; then
 else
    export CXX=g++
    export CC=gcc
-   #export CXX=clang++-10
-   #export CC=clang-10
 fi
 
-which $CXX
-which $CC
+source $(dirname $0)/common
 
 FATHOM_PRESENT=0
 if [ -e Fathom/src/tbprobe.h ]; then
@@ -31,34 +25,7 @@ if [ -e Fathom/src/tbprobe.h ]; then
    $(dirname $0)/buildFathom.sh "$@"
 fi
 
-mkdir -p $dir/Dist/Minic3
-
-d="-DDEBUG_TOOL"
-v="dev"
-t="-march=native"
-n="-fopenmp-simd"
-
-if [ -n "$1" ] ; then
-   v=$1
-   shift
-fi
-
-if [ -n "$1" ] ; then
-   t=$1
-   shift
-fi
-
-if [ -n "$1" ] ; then
-   n=$1
-   shift
-fi
-
-$CXX -v
-echo "version $v"
-echo "definition $d"
-echo "target $t"
-
-exe=minic_${v}_linux_x64
+exe=${e}_${v}_linux_x64
 if [ "$t" != "-march=native" ]; then
    tname=$(echo $t | sed 's/-m//g' | sed 's/arch=//g' | sed 's/ /_/g')
    exe=${exe}_${tname}

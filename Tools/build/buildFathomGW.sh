@@ -1,25 +1,11 @@
 #!/bin/bash
-dir=$(readlink -f $(dirname $0)/../..)
+
+export CXX=x86_64-w64-mingw32-g++
+export CC=x86_64-w64-mingw32-gcc
+
+source $(dirname $0)/common
+
 cd $dir/Fathom/src
-
-d=""
-v="dev"
-t="-march=native"
-
-if [ -n "$1" ] ; then
-   v=$1
-   shift
-fi
-
-if [ -n "$1" ] ; then
-   t=$1
-   shift
-fi
-
-x86_64-w64-mingw32-g++ -v
-echo "version $v"
-echo "definition $d"
-echo "target $t"
 
 lib=fathom_${v}_mingw_x64
 if [ "$t" != "-march=native" ]; then
@@ -30,6 +16,6 @@ lib=${lib}.o
 echo "Building $lib"
 
 OPT="-s -Wall -Wno-char-subscripts $d -DNDEBUG -O3 -flto $t -I."
-x86_64-w64-mingw32-gcc -c $OPT tbprobe.c -o $lib
+$CC -c $OPT tbprobe.c -o $lib
 
 cd -

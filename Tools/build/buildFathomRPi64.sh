@@ -1,17 +1,11 @@
 #!/bin/bash
-dir=$(readlink -f $(dirname $0)/../..)
+
+export CXX=aarch64-linux-gnu-g++
+export CC=aarch64-linux-gnu-gcc
+
+source $(dirname)/common
+
 cd $dir/Fathom/src
-
-v="dev"
-
-if [ -n "$1" ] ; then
-   v=$1
-   shift
-fi
-
-$CC -v
-
-echo "version $v"
 
 lib=fathom_${v}_linux_x64_armv8.o
 echo "Building $lib"
