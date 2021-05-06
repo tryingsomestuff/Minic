@@ -1,25 +1,11 @@
 #!/bin/bash
-dir=$(readlink -f $(dirname $0)/../..)
+
+export CXX=g++
+export CC=gcc
+
+source $(dirname $0)/common
+
 cd $dir/Fathom/src
-
-d=""
-v="dev"
-t="-march=native"
-
-if [ -n "$1" ] ; then
-   v=$1
-   shift
-fi
-
-if [ -n "$1" ] ; then
-   t=$1
-   shift
-fi
-
-$CC -v
-echo "version $v"
-echo "definition $d"
-echo "target $t"
 
 lib=fathom_${v}_linux_x64
 if [ "$t" != "-march=native" ]; then

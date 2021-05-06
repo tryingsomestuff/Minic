@@ -1,17 +1,13 @@
 #!/bin/bash
-dir=$(readlink -f $(dirname $0)/../..)
+
+source "/ssd/emsdk/emsdk_env.sh"
+
+export CXX=emcc
+export CC=emcc
+
+source $(dirname $0)/common
+
 cd $dir/Fathom/src
-
-v="dev"
-
-if [ -n "$1" ] ; then
-   v=$1
-   shift
-fi
-
-$CC -v
-
-echo "version $v"
 
 lib=fathom_${v}_linux_x64_wasm.o
 echo "Building $lib"
