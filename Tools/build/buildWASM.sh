@@ -35,4 +35,4 @@ echo $OPT
 
 STANDARDSOURCE="Source/*.cpp Source/nnue/learn/*.cpp"
 
-$CXX $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $dir/Dist/Minic3/$exe -lpthread
+$CXX $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $buildDir/$exe -lpthread

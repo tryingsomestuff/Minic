@@ -38,5 +38,5 @@ fi
 
 STANDARDSOURCE="Source/*.cpp Source/nnue/learn/*.cpp"
 
-$CXX $OPT $STANDARDSOURCE -ISource -ISource/nnue -static -static-libgcc -static-libstdc++ -o $dir/Dist/Minic3/$exe -Wl,-Bstatic -lpthread
-i686-w64-mingw32-strip $dir/Dist/Minic3/$exe
+$CXX $OPT $STANDARDSOURCE -ISource -ISource/nnue -static -static-libgcc -static-libstdc++ -o $buildDir/$exe -Wl,-Bstatic -lpthread
+i686-w64-mingw32-strip $buildDir/$exe
