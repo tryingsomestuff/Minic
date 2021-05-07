@@ -35,6 +35,7 @@ else
    if [ "$t" != "-march=native" ]; then
       tname=$(echo $t | sed 's/-m//g' | sed 's/arch=//g' | sed 's/ /_/g')
       exe=${exe}_${tname}
+      exe=${buildDir}/${exe}
    fi
 fi
 echo "Building $exe"
@@ -76,15 +77,15 @@ rm -f *.gcda
 
 STANDARDSOURCE="Source/*.cpp Source/nnue/learn/*.cpp"
 
-$CXX -fprofile-generate $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $dir/Dist/Minic3/$exe $LIBS 
+$CXX -fprofile-generate $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $exe $LIBS 
 ret=$?
 echo "end of first compilation"
 if [ $ret = "0" ]; then
-   echo "running Minic for profiling : $dir/Dist/Minic3/$exe"
-   $dir/Dist/Minic3/$exe bench $DEPTH -quiet 0 -NNUEFile Tourney/nn.bin -NNUEFileEG Tourney/nn.bin
-   $dir/Dist/Minic3/$exe bench $DEPTH -quiet 0 
+   echo "running Minic for profiling : $exe"
+   $exe bench $DEPTH -quiet 0 -NNUEFile Tourney/nn.bin -NNUEFileEG Tourney/nn.bin
+   $exe bench $DEPTH -quiet 0 
    echo "starting optimized compilation"
-   $CXX -fprofile-use $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $dir/Dist/Minic3/$exe $LIBS
+   $CXX -fprofile-use $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $exe $LIBS
    echo "done "
 else
    echo "some error"

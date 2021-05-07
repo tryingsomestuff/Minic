@@ -28,4 +28,4 @@ echo $OPT
 
 STANDARDSOURCE="Source/*.cpp Source/nnue/learn/*.cpp"
 
-$CXX $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $dir/Dist/Minic3/$exe -static-libgcc -static-libstdc++ 
+$CXX $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $buildDir/$exe -static-libgcc -static-libstdc++ 

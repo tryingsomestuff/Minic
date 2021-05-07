@@ -6,6 +6,10 @@ if [ -n "${COMMON_BUILD}" ]; then
 else
 
    export dir=$(readlink -f $(dirname $0)/../..)
+   
+   export buildDir=$dir/Dist/Minic3
+
+   mkdir -p $buildDir
 
    export COMMON_BUILD=1
 
@@ -27,8 +31,6 @@ else
       cd $dir
    }
    export -f cd_root
-
-   mkdir -p $dir/Dist/Minic3
 
    e=minic
    v="dev"
