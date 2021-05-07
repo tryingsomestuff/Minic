@@ -1,0 +1,49 @@
+ulimit -s unlimited
+
+dir=$(readlink -f $(dirname $0)/../..)
+cd $dir
+
+mkdir -p $dir/Dist/Minic3
+
+e=minic
+v="dev"
+t="-march=native"
+n="-fopenmp-simd"
+d="-DDEBUG_TOOL"
+
+if [ -n "$1" ]; then
+   e=$1
+   shift
+fi
+
+if [ -n "$1" ] ; then
+   v=$1
+   shift
+fi
+
+if [ -n "$1" ] ; then
+   t=$1
+   shift
+fi
+
+if [ -n "$1" ] ; then
+   n=$1
+   shift
+fi
+
+if [ -n "$1" ] ; then
+   d=$1
+   shift
+fi
+
+echo "-----------------------------------------------------"
+which $CXX
+which $CC
+echo "-----------------------------------------------------"
+$CXX --version
+echo "-----------------------------------------------------"
+echo "output name: $e"
+echo "version: $v"
+echo "definition: $d"
+echo "target: $t"
+echo "-----------------------------------------------------"
