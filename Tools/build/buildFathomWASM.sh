@@ -6,6 +6,9 @@ export CXX=emcc
 export CC=emcc
 
 source $(dirname $0)/common
+cd_root
+
+do_title "Building Fathom for WASM"
 
 cd $dir/Fathom/src
 

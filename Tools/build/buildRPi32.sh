@@ -4,6 +4,7 @@ export CXX=arm-linux-gnueabihf-g++
 export CC=arm-linux-gnueabihf-gcc
 
 source $(dirname $0)/common
+cd_root
 
 FATHOM_PRESENT=0
 if [ -e Fathom/src/tbprobe.h ]; then
@@ -12,6 +13,8 @@ if [ -e Fathom/src/tbprobe.h ]; then
    $(dirname $0)/buildFathomRPi32.sh "$@"
 fi
 
+do_title "Building Minic for RPi32"
+
 OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto --std=c++17 $n -Wno-unknown-pragmas -DWITHOUT_FILESYSTEM"
 
 if [ $FATHOM_PRESENT = "1" ]; then
@@ -19,7 +22,7 @@ if [ $FATHOM_PRESENT = "1" ]; then
    OPT="$OPT $dir/Fathom/src/$lib -I$dir/Fathom/src"
 fi
 
-exe=${executable_name}_${v}_linux_x32_armv7
+exe=${e}_${v}_linux_x32_armv7
 echo "Building $exe"
 echo $OPT
 

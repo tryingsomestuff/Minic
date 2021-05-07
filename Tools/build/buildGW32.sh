@@ -4,6 +4,7 @@ export CXX=i686-w64-mingw32-g++-posix
 export CC=i686-w64-mingw32-gcc-posix
 
 source $(dirname $0)/common
+cd_root
 
 FATHOM_PRESENT=0
 if [ -e Fathom/src/tbprobe.h ]; then
@@ -11,6 +12,8 @@ if [ -e Fathom/src/tbprobe.h ]; then
    echo "found Fathom lib, trying to build"
    $(dirname $0)/buildFathomGW32.sh "$@"
 fi
+
+do_title "Building Minic for Win32"
 
 exe=${e}_${v}_mingw_x32
 if [ "$t" != "-march=native" ]; then

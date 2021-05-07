@@ -3,7 +3,10 @@
 export CXX=aarch64-linux-gnu-g++
 export CC=aarch64-linux-gnu-gcc
 
-source $(dirname)/common
+source $(dirname $0)/common
+cd_root
+
+do_title "Building Fathom for RPi64"
 
 cd $dir/Fathom/src
 
