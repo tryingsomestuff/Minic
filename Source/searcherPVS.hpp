@@ -361,7 +361,14 @@ ScoreType Searcher::pvs(ScoreType alpha,
                // castling extension
                //if (EXTENDMORE(extension) && isCastling(e.m) ) stats.incr(Stats::sid_castlingExtension),++extension;
                // Botvinnik-Markoff Extension
-               //if (EXTENDMORE(extension) && height > 1 && VALIDMOVE(stack[p.halfmoves].threat) && VALIDMOVE(stack[p.halfmoves - 2].threat) && (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) || (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat)))) stats.incr(Stats::sid_BMExtension), ++extension;
+               if (EXTENDMORE(extension) && 
+                   DynamicConfig::useNNUE && 
+                   height > 1 && 
+                   VALIDMOVE(stack[p.halfmoves].threat) && 
+                   VALIDMOVE(stack[p.halfmoves - 2].threat) && 
+                   (   sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) 
+                   || ( Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat) ) ) 
+                  ) stats.incr(Stats::sid_BMExtension), ++extension;
                // mate threat extension (from null move)
                //if (EXTENDMORE(extension) && mateThreat) stats.incr(Stats::sid_mateThreatExtension),++extension;
                // simple recapture extension
