@@ -52,6 +52,7 @@ LIBS="-lpthread -ldl"
 # -lopenblas"
 
 OPT="$WARN $d $OPT $t --std=c++17 -fno-exceptions"
+OPT="$OPT -ffp-contract=off" # to ensure reproductible result in AVX2 (FMA)
 
 # -flto is making g++ 9.3.0 under cygwin segfault
 uname -a | grep CYGWIN
