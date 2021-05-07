@@ -4,6 +4,9 @@ export CXX=$dir/android/bin/arm-linux-androideabi-clang++
 export CC=$dir/android/bin/arm-linux-androideabi-clang++
 
 source $(dirname $0)/common
+cd_root
+
+do_title "Building Fathom for Android"
 
 cd $dir/Fathom/src
 

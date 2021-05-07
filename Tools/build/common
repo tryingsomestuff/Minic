@@ -1,49 +1,83 @@
 ulimit -s unlimited
 
-dir=$(readlink -f $(dirname $0)/../..)
-cd $dir
+if [ -n "${COMMON_BUILD}" ]; then
+   echo "Common tools already loaded"
 
-mkdir -p $dir/Dist/Minic3
+else
 
-e=minic
-v="dev"
-t="-march=native"
-n="-fopenmp-simd"
-d="-DDEBUG_TOOL"
+   export dir=$(readlink -f $(dirname $0)/../..)
 
-if [ -n "$1" ]; then
-   e=$1
-   shift
+   export COMMON_BUILD=1
+
+   do_sep(){
+      echo "-----------------------------------------------------"
+   }
+   export -f do_sep
+
+   do_title(){
+      echo 
+      echo "======================================"
+      echo "   $1"
+      echo "======================================"
+      echo 
+   }
+   export -f do_title
+
+   cd_root(){
+      cd $dir
+   }
+   export -f cd_root
+
+   mkdir -p $dir/Dist/Minic3
+
+   e=minic
+   v="dev"
+   t="-march=native"
+   n="-fopenmp-simd"
+   d="-DDEBUG_TOOL"
+
+   if [ -n "$1" ]; then
+      e=$1
+      shift
+   fi
+
+   if [ -n "$1" ] ; then
+      v=$1
+      shift
+   fi
+
+   if [ -n "$1" ] ; then
+      t=$1
+      shift
+   fi
+
+   if [ -n "$1" ] ; then
+      n=$1
+      shift
+   fi
+
+   if [ -n "$1" ] ; then
+      d=$1
+      shift
+   fi
+
+   export e
+   export v
+   export t
+   export d
+   export CXX
+   export CC
+
+   do_sep
+   which $CXX
+   which $CC
+   do_sep
+   $CXX --version
+   do_sep
+   echo "output name: $e"
+   echo "version: $v"
+   echo "definition: $d"
+   echo "target: $t"
+   do_sep
+
 fi
-
-if [ -n "$1" ] ; then
-   v=$1
-   shift
-fi
-
-if [ -n "$1" ] ; then
-   t=$1
-   shift
-fi
-
-if [ -n "$1" ] ; then
-   n=$1
-   shift
-fi
-
-if [ -n "$1" ] ; then
-   d=$1
-   shift
-fi
-
-echo "-----------------------------------------------------"
-which $CXX
-which $CC
-echo "-----------------------------------------------------"
-$CXX --version
-echo "-----------------------------------------------------"
-echo "output name: $e"
-echo "version: $v"
-echo "definition: $d"
-echo "target: $t"
-echo "-----------------------------------------------------"

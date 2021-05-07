@@ -6,6 +6,7 @@ export CXX=emcc
 export CC=emcc
 
 source $(dirname $0)/common
+cd_root
 
 FATHOM_PRESENT=0
 if [ -e Fathom/src/tbprobe.h ]; then
@@ -13,6 +14,8 @@ if [ -e Fathom/src/tbprobe.h ]; then
    echo "found Fathom lib, trying to build"
    $(dirname $0)/buildFathomWASM.sh "$@"
 fi
+
+do_title "Building Minic for WASM"
 
 OPT="-Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto --std=c++17 $n -Wno-unknown-pragmas -DWITHOUT_FILESYSTEM"
 OPT="$OPT -s MODULARIZE=1 -s EXPORT_NAME="Minic" -s ENVIRONMENT=web,worker,node -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1"

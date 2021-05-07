@@ -4,6 +4,7 @@ export CXX=$dir/android/bin/arm-linux-androideabi-clang++
 export CC=$dir/android/bin/arm-linux-androideabi-clang++
 
 source $(dirname $0)/common
+cd_root
 
 FATHOM_PRESENT=0
 if [ -e Fathom/src/tbprobe.h ]; then
@@ -11,6 +12,8 @@ if [ -e Fathom/src/tbprobe.h ]; then
    echo "found Fathom lib, trying to build"
    $(dirname $0)/buildFathomAndroid.sh "$@"
 fi
+
+do_title "Building Minic for Android"
 
 OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto --std=c++17 $n -Wno-unknown-pragmas"
 

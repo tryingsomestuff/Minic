@@ -17,6 +17,7 @@ else
 fi
 
 source $(dirname $0)/common
+cd_root
 
 FATHOM_PRESENT=0
 if [ -e Fathom/src/tbprobe.h ]; then
@@ -25,12 +26,17 @@ if [ -e Fathom/src/tbprobe.h ]; then
    $(dirname $0)/buildFathom.sh "$@"
 fi
 
-exe=${e}_${v}_linux_x64
-if [ "$t" != "-march=native" ]; then
-   tname=$(echo $t | sed 's/-m//g' | sed 's/arch=//g' | sed 's/ /_/g')
-   exe=${exe}_${tname}
-fi
+do_title "Building Minic for Linux"
 
+if [ -n "$FORCEDNAME" ]; then
+   exe=$FORCEDNAME
+else
+   exe=${e}_${v}_linux_x64
+   if [ "$t" != "-march=native" ]; then
+      tname=$(echo $t | sed 's/-m//g' | sed 's/arch=//g' | sed 's/ /_/g')
+      exe=${exe}_${tname}
+   fi
+fi
 echo "Building $exe"
 
 WARN="-Wall -Wcast-qual -Wno-char-subscripts -Wno-reorder -Wmaybe-uninitialized -Wuninitialized -pedantic -Wextra -Wshadow -Wno-unknown-pragmas"

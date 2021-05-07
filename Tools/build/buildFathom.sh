@@ -4,6 +4,9 @@ export CXX=g++
 export CC=gcc
 
 source $(dirname $0)/common
+cd_root
+
+do_title "Building Fathom"
 
 cd $dir/Fathom/src
 

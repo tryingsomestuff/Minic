@@ -4,6 +4,9 @@ export CXX=i686-w64-mingw32-g++-posix
 export CC=i686-w64-mingw32-gcc-posix
 
 source $(dirname $0)/common
+cd_root
+
+do_title "Building Fathom for Win32"
 
 cd $dir/Fathom/src
 
