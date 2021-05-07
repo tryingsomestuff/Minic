@@ -8,7 +8,7 @@ inline T dotProductFma_(const T* a, const T* b){
   return sum;
 }
 
-#ifdef __AVX__ // no need for AVX2 here, as AVX1 already implements 256bits float stuff
+#ifdef __AVX2__
 
 #include <assert.h>
 #include <immintrin.h>
