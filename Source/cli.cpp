@@ -337,7 +337,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
     }
 
     if ( cli == "bench" ){
-        DepthType d = 15;
+        DepthType d = 16;
         if ( argc > 2 ) d = atoi(argv[2]);         
         return bench(d);
     }
