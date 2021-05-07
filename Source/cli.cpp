@@ -89,6 +89,10 @@ void perft_test(const std::string & fen, DepthType d, unsigned long long int exp
 }
 
 void analyze(const Position & p, DepthType depth, bool openBenchOutput = false){
+
+    static float benchms = 0;
+    static Counter benchNodes = 0;
+
     TimeMan::isDynamic       = false;
     TimeMan::nbMoveInTC      = -1;
     TimeMan::msecPerMove     = INFINITETIME;
@@ -110,8 +114,10 @@ void analyze(const Position & p, DepthType depth, bool openBenchOutput = false){
         Logging::LogIt(Logging::logInfo) << "Next two lines are for OpenBench";
         const TimeType ms = std::max(1,(int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - ThreadPool::instance().main().startTime).count());
         const Counter nodeCount = ThreadPool::instance().main().stats.counters[Stats::sid_nodes] + ThreadPool::instance().main().stats.counters[Stats::sid_qnodes];
-        std::cerr << "NODES " << nodeCount << std::endl;
-        std::cerr << "NPS " << int(nodeCount/(ms/1000.f)) << std::endl;
+        benchNodes+=nodeCount;
+        benchms+=ms/1000.f;
+        std::cerr << "NODES " << benchNodes << std::endl;
+        std::cerr << "NPS " << benchNodes/benchms << std::endl;
     }
 }
 
