@@ -30,3 +30,25 @@ $dir/buildGW32.sh $e $v "-march=pentium2" $n $d
 $dir/buildAndroid.sh $e $v $n $d
 $dir/buildRPi32.sh $e $v $n $d
 $dir/buildRPi64.sh $e $v $n $d
+
+#TODO WASM
+
+rootdir=$(readlink -f $dir/../../)
+
+$rootdir/Dist/Minic3/minic_${v}_linux_x64_core2 bench 16 -NNUEFile $rootdir/Tourney/nn.bin 2>&1 | grep NODES
+echo '-------'
+$rootdir/Dist/Minic3/minic_${v}_linux_x64_nehalem bench 16 -NNUEFile $rootdir/Tourney/nn.bin 2>&1 | grep NODES
+echo '-------'
+$rootdir/Dist/Minic3/minic_${v}_linux_x64_sandybridge bench 16 -NNUEFile $rootdir/Tourney/nn.bin 2>&1 | grep NODES
+echo '-------'
+$rootdir/Dist/Minic3/minic_${v}_linux_x64_skylake bench 16 -NNUEFile $rootdir/Tourney/nn.bin 2>&1 | grep NODES
+
+echo '---------------------------------'
+
+$rootdir/Dist/Minic3/minic_${v}_linux_x64_core2 bench 16 2>&1 | grep NODES
+echo '-------'
+$rootdir/Dist/Minic3/minic_${v}_linux_x64_nehalem bench 16 2>&1 | grep NODES
+echo '-------'
+$rootdir/Dist/Minic3/minic_${v}_linux_x64_sandybridge bench 16 2>&1 | grep NODES
+echo '-------'
+$rootdir/Dist/Minic3/minic_${v}_linux_x64_skylake bench 16 2>&1 | grep NODES
