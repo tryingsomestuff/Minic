@@ -117,7 +117,7 @@ void analyze(const Position & p, DepthType depth, bool openBenchOutput = false){
         benchNodes+=nodeCount;
         benchms+=ms/1000.f;
         std::cerr << "NODES " << benchNodes << std::endl;
-        std::cerr << "NPS " << benchNodes/benchms << std::endl;
+        std::cerr << "NPS " << int(benchNodes/benchms) << std::endl;
     }
 }
 
