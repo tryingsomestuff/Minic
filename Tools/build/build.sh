@@ -30,6 +30,7 @@ do_title "Building Minic for Linux"
 
 if [ -n "$FORCEDNAME" ]; then
    exe=$FORCEDNAME
+   exe=${dir}/${exe}
 else
    exe=${e}_${v}_linux_x64
    if [ "$t" != "-march=native" ]; then
@@ -82,7 +83,7 @@ ret=$?
 echo "end of first compilation"
 if [ $ret = "0" ]; then
    echo "running Minic for profiling : $exe"
-   $exe bench $DEPTH -quiet 0 -NNUEFile Tourney/nn.bin -NNUEFileEG Tourney/nn.bin
+   $exe bench $DEPTH -quiet 0 -NNUEFile Tourney/nn.bin
    $exe bench $DEPTH -quiet 0 
    echo "starting optimized compilation"
    $CXX -fprofile-use $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $exe $LIBS
