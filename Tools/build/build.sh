@@ -54,7 +54,9 @@ LIBS="-lpthread -ldl"
 # -lopenblas"
 
 OPT="$WARN $d $OPT $t --std=c++17 -fno-exceptions"
-OPT="$OPT -ffp-contract=off" # to ensure reproductible result in AVX2 (FMA)
+if [ -n "$FORCEDNAME" ]; then
+   OPT="$OPT -ffp-contract=off" # to ensure reproductible result in AVX2 (FMA)
+fi
 
 # -flto is making g++ 9.3.0 under cygwin segfault
 uname -a | grep CYGWIN
@@ -75,8 +77,6 @@ fi
 echo $OPT $LIBS
 
 rm -f *.gcda
-
-STANDARDSOURCE="Source/*.cpp Source/nnue/learn/*.cpp"
 
 $CXX -fprofile-generate $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $exe $LIBS 
 ret=$?

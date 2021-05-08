@@ -26,6 +26,4 @@ exe=${e}_${v}_linux_x64_armv8
 echo "Building $exe"
 echo $OPT
 
-STANDARDSOURCE="Source/*.cpp Source/nnue/learn/*.cpp"
-
 $CXX $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $buildDir/$exe -static-libgcc -static-libstdc++ -lpthread

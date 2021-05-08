@@ -33,6 +33,4 @@ exe=${e}_${v}_linux_x64_wasm.js
 echo "Building $exe"
 echo $OPT
 
-STANDARDSOURCE="Source/*.cpp Source/nnue/learn/*.cpp"
-
 $CXX $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $buildDir/$exe -lpthread

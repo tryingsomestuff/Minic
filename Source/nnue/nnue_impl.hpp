@@ -35,7 +35,17 @@
 #define CONSTEXPR constexpr
 #endif
 
+#define INCBIN_PREFIX
+#define INCBIN_STYLE INCBIN_STYLE_CAMEL
+#include "incbin.h"
+
 namespace nnue{
+
+#ifdef EMBEDEDNNUEPATH
+namespace embeded {
+  INCBIN_EXTERN(weightsFile);
+}
+#endif
 
 // quantization constantes
 
@@ -84,22 +94,24 @@ inline void quantizationInfo(){
 
 template<typename NT>
 struct weights_streamer{
-  std::fstream file;
+  std::istream * file = nullptr;
   
   weights_streamer<NT>& read_version(uint32_t & version){
-     file.read((char *) &version, sizeof(uint32_t));
+     assert(file);
+     file->read((char *) &version, sizeof(uint32_t));
      return *this;
   }
 
   template<typename T, bool Q>
   weights_streamer<NT>& streamW(T* dst, const size_t request, size_t dim0, size_t dim1){
+    assert(file);
     NT minW = std::numeric_limits<NT>::max();
     NT maxW = std::numeric_limits<NT>::min();
     std::array<char, sizeof(NT)> single_element{};
     const NT Wscale = Quantization<Q>::weightFactor;
     Logging::LogIt(Logging::logInfo) << "Reading inner weight";
     for(size_t i(0); i < request; ++i){
-      file.read(single_element.data(), single_element.size());
+      file->read(single_element.data(), single_element.size());
       NT tmp{0};
       std::memcpy(&tmp, single_element.data(), single_element.size());
       minW = std::min(minW,tmp);
@@ -126,13 +138,14 @@ struct weights_streamer{
 
   template<typename T, bool Q>
   weights_streamer<NT> & streamWI(T* dst, const size_t request){
+    assert(file);
     NT minW = std::numeric_limits<NT>::max();
     NT maxW = std::numeric_limits<NT>::min();
     std::array<char, sizeof(NT)> single_element{};
     const NT Wscale = Quantization<Q>::weightScale;
     Logging::LogIt(Logging::logInfo) << "Reading input weight";
     for(size_t i(0); i < request; ++i){
-      file.read(single_element.data(), single_element.size());
+      file->read(single_element.data(), single_element.size());
       NT tmp{0};
       std::memcpy(&tmp, single_element.data(), single_element.size());
       minW = std::min(minW,tmp);
@@ -153,13 +166,14 @@ struct weights_streamer{
 
   template<typename T, bool Q>
   weights_streamer<NT> & streamB(T* dst, const size_t request){
+    assert(file);
     NT minB = std::numeric_limits<NT>::max();
     NT maxB = std::numeric_limits<NT>::min();
     std::array<char, sizeof(NT)> single_element{};
     const NT Bscale = Quantization<Q>::biasFactor;
     Logging::LogIt(Logging::logInfo) << "Reading inner bias";
     for(size_t i(0); i < request; ++i){
-      file.read(single_element.data(), single_element.size());
+      file->read(single_element.data(), single_element.size());
       NT tmp{0};
       std::memcpy(&tmp, single_element.data(), single_element.size());
       minB = std::min(minB,tmp);
@@ -180,13 +194,14 @@ struct weights_streamer{
 
   template<typename T, bool Q>
   weights_streamer<NT> & streamBI(T* dst, const size_t request){
+    assert(file);
     NT minB = std::numeric_limits<NT>::max();
     NT maxB = std::numeric_limits<NT>::min();
     std::array<char, sizeof(NT)> single_element{};
     const NT Bscale = Quantization<Q>::weightScale;
     Logging::LogIt(Logging::logInfo) << "Reading input bias";
     for(size_t i(0); i < request; ++i){
-      file.read(single_element.data(), single_element.size());
+      file->read(single_element.data(), single_element.size());
       NT tmp{0};
       std::memcpy(&tmp, single_element.data(), single_element.size());
       minB = std::min(minB,tmp);
@@ -205,7 +220,7 @@ struct weights_streamer{
     return *this;
   }  
 
-  weights_streamer(const std::string& name) : file(name, std::ios_base::in | std::ios_base::binary) {}
+  weights_streamer(std::istream& stream) : file(&stream) {}
 };
 
 #ifdef WITH_NNUE_CLIPPED_RELU
@@ -507,24 +522,45 @@ struct half_kp_weights{
   
   static bool load(const std::string& path, half_kp_weights<NT,Q>& loadedWeights){
     static const uint32_t expectedVersion = 0xc0ffee00;
+    static const int expectedSize = 50378504; // 50378500 + 4 for version
     static const bool withVersion = true;
+
+    if ( path != "embeded"){ // read from disk
 #ifndef __ANDROID__
 #ifndef WITHOUT_FILESYSTEM 
-    static const int expectedSize = 50378504; // 50378500 + 4 for version
-    std::error_code ec;
-    auto fsize = std::filesystem::file_size(path,ec);
-    if ( ec ){
-      Logging::LogIt(Logging::logError) << "File " << path << " is not accessible";
-      return false;
-    }
-    if ( fsize != expectedSize ){ // with or without version
-      Logging::LogIt(Logging::logError) << "File " << path << " does not look like a compatible net";
-      return false;
-    }
+      std::error_code ec;
+      auto fsize = std::filesystem::file_size(path,ec);
+      if ( ec ){
+        Logging::LogIt(Logging::logError) << "File " << path << " is not accessible";
+        return false;
+      }
+      if ( fsize != expectedSize ){ // with or without version
+        Logging::LogIt(Logging::logError) << "File " << path << " does not look like a compatible net";
+        return false;
+      }
 #endif
 #endif
-    auto ws = weights_streamer<NT>(path);
-    loadedWeights.load(ws,withVersion);
+      std::fstream stream(path, std::ios_base::in | std::ios_base::binary);
+      auto ws = weights_streamer<NT>(stream);
+      loadedWeights.load(ws,withVersion);
+    }
+#ifdef EMBEDEDNNUEPATH
+    else{ // read from embeded data
+      if ( embeded::weightsFileSize != expectedSize ){ // with or without version
+        Logging::LogIt(Logging::logError) << "File " << path << " does not look like a compatible net";
+        return false;
+      }
+      std::istringstream stream(std::string((const char*)embeded::weightsFileData,embeded::weightsFileSize),std::stringstream::binary);
+      auto ws = weights_streamer<NT>(stream);
+      loadedWeights.load(ws,withVersion);
+    }
+#else
+    else{
+        Logging::LogIt(Logging::logError) << "Minic was not compiled with an embeded net";
+        return false;
+    }
+#endif
+
     if ( withVersion ){
       Logging::LogIt(Logging::logInfo) << "Expected net version : " << toHexString(expectedVersion);
       Logging::LogIt(Logging::logInfo) << "Read net version     : " << toHexString(loadedWeights.version);

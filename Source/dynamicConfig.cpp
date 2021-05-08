@@ -23,7 +23,11 @@ namespace DynamicConfig{
     bool nodesBasedLevel     = false;
     bool useNNUE             = false;
     bool forceNNUE           = false;
+#ifndef FORCEEMBEDEDNNUE    
     std::array<std::string,NNN> NNUEFile;
+#else
+    std::array<std::string,NNN> NNUEFile = {"embeded"};
+#endif
     bool genFen              = false;
     unsigned int genFenDepth = 8;
     unsigned int genFenDepthEG = 16;

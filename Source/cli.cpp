@@ -118,7 +118,7 @@ void analyze(const Position & p, DepthType depth, bool openBenchOutput = false){
         const Counter nodeCount = ThreadPool::instance().main().stats.counters[Stats::sid_nodes] + ThreadPool::instance().main().stats.counters[Stats::sid_qnodes];
         benchNodes+=nodeCount;
         benchms+=ms/1000.f;
-        DynamicConfig::silent = true;
+        DynamicConfig::silent = false;
         std::cerr << "NODES " << benchNodes << std::endl;
         std::cerr << "NPS " << int(benchNodes/benchms) << std::endl;
     }
