@@ -36,8 +36,8 @@ else
    if [ "$t" != "-march=native" ]; then
       tname=$(echo $t | sed 's/-m//g' | sed 's/arch=//g' | sed 's/ /_/g')
       exe=${exe}_${tname}
-      exe=${buildDir}/${exe}
    fi
+   exe=${buildDir}/${exe}
 fi
 echo "Building $exe"
 
