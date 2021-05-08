@@ -11,6 +11,8 @@ else
 
    mkdir -p $buildDir
 
+   export STANDARDSOURCE="Source/*.cpp Source/nnue/*.cpp Source/nnue/learn/*.cpp"
+
    export COMMON_BUILD=1
 
    do_sep(){
@@ -37,6 +39,13 @@ else
    t="-march=native"
    n="-fopenmp-simd"
    d="-DDEBUG_TOOL"
+   if [ -n "$EMBEDEDNNUEPATH" ]; then
+      echo "Forced embeded net $EMBEDEDNNUEPATH"
+      d="$d -DEMBEDEDNNUEPATH=$EMBEDEDNNUEPATH -DFORCEEMBEDEDNNUE"
+   else
+      echo "Default embeded net"
+      d="$d -DEMBEDEDNNUEPATH=/ssd/NNUE-Nets/nocturnal_nadir.bin"
+   fi
 
    if [ -n "$1" ]; then
       e=$1

@@ -3,6 +3,10 @@ ifdef EXE
    export FORCEDNAME=$(EXE)
 endif
 
+ifdef EVALFILE
+   export EMBEDEDNNUEPATH=$(EVALFILE)
+endif
+
 .PHONY: config fathom build dist release
 
 .DEFAULT_GOAL:= build 
