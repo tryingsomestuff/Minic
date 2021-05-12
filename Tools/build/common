@@ -44,7 +44,7 @@ else
       d="$d -DEMBEDEDNNUEPATH=$EMBEDEDNNUEPATH -DFORCEEMBEDEDNNUE"
    else
       echo "Default embeded net"
-      d="$d -DEMBEDEDNNUEPATH=/ssd/NNUE-Nets/nocturnal_nadir.bin"
+      d="$d -DEMBEDEDNNUEPATH=/ssd/NNUE-Nets/nocturnal_nadir.bin -DFORCEEMBEDEDNNUE"
    fi
 
    if [ -n "$1" ]; then
