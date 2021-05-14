@@ -384,7 +384,7 @@ private:
 };
 
 namespace{
-   std::atomic<unsigned long long int> sfens_count = 0;
+   std::atomic<uint64_t> sfens_count = 0;
 }
 
 extern "C" {

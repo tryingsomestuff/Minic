@@ -89,7 +89,7 @@ struct Searcher{
                                     DepthType qply, 
                                     bool qRoot, 
                                     bool pvnode, 
-                                    signed char isInCheckHint = -1);
+                                    int8_t isInCheckHint = -1);
 
     // used for tuning not search !
     [[nodiscard]] ScoreType qsearchNoPruning(ScoreType alpha, 
@@ -157,7 +157,7 @@ struct Searcher{
     };
     #pragma pack(pop)
 
-    static const unsigned long long int ttSizePawn;
+    static const uint64_t ttSizePawn;
     std::unique_ptr<PawnEntry[]> tablePawn = 0;
 
     void initPawnTable();

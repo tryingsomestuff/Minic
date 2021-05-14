@@ -7,7 +7,7 @@
 namespace Opponent
 {
 
-    static std::map<std::string, unsigned short int> ratings = {
+    static std::map<std::string, uint16_t> ratings = {
         {"Fat Fritz 2", 3643},
         {"Stockfish", 3637},
         {"Dragon", 3587},
@@ -112,7 +112,7 @@ namespace Opponent
     };
 
     std::string str_tolower(std::string s){
-        std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
+        std::transform(s.begin(), s.end(), s.begin(), [](uint8_t c) { return std::tolower(c); });
         return s;
     }
 

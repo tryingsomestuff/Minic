@@ -89,7 +89,7 @@ inline std::ostream & operator<<(std::ostream & of, const EvalScore & s){
     return of;
 }
 
-enum Feature : unsigned char { F_material = 0, F_positional, F_development, F_mobility, F_attack, F_pawnStruct, F_complexity, F_max };
+enum Feature : uint8_t { F_material = 0, F_positional, F_development, F_mobility, F_attack, F_pawnStruct, F_complexity, F_max };
 inline Feature operator++(Feature & f){f=Feature(f+1); return f;}
 struct EvalFeatures{
     EvalScore scores[F_max] = { {0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0} };
@@ -117,7 +117,7 @@ inline std::ostream & operator<<(std::ostream & of, const EvalFeatures & feature
 struct EvalData{
     float gp = 0;
     ScoreType danger[2] = {0,0};
-    unsigned short int mobility[2] = {0,0};
+    uint16_t mobility[2] = {0,0};
 };
 
 // used for easy move detection

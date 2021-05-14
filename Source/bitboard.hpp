@@ -127,7 +127,7 @@ inline void      _unSetBit(      BitBoard & b, Square k) { b &= ~SquareToBitboar
 
 [[nodiscard]] inline int popBit(BitBoard & b) {
     assert( b != emptyBitBoard);
-    unsigned long i = 0;
+    int i = 0;
     bsf(b, i);
     b &= b - 1;
     return i;

@@ -39,12 +39,12 @@ struct Position{
 
     mutable Hash h = nullHash, ph = nullHash;
     MiniMove lastMove = INVALIDMINIMOVE;
-    unsigned short int moves = 0, halfmoves = 0;
+    uint16_t moves = 0, halfmoves = 0;
     std::array<Square,2> king = { INVALIDSQUARE, INVALIDSQUARE };
     std::array<std::array<Square,2>,2> rooksInit = {{ {INVALIDSQUARE, INVALIDSQUARE}, {INVALIDSQUARE, INVALIDSQUARE} }};
     std::array<Square,2> kingInit = {INVALIDSQUARE, INVALIDSQUARE};
     Square ep = INVALIDSQUARE;
-    unsigned char fifty = 0;
+    uint8_t fifty = 0;
     CastlingRights castling = C_none;
     Color c = Co_White;
 

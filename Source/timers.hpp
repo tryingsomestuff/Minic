@@ -11,7 +11,7 @@ uint64_t rdtsc();
 #define START_TIMER uint64_t rdtscBegin = rdtsc();
 #define STOP_AND_SUM_TIMER(name) Timers::rdtscCounter[TM_##name] += rdtsc() - rdtscBegin; ++Timers::callCounter[TM_##name];
 
-enum TimerType : unsigned char { TM_Total=0, TM_See, TM_Apply, TM_Eval1, TM_Eval2, TM_Eval3, TM_Eval4, TM_Eval5, TM_Eval, 
+enum TimerType : uint8_t { TM_Total=0, TM_See, TM_Apply, TM_Eval1, TM_Eval2, TM_Eval3, TM_Eval4, TM_Eval5, TM_Eval, 
                                  TM_Attack, TM_MovePiece, TM_Generate, TM_PseudoLegal, TM_IsAttacked, TM_MoveScoring, TM_MoveSorting, TM_Max };
 
 namespace Timers{

@@ -11,7 +11,7 @@ template<class T>
     struct DeleteAligned{
         void operator()(T * ptr) const { if (ptr) std_aligned_free(ptr); }
     };     
-    unsigned long long int ttSize = 0;
+    uint64_t ttSize = 0;
     std::unique_ptr<TT::Entry[],DeleteAligned<TT::Entry>> table(nullptr);
 }
 namespace TT{
@@ -25,7 +25,7 @@ GenerationType curGen = 0;
 void initTable(){
     Logging::LogIt(Logging::logInfo) << "Init TT" ;
     Logging::LogIt(Logging::logInfo) << "Entry size " << sizeof(Entry);
-    ttSize = powerFloor((1024ull * 1024ull * DynamicConfig::ttSizeMb) / (unsigned long long int)sizeof(Entry));
+    ttSize = powerFloor((1024ull * 1024ull * DynamicConfig::ttSizeMb) / (uint64_t)sizeof(Entry));
     assert(BB::countBit(ttSize) == 1); // a power of 2
     table.reset((Entry *) std_aligned_alloc(1024,ttSize*sizeof(Entry)));
     Logging::LogIt(Logging::logInfo) << "Size of TT " << ttSize * sizeof(Entry) / 1024 / 1024 << "Mb" ;
@@ -43,7 +43,7 @@ void clearTT() {
 }
 
 int hashFull(){
-    unsigned long long count = 0;
+    unsigned int count = 0;
     const unsigned int samples = 1023*64;
     for (unsigned int k = 0; k < samples; ++k) if ( table[(k*67)%ttSize].h != nullHash ) ++count;
     return int((count*1000)/samples);

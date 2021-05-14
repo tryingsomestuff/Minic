@@ -146,7 +146,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
             if ( matHash != nullHash ){
                stats.incr(Stats::sid_materialTableHits);
                const MaterialHash::MaterialHashEntry & MEntry = MaterialHash::materialHashTable[matHash];
-               data.gp = MEntry.gp;
+               data.gp = MEntry.gamePhase();
             }
             else{ // if no match, compute game phase (this does not happend very often ...)
                ScoreType matScoreW = 0;

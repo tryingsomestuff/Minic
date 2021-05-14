@@ -16,7 +16,7 @@ namespace TT{
 
 // curGen is coded inside Bound using only 3bits, shifted by 5 (224 = 0x111)
 extern GenerationType curGen;
-enum Bound : unsigned char{ B_none = 0, B_alpha = 1, B_beta = 2, B_exact = 3, B_ttPVFlag = 4, B_isCheckFlag = 8, B_isInCheckFlag = 16, B_gen = 224, B_allFlags = B_ttPVFlag|B_isCheckFlag|B_isInCheckFlag|B_gen};
+enum Bound : uint8_t{ B_none = 0, B_alpha = 1, B_beta = 2, B_exact = 3, B_ttPVFlag = 4, B_isCheckFlag = 8, B_isInCheckFlag = 16, B_gen = 224, B_allFlags = B_ttPVFlag|B_isCheckFlag|B_isInCheckFlag|B_gen};
 #if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"

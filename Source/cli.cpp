@@ -77,12 +77,12 @@ Counter perft(const Position & p, DepthType depth, PerftAccumulator & acc){
     return acc.validNodes;
 }
 
-void perft_test(const std::string & fen, DepthType d, unsigned long long int expected) {
+void perft_test(const std::string & fen, DepthType d, uint64_t expected) {
     Position p;
     readFEN(fen, p);
     Logging::LogIt(Logging::logInfo) << ToString(p) ;
     PerftAccumulator acc;
-    unsigned long long int n = perft(p, d, acc);
+    uint64_t n = perft(p, d, acc);
     acc.Display();
     if (n != expected) Logging::LogIt(Logging::logFatal) << "Error !! " << fen << " " << expected ;
     Logging::LogIt(Logging::logInfo) << "#########################" ;
@@ -196,7 +196,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
     if ( cli == "-selfplay"){
         DepthType d = 15; // this is "search depth", not genFenDepth !
         if ( argc > 2 ) d = atoi(argv[2]); 
-        unsigned long long int n = 1;
+        uint64_t n = 1;
         if ( argc > 3 ) n = atoll(argv[3]); 
         Logging::LogIt(Logging::logInfo) << "Let's go for " << n << " selfplay games ..."; 
         while ( n-- > 0 ){
@@ -224,7 +224,7 @@ int cliManagement(std::string cli, int argc, char ** argv){
             while (found != std::string::npos ){
                 const std::size_t start = found+1;
                 found=line.find_first_of(",",found + 1 );
-                const unsigned long long ull = std::stoull (line.substr(start, found-start));
+                const uint64_t ull = std::stoull (line.substr(start, found-start));
                 perft_test(fen, 6, ull);
             }
         }
@@ -237,11 +237,11 @@ int cliManagement(std::string cli, int argc, char ** argv){
         while (std::getline(infile, line)){
             std::size_t found = line.find_first_of(",");
             const std::string fen = line.substr(0, found);
-            unsigned int i = 0;
+            DepthType i = 0;
             while (found != std::string::npos ){
                 const std::size_t start = found+1;
                 found=line.find_first_of(",",found + 1 );
-                const unsigned long long ull = std::stoull (line.substr(start, found-start));
+                const uint64_t ull = std::stoull (line.substr(start, found-start));
                 perft_test(fen, ++i, ull);
             }
         }

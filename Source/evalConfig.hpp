@@ -93,7 +93,7 @@ extern CONST_TEXEL_TUNING ScoreType   scalingFactorPawnsSlope         ;
 extern CONST_TEXEL_TUNING ScoreType   scalingFactorPawnsOneSide       ;
 
 // This idea was taken from Topple by Vincent Tang a.k.a Konsolas
-enum katt_att_def : unsigned char { katt_attack = 0, katt_defence = 1 };
+enum katt_att_def : uint8_t { katt_attack = 0, katt_defence = 1 };
 extern CONST_TEXEL_TUNING ScoreType kingAttMax             ;
 extern CONST_TEXEL_TUNING ScoreType kingAttTrans           ;
 extern CONST_TEXEL_TUNING ScoreType kingAttScale           ;
