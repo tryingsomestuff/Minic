@@ -16,7 +16,7 @@ ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 config:
 	chmod +x $(ROOT_DIR)/Tools/build/*.sh
 	mkdir -p Tourney
-	if [ ! -e $(ROOT_DIR)/Tourney/nn.bin ]; then wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/nocturnal_nadir.bin -O Tourney/nn.bin ; fi
+	if [ ! -e $(ROOT_DIR)/Tourney/nn.bin ]; then wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/naive_nostalgia.bin -O Tourney/nn.bin ; fi
 
 fathom:
 	git rev-parse --is-inside-work-tree > /dev/null 2>&1 && git submodule update --init -- Fathom || (rm -rf Fathom && git clone https://github.com/jdart1/Fathom.git)

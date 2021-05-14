@@ -43,10 +43,12 @@ else
       if [ "$EMBEDEDNNUEPATH" != "none" ]; then
          echo "Forced embeded net $EMBEDEDNNUEPATH"
          d="$d -DEMBEDEDNNUEPATH=$EMBEDEDNNUEPATH -DFORCEEMBEDEDNNUE"
+      else
+         echo "Forced build without embeded net"
       fi
    else
       echo "Default embeded net"
-      d="$d -DEMBEDEDNNUEPATH=/ssd/NNUE-Nets/nocturnal_nadir.bin -DFORCEEMBEDEDNNUE"
+      d="$d -DEMBEDEDNNUEPATH=/ssd/NNUE-Nets/naive_nostalgia.bin -DFORCEEMBEDEDNNUE"
    fi
 
    if [ -n "$1" ]; then
