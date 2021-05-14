@@ -136,12 +136,11 @@ ScoreType Searcher::qsearch(ScoreType alpha,
     // use tt score if possible and not in check
     if ( !isInCheck){
        if ( ttHit && ((bound == TT::B_alpha && e.s <= evalScore) || (bound == TT::B_beta && e.s >= evalScore) || (bound == TT::B_exact)) ) evalScore = e.s, evalScoreIsHashScore = true;
-       if ( !ttHit ) TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(evalScore,height),createHashScore(evalScore,height),TT::B_none,-2); // already insert an eval here in case of pruning ...
     }
 
     // early cut-off based on eval score (static or from TT score)
     if ( evalScore >= beta ){
-        //if ( !ttHit ) TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(evalScore,height),createHashScore(evalScore,height),TT::B_none,-2); 
+        if ( !isInCheck && !ttHit ) TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(evalScore,height),createHashScore(evalScore,height),TT::B_none,-2);
         return evalScore;
     }
     if ( !isInCheck && SearchConfig::doQDeltaPruning && staticScore + qDeltaMargin(p) < alpha ) return stats.incr(Stats::sid_delta),alpha;
