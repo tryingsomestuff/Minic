@@ -207,8 +207,9 @@ namespace MaterialHash { // idea from Gull
             const EvalScore imbalanceW = Imbalance(mat, Co_White);
             const EvalScore imbalanceB = Imbalance(mat, Co_Black);
 #endif
-            materialHashTable[k].gp = (matScoreW + matScoreB ) / totalMatScore;
-            materialHashTable[k].score = EvalScore(imbalanceW[MG] + matScoreW   - (imbalanceB[MG] + matScoreB), imbalanceW[EG] + matScoreWEG - (imbalanceB[EG] + matScoreBEG));
+            materialHashTable[k].setGamePhase((matScoreW + matScoreB ) / totalMatScore);
+            materialHashTable[k].score = EvalScore(imbalanceW[MG] + matScoreW   - (imbalanceB[MG] + matScoreB), 
+                                                   imbalanceW[EG] + matScoreWEG - (imbalanceB[EG] + matScoreBEG));
         }
         if ( display) Logging::LogIt(Logging::logInfo) << "...Done";
     }
@@ -388,19 +389,19 @@ namespace MaterialHash { // idea from Gull
         p.mat[Co_White][M_m] = p.mat[Co_White][M_b] + p.mat[Co_White][M_n];  
         p.mat[Co_White][M_t] = p.mat[Co_White][M_M] + p.mat[Co_White][M_m];  
         const BitBoard wb = p.whiteBishop();
-        p.mat[Co_White][M_bl] = (unsigned char)BB::countBit(wb&BB::whiteSquare);   
-        p.mat[Co_White][M_bd] = (unsigned char)BB::countBit(wb&BB::blackSquare);
+        p.mat[Co_White][M_bl] = (uint8_t)BB::countBit(wb&BB::whiteSquare);   
+        p.mat[Co_White][M_bd] = (uint8_t)BB::countBit(wb&BB::blackSquare);
 
         p.mat[Co_Black][M_M] = p.mat[Co_Black][M_q] + p.mat[Co_Black][M_r];
         p.mat[Co_Black][M_m] = p.mat[Co_Black][M_b] + p.mat[Co_Black][M_n];
         p.mat[Co_Black][M_t] = p.mat[Co_Black][M_M] + p.mat[Co_Black][M_m];
         const BitBoard bb = p.blackBishop();
-        p.mat[Co_Black][M_bl] = (unsigned char)BB::countBit(bb&BB::whiteSquare);   
-        p.mat[Co_Black][M_bd] = (unsigned char)BB::countBit(bb&BB::blackSquare);
+        p.mat[Co_Black][M_bl] = (uint8_t)BB::countBit(bb&BB::whiteSquare);   
+        p.mat[Co_Black][M_bd] = (uint8_t)BB::countBit(bb&BB::blackSquare);
     }
 
     void initMaterial(Position & p){ // M_p .. M_k is the same as P_wp .. P_wk
-        for( Color c = Co_White ; c < Co_End ; ++c) for( Piece pp = P_wp ; pp <= P_wk ; ++pp) p.mat[c][pp] = (unsigned char)BB::countBit(p.pieces_const(c,pp));
+        for( Color c = Co_White ; c < Co_End ; ++c) for( Piece pp = P_wp ; pp <= P_wk ; ++pp) p.mat[c][pp] = (uint8_t)BB::countBit(p.pieces_const(c,pp));
         updateMaterialOther(p);
     }
 

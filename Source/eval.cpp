@@ -42,7 +42,7 @@ inline void evalPiece(const Position & p, BitBoard pieceBBiterator, const BitBoa
 template < Piece T ,Color C>
 inline void evalMob(const Position & p, BitBoard pieceBBiterator, EvalScore & score, const BitBoard safe, const BitBoard occupancy, EvalData & data){
     while (pieceBBiterator){
-        const unsigned short int mob = countBit(BBTools::pfCoverage[T-1](popBit(pieceBBiterator), occupancy, C) & ~p.allPieces[C] & safe);
+        const uint16_t mob = countBit(BBTools::pfCoverage[T-1](popBit(pieceBBiterator), occupancy, C) & ~p.allPieces[C] & safe);
         data.mobility[C] += mob;
         score += EvalConfig::MOB[T-2][mob]*ColorSignHelper<C>();
     }
@@ -52,7 +52,7 @@ template < Color C >
 inline void evalMobQ(const Position & p, BitBoard pieceBBiterator, EvalScore & score, const BitBoard safe, const BitBoard occupancy, EvalData & data){
     while (pieceBBiterator){
         const Square s = popBit(pieceBBiterator);
-        unsigned short int mob = countBit(BBTools::pfCoverage[P_wb-1](s, occupancy, C) & ~p.allPieces[C] & safe);
+        uint16_t mob = countBit(BBTools::pfCoverage[P_wb-1](s, occupancy, C) & ~p.allPieces[C] & safe);
         data.mobility[C] += mob;
         score += EvalConfig::MOB[3][mob]*ColorSignHelper<C>();
         mob = countBit(BBTools::pfCoverage[P_wr-1](s, occupancy, C) & ~p.allPieces[C] & safe);
@@ -64,7 +64,7 @@ inline void evalMobQ(const Position & p, BitBoard pieceBBiterator, EvalScore & s
 template < Color C>
 inline void evalMobK(const Position & p, BitBoard pieceBBiterator, EvalScore & score, const BitBoard safe, const BitBoard occupancy, EvalData & data){
     while (pieceBBiterator){
-        const unsigned short int mob = countBit(BBTools::pfCoverage[P_wk-1](popBit(pieceBBiterator), occupancy, C) & ~p.allPieces[C] & safe);
+        const uint16_t mob = countBit(BBTools::pfCoverage[P_wk-1](popBit(pieceBBiterator), occupancy, C) & ~p.allPieces[C] & safe);
         data.mobility[C] += mob;
         score += EvalConfig::MOB[5][mob]*ColorSignHelper<C>();
     }
@@ -154,7 +154,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
        ++context.stats.counters[Stats::sid_materialTableHits];
        // Hash data
        const MaterialHash::MaterialHashEntry & MEntry = MaterialHash::materialHashTable[matHash];
-       data.gp = MEntry.gp;
+       data.gp = MEntry.gamePhase();
        features.scores[F_material] += MEntry.score;
        // end game knowledge (helper or scaling)
        if ( safeMatEvaluator && (p.mat[Co_White][M_t]+p.mat[Co_Black][M_t]<5) ){

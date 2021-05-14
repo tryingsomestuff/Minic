@@ -21,7 +21,7 @@ void debug_king_cap(const Position & p);
 [[nodiscard]] std::string ToString(const Position::Material & mat);
 
 template< typename F, typename... Arguments>
-void threadedWork(F && worker, size_t nbthreads, unsigned long long size, Arguments ... args){
+void threadedWork(F && worker, size_t nbthreads, uint64_t size, Arguments ... args){
     std::vector<std::thread> threads(nbthreads);
     const size_t grainsize = size / nbthreads;
     size_t work_iter = 0;

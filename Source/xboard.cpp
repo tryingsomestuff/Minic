@@ -12,13 +12,13 @@ namespace XBoard{
 
     bool display;
 
-    enum Ponder : unsigned char { p_off = 0, p_on = 1 };
+    enum Ponder : uint8_t { p_off = 0, p_on = 1 };
     Ponder ponder; // easy / hard
 
-    enum Mode : unsigned char { m_play_white = 0, m_play_black = 1, m_force = 2, m_analyze = 3 };
+    enum Mode : uint8_t { m_play_white = 0, m_play_black = 1, m_force = 2, m_analyze = 3 };
     Mode mode;
 
-    enum SideToMove : unsigned char { stm_white = 0, stm_black = 1 };
+    enum SideToMove : uint8_t { stm_white = 0, stm_black = 1 };
     SideToMove stm; ///@todo isn't this redundant with position.c ??
 
     Position initialPos;

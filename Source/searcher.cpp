@@ -189,7 +189,7 @@ void Searcher::prefetchPawn(Hash h) {
 }
 
 std::atomic<bool> Searcher::startLock;
-const unsigned long long int Searcher::ttSizePawn = 1024*16*8;
+const uint64_t Searcher::ttSizePawn = 1024*16*8;
 
 Searcher & Searcher::getCoSearcher(size_t id){
     static std::map<int,std::unique_ptr<Searcher> > coSearchers; 
@@ -238,7 +238,7 @@ Position Searcher::getQuiet(const Position & p, Searcher * searcher, ScoreType *
 
 #ifdef WITH_GENFILE
 void Searcher::writeToGenFile(const Position & p){
-    static unsigned long long int sfensWritten = 0;
+    static uint64_t sfensWritten = 0;
     if (!genFen || id() >= MAX_THREADS) return;
 
     Searcher & cos = getCoSearcher(id());
@@ -275,7 +275,7 @@ void Searcher::writeToGenFile(const Position & p){
             float gp = 1;
             if ( matHash != nullHash ){
                const MaterialHash::MaterialHashEntry & MEntry = MaterialHash::materialHashTable[matHash];
-               gp = MEntry.gp;
+               gp = MEntry.gamePhase();
             }
             DepthType depth(DynamicConfig::genFenDepth*gp + DynamicConfig::genFenDepthEG*(1.f-gp));
             DynamicConfig::randomPly = 0;

@@ -11,7 +11,7 @@
  */
 namespace COM {
 
-    enum State : unsigned char { st_pondering = 0, st_analyzing, st_searching, st_none };
+    enum State : uint8_t { st_pondering = 0, st_analyzing, st_searching, st_none };
     extern State state; 
 
     extern std::string command; // see readLine

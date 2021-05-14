@@ -26,7 +26,7 @@ namespace MaterialHash {
 
     [[nodiscard]] Hash getMaterialHash(const Position::Material & mat);
 
-    enum Terminaison : unsigned char {
+    enum Terminaison : uint8_t {
       Ter_Unknown = 0,
       Ter_WhiteWinWithHelper,
       Ter_WhiteWin,
@@ -43,8 +43,10 @@ namespace MaterialHash {
 #pragma pack(push, 1)
     struct MaterialHashEntry  {
       EvalScore score = {0,0};
-      float gp = 1.f;
+      uint8_t gp = 255;
       Terminaison t = Ter_Unknown;
+      inline float gamePhase()const{ return gp/255.f;}
+      inline void setGamePhase(float gpf){ gp = (uint8_t)(255*gpf);}
     };
 #pragma pack(pop)    
 

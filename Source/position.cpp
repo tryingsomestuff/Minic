@@ -140,14 +140,14 @@ bool readFEN(const std::string & fen, Position & p, bool silent, bool withMoveCo
     assert(p.ep == INVALIDSQUARE || (SQRANK(p.ep) == 2 || SQRANK(p.ep) == 5));
 
     // read 50 moves rules
-    if (withMoveCount && strList.size() >= 5) p.fifty = (unsigned char)readFromString<int>(strList[4]);
+    if (withMoveCount && strList.size() >= 5) p.fifty = (uint8_t)readFromString<int>(strList[4]);
     else p.fifty = 0;
 
     // read number of move
-    if (withMoveCount && strList.size() >= 6) p.moves = (unsigned char)readFromString<int>(strList[5]);
+    if (withMoveCount && strList.size() >= 6) p.moves = (uint16_t)readFromString<int>(strList[5]);
     else p.moves = 1;
 
-    if (p.moves < 1) { // fix a LittleBlitzer bug here ...
+    if (p.moves == 0) { // fix a LittleBlitzer bug here ...
         Logging::LogIt(Logging::logInfo) << "Wrong move counter " << (int)p.moves << " using 1 instead";
         p.moves = 1;
     }

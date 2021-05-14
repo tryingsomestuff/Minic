@@ -165,17 +165,17 @@ const std::string MinicVersion = "3.07";
 #define EXTENDMORE(extension) (!extension)
 
 typedef std::chrono::system_clock Clock;
-typedef signed char DepthType;
-typedef int32_t Move;         // invalid if < 0
-typedef int16_t MiniMove;     // invalid if < 0
-typedef signed char Square;   // invalid if < 0
+typedef int8_t   DepthType;
+typedef int32_t  Move;         // invalid if < 0
+typedef int16_t  MiniMove;     // invalid if < 0
+typedef int8_t   Square;   // invalid if < 0
 typedef uint64_t Hash;        // invalid if == 0ull
 typedef uint32_t MiniHash;    // invalid if == 0
 typedef uint64_t Counter;
 typedef uint64_t BitBoard;
 typedef int16_t  ScoreType;
 typedef int64_t  TimeType;
-typedef unsigned char  GenerationType;
+typedef uint8_t  GenerationType;
 
 const Hash nullHash = 0ull; //std::numeric_limits<MiniHash>::max(); // use MiniHash to allow same "null" value for Hash(64) and MiniHash(32)
 const BitBoard emptyBitBoard = 0ull;
@@ -216,7 +216,7 @@ const int NbPiece = 2*PieceShift+1;
 
 [[nodiscard]] constexpr int PieceIdx(Piece p){ return p + PieceShift;} ///@todo use it everywhere !
 
-enum Mat      : unsigned char{ M_t = 0, M_p, M_n, M_b, M_r, M_q, M_k, M_bl, M_bd, M_M, M_m };
+enum Mat : uint8_t{ M_t = 0, M_p, M_n, M_b, M_r, M_q, M_k, M_bl, M_bd, M_M, M_m };
 inline Mat operator++(Mat & m){m=Mat(m+1); return m;}
 
 extern CONST_PIECE_TUNING ScoreType   Values[NbPiece]  ;
@@ -253,28 +253,28 @@ const std::string SquareNames[NbSquare]   = { "a1", "b1", "c1", "d1", "e1", "f1"
 const std::string FileNames[8]      = { "a", "b", "c", "d", "e", "f", "g", "h" };
 const std::string RankNames[8]      = { "1", "2", "3", "4", "5", "6", "7", "8" };
 
-enum Sq   : unsigned char { Sq_a1  = 0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1,
-                                 Sq_a2,Sq_b2,Sq_c2,Sq_d2,Sq_e2,Sq_f2,Sq_g2,Sq_h2,
-                                 Sq_a3,Sq_b3,Sq_c3,Sq_d3,Sq_e3,Sq_f3,Sq_g3,Sq_h3,
-                                 Sq_a4,Sq_b4,Sq_c4,Sq_d4,Sq_e4,Sq_f4,Sq_g4,Sq_h4,
-                                 Sq_a5,Sq_b5,Sq_c5,Sq_d5,Sq_e5,Sq_f5,Sq_g5,Sq_h5,
-                                 Sq_a6,Sq_b6,Sq_c6,Sq_d6,Sq_e6,Sq_f6,Sq_g6,Sq_h6,
-                                 Sq_a7,Sq_b7,Sq_c7,Sq_d7,Sq_e7,Sq_f7,Sq_g7,Sq_h7,
-                                 Sq_a8,Sq_b8,Sq_c8,Sq_d8,Sq_e8,Sq_f8,Sq_g8,Sq_h8};
+enum Sq : uint8_t { Sq_a1  = 0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1,
+                         Sq_a2,Sq_b2,Sq_c2,Sq_d2,Sq_e2,Sq_f2,Sq_g2,Sq_h2,
+                         Sq_a3,Sq_b3,Sq_c3,Sq_d3,Sq_e3,Sq_f3,Sq_g3,Sq_h3,
+                         Sq_a4,Sq_b4,Sq_c4,Sq_d4,Sq_e4,Sq_f4,Sq_g4,Sq_h4,
+                         Sq_a5,Sq_b5,Sq_c5,Sq_d5,Sq_e5,Sq_f5,Sq_g5,Sq_h5,
+                         Sq_a6,Sq_b6,Sq_c6,Sq_d6,Sq_e6,Sq_f6,Sq_g6,Sq_h6,
+                         Sq_a7,Sq_b7,Sq_c7,Sq_d7,Sq_e7,Sq_f7,Sq_g7,Sq_h7,
+                         Sq_a8,Sq_b8,Sq_c8,Sq_d8,Sq_e8,Sq_f8,Sq_g8,Sq_h8};
 
-enum File : unsigned char { File_a = 0,File_b,File_c,File_d,File_e,File_f,File_g,File_h};
+enum File : uint8_t { File_a = 0,File_b,File_c,File_d,File_e,File_f,File_g,File_h};
 inline File operator++(File & f){f=File(f+1); return f;}
 inline File operator--(File & f){f=File(f-1); return f;}
 
-enum Rank : unsigned char { Rank_1 = 0,Rank_2,Rank_3,Rank_4,Rank_5,Rank_6,Rank_7,Rank_8};
+enum Rank : uint8_t { Rank_1 = 0,Rank_2,Rank_3,Rank_4,Rank_5,Rank_6,Rank_7,Rank_8};
 inline Rank operator++(Rank & r){r=Rank(r+1); return r;}
 inline Rank operator--(Rank & r){r=Rank(r-1); return r;}
 
 const Rank PromRank[2] = { Rank_8 , Rank_1 };
 const Rank EPRank[2]   = { Rank_6 , Rank_3 };
 
-enum CastlingTypes : unsigned char { CT_OOO = 0, CT_OO = 1 };
-enum CastlingRights : unsigned char{ 
+enum CastlingTypes : uint8_t { CT_OOO = 0, CT_OO = 1 };
+enum CastlingRights : uint8_t{ 
     C_none = 0, 
     C_wks = 1, 
     C_wqs = 2, 
@@ -298,7 +298,7 @@ inline void operator|=(CastlingRights & a, const CastlingRights &b){ a = a | b;}
 
 [[nodiscard]] inline Square stringToSquare(const std::string & str) { return (str.at(1) - 49) * 8 + (str.at(0) - 97); }
 
-enum MType : unsigned char{
+enum MType : uint8_t{
     T_std        = 0,   T_capture    = 1,   T_reserved   = 2,   T_ep         = 3,    // binary    0 to   11
     T_promq      = 4,   T_promr      = 5,   T_promb      = 6,   T_promn      = 7,    // binary  100 to  111
     T_cappromq   = 8,   T_cappromr   = 9,   T_cappromb   = 10,  T_cappromn   = 11,   // binary 1000 to 1011
@@ -312,7 +312,7 @@ enum MType : unsigned char{
 
 [[nodiscard]] inline Piece promShift(MType mt){ assert(mt>=T_promq); assert(mt<=T_cappromn); return Piece(P_wq - (mt%4));} // awfull hack
 
-enum Color : signed char{ Co_None  = -1,   Co_White = 0,   Co_Black = 1,   Co_End };
+enum Color : int8_t{ Co_None  = -1,   Co_White = 0,   Co_Black = 1,   Co_End };
 [[nodiscard]] constexpr Color operator~(Color c){return Color(c^Co_Black);} // switch Color
 inline Color operator++(Color & c){c=Color(c+1); return c;}
 
@@ -404,8 +404,8 @@ template<class T>
 template<Color C> 
 [[nodiscard]] inline Square ColorSquarePstHelper(Square k){ return relative_square(~C,k); }
 
-[[nodiscard]] inline unsigned long long int powerFloor(unsigned long long int x) {
-    unsigned long long int power = 1;
+[[nodiscard]] inline uint64_t powerFloor(uint64_t x) {
+    uint64_t power = 1;
     while (power <= x) power *= 2;
     return power/2;
 }

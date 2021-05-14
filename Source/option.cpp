@@ -32,7 +32,7 @@ namespace Options {
         case k_depth:  return (int)*static_cast<DepthType*>(k.value);
         case k_int:    return (int)*static_cast<int*>(k.value);
         case k_score:  return (int)*static_cast<ScoreType*>(k.value);
-        case k_ull:    return (int)*static_cast<unsigned long long int*>(k.value);
+        case k_ull:    return (int)*static_cast<uint64_t*>(k.value);
         case k_string:
         case k_bad:
         default:       Logging::LogIt(Logging::logError) << "Bad key type"; return false;
@@ -82,7 +82,7 @@ namespace Options {
         case k_depth:  SETVALUE(int,DepthType)
         case k_int:    SETVALUE(int,int)
         case k_score:  SETVALUE(int,ScoreType)
-        case k_ull:    SETVALUE(int,unsigned long long)
+        case k_ull:    SETVALUE(int,uint64_t)
         case k_string: SETVALUESTR(std::string,std::string)
         case k_bad:
         default: Logging::LogIt(Logging::logError) << "Bad key type"; return false;

@@ -60,7 +60,7 @@ ScoreType Searcher::qsearch(ScoreType alpha,
                             DepthType qply, 
                             bool qRoot, 
                             bool pvnode, 
-                            signed char isInCheckHint){
+                            int8_t isInCheckHint){
     _height = height;
 
     if (stopFlag) return STOPSCORE; // no time verification in qsearch, too slow

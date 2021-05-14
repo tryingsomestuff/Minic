@@ -34,15 +34,15 @@ namespace Distributed{
 
    std::array<Counter,Stats::sid_maxid> _countersBufSend; 
    std::array<Counter,Stats::sid_maxid> _countersBufRecv[2]; 
-   unsigned char _doubleBufferStatParity;
+   uint8_t _doubleBufferStatParity;
    uint64_t _nbStatPoll;
 
-   const unsigned long long int _ttBufSize = 32;
-   unsigned long long int _ttCurPos;
+   const uint64_t _ttBufSize = 32;
+   uint64_t _ttCurPos;
    const DepthType _ttMinDepth = 3;
    std::vector<EntryHash> _ttBufSend[2];
    std::vector<EntryHash> _ttBufRecv;
-   unsigned char _doubleBufferTTParity;    
+   uint8_t _doubleBufferTTParity;    
    std::mutex _ttMutex;
    uint64_t _nbTTTransfert;
 
