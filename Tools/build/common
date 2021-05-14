@@ -40,8 +40,10 @@ else
    n="-fopenmp-simd"
    d="-DDEBUG_TOOL"
    if [ -n "$EMBEDEDNNUEPATH" ]; then
-      echo "Forced embeded net $EMBEDEDNNUEPATH"
-      d="$d -DEMBEDEDNNUEPATH=$EMBEDEDNNUEPATH -DFORCEEMBEDEDNNUE"
+      if [ "$EMBEDEDNNUEPATH" != "none" ]; then
+         echo "Forced embeded net $EMBEDEDNNUEPATH"
+         d="$d -DEMBEDEDNNUEPATH=$EMBEDEDNNUEPATH -DFORCEEMBEDEDNNUE"
+      fi
    else
       echo "Default embeded net"
       d="$d -DEMBEDEDNNUEPATH=/ssd/NNUE-Nets/nocturnal_nadir.bin -DFORCEEMBEDEDNNUE"
