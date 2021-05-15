@@ -54,7 +54,11 @@ while True:
                     continue
                 # ['1', 'logs/nn-epoch86.nnue', ':', '35.2', '81.2', '33.0', '60', '55', '65']
                 values = [s for s in line.split()]
-                l = values[1].strip().replace(' ', '').replace(args.n+'nn-epoch', '').replace('.nnue', '')
+                name = values[1].strip().replace(' ', '')
+                if "nn-epoch" in name:
+                   l = name.replace(args.n+'nn-epoch', '').replace('.nnue', '')
+                else:
+                   l = name.replace('config-', '')
                 if l == "master":
                     l='0'
                     continue

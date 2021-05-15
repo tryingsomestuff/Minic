@@ -1,1 +1,1 @@
-../Ordo/ordo -q -G -J  -p test.pgn -a 0.0 --anchor=minic_dev --draw-auto --white-auto -s 100
+../Ordo/ordo -q -G -J  -p $1 -a 0.0 --anchor=$2 --draw-auto --white-auto -s 100
