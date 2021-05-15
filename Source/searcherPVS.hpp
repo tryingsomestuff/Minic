@@ -394,7 +394,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
                //if (EXTENDMORE(extension) && pvnode && (p.pieces_const<P_wq>(p.c) && isQuiet && PieceTools::getPieceType(p, Move2From(e.m)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, e.m, 0)) stats.incr(Stats::sid_queenThreatExtension), ++extension;
                // singular move extension
                if (EXTENDMORE(extension) && withoutSkipMove && depth >= SearchConfig::singularExtensionDepth && !rootnode && !isMateScore(e.s) && bound == TT::B_beta && e.d >= depth - 3){
-                   const ScoreType betaC = e.s - 2*depth; ///@todo NNUEscaling?
+                   const ScoreType betaC = e.s - 2*depth;
                    PVList sePV;
                    DepthType seSeldetph = 0;
                    std::vector<MiniMove> skip({e.m});
@@ -403,7 +403,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
                    if (score < betaC) { // TT move is singular
                        stats.incr(Stats::sid_singularExtension),/*ttMoveSingularExt=!ttMoveIsCapture,*/++extension;
                        // TT move is "very singular" : kind of single reply extension
-                       if ( score < betaC - 4*depth) stats.incr(Stats::sid_singularExtension2),++extension; ///@todo NNUEscaling
+                       if ( score < betaC - 4*depth) stats.incr(Stats::sid_singularExtension2),++extension;
                    }
                    // multi cut (at least the TT move and another move are above beta)
                    else if ( betaC >= beta){
