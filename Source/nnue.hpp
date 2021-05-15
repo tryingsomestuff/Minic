@@ -26,27 +26,23 @@ namespace NNUEWrapper{
   void compute_scaling(int count = SCALINGCOUNT);
 
   inline void init(){
-     bool loadOk = true;
-     int netRead = 0;
-     for ( int n = 0; n < NNN && loadOk; ++n){
-        if ( !DynamicConfig::NNUEFile[n].empty() ){
-           ++netRead;
-           Logging::LogIt(Logging::logInfoPrio) << "Loading NNUE net " << DynamicConfig::NNUEFile[n];
-           loadOk &= nnue::half_kp_weights<nnueNType,quantization>::load(DynamicConfig::NNUEFile[n], nnue::half_kp_eval<nnueNType,quantization>::weights[n]);
-        }
-        else{
-           Logging::LogIt(Logging::logInfoPrio) << "No NNUE net given (" << n << ")"; 
-           loadOk = false;
-           break;
-        }
+     bool loadOk = false;
+     const bool shallLoadNNUE = !DynamicConfig::NNUEFile.empty() && DynamicConfig::NNUEFile != "none";
+     if ( shallLoadNNUE ){
+        Logging::LogIt(Logging::logInfoPrio) << "Loading NNUE net " << DynamicConfig::NNUEFile;
+        loadOk = nnue::half_kp_weights<nnueNType,quantization>::load(DynamicConfig::NNUEFile, nnue::half_kp_eval<nnueNType,quantization>::weights);
      }
-     if ( netRead == NNN && loadOk){
+     else{
+        Logging::LogIt(Logging::logInfoPrio) << "No NNUE net given"; 
+     }
+
+     if ( loadOk ){
         DynamicConfig::useNNUE = true;
         compute_scaling();
      }
      else{
-        if ( netRead ) Logging::LogIt(Logging::logInfoPrio) << "Fail to load NNUE net(s), using standard evaluation instead"; 
-        else Logging::LogIt(Logging::logInfoPrio) << "Using standard evaluation instead"; 
+        if ( shallLoadNNUE ) Logging::LogIt(Logging::logInfoPrio) << "Fail to load NNUE net(s), using standard evaluation instead"; 
+        else Logging::LogIt(Logging::logInfoPrio) << "Using standard evaluation"; 
         DynamicConfig::useNNUE = false;
      }
   }

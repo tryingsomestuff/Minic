@@ -117,9 +117,6 @@ namespace Options {
 #endif
 #ifdef WITH_NNUE
        _keys.push_back(KeyBase(k_string,w_string,"NNUEFile"                    , &DynamicConfig::NNUEFile[0]                                                                             , &NNUEWrapper::init));
-    #if NNN == 2
-       _keys.push_back(KeyBase(k_string,w_string,"NNUEFileEG"                  , &DynamicConfig::NNUEFile[1]                                                                             , &NNUEWrapper::init));
-    #endif
        _keys.push_back(KeyBase(k_bool,  w_check, "forceNNUE"                   , &DynamicConfig::forceNNUE                      , false            , true                              ));
 #endif
 
@@ -248,10 +245,7 @@ namespace Options {
        GETOPT(syzygyPath,       std::string)
 #endif
 #ifdef WITH_NNUE
-       GETOPTVAR(NNUEFile,   NNUEFile[0], std::string)
-    #if NNN == 2
-       GETOPTVAR(NNUEFileEG, NNUEFile[1], std::string)
-    #endif
+       GETOPT(NNUEFile,         std::string)
        GETOPT(forceNNUE,        bool)
 #endif
 #ifdef WITH_GENFILE

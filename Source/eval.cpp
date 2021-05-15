@@ -211,29 +211,8 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
         ///@todo use data.gp inside NNUE condition ?
         if ( DynamicConfig::forceNNUE || ! isLazyHigh(600,features,score)){ // stay to classic eval when the game is already decided
            if ( DynamicConfig::armageddon ) features.scalingFactor = 1.f; ///@todo better
-        #if NNN == 2
-           ScoreType nnueScore = 0;
-           ScoreType nnueScoreEG = 0;
-           const float inf = 0.35f;
-           const float sup = 0.65f;
-           if ( data.gp > sup ){
-               nnueScore   = p.Evaluator().propagate(p.c,0);
-               nnueScoreEG = nnueScore;
-           }
-           else if ( data.gp < inf ){
-               nnueScoreEG = p.Evaluator().propagate(p.c,1)*features.scalingFactor;
-               nnueScore   = nnueScoreEG;
-           }
-           else{
-               nnueScore   = p.Evaluator().propagate(p.c,0);
-               nnueScoreEG = p.Evaluator().propagate(p.c,1);
-               const float gp = (data.gp-inf) / (sup-inf);
-               nnueScore = ScoreType(gp*nnueScore + (1.f-gp)*nnueScoreEG*features.scalingFactor);
-           }
-        #else
-           ScoreType nnueScore = p.Evaluator().propagate(p.c,0);
+           ScoreType nnueScore = p.Evaluator().propagate(p.c);
            nnueScore = ScoreType(data.gp*nnueScore + (1.f-data.gp)*nnueScore*features.scalingFactor); // use scaling factor
-        #endif
            // NNUE evaluation scaling
            nnueScore = (Score(nnueScore,p) * NNUEWrapper::NNUEscaling) / 64;
            // take tempo and contempt into account
