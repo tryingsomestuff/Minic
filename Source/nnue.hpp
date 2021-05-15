@@ -20,9 +20,6 @@ namespace NNUEWrapper{
   typedef float nnueNType; // type of data inside the binary net
   const bool quantization = false; // probably needs WITH_NNUE_CLIPPED_RELU to be true
 
-  // NNUE eval scaling factor
-  extern int NNUEscaling;
-
   void compute_scaling(int count = SCALINGCOUNT);
 
   inline void init(){
@@ -38,7 +35,7 @@ namespace NNUEWrapper{
 
      if ( loadOk ){
         DynamicConfig::useNNUE = true;
-        compute_scaling();
+        //compute_scaling();
      }
      else{
         if ( shallLoadNNUE ) Logging::LogIt(Logging::logInfoPrio) << "Fail to load NNUE net(s), using standard evaluation instead"; 

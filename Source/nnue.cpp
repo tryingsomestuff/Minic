@@ -12,11 +12,6 @@
 
 #include "nnue_impl.hpp"
 
-// this is used to scale NNUE score to classic eval score. 
-// This way search params can remain the same ... more or less ...
-// see compute_scaling
-int NNUEWrapper::NNUEscaling = 64; // from 32 to 128      x_scaled = x * NNUEscaling / 64
-
 namespace NNUEWrapper{
 
 void compute_scaling(int count){
@@ -80,8 +75,8 @@ void compute_scaling(int count){
         }
         if ( !found ) readFEN(startPosition,p,true);        
     }
-    NNUEWrapper::NNUEscaling = int(s1/s2*64);
-    Logging::LogIt(Logging::logInfo) << "NNUEscaling " << NNUEWrapper::NNUEscaling << " (" << s1/s2 << ") on " << k << " samples";
+    DynamicConfig::NNUEscaling = int(s1/s2*64);
+    Logging::LogIt(Logging::logInfo) << "NNUEscaling " << DynamicConfig::NNUEscaling << " (" << s1/s2 << ") on " << k << " samples";
 
     DynamicConfig::disableTT = bkTT;
 }

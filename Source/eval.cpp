@@ -214,7 +214,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
            ScoreType nnueScore = p.Evaluator().propagate(p.c);
            nnueScore = ScoreType(data.gp*nnueScore + (1.f-data.gp)*nnueScore*features.scalingFactor); // use scaling factor
            // NNUE evaluation scaling
-           nnueScore = (Score(nnueScore,p) * NNUEWrapper::NNUEscaling) / 64;
+           nnueScore = (Score(nnueScore,p) * DynamicConfig::NNUEscaling) / 64;
            // take tempo and contempt into account
            nnueScore += ScaleScore( /*EvalConfig::tempo*(white2Play?+1:-1) +*/ context.contempt, data.gp);
            ++context.stats.counters[Stats::sid_evalNNUE];
