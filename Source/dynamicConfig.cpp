@@ -24,9 +24,9 @@ namespace DynamicConfig{
     bool useNNUE             = false;
     bool forceNNUE           = false;
 #ifndef FORCEEMBEDEDNNUE    
-    std::array<std::string,NNN> NNUEFile;
+    std::string NNUEFile;
 #else
-    std::array<std::string,NNN> NNUEFile = {"embeded"};
+    std::string NNUEFile     = "embeded";
 #endif
     bool genFen              = false;
     unsigned int genFenDepth = 8;

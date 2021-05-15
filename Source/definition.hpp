@@ -143,8 +143,6 @@ const std::string MinicVersion = "3.07";
 #define HSCORE(depth) ScoreType(SQR(std::min((int)depth, 32))*4)
 #define MAX_THREADS 256
 
-#define NNN 1
-
 #define SQFILE(s) ((s)&7)
 #define SQRANK(s) ((s)>>3)
 #define ISOUTERFILE(x) (SQFILE(x) == 0 || SQFILE(x) == 7)
