@@ -55,7 +55,7 @@ def run_match(best, c_chess_exe, concurrency, book_file_name, engine):
     """ Run a match using c-chess-cli adding pgns to a file to be analysed with ordo """
     pgn_file_name = os.path.join("out.pgn")
     c_chess_out_file_name = os.path.join("c_chess.out")
-    command = "{} -each tc=1+0.01 -games 10 -rounds 2 -concurrency {}".format(
+    command = "{} -each tc=10+0.1 -games 10 -rounds 2 -concurrency {}".format(
         c_chess_exe, concurrency
     )
     command = (
@@ -65,6 +65,8 @@ def run_match(best, c_chess_exe, concurrency, book_file_name, engine):
         )
     )
     command = command + " -engine cmd=/ssd/Minic/Dist/Minic3/minic_dev_linux_x64 name=master"
+    #command = command + " -engine cmd=/ssd/engines/seer-nnue/build/seer name=master option.Hash=128"
+    #command = command + " -engine cmd=/ssd/engines/Halogen/Halogen/src/Halogen name=master option.Hash=128"
 
     count = 0
     for config in best:
@@ -111,7 +113,7 @@ def run_round(
 ):
     """ run a round of games, analyze an ordo file to pick most suitable ones, run a round, and run ordo """
 
-    configs = [ "config-{}".format(k) for k in range(32,129) ]
+    configs = [ "config-{}".format(k) for k in range(32,129,8) ]
     print(configs)
 
     # Get info from ordo data if that is around

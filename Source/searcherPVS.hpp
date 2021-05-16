@@ -154,7 +154,7 @@ ScoreType Searcher::pvs(ScoreType alpha,
                data.gp = gamePhase(p,matScoreW,matScoreB);
                stats.incr(Stats::sid_materialTableMiss);
             }
-            ///@todo data.danger, data.mob are not filled in case of TT hit !!
+            ///@todo data.danger, data.mobility are not filled in case of TT hit !!
         }
         else { // if no TT hit call evaluation !
             stats.incr(Stats::sid_ttscmiss);
