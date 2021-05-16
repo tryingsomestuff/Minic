@@ -42,6 +42,10 @@ if args.D:
 else:
    import matplotlib.pyplot as plt
 
+from matplotlib import rcParams
+
+rcParams['font.family'] = 'monospace'
+
 while True:
     try:
         with open(args.f) as f:
@@ -147,12 +151,12 @@ while True:
                     else:
                         fail.append([x,y,e,n,g])
 
-                txt += ['target2  {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in target2 ]
-                txt += ['target1  {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in target1 ]
-                txt += ['good     {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in good ]
-                txt += ['probable {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in probable ]
-                txt += ['possible {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in possible ]
-                txt += ['fail     {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in fail ]
+                txt += ['target2  {: >6} +/- {: <6} : {: >12} ({})'.format(y,e,n,g) for (x,y,e,n,g) in target2 ]
+                txt += ['target1  {: >6} +/- {: <6} : {: >12} ({})'.format(y,e,n,g) for (x,y,e,n,g) in target1 ]
+                txt += ['good     {: >6} +/- {: <6} : {: >12} ({})'.format(y,e,n,g) for (x,y,e,n,g) in good ]
+                txt += ['probable {: >6} +/- {: <6} : {: >12} ({})'.format(y,e,n,g) for (x,y,e,n,g) in probable ]
+                txt += ['possible {: >6} +/- {: <6} : {: >12} ({})'.format(y,e,n,g) for (x,y,e,n,g) in possible ]
+                txt += ['fail     {: >6} +/- {: <6} : {: >12} ({})'.format(y,e,n,g) for (x,y,e,n,g) in fail ]
 
                 txt = txt[:display_max+2]
 
