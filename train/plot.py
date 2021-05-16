@@ -19,18 +19,18 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 parser = argparse.ArgumentParser(description='NNUE training plots.')
-parser.add_argument('-D', action='store_true' , help='without display'         , default=False )
-parser.add_argument('-e', action='store_true' , help='with error bar'          , default=False )
-parser.add_argument('-x', action='store_true' , help='with exploration data'   , default=False )
-parser.add_argument('-s', type=int,             help='skip this net at first'  , default=0 )
-parser.add_argument('-X', type=float,           help='exploration factor'      , default=1.5 )
-parser.add_argument('-k', type=int,             help='only keep this last nets', default=0)
+parser.add_argument('-D', action='store_true' , help='without display'             , default=False )
+parser.add_argument('-e', action='store_true' , help='with error bar'              , default=False )
+parser.add_argument('-x', action='store_true' , help='with exploration data'       , default=False )
+parser.add_argument('-s', type=int,             help='skip this number at first'   , default=0 )
+parser.add_argument('-X', type=float,           help='exploration factor'          , default=1.5 )
+parser.add_argument('-k', type=int,             help='only keep this last'         , default=0)
 parser.add_argument('-p', type=int,             help='pause between refresh in sec', default=15)
-parser.add_argument('-y', type=int,             help='y axis low limit'        , default=-150)
-parser.add_argument('-Y', type=int,             help='y axis high limit'       , default=150)
-parser.add_argument('-m', type=int,             help='first target'            , default=20, action=TargetBoundCheck)
-parser.add_argument('-l', type=int,             help='second target'           , default=40, action=TargetBoundCheck)
-parser.add_argument('-f', type=str,             help='ordo file path'          , default='logs/ordo.out')
+parser.add_argument('-y', type=int,             help='y axis low limit'            , default=-150)
+parser.add_argument('-Y', type=int,             help='y axis high limit'           , default=150)
+parser.add_argument('-m', type=int,             help='first target'                , default=20, action=TargetBoundCheck)
+parser.add_argument('-l', type=int,             help='second target'               , default=40, action=TargetBoundCheck)
+parser.add_argument('-f', type=str,             help='ordo file path'              , default='logs/ordo.out')
 parser.add_argument('-n', type=str,             help='nets directory path (with trailing /)', default='logs/')
 args = parser.parse_args()
 
@@ -103,7 +103,7 @@ while True:
                 # error bar and dot color
                 if args.e:
                     plt.errorbar(X, Y, yerr=err, fmt='.', color='gray', marker=None, capsize=2)
-                plt.scatter(X, Y, c=['gold' if y-e>args.l else 'silver' if y-e>args.m else 'lime' if y-e>0 else 'cyan' if y>0 else 'black' if y+e > 0 else 'red' for y,e in zip(Y,err)], s=64, marker='o', label='Nets Elo')
+                plt.scatter(X, Y, c=['gold' if y-e>args.l else 'silver' if y-e>args.m else 'lime' if y-e>0 else 'cyan' if y>0 else 'black' if y+e > 0 else 'red' for y,e in zip(Y,err)], s=64, marker='o', label='Elo')
 
                 # specific markers
                 if args.x:
@@ -147,12 +147,12 @@ while True:
                     else:
                         fail.append([x,y,e,n,g])
 
-                txt += ['target2  net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in target2 ]
-                txt += ['target1  net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in target1 ]
-                txt += ['good     net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in good ]
-                txt += ['probable net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in probable ]
-                txt += ['possible net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in possible ]
-                txt += ['fail     net {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in fail ]
+                txt += ['target2  {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in target2 ]
+                txt += ['target1  {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in target1 ]
+                txt += ['good     {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in good ]
+                txt += ['probable {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in probable ]
+                txt += ['possible {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in possible ]
+                txt += ['fail     {: <5} +/- {: <5} : {} ({})'.format(y,e,n,g) for (x,y,e,n,g) in fail ]
 
                 txt = txt[:display_max+2]
 
