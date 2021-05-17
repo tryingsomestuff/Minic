@@ -126,12 +126,13 @@ Minic random-mover stats are the following :
 ### CCRL
 #### 40/15
 Minic 2.46 is tested at 3050 on the [CCRL 40/15 scale](http://ccrl.chessdom.com/ccrl/4040/)  
+Minic 3.04 + Noisy Notch is ted at 3061 on the [CCRL 40/15 scale](http://ccrl.chessdom.com/ccrl/4040/)  
 #### Blitz
 Minic 2.33 is tested at 3162 on the [CCRL BLITZ 4CPU scale](http://ccrl.chessdom.com/ccrl/404/)  
 Minic 2.43 is tested at 3116 on the [CCRL BLITZ 1CPU scale](http://ccrl.chessdom.com/ccrl/404/)  
-Minic 3.04 + Noisy Notch is tested at 3223 on the [CCRL BLITZ 1CPU scale](http://ccrl.chessdom.com/ccrl/404/)  
+Minic 3.06 + Nocturnal Nadir is tested at 3230 on the [CCRL BLITZ 1CPU scale](http://ccrl.chessdom.com/ccrl/404/)  
 #### FRC
-Minic 3.04 + Noisy Notch is tested at 3133 on the [CCRL FRC list](http://ccrl.chessdom.com/ccrl/404FRC/)  
+Minic 3.06 + Nocturnal Nadir is tested at 3282 on the [CCRL FRC list](http://ccrl.chessdom.com/ccrl/404FRC/)  
 
 ### CEGT
 #### 40/4
@@ -139,7 +140,7 @@ Minic 3.02 + Narcotized Nightshift is tested at 3035 on the [CEGT 40/4 list](htt
 Minic 1.35 is tested at 3032 on the [CEGT 40/4 MP8CPU list](http://www.cegt.net/40_4_Ratinglist/40_4_mp/rangliste.html)  
 #### 40/20
 MinicNNUE 2.51 using Nascent Nutrient is tested at 3217 on the [CEGT 40/20 list](http://www.cegt.net/40_40%20Rating%20List/40_40%20All%20Versions/rangliste.html)  
-Minic 3.04 + Noisy Notch is tested at 3090 on the [CEGT 40/20 list](http://www.cegt.net/40_40%20Rating%20List/40_40%20All%20Versions/rangliste.html)  
+Minic 3.06 + Nocturnal Nadir is tested at 3120 on the [CEGT 40/20 list](http://www.cegt.net/40_40%20Rating%20List/40_40%20All%20Versions/rangliste.html)  
 Minic 2.48 is tested at 2969 on the [CEGT 40/12 list](http://www.cegt.net/40_40%20Rating%20List/40_40%20SingleVersion/rangliste.html)   
 #### 5+3 pb=on
 Minic 2.07 is tested at 2935 on the [CEGT 5+3 PB=ON list](http://www.cegt.net/5Plus3Rating/BestVersionsNEW/rangliste.html)  
@@ -150,7 +151,8 @@ Minic 2.48 is tested at 2932 on the [fastgm 10min+6sec rating list](http://www.f
 Minic 2.00 is tested at 2953 on the [fastgm 60min+15sec rating list](http://www.fastgm.de/60min.html)  
 
 ### SP-CC
-MinicNNUE 2.51 using Nascent Nutrient net is tested at 3284 on the [SP-CC 3min+1s rating list](https://www.sp-cc.de/) 
+MinicNNUE 2.51 using Nascent Nutrient net is tested at 3284 on the [SP-CC 3min+1s rating list](https://www.sp-cc.de/)  
+Minic 3.06 + Nocturnal Nadir is tested at 3172  on the [SP-CC 3min+1s rating list](https://www.sp-cc.de/)  
 
 ### Test Suite
 STS : 1191/1500 @10sec per position (single thread on an i7-9700K)  
@@ -261,8 +263,9 @@ Minic comes with some command line options :
 
 *Remark for Windows users* : it may be quite difficult to get the path format for the NNUE file ok under Windows. Here is a working example (thanks to Stefan Pohl) for cutechess-cli as a guide:
 
-```cutechess-cli.exe -engine name="Minic 3.06 noct_nadir" cmd="C:/Cutechess/Engines/AB_testruns/Minic_3.06/minic_3.06_mingw_x64_nehalem.exe" dir="C:/Cutechess/Engines/AB_testruns/Minic_3.06" option.NNUEFile=C:/Cutechess/Engines/AB_testruns/Minic_3.06/net.bin option.Hash=256 option.Threads=1 proto=uci```
+```cutechess-cli.exe -engine name="Minic3.06NoNa" cmd="C:/Engines/Minic/minic_3.06_mingw_x64_nehalem.exe" dir="C:/Engines/Minic" option.NNUEFile=C:/Engines/Minic/nocturnal_nadir.bin option.Hash=256 option.Threads=1 proto=uci```
 
+Starting from Minic 3.07, no need to worry about this, the corresponding net is embeded inside the binary using the *INCBIN* technology.
 
 #### Adjust strength
 Minic strength can be ajdusted using the level option (from command line or using protocol option support, using value from 0 to 100). Level 0 is a random mover, 1 to 30 very weak, ..., level 100 is full strength. For now it uses multipv, maximum depth adjustment and randomness to make Minic play weaker moves.
