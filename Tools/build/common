@@ -48,7 +48,7 @@ else
       fi
    else
       echo "Default embeded net"
-      d="$d -DEMBEDEDNNUEPATH=/ssd/NNUE-Nets/naive_nostalgia.bin -DFORCEEMBEDEDNNUE"
+      d="$d -DEMBEDEDNNUEPATH=$dir/Tourney/nn.bin -DFORCEEMBEDEDNNUE"
    fi
 
    if [ -n "$1" ]; then

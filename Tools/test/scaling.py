@@ -138,4 +138,5 @@ plt.plot(x_range, x_range)
 for engine in engines:
     plt.plot(x_range, [x / speeds[engine][0] for x in speeds[engine]])
 
-plt.show()
+#plt.show()
+plt.savefig("scaling.png")
