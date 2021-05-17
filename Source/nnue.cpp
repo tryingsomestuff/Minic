@@ -76,7 +76,12 @@ void compute_scaling(int count){
         if ( !found ) readFEN(startPosition,p,true);        
     }
     DynamicConfig::NNUEscaling = int(s1/s2*64);
-    Logging::LogIt(Logging::logInfo) << "NNUEscaling " << DynamicConfig::NNUEscaling << " (" << s1/s2 << ") on " << k << " samples";
+    if ( DynamicConfig::NNUEscaling < 32 || DynamicConfig::NNUEscaling > 256 ){
+        Logging::LogIt(Logging::logFatal) << "Error NNUE scaling is out of bound :" << DynamicConfig::NNUEscaling << " (" << s1 << ", " << s2 << ")";
+    }
+    else{
+        Logging::LogIt(Logging::logInfo) << "NNUEscaling " << DynamicConfig::NNUEscaling << " (" << s1/s2 << ") on " << k << " samples";
+    }
 
     DynamicConfig::disableTT = bkTT;
 }
