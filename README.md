@@ -1,9 +1,9 @@
 <img src="https://raw.githubusercontent.com/tryingsomestuff/Minic/master/logo2.png" width="350">
 
 # Minic
-A chess engine I made to learn about chess programming.
-It is compatible with both CECP (xboard) and UCI protocol.
-
+A chess engine I made to learn about chess programming.  
+It is compatible with both CECP (xboard) and UCI protocol.  
+It is currently rated >3200 on CCRL scale.
 
 ## History & the NNUE Minic story
 
