@@ -2,7 +2,7 @@
 
 # Minic
 A chess engine I made to learn about chess programming.
-It is compatible with both xboard/winboard and UCI protocol.
+It is compatible with both CECP (xboard) and UCI protocol.
 
 
 ## History & the NNUE Minic story
