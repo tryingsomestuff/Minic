@@ -16,13 +16,13 @@ Nowadays, since the release of version "2" Minic is written in a more classic c+
 
 More details about Minic history in the next paragraphs...
 
-### Week-end project
+### Week-end project (October 2018)
 Initially, the code size of Minic was supposed not to go above 2000sloc. It started as a week-end project in october 2018 (http://talkchess.com/forum3/viewtopic.php?f=2&t=68701). But, as soon as more features (especially SMP, material tables and bitboard) came up, I tried to keep it under 4000sloc and then 5000sloc, ... This is why this engine was named Minic, this stands for "Minimal Chess" (and is not related to the GM Dragoljub Minić) but it has not much to do with minimalism anymore...  
 
-### Version "1" 
+### Version "1" (October 2019)
 was released as a one year anniversary release in october 2019. At this point Minic has already go from a 1800 Elo 2-days-of-work engine, to a 2800 Elo engine being invited at TCEC qualification league.
 
-### Version "2"
+### Version "2" (April 2020)
 is released for April 1st 2020 (during covid-19 confinement). For this version, the one file Minic was splitted into many header and source files, and commented a lot more, without negative impact on speed and strength. 
 
 ### NNUE from release 2.47 to release 2.53 (from Stockfish implementation)
@@ -36,7 +36,7 @@ The genFen part was not ported and in internal process to produce training is us
 
 Nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets.
 
-### Version "3"
+### Version "3" (November 2020)
 is released in november 2020 (during second covid-19 confinement) as a 2 years anniversary release and *is not using, nor compatible with, SF NNUE implementation anymore*. More about this just below...
 
 ### NNUE from release 3.00 (from Seer implementation)
