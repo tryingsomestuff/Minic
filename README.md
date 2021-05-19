@@ -201,16 +201,21 @@ In a github release, a tester shall only use the given (attached) binaries. The 
 Binaries are named following this convention :
 ```
 Linux 64:
-* minic_X.YY_linux_x64_skylake         : fully optimized Linux64 (popcnt+avx2+bmi2)   
-* minic_X.YY_linux_x64_sandybridge     : optimized Linux64 (popcnt+avx)   
+-- Intel --
+* minic_X.YY_linux_x64_skylake         : fully optimized Linux64 (popcnt+avx2+bmi2)  
+* minic_X.YY_linux_x64_sandybridge     : optimized Linux64 (popcnt+avx)  
 * minic_X.YY_linux_x64_nehalem         : optimized Linux64 (popcnt+sse4.2)  
 * minic_X.YY_linux_x64_core2           : basic Linux64 (nopopcnt+sse3)  
 
+-- AMD --
+* minic_X.YY_linux_x64_znver3          : fully optimized Linux64 (popcnt+avx2+bmi2)  
+* minic_X.YY_linux_x64_znver1          : almost optimized Linux64 (popcnt+avx2)  
+* minic_X.YY_linux_x64_bdver1          : optimized Linux64 (nopopcnt+avx)  
+* minic_X.YY_linux_x64_barcelona       : optimized Linux64 (nopopcnt+sse4A)  
+* minic_X.YY_linux_x64_athlon64-sse3   : basic Linux64 (nopopcnt+sse3)  
+
 Windows 64:
-* minic_X.YY_mingw_x64_skylake.exe     : fully optimized Windows64 (popcnt+avx2+bmi2)   
-* minic_X.YY_mingw_x64_sandybridge.exe : optimized Windows64 (popcnt+avx)   
-* minic_X.YY_mingw_x64_nehalem.exe     : optimized Windows64 (popcnt+sse4.2)   
-* minic_X.YY_mingw_x64_core2.exe       : basic Windows64 (nopopcnt+sse3)  
+Some as for Linux with naming convention like this minic_X.YY_mingw_x64_skylake.exe
 
 Windows 32:
 * minic_X.YY_mingw_x32_pentium2.exe    : very basic Windows32  
