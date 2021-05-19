@@ -1,4 +1,4 @@
-<p float="left">
+<p align="center">
 <img src="https://raw.githubusercontent.com/tryingsomestuff/Minic/master/logo.png" width="350"> 
 <img src="https://raw.githubusercontent.com/tryingsomestuff/Minic/master/logo_dark.png" width="350">
 </p>
