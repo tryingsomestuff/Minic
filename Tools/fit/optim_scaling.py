@@ -55,7 +55,7 @@ def run_match(best, c_chess_exe, concurrency, book_file_name, engine):
     """ Run a match using c-chess-cli adding pgns to a file to be analysed with ordo """
     pgn_file_name = os.path.join("out.pgn")
     c_chess_out_file_name = os.path.join("c_chess.out")
-    command = "{} -each tc=60+0.6 -games 10 -rounds 2 -concurrency {}".format(
+    command = "{} -each tc=3+0.03 -games 10 -rounds 2 -concurrency {}".format(
         c_chess_exe, concurrency
     )
     command = (
