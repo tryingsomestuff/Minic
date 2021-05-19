@@ -78,18 +78,23 @@ echo $OPT $LIBS
 
 rm -f *.gcda
 
-$CXX -fprofile-generate $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $exe $LIBS 
-ret=$?
-echo "end of first compilation"
-if [ $ret = "0" ]; then
-   echo "running Minic for profiling : $exe"
-   $exe bench $DEPTH -quiet 0 -NNUEFile Tourney/nn.bin
-   $exe bench $DEPTH -quiet 0 
-   echo "starting optimized compilation"
-   $CXX -fprofile-use $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $exe $LIBS
-   echo "done "
+if [ -n "$NOPROFILE" ]; then
+   echo "compilation without profiling"
+   $CXX $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $exe $LIBS 
 else
-   echo "some error"
+   $CXX -fprofile-generate $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $exe $LIBS 
+   ret=$?
+   echo "end of first compilation"
+   if [ $ret = "0" ]; then
+      echo "running Minic for profiling : $exe"
+      $exe bench $DEPTH -quiet 0 -NNUEFile Tourney/nn.bin
+      $exe bench $DEPTH -quiet 0 
+      echo "starting optimized compilation"
+      $CXX -fprofile-use $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $exe $LIBS
+      echo "done "
+   else
+      echo "some error"
+   fi
 fi
 
 rm -f *.gcda
