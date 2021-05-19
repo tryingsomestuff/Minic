@@ -18,7 +18,7 @@ It is currently rated >3200 on CCRL scale.
 
 ## Support Minic development
 
-Generating data, learning process, tuning and testing of a chess engine is quite hardware intensive ! I have an i7-9700K at home and I'm renting an E5-2650 on the cloud but this is far from enough. This is why I opened a [Patreon](https://www.patreon.com/minicchess) account for Minic ; if you want to support Minic development, it is the place to be ;-)
+Generating data, learning process, tuning and testing of a chess engine is quite hardware intensive ! I have an i7-9700K at home and I'm renting an E5-2650v2 on the cloud but this is far from enough. This is why I opened a [Patreon](https://www.patreon.com/minicchess) account for Minic ; if you want to support Minic development, it is the place to be ;-)
 
 ## History & the NNUE Minic story
 
