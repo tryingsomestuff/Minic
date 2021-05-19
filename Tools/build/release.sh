@@ -13,20 +13,24 @@ echo "====================================="
 # all build script takes arguments in this order (if missing => default)
 #   exe_name version arch_target special_options special_definitions
 
-$dir/build.sh $e $v "-march=core2" $n $d
-$dir/build.sh $e $v "-march=nehalem"  $n $d
-$dir/build.sh $e $v "-march=sandybridge" $n $d
-#$dir/build.sh $e $v "-march=haswell" $n $d
-$dir/build.sh $e $v "-march=skylake" $n $d
+# Intel main arch
+for m in -march=core2 -march=nehalem -march=sandybridge -march=skylake; do
+   $dir/build.sh $e $v $m $n $d
+   $dir/buildGW.sh $e $v $m $n $d
+done
 
-$dir/buildGW.sh $e $v "-march=core2" $n $d
-$dir/buildGW.sh $e $v "-march=nehalem" $n $d
-$dir/buildGW.sh $e $v "-march=sandybridge" $n $d
-#$dir/buildGW.sh $e $v "-march=haswell" $n $d
-$dir/buildGW.sh $e $v "-march=skylake" $n $d
+# AMD main arch
+NOPROFILE=1
+for m in -march=athlon64-sse3 -march=barcelona -march=bdver1 -march=znver1 -march=znver3; do
+   $dir/build.sh $e $v $m $n $d
+   $dir/buildGW.sh $e $v $m $n $d
+done
+unset NOPROFILE
 
+# an old win32 build
 $dir/buildGW32.sh $e $v "-march=pentium2" $n $d
 
+# some fun stuff
 $dir/buildAndroid.sh $e $v $n $d
 $dir/buildRPi32.sh $e $v $n $d
 $dir/buildRPi64.sh $e $v $n $d
