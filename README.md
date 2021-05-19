@@ -1,4 +1,5 @@
-<img src="https://raw.githubusercontent.com/tryingsomestuff/Minic/master/logo2.png" width="350">
+<img src="https://raw.githubusercontent.com/tryingsomestuff/Minic/master/logo.png" width="350">
+<img src="https://raw.githubusercontent.com/tryingsomestuff/Minic/master/logo_dark.png" width="350">
 
 # Minic
 A chess engine I made to learn about chess programming.  
