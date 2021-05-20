@@ -20,12 +20,12 @@ for m in -march=core2 -march=nehalem -march=sandybridge -march=skylake; do
 done
 
 # AMD main arch
-NOPROFILE=1
+export NOPROFILE=1
 for m in -march=athlon64-sse3 -march=barcelona -march=bdver1 -march=znver1 -march=znver3; do
    $dir/build.sh $e $v $m $n $d
    $dir/buildGW.sh $e $v $m $n $d
 done
-unset NOPROFILE
+export NOPROFILE
 
 # an old win32 build
 $dir/buildGW32.sh $e $v "-march=pentium2" $n $d
