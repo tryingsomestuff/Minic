@@ -7,3 +7,6 @@
 [submodule "Dist"]
 	path = Dist
 	url = https://github.com/tryingsomestuff/Minic-Dist
+[submodule "NNUE-Nets"]
+	path = NNUE-Nets
+	url = https://github.com/tryingsomestuff/NNUE-Nets.git
