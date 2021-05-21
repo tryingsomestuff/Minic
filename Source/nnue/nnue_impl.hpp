@@ -18,8 +18,6 @@
 #include "dot.hpp"
 #endif
 
-//#include "bfloat16.hpp"
-
 #ifdef WITH_BLAS
 #include <cblas.h>
 #endif
