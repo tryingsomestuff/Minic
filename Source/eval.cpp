@@ -209,12 +209,12 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
     if (DynamicConfig::useNNUE){
         EvalScore score;
         ///@todo use data.gp inside NNUE condition ?
-        if ( DynamicConfig::forceNNUE || ! isLazyHigh(600,features,score)){ // stay to classic eval when the game is already decided
+        if ( DynamicConfig::forceNNUE || !isLazyHigh(DynamicConfig::NNUEThreshold,features,score)){ // stay to classic eval when the game is already decided
            if ( DynamicConfig::armageddon ) features.scalingFactor = 1.f; ///@todo better
            ScoreType nnueScore = p.Evaluator().propagate(p.c);
            nnueScore = ScoreType(data.gp*nnueScore + (1.f-data.gp)*nnueScore*features.scalingFactor); // use scaling factor
            // NNUE evaluation scaling
-           nnueScore = (Score(nnueScore,p) * DynamicConfig::NNUEscaling) / 64;
+           nnueScore = (Score(nnueScore,p) * DynamicConfig::NNUEScaling) / 64;
            // take tempo and contempt into account
            nnueScore += ScaleScore( /*EvalConfig::tempo*(white2Play?+1:-1) +*/ context.contempt, data.gp);
            ++context.stats.counters[Stats::sid_evalNNUE];

@@ -118,7 +118,8 @@ namespace Options {
 #ifdef WITH_NNUE
        _keys.push_back(KeyBase(k_string,w_string,"NNUEFile"                    , &DynamicConfig::NNUEFile                                                                                , &NNUEWrapper::init));
        _keys.push_back(KeyBase(k_bool,  w_check, "forceNNUE"                   , &DynamicConfig::forceNNUE                      , false            , true                              ));
-       _keys.push_back(KeyBase(k_int,   w_spin,  "NNUEscaling"                 , &DynamicConfig::NNUEscaling                    , (int)32          , (int)256 ));
+       _keys.push_back(KeyBase(k_int,   w_spin,  "NNUEScaling"                 , &DynamicConfig::NNUEScaling                    , (int)32          , (int)256 ));
+       _keys.push_back(KeyBase(k_int,   w_spin,  "NNUEThreshold"               , &DynamicConfig::NNUEThreshold                  , (int)-1500       , (int)1500 ));
 #endif
 
 #ifdef WITH_GENFILE
@@ -248,7 +249,8 @@ namespace Options {
 #ifdef WITH_NNUE
        GETOPT(NNUEFile,         std::string)
        GETOPT(forceNNUE,        bool)
-       GETOPT(NNUEscaling,      int)
+       GETOPT(NNUEScaling,      int)
+       GETOPT(NNUEThreshold,    int)
 #endif
 #ifdef WITH_GENFILE
        GETOPT(genFen,            bool)

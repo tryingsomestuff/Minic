@@ -75,12 +75,12 @@ void compute_scaling(int count){
         }
         if ( !found ) readFEN(startPosition,p,true);        
     }
-    DynamicConfig::NNUEscaling = int(s1/s2*64);
-    if ( DynamicConfig::NNUEscaling < 32 || DynamicConfig::NNUEscaling > 256 ){
-        Logging::LogIt(Logging::logFatal) << "Error NNUE scaling is out of bound :" << DynamicConfig::NNUEscaling << " (" << s1 << ", " << s2 << ")";
+    DynamicConfig::NNUEScaling = int(s1/s2*64);
+    if ( DynamicConfig::NNUEScaling < 32 || DynamicConfig::NNUEScaling > 256 ){
+        Logging::LogIt(Logging::logFatal) << "Error NNUE scaling is out of bound :" << DynamicConfig::NNUEScaling << " (" << s1 << ", " << s2 << ")";
     }
     else{
-        Logging::LogIt(Logging::logInfo) << "NNUEscaling " << DynamicConfig::NNUEscaling << " (" << s1/s2 << ") on " << k << " samples";
+        Logging::LogIt(Logging::logInfo) << "NNUEScaling " << DynamicConfig::NNUEScaling << " (" << s1/s2 << ") on " << k << " samples";
     }
 
     DynamicConfig::disableTT = bkTT;

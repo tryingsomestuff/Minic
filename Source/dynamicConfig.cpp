@@ -28,7 +28,8 @@ namespace DynamicConfig{
     // This way search params can remain the same ... more or less ...
     // see compute_scaling
     // from 32 to 256      x_scaled = x * NNUEscaling / 64
-    int NNUEscaling = 130; // tuned by hand
+    int NNUEScaling          = 130; // tuned by hand
+    int NNUEThreshold        = 600;
 
 #ifndef FORCEEMBEDEDNNUE    
     std::string NNUEFile;
