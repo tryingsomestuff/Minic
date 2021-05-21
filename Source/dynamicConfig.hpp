@@ -31,7 +31,8 @@ namespace DynamicConfig{
     extern bool useNNUE             ;
     extern bool forceNNUE           ;
     extern std::string NNUEFile     ;
-    extern int NNUEscaling          ;
+    extern int NNUEScaling          ;
+    extern int NNUEThreshold        ;
     extern bool genFen              ;
     extern unsigned int genFenDepth ;
     extern unsigned int genFenDepthEG;
