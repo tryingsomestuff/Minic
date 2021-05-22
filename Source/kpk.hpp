@@ -13,7 +13,7 @@ namespace KPK{
 Square normalizeSquare(const Position& p, Color strongSide, Square sq);
 
 enum kpk_result : uint8_t { kpk_invalid = 0, kpk_unknown = 1, kpk_draw = 2, kpk_win = 4};
-inline kpk_result& operator|=(kpk_result& r, kpk_result v) { return r = kpk_result(r | v); }
+inline constexpr kpk_result& operator|=(kpk_result& r, kpk_result v) { return r = kpk_result(r | v); }
 
 #pragma pack(push, 1)
 struct KPKPosition {

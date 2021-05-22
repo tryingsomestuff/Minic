@@ -99,11 +99,11 @@ struct Position{
   // Vastly taken from Seer implementation.
   // see https://github.com/connormcmonigle/seer-nnue
 
-  [[nodiscard]] static inline int NNUEIndiceUs(Square ksq, Square s, Piece p){
+  [[nodiscard]] static inline constexpr int NNUEIndiceUs(Square ksq, Square s, Piece p){
     return feature_idx::major * HFlip(ksq) + HFlip(s) + feature_idx::us_offset(p);
   }
 
-  [[nodiscard]] static inline int NNUEIndiceThem(Square ksq, Square s, Piece p){
+  [[nodiscard]] static inline constexpr int NNUEIndiceThem(Square ksq, Square s, Piece p){
     return feature_idx::major * HFlip(ksq) + HFlip(s) + feature_idx::them_offset(p);
   }
 

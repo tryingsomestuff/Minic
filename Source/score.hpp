@@ -141,11 +141,11 @@ inline void displayEval(const EvalData & data, const EvalFeatures & features ){
 // idea from Stockfish
 namespace WDL{
     // Coefficients of a 3rd order polynomial fit based on Minic test data (from CCRL, CEGT, FGRL)
-    const double as[] = {-13.65744616,  94.04894005,  -95.05180396,  84.853482690};
-    const double bs[] = {-10.78187987,  77.22626799, -132.72201029,  122.54185402};
+    constexpr double as[] = {-13.65744616,  94.04894005,  -95.05180396,  84.853482690};
+    constexpr double bs[] = {-10.78187987,  77.22626799, -132.72201029,  122.54185402};
 }
 
-inline ScoreType shiftArmageddon(ScoreType v, unsigned int ply, Color c){
+inline ScoreType shiftArmageddon(const ScoreType v, const unsigned int ply, const Color c){
     // limit input ply and rescale
     const double m = std::min(256u, ply) / 64.0; // care! here ply not move
     const double a = (((WDL::as[0] * m + WDL::as[1]) * m + WDL::as[2]) * m) + WDL::as[3];
@@ -153,7 +153,7 @@ inline ScoreType shiftArmageddon(ScoreType v, unsigned int ply, Color c){
     else                 return ScoreType(v + 2*a);
 }
 
-inline double toWDLModel(ScoreType v, unsigned int ply) {
+inline double toWDLModel(const ScoreType v, const unsigned int ply) {
     // limit input ply and rescale
     const double m = std::min(256u, ply) / 64.0; // care! here ply not move
     const double a = (((WDL::as[0] * m + WDL::as[1]) * m + WDL::as[2]) * m) + WDL::as[3];
