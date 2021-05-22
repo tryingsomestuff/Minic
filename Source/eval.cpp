@@ -209,7 +209,7 @@ ScoreType eval(const Position & p, EvalData & data, Searcher &context, bool safe
     if (DynamicConfig::useNNUE){
         EvalScore score;
         ///@todo use data.gp inside NNUE condition ?
-        if ( DynamicConfig::forceNNUE || !isLazyHigh(DynamicConfig::NNUEThreshold,features,score)){ // stay to classic eval when the game is already decided
+        if ( DynamicConfig::forceNNUE || !isLazyHigh(ScoreType(DynamicConfig::NNUEThreshold),features,score)){ // stay to classic eval when the game is already decided
            if ( DynamicConfig::armageddon ) features.scalingFactor = 1.f; ///@todo better
            ScoreType nnueScore = p.Evaluator().propagate(p.c);
            nnueScore = ScoreType(data.gp*nnueScore + (1.f-data.gp)*nnueScore*features.scalingFactor); // use scaling factor

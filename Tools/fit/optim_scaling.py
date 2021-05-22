@@ -113,7 +113,7 @@ def run_round(
 ):
     """ run a round of games, analyze an ordo file to pick most suitable ones, run a round, and run ordo """
 
-    configs = [ "config-{}".format(k) for k in range(100,1200,25) ]
+    configs = [ "config-{}".format(k) for k in range(100,1200,50) ]
     print(configs)
 
     # Get info from ordo data if that is around
