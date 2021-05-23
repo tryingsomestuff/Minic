@@ -59,16 +59,16 @@ void init() {
             int               oppRating    = 0;
             bool              ratingFound  = false;
 
-            /*
-                    if ( oppRatingStr != "none" ){
-                        const int oppRatingRead = std::atoi(oppRatingStr.c_str());
-                        if ( oppRatingRead ){
-                            oppRating = oppRatingRead;
-                            Logging::LogIt(Logging::logInfo) << "Opponent rating is " << oppRating;
-                            ratingFound = true;
-                        }
-                    }
-                    */
+/*
+            if ( oppRatingStr != "none" ){
+               const int oppRatingRead = std::atoi(oppRatingStr.c_str());
+               if ( oppRatingRead ){
+                     oppRating = oppRatingRead;
+                     Logging::LogIt(Logging::logInfo) << "Opponent rating is " << oppRating;
+                     ratingFound = true;
+               }
+            }
+*/
 
             if (!ratingFound) {
                //Logging::LogIt(Logging::logWarn) << "No rating given";

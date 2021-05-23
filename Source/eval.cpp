@@ -368,23 +368,25 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
       const BitBoard semiOpenPawn[2] = {BBTools::pawnSemiOpen<Co_White>(pawns[Co_White], pawns[Co_Black]),
                                         BBTools::pawnSemiOpen<Co_Black>(pawns[Co_Black], pawns[Co_White])};
       const BitBoard backward[2]     = {BBTools::pawnBackward<Co_White>(pawns[Co_White], pawns[Co_Black]),
-                                    BBTools::pawnBackward<Co_Black>(pawns[Co_Black], pawns[Co_White])};
+                                        BBTools::pawnBackward<Co_Black>(pawns[Co_Black], pawns[Co_White])};
       const BitBoard backwardOpenW   = backward[Co_White] & semiOpenPawn[Co_White];
       const BitBoard backwardCloseW  = backward[Co_White] & ~semiOpenPawn[Co_White];
       const BitBoard backwardOpenB   = backward[Co_Black] & semiOpenPawn[Co_Black];
       const BitBoard backwardCloseB  = backward[Co_Black] & ~semiOpenPawn[Co_Black];
-      const BitBoard doubled[2]      = {BBTools::pawnDoubled<Co_White>(pawns[Co_White]), BBTools::pawnDoubled<Co_Black>(pawns[Co_Black])};
+      const BitBoard doubled[2]      = {BBTools::pawnDoubled<Co_White>(pawns[Co_White]), 
+                                        BBTools::pawnDoubled<Co_Black>(pawns[Co_Black])};
       const BitBoard doubledOpenW    = doubled[Co_White] & semiOpenPawn[Co_White];
       const BitBoard doubledCloseW   = doubled[Co_White] & ~semiOpenPawn[Co_White];
       const BitBoard doubledOpenB    = doubled[Co_Black] & semiOpenPawn[Co_Black];
       const BitBoard doubledCloseB   = doubled[Co_Black] & ~semiOpenPawn[Co_Black];
-      const BitBoard isolated[2]     = {BBTools::pawnIsolated(pawns[Co_White]), BBTools::pawnIsolated(pawns[Co_Black])};
+      const BitBoard isolated[2]     = {BBTools::pawnIsolated(pawns[Co_White]), 
+                                        BBTools::pawnIsolated(pawns[Co_Black])};
       const BitBoard isolatedOpenW   = isolated[Co_White] & semiOpenPawn[Co_White];
       const BitBoard isolatedCloseW  = isolated[Co_White] & ~semiOpenPawn[Co_White];
       const BitBoard isolatedOpenB   = isolated[Co_Black] & semiOpenPawn[Co_Black];
       const BitBoard isolatedCloseB  = isolated[Co_Black] & ~semiOpenPawn[Co_Black];
       const BitBoard detached[2]     = {BBTools::pawnDetached<Co_White>(pawns[Co_White], pawns[Co_Black]),
-                                    BBTools::pawnDetached<Co_Black>(pawns[Co_Black], pawns[Co_White])};
+                                        BBTools::pawnDetached<Co_Black>(pawns[Co_Black], pawns[Co_White])};
       const BitBoard detachedOpenW   = detached[Co_White] & semiOpenPawn[Co_White] & ~backward[Co_White];
       const BitBoard detachedCloseW  = detached[Co_White] & ~semiOpenPawn[Co_White] & ~backward[Co_White];
       const BitBoard detachedOpenB   = detached[Co_Black] & semiOpenPawn[Co_Black] & ~backward[Co_Black];
@@ -704,8 +706,8 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
 #endif
 
    // initiative (kind of second order pawn structure stuff for end-games)
-   const BitBoard &allPawns        = p.allPawn();
-   EvalScore       initiativeBonus = EvalConfig::initiative[0] * countBit(allPawns) +
+   const BitBoard &allPawns = p.allPawn();
+   EvalScore initiativeBonus = EvalConfig::initiative[0] * countBit(allPawns) +
                                EvalConfig::initiative[1] * ((allPawns & queenSide) && (allPawns & kingSide)) +
                                EvalConfig::initiative[2] * (countBit(occupancy & ~allPawns) == 2) - EvalConfig::initiative[3];
    initiativeBonus = EvalScore(sgn(score[MG]) * std::max(initiativeBonus[MG], ScoreType(-std::abs(score[MG]))),
@@ -748,8 +750,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
       // queen versus no queen (scale on number of minor of no queen side)
       else if (countBit(p.allQueen()) == 1) {
          features.scalingFactor =
-             (EvalConfig::scalingFactorQueenNoQueen + EvalConfig::scalingFactorQueenNoQueenSlope * p.mat[p.whiteQueen() ? Co_Black : Co_White][M_m]) /
-             128.f;
+             (EvalConfig::scalingFactorQueenNoQueen + EvalConfig::scalingFactorQueenNoQueenSlope * p.mat[p.whiteQueen() ? Co_Black : Co_White][M_m]) / 128.f;
       }
       // scale based on the number of pawn of strong side
       else
