@@ -45,7 +45,7 @@ inline std::vector<StackFrame> stack_trace() {
 #if _WIN64
    DWORD machine = IMAGE_FILE_MACHINE_AMD64;
 #else
-   DWORD      machine     = IMAGE_FILE_MACHINE_I386;
+   DWORD machine = IMAGE_FILE_MACHINE_I386;
 #endif
    HANDLE process = GetCurrentProcess();
    HANDLE thread  = GetCurrentThread();
@@ -81,7 +81,7 @@ inline std::vector<StackFrame> stack_trace() {
    std::vector<StackFrame> frames;
    while (StackWalk(machine, process, thread, &frame, &context, NULL, SymFunctionTableAccess, SymGetModuleBase, NULL)) {
       StackFrame f = {};
-      f.address    = frame.AddrPC.Offset;
+      f.address = frame.AddrPC.Offset;
 
 #if _WIN64
       DWORD64 moduleBase = 0;
@@ -99,7 +99,7 @@ inline std::vector<StackFrame> stack_trace() {
 #if _WIN64
       DWORD64 offset = 0;
 #else
-      DWORD offset     = 0;
+      DWORD offset = 0;
 #endif
       char             symbolBuffer[sizeof(IMAGEHLP_SYMBOL) + 255];
       PIMAGEHLP_SYMBOL symbol = (PIMAGEHLP_SYMBOL)symbolBuffer;
@@ -109,7 +109,7 @@ inline std::vector<StackFrame> stack_trace() {
       if (SymGetSymFromAddr(process, frame.AddrPC.Offset, &offset, symbol)) { f.name = symbol->Name; }
       else {
          DWORD error = GetLastError();
-         f.name      = "Unknown Function";
+         f.name = "Unknown Function";
       }
 
       IMAGEHLP_LINE line;
@@ -122,7 +122,7 @@ inline std::vector<StackFrame> stack_trace() {
       }
       else {
          DWORD error = GetLastError();
-         f.line      = 0;
+         f.line = 0;
       }
 
       if (!first) { frames.push_back(f); }
