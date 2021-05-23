@@ -1,85 +1,95 @@
+#include "logging.hpp"
 #include "searcher.hpp"
 
-#include "logging.hpp"
+ScoreType Searcher::SEE(const Position& p, const Move& m) const {
+   if (!VALIDMOVE(m)) return 0;
 
-ScoreType Searcher::SEE(const Position & p, const Move & m) const {
-    if ( ! VALIDMOVE(m) ) return 0;
+   START_TIMER
 
-    START_TIMER
+   Square from = Move2From(m);
+   assert(squareOK(from));
+   const Square to = Move2To(m);
+   assert(squareOK(to));
+   const MType mtype = Move2Type(m);
+   assert(moveTypeOK(mtype));
+   BitBoard   attackers          = BBTools::allAttackedBB(p, to);
+   BitBoard   occupation_mask    = 0xFFFFFFFFFFFFFFFF;
+   ScoreType  current_target_val = 0;
+   const bool promPossible       = PROMOTION_RANK(to);
+   Color c = p.c;
 
-    Square from = Move2From(m); assert(squareOK(from));
-    const Square to = Move2To(m); assert(squareOK(to));
-    const MType mtype = Move2Type(m); assert(moveTypeOK(mtype));
-    BitBoard attackers = BBTools::allAttackedBB(p, to);
-    BitBoard occupation_mask = 0xFFFFFFFFFFFFFFFF;
-    ScoreType current_target_val = 0;
-    const bool promPossible = PROMOTION_RANK(to);
-    Color c = p.c;
+   int nCapt = 0;
+   ScoreType swapList[32]; // max 32 caps ... shall be ok
 
-    int nCapt = 0;
-    ScoreType swapList[32]; // max 32 caps ... shall be ok
+   Piece pp = PieceTools::getPieceType(p, from);
+   if (mtype == T_ep) {
+      swapList[nCapt]    = Values[P_wp + PieceShift];
+      current_target_val = Values[pp + PieceShift];
+      occupation_mask &= ~SquareToBitboard(p.ep);
+   }
+   else {
+      swapList[nCapt] = PieceTools::getAbsValue(p, to);
+      if (promPossible && pp == P_wp) {
+         swapList[nCapt] += Values[promShift(mtype) + PieceShift] - Values[P_wp + PieceShift];
+         current_target_val = Values[promShift(mtype) + PieceShift];
+      }
+      else
+         current_target_val = Values[pp + PieceShift];
+   }
+   nCapt++;
 
-    Piece pp = PieceTools::getPieceType(p, from);
-    if ( mtype == T_ep ){
-        swapList[nCapt] = Values[P_wp+PieceShift];
-        current_target_val = Values[pp+PieceShift];
-        occupation_mask &= ~SquareToBitboard(p.ep);
-    }
-    else{
-        swapList[nCapt] = PieceTools::getAbsValue(p, to);
-        if (promPossible && pp == P_wp) {
-            swapList[nCapt] += Values[promShift(mtype)+PieceShift] - Values[P_wp+PieceShift];
-            current_target_val = Values[promShift(mtype)+PieceShift];
-        }
-        else current_target_val = Values[pp+PieceShift];
-    }
-    nCapt++;
+   attackers &= ~SquareToBitboard(from);
+   occupation_mask &= ~SquareToBitboard(from);
+   const BitBoard occupancy = p.occupancy();
 
-    attackers &= ~SquareToBitboard(from);
-    occupation_mask &= ~SquareToBitboard(from);
-    const BitBoard occupancy = p.occupancy();
+   attackers |= BBTools::attack<P_wr>(to, p.allQueen() | p.allRook(), occupancy & occupation_mask, c) |
+                BBTools::attack<P_wb>(to, p.allQueen() | p.allBishop(), occupancy & occupation_mask, c);
+   attackers &= occupation_mask;
+   c = ~c;
 
-    attackers |= BBTools::attack<P_wr>(to, p.allQueen() | p.allRook(),   occupancy & occupation_mask, c) |
-                 BBTools::attack<P_wb>(to, p.allQueen() | p.allBishop(), occupancy & occupation_mask, c) ;
-    attackers &= occupation_mask;
-    c = ~c;
+   while (attackers) {
+      if (!promPossible && attackers & p.pieces_const<P_wp>(c)) from = BBTools::SquareFromBitBoard(attackers & p.pieces_const<P_wp>(c)), pp = P_wp;
+      else if (attackers & p.pieces_const<P_wn>(c))
+         from = BBTools::SquareFromBitBoard(attackers & p.pieces_const<P_wn>(c)), pp = P_wn;
+      else if (attackers & p.pieces_const<P_wb>(c))
+         from = BBTools::SquareFromBitBoard(attackers & p.pieces_const<P_wb>(c)), pp = P_wb;
+      else if (attackers & p.pieces_const<P_wr>(c))
+         from = BBTools::SquareFromBitBoard(attackers & p.pieces_const<P_wr>(c)), pp = P_wr;
+      else if (promPossible && (attackers & p.pieces_const<P_wp>(c)))
+         from = BBTools::SquareFromBitBoard(attackers & p.pieces_const<P_wp>(c)), pp = P_wp;
+      else if (attackers & p.pieces_const<P_wq>(c))
+         from = BBTools::SquareFromBitBoard(attackers & p.pieces_const<P_wq>(c)), pp = P_wq;
+      else if ((attackers & p.pieces_const<P_wk>(c)) && !(attackers & p.allPieces[~c]))
+         from = BBTools::SquareFromBitBoard(attackers & p.pieces_const<P_wk>(c)), pp = P_wk;
+      else
+         break;
 
-    while (attackers) {
-        if (!promPossible && attackers & p.pieces_const<P_wp>(c))        from = BBTools::SquareFromBitBoard(attackers & p.pieces_const<P_wp>(c)),pp=P_wp;
-        else if (attackers & p.pieces_const<P_wn>(c))                    from = BBTools::SquareFromBitBoard(attackers & p.pieces_const<P_wn>(c)),pp=P_wn;
-        else if (attackers & p.pieces_const<P_wb>(c))                    from = BBTools::SquareFromBitBoard(attackers & p.pieces_const<P_wb>(c)),pp=P_wb;
-        else if (attackers & p.pieces_const<P_wr>(c))                    from = BBTools::SquareFromBitBoard(attackers & p.pieces_const<P_wr>(c)),pp=P_wr;
-        else if (promPossible && (attackers & p.pieces_const<P_wp>(c)))  from = BBTools::SquareFromBitBoard(attackers & p.pieces_const<P_wp>(c)),pp=P_wp;
-        else if (attackers & p.pieces_const<P_wq>(c))                    from = BBTools::SquareFromBitBoard(attackers & p.pieces_const<P_wq>(c)),pp=P_wq;
-        else if ((attackers & p.pieces_const<P_wk>(c)) && !(attackers & p.allPieces[~c])) from = BBTools::SquareFromBitBoard(attackers &  p.pieces_const<P_wk>(c)),pp=P_wk;
-        else break;
+      swapList[nCapt] = -swapList[nCapt - 1] + current_target_val;
+      if (promPossible && pp == P_wp) {
+         swapList[nCapt] += Values[P_wq + PieceShift] - Values[P_wp + PieceShift];
+         current_target_val = Values[P_wq + PieceShift];
+      }
+      else
+         current_target_val = Values[pp + PieceShift];
 
-        swapList[nCapt] = -swapList[nCapt - 1] + current_target_val;
-        if (promPossible && pp == P_wp) {
-            swapList[nCapt] += Values[P_wq+PieceShift] - Values[P_wp+PieceShift];
-            current_target_val = Values[P_wq+PieceShift];
-        }
-        else current_target_val = Values[pp+PieceShift];
+      nCapt++;
+      attackers &= ~SquareToBitboard(from);
+      occupation_mask &= ~SquareToBitboard(from);
 
-        nCapt++;
-        attackers &= ~SquareToBitboard(from);
-        occupation_mask &= ~SquareToBitboard(from);
+      attackers |= BBTools::attack<P_wr>(to, p.allQueen() | p.allRook(), occupancy & occupation_mask, c) |
+                   BBTools::attack<P_wb>(to, p.allQueen() | p.allBishop(), occupancy & occupation_mask, c);
+      attackers &= occupation_mask;
 
-        attackers |= BBTools::attack<P_wr>(to, p.allQueen() | p.allRook(),   occupancy & occupation_mask, c) |
-                     BBTools::attack<P_wb>(to, p.allQueen() | p.allBishop(), occupancy & occupation_mask, c) ;
-        attackers &= occupation_mask;
+      c = ~c;
+   }
 
-        c = ~c;
-    }
-
-    while (--nCapt) if (swapList[nCapt] > -swapList[nCapt - 1])  swapList[nCapt - 1] = -swapList[nCapt];
-    STOP_AND_SUM_TIMER(See)
-    return swapList[0];
+   while (--nCapt)
+      if (swapList[nCapt] > -swapList[nCapt - 1]) swapList[nCapt - 1] = -swapList[nCapt];
+   STOP_AND_SUM_TIMER(See)
+   return swapList[0];
 }
 
-bool Searcher::SEE_GE(const Position & p, const Move & m, ScoreType threshold) const{
-   return SEE(p,m) >= threshold;
-}
+bool Searcher::SEE_GE(const Position& p, const Move& m, ScoreType threshold) const { return SEE(p, m) >= threshold; }
 
 /*
 // Static Exchange Evaluation (cutoff version algorithm from Stockfish)

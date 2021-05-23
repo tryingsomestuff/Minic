@@ -1,7 +1,6 @@
 #pragma once
 
 #include "definition.hpp"
-
 #include "position.hpp"
 
 /*!
@@ -11,27 +10,28 @@
  */
 namespace COM {
 
-    enum State : uint8_t { st_pondering = 0, st_analyzing, st_searching, st_none };
-    extern State state; 
+enum State : uint8_t { st_pondering = 0, st_analyzing, st_searching, st_none };
+extern State state;
 
-    extern std::string command; // see readLine
-    extern Position position; 
-    extern DepthType depth;
-    extern std::vector<Move> moves;
+extern std::string       command; // see readLine
+extern Position          position;
+extern DepthType         depth;
+extern std::vector<Move> moves;
 
-    void init();
+void init();
 
-    void readLine();
+void readLine();
 
-    [[nodiscard]] bool makeMove(Move m, bool disp, std::string tag, Move ponder = INVALIDMOVE);
+[[nodiscard]] bool makeMove(Move m, bool disp, std::string tag, Move ponder = INVALIDMOVE);
 
-    void stop();
+void stop();
 
-    void stopPonder();
+void stopPonder();
 
-    [[nodiscard]] bool receiveMoves(Move bestmove, Move pondermove);
+[[nodiscard]] bool receiveMoves(Move bestmove, Move pondermove);
 
-    void thinkAsync(State givenState);
+void thinkAsync(State givenState);
 
-    [[nodiscard]] Move moveFromCOM(std::string mstr);
-}
+[[nodiscard]] Move moveFromCOM(std::string mstr);
+
+} // namespace COM

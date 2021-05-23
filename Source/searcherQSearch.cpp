@@ -1,116 +1,113 @@
 #include "searcher.hpp"
 
-ScoreType Searcher::qsearchNoPruning(ScoreType alpha, 
-                                     ScoreType beta, 
-                                     const Position & p, 
-                                     DepthType height, 
-                                     DepthType & seldepth, 
-                                     PVList * pv){
-    _height = height;
+ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position& p, DepthType height, DepthType& seldepth, PVList* pv) {
+   _height = height;
 
-    EvalData data;
-    ++stats.counters[Stats::sid_qnodes];
-    const ScoreType evalScore = eval(p,data,*this);
+   EvalData data;
+   ++stats.counters[Stats::sid_qnodes];
+   const ScoreType evalScore = eval(p, data, *this);
 
-    if ( evalScore >= beta ) return evalScore;
-    if ( evalScore > alpha ) alpha = evalScore;
+   if (evalScore >= beta) return evalScore;
+   if (evalScore > alpha) alpha = evalScore;
 
-    const bool isInCheck = isAttacked(p, kingSquare(p));
-    ScoreType bestScore = isInCheck?-MATE+height:evalScore;
+   const bool isInCheck = isAttacked(p, kingSquare(p));
+   ScoreType  bestScore = isInCheck ? -MATE + height : evalScore;
 
-    CMHPtrArray cmhPtr;
-    getCMHPtr(p.halfmoves,cmhPtr);
+   CMHPtrArray cmhPtr;
+   getCMHPtr(p.halfmoves, cmhPtr);
 
-    MoveList moves;
-    //if ( isInCheck ) MoveGen::generate<MoveGen::GP_all>(p,moves); ///@todo generate only evasion !
-    /*else*/             MoveGen::generate<MoveGen::GP_cap>(p,moves);
-    MoveSorter::scoreAndSort(*this,moves,p,data.gp,height,cmhPtr,false,isInCheck);
+   MoveList moves;
+   //if ( isInCheck ) MoveGen::generate<MoveGen::GP_all>(p,moves); ///@todo generate only evasion !
+   /*else*/ MoveGen::generate<MoveGen::GP_cap>(p, moves);
+   MoveSorter::scoreAndSort(*this, moves, p, data.gp, height, cmhPtr, false, isInCheck);
 
-    for(auto it = moves.begin() ; it != moves.end() ; ++it){
-        Position p2 = p;
+   for (auto it = moves.begin(); it != moves.end(); ++it) {
+      Position p2 = p;
 #ifdef WITH_NNUE
-        NNUEEvaluator newEvaluator = p.Evaluator();
-        p2.associateEvaluator(newEvaluator);         
+      NNUEEvaluator newEvaluator = p.Evaluator();
+      p2.associateEvaluator(newEvaluator);
 #endif
-        if ( ! applyMove(p2,*it) ) continue;
-        PVList childPV;
-        const ScoreType score = -qsearchNoPruning(-beta, -alpha, p2, height+1, seldepth, pv ? &childPV : nullptr);
-        if ( score > bestScore){
-           bestScore = score;
-           if ( score > alpha ){
-              if (pv) updatePV(*pv, *it, childPV);
-              if ( score >= beta ) return score;
-              alpha = score;
-           }
-        }
-    }
-    return bestScore;
+      if (!applyMove(p2, *it)) continue;
+      PVList childPV;
+      const ScoreType score = -qsearchNoPruning(-beta, -alpha, p2, height + 1, seldepth, pv ? &childPV : nullptr);
+      if (score > bestScore) {
+         bestScore = score;
+         if (score > alpha) {
+            if (pv) updatePV(*pv, *it, childPV);
+            if (score >= beta) return score;
+            alpha = score;
+         }
+      }
+   }
+   return bestScore;
 }
 
-inline ScoreType qDeltaMargin(const Position & p) {
-   const ScoreType delta = (p.pieces_const(p.c,P_wp) & BB::seventhRank[p.c]) ? Values[P_wq+PieceShift] : Values[P_wp+PieceShift];
-   return delta + Values[P_wq+PieceShift];
+inline ScoreType qDeltaMargin(const Position& p) {
+   const ScoreType delta = (p.pieces_const(p.c, P_wp) & BB::seventhRank[p.c]) ? Values[P_wq + PieceShift] : Values[P_wp + PieceShift];
+   return delta + Values[P_wq + PieceShift];
 }
 
-ScoreType Searcher::qsearch(ScoreType alpha, 
-                            ScoreType beta, 
-                            const Position & p, 
-                            DepthType height, 
-                            DepthType & seldepth, 
-                            DepthType qply, 
-                            bool qRoot, 
-                            bool pvnode, 
-                            int8_t isInCheckHint){
-    _height = height;
+ScoreType Searcher::qsearch(ScoreType       alpha,
+                            ScoreType       beta,
+                            const Position& p,
+                            DepthType       height,
+                            DepthType&      seldepth,
+                            DepthType       qply,
+                            bool            qRoot,
+                            bool            pvnode,
+                            int8_t          isInCheckHint) {
+   _height = height;
 
-    if (stopFlag) return STOPSCORE; // no time verification in qsearch, too slow
-    ++stats.counters[Stats::sid_qnodes];
+   if (stopFlag) return STOPSCORE; // no time verification in qsearch, too slow
+   ++stats.counters[Stats::sid_qnodes];
 
-    alpha = std::max(alpha, (ScoreType)(-MATE + height));
-    beta  = std::min(beta , (ScoreType)( MATE - height + 1));
-    if (alpha >= beta) return alpha;
+   alpha = std::max(alpha, (ScoreType)(-MATE + height));
+   beta  = std::min(beta, (ScoreType)(MATE - height + 1));
+   if (alpha >= beta) return alpha;
 
-    if ((int)height > seldepth) seldepth = height;
+   if ((int)height > seldepth) seldepth = height;
 
-    EvalData data;
-    if (height >= MAX_DEPTH - 1) return eval(p, data, *this, false);
-    Move bestMove = INVALIDMOVE;
+   EvalData data;
+   if (height >= MAX_DEPTH - 1) return eval(p, data, *this, false);
+   Move bestMove = INVALIDMOVE;
 
-    debug_king_cap(p);
+   debug_king_cap(p);
 
-    // probe TT
-    TT::Entry e;
-    const Hash pHash = computeHash(p);
-    const bool ttDepthOk = TT::getEntry(*this, p, pHash, 0, e);
-    const TT::Bound bound = TT::Bound(e.b & ~TT::B_allFlags);
-    const bool ttHit = e.h != nullHash;
-    const bool validTTmove = ttHit && e.m != INVALIDMINIMOVE;
-    const bool ttPV = pvnode || (validTTmove && (e.b&TT::B_ttPVFlag));    
-    const bool ttIsInCheck = validTTmove && (e.b&TT::B_isInCheckFlag);
-    const bool isInCheck = isInCheckHint!=-1 ? isInCheckHint : ttIsInCheck || isAttacked(p, kingSquare(p));
-    const bool specialQSearch = isInCheck || qRoot;
-    const DepthType hashDepth = specialQSearch ? 0 : -1;
-    if (ttDepthOk && e.d >= hashDepth) { // if depth of TT entry is enough
-        if (!pvnode && ((bound == TT::B_alpha && e.s <= alpha) || (bound == TT::B_beta  && e.s >= beta) || (bound == TT::B_exact))) { 
-            return adjustHashScore(e.s, height); 
-        }
-    }
+   // probe TT
+   TT::Entry       e;
+   const Hash      pHash          = computeHash(p);
+   const bool      ttDepthOk      = TT::getEntry(*this, p, pHash, 0, e);
+   const TT::Bound bound          = TT::Bound(e.b & ~TT::B_allFlags);
+   const bool      ttHit          = e.h != nullHash;
+   const bool      validTTmove    = ttHit && e.m != INVALIDMINIMOVE;
+   const bool      ttPV           = pvnode || (validTTmove && (e.b & TT::B_ttPVFlag));
+   const bool      ttIsInCheck    = validTTmove && (e.b & TT::B_isInCheckFlag);
+   const bool      isInCheck      = isInCheckHint != -1 ? isInCheckHint : ttIsInCheck || isAttacked(p, kingSquare(p));
+   const bool      specialQSearch = isInCheck || qRoot;
+   const DepthType hashDepth      = specialQSearch ? 0 : -1;
+   if (ttDepthOk && e.d >= hashDepth) { // if depth of TT entry is enough
+      if (!pvnode && ((bound == TT::B_alpha && e.s <= alpha) || (bound == TT::B_beta && e.s >= beta) || (bound == TT::B_exact))) {
+         return adjustHashScore(e.s, height);
+      }
+   }
 
-    if ( qRoot && interiorNodeRecognizer<true,false,true>(p) == MaterialHash::Ter_Draw) return drawScore(p,height); ///@todo is that gain elo ???
+   if (qRoot && interiorNodeRecognizer<true, false, true>(p) == MaterialHash::Ter_Draw) return drawScore(p, height); ///@todo is that gain elo ???
 
-    if ( validTTmove && (isInCheck || isCapture(e.m)) ) bestMove = e.m;
-    
-    assert(p.halfmoves - 1 < MAX_PLY && p.halfmoves - 1 >= 0);
+   if (validTTmove && (isInCheck || isCapture(e.m))) bestMove = e.m;
 
-    // get a static score for the position.
-    ScoreType evalScore;
-    if (isInCheck) evalScore = -MATE + height;
-    else if ( p.lastMove == NULLMOVE && height > 0 ) evalScore = 2*ScaleScore(EvalConfig::tempo,stack[p.halfmoves-1].data.gp) - stack[p.halfmoves-1].eval; // skip eval if nullmove just applied ///@todo wrong ! gp is 0 here so tempoMG must be == tempoEG
-    else{
-        if (ttHit){ // if we had a TT hit (with or without associated move), we can use its eval instead of calling eval()
-            stats.incr(Stats::sid_ttschits);
-            evalScore = e.e;
-            /*
+   assert(p.halfmoves - 1 < MAX_PLY && p.halfmoves - 1 >= 0);
+
+   // get a static score for the position.
+   ScoreType evalScore;
+   if (isInCheck) evalScore = -MATE + height;
+   else if (p.lastMove == NULLMOVE && height > 0)
+      evalScore = 2 * ScaleScore(EvalConfig::tempo, stack[p.halfmoves - 1].data.gp) -
+                  stack[p.halfmoves - 1].eval; // skip eval if nullmove just applied ///@todo wrong ! gp is 0 here so tempoMG must be == tempoEG
+   else {
+      if (ttHit) { // if we had a TT hit (with or without associated move), we can use its eval instead of calling eval()
+         stats.incr(Stats::sid_ttschits);
+         evalScore = e.e;
+         /*
             const Hash matHash = MaterialHash::getMaterialHash(p.mat);
             if ( matHash != nullHash){
                stats.incr(Stats::sid_materialTableHits);
@@ -124,112 +121,128 @@ ScoreType Searcher::qsearch(ScoreType alpha,
                stats.incr(Stats::sid_materialTableMiss);
             }
             */
-            data.gp = 0.5; // force mid game value in sorting ... affect only quiet move, so here check evasion ...
-        }
-        else {
-            stats.incr(Stats::sid_ttscmiss);
-            evalScore = eval(p, data, *this);
-        }
-    }
-    const ScoreType staticScore = evalScore;
-    bool evalScoreIsHashScore = false;
-    // use tt score if possible and not in check
-    if ( !isInCheck){
-       if ( ttHit && ((bound == TT::B_alpha && e.s <= evalScore) || (bound == TT::B_beta && e.s >= evalScore) || (bound == TT::B_exact)) ) evalScore = e.s, evalScoreIsHashScore = true;
-    }
+         data.gp = 0.5; // force mid game value in sorting ... affect only quiet move, so here check evasion ...
+      }
+      else {
+         stats.incr(Stats::sid_ttscmiss);
+         evalScore = eval(p, data, *this);
+      }
+   }
+   const ScoreType staticScore = evalScore;
+   bool evalScoreIsHashScore = false;
+   // use tt score if possible and not in check
+   if (!isInCheck) {
+      if (ttHit && ((bound == TT::B_alpha && e.s <= evalScore) || (bound == TT::B_beta && e.s >= evalScore) || (bound == TT::B_exact)))
+         evalScore = e.s, evalScoreIsHashScore = true;
+   }
 
-    // early cut-off based on eval score (static or from TT score)
-    if ( evalScore >= beta ){
-        if ( !isInCheck && !ttHit ) TT::setEntry(*this,pHash,INVALIDMOVE,createHashScore(evalScore,height),createHashScore(evalScore,height),TT::B_none,-2);
-        return evalScore;
-    }
-    if ( !isInCheck && SearchConfig::doQDeltaPruning && staticScore + qDeltaMargin(p) < alpha ) return stats.incr(Stats::sid_delta),alpha;
-    if ( evalScore > alpha) alpha = evalScore;
+   // early cut-off based on eval score (static or from TT score)
+   if (evalScore >= beta) {
+      if (!isInCheck && !ttHit)
+         TT::setEntry(*this, pHash, INVALIDMOVE, createHashScore(evalScore, height), createHashScore(evalScore, height), TT::B_none, -2);
+      return evalScore;
+   }
+   if (!isInCheck && SearchConfig::doQDeltaPruning && staticScore + qDeltaMargin(p) < alpha) return stats.incr(Stats::sid_delta), alpha;
+   if (evalScore > alpha) alpha = evalScore;
 
-    TT::Bound b = TT::B_alpha;
-    ScoreType bestScore = evalScore;
-    const ScoreType alphaInit = alpha;
-    int validMoveCount = 0;
-    
-    // try the tt move before move generation
-    if ( validTTmove && (isInCheck || isCapture(e.m)) ){
-        Position p2 = p;
-#ifdef WITH_NNUE        
-        NNUEEvaluator newEvaluator = p.Evaluator();
-        p2.associateEvaluator(newEvaluator);         
+   TT::Bound       b              = TT::B_alpha;
+   ScoreType       bestScore      = evalScore;
+   const ScoreType alphaInit      = alpha;
+   int             validMoveCount = 0;
+
+   // try the tt move before move generation
+   if (validTTmove && (isInCheck || isCapture(e.m))) {
+      Position p2 = p;
+#ifdef WITH_NNUE
+      NNUEEvaluator newEvaluator = p.Evaluator();
+      p2.associateEvaluator(newEvaluator);
 #endif
-        if ( applyMove(p2,e.m) ){;
-            ++validMoveCount;
-            //stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
-            //stack[p2.halfmoves].h = p2.h;
-            TT::prefetch(computeHash(p2));
-            const ScoreType score = -qsearch(-beta, -alpha, p2, height+1, seldepth, isInCheck?0:qply+1, false, false);
-            if ( score > bestScore){
-                bestMove = e.m;
-                bestScore = score;
-                if ( score > alpha ){
-                    if (score >= beta) {
-                        b = TT::B_beta;
-                        TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,height),createHashScore(evalScore,height),TT::Bound(b|(ttPV?TT::B_ttPVFlag:TT::B_none)|(isInCheck?TT::B_isInCheckFlag:TT::B_none)),hashDepth);
-                        return bestScore;
-                    }
-                    b = TT::B_exact;
-                    alpha = score;
-                }
-            }
-        }
-    }
-
-    MoveList moves;
-    if ( isInCheck ) MoveGen::generate<MoveGen::GP_all>(p,moves); ///@todo generate only evasion !
-    else             MoveGen::generate<MoveGen::GP_cap>(p,moves); ///@todo generate only recapture if qly > 5
-
-    const Square recapture = VALIDMOVE(p.lastMove) ? Move2To(p.lastMove) : INVALIDSQUARE;
-    const bool onlyRecapture = qply > 5 && isCapture(p.lastMove) && recapture != INVALIDSQUARE;
-
-    CMHPtrArray cmhPtr;
-    getCMHPtr(p.halfmoves,cmhPtr);
-
-#ifdef USE_PARTIAL_SORT
-    MoveSorter::score(*this,moves,p,data.gp,height,cmhPtr,false,isInCheck,validTTmove?&e:NULL); ///@todo warning gp is often = 0.5 here !
-    size_t offset = 0;
-    const Move * it = nullptr;
-    while( (it = MoveSorter::pickNext(moves,offset))){
-#else
-    MoveSorter::scoreAndSort(*this,moves,p,data.gp,height,cmhPtr,false,isInCheck,validTTmove?&e:NULL); ///@todo warning gp is often = 0.5 here !
-    for(auto it = moves.begin() ; it != moves.end() ; ++it){
-#endif
-        if (validTTmove && sameMove(e.m, *it)) continue; // already tried
-        if (!isInCheck) {
-            if (onlyRecapture && Move2To(*it) != recapture ) continue; // only recapture now ...
-            if (!SEE_GE(p,*it,0)) {stats.incr(Stats::sid_qsee);continue;}
-            if (SearchConfig::doQFutility && staticScore + SearchConfig::qfutilityMargin[evalScoreIsHashScore] + (isPromotionCap(*it) ? (Values[P_wq+PieceShift]-Values[P_wp+PieceShift]) : 0 ) + (Move2Type(*it)==T_ep ? Values[P_wp+PieceShift] : PieceTools::getAbsValue(p, Move2To(*it))) <= alphaInit) {stats.incr(Stats::sid_qfutility);continue;}
-        }
-        Position p2 = p;
-#ifdef WITH_NNUE        
-        NNUEEvaluator newEvaluator = p.Evaluator();
-        p2.associateEvaluator(newEvaluator);         
-#endif
-        if ( ! applyMove(p2,*it) ) continue;
-        ++validMoveCount;
-        //stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
-        //stack[p2.halfmoves].h = p2.h;
-        TT::prefetch(computeHash(p2));
-        const ScoreType score = -qsearch(-beta, -alpha, p2, height+1, seldepth, isInCheck?0:qply+1, false, false);
-        if ( score > bestScore){
-           bestMove = *it;
-           bestScore = score;
-           if ( score > alpha ){
+      if (applyMove(p2, e.m)) {
+         ;
+         ++validMoveCount;
+         //stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
+         //stack[p2.halfmoves].h = p2.h;
+         TT::prefetch(computeHash(p2));
+         const ScoreType score = -qsearch(-beta, -alpha, p2, height + 1, seldepth, isInCheck ? 0 : qply + 1, false, false);
+         if (score > bestScore) {
+            bestMove  = e.m;
+            bestScore = score;
+            if (score > alpha) {
                if (score >= beta) {
-                   b = TT::B_beta;
-                   break;
+                  b = TT::B_beta;
+                  TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(evalScore, height),
+                               TT::Bound(b | (ttPV ? TT::B_ttPVFlag : TT::B_none) | (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), hashDepth);
+                  return bestScore;
                }
                b = TT::B_exact;
                alpha = score;
-           }
-        }
-    }
-    if ( validMoveCount==0 && isInCheck) bestScore = -MATE + height;  
-    TT::setEntry(*this,pHash,bestMove,createHashScore(bestScore,height),createHashScore(evalScore,height),TT::Bound(b|(ttPV?TT::B_ttPVFlag:TT::B_none)|(isInCheck?TT::B_isInCheckFlag:TT::B_none)),hashDepth);
-    return bestScore;
+            }
+         }
+      }
+   }
+
+   MoveList moves;
+   if (isInCheck) MoveGen::generate<MoveGen::GP_all>(p, moves); ///@todo generate only evasion !
+   else
+      MoveGen::generate<MoveGen::GP_cap>(p, moves); ///@todo generate only recapture if qly > 5
+
+   const Square recapture     = VALIDMOVE(p.lastMove) ? Move2To(p.lastMove) : INVALIDSQUARE;
+   const bool   onlyRecapture = qply > 5 && isCapture(p.lastMove) && recapture != INVALIDSQUARE;
+
+   CMHPtrArray cmhPtr;
+   getCMHPtr(p.halfmoves, cmhPtr);
+
+#ifdef USE_PARTIAL_SORT
+   MoveSorter::score(*this, moves, p, data.gp, height, cmhPtr, false, isInCheck, validTTmove ? &e : NULL); ///@todo warning gp is often = 0.5 here !
+   size_t      offset = 0;
+   const Move* it     = nullptr;
+   while ((it = MoveSorter::pickNext(moves, offset))) {
+#else
+   MoveSorter::scoreAndSort(*this, moves, p, data.gp, height, cmhPtr, false, isInCheck,
+                            validTTmove ? &e : NULL); ///@todo warning gp is often = 0.5 here !
+   for (auto it = moves.begin(); it != moves.end(); ++it) {
+#endif
+      if (validTTmove && sameMove(e.m, *it)) continue; // already tried
+      if (!isInCheck) {
+         if (onlyRecapture && Move2To(*it) != recapture) continue; // only recapture now ...
+         if (!SEE_GE(p, *it, 0)) {
+            stats.incr(Stats::sid_qsee);
+            continue;
+         }
+         if (SearchConfig::doQFutility && staticScore + SearchConfig::qfutilityMargin[evalScoreIsHashScore] +
+                                                  (isPromotionCap(*it) ? (Values[P_wq + PieceShift] - Values[P_wp + PieceShift]) : 0) +
+                                                  (Move2Type(*it) == T_ep ? Values[P_wp + PieceShift] : PieceTools::getAbsValue(p, Move2To(*it))) <=
+                                              alphaInit) {
+            stats.incr(Stats::sid_qfutility);
+            continue;
+         }
+      }
+      Position p2 = p;
+#ifdef WITH_NNUE
+      NNUEEvaluator newEvaluator = p.Evaluator();
+      p2.associateEvaluator(newEvaluator);
+#endif
+      if (!applyMove(p2, *it)) continue;
+      ++validMoveCount;
+      //stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
+      //stack[p2.halfmoves].h = p2.h;
+      TT::prefetch(computeHash(p2));
+      const ScoreType score = -qsearch(-beta, -alpha, p2, height + 1, seldepth, isInCheck ? 0 : qply + 1, false, false);
+      if (score > bestScore) {
+         bestMove  = *it;
+         bestScore = score;
+         if (score > alpha) {
+            if (score >= beta) {
+               b = TT::B_beta;
+               break;
+            }
+            b     = TT::B_exact;
+            alpha = score;
+         }
+      }
+   }
+   if (validMoveCount == 0 && isInCheck) bestScore = -MATE + height;
+   TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(evalScore, height),
+                TT::Bound(b | (ttPV ? TT::B_ttPVFlag : TT::B_none) | (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), hashDepth);
+   return bestScore;
 }

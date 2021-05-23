@@ -39,183 +39,161 @@
  *
  */
 
-namespace Distributed{
+namespace Distributed {
 
-   extern int worldSize;
-   extern int rank;
-   extern std::string name;
+extern int         worldSize;
+extern int         rank;
+extern std::string name;
 
-   extern MPI_Comm _commTT;
-   extern MPI_Comm _commTT2;
-   extern MPI_Comm _commStat;
-   extern MPI_Comm _commStat2;
-   extern MPI_Comm _commInput;
-   extern MPI_Comm _commStop;
-   extern MPI_Comm _commMove;
+extern MPI_Comm _commTT;
+extern MPI_Comm _commTT2;
+extern MPI_Comm _commStat;
+extern MPI_Comm _commStat2;
+extern MPI_Comm _commInput;
+extern MPI_Comm _commStop;
+extern MPI_Comm _commMove;
 
-   extern MPI_Request _requestTT;
-   extern MPI_Request _requestStat;
-   extern MPI_Request _requestInput;
-   extern MPI_Request _requestMove;
+extern MPI_Request _requestTT;
+extern MPI_Request _requestStat;
+extern MPI_Request _requestInput;
+extern MPI_Request _requestMove;
 
-   extern MPI_Win _winStop;
+extern MPI_Win _winStop;
 
-   void init();
-   void lateInit();
-   void finalize();
-   bool isMainProcess();
-   void sync(MPI_Comm & com, const std::string & msg = "");
+void init();
+void lateInit();
+void finalize();
+bool isMainProcess();
+void sync(MPI_Comm& com, const std::string& msg = "");
 
-   struct EntryHash{
-      Hash h = nullHash;
-      TT::Entry e;
-   };
+struct EntryHash {
+   Hash      h = nullHash;
+   TT::Entry e;
+};
 
-   template<typename T>
-   struct TraitMpiType{};
+template<typename T> struct TraitMpiType {};
 
-   template<>
-   struct TraitMpiType<bool>{static constexpr MPI_Datatype type = MPI_CXX_BOOL;};
-   template<>
-   struct TraitMpiType<char>{static constexpr MPI_Datatype type = MPI_CHAR;};
-   template<>
-   struct TraitMpiType<Counter>{static constexpr MPI_Datatype type = MPI_LONG_LONG_INT;};
-   template<>
-   struct TraitMpiType<EntryHash>{static constexpr MPI_Datatype type = MPI_CHAR;}; // WARNING : size must be adapted *sizeof(EntryHash)
-   template<>
-   struct TraitMpiType<Move>{static constexpr MPI_Datatype type = MPI_INT;};
+template<> struct TraitMpiType<bool>      { static constexpr MPI_Datatype type = MPI_CXX_BOOL; };
+template<> struct TraitMpiType<char>      { static constexpr MPI_Datatype type = MPI_CHAR; };
+template<> struct TraitMpiType<Counter>   { static constexpr MPI_Datatype type = MPI_LONG_LONG_INT; };
+template<> struct TraitMpiType<EntryHash> { static constexpr MPI_Datatype type = MPI_CHAR; }; // WARNING : size must be adapted *sizeof(EntryHash)
+template<> struct TraitMpiType<Move>      { static constexpr MPI_Datatype type = MPI_INT; };
 
-   void checkError(int err);
+void checkError(int err);
 
-   template<typename T>
-   inline void bcast(T * v, int n, MPI_Comm & com){
-      if (worldSize < 2) return;
-      checkError(MPI_Bcast(v, n, TraitMpiType<T>::type, 0, com));
-   }
-
-   template<typename T>
-   inline void asyncBcast(T * v, int n, MPI_Request & req, MPI_Comm & com){
-      if (worldSize < 2) return;
-      checkError(MPI_Ibcast(v, n, TraitMpiType<T>::type, 0, com, &req));
-   }
-
-   template<typename T>
-   inline void allReduceSum(T * local, T* global, int n, MPI_Comm & com){
-      if (worldSize < 2) return;
-      checkError(MPI_Allreduce(local, global, n, TraitMpiType<T>::type, MPI_SUM, com));
-   }
-
-   template<typename T>
-   inline void allReduceMax(T * local, T* global, int n, MPI_Comm & com){
-      if (worldSize < 2) return;
-      checkError(MPI_Allreduce(local, global, n, TraitMpiType<T>::type, MPI_MAX, com));
-   }
-
-   template<typename T>
-   inline void asyncAllReduceSum(T * local, T* global, int n, MPI_Request & req, MPI_Comm & com){
-      if (worldSize < 2) return;
-      checkError(MPI_Iallreduce(local, global, n, TraitMpiType<T>::type, MPI_SUM, com, &req));
-   }
-
-   template<typename T>
-   inline void put(T * ptr, int n, MPI_Win & window, int target ){
-      if (worldSize < 2) return;
-      checkError(MPI_Put(ptr, n, TraitMpiType<T>::type, target, MPI_Aint(0), n, TraitMpiType<T>::type, window));
-   }
-
-   template<typename T>
-   inline void get(T * ptr, int n, MPI_Win & window, int source ){
-      if (worldSize < 2) return;
-      checkError(MPI_Get(ptr, n, TraitMpiType<T>::type, source, MPI_Aint(0), n, TraitMpiType<T>::type, window));
-   }
-
-   template<typename T>
-   inline void putMainToAll(T * ptr, int n, MPI_Win & window ){
-      if (worldSize < 2) return;
-      checkError(MPI_Win_lock_all(0, window));
-      for(int r = 1 ; r < worldSize ; ++r){
-         put(ptr,n,window,r);
-      }
-      //checkError(MPI_Win_flush_all(window)); 
-      checkError(MPI_Win_unlock_all(window));
-   }
-
-   template<typename T>
-   inline void asyncAllGather( T * inptr, T * outptr, int n, MPI_Request & req, MPI_Comm & com ){
-      if (worldSize < 2) return;
-      checkError(MPI_Iallgather(inptr, n, TraitMpiType<T>::type, outptr, n, TraitMpiType<T>::type, com, &req));
-   }
-
-   inline void winFence(MPI_Win & window){
-      checkError(MPI_Win_fence(0, window));
-   }
-
-   void waitRequest(MPI_Request & req);
-
-   void initStat();
-   void sendStat();
-   void pollStat();
-   void syncStat();
-   void showStat();
-   Counter counter(Stats::StatId id);
-
-   void setEntry(const Hash h, const TT::Entry & e);
-   void syncTT();
-
+template<typename T> inline void bcast(T* v, int n, MPI_Comm& com) {
+   if (worldSize < 2) return;
+   checkError(MPI_Bcast(v, n, TraitMpiType<T>::type, 0, com));
 }
+
+template<typename T> inline void asyncBcast(T* v, int n, MPI_Request& req, MPI_Comm& com) {
+   if (worldSize < 2) return;
+   checkError(MPI_Ibcast(v, n, TraitMpiType<T>::type, 0, com, &req));
+}
+
+template<typename T> inline void allReduceSum(T* local, T* global, int n, MPI_Comm& com) {
+   if (worldSize < 2) return;
+   checkError(MPI_Allreduce(local, global, n, TraitMpiType<T>::type, MPI_SUM, com));
+}
+
+template<typename T> inline void allReduceMax(T* local, T* global, int n, MPI_Comm& com) {
+   if (worldSize < 2) return;
+   checkError(MPI_Allreduce(local, global, n, TraitMpiType<T>::type, MPI_MAX, com));
+}
+
+template<typename T> inline void asyncAllReduceSum(T* local, T* global, int n, MPI_Request& req, MPI_Comm& com) {
+   if (worldSize < 2) return;
+   checkError(MPI_Iallreduce(local, global, n, TraitMpiType<T>::type, MPI_SUM, com, &req));
+}
+
+template<typename T> inline void put(T* ptr, int n, MPI_Win& window, int target) {
+   if (worldSize < 2) return;
+   checkError(MPI_Put(ptr, n, TraitMpiType<T>::type, target, MPI_Aint(0), n, TraitMpiType<T>::type, window));
+}
+
+template<typename T> inline void get(T* ptr, int n, MPI_Win& window, int source) {
+   if (worldSize < 2) return;
+   checkError(MPI_Get(ptr, n, TraitMpiType<T>::type, source, MPI_Aint(0), n, TraitMpiType<T>::type, window));
+}
+
+template<typename T> inline void putMainToAll(T* ptr, int n, MPI_Win& window) {
+   if (worldSize < 2) return;
+   checkError(MPI_Win_lock_all(0, window));
+   for (int r = 1; r < worldSize; ++r) { put(ptr, n, window, r); }
+   //checkError(MPI_Win_flush_all(window));
+   checkError(MPI_Win_unlock_all(window));
+}
+
+template<typename T> inline void asyncAllGather(T* inptr, T* outptr, int n, MPI_Request& req, MPI_Comm& com) {
+   if (worldSize < 2) return;
+   checkError(MPI_Iallgather(inptr, n, TraitMpiType<T>::type, outptr, n, TraitMpiType<T>::type, com, &req));
+}
+
+inline void winFence(MPI_Win& window) { checkError(MPI_Win_fence(0, window)); }
+
+void waitRequest(MPI_Request& req);
+
+void    initStat();
+void    sendStat();
+void    pollStat();
+void    syncStat();
+void    showStat();
+Counter counter(Stats::StatId id);
+
+void setEntry(const Hash h, const TT::Entry& e);
+void syncTT();
+
+} // namespace Distributed
 
 #else // ! WITH_MPI
-namespace Distributed{
+namespace Distributed {
 
-   extern int worldSize;
-   extern int rank;
+extern int worldSize;
+extern int rank;
 
-   typedef int DummyType;
-   extern DummyType _commTT;
-   extern DummyType _commTT2;
-   extern DummyType _commStat;
-   extern DummyType _commStat2;
-   extern DummyType _commInput;
-   extern DummyType _commStop;
-   extern DummyType _commMove;
+typedef int      DummyType;
+extern DummyType _commTT;
+extern DummyType _commTT2;
+extern DummyType _commStat;
+extern DummyType _commStat2;
+extern DummyType _commInput;
+extern DummyType _commStop;
+extern DummyType _commMove;
 
-   extern DummyType _requestTT;
-   extern DummyType _requestStat;
-   extern DummyType _requestInput;
-   extern DummyType _requestMove;
+extern DummyType _requestTT;
+extern DummyType _requestStat;
+extern DummyType _requestInput;
+extern DummyType _requestMove;
 
-   extern DummyType _winStop;
+extern DummyType _winStop;
 
-   inline void checkError(int ){}
+inline void checkError(int) {}
 
-   inline void init(){}
-   inline void lateInit(){}
-   inline void finalize(){}
-   inline bool isMainProcess(){return true;}
-   inline void sync(DummyType &, const std::string & ){}
+inline void init() {}
+inline void lateInit() {}
+inline void finalize() {}
+inline bool isMainProcess() { return true; }
+inline void sync(DummyType &, const std::string &) {}
 
-   template<typename T>
-   inline void asyncBcast(T *, int , DummyType &, DummyType & ){}
+template<typename T> inline void asyncBcast(T *, int, DummyType &, DummyType &) {}
 
-   template<typename T>
-   inline void putMainToAll(T * , int , DummyType & ){}
+template<typename T> inline void putMainToAll(T *, int, DummyType &) {}
 
-   template<typename T>
-   inline void get(T * , int , DummyType & , int  ){}
+template<typename T> inline void get(T *, int, DummyType &, int) {}
 
-   inline void waitRequest(DummyType & ){}
+inline void waitRequest(DummyType &) {}
 
-   inline void winFence(DummyType & ){}
+inline void winFence(DummyType &) {}
 
-   inline void initStat(){}
-   inline void sendStat(){}
-   inline void pollStat(){}
-   inline void syncStat(){}
-   inline void showStat(){}
-   Counter counter(Stats::StatId id);
+inline void initStat() {}
+inline void sendStat() {}
+inline void pollStat() {}
+inline void syncStat() {}
+inline void showStat() {}
+Counter     counter(Stats::StatId id);
 
-   inline void setEntry(const Hash, const TT::Entry &){}
-   inline void syncTT(){}
+inline void setEntry(const Hash, const TT::Entry &) {}
+inline void syncTT() {}
 
-}
+} // namespace Distributed
 #endif
