@@ -11,6 +11,10 @@ nb_best_print = 15
 nb_best_test = 15
 nb_tested_config = 3
 
+time_control='5+0.05'
+to_be_tuned='aspirationMinDepth'
+test_range = range(0,20,1)
+
 class Command(object):
     def __init__(self, cmd):
         self.cmd = cmd
@@ -55,8 +59,8 @@ def run_match(best, c_chess_exe, concurrency, book_file_name, engine):
     """ Run a match using c-chess-cli adding pgns to a file to be analysed with ordo """
     pgn_file_name = os.path.join("out.pgn")
     c_chess_out_file_name = os.path.join("c_chess.out")
-    command = "{} -each tc=5+0.05 -games 10 -rounds 2 -concurrency {}".format(
-        c_chess_exe, concurrency
+    command = "{} -each tc={} -games 10 -rounds 2 -concurrency {}".format(
+        c_chess_exe, time_control, concurrency
     )
     command = (
         command
@@ -70,8 +74,8 @@ def run_match(best, c_chess_exe, concurrency, book_file_name, engine):
 
     count = 0
     for config in best:
-        command = command + " -engine cmd={} name={} option.NNUEThreshold={}".format(
-            engine, config, config.split('-')[1]
+        command = command + " -engine cmd={} name={} option.{}={}".format(
+            engine, config, to_be_tuned, config.split('-')[1]
         )
         count +=1
         if count >= nb_tested_config:
@@ -113,7 +117,7 @@ def run_round(
 ):
     """ run a round of games, analyze an ordo file to pick most suitable ones, run a round, and run ordo """
 
-    configs = [ "config-{}".format(k) for k in range(100,1200,50) ]
+    configs = [ "config-{}".format(k) for k in test_range ]
     print(configs)
 
     # Get info from ordo data if that is around
