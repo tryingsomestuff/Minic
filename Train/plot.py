@@ -61,6 +61,7 @@ while True:
                 name = values[1].strip().replace(' ', '')
                 if "nn-epoch" in name:
                    l = name.replace(args.n+'nn-epoch', '').replace('.nnue', '')
+                   l = l.split('-')[0]
                 else:
                    l = name.replace('config-', '')
                 if l == "master":
@@ -69,7 +70,7 @@ while True:
                 e = values[4]
                 if e == "----":
                     e='0'
-                X.append(float(l.split('-')[0]))
+                X.append(float(l))
                 Y.append(float(values[3]))
                 err.append(float(e))
                 games.append(values[6])

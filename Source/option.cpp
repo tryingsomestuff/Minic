@@ -112,9 +112,11 @@ namespace Options {
        _keys.push_back(KeyBase(k_score, w_spin,  "ContemptMG"                  , &DynamicConfig::contemptMG                     , (ScoreType)-50   , (ScoreType)50));
        _keys.push_back(KeyBase(k_bool,  w_check, "Armageddon"                  , &DynamicConfig::armageddon                     , false            , true ));
        _keys.push_back(KeyBase(k_bool,  w_check, "WDL_display"                 , &DynamicConfig::withWDL                        , false            , true ));
+
 #ifdef WITH_SYZYGY
        _keys.push_back(KeyBase(k_string,w_string,"SyzygyPath"                  , &DynamicConfig::syzygyPath                                                                              , &SyzygyTb::initTB));
 #endif
+
 #ifdef WITH_NNUE
        _keys.push_back(KeyBase(k_string,w_string,"NNUEFile"                    , &DynamicConfig::NNUEFile                                                                                , &NNUEWrapper::init));
        _keys.push_back(KeyBase(k_bool,  w_check, "forceNNUE"                   , &DynamicConfig::forceNNUE                      , false            , true                              ));
@@ -129,19 +131,24 @@ namespace Options {
        _keys.push_back(KeyBase(k_int,   w_spin,  "RandomPly"                   , &DynamicConfig::randomPly                      , (unsigned int)0  , (unsigned int)40 ));
 #endif
 
-       _keys.push_back(KeyBase(k_int, w_spin,  "StyleAttack"                   , &DynamicConfig::styleAttack                    , (int)0   , (int)100                                    , &EvalFeatures::callBack));
-       _keys.push_back(KeyBase(k_int, w_spin,  "StyleComplexity"               , &DynamicConfig::styleComplexity                , (int)0   , (int)100                                    , &EvalFeatures::callBack));
-       _keys.push_back(KeyBase(k_int, w_spin,  "StyleDevelopment"              , &DynamicConfig::styleDevelopment               , (int)0   , (int)100                                    , &EvalFeatures::callBack));
-       _keys.push_back(KeyBase(k_int, w_spin,  "StyleMaterial"                 , &DynamicConfig::styleMaterial                  , (int)0   , (int)100                                    , &EvalFeatures::callBack));
-       _keys.push_back(KeyBase(k_int, w_spin,  "StyleMobility"                 , &DynamicConfig::styleMobility                  , (int)0   , (int)100                                    , &EvalFeatures::callBack));
-       _keys.push_back(KeyBase(k_int, w_spin,  "StylePositional"               , &DynamicConfig::stylePositional                , (int)0   , (int)100                                    , &EvalFeatures::callBack));
-       _keys.push_back(KeyBase(k_int, w_spin,  "StyleForwardness"              , &DynamicConfig::styleForwardness               , (int)0   , (int)100                                    , &EvalFeatures::callBack));
+       _keys.push_back(KeyBase(k_int,   w_spin,  "StyleAttack"                 , &DynamicConfig::styleAttack                    , (int)0   , (int)100                                    , &EvalFeatures::callBack));
+       _keys.push_back(KeyBase(k_int,   w_spin,  "StyleComplexity"             , &DynamicConfig::styleComplexity                , (int)0   , (int)100                                    , &EvalFeatures::callBack));
+       _keys.push_back(KeyBase(k_int,   w_spin,  "StyleDevelopment"            , &DynamicConfig::styleDevelopment               , (int)0   , (int)100                                    , &EvalFeatures::callBack));
+       _keys.push_back(KeyBase(k_int,   w_spin,  "StyleMaterial"               , &DynamicConfig::styleMaterial                  , (int)0   , (int)100                                    , &EvalFeatures::callBack));
+       _keys.push_back(KeyBase(k_int,   w_spin,  "StyleMobility"               , &DynamicConfig::styleMobility                  , (int)0   , (int)100                                    , &EvalFeatures::callBack));
+       _keys.push_back(KeyBase(k_int,   w_spin,  "StylePositional"             , &DynamicConfig::stylePositional                , (int)0   , (int)100                                    , &EvalFeatures::callBack));
+       _keys.push_back(KeyBase(k_int,   w_spin,  "StyleForwardness"            , &DynamicConfig::styleForwardness               , (int)0   , (int)100                                    , &EvalFeatures::callBack));
 
-       _keys.push_back(KeyBase(k_string,w_string,"UCI_Opponent"                , &DynamicConfig::opponent                                                                                /*, &Opponent::init*/));
-       _keys.push_back(KeyBase(k_int, w_spin,    "UCI_RatingAdv"               , &DynamicConfig::ratingAdv                      , (int)-10000, (int)10000                                , &Opponent::ratingReceived));
-       
-       
+       _keys.push_back(KeyBase(k_string, w_string,"UCI_Opponent"               , &DynamicConfig::opponent                                                                                /*, &Opponent::init*/));
+       _keys.push_back(KeyBase(k_int,    w_spin,  "UCI_RatingAdv"              , &DynamicConfig::ratingAdv                      , (int)-10000, (int)10000                                , &Opponent::ratingReceived));
+
 #ifdef WITH_SEARCH_TUNING
+
+       _keys.push_back(KeyBase(k_depth, w_spin, "aspirationMinDepth"                , &SearchConfig::aspirationMinDepth                  , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "aspirationInit"                    , &SearchConfig::aspirationInit                      , DepthType(0)    , DepthType(30)       ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "aspirationDepthInit"               , &SearchConfig::aspirationDepthInit                 , DepthType(0)    , DepthType(150)      ));
+       _keys.push_back(KeyBase(k_depth, w_spin, "aspirationDepthCoef"               , &SearchConfig::aspirationDepthCoef                 , DepthType(-10)  , DepthType(10)       ));
+
        _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin0"                  , &SearchConfig::qfutilityMargin[0]                  , ScoreType(0)    , ScoreType(1500)     ));
        _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin1"                  , &SearchConfig::qfutilityMargin[1]                  , ScoreType(0)    , ScoreType(1500)     ));
        _keys.push_back(KeyBase(k_depth, w_spin, "staticNullMoveMaxDepth0"           , &SearchConfig::staticNullMoveMaxDepth[0]           , DepthType(0)    , DepthType(30)       ));
@@ -223,8 +230,10 @@ namespace Options {
     void initOptions(int argc, char ** argv){
 #define GETOPT(name,type) Options::getOption<type>(DynamicConfig::name,#name);
 #define GETOPTVAR(name,variable,type) Options::getOption<type>(DynamicConfig::variable,#name);
+
        registerCOMOptions();
        readOptions(argc,argv);
+
        GETOPT(quiet,            bool)  // first to be read
        GETOPT(debugMode,        bool)
        GETOPT(debugFile,        std::string)
@@ -246,12 +255,14 @@ namespace Options {
 #ifdef WITH_SYZYGY
        GETOPT(syzygyPath,       std::string)
 #endif
+
 #ifdef WITH_NNUE
        GETOPT(NNUEFile,         std::string)
        GETOPT(forceNNUE,        bool)
        GETOPT(NNUEScaling,      int)
        GETOPT(NNUEThreshold,    int)
 #endif
+
 #ifdef WITH_GENFILE
        GETOPT(genFen,            bool)
        GETOPT(genFenDepth,       unsigned int)

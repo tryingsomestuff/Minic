@@ -145,7 +145,7 @@ void Searcher::searchDriver(){
     // using MAX_DEPTH-6 so that draw can be found for sure ///@todo I don't understand this -6 anymore ..
     const DepthType targetMaxDepth = std::min(maxDepth,DepthType(MAX_DEPTH-6));
 
-    // random mover can be forced for the few first moves of a game or be setting level to 0
+    // random mover can be forced for the few first moves of a game or by setting level to 0
     if ( DynamicConfig::level == 0 || p.halfmoves < DynamicConfig::randomPly ){ 
        if ( p.halfmoves < DynamicConfig::randomPly ) Logging::LogIt(Logging::logInfo) << "Randomized ply";
        _data.score = randomMover(p,_data.pv,isInCheck);
@@ -210,7 +210,7 @@ void Searcher::searchDriver(){
 
             // initialize aspiration window loop variables
             PVList pvLoc;
-            ScoreType delta = (SearchConfig::doWindow && depth>4)?6+std::max(0,(20-depth)*2):MATE; // MATE not INFSCORE in order to enter the loop below once
+            ScoreType delta = (SearchConfig::doWindow && depth>SearchConfig::aspirationMinDepth)?SearchConfig::aspirationInit+std::max(0,SearchConfig::aspirationDepthInit - SearchConfig::aspirationDepthCoef*depth):MATE; // MATE not INFSCORE in order to enter the loop below once
             ScoreType alpha = std::max(ScoreType(currentScore[multi] - delta), ScoreType (-MATE));
             ScoreType beta  = std::min(ScoreType(currentScore[multi] + delta), MATE);
             ScoreType score = 0;

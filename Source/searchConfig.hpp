@@ -64,6 +64,11 @@ extern CONST_CLOP_TUNING ScoreType dangerLimitReduction         ;
 const ScoreType dangerDivisor = 100;
 extern CONST_CLOP_TUNING ScoreType failLowRootMargin            ;
 
+extern CONST_CLOP_TUNING DepthType aspirationMinDepth           ;
+extern CONST_CLOP_TUNING DepthType aspirationInit               ;
+extern CONST_CLOP_TUNING DepthType aspirationDepthCoef          ;
+extern CONST_CLOP_TUNING DepthType aspirationDepthInit          ;
+
 const DepthType lmpMaxDepth = 10;
 const int lmpLimit[][SearchConfig::lmpMaxDepth + 1] = {  { 0, 2, 3, 5, 9, 13, 18, 25, 34, 45, 55 }, { 0, 5, 6, 9, 14, 21, 30, 41, 55, 69, 84 } };
 
