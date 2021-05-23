@@ -32,6 +32,6 @@
 
 #include "extendedPosition.hpp"
 
-bool test(const std::string & option);
+bool test(const std::string& option);
 
 #endif

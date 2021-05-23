@@ -12,15 +12,15 @@ struct Position;
  * Then, during a search Searcher::getCurrentMoveMs() is used to check the available time.
  */
 
-namespace TimeMan{
-extern TimeType msecPerMove, msecInTC, nbMoveInTC, msecInc, msecUntilNextTC, overHead;
-extern TimeType targetTime, maxTime;
+namespace TimeMan {
+extern TimeType  msecPerMove, msecInTC, nbMoveInTC, msecInc, msecUntilNextTC, overHead;
+extern TimeType  targetTime, maxTime;
 extern DepthType moveToGo;
-extern uint64_t maxNodes;
-extern bool isDynamic;
+extern uint64_t  maxNodes;
+extern bool      isDynamic;
 
 void init();
 
-[[nodiscard]] TimeType GetNextMSecPerMove(const Position & p);
+[[nodiscard]] TimeType GetNextMSecPerMove(const Position& p);
 
-} // TimeMan
+} // namespace TimeMan

@@ -5,10 +5,10 @@
 /*! 
  * A simple, and partial, XBOARD implementation
  */
-namespace XBoard{
-    extern bool display; ///@todo use it !
-    void init();
-    void xboard();
+namespace XBoard {
+extern bool display; ///@todo use it !
+void        init();
+void        xboard();
 
-    void moveApplied(bool success);
-} // XBoard
+void moveApplied(bool success);
+} // namespace XBoard

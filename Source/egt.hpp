@@ -16,14 +16,14 @@ struct Searcher;
 namespace SyzygyTb {
 
 const ScoreType TB_CURSED_SCORE = 1;
-const ScoreType TB_WIN_SCORE = 2000;
-extern int MAX_TB_MEN;
+const ScoreType TB_WIN_SCORE    = 2000;
+extern int      MAX_TB_MEN;
 
 bool initTB();
 
-[[nodiscard]] int probe_root(Searcher & context, const Position &p, ScoreType &score, MoveList &rootMoves);
+[[nodiscard]] int probe_root(Searcher &context, const Position &p, ScoreType &score, MoveList &rootMoves);
 
 [[nodiscard]] int probe_wdl(const Position &p, ScoreType &score, bool use50MoveRule);
 
-} // SyzygyTb
+} // namespace SyzygyTb
 #endif

@@ -2,12 +2,10 @@
 
 #include "dynamicConfig.hpp"
 
-namespace Opponent{
+namespace Opponent {
 
 void init();
 
-inline void ratingReceived(){
-   DynamicConfig::ratingAdvReveived = true;
-}
+inline void ratingReceived() { DynamicConfig::ratingAdvReveived = true; }
 
-}
+} // namespace Opponent

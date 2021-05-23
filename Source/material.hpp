@@ -10,64 +10,67 @@
  */
 
 namespace MaterialHash {
-    const int MatWQ = 1;
-    const int MatBQ = 3;
-    const int MatWR = (3 * 3);
-    const int MatBR = (3 * 3 * 3);
-    const int MatWL = (3 * 3 * 3 * 3);
-    const int MatBL = (3 * 3 * 3 * 3 * 2);
-    const int MatWD = (3 * 3 * 3 * 3 * 2 * 2);
-    const int MatBD = (3 * 3 * 3 * 3 * 2 * 2 * 2);
-    const int MatWN = (3 * 3 * 3 * 3 * 2 * 2 * 2 * 2);
-    const int MatBN = (3 * 3 * 3 * 3 * 2 * 2 * 2 * 2 * 3);
-    const int MatWP = (3 * 3 * 3 * 3 * 2 * 2 * 2 * 2 * 3 * 3);
-    const int MatBP = (3 * 3 * 3 * 3 * 2 * 2 * 2 * 2 * 3 * 3 * 9);
-    const int TotalMat = ((2 * (MatWQ + MatBQ) + MatWL + MatBL + MatWD + MatBD + 2 * (MatWR + MatBR + MatWN + MatBN) + 8 * (MatWP + MatBP)) + 1);
+const int MatWQ    = 1;
+const int MatBQ    = 3;
+const int MatWR    = (3 * 3);
+const int MatBR    = (3 * 3 * 3);
+const int MatWL    = (3 * 3 * 3 * 3);
+const int MatBL    = (3 * 3 * 3 * 3 * 2);
+const int MatWD    = (3 * 3 * 3 * 3 * 2 * 2);
+const int MatBD    = (3 * 3 * 3 * 3 * 2 * 2 * 2);
+const int MatWN    = (3 * 3 * 3 * 3 * 2 * 2 * 2 * 2);
+const int MatBN    = (3 * 3 * 3 * 3 * 2 * 2 * 2 * 2 * 3);
+const int MatWP    = (3 * 3 * 3 * 3 * 2 * 2 * 2 * 2 * 3 * 3);
+const int MatBP    = (3 * 3 * 3 * 3 * 2 * 2 * 2 * 2 * 3 * 3 * 9);
+const int TotalMat = ((2 * (MatWQ + MatBQ) + MatWL + MatBL + MatWD + MatBD + 2 * (MatWR + MatBR + MatWN + MatBN) + 8 * (MatWP + MatBP)) + 1);
 
-    [[nodiscard]] Hash getMaterialHash(const Position::Material & mat);
+[[nodiscard]] Hash getMaterialHash(const Position::Material &mat);
 
-    enum Terminaison : uint8_t {
-      Ter_Unknown = 0,
-      Ter_WhiteWinWithHelper,
-      Ter_WhiteWin,
-      Ter_BlackWinWithHelper,
-      Ter_BlackWin,
-      Ter_Draw,
-      Ter_MaterialDraw,
-      Ter_LikelyDraw,
-      Ter_HardToWin
-    };
+enum Terminaison : uint8_t {
+   Ter_Unknown = 0,
+   Ter_WhiteWinWithHelper,
+   Ter_WhiteWin,
+   Ter_BlackWinWithHelper,
+   Ter_BlackWin,
+   Ter_Draw,
+   Ter_MaterialDraw,
+   Ter_LikelyDraw,
+   Ter_HardToWin
+};
 
-    extern ScoreType (* helperTable[TotalMat])(const Position &, Color, ScoreType, DepthType );
+extern ScoreType (*helperTable[TotalMat])(const Position &, Color, ScoreType, DepthType);
 
 #pragma pack(push, 1)
-    struct MaterialHashEntry  {
-      EvalScore score = {0,0};
-      uint8_t gp = 255;
-      Terminaison t = Ter_Unknown;
-      inline float gamePhase()const{ return gp/255.f;}
-      inline void setGamePhase(float gpf){ gp = (uint8_t)(255*gpf);}
-    };
-#pragma pack(pop)    
+struct MaterialHashEntry {
+   EvalScore    score = {0, 0};
+   uint8_t      gp    = 255;
+   Terminaison  t     = Ter_Unknown;
+   inline float gamePhase() const { return gp / 255.f; }
+   inline void  setGamePhase(float gpf) { gp = (uint8_t)(255 * gpf); }
+};
+#pragma pack(pop)
 
-    extern MaterialHashEntry materialHashTable[TotalMat];
+extern MaterialHashEntry materialHashTable[TotalMat];
 
-    [[nodiscard]] EvalScore Imbalance(const Position::Material & mat, Color c);
+[[nodiscard]] EvalScore Imbalance(const Position::Material &mat, Color c);
 
-    void InitMaterialScore(bool display = true);
+void InitMaterialScore(bool display = true);
 
-    struct MaterialHashInitializer {
-        MaterialHashInitializer(const Position::Material & mat, Terminaison t) { materialHashTable[getMaterialHash(mat)].t = t; }
-        MaterialHashInitializer(const Position::Material & mat, Terminaison t, ScoreType (*helper)(const Position &, Color, ScoreType, DepthType) ) { materialHashTable[getMaterialHash(mat)].t = t; helperTable[getMaterialHash(mat)] = helper; }
-        static void init();
-    };
+struct MaterialHashInitializer {
+   MaterialHashInitializer(const Position::Material &mat, Terminaison t) { materialHashTable[getMaterialHash(mat)].t = t; }
+   MaterialHashInitializer(const Position::Material &mat, Terminaison t, ScoreType (*helper)(const Position &, Color, ScoreType, DepthType)) {
+      materialHashTable[getMaterialHash(mat)].t = t;
+      helperTable[getMaterialHash(mat)]         = helper;
+   }
+   static void init();
+};
 
-    [[nodiscard]] Terminaison probeMaterialHashTable(const Position::Material & mat);
+[[nodiscard]] Terminaison probeMaterialHashTable(const Position::Material &mat);
 
-    void updateMaterialOther(Position & p);
+void updateMaterialOther(Position &p);
 
-    void initMaterial(Position & p);
+void initMaterial(Position &p);
 
-    void updateMaterialProm(Position &p, const Square toBeCaptured, MType mt);
+void updateMaterialProm(Position &p, const Square toBeCaptured, MType mt);
 
-} // MaterialHash
+} // namespace MaterialHash
