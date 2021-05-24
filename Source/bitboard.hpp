@@ -17,45 +17,45 @@ inline int BitScanForward(BitBoard bb) {
 #define bsf(x, i)     (i = BitScanForward(x))
 #define swapbits(x)   (__builtin_bswap64(x))
 #define swapbits32(x) (__builtin_bswap32(x))
-#else
-   #ifdef _WIN32
-      #ifdef _WIN64
-         #define POPCOUNT(x)   __popcnt64(x)
+#else // __MINGW32__
+#ifdef _WIN32
+#ifdef _WIN64
+#define POPCOUNT(x)   __popcnt64(x)
 #define bsf(x, i)     _BitScanForward64(&i, x)
 #define swapbits(x)   (_byteswap_uint64(x))
 #define swapbits32(x) (_byteswap_ulong(x))
-      #else // we are _WIN32 but not _WIN64
+#else // we are _WIN32 but not _WIN64
 int popcount(uint64_t b) {
-            b = (b & 0x5555555555555555LU) + (b >> 1 & 0x5555555555555555LU);
-            b = (b & 0x3333333333333333LU) + (b >> 2 & 0x3333333333333333LU);
-            b = b + (b >> 4) & 0x0F0F0F0F0F0F0F0FLU;
-            b = b + (b >> 8);
-            b = b + (b >> 16);
-            b = b + (b >> 32) & 0x0000007F;
-            return (int)b;
-        }
-        const int index64[NbSquare] = {
-            0,  1, 48,  2, 57, 49, 28,  3,
-           61, 58, 50, 42, 38, 29, 17,  4,
-           62, 55, 59, 36, 53, 51, 43, 22,
-           45, 39, 33, 30, 24, 18, 12,  5,
-           63, 47, 56, 27, 60, 41, 37, 16,
-           54, 35, 52, 21, 44, 32, 23, 11,
-           46, 26, 40, 15, 34, 20, 31, 10,
-           25, 14, 19,  9, 13,  8,  7,  6
-        };
-        int bitScanForward(int64_t bb) {
-           const uint64_t debruijn64 = 0x03f79d71b4cb0a89;
-           assert(bb != emptyBitBoard);
-           return index64[((bb & -bb) * debruijn64) >> 58];
-        }
-        #define POPCOUNT(x)   popcount(x)
+   b = (b & 0x5555555555555555LU) + (b >> 1 & 0x5555555555555555LU);
+   b = (b & 0x3333333333333333LU) + (b >> 2 & 0x3333333333333333LU);
+   b = b + (b >> 4) & 0x0F0F0F0F0F0F0F0FLU;
+   b = b + (b >> 8);
+   b = b + (b >> 16);
+   b = b + (b >> 32) & 0x0000007F;
+   return (int)b;
+}
+const int index64[NbSquare] = {
+   0,  1, 48,  2, 57, 49, 28,  3,
+   61, 58, 50, 42, 38, 29, 17,  4,
+   62, 55, 59, 36, 53, 51, 43, 22,
+   45, 39, 33, 30, 24, 18, 12,  5,
+   63, 47, 56, 27, 60, 41, 37, 16,
+   54, 35, 52, 21, 44, 32, 23, 11,
+   46, 26, 40, 15, 34, 20, 31, 10,
+   25, 14, 19,  9, 13,  8,  7,  6
+};
+int bitScanForward(int64_t bb) {
+   const uint64_t debruijn64 = 0x03f79d71b4cb0a89;
+   assert(bb != emptyBitBoard);
+   return index64[((bb & -bb) * debruijn64) >> 58];
+}
+#define POPCOUNT(x)   popcount(x)
 #define bsf(x, i)     (i = bitScanForward(x))
 #define swapbits(x)   (_byteswap_uint64(x))
 #define swapbits32(x) (_byteswap_ulong(x))
-      #endif // _WIN64
-#else  // linux
-      #define POPCOUNT(x)   int(__builtin_popcountll(x))
+#endif // _WIN64
+#else  // _WIN32 (thus linux)
+#define POPCOUNT(x)   int(__builtin_popcountll(x))
 inline int BitScanForward(BitBoard bb) {
    assert(bb != emptyBitBoard);
    return __builtin_ctzll(bb);
@@ -63,8 +63,8 @@ inline int BitScanForward(BitBoard bb) {
 #define bsf(x, i)     (i = BitScanForward(x))
 #define swapbits(x)   (__builtin_bswap64(x))
 #define swapbits32(x) (__builtin_bswap32(x))
-   #endif // linux
-#endif
+#endif // linux
+#endif // __MINGW32__
 
 // Hard to say which one is better, bit shifting or precalculated access to mask data ...
 #define SquareToBitboard(k)      BitBoard(1ull << (k))
@@ -83,8 +83,8 @@ enum BBSq : BitBoard { BBSq_a1 = SquareToBitboard(Sq_a1),BBSq_b1 = SquareToBitbo
 
 const BitBoard whiteSquare = 0x55AA55AA55AA55AA;
 const BitBoard blackSquare = 0xAA55AA55AA55AA55;
-//const BitBoard whiteSideSquare           = 0x00000000FFFFFFFF; 
-//const BitBoard blackSideSquare           = 0xFFFFFFFF00000000;
+//const BitBoard whiteSideSquare = 0x00000000FFFFFFFF; 
+//const BitBoard blackSideSquare = 0xFFFFFFFF00000000;
 const BitBoard fileA    = 0x0101010101010101;
 const BitBoard fileB    = 0x0202020202020202;
 const BitBoard fileC    = 0x0404040404040404;
@@ -103,8 +103,8 @@ const BitBoard rank6    = 0x0000ff0000000000;
 const BitBoard rank7    = 0x00ff000000000000;
 const BitBoard rank8    = 0xff00000000000000;
 const BitBoard ranks[8] = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
-//const BitBoard diagA1H8                  = 0x8040201008040201;
-//const BitBoard diagA8H1                  = 0x0102040810204080;
+//const BitBoard diagA1H8 = 0x8040201008040201;
+//const BitBoard diagA8H1 = 0x0102040810204080;
 //const BitBoard center = BBSq_d4 | BBSq_d5 | BBSq_e4 | BBSq_e5;
 const BitBoard advancedRanks = 0x0000ffffffff0000;
 
