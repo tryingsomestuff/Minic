@@ -411,7 +411,7 @@ void MaterialHashInitializer::init() {
 }
 
 Terminaison probeMaterialHashTable(const Position::Material &mat) {
-   Hash h = getMaterialHash(mat);
+   const Hash h = getMaterialHash(mat);
    if (h == nullHash) return Ter_Unknown;
    return materialHashTable[h].t;
 }
@@ -435,7 +435,7 @@ void updateMaterialOther(Position &p) {
 void initMaterial(Position &p) { // M_p .. M_k is the same as P_wp .. P_wk
    for (Color c = Co_White; c < Co_End; ++c)
       for (Piece pp = P_wp; pp <= P_wk; ++pp) p.mat[c][pp] = (uint8_t)BB::countBit(p.pieces_const(c, pp));
-        updateMaterialOther(p);
+   updateMaterialOther(p);
 }
 
 void updateMaterialProm(Position &p, const Square toBeCaptured, MType mt) {

@@ -42,18 +42,19 @@ class ThreadPool : public std::vector<std::unique_ptr<Searcher>> {
   public:
    static ThreadPool& instance();
    ~ThreadPool();
-   void                    setup();
+   
    [[nodiscard]] Searcher& main();
-   void                    distributeData(const ThreadData& data);
-   void                    startSearch(const ThreadData& d); // non-blocking
-   void                    startOthers();                    // non-blocking
-   void                    wait(bool otherOnly = false);
-   void                    stop(); // non-blocking
+   void setup();
+   void distributeData(const ThreadData& data);
+   void startSearch(const ThreadData& d); // non-blocking
+   void startOthers();                    // non-blocking
+   void wait(bool otherOnly = false);
+   void stop(); // non-blocking
 
    // gathering counter information from all threads
    [[nodiscard]] Counter counter(Stats::StatId id, bool forceLocal = false) const;
-   void                  DisplayStats() const;
 
+   void DisplayStats() const;
    void clearGame();
    void clearSearch();
 
