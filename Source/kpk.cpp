@@ -46,8 +46,8 @@ template<Color Us> kpk_result KPKPosition::preCompute(const std::vector<KPKPosit
    constexpr Color      Them = (Us == Co_White ? Co_Black : Co_White);
    constexpr kpk_result good = (Us == Co_White ? kpk_win : kpk_draw);
    constexpr kpk_result bad  = (Us == Co_White ? kpk_draw : kpk_win);
-   kpk_result           r    = kpk_invalid;
-   BitBoard             b    = BBTools::mask[ksq[us]].king;
+   kpk_result r = kpk_invalid;
+   BitBoard b = BBTools::mask[ksq[us]].king;
    while (b) { r |= (Us == Co_White ? db[KPKindex(Them, ksq[Them], BB::popBit(b), psq)] : db[KPKindex(Them, BB::popBit(b), ksq[Them], psq)]); }
    if (Us == Co_White) {
       if (SQRANK(psq) < 6) r |= db[KPKindex(Them, ksq[Them], ksq[Us], psq + 8)];

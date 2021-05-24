@@ -19,41 +19,41 @@ const std::string widgetXboardNames[w_max] = {"check", "string", "spin", "combo"
 struct KeyBase {
    template<typename T>
    KeyBase(
-       KeyType                          t,
-       WidgetType                       w,
-       const std::string&               k,
-       T*                               v,
+       KeyType            t,
+       WidgetType         w,
+       const std::string& k,
+       T*                 v,
        const std::function<void(void)>& cb = [] {}):
        type(t), wtype(w), key(k), value((void*)v) {
       callBack = cb;
    }
    template<typename T>
    KeyBase(
-       KeyType                          t,
-       WidgetType                       w,
-       const std::string&               k,
-       T*                               v,
-       const T&                         _vmin,
-       const T&                         _vmax,
+       KeyType             t,
+       WidgetType          w,
+       const std::string&  k,
+       T*                  v,
+       const T&            _vmin,
+       const T&            _vmax,
        const std::function<void(void)>& cb = [] {}):
        type(t), wtype(w), key(k), value((void*)v), vmin(_vmin), vmax(_vmax) {
       callBack = cb;
    }
    KeyBase(
-       KeyType                          t,
-       WidgetType                       w,
-       const std::string&               k,
-       std::string*                     v,
+       KeyType            t,
+       WidgetType         w,
+       const std::string& k,
+       std::string*       v,
        const std::function<void(void)>& cb = [] {}):
        type(t), wtype(w), key(k), value((void*)v) {
       callBack = cb;
    }
-   KeyType                   type;
-   WidgetType                wtype;
-   std::string               key;
-   void*                     value;
-   int                       vmin = 0, vmax = 0; // assume int type is covering all the case (string excluded ...)
-   bool                      hotPlug = false;
+   KeyType     type;
+   WidgetType  wtype;
+   std::string key;
+   void*       value;
+   int         vmin = 0, vmax = 0; // assume int type is covering all the case (string excluded ...)
+   bool        hotPlug = false;
    std::function<void(void)> callBack;
 };
 
