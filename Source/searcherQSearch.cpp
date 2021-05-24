@@ -194,8 +194,8 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
 
 #ifdef USE_PARTIAL_SORT
    MoveSorter::score(*this, moves, p, data.gp, height, cmhPtr, false, isInCheck, validTTmove ? &e : NULL); ///@todo warning gp is often = 0.5 here !
-   size_t      offset = 0;
-   const Move* it     = nullptr;
+   size_t offset = 0;
+   const Move* it = nullptr;
    while ((it = MoveSorter::pickNext(moves, offset))) {
 #else
    MoveSorter::scoreAndSort(*this, moves, p, data.gp, height, cmhPtr, false, isInCheck,

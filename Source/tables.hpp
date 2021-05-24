@@ -14,15 +14,15 @@
  *  - Counter : from/to
  */
 
-static const int                            MAX_CMH_PLY = 2;
+static const int MAX_CMH_PLY = 2;
 typedef std::array<ScoreType*, MAX_CMH_PLY> CMHPtrArray;
 
 struct KillerT {
    Move killers[MAX_DEPTH][2];
 
-   void               initKillers();
+   void initKillers();
+   void update(Move m, DepthType ply);
    [[nodiscard]] bool isKiller(const Move m, const DepthType height);
-   void               update(Move m, DepthType ply);
 };
 
 struct HistoryT {
