@@ -85,7 +85,7 @@ const std::string MinicVersion = "3.08";
 
 // *** Tuning
 //#define WITH_TIMER
-//#define WITH_SEARCH_TUNING
+#define WITH_SEARCH_TUNING
 //#define WITH_TEXEL_TUNING
 //#define WITH_PIECE_TUNING
 
@@ -146,7 +146,7 @@ const std::string MinicVersion = "3.08";
 #define SQFILE(s)              ((s)&7)
 #define SQRANK(s)              ((s) >> 3)
 #define ISOUTERFILE(x)         (SQFILE(x) == 0 || SQFILE(x) == 7)
-#define ISNEIGHBOUR(x, y)      ((x) >= 0 && (x) < 64 && (y) >= 0 && (y) < 64 && abs(SQRANK(x) - SQRANK(y)) <= 1 && abs(SQFILE(x) - SQFILE(y)) <= 1)
+#define ISNEIGHBOUR(x, y)      ((x) >= 0 && (x) < 64 && (y) >= 0 && (y) < 64 && Abs(SQRANK(x) - SQRANK(y)) <= 1 && Abs(SQFILE(x) - SQFILE(y)) <= 1)
 #define PROMOTION_RANK(x)      (SQRANK(x) == 0 || SQRANK(x) == 7)
 #define PROMOTION_RANK_C(x, c) ((c == Co_Black && SQRANK(x) == 0) || (c == Co_White && SQRANK(x) == 7))
 #define MakeSquare(f, r)       Square(((r) << 3) + (f))
@@ -184,7 +184,9 @@ enum GamePhase { MG = 0, EG = 1, GP_MAX = 2 };
 inline constexpr GamePhase operator++(GamePhase& g) {
    g = GamePhase(g + 1);
    return g;
-    }
+}
+
+template<typename T> [[nodiscard]] inline constexpr T Abs(const T& s) { return s > 0 ? s : -s; }
 
 template<typename T, int SIZE> struct OptList : public std::vector<T> {
    OptList(): std::vector<T>() { std::vector<T>::reserve(SIZE); }
@@ -418,7 +420,7 @@ constexpr ScoreType MoveScoring[16] = {0, 7000, 7100, 6000, 3950, 3500, 3350, 33
 
 [[nodiscard]] inline constexpr bool isMatingScore(ScoreType s) { return (s >= MATE - MAX_DEPTH); }
 [[nodiscard]] inline constexpr bool isMatedScore(ScoreType s) { return (s <= -MATE + MAX_DEPTH); }
-[[nodiscard]] inline constexpr bool isMateScore(ScoreType s) { return (std::abs(s) >= MATE - MAX_DEPTH); }
+[[nodiscard]] inline constexpr bool isMateScore(ScoreType s) { return (Abs(s) >= MATE - MAX_DEPTH); }
 
 [[nodiscard]] inline constexpr bool isPromotionStd(const MType mt) {
    assert(moveTypeOK(mt));
@@ -456,13 +458,13 @@ constexpr ScoreType MoveScoring[16] = {0, 7000, 7100, 6000, 3950, 3500, 3350, 33
 [[nodiscard]] inline constexpr ScoreType badCapScore(const Move m) { return Move2Score(m) + MoveScoring[T_capture]; }
 
 [[nodiscard]] inline constexpr Square chebyshevDistance(Square sq1, Square sq2) {
-   return std::max(std::abs(SQRANK(sq2) - SQRANK(sq1)), std::abs(SQFILE(sq2) - SQFILE(sq1)));
+   return std::max(Abs(SQRANK(sq2) - SQRANK(sq1)), Abs(SQFILE(sq2) - SQFILE(sq1)));
 }
 [[nodiscard]] inline constexpr Square manatthanDistance(Square sq1, Square sq2) {
-   return std::abs(SQRANK(sq2) - SQRANK(sq1)) + std::abs(SQFILE(sq2) - SQFILE(sq1));
+   return Abs(SQRANK(sq2) - SQRANK(sq1)) + Abs(SQFILE(sq2) - SQFILE(sq1));
 }
 [[nodiscard]] inline constexpr Square minDistance(Square sq1, Square sq2) {
-   return std::min(std::abs(SQRANK(sq2) - SQRANK(sq1)), std::abs(SQFILE(sq2) - SQFILE(sq1)));
+   return std::min(Abs(SQRANK(sq2) - SQRANK(sq1)), Abs(SQFILE(sq2) - SQFILE(sq1)));
 }
 
 namespace MoveDifficultyUtil {
