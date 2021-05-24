@@ -48,7 +48,7 @@ CONST_CLOP_TUNING ScoreType failLowRootMargin    = 100;
 
 CONST_CLOP_TUNING DepthType aspirationMinDepth  = 4;
 CONST_CLOP_TUNING DepthType aspirationInit      = 6;
-CONST_CLOP_TUNING DepthType aspirationDepthCoef = -2;
+CONST_CLOP_TUNING DepthType aspirationDepthCoef = 2;
 CONST_CLOP_TUNING DepthType aspirationDepthInit = 40;
 
 CONST_CLOP_TUNING ScoreType failHighReductionThresholdInit[2]  = {130, 130};
