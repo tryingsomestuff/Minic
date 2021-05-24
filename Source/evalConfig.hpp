@@ -109,9 +109,11 @@ extern ScoreType                    kingAttTable[64];
 extern CONST_TEXEL_TUNING EvalScore tempo;
 
 // from 0 to m with offset, translation and scale
-[[nodiscard]] inline constexpr double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f, double offset = 0.f) {
+// exp is not (yet?) constexpr
+[[nodiscard]] inline /*constexpr*/ double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f, double offset = 0.f) {
    return m / (1 + exp((trans - x) / scale)) - offset;
 }
+
 inline void initEval() {
    for (Square i = 0; i < NbSquare; i++) {
       EvalConfig::kingAttTable[i] =
