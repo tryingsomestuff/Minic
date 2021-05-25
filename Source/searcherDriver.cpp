@@ -341,9 +341,10 @@ void Searcher::searchDriver() {
 
 pvsout:
 
-   // for all thread, best is set to first pv move
+   // for all thread, best move is set to first pv move (if there is one ...)
    // this will be changed later for main thread to take skill or best move into account
-   _data.best = _data.pv[0]; // setting this thread best move
+   if (_data.pv.empty()) _data.best = INVALIDMOVE; 
+   else                  _data.best = _data.pv[0];
 
    if (isMainThread()) {
       // in case of very very short depth or time, "others" threads may still be blocked
@@ -353,7 +354,6 @@ pvsout:
       // all threads are updating there output values but main one is looking for the longest pv
       // note that depth, score, seldepth and pv are already updated on-the-fly
       if (_data.pv.empty()) {
-         _data.best = INVALIDMOVE;
          if (!subSearch) Logging::LogIt(Logging::logWarn) << "Empty pv";
       }
       else {

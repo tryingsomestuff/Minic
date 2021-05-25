@@ -260,7 +260,7 @@ void Searcher::writeToGenFile(const Position& p) {
       DynamicConfig::disableTT = false; // use TT here
       if (std::abs(e) < 1000) {
          const Hash matHash = MaterialHash::getMaterialHash(p.mat);
-         float      gp      = 1;
+         float gp = 1;
          if (matHash != nullHash) {
             const MaterialHash::MaterialHashEntry& MEntry = MaterialHash::materialHashTable[matHash];
             gp                                            = MEntry.gamePhase();
