@@ -128,21 +128,44 @@ class NNUE(pl.LightningModule):
   def step_(self, batch, batch_idx, loss_type):
     us, them, white, black, outcome, score = batch
   
-    q = self(us, them, white, black)
-    t = outcome
+    net2score = 600
+    in_scaling = 410
+    out_scaling = 361
 
-    # Divide score by 600.0 to match the expected NNUE scaling factor
-    p = (score / 600.0).sigmoid()
-    epsilon = 1e-12
-    teacher_entropy = -(p * (p + epsilon).log() + (1.0 - p) * (1.0 - p + epsilon).log())
-    outcome_entropy = -(t * (t + epsilon).log() + (1.0 - t) * (1.0 - t + epsilon).log())
-    teacher_loss = -(p * F.logsigmoid(q) + (1.0 - p) * F.logsigmoid(-q))
-    outcome_loss = -(t * F.logsigmoid(q) + (1.0 - t) * F.logsigmoid(-q))
-    result  = self.lambda_ * teacher_loss    + (1.0 - self.lambda_) * outcome_loss
-    entropy = self.lambda_ * teacher_entropy + (1.0 - self.lambda_) * outcome_entropy
-    loss = result.mean() - entropy.mean()
+    q = (self(us, them, white, black) * net2score / out_scaling).sigmoid()
+    t = outcome
+    p = (score / in_scaling).sigmoid()
+    
+    #epsilon = 1e-12
+    #teacher_entropy = -(p * (p + epsilon).log() + (1.0 - p) * (1.0 - p + epsilon).log())
+    #outcome_entropy = -(t * (t + epsilon).log() + (1.0 - t) * (1.0 - t + epsilon).log())
+    #teacher_loss = -(p * F.logsigmoid(q) + (1.0 - p) * F.logsigmoid(-q))
+    #outcome_loss = -(t * F.logsigmoid(q) + (1.0 - t) * F.logsigmoid(-q))
+    #result  = self.lambda_ * teacher_loss    + (1.0 - self.lambda_) * outcome_loss
+    #entropy = self.lambda_ * teacher_entropy + (1.0 - self.lambda_) * outcome_entropy
+    #loss = result.mean() - entropy.mean()
+
+    loss_eval = (p - q).square().mean()
+    loss_result = (p - t).square().mean()
+    loss = self.lambda_ * loss_eval + (1.0 - self.lambda_) * loss_result
+
     self.log(loss_type, loss)
     return loss
+
+    nnue2score = 600
+    in_scaling = 410
+    out_scaling = 361
+
+    q = (self(us, them, white_indices, white_values, black_indices, black_values, psqt_indices, layer_stack_indices) * nnue2score / out_scaling).sigmoid()
+    t = outcome
+    p = (score / in_scaling).sigmoid()
+
+    loss_eval = (p - q).square().mean()
+    loss_result = (p - t).square().mean()
+    loss = self.lambda_ * loss_eval + (1.0 - self.lambda_) * loss_result
+
+    self.log(loss_type, loss)
+
 
   def training_step(self, batch, batch_idx):
     return self.step_(batch, batch_idx, 'train_loss')
@@ -157,7 +180,6 @@ class NNUE(pl.LightningModule):
     optimizer = torch.optim.Adadelta(self.parameters(), lr=1, weight_decay=1e-10)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=75, gamma=0.3)
     return [optimizer], [scheduler]
-    #return optimizer
 
   def flattened_parameters(self, log=True):
     def join_param(joined, param):

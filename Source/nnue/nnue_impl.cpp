@@ -1,3 +1,7 @@
+#include "definition.hpp"
+
+#ifdef WITH_NNUE
+
 #define INCBIN_PREFIX
 #define INCBIN_STYLE INCBIN_STYLE_CAMEL
 #include "incbin.h"
@@ -11,6 +15,8 @@ INCBIN(weightsFile, INCBIN_STRINGIZE(EMBEDEDNNUEPATH));
 // const unsigned char weightsFileData[];
 // const unsigned int weightsFileSize;
 } // namespace embeded
-#endif
+#endif // EMBEDEDNNUEPATH
 
 } // namespace nnue
+
+#endif // WITH_NNUE
