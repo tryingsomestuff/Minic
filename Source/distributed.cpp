@@ -86,7 +86,7 @@ void init() {
 }
 
 void lateInit() {
-   if (worldSize > 1) {
+   if (moreThanOneProcess()) {
       checkError(MPI_Win_create(&ThreadPool::instance().main().stopFlag, sizeof(bool), sizeof(bool), MPI_INFO_NULL, _commStop, &_winStop));
       checkError(MPI_Win_fence(0, _winStop));
    }
@@ -101,16 +101,20 @@ void finalize() {
    checkError(MPI_Comm_free(&_commStop));
    checkError(MPI_Comm_free(&_commMove));
 
-   if (worldSize > 1) checkError(MPI_Win_free(&_winStop));
+   if (moreThanOneProcess()) checkError(MPI_Win_free(&_winStop));
 
    checkError(MPI_Finalize());
 }
 
 bool isMainProcess() { return rank == 0; }
 
+bool moreThanOneProcess() {
+   return worldSize > 1;
+}
+
 // classic busy wait
 void sync(MPI_Comm& com, const std::string& msg) {
-   if (worldSize < 2) return;
+   if (!moreThanOneProcess()) return;
    Logging::LogIt(Logging::logDebug) << "syncing: " << msg;
    checkError(MPI_Barrier(com));
    Logging::LogIt(Logging::logDebug) << "...done";
@@ -118,7 +122,7 @@ void sync(MPI_Comm& com, const std::string& msg) {
 
 // "softer" wait on other process
 void waitRequest(MPI_Request& req) {
-   if (worldSize < 2) return;
+   if (!moreThanOneProcess()) return;
    // don't rely on MPI to do a "passive wait", most implementations are doing a busy-wait, so use 100% cpu
    if (Distributed::isMainProcess()) { checkError(MPI_Wait(&req, MPI_STATUS_IGNORE)); }
    else {
@@ -133,21 +137,21 @@ void waitRequest(MPI_Request& req) {
 }
 
 void initStat() {
-   if (worldSize < 2) return;
+   if (!moreThanOneProcess()) return;
    _countersBufSend.fill(0ull);
    _countersBufRecv[0].fill(0ull);
    _countersBufRecv[1].fill(0ull);
 }
 
 void sendStat() {
-   if (worldSize < 2) return;
+   if (!moreThanOneProcess()) return;
    // launch an async reduce
    asyncAllReduceSum(_countersBufSend.data(), _countersBufRecv[_doubleBufferStatParity % 2].data(), Stats::sid_maxid, _requestStat, _commStat);
    ++_nbStatPoll;
 }
 
 void pollStat() { // only called from main thread
-   if (worldSize < 2) return;
+   if (!moreThanOneProcess()) return;
    int flag;
    checkError(MPI_Test(&_requestStat, &flag, MPI_STATUS_IGNORE));
    // if previous comm is done, launch another one
@@ -164,7 +168,7 @@ void pollStat() { // only called from main thread
 
 // get all rank to a common synchronous state at the end of search
 void syncStat() { // only called from main thread
-   if (worldSize < 2) return;
+   if (!moreThanOneProcess()) return;
    // wait for equilibrium
    uint64_t globalNbPoll = 0ull;
    allReduceMax(&_nbStatPoll, &globalNbPoll, 1, _commStat2);
@@ -198,7 +202,7 @@ Counter counter(Stats::StatId id) {
 }
 
 void setEntry(const Hash h, const TT::Entry& e) {
-   if (worldSize < 2) return;
+   if (!moreThanOneProcess()) return;
    //DEBUGCOUT("set entry")
    // do not share entry near leaf, their are changing to quickly
    if (e.d > _ttMinDepth) {
@@ -240,7 +244,7 @@ void setEntry(const Hash h, const TT::Entry& e) {
 
 // get all rank to a common synchronous state at the end of search
 void syncTT() { // only called from main thread
-   if (worldSize < 2) return;
+   if (!moreThanOneProcess()) return;
    // wait for equilibrium
    uint64_t globalNbPoll = 0ull;
    allReduceMax(&_nbTTTransfert, &globalNbPoll, 1, _commTT2);
