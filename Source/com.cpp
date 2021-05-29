@@ -51,7 +51,7 @@ void readLine() {
       Logging::LogIt(Logging::logInfo) << "Received command : \"" << command << "\"";
       strcpy(buffer, command.c_str()); // only usefull if WITH_MPI
    }
-   if (Distributed::worldSize > 1) {
+   if (Distributed::moreThanOneProcess()) {
       // don't rely on Bcast to do a "passive wait", most implementation is doing a busy-wait, so use 100% cpu
       Distributed::asyncBcast(buffer, 4096, Distributed::_requestInput, Distributed::_commInput);
       Distributed::waitRequest(Distributed::_requestInput);
@@ -65,7 +65,7 @@ bool receiveMoves(Move move, Move ponderMove) {
    Logging::LogIt(Logging::logInfo) << "ponder move " << ToString(ponderMove);
 
    // share the same move with all process
-   if (Distributed::worldSize > 1) {
+   if (Distributed::moreThanOneProcess()) {
       Distributed::sync(Distributed::_commMove, __PRETTY_FUNCTION__);
       // don't rely on Bcast to do a "passive wait", most implementation is doing a busy-wait, so use 100% cpu
       Distributed::asyncBcast(&move, 1, Distributed::_requestMove, Distributed::_commMove);

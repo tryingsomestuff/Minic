@@ -64,6 +64,7 @@ void init();
 void lateInit();
 void finalize();
 bool isMainProcess();
+bool moreThanOneProcess();
 void sync(MPI_Comm& com, const std::string& msg = "");
 
 struct EntryHash {
@@ -82,42 +83,42 @@ template<> struct TraitMpiType<Move>      { static constexpr MPI_Datatype type =
 void checkError(int err);
 
 template<typename T> inline void bcast(T* v, int n, MPI_Comm& com) {
-   if (worldSize < 2) return;
+   if (!moreThanOneProcess()) return;
    checkError(MPI_Bcast(v, n, TraitMpiType<T>::type, 0, com));
 }
 
 template<typename T> inline void asyncBcast(T* v, int n, MPI_Request& req, MPI_Comm& com) {
-   if (worldSize < 2) return;
+   if (!moreThanOneProcess()) return;
    checkError(MPI_Ibcast(v, n, TraitMpiType<T>::type, 0, com, &req));
 }
 
 template<typename T> inline void allReduceSum(T* local, T* global, int n, MPI_Comm& com) {
-   if (worldSize < 2) return;
+   if (!moreThanOneProcess()) return;
    checkError(MPI_Allreduce(local, global, n, TraitMpiType<T>::type, MPI_SUM, com));
 }
 
 template<typename T> inline void allReduceMax(T* local, T* global, int n, MPI_Comm& com) {
-   if (worldSize < 2) return;
+   if (!moreThanOneProcess()) return;
    checkError(MPI_Allreduce(local, global, n, TraitMpiType<T>::type, MPI_MAX, com));
 }
 
 template<typename T> inline void asyncAllReduceSum(T* local, T* global, int n, MPI_Request& req, MPI_Comm& com) {
-   if (worldSize < 2) return;
+   if (!moreThanOneProcess()) return;
    checkError(MPI_Iallreduce(local, global, n, TraitMpiType<T>::type, MPI_SUM, com, &req));
 }
 
 template<typename T> inline void put(T* ptr, int n, MPI_Win& window, int target) {
-   if (worldSize < 2) return;
+   if (!moreThanOneProcess()) return;
    checkError(MPI_Put(ptr, n, TraitMpiType<T>::type, target, MPI_Aint(0), n, TraitMpiType<T>::type, window));
 }
 
 template<typename T> inline void get(T* ptr, int n, MPI_Win& window, int source) {
-   if (worldSize < 2) return;
+   if (!moreThanOneProcess()) return;
    checkError(MPI_Get(ptr, n, TraitMpiType<T>::type, source, MPI_Aint(0), n, TraitMpiType<T>::type, window));
 }
 
 template<typename T> inline void putMainToAll(T* ptr, int n, MPI_Win& window) {
-   if (worldSize < 2) return;
+   if (!moreThanOneProcess()) return;
    checkError(MPI_Win_lock_all(0, window));
    for (int r = 1; r < worldSize; ++r) { put(ptr, n, window, r); }
    //checkError(MPI_Win_flush_all(window));
@@ -125,11 +126,14 @@ template<typename T> inline void putMainToAll(T* ptr, int n, MPI_Win& window) {
 }
 
 template<typename T> inline void asyncAllGather(T* inptr, T* outptr, int n, MPI_Request& req, MPI_Comm& com) {
-   if (worldSize < 2) return;
+   if (!moreThanOneProcess()) return;
    checkError(MPI_Iallgather(inptr, n, TraitMpiType<T>::type, outptr, n, TraitMpiType<T>::type, com, &req));
 }
 
-inline void winFence(MPI_Win& window) { checkError(MPI_Win_fence(0, window)); }
+inline void winFence(MPI_Win& window) { 
+   if (!moreThanOneProcess()) return;
+   checkError(MPI_Win_fence(0, window)); 
+}
 
 void waitRequest(MPI_Request& req);
 
@@ -173,6 +177,7 @@ inline void init() {}
 inline void lateInit() {}
 inline void finalize() {}
 inline bool isMainProcess() { return true; }
+inline bool moreThanOneProcess() { return false; }
 inline void sync(DummyType &, const std::string &) {}
 
 template<typename T> inline void asyncBcast(T *, int, DummyType &, DummyType &) {}

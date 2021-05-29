@@ -400,7 +400,7 @@ pvsout:
       Distributed::syncTT();
 
       // display search statistics (only when all threads and process are done and sync)
-      if (Distributed::worldSize > 1) { Distributed::showStat(); }
+      if (Distributed::moreThanOneProcess()) { Distributed::showStat(); }
       else {
          ThreadPool::instance().DisplayStats();
       }

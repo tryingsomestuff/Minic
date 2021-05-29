@@ -50,7 +50,7 @@ void hellooo() {
 #else
       std::cout << Logging::_protocolComment[Logging::ct] << "This is Minic version " << MinicVersion << std::endl;
 #endif
-      if (Distributed::worldSize > 1) {
+      if (Distributed::moreThanOneProcess()) {
          std::cout << Logging::_protocolComment[Logging::ct] << "MPI version running on " << Distributed::worldSize << " process" << std::endl;
       }
    }

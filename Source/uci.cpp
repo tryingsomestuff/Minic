@@ -32,7 +32,7 @@ void uci() {
 
       if (uciCommand == "uci") {
          std::string version = MinicVersion;
-         if (Distributed::worldSize > 1) version += "_" + std::to_string(Distributed::worldSize) + "proc";
+         if (Distributed::moreThanOneProcess()) version += "_" + std::to_string(Distributed::worldSize) + "proc";
          Logging::LogIt(Logging::logGUI) << "id name Minic " << version;
          Logging::LogIt(Logging::logGUI) << "id author Vivien Clauzon";
          Options::displayOptionsUCI();
