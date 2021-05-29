@@ -75,7 +75,7 @@ template<typename T, size_t N> T dotProductFma(const T* a, const T* b) {
    }
 }
 
-#else // not __AVX__
+#else // not __AVX2__
 
 template<typename T, size_t dim> T dotProductFma(const T* a, const T* b) { return dotProductFma_<T, dim>(a, b); }
 #endif

@@ -41,31 +41,30 @@ typedef uint64_t u_int64_t;
 const std::string MinicVersion = "3.08";
 
 // *** options
-#define WITH_UCI
-#define WITH_XBOARD
-#define WITH_MAGIC
-#define WITH_SYZYGY
-#define WITH_NNUE
+#define WITH_UCI    // include or not UCI protocol support
+#define WITH_XBOARD // include or not XBOARB protocol support
+#define WITH_MAGIC  // use magic bitboard or HB ones
+#define WITH_SYZYGY // include or not syzgy ETG support
+#define WITH_NNUE   // include or not NNUE support
+#define WITH_STATS  // produce or not search statitics
+//#define WITH_MPI    // support "distributed" version or not
 
-#define WITH_STATS
-//#define WITH_MPI
-
-//#define WITHOUT_FILESYSTEM
-//#define LIMIT_THREADS_TO_PHYSICAL_CORES
-//#define REPRODUCTIBLE_RESULTS
-//#define WITH_NNUE_CLIPPED_RELU
+//#define WITHOUT_FILESYSTEM              // some compiler don't support whole std:filesystem 
+//#define LIMIT_THREADS_TO_PHYSICAL_CORES // in order to restrict thread to the number of physical core
+//#define REPRODUCTIBLE_RESULTS           // clear state table betwwen all new search (not all new games)
+//#define WITH_NNUE_CLIPPED_RELU          // use clipped relu instead of relu for NNUE
 #ifndef __ANDROID__
-#define USE_AVX_INTRIN
-//#define WITH_BLAS
+#define USE_AVX_INTRIN                    // on AVX2 architecture, use a hand written dot product (a little faster)
+//#define WITH_BLAS                       // link on a given BLAS library for cblas_sgemv operations
 #endif
 
 // *** Optim (?)
-#define USE_PARTIAL_SORT 
+#define USE_PARTIAL_SORT        // do not sort every move in move list
 //#define WITH_EVALSCORE_AS_INT // in fact just as slow as my basic impl ...
 
 // *** Add-ons
-#ifndef DEBUG_TOOL // forced
-#define DEBUG_TOOL
+#ifndef DEBUG_TOOL
+#define DEBUG_TOOL // forced
 #endif
 #define WITH_TEST_SUITE
 //#define WITH_PGN_PARSER
