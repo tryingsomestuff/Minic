@@ -98,7 +98,7 @@ def run_match(best, root_dir, c_chess_exe, concurrency, book_file_name, engine):
     )
     command = (
         command
-        + " -openings file={} order=random -repeat -resign 3 700 -draw 8 10".format(
+        + " -openings file={} order=random -repeat -resign count=3 score=700 -draw number=40 count=8 score=10".format(
             book_file_name
         )
     )
