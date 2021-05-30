@@ -144,33 +144,35 @@ Minic random-mover stats are the following :
 ### CCRL
 #### 40/15
 - Minic 2.46 is tested at 3050 on the [CCRL 40/15 scale](http://ccrl.chessdom.com/ccrl/4040/)  
-- Minic 3.04 + Noisy Notch is ted at 3061 on the [CCRL 40/15 scale](http://ccrl.chessdom.com/ccrl/4040/)  
+- Minic 3.04 + Noisy Notch is ted at 3052 on the [CCRL 40/15 scale](http://ccrl.chessdom.com/ccrl/4040/)  
 #### Blitz
-- Minic 2.33 is tested at 3162 on the [CCRL BLITZ 4CPU scale](http://ccrl.chessdom.com/ccrl/404/)  
-- Minic 2.43 is tested at 3116 on the [CCRL BLITZ 1CPU scale](http://ccrl.chessdom.com/ccrl/404/)  
-- Minic 3.06 + Nocturnal Nadir is tested at 3230 on the [CCRL BLITZ 1CPU scale](http://ccrl.chessdom.com/ccrl/404/)  
+- Minic 2.33 is tested at 3161 on the [CCRL BLITZ 4CPU scale](http://ccrl.chessdom.com/ccrl/404/)  
+- Minic 2.43 is tested at 3115 on the [CCRL BLITZ 1CPU scale](http://ccrl.chessdom.com/ccrl/404/)  
+- Minic 3.06 + Nocturnal Nadir is tested at 3233 on the [CCRL BLITZ 1CPU scale](http://ccrl.chessdom.com/ccrl/404/)  
 #### FRC
 - Minic 3.06 + Nocturnal Nadir is tested at 3282 on the [CCRL FRC list](http://ccrl.chessdom.com/ccrl/404FRC/)  
 
 ### CEGT
 #### 40/4
-- Minic 3.02 + Narcotized Nightshift is tested at 3035 on the [CEGT 40/4 list](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
+- Minic 3.02 + Narcotized Nightshift is tested at 3028 on the [CEGT 40/4 list](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
 - Minic 1.35 is tested at 3032 on the [CEGT 40/4 MP8CPU list](http://www.cegt.net/40_4_Ratinglist/40_4_mp/rangliste.html)  
 #### 40/20
-- MinicNNUE 2.51 using Nascent Nutrient is tested at 3217 on the [CEGT 40/20 list](http://www.cegt.net/40_40%20Rating%20List/40_40%20All%20Versions/rangliste.html)  
-- Minic 3.06 + Nocturnal Nadir is tested at 3120 on the [CEGT 40/20 list](http://www.cegt.net/40_40%20Rating%20List/40_40%20All%20Versions/rangliste.html)  
-- Minic 2.48 is tested at 2969 on the [CEGT 40/12 list](http://www.cegt.net/40_40%20Rating%20List/40_40%20SingleVersion/rangliste.html)   
+- MinicNNUE 2.51 using Nascent Nutrient is tested at 3215 on the [CEGT 40/20 list](http://www.cegt.net/40_40%20Rating%20List/40_40%20All%20Versions/rangliste.html)  
+- Minic 3.07 + Naive Nostalgia is tested at 3135 on the [CEGT 40/20 list](http://www.cegt.net/40_40%20Rating%20List/40_40%20All%20Versions/rangliste.html)  
+- Minic 2.48 is tested at 2972 on the [CEGT 40/12 list](http://www.cegt.net/40_40%20Rating%20List/40_40%20SingleVersion/rangliste.html)   
 #### 5+3 pb=on
 - Minic 2.07 is tested at 2935 on the [CEGT 5+3 PB=ON list](http://www.cegt.net/5Plus3Rating/BestVersionsNEW/rangliste.html)  
 
 ### FGRL
 - Minic 3.03 + Narcotized Nightshift is tested at 2899 on the [fastgm 60sec+0.6sec rating list](http://www.fastgm.de/60-0.60.html)  
-- Minic 2.48 is tested at 2932 on the [fastgm 10min+6sec rating list](http://www.fastgm.de/10min.html)  
-- Minic 2.00 is tested at 2953 on the [fastgm 60min+15sec rating list](http://www.fastgm.de/60min.html)  
+- Minic 3.04 + Noisy Notch is tested at 3090 on the [fastgm 10min+6sec rating list](http://www.fastgm.de/10min.html)  
+- Minic 2.48 is tested at 2936 on the [fastgm 10min+6sec rating list](http://www.fastgm.de/10min.html)  
+- Minic 3.04 + Noisy Notch is tested at 3090 on the [fastgm 60min+15sec rating list](http://www.fastgm.de/60min.html)  
+- Minic 2.00 is tested at 2959 on the [fastgm 60min+15sec rating list](http://www.fastgm.de/60min.html)  
 
 ### SP-CC
-- MinicNNUE 2.51 using Nascent Nutrient net is tested at 3284 on the [SP-CC 3min+1s rating list](https://www.sp-cc.de/)  
-- Minic 3.06 + Nocturnal Nadir is tested at 3172  on the [SP-CC 3min+1s rating list](https://www.sp-cc.de/)  
+- MinicNNUE 2.51 using Nascent Nutrient net is tested at 3287 on the [SP-CC 3min+1s rating list](https://www.sp-cc.de/)  
+- Minic 3.06 + Nocturnal Nadir is tested at 3175  on the [SP-CC 3min+1s rating list](https://www.sp-cc.de/)  
 
 ### Test Suite
 - STS : 1191/1500 @10sec per position (single thread on an i7-9700K)  
@@ -178,7 +180,7 @@ Minic random-mover stats are the following :
 
 ### TCEC stats
 
-TCEC hardware: Minic is at 3401 (https://tcec-chess.com/bayeselo.txt)
+TCEC hardware: Minic is at 3409 (https://tcec-chess.com/bayeselo.txt)
 
 ### TCEC
 
