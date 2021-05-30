@@ -203,15 +203,15 @@ Counter counter(Stats::StatId id) {
 
 void setEntry(const Hash h, const TT::Entry& e) {
    if (!moreThanOneProcess()) return;
-   //DEBUGCOUT("set entry")
+   DEBUGCOUT("set entry")
    // do not share entry near leaf, their are changing to quickly
    if (e.d > _ttMinDepth) {
-      //DEBUGCOUT("depth ok")
+      DEBUGCOUT("depth ok")
       if (_ttMutex.try_lock()) { // this can be called from multiple threads of this process !
-         //DEBUGCOUT("lock ok")
+         DEBUGCOUT("lock ok")
          _ttBufSend[_doubleBufferTTParity % 2][_ttCurPos++] = {h, e};
          if (_ttCurPos == _ttBufSize) { // buffer is full
-            //DEBUGCOUT("buffer full")
+            DEBUGCOUT("buffer full")
             _ttCurPos = 0ull; // reset index
             // if previous comm is done then use data and launch another one
             int flag;
@@ -219,15 +219,15 @@ void setEntry(const Hash h, const TT::Entry& e) {
             if (flag) {
                // receive previous data
 #ifdef DEBUG_DISTRIBUTED
-               //static uint64_t received = 0;
+               static uint64_t received = 0;
 #endif
-               //DEBUGCOUT("buffer received " +std::to_string(received++))
+               DEBUGCOUT("buffer received " +std::to_string(received++))
                for (const auto& i : _ttBufRecv) {
                   TT::_setEntry(i.h, i.e); // always replace (favour data from other process)
                }
                // send new ones
                ++_doubleBufferTTParity; // switch buffer
-               //DEBUGCOUT("sending data " + std::to_string(_nbTTTransfert))
+               DEBUGCOUT("sending data " + std::to_string(_nbTTTransfert))
                asyncAllGather(_ttBufSend[(_doubleBufferTTParity + 1) % 2].data(), _ttBufRecv.data(), _ttBufSize * sizeof(EntryHash), _requestTT,
                               _commTT);
                ++_nbTTTransfert;
@@ -235,7 +235,7 @@ void setEntry(const Hash h, const TT::Entry& e) {
             // else we reuse the same buffer and loosing current data
             /*else{
                   DEBUGCOUT("previous comm not done, skipping")
-               }*/
+            }*/
          }
          _ttMutex.unlock();
       } // end of lock
@@ -248,20 +248,20 @@ void syncTT() { // only called from main thread
    // wait for equilibrium
    uint64_t globalNbPoll = 0ull;
    allReduceMax(&_nbTTTransfert, &globalNbPoll, 1, _commTT2);
-   //DEBUGCOUT("sync TT " + std::to_string(_nbTTTransfert) + " " + std::to_string(globalNbPoll))
+   DEBUGCOUT("sync TT " + std::to_string(_nbTTTransfert) + " " + std::to_string(globalNbPoll))
    if (_nbTTTransfert < globalNbPoll) {
-      //DEBUGCOUT("sync TT middle wait")
+      DEBUGCOUT("sync TT middle wait")
       checkError(MPI_Wait(&_requestTT, MPI_STATUS_IGNORE));
       // we don't really care which buffer is sent here
       asyncAllGather(_ttBufSend[(_doubleBufferTTParity + 1) % 2].data(), _ttBufRecv.data(), _ttBufSize * sizeof(EntryHash), _requestTT, _commTT);
       ++_nbTTTransfert;
    }
    // final resync
-   //DEBUGCOUT("sync TT final wait")
+   DEBUGCOUT("sync TT final wait")
    checkError(MPI_Wait(&_requestTT, MPI_STATUS_IGNORE));
-   //DEBUGCOUT("sync TT final wait done 1")
+   DEBUGCOUT("sync TT final wait done 1")
    sync(_commTT, __PRETTY_FUNCTION__);
-   //DEBUGCOUT("sync TT final wait done 2")
+   DEBUGCOUT("sync TT final wait done 2")
 }
 } // namespace Distributed
 
