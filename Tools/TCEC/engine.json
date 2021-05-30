@@ -1,6 +1,6 @@
 [
     {
-        "command": "./minic_linux_x64 -uci -book 0 -syzygyPath /home/syzygy/",
+        "command": "./minic_linux_x64 -uci -syzygyPath /home/syzygy/",
         "name": "Minic 3.07",
         "restart": "on",
         "rating": "3293",
@@ -19,7 +19,7 @@
             },
             {
                 "name": "CommandLineOptions",
-                "value": "-uci -book 0 -syzygyPath /home/syzygy/"
+                "value": "-uci -syzygyPath /home/syzygy/"
             }
         ],
         "protocol": "uci",
