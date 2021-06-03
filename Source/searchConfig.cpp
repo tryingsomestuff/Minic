@@ -48,9 +48,9 @@ CONST_CLOP_TUNING ScoreType failLowRootMargin    = 100;
 
 ///@todo probably should be tuned with/without a net
 CONST_CLOP_TUNING DepthType aspirationMinDepth  = 4;
-CONST_CLOP_TUNING DepthType aspirationInit      = 6;
-CONST_CLOP_TUNING DepthType aspirationDepthCoef = 0;
-CONST_CLOP_TUNING DepthType aspirationDepthInit = 0;
+CONST_CLOP_TUNING ScoreType aspirationInit      = 6;
+CONST_CLOP_TUNING ScoreType aspirationDepthCoef = 0;
+CONST_CLOP_TUNING ScoreType aspirationDepthInit = 0;
 
 CONST_CLOP_TUNING ScoreType failHighReductionThresholdInit[2]  = {130, 130};
 CONST_CLOP_TUNING ScoreType failHighReductionThresholdDepth[2] = {0, 0};

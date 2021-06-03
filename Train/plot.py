@@ -152,12 +152,12 @@ while True:
                     else:
                         fail.append([x,y,e,n,g])
 
-                txt += ['target2  {: >6} +/- {: <6} : {: >12} ({})'.format(y,e,n,g) for (x,y,e,n,g) in target2 ]
-                txt += ['target1  {: >6} +/- {: <6} : {: >12} ({})'.format(y,e,n,g) for (x,y,e,n,g) in target1 ]
-                txt += ['good     {: >6} +/- {: <6} : {: >12} ({})'.format(y,e,n,g) for (x,y,e,n,g) in good ]
-                txt += ['probable {: >6} +/- {: <6} : {: >12} ({})'.format(y,e,n,g) for (x,y,e,n,g) in probable ]
-                txt += ['possible {: >6} +/- {: <6} : {: >12} ({})'.format(y,e,n,g) for (x,y,e,n,g) in possible ]
-                txt += ['fail     {: >6} +/- {: <6} : {: >12} ({})'.format(y,e,n,g) for (x,y,e,n,g) in fail ]
+                txt += ['target2  {: >6} +/- {: <6} : {: >12} ({})'.format(y,e,n,g) for (x,y,e,n,g) in sorted(target2 , key=lambda x: x[1]-x[2], reverse=True) ]
+                txt += ['target1  {: >6} +/- {: <6} : {: >12} ({})'.format(y,e,n,g) for (x,y,e,n,g) in sorted(target1 , key=lambda x: x[1]-x[2], reverse=True) ]
+                txt += ['good     {: >6} +/- {: <6} : {: >12} ({})'.format(y,e,n,g) for (x,y,e,n,g) in sorted(good    , key=lambda x: x[1]-x[2], reverse=True) ]
+                txt += ['probable {: >6} +/- {: <6} : {: >12} ({})'.format(y,e,n,g) for (x,y,e,n,g) in sorted(probable, key=lambda x: x[1]-x[2], reverse=True) ]
+                txt += ['possible {: >6} +/- {: <6} : {: >12} ({})'.format(y,e,n,g) for (x,y,e,n,g) in sorted(possible, key=lambda x: x[1]-x[2], reverse=True) ]
+                txt += ['fail     {: >6} +/- {: <6} : {: >12} ({})'.format(y,e,n,g) for (x,y,e,n,g) in sorted(fail    , key=lambda x: x[1]-x[2], reverse=True) ]
 
                 txt = txt[:display_max+2]
 

@@ -181,9 +181,9 @@ void registerCOMOptions() { // options exposed to GUI
 #ifdef WITH_SEARCH_TUNING
 
    _keys.push_back(KeyBase(k_depth, w_spin, "aspirationMinDepth"                , &SearchConfig::aspirationMinDepth                  , DepthType(0)    , DepthType(30)       ));
-   _keys.push_back(KeyBase(k_depth, w_spin, "aspirationInit"                    , &SearchConfig::aspirationInit                      , DepthType(0)    , DepthType(30)       ));
-   _keys.push_back(KeyBase(k_depth, w_spin, "aspirationDepthInit"               , &SearchConfig::aspirationDepthInit                 , DepthType(0)    , DepthType(150)      ));
-   _keys.push_back(KeyBase(k_depth, w_spin, "aspirationDepthCoef"               , &SearchConfig::aspirationDepthCoef                 , DepthType(-10)  , DepthType(10)       ));
+   _keys.push_back(KeyBase(k_score, w_spin, "aspirationInit"                    , &SearchConfig::aspirationInit                      , ScoreType(0)    , ScoreType(30)       ));
+   _keys.push_back(KeyBase(k_score, w_spin, "aspirationDepthInit"               , &SearchConfig::aspirationDepthInit                 , ScoreType(0)    , ScoreType(150)      ));
+   _keys.push_back(KeyBase(k_score, w_spin, "aspirationDepthCoef"               , &SearchConfig::aspirationDepthCoef                 , ScoreType(-10)  , ScoreType(10)       ));
 
    _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin0"                  , &SearchConfig::qfutilityMargin[0]                  , ScoreType(0)    , ScoreType(1500)     ));
    _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin1"                  , &SearchConfig::qfutilityMargin[1]                  , ScoreType(0)    , ScoreType(1500)     ));
