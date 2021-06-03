@@ -332,7 +332,7 @@ void Searcher::searchDriver() {
                                                           std::max(Counter(1), ThreadPool::instance().counter(Stats::sid_nodes));
                }
 
-               // sync stopflag in other process
+               // sync (pull) stopflag in other process
                if (!Distributed::isMainProcess()) { Distributed::get(&ThreadPool::instance().main().stopFlag, 1, Distributed::_winStop, 0); }
             }
          }
@@ -398,6 +398,17 @@ pvsout:
       Distributed::winFence(Distributed::_winStop);
       Distributed::syncStat();
       Distributed::syncTT();
+
+      if (Distributed::isMainProcess()) {
+         for (auto r = 1; r < Distributed::worldSize; ++r) {
+            Distributed::get(&ThreadPool::instance().main().stopFlag, 1, Distributed::_winStop, r);
+            Distributed::winFence(Distributed::_winStop);
+            while (ThreadPool::instance().main().stopFlag) {
+               Distributed::get(&ThreadPool::instance().main().stopFlag, 1, Distributed::_winStop, r);
+               Distributed::winFence(Distributed::_winStop);
+            }
+         }
+      }
 
       // display search statistics (only when all threads and process are done and sync)
       if (Distributed::moreThanOneProcess()) { Distributed::showStat(); }
