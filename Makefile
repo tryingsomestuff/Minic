@@ -7,6 +7,8 @@ endif
 
 ifdef EVALFILE
    export EMBEDEDNNUEPATH=$(EVALFILE)
+else
+   export EMBEDEDNNUENAME=negligible_nystagmus.bin
 endif
 
 .PHONY: config fathom build dist release
@@ -20,13 +22,13 @@ config:
 	mkdir -p Tourney
 	if [ ! -e $(ROOT_DIR)/Tourney/nn.bin ]; then \
 	   echo "No net, downloading..." \
-	   && wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/naive_nostalgia.bin -O Tourney/nn.bin ;\
+	   && wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/$$EMBEDEDNNUENAME -O Tourney/nn.bin ;\
 	fi
 	NETMD5=$$(md5sum $(ROOT_DIR)/Tourney/nn.bin | awk '{print $$1}') \
 	&& echo "Net md5: $${NETMD5}" \
-	&& if [ "$${NETMD5}" != "196efe65d3c89d6ea1ce5522633467d7" ]; then \
+	&& if [ "$${NETMD5}" != "68c503112d88672b4de0e4641feb884e" ]; then \
 	   echo "Bad net (md5: $${NETMD5}), downloading..." \
-	   && wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/naive_nostalgia.bin -O Tourney/nn.bin ;\
+	   && wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/$$EMBEDEDNNUENAME -O Tourney/nn.bin ;\
 	fi
 
 fathom:
