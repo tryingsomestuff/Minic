@@ -179,6 +179,7 @@ void Searcher::searchDriver() {
 
    // ID loop
    for (DepthType depth = startDepth; depth <= targetMaxDepth && !stopFlag; ++depth) {
+
       // MultiPV loop
       std::vector<MiniMove> skipMoves;
       for (unsigned int multi = 0; multi < DynamicConfig::multiPV && !stopFlag; ++multi) {
@@ -187,7 +188,6 @@ void Searcher::searchDriver() {
 
          if (isMainThread()) {
             if (depth > 1) {
-               if (Distributed::isMainProcess()) TimeMan::maxNodes = maxNodes; // restore real value (only on main processus!)
                // delayed other thread start (can use a depth condition...)
                if (startLock.load()) {
                   Logging::LogIt(Logging::logInfo) << "Unlocking other threads";
@@ -337,6 +337,18 @@ void Searcher::searchDriver() {
             }
          }
       } // multiPV loop end
+
+      // check for a node count stop
+      if (isMainThread()) {
+         // restore real value (only on main processus!), was discarded for depth 1 search
+         if (Distributed::isMainProcess()) TimeMan::maxNodes = maxNodes; 
+         const Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
+         if (TimeMan::maxNodes > 0 && nodeCount > TimeMan::maxNodes) {
+            stopFlag = true;
+            Logging::LogIt(Logging::logInfo) << "stopFlag triggered in search driver (nodes limits) in thread " << id();
+         }
+      }
+
    }    // iterative deepening loop end
 
 pvsout:
