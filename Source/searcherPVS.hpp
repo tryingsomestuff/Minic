@@ -13,7 +13,7 @@
 #include "tools.hpp"
 #include "transposition.hpp"
 
-#define PERIODICCHECK 1024ull
+#define PERIODICCHECK uint64_t(1024)
 
 // pvs inspired by Xiphos
 template<bool pvnode>
@@ -34,7 +34,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    if (isMainThread()) {
       static int periodicCheck = 0;
       if (periodicCheck == 0) {
-         periodicCheck = (TimeMan::maxNodes > 0) ? std::min(TimeMan::maxNodes / PERIODICCHECK, PERIODICCHECK) : PERIODICCHECK;
+         periodicCheck = (TimeMan::maxNodes > 0) ? std::min(TimeMan::maxNodes, PERIODICCHECK) : PERIODICCHECK;
          const Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
          if (TimeMan::maxNodes > 0 && nodeCount > TimeMan::maxNodes) {
             stopFlag = true;
