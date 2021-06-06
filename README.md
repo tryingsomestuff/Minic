@@ -144,13 +144,13 @@ Minic random-mover stats are the following :
 ### CCRL
 #### 40/15
 - Minic 2.46 is tested at 3050 on the [CCRL 40/15 scale](http://ccrl.chessdom.com/ccrl/4040/)  
-- Minic 3.04 + Noisy Notch is ted at 3052 on the [CCRL 40/15 scale](http://ccrl.chessdom.com/ccrl/4040/)  
+- Minic 3.06 + Nocturnal Nadir is tested at 3234 on the [CCRL 40/15 scale](http://ccrl.chessdom.com/ccrl/4040/)  
 #### Blitz
 - Minic 2.33 is tested at 3161 on the [CCRL BLITZ 4CPU scale](http://ccrl.chessdom.com/ccrl/404/)  
 - Minic 2.43 is tested at 3115 on the [CCRL BLITZ 1CPU scale](http://ccrl.chessdom.com/ccrl/404/)  
 - Minic 3.06 + Nocturnal Nadir is tested at 3233 on the [CCRL BLITZ 1CPU scale](http://ccrl.chessdom.com/ccrl/404/)  
 #### FRC
-- Minic 3.06 + Nocturnal Nadir is tested at 3282 on the [CCRL FRC list](http://ccrl.chessdom.com/ccrl/404FRC/)  
+- Minic 3.06 + nocturnal nadir is tested at 3282 on the [CCRL FRC list](http://ccrl.chessdom.com/ccrl/404FRC/)  
 
 ### CEGT
 #### 40/4
