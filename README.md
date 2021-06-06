@@ -71,22 +71,22 @@ Minic is currently near the top20 with a Elo rating around 3200 at [CCRL scale](
 
 ### Various NNUE nets strenght 
 
-This table shows nets strength compared to HCE on an AVX2 hardware at short TC (10s+0.1). Results will be a lot different on older hardware where NNUE evaluation is much slower. I thus encourage users to only use Minic with NNUE nets on recent hardware.
+This table shows nets strength of various MInic nets on an AVX2 hardware at short TC (10s+0.1). Results will be a lot different on older hardware where NNUE evaluation is much slower. I thus encourage users to only use Minic with NNUE nets on recent hardware.
 
 ```
-Rank Name                                Elo     +/-   Games   Score    Draw 
-   1 minic_2.53_napping_nexus            270      12    3080   82.6%   25.7% 
-   2 minic_2.53_nascent_nutrient         165      11    3080   72.1%   29.9% 
-   3 minic_3.02_nettling_nemesis          79      10    3079   61.2%   29.3% 
-   4 minic_3.04_noisy_notch                4      10    3079   50.6%   35.6% 
-   5 minic_3.03_niggling_nymph           -33      10    3079   45.3%   35.1% 
-   6 minic_3.02_narcotized_nightshift    -47      10    3080   43.2%   34.4% 
-   7 minic_2.53                          -52      10    3079   42.6%   34.2% 
-   8 minic_2.46                          -64      10    3080   40.9%   32.7% 
-   9 minic_3.03                          -70      10    3079   40.1%   34.0% 
-  10 minic_3.04                          -78      10    3079   38.9%   32.5% 
-  11 minic_3.01_nefarious_nucleus       -127      11    3080   32.4%   26.4% 
-
+Rank Name                                 Elo     +/-   Games   Score    Draw 
+   1 minic_2.53_nn-97f742aaefcd           273      17    1488   82.8%   26.3% 
+   2 minic_2.53_napping_nexus             180      15    1488   73.8%   33.5% 
+   3 minic_2.53_nascent_nutrient           71      14    1488   60.1%   38.0% 
+   4 minic_3.02_nettling_nemesis           26      14    1488   53.8%   36.0% 
+   5 minic_3.08                            24      14    1488   53.4%   41.4% 
+   6 minic_3.07                             3      13    1488   50.4%   41.6% 
+   7 minic_3.06_nocturnal_nadir           -31      14    1487   45.5%   40.9% 
+   8 minic_3.05_nibbled_nutshell          -34      14    1487   45.2%   36.4% 
+   9 minic_3.04_noisy_notch               -65      14    1487   40.8%   40.2% 
+  10 minic_3.03_niggling_nymph           -110      15    1487   34.7%   34.9% 
+  11 minic_3.02_narcotized_nightshift    -120      15    1488   33.3%   34.8% 
+  12 minic_3.01_nefarious_nucleus        -211      17    1488   22.9%   25.7% 
 ```
 
 More details about those nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets.
