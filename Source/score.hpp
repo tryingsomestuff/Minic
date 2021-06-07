@@ -5,6 +5,8 @@
 
 struct Position;
 
+[[nodiscard]] inline float fiftyMoveRuleScaling(DepthType fifty){ return 1 - fifty / 100.f;}
+
 // Stockfish trick (two short in one int) is not compatible with Texel tuning !
 #ifndef WITH_EVALSCORE_AS_INT
 struct EvalScore {

@@ -197,13 +197,13 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
                   return context.drawScore(p, context._height); // drawScore take armageddon into account
                }
             }
-            // apply some scaling
+            // apply some scaling (note the fifty move rule scaling will be applied twice in those cases)
             else if (MEntry.t == MaterialHash::Ter_WhiteWin || MEntry.t == MaterialHash::Ter_BlackWin)
-               features.scalingFactor = (1 - p.fifty / 100.f) * EvalConfig::scalingFactorWin / 128.f;
+               features.scalingFactor = fiftyMoveRuleScaling(p.fifty) * EvalConfig::scalingFactorWin / 128.f;
             else if (MEntry.t == MaterialHash::Ter_HardToWin)
-               features.scalingFactor = (1 - p.fifty / 100.f) * EvalConfig::scalingFactorHardWin / 128.f;
+               features.scalingFactor = fiftyMoveRuleScaling(p.fifty) * EvalConfig::scalingFactorHardWin / 128.f;
             else if (MEntry.t == MaterialHash::Ter_LikelyDraw)
-               features.scalingFactor = (1 - p.fifty / 100.f) * EvalConfig::scalingFactorLikelyDraw / 128.f;
+               features.scalingFactor = fiftyMoveRuleScaling(p.fifty) * EvalConfig::scalingFactorLikelyDraw / 128.f;
          }
       }
    }

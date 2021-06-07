@@ -86,7 +86,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    const bool      specialQSearch = isInCheck || qRoot;
    const DepthType hashDepth      = specialQSearch ? 0 : -1;
    if (ttDepthOk && e.d >= hashDepth) { // if depth of TT entry is enough
-      if (!pvnode && ((bound == TT::B_alpha && e.s <= alpha) || (bound == TT::B_beta && e.s >= beta) || (bound == TT::B_exact))) {
+      if (!pvnode && p.fifty < SearchConfig::ttMaxFiftyValideDepth && ((bound == TT::B_alpha && e.s <= alpha) || (bound == TT::B_beta && e.s >= beta) || (bound == TT::B_exact))) {
          return adjustHashScore(e.s, height);
       }
    }
@@ -108,19 +108,19 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
          stats.incr(Stats::sid_ttschits);
          evalScore = e.e;
          /*
-            const Hash matHash = MaterialHash::getMaterialHash(p.mat);
-            if ( matHash != nullHash){
-               stats.incr(Stats::sid_materialTableHits);
-               const MaterialHash::MaterialHashEntry & MEntry = MaterialHash::materialHashTable[matHash];
-               data.gp = MEntry.gp;
-            }
-            else{
-               ScoreType matScoreW = 0;
-               ScoreType matScoreB = 0;
-               data.gp = gamePhase(p,matScoreW,matScoreB);
-               stats.incr(Stats::sid_materialTableMiss);
-            }
-            */
+         const Hash matHash = MaterialHash::getMaterialHash(p.mat);
+         if ( matHash != nullHash){
+            stats.incr(Stats::sid_materialTableHits);
+            const MaterialHash::MaterialHashEntry & MEntry = MaterialHash::materialHashTable[matHash];
+            data.gp = MEntry.gp;
+         }
+         else{
+            ScoreType matScoreW = 0;
+            ScoreType matScoreB = 0;
+            data.gp = gamePhase(p,matScoreW,matScoreB);
+            stats.incr(Stats::sid_materialTableMiss);
+         }
+         */
          data.gp = 0.5; // force mid game value in sorting ... affect only quiet move, so here check evasion ...
       }
       else {
