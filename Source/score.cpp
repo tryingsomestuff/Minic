@@ -7,7 +7,7 @@
 ScoreType Score(ScoreType score, const Position &p) {
    if (DynamicConfig::armageddon) return ScoreType(clampScore(score)); ///@todo better ?
    else
-      return ScoreType(clampScore(int(score * std::min(1.f, (110 - p.fifty) / 100.f))));
+      return ScoreType(clampScore(int(score * fiftyMoveRuleScaling(p.fifty))));
 }
 
 EvalScore EvalFeatures::SumUp() const {

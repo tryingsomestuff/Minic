@@ -90,14 +90,14 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          if (!pvnode) {
             // increase history bonus of this move
             if (/*!isInCheck &&*/ e.m != INVALIDMINIMOVE && Move2Type(e.m) == T_std) updateTables(*this, p, depth, height, e.m, bound, cmhPtr);
-            if (p.fifty < 92) return adjustHashScore(e.s, height);
+            if (p.fifty < SearchConfig::ttMaxFiftyValideDepth) return adjustHashScore(e.s, height);
          }
          ///@todo try returning also at pv node
          /*
             else{ // in "good" condition, also return a score at pvnode
-               if ( bound == TT::B_exact && e.d > 3*depth/2 && p.fifty < 92) return adjustHashScore(e.s, height);
+               if ( bound == TT::B_exact && e.d > 3*depth/2 && p.fifty < SearchConfig::ttMaxFiftyValideDepth) return adjustHashScore(e.s, height);
             }
-            */
+         */
       }
    }
 
@@ -134,9 +134,10 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // get a static score for the position.
    ScoreType evalScore;
    if (isInCheck) evalScore = -MATE + height;
-   else if (p.lastMove == NULLMOVE && height > 0)
-      evalScore = 2 * ScaleScore(EvalConfig::tempo, stack[p.halfmoves - 1].data.gp) -
-                  stack[p.halfmoves - 1].eval; // skip eval if nullmove just applied ///@todo wrong ! gp is 0 here so tempoMG must be == tempoEG
+   else if (p.lastMove == NULLMOVE && height > 0){
+      // skip eval if nullmove just applied ///@todo wrong ! gp is 0 here so tempoMG must be == tempoEG
+      evalScore = 2 * ScaleScore(EvalConfig::tempo, stack[p.halfmoves - 1].data.gp) - stack[p.halfmoves - 1].eval; 
+   }
    else {
       if (ttHit) { // if we had a TT hit (with or without associated move), we can use its eval instead of calling eval()
          stats.incr(Stats::sid_ttschits);
