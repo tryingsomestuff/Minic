@@ -150,7 +150,7 @@ Minic random-mover stats are the following :
 - Minic 2.43 is tested at 3115 on the [CCRL BLITZ 1CPU scale](http://ccrl.chessdom.com/ccrl/404/)  
 - Minic 3.06 + Nocturnal Nadir is tested at 3233 on the [CCRL BLITZ 1CPU scale](http://ccrl.chessdom.com/ccrl/404/)  
 #### FRC
-- Minic 3.06 + nocturnal nadir is tested at 3282 on the [CCRL FRC list](http://ccrl.chessdom.com/ccrl/404FRC/)  
+- Minic 3.08 + Negligible Nystagmus  is tested at 3293 on the [CCRL FRC list](http://ccrl.chessdom.com/ccrl/404FRC/)  
 
 ### CEGT
 #### 40/4
