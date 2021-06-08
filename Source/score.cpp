@@ -5,7 +5,8 @@
 #include "position.hpp"
 
 ScoreType Score(ScoreType score, const Position &p) {
-   if (DynamicConfig::armageddon) return ScoreType(clampScore(score)); ///@todo better ?
+   if (DynamicConfig::armageddon) 
+      return ScoreType(clampScore(score)); ///@todo better ?
    else
       return ScoreType(clampScore(int(score * fiftyMoveRuleScaling(p.fifty))));
 }
