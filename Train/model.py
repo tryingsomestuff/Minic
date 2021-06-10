@@ -128,6 +128,7 @@ class NNUE(pl.LightningModule):
   def step_(self, batch, batch_idx, loss_type):
     us, them, white, black, outcome, score = batch
   
+    #from SF values, shall be tuned
     net2score = 600
     in_scaling = 410
     out_scaling = 361
@@ -151,21 +152,6 @@ class NNUE(pl.LightningModule):
 
     self.log(loss_type, loss)
     return loss
-
-    nnue2score = 600
-    in_scaling = 410
-    out_scaling = 361
-
-    q = (self(us, them, white_indices, white_values, black_indices, black_values, psqt_indices, layer_stack_indices) * nnue2score / out_scaling).sigmoid()
-    t = outcome
-    p = (score / in_scaling).sigmoid()
-
-    loss_eval = (p - q).square().mean()
-    loss_result = (p - t).square().mean()
-    loss = self.lambda_ * loss_eval + (1.0 - self.lambda_) * loss_result
-
-    self.log(loss_type, loss)
-
 
   def training_step(self, batch, batch_idx):
     return self.step_(batch, batch_idx, 'train_loss')
