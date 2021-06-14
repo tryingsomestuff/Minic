@@ -113,19 +113,17 @@ This can explain some strange results during some testing process and in rating 
 ### Home test
 Here are some fast TC results of a gauntlet tournament (STC 10s+0.1) for Minic.
 ```
-Rank Name                          Elo     +/-   Games   Score    Draw 
-   0 minic_3.06_nocturnal_nadir      9       4   15775   51.3%   34.7% 
-   1 komodo-10                     206      17    1434   76.6%   28.1% 
-   2 stockfish.7                   206      16    1434   76.6%   32.2% 
-   3 Defenchess_2.2                 78      15    1434   61.0%   34.2% 
-   4 Halogen                        41      14    1435   55.9%   38.7% 
-   5 seer                          -23      14    1434   46.7%   36.8% 
-   6 minic_3.04_noisy_notch        -30      13    1434   45.7%   46.7% 
-   7 Koivisto                      -35      14    1435   44.9%   37.0% 
-   8 weiss                         -55      14    1433   42.1%   37.5% 
-   9 Vajolet2_2.8                  -88      15    1434   37.6%   34.2% 
-  10 minic_3.06                   -126      15    1434   32.6%   36.7% 
-  11 rodentIV                     -290      20    1434   15.9%   19.5% 
+Rank Name                Elo    +    - games score oppo. draws 
+   1 Pedone_linux_bmi2   173   17   17  1169   79%   -27   33% 
+   2 nemorino_nnue       162   17   17  1169   77%   -27   30% 
+   3 xiphos               77   16   15  1169   66%   -27   37% 
+   4 rofChade_bmi2        51   15   15  1169   62%   -27   38% 
+   5 Defenchess_2.2      -16   15   15  1169   52%   -27   38% 
+   6 minic_3.08          -27    6    6 10520   45%     3   34% 
+   7 Halogen             -28   15   15  1169   50%   -27   40% 
+   8 Winter             -114   16   16  1169   37%   -27   32% 
+   9 weiss              -124   16   16  1168   36%   -27   30% 
+  10 Vajolet2_2.8       -153   16   16  1169   32%   -27   29%
 ```
 
 ### Random mover
