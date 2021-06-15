@@ -231,17 +231,17 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                if (nullEThreat.h != nullHash && nullEThreat.m != INVALIDMINIMOVE) refutation = nullEThreat.m;
                //if (isMatedScore(nullscore)) mateThreat = true;
                if (nullscore >= beta) { // verification search
-                                        /*
-                       if ( (!isNotEndGame || depth > SearchConfig::nullMoveVerifDepth) && nullMoveMinPly == 0){
-                          stats.incr(Stats::sid_nullMoveTry3);
-                          nullMoveMinPly = height + 3*nullDepth/4;
-                          nullscore = pvs<false>(beta - 1, beta, p, nullDepth, evaluator, height+1, nullPV, seldepth, isInCheck, !cutNode, false);
-                          nullMoveMinPly = 0;
-                          if (stopFlag) return STOPSCORE;
-                          if (nullscore >= beta ) return stats.incr(Stats::sid_nullMove2), nullscore;
-                       }
-                       else{
-                           */
+                  /*
+                  if ( (!isNotEndGame || depth > SearchConfig::nullMoveVerifDepth) && nullMoveMinPly == 0){
+                     stats.incr(Stats::sid_nullMoveTry3);
+                     nullMoveMinPly = height + 3*nullDepth/4;
+                     nullscore = pvs<false>(beta - 1, beta, p, nullDepth, evaluator, height+1, nullPV, seldepth, isInCheck, !cutNode, false);
+                     nullMoveMinPly = 0;
+                     if (stopFlag) return STOPSCORE;
+                     if (nullscore >= beta ) return stats.incr(Stats::sid_nullMove2), nullscore;
+                  }
+                  else{
+                  */
                   return stats.incr(Stats::sid_nullMove), (isMateScore(nullscore) ? beta : nullscore);
                   //}
                }
@@ -386,7 +386,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                    const int pp = (p.board_const(Move2From(e.m)) + PieceShift) * NbSquare + to;
                    if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= HISTORY_MAX / 2 && cmhPtr[1][pp] >= HISTORY_MAX / 2) stats.incr(Stats::sid_CMHExtension), ++extension;
                }
-               */
+            */
             // advanced pawn push extension
             /*
                if (EXTENDMORE(extension) && isAdvancedPawnPush ) {
@@ -394,7 +394,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                    const BitBoard passed[2] = { BBTools::pawnPassed<Co_White>(pawns[Co_White], pawns[Co_Black]), BBTools::pawnPassed<Co_Black>(pawns[Co_Black], pawns[Co_White]) };
                    if ( SquareToBitboard(to) & passed[p.c] ) stats.incr(Stats::sid_pawnPushExtension), ++extension;
                }
-               */
+            */
             // threat on queen extension
             //if (EXTENDMORE(extension) && pvnode && (p.pieces_const<P_wq>(p.c) && isQuiet && PieceTools::getPieceType(p, Move2From(e.m)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, e.m, 0)) stats.incr(Stats::sid_queenThreatExtension), ++extension;
             // singular move extension
@@ -532,7 +532,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                const int pp = (p.board_const(Move2From(*it)) + PieceShift) * NbSquare + to;
                if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= HISTORY_MAX/2 && cmhPtr[1][pp] >= HISTORY_MAX/2) stats.incr(Stats::sid_CMHExtension), ++extension;
            }
-           */
+         */
          // advanced pawn push extension
          /*
            if (EXTENDMORE(extension) && isAdvancedPawnPush && killerT.isKiller(*it, height) ){
@@ -540,7 +540,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                const BitBoard passed[2] = { BBTools::pawnPassed<Co_White>(pawns[Co_White], pawns[Co_Black]), BBTools::pawnPassed<Co_Black>(pawns[Co_Black], pawns[Co_White]) };
                if ( (SquareToBitboard(to) & passed[p.c]) ) stats.incr(Stats::sid_pawnPushExtension), ++extension;
            }
-           */
+         */
          // threat on queen extension
          //if (EXTENDMORE(extension) && pvnode && firstMove && (p.pieces_const<P_wq>(p.c) && isQuiet && Move2Type(*it) == T_std && PieceTools::getPieceType(p, Move2From(*it)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, *it, 0)) stats.incr(Stats::sid_queenThreatExtension), ++extension;
          // move that lead to endgame
@@ -549,14 +549,14 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
               ++extension;
               stats.incr(Stats::sid_endGameExtension);
            }
-           */
+         */
          // extend if quiet with good history
          /*
            if ( EXTENDMORE(extension) && isQuiet && Move2Score(*it) > SearchConfig::historyExtensionThreshold){
               ++extension; 
               stats.incr(Stats::sid_goodHistoryExtension);
            }
-           */
+         */
       }
       // pvs
       if (validMoveCount < (2 /*+2*rootnode*/) || !SearchConfig::doPVS)
