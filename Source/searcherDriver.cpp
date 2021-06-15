@@ -210,7 +210,7 @@ void Searcher::searchDriver() {
 #else
          contempt = 0;
 #endif
-         contempt += ScoreType(std::round(25 * std::tanh(currentScore[multi] / 400.f)));
+         contempt += ScoreType(std::round(25 * std::tanh(currentScore[multi] / 400.f))); // slow but ok here
          Logging::LogIt(Logging::logInfo) << "Dynamic contempt " << contempt;
 
          // initialize aspiration window loop variables
@@ -307,7 +307,7 @@ void Searcher::searchDriver() {
 
                // update a "variability" measure to scale remaining time on it ///@todo tune this more
                if (depth > 12 && pvLoc.size()) {
-                  if (getSearchData().moves[depth] != getSearchData().moves[depth - 1]) MoveDifficultyUtil::variability *= (1.f + float(depth) / 100);
+                  if (getSearchData().moves[depth] != getSearchData().moves[depth - 1]) MoveDifficultyUtil::variability *= (1.f + float(depth) / 100); // slow but ok here
                   else
                      MoveDifficultyUtil::variability *= 0.97f;
                   Logging::LogIt(Logging::logInfo) << "Variability :" << MoveDifficultyUtil::variability;

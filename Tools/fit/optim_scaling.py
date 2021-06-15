@@ -12,8 +12,8 @@ nb_best_test = 15
 nb_tested_config = 3
 
 time_control='5+0.05'
-to_be_tuned='aspirationDepthCoef'
-test_range = range(0,5,1)
+to_be_tuned='NNUEScaling'
+test_range = range(10,384,10)
 
 class Command(object):
     def __init__(self, cmd):

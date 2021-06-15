@@ -77,7 +77,7 @@ extern CONST_TEXEL_TUNING EvalScore MOB[6][15];
 // This is of course Stockfish inspired
 extern CONST_TEXEL_TUNING EvalScore initiative[4];
 
-// scaling (/128 inside eval)
+// scaling (/128.f inside eval)
 extern CONST_TEXEL_TUNING ScoreType scalingFactorWin;
 extern CONST_TEXEL_TUNING ScoreType scalingFactorHardWin;
 extern CONST_TEXEL_TUNING ScoreType scalingFactorLikelyDraw;
