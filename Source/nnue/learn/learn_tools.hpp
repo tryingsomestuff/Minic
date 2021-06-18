@@ -12,7 +12,7 @@
 
 struct Position;
 
-// in order for Minic data generation and use to stay compatible with SF one,
+// For Minic data generation and use to stay compatible with SF one,
 // I need to handle SF move encoding in the binary format ...
 // So here is some SF extracted Move usage things
 
@@ -107,10 +107,6 @@ constexpr Square to_sq(Move m) { return Square(m & 0x3F); }
 constexpr MoveType type_of(Move m) { return MoveType(m & (3 << 14)); }
 
 constexpr Piece promotion_type(Move m) { return Piece(((m >> 12) & 3) + P_wn); }
-
-constexpr Square flip_rank(Square s) { return Square(s ^ Sq_a8); }
-
-constexpr Square flip_file(Square s) { return Square(s ^ Sq_h1); }
 
 } // namespace FromSF
 

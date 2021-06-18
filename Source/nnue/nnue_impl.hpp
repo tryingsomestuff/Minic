@@ -448,8 +448,8 @@ template<typename NT, size_t dim0, size_t dim1, bool Q> struct BigAffine {
    }
 };
 
-constexpr size_t inputLayerSize = 12 * 64 * 64;
-constexpr size_t firstInnerLayerSize      = 128;
+constexpr size_t inputLayerSize      = 12 * 64 * 64;
+constexpr size_t firstInnerLayerSize = 128;
 
 template<typename NT, bool Q> struct NNUEWeights {
    BigAffine<NT, inputLayerSize, firstInnerLayerSize, Q> w {};
@@ -572,28 +572,28 @@ template<> struct them_<Co_White> { static constexpr Color value = Co_Black; };
 template<> struct them_<Co_Black> { static constexpr Color value = Co_White; };
 
 template<typename T, typename U> struct sided {
-   using return_type = U;
+   using returnType = U;
 
    T&       cast() { return static_cast<T&>(*this); }
    const T& cast() const { return static_cast<const T&>(*this); }
 
-   template<Color c> return_type& us() {
+   template<Color c> returnType& us() {
       if constexpr (c == Co_White) { return cast().white; }
       else {
          return cast().black;
       }
    }
 
-   template<Color c> const return_type& us() const {
+   template<Color c> const returnType& us() const {
       if constexpr (c == Co_White) { return cast().white; }
       else {
          return cast().black;
       }
    }
 
-   template<Color c> return_type& them() { return us<them_<c>::value>(); }
+   template<Color c> returnType& them() { return us<them_<c>::value>(); }
 
-   template<Color c> const return_type& them() const { return us<them_<c>::value>(); }
+   template<Color c> const returnType& them() const { return us<them_<c>::value>(); }
 
   private:
    sided() {};
