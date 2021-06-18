@@ -27,7 +27,7 @@ inline void init() {
    const bool shallLoadNNUE = !DynamicConfig::NNUEFile.empty() && DynamicConfig::NNUEFile != "none";
    if (shallLoadNNUE) {
       Logging::LogIt(Logging::logInfoPrio) << "Loading NNUE net " << DynamicConfig::NNUEFile;
-      loadOk = nnue::half_kp_weights<nnueNType, quantization>::load(DynamicConfig::NNUEFile, nnue::half_kp_eval<nnueNType, quantization>::weights);
+      loadOk = nnue::NNUEWeights<nnueNType, quantization>::load(DynamicConfig::NNUEFile, nnue::NNUEEval<nnueNType, quantization>::weights);
    }
    else {
       Logging::LogIt(Logging::logInfoPrio) << "No NNUE net given";
@@ -47,52 +47,52 @@ inline void init() {
 
 } // namespace NNUEWrapper
 
-using NNUEEvaluator = nnue::half_kp_eval<NNUEWrapper::nnueNType, NNUEWrapper::quantization>;
+using NNUEEvaluator = nnue::NNUEEval<NNUEWrapper::nnueNType, NNUEWrapper::quantization>;
 
-namespace feature_idx {
+namespace FeatureIdx {
 
 constexpr size_t major = 64 * 12;
 constexpr size_t minor = 64;
 
-constexpr size_t us_pawn_offset   = 0;
-constexpr size_t us_knight_offset = us_pawn_offset + minor;
-constexpr size_t us_bishop_offset = us_knight_offset + minor;
-constexpr size_t us_rook_offset   = us_bishop_offset + minor;
-constexpr size_t us_queen_offset  = us_rook_offset + minor;
-constexpr size_t us_king_offset   = us_queen_offset + minor;
+constexpr size_t usPawnOffset   = 0;
+constexpr size_t usKnightOffset = usPawnOffset + minor;
+constexpr size_t usBishopOffset = usKnightOffset + minor;
+constexpr size_t usRookOffset   = usBishopOffset + minor;
+constexpr size_t usQueenOffset  = usRookOffset + minor;
+constexpr size_t usKingOffset   = usQueenOffset + minor;
 
-constexpr size_t them_pawn_offset   = us_king_offset + minor;
-constexpr size_t them_knight_offset = them_pawn_offset + minor;
-constexpr size_t them_bishop_offset = them_knight_offset + minor;
-constexpr size_t them_rook_offset   = them_bishop_offset + minor;
-constexpr size_t them_queen_offset  = them_rook_offset + minor;
-constexpr size_t them_king_offset   = them_queen_offset + minor;
+constexpr size_t themPawnOffset   = usKingOffset + minor;
+constexpr size_t themKnightOffset = themPawnOffset + minor;
+constexpr size_t themBishopOffset = themKnightOffset + minor;
+constexpr size_t themRookOffset   = themBishopOffset + minor;
+constexpr size_t themQueenOffset  = themRookOffset + minor;
+constexpr size_t themKingOffset   = themQueenOffset + minor;
 
-constexpr size_t us_offset(Piece pt) {
+constexpr size_t usOffset(Piece pt) {
    switch (pt) {
-      case P_wp: return us_pawn_offset;
-      case P_wn: return us_knight_offset;
-      case P_wb: return us_bishop_offset;
-      case P_wr: return us_rook_offset;
-      case P_wq: return us_queen_offset;
-      case P_wk: return us_king_offset;
-      default: return us_pawn_offset;
+      case P_wp: return usPawnOffset;
+      case P_wn: return usKnightOffset;
+      case P_wb: return usBishopOffset;
+      case P_wr: return usRookOffset;
+      case P_wq: return usQueenOffset;
+      case P_wk: return usKingOffset;
+      default: return usPawnOffset;
    }
 }
 
-constexpr size_t them_offset(Piece pt) {
+constexpr size_t themOffset(Piece pt) {
    switch (pt) {
-      case P_wp: return them_pawn_offset;
-      case P_wn: return them_knight_offset;
-      case P_wb: return them_bishop_offset;
-      case P_wr: return them_rook_offset;
-      case P_wq: return them_queen_offset;
-      case P_wk: return them_king_offset;
-      default: return them_pawn_offset;
+      case P_wp: return themPawnOffset;
+      case P_wn: return themKnightOffset;
+      case P_wb: return themBishopOffset;
+      case P_wr: return themRookOffset;
+      case P_wq: return themQueenOffset;
+      case P_wk: return themKingOffset;
+      default: return themPawnOffset;
    }
 }
 
-} // namespace feature_idx
+} // namespace FeatureIdx
 
 #ifdef WITH_DATA2BIN
 #include "learn/convert.hpp"

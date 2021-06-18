@@ -92,31 +92,6 @@ class PRNG {
    }
 };
 
-// async version of PRNG
-struct AsyncPRNG {
-   AsyncPRNG(): prng() {}
-   AsyncPRNG(uint64_t seed): prng(seed) { assert(seed); }
-   AsyncPRNG(const std::string& seed): prng(seed) {}
-   // [ASYNC] Extract one random number.
-   template<typename T> T rand() {
-      std::unique_lock<std::mutex> lk(mutex);
-      return prng.rand<T>();
-   }
-
-   // [ASYNC] Returns a random number from 0 to n-1. (Not uniform distribution, but this is enough in reality)
-   uint64_t rand(uint64_t n) {
-      std::unique_lock<std::mutex> lk(mutex);
-      return prng.rand(n);
-   }
-
-   // Return the random seed used internally.
-   uint64_t get_seed() const { return prng.get_seed(); }
-
-  protected:
-   std::mutex mutex;
-   PRNG       prng;
-};
-
 enum MoveType { NORMAL, PROMOTION = 1 << 14, ENPASSANT = 2 << 14, CASTLING = 3 << 14 };
 
 template<MoveType T> constexpr MiniMove MakeMove(Square from, Square to, Piece prom = P_wn) {
@@ -138,26 +113,6 @@ constexpr Square flip_rank(Square s) { return Square(s ^ Sq_a8); }
 constexpr Square flip_file(Square s) { return Square(s ^ Sq_h1); }
 
 } // namespace FromSF
-
-namespace Path {
-// Combine the path name and file name and return it.
-// If the folder name is not an empty string, append it if there is no'/' or'\\' at the end.
-inline std::string Combine(const std::string& folder, const std::string& filename) {
-   if (folder.length() >= 1 && *folder.rbegin() != '/' && *folder.rbegin() != '\\') return folder + "/" + filename;
-
-   return folder + filename;
-}
-
-// Get the file name part (excluding the folder name) from the full path expression.
-inline std::string GetFileName(const std::string& path) {
-   // I don't know which "\" or "/" is used.
-   auto path_index1 = path.find_last_of("\\") + 1;
-   auto path_index2 = path.find_last_of("/") + 1;
-   auto path_index  = std::max(path_index1, path_index2);
-
-   return path.substr(path_index);
-}
-} // namespace Path
 
 struct PackedSfen {
    uint8_t data[32];
@@ -197,9 +152,5 @@ int set_from_packed_sfen(Position& p, PackedSfen& sfen);
 MiniMove ToSFMove(const Position& p, Square from, Square to, MType type);
 
 MiniMove FromSFMove(const Position& p, MiniMove sfmove);
-
-namespace Dependency {
-inline int mkdir(std::string dir_name) { return std::filesystem::create_directory(dir_name); }
-} // namespace Dependency
 
 #endif // WITH_DATA2BIN
