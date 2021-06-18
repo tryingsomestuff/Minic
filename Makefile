@@ -22,13 +22,13 @@ config:
 	mkdir -p Tourney
 	if [ ! -e $(ROOT_DIR)/Tourney/nn.bin ]; then \
 	   echo "No net, downloading..." \
-	   && wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/$$EMBEDEDNNUENAME -O Tourney/nn.bin ;\
+	   && wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/$$EMBEDEDNNUENAME -O Tourney/nn.bin --no-check-certificate;\
 	fi
 	NETMD5=$$(md5sum $(ROOT_DIR)/Tourney/nn.bin | awk '{print $$1}') \
 	&& echo "Net md5: $${NETMD5}" \
 	&& if [ "$${NETMD5}" != "68c503112d88672b4de0e4641feb884e" ]; then \
 	   echo "Bad net (md5: $${NETMD5}), downloading..." \
-	   && wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/$$EMBEDEDNNUENAME -O Tourney/nn.bin ;\
+	   && wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/$$EMBEDEDNNUENAME -O Tourney/nn.bin --no-check-certificate ;\
 	fi
 
 fathom:
