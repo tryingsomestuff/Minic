@@ -238,14 +238,14 @@ bool readMove(const Position &p, const std::string &ss, Square &from, Square &to
 }
 
 float gamePhase(const Position &p, ScoreType &matScoreW, ScoreType &matScoreB) {
-   const float totalMatScore = 2.f * *absValues[P_wq] + 4.f * *absValues[P_wr] + 4.f * *absValues[P_wb] + 4.f * *absValues[P_wn] +
-                               16.f * *absValues[P_wp]; // cannot be static for tuning process ...
-   const ScoreType matPieceScoreW = p.mat[Co_White][M_q] * *absValues[P_wq] + p.mat[Co_White][M_r] * *absValues[P_wr] +
-                                    p.mat[Co_White][M_b] * *absValues[P_wb] + p.mat[Co_White][M_n] * *absValues[P_wn];
-   const ScoreType matPieceScoreB = p.mat[Co_Black][M_q] * *absValues[P_wq] + p.mat[Co_Black][M_r] * *absValues[P_wr] +
-                                    p.mat[Co_Black][M_b] * *absValues[P_wb] + p.mat[Co_Black][M_n] * *absValues[P_wn];
-   const ScoreType matPawnScoreW = p.mat[Co_White][M_p] * *absValues[P_wp];
-   const ScoreType matPawnScoreB = p.mat[Co_Black][M_p] * *absValues[P_wp];
+   const float totalMatScore = 2.f * absValue(P_wq) + 4.f * absValue(P_wr) + 4.f * absValue(P_wb) + 4.f * absValue(P_wn) +
+                               16.f * absValue(P_wp); // cannot be static for tuning process ...
+   const ScoreType matPieceScoreW = p.mat[Co_White][M_q] * absValue(P_wq) + p.mat[Co_White][M_r] * absValue(P_wr) +
+                                    p.mat[Co_White][M_b] * absValue(P_wb) + p.mat[Co_White][M_n] * absValue(P_wn);
+   const ScoreType matPieceScoreB = p.mat[Co_Black][M_q] * absValue(P_wq) + p.mat[Co_Black][M_r] * absValue(P_wr) +
+                                    p.mat[Co_Black][M_b] * absValue(P_wb) + p.mat[Co_Black][M_n] * absValue(P_wn);
+   const ScoreType matPawnScoreW = p.mat[Co_White][M_p] * absValue(P_wp);
+   const ScoreType matPawnScoreB = p.mat[Co_Black][M_p] * absValue(P_wp);
    matScoreW = matPieceScoreW + matPawnScoreW;
    matScoreB = matPieceScoreB + matPawnScoreB;
    return (matScoreW + matScoreB) / totalMatScore; // based on MG values

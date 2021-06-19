@@ -64,7 +64,7 @@ template<Color C> void MoveSorter::computeScore(Move& m) const {
             ///@todo give another try to tune those ratio!
             const Piece pp = p.board_const(from);
             s += context.historyT.history[p.c][from][to] / 4;        // +/- HISTORY_MAX = 1000
-            s += context.historyT.historyP[pp + PieceShift][to] / 4; // +/- HISTORY_MAX = 1000
+            s += context.historyT.historyP[PieceIdx(pp)][to] / 4;    // +/- HISTORY_MAX = 1000
             s += context.getCMHScore(p, from, to, cmhPtr) / 2;       // +/- HISTORY_MAX = 1000
             if (!isInCheck) {
                if (refutation != INVALIDMINIMOVE && from == Move2To(refutation) && context.SEE_GE(p, m, -80))

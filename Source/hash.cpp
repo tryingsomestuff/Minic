@@ -25,7 +25,7 @@ Hash computeHash(const Position &p) {
    //++ThreadPool::instance().main().stats.counters[Stats::sid_hashComputed]; // shall of course never happend !
    for (Square k = 0; k < NbSquare; ++k) { ///todo try if BB is faster here ?
       const Piece pp = p.board_const(k);
-      if (pp != P_none) p.h ^= Zobrist::ZT[k][pp + PieceShift];
+      if (pp != P_none) p.h ^= Zobrist::ZT[k][PieceIdx(pp)];
    }
    if (p.ep != INVALIDSQUARE) p.h ^= Zobrist::ZT[p.ep][NbPiece];
    p.h ^= Zobrist::ZTCastling[p.castling];
@@ -45,13 +45,13 @@ Hash computePHash(const Position &p) {
    if (p.ph != nullHash) return p.ph;
    //++ThreadPool::instance().main().stats.counters[Stats::sid_hashComputed]; // shall of course never happend !
    BitBoard bb = p.whitePawn();
-   while (bb) { p.ph ^= Zobrist::ZT[BB::popBit(bb)][P_wp + PieceShift]; }
+   while (bb) { p.ph ^= Zobrist::ZT[BB::popBit(bb)][PieceIdx(P_wp)]; }
    bb = p.blackPawn();
-   while (bb) { p.ph ^= Zobrist::ZT[BB::popBit(bb)][P_bp + PieceShift]; }
+   while (bb) { p.ph ^= Zobrist::ZT[BB::popBit(bb)][PieceIdx(P_bp)]; }
    bb = p.whiteKing();
-   while (bb) { p.ph ^= Zobrist::ZT[BB::popBit(bb)][P_wk + PieceShift]; }
+   while (bb) { p.ph ^= Zobrist::ZT[BB::popBit(bb)][PieceIdx(P_wk)]; }
    bb = p.blackKing();
-   while (bb) { p.ph ^= Zobrist::ZT[BB::popBit(bb)][P_bk + PieceShift]; }
+   while (bb) { p.ph ^= Zobrist::ZT[BB::popBit(bb)][PieceIdx(P_bk)]; }
 #ifdef DEBUG_PHASH
    if (h != nullHash && h != p.ph) {
       Logging::LogIt(Logging::logFatal) << "Pawn Hash error " << ToString(p.lastMove) << ToString(p, true) << p.ph << " != " << h;

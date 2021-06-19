@@ -212,25 +212,25 @@ EvalScore Imbalance(const Position::Material &mat, Color c) {
 
 void InitMaterialScore(bool display) {
    if (display) Logging::LogIt(Logging::logInfo) << "Material hash init";
-   const float totalMatScore = 2.f * *absValues[P_wq] + 4.f * *absValues[P_wr] + 4.f * *absValues[P_wb] + 4.f * *absValues[P_wn] + 16.f * *absValues[P_wp];
+   const float totalMatScore = 2.f * absValue(P_wq) + 4.f * absValue(P_wr) + 4.f * absValue(P_wb) + 4.f * absValue(P_wn) + 16.f * absValue(P_wp);
    for (int k = 0; k < TotalMat; ++k) {
       const Position::Material mat = indexToMat(k);
       // MG
-      const ScoreType matPieceScoreW = mat[Co_White][M_q] * *absValues[P_wq] + mat[Co_White][M_r] * *absValues[P_wr] +
-                                       mat[Co_White][M_b] * *absValues[P_wb] + mat[Co_White][M_n] * *absValues[P_wn];
-      const ScoreType matPieceScoreB = mat[Co_Black][M_q] * *absValues[P_wq] + mat[Co_Black][M_r] * *absValues[P_wr] +
-                                       mat[Co_Black][M_b] * *absValues[P_wb] + mat[Co_Black][M_n] * *absValues[P_wn];
-      const ScoreType matPawnScoreW = mat[Co_White][M_p] * *absValues[P_wp];
-      const ScoreType matPawnScoreB = mat[Co_Black][M_p] * *absValues[P_wp];
+      const ScoreType matPieceScoreW = mat[Co_White][M_q] * absValue(P_wq) + mat[Co_White][M_r] * absValue(P_wr) +
+                                       mat[Co_White][M_b] * absValue(P_wb) + mat[Co_White][M_n] * absValue(P_wn);
+      const ScoreType matPieceScoreB = mat[Co_Black][M_q] * absValue(P_wq) + mat[Co_Black][M_r] * absValue(P_wr) +
+                                       mat[Co_Black][M_b] * absValue(P_wb) + mat[Co_Black][M_n] * absValue(P_wn);
+      const ScoreType matPawnScoreW = mat[Co_White][M_p] * absValue(P_wp);
+      const ScoreType matPawnScoreB = mat[Co_Black][M_p] * absValue(P_wp);
       const ScoreType matScoreW     = matPieceScoreW + matPawnScoreW;
       const ScoreType matScoreB     = matPieceScoreB + matPawnScoreB;
       // EG
-      const ScoreType matPieceScoreWEG = mat[Co_White][M_q] * *absValuesEG[P_wq] + mat[Co_White][M_r] * *absValuesEG[P_wr] +
-                                         mat[Co_White][M_b] * *absValuesEG[P_wb] + mat[Co_White][M_n] * *absValuesEG[P_wn];
-      const ScoreType matPieceScoreBEG = mat[Co_Black][M_q] * *absValuesEG[P_wq] + mat[Co_Black][M_r] * *absValuesEG[P_wr] +
-                                         mat[Co_Black][M_b] * *absValuesEG[P_wb] + mat[Co_Black][M_n] * *absValuesEG[P_wn];
-      const ScoreType matPawnScoreWEG = mat[Co_White][M_p] * *absValuesEG[P_wp];
-      const ScoreType matPawnScoreBEG = mat[Co_Black][M_p] * *absValuesEG[P_wp];
+      const ScoreType matPieceScoreWEG = mat[Co_White][M_q] * absValueEG(P_wq) + mat[Co_White][M_r] * absValueEG(P_wr) +
+                                         mat[Co_White][M_b] * absValueEG(P_wb) + mat[Co_White][M_n] * absValueEG(P_wn);
+      const ScoreType matPieceScoreBEG = mat[Co_Black][M_q] * absValueEG(P_wq) + mat[Co_Black][M_r] * absValueEG(P_wr) +
+                                         mat[Co_Black][M_b] * absValueEG(P_wb) + mat[Co_Black][M_n] * absValueEG(P_wn);
+      const ScoreType matPawnScoreWEG = mat[Co_White][M_p] * absValueEG(P_wp);
+      const ScoreType matPawnScoreBEG = mat[Co_Black][M_p] * absValueEG(P_wp);
       const ScoreType matScoreWEG     = matPieceScoreWEG + matPawnScoreWEG;
       const ScoreType matScoreBEG     = matPieceScoreBEG + matPawnScoreBEG;
 #ifdef WITH_TEXEL_TUNING

@@ -23,18 +23,18 @@ ScoreType Searcher::SEE(const Position& p, const Move& m) const {
 
    Piece pp = PieceTools::getPieceType(p, from);
    if (mtype == T_ep) {
-      swapList[nCapt]    = Values[P_wp + PieceShift];
-      current_target_val = Values[pp + PieceShift];
+      swapList[nCapt]    = value(P_wp);
+      current_target_val = value(pp);
       occupation_mask &= ~SquareToBitboard(p.ep);
    }
    else {
       swapList[nCapt] = PieceTools::getAbsValue(p, to);
       if (promPossible && pp == P_wp) {
-         swapList[nCapt] += Values[promShift(mtype) + PieceShift] - Values[P_wp + PieceShift];
-         current_target_val = Values[promShift(mtype) + PieceShift];
+         swapList[nCapt] += value(promShift(mtype)) - value(P_wp);
+         current_target_val = value(promShift(mtype));
       }
       else
-         current_target_val = Values[pp + PieceShift];
+         current_target_val = value(pp);
    }
    nCapt++;
 
@@ -66,11 +66,11 @@ ScoreType Searcher::SEE(const Position& p, const Move& m) const {
 
       swapList[nCapt] = -swapList[nCapt - 1] + current_target_val;
       if (promPossible && pp == P_wp) {
-         swapList[nCapt] += Values[P_wq + PieceShift] - Values[P_wp + PieceShift];
-         current_target_val = Values[P_wq + PieceShift];
+         swapList[nCapt] += value(P_wq) - value(P_wp);
+         current_target_val = value(P_wq);
       }
       else
-         current_target_val = Values[pp + PieceShift];
+         current_target_val = value(pp);
 
       nCapt++;
       attackers &= ~SquareToBitboard(from);
@@ -106,9 +106,9 @@ bool Searcher::SEE_GE(const Position & p, const Move & m, ScoreType threshold) c
     bool prom = promPossible && pp == P_wp;
     Piece nextVictim  = prom ? P_wq : pp; ///@todo other prom
     const Color us    = p.c;
-    ScoreType balance = (type==T_ep ? Values[P_wp+PieceShift] : PieceTools::getAbsValue(p,to)) - threshold + (prom?(Values[P_wq+PieceShift]-Values[P_wp+PieceShift]):0); // The opponent may be able to recapture so this is the best result we can hope for.
+    ScoreType balance = (type==T_ep ? value(P_wp) : PieceTools::getAbsValue(p,to)) - threshold + (prom?(value(P_wq)-value(P_wp)):0); // The opponent may be able to recapture so this is the best result we can hope for.
     if (balance < 0) return false;
-    balance -= Values[nextVictim+PieceShift]; // Now assume the worst possible result: that the opponent can capture our piece for free.
+    balance -= value(nextVictim); // Now assume the worst possible result: that the opponent can capture our piece for free.
     if (balance >= 0) return true;
     Position p2 = p;
     if (!applyMove(p2, m, true)) return false;
@@ -127,8 +127,8 @@ bool Searcher::SEE_GE(const Position & p, const Move & m, ScoreType threshold) c
               if (!applyMove(p3,mm,true)) continue;
               validThreatFound = true;
               nextVictim = prom ? P_wq : pp; // CAREFULL here :: we don't care black or white, always use abs(value) next !!!
-              if (prom) balance -= Values[P_wp + PieceShift];
-              balance = -balance - 1 - Values[nextVictim+PieceShift]; ///@todo other prom ?
+              if (prom) balance -= value(P_wp);
+              balance = -balance - 1 - value(nextVictim); ///@todo other prom ?
               if (balance >= 0 && nextVictim != P_wk) endOfSEE = true;
               p2 = p3;
            }

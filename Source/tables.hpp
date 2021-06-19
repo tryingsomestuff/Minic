@@ -42,10 +42,10 @@ struct HistoryT {
          const ScoreType s  = S * HSCORE(depth);
          const Piece     pp = p.board_const(from);
          history[c][from][to] += s - HISTORY_DIV(history[c][from][to] * (int)std::abs(s));
-         historyP[pp + PieceShift][to] += s - HISTORY_DIV(historyP[pp + PieceShift][to] * (int)std::abs(s));
+         historyP[PieceIdx(pp)][to] += s - HISTORY_DIV(historyP[PieceIdx(pp)][to] * (int)std::abs(s));
          for (int i = 0; i < MAX_CMH_PLY; ++i) {
             if (cmhPtr[i]) {
-               ScoreType& item = cmhPtr[i][(p.board_const(from) + PieceShift) * NbSquare + to];
+               ScoreType& item = cmhPtr[i][PieceIdx(p.board_const(from)) * NbSquare + to];
                item += s - HISTORY_DIV(item * (int)std::abs(s));
             }
          }
