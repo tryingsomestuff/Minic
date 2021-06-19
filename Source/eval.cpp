@@ -90,7 +90,7 @@ template<Color C> inline void evalPawnPasser(const Position &p, BitBoard pieceBB
       const bool unstoppable = (p.mat[~C][M_t] == 0) && ((chebyshevDistance(p.king[~C], PromotionSquare<C>(k)) - int(p.c != C)) >
                                                          std::min(Square(5), chebyshevDistance(PromotionSquare<C>(k), k)));
       if (unstoppable)
-         score += ColorSignHelper<C>() * (Values[P_wr + PieceShift] - Values[P_wp + PieceShift]); // yes rook not queen to force promotion asap
+         score += ColorSignHelper<C>() * (value(P_wr) - value(P_wp)); // yes rook not queen to force promotion asap
       else
          score += (EvalConfig::passerBonus[ColorRank<C>(k)] + kingNearBonus) * ColorSignHelper<C>();
    }
@@ -213,9 +213,9 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
       ScoreType matScoreB = 0;
       data.gp = gamePhase(p, matScoreW, matScoreB);
       features.scores[F_material] += EvalScore(
-          (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * *absValuesEG[P_wq] + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * *absValuesEG[P_wr] +
-              (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * *absValuesEG[P_wb] +
-              (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * *absValuesEG[P_wn] + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * *absValuesEG[P_wp],
+          (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * absValueEG(P_wq) + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * absValueEG(P_wr) +
+              (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * absValueEG(P_wb) +
+              (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * absValueEG(P_wn) + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * absValueEG(P_wp),
           matScoreW - matScoreB);
       ++context.stats.counters[Stats::sid_materialTableMiss];
    }

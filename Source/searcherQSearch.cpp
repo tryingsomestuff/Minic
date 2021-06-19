@@ -43,8 +43,8 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Posi
 }
 
 inline ScoreType qDeltaMargin(const Position& p) {
-   const ScoreType delta = (p.pieces_const(p.c, P_wp) & BB::seventhRank[p.c]) ? Values[P_wq + PieceShift] : Values[P_wp + PieceShift];
-   return delta + Values[P_wq + PieceShift];
+   const ScoreType delta = (p.pieces_const(p.c, P_wp) & BB::seventhRank[p.c]) ? value(P_wq) : value(P_wp);
+   return delta + value(P_wq);
 }
 
 ScoreType Searcher::qsearch(ScoreType       alpha,
@@ -210,8 +210,8 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
             continue;
          }
          if (SearchConfig::doQFutility && staticScore + SearchConfig::qfutilityMargin[evalScoreIsHashScore] +
-                                                  (isPromotionCap(*it) ? (Values[P_wq + PieceShift] - Values[P_wp + PieceShift]) : 0) +
-                                                  (Move2Type(*it) == T_ep ? Values[P_wp + PieceShift] : PieceTools::getAbsValue(p, Move2To(*it))) <=
+                                                  (isPromotionCap(*it) ? (value(P_wq) - value(P_wp)) : 0) +
+                                                  (Move2Type(*it) == T_ep ? value(P_wp) : PieceTools::getAbsValue(p, Move2To(*it))) <=
                                               alphaInit) {
             stats.incr(Stats::sid_qfutility);
             continue;

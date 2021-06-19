@@ -31,7 +31,7 @@ void Searcher::getCMHPtr(const unsigned int ply, CMHPtrArray& cmhPtr) {
       assert(ply - k < MAX_PLY && int(ply) - int(k) >= 0);
       if (ply > k && VALIDMOVE(stack[ply - k].p.lastMove)) {
          const Square to = Move2To(stack[ply - k].p.lastMove);
-         cmhPtr[k]       = historyT.counter_history[stack[ply - k - 1].p.board_const(to) + PieceShift][to];
+         cmhPtr[k]       = historyT.counter_history[PieceIdx(stack[ply - k - 1].p.board_const(to))][to];
       }
    }
 }
@@ -39,7 +39,7 @@ void Searcher::getCMHPtr(const unsigned int ply, CMHPtrArray& cmhPtr) {
 ScoreType Searcher::getCMHScore(const Position& p, const Square from, const Square to, const CMHPtrArray& cmhPtr) const {
    ScoreType ret = 0;
    for (int i = 0; i < MAX_CMH_PLY; i++) {
-      if (cmhPtr[i]) { ret += cmhPtr[i][(p.board_const(from) + PieceShift) * NbSquare + to]; }
+      if (cmhPtr[i]) { ret += cmhPtr[i][PieceIdx(p.board_const(from)) * NbSquare + to]; }
    }
    return ret;
 }

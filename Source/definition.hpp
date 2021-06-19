@@ -251,20 +251,24 @@ inline void SymetrizeValue() {
 #endif
 
 const ScoreType        dummyScore     = 0;
-const ScoreType* const absValues[7]   = {&dummyScore,
-                                         &Values[P_wp + PieceShift],
-                                         &Values[P_wn + PieceShift],
-                                         &Values[P_wb + PieceShift],
-                                         &Values[P_wr + PieceShift],
-                                         &Values[P_wq + PieceShift],
-                                         &Values[P_wk + PieceShift]};
-const ScoreType* const absValuesEG[7] = {&dummyScore,
-                                         &ValuesEG[P_wp + PieceShift],
-                                         &ValuesEG[P_wn + PieceShift],
-                                         &ValuesEG[P_wb + PieceShift],
-                                         &ValuesEG[P_wr + PieceShift],
-                                         &ValuesEG[P_wq + PieceShift],
-                                         &ValuesEG[P_wk + PieceShift]};
+const ScoreType* const absValues_[7]   = {&dummyScore,
+                                          &Values[P_wp + PieceShift],
+                                          &Values[P_wn + PieceShift],
+                                          &Values[P_wb + PieceShift],
+                                          &Values[P_wr + PieceShift],
+                                          &Values[P_wq + PieceShift],
+                                          &Values[P_wk + PieceShift]};
+const ScoreType* const absValuesEG_[7] = {&dummyScore,
+                                          &ValuesEG[P_wp + PieceShift],
+                                          &ValuesEG[P_wn + PieceShift],
+                                          &ValuesEG[P_wb + PieceShift],
+                                          &ValuesEG[P_wr + PieceShift],
+                                          &ValuesEG[P_wq + PieceShift],
+                                          &ValuesEG[P_wk + PieceShift]};
+
+inline ScoreType value(Piece pp)      { return Values[pp + PieceShift]; }
+inline ScoreType absValue(Piece pp)   { return *absValues_[pp]; }
+inline ScoreType absValueEG(Piece pp) { return *absValuesEG_[pp]; }
 
 template<typename T> [[nodiscard]] inline constexpr int sgn(T val) { return (T(0) < val) - (val < T(0)); }
 

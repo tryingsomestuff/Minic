@@ -3,9 +3,9 @@
 #include "position.hpp"
 
 namespace PieceTools {
-[[nodiscard]] inline Piece getPieceIndex(const Position &p, Square k) {
+[[nodiscard]] inline Piece getPieceIndex_(const Position &p, Square k) {
    assert(k >= 0 && k < NbSquare);
-   return Piece(p.board_const(k) + PieceShift);
+   return (Piece)PieceIdx(p.board_const(k));
 }
 [[nodiscard]] inline Piece getPieceType(const Position &p, Square k) {
    assert(k >= 0 && k < NbSquare);
@@ -13,14 +13,16 @@ namespace PieceTools {
 }
 [[nodiscard]] inline std::string getName(const Position &p, Square k) {
    assert(k >= 0 && k < NbSquare);
-   return PieceNames[getPieceIndex(p, k)];
+   return PieceNames[getPieceIndex_(p, k)];
 }
+/*
 [[nodiscard]] inline ScoreType getValue(const Position &p, Square k) {
    assert(k >= 0 && k < NbSquare);
-   return Values[getPieceIndex(p, k)];
+   return Values[getPieceIndex_(p, k)];
 }
+*/
 [[nodiscard]] inline ScoreType getAbsValue(const Position &p, Square k) {
    assert(k >= 0 && k < NbSquare);
-   return std::abs(Values[getPieceIndex(p, k)]);
+   return std::abs(Values[getPieceIndex_(p, k)]);
 }
 } // namespace PieceTools

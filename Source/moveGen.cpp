@@ -42,10 +42,10 @@ const bool _helperPawnHash[NbPiece] = {true, false, false, false, false, true, f
 
 void movePiece(Position& p, Square from, Square to, Piece fromP, Piece toP, bool isCapture, Piece prom) {
    START_TIMER
-   const int   fromId  = fromP + PieceShift;
-   const int   toId    = toP + PieceShift;
+   const int   fromId  = PieceIdx(fromP);
+   const int   toId    = PieceIdx(toP);
    const Piece toPnew  = prom != P_none ? prom : fromP;
-   const int   toIdnew = prom != P_none ? (prom + PieceShift) : fromId;
+   const int   toIdnew = prom != P_none ? PieceIdx(prom) : fromId;
    assert(squareOK(from));
    assert(squareOK(to));
    assert(pieceValid(fromP));
@@ -119,7 +119,7 @@ bool applyMove(Position& p, const Move& m, bool noValidation) {
    assert(moveTypeOK(type));
    const Piece fromP     = p.board_const(from);
    const Piece toP       = p.board_const(to);
-   const int   fromId    = fromP + PieceShift;
+   const int   fromId    = PieceIdx(fromP);
    const bool  isCapNoEP = toP != P_none;
    Piece       promPiece = P_none;
 #ifdef DEBUG_APPLY
@@ -165,13 +165,13 @@ bool applyMove(Position& p, const Move& m, bool noValidation) {
             p.board(to)      = fromP;
             p.board(epCapSq) = P_none;
 
-            p.h ^= Zobrist::ZT[from][fromId];                                          // remove fromP at from
-            p.h ^= Zobrist::ZT[epCapSq][(p.c == Co_White ? P_bp : P_wp) + PieceShift]; // remove captured pawn
-            p.h ^= Zobrist::ZT[to][fromId];                                            // add fromP at to
+            p.h ^= Zobrist::ZT[from][fromId];                                       // remove fromP at from
+            p.h ^= Zobrist::ZT[epCapSq][PieceIdx(p.c == Co_White ? P_bp : P_wp)];   // remove captured pawn
+            p.h ^= Zobrist::ZT[to][fromId];                                         // add fromP at to
 
-            p.ph ^= Zobrist::ZT[from][fromId];                                          // remove fromP at from
-            p.ph ^= Zobrist::ZT[epCapSq][(p.c == Co_White ? P_bp : P_wp) + PieceShift]; // remove captured pawn
-            p.ph ^= Zobrist::ZT[to][fromId];                                            // add fromP at to
+            p.ph ^= Zobrist::ZT[from][fromId];                                      // remove fromP at from
+            p.ph ^= Zobrist::ZT[epCapSq][PieceIdx(p.c == Co_White ? P_bp : P_wp)];  // remove captured pawn
+            p.ph ^= Zobrist::ZT[to][fromId];                                        // add fromP at to
 
             p.mat[~p.c][M_p]--;
          }

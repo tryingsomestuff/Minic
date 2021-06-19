@@ -254,11 +254,11 @@ int cliManagement(std::string cli, int argc, char** argv) {
          const ScoreType threshold;
       };
 
-      const ScoreType P = Values[P_wp + PieceShift];
-      const ScoreType N = Values[P_wn + PieceShift];
-      const ScoreType B = Values[P_wb + PieceShift];
-      const ScoreType R = Values[P_wr + PieceShift];
-      const ScoreType Q = Values[P_wq + PieceShift];
+      const ScoreType P = value(P_wp);
+      const ScoreType N = value(P_wn);
+      const ScoreType B = value(P_wb);
+      const ScoreType R = value(P_wr);
+      const ScoreType Q = value(P_wq);
 
       std::cout << P << "\t" << N << "\t" << B << "\t" << R << "\t" << Q << "\t" << std::endl;
 
