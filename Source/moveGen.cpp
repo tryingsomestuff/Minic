@@ -111,20 +111,11 @@ bool applyMove(Position& p, const Move& m, bool noValidation) {
 #ifdef DEBUG_MATERIAL
    Position previous = p;
 #endif
-   const Square from = Move2From(m);
-   assert(squareOK(from));
-   const Square to = Move2To(m);
-   assert(squareOK(to));
-   const MType type = Move2Type(m);
-   assert(moveTypeOK(type));
-   const Piece fromP     = p.board_const(from);
-   const Piece toP       = p.board_const(to);
-   const int   fromId    = PieceIdx(fromP);
-   const bool  isCapNoEP = toP != P_none;
-   Piece       promPiece = P_none;
+   const Position::MoveInfo moveInfo(p,m);
+   Piece promPiece = P_none;
 #ifdef DEBUG_APPLY
    if (!isPseudoLegal(p, m)) {
-      Logging::LogIt(Logging::logError) << ToString(m) << " " << Move2Type(m);
+      Logging::LogIt(Logging::logError) << ToString(m) << " " << moveInfo.type;
       Logging::LogIt(Logging::logFatal) << "Apply error, not legal " << ToString(p);
       assert(false);
    }
@@ -133,21 +124,21 @@ bool applyMove(Position& p, const Move& m, bool noValidation) {
 #ifdef WITH_NNUE
    // if king is not moving, update nnue evaluator
    // this is based on current position state
-   if (DynamicConfig::useNNUE && std::abs(fromP) != P_wk) {
-      if (p.c == Co_White) p.updateNNUEEvaluator<Co_White>(p.Evaluator(), m);
+   if (DynamicConfig::useNNUE && std::abs(moveInfo.fromP) != P_wk) {
+      if (p.c == Co_White) p.updateNNUEEvaluator<Co_White>(p.Evaluator(), m, moveInfo);
       else
-         p.updateNNUEEvaluator<Co_Black>(p.Evaluator(), m);
+         p.updateNNUEEvaluator<Co_Black>(p.Evaluator(), m, moveInfo);
    }
 #endif
 
-   switch (type) {
+   switch (moveInfo.type) {
       case T_std:
       case T_capture:
       case T_reserved:
          // update material
-         if (isCapNoEP) { p.mat[~p.c][std::abs(toP)]--; }
+         if (moveInfo.isCapNoEP) { p.mat[~p.c][std::abs(moveInfo.toP)]--; }
          // update hash, BB, board and castling rights
-         movePiece(p, from, to, fromP, toP, type == T_capture);
+         movePiece(p, moveInfo.from, moveInfo.to, moveInfo.fromP, moveInfo.toP, moveInfo.type == T_capture);
          break;
       case T_ep:
          {
@@ -155,50 +146,50 @@ bool applyMove(Position& p, const Move& m, bool noValidation) {
             assert(SQRANK(p.ep) == EPRank[p.c]);
             const Square epCapSq = p.ep + (p.c == Co_White ? -8 : +8);
             assert(squareOK(epCapSq));
-            BBTools::unSetBit(p, epCapSq, ~fromP); // BEFORE setting p.b new shape !!!
-            BB::_unSetBit(p.allPieces[fromP > 0 ? Co_Black : Co_White], epCapSq);
-            BBTools::unSetBit(p, from, fromP);
-            BB::_unSetBit(p.allPieces[fromP > 0 ? Co_White : Co_Black], from);
-            BBTools::setBit(p, to, fromP);
-            BB::_setBit(p.allPieces[fromP > 0 ? Co_White : Co_Black], to);
-            p.board(from)    = P_none;
-            p.board(to)      = fromP;
+            BBTools::unSetBit(p, epCapSq, ~moveInfo.fromP); // BEFORE setting p.b new shape !!!
+            BB::_unSetBit(p.allPieces[moveInfo.fromP > 0 ? Co_Black : Co_White], epCapSq);
+            BBTools::unSetBit(p, moveInfo.from, moveInfo.fromP);
+            BB::_unSetBit(p.allPieces[moveInfo.fromP > 0 ? Co_White : Co_Black], moveInfo.from);
+            BBTools::setBit(p, moveInfo.to, moveInfo.fromP);
+            BB::_setBit(p.allPieces[moveInfo.fromP > 0 ? Co_White : Co_Black], moveInfo.to);
+            p.board(moveInfo.from)    = P_none;
+            p.board(moveInfo.to)      = moveInfo.fromP;
             p.board(epCapSq) = P_none;
 
-            p.h ^= Zobrist::ZT[from][fromId];                                       // remove fromP at from
+            p.h ^= Zobrist::ZT[moveInfo.from][moveInfo.fromId];                     // remove fromP at from
             p.h ^= Zobrist::ZT[epCapSq][PieceIdx(p.c == Co_White ? P_bp : P_wp)];   // remove captured pawn
-            p.h ^= Zobrist::ZT[to][fromId];                                         // add fromP at to
+            p.h ^= Zobrist::ZT[moveInfo.to][moveInfo.fromId];                       // add fromP at to
 
-            p.ph ^= Zobrist::ZT[from][fromId];                                      // remove fromP at from
+            p.ph ^= Zobrist::ZT[moveInfo.from][moveInfo.fromId];                    // remove fromP at from
             p.ph ^= Zobrist::ZT[epCapSq][PieceIdx(p.c == Co_White ? P_bp : P_wp)];  // remove captured pawn
-            p.ph ^= Zobrist::ZT[to][fromId];                                        // add fromP at to
+            p.ph ^= Zobrist::ZT[moveInfo.to][moveInfo.fromId];                      // add fromP at to
 
             p.mat[~p.c][M_p]--;
          }
          break;
       case T_promq:
       case T_cappromq:
-         MaterialHash::updateMaterialProm(p, to, type);
+         MaterialHash::updateMaterialProm(p, moveInfo.to, moveInfo.type);
          promPiece = (p.c == Co_White ? P_wq : P_bq);
-         movePiece(p, from, to, fromP, toP, type == T_cappromq, promPiece);
+         movePiece(p, moveInfo.from, moveInfo.to, moveInfo.fromP, moveInfo.toP, moveInfo.type == T_cappromq, promPiece);
          break;
       case T_promr:
       case T_cappromr:
-         MaterialHash::updateMaterialProm(p, to, type);
+         MaterialHash::updateMaterialProm(p, moveInfo.to, moveInfo.type);
          promPiece = (p.c == Co_White ? P_wr : P_br);
-         movePiece(p, from, to, fromP, toP, type == T_cappromr, promPiece);
+         movePiece(p, moveInfo.from, moveInfo.to, moveInfo.fromP, moveInfo.toP, moveInfo.type == T_cappromr, promPiece);
          break;
       case T_promb:
       case T_cappromb:
-         MaterialHash::updateMaterialProm(p, to, type);
+         MaterialHash::updateMaterialProm(p, moveInfo.to, moveInfo.type);
          promPiece = (p.c == Co_White ? P_wb : P_bb);
-         movePiece(p, from, to, fromP, toP, type == T_cappromb, promPiece);
+         movePiece(p, moveInfo.from, moveInfo.to, moveInfo.fromP, moveInfo.toP, moveInfo.type == T_cappromb, promPiece);
          break;
       case T_promn:
       case T_cappromn:
-         MaterialHash::updateMaterialProm(p, to, type);
+         MaterialHash::updateMaterialProm(p, moveInfo.to, moveInfo.type);
          promPiece = (p.c == Co_White ? P_wn : P_bn);
-         movePiece(p, from, to, fromP, toP, type == T_cappromn, promPiece);
+         movePiece(p, moveInfo.from, moveInfo.to, moveInfo.fromP, moveInfo.toP, moveInfo.type == T_cappromn, promPiece);
          break;
       case T_wks: movePieceCastle<Co_White>(p, CT_OO, Sq_g1, Sq_f1); break;
       case T_wqs: movePieceCastle<Co_White>(p, CT_OOO, Sq_c1, Sq_d1); break;
@@ -211,12 +202,12 @@ bool applyMove(Position& p, const Move& m, bool noValidation) {
       return false; // this is the only legal move validation needed
    }
 
-   const bool pawnMove = abs(fromP) == P_wp;
+   const bool pawnMove = abs(moveInfo.fromP) == P_wp;
    // update EP
    if (p.ep != INVALIDSQUARE) p.h ^= Zobrist::ZT[p.ep][13];
    p.ep = INVALIDSQUARE;
-   if (pawnMove && abs(to - from) == 16) {
-      p.ep = (from + to) / 2;
+   if (pawnMove && abs(moveInfo.to - moveInfo.from) == 16) {
+      p.ep = (moveInfo.from + moveInfo.to) / 2;
       p.h ^= Zobrist::ZT[p.ep][13];
    }
    assert(p.ep == INVALIDSQUARE || SQRANK(p.ep) == EPRank[~p.c]);
@@ -227,18 +218,18 @@ bool applyMove(Position& p, const Move& m, bool noValidation) {
    p.h ^= Zobrist::ZT[4][13];
 
    // update game state
-   if (isCapNoEP || pawnMove) p.fifty = 0; // E.p covered by pawn move here ...
+   if (moveInfo.isCapNoEP || pawnMove) p.fifty = 0; // E.p covered by pawn move here ...
    else
       ++p.fifty;
    if (p.c == Co_White) ++p.moves;
    ++p.halfmoves;
 
-   if (isCaptureOrProm(type)) MaterialHash::updateMaterialOther(p);
+   if (isCaptureOrProm(moveInfo.type)) MaterialHash::updateMaterialOther(p);
 
 #ifdef WITH_NNUE
    // if a king was moved (including castling), reset nnue evaluator
    // this is based on new position state !
-   if (DynamicConfig::useNNUE && std::abs(fromP) == P_wk) { p.resetNNUEEvaluator(p.Evaluator()); }
+   if (DynamicConfig::useNNUE && std::abs(moveInfo.fromP) == P_wk) { p.resetNNUEEvaluator(p.Evaluator()); }
 #endif
 
 #ifdef DEBUG_NNUE_UPDATE
