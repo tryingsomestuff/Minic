@@ -203,13 +203,13 @@ void Searcher::searchDriver() {
 
          Logging::LogIt(Logging::logInfo) << "Thread " << id() << " searching depth " << (int)depth;
 
-         // dynamic contempt ///@todo tune this
 #ifndef WITH_TEXEL_TUNING
          contempt = {ScoreType((p.c == Co_White ? +1 : -1) * (DynamicConfig::contempt + DynamicConfig::contemptMG) * DynamicConfig::ratingFactor),
                      ScoreType((p.c == Co_White ? +1 : -1) * DynamicConfig::contempt * DynamicConfig::ratingFactor)};
 #else
          contempt = 0;
 #endif
+         // dynamic contempt ///@todo tune this
          contempt += ScoreType(std::round(25 * std::tanh(currentScore[multi] / 400.f))); // slow but ok here
          Logging::LogIt(Logging::logInfo) << "Dynamic contempt " << contempt;
 
