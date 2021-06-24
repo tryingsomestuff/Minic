@@ -29,10 +29,11 @@ struct Position {
    Position(const std::string& fen, bool withMoveCount = true);
    ~Position();
 
-   std::array<Piece, 64>   _b {{P_none}}; // works because P_none is in fact 0 ...
-   std::array<BitBoard, 6> _allB {{emptyBitBoard}};
-   std::array<BitBoard, 2> allPieces {{emptyBitBoard}};
-
+   std::array<Piece, NbSquare>          _b {{P_none}}; // works because P_none is in fact 0 ...
+   std::array<CastlingRights, NbSquare> castlePermHashTable;
+   std::array<BitBoard, 6>              _allB {{emptyBitBoard}};
+   std::array<BitBoard, 2>              allPieces {{emptyBitBoard}};
+   
    // t p n b r q k bl bd M n  (total is first so that pawn to king is same a Piece)
    typedef std::array<std::array<char, 11>, 2> Material;
    Material                                    mat = {{{{0}}}}; // such a nice syntax ...
@@ -118,6 +119,8 @@ struct Position {
       const int    fromId    = 0;
       const bool   isCapNoEP = false;
    };
+
+   void initCaslingPermHashTable();
 
 #ifdef WITH_NNUE
 

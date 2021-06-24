@@ -5,11 +5,15 @@
 namespace PieceTools {
 [[nodiscard]] inline Piece getPieceIndex_(const Position &p, Square k) {
    assert(k >= 0 && k < NbSquare);
-   return (Piece)PieceIdx(p.board_const(k));
+   const Piece pp = p.board_const(k);
+   assert(pieceOK(pp));
+   return (Piece)PieceIdx(pp);
 }
 [[nodiscard]] inline Piece getPieceType(const Position &p, Square k) {
    assert(k >= 0 && k < NbSquare);
-   return (Piece)std::abs(p.board_const(k));
+   const Piece pp = p.board_const(k);
+   assert(pieceOK(pp));
+   return (Piece)std::abs(pp);
 }
 [[nodiscard]] inline std::string getName(const Position &p, Square k) {
    assert(k >= 0 && k < NbSquare);

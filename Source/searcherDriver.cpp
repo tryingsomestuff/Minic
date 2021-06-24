@@ -66,7 +66,7 @@ void Searcher::searchDriver() {
    p.resetNNUEEvaluator(nnueEvaluator);
 #endif
 
-   if (isMainThread()) initCaslingPermHashTable(p); // let's be sure ... ///@todo clean up this crap !!!!
+   //if (isMainThread()) p.initCaslingPermHashTable(); // let's be sure ...
 
    // requested depth can be changed according to level or skill parameter
    DynamicConfig::level = DynamicConfig::limitStrength ? Skill::convertElo2Level() : DynamicConfig::level;

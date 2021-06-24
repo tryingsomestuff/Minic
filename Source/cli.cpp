@@ -78,10 +78,15 @@ Counter perft(const Position& p, DepthType depth, PerftAccumulator& acc) {
 
 void perft_test(const std::string& fen, DepthType d, uint64_t expected) {
     Position p;
+#ifdef WITH_NNUE
+    NNUEEvaluator evaluator;
+    p.associateEvaluator(evaluator);
+    p.resetNNUEEvaluator(evaluator);
+#endif    
     readFEN(fen, p);
     Logging::LogIt(Logging::logInfo) << ToString(p);
     PerftAccumulator acc;
-    uint64_t         n = perft(p, d, acc);
+    uint64_t n = perft(p, d, acc);
     acc.Display();
     if (n != expected) Logging::LogIt(Logging::logFatal) << "Error !! " << fen << " " << expected;
     Logging::LogIt(Logging::logInfo) << "#########################";
@@ -161,6 +166,11 @@ void selfPlay(DepthType depth) {
 
 int bench(DepthType depth) {
    Position p;
+#ifdef WITH_NNUE
+    NNUEEvaluator evaluator;
+    p.associateEvaluator(evaluator);
+    p.resetNNUEEvaluator(evaluator);
+#endif   
    readFEN(startPosition, p);
    analyze(p, depth, true);
    readFEN(fine70, p);
@@ -320,8 +330,16 @@ int cliManagement(std::string cli, int argc, char** argv) {
       posList.push_back( SEETest{"8/8/1k6/8/8/2N1N3/4p1K1/3n4 w - - 0 1",				                      ToMove(Sq_c3,Sq_d1, T_capture), ScoreType(N - (N - P + Q ) + Q) });
       posList.push_back( SEETest{"r1bqk1nr/pppp1ppp/2n5/1B2p3/1b2P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4",	 ToMove(Sq_e1,Sq_g1, T_wks) , ScoreType(0) });
 
+#ifdef WITH_NNUE
+      NNUEEvaluator evaluator;
+#endif
+
       for (auto& t : posList) {
          Position p;
+#ifdef WITH_NNUE
+         p.associateEvaluator(evaluator);
+         p.resetNNUEEvaluator(evaluator);
+#endif         
          readFEN(t.fen, p, true);
          Logging::LogIt(Logging::logError) << "============================== " << t.fen << " ==";
          const ScoreType s = ThreadPool::instance().main().SEE(p, t.m);
@@ -425,7 +443,7 @@ int cliManagement(std::string cli, int argc, char** argv) {
         Square k = Sq_e4;
         if (argc > 3) k = atoi(argv[3]);
         Logging::LogIt(Logging::logInfo) << SquareNames[k];
-        Logging::LogIt(Logging::logInfo) << BB::showBitBoard(BBTools::allAttackedBB(p, k, p.c));
+        Logging::LogIt(Logging::logInfo) << BB::ToString(BBTools::allAttackedBB(p, k, p.c));
         return 0;
     }
 
@@ -434,42 +452,42 @@ int cliManagement(std::string cli, int argc, char** argv) {
         if (argc > 3) k = atoi(argv[3]);
         switch (p.board_const(k)) {
         case P_wp:
-            Logging::LogIt(Logging::logInfo) << BB::showBitBoard((BBTools::coverage<P_wp>(k, p.occupancy(), p.c) + BBTools::mask[k].push[p.c]) & ~p.allPieces[Co_White]);
+            Logging::LogIt(Logging::logInfo) << BB::ToString((BBTools::coverage<P_wp>(k, p.occupancy(), p.c) + BBTools::mask[k].push[p.c]) & ~p.allPieces[Co_White]);
             break;
         case P_wn:
-            Logging::LogIt(Logging::logInfo) << BB::showBitBoard(BBTools::coverage<P_wn>(k, p.occupancy(), p.c) & ~p.allPieces[Co_White]);
+            Logging::LogIt(Logging::logInfo) << BB::ToString(BBTools::coverage<P_wn>(k, p.occupancy(), p.c) & ~p.allPieces[Co_White]);
             break;
         case P_wb:
-            Logging::LogIt(Logging::logInfo) << BB::showBitBoard(BBTools::coverage<P_wb>(k, p.occupancy(), p.c) & ~p.allPieces[Co_White]);
+            Logging::LogIt(Logging::logInfo) << BB::ToString(BBTools::coverage<P_wb>(k, p.occupancy(), p.c) & ~p.allPieces[Co_White]);
             break;
         case P_wr:
-            Logging::LogIt(Logging::logInfo) << BB::showBitBoard(BBTools::coverage<P_wr>(k, p.occupancy(), p.c) & ~p.allPieces[Co_White]);
+            Logging::LogIt(Logging::logInfo) << BB::ToString(BBTools::coverage<P_wr>(k, p.occupancy(), p.c) & ~p.allPieces[Co_White]);
             break;
         case P_wq:
-            Logging::LogIt(Logging::logInfo) << BB::showBitBoard(BBTools::coverage<P_wq>(k, p.occupancy(), p.c) & ~p.allPieces[Co_White]);
+            Logging::LogIt(Logging::logInfo) << BB::ToString(BBTools::coverage<P_wq>(k, p.occupancy(), p.c) & ~p.allPieces[Co_White]);
             break;
         case P_wk:
-            Logging::LogIt(Logging::logInfo) << BB::showBitBoard(BBTools::coverage<P_wk>(k, p.occupancy(), p.c) & ~p.allPieces[Co_White]);
+            Logging::LogIt(Logging::logInfo) << BB::ToString(BBTools::coverage<P_wk>(k, p.occupancy(), p.c) & ~p.allPieces[Co_White]);
             break;
         case P_bk:
-            Logging::LogIt(Logging::logInfo) << BB::showBitBoard(BBTools::coverage<P_wk>(k, p.occupancy(), p.c) & ~p.allPieces[Co_Black]);
+            Logging::LogIt(Logging::logInfo) << BB::ToString(BBTools::coverage<P_wk>(k, p.occupancy(), p.c) & ~p.allPieces[Co_Black]);
             break;
         case P_bq:
-            Logging::LogIt(Logging::logInfo) << BB::showBitBoard(BBTools::coverage<P_wq>(k, p.occupancy(), p.c) & ~p.allPieces[Co_Black]);
+            Logging::LogIt(Logging::logInfo) << BB::ToString(BBTools::coverage<P_wq>(k, p.occupancy(), p.c) & ~p.allPieces[Co_Black]);
             break;
         case P_br:
-            Logging::LogIt(Logging::logInfo) << BB::showBitBoard(BBTools::coverage<P_wr>(k, p.occupancy(), p.c) & ~p.allPieces[Co_Black]);
+            Logging::LogIt(Logging::logInfo) << BB::ToString(BBTools::coverage<P_wr>(k, p.occupancy(), p.c) & ~p.allPieces[Co_Black]);
             break;
         case P_bb:
-            Logging::LogIt(Logging::logInfo) << BB::showBitBoard(BBTools::coverage<P_wb>(k, p.occupancy(), p.c) & ~p.allPieces[Co_Black]);
+            Logging::LogIt(Logging::logInfo) << BB::ToString(BBTools::coverage<P_wb>(k, p.occupancy(), p.c) & ~p.allPieces[Co_Black]);
             break;
         case P_bn:
-            Logging::LogIt(Logging::logInfo) << BB::showBitBoard(BBTools::coverage<P_wn>(k, p.occupancy(), p.c) & ~p.allPieces[Co_Black]);
+            Logging::LogIt(Logging::logInfo) << BB::ToString(BBTools::coverage<P_wn>(k, p.occupancy(), p.c) & ~p.allPieces[Co_Black]);
             break;
         case P_bp:
-            Logging::LogIt(Logging::logInfo) << BB::showBitBoard((BBTools::coverage<P_wp>(k, p.occupancy(), p.c) + BBTools::mask[k].push[p.c])& ~p.allPieces[Co_Black]);
+            Logging::LogIt(Logging::logInfo) << BB::ToString((BBTools::coverage<P_wp>(k, p.occupancy(), p.c) + BBTools::mask[k].push[p.c])& ~p.allPieces[Co_Black]);
             break;
-         default: Logging::LogIt(Logging::logInfo) << BB::showBitBoard(0ull);
+         default: Logging::LogIt(Logging::logInfo) << BB::ToString(0ull);
         }
         return 0;
     }
@@ -508,7 +526,7 @@ int cliManagement(std::string cli, int argc, char** argv) {
       DepthType d = 5;
       if (argc > 3) d = atoi(argv[3]);
       PerftAccumulator acc;
-      auto             start = Clock::now();
+      auto start = Clock::now();
       perft(p, d, acc);
       auto elapsed = std::max(1, (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - start).count());
       Logging::LogIt(Logging::logInfo) << "Perft done in " << elapsed << "ms";

@@ -4,7 +4,7 @@
 
 namespace BB {
 
-std::string showBitBoard(const BitBoard& b) {
+std::string ToString(const BitBoard& b) {
    std::bitset<64> bs(b);
    std::stringstream ss;
    for (int j = 7; j >= 0; --j) {

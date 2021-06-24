@@ -19,6 +19,21 @@ void debug_king_cap(const Position& p);
 
 [[nodiscard]] std::string ToString(const Position::Material& mat);
 
+template < typename T >
+[[nodiscard]] std::string ToString(const std::array<T,64>& a){
+   std::stringstream ss;
+   for (int j = 7; j >= 0; --j) {
+      ss << "\n";
+      ss << Logging::_protocolComment[Logging::ct] << "+---+---+---+---+---+---+---+---+"
+         << "\n";
+      ss << Logging::_protocolComment[Logging::ct] << "|";
+      for (int i = 0; i < 8; ++i) ss << std::setw(3) << (int)a[i + j * 8] << '|';
+   }
+   ss << "\n";
+   ss << Logging::_protocolComment[Logging::ct] << "+---+---+---+---+---+---+---+---+";
+   return ss.str();
+}
+
 template<typename F, typename... Arguments> void threadedWork(F&& worker, size_t nbthreads, uint64_t size, Arguments... args) {
    std::vector<std::thread> threads(nbthreads);
    const size_t grainsize = size / nbthreads;

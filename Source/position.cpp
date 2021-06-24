@@ -6,6 +6,7 @@
 #include "logging.hpp"
 #include "material.hpp"
 #include "moveGen.hpp"
+#include "tools.hpp"
 
 template<typename T> T readFromString(const std::string& s) {
    std::stringstream ss(s);
@@ -221,8 +222,6 @@ bool readFEN(const std::string& fen, Position& p, bool silent, bool withMoveCoun
 
    p.halfmoves = (int(p.moves) - 1) * 2 + 1 + (p.c == Co_Black ? 1 : 0);
 
-   initCaslingPermHashTable(p);
-
    BBTools::setBitBoards(p);
    MaterialHash::initMaterial(p);
    p.h  = computeHash(p);
@@ -234,7 +233,21 @@ bool readFEN(const std::string& fen, Position& p, bool silent, bool withMoveCoun
    if (DynamicConfig::useNNUE && evaluator) p.resetNNUEEvaluator(p.Evaluator());
 #endif
 
+   p.initCaslingPermHashTable();
+
    return true;
+}
+
+void Position::initCaslingPermHashTable() {
+   // works also for FRC !
+   castlePermHashTable.fill(C_all);
+   castlePermHashTable[kingInit[Co_White]] = C_all_but_w;
+   castlePermHashTable[kingInit[Co_Black]] = C_all_but_b;
+
+   if (castling & C_wqs) castlePermHashTable[rooksInit[Co_White][CT_OOO]] = C_all_but_wqs;
+   if (castling & C_wks) castlePermHashTable[rooksInit[Co_White][CT_OO]]  = C_all_but_wks;
+   if (castling & C_bqs) castlePermHashTable[rooksInit[Co_Black][CT_OOO]] = C_all_but_bqs;
+   if (castling & C_bks) castlePermHashTable[rooksInit[Co_Black][CT_OO]]  = C_all_but_bks;
 }
 
 Position::~Position() {}

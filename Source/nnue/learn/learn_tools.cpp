@@ -386,7 +386,7 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen ){
 
 	p.halfmoves = (int(p.moves) - 1) * 2 + 1 + (p.c == Co_Black ? 1 : 0);
 
-	initCaslingPermHashTable(p);
+	p.initCaslingPermHashTable();
 
 	BBTools::setBitBoards(p);
 	MaterialHash::initMaterial(p);

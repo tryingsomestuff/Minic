@@ -105,7 +105,8 @@ std::string ToString(const Position& p, bool noEval) {
    std::stringstream ss;
    ss << "Position" << std::endl;
    for (Square j = 7; j >= 0; --j) {
-      ss << Logging::_protocolComment[Logging::ct] << " +-+-+-+-+-+-+-+-+" << std::endl << Logging::_protocolComment[Logging::ct] << " |";
+      ss << Logging::_protocolComment[Logging::ct] << " +-+-+-+-+-+-+-+-+" << std::endl;
+      ss << Logging::_protocolComment[Logging::ct] << " |";
       for (Square i = 0; i < 8; ++i) ss << PieceTools::getName(p, i + j * 8) << '|';
       ss << std::endl;
    }
@@ -125,11 +126,11 @@ std::string ToString(const Position& p, bool noEval) {
       }
 #endif
       sc = eval(p, data, ThreadPool::instance().main());
-      ss << Logging::_protocolComment[Logging::ct] << " Phase " << data.gp << std::endl
-         << Logging::_protocolComment[Logging::ct] << " Static score " << sc << std::endl
-         << Logging::_protocolComment[Logging::ct] << " Hash " << computeHash(p) << std::endl
-         << Logging::_protocolComment[Logging::ct] << " FEN " << GetFEN(p);
+      ss << Logging::_protocolComment[Logging::ct] << " Phase " << data.gp << std::endl;
+      ss << Logging::_protocolComment[Logging::ct] << " Static score " << sc << std::endl;
+      ss << Logging::_protocolComment[Logging::ct] << " Hash " << computeHash(p) << std::endl;
    }
+   ss << Logging::_protocolComment[Logging::ct] << " FEN " << GetFEN(p);
    //ss << ToString(p.mat);
    return ss.str();
 }
