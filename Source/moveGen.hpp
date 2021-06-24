@@ -26,7 +26,7 @@ enum GenPhase { GP_all = 0, GP_cap = 1, GP_quiet = 2 };
 void addMove(Square from, Square to, MType type, MoveList& moves);
 
 template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveList& moves, Square from) {
-   assert(from != INVALIDSQUARE);
+   assert(from >= 0 && from < 64);
 #ifdef DEBUG_GENERATION
    if (from == INVALIDSQUARE) Logging::LogIt(Logging::logFatal) << "invalid square";
 #endif
@@ -38,8 +38,8 @@ template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveLis
    assert(pieceValid(ptype));
 #ifdef DEBUG_GENERATION
    if (!pieceValid(ptype)) {
-      Logging::LogIt(Logging::logWarn) << BB::showBitBoard(myPieceBB);
-      Logging::LogIt(Logging::logWarn) << BB::showBitBoard(oppPieceBB);
+      Logging::LogIt(Logging::logWarn) << BB::ToString(myPieceBB);
+      Logging::LogIt(Logging::logWarn) << BB::ToString(oppPieceBB);
       Logging::LogIt(Logging::logWarn) << "piece " << (int)piece;
       Logging::LogIt(Logging::logWarn) << SquareNames[from];
       Logging::LogIt(Logging::logWarn) << ToString(p);
@@ -63,6 +63,9 @@ template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveLis
 
       // attack on castling king destination square will be checked by applyMove
       if (phase != GP_cap && ptype == P_wk) { // castling
+         // Be carefull, here rooksInit are only accessed if the corresponding p.castling is set
+         // This way rooksInit is not INVALIDSQUARE, and thus mask[] is not out of bound
+         // Moreover, king[] also is assumed to be not INVALIDSQUARE which is verified in readFen      
          if (side == Co_White) {
             if ((p.castling & C_wqs) &&
                 (((BBTools::mask[p.king[Co_White]].between[Sq_c1] | BB::BBSq_c1 | BBTools::mask[p.rooksInit[Co_White][CT_OOO]].between[Sq_d1] | BB::BBSq_d1) &
@@ -141,8 +144,6 @@ template<GenPhase phase = GP_all> void generate(const Position& p, MoveList& mov
 } // namespace MoveGen
 
 void movePiece(Position& p, Square from, Square to, Piece fromP, Piece toP, bool isCapture = false, Piece prom = P_none);
-
-void initCaslingPermHashTable(const Position& p);
 
 template<Color c> inline void movePieceCastle(Position& p, CastlingTypes ct, Square kingDest, Square rookDest) {
    START_TIMER

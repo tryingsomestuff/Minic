@@ -17,24 +17,6 @@ void addMove(Square from, Square to, MType type, MoveList& moves) {
 
 } // namespace MoveGen
 
-///@todo This will totally fail on the case of multi Searcher working on different root positions. VERY bad design here.
-namespace {
-std::array<CastlingRights, NbSquare> castlePermHashTable;
-std::mutex                           castlePermHashTableMutex;
-} // namespace
-
-void initCaslingPermHashTable(const Position& p) {
-   // works also for FRC !
-   const std::lock_guard<std::mutex> lock(castlePermHashTableMutex); // this function must be thread safe !!!
-   castlePermHashTable.fill(C_all);
-   castlePermHashTable[p.rooksInit[Co_White][CT_OOO]] = C_all_but_wqs;
-   castlePermHashTable[p.kingInit[Co_White]]          = C_all_but_w;
-   castlePermHashTable[p.rooksInit[Co_White][CT_OO]]  = C_all_but_wks;
-   castlePermHashTable[p.rooksInit[Co_Black][CT_OOO]] = C_all_but_bqs;
-   castlePermHashTable[p.kingInit[Co_Black]]          = C_all_but_b;
-   castlePermHashTable[p.rooksInit[Co_Black][CT_OO]]  = C_all_but_bks;
-}
-
 namespace {
 // piece that have influence on pawn hash
 const bool _helperPawnHash[NbPiece] = {true, false, false, false, false, true, false, true, false, false, false, false, true};
@@ -73,9 +55,9 @@ void movePiece(Position& p, Square from, Square to, Piece fromP, Piece toP, bool
       if ((abs(toP) == P_wp || abs(toP) == P_wk)) p.ph ^= Zobrist::ZT[to][toId];
    }
    // consequences on castling
-   if (p.castling && castlePermHashTable[from] ^ castlePermHashTable[to]) {
+   if (p.castling && (p.castlePermHashTable[from] ^ p.castlePermHashTable[to])) {
       p.h ^= Zobrist::ZTCastling[p.castling];
-      p.castling &= castlePermHashTable[from] & castlePermHashTable[to];
+      p.castling &= (p.castlePermHashTable[from] & p.castlePermHashTable[to]);
       p.h ^= Zobrist::ZTCastling[p.castling];
    }
 
@@ -280,7 +262,7 @@ bool applyMove(Position& p, const Move& m, bool noValidation) {
          if (p.board_const(s) != pp) {
             Logging::LogIt(Logging::logWarn) << SquareNames[s];
             Logging::LogIt(Logging::logWarn) << ToString(p);
-            Logging::LogIt(Logging::logWarn) << BB::showBitBoard(bb);
+            Logging::LogIt(Logging::logWarn) << BB::ToString(bb);
             Logging::LogIt(Logging::logWarn) << (int)pp;
             Logging::LogIt(Logging::logWarn) << (int)p.board_const(s);
             Logging::LogIt(Logging::logWarn) << "last move " << ToString(p.lastMove);
@@ -292,16 +274,16 @@ bool applyMove(Position& p, const Move& m, bool noValidation) {
    if (count_bb1 != count_bb2) {
       Logging::LogIt(Logging::logFatal) << "Wrong bitboard count (all/piece)" << count_bb1 << " " << count_bb2;
       Logging::LogIt(Logging::logWarn) << ToString(p);
-      Logging::LogIt(Logging::logWarn) << BB::showBitBoard(p.occupancy());
+      Logging::LogIt(Logging::logWarn) << BB::ToString(p.occupancy());
       for (Piece pp = P_bk; pp <= P_wk; ++pp) {
          if (pp == P_none) continue;
-         Logging::LogIt(Logging::logWarn) << BB::showBitBoard(p.pieces_const(pp));
+         Logging::LogIt(Logging::logWarn) << BB::ToString(p.pieces_const(pp));
       }
    }
    if (count_board != count_bb1) {
       Logging::LogIt(Logging::logFatal) << "Wrong bitboard count (board)" << count_board << " " << count_bb1;
       Logging::LogIt(Logging::logWarn) << ToString(p);
-      Logging::LogIt(Logging::logWarn) << BB::showBitBoard(p.occupancy());
+      Logging::LogIt(Logging::logWarn) << BB::ToString(p.occupancy());
    }
 #endif
    p.lastMove = m;
@@ -395,6 +377,9 @@ bool isPseudoLegal(const Position& p, Move m) { // validate TT move
    if (isPromotion(m) && fromPieceType != P_wp) PSEUDO_LEGAL_RETURN(false, 8)
    const BitBoard occupancy = p.occupancy();
    if (isCastling(m)) {
+      // Be carefull, here rooksInit are only accessed if the corresponding p.castling is set
+      // This way rooksInit is not INVALIDSQUARE, and thus mask[] is not out of bound
+      // Moreover, king[] also is assumed to be not INVALIDSQUARE which is verified in readFen
       if (p.c == Co_White) {
          if (t == T_wqs && (p.castling & C_wqs) && from == p.kingInit[Co_White] && fromP == P_wk && to == Sq_c1 && toP == P_none &&
              (((BBTools::mask[p.king[Co_White]].between[Sq_c1] | BB::BBSq_c1 | BBTools::mask[p.rooksInit[Co_White][CT_OOO]].between[Sq_d1] |

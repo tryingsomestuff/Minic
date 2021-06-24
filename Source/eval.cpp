@@ -170,7 +170,9 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
       // end game knowledge (helper or scaling)
       if (safeMatEvaluator && (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] < 5)) {
          MoveList moves;
+#ifndef DEBUG_GENERATION
          MoveGen::generate<MoveGen::GP_cap>(p, moves);
+#endif
          if (moves.empty()) { // probe endgame knowledge only if position is quiet from stm pov
             const Color winningSideEG = features.scores[F_material][EG] > 0 ? Co_White : Co_Black;
             // helpers for endgame
