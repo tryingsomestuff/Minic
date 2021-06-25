@@ -167,22 +167,15 @@ void write_board_piece_to_stream(Piece pc){
 Piece read_board_piece_from_stream(){
 	Piece pr = P_none;
 	int code = 0, bits = 0;
-	//std::cout << "------" << std::endl;
 	while (true){
-		//std::cout << "bits " << bits << std::endl;
 		code |= stream.read_one_bit() << bits;
-		//std::cout << "code " << code << std::endl;
 		++bits;
-
 		assert(bits <= 6);
-
 		for (pr = P_none; pr < P_wk; ++pr){
-			//std::cout << "pr " << (int) pr << std::endl;
 			if (huffman_table[pr].code == code && huffman_table[pr].bits == bits) goto Found;
 		}
 	}
 	Found:;
-	//std::cout << "found " << int(pr) << std::endl;
 	assert(pr != P_wk);
 	if ( pr == P_none ) return P_none;
 
@@ -283,8 +276,6 @@ void sfen_pack(const Position & p, PackedSfen& sfen){
 // If there is a problem with the passed phase and there is an error, non-zero is returned.
 int set_from_packed_sfen(Position &p, PackedSfen& sfen ){
 
-    //std::cout << "+++++++++++++++++++++++++" << std::endl;
-
 	SfenPacker packer;
 	auto& stream = packer.stream;
 	stream.set_data((uint8_t*)&sfen);
@@ -292,7 +283,6 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen ){
 	// Active color
 	p.c = (Color)stream.read_one_bit();
 
-	//std::cout << "color " << int(p.c) << std::endl;
 	for (auto c : {Co_White, Co_Black}){
 		const Square sq = (Square)stream.read_n_bit(6);
 		p.board(sq) = (c == Co_White ? P_wk : P_bk);
@@ -302,32 +292,22 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen ){
 	p.rootInfo().kingInit[Co_White] = p.king[Co_White];
 	p.rootInfo().kingInit[Co_Black] = p.king[Co_Black];
 
-    //std::cout << "wk " << int(p.king[Co_White]) << std::endl;
-	//std::cout << "bk " << int(p.king[Co_Black]) << std::endl;
-
 	// Piece placement
 	for (Rank r = Rank_8; ; --r){
 		for (File f = File_a; f <= File_h; ++f){
 			auto sq = MakeSquare(f, r);
-			//std::cout << int(r) << " " << int(f) << " " << int(sq) << std::endl;
 			Piece pc = P_none;
 
 			// skip already given kings
 			if (PieceTools::getPieceType(p,sq) != P_wk){
 				assert(p.board_const(sq) == P_none);
-				//std::cout << "read piece : " << int(f) << " " << int(r) << " " << int(pc) << std::endl;
 				pc = packer.read_board_piece_from_stream();
-			}
-			else{
-				//std::cout << "skipping king " << int(f) << " " << int(r) << std::endl;
 			}
 
 			// There may be no pieces, so skip in that case (also cover king case).
 			if (pc == P_none) continue;
 
 			p.board(sq) = pc;
-
-			//cout << sq << ' ' << board[sq] << ' ' << stream.get_cursor() << endl;
 
 			if (stream.get_cursor()> 256) return 1;
 		}

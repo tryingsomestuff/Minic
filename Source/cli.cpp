@@ -110,7 +110,7 @@ void analyze(const Position& p, DepthType depth, bool openBenchOutput = false) {
    d.p = p;
    d.depth = depth;
    ThreadPool::instance().distributeData(d);
-   //COM::position = p;
+   //COM::position = p; // only need for display purpose
    ThreadPool::instance().main().searchDriver(false);
    d = ThreadPool::instance().main().getData();
    Logging::LogIt(Logging::logInfo) << "Best move is " << ToString(d.best) << " " << (int)d.depth << " " << d.score << " pv : " << ToString(d.pv);
@@ -444,7 +444,7 @@ int cliManagement(std::string cli, int argc, char** argv) {
         Square k = Sq_e4;
         if (argc > 3) k = atoi(argv[3]);
         Logging::LogIt(Logging::logInfo) << SquareNames[k];
-        Logging::LogIt(Logging::logInfo) << BB::ToString(BBTools::allAttackedBB(p, k, p.c));
+        Logging::LogIt(Logging::logInfo) << ToString(BBTools::allAttackedBB(p, k, p.c));
         return 0;
     }
 
@@ -453,42 +453,42 @@ int cliManagement(std::string cli, int argc, char** argv) {
         if (argc > 3) k = atoi(argv[3]);
         switch (p.board_const(k)) {
         case P_wp:
-            Logging::LogIt(Logging::logInfo) << BB::ToString((BBTools::coverage<P_wp>(k, p.occupancy(), p.c) + BBTools::mask[k].push[p.c]) & ~p.allPieces[Co_White]);
+            Logging::LogIt(Logging::logInfo) << ToString((BBTools::coverage<P_wp>(k, p.occupancy(), p.c) + BBTools::mask[k].push[p.c]) & ~p.allPieces[Co_White]);
             break;
         case P_wn:
-            Logging::LogIt(Logging::logInfo) << BB::ToString(BBTools::coverage<P_wn>(k, p.occupancy(), p.c) & ~p.allPieces[Co_White]);
+            Logging::LogIt(Logging::logInfo) << ToString(BBTools::coverage<P_wn>(k, p.occupancy(), p.c) & ~p.allPieces[Co_White]);
             break;
         case P_wb:
-            Logging::LogIt(Logging::logInfo) << BB::ToString(BBTools::coverage<P_wb>(k, p.occupancy(), p.c) & ~p.allPieces[Co_White]);
+            Logging::LogIt(Logging::logInfo) << ToString(BBTools::coverage<P_wb>(k, p.occupancy(), p.c) & ~p.allPieces[Co_White]);
             break;
         case P_wr:
-            Logging::LogIt(Logging::logInfo) << BB::ToString(BBTools::coverage<P_wr>(k, p.occupancy(), p.c) & ~p.allPieces[Co_White]);
+            Logging::LogIt(Logging::logInfo) << ToString(BBTools::coverage<P_wr>(k, p.occupancy(), p.c) & ~p.allPieces[Co_White]);
             break;
         case P_wq:
-            Logging::LogIt(Logging::logInfo) << BB::ToString(BBTools::coverage<P_wq>(k, p.occupancy(), p.c) & ~p.allPieces[Co_White]);
+            Logging::LogIt(Logging::logInfo) << ToString(BBTools::coverage<P_wq>(k, p.occupancy(), p.c) & ~p.allPieces[Co_White]);
             break;
         case P_wk:
-            Logging::LogIt(Logging::logInfo) << BB::ToString(BBTools::coverage<P_wk>(k, p.occupancy(), p.c) & ~p.allPieces[Co_White]);
+            Logging::LogIt(Logging::logInfo) << ToString(BBTools::coverage<P_wk>(k, p.occupancy(), p.c) & ~p.allPieces[Co_White]);
             break;
         case P_bk:
-            Logging::LogIt(Logging::logInfo) << BB::ToString(BBTools::coverage<P_wk>(k, p.occupancy(), p.c) & ~p.allPieces[Co_Black]);
+            Logging::LogIt(Logging::logInfo) << ToString(BBTools::coverage<P_wk>(k, p.occupancy(), p.c) & ~p.allPieces[Co_Black]);
             break;
         case P_bq:
-            Logging::LogIt(Logging::logInfo) << BB::ToString(BBTools::coverage<P_wq>(k, p.occupancy(), p.c) & ~p.allPieces[Co_Black]);
+            Logging::LogIt(Logging::logInfo) << ToString(BBTools::coverage<P_wq>(k, p.occupancy(), p.c) & ~p.allPieces[Co_Black]);
             break;
         case P_br:
-            Logging::LogIt(Logging::logInfo) << BB::ToString(BBTools::coverage<P_wr>(k, p.occupancy(), p.c) & ~p.allPieces[Co_Black]);
+            Logging::LogIt(Logging::logInfo) << ToString(BBTools::coverage<P_wr>(k, p.occupancy(), p.c) & ~p.allPieces[Co_Black]);
             break;
         case P_bb:
-            Logging::LogIt(Logging::logInfo) << BB::ToString(BBTools::coverage<P_wb>(k, p.occupancy(), p.c) & ~p.allPieces[Co_Black]);
+            Logging::LogIt(Logging::logInfo) << ToString(BBTools::coverage<P_wb>(k, p.occupancy(), p.c) & ~p.allPieces[Co_Black]);
             break;
         case P_bn:
-            Logging::LogIt(Logging::logInfo) << BB::ToString(BBTools::coverage<P_wn>(k, p.occupancy(), p.c) & ~p.allPieces[Co_Black]);
+            Logging::LogIt(Logging::logInfo) << ToString(BBTools::coverage<P_wn>(k, p.occupancy(), p.c) & ~p.allPieces[Co_Black]);
             break;
         case P_bp:
-            Logging::LogIt(Logging::logInfo) << BB::ToString((BBTools::coverage<P_wp>(k, p.occupancy(), p.c) + BBTools::mask[k].push[p.c])& ~p.allPieces[Co_Black]);
+            Logging::LogIt(Logging::logInfo) << ToString((BBTools::coverage<P_wp>(k, p.occupancy(), p.c) + BBTools::mask[k].push[p.c])& ~p.allPieces[Co_Black]);
             break;
-         default: Logging::LogIt(Logging::logInfo) << BB::ToString(0ull);
+         default: Logging::LogIt(Logging::logInfo) << ToString(emptyBitBoard);
         }
         return 0;
     }

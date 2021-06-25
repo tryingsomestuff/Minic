@@ -20,7 +20,6 @@
 
 // Phase array: PSVector stands for packed sfen vector.
 typedef std::vector<PackedSfenValue> PSVector;
-
 struct BasicSfenInputStream
 {
 	virtual std::optional<PackedSfenValue> next() = 0;

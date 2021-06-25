@@ -38,8 +38,8 @@ template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveLis
    assert(pieceValid(ptype));
 #ifdef DEBUG_GENERATION
    if (!pieceValid(ptype)) {
-      Logging::LogIt(Logging::logWarn) << BB::ToString(myPieceBB);
-      Logging::LogIt(Logging::logWarn) << BB::ToString(oppPieceBB);
+      Logging::LogIt(Logging::logWarn) << ToString(myPieceBB);
+      Logging::LogIt(Logging::logWarn) << ToString(oppPieceBB);
       Logging::LogIt(Logging::logWarn) << "piece " << (int)piece;
       Logging::LogIt(Logging::logWarn) << SquareNames[from];
       Logging::LogIt(Logging::logWarn) << ToString(p);
