@@ -10,7 +10,7 @@
 /*!
  * Those things are used for test suite to work when reading edp file
  */
-struct ExtendedPosition : Position {
+struct ExtendedPosition : RootPosition {
    ExtendedPosition(const std::string& s, bool withMoveCount = true);
    [[nodiscard]] bool       shallFindBest();
    [[nodiscard]] bool       shallAvoidBad();

@@ -103,7 +103,7 @@ struct Searcher {
 
    [[nodiscard]] ScoreType SEE(const Position& p, const Move& m) const;
 
-   void searchDriver();
+   void searchDriver(bool postMove = true);
 
    template<bool withRep = true, bool isPv = true, bool INR = true>
    [[nodiscard]] MaterialHash::Terminaison interiorNodeRecognizer(const Position& p) const;

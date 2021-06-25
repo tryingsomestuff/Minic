@@ -121,7 +121,7 @@ Move SanitizeCastling(const Position &p, const Move &m) {
    // convert GUI castling input notation to internal castling style if not FRC
    if (!DynamicConfig::FRC) {
       bool whiteToMove = p.c == Co_White;
-      if (mtype == T_std && from == p.kingInit[p.c]) {
+      if (mtype == T_std && from == p.rootInfo().kingInit[p.c]) {
          if (to == (whiteToMove ? Sq_c1 : Sq_c8)) return ToMove(from, to, whiteToMove ? T_wqs : T_bqs);
          else if (to == (whiteToMove ? Sq_g1 : Sq_g8))
             return ToMove(from, to, whiteToMove ? T_wks : T_bks);
@@ -226,8 +226,8 @@ bool readMove(const Position &p, const std::string &ss, Square &from, Square &to
    }
    if (DynamicConfig::FRC) {
       // In FRC, some castling way be encoded king takes rooks ... Let's check that, the dirty way
-      if (p.board_const(from) == P_wk && p.board_const(to) == P_wr) { moveType = (p.rooksInit[Co_White][CT_OOO] == to ? T_wqs : T_wks); }
-      if (p.board_const(from) == P_bk && p.board_const(to) == P_br) { moveType = (p.rooksInit[Co_Black][CT_OOO] == to ? T_bqs : T_bks); }
+      if (p.board_const(from) == P_wk && p.board_const(to) == P_wr) { moveType = (p.rootInfo().rooksInit[Co_White][CT_OOO] == to ? T_wqs : T_wks); }
+      if (p.board_const(from) == P_bk && p.board_const(to) == P_br) { moveType = (p.rootInfo().rooksInit[Co_Black][CT_OOO] == to ? T_bqs : T_bks); }
    }
    if (!DynamicConfig::FRC && !isPseudoLegal(p, ToMove(from, to, moveType))) { ///@todo FRC !
       Logging::LogIt(Logging::logError) << "Trying to read bad move, not legal. " << ToString(p) << ", move is " << str;

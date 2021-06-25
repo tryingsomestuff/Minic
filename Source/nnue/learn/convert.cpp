@@ -94,7 +94,7 @@ bool convert_bin(const std::vector<std::string>& filenames,
       std::ifstream ifs;
       ifs.open(filename);
       PackedSfenValue p;
-      Position        pos;
+      RootPosition    pos;
 #if defined(WITH_NNUE)
       NNUEEvaluator evaluator;
       pos.associateEvaluator(evaluator);
@@ -241,7 +241,7 @@ bool convert_bin_from_pgn_extract(const std::vector<std::string>& filenames,
    std::cout << "pgn_eval_side_to_move=" << pgn_eval_side_to_move << std::endl;
    std::cout << "convert_no_eval_fens_as_score_zero=" << convert_no_eval_fens_as_score_zero << std::endl;
 
-   Position pos;
+   RootPosition pos;
 
    std::fstream ofs;
    ofs.open(output_file_name, std::ios::out | std::ios::binary);
@@ -482,8 +482,8 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
             ThreadData data;
             data.p        = tpos;
             data.depth    = DynamicConfig::genFenDepth;
-            COM::position = tpos;
-            cos.searchDriver();
+            //COM::position = tpos;
+            cos.searchDriver(false);
             data    = ThreadPool::instance().main().getData();
             p.score = data.score;
             ofs.write((char*)&p, sizeof(PackedSfenValue));

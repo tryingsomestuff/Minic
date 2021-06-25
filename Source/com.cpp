@@ -9,7 +9,7 @@ namespace COM {
 
 State             state;
 std::string       command;
-Position          position;
+RootPosition      position;
 DepthType         depth;
 std::vector<Move> moves;
 #ifdef WITH_NNUE
@@ -22,7 +22,7 @@ void newgame() {
 #ifdef WITH_NNUE
    position.associateEvaluator(evaluator);
 #endif
-   readFEN(startPosition, position);
+   readFEN(startPosition, position); // this set the COM::position position status
 
    // reset dynamic state depending on opponent
    DynamicConfig::ratingFactor      = 1.;
@@ -72,7 +72,7 @@ bool receiveMoves(Move move, Move ponderMove) {
       Distributed::waitRequest(Distributed::_requestMove);
    }
 
-   // if possible get a ponder move
+   // if possible, get a ponder move
    if (ponderMove != INVALIDMOVE) {
       Position p2 = position;
 #ifdef WITH_NNUE
@@ -80,6 +80,7 @@ bool receiveMoves(Move move, Move ponderMove) {
       p2.associateEvaluator(evaluator2);
       p2.resetNNUEEvaluator(p2.Evaluator());
 #endif
+      // apply best move and verify ponder move is ok
       if (!(applyMove(p2, move) && isPseudoLegal(p2, ponderMove))) {
          Logging::LogIt(Logging::logInfo) << "Illegal ponder move " << ToString(ponderMove) << " " << ToString(p2);
          ponderMove = INVALIDMOVE; // do be sure ...
@@ -116,7 +117,7 @@ bool makeMove(Move m, bool disp, std::string tag, Move pMove) {
 #ifdef WITH_NNUE
    position.resetNNUEEvaluator(position.Evaluator());
 #endif
-   bool b = applyMove(position, m, true);
+   bool b = applyMove(position, m, true); // this update the COM::position position status
    if (disp && m != INVALIDMOVE) {
       Logging::LogIt(Logging::logGUI) << tag << " " << ToString(m)
                                       << (Logging::ct == Logging::CT_uci && VALIDMOVE(pMove) ? (" ponder " + ToString(pMove)) : "");

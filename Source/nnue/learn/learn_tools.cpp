@@ -219,13 +219,13 @@ MiniMove ToSFMove(const Position & p, Square from, Square to, MType type){
 	else if ( isCastling(type) ){
 		switch (type){
 			case T_wks:
-			return FromSF::MakeMove<FromSF::CASTLING>(from,p.rooksInit[Co_White][CT_OO]);
+			return FromSF::MakeMove<FromSF::CASTLING>(from,p.rootInfo().rooksInit[Co_White][CT_OO]);
 			case T_wqs:
-			return FromSF::MakeMove<FromSF::CASTLING>(from,p.rooksInit[Co_White][CT_OOO]);
+			return FromSF::MakeMove<FromSF::CASTLING>(from,p.rootInfo().rooksInit[Co_White][CT_OOO]);
 			case T_bks:
-			return FromSF::MakeMove<FromSF::CASTLING>(from,p.rooksInit[Co_Black][CT_OO]);
+			return FromSF::MakeMove<FromSF::CASTLING>(from,p.rootInfo().rooksInit[Co_Black][CT_OO]);
 			case T_bqs:
-			return FromSF::MakeMove<FromSF::CASTLING>(from,p.rooksInit[Co_Black][CT_OOO]);
+			return FromSF::MakeMove<FromSF::CASTLING>(from,p.rootInfo().rooksInit[Co_Black][CT_OOO]);
 			default:
 			return INVALIDMINIMOVE;
 		}
@@ -263,10 +263,10 @@ MiniMove FromSFMove(const Position & p, MiniMove sfmove){
 		type = T_ep;
 		break;
 		case FromSF::CASTLING:
-		if ( to == p.rooksInit[Co_White][CT_OO]  ) type = T_wks;
-		if ( to == p.rooksInit[Co_White][CT_OOO] ) type = T_wqs;
-		if ( to == p.rooksInit[Co_Black][CT_OO]  ) type = T_bks;
-		if ( to == p.rooksInit[Co_Black][CT_OOO] ) type = T_bqs;
+		if ( to == p.rootInfo().rooksInit[Co_White][CT_OO]  ) type = T_wks;
+		if ( to == p.rootInfo().rooksInit[Co_White][CT_OOO] ) type = T_wqs;
+		if ( to == p.rootInfo().rooksInit[Co_Black][CT_OO]  ) type = T_bks;
+		if ( to == p.rootInfo().rooksInit[Co_Black][CT_OOO] ) type = T_bqs;
 		break;
 		default:
 		   assert(false);
@@ -299,8 +299,8 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen ){
 		p.king[c] = sq;
 	}
 
-	p.kingInit[Co_White] = p.king[Co_White];
-	p.kingInit[Co_Black] = p.king[Co_Black];
+	p.rootInfo().kingInit[Co_White] = p.king[Co_White];
+	p.rootInfo().kingInit[Co_Black] = p.king[Co_Black];
 
     //std::cout << "wk " << int(p.king[Co_White]) << std::endl;
 	//std::cout << "bk " << int(p.king[Co_Black]) << std::endl;
@@ -339,25 +339,25 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen ){
 	if (stream.read_one_bit()) {
 		Square rsq;
 		for (rsq = relative_square(Co_White, Sq_h1); p.board_const(rsq) != P_wr; --rsq) {}
-		p.rooksInit[Co_White][CT_OO] = rsq;
+		p.rootInfo().rooksInit[Co_White][CT_OO] = rsq;
 		p.castling |= C_wks;
 	}
 	if (stream.read_one_bit()) {
 		Square rsq;
 		for (rsq = relative_square(Co_White, Sq_a1); p.board_const(rsq) != P_wr; ++rsq) {}
-		p.rooksInit[Co_White][CT_OOO] = rsq;
+		p.rootInfo().rooksInit[Co_White][CT_OOO] = rsq;
 		p.castling |= C_wqs;
 	}
 	if (stream.read_one_bit()) {
 		Square rsq;
 		for (rsq = relative_square(Co_Black, Sq_h1); p.board_const(rsq) != P_br; --rsq) {}
-		p.rooksInit[Co_Black][CT_OO] = rsq;
+		p.rootInfo().rooksInit[Co_Black][CT_OO] = rsq;
 		p.castling |= C_bks;
 	}
 	if (stream.read_one_bit()) {
 		Square rsq;
 		for (rsq = relative_square(Co_Black, Sq_a1); p.board_const(rsq) != P_br; ++rsq) {}
-		p.rooksInit[Co_Black][CT_OOO] = rsq;
+		p.rootInfo().rooksInit[Co_Black][CT_OOO] = rsq;
 		p.castling |= C_bqs;
 	}
 
@@ -365,11 +365,7 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen ){
 	if (stream.read_one_bit()) {
 		Square ep_square = static_cast<Square>(stream.read_n_bit(6));
 		p.ep = ep_square;
-		///@todo ??
-		/*
-		if (!(attackers_to(p.ep) & pieces(sideToMove, PAWN))
-		|| !(pieces(~sideToMove, PAWN) & (p.ep + pawn_push(~sideToMove)))) p.ep = INVALIDSQUARE;
-		*/
+		///@todo verify en passant square
 	}
 	else p.ep = INVALIDSQUARE;
 
@@ -386,7 +382,7 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen ){
 
 	p.halfmoves = (int(p.moves) - 1) * 2 + 1 + (p.c == Co_Black ? 1 : 0);
 
-	p.initCaslingPermHashTable();
+	p.rootInfo().initCaslingPermHashTable();
 
 	BBTools::setBitBoards(p);
 	MaterialHash::initMaterial(p);

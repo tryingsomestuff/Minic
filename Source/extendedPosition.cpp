@@ -159,7 +159,7 @@ std::string ltrim(std::string &s) {
    return s;
 }
 
-ExtendedPosition::ExtendedPosition(const std::string &extFEN, bool withMoveCount): Position(extFEN, withMoveCount) {
+ExtendedPosition::ExtendedPosition(const std::string &extFEN, bool withMoveCount): RootPosition(extFEN, withMoveCount) {
    if (!withMoveCount) {
       halfmoves = 0;
       moves     = 1;
@@ -270,8 +270,8 @@ void ExtendedPosition::test(const std::vector<std::string> &positions,
             ThreadData d;
             d.p = extP;
             ThreadPool::instance().distributeData(d);
-            COM::position = extP;
-            ThreadPool::instance().main().searchDriver();
+            //COM::position = extP;
+            ThreadPool::instance().main().searchDriver(false);
             d                   = ThreadPool::instance().main().getData();
             const Move bestMove = d.best;
 
