@@ -15,9 +15,7 @@ template<typename T> T readFromString(const std::string& s) {
    return tmp;
 }
 
-bool readFEN(const std::string& fen, Position& p, bool silent, bool withMoveCount) {
-   static Position defaultPos;
-
+bool readFEN(const std::string& fen, RootPosition& p, bool silent, bool withMoveCount) {
    if (fen.find_first_not_of(' ') == std::string::npos) {
       Logging::LogIt(Logging::logError) << "Empty fen";
       return false;
@@ -27,7 +25,7 @@ bool readFEN(const std::string& fen, Position& p, bool silent, bool withMoveCoun
    // backup evaluator
    NNUEEvaluator* evaluator = p.associatedEvaluator;
 #endif
-   p = defaultPos;
+   p.clear(); // "clear" position
 #ifdef WITH_NNUE
    // restore initial evaluator ...
    if (evaluator) p.associateEvaluator(*evaluator);
@@ -145,12 +143,12 @@ bool readFEN(const std::string& fen, Position& p, bool silent, bool withMoveCoun
          if (!silent) Logging::LogIt(Logging::logWarn) << "No castling right given";
       }
       else { ///@todo detect illegal stuff in here
-         p.kingInit[Co_White] = p.king[Co_White];
-         p.kingInit[Co_Black] = p.king[Co_Black];
+         p.rootInfo().kingInit[Co_White] = p.king[Co_White];
+         p.rootInfo().kingInit[Co_Black] = p.king[Co_Black];
          if (p.castling & C_wqs) {
             for (Square s = Sq_a1; s <= Sq_h1; ++s) {
                if (s < p.king[Co_White] && p.board_const(s) == P_wr) {
-                  p.rooksInit[Co_White][CT_OOO] = s;
+                  p.rootInfo().rooksInit[Co_White][CT_OOO] = s;
                   break;
                }
             }
@@ -158,7 +156,7 @@ bool readFEN(const std::string& fen, Position& p, bool silent, bool withMoveCoun
          if (p.castling & C_wks) {
             for (Square s = Sq_a1; s <= Sq_h1; ++s) {
                if (s > p.king[Co_White] && p.board_const(s) == P_wr) {
-                  p.rooksInit[Co_White][CT_OO] = s;
+                  p.rootInfo().rooksInit[Co_White][CT_OO] = s;
                   break;
                }
             }
@@ -166,7 +164,7 @@ bool readFEN(const std::string& fen, Position& p, bool silent, bool withMoveCoun
          if (p.castling & C_bqs) {
             for (Square s = Sq_a8; s <= Sq_h8; ++s) {
                if (s < p.king[Co_Black] && p.board_const(s) == P_br) {
-                  p.rooksInit[Co_Black][CT_OOO] = s;
+                  p.rootInfo().rooksInit[Co_Black][CT_OOO] = s;
                   break;
                }
             }
@@ -174,7 +172,7 @@ bool readFEN(const std::string& fen, Position& p, bool silent, bool withMoveCoun
          if (p.castling & C_bks) {
             for (Square s = Sq_a8; s <= Sq_h8; ++s) {
                if (s > p.king[Co_Black] && p.board_const(s) == P_br) {
-                  p.rooksInit[Co_Black][CT_OO] = s;
+                  p.rootInfo().rooksInit[Co_Black][CT_OO] = s;
                   break;
                }
             }
@@ -233,25 +231,28 @@ bool readFEN(const std::string& fen, Position& p, bool silent, bool withMoveCoun
    if (DynamicConfig::useNNUE && evaluator) p.resetNNUEEvaluator(p.Evaluator());
 #endif
 
-   p.initCaslingPermHashTable();
+   p.rootInfo().initCaslingPermHashTable();
 
    return true;
 }
 
-void Position::initCaslingPermHashTable() {
+void RootInformation::initCaslingPermHashTable() {
    // works also for FRC !
    castlePermHashTable.fill(C_all);
    castlePermHashTable[kingInit[Co_White]] = C_all_but_w;
    castlePermHashTable[kingInit[Co_Black]] = C_all_but_b;
 
-   if (castling & C_wqs) castlePermHashTable[rooksInit[Co_White][CT_OOO]] = C_all_but_wqs;
-   if (castling & C_wks) castlePermHashTable[rooksInit[Co_White][CT_OO]]  = C_all_but_wks;
-   if (castling & C_bqs) castlePermHashTable[rooksInit[Co_Black][CT_OOO]] = C_all_but_bqs;
-   if (castling & C_bks) castlePermHashTable[rooksInit[Co_Black][CT_OO]]  = C_all_but_bks;
+   if (rooksInit[Co_White][CT_OOO] != INVALIDSQUARE) castlePermHashTable[rooksInit[Co_White][CT_OOO]] = C_all_but_wqs;
+   if (rooksInit[Co_White][CT_OO]  != INVALIDSQUARE) castlePermHashTable[rooksInit[Co_White][CT_OO]]  = C_all_but_wks;
+   if (rooksInit[Co_Black][CT_OOO] != INVALIDSQUARE) castlePermHashTable[rooksInit[Co_Black][CT_OOO]] = C_all_but_bqs;
+   if (rooksInit[Co_Black][CT_OO]  != INVALIDSQUARE) castlePermHashTable[rooksInit[Co_Black][CT_OO]]  = C_all_but_bks;
 }
 
 Position::~Position() {}
 
 Position::Position() {}
 
-Position::Position(const std::string& fen, bool withMoveCount) { readFEN(fen, *this, true, withMoveCount); }
+RootPosition::RootPosition(const std::string& fen, bool withMoveCount) { 
+   root = new RootInformation;
+   readFEN(fen, *this, true, withMoveCount); 
+}

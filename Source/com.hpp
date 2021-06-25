@@ -14,7 +14,7 @@ enum State : uint8_t { st_pondering = 0, st_analyzing, st_searching, st_none };
 extern State state;
 
 extern std::string       command; // see readLine
-extern Position          position;
+extern RootPosition      position;
 extern DepthType         depth;
 extern std::vector<Move> moves;
 

@@ -44,11 +44,16 @@ echo "Building $exe"
 WARN="-Wall -Wcast-qual -Wno-char-subscripts -Wno-reorder -Wmaybe-uninitialized -Wuninitialized -pedantic -Wextra -Wshadow -Wno-unknown-pragmas"
 #-fopt-info"
 
-OPT="-s -DNDEBUG -O3 $n" ; DEPTH=16
-#OPT="-s -ffunction-sections -fdata-sections -Os -s -DNDEBUG -Wl,--gc-sections" ; DEPTH=16
-#OPT="-DNDEBUG -O3 -g -ggdb -fno-omit-frame-pointer" ; DEPTH=10
-#OPT="-DNDEBUG -g" ; DEPTH=10
-#OPT="-g -rdynamic" ; DEPTH=10
+if [ ! -n "$DEBUGMINIC" ]; then
+  echo "******* RELEASE BUILD *******"
+  OPT="-s -DNDEBUG -O3 $n" ; DEPTH=16
+else
+  echo "******* DEBUG BUILD *******"
+  #OPT="-s -ffunction-sections -fdata-sections -Os -s -DNDEBUG -Wl,--gc-sections" ; DEPTH=16
+  #OPT="-DNDEBUG -O3 -g -ggdb -fno-omit-frame-pointer" ; DEPTH=10
+  #OPT="-DNDEBUG -g" ; DEPTH=10
+  OPT="-g -rdynamic" ; DEPTH=10
+fi
 
 LIBS="-lpthread -ldl" 
 # -lopenblas"

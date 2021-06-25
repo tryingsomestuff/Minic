@@ -271,7 +271,7 @@ void Searcher::writeToGenFile(const Position& p) {
          data.depth               = depth;
          cos.setData(data);
          // do not update COM::position here
-         cos.searchDriver();
+         cos.searchDriver(false);
          data = cos.getData();
 
          // std::cout << data << std::endl; // debug

@@ -52,7 +52,7 @@ void Searcher::displayGUI(DepthType          depth,
    Logging::LogIt(Logging::logGUI) << str.str();
 }
 
-void Searcher::searchDriver() {
+void Searcher::searchDriver(bool postMove) {
    stopFlag = false; ///@todo shall be only done outside ?
 
    if (isMainThread()) Distributed::sync(Distributed::_commStat2, __PRETTY_FUNCTION__);
@@ -428,10 +428,12 @@ pvsout:
          ThreadPool::instance().DisplayStats();
       }
 
-      // send move and ponder move to GUI
-      const bool success = COM::receiveMoves(_data.best, _data.pv.size() > 1 ? _data.pv[1] : INVALIDMOVE);
-      // update position state
-      XBoard::moveApplied(success);
+      if (postMove) {
+         // send move and ponder move to GUI
+         const bool success = COM::receiveMoves(_data.best, _data.pv.size() > 1 ? _data.pv[1] : INVALIDMOVE);
+         // update position state
+         XBoard::moveApplied(success);
+      }
 
    } // isMainThread()
 }

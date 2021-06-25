@@ -68,25 +68,25 @@ template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveLis
          // Moreover, king[] also is assumed to be not INVALIDSQUARE which is verified in readFen      
          if (side == Co_White) {
             if ((p.castling & C_wqs) &&
-                (((BBTools::mask[p.king[Co_White]].between[Sq_c1] | BB::BBSq_c1 | BBTools::mask[p.rooksInit[Co_White][CT_OOO]].between[Sq_d1] | BB::BBSq_d1) &
-                  ~BBTools::mask[p.rooksInit[Co_White][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) & occupancy) == emptyBitBoard &&
+                (((BBTools::mask[p.king[Co_White]].between[Sq_c1] | BB::BBSq_c1 | BBTools::mask[p.rootInfo().rooksInit[Co_White][CT_OOO]].between[Sq_d1] | BB::BBSq_d1) &
+                  ~BBTools::mask[p.rootInfo().rooksInit[Co_White][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) & occupancy) == emptyBitBoard &&
                 !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_c1] | SquareToBitboard(p.king[Co_White]) | BB::BBSq_c1))
                addMove(from, Sq_c1, T_wqs, moves); // wqs
             if ((p.castling & C_wks) &&
-                (((BBTools::mask[p.king[Co_White]].between[Sq_g1] | BB::BBSq_g1 | BBTools::mask[p.rooksInit[Co_White][CT_OO]].between[Sq_f1] | BB::BBSq_f1) &
-                  ~BBTools::mask[p.rooksInit[Co_White][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) & occupancy) == emptyBitBoard &&
+                (((BBTools::mask[p.king[Co_White]].between[Sq_g1] | BB::BBSq_g1 | BBTools::mask[p.rootInfo().rooksInit[Co_White][CT_OO]].between[Sq_f1] | BB::BBSq_f1) &
+                  ~BBTools::mask[p.rootInfo().rooksInit[Co_White][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) & occupancy) == emptyBitBoard &&
                 !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_g1] | SquareToBitboard(p.king[Co_White]) | BB::BBSq_g1))
                addMove(from, Sq_g1, T_wks, moves); // wks
          }
          else {
             if ((p.castling & C_bqs) &&
-                (((BBTools::mask[p.king[Co_Black]].between[Sq_c8] | BB::BBSq_c8 | BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].between[Sq_d8] | BB::BBSq_d8) &
-                  ~BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) & occupancy) == emptyBitBoard &&
+                (((BBTools::mask[p.king[Co_Black]].between[Sq_c8] | BB::BBSq_c8 | BBTools::mask[p.rootInfo().rooksInit[Co_Black][CT_OOO]].between[Sq_d8] | BB::BBSq_d8) &
+                  ~BBTools::mask[p.rootInfo().rooksInit[Co_Black][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) & occupancy) == emptyBitBoard &&
                 !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_c8] | SquareToBitboard(p.king[Co_Black]) | BB::BBSq_c8))
                addMove(from, Sq_c8, T_bqs, moves); // wqs
             if ((p.castling & C_bks) &&
-                (((BBTools::mask[p.king[Co_Black]].between[Sq_g8] | BB::BBSq_g8 | BBTools::mask[p.rooksInit[Co_Black][CT_OO]].between[Sq_f8] | BB::BBSq_f8) &
-                  ~BBTools::mask[p.rooksInit[Co_Black][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) & occupancy) == emptyBitBoard &&
+                (((BBTools::mask[p.king[Co_Black]].between[Sq_g8] | BB::BBSq_g8 | BBTools::mask[p.rootInfo().rooksInit[Co_Black][CT_OO]].between[Sq_f8] | BB::BBSq_f8) &
+                  ~BBTools::mask[p.rootInfo().rooksInit[Co_Black][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) & occupancy) == emptyBitBoard &&
                 !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_g8] | SquareToBitboard(p.king[Co_Black]) | BB::BBSq_g8))
                addMove(from, Sq_g8, T_bks, moves); // wks
          }
@@ -129,7 +129,7 @@ template<GenPhase phase = GP_all> void generate(const Position& p, MoveList& mov
    BitBoard myPieceBBiterator = p.allPieces[p.c];
    while (myPieceBBiterator) generateSquare<phase>(p, moves, BB::popBit(myPieceBBiterator));
 #ifdef DEBUG_GENERATION_LEGAL
-   for (auto m : moves) {
+   for (auto & m : moves) {
       if (!isPseudoLegal(p, m)) {
          Logging::LogIt(Logging::logError) << "Generation error, move not legal " << ToString(p);
          Logging::LogIt(Logging::logError) << "move " << ToString(m);
@@ -153,19 +153,19 @@ template<Color c> inline void movePieceCastle(Position& p, CastlingTypes ct, Squ
    const CastlingRights qs = c == Co_White ? C_wqs : C_bqs;
    BBTools::unSetBit(p, p.king[c]);
    BB::_unSetBit(p.allPieces[c], p.king[c]);
-   BBTools::unSetBit(p, p.rooksInit[c][ct]);
-   BB::_unSetBit(p.allPieces[c], p.rooksInit[c][ct]);
+   BBTools::unSetBit(p, p.rootInfo().rooksInit[c][ct]);
+   BB::_unSetBit(p.allPieces[c], p.rootInfo().rooksInit[c][ct]);
    BBTools::setBit(p, kingDest, pk);
    BB::_setBit(p.allPieces[c], kingDest);
    BBTools::setBit(p, rookDest, pr);
    BB::_setBit(p.allPieces[c], rookDest);
-   p.board(p.king[c])          = P_none;
-   p.board(p.rooksInit[c][ct]) = P_none;
-   p.board(kingDest)           = pk;
-   p.board(rookDest)           = pr;
+   p.board(p.king[c]) = P_none;
+   p.board(p.rootInfo().rooksInit[c][ct]) = P_none;
+   p.board(kingDest) = pk;
+   p.board(rookDest) = pr;
    p.h  ^= Zobrist::ZT[p.king[c]][pk + PieceShift];
    p.ph ^= Zobrist::ZT[p.king[c]][pk + PieceShift];
-   p.h  ^= Zobrist::ZT[p.rooksInit[c][ct]][pr + PieceShift];
+   p.h  ^= Zobrist::ZT[p.rootInfo().rooksInit[c][ct]][pr + PieceShift];
    p.h  ^= Zobrist::ZT[kingDest][pk + PieceShift];
    p.ph ^= Zobrist::ZT[kingDest][pk + PieceShift];
    p.h  ^= Zobrist::ZT[rookDest][pr + PieceShift];

@@ -77,7 +77,7 @@ Counter perft(const Position& p, DepthType depth, PerftAccumulator& acc) {
 }
 
 void perft_test(const std::string& fen, DepthType d, uint64_t expected) {
-    Position p;
+    RootPosition p;
 #ifdef WITH_NNUE
     NNUEEvaluator evaluator;
     p.associateEvaluator(evaluator);
@@ -110,8 +110,8 @@ void analyze(const Position& p, DepthType depth, bool openBenchOutput = false) {
    d.p = p;
    d.depth = depth;
    ThreadPool::instance().distributeData(d);
-   COM::position = p;
-   ThreadPool::instance().main().searchDriver();
+   //COM::position = p;
+   ThreadPool::instance().main().searchDriver(false);
    d = ThreadPool::instance().main().getData();
    Logging::LogIt(Logging::logInfo) << "Best move is " << ToString(d.best) << " " << (int)d.depth << " " << d.score << " pv : " << ToString(d.pv);
 
@@ -131,7 +131,7 @@ void analyze(const Position& p, DepthType depth, bool openBenchOutput = false) {
 
 void selfPlay(DepthType depth) {
    DynamicConfig::genFen = true;
-   Position p(DynamicConfig::FRC ? chess960::positions[std::rand() % 960] : startPosition);
+   RootPosition p(DynamicConfig::FRC ? chess960::positions[std::rand() % 960] : startPosition);
    NNUEEvaluator evaluator;
    p.associateEvaluator(evaluator);
    p.resetNNUEEvaluator(p.Evaluator());
@@ -139,11 +139,12 @@ void selfPlay(DepthType depth) {
    if (DynamicConfig::genFen && !ThreadPool::instance().main().genStream.is_open()) {
       ThreadPool::instance().main().genStream.open("genfen_" + std::to_string(::getpid()) + "_" + std::to_string(0) + ".epd", std::ofstream::app);
    }
-#endif    
+#endif
+   Position p2 = p;
    while (true) {
       DynamicConfig::genFen = false;
       ThreadPool::instance().main().subSearch = true;
-      analyze(p, depth); // selfplay using a specific depth
+      analyze(p2, depth); // selfplay using a specific depth
       ThreadPool::instance().main().subSearch = false;
       ThreadData d = ThreadPool::instance().main().getData();
       DynamicConfig::genFen = true;
@@ -151,13 +152,13 @@ void selfPlay(DepthType depth) {
          //Logging::LogIt(Logging::logInfo) << "End of game"; 
          break;
       }
-      Position p2 = p;
-      applyMove(p2, d.best, true);
-      p = p2;
+      Position p3 = p2;
+      applyMove(p3, d.best, true);
+      p2 = p3;
 #ifdef WITH_GENFILE
-      if (DynamicConfig::genFen) ThreadPool::instance().main().writeToGenFile(p); // writeToGenFile using genFenDepth from this root position
+      if (DynamicConfig::genFen) ThreadPool::instance().main().writeToGenFile(p2); // writeToGenFile using genFenDepth from this root position
 #endif
-      if (p.halfmoves > MAX_PLY / 4) {
+      if (p2.halfmoves > MAX_PLY / 4) {
          //Logging::LogIt(Logging::logInfo) << "Too long game"; 
          break;
       }
@@ -165,7 +166,7 @@ void selfPlay(DepthType depth) {
 }
 
 int bench(DepthType depth) {
-   Position p;
+   RootPosition p;
 #ifdef WITH_NNUE
     NNUEEvaluator evaluator;
     p.associateEvaluator(evaluator);
@@ -334,8 +335,8 @@ int cliManagement(std::string cli, int argc, char** argv) {
       NNUEEvaluator evaluator;
 #endif
 
-      for (auto& t : posList) {
-         Position p;
+      for (auto & t : posList) {
+         RootPosition p;
 #ifdef WITH_NNUE
          p.associateEvaluator(evaluator);
          p.resetNNUEEvaluator(evaluator);
@@ -359,19 +360,19 @@ int cliManagement(std::string cli, int argc, char** argv) {
       DynamicConfig::disableTT = true;
       std::string filename = "evalSpeed.epd";
       if (argc > 2) filename = argv[2];
-      std::vector<Position> data;
+      std::vector<RootPosition> data;
       Logging::LogIt(Logging::logInfo) << "Running eval speed with file " << filename;
       std::vector<std::string> positions;
       readEPDFile(filename, positions);
       for (size_t k = 0; k < positions.size(); ++k) {
-         data.push_back(Position(positions[k], false));
+         data.push_back(RootPosition(positions[k], false));
          if (k % 50000 == 0) Logging::LogIt(Logging::logInfo) << k << " position read";
         }
       Logging::LogIt(Logging::logInfo) << "Data size : " << data.size();
 
       std::chrono::time_point<Clock> startTime = Clock::now();
       for (int k = 0; k < 10; ++k)
-         for (auto p : data) {
+         for (auto & p : data) {
             EvalData d;
             eval(p, d, ThreadPool::instance().main(), true);
          }
@@ -380,7 +381,7 @@ int cliManagement(std::string cli, int argc, char** argv) {
 
       startTime = Clock::now();
       for (int k = 0; k < 10; ++k)
-         for (auto p : data) {
+         for (auto & p : data) {
             EvalData d;
             eval(p, d, ThreadPool::instance().main(), false);
          }
@@ -406,7 +407,7 @@ int cliManagement(std::string cli, int argc, char** argv) {
     if (fen == "shirov") fen = shirov;
 
     // instantiate the position
-    Position p;
+    RootPosition p;
 #ifdef WITH_NNUE
     NNUEEvaluator evaluator;
     p.associateEvaluator(evaluator);

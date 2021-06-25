@@ -55,9 +55,9 @@ void movePiece(Position& p, Square from, Square to, Piece fromP, Piece toP, bool
       if ((abs(toP) == P_wp || abs(toP) == P_wk)) p.ph ^= Zobrist::ZT[to][toId];
    }
    // consequences on castling
-   if (p.castling && (p.castlePermHashTable[from] ^ p.castlePermHashTable[to])) {
+   if (p.castling && (p.rootInfo().castlePermHashTable[from] ^ p.rootInfo().castlePermHashTable[to])) {
       p.h ^= Zobrist::ZTCastling[p.castling];
-      p.castling &= (p.castlePermHashTable[from] & p.castlePermHashTable[to]);
+      p.castling &= (p.rootInfo().castlePermHashTable[from] & p.rootInfo().castlePermHashTable[to]);
       p.h ^= Zobrist::ZTCastling[p.castling];
    }
 
@@ -381,34 +381,34 @@ bool isPseudoLegal(const Position& p, Move m) { // validate TT move
       // This way rooksInit is not INVALIDSQUARE, and thus mask[] is not out of bound
       // Moreover, king[] also is assumed to be not INVALIDSQUARE which is verified in readFen
       if (p.c == Co_White) {
-         if (t == T_wqs && (p.castling & C_wqs) && from == p.kingInit[Co_White] && fromP == P_wk && to == Sq_c1 && toP == P_none &&
-             (((BBTools::mask[p.king[Co_White]].between[Sq_c1] | BB::BBSq_c1 | BBTools::mask[p.rooksInit[Co_White][CT_OOO]].between[Sq_d1] |
+         if (t == T_wqs && (p.castling & C_wqs) && from == p.rootInfo().kingInit[Co_White] && fromP == P_wk && to == Sq_c1 && toP == P_none &&
+             (((BBTools::mask[p.king[Co_White]].between[Sq_c1] | BB::BBSq_c1 | BBTools::mask[p.rootInfo().rooksInit[Co_White][CT_OOO]].between[Sq_d1] |
                 BB::BBSq_d1) &
-               ~BBTools::mask[p.rooksInit[Co_White][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) &
+               ~BBTools::mask[p.rootInfo().rooksInit[Co_White][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) &
               occupancy) == emptyBitBoard &&
              !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_c1] | SquareToBitboard(p.king[Co_White]) | BB::BBSq_c1))
             PSEUDO_LEGAL_RETURN(true, 9)
-         if (t == T_wks && (p.castling & C_wks) && from == p.kingInit[Co_White] && fromP == P_wk && to == Sq_g1 && toP == P_none &&
-             (((BBTools::mask[p.king[Co_White]].between[Sq_g1] | BB::BBSq_g1 | BBTools::mask[p.rooksInit[Co_White][CT_OO]].between[Sq_f1] |
+         if (t == T_wks && (p.castling & C_wks) && from == p.rootInfo().kingInit[Co_White] && fromP == P_wk && to == Sq_g1 && toP == P_none &&
+             (((BBTools::mask[p.king[Co_White]].between[Sq_g1] | BB::BBSq_g1 | BBTools::mask[p.rootInfo().rooksInit[Co_White][CT_OO]].between[Sq_f1] |
                 BB::BBSq_f1) &
-               ~BBTools::mask[p.rooksInit[Co_White][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) &
+               ~BBTools::mask[p.rootInfo().rooksInit[Co_White][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) &
               occupancy) == emptyBitBoard &&
              !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_g1] | SquareToBitboard(p.king[Co_White]) | BB::BBSq_g1))
             PSEUDO_LEGAL_RETURN(true, 10)
          PSEUDO_LEGAL_RETURN(false, 11)
       }
       else {
-         if (t == T_bqs && (p.castling & C_bqs) && from == p.kingInit[Co_Black] && fromP == P_bk && to == Sq_c8 && toP == P_none &&
-             (((BBTools::mask[p.king[Co_Black]].between[Sq_c8] | BB::BBSq_c8 | BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].between[Sq_d8] |
+         if (t == T_bqs && (p.castling & C_bqs) && from == p.rootInfo().kingInit[Co_Black] && fromP == P_bk && to == Sq_c8 && toP == P_none &&
+             (((BBTools::mask[p.king[Co_Black]].between[Sq_c8] | BB::BBSq_c8 | BBTools::mask[p.rootInfo().rooksInit[Co_Black][CT_OOO]].between[Sq_d8] |
                 BB::BBSq_d8) &
-               ~BBTools::mask[p.rooksInit[Co_Black][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) &
+               ~BBTools::mask[p.rootInfo().rooksInit[Co_Black][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) &
               occupancy) == emptyBitBoard &&
              !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_c8] | SquareToBitboard(p.king[Co_Black]) | BB::BBSq_c8))
             PSEUDO_LEGAL_RETURN(true, 12)
-         if (t == T_bks && (p.castling & C_bks) && from == p.kingInit[Co_Black] && fromP == P_bk && to == Sq_g8 && toP == P_none &&
-             (((BBTools::mask[p.king[Co_Black]].between[Sq_g8] | BB::BBSq_g8 | BBTools::mask[p.rooksInit[Co_Black][CT_OO]].between[Sq_f8] |
+         if (t == T_bks && (p.castling & C_bks) && from == p.rootInfo().kingInit[Co_Black] && fromP == P_bk && to == Sq_g8 && toP == P_none &&
+             (((BBTools::mask[p.king[Co_Black]].between[Sq_g8] | BB::BBSq_g8 | BBTools::mask[p.rootInfo().rooksInit[Co_Black][CT_OO]].between[Sq_f8] |
                 BB::BBSq_f8) &
-               ~BBTools::mask[p.rooksInit[Co_Black][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) &
+               ~BBTools::mask[p.rootInfo().rooksInit[Co_Black][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) &
               occupancy) == emptyBitBoard &&
              !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_g8] | SquareToBitboard(p.king[Co_Black]) | BB::BBSq_g8))
             PSEUDO_LEGAL_RETURN(true, 13)

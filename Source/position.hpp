@@ -8,8 +8,25 @@
 #endif
 
 struct Position; // forward decl
+struct RootPosition; // forward decl
 
-bool readFEN(const std::string& fen, Position& p, bool silent = false, bool withMoveount = false); // forward decl
+/*!
+ * Main Position initialisation function
+ * - silent will forbid logging (for info, not for error !)
+ * - withMoveCount shall be set in order to read last part of the FEN string
+ */
+bool readFEN(const std::string& fen, RootPosition& p, bool silent = false, bool withMoveCount = false); // forward decl
+
+/*!
+ * Informations associated with an initially given Position (from readFEN)
+ * There will not change inside the search tree
+ */
+struct RootInformation {
+   std::array<CastlingRights, NbSquare> castlePermHashTable;
+   std::array<std::array<Square, 2>, 2> rooksInit = {{{INVALIDSQUARE, INVALIDSQUARE}, {INVALIDSQUARE, INVALIDSQUARE}}};
+   std::array<Square, 2>                kingInit  = {INVALIDSQUARE, INVALIDSQUARE};
+   void initCaslingPermHashTable();
+};
 
 /*!
  * The main position structure
@@ -26,59 +43,87 @@ bool readFEN(const std::string& fen, Position& p, bool silent = false, bool with
  */
 struct Position {
    Position();
-   Position(const std::string& fen, bool withMoveCount = true);
-   ~Position();
+   virtual ~Position();
 
-   std::array<Piece, NbSquare>          _b {{P_none}}; // works because P_none is in fact 0 ...
-   std::array<CastlingRights, NbSquare> castlePermHashTable;
-   std::array<BitBoard, 6>              _allB {{emptyBitBoard}};
-   std::array<BitBoard, 2>              allPieces {{emptyBitBoard}};
+   std::array<Piece, NbSquare> _b {{P_none}}; // works because P_none is in fact 0
+   std::array<BitBoard, 6>     _allB {{emptyBitBoard}}; // works because emptyBitBoard is in fact 0
+   std::array<BitBoard, 2>     allPieces {{emptyBitBoard}}; // works because emptyBitBoard is in fact 0
    
    // t p n b r q k bl bd M n  (total is first so that pawn to king is same a Piece)
    typedef std::array<std::array<char, 11>, 2> Material;
-   Material                                    mat = {{{{0}}}}; // such a nice syntax ...
+   Material mat = {{{{0}}}}; // such a nice syntax ...
 
    mutable Hash h = nullHash, ph = nullHash;
-   MiniMove     lastMove = INVALIDMINIMOVE;
-   uint16_t     moves = 0, halfmoves = 0;
-   std::array<Square, 2>                king      = {INVALIDSQUARE, INVALIDSQUARE};
-   std::array<std::array<Square, 2>, 2> rooksInit = {{{INVALIDSQUARE, INVALIDSQUARE}, {INVALIDSQUARE, INVALIDSQUARE}}};
-   std::array<Square, 2>                kingInit  = {INVALIDSQUARE, INVALIDSQUARE};
-   Square          ep        = INVALIDSQUARE;
-   uint8_t         fifty     = 0;
-   CastlingRights  castling  = C_none;
-   Color           c         = Co_White;
+   MiniMove lastMove = INVALIDMINIMOVE;
+   uint16_t moves = 0, halfmoves = 0;
+   std::array<Square, 2> king = {INVALIDSQUARE, INVALIDSQUARE};
+
+   // shared by all "child" of a same "root" position
+   mutable RootInformation* root = nullptr; 
+
+   Square         ep       = INVALIDSQUARE;
+   uint8_t        fifty    = 0;
+   CastlingRights castling = C_none;
+   Color          c        = Co_White;
+
+   inline void clear(){
+      _b = {{P_none}};
+      _allB = {{emptyBitBoard}};
+      allPieces = {{emptyBitBoard}};
+      mat = {{{{0}}}};
+      h = nullHash; 
+      ph = nullHash;
+      lastMove = INVALIDMINIMOVE;
+      moves = 0;
+      halfmoves = 0;
+      king = {INVALIDSQUARE, INVALIDSQUARE};
+      //root = nullptr; 
+      ep = INVALIDSQUARE;
+      fifty = 0;
+      castling = C_none;
+      c = Co_White;
+   }
+
+   [[nodiscard]] inline RootInformation& rootInfo() {
+      assert(root);
+      return *root;
+   }
+
+   [[nodiscard]] inline const RootInformation& rootInfo() const {
+      assert(root);
+      return *root;
+   }
 
    [[nodiscard]] inline const Piece& board_const(Square k) const { return _b[k]; }
-   [[nodiscard]] inline Piece&       board(Square k) { return _b[k]; }
+   [[nodiscard]] inline Piece&       board      (Square k)       { return _b[k]; }
 
    [[nodiscard]] inline BitBoard occupancy() const { return allPieces[Co_White] | allPieces[Co_Black]; }
 
-   [[nodiscard]] inline BitBoard allKing() const { return _allB[5]; }
-   [[nodiscard]] inline BitBoard allQueen() const { return _allB[4]; }
-   [[nodiscard]] inline BitBoard allRook() const { return _allB[3]; }
+   [[nodiscard]] inline BitBoard allKing()   const { return _allB[5]; }
+   [[nodiscard]] inline BitBoard allQueen()  const { return _allB[4]; }
+   [[nodiscard]] inline BitBoard allRook()   const { return _allB[3]; }
    [[nodiscard]] inline BitBoard allBishop() const { return _allB[2]; }
    [[nodiscard]] inline BitBoard allKnight() const { return _allB[1]; }
-   [[nodiscard]] inline BitBoard allPawn() const { return _allB[0]; }
+   [[nodiscard]] inline BitBoard allPawn()   const { return _allB[0]; }
 
-   [[nodiscard]] inline BitBoard blackKing() const { return _allB[5] & allPieces[Co_Black]; }
-   [[nodiscard]] inline BitBoard blackQueen() const { return _allB[4] & allPieces[Co_Black]; }
-   [[nodiscard]] inline BitBoard blackRook() const { return _allB[3] & allPieces[Co_Black]; }
+   [[nodiscard]] inline BitBoard blackKing()   const { return _allB[5] & allPieces[Co_Black]; }
+   [[nodiscard]] inline BitBoard blackQueen()  const { return _allB[4] & allPieces[Co_Black]; }
+   [[nodiscard]] inline BitBoard blackRook()   const { return _allB[3] & allPieces[Co_Black]; }
    [[nodiscard]] inline BitBoard blackBishop() const { return _allB[2] & allPieces[Co_Black]; }
    [[nodiscard]] inline BitBoard blackKnight() const { return _allB[1] & allPieces[Co_Black]; }
-   [[nodiscard]] inline BitBoard blackPawn() const { return _allB[0] & allPieces[Co_Black]; }
+   [[nodiscard]] inline BitBoard blackPawn()   const { return _allB[0] & allPieces[Co_Black]; }
 
-   [[nodiscard]] inline BitBoard whitePawn() const { return _allB[0] & allPieces[Co_White]; }
+   [[nodiscard]] inline BitBoard whitePawn()   const { return _allB[0] & allPieces[Co_White]; }
    [[nodiscard]] inline BitBoard whiteKnight() const { return _allB[1] & allPieces[Co_White]; }
    [[nodiscard]] inline BitBoard whiteBishop() const { return _allB[2] & allPieces[Co_White]; }
-   [[nodiscard]] inline BitBoard whiteRook() const { return _allB[3] & allPieces[Co_White]; }
-   [[nodiscard]] inline BitBoard whiteQueen() const { return _allB[4] & allPieces[Co_White]; }
-   [[nodiscard]] inline BitBoard whiteKing() const { return _allB[5] & allPieces[Co_White]; }
+   [[nodiscard]] inline BitBoard whiteRook()   const { return _allB[3] & allPieces[Co_White]; }
+   [[nodiscard]] inline BitBoard whiteQueen()  const { return _allB[4] & allPieces[Co_White]; }
+   [[nodiscard]] inline BitBoard whiteKing()   const { return _allB[5] & allPieces[Co_White]; }
 
    [[nodiscard]] inline BitBoard whiteLightBishop() const { return whiteBishop() & BB::whiteSquare; }
-   [[nodiscard]] inline BitBoard whiteDarkBishop() const { return whiteBishop() & BB::blackSquare; }
+   [[nodiscard]] inline BitBoard whiteDarkBishop()  const { return whiteBishop() & BB::blackSquare; }
    [[nodiscard]] inline BitBoard blackLightBishop() const { return blackBishop() & BB::whiteSquare; }
-   [[nodiscard]] inline BitBoard blackDarkBishop() const { return blackBishop() & BB::blackSquare; }
+   [[nodiscard]] inline BitBoard blackDarkBishop()  const { return blackBishop() & BB::blackSquare; }
 
    template<Piece pp> [[nodiscard]] inline BitBoard pieces_const(Color cc) const {
       assert(pp != P_none);
@@ -120,11 +165,7 @@ struct Position {
       const bool   isCapNoEP = false;
    };
 
-   void initCaslingPermHashTable();
-
 #ifdef WITH_NNUE
-
-   using NNUEEvaluator = nnue::NNUEEval<NNUEWrapper::nnueNType, NNUEWrapper::quantization>;
 
    mutable NNUEEvaluator* associatedEvaluator = nullptr;
    void                   associateEvaluator(NNUEEvaluator& evaluator) { associatedEvaluator = &evaluator; }
@@ -211,4 +252,21 @@ struct Position {
    }
 
 #endif
+};
+
+/*!
+ * RootPosition only specific responsability is to 
+ * allocate and delete root pointer
+ */
+struct RootPosition : public Position {
+   RootPosition(): Position() { root = new RootInformation; }
+   RootPosition(const std::string& fen, bool withMoveCount = true);
+   ~RootPosition() {
+      if (root) delete root;
+   }
+   RootPosition(const RootPosition& p): Position(p) {
+      if (p.root) root = new RootInformation(*p.root);
+      else root = new RootInformation;
+   };
+   RootPosition & operator=(const RootPosition &) = delete;
 };
