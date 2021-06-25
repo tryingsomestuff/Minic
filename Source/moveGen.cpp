@@ -262,7 +262,7 @@ bool applyMove(Position& p, const Move& m, bool noValidation) {
          if (p.board_const(s) != pp) {
             Logging::LogIt(Logging::logWarn) << SquareNames[s];
             Logging::LogIt(Logging::logWarn) << ToString(p);
-            Logging::LogIt(Logging::logWarn) << BB::ToString(bb);
+            Logging::LogIt(Logging::logWarn) << ToString(bb);
             Logging::LogIt(Logging::logWarn) << (int)pp;
             Logging::LogIt(Logging::logWarn) << (int)p.board_const(s);
             Logging::LogIt(Logging::logWarn) << "last move " << ToString(p.lastMove);
@@ -274,16 +274,16 @@ bool applyMove(Position& p, const Move& m, bool noValidation) {
    if (count_bb1 != count_bb2) {
       Logging::LogIt(Logging::logFatal) << "Wrong bitboard count (all/piece)" << count_bb1 << " " << count_bb2;
       Logging::LogIt(Logging::logWarn) << ToString(p);
-      Logging::LogIt(Logging::logWarn) << BB::ToString(p.occupancy());
+      Logging::LogIt(Logging::logWarn) << ToString(p.occupancy());
       for (Piece pp = P_bk; pp <= P_wk; ++pp) {
          if (pp == P_none) continue;
-         Logging::LogIt(Logging::logWarn) << BB::ToString(p.pieces_const(pp));
+         Logging::LogIt(Logging::logWarn) << ToString(p.pieces_const(pp));
       }
    }
    if (count_board != count_bb1) {
       Logging::LogIt(Logging::logFatal) << "Wrong bitboard count (board)" << count_board << " " << count_bb1;
       Logging::LogIt(Logging::logWarn) << ToString(p);
-      Logging::LogIt(Logging::logWarn) << BB::ToString(p.occupancy());
+      Logging::LogIt(Logging::logWarn) << ToString(p.occupancy());
    }
 #endif
    p.lastMove = m;

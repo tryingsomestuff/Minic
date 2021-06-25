@@ -166,7 +166,7 @@ typedef int8_t   DepthType;
 typedef int32_t  Move;         // invalid if < 0
 typedef int16_t  MiniMove;     // invalid if < 0
 typedef int8_t   Square;       // invalid if < 0
-typedef uint64_t Hash;         // invalid if == 0ull
+typedef uint64_t Hash;         // invalid if == nullHash
 typedef uint32_t MiniHash;     // invalid if == 0
 typedef uint64_t Counter;
 typedef uint64_t BitBoard;

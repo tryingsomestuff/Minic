@@ -60,7 +60,7 @@ void uci() {
       }
       else if (uciCommand == "position") {
          auto startTimePos = Clock::now();
-         COM::position.h   = 0ull; // invalidate position
+         COM::position.h   = nullHash; // invalidate position
          std::string type;
          while (iss >> type) {
             if (type == "startpos") { readFEN(startPosition, COM::position, false, true); }
@@ -74,7 +74,7 @@ void uci() {
                if (!readFEN(fen, COM::position, false, true)) Logging::LogIt(Logging::logFatal) << "Illegal FEN " << fen;
             }
             else if (type == "moves") {
-               if (COM::position.h != 0ull) {
+               if (COM::position.h != nullHash) {
                   std::string mstr;
                   while (iss >> mstr) {
                      Move m = COM::moveFromCOM(mstr);
@@ -96,7 +96,7 @@ void uci() {
             Logging::LogIt(Logging::logGUI) << "info string go command received, but search already in progress";
          }
          else {
-            if (COM::position.h != 0ull) {
+            if (COM::position.h != nullHash) {
                //MoveList root_moves;
 
                TimeMan::isDynamic       = false;

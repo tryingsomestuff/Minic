@@ -121,8 +121,6 @@ const BitBoard centerFiles  = fileC | fileD | fileE | fileF;
 const BitBoard kingSide     = fileE | fileF | fileG | fileH;
 const BitBoard kingFlank[8] = {queenSide ^ fileD, queenSide, queenSide, centerFiles, centerFiles, kingSide, kingSide, kingSide ^ fileE};
 
-[[nodiscard]] std::string ToString(const BitBoard& b);
-
 inline void _setBit  (BitBoard& b, Square k) { b |= SquareToBitboard(k); }
 inline void _unSetBit(BitBoard& b, Square k) { b &= ~SquareToBitboard(k); }
 

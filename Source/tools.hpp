@@ -19,6 +19,8 @@ void debug_king_cap(const Position& p);
 
 [[nodiscard]] std::string ToString(const Position::Material& mat);
 
+[[nodiscard]] std::string ToString(const BitBoard& b);
+
 template < typename T >
 [[nodiscard]] std::string ToString(const std::array<T,64>& a){
    std::stringstream ss;

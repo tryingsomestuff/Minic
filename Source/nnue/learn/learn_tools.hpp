@@ -15,9 +15,7 @@ struct Position;
 // For Minic data generation and use to stay compatible with SF one,
 // I need to handle SF move encoding in the binary format ...
 // So here is some SF extracted Move usage things
-
 namespace FromSF {
-
 namespace Algo {
 // Fisher-Yates
 template<typename Rng, typename T> inline void shuffle(std::vector<T>& buf, Rng&& prng) {
@@ -52,7 +50,6 @@ inline uint64_t string_hash(const std::string& str) {
 ///
 /// For further analysis see
 ///   <http://vigna.di.unimi.it/ftp/papers/xorshift.pdf>
-
 class PRNG {
    uint64_t s;
 

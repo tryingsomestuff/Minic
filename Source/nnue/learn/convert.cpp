@@ -482,7 +482,7 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
             ThreadData data;
             data.p        = tpos;
             data.depth    = DynamicConfig::genFenDepth;
-            //COM::position = tpos;
+            //COM::position = tpos; // only need for display purpose
             cos.searchDriver(false);
             data    = ThreadPool::instance().main().getData();
             p.score = data.score;

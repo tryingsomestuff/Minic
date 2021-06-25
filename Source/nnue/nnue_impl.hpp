@@ -22,7 +22,7 @@
 #include <cblas.h>
 #endif
 
-// Initially taken from Seer implementation.
+// Initially taken from Seer implementation in October 2020.
 // see https://github.com/connormcmonigle/seer-nnue
 
 #define NNUEALIGNMENT 64
