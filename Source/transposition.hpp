@@ -42,10 +42,16 @@ struct Entry {
    Entry(): m(INVALIDMINIMOVE), h(nullHash), s(0), e(0), b(B_none), d(-2) {}
    Entry(Hash _h, Move _m, ScoreType _s, ScoreType _e, Bound _b, DepthType _d):
        h(Hash64to32(_h)), m(Move2MiniMove(_m)), s(_s), e(_e), b(Bound(_b | (curGen << 5))), d(_d) {}
-   MiniHash  h;    //32
-   ScoreType s, e; //16 + 16
+   MiniHash h; //32
    union {
-      MiniHash _data; //32
+      MiniHash _data1; //32
+      struct {
+         ScoreType s; //16
+         ScoreType e; //16
+      };
+   };
+   union {
+      MiniHash _data2; //32
       struct {
          MiniMove  m; //16
          Bound     b; //8

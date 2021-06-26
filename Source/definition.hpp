@@ -89,9 +89,9 @@ const std::string MinicVersion = "3.09";
 //#define WITH_PIECE_TUNING
 
 // *** Debug
+//#define VERBOSE_EVAL
 //#define DEBUG_NNUE_UPDATE
 //#define DEBUG_BACKTRACE
-//#define VERBOSE_EVAL
 //#define DEBUG_HASH
 //#define DEBUG_PHASH
 //#define DEBUG_MATERIAL
@@ -103,6 +103,8 @@ const std::string MinicVersion = "3.09";
 //#define DEBUG_HASH_ENTRY
 //#define DEBUG_KING_CAP
 //#define DEBUG_PERFT
+//#define DEBUG_STATICEVAL
+//#define DEBUG_QSTATICEVAL
 
 #ifdef WITH_TEXEL_TUNING
 #define CONST_TEXEL_TUNING

@@ -42,9 +42,17 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Posi
    return bestScore;
 }
 
+inline ScoreType bestCapture(const Position &p){
+   return p.pieces_const(~p.c,P_wq) ? value(P_wq) : value(P_wr);
+          /*p.pieces_const(~p.c,P_wr) ? value(P_wr) :
+          p.pieces_const(~p.c,P_wb) ? value(P_wb) :
+          p.pieces_const(~p.c,P_wn) ? value(P_wn) :
+          p.pieces_const(~p.c,P_wp) ? value(P_wp) : 0;*/
+}
+
 inline ScoreType qDeltaMargin(const Position& p) {
    const ScoreType delta = (p.pieces_const(p.c, P_wp) & BB::seventhRank[p.c]) ? value(P_wq) : value(P_wp);
-   return delta + value(P_wq);
+   return delta + value(P_wq);//bestCapture(p);
 }
 
 ScoreType Searcher::qsearch(ScoreType       alpha,
@@ -99,12 +107,18 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
 
    // get a static score for the position.
    ScoreType evalScore;
+   // do not eval position when in check, we won't use it (won't forward prune)
    if (isInCheck) evalScore = -MATE + height;
-   else if (p.lastMove == NULLMOVE && height > 0)
-      evalScore = 2 * ScaleScore(EvalConfig::tempo, stack[p.halfmoves - 1].data.gp) -
-                  stack[p.halfmoves - 1].eval; // skip eval if nullmove just applied ///@todo wrong ! gp is 0 here so tempoMG must be == tempoEG
+   // skip eval if nullmove just applied we can hack
+   // Won't work with asymetric HalfKA NNUE
+   ///@todo wrong ! gp is 0 here so tempoMG must be == tempoEG
+   else if (!DynamicConfig::useNNUE && p.lastMove == NULLMOVE && height > 0){
+      evalScore = 2 * ScaleScore(EvalConfig::tempo, stack[p.halfmoves - 1].data.gp) - stack[p.halfmoves - 1].eval;
+      checkEval(p,evalScore,*this,"null move trick (qsearch)");
+   }
    else {
-      if (ttHit) { // if we had a TT hit (with or without associated move), we can use its eval instead of calling eval()
+      // if we had a TT hit (with or without associated move), we can use its eval instead of calling eval()
+      if (ttHit) {
          stats.incr(Stats::sid_ttschits);
          evalScore = e.e;
          /*
@@ -122,10 +136,12 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
          }
          */
          data.gp = 0.5; // force mid game value in sorting ... affect only quiet move, so here check evasion ...
+         checkEval(p,evalScore,*this,"from TT (qsearch)");
       }
       else {
          stats.incr(Stats::sid_ttscmiss);
          evalScore = eval(p, data, *this);
+         checkEval(p,evalScore,*this,"from eval (qsearch)");
       }
    }
    const ScoreType staticScore = evalScore;
@@ -139,10 +155,11 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    // early cut-off based on eval score (static or from TT score)
    if (evalScore >= beta) {
       if (!isInCheck && !ttHit)
+         // Be carefull here, _data in Entry is always (INVALIDMOVE,B_none,-2) here, so that collisions are a lot more likely
          TT::setEntry(*this, pHash, INVALIDMOVE, createHashScore(evalScore, height), createHashScore(evalScore, height), TT::B_none, -2);
       return evalScore;
    }
-   if (!isInCheck && SearchConfig::doQDeltaPruning && staticScore + qDeltaMargin(p) < alpha) return stats.incr(Stats::sid_delta), alpha;
+   if (!isInCheck && SearchConfig::doQDeltaPruning && staticScore + qDeltaMargin(p) < alpha) return stats.incr(Stats::sid_delta), staticScore;
    if (evalScore > alpha) alpha = evalScore;
 
    TT::Bound       b              = TT::B_alpha;
@@ -205,17 +222,17 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
       if (validTTmove && sameMove(e.m, *it)) continue; // already tried
       if (!isInCheck) {
          if (onlyRecapture && Move2To(*it) != recapture) continue; // only recapture now ...
-         if (!SEE_GE(p, *it, 0)) {
-            stats.incr(Stats::sid_qsee);
-            continue;
-         }
-         if (SearchConfig::doQFutility && staticScore + SearchConfig::qfutilityMargin[evalScoreIsHashScore] +
-                                                  (isPromotionCap(*it) ? (value(P_wq) - value(P_wp)) : 0) +
-                                                  (Move2Type(*it) == T_ep ? value(P_wp) : PieceTools::getAbsValue(p, Move2To(*it))) <=
-                                              alphaInit) {
+         if (SearchConfig::doQFutility && validMoveCount &&
+             staticScore + SearchConfig::qfutilityMargin[evalScoreIsHashScore] + (isPromotionCap(*it) ? (value(P_wq) - value(P_wp)) : 0) +
+                     (Move2Type(*it) == T_ep ? value(P_wp) : PieceTools::getAbsValue(p, Move2To(*it))) <=
+                 alphaInit) {
             stats.incr(Stats::sid_qfutility);
             continue;
          }
+         if (!SEE_GE(p, *it, 0)) {
+            stats.incr(Stats::sid_qsee);
+            continue;
+         }           
       }
       Position p2 = p;
 #ifdef WITH_NNUE

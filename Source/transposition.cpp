@@ -77,7 +77,7 @@ bool getEntry(Searcher &context, const Position &p, Hash h, DepthType d, Entry &
    if (e.h == nullHash) return false; //early exit
    if (
 #ifndef DEBUG_HASH_ENTRY
-       ((e.h ^ e._data) != Hash64to32(h)) ||
+       ((e.h ^ e._data1 ^ e._data2) != Hash64to32(h)) ||
 #endif
        (VALIDMOVE(e.m) && !isPseudoLegal(p, e.m))) {
       e.h = nullHash;
@@ -97,7 +97,8 @@ void setEntry(Searcher &context, Hash h, Move m, ScoreType s, ScoreType eval, Bo
    assert(h != nullHash); // can really happen in fact ... but rarely
    if (DynamicConfig::disableTT) return;
    Entry e(h, m, s, eval, b, d);
-   e.h ^= e._data;
+   e.h ^= e._data1;
+   e.h ^= e._data2;
    ++context.stats.counters[Stats::sid_ttInsert];
    table[h & (ttSize - 1)] = e; // always replace (favour leaf)
    Distributed::setEntry(h, e);
