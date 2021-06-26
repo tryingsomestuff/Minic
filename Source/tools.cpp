@@ -7,6 +7,7 @@
 #include "pieceTools.hpp"
 #include "position.hpp"
 #include "positionTools.hpp"
+#include "searcher.hpp"
 #include "score.hpp"
 #include "threading.hpp"
 
@@ -149,3 +150,21 @@ std::string ToString(const BitBoard& b) {
    ss << Logging::_protocolComment[Logging::ct] << "+-+-+-+-+-+-+-+-+";
    return ss.str();
 }
+
+#if defined(DEBUG_STATICEVAL) || defined(DEBUG_QSTATICEVAL)
+void checkEval(const Position & p, ScoreType e, Searcher & context, const std::string & txt){
+   EvalData data;
+   const ScoreType f = eval(p, data, context);
+   if ( std::abs(e - f) > 10){
+      std::cout << ToString(p) << std::endl;
+      std::cout << e << std::endl;
+      std::cout << f << std::endl;
+      std::cout << "EVALERROR : " << txt << std::endl;
+   }
+   else{
+      std::cout << "EVALOK : " << txt << std::endl;
+   }      
+}
+#else
+void checkEval(const Position &, ScoreType, Searcher &, const std::string &){}
+#endif

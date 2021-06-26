@@ -3,6 +3,8 @@
 #include "definition.hpp"
 #include "position.hpp"
 
+struct Searcher;
+
 [[nodiscard]] std::string trim(const std::string& str, const std::string& whitespace = " \t");
 
 void tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters = " ");
@@ -47,6 +49,8 @@ template<typename F, typename... Arguments> void threadedWork(F&& worker, size_t
    threads.back() = std::thread(worker, work_iter, size, args...);
    for (auto&& i : threads) { i.join(); }
 }
+
+void checkEval(const Position & p, ScoreType e, Searcher & context, const std::string & txt);
 
 /*
 #include <cassert>

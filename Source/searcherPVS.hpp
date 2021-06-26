@@ -133,13 +133,18 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // get a static score for the position.
    ScoreType evalScore;
+   // do not eval position when in check, we won't use it (won't forward prune)
    if (isInCheck) evalScore = -MATE + height;
-   else if (p.lastMove == NULLMOVE && height > 0){
-      // skip eval if nullmove just applied ///@todo wrong ! gp is 0 here so tempoMG must be == tempoEG
+   // skip eval if nullmove just applied we can hack
+   // Won't work with asymetric HalfKA NNUE
+   ///@todo wrong ! gp is 0 here so tempoMG must be == tempoEG
+   else if (!DynamicConfig::useNNUE && p.lastMove == NULLMOVE && height > 0){
       evalScore = 2 * ScaleScore(EvalConfig::tempo, stack[p.halfmoves - 1].data.gp) - stack[p.halfmoves - 1].eval; 
+      checkEval(p,evalScore,*this,"null move trick (pvs)");      
    }
    else {
-      if (ttHit) { // if we had a TT hit (with or without associated move), we can use its eval instead of calling eval()
+      // if we had a TT hit (with or without associated move), we can use its eval instead of calling eval()
+      if (ttHit) {
          stats.incr(Stats::sid_ttschits);
          evalScore = e.e;
          // look for a material match (to get game phase)
@@ -156,18 +161,23 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             stats.incr(Stats::sid_materialTableMiss);
          }
          ///@todo data.danger, data.mobility are not filled in case of TT hit !!
+         checkEval(p,evalScore,*this,"from TT (pvs)");
       }
       else { // if no TT hit call evaluation !
          stats.incr(Stats::sid_ttscmiss);
          evalScore = eval(p, data, *this);
+         checkEval(p,evalScore,*this,"from eval (pvs)");
       }
    }
    stack[p.halfmoves].eval = evalScore; // insert only static eval, never hash score !
    stack[p.halfmoves].data = data;
+   //const ScoreType staticScore = evalScore;
 
    bool evalScoreIsHashScore = false;
    // if no TT hit yet, we insert an eval without a move here in case of forward pruning (depth is negative, bound is none) ...
+   // Be carefull here, _data in Entry is always (INVALIDMOVE,B_none,-2) here, so that collisions are a lot more likely
    if (!ttHit) TT::setEntry(*this, pHash, INVALIDMOVE, createHashScore(evalScore, height), createHashScore(evalScore, height), TT::B_none, -2);
+   
    // if TT hit, we can use its score as a best draft
    if (ttHit && !isInCheck && ((bound == TT::B_alpha && e.s < evalScore) || (bound == TT::B_beta && e.s > evalScore) || (bound == TT::B_exact)))
       evalScore = adjustHashScore(e.s, height), evalScoreIsHashScore = true;
