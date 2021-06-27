@@ -17,6 +17,8 @@ struct Stats {
       sid_ttPawnInsert,
       sid_ttschits,
       sid_ttscmiss,
+      sid_qsearchInCheck,
+      sid_qEvalNullMoveTrick,
       sid_materialTableHits,
       sid_materialTableMiss,
       sid_materialTableHelper,
