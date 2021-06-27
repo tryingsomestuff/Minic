@@ -28,8 +28,10 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                         bool                         cutNode,
                         bool                         canPrune,
                         const std::vector<MiniMove>* skipMoves) {
+   // is updated recursively in pvs and qsearch calls but also affected to Searcher data in order to be available inside eval.
    _height = height;
 
+   // stop and time check. Only on main thread and not at each node (see PERIODICCHECK)
    if (stopFlag) return STOPSCORE;
    if (isMainThread()) {
       static int periodicCheck = 0;
@@ -54,12 +56,22 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       --periodicCheck;
    }
 
+   // we cannot search deeper than MAX_DEPTH, is so just return static evaluation
    EvalData data;
    if (height >= MAX_DEPTH - 1 || depth >= MAX_DEPTH - 1) return eval(p, data, *this, false);
 
-   if (depth <= 0) return qsearch(alpha, beta, p, height, seldepth, 0, true, pvnode, isInCheck);
+   // on pvs leaf node, call a quiet search
+   if (depth <= 0) {
+      // don't enter qsearch when in check
+      if (isInCheck) depth = 1;
+      else
+         return qsearch(alpha, beta, p, height, seldepth, 0, true, pvnode, isInCheck);
+   }
 
-   seldepth = std::max((DepthType)height, seldepth);
+   // update selective depth
+   seldepth = std::max(seldepth,height);
+
+   // update nodes count as soon as we enter a node
    ++stats.counters[Stats::sid_nodes];
 
    debug_king_cap(p);
@@ -70,6 +82,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    const bool rootnode = height == 0;
 
+   // if not at root we check for draws (3rep, fifty and material)
    if (!rootnode && interiorNodeRecognizer<true, pvnode, true>(p) == MaterialHash::Ter_Draw) return drawScore(p, height);
 
    CMHPtrArray cmhPtr;
@@ -85,7 +98,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    TT::Entry  e;
    const bool ttDepthOk = TT::getEntry(*this, p, pHash, depth, e);
    TT::Bound  bound     = TT::Bound(e.b & ~TT::B_allFlags);
-   if (ttDepthOk) { // if depth of TT entry is enough
+   // if depth of TT entry is enough
+   if (ttDepthOk) { 
       if (!rootnode && ((bound == TT::B_alpha && e.s <= alpha) || (bound == TT::B_beta && e.s >= beta) || (bound == TT::B_exact))) {
          if (!pvnode) {
             // increase history bonus of this move
@@ -178,7 +192,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // Be carefull here, _data in Entry is always (INVALIDMOVE,B_none,-2) here, so that collisions are a lot more likely
    if (!ttHit) TT::setEntry(*this, pHash, INVALIDMOVE, createHashScore(evalScore, height), createHashScore(evalScore, height), TT::B_none, -2);
    
-   // if TT hit, we can use its score as a best draft
+   // if TT hit, we can use its score as a best draft (but we set evalScoreIsHashScore to be aware of that !)
    if (ttHit && !isInCheck && ((bound == TT::B_alpha && e.s < evalScore) || (bound == TT::B_beta && e.s > evalScore) || (bound == TT::B_exact)))
       evalScore = adjustHashScore(e.s, height), evalScoreIsHashScore = true;
 
