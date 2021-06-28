@@ -5,7 +5,15 @@
 
 struct Position;
 
-[[nodiscard]] inline float fiftyMoveRuleScaling(DepthType fifty){ return 1 - fifty / 100.f;}
+#ifdef DEBUG_EVALSYM
+[[nodiscard]] inline float fiftyMoveRuleScaling(DepthType ){ 
+   return 1;
+}
+#else
+[[nodiscard]] inline float fiftyMoveRuleScaling(DepthType fifty){ 
+   return 1 - fifty / 100.f;
+}
+#endif
 
 // Stockfish trick (two short in one int) is not compatible with Texel tuning !
 #ifndef WITH_EVALSCORE_AS_INT
@@ -198,8 +206,6 @@ inline std::ostream & operator<<(std::ostream & of, const EvalFeatures & feature
 [[nodiscard]] inline ScoreType ScaleScore(EvalScore s, float gp, float scalingFactorEG = 1.f) {
    return ScoreType(gp * s[MG] + (1.f - gp) * scalingFactorEG * s[EG]);
 }
-
-[[nodiscard]] ScoreType Score(ScoreType score, const Position& p);
 
 /* Evaluation is returning the score of course, but also fill this little structure to provide
  * additionnal usefull information, such as game phase and current danger. Things that are

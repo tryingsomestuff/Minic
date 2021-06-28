@@ -151,10 +151,11 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    if (isInCheck) evalScore = -MATE + height;
    // skip eval if nullmove just applied we can hack
    // Won't work with asymetric HalfKA NNUE
-   ///@todo wrong ! gp is 0 here so tempoMG must be == tempoEG
    else if (!DynamicConfig::useNNUE && p.lastMove == NULLMOVE && height > 0){
-      evalScore = 2 * ScaleScore(EvalConfig::tempo, stack[p.halfmoves - 1].data.gp) - stack[p.halfmoves - 1].eval; 
+      evalScore = 2 * EvalConfig::tempo - stack[p.halfmoves - 1].eval; 
+#ifdef DEBUG_STATICEVAL
       checkEval(p,evalScore,*this,"null move trick (pvs)");      
+#endif
    }
    else {
       // if we had a TT hit (with or without associated move), we can use its eval instead of calling eval()
@@ -175,22 +176,26 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             stats.incr(Stats::sid_materialTableMiss);
          }
          ///@todo data.danger, data.mobility are not filled in case of TT hit !!
+#ifdef DEBUG_STATICEVAL         
          checkEval(p,evalScore,*this,"from TT (pvs)");
+#endif
       }
       else { // if no TT hit call evaluation !
          stats.incr(Stats::sid_ttscmiss);
          evalScore = eval(p, data, *this);
+#ifdef DEBUG_STATICEVAL         
          checkEval(p,evalScore,*this,"from eval (pvs)");
+ #endif
       }
    }
    stack[p.halfmoves].eval = evalScore; // insert only static eval, never hash score !
    stack[p.halfmoves].data = data;
-   //const ScoreType staticScore = evalScore;
 
    bool evalScoreIsHashScore = false;
+   const ScoreType staticScore = evalScore;
    // if no TT hit yet, we insert an eval without a move here in case of forward pruning (depth is negative, bound is none) ...
    // Be carefull here, _data in Entry is always (INVALIDMOVE,B_none,-2) here, so that collisions are a lot more likely
-   if (!ttHit) TT::setEntry(*this, pHash, INVALIDMOVE, createHashScore(evalScore, height), createHashScore(evalScore, height), TT::B_none, -2);
+   if (!ttHit) TT::setEntry(*this, pHash, INVALIDMOVE, createHashScore(evalScore, height), createHashScore(staticScore, height), TT::B_none, -2);
    
    // if TT hit, we can use its score as a best draft (but we set evalScoreIsHashScore to be aware of that !)
    if (ttHit && !isInCheck && ((bound == TT::B_alpha && e.s < evalScore) || (bound == TT::B_beta && e.s > evalScore) || (bound == TT::B_exact)))
@@ -462,7 +467,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                   // increase history bonus of this move
                   if (!isInCheck && isQuiet /*&& depth > 1*/)
                      updateTables(*this, p, depth + (ttScore > (beta + SearchConfig::betaMarginDynamicHistory)), height, e.m, TT::B_beta, cmhPtr);
-                  TT::setEntry(*this, pHash, e.m, createHashScore(ttScore, height), createHashScore(evalScore, height),
+                  TT::setEntry(*this, pHash, e.m, createHashScore(ttScore, height), createHashScore(staticScore, height),
                                TT::Bound(TT::B_beta | 
                                          (ttPV ? TT::B_ttPVFlag : TT::B_none) | 
                                          (bestMoveIsCheck ? TT::B_isCheckFlag : TT::B_none) |
@@ -723,7 +728,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    }
 
    if (validMoveCount == 0) return (isInCheck || !withoutSkipMove) ? -MATE + height : drawScore(p, height);
-   TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(evalScore, height),
+   TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(staticScore, height),
                 TT::Bound(hashBound | 
                           (ttPV ? TT::B_ttPVFlag : TT::B_none) | 
                           (bestMoveIsCheck ? TT::B_isCheckFlag : TT::B_none) |

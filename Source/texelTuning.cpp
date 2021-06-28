@@ -655,8 +655,7 @@ void TexelTuning(const std::string& filename) {
       guess["knightTooFar"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::knightTooFar[k][EG] , -100, 100, "knightTooFarEG"+std::to_string(k)));
    }
 
-   guess["tempo"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::tempo[MG] , -500,  500,"tempo"));
-   guess["tempo"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::tempo[EG] , -500,  500,"tempoEG"));
+   guess["tempo"].push_back(Texel::TexelParam<ScoreType>(EvalConfig::tempo , -500,  500,"tempo"));
 
    for (Mat m1 = M_p; m1 <= M_q; ++m1) {
       for (Mat m2 = M_p; m2 <= m1; ++m2) {

@@ -106,7 +106,7 @@ extern CONST_TEXEL_TUNING ScoreType kingAttSemiOpenfileOur;
 extern CONST_TEXEL_TUNING ScoreType kingAttNoQueen;
 extern ScoreType                    kingAttTable[64];
 
-extern CONST_TEXEL_TUNING EvalScore tempo;
+extern CONST_TEXEL_TUNING ScoreType tempo;
 
 // from 0 to m with offset, translation and scale
 // exp is not (yet?) constexpr

@@ -233,14 +233,19 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
       if (DynamicConfig::forceNNUE ||
           !isLazyHigh(ScoreType(DynamicConfig::NNUEThreshold), features, score)) { // stay to classic eval when the game is already decided
          if (DynamicConfig::armageddon) features.scalingFactor = 1.f;              ///@todo better
+         // call the net
          ScoreType nnueScore = p.Evaluator().propagate(p.c);
+         // fuse MG and EG score applying the EG scaling factor
          nnueScore = ScoreType(data.gp * nnueScore + (1.f - data.gp) * nnueScore * features.scalingFactor); // use scaling factor
          // NNUE evaluation scaling
-         nnueScore = (Score(nnueScore, p) * DynamicConfig::NNUEScaling) / 64;
-         // take tempo and contempt into account
-         nnueScore += ScaleScore(/*EvalConfig::tempo*(white2Play?+1:-1) +*/ context.contempt, data.gp);
+         nnueScore = (nnueScore * DynamicConfig::NNUEScaling) / 64;
+         // take contempt into account (no tempo with NNUE, the HalfKA net already take it into account))
+         nnueScore += ScaleScore(context.contempt, data.gp);
+         // clamp score
+         nnueScore = clampScore(nnueScore);         
          ++context.stats.counters[Stats::sid_evalNNUE];
          STOP_AND_SUM_TIMER(Eval)
+         // apply armageddon scoring if requiered
          return armageddonScore(nnueScore, p.halfmoves, context._height, p.c);
       }
       ++context.stats.counters[Stats::sid_evalStd];
@@ -696,7 +701,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
    features.scores[F_attack]      = features.scores[F_attack]     .scale(1 + (DynamicConfig::styleAttack - 50) / 50.f, 1.f);
    features.scores[F_complexity]  = features.scores[F_complexity] .scale((DynamicConfig::styleComplexity - 50) / 50.f, 0.f);
 
-   // Sum everything
+   // sum every score contribution
    EvalScore score = features.SumUp();
 
 #ifdef VERBOSE_EVAL
@@ -723,22 +728,15 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
    }
 #endif
 
-   // tempo
-   score += EvalConfig::tempo * (white2Play ? +1 : -1);
-
-#ifdef VERBOSE_EVAL
-   if (display) { Logging::LogIt(Logging::logInfo) << "> All (with tempo) " << score; }
-#endif
-
-   // contempt
+   // add contempt
    score += context.contempt;
 
 #ifdef VERBOSE_EVAL
    if (display) { Logging::LogIt(Logging::logInfo) << "> All (with contempt) " << score; }
 #endif
 
-   // use scale factor in some other end-game cases not using material table:
-   if (features.scalingFactor == 1.f && !DynamicConfig::armageddon) { ///@todo armageddon ?
+   // compute a scale factor in some other end-game cases that are not using the material table:
+   if (features.scalingFactor == 1.f && !DynamicConfig::armageddon) {
       const Color strongSide = score[EG] > 0 ? Co_White : Co_Black;
       // opposite colored bishops (scale based on passed pawn of strong side)
       if (countBit(p.whiteBishop()) == 1 && countBit(p.blackBishop()) == 1 && countBit(p.allBishop() | whiteSquare) == 1) {
@@ -762,14 +760,50 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
       // moreover scaledown if pawn on only one side
       if (allPawns && !((allPawns & queenSide) && (allPawns & kingSide))) { features.scalingFactor -= EvalConfig::scalingFactorPawnsOneSide / 128.f; }
    }
-
    if (DynamicConfig::armageddon) features.scalingFactor = 1.f; ///@todo better
 
-   // scale score (MG/EG)
-   const ScoreType ret = (white2Play ? +1 : -1) * Score(ScaleScore(score, data.gp, features.scalingFactor), p); // scale both phase and 50 moves rule
+#ifdef VERBOSE_EVAL
+   if (display) { Logging::LogIt(Logging::logInfo) << "Scaling factor (corrected) " << features.scalingFactor; }
+#endif
+
+   // fuse MG and EG score
+   // scale both game phase and end-game scaling factor
+   ScoreType ret = ScaleScore(score, data.gp, features.scalingFactor);
+
+#ifdef VERBOSE_EVAL
+   if (display) { Logging::LogIt(Logging::logInfo) << "> All (with game phase scaling) " << ret; }
+#endif
+
+   if (!DynamicConfig::armageddon){
+      // apply scaling factor based on fifty move rule
+      ret *= fiftyMoveRuleScaling(p.fifty);
+   }
+
+#ifdef VERBOSE_EVAL
+   if (display) { Logging::LogIt(Logging::logInfo) << "> All (with last scaling) " << ret; }
+#endif
+
+   // apply tempo
+   ret += EvalConfig::tempo * (white2Play ? +1 : -1);
+
+#ifdef VERBOSE_EVAL
+   if (display) { Logging::LogIt(Logging::logInfo) << "> All (with tempo) " << ret; }
+#endif
+
+   // clamp score
+   ret = clampScore(ret);
+
+#ifdef VERBOSE_EVAL
+   if (display) { Logging::LogIt(Logging::logInfo) << "> All (clamped) " << ret; }
+#endif
+
+   // take side to move into account
+   ret = (white2Play ? +1 : -1) * ret; 
 
    if (display) { Logging::LogIt(Logging::logInfo) << "==> All (fully scaled) " << ret; }
 
    STOP_AND_SUM_TIMER(Eval)
+
+   // apply armageddon scoring if requiered
    return armageddonScore(ret, p.halfmoves, context._height, p.c);
 }

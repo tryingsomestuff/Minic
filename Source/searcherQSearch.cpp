@@ -132,9 +132,10 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    // skip eval if nullmove just applied, we can hack using opposite of opponent score corrected by tempo
    // But this may don't work well with (a too) asymetric HalfKA NNUE
    else if (!DynamicConfig::useNNUE && p.lastMove == NULLMOVE && height > 0){
-      ///@todo kinda wrong ! because gp is 0 here so tempoMG must be == tempoEG
-      evalScore = 2 * ScaleScore(EvalConfig::tempo, stack[p.halfmoves - 1].data.gp) - stack[p.halfmoves - 1].eval;
+      evalScore = 2 * EvalConfig::tempo - stack[p.halfmoves - 1].eval;
+#ifdef DEBUG_STATICEVAL      
       checkEval(p,evalScore,*this,"null move trick (qsearch)");
+#endif
       stats.incr(Stats::sid_qEvalNullMoveTrick);
    }
    else {
@@ -142,7 +143,9 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
       if (ttHit) {
          stats.incr(Stats::sid_ttschits);
          evalScore = e.e;
+#ifdef DEBUG_STATICEVAL         
          checkEval(p,evalScore,*this,"from TT (qsearch)");
+#endif
          // in this case we force mid game value in sorting ... 
          // anyway, this affects only quiet move sorting, so here only for check evasion ...
          data.gp = 0.5; 
@@ -151,14 +154,28 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
          // we tried everthing ... now this position must be evaluated
          stats.incr(Stats::sid_ttscmiss);
          evalScore = eval(p, data, *this);
+#ifdef DEBUG_STATICEVAL         
          checkEval(p,evalScore,*this,"from eval (qsearch)");
+#endif
       }
    }
    // backup this score as the "static" one
    const ScoreType staticScore = evalScore;
 
    // delta pruning based on static score, and best possible capture on the board
-   if (!isInCheck && SearchConfig::doQDeltaPruning && staticScore + qDeltaMargin(p) < alpha) return stats.incr(Stats::sid_delta), staticScore;
+   if (!isInCheck && SearchConfig::doQDeltaPruning && staticScore + qDeltaMargin(p) < alpha){
+/*      
+      if (! checkEval(p,evalScore,*this,"for delta (qsearch)")){
+         std::cout << "*********************" << std::endl;
+         std::cout << "DELTA" << std::endl;
+         std::cout << ToString(p) << std::endl;
+         std::cout << staticScore << std::endl;
+         std::cout << qDeltaMargin(p) << std::endl;
+         std::cout << alpha << std::endl;
+      }
+*/      
+      return stats.incr(Stats::sid_delta), staticScore;
+   }
 
    // early cut-off based on staticScore score
    if (staticScore >= beta) {
@@ -203,7 +220,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
             if (score > alpha) {
                if (score >= beta) {
                   b = TT::B_beta;
-                  TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(evalScore, height),
+                  TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(staticScore, height),
                                TT::Bound(b | (ttPV ? TT::B_ttPVFlag : TT::B_none) | (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), hashDepth);
                   return bestScore;
                }
@@ -278,7 +295,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
 
    if (validMoveCount == 0 && isInCheck) bestScore = -MATE + height;
 
-   TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(evalScore, height),
+   TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(staticScore, height),
                 TT::Bound(b | (ttPV ? TT::B_ttPVFlag : TT::B_none) | (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), hashDepth);
                 
    return bestScore;

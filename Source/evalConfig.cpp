@@ -206,6 +206,6 @@ CONST_TEXEL_TUNING ScoreType kingAttSemiOpenfileOpp = 151;
 CONST_TEXEL_TUNING ScoreType kingAttNoQueen = 503;
 ScoreType kingAttTable[64] = {0};
 
-CONST_TEXEL_TUNING EvalScore tempo = {15, 15};
+CONST_TEXEL_TUNING ScoreType tempo = {15};
 
 } // EvalConfig
