@@ -151,20 +151,31 @@ std::string ToString(const BitBoard& b) {
    return ss.str();
 }
 
-#if defined(DEBUG_STATICEVAL) || defined(DEBUG_QSTATICEVAL)
-void checkEval(const Position & p, ScoreType e, Searcher & context, const std::string & txt){
+bool checkEval(const Position & p, ScoreType e, Searcher & context, const std::string & txt){
    EvalData data;
-   const ScoreType f = eval(p, data, context);
-   if ( std::abs(e - f) > 10){
+   const ScoreType f = eval(p, data, context, true, true);
+#ifdef DEBUG_EVALSYM
+   Position p2 = p;
+   p2.c = ~p2.c;
+   const ScoreType g = eval(p2, data, context, true, false);
+   if ( std::abs(f + g - 2*EvalConfig::tempo) > 2){
+      std::cout << "*********************" << std::endl;
+      std::cout << ToString(p) << std::endl;
+      std::cout << f << std::endl;
+      std::cout << g - 2*EvalConfig::tempo << std::endl;
+      std::cout << "EVALSYMERROR" << std::endl;
+   }
+#endif
+   if ( std::abs(e - f) > std::max(std::abs(e)/20,10)){
+      std::cout << "*********************" << std::endl;
       std::cout << ToString(p) << std::endl;
       std::cout << e << std::endl;
       std::cout << f << std::endl;
       std::cout << "EVALERROR : " << txt << std::endl;
+      return false;
    }
    else{
       std::cout << "EVALOK : " << txt << std::endl;
+      return true;
    }      
 }
-#else
-void checkEval(const Position &, ScoreType, Searcher &, const std::string &){}
-#endif

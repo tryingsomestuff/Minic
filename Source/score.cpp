@@ -4,13 +4,6 @@
 #include "evalConfig.hpp"
 #include "position.hpp"
 
-ScoreType Score(ScoreType score, const Position &p) {
-   if (DynamicConfig::armageddon) 
-      return ScoreType(clampScore(score)); ///@todo better ?
-   else
-      return ScoreType(clampScore(int(score * fiftyMoveRuleScaling(p.fifty))));
-}
-
 EvalScore EvalFeatures::SumUp() const {
    EvalScore score = scores[F_material] + scores[F_positional] + scores[F_development] + scores[F_mobility] + scores[F_pawnStruct] + scores[F_attack];
    score += scores[F_complexity] * sgn(score[MG]);

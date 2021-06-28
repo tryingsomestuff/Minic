@@ -50,7 +50,7 @@ template<typename F, typename... Arguments> void threadedWork(F&& worker, size_t
    for (auto&& i : threads) { i.join(); }
 }
 
-void checkEval(const Position & p, ScoreType e, Searcher & context, const std::string & txt);
+bool checkEval(const Position & p, ScoreType e, Searcher & context, const std::string & txt);
 
 /*
 #include <cassert>

@@ -104,7 +104,7 @@ const std::string MinicVersion = "3.09";
 //#define DEBUG_KING_CAP
 //#define DEBUG_PERFT
 //#define DEBUG_STATICEVAL
-//#define DEBUG_QSTATICEVAL
+//#define DEBUG_EVALSYM
 
 #ifdef WITH_TEXEL_TUNING
 #define CONST_TEXEL_TUNING
