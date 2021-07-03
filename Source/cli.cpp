@@ -271,7 +271,7 @@ int cliManagement(std::string cli, int argc, char** argv) {
       const ScoreType R = value(P_wr);
       const ScoreType Q = value(P_wq);
 
-      std::cout << P << "\t" << N << "\t" << B << "\t" << R << "\t" << Q << "\t" << std::endl;
+      std::cout << "Piece values " << P << "\t" << N << "\t" << B << "\t" << R << "\t" << Q << "\t" << std::endl;
 
       // from Vajolet
       std::list<SEETest> posList;
@@ -342,10 +342,9 @@ int cliManagement(std::string cli, int argc, char** argv) {
          p.resetNNUEEvaluator(evaluator);
 #endif         
          readFEN(t.fen, p, true);
-         Logging::LogIt(Logging::logError) << "============================== " << t.fen << " ==";
+         Logging::LogIt(Logging::logInfo) << "============================== " << t.fen << " ==";
          const ScoreType s = ThreadPool::instance().main().SEE(p, t.m);
-         const bool b = s == t.threshold;
-         if (!b) Logging::LogIt(Logging::logError) << "wrong SEE value == " << ToString(p) << "\n" << ToString(t.m) << " " << s << " " << t.threshold;
+         if (s != t.threshold) Logging::LogIt(Logging::logError) << "wrong SEE value == " << ToString(p) << "\n" << ToString(t.m) << " " << s << " " << t.threshold;
         }
         return 0;
     }
@@ -518,7 +517,9 @@ int cliManagement(std::string cli, int argc, char** argv) {
       p2.associateEvaluator(evaluator);
       p2.resetNNUEEvaluator(p2.Evaluator());        
 #endif
-      applyMove(p2, m);
+      if (!applyMove(p2, m)){
+         Logging::LogIt(Logging::logError) << "Cannot apply this move";
+      }
       Logging::LogIt(Logging::logInfo) << ToString(p2);
       return 0;
     }
@@ -550,7 +551,10 @@ int cliManagement(std::string cli, int argc, char** argv) {
       DynamicConfig::mateFinder = true;
       DepthType depth           = 10;
       if (argc > 3) depth = atoi(argv[3]);
+      auto start = Clock::now();
       analyze(p, depth);
+      auto elapsed = std::max(1, (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - start).count());
+      Logging::LogIt(Logging::logInfo) << "Analysis done in " << elapsed << "ms";
       return 0;
     }
 
