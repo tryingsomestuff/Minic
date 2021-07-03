@@ -14,10 +14,10 @@ struct ExtendedPosition : RootPosition {
    ExtendedPosition(const std::string& s, bool withMoveCount = true);
    [[nodiscard]] bool       shallFindBest();
    [[nodiscard]] bool       shallAvoidBad();
-   std::vector<std::string> bestMoves();
-   std::vector<std::string> badMoves();
-   std::vector<std::string> comment0();
-   std::string              id();
+   [[nodiscard]] std::vector<std::string> bestMoves();
+   [[nodiscard]] std::vector<std::string> badMoves();
+   [[nodiscard]] std::vector<std::string> comment0();
+   [[nodiscard]] std::string              id();
 
    static void test(const std::vector<std::string>& positions,
                     const std::vector<int>&         timeControls,
@@ -31,9 +31,9 @@ struct ExtendedPosition : RootPosition {
 
    std::map<std::string, std::vector<std::string>> _extendedParams;
 
-   std::string epdString() const;
+   [[nodiscard]] std::string epdString() const;
 };
 
-std::string showAlgAbr(Move m, const Position& p);
+[[nodiscard]] std::string showAlgAbr(Move m, const Position& p);
 
 #endif

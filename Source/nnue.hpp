@@ -65,7 +65,7 @@ constexpr size_t themRookOffset   = themBishopOffset + minor;
 constexpr size_t themQueenOffset  = themRookOffset + minor;
 constexpr size_t themKingOffset   = themQueenOffset + minor;
 
-constexpr size_t usOffset(Piece pt) {
+[[nodiscard]] constexpr size_t usOffset(Piece pt) {
    switch (pt) {
       case P_wp: return usPawnOffset;
       case P_wn: return usKnightOffset;
@@ -77,7 +77,7 @@ constexpr size_t usOffset(Piece pt) {
    }
 }
 
-constexpr size_t themOffset(Piece pt) {
+[[nodiscard]] constexpr size_t themOffset(Piece pt) {
    switch (pt) {
       case P_wp: return themPawnOffset;
       case P_wn: return themKnightOffset;

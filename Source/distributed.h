@@ -176,8 +176,10 @@ inline void checkError(int) {}
 inline void init() {}
 inline void lateInit() {}
 inline void finalize() {}
-inline bool isMainProcess() { return true; }
-inline bool moreThanOneProcess() { return false; }
+
+[[nodiscard]] inline bool isMainProcess() { return true; }
+[[nodiscard]] inline bool moreThanOneProcess() { return false; }
+
 inline void sync(DummyType &, const std::string &) {}
 
 template<typename T> inline void asyncBcast(T *, int, DummyType &, DummyType &) {}
@@ -195,7 +197,8 @@ inline void sendStat() {}
 inline void pollStat() {}
 inline void syncStat() {}
 inline void showStat() {}
-Counter     counter(Stats::StatId id);
+
+[[nodiscard]] Counter counter(Stats::StatId id);
 
 inline void setEntry(const Hash, const TT::Entry &) {}
 inline void syncTT() {}

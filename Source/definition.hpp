@@ -163,6 +163,8 @@ const std::string MinicVersion = "3.09";
 
 #define EXTENDMORE(extension) (!extension)
 
+#define DISCARD [[maybe_unused]] auto LINE_NAME(_tmp,_) =
+
 typedef std::chrono::system_clock Clock;
 typedef int8_t   DepthType;
 typedef int32_t  Move;         // invalid if < 0
@@ -179,7 +181,7 @@ typedef uint8_t  GenerationType;
 const Hash     nullHash      = 0ull; //std::numeric_limits<MiniHash>::max(); // use MiniHash to allow same "null" value for Hash(64) and MiniHash(32)
 const BitBoard emptyBitBoard = 0ull;
 
-template<typename T> constexpr ScoreType clampScore(T s) { return (ScoreType)std::clamp(s, (T)(-MATE + 2 * MAX_DEPTH), (T)(MATE - 2 * MAX_DEPTH)); }
+template<typename T> [[nodiscard]] constexpr ScoreType clampScore(T s) { return (ScoreType)std::clamp(s, (T)(-MATE + 2 * MAX_DEPTH), (T)(MATE - 2 * MAX_DEPTH)); }
 
 enum GamePhase { MG = 0, EG = 1, GP_MAX = 2 };
 inline constexpr GamePhase operator++(GamePhase& g) {

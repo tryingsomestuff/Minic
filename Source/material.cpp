@@ -13,7 +13,7 @@ ScoreType (*helperTable[TotalMat])(const Position &, Color, ScoreType, DepthType
 // the material cache
 MaterialHashEntry materialHashTable[TotalMat];
 
-Hash getMaterialHash(const Position::Material &mat) {
+[[nodiscard]] Hash getMaterialHash(const Position::Material &mat) {
    assert(mat[Co_White][M_q]  >= 0);
    assert(mat[Co_Black][M_q]  >= 0);
    assert(mat[Co_White][M_r]  >= 0);
@@ -42,7 +42,7 @@ Hash getMaterialHash(const Position::Material &mat) {
         + mat[Co_White][M_q]  * MatWQ + mat[Co_Black][M_q]  * MatBQ;
 }
 
-Position::Material indexToMat(int index) {
+[[nodiscard]] Position::Material indexToMat(int index) {
    Position::Material m = {{{{0}}}};
    m[Co_White][M_q] = index % 3; index /= 3;
    m[Co_Black][M_q] = index % 3; index /= 3;
@@ -64,7 +64,7 @@ Position::Material indexToMat(int index) {
    return m;
 }
 
-Position::Material getMatReverseColor(const Position::Material &mat) {
+[[nodiscard]] Position::Material getMatReverseColor(const Position::Material &mat) {
    Position::Material rev = {{{{0}}}};
    rev[Co_White][M_k]  = mat[Co_Black][M_k];   rev[Co_Black][M_k]  = mat[Co_White][M_k];
    rev[Co_White][M_q]  = mat[Co_Black][M_q];   rev[Co_Black][M_q]  = mat[Co_White][M_q];
@@ -80,7 +80,7 @@ Position::Material getMatReverseColor(const Position::Material &mat) {
    return rev;
 }
 
-Position::Material materialFromString(const std::string &strMat) {
+[[nodiscard]] Position::Material materialFromString(const std::string &strMat) {
    Position::Material mat = {{{{0}}}};
    Color c = Co_Black;
    for (auto it = strMat.begin(); it != strMat.end(); ++it) {
@@ -123,7 +123,7 @@ Position::Material materialFromString(const std::string &strMat) {
    return mat;
 }
 
-Terminaison reverseTerminaison(Terminaison t) {
+[[nodiscard]] Terminaison reverseTerminaison(Terminaison t) {
    switch (t) {
    case Ter_Unknown: case Ter_Draw: case Ter_MaterialDraw: case Ter_LikelyDraw: case Ter_HardToWin: return t;
    case Ter_WhiteWin:             return Ter_BlackWin;
