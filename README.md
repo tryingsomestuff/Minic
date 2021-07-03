@@ -10,6 +10,7 @@ It is currently rated >3200 on CCRL scale.
 
    * [Support Minic development](#support-minic-development)
    * [History &amp; the NNUE Minic story](#history--the-nnue-minic-story)
+   * [Minic NNUE "originality" status](#Minic NNUE "originality" status)
    * [Strength](#strength)
    * [Rating Lists &amp; competitions](#rating-lists--competitions)
    * [Release process](#release-process)
