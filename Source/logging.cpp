@@ -10,7 +10,7 @@ std::unique_ptr<std::ofstream> LogIt::_of;
 
 COMType ct = CT_uci;
 
-std::string showDate() {
+[[nodiscard]] std::string showDate() {
    std::stringstream str;
    auto msecEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch());
    char buffer[64];

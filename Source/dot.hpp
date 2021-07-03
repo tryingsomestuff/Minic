@@ -12,14 +12,14 @@ template<typename T, size_t N> inline T dotProductFma_(const T* a, const T* b) {
 #include <assert.h>
 #include <immintrin.h>
 
-template<int offsetRegs> inline __m256 mul8(const float* p1, const float* p2) {
+template<int offsetRegs> [[nodiscard]]  inline __m256 mul8(const float* p1, const float* p2) {
    constexpr int lanes = offsetRegs * 8;
    const __m256  a     = _mm256_loadu_ps(p1 + lanes);
    const __m256  b     = _mm256_loadu_ps(p2 + lanes);
    return _mm256_mul_ps(a, b);
 }
 
-template<int offsetRegs> inline __m256 fma8(__m256 acc, const float* p1, const float* p2) {
+template<int offsetRegs> [[nodiscard]]  inline __m256 fma8(__m256 acc, const float* p1, const float* p2) {
    constexpr int lanes = offsetRegs * 8;
    const __m256  a     = _mm256_loadu_ps(p1 + lanes);
    const __m256  b     = _mm256_loadu_ps(p2 + lanes);
@@ -28,7 +28,7 @@ template<int offsetRegs> inline __m256 fma8(__m256 acc, const float* p1, const f
 
 // dot product of float vectors, using 8-wide FMA instructions.
 // from https://stackoverflow.com/questions/59494745/avx2-computing-dot-product-of-512-float-arrays
-template<typename T, size_t N> T dotProductFma(const T* a, const T* b) {
+template<typename T, size_t N> [[nodiscard]] T dotProductFma(const T* a, const T* b) {
    if constexpr (std::is_same_v<T, float> && (N % 32) == 0) { // only for float
 
       if constexpr (N == 0) return 0;
@@ -77,5 +77,5 @@ template<typename T, size_t N> T dotProductFma(const T* a, const T* b) {
 
 #else // not __AVX2__
 
-template<typename T, size_t dim> T dotProductFma(const T* a, const T* b) { return dotProductFma_<T, dim>(a, b); }
+template<typename T, size_t dim> [[nodiscard]] T dotProductFma(const T* a, const T* b) { return dotProductFma_<T, dim>(a, b); }
 #endif

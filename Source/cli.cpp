@@ -363,18 +363,18 @@ int cliManagement(std::string cli, int argc, char** argv) {
       std::vector<RootPosition> data;
       Logging::LogIt(Logging::logInfo) << "Running eval speed with file " << filename;
       std::vector<std::string> positions;
-      readEPDFile(filename, positions);
+      DISCARD readEPDFile(filename, positions);
       for (size_t k = 0; k < positions.size(); ++k) {
          data.push_back(RootPosition(positions[k], false));
          if (k % 50000 == 0) Logging::LogIt(Logging::logInfo) << k << " position read";
-        }
+      }
       Logging::LogIt(Logging::logInfo) << "Data size : " << data.size();
 
       std::chrono::time_point<Clock> startTime = Clock::now();
       for (int k = 0; k < 10; ++k)
          for (auto & p : data) {
             EvalData d;
-            eval(p, d, ThreadPool::instance().main(), true);
+            DISCARD eval(p, d, ThreadPool::instance().main(), true);
          }
       int ms = (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count();
       Logging::LogIt(Logging::logInfo) << "Eval speed (with EG material hash): " << data.size() * 10.f / (ms * 1000) << " Meval/s";
@@ -383,7 +383,7 @@ int cliManagement(std::string cli, int argc, char** argv) {
       for (int k = 0; k < 10; ++k)
          for (auto & p : data) {
             EvalData d;
-            eval(p, d, ThreadPool::instance().main(), false);
+            DISCARD eval(p, d, ThreadPool::instance().main(), false);
          }
       ms = (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count();
       Logging::LogIt(Logging::logInfo) << "Eval speed : " << data.size() * 10.f / (ms * 1000) << " Meval/s";

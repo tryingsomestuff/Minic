@@ -132,7 +132,7 @@ inline void setBit(Position& p, Square k, Piece pp) {
    assert(k >= 0 && k < NbSquare);
    BB::_setBit(p._pieces(pp), k);
 }
-void initBitBoards(Position& p);
+void clearBitBoards(Position& p);
 void setBitBoards(Position& p);
 
 } // namespace BBTools

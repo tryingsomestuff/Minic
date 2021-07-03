@@ -321,7 +321,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       if (((pvnode && depth >= SearchConfig::iidMinDepth) || (cutNode && depth >= SearchConfig::iidMinDepth2))) { ///@todo try with cutNode only ?
          stats.incr(Stats::sid_iid);
          PVList iidPV;
-         pvs<pvnode>(alpha, beta, p, depth / 2, height, iidPV, seldepth, isInCheck, cutNode, false, skipMoves);
+         DISCARD pvs<pvnode>(alpha, beta, p, depth / 2, height, iidPV, seldepth, isInCheck, cutNode, false, skipMoves);
          if (stopFlag) return STOPSCORE;
          TT::getEntry(*this, p, pHash, 0, e);
          ttHit       = e.h != nullHash;

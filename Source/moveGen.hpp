@@ -15,7 +15,7 @@ void applyNull(Searcher& context, Position& pN);
 
 bool applyMove(Position& p, const Move& m, bool noValidation = false);
 
-ScoreType randomMover(const Position& p, PVList& pv, bool isInCheck);
+[[nodiscard]] ScoreType randomMover(const Position& p, PVList& pv, bool isInCheck);
 
 [[nodiscard]] bool isPseudoLegal(const Position& p, Move m);
 

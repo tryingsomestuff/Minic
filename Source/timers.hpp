@@ -7,7 +7,7 @@
  */
 
 #ifdef WITH_TIMER
-uint64_t rdtsc();
+DISCARD uint64_t rdtsc();
 #define START_TIMER uint64_t rdtscBegin = rdtsc();
 #define STOP_AND_SUM_TIMER(name)                            \
    Timers::rdtscCounter[TM_##name] += rdtsc() - rdtscBegin; \

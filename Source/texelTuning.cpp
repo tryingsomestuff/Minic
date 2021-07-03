@@ -322,7 +322,7 @@ void TexelTuning(const std::string& filename) {
    std::vector<Texel::TexelInput> data;
    Logging::LogIt(Logging::logInfo) << "Running texel tuning with file " << filename;
    std::vector<std::string> positions;
-   readEPDFile(filename, positions);
+   DISCARD readEPDFile(filename, positions);
    for (size_t k = 0; k < positions.size(); ++k) {
       if (k % 50000 == 0) Logging::LogIt(Logging::logInfo) << k << " position read";
 //#define TEST_TEXEL

@@ -11,13 +11,13 @@ Square SquareFromBitBoard(const BitBoard& b) {
    return Square(i);
 }
 
-void initBitBoards(Position& p) {
+void clearBitBoards(Position& p) {
    p._allB.fill(emptyBitBoard);
    p.allPieces[Co_White] = p.allPieces[Co_Black] = emptyBitBoard;
 }
 
 void setBitBoards(Position& p) {
-   initBitBoards(p);
+   clearBitBoards(p);
    for (Square k = 0; k < NbSquare; ++k) {
       const Piece pp = p.board_const(k);
       if (pp != P_none) {

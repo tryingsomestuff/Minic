@@ -69,6 +69,7 @@ struct Searcher {
    [[nodiscard]] ScoreType drawScore(const Position& p, DepthType height);
 
    template<bool pvnode>
+   [[nodiscard]] 
    ScoreType pvs(ScoreType                    alpha,
                  ScoreType                    beta,
                  const Position&              p,
