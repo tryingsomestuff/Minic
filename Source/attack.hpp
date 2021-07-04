@@ -87,18 +87,18 @@ struct SMagic {
   BitBoard mask, magic;
 };
 
-extern SMagic bishop[NbSquare];
-extern SMagic rook[NbSquare];
+extern SMagic bishopMagic[NbSquare];
+extern SMagic rookMagic[NbSquare];
 
 extern BitBoard bishopAttacks[NbSquare][1 << BISHOP_INDEX_BITS];
 extern BitBoard rookAttacks[NbSquare][1 << ROOK_INDEX_BITS];
 
 #if defined(__BMI2__) && !defined(__znver1) && !defined(__znver2) && !defined(__bdver4)
-#define MAGICBISHOPINDEX(m, x) (_pext_u64(m, MagicBB::bishop[x].mask))
-#define MAGICROOKINDEX(m, x)   (_pext_u64(m, MagicBB::rook[x].mask))
+#define MAGICBISHOPINDEX(m, x) (_pext_u64(m, MagicBB::bishopMagic[x].mask))
+#define MAGICROOKINDEX(m, x)   (_pext_u64(m, MagicBB::rookMagic[x].mask))
 #else
-#define MAGICBISHOPINDEX(m, x) (int)((((m)&MagicBB::bishop[x].mask) * MagicBB::bishop[x].magic) >> (NbSquare - BISHOP_INDEX_BITS))
-#define MAGICROOKINDEX(m, x)   (int)((((m)&MagicBB::rook[x].mask) * MagicBB::rook[x].magic) >> (NbSquare - ROOK_INDEX_BITS))
+#define MAGICBISHOPINDEX(m, x) (int)((((m)&MagicBB::bishopMagic[x].mask) * MagicBB::bishopMagic[x].magic) >> (NbSquare - BISHOP_INDEX_BITS))
+#define MAGICROOKINDEX(m, x)   (int)((((m)&MagicBB::rookMagic[x].mask) * MagicBB::rookMagic[x].magic) >> (NbSquare - ROOK_INDEX_BITS))
 #endif
 
 #define MAGICBISHOPATTACKS(m, x) (MagicBB::bishopAttacks[x][MAGICBISHOPINDEX(m, x)])
@@ -110,17 +110,20 @@ void initMagic();
 
 // Next functions define the user API for piece move
 template < Piece > [[nodiscard]] inline BitBoard coverage      (const Square  , const BitBoard          , const Color  ) { assert(false); return emptyBitBoard; }
-template <       > [[nodiscard]] inline BitBoard coverage<P_wp>(const Square x, const BitBoard          , const Color c) { assert( x >= 0 && x < 64); return mask[x].pawnAttack[c]; }
-template <       > [[nodiscard]] inline BitBoard coverage<P_wn>(const Square x, const BitBoard          , const Color  ) { assert( x >= 0 && x < 64); return mask[x].knight; }
-template <       > [[nodiscard]] inline BitBoard coverage<P_wb>(const Square x, const BitBoard occupancy, const Color  ) { assert( x >= 0 && x < 64); return MAGICBISHOPATTACKS(occupancy, x); }
-template <       > [[nodiscard]] inline BitBoard coverage<P_wr>(const Square x, const BitBoard occupancy, const Color  ) { assert( x >= 0 && x < 64); return MAGICROOKATTACKS  (occupancy, x); }
-template <       > [[nodiscard]] inline BitBoard coverage<P_wq>(const Square x, const BitBoard occupancy, const Color  ) { assert( x >= 0 && x < 64); return MAGICBISHOPATTACKS(occupancy, x) | MAGICROOKATTACKS(occupancy, x); }
-template <       > [[nodiscard]] inline BitBoard coverage<P_wk>(const Square x, const BitBoard          , const Color  ) { assert( x >= 0 && x < 64); return mask[x].king; }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wp>(const Square s, const BitBoard          , const Color c) { assert( s >= 0 && s < 64); return mask[s].pawnAttack[c]; }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wn>(const Square s, const BitBoard          , const Color  ) { assert( s >= 0 && s < 64); return mask[s].knight; }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wb>(const Square s, const BitBoard occupancy, const Color  ) { assert( s >= 0 && s < 64); return MAGICBISHOPATTACKS(occupancy, s); }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wr>(const Square s, const BitBoard occupancy, const Color  ) { assert( s >= 0 && s < 64); return MAGICROOKATTACKS  (occupancy, s); }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wq>(const Square s, const BitBoard occupancy, const Color  ) { assert( s >= 0 && s < 64); return MAGICBISHOPATTACKS(occupancy, s) | MAGICROOKATTACKS(occupancy, s); }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wk>(const Square s, const BitBoard          , const Color  ) { assert( s >= 0 && s < 64); return mask[s].king; }
 
 // Attack function is just coverage interseted with a target bitboard
 template<Piece pp>
-[[nodiscard]] inline BitBoard attack(const Square x, const BitBoard target, const BitBoard occupancy = 0, const Color c = Co_White) {
-   return coverage<pp>(x, occupancy, c) & target; 
+[[nodiscard]] inline BitBoard attack(const Square s, 
+                                     const BitBoard target, 
+                                     const BitBoard occupancy = 0, 
+                                     const Color c = Co_White) { // color is only important/needed for pawns
+   return coverage<pp>(s, occupancy, c) & target; 
 }
 
 #endif // MAGIC
@@ -132,14 +135,14 @@ constexpr BitBoard (*const pfCoverage[])(const Square, const BitBoard, const Col
 //constexpr BitBoard(*const pfAttack[])  (const Square, const BitBoard, const BitBoard, const Color) = { &BBTools::attack<P_wp>,   &BBTools::attack<P_wn>,   &BBTools::attack<P_wb>,   &BBTools::attack<P_wr>,   &BBTools::attack<P_wq>,   &BBTools::attack<P_wk>   };
 
 // Convenient function to check is a square is under attack or not
-[[nodiscard]] bool isAttackedBB(const Position &p, const Square x, Color c);
+[[nodiscard]] bool isAttackedBB(const Position &p, const Square s, Color c);
 
 // Convenient function to return the bitboard of all attacker of a specific square
-[[nodiscard]] BitBoard allAttackedBB(const Position &p, const Square x, Color c);
-[[nodiscard]] BitBoard allAttackedBB(const Position &p, const Square x);
+[[nodiscard]] BitBoard allAttackedBB(const Position &p, const Square s, Color c);
+[[nodiscard]] BitBoard allAttackedBB(const Position &p, const Square s);
 
 } // namespace BBTools
 
 // Those are wrapper functions around isAttackedBB
-[[nodiscard]] bool isAttacked(const Position &p, const Square k);
+[[nodiscard]] bool isAttacked(const Position &p, const Square s);
 [[nodiscard]] bool isAttacked(const Position &p, BitBoard bb);

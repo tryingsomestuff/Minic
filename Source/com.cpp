@@ -18,7 +18,7 @@ NNUEEvaluator evaluator;
 
 std::mutex mutex;
 
-void newgame() {
+void newGame() {
 #ifdef WITH_NNUE
    position.associateEvaluator(evaluator);
 #endif
@@ -38,7 +38,7 @@ void init() {
    Logging::LogIt(Logging::logInfo) << "Init COM";
    state = st_none;
    depth = -1;
-   newgame();
+   newGame();
 }
 
 void readLine() {

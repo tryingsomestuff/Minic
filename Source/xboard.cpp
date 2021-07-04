@@ -32,7 +32,7 @@ bool sideToMoveFromFEN(const std::string& fen) {
    return b;
 }
 
-void newgame() {
+void newGame() {
    mode = m_force;
    stm  = stm_white;
 }
@@ -40,10 +40,10 @@ void newgame() {
 void init() {
    Logging::ct = Logging::CT_xboard;
    Logging::LogIt(Logging::logInfo) << "Init xboard";
-   COM::init();
    display = false;
    ponder  = p_off;
-   newgame();
+   COM::init();
+   newGame();
 }
 
 void setFeature() {
@@ -152,7 +152,7 @@ void xboard() {
          else if (COM::command == "new") { // not following protocol, should set infinite depth search
             COM::stop();
             COM::init();
-            newgame();
+            newGame();
             if (!sideToMoveFromFEN(startPosition)) { commandOK = false; }
             initialPos = COM::position;
             DynamicConfig::FRC = false;
