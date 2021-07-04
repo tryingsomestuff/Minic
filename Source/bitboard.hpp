@@ -10,11 +10,11 @@
 
 #ifdef __MINGW32__
 #define POPCOUNT(x) int(__builtin_popcountll(x))
-inline int BitScanForward(BitBoard bb) {
+inline int bitScanForward(BitBoard bb) {
    assert(bb != emptyBitBoard);
    return __builtin_ctzll(bb);
 }
-#define bsf(x, i)     (i = BitScanForward(x))
+#define bsf(x, i)     (i = bitScanForward(x))
 #define swapbits(x)   (__builtin_bswap64(x))
 #define swapbits32(x) (__builtin_bswap32(x))
 #else // __MINGW32__
@@ -56,11 +56,11 @@ int bitScanForward(int64_t bb) {
 #endif // _WIN64
 #else  // _WIN32 (thus linux)
 #define POPCOUNT(x)   int(__builtin_popcountll(x))
-inline int BitScanForward(BitBoard bb) {
+inline int bitScanForward(BitBoard bb) {
    assert(bb != emptyBitBoard);
    return __builtin_ctzll(bb);
 }
-#define bsf(x, i)     (i = BitScanForward(x))
+#define bsf(x, i)     (i = bitScanForward(x))
 #define swapbits(x)   (__builtin_bswap64(x))
 #define swapbits32(x) (__builtin_bswap32(x))
 #endif // linux

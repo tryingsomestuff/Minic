@@ -121,34 +121,34 @@ void initMask() {
 
 #ifndef WITH_MAGIC // then use HQBB
 
-BitBoard attack(const BitBoard occupancy, const Square x, const BitBoard m) {
+BitBoard attack(const BitBoard occupancy, const Square s, const BitBoard m) {
    START_TIMER
    BitBoard forward = occupancy & m;
    BitBoard reverse = swapbits(forward);
-   forward -= SquareToBitboard(x);
-   reverse -= SquareToBitboard(x ^ 63);
+   forward -= SquareToBitboard(s);
+   reverse -= SquareToBitboard(s ^ 63);
    forward ^= swapbits(reverse);
    forward &= m;
    STOP_AND_SUM_TIMER(Attack)
    return forward;
 }
 
-BitBoard rankAttack(const BitBoard occupancy, const Square x) {
+BitBoard rankAttack(const BitBoard occupancy, const Square s) {
    const int f = SQFILE(x);
-   const int r = x & 56;
+   const int r = s & 56;
    return BitBoard(_ranks[((occupancy >> r) & 126) * 4 + f]) << r;
 }
 
-BitBoard fileAttack(const BitBoard occupancy, const Square x) { return attack(occupancy, x, mask[x].file); }
-BitBoard diagonalAttack(const BitBoard occupancy, const Square x) { return attack(occupancy, x, mask[x].diagonal); }
-BitBoard antidiagonalAttack(const BitBoard occupancy, const Square x) { return attack(occupancy, x, mask[x].antidiagonal); }
+BitBoard fileAttack(const BitBoard occupancy, const Square s) { return attack(occupancy, s, mask[s].file); }
+BitBoard diagonalAttack(const BitBoard occupancy, const Square s) { return attack(occupancy, s, mask[s].diagonal); }
+BitBoard antidiagonalAttack(const BitBoard occupancy, const Square s) { return attack(occupancy, s, mask[s].antidiagonal); }
 
 #else // MAGIC
 
 namespace MagicBB {
 
-SMagic bishop[NbSquare];
-SMagic rook[NbSquare];
+SMagic bishopMagic[NbSquare];
+SMagic rookMagic[NbSquare];
 
 BitBoard bishopAttacks[NbSquare][1 << BISHOP_INDEX_BITS];
 BitBoard rookAttacks[NbSquare][1 << ROOK_INDEX_BITS];
@@ -198,24 +198,24 @@ BitBoard occupiedFromIndex(int j, BitBoard mask) {
 void initMagic() {
    Logging::LogIt(Logging::logInfo) << "Init magic";
    for (Square from = 0; from < 64; from++) {
-      bishop[from].mask = emptyBitBoard;
-      rook[from].mask   = emptyBitBoard;
+      bishopMagic[from].mask = emptyBitBoard;
+      rookMagic[from].mask   = emptyBitBoard;
       for (Square j = 0; j < 64; j++) {
          if (from == j) continue;
-         if (SQRANK(from) == SQRANK(j) && !ISOUTERFILE(j)) rook[from].mask |= SquareToBitboard(j);
-         if (SQFILE(from) == SQFILE(j) && !PROMOTION_RANK(j)) rook[from].mask |= SquareToBitboard(j);
+         if (SQRANK(from) == SQRANK(j) && !ISOUTERFILE(j)) rookMagic[from].mask |= SquareToBitboard(j);
+         if (SQFILE(from) == SQFILE(j) && !PROMOTION_RANK(j)) rookMagic[from].mask |= SquareToBitboard(j);
          if (abs(SQRANK(from) - SQRANK(j)) == abs(SQFILE(from) - SQFILE(j)) && !ISOUTERFILE(j) && !PROMOTION_RANK(j))
-            bishop[from].mask |= SquareToBitboard(j);
+            bishopMagic[from].mask |= SquareToBitboard(j);
       }
-      bishop[from].magic = bishopMagics[from];
+      bishopMagic[from].magic = bishopMagics[from];
       for (int j = 0; j < (1 << BISHOP_INDEX_BITS); j++) {
-         const BitBoard occ = occupiedFromIndex(j, bishop[from].mask);
+         const BitBoard occ = occupiedFromIndex(j, bishopMagic[from].mask);
          bishopAttacks[from][MAGICBISHOPINDEX(occ, from)] =
              (computeAttacks(from, occ, -7) | computeAttacks(from, occ, 7) | computeAttacks(from, occ, -9) | computeAttacks(from, occ, 9));
       }
-      rook[from].magic = rookMagics[from];
+      rookMagic[from].magic = rookMagics[from];
       for (int j = 0; j < (1 << ROOK_INDEX_BITS); j++) {
-         const BitBoard occ = occupiedFromIndex(j, rook[from].mask);
+         const BitBoard occ = occupiedFromIndex(j, rookMagic[from].mask);
          rookAttacks[from][MAGICROOKINDEX(occ, from)] =
              (computeAttacks(from, occ, -1) | computeAttacks(from, occ, 1) | computeAttacks(from, occ, -8) | computeAttacks(from, occ, 8));
       }
@@ -226,41 +226,41 @@ void initMagic() {
 
 #endif // MAGIC
 
-bool isAttackedBB(const Position &p, const Square x, Color c) { ///@todo try to optimize order better ?
-   assert(x != INVALIDSQUARE);
+bool isAttackedBB(const Position &p, const Square s, Color c) { ///@todo try to optimize order better ?
+   assert(s != INVALIDSQUARE);
    const BitBoard occupancy = p.occupancy();
    if (c == Co_White)
-      return attack<P_wb>(x, p.blackBishop() | p.blackQueen(), occupancy) || attack<P_wr>(x, p.blackRook() | p.blackQueen(), occupancy) ||
-             attack<P_wp>(x, p.blackPawn(), occupancy, Co_White) || attack<P_wn>(x, p.blackKnight()) || attack<P_wk>(x, p.blackKing());
+      return attack<P_wb>(s, p.blackBishop() | p.blackQueen(), occupancy) || attack<P_wr>(s, p.blackRook() | p.blackQueen(), occupancy) ||
+             attack<P_wp>(s, p.blackPawn(), occupancy, Co_White) || attack<P_wn>(s, p.blackKnight()) || attack<P_wk>(s, p.blackKing());
    else
-      return attack<P_wb>(x, p.whiteBishop() | p.whiteQueen(), occupancy) || attack<P_wr>(x, p.whiteRook() | p.whiteQueen(), occupancy) ||
-             attack<P_wp>(x, p.whitePawn(), occupancy, Co_Black) || attack<P_wn>(x, p.whiteKnight()) || attack<P_wk>(x, p.whiteKing());
+      return attack<P_wb>(s, p.whiteBishop() | p.whiteQueen(), occupancy) || attack<P_wr>(s, p.whiteRook() | p.whiteQueen(), occupancy) ||
+             attack<P_wp>(s, p.whitePawn(), occupancy, Co_Black) || attack<P_wn>(s, p.whiteKnight()) || attack<P_wk>(s, p.whiteKing());
 }
 
-BitBoard allAttackedBB(const Position &p, const Square x, Color c) {
-   assert(x != INVALIDSQUARE);
+BitBoard allAttackedBB(const Position &p, const Square s, Color c) {
+   assert(s != INVALIDSQUARE);
    const BitBoard occupancy = p.occupancy();
    if (c == Co_White)
-      return attack<P_wb>(x, p.blackBishop() | p.blackQueen(), occupancy) | attack<P_wr>(x, p.blackRook() | p.blackQueen(), occupancy) |
-             attack<P_wn>(x, p.blackKnight()) | attack<P_wp>(x, p.blackPawn(), occupancy, Co_White) | attack<P_wk>(x, p.blackKing());
+      return attack<P_wb>(s, p.blackBishop() | p.blackQueen(), occupancy) | attack<P_wr>(s, p.blackRook() | p.blackQueen(), occupancy) |
+             attack<P_wn>(s, p.blackKnight()) | attack<P_wp>(s, p.blackPawn(), occupancy, Co_White) | attack<P_wk>(s, p.blackKing());
    else
-      return attack<P_wb>(x, p.whiteBishop() | p.whiteQueen(), occupancy) | attack<P_wr>(x, p.whiteRook() | p.whiteQueen(), occupancy) |
-             attack<P_wn>(x, p.whiteKnight()) | attack<P_wp>(x, p.whitePawn(), occupancy, Co_Black) | attack<P_wk>(x, p.whiteKing());
+      return attack<P_wb>(s, p.whiteBishop() | p.whiteQueen(), occupancy) | attack<P_wr>(s, p.whiteRook() | p.whiteQueen(), occupancy) |
+             attack<P_wn>(s, p.whiteKnight()) | attack<P_wp>(s, p.whitePawn(), occupancy, Co_Black) | attack<P_wk>(s, p.whiteKing());
 }
 
-BitBoard allAttackedBB(const Position &p, const Square x) {
-   assert(x != INVALIDSQUARE);
+BitBoard allAttackedBB(const Position &p, const Square s) {
+   assert(s != INVALIDSQUARE);
    const BitBoard occupancy = p.occupancy();
-   return attack<P_wb>(x, p.allBishop() | p.allQueen(), occupancy) | attack<P_wr>(x, p.allRook() | p.allQueen(), occupancy) |
-          attack<P_wn>(x, p.allKnight()) | attack<P_wp>(x, p.blackPawn(), occupancy, Co_White) | attack<P_wp>(x, p.whitePawn(), occupancy, Co_Black) |
-          attack<P_wk>(x, p.allKing());
+   return attack<P_wb>(s, p.allBishop() | p.allQueen(), occupancy) | attack<P_wr>(s, p.allRook() | p.allQueen(), occupancy) |
+          attack<P_wn>(s, p.allKnight()) | attack<P_wp>(s, p.blackPawn(), occupancy, Co_White) | attack<P_wp>(s, p.whitePawn(), occupancy, Co_Black) |
+          attack<P_wk>(s, p.allKing());
 }
 
 } // namespace BBTools
 
-bool isAttacked(const Position &p, const Square k) {
+bool isAttacked(const Position &p, const Square s) {
    START_TIMER
-   const bool b = k != INVALIDSQUARE && BBTools::isAttackedBB(p, k, p.c);
+   const bool b = s != INVALIDSQUARE && BBTools::isAttackedBB(p, s, p.c);
    STOP_AND_SUM_TIMER(IsAttacked);
    return b;
 }
