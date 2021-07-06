@@ -93,11 +93,16 @@ bool receiveMoves(Move move, Move ponderMove) {
    // in searching only mode we have to return a move to GUI
    // but curiously uci protocol also expect a bestMove when pondering to wake up the GUI
    if (state == st_searching || state == st_pondering) {
+      const std::string tag = Logging::ct == Logging::CT_uci ? "bestmove" : "move";
       Logging::LogIt(Logging::logInfo) << "sending move to GUI " << ToString(move);
-      if (move == INVALIDMOVE) { ret = false; } // game ends
+      if (move == INVALIDMOVE) { 
+         // game ends (check mated / stalemate) **or** stop at the very begining of pondering
+         ret = false; 
+         Logging::LogIt(Logging::logGUI) << tag << " " << "0000";
+      } 
       else {
-         if (!makeMove(move, true, Logging::ct == Logging::CT_uci ? "bestmove" : "move", ponderMove)) {
-            Logging::LogIt(Logging::logGUI) << "info string Bad computer move !";
+         if (!makeMove(move, true, tag, ponderMove)) {
+            Logging::LogIt(Logging::logGUI) << "info string Bad move ! " << ToString(move);
             Logging::LogIt(Logging::logInfo) << ToString(position);
             ret = false;
          }

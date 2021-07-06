@@ -210,7 +210,7 @@ void uci() {
       else if (uciCommand == "ponderhit") {
          Logging::LogIt(Logging::logInfo) << "received command ponderhit";
          COM::state = COM::st_searching; // will allow move reporting to GUI
-         ThreadPool::instance().main().getData().isPondering = false;             // will unlock busy loop
+         ThreadPool::instance().main().getData().isPondering = false; // will unlock busy loop
       }
       else if (uciCommand == "ucinewgame") {
          if (ThreadPool::instance().main().searching()) {

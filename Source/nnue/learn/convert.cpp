@@ -460,6 +460,7 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
    // init sub search
    cos.genFen               = false;
    cos.subSearch            = true;
+   cos.stopFlag             = false;
    DynamicConfig::quiet     = true;
    DynamicConfig::disableTT = false;
    DynamicConfig::level     = 100;
@@ -480,6 +481,7 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
             Position tpos; // fully empty position !
             set_from_packed_sfen(tpos, p.sfen);
             ThreadData data;
+            ///@todo support threading here by using ThinkAsync ?
             data.p        = tpos;
             data.depth    = DynamicConfig::genFenDepth;
             //COM::position = tpos; // only need for display purpose
