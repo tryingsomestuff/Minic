@@ -267,9 +267,12 @@ void ExtendedPosition::test(const std::vector<std::string> &positions,
             TimeMan::msecUntilNextTC             = -1;
             ThreadPool::instance().currentMoveMs = TimeMan::GetNextMSecPerMove(extP);
 
+            ///@todo support threading here by using ThinkAsync ?
+
             ThreadData d;
             d.p = extP;
             ThreadPool::instance().distributeData(d);
+            ThreadPool::instance().main().stopFlag = false;
             //COM::position = extP; // only need for display purpose
             ThreadPool::instance().main().searchDriver(false);
             d                   = ThreadPool::instance().main().getData();

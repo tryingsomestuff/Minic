@@ -74,6 +74,7 @@ void Searcher::startThread() {
    std::lock_guard<std::mutex> lock(_mutex);
    Logging::LogIt(Logging::logInfo) << "Starting worker " << id();
    _searching = true;
+   Logging::LogIt(Logging::logInfo) << "Setting stopflag to false on worker " << id();
    stopFlag   = false;
    _cv.notify_one(); // Wake up the thread in idleLoop()
 }

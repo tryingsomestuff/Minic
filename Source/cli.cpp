@@ -106,11 +106,13 @@ void analyze(const Position& p, DepthType depth, bool openBenchOutput = false) {
    TimeMan::msecUntilNextTC = -1;
    ThreadPool::instance().currentMoveMs = TimeMan::GetNextMSecPerMove(p);
 
+   ///@todo support threading here by using ThinkAsync ?
    ThreadData d;
    d.p = p;
    d.depth = depth;
    ThreadPool::instance().distributeData(d);
    //COM::position = p; // only need for display purpose
+   ThreadPool::instance().main().stopFlag = false;
    ThreadPool::instance().main().searchDriver(false);
    d = ThreadPool::instance().main().getData();
    Logging::LogIt(Logging::logInfo) << "Best move is " << ToString(d.best) << " " << (int)d.depth << " " << d.score << " pv : " << ToString(d.pv);

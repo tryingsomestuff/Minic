@@ -93,7 +93,7 @@ void ThreadPool::clearSearch() {
 }
 
 void ThreadPool::stop() {
-   Logging::LogIt(Logging::logInfo) << "Setting stopflag on every threads";
+   Logging::LogIt(Logging::logInfo) << "Setting stopflag to true on every threads";
    for (auto& s : *this) (*s).stopFlag = true;
 }
 
