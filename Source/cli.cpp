@@ -359,7 +359,7 @@ int cliManagement(std::string cli, int argc, char** argv) {
 
    if (cli == "-evalSpeed") {
       DynamicConfig::disableTT = true;
-      std::string filename = "evalSpeed.epd";
+      std::string filename = "Book_and_Test/TestSuite/evalSpeed.epd";
       if (argc > 2) filename = argv[2];
       std::vector<RootPosition> data;
       Logging::LogIt(Logging::logInfo) << "Running eval speed with file " << filename;
@@ -374,6 +374,11 @@ int cliManagement(std::string cli, int argc, char** argv) {
       std::chrono::time_point<Clock> startTime = Clock::now();
       for (int k = 0; k < 10; ++k)
          for (auto & p : data) {
+#ifdef WITH_NNUE
+            NNUEEvaluator evaluator;
+            p.associateEvaluator(evaluator);
+            p.resetNNUEEvaluator(evaluator);
+#endif
             EvalData d;
             DISCARD eval(p, d, ThreadPool::instance().main(), true);
          }
@@ -383,6 +388,11 @@ int cliManagement(std::string cli, int argc, char** argv) {
       startTime = Clock::now();
       for (int k = 0; k < 10; ++k)
          for (auto & p : data) {
+#ifdef WITH_NNUE
+            NNUEEvaluator evaluator;
+            p.associateEvaluator(evaluator);
+            p.resetNNUEEvaluator(evaluator);
+#endif            
             EvalData d;
             DISCARD eval(p, d, ThreadPool::instance().main(), false);
          }
