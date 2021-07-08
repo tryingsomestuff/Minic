@@ -63,8 +63,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // on pvs leaf node, call a quiet search
    if (depth <= 0) {
       // don't enter qsearch when in check
-      if (isInCheck) depth = 1;
-      else
+//      if (isInCheck) depth = 1;
+//      else
          return qsearch(alpha, beta, p, height, seldepth, 0, true, pvnode, isInCheck);
    }
 
@@ -198,8 +198,12 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    if (!ttHit) TT::setEntry(*this, pHash, INVALIDMOVE, createHashScore(evalScore, height), createHashScore(staticScore, height), TT::B_none, -2);
    
    // if TT hit, we can use its score as a best draft (but we set evalScoreIsHashScore to be aware of that !)
-   if (ttHit && !isInCheck && ((bound == TT::B_alpha && e.s < evalScore) || (bound == TT::B_beta && e.s > evalScore) || (bound == TT::B_exact)))
-      evalScore = adjustHashScore(e.s, height), evalScoreIsHashScore = true;
+   // note that e.d >= 0 here is quite redondant with bound != TT::B_None, but anyway ...
+   if (ttHit && !isInCheck && e.d >= 0 && ((bound == TT::B_alpha && e.s < evalScore) || (bound == TT::B_beta && e.s > evalScore) || (bound == TT::B_exact))){
+     evalScore = adjustHashScore(e.s, height);
+     evalScoreIsHashScore = true;
+     stats.incr(Stats::sid_staticScoreIsFromSearch);
+   }
 
    ScoreType  bestScore = -MATE + height;
    MoveList   moves;
@@ -216,10 +220,11 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
        !pvnode) { ///@todo removing the !isMateScore(beta) is not losing that much elo and allow for better check mate finding ...
       // static null move
       if (SearchConfig::doStaticNullMove && !isMateScore(evalScore) && isNotEndGame &&
-          depth <= SearchConfig::staticNullMoveMaxDepth[evalScoreIsHashScore] &&
-          evalScore >= beta + SearchConfig::staticNullMoveDepthInit[evalScoreIsHashScore] +
-                           SearchConfig::staticNullMoveDepthCoeff[evalScoreIsHashScore] * marginDepth)
-         return stats.incr(Stats::sid_staticNullMove), evalScore;
+          depth <= SearchConfig::staticNullMoveMaxDepth[evalScoreIsHashScore]) {
+         const ScoreType margin = SearchConfig::staticNullMoveDepthInit[evalScoreIsHashScore] 
+                                + SearchConfig::staticNullMoveDepthCoeff[evalScoreIsHashScore] * marginDepth;
+         if (evalScore >= beta + margin) return stats.incr(Stats::sid_staticNullMove), evalScore;
+      }
 
       // razoring
       ScoreType rAlpha = alpha - SearchConfig::razoringMarginDepthInit[evalScoreIsHashScore] -
@@ -228,7 +233,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          stats.incr(Stats::sid_razoringTry);
          const ScoreType qScore = qsearch(alpha, beta, p, height, seldepth, 0, true, pvnode, isInCheck);
          if (stopFlag) return STOPSCORE;
-         if (qScore <= alpha || (depth < 2 && evalScoreIsHashScore)) return stats.incr(Stats::sid_razoring), qScore;
+         if (depth < 2 && evalScoreIsHashScore) return stats.incr(Stats::sid_razoringNoQ), qScore;
+         if (qScore <= alpha) return stats.incr(Stats::sid_razoring), qScore;
       }
 
       // null move (warning, mobility info is only available if no TT hit)
