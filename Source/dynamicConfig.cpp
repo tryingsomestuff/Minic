@@ -30,10 +30,10 @@ bool         forceNNUE        = false;
 int NNUEScaling   = 130; // tuned by hand
 int NNUEThreshold = 600;
 
-#ifndef FORCEEMBEDEDNNUE
+#ifndef FORCEEMBEDDEDNNUE
 std::string NNUEFile;
 #else
-std::string NNUEFile = "embeded";
+std::string NNUEFile = "embedded";
 #endif
 bool         genFen        = false;
 unsigned int genFenDepth   = 8;
