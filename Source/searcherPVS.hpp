@@ -218,7 +218,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       if (SearchConfig::doStaticNullMove && !isMateScore(evalScore) && isNotEndGame &&
           depth <= SearchConfig::staticNullMoveMaxDepth[evalScoreIsHashScore] &&
           evalScore >= beta + SearchConfig::staticNullMoveDepthInit[evalScoreIsHashScore] +
-                           SearchConfig::staticNullMoveDepthCoeff[evalScoreIsHashScore] * depth)
+                           SearchConfig::staticNullMoveDepthCoeff[evalScoreIsHashScore] * marginDepth)
          return stats.incr(Stats::sid_staticNullMove), evalScore;
 
       // razoring
@@ -627,7 +627,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          }
          // History pruning (with CMH)
          if (historyPruning && isPrunableStdNoCheck &&
-             Move2Score(*it) < SearchConfig::historyPruningThresholdInit + marginDepth * SearchConfig::historyPruningThresholdDepth) {
+             Move2Score(*it) < SearchConfig::historyPruningThresholdInit + depth * SearchConfig::historyPruningThresholdDepth) {
             stats.incr(Stats::sid_historyPruning);
             continue;
          }

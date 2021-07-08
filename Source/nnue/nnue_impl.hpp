@@ -39,8 +39,8 @@
 
 namespace nnue {
 
-#ifdef EMBEDEDNNUEPATH
-namespace embeded {
+#ifdef EMBEDDEDNNUEPATH
+namespace embedded {
 INCBIN_EXTERN(weightsFile);
 }
 #endif
@@ -478,7 +478,7 @@ template<typename NT, bool Q> struct NNUEWeights {
       static const int      expectedSize    = 50378504; // 50378500 + 4 for version
       static const bool     withVersion     = true;
 
-      if (path != "embeded") { // read from disk
+      if (path != "embedded") { // read from disk
 #ifndef __ANDROID__
 #ifndef WITHOUT_FILESYSTEM
          std::error_code ec;
@@ -497,19 +497,19 @@ template<typename NT, bool Q> struct NNUEWeights {
          auto         ws = WeightsStreamer<NT>(stream);
          loadedWeights.load(ws, withVersion);
       }
-#ifdef EMBEDEDNNUEPATH
-      else {                                             // read from embeded data
-         if (embeded::weightsFileSize != expectedSize) { // with or without version
+#ifdef EMBEDDEDNNUEPATH
+      else {                                             // read from embedded data
+         if (embedded::weightsFileSize != expectedSize) { // with or without version
             Logging::LogIt(Logging::logError) << "File " << path << " does not look like a compatible net";
             return false;
          }
-         std::istringstream stream(std::string((const char*)embeded::weightsFileData, embeded::weightsFileSize), std::stringstream::binary);
+         std::istringstream stream(std::string((const char*)embedded::weightsFileData, embedded::weightsFileSize), std::stringstream::binary);
          auto               ws = WeightsStreamer<NT>(stream);
          loadedWeights.load(ws, withVersion);
       }
 #else
       else {
-         Logging::LogIt(Logging::logError) << "Minic was not compiled with an embeded net";
+         Logging::LogIt(Logging::logError) << "Minic was not compiled with an embedded net";
          return false;
       }
 #endif

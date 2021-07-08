@@ -8,14 +8,14 @@
 
 namespace nnue {
 
-#ifdef EMBEDEDNNUEPATH
-namespace embeded {
-INCBIN(weightsFile, INCBIN_STRINGIZE(EMBEDEDNNUEPATH));
+#ifdef EMBEDDEDNNUEPATH
+namespace embedded {
+INCBIN(weightsFile, INCBIN_STRINGIZE(EMBEDDEDNNUEPATH));
 // We now have these three symbols
 // const unsigned char weightsFileData[];
 // const unsigned int weightsFileSize;
-} // namespace embeded
-#endif // EMBEDEDNNUEPATH
+} // namespace embedded
+#endif // EMBEDDEDNNUEPATH
 
 } // namespace nnue
 

@@ -194,7 +194,7 @@ template<typename T> [[nodiscard]] inline constexpr T Abs(const T& s) { return s
 template<typename T, int SIZE> struct OptList : public std::vector<T> {
    OptList(): std::vector<T>() { std::vector<T>::reserve(SIZE); }
 };
-typedef OptList<Move, MAX_MOVE / 4> MoveList;
+typedef OptList<Move, MAX_MOVE / 4> MoveList; ///@todo tune this ?
 typedef std::vector<Move>           PVList;
 
 [[nodiscard]] inline constexpr MiniHash Hash64to32(Hash h) { return (h >> 32) & 0xFFFFFFFF; }

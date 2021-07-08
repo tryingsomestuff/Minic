@@ -39,16 +39,16 @@ else
    t="-march=native"
    n="-fopenmp-simd"
    d="-DDEBUG_TOOL"
-   if [ -n "$EMBEDEDNNUEPATH" ]; then
-      if [ "$EMBEDEDNNUEPATH" != "none" ]; then
-         echo "Forced embeded net $EMBEDEDNNUEPATH"
-         d="$d -DEMBEDEDNNUEPATH=$EMBEDEDNNUEPATH -DFORCEEMBEDEDNNUE"
+   if [ -n "$EMBEDDEDNNUEPATH" ]; then
+      if [ "$EMBEDDEDNNUEPATH" != "none" ]; then
+         echo "Forced embedded net $EMBEDDEDNNUEPATH"
+         d="$d -DEMBEDDEDNNUEPATH=$EMBEDDEDNNUEPATH -DFORCEEMBEDDEDNNUE"
       else
-         echo "Forced build without embeded net"
+         echo "Forced build without embedded net"
       fi
    else
-      echo "Default embeded net"
-      d="$d -DEMBEDEDNNUEPATH=$dir/Tourney/nn.bin -DFORCEEMBEDEDNNUE"
+      echo "Default embedded net"
+      d="$d -DEMBEDDEDNNUEPATH=$dir/Tourney/nn.bin -DFORCEEMBEDDEDNNUE"
    fi
 
    if [ -n "$1" ]; then
