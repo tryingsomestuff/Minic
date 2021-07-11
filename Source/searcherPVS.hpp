@@ -198,8 +198,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    if (!ttHit) TT::setEntry(*this, pHash, INVALIDMOVE, createHashScore(evalScore, height), createHashScore(staticScore, height), TT::B_none, -2);
    
    // if TT hit, we can use its score as a best draft (but we set evalScoreIsHashScore to be aware of that !)
-   // note that e.d >= 0 here is quite redondant with bound != TT::B_None, but anyway ...
-   if (ttHit && !isInCheck && e.d >= 0 && ((bound == TT::B_alpha && e.s < evalScore) || (bound == TT::B_beta && e.s > evalScore) || (bound == TT::B_exact))){
+   // note that e.d >= -1 here is quite redondant with bound != TT::B_None, but anyway ...
+   if (ttHit && !isInCheck && e.d >= -1 && ((bound == TT::B_alpha && e.s < evalScore) || (bound == TT::B_beta && e.s > evalScore) || (bound == TT::B_exact))){
      evalScore = adjustHashScore(e.s, height);
      evalScoreIsHashScore = true;
      stats.incr(Stats::sid_staticScoreIsFromSearch);
