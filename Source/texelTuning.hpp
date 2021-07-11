@@ -6,7 +6,7 @@
  * Texel tuning utilities
  */
 
-#ifdef WITH_TEXEL_TUNING
+#ifdef WITH_EVAL_TUNING
 
 void TexelTuning(const std::string& filename);
 

@@ -1,6 +1,6 @@
 #include "texelTuning.hpp"
 
-#ifdef WITH_TEXEL_TUNING
+#ifdef WITH_EVAL_TUNING
 
 #include "dynamicConfig.hpp"
 #include "evalConfig.hpp"

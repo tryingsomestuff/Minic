@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
    if (argc > 1 && test(argv[1])) RETURN(EXIT_SUCCESS)
 #endif
 
-#ifdef WITH_TEXEL_TUNING
+#ifdef WITH_EVAL_TUNING
    if (argc > 1 && std::string(argv[1]) == "-texel") {
       TexelTuning(argv[2]);
       RETURN(EXIT_SUCCESS)

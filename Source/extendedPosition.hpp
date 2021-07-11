@@ -2,7 +2,7 @@
 
 #include "definition.hpp"
 
-#if defined(WITH_TEST_SUITE) || defined(WITH_PGN_PARSER) || defined(WITH_TEXEL_TUNING)
+#if defined(WITH_TEST_SUITE) || defined(WITH_PGN_PARSER) || defined(WITH_EVAL_TUNING)
 
 #include "bitboardTools.hpp"
 #include "position.hpp"
