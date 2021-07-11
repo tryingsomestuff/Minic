@@ -233,7 +233,7 @@ void InitMaterialScore(bool display) {
       const ScoreType matPawnScoreBEG = mat[Co_Black][M_p] * absValueEG(P_wp);
       const ScoreType matScoreWEG     = matPieceScoreWEG + matPawnScoreWEG;
       const ScoreType matScoreBEG     = matPieceScoreBEG + matPawnScoreBEG;
-#ifdef WITH_TEXEL_TUNING
+#ifdef WITH_EVAL_TUNING
       const EvalScore imbalanceW = {0, 0};
       const EvalScore imbalanceB = {0, 0};
 #else

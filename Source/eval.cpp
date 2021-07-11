@@ -222,7 +222,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
       ++context.stats.counters[Stats::sid_materialTableMiss];
    }
 
-#ifdef WITH_TEXEL_TUNING
+#ifdef WITH_EVAL_TUNING
    features.scores[F_material] += MaterialHash::Imbalance(p.mat, Co_White) - MaterialHash::Imbalance(p.mat, Co_Black);
 #endif
 
@@ -326,7 +326,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
    STOP_AND_SUM_TIMER(Eval2)
 
    Searcher::PawnEntry *pePtr = nullptr;
-#ifdef WITH_TEXEL_TUNING
+#ifdef WITH_EVAL_TUNING
    Searcher::PawnEntry dummy; // used for texel tuning
    pePtr = &dummy;
    {

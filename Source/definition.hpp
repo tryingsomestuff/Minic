@@ -85,7 +85,7 @@ const std::string MinicVersion = "3.09";
 // *** Tuning
 //#define WITH_TIMER
 //#define WITH_SEARCH_TUNING
-//#define WITH_TEXEL_TUNING
+//#define WITH_EVAL_TUNING
 //#define WITH_PIECE_TUNING
 
 // *** Debug
@@ -106,17 +106,17 @@ const std::string MinicVersion = "3.09";
 //#define DEBUG_STATICEVAL
 //#define DEBUG_EVALSYM
 
-#ifdef WITH_TEXEL_TUNING
-#define CONST_TEXEL_TUNING
+#ifdef WITH_EVAL_TUNING
+#define CONST_EVAL_TUNING
 #undef WITH_EVALSCORE_AS_INT
 #else
-#define CONST_TEXEL_TUNING const
+#define CONST_EVAL_TUNING const
 #endif
 
 #ifdef WITH_SEARCH_TUNING
-#define CONST_CLOP_TUNING
+#define CONST_SEARCH_TUNING
 #else
-#define CONST_CLOP_TUNING const
+#define CONST_SEARCH_TUNING const
 #endif
 
 #ifdef WITH_PIECE_TUNING
