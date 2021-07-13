@@ -475,7 +475,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                   // increase history bonus of this move
                   if (!isInCheck && isQuiet /*&& depth > 1*/)
                      updateTables(*this, p, depth + (ttScore > (beta + SearchConfig::betaMarginDynamicHistory)), height, e.m, TT::B_beta, cmhPtr);
-                  TT::setEntry(*this, pHash, e.m, createHashScore(ttScore, height), createHashScore(staticScore, height),
+                  TT::setEntry(*this, pHash, e.m, createHashScore(ttScore, height), createHashScore(evalScore, height),
                                TT::Bound(TT::B_beta | 
                                          (ttPV ? TT::B_ttPVFlag : TT::B_none) | 
                                          (bestMoveIsCheck ? TT::B_isCheckFlag : TT::B_none) |
@@ -736,7 +736,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    }
 
    if (validMoveCount == 0) return (isInCheck || !withoutSkipMove) ? -MATE + height : drawScore(p, height);
-   TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(staticScore, height),
+   TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(evalScore, height),
                 TT::Bound(hashBound | 
                           (ttPV ? TT::B_ttPVFlag : TT::B_none) | 
                           (bestMoveIsCheck ? TT::B_isCheckFlag : TT::B_none) |

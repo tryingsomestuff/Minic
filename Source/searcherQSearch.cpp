@@ -189,12 +189,11 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
 
    // maybe we can use tt score (instead of static evaluation) as a better draft if possible and not in check ?
    bool evalScoreIsHashScore = false;
-   /*
+   
    if (!isInCheck) {
       if (ttHit && ((bound == TT::B_alpha && e.s <= evalScore) || (bound == TT::B_beta && e.s >= evalScore) || (bound == TT::B_exact)))
          evalScore = e.s, evalScoreIsHashScore = true;
    }
-   */
    
    TT::Bound       b              = TT::B_alpha;
    ScoreType       bestScore      = /*evalScore*/staticScore; ///@todo uses TT draft instead of static score
@@ -220,7 +219,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
             if (score > alpha) {
                if (score >= beta) {
                   b = TT::B_beta;
-                  TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(staticScore, height),
+                  TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(evalScore, height),
                                TT::Bound(b | (ttPV ? TT::B_ttPVFlag : TT::B_none) | (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), hashDepth);
                   return bestScore;
                }
@@ -295,7 +294,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
 
    if (validMoveCount == 0 && isInCheck) bestScore = -MATE + height;
 
-   TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(staticScore, height),
+   TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(evalScore, height),
                 TT::Bound(b | (ttPV ? TT::B_ttPVFlag : TT::B_none) | (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), hashDepth);
                 
    return bestScore;
