@@ -195,9 +195,9 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
          evalScore = e.s, evalScoreIsHashScore = true;
    }
    */
-
+   
    TT::Bound       b              = TT::B_alpha;
-   ScoreType       bestScore      = staticScore;
+   ScoreType       bestScore      = /*evalScore*/staticScore; ///@todo uses TT draft instead of static score
    const ScoreType alphaInit      = alpha;
    int             validMoveCount = 0;
 

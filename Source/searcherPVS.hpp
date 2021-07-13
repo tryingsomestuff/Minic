@@ -63,8 +63,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // on pvs leaf node, call a quiet search
    if (depth <= 0) {
       // don't enter qsearch when in check
-//      if (isInCheck) depth = 1;
-//      else
+      //if (isInCheck) depth = 1;
+      //else
          return qsearch(alpha, beta, p, height, seldepth, 0, true, pvnode, isInCheck);
    }
 
@@ -199,7 +199,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    
    // if TT hit, we can use its score as a best draft (but we set evalScoreIsHashScore to be aware of that !)
    // note that e.d >= -1 here is quite redondant with bound != TT::B_None, but anyway ...
-   if (ttHit && !isInCheck && e.d >= -1 && ((bound == TT::B_alpha && e.s < evalScore) || (bound == TT::B_beta && e.s > evalScore) || (bound == TT::B_exact))){
+   if (ttHit && !isInCheck && /*e.d >= -1 && */
+      ((bound == TT::B_alpha && e.s < evalScore) || (bound == TT::B_beta && e.s > evalScore) || (bound == TT::B_exact))){
      evalScore = adjustHashScore(e.s, height);
      evalScoreIsHashScore = true;
      stats.incr(Stats::sid_staticScoreIsFromSearch);
@@ -336,7 +337,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          ttPV        = pvnode || (ttHit && (e.b & TT::B_ttPVFlag));
          ttIsCheck   = validTTmove && (e.b & TT::B_isCheckFlag);
          formerPV    = ttPV && !pvnode;
-         if (ttHit && !isInCheck &&
+         // note that e.d >= -1 here is quite redondant with bound != TT::B_None, but anyway ...
+         if (ttHit && !isInCheck && /*e.d >= -1 &&*/
              ((bound == TT::B_alpha && e.s < evalScore) || (bound == TT::B_beta && e.s > evalScore) || (bound == TT::B_exact))) {
             evalScore            = adjustHashScore(e.s, height);
             evalScoreIsHashScore = true;
@@ -663,7 +665,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
              ((isReductible && isQuiet) /*|| isPrunableCap*/ /*|| stack[p.halfmoves].eval <= alpha*/ /*|| cutNode*/) &&
              validMoveCount > 1 + 2 * rootnode) {
             stats.incr(Stats::sid_lmr);
-            reduction += SearchConfig::lmrReduction[std::min((int)depth, MAX_DEPTH - 1)][std::min(validMoveCount, MAX_DEPTH)];
+            reduction += SearchConfig::lmrReduction[std::min((int)depth, MAX_DEPTH - 1)][std::min(validMoveCount, MAX_MOVE - 1)];
             reduction += !improving + ttMoveIsCapture;
             reduction += (cutNode && evalScore - SearchConfig::failHighReductionThresholdInit[evalScoreIsHashScore] -
                                              marginDepth * SearchConfig::failHighReductionThresholdDepth[evalScoreIsHashScore] >
@@ -672,8 +674,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             reduction -= /*std::min(2,*/ HISTORY_DIV(
                 2 * Move2Score(*it)) /*)*/; //history reduction/extension (beware killers and counter are scored above history max)
             //if ( !isInCheck) reduction += std::min(2,(data.mobility[p.c]-data.mobility[~p.c])/8);
-            reduction -= (ttPV || isDangerRed || !noCheck /*|| ttMoveSingularExt*/ /*|| isEmergencyDefence*/);
             reduction -= formerPV;
+            reduction -= ( ttPV || isDangerRed || !noCheck /*|| ttMoveSingularExt*/ /*|| isEmergencyDefence*/);
 
             // never extend more than reduce
             if (extension - reduction > 0) reduction = extension;
