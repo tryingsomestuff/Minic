@@ -3602,6 +3602,9 @@ namespace chess
 
         [[nodiscard]] constexpr std::optional<CastlingRights> tryParseCastlingRights(std::string_view s)
         {
+            // ignore castling rights
+            return CastlingRights::None;
+
             if (s == std::string_view("-")) return CastlingRights::None;
 
             CastlingRights rights = CastlingRights::None;
@@ -4526,6 +4529,7 @@ namespace chess
         inline void setFullMove(std::uint16_t hm)
         {
             m_ply = 2 * hm - 1 + (m_sideToMove == Color::Black);
+            //std::cout << "ply " << (int) m_ply << std::endl;
         }
 
         [[nodiscard]] inline bool isCheck() const;
@@ -5974,6 +5978,12 @@ namespace chess
             else
             {
                 m_epSquare = *epSquareOpt;
+                /*
+                std::string epStr;
+                if ( m_epSquare != Square::none()) parser_bits::appendSquareToString(m_epSquare,epStr);
+                else epStr = "none";
+                std::cout << epStr << std::endl;
+                */
             }
         }
 
@@ -5982,6 +5992,7 @@ namespace chess
             if (!rule50.empty())
             {
                 m_rule50Counter = std::stoi(rule50.data());
+                //std::cout << (int)m_rule50Counter << std::endl;
             }
             else
             {
@@ -5994,6 +6005,7 @@ namespace chess
             if (!fullMove.empty())
             {
                 m_ply = std::stoi(fullMove.data()) * 2 - (m_sideToMove == Color::White);
+                //std::cout << (int)m_ply << std::endl;
             }
             else
             {
@@ -6206,7 +6218,7 @@ namespace chess
     namespace uci
     {
         [[nodiscard]] inline std::string moveToUci(const Position& pos, const Move& move);
-        [[nodiscard]] inline Move uciToMove(const Position& pos, std::string_view sv);
+        [[nodiscard]] inline std::optional<Move> uciToMove(const Position& pos, std::string_view sv);
 
         [[nodiscard]] inline std::string moveToUci(const Position& pos, const Move& move)
         {
@@ -6235,8 +6247,11 @@ namespace chess
             return s;
         }
 
-        [[nodiscard]] inline Move uciToMove(const Position& pos, std::string_view sv)
+        [[nodiscard]] inline std::optional<Move> uciToMove(const Position& pos, std::string_view sv)
         {
+            // skip castling moves
+            if (sv == "0-0" || sv == "0-0-0" || sv == "O-O" || sv == "O-O-O") return {};
+
             const Square from = parser_bits::parseSquare(sv.data());
             const Square to = parser_bits::parseSquare(sv.data() + 2);
 
@@ -6567,7 +6582,11 @@ namespace binpack
                     stream.write_n_bit(static_cast<int>(pos.epSquare()), 6);
                 }
 
+                //std::cout << "50 " << (int)pos.rule50Counter() << std::endl;
+
                 stream.write_n_bit(pos.rule50Counter(), 6);
+
+                //std::cout << "move " << (int)pos.fullMove() << std::endl;
 
                 stream.write_n_bit(pos.fullMove(), 8);
 
@@ -6700,14 +6719,23 @@ namespace binpack
             // En passant square. Ignore if no pawn capture is possible
             if (stream.read_one_bit()) {
                 chess::Square ep_square = static_cast<chess::Square>(stream.read_n_bit(6));
+                /*
+                std::string epStr;
+                if ( ep_square != chess::Square::none()) chess::parser_bits::appendSquareToString(ep_square,epStr);
+                else epStr = "none";
+                std::cout << epStr << std::endl;                
+                */
                 pos.setEpSquare(ep_square);
             }
 
             // Halfmove clock
             std::uint8_t rule50 = stream.read_n_bit(6);
-
+            
             // Fullmove number
             std::uint16_t fullmove = stream.read_n_bit(8);
+            
+            //std::cout << "50 " << (int)rule50 << std::endl;
+            //std::cout << "move " << (int)fullmove << std::endl;
 
             // Fullmove number, high bits
             // This was added as a fix for fullmove clock
@@ -6718,6 +6746,9 @@ namespace binpack
             // counter having only 6 bits stored.
             // In older entries this will just be a zero bit.
             rule50 |= stream.read_n_bit(1) << 6;
+
+            //std::cout << "*50 " << (int)rule50 << std::endl;
+            //std::cout << "*move " << (int)fullmove << std::endl;
 
             pos.setFullMove(fullmove);
             pos.setRule50Counter(rule50);
@@ -7800,7 +7831,11 @@ namespace binpack
 
             if (key == "e"sv)
             {
-                e.move = chess::uci::uciToMove(e.pos, move);
+                // there is a hack here, uciToMove will just skip castling move and return empty optional
+                auto m = chess::uci::uciToMove(e.pos, move);
+                if(!m.has_value()) continue; // skip castling
+                
+                e.move = m.value();
                 if (validate && !e.isValid())
                 {
                     std::cerr << "Illegal move " << chess::uci::moveToUci(e.pos, e.move) << " for position " << e.pos.fen() << '\n';
@@ -8054,7 +8089,11 @@ namespace binpack
 
             if (key == "e"sv)
             {
-                e.move = chess::uci::uciToMove(e.pos, move);
+                // there is a hack here, uciToMove will just skip castling move and return empty optional
+                auto m = chess::uci::uciToMove(e.pos, move);
+                if(!m.has_value()) continue; // skip castling
+                
+                e.move = m.value();
                 if (validate && !e.isValid())
                 {
                     std::cerr << "Illegal move " << chess::uci::moveToUci(e.pos, e.move) << " for position " << e.pos.fen() << '\n';

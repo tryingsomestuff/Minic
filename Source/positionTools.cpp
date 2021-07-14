@@ -132,7 +132,7 @@ Move SanitizeCastling(const Position &p, const Move &m) {
 
 Square kingSquare(const Position &p) { return p.king[p.c]; }
 
-bool readMove(const Position &p, const std::string &ss, Square &from, Square &to, MType &moveType) {
+bool readMove(const Position &p, const std::string &ss, Square &from, Square &to, MType &moveType, bool forbidCastling) {
    if (ss.empty()) {
       Logging::LogIt(Logging::logFatal) << "Trying to read empty move ! ";
       moveType = T_std;
@@ -142,6 +142,7 @@ bool readMove(const Position &p, const std::string &ss, Square &from, Square &to
    str = SanitizeCastling(p, str);
    // add space to go to own internal notation (if not castling)
    if (str != "0-0" && str != "0-0-0" && str != "O-O" && str != "O-O-O") str.insert(2, " ");
+   else if ( forbidCastling ) return false;
 
    std::vector<std::string> strList;
    std::stringstream iss(str);

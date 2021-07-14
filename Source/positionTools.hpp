@@ -15,7 +15,7 @@
 
 [[nodiscard]] Square kingSquare(const Position &p);
 
-bool readMove(const Position &p, const std::string &ss, Square &from, Square &to, MType &moveType);
+bool readMove(const Position &p, const std::string &ss, Square &from, Square &to, MType &moveType, bool forbidCastling = false);
 
 [[nodiscard]] float gamePhase(const Position &p, ScoreType &matScoreW, ScoreType &matScoreB);
 
