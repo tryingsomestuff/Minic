@@ -6092,18 +6092,14 @@ namespace chess
         // for double pushes move index differs by 16 or -16;
         if((movedPiece == PieceType::Pawn) & ((ordinal(move.to) ^ ordinal(move.from)) == 16))
         {
-            const Square potentialEpSquare = fromOrdinal<Square>((ordinal(move.to) + ordinal(move.from)) >> 1);
-            // Even though the move has not yet been made we can safely call
-            // this function and get the right result because the position of the
-            // pawn to be captured is not really relevant.
-            if (isEpPossible(potentialEpSquare, !m_sideToMove))
-            {
-                m_epSquare = potentialEpSquare;
-            }
+            m_epSquare = fromOrdinal<Square>((ordinal(move.to) + ordinal(move.from)) >> 1);
         }
 
         const Piece captured = BaseType::doMove(move);
         m_sideToMove = !m_sideToMove;
+
+        nullifyEpSquareIfNotPossible();
+
         return { move, captured, oldEpSquare, oldCastlingRights };
     }
 
@@ -6134,6 +6130,26 @@ namespace chess
 
     [[nodiscard]] inline bool Position::isEpPossibleColdPath(Square epSquare, Bitboard pawnsAttackingEpSquare, Color sideToMove) const
     {
+        if (pieceAt(epSquare) != Piece::none())
+        {
+            return false;
+        }
+
+        const auto forward =
+            sideToMove == chess::Color::White
+            ? FlatSquareOffset(0, 1)
+            : FlatSquareOffset(0, -1);
+
+        if (pieceAt(epSquare + forward) != Piece::none())
+        {
+            return false;
+        }
+
+        if (pieceAt(epSquare + -forward) != Piece(PieceType::Pawn, !sideToMove))
+        {
+            return false;
+        }
+
         // only set m_epSquare when it matters, ie. when
         // the opposite side can actually capture
         for (Square sq : pawnsAttackingEpSquare)
@@ -6829,24 +6845,6 @@ namespace binpack
         [[nodiscard]] bool isValid() const
         {
             return pos.isMoveLegal(move);
-        }
-
-        [[nodiscard]] bool isBetween(uint16_t targetPhaseLow = 0, uint16_t targetPhaseHigh = 0) const
-        {
-            const uint8_t wp = pos.pieceCount(chess::whitePawn);
-            const uint8_t bp = pos.pieceCount(chess::blackPawn);
-            const uint8_t wn = pos.pieceCount(chess::whiteKnight);
-            const uint8_t bn = pos.pieceCount(chess::blackKnight);
-            const uint8_t wb = pos.pieceCount(chess::whiteBishop);
-            const uint8_t bb = pos.pieceCount(chess::blackBishop);
-            const uint8_t wr = pos.pieceCount(chess::whiteRook);
-            const uint8_t br = pos.pieceCount(chess::blackRook);
-            const uint8_t wq = pos.pieceCount(chess::whiteQueen);
-            const uint8_t bq = pos.pieceCount(chess::blackQueen);
-
-            const uint16_t phase = wp+bp + 3*(wn+bn+wb+bb) + 5*(wr+br) + 9*(wq+bq);
-
-            return phase >= targetPhaseLow && phase <= targetPhaseHigh;
         }
 
         [[nodiscard]] bool isCapturingMove() const
