@@ -9,22 +9,22 @@ int main(int argc, char ** argv){
     const std::string output = argv[3];
     
     if (option == "binpack2bin"){
-        binpack::convertBinpackToBin(input,output,std::ios::out,false);
+        binpack::convertBinpackToBin(input,output,std::ios::trunc,false);
     }
     else if (option == "binpack2plain"){
-        binpack::convertBinpackToPlain(input,output,std::ios::out,false);
+        binpack::convertBinpackToPlain(input,output,std::ios::trunc,false);
     }
     else if (option == "bin2binpack"){
-        binpack::convertBinToBinpack(input,output,std::ios::out,false);
+        binpack::convertBinToBinpack(input,output,std::ios::trunc,false);
     }
     else if (option == "bin2plain"){
-        binpack::convertBinToPlain(input,output,std::ios::out,false);
+        binpack::convertBinToPlain(input,output,std::ios::trunc,false);
     }
     else if (option == "plain2bin"){
-        binpack::convertPlainToBin(input,output,std::ios::out,false);
+        binpack::convertPlainToBin(input,output,std::ios::trunc,false);
     }
     else if (option == "plain2binpack"){
-        binpack::convertPlainToBinpack(input,output,std::ios::out,false);
+        binpack::convertPlainToBinpack(input,output,std::ios::trunc,false);
     }
 
     return 0;
