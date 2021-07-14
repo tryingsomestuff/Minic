@@ -43,7 +43,7 @@ struct MoveSorter {
    const MiniMove     refutation;
    const DepthType    height;
    const CMHPtrArray& cmhPtr;
-   float              gp;
+   const float        gp;
 
    static void score(const Searcher&    context,
                      MoveList&          moves,
