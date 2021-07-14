@@ -102,7 +102,7 @@ def run_match(best, root_dir, c_chess_exe, concurrency, book_file_name, engine):
             book_file_name
         )
     )
-    command = command + " -engine cmd=/ssd/Minic/Dist/Minic3/minic_3.09_linux_x64_skylake name=master"
+    command = command + " -engine cmd=/ssd/Minic/Dist/Minic3/minic_3.08_linux_x64_skylake name=master"
 
     count = 0
     for net in best:

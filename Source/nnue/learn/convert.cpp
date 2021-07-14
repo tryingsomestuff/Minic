@@ -152,9 +152,11 @@ bool convert_bin(const std::vector<std::string>& filenames,
             Square from = INVALIDSQUARE;
             Square to   = INVALIDSQUARE;
             MType  type = T_std;
-            if (hasPos && readMove(pos, value, from, to, type)) {
+            // forbid castling moves
+            // this will create a "discontinuity" in binpack interpretation of the move sequence
+            if (hasPos && readMove(pos, value, from, to, type, true)) { 
                p.move = ToSFMove(pos, from, to, type); // use SF style move encoding
-                                                       //p.move = ToMove(from,to,type); // use Minic style move encoding
+               //p.move = ToMove(from,to,type); // use Minic style move encoding
             }
             else {
                skipit();
