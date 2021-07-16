@@ -11,7 +11,7 @@
 #ifdef __MINGW32__
 #define POPCOUNT(x) int(__builtin_popcountll(x))
 inline int bitScanForward(BitBoard bb) {
-   assert(bb != emptyBitBoard);
+   assert(isNotEmpty(bb));
    return __builtin_ctzll(bb);
 }
 #define bsf(x, i)     (i = bitScanForward(x))
@@ -46,7 +46,7 @@ const int index64[NbSquare] = {
 };
 int bitScanForward(int64_t bb) {
    const uint64_t debruijn64 = 0x03f79d71b4cb0a89;
-   assert(bb != emptyBitBoard);
+   assert(isNotEmpty(bb));
    return index64[((bb & -bb) * debruijn64) >> 58];
 }
 #define POPCOUNT(x)   popcount(x)
@@ -57,7 +57,7 @@ int bitScanForward(int64_t bb) {
 #else  // _WIN32 (thus linux)
 #define POPCOUNT(x)   int(__builtin_popcountll(x))
 inline int bitScanForward(BitBoard bb) {
-   assert(bb != emptyBitBoard);
+   assert(isNotEmpty(bb));
    return __builtin_ctzll(bb);
 }
 #define bsf(x, i)     (i = bitScanForward(x))
@@ -127,7 +127,7 @@ inline void _unSetBit(BitBoard& b, Square k) { b &= ~SquareToBitboard(k); }
 [[nodiscard]] inline ScoreType countBit(const BitBoard& b) { return ScoreType(POPCOUNT(b)); }
 
 [[nodiscard]] inline int popBit(BitBoard& b) {
-   assert(b != emptyBitBoard);
+   assert(isNotEmpty(b));
     int i = 0;
     bsf(b, i);
     b &= b - 1;

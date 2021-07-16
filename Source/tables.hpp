@@ -36,9 +36,9 @@ struct HistoryT {
       if (Move2Type(m) == T_std) {
          const Color  c    = p.c;
          const Square from = Move2From(m);
-         assert(squareOK(from));
+         assert(isValidSquare(from));
          const Square to = Move2To(m);
-         assert(squareOK(to));
+         assert(isValidSquare(to));
          const ScoreType s  = S * HSCORE(depth);
          const Piece     pp = p.board_const(from);
          history[c][from][to] += s - HISTORY_DIV(history[c][from][to] * (int)std::abs(s));

@@ -152,9 +152,9 @@ struct Position {
           toP(p.board_const(to)),
           fromId(PieceIdx(fromP)),
           isCapNoEP(toP != P_none) {
-         assert(squareOK(from));
-         assert(squareOK(to));
-         assert(moveTypeOK(type));
+         assert(isValidSquare(from));
+         assert(isValidSquare(to));
+         assert(isValidMoveType(type));
       }
       const Square from      = INVALIDSQUARE;
       const Square to        = INVALIDSQUARE;

@@ -26,7 +26,7 @@ enum GenPhase { GP_all = 0, GP_cap = 1, GP_quiet = 2 };
 void addMove(Square from, Square to, MType type, MoveList& moves);
 
 template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveList& moves, Square from) {
-   assert(from >= 0 && from < 64);
+   assert(isValidSquare(from));
 #ifdef DEBUG_GENERATION
    if (from == INVALIDSQUARE) Logging::LogIt(Logging::logFatal) << "invalid square";
 #endif
@@ -35,9 +35,9 @@ template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveLis
    const BitBoard& oppPieceBB = p.allPieces[~side];
    const Piece     piece      = p.board_const(from);
    const Piece     ptype      = (Piece)std::abs(piece);
-   assert(pieceValid(ptype));
+   assert(isValidPieceNotNone(ptype));
 #ifdef DEBUG_GENERATION
-   if (!pieceValid(ptype)) {
+   if (!isValidPieceNotNone(ptype)) {
       Logging::LogIt(Logging::logWarn) << ToString(myPieceBB);
       Logging::LogIt(Logging::logWarn) << ToString(oppPieceBB);
       Logging::LogIt(Logging::logWarn) << "piece " << (int)piece;

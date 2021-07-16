@@ -15,7 +15,7 @@ Move Skill::pick(std::vector<RootScores>& multiPVMoves) {
    // shuffling of available moves thanks to both a deterministic value and a random one
    Move m = INVALIDMOVE;
    for (size_t i = 0; i < multiPV; ++i) {
-      if (!VALIDMOVE(multiPVMoves[i].m)) continue;
+      if (!isValidMove(multiPVMoves[i].m)) continue;
       const ScoreType currentMoveScore = multiPVMoves[i].s;
       // magic formula from Stockfish
       const ScoreType add = (weakness * (topScore - currentMoveScore) + randomInt<int, 1234>(0, weakness) * delta) / 128;

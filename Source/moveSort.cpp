@@ -16,14 +16,14 @@
  */
 
 template<Color C> void MoveSorter::computeScore(Move& m) const {
-   assert(VALIDMOVE(m));
+   assert(isValidMove(m));
    if (Move2Score(m) != 0) return; // prob cut already computed captures score
    const MType t = Move2Type(m);
-   assert(moveTypeOK(t));
+   assert(isValidMoveType(t));
    const Square from = Move2From(m);
-   assert(squareOK(from));
+   assert(isValidSquare(from));
    const Square to = Move2To(m);
-   assert(squareOK(to));
+   assert(isValidSquare(to));
    ScoreType s = MoveScoring[t];
    if (height == 0 && sameMove(context.previousBest, m)) s += 15000; // previous root best at root
    else if (e && sameMove(e->m, m))
@@ -41,12 +41,12 @@ template<Color C> void MoveSorter::computeScore(Move& m) const {
          if (useSEE && !isInCheck) {
             const ScoreType see = context.SEE(p, m);
             s += see;
-            if (VALIDMOVE(p.lastMove) && isCapture(p.lastMove) && to == Move2To(p.lastMove)) s += 150; // recapture bonus
+            if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == Move2To(p.lastMove)) s += 150; // recapture bonus
             else if (see < -80)
                s -= 2 * MoveScoring[T_capture]; // too bad capture
          }
          else {                                                                                        // MVVLVA
-            if (VALIDMOVE(p.lastMove) && isCapture(p.lastMove) && to == Move2To(p.lastMove)) s += 500; // recapture bonus
+            if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == Move2To(p.lastMove)) s += 500; // recapture bonus
             else {
                s += SearchConfig::MvvLvaScores[ppOpp - 1][pp - 1]; //[0 400]
             }
@@ -58,7 +58,7 @@ template<Color C> void MoveSorter::computeScore(Move& m) const {
             s += 1700; // quiet killer
          else if (height > 1 && sameMove(m, context.killerT.killers[height - 2][0]))
             s += 1500; // quiet killer
-         else if (VALIDMOVE(p.lastMove) && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)], m))
+         else if (isValidMove(p.lastMove) && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)], m))
             s += 1300; // quiet counter
          else {
             ///@todo give another try to tune those ratio!

@@ -204,8 +204,8 @@ typedef std::vector<Move>           PVList;
 [[nodiscard]] inline constexpr bool sameMove(const Move& a, const Move& b) { return Move2MiniMove(a) == Move2MiniMove(b); }
 [[nodiscard]] inline constexpr bool sameMove(const Move& a, const MiniMove& b) { return Move2MiniMove(a) == b; }
 
-[[nodiscard]] inline constexpr bool VALIDMOVE(const Move& m) { return !sameMove(m, NULLMOVE) && !sameMove(m, INVALIDMOVE); }
-[[nodiscard]] inline constexpr bool VALIDMOVE(const MiniMove& m) { return m != INVALIDMINIMOVE && m != NULLMOVE; }
+[[nodiscard]] inline constexpr bool isValidMove(const Move& m) { return !sameMove(m, NULLMOVE) && !sameMove(m, INVALIDMOVE); }
+[[nodiscard]] inline constexpr bool isValidMove(const MiniMove& m) { return m != INVALIDMINIMOVE && m != NULLMOVE; }
 
 const std::string startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 const std::string fine70        = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1";
@@ -368,10 +368,11 @@ enum MType : uint8_t {
    T_bqs      = 15 // binary 1100 to 1111
 };
 
-[[nodiscard]] inline constexpr bool moveTypeOK(MType m) { return m <= T_bqs; }
-[[nodiscard]] inline constexpr bool squareOK(Square s) { return s >= 0 && s < NbSquare; }
-[[nodiscard]] inline constexpr bool pieceOK(Piece pp) { return pp >= P_bk && pp <= P_wk; }
-[[nodiscard]] inline constexpr bool pieceValid(Piece pp) { return pieceOK(pp) && pp != P_none; }
+[[nodiscard]] inline constexpr bool isValidMoveType(MType m)      { return m <= T_bqs; }
+[[nodiscard]] inline constexpr bool isValidSquare(Square s)       { return s >= 0 && s < NbSquare; }
+[[nodiscard]] inline constexpr bool isValidPiece(Piece pp)        { return pp >= P_bk && pp <= P_wk; }
+[[nodiscard]] inline constexpr bool isValidPieceNotNone(Piece pp) { return isValidPiece(pp) && pp != P_none; }
+[[nodiscard]] inline constexpr bool isNotEmpty(BitBoard bb)       { return bb != emptyBitBoard; }
 
 [[nodiscard]] inline constexpr Piece promShift(MType mt) {
    assert(mt >= T_promq);
@@ -399,29 +400,29 @@ constexpr ScoreType MoveScoring[16] = {0, 7000, 7100, 6000, 3950, 3500, 3350, 33
 }
 
 [[nodiscard]] inline constexpr ScoreType Move2Score(Move m) {
-   assert(VALIDMOVE(m));
+   assert(isValidMove(m));
    return (m >> 16) & 0xFFFF;
 }
 [[nodiscard]] inline constexpr Square Move2From(Move m) {
-   assert(VALIDMOVE(m));
+   assert(isValidMove(m));
    return (m >> 10) & 0x3F;
 }
 [[nodiscard]] inline constexpr Square Move2To(Move m) {
-   assert(VALIDMOVE(m));
+   assert(isValidMove(m));
    return (m >> 4) & 0x3F;
 }
 [[nodiscard]] inline constexpr MType Move2Type(Move m) {
-   assert(VALIDMOVE(m));
+   assert(isValidMove(m));
    return MType(m & 0xF);
 }
 [[nodiscard]] inline constexpr MiniMove ToMove(Square from, Square to, MType type) {
-   assert(from >= 0 && from < 64);
-   assert(to >= 0 && to < 64);
+   assert(isValidSquare(from));
+   assert(isValidSquare(to));
    return (from << 10) | (to << 4) | type;
 }
 [[nodiscard]] inline constexpr Move ToMove(Square from, Square to, MType type, ScoreType score) {
-   assert(from >= 0 && from < 64);
-   assert(to >= 0 && to < 64);
+   assert(isValidSquare(from));
+   assert(isValidSquare(to));
    return (score << 16) | (from << 10) | (to << 4) | type;
 }
 
@@ -430,33 +431,33 @@ constexpr ScoreType MoveScoring[16] = {0, 7000, 7100, 6000, 3950, 3500, 3350, 33
 [[nodiscard]] inline constexpr bool isMateScore(ScoreType s) { return (Abs(s) >= MATE - MAX_DEPTH); }
 
 [[nodiscard]] inline constexpr bool isPromotionStd(const MType mt) {
-   assert(moveTypeOK(mt));
+   assert(isValidMoveType(mt));
    return (mt >> 2 == 0x1);
 }
 [[nodiscard]] inline constexpr bool isPromotionStd(const Move m) { return isPromotionStd(Move2Type(m)); }
 [[nodiscard]] inline constexpr bool isPromotionCap(const MType mt) {
-   assert(moveTypeOK(mt));
+   assert(isValidMoveType(mt));
    return (mt >> 2 == 0x2);
 }
 [[nodiscard]] inline constexpr bool isPromotionCap(const Move m) { return isPromotionCap(Move2Type(m)); }
 [[nodiscard]] inline constexpr bool isPromotion(const MType mt) {
-   assert(moveTypeOK(mt));
+   assert(isValidMoveType(mt));
    return isPromotionStd(mt) || isPromotionCap(mt);
 }
 [[nodiscard]] inline constexpr bool isPromotion(const Move m) { return isPromotion(Move2Type(m)); }
 [[nodiscard]] inline constexpr bool isCastling(const MType mt) {
-   assert(moveTypeOK(mt));
+   assert(isValidMoveType(mt));
    return (mt >> 2) == 0x3;
 }
 [[nodiscard]] inline constexpr bool isCastling(const Move m) { return isCastling(Move2Type(m)); }
 [[nodiscard]] inline constexpr bool isCapture(const MType mt) {
-   assert(moveTypeOK(mt));
+   assert(isValidMoveType(mt));
    return mt == T_capture || mt == T_ep || isPromotionCap(mt);
 }
 [[nodiscard]] inline constexpr bool isCapture(const Move m) { return isCapture(Move2Type(m)); }
 
 [[nodiscard]] inline constexpr bool isCaptureOrProm(const MType mt) {
-   assert(moveTypeOK(mt));
+   assert(isValidMoveType(mt));
    return mt == T_capture || mt == T_ep || isPromotion(mt);
 }
 [[nodiscard]] inline constexpr bool isCaptureOrProm(const Move m) { return isCaptureOrProm(Move2Type(m)); }

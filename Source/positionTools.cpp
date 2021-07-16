@@ -111,13 +111,13 @@ std::string SanitizeCastling(const Position &p, const std::string &str) {
 }
 
 Move SanitizeCastling(const Position &p, const Move &m) {
-   if (!VALIDMOVE(m)) return m;
+   if (!isValidMove(m)) return m;
    const Square from = Move2From(m);
-   assert(squareOK(from));
+   assert(isValidSquare(from));
    const Square to = Move2To(m);
-   assert(squareOK(to));
+   assert(isValidSquare(to));
    MType mtype = Move2Type(m);
-   assert(moveTypeOK(mtype));
+   assert(isValidMoveType(mtype));
    // convert GUI castling input notation to internal castling style if not FRC
    if (!DynamicConfig::FRC) {
       bool whiteToMove = p.c == Co_White;
