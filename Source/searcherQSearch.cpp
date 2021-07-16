@@ -236,7 +236,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    else
       MoveGen::generate<MoveGen::GP_cap>(p, moves); ///@todo generate only recapture if qly > 5
 
-   const Square recapture     = VALIDMOVE(p.lastMove) ? Move2To(p.lastMove) : INVALIDSQUARE;
+   const Square recapture     = isValidMove(p.lastMove) ? Move2To(p.lastMove) : INVALIDSQUARE;
    const bool   onlyRecapture = qply > 5 && isCapture(p.lastMove) && recapture != INVALIDSQUARE;
 
    CMHPtrArray cmhPtr;

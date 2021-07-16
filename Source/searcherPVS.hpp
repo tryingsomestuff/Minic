@@ -406,15 +406,15 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             // castling extension
             //if (EXTENDMORE(extension) && isCastling(e.m) ) stats.incr(Stats::sid_castlingExtension),++extension;
             // Botvinnik-Markoff Extension
-            if (EXTENDMORE(extension) && DynamicConfig::useNNUE && height > 1 && VALIDMOVE(stack[p.halfmoves].threat) &&
-                VALIDMOVE(stack[p.halfmoves - 2].threat) &&
+            if (EXTENDMORE(extension) && DynamicConfig::useNNUE && height > 1 && isValidMove(stack[p.halfmoves].threat) &&
+                isValidMove(stack[p.halfmoves - 2].threat) &&
                 (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) ||
                  (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat))))
                stats.incr(Stats::sid_BMExtension), ++extension;
             // mate threat extension (from null move)
             //if (EXTENDMORE(extension) && mateThreat) stats.incr(Stats::sid_mateThreatExtension),++extension;
             // simple recapture extension
-            //if (EXTENDMORE(extension) && VALIDMOVE(p.lastMove) && Move2Type(p.lastMove) == T_capture && to == Move2To(p.lastMove)) stats.incr(Stats::sid_recaptureExtension),++extension; // recapture
+            //if (EXTENDMORE(extension) && isValidMove(p.lastMove) && Move2Type(p.lastMove) == T_capture && to == Move2To(p.lastMove)) stats.incr(Stats::sid_recaptureExtension),++extension; // recapture
             // gives check extension
             //if (EXTENDMORE(extension) && isCheck ) stats.incr(Stats::sid_checkExtension2),++extension; // we give check with a non risky move
             /*
@@ -560,7 +560,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          // mate threat extension (from null move)
          //if (EXTENDMORE(extension) && mateThreat && depth <= 4) stats.incr(Stats::sid_mateThreatExtension),++extension;
          // simple recapture extension
-         //if (EXTENDMORE(extension) && VALIDMOVE(p.lastMove) && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && to == Move2To(p.lastMove)) stats.incr(Stats::sid_recaptureExtension),++extension; //recapture
+         //if (EXTENDMORE(extension) && isValidMove(p.lastMove) && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && to == Move2To(p.lastMove)) stats.incr(Stats::sid_recaptureExtension),++extension; //recapture
          // gives check extension
          //if (EXTENDMORE(extension) && isCheck && !isBadCap(*it)) stats.incr(Stats::sid_checkExtension2),++extension; // we give check with a non risky move
          // CMH extension

@@ -2,16 +2,16 @@
 #include "searcher.hpp"
 
 ScoreType Searcher::SEE(const Position& p, const Move& m) const {
-   if (!VALIDMOVE(m)) return 0;
+   if (!isValidMove(m)) return 0;
 
    START_TIMER
 
    Square from = Move2From(m);
-   assert(squareOK(from));
+   assert(isValidSquare(from));
    const Square to = Move2To(m);
-   assert(squareOK(to));
+   assert(isValidSquare(to));
    const MType mtype = Move2Type(m);
-   assert(moveTypeOK(mtype));
+   assert(isValidMoveType(mtype));
    BitBoard   attackers          = BBTools::allAttackedBB(p, to);
    BitBoard   occupation_mask    = 0xFFFFFFFFFFFFFFFF;
    ScoreType  current_target_val = 0;
@@ -94,7 +94,7 @@ bool Searcher::SEE_GE(const Position& p, const Move& m, ScoreType threshold) con
 /*
 // Static Exchange Evaluation (cutoff version algorithm from Stockfish)
 bool Searcher::SEE_GE(const Position & p, const Move & m, ScoreType threshold) const{
-    assert(VALIDMOVE(m));
+    assert(isValidMove(m));
     START_TIMER
     const Square from = Move2From(m);
     const Square to   = Move2To(m);

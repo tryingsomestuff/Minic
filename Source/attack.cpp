@@ -122,6 +122,7 @@ void initMask() {
 #ifndef WITH_MAGIC // then use HQBB
 
 BitBoard attack(const BitBoard occupancy, const Square s, const BitBoard m) {
+   assert(isValidSquare(s));
    START_TIMER
    BitBoard forward = occupancy & m;
    BitBoard reverse = swapbits(forward);
@@ -134,14 +135,26 @@ BitBoard attack(const BitBoard occupancy, const Square s, const BitBoard m) {
 }
 
 BitBoard rankAttack(const BitBoard occupancy, const Square s) {
+   assert(isValidSquare(s));
    const int f = SQFILE(x);
    const int r = s & 56;
    return BitBoard(_ranks[((occupancy >> r) & 126) * 4 + f]) << r;
 }
 
-BitBoard fileAttack(const BitBoard occupancy, const Square s) { return attack(occupancy, s, mask[s].file); }
-BitBoard diagonalAttack(const BitBoard occupancy, const Square s) { return attack(occupancy, s, mask[s].diagonal); }
-BitBoard antidiagonalAttack(const BitBoard occupancy, const Square s) { return attack(occupancy, s, mask[s].antidiagonal); }
+BitBoard fileAttack(const BitBoard occupancy, const Square s) { 
+   assert(isValidSquare(s));
+   return attack(occupancy, s, mask[s].file); 
+}
+
+BitBoard diagonalAttack(const BitBoard occupancy, const Square s) { 
+   assert(isValidSquare(s));
+   return attack(occupancy, s, mask[s].diagonal); 
+}
+
+BitBoard antidiagonalAttack(const BitBoard occupancy, const Square s) { 
+   assert(isValidSquare(s));
+   return attack(occupancy, s, mask[s].antidiagonal); 
+}
 
 #else // MAGIC
 
@@ -227,7 +240,7 @@ void initMagic() {
 #endif // MAGIC
 
 bool isAttackedBB(const Position &p, const Square s, Color c) { ///@todo try to optimize order better ?
-   assert(s != INVALIDSQUARE);
+   assert(isValidSquare(s));
    const BitBoard occupancy = p.occupancy();
    if (c == Co_White)
       return attack<P_wb>(s, p.blackBishop() | p.blackQueen(), occupancy) || attack<P_wr>(s, p.blackRook() | p.blackQueen(), occupancy) ||
@@ -238,7 +251,7 @@ bool isAttackedBB(const Position &p, const Square s, Color c) { ///@todo try to 
 }
 
 BitBoard allAttackedBB(const Position &p, const Square s, Color c) {
-   assert(s != INVALIDSQUARE);
+   assert(isValidSquare(s));
    const BitBoard occupancy = p.occupancy();
    if (c == Co_White)
       return attack<P_wb>(s, p.blackBishop() | p.blackQueen(), occupancy) | attack<P_wr>(s, p.blackRook() | p.blackQueen(), occupancy) |
@@ -249,7 +262,7 @@ BitBoard allAttackedBB(const Position &p, const Square s, Color c) {
 }
 
 BitBoard allAttackedBB(const Position &p, const Square s) {
-   assert(s != INVALIDSQUARE);
+   assert(isValidSquare(s));
    const BitBoard occupancy = p.occupancy();
    return attack<P_wb>(s, p.allBishop() | p.allQueen(), occupancy) | attack<P_wr>(s, p.allRook() | p.allQueen(), occupancy) |
           attack<P_wn>(s, p.allKnight()) | attack<P_wp>(s, p.blackPawn(), occupancy, Co_White) | attack<P_wp>(s, p.whitePawn(), occupancy, Co_Black) |
@@ -259,6 +272,7 @@ BitBoard allAttackedBB(const Position &p, const Square s) {
 } // namespace BBTools
 
 bool isAttacked(const Position &p, const Square s) {
+   //assert(isValidSquare(s)); ///@todo ?
    START_TIMER
    const bool b = s != INVALIDSQUARE && BBTools::isAttackedBB(p, s, p.c);
    STOP_AND_SUM_TIMER(IsAttacked);

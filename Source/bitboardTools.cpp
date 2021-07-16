@@ -5,7 +5,7 @@
 namespace BBTools {
 
 Square SquareFromBitBoard(const BitBoard& b) {
-   assert(b != emptyBitBoard);
+   assert(isNotEmpty(b));
    int i = 0;
    bsf(b, i);
    return Square(i);

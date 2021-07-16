@@ -79,7 +79,7 @@ bool getEntry(Searcher &context, const Position &p, Hash h, DepthType d, Entry &
 #ifndef DEBUG_HASH_ENTRY
        ((e.h ^ e._data1 ^ e._data2) != Hash64to32(h)) ||
 #endif
-       (VALIDMOVE(e.m) && !isPseudoLegal(p, e.m))) {
+       (isValidMove(e.m) && !isPseudoLegal(p, e.m))) {
       e.h = nullHash;
       return false;
    } // move is filled, but wrong in this position, invalidate returned entry.
@@ -120,7 +120,7 @@ void getPV(const Position &p, Searcher &context, PVList &pv) {
       if (!TT::getEntry(context, p2, computeHash(p2), 0, e)) break;
       if (e.h != nullHash) {
          hashStack[k] = computeHash(p2);
-         if (!VALIDMOVE(e.m) || !applyMove(p2, e.m)) break;
+         if (!isValidMove(e.m) || !applyMove(p2, e.m)) break;
          pv.push_back(e.m);
          const Hash h = computeHash(p2);
          for (int i = k - 1; i >= 0; --i)

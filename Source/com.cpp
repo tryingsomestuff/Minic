@@ -125,7 +125,7 @@ bool makeMove(Move m, bool disp, std::string tag, Move pMove) {
    bool b = applyMove(position, m, true); // this update the COM::position position status
    if (disp && m != INVALIDMOVE) {
       Logging::LogIt(Logging::logGUI) << tag << " " << ToString(m)
-                                      << (Logging::ct == Logging::CT_uci && VALIDMOVE(pMove) ? (" ponder " + ToString(pMove)) : "");
+                                      << (Logging::ct == Logging::CT_uci && isValidMove(pMove) ? (" ponder " + ToString(pMove)) : "");
    }
    Logging::LogIt(Logging::logInfo) << ToString(position);
    return b;
