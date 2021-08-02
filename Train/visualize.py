@@ -32,7 +32,7 @@ def plot_input_weights_image(x, name, dst):
     dst.axhline(y=6*8*8*j-1, **line_options)
 
 def main():
-  DPI = 300
+  DPI = 100
 
   if len(sys.argv) < 2:
     print("Usage : python visualize.py net")
@@ -59,7 +59,7 @@ def main():
   plot_input_weights_image(w, 'white', axs_w)
   plot_input_weights_image(b, 'black', axs_b)
   
-  plt.savefig(os.path.join('./', 'feature_transformer.png'))
+  plt.savefig(os.path.join('./', 'feature_transformer.tif'))
 
 
 if __name__ == '__main__':
