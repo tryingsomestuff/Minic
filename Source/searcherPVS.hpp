@@ -662,7 +662,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          // LMR
          DepthType reduction = 0;
          if (SearchConfig::doLMR && depth >= SearchConfig::lmrMinDepth &&
-             ((isReductible && isQuiet) /*|| isPrunableCap*/ /*|| stack[p.halfmoves].eval <= alpha*/ /*|| cutNode*/) &&
+             ((isReductible && isQuiet) /*|| isPrunableCap*/ /*|| stack[p.halfmoves].eval <= alpha*/ /*|| cutNode*/) && ///@todo retry isPrunableCap
              validMoveCount > 1 + 2 * rootnode) {
             stats.incr(Stats::sid_lmr);
             reduction += SearchConfig::lmrReduction[std::min((int)depth, MAX_DEPTH - 1)][std::min(validMoveCount, MAX_MOVE - 1)];
