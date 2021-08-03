@@ -36,13 +36,13 @@ void movePiece(Position& p, Square from, Square to, Piece fromP, Piece toP, bool
    p.board(to)   = toPnew;
    // update bitboard
    BBTools::unSetBit(p, from, fromP);
-   BB::_unSetBit(p.allPieces[fromP > 0 ? Co_White : Co_Black], from);
+   BB::_unSetBit(p.allPieces[p.c/*fromP > 0 ? Co_White : Co_Black*/], from);
    if (toP != P_none) {
       BBTools::unSetBit(p, to, toP);
-      BB::_unSetBit(p.allPieces[toP > 0 ? Co_White : Co_Black], to);
+      BB::_unSetBit(p.allPieces[~p.c/*toP > 0 ? Co_White : Co_Black*/], to);
    }
    BBTools::setBit(p, to, toPnew);
-   BB::_setBit(p.allPieces[fromP > 0 ? Co_White : Co_Black], to);
+   BB::_setBit(p.allPieces[p.c/*fromP > 0 ? Co_White : Co_Black*/], to);
    // update Zobrist hash
    p.h ^= Zobrist::ZT[from][fromId]; // remove fromP at from
    p.h ^= Zobrist::ZT[to][toIdnew];  // add fromP (or prom) at to
@@ -94,7 +94,6 @@ bool applyMove(Position& p, const Move& m, bool noValidation) {
    Position previous = p;
 #endif
    const Position::MoveInfo moveInfo(p,m);
-   Piece promPiece = P_none;
 #ifdef DEBUG_APPLY
    if (!isPseudoLegal(p, m)) {
       Logging::LogIt(Logging::logError) << ToString(m) << " " << moveInfo.type;
@@ -129,11 +128,11 @@ bool applyMove(Position& p, const Move& m, bool noValidation) {
             const Square epCapSq = p.ep + (p.c == Co_White ? -8 : +8);
             assert(isValidSquare(epCapSq));
             BBTools::unSetBit(p, epCapSq, ~moveInfo.fromP); // BEFORE setting p.b new shape !!!
-            BB::_unSetBit(p.allPieces[moveInfo.fromP > 0 ? Co_Black : Co_White], epCapSq);
+            BB::_unSetBit(p.allPieces[~p.c/*moveInfo.fromP > 0 ? Co_Black : Co_White*/], epCapSq);
             BBTools::unSetBit(p, moveInfo.from, moveInfo.fromP);
-            BB::_unSetBit(p.allPieces[moveInfo.fromP > 0 ? Co_White : Co_Black], moveInfo.from);
+            BB::_unSetBit(p.allPieces[p.c/*moveInfo.fromP > 0 ? Co_White : Co_Black*/], moveInfo.from);
             BBTools::setBit(p, moveInfo.to, moveInfo.fromP);
-            BB::_setBit(p.allPieces[moveInfo.fromP > 0 ? Co_White : Co_Black], moveInfo.to);
+            BB::_setBit(p.allPieces[p.c/*moveInfo.fromP > 0 ? Co_White : Co_Black*/], moveInfo.to);
             p.board(moveInfo.from)    = P_none;
             p.board(moveInfo.to)      = moveInfo.fromP;
             p.board(epCapSq) = P_none;
@@ -152,30 +151,26 @@ bool applyMove(Position& p, const Move& m, bool noValidation) {
       case T_promq:
       case T_cappromq:
          MaterialHash::updateMaterialProm(p, moveInfo.to, moveInfo.type);
-         promPiece = (p.c == Co_White ? P_wq : P_bq);
-         movePiece(p, moveInfo.from, moveInfo.to, moveInfo.fromP, moveInfo.toP, moveInfo.type == T_cappromq, promPiece);
+         movePiece(p, moveInfo.from, moveInfo.to, moveInfo.fromP, moveInfo.toP, moveInfo.type == T_cappromq, (p.c == Co_White ? P_wq : P_bq));
          break;
       case T_promr:
       case T_cappromr:
          MaterialHash::updateMaterialProm(p, moveInfo.to, moveInfo.type);
-         promPiece = (p.c == Co_White ? P_wr : P_br);
-         movePiece(p, moveInfo.from, moveInfo.to, moveInfo.fromP, moveInfo.toP, moveInfo.type == T_cappromr, promPiece);
+         movePiece(p, moveInfo.from, moveInfo.to, moveInfo.fromP, moveInfo.toP, moveInfo.type == T_cappromr, (p.c == Co_White ? P_wr : P_br));
          break;
       case T_promb:
       case T_cappromb:
          MaterialHash::updateMaterialProm(p, moveInfo.to, moveInfo.type);
-         promPiece = (p.c == Co_White ? P_wb : P_bb);
-         movePiece(p, moveInfo.from, moveInfo.to, moveInfo.fromP, moveInfo.toP, moveInfo.type == T_cappromb, promPiece);
+         movePiece(p, moveInfo.from, moveInfo.to, moveInfo.fromP, moveInfo.toP, moveInfo.type == T_cappromb, (p.c == Co_White ? P_wb : P_bb));
          break;
       case T_promn:
       case T_cappromn:
          MaterialHash::updateMaterialProm(p, moveInfo.to, moveInfo.type);
-         promPiece = (p.c == Co_White ? P_wn : P_bn);
-         movePiece(p, moveInfo.from, moveInfo.to, moveInfo.fromP, moveInfo.toP, moveInfo.type == T_cappromn, promPiece);
+         movePiece(p, moveInfo.from, moveInfo.to, moveInfo.fromP, moveInfo.toP, moveInfo.type == T_cappromn, (p.c == Co_White ? P_wn : P_bn));
          break;
-      case T_wks: movePieceCastle<Co_White>(p, CT_OO, Sq_g1, Sq_f1); break;
+      case T_wks: movePieceCastle<Co_White>(p, CT_OO,  Sq_g1, Sq_f1); break;
       case T_wqs: movePieceCastle<Co_White>(p, CT_OOO, Sq_c1, Sq_d1); break;
-      case T_bks: movePieceCastle<Co_Black>(p, CT_OO, Sq_g8, Sq_f8); break;
+      case T_bks: movePieceCastle<Co_Black>(p, CT_OO,  Sq_g8, Sq_f8); break;
       case T_bqs: movePieceCastle<Co_Black>(p, CT_OOO, Sq_c8, Sq_d8); break;
    }
 
