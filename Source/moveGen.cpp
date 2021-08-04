@@ -359,7 +359,7 @@ bool isPseudoLegal(const Position& p, Move m) { // validate TT move
    const Square to = Move2To(m);
    assert(isValidSquare(to));
    const Piece toP = p.board_const(to);
-   if ((toP > 0 && p.c == Co_White) || (toP < 0 && p.c == Co_Black)) PSEUDO_LEGAL_RETURN(false, 1)
+   if (!isCastling(m) && ((toP > 0 && p.c == Co_White) || (toP < 0 && p.c == Co_Black))) PSEUDO_LEGAL_RETURN(false, 1) // FRC castling is king takes rook ....
    if ((Piece)std::abs(toP) == P_wk) PSEUDO_LEGAL_RETURN(false, 2)
    const Piece fromPieceType = (Piece)std::abs(fromP);
    const MType t             = Move2Type(m);

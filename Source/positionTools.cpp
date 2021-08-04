@@ -105,29 +105,11 @@ std::string GetFEN(const Position &p) { // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1P
 }
 
 std::string SanitizeCastling(const Position &p, const std::string &str) {
+   // standard chess
    if ((str == "e1g1" && p.board_const(Sq_e1) == P_wk) || (str == "e8g8" && p.board_const(Sq_e8) == P_bk)) return "0-0";
    if ((str == "e1c1" && p.board_const(Sq_e1) == P_wk) || (str == "e8c8" && p.board_const(Sq_e8) == P_bk)) return "0-0-0";
+   // FRC is handled in readMove
    return str;
-}
-
-Move SanitizeCastling(const Position &p, const Move &m) {
-   if (!isValidMove(m)) return m;
-   const Square from = Move2From(m);
-   assert(isValidSquare(from));
-   const Square to = Move2To(m);
-   assert(isValidSquare(to));
-   MType mtype = Move2Type(m);
-   assert(isValidMoveType(mtype));
-   // convert GUI castling input notation to internal castling style if not FRC
-   if (!DynamicConfig::FRC) {
-      bool whiteToMove = p.c == Co_White;
-      if (mtype == T_std && from == p.rootInfo().kingInit[p.c]) {
-         if (to == (whiteToMove ? Sq_c1 : Sq_c8)) return ToMove(from, to, whiteToMove ? T_wqs : T_bqs);
-         else if (to == (whiteToMove ? Sq_g1 : Sq_g8))
-            return ToMove(from, to, whiteToMove ? T_wks : T_bks);
-      }
-   }
-   return m;
 }
 
 Square kingSquare(const Position &p) { return p.king[p.c]; }

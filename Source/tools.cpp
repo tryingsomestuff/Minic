@@ -46,20 +46,21 @@ void debug_king_cap(const Position&) { ; }
 std::string ToString(const MiniMove& m) { return ToString(Move(m), false); }
 
 std::string ToString(const Move& m, bool withScore) {
-   if (sameMove(m, INVALIDMOVE)) return "invalid move";
-   if (sameMove(m, NULLMOVE)) return "null move";
+   if (sameMove(m, INVALIDMOVE)) return "invalid move"; ///@todo 0000 ?
+   if (sameMove(m, NULLMOVE)) return "null move"; ///@todo 0000 ?
 
-   std::string       prom;
    const std::string score = (withScore ? " (" + std::to_string(Move2Score(m)) + ")" : "");
-   switch (Move2Type(m)) {
-      case T_bks: return (DynamicConfig::FRC ? "O-O" : "e8g8") + score;
-      case T_wks: return (DynamicConfig::FRC ? "O-O" : "e1g1") + score;
-      case T_bqs: return (DynamicConfig::FRC ? "O-O-O" : "e8c8") + score;
-      case T_wqs: return (DynamicConfig::FRC ? "O-O-O" : "e1c1") + score;
-      default:
-         static const std::string promSuffixe[] = {"", "", "", "", "q", "r", "b", "n", "q", "r", "b", "n"};
-         prom                                   = promSuffixe[Move2Type(m)];
+   static const std::string promSuffixe[] = {"", "", "", "", "q", "r", "b", "n", "q", "r", "b", "n", "", "", "", "",};
+   const std::string prom = promSuffixe[Move2Type(m)];
+   if (!DynamicConfig::FRC) { // FRC castling is encoded king takes rook
+      switch (Move2Type(m)) {
+         case T_bks: return "e8g8" + score;
+         case T_wks: return "e1g1" + score;
+         case T_bqs: return "e8c8" + score;
+         case T_wqs: return "e1c1" + score;
+         default:
          break;
+      }
    }
    return SquareNames[Move2From(m)] + SquareNames[Move2To(m)] + prom + score;
 }
