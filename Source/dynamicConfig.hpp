@@ -13,8 +13,7 @@ extern bool         disableTT;
 extern unsigned int ttSizeMb;
 extern bool         fullXboardOutput;
 extern bool         debugMode; // activate output in a file (see debugFile)
-extern bool         quiet;     // if true, only print out info for GUI
-extern bool         silent;    // if true, do not print to screen
+extern int          minOutputLevel; // minimum output level
 extern std::string  debugFile;
 extern unsigned int level;
 extern unsigned int randomOpen;

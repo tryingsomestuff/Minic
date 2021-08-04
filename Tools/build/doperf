@@ -27,6 +27,6 @@ rm -rf minic.perf
 
 g++ $STANDARDSOURCE -ISource -ISource/nnue $OPT -lpthread -DDEBUG_TOOL -o minic.perf
 perf record -g -- ./minic.perf -analyze "r1bqkb1r/pp3ppp/1np1pn2/6N1/2BP4/8/PPP1QPPP/R1B1K1NR w KQkq - 1 1" 15
-#perf record -g -- ./minic.perf -perft "start" 6 -quiet 0
+#perf record -g -- ./minic.perf -perft "start" 6 -minOutputLevel 0
 #perf record -g -- ./minic.perf -evalSpeed Book_and_Test/Tuning/lichess-new-labeled.epd
 perf report minic.perf

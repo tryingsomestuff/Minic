@@ -233,18 +233,18 @@ void Searcher::writeToGenFile(const Position& p) {
    Searcher& cos = getCoSearcher(id());
 
    cos.genFen                       = false;
-   const bool         oldQuiet      = DynamicConfig::quiet;
+   const int          oldMinOutLvl  = DynamicConfig::minOutputLevel;
    const bool         oldDisableTT  = DynamicConfig::disableTT;
    const unsigned int oldLevel      = DynamicConfig::level;
    const unsigned int oldRandomOpen = DynamicConfig::randomOpen;
    const unsigned int oldRandomPly  = DynamicConfig::randomPly;
 
    // init sub search
-   cos.subSearch             = true;
-   DynamicConfig::quiet      = true;
-   DynamicConfig::disableTT  = true; // do not use TT in order to get qsearch leaf node
-   DynamicConfig::level      = 100;
-   DynamicConfig::randomOpen = 0;
+   cos.subSearch                 = true;
+   DynamicConfig::minOutputLevel = Logging::logMax;
+   DynamicConfig::disableTT      = true; // do not use TT in order to get qsearch leaf node
+   DynamicConfig::level          = 100;
+   DynamicConfig::randomOpen     = 0;
    cos.clearSearch(true);
 
    // look for a quiet position using qsearch
@@ -279,13 +279,13 @@ void Searcher::writeToGenFile(const Position& p) {
       }
    }
 
-   cos.genFen                = true;
-   DynamicConfig::quiet      = oldQuiet;
-   DynamicConfig::disableTT  = oldDisableTT;
-   DynamicConfig::level      = oldLevel;
-   DynamicConfig::randomOpen = oldRandomOpen;
-   DynamicConfig::randomPly  = oldRandomPly;
-   cos.subSearch             = false;
+   cos.genFen                    = true;
+   DynamicConfig::minOutputLevel = oldMinOutLvl;
+   DynamicConfig::disableTT      = oldDisableTT;
+   DynamicConfig::level          = oldLevel;
+   DynamicConfig::randomOpen     = oldRandomOpen;
+   DynamicConfig::randomPly      = oldRandomPly;
+   cos.subSearch                 = false;
 
    // end of sub search
 

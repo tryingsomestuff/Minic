@@ -24,8 +24,8 @@ if [ $FATHOM_PRESENT = "1" ]; then
 fi
 
 g++ $STANDARDSOURCE -ISource -ISource/nnue $OPT -lpthread -DDEBUG_TOOL -o minic.prof
-./minic.prof -analyze "shirov" 25 -quiet 0
+./minic.prof -analyze "shirov" 25 -minOutputLevel 0
 #./minic.prof -evalSpeed Book_and_Test/Tuning/lichess-new-labeled.epd
-#./minic.prof -perft "start" 7 -book 0 -quiet 0
+#./minic.prof -perft "start" 7 -book 0 -minOutputLevel 0
 gprof minic.prof gmon.out | gprof2dot | dot -Tpng -o prof.png
 gprof minic.prof gmon.out > prof.txt

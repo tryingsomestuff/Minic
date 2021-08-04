@@ -80,9 +80,9 @@ inline std::string backtrace(int skip = 1) {
 namespace Logging {
 enum COMType { CT_xboard = 0, CT_uci = 1 };
 extern COMType ct;
-enum LogLevel : uint8_t { logTrace = 0, logDebug = 1, logInfo = 2, logGUI = 3, logInfoPrio = 4, logWarn = 5, logError = 6, logFatal = 7, logMax = 8 };
+enum LogLevel : uint8_t { logTrace = 0, logDebug = 1, logInfo = 2, logInfoPrio = 3, logWarn = 4, logGUI = 5, logError = 6, logFatal = 7, logOff = 8, logMax = 9 };
 const std::string _protocolComment[2] = {"# ", "info string "};
-const std::string _levelNames[logMax] = {"Trace ", "Debug ", "Info  ", "", "Info  ", "Warn  ", "Error ", "Fatal "};
+const std::string _levelNames[logMax] = {"Trace ", "Debug ", "Info  ", "Info  ", "Warn  ", "",  "Error ", "Fatal ", "Off..."};
 
 class LogIt {
    friend void init();
