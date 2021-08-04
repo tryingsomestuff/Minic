@@ -249,7 +249,7 @@ This can be done using the given git submodule or by hand. To use EGT just speci
 
 ## How to run
 add the command line option "-xboard" to go to xboard/winboard mode or -uci for UCI. If not option is given Minic will **default to use UCI protocol**.
-Please note that if you want to force specific option from command line instead of using protocol option, you **have** to first specific protocol as the first command line argument. For instance `minic -uci -quiet 0` will give a verbose Minic using uci. 
+Please note that if you want to force specific option from command line instead of using protocol option, you **have** to first specific protocol as the first command line argument. For instance `minic -uci -minOutputLevel 0` will give a very verbose Minic using uci. 
 
 Other available options (depending on compilation option, see definition.hpp) are mainly for development or debug purpose. They do not start the protocol loop. Here is an incompleted list :
 * -perft_test : run the inner perft test
@@ -277,7 +277,7 @@ If compiled with the WITH_SEARCH_TUNING definition, Minic can expose all search 
 Minic comes with some command line options :
 
 #### Debug option
-* -quiet \[0 or 1\] (default is 1 which means "true"): make Minic more verbose for debug purpose. This option is often needed when using unsual things as Texel tuning or command line analysis for instance.
+* -minOutputLevel \[from 0 or 8\] (default is 5 which means "classic GUI output"): make Minic more verbose for debug purpose (if set < 5). This option is often needed when using unsual things as Texel tuning or command line analysis for instance in order to have full display of outputs. Here are the various level `logTrace = 0, logDebug = 1, logInfo = 2, logInfoPrio = 3, logWarn = 4, logGUI = 5, logError = 6, logFatal = 7, logOff = 8`
 * -debugMode \[0 or 1\] (default is 0 which means "false"): will write every output also in a file (named minic.debug by default)
 * -debugFile \[name_of_file\] (default is minic.debug): name of the debug output file
 
