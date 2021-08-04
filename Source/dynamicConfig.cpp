@@ -1,13 +1,14 @@
 #include "dynamicConfig.hpp"
 
+#include "logging.hpp"
+
 namespace DynamicConfig {
 bool         mateFinder       = false;
 bool         disableTT        = false;
 unsigned int ttSizeMb         = 128; // here in Mb, will be converted to real size next
 bool         fullXboardOutput = false;
 bool         debugMode        = false;
-bool         quiet            = true;
-bool         silent           = false;
+int          minOutputLevel   = Logging::logGUI;
 std::string  debugFile        = "minic.debug";
 unsigned int level            = 100;
 unsigned int randomOpen       = 0;

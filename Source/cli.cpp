@@ -96,7 +96,10 @@ void analyze(const Position& p, DepthType depth, bool openBenchOutput = false) {
    static float   benchms    = 0;
    static Counter benchNodes = 0;
 
-   if (openBenchOutput) DynamicConfig::silent = true;
+   const int oldOutLvl = DynamicConfig::minOutputLevel;
+   if (openBenchOutput){
+      DynamicConfig::minOutputLevel = Logging::logOff;
+   }
 
    TimeMan::isDynamic       = false;
    TimeMan::nbMoveInTC      = -1;
@@ -125,7 +128,7 @@ void analyze(const Position& p, DepthType depth, bool openBenchOutput = false) {
       ThreadPool::instance().main().stats.counters[Stats::sid_nodes] + ThreadPool::instance().main().stats.counters[Stats::sid_qnodes];
       benchNodes += nodeCount;
       benchms += ms / 1000.f;
-      DynamicConfig::silent = false;
+      DynamicConfig::minOutputLevel = oldOutLvl;
       std::cerr << "NODES " << benchNodes << std::endl;
       std::cerr << "NPS " << int(benchNodes / benchms) << std::endl;
    }

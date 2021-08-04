@@ -22,14 +22,18 @@ COMType ct = CT_uci;
 
 LogIt::~LogIt() {
    std::lock_guard<std::mutex> lock(_mutex);
-   if (_level != logGUI) {
-      if (!DynamicConfig::quiet || _level > logGUI) {
-         if (!DynamicConfig::silent) std::cout << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
+   if (_level != logGUI) { // those are "comments" and are prefixed with _protocolComment[ct] ("info string" for UCI)
+      if ( _level >= DynamicConfig::minOutputLevel ) {
+         std::cout << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
       }
+      // debug file output is *not* depending on DynamicConfig::minOutputLevel
       if (_of) (*_of) << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
    }
-   else {
-      if (!DynamicConfig::silent) std::cout << _buffer.str() << std::flush << std::endl;
+   else { // those are direct GUI outputs (like bestmove, feature, option, ...)
+      if ( _level >= DynamicConfig::minOutputLevel ) { 
+         std::cout << _buffer.str() << std::flush << std::endl;
+      }
+      // debug file output is *not* depending on DynamicConfig::minOutputLevel
       if (_of) (*_of) << _buffer.str() << std::flush << std::endl;
    }
    if (_level >= logError) {

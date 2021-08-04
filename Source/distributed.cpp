@@ -61,7 +61,7 @@ void init() {
    checkError(MPI_Get_processor_name(processor_name, &name_len));
    name = processor_name;
 
-   if (!isMainProcess()) DynamicConfig::silent = true;
+   if (!isMainProcess()) DynamicConfig::minOutputLevel = Logging::logOff;
 
    if (provided < MPI_THREAD_MULTIPLE) { Logging::LogIt(Logging::logFatal) << "The threading support level is lesser than needed"; }
 

@@ -270,7 +270,7 @@ void initOptions(int argc, char** argv) {
    registerCOMOptions();
    readOptions(argc, argv);
 
-   GETOPT(quiet, bool) // first to be read
+   GETOPT(minOutputLevel, int) // first to be read !
    GETOPT(debugMode, bool)
    GETOPT(debugFile, std::string)
    GETOPT(ttSizeMb, unsigned int)

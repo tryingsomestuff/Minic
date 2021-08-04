@@ -460,12 +460,12 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
    Searcher& cos = Searcher::getCoSearcher(0);
 
    // init sub search
-   cos.genFen               = false;
-   cos.subSearch            = true;
-   cos.stopFlag             = false;
-   DynamicConfig::quiet     = true;
-   DynamicConfig::disableTT = false;
-   DynamicConfig::level     = 100;
+   cos.genFen                    = false;
+   cos.subSearch                 = true;
+   cos.stopFlag                  = false;
+   DynamicConfig::minOutputLevel = Logging::logOff;
+   DynamicConfig::disableTT      = false;
+   DynamicConfig::level          = 100;
    cos.clearSearch(true);
 
    uint64_t count = 0;
