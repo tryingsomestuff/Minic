@@ -50,8 +50,6 @@ std::string ToString(const Move& m, bool withScore) {
    if (sameMove(m, NULLMOVE)) return "null move"; ///@todo 0000 ?
 
    const std::string score = (withScore ? " (" + std::to_string(Move2Score(m)) + ")" : "");
-   static const std::string promSuffixe[] = {"", "", "", "", "q", "r", "b", "n", "q", "r", "b", "n", "", "", "", "",};
-   const std::string prom = promSuffixe[Move2Type(m)];
    if (!DynamicConfig::FRC) { // FRC castling is encoded king takes rook
       switch (Move2Type(m)) {
          case T_bks: return "e8g8" + score;
@@ -62,6 +60,8 @@ std::string ToString(const Move& m, bool withScore) {
          break;
       }
    }
+   static const std::string promSuffixe[] = {"", "", "", "", "q", "r", "b", "n", "q", "r", "b", "n", "", "", "", "",};
+   const std::string prom = promSuffixe[Move2Type(m)];
    return SquareNames[Move2From(m)] + SquareNames[Move2To(m)] + prom + score;
 }
 
