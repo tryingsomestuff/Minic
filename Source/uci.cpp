@@ -54,6 +54,12 @@ void uci() {
 
          Logging::LogIt(Logging::logGUI) << "readyok";
       }
+      else if (uciCommand == "debug") {
+         std::string str;
+         iss >> str;
+         if ( str == "on" ) DynamicConfig::minOutputLevel = Logging::logInfo;
+         else DynamicConfig::minOutputLevel = Logging::logGUI;
+      }
       else if (uciCommand == "stop") {
          Logging::LogIt(Logging::logInfo) << "stop requested";
          COM::stop();
