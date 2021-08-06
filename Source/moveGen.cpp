@@ -30,7 +30,7 @@ void movePiece(Position& p, Square from, Square to, Piece fromP, Piece toP, bool
    const int   fromId  = PieceIdx(fromP);
    const int   toId    = PieceIdx(toP);
    const Piece toPnew  = prom != P_none ? prom : fromP;
-   const int   toIdnew = prom != P_none ? PieceIdx(prom) : fromId;
+   const int   toIdnew = PieceIdx(toPnew);
    // update board
    p.board(from) = P_none;
    p.board(to)   = toPnew;
@@ -68,8 +68,7 @@ void movePiece(Position& p, Square from, Square to, Piece fromP, Piece toP, bool
 
    // king capture : is that necessary ???
    if (toP == P_wk) p.king[Co_White] = INVALIDSQUARE;
-   else if (toP == P_bk)
-      p.king[Co_Black] = INVALIDSQUARE;
+   else if (toP == P_bk) p.king[Co_Black] = INVALIDSQUARE;
 
    STOP_AND_SUM_TIMER(MovePiece)
 }
