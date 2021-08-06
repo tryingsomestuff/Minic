@@ -232,7 +232,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
 
    // generate move list
    MoveList moves;
-   if (isInCheck) MoveGen::generate<MoveGen::GP_all>(p, moves); ///@todo generate only evasion !
+   if (isInCheck) MoveGen::generate<MoveGen::GP_evasion>(p, moves);
    else
       MoveGen::generate<MoveGen::GP_cap>(p, moves); ///@todo generate only recapture if qly > 5
 

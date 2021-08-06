@@ -140,12 +140,12 @@ bool readMove(const Position &p, const std::string &ss, Square &from, Square &to
    if (strList[0] == "0-0" || strList[0] == "O-O") {
       moveType = (p.c == Co_White) ? T_wks : T_bks;
       from     = kingSquare(p);
-      to       = (p.c == Co_White) ? Sq_g1 : Sq_g8;
+      to       = (p.c == Co_White) ? p.rootInfo().rooksInit[Co_White][CT_OO] : p.rootInfo().rooksInit[Co_Black][CT_OO];
    }
    else if (strList[0] == "0-0-0" || strList[0] == "O-O-O") {
       moveType = (p.c == Co_White) ? T_wqs : T_bqs;
       from     = kingSquare(p);
-      to       = (p.c == Co_White) ? Sq_c1 : Sq_c8;
+      to       = (p.c == Co_White) ? p.rootInfo().rooksInit[Co_White][CT_OOO] : p.rootInfo().rooksInit[Co_Black][CT_OOO];
    }
    else {
       if (strList.size() == 1) {
