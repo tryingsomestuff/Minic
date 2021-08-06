@@ -396,6 +396,12 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
          stack[p2.halfmoves].h = p2.h;
          const bool isCheck    = ttIsCheck || isAttacked(p2, kingSquare(p2));
+#ifdef DEBUG_TT_CHECK
+         if (ttIsCheck && !isAttacked(p2, kingSquare(p2))){
+            std::cout << "Error ttIsCheck" << std::endl;
+            std::cout << ToString(p2) << std::endl;
+         }
+#endif
          if (isCapture(e.m)) ttMoveIsCapture = true;
          //const bool isAdvancedPawnPush = PieceTools::getPieceType(p,Move2From(e.m)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
          // extensions
@@ -499,7 +505,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       if (SyzygyTb::probe_root(*this, p, tbScore, moves) < 0) { // only good moves if TB success
          if (capMoveGenerated) MoveGen::generate<MoveGen::GP_quiet>(p, moves, true);
          else
-            MoveGen::generate<MoveGen::GP_all>(p, moves, false);
+            if ( isInCheck ) MoveGen::generate<MoveGen::GP_evasion>(p, moves, false);
+            else MoveGen::generate<MoveGen::GP_all>(p, moves, false);
       }
       else
          ++stats.counters[Stats::sid_tbHit2];
@@ -512,7 +519,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    if (!moveGenerated) {
       if (capMoveGenerated) MoveGen::generate<MoveGen::GP_quiet>(p, moves, true);
       else
-         MoveGen::generate<MoveGen::GP_all>(p, moves, false);
+         if ( isInCheck ) MoveGen::generate<MoveGen::GP_evasion>(p, moves, false);
+         else MoveGen::generate<MoveGen::GP_all>(p, moves, false);
    }
    if (moves.empty()) return isInCheck ? -MATE + height : drawScore(p, height);
 
@@ -614,6 +622,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
          // take current danger level into account
          // Warning : danger is only available if no TT hit !
+         ///@todo get danger without calling HCE
          const int  dangerFactor  = (data.danger[p.c] + data.danger[~p.c]) / SearchConfig::dangerDivisor;
          const bool isDangerPrune = dangerFactor >= SearchConfig::dangerLimitPruning;
          const bool isDangerRed   = dangerFactor >= SearchConfig::dangerLimitReduction;

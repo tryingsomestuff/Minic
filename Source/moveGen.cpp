@@ -36,13 +36,13 @@ void movePiece(Position& p, Square from, Square to, Piece fromP, Piece toP, bool
    p.board(to)   = toPnew;
    // update bitboard
    BBTools::unSetBit(p, from, fromP);
-   BB::_unSetBit(p.allPieces[p.c/*fromP > 0 ? Co_White : Co_Black*/], from);
+   BB::_unSetBit(p.allPieces[p.c], from);
    if (toP != P_none) {
       BBTools::unSetBit(p, to, toP);
-      BB::_unSetBit(p.allPieces[~p.c/*toP > 0 ? Co_White : Co_Black*/], to);
+      BB::_unSetBit(p.allPieces[~p.c], to);
    }
    BBTools::setBit(p, to, toPnew);
-   BB::_setBit(p.allPieces[p.c/*fromP > 0 ? Co_White : Co_Black*/], to);
+   BB::_setBit(p.allPieces[p.c], to);
    // update Zobrist hash
    p.h ^= Zobrist::ZT[from][fromId]; // remove fromP at from
    p.h ^= Zobrist::ZT[to][toIdnew];  // add fromP (or prom) at to
@@ -128,11 +128,11 @@ bool applyMove(Position& p, const Move& m, bool noValidation) {
             const Square epCapSq = p.ep + (p.c == Co_White ? -8 : +8);
             assert(isValidSquare(epCapSq));
             BBTools::unSetBit(p, epCapSq, ~moveInfo.fromP); // BEFORE setting p.b new shape !!!
-            BB::_unSetBit(p.allPieces[~p.c/*moveInfo.fromP > 0 ? Co_Black : Co_White*/], epCapSq);
+            BB::_unSetBit(p.allPieces[~p.c], epCapSq);
             BBTools::unSetBit(p, moveInfo.from, moveInfo.fromP);
-            BB::_unSetBit(p.allPieces[p.c/*moveInfo.fromP > 0 ? Co_White : Co_Black*/], moveInfo.from);
+            BB::_unSetBit(p.allPieces[p.c], moveInfo.from);
             BBTools::setBit(p, moveInfo.to, moveInfo.fromP);
-            BB::_setBit(p.allPieces[p.c/*moveInfo.fromP > 0 ? Co_White : Co_Black*/], moveInfo.to);
+            BB::_setBit(p.allPieces[p.c], moveInfo.to);
             p.board(moveInfo.from)    = P_none;
             p.board(moveInfo.to)      = moveInfo.fromP;
             p.board(epCapSq) = P_none;
@@ -353,17 +353,17 @@ bool isPseudoLegal(const Position& p, Move m) { // validate TT move
    START_TIMER
    if (!isValidMove(m)) PSEUDO_LEGAL_RETURN(false, -1)
    const Square from = Move2From(m);
-   assert(isValidSquare(from));
+   if (!isValidSquare(from)) PSEUDO_LEGAL_RETURN(false, -2)
    const Piece fromP = p.board_const(from);
    if (fromP == P_none || (fromP > 0 && p.c == Co_Black) || (fromP < 0 && p.c == Co_White)) PSEUDO_LEGAL_RETURN(false, 0)
    const Square to = Move2To(m);
-   assert(isValidSquare(to));
+   if (!isValidSquare(to)) PSEUDO_LEGAL_RETURN(false, -3)
    const Piece toP = p.board_const(to);
    if (!isCastling(m) && ((toP > 0 && p.c == Co_White) || (toP < 0 && p.c == Co_Black))) PSEUDO_LEGAL_RETURN(false, 1) // castling is king takes rook ....
    if ((Piece)std::abs(toP) == P_wk) PSEUDO_LEGAL_RETURN(false, 2)
    const Piece fromPieceType = (Piece)std::abs(fromP);
    const MType t             = Move2Type(m);
-   assert(isValidMoveType(t));
+   if (!isValidMoveType(t)) PSEUDO_LEGAL_RETURN(false, -4)
    if (t == T_reserved) PSEUDO_LEGAL_RETURN(false, 3)
    if (toP == P_none && (isCapture(t) && t != T_ep)) PSEUDO_LEGAL_RETURN(false, 4)
    if (!isCastling(m) && toP != P_none && !isCapture(t)) PSEUDO_LEGAL_RETURN(false, 5)

@@ -21,7 +21,7 @@ bool applyMove(Position& p, const Move& m, bool noValidation = false);
 
 namespace MoveGen {
 
-enum GenPhase { GP_all = 0, GP_cap = 1, GP_quiet = 2 };
+enum GenPhase { GP_all = 0, GP_cap = 1, GP_quiet = 2, GP_evasion = 3 };
 
 void addMove(Square from, Square to, MType type, MoveList& moves);
 
@@ -48,11 +48,42 @@ template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveLis
    }
 #endif
    const BitBoard occupancy = p.occupancy();
+   BitBoard sliderRay = emptyBitBoard;
+   BitBoard attacker = emptyBitBoard;
+   if (phase == GP_evasion){
+      BitBoard slider = BBTools::attack<P_wb>(kingSquare(p), p.pieces_const<P_wb>(~p.c) | p.pieces_const<P_wq>(~p.c), occupancy)|
+                        BBTools::attack<P_wr>(kingSquare(p), p.pieces_const<P_wr>(~p.c) | p.pieces_const<P_wq>(~p.c), occupancy);
+      attacker = slider;
+      while (slider) { 
+         sliderRay |= BBTools::mask[BB::popBit(slider)].between[kingSquare(p)]; 
+      }
+      attacker |= BBTools::attack<P_wn>(kingSquare(p), p.pieces_const<P_wn>(~p.c));
+      attacker |= BBTools::attack<P_wp>(kingSquare(p), p.pieces_const<P_wp>(~p.c), occupancy, p.c);
+      if (!attacker){
+         std::cout << "Error ! no attaker but evasion requested !" << std::endl;
+         std::cout << ToString(p) << std::endl;
+      }
+      //std::cout << ToString(attacker) << std::endl;
+      //std::cout << ToString(sliderRay) << std::endl;
+   }
    if (ptype != P_wp) {
       BitBoard bb = BBTools::pfCoverage[ptype - 1](from, occupancy, p.c) & ~myPieceBB;
-      if (phase == GP_cap) bb &= oppPieceBB; // only target opponent piece
-      else if (phase == GP_quiet)
-         bb &= ~oppPieceBB; // do not target opponent piece
+      if (phase == GP_cap){
+         // only target opponent piece
+         bb &= oppPieceBB; 
+      }
+      else if (phase == GP_quiet){
+         // do not target opponent piece
+         bb &= ~oppPieceBB; 
+      }
+      else if (phase == GP_evasion){
+         // king don't want to stay in check
+         if ( ptype == P_wk )
+            bb &= ~sliderRay;
+         // other pieces only target king attakers and sliders path
+         else
+            bb &= attacker | sliderRay;
+      }
       while (bb) {
          const Square to    = BB::popBit(bb);
          const bool   isCap = (phase == GP_cap) || ((oppPieceBB & SquareToBitboard(to)) != emptyBitBoard);
@@ -62,7 +93,7 @@ template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveLis
       }
 
       // attack on castling king destination square will be checked by applyMove
-      if (phase != GP_cap && ptype == P_wk) { // castling
+      if (phase != GP_cap && phase != GP_evasion && ptype == P_wk) { // add castling
          // Be carefull, here rooksInit are only accessed if the corresponding p.castling is set
          // This way rooksInit is not INVALIDSQUARE, and thus mask[] is not out of bound
          // Moreover, king[] also is assumed to be not INVALIDSQUARE which is verified in readFen      
@@ -96,6 +127,7 @@ template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveLis
       BitBoard              pawnmoves      = emptyBitBoard;
       static const BitBoard rank1_or_rank8 = BB::rank1 | BB::rank8;
       if (phase != GP_quiet) pawnmoves = BBTools::mask[from].pawnAttack[p.c] & ~myPieceBB & oppPieceBB;
+      if (phase == GP_evasion) pawnmoves &= attacker;
       while (pawnmoves) {
          const Square to = BB::popBit(pawnmoves);
          if ((SquareToBitboard(to) & rank1_or_rank8) == emptyBitBoard) addMove(from, to, T_capture, moves);
@@ -108,6 +140,7 @@ template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveLis
       }
       if (phase != GP_cap) pawnmoves |= BBTools::mask[from].push[p.c] & ~occupancy;
       if ((phase != GP_cap) && (BBTools::mask[from].push[p.c] & occupancy) == emptyBitBoard) pawnmoves |= BBTools::mask[from].dpush[p.c] & ~occupancy;
+      if (phase == GP_evasion) pawnmoves &= sliderRay;
       while (pawnmoves) {
          const Square to = BB::popBit(pawnmoves);
          if ((SquareToBitboard(to) & rank1_or_rank8) == emptyBitBoard) addMove(from, to, T_std, moves);
@@ -118,6 +151,7 @@ template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveLis
             addMove(from, to, T_promn, moves); // promotion N
          }
       }
+      ///@todo evasion ep special case ?
       if (p.ep != INVALIDSQUARE && phase != GP_quiet) pawnmoves = BBTools::mask[from].pawnAttack[p.c] & ~myPieceBB & SquareToBitboard(p.ep);
       while (pawnmoves) addMove(from, BB::popBit(pawnmoves), T_ep, moves);
    }

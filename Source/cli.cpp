@@ -48,7 +48,8 @@ Counter perft(const Position& p, DepthType depth, PerftAccumulator& acc) {
    MoveList moves;
     PerftAccumulator accLoc;
 #ifndef DEBUG_PERFT
-   MoveGen::generate<MoveGen::GP_all>(p, moves);
+   if ( isAttacked(p,kingSquare(p))) MoveGen::generate<MoveGen::GP_evasion>(p, moves);
+   else MoveGen::generate<MoveGen::GP_all>(p, moves);
     const size_t n = moves.size();
    for (size_t k = 0; k < n; ++k) {
       const Move& m = moves[k];
@@ -176,7 +177,7 @@ int bench(DepthType depth) {
     NNUEEvaluator evaluator;
     p.associateEvaluator(evaluator);
     p.resetNNUEEvaluator(evaluator);
-#endif   
+#endif
    readFEN(startPosition, p);
    analyze(p, depth, true);
    readFEN(fine70, p);
@@ -334,7 +335,7 @@ int cliManagement(std::string cli, int argc, char** argv) {
       posList.push_back( SEETest{"8/8/8/1k6/6b1/4N3/2p3K1/3n4 w - - 0 1",					                   ToMove(Sq_e3,Sq_d1, T_capture), ScoreType(0) });
       posList.push_back( SEETest{"8/8/1k6/8/8/2N1N3/2p1p1K1/3n4 w - - 0 1",				                   ToMove(Sq_c3,Sq_d1, T_capture), ScoreType(N - N - Q + P) });
       posList.push_back( SEETest{"8/8/1k6/8/8/2N1N3/4p1K1/3n4 w - - 0 1",				                      ToMove(Sq_c3,Sq_d1, T_capture), ScoreType(N - (N - P + Q ) + Q) });
-      posList.push_back( SEETest{"r1bqk1nr/pppp1ppp/2n5/1B2p3/1b2P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4",	 ToMove(Sq_e1,Sq_g1, T_wks) , ScoreType(0) });
+      posList.push_back( SEETest{"r1bqk1nr/pppp1ppp/2n5/1B2p3/1b2P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4",	 ToMove(Sq_e1,Sq_h1, T_wks) , ScoreType(0) });
 
 #ifdef WITH_NNUE
       NNUEEvaluator evaluator;
