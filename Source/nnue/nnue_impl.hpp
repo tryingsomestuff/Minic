@@ -236,9 +236,8 @@ template<typename T, bool Q> inline constexpr typename std::enable_if<!Q, T>::ty
 #endif
 
 template<typename T, size_t dim> struct StackVector {
+   alignas(NNUEALIGNMENT) T data[dim];
 #ifdef DEBUG_NNUE_UPDATE
-   std::array<T, dim> data;
-
    bool operator==(const StackVector<T, dim>& other) {
       static const T eps = std::numeric_limits<T>::epsilon() * 100;
       for (size_t i = 0; i < dim; ++i) {
@@ -260,8 +259,6 @@ template<typename T, size_t dim> struct StackVector {
       }
       return false;
    }
-#else
-   alignas(NNUEALIGNMENT) T data[dim];
 #endif
 
    /*
@@ -559,9 +556,9 @@ template<typename NT, bool Q> struct FeatureTransformer {
    ~FeatureTransformer() {}
 
 #ifdef DEBUG_NNUE_UPDATE
-   bool operator==(const FeatureTransformer<T, Q>& other) { return active_ == other.active_; }
+   bool operator==(const FeatureTransformer<NT, Q>& other) { return active_ == other.active_; }
 
-   bool operator!=(const FeatureTransformer<T, Q>& other) { return active_ != other.active_; }
+   bool operator!=(const FeatureTransformer<NT, Q>& other) { return active_ != other.active_; }
 #endif
 };
 
@@ -632,12 +629,12 @@ template<typename NT, bool Q> struct NNUEEval : sided<NNUEEval<NT, Q>, FeatureTr
    }
 
 #ifdef DEBUG_NNUE_UPDATE
-   bool operator==(const NNUEEval<T>& other) {
+   bool operator==(const NNUEEval<NT,Q>& other) {
       if (white != other.white || black != other.black) return false;
       return true;
    }
 
-   bool operator!=(const NNUEEval<T>& other) {
+   bool operator!=(const NNUEEval<NT,Q>& other) {
       if (white != other.white || black != other.black) return true;
       return false;
    }

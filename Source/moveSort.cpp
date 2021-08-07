@@ -41,12 +41,12 @@ template<Color C> void MoveSorter::computeScore(Move& m) const {
          if (useSEE && !isInCheck) {
             const ScoreType see = context.SEE(p, m);
             s += see;
-            if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == Move2To(p.lastMove)) s += 150; // recapture bonus
+            if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == correctedMove2To(p.lastMove)) s += 150; // recapture bonus
             else if (see < -80)
                s -= 2 * MoveScoring[T_capture]; // too bad capture
          }
          else {                                                                                        // MVVLVA
-            if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == Move2To(p.lastMove)) s += 500; // recapture bonus
+            if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == correctedMove2To(p.lastMove)) s += 500; // recapture bonus
             else {
                s += SearchConfig::MvvLvaScores[ppOpp - 1][pp - 1]; //[0 400]
             }
@@ -58,7 +58,7 @@ template<Color C> void MoveSorter::computeScore(Move& m) const {
             s += 1700; // quiet killer
          else if (height > 1 && sameMove(m, context.killerT.killers[height - 2][0]))
             s += 1500; // quiet killer
-         else if (isValidMove(p.lastMove) && sameMove(context.counterT.counter[Move2From(p.lastMove)][Move2To(p.lastMove)], m))
+         else if (isValidMove(p.lastMove) && sameMove(context.counterT.counter[Move2From(p.lastMove)][correctedMove2To(p.lastMove)], m))
             s += 1300; // quiet counter
          else {
             ///@todo give another try to tune those ratio!
@@ -67,7 +67,7 @@ template<Color C> void MoveSorter::computeScore(Move& m) const {
             s += context.historyT.historyP[PieceIdx(pp)][to] / 3;    // +/- HISTORY_MAX = 1000
             s += context.getCMHScore(p, from, to, cmhPtr) / 3;       // +/- HISTORY_MAX = 1000
             if (!isInCheck) {
-               if (refutation != INVALIDMINIMOVE && from == Move2To(refutation) && context.SEE_GE(p, m, -80))
+               if (refutation != INVALIDMINIMOVE && from == correctedMove2To(refutation) && context.SEE_GE(p, m, -80))
                   s += 1000; // move (safely) leaving threat square from null move search
                const EvalScore* const pst = EvalConfig::PST[std::abs(pp) - 1];
                s += ScaleScore(pst[ColorSquarePstHelper<C>(to)] - pst[ColorSquarePstHelper<C>(from)], gp);

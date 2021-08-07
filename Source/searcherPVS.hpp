@@ -73,6 +73,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // update nodes count as soon as we enter a node
    ++stats.counters[Stats::sid_nodes];
+   std::cout << GetFEN(p) << std::endl;
 
    debug_king_cap(p);
 
@@ -415,7 +416,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             if (EXTENDMORE(extension) && DynamicConfig::useNNUE && height > 1 && isValidMove(stack[p.halfmoves].threat) &&
                 isValidMove(stack[p.halfmoves - 2].threat) &&
                 (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) ||
-                 (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat))))
+                 (correctedMove2To(stack[p.halfmoves].threat) == correctedMove2To(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat))))
                stats.incr(Stats::sid_BMExtension), ++extension;
             // mate threat extension (from null move)
             //if (EXTENDMORE(extension) && mateThreat) stats.incr(Stats::sid_mateThreatExtension),++extension;
@@ -564,7 +565,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          // castling extension
          //if (EXTENDMORE(extension) && isCastling(*it) ) stats.incr(Stats::sid_castlingExtension),++extension;
          // Botvinnik-Markoff Extension
-         //if (EXTENDMORE(extension) && height > 1 && stack[p.halfmoves].threat != INVALIDMOVE && stack[p.halfmoves - 2].threat != INVALIDMOVE && (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) || (Move2To(stack[p.halfmoves].threat) == Move2To(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat)))) stats.incr(Stats::sid_BMExtension), ++extension;
+         //if (EXTENDMORE(extension) && height > 1 && stack[p.halfmoves].threat != INVALIDMOVE && stack[p.halfmoves - 2].threat != INVALIDMOVE && (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) || (correctedMove2To(stack[p.halfmoves].threat) == correctedMove2To(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat)))) stats.incr(Stats::sid_BMExtension), ++extension;
          // mate threat extension (from null move)
          //if (EXTENDMORE(extension) && mateThreat && depth <= 4) stats.incr(Stats::sid_mateThreatExtension),++extension;
          // simple recapture extension

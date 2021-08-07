@@ -39,6 +39,7 @@ void PerftAccumulator::Display() {
    Logging::LogIt(Logging::logInfo) << "captureNodes  " << captureNodes;
    Logging::LogIt(Logging::logInfo) << "epNodes       " << epNodes;
    Logging::LogIt(Logging::logInfo) << "castling      " << castling;
+   Logging::LogIt(Logging::logInfo) << "promotion     " << promotion;
    Logging::LogIt(Logging::logInfo) << "checkNode     " << checkNode;
    Logging::LogIt(Logging::logInfo) << "checkMateNode " << checkMateNode;
 }
