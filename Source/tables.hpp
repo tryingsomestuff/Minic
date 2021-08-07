@@ -37,7 +37,7 @@ struct HistoryT {
          const Color  c    = p.c;
          const Square from = Move2From(m);
          assert(isValidSquare(from));
-         const Square to = Move2To(m);
+         const Square to = correctedMove2To(m);
          assert(isValidSquare(to));
          const ScoreType s  = S * HSCORE(depth);
          const Piece     pp = p.board_const(from);

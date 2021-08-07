@@ -369,6 +369,11 @@ enum MType : uint8_t {
    T_bqs      = 15 // binary 1100 to 1111
 };
 
+const Square correctedDestSq[T_bqs+1] = { INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE,
+                                          INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE,
+                                          INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE,
+                                          Sq_g1, Sq_c1, Sq_g8, Sq_c8};
+
 [[nodiscard]] inline constexpr bool isValidMoveType(MType m)      { return m <= T_bqs; }
 [[nodiscard]] inline constexpr bool isValidSquare(Square s)       { return s >= 0 && s < NbSquare; }
 [[nodiscard]] inline constexpr bool isValidPiece(Piece pp)        { return pp >= P_bk && pp <= P_wk; }
@@ -475,7 +480,10 @@ constexpr ScoreType MoveScoring[16] = {0, 7000, 7100, 6000, 3950, 3500, 3350, 33
 [[nodiscard]] inline constexpr Square minDistance(Square sq1, Square sq2) {
    return std::min(Abs(SQRANK(sq2) - SQRANK(sq1)), Abs(SQFILE(sq2) - SQFILE(sq1)));
 }
-
+[[nodiscard]] inline Square correctedMove2To(Move m) {
+   assert(isValidMove(m));
+   return (!isCastling(m)) ? Move2To(m) : correctedDestSq[Move2Type(m)];
+}
 namespace MoveDifficultyUtil {
     enum MoveDifficulty { MD_forced = 0, MD_easy, MD_std, MD_hardDefense, MD_hardAttack };
     const DepthType emergencyMinDepth         = 14;

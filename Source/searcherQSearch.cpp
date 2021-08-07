@@ -77,6 +77,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    
    // update nodes count as soon as we enter a node
    ++stats.counters[Stats::sid_qnodes];
+   std::cout << GetFEN(p) << std::endl;
 
    alpha = std::max(alpha, (ScoreType)(-MATE + height));
    beta  = std::min(beta, (ScoreType)(MATE - height + 1));
@@ -236,7 +237,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    else
       MoveGen::generate<MoveGen::GP_cap>(p, moves); ///@todo generate only recapture if qly > 5
 
-   const Square recapture     = isValidMove(p.lastMove) ? Move2To(p.lastMove) : INVALIDSQUARE;
+   const Square recapture     = (isValidMove(p.lastMove) && isCapture(p.lastMove)) ? Move2To(p.lastMove) : INVALIDSQUARE;
    const bool   onlyRecapture = qply > 5 && isCapture(p.lastMove) && recapture != INVALIDSQUARE;
 
    CMHPtrArray cmhPtr;
@@ -257,8 +258,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
          if (onlyRecapture && Move2To(*it) != recapture) continue; // only recapture now ...
          if (SearchConfig::doQFutility && validMoveCount &&
              staticScore + SearchConfig::qfutilityMargin[evalScoreIsHashScore] + (isPromotionCap(*it) ? (value(P_wq) - value(P_wp)) : 0) +
-                     (Move2Type(*it) == T_ep ? value(P_wp) : PieceTools::getAbsValue(p, Move2To(*it))) <=
-                 alphaInit) {
+                     (Move2Type(*it) == T_ep ? value(P_wp) : PieceTools::getAbsValue(p, Move2To(*it))) <= alphaInit) {
             stats.incr(Stats::sid_qfutility);
             continue;
          }

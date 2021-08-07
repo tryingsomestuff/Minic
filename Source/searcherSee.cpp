@@ -6,12 +6,13 @@ ScoreType Searcher::SEE(const Position& p, const Move& m) const {
 
    START_TIMER
 
-   Square from = Move2From(m);
-   assert(isValidSquare(from));
-   const Square to = Move2To(m);
-   assert(isValidSquare(to));
    const MType mtype = Move2Type(m);
    assert(isValidMoveType(mtype));
+   Square from = Move2From(m);
+   assert(isValidSquare(from));
+   const Square to = correctedMove2To(m);
+   assert(isValidSquare(to));
+   
    BitBoard   attackers          = BBTools::allAttackedBB(p, to);
    BitBoard   occupation_mask    = 0xFFFFFFFFFFFFFFFF;
    ScoreType  current_target_val = 0;
@@ -97,7 +98,7 @@ bool Searcher::SEE_GE(const Position & p, const Move & m, ScoreType threshold) c
     assert(isValidMove(m));
     START_TIMER
     const Square from = Move2From(m);
-    const Square to   = Move2To(m);
+    const Square to   = correctedMove2To(m);
     const MType type  = Move2Type(m);
     if (PieceTools::getPieceType(p, to) == P_wk) return true; // capture king !
     const bool promPossible = PROMOTION_RANK_C(to,p.c);

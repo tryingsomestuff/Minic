@@ -213,7 +213,7 @@ bool readMove(const Position &p, const std::string &ss, Square &from, Square &to
       if (p.board_const(from) == P_bk && p.board_const(to) == P_br) { moveType = (p.rootInfo().rooksInit[Co_Black][CT_OOO] == to ? T_bqs : T_bks); }
    }
    if (!DynamicConfig::FRC && !isPseudoLegal(p, ToMove(from, to, moveType))) { ///@todo FRC !
-      Logging::LogIt(Logging::logError) << "Trying to read bad move, not legal. " << ToString(p) << ", move is " << str;
+      Logging::LogIt(Logging::logError) << "Trying to read bad move, not legal. " << ToString(p) << ", move is " << str << "(" << int(from) << " " << int(to) << " " << int(moveType) << ")";
       return false;
    }
 
