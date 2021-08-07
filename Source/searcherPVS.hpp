@@ -73,7 +73,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // update nodes count as soon as we enter a node
    ++stats.counters[Stats::sid_nodes];
-   std::cout << GetFEN(p) << std::endl;
+   //std::cout << GetFEN(p) << std::endl;
 
    debug_king_cap(p);
 

@@ -77,7 +77,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    
    // update nodes count as soon as we enter a node
    ++stats.counters[Stats::sid_qnodes];
-   std::cout << GetFEN(p) << std::endl;
+   //std::cout << GetFEN(p) << std::endl;
 
    alpha = std::max(alpha, (ScoreType)(-MATE + height));
    beta  = std::min(beta, (ScoreType)(MATE - height + 1));
