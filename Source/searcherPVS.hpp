@@ -241,7 +241,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       // null move (warning, mobility info is only available if no TT hit)
       if (SearchConfig::doNullMove && !subSearch && (isNotEndGame || data.mobility[p.c] > 4) && withoutSkipMove &&
           depth >= SearchConfig::nullMoveMinDepth && evalScore >= beta + SearchConfig::nullMoveMargin && evalScore >= stack[p.halfmoves].eval &&
-          stack[p.halfmoves].p.lastMove != NULLMOVE && height >= nullMoveMinPly) {
+          stack[p.halfmoves].p.lastMove != NULLMOVE && (height >= nullMoveMinPly || nullMoveMinPly != p.c)) {
          PVList nullPV;
          stats.incr(Stats::sid_nullMoveTry);
          const DepthType R = depth / 4 + 3 + std::min((evalScore - beta) / SearchConfig::nullMoveDynamicDivisor, 5); // adaptative
@@ -267,19 +267,19 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                if (nullEThreat.h != nullHash && nullEThreat.m != INVALIDMINIMOVE) refutation = nullEThreat.m;
                //if (isMatedScore(nullscore)) mateThreat = true;
                if (nullscore >= beta) { // verification search
-                  /*
                   if ( (!isNotEndGame || depth > SearchConfig::nullMoveVerifDepth) && nullMoveMinPly == 0){
                      stats.incr(Stats::sid_nullMoveTry3);
                      nullMoveMinPly = height + 3*nullDepth/4;
-                     nullscore = pvs<false>(beta - 1, beta, p, nullDepth, evaluator, height+1, nullPV, seldepth, isInCheck, !cutNode, false);
+                     nullMoveVerifColor = p.c;
+                     nullscore = pvs<false>(beta - 1, beta, p, nullDepth, height+1, nullPV, seldepth, isInCheck, !cutNode, false);
                      nullMoveMinPly = 0;
+                     nullMoveVerifColor = Co_None;
                      if (stopFlag) return STOPSCORE;
                      if (nullscore >= beta ) return stats.incr(Stats::sid_nullMove2), nullscore;
                   }
                   else{
-                  */
-                  return stats.incr(Stats::sid_nullMove), (isMateScore(nullscore) ? beta : nullscore);
-                  //}
+                     return stats.incr(Stats::sid_nullMove), (isMateScore(nullscore) ? beta : nullscore);
+                  }
                }
             }
          }
