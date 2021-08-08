@@ -7,7 +7,7 @@ if [ ! -n "$VERSION" ];then
    exit 1
 fi
 
-NETNAME=negligible_nystagmus.bin
+NETNAME=nidicolous_nighthawk.bin
 export EMBEDDEDNNUEPATH=$NETNAME
 
 # get minic

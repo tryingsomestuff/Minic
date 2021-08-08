@@ -8,7 +8,7 @@ endif
 ifdef EVALFILE
    export EMBEDDEDNNUEPATH=$(EVALFILE)
 else
-   export EMBEDDEDNNUENAME=negligible_nystagmus.bin
+   export EMBEDDEDNNUENAME=nidicolous_nighthawk.bin
 endif
 
 .PHONY: config fathom build dist release
