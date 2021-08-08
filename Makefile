@@ -26,7 +26,7 @@ config:
 	fi
 	NETMD5=$$(md5sum $(ROOT_DIR)/Tourney/nn.bin | awk '{print $$1}') \
 	&& echo "Net md5: $${NETMD5}" \
-	&& if [ "$${NETMD5}" != "68c503112d88672b4de0e4641feb884e" ]; then \
+	&& if [ "$${NETMD5}" != "e0dd8b78bc02a6e5cc91bb3b0c53ae49" ]; then \
 	   echo "Bad net (md5: $${NETMD5}), downloading..." \
 	   && wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/$$EMBEDDEDNNUENAME -O Tourney/nn.bin --no-check-certificate ;\
 	fi
