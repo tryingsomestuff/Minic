@@ -16,41 +16,6 @@ template<Color C> inline constexpr Square    PromotionSquare(const Square k) { r
 template<Color C> inline constexpr Rank      ColorRank(const Square k) { return Rank(C == Co_White ? SQRANK(k) : (7 - SQRANK(k))); }
 } // namespace
 
-template<Piece T, Color C, bool withForwardness = false>
-inline void evalPiece(const Position &p,
-                      BitBoard        pieceBBiterator,
-                      const BitBoard (&kingZone)[2],
-                      const BitBoard nonPawnMat,
-                      const BitBoard occupancy,
-                      EvalScore &    score,
-                      BitBoard &     attBy,
-                      BitBoard &     att,
-                      BitBoard &     att2,
-                      ScoreType (&kdanger)[2],
-                      BitBoard &checkers) {
-   while (pieceBBiterator) {
-      const Square k  = popBit(pieceBBiterator);
-      const Square kk = ColorSquarePstHelper<C>(k);
-      score += EvalConfig::PST[T - 1][kk] * ColorSignHelper<C>();
-      if constexpr (withForwardness)
-         score += EvalScore {ScoreType(((DynamicConfig::styleForwardness - 50) * SQRANK(kk)) / 8), 0} * ColorSignHelper<C>();
-      const BitBoard shadowTarget =
-          BBTools::pfCoverage[T - 1](k, occupancy ^ nonPawnMat, C); // aligned threats removing own piece (not pawn) in occupancy
-      if (shadowTarget) {
-         kdanger[~C] += countBit(shadowTarget & kingZone[~C]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][T - 1];
-         const BitBoard target = BBTools::pfCoverage[T - 1](k, occupancy, C); // real targets
-         if (target) {
-            attBy |= target;
-            att2 |= att & target;
-            att |= target;
-            if (target & p.pieces_const<P_wk>(~C)) checkers |= SquareToBitboard(k);
-            kdanger[C] -= countBit(target & kingZone[C]) * EvalConfig::kingAttWeight[EvalConfig::katt_defence][T - 1];
-         }
-      }
-   }
-}
-///@todo special version of evalPiece for king ??
-
 template<Piece T, Color C>
 inline void evalMob(const Position &p, BitBoard pieceBBiterator, EvalScore &score, const BitBoard safe, const BitBoard occupancy, EvalData &data) {
    while (pieceBBiterator) {
@@ -286,49 +251,32 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
    BitBoard  checkers[2][6]     = {{emptyBitBoard}};              // bitboard of Color pieces squares attacking king
 
    // PST, attack, danger
-   if (DynamicConfig::styleForwardness != 50) {
-      evalPiece<P_wn, Co_White, true>(p, knights[Co_White], kingZone, nonPawnMat[Co_White], occupancy, features.scores[F_positional],
-                                      attFromPiece[Co_White][P_wn - 1], att[Co_White], att2[Co_White], kdanger, checkers[Co_White][P_wn - 1]);
-      evalPiece<P_wb, Co_White, true>(p, bishops[Co_White], kingZone, nonPawnMat[Co_White], occupancy, features.scores[F_positional],
-                                      attFromPiece[Co_White][P_wb - 1], att[Co_White], att2[Co_White], kdanger, checkers[Co_White][P_wb - 1]);
-      evalPiece<P_wr, Co_White, true>(p, rooks[Co_White], kingZone, nonPawnMat[Co_White], occupancy, features.scores[F_positional],
-                                      attFromPiece[Co_White][P_wr - 1], att[Co_White], att2[Co_White], kdanger, checkers[Co_White][P_wr - 1]);
-      evalPiece<P_wq, Co_White, true>(p, queens[Co_White], kingZone, nonPawnMat[Co_White], occupancy, features.scores[F_positional],
-                                      attFromPiece[Co_White][P_wq - 1], att[Co_White], att2[Co_White], kdanger, checkers[Co_White][P_wq - 1]);
-      evalPiece<P_wk, Co_White, true>(p, kings[Co_White], kingZone, nonPawnMat[Co_White], occupancy, features.scores[F_positional],
-                                      attFromPiece[Co_White][P_wk - 1], att[Co_White], att2[Co_White], kdanger, checkers[Co_White][P_wk - 1]);
-      evalPiece<P_wn, Co_Black, true>(p, knights[Co_Black], kingZone, nonPawnMat[Co_Black], occupancy, features.scores[F_positional],
-                                      attFromPiece[Co_Black][P_wn - 1], att[Co_Black], att2[Co_Black], kdanger, checkers[Co_Black][P_wn - 1]);
-      evalPiece<P_wb, Co_Black, true>(p, bishops[Co_Black], kingZone, nonPawnMat[Co_Black], occupancy, features.scores[F_positional],
-                                      attFromPiece[Co_Black][P_wb - 1], att[Co_Black], att2[Co_Black], kdanger, checkers[Co_Black][P_wb - 1]);
-      evalPiece<P_wr, Co_Black, true>(p, rooks[Co_Black], kingZone, nonPawnMat[Co_Black], occupancy, features.scores[F_positional],
-                                      attFromPiece[Co_Black][P_wr - 1], att[Co_Black], att2[Co_Black], kdanger, checkers[Co_Black][P_wr - 1]);
-      evalPiece<P_wq, Co_Black, true>(p, queens[Co_Black], kingZone, nonPawnMat[Co_Black], occupancy, features.scores[F_positional],
-                                      attFromPiece[Co_Black][P_wq - 1], att[Co_Black], att2[Co_Black], kdanger, checkers[Co_Black][P_wq - 1]);
-      evalPiece<P_wk, Co_Black, true>(p, kings[Co_Black], kingZone, nonPawnMat[Co_Black], occupancy, features.scores[F_positional],
-                                      attFromPiece[Co_Black][P_wk - 1], att[Co_Black], att2[Co_Black], kdanger, checkers[Co_Black][P_wk - 1]);
-   }
-   else {
-      evalPiece<P_wn, Co_White>(p, knights[Co_White], kingZone, nonPawnMat[Co_White], occupancy, features.scores[F_positional],
-                                attFromPiece[Co_White][P_wn - 1], att[Co_White], att2[Co_White], kdanger, checkers[Co_White][P_wn - 1]);
-      evalPiece<P_wb, Co_White>(p, bishops[Co_White], kingZone, nonPawnMat[Co_White], occupancy, features.scores[F_positional],
-                                attFromPiece[Co_White][P_wb - 1], att[Co_White], att2[Co_White], kdanger, checkers[Co_White][P_wb - 1]);
-      evalPiece<P_wr, Co_White>(p, rooks[Co_White], kingZone, nonPawnMat[Co_White], occupancy, features.scores[F_positional],
-                                attFromPiece[Co_White][P_wr - 1], att[Co_White], att2[Co_White], kdanger, checkers[Co_White][P_wr - 1]);
-      evalPiece<P_wq, Co_White>(p, queens[Co_White], kingZone, nonPawnMat[Co_White], occupancy, features.scores[F_positional],
-                                attFromPiece[Co_White][P_wq - 1], att[Co_White], att2[Co_White], kdanger, checkers[Co_White][P_wq - 1]);
-      evalPiece<P_wk, Co_White>(p, kings[Co_White], kingZone, nonPawnMat[Co_White], occupancy, features.scores[F_positional],
-                                attFromPiece[Co_White][P_wk - 1], att[Co_White], att2[Co_White], kdanger, checkers[Co_White][P_wk - 1]);
-      evalPiece<P_wn, Co_Black>(p, knights[Co_Black], kingZone, nonPawnMat[Co_Black], occupancy, features.scores[F_positional],
-                                attFromPiece[Co_Black][P_wn - 1], att[Co_Black], att2[Co_Black], kdanger, checkers[Co_Black][P_wn - 1]);
-      evalPiece<P_wb, Co_Black>(p, bishops[Co_Black], kingZone, nonPawnMat[Co_Black], occupancy, features.scores[F_positional],
-                                attFromPiece[Co_Black][P_wb - 1], att[Co_Black], att2[Co_Black], kdanger, checkers[Co_Black][P_wb - 1]);
-      evalPiece<P_wr, Co_Black>(p, rooks[Co_Black], kingZone, nonPawnMat[Co_Black], occupancy, features.scores[F_positional],
-                                attFromPiece[Co_Black][P_wr - 1], att[Co_Black], att2[Co_Black], kdanger, checkers[Co_Black][P_wr - 1]);
-      evalPiece<P_wq, Co_Black>(p, queens[Co_Black], kingZone, nonPawnMat[Co_Black], occupancy, features.scores[F_positional],
-                                attFromPiece[Co_Black][P_wq - 1], att[Co_Black], att2[Co_Black], kdanger, checkers[Co_Black][P_wq - 1]);
-      evalPiece<P_wk, Co_Black>(p, kings[Co_Black], kingZone, nonPawnMat[Co_Black], occupancy, features.scores[F_positional],
-                                attFromPiece[Co_Black][P_wk - 1], att[Co_Black], att2[Co_Black], kdanger, checkers[Co_Black][P_wk - 1]);
+   const bool withForwadness = DynamicConfig::styleForwardness != 50;
+   const ScoreType staticColorSignHelper[2] = { +1, -1};
+   for (Color c = Co_White ; c <= Co_Black ; ++c){
+      for (Piece pp = P_wn ; pp <= P_wk ; ++pp){
+         BitBoard pieceBBiterator = p.pieces_const(c,pp);
+         while (pieceBBiterator) {
+            const Square k  = popBit(pieceBBiterator);
+            const Square kk = relative_square(~c,k);
+            features.scores[F_positional] += EvalConfig::PST[pp - 1][kk] * staticColorSignHelper[c];
+            if (withForwadness)
+               features.scores[F_positional] += EvalScore {ScoreType(((DynamicConfig::styleForwardness - 50) * SQRANK(kk)) / 8), 0} * staticColorSignHelper[c];
+            // aligned threats removing own piece (not pawn) in occupancy
+            const BitBoard shadowTarget = BBTools::pfCoverage[pp - 1](k, occupancy ^ nonPawnMat[c], c);
+            if (shadowTarget) {
+               kdanger[~c] += countBit(shadowTarget & kingZone[~c]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][pp - 1];
+               const BitBoard target = BBTools::pfCoverage[pp - 1](k, occupancy, c); // real targets
+               if (target) {
+                  attFromPiece[c][pp - 1] |= target;
+                  att2[c] |= att[c] & target;
+                  att[c] |= target;
+                  if (target & p.pieces_const<P_wk>(~c)) checkers[c][pp - 1] |= SquareToBitboard(k);
+                  kdanger[c] -= countBit(target & kingZone[c]) * EvalConfig::kingAttWeight[EvalConfig::katt_defence][pp - 1];
+               }
+            }
+         }
+      }
    }
 
    // random factor in opening if requiered
@@ -499,6 +447,28 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
    const BitBoard protectedSquare[2] = {pe.pawnTargets[Co_White] | attackedAndNotDefended[Co_White] | attacked2AndNotDefended2[Co_White],
                                         pe.pawnTargets[Co_Black] | attackedAndNotDefended[Co_Black] | attacked2AndNotDefended2[Co_Black]};
 
+   // reward safe checks
+   kdanger[Co_White] += EvalConfig::kingAttSafeCheck[0] * countBit(checkers[Co_Black][0] & att[Co_Black]);
+   kdanger[Co_Black] += EvalConfig::kingAttSafeCheck[0] * countBit(checkers[Co_White][0] & att[Co_White]);
+   for (Piece pp = P_wn; pp < P_wk; ++pp) {
+      kdanger[Co_White] += EvalConfig::kingAttSafeCheck[pp - 1] * countBit(checkers[Co_Black][pp - 1] & safeSquare[Co_Black]);
+      kdanger[Co_Black] += EvalConfig::kingAttSafeCheck[pp - 1] * countBit(checkers[Co_White][pp - 1] & safeSquare[Co_White]);
+   }
+
+   // less danger if no enemy queen
+   const Square whiteQueenSquare = queens[Co_White] ? BBTools::SquareFromBitBoard(queens[Co_White]) : INVALIDSQUARE;
+   const Square blackQueenSquare = queens[Co_Black] ? BBTools::SquareFromBitBoard(queens[Co_Black]) : INVALIDSQUARE;
+   kdanger[Co_White] -= blackQueenSquare == INVALIDSQUARE ? EvalConfig::kingAttNoQueen : 0;
+   kdanger[Co_Black] -= whiteQueenSquare == INVALIDSQUARE ? EvalConfig::kingAttNoQueen : 0;
+
+   // danger : use king danger score. **DO NOT** apply this in end-game
+   const ScoreType dw = EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_White] / 32), ScoreType(0)), ScoreType(63))];
+   const ScoreType db = EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_Black] / 32), ScoreType(0)), ScoreType(63))];
+   features.scores[F_attack] -= EvalScore(dw, 0);
+   features.scores[F_attack] += EvalScore(db, 0);
+   data.danger[Co_White] = kdanger[Co_White];
+   data.danger[Co_Black] = kdanger[Co_Black];
+
    // own piece in front of pawn
    features.scores[F_development] += EvalConfig::pieceFrontPawn * countBit(BBTools::shiftN<Co_White>(pawns[Co_White]) & nonPawnMat[Co_White]);
    features.scores[F_development] -= EvalConfig::pieceFrontPawn * countBit(BBTools::shiftN<Co_Black>(pawns[Co_Black]) & nonPawnMat[Co_Black]);
@@ -553,28 +523,6 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
       features.scores[F_positional] -=
           EvalConfig::knightTooFar[std::min(chebyshevDistance(p.king[Co_White], knighSq), chebyshevDistance(p.king[Co_Black], knighSq))];
    }
-
-   // reward safe checks
-   kdanger[Co_White] += EvalConfig::kingAttSafeCheck[0] * countBit(checkers[Co_Black][0] & att[Co_Black]);
-   kdanger[Co_Black] += EvalConfig::kingAttSafeCheck[0] * countBit(checkers[Co_White][0] & att[Co_White]);
-   for (Piece pp = P_wn; pp < P_wk; ++pp) {
-      kdanger[Co_White] += EvalConfig::kingAttSafeCheck[pp - 1] * countBit(checkers[Co_Black][pp - 1] & safeSquare[Co_Black]);
-      kdanger[Co_Black] += EvalConfig::kingAttSafeCheck[pp - 1] * countBit(checkers[Co_White][pp - 1] & safeSquare[Co_White]);
-   }
-
-   // less danger if no enemy queen
-   const Square whiteQueenSquare = queens[Co_White] ? BBTools::SquareFromBitBoard(queens[Co_White]) : INVALIDSQUARE;
-   const Square blackQueenSquare = queens[Co_Black] ? BBTools::SquareFromBitBoard(queens[Co_Black]) : INVALIDSQUARE;
-   kdanger[Co_White] -= blackQueenSquare == INVALIDSQUARE ? EvalConfig::kingAttNoQueen : 0;
-   kdanger[Co_Black] -= whiteQueenSquare == INVALIDSQUARE ? EvalConfig::kingAttNoQueen : 0;
-
-   // danger : use king danger score. **DO NOT** apply this in end-game
-   const ScoreType dw = EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_White] / 32), ScoreType(0)), ScoreType(63))];
-   const ScoreType db = EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_Black] / 32), ScoreType(0)), ScoreType(63))];
-   features.scores[F_attack] -= EvalScore(dw, 0);
-   features.scores[F_attack] += EvalScore(db, 0);
-   data.danger[Co_White] = kdanger[Co_White];
-   data.danger[Co_Black] = kdanger[Co_Black];
 
    // number of hanging pieces
    const BitBoard hanging[2] = {nonPawnMat[Co_White] & weakSquare[Co_White], nonPawnMat[Co_Black] & weakSquare[Co_Black]};
