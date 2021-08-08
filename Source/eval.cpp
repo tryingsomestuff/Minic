@@ -141,8 +141,11 @@ ScoreType armageddonScore(ScoreType score, unsigned int ply, DepthType height, C
 ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMatEvaluator, bool display) {
    START_TIMER
 
-   // king captured ///@todo still necessary ???
    const bool white2Play = p.c == Co_White;
+
+#ifdef DEBUG_KING_CAP
+   // king captured ///@todo still necessary ???
+   
    if (p.king[Co_White] == INVALIDSQUARE) {
       STOP_AND_SUM_TIMER(Eval)
       ++context.stats.counters[Stats::sid_evalNoKing];
@@ -153,29 +156,33 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
       ++context.stats.counters[Stats::sid_evalNoKing];
       return data.gp = 0, (white2Play ? +1 : -1) * MATE;
    }
+#endif
 
    ///@todo activate (or modulate!) features based on skill level
 
-   // main features
+   // main features (feature won't survive Eval scope), EvalData will !
    EvalFeatures features;
 
-   // Material evaluation
+   // Material evaluation (most often from Material table)
    const Hash matHash = MaterialHash::getMaterialHash(p.mat);
    if (matHash != nullHash) {
       ++context.stats.counters[Stats::sid_materialTableHits];
-      // Hash data
+      // Get material hash data
       const MaterialHash::MaterialHashEntry &MEntry = MaterialHash::materialHashTable[matHash];
-      data.gp                                       = MEntry.gamePhase();
+      // update EvalData and EvalFeatures
+      data.gp = MEntry.gamePhase();
       features.scores[F_material] += MEntry.score;
+
       // end game knowledge (helper or scaling)
       if (safeMatEvaluator && (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] < 5)) {
          MoveList moves;
 #ifndef DEBUG_GENERATION
          MoveGen::generate<MoveGen::GP_cap>(p, moves);
 #endif
-         if (moves.empty()) { // probe endgame knowledge only if position is quiet from stm pov
+         // probe endgame knowledge only if position is quiet from stm pov
+         if (moves.empty()) { 
             const Color winningSideEG = features.scores[F_material][EG] > 0 ? Co_White : Co_Black;
-            // helpers for endgame
+            // helpers for various endgame
             if (MEntry.t == MaterialHash::Ter_WhiteWinWithHelper || MEntry.t == MaterialHash::Ter_BlackWinWithHelper) {
                STOP_AND_SUM_TIMER(Eval)
                ++context.stats.counters[Stats::sid_materialTableHelper];
@@ -183,7 +190,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
                    (white2Play ? +1 : -1) * (MaterialHash::helperTable[matHash](p, winningSideEG, features.scores[F_material][EG], context._height));
                return armageddonScore(materialTableScore, p.halfmoves, context._height, p.c);
             }
-            // real FIDE draws (shall not happens for now in fact)
+            // real FIDE draws (shall not happens for now in fact ///@todo !!!)
             else if (MEntry.t == MaterialHash::Ter_Draw) {
                if (!isAttacked(p, kingSquare(p))) {
                   STOP_AND_SUM_TIMER(Eval)
@@ -199,7 +206,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
                   return context.drawScore(p, context._height); // drawScore take armageddon into account
                }
             }
-            // apply some scaling
+            // apply some scaling (more later...)
             else if (MEntry.t == MaterialHash::Ter_WhiteWin || MEntry.t == MaterialHash::Ter_BlackWin)
                features.scalingFactor = EvalConfig::scalingFactorWin / 128.f;
             else if (MEntry.t == MaterialHash::Ter_HardToWin)
@@ -210,15 +217,16 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
       }
    }
    else { // game phase and material scores out of table
-      ///@todo don't care about imbalance here ?
+      ///@todo we don't care about imbalance here ?
       ScoreType matScoreW = 0;
       ScoreType matScoreB = 0;
       data.gp = gamePhase(p, matScoreW, matScoreB);
       features.scores[F_material] += EvalScore(
-          (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * absValueEG(P_wq) + (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * absValueEG(P_wr) +
-              (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * absValueEG(P_wb) +
-              (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * absValueEG(P_wn) + (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * absValueEG(P_wp),
-          matScoreW - matScoreB);
+          (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * absValueEG(P_wq) + 
+          (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * absValueEG(P_wr) +
+          (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * absValueEG(P_wb) +
+          (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * absValueEG(P_wn) + 
+          (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * absValueEG(P_wp), matScoreW - matScoreB);
       ++context.stats.counters[Stats::sid_materialTableMiss];
    }
 
@@ -229,34 +237,37 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
 #ifdef WITH_NNUE
    if (DynamicConfig::useNNUE) {
       EvalScore score;
+      // we will stay to classic eval when the game is already decided (to gain some nps)
       ///@todo use data.gp inside NNUE condition ?
       if (DynamicConfig::forceNNUE ||
-          !isLazyHigh(ScoreType(DynamicConfig::NNUEThreshold), features, score)) { // stay to classic eval when the game is already decided
+          !isLazyHigh(ScoreType(DynamicConfig::NNUEThreshold), features, score)) { 
          if (DynamicConfig::armageddon) features.scalingFactor = 1.f;              ///@todo better
          // call the net
          ScoreType nnueScore = p.Evaluator().propagate(p.c);
-         // fuse MG and EG score applying the EG scaling factor
+         // fuse MG and EG score applying the EG scaling factor ///@todo, doesn't the net already learned that ????
          nnueScore = ScoreType(data.gp * nnueScore + (1.f - data.gp) * nnueScore * features.scalingFactor); // use scaling factor
          // NNUE evaluation scaling
          nnueScore = (nnueScore * DynamicConfig::NNUEScaling) / 64;
-         // take contempt into account (no tempo with NNUE, the HalfKA net already take it into account))
+         // take contempt into account (no tempo with NNUE, the HalfKA net already take it into account)
          nnueScore += ScaleScore(context.contempt, data.gp);
          // clamp score
-         nnueScore = clampScore(nnueScore);         
+         nnueScore = clampScore(nnueScore);
          ++context.stats.counters[Stats::sid_evalNNUE];
          STOP_AND_SUM_TIMER(Eval)
          // apply armageddon scoring if requiered
          return armageddonScore(nnueScore, p.halfmoves, context._height, p.c);
       }
+      // fall back to classic eval
       ++context.stats.counters[Stats::sid_evalStd];
    }
 #endif
 
    STOP_AND_SUM_TIMER(Eval1)
 
+   // prefetch pawn evaluation table as soon as possible
    context.prefetchPawn(computeHash(p));
 
-   // usefull bitboards
+   // pre compute some usefull bitboards (///@todo maybe this is not efficient ...)
    const BitBoard pawns[2]      = {p.whitePawn(), p.blackPawn()};
    const BitBoard knights[2]    = {p.whiteKnight(), p.blackKnight()};
    const BitBoard bishops[2]    = {p.whiteBishop(), p.blackBishop()};
@@ -267,6 +278,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
    const BitBoard kingZone[2]   = {BBTools::mask[p.king[Co_White]].kingZone, BBTools::mask[p.king[Co_Black]].kingZone};
    const BitBoard occupancy     = p.occupancy();
 
+   // helpers that will be filled by evalPiece calls
    ScoreType kdanger[2]         = {0, 0};
    BitBoard  att[2]             = {emptyBitBoard, emptyBitBoard}; // bitboard of squares attacked by Color
    BitBoard  att2[2]            = {emptyBitBoard, emptyBitBoard}; // bitboard of squares attacked twice by Color
@@ -321,7 +333,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
 
    // random factor in opening if requiered
    if (p.halfmoves < 10 && DynamicConfig::randomOpen != 0)
-      features.scores[F_positional] += randomInt<ScoreType /*NO SEED => random device*/>(-DynamicConfig::randomOpen, DynamicConfig::randomOpen);
+      features.scores[F_positional] += randomInt<ScoreType /*NO SEED USE => random device*/>(-DynamicConfig::randomOpen, DynamicConfig::randomOpen);
 
    STOP_AND_SUM_TIMER(Eval2)
 
@@ -336,10 +348,10 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
       assert(pePtr);
       Searcher::PawnEntry &pe = *pePtr;
       pe.reset();
-      pe.pawnTargets[Co_White] = BBTools::pawnAttacks<Co_White>(pawns[Co_White]);
-      pe.pawnTargets[Co_Black] = BBTools::pawnAttacks<Co_Black>(pawns[Co_Black]);
-      pe.semiOpenFiles[Co_White] =
-          BBTools::fillFile(pawns[Co_White]) & ~BBTools::fillFile(pawns[Co_Black]); // semiOpen white means with white pawn, and without black pawn
+      pe.pawnTargets[Co_White]   = BBTools::pawnAttacks<Co_White>(pawns[Co_White]);
+      pe.pawnTargets[Co_Black]   = BBTools::pawnAttacks<Co_Black>(pawns[Co_Black]);
+      // semiOpen white means with white pawn, and without black pawn
+      pe.semiOpenFiles[Co_White] = BBTools::fillFile(pawns[Co_White]) & ~BBTools::fillFile(pawns[Co_Black]); 
       pe.semiOpenFiles[Co_Black] = BBTools::fillFile(pawns[Co_Black]) & ~BBTools::fillFile(pawns[Co_White]);
       pe.passed[Co_White]        = BBTools::pawnPassed<Co_White>(pawns[Co_White], pawns[Co_Black]);
       pe.passed[Co_Black]        = BBTools::pawnPassed<Co_Black>(pawns[Co_Black], pawns[Co_White]);
@@ -352,8 +364,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
       evalPawn<Co_Black>(pawns[Co_Black], pe.score);
 
       // danger in king zone
-      pe.danger[Co_White] -=
-          countBit(pe.pawnTargets[Co_White] & kingZone[Co_White]) * EvalConfig::kingAttWeight[EvalConfig::katt_defence][0]; // 0 means pawn here
+      pe.danger[Co_White] -= countBit(pe.pawnTargets[Co_White] & kingZone[Co_White]) * EvalConfig::kingAttWeight[EvalConfig::katt_defence][0];
       pe.danger[Co_White] += countBit(pe.pawnTargets[Co_Black] & kingZone[Co_White]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][0];
       pe.danger[Co_Black] -= countBit(pe.pawnTargets[Co_Black] & kingZone[Co_Black]) * EvalConfig::kingAttWeight[EvalConfig::katt_defence][0];
       pe.danger[Co_Black] += countBit(pe.pawnTargets[Co_White] & kingZone[Co_Black]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][0];
@@ -570,11 +581,9 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
    features.scores[F_attack] += EvalConfig::hangingPieceMalus * (countBit(hanging[Co_White]) - countBit(hanging[Co_Black]));
 
    // threats by minor
-   BitBoard targetThreat =
-       (nonPawnMat[Co_White] | (pawns[Co_White] & weakSquare[Co_White])) & (attFromPiece[Co_Black][P_wn - 1] | attFromPiece[Co_Black][P_wb - 1]);
+   BitBoard targetThreat = (nonPawnMat[Co_White] | (pawns[Co_White] & weakSquare[Co_White])) & (attFromPiece[Co_Black][P_wn - 1] | attFromPiece[Co_Black][P_wb - 1]);
    while (targetThreat) features.scores[F_attack] += EvalConfig::threatByMinor[PieceTools::getPieceType(p, popBit(targetThreat)) - 1];
-   targetThreat =
-       (nonPawnMat[Co_Black] | (pawns[Co_Black] & weakSquare[Co_Black])) & (attFromPiece[Co_White][P_wn - 1] | attFromPiece[Co_White][P_wb - 1]);
+   targetThreat = (nonPawnMat[Co_Black] | (pawns[Co_Black] & weakSquare[Co_Black])) & (attFromPiece[Co_White][P_wn - 1] | attFromPiece[Co_White][P_wb - 1]);
    while (targetThreat) features.scores[F_attack] -= EvalConfig::threatByMinor[PieceTools::getPieceType(p, popBit(targetThreat)) - 1];
    // threats by rook
    targetThreat = p.allPieces[Co_White] & weakSquare[Co_White] & attFromPiece[Co_Black][P_wr - 1];
@@ -680,10 +689,10 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
    // adjust piece pair score
    features.scores[F_material] += ((p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonus[p.mat[Co_White][M_p]] : 0) -
                                    (p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonus[p.mat[Co_Black][M_p]] : 0));
-   features.scores[F_material] +=
-       ((p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0) - (p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0));
-   features.scores[F_material] +=
-       ((p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus : 0) - (p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus : 0));
+   features.scores[F_material] += ((p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0) - 
+                                   (p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0));
+   features.scores[F_material] += ((p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus : 0) - 
+                                   (p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus : 0));
 
    // complexity
    // an "anti human" trick : winning side wants to keep the position more complex

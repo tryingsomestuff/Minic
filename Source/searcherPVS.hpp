@@ -42,8 +42,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             stopFlag = true;
             Logging::LogIt(Logging::logInfo) << "stopFlag triggered (nodes limits) in thread " << id();
          }
-         if ((TimeType)std::max(1, (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count()) >
-             getCurrentMoveMs()) {
+         if ((TimeType)std::max(1, (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count()) > getCurrentMoveMs()) {
             stopFlag = true;
             Logging::LogIt(Logging::logInfo) << "stopFlag triggered in thread " << id();
          }
@@ -546,8 +545,10 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       if (!applyMove(p2, *it)) continue;
       TT::prefetch(computeHash(p2));
       const Square to = Move2To(*it);
+#ifdef DEBUG_KING_CAP      
       if (p.c == Co_White && to == p.king[Co_Black]) return MATE - height + 1;
       if (p.c == Co_Black && to == p.king[Co_White]) return MATE - height + 1;
+#endif
       validMoveCount++;
       const bool isQuiet = Move2Type(*it) == T_std;
       if (isQuiet) validQuietMoveCount++;
@@ -609,8 +610,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          score = -pvs<pvnode>(-beta, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, isCheck, !cutNode, true);
       else {
          // reductions & prunings
-         const bool isPrunable =
-             /*isNotEndGame &&*/ !isAdvancedPawnPush && !isMateScore(alpha) && !DynamicConfig::mateFinder && !killerT.isKiller(*it, height);
+         const bool isPrunable = /*isNotEndGame &&*/ !isAdvancedPawnPush && !isMateScore(alpha) && !DynamicConfig::mateFinder && !killerT.isKiller(*it, height);
          const bool isReductible         = /*isNotEndGame &&*/ !isAdvancedPawnPush && !DynamicConfig::mateFinder;
          const bool noCheck              = !isInCheck && !isCheck;
          const bool isPrunableStd        = isPrunable && isQuiet;
