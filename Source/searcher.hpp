@@ -49,6 +49,7 @@ struct Searcher {
    HistoryT  historyT;
    CounterT  counterT;
    DepthType nullMoveMinPly = 0;
+   Color     nullMoveVerifColor = Co_None;
    EvalScore contempt       = 0;
    bool      subSearch      = false;
    DepthType _height        = 0; ///@todo use this everywhere, instead of passing height in pvs and qsearch call ?
