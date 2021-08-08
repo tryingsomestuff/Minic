@@ -225,7 +225,8 @@ enum Piece : signed char {
    P_wb   = 3,
    P_wr   = 4,
    P_wq   = 5,
-   P_wk   = 6
+   P_wk   = 6,
+   P_end
 };
 inline constexpr Piece operator++(Piece& pp) {
    pp = Piece(pp + 1);
