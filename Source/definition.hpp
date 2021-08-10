@@ -394,13 +394,24 @@ inline constexpr Color        operator++(Color& c) {
    return c;
 }
 
-// previous best root 20000, ttmove 15000, king evasion 10000
-// promcap >7000, cap 7000, (checks 6000,)
-// killers 1900-1700-1500, counter 1300, castling 200, other by -1000 < history < 1000, bad cap <-7000,
-// leaving threat 1000
+// previous best root 20000
+// ttmove 15000 
+// ~~king evasion 10000~~
+// good cap +7000 +SEE (or MVA and cap history)
+// killers 1900-1700-1500
+// counter 1300
+// standard move use -1024 < history < 1024
+// leaving threat +1000
 // MVV-LVA [0 400]
-// recapture 400
-constexpr ScoreType MoveScoring[16] = {0, 7000, 7100, 6000, 3950, 3500, 3350, 3300, 7950, 7500, 7350, 7300, 200, 200, 200, 200};
+// recapture +500
+constexpr ScoreType MoveScoring[16] = {   0,                   // standard
+                                       7000,                   // cap (bad cap will be *=-1)
+                                          0,                   // reserved
+                                       7000,                   // ep
+                                       3950, 3500, 3350, 3300, // prom
+                                       7950, 7500, 7350, 7300, // prom+cap
+                                        200,  200,  200,  200  // castling bonus
+                                      };
 
 [[nodiscard]] inline bool isSkipMove(const Move& a, const std::vector<MiniMove>* skipMoves) {
    return skipMoves && std::find(skipMoves->begin(), skipMoves->end(), Move2MiniMove(a)) != skipMoves->end();

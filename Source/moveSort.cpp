@@ -24,36 +24,51 @@ template<Color C> void MoveSorter::computeScore(Move& m) const {
    assert(isValidSquare(from));
    const Square to = Move2To(m);
    assert(isValidSquare(to));
+
+   // apply default score based on type
    ScoreType s = MoveScoring[t];
-   if (height == 0 && sameMove(context.previousBest, m)) s += 15000; // previous root best at root
-   else if (e && sameMove(e->m, m))
-      s += 15000; // TT move
+
+   // previous root best at root
+   if (height == 0 && sameMove(context.previousBest, m)) s += 15000; 
+   // TT move
+   else if (e && sameMove(e->m, m)) s += 15000;
+
    else {
-      //if (isInCheck && from == p.king[C]) s += 10000; // king evasion
+      // king evasion ///@todo try again ??
+      //if (isInCheck && from == p.king[C]) s += 10000; 
+      
+      // capture that are not promotion
       if (isCapture(t) && !isPromotion(t)) {
          const Piece pp    = PieceTools::getPieceType(p, from);
          const Piece ppOpp = (t != T_ep) ? PieceTools::getPieceType(p, to) : P_wp;
          assert(pp > 0);
          assert(ppOpp > 0);
+
          const EvalScore* const pst    = EvalConfig::PST[pp - 1];
          const EvalScore* const pstOpp = EvalConfig::PST[ppOpp - 1];
+         // always use PST as a hint
          s += ScaleScore(pst[ColorSquarePstHelper<C>(to)] - pst[ColorSquarePstHelper<C>(from)] + pstOpp[ColorSquarePstHelper<~C>(to)], gp);
+         
          if (useSEE && !isInCheck) { 
             const ScoreType see = context.SEE(p, m);
             s += see;
-            if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == correctedMove2To(p.lastMove)) s += 150; // recapture bonus
-            else if (see < -80)
-               s -= 2 * MoveScoring[T_capture]; // too bad capture
+            // recapture bonus
+            if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == correctedMove2To(p.lastMove)) s += 150;
+            // too bad capture are ordered last (-7000)
+            else if (see < -80) s -= 2 * MoveScoring[T_capture];
          }
-         else { // MVV(LVA / cap history)
-            if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == correctedMove2To(p.lastMove)) s += 500; // recapture bonus
+         else { // without SEE
+            // recapture (> max MVVLVA value)
+            if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == correctedMove2To(p.lastMove)) s += 500; 
             else {
-               s += (20 * absValue(ppOpp) + context.historyT.historyCap[PieceIdx(p.board_const(from))][to][ppOpp-1]) / 4;
-               //s += SearchConfig::MvvLvaScores[ppOpp - 1][pp - 1]; //[0 400]
+               // MVVLVA [0 400] + cap history (HISTORY_MAX = 1024)
+               s += (4 * SearchConfig::MvvLvaScores[ppOpp - 1][pp - 1] + context.historyT.historyCap[PieceIdx(p.board_const(from))][to][ppOpp-1]) / 4;
             }
          }
       }
-      else if (t == T_std) {
+
+      // standard moves and castling
+      else if (t == T_std || isCastling(m)) {
          if (sameMove(m, context.killerT.killers[height][0])) s += 1900; // quiet killer
          else if (sameMove(m, context.killerT.killers[height][1]))
             s += 1700; // quiet killer
@@ -63,13 +78,15 @@ template<Color C> void MoveSorter::computeScore(Move& m) const {
             s += 1300; // quiet counter
          else {
             ///@todo give another try to tune those ratio!
+            // History
             const Piece pp = p.board_const(from);
-            s += context.historyT.history[p.c][from][to] / 3;        // +/- HISTORY_MAX = 1024
-            s += context.historyT.historyP[PieceIdx(pp)][to] / 3;    // +/- HISTORY_MAX = 1024
-            s += context.getCMHScore(p, from, to, cmhPtr) / 3;       // +/- HISTORY_MAX = 1024
+            s += context.historyT.history[p.c][from][to] / 3;     // +/- HISTORY_MAX = 1024
+            s += context.historyT.historyP[PieceIdx(pp)][to] / 3; // +/- HISTORY_MAX = 1024
+            s += context.getCMHScore(p, from, to, cmhPtr) / 3;    // +/- HISTORY_MAX = 1024
             if (!isInCheck) {
-               if (refutation != INVALIDMINIMOVE && from == correctedMove2To(refutation) && context.SEE_GE(p, m, -80))
-                  s += 1000; // move (safely) leaving threat square from null move search
+               // move (safely) leaving threat square from null move search
+               if (refutation != INVALIDMINIMOVE && from == correctedMove2To(refutation) && context.SEE_GE(p, m, -80)) s += 1024; 
+               // always use PST to compensate low value history
                const EvalScore* const pst = EvalConfig::PST[std::abs(pp) - 1];
                s += ScaleScore(pst[ColorSquarePstHelper<C>(to)] - pst[ColorSquarePstHelper<C>(from)], gp);
             }
