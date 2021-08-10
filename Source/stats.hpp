@@ -44,6 +44,7 @@ struct Stats {
       sid_historyPruning,
       sid_futility,
       sid_CMHPruning,
+      sid_capHistPruning,
       sid_see,
       sid_see2,
       sid_seeQuiet,

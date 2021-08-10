@@ -38,17 +38,18 @@ template<Color C> void MoveSorter::computeScore(Move& m) const {
          const EvalScore* const pst    = EvalConfig::PST[pp - 1];
          const EvalScore* const pstOpp = EvalConfig::PST[ppOpp - 1];
          s += ScaleScore(pst[ColorSquarePstHelper<C>(to)] - pst[ColorSquarePstHelper<C>(from)] + pstOpp[ColorSquarePstHelper<~C>(to)], gp);
-         if (useSEE && !isInCheck) {
+         if (useSEE && !isInCheck) { 
             const ScoreType see = context.SEE(p, m);
             s += see;
             if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == correctedMove2To(p.lastMove)) s += 150; // recapture bonus
             else if (see < -80)
                s -= 2 * MoveScoring[T_capture]; // too bad capture
          }
-         else {                                                                                        // MVVLVA
+         else { // MVV(LVA / cap history)
             if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == correctedMove2To(p.lastMove)) s += 500; // recapture bonus
             else {
-               s += SearchConfig::MvvLvaScores[ppOpp - 1][pp - 1]; //[0 400]
+               s += (20 * absValue(ppOpp) + context.historyT.historyCap[PieceIdx(p.board_const(from))][to][ppOpp-1]) / 4;
+               //s += SearchConfig::MvvLvaScores[ppOpp - 1][pp - 1]; //[0 400]
             }
          }
       }
@@ -63,9 +64,9 @@ template<Color C> void MoveSorter::computeScore(Move& m) const {
          else {
             ///@todo give another try to tune those ratio!
             const Piece pp = p.board_const(from);
-            s += context.historyT.history[p.c][from][to] / 3;        // +/- HISTORY_MAX = 1000
-            s += context.historyT.historyP[PieceIdx(pp)][to] / 3;    // +/- HISTORY_MAX = 1000
-            s += context.getCMHScore(p, from, to, cmhPtr) / 3;       // +/- HISTORY_MAX = 1000
+            s += context.historyT.history[p.c][from][to] / 3;        // +/- HISTORY_MAX = 1024
+            s += context.historyT.historyP[PieceIdx(pp)][to] / 3;    // +/- HISTORY_MAX = 1024
+            s += context.getCMHScore(p, from, to, cmhPtr) / 3;       // +/- HISTORY_MAX = 1024
             if (!isInCheck) {
                if (refutation != INVALIDMINIMOVE && from == correctedMove2To(refutation) && context.SEE_GE(p, m, -80))
                   s += 1000; // move (safely) leaving threat square from null move search
