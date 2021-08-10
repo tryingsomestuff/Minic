@@ -103,10 +103,15 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       if (!rootnode && ((bound == TT::B_alpha && e.s <= alpha) || (bound == TT::B_beta && e.s >= beta) || (bound == TT::B_exact))) {
          if (!pvnode) {
             // increase history bonus of this move
-            if (/*!isInCheck &&*/ e.m != INVALIDMINIMOVE && Move2Type(e.m) == T_std) updateTables(*this, p, depth, height, e.m, bound, cmhPtr);
+            if (/*!isInCheck &&*/ e.m != INVALIDMINIMOVE){
+               if (Move2Type(e.m) == T_std) // quiet move history
+                  updateTables(*this, p, depth, height, e.m, bound, cmhPtr);
+               else if ( isCapture(e.m) ) // capture history
+                  historyT.updateCap<1>(depth, e.m, p);
+            }
             if (p.fifty < SearchConfig::ttMaxFiftyValideDepth) return adjustHashScore(e.s, height);
          }
-         ///@todo try returning also at pv node
+         ///@todo try returning also at pv node (this cuts pv ...)
          /*
             else{ // in "good" condition, also return a score at pvnode
                if ( bound == TT::B_exact && e.d > 3*depth/2 && p.fifty < SearchConfig::ttMaxFiftyValideDepth) return adjustHashScore(e.s, height);
@@ -210,7 +215,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    MoveList   moves;
    bool       moveGenerated    = false;
    bool       capMoveGenerated = false;
-   bool       futility = false, lmp = false, /*mateThreat = false,*/ historyPruning = false, CMHPruning = false;
+   bool       futility = false, lmp = false, /*mateThreat = false,*/ historyPruning = false, capHistoryPruning = false, CMHPruning = false;
    MiniMove   refutation   = INVALIDMINIMOVE;
    DepthType  marginDepth  = std::max(1, depth - (evalScoreIsHashScore ? e.d : 0)); // a depth that take TT depth into account
    const bool isNotEndGame = p.mat[p.c][M_t] > 0;                                   ///@todo better ?
@@ -351,15 +356,17 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    if (!rootnode) {
       // LMP
-      lmp = (SearchConfig::doLMP && depth <= SearchConfig::lmpMaxDepth);
+      lmp = SearchConfig::doLMP && depth <= SearchConfig::lmpMaxDepth;
       // futility
       const ScoreType futilityScore =
           alpha - SearchConfig::futilityDepthInit[evalScoreIsHashScore] - SearchConfig::futilityDepthCoeff[evalScoreIsHashScore] * marginDepth;
-      futility = (SearchConfig::doFutility && depth <= SearchConfig::futilityMaxDepth[evalScoreIsHashScore] && evalScore <= futilityScore);
+      futility = SearchConfig::doFutility && depth <= SearchConfig::futilityMaxDepth[evalScoreIsHashScore] && evalScore <= futilityScore;
       // history pruning
-      historyPruning = (SearchConfig::doHistoryPruning && isNotEndGame && depth < SearchConfig::historyPruningMaxDepth);
+      historyPruning = SearchConfig::doHistoryPruning && isNotEndGame && depth < SearchConfig::historyPruningMaxDepth;
       // CMH pruning
-      CMHPruning = (SearchConfig::doCMHPruning && isNotEndGame && depth < SearchConfig::CMHMaxDepth);
+      CMHPruning = SearchConfig::doCMHPruning && isNotEndGame && depth < SearchConfig::CMHMaxDepth;
+      // capture history pruning
+      capHistoryPruning = SearchConfig::doCapHistoryPruning && isNotEndGame && depth < SearchConfig::capHistoryPruningMaxDepth;
    }
 
    int       validMoveCount      = 0;
@@ -475,13 +482,19 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             bestMoveIsCheck = isCheck;
             if (ttScore > alpha) {
                hashBound = TT::B_exact;
-               if (pvnode) updatePV(pv, e.m, childPV);
+               if (pvnode) updatePV(pv, bestMove, childPV);
                if (ttScore >= beta) {
                   stats.incr(Stats::sid_ttbeta);
+                  
                   // increase history bonus of this move
-                  if (!isInCheck && isQuiet /*&& depth > 1*/)
-                     updateTables(*this, p, depth + (ttScore > (beta + SearchConfig::betaMarginDynamicHistory)), height, e.m, TT::B_beta, cmhPtr);
-                  TT::setEntry(*this, pHash, e.m, createHashScore(ttScore, height), createHashScore(evalScore, height),
+                  if (!isInCheck){
+                     if (isQuiet /*&& depth > 1*/) // quiet move history
+                        updateTables(*this, p, depth + (ttScore > (beta + SearchConfig::betaMarginDynamicHistory)), height, bestMove, TT::B_beta, cmhPtr);
+                     else if (isCapture(bestMove)) // capture history
+                        historyT.updateCap<1>(depth + (ttScore > (beta + SearchConfig::betaMarginDynamicHistory)), bestMove, p);
+                  }
+
+                  TT::setEntry(*this, pHash, bestMove, createHashScore(ttScore, height), createHashScore(evalScore, height),
                                TT::Bound(TT::B_beta | 
                                          (ttPV ? TT::B_ttPVFlag : TT::B_none) | 
                                          (bestMoveIsCheck ? TT::B_isCheckFlag : TT::B_none) |
@@ -550,7 +563,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       if (p.c == Co_Black && to == p.king[Co_White]) return MATE - height + 1;
 #endif
       validMoveCount++;
-      const bool isQuiet = Move2Type(*it) == T_std;
+      const bool isQuiet = Move2Type(*it) == T_std; ///@todo non tactical (no forks, no check, ...)
       if (isQuiet) validQuietMoveCount++;
       const bool firstMove = validMoveCount == 1;
       PVList     childPV;
@@ -610,12 +623,13 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          score = -pvs<pvnode>(-beta, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, isCheck, !cutNode, true);
       else {
          // reductions & prunings
-         const bool isPrunable = /*isNotEndGame &&*/ !isAdvancedPawnPush && !isMateScore(alpha) && !DynamicConfig::mateFinder && !killerT.isKiller(*it, height);
+         const bool isPrunable           = /*isNotEndGame &&*/ !DynamicConfig::mateFinder && !isAdvancedPawnPush && !isMateScore(alpha) && !killerT.isKiller(*it, height);
          const bool isReductible         = /*isNotEndGame &&*/ !isAdvancedPawnPush && !DynamicConfig::mateFinder;
          const bool noCheck              = !isInCheck && !isCheck;
          const bool isPrunableStd        = isPrunable && isQuiet;
          const bool isPrunableStdNoCheck = isPrunableStd && noCheck;
-         const bool isPrunableCap        = isPrunable && Move2Type(*it) == T_capture && isBadCap(*it) && noCheck;
+         const bool isPrunableCap        = isPrunable && Move2Type(*it) == T_capture && noCheck;
+         const bool isPrunableBadCap     = isPrunableCap && isBadCap(*it);
 
          // take initial position situation into account ///@todo use this
          const bool isEmergencyDefence = false; //moveDifficulty == MoveDifficultyUtil::MD_hardDefense;
@@ -657,8 +671,14 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                continue;
             }
          }
+         // capture history pruning
+         if ( capHistoryPruning && isPrunableCap && 
+              historyT.historyCap[PieceIdx(p.board_const(Move2From(*it)))][to][Abs(p.board_const(to))-1] < SearchConfig::capHistoryPruningThresholdInit + depth * SearchConfig::capHistoryPruningThresholdDepth){
+               stats.incr(Stats::sid_capHistPruning);
+               continue;
+         }
          // SEE (capture)
-         if (isPrunableCap) {
+         if (isPrunableBadCap) {
             if (futility) {
                stats.incr(Stats::sid_see);
                continue;
@@ -672,7 +692,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          // LMR
          DepthType reduction = 0;
          if (SearchConfig::doLMR && depth >= SearchConfig::lmrMinDepth &&
-             ((isReductible && isQuiet) /*|| isPrunableCap*/ /*|| stack[p.halfmoves].eval <= alpha*/ /*|| cutNode*/) && ///@todo retry isPrunableCap
+             ((isReductible && isQuiet) /*|| isPrunableBadCap*/ /*|| stack[p.halfmoves].eval <= alpha*/ /*|| cutNode*/) && ///@todo retry isPrunableBadCap
              validMoveCount > 1 + 2 * rootnode) {
             stats.incr(Stats::sid_lmr);
             reduction += SearchConfig::lmrReduction[std::min((int)depth, MAX_DEPTH - 1)][std::min(validMoveCount, MAX_MOVE - 1)];
@@ -689,6 +709,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
             // never extend more than reduce
             if (extension - reduction > 0) reduction = extension;
+            // never fall into qsearch directly
             if (reduction >= depth - 1 + extension) reduction = depth - 1 + extension - 1;
          }
          const DepthType nextDepth = depth - 1 - reduction + extension;
@@ -721,18 +742,28 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          bestMoveIsCheck = isCheck;
          //bestScoreUpdated = true;
          if (score > alpha) {
-            if (pvnode) updatePV(pv, *it, childPV);
+            if (pvnode) updatePV(pv, bestMove, childPV);
             //alphaUpdated = true;
             alpha = score;
             hashBound = TT::B_exact;
             if (score >= beta) {
-               if (!isInCheck && isQuiet /*&& depth > 1*/ /*&& !( depth == 1 && validQuietMoveCount == 1 )*/) { // last cond from Alayan in Ethereal)
-                  // increase history bonus of this move
-                  updateTables(*this, p, depth + (score > beta + SearchConfig::betaMarginDynamicHistory), height, *it, TT::B_beta, cmhPtr);
-                  // reduce history bonus of all previous
-                  for (auto it2 = moves.begin(); it2 != moves.end() && !sameMove(*it2, *it); ++it2) {
-                     if (Move2Type(*it2) == T_std)
-                        historyT.update<-1>(depth + (score > (beta + SearchConfig::betaMarginDynamicHistory)), *it2, p, cmhPtr);
+               if (!isInCheck){
+                  const DepthType bonus = depth + (score > beta + SearchConfig::betaMarginDynamicHistory);
+                  if(isQuiet /*&& depth > 1*/ /*&& !( depth == 1 && validQuietMoveCount == 1 )*/) { // quiet move history
+                     // increase history bonus of this move
+                     updateTables(*this, p, bonus, height, bestMove, TT::B_beta, cmhPtr);
+                     // reduce history bonus of all previous
+                     for (auto it2 = moves.begin(); it2 != moves.end() && !sameMove(*it2, bestMove); ++it2) {
+                        if (Move2Type(*it2) == T_std)
+                           historyT.update<-1>(bonus, *it2, p, cmhPtr);
+                     }
+                  }
+                  else if( isCapture(bestMove)){ // capture history
+                     historyT.updateCap<1>(bonus, bestMove, p);
+                     for (auto it2 = moves.begin(); it2 != moves.end() && !sameMove(*it2, bestMove); ++it2) {
+                        if (isCapture(*it2))
+                           historyT.updateCap<-1>(bonus, *it2, p);
+                     }
                   }
                }
                hashBound = TT::B_beta;

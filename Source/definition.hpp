@@ -38,7 +38,7 @@ typedef uint64_t u_int64_t;
 #include <unistd.h>
 #endif
 
-const std::string MinicVersion = "3.12";
+const std::string MinicVersion = "3.13";
 
 // *** options
 #define WITH_UCI    // include or not UCI protocol support
@@ -190,7 +190,7 @@ inline constexpr GamePhase operator++(GamePhase& g) {
    return g;
 }
 
-template<typename T> [[nodiscard]] inline constexpr T Abs(const T& s) { return s > 0 ? s : -s; }
+template<typename T> [[nodiscard]] inline constexpr T Abs(const T& s) { return s > T(0) ? s : T(-s); }
 
 template<typename T, int SIZE> struct OptList : public std::vector<T> {
    OptList(): std::vector<T>() { std::vector<T>::reserve(SIZE); }

@@ -8,19 +8,20 @@
  * There are const when no CLOP tuning is use and of course need to be mutable when begin tuned
  */
 namespace SearchConfig {
-const bool doWindow         = true;
-const bool doPVS            = true;
-const bool doNullMove       = true;
-const bool doFutility       = true;
-const bool doLMR            = true;
-const bool doLMP            = true;
-const bool doStaticNullMove = true;
-const bool doRazoring       = true;
-const bool doQFutility      = false;
-const bool doQDeltaPruning  = false;
-const bool doProbcut        = true;
-const bool doHistoryPruning = true;
-const bool doCMHPruning     = true;
+const bool doWindow            = true;
+const bool doPVS               = true;
+const bool doNullMove          = true;
+const bool doFutility          = true;
+const bool doLMR               = true;
+const bool doLMP               = true;
+const bool doStaticNullMove    = true;
+const bool doRazoring          = true;
+const bool doQFutility         = false;
+const bool doQDeltaPruning     = false;
+const bool doProbcut           = true;
+const bool doHistoryPruning    = true;
+const bool doCapHistoryPruning = true;
+const bool doCMHPruning        = true;
 
 // first value if eval score is used, second if hash score is used
 extern CONST_SEARCH_TUNING ScoreType qfutilityMargin[2];
@@ -38,6 +39,9 @@ extern CONST_SEARCH_TUNING ScoreType nullMoveDynamicDivisor;
 extern CONST_SEARCH_TUNING DepthType historyPruningMaxDepth;
 extern CONST_SEARCH_TUNING ScoreType historyPruningThresholdInit;
 extern CONST_SEARCH_TUNING ScoreType historyPruningThresholdDepth;
+extern CONST_SEARCH_TUNING DepthType capHistoryPruningMaxDepth;
+extern CONST_SEARCH_TUNING ScoreType capHistoryPruningThresholdInit;
+extern CONST_SEARCH_TUNING ScoreType capHistoryPruningThresholdDepth;
 extern CONST_SEARCH_TUNING ScoreType historyExtensionThreshold;
 extern CONST_SEARCH_TUNING DepthType CMHMaxDepth;
 extern CONST_SEARCH_TUNING DepthType futilityMaxDepth[2];

@@ -27,8 +27,9 @@ struct KillerT {
 
 struct HistoryT {
    ScoreType history[2][NbSquare][NbSquare];                         // Color, from, to
+   ScoreType historyCap[NbPiece][NbSquare][PieceShift];              // Piece moved (+color), to, piece taken
    ScoreType historyP[NbPiece][NbSquare];                            // Piece, to
-   ScoreType counter_history[NbPiece][NbSquare][NbPiece * NbSquare]; //previous moved piece, previous to, current moved piece * boardsize + current to
+   ScoreType counter_history[NbPiece][NbSquare][NbPiece * NbSquare]; // Previous moved piece, previous to, current moved piece * boardsize + current to
 
    void initHistory(bool noCleanCounter = false);
 
@@ -49,6 +50,19 @@ struct HistoryT {
                item += s - HISTORY_DIV(item * (int)std::abs(s));
             }
          }
+      }
+   }
+
+   template<int S> inline void updateCap(DepthType depth, Move m, const Position& p) {
+      if (isCapture(m)) {
+         const Square from = Move2From(m);
+         assert(isValidSquare(from));
+         const Square to = correctedMove2To(m);
+         assert(isValidSquare(to));
+         const Piece pf = p.board_const(from);
+         const Piece pt = p.board_const(to);
+         const ScoreType s  = S * HSCORE(depth);
+         historyCap[PieceIdx(pf)][to][Abs(pt)-1] += s - HISTORY_DIV(historyCap[PieceIdx(pf)][to][Abs(pt)-1] * (int)std::abs(s));
       }
    }
 };

@@ -208,6 +208,9 @@ void registerCOMOptions() { // options exposed to GUI
    _keys.push_back(KeyBase(k_depth, w_spin, "historyPruningMaxDepth"            , &SearchConfig::historyPruningMaxDepth              , DepthType(0)    , DepthType(30)       ));
    _keys.push_back(KeyBase(k_score, w_spin, "historyPruningThresholdInit"       , &SearchConfig::historyPruningThresholdInit         , ScoreType(-500) , ScoreType(500)      ));
    _keys.push_back(KeyBase(k_score, w_spin, "historyPruningThresholdDepth"      , &SearchConfig::historyPruningThresholdDepth        , ScoreType(-500) , ScoreType(500)      ));
+   _keys.push_back(KeyBase(k_depth, w_spin, "capHistoryPruningMaxDepth"         , &SearchConfig::capHistoryPruningMaxDepth           , DepthType(0)    , DepthType(30)       ));
+   _keys.push_back(KeyBase(k_score, w_spin, "capHistoryPruningThresholdInit"    , &SearchConfig::capHistoryPruningThresholdInit      , ScoreType(-500) , ScoreType(500)      ));
+   _keys.push_back(KeyBase(k_score, w_spin, "capHistoryPruningThresholdDepth"   , &SearchConfig::capHistoryPruningThresholdDepth     , ScoreType(-500) , ScoreType(500)      ));
    _keys.push_back(KeyBase(k_depth, w_spin, "CMHMaxDepth"                       , &SearchConfig::CMHMaxDepth                         , DepthType(0)    , DepthType(30)       ));
    _keys.push_back(KeyBase(k_depth, w_spin, "futilityMaxDepth0"                 , &SearchConfig::futilityMaxDepth[0]                 , DepthType(0)    , DepthType(30)       ));
    _keys.push_back(KeyBase(k_depth, w_spin, "futilityMaxDepth1"                 , &SearchConfig::futilityMaxDepth[1]                 , DepthType(0)    , DepthType(30)       ));
