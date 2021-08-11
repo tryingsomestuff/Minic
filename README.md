@@ -334,7 +334,7 @@ Then use Minic -pgn2bin option to get a binary format sfen file. Note than posit
 
 #### Style
 
-Moreover, Minic implements some "style" parameters that allow the user to boost or minimize effects of :
+Moreover, Minic implements some "style" parameters when using HCE (hand crafted evalaution in opposition to NNUE) that allow the user to boost or minimize effects of :
 - material
 - attack
 - development
