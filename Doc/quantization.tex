@@ -54,7 +54,7 @@ $s = \frac{f^2\alpha}{600}$ is the output scale factor.
 
 \section{Some "real" numbers}
 
-For quantization to work well, without losing too much precision, and as weights are mostly near 0, if it important to be able to map 1 on the highest possible int8 (idealy 127 or 64, not less). For this to be possible, we need $\alpha <=2$ which is not the case with current "Seer-style" nets. Int8 quantization cannot be applied, we gives some figures anywa.
+For quantization to work well, without losing too much precision, and as weights are mostly near 0, if it important to be able to map 1 on the highest possible int8 (idealy 127 or 64, not less). For this to be possible, we need $\alpha <=2$ which is not the case without applying a weight delay.
 
 \subsection{Int8 quantization for inner weights}
 For int8 quantization, $n=127$. If standard weights can be clamped to $\alpha = 2$, then $f = 127/2 \approx 64 = 2^6$, $\alpha f^2 \approx 8128$ and $s = (f^2\alpha)/600 \approx 13$.
