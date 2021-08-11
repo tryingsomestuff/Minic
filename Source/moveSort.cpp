@@ -47,23 +47,21 @@ template<Color C> void MoveSorter::computeScore(Move& m) const {
          const EvalScore* const pst    = EvalConfig::PST[pp - 1];
          const EvalScore* const pstOpp = EvalConfig::PST[ppOpp - 1];
          // always use PST as a hint
-         s += ScaleScore(pst[ColorSquarePstHelper<C>(to)] - pst[ColorSquarePstHelper<C>(from)] + pstOpp[ColorSquarePstHelper<~C>(to)], gp);
+         s += (ScaleScore(pst[ColorSquarePstHelper<C>(to)] - pst[ColorSquarePstHelper<C>(from)] + pstOpp[ColorSquarePstHelper<~C>(to)], gp))/2;
          
          if (useSEE && !isInCheck) { 
             const ScoreType see = context.SEE(p, m);
             s += see;
             // recapture bonus
-            if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == correctedMove2To(p.lastMove)) s += 150;
+            if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == correctedMove2To(p.lastMove)) s += 512;
             // too bad capture are ordered last (-7000)
-            else if (see < -80) s -= 2 * MoveScoring[T_capture];
+            if (see < -80) s -= 2 * MoveScoring[T_capture];
          }
          else { // without SEE
             // recapture (> max MVVLVA value)
-            if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == correctedMove2To(p.lastMove)) s += 500; 
-            else {
-               // MVVLVA [0 400] + cap history (HISTORY_MAX = 1024)
-               s += (4 * SearchConfig::MvvLvaScores[ppOpp - 1][pp - 1] + context.historyT.historyCap[PieceIdx(p.board_const(from))][to][ppOpp-1]) / 4;
-            }
+            if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == correctedMove2To(p.lastMove)) s += 512; 
+            // MVVLVA [0 400] + cap history (HISTORY_MAX = 1024)
+            s += (8 * SearchConfig::MvvLvaScores[ppOpp - 1][pp - 1] + context.historyT.historyCap[PieceIdx(p.board_const(from))][to][ppOpp-1]) / 4;
          }
       }
 
@@ -85,10 +83,10 @@ template<Color C> void MoveSorter::computeScore(Move& m) const {
             s += context.getCMHScore(p, from, to, cmhPtr) / 3;    // +/- HISTORY_MAX = 1024
             if (!isInCheck) {
                // move (safely) leaving threat square from null move search
-               if (refutation != INVALIDMINIMOVE && from == correctedMove2To(refutation) && context.SEE_GE(p, m, -80)) s += 1024; 
+               if (refutation != INVALIDMINIMOVE && from == correctedMove2To(refutation) && context.SEE_GE(p, m, -80)) s += 512; 
                // always use PST to compensate low value history
                const EvalScore* const pst = EvalConfig::PST[std::abs(pp) - 1];
-               s += ScaleScore(pst[ColorSquarePstHelper<C>(to)] - pst[ColorSquarePstHelper<C>(from)], gp);
+               s += (ScaleScore(pst[ColorSquarePstHelper<C>(to)] - pst[ColorSquarePstHelper<C>(from)], gp))/2;
             }
          }
       }

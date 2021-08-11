@@ -15,6 +15,13 @@
 
 #define PERIODICCHECK uint64_t(1024)
 
+/*
+inline bool isNoisy(const Position & p, const Move & m){
+   if ( Move2Type(m) != T_std ) return true;
+   return false;
+}
+*/
+
 // pvs inspired by Xiphos
 template<bool pvnode>
 ScoreType Searcher::pvs(ScoreType                    alpha,
@@ -396,7 +403,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          TT::prefetch(computeHash(p2));
          //const Square to = Move2To(e.m);
          validMoveCount++;
-         const bool isQuiet = Move2Type(e.m) == T_std;
+         const bool isQuiet = Move2Type(e.m) == T_std; ///@todo non tactical (no forks, no check, ...)
          if (isQuiet) validQuietMoveCount++;
          PVList childPV;
          assert(p2.halfmoves < MAX_PLY && p2.halfmoves >= 0);
