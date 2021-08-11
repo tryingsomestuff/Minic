@@ -401,16 +401,16 @@ inline constexpr Color        operator++(Color& c) {
 // killers 1900-1700-1500
 // counter 1300
 // standard move use -1024 < history < 1024
-// leaving threat +1000
+// leaving threat +512
 // MVV-LVA [0 400]
-// recapture +500
+// recapture +512
 constexpr ScoreType MoveScoring[16] = {   0,                   // standard
                                        7000,                   // cap (bad cap will be *=-1)
                                           0,                   // reserved
                                        7000,                   // ep
                                        3950, 3500, 3350, 3300, // prom
                                        7950, 7500, 7350, 7300, // prom+cap
-                                        200,  200,  200,  200  // castling bonus
+                                        256,  256,  256,  256  // castling bonus
                                       };
 
 [[nodiscard]] inline bool isSkipMove(const Move& a, const std::vector<MiniMove>* skipMoves) {
