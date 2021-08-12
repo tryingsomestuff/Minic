@@ -15,12 +15,31 @@
 
 #define PERIODICCHECK uint64_t(1024)
 
-/*
-inline bool isNoisy(const Position & p, const Move & m){
+[[nodiscard]] inline bool isNoisy(const Position & p, const Move & m){
    if ( Move2Type(m) != T_std ) return true;
+   const Square to = Move2To(m);
+   const Piece pp = p.board_const(to);
+   if (pp == P_wp){
+      const BitBoard pAtt = p.c == Co_White ? BBTools::pawnAttacks<Co_White>(SquareToBitboard(to)) & p.allPieces[~p.c]:
+                                              BBTools::pawnAttacks<Co_Black>(SquareToBitboard(to)) & p.allPieces[~p.c];
+      if ( BB::countBit(pAtt) > 1 ) return true; ///@todo verify if the pawn is protected and/or not attacked ?
+   }
+   else if (pp == P_wn){
+      const BitBoard nAtt = BBTools::coverage<P_wn>(to, p.occupancy(), p.c) & p.allPieces[~p.c];
+      if ( BB::countBit(nAtt) > 1 ) return true; ///@todo verify if the knight is protected and/or not attacked ?
+   }
    return false;
 }
-*/
+
+inline void getAttacks(const Position & p, BitBoard (& att)[2]){
+   for (Color c = Co_White ; c <= Co_Black; ++c){
+      att[c] = emptyBitBoard;
+      for (Piece pp = P_wp ; pp <= P_wk; ++pp){
+         BitBoard b = p.pieces_const(c,pp);
+         while(b) att[c] |= BBTools::pfCoverage[pp-1](BB::popBit(b), p.occupancy(), c);
+      }
+   }
+}
 
 // pvs inspired by Xiphos
 template<bool pvnode>
@@ -359,7 +378,45 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       }
    }
 
-   killerT.killers[height + 1][0] = killerT.killers[height + 1][1] = 0;
+   // reset killer
+   killerT.killers[height + 1][0] = killerT.killers[height + 1][1] = 0; ///@todo just use INVALIDMOVE
+
+   // take **initial** position situation into account ///@todo use this
+   const bool isEmergencyDefence = false; //moveDifficulty == MoveDifficultyUtil::MD_hardDefense;
+   const bool isEmergencyAttack  = false; //moveDifficulty == MoveDifficultyUtil::MD_hardAttack;
+
+   // take **current** position danger level into account
+   int  dangerFactor  = 0;
+   bool isDangerPrune = false;
+   bool isDangerRed   = false;
+   // Warning : danger is only available if no TT hit and of course no NNUE eval
+   if ( ttHit || DynamicConfig::useNNUE ){
+      // get some very simple "eval" info about possible ongoing attack
+      BitBoard attacking[2];
+      getAttacks(p,attacking);
+      const BitBoard kingZone[2]       = { BBTools::mask[p.king[Co_White]].kingZone, BBTools::mask[p.king[Co_Black]].kingZone };
+      const BitBoard kzAttackingOwn[2] = { attacking[Co_White] & kingZone[Co_White], attacking[Co_Black] & kingZone[Co_Black] };
+      const BitBoard kzAttackingOpp[2] = { attacking[Co_White] & kingZone[Co_Black], attacking[Co_Black] & kingZone[Co_White] };
+      const int attCount[2]   = { BB::countBit(attacking[Co_White] & p.allPieces[Co_Black]), 
+                                  BB::countBit(attacking[Co_Black] & p.allPieces[Co_White]) };
+      const int attCountKZ[2] = { BB::countBit(kzAttackingOpp[Co_White]), BB::countBit(kzAttackingOpp[Co_Black]) };
+      const int defCountKZ[2] = { BB::countBit(kzAttackingOwn[Co_White]), BB::countBit(kzAttackingOwn[Co_Black]) };
+      dangerFactor = 2 * (std::max(2 * attCountKZ[p.c]  - (defCountKZ[~p.c]-3),0)) 
+                   + 2 * (std::max(2 * attCountKZ[~p.c] - (defCountKZ[p.c] -3),0)) 
+                   + attCount[p.c] + attCount[~p.c];
+      //std::cout << ToString(attacking[0]) << std::endl;
+      //std::cout << ToString(attacking[1]) << std::endl;
+      //std::cout << ToString(p) << std::endl;
+      //std::cout << " aaa* " << dangerFactor << std::endl;
+   }
+   else{
+      dangerFactor = (data.danger[p.c] + data.danger[~p.c]) / SearchConfig::dangerDivisor;
+      //std::cout << " aaa+ " << dangerFactor << " " << (data.danger[p.c] + data.danger[~p.c]) << std::endl;
+   }
+   isDangerPrune = dangerFactor >= SearchConfig::dangerLimitPruning;
+   isDangerRed   = dangerFactor >= SearchConfig::dangerLimitReduction;
+   if (isDangerPrune) stats.incr(Stats::sid_dangerPrune);
+   if (isDangerRed) stats.incr(Stats::sid_dangerReduce);
 
    if (!rootnode) {
       // LMP
@@ -403,7 +460,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          TT::prefetch(computeHash(p2));
          //const Square to = Move2To(e.m);
          validMoveCount++;
-         const bool isQuiet = Move2Type(e.m) == T_std; ///@todo non tactical (no forks, no check, ...)
+         const bool isQuiet = Move2Type(e.m) == T_std && !isNoisy(p,e.m);
          if (isQuiet) validQuietMoveCount++;
          PVList childPV;
          assert(p2.halfmoves < MAX_PLY && p2.halfmoves >= 0);
@@ -570,7 +627,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       if (p.c == Co_Black && to == p.king[Co_White]) return MATE - height + 1;
 #endif
       validMoveCount++;
-      const bool isQuiet = Move2Type(*it) == T_std; ///@todo non tactical (no forks, no check, ...)
+      const bool isQuiet = Move2Type(*it) == T_std && !isNoisy(p,*it);
       if (isQuiet) validQuietMoveCount++;
       const bool firstMove = validMoveCount == 1;
       PVList     childPV;
@@ -638,38 +695,28 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          const bool isPrunableCap        = isPrunable && Move2Type(*it) == T_capture && noCheck;
          const bool isPrunableBadCap     = isPrunableCap && isBadCap(*it);
 
-         // take initial position situation into account ///@todo use this
-         const bool isEmergencyDefence = false; //moveDifficulty == MoveDifficultyUtil::MD_hardDefense;
-         const bool isEmergencyAttack  = false; //moveDifficulty == MoveDifficultyUtil::MD_hardAttack;
-
-         // take current danger level into account
-         // Warning : danger is only available if no TT hit !
-         ///@todo get danger without calling HCE
-         const int  dangerFactor  = (data.danger[p.c] + data.danger[~p.c]) / SearchConfig::dangerDivisor;
-         const bool isDangerPrune = dangerFactor >= SearchConfig::dangerLimitPruning;
-         const bool isDangerRed   = dangerFactor >= SearchConfig::dangerLimitReduction;
-         if (isDangerPrune) stats.incr(Stats::sid_dangerPrune);
-         if (isDangerRed) stats.incr(Stats::sid_dangerReduce);
-
          // futility
          if (futility && isPrunableStdNoCheck) {
             stats.incr(Stats::sid_futility);
             continue;
          }
+
+         const DepthType pruningDepthCorrection = dangerFactor/SearchConfig::dangerLimitPruning + (isEmergencyDefence||isEmergencyAttack);
+
          // LMP
-         const bool moveCountPruning =
-             validMoveCount >
-             /*(1+(2*dangerFactor)/SearchConfig::dangerLimitPruning)**/ SearchConfig::lmpLimit[improving][depth] + 2 * isEmergencyDefence;
+         const bool moveCountPruning = validMoveCount > SearchConfig::lmpLimit[improving][depth + pruningDepthCorrection];
          if (lmp && isPrunableStdNoCheck && moveCountPruning) {
             stats.incr(Stats::sid_lmp);
             continue;
          }
+
          // History pruning (with CMH)
          if (historyPruning && isPrunableStdNoCheck &&
-             Move2Score(*it) < SearchConfig::historyPruningThresholdInit + depth * SearchConfig::historyPruningThresholdDepth) {
+             Move2Score(*it) < SearchConfig::historyPruningThresholdInit + (depth + pruningDepthCorrection) * SearchConfig::historyPruningThresholdDepth) {
             stats.incr(Stats::sid_historyPruning);
             continue;
          }
+
          // CMH pruning alone
          if (CMHPruning && isPrunableStdNoCheck) {
             const int pp = (p.board_const(Move2From(*it)) + PieceShift) * NbSquare + Move2To(*it);
@@ -678,24 +725,26 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                continue;
             }
          }
+
          // capture history pruning
          if ( capHistoryPruning && isPrunableCap && 
-              historyT.historyCap[PieceIdx(p.board_const(Move2From(*it)))][to][Abs(p.board_const(to))-1] < SearchConfig::capHistoryPruningThresholdInit + depth * SearchConfig::capHistoryPruningThresholdDepth){
+              historyT.historyCap[PieceIdx(p.board_const(Move2From(*it)))][to][Abs(p.board_const(to))-1] < SearchConfig::capHistoryPruningThresholdInit + (depth + pruningDepthCorrection) * SearchConfig::capHistoryPruningThresholdDepth){
                stats.incr(Stats::sid_capHistPruning);
                continue;
          }
+
          // SEE (capture)
          if (isPrunableBadCap) {
             if (futility) {
                stats.incr(Stats::sid_see);
                continue;
             }
-            else if (!rootnode && badCapScore(*it) < -(1 + (6 * dangerFactor) / SearchConfig::dangerLimitPruning) * SearchConfig::seeCaptureFactor *
-                                                         (depth + isEmergencyDefence + isEmergencyAttack)) {
+            else if (!rootnode && badCapScore(*it) < - 1 * SearchConfig::seeCaptureFactor * (depth + pruningDepthCorrection)) {
                stats.incr(Stats::sid_see2);
                continue;
             }
          }
+
          // LMR
          DepthType reduction = 0;
          if (SearchConfig::doLMR && depth >= SearchConfig::lmrMinDepth &&
@@ -719,7 +768,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             // never fall into qsearch directly
             if (reduction >= depth - 1 + extension) reduction = depth - 1 + extension - 1;
          }
+
          const DepthType nextDepth = depth - 1 - reduction + extension;
+
          // SEE (quiet)
          if (isPrunableStdNoCheck &&
              /*!rootnode &&*/ !SEE_GE(p, *it, -SearchConfig::seeQuietFactor * (nextDepth + isEmergencyDefence + isEmergencyAttack) * nextDepth)) {
@@ -737,8 +788,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          if (pvnode && score > alpha && (rootnode || score < beta)) {
             stats.incr(Stats::sid_pvsFail);
             childPV.clear();
+            // potential new pv node
             score = -pvs<true>(-beta, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, isCheck, false, true);
-         } // potential new pv node
+         } 
       }
       if (stopFlag) return STOPSCORE;
       if (rootnode) { rootScores.push_back({*it, score}); }
