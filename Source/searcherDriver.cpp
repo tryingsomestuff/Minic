@@ -92,13 +92,6 @@ void Searcher::searchDriver(bool postMove) {
    moveDifficulty = MoveDifficultyUtil::MD_std;
    startTime      = Clock::now();
 
-#ifdef WITH_GENFILE
-   // open the genfen file for output if needed
-   if (DynamicConfig::genFen && id() < MAX_THREADS && !genStream.is_open()) {
-      genStream.open("genfen_" + std::to_string(::getpid()) + "_" + std::to_string(id()) + ".epd", std::ofstream::app);
-   }
-#endif
-
    // Main thread only will reset tables
    if (isMainThread() || id() >= MAX_THREADS) {
       if (isMainThread()) {
@@ -389,11 +382,6 @@ pvsout:
             _data.best = _data.pv[0];
          }
       }
-
-#ifdef WITH_GENFILE
-      // calling writeToGenFile at each root node
-      if (DynamicConfig::genFen && p.halfmoves >= DynamicConfig::randomPly && DynamicConfig::level != 0) writeToGenFile(p);
-#endif
 
       // wait for "ponderhit" or "stop" in case search returned too soon
       if (!stopFlag && (getData().isPondering || getData().isAnalysis)) {

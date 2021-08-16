@@ -226,9 +226,30 @@ Position Searcher::getQuiet(const Position& p, Searcher* searcher, ScoreType* qS
 }
 
 #ifdef WITH_GENFILE
-void Searcher::writeToGenFile(const Position& p) {
+
+struct GenFENEtnry{
+   std::string fen;
+   Move m;
+   ScoreType s;
+   uint16_t ply;
+   void write(std::ofstream & genStream, int result) const {
+      genStream << "fen " << fen << "\n"
+                << "move " << ToString(m) << "\n"
+                << "score " << s
+                << "\n"
+                //<< "eval "   << e << "\n"
+                << "ply " << ply << "\n"
+                << "result " << result << "\n"
+                << "e"
+                << "\n";
+   }
+};
+
+void Searcher::writeToGenFile(const Position& p, const std::optional<int> result) {
    static uint64_t sfensWritten = 0;
    if (!genFen || id() >= MAX_THREADS) return;
+
+   static std::vector<GenFENEtnry> buffer;
 
    Searcher& cos = getCoSearcher(id());
 
@@ -289,29 +310,21 @@ void Searcher::writeToGenFile(const Position& p) {
 
    // end of sub search
 
-   if (data.best != INVALIDMOVE && pQuiet.halfmoves >= DynamicConfig::randomPly && std::abs(data.score) < 1000) {
-      /*
-        // epd format
-            genStream << GetFEN(pQuiet) << " c0 \"" << e << "\" ;"          // eval
-                                << " c1 \"" << s << "\" ;"             // score (search)
-                                << " c2 \"" << ToString(m) << "\" ;"   // best move
-                                //<< " c3 \"" << str.str() << "\" ;"   // features break down
-                                << "\n";
-        */
-
-      // "plain" format (**not** taking result into account, also draw!)
-      genStream << "fen " << GetFEN(pQuiet) << "\n"
-                << "move " << ToString(data.best) << "\n"
-                << "score " << data.score
-                << "\n"
-                //<< "eval "   << e << "\n"
-                << "ply " << pQuiet.halfmoves << "\n"
-                << "result " << 0 << "\n"
-                << "e"
-                << "\n";
-
+   if (data.best != INVALIDMOVE && 
+       //pQuiet.halfmoves >= DynamicConfig::randomPly && 
+       std::abs(data.score) < 1000) {
+      buffer.push_back({GetFEN(pQuiet), data.best, data.score, pQuiet.halfmoves});
       sfensWritten++;
-      if (sfensWritten % 100'000 == 0) Logging::LogIt(Logging::logInfo) << "Sfens written " << sfensWritten;
+      if (sfensWritten % 100'000 == 0) Logging::LogIt(Logging::logInfoPrio) << "Sfens written " << sfensWritten;
    }
+
+   if (result.has_value()){
+      Logging::LogIt(Logging::logInfoPrio) << "Game ended, result " << result.value(); 
+      for(const auto & entry : buffer){
+         entry.write(genStream,result.value());
+      }
+      buffer.clear();
+   }
+
 }
 #endif
