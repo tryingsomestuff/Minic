@@ -148,27 +148,65 @@ void selfPlay(DepthType depth) {
    }
 #endif
    Position p2 = p;
+   bool ended = false;
+   int result = 0;
+   int drawCount = 0;
+   int winCount = 0;
+   const int minAdjMove = 40;
+   const int minAdjCount = 10;
+   const int minDrawScore = 8;
+   const int minWinScore = 800;
    while (true) {
       DynamicConfig::genFen = false;
       ThreadPool::instance().main().subSearch = true;
-      analyze(p2, depth); // selfplay using a specific depth
+      analyze(p2, depth); // search using a specific depth
       ThreadPool::instance().main().subSearch = false;
       ThreadData d = ThreadPool::instance().main().getData();
       DynamicConfig::genFen = true;
-      if (std::abs(d.score) > 1000 || d.best == INVALIDMOVE) {
-         //Logging::LogIt(Logging::logInfo) << "End of game"; 
-         break;
+
+      if ( std::abs(d.score) < minDrawScore ) drawCount++;
+      else drawCount = 0;
+
+      if ( std::abs(d.score) > minWinScore ) winCount++;
+      else winCount = 0;
+
+      if (p2.halfmoves > minAdjMove && winCount > minAdjCount) {
+         Logging::LogIt(Logging::logInfoPrio) << "End of game (adjudication win) " << GetFEN(p2);
+         ended = true;
+         result = (d.score * (p2.c==Co_White?1:-1)) > 0 ? 1 : -1;
       }
+      else if (p2.halfmoves > minAdjMove && drawCount > minAdjCount){
+         Logging::LogIt(Logging::logInfoPrio) << "End of game (adjudication draw) " << GetFEN(p2);
+         ended = true;
+         result = 0;
+      }
+      else if (d.best == INVALIDMOVE){
+         Logging::LogIt(Logging::logInfoPrio) << "End of game " << GetFEN(p2);
+         ended = true;
+         if ( isAttacked(p2, p2.king[p2.c])) result = p2.c == Co_Black ? 1 : -1; // checkmated (cannot move and attaked)
+         else result = 0; // pat (cannot move)
+      }
+      else if (p2.halfmoves > MAX_PLY / 4) {
+         Logging::LogIt(Logging::logInfoPrio) << "Too long game " << GetFEN(p2);
+         ended = true;
+         result = 0; // draw
+      }
+
+#ifdef WITH_GENFILE
+      if (DynamicConfig::genFen){
+         // writeToGenFile using genFenDepth from this root position
+         if (!ended) ThreadPool::instance().main().writeToGenFile(p2, {}); // bufferized
+         else{
+            ThreadPool::instance().main().writeToGenFile(p2,result); // write to file using result
+            break;
+         }
+      }
+#endif
+
+      // update position using best move
       Position p3 = p2;
       applyMove(p3, d.best, true);
       p2 = p3;
-#ifdef WITH_GENFILE
-      if (DynamicConfig::genFen) ThreadPool::instance().main().writeToGenFile(p2); // writeToGenFile using genFenDepth from this root position
-#endif
-      if (p2.halfmoves > MAX_PLY / 4) {
-         //Logging::LogIt(Logging::logInfo) << "Too long game"; 
-         break;
-      }
    }    
 }
 
