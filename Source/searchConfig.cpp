@@ -40,14 +40,16 @@ CONST_SEARCH_TUNING int       probCutMaxMoves                 = 5;
 CONST_SEARCH_TUNING ScoreType probCutMargin                   = 80;
 CONST_SEARCH_TUNING ScoreType seeCaptureFactor                = 100;
 CONST_SEARCH_TUNING ScoreType seeQuietFactor                  = 15;
-CONST_SEARCH_TUNING ScoreType betaMarginDynamicHistory        = 80;
+CONST_SEARCH_TUNING ScoreType betaMarginDynamicHistory        = 180;
 //CONST_SEARCH_TUNING ScoreType probCutThreshold              = 450;
 CONST_SEARCH_TUNING DepthType lmrMinDepth            = 2;
 CONST_SEARCH_TUNING DepthType singularExtensionDepth = 8;
 ///@todo on move / opponent
-CONST_SEARCH_TUNING ScoreType dangerLimitPruning   = 9;
-CONST_SEARCH_TUNING ScoreType dangerLimitReduction = 7;
-CONST_SEARCH_TUNING ScoreType failLowRootMargin    = 100;
+CONST_SEARCH_TUNING ScoreType dangerLimitPruning        = 64; //off
+CONST_SEARCH_TUNING ScoreType dangerLimitForwardPruning = 64; //off
+CONST_SEARCH_TUNING ScoreType dangerLimitReduction      = 64; //off
+CONST_SEARCH_TUNING ScoreType dangerDivisor             = 180;
+CONST_SEARCH_TUNING ScoreType failLowRootMargin         = 100;
 
 ///@todo probably should be tuned with/without a net
 CONST_SEARCH_TUNING DepthType aspirationMinDepth  = 4;

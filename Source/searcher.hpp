@@ -26,7 +26,7 @@ struct Searcher {
    struct StackData {
       Position  p;
       Hash      h      = nullHash;
-      EvalData  data   = {0, {0, 0}, {0, 0}};
+      //EvalData  data   = {0, {0, 0}, {0, 0}, false};
       ScoreType eval   = 0;
       MiniMove  threat = INVALIDMINIMOVE;
    };

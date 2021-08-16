@@ -237,8 +237,10 @@ void registerCOMOptions() { // options exposed to GUI
    _keys.push_back(KeyBase(k_depth, w_spin, "lmrMinDepth"                       , &SearchConfig::lmrMinDepth                         , DepthType(0)    , DepthType(30)       ));
    _keys.push_back(KeyBase(k_depth, w_spin, "singularExtensionDepth"            , &SearchConfig::singularExtensionDepth              , DepthType(0)    , DepthType(30)       ));
    
-   _keys.push_back(KeyBase(k_score, w_spin, "dangerLimitPruning"                , &SearchConfig::dangerLimitPruning                  , ScoreType(-200) , ScoreType(1500)     ));
-   _keys.push_back(KeyBase(k_score, w_spin, "dangerLimitReduction"              , &SearchConfig::dangerLimitReduction                , ScoreType(-200) , ScoreType(1500)     ));
+   _keys.push_back(KeyBase(k_score, w_spin, "dangerLimitPruning"                , &SearchConfig::dangerLimitPruning                  , ScoreType(-25) , ScoreType(25)        ));
+   _keys.push_back(KeyBase(k_score, w_spin, "dangerLimitForwardPruning"         , &SearchConfig::dangerLimitForwardPruning           , ScoreType(-25) , ScoreType(25)        ));
+   _keys.push_back(KeyBase(k_score, w_spin, "dangerLimitReduction"              , &SearchConfig::dangerLimitReduction                , ScoreType(-25) , ScoreType(25)        ));
+   _keys.push_back(KeyBase(k_score, w_spin, "dangerDivisor"                     , &SearchConfig::dangerDivisor                       , ScoreType(-50) ,  ScoreType(1500)     ));
 
    _keys.push_back(KeyBase(k_score, w_spin, "failLowRootMargin"                 , &SearchConfig::failLowRootMargin                   , ScoreType(-200) , ScoreType(1500)     ));
 
