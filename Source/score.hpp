@@ -215,7 +215,7 @@ struct EvalData {
    float     gp          = 0;
    ScoreType danger[2]   = {0, 0};
    uint16_t  mobility[2] = {0, 0};
-   bool      evalDone    = false;
+   bool      evalDone    = false; // will tell if phase, danger and mobility are filleds or notss
 };
 
 // used for easy move detection
