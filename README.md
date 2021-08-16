@@ -229,7 +229,8 @@ Others:
 * minic_X.YY_linux_x64_armv8           : RPi armv8
 ```   
 
-Please note that Win32 binaries are very slow so please use Win64 one if possible.
+Please note that for Linux binaries to work you will need a recent libc (>=2.33, likely an ubuntu21.04 for instance) installed on your system.  
+Please note that Win32 binaries are very slow so please use Win64 one if possible.  
 Please note that Minic has always been a little weaker under Windows OS (probably due to cross-compilation).
      
 ## How to compile

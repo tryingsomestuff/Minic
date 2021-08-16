@@ -94,7 +94,7 @@ template<Color C> [[nodiscard]] inline constexpr BitBoard pawnBackward(BitBoard 
 }
 
 template<Color C> [[nodiscard]] inline constexpr BitBoard pawnForwardCoverage(BitBoard bb) { 
-    BitBoard spans = frontSpan<C>(bb); 
+    const BitBoard spans = frontSpan<C>(bb); 
     return spans | _shiftEast(spans) | _shiftWest(spans);
 }
 

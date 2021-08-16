@@ -15,7 +15,7 @@
 
 #define PERIODICCHECK uint64_t(1024)
 
-inline void evalFistPass(const Position & p,
+inline void evalDanger(const Position & p,
                          BitBoard         (&attFromPiece)[2][6],
                          BitBoard         (&att)[2],
                          BitBoard         (&att2)[2],
@@ -285,7 +285,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       BitBoard att[2] = {{emptyBitBoard}};
       BitBoard att2[2] = {{emptyBitBoard}};
       BitBoard checkers[2][6] = {{emptyBitBoard}};
-      evalFistPass(p,attFromPiece,att,att2,checkers,data.danger);
+      evalDanger(p,attFromPiece,att,att2,checkers,data.danger);
       ///@todo mobility ?
    }
    const int dangerFactor          = (data.danger[Co_White] + data.danger[Co_Black]) / SearchConfig::dangerDivisor;

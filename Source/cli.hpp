@@ -14,7 +14,7 @@
  * -perft_test : run small perf test
  * -perft_test_long_fischer : run a long perf test for FRC
  * -perft_test_long : run a long perf test
- * -see_test : run a SEE test (position talen from Vajolet by Marco Belli a.k.a elcabesa)
+ * -see_test : run a SEE test (most positions taken from Vajolet by Marco Belli a.k.a elcabesa)
  * bench : used for OpenBench ( by Andrew Grant)
  * -qsearch : run a qsearch
  * -see : run a SEE
