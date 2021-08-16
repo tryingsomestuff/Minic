@@ -226,12 +226,12 @@ struct Position {
       resetNNUEIndices_<Co_Black>(nnueEvaluator);
    }
 
-   template<Color c> void updateNNUEEvaluator(NNUEEvaluator& nnueEvaluator, const Move m, const MoveInfo& moveInfo) const {
+   template<Color c> void updateNNUEEvaluator(NNUEEvaluator& nnueEvaluator, const MoveInfo& moveInfo) const {
       const Piece fromType = (Piece)std::abs(moveInfo.fromP);
       const Piece toType = (Piece)std::abs(moveInfo.toP);
       nnueEvaluator.template us<c>().erase(NNUEIndiceUs(king[c], moveInfo.from, fromType));
       nnueEvaluator.template them<c>().erase(NNUEIndiceThem(king[~c], moveInfo.from, fromType));
-      if (isPromotion(m)) {
+      if (isPromotion(moveInfo.type)) {
          const Piece promPieceType = promShift(moveInfo.type);
          nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c], moveInfo.to, promPieceType));
          nnueEvaluator.template them<c>().insert(NNUEIndiceThem(king[~c], moveInfo.to, promPieceType));

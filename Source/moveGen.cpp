@@ -101,16 +101,6 @@ bool applyMove(Position& p, const Move& m, bool noValidation) {
    }
 #endif
 
-#ifdef WITH_NNUE
-   // if king is not moving, update nnue evaluator
-   // this is based on current position state
-   if (DynamicConfig::useNNUE && std::abs(moveInfo.fromP) != P_wk) {
-      if (p.c == Co_White) p.updateNNUEEvaluator<Co_White>(p.Evaluator(), m, moveInfo);
-      else
-         p.updateNNUEEvaluator<Co_Black>(p.Evaluator(), m, moveInfo);
-   }
-#endif
-
    switch (moveInfo.type) {
       case T_std:
       case T_capture:
@@ -177,6 +167,15 @@ bool applyMove(Position& p, const Move& m, bool noValidation) {
       STOP_AND_SUM_TIMER(Apply)
       return false; // this is the only legal move validation needed
    }
+
+#ifdef WITH_NNUE
+   // if king is not moving, update nnue evaluator
+   // this is based on initial position state (most notably ep square and the previously built moveInfo)
+   if (DynamicConfig::useNNUE && std::abs(moveInfo.fromP) != P_wk) {
+      if (p.c == Co_White) p.updateNNUEEvaluator<Co_White>(p.Evaluator(), moveInfo);
+      else p.updateNNUEEvaluator<Co_Black>(p.Evaluator(), moveInfo);
+   }
+#endif
 
    const bool pawnMove = abs(moveInfo.fromP) == P_wp;
    // update EP
