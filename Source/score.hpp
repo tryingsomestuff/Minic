@@ -215,6 +215,7 @@ struct EvalData {
    float     gp          = 0;
    ScoreType danger[2]   = {0, 0};
    uint16_t  mobility[2] = {0, 0};
+   bool      evalDone    = false;
 };
 
 // used for easy move detection

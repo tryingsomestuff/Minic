@@ -58,13 +58,14 @@ extern CONST_SEARCH_TUNING ScoreType probCutMargin;
 extern CONST_SEARCH_TUNING ScoreType seeCaptureFactor;
 extern CONST_SEARCH_TUNING ScoreType seeQuietFactor;
 extern CONST_SEARCH_TUNING ScoreType betaMarginDynamicHistory;
-//extern CONST_SEARCH_TUNING ScoreType probCutThreshold             ;
+//extern CONST_SEARCH_TUNING ScoreType probCutThreshold;
 extern CONST_SEARCH_TUNING DepthType lmrMinDepth;
 extern CONST_SEARCH_TUNING DepthType singularExtensionDepth;
 ///@todo on move / opponent
 extern CONST_SEARCH_TUNING ScoreType dangerLimitPruning;
+extern CONST_SEARCH_TUNING ScoreType dangerLimitForwardPruning;
 extern CONST_SEARCH_TUNING ScoreType dangerLimitReduction;
-const ScoreType                    dangerDivisor = 100;
+extern CONST_SEARCH_TUNING ScoreType dangerDivisor;
 extern CONST_SEARCH_TUNING ScoreType failLowRootMargin;
 
 extern CONST_SEARCH_TUNING DepthType aspirationMinDepth;

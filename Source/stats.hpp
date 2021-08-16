@@ -69,6 +69,7 @@ struct Stats {
       sid_tbHit1,
       sid_tbHit2,
       sid_dangerPrune,
+      sid_dangerForwardPrune,
       sid_dangerReduce,
       sid_hashComputed,
       sid_qfutility,

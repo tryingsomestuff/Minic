@@ -15,6 +15,69 @@
 
 #define PERIODICCHECK uint64_t(1024)
 
+inline void evalFistPass(const Position & p,
+                         BitBoard         (&attFromPiece)[2][6],
+                         BitBoard         (&att)[2],
+                         BitBoard         (&att2)[2],
+                         BitBoard         (&checkers)[2][6],
+                         ScoreType        (&kdanger)[2]){
+
+   const BitBoard pawns[2] = {p.whitePawn(), p.blackPawn()};
+   const BitBoard nonPawnMat[2] = {p.allPieces[Co_White] & ~pawns[Co_White], p.allPieces[Co_Black] & ~pawns[Co_Black]};
+   const BitBoard kingZone[2] = {BBTools::mask[p.king[Co_White]].kingZone, BBTools::mask[p.king[Co_Black]].kingZone};
+   const BitBoard occupancy = p.occupancy();
+   
+   for (Color c = Co_White ; c <= Co_Black ; ++c){
+      for (Piece pp = P_wp ; pp <= P_wk ; ++pp){
+         BitBoard pieceBBiterator = p.pieces_const(c,pp);
+         while (pieceBBiterator) {
+            const Square k  = BB::popBit(pieceBBiterator);
+            // aligned threats removing own piece (not pawn) in occupancy
+            const BitBoard shadowTarget = BBTools::pfCoverage[pp - 1](k, occupancy ^ nonPawnMat[c], c);
+            if (shadowTarget) {
+               kdanger[~c] += BB::countBit(shadowTarget & kingZone[~c]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][pp - 1];
+               const BitBoard target = BBTools::pfCoverage[pp - 1](k, occupancy, c); // real targets
+               if (target) {
+                  attFromPiece[c][pp - 1] |= target;
+                  att2[c] |= att[c] & target;
+                  att[c] |= target;
+                  if (target & p.pieces_const<P_wk>(~c)) checkers[c][pp - 1] |= SquareToBitboard(k);
+                  kdanger[c] -= BB::countBit(target & kingZone[c]) * EvalConfig::kingAttWeight[EvalConfig::katt_defence][pp - 1];
+               }
+            }
+         }
+      }
+   }
+
+   const File wkf = (File)SQFILE(p.king[Co_White]);
+   const File bkf = (File)SQFILE(p.king[Co_Black]);
+
+   const BitBoard semiOpenFiles[2] = {BBTools::fillFile(pawns[Co_White]) & ~BBTools::fillFile(pawns[Co_Black]),
+                                      BBTools::fillFile(pawns[Co_Black]) & ~BBTools::fillFile(pawns[Co_White])};
+   const BitBoard openFiles        = BBTools::openFiles(pawns[Co_White], pawns[Co_Black]);
+
+   kdanger[Co_White] += EvalConfig::kingAttOpenfile * BB::countBit(BB::kingFlank[wkf] & openFiles) / 8;
+   kdanger[Co_White] += EvalConfig::kingAttSemiOpenfileOpp * BB::countBit(BB::kingFlank[wkf] & semiOpenFiles[Co_White]) / 8;
+   kdanger[Co_White] += EvalConfig::kingAttSemiOpenfileOur * BB::countBit(BB::kingFlank[wkf] & semiOpenFiles[Co_Black]) / 8;
+   kdanger[Co_Black] += EvalConfig::kingAttOpenfile * BB::countBit(BB::kingFlank[bkf] & openFiles) / 8;
+   kdanger[Co_Black] += EvalConfig::kingAttSemiOpenfileOpp * BB::countBit(BB::kingFlank[bkf] & semiOpenFiles[Co_Black]) / 8;
+   kdanger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * BB::countBit(BB::kingFlank[bkf] & semiOpenFiles[Co_White]) / 8;   
+
+   const BitBoard weakSquare[2] = { att[Co_Black] & ~att2[Co_White] & (~att[Co_White] | attFromPiece[Co_White][P_wk - 1] | attFromPiece[Co_White][P_wq - 1]),
+                                    att[Co_White] & ~att2[Co_Black] & (~att[Co_Black] | attFromPiece[Co_Black][P_wk - 1] | attFromPiece[Co_Black][P_wq - 1])};
+
+   const BitBoard safeSquare[2] = { ~att[Co_Black] | (weakSquare[Co_Black] & att2[Co_White]),
+                                    ~att[Co_White] | (weakSquare[Co_White] & att2[Co_Black])};
+
+   // reward safe checks
+   kdanger[Co_White] += EvalConfig::kingAttSafeCheck[0] * BB::countBit(checkers[Co_Black][0] & att[Co_Black]);
+   kdanger[Co_Black] += EvalConfig::kingAttSafeCheck[0] * BB::countBit(checkers[Co_White][0] & att[Co_White]);
+   for (Piece pp = P_wn; pp < P_wk; ++pp) {
+      kdanger[Co_White] += EvalConfig::kingAttSafeCheck[pp - 1] * BB::countBit(checkers[Co_Black][pp - 1] & safeSquare[Co_Black]);
+      kdanger[Co_Black] += EvalConfig::kingAttSafeCheck[pp - 1] * BB::countBit(checkers[Co_White][pp - 1] & safeSquare[Co_White]);
+   }   
+}
+
 [[nodiscard]] inline bool isNoisy(const Position & p, const Move & m){
    if ( Move2Type(m) != T_std ) return true;
    const Square to = Move2To(m);
@@ -29,16 +92,6 @@
       if ( BB::countBit(nAtt) > 1 ) return true; ///@todo verify if the knight is protected and/or not attacked ?
    }
    return false;
-}
-
-inline void getAttacks(const Position & p, BitBoard (& att)[2]){
-   for (Color c = Co_White ; c <= Co_Black; ++c){
-      att[c] = emptyBitBoard;
-      for (Piece pp = P_wp ; pp <= P_wk; ++pp){
-         BitBoard b = p.pieces_const(c,pp);
-         while(b) att[c] |= BBTools::pfCoverage[pp-1](BB::popBit(b), p.occupancy(), c);
-      }
-   }
 }
 
 // pvs inspired by Xiphos
@@ -206,7 +259,6 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             data.gp = gamePhase(p, matScoreW, matScoreB);
             stats.incr(Stats::sid_materialTableMiss);
          }
-         ///@todo data.danger, data.mobility are not filled in case of TT hit !!
 #ifdef DEBUG_STATICEVAL         
          checkEval(p,evalScore,*this,"from TT (pvs)");
 #endif
@@ -220,12 +272,34 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       }
    }
    stack[p.halfmoves].eval = evalScore; // insert only static eval, never hash score !
-   stack[p.halfmoves].data = data;
+   //stack[p.halfmoves].data = data;
+
+   // take **initial** position situation into account ///@todo use this
+   const bool isEmergencyDefence = false; //moveDifficulty == MoveDifficultyUtil::MD_hardDefense;
+   const bool isEmergencyAttack  = false; //moveDifficulty == MoveDifficultyUtil::MD_hardAttack;
+
+   // take **current** position danger level into account
+   if (!data.evalDone){
+      // no eval has been done, we need to work a little to get danger data
+      BitBoard attFromPiece[2][6] = {{emptyBitBoard}};
+      BitBoard att[2] = {{emptyBitBoard}};
+      BitBoard att2[2] = {{emptyBitBoard}};
+      BitBoard checkers[2][6] = {{emptyBitBoard}};
+      evalFistPass(p,attFromPiece,att,att2,checkers,data.danger);
+      ///@todo mobility ?
+   }
+   const int dangerFactor          = (data.danger[Co_White] + data.danger[Co_Black]) / SearchConfig::dangerDivisor;
+   const bool isDangerPrune        = dangerFactor >= SearchConfig::dangerLimitPruning;
+   const bool isDangerForwardPrune = dangerFactor >= SearchConfig::dangerLimitForwardPruning;
+   const bool isDangerRed          = dangerFactor >= SearchConfig::dangerLimitReduction;
+   if (isDangerPrune) stats.incr(Stats::sid_dangerPrune);
+   if (isDangerForwardPrune) stats.incr(Stats::sid_dangerPrune);
+   if (isDangerRed) stats.incr(Stats::sid_dangerReduce);
 
    bool evalScoreIsHashScore = false;
    const ScoreType staticScore = evalScore;
    // if no TT hit yet, we insert an eval without a move here in case of forward pruning (depth is negative, bound is none) ...
-   // Be carefull here, _data in Entry is always (INVALIDMOVE,B_none,-2) here, so that collisions are a lot more likely
+   // Be carefull here, _data2 in Entry is always (INVALIDMOVE,B_none,-2) here, so that collisions are a lot more likely
    if (!ttHit) TT::setEntry(*this, pHash, INVALIDMOVE, createHashScore(evalScore, height), createHashScore(staticScore, height), TT::B_none, -2);
    
    // if TT hit, we can use its score as a best draft (but we set evalScoreIsHashScore to be aware of that !)
@@ -249,9 +323,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // forward prunings
    if (!DynamicConfig::mateFinder && canPrune && !isInCheck /*&& !isMateScore(beta)*/ &&
-       !pvnode) { ///@todo removing the !isMateScore(beta) is not losing that much elo and allow for better check mate finding ...
+       !pvnode) { // removing the !isMateScore(beta) is not losing that much elo and allow for better check mate finding ...
       // static null move
-      if (SearchConfig::doStaticNullMove && !isMateScore(evalScore) && isNotEndGame &&
+      if (SearchConfig::doStaticNullMove && !isMateScore(evalScore) && isNotEndGame && !isDangerForwardPrune && 
           depth <= SearchConfig::staticNullMoveMaxDepth[evalScoreIsHashScore]) {
          const ScoreType margin = SearchConfig::staticNullMoveDepthInit[evalScoreIsHashScore] 
                                 + SearchConfig::staticNullMoveDepthCoeff[evalScoreIsHashScore] * marginDepth;
@@ -261,7 +335,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       // razoring
       ScoreType rAlpha = alpha - SearchConfig::razoringMarginDepthInit[evalScoreIsHashScore] -
                          SearchConfig::razoringMarginDepthCoeff[evalScoreIsHashScore] * marginDepth;
-      if (SearchConfig::doRazoring && depth <= SearchConfig::razoringMaxDepth[evalScoreIsHashScore] && evalScore <= rAlpha) {
+      if (SearchConfig::doRazoring && !isDangerForwardPrune && depth <= SearchConfig::razoringMaxDepth[evalScoreIsHashScore] && evalScore <= rAlpha) {
          stats.incr(Stats::sid_razoringTry);
          const ScoreType qScore = qsearch(alpha, beta, p, height, seldepth, 0, true, pvnode, isInCheck);
          if (stopFlag) return STOPSCORE;
@@ -380,43 +454,6 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // reset killer
    killerT.killers[height + 1][0] = killerT.killers[height + 1][1] = 0; ///@todo just use INVALIDMOVE
-
-   // take **initial** position situation into account ///@todo use this
-   const bool isEmergencyDefence = false; //moveDifficulty == MoveDifficultyUtil::MD_hardDefense;
-   const bool isEmergencyAttack  = false; //moveDifficulty == MoveDifficultyUtil::MD_hardAttack;
-
-   // take **current** position danger level into account
-   int  dangerFactor  = 0;
-   bool isDangerPrune = false;
-   bool isDangerRed   = false;
-   // Warning : danger is only available if no TT hit and of course no NNUE eval
-   if ( ttHit || DynamicConfig::useNNUE ){
-      // get some very simple "eval" info about possible ongoing attack
-      BitBoard attacking[2];
-      getAttacks(p,attacking);
-      const BitBoard kingZone[2]       = { BBTools::mask[p.king[Co_White]].kingZone, BBTools::mask[p.king[Co_Black]].kingZone };
-      const BitBoard kzAttackingOwn[2] = { attacking[Co_White] & kingZone[Co_White], attacking[Co_Black] & kingZone[Co_Black] };
-      const BitBoard kzAttackingOpp[2] = { attacking[Co_White] & kingZone[Co_Black], attacking[Co_Black] & kingZone[Co_White] };
-      const int attCount[2]   = { BB::countBit(attacking[Co_White] & p.allPieces[Co_Black]), 
-                                  BB::countBit(attacking[Co_Black] & p.allPieces[Co_White]) };
-      const int attCountKZ[2] = { BB::countBit(kzAttackingOpp[Co_White]), BB::countBit(kzAttackingOpp[Co_Black]) };
-      const int defCountKZ[2] = { BB::countBit(kzAttackingOwn[Co_White]), BB::countBit(kzAttackingOwn[Co_Black]) };
-      dangerFactor = 2 * (std::max(2 * attCountKZ[p.c]  - (defCountKZ[~p.c]-3),0)) 
-                   + 2 * (std::max(2 * attCountKZ[~p.c] - (defCountKZ[p.c] -3),0)) 
-                   + attCount[p.c] + attCount[~p.c];
-      //std::cout << ToString(attacking[0]) << std::endl;
-      //std::cout << ToString(attacking[1]) << std::endl;
-      //std::cout << ToString(p) << std::endl;
-      //std::cout << " aaa* " << dangerFactor << std::endl;
-   }
-   else{
-      dangerFactor = (data.danger[p.c] + data.danger[~p.c]) / SearchConfig::dangerDivisor;
-      //std::cout << " aaa+ " << dangerFactor << " " << (data.danger[p.c] + data.danger[~p.c]) << std::endl;
-   }
-   isDangerPrune = dangerFactor >= SearchConfig::dangerLimitPruning;
-   isDangerRed   = dangerFactor >= SearchConfig::dangerLimitReduction;
-   if (isDangerPrune) stats.incr(Stats::sid_dangerPrune);
-   if (isDangerRed) stats.incr(Stats::sid_dangerReduce);
 
    if (!rootnode) {
       // LMP
@@ -701,7 +738,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             continue;
          }
 
-         const DepthType pruningDepthCorrection = dangerFactor/SearchConfig::dangerLimitPruning + (isEmergencyDefence||isEmergencyAttack);
+         const DepthType pruningDepthCorrection = 0;//DepthType(float(dangerFactor)/SearchConfig::dangerLimitPruning + (isEmergencyDefence||isEmergencyAttack) - 0.5);
 
          // LMP
          const bool moveCountPruning = validMoveCount > SearchConfig::lmpLimit[improving][depth + pruningDepthCorrection];
@@ -751,17 +788,24 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
              ((isReductible && isQuiet) /*|| isPrunableBadCap*/ /*|| stack[p.halfmoves].eval <= alpha*/ /*|| cutNode*/) && ///@todo retry isPrunableBadCap
              validMoveCount > 1 + 2 * rootnode) {
             stats.incr(Stats::sid_lmr);
+            // base reduction
             reduction += SearchConfig::lmrReduction[std::min((int)depth, MAX_DEPTH - 1)][std::min(validMoveCount, MAX_MOVE - 1)];
-            reduction += !improving + ttMoveIsCapture;
-            reduction += (cutNode && evalScore - SearchConfig::failHighReductionThresholdInit[evalScoreIsHashScore] -
-                                             marginDepth * SearchConfig::failHighReductionThresholdDepth[evalScoreIsHashScore] >
-                                         beta); ///@todo try without
+
+            // more reduction
+            reduction += !improving;
+            reduction += ttMoveIsCapture;
+            reduction += (cutNode && evalScore - SearchConfig::failHighReductionThresholdInit[evalScoreIsHashScore]
+                                               - marginDepth * SearchConfig::failHighReductionThresholdDepth[evalScoreIsHashScore] > beta);
             //reduction += moveCountPruning && !formerPV;
-            reduction -= /*std::min(2,*/ HISTORY_DIV(
-                2 * Move2Score(*it)) /*)*/; //history reduction/extension (beware killers and counter are scored above history max)
-            //if ( !isInCheck) reduction += std::min(2,(data.mobility[p.c]-data.mobility[~p.c])/8);
-            reduction -= formerPV;
-            reduction -= ( ttPV || isDangerRed || !noCheck /*|| ttMoveSingularExt*/ /*|| isEmergencyDefence*/);
+            //if (!isInCheck) reduction += std::min(2,(data.mobility[p.c]-data.mobility[~p.c])/8);
+            
+            // history reduction/extension 
+            // beware killers and counter are scored above history max
+            reduction -= /*std::min(2,*/ HISTORY_DIV(2 * Move2Score(*it)) /*)*/; 
+            
+            // less reduction
+            //reduction -= !noCheck;
+            reduction -= (ttPV || formerPV || isDangerRed /*|| ttMoveSingularExt*/ /*|| isEmergencyDefence*/);
 
             // never extend more than reduce
             if (extension - reduction > 0) reduction = extension;
@@ -769,13 +813,18 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             if (reduction >= depth - 1 + extension) reduction = depth - 1 + extension - 1;
          }
 
-         const DepthType nextDepth = depth - 1 - reduction + extension;
+         DepthType nextDepth = depth - 1 - reduction + extension;
 
          // SEE (quiet)
-         if (isPrunableStdNoCheck &&
-             /*!rootnode &&*/ !SEE_GE(p, *it, -SearchConfig::seeQuietFactor * (nextDepth + isEmergencyDefence + isEmergencyAttack) * nextDepth)) {
-            stats.incr(Stats::sid_seeQuiet);
-            continue;
+         ScoreType seeValue = 0;
+         if (isPrunableStdNoCheck /* && !rootnode*/) {
+            seeValue = SEE(p, *it);
+            if (seeValue < -SearchConfig::seeQuietFactor * (nextDepth + isEmergencyDefence + isEmergencyAttack) * nextDepth ){
+               stats.incr(Stats::sid_seeQuiet);
+               continue;
+            }
+            // reduce bad quiet more
+            else if (seeValue < 0 && nextDepth > 1) --nextDepth;
          }
 
          // PVS

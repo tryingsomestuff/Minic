@@ -122,7 +122,7 @@ void Searcher::searchDriver(bool postMove) {
       EvalData  eData;
       ScoreType e = eval(p, eData, *this, false);
       assert(p.halfmoves < MAX_PLY && p.halfmoves >= 0);
-      stack[p.halfmoves] = {p, computeHash(p), eData, e, INVALIDMINIMOVE};
+      stack[p.halfmoves] = {p, computeHash(p), /*eData,*/ e, INVALIDMINIMOVE};
    }
 
    // reset output search results
