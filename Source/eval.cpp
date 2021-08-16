@@ -103,7 +103,7 @@ ScoreType armageddonScore(ScoreType score, unsigned int ply, DepthType height, C
    return std::clamp(shiftArmageddon(score, ply, c), ScoreType(-MATE + height), ScoreType(MATE - height + 1));
 }
 
-ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMatEvaluator, bool display) {
+ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowEGEvaluation, bool display) {
    START_TIMER
 
    const bool white2Play = p.c == Co_White;
@@ -139,7 +139,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
       features.scores[F_material] += MEntry.score;
 
       // end game knowledge (helper or scaling)
-      if (safeMatEvaluator && (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] < 5)) {
+      if (allowEGEvaluation && (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] < 5)) {
          MoveList moves;
 #ifndef DEBUG_GENERATION
          MoveGen::generate<MoveGen::GP_cap>(p, moves);
@@ -761,6 +761,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool safeMa
 
    STOP_AND_SUM_TIMER(Eval)
 
+   data.evalDone = true;
    // apply armageddon scoring if requiered
    return armageddonScore(ret, p.halfmoves, context._height, p.c);
 }
