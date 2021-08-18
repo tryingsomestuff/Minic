@@ -801,11 +801,13 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             
             // history reduction/extension 
             // beware killers and counter are scored above history max
-            reduction -= /*std::min(2,*/ HISTORY_DIV(2 * Move2Score(*it)) /*)*/; 
+            reduction -= std::min(3, HISTORY_DIV(2 * Move2Score(*it))); 
             
             // less reduction
             //reduction -= !noCheck;
-            reduction -= (ttPV || formerPV || isDangerRed /*|| ttMoveSingularExt*/ /*|| isEmergencyDefence*/);
+            //reduction -= isCheck;
+            reduction -= formerPV || ttPV;
+            //reduction -= isDangerRed /*|| ttMoveSingularExt*/ /*|| isEmergencyDefence*/);
 
             // never extend more than reduce
             if (extension - reduction > 0) reduction = extension;
