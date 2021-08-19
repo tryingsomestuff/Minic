@@ -277,6 +277,7 @@ void initOptions(int argc, char** argv) {
 
    GETOPT(minOutputLevel, int) // first to be read !
    GETOPT(debugMode, bool)
+   GETOPT(disableTT, bool)
    GETOPT(debugFile, std::string)
    GETOPT(ttSizeMb, unsigned int)
    GETOPT(FRC, bool)

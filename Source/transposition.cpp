@@ -70,7 +70,8 @@ bool getEntry(Searcher &context, const Position &p, Hash h, DepthType d, Entry &
    assert(h != nullHash);
    assert((h & (ttSize - 1)) == (h % ttSize));
    if (DynamicConfig::disableTT) return false;
-   e = table[h & (ttSize - 1)]; // update entry immediatly to avoid further race condition and invalidate it later if needed
+   // update entry immediatly to avoid further race condition and invalidate it later if needed
+   e = table[h & (ttSize - 1)]; 
 #ifdef DEBUG_HASH_ENTRY
    e.d = randomInt<unsigned int, 666>(0, UINT32_MAX);
 #endif
@@ -80,14 +81,16 @@ bool getEntry(Searcher &context, const Position &p, Hash h, DepthType d, Entry &
        ((e.h ^ e._data1 ^ e._data2) != Hash64to32(h)) ||
 #endif
        (isValidMove(e.m) && !isPseudoLegal(p, e.m))) {
+      // move is filled, but wrong in this position, invalidate returned entry.          
       e.h = nullHash;
       return false;
-   } // move is filled, but wrong in this position, invalidate returned entry.
+   } 
 
    if (e.d >= d) {
-      ++context.stats.counters[Stats::sid_tthits];
+      // valid entry only if depth is ok
+      context.stats.incr(Stats::sid_tthits);
       return true;
-   } // valid entry only if depth is ok
+   }
    else
       return false;
 }
@@ -99,7 +102,7 @@ void setEntry(Searcher &context, Hash h, Move m, ScoreType s, ScoreType eval, Bo
    Entry e(h, m, s, eval, b, d);
    e.h ^= e._data1;
    e.h ^= e._data2;
-   ++context.stats.counters[Stats::sid_ttInsert];
+   context.stats.incr(Stats::sid_ttInsert);
    table[h & (ttSize - 1)] = e; // always replace (favour leaf)
    Distributed::setEntry(h, e);
 }

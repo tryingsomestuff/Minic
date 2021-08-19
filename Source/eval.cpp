@@ -10,12 +10,6 @@
 
 using namespace BB;
 
-namespace { // some Color / Piece helpers
-template<Color C> inline constexpr ScoreType ColorSignHelper() { return C == Co_White ? +1 : -1; }
-template<Color C> inline constexpr Square    PromotionSquare(const Square k) { return C == Co_White ? (SQFILE(k) + 56) : SQFILE(k); }
-template<Color C> inline constexpr Rank      ColorRank(const Square k) { return Rank(C == Co_White ? SQRANK(k) : (7 - SQRANK(k))); }
-} // namespace
-
 template<Piece T, Color C>
 inline void evalMob(const Position &p, BitBoard pieceBBiterator, EvalScore &score, const BitBoard safe, const BitBoard occupancy, EvalData &data) {
    while (pieceBBiterator) {
@@ -106,6 +100,9 @@ ScoreType armageddonScore(ScoreType score, unsigned int ply, DepthType height, C
 ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowEGEvaluation, bool display) {
    START_TIMER
 
+   if ( (p.occupancy() & ~p.allKing()) == emptyBitBoard) 
+      return context.drawScore(p, context._height); // drawScore take armageddon into account
+
    const bool white2Play = p.c == Co_White;
 
 #ifdef DEBUG_KING_CAP
@@ -113,12 +110,12 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    
    if (p.king[Co_White] == INVALIDSQUARE) {
       STOP_AND_SUM_TIMER(Eval)
-      ++context.stats.counters[Stats::sid_evalNoKing];
+      context.stats.incr(Stats::sid_evalNoKing);
       return data.gp = 0, (white2Play ? -1 : +1) * MATE;
    }
    if (p.king[Co_Black] == INVALIDSQUARE) {
       STOP_AND_SUM_TIMER(Eval)
-      ++context.stats.counters[Stats::sid_evalNoKing];
+      context.stats.incr(Stats::sid_evalNoKing);
       return data.gp = 0, (white2Play ? +1 : -1) * MATE;
    }
 #endif
@@ -131,7 +128,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    // Material evaluation (most often from Material table)
    const Hash matHash = MaterialHash::getMaterialHash(p.mat);
    if (matHash != nullHash) {
-      ++context.stats.counters[Stats::sid_materialTableHits];
+      context.stats.incr(Stats::sid_materialTableHits);
       // Get material hash data
       const MaterialHash::MaterialHashEntry &MEntry = MaterialHash::materialHashTable[matHash];
       // update EvalData and EvalFeatures
@@ -150,7 +147,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
             // helpers for various endgame
             if (MEntry.t == MaterialHash::Ter_WhiteWinWithHelper || MEntry.t == MaterialHash::Ter_BlackWinWithHelper) {
                STOP_AND_SUM_TIMER(Eval)
-               ++context.stats.counters[Stats::sid_materialTableHelper];
+               context.stats.incr(Stats::sid_materialTableHelper);
                const ScoreType materialTableScore =
                    (white2Play ? +1 : -1) * (MaterialHash::helperTable[matHash](p, winningSideEG, features.scores[F_material][EG], context._height));
                return armageddonScore(materialTableScore, p.halfmoves, context._height, p.c);
@@ -159,7 +156,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
             else if (MEntry.t == MaterialHash::Ter_Draw) {
                if (!isAttacked(p, kingSquare(p))) {
                   STOP_AND_SUM_TIMER(Eval)
-                  ++context.stats.counters[Stats::sid_materialTableDraw];
+                  context.stats.incr(Stats::sid_materialTableDraw);
                   return context.drawScore(p, context._height); // drawScore take armageddon into account
                }
             }
@@ -167,7 +164,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
             else if (MEntry.t == MaterialHash::Ter_MaterialDraw) {
                if (!isAttacked(p, kingSquare(p))) {
                   STOP_AND_SUM_TIMER(Eval)
-                  ++context.stats.counters[Stats::sid_materialTableDraw2];
+                  context.stats.incr(Stats::sid_materialTableDraw2);
                   return context.drawScore(p, context._height); // drawScore take armageddon into account
                }
             }
@@ -192,7 +189,8 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
           (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * absValueEG(P_wb) +
           (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * absValueEG(P_wn) + 
           (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * absValueEG(P_wp), matScoreW - matScoreB);
-      ++context.stats.counters[Stats::sid_materialTableMiss];
+      //std::cout << ToString(p,true) << std::endl;
+      context.stats.incr(Stats::sid_materialTableMiss);
    }
 
 #ifdef WITH_EVAL_TUNING
@@ -217,13 +215,13 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
          nnueScore += ScaleScore(context.contempt, data.gp);
          // clamp score
          nnueScore = clampScore(nnueScore);
-         ++context.stats.counters[Stats::sid_evalNNUE];
+         context.stats.incr(Stats::sid_evalNNUE);
          STOP_AND_SUM_TIMER(Eval)
          // apply armageddon scoring if requiered
          return armageddonScore(nnueScore, p.halfmoves, context._height, p.c);
       }
       // fall back to classic eval
-      ++context.stats.counters[Stats::sid_evalStd];
+      context.stats.incr(Stats::sid_evalStd);
    }
 #endif
 
@@ -417,7 +415,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       pe.score += EvalConfig::pawnFawnMalusQS *
                   (countBit((pawns[Co_Black] & (BBSq_a7 | BBSq_b6)) | (pawns[Co_White] & BBSq_a6) | (kings[Co_Black] & queenSide)) / 4);
 
-      ++context.stats.counters[Stats::sid_ttPawnInsert];
+      context.stats.incr(Stats::sid_ttPawnInsert);
       pe.h = Hash64to32(computePHash(p)); // set the pawn entry
    }
    assert(pePtr);

@@ -136,7 +136,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // we cannot search deeper than MAX_DEPTH, is so just return static evaluation
    EvalData data;
-   if (height >= MAX_DEPTH - 1 || depth >= MAX_DEPTH - 1) return eval(p, data, *this, false);
+   if (height >= MAX_DEPTH - 1 || depth >= MAX_DEPTH - 1) return eval(p, data, *this);
 
    // on pvs leaf node, call a quiet search
    if (depth <= 0) {
@@ -596,11 +596,11 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                   }
 
                   TT::setEntry(*this, pHash, bestMove, createHashScore(ttScore, height), createHashScore(evalScore, height),
-                               TT::Bound(TT::B_beta | 
-                                         (ttPV ? TT::B_ttPVFlag : TT::B_none) | 
-                                         (bestMoveIsCheck ? TT::B_isCheckFlag : TT::B_none) |
-                                         (isInCheck ? TT::B_isInCheckFlag : TT::B_none)),
-                               depth);
+                                      TT::Bound(TT::B_beta | 
+                                      (ttPV ? TT::B_ttPVFlag : TT::B_none) | 
+                                      (bestMoveIsCheck ? TT::B_isCheckFlag : TT::B_none) |
+                                      (isInCheck ? TT::B_isInCheckFlag : TT::B_none)),
+                                      depth);
                   return ttScore;
                }
                stats.incr(Stats::sid_ttalpha);
@@ -888,10 +888,10 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    if (validMoveCount == 0) return (isInCheck || !withoutSkipMove) ? -MATE + height : drawScore(p, height);
    TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(evalScore, height),
-                TT::Bound(hashBound | 
-                          (ttPV ? TT::B_ttPVFlag : TT::B_none) | 
-                          (bestMoveIsCheck ? TT::B_isCheckFlag : TT::B_none) |
-                          (isInCheck ? TT::B_isInCheckFlag : TT::B_none)),
-                depth);
+                       TT::Bound(hashBound | 
+                       (ttPV ? TT::B_ttPVFlag : TT::B_none) | 
+                       (bestMoveIsCheck ? TT::B_isCheckFlag : TT::B_none) |
+                       (isInCheck ? TT::B_isInCheckFlag : TT::B_none)),
+                       depth);
    return bestScore;
 }
