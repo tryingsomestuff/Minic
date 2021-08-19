@@ -88,7 +88,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
 
    EvalData data;
    // we cannot search deeper than MAX_DEPTH, is so just return static evaluation
-   if (height >= MAX_DEPTH - 1) return eval(p, data, *this, false);
+   if (height >= MAX_DEPTH - 1) return eval(p, data, *this);
 
    Move bestMove = INVALIDMOVE;
 

@@ -182,6 +182,13 @@ typedef uint8_t  GenerationType;
 const Hash     nullHash      = 0ull; //std::numeric_limits<MiniHash>::max(); // use MiniHash to allow same "null" value for Hash(64) and MiniHash(32)
 const BitBoard emptyBitBoard = 0ull;
 
+enum Color : int8_t { Co_None = -1, Co_White = 0, Co_Black = 1, Co_End };
+[[nodiscard]] constexpr Color operator~(Color c) { return Color(c ^ Co_Black); } // switch Color
+inline constexpr Color        operator++(Color& c) {
+   c = Color(c + 1);
+   return c;
+}
+
 template<typename T> [[nodiscard]] constexpr ScoreType clampScore(T s) { return (ScoreType)std::clamp(s, (T)(-MATE + 2 * MAX_DEPTH), (T)(MATE - 2 * MAX_DEPTH)); }
 
 enum GamePhase { MG = 0, EG = 1, GP_MAX = 2 };
@@ -326,6 +333,10 @@ inline constexpr Rank operator--(Rank& r) {
 constexpr Rank PromRank[2] = {Rank_8, Rank_1};
 constexpr Rank EPRank[2]   = {Rank_6, Rank_3};
 
+template<Color C> inline constexpr ScoreType ColorSignHelper() { return C == Co_White ? +1 : -1; }
+template<Color C> inline constexpr Square    PromotionSquare(const Square k) { return C == Co_White ? (SQFILE(k) + 56) : SQFILE(k); }
+template<Color C> inline constexpr Rank      ColorRank(const Square k) { return Rank(C == Co_White ? SQRANK(k) : (7 - SQRANK(k))); }
+
 enum CastlingTypes : uint8_t { CT_OOO = 0, CT_OO = 1 };
 enum CastlingRights : uint8_t {
    C_none        = 0,
@@ -386,13 +397,6 @@ const Square correctedDestSq[T_bqs+1] = { INVALIDSQUARE, INVALIDSQUARE, INVALIDS
    assert(mt <= T_cappromn);
    return Piece(P_wq - (mt % 4));
 } // awfull hack
-
-enum Color : int8_t { Co_None = -1, Co_White = 0, Co_Black = 1, Co_End };
-[[nodiscard]] constexpr Color operator~(Color c) { return Color(c ^ Co_Black); } // switch Color
-inline constexpr Color        operator++(Color& c) {
-   c = Color(c + 1);
-   return c;
-}
 
 // previous best root 20000
 // ttmove 15000 

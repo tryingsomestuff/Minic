@@ -163,8 +163,9 @@ bool Searcher::getPawnEntry(Hash h, PawnEntry*& pe) {
    PawnEntry& _e = tablePawn[h & (ttSizePawn - 1)];
    pe = &_e;
    if (_e.h != Hash64to32(h)) return false;
+   ///@todo check for hash collision ?
    stats.incr(Stats::sid_ttPawnhits);
-   return true;
+   return !DynamicConfig::disableTT;
 }
 
 void Searcher::prefetchPawn(Hash h) {
