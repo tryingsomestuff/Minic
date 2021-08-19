@@ -197,6 +197,20 @@ ScoreType helperKPK(const Position &p, Color winningSide, ScoreType, DepthType h
    return clampScore(((winningSide == Co_White) ? +1 : -1) * (WIN + ValuesEG[P_wp + PieceShift] + 10 * SQRANK(psq)));
 }
 
+ScoreType helperKBPK(const Position & p, Color winningSide, ScoreType s, DepthType height) {
+   const Square winningPawn = BBTools::SquareFromBitBoard(p.allPawn()); // assume only one pawn
+   const Square promSquare = winningSide == Co_White ? PromotionSquare<Co_White>(winningPawn) : PromotionSquare<Co_Black>(winningPawn);
+   const Color bc = (p.allBishop() & BB::whiteSquare) ? Co_White : Co_Black;
+   const Color pc = (SquareToBitboard(promSquare) & BB::whiteSquare) ? Co_White : Co_Black;
+   if ( bc != pc ){
+      // let's approximate score by the KPK one ...
+      return helperKPK(p,winningSide,0,height);
+   }
+   else{
+      return s;
+   }
+}
+
 // Second-degree polynomial material imbalance, by Tord Romstad (old version, not the current Stockfish stuff)
 EvalScore Imbalance(const Position::Material &mat, Color c) {
    EvalScore bonus = 0;
@@ -407,7 +421,11 @@ void MaterialHashInitializer::init() {
    // KPK
    DEF_MAT_H(KPK, Ter_WhiteWinWithHelper,&helperKPK)    DEF_MAT_REV_H(KKP,KPK,&helperKPK)
 
-   ///@todo other (with more pawn ...), especially KPsKB with wrong Color bishop
+   // KBPK
+   DEF_MAT_H(KLPK, Ter_WhiteWinWithHelper,&helperKBPK)    DEF_MAT_REV_H(KKLP,KLPK,&helperKBPK)
+   DEF_MAT_H(KDPK, Ter_WhiteWinWithHelper,&helperKBPK)    DEF_MAT_REV_H(KKDP,KDPK,&helperKBPK)
+
+   ///@todo other (with more pawn ...)
 }
 
 Terminaison probeMaterialHashTable(const Position::Material &mat) {
