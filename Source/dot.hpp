@@ -1,8 +1,10 @@
 #pragma once
 
+#include "string.h"
+
 template<typename T, size_t N> inline T dotProductFma_(const T* a, const T* b) {
    T sum {0};
-#pragma omp simd
+#pragma omp simd reduction(+:sum)
    for (size_t i = 0; i < N; ++i) sum += a[i] * b[i];
    return sum;
 }
