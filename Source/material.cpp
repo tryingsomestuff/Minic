@@ -27,11 +27,11 @@ MaterialHashEntry materialHashTable[TotalMat];
    assert(mat[Co_White][M_p]  >= 0);
    assert(mat[Co_Black][M_p]  >= 0);
 
-   if (mat[Co_White][M_q] > 2  || mat[Co_Black][M_q] > 2 
-    || mat[Co_White][M_r] > 2  || mat[Co_Black][M_r] > 2 
-    || mat[Co_White][M_bl] > 1 || mat[Co_Black][M_bl] > 1 
-    || mat[Co_White][M_bd] > 1 || mat[Co_Black][M_bd] > 1 
-    || mat[Co_White][M_n] > 2  || mat[Co_Black][M_n] > 2 
+   if (mat[Co_White][M_q] > 2  || mat[Co_Black][M_q] > 2
+    || mat[Co_White][M_r] > 2  || mat[Co_Black][M_r] > 2
+    || mat[Co_White][M_bl] > 2 || mat[Co_Black][M_bl] > 2
+    || mat[Co_White][M_bd] > 2 || mat[Co_Black][M_bd] > 2
+    || mat[Co_White][M_n] > 2  || mat[Co_Black][M_n] > 2
     || mat[Co_White][M_p] > 8  || mat[Co_Black][M_p] > 8) return nullHash;
 
    return mat[Co_White][M_p]  * MatWP + mat[Co_Black][M_p]  * MatBP 
@@ -48,10 +48,10 @@ MaterialHashEntry materialHashTable[TotalMat];
    m[Co_Black][M_q] = index % 3; index /= 3;
    m[Co_White][M_r] = index % 3; index /= 3;
    m[Co_Black][M_r] = index % 3; index /= 3;
-   m[Co_White][M_bl]= index % 2; index /= 2;
-   m[Co_Black][M_bl]= index % 2; index /= 2;
-   m[Co_White][M_bd]= index % 2; index /= 2;
-   m[Co_Black][M_bd]= index % 2; index /= 2;
+   m[Co_White][M_bl]= index % 3; index /= 3;
+   m[Co_Black][M_bl]= index % 3; index /= 3;
+   m[Co_White][M_bd]= index % 3; index /= 3;
+   m[Co_Black][M_bd]= index % 3; index /= 3;
    m[Co_White][M_n] = index % 3; index /= 3;
    m[Co_Black][M_n] = index % 3; index /= 3;
    m[Co_White][M_p] = index % 9; index /= 9;
@@ -277,24 +277,24 @@ void MaterialHashInitializer::init() {
    ///@todo some Ter_MaterialDraw are Ter_Draw (FIDE)
 
    // other FIDE draw
-   DEF_MAT(KLKL,   Ter_MaterialDraw)        
-   DEF_MAT(KDKD,   Ter_MaterialDraw)
+   //DEF_MAT(KLKL,   Ter_MaterialDraw)        
+   //DEF_MAT(KDKD,   Ter_MaterialDraw)
 
    // sym (and pseudo sym) : all should be draw (or very nearly)
-   DEF_MAT(KK,     Ter_MaterialDraw)        
+   //DEF_MAT(KK,     Ter_MaterialDraw)  // this is invalid hash
    //DEF_MAT(KQQKQQ, Ter_LikelyDraw)    // useless
    //DEF_MAT(KQKQ,   Ter_LikelyDraw)    // useless 
    //DEF_MAT(KRRKRR, Ter_LikelyDraw)    // useless
    //DEF_MAT(KRKR,   Ter_LikelyDraw)    // useless
    //DEF_MAT(KLDKLD, Ter_MaterialDraw)  // useless
-   //DEF_MAT(KLLKLL, Ter_MaterialDraw)  // not a valid Hash !       
-   //DEF_MAT(KDDKDD, Ter_MaterialDraw)  // not a valid Hash !
+   //DEF_MAT(KLLKLL, Ter_MaterialDraw)  // useless
+   //DEF_MAT(KDDKDD, Ter_MaterialDraw)  // useless
    //DEF_MAT(KNNKNN, Ter_MaterialDraw)  // useless
-   DEF_MAT(KNKN  , Ter_MaterialDraw)  
+   //DEF_MAT(KNKN  , Ter_MaterialDraw)  // useless
 
-   //DEF_MAT(KLDKLL, Ter_MaterialDraw)        DEF_MAT_REV(KLLKLD, KLDKLL)  // not a valid Hash !         
-   //DEF_MAT(KLDKDD, Ter_MaterialDraw)        DEF_MAT_REV(KDDKLD, KLDKDD)  // not a valid Hash !  
-   DEF_MAT(KLKD,   Ter_MaterialDraw)        DEF_MAT_REV(KDKL,   KLKD)
+   //DEF_MAT(KLDKLL, Ter_MaterialDraw)        DEF_MAT_REV(KLLKLD, KLDKLL)  // useless
+   //DEF_MAT(KLDKDD, Ter_MaterialDraw)        DEF_MAT_REV(KDDKLD, KLDKDD)  // useless
+   //DEF_MAT(KLKD,   Ter_MaterialDraw)        DEF_MAT_REV(KDKL,   KLKD)    // useless
 
    // 2M M
    DEF_MAT(KQQKQ, Ter_WhiteWin)             DEF_MAT_REV(KQKQQ, KQQKQ)            
@@ -318,10 +318,10 @@ void MaterialHashInitializer::init() {
    // 2m M
    DEF_MAT(KLDKQ, Ter_HardToWin)            DEF_MAT_REV(KQKLD,KLDKQ)            
    DEF_MAT(KLDKR, Ter_LikelyDraw)         DEF_MAT_REV(KRKLD,KLDKR)
-   //DEF_MAT(KLLKQ, Ter_HardToWin)            DEF_MAT_REV(KQKLL,KLLKQ) // not a valid Hash !           
-   //DEF_MAT(KLLKR, Ter_LikelyDraw)         DEF_MAT_REV(KRKLL,KLLKR) // not a valid Hash !
-   //DEF_MAT(KDDKQ, Ter_HardToWin)            DEF_MAT_REV(KQKDD,KDDKQ) // not a valid Hash !           
-   //DEF_MAT(KDDKR, Ter_LikelyDraw)         DEF_MAT_REV(KRKDD,KDDKR) // not a valid Hash !
+   DEF_MAT(KLLKQ, Ter_HardToWin)            DEF_MAT_REV(KQKLL,KLLKQ)
+   DEF_MAT(KLLKR, Ter_LikelyDraw)         DEF_MAT_REV(KRKLL,KLLKR)
+   DEF_MAT(KDDKQ, Ter_HardToWin)            DEF_MAT_REV(KQKDD,KDDKQ)
+   DEF_MAT(KDDKR, Ter_LikelyDraw)         DEF_MAT_REV(KRKDD,KDDKR)
    DEF_MAT(KNNKQ, Ter_HardToWin)            DEF_MAT_REV(KQKNN,KNNKQ)            
    DEF_MAT(KNNKR, Ter_LikelyDraw)         DEF_MAT_REV(KRKNN,KNNKR)
    DEF_MAT(KLNKQ, Ter_HardToWin)            DEF_MAT_REV(KQKLN,KLNKQ)            
@@ -333,12 +333,12 @@ void MaterialHashInitializer::init() {
    DEF_MAT(KLDKL, Ter_LikelyDraw)         DEF_MAT_REV(KLKLD,KLDKL)            
    DEF_MAT(KLDKD, Ter_LikelyDraw)         DEF_MAT_REV(KDKLD,KLDKD)
    DEF_MAT(KLDKN, Ter_LikelyDraw)         DEF_MAT_REV(KNKLD,KLDKN)            
-   //DEF_MAT(KLLKL, Ter_LikelyDraw)         DEF_MAT_REV(KLKLL,KLLKL) // not a valid Hash !
-   //DEF_MAT(KLLKD, Ter_LikelyDraw)         DEF_MAT_REV(KDKLL,KLLKD) // not a valid Hash !           
-   //DEF_MAT(KLLKN, Ter_LikelyDraw)         DEF_MAT_REV(KNKLL,KLLKN) // not a valid Hash !
-   //DEF_MAT(KDDKL, Ter_LikelyDraw)         DEF_MAT_REV(KLKDD,KDDKL) // not a valid Hash !           
-   //DEF_MAT(KDDKD, Ter_LikelyDraw)         DEF_MAT_REV(KDKDD,KDDKD) // not a valid Hash !
-   //DEF_MAT(KDDKN, Ter_LikelyDraw)         DEF_MAT_REV(KNKDD,KDDKN) // not a valid Hash !            
+   DEF_MAT(KLLKL, Ter_LikelyDraw)         DEF_MAT_REV(KLKLL,KLLKL)
+   DEF_MAT(KLLKD, Ter_LikelyDraw)         DEF_MAT_REV(KDKLL,KLLKD)
+   DEF_MAT(KLLKN, Ter_LikelyDraw)         DEF_MAT_REV(KNKLL,KLLKN)
+   DEF_MAT(KDDKL, Ter_LikelyDraw)         DEF_MAT_REV(KLKDD,KDDKL)
+   DEF_MAT(KDDKD, Ter_LikelyDraw)         DEF_MAT_REV(KDKDD,KDDKD)
+   DEF_MAT(KDDKN, Ter_LikelyDraw)         DEF_MAT_REV(KNKDD,KDDKN)
    DEF_MAT(KNNKL, Ter_LikelyDraw)         DEF_MAT_REV(KLKNN,KNNKL)
    DEF_MAT(KNNKD, Ter_LikelyDraw)         DEF_MAT_REV(KDKNN,KNNKD)            
    DEF_MAT(KNNKN, Ter_LikelyDraw)         DEF_MAT_REV(KNKNN,KNNKN)
@@ -375,8 +375,8 @@ void MaterialHashInitializer::init() {
    DEF_MAT(KQQK, Ter_WhiteWin)                         DEF_MAT_REV(KKQQ,KQQK)
    DEF_MAT(KRRK, Ter_WhiteWin)                         DEF_MAT_REV(KKRR,KRRK)
    DEF_MAT_H(KLDK, Ter_WhiteWinWithHelper,&helperKmmK) DEF_MAT_REV_H(KKLD,KLDK,&helperKmmK)
-   //DEF_MAT(KLLK, Ter_MaterialDraw)                     DEF_MAT_REV(KKLL,KLLK)
-   //DEF_MAT(KDDK, Ter_MaterialDraw)                     DEF_MAT_REV(KKDD,KDDK)
+   DEF_MAT(KLLK, Ter_MaterialDraw)                     DEF_MAT_REV(KKLL,KLLK)
+   DEF_MAT(KDDK, Ter_MaterialDraw)                     DEF_MAT_REV(KKDD,KDDK)
    DEF_MAT(KNNK, Ter_MaterialDraw)                     DEF_MAT_REV(KKNN,KNNK)
    DEF_MAT_H(KLNK, Ter_WhiteWinWithHelper,&helperKmmK) DEF_MAT_REV_H(KKLN,KLNK,&helperKmmK)
    DEF_MAT_H(KDNK, Ter_WhiteWinWithHelper,&helperKmmK) DEF_MAT_REV_H(KKDN,KDNK,&helperKmmK)
