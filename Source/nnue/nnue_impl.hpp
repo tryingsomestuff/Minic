@@ -14,8 +14,8 @@
 #include <string>
 #include <utility>
 
-#ifdef USE_AVX_INTRIN
-#include "dot.hpp"
+#ifdef USE_SIMD_INTRIN
+#include "dot.hpp" // dot product simd implementation
 #endif
 
 #ifdef WITH_BLAS
@@ -117,8 +117,8 @@ template<typename NT> struct WeightsStreamer {
          else {
             tmp = tmp * Wscale;
          }
-#if (defined USE_AVX_INTRIN) || (defined WITH_BLAS)
-         // transpose data
+#if (defined USE_SIMD_INTRIN) || (defined WITH_BLAS)
+         // transpose data ///@todo as this is default now, do this in trainer
          const size_t j = (i % dim1) * dim0 + i / dim1;
 #else
          const size_t j = i;
@@ -292,7 +292,7 @@ template<typename T, size_t dim> struct StackVector {
       return *this;
    }
 
-#ifdef USE_AVX_INTRIN
+#ifdef USE_SIMD_INTRIN
    inline T dot_(const T* other) const { return dotProductFma<T, dim>(data, other); }
 #endif
 
@@ -350,11 +350,11 @@ template<typename NT, size_t dim0, size_t dim1, bool Q> struct StackAffine {
       auto result = StackVector<BT, dim1>::from(b);
 #ifndef WITH_BLAS
 #pragma omp simd
-#ifdef USE_AVX_INTRIN
+#ifdef USE_SIMD_INTRIN
       for (size_t i = 0; i < dim1; ++i) { result.data[i] += x.dot_(W + i * dim0); }
 #else
       for (size_t i = 0; i < dim0; ++i) { result.fma_(x.data[i], W + i * dim1); }
-#endif // USE_AVX_INTRIN
+#endif // USE_SIMD_INTRIN
 #else
       static_assert(std::is_same<BT, float>::value, "only works with float");
       cblas_sgemv(CblasRowMajor, CblasNoTrans, dim1, dim0, 1, W, dim0, x.data, 1, 1, result.data, 1);
@@ -367,11 +367,11 @@ template<typename NT, size_t dim0, size_t dim1, bool Q> struct StackAffine {
       auto result = StackVector<BT, dim1>::from(b);
 #ifndef WITH_BLAS
 #pragma omp simd
-#ifdef USE_AVX_INTRIN
+#ifdef USE_SIMD_INTRIN
       for (size_t i = 0; i < dim1; ++i) { result.data[i] += x.dot_(W + i * dim0); }
 #else
       for (size_t i = 0; i < dim0; ++i) { result.fma_(x.data[i], W + i * dim1); }
-#endif // USE_AVX_INTRIN
+#endif // USE_SIMD_INTRIN
 #else
       static_assert(std::is_same<BT, float>::value, "only works with float");
       cblas_sgemv(CblasRowMajor, CblasNoTrans, dim1, dim0, 1, W, dim0, x.data, 1, 1, result.data, 1);
