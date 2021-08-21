@@ -289,7 +289,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    pePtr = &dummy;
    {
 #else
-   if (!context.getPawnEntry(computePHash(p), pePtr) || DynamicConfig::disableTT) {
+   if (!context.getPawnEntry(computePHash(p), pePtr)) {
 #endif
       assert(pePtr);
       Searcher::PawnEntry &pe = *pePtr;

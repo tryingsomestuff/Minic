@@ -280,6 +280,7 @@ void initOptions(int argc, char** argv) {
    GETOPT(disableTT, bool)
    GETOPT(debugFile, std::string)
    GETOPT(ttSizeMb, unsigned int)
+   GETOPT(contempt, ScoreType)
    GETOPT(FRC, bool)
    GETOPT(threads, unsigned int)
    GETOPT(mateFinder, bool)

@@ -217,6 +217,7 @@ void Searcher::searchDriver(bool postMove) {
          ScoreType beta        = std::min(ScoreType(currentScore[multi] + delta), MATE);
          ScoreType score       = 0;
          DepthType windowDepth = depth;
+         Logging::LogIt(Logging::logInfo) << "Inital window: " << alpha << ".." << beta;
 
          // Aspiration loop
          while (!stopFlag) {
@@ -224,7 +225,8 @@ void Searcher::searchDriver(bool postMove) {
             score =
                 pvs<true>(alpha, beta, p, windowDepth, 0, pvLoc, _data.seldepth, isInCheck, false, false, skipMoves.empty() ? nullptr : &skipMoves);
             if (stopFlag) break;
-            delta += 2 + delta / 2; // formula from xiphos ...
+            ScoreType matW =0, matB = 0;
+            delta += (2 + delta / 2) * exp(1.f - gamePhase(p,matW,matB)); // in end-game, open window faster
             if (alpha > -MATE && score <= alpha) {
                beta  = std::min(MATE, ScoreType((alpha + beta) / 2));
                alpha = std::max(ScoreType(score - delta), ScoreType(-MATE));
@@ -232,7 +234,7 @@ void Searcher::searchDriver(bool postMove) {
                if (isMainThread() && DynamicConfig::multiPV == 1) {
                   PVList pv2;
                   TT::getPV(p, *this, pv2);
-                  displayGUI(depth, _data.seldepth, score, p.halfmoves, pv2, multi + 1, "!");
+                  displayGUI(depth, _data.seldepth, score, p.halfmoves, pv2, multi + 1, "?");
                   windowDepth = depth;
                }
             }
@@ -243,7 +245,7 @@ void Searcher::searchDriver(bool postMove) {
                if (isMainThread() && DynamicConfig::multiPV == 1) {
                   PVList pv2;
                   TT::getPV(p, *this, pv2);
-                  displayGUI(depth, _data.seldepth, score, p.halfmoves, pv2, multi + 1, "?");
+                  displayGUI(depth, _data.seldepth, score, p.halfmoves, pv2, multi + 1, "!");
                }
             }
             else

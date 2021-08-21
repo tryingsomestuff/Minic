@@ -249,7 +249,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          // look for a material match (to get game phase)
          const Hash matHash = MaterialHash::getMaterialHash(p.mat);
          if (matHash != nullHash) {
-            stats.incr(Stats::sid_materialTableHits);
+            stats.incr(Stats::sid_materialTableHitsSearch);
             const MaterialHash::MaterialHashEntry& MEntry = MaterialHash::materialHashTable[matHash];
             data.gp = MEntry.gamePhase();
          }
@@ -257,7 +257,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             ScoreType matScoreW = 0;
             ScoreType matScoreB = 0;
             data.gp = gamePhase(p, matScoreW, matScoreB);
-            stats.incr(Stats::sid_materialTableMiss);
+            stats.incr(Stats::sid_materialTableMissSearch);
          }
 #ifdef DEBUG_STATICEVAL         
          checkEval(p,evalScore,*this,"from TT (pvs)");
