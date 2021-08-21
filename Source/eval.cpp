@@ -137,12 +137,12 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
 
       // end game knowledge (helper or scaling)
       if (allowEGEvaluation && (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] < 5)) {
-         MoveList moves;
+         //MoveList moves;
 #ifndef DEBUG_GENERATION
-         MoveGen::generate<MoveGen::GP_cap>(p, moves);
+         //MoveGen::generate<MoveGen::GP_cap>(p, moves);
 #endif
          // probe endgame knowledge only if position is quiet from stm pov
-         if (moves.empty()) { 
+         if (true/*moves.empty()*/) { 
             const Color winningSideEG = features.scores[F_material][EG] > 0 ? Co_White : Co_Black;
             // helpers for various endgame
             if (MEntry.t == MaterialHash::Ter_WhiteWinWithHelper || MEntry.t == MaterialHash::Ter_BlackWinWithHelper) {
@@ -176,6 +176,11 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
             else if (MEntry.t == MaterialHash::Ter_LikelyDraw)
                features.scalingFactor = EvalConfig::scalingFactorLikelyDraw / 128.f;
          }
+         /*
+         else{
+            std::cout << "posible cap" << std::endl;
+         }
+         */
       }
    }
    else { // game phase and material scores out of table
@@ -192,6 +197,9 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       //std::cout << ToString(p,true) << std::endl;
       context.stats.incr(Stats::sid_materialTableMiss);
    }
+
+   //std::cout << "allow material eval? " << allowEGEvaluation << std::endl;
+   //std::cout << GetFEN(p) << std::endl;
 
 #ifdef WITH_EVAL_TUNING
    features.scores[F_material] += MaterialHash::Imbalance(p.mat, Co_White) - MaterialHash::Imbalance(p.mat, Co_Black);
