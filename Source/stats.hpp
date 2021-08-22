@@ -43,6 +43,7 @@ struct Stats {
       sid_probcutTry2,
       sid_probcut,
       sid_lmp,
+      sid_lmrAR,
       sid_historyPruning,
       sid_futility,
       sid_CMHPruning,

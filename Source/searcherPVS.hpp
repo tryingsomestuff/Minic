@@ -798,7 +798,13 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                                                - marginDepth * SearchConfig::failHighReductionThresholdDepth[evalScoreIsHashScore] > beta);
             //reduction += moveCountPruning && !formerPV;
             //if (!isInCheck) reduction += std::min(2,(data.mobility[p.c]-data.mobility[~p.c])/8);
-            
+
+            // aggressive random reduction
+            if (randomInt<int,2909>(0,100) > 100 + SearchConfig::lmpLimit[improving][depth + pruningDepthCorrection] - 7*validQuietMoveCount) {
+               stats.incr(Stats::sid_lmrAR);
+               ++reduction;
+            }
+
             // history reduction/extension 
             // beware killers and counter are scored above history max
             reduction -= std::min(3, HISTORY_DIV(2 * Move2Score(*it))); 
