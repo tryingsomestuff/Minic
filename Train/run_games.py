@@ -35,7 +35,7 @@ def convert_ckpt(root_dir):
     # default/version_0/checkpoints/epoch=3.ckpt
     p = re.compile("epoch=[0-9]*.*.ckpt")
     ckpts = []
-    for path, subdirs, files in os.walk(root_dir + '/default/', followlinks=False):
+    for path, subdirs, files in os.walk(root_dir + '/default/version_6/', followlinks=False):
         for filename in files:
             #print(filename)
             m = p.match(filename)
@@ -102,7 +102,7 @@ def run_match(best, root_dir, c_chess_exe, concurrency, book_file_name, engine):
             book_file_name
         )
     )
-    command = command + " -engine cmd=/ssd/Minic/Dist/Minic3/minic_3.08_linux_x64_skylake name=master"
+    command = command + " -engine cmd=/ssd/Minic/Dist/Minic3/minic_3.14_linux_x64_skylake name=master"
 
     count = 0
     for net in best:
