@@ -630,6 +630,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    ScoreType score = -MATE + height;
    bool skipQuiet = false;
+   bool skipCap = false;
 
    if (!moveGenerated) {
       if (capMoveGenerated) MoveGen::generate<MoveGen::GP_quiet>(p, moves, true);
@@ -654,6 +655,11 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       // skip quiet if LMP was triggered (!!even if move gives check now!!)
       if (skipQuiet && isQuiet && !isInCheck){
          stats.incr(Stats::sid_lmp);
+         continue;
+      }
+      // skip other bad capture (!!even if move gives check now!!)
+      if (skipCap && Move2Type(*it) == T_capture && !isInCheck){
+         stats.incr(Stats::sid_see2);
          continue;
       }
       if (isSkipMove(*it, skipMoves)) continue;        // skipmoves
@@ -781,10 +787,12 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          if (isPrunableBadCap) {
             if (futility) {
                stats.incr(Stats::sid_see);
+               skipCap = true;
                continue;
             }
             else if (!rootnode && badCapScore(*it) < - 1 * SearchConfig::seeCaptureFactor * (depth + pruningDepthCorrection)) {
                stats.incr(Stats::sid_see2);
+               skipCap = true;
                continue;
             }
          }
