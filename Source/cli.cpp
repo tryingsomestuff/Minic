@@ -201,6 +201,9 @@ void selfPlay(DepthType depth) {
             break;
          }
       }
+#else
+      DISCARD ended;
+      DISCARD result;
 #endif
 
       // update position using best move

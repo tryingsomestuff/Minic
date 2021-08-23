@@ -282,8 +282,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    if (!data.evalDone){
       // no eval has been done, we need to work a little to get danger data
       BitBoard attFromPiece[2][6] = {{emptyBitBoard}};
-      BitBoard att[2] = {{emptyBitBoard}};
-      BitBoard att2[2] = {{emptyBitBoard}};
+      BitBoard att[2] = {emptyBitBoard,emptyBitBoard};
+      BitBoard att2[2] = {emptyBitBoard,emptyBitBoard};
       BitBoard checkers[2][6] = {{emptyBitBoard}};
       evalDanger(p,attFromPiece,att,att2,checkers,data.danger);
       ///@todo mobility ?
