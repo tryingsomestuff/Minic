@@ -629,6 +629,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 #endif
 
    ScoreType score = -MATE + height;
+   bool skipQuiet = false;
 
    if (!moveGenerated) {
       if (capMoveGenerated) MoveGen::generate<MoveGen::GP_quiet>(p, moves, true);
@@ -649,6 +650,12 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                             refutation != INVALIDMINIMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMINIMOVE);
    for (auto it = moves.begin(); it != moves.end() && !stopFlag; ++it) {
 #endif
+      const bool isQuiet = Move2Type(*it) == T_std && !isNoisy(p,*it);
+      // skip quiet if LMP was triggered (!!even if move gives check now!!)
+      if (skipQuiet && isQuiet && !isInCheck){
+         stats.incr(Stats::sid_lmp);
+         continue;
+      }
       if (isSkipMove(*it, skipMoves)) continue;        // skipmoves
       if (validTTmove && sameMove(e.m, *it)) continue; // already tried
       Position p2 = p;
@@ -664,7 +671,6 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       if (p.c == Co_Black && to == p.king[Co_White]) return MATE - height + 1;
 #endif
       validMoveCount++;
-      const bool isQuiet = Move2Type(*it) == T_std && !isNoisy(p,*it);
       if (isQuiet) validQuietMoveCount++;
       const bool firstMove = validMoveCount == 1;
       PVList     childPV;
@@ -744,10 +750,11 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          const bool moveCountPruning = validMoveCount > SearchConfig::lmpLimit[improving][depth + pruningDepthCorrection];
          if (lmp && isPrunableStdNoCheck && moveCountPruning) {
             stats.incr(Stats::sid_lmp);
+            skipQuiet = true;
             continue;
          }
 
-         // History pruning (with CMH)
+         // History pruning (including CMH)
          if (historyPruning && isPrunableStdNoCheck &&
              Move2Score(*it) < SearchConfig::historyPruningThresholdInit + (depth + pruningDepthCorrection) * SearchConfig::historyPruningThresholdDepth) {
             stats.incr(Stats::sid_historyPruning);
