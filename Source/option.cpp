@@ -148,6 +148,7 @@ void registerCOMOptions() { // options exposed to GUI
    _keys.push_back(KeyBase(k_score, w_spin,  "ContemptMG"                  , &DynamicConfig::contemptMG                     , (ScoreType)-50   , (ScoreType)50));
    _keys.push_back(KeyBase(k_bool,  w_check, "Armageddon"                  , &DynamicConfig::armageddon                     , false            , true ));
    _keys.push_back(KeyBase(k_bool,  w_check, "WDL_display"                 , &DynamicConfig::withWDL                        , false            , true ));
+   _keys.push_back(KeyBase(k_bool,  w_check, "bongCloud"                   , &DynamicConfig::bongCloud                      , false            , true ));
 
 #ifdef WITH_SYZYGY
    _keys.push_back(KeyBase(k_string,w_string,"SyzygyPath"                  , &DynamicConfig::syzygyPath                                                                              , &SyzygyTb::initTB));
@@ -294,6 +295,7 @@ void initOptions(int argc, char** argv) {
    GETOPT(moveOverHead, unsigned int)
    GETOPT(armageddon, bool)
    GETOPT(withWDL, bool)
+   GETOPT(bongCloud, bool)
 
 #ifdef WITH_SYZYGY
    GETOPT(syzygyPath, std::string)
