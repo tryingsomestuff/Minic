@@ -146,6 +146,24 @@ void Searcher::searchDriver(bool postMove) {
    // using MAX_DEPTH-6 so that draw can be found for sure ///@todo I don't understand this -6 anymore ..
    const DepthType targetMaxDepth = std::min(maxDepth, DepthType(MAX_DEPTH - 6));
 
+   // forced bongcloud
+   if (DynamicConfig::bongCloud && (p.castling & (p.c == Co_White ? C_w_all : C_b_all)) ){
+      static const Move wbc[5] = { ToMove(Sq_e1,Sq_e2,T_std), ToMove(Sq_e1,Sq_d1,T_std), ToMove(Sq_e1,Sq_f1,T_std), ToMove(Sq_e1,Sq_d2,T_std), ToMove(Sq_e1,Sq_f2,T_std)};
+      static const Move bbc[5] = { ToMove(Sq_e8,Sq_e7,T_std), ToMove(Sq_e8,Sq_d8,T_std), ToMove(Sq_e8,Sq_f8,T_std), ToMove(Sq_e8,Sq_d7,T_std), ToMove(Sq_e8,Sq_f7,T_std)};
+      MoveList moves;
+      MoveGen::generate(p,moves);
+      for (int i = 0 ; i < 5; ++i){
+         const Move m = p.c == Co_White ? wbc[i] : bbc[i];
+         for (const auto & it : moves){
+            if(sameMove(m,it)){
+               _data.score = 0;
+               _data.pv.push_back(m);
+               goto pvsout;
+            }
+         }
+      }
+   }
+
    // random mover can be forced for the few first moves of a game or by setting level to 0
    if (DynamicConfig::level == 0 || p.halfmoves < DynamicConfig::randomPly) {
       if (p.halfmoves < DynamicConfig::randomPly) Logging::LogIt(Logging::logInfo) << "Randomized ply";

@@ -24,6 +24,7 @@ int          strength         = 1500;
 bool         nodesBasedLevel  = false;
 bool         useNNUE          = false;
 bool         forceNNUE        = false;
+bool         bongCloud        = false;
 
 // this is used to scale NNUE score to classic eval score.
 // This way search params can remain the same ... more or less ...
