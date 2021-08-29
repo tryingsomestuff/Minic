@@ -815,7 +815,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             //if (!isInCheck) reduction += std::min(2,(data.mobility[p.c]-data.mobility[~p.c])/8);
 
             // aggressive random reduction
-            if (randomInt<int,2909>(0,100) > 100 + SearchConfig::lmpLimit[improving][depth + pruningDepthCorrection] - 7*validQuietMoveCount) {
+            if (randomInt<int,2909>(0,100) > 100 + SearchConfig::lmpLimit[improving][depth + pruningDepthCorrection] - SearchConfig::randomAggressiveReductionFactor * validQuietMoveCount) {
                stats.incr(Stats::sid_lmrAR);
                ++reduction;
             }
