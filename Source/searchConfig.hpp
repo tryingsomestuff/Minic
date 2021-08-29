@@ -49,6 +49,7 @@ extern CONST_SEARCH_TUNING ScoreType futilityDepthCoeff[2];
 extern CONST_SEARCH_TUNING ScoreType futilityDepthInit[2];
 extern CONST_SEARCH_TUNING ScoreType failHighReductionThresholdInit[2];
 extern CONST_SEARCH_TUNING ScoreType failHighReductionThresholdDepth[2];
+extern CONST_SEARCH_TUNING ScoreType randomAggressiveReductionFactor;
 extern CONST_SEARCH_TUNING DepthType iidMinDepth;
 extern CONST_SEARCH_TUNING DepthType iidMinDepth2;
 extern CONST_SEARCH_TUNING DepthType iidMinDepth3;
