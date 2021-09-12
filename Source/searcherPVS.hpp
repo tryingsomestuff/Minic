@@ -832,7 +832,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
             // never extend more than reduce
             if (extension - reduction > 0) reduction = extension;
-            // never fall into qsearch directly
+            // clamp to depth = 0
             if (reduction >= depth - 1 + extension) reduction = depth - 1 + extension;
          }
 
