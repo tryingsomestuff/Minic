@@ -155,11 +155,13 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    debug_king_cap(p);
 
-   alpha = std::max(alpha, (ScoreType)(-MATE + height));
-   beta  = std::min(beta, (ScoreType)(MATE - height + 1));
-   if (alpha >= beta) return alpha;
-
    const bool rootnode = height == 0;
+
+   if(!rootnode){
+      alpha = std::max(alpha, (ScoreType)(-MATE + height));
+      beta  = std::min(beta, (ScoreType)(MATE - height - 1));
+      if (alpha >= beta) return alpha;
+   }
 
    // if not at root we check for draws (3rep, fifty and material)
    if (!rootnode && interiorNodeRecognizer<true, pvnode, true>(p) == MaterialHash::Ter_Draw) return drawScore(p, height);

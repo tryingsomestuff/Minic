@@ -80,7 +80,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    //std::cout << GetFEN(p) << std::endl;
 
    alpha = std::max(alpha, (ScoreType)(-MATE + height));
-   beta  = std::min(beta, (ScoreType)(MATE - height + 1));
+   beta  = std::min(beta, (ScoreType)(MATE - height - 1));
    if (alpha >= beta) return alpha;
 
    // update selective depth
