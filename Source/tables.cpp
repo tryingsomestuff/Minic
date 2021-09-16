@@ -12,7 +12,7 @@ void KillerT::initKillers() {
 bool KillerT::isKiller(const Move m, const DepthType height) { return sameMove(m, killers[height][0]) || sameMove(m, killers[height][1]); }
 
 void KillerT::update(Move m, DepthType height) {
-   if (!sameMove(killers[0][height], m)) {
+   if (!sameMove(killers[height][0], m)) {
       killers[height][1] = killers[height][0];
       killers[height][0] = m;
    }
