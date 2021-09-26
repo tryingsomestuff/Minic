@@ -233,6 +233,7 @@ struct GenFENEtnry{
    Move m;
    ScoreType s;
    uint16_t ply;
+   Color stm;
    void write(std::ofstream & genStream, int result) const {
       genStream << "fen " << fen << "\n"
                 << "move " << ToString(m) << "\n"
@@ -240,7 +241,7 @@ struct GenFENEtnry{
                 << "\n"
                 //<< "eval "   << e << "\n"
                 << "ply " << ply << "\n"
-                << "result " << result << "\n"
+                << "result " << (stm == Co_White ? result : -result) << "\n"
                 << "e"
                 << "\n";
    }
@@ -314,7 +315,7 @@ void Searcher::writeToGenFile(const Position& p, const std::optional<int> result
    if (data.best != INVALIDMOVE && 
        //pQuiet.halfmoves >= DynamicConfig::randomPly && 
        std::abs(data.score) < 1000) {
-      buffer.push_back({GetFEN(pQuiet), data.best, data.score, pQuiet.halfmoves});
+      buffer.push_back({GetFEN(pQuiet), data.best, data.score, pQuiet.halfmoves, pQuiet.c});
       sfensWritten++;
       if (sfensWritten % 100'000 == 0) Logging::LogIt(Logging::logInfoPrio) << "Sfens written " << sfensWritten;
    }
