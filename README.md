@@ -65,12 +65,20 @@ For now, generated nets are still quite weak, but that is a starting point, a ne
 
 Nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets.
 
+### Some stuff that were maybe introduced in Minic
+
+- use of PST score in move sorter to compensate near 0 history of quiet move
+- aggregate history score for move sorter and history heuristic (cmh + history[piece and color][tosquare] + history[color][square][square])
+- danger (from evaluation) based pruning and reductions in search
+- contempt opponent model taking opponent name or opponent rating into account
+- "features" based evaluation parameter available to the user to tune game play
+
 ### Minic NNUE "originality" status
 
 - Inference code : originally based on Seer one (Connor McMonigle), many refactoring and experiements inside (clipped ReLU, quantization on read, vectorization, ...).
 - Network topology : currently same at a previous Seer release. Many many others have been tested (with or without skip connections, bigger or smaller input layer, number of layers, ...) mainly without success except the small "Nibbled Nutshell" net. Still trying to find a better idea ...
 - Training code : mainly based on the Gary Linscott and Tomasz Sobczyk (@Sopel) pytorch trainer (https://github.com/glinscott/nnue-pytorch), adapted and tuned to Minic.
-- Data generation code : fully original, pure Minic data. Many ideas has been tried (generate inside search tree, selftplay, multi-pv, random, ...). 
+- Data generation code : fully original, pure Minic data. Many ideas has been tried (generate inside search tree, self-play, multi-pv, random, ...). 
 - Other tools : many little tools around training process, borrowed here and there or developed by myself.
 
 In brief, Minic NNUE world is vastly inspired from what others are doing and is using pure Minic data.
