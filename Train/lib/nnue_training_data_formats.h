@@ -6898,7 +6898,7 @@ namespace binpack
         ret.move = psv.move.toMove();
         ret.score = psv.score;
         ret.ply = psv.gamePly;
-//#define RESULT_NO_STM
+#define RESULT_NO_STM
 #ifdef RESULT_NO_STM
         ret.result = ret.pos.sideToMove() == chess::Color::White ? psv.game_result : -psv.game_result;
 #else
