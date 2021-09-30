@@ -35,7 +35,7 @@ def convert_ckpt(root_dir):
     # default/version_0/checkpoints/epoch=3.ckpt
     p = re.compile("epoch=[0-9]*.*.ckpt")
     ckpts = []
-    for path, subdirs, files in os.walk(root_dir + '/default/version_6/', followlinks=False):
+    for path, subdirs, files in os.walk(root_dir + '/default/', followlinks=False):
         for filename in files:
             #print(filename)
             m = p.match(filename)
