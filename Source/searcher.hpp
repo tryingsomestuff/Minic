@@ -57,7 +57,7 @@ struct Searcher {
 #ifdef WITH_GENFILE
    std::ofstream genStream;
    bool          genFen = true;
-   void          writeToGenFile(const Position& p, const std::optional<int> result);
+   void          writeToGenFile(const Position& p, bool getQuietPos, const ThreadData & d, const std::optional<int> result);
 #endif
 
    static Position getQuiet(const Position& p, Searcher* searcher = nullptr, ScoreType* qScore = nullptr);

@@ -193,11 +193,12 @@ void selfPlay(DepthType depth) {
       }
 
 #ifdef WITH_GENFILE
+      const bool getQuietPos = false;
       if (DynamicConfig::genFen){
          // writeToGenFile using genFenDepth from this root position
-         if (!ended) ThreadPool::instance().main().writeToGenFile(p2, {}); // bufferized
+         if (!ended) ThreadPool::instance().main().writeToGenFile(p2, getQuietPos, d, {}); // bufferized
          else{
-            ThreadPool::instance().main().writeToGenFile(p2,result); // write to file using result
+            ThreadPool::instance().main().writeToGenFile(p2, getQuietPos, d, result); // write to file using result
             break;
          }
       }
