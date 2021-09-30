@@ -247,75 +247,81 @@ struct GenFENEtnry{
    }
 };
 
-void Searcher::writeToGenFile(const Position& p, const std::optional<int> result) {
+void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadData & d, const std::optional<int> result) {
    static uint64_t sfensWritten = 0;
    if (!genFen || id() >= MAX_THREADS) return;
 
    static std::vector<GenFENEtnry> buffer;
 
-   Searcher& cos = getCoSearcher(id());
+   ThreadData data = d; // copy data from PV
+   Position pLeaf = p; // copy current pos
 
-   cos.genFen                       = false;
-   const int          oldMinOutLvl  = DynamicConfig::minOutputLevel;
-   const bool         oldDisableTT  = DynamicConfig::disableTT;
-   const unsigned int oldLevel      = DynamicConfig::level;
-   const unsigned int oldRandomOpen = DynamicConfig::randomOpen;
-   const unsigned int oldRandomPly  = DynamicConfig::randomPly;
+   if(getQuietPos){
 
-   // init sub search
-   cos.subSearch                 = true;
-   DynamicConfig::minOutputLevel = Logging::logMax;
-   DynamicConfig::disableTT      = true; // do not use TT in order to get qsearch leaf node
-   DynamicConfig::level          = 100;
-   DynamicConfig::randomOpen     = 0;
-   cos.clearSearch(true);
+      Searcher& cos = getCoSearcher(id());
 
-   // look for a quiet position using qsearch
-   ScoreType qScore = 0;
-   Position  pQuiet = getQuiet(p, this, &qScore);
+      cos.genFen                       = false;
+      const int          oldMinOutLvl  = DynamicConfig::minOutputLevel;
+      const bool         oldDisableTT  = DynamicConfig::disableTT;
+      const unsigned int oldLevel      = DynamicConfig::level;
+      const unsigned int oldRandomOpen = DynamicConfig::randomOpen;
+      const unsigned int oldRandomPly  = DynamicConfig::randomPly;
 
-   ThreadData data;
-   ScoreType  e = 0;
-   if (std::abs(qScore) < 1000) {
-      // evaluate quiet leaf position
-      EvalData eData;
-      e = eval(pQuiet, eData, cos, true, false);
+      // init sub search
+      cos.subSearch                 = true;
+      DynamicConfig::minOutputLevel = Logging::logMax;
+      DynamicConfig::disableTT      = true; // do not use TT in order to get qsearch leaf node
+      DynamicConfig::level          = 100;
+      DynamicConfig::randomOpen     = 0;
+      cos.clearSearch(true);
 
-      DynamicConfig::disableTT = false; // use TT here
-      if (std::abs(e) < 1000) {
-         const Hash matHash = MaterialHash::getMaterialHash(p.mat);
-         float gp = 1;
-         if (matHash != nullHash) {
-            const MaterialHash::MaterialHashEntry& MEntry = MaterialHash::materialHashTable[matHash];
-            gp                                            = MEntry.gamePhase();
+      // look for a quiet position using qsearch
+      ScoreType qScore = 0;
+      pLeaf = getQuiet(p, this, &qScore);
+
+      ScoreType  e = 0;
+      if (std::abs(qScore) < 1000) {
+         // evaluate quiet leaf position
+         EvalData eData;
+         e = eval(pLeaf, eData, cos, true, false);
+
+         DynamicConfig::disableTT = false; // use TT here
+         if (std::abs(e) < 1000) {
+            const Hash matHash = MaterialHash::getMaterialHash(p.mat);
+            float gp = 1;
+            if (matHash != nullHash) {
+               const MaterialHash::MaterialHashEntry& MEntry = MaterialHash::materialHashTable[matHash];
+               gp                                            = MEntry.gamePhase();
+            }
+            DepthType depth(DynamicConfig::genFenDepth * gp + DynamicConfig::genFenDepthEG * (1.f - gp));
+            DynamicConfig::randomPly = 0;
+            data.p                   = pLeaf;
+            data.depth               = depth;
+            cos.setData(data);
+            // do not update COM::position here
+            cos.searchDriver(false);
+            data = cos.getData();
+
+            // std::cout << data << std::endl; // debug
          }
-         DepthType depth(DynamicConfig::genFenDepth * gp + DynamicConfig::genFenDepthEG * (1.f - gp));
-         DynamicConfig::randomPly = 0;
-         data.p                   = pQuiet;
-         data.depth               = depth;
-         cos.setData(data);
-         // do not update COM::position here
-         cos.searchDriver(false);
-         data = cos.getData();
-
-         // std::cout << data << std::endl; // debug
       }
+
+      cos.genFen                    = true;
+      DynamicConfig::minOutputLevel = oldMinOutLvl;
+      DynamicConfig::disableTT      = oldDisableTT;
+      DynamicConfig::level          = oldLevel;
+      DynamicConfig::randomOpen     = oldRandomOpen;
+      DynamicConfig::randomPly      = oldRandomPly;
+      cos.subSearch                 = false;
+
+      // end of sub search
+
    }
 
-   cos.genFen                    = true;
-   DynamicConfig::minOutputLevel = oldMinOutLvl;
-   DynamicConfig::disableTT      = oldDisableTT;
-   DynamicConfig::level          = oldLevel;
-   DynamicConfig::randomOpen     = oldRandomOpen;
-   DynamicConfig::randomPly      = oldRandomPly;
-   cos.subSearch                 = false;
-
-   // end of sub search
-
    if (data.best != INVALIDMOVE && 
-       //pQuiet.halfmoves >= DynamicConfig::randomPly && 
+       //pLeaf.halfmoves >= DynamicConfig::randomPly && 
        std::abs(data.score) < 1000) {
-      buffer.push_back({GetFEN(pQuiet), data.best, data.score, pQuiet.halfmoves, pQuiet.c});
+      buffer.push_back({GetFEN(pLeaf), data.best, data.score, pLeaf.halfmoves, pLeaf.c});
       sfensWritten++;
       if (sfensWritten % 100'000 == 0) Logging::LogIt(Logging::logInfoPrio) << "Sfens written " << sfensWritten;
    }
