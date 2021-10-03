@@ -181,7 +181,11 @@ Minic random-mover stats are the following :
 
 ### SP-CC
 - MinicNNUE 2.51 using Nascent Nutrient net is tested at 3287 on the [SP-CC 3min+1s rating list](https://www.sp-cc.de/)  
-- Minic 3.09 + Nidicolous Nighthawk is tested at 3325  on the [SP-CC 3min+1s rating list](https://www.sp-cc.de/)  
+- Minic 3.09 + Nidicolous Nighthawk is tested at 3325 on the [SP-CC 3min+1s rating list](https://www.sp-cc.de/)  
+
+### GRL
+- Minic 3.13 + Nidicolous Nighthawk is tested at 3159 on the [GRL 40/2 rating list](http://rebel13.nl/grl-best-40-2.html)
+- Minic 3.06 using Nocturnal Nadir net is tested at 3078 on the [GRL 40/15 rating list](http://rebel13.nl/grl-best-40-15.html)
 
 ### Test Suite
 - STS : 1191/1500 @10sec per position (single thread on an i7-9700K)  
