@@ -7,8 +7,9 @@ endif
 
 ifdef EVALFILE
    export EMBEDDEDNNUEPATH=$(EVALFILE)
+   export SKIPMD5CHECK=1
 else
-   export EMBEDDEDNNUENAME=nidicolous_nighthawk.bin
+   export EMBEDDEDNNUENAME=nucleated_neurulation.bin
 endif
 
 .PHONY: config fathom build dist release
@@ -26,7 +27,7 @@ config:
 	fi
 	NETMD5=$$(md5sum $(ROOT_DIR)/Tourney/nn.bin | awk '{print $$1}') \
 	&& echo "Net md5: $${NETMD5}" \
-	&& if [ "$${NETMD5}" != "e0dd8b78bc02a6e5cc91bb3b0c53ae49" ]; then \
+	&& if [ "$${SKIPMD5CHECK}" != "1" ] && [ "$${NETMD5}" != "b2c8335ad6d27380123957f391006f3d" ]; then \
 	   echo "Bad net (md5: $${NETMD5}), downloading..." \
 	   && wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/$$EMBEDDEDNNUENAME -O Tourney/nn.bin --no-check-certificate ;\
 	fi
