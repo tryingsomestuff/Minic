@@ -523,7 +523,7 @@ inline void updatePV(PVList& pv, const Move& m, const PVList& childPV) {
 template<typename T, int seed> [[nodiscard]] inline T randomInt(T m, T M) {
    static std::mt19937 mt(seed); // fixed seed for ZHash for instance !!!
    static std::uniform_int_distribution<T> dist(m, M);
-    return dist(mt);
+   return dist(mt);
 }
 
 template<typename T> [[nodiscard]] inline T randomInt(T m, T M) {
@@ -531,7 +531,7 @@ template<typename T> [[nodiscard]] inline T randomInt(T m, T M) {
    static std::seed_seq seed {r(), r(), r(), r(), r(), r(), r(), r()};
    static std::mt19937 mt(seed);
    static std::uniform_int_distribution<T> dist(m, M);
-    return dist(mt);
+   return dist(mt);
 }
 
 template<class T> [[nodiscard]] inline constexpr const T& clamp(const T& v, const T& lo, const T& hi) {

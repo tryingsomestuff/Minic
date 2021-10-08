@@ -62,6 +62,6 @@ CONST_SEARCH_TUNING DepthType ttMaxFiftyValideDepth = 92;
 CONST_SEARCH_TUNING ScoreType failHighReductionThresholdInit[2]  = {130, 130};
 CONST_SEARCH_TUNING ScoreType failHighReductionThresholdDepth[2] = {0, 0};
 
-CONST_SEARCH_TUNING ScoreType randomAggressiveReductionFactor = 2;
+//CONST_SEARCH_TUNING ScoreType randomAggressiveReductionFactor = 2;
 
 } // namespace SearchConfig

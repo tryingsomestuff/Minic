@@ -816,11 +816,13 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             //reduction += moveCountPruning && !formerPV;
             //if (!isInCheck) reduction += std::min(2,(data.mobility[p.c]-data.mobility[~p.c])/8);
 
-            // aggressive random reduction
+            /*
+            // aggressive random reduction (too expensive for multi-threading)
             if (randomInt<int,2909>(0,100) > 100 + SearchConfig::lmpLimit[improving][depth + pruningDepthCorrection] - SearchConfig::randomAggressiveReductionFactor * validQuietMoveCount) {
                stats.incr(Stats::sid_lmrAR);
                ++reduction;
             }
+            */
 
             // history reduction/extension 
             // beware killers and counter are scored above history max

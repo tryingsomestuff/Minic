@@ -223,7 +223,7 @@ void registerCOMOptions() { // options exposed to GUI
    _keys.push_back(KeyBase(k_score, w_spin, "failHighReductionThresholdInit1"   , &SearchConfig::failHighReductionThresholdInit[1]   , ScoreType(-500) , ScoreType(1500)     ));
    _keys.push_back(KeyBase(k_score, w_spin, "failHighReductionThresholdDepth0"  , &SearchConfig::failHighReductionThresholdDepth[0]  , ScoreType(-500) , ScoreType(1500)     ));
    _keys.push_back(KeyBase(k_score, w_spin, "failHighReductionThresholdDepth1"  , &SearchConfig::failHighReductionThresholdDepth[1]  , ScoreType(-500) , ScoreType(1500)     ));
-   _keys.push_back(KeyBase(k_score, w_spin, "randomAggressiveReductionFactor"   , &SearchConfig::randomAggressiveReductionFactor     , ScoreType(-10)  , ScoreType(10)       ));
+   //_keys.push_back(KeyBase(k_score, w_spin, "randomAggressiveReductionFactor"   , &SearchConfig::randomAggressiveReductionFactor     , ScoreType(-10)  , ScoreType(10)       ));
 
    _keys.push_back(KeyBase(k_depth, w_spin, "iidMinDepth"                       , &SearchConfig::iidMinDepth                         , DepthType(0)    , DepthType(30)       ));
    _keys.push_back(KeyBase(k_depth, w_spin, "iidMinDepth2"                      , &SearchConfig::iidMinDepth2                        , DepthType(0)    , DepthType(30)       ));
