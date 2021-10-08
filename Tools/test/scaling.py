@@ -41,6 +41,10 @@ class Engine():
         self.writeline('ucinewgame\n')
         self.uci_isready()
 
+    def uci_quit(self):
+        self.uci_isready()
+        self.writeline('quit\n')
+
     def uci_search(self, fen, depth, *moves):
 
         if len(moves) == 0: self.writeline('position fen {}\n'.format(fen))
@@ -131,6 +135,9 @@ for threads in range(1, maxthreads+1):
             proc.uci_isready()
         print(total_nps / len(positions), flush=True)
         speeds[engine] += [total_nps / len(positions)]
+
+for engine in engines:
+    procs[engine].uci_quit()
 
 x_range = range(1, maxthreads+1)
 plt.grid()
