@@ -68,7 +68,7 @@ def run_match(best, c_chess_exe, concurrency, book_file_name, engine):
             book_file_name
         )
     )
-    command = command + " -engine cmd=/ssd/Minic/Dist/Minic3/minic_3.12_linux_x64_skylake name=master"
+    command = command + " -engine cmd=/ssd/Minic/Dist/Minic3/minic_3.15_linux_x64_skylake name=master"
     #command = command + " -engine cmd=/ssd/engines/seer-nnue/build/seer name=master option.Hash=128"
     #command = command + " -engine cmd=/ssd/engines/Halogen/Halogen/src/Halogen name=master option.Hash=128"
 
