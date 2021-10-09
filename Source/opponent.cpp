@@ -7,15 +7,15 @@
 namespace Opponent {
 
 static std::map<std::string, uint16_t> ratings = {
-    {"Fat Fritz 2", 3639}, {"Stockfish", 3657}, {"Dragon", 3589},       {"Lc0", 3524},        {"Allie", 3445},         {"Houdini", 3443},
+    {"Fat Fritz 2", 3639}, {"Stockfish", 3657}, {"Dragon", 3632},       {"Lc0", 3524},        {"Allie", 3445},         {"Houdini", 3443},
     {"Nemorino", 3437},    {"RubiChess", 3457}, {"SlowChess", 3474},    {"Igel", 3428},       {"Ethereal", 3458},      {"Stoofvlees", 3350},
     {"Revenge", 3433},     {"Xiphos", 3341},    {"Fire", 3340},         {"Booot", 3321},      {"RofChade", 3305},      {"Defenchess", 3283},
     {"Schooner", 3271},    {"Laser", 3273},     {"Shredder", 3270},     {"Fizbo", 3248},      {"Andscacs", 3230},      {"Minic", 3253},
-    {"Wasp", 3219},        {"Roc", 3218},       {"DanaSah", 3205},      {"Halogen", 3200},    {"Arasan", 3183},        {"Combusken", 3169},
+    {"Wasp", 3219},        {"Roc", 3218},       {"DanaSah", 3255},      {"Halogen", 3300},    {"Arasan", 3300},        {"Combusken", 3169},
     {"Demolito", 3168},    {"Chiron", 3164},    {"NirvanaChess", 3164}, {"Equinox", 3161},    {"Critter", 3156},       {"Winter", 3155},
     {"Marvin", 3145},      {"Strelka", 3142},   {"Orion", 3138},        {"PanChess", 3138},   {"Toga", 3135},          {"Vajolet2", 3128},
-    {"Weiss", 3240},       {"Koivisto", 3350},  {"Gull", 3117},         {"Texel", 3114},      {"Hannibal", 3110},      {"Rybka", 3110},
-    {"Stash", 3108},       {"iCE", 3108},       {"chess22k", 3097},     {"BlackMamba", 3091}, {"Protector", 3088},     {"Seer", 3250},
+    {"Weiss", 3314},       {"Koivisto", 3462},  {"Gull", 3117},         {"Texel", 3114},      {"Hannibal", 3110},      {"Rybka", 3110},
+    {"Stash", 3142},       {"iCE", 3108},       {"chess22k", 3097},     {"BlackMamba", 3091}, {"Protector", 3088},     {"Seer", 3373},
     {"Senpai", 3085},      {"Pirarucu", 3060},  {"ChessBrainVB", 3050}, {"SmarThink", 3045},  {"FabChess", 3033},      {"Monolith", 3032},
     {"Alfil", 3031},       {"Naum", 3031},      {"Bagatur", 3024},      {"Tucano", 3022},     {"Hakkapeliitta", 3021}, {"Deuterium", 3020},
     {"Amoeba", 3019},      {"Rodent", 3005},    {"Cheng", 3000},        {"Gogobello", 2991},  {"Topple", 2987},        {"Hiarcs", 2985},
