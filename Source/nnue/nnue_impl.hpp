@@ -25,7 +25,7 @@
 // Initially taken from Seer implementation in October 2020.
 // see https://github.com/connormcmonigle/seer-nnue
 
-#define NNUEALIGNMENT 64
+#define NNUEALIGNMENT 64 // AVX512 compatible ...
 
 #ifdef __clang__
 #define CONSTEXPR
@@ -293,7 +293,7 @@ template<typename T, size_t dim> struct StackVector {
    }
 
 #ifdef USE_SIMD_INTRIN
-   inline T dot_(const T* other) const { return dotProductFma<T, dim>(data, other); }
+   inline T dot_(const T* other) const { return dotProductFma<dim>(data, other); }
 #endif
 
    constexpr T item() const {
@@ -302,14 +302,14 @@ template<typename T, size_t dim> struct StackVector {
    }
 
    static CONSTEXPR StackVector<T, dim> zeros() {
-      StackVector<T, dim> result {};
+      alignas(NNUEALIGNMENT) StackVector<T, dim> result {};
 #pragma omp simd
       for (size_t i = 0; i < dim; ++i) { result.data[i] = T(0); }
       return result; // RVO
    }
 
    template<typename T2> static CONSTEXPR StackVector<T, dim> from(const T2* data) {
-      StackVector<T, dim> result {};
+      alignas(NNUEALIGNMENT) StackVector<T, dim> result {};
 #pragma omp simd
       for (size_t i = 0; i < dim; ++i) { result.data[i] = T(data[i]); }
       return result; //RVO
@@ -326,7 +326,7 @@ template<typename T, size_t dim> std::ostream& operator<<(std::ostream& ostr, co
 
 template<typename T, size_t dim0, size_t dim1>
 CONSTEXPR StackVector<T, dim0 + dim1> splice(const StackVector<T, dim0>& a, const StackVector<T, dim1>& b) {
-   auto c = StackVector<T, dim0 + dim1>::zeros();
+   alignas(NNUEALIGNMENT) auto c = StackVector<T, dim0 + dim1>::zeros();
 #pragma omp simd
    for (size_t i = 0; i < dim0; ++i) { c.data[i] = a.data[i]; }
 #pragma omp simd
@@ -347,7 +347,7 @@ template<typename NT, size_t dim0, size_t dim1, bool Q> struct StackAffine {
    alignas(NNUEALIGNMENT) BT b[nbB];
 
    CONSTEXPR StackVector<BT, dim1> forward(const StackVector<BT, dim0>& x) const {
-      auto result = StackVector<BT, dim1>::from(b);
+      alignas(NNUEALIGNMENT) auto result = StackVector<BT, dim1>::from(b);
 #ifndef WITH_BLAS
 #pragma omp simd
 #ifdef USE_SIMD_INTRIN
@@ -364,7 +364,7 @@ template<typename NT, size_t dim0, size_t dim1, bool Q> struct StackAffine {
 
    ///@todo forward with return type of next layer
    template<typename T> CONSTEXPR StackVector<BT, dim1> forward(const StackVector<T, dim0>& x) const {
-      auto result = StackVector<BT, dim1>::from(b);
+      alignas(NNUEALIGNMENT) auto result = StackVector<BT, dim1>::from(b);
 #ifndef WITH_BLAS
 #pragma omp simd
 #ifdef USE_SIMD_INTRIN
@@ -472,7 +472,7 @@ template<typename NT, bool Q> struct NNUEWeights {
 
    static bool load(const std::string& path, NNUEWeights<NT, Q>& loadedWeights) {
       static const uint32_t expectedVersion = 0xc0ffee00;
-      static const int      expectedSize    = 50378504; // 50378500 + 4 for version
+      static const int      expectedSize    = 50378504; // net size + 4 for version
       static const bool     withVersion     = true;
 
       if (path != "embedded") { // read from disk
