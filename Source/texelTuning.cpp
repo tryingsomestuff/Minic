@@ -95,9 +95,14 @@ double E(const std::vector<Texel::TexelInput>& data, size_t miniBatchSize) {
 
    auto worker = [&](size_t begin, size_t end, std::atomic<double>& acc) {
       double ee = 0;
+      NNUEEvaluator evaluator;
       for (auto k = begin; k != end; ++k) {
          Position* p = data[k].p.get();
          assert(p);
+         if (DynamicConfig::useNNUE){
+            p->associateEvaluator(evaluator);
+            p->resetNNUEEvaluator(p->Evaluator());
+         }
          ee += std::pow((data[k].result + 1) * 0.5 - Sigmoid(*p), 2);
       }
       {
@@ -681,8 +686,21 @@ void TexelTuning(const std::string& filename) {
 
    for (auto it = guess.begin(); it != guess.end(); ++it) { std::cout << "\"" << it->first << "\","; }
 
+   // NNUE MSE eval
+   DynamicConfig::useNNUE = true;
+   DynamicConfig::forceNNUE = true;
    computeOptimalK(data);
    Logging::LogIt(Logging::logInfo) << "Optimal K " << Texel::K;
+   auto NNUEerr = E(data, data.size());
+   DynamicConfig::useNNUE = false;
+   DynamicConfig::forceNNUE = false;
+   computeOptimalK(data);
+   Logging::LogIt(Logging::logInfo) << "Optimal K " << Texel::K;
+   auto HCEerr = E(data, data.size());
+   std::cout << "NNUE : " << NNUEerr << std::endl;
+   std::cout << "HCE  : " << HCEerr << std::endl;
+
+   return;
 
    std::vector<std::string> todo = {
        //"piecesValue",
