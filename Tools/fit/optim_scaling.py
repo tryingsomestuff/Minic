@@ -12,8 +12,8 @@ nb_best_test = 15
 nb_tested_config = 3
 
 time_control='5+0.05'
-to_be_tuned='betaMarginDynamicHistory'
-test_range = range(50,250,20)
+to_be_tuned='NNUEScaling'
+test_range = range(30,230,10)
 
 class Command(object):
     def __init__(self, cmd):
@@ -68,7 +68,7 @@ def run_match(best, c_chess_exe, concurrency, book_file_name, engine):
             book_file_name
         )
     )
-    command = command + " -engine cmd=/ssd/Minic/Dist/Minic3/minic_3.15_linux_x64_skylake name=master"
+    command = command + " -engine cmd=/ssd/Minic/Dist/Minic3/minic_3.14_linux_x64_skylake name=master"
     #command = command + " -engine cmd=/ssd/engines/seer-nnue/build/seer name=master option.Hash=128"
     #command = command + " -engine cmd=/ssd/engines/Halogen/Halogen/src/Halogen name=master option.Hash=128"
 
