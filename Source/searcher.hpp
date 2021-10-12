@@ -8,6 +8,8 @@
 #include "tables.hpp"
 #include "threading.hpp"
 
+#include <optional>
+
 /*!
  * Searcher struct store all the information needed by a search thread
  * Implements main search function (driver, pvs, qsearch, see, display to GUI, ...)
