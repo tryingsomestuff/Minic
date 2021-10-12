@@ -70,6 +70,7 @@ My gcc (and clang) gives those macros for simd extension :
 #include <immintrin.h>
 #endif
 
+/*
 //----------------------------------
 // AVX512
 //----------------------------------
@@ -98,7 +99,8 @@ DOT_FINLINE float v_sum_f32(v_f32 a) {
 //----------------------------------
 // AVX
 //----------------------------------
-#elif defined(__AVX2__)
+#el*/
+#if defined(__AVX2__)
 #define V_SIMD 256
 typedef __m256 v_f32;
 #define v_nlanes_f32 8
