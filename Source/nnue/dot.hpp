@@ -79,7 +79,6 @@ My gcc (and clang) gives those macros for simd extension :
 typedef __m512 v_f32;
 #define v_nlanes_f32 16
 #define v_add_f32    _mm512_add_ps
-#define v_sub_f32    _mm512_sub_ps
 #define v_mul_f32    _mm512_mul_ps
 #define v_muladd_f32 _mm512_fmadd_ps
 DOT_FINLINE float v_sum_f32(v_f32 a) {
@@ -94,7 +93,7 @@ DOT_FINLINE float v_sum_f32(v_f32 a) {
    return _mm_cvtss_f32(_mm512_castps512_ps128(sum4));
 }
 #define v_load_f32(PTR) _mm512_loadu_ps((const __m512*)(PTR))
-#define v_zero_f32       _mm512_setzero_ps
+#define v_zero_f32      _mm512_setzero_ps
 
 //----------------------------------
 // AVX
@@ -105,7 +104,6 @@ DOT_FINLINE float v_sum_f32(v_f32 a) {
 typedef __m256 v_f32;
 #define v_nlanes_f32 8
 #define v_add_f32    _mm256_add_ps
-#define v_sub_f32    _mm256_sub_ps
 #define v_mul_f32    _mm256_mul_ps
 #ifdef __FMA__
 #define v_muladd_f32 _mm256_fmadd_ps
@@ -121,7 +119,7 @@ DOT_FINLINE float v_sum_f32(__m256 a) {
    return _mm_cvtss_f32(sum);
 }
 #define v_load_f32 _mm256_loadu_ps
-#define v_zero_f32  _mm256_setzero_ps
+#define v_zero_f32 _mm256_setzero_ps
 
 //----------------------------------
 // SSE
@@ -131,7 +129,6 @@ DOT_FINLINE float v_sum_f32(__m256 a) {
 typedef __m128 v_f32;
 #define v_nlanes_f32 4
 #define v_add_f32    _mm_add_ps
-#define v_sub_f32    _mm_sub_ps
 #define v_mul_f32    _mm_mul_ps
 #ifdef __FMA__
 #define v_muladd_f32 _mm_fmadd_ps
@@ -153,7 +150,7 @@ DOT_FINLINE float v_sum_f32(__m128 a) {
 #endif
 }
 #define v_load_f32 _mm_loadu_ps
-#define v_zero_f32  _mm_setzero_ps
+#define v_zero_f32 _mm_setzero_ps
 #endif
 
 #ifndef V_SIMD
