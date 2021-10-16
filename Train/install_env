@@ -1,0 +1,25 @@
+# setup pyenv and install latest python
+# https://github.com/pyenv/pyenv
+
+if ! command -v pyenv &>/dev/null; then
+  python_ver="3.10.0"
+  sudo apt update; sudo apt install -y --no-install-recommends make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+
+  pyenv_dir="${HOME}/.pyenv"
+  git clone https://github.com/pyenv/pyenv.git "$pyenv_dir"
+
+  cp ${HOME}/.profile ${HOME}/.profile.bkp
+  sed -i 's/^#umask 022/#umask 022:\n\n# pyenv: keep before sourcing .bashrc\nexport PYENV_ROOT="$HOME\/.pyenv"\nexport PATH="$PYENV_ROOT\/bin:$PATH"\neval "$(pyenv init --path)"/' ${HOME}/.profile
+
+  cat << EOF >> ${HOME}/.bashrc
+
+# pyenv: keep at the end of the file
+if command -v pyenv &>/dev/null; then
+  eval "\$(pyenv init -)"
+fi
+EOF
+
+  . ${HOME}/.profile
+  CONFIGURE_OPTS=--enable-optimizations pyenv install ${python_ver}
+  pyenv local ${python_ver}
+fi
