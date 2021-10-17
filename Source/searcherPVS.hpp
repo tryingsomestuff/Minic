@@ -281,6 +281,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    const bool isEmergencyAttack  = false; //moveDifficulty == MoveDifficultyUtil::MD_hardAttack;
 
    // take **current** position danger level into account
+   /*
    if (!data.evalDone){
       // no eval has been done, we need to work a little to get danger data
       BitBoard attFromPiece[2][6] = {{emptyBitBoard}};
@@ -290,6 +291,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       evalDanger(p,attFromPiece,att,att2,checkers,data.danger);
       ///@todo mobility ?
    }
+   */
    const int dangerFactor          = (data.danger[Co_White] + data.danger[Co_Black]) / SearchConfig::dangerDivisor;
    const bool isDangerPrune        = dangerFactor >= SearchConfig::dangerLimitPruning;
    const bool isDangerForwardPrune = dangerFactor >= SearchConfig::dangerLimitForwardPruning;
