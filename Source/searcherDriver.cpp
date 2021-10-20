@@ -126,7 +126,7 @@ void Searcher::searchDriver(bool postMove) {
    _data.pv.clear();
 
    const bool isInCheck = isAttacked(p, kingSquare(p));
-   const DepthType easyMoveDetectionDepth = 5;
+   const DepthType easyMoveDetectionDepth = (DepthType)std::min(12,5 + int(currentMoveMs/5000));
    const DepthType startDepth = 1; //std::min(d,easyMoveDetectionDepth);
 
    // initialize multiPV stuff
