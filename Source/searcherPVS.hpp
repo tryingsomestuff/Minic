@@ -467,11 +467,11 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
           alpha - SearchConfig::futilityDepthInit[evalScoreIsHashScore] - SearchConfig::futilityDepthCoeff[evalScoreIsHashScore] * marginDepth;
       futility = SearchConfig::doFutility && depth <= SearchConfig::futilityMaxDepth[evalScoreIsHashScore] && evalScore <= futilityScore;
       // history pruning
-      historyPruning = SearchConfig::doHistoryPruning && isNotEndGame && depth < SearchConfig::historyPruningMaxDepth;
+      historyPruning = SearchConfig::doHistoryPruning && isNotEndGame && depth < SearchConfig::historyPruningMaxDepth[improving];
       // CMH pruning
-      CMHPruning = SearchConfig::doCMHPruning && isNotEndGame && depth < SearchConfig::CMHMaxDepth;
+      CMHPruning = SearchConfig::doCMHPruning && isNotEndGame && depth < SearchConfig::CMHMaxDepth[improving];
       // capture history pruning
-      capHistoryPruning = SearchConfig::doCapHistoryPruning && isNotEndGame && depth < SearchConfig::capHistoryPruningMaxDepth;
+      capHistoryPruning = SearchConfig::doCapHistoryPruning && isNotEndGame && depth < SearchConfig::capHistoryPruningMaxDepth[improving];
    }
 
    int       validMoveCount      = 0;
