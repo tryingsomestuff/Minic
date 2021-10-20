@@ -136,7 +136,8 @@ class NNUE(pl.LightningModule):
     q = (self(us, them, white, black) * net2score / out_scaling).sigmoid()
     t = outcome
     p = (score / in_scaling).sigmoid()
-    
+
+    # From old seer trainer    
     #epsilon = 1e-12
     #teacher_entropy = -(p * (p + epsilon).log() + (1.0 - p) * (1.0 - p + epsilon).log())
     #outcome_entropy = -(t * (t + epsilon).log() + (1.0 - t) * (1.0 - t + epsilon).log())
@@ -146,9 +147,14 @@ class NNUE(pl.LightningModule):
     #entropy = self.lambda_ * teacher_entropy + (1.0 - self.lambda_) * outcome_entropy
     #loss = result.mean() - entropy.mean()
 
-    loss_eval = (p - q).square().mean()
-    loss_result = (q - t).square().mean()
-    loss = self.lambda_ * loss_eval + (1.0 - self.lambda_) * loss_result
+    # from former SF trainer
+    #loss_eval = (p - q).square().mean()
+    #loss_result = (q - t).square().mean()
+    #loss = self.lambda_ * loss_eval + (1.0 - self.lambda_) * loss_result
+
+    # from current SF trainer
+    pt = p * self.lambda_ + t * (1.0 - self.lambda_)
+    loss = torch.pow(torch.abs(pt - q), 2.6).mean()
 
     self.log(loss_type, loss)
     return loss
@@ -164,7 +170,9 @@ class NNUE(pl.LightningModule):
 
   def configure_optimizers(self):
     optimizer = torch.optim.Adadelta(self.parameters(), lr=1, weight_decay=1e-10)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=75, gamma=0.3)
+    #scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=75, gamma=0.3)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.992)
+
     return [optimizer], [scheduler]
 
   def flattened_parameters(self, log=True):
