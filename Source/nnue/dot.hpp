@@ -70,7 +70,6 @@ My gcc (and clang) gives those macros for simd extension :
 #include <immintrin.h>
 #endif
 
-/*
 //----------------------------------
 // AVX512
 //----------------------------------
@@ -81,6 +80,18 @@ typedef __m512 v_f32;
 #define v_add_f32    _mm512_add_ps
 #define v_mul_f32    _mm512_mul_ps
 #define v_muladd_f32 _mm512_fmadd_ps
+/*
+DOT_FINLINE float v_sum_f32(v_f32 a) {
+    return _mm512_reduce_add_ps(a);
+}
+*/
+DOT_FINLINE float v_sum_f32(v_f32 a) {
+    __m512 tmp = _mm512_add_ps(a,_mm512_shuffle_f32x4(a,a,_MM_SHUFFLE(0,0,3,2)));
+    __m128 r = _mm512_castps512_ps128(_mm512_add_ps(tmp,_mm512_shuffle_f32x4(tmp,tmp,_MM_SHUFFLE(0,0,0,1))));
+    r = _mm_hadd_ps(r,r);
+    return _mm_cvtss_f32(_mm_hadd_ps(r,r));
+}
+/*
 DOT_FINLINE float v_sum_f32(v_f32 a) {
    __m512 h64   = _mm512_shuffle_f32x4(a, a, _MM_SHUFFLE(3, 2, 3, 2));
    __m512 sum32 = _mm512_add_ps(a, h64);
@@ -92,14 +103,14 @@ DOT_FINLINE float v_sum_f32(v_f32 a) {
    __m512 sum4  = _mm512_add_ps(sum8, h4);
    return _mm_cvtss_f32(_mm512_castps512_ps128(sum4));
 }
+*/
 #define v_load_f32(PTR) _mm512_loadu_ps((const __m512*)(PTR))
 #define v_zero_f32      _mm512_setzero_ps
 
 //----------------------------------
 // AVX
 //----------------------------------
-#el*/
-#if defined(__AVX2__)
+#elif defined(__AVX2__)
 #define V_SIMD 256
 typedef __m256 v_f32;
 #define v_nlanes_f32 8
