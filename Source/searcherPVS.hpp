@@ -520,7 +520,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          DepthType extension = 0;
          if (DynamicConfig::level > 80) {
             // is in check extension if pvnode
-            //if (EXTENDMORE(extension) && pvnode && isInCheck) stats.incr(Stats::sid_checkExtension),++extension;
+            //if (EXTENDMORE(extension) && pvnode && isInCheck && depth < 8) stats.incr(Stats::sid_checkExtension),++extension;
             // castling extension
             //if (EXTENDMORE(extension) && isCastling(e.m) ) stats.incr(Stats::sid_castlingExtension),++extension;
             // Botvinnik-Markoff Extension
@@ -532,7 +532,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             // mate threat extension (from null move)
             //if (EXTENDMORE(extension) && mateThreat) stats.incr(Stats::sid_mateThreatExtension),++extension;
             // simple recapture extension
-            //if (EXTENDMORE(extension) && isValidMove(p.lastMove) && Move2Type(p.lastMove) == T_capture && to == Move2To(p.lastMove)) stats.incr(Stats::sid_recaptureExtension),++extension; // recapture
+            //if (EXTENDMORE(extension) && pvnode && isValidMove(p.lastMove) && Move2Type(p.lastMove) == T_capture && to == Move2To(p.lastMove)) stats.incr(Stats::sid_recaptureExtension),++extension; // recapture
             // gives check extension
             //if (EXTENDMORE(extension) && isCheck ) stats.incr(Stats::sid_checkExtension2),++extension; // we give check with a non risky move
             /*
@@ -692,7 +692,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       DepthType extension = 0;
       if (DynamicConfig::level > 80) {
          // is in check extension if pvnode
-         //if (EXTENDMORE(extension) && pvnode && isInCheck) stats.incr(Stats::sid_checkExtension),++extension; // we are in check (extension)
+         //if (EXTENDMORE(extension) && pvnode && isInCheck && depth < 8) stats.incr(Stats::sid_checkExtension),++extension; // we are in check (extension)
          // castling extension
          //if (EXTENDMORE(extension) && isCastling(*it) ) stats.incr(Stats::sid_castlingExtension),++extension;
          // Botvinnik-Markoff Extension
@@ -700,7 +700,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          // mate threat extension (from null move)
          //if (EXTENDMORE(extension) && mateThreat && depth <= 4) stats.incr(Stats::sid_mateThreatExtension),++extension;
          // simple recapture extension
-         //if (EXTENDMORE(extension) && isValidMove(p.lastMove) && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && to == Move2To(p.lastMove)) stats.incr(Stats::sid_recaptureExtension),++extension; //recapture
+         //if (EXTENDMORE(extension) && pvnode && isValidMove(p.lastMove) && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && to == Move2To(p.lastMove)) stats.incr(Stats::sid_recaptureExtension),++extension; //recapture
          // gives check extension
          //if (EXTENDMORE(extension) && isCheck && !isBadCap(*it)) stats.incr(Stats::sid_checkExtension2),++extension; // we give check with a non risky move
          // CMH extension
