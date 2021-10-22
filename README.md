@@ -18,6 +18,7 @@ It is currently rated >3200 on CCRL scale.
    * [Syzygy EGT](#syzygy-egt)
    * [How to run](#how-to-run)
    * [Options](#options)
+   * [Videos](#videos)
    * [Thanks](#thanks)
 
 ## Support Minic development
@@ -358,6 +359,18 @@ Moreover, Minic implements some "style" parameters when using HCE (hand crafted 
 
 Default values are 50 and a range from 0 to 100 can be used. A value of 100 will double the effect, while a value of 0 will disable the feature (it is probably not a good idea to put material awareness to 0 for instance ...).
 
+## Videos
+
+Minic on youtube, most often loosing to stronger engines ;-) :
+  - https://www.youtube.com/watch?v=fPBtZ7VTBnQ
+  - https://www.youtube.com/watch?v=juxxpN64Qcw
+  - https://www.youtube.com/watch?v=jb3BifP8abA
+  - https://www.youtube.com/watch?v=mrY4tTujC4g
+  - https://www.youtube.com/watch?v=_6vbzpCTFyM
+  - https://www.youtube.com/watch?v=EmWN79hHpZo
+  - https://www.youtube.com/watch?v=yV1Z69oAOvA
+  - https://www.youtube.com/watch?v=Ub3ug-TYJz0
+  
 ## Thanks
 
 Of course many/most idea in Minic are taken from the beautifull chess developer community.
