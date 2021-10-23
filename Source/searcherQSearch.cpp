@@ -163,21 +163,6 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    // backup this score as the "static" one
    const ScoreType staticScore = evalScore;
 
-   // delta pruning based on static score, and best possible capture on the board
-   if (!isInCheck && SearchConfig::doQDeltaPruning && staticScore + qDeltaMargin(p) < alpha){
-/*      
-      if (! checkEval(p,evalScore,*this,"for delta (qsearch)")){
-         std::cout << "*********************" << std::endl;
-         std::cout << "DELTA" << std::endl;
-         std::cout << ToString(p) << std::endl;
-         std::cout << staticScore << std::endl;
-         std::cout << qDeltaMargin(p) << std::endl;
-         std::cout << alpha << std::endl;
-      }
-*/      
-      return stats.incr(Stats::sid_delta), staticScore;
-   }
-
    // early cut-off based on staticScore score
    if (staticScore >= beta) {
       if (!isInCheck && !ttHit)
@@ -262,10 +247,24 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
             stats.incr(Stats::sid_qfutility);
             continue;
          }
-         if (!SEE_GE(p, *it, 0)) {
+         const ScoreType seeValue = SEE(p,*it);
+         // prune all bad captures
+         if (seeValue < 0) {
             stats.incr(Stats::sid_qsee);
             continue;
-         }           
+         }            
+         // neutral captures are pruned if move can't raise alpha (idea from Seer)
+         if (SearchConfig::doQDeltaPruning && !ttPV 
+             && seeValue <= SearchConfig::deltaBadSEEThreshold && staticScore + SearchConfig::deltaBadMargin < alpha){
+            stats.incr(Stats::sid_deltaAlpha);
+            continue;
+         }
+         // return beta early if a good capture sequence is found and static eval was not far from beta (idea from Seer)
+         if (SearchConfig::doQDeltaPruning && !ttPV 
+             && seeValue >= SearchConfig::deltaGoodSEEThreshold && staticScore + SearchConfig::deltaGoodMargin > beta){
+            stats.incr(Stats::sid_deltaBeta);
+            return beta;
+         }
       }
       Position p2 = p;
 #ifdef WITH_NNUE

@@ -51,6 +51,11 @@ CONST_SEARCH_TUNING ScoreType dangerLimitReduction      = 64; //off
 CONST_SEARCH_TUNING ScoreType dangerDivisor             = 180;
 CONST_SEARCH_TUNING ScoreType failLowRootMargin         = 100;
 
+CONST_SEARCH_TUNING ScoreType deltaBadMargin            = 180;
+CONST_SEARCH_TUNING ScoreType deltaBadSEEThreshold      = 0;
+CONST_SEARCH_TUNING ScoreType deltaGoodMargin           = 128;
+CONST_SEARCH_TUNING ScoreType deltaGoodSEEThreshold     = 160;
+
 ///@todo probably should be tuned with/without a net
 CONST_SEARCH_TUNING DepthType aspirationMinDepth  = 4;
 CONST_SEARCH_TUNING ScoreType aspirationInit      = 6;

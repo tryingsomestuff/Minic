@@ -17,7 +17,7 @@ const bool doLMP               = true;
 const bool doStaticNullMove    = true;
 const bool doRazoring          = true;
 const bool doQFutility         = false;
-const bool doQDeltaPruning     = false;
+const bool doQDeltaPruning     = true;
 const bool doProbcut           = true;
 const bool doHistoryPruning    = true;
 const bool doCapHistoryPruning = true;
@@ -68,6 +68,11 @@ extern CONST_SEARCH_TUNING ScoreType dangerLimitForwardPruning;
 extern CONST_SEARCH_TUNING ScoreType dangerLimitReduction;
 extern CONST_SEARCH_TUNING ScoreType dangerDivisor;
 extern CONST_SEARCH_TUNING ScoreType failLowRootMargin;
+
+extern CONST_SEARCH_TUNING ScoreType deltaBadMargin;
+extern CONST_SEARCH_TUNING ScoreType deltaBadSEEThreshold;
+extern CONST_SEARCH_TUNING ScoreType deltaGoodMargin;
+extern CONST_SEARCH_TUNING ScoreType deltaGoodSEEThreshold;
 
 extern CONST_SEARCH_TUNING DepthType aspirationMinDepth;
 extern CONST_SEARCH_TUNING ScoreType aspirationInit;
