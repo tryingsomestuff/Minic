@@ -58,6 +58,7 @@ extern CONST_SEARCH_TUNING int       probCutMaxMoves;
 extern CONST_SEARCH_TUNING ScoreType probCutMargin;
 extern CONST_SEARCH_TUNING ScoreType seeCaptureFactor;
 extern CONST_SEARCH_TUNING ScoreType seeQuietFactor;
+extern CONST_SEARCH_TUNING ScoreType seeQThreashold;
 extern CONST_SEARCH_TUNING ScoreType betaMarginDynamicHistory;
 //extern CONST_SEARCH_TUNING ScoreType probCutThreshold;
 extern CONST_SEARCH_TUNING DepthType lmrMinDepth;
