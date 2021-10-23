@@ -40,6 +40,7 @@ CONST_SEARCH_TUNING int       probCutMaxMoves                 = 5;
 CONST_SEARCH_TUNING ScoreType probCutMargin                   = 80;
 CONST_SEARCH_TUNING ScoreType seeCaptureFactor                = 100;
 CONST_SEARCH_TUNING ScoreType seeQuietFactor                  = 15;
+CONST_SEARCH_TUNING ScoreType seeQThreashold                  = 0;
 CONST_SEARCH_TUNING ScoreType betaMarginDynamicHistory        = 180;
 //CONST_SEARCH_TUNING ScoreType probCutThreshold              = 450;
 CONST_SEARCH_TUNING DepthType lmrMinDepth            = 2;
@@ -51,9 +52,9 @@ CONST_SEARCH_TUNING ScoreType dangerLimitReduction      = 64; //off
 CONST_SEARCH_TUNING ScoreType dangerDivisor             = 180;
 CONST_SEARCH_TUNING ScoreType failLowRootMargin         = 100;
 
-CONST_SEARCH_TUNING ScoreType deltaBadMargin            = 180;
-CONST_SEARCH_TUNING ScoreType deltaBadSEEThreshold      = 0;
-CONST_SEARCH_TUNING ScoreType deltaGoodMargin           = 128;
+CONST_SEARCH_TUNING ScoreType deltaBadMargin            = 150;
+CONST_SEARCH_TUNING ScoreType deltaBadSEEThreshold      = 25;
+CONST_SEARCH_TUNING ScoreType deltaGoodMargin           = 135;
 CONST_SEARCH_TUNING ScoreType deltaGoodSEEThreshold     = 160;
 
 ///@todo probably should be tuned with/without a net

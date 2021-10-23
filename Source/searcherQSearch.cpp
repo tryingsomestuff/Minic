@@ -249,17 +249,17 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
          }
          const ScoreType seeValue = SEE(p,*it);
          // prune all bad captures
-         if (seeValue < 0) {
+         if (seeValue < SearchConfig::seeQThreashold) {
             stats.incr(Stats::sid_qsee);
             continue;
          }            
-         // neutral captures are pruned if move can't raise alpha (idea from Seer)
+         // neutral captures are pruned if move can't raise alpha (idea origin from Seer)
          if (SearchConfig::doQDeltaPruning && !ttPV 
              && seeValue <= SearchConfig::deltaBadSEEThreshold && staticScore + SearchConfig::deltaBadMargin < alpha){
             stats.incr(Stats::sid_deltaAlpha);
             continue;
          }
-         // return beta early if a good capture sequence is found and static eval was not far from beta (idea from Seer)
+         // return beta early if a good capture sequence is found and static eval was not far from beta (idea origin from Seer)
          if (SearchConfig::doQDeltaPruning && !ttPV 
              && seeValue >= SearchConfig::deltaGoodSEEThreshold && staticScore + SearchConfig::deltaGoodMargin > beta){
             stats.incr(Stats::sid_deltaBeta);
