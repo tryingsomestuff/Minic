@@ -130,19 +130,20 @@ For NNUE, AVX2 is +40 versus SSE4.2 and there is again a gap of nearly 60Elo for
 This can explain some strange results during some testing process and in rating list where I sometimes see my nets underperform a lot. So please, use AVX2 hardware (and the corresponding Minic binary, i.e. the "skylake" one) for NNUE testing if possible.
 
 ### Home test
-Here are some fast TC results of a gauntlet tournament (STC 10s+0.1) for Minic.
+Here are some fast TC results of a gauntlet tournament (STC 10s+0.1) for Minic (dev version of various engine october 24 2021).
 ```
-Rank Name                Elo    +    - games score oppo. draws 
-   1 Pedone_linux_bmi2   173   17   17  1169   79%   -27   33% 
-   2 nemorino_nnue       162   17   17  1169   77%   -27   30% 
-   3 xiphos               77   16   15  1169   66%   -27   37% 
-   4 rofChade_bmi2        51   15   15  1169   62%   -27   38% 
-   5 Defenchess_2.2      -16   15   15  1169   52%   -27   38% 
-   6 minic_3.08          -27    6    6 10520   45%     3   34% 
-   7 Halogen             -28   15   15  1169   50%   -27   40% 
-   8 Winter             -114   16   16  1169   37%   -27   32% 
-   9 weiss              -124   16   16  1168   36%   -27   30% 
-  10 Vajolet2_2.8       -153   16   16  1169   32%   -27   29%
+Rank Name                          Elo     +/-   Games   Score    Draw 
+   1 seer                          103      13    1684   64.4%   37.0% 
+   2 xiphos                         80      13    1683   61.3%   39.6% 
+   3 Halogen                        45      13    1684   56.5%   37.5% 
+   4 weiss                          41      13    1684   55.8%   37.6% 
+   5 minic_3.17_linux_x64           32      13    1684   54.6%   40.1% 
+   6 rofChade_bmi2                  24      13    1683   53.5%   37.6% 
+   7 minic_3.16                      4      13    1684   50.5%   38.5% 
+   8 Defenchess_2.2                -22      13    1684   46.9%   35.0% 
+   9 Clover.3.0-dev41              -51      13    1683   42.7%   35.2% 
+  10 stash-bot                    -118      14    1683   33.6%   32.4% 
+  11 Winter                       -146      15    1684   30.2%   29.6% 
 ```
 
 ### Random mover
