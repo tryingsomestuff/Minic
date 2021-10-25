@@ -252,7 +252,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
          if (seeValue < SearchConfig::seeQThreshold) {
             stats.incr(Stats::sid_qsee);
             continue;
-         }            
+         }
          // neutral captures are pruned if move can't raise alpha (idea origin from Seer)
          if (SearchConfig::doQDeltaPruning && !ttPV 
              && seeValue <= SearchConfig::deltaBadSEEThreshold && staticScore + SearchConfig::deltaBadMargin < alpha){
