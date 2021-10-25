@@ -249,7 +249,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
          }
          const ScoreType seeValue = SEE(p,*it);
          // prune all bad captures
-         if (seeValue < SearchConfig::seeQThreashold) {
+         if (seeValue < SearchConfig::seeQThreshold) {
             stats.incr(Stats::sid_qsee);
             continue;
          }            
