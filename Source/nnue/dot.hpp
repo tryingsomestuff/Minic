@@ -73,7 +73,7 @@ My gcc (and clang) gives those macros for simd extension :
 //----------------------------------
 // AVX512
 //----------------------------------
-#if defined(__AVX512VL__)
+#if defined(__AVX512VL__NONONONONO)
 #define V_SIMD 512
 typedef __m512 v_f32;
 #define v_nlanes_f32 16
