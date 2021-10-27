@@ -5,7 +5,7 @@ if [ -n "${COMMON_BUILD}" ]; then
 
 else
 
-   export dir=$(readlink -f $(dirname $0)/../..)
+   export dir=$(cd $(dirname $0)/../../>/dev/null; pwd -P)
    
    export buildDir=$dir/Dist/Minic3
 
