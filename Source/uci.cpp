@@ -245,7 +245,9 @@ void uci() {
          iterate = false;
       }
       else if (uciCommand == "bench") {
-         bench(20);
+         int bd = 10;
+         iss >> bd;
+         bench(bd);
       }
       else if (!uciCommand.empty()) {
          Logging::LogIt(Logging::logGUI) << "info string unrecognised command " << uciCommand;
