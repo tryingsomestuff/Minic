@@ -81,7 +81,7 @@ fi
 
 echo $OPT $LIBS
 
-rm -f *.gcda
+rm -f *.gcda Dist/Minic3/*.gcda
 
 if [ -n "$NOPROFILE" ]; then
    echo "compilation without profiling"
@@ -93,7 +93,7 @@ else
    if [ $ret = "0" ]; then
       echo "running Minic for profiling : $exe"
       $exe bench $DEPTH -minOutputLevel 0 -NNUEFile Tourney/nn.bin
-      $exe bench $DEPTH -minOutputLevel 0 -NNUEFile none # force no NNUE
+      #$exe bench $DEPTH -minOutputLevel 0 -NNUEFile none # force no NNUE
       echo "starting optimized compilation"
       $CXX -fprofile-use $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $exe $LIBS
       echo "done "
