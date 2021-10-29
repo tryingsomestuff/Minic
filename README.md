@@ -73,6 +73,7 @@ Nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets.
 - danger (from evaluation) based pruning and reductions in search
 - contempt opponent model taking opponent name or opponent rating into account
 - "features" based evaluation parameter available to the user to tune game play
+- using a depth factor for pruning and reduction that takes TT entry depth into account
 
 ### Minic NNUE "originality" status
 
