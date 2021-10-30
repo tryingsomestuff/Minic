@@ -16,11 +16,11 @@
 #define PERIODICCHECK uint64_t(1024)
 
 inline void evalDanger(const Position & p,
-                         BitBoard         (&attFromPiece)[2][6],
-                         BitBoard         (&att)[2],
-                         BitBoard         (&att2)[2],
-                         BitBoard         (&checkers)[2][6],
-                         ScoreType        (&kdanger)[2]){
+                       BitBoard         (&attFromPiece)[2][6],
+                       BitBoard         (&att)[2],
+                       BitBoard         (&att2)[2],
+                       BitBoard         (&checkers)[2][6],
+                       ScoreType        (&kdanger)[2]){
 
    const BitBoard pawns[2] = {p.whitePawn(), p.blackPawn()};
    const BitBoard nonPawnMat[2] = {p.allPieces[Co_White] & ~pawns[Co_White], p.allPieces[Co_Black] & ~pawns[Co_Black]};
@@ -281,7 +281,6 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    const bool isEmergencyAttack  = false; //moveDifficulty == MoveDifficultyUtil::MD_hardAttack;
 
    // take **current** position danger level into account
-   /*
    if (!data.evalDone){
       // no eval has been done, we need to work a little to get danger data
       BitBoard attFromPiece[2][6] = {{emptyBitBoard}};
@@ -291,14 +290,14 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       evalDanger(p,attFromPiece,att,att2,checkers,data.danger);
       ///@todo mobility ?
    }
-   */
    const int dangerFactor          = (data.danger[Co_White] + data.danger[Co_Black]) / SearchConfig::dangerDivisor;
+   const int dangerDiff            = (data.danger[~p.c] - data.danger[p.c]) / SearchConfig::dangerDivisor;
    const bool isDangerPrune        = dangerFactor >= SearchConfig::dangerLimitPruning;
    const bool isDangerForwardPrune = dangerFactor >= SearchConfig::dangerLimitForwardPruning;
    const bool isDangerRed          = dangerFactor >= SearchConfig::dangerLimitReduction;
-   if (isDangerPrune) stats.incr(Stats::sid_dangerPrune);
+   if (isDangerPrune)        stats.incr(Stats::sid_dangerPrune);
    if (isDangerForwardPrune) stats.incr(Stats::sid_dangerPrune);
-   if (isDangerRed) stats.incr(Stats::sid_dangerReduce);
+   if (isDangerRed)          stats.incr(Stats::sid_dangerReduce);
 
    bool evalScoreIsHashScore = false;
    const ScoreType staticScore = evalScore;
@@ -329,7 +328,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    if (!DynamicConfig::mateFinder && canPrune && !isInCheck /*&& !isMateScore(beta)*/ &&
        !pvnode) { // removing the !isMateScore(beta) is not losing that much elo and allow for better check mate finding ...
       // static null move
-      if (SearchConfig::doStaticNullMove && !isMateScore(evalScore) && isNotEndGame && !isDangerForwardPrune && 
+      if (SearchConfig::doStaticNullMove && !isMateScore(evalScore) && isNotEndGame &&  
           depth <= SearchConfig::staticNullMoveMaxDepth[evalScoreIsHashScore]) {
          const ScoreType margin = SearchConfig::staticNullMoveDepthInit[evalScoreIsHashScore] 
                                 + SearchConfig::staticNullMoveDepthCoeff[evalScoreIsHashScore] * marginDepth;
@@ -339,7 +338,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       // razoring
       ScoreType rAlpha = alpha - SearchConfig::razoringMarginDepthInit[evalScoreIsHashScore] -
                          SearchConfig::razoringMarginDepthCoeff[evalScoreIsHashScore] * marginDepth;
-      if (SearchConfig::doRazoring && !isDangerForwardPrune && depth <= SearchConfig::razoringMaxDepth[evalScoreIsHashScore] && evalScore <= rAlpha) {
+      if (SearchConfig::doRazoring && depth <= SearchConfig::razoringMaxDepth[evalScoreIsHashScore] && evalScore <= rAlpha) {
          stats.incr(Stats::sid_razoringTry);
          const ScoreType qScore = qsearch(alpha, beta, p, height, seldepth, 0, true, pvnode, isInCheck);
          if (stopFlag) return STOPSCORE;
@@ -794,7 +793,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                skipCap = true;
                continue;
             }
-            else if (!rootnode && badCapScore(*it) < - 1 * SearchConfig::seeCaptureFactor * (depth + pruningDepthCorrection)) {
+            else if (!rootnode && badCapScore(*it) < - 1 * SearchConfig::seeCaptureFactor * (depth + pruningDepthCorrection + dangerDiff/8)) {
                stats.incr(Stats::sid_see2);
                skipCap = true;
                continue;
