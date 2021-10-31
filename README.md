@@ -161,21 +161,14 @@ Minic random-mover stats are the following :
 ## Rating Lists & competitions
 
 ### CCRL
-#### 40/15
-- Minic 3.16 + Nucleated Neurulation is tested at 3216 on the [CCRL 40/15 scale](http://ccrl.chessdom.com/ccrl/4040/)  
-#### Blitz
-- Minic 3.08 + Negligible Nystagmus is tested at 3254 on the [CCRL BLITZ scale](http://ccrl.chessdom.com/ccrl/404/)  
-#### FRC
-- Minic 3.08 + Negligible Nystagmus  is tested at 3295 on the [CCRL FRC list](http://ccrl.chessdom.com/ccrl/404FRC/)  
+- 40/15: Minic 3.16 + Nucleated Neurulation is tested at 3216 on the [CCRL 40/15 scale](http://ccrl.chessdom.com/ccrl/4040/)  
+- Blitz: Minic 3.08 + Negligible Nystagmus is tested at 3254 on the [CCRL BLITZ scale](http://ccrl.chessdom.com/ccrl/404/)  
+- FRC: Minic 3.08 + Negligible Nystagmus  is tested at 3295 on the [CCRL FRC list](http://ccrl.chessdom.com/ccrl/404FRC/)  
 
 ### CEGT
-#### 40/4
-- Minic 3.14 + Nucleated Neurulation is tested at 3177 on the [CEGT 40/4 list](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
-#### 40/20
-- MinicNNUE 2.51 using Nascent Nutrient is tested at 3214 on the [CEGT 40/20 list](http://www.cegt.net/40_40%20Rating%20List/40_40%20All%20Versions/rangliste.html)  
-- Minic 3.16 + Nucleated Neurulation is tested at 3178 on the [CEGT 40/20 list](http://www.cegt.net/40_40%20Rating%20List/40_40%20All%20Versions/rangliste.html)  
-#### 5+3 pb=on
-- Minic 3.07 is tested at 3170 on the [CEGT 5+3 PB=ON list](http://www.cegt.net/5Plus3Rating/BestVersionsNEW/rangliste.html)  
+- 40/4: Minic 3.14 + Nucleated Neurulation is tested at 3177 on the [CEGT 40/4 list](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
+- 40/20: Minic 3.16 + Nucleated Neurulation is tested at 3178 on the [CEGT 40/20 list](http://www.cegt.net/40_40%20Rating%20List/40_40%20All%20Versions/rangliste.html)  
+- 5+3 pb=on: Minic 3.16 + Nucleated Neurulation is tested at 3232 on the [CEGT 5+3 PB=ON list](http://www.cegt.net/5Plus3Rating/BestVersionsNEW/rangliste.html)  
 
 ### FGRL
 - Minic 3.13 + Nidicolous Nighthawk is tested at 2989 on the [fastgm 60sec+0.6sec rating list](http://www.fastgm.de/60-0.60.html)  
@@ -184,7 +177,7 @@ Minic random-mover stats are the following :
 - Minic 3.13 + Nidicolous Nighthawk is tested at 3186 on the [fastgm 60sec+0.6sec 16 cores rating list](http://www.fastgm.de/16-60-0.6.html)
 
 ### SP-CC
-- Minic 3.16 + Nucleated Neurulation is tested at 3289 on the [SP-CC 3min+1s rating list](https://www.sp-cc.de/)  
+- Minic 3.16 + Nucleated Neurulation is tested at 3290 on the [SP-CC 3min+1s rating list](https://www.sp-cc.de/)  
 
 ### GRL
 - Minic 3.17 + Nucleated Neurulation is tested at 3229 on the [GRL 40/2 rating list](http://rebel13.nl/grl-best-40-2.html)
