@@ -847,7 +847,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          ScoreType seeValue = 0;
          if (isPrunableStdNoCheck /* && !rootnode*/) {
             seeValue = SEE(p, *it);
-            if (seeValue < -SearchConfig::seeQuietFactor * (nextDepth + isEmergencyDefence + isEmergencyAttack) * nextDepth ){
+            if (seeValue < -SearchConfig::seeQuietFactor * (nextDepth + isEmergencyDefence + isEmergencyAttack + dangerDiff/8) * nextDepth ){
                stats.incr(Stats::sid_seeQuiet);
                continue;
             }
