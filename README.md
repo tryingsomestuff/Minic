@@ -170,7 +170,7 @@ Minic random-mover stats are the following :
 
 ### CEGT
 #### 40/4
-- Minic 3.14 + Nucleated Neurulation is tested at 3181 on the [CEGT 40/4 list](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
+- Minic 3.14 + Nucleated Neurulation is tested at 3177 on the [CEGT 40/4 list](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
 #### 40/20
 - MinicNNUE 2.51 using Nascent Nutrient is tested at 3214 on the [CEGT 40/20 list](http://www.cegt.net/40_40%20Rating%20List/40_40%20All%20Versions/rangliste.html)  
 - Minic 3.16 + Nucleated Neurulation is tested at 3178 on the [CEGT 40/20 list](http://www.cegt.net/40_40%20Rating%20List/40_40%20All%20Versions/rangliste.html)  
@@ -187,7 +187,7 @@ Minic random-mover stats are the following :
 - Minic 3.16 + Nucleated Neurulation is tested at 3289 on the [SP-CC 3min+1s rating list](https://www.sp-cc.de/)  
 
 ### GRL
-- Minic 3.16 + Nucleated Neurulation is tested at 3199 on the [GRL 40/2 rating list](http://rebel13.nl/grl-best-40-2.html)
+- Minic 3.17 + Nucleated Neurulation is tested at 3229 on the [GRL 40/2 rating list](http://rebel13.nl/grl-best-40-2.html)
 - Minic 3.06 using Nocturnal Nadir net is tested at 3078 on the [GRL 40/15 rating list](http://rebel13.nl/grl-best-40-15.html)
 
 ### Test Suite
