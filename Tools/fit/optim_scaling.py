@@ -12,8 +12,8 @@ nb_best_test = 15
 nb_tested_config = 3
 
 time_control='5+0.05'
-to_be_tuned='seeQThreshold'
-test_range = range(-65,65,10)
+to_be_tuned='seeQuietDangerDivisor'
+test_range = range(1,16,2)
 
 class Command(object):
     def __init__(self, cmd):

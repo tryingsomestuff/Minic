@@ -102,4 +102,4 @@ else
    fi
 fi
 
-rm -f *.gcda
+rm -f *.gcda Dist/Minic3/*.gcda
