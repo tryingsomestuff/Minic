@@ -475,6 +475,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    int       validMoveCount      = 0;
    int       validQuietMoveCount = 0;
+   int       validNonPrunedCount = 0;
    Move      bestMove            = INVALIDMOVE;
    TT::Bound hashBound           = TT::B_alpha;
    bool      ttMoveIsCapture     = false;
@@ -735,8 +736,10 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          */
       }
       // pvs
-      if (validMoveCount < (2 /*+2*rootnode*/) || !SearchConfig::doPVS)
+      if (validMoveCount < (2 /*+2*rootnode*/) || !SearchConfig::doPVS){
          score = -pvs<pvnode>(-beta, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, isCheck, !cutNode, true);
+         ++validNonPrunedCount;
+      }
       else {
          // reductions & prunings
          const bool isPrunable           = /*isNotEndGame &&*/ !DynamicConfig::mateFinder && !isAdvancedPawnPush && !isMateScore(alpha) && !killerT.isKiller(*it, height);
@@ -802,40 +805,50 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
          // LMR
          DepthType reduction = 0;
-         if (SearchConfig::doLMR && depth >= SearchConfig::lmrMinDepth &&
-             ((isReductible && isQuiet) /*|| isPrunableBadCap*/ /*|| stack[p.halfmoves].eval <= alpha*/ /*|| cutNode*/) && ///@todo retry isPrunableBadCap
-             validMoveCount > 1 + 2 * rootnode) {
-            stats.incr(Stats::sid_lmr);
-            // base reduction
-            reduction += SearchConfig::lmrReduction[std::min((int)depth, MAX_DEPTH - 1)][std::min(validMoveCount, MAX_MOVE - 1)];
+         if (SearchConfig::doLMR && depth >= SearchConfig::lmrMinDepth && validMoveCount > 1 + 2 * rootnode && isReductible) {
 
-            // more reduction
-            reduction += !improving;
-            reduction += ttMoveIsCapture;
-            reduction += (cutNode && evalScore - SearchConfig::failHighReductionThresholdInit[evalScoreIsHashScore]
-                                               - marginDepth * SearchConfig::failHighReductionThresholdDepth[evalScoreIsHashScore] > beta);
-            //reduction += moveCountPruning && !formerPV;
-            //if (!isInCheck) reduction += std::min(2,(data.mobility[p.c]-data.mobility[~p.c])/8);
+            if (Move2Type(*it) == T_std){ 
+               stats.incr(Stats::sid_lmr);
+               // base reduction
+               reduction += SearchConfig::lmrReduction[std::min((int)depth, MAX_DEPTH - 1)][std::min(validMoveCount, MAX_MOVE - 1)];
 
-            /*
-            // aggressive random reduction (too expensive for multi-threading)
-            if (randomInt<int,2909>(0,100) > 100 + SearchConfig::lmpLimit[improving][depth + pruningDepthCorrection] - SearchConfig::randomAggressiveReductionFactor * validQuietMoveCount) {
-               stats.incr(Stats::sid_lmrAR);
-               ++reduction;
+               // more reduction
+               reduction += !improving;
+               reduction += ttMoveIsCapture;
+               reduction += (cutNode && evalScore - SearchConfig::failHighReductionThresholdInit[evalScoreIsHashScore]
+                                                  - marginDepth * SearchConfig::failHighReductionThresholdDepth[evalScoreIsHashScore] > beta);
+               //reduction += moveCountPruning && !formerPV;
+               //if (!isInCheck) reduction += std::min(2,(data.mobility[p.c]-data.mobility[~p.c])/8);
+
+               /*
+               // aggressive random reduction (too expensive for multi-threading)
+               if (randomInt<int,2909>(0,100) > 100 + SearchConfig::lmpLimit[improving][depth + pruningDepthCorrection] - SearchConfig::randomAggressiveReductionFactor * validQuietMoveCount) {
+                  stats.incr(Stats::sid_lmrAR);
+                  ++reduction;
+               }
+               */
+
+               // history reduction/extension 
+               // beware killers and counter are scored above history max
+               reduction -= std::min(3, HISTORY_DIV(2 * Move2Score(*it))); 
+               
+               // less reduction
+               //reduction -= !noCheck;
+               //reduction -= isCheck;
+               reduction -= formerPV || ttPV;
+               //reduction -= isDangerRed /*|| ttMoveSingularExt*/ /*|| isEmergencyDefence*/);
+
             }
-            */
+            else if (Move2Type(*it) == T_capture){
+               stats.incr(Stats::sid_lmrcap);
+               // base reduction
+               reduction += SearchConfig::lmrReduction[std::min((int)depth + pvnode + improving, MAX_DEPTH - 1)][std::min(validNonPrunedCount, MAX_MOVE - 1)];
+               
+               // capture history reduction
+               reduction -= std::max(-2,std::min(2, HISTORY_DIV(2 * historyT.historyCap[PieceIdx(p.board_const(Move2From(*it)))][to][Abs(p.board_const(to))-1])));
+            }
 
-            // history reduction/extension 
-            // beware killers and counter are scored above history max
-            reduction -= std::min(3, HISTORY_DIV(2 * Move2Score(*it))); 
-            
-            // less reduction
-            //reduction -= !noCheck;
-            //reduction -= isCheck;
-            reduction -= formerPV || ttPV;
-            //reduction -= isDangerRed /*|| ttMoveSingularExt*/ /*|| isEmergencyDefence*/);
-
-            // never extend more than reduce
+            // never extend more than reduce (to avoid search explosion)
             if (extension - reduction > 0) reduction = extension;
             // clamp to depth = 0
             if (reduction >= depth - 1 + extension) reduction = depth - 1 + extension;
@@ -854,6 +867,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             // reduce bad quiet more
             else if (seeValue < 0 && nextDepth > 1) --nextDepth;
          }
+
+         ++validNonPrunedCount;
 
          // PVS
          score = -pvs<false>(-alpha - 1, -alpha, p2, nextDepth, height + 1, childPV, seldepth, isCheck, true, true);
