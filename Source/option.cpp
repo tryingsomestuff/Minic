@@ -244,6 +244,7 @@ void registerCOMOptions() { // options exposed to GUI
 
    _keys.push_back(KeyBase(k_depth, w_spin, "lmrMinDepth"                       , &SearchConfig::lmrMinDepth                         , DepthType(0)    , DepthType(30)       ));
    _keys.push_back(KeyBase(k_depth, w_spin, "singularExtensionDepth"            , &SearchConfig::singularExtensionDepth              , DepthType(0)    , DepthType(30)       ));
+   _keys.push_back(KeyBase(k_int  , w_spin, "lmrCapHistoryFactor"               , &SearchConfig::lmrCapHistoryFactor                 , 1               , 64                  ));
    
    _keys.push_back(KeyBase(k_score, w_spin, "dangerLimitPruning"                , &SearchConfig::dangerLimitPruning                  , ScoreType(0)    , ScoreType(65)       ));
    _keys.push_back(KeyBase(k_score, w_spin, "dangerLimitForwardPruning"         , &SearchConfig::dangerLimitForwardPruning           , ScoreType(0)    , ScoreType(65)       ));
