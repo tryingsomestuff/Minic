@@ -724,9 +724,10 @@ def run_benchmarks(arguments, workload, branch, engine):
     return bench[0], sum(nps) // cores
 
 def verify_benchmarks(arguments, workload, branch, bench):
-    if bench != int(workload['test'][branch]['bench']):
+    target = int(workload['test'][branch]['bench'])
+    if bench != target and target != 0:
         server_report_bad_bench(arguments, workload, branch, bench)
-    return bench == int(workload['test'][branch]['bench'])
+    return bench == target or target == 0
 
 def build_cutechess_command(arguments, workload, dev_name, base_name, nps):
 
