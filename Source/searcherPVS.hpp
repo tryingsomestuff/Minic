@@ -280,13 +280,13 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    const bool isEmergencyDefence = false; //moveDifficulty == MoveDifficultyUtil::MD_hardDefense;
    const bool isEmergencyAttack  = false; //moveDifficulty == MoveDifficultyUtil::MD_hardAttack;
 
+   BitBoard attFromPiece[2][6] = {{emptyBitBoard}};
+   BitBoard att[2] = {emptyBitBoard,emptyBitBoard};
+   BitBoard att2[2] = {emptyBitBoard,emptyBitBoard};
+   BitBoard checkers[2][6] = {{emptyBitBoard}};
    // take **current** position danger level into account
    if (!data.evalDone){
       // no eval has been done, we need to work a little to get danger data
-      BitBoard attFromPiece[2][6] = {{emptyBitBoard}};
-      BitBoard att[2] = {emptyBitBoard,emptyBitBoard};
-      BitBoard att2[2] = {emptyBitBoard,emptyBitBoard};
-      BitBoard checkers[2][6] = {{emptyBitBoard}};
       evalDanger(p,attFromPiece,att,att2,checkers,data.danger);
       ///@todo mobility ?
    }
@@ -298,6 +298,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    if (isDangerPrune)        stats.incr(Stats::sid_dangerPrune);
    if (isDangerForwardPrune) stats.incr(Stats::sid_dangerPrune);
    if (isDangerRed)          stats.incr(Stats::sid_dangerReduce);
+
+   const bool haveThreats[2] = { att[Co_White] & p.allPieces[Co_Black], att[Co_Black] & p.allPieces[Co_White]};
 
    bool evalScoreIsHashScore = false;
    const ScoreType staticScore = evalScore;
@@ -394,7 +396,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       }
 
       // ProbCut
-      if (SearchConfig::doProbcut && depth >= SearchConfig::probCutMinDepth && !isMateScore(beta)) {
+      if (SearchConfig::doProbcut && depth >= SearchConfig::probCutMinDepth && !isMateScore(beta) && haveThreats[p.c]) {
          stats.incr(Stats::sid_probcutTry);
          int probCutCount = 0;
          const ScoreType betaPC = beta + SearchConfig::probCutMargin;
