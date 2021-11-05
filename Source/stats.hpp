@@ -28,6 +28,7 @@ struct Stats {
       sid_materialTableDraw,
       sid_materialTableDraw2,
       sid_staticNullMove,
+      sid_threatsPruning,
       sid_lmr,
       sid_lmrcap,
       sid_lmrFail,
