@@ -16,6 +16,7 @@ CONST_SEARCH_TUNING ScoreType staticNullMoveDepthInit[2]      = {0, 0};
 CONST_SEARCH_TUNING DepthType razoringMaxDepth[2]             = {3, 3};
 CONST_SEARCH_TUNING ScoreType razoringMarginDepthCoeff[2]     = {0, 0};
 CONST_SEARCH_TUNING ScoreType razoringMarginDepthInit[2]      = {200, 200};
+CONST_SEARCH_TUNING ScoreType threatPruningMargin[2]          = {30, 0}; // improving
 CONST_SEARCH_TUNING DepthType nullMoveMinDepth                = 2;
 CONST_SEARCH_TUNING DepthType nullMoveVerifDepth              = 12;
 CONST_SEARCH_TUNING ScoreType nullMoveMargin                  = 0;
