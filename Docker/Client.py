@@ -30,6 +30,7 @@ import traceback
 import zipfile
 import shutil
 import multiprocessing
+import psutil
 
 from subprocess import PIPE, Popen, call
 
@@ -297,6 +298,10 @@ def kill_cutechess(cutechess):
 
         if IS_LINUX:
             cutechess.kill()
+
+        parent = psutil.Process(cutechess.pid)
+        for child in parent.children(recursive=True):
+            child.kill()
 
         cutechess.wait()
         cutechess.stdout.close()
