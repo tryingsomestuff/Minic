@@ -844,8 +844,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             else if (Move2Type(*it) == T_capture){
                stats.incr(Stats::sid_lmrcap);
                // base reduction
-               reduction += SearchConfig::lmrReduction[std::min((int)depth + pvnode + improving, MAX_DEPTH - 1)][std::min(validNonPrunedCount, MAX_MOVE - 1)];
-               
+               reduction += SearchConfig::lmrReduction[std::min((int)depth, MAX_DEPTH - 1)][std::min(validMoveCount, MAX_MOVE - 1)];
+               reduction -= improving;
+               reduction -= pvnode;
                // capture history reduction
                reduction -= std::max(-2,std::min(2, HISTORY_DIV(SearchConfig::lmrCapHistoryFactor * historyT.historyCap[PieceIdx(p.board_const(Move2From(*it)))][to][Abs(p.board_const(to))-1])));
             }
