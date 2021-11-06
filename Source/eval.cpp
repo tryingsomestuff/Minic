@@ -453,6 +453,18 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    const BitBoard protectedSquare[2] = {pe.pawnTargets[Co_White] | attackedAndNotDefended[Co_White] | attacked2AndNotDefended2[Co_White],
                                         pe.pawnTargets[Co_Black] | attackedAndNotDefended[Co_Black] | attacked2AndNotDefended2[Co_Black]};
 
+   data.haveThreats[Co_White] = (att[Co_White] & p.allPieces[Co_Black]) != emptyBitBoard;
+   data.haveThreats[Co_Black] = (att[Co_Black] & p.allPieces[Co_White]) != emptyBitBoard;
+
+   data.goodThreats[Co_White] = ((attFromPiece[Co_White][P_wp-1] & p.allPieces[Co_Black] & ~p.blackPawn())
+                                | (attFromPiece[Co_White][P_wn-1] & (p.blackQueen() | p.blackRook()))
+                                | (attFromPiece[Co_White][P_wb-1] & (p.blackQueen() | p.blackRook()))
+                                | (attFromPiece[Co_White][P_wr-1] & p.blackQueen())) != emptyBitBoard;
+   data.goodThreats[Co_Black] = ((attFromPiece[Co_Black][P_wp-1] & p.allPieces[Co_White] & ~p.whitePawn())
+                                | (attFromPiece[Co_Black][P_wn-1] & (p.whiteQueen() | p.whiteRook()))
+                                | (attFromPiece[Co_Black][P_wb-1] & (p.whiteQueen() | p.whiteRook()))
+                                | (attFromPiece[Co_Black][P_wr-1] & p.whiteQueen())) != emptyBitBoard;
+
    // reward safe checks
    kdanger[Co_White] += EvalConfig::kingAttSafeCheck[0] * countBit(checkers[Co_Black][0] & att[Co_Black]);
    kdanger[Co_Black] += EvalConfig::kingAttSafeCheck[0] * countBit(checkers[Co_White][0] & att[Co_White]);
