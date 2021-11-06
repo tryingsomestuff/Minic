@@ -289,6 +289,18 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       // no eval has been done, we need to work a little to get danger data
       evalDanger(p,attFromPiece,att,att2,checkers,data.danger);
       ///@todo mobility ?
+
+      data.haveThreats[Co_White] = (att[Co_White] & p.allPieces[Co_Black]) != emptyBitBoard;
+      data.haveThreats[Co_Black] = (att[Co_Black] & p.allPieces[Co_White]) != emptyBitBoard;
+
+      data.goodThreats[Co_White] = ((attFromPiece[Co_White][P_wp-1] & p.allPieces[Co_Black] & ~p.blackPawn())
+                                 | (attFromPiece[Co_White][P_wn-1] & (p.blackQueen() | p.blackRook()))
+                                 | (attFromPiece[Co_White][P_wb-1] & (p.blackQueen() | p.blackRook()))
+                                 | (attFromPiece[Co_White][P_wr-1] & p.blackQueen())) != emptyBitBoard;
+      data.goodThreats[Co_Black] = ((attFromPiece[Co_Black][P_wp-1] & p.allPieces[Co_White] & ~p.whitePawn())
+                                 | (attFromPiece[Co_Black][P_wn-1] & (p.whiteQueen() | p.whiteRook()))
+                                 | (attFromPiece[Co_Black][P_wb-1] & (p.whiteQueen() | p.whiteRook()))
+                                 | (attFromPiece[Co_Black][P_wr-1] & p.whiteQueen())) != emptyBitBoard;      
    }
    const int dangerFactor          = (data.danger[Co_White] + data.danger[Co_Black]) / SearchConfig::dangerDivisor;
    const int dangerDiff            = (data.danger[~p.c] - data.danger[p.c]) / SearchConfig::dangerDivisor;
@@ -298,17 +310,6 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    if (isDangerPrune)        stats.incr(Stats::sid_dangerPrune);
    if (isDangerForwardPrune) stats.incr(Stats::sid_dangerPrune);
    if (isDangerRed)          stats.incr(Stats::sid_dangerReduce);
-
-   const bool haveThreats[2] = { (att[Co_White] & p.allPieces[Co_Black]) != emptyBitBoard, (att[Co_Black] & p.allPieces[Co_White]) != emptyBitBoard};
-
-   const bool goodThreats[2] = { ((attFromPiece[Co_White][P_wp-1] & p.allPieces[Co_Black] & ~p.blackPawn())
-                                | (attFromPiece[Co_White][P_wn-1] & (p.blackQueen() | p.blackRook()))
-                                | (attFromPiece[Co_White][P_wb-1] & (p.blackQueen() | p.blackRook()))
-                                | (attFromPiece[Co_White][P_wr-1] & p.blackQueen())) != emptyBitBoard,
-                                 ((attFromPiece[Co_Black][P_wp-1] & p.allPieces[Co_White] & ~p.whitePawn())
-                                | (attFromPiece[Co_Black][P_wn-1] & (p.whiteQueen() | p.whiteRook()))
-                                | (attFromPiece[Co_Black][P_wb-1] & (p.whiteQueen() | p.whiteRook()))
-                                | (attFromPiece[Co_Black][P_wr-1] & p.whiteQueen())) != emptyBitBoard };
 
    bool evalScoreIsHashScore = false;
    const ScoreType staticScore = evalScore;
@@ -348,7 +349,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
       // Threats pruning
       if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && isNotEndGame && depth <= 1 && 
-           !goodThreats[~p.c] && evalScore > beta + SearchConfig::threatPruningMargin[improving] ){
+           !data.goodThreats[~p.c] && evalScore > beta + SearchConfig::threatPruningMargin[improving] ){
          return stats.incr(Stats::sid_threatsPruning), beta;
       }
 
@@ -411,7 +412,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       }
 
       // ProbCut
-      if (SearchConfig::doProbcut && depth >= SearchConfig::probCutMinDepth && !isMateScore(beta) && haveThreats[p.c]) {
+      if (SearchConfig::doProbcut && depth >= SearchConfig::probCutMinDepth && !isMateScore(beta) && data.haveThreats[p.c]) {
          stats.incr(Stats::sid_probcutTry);
          int probCutCount = 0;
          const ScoreType betaPC = beta + SearchConfig::probCutMargin;
