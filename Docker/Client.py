@@ -292,6 +292,8 @@ def scale_time_control(workload, nps):
 def kill_cutechess(cutechess):
 
     try:
+        parent = psutil.Process(cutechess.pid)
+        childs = parent.children(recursive=True)
 
         if IS_WINDOWS:
             call(['taskkill', '/F', '/T', '/PID', str(cutechess.pid)])
@@ -299,12 +301,11 @@ def kill_cutechess(cutechess):
         if IS_LINUX:
             cutechess.kill()
 
-        parent = psutil.Process(cutechess.pid)
-        for child in parent.children(recursive=True):
-            child.kill()
-
         cutechess.wait()
         cutechess.stdout.close()
+        
+        for child in childs:
+            child.kill()
 
     except Exception:
         pass
