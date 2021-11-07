@@ -1,7 +1,7 @@
 #!/bin/bash
 
-export CXX=i686-w64-mingw32-g++-posix
-export CC=i686-w64-mingw32-gcc-posix
+export CXX=x86_64-w64-mingw32-gcc-posix
+export CC=x86_64-w64-mingw32-g++-posix
 
 source $(dirname $0)/common
 cd_root
@@ -36,5 +36,5 @@ if [ $FATHOM_PRESENT = "1" ]; then
    OPT="$OPT $dir/Fathom/src/$lib -I$dir/Fathom/src"
 fi
 
-$CXX $OPT $STANDARDSOURCE -ISource -ISource/nnue -static -static-libgcc -static-libstdc++ -o $buildDir/$exe -Wl,-Bstatic -lpthread
-i686-w64-mingw32-strip $buildDir/$exe
+$CXX $OPT $STANDARDSOURCE -ISource -ISource/nnue -static -static-libgcc -static-libstdc++ -o $buildDir/$exe -Wl,-Bstatic -lpthread -lstdc++ -lgcc
+x86_64-w64-mingw32-strip $buildDir/$exe
