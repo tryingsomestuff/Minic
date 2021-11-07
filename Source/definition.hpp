@@ -126,6 +126,23 @@ const std::string MinicVersion = "3.18";
 #define CONST_PIECE_TUNING const
 #endif
 
+#if _WIN32 || _WIN64
+   #if _WIN64
+     #define ENV64BIT
+  #else
+    #define ENV32BIT
+  #endif
+#endif
+
+#if __GNUC__
+  #if __x86_64__ || __ppc64__
+    #define ENV64BIT
+  #else
+    #define ENV32BIT
+  #endif
+#endif
+
+
 #define INFINITETIME    TimeType(60ull * 60ull * 1000ull * 24ull * 30ull) // 1 month ...
 #define STOPSCORE       ScoreType(-20000)
 #define INFSCORE        ScoreType(15000)
