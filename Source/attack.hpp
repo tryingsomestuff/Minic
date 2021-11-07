@@ -93,7 +93,7 @@ extern SMagic rookMagic[NbSquare];
 extern BitBoard bishopAttacks[NbSquare][1 << BISHOP_INDEX_BITS];
 extern BitBoard rookAttacks[NbSquare][1 << ROOK_INDEX_BITS];
 
-#if defined(__BMI2__) && !defined(__znver1) && !defined(__znver2) && !defined(__bdver4)
+#if defined(__BMI2__) && !defined(__znver1) && !defined(__znver2) && !defined(__bdver4) && defined(ENV64BIT)
 #define MAGICBISHOPINDEX(m, x) (_pext_u64(m, MagicBB::bishopMagic[x].mask))
 #define MAGICROOKINDEX(m, x)   (_pext_u64(m, MagicBB::rookMagic[x].mask))
 #else
