@@ -348,7 +348,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       }
 
       // Threats pruning
-      if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && isNotEndGame && depth <= 1 && 
+      if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && isNotEndGame && depth <= 2 && 
            !data.goodThreats[~p.c] && evalScore > beta + SearchConfig::threatPruningMargin[improving] ){
          return stats.incr(Stats::sid_threatsPruning), beta;
       }
