@@ -146,6 +146,10 @@ def cleanup_client():
         if file_age(os.path.join('Networks', file)) > SECONDS_PER_MONTH:
             os.remove(os.path.join('Networks', file))
 
+    for proc in psutil.process_iter():
+        if "Minic-" in proc.name():
+            proc.kill()            
+
 def validate_syzygy_exists():
 
     global SYZYGY_WDL_PATH
@@ -306,6 +310,10 @@ def kill_cutechess(cutechess):
         
         for child in childs:
             child.kill()
+
+        for proc in psutil.process_iter():
+            if "Minic-" in proc.name():
+                proc.kill()
 
     except Exception:
         pass
