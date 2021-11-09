@@ -49,7 +49,8 @@ ScoreType Searcher::SEE(const Position& p, const Move& m) const {
    c = ~c;
 
    while (attackers) {
-      if (!promPossible && attackers & p.pieces_const<P_wp>(c)) from = BBTools::SquareFromBitBoard(attackers & p.pieces_const<P_wp>(c)), pp = P_wp;
+      if (!promPossible && attackers & p.pieces_const<P_wp>(c)) 
+         from = BBTools::SquareFromBitBoard(attackers & p.pieces_const<P_wp>(c)), pp = P_wp;
       else if (attackers & p.pieces_const<P_wn>(c))
          from = BBTools::SquareFromBitBoard(attackers & p.pieces_const<P_wn>(c)), pp = P_wn;
       else if (attackers & p.pieces_const<P_wb>(c))
