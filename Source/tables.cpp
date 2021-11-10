@@ -18,7 +18,7 @@ void KillerT::update(Move m, DepthType height) {
    }
 }
 
-void HistoryT::initHistory(bool noCleanCounter) {
+void HistoryT::initHistory() {
    Logging::LogIt(Logging::logInfo) << "Init history";
    for (int i = 0; i < NbSquare; ++i)
       for (int k = 0; k < NbSquare; ++k)
@@ -33,11 +33,10 @@ void HistoryT::initHistory(bool noCleanCounter) {
          for (int k = 0; k < 6; ++k)
             historyCap[i][j][k] = 0;
 
-   if (!noCleanCounter)
-      for (int i = 0; i < 13; ++i)
-         for (int j = 0; j < NbSquare; ++j)
-            for (int k = 0; k < NbPiece * NbSquare; ++k) 
-               counter_history[i][j][k] = -1;
+   for (int i = 0; i < 13; ++i)
+      for (int j = 0; j < NbSquare; ++j)
+         for (int k = 0; k < NbPiece * NbSquare; ++k) 
+            counter_history[i][j][k] = -1;
 }
 
 void CounterT::initCounter() {

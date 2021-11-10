@@ -31,7 +31,7 @@ struct HistoryT {
    ScoreType historyP[NbPiece][NbSquare];                            // Piece, to
    ScoreType counter_history[NbPiece][NbSquare][NbPiece * NbSquare]; // Previous moved piece, previous to, current moved piece * boardsize + current to
 
-   void initHistory(bool noCleanCounter = false);
+   void initHistory();
 
    template<int S> inline void update(DepthType depth, Move m, const Position& p, CMHPtrArray& cmhPtr) {
       if (Move2Type(m) == T_std) {

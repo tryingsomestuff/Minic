@@ -146,14 +146,14 @@ void Searcher::clearGame() {
    previousBest = INVALIDMOVE;
 }
 
-void Searcher::clearSearch(bool forceCounterClear) {
+void Searcher::clearSearch(bool forceHistoryClear) {
 #ifdef REPRODUCTIBLE_RESULTS
    clearPawnTT();
-   forceCounterClear = true;
+   forceHistoryClear = true;
 #endif
    stats.init();
    killerT.initKillers();
-   historyT.initHistory(!forceCounterClear);
+   if(forceHistoryClear) historyT.initHistory();
    counterT.initCounter();
    previousBest = INVALIDMOVE;
 }
@@ -273,7 +273,7 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
       DynamicConfig::disableTT      = true; // do not use TT in order to get qsearch leaf node
       DynamicConfig::level          = 100;
       DynamicConfig::randomOpen     = 0;
-      cos.clearSearch(true);
+      cos.clearSearch(true); // why would this be necessary ?
 
       // look for a quiet position using qsearch
       ScoreType qScore = 0;
