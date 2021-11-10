@@ -457,16 +457,10 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
    std::ofstream ofs;
    ofs.open(output_file_name, std::ios::app);
 
-   Searcher& cos = Searcher::getCoSearcher(0);
-
    // init sub search
-   cos.genFen                    = false;
-   cos.subSearch                 = true;
-   cos.stopFlag                  = false;
    DynamicConfig::minOutputLevel = Logging::logOff;
    DynamicConfig::disableTT      = false;
    DynamicConfig::level          = 100;
-   cos.clearSearch(true);
 
    uint64_t count = 0;
 
@@ -480,19 +474,33 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
       while (true) {
          if ((++count % 100000) == 0) { std::cout << count << std::endl; }
          if (fs.read((char*)&p, sizeof(PackedSfenValue))) {
-            Position tpos; // fully empty position !
+            RootPosition tpos; // fully empty position !
             set_from_packed_sfen(tpos, p.sfen);
+#ifdef WITH_NNUE
+            NNUEEvaluator evaluator;
+            tpos.associateEvaluator(evaluator);
+            tpos.resetNNUEEvaluator(evaluator);
+#endif              
             ThreadData data;
-            ///@todo support threading here by using ThinkAsync ?
-            data.p        = tpos;
-            data.depth    = DynamicConfig::genFenDepth;
-            //COM::position = tpos; // only need for display purpose
-            cos.searchDriver(false);
-            data    = ThreadPool::instance().main().getData();
+            const Hash matHash = MaterialHash::getMaterialHash(tpos.mat);
+            float gp = 1;
+            if (matHash != nullHash) {
+               const MaterialHash::MaterialHashEntry& MEntry = MaterialHash::materialHashTable[matHash];
+               gp                                            = MEntry.gamePhase();
+            }
+            DepthType depth(DynamicConfig::genFenDepth * gp + DynamicConfig::genFenDepthEG * (1.f - gp));
+            DynamicConfig::randomPly = 0;
+            data.p                   = tpos;
+            data.depth               = depth;
+            ThreadPool::instance().main().setData(data);
+            // do not update COM::position here
+            ThreadPool::instance().main().searchDriver(false);
+            data = ThreadPool::instance().main().getData();
             p.score = data.score;
             ofs.write((char*)&p, sizeof(PackedSfenValue));
          }
          else {
+            std::cout << "read error" << std::endl;
             break;
          }
       }
