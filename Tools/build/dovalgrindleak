@@ -22,9 +22,12 @@ if [ $FATHOM_PRESENT = "1" ]; then
 fi
 
 g++ -g -std=c++17 $STANDARDSOURCE $NNUESOURCE -ISource -ISource/nnue $OPT -lpthread -ldl -DDEBUG_TOOL -o minic.valgrind
+echo "Let's go"
 #valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all ./minic.valgrind -analyze "shirov" 10
 #valgrind --tool=exp-sgcheck ./minic.valgrind -analyze "shirov" 10
 #valgrind --log-file=valgrind.log --tool=memcheck --track-origins=yes ./minic.valgrind -analyze "shirov" 10 -minOutputLevel 0 
 #valgrind --log-file=valgrind.log --tool=memcheck --track-origins=yes --leak-check=full ./minic.valgrind -analyze "shirov" 10 -minOutputLevel 0 -NNUEFile "Tourney/nn.bin" 
 #valgrind --log-file=valgrind.log --tool=memcheck --track-origins=yes --leak-check=full ./minic.valgrind -uci -NNUEFile Tourney/nn.bin -minOutputLevel 0
-valgrind --log-file=valgrind.log --tool=memcheck --track-origins=yes --leak-check=full --show-leak-kinds=all ./minic.valgrind -selfplay 9 2 -randomPly 6 -minOutputLevel 0 -NNUEFile ../NNUE-Nets/narcotized_nightshift.bin
+#valgrind --log-file=valgrind.log --tool=memcheck --track-origins=yes --leak-check=full --show-leak-kinds=all ./minic.valgrind -selfplay 9 2 -randomPly 6 -minOutputLevel 0 -NNUEFile ../NNUE-Nets/narcotized_nightshift.bin
+valgrind --log-file=valgrind.log --tool=memcheck --track-origins=yes --leak-check=full --show-leak-kinds=all ./minic.valgrind -rescore /mnt/BK1/train_data/lC0/test -genFenDepth 8 -genFenDepthEG 12 -minOutputLevel 0
+echo "done"

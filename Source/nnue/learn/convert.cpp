@@ -458,6 +458,7 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
    ofs.open(output_file_name, std::ios::app);
 
    Searcher& cos = Searcher::getCoSearcher(0);
+   cos.clearSearch(true);
 
    // init sub search
    const int          oldMinOutLvl  = DynamicConfig::minOutputLevel;
@@ -498,7 +499,7 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
             NNUEEvaluator evaluator;
             tpos.associateEvaluator(evaluator);
             tpos.resetNNUEEvaluator(evaluator);
-#endif              
+#endif
             ThreadData data;
             const Hash matHash = MaterialHash::getMaterialHash(tpos.mat);
             float gp = 1;
