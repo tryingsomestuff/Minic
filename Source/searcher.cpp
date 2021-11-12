@@ -273,6 +273,7 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
       DynamicConfig::disableTT      = true; // do not use TT in order to get qsearch leaf node
       DynamicConfig::level          = 100;
       DynamicConfig::randomOpen     = 0;
+      DynamicConfig::randomPly      = 0;
       cos.clearSearch(true); // why would this be necessary ?
 
       // look for a quiet position using qsearch
@@ -299,6 +300,7 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
             data.depth               = depth;
             cos.setData(data);
             // do not update COM::position here
+            cos.stopFlag = false;
             cos.searchDriver(false);
             data = cos.getData();
 
@@ -319,8 +321,8 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
    }
 
    if (data.best != INVALIDMOVE && 
-       //pLeaf.halfmoves >= DynamicConfig::randomPly && 
-       std::abs(data.score) < 1000) {
+      //pLeaf.halfmoves >= DynamicConfig::randomPly && 
+      std::abs(data.score) < 1000) {
       buffer.push_back({GetFEN(pLeaf), data.best, data.score, pLeaf.halfmoves, pLeaf.c});
       sfensWritten++;
       if (sfensWritten % 100'000 == 0) Logging::LogIt(Logging::logInfoPrio) << "Sfens written " << sfensWritten;
