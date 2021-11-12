@@ -274,7 +274,7 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
       DynamicConfig::level          = 100;
       DynamicConfig::randomOpen     = 0;
       DynamicConfig::randomPly      = 0;
-      cos.clearSearch(true); // why would this be necessary ?
+      cos.clearSearch(true);
 
       // look for a quiet position using qsearch
       ScoreType qScore = 0;
