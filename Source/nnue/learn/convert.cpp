@@ -457,12 +457,27 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
    std::ofstream ofs;
    ofs.open(output_file_name, std::ios::app);
 
+   Searcher& cos = Searcher::getCoSearcher(0);
+
    // init sub search
-   DynamicConfig::minOutputLevel = Logging::logOff;
-   DynamicConfig::disableTT      = false;
+   const int          oldMinOutLvl  = DynamicConfig::minOutputLevel;
+   const unsigned int oldLevel      = DynamicConfig::level;
+   const unsigned int oldRandomOpen = DynamicConfig::randomOpen;
+   const unsigned int oldRandomPly  = DynamicConfig::randomPly;
+
+   DynamicConfig::minOutputLevel = Logging::logMax;
    DynamicConfig::level          = 100;
+   DynamicConfig::randomOpen     = 0;
+   DynamicConfig::randomPly      = 0;
 
    uint64_t count = 0;
+
+   TimeMan::isDynamic       = false;
+   TimeMan::nbMoveInTC      = -1;
+   TimeMan::msecPerMove     = INFINITETIME;
+   TimeMan::msecInTC        = -1;
+   TimeMan::msecInc         = -1;
+   TimeMan::msecUntilNextTC = -1;
 
    for (auto filename : filenames) {
       std::cout << "rescoring " << filename << " ... " << std::endl;
@@ -474,8 +489,11 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
       while (true) {
          if ((++count % 100000) == 0) { std::cout << count << std::endl; }
          if (fs.read((char*)&p, sizeof(PackedSfenValue))) {
+            //std::cout << p.score << std::endl;
             RootPosition tpos; // fully empty position !
             set_from_packed_sfen(tpos, p.sfen);
+            cos.currentMoveMs = TimeMan::GetNextMSecPerMove(tpos);
+            //std::cout << GetFEN(tpos) << std::endl;
 #ifdef WITH_NNUE
             NNUEEvaluator evaluator;
             tpos.associateEvaluator(evaluator);
@@ -492,11 +510,13 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
             DynamicConfig::randomPly = 0;
             data.p                   = tpos;
             data.depth               = depth;
-            ThreadPool::instance().main().setData(data);
+            cos.setData(data);
             // do not update COM::position here
-            ThreadPool::instance().main().searchDriver(false);
-            data = ThreadPool::instance().main().getData();
+            cos.stopFlag = false;
+            cos.searchDriver(false);
+            data = cos.getData();
             p.score = data.score;
+            //std::cout << data.score << std::endl;
             ofs.write((char*)&p, sizeof(PackedSfenValue));
          }
          else {
@@ -509,6 +529,11 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
    }
    ofs.close();
    std::cout << "all done" << std::endl;
+
+   DynamicConfig::minOutputLevel = oldMinOutLvl;
+   DynamicConfig::level          = oldLevel;
+   DynamicConfig::randomOpen     = oldRandomOpen;
+   DynamicConfig::randomPly      = oldRandomPly;
 
    return true;
 }
