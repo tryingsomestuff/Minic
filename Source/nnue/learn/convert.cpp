@@ -453,7 +453,17 @@ bool convert_plain(const std::vector<std::string>& filenames, const std::string&
    return true;
 }
 
+#ifdef DEBUG_MTRACE
+#include <mcheck.h>
+#endif
+
 bool rescore(const std::vector<std::string>& filenames, const std::string& output_file_name) {
+
+#ifdef DEBUG_MTRACE
+   mtrace();
+   // use LD_PRELOAD=libc_malloc_debug.so MALLOC_TRACE=output.txt
+#endif
+
    std::ofstream ofs;
    ofs.open(output_file_name, std::ios::app);
 
@@ -480,6 +490,12 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
    TimeMan::msecInc         = -1;
    TimeMan::msecUntilNextTC = -1;
 
+   RootPosition tpos;
+#ifdef WITH_NNUE
+   NNUEEvaluator evaluator;
+   tpos.associateEvaluator(evaluator);
+#endif
+
    for (auto filename : filenames) {
       std::cout << "rescoring " << filename << " ... " << std::endl;
       // Just convert packedsfenvalue to text
@@ -491,13 +507,11 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
          if ((++count % 100000) == 0) { std::cout << count << std::endl; }
          if (fs.read((char*)&p, sizeof(PackedSfenValue))) {
             //std::cout << p.score << std::endl;
-            RootPosition tpos; // fully empty position !
+            tpos.clear(); // fully empty position !
             set_from_packed_sfen(tpos, p.sfen);
             cos.currentMoveMs = TimeMan::GetNextMSecPerMove(tpos);
             //std::cout << GetFEN(tpos) << std::endl;
 #ifdef WITH_NNUE
-            NNUEEvaluator evaluator;
-            tpos.associateEvaluator(evaluator);
             tpos.resetNNUEEvaluator(evaluator);
 #endif
             ThreadData data;
