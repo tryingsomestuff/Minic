@@ -29,5 +29,6 @@ echo "Let's go"
 #valgrind --log-file=valgrind.log --tool=memcheck --track-origins=yes --leak-check=full ./minic.valgrind -analyze "shirov" 10 -minOutputLevel 0 -NNUEFile "Tourney/nn.bin" 
 #valgrind --log-file=valgrind.log --tool=memcheck --track-origins=yes --leak-check=full ./minic.valgrind -uci -NNUEFile Tourney/nn.bin -minOutputLevel 0
 #valgrind --log-file=valgrind.log --tool=memcheck --track-origins=yes --leak-check=full --show-leak-kinds=all ./minic.valgrind -selfplay 9 2 -randomPly 6 -minOutputLevel 0 -NNUEFile ../NNUE-Nets/narcotized_nightshift.bin
-valgrind --log-file=valgrind.log --tool=memcheck --track-origins=yes --leak-check=full --show-leak-kinds=all ./minic.valgrind -rescore /mnt/BK1/train_data/lC0/test -genFenDepth 8 -genFenDepthEG 12 -minOutputLevel 0
+#valgrind --log-file=valgrind.log --tool=memcheck --track-origins=yes --leak-check=full --show-leak-kinds=all ./minic.valgrind -rescore /mnt/BK1/train_data/lC0/test -genFenDepth 8 -genFenDepthEG 12 -minOutputLevel 0
+valgrind --log-file=valgrind.log --tool=massif --threshold=0.001 --max-snapshots=1000 ./minic.valgrind -rescore /mnt/BK1/train_data/lC0/test -genFenDepth 8 -genFenDepthEG 12 -minOutputLevel 0
 echo "done"
