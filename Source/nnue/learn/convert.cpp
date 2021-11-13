@@ -453,6 +453,7 @@ bool convert_plain(const std::vector<std::string>& filenames, const std::string&
    return true;
 }
 
+//#define DEBUG_MTRACE
 #ifdef DEBUG_MTRACE
 #include <mcheck.h>
 #endif
@@ -549,6 +550,10 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
    DynamicConfig::level          = oldLevel;
    DynamicConfig::randomOpen     = oldRandomOpen;
    DynamicConfig::randomPly      = oldRandomPly;
+
+#ifdef DEBUG_MTRACE
+   muntrace();
+#endif
 
    return true;
 }
