@@ -55,7 +55,7 @@ else
   OPT="-g -rdynamic" ; DEPTH=10
 fi
 
-LIBS="-lpthread -ldl" 
+LIBS="-lpthread -ldl"
 # -lopenblas"
 
 OPT="$WARN $d $OPT $t --std=c++17 -fno-exceptions"
