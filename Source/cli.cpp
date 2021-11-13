@@ -554,7 +554,7 @@ int cliManagement(std::string cli, int argc, char** argv) {
    if (cli == "-eval") {
        EvalData data;
        if (DynamicConfig::useNNUE) DynamicConfig::forceNNUE = true;
-       ScoreType score = eval(p, data, ThreadPool::instance().main(), true, true);
+       const ScoreType score = eval(p, data, ThreadPool::instance().main(), true, true);
        Logging::LogIt(Logging::logInfo) << "eval " << score << " phase " << data.gp;
        return 0;
     }
