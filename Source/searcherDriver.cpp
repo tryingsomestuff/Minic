@@ -171,11 +171,12 @@ void Searcher::searchDriver(bool postMove) {
       goto pvsout;
    }
 
+   // all threads clear rootScore, this is usefull for helper like in genfen or rescore.
+   rootScores.clear();
    // easy move detection (shallow open window search)
    // only main thread here (stopflag will be triggered anyway for other threads if needed)
    if (isMainThread() && DynamicConfig::multiPV == 1 && targetMaxDepth > easyMoveDetectionDepth + 5 && maxNodes == 0 &&
        currentMoveMs < INFINITETIME && currentMoveMs > 1000 && TimeMan::msecUntilNextTC > 0 && !getData().isPondering && !getData().isAnalysis) {
-      rootScores.clear();
       _data.score = pvs<true>(-MATE, MATE, p, easyMoveDetectionDepth, 0, _data.pv, _data.seldepth, isInCheck, false, false);
       std::sort(rootScores.begin(), rootScores.end(), [](const RootScores& r1, const RootScores& r2) { return r1.s > r2.s; });
       if (stopFlag) { // no more time, this is strange ...
