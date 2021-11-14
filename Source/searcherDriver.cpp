@@ -93,12 +93,12 @@ void Searcher::searchDriver(bool postMove) {
    startTime      = Clock::now();
 
    // Main thread only will reset tables
+   if (isMainThread()) {
+      TT::age();
+      MoveDifficultyUtil::variability = 1.f; // not usefull for co-searcher threads that won't depend on time
+      ThreadPool::instance().clearSearch();  // reset tables for all threads !
+   }
    if (isMainThread() || id() >= MAX_THREADS) {
-      if (isMainThread()) {
-         TT::age();
-         MoveDifficultyUtil::variability = 1.f; // not usefull for co-searcher threads that won't depend on time
-         ThreadPool::instance().clearSearch();  // reset tables for all threads !
-      }
       Logging::LogIt(Logging::logInfo) << "Search params :";
       Logging::LogIt(Logging::logInfo) << "requested time  " << getCurrentMoveMs() << " (" << currentMoveMs << ")"; // won't exceed TimeMan::maxTime
       Logging::LogIt(Logging::logInfo) << "requested depth " << (int)maxDepth;
