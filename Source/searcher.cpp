@@ -183,7 +183,7 @@ std::atomic<bool> Searcher::startLock;
 const uint64_t    Searcher::ttSizePawn = 1024 * 16 * 8;
 
 Searcher& Searcher::getCoSearcher(size_t id) {
-   static std::map<int, std::unique_ptr<Searcher>> coSearchers;
+   static std::map<size_t, std::unique_ptr<Searcher>> coSearchers;
    // init new co-searcher if not already present
    if (coSearchers.find(id) == coSearchers.end()) {
       coSearchers[id] = std::unique_ptr<Searcher>(new Searcher(id + MAX_THREADS));
@@ -294,7 +294,7 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
                const MaterialHash::MaterialHashEntry& MEntry = MaterialHash::materialHashTable[matHash];
                gp                                            = MEntry.gamePhase();
             }
-            DepthType depth(DynamicConfig::genFenDepth * gp + DynamicConfig::genFenDepthEG * (1.f - gp));
+            DepthType depth = DepthType(DynamicConfig::genFenDepth * gp + DynamicConfig::genFenDepthEG * (1.f - gp));
             DynamicConfig::randomPly = 0;
             data.p                   = pLeaf;
             data.depth               = depth;

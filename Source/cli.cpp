@@ -144,7 +144,12 @@ void selfPlay(DepthType depth) {
    p.resetNNUEEvaluator(p.Evaluator());
 #ifdef WITH_GENFILE
    if (DynamicConfig::genFen && !ThreadPool::instance().main().genStream.is_open()) {
-      ThreadPool::instance().main().genStream.open("genfen_" + std::to_string(::getpid()) + "_" + std::to_string(0) + ".epd", std::ofstream::app);
+#ifdef _WIN32
+#define GETPID _getpid
+#else
+#define GETPID ::getpid
+#endif
+      ThreadPool::instance().main().genStream.open("genfen_" + std::to_string(GETPID()) + "_" + std::to_string(0) + ".epd", std::ofstream::app);
    }
 #endif
    Position p2 = p;
@@ -570,7 +575,7 @@ int cliManagement(std::string cli, int argc, char** argv) {
     }
 
    if (cli == "-testmove") {
-      Move m = ToMove(8, 16, T_std);
+      constexpr Move m = ToMove(8, 16, T_std);
       Position p2 = p;
 #if defined(WITH_NNUE) && defined(DEBUG_NNUE_UPDATE)
       p2.associateEvaluator(evaluator);

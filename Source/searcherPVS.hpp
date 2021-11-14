@@ -113,8 +113,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // stop and time check. Only on main thread and not at each node (see PERIODICCHECK)
    if (stopFlag) return STOPSCORE;
    if (isMainThread()) {
-      static int periodicCheck = 0;
-      if (periodicCheck == 0) {
+      static uint64_t periodicCheck = 0ull;
+      if (periodicCheck == 0ull) {
          periodicCheck = (TimeMan::maxNodes > 0) ? std::min(TimeMan::maxNodes, PERIODICCHECK) : PERIODICCHECK;
          const Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
          if (TimeMan::maxNodes > 0 && nodeCount > TimeMan::maxNodes) {
