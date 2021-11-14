@@ -54,9 +54,10 @@ inline std::string backtrace(int skip = 1) {
 }
 
 #elif defined _WIN32
-#include "dbg_win.h"
+//#include "dbg_win.h"
 
 inline std::string backtrace(int skip = 1) {
+/*
    std::stringstream               buff;
    std::vector<windbg::StackFrame> stack = windbg::stack_trace();
    buff << "Callstack: \n";
@@ -64,6 +65,8 @@ inline std::string backtrace(int skip = 1) {
       buff << "0x" << std::hex << stack[i].address << ": " << stack[i].name << "(" << std::dec << stack[i].line << ") in " << stack[i].module << "\n";
    }
    return buff.str();
+*/
+   return "";
 }
 
 #elif defined __CYGWIN__

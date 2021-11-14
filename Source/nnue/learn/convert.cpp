@@ -229,8 +229,8 @@ inline void trim(std::string& s) {
 }
 
 inline bool is_like_fen(std::string fen) {
-   int count_space = std::count(fen.cbegin(), fen.cend(), ' ');
-   int count_slash = std::count(fen.cbegin(), fen.cend(), '/');
+   auto count_space = std::count(fen.cbegin(), fen.cend(), ' ');
+   auto count_slash = std::count(fen.cbegin(), fen.cend(), '/');
    return count_space == 5 && count_slash == 7;
 }
 } // namespace
@@ -522,7 +522,7 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
                const MaterialHash::MaterialHashEntry& MEntry = MaterialHash::materialHashTable[matHash];
                gp                                            = MEntry.gamePhase();
             }
-            DepthType depth(DynamicConfig::genFenDepth * gp + DynamicConfig::genFenDepthEG * (1.f - gp));
+            DepthType depth = DepthType(DynamicConfig::genFenDepth * gp + DynamicConfig::genFenDepthEG * (1.f - gp));
             DynamicConfig::randomPly = 0;
             data.p                   = tpos;
             data.depth               = depth;

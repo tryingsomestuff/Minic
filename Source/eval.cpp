@@ -214,7 +214,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
           !isLazyHigh(ScoreType(DynamicConfig::NNUEThreshold), features, score)) { 
          if (DynamicConfig::armageddon) features.scalingFactor = 1.f;              ///@todo better
          // call the net
-         ScoreType nnueScore = p.Evaluator().propagate(p.c);
+         ScoreType nnueScore = (ScoreType)p.Evaluator().propagate(p.c);
          // fuse MG and EG score applying the EG scaling factor ///@todo, doesn't the net already learned that ????
          nnueScore = ScoreType(data.gp * nnueScore + (1.f - data.gp) * nnueScore * features.scalingFactor); // use scaling factor
          // NNUE evaluation scaling
@@ -287,7 +287,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
 
    // random factor in opening if requiered
    if (p.halfmoves < 10 && DynamicConfig::randomOpen != 0)
-      features.scores[F_positional] += randomInt<ScoreType /*NO SEED USE => random device*/>(-DynamicConfig::randomOpen, DynamicConfig::randomOpen);
+      features.scores[F_positional] += randomInt<ScoreType /*NO SEED USE => random device*/>(-1*DynamicConfig::randomOpen, DynamicConfig::randomOpen);
 
    STOP_AND_SUM_TIMER(Eval2)
 
@@ -751,7 +751,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
 
    if (!DynamicConfig::armageddon){
       // apply scaling factor based on fifty move rule
-      ret *= fiftyMoveRuleScaling(p.fifty);
+      ret = ScoreType(ret*fiftyMoveRuleScaling(p.fifty));
    }
 
 #ifdef VERBOSE_EVAL

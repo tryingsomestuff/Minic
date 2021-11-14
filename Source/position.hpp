@@ -22,7 +22,7 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent = false, bool 
  * There will not change inside the search tree
  */
 struct RootInformation {
-   std::array<CastlingRights, NbSquare> castlePermHashTable;
+   std::array<CastlingRights, NbSquare> castlePermHashTable = {CastlingRights::C_none}; // C_none is 0 so ok
    std::array<std::array<Square, 2>, 2> rooksInit = {{{INVALIDSQUARE, INVALIDSQUARE}, {INVALIDSQUARE, INVALIDSQUARE}}};
    std::array<Square, 2>                kingInit  = {INVALIDSQUARE, INVALIDSQUARE};
    void initCaslingPermHashTable();
@@ -182,11 +182,11 @@ struct Position {
    // Vastly taken from Seer implementation.
    // see https://github.com/connormcmonigle/seer-nnue
 
-   [[nodiscard]] static inline constexpr int NNUEIndiceUs(Square ksq, Square s, Piece p) {
+   [[nodiscard]] static inline constexpr size_t NNUEIndiceUs(Square ksq, Square s, Piece p) {
       return FeatureIdx::major * HFlip(ksq) + HFlip(s) + FeatureIdx::usOffset(p);
    }
 
-   [[nodiscard]] static inline constexpr int NNUEIndiceThem(Square ksq, Square s, Piece p) {
+   [[nodiscard]] static inline constexpr size_t NNUEIndiceThem(Square ksq, Square s, Piece p) {
       return FeatureIdx::major * HFlip(ksq) + HFlip(s) + FeatureIdx::themOffset(p);
    }
 

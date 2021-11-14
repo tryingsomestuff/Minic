@@ -244,7 +244,7 @@ void Searcher::searchDriver(bool postMove) {
                 pvs<true>(alpha, beta, p, windowDepth, 0, pvLoc, _data.seldepth, isInCheck, false, false, skipMoves.empty() ? nullptr : &skipMoves);
             if (stopFlag) break;
             ScoreType matW =0, matB = 0;
-            delta += (2 + delta / 2) * exp(1.f - gamePhase(p,matW,matB)); // in end-game, open window faster
+            delta += ScoreType((2 + delta / 2) * exp(1.f - gamePhase(p,matW,matB))); // in end-game, open window faster
             if (alpha > -MATE && score <= alpha) {
                beta  = std::min(MATE, ScoreType((alpha + beta) / 2));
                alpha = std::max(ScoreType(score - delta), ScoreType(-MATE));

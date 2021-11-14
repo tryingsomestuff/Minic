@@ -44,10 +44,12 @@ const std::string MinicVersion = "3.18";
 #define WITH_UCI    // include or not UCI protocol support
 #define WITH_XBOARD // include or not XBOARB protocol support
 #define WITH_MAGIC  // use magic bitboard or HB ones
-#define WITH_SYZYGY // include or not syzgy ETG support
 #define WITH_NNUE   // include or not NNUE support
 #define WITH_STATS  // produce or not search statitics
 //#define WITH_MPI    // support "distributed" version or not
+#ifndef _MSC_VER
+#define WITH_SYZYGY // include or not syzgy ETG support
+#endif
 
 //#define WITHOUT_FILESYSTEM              // some compiler don't support whole std:filesystem 
 //#define LIMIT_THREADS_TO_PHYSICAL_CORES // in order to restrict thread to the number of physical core
@@ -142,6 +144,13 @@ const std::string MinicVersion = "3.18";
   #endif
 #endif
 
+#ifdef _MSC_VER
+#pragma warning(disable:4996)
+#endif
+
+#if !defined(__PRETTY_FUNCTION__) && !defined(__GNUC__)
+#define __PRETTY_FUNCTION__ __FUNCSIG__
+#endif
 
 #define INFINITETIME    TimeType(60ull * 60ull * 1000ull * 24ull * 30ull) // 1 month ...
 #define STOPSCORE       ScoreType(-20000)
