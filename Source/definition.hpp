@@ -57,7 +57,6 @@ const std::string MinicVersion = "3.18";
 //#define WITH_NNUE_CLIPPED_RELU          // use clipped relu instead of relu for NNUE
 #ifndef __ANDROID__
 #define USE_SIMD_INTRIN                   // on simd architectures, use a hand written dot product
-//#define WITH_BLAS                       // link on a given BLAS library for cblas_sgemv operations
 #endif
 
 // *** Optim (?)
