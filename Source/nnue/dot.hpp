@@ -104,7 +104,7 @@ DOT_FINLINE float v_sum_f32(v_f32 a) {
    return _mm_cvtss_f32(_mm512_castps512_ps128(sum4));
 }
 */
-#define v_load_f32(PTR) _mm512_loadu_ps((const __m512*)(PTR))
+#define v_load_f32(PTR) _mm512_load_ps((const __m512*)(PTR))
 #define v_zero_f32      _mm512_setzero_ps
 
 //----------------------------------
@@ -129,7 +129,7 @@ DOT_FINLINE float v_sum_f32(__m256 a) {
    __m128 sum        = _mm_add_ps(lo, hi);
    return _mm_cvtss_f32(sum);
 }
-#define v_load_f32 _mm256_loadu_ps
+#define v_load_f32 _mm256_load_ps
 #define v_zero_f32 _mm256_setzero_ps
 
 //----------------------------------
@@ -160,7 +160,7 @@ DOT_FINLINE float v_sum_f32(__m128 a) {
    return _mm_cvtss_f32(t4);
 #endif
 }
-#define v_load_f32 _mm_loadu_ps
+#define v_load_f32 _mm_load_ps
 #define v_zero_f32 _mm_setzero_ps
 #endif
 
