@@ -22,6 +22,7 @@
 // see https://github.com/connormcmonigle/seer-nnue
 
 #define NNUEALIGNMENT 64 // AVX512 compatible ...
+#define NNUEALIGNMENT_STD std::align_val_t{ NNUEALIGNMENT }
 
 #ifdef __clang__
 #define CONSTEXPR
@@ -419,7 +420,7 @@ template<typename NT, size_t dim0, size_t dim1, bool Q> struct BigAffine {
    }
 
    BigAffine(const BigAffine<NT, dim0, dim1, Q>& other) {
-      W = new WIT[nbW];
+      W = new (NNUEALIGNMENT_STD) WIT[nbW];
 #pragma omp simd
       for (size_t i = 0; i < nbW; ++i) { W[i] = other.W[i]; }
 #pragma omp simd
@@ -431,10 +432,10 @@ template<typename NT, size_t dim0, size_t dim1, bool Q> struct BigAffine {
       std::swap(b, other.b);
    }
 
-   BigAffine() { W = new WIT[nbW]; }
+   BigAffine() { W = new (NNUEALIGNMENT_STD) WIT[nbW]; }
 
    ~BigAffine() {
-      if (W != nullptr) { delete[] W; }
+      if (W != nullptr) { ::operator delete(W, NNUEALIGNMENT_STD); }
    }
 };
 
