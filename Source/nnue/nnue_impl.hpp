@@ -18,10 +18,6 @@
 #include "dot.hpp" // dot product simd implementation
 #endif
 
-#ifdef WITH_BLAS
-#include <cblas.h>
-#endif
-
 // Initially taken from Seer implementation in October 2020.
 // see https://github.com/connormcmonigle/seer-nnue
 
@@ -47,6 +43,7 @@ INCBIN_EXTERN(weightsFile);
 
 // quantization constantes
 
+// By default, quantization is disabled, values are float and we scale only output layer
 template<bool Q> struct Quantization {
    typedef float WT;
    typedef float WIT;
@@ -60,6 +57,9 @@ template<bool Q> struct Quantization {
    static float           round(const float& x) { return x; }
 };
 
+// When quantization is activated (on read) we try to store weights and
+// do computations using only integers, smaller being best for speed
+// but there is some constrains : see doc/
 template<> struct Quantization<true> {
    typedef int16_t WIT;
    typedef int8_t  WT;
@@ -67,7 +67,7 @@ template<> struct Quantization<true> {
    typedef int32_t BT;
    static constexpr float weightMax {2.0f}; // supposed min/max of weights values
    static constexpr int   weightScale {std::numeric_limits<WT>::max()};
-   static constexpr int   weightFactor {(int)(weightScale / weightMax)}; // quantization factor
+   static constexpr int   weightFactor {(int)(weightScale / weightMax)};
    static constexpr int   biasFactor {weightScale * weightFactor};
    static constexpr float outFactor {(weightFactor * weightFactor * weightMax) / 600.f};
    static float           round(const float& x) { return std::round(x); }
@@ -87,6 +87,7 @@ template<bool Q> inline void quantizationInfo() {
    }
 }
 
+// NT is the network type as written inside the binary file
 template<typename NT> struct WeightsStreamer {
    std::istream* file = nullptr;
 
@@ -98,17 +99,21 @@ template<typename NT> struct WeightsStreamer {
 
    template<typename T, bool Q> WeightsStreamer<NT>& streamW(T* dst, const size_t request, size_t dim0, size_t dim1) {
       assert(file);
+      Logging::LogIt(Logging::logInfo) << "Reading inner weight";
+      // we will get min and max weight for display purpose
       NT minW = std::numeric_limits<NT>::max();
       NT maxW = std::numeric_limits<NT>::min();
       std::array<char, sizeof(NT)> singleElement {};
       const NT Wscale = Quantization<Q>::weightFactor;
-      Logging::LogIt(Logging::logInfo) << "Reading inner weight";
+      
       for (size_t i(0); i < request; ++i) {
          file->read(singleElement.data(), singleElement.size());
          NT tmp {0};
          std::memcpy(&tmp, singleElement.data(), singleElement.size());
+         // update min/max
          minW = std::min(minW, tmp);
          maxW = std::max(maxW, tmp);
+         // if quantization is active and we overflow, just clamp and warn
          if (Q && std::abs(tmp * Wscale) > (NT)std::numeric_limits<T>::max()) {
             NT tmp2 = tmp;
             tmp = std::clamp(tmp2 * Wscale, (NT)std::numeric_limits<T>::min(), (NT)std::numeric_limits<T>::max());
@@ -117,8 +122,8 @@ template<typename NT> struct WeightsStreamer {
          else {
             tmp = tmp * Wscale;
          }
-#if (defined USE_SIMD_INTRIN) || (defined WITH_BLAS)
-         // transpose data ///@todo as this is default now, do this in trainer
+#if (defined USE_SIMD_INTRIN)
+         // transpose data ///@todo as this is default now, do this in trainer ...
          const size_t j = (i % dim1) * dim0 + i / dim1;
 #else
          const size_t j = i;
@@ -131,17 +136,21 @@ template<typename NT> struct WeightsStreamer {
 
    template<typename T, bool Q> WeightsStreamer<NT>& streamWI(T* dst, const size_t request) {
       assert(file);
+      Logging::LogIt(Logging::logInfo) << "Reading input weight";
+      // we will get min and max weight for display purpose
       NT minW = std::numeric_limits<NT>::max();
       NT maxW = std::numeric_limits<NT>::min();
       std::array<char, sizeof(NT)> singleElement {};
       const NT Wscale = Quantization<Q>::weightScale;
-      Logging::LogIt(Logging::logInfo) << "Reading input weight";
+      // read each weight one by one, and scale them if quantization is active
       for (size_t i(0); i < request; ++i) {
          file->read(singleElement.data(), singleElement.size());
          NT tmp {0};
          std::memcpy(&tmp, singleElement.data(), singleElement.size());
+         // update min/max
          minW = std::min(minW, tmp);
          maxW = std::max(maxW, tmp);
+         // if quantization is active and we overflow, just clamp and warn
          if (Q && std::abs(tmp * Wscale) > (NT)std::numeric_limits<T>::max()) {
             NT tmp2 = tmp;
             tmp = std::clamp(tmp2 * Wscale, (NT)std::numeric_limits<T>::min(), (NT)std::numeric_limits<T>::max());
@@ -158,17 +167,21 @@ template<typename NT> struct WeightsStreamer {
 
    template<typename T, bool Q> WeightsStreamer<NT>& streamB(T* dst, const size_t request) {
       assert(file);
+      Logging::LogIt(Logging::logInfo) << "Reading inner bias";
+      // we will get min and max bias for display purpose
       NT minB = std::numeric_limits<NT>::max();
       NT maxB = std::numeric_limits<NT>::min();
       std::array<char, sizeof(NT)> singleElement {};
       const NT Bscale = Quantization<Q>::biasFactor;
-      Logging::LogIt(Logging::logInfo) << "Reading inner bias";
+      // read each bias one by one, and scale them if quantization is active
       for (size_t i(0); i < request; ++i) {
          file->read(singleElement.data(), singleElement.size());
          NT tmp {0};
          std::memcpy(&tmp, singleElement.data(), singleElement.size());
+         // update min/max
          minB = std::min(minB, tmp);
          maxB = std::max(maxB, tmp);
+         // if quantization is active and we overflow, just clamp and warn
          if (Q && std::abs(tmp * Bscale) > (NT)std::numeric_limits<T>::max()) {
             NT tmp2 = tmp;
             tmp = std::clamp(tmp2 * Bscale, (NT)std::numeric_limits<T>::min(), (NT)std::numeric_limits<T>::max());
@@ -185,17 +198,21 @@ template<typename NT> struct WeightsStreamer {
 
    template<typename T, bool Q> WeightsStreamer<NT>& streamBI(T* dst, const size_t request) {
       assert(file);
+      Logging::LogIt(Logging::logInfo) << "Reading input bias";
+      // we will get min and max bias for display purpose
       NT minB = std::numeric_limits<NT>::max();
       NT maxB = std::numeric_limits<NT>::min();
       std::array<char, sizeof(NT)> singleElement {};
       const NT Bscale = Quantization<Q>::weightScale;
-      Logging::LogIt(Logging::logInfo) << "Reading input bias";
+      // read each bias one by one, and scale them if quantization is active
       for (size_t i(0); i < request; ++i) {
          file->read(singleElement.data(), singleElement.size());
          NT tmp {0};
          std::memcpy(&tmp, singleElement.data(), singleElement.size());
+         // update min/max
          minB = std::min(minB, tmp);
          maxB = std::max(maxB, tmp);
+         // if quantization is active and we overflow, just clamp and warn
          if (Q && std::abs(tmp * Bscale) > (NT)std::numeric_limits<T>::max()) {
             NT tmp2 = tmp;
             tmp = std::clamp(tmp2 * Bscale, (NT)std::numeric_limits<T>::min(), (NT)std::numeric_limits<T>::max());
@@ -222,16 +239,11 @@ template<typename T, bool Q> inline constexpr T activation(const T& x) {
    return std::min(std::max(T(x / Quantization<Q>::weightFactor), T {0}), T {Quantization<Q>::weightScale});
 }
 
-template<typename T, bool Q> inline constexpr T activationQSingleLayer(const T& x) {
-   return std::min(std::max(T(x), T {0}), T {Quantization<Q>::weightFactor});
-}
-
 #else // standard relu (not clipped)
 
 template<typename T, bool Q> inline constexpr typename std::enable_if<!Q, T>::type activation(const T& x) { return std::max(T(x), T {0}); }
 
 #define activationInput        activation
-#define activationQSingleLayer activation
 
 #endif
 
@@ -260,13 +272,6 @@ template<typename T, size_t dim> struct StackVector {
       return false;
    }
 #endif
-
-   /*
-  template<typename F>
-  constexpr StackVector<T, dim> apply(F&& f) const {
-    return StackVector<T, dim>{*this}.apply_(std::forward<F>(f));
-  }
-*/
 
    template<typename F> CONSTEXPR StackVector<T, dim>& apply_(F&& f) {
 #pragma omp simd
@@ -338,44 +343,32 @@ template<typename NT, size_t dim0, size_t dim1, bool Q> struct StackAffine {
    static constexpr size_t nbW = dim0 * dim1;
    static constexpr size_t nbB = dim1;
 
-   typedef typename Quantization<Q>::BT  BT;
-   typedef typename Quantization<Q>::BIT BIT;
-   typedef typename Quantization<Q>::WT  WT;
+   typedef typename Quantization<Q>::BT BT;
+   typedef typename Quantization<Q>::WT WT;
 
-   // dirty thing here, StackAffine is always for inner layer
+   // StackAffine is always for inner layer, so we can safely use WT and BT
    alignas(NNUEALIGNMENT) WT W[nbW];
    alignas(NNUEALIGNMENT) BT b[nbB];
 
    CONSTEXPR StackVector<BT, dim1> forward(const StackVector<BT, dim0>& x) const {
       alignas(NNUEALIGNMENT) auto result = StackVector<BT, dim1>::from(b);
-#ifndef WITH_BLAS
-#pragma omp simd
 #ifdef USE_SIMD_INTRIN
       for (size_t i = 0; i < dim1; ++i) { result.data[i] += x.dot_(W + i * dim0); }
 #else
+#pragma omp simd
       for (size_t i = 0; i < dim0; ++i) { result.fma_(x.data[i], W + i * dim1); }
 #endif // USE_SIMD_INTRIN
-#else
-      static_assert(std::is_same<BT, float>::value, "only works with float");
-      cblas_sgemv(CblasRowMajor, CblasNoTrans, dim1, dim0, 1, W, dim0, x.data, 1, 1, result.data, 1);
-#endif
       return result;
    }
 
-   ///@todo forward with return type of next layer
    template<typename T> CONSTEXPR StackVector<BT, dim1> forward(const StackVector<T, dim0>& x) const {
       alignas(NNUEALIGNMENT) auto result = StackVector<BT, dim1>::from(b);
-#ifndef WITH_BLAS
-#pragma omp simd
 #ifdef USE_SIMD_INTRIN
       for (size_t i = 0; i < dim1; ++i) { result.data[i] += x.dot_(W + i * dim0); }
 #else
+#pragma omp simd
       for (size_t i = 0; i < dim0; ++i) { result.fma_(x.data[i], W + i * dim1); }
 #endif // USE_SIMD_INTRIN
-#else
-      static_assert(std::is_same<BT, float>::value, "only works with float");
-      cblas_sgemv(CblasRowMajor, CblasNoTrans, dim1, dim0, 1, W, dim0, x.data, 1, 1, result.data, 1);
-#endif
       return result; // RVO
    }
 
@@ -392,7 +385,7 @@ template<typename NT, size_t dim0, size_t dim1, bool Q> struct BigAffine {
    typedef typename Quantization<Q>::BIT BIT;
    typedef typename Quantization<Q>::WIT WIT;
 
-   // dirty thing here, BigAffine is always for input layer
+   // BigAffine is alway for input layer, so we use WIT and BIT
    typename Quantization<Q>::WIT* W {nullptr};
    alignas(NNUEALIGNMENT) typename Quantization<Q>::BIT b[nbB];
 
@@ -456,7 +449,7 @@ template<typename NT, bool Q> struct NNUEWeights {
    StackAffine<NT, 64, 32, Q>                            fc2 {};
    StackAffine<NT, 96,  1, Q>                            fc3 {};
 
-   uint32_t version = 0;
+   uint32_t version {0};
 
    NNUEWeights<NT, Q>& load(WeightsStreamer<NT>& ws, bool readVersion) {
       quantizationInfo<Q>();
@@ -471,9 +464,9 @@ template<typename NT, bool Q> struct NNUEWeights {
    }
 
    static bool load(const std::string& path, NNUEWeights<NT, Q>& loadedWeights) {
-      static const uint32_t expectedVersion = 0xc0ffee00;
-      static const int      expectedSize    = 50378504; // net size + 4 for version
-      static const bool     withVersion     = true;
+      static const uint32_t expectedVersion {0xc0ffee00};
+      static const int      expectedSize    {50378504}; // net size + 4 for version
+      static const bool     withVersion     {true}; // used for backward compatiblity and debug
 
       if (path != "embedded") { // read from disk
 #ifndef __ANDROID__
@@ -524,12 +517,13 @@ template<typename NT, bool Q> struct NNUEWeights {
 };
 
 template<typename NT, bool Q> struct FeatureTransformer {
+
    const BigAffine<NT, inputLayerSize, firstInnerLayerSize, Q>* weights_;
 
    typedef typename Quantization<Q>::BIT BIT;
    typedef typename Quantization<Q>::WIT WIT;
 
-   // dirty thing here, active_ is always for input layer
+   // active_ is always for input layer, so BIT shall be used
    StackVector<BIT, firstInnerLayerSize> active_;
 
    constexpr StackVector<BIT, firstInnerLayerSize> active() const { return active_; }
@@ -563,12 +557,10 @@ template<typename NT, bool Q> struct FeatureTransformer {
 };
 
 template<Color> struct them_ {};
-
 template<> struct them_<Co_White> { static constexpr Color value = Co_Black; };
-
 template<> struct them_<Co_Black> { static constexpr Color value = Co_White; };
 
-template<typename T, typename U> struct sided {
+template<typename T, typename U> struct Sided {
    using returnType = U;
 
    T&       cast() { return static_cast<T&>(*this); }
@@ -593,11 +585,11 @@ template<typename T, typename U> struct sided {
    template<Color c> const returnType& them() const { return us<them_<c>::value>(); }
 
   private:
-   sided() {};
+   Sided() {};
    friend T;
 };
 
-template<typename NT, bool Q> struct NNUEEval : sided<NNUEEval<NT, Q>, FeatureTransformer<NT, Q>> {
+template<typename NT, bool Q> struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTransformer<NT, Q>> {
    // common data (weights and bias)
    static NNUEWeights<NT, Q> weights;
    // instance data (active index)
@@ -615,16 +607,10 @@ template<typename NT, bool Q> struct NNUEEval : sided<NNUEEval<NT, Q>, FeatureTr
       const auto w_x = white.active();
       const auto b_x = black.active();
       const auto x0  = c == Co_White ? splice(w_x, b_x).apply_(activationInput<BT, Q>) : splice(b_x, w_x).apply_(activationInput<BT, Q>);
-      //std::cout << "x0 " << x0 << std::endl;
-      //const StackVector<BT, 32> x1 = StackVector<BT, 32>::from((weights.fc0).forward(x0).apply_(activationQSingleLayer<BT,true>).data,1.f/Quantization<Q>::weightFactor);
       const auto x1 = (weights.fc0).forward(x0).apply_(activation<BT, Q>);
-      //std::cout << "x1 " << x1 << std::endl;
       const auto x2 = splice(x1, (weights.fc1).forward(x1).apply_(activation<BT, Q>));
-      //std::cout << "x2 " << x2 << std::endl;
       const auto x3 = splice(x2, (weights.fc2).forward(x2).apply_(activation<BT, Q>));
-      //std::cout << "x3 " << x3 << std::endl;
       const float val = (weights.fc3).forward(x3).item();
-      //std::cout << "val " << val / Quantization<Q>::outFactor << std::endl;
       return val / Quantization<Q>::outFactor;
    }
 
