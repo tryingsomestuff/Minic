@@ -97,7 +97,7 @@ template<typename NT> struct WeightsStreamer {
       return *this;
    }
 
-   template<typename T, bool Q> WeightsStreamer<NT>& streamW(T* dst, const size_t request, size_t dim0, size_t dim1) {
+   template<typename T, bool Q> WeightsStreamer<NT>& streamW(T* dst, const size_t request, [[maybe_unused]] size_t dim0, [[maybe_unused]] size_t dim1) {
       assert(file);
       Logging::LogIt(Logging::logInfo) << "Reading inner weight";
       // we will get min and max weight for display purpose
