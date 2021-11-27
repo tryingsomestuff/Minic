@@ -148,13 +148,13 @@ class NNUE(pl.LightningModule):
     #loss = result.mean() - entropy.mean()
 
     # from former SF trainer
-    loss_eval = (p - q).square().mean()
-    loss_result = (q - t).square().mean()
-    loss = self.lambda_ * loss_eval + (1.0 - self.lambda_) * loss_result
+    #loss_eval = (p - q).square().mean()
+    #loss_result = (q - t).square().mean()
+    #loss = self.lambda_ * loss_eval + (1.0 - self.lambda_) * loss_result
 
     # from current SF trainer
-    #pt = p * self.lambda_ + t * (1.0 - self.lambda_)
-    #loss = torch.pow(torch.abs(pt - q), 2.6).mean()
+    pt = p * self.lambda_ + t * (1.0 - self.lambda_)
+    loss = torch.pow(torch.abs(pt - q), 2.6).mean()
 
     self.log(loss_type, loss)
     return loss
