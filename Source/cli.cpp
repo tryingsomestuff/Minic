@@ -137,11 +137,15 @@ void analyze(const Position& p, DepthType depth, bool openBenchOutput = false) {
 }
 
 void selfPlay(DepthType depth) {
-   DynamicConfig::genFen = true;
+   DynamicConfig::genFen = true; ///@todo this is forced here but shall be set by CLI option in fact.
+
    RootPosition p(DynamicConfig::FRC ? chess960::positions[std::rand() % 960] : startPosition);
+#ifdef WITH_NNUE
    NNUEEvaluator evaluator;
    p.associateEvaluator(evaluator);
    p.resetNNUEEvaluator(p.Evaluator());
+#endif
+
 #ifdef WITH_GENFILE
    if (DynamicConfig::genFen && !ThreadPool::instance().main().genStream.is_open()) {
 #ifdef _WIN32
@@ -162,12 +166,10 @@ void selfPlay(DepthType depth) {
    const int minDrawScore = 8;
    const int minWinScore = 800;
    while (true) {
-      DynamicConfig::genFen = false;
       ThreadPool::instance().main().subSearch = true;
       analyze(p2, depth); // search using a specific depth
       ThreadPool::instance().main().subSearch = false;
       ThreadData d = ThreadPool::instance().main().getData();
-      DynamicConfig::genFen = true;
 
       if ( std::abs(d.score) < minDrawScore ) drawCount++;
       else drawCount = 0;
