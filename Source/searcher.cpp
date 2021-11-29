@@ -228,7 +228,7 @@ Position Searcher::getQuiet(const Position& p, Searcher* searcher, ScoreType* qS
 
 #ifdef WITH_GENFILE
 
-struct GenFENEtnry{
+struct GenFENEntry{
    std::string fen;
    Move m;
    ScoreType s;
@@ -249,9 +249,8 @@ struct GenFENEtnry{
 
 void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadData & d, const std::optional<int> result) {
    static uint64_t sfensWritten = 0;
-   if (!genFen || id() >= MAX_THREADS) return;
 
-   static std::vector<GenFENEtnry> buffer;
+   static std::vector<GenFENEntry> buffer;
 
    ThreadData data = d; // copy data from PV
    Position pLeaf = p; // copy current pos
@@ -260,7 +259,6 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
 
       Searcher& cos = getCoSearcher(id());
 
-      cos.genFen                       = false;
       const int          oldMinOutLvl  = DynamicConfig::minOutputLevel;
       const bool         oldDisableTT  = DynamicConfig::disableTT;
       const unsigned int oldLevel      = DynamicConfig::level;
@@ -299,8 +297,8 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
             data.p                   = pLeaf;
             data.depth               = depth;
             cos.setData(data);
-            // do not update COM::position here
             cos.stopFlag = false;
+            // do not update COM::position here
             cos.searchDriver(false);
             data = cos.getData();
 
@@ -308,7 +306,6 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
          }
       }
 
-      cos.genFen                    = true;
       DynamicConfig::minOutputLevel = oldMinOutLvl;
       DynamicConfig::disableTT      = oldDisableTT;
       DynamicConfig::level          = oldLevel;

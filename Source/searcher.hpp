@@ -58,7 +58,6 @@ struct Searcher {
 
 #ifdef WITH_GENFILE
    std::ofstream genStream;
-   bool          genFen = true;
    void          writeToGenFile(const Position& p, bool getQuietPos, const ThreadData & d, const std::optional<int> result);
 #endif
 
