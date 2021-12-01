@@ -23,6 +23,8 @@ const bool doProbcut           = true;
 const bool doHistoryPruning    = true;
 const bool doCapHistoryPruning = true;
 const bool doCMHPruning        = true;
+const bool doIID               = false;
+const bool doIIR               = true;
 
 // first value if eval score is used, second if hash score is used
 extern CONST_SEARCH_TUNING ScoreType qfutilityMargin[2];

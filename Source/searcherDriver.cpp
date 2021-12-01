@@ -177,7 +177,7 @@ void Searcher::searchDriver(bool postMove) {
    // only main thread here (stopflag will be triggered anyway for other threads if needed)
    if (isMainThread() && DynamicConfig::multiPV == 1 && targetMaxDepth > easyMoveDetectionDepth + 5 && maxNodes == 0 &&
        currentMoveMs < INFINITETIME && currentMoveMs > 1000 && TimeMan::msecUntilNextTC > 0 && !getData().isPondering && !getData().isAnalysis) {
-      _data.score = pvs<true>(-MATE, MATE, p, easyMoveDetectionDepth, 0, _data.pv, _data.seldepth, isInCheck, false, false);
+      _data.score = pvs<true>(-MATE, MATE, p, easyMoveDetectionDepth, 0, _data.pv, _data.seldepth, isInCheck, false);
       std::sort(rootScores.begin(), rootScores.end(), [](const RootScores& r1, const RootScores& r2) { return r1.s > r2.s; });
       if (stopFlag) { // no more time, this is strange ...
          goto pvsout;
@@ -242,7 +242,7 @@ void Searcher::searchDriver(bool postMove) {
          while (!stopFlag) {
             pvLoc.clear();
             score =
-                pvs<true>(alpha, beta, p, windowDepth, 0, pvLoc, _data.seldepth, isInCheck, false, false, skipMoves.empty() ? nullptr : &skipMoves);
+                pvs<true>(alpha, beta, p, windowDepth, 0, pvLoc, _data.seldepth, isInCheck, false, skipMoves.empty() ? nullptr : &skipMoves);
             if (stopFlag) break;
             ScoreType matW =0, matB = 0;
             delta += ScoreType((2 + delta / 2) * exp(1.f - gamePhase(p,matW,matB))); // in end-game, open window faster

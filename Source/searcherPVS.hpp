@@ -105,7 +105,6 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                         DepthType&                   seldepth,
                         bool                         isInCheck,
                         bool                         cutNode,
-                        bool                         canPrune,
                         const std::vector<MiniMove>* skipMoves) {
    // is updated recursively in pvs and qsearch calls but also affected to Searcher data in order to be available inside eval.
    _height = height;
@@ -337,8 +336,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    const bool improving    = (!isInCheck && height > 1 && stack[p.halfmoves].eval >= stack[p.halfmoves - 2].eval);
 
    // forward prunings
-   if (!DynamicConfig::mateFinder && canPrune && !isInCheck /*&& !isMateScore(beta)*/ &&
-       !pvnode) { // removing the !isMateScore(beta) is not losing that much elo and allow for better check mate finding ...
+   if (!DynamicConfig::mateFinder && !rootnode && !isInCheck && !pvnode /*&& !isMateScore(beta)*/) { // removing the !isMateScore(beta) is not losing that much elo and allow for better check mate finding ...
+      
       // static null move
       if (SearchConfig::doStaticNullMove && !isMateScore(evalScore) && isNotEndGame &&  
           depth <= SearchConfig::staticNullMoveMaxDepth[evalScoreIsHashScore]) {
@@ -384,9 +383,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                Position pN = p;
                applyNull(*this, pN);
                assert(pN.halfmoves < MAX_PLY && pN.halfmoves >= 0);
-               stack[pN.halfmoves].p = pN;
+               stack[pN.halfmoves].p = pN; ///@todo another expensive copy !!!!
                stack[pN.halfmoves].h = pN.h;
-               ScoreType nullscore   = -pvs<false>(-beta, -beta + 1, pN, nullDepth, height + 1, nullPV, seldepth, isInCheck, !cutNode, false);
+               ScoreType nullscore   = -pvs<false>(-beta, -beta + 1, pN, nullDepth, height + 1, nullPV, seldepth, isInCheck, !cutNode);
                if (stopFlag) return STOPSCORE;
                TT::Entry nullEThreat;
                TT::getEntry(*this, pN, computeHash(pN), 0, nullEThreat);
@@ -397,7 +396,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                      stats.incr(Stats::sid_nullMoveTry3);
                      nullMoveMinPly = height + 3*nullDepth/4;
                      nullMoveVerifColor = p.c;
-                     nullscore = pvs<false>(beta - 1, beta, p, nullDepth, height+1, nullPV, seldepth, isInCheck, !cutNode, false);
+                     nullscore = pvs<false>(beta - 1, beta, p, nullDepth, height+1, nullPV, seldepth, isInCheck, false);
                      nullMoveMinPly = 0;
                      nullMoveVerifColor = Co_None;
                      if (stopFlag) return STOPSCORE;
@@ -441,7 +440,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             if (scorePC >= betaPC) {
                stats.incr(Stats::sid_probcutTry2);
                scorePC = -pvs<false>(-betaPC, -betaPC + 1, p2, depth - SearchConfig::probCutMinDepth + 1, height + 1, pcPV, seldepth,
-                                     isAttacked(p2, kingSquare(p2)), !cutNode, true);
+                                     isAttacked(p2, kingSquare(p2)), !cutNode);
             }
             if (stopFlag) return STOPSCORE;
             if (scorePC >= betaPC) return stats.incr(Stats::sid_probcut), scorePC;
@@ -449,12 +448,15 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       }
    }
 
-   // IID
-   if (!validTTmove /*|| e.d < depth-4*/) {
+   // Ed style IIR
+   if ( SearchConfig::doIIR && pvnode && depth >= 6 && !validTTmove) depth -= 1;
+
+   // Classic IID
+   if (SearchConfig::doIID && !validTTmove /*|| e.d < depth-4*/) {
       if (((pvnode && depth >= SearchConfig::iidMinDepth) || (cutNode && depth >= SearchConfig::iidMinDepth2))) { ///@todo try with cutNode only ?
          stats.incr(Stats::sid_iid);
          PVList iidPV;
-         DISCARD pvs<pvnode>(alpha, beta, p, depth / 2, height, iidPV, seldepth, isInCheck, cutNode, false, skipMoves);
+         DISCARD pvs<pvnode>(alpha, beta, p, depth / 2, height, iidPV, seldepth, isInCheck, cutNode, skipMoves);
          if (stopFlag) return STOPSCORE;
          TT::getEntry(*this, p, pHash, 0, e);
          ttHit       = e.h != nullHash;
@@ -554,11 +556,11 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             // gives check extension
             //if (EXTENDMORE(extension) && isCheck ) stats.incr(Stats::sid_checkExtension2),++extension; // we give check with a non risky move
             /*
-               // CMH extension
-               if (EXTENDMORE(extension) && isQuiet) {
-                   const int pp = (p.board_const(Move2From(e.m)) + PieceShift) * NbSquare + to;
-                   if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= HISTORY_MAX / 2 && cmhPtr[1][pp] >= HISTORY_MAX / 2) stats.incr(Stats::sid_CMHExtension), ++extension;
-               }
+            // CMH extension
+            if (EXTENDMORE(extension) && isQuiet) {
+                const int pp = (p.board_const(Move2From(e.m)) + PieceShift) * NbSquare + to;
+                if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= HISTORY_MAX / 2 && cmhPtr[1][pp] >= HISTORY_MAX / 2) stats.incr(Stats::sid_CMHExtension), ++extension;
+            }
             */
             // advanced pawn push extension
             /*
@@ -577,12 +579,16 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                PVList          sePV;
                DepthType       seSeldetph = 0;
                std::vector<MiniMove> skip({e.m});
-               const ScoreType       score = pvs<false>(betaC - 1, betaC, p, depth / 2, height, sePV, seSeldetph, isInCheck, cutNode, false, &skip);
+               const ScoreType       score = pvs<false>(betaC - 1, betaC, p, depth / 2, height, sePV, seSeldetph, isInCheck, cutNode, &skip);
                if (stopFlag) return STOPSCORE;
                if (score < betaC) { // TT move is singular
                   stats.incr(Stats::sid_singularExtension), /*ttMoveSingularExt=!ttMoveIsCapture,*/ ++extension;
                   // TT move is "very singular" : kind of single reply extension
-                  if (score < betaC - 4 * depth) stats.incr(Stats::sid_singularExtension2), ++extension;
+                  if (score < betaC - 4 * depth) {
+                     stats.incr(Stats::sid_singularExtension2);
+                     ++extension;
+                     ///@todo try to avoid too much extensions in the same line ?
+                  }
                }
                // multi cut (at least the TT move and another move are above beta)
                else if (betaC >= beta) {
@@ -590,12 +596,12 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                }
                // if TT move is above beta, we try a reduce search early to see if another move is above beta (from SF)
                else if (e.s >= beta) {
-                  const ScoreType score2 = pvs<false>(beta - 1, beta, p, depth - 4, height, sePV, seSeldetph, isInCheck, cutNode, false, &skip);
+                  const ScoreType score2 = pvs<false>(beta - 1, beta, p, depth - 4, height, sePV, seSeldetph, isInCheck, cutNode, &skip);
                   if (score2 > beta) return stats.incr(Stats::sid_singularExtension4), beta; // fail-hard
                }
             }
          }
-         ScoreType ttScore = -pvs<pvnode>(-beta, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, isCheck, !cutNode, true);
+         ScoreType ttScore = -pvs<pvnode>(-beta, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, isCheck, !cutNode);
          if (stopFlag) return STOPSCORE;
          if (rootnode) { rootScores.push_back({e.m, ttScore}); }
          if (ttScore > bestScore) {
@@ -755,7 +761,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       }
       // pvs
       if (validMoveCount < (2 /*+2*rootnode*/) || !SearchConfig::doPVS){
-         score = -pvs<pvnode>(-beta, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, isCheck, !cutNode, true);
+         score = -pvs<pvnode>(-beta, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, isCheck, false);
          ++validNonPrunedCount;
       }
       else {
@@ -890,18 +896,18 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          ++validNonPrunedCount;
 
          // PVS
-         score = -pvs<false>(-alpha - 1, -alpha, p2, nextDepth, height + 1, childPV, seldepth, isCheck, true, true);
+         score = -pvs<false>(-alpha - 1, -alpha, p2, nextDepth, height + 1, childPV, seldepth, isCheck, true);
          if (reduction > 0 && score > alpha) {
             stats.incr(Stats::sid_lmrFail);
             childPV.clear();
-            score = -pvs<false>(-alpha - 1, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, isCheck, !cutNode, true);
+            score = -pvs<false>(-alpha - 1, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, isCheck, !cutNode);
          }
          if (pvnode && score > alpha && (rootnode || score < beta)) {
             stats.incr(Stats::sid_pvsFail);
             childPV.clear();
             // potential new pv node
-            score = -pvs<true>(-beta, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, isCheck, false, true);
-         } 
+            score = -pvs<true>(-beta, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, isCheck, false);
+         }
       }
       if (stopFlag) return STOPSCORE;
       if (rootnode) { rootScores.push_back({*it, score}); }
