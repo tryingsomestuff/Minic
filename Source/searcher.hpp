@@ -81,7 +81,6 @@ struct Searcher {
                  DepthType&                   seldepth,
                  bool                         isInCheck,
                  bool                         cutNode,
-                 bool                         canPrune,
                  const std::vector<MiniMove>* skipMoves = nullptr);
 
    [[nodiscard]] ScoreType qsearch(ScoreType       alpha,
