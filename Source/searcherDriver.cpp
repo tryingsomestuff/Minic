@@ -72,8 +72,10 @@ void Searcher::searchDriver(bool postMove) {
    // requested depth can be changed according to level or skill parameter
    DynamicConfig::level = DynamicConfig::limitStrength ? Skill::convertElo2Level() : DynamicConfig::level;
    DepthType maxDepth   = _data.depth; // _data.depth will be reset to zero later
+   bool depthLimitedSearch = false;
    if (Distributed::isMainProcess()) {
       maxDepth = std::max((DepthType)1, (Skill::enabled() && !DynamicConfig::nodesBasedLevel) ? std::min(maxDepth, Skill::limitedDepth()) : maxDepth);
+      depthLimitedSearch = maxDepth != _data.depth;
    }
    else {
       // other process performs infinite search
@@ -119,15 +121,10 @@ void Searcher::searchDriver(bool postMove) {
    }
 
    // reset output search results
-   _data.score    = 0;
-   _data.best     = INVALIDMOVE;
-   _data.seldepth = 0;
-   _data.depth    = 0;
-   _data.pv.clear();
+   _data.reset();
 
    const bool isInCheck = isAttacked(p, kingSquare(p));
-   const DepthType easyMoveDetectionDepth = (DepthType)std::min(12,5 + int(currentMoveMs/5000));
-   const DepthType startDepth = 1; //std::min(d,easyMoveDetectionDepth);
+   const DepthType easyMoveDetectionDepth = (DepthType)std::min(20, 10 + int(currentMoveMs/3000));
 
    // initialize multiPV stuff
    DynamicConfig::multiPV = (Logging::ct == Logging::CT_uci ? DynamicConfig::multiPV : 1);
@@ -145,6 +142,8 @@ void Searcher::searchDriver(bool postMove) {
 
    // using MAX_DEPTH-6 so that draw can be found for sure ///@todo I don't understand this -6 anymore ..
    const DepthType targetMaxDepth = std::min(maxDepth, DepthType(MAX_DEPTH - 6));
+
+   const bool isFiniteTimeSearch = maxNodes == 0 && !depthLimitedSearch && currentMoveMs < INFINITETIME && TimeMan::msecUntilNextTC > 0 && !getData().isPondering && !getData().isAnalysis;
 
    // forced bongcloud
    if (DynamicConfig::bongCloud && (p.castling & (p.c == Co_White ? C_w_all : C_b_all)) ){
@@ -171,27 +170,18 @@ void Searcher::searchDriver(bool postMove) {
       goto pvsout;
    }
 
-   // all threads clear rootScore, this is usefull for helper like in genfen or rescore.
-   rootScores.clear();
-   // easy move detection (shallow open window search)
+   // forced move detection
    // only main thread here (stopflag will be triggered anyway for other threads if needed)
-   if (isMainThread() && DynamicConfig::multiPV == 1 && targetMaxDepth > easyMoveDetectionDepth + 5 && maxNodes == 0 &&
-       currentMoveMs < INFINITETIME && currentMoveMs > 1000 && TimeMan::msecUntilNextTC > 0 && !getData().isPondering && !getData().isAnalysis) {
-      _data.score = pvs<true>(-MATE, MATE, p, easyMoveDetectionDepth, 0, _data.pv, _data.seldepth, isInCheck, false);
-      std::sort(rootScores.begin(), rootScores.end(), [](const RootScores& r1, const RootScores& r2) { return r1.s > r2.s; });
-      if (stopFlag) { // no more time, this is strange ...
-         goto pvsout;
-      }
+   if (isMainThread() && DynamicConfig::multiPV == 1 && isFiniteTimeSearch && currentMoveMs > 100) { ///@todo should work with nps here
+      _data.score = pvs<true>(-MATE, MATE, p, 1, 0, _data.pv, _data.seldepth, isInCheck, false); // depth 1 search to get real valid moves
+      // only one : check evasion or zugzwang
       if (rootScores.size() == 1) {
-         moveDifficulty = MoveDifficultyUtil::MD_forced; // only one : check evasion or zugzwang
-      }
-      else if (rootScores.size() > 1 && rootScores[0].s > rootScores[1].s + MoveDifficultyUtil::easyMoveMargin) {
-         moveDifficulty = MoveDifficultyUtil::MD_easy;
+         moveDifficulty = MoveDifficultyUtil::MD_forced; 
       }
    }
 
    // ID loop
-   for (DepthType depth = startDepth; depth <= targetMaxDepth && !stopFlag; ++depth) {
+   for (DepthType depth = 1; depth <= targetMaxDepth && !stopFlag; ++depth) {
 
       // MultiPV loop
       std::vector<MiniMove> skipMoves;
@@ -241,8 +231,7 @@ void Searcher::searchDriver(bool postMove) {
          // Aspiration loop
          while (!stopFlag) {
             pvLoc.clear();
-            score =
-                pvs<true>(alpha, beta, p, windowDepth, 0, pvLoc, _data.seldepth, isInCheck, false, skipMoves.empty() ? nullptr : &skipMoves);
+            score = pvs<true>(alpha, beta, p, windowDepth, 0, pvLoc, _data.seldepth, isInCheck, false, skipMoves.empty() ? nullptr : &skipMoves);
             if (stopFlag) break;
             ScoreType matW =0, matB = 0;
             delta += ScoreType((2 + delta / 2) * exp(1.f - gamePhase(p,matW,matB))); // in end-game, open window faster
@@ -281,7 +270,7 @@ void Searcher::searchDriver(bool postMove) {
             }
          }
          else {
-            // this aspirasion multipv loop was fully done, let's update results
+            // this aspiration multipv loop was fully done, let's update results
             _data.depth         = depth;
             currentScore[multi] = score;
 
