@@ -160,6 +160,11 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    debug_king_cap(p);
 
    const bool rootnode = height == 0;
+   
+   if (rootnode){
+      // all threads clear rootScore, this is usefull for helper like in genfen or rescore.
+      rootScores.clear();
+   }
 
    if(!rootnode){
       alpha = std::max(alpha, (ScoreType)(-MATE + height));

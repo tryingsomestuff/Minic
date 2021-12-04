@@ -29,6 +29,13 @@ struct ThreadData {
    SearchData datas;
    bool       isPondering = false;
    bool       isAnalysis  = false;
+   void reset(){
+      score    = 0;
+      best     = INVALIDMOVE;
+      seldepth = 0;
+      depth    = 0;
+      pv.clear();
+   }
 };
 
 std::ostream& operator<<(std::ostream& of, const ThreadData& d);
