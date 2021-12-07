@@ -275,7 +275,7 @@ void ExtendedPosition::test(const std::vector<std::string> &positions,
             ThreadPool::instance().main().stopFlag = false;
             //COM::position = extP; // only need for display purpose
             ThreadPool::instance().main().searchDriver(false);
-            d                   = ThreadPool::instance().main().getData();
+            d = ThreadPool::instance().main().getData();
             const Move bestMove = d.best;
 
             results[k][t].name = extP.id();

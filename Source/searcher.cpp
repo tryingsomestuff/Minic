@@ -209,6 +209,7 @@ Position Searcher::getQuiet(const Position& p, Searcher* searcher, ScoreType* qS
    // go for a qsearch (no pruning, open bounds)
    cos.stopFlag  = false;
    cos.subSearch = true;
+   cos.currentMoveMs = INFINITETIME;
    s = cos.qsearchNoPruning(-10000, 10000, pQuiet, height, seldepth, &pv);
    cos.subSearch = false;
    if (qScore) *qScore = s;
@@ -298,10 +299,10 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
             data.depth               = depth;
             cos.setData(data);
             cos.stopFlag = false;
+            cos.currentMoveMs = INFINITETIME;
             // do not update COM::position here
             cos.searchDriver(false);
             data = cos.getData();
-
             // std::cout << data << std::endl; // debug
          }
       }
