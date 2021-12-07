@@ -75,7 +75,7 @@ template<Piece pp>
 namespace MagicBB {
 
 /*!
- * This compact magic BB implemtation is very near the one used
+ * This compact magic BB implementation is very near the one used
  * in RubiChess and Stockfish
  * It is not really much faster than HQ BB, maybe around +10%
  */

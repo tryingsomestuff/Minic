@@ -36,7 +36,7 @@ struct Searcher {
 
    Stats stats;
 
-   inline void DisplayStats() const {
+   inline void displayStats() const {
       for (size_t k = 0; k < Stats::sid_maxid; ++k) {
          Logging::LogIt(Logging::logInfo) << Stats::Names[k] << " " << stats.counters[(Stats::StatId)k];
       }
