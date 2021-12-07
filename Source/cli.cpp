@@ -453,7 +453,7 @@ int cliManagement(std::string cli, int argc, char** argv) {
       ms = (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count();
       Logging::LogIt(Logging::logInfo) << "Eval speed : " << data.size() * 10.f / (ms * 1000) << " Meval/s";
 
-      ThreadPool::instance().DisplayStats();
+      ThreadPool::instance().displayStats();
       return 0;
     }
 

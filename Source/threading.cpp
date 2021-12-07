@@ -97,7 +97,7 @@ void ThreadPool::stop() {
    for (auto& s : *this) (*s).stopFlag = true;
 }
 
-void ThreadPool::DisplayStats() const {
+void ThreadPool::displayStats() const {
    for (size_t k = 0; k < Stats::sid_maxid; ++k) { Logging::LogIt(Logging::logInfo) << Stats::Names[k] << " " << counter((Stats::StatId)k); }
 }
 

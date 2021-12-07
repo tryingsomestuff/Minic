@@ -435,7 +435,7 @@ pvsout:
       // display search statistics (only when all threads and process are done and sync)
       if (Distributed::moreThanOneProcess()) { Distributed::showStat(); }
       else {
-         ThreadPool::instance().DisplayStats();
+         ThreadPool::instance().displayStats();
       }
 
       if (postMove) {

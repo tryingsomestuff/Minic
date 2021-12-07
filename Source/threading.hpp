@@ -54,7 +54,7 @@ class ThreadPool : public std::vector<std::unique_ptr<Searcher>> {
    // gathering counter information from all threads
    [[nodiscard]] Counter counter(Stats::StatId id, bool forceLocal = false) const;
 
-   void DisplayStats() const;
+   void displayStats() const;
    void clearGame();
    void clearSearch();
 
