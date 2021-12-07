@@ -510,7 +510,6 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
             //std::cout << p.score << std::endl;
             tpos.clear(); // fully empty position !
             set_from_packed_sfen(tpos, p.sfen);
-            cos.currentMoveMs = TimeMan::GetNextMSecPerMove(tpos);
             //std::cout << GetFEN(tpos) << std::endl;
 #ifdef WITH_NNUE
             tpos.resetNNUEEvaluator(evaluator);
@@ -527,8 +526,9 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
             data.p                   = tpos;
             data.depth               = depth;
             cos.setData(data);
-            // do not update COM::position here
             cos.stopFlag = false;
+            cos.currentMoveMs = INFINITETIME;
+            // do not update COM::position here
             cos.searchDriver(false);
             data = cos.getData();
             p.score = data.score;
