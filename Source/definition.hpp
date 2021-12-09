@@ -46,7 +46,7 @@ const std::string MinicVersion = "3.18";
 #define WITH_MAGIC  // use magic bitboard or HB ones
 #define WITH_NNUE   // include or not NNUE support
 #define WITH_STATS  // produce or not search statitics
-//#define WITH_MPI    // support "distributed" version or not
+#define WITH_MPI    // support "distributed" version or not
 #ifndef _MSC_VER
 #define WITH_SYZYGY // include or not syzgy ETG support
 #endif

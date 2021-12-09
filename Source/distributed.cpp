@@ -17,6 +17,8 @@ int         worldSize;
 int         rank;
 std::string name;
 
+bool stopflag;
+
 MPI_Comm _commTT    = MPI_COMM_NULL;
 MPI_Comm _commTT2   = MPI_COMM_NULL;
 MPI_Comm _commStat  = MPI_COMM_NULL;

@@ -3,12 +3,12 @@ ulimit -s unlimited
 
 if grep "^#define WITH_MPI" Source/definition.hpp ; then
    echo "Build with mpi"
-   if (mpirun --version | grep Intel); then
+   if (mpirun --version | grep Open); then
       export CXX=mpicxx
       export CC=mpicc
       which mpirun
    else
-      echo "Please use IntelMPI, only validated MPI distribution with Minic"
+      echo "Please use Open, only validated MPI distribution with Minic"
       exit 1
    fi
 else
