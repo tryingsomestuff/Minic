@@ -418,19 +418,22 @@ pvsout:
 
       // sync point for distributed search
       Distributed::winFence(Distributed::_winStop);
-      Distributed::syncStat();
-      Distributed::syncTT();
-
       if (Distributed::isMainProcess()) {
          for (auto r = 1; r < Distributed::worldSize; ++r) {
             Distributed::get(&ThreadPool::instance().main().stopFlag, 1, Distributed::_winStop, r);
             Distributed::winFence(Distributed::_winStop);
-            while (ThreadPool::instance().main().stopFlag) {
+            // wait for other process to have stopFlag activated
+            while (!ThreadPool::instance().main().stopFlag) {
                Distributed::get(&ThreadPool::instance().main().stopFlag, 1, Distributed::_winStop, r);
                Distributed::winFence(Distributed::_winStop);
             }
          }
       }
+
+      // gather various process stats
+      Distributed::syncStat();
+      // share our TT
+      Distributed::syncTT();
 
       // display search statistics (only when all threads and process are done and sync)
       if (Distributed::moreThanOneProcess()) { Distributed::showStat(); }
