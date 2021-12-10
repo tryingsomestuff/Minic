@@ -126,7 +126,12 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          }
          Distributed::pollStat();
 
-         if (!Distributed::isMainProcess()) { Distributed::get(&ThreadPool::instance().main().stopFlag, 1, Distributed::_winStop, 0); }
+         if (!Distributed::isMainProcess()) { 
+            bool masterStopFlag;
+            Distributed::get(&masterStopFlag, 1, Distributed::_winStop, 0, Distributed::_requestStop); 
+	         Distributed::waitRequest(Distributed::_requestStop);
+            ThreadPool::instance().main().stopFlag = masterStopFlag;
+         }
 
          if (stopFlag) return STOPSCORE;
       }

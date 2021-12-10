@@ -309,7 +309,7 @@ void Searcher::searchDriver(bool postMove) {
                // store current depth info
                getSearchData().scores[depth] = _data.score;
                getSearchData().nodes[depth]  = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
-               if (pvLoc.size()) getSearchData().moves[depth] = Move2MiniMove(pvLoc[0]);
+               if (!pvLoc.empty()) getSearchData().moves[depth] = Move2MiniMove(pvLoc[0]);
 
                // check for an emergency
                if (TimeMan::isDynamic && depth > MoveDifficultyUtil::emergencyMinDepth &&
@@ -321,7 +321,7 @@ void Searcher::searchDriver(bool postMove) {
                }
 
                // update a "variability" measure to scale remaining time on it ///@todo tune this more
-               if (depth > 12 && pvLoc.size()) {
+               if (depth > 12 && !pvLoc.empty()) {
                   if (getSearchData().moves[depth] != getSearchData().moves[depth - 1]) MoveDifficultyUtil::variability *= (1.f + float(depth) / 100); // slow but ok here
                   else
                      MoveDifficultyUtil::variability *= 0.97f;
@@ -348,7 +348,12 @@ void Searcher::searchDriver(bool postMove) {
                }
 
                // sync (pull) stopflag in other process
-               if (!Distributed::isMainProcess()) { Distributed::get(&ThreadPool::instance().main().stopFlag, 1, Distributed::_winStop, 0); }
+               if (!Distributed::isMainProcess()) {
+                  bool masterStopFlag;
+                  Distributed::get(&masterStopFlag, 1, Distributed::_winStop, 0, Distributed::_requestStop);
+	               Distributed::waitRequest(Distributed::_requestStop);
+                  ThreadPool::instance().main().stopFlag = masterStopFlag;
+               }
             }
          }
       } // multiPV loop end
@@ -417,18 +422,27 @@ pvsout:
       ThreadPool::instance().wait(true);
 
       // sync point for distributed search
-      Distributed::winFence(Distributed::_winStop);
       if (Distributed::isMainProcess()) {
+         Logging::LogIt(Logging::logInfo) << "Waiting for all process";
          for (auto r = 1; r < Distributed::worldSize; ++r) {
-            Distributed::get(&ThreadPool::instance().main().stopFlag, 1, Distributed::_winStop, r);
-            Distributed::winFence(Distributed::_winStop);
+            bool remoteStopFlag;
+            Distributed::get(&remoteStopFlag, 1, Distributed::_winStop, r, Distributed::_requestStop);
+	         Distributed::waitRequest(Distributed::_requestStop);
             // wait for other process to have stopFlag activated
-            while (!ThreadPool::instance().main().stopFlag) {
-               Distributed::get(&ThreadPool::instance().main().stopFlag, 1, Distributed::_winStop, r);
-               Distributed::winFence(Distributed::_winStop);
+            while (!remoteStopFlag) {
+               Distributed::get(&remoteStopFlag, 1, Distributed::_winStop, r, Distributed::_requestStop);
+	            Distributed::waitRequest(Distributed::_requestStop);
             }
          }
+         Logging::LogIt(Logging::logInfo) << "... ok";
       }
+      // sync (pull) stopflag in other process
+      else {
+         bool masterStopFlag;
+         Distributed::get(&masterStopFlag, 1, Distributed::_winStop, 0, Distributed::_requestStop);
+	      Distributed::waitRequest(Distributed::_requestStop);
+         ThreadPool::instance().main().stopFlag = masterStopFlag;
+      }      
 
       // gather various process stats
       Distributed::syncStat();

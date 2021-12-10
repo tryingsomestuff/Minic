@@ -57,6 +57,7 @@ extern MPI_Request _requestTT;
 extern MPI_Request _requestStat;
 extern MPI_Request _requestInput;
 extern MPI_Request _requestMove;
+extern MPI_Request _requestStop;
 
 extern MPI_Win _winStop;
 
@@ -107,14 +108,18 @@ template<typename T> inline void asyncAllReduceSum(T* local, T* global, int n, M
    checkError(MPI_Iallreduce(local, global, n, TraitMpiType<T>::type, MPI_SUM, com, &req));
 }
 
-template<typename T> inline void put(T* ptr, int n, MPI_Win& window, int target) {
+template<typename T> inline void put(T* ptr, int n, MPI_Win& window, int target, MPI_Request & req) {
    if (!moreThanOneProcess()) return;
-   checkError(MPI_Put(ptr, n, TraitMpiType<T>::type, target, MPI_Aint(0), n, TraitMpiType<T>::type, window));
+   Logging::LogIt(Logging::logInfo) << "Window put... ";
+   checkError(MPI_Rput(ptr, n, TraitMpiType<T>::type, target, MPI_Aint(0), n, TraitMpiType<T>::type, window, &req));
+   Logging::LogIt(Logging::logInfo) << "... ok";
 }
 
-template<typename T> inline void get(T* ptr, int n, MPI_Win& window, int source) {
+template<typename T> inline void get(T* ptr, int n, MPI_Win& window, int source, MPI_Request & req) {
    if (!moreThanOneProcess()) return;
-   checkError(MPI_Get(ptr, n, TraitMpiType<T>::type, source, MPI_Aint(0), n, TraitMpiType<T>::type, window));
+   Logging::LogIt(Logging::logInfo) << "Window get... ";
+   checkError(MPI_Rget(ptr, n, TraitMpiType<T>::type, source, MPI_Aint(0), n, TraitMpiType<T>::type, window, &req));
+   Logging::LogIt(Logging::logInfo) << "... ok";
 }
 
 template<typename T> inline void putMainToAll(T* ptr, int n, MPI_Win& window) {
@@ -130,9 +135,11 @@ template<typename T> inline void asyncAllGather(T* inptr, T* outptr, int n, MPI_
    checkError(MPI_Iallgather(inptr, n, TraitMpiType<T>::type, outptr, n, TraitMpiType<T>::type, com, &req));
 }
 
-inline void winFence(MPI_Win& window) { 
+inline void winFence(MPI_Win& window, const std::string & msg = "") { 
    if (!moreThanOneProcess()) return;
+   Logging::LogIt(Logging::logInfo) << "Window fence... " + msg;
    checkError(MPI_Win_fence(0, window)); 
+   Logging::LogIt(Logging::logInfo) << "... ok";
 }
 
 void waitRequest(MPI_Request& req);
@@ -168,6 +175,7 @@ extern DummyType _requestTT;
 extern DummyType _requestStat;
 extern DummyType _requestInput;
 extern DummyType _requestMove;
+extern DummyType _requestStop;
 
 extern DummyType _winStop;
 
@@ -186,11 +194,12 @@ template<typename T> inline void asyncBcast(T *, int, DummyType &, DummyType &) 
 
 template<typename T> inline void putMainToAll(T *, int, DummyType &) {}
 
-template<typename T> inline void get(T *, int, DummyType &, int) {}
+template<typename T> inline void get(T *, int, DummyType &, int, DummyType &) {}
+template<typename T> inline void put(T *, int, DummyType &, int, DummyType &) {}
 
 inline void waitRequest(DummyType &) {}
 
-inline void winFence(DummyType &) {}
+inline void winFence(DummyType &, const std::string & ) {}
 
 inline void initStat() {}
 inline void sendStat() {}
