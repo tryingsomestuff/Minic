@@ -50,16 +50,19 @@ extern MPI_Comm _commTT2;
 extern MPI_Comm _commStat;
 extern MPI_Comm _commStat2;
 extern MPI_Comm _commInput;
-extern MPI_Comm _commStop;
 extern MPI_Comm _commMove;
+extern MPI_Comm _commStopFromR0;
+extern MPI_Comm _commStopToR0;
 
 extern MPI_Request _requestTT;
 extern MPI_Request _requestStat;
 extern MPI_Request _requestInput;
 extern MPI_Request _requestMove;
-extern MPI_Request _requestStop;
+extern MPI_Request _requestStopFromR0;
+extern MPI_Request _requestStopToR0;
 
-extern MPI_Win _winStop;
+extern MPI_Win _winStopFromR0;
+extern MPI_Win _winStopToR0;
 
 void init();
 void lateInit();
@@ -168,16 +171,19 @@ extern DummyType _commTT2;
 extern DummyType _commStat;
 extern DummyType _commStat2;
 extern DummyType _commInput;
-extern DummyType _commStop;
 extern DummyType _commMove;
+extern DummyType _commStopFromR0;
+extern DummyType _commStopToR0;
 
 extern DummyType _requestTT;
 extern DummyType _requestStat;
 extern DummyType _requestInput;
 extern DummyType _requestMove;
-extern DummyType _requestStop;
+extern DummyType _requestStopFromR0;
+extern DummyType _requestStopToR0;
 
-extern DummyType _winStop;
+extern DummyType _winStopFromR0;
+extern DummyType _winStopToR0;
 
 inline void checkError(int) {}
 
