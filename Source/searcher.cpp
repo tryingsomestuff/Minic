@@ -4,7 +4,7 @@
 #include "logging.hpp"
 #include "xboard.hpp"
 
-TimeType Searcher::getCurrentMoveMs() {
+TimeType Searcher::getCurrentMoveMs()const{
    if (ThreadPool::instance().main().getData().isPondering || ThreadPool::instance().main().getData().isAnalysis) { return INFINITETIME; }
 
    TimeType ret = currentMoveMs;

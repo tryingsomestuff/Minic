@@ -17,8 +17,6 @@ int         worldSize;
 int         rank;
 std::string name;
 
-bool stopflag;
-
 MPI_Comm _commTT    = MPI_COMM_NULL;
 MPI_Comm _commTT2   = MPI_COMM_NULL;
 MPI_Comm _commStat  = MPI_COMM_NULL;
@@ -31,6 +29,7 @@ MPI_Request _requestTT    = MPI_REQUEST_NULL;
 MPI_Request _requestStat  = MPI_REQUEST_NULL;
 MPI_Request _requestInput = MPI_REQUEST_NULL;
 MPI_Request _requestMove  = MPI_REQUEST_NULL;
+MPI_Request _requestStop  = MPI_REQUEST_NULL;
 
 MPI_Win _winStop;
 
@@ -171,6 +170,7 @@ void pollStat() { // only called from main thread
 // get all rank to a common synchronous state at the end of search
 void syncStat() { // only called from main thread
    if (!moreThanOneProcess()) return;
+   Logging::LogIt(Logging::logInfo) << "Syncing stat";
    // wait for equilibrium
    uint64_t globalNbPoll = 0ull;
    allReduceMax(&_nbStatPoll, &globalNbPoll, 1, _commStat2);
@@ -188,6 +188,7 @@ void syncStat() { // only called from main thread
 
    //showStat(); // debug
    sync(_commStat, __PRETTY_FUNCTION__);
+   Logging::LogIt(Logging::logInfo) << "...ok";
 }
 
 void showStat() {
@@ -247,6 +248,7 @@ void setEntry(const Hash h, const TT::Entry& e) {
 // get all rank to a common synchronous state at the end of search
 void syncTT() { // only called from main thread
    if (!moreThanOneProcess()) return;
+   Logging::LogIt(Logging::logInfo) << "Syncing TT";
    // wait for equilibrium
    uint64_t globalNbPoll = 0ull;
    allReduceMax(&_nbTTTransfert, &globalNbPoll, 1, _commTT2);
@@ -264,6 +266,7 @@ void syncTT() { // only called from main thread
    DEBUGCOUT("sync TT final wait done 1")
    sync(_commTT, __PRETTY_FUNCTION__);
    DEBUGCOUT("sync TT final wait done 2")
+   Logging::LogIt(Logging::logInfo) << "... ok";
 }
 } // namespace Distributed
 
@@ -285,6 +288,7 @@ DummyType _requestTT    = 0;
 DummyType _requestStat  = 0;
 DummyType _requestInput = 0;
 DummyType _requestMove  = 0;
+DummyType _requestStop  = 0;
 
 DummyType _winStop = 0;
 

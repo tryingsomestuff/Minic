@@ -23,7 +23,7 @@ struct Searcher {
    MoveDifficultyUtil::MoveDifficulty moveDifficulty = MoveDifficultyUtil::MD_std;
    TimeType                           currentMoveMs  = 777;
 
-   TimeType getCurrentMoveMs(); // use this (and not the variable) to take emergency time into account !
+   TimeType getCurrentMoveMs()const; // use this (and not the variable) to take emergency time into account !
 
    struct StackData {
       Position  p;
