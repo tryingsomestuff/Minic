@@ -128,8 +128,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
          if (!Distributed::isMainProcess()) { 
             bool masterStopFlag;
-            Distributed::get(&masterStopFlag, 1, Distributed::_winStop, 0, Distributed::_requestStop); 
-	         Distributed::waitRequest(Distributed::_requestStop);
+            Distributed::get(&masterStopFlag, 1, Distributed::_winStopFromR0, 0, Distributed::_requestStopFromR0); 
+	         Distributed::waitRequest(Distributed::_requestStopFromR0);
             ThreadPool::instance().main().stopFlag = masterStopFlag;
          }
 

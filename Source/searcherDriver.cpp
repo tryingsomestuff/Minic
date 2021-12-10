@@ -350,8 +350,8 @@ void Searcher::searchDriver(bool postMove) {
                // sync (pull) stopflag in other process
                if (!Distributed::isMainProcess()) {
                   bool masterStopFlag;
-                  Distributed::get(&masterStopFlag, 1, Distributed::_winStop, 0, Distributed::_requestStop);
-	               Distributed::waitRequest(Distributed::_requestStop);
+                  Distributed::get(&masterStopFlag, 1, Distributed::_winStopFromR0, 0, Distributed::_requestStopFromR0);
+	               Distributed::waitRequest(Distributed::_requestStopFromR0);
                   ThreadPool::instance().main().stopFlag = masterStopFlag;
                }
             }
@@ -420,29 +420,6 @@ pvsout:
       ThreadPool::instance().stop();
       // and wait for them
       ThreadPool::instance().wait(true);
-
-      // sync point for distributed search
-      if (Distributed::isMainProcess()) {
-         Logging::LogIt(Logging::logInfo) << "Waiting for all process";
-         for (auto r = 1; r < Distributed::worldSize; ++r) {
-            bool remoteStopFlag;
-            Distributed::get(&remoteStopFlag, 1, Distributed::_winStop, r, Distributed::_requestStop);
-	         Distributed::waitRequest(Distributed::_requestStop);
-            // wait for other process to have stopFlag activated
-            while (!remoteStopFlag) {
-               Distributed::get(&remoteStopFlag, 1, Distributed::_winStop, r, Distributed::_requestStop);
-	            Distributed::waitRequest(Distributed::_requestStop);
-            }
-         }
-         Logging::LogIt(Logging::logInfo) << "... ok";
-      }
-      // sync (pull) stopflag in other process
-      else {
-         bool masterStopFlag;
-         Distributed::get(&masterStopFlag, 1, Distributed::_winStop, 0, Distributed::_requestStop);
-	      Distributed::waitRequest(Distributed::_requestStop);
-         ThreadPool::instance().main().stopFlag = masterStopFlag;
-      }      
 
       // gather various process stats
       Distributed::syncStat();
