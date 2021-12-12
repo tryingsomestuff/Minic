@@ -124,7 +124,6 @@ void Searcher::searchDriver(bool postMove) {
    _data.reset();
 
    const bool isInCheck = isAttacked(p, kingSquare(p));
-   const DepthType easyMoveDetectionDepth = (DepthType)std::min(20, 10 + int(currentMoveMs/3000));
 
    // initialize multiPV stuff
    DynamicConfig::multiPV = (Logging::ct == Logging::CT_uci ? DynamicConfig::multiPV : 1);
@@ -311,9 +310,11 @@ void Searcher::searchDriver(bool postMove) {
 
                // update a "variability" measure to scale remaining time on it ///@todo tune this more
                if (depth > 12 && !pvLoc.empty()) {
-                  if (getSearchData().moves[depth] != getSearchData().moves[depth - 1]) MoveDifficultyUtil::variability *= (1.f + float(depth) / 100); // slow but ok here
+                  if (getSearchData().moves[depth] != getSearchData().moves[depth - 1] &&
+                  std::fabs(getSearchData().scores[depth] - getSearchData().scores[depth-1]) > MoveDifficultyUtil::emergencyMargin/4 ) 
+                     MoveDifficultyUtil::variability *= (1.f + float(depth) / 100); // slow but ok here
                   else
-                     MoveDifficultyUtil::variability *= 0.97f;
+                     MoveDifficultyUtil::variability *= 0.98f;
                   Logging::LogIt(Logging::logInfo) << "Variability :" << MoveDifficultyUtil::variability;
                   Logging::LogIt(Logging::logInfo) << "Variability time factor :" << MoveDifficultyUtil::variabilityFactor();
                }
