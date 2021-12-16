@@ -535,7 +535,6 @@ namespace MoveDifficultyUtil {
     const float     maxStealFraction          = 0.2f; // of remaining time
 
 extern float variability;
-///@todo optimize for speed
 [[nodiscard]] inline float variabilityFactor() { return 2 / (1 + exp(1 - MoveDifficultyUtil::variability)); } // inside [0.5 .. 2]
 } // namespace MoveDifficultyUtil
 

@@ -106,8 +106,6 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    const bool white2Play = p.c == Co_White;
 
 #ifdef DEBUG_KING_CAP
-   // king captured ///@todo still necessary ???
-   
    if (p.king[Co_White] == INVALIDSQUARE) {
       STOP_AND_SUM_TIMER(Eval)
       context.stats.incr(Stats::sid_evalNoKing);
