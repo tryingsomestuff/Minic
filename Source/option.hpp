@@ -11,7 +11,6 @@ namespace Options {
 
 extern std::vector<std::string> args;
 
-///@todo use std::variant ? and std::optinal ?? c++17
 enum KeyType : uint8_t { k_bad = 0, k_bool, k_depth, k_int, k_score, k_ull, k_string };
 enum WidgetType : uint8_t { w_check = 0, w_string, w_spin, w_combo, w_button, w_max };
 const std::string widgetXboardNames[w_max] = {"check", "string", "spin", "combo", "button"};
