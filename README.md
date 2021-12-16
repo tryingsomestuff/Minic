@@ -201,7 +201,7 @@ TCEC17: 7th/16 in Q League, 13th/16 in League 2 (https://en.wikipedia.org/wiki/T
 TCEC18: 4th/10 in League 3 (https://en.wikipedia.org/wiki/TCEC_Season_18)  
 TCEC19: 3rd/10 in League 3 (https://en.wikipedia.org/wiki/TCEC_Season_19)  
 TCEC20: 2nd/10 in League 3, 9th/10 in League 2 (https://en.wikipedia.org/wiki/TCEC_Season_20)  
-TCEC21: 6th/10 in League 2 (https://en.wikipedia.org/wiki/TCEC_Season_21)  
+TCEC21: 1st/12 in League 3, 6th/10 in League 2 (https://en.wikipedia.org/wiki/TCEC_Season_21)  
 
 ## Release process
 WARNING : the former Dist directory as been REMOVED from the repository because it was starting to be too big. Unofficial releases are not available anymore here. All (unofficial) releases are available in a new repo, here : https://github.com/tryingsomestuff/Minic-Dist, also available as a git submodule.
