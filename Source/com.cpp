@@ -28,7 +28,7 @@ void newGame() {
    DynamicConfig::ratingFactor      = 1.;
    DynamicConfig::ratingAdv         = 0;
    DynamicConfig::opponent          = "";
-   DynamicConfig::ratingAdvReveived = false;
+   DynamicConfig::ratingAdvReceived = false;
 
    // re-init all threads data
    ThreadPool::instance().clearGame();

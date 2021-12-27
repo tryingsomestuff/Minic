@@ -47,7 +47,7 @@ bool         withWDL       = false;
 
 std::string opponent          = "";
 int         ratingAdv         = 0;
-bool        ratingAdvReveived = false;
+bool        ratingAdvReceived = false;
 double      ratingFactor      = 1.;
 
 int styleComplexity  = 50;

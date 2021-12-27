@@ -37,7 +37,7 @@ void init() {
    const int myRating = ratings["Minic"];
 
    // this TCEC specific option is prefered when present
-   if (DynamicConfig::ratingAdvReveived) {
+   if (DynamicConfig::ratingAdvReceived) {
       Logging::LogIt(Logging::logInfo) << "Using ratingAdv...";
       // ratingFactor will go from -2 to 2
       const double x = 1. / (1 - DynamicConfig::ratingAdv / double(myRating));

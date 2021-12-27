@@ -43,7 +43,7 @@ extern bool         bongCloud;
 
 extern std::string opponent;
 extern int         ratingAdv;
-extern bool        ratingAdvReveived;
+extern bool        ratingAdvReceived;
 extern double      ratingFactor;
 
 extern int styleComplexity;
