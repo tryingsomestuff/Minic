@@ -6,6 +6,6 @@ namespace Opponent {
 
 void init();
 
-inline void ratingReceived() { DynamicConfig::ratingAdvReveived = true; }
+inline void ratingReceived() { DynamicConfig::ratingAdvReceived = true; }
 
 } // namespace Opponent
