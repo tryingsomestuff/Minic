@@ -30,7 +30,7 @@ Generating data, learning process, tuning and testing of a chess engine is quite
 ### Code style
 For a year and a half Minic was (mainly) a one-file-code with very dense lines. This is of course very wrong in terms of software design... So why is it so? First reason is that Minic was first developped as a week-end project (in mid-october 2018), the quick-and-dirty way, and since then I was having fun going on this way ; being a "small" code size engine was part of the stakes in developing it. Second reason is that it helps the compilers optimize the whole code (at least that is what I though...)
 
-Until version 2 of Minic, some optional features such as Texel tuning, perft, tests, uci support, book generation ... were available in the Add-Ons directory ; they are now fused with the source code.
+Until version 2 of Minic, some optional features such as evaluation and searchs tuning, perft, tests, uci support, book generation ... were available in the Add-Ons directory ; they are now fused with the source code.
 
 Nowadays, since the release of version "2" Minic is written in a more classic c++ style, although very dense lines are still present and recall Minic past compacity...
 
@@ -264,7 +264,7 @@ Other available options (depending on compilation option, see definition.hpp) ar
 * -qsearch <"fen"> : just a qsearch ...
 * -mateFinder <"fen"> depth : same as analysis but without prunings in search
 * -pgn <file> : extraction tool to build tuning data
-* -texel <file> : run a Texel tuning session
+* -tuning <file> : run an evaluation tuning session (a.k.a. Texel tunings)
 * -selfplay \[depth\] \[number of games\] (default are 15 and 1): launch some selfplay game with genfen activated
 * ...
 
@@ -281,7 +281,7 @@ If compiled with the WITH_SEARCH_TUNING definition, Minic can expose all search 
 Minic comes with some command line options :
 
 #### Debug option
-* -minOutputLevel \[from 0 or 8\] (default is 5 which means "classic GUI output"): make Minic more verbose for debug purpose (if set < 5). This option is often needed when using unsual things as Texel tuning or command line analysis for instance in order to have full display of outputs. Here are the various level `logTrace = 0, logDebug = 1, logInfo = 2, logInfoPrio = 3, logWarn = 4, logGUI = 5, logError = 6, logFatal = 7, logOff = 8`
+* -minOutputLevel \[from 0 or 8\] (default is 5 which means "classic GUI output"): make Minic more verbose for debug purpose (if set < 5). This option is often needed when using unsual things as evaluation tuning or command line analysis for instance in order to have full display of outputs. Here are the various level `logTrace = 0, logDebug = 1, logInfo = 2, logInfoPrio = 3, logWarn = 4, logGUI = 5, logError = 6, logFatal = 7, logOff = 8`
 * -debugMode \[0 or 1\] (default is 0 which means "false"): will write every output also in a file (named minic.debug by default)
 * -debugFile \[name_of_file\] (default is minic.debug): name of the debug output file
 
