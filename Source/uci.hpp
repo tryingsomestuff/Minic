@@ -4,6 +4,7 @@
 
 /*!
  * A simple, and partial, UCI implementation
+ * Some help here : https://www.shredderchess.com/download/div/uci.zip
  */
 namespace UCI {
 void        init();
