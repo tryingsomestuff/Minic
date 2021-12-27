@@ -4,7 +4,7 @@
 
 /*! 
  * A simple, and partial, XBOARD implementation
- * Some helm here : https://www.gnu.org/software/xboard/engine-intf.html
+ * Some help here : https://www.gnu.org/software/xboard/engine-intf.html
  */
 namespace XBoard {
 extern bool display; ///@todo use it !
