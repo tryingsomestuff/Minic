@@ -181,10 +181,10 @@ void movePiece(Position& p, Square from, Square to, Piece fromP, Piece toP, bool
 
 template<Color c> inline void movePieceCastle(Position& p, CastlingTypes ct, Square kingDest, Square rookDest) {
    START_TIMER
-   const Piece          pk = c == Co_White ? P_wk  : P_bk;
-   const Piece          pr = c == Co_White ? P_wr  : P_br;
-   const CastlingRights ks = c == Co_White ? C_wks : C_bks;
-   const CastlingRights qs = c == Co_White ? C_wqs : C_bqs;
+   constexpr Piece          pk = c == Co_White ? P_wk  : P_bk;
+   constexpr Piece          pr = c == Co_White ? P_wr  : P_br;
+   constexpr CastlingRights ks = c == Co_White ? C_wks : C_bks;
+   constexpr CastlingRights qs = c == Co_White ? C_wqs : C_bqs;
    BBTools::unSetBit(p, p.king[c]);
    BB::_unSetBit(p.allPieces[c], p.king[c]);
    BBTools::unSetBit(p, p.rootInfo().rooksInit[c][ct]);
