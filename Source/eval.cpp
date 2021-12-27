@@ -291,7 +291,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
 
    Searcher::PawnEntry *pePtr = nullptr;
 #ifdef WITH_EVAL_TUNING
-   Searcher::PawnEntry dummy; // used for texel tuning
+   Searcher::PawnEntry dummy; // used for evaluations tuning
    pePtr = &dummy;
    {
 #else

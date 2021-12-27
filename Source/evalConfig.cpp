@@ -181,7 +181,7 @@ CONST_EVAL_TUNING ScoreType   scalingFactorQueenNoQueen        = 66;
 CONST_EVAL_TUNING ScoreType   scalingFactorQueenNoQueenSlope   = 8;
 CONST_EVAL_TUNING ScoreType   scalingFactorPawns               = 86;
 CONST_EVAL_TUNING ScoreType   scalingFactorPawnsSlope          = 14;
-CONST_EVAL_TUNING ScoreType   scalingFactorPawnsOneSide        = -14; // a curious texel tuned value ...
+CONST_EVAL_TUNING ScoreType   scalingFactorPawnsOneSide        = -14; // a curious tuned value ...
 
 //N B R QB QR K
 CONST_EVAL_TUNING EvalScore MOB[6][15] = { { { -1,-15},{  7, 20},{ 12, 40},{ 19, 43},{ 26, 40},{ 30, 44},{ 40, 33},{ 35, 46},{ 29, 47},{  0,  0},{  0,  0},{  0,  0},{  0,  0},{  0,  0},{  0,  0} },

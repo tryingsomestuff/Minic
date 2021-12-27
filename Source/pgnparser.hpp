@@ -8,7 +8,7 @@
 
 /*!
  * This thing was used to parse pgn file
- * in order to generate learning file for the Texel tuning process
+ * in order to generate learning file for the evaluation tuning process
  */
 
 struct PGNGame {

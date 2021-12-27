@@ -5,7 +5,7 @@
 
 /*!
  * All parameters for evaluation are defined here
- * There are const when no Texel tuning is use and of course need to be mutable when begin tuned
+ * There are const when no esvaluation tuning is use and of course need to be mutable when begin tuned
  */
 namespace EvalConfig {
 

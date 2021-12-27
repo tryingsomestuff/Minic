@@ -8,6 +8,6 @@
 
 #ifdef WITH_EVAL_TUNING
 
-void TexelTuning(const std::string& filename);
+void evaluationTuning(const std::string& filename);
 
 #endif

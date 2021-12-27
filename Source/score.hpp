@@ -15,7 +15,7 @@ struct Position;
 }
 #endif
 
-// Stockfish trick (two short in one int) is not compatible with Texel tuning !
+// Stockfish trick (two short in one int) is not compatible with evaluation tuning !
 #ifndef WITH_EVALSCORE_AS_INT
 struct EvalScore {
    std::array<ScoreType, GP_MAX> sc = {0};

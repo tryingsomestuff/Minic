@@ -17,7 +17,7 @@
 #include "searchConfig.hpp"
 #include "searcher.hpp"
 #include "testSuite.hpp"
-#include "texelTuning.hpp"
+#include "evaluationTuning.hpp"
 #include "threading.hpp"
 #include "timeMan.hpp"
 #include "timers.hpp"
@@ -86,8 +86,8 @@ int main(int argc, char** argv) {
 #endif
 
 #ifdef WITH_EVAL_TUNING
-   if (argc > 1 && std::string(argv[1]) == "-texel") {
-      TexelTuning(argv[2]);
+   if (argc > 1 && std::string(argv[1]) == "-tuning") {
+      evaluationTuning(argv[2]);
       RETURN(EXIT_SUCCESS)
    }
 #endif
