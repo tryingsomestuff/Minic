@@ -6,7 +6,7 @@ struct Position;
 
 /*!
  * Time managament in Minic
- * GUI protocol is setting  internal TimeMan variable as possible.
+ * GUI protocol is setting internal TimeMan variable as possible.
  * Then Timeman is responsible to compute msec for next move, using GetNextMSecPerMove(), based on GUI available information.
  * Then Searcher::currentMoveMs is set to GetNextMSecPerMove at the begining of a search.
  * Then, during a search Searcher::getCurrentMoveMs() is used to check the available time.
