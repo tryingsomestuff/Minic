@@ -161,9 +161,9 @@ Minic random-mover stats are the following :
 ## Rating Lists & competitions
 
 ### CCRL
-- 40/15: Minic 3.16 + Nucleated Neurulation is tested at 3216 on the [CCRL 40/15 scale](http://ccrl.chessdom.com/ccrl/4040/)  
-- Blitz: Minic 3.08 + Negligible Nystagmus is tested at 3254 on the [CCRL BLITZ scale](http://ccrl.chessdom.com/ccrl/404/)  
-- FRC: Minic 3.08 + Negligible Nystagmus  is tested at 3295 on the [CCRL FRC list](http://ccrl.chessdom.com/ccrl/404FRC/)  
+- 40/15: Minic 3.17 + Nucleated Neurulation is tested at 3310 on the [CCRL 40/15 scale, 4 cores](http://ccrl.chessdom.com/ccrl/4040/)  
+- Blitz: Minic 3.17 + Nucleated Neurulation is tested at 3472 on the [CCRL BLITZ scale, 8 cores](http://ccrl.chessdom.com/ccrl/404/)  
+- FRC: Minic 3.17 + Nucleated Neurulation  is tested at 3454 on the [CCRL FRC list](http://ccrl.chessdom.com/ccrl/404FRC/)  
 
 ### CEGT
 - 40/4: Minic 3.14 + Nucleated Neurulation is tested at 3177 on the [CEGT 40/4 list](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
