@@ -163,14 +163,13 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    // backup this score as the "static" one
    const ScoreType staticScore = evalScore;
 
+   if (!isInCheck && !ttHit)
+      // Be carefull here, _data in Entry is always (INVALIDMOVE,B_none,-2) here, so that collisions are a lot more likely
+      // depth -2 is used to ensure this will never be used directly (only evaluation score is of interest here...)
+      TT::setEntry(*this, pHash, INVALIDMOVE, createHashScore(staticScore, height), createHashScore(staticScore, height), TT::B_none, -2);
+
    // early cut-off based on staticScore score
-   if (staticScore >= beta) {
-      if (!isInCheck && !ttHit)
-         // Be carefull here, _data in Entry is always (INVALIDMOVE,B_none,-2) here, so that collisions are a lot more likely
-         // depth -2 is used to ensure this will never be used directly (only evaluation score is of interest here...)
-         TT::setEntry(*this, pHash, INVALIDMOVE, createHashScore(staticScore, height), createHashScore(staticScore, height), TT::B_none, -2);
-      return staticScore;
-   }
+   if (staticScore >= beta) return staticScore;
    else if (staticScore > alpha) alpha = staticScore;
 
    // maybe we can use tt score (instead of static evaluation) as a better draft if possible and not in check ?
