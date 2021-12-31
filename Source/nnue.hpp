@@ -6,7 +6,7 @@
 
 #include "dynamicConfig.hpp"
 #include "logging.hpp"
-#include "nnue_impl.hpp"
+#include "nnueImpl.hpp"
 
 #ifndef NDEBUG
 #define SCALINGCOUNT 5000
