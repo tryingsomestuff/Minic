@@ -127,6 +127,15 @@ const std::string MinicVersion = "3.18";
 #define CONST_PIECE_TUNING const
 #endif
 
+#define NNUEALIGNMENT 64 // AVX512 compatible ...
+#define NNUEALIGNMENT_STD std::align_val_t{ NNUEALIGNMENT }
+
+#ifdef __clang__
+#define CONSTEXPR
+#else
+#define CONSTEXPR constexpr
+#endif
+
 #if _WIN32 || _WIN64
    #if _WIN64
      #define ENV64BIT
