@@ -3,11 +3,11 @@
 if [ ! -n "$VERSION" ];then
    echo "You must first set VERSION variable please, see example below"
    echo "> export VERSION=master && ./update.sh"
-   echo "> export VERSION=3.17 && ./update.sh"
+   echo "> export VERSION=3.18 && ./update.sh"
    exit 1
 fi
 
-NETNAME=nucleated_neurulation.bin
+NETNAME=nimble_nothingness.bin
 export EMBEDDEDNNUEPATH=$NETNAME
 
 # get minic

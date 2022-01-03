@@ -54,7 +54,7 @@ const std::string MinicVersion = "3.18";
 //#define WITHOUT_FILESYSTEM              // some compiler don't support whole std:filesystem 
 //#define LIMIT_THREADS_TO_PHYSICAL_CORES // in order to restrict thread to the number of physical core
 //#define REPRODUCTIBLE_RESULTS           // clear state table betwwen all new search (not only all new games)
-//#define WITH_NNUE_CLIPPED_RELU          // use clipped relu instead of relu for NNUE
+#define WITH_NNUE_CLIPPED_RELU            // use clipped relu instead of relu for NNUE
 #ifndef __ANDROID__
 #define USE_SIMD_INTRIN                   // on simd architectures, use a hand written dot product
 #endif
