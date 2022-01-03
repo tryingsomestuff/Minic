@@ -102,24 +102,18 @@ class NNUE(pl.LightningModule):
     else: # sparse data from ccdataloader
       w_ = self.white_affine(white)
       b_ = self.black_affine(black)
-
-    # clipped relu
-    #base = torch.clamp(us * torch.cat([w_, b_], dim=1) + (1.0 - us) * torch.cat([b_, w_], dim=1),0,1)
-    #x = torch.clamp(self.fc0(base),0,1)
-    #x = torch.cat([x, torch.clamp(self.fc1(x),0,1)], dim=1)
-    #x = torch.cat([x, torch.clamp(self.fc2(x),0,1)], dim=1)
     
-    # standard relu
-    base = F.relu(us * torch.cat([w_, b_], dim=1) + (1.0 - us) * torch.cat([b_, w_], dim=1))
+    # clipped relu
+    base = torch.clamp(us * torch.cat([w_, b_], dim=1) + (1.0 - us) * torch.cat([b_, w_], dim=1),0,1)
     if withFactorizer:
       base = self.d0(base)
-    x = F.relu(self.fc0(base))
+    x = torch.clamp(self.fc0(base),0,1)
     if withFactorizer:
       x = self.d1(x)
-    x = torch.cat([x, F.relu(self.fc1(x))], dim=1)
+    x = torch.cat([x, torch.clamp(self.fc1(x),0,1)], dim=1)
     if withFactorizer:
       x = self.d2(x)
-    x = torch.cat([x, F.relu(self.fc2(x))], dim=1)
+    x = torch.cat([x, torch.clamp(self.fc2(x),0,1)], dim=1)
     if withFactorizer:
       x = self.d3(x)
     x = self.fc3(x)
