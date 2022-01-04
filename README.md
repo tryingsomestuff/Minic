@@ -113,22 +113,16 @@ More details about those nets I built are available at https://github.com/trying
 
 ### A word on NNUE and vectorization
 
-In this table, the net "Niggling Nymph" is used to compare NNUE performances on various CPU architecture (effect of vectorisation).
+In this table, Minic 3.18 is used to compare NNUE performances on various CPU architecture (effect of vectorisation).
 ```
 Rank Name                          Elo     +/-   Games   Score    Draw 
-   1 minic_3.03_linux_x64_skylake_niny    56      11    2454   58.0%   39.2% 
-   2 minic_3.03_linux_x64_nehalem_niny    13      11    2454   51.9%   40.9% 
-   3 minic_3.03_linux_x64_nehalem         10      11    2455   51.5%   39.7% 
-   4 minic_3.03_linux_x64_skylake          4      11    2455   50.6%   41.4% 
-   5 minic_3.03_linux_x64_core2          -36      11    2456   44.9%   39.7% 
-   6 minic_3.03_linux_x64_core2_niny     -48      11    2456   43.1%   37.3% 
+   1 minic_3.18_skylake             53      13    1074   57.6%   61.6% 
+   2 minic_3.18_sandybridge         -6      13    1073   49.2%   62.3% 
+   3 minic_3.18_nehalem            -21      13    1073   46.9%   61.8% 
+   4 minic_3.18_core2              -26      13    1072   46.2%   60.4% 
 ```
 What does this say ?
-For HCE first, this looks simple, performance is the same as soon as *popcnt* is here. Not having popcnt leads to something like -40Elo. There is not much dependency to vectorisation but popcnt looks quite important.
-
-For NNUE, AVX2 is +40 versus SSE4.2 and there is again a gap of nearly 60Elo for SSE3. So that on (very) old hardware, current Minic HCE is better than "Niggling Nymph" !
-
-This can explain some strange results during some testing process and in rating list where I sometimes see my nets underperform a lot. So please, use AVX2 hardware (and the corresponding Minic binary, i.e. the "skylake" one) for NNUE testing if possible.
+Well ... for NNUE, using AVX2 is very important. This can explain some strange results during some testing process and in rating list where I sometimes see my nets underperform a lot. So please, use AVX2 hardware (and the corresponding Minic binary, i.e. the "skylake" one for Intel or at least the "znver1" for AMD) for NNUE testing if possible.
 
 ### Home test
 Here are some fast TC results of a gauntlet tournament (STC 10s+0.1) for Minic (dev version of various engine october 24 2021).
