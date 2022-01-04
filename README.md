@@ -124,6 +124,17 @@ Rank Name                          Elo     +/-   Games   Score    Draw
 What does this say ?
 Well ... for NNUE, using AVX2 is very important. This can explain some strange results during some testing process and in rating list where I sometimes see my nets underperform a lot. So please, use AVX2 hardware (and the corresponding Minic binary, i.e. the "skylake" one for Intel or at least the "znver1" for AMD) for NNUE testing if possible.
 
+### Threading performances
+
+I'd love to own a big enough hardware to test with more than 8 threads ... Here are 10s+0.1 TC results to illustrate threading capabilities.
+```
+Rank Name                          Elo     +/-   Games   Score    Draw 
+   1 minic_dev_8_threads           125      36     125   67.2%   60.8% 
+   2 minic_dev_4_threads            42      39     125   56.0%   59.2% 
+   3 minic_dev_2_threads           -28      37     126   46.0%   63.5% 
+   4 minic_dev                    -139      42     126   31.0%   50.8% 
+```
+
 ### Home test
 Here are some fast TC results of a gauntlet tournament (STC 10s+0.1) for Minic (dev version of various engine october 24 2021).
 ```
