@@ -21,4 +21,5 @@ bool readMove(const Position &p, const std::string &ss, Square &from, Square &to
 
 namespace chess960 {
 extern const std::string positions[960];
+std::string getDFRCXFEN();
 }

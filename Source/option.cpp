@@ -296,6 +296,7 @@ void initOptions(int argc, char** argv) {
    GETOPT(ttSizeMb, unsigned int)
    GETOPT(contempt, ScoreType)
    GETOPT(FRC, bool)
+   GETOPT(DFRC, bool)
    GETOPT(threads, unsigned int)
    GETOPT(mateFinder, bool)
    GETOPT(fullXboardOutput, bool)
@@ -327,5 +328,8 @@ void initOptions(int argc, char** argv) {
    GETOPT(genFenDepthEG, unsigned int)
    GETOPT(randomPly, unsigned int)
 #endif
+
+   if (DynamicConfig::DFRC) DynamicConfig::FRC = true;
 }
+
 } // namespace Options

@@ -20,6 +20,7 @@ extern unsigned int randomOpen;
 extern unsigned int threads;
 extern std::string  syzygyPath;
 extern bool         FRC;
+extern bool         DFRC;
 extern bool         UCIPonder;
 extern unsigned int multiPV;
 extern ScoreType    contempt;
