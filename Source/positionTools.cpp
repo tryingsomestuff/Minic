@@ -208,7 +208,7 @@ bool readMove(const Position &p, const std::string &ss, Square &from, Square &to
       if (PieceTools::getPieceType(p, from) == P_wp && to == p.ep) moveType = T_ep;
    }
    if (DynamicConfig::FRC) {
-      // In FRC, some castling way be encoded king takes rooks ... Let's check that, the dirty way
+      // In FRC, some castling may be encoded king takes rooks ... Let's check that, the dirty way
       if (p.board_const(from) == P_wk && p.board_const(to) == P_wr) { moveType = (p.rootInfo().rooksInit[Co_White][CT_OOO] == to ? T_wqs : T_wks); }
       if (p.board_const(from) == P_bk && p.board_const(to) == P_br) { moveType = (p.rootInfo().rooksInit[Co_Black][CT_OOO] == to ? T_bqs : T_bks); }
    }
