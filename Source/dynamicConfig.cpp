@@ -15,6 +15,7 @@ unsigned int randomOpen       = 0;
 unsigned int threads          = 1;
 std::string  syzygyPath       = "";
 bool         FRC              = false;
+bool         DFRC             = false;
 bool         UCIPonder        = false;
 unsigned int multiPV          = 1;
 ScoreType    contempt         = 12;

@@ -29,6 +29,12 @@ void tokenize(const std::string& str, std::vector<std::string>& tokens, const st
    }
 }
 
+std::vector<std::string> tokenize(const std::string& str, const std::string& delimiters) {
+   std::vector<std::string> tokens;
+   tokenize(str,tokens,delimiters);
+   return tokens;
+}
+
 #ifdef DEBUG_KING_CAP
 void debug_king_cap(const Position& p) {
    if (!p.whiteKing() || !p.blackKing()) {
