@@ -75,7 +75,7 @@ class Engine():
     def uci_search(self, line):
         self.searching = True
         self.writeline(line)
-        # wait for bestmove, printing everything else before that
+        # wait for bestmove, save everything else before that
         self.output = []
         while True:
             l = self.readline()
@@ -87,9 +87,10 @@ class Engine():
 
 parser = argparse.ArgumentParser(description='XFEN Analyzer')
 parser.add_argument('-e', '--engine', type=str, help='the engine to use')
-parser.add_argument('-n', '--threads', type=int, default=3, help='number of concurrent threads to use')
+parser.add_argument('-p', '--process', type=int, default=3, help='number of concurrent process to use')
 parser.add_argument('-d', '--depth', type=int, default=15, help='analysis depth')
 parser.add_argument('-i', '--input', type=str, help='XFEN file')
+parser.add_argument('-t', '--timeout', type=int, default=40, help='a timeout that shall allow all process to start one by one')
 args = parser.parse_args()
 
 engine = args.engine
@@ -98,13 +99,14 @@ if not engine :
 input = args.input
 if not input :
     parser.error('No input file')
-threads = max(1,min(args.threads,16))
+process = max(1,min(args.process,16))
 depth = max(1,min(40,args.depth))
+timeout = max(10,min(600,args.timeout))
 
-print('{} analyzing {}. Using {} threads'.format(engine, input, threads))
+print('{} analyzing {} at depth {} using {} process (timeout {})'.format(engine, input, depth, process, timeout))
 
 class P(Process):
-    def __init__(self, id, engine, queue, debug):
+    def __init__(self, id, engine, queue, timeout, debug):
         self.id = id
         self.queue = queue
         self.engine = Engine(engine, debug)
@@ -112,6 +114,7 @@ class P(Process):
         self.engine.uci_isready()
         self.depth = 15
         self.stop = False
+        self.timeout = timeout
         super(P, self).__init__()
 
     def set_depth(self, depth):
@@ -124,7 +127,7 @@ class P(Process):
 
         while not self.stop:
             print('Waiting for fen ...')
-            fen = self.queue.get(block=True, timeout=20).rstrip('\n')
+            fen = self.queue.get(block=True, timeout=self.timeout).rstrip('\n')
             
             print("Analyzing {}".format(fen))
             self.engine.uci_isready()
@@ -155,8 +158,8 @@ def run():
     queue = Queue()
 
     # create each engine process and start them
-    for id in range(threads):
-        procs.append(P(id, engine, queue, False))
+    for id in range(process):
+        procs.append(P(id, engine, queue, timeout, False))
         procs[-1].set_depth(depth)
         procs[-1].start()
 
