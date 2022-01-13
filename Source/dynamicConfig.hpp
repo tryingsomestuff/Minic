@@ -41,6 +41,7 @@ extern unsigned int moveOverHead;
 extern bool         armageddon;
 extern bool         withWDL;
 extern bool         bongCloud;
+extern bool         anarchy;
 
 extern std::string opponent;
 extern int         ratingAdv;

@@ -172,6 +172,19 @@ template<GenPhase phase = GP_all> void generate(const Position& p, MoveList& mov
       }
    }
 #endif
+   if ( DynamicConfig::anarchy && p.ep != INVALIDSQUARE ){ // will be slow ... ///@todo better
+      bool foundEP = false;
+      MoveList eps;
+      for(auto & m : moves){
+         if ( Move2To(m) == T_ep ){
+            foundEP = true;
+            eps.push_back(m);
+         }
+      }
+      if ( foundEP ){
+         moves = eps;
+      }
+   }
    STOP_AND_SUM_TIMER(Generate)
 }
 
