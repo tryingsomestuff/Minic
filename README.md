@@ -168,21 +168,21 @@ Minic random-mover stats are the following :
 ### CCRL
 - 40/15: Minic 3.17 + Nucleated Neurulation is tested at 3310 on the [CCRL 40/15 scale, 4 cores](http://ccrl.chessdom.com/ccrl/4040/)  
 - Blitz: Minic 3.17 + Nucleated Neurulation is tested at 3472 on the [CCRL BLITZ scale, 8 cores](http://ccrl.chessdom.com/ccrl/404/)  
-- FRC: Minic 3.17 + Nucleated Neurulation  is tested at 3454 on the [CCRL FRC list](http://ccrl.chessdom.com/ccrl/404FRC/)  
+- FRC: Minic 3.18 + Nimble Nothingness is tested at 3468 on the [CCRL FRC list](http://ccrl.chessdom.com/ccrl/404FRC/)  
 
 ### CEGT
-- 40/4: Minic 3.14 + Nucleated Neurulation is tested at 3177 on the [CEGT 40/4 list](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
-- 40/20: Minic 3.16 + Nucleated Neurulation is tested at 3178 on the [CEGT 40/20 list](http://www.cegt.net/40_40%20Rating%20List/40_40%20All%20Versions/rangliste.html)  
+- 40/4: Minic 3.18 + Nimble Nothingness is tested at 3304 on the [CEGT 40/4 list](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
+- 40/20: Minic 3.18 + Nimble Nothingness is tested at 3258 on the [CEGT 40/20 list](http://www.cegt.net/40_40%20Rating%20List/40_40%20All%20Versions/rangliste.html)  
 - 5+3 pb=on: Minic 3.16 + Nucleated Neurulation is tested at 3232 on the [CEGT 5+3 PB=ON list](http://www.cegt.net/5Plus3Rating/BestVersionsNEW/rangliste.html)  
 
 ### FGRL
 - Minic 3.13 + Nidicolous Nighthawk is tested at 2989 on the [fastgm 60sec+0.6sec rating list](http://www.fastgm.de/60-0.60.html)  
-- Minic 3.13 + Nidicolous Nighthawk is tested at 3127 on the [fastgm 10min+6sec rating list](http://www.fastgm.de/10min.html)  
-- Minic 3.04 + Noisy Notch is tested at 3090 on the [fastgm 60min+15sec rating list](http://www.fastgm.de/60min.html)  
+- Minic 3.17 + Nucleated Neurulation is tested at 3159 on the [fastgm 10min+6sec rating list](http://www.fastgm.de/10min.html)  
+- Minic 3.17 + Nucleated Neurulation is tested at 3172 on the [fastgm 60min+15sec rating list](http://www.fastgm.de/60min.html)  
 - Minic 3.13 + Nidicolous Nighthawk is tested at 3186 on the [fastgm 60sec+0.6sec 16 cores rating list](http://www.fastgm.de/16-60-0.6.html)
 
 ### SP-CC
-- Minic 3.17 + Nucleated Neurulation is tested at 3292 on the [SP-CC 3min+1s rating list](https://www.sp-cc.de/)  
+- Minic 3.18 + Nimble Nothingness is tested at 3383 on the [SP-CC 3min+1s rating list](https://www.sp-cc.de/)  
 
 ### GRL
 - Minic 3.17 + Nucleated Neurulation is tested at 3229 on the [GRL 40/2 rating list](http://rebel13.nl/grl-best-40-2.html)
