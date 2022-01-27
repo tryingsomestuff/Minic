@@ -12,6 +12,7 @@ def getData(engine,data):
    f = chess.pgn.read_game(pgn)
    a=[]
    c = 0
+   found = False
    while f:
       if c%100 == 0:
           print('.')
@@ -20,6 +21,7 @@ def getData(engine,data):
       #print(f.headers["Black"])
       if engine in f.headers["White"]:
          #print("white")
+         found = True
          n = f.variations[0]
          tt=[]
          p=0
@@ -38,6 +40,7 @@ def getData(engine,data):
          a.append(tt)
       if engine in f.headers["Black"]:
          #print("black")
+         found = True
          n = f.variations[0]
          tt=[]
          p=0
@@ -84,19 +87,23 @@ def getData(engine,data):
       if counts[n] == 0:
          break
 
+   return found
+
 data = {}
 engines = ["minic_dev_dev", "minic_3.18", "Genie", "berserk", "seer", "weiss", "xiphos", "BlackMarlin", "stash", "rofChade", "Drofa", "stockfish"]
-cycler = plt.cycler(color=['r', 'g', 'b']) * plt.cycler(linestyle=['-', '--', ':', '-.'])
+cycler = plt.cycler(linestyle=['-', '--', ':', '-.']) * plt.cycler(color=['r', 'g', 'b'])
 plt.rc('axes', prop_cycle=cycler)
+engines_present = []
 for e in engines:
-   getData(e, data)
-   plt.plot([x for x in data[e]['times'] if x])
-plt.legend(engines)   
+   if getData(e, data):
+      plt.plot([x for x in data[e]['times'] if x])
+      engines_present.append(e)
+plt.legend(engines_present)   
 plt.savefig('time.png')
 plt.show()
 
-for e in engines:
+for e in engines_present:
    plt.plot([x for x in data[e]['remaining'][:100] if x])
-plt.legend(engines)   
+plt.legend(engines_present)   
 plt.savefig('rtime.png')
 plt.show()
