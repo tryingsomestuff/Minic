@@ -3,6 +3,7 @@
 #include "logging.hpp"
 #include "searcher.hpp"
 #include "skill.hpp"
+#include "timeMan.hpp"
 #include "uci.hpp"
 #include "xboard.hpp"
 
@@ -163,7 +164,7 @@ void Searcher::searchDriver(bool postMove) {
    }
 
    // random mover can be forced for the few first moves of a game or by setting level to 0
-   if (DynamicConfig::level == 0 || p.halfmoves < DynamicConfig::randomPly) {
+   if (DynamicConfig::level == 0 || p.halfmoves < DynamicConfig::randomPly || currentMoveMs <= TimeMan::msecMinimal) {
       if (p.halfmoves < DynamicConfig::randomPly) Logging::LogIt(Logging::logInfo) << "Randomized ply";
       _data.score = randomMover(p, _data.pv, isInCheck);
       goto pvsout;
