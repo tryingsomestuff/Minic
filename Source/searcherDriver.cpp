@@ -313,7 +313,7 @@ void Searcher::searchDriver(bool postMove) {
                if (depth > 12 && !pvLoc.empty()) {
                   if (getSearchData().moves[depth] != getSearchData().moves[depth - 1] &&
                   std::fabs(getSearchData().scores[depth] - getSearchData().scores[depth-1]) > MoveDifficultyUtil::emergencyMargin/4 ) 
-                     MoveDifficultyUtil::variability *= (1.f + float(depth) / 100); // slow but ok here
+                     MoveDifficultyUtil::variability *= (1.f + float(depth) / 100);
                   else
                      MoveDifficultyUtil::variability *= 0.98f;
                   Logging::LogIt(Logging::logInfo) << "Variability :" << MoveDifficultyUtil::variability;
