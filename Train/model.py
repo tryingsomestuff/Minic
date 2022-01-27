@@ -7,7 +7,7 @@ import torch.nn.functional as F
 import pytorch_lightning as pl
 import struct
 
-netversion = struct.unpack('!f', bytes.fromhex('c0ffee00'))[0]
+netversion = struct.unpack('!f', bytes.fromhex('c0ffee01'))[0]
 
 withFactorizer = True
 

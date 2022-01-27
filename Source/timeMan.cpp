@@ -25,11 +25,16 @@ void init() {
    maxTime    = 0;
 }
 
-TimeType GetNextMSecPerMove(const Position& p) {
-   static const TimeType msecMarginMin  = DynamicConfig::moveOverHead; // this can be HUGE at short TC !
-   static const TimeType msecMarginMax  = 1000;
-   static const float    msecMarginCoef = 0.01f; // 1% of remaining time (or time in TC)
-   TimeType              ms             = -1;
+TimeType getNextMSecPerMove(const Position& p) {
+
+   const TimeType msecMarginMin  = DynamicConfig::moveOverHead; // minimum margin
+   const TimeType msecMarginMax  = 3000; // maximum margin
+   const float    msecMarginCoef = 0.01f; // part of the remaining time use as margin
+   auto getMargin = [&](TimeType remainingTime){
+      return std::max(std::min(msecMarginMax, TimeType(msecMarginCoef * remainingTime)), msecMarginMin);
+   };
+
+   TimeType ms = -1; // this is what we will compute here
 
    Logging::LogIt(Logging::logInfo) << "msecPerMove     " << msecPerMove;
    Logging::LogIt(Logging::logInfo) << "msecInTC        " << msecInTC;
@@ -41,6 +46,8 @@ TimeType GetNextMSecPerMove(const Position& p) {
    Logging::LogIt(Logging::logInfo) << "maxNodes        " << maxNodes;
 
    const TimeType msecIncLoc = (msecInc > 0) ? msecInc : 0;
+
+   TimeType msecMargin = msecMarginMin;
 
    if (maxNodes > 0) {
       Logging::LogIt(Logging::logInfo) << "Fixed nodes per move";
@@ -57,44 +64,145 @@ TimeType GetNextMSecPerMove(const Position& p) {
    }
 
    else if (nbMoveInTC > 0) { // mps is given (xboard style)
-      assert(msecInTC > 0);
       assert(nbMoveInTC > 0);
       Logging::LogIt(Logging::logInfo) << "Xboard style TC";
-      const TimeType msecMargin = std::max(std::min(msecMarginMax, TimeType(msecMarginCoef * msecInTC)), msecMarginMin);
-      if (!isDynamic) ms = int((msecInTC - msecMarginMin) / (float)nbMoveInTC) + msecIncLoc;
+      if (!isDynamic){
+         assert(msecInTC > 0);
+         // we have all static information here : nbMoveInTC in a nbMoveInTC TC with msecIncLoc of increment at each move.
+         // so we simply split time in equal parts
+         // we use the minimal margin
+         // WARNING note that this might be a bit stupid when used with a book
+         const TimeType totalIncr = nbMoveInTC * msecIncLoc;
+         ms = TimeType((msecInTC + totalIncr - msecMargin) / (float)nbMoveInTC);
+      }
       else {
-         ms = std::min(msecUntilNextTC - msecMargin,
-                       int((msecUntilNextTC - msecMargin) / float(nbMoveInTC - ((p.moves - 1) % nbMoveInTC))) + msecIncLoc);
+         assert(msecUntilNextTC > 0);
+         // we have some dynamic information here : 
+         // - the next TC will be in : (nbMoveInTC - ((p.moves - 1) % nbMoveInTC)) moves
+         // - current remaining time is msecUntilNextTC
+         // remainings increment sum is computed
+         // a margin will be used
+         // WARNING using this late moves in current TC can be a little longer depending on the margin used
+         const int moveUntilNextTC = nbMoveInTC - ((p.moves - 1) % nbMoveInTC);
+         const TimeType remainingIncr = moveUntilNextTC * msecIncLoc;
+         msecMargin = getMargin(msecUntilNextTC);
+         ms = TimeType((msecUntilNextTC + remainingIncr - msecMargin) / (float)moveUntilNextTC );
       }
    }
 
    else if (moveToGo > 0) { // moveToGo is given (uci style)
       assert(msecUntilNextTC > 0);
       Logging::LogIt(Logging::logInfo) << "UCI style TC";
-      const TimeType msecMargin = std::max(std::min(msecMarginMax, TimeType(msecMarginCoef * msecUntilNextTC)), msecMarginMin);
-      if (!isDynamic) Logging::LogIt(Logging::logFatal) << "bad timing configuration ... (missing dynamic UCI time info)";
+      if (!isDynamic){
+         Logging::LogIt(Logging::logFatal) << "bad timing configuration ... (missing dynamic UCI time info)";
+      }
       else {
-         ms = std::min(msecUntilNextTC - msecMargin, TimeType((msecUntilNextTC - msecMargin) / float(moveToGo) + msecIncLoc) *
-                                                         (ThreadPool::instance().main().getData().isPondering ? 3 : 2) / 2);
+         // we have dynamic information here :
+         // - move to go before next TC
+         // - current remaining time
+         // remainings increment sum is computed
+         // a margin will be used
+         // a correction factor is applied for UCI pondering in order to search longer ///@todo why only 3/2 ...
+         const TimeType remainingIncr = moveToGo * msecIncLoc;
+         const float ponderingCorrection = (ThreadPool::instance().main().getData().isPondering ? 3 : 2) / 2;
+         msecMargin = getMargin(msecUntilNextTC);
+         ms = TimeType( ((msecUntilNextTC + remainingIncr - msecMargin) / (float)moveToGo ) * ponderingCorrection);
       }
    }
 
    else { // sudden death style
-      Logging::LogIt(Logging::logInfo) << "Suddendeath style";
-      const int nmoves = 17 - std::min(12, p.halfmoves / 15); // always be able to play this more moves !
-      Logging::LogIt(Logging::logInfo) << "nmoves    " << nmoves;
-      Logging::LogIt(Logging::logInfo) << "p.moves   " << int(p.moves);
-      assert(nmoves > 0);
       assert(msecUntilNextTC >= 0);
-      const TimeType msecMargin = std::max(std::min(msecMarginMax, TimeType(msecMarginCoef * msecUntilNextTC)), msecMarginMin);
+      Logging::LogIt(Logging::logInfo) << "Suddendeath style";
       if (!isDynamic) Logging::LogIt(Logging::logFatal) << "bad timing configuration ... (missing dynamic time info for sudden death style TC)";
-      else
-         ms = std::min(msecUntilNextTC - msecMargin, TimeType((msecUntilNextTC - msecMargin) / (float)nmoves + msecIncLoc) *
-                                                         (ThreadPool::instance().main().getData().isPondering ? 3 : 2) / 2);
+      // we have only remaining time available 
+      // we will do "has if" nmoves still need to be played
+      // we will take into account the time needed to parse input and get current position (overhead)
+      // in situation where increment is smaller than minimum margin we will be a lot more conservative
+      // a margin will be used
+      // a correction factor is applied for UCI pondering in order to search longer ///@todo why only 3/2 ...
+      const bool riskySituation = msecInc < msecMinimal;
+      const int nmoves = (riskySituation ? 28 : 15 ) 
+                       - (riskySituation ? std::min(8, p.halfmoves / 20) : std::min(10, p.halfmoves / 20));
+      Logging::LogIt(Logging::logInfo) << "nmoves      " << nmoves;
+      Logging::LogIt(Logging::logInfo) << "p.moves     " << int(p.moves);
+      Logging::LogIt(Logging::logInfo) << "p.halfmoves " << int(p.halfmoves);
+      if (nmoves * msecMinimal > msecUntilNextTC){
+         Logging::LogIt(Logging::logGUI) << Logging::_protocolComment[Logging::ct] << "Minic is in time trouble ...";
+      }
+      const float ponderingCorrection = (ThreadPool::instance().main().getData().isPondering ? 3 : 2) / 2;
+      msecMargin = getMargin(msecUntilNextTC);
+      ms = TimeType( ((msecUntilNextTC - msecMargin) / (float)nmoves) * ponderingCorrection);
    }
 
-   targetTime = std::max(ms - overHead, TimeType(20)); // if not much time left, let's try that hoping for a friendly GUI...
-   maxTime    = std::min(msecUntilNextTC - msecMarginMin, targetTime * 7);
+   // take overhead into account
+   // and if not much time left, let's try to return msecMinimal and hope for a friendly GUI...
+   targetTime = std::max(ms - overHead, msecMinimal); 
+   // maxTime will be our limit even in case of trouble
+   maxTime = std::min(msecUntilNextTC - msecMargin, targetTime * 7);
    return targetTime;
 }
+
+void simulate(TCType tcType, TimeType initialTime, TimeType increment, TimeType movesInTC, TimeType guiLag){
+
+   Logging::LogIt(Logging::logInfo) << "Start of TC simulation";
+
+   // init TC parameter
+   isDynamic       = tcType == TC_suddendeath;
+   nbMoveInTC      = tcType == TC_repeating ? movesInTC : -1;
+   msecPerMove     = -1;
+   msecInTC        = tcType == TC_repeating ? initialTime : -1;
+   msecInc         = increment;
+   msecUntilNextTC = tcType == TC_suddendeath ? initialTime : -1;
+   moveToGo        = -1;
+   
+   // and check configuration
+   switch(tcType){
+      case TC_suddendeath:
+         assert(msecUntilNextTC >= 0);      
+         break;
+      case TC_repeating:
+         assert(msecInTC > 0);
+         assert(nbMoveInTC > 0);      
+         break;
+      case TC_fixed:
+         assert(false); // not used here
+         break;
+   }
+
+   RootPosition p(startPosition);
+   Position p2 = p;
+#ifdef WITH_NNUE
+   NNUEEvaluator evaluator;
+   p2.associateEvaluator(evaluator);
+   p2.resetNNUEEvaluator(p2.Evaluator());
+#endif
+
+   TimeType remaining = msecUntilNextTC;
+   TimeType currentMoveMs = 0;
+
+   while( remaining > 0 && p2.moves < 300){
+      currentMoveMs = getNextMSecPerMove(p2);
+      Logging::LogIt(Logging::logInfo) << "currentMoveMs " << currentMoveMs;
+      remaining -= currentMoveMs;
+      remaining += msecInc;
+      remaining -= guiLag;
+      Logging::LogIt(Logging::logInfo) << "remaining " << remaining;
+      switch(tcType){
+         case TC_suddendeath:
+            msecUntilNextTC = remaining;
+         break;
+         case TC_repeating:
+         break;
+         case TC_fixed:
+         break;
+      }
+      const bool isInCheck = isAttacked(p2, kingSquare(p2));
+      ThreadData _data;
+      _data.score = randomMover(p2, _data.pv, isInCheck);
+      if ( _data.pv.empty() || ! applyMove(p2,_data.pv[0])) break;
+      std::cout << GetFEN(p2) << std::endl;
+   }
+   Logging::LogIt(Logging::logInfo) << "End of TC simulation : " << (remaining > 0 ? "success" : "failed");
+}
+
 } // namespace TimeMan
