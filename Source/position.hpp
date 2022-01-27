@@ -259,7 +259,7 @@ struct Position {
  * allocate and delete root pointer
  */
 struct RootPosition : public Position {
-   RootPosition(): Position() { root = new RootInformation; }
+   RootPosition(){ root = new RootInformation; }
    RootPosition(const std::string& fen, bool withMoveCount = true);
    ~RootPosition() {
       delete root;
