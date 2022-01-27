@@ -95,6 +95,7 @@ void uci() {
                   Logging::LogIt(Logging::logGUI) << "info string no start position specified";
             }
          }
+         // we take into account the time needed to parse input and get current position
          TimeMan::overHead = (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTimePos).count();
       }
       else if (uciCommand == "go") {
