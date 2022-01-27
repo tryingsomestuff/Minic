@@ -1,6 +1,9 @@
 import chess.pgn
 import matplotlib.pyplot as plt
 
+incr = 0.
+initialTC = 10
+
 def getData(engine,data):
 
    print("Engine : " + engine)
@@ -10,19 +13,20 @@ def getData(engine,data):
    a=[]
    c = 0
    while f:
-      if c%100 is 0:
+      if c%100 == 0:
           print('.')
       c+=1
       #print(f.headers["White"])
       #print(f.headers["Black"])
-      if e in f.headers["White"]:
+      if engine in f.headers["White"]:
+         #print("white")
          n = f.variations[0]
          tt=[]
          p=0
          while n.variations:
             n = n.variations[0]
             p+=1
-            if p%2 is 0:
+            if p%2 == 1:
                 continue
             l = n.comment.split(' ')
             if len(l) > 1:
@@ -32,14 +36,15 @@ def getData(engine,data):
                   print("error treating " + ' '.join(l))
          #print(tt)
          a.append(tt)
-      if e in f.headers["Black"]:
+      if engine in f.headers["Black"]:
+         #print("black")
          n = f.variations[0]
          tt=[]
          p=0
          while n.variations:
             n = n.variations[0]
             p+=1
-            if p%2 is 1:
+            if p%2 == 0:
                 continue
             l = n.comment.split(' ')
             if len(l) > 1:
@@ -71,16 +76,18 @@ def getData(engine,data):
          data[engine]['times'][n] /= counts[n]
 
    data[engine]['remaining'] = [0] * 1000
-   data[engine]['remaining'][0] = 30 
+   data[engine]['remaining'][0] = initialTC 
 
    for n,t in enumerate(data[engine]['times']):
       if n > 0:
-         data[engine]['remaining'][n] = data[engine]['remaining'][n-1] - data[engine]['times'][n] + 0.3
-      if counts[n] is 0:
+         data[engine]['remaining'][n] = data[engine]['remaining'][n-1] - data[engine]['times'][n] + incr
+      if counts[n] == 0:
          break
 
 data = {}
-engines = ["igel", "minic_2.15", "minic_2.12", "texel", "Rubi", "demolito", "Winter", "Topple", "PeSTO", "rodent", "Vajolet"]
+engines = ["minic_dev_dev", "Genie", "berserk", "seer", "weiss", "xiphos", "BlackMarlin", "stash", "rofChade", "Drofa", "stockfish"]
+cycler = plt.cycler(color=['r', 'g', 'b']) * plt.cycler(linestyle=['-', '--', ':', '-.'])
+plt.rc('axes', prop_cycle=cycler)
 for e in engines:
    getData(e, data)
    plt.plot([x for x in data[e]['times'] if x])
