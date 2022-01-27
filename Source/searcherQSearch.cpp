@@ -121,7 +121,8 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    if (qRoot && interiorNodeRecognizer<true, false, true>(p) == MaterialHash::Ter_Draw) return drawScore(p, height); 
 
    // set TT move as current best, this allows to re-insert it in pv in case there is no capture, or no move incrases alpha
-   if (validTTmove && (isInCheck || isCapture(e.m))) bestMove = e.m;
+   const bool usableTTmove = validTTmove && (isInCheck || isCapture(e.m));
+   if (usableTTmove) bestMove = e.m;
 
    // get a static score for that position.
    ScoreType evalScore;
@@ -186,7 +187,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    int             validMoveCount = 0;
 
    // we try the tt move before move generation
-   if (validTTmove && (isInCheck || isCapture(e.m))) {
+   if (usableTTmove) {
       Position p2 = p;
 #ifdef WITH_NNUE
       NNUEEvaluator newEvaluator = p.Evaluator();
