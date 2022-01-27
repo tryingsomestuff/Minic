@@ -94,6 +94,31 @@ inline void evalDanger(const Position & p,
    return false;
 }
 
+inline void Searcher::timeCheck(){
+   static uint64_t periodicCheck = 0ull;
+   if (periodicCheck == 0ull) {
+      periodicCheck = (TimeMan::maxNodes > 0) ? std::min(TimeMan::maxNodes, PERIODICCHECK) : PERIODICCHECK;
+      const Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
+      if (TimeMan::maxNodes > 0 && nodeCount > TimeMan::maxNodes) {
+         stopFlag = true;
+         Logging::LogIt(Logging::logInfo) << "stopFlag triggered (nodes limits) in thread " << id();
+      }
+      if ((TimeType)std::max(1, (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count()) > getCurrentMoveMs()) {
+         stopFlag = true;
+         Logging::LogIt(Logging::logInfo) << "stopFlag triggered in thread " << id();
+      }
+      Distributed::pollStat();
+
+      if (!Distributed::isMainProcess()) { 
+         bool masterStopFlag;
+         Distributed::get(&masterStopFlag, 1, Distributed::_winStopFromR0, 0, Distributed::_requestStopFromR0); 
+         Distributed::waitRequest(Distributed::_requestStopFromR0);
+         ThreadPool::instance().main().stopFlag = masterStopFlag;
+      }
+   }
+   --periodicCheck;
+}
+
 // pvs inspired by Xiphos
 template<bool pvnode>
 ScoreType Searcher::pvs(ScoreType                    alpha,
@@ -106,37 +131,13 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                         bool                         isInCheck,
                         bool                         cutNode,
                         const std::vector<MiniMove>* skipMoves) {
+   
    // is updated recursively in pvs and qsearch calls but also affected to Searcher data in order to be available inside eval.
    _height = height;
 
-   // stop and time check. Only on main thread and not at each node (see PERIODICCHECK)
+   // stopFlag management and time check. Only on main thread and not at each node (see PERIODICCHECK)
+   if (isMainThread()) timeCheck();
    if (stopFlag) return STOPSCORE;
-   if (isMainThread()) {
-      static uint64_t periodicCheck = 0ull;
-      if (periodicCheck == 0ull) {
-         periodicCheck = (TimeMan::maxNodes > 0) ? std::min(TimeMan::maxNodes, PERIODICCHECK) : PERIODICCHECK;
-         const Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
-         if (TimeMan::maxNodes > 0 && nodeCount > TimeMan::maxNodes) {
-            stopFlag = true;
-            Logging::LogIt(Logging::logInfo) << "stopFlag triggered (nodes limits) in thread " << id();
-         }
-         if ((TimeType)std::max(1, (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count()) > getCurrentMoveMs()) {
-            stopFlag = true;
-            Logging::LogIt(Logging::logInfo) << "stopFlag triggered in thread " << id();
-         }
-         Distributed::pollStat();
-
-         if (!Distributed::isMainProcess()) { 
-            bool masterStopFlag;
-            Distributed::get(&masterStopFlag, 1, Distributed::_winStopFromR0, 0, Distributed::_requestStopFromR0); 
-	         Distributed::waitRequest(Distributed::_requestStopFromR0);
-            ThreadPool::instance().main().stopFlag = masterStopFlag;
-         }
-
-         if (stopFlag) return STOPSCORE;
-      }
-      --periodicCheck;
-   }
 
    // we cannot search deeper than MAX_DEPTH, is so just return static evaluation
    EvalData data;
@@ -166,6 +167,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       rootScores.clear();
    }
 
+   // mate distance pruning
    if(!rootnode){
       alpha = std::max(alpha, (ScoreType)(-MATE + height));
       beta  = std::min(beta, (ScoreType)(MATE - height - 1));
@@ -218,6 +220,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    bool formerPV    = ttPV && !pvnode;
 
 #ifdef WITH_SYZYGY
+   // probe TB
    ScoreType tbScore = 0;
    if (!rootnode && withoutSkipMove && (BB::countBit(p.allPieces[Co_White] | p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN &&
        SyzygyTb::probe_wdl(p, tbScore, false) > 0) {
@@ -289,11 +292,11 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    const bool isEmergencyDefence = false; //moveDifficulty == MoveDifficultyUtil::MD_hardDefense;
    const bool isEmergencyAttack  = false; //moveDifficulty == MoveDifficultyUtil::MD_hardAttack;
 
+   // take **current** position danger level into account
    BitBoard attFromPiece[2][6] = {{emptyBitBoard}};
    BitBoard att[2] = {emptyBitBoard,emptyBitBoard};
    BitBoard att2[2] = {emptyBitBoard,emptyBitBoard};
    BitBoard checkers[2][6] = {{emptyBitBoard}};
-   // take **current** position danger level into account
    if (!data.evalDone){
       // no eval has been done, we need to work a little to get danger data
       evalDanger(p,attFromPiece,att,att2,checkers,data.danger);
@@ -670,6 +673,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    bool skipQuiet = false;
    bool skipCap = false;
 
+   // depending if probecut already generates capture or not, generate all moves or only quiets
    if (!moveGenerated) {
       if (capMoveGenerated) MoveGen::generate<MoveGen::GP_quiet>(p, moves, true);
       else
@@ -962,12 +966,16 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       }
    }
 
+   // check for draw and check mate
    if (validMoveCount == 0) return (isInCheck || !withoutSkipMove) ? -MATE + height : drawScore(p, height);
+
+   // insert data in TT
    TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(evalScore, height),
                        TT::Bound(hashBound | 
                        (ttPV ? TT::B_ttPVFlag : TT::B_none) | 
                        (bestMoveIsCheck ? TT::B_isCheckFlag : TT::B_none) |
                        (isInCheck ? TT::B_isInCheckFlag : TT::B_none)),
                        depth);
+
    return bestScore;
 }
