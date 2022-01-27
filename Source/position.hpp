@@ -262,7 +262,7 @@ struct RootPosition : public Position {
    RootPosition(): Position() { root = new RootInformation; }
    RootPosition(const std::string& fen, bool withMoveCount = true);
    ~RootPosition() {
-      if (root) delete root;
+      delete root;
    }
    RootPosition(const RootPosition& p): Position(p) {
       if (p.root) root = new RootInformation(*p.root);
