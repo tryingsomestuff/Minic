@@ -245,6 +245,13 @@ void uci() {
          COM::stop();
          iterate = false;
       }
+      else if (uciCommand == "wait") {
+         using namespace std::chrono_literals;
+         while(!ThreadPool::instance().main().stopFlag){
+            std::this_thread::sleep_for(20ms);
+         }
+         std::this_thread::sleep_for(200ms);
+      }      
       else if (uciCommand == "bench") {
          int bd = 10;
          iss >> bd;
