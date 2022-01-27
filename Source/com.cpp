@@ -148,7 +148,7 @@ void thinkAsync(COM::State givenState) {
    if (depth < 0) depth = MAX_DEPTH;
    Logging::LogIt(Logging::logInfo) << "depth          " << (int)depth;
    // here is computed the time for next search (and store it in the Threadpool for now)
-   ThreadPool::instance().currentMoveMs = TimeMan::GetNextMSecPerMove(position);
+   ThreadPool::instance().currentMoveMs = TimeMan::getNextMSecPerMove(position);
    Logging::LogIt(Logging::logInfo) << "currentMoveMs  " << ThreadPool::instance().currentMoveMs;
    Logging::LogIt(Logging::logInfo) << ToString(position);
 
