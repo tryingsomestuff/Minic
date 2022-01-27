@@ -38,8 +38,6 @@ template<typename NT, bool Q> struct FeatureTransformer {
 
    FeatureTransformer(): weights_(nullptr) {}
 
-   ~FeatureTransformer() {}
-
 #ifdef DEBUG_NNUE_UPDATE
    bool operator==(const FeatureTransformer<NT, Q>& other) { return active_ == other.active_; }
 
