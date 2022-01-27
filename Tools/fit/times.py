@@ -85,7 +85,7 @@ def getData(engine,data):
          break
 
 data = {}
-engines = ["minic_dev_dev", "Genie", "berserk", "seer", "weiss", "xiphos", "BlackMarlin", "stash", "rofChade", "Drofa", "stockfish"]
+engines = ["minic_dev_dev", "minic_3.18", "Genie", "berserk", "seer", "weiss", "xiphos", "BlackMarlin", "stash", "rofChade", "Drofa", "stockfish"]
 cycler = plt.cycler(color=['r', 'g', 'b']) * plt.cycler(linestyle=['-', '--', ':', '-.'])
 plt.rc('axes', prop_cycle=cycler)
 for e in engines:
