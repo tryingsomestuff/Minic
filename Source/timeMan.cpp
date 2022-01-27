@@ -122,7 +122,7 @@ TimeType getNextMSecPerMove(const Position& p) {
       // a correction factor is applied for UCI pondering in order to search longer ///@todo why only 3/2 ...
       const bool riskySituation = msecInc < msecMinimal;
       const int nmoves = (riskySituation ? 28 : 15 ) 
-                       - (riskySituation ? std::min(8, p.halfmoves / 20) : std::min(10, p.halfmoves / 20));
+                       - (riskySituation ? std::min(8, p.halfmoves / 20) : std::min(10, p.halfmoves / 12));
       Logging::LogIt(Logging::logInfo) << "nmoves      " << nmoves;
       Logging::LogIt(Logging::logInfo) << "p.moves     " << int(p.moves);
       Logging::LogIt(Logging::logInfo) << "p.halfmoves " << int(p.halfmoves);
