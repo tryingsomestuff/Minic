@@ -1,0 +1,64 @@
+#!/bin/bash
+ulimit -s unlimited
+
+export CXX=g++
+export CC=gcc
+
+source $(dirname $0)/common
+cd_root
+
+FATHOM_PRESENT=0
+if [ -e Fathom/src/tbprobe.h ]; then
+   FATHOM_PRESENT=1
+   echo "found Fathom lib, trying to build"
+   $(dirname $0)/buildFathom.sh "$@"
+fi
+
+do_title "Building Minic for Linux prof"
+
+OPT="$d --coverage -O3 --std=c++17"
+
+if [ $FATHOM_PRESENT = "1" ]; then
+   lib=fathom_dev_linux_x64.o
+   OPT="$OPT $dir/Fathom/src/$lib -I$dir/Fathom/src"
+fi
+
+rm -f *.gcno
+rm -f *.gcda
+
+g++ $STANDARDSOURCE -ISource -ISource/nnue $OPT -lpthread -DDEBUG_TOOL -o minic.cov
+
+./minic.cov -analyze "shirov" 25 -minOutputLevel 0
+./minic.cov -perft "start" 6 -minOutputLevel 0
+#./minic.cov -evalSpeed Book_and_Test/Tuning/lichess-new-labeled.epd
+./minic.cov bench 10 -minOutputLevel 0
+./minic.cov -selfplay 5 1 -minOutputLevel 0
+./minic.cov -perft_test -minOutputLevel 0
+./minic.cov -uci -minOutputLevel 0 <<EOF
+uci
+ucinewgame
+setoption name Hash value 16
+setoption name Threads value 4
+setoption name UCI_Opponent value berserk
+setoption name UCI_RatingAdv value 3000
+setoption name StyleAttack value 55
+setoption name Level value 55
+position fen r1bqkb1r/pp3ppp/1np1pn2/6N1/2BP4/8/PPP1QPPP/R1B1K1NR w KQkq - 1 1
+go depth 20
+wait
+quit
+EOF
+
+./minic.cov -xboard -minOutputLevel 0 <<EOF
+xboard
+sd 20
+go
+wait
+quit
+EOF
+
+lcov --directory . -c -o rapport.info --no-external
+genhtml -o rapport -t "coverage" rapport.info
+
+rm -f *.gcno
+rm -f *.gcda

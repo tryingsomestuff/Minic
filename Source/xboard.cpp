@@ -223,6 +223,13 @@ void xboard() {
          else if (COM::command == "quit") {
             iterate = false;
          }
+         else if (COM::command == "wait") {
+            using namespace std::chrono_literals;
+            while(!ThreadPool::instance().main().stopFlag){
+               std::this_thread::sleep_for(20ms);
+            }
+            std::this_thread::sleep_for(200ms);
+         }            
          else if (COM::command == "pause") {
             COM::stopPonder();
             COM::readLine();
