@@ -265,7 +265,7 @@ void ExtendedPosition::test(const std::vector<std::string> &positions,
             TimeMan::msecInTC                    = -1;
             TimeMan::msecInc                     = -1;
             TimeMan::msecUntilNextTC             = -1;
-            ThreadPool::instance().currentMoveMs = TimeMan::GetNextMSecPerMove(extP);
+            ThreadPool::instance().currentMoveMs = TimeMan::getNextMSecPerMove(extP);
 
             ///@todo support threading here by using ThinkAsync ?
 
