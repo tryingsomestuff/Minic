@@ -70,6 +70,8 @@ struct Searcher {
 
    [[nodiscard]] ScoreType drawScore(const Position& p, DepthType height);
 
+   void timeCheck();
+
    template<bool pvnode>
    [[nodiscard]] 
    ScoreType pvs(ScoreType                    alpha,
