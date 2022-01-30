@@ -4,6 +4,7 @@
 #include "logging.hpp"
 #include "opponent.hpp"
 #include "searcher.hpp"
+#include "searchConfig.hpp"
 #include "threading.hpp"
 
 #ifdef WITH_NNUE
@@ -12,8 +13,45 @@
 
 namespace Options {
 
+enum KeyType : uint8_t { k_bad = 0, k_bool, k_depth, k_int, k_score, k_ull, k_string };
+enum WidgetType : uint8_t { w_check = 0, w_string, w_spin, w_combo, w_button, w_max };
+struct KeyBase {
+   template<typename T>
+   KeyBase(
+       KeyType            t,
+       WidgetType         w,
+       const std::string& k,
+       T*                 v,
+       const std::function<void(void)>& cb = [] {}):
+       type(t), wtype(w), key(k), value((void*)v) {
+      callBack = cb;
+   }
+   template<typename T>
+   KeyBase(
+       KeyType             t,
+       WidgetType          w,
+       const std::string&  k,
+       T*                  v,
+       const T&            _vmin,
+       const T&            _vmax,
+       const std::function<void(void)>& cb = [] {}):
+       type(t), wtype(w), key(k), value((void*)v), vmin(_vmin), vmax(_vmax) {
+      callBack = cb;
+   }
+
+   KeyType     type;
+   WidgetType  wtype;
+   std::string key;
+   void*       value;
+   int         vmin = 0, vmax = 0; // assume int type is covering all the case (string excluded ...)
+   bool        hotPlug = false;
+   std::function<void(void)> callBack;
+};
+
 std::vector<std::string> args;
 std::vector<KeyBase>     _keys;
+
+const std::string widgetXboardNames[w_max] = {"check", "string", "spin", "combo", "button"};
 
 KeyBase& GetKey(const std::string& key) {
    bool           keyFound = false;
@@ -44,11 +82,13 @@ int GetValue(const std::string& key) { // assume we can convert to int safely (n
       default:      Logging::LogIt(Logging::logError) << "Bad key type"; return false;
    }
 }
-const std::string GetValueString(const std::string& key) { // the one for string
+
+std::string GetValueString(const std::string& key) { // the one for string
    const KeyBase& k = GetKey(key);
    if (k.type != k_string) Logging::LogIt(Logging::logError) << "Bad key type";
    return *static_cast<std::string*>(k.value);
 }
+
 void displayOptionsDebug() {
    for (auto it = _keys.begin(); it != _keys.end(); ++it)
       if (it->type == k_string)
@@ -60,6 +100,7 @@ void displayOptionsDebug() {
          Logging::LogIt(Logging::logInfo) << "option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << (int)GetValue(it->key) << " "
                                           << it->vmin << " " << it->vmax << "\"";
 }
+
 void displayOptionsXBoard() {
    for (auto it = _keys.begin(); it != _keys.end(); ++it)
       if (it->type == k_string)
@@ -72,6 +113,7 @@ void displayOptionsXBoard() {
          Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << (int)GetValue(it->key)
                                          << " " << it->vmin << " " << it->vmax << "\"";
 }
+
 void displayOptionsUCI() {
    for (auto it = _keys.begin(); it != _keys.end(); ++it)
       if (it->type == k_string)
@@ -131,7 +173,32 @@ bool SetValue(const std::string& key, const std::string& val) {
    displayOptionsDebug();
    return true;
 }
+
+template<typename C>
+inline void addOptions(C & coeff){
+   for(size_t k = 0; k < coeff.N; ++k){
+      _keys.push_back(KeyBase(k_depth, w_spin, coeff.getName(SearchConfig::CNT_minDepth,k), &coeff.minDepth[k], DepthType(0)     , DepthType(MAX_DEPTH)   ));
+      _keys.push_back(KeyBase(k_depth, w_spin, coeff.getName(SearchConfig::CNT_maxdepth,k), &coeff.maxDepth[k], DepthType(0)     , DepthType(MAX_DEPTH)   ));
+      _keys.push_back(KeyBase(k_score, w_spin, coeff.getName(SearchConfig::CNT_slope,k)   , &coeff.slope[k]   , ScoreType(-1500) , ScoreType(1500) ));
+      _keys.push_back(KeyBase(k_score, w_spin, coeff.getName(SearchConfig::CNT_init,k)    , &coeff.init[k]    , ScoreType(-1500) , ScoreType(1500) ));
+   }
+   for(size_t k = 0; k < coeff.M; ++k){
+      _keys.push_back(KeyBase(k_score, w_spin, coeff.getName(SearchConfig::CNT_bonus,k)   , &coeff.bonus[k]   , ScoreType(-1500) , ScoreType(1500) ));
+   }
+}
+
 void registerCOMOptions() { // options exposed to GUI
+
+#ifdef WITH_SEARCH_TUNING
+   addOptions(SearchConfig::staticNullMoveCoeff);
+   addOptions(SearchConfig::razoringCoeff);
+   addOptions(SearchConfig::threatCoeff);
+   addOptions(SearchConfig::historyPruningCoeff);
+   addOptions(SearchConfig::captureHistoryPruningCoeff);
+   addOptions(SearchConfig::futilityPruningCoeff);
+   addOptions(SearchConfig::failHighReductionCoeff);
+#endif
+
    _keys.push_back(KeyBase(k_int,   w_spin,  "Level"                       , &DynamicConfig::level                          , (unsigned int)0  , (unsigned int)100 ));
    _keys.push_back(KeyBase(k_bool,  w_check, "nodesBasedLevel"             , &DynamicConfig::nodesBasedLevel                , false            , true ));
    _keys.push_back(KeyBase(k_bool,  w_check, "UCI_LimitStrength"           , &DynamicConfig::limitStrength                  , false            , true ));
@@ -189,44 +256,15 @@ void registerCOMOptions() { // options exposed to GUI
 
    _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin0"                  , &SearchConfig::qfutilityMargin[0]                  , ScoreType(-200) , ScoreType(1500)     ));
    _keys.push_back(KeyBase(k_score, w_spin, "qfutilityMargin1"                  , &SearchConfig::qfutilityMargin[1]                  , ScoreType(-200) , ScoreType(1500)     ));
-   _keys.push_back(KeyBase(k_depth, w_spin, "staticNullMoveMaxDepth0"           , &SearchConfig::staticNullMoveMaxDepth[0]           , DepthType(0)    , DepthType(30)       ));
-   _keys.push_back(KeyBase(k_depth, w_spin, "staticNullMoveMaxDepth1"           , &SearchConfig::staticNullMoveMaxDepth[1]           , DepthType(0)    , DepthType(30)       ));
-   _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthCoeff0"         , &SearchConfig::staticNullMoveDepthCoeff[0]         , ScoreType(-500) , ScoreType(1500)     ));
-   _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthCoeff1"         , &SearchConfig::staticNullMoveDepthCoeff[1]         , ScoreType(-500) , ScoreType(1500)     ));
-   _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthInit0"          , &SearchConfig::staticNullMoveDepthInit[0]          , ScoreType(-500) , ScoreType(1500)     ));
-   _keys.push_back(KeyBase(k_score, w_spin, "staticNullMoveDepthInit1"          , &SearchConfig::staticNullMoveDepthInit[1]          , ScoreType(-500) , ScoreType(1500)     ));
-   _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthCoeff0"         , &SearchConfig::razoringMarginDepthCoeff[0]         , ScoreType(-500) , ScoreType(1500)     ));
-   _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthCoeff1"         , &SearchConfig::razoringMarginDepthCoeff[1]         , ScoreType(-500) , ScoreType(1500)     ));
-   _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthInit0"          , &SearchConfig::razoringMarginDepthInit[0]          , ScoreType(-500) , ScoreType(1500)     ));
-   _keys.push_back(KeyBase(k_score, w_spin, "razoringMarginDepthInit1"          , &SearchConfig::razoringMarginDepthInit[1]          , ScoreType(-500) , ScoreType(1500)     ));
-   _keys.push_back(KeyBase(k_depth, w_spin, "razoringMaxDepth0"                 , &SearchConfig::razoringMaxDepth[0]                 , DepthType(0)    , DepthType(30)       ));
-   _keys.push_back(KeyBase(k_depth, w_spin, "razoringMaxDepth1"                 , &SearchConfig::razoringMaxDepth[1]                 , DepthType(0)    , DepthType(30)       ));
+
    _keys.push_back(KeyBase(k_depth, w_spin, "nullMoveMinDepth"                  , &SearchConfig::nullMoveMinDepth                    , DepthType(0)    , DepthType(30)       ));
    _keys.push_back(KeyBase(k_depth, w_spin, "nullMoveVerifDepth"                , &SearchConfig::nullMoveVerifDepth                  , DepthType(0)    , DepthType(30)       ));
    _keys.push_back(KeyBase(k_score, w_spin, "nullMoveMargin"                    , &SearchConfig::nullMoveMargin                      , ScoreType(-500) , ScoreType(500)      ));
    _keys.push_back(KeyBase(k_score, w_spin, "nullMoveMargin2"                   , &SearchConfig::nullMoveMargin2                     , ScoreType(-500) , ScoreType(500)      ));
    _keys.push_back(KeyBase(k_score, w_spin, "nullMoveDynamicDivisor"            , &SearchConfig::nullMoveDynamicDivisor              , ScoreType(1)    , ScoreType(1500)     ));
    
-   _keys.push_back(KeyBase(k_depth, w_spin, "historyPruningMaxDepth0"           , &SearchConfig::historyPruningMaxDepth[0]           , DepthType(0)    , DepthType(30)       ));
-   _keys.push_back(KeyBase(k_depth, w_spin, "historyPruningMaxDepth1"           , &SearchConfig::historyPruningMaxDepth[1]           , DepthType(0)    , DepthType(30)       ));
-   _keys.push_back(KeyBase(k_score, w_spin, "historyPruningThresholdInit"       , &SearchConfig::historyPruningThresholdInit         , ScoreType(-500) , ScoreType(500)      ));
-   _keys.push_back(KeyBase(k_score, w_spin, "historyPruningThresholdDepth"      , &SearchConfig::historyPruningThresholdDepth        , ScoreType(-500) , ScoreType(500)      ));
-   _keys.push_back(KeyBase(k_depth, w_spin, "capHistoryPruningMaxDepth0"        , &SearchConfig::capHistoryPruningMaxDepth[0]        , DepthType(0)    , DepthType(30)       ));
-   _keys.push_back(KeyBase(k_depth, w_spin, "capHistoryPruningMaxDepth1"        , &SearchConfig::capHistoryPruningMaxDepth[1]        , DepthType(0)    , DepthType(30)       ));
-   _keys.push_back(KeyBase(k_score, w_spin, "capHistoryPruningThresholdInit"    , &SearchConfig::capHistoryPruningThresholdInit      , ScoreType(-500) , ScoreType(500)      ));
-   _keys.push_back(KeyBase(k_score, w_spin, "capHistoryPruningThresholdDepth"   , &SearchConfig::capHistoryPruningThresholdDepth     , ScoreType(-500) , ScoreType(500)      ));
    _keys.push_back(KeyBase(k_depth, w_spin, "CMHMaxDepth0"                      , &SearchConfig::CMHMaxDepth[0]                      , DepthType(0)    , DepthType(30)       ));
    _keys.push_back(KeyBase(k_depth, w_spin, "CMHMaxDepth1"                      , &SearchConfig::CMHMaxDepth[1]                      , DepthType(0)    , DepthType(30)       ));
-   _keys.push_back(KeyBase(k_depth, w_spin, "futilityMaxDepth0"                 , &SearchConfig::futilityMaxDepth[0]                 , DepthType(0)    , DepthType(30)       ));
-   _keys.push_back(KeyBase(k_depth, w_spin, "futilityMaxDepth1"                 , &SearchConfig::futilityMaxDepth[1]                 , DepthType(0)    , DepthType(30)       ));
-   _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthCoeff0"               , &SearchConfig::futilityDepthCoeff[0]               , ScoreType(-500) , ScoreType(1500)     ));
-   _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthCoeff1"               , &SearchConfig::futilityDepthCoeff[1]               , ScoreType(-500) , ScoreType(1500)     ));
-   _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthInit0"                , &SearchConfig::futilityDepthInit[0]                , ScoreType(-500) , ScoreType(1500)     ));
-   _keys.push_back(KeyBase(k_score, w_spin, "futilityDepthInit1"                , &SearchConfig::futilityDepthInit[1]                , ScoreType(-500) , ScoreType(1500)     ));
-   _keys.push_back(KeyBase(k_score, w_spin, "failHighReductionThresholdInit0"   , &SearchConfig::failHighReductionThresholdInit[0]   , ScoreType(-500) , ScoreType(1500)     ));
-   _keys.push_back(KeyBase(k_score, w_spin, "failHighReductionThresholdInit1"   , &SearchConfig::failHighReductionThresholdInit[1]   , ScoreType(-500) , ScoreType(1500)     ));
-   _keys.push_back(KeyBase(k_score, w_spin, "failHighReductionThresholdDepth0"  , &SearchConfig::failHighReductionThresholdDepth[0]  , ScoreType(-500) , ScoreType(1500)     ));
-   _keys.push_back(KeyBase(k_score, w_spin, "failHighReductionThresholdDepth1"  , &SearchConfig::failHighReductionThresholdDepth[1]  , ScoreType(-500) , ScoreType(1500)     ));
    //_keys.push_back(KeyBase(k_score, w_spin, "randomAggressiveReductionFactor"   , &SearchConfig::randomAggressiveReductionFactor     , ScoreType(-10)  , ScoreType(10)       ));
 
    _keys.push_back(KeyBase(k_depth, w_spin, "iidMinDepth"                       , &SearchConfig::iidMinDepth                         , DepthType(0)    , DepthType(30)       ));

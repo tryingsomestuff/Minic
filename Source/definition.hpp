@@ -117,8 +117,10 @@ const std::string MinicVersion = "3.18";
 
 #ifdef WITH_SEARCH_TUNING
 #define CONST_SEARCH_TUNING
+#define CONSTEXPR_SEARCH_TUNING
 #else
 #define CONST_SEARCH_TUNING const
+#define CONSTEXPR_SEARCH_TUNING constexpr
 #endif
 
 #ifdef WITH_PIECE_TUNING
