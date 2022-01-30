@@ -8,31 +8,23 @@ ScoreType MvvLvaScores[6][6];
 ///@todo try parity pruning, prune less when ply is odd
 ///@todo tune everything when evalScore is from TT score
 
+CONST_SEARCH_TUNING Coeff<2,2> staticNullMoveCoeff        = { {0, 0}, {0, 0}, {80, 80}, {0, 0}, {6, 6}, "staticNullMove" };
+CONST_SEARCH_TUNING Coeff<2,2> razoringCoeff              = { {200, 200}, {0, 0}, {0, 0}, {0, 0}, {3, 3}, "razoring" };
+CONST_SEARCH_TUNING Coeff<2,2> threatCoeff                = { {0, 0}, {30, 0}, {0, 0}, {0, 0}, {2, 2}, "threat" };
+CONST_SEARCH_TUNING Coeff<2,2> historyPruningCoeff        = { {0, 0}, {0, 0}, {0, 0}, {0, 0}, {2, 1}, "historyPruning" };
+CONST_SEARCH_TUNING Coeff<2,2> captureHistoryPruningCoeff = { {0, 0}, {0, 0}, {-128, -128}, {0, 0}, {4, 3}, "captureHistoryPruning" };
+CONST_SEARCH_TUNING Coeff<2,2> futilityPruningCoeff       = { {0, 0}, {0, 0}, {160, 160}, {0, 0}, {10, 10}, "futilityPruning" };
+CONST_SEARCH_TUNING Coeff<2,2> failHighReductionCoeff     = { {130, 130}, {0, 0}, {0, 0}, {0, 0}, {MAX_DEPTH, MAX_DEPTH}, "failHighReduction" };
+
 // first value if eval score is used, second if hash score is used
 CONST_SEARCH_TUNING ScoreType qfutilityMargin[2]              = {132, 132};
-CONST_SEARCH_TUNING DepthType staticNullMoveMaxDepth[2]       = {6, 6};
-CONST_SEARCH_TUNING ScoreType staticNullMoveDepthCoeff[2]     = {80, 80};
-CONST_SEARCH_TUNING ScoreType staticNullMoveDepthInit[2]      = {0, 0};
-CONST_SEARCH_TUNING DepthType razoringMaxDepth[2]             = {3, 3};
-CONST_SEARCH_TUNING ScoreType razoringMarginDepthCoeff[2]     = {0, 0};
-CONST_SEARCH_TUNING ScoreType razoringMarginDepthInit[2]      = {200, 200};
-CONST_SEARCH_TUNING ScoreType threatPruningMargin[2]          = {30, 0}; // improving
 CONST_SEARCH_TUNING DepthType nullMoveMinDepth                = 2;
 CONST_SEARCH_TUNING DepthType nullMoveVerifDepth              = 12;
 CONST_SEARCH_TUNING ScoreType nullMoveMargin                  = 0;
 CONST_SEARCH_TUNING ScoreType nullMoveMargin2                 = 0;
 CONST_SEARCH_TUNING ScoreType nullMoveDynamicDivisor          = 180;
-CONST_SEARCH_TUNING DepthType historyPruningMaxDepth[2]       = {3,2};
-CONST_SEARCH_TUNING ScoreType historyPruningThresholdInit     = 0;
-CONST_SEARCH_TUNING ScoreType historyPruningThresholdDepth    = 0;
-CONST_SEARCH_TUNING DepthType capHistoryPruningMaxDepth[2]    = {5,4};
-CONST_SEARCH_TUNING ScoreType capHistoryPruningThresholdInit  = 0;
-CONST_SEARCH_TUNING ScoreType capHistoryPruningThresholdDepth = -128;
 CONST_SEARCH_TUNING ScoreType historyExtensionThreshold       = 512;
 CONST_SEARCH_TUNING DepthType CMHMaxDepth[2]                  = {4,3};
-CONST_SEARCH_TUNING DepthType futilityMaxDepth[2]             = {10, 10};
-CONST_SEARCH_TUNING ScoreType futilityDepthCoeff[2]           = {160, 160};
-CONST_SEARCH_TUNING ScoreType futilityDepthInit[2]            = {0, 0};
 CONST_SEARCH_TUNING DepthType iidMinDepth                     = 7;
 CONST_SEARCH_TUNING DepthType iidMinDepth2                    = 10;
 CONST_SEARCH_TUNING DepthType iidMinDepth3                    = 3;
@@ -68,9 +60,6 @@ CONST_SEARCH_TUNING ScoreType aspirationDepthCoef = 0;
 CONST_SEARCH_TUNING ScoreType aspirationDepthInit = 0;
 
 CONST_SEARCH_TUNING DepthType ttMaxFiftyValideDepth = 92;
-
-CONST_SEARCH_TUNING ScoreType failHighReductionThresholdInit[2]  = {130, 130};
-CONST_SEARCH_TUNING ScoreType failHighReductionThresholdDepth[2] = {0, 0};
 
 //CONST_SEARCH_TUNING ScoreType randomAggressiveReductionFactor = 2;
 

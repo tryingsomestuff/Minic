@@ -26,33 +26,57 @@ const bool doCMHPruning        = true;
 const bool doIID               = false;
 const bool doIIR               = true;
 
+enum CoeffNameType { CNT_init = 0, CNT_bonus, CNT_slope, CNT_minDepth, CNT_maxdepth };
+
+// Most often, N will be =2 for "evalScoreIsHashScore"
+//             M will be =2 for an "improving" bonus
+template<size_t _N, size_t _M> struct Coeff {
+   static const size_t N {_N};
+   static const size_t M {_M};
+   CONST_SEARCH_TUNING std::array<ScoreType, N> init;
+   CONST_SEARCH_TUNING std::array<ScoreType, M> bonus;
+   CONST_SEARCH_TUNING std::array<ScoreType, N> slope;
+   CONST_SEARCH_TUNING std::array<DepthType, N> minDepth;
+   CONST_SEARCH_TUNING std::array<DepthType, N> maxDepth;
+   const std::string name;
+   [[nodiscard]] inline CONSTEXPR_SEARCH_TUNING ScoreType threshold(DepthType d, size_t idx1 = 0, size_t idx2 = 0) const {
+      assert(idx1 >= 0);
+      assert(idx1 < N);
+      assert(idx2 >= 0);
+      assert(idx2 < M);
+      return init[idx1] + d * slope[idx1] + bonus[idx2]; 
+   }
+   [[nodiscard]] inline CONSTEXPR_SEARCH_TUNING bool isActive(DepthType d, size_t idx1 = 0) const {
+      assert(idx1 >= 0);
+      assert(idx1 < N);
+      return d >= minDepth[idx1] && d <= maxDepth[idx1]; 
+   }
+   [[nodiscard]] inline std::string getName(CoeffNameType t, size_t idx)const{
+      assert(idx >= 0);
+      assert(t >= 0);
+      assert(t <= CNT_maxdepth);
+      static const std::string suffixes[] = { "Init", "Bonus", "Slope", "MinDepth", "MaxDepth" };
+      return name + suffixes[t] + std::to_string(idx);
+   }
+};
+
+extern CONST_SEARCH_TUNING Coeff<2,2> staticNullMoveCoeff;
+extern CONST_SEARCH_TUNING Coeff<2,2> razoringCoeff;
+extern CONST_SEARCH_TUNING Coeff<2,2> threatCoeff;
+extern CONST_SEARCH_TUNING Coeff<2,2> historyPruningCoeff;
+extern CONST_SEARCH_TUNING Coeff<2,2> captureHistoryPruningCoeff;
+extern CONST_SEARCH_TUNING Coeff<2,2> futilityPruningCoeff;
+extern CONST_SEARCH_TUNING Coeff<2,2> failHighReductionCoeff;
+
 // first value if eval score is used, second if hash score is used
 extern CONST_SEARCH_TUNING ScoreType qfutilityMargin[2];
-extern CONST_SEARCH_TUNING DepthType staticNullMoveMaxDepth[2];
-extern CONST_SEARCH_TUNING ScoreType staticNullMoveDepthCoeff[2];
-extern CONST_SEARCH_TUNING ScoreType staticNullMoveDepthInit[2];
-extern CONST_SEARCH_TUNING DepthType razoringMaxDepth[2];
-extern CONST_SEARCH_TUNING ScoreType razoringMarginDepthCoeff[2];
-extern CONST_SEARCH_TUNING ScoreType razoringMarginDepthInit[2];
-extern CONST_SEARCH_TUNING ScoreType threatPruningMargin[2];
 extern CONST_SEARCH_TUNING DepthType nullMoveMinDepth;
 extern CONST_SEARCH_TUNING DepthType nullMoveVerifDepth;
 extern CONST_SEARCH_TUNING ScoreType nullMoveMargin;
 extern CONST_SEARCH_TUNING ScoreType nullMoveMargin2;
 extern CONST_SEARCH_TUNING ScoreType nullMoveDynamicDivisor;
-extern CONST_SEARCH_TUNING DepthType historyPruningMaxDepth[2];
-extern CONST_SEARCH_TUNING ScoreType historyPruningThresholdInit;
-extern CONST_SEARCH_TUNING ScoreType historyPruningThresholdDepth;
-extern CONST_SEARCH_TUNING DepthType capHistoryPruningMaxDepth[2];
-extern CONST_SEARCH_TUNING ScoreType capHistoryPruningThresholdInit;
-extern CONST_SEARCH_TUNING ScoreType capHistoryPruningThresholdDepth;
 extern CONST_SEARCH_TUNING ScoreType historyExtensionThreshold;
 extern CONST_SEARCH_TUNING DepthType CMHMaxDepth[2];
-extern CONST_SEARCH_TUNING DepthType futilityMaxDepth[2];
-extern CONST_SEARCH_TUNING ScoreType futilityDepthCoeff[2];
-extern CONST_SEARCH_TUNING ScoreType futilityDepthInit[2];
-extern CONST_SEARCH_TUNING ScoreType failHighReductionThresholdInit[2];
-extern CONST_SEARCH_TUNING ScoreType failHighReductionThresholdDepth[2];
 //extern CONST_SEARCH_TUNING ScoreType randomAggressiveReductionFactor;
 extern CONST_SEARCH_TUNING DepthType iidMinDepth;
 extern CONST_SEARCH_TUNING DepthType iidMinDepth2;
