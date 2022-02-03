@@ -188,6 +188,9 @@ Minic random-mover stats are the following :
 - Minic 3.17 + Nucleated Neurulation is tested at 3229 on the [GRL 40/2 rating list](http://rebel13.nl/grl-best-40-2.html)
 - Minic 3.06 using Nocturnal Nadir net is tested at 3078 on the [GRL 40/15 rating list](http://rebel13.nl/grl-best-40-15.html)
 
+### BRUCE
+- Minic 3.18 + Nimble Nothingness is tested at 3305 on the [BRUCE rating list](https://e4e6.com/)
+
 ### Test Suite
 - STS : 1191/1500 @10sec per position (single thread on an i7-9700K)  
 - WAC : 291/300 @10sec per position (single thread on an i7-9700K)  
