@@ -26,7 +26,7 @@ const bool doCMHPruning        = true;
 const bool doIID               = false;
 const bool doIIR               = true;
 
-enum CoeffNameType { CNT_init = 0, CNT_bonus, CNT_slopeD, CNT_slopeGM, CNT_minDepth, CNT_maxdepth };
+enum CoeffNameType { CNT_init = 0, CNT_bonus, CNT_slopeD, CNT_slopeGP, CNT_minDepth, CNT_maxdepth };
 
 // Most often, N will be =2 for "evalScoreIsHashScore"
 //             M will be =2 for an "improving" bonus
@@ -56,7 +56,7 @@ template<size_t _N, size_t _M> struct Coeff {
       assert(idx >= 0);
       assert(t >= 0);
       assert(t <= CNT_maxdepth);
-      static const std::string suffixes[] = { "Init", "Bonus", "SlopeDepth", "SlopeGM", "MinDepth", "MaxDepth" };
+      static const std::string suffixes[] = { "Init", "Bonus", "SlopeDepth", "SlopeGP", "MinDepth", "MaxDepth" };
       return name + suffixes[t] + std::to_string(idx);
    }
 };
