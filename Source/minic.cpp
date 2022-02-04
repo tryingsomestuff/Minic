@@ -51,7 +51,7 @@ void init(int argc, char** argv) {
 #ifdef WITH_NNUE
    NNUEWrapper::init();
 #endif
-   COM::init(); // let's do this ... (usefull to reset position in case of NNUE)
+   COM::init(COM::p_uci); // let's do this ... (usefull to reset position in case of NNUE)
 }
 
 void finalize() {

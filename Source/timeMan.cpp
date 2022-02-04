@@ -120,6 +120,7 @@ TimeType getNextMSecPerMove(const Position& p) {
       // in situation where increment is smaller than minimum margin we will be a lot more conservative
       // a margin will be used
       // a correction factor is applied for UCI pondering in order to search longer ///@todo why only 3/2 ...
+      // be carefull here !, using xboard (for instance under cutechess), we won't receive an increment
       const bool riskySituation = msecInc < msecMinimal;
       const int nmoves = (riskySituation ? 28 : 15 ) 
                        - (riskySituation ? std::min(8, p.halfmoves / 20) : std::min(10, p.halfmoves / 12));

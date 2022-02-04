@@ -42,7 +42,7 @@ void init() {
    Logging::LogIt(Logging::logInfo) << "Init xboard";
    display = false;
    ponder  = p_off;
-   COM::init();
+   COM::init(COM::p_xboard);
    newGame();
 }
 
@@ -151,7 +151,7 @@ void xboard() {
          }
          else if (COM::command == "new") { // not following protocol, should set infinite depth search
             COM::stop();
-            COM::init();
+            COM::init(COM::p_xboard);
             newGame();
             if (!sideToMoveFromFEN(startPosition)) { commandOK = false; }
             initialPos = COM::position;
@@ -276,6 +276,7 @@ void xboard() {
          }
          else if (strncmp(COM::command.c_str(), "level", 5) == 0) {
             int timeTC = 0, secTC = 0, inc = 0, mps = 0;
+            // WARNING here, level command only supports integer ! timeTC is in minutes, and secTC and inc in secondes
             if (sscanf(COM::command.c_str(), "level %d %d %d", &mps, &timeTC, &inc) != 3)
                sscanf(COM::command.c_str(), "level %d %d:%d %d", &mps, &timeTC, &secTC, &inc);
             // classic TC is mps>0, else sudden death

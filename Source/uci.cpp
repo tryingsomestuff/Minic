@@ -15,7 +15,7 @@ namespace UCI {
 void init() {
    Logging::ct = Logging::CT_uci;
    Logging::LogIt(Logging::logInfo) << "Init uci";
-   COM::init();
+   COM::init(COM::p_uci);
 }
 
 void uci() {
@@ -224,7 +224,7 @@ void uci() {
             Logging::LogIt(Logging::logGUI) << "info string " << uciCommand << " received but search in progress ...";
          }
          else {
-            COM::init();
+            COM::init(COM::p_uci);
          }
       }
       else if (uciCommand == "eval") {
