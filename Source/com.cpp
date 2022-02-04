@@ -6,7 +6,7 @@
 #include "transposition.hpp"
 
 namespace COM {
-
+Protocol          protocol;
 State             state;
 std::string       command;
 RootPosition      position;
@@ -34,10 +34,11 @@ void newGame() {
    ThreadPool::instance().clearGame();
 }
 
-void init() {
+void init(Protocol pr) {
    Logging::LogIt(Logging::logInfo) << "Init COM";
    state = st_none;
    depth = -1;
+   protocol = pr;
    newGame();
 }
 

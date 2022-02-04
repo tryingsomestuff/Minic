@@ -353,18 +353,18 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       
       // static null move
       if (SearchConfig::doStaticNullMove && !isMateScore(evalScore) && isNotEndGame && SearchConfig::staticNullMoveCoeff.isActive(depth, evalScoreIsHashScore) ) {
-         const ScoreType margin = SearchConfig::staticNullMoveCoeff.threshold(marginDepth, evalScoreIsHashScore, improving);
+         const ScoreType margin = SearchConfig::staticNullMoveCoeff.threshold(marginDepth, data.gp, evalScoreIsHashScore, improving);
          if (evalScore >= beta + margin) return stats.incr(Stats::sid_staticNullMove), evalScore;
       }
 
       // Threats pruning (idea origin from Koivisto)
       if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && isNotEndGame && SearchConfig::threatCoeff.isActive(depth, evalScoreIsHashScore) && 
-           !data.goodThreats[~p.c] && evalScore > beta + SearchConfig::threatCoeff.threshold(depth, evalScoreIsHashScore, improving) ){
+           !data.goodThreats[~p.c] && evalScore > beta + SearchConfig::threatCoeff.threshold(depth, data.gp, evalScoreIsHashScore, improving) ){
          return stats.incr(Stats::sid_threatsPruning), beta;
       }
 
       // razoring
-      const ScoreType rAlpha = alpha - SearchConfig::razoringCoeff.threshold(marginDepth, evalScoreIsHashScore, improving); 
+      const ScoreType rAlpha = alpha - SearchConfig::razoringCoeff.threshold(marginDepth, data.gp, evalScoreIsHashScore, improving); 
       if (SearchConfig::doRazoring && SearchConfig::razoringCoeff.isActive(depth, evalScoreIsHashScore) && evalScore <= rAlpha) {
          stats.incr(Stats::sid_razoringTry);
          const ScoreType qScore = qsearch(alpha, beta, p, height, seldepth, 0, true, pvnode, isInCheck);
@@ -493,7 +493,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       lmp = SearchConfig::doLMP && depth <= SearchConfig::lmpMaxDepth;
       // futility
       const ScoreType futilityScore =
-          alpha - SearchConfig::futilityPruningCoeff.threshold(marginDepth, evalScoreIsHashScore, improving);
+          alpha - SearchConfig::futilityPruningCoeff.threshold(marginDepth, data.gp, evalScoreIsHashScore, improving);
       futility = SearchConfig::doFutility && SearchConfig::futilityPruningCoeff.isActive(depth,evalScoreIsHashScore) && evalScore <= futilityScore;
       // history pruning
       historyPruning = SearchConfig::doHistoryPruning && isNotEndGame && SearchConfig::historyPruningCoeff.isActive(depth, improving);
@@ -803,7 +803,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
          // History pruning (including CMH)
          if (historyPruning && isPrunableStdNoCheck &&
-             Move2Score(*it) < SearchConfig::historyPruningCoeff.threshold(depth + pruningDepthCorrection, improving, cutNode)) {
+             Move2Score(*it) < SearchConfig::historyPruningCoeff.threshold(depth + pruningDepthCorrection, data.gp, improving, cutNode)) {
             stats.incr(Stats::sid_historyPruning);
             continue;
          }
@@ -819,7 +819,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
          // capture history pruning
          if ( capHistoryPruning && isPrunableCap && 
-              historyT.historyCap[PieceIdx(p.board_const(Move2From(*it)))][to][Abs(p.board_const(to))-1] < SearchConfig::captureHistoryPruningCoeff.threshold(depth + pruningDepthCorrection, improving, cutNode)){
+              historyT.historyCap[PieceIdx(p.board_const(Move2From(*it)))][to][Abs(p.board_const(to))-1] < SearchConfig::captureHistoryPruningCoeff.threshold(depth + pruningDepthCorrection, data.gp, improving, cutNode)){
             stats.incr(Stats::sid_capHistPruning);
             continue;
          }
@@ -850,7 +850,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                // more reduction
                reduction += !improving;
                reduction += ttMoveIsCapture;
-               reduction += (cutNode && evalScore - SearchConfig::failHighReductionCoeff.threshold(marginDepth, evalScoreIsHashScore, improving) > beta);
+               reduction += (cutNode && evalScore - SearchConfig::failHighReductionCoeff.threshold(marginDepth, data.gp, evalScoreIsHashScore, improving) > beta);
                //reduction += moveCountPruning && !formerPV;
                //if (!isInCheck) reduction += std::min(2,(data.mobility[p.c]-data.mobility[~p.c])/8);
 

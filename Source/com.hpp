@@ -10,6 +10,9 @@
  */
 namespace COM {
 
+enum Protocol : uint8_t { p_uci = 0, p_xboard };
+extern Protocol protocol;
+
 enum State : uint8_t { st_pondering = 0, st_analyzing, st_searching, st_none };
 extern State state;
 
@@ -18,7 +21,7 @@ extern RootPosition      position;
 extern DepthType         depth;
 extern std::vector<Move> moves;
 
-void init();
+void init(Protocol pr);
 
 void readLine();
 
