@@ -26,7 +26,7 @@ const bool doCMHPruning        = true;
 const bool doIID               = false;
 const bool doIIR               = true;
 
-enum CoeffNameType { CNT_init = 0, CNT_bonus, CNT_slope, CNT_minDepth, CNT_maxdepth };
+enum CoeffNameType { CNT_init = 0, CNT_bonus, CNT_slopeD, CNT_slopeGM, CNT_minDepth, CNT_maxdepth };
 
 // Most often, N will be =2 for "evalScoreIsHashScore"
 //             M will be =2 for an "improving" bonus
@@ -35,16 +35,17 @@ template<size_t _N, size_t _M> struct Coeff {
    static const size_t M {_M};
    CONST_SEARCH_TUNING std::array<ScoreType, N> init;
    CONST_SEARCH_TUNING std::array<ScoreType, M> bonus;
-   CONST_SEARCH_TUNING std::array<ScoreType, N> slope;
+   CONST_SEARCH_TUNING std::array<ScoreType, N> slopeDepth;
+   CONST_SEARCH_TUNING std::array<ScoreType, N> slopeGamePhase;
    CONST_SEARCH_TUNING std::array<DepthType, N> minDepth;
    CONST_SEARCH_TUNING std::array<DepthType, N> maxDepth;
    const std::string name;
-   [[nodiscard]] inline CONSTEXPR_SEARCH_TUNING ScoreType threshold(DepthType d, size_t idx1 = 0, size_t idx2 = 0) const {
+   [[nodiscard]] inline CONSTEXPR_SEARCH_TUNING ScoreType threshold(DepthType d, float gp, size_t idx1 = 0, size_t idx2 = 0) const {
       assert(idx1 >= 0);
       assert(idx1 < N);
       assert(idx2 >= 0);
       assert(idx2 < M);
-      return init[idx1] + d * slope[idx1] + bonus[idx2]; 
+      return init[idx1] + d * slopeDepth[idx1] + bonus[idx2] + gp * slopeGamePhase[idx1]; 
    }
    [[nodiscard]] inline CONSTEXPR_SEARCH_TUNING bool isActive(DepthType d, size_t idx1 = 0) const {
       assert(idx1 >= 0);
@@ -55,7 +56,7 @@ template<size_t _N, size_t _M> struct Coeff {
       assert(idx >= 0);
       assert(t >= 0);
       assert(t <= CNT_maxdepth);
-      static const std::string suffixes[] = { "Init", "Bonus", "Slope", "MinDepth", "MaxDepth" };
+      static const std::string suffixes[] = { "Init", "Bonus", "SlopeDepth", "SlopeGM", "MinDepth", "MaxDepth" };
       return name + suffixes[t] + std::to_string(idx);
    }
 };
