@@ -8,13 +8,13 @@ ScoreType MvvLvaScores[6][6];
 ///@todo try parity pruning, prune less when ply is odd
 ///@todo tune everything when evalScore is from TT score
 
-CONST_SEARCH_TUNING Coeff<2,2> staticNullMoveCoeff        = { {0, 0}, {0, 0}, {80, 80}, {0, 0}, {6, 6}, "staticNullMove" };
-CONST_SEARCH_TUNING Coeff<2,2> razoringCoeff              = { {200, 200}, {0, 0}, {0, 0}, {0, 0}, {3, 3}, "razoring" };
-CONST_SEARCH_TUNING Coeff<2,2> threatCoeff                = { {0, 0}, {30, 0}, {0, 0}, {0, 0}, {2, 2}, "threat" };
-CONST_SEARCH_TUNING Coeff<2,2> historyPruningCoeff        = { {0, 0}, {0, 0}, {0, 0}, {0, 0}, {2, 1}, "historyPruning" };
-CONST_SEARCH_TUNING Coeff<2,2> captureHistoryPruningCoeff = { {0, 0}, {0, 0}, {-128, -128}, {0, 0}, {4, 3}, "captureHistoryPruning" };
-CONST_SEARCH_TUNING Coeff<2,2> futilityPruningCoeff       = { {0, 0}, {0, 0}, {160, 160}, {0, 0}, {10, 10}, "futilityPruning" };
-CONST_SEARCH_TUNING Coeff<2,2> failHighReductionCoeff     = { {130, 130}, {0, 0}, {0, 0}, {0, 0}, {MAX_DEPTH, MAX_DEPTH}, "failHighReduction" };
+CONST_SEARCH_TUNING Coeff<2,2> staticNullMoveCoeff        = { {0, 0}, {0, 0}, {80, 80}, {0, 0}, {0, 0}, {6, 6}, "staticNullMove" };
+CONST_SEARCH_TUNING Coeff<2,2> razoringCoeff              = { {200, 200}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {3, 3}, "razoring" };
+CONST_SEARCH_TUNING Coeff<2,2> threatCoeff                = { {0, 0}, {30, 0}, {0, 0}, {0, 0}, {0, 0}, {2, 2}, "threat" };
+CONST_SEARCH_TUNING Coeff<2,2> historyPruningCoeff        = { {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {2, 1}, "historyPruning" };
+CONST_SEARCH_TUNING Coeff<2,2> captureHistoryPruningCoeff = { {0, 0}, {0, 0}, {-128, -128}, {0, 0}, {0, 0}, {4, 3}, "captureHistoryPruning" };
+CONST_SEARCH_TUNING Coeff<2,2> futilityPruningCoeff       = { {0, 0}, {0, 0}, {160, 160}, {0, 0}, {0, 0}, {10, 10}, "futilityPruning" };
+CONST_SEARCH_TUNING Coeff<2,2> failHighReductionCoeff     = { {130, 130}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {MAX_DEPTH, MAX_DEPTH}, "failHighReduction" };
 
 // first value if eval score is used, second if hash score is used
 CONST_SEARCH_TUNING ScoreType qfutilityMargin[2]              = {132, 132};
