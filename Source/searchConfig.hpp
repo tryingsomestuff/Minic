@@ -117,6 +117,7 @@ extern CONST_SEARCH_TUNING DepthType ttMaxFiftyValideDepth;
 const DepthType lmpMaxDepth = 10;
 const int       lmpLimit[][SearchConfig::lmpMaxDepth + 1] = {{0, 2, 3, 5, 9, 13, 18, 25, 34, 45, 55}, {0, 5, 6, 9, 14, 21, 30, 41, 55, 69, 84}};
 
+///@todo try lmr based on game phase
 constexpr Matrix<DepthType, MAX_DEPTH, MAX_MOVE> lmrReduction = [] {
    auto ret = decltype(lmrReduction){0};
    //Logging::LogIt(Logging::logInfo) << "Init lmr";
