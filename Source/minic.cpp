@@ -34,8 +34,6 @@ void init(int argc, char** argv) {
    Logging::init(); // after reading options
    Zobrist::initHash();
    TT::initTable();
-   SearchConfig::initLMR();
-   SearchConfig::initMvvLva();
    BBTools::initMask();
 #ifdef WITH_MAGIC
    BBTools::MagicBB::initMagic();
