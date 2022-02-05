@@ -117,19 +117,21 @@ extern CONST_SEARCH_TUNING DepthType ttMaxFiftyValideDepth;
 const DepthType lmpMaxDepth = 10;
 const int       lmpLimit[][SearchConfig::lmpMaxDepth + 1] = {{0, 2, 3, 5, 9, 13, 18, 25, 34, 45, 55}, {0, 5, 6, 9, 14, 21, 30, 41, 55, 69, 84}};
 
-extern DepthType lmrReduction[MAX_DEPTH][MAX_MOVE];
-inline void initLMR() {
-   Logging::LogIt(Logging::logInfo) << "Init lmr";
-   for (int d = 0; d < MAX_DEPTH; d++)
-      for (int m = 0; m < MAX_MOVE; m++) lmrReduction[d][m] = DepthType(log(d * 1.6) * log(m) * 0.4);
-}
+constexpr Matrix<DepthType, MAX_DEPTH, MAX_MOVE> lmrReduction = [] {
+   auto ret = decltype(lmrReduction){0};
+   //Logging::LogIt(Logging::logInfo) << "Init lmr";
+   for (int d = 1; d < MAX_DEPTH; d++)
+      for (int m = 1; m < MAX_MOVE; m++) ret[d][m] = DepthType(std::log(d * 1.6) * std::log(m) * 0.4);
+   return ret;
+}();
 
-extern ScoreType MvvLvaScores[6][6];
-inline void initMvvLva() {
-   Logging::LogIt(Logging::logInfo) << "Init mvv-lva";
-   static const ScoreType IValues[6] = {1, 2, 3, 5, 9, 20}; ///@todo try N=B=3 ??
+constexpr Matrix<ScoreType, 6, 6> MvvLvaScores = [] {
+   auto ret = decltype(MvvLvaScores){};
+   //Logging::LogIt(Logging::logInfo) << "Init mvv-lva";
+   constexpr ScoreType IValues[6] = {1, 2, 3, 5, 9, 20}; ///@todo try N=B=3 ??
    for (int v = 0; v < 6; ++v)
-      for (int a = 0; a < 6; ++a) MvvLvaScores[v][a] = IValues[v] * 20 - IValues[a];
-}
+      for (int a = 0; a < 6; ++a) ret[v][a] = IValues[v] * 20 - IValues[a];
+   return ret;
+}();
 
 } // namespace SearchConfig

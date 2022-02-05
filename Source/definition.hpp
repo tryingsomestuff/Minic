@@ -215,6 +215,9 @@ typedef int16_t  ScoreType;
 typedef int64_t  TimeType;
 typedef uint8_t  GenerationType;
 
+template<typename T, int N, int M>
+using Matrix = std::array<std::array<T,M>,N>;
+
 const Hash     nullHash      = 0ull; //std::numeric_limits<MiniHash>::max(); // use MiniHash to allow same "null" value for Hash(64) and MiniHash(32)
 const BitBoard emptyBitBoard = 0ull;
 
