@@ -103,9 +103,9 @@ struct Searcher {
                                             DepthType&      seldepth,
                                             PVList*         pv = nullptr);
 
-   [[nodiscard]] bool SEE_GE(const Position& p, const Move& m, ScoreType threshold) const;
+   [[nodiscard]] static bool SEE_GE(const Position& p, const Move& m, ScoreType threshold);
 
-   [[nodiscard]] ScoreType SEE(const Position& p, const Move& m) const;
+   [[nodiscard]] static ScoreType SEE(const Position& p, const Move& m);
 
    void searchDriver(bool postMove = true);
 

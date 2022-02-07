@@ -1,7 +1,7 @@
 #include "logging.hpp"
 #include "searcher.hpp"
 
-ScoreType Searcher::SEE(const Position& p, const Move& m) const {
+ScoreType Searcher::SEE(const Position& p, const Move& m) {
    if (!isValidMove(m)) return 0;
 
    START_TIMER
@@ -91,7 +91,7 @@ ScoreType Searcher::SEE(const Position& p, const Move& m) const {
    return swapList[0];
 }
 
-bool Searcher::SEE_GE(const Position& p, const Move& m, ScoreType threshold) const { return SEE(p, m) >= threshold; }
+bool Searcher::SEE_GE(const Position& p, const Move& m, ScoreType threshold) { return SEE(p, m) >= threshold; }
 
 /*
 // Static Exchange Evaluation (cutoff version algorithm from Stockfish)
