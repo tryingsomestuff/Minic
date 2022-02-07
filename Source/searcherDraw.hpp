@@ -2,7 +2,8 @@
 
 #include "material.hpp"
 
-template<bool withRep, bool isPV, bool INR> [[nodiscard]] inline MaterialHash::Terminaison Searcher::interiorNodeRecognizer(const Position& p) const {
+template<bool withRep, bool isPV, bool INR> 
+[[nodiscard]] inline MaterialHash::Terminaison Searcher::interiorNodeRecognizer(const Position& p) const{
    if ( (p.occupancy() & ~p.allKing()) == emptyBitBoard)  return MaterialHash::Ter_Draw;
    if (withRep && isRep(p, isPV)) return MaterialHash::Ter_Draw;
    if (p.fifty >= 100) return MaterialHash::Ter_Draw;
