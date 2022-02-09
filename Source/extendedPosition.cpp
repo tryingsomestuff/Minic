@@ -279,7 +279,7 @@ void ExtendedPosition::test(const std::vector<std::string> &positions,
             const Move bestMove = d.best;
 
             results[k][t].name = extP.id();
-            results[k][t].k    = (int)k;
+            results[k][t].k    = static_cast<int>(k);
             results[k][t].t    = timeControls[t];
 
             results[k][t].computerMove = showAlgAbr(bestMove, extP);
@@ -336,8 +336,8 @@ void ExtendedPosition::test(const std::vector<std::string> &positions,
                bool success = false;
                static const std::array<int, 23>   ms = {10,  20,  30,  40,  50,  60,  70,  80,  90,  100, 125,  150,
                                                         175, 200, 250, 300, 400, 500, 600, 700, 800, 900, 10000};
-               static const std::array<float, 23> bonus = {3.0f, 2.9f, 2.8f, 2.7f, 2.6f, 2.5f, 2.4f, 2.3f, 2.2f, 2.1f, 2.0f, 1.9f,
-                                                           1.8f, 1.7f, 1.6f, 1.5f, 1.4f, 1.3f, 1.2f, 1.1f, 1.0f, 1.0f, 0.0f};
+               static const std::array<double, 23> bonus = {3.0, 2.9, 2.8, 2.7, 2.6, 2.5, 2.4, 2.3, 2.2, 2.1, 2.0, 1.9,
+                                                            1.8, 1.7, 1.6, 1.5, 1.4, 1.3, 1.2, 1.1, 1.0, 1.0, 0.0};
                for (size_t i = 0; i < results[k][t].mea.size(); ++i) {
                   if (results[k][t].computerMove == results[k][t].mea[i].first) {
                      results[k][t].score     = results[k][t].mea[i].second;
@@ -353,10 +353,10 @@ void ExtendedPosition::test(const std::vector<std::string> &positions,
                      for (; id < 23 && ms[id] < msec; ++id) { ; }
 
                      Logging::LogIt(Logging::logInfo) << "Good " << i + 1 << " best move : " << results[k][t].mea[i].first;
-                     Logging::LogIt(Logging::logInfo) << "Found at depth " << int(dd) << " in " << datas.times[dd] << " id " << id;
+                     Logging::LogIt(Logging::logInfo) << "Found at depth " << static_cast<int>(dd) << " in " << datas.times[dd] << " id " << id;
                      Logging::LogIt(Logging::logInfo) << "Bonus " << bonus[id] << " score " << results[k][t].mea[i].second;
 
-                     results[k][t].score = int(results[k][t].score * bonus[id]);
+                     results[k][t].score = static_cast<int>(results[k][t].score * bonus[id]);
                      success             = true;
                      break;
                   }
@@ -414,7 +414,7 @@ void ExtendedPosition::testStatic(const std::vector<std::string> &positions, boo
       ScoreType ret = eval(extP, data, ThreadPool::instance().main(), true, true);
 
       results[k].name  = extP.id();
-      results[k].k     = (int)k;
+      results[k].k     = static_cast<int>(k);
       results[k].score = ret;
 
       std::cout << "score is  " << ret << std::endl;

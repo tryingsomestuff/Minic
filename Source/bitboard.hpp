@@ -32,7 +32,7 @@ int popcount(uint64_t b) {
    b = b + (b >> 8);
    b = b + (b >> 16);
    b = b + (b >> 32) & 0x0000007F;
-   return (int)b;
+   return static_cast<int>(b);
 }
 const int index64[NbSquare] = {
    0,  1, 48,  2, 57, 49, 28,  3,
@@ -126,7 +126,7 @@ inline void _unSetBit(BitBoard& b, Square k) { b &= ~SquareToBitboard(k); }
 
 [[nodiscard]] inline ScoreType countBit(const BitBoard& b) { return ScoreType(POPCOUNT(b)); }
 
-[[nodiscard]] inline int popBit(BitBoard& b) {
+[[nodiscard]] inline Square popBit(BitBoard& b) {
    assert(isNotEmpty(b));
 #ifdef _WIN64
     unsigned long i = 0ull;
@@ -135,7 +135,7 @@ inline void _unSetBit(BitBoard& b, Square k) { b &= ~SquareToBitboard(k); }
 #endif
     bsf(b, i);
     b &= b - 1;
-    return i;
+    return static_cast<Square>(i);
 }
 
 /*

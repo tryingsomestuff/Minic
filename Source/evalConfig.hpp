@@ -116,7 +116,7 @@ extern CONST_EVAL_TUNING ScoreType tempo;
 inline void initEval() {
    for (Square i = 0; i < NbSquare; i++) {
       EvalConfig::kingAttTable[i] =
-          (int)sigmoid(i, EvalConfig::kingAttMax, EvalConfig::kingAttTrans, EvalConfig::kingAttScale, EvalConfig::kingAttOffset);
+          static_cast<ScoreType>(sigmoid(i, EvalConfig::kingAttMax, EvalConfig::kingAttTrans, EvalConfig::kingAttScale, EvalConfig::kingAttOffset));
    }
 } // idea taken from Topple
 

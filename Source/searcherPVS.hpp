@@ -15,6 +15,9 @@
 
 #define PERIODICCHECK uint64_t(1024)
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+
 inline void evalDanger(const Position & p,
                        BitBoard         (&attFromPiece)[2][6],
                        BitBoard         (&att)[2],
@@ -78,6 +81,8 @@ inline void evalDanger(const Position & p,
    }   
 }
 
+#pragma GCC diagnostic pop
+
 [[nodiscard]] inline bool isNoisy(const Position & p, const Move & m){
    if ( Move2Type(m) != T_std ) return true;
    const Square to = Move2To(m);
@@ -103,7 +108,7 @@ inline void Searcher::timeCheck(){
          stopFlag = true;
          Logging::LogIt(Logging::logInfo) << "stopFlag triggered (nodes limits) in thread " << id();
       }
-      if ((TimeType)std::max(1, (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count()) > getCurrentMoveMs()) {
+      if (getTimeDiff(startTime) > getCurrentMoveMs()) {
          stopFlag = true;
          Logging::LogIt(Logging::logInfo) << "stopFlag triggered in thread " << id();
       }
@@ -169,8 +174,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // mate distance pruning
    if(!rootnode){
-      alpha = std::max(alpha, (ScoreType)(-MATE + height));
-      beta  = std::min(beta, (ScoreType)(MATE - height - 1));
+      alpha = std::max(alpha, matedScore(height));
+      beta  = std::min(beta, matingScore(height + 1));
       if (alpha >= beta) return alpha;
    }
 
@@ -246,7 +251,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // get a static score for the position.
    ScoreType evalScore;
    // do not eval position when in check, we won't use it (won't forward prune)
-   if (isInCheck) evalScore = -MATE + height;
+   if (isInCheck) evalScore = matedScore(height);
    // skip eval if nullmove just applied we can hack
    // Won't work with asymetric HalfKA NNUE
    else if (!DynamicConfig::useNNUE && p.lastMove == NULLMOVE && height > 0){
@@ -338,7 +343,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
      stats.incr(Stats::sid_staticScoreIsFromSearch);
    }
 
-   ScoreType  bestScore = -MATE + height;
+   ScoreType  bestScore = matedScore(height);
    MoveList   moves;
    bool       moveGenerated    = false;
    bool       capMoveGenerated = false;
@@ -666,7 +671,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    }
 #endif
 
-   ScoreType score = -MATE + height;
+   ScoreType score = matedScore(height);
    bool skipQuiet = false;
    bool skipCap = false;
 
@@ -677,7 +682,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          if ( isInCheck ) MoveGen::generate<MoveGen::GP_evasion>(p, moves, false);
          else MoveGen::generate<MoveGen::GP_all>(p, moves, false);
    }
-   if (moves.empty()) return isInCheck ? -MATE + height : drawScore(p, height);
+   if (moves.empty()) return isInCheck ? matedScore(height) : drawScore(p, height);
 
 #ifdef USE_PARTIAL_SORT
    MoveSorter::score(*this, moves, p, data.gp, height, cmhPtr, true, isInCheck, validTTmove ? &e : NULL,
@@ -712,8 +717,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       TT::prefetch(computeHash(p2));
       const Square to = Move2To(*it);
 #ifdef DEBUG_KING_CAP      
-      if (p.c == Co_White && to == p.king[Co_Black]) return MATE - height + 1;
-      if (p.c == Co_Black && to == p.king[Co_White]) return MATE - height + 1;
+      if (p.c == Co_White && to == p.king[Co_Black]) return matingScore(height - 1);
+      if (p.c == Co_Black && to == p.king[Co_White]) return matingScore(height - 1);
 #endif
       validMoveCount++;
       if (isQuiet) validQuietMoveCount++;
@@ -845,7 +850,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             if (Move2Type(*it) == T_std){ 
                stats.incr(Stats::sid_lmr);
                // base reduction
-               reduction += SearchConfig::lmrReduction[std::min((int)depth, MAX_DEPTH - 1)][std::min(validMoveCount, MAX_MOVE - 1)];
+               reduction += SearchConfig::lmrReduction[std::min(static_cast<int>(depth), MAX_DEPTH - 1)][std::min(validMoveCount, MAX_MOVE - 1)];
 
                // more reduction
                reduction += !improving;
@@ -876,7 +881,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             else if (Move2Type(*it) == T_capture){
                stats.incr(Stats::sid_lmrcap);
                // base reduction
-               reduction += SearchConfig::lmrReduction[std::min((int)depth, MAX_DEPTH - 1)][std::min(validMoveCount, MAX_MOVE - 1)];
+               reduction += SearchConfig::lmrReduction[std::min(static_cast<int>(depth), MAX_DEPTH - 1)][std::min(validMoveCount, MAX_MOVE - 1)];
                reduction -= improving;
                reduction -= pvnode;
                // capture history reduction
@@ -963,7 +968,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    }
 
    // check for draw and check mate
-   if (validMoveCount == 0) return (isInCheck || !withoutSkipMove) ? -MATE + height : drawScore(p, height);
+   if (validMoveCount == 0) return (isInCheck || !withoutSkipMove) ? matedScore(height) : drawScore(p, height);
 
    // insert data in TT
    TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(evalScore, height),

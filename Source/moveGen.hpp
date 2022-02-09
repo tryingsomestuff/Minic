@@ -40,7 +40,7 @@ template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveLis
    if (!isValidPieceNotNone(ptype)) {
       Logging::LogIt(Logging::logWarn) << ToString(myPieceBB);
       Logging::LogIt(Logging::logWarn) << ToString(oppPieceBB);
-      Logging::LogIt(Logging::logWarn) << "piece " << (int)piece;
+      Logging::LogIt(Logging::logWarn) << "piece " << static_cast<int>(piece);
       Logging::LogIt(Logging::logWarn) << SquareNames[from];
       Logging::LogIt(Logging::logWarn) << ToString(p);
       Logging::LogIt(Logging::logWarn) << ToString(p.lastMove);

@@ -62,7 +62,7 @@ void readLine() {
 }
 
 bool receiveMoves(Move move, Move ponderMove) {
-   Logging::LogIt(Logging::logInfo) << "...done returning move " << ToString(move) << " (state " << (int)state << ")";
+   Logging::LogIt(Logging::logInfo) << "...done returning move " << ToString(move) << " (state " << static_cast<int>(state) << ")";
    Logging::LogIt(Logging::logInfo) << "ponder move " << ToString(ponderMove);
 
    // share the same move with all process
@@ -90,7 +90,7 @@ bool receiveMoves(Move move, Move ponderMove) {
 
    bool ret = true;
 
-   Logging::LogIt(Logging::logInfo) << "search async done (state " << (int)state << ")";
+   Logging::LogIt(Logging::logInfo) << "search async done (state " << static_cast<int>(state) << ")";
    // in searching only mode we have to return a move to GUI
    // but curiously uci protocol also expect a bestMove when pondering to wake up the GUI
    if (state == st_searching || state == st_pondering) {
@@ -113,7 +113,7 @@ bool receiveMoves(Move move, Move ponderMove) {
          }
       }
    }
-   Logging::LogIt(Logging::logInfo) << "Putting state to none (state was " << (int)state << ")";
+   Logging::LogIt(Logging::logInfo) << "Putting state to none (state was " << static_cast<int>(state) << ")";
    state = st_none;
 
    return ret;
@@ -145,9 +145,9 @@ void stopPonder() {
 // this is a non-blocking call (search wise)
 void thinkAsync(COM::State givenState) {
    std::lock_guard<std::mutex> lock(mutex); // cannot stop and start at the same time
-   Logging::LogIt(Logging::logInfo) << "Thinking... (state was " << (int)state << " going for " << (int)givenState << ")";
+   Logging::LogIt(Logging::logInfo) << "Thinking... (state was " << static_cast<int>(state) << " going for " << static_cast<int>(givenState) << ")";
    if (depth < 0) depth = MAX_DEPTH;
-   Logging::LogIt(Logging::logInfo) << "depth          " << (int)depth;
+   Logging::LogIt(Logging::logInfo) << "depth          " << static_cast<int>(depth);
    // here is computed the time for next search (and store it in the Threadpool for now)
    ThreadPool::instance().currentMoveMs = TimeMan::getNextMSecPerMove(position);
    Logging::LogIt(Logging::logInfo) << "currentMoveMs  " << ThreadPool::instance().currentMoveMs;

@@ -30,7 +30,7 @@ template<> struct Quantization<true> {
    typedef int32_t BT;
    static constexpr float weightMax {2.0f}; // supposed min/max of weights values
    static constexpr int   weightScale {std::numeric_limits<WT>::max()};
-   static constexpr int   weightFactor {(int)(weightScale / weightMax)};
+   static constexpr int   weightFactor {static_cast<int>(weightScale / weightMax)};
    static constexpr int   biasFactor {weightScale * weightFactor};
    static constexpr float outFactor {(weightFactor * weightFactor * weightMax) / 600.f};
    static float           round(const float& x) { return std::round(x); }

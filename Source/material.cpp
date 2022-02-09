@@ -44,18 +44,19 @@ MaterialHashEntry materialHashTable[TotalMat];
 
 [[nodiscard]] Position::Material indexToMat(int index) {
    Position::Material m = {{{{0}}}};
-   m[Co_White][M_q] = index % 3; index /= 3;
-   m[Co_Black][M_q] = index % 3; index /= 3;
-   m[Co_White][M_r] = index % 3; index /= 3;
-   m[Co_Black][M_r] = index % 3; index /= 3;
-   m[Co_White][M_bl]= index % 3; index /= 3;
-   m[Co_Black][M_bl]= index % 3; index /= 3;
-   m[Co_White][M_bd]= index % 3; index /= 3;
-   m[Co_Black][M_bd]= index % 3; index /= 3;
-   m[Co_White][M_n] = index % 3; index /= 3;
-   m[Co_Black][M_n] = index % 3; index /= 3;
-   m[Co_White][M_p] = index % 9; index /= 9;
-   m[Co_Black][M_p] = index;
+   using MatType = Position::Material::value_type::value_type;
+   m[Co_White][M_q] = static_cast<MatType>(index % 3); index /= 3;
+   m[Co_Black][M_q] = static_cast<MatType>(index % 3); index /= 3;
+   m[Co_White][M_r] = static_cast<MatType>(index % 3); index /= 3;
+   m[Co_Black][M_r] = static_cast<MatType>(index % 3); index /= 3;
+   m[Co_White][M_bl]= static_cast<MatType>(index % 3); index /= 3;
+   m[Co_Black][M_bl]= static_cast<MatType>(index % 3); index /= 3;
+   m[Co_White][M_bd]= static_cast<MatType>(index % 3); index /= 3;
+   m[Co_Black][M_bd]= static_cast<MatType>(index % 3); index /= 3;
+   m[Co_White][M_n] = static_cast<MatType>(index % 3); index /= 3;
+   m[Co_Black][M_n] = static_cast<MatType>(index % 3); index /= 3;
+   m[Co_White][M_p] = static_cast<MatType>(index % 9); index /= 9;
+   m[Co_Black][M_p] = static_cast<MatType>(index);
    m[Co_White][M_b] = m[Co_White][M_bl] + m[Co_White][M_bd];
    m[Co_Black][M_b] = m[Co_Black][M_bl] + m[Co_Black][M_bd];
    m[Co_White][M_M] = m[Co_White][M_q] + m[Co_White][M_r];  m[Co_Black][M_M] = m[Co_Black][M_q] + m[Co_Black][M_r];
@@ -188,9 +189,9 @@ ScoreType helperKPK(const Position &p, Color winningSide, ScoreType, DepthType h
                    KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const<P_wk>(~winningSide))),
                    winningSide == p.c ? Co_White : Co_Black)) {
       if (DynamicConfig::armageddon) {
-         if (p.c == Co_White) return -MATE + height;
+         if (p.c == Co_White) return matedScore(height);
          else
-            return MATE - height + 1;
+            return matingScore(height-1);
          }
          return 0; // shall be drawScore but we don't care, this is not 3rep
        }
@@ -223,6 +224,9 @@ EvalScore Imbalance(const Position::Material &mat, Color c) {
    }
    return bonus / 16;
 }
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
 
 void InitMaterialScore(bool display) {
    if (display) Logging::LogIt(Logging::logInfo) << "Material hash init";
@@ -260,6 +264,8 @@ void InitMaterialScore(bool display) {
    }
    if (display) Logging::LogIt(Logging::logInfo) << "...Done";
 }
+
+#pragma GCC diagnostic pop
 
 void MaterialHashInitializer::init() {
    Logging::LogIt(Logging::logInfo) << "Material hash total : " << TotalMat;

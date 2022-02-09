@@ -4529,7 +4529,7 @@ namespace chess
         inline void setFullMove(std::uint16_t hm)
         {
             m_ply = 2 * hm - 1 + (m_sideToMove == Color::Black);
-            //std::cout << "ply " << (int) m_ply << std::endl;
+            //std::cout << "ply " << static_cast<int>(m_ply) << std::endl;
         }
 
         [[nodiscard]] inline bool isCheck() const;
@@ -5992,7 +5992,7 @@ namespace chess
             if (!rule50.empty())
             {
                 m_rule50Counter = std::stoi(rule50.data());
-                //std::cout << (int)m_rule50Counter << std::endl;
+                //std::cout << static_cast<int>(m_rule50Counter) << std::endl;
             }
             else
             {
@@ -6005,7 +6005,7 @@ namespace chess
             if (!fullMove.empty())
             {
                 m_ply = std::stoi(fullMove.data()) * 2 - (m_sideToMove == Color::White);
-                //std::cout << (int)m_ply << std::endl;
+                //std::cout << static_cast<int>(m_ply) << std::endl;
             }
             else
             {
@@ -6548,7 +6548,7 @@ namespace binpack
 
                 // turn
                 // Side to move.
-                stream.write_one_bit((int)(pos.sideToMove()));
+                stream.write_one_bit(static_cast<int>(pos.sideToMove()));
 
                 // 7-bit positions for leading and trailing balls
                 // White king and black king, 6 bits for each.
@@ -6582,11 +6582,11 @@ namespace binpack
                     stream.write_n_bit(static_cast<int>(pos.epSquare()), 6);
                 }
 
-                //std::cout << "50 " << (int)pos.rule50Counter() << std::endl;
+                //std::cout << "50 " << static_cast<int>(pos.rule50Counter()) << std::endl;
 
                 stream.write_n_bit(pos.rule50Counter(), 6);
 
-                //std::cout << "move " << (int)pos.fullMove() << std::endl;
+                //std::cout << "move " << static_cast<int>(pos.fullMove()) << std::endl;
 
                 stream.write_n_bit(pos.fullMove(), 8);
 
@@ -6734,8 +6734,8 @@ namespace binpack
             // Fullmove number
             std::uint16_t fullmove = stream.read_n_bit(8);
             
-            //std::cout << "50 " << (int)rule50 << std::endl;
-            //std::cout << "move " << (int)fullmove << std::endl;
+            //std::cout << "50 " << static_cast<int>(rule50) << std::endl;
+            //std::cout << "move " << static_cast<int>(fullmove) << std::endl;
 
             // Fullmove number, high bits
             // This was added as a fix for fullmove clock
@@ -6747,8 +6747,8 @@ namespace binpack
             // In older entries this will just be a zero bit.
             rule50 |= stream.read_n_bit(1) << 6;
 
-            //std::cout << "*50 " << (int)rule50 << std::endl;
-            //std::cout << "*move " << (int)fullmove << std::endl;
+            //std::cout << "*50 " << static_cast<int>(rule50) << std::endl;
+            //std::cout << "*move " << static_cast<int>(fullmove) << std::endl;
 
             pos.setFullMove(fullmove);
             pos.setRule50Counter(rule50);

@@ -114,7 +114,7 @@ bool applyMove(Position& p, const Move& m, bool noValidation) {
          {
             assert(p.ep != INVALIDSQUARE);
             assert(SQRANK(p.ep) == EPRank[p.c]);
-            const Square epCapSq = p.ep + (p.c == Co_White ? -8 : +8);
+            const Square epCapSq = static_cast<Square>(p.ep + (p.c == Co_White ? -8 : +8));
             assert(isValidSquare(epCapSq));
             BBTools::unSetBit(p, epCapSq, ~moveInfo.fromP); // BEFORE setting p.b new shape !!!
             BB::_unSetBit(p.allPieces[~p.c], epCapSq);
@@ -182,7 +182,7 @@ bool applyMove(Position& p, const Move& m, bool noValidation) {
    if (p.ep != INVALIDSQUARE) p.h ^= Zobrist::ZT[p.ep][13];
    p.ep = INVALIDSQUARE;
    if (pawnMove && abs(moveInfo.to - moveInfo.from) == 16) {
-      p.ep = (moveInfo.from + moveInfo.to) / 2;
+      p.ep = static_cast<Square>((moveInfo.from + moveInfo.to) / 2);
       p.h ^= Zobrist::ZT[p.ep][13];
    }
    assert(p.ep == INVALIDSQUARE || SQRANK(p.ep) == EPRank[~p.c]);
@@ -256,8 +256,8 @@ bool applyMove(Position& p, const Move& m, bool noValidation) {
             Logging::LogIt(Logging::logWarn) << SquareNames[s];
             Logging::LogIt(Logging::logWarn) << ToString(p);
             Logging::LogIt(Logging::logWarn) << ToString(bb);
-            Logging::LogIt(Logging::logWarn) << (int)pp;
-            Logging::LogIt(Logging::logWarn) << (int)p.board_const(s);
+            Logging::LogIt(Logging::logWarn) << static_cast<int>(pp);
+            Logging::LogIt(Logging::logWarn) << static_cast<int>(p.board_const(s));
             Logging::LogIt(Logging::logWarn) << "last move " << ToString(p.lastMove);
             Logging::LogIt(Logging::logWarn) << " current move " << ToString(m);
             Logging::LogIt(Logging::logFatal) << "Wrong bitboard ";
@@ -279,7 +279,7 @@ bool applyMove(Position& p, const Move& m, bool noValidation) {
       Logging::LogIt(Logging::logWarn) << ToString(p.occupancy());
    }
 #endif
-   p.lastMove = m;
+   p.lastMove = Move2MiniMove(m);
    STOP_AND_SUM_TIMER(Apply)
    return true;
 }
@@ -287,7 +287,7 @@ bool applyMove(Position& p, const Move& m, bool noValidation) {
 ScoreType randomMover(const Position& p, PVList& pv, bool isInCheck) {
    MoveList moves;
    MoveGen::generate<MoveGen::GP_all>(p, moves, false);
-   if (moves.empty()) return isInCheck ? -MATE : 0;
+   if (moves.empty()) return isInCheck ? matedScore(0) : 0;
    static std::random_device rd;
    static std::mt19937       g(rd()); // here really random
    std::shuffle(moves.begin(), moves.end(), g);
@@ -301,12 +301,12 @@ ScoreType randomMover(const Position& p, PVList& pv, bool isInCheck) {
       PVList childPV;
       updatePV(pv, *it, childPV);
       const Square to = Move2To(*it);
-      if (p.c == Co_White && to == p.king[Co_Black]) return MATE + 1;
-      if (p.c == Co_Black && to == p.king[Co_White]) return MATE + 1;
+      if (p.c == Co_White && to == p.king[Co_Black]) return matingScore(0);
+      if (p.c == Co_Black && to == p.king[Co_White]) return matingScore(0);
       return 0; // found one valid move
    }
    // no move is valid ...
-   return isInCheck ? -MATE : 0;
+   return isInCheck ? matedScore(0) : 0;
 }
 
 #ifdef DEBUG_PSEUDO_LEGAL
@@ -323,7 +323,7 @@ bool isPseudoLegal(const Position& p, Move m) {
          std::cout << ToString(p) << "\n" << ToString(m) << "\t" << m << std::endl;
          std::cout << SquareNames[Move2From(m)] << std::endl;
          std::cout << SquareNames[Move2To(m)] << std::endl;
-         std::cout << (int)Move2Type(m) << std::endl;
+         std::cout << static_cast<int>(Move2Type(m)) << std::endl;
          std::cout << Move2Score(m) << std::endl;
          std::cout << int(m & 0x0000FFFF) << std::endl;
          for (auto it = moves.begin(); it != moves.end(); ++it) std::cout << ToString(*it) << "\t" << *it << "\t";
@@ -366,7 +366,7 @@ bool isPseudoLegal(const Position& p, Move m) { // validate TT move
    if (toP == P_none && (isCapture(t) && t != T_ep)) PSEUDO_LEGAL_RETURN(false, 4)
    if (toP != P_none && !isCapture(t)) PSEUDO_LEGAL_RETURN(false, 5)
    if (t == T_ep && (p.ep == INVALIDSQUARE || fromPieceType != P_wp)) PSEUDO_LEGAL_RETURN(false, 6)
-   if (t == T_ep && p.board_const(p.ep + (p.c == Co_White ? -8 : +8)) != (p.c == Co_White ? P_bp : P_wp)) PSEUDO_LEGAL_RETURN(false, 7)
+   if (t == T_ep && p.board_const(static_cast<Square>(p.ep + (p.c == Co_White ? -8 : +8))) != (p.c == Co_White ? P_bp : P_wp)) PSEUDO_LEGAL_RETURN(false, 7)
    if (isPromotion(m) && fromPieceType != P_wp) PSEUDO_LEGAL_RETURN(false, 8)
    const BitBoard occupancy = p.occupancy();
    if (isCastling(m)) {

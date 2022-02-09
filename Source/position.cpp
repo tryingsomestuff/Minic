@@ -45,7 +45,7 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent, bool withMove
    while ((j <= NbSquare) && (i < (char)strList[0].length())) {
       char letter = strList[0].at(i);
       ++i;
-      const Square k = (7 - (j - 1) / 8) * 8 + ((j - 1) % 8);
+      const Square k = static_cast<Square>((7 - (j - 1) / 8) * 8 + ((j - 1) % 8));
       switch (letter) {
          case 'p': p.board(k) = P_bp; break;
          case 'r': p.board(k) = P_br; break;
@@ -122,7 +122,7 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent, bool withMove
             if ((cr >= 'A' && cr <= 'H') || (cr >= 'a' && cr <= 'h')) {
                //Logging::LogIt(Logging::logInfo) << "Found FRC like castling " << cr;
                const Color c  = std::isupper(cr) ? Co_White : Co_Black;
-               const char  kf = std::toupper(FileNames[SQFILE(p.king[c])].at(0));
+               const char  kf = static_cast<char>(std::toupper(FileNames[SQFILE(p.king[c])].at(0)));
                if (std::toupper(cr) > kf) { p.castling |= (c == Co_White ? C_wks : C_bks); }
                else {
                   p.castling |= (c == Co_White ? C_wqs : C_bqs);
@@ -214,11 +214,11 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent, bool withMove
       p.moves = 1;
 
    if (p.moves == 0) { // fix a LittleBlitzer bug here ...
-      Logging::LogIt(Logging::logInfo) << "Wrong move counter " << (int)p.moves << " using 1 instead";
+      Logging::LogIt(Logging::logInfo) << "Wrong move counter " << static_cast<int>(p.moves) << " using 1 instead";
       p.moves = 1;
    }
 
-   p.halfmoves = (int(p.moves) - 1) * 2 + 1 + (p.c == Co_Black ? 1 : 0);
+   p.halfmoves = static_cast<decltype(p.halfmoves)>((p.moves - 1) * 2 + 1 + (p.c == Co_Black ? 1 : 0));
 
    BBTools::setBitBoards(p);
    MaterialHash::initMaterial(p);

@@ -114,7 +114,7 @@ double E(const std::vector<EvalTuning::InputData>& data, size_t miniBatchSize) {
 
    if (progress) {
       count += miniBatchSize;
-      ms += (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count();
+      ms += getTimeDiff(startTime);
       if (ms > 10000) {
          Logging::LogIt(Logging::logInfo) << ms << "ms " << count / ms << "kps on " << DynamicConfig::threads << " threads";
          count = 0;
@@ -302,7 +302,7 @@ int getResult(const std::string& s) {
    if (s == "\"0-1\"") return -1;
    if (s == "\"1/2-1/2\"") return 0;
    Logging::LogIt(Logging::logError) << "Bad position result \"" << s << "\" " << s.size();
-   for (char c : s) Logging::LogIt(Logging::logError) << (int)c;
+   for (char c : s) Logging::LogIt(Logging::logError) << static_cast<int>(c);
    return -2;
 }
 
@@ -319,7 +319,7 @@ int getResult3(const std::string& s) {
    if (s == "0-1") return -1;
    if (s == "1/2-1/2") return 0;
    Logging::LogIt(Logging::logError) << "Bad position result \"" << s << "\" " << s.size();
-   for (char c : s) Logging::LogIt(Logging::logError) << (int)c;
+   for (char c : s) Logging::LogIt(Logging::logError) << static_cast<int>(c);
    return -2;
 }
 

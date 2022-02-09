@@ -10,6 +10,9 @@
 
 using namespace BB;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+
 template<Piece T, Color C>
 inline void evalMob(const Position &p, BitBoard pieceBBiterator, EvalScore &score, const BitBoard safe, const BitBoard occupancy, EvalData &data) {
    while (pieceBBiterator) {
@@ -94,7 +97,7 @@ bool isLazyHigh(ScoreType lazyThreshold, const EvalFeatures &features, EvalScore
 
 ScoreType armageddonScore(ScoreType score, unsigned int ply, DepthType height, Color c) {
    if (!DynamicConfig::armageddon) return score;
-   return std::clamp(shiftArmageddon(score, ply, c), ScoreType(-MATE + height), ScoreType(MATE - height + 1));
+   return std::clamp(shiftArmageddon(score, ply, c), matedScore(height), matingScore(height-1));
 }
 
 ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowEGEvaluation, bool display) {
@@ -109,12 +112,12 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    if (p.king[Co_White] == INVALIDSQUARE) {
       STOP_AND_SUM_TIMER(Eval)
       context.stats.incr(Stats::sid_evalNoKing);
-      return data.gp = 0, (white2Play ? -1 : +1) * MATE;
+      return data.gp = 0, (white2Play ? -1 : +1) * matingScore(0);
    }
    if (p.king[Co_Black] == INVALIDSQUARE) {
       STOP_AND_SUM_TIMER(Eval)
       context.stats.incr(Stats::sid_evalNoKing);
-      return data.gp = 0, (white2Play ? +1 : -1) * MATE;
+      return data.gp = 0, (white2Play ? +1 : -1) * matingScore(0);
    }
 #endif
 
@@ -209,14 +212,14 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       // we will stay to classic eval when the game is already decided (to gain some nps)
       ///@todo use data.gp inside NNUE condition ?
       if (DynamicConfig::forceNNUE ||
-          !isLazyHigh(ScoreType(DynamicConfig::NNUEThreshold), features, score)) { 
+          !isLazyHigh(static_cast<ScoreType>(DynamicConfig::NNUEThreshold), features, score)) { 
          if (DynamicConfig::armageddon) features.scalingFactor = 1.f;              ///@todo better
          // call the net
-         ScoreType nnueScore = (ScoreType)p.Evaluator().propagate(p.c);
+         ScoreType nnueScore = static_cast<ScoreType>(p.Evaluator().propagate(p.c));
          // fuse MG and EG score applying the EG scaling factor ///@todo, doesn't the net already learned that ????
-         nnueScore = ScoreType(data.gp * nnueScore + (1.f - data.gp) * nnueScore * features.scalingFactor); // use scaling factor
+         nnueScore = static_cast<ScoreType>(data.gp * nnueScore + (1.f - data.gp) * nnueScore * features.scalingFactor); // use scaling factor
          // NNUE evaluation scaling
-         nnueScore = (nnueScore * DynamicConfig::NNUEScaling) / 64;
+         nnueScore = static_cast<ScoreType>((nnueScore * DynamicConfig::NNUEScaling) / 64);
          // take contempt into account (no tempo with NNUE, the HalfKA net already take it into account)
          nnueScore += ScaleScore(context.contempt, data.gp);
          // clamp score
@@ -285,7 +288,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
 
    // random factor in opening if requiered
    if (p.halfmoves < 10 && DynamicConfig::randomOpen != 0)
-      features.scores[F_positional] += randomInt<ScoreType /*NO SEED USE => random device*/>(-1*DynamicConfig::randomOpen, DynamicConfig::randomOpen);
+      features.scores[F_positional] += static_cast<ScoreType>(randomInt<decltype(DynamicConfig::randomOpen) /*NO SEED USE => random device*/>(-1*DynamicConfig::randomOpen, DynamicConfig::randomOpen));
 
    STOP_AND_SUM_TIMER(Eval2)
 
@@ -781,3 +784,5 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    // apply armageddon scoring if requiered
    return armageddonScore(ret, p.halfmoves, context._height, p.c);
 }
+
+#pragma GCC diagnostic pop

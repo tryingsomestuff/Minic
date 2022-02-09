@@ -13,11 +13,11 @@ struct Position;
  */
 
 namespace TimeMan {
-extern TimeType  msecPerMove, msecInTC, nbMoveInTC, msecInc, msecUntilNextTC, overHead;
-extern TimeType  targetTime, maxTime;
-extern DepthType moveToGo;
-extern uint64_t  maxNodes;
-extern bool      isDynamic;
+extern TimeType msecPerMove, msecInTC, msecInc, msecUntilNextTC, overHead;
+extern TimeType targetTime, maxTime;
+extern int      moveToGo, nbMoveInTC;
+extern uint64_t maxNodes;
+extern bool     isDynamic;
 
 const TimeType msecMinimal = 20;
 

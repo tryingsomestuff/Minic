@@ -50,7 +50,7 @@ int hashFull() {
 }
 
 void age() {
-   TT::curGen = (TT::curGen + 1) % 8; // see Bound::B_gen
+   TT::curGen = static_cast<GenerationType>((TT::curGen + 1) % 8); // see Bound::B_gen
 }
 
 void prefetch(Hash h) {

@@ -162,23 +162,23 @@ const std::string MinicVersion = "3.18";
 #define __PRETTY_FUNCTION__ __FUNCSIG__
 #endif
 
-#define INFINITETIME    TimeType(60ull * 60ull * 1000ull * 24ull * 30ull) // 1 month ...
-#define STOPSCORE       ScoreType(-20000)
-#define INFSCORE        ScoreType(15000)
-#define MATE            ScoreType(10000)
-#define WIN             ScoreType(3000)
-#define INVALIDMOVE     int32_t(0xFFFF0002)
-#define INVALIDMINIMOVE int16_t(0x0002)
-#define NULLMOVE        int16_t(0x1112)
+#define INFINITETIME    static_cast<TimeType>(60ull * 60ull * 1000ull * 24ull * 30ull) // 1 month ...
+#define STOPSCORE       static_cast<ScoreType>(-20000)
+#define INFSCORE        static_cast<ScoreType>(15000)
+#define MATE            static_cast<ScoreType>(10000)
+#define WIN             static_cast<ScoreType>(3000)
+#define INVALIDMOVE     static_cast<int32_t>(0xFFFF0002)
+#define INVALIDMINIMOVE static_cast<int16_t>(0x0002)
+#define NULLMOVE        static_cast<int16_t>(0x1112)
 #define INVALIDSQUARE   -1
 #define MAX_PLY         1024
 #define MAX_MOVE        256 // 256 is enough I guess/hope ...
-#define MAX_DEPTH       127 // if DepthType is a char, !!!do not go above 127!!!
+#define MAX_DEPTH       static_cast<DepthType>(127) // if DepthType is a char, !!!do not go above 127!!!
 #define HISTORY_POWER   10
 #define HISTORY_MAX     (1 << HISTORY_POWER)
 #define HISTORY_DIV(x)  ((x) >> HISTORY_POWER)
 #define SQR(x)          ((x) * (x))
-#define HSCORE(depth)   ScoreType(SQR(std::min((int)depth, 32)) * 4)
+#define HSCORE(depth)   static_cast<ScoreType>(SQR(std::min(static_cast<int>(depth), 32)) * 4)
 #define MAX_THREADS     256
 
 #define SQFILE(s)              ((s)&7)
@@ -187,7 +187,7 @@ const std::string MinicVersion = "3.18";
 #define ISNEIGHBOUR(x, y)      ((x) >= 0 && (x) < 64 && (y) >= 0 && (y) < 64 && Abs(SQRANK(x) - SQRANK(y)) <= 1 && Abs(SQFILE(x) - SQFILE(y)) <= 1)
 #define PROMOTION_RANK(x)      (SQRANK(x) == 0 || SQRANK(x) == 7)
 #define PROMOTION_RANK_C(x, c) ((c == Co_Black && SQRANK(x) == 0) || (c == Co_White && SQRANK(x) == 7))
-#define MakeSquare(f, r)       Square(((r) << 3) + (f))
+#define MakeSquare(f, r)       static_cast<Square>(((r) << 3) + (f))
 #define VFlip(s)               ((s) ^ Sq_a8)
 #define HFlip(s)               ((s) ^ 7)
 #define MFlip(s)               ((s) ^ Sq_h8)
@@ -215,6 +215,48 @@ typedef int16_t  ScoreType;
 typedef int64_t  TimeType;
 typedef uint8_t  GenerationType;
 
+template<typename T>
+[[nodiscard]] inline 
+T asLeastOne(const T &t){
+   return std::max(static_cast<std::remove_const_t<decltype(t)>>(1), t);
+}
+
+[[nodiscard]] inline 
+TimeType getTimeDiff(const Clock::time_point & reference){
+   const auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - reference).count();
+   return static_cast<TimeType>(asLeastOne(diff));
+}
+
+[[nodiscard]] inline 
+TimeType getTimeDiff(const Clock::time_point & current, const Clock::time_point & reference){
+   const auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(current - reference).count();
+   return static_cast<TimeType>(asLeastOne(diff));
+}
+
+[[nodiscard]] inline double msec2sec(TimeType periodInMsec){
+   using fpMilliseconds = std::chrono::duration<float, std::chrono::milliseconds::period>;
+   using fpSeconds = std::chrono::duration<float, std::chrono::seconds::period>;
+   return fpSeconds(fpMilliseconds(periodInMsec)).count();
+}
+
+template<typename OT, typename IT>
+[[nodiscard]] inline 
+OT clampInt(IT t){
+   return static_cast<OT>(std::min(std::numeric_limits<IT>::max(), std::max(std::numeric_limits<IT>::min(), t)));
+}
+
+template<typename OT, typename IT>
+[[nodiscard]] inline 
+OT clampIntU(IT t){
+   return static_cast<OT>(std::min(std::numeric_limits<IT>::max(), std::max(0, t)));
+}
+
+template<typename T>
+[[nodiscard]] inline
+DepthType clampDepth(const T & d){
+   return static_cast<DepthType>(std::max(static_cast<T>(0), std::min(static_cast<T>(MAX_DEPTH),d)));
+}
+
 template<typename T, int N, int M>
 using Matrix = std::array<std::array<T,M>,N>;
 
@@ -228,7 +270,10 @@ inline constexpr Color        operator++(Color& c) {
    return c;
 }
 
-template<typename T> [[nodiscard]] constexpr ScoreType clampScore(T s) { return (ScoreType)std::clamp(s, (T)(-MATE + 2 * MAX_DEPTH), (T)(MATE - 2 * MAX_DEPTH)); }
+template<typename T> 
+[[nodiscard]] constexpr ScoreType clampScore(T s) { 
+   return static_cast<ScoreType>(std::clamp(s, (T)(-MATE + 2 * MAX_DEPTH), (T)(MATE - 2 * MAX_DEPTH))); 
+}
 
 enum GamePhase { MG = 0, EG = 1, GP_MAX = 2 };
 inline constexpr GamePhase operator++(GamePhase& g) {
@@ -244,8 +289,8 @@ template<typename T, int SIZE> struct OptList : public std::vector<T> {
 typedef OptList<Move, MAX_MOVE / 4> MoveList; ///@todo tune this ?
 typedef std::vector<Move>           PVList;
 
-[[nodiscard]] inline constexpr MiniHash Hash64to32(Hash h) { return (h >> 32) & 0xFFFFFFFF; }
-[[nodiscard]] inline constexpr MiniMove Move2MiniMove(Move m) { return m & 0xFFFF; } // skip score
+[[nodiscard]] inline constexpr MiniHash Hash64to32(Hash h) { return static_cast<MiniHash>((h >> 32) & 0xFFFFFFFF); }
+[[nodiscard]] inline constexpr MiniMove Move2MiniMove(Move m) { return static_cast<MiniMove>(m & 0xFFFF); } // skip score
 
 // sameMove is not comparing score part of the Move, only the MiniMove part !
 [[nodiscard]] inline constexpr bool sameMove(const Move& a, const Move& b) { return Move2MiniMove(a) == Move2MiniMove(b); }
@@ -318,9 +363,9 @@ const ScoreType* const absValuesEG_[7] = {&dummyScore,
                                           &ValuesEG[P_wq + PieceShift],
                                           &ValuesEG[P_wk + PieceShift]};
 
-inline ScoreType value(Piece pp)      { return Values[pp + PieceShift]; }
-inline ScoreType absValue(Piece pp)   { return *absValues_[pp]; }
-inline ScoreType absValueEG(Piece pp) { return *absValuesEG_[pp]; }
+[[nodiscard]] inline ScoreType value(Piece pp)      { return Values[pp + PieceShift]; }
+[[nodiscard]] inline ScoreType absValue(Piece pp)   { return *absValues_[pp]; }
+[[nodiscard]] inline ScoreType absValueEG(Piece pp) { return *absValuesEG_[pp]; }
 
 template<typename T> [[nodiscard]] inline constexpr int sgn(T val) { return (T(0) < val) - (val < T(0)); }
 
@@ -372,9 +417,9 @@ inline constexpr Rank operator--(Rank& r) {
 constexpr Rank PromRank[2] = {Rank_8, Rank_1};
 constexpr Rank EPRank[2]   = {Rank_6, Rank_3};
 
-template<Color C> inline constexpr ScoreType ColorSignHelper() { return C == Co_White ? +1 : -1; }
-template<Color C> inline constexpr Square    PromotionSquare(const Square k) { return C == Co_White ? (SQFILE(k) + 56) : SQFILE(k); }
-template<Color C> inline constexpr Rank      ColorRank(const Square k) { return Rank(C == Co_White ? SQRANK(k) : (7 - SQRANK(k))); }
+template<Color C> [[nodiscard]] inline constexpr ScoreType ColorSignHelper() { return C == Co_White ? +1 : -1; }
+template<Color C> [[nodiscard]] inline constexpr Square    PromotionSquare(const Square k) { return C == Co_White ? (SQFILE(k) + 56) : SQFILE(k); }
+template<Color C> [[nodiscard]] inline constexpr Rank      ColorRank(const Square k) { return Rank(C == Co_White ? SQRANK(k) : (7 - SQRANK(k))); }
 
 enum CastlingTypes : uint8_t { CT_OOO = 0, CT_OO = 1 };
 enum CastlingRights : uint8_t {
@@ -399,7 +444,7 @@ inline constexpr CastlingRights operator~(const CastlingRights& a) { return Cast
 inline constexpr void           operator&=(CastlingRights& a, const CastlingRights& b) { a = a & b; }
 inline constexpr void           operator|=(CastlingRights& a, const CastlingRights& b) { a = a | b; }
 
-[[nodiscard]] inline Square stringToSquare(const std::string& str) { return (str.at(1) - 49) * 8 + (str.at(0) - 97); }
+[[nodiscard]] inline Square stringToSquare(const std::string& str) { return static_cast<Square>((str.at(1) - 49) * 8 + (str.at(0) - 97)); }
 
 enum MType : uint8_t {
    T_std      = 0,
@@ -462,33 +507,35 @@ constexpr ScoreType MoveScoring[16] = {   0,                   // standard
 
 [[nodiscard]] inline constexpr ScoreType Move2Score(Move m) {
    assert(isValidMove(m));
-   return (m >> 16) & 0xFFFF;
+   return static_cast<ScoreType>((m >> 16) & 0xFFFF);
 }
 [[nodiscard]] inline constexpr Square Move2From(Move m) {
    assert(isValidMove(m));
-   return (m >> 10) & 0x3F;
+   return static_cast<Square>((m >> 10) & 0x3F);
 }
 [[nodiscard]] inline constexpr Square Move2To(Move m) {
    assert(isValidMove(m));
-   return (m >> 4) & 0x3F;
+   return static_cast<Square>((m >> 4) & 0x3F);
 }
 [[nodiscard]] inline constexpr MType Move2Type(Move m) {
    assert(isValidMove(m));
-   return MType(m & 0xF);
+   return static_cast<MType>(m & 0xF);
 }
 [[nodiscard]] inline constexpr MiniMove ToMove(Square from, Square to, MType type) {
    assert(isValidSquare(from));
    assert(isValidSquare(to));
-   return (from << 10) | (to << 4) | type;
+   return static_cast<MiniMove>((from << 10) | (to << 4) | type);
 }
 [[nodiscard]] inline constexpr Move ToMove(Square from, Square to, MType type, ScoreType score) {
    assert(isValidSquare(from));
    assert(isValidSquare(to));
-   return (score << 16) | (from << 10) | (to << 4) | type;
+   return static_cast<Move>((score << 16) | (from << 10) | (to << 4) | type);
 }
 
+[[nodiscard]] inline constexpr ScoreType matingScore(DepthType in) { return static_cast<ScoreType>(MATE - in); }
+[[nodiscard]] inline constexpr ScoreType matedScore(DepthType in) { return static_cast<ScoreType>(-MATE + in); }
 [[nodiscard]] inline constexpr bool isMatingScore(ScoreType s) { return (s >= MATE - MAX_DEPTH); }
-[[nodiscard]] inline constexpr bool isMatedScore(ScoreType s) { return (s <= -MATE + MAX_DEPTH); }
+[[nodiscard]] inline constexpr bool isMatedScore(ScoreType s) { return (s <= matedScore(MAX_DEPTH)); }
 [[nodiscard]] inline constexpr bool isMateScore(ScoreType s) { return (Abs(s) >= MATE - MAX_DEPTH); }
 
 [[nodiscard]] inline constexpr bool isPromotionStd(const MType mt) {
@@ -527,13 +574,13 @@ constexpr ScoreType MoveScoring[16] = {   0,                   // standard
 [[nodiscard]] inline constexpr ScoreType badCapScore(const Move m) { return Move2Score(m) + MoveScoring[T_capture]; }
 
 [[nodiscard]] inline constexpr Square chebyshevDistance(Square sq1, Square sq2) {
-   return std::max(Abs(SQRANK(sq2) - SQRANK(sq1)), Abs(SQFILE(sq2) - SQFILE(sq1)));
+   return std::max(Abs(static_cast<Square>(SQRANK(sq2) - SQRANK(sq1))), Abs(static_cast<Square>(SQFILE(sq2) - SQFILE(sq1))));
 }
 [[nodiscard]] inline constexpr Square manatthanDistance(Square sq1, Square sq2) {
-   return Abs(SQRANK(sq2) - SQRANK(sq1)) + Abs(SQFILE(sq2) - SQFILE(sq1));
+   return Abs(static_cast<Square>(SQRANK(sq2) - SQRANK(sq1))) + Abs(static_cast<Square>(SQFILE(sq2) - SQFILE(sq1)));
 }
 [[nodiscard]] inline constexpr Square minDistance(Square sq1, Square sq2) {
-   return std::min(Abs(SQRANK(sq2) - SQRANK(sq1)), Abs(SQFILE(sq2) - SQFILE(sq1)));
+   return std::min(Abs(static_cast<Square>(SQRANK(sq2) - SQRANK(sq1))), Abs(static_cast<Square>(SQFILE(sq2) - SQFILE(sq1))));
 }
 [[nodiscard]] inline Square correctedMove2To(Move m) {
    assert(isValidMove(m));
@@ -546,10 +593,10 @@ namespace MoveDifficultyUtil {
     const ScoreType emergencyAttackThreashold = 150;
     const ScoreType easyMoveMargin            = 180;
     const int       emergencyFactor           = 5;
-    const float     maxStealFraction          = 0.2f; // of remaining time
+    const int       maxStealDivisor           = 5; // 1/maxStealDivisor of remaining time
 
 extern float variability;
-[[nodiscard]] inline float variabilityFactor() { return 2 / (1 + exp(1 - MoveDifficultyUtil::variability)); } // inside [0.5 .. 2]
+[[nodiscard]] inline float variabilityFactor() { return 2.f / (1.f + std::exp(1.f - MoveDifficultyUtil::variability)); } // inside [0.5 .. 2]
 } // namespace MoveDifficultyUtil
 
 inline void updatePV(PVList& pv, const Move& m, const PVList& childPV) {

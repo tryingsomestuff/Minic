@@ -48,7 +48,7 @@ void reset() { bit_cursor = 0; }
 void write_one_bit(int b){
 	if (b){
 	   //std::cout << bit_cursor << std::endl;
-	   data[bit_cursor / 8] |= 1 << (bit_cursor & 7);
+	   data[bit_cursor / 8] |= static_cast<uint8_t>(1 << (bit_cursor & 7));
 	}
 	++bit_cursor;
 	assert(bit_cursor <= 256);
@@ -112,7 +112,7 @@ void pack(const Position& pos){
 	stream.set_data(data);
 
 	// Side to move.
-	stream.write_one_bit((int)(pos.c));
+	stream.write_one_bit(static_cast<int>(pos.c));
 
 	// 7-bit positions for leading and trailing balls
 	// White king and black king, 6 bits for each.
@@ -122,7 +122,7 @@ void pack(const Position& pos){
 	for (Rank r = Rank_8; ; --r){
 		for (File f = File_a; f <= File_h; ++f){
 			Piece pc = pos.board_const(MakeSquare(f, r));
-			//std::cout << (int) pc << std::endl;
+			//std::cout << static_cast<int>(pc) << std::endl;
 			if (std::abs(pc) == P_wk) continue;
 			write_board_piece_to_stream(pc);
 		}
@@ -284,7 +284,7 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen ){
 	p.c = (Color)stream.read_one_bit();
 
 	for (auto c : {Co_White, Co_Black}){
-		const Square sq = (Square)stream.read_n_bit(6);
+		const Square sq = static_cast<Square>(stream.read_n_bit(6));
 		p.board(sq) = (c == Co_White ? P_wk : P_bk);
 		p.king[c] = sq;
 	}
@@ -350,17 +350,17 @@ int set_from_packed_sfen(Position &p, PackedSfen& sfen ){
 	else p.ep = INVALIDSQUARE;
 
 	// Halfmove clock
-	p.fifty = static_cast<unsigned char>(stream.read_n_bit(6));
+	p.fifty = static_cast<decltype(p.fifty)>(stream.read_n_bit(6));
 
 	// Fullmove number
-	p.moves = static_cast<unsigned short>(stream.read_n_bit(8));
+	p.moves = static_cast<decltype(p.moves)>(stream.read_n_bit(8));
 	if (p.moves < 1) { // fix a LittleBlitzer bug here ...
-		Logging::LogIt(Logging::logDebug) << "Wrong move counter " << (int)p.moves << " using 1 instead";
+		Logging::LogIt(Logging::logDebug) << "Wrong move counter " << static_cast<int>(p.moves) << " using 1 instead";
 		p.moves = 1;
 	}
 	assert(stream.get_cursor() <= 256);
 
-	p.halfmoves = (int(p.moves) - 1) * 2 + 1 + (p.c == Co_Black ? 1 : 0);
+	p.halfmoves = static_cast<decltype(p.halfmoves)>((p.moves - 1) * 2 + 1 + (p.c == Co_Black ? 1 : 0));
 
 	p.rootInfo().initCaslingPermHashTable();
 

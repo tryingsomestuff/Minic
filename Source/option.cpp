@@ -72,11 +72,11 @@ KeyBase& GetKey(const std::string& key) {
 int GetValue(const std::string& key) { // assume we can convert to int safely (not valid for string of course !)
    const KeyBase& k = GetKey(key);
    switch (k.type) {
-      case k_bool:  return (int)*static_cast<bool*>(k.value);
-      case k_depth: return (int)*static_cast<DepthType*>(k.value);
-      case k_int:   return (int)*static_cast<int*>(k.value);
-      case k_score: return (int)*static_cast<ScoreType*>(k.value);
-      case k_ull:   return (int)*static_cast<uint64_t*>(k.value);
+      case k_bool:  return static_cast<int>(*static_cast<bool*>(k.value));
+      case k_depth: return static_cast<int>(*static_cast<DepthType*>(k.value));
+      case k_int:   return static_cast<int>(*static_cast<int*>(k.value));
+      case k_score: return static_cast<int>(*static_cast<ScoreType*>(k.value));
+      case k_ull:   return static_cast<int>(*static_cast<uint64_t*>(k.value));
       case k_string:
       case k_bad:
       default:      Logging::LogIt(Logging::logError) << "Bad key type"; return false;
@@ -97,7 +97,7 @@ void displayOptionsDebug() {
          Logging::LogIt(Logging::logInfo) << "option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " "
                                           << (GetValue(it->key) ? "true" : "false") << "\"";
       else
-         Logging::LogIt(Logging::logInfo) << "option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << (int)GetValue(it->key) << " "
+         Logging::LogIt(Logging::logInfo) << "option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << static_cast<int>(GetValue(it->key)) << " "
                                           << it->vmin << " " << it->vmax << "\"";
 }
 
@@ -110,7 +110,7 @@ void displayOptionsXBoard() {
          Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << bool(GetValue(it->key))
                                          << "\"";
       else
-         Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << (int)GetValue(it->key)
+         Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << static_cast<int>(GetValue(it->key))
                                          << " " << it->vmin << " " << it->vmax << "\"";
 }
 

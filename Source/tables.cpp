@@ -46,7 +46,7 @@ void CounterT::initCounter() {
 }
 
 void CounterT::update(Move m, const Position& p) {
-   if (isValidMove(p.lastMove)) counter[Move2From(p.lastMove)][correctedMove2To(p.lastMove)] = m;
+   if (isValidMove(p.lastMove)) counter[Move2From(p.lastMove)][correctedMove2To(p.lastMove)] = Move2MiniMove(m);
 }
 
 void updateTables(Searcher& context, const Position& p, DepthType depth, DepthType height, const Move m, TT::Bound bound, CMHPtrArray& cmhPtr) {

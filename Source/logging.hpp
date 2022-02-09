@@ -31,12 +31,12 @@ inline std::string backtrace(int skip = 1) {
          char *demangled = NULL;
          int   status;
          demangled = abi::__cxa_demangle(info.dli_sname, NULL, 0, &status);
-         std::snprintf(buf, sizeof(buf), "%-3d %*p %s + %zd\n", i, (int)(2 + sizeof(void *) * 2), callstack[i],
+         std::snprintf(buf, sizeof(buf), "%-3d %*p %s + %zd\n", i, static_cast<int>(2 + sizeof(void *) * 2), callstack[i],
                        status == 0 ? demangled : info.dli_sname, (char *)callstack[i] - (char *)info.dli_saddr);
          free(demangled);
       }
       else {
-         std::snprintf(buf, sizeof(buf), "%-3d %*p\n", i, (int)(2 + sizeof(void *) * 2), callstack[i]);
+         std::snprintf(buf, sizeof(buf), "%-3d %*p\n", i, static_cast<int>(2 + sizeof(void *) * 2), callstack[i]);
       }
       trace_buf << buf;
       std::snprintf(buf, sizeof(buf), "%s\n", symbols[i]);
