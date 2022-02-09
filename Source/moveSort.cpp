@@ -15,6 +15,9 @@
  * 9°) bad cap
  */
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+
 template<Color C> void MoveSorter::computeScore(Move& m) const {
    assert(isValidMove(m));
    if (Move2Score(m) != 0) return; // prob cut already computed captures score
@@ -50,7 +53,7 @@ template<Color C> void MoveSorter::computeScore(Move& m) const {
          s += (ScaleScore(pst[ColorSquarePstHelper<C>(to)] - pst[ColorSquarePstHelper<C>(from)] + pstOpp[ColorSquarePstHelper<~C>(to)], gp))/2;
          
          if (useSEE && !isInCheck) { 
-            const ScoreType see = context.SEE(p, m);
+            const ScoreType see = Searcher::SEE(p, m);
             s += see;
             // recapture bonus
             if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == correctedMove2To(p.lastMove)) s += 512;
@@ -83,7 +86,7 @@ template<Color C> void MoveSorter::computeScore(Move& m) const {
             s += context.getCMHScore(p, from, to, cmhPtr) / 3;    // +/- HISTORY_MAX = 1024
             if (!isInCheck) {
                // move (safely) leaving threat square from null move search
-               if (refutation != INVALIDMINIMOVE && from == correctedMove2To(refutation) && context.SEE_GE(p, m, -80)) s += 512; 
+               if (refutation != INVALIDMINIMOVE && from == correctedMove2To(refutation) && Searcher::SEE_GE(p, m, -80)) s += 512; 
                // always use PST to compensate low value history
                const EvalScore* const pst = EvalConfig::PST[std::abs(pp) - 1];
                s += (ScaleScore(pst[ColorSquarePstHelper<C>(to)] - pst[ColorSquarePstHelper<C>(from)], gp))/2;
@@ -93,6 +96,8 @@ template<Color C> void MoveSorter::computeScore(Move& m) const {
    }
    m = ToMove(from, to, t, s);
 }
+
+#pragma GCC diagnostic pop
 
 void MoveSorter::score(const Searcher&    context,
                        MoveList&          moves,

@@ -83,29 +83,29 @@ std::string ToString(const PVList& moves) {
 std::string ToString(const Position::Material& mat) {
    std::stringstream str;
    str << "\n"
-       << Logging::_protocolComment[Logging::ct] << "K  :" << (int)mat[Co_White][M_k] << "\n"
-       << Logging::_protocolComment[Logging::ct] << "Q  :" << (int)mat[Co_White][M_q] << "\n"
-       << Logging::_protocolComment[Logging::ct] << "R  :" << (int)mat[Co_White][M_r] << "\n"
-       << Logging::_protocolComment[Logging::ct] << "B  :" << (int)mat[Co_White][M_b] << "\n"
-       << Logging::_protocolComment[Logging::ct] << "L  :" << (int)mat[Co_White][M_bl] << "\n"
-       << Logging::_protocolComment[Logging::ct] << "D  :" << (int)mat[Co_White][M_bd] << "\n"
-       << Logging::_protocolComment[Logging::ct] << "N  :" << (int)mat[Co_White][M_n] << "\n"
-       << Logging::_protocolComment[Logging::ct] << "P  :" << (int)mat[Co_White][M_p] << "\n"
-       << Logging::_protocolComment[Logging::ct] << "Ma :" << (int)mat[Co_White][M_M] << "\n"
-       << Logging::_protocolComment[Logging::ct] << "Mi :" << (int)mat[Co_White][M_m] << "\n"
-       << Logging::_protocolComment[Logging::ct] << "T  :" << (int)mat[Co_White][M_t] << "\n";
+       << Logging::_protocolComment[Logging::ct] << "K  :" << static_cast<int>(mat[Co_White][M_k]) << "\n"
+       << Logging::_protocolComment[Logging::ct] << "Q  :" << static_cast<int>(mat[Co_White][M_q]) << "\n"
+       << Logging::_protocolComment[Logging::ct] << "R  :" << static_cast<int>(mat[Co_White][M_r]) << "\n"
+       << Logging::_protocolComment[Logging::ct] << "B  :" << static_cast<int>(mat[Co_White][M_b]) << "\n"
+       << Logging::_protocolComment[Logging::ct] << "L  :" << static_cast<int>(mat[Co_White][M_bl]) << "\n"
+       << Logging::_protocolComment[Logging::ct] << "D  :" << static_cast<int>(mat[Co_White][M_bd]) << "\n"
+       << Logging::_protocolComment[Logging::ct] << "N  :" << static_cast<int>(mat[Co_White][M_n]) << "\n"
+       << Logging::_protocolComment[Logging::ct] << "P  :" << static_cast<int>(mat[Co_White][M_p]) << "\n"
+       << Logging::_protocolComment[Logging::ct] << "Ma :" << static_cast<int>(mat[Co_White][M_M]) << "\n"
+       << Logging::_protocolComment[Logging::ct] << "Mi :" << static_cast<int>(mat[Co_White][M_m]) << "\n"
+       << Logging::_protocolComment[Logging::ct] << "T  :" << static_cast<int>(mat[Co_White][M_t]) << "\n";
    str << "\n"
-       << Logging::_protocolComment[Logging::ct] << "k  :" << (int)mat[Co_Black][M_k] << "\n"
-       << Logging::_protocolComment[Logging::ct] << "q  :" << (int)mat[Co_Black][M_q] << "\n"
-       << Logging::_protocolComment[Logging::ct] << "r  :" << (int)mat[Co_Black][M_r] << "\n"
-       << Logging::_protocolComment[Logging::ct] << "b  :" << (int)mat[Co_Black][M_b] << "\n"
-       << Logging::_protocolComment[Logging::ct] << "l  :" << (int)mat[Co_Black][M_bl] << "\n"
-       << Logging::_protocolComment[Logging::ct] << "d  :" << (int)mat[Co_Black][M_bd] << "\n"
-       << Logging::_protocolComment[Logging::ct] << "n  :" << (int)mat[Co_Black][M_n] << "\n"
-       << Logging::_protocolComment[Logging::ct] << "p  :" << (int)mat[Co_Black][M_p] << "\n"
-       << Logging::_protocolComment[Logging::ct] << "ma :" << (int)mat[Co_Black][M_M] << "\n"
-       << Logging::_protocolComment[Logging::ct] << "mi :" << (int)mat[Co_Black][M_m] << "\n"
-       << Logging::_protocolComment[Logging::ct] << "t  :" << (int)mat[Co_Black][M_t] << "\n";
+       << Logging::_protocolComment[Logging::ct] << "k  :" << static_cast<int>(mat[Co_Black][M_k]) << "\n"
+       << Logging::_protocolComment[Logging::ct] << "q  :" << static_cast<int>(mat[Co_Black][M_q]) << "\n"
+       << Logging::_protocolComment[Logging::ct] << "r  :" << static_cast<int>(mat[Co_Black][M_r]) << "\n"
+       << Logging::_protocolComment[Logging::ct] << "b  :" << static_cast<int>(mat[Co_Black][M_b]) << "\n"
+       << Logging::_protocolComment[Logging::ct] << "l  :" << static_cast<int>(mat[Co_Black][M_bl]) << "\n"
+       << Logging::_protocolComment[Logging::ct] << "d  :" << static_cast<int>(mat[Co_Black][M_bd]) << "\n"
+       << Logging::_protocolComment[Logging::ct] << "n  :" << static_cast<int>(mat[Co_Black][M_n]) << "\n"
+       << Logging::_protocolComment[Logging::ct] << "p  :" << static_cast<int>(mat[Co_Black][M_p]) << "\n"
+       << Logging::_protocolComment[Logging::ct] << "ma :" << static_cast<int>(mat[Co_Black][M_M]) << "\n"
+       << Logging::_protocolComment[Logging::ct] << "mi :" << static_cast<int>(mat[Co_Black][M_m]) << "\n"
+       << Logging::_protocolComment[Logging::ct] << "t  :" << static_cast<int>(mat[Co_Black][M_t]) << "\n";
    return str.str();
 }
 
@@ -115,7 +115,7 @@ std::string ToString(const Position& p, bool noEval) {
    for (Square j = 7; j >= 0; --j) {
       ss << Logging::_protocolComment[Logging::ct] << " +-+-+-+-+-+-+-+-+" << std::endl;
       ss << Logging::_protocolComment[Logging::ct] << " |";
-      for (Square i = 0; i < 8; ++i) ss << PieceTools::getName(p, i + j * 8) << '|';
+      for (Square i = 0; i < 8; ++i) ss << PieceTools::getName(p, static_cast<Square>(i + j * 8)) << '|';
       ss << std::endl;
    }
    ss << Logging::_protocolComment[Logging::ct] << " +-+-+-+-+-+-+-+-+" << std::endl;

@@ -13,7 +13,7 @@ std::string GetFENShort(const Position &p) { // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/P
    int count = 0;
    for (int i = 7; i >= 0; --i) {
       for (int j = 0; j < 8; j++) {
-         const Square k = 8 * i + j;
+         const Square k = static_cast<Square>(8 * i + j);
          if (p.board_const(k) == P_none) ++count;
          else {
             if (count != 0) {
@@ -44,7 +44,7 @@ std::string GetFENShort2(const Position &p) { // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/
       if (p.castling & C_wqs) {
          for (Square s = Sq_a1; s <= Sq_h1; ++s) {
             if (s < p.king[Co_White] && p.board_const(s) == P_wr) {
-               castlingChar[1] = std::toupper(FileNames[SQFILE(s)][0]);
+               castlingChar[1] = static_cast<char>(std::toupper(FileNames[SQFILE(s)][0]));
                break;
             }
          }
@@ -52,7 +52,7 @@ std::string GetFENShort2(const Position &p) { // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/
       if (p.castling & C_wks) {
          for (Square s = Sq_a1; s <= Sq_h1; ++s) {
             if (s > p.king[Co_White] && p.board_const(s) == P_wr) {
-               castlingChar[0] = std::toupper(FileNames[SQFILE(s)][0]);
+               castlingChar[0] = static_cast<char>(std::toupper(FileNames[SQFILE(s)][0]));
                break;
             }
          }
@@ -60,7 +60,7 @@ std::string GetFENShort2(const Position &p) { // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/
       if (p.castling & C_bqs) {
          for (Square s = Sq_a8; s <= Sq_h8; ++s) {
             if (s < p.king[Co_Black] && p.board_const(s) == P_br) {
-               castlingChar[3] = std::tolower(FileNames[SQFILE(s)][0]);
+               castlingChar[3] = static_cast<char>(std::tolower(FileNames[SQFILE(s)][0]));
                break;
             }
          }
@@ -68,7 +68,7 @@ std::string GetFENShort2(const Position &p) { // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/
       if (p.castling & C_bks) {
          for (Square s = Sq_a8; s <= Sq_h8; ++s) {
             if (s > p.king[Co_Black] && p.board_const(s) == P_br) {
-               castlingChar[2] = std::tolower(FileNames[SQFILE(s)][0]);
+               castlingChar[2] = static_cast<char>(std::tolower(FileNames[SQFILE(s)][0]));
                break;
             }
          }
@@ -100,7 +100,7 @@ std::string GetFENShort2(const Position &p) { // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/
 
 std::string GetFEN(const Position &p) { // "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d5 0 2"
    std::stringstream ss;
-   ss << GetFENShort2(p) << " " << (int)p.fifty << " " << (int)p.moves;
+   ss << GetFENShort2(p) << " " << static_cast<int>(p.fifty) << " " << static_cast<int>(p.moves);
    return ss.str();
 }
 
@@ -220,6 +220,9 @@ bool readMove(const Position &p, const std::string &ss, Square &from, Square &to
    return true;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+
 float gamePhase(const Position &p, ScoreType &matScoreW, ScoreType &matScoreB) {
    const float totalMatScore = 2.f * absValue(P_wq) + 4.f * absValue(P_wr) + 4.f * absValue(P_wb) + 4.f * absValue(P_wn) +
                                16.f * absValue(P_wp); // cannot be static for tuning process ...
@@ -233,6 +236,8 @@ float gamePhase(const Position &p, ScoreType &matScoreW, ScoreType &matScoreB) {
    matScoreB = matPieceScoreB + matPawnScoreB;
    return (matScoreW + matScoreB) / totalMatScore; // based on MG values
 }
+
+#pragma GCC diagnostic pop
 
 bool readEPDFile(const std::string &fileName, std::vector<std::string> &positions) {
    Logging::LogIt(Logging::logInfo) << "Loading EPD file : " << fileName;

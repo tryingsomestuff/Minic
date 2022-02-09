@@ -46,18 +46,18 @@ ScoreType parse_score_from_pgn_extract(std::string eval, bool& success) {
    success = true;
 
    if (eval.substr(0, 1) == "#") {
-      if (eval.substr(1, 1) == "-") { return -MATE + (stoi(eval.substr(2, eval.length() - 2))); }
+      if (eval.substr(1, 1) == "-") { return matedScore(stoi(eval.substr(2, eval.length() - 2))); }
       else {
-         return MATE - (stoi(eval.substr(1, eval.length() - 1)));
+         return matingScore(stoi(eval.substr(1, eval.length() - 1)));
       }
    }
    else if (eval.substr(0, 2) == "-M") {
       //std::cout << "eval=" << eval << std::endl;
-      return -MATE + (stoi(eval.substr(2, eval.length() - 2)));
+      return matedScore(stoi(eval.substr(2, eval.length() - 2)));
    }
    else if (eval.substr(0, 2) == "+M") {
       //std::cout << "eval=" << eval << std::endl;
-      return MATE - (stoi(eval.substr(2, eval.length() - 2)));
+      return matingScore(stoi(eval.substr(2, eval.length() - 2)));
    }
    else {
       char*  endptr;
@@ -394,8 +394,8 @@ bool convert_bin_from_pgn_extract(const std::vector<std::string>& filenames,
                if (eval_found || convert_no_eval_fens_as_score_zero) {
                   if (!eval_found && convert_no_eval_fens_as_score_zero) { psv.score = 0; }
 
-                  psv.gamePly     = gamePly;
-                  psv.game_result = game_result;
+                  psv.gamePly     = static_cast<uint16_t>(gamePly);
+                  psv.game_result = static_cast<uint16_t>(game_result);
 
                   if (pos.c == Co_Black) {
                      if (!pgn_eval_side_to_move) { psv.score *= -1; }
@@ -521,7 +521,7 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
                const MaterialHash::MaterialHashEntry& MEntry = MaterialHash::materialHashTable[matHash];
                gp                                            = MEntry.gamePhase();
             }
-            DepthType depth = DepthType(DynamicConfig::genFenDepth * gp + DynamicConfig::genFenDepthEG * (1.f - gp));
+            DepthType depth = static_cast<DepthType>(clampDepth(DynamicConfig::genFenDepth) * gp + clampDepth(DynamicConfig::genFenDepthEG) * (1.f - gp));
             DynamicConfig::randomPly = 0;
             data.p                   = tpos;
             data.depth               = depth;

@@ -97,8 +97,8 @@ extern BitBoard rookAttacks[NbSquare][1 << ROOK_INDEX_BITS];
 #define MAGICBISHOPINDEX(m, x) (_pext_u64(m, MagicBB::bishopMagic[x].mask))
 #define MAGICROOKINDEX(m, x)   (_pext_u64(m, MagicBB::rookMagic[x].mask))
 #else
-#define MAGICBISHOPINDEX(m, x) (int)((((m)&MagicBB::bishopMagic[x].mask) * MagicBB::bishopMagic[x].magic) >> (NbSquare - BISHOP_INDEX_BITS))
-#define MAGICROOKINDEX(m, x)   (int)((((m)&MagicBB::rookMagic[x].mask) * MagicBB::rookMagic[x].magic) >> (NbSquare - ROOK_INDEX_BITS))
+#define MAGICBISHOPINDEX(m, x) static_cast<int>((((m)&MagicBB::bishopMagic[x].mask) * MagicBB::bishopMagic[x].magic) >> (NbSquare - BISHOP_INDEX_BITS))
+#define MAGICROOKINDEX(m, x)   static_cast<int>((((m)&MagicBB::rookMagic[x].mask) * MagicBB::rookMagic[x].magic) >> (NbSquare - ROOK_INDEX_BITS))
 #endif
 
 #define MAGICBISHOPATTACKS(m, x) (MagicBB::bishopAttacks[x][MAGICBISHOPINDEX(m, x)])

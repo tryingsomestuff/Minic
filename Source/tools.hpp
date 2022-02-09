@@ -32,7 +32,7 @@ template < typename T >
       ss << Logging::_protocolComment[Logging::ct] << "+---+---+---+---+---+---+---+---+"
          << "\n";
       ss << Logging::_protocolComment[Logging::ct] << "|";
-      for (int i = 0; i < 8; ++i) ss << std::setw(3) << (int)a[i + j * 8] << '|';
+      for (int i = 0; i < 8; ++i) ss << std::setw(3) << static_cast<int>(a[i + j * 8]) << '|';
    }
    ss << "\n";
    ss << Logging::_protocolComment[Logging::ct] << "+---+---+---+---+---+---+---+---+";

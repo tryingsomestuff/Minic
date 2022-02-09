@@ -8,7 +8,7 @@ Move Skill::pick(std::vector<RootScores>& multiPVMoves) {
    const ScoreType worstScore = multiPVMoves[multiPV - 1].s;
    const ScoreType delta      = std::min(ScoreType(topScore - worstScore), absValue(P_wp));
    const ScoreType weakness   = 128 - DynamicConfig::level; // so from 28 (minimum) to 128 (maximum)
-   ScoreType       maxScore   = -MATE;
+   ScoreType       maxScore   = matedScore(0);
 
    Logging::LogIt(Logging::logInfo) << "Picking suboptimal move from " << multiPV << " best move(s)";
 

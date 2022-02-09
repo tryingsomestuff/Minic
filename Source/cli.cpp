@@ -96,7 +96,7 @@ void perft_test(const std::string& fen, DepthType d, uint64_t expected) {
 }
 
 void analyze(const Position& p, DepthType depth, bool openBenchOutput = false) {
-   static float   benchms    = 0;
+   static double  benchms    = 0;
    static Counter benchNodes = 0;
 
    const int oldOutLvl = DynamicConfig::minOutputLevel;
@@ -119,19 +119,18 @@ void analyze(const Position& p, DepthType depth, bool openBenchOutput = false) {
    ThreadPool::instance().main().stopFlag = false;
    ThreadPool::instance().main().searchDriver(false);
    d = ThreadPool::instance().main().getData();
-   Logging::LogIt(Logging::logInfo) << "Best move is " << ToString(d.best) << " " << (int)d.depth << " " << d.score << " pv : " << ToString(d.pv);
+   Logging::LogIt(Logging::logInfo) << "Best move is " << ToString(d.best) << " " << static_cast<int>(d.depth) << " " << d.score << " pv : " << ToString(d.pv);
 
    if (openBenchOutput) {
       Logging::LogIt(Logging::logInfo) << "Next two lines are for OpenBench";
-      const TimeType ms =
-          std::max(1, (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - ThreadPool::instance().main().startTime).count());
+      const TimeType ms = getTimeDiff(ThreadPool::instance().main().startTime);
       const Counter nodeCount =
           ThreadPool::instance().main().stats.counters[Stats::sid_nodes] + ThreadPool::instance().main().stats.counters[Stats::sid_qnodes];
       benchNodes += nodeCount;
-      benchms += ms / 1000.f;
+      benchms += static_cast<decltype(benchms)>(ms) / 1000.;
       DynamicConfig::minOutputLevel = oldOutLvl;
       std::cerr << "NODES " << benchNodes << std::endl;
-      std::cerr << "NPS " << int(benchNodes / benchms) << std::endl;
+      std::cerr << "NPS " << static_cast<int>(static_cast<decltype(benchms)>(benchNodes) / benchms) << std::endl;
    }
 }
 
@@ -266,7 +265,7 @@ int cliManagement(std::string cli, int argc, char** argv) {
 
    if (cli == "-selfplay") {
       DepthType d = 15; // this is "search depth", not genFenDepth !
-      if (argc > 2) d = atoi(argv[2]);
+      if (argc > 2) d = clampDepth(atoi(argv[2]));
       uint64_t n = 1;
       if (argc > 3) n = atoll(argv[3]);
       Logging::LogIt(Logging::logInfo) << "Let's go for " << n << " selfplay games ...";
@@ -413,7 +412,7 @@ int cliManagement(std::string cli, int argc, char** argv) {
 
    if (cli == "bench") {
       DepthType d = 16;
-      if (argc > 2) d = atoi(argv[2]);
+      if (argc > 2) d = clampDepth(atoi(argv[2]));
       return bench(d);
    }
 
@@ -432,7 +431,8 @@ int cliManagement(std::string cli, int argc, char** argv) {
       Logging::LogIt(Logging::logInfo) << "Data size : " << data.size();
 
       std::chrono::time_point<Clock> startTime = Clock::now();
-      for (int k = 0; k < 10; ++k)
+      const int loops = 10;
+      for (int k = 0; k < loops; ++k)
          for (auto& p : data) {
 #ifdef WITH_NNUE
             NNUEEvaluator evaluator;
@@ -442,8 +442,8 @@ int cliManagement(std::string cli, int argc, char** argv) {
             EvalData d;
             DISCARD  eval(p, d, ThreadPool::instance().main(), true);
          }
-      int ms = (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count();
-      Logging::LogIt(Logging::logInfo) << "Eval speed (with EG material hash): " << data.size() * 10.f / (ms * 1000) << " Meval/s";
+      auto ms = getTimeDiff(startTime);
+      Logging::LogIt(Logging::logInfo) << "Eval speed (with EG material hash): " << static_cast<double>(data.size()) * loops / (static_cast<double>(ms) * 1000) << " Meval/s";
 
       startTime = Clock::now();
       for (int k = 0; k < 10; ++k)
@@ -456,8 +456,8 @@ int cliManagement(std::string cli, int argc, char** argv) {
             EvalData d;
             DISCARD  eval(p, d, ThreadPool::instance().main(), false);
          }
-      ms = (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count();
-      Logging::LogIt(Logging::logInfo) << "Eval speed : " << data.size() * 10.f / (ms * 1000) << " Meval/s";
+      ms = getTimeDiff(startTime);
+      Logging::LogIt(Logging::logInfo) << "Eval speed : " << static_cast<double>(data.size()) * 10. / (static_cast<double>(ms) * 1000) << " Meval/s";
 
       ThreadPool::instance().displayStats();
       return 0;
@@ -519,15 +519,15 @@ int cliManagement(std::string cli, int argc, char** argv) {
       const std::string move  = argc > 3 ? argv[3] : "e2e4";
       readMove(p, move, from, to, mtype);
       Move      m = ToMove(from, to, mtype);
-      ScoreType t = atoi(argv[4]);
-      bool      b = ThreadPool::instance().main().SEE_GE(p, m, t);
+      ScoreType t = clampInt<ScoreType>(atoi(argv[4]));
+      bool      b = Searcher::SEE_GE(p, m, t);
       Logging::LogIt(Logging::logInfo) << "SEE ? " << (b ? "ok" : "not");
       return 1;
    }
 
    if (cli == "-attacked") {
       Square k = Sq_e4;
-      if (argc > 3) k = atoi(argv[3]);
+      if (argc > 3) k = clampIntU<Square>(atoi(argv[3]));
       Logging::LogIt(Logging::logInfo) << SquareNames[k];
       Logging::LogIt(Logging::logInfo) << ToString(BBTools::allAttackedBB(p, k, p.c));
       return 0;
@@ -535,7 +535,7 @@ int cliManagement(std::string cli, int argc, char** argv) {
 
    if (cli == "-cov") {
       Square k = Sq_e4;
-      if (argc > 3) k = atoi(argv[3]);
+      if (argc > 3) k = clampIntU<Square>(atoi(argv[3]));
       switch (p.board_const(k)) {
          case P_wp: Logging::LogIt(Logging::logInfo) << ToString((BBTools::coverage<P_wp>(k, p.occupancy(), p.c) + BBTools::mask[k].push[p.c]) &~p.allPieces[Co_White]); break;
          case P_wn: Logging::LogIt(Logging::logInfo) << ToString(BBTools::coverage<P_wn>(k, p.occupancy(), p.c) & ~p.allPieces[Co_White]); break;
@@ -589,11 +589,11 @@ int cliManagement(std::string cli, int argc, char** argv) {
 
    if (cli == "-perft") {
       DepthType d = 5;
-      if (argc > 3) d = atoi(argv[3]);
+      if (argc > 3) d = clampIntU<DepthType>(atoi(argv[3]));
       PerftAccumulator acc;
       auto start = Clock::now();
       perft(p, d, acc);
-      auto elapsed = std::max(1, (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - start).count());
+      auto elapsed = getTimeDiff(start);
       Logging::LogIt(Logging::logInfo) << "Perft done in " << elapsed << "ms";
       acc.Display();
       Logging::LogIt(Logging::logInfo) << "Speed " << int(acc.validNodes / elapsed) << "KNPS";
@@ -602,10 +602,10 @@ int cliManagement(std::string cli, int argc, char** argv) {
 
    if (cli == "-analyze") {
       DepthType depth = 15;
-      if (argc > 3) depth = atoi(argv[3]);
+      if (argc > 3) depth = clampIntU<DepthType>(atoi(argv[3]));
       auto start = Clock::now();
       analyze(p, depth);
-      auto elapsed = std::max(1, (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - start).count());
+      auto elapsed = getTimeDiff(start);
       Logging::LogIt(Logging::logInfo) << "Analysis done in " << elapsed << "ms";
       return 0;
    }
@@ -613,10 +613,10 @@ int cliManagement(std::string cli, int argc, char** argv) {
    if (cli == "-mateFinder") {
       DynamicConfig::mateFinder = true;
       DepthType depth           = 10;
-      if (argc > 3) depth = atoi(argv[3]);
+      if (argc > 3) depth = clampIntU<DepthType>(atoi(argv[3]));
       auto start = Clock::now();
       analyze(p, depth);
-      auto elapsed = std::max(1, (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - start).count());
+      auto elapsed = getTimeDiff(start);
       Logging::LogIt(Logging::logInfo) << "Analysis done in " << elapsed << "ms";
       return 0;
    }

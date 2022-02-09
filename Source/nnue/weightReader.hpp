@@ -34,7 +34,7 @@ template<typename NT> struct WeightsReader {
          if (Q && std::abs(tmp * Wscale) > (NT)std::numeric_limits<T>::max()) {
             NT tmp2 = tmp;
             tmp = std::clamp(tmp2 * Wscale, (NT)std::numeric_limits<T>::min(), (NT)std::numeric_limits<T>::max());
-            Logging::LogIt(Logging::logWarn) << "Overflow weight " << tmp2 << " -> " << (int)tmp;
+            Logging::LogIt(Logging::logWarn) << "Overflow weight " << tmp2 << " -> " << tmp;
          }
          else {
             tmp = tmp * Wscale;
@@ -71,7 +71,7 @@ template<typename NT> struct WeightsReader {
          if (Q && std::abs(tmp * Wscale) > (NT)std::numeric_limits<T>::max()) {
             NT tmp2 = tmp;
             tmp = std::clamp(tmp2 * Wscale, (NT)std::numeric_limits<T>::min(), (NT)std::numeric_limits<T>::max());
-            Logging::LogIt(Logging::logWarn) << "Overflow weight " << tmp2 << " -> " << (int)tmp;
+            Logging::LogIt(Logging::logWarn) << "Overflow weight " << tmp2 << " -> " << tmp;
          }
          else {
             tmp = tmp * Wscale;
@@ -102,7 +102,7 @@ template<typename NT> struct WeightsReader {
          if (Q && std::abs(tmp * Bscale) > (NT)std::numeric_limits<T>::max()) {
             NT tmp2 = tmp;
             tmp = std::clamp(tmp2 * Bscale, (NT)std::numeric_limits<T>::min(), (NT)std::numeric_limits<T>::max());
-            Logging::LogIt(Logging::logWarn) << "Overflow bias " << tmp2 << " -> " << (int)tmp;
+            Logging::LogIt(Logging::logWarn) << "Overflow bias " << tmp2 << " -> " << tmp;
          }
          else {
             tmp = tmp * Bscale;
@@ -133,7 +133,7 @@ template<typename NT> struct WeightsReader {
          if (Q && std::abs(tmp * Bscale) > (NT)std::numeric_limits<T>::max()) {
             NT tmp2 = tmp;
             tmp = std::clamp(tmp2 * Bscale, (NT)std::numeric_limits<T>::min(), (NT)std::numeric_limits<T>::max());
-            Logging::LogIt(Logging::logWarn) << "Overflow bias " << tmp2 << " -> " << (int)tmp;
+            Logging::LogIt(Logging::logWarn) << "Overflow bias " << tmp2 << " -> " << tmp;
          }
          else {
             tmp = tmp * Bscale;

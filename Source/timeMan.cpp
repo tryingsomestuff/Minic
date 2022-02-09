@@ -7,16 +7,17 @@
 
 namespace TimeMan {
 
-TimeType  msecPerMove, msecInTC, nbMoveInTC, msecInc, msecUntilNextTC, overHead;
-TimeType  targetTime, maxTime;
-DepthType moveToGo;
-uint64_t  maxNodes;
-bool      isDynamic;
+TimeType msecPerMove, msecInTC, msecInc, msecUntilNextTC, overHead;
+TimeType targetTime, maxTime;
+int      moveToGo, nbMoveInTC;
+uint64_t maxNodes;
+bool     isDynamic;
 
 void init() {
    Logging::LogIt(Logging::logInfo) << "Init timeman";
    msecPerMove = 777;
-   msecInTC = nbMoveInTC = msecInc = msecUntilNextTC = -1;
+   msecInTC = msecInc = msecUntilNextTC = -1;
+   nbMoveInTC = -1;
    moveToGo   = -1;
    maxNodes   = 0;
    isDynamic  = false;
@@ -31,7 +32,7 @@ TimeType getNextMSecPerMove(const Position& p) {
    const TimeType msecMarginMax  = 3000; // maximum margin
    const float    msecMarginCoef = 0.01f; // part of the remaining time use as margin
    auto getMargin = [&](TimeType remainingTime){
-      return std::max(std::min(msecMarginMax, TimeType(msecMarginCoef * remainingTime)), msecMarginMin);
+      return std::max(std::min(msecMarginMax, static_cast<TimeType>(msecMarginCoef * static_cast<float>(remainingTime))), msecMarginMin);
    };
 
    TimeType ms = -1; // this is what we will compute here
@@ -73,7 +74,7 @@ TimeType getNextMSecPerMove(const Position& p) {
          // we use the minimal margin
          // WARNING note that this might be a bit stupid when used with a book
          const TimeType totalIncr = nbMoveInTC * msecIncLoc;
-         ms = TimeType((msecInTC + totalIncr - msecMargin) / (float)nbMoveInTC);
+         ms = static_cast<TimeType>(static_cast<double>(msecInTC + totalIncr - msecMargin) / static_cast<double>(nbMoveInTC));
       }
       else {
          assert(msecUntilNextTC > 0);
@@ -86,7 +87,7 @@ TimeType getNextMSecPerMove(const Position& p) {
          const int moveUntilNextTC = nbMoveInTC - ((p.moves - 1) % nbMoveInTC);
          const TimeType remainingIncr = moveUntilNextTC * msecIncLoc;
          msecMargin = getMargin(msecUntilNextTC);
-         ms = TimeType((msecUntilNextTC + remainingIncr - msecMargin) / (float)moveUntilNextTC );
+         ms = static_cast<TimeType>(static_cast<double>(msecUntilNextTC + remainingIncr - msecMargin) / static_cast<double>(moveUntilNextTC));
       }
    }
 
@@ -106,7 +107,7 @@ TimeType getNextMSecPerMove(const Position& p) {
          const TimeType remainingIncr = moveToGo * msecIncLoc;
          const float ponderingCorrection = (ThreadPool::instance().main().getData().isPondering ? 3 : 2) / 2;
          msecMargin = getMargin(msecUntilNextTC);
-         ms = TimeType( ((msecUntilNextTC + remainingIncr - msecMargin) / (float)moveToGo ) * ponderingCorrection);
+         ms = static_cast<TimeType>((static_cast<double>(msecUntilNextTC + remainingIncr - msecMargin) / static_cast<double>(moveToGo) ) * ponderingCorrection);
       }
    }
 
@@ -132,7 +133,7 @@ TimeType getNextMSecPerMove(const Position& p) {
       }
       const float ponderingCorrection = (ThreadPool::instance().main().getData().isPondering ? 3 : 2) / 2;
       msecMargin = getMargin(msecUntilNextTC);
-      ms = TimeType( ((msecUntilNextTC - msecMargin) / (float)nmoves) * ponderingCorrection);
+      ms = static_cast<TimeType>( (static_cast<double>(msecUntilNextTC - msecMargin) / static_cast<double>(nmoves)) * ponderingCorrection);
    }
 
    // take overhead into account
@@ -149,11 +150,11 @@ void simulate(TCType tcType, TimeType initialTime, TimeType increment, TimeType 
 
    // init TC parameter
    isDynamic       = tcType == TC_suddendeath;
-   nbMoveInTC      = tcType == TC_repeating ? movesInTC : -1;
+   nbMoveInTC      = tcType == TC_repeating ? movesInTC : static_cast<TimeType>(-1);
    msecPerMove     = -1;
-   msecInTC        = tcType == TC_repeating ? initialTime : -1;
+   msecInTC        = tcType == TC_repeating ? initialTime : static_cast<TimeType>(-1);
    msecInc         = increment;
-   msecUntilNextTC = tcType == TC_suddendeath ? initialTime : -1;
+   msecUntilNextTC = tcType == TC_suddendeath ? initialTime : static_cast<TimeType>(-1);
    moveToGo        = -1;
    
    // and check configuration

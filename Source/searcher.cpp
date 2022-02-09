@@ -14,15 +14,15 @@ TimeType Searcher::getCurrentMoveMs()const{
          case MoveDifficultyUtil::MD_easy: ret = (ret >> 3); break;   ///@todo this is not used anymore
          case MoveDifficultyUtil::MD_std: break;                      // nothing special
          case MoveDifficultyUtil::MD_hardAttack:
-            break; // score is decreasing but still quite high // ret = (std::min(TimeType(TimeMan::msecUntilNextTC*MoveDifficultyUtil::maxStealFraction), ret*MoveDifficultyUtil::emergencyFactor)); break; // something bad is happening
+            break; // score is decreasing but still quite high ///@todo something ?
          case MoveDifficultyUtil::MD_hardDefense:
-            ret = (std::min(TimeType(TimeMan::msecUntilNextTC * MoveDifficultyUtil::maxStealFraction), ret * MoveDifficultyUtil::emergencyFactor));
+            ret = static_cast<TimeType>(std::min(TimeMan::msecUntilNextTC / MoveDifficultyUtil::maxStealDivisor, ret * MoveDifficultyUtil::emergencyFactor));
             break; // something bad is happening
       }
    }
    // take variability into account
-   ret = std::min(TimeMan::maxTime, TimeType(ret * MoveDifficultyUtil::variabilityFactor())); // inside [0.5 .. 2]
-   return std::max(ret, TimeType(20));                                                        // if not much time left, let's try something ...;
+   ret = std::min(TimeMan::maxTime, static_cast<TimeType>(static_cast<float>(ret) * MoveDifficultyUtil::variabilityFactor())); // inside [0.5 .. 2]
+   return std::max(ret, TimeType(20)); // if not much time left, let's try something ...;
 }
 
 void Searcher::getCMHPtr(const unsigned int ply, CMHPtrArray& cmhPtr) {
@@ -46,11 +46,11 @@ ScoreType Searcher::getCMHScore(const Position& p, const Square from, const Squa
 
 ScoreType Searcher::drawScore(const Position& p, DepthType height) {
    if (DynamicConfig::armageddon) {
-      if (p.c == Co_White) return -MATE + height;
+      if (p.c == Co_White) return matedScore(height);
       else
-         return MATE - height + 1;
+         return matingScore(height-1);
    }
-   return -1 + 2 * ((stats.counters[Stats::sid_nodes] + stats.counters[Stats::sid_qnodes]) % 2);
+   return static_cast<ScoreType>(-1 + 2 * ((stats.counters[Stats::sid_nodes] + stats.counters[Stats::sid_qnodes]) % 2));
 }
 
 void Searcher::idleLoop() {
@@ -293,7 +293,7 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
                const MaterialHash::MaterialHashEntry& MEntry = MaterialHash::materialHashTable[matHash];
                gp                                            = MEntry.gamePhase();
             }
-            DepthType depth = DepthType(DynamicConfig::genFenDepth * gp + DynamicConfig::genFenDepthEG * (1.f - gp));
+            DepthType depth = static_cast<DepthType>(clampDepth(DynamicConfig::genFenDepth) * gp + clampDepth(DynamicConfig::genFenDepthEG) * (1.f - gp));
             DynamicConfig::randomPly = 0;
             data.p                   = pLeaf;
             data.depth               = depth;

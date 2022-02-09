@@ -66,7 +66,7 @@ void ThreadPool::startSearch(const ThreadData& data) {
    main().wait();
    // COM state must be updated quite late, when all threads or done
    COM::state = data.isAnalysis ? COM::st_analyzing : data.isPondering ? COM::st_pondering : COM::st_searching; // update COM state
-   Logging::LogIt(Logging::logInfo) << "state set to " << (int)COM::state;
+   Logging::LogIt(Logging::logInfo) << "state set to " << static_cast<int>(COM::state);
    Logging::LogIt(Logging::logInfo) << "Locking other threads";
    Searcher::startLock.store(true);
    distributeData(data);

@@ -272,6 +272,6 @@ inline ScoreType fromWDLModel(double w, unsigned int ply) {
     const double a = (((WDL::as[0] * m + WDL::as[1]) * m + WDL::as[2]) * m) + WDL::as[3];
     const double b = (((WDL::bs[0] * m + WDL::bs[1]) * m + WDL::bs[2]) * m) + WDL::bs[3];    
     const double s = a - b * std::log(1000./(std::max(w,std::numeric_limits<double>::epsilon())) - 1. + std::numeric_limits<double>::epsilon());
-    return ScoreType(std::clamp(s, double(-MATE + ply) , double(MATE - ply + 1)) );
+    return ScoreType(std::clamp(s, static_cast<double>matedScore(ply) , static_cast<double>(matingScore(ply - 1)) );
 }
 */

@@ -45,7 +45,10 @@ template<size_t _N, size_t _M> struct Coeff {
       assert(idx1 < N);
       assert(idx2 >= 0);
       assert(idx2 < M);
-      return init[idx1] + d * slopeDepth[idx1] + bonus[idx2] + gp * slopeGamePhase[idx1]; 
+      const auto value = init[idx1] + d * slopeDepth[idx1] + bonus[idx2] + static_cast<double>(gp) * slopeGamePhase[idx1];
+      assert(value > std::numeric_limits<ScoreType>::min());
+      assert(value < std::numeric_limits<ScoreType>::max());
+      return static_cast<ScoreType>(value); 
    }
    [[nodiscard]] inline CONSTEXPR_SEARCH_TUNING bool isActive(DepthType d, size_t idx1 = 0) const {
       assert(idx1 >= 0);
@@ -131,7 +134,7 @@ constexpr Matrix<ScoreType, 6, 6> MvvLvaScores = [] {
    //Logging::LogIt(Logging::logInfo) << "Init mvv-lva";
    constexpr ScoreType IValues[6] = {1, 2, 3, 5, 9, 20}; ///@todo try N=B=3 ??
    for (int v = 0; v < 6; ++v)
-      for (int a = 0; a < 6; ++a) ret[v][a] = IValues[v] * 20 - IValues[a];
+      for (int a = 0; a < 6; ++a) ret[v][a] = static_cast<ScoreType>(IValues[v] * 20 - IValues[a]);
    return ret;
 }();
 

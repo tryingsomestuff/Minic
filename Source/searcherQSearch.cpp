@@ -12,7 +12,7 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Posi
    if (evalScore > alpha) alpha = evalScore;
 
    const bool isInCheck = isAttacked(p, kingSquare(p));
-   ScoreType  bestScore = isInCheck ? -MATE + height : evalScore;
+   ScoreType  bestScore = isInCheck ? matedScore(height) : evalScore;
 
    CMHPtrArray cmhPtr;
    getCMHPtr(p.halfmoves, cmhPtr);
@@ -79,8 +79,8 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    ++stats.counters[Stats::sid_qnodes];
    //std::cout << GetFEN(p) << std::endl;
 
-   alpha = std::max(alpha, (ScoreType)(-MATE + height));
-   beta  = std::min(beta, (ScoreType)(MATE - height - 1));
+   alpha = std::max(alpha, matedScore(height));
+   beta  = std::min(beta, matingScore(height + 1));
    if (alpha >= beta) return alpha;
 
    // update selective depth
@@ -128,7 +128,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    ScoreType evalScore;
    // do not eval position when in check, we won't use it (won't forward prune)
    if (isInCheck){
-      evalScore = -MATE + height;
+      evalScore = matedScore(height);
       stats.incr(Stats::sid_qsearchInCheck);
    }
    // skip eval if nullmove just applied, we can hack using opposite of opponent score corrected by tempo
@@ -291,7 +291,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
       }
    }
 
-   if (validMoveCount == 0 && isInCheck) bestScore = -MATE + height;
+   if (validMoveCount == 0 && isInCheck) bestScore = matedScore(height);
 
    TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(evalScore, height),
                 TT::Bound(b | (ttPV ? TT::B_ttPVFlag : TT::B_none) | (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), hashDepth);

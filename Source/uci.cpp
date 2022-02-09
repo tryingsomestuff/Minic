@@ -96,7 +96,7 @@ void uci() {
             }
          }
          // we take into account the time needed to parse input and get current position
-         TimeMan::overHead = (int)std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTimePos).count();
+         TimeMan::overHead = getTimeDiff(startTimePos);
       }
       else if (uciCommand == "go") {
          if (!ThreadPool::instance().main().stopFlag) {
@@ -131,7 +131,7 @@ void uci() {
                      noParam = false;
                      int d   = 0;
                      iss >> d;
-                     COM::depth           = d;
+                     COM::depth           = clampDepth(d);
                      TimeMan::msecPerMove = INFINITETIME;
                   }
                   else if (param == "movetime") {
@@ -192,7 +192,7 @@ void uci() {
                   else if (param == "mate") {
                      int d = 0;
                      iss >> d;
-                     COM::depth                = d;
+                     COM::depth                = clampDepth(d);
                      DynamicConfig::mateFinder = true;
                      TimeMan::msecPerMove      = INFINITETIME;
                   }
@@ -255,7 +255,7 @@ void uci() {
       else if (uciCommand == "bench") {
          int bd = 10;
          iss >> bd;
-         bench(bd);
+         bench(clampDepth(bd));
       }
       else if (!uciCommand.empty()) {
          Logging::LogIt(Logging::logGUI) << "info string unrecognised command " << uciCommand;
@@ -266,8 +266,8 @@ void uci() {
 
 std::string wdlStat(ScoreType score, unsigned int ply) {
    std::stringstream ss;
-   const int wdlW = (int)toWDLModel(score, ply);
-   const int wdlL = (int)toWDLModel(-score, ply);
+   const int wdlW = static_cast<int>(toWDLModel(score, ply));
+   const int wdlL = static_cast<int>(toWDLModel(-score, ply));
    const int wdlD = 1000 - wdlW - wdlL;
    ss << " wdl " << wdlW << " " << wdlD << " " << wdlL;
    return ss.str();

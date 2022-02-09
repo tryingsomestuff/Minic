@@ -23,28 +23,36 @@ void Searcher::displayGUI(DepthType          depth,
                           int                multipv,
                           const std::string& mark) {
    const auto     now           = Clock::now();
-   const TimeType ms            = std::max((TimeType)1, (TimeType)std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count());
+   const TimeType ms            = getTimeDiff(startTime);
    getSearchData().times[depth] = ms;
    if (subSearch) return; // no need to display stuff for subsearch
    std::stringstream str;
-   const Counter     nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
+   const Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
    if (Logging::ct == Logging::CT_xboard) {
-      str << int(depth) << " " << bestScore << " " << ms / 10 << " " << nodeCount << " ";
+      str << int(depth) << " " 
+          << bestScore << " " 
+          << ms / 10 << " " // csec
+          << nodeCount << " ";
       if (DynamicConfig::fullXboardOutput)
-         str << (int)seldepth << " " << Counter(nodeCount / (ms / 1000.f) / 1000.) << " "
+         str << static_cast<int>(seldepth) << " " 
+             << static_cast<Counter>(nodeCount / ms) << " "  // knps
              << ThreadPool::instance().counter(Stats::sid_tbHit1) + ThreadPool::instance().counter(Stats::sid_tbHit2);
       str << "\t" << ToString(pv);
       if (!mark.empty()) str << mark;
    }
    else if (Logging::ct == Logging::CT_uci) {
       const std::string multiPVstr = DynamicConfig::multiPV > 1 ? (" multipv " + std::to_string(multipv)) : "";
-      str << "info" << multiPVstr << " depth " << int(depth) << " score " << UCI::uciScore(bestScore, ply) << " time " << ms << " nodes " << nodeCount
-          << " nps " << Counter(nodeCount / (ms / 1000.f)) << " seldepth " << (int)seldepth << " tbhits "
+      str << "info" << multiPVstr 
+          << " depth " << static_cast<int>(depth) 
+          << " score " << UCI::uciScore(bestScore, ply) 
+          << " time " << ms // msec
+          << " nodes " << nodeCount
+          << " nps " << static_cast<Counter>(static_cast<double>(nodeCount) / msec2sec(ms)) // nps
+          << " seldepth " << static_cast<int>(seldepth) << " tbhits "
           << ThreadPool::instance().counter(Stats::sid_tbHit1) + ThreadPool::instance().counter(Stats::sid_tbHit2);
       static auto lastHashFull = Clock::now();
-      if ((int)std::chrono::duration_cast<std::chrono::milliseconds>(now - lastHashFull).count() > 500 &&
-          (TimeType)std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count() * 2)) <
-              ThreadPool::instance().main().getCurrentMoveMs()) {
+      if (getTimeDiff(now,lastHashFull) > 500 &&
+          getTimeDiff(now,startTime)*2 < ThreadPool::instance().main().getCurrentMoveMs()) {
          lastHashFull = now;
          str << " hashfull " << TT::hashFull();
       }
@@ -75,7 +83,7 @@ void Searcher::searchDriver(bool postMove) {
    DepthType maxDepth   = _data.depth; // _data.depth will be reset to zero later
    bool depthLimitedSearch = false;
    if (Distributed::isMainProcess()) {
-      maxDepth = std::max((DepthType)1, (Skill::enabled() && !DynamicConfig::nodesBasedLevel) ? std::min(maxDepth, Skill::limitedDepth()) : maxDepth);
+      maxDepth = asLeastOne( (Skill::enabled() && !DynamicConfig::nodesBasedLevel) ? std::min(maxDepth, Skill::limitedDepth()) : maxDepth );
       depthLimitedSearch = maxDepth != _data.depth;
    }
    else {
@@ -104,7 +112,7 @@ void Searcher::searchDriver(bool postMove) {
    if (isMainThread() || id() >= MAX_THREADS) {
       Logging::LogIt(Logging::logInfo) << "Search params :";
       Logging::LogIt(Logging::logInfo) << "requested time  " << getCurrentMoveMs() << " (" << currentMoveMs << ")"; // won't exceed TimeMan::maxTime
-      Logging::LogIt(Logging::logInfo) << "requested depth " << (int)maxDepth;
+      Logging::LogIt(Logging::logInfo) << "requested depth " << static_cast<int>(maxDepth);
    }
    // other threads will wait here for start signal
    else {
@@ -130,7 +138,7 @@ void Searcher::searchDriver(bool postMove) {
    DynamicConfig::multiPV = (Logging::ct == Logging::CT_uci ? DynamicConfig::multiPV : 1);
    if (Skill::enabled() && !DynamicConfig::nodesBasedLevel) { DynamicConfig::multiPV = std::max(DynamicConfig::multiPV, 4u); }
    Logging::LogIt(Logging::logInfo) << "MultiPV " << DynamicConfig::multiPV;
-   std::vector<RootScores> multiPVMoves(DynamicConfig::multiPV, {INVALIDMOVE, -MATE});
+   std::vector<RootScores> multiPVMoves(DynamicConfig::multiPV, {INVALIDMOVE, matedScore(0)});
    // in multipv mode _data.score cannot be use a the aspiration loop score
    std::vector<ScoreType> currentScore(DynamicConfig::multiPV, 0);
 
@@ -173,7 +181,7 @@ void Searcher::searchDriver(bool postMove) {
    // forced move detection
    // only main thread here (stopflag will be triggered anyway for other threads if needed)
    if (isMainThread() && DynamicConfig::multiPV == 1 && isFiniteTimeSearch && currentMoveMs > 100) { ///@todo should work with nps here
-      _data.score = pvs<true>(-MATE, MATE, p, 1, 0, _data.pv, _data.seldepth, isInCheck, false); // depth 1 search to get real valid moves
+      _data.score = pvs<true>(matedScore(0), matingScore(0), p, 1, 0, _data.pv, _data.seldepth, isInCheck, false); // depth 1 search to get real valid moves
       // only one : check evasion or zugzwang
       if (rootScores.size() == 1) {
          moveDifficulty = MoveDifficultyUtil::MD_forced; 
@@ -200,11 +208,11 @@ void Searcher::searchDriver(bool postMove) {
          }
          // stockfish like thread management (not for co-searcher)
          else if (!subSearch) {
-            const int i = (id() - 1) % threadSkipSize;
+            const auto i = (id() - 1) % threadSkipSize;
             if (((depth + skipPhase[i]) / skipSize[i]) % 2) continue; // next depth
          }
 
-         Logging::LogIt(Logging::logInfo) << "Thread " << id() << " searching depth " << (int)depth;
+         Logging::LogIt(Logging::logInfo) << "Thread " << id() << " searching depth " << static_cast<int>(depth);
 
 #ifndef WITH_EVAL_TUNING
          contempt = {ScoreType((p.c == Co_White ? +1 : -1) * (DynamicConfig::contempt + DynamicConfig::contemptMG) * DynamicConfig::ratingFactor),
@@ -213,7 +221,7 @@ void Searcher::searchDriver(bool postMove) {
          contempt = 0;
 #endif
          // dynamic contempt ///@todo tune this
-         contempt += ScoreType(std::round(25 * std::tanh(currentScore[multi] / 400.f))); // slow but ok here
+         contempt += static_cast<ScoreType>(std::round(25 * std::tanh(currentScore[multi] / 400.f))); // slow but ok here
          Logging::LogIt(Logging::logInfo) << "Dynamic contempt " << contempt;
 
          // initialize aspiration window loop variables
@@ -221,9 +229,9 @@ void Searcher::searchDriver(bool postMove) {
          ScoreType delta =
              (SearchConfig::doWindow && depth > SearchConfig::aspirationMinDepth)
                  ? SearchConfig::aspirationInit + std::max(0, SearchConfig::aspirationDepthInit - SearchConfig::aspirationDepthCoef * depth)
-                 : MATE; // MATE not INFSCORE in order to enter the loop below once
-         ScoreType alpha       = std::max(ScoreType(currentScore[multi] - delta), ScoreType(-MATE));
-         ScoreType beta        = std::min(ScoreType(currentScore[multi] + delta), MATE);
+                 : matingScore(0); // MATE not INFSCORE in order to enter the loop below once
+         ScoreType alpha       = std::max(static_cast<ScoreType>(currentScore[multi] - delta), matedScore(0));
+         ScoreType beta        = std::min(static_cast<ScoreType>(currentScore[multi] + delta), matingScore(0));
          ScoreType score       = 0;
          DepthType windowDepth = depth;
          Logging::LogIt(Logging::logInfo) << "Inital window: " << alpha << ".." << beta;
@@ -235,9 +243,9 @@ void Searcher::searchDriver(bool postMove) {
             if (stopFlag) break;
             ScoreType matW =0, matB = 0;
             delta += ScoreType((2 + delta / 2) * exp(1.f - gamePhase(p,matW,matB))); // in end-game, open window faster
-            if (alpha > -MATE && score <= alpha) {
-               beta  = std::min(MATE, ScoreType((alpha + beta) / 2));
-               alpha = std::max(ScoreType(score - delta), ScoreType(-MATE));
+            if (alpha > matedScore(0) && score <= alpha) {
+               beta  = std::min(matingScore(0), ScoreType((alpha + beta) / 2));
+               alpha = std::max(ScoreType(score - delta), matedScore(0));
                Logging::LogIt(Logging::logInfo) << "Increase window alpha " << alpha << ".." << beta;
                if (isMainThread() && DynamicConfig::multiPV == 1) {
                   PVList pv2;
@@ -246,9 +254,9 @@ void Searcher::searchDriver(bool postMove) {
                   windowDepth = depth;
                }
             }
-            else if (beta < MATE && score >= beta) {
+            else if (beta < matingScore(0) && score >= beta) {
                --windowDepth; // from Ethereal
-               beta = std::min(ScoreType(score + delta), ScoreType(MATE));
+               beta = std::min(ScoreType(score + delta), matingScore(0));
                Logging::LogIt(Logging::logInfo) << "Increase window beta " << alpha << ".." << beta;
                if (isMainThread() && DynamicConfig::multiPV == 1) {
                   PVList pv2;
@@ -321,9 +329,7 @@ void Searcher::searchDriver(bool postMove) {
                }
 
                // check for remaining time
-               if (TimeMan::isDynamic &&
-                   (TimeType)std::max(1, int(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startTime).count() * 1.8)) >
-                       getCurrentMoveMs()) {
+               if (TimeMan::isDynamic && static_cast<TimeType>(static_cast<double>(getTimeDiff(startTime))*1.8) > getCurrentMoveMs()) {
                   stopFlag = true;
                   Logging::LogIt(Logging::logInfo) << "stopflag triggered, not enough time for next depth";
                   break;
@@ -332,10 +338,11 @@ void Searcher::searchDriver(bool postMove) {
                // compute EBF
                if (depth > 1) {
                   Logging::LogIt(Logging::logInfo) << "EBF  "
-                                                   << float(getSearchData().nodes[depth]) / (std::max(Counter(1), getSearchData().nodes[depth - 1]));
+                                                   << getSearchData().nodes[depth] / 
+                                                      static_cast<double>(asLeastOne(getSearchData().nodes[depth - 1]));
                   Logging::LogIt(Logging::logInfo) << "EBF2 "
-                                                   << float(ThreadPool::instance().counter(Stats::sid_qnodes)) /
-                                                          std::max(Counter(1), ThreadPool::instance().counter(Stats::sid_nodes));
+                                                   << ThreadPool::instance().counter(Stats::sid_qnodes) /
+                                                      static_cast<double>(asLeastOne(ThreadPool::instance().counter(Stats::sid_nodes)));
                }
 
                // sync (pull) stopflag in other process
@@ -391,7 +398,7 @@ pvsout:
                if (s->getData().depth > bestDepth) {
                   bestThreadId = s->id();
                   bestDepth    = s->getData().depth;
-                  Logging::LogIt(Logging::logInfo) << "Better thread ! " << bestThreadId << ", depth " << (int)bestDepth;
+                  Logging::LogIt(Logging::logInfo) << "Better thread ! " << bestThreadId << ", depth " << static_cast<int>(bestDepth);
                }
             }
             // update data with best data available

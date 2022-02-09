@@ -118,9 +118,9 @@ void xboard() {
 
    bool iterate = true;
    while (iterate) {
-      Logging::LogIt(Logging::logInfo) << "XBoard: mode  (before command)" << (int)mode;
-      Logging::LogIt(Logging::logInfo) << "XBoard: stm   (before command)" << (int)stm;
-      Logging::LogIt(Logging::logInfo) << "XBoard: state (before command)" << (int)COM::state;
+      Logging::LogIt(Logging::logInfo) << "XBoard: mode  (before command)" << static_cast<int>(mode);
+      Logging::LogIt(Logging::logInfo) << "XBoard: stm   (before command)" << static_cast<int>(stm);
+      Logging::LogIt(Logging::logInfo) << "XBoard: state (before command)" << static_cast<int>(COM::state);
       bool commandOK = true;
       int  once = 0;
       while (once++ == 0 || !commandOK) { // loop until a good command is found
@@ -157,7 +157,7 @@ void xboard() {
             initialPos = COM::position;
             DynamicConfig::FRC = false;
             COM::moves.clear();
-            mode = (Mode)((int)stm); ///@todo this is so wrong !
+            mode = static_cast<Mode>(static_cast<int>(stm)); ///@todo this is so wrong !
             if (mode != m_analyze) {
                mode = m_play_black;
                stm  = stm_white;
@@ -183,11 +183,11 @@ void xboard() {
          }
          else if (COM::command == "go") {
             COM::stop();
-            mode = (Mode)((int)stm);
+            mode = static_cast<Mode>(static_cast<int>(stm));
          }
          else if (COM::command == "playother") {
             COM::stop();
-            mode = (Mode)((int)opponent(stm));
+            mode = static_cast<Mode>(static_cast<int>(opponent(stm)));
          }
          else if (strncmp(COM::command.c_str(), "usermove", 8) == 0) {
             if (!receiveOppMove(COM::command)) commandOK = false;
@@ -263,7 +263,7 @@ void xboard() {
          else if (strncmp(COM::command.c_str(), "sd", 2) == 0) { // not following protocol, will update search depth
             int d = 0;
             sscanf(COM::command.c_str(), "sd %d", &d);
-            COM::depth = d;
+            COM::depth = clampDepth(d);
             if (COM::depth < 0) COM::depth = 8;
             // forced move depth
             TimeMan::isDynamic       = false;
@@ -330,12 +330,12 @@ void xboard() {
             Logging::LogIt(Logging::logInfo) << "Xboard does not know this command \"" << COM::command << "\"";
       } // readline
 
-      Logging::LogIt(Logging::logInfo) << "XBoard: mode  (after command)" << (int)mode;
-      Logging::LogIt(Logging::logInfo) << "XBoard: stm   (after command)" << (int)stm;
-      Logging::LogIt(Logging::logInfo) << "XBoard: state (after command)" << (int)COM::state;
+      Logging::LogIt(Logging::logInfo) << "XBoard: mode  (after command)" << static_cast<int>(mode);
+      Logging::LogIt(Logging::logInfo) << "XBoard: stm   (after command)" << static_cast<int>(stm);
+      Logging::LogIt(Logging::logInfo) << "XBoard: state (after command)" << static_cast<int>(COM::state);
 
       // move as computer if mode is equal to stm
-      if ((int)mode == (int)stm && COM::state == COM::st_none) {
+      if (static_cast<int>(mode) == static_cast<int>(stm) && COM::state == COM::st_none) {
          Logging::LogIt(Logging::logInfo) << "xboard search launched";
          COM::thinkAsync(COM::st_searching);
          Logging::LogIt(Logging::logInfo) << "xboard async started";
@@ -344,7 +344,7 @@ void xboard() {
       /*
       ///@todo Ponder won't work here because after this, as searchDriver() is async, we are probably stuck in readLine() ...
       // if not our turn, and ponder is on, let's think ...
-      if((int)COM::mode == (int)COM::opponent(COM::stm) && COM::ponder == COM::p_on && COM::state == COM::st_none) {
+      if(static_cast<int>(COM::mode) == static_cast<int>(COM::opponent(COM::stm)) && COM::ponder == COM::p_on && COM::state == COM::st_none) {
           Logging::LogIt(Logging::logInfo) << "xboard search launched (pondering)";
           COM::thinkAsync(COM::st_pondering);
           Logging::LogIt(Logging::logInfo) << "xboard async started (pondering)";
@@ -357,9 +357,9 @@ void xboard() {
          Logging::LogIt(Logging::logInfo) << "xboard async started (analysis)";
       }
 
-      Logging::LogIt(Logging::logInfo) << "XBoard: mode  (after search launch)" << (int)mode;
-      Logging::LogIt(Logging::logInfo) << "XBoard: stm   (after search launch)" << (int)stm;
-      Logging::LogIt(Logging::logInfo) << "XBoard: state (after search launch)" << (int)COM::state;
+      Logging::LogIt(Logging::logInfo) << "XBoard: mode  (after search launch)" << static_cast<int>(mode);
+      Logging::LogIt(Logging::logInfo) << "XBoard: stm   (after search launch)" << static_cast<int>(stm);
+      Logging::LogIt(Logging::logInfo) << "XBoard: state (after search launch)" << static_cast<int>(COM::state);
 
    } // while true
    Logging::LogIt(Logging::logInfo) << "Leaving Xboard loop";
