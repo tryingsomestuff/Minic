@@ -6,7 +6,7 @@
 
 #ifdef _WIN32
 #include <intrin.h>
-uint64_t rdtsc() { return __rdtsc(); }
+inline uint64_t rdtsc() { return __rdtsc(); }
 #else
 uint64_t rdtsc() {
    unsigned int lo, hi;
@@ -21,7 +21,8 @@ uint64_t rdtscCounter[TM_Max] = {0ull};
 uint64_t callCounter[TM_Max]  = {0ull};
 
 const std::string TimerNames[TM_Max] = {"Total", "See",    "Apply",     "Eval1",    "Eval2",       "Eval3",      "Eval4",       "Eval5",
-                                        "Eval",  "Attack", "MovePiece", "Generate", "PseudoLegal", "IsAttacked", "MoveScoring", "MoveSorting"};
+                                        "Eval",  "Attack", "MovePiece", "Generate", "PseudoLegal", "IsAttacked", "MoveScoring", "MoveSorting",
+                                        "ResetNNUE", "UpdateNNUE"};
 
 #define DisplayHelper(name)                                                                                                                          \
    if (callCounter[name])                                                                                                                            \
@@ -30,7 +31,7 @@ const std::string TimerNames[TM_Max] = {"Total", "See",    "Apply",     "Eval1",
                 << " " << std::right << std::setw(15) << rdtscCounter[name] / callCounter[name] << std::endl;
 
 void Display() {
-   for (TimerType tm = TM_Total; tm < TM_Max; tm = TimerType(tm + 1)) DisplayHelper(tm);
+   for (TimerType tm = TM_Total; tm < TM_Max; ++tm) DisplayHelper(tm);
 }
 } // namespace Timers
 

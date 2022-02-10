@@ -7,7 +7,7 @@
  */
 
 #ifdef WITH_TIMER
-DISCARD uint64_t rdtsc();
+[[nodiscard]] uint64_t rdtsc();
 #define START_TIMER uint64_t rdtscBegin = rdtsc();
 #define STOP_AND_SUM_TIMER(name)                            \
    Timers::rdtscCounter[TM_##name] += rdtsc() - rdtscBegin; \
@@ -30,8 +30,11 @@ enum TimerType : uint8_t {
    TM_IsAttacked,
    TM_MoveScoring,
    TM_MoveSorting,
+   TM_ResetNNUE,
+   TM_UpdateNNUE,
    TM_Max
 };
+ENABLE_INCR_OPERATORS_ON(TimerType)
 
 namespace Timers {
 extern uint64_t rdtscCounter[TM_Max];

@@ -2,6 +2,7 @@
 
 #include "bitboard.hpp"
 #include "definition.hpp"
+#include "timers.hpp"
 
 #ifdef WITH_NNUE
 #include "nnue.hpp"
@@ -221,12 +222,15 @@ struct Position {
    }
 
    void resetNNUEEvaluator(NNUEEvaluator& nnueEvaluator) const {
+      START_TIMER
       nnueEvaluator.clear();
       resetNNUEIndices_<Co_White>(nnueEvaluator);
       resetNNUEIndices_<Co_Black>(nnueEvaluator);
+      STOP_AND_SUM_TIMER(ResetNNUE)
    }
 
    template<Color c> void updateNNUEEvaluator(NNUEEvaluator& nnueEvaluator, const MoveInfo& moveInfo) const {
+      START_TIMER
       const Piece fromType = (Piece)std::abs(moveInfo.fromP);
       const Piece toType = (Piece)std::abs(moveInfo.toP);
       nnueEvaluator.template us<c>().erase(NNUEIndiceUs(king[c], moveInfo.from, fromType));
@@ -249,6 +253,7 @@ struct Position {
          nnueEvaluator.template them<c>().erase(NNUEIndiceUs(king[~c], moveInfo.to, toType));
          nnueEvaluator.template us<c>().erase(NNUEIndiceThem(king[c], moveInfo.to, toType));
       }
+      STOP_AND_SUM_TIMER(UpdateNNUE)
    }
 
 #endif
