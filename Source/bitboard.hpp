@@ -67,7 +67,7 @@ inline int bitScanForward(BitBoard bb) {
 #endif // __MINGW32__
 
 // Hard to say which one is better, bit shifting or precalculated access to mask data ...
-#define SquareToBitboard(k)      BitBoard(1ull << (k))
+#define SquareToBitboard(k)      static_cast<BitBoard>(1ull << (k))
 #define SquareToBitboardTable(k) BBTools::mask[k].bbsquare
 
 namespace BB {
