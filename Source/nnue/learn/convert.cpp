@@ -46,18 +46,18 @@ ScoreType parse_score_from_pgn_extract(std::string eval, bool& success) {
    success = true;
 
    if (eval.substr(0, 1) == "#") {
-      if (eval.substr(1, 1) == "-") { return matedScore(stoi(eval.substr(2, eval.length() - 2))); }
+      if (eval.substr(1, 1) == "-") { return matedScore(static_cast<DepthType>(stoi(eval.substr(2, eval.length() - 2)))); }
       else {
-         return matingScore(stoi(eval.substr(1, eval.length() - 1)));
+         return matingScore(static_cast<DepthType>(stoi(eval.substr(1, eval.length() - 1))));
       }
    }
    else if (eval.substr(0, 2) == "-M") {
       //std::cout << "eval=" << eval << std::endl;
-      return matedScore(stoi(eval.substr(2, eval.length() - 2)));
+      return matedScore(static_cast<DepthType>(stoi(eval.substr(2, eval.length() - 2))));
    }
    else if (eval.substr(0, 2) == "+M") {
       //std::cout << "eval=" << eval << std::endl;
-      return matingScore(stoi(eval.substr(2, eval.length() - 2)));
+      return matingScore(static_cast<DepthType>(stoi(eval.substr(2, eval.length() - 2))));
    }
    else {
       char*  endptr;
