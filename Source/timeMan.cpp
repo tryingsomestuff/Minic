@@ -144,13 +144,13 @@ TimeType getNextMSecPerMove(const Position& p) {
    return targetTime;
 }
 
-void simulate(TCType tcType, TimeType initialTime, TimeType increment, TimeType movesInTC, TimeType guiLag){
+void simulate(TCType tcType, TimeType initialTime, TimeType increment, int movesInTC, TimeType guiLag){
 
    Logging::LogIt(Logging::logInfo) << "Start of TC simulation";
 
    // init TC parameter
    isDynamic       = tcType == TC_suddendeath;
-   nbMoveInTC      = tcType == TC_repeating ? movesInTC : static_cast<TimeType>(-1);
+   nbMoveInTC      = tcType == TC_repeating ? movesInTC : -1;
    msecPerMove     = -1;
    msecInTC        = tcType == TC_repeating ? initialTime : static_cast<TimeType>(-1);
    msecInc         = increment;

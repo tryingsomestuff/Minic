@@ -27,6 +27,6 @@ void init();
 
 enum TCType { TC_suddendeath, TC_repeating, TC_fixed };
 
-void simulate(TCType tcType, TimeType initialTime, TimeType increment = -1, TimeType movesInTC = -1, TimeType guiLag = 0);
+void simulate(TCType tcType, TimeType initialTime, TimeType increment = -1, int movesInTC = -1, TimeType guiLag = 0);
 
 } // namespace TimeMan

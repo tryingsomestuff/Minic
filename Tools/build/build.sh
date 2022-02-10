@@ -42,7 +42,8 @@ fi
 echo "Building $exe"
 
 WARN="-Wall -Wcast-qual -Wno-char-subscripts -Wno-reorder -Wmaybe-uninitialized -Wuninitialized -pedantic -Wextra -Wshadow -Wno-unknown-pragmas"
-#-fopt-info"
+#-fopt-info
+#-Wconversion
 
 if [ ! -n "$DEBUGMINIC" ]; then
   echo "******* RELEASE BUILD *******"

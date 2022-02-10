@@ -467,7 +467,7 @@ int cliManagement(std::string cli, int argc, char** argv) {
       TimeMan::TCType tcType      = TimeMan::TC_suddendeath;
       TimeType        initialTime = 50000;
       TimeType        increment   = 0;
-      TimeType        movesInTC   = -1;
+      int             movesInTC   = -1;
       TimeType        guiLag      = 0;
       if (argc > 2) initialTime = atoi(argv[2]);
       if (argc > 3) increment   = atoi(argv[3]);
