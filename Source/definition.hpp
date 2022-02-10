@@ -268,7 +268,7 @@ const Hash     nullHash      = 0ull; //std::numeric_limits<MiniHash>::max(); // 
 const BitBoard emptyBitBoard = 0ull;
 
 enum Color : int8_t { Co_None = -1, Co_White = 0, Co_Black = 1, Co_End };
-[[nodiscard]] constexpr Color operator~(Color c) { return Color(c ^ Co_Black); } // switch Color
+[[nodiscard]] constexpr Color operator~(Color c) { return static_cast<Color>(c ^ Co_Black); } // switch Color
 ENABLE_INCR_OPERATORS_ON(Color);
 
 template<typename T> 
@@ -319,7 +319,7 @@ enum Piece : signed char {
 };
 ENABLE_INCR_OPERATORS_ON(Piece);
 
-constexpr Piece operator~(Piece pp) { return Piece(-pp); } // switch piece Color
+constexpr Piece operator~(Piece pp) { return static_cast<Piece>(-pp); } // switch piece Color
 const int       PieceShift = 6;
 const int       NbPiece    = 2 * PieceShift + 1;
 
@@ -458,7 +458,7 @@ const Square correctedDestSq[T_bqs+1] = { INVALIDSQUARE, INVALIDSQUARE, INVALIDS
 [[nodiscard]] inline constexpr Piece promShift(MType mt) {
    assert(mt >= T_promq);
    assert(mt <= T_cappromn);
-   return Piece(P_wq - (mt % 4));
+   return static_cast<Piece>(P_wq - (mt % 4));
 } // awfull hack
 
 // previous best root 20000
@@ -608,8 +608,8 @@ template<class T> [[nodiscard]] inline constexpr const T& clamp(const T& v, cons
 template<Color C> [[nodiscard]] inline constexpr Square ColorSquarePstHelper(Square k) { return relative_square(~C, k); }
 
 [[nodiscard]] inline constexpr uint64_t powerFloor(uint64_t x) {
-    uint64_t power = 1;
-    while (power <= x) power *= 2;
+   uint64_t power = 1;
+   while (power <= x) power *= 2;
    return power / 2;
 }
 
