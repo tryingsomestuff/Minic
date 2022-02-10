@@ -12,7 +12,7 @@ Square SquareFromBitBoard(const BitBoard& b) {
    int i = 0;
 #endif
    bsf(b, i);
-   return Square(i);
+   return static_cast<Square>(i);
 }
 
 void clearBitBoards(Position& p) {

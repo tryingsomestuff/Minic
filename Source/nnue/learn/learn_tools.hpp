@@ -97,9 +97,9 @@ template<MoveType T> constexpr MiniMove MakeMove(Square from, Square to, Piece p
 
 constexpr MiniMove MakeMoveStd(Square from, Square to) { return MiniMove((from << 6) + to); }
 
-constexpr Square from_sq(Move m) { return Square((m >> 6) & 0x3F); }
+constexpr Square from_sq(Move m) { return static_cast<Square>((m >> 6) & 0x3F); }
 
-constexpr Square to_sq(Move m) { return Square(m & 0x3F); }
+constexpr Square to_sq(Move m) { return static_cast<Square>(m & 0x3F); }
 
 constexpr MoveType type_of(Move m) { return MoveType(m & (3 << 14)); }
 

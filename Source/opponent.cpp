@@ -109,7 +109,7 @@ static std::map<std::string, uint16_t> ratings = {
 {"Quazar", 2901 },
 };
 
-std::string str_tolower(std::string s) {
+std::string strToLower(std::string s) {
    std::transform(s.begin(), s.end(), s.begin(), [](uint8_t c) { return std::tolower(c); });
    return s;
 }
@@ -158,10 +158,10 @@ void init() {
                //Logging::LogIt(Logging::logWarn) << "No rating given";
                unsigned int i = 4;
                while (i < tokens.size()) oppName += " " + tokens[i++];
-               oppName = str_tolower(oppName);
+               oppName = strToLower(oppName);
                Logging::LogIt(Logging::logInfo) << "Looking for Elo rating of " << oppName;
                for (auto const& it : ratings) {
-                  if ((oppName.find(str_tolower(it.first)) != std::string::npos) || (str_tolower(it.first).find(oppName) != std::string::npos)) {
+                  if ((oppName.find(strToLower(it.first)) != std::string::npos) || (strToLower(it.first).find(oppName) != std::string::npos)) {
                      oppRating = it.second;
                      Logging::LogIt(Logging::logInfo) << "Opponent is " << it.first << ", Elo " << oppRating;
                      ratingFound = true;
