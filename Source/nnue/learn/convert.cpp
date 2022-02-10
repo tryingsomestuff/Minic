@@ -395,7 +395,7 @@ bool convert_bin_from_pgn_extract(const std::vector<std::string>& filenames,
                   if (!eval_found && convert_no_eval_fens_as_score_zero) { psv.score = 0; }
 
                   psv.gamePly     = static_cast<uint16_t>(gamePly);
-                  psv.game_result = static_cast<uint16_t>(game_result);
+                  psv.game_result = static_cast<uint8_t>(game_result);
 
                   if (pos.c == Co_Black) {
                      if (!pgn_eval_side_to_move) { psv.score *= -1; }
