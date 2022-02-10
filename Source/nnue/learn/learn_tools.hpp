@@ -92,18 +92,18 @@ class PRNG {
 enum MoveType { NORMAL, PROMOTION = 1 << 14, ENPASSANT = 2 << 14, CASTLING = 3 << 14 };
 
 template<MoveType T> constexpr MiniMove MakeMove(Square from, Square to, Piece prom = P_wn) {
-   return MiniMove(T + ((prom - P_wn) << 12) + (from << 6) + to);
+   return static_cast<MiniMove>(T + ((prom - P_wn) << 12) + (from << 6) + to);
 }
 
-constexpr MiniMove MakeMoveStd(Square from, Square to) { return MiniMove((from << 6) + to); }
+constexpr MiniMove MakeMoveStd(Square from, Square to) { return static_cast<MiniMove>((from << 6) + to); }
 
 constexpr Square from_sq(Move m) { return static_cast<Square>((m >> 6) & 0x3F); }
 
 constexpr Square to_sq(Move m) { return static_cast<Square>(m & 0x3F); }
 
-constexpr MoveType type_of(Move m) { return MoveType(m & (3 << 14)); }
+constexpr MoveType type_of(Move m) { return static_cast<MoveType>(m & (3 << 14)); }
 
-constexpr Piece promotion_type(Move m) { return Piece(((m >> 12) & 3) + P_wn); }
+constexpr Piece promotion_type(Move m) { return static_cast<Piece>(((m >> 12) & 3) + P_wn); }
 
 } // namespace FromSF
 

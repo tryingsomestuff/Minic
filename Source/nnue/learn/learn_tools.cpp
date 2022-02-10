@@ -180,7 +180,7 @@ Piece read_board_piece_from_stream(){
 	if ( pr == P_none ) return P_none;
 
 	const Color c = (Color)stream.read_one_bit();
-	return c == Co_White ? pr : Piece(-pr);
+	return c == Co_White ? pr : ~pr;
 }
 
 }; // SfenPacker
