@@ -188,9 +188,9 @@ const std::string MinicVersion = "3.18";
 #define PROMOTION_RANK(x)      (SQRANK(x) == 0 || SQRANK(x) == 7)
 #define PROMOTION_RANK_C(x, c) ((c == Co_Black && SQRANK(x) == 0) || (c == Co_White && SQRANK(x) == 7))
 #define MakeSquare(f, r)       static_cast<Square>(((r) << 3) + (f))
-#define VFlip(s)               ((s) ^ Sq_a8)
-#define HFlip(s)               ((s) ^ 7)
-#define MFlip(s)               ((s) ^ Sq_h8)
+#define VFlip(s)               static_cast<Square>((s) ^ Sq_a8)
+#define HFlip(s)               static_cast<Square>((s) ^ 7)
+#define MFlip(s)               static_cast<Square>((s) ^ Sq_h8)
 
 #define TO_STR2(x)                 #x
 #define TO_STR(x)                  TO_STR2(x)
@@ -603,7 +603,7 @@ template<class T> [[nodiscard]] inline constexpr const T& clamp(const T& v, cons
     return (v < lo) ? lo : (hi < v) ? hi : v;
 }
 
-[[nodiscard]] constexpr Square relative_square(Color c, Square s) { return Square(s ^ (c * 56)); }
+[[nodiscard]] constexpr Square relative_square(Color c, Square s) { return static_cast<Square>(s ^ (c * 56)); }
 
 template<Color C> [[nodiscard]] inline constexpr Square ColorSquarePstHelper(Square k) { return relative_square(~C, k); }
 

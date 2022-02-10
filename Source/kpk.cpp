@@ -16,14 +16,14 @@ namespace KPK {
 
 Square normalizeSquare(const Position& p, Color strongSide, Square sq) {
    assert(BB::countBit(p.pieces_const<P_wp>(strongSide)) == 1);                                                 // only for KPK !
-   if (SQFILE(BBTools::SquareFromBitBoard(p.pieces_const<P_wp>(strongSide))) >= File_e) sq = Square(HFlip(sq)); // we know there is at least one pawn
+   if (SQFILE(BBTools::SquareFromBitBoard(p.pieces_const<P_wp>(strongSide))) >= File_e) sq = HFlip(sq); // we know there is at least one pawn
    return strongSide == Co_White ? sq : VFlip(sq);
 }
 
 KPKPosition::KPKPosition(unsigned idx) { // first init
-   ksq[Co_White] = Square(idx & 0x3F);
-   ksq[Co_Black] = Square((idx >> 6) & 0x3F);
-   us            = Color((idx >> 12) & 0x01);
+   ksq[Co_White] = static_cast<Square>(idx & 0x3F);
+   ksq[Co_Black] = static_cast<Square>((idx >> 6) & 0x3F);
+   us            = static_cast<Color>((idx >> 12) & 0x01);
    psq           = MakeSquare(File((idx >> 13) & 0x3), Rank(6 - ((idx >> 15) & 0x7)));
    if (chebyshevDistance(ksq[Co_White], ksq[Co_Black]) <= 1 || ksq[Co_White] == psq || ksq[Co_Black] == psq ||
        (us == Co_White && (BBTools::mask[psq].pawnAttack[Co_White] & SquareToBitboard(ksq[Co_Black]))))

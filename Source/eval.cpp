@@ -50,7 +50,7 @@ template<Color C> inline void evalPawnPasser(const Position &p, BitBoard pieceBB
       const EvalScore kingNearBonus = EvalConfig::kingNearPassedPawnSupport[chebyshevDistance(p.king[C], k)][ColorRank<C>(k)] +
                                       EvalConfig::kingNearPassedPawnDefend[chebyshevDistance(p.king[~C], k)][ColorRank<~C>(k)];
       const bool unstoppable = (p.mat[~C][M_t] == 0) && ((chebyshevDistance(p.king[~C], PromotionSquare<C>(k)) - int(p.c != C)) >
-                                                         std::min(Square(5), chebyshevDistance(PromotionSquare<C>(k), k)));
+                                                         std::min(static_cast<Square>(5), chebyshevDistance(PromotionSquare<C>(k), k)));
       if (unstoppable)
          score += ColorSignHelper<C>() * (value(P_wr) - value(P_wp)); // yes rook not queen to force promotion asap
       else
