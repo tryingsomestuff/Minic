@@ -22,16 +22,30 @@ uint64_t callCounter[TM_Max]  = {0ull};
 
 const std::string TimerNames[TM_Max] = {"Total", "See",    "Apply",     "Eval1",    "Eval2",       "Eval3",      "Eval4",       "Eval5",
                                         "Eval",  "Attack", "MovePiece", "Generate", "PseudoLegal", "IsAttacked", "MoveScoring", "MoveSorting",
-                                        "ResetNNUE", "UpdateNNUE"};
-
-#define DisplayHelper(name)                                                                                                                          \
-   if (callCounter[name])                                                                                                                            \
-      std::cout << std::left << std::setw(15) << TimerNames[tm] << std::right << std::setw(15) << rdtscCounter[name] << "  " << std::right           \
-                << std::setw(15) << 100.f * rdtscCounter[name] / rdtscCounter[TM_Total] << "%  " << std::right << std::setw(15) << callCounter[name] \
-                << " " << std::right << std::setw(15) << rdtscCounter[name] / callCounter[name] << std::endl;
+                                        "ResetNNUE", "UpdateNNUE", "Sum"};
 
 void Display() {
-   for (TimerType tm = TM_Total; tm < TM_Max; ++tm) DisplayHelper(tm);
+   std::cout << std::left  << std::setw(15) << "Counter" 
+             << std::right << std::setw(15) << "total tick"
+             << std::right << std::setw(15) << "% of total"
+             << std::right << std::setw(15) << "calls"
+             << std::right << std::setw(15) << "tick per call" 
+             << std::endl;
+   for (TimerType tm = TM_Total; tm < TM_Max; ++tm){
+      if (callCounter[tm]){
+         const float percent =  100.f * rdtscCounter[tm] / rdtscCounter[TM_Total];
+         if( tm != TM_Total && tm != TM_Sum ){
+            rdtscCounter[TM_Sum] += rdtscCounter[tm];
+            callCounter[TM_Sum] += callCounter[tm];
+         }
+         std::cout << std::left  << std::setw(15) << TimerNames[tm] 
+                   << std::right << std::setw(15) << rdtscCounter[tm]
+                   << std::right << std::setw(15) << percent
+                   << std::right << std::setw(15) << callCounter[tm]
+                   << std::right << std::setw(15) << rdtscCounter[tm] / callCounter[tm] 
+                   << std::endl;
+      }
+   }
 }
 } // namespace Timers
 

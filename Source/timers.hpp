@@ -32,6 +32,7 @@ enum TimerType : uint8_t {
    TM_MoveSorting,
    TM_ResetNNUE,
    TM_UpdateNNUE,
+   TM_Sum,
    TM_Max
 };
 ENABLE_INCR_OPERATORS_ON(TimerType)
