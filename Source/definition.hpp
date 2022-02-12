@@ -449,13 +449,13 @@ const Square correctedDestSq[T_bqs+1] = { INVALIDSQUARE, INVALIDSQUARE, INVALIDS
                                           INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE,
                                           Sq_g1, Sq_c1, Sq_g8, Sq_c8};
 
-[[nodiscard]] inline constexpr bool isValidMoveType(MType m)      { return m <= T_bqs; }
-[[nodiscard]] inline constexpr bool isValidSquare(Square s)       { return s >= 0 && s < NbSquare; }
-[[nodiscard]] inline constexpr bool isValidPiece(Piece pp)        { return pp >= P_bk && pp <= P_wk; }
-[[nodiscard]] inline constexpr bool isValidPieceNotNone(Piece pp) { return isValidPiece(pp) && pp != P_none; }
-[[nodiscard]] inline constexpr bool isNotEmpty(BitBoard bb)       { return bb != emptyBitBoard; }
+[[nodiscard]] inline constexpr bool isValidMoveType(const MType m)      { return m <= T_bqs; }
+[[nodiscard]] inline constexpr bool isValidSquare(const Square s)       { return s >= 0 && s < NbSquare; }
+[[nodiscard]] inline constexpr bool isValidPiece(const Piece pp)        { return pp >= P_bk && pp <= P_wk; }
+[[nodiscard]] inline constexpr bool isValidPieceNotNone(const Piece pp) { return isValidPiece(pp) && pp != P_none; }
+[[nodiscard]] inline constexpr bool isNotEmpty(const BitBoard bb)       { return bb != emptyBitBoard; }
 
-[[nodiscard]] inline constexpr Piece promShift(MType mt) {
+[[nodiscard]] inline constexpr Piece promShift(const MType mt) {
    assert(mt >= T_promq);
    assert(mt <= T_cappromn);
    return static_cast<Piece>(P_wq - (mt % 4));
@@ -484,38 +484,38 @@ constexpr ScoreType MoveScoring[16] = {   0,                   // standard
    return skipMoves && std::find(skipMoves->begin(), skipMoves->end(), Move2MiniMove(a)) != skipMoves->end();
 }
 
-[[nodiscard]] inline constexpr ScoreType Move2Score(Move m) {
+[[nodiscard]] inline constexpr ScoreType Move2Score(const Move m) {
    assert(isValidMove(m));
    return static_cast<ScoreType>((m >> 16) & 0xFFFF);
 }
-[[nodiscard]] inline constexpr Square Move2From(Move m) {
+[[nodiscard]] inline constexpr Square Move2From(const Move m) {
    assert(isValidMove(m));
    return static_cast<Square>((m >> 10) & 0x3F);
 }
-[[nodiscard]] inline constexpr Square Move2To(Move m) {
+[[nodiscard]] inline constexpr Square Move2To(const Move m) {
    assert(isValidMove(m));
    return static_cast<Square>((m >> 4) & 0x3F);
 }
-[[nodiscard]] inline constexpr MType Move2Type(Move m) {
+[[nodiscard]] inline constexpr MType Move2Type(const Move m) {
    assert(isValidMove(m));
    return static_cast<MType>(m & 0xF);
 }
-[[nodiscard]] inline constexpr MiniMove ToMove(Square from, Square to, MType type) {
+[[nodiscard]] inline constexpr MiniMove ToMove(const Square from, const Square to, const MType type) {
    assert(isValidSquare(from));
    assert(isValidSquare(to));
    return static_cast<MiniMove>((from << 10) | (to << 4) | type);
 }
-[[nodiscard]] inline constexpr Move ToMove(Square from, Square to, MType type, ScoreType score) {
+[[nodiscard]] inline constexpr Move ToMove(const Square from, const Square to, const MType type, const ScoreType score) {
    assert(isValidSquare(from));
    assert(isValidSquare(to));
    return static_cast<Move>((score << 16) | (from << 10) | (to << 4) | type);
 }
 
-[[nodiscard]] inline constexpr ScoreType matingScore(DepthType in) { return static_cast<ScoreType>(MATE - in); }
-[[nodiscard]] inline constexpr ScoreType matedScore(DepthType in) { return static_cast<ScoreType>(-MATE + in); }
-[[nodiscard]] inline constexpr bool isMatingScore(ScoreType s) { return (s >= MATE - MAX_DEPTH); }
-[[nodiscard]] inline constexpr bool isMatedScore(ScoreType s) { return (s <= matedScore(MAX_DEPTH)); }
-[[nodiscard]] inline constexpr bool isMateScore(ScoreType s) { return (Abs(s) >= MATE - MAX_DEPTH); }
+[[nodiscard]] inline constexpr ScoreType matingScore(const DepthType in) { return static_cast<ScoreType>(MATE - in); }
+[[nodiscard]] inline constexpr ScoreType matedScore(const DepthType in) { return static_cast<ScoreType>(-MATE + in); }
+[[nodiscard]] inline constexpr bool isMatingScore(const ScoreType s) { return (s >= MATE - MAX_DEPTH); }
+[[nodiscard]] inline constexpr bool isMatedScore(const ScoreType s) { return (s <= matedScore(MAX_DEPTH)); }
+[[nodiscard]] inline constexpr bool isMateScore(const ScoreType s) { return (Abs(s) >= MATE - MAX_DEPTH); }
 
 [[nodiscard]] inline constexpr bool isPromotionStd(const MType mt) {
    assert(isValidMoveType(mt));
@@ -552,16 +552,16 @@ constexpr ScoreType MoveScoring[16] = {   0,                   // standard
 [[nodiscard]] inline constexpr bool      isBadCap(const Move m) { return Move2Score(m) < -MoveScoring[T_capture] + 800; }
 [[nodiscard]] inline constexpr ScoreType badCapScore(const Move m) { return Move2Score(m) + MoveScoring[T_capture]; }
 
-[[nodiscard]] inline constexpr Square chebyshevDistance(Square sq1, Square sq2) {
+[[nodiscard]] inline constexpr Square chebyshevDistance(const Square sq1, const Square sq2) {
    return std::max(Abs(static_cast<Square>(SQRANK(sq2) - SQRANK(sq1))), Abs(static_cast<Square>(SQFILE(sq2) - SQFILE(sq1))));
 }
-[[nodiscard]] inline constexpr Square manatthanDistance(Square sq1, Square sq2) {
+[[nodiscard]] inline constexpr Square manatthanDistance(const Square sq1, const Square sq2) {
    return Abs(static_cast<Square>(SQRANK(sq2) - SQRANK(sq1))) + Abs(static_cast<Square>(SQFILE(sq2) - SQFILE(sq1)));
 }
-[[nodiscard]] inline constexpr Square minDistance(Square sq1, Square sq2) {
+[[nodiscard]] inline constexpr Square minDistance(const Square sq1, const Square sq2) {
    return std::min(Abs(static_cast<Square>(SQRANK(sq2) - SQRANK(sq1))), Abs(static_cast<Square>(SQFILE(sq2) - SQFILE(sq1))));
 }
-[[nodiscard]] inline Square correctedMove2To(Move m) {
+[[nodiscard]] inline Square correctedMove2To(const Move m) {
    assert(isValidMove(m));
    return (!isCastling(m)) ? Move2To(m) : correctedDestSq[Move2Type(m)];
 }
@@ -585,12 +585,14 @@ inline void updatePV(PVList& pv, const Move& m, const PVList& childPV) {
 }
 
 template<typename T, int seed> [[nodiscard]] inline T randomInt(T m, T M) {
+   ///@todo this is slow because the static here implies a guard variable !!
    static std::mt19937 mt(seed); // fixed seed for ZHash for instance !!!
    static std::uniform_int_distribution<T> dist(m, M);
    return dist(mt);
 }
 
 template<typename T> [[nodiscard]] inline T randomInt(T m, T M) {
+   ///@todo this is slow because the static here implies a guard variable !!
    static std::random_device r;
    static std::seed_seq seed {r(), r(), r(), r(), r(), r(), r(), r()};
    static std::mt19937 mt(seed);
@@ -603,17 +605,17 @@ template<class T> [[nodiscard]] inline constexpr const T& clamp(const T& v, cons
     return (v < lo) ? lo : (hi < v) ? hi : v;
 }
 
-[[nodiscard]] constexpr Square relative_square(Color c, Square s) { return static_cast<Square>(s ^ (c * 56)); }
+[[nodiscard]] constexpr Square relative_square(const Color c, const Square s) { return static_cast<Square>(s ^ (c * 56)); }
 
-template<Color C> [[nodiscard]] inline constexpr Square ColorSquarePstHelper(Square k) { return relative_square(~C, k); }
+template<Color C> [[nodiscard]] inline constexpr Square ColorSquarePstHelper(const Square k) { return relative_square(~C, k); }
 
-[[nodiscard]] inline constexpr uint64_t powerFloor(uint64_t x) {
+[[nodiscard]] inline constexpr uint64_t powerFloor(const uint64_t x) {
    uint64_t power = 1;
    while (power <= x) power *= 2;
    return power / 2;
 }
 
-inline void* std_aligned_alloc(size_t alignment, size_t size) {
+inline void* std_aligned_alloc(const size_t alignment, const size_t size) {
 #ifdef __ANDROID__
   return malloc(size);
 #elif defined(__EMSCRIPTEN__)
@@ -645,7 +647,7 @@ inline void std_aligned_free(void* ptr) {
 #endif
 }
 
-inline std::string toHexString(uint32_t i) {
+inline std::string toHexString(const uint32_t i) {
   std::stringstream s;
   s << "0x" << std::hex << i;
   return s.str();

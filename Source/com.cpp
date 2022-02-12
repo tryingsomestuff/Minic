@@ -34,7 +34,7 @@ void newGame() {
    ThreadPool::instance().clearGame();
 }
 
-void init(Protocol pr) {
+void init(const Protocol pr) {
    Logging::LogIt(Logging::logInfo) << "Init COM";
    state = st_none;
    depth = -1;
@@ -61,7 +61,7 @@ void readLine() {
    if (!Distributed::isMainProcess()) { command = buffer; }
 }
 
-bool receiveMoves(Move move, Move ponderMove) {
+bool receiveMoves(const Move move, Move ponderMove) {
    Logging::LogIt(Logging::logInfo) << "...done returning move " << ToString(move) << " (state " << static_cast<int>(state) << ")";
    Logging::LogIt(Logging::logInfo) << "ponder move " << ToString(ponderMove);
 
@@ -119,7 +119,7 @@ bool receiveMoves(Move move, Move ponderMove) {
    return ret;
 }
 
-bool makeMove(Move m, bool disp, std::string tag, Move pMove) {
+bool makeMove(const Move m, const bool disp, const std::string & tag, const Move pMove) {
 #ifdef WITH_NNUE
    position.resetNNUEEvaluator(position.Evaluator());
 #endif
@@ -143,7 +143,7 @@ void stopPonder() {
 }
 
 // this is a non-blocking call (search wise)
-void thinkAsync(COM::State givenState) {
+void thinkAsync(const COM::State givenState) {
    std::lock_guard<std::mutex> lock(mutex); // cannot stop and start at the same time
    Logging::LogIt(Logging::logInfo) << "Thinking... (state was " << static_cast<int>(state) << " going for " << static_cast<int>(givenState) << ")";
    if (depth < 0) depth = MAX_DEPTH;

@@ -23,7 +23,7 @@ bool initTB();
 
 [[nodiscard]] int probe_root(Searcher &context, const Position &p, ScoreType &score, MoveList &rootMoves);
 
-[[nodiscard]] int probe_wdl(const Position &p, ScoreType &score, bool use50MoveRule);
+[[nodiscard]] int probe_wdl(const Position &p, ScoreType &score, const bool use50MoveRule);
 
 } // namespace SyzygyTb
 #endif

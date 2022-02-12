@@ -135,10 +135,10 @@ constexpr BitBoard (*const pfCoverage[])(const Square, const BitBoard, const Col
 //constexpr BitBoard(*const pfAttack[])  (const Square, const BitBoard, const BitBoard, const Color) = { &BBTools::attack<P_wp>,   &BBTools::attack<P_wn>,   &BBTools::attack<P_wb>,   &BBTools::attack<P_wr>,   &BBTools::attack<P_wq>,   &BBTools::attack<P_wk>   };
 
 // Convenient function to check is a square is under attack or not
-[[nodiscard]] bool isAttackedBB(const Position &p, const Square s, Color c);
+[[nodiscard]] bool isAttackedBB(const Position &p, const Square s, const Color c);
 
 // Convenient function to return the bitboard of all attacker of a specific square
-[[nodiscard]] BitBoard allAttackedBB(const Position &p, const Square s, Color c);
+[[nodiscard]] BitBoard allAttackedBB(const Position &p, const Square s, const Color c);
 [[nodiscard]] BitBoard allAttackedBB(const Position &p, const Square s);
 
 } // namespace BBTools

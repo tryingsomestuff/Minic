@@ -31,9 +31,9 @@ template<typename NT, bool Q> struct NNUEWeights {
    }
 
    static bool load(const std::string& path, NNUEWeights<NT, Q>& loadedWeights) {
-      static const uint32_t expectedVersion {0xc0ffee00};
-      static const int      expectedSize    {50378504}; // net size + 4 for version
-      static const bool     withVersion     {true}; // used for backward compatiblity and debug
+      constexpr uint32_t expectedVersion {0xc0ffee00};
+      constexpr int      expectedSize    {50378504}; // net size + 4 for version
+      constexpr bool     withVersion     {true}; // used for backward compatiblity and debug
 
       if (path != "embedded") { // read from disk
 #ifndef __ANDROID__

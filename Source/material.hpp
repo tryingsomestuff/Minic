@@ -72,6 +72,6 @@ void updateMaterialOther(Position &p);
 
 void initMaterial(Position &p);
 
-void updateMaterialProm(Position &p, const Square toBeCaptured, MType mt);
+void updateMaterialProm(Position &p, const Square toBeCaptured, const MType mt);
 
 } // namespace MaterialHash

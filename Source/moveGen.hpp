@@ -13,11 +13,11 @@ struct Searcher;
 
 void applyNull(Searcher& context, Position& pN);
 
-bool applyMove(Position& p, const Move& m, bool noValidation = false);
+bool applyMove(Position& p, const Move& m, const bool noValidation = false);
 
-[[nodiscard]] ScoreType randomMover(const Position& p, PVList& pv, bool isInCheck);
+[[nodiscard]] ScoreType randomMover(const Position& p, PVList& pv, const bool isInCheck);
 
-[[nodiscard]] bool isPseudoLegal(const Position& p, Move m);
+[[nodiscard]] bool isPseudoLegal(const Position& p, const Move m);
 
 namespace MoveGen {
 
@@ -25,7 +25,7 @@ enum GenPhase { GP_all = 0, GP_cap = 1, GP_quiet = 2, GP_evasion = 3 };
 
 void addMove(Square from, Square to, MType type, MoveList& moves);
 
-template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveList& moves, Square from) {
+template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveList& moves, const Square from) {
    assert(isValidSquare(from));
 #ifdef DEBUG_GENERATION
    if (from == INVALIDSQUARE) Logging::LogIt(Logging::logFatal) << "invalid square";
@@ -125,12 +125,11 @@ template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveLis
    }
    else {
       BitBoard              pawnmoves      = emptyBitBoard;
-      static const BitBoard rank1_or_rank8 = BB::rank1 | BB::rank8;
       if (phase != GP_quiet) pawnmoves = BBTools::mask[from].pawnAttack[p.c] & ~myPieceBB & oppPieceBB;
       if (phase == GP_evasion) pawnmoves &= attacker;
       while (pawnmoves) {
          const Square to = BB::popBit(pawnmoves);
-         if ((SquareToBitboard(to) & rank1_or_rank8) == emptyBitBoard) addMove(from, to, T_capture, moves);
+         if ((SquareToBitboard(to) & BB::rank1_or_rank8) == emptyBitBoard) addMove(from, to, T_capture, moves);
          else {
             addMove(from, to, T_cappromq, moves); // pawn capture with promotion
             addMove(from, to, T_cappromr, moves); // pawn capture with promotion
@@ -143,7 +142,7 @@ template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveLis
       if (phase == GP_evasion) pawnmoves &= sliderRay;
       while (pawnmoves) {
          const Square to = BB::popBit(pawnmoves);
-         if ((SquareToBitboard(to) & rank1_or_rank8) == emptyBitBoard) addMove(from, to, T_std, moves);
+         if ((SquareToBitboard(to) & BB::rank1_or_rank8) == emptyBitBoard) addMove(from, to, T_std, moves);
          else {
             addMove(from, to, T_promq, moves); // promotion Q
             addMove(from, to, T_promr, moves); // promotion R
@@ -157,7 +156,7 @@ template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveLis
    }
 }
 
-template<GenPhase phase = GP_all> void generate(const Position& p, MoveList& moves, bool doNotClear = false) {
+template<GenPhase phase = GP_all> void generate(const Position& p, MoveList& moves, const bool doNotClear = false) {
    START_TIMER
    if (!doNotClear) moves.clear();
    BitBoard myPieceBBiterator = p.allPieces[p.c];
@@ -190,9 +189,9 @@ template<GenPhase phase = GP_all> void generate(const Position& p, MoveList& mov
 
 } // namespace MoveGen
 
-void movePiece(Position& p, Square from, Square to, Piece fromP, Piece toP, bool isCapture = false, Piece prom = P_none);
+void movePiece(Position& p, const Square from, const Square to, const Piece fromP, const Piece toP, const bool isCapture = false, const Piece prom = P_none);
 
-template<Color c> inline void movePieceCastle(Position& p, CastlingTypes ct, Square kingDest, Square rookDest) {
+template<Color c> inline void movePieceCastle(Position& p, const CastlingTypes ct, const Square kingDest, const Square rookDest) {
    START_TIMER
    constexpr Piece          pk = c == Co_White ? P_wk  : P_bk;
    constexpr Piece          pr = c == Co_White ? P_wr  : P_br;

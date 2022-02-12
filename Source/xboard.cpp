@@ -78,7 +78,7 @@ bool receiveOppMove(const std::string& command) {
    return true;
 }
 
-void moveApplied(bool success) {
+void moveApplied(const bool success) {
    if (success) {
       // switch stm
       stm = opponent(stm);

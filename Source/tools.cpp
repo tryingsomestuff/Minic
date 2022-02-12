@@ -66,9 +66,9 @@ std::string ToString(const Move& m, bool withScore) {
          break;
       }
    }
-   static const std::string promSuffixe[] = {"", "", "", "", "q", "r", "b", "n", "q", "r", "b", "n", "", "", "", "",};
-   const std::string prom = promSuffixe[Move2Type(m)];
-   return SquareNames[Move2From(m)] + SquareNames[Move2To(m)] + prom + score;
+   constexpr std::string_view promSuffixe[] = {"", "", "", "", "q", "r", "b", "n", "q", "r", "b", "n", "", "", "", ""};
+   const std::string_view & prom = promSuffixe[Move2Type(m)];
+   return SquareNames[Move2From(m)] + SquareNames[Move2To(m)] + std::string(prom) + score;
 }
 
 std::string ToString(const PVList& moves) {

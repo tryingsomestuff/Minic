@@ -39,7 +39,8 @@ template < typename T >
    return ss.str();
 }
 
-template<typename F, typename... Arguments> void threadedWork(F&& worker, size_t nbthreads, uint64_t size, Arguments... args) {
+template<typename F, typename... Arguments> 
+void threadedWork(F&& worker, const size_t nbthreads, const uint64_t size, Arguments... args) {
    std::vector<std::thread> threads(nbthreads);
    const size_t grainsize = size / nbthreads;
    size_t       work_iter = 0;

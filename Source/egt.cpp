@@ -74,7 +74,7 @@ int probe_root(Searcher &context, const Position &p, ScoreType &score, MoveList 
    return TB_GET_DTZ(result);
 }
 
-int probe_wdl(const Position &p, ScoreType &score, bool use50MoveRule) {
+int probe_wdl(const Position &p, ScoreType &score, const bool use50MoveRule) {
    if (MAX_TB_MEN <= 0) return -1;
    score = 0;
    debug_king_cap(p);
