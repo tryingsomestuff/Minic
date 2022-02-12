@@ -1,0 +1,7 @@
+rm -rf iwyu
+mkdir iwyu
+cd iwyu
+CC="gcc" CXX="g++" cmake -DCMAKE_CXX_INCLUDE_WHAT_YOU_USE=include-what-you-use .. 
+make 2> iwyu.out
+fix_includes < iwyu.out
+
