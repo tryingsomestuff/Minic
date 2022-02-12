@@ -36,6 +36,13 @@ struct Searcher {
 
    Stats stats;
 
+   inline void updatePV(PVList& pv, const Move& m, const PVList& childPV) {
+      stats.incr(Stats::sid_PVupdate);
+      pv.clear();
+      pv.push_back(m);
+      std::copy(childPV.begin(), childPV.end(), std::back_inserter(pv));
+   }
+
    inline void displayStats() const {
       for (size_t k = 0; k < Stats::sid_maxid; ++k) {
          Logging::LogIt(Logging::logInfo) << Stats::Names[k] << " " << stats.counters[(Stats::StatId)k];
