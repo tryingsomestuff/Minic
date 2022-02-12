@@ -84,7 +84,7 @@ TimeType getNextMSecPerMove(const Position& p) {
          // remainings increment sum is computed
          // a margin will be used
          // WARNING using this late moves in current TC can be a little longer depending on the margin used
-         const int moveUntilNextTC = nbMoveInTC - ((p.moves - 1) % nbMoveInTC);
+         const int moveUntilNextTC = nbMoveInTC - ((p.moves - 1) % nbMoveInTC); // this modulus is a bit slow probably
          const TimeType remainingIncr = moveUntilNextTC * msecIncLoc;
          msecMargin = getMargin(msecUntilNextTC);
          ms = static_cast<TimeType>(static_cast<double>(msecUntilNextTC + remainingIncr - msecMargin) / static_cast<double>(moveUntilNextTC));
