@@ -358,7 +358,7 @@ bool isPseudoLegal(const Position& p, const Move m) { // validate TT move
    if (!isValidSquare(from)) PSEUDO_LEGAL_RETURN(false, -2)
    const Piece fromP = p.board_const(from);
    if (fromP == P_none || (fromP > 0 && p.c == Co_Black) || (fromP < 0 && p.c == Co_White)) PSEUDO_LEGAL_RETURN(false, 0)
-   const Square to = correctedMove2To(m);
+   const Square to = correctedMove2ToKingDest(m);
    if (!isValidSquare(to)) PSEUDO_LEGAL_RETURN(false, -3)
    const Piece toP = p.board_const(to);
    if ((toP > 0 && p.c == Co_White) || (toP < 0 && p.c == Co_Black)) PSEUDO_LEGAL_RETURN(false, 1)

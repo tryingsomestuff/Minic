@@ -34,6 +34,6 @@ struct ExtendedPosition : RootPosition {
    [[nodiscard]] std::string epdString() const;
 };
 
-[[nodiscard]] std::string showAlgAbr(Move m, const Position& p);
+[[nodiscard]] std::string showAlgAbr(const Move m, const Position& p);
 
 #endif

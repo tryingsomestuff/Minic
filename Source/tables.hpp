@@ -38,7 +38,7 @@ struct HistoryT {
          const Color  c    = p.c;
          const Square from = Move2From(m);
          assert(isValidSquare(from));
-         const Square to = correctedMove2To(m);
+         const Square to = correctedMove2ToKingDest(m);
          assert(isValidSquare(to));
          const ScoreType s  = S * HSCORE(depth);
          const Piece     pp = p.board_const(from);
@@ -57,7 +57,7 @@ struct HistoryT {
       if (isCapture(m)) {
          const Square from = Move2From(m);
          assert(isValidSquare(from));
-         const Square to = correctedMove2To(m);
+         const Square to = correctedMove2ToKingDest(m);
          assert(isValidSquare(to));
          const Piece pf = p.board_const(from);
          const Piece pt = p.board_const(to);

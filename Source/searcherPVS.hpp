@@ -83,10 +83,12 @@ inline void evalDanger(const Position & p,
 
 #pragma GCC diagnostic pop
 
+// this function shall be used on the initial position state before move is applied
 [[nodiscard]] inline bool isNoisy(const Position & p, const Move & m){
    if ( Move2Type(m) != T_std ) return true;
+   const Square from = Move2From(m);
    const Square to = Move2To(m);
-   const Piece pp = p.board_const(to);
+   const Piece pp = p.board_const(from);
    if (pp == P_wp){
       const BitBoard pAtt = p.c == Co_White ? BBTools::pawnAttacks<Co_White>(SquareToBitboard(to)) & p.allPieces[~p.c]:
                                               BBTools::pawnAttacks<Co_Black>(SquareToBitboard(to)) & p.allPieces[~p.c];
@@ -562,7 +564,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             if (EXTENDMORE(extension) && DynamicConfig::useNNUE && height > 1 && isValidMove(stack[p.halfmoves].threat) &&
                 isValidMove(stack[p.halfmoves - 2].threat) &&
                 (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) ||
-                 (correctedMove2To(stack[p.halfmoves].threat) == correctedMove2To(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat))))
+                 (correctedMove2ToKingDest(stack[p.halfmoves].threat) == correctedMove2ToKingDest(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat))))
                stats.incr(Stats::sid_BMExtension), ++extension;
             // mate threat extension (from null move)
             //if (EXTENDMORE(extension) && mateThreat) stats.incr(Stats::sid_mateThreatExtension),++extension;
@@ -736,7 +738,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          // castling extension
          //if (EXTENDMORE(extension) && isCastling(*it) ) stats.incr(Stats::sid_castlingExtension),++extension;
          // Botvinnik-Markoff Extension
-         //if (EXTENDMORE(extension) && height > 1 && stack[p.halfmoves].threat != INVALIDMOVE && stack[p.halfmoves - 2].threat != INVALIDMOVE && (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) || (correctedMove2To(stack[p.halfmoves].threat) == correctedMove2To(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat)))) stats.incr(Stats::sid_BMExtension), ++extension;
+         //if (EXTENDMORE(extension) && height > 1 && stack[p.halfmoves].threat != INVALIDMOVE && stack[p.halfmoves - 2].threat != INVALIDMOVE && (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) || (correctedMove2ToKingDest(stack[p.halfmoves].threat) == correctedMove2ToKingDest(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat)))) stats.incr(Stats::sid_BMExtension), ++extension;
          // mate threat extension (from null move)
          //if (EXTENDMORE(extension) && mateThreat && depth <= 4) stats.incr(Stats::sid_mateThreatExtension),++extension;
          // simple recapture extension
