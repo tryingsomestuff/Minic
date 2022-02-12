@@ -175,7 +175,7 @@ template<GenPhase phase = GP_all> void generate(const Position& p, MoveList& mov
       bool foundEP = false;
       MoveList eps;
       for(auto & m : moves){
-         if ( Move2To(m) == T_ep ){
+         if ( Move2Type(m) == T_ep ){
             foundEP = true;
             eps.push_back(m);
          }
