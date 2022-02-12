@@ -10,6 +10,7 @@
 #include <climits>
 #include <cmath>
 #include <condition_variable>
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
@@ -22,6 +23,7 @@
 #include <map>
 #include <mutex>
 #include <random>
+#include <regex>
 #include <set>
 #include <sstream>
 #include <string>
