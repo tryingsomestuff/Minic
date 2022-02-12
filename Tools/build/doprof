@@ -23,7 +23,7 @@ if [ $FATHOM_PRESENT = "1" ]; then
    OPT="$OPT $dir/Fathom/src/$lib -I$dir/Fathom/src"
 fi
 
-g++ $STANDARDSOURCE -ISource -ISource/nnue $OPT -lpthread -DDEBUG_TOOL -o minic.prof
+$CXX $STANDARDSOURCE -ISource -ISource/nnue $OPT -lpthread -DDEBUG_TOOL -o minic.prof
 ./minic.prof -analyze "shirov" 25 -minOutputLevel 0
 #./minic.prof -evalSpeed Book_and_Test/Tuning/lichess-new-labeled.epd
 #./minic.prof -perft "start" 7 -book 0 -minOutputLevel 0

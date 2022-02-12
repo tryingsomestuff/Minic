@@ -21,7 +21,7 @@ if [ $FATHOM_PRESENT = "1" ]; then
    OPT="$OPT $dir/Fathom/src/$lib -I$dir/Fathom/src"
 fi
 
-g++ -g -std=c++17 $STANDARDSOURCE $NNUESOURCE -ISource -ISource/nnue $OPT -lpthread -ldl -DDEBUG_TOOL -o minic.valgrind
+$CXX -g -std=c++17 $STANDARDSOURCE $NNUESOURCE -ISource -ISource/nnue $OPT -lpthread -ldl -DDEBUG_TOOL -o minic.valgrind
 echo "Let's go"
 #valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all ./minic.valgrind -analyze "shirov" 10
 #valgrind --tool=exp-sgcheck ./minic.valgrind -analyze "shirov" 10

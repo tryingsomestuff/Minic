@@ -26,7 +26,7 @@ fi
 rm -f *.gcno
 rm -f *.gcda
 
-g++ $STANDARDSOURCE -ISource -ISource/nnue $OPT -lpthread -DDEBUG_TOOL -o minic.cov
+$CXX $STANDARDSOURCE -ISource -ISource/nnue $OPT -lpthread -DDEBUG_TOOL -o minic.cov
 
 ./minic.cov -analyze "shirov" 25 -minOutputLevel 0
 ./minic.cov -perft "start" 6 -minOutputLevel 0
