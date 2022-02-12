@@ -16,94 +16,22 @@ struct Position;
 // I need to handle SF move encoding in the binary format ...
 // So here is some SF extracted Move usage things
 namespace FromSF {
-namespace Algo {
-// Fisher-Yates
-template<typename Rng, typename T> inline void shuffle(std::vector<T>& buf, Rng&& prng) {
-   const auto size = buf.size();
-   for (uint64_t i = 0; i < size; ++i) std::swap(buf[i], buf[prng.rand(size - i) + i]);
-}
-} // namespace Algo
-
-inline uint64_t string_hash(const std::string& str) {
-   uint64_t h = 525201411107845655ull;
-
-   for (auto c : str) {
-      h ^= static_cast<uint64_t>(c);
-      h *= 0x5bd1e9955bd1e995ull;
-      h ^= h >> 47;
-   }
-
-   return h;
-}
-
-/// xorshift64star Pseudo-Random Number Generator
-/// This class is based on original code written and dedicated
-/// to the public domain by Sebastiano Vigna (2014).
-/// It has the following characteristics:
-///
-///  -  Outputs 64-bit numbers
-///  -  Passes Dieharder and SmallCrush test batteries
-///  -  Does not require warm-up, no zeroland to escape
-///  -  Internal state is a single 64-bit integer
-///  -  Period is 2^64 - 1
-///  -  Speed: 1.60 ns/call (Core i7 @3.40GHz)
-///
-/// For further analysis see
-///   <http://vigna.di.unimi.it/ftp/papers/xorshift.pdf>
-class PRNG {
-   uint64_t s;
-
-   uint64_t rand64() {
-      s ^= s >> 12, s ^= s << 25, s ^= s >> 27;
-      return s * 2685821657736338717LL;
-   }
-
-  public:
-   PRNG() { set_seed_from_time(); }
-   PRNG(uint64_t seed): s(seed) { assert(seed); }
-   PRNG(const std::string& seed) { set_seed(seed); }
-
-   template<typename T> T rand() { return T(rand64()); }
-
-   /// Special generator used to fast init magic numbers.
-   /// Output values only have 1/8th of their bits set on average.
-   template<typename T> T sparse_rand() { return T(rand64() & rand64() & rand64()); }
-   // Returns a random number from 0 to n-1. (Not uniform distribution, but this is enough in reality)
-   uint64_t rand(uint64_t n) { return rand<uint64_t>() % n; }
-
-   // Return the random seed used internally.
-   uint64_t get_seed() const { return s; }
-
-   void set_seed(uint64_t seed) { s = seed; }
-
-   void set_seed_from_time() { set_seed(std::chrono::system_clock::now().time_since_epoch().count()); }
-
-   void set_seed(const std::string& str) {
-      if (str.empty()) { set_seed_from_time(); }
-      else if (std::all_of(str.begin(), str.end(), [](char c) { return std::isdigit(c); })) {
-         set_seed(std::stoull(str));
-      }
-      else {
-         set_seed(string_hash(str));
-      }
-   }
-};
 
 enum MoveType { NORMAL, PROMOTION = 1 << 14, ENPASSANT = 2 << 14, CASTLING = 3 << 14 };
 
-template<MoveType T> constexpr MiniMove MakeMove(Square from, Square to, Piece prom = P_wn) {
+template<MoveType T> constexpr MiniMove MakeMove(const Square from, const Square to, const Piece prom = P_wn) {
    return static_cast<MiniMove>(T + ((prom - P_wn) << 12) + (from << 6) + to);
 }
 
-constexpr MiniMove MakeMoveStd(Square from, Square to) { return static_cast<MiniMove>((from << 6) + to); }
+constexpr MiniMove MakeMoveStd(const Square from, const Square to) { return static_cast<MiniMove>((from << 6) + to); }
 
-constexpr Square from_sq(Move m) { return static_cast<Square>((m >> 6) & 0x3F); }
+constexpr Square from_sq(const Move m) { return static_cast<Square>((m >> 6) & 0x3F); }
 
-constexpr Square to_sq(Move m) { return static_cast<Square>(m & 0x3F); }
+constexpr Square to_sq(const Move m) { return static_cast<Square>(m & 0x3F); }
 
-constexpr MoveType type_of(Move m) { return static_cast<MoveType>(m & (3 << 14)); }
+constexpr MoveType type_of(const Move m) { return static_cast<MoveType>(m & (3 << 14)); }
 
-constexpr Piece promotion_type(Move m) { return static_cast<Piece>(((m >> 12) & 3) + P_wn); }
+constexpr Piece promotion_type(const Move m) { return static_cast<Piece>(((m >> 12) & 3) + P_wn); }
 
 } // namespace FromSF
 
@@ -142,8 +70,8 @@ void sfen_pack(const Position& p, PackedSfen& sfen);
 
 int set_from_packed_sfen(Position& p, PackedSfen& sfen);
 
-MiniMove ToSFMove(const Position& p, Square from, Square to, MType type);
+MiniMove ToSFMove(const Position& p, const Square from, const Square to, const MType type);
 
-MiniMove FromSFMove(const Position& p, MiniMove sfmove);
+MiniMove FromSFMove(const Position& p, const MiniMove sfmove);
 
 #endif // WITH_DATA2BIN

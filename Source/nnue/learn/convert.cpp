@@ -1,12 +1,3 @@
-#include <algorithm>
-#include <cstring>
-#include <fstream>
-#include <iostream>
-#include <regex>
-#include <sstream>
-#include <string>
-#include <vector>
-
 #include "com.hpp"
 #include "definition.hpp"
 #include "learn_tools.hpp"
@@ -24,6 +15,7 @@
 // Tools for handling various learning data format
 
 namespace {
+
 int parse_game_result_from_pgn_extract(std::string result) {
    // White Win
    if (result == "\"1-0\"") { return 1; }
@@ -72,21 +64,42 @@ ScoreType parse_score_from_pgn_extract(std::string eval, bool& success) {
    }
 }
 
-} // namespace
+inline void ltrim(std::string& s) {
+   s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !std::isspace(ch); }));
+}
 
-bool convert_bin(const std::vector<std::string>& filenames,
-                 const std::string&              output_file_name,
-                 const int                       ply_minimum,
-                 const int                       ply_maximum,
-                 const int                       interpolate_eval) {
+inline void rtrim(std::string& s) {
+   s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) { return !std::isspace(ch); }).base(), s.end());
+}
+
+inline void trim(std::string& s) {
+   ltrim(s);
+   rtrim(s);
+}
+
+inline bool is_like_fen(std::string fen) {
+   auto count_space = std::count(fen.cbegin(), fen.cend(), ' ');
+   auto count_slash = std::count(fen.cbegin(), fen.cend(), '/');
+   return count_space == 5 && count_slash == 7;
+}
+
+} // anonymous namespace
+
+bool convert_plain_to_bin(const std::vector<std::string>& filenames,
+                          const std::string&              output_file_name,
+                          const int                       ply_minimum,
+                          const int                       ply_maximum) {
+
    std::fstream fs;
    uint64_t     data_size          = 0;
    uint64_t     filtered_size      = 0;
    uint64_t     filtered_size_fen  = 0;
    uint64_t     filtered_size_move = 0;
    uint64_t     filtered_size_ply  = 0;
+
    // convert plain to bin
    fs.open(output_file_name, std::ios::app | std::ios::binary);
+
    for (auto filename : filenames) {
       std::cout << "converting " << filename << " from plain to binary format... " << std::endl;
       std::string   line;
@@ -175,13 +188,11 @@ bool convert_bin(const std::vector<std::string>& filenames,
                filtered_size_ply++;
             }
             p.gamePly = uint16_t(temp); // No cast here?
-            if (interpolate_eval != 0) { p.score = std::min(3000, interpolate_eval * temp); }
          }
          else if (token == "result") {
             int temp;
             ss >> temp;
             p.game_result = int8_t(temp); // Do you need a cast here?
-            if (interpolate_eval) { p.score = p.score * p.game_result; }
             scored = true;
          }
          else if (token == "e") {
@@ -213,28 +224,7 @@ bool convert_bin(const std::vector<std::string>& filenames,
    return true;
 }
 
-namespace {
-
-inline void ltrim(std::string& s) {
-   s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !std::isspace(ch); }));
-}
-
-inline void rtrim(std::string& s) {
-   s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) { return !std::isspace(ch); }).base(), s.end());
-}
-
-inline void trim(std::string& s) {
-   ltrim(s);
-   rtrim(s);
-}
-
-inline bool is_like_fen(std::string fen) {
-   auto count_space = std::count(fen.cbegin(), fen.cend(), ' ');
-   auto count_slash = std::count(fen.cbegin(), fen.cend(), '/');
-   return count_space == 5 && count_slash == 7;
-}
-} // namespace
-
+// First pgn must be converted using this command
 // pgn-extract --fencomments -Wlalg --nochecks --nomovenumbers --noresults -w500000 -N -V -o data.plain games.pgn
 bool convert_bin_from_pgn_extract(const std::vector<std::string>& filenames,
                                   const std::string&              output_file_name,
@@ -332,8 +322,7 @@ bool convert_bin_from_pgn_extract(const std::vector<std::string>& filenames,
                   Square from = INVALIDSQUARE;
                   Square to   = INVALIDSQUARE;
                   MType  type = T_std;
-                  bool   b    = readMove(pos, str_move, from, to, type);
-                  if (b) {
+                  if (readMove(pos, str_move, from, to, type)) {
                      psv.move = ToSFMove(pos, from, to, type); // use SF style move encoding
                   }
                }
@@ -419,7 +408,7 @@ bool convert_bin_from_pgn_extract(const std::vector<std::string>& filenames,
    return true;
 }
 
-bool convert_plain(const std::vector<std::string>& filenames, const std::string& output_file_name) {
+bool convert_bin_to_plain(const std::vector<std::string>& filenames, const std::string& output_file_name) {
    std::ofstream ofs;
    ofs.open(output_file_name, std::ios::app);
    for (auto filename : filenames) {
