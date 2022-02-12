@@ -299,8 +299,7 @@ ScoreType randomMover(const Position& p, PVList& pv, const bool isInCheck) {
       p2.associateEvaluator(evaluator);
 #endif
       if (!applyMove(p2, *it)) continue;
-      PVList childPV;
-      updatePV(pv, *it, childPV);
+      pv.push_back(*it); // updatePV
       const Square to = Move2To(*it);
       if (p.c == Co_White && to == p.king[Co_Black]) return matingScore(0);
       if (p.c == Co_Black && to == p.king[Co_White]) return matingScore(0);

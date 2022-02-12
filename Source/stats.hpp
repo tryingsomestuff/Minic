@@ -84,6 +84,7 @@ struct Stats {
       sid_evalNoKing,
       sid_evalStd,
       sid_evalNNUE,
+      sid_PVupdate,
       sid_maxid
    };
 

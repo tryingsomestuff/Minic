@@ -594,12 +594,6 @@ extern float variability;
 [[nodiscard]] inline float variabilityFactor() { return 2.f / (1.f + std::exp(1.f - MoveDifficultyUtil::variability)); } // inside [0.5 .. 2]
 } // namespace MoveDifficultyUtil
 
-inline void updatePV(PVList& pv, const Move& m, const PVList& childPV) {
-    pv.clear();
-    pv.push_back(m);
-    std::copy(childPV.begin(), childPV.end(), std::back_inserter(pv));
-}
-
 template<typename T, int seed> [[nodiscard]] inline T randomInt(T m, T M) {
    ///@todo this is slow because the static here implies a guard variable !!
    static std::mt19937 mt(seed); // fixed seed for ZHash for instance !!!
