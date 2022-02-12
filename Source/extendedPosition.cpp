@@ -19,10 +19,10 @@ namespace {
 uint64_t numberOf(const Position &p, Piece t) { return BB::countBit(p.pieces_const(t)); }
 } // namespace
 
-std::string showAlgAbr(Move m, const Position &p) {
-   Square from  = Move2From(m);
-   Square to    = Move2To(m);
-   MType  mtype = Move2Type(m);
+std::string showAlgAbr(const Move m, const Position &p) {
+   const Square from  = Move2From(m);
+   const Square to    = Move2To(m);
+   const MType  mtype = Move2Type(m);
    if (m == INVALIDMOVE) return "xx";
 
    bool     isCheck    = false;

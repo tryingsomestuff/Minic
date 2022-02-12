@@ -446,10 +446,17 @@ enum MType : uint8_t {
    T_bqs      = 15 // binary 1100 to 1111
 };
 
-const Square correctedDestSq[T_bqs+1] = { INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE,
-                                          INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE,
-                                          INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE,
-                                          Sq_g1, Sq_c1, Sq_g8, Sq_c8};
+// castling are encoded with to Square being initial rook position
+// this allows to change it to king destination square
+const Square correctedKingDestSq[T_bqs+1] = { INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE,
+                                              INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE,
+                                              INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE,
+                                              Sq_g1, Sq_c1, Sq_g8, Sq_c8};
+// this allows to change it to rook destination square
+const Square correctedRookDestSq[T_bqs+1] = { INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE,
+                                              INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE,
+                                              INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE,
+                                              Sq_f1, Sq_d1, Sq_f8, Sq_d8};
 
 [[nodiscard]] inline constexpr bool isValidMoveType(const MType m)      { return m <= T_bqs; }
 [[nodiscard]] inline constexpr bool isValidSquare(const Square s)       { return s >= 0 && s < NbSquare; }
@@ -563,10 +570,17 @@ constexpr ScoreType MoveScoring[16] = {   0,                   // standard
 [[nodiscard]] inline constexpr Square minDistance(const Square sq1, const Square sq2) {
    return std::min(Abs(static_cast<Square>(SQRANK(sq2) - SQRANK(sq1))), Abs(static_cast<Square>(SQFILE(sq2) - SQFILE(sq1))));
 }
-[[nodiscard]] inline Square correctedMove2To(const Move m) {
+
+[[nodiscard]] inline Square correctedMove2ToKingDest(const Move m) {
    assert(isValidMove(m));
-   return (!isCastling(m)) ? Move2To(m) : correctedDestSq[Move2Type(m)];
+   return (!isCastling(m)) ? Move2To(m) : correctedKingDestSq[Move2Type(m)];
 }
+
+[[nodiscard]] inline Square correctedMove2ToRookDest(const Move m) {
+   assert(isValidMove(m));
+   return (!isCastling(m)) ? Move2To(m) : correctedRookDestSq[Move2Type(m)];
+}
+
 namespace MoveDifficultyUtil {
     enum MoveDifficulty { MD_forced = 0, MD_easy, MD_std, MD_hardDefense, MD_hardAttack };
     const DepthType emergencyMinDepth         = 14;

@@ -147,7 +147,7 @@ struct Position {
    struct MoveInfo {
       MoveInfo(const Position& p, const Move m):
           from(Move2From(m)),
-          to(correctedMove2To(m)),
+          to(correctedMove2ToKingDest(m)),
           type(Move2Type(m)),
           fromP(p.board_const(from)),
           toP(p.board_const(to)),

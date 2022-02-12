@@ -30,7 +30,7 @@ void Searcher::getCMHPtr(const unsigned int ply, CMHPtrArray& cmhPtr) {
    for (unsigned int k = 0; k < MAX_CMH_PLY; ++k) {
       assert(ply - k < MAX_PLY && int(ply) - int(k) >= 0);
       if (ply > k && isValidMove(stack[ply - k].p.lastMove)) {
-         const Square to = correctedMove2To(stack[ply - k].p.lastMove);
+         const Square to = correctedMove2ToKingDest(stack[ply - k].p.lastMove);
          cmhPtr[k]       = historyT.counter_history[PieceIdx(stack[ply - k - 1].p.board_const(to))][to];
       }
    }
