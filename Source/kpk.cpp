@@ -14,13 +14,12 @@ inline unsigned    KPKindex(Color us, Square bksq, Square wksq, Square psq) {
 
 namespace KPK {
 
-Square normalizeSquare(const Position& p, Color strongSide, Square sq) {
-   assert(BB::countBit(p.pieces_const<P_wp>(strongSide)) == 1);                                                 // only for KPK !
-   if (SQFILE(BBTools::SquareFromBitBoard(p.pieces_const<P_wp>(strongSide))) >= File_e) sq = HFlip(sq); // we know there is at least one pawn
-   return strongSide == Co_White ? sq : VFlip(sq);
+Square normalizeSquare(const Position& p, const Color strongSide, const Square sq) {
+   assert(BB::countBit(p.pieces_const<P_wp>(strongSide)) == 1); // only for KPK !
+   return strongSide == Co_White ? (SQFILE(BBTools::SquareFromBitBoard(p.pieces_const<P_wp>(strongSide))) >= File_e ? HFlip(sq) : sq) : VFlip(sq);
 }
 
-KPKPosition::KPKPosition(unsigned idx) { // first init
+KPKPosition::KPKPosition(const unsigned idx) { // first init
    ksq[Co_White] = static_cast<Square>(idx & 0x3F);
    ksq[Co_Black] = static_cast<Square>((idx >> 6) & 0x3F);
    us            = static_cast<Color>((idx >> 12) & 0x01);
@@ -56,7 +55,7 @@ template<Color Us> kpk_result KPKPosition::preCompute(const std::vector<KPKPosit
    return result = r & good ? good : r & kpk_unknown ? kpk_unknown : bad;
 }
 
-bool probe(Square wksq, Square wpsq, Square bksq, Color us) {
+bool probe(Square wksq, const Square wpsq, const Square bksq, const Color us) {
    assert(isValidSquare(wksq));
    assert(isValidSquare(wpsq));
    assert(isValidSquare(bksq));

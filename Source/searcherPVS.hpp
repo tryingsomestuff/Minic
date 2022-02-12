@@ -100,7 +100,7 @@ inline void evalDanger(const Position & p,
 }
 
 inline void Searcher::timeCheck(){
-   static uint64_t periodicCheck = 0ull;
+   static uint64_t periodicCheck = 0ull; ///@todo this is slow because of guard variable
    if (periodicCheck == 0ull) {
       periodicCheck = (TimeMan::maxNodes > 0) ? std::min(TimeMan::maxNodes, PERIODICCHECK) : PERIODICCHECK;
       const Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);

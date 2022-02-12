@@ -9,5 +9,5 @@
 namespace UCI {
 void        init();
 void        uci();
-[[nodiscard]] std::string uciScore(ScoreType score, unsigned int ply);
+[[nodiscard]] const std::string uciScore(const ScoreType score, const unsigned int ply);
 } // namespace UCI

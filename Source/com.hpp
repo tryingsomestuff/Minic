@@ -21,19 +21,19 @@ extern RootPosition      position;
 extern DepthType         depth;
 extern std::vector<Move> moves;
 
-void init(Protocol pr);
+void init(const Protocol pr);
 
 void readLine();
 
-[[nodiscard]] bool makeMove(Move m, bool disp, std::string tag, Move ponder = INVALIDMOVE);
+[[nodiscard]] bool makeMove(const Move m, const bool disp, const std::string & tag, const Move ponder = INVALIDMOVE);
 
 void stop();
 
 void stopPonder();
 
-[[nodiscard]] bool receiveMoves(Move bestmove, Move pondermove);
+[[nodiscard]] bool receiveMoves(const Move bestmove, Move pondermove);
 
-void thinkAsync(State givenState);
+void thinkAsync(const State givenState);
 
 [[nodiscard]] Move moveFromCOM(std::string mstr);
 

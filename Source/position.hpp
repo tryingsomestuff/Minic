@@ -95,8 +95,8 @@ struct Position {
       return *root;
    }
 
-   [[nodiscard]] inline const Piece& board_const(Square k) const { return _b[k]; }
-   [[nodiscard]] inline Piece&       board      (Square k)       { return _b[k]; }
+   [[nodiscard]] inline const Piece& board_const(const Square k) const { return _b[k]; }
+   [[nodiscard]] inline Piece&       board      (const Square k)       { return _b[k]; }
 
    [[nodiscard]] inline BitBoard occupancy() const { return allPieces[Co_White] | allPieces[Co_Black]; }
 
@@ -126,26 +126,26 @@ struct Position {
    [[nodiscard]] inline BitBoard blackLightBishop() const { return blackBishop() & BB::whiteSquare; }
    [[nodiscard]] inline BitBoard blackDarkBishop()  const { return blackBishop() & BB::blackSquare; }
 
-   template<Piece pp> [[nodiscard]] inline BitBoard pieces_const(Color cc) const {
+   template<Piece pp> [[nodiscard]] inline BitBoard pieces_const(const Color cc) const {
       assert(pp != P_none);
       return _allB[pp - 1] & allPieces[cc];
    }
-   [[nodiscard]] inline BitBoard pieces_const(Color cc, Piece pp) const {
+   [[nodiscard]] inline BitBoard pieces_const(const Color cc, const Piece pp) const {
       assert(pp != P_none);
       return _allB[pp - 1] & allPieces[cc];
    }
-   [[nodiscard]] inline BitBoard pieces_const(Piece pp) const {
+   [[nodiscard]] inline BitBoard pieces_const(const Piece pp) const {
       assert(pp != P_none);
       return _allB[std::abs(pp) - 1] & allPieces[pp > 0 ? Co_White : Co_Black];
    }
    // next one is kinda "private"
-   [[nodiscard]] inline BitBoard& _pieces(Piece pp) {
+   [[nodiscard]] inline BitBoard& _pieces(const Piece pp) {
       assert(pp != P_none);
       return _allB[std::abs(pp) - 1];
    }
 
    struct MoveInfo {
-      MoveInfo(const Position& p, Move m):
+      MoveInfo(const Position& p, const Move m):
           from(Move2From(m)),
           to(correctedMove2To(m)),
           type(Move2Type(m)),
@@ -183,11 +183,11 @@ struct Position {
    // Vastly taken from Seer implementation.
    // see https://github.com/connormcmonigle/seer-nnue
 
-   [[nodiscard]] static inline constexpr size_t NNUEIndiceUs(Square ksq, Square s, Piece p) {
+   [[nodiscard]] static inline constexpr size_t NNUEIndiceUs(const Square ksq, const Square s, const Piece p) {
       return FeatureIdx::major * HFlip(ksq) + HFlip(s) + FeatureIdx::usOffset(p);
    }
 
-   [[nodiscard]] static inline constexpr size_t NNUEIndiceThem(Square ksq, Square s, Piece p) {
+   [[nodiscard]] static inline constexpr size_t NNUEIndiceThem(const Square ksq, const Square s, const Piece p) {
       return FeatureIdx::major * HFlip(ksq) + HFlip(s) + FeatureIdx::themOffset(p);
    }
 

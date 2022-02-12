@@ -188,7 +188,7 @@ const BitBoard rookMagics[] = {
     0x2000804026001102, 0x2000804026001102, 0x800040a010040901, 0x80001802002c0422, 0x0010b018200c0122, 0x200204802a080401, 0x8880604201100844, 0x80000cc281092402
 };
 
-BitBoard computeAttacks(int index, BitBoard occ, int delta) {
+BitBoard computeAttacks(const int index, const BitBoard occ, const int delta) {
    BitBoard attacks = emptyBitBoard, blocked = emptyBitBoard;
    for (int shift = index + delta; ISNEIGHBOUR(shift, shift - delta); shift += delta) {
       if (!blocked) attacks |= SquareToBitboard(shift);
@@ -197,7 +197,7 @@ BitBoard computeAttacks(int index, BitBoard occ, int delta) {
    return attacks;
 }
 
-BitBoard occupiedFromIndex(int j, BitBoard mask) {
+BitBoard occupiedFromIndex(const int j, BitBoard mask) {
    BitBoard occ = emptyBitBoard;
    int      i   = 0;
    while (mask) {
@@ -239,7 +239,7 @@ void initMagic() {
 
 #endif // MAGIC
 
-bool isAttackedBB(const Position &p, const Square s, Color c) { ///@todo try to optimize order better ?
+bool isAttackedBB(const Position &p, const Square s, const Color c) { ///@todo try to optimize order better ?
    assert(isValidSquare(s));
    const BitBoard occupancy = p.occupancy();
    if (c == Co_White)
@@ -250,7 +250,7 @@ bool isAttackedBB(const Position &p, const Square s, Color c) { ///@todo try to 
              attack<P_wp>(s, p.whitePawn(), occupancy, Co_Black) || attack<P_wn>(s, p.whiteKnight()) || attack<P_wk>(s, p.whiteKing());
 }
 
-BitBoard allAttackedBB(const Position &p, const Square s, Color c) {
+BitBoard allAttackedBB(const Position &p, const Square s, const Color c) {
    assert(isValidSquare(s));
    const BitBoard occupancy = p.occupancy();
    if (c == Co_White)

@@ -10,7 +10,7 @@ struct Position;
  */
 namespace KPK {
 
-[[nodiscard]] Square normalizeSquare(const Position& p, Color strongSide, Square sq);
+[[nodiscard]] Square normalizeSquare(const Position& p, const Color strongSide, const Square sq);
 
 enum kpk_result : uint8_t { kpk_invalid = 0, kpk_unknown = 1, kpk_draw = 2, kpk_win = 4 };
 inline constexpr kpk_result& operator|=(kpk_result& r, kpk_result v) { return r = kpk_result(r | v); }
@@ -18,7 +18,7 @@ inline constexpr kpk_result& operator|=(kpk_result& r, kpk_result v) { return r 
 #pragma pack(push, 1)
 struct KPKPosition {
    KPKPosition() = default;
-   explicit KPKPosition(unsigned idx);
+   explicit KPKPosition(const unsigned idx);
    inline operator kpk_result() const { return result; }
    [[nodiscard]] inline kpk_result preCompute(const std::vector<KPKPosition>& db);
    template<Color Us> [[nodiscard]] kpk_result preCompute(const std::vector<KPKPosition>& db);
@@ -28,7 +28,7 @@ struct KPKPosition {
 };
 #pragma pack(pop)
 
-[[nodiscard]] bool probe(Square wksq, Square wpsq, Square bksq, Color us);
+[[nodiscard]] bool probe(const Square wksq, const Square wpsq, const Square bksq, const Color us);
 
 void init();
 

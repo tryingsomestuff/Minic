@@ -81,48 +81,48 @@ enum BBSq : BitBoard { BBSq_a1 = SquareToBitboard(Sq_a1),BBSq_b1 = SquareToBitbo
                        BBSq_a7 = SquareToBitboard(Sq_a7),BBSq_b7 = SquareToBitboard(Sq_b7),BBSq_c7 = SquareToBitboard(Sq_c7),BBSq_d7 = SquareToBitboard(Sq_d7),BBSq_e7 = SquareToBitboard(Sq_e7),BBSq_f7 = SquareToBitboard(Sq_f7),BBSq_g7 = SquareToBitboard(Sq_g7),BBSq_h7 = SquareToBitboard(Sq_h7),
                        BBSq_a8 = SquareToBitboard(Sq_a8),BBSq_b8 = SquareToBitboard(Sq_b8),BBSq_c8 = SquareToBitboard(Sq_c8),BBSq_d8 = SquareToBitboard(Sq_d8),BBSq_e8 = SquareToBitboard(Sq_e8),BBSq_f8 = SquareToBitboard(Sq_f8),BBSq_g8 = SquareToBitboard(Sq_g8),BBSq_h8 = SquareToBitboard(Sq_h8)};
 
-const BitBoard whiteSquare = 0x55AA55AA55AA55AA;
-const BitBoard blackSquare = 0xAA55AA55AA55AA55;
-//const BitBoard whiteSideSquare = 0x00000000FFFFFFFF; 
-//const BitBoard blackSideSquare = 0xFFFFFFFF00000000;
-const BitBoard fileA    = 0x0101010101010101;
-const BitBoard fileB    = 0x0202020202020202;
-const BitBoard fileC    = 0x0404040404040404;
-const BitBoard fileD    = 0x0808080808080808;
-const BitBoard fileE    = 0x1010101010101010;
-const BitBoard fileF    = 0x2020202020202020;
-const BitBoard fileG    = 0x4040404040404040;
-const BitBoard fileH    = 0x8080808080808080;
-const BitBoard files[8] = {fileA, fileB, fileC, fileD, fileE, fileF, fileG, fileH};
-const BitBoard rank1    = 0x00000000000000ff;
-const BitBoard rank2    = 0x000000000000ff00;
-const BitBoard rank3    = 0x0000000000ff0000;
-const BitBoard rank4    = 0x00000000ff000000;
-const BitBoard rank5    = 0x000000ff00000000;
-const BitBoard rank6    = 0x0000ff0000000000;
-const BitBoard rank7    = 0x00ff000000000000;
-const BitBoard rank8    = 0xff00000000000000;
-const BitBoard ranks[8] = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
-//const BitBoard diagA1H8 = 0x8040201008040201;
-//const BitBoard diagA8H1 = 0x0102040810204080;
-//const BitBoard center = BBSq_d4 | BBSq_d5 | BBSq_e4 | BBSq_e5;
-const BitBoard advancedRanks = 0x0000ffffffff0000;
+constexpr BitBoard whiteSquare = 0x55AA55AA55AA55AA;
+constexpr BitBoard blackSquare = 0xAA55AA55AA55AA55;
+//constexpr BitBoard whiteSideSquare = 0x00000000FFFFFFFF; 
+//constexpr BitBoard blackSideSquare = 0xFFFFFFFF00000000;
+constexpr BitBoard fileA    = 0x0101010101010101;
+constexpr BitBoard fileB    = 0x0202020202020202;
+constexpr BitBoard fileC    = 0x0404040404040404;
+constexpr BitBoard fileD    = 0x0808080808080808;
+constexpr BitBoard fileE    = 0x1010101010101010;
+constexpr BitBoard fileF    = 0x2020202020202020;
+constexpr BitBoard fileG    = 0x4040404040404040;
+constexpr BitBoard fileH    = 0x8080808080808080;
+constexpr BitBoard files[8] = {fileA, fileB, fileC, fileD, fileE, fileF, fileG, fileH};
+constexpr BitBoard rank1    = 0x00000000000000ff;
+constexpr BitBoard rank2    = 0x000000000000ff00;
+constexpr BitBoard rank3    = 0x0000000000ff0000;
+constexpr BitBoard rank4    = 0x00000000ff000000;
+constexpr BitBoard rank5    = 0x000000ff00000000;
+constexpr BitBoard rank6    = 0x0000ff0000000000;
+constexpr BitBoard rank7    = 0x00ff000000000000;
+constexpr BitBoard rank8    = 0xff00000000000000;
+constexpr BitBoard ranks[8] = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+//constexpr BitBoard diagA1H8 = 0x8040201008040201;
+//constexpr BitBoard diagA8H1 = 0x0102040810204080;
+//constexpr BitBoard center = BBSq_d4 | BBSq_d5 | BBSq_e4 | BBSq_e5;
+constexpr BitBoard advancedRanks = 0x0000ffffffff0000;
+constexpr BitBoard rank1_or_rank8 = BB::rank1 | BB::rank8;
+constexpr BitBoard extendedCenter = BBSq_c3 | BBSq_c4 | BBSq_c5 | BBSq_c6 | 
+                                    BBSq_d3 | BBSq_d4 | BBSq_d5 | BBSq_d6 | 
+                                    BBSq_e3 | BBSq_e4 | BBSq_e5 | BBSq_e6 | 
+                                    BBSq_f3 | BBSq_f4 | BBSq_f5 | BBSq_f6;
 
-const BitBoard extendedCenter = BBSq_c3 | BBSq_c4 | BBSq_c5 | BBSq_c6 | 
-                                BBSq_d3 | BBSq_d4 | BBSq_d5 | BBSq_d6 | 
-                                BBSq_e3 | BBSq_e4 | BBSq_e5 | BBSq_e6 | 
-                                BBSq_f3 | BBSq_f4 | BBSq_f5 | BBSq_f6;
+constexpr BitBoard seventhRank[2] = {rank7, rank2};
 
-const BitBoard seventhRank[2] = {rank7, rank2};
+constexpr BitBoard holesZone[2] = {rank2 | rank3 | rank4 | rank5, rank4 | rank5 | rank6 | rank7};
+constexpr BitBoard queenSide    = fileA | fileB | fileC | fileD;
+constexpr BitBoard centerFiles  = fileC | fileD | fileE | fileF;
+constexpr BitBoard kingSide     = fileE | fileF | fileG | fileH;
+constexpr BitBoard kingFlank[8] = {queenSide ^ fileD, queenSide, queenSide, centerFiles, centerFiles, kingSide, kingSide, kingSide ^ fileE};
 
-const BitBoard holesZone[2] = {rank2 | rank3 | rank4 | rank5, rank4 | rank5 | rank6 | rank7};
-const BitBoard queenSide    = fileA | fileB | fileC | fileD;
-const BitBoard centerFiles  = fileC | fileD | fileE | fileF;
-const BitBoard kingSide     = fileE | fileF | fileG | fileH;
-const BitBoard kingFlank[8] = {queenSide ^ fileD, queenSide, queenSide, centerFiles, centerFiles, kingSide, kingSide, kingSide ^ fileE};
-
-inline void _setBit  (BitBoard& b, Square k) { b |= SquareToBitboard(k); }
-inline void _unSetBit(BitBoard& b, Square k) { b &= ~SquareToBitboard(k); }
+inline void _setBit  (BitBoard& b, const Square k) { b |= SquareToBitboard(k); }
+inline void _unSetBit(BitBoard& b, const Square k) { b &= ~SquareToBitboard(k); }
 
 [[nodiscard]] inline ScoreType countBit(const BitBoard& b) { return ScoreType(POPCOUNT(b)); }
 
@@ -139,7 +139,7 @@ inline void _unSetBit(BitBoard& b, Square k) { b &= ~SquareToBitboard(k); }
 }
 
 /*
-[[nodiscard]] constexpr bool moreThanOne(BitBoard b) {
+[[nodiscard]] constexpr bool moreThanOne(const BitBoard b) {
   return b & (b - 1);
 }
 */

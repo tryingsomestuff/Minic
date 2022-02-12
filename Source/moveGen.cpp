@@ -22,7 +22,7 @@ namespace {
 const bool _helperPawnHash[NbPiece] = {true, false, false, false, false, true, false, true, false, false, false, false, true};
 } // namespace
 
-void movePiece(Position& p, Square from, Square to, Piece fromP, Piece toP, bool isCapture, Piece prom) {
+void movePiece(Position& p, const Square from, const Square to, const Piece fromP, const Piece toP, const bool isCapture, const Piece prom) {
    assert(isValidSquare(from));
    assert(isValidSquare(to));
    assert(isValidPieceNotNone(fromP));
@@ -86,7 +86,7 @@ void applyNull(Searcher&, Position& pN) {
    STOP_AND_SUM_TIMER(Apply)
 }
 
-bool applyMove(Position& p, const Move& m, bool noValidation) {
+bool applyMove(Position& p, const Move& m, const bool noValidation) {
    assert(isValidMove(m));
    START_TIMER
 #ifdef DEBUG_MATERIAL
@@ -284,10 +284,11 @@ bool applyMove(Position& p, const Move& m, bool noValidation) {
    return true;
 }
 
-ScoreType randomMover(const Position& p, PVList& pv, bool isInCheck) {
+ScoreType randomMover(const Position& p, PVList& pv, const bool isInCheck) {
    MoveList moves;
    MoveGen::generate<MoveGen::GP_all>(p, moves, false);
    if (moves.empty()) return isInCheck ? matedScore(0) : 0;
+   ///@todo this is slow because the static here implies a guard variable !!
    static std::random_device rd;
    static std::mt19937       g(rd()); // here really random
    std::shuffle(moves.begin(), moves.end(), g);
@@ -334,9 +335,9 @@ bool isPseudoLegal(const Position& p, Move m) {
    return b;
 }
 
-bool isPseudoLegal2(const Position& p, Move m) { // validate TT move
+bool isPseudoLegal2(const Position& p, const Move m) { // validate TT move
 #else
-bool isPseudoLegal(const Position& p, Move m) { // validate TT move
+bool isPseudoLegal(const Position& p, const Move m) { // validate TT move
 #endif
 #ifdef DEBUG_PSEUDO_LEGAL
 #define PSEUDO_LEGAL_RETURN(b, r)                                \

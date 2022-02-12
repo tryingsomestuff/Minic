@@ -6,11 +6,11 @@
 struct Position;
 
 #ifdef DEBUG_EVALSYM
-[[nodiscard]] inline float fiftyMoveRuleScaling(DepthType ){ 
+[[nodiscard]] inline float fiftyMoveRuleScaling(const DepthType ){ 
    return 1;
 }
 #else
-[[nodiscard]] inline float fiftyMoveRuleScaling(DepthType fifty){ 
+[[nodiscard]] inline constexpr float fiftyMoveRuleScaling(const DepthType fifty){ 
    return 1 - fifty / 100.f;
 }
 #endif
@@ -19,13 +19,13 @@ struct Position;
 #ifndef WITH_EVALSCORE_AS_INT
 struct EvalScore {
    std::array<ScoreType, GP_MAX> sc = {0};
-   EvalScore(ScoreType mg, ScoreType eg): sc {mg, eg} {}
-   EvalScore(ScoreType s): sc {s, s} {}
+   EvalScore(const ScoreType mg, const ScoreType eg): sc {mg, eg} {}
+   EvalScore(const ScoreType s): sc {s, s} {}
    EvalScore(): sc {0, 0} {}
    EvalScore(const EvalScore& e): sc {e.sc[MG], e.sc[EG]} {}
 
-   inline ScoreType&       operator[](GamePhase g) { return sc[g]; }
-   inline const ScoreType& operator[](GamePhase g) const { return sc[g]; }
+   inline ScoreType&       operator[](const GamePhase g) { return sc[g]; }
+   inline const ScoreType& operator[](const GamePhase g) const { return sc[g]; }
 
    EvalScore& operator*=(const EvalScore& s) {
       for (GamePhase g = MG; g < GP_MAX; ++g) sc[g] *= s[g];
@@ -123,8 +123,8 @@ struct EvalScore {
 
 struct EvalScore {
    int sc = 0;
-   EvalScore(ScoreType mg, ScoreType eg): sc {MakeScore(mg, eg)} {}
-   EvalScore(ScoreType s): sc {MakeScore(s, s)} {}
+   EvalScore(const ScoreType mg, const ScoreType eg): sc {MakeScore(mg, eg)} {}
+   EvalScore(const ScoreType s): sc {MakeScore(s, s)} {}
    EvalScore(): sc {0} {}
    EvalScore(const EvalScore& s): sc {s.sc} {}
 
@@ -203,8 +203,8 @@ inline std::ostream & operator<<(std::ostream & of, const EvalFeatures & feature
 }
 */
 
-[[nodiscard]] inline ScoreType ScaleScore(EvalScore s, float gp, float scalingFactorEG = 1.f) {
-   return ScoreType(gp * s[MG] + (1.f - gp) * scalingFactorEG * s[EG]);
+[[nodiscard]] inline ScoreType ScaleScore(const EvalScore s, const float gp, const float scalingFactorEG = 1.f) {
+   return static_cast<ScoreType>(gp * s[MG] + (1.f - gp) * scalingFactorEG * s[EG]);
 }
 
 /* Evaluation is returning the score of course, but also fill this little structure to provide
@@ -251,7 +251,7 @@ constexpr double bs[] = {-10.78187987, 77.22626799, -132.72201029, 122.54185402}
    const double a = (((WDL::as[0] * m + WDL::as[1]) * m + WDL::as[2]) * m) + WDL::as[3];
    if (c == Co_White) return ScoreType(v - 2 * a);
    else
-      return ScoreType(v + 2 * a);
+      return static_cast<ScoreType>(v + 2 * a);
 }
 
 [[nodiscard]] inline double toWDLModel(const ScoreType v, const unsigned int ply) {
@@ -266,12 +266,12 @@ constexpr double bs[] = {-10.78187987, 77.22626799, -132.72201029, 122.54185402}
 }
 
 /*
-inline ScoreType fromWDLModel(double w, unsigned int ply) {
+inline ScoreType fromWDLModel(const double w, const unsigned int ply) {
     // limit input ply and rescale
     const double m = std::min(256u, ply) / 32.0;
     const double a = (((WDL::as[0] * m + WDL::as[1]) * m + WDL::as[2]) * m) + WDL::as[3];
     const double b = (((WDL::bs[0] * m + WDL::bs[1]) * m + WDL::bs[2]) * m) + WDL::bs[3];    
     const double s = a - b * std::log(1000./(std::max(w,std::numeric_limits<double>::epsilon())) - 1. + std::numeric_limits<double>::epsilon());
-    return ScoreType(std::clamp(s, static_cast<double>matedScore(ply) , static_cast<double>(matingScore(ply - 1)) );
+    return static_cast<ScoreType>(std::clamp(s, static_cast<double>matedScore(ply) , static_cast<double>(matingScore(ply - 1)) );
 }
 */

@@ -144,7 +144,7 @@ TimeType getNextMSecPerMove(const Position& p) {
    return targetTime;
 }
 
-void simulate(TCType tcType, TimeType initialTime, TimeType increment, int movesInTC, TimeType guiLag){
+void simulate(const TCType tcType, const TimeType initialTime, const TimeType increment, const int movesInTC, const TimeType guiLag){
 
    Logging::LogIt(Logging::logInfo) << "Start of TC simulation";
 

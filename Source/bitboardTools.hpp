@@ -11,16 +11,16 @@ namespace BBTools {
  * Most of them are taken from Topple chess engine by Vincent Tang (a.k.a Konsolas)
  */
 
-[[nodiscard]] inline constexpr BitBoard _shiftSouth    (BitBoard b) { return b >> 8; }
-[[nodiscard]] inline constexpr BitBoard _shiftNorth    (BitBoard b) { return b << 8; }
-[[nodiscard]] inline constexpr BitBoard _shiftWest     (BitBoard b) { return b >> 1 & ~BB::fileH; }
-[[nodiscard]] inline constexpr BitBoard _shiftEast     (BitBoard b) { return b << 1 & ~BB::fileA; }
-[[nodiscard]] inline constexpr BitBoard _shiftNorthEast(BitBoard b) { return b << 9 & ~BB::fileA; }
-[[nodiscard]] inline constexpr BitBoard _shiftNorthWest(BitBoard b) { return b << 7 & ~BB::fileH; }
-[[nodiscard]] inline constexpr BitBoard _shiftSouthEast(BitBoard b) { return b >> 7 & ~BB::fileA; }
-[[nodiscard]] inline constexpr BitBoard _shiftSouthWest(BitBoard b) { return b >> 9 & ~BB::fileH; }
+[[nodiscard]] inline constexpr BitBoard _shiftSouth    (const BitBoard b) { return b >> 8; }
+[[nodiscard]] inline constexpr BitBoard _shiftNorth    (const BitBoard b) { return b << 8; }
+[[nodiscard]] inline constexpr BitBoard _shiftWest     (const BitBoard b) { return b >> 1 & ~BB::fileH; }
+[[nodiscard]] inline constexpr BitBoard _shiftEast     (const BitBoard b) { return b << 1 & ~BB::fileA; }
+[[nodiscard]] inline constexpr BitBoard _shiftNorthEast(const BitBoard b) { return b << 9 & ~BB::fileA; }
+[[nodiscard]] inline constexpr BitBoard _shiftNorthWest(const BitBoard b) { return b << 7 & ~BB::fileH; }
+[[nodiscard]] inline constexpr BitBoard _shiftSouthEast(const BitBoard b) { return b >> 7 & ~BB::fileA; }
+[[nodiscard]] inline constexpr BitBoard _shiftSouthWest(const BitBoard b) { return b >> 9 & ~BB::fileH; }
 
-[[nodiscard]] inline constexpr BitBoard adjacent(BitBoard b) { return _shiftWest(b) | _shiftEast(b); }
+[[nodiscard]] inline constexpr BitBoard adjacent(const BitBoard b) { return _shiftWest(b) | _shiftEast(b); }
 
 template<Color C> [[nodiscard]] inline constexpr BitBoard shiftN(const BitBoard b) {
    return C == Co_White ? BBTools::_shiftNorth(b) : BBTools::_shiftSouth(b);
@@ -73,45 +73,45 @@ template<> [[nodiscard]] inline constexpr BitBoard fillForwardOccluded<Co_Black>
     return b;
 }
 
-template<Color C> [[nodiscard]] inline constexpr BitBoard frontSpan(BitBoard b) { return fillForward<C>(shiftN<C>(b)); }
-template<Color C> [[nodiscard]] inline constexpr BitBoard rearSpan(BitBoard b) { return frontSpan<~C>(b); }
-template<Color C> [[nodiscard]] inline constexpr BitBoard pawnSemiOpen(BitBoard own, BitBoard opp) { return own & ~frontSpan<~C>(opp); }
+template<Color C> [[nodiscard]] inline constexpr BitBoard frontSpan(const BitBoard b) { return fillForward<C>(shiftN<C>(b)); }
+template<Color C> [[nodiscard]] inline constexpr BitBoard rearSpan(const BitBoard b) { return frontSpan<~C>(b); }
+template<Color C> [[nodiscard]] inline constexpr BitBoard pawnSemiOpen(const BitBoard own, const BitBoard opp) { return own & ~frontSpan<~C>(opp); }
 
-[[nodiscard]] inline constexpr BitBoard fillFile(BitBoard b) { return fillForward<Co_White>(b) | fillForward<Co_Black>(b); }
-[[nodiscard]] inline constexpr BitBoard openFiles(BitBoard w, BitBoard b) { return ~fillFile(w) & ~fillFile(b); }
+[[nodiscard]] inline constexpr BitBoard fillFile(const BitBoard b) { return fillForward<Co_White>(b) | fillForward<Co_Black>(b); }
+[[nodiscard]] inline constexpr BitBoard openFiles(const BitBoard w, const BitBoard b) { return ~fillFile(w) & ~fillFile(b); }
 
-template<Color C> [[nodiscard]] inline constexpr BitBoard pawnAttacks(BitBoard b) { return shiftNW<C>(b) | shiftNE<C>(b); }
-template<Color C> [[nodiscard]] inline constexpr BitBoard pawnDoubleAttacks(BitBoard b) { return shiftNW<C>(b) & shiftNE<C>(b); }
-template<Color C> [[nodiscard]] inline constexpr BitBoard pawnSingleAttacks(BitBoard b) { return shiftNW<C>(b) ^ shiftNE<C>(b); }
+template<Color C> [[nodiscard]] inline constexpr BitBoard pawnAttacks(const BitBoard b) { return shiftNW<C>(b) | shiftNE<C>(b); }
+template<Color C> [[nodiscard]] inline constexpr BitBoard pawnDoubleAttacks(const BitBoard b) { return shiftNW<C>(b) & shiftNE<C>(b); }
+template<Color C> [[nodiscard]] inline constexpr BitBoard pawnSingleAttacks(const BitBoard b) { return shiftNW<C>(b) ^ shiftNE<C>(b); }
 
-template<Color C> [[nodiscard]] inline constexpr BitBoard pawnHoles(BitBoard b) { return ~fillForward<C>(pawnAttacks<C>(b)); }
-template<Color C> [[nodiscard]] inline constexpr BitBoard pawnDoubled(BitBoard b) { return frontSpan<C>(b) & b; }
+template<Color C> [[nodiscard]] inline constexpr BitBoard pawnHoles(const BitBoard b) { return ~fillForward<C>(pawnAttacks<C>(b)); }
+template<Color C> [[nodiscard]] inline constexpr BitBoard pawnDoubled(const BitBoard b) { return frontSpan<C>(b) & b; }
 
-[[nodiscard]] inline constexpr BitBoard pawnIsolated(BitBoard b) { return b & ~fillFile(_shiftEast(b)) & ~fillFile(_shiftWest(b)); }
+[[nodiscard]] inline constexpr BitBoard pawnIsolated(const BitBoard b) { return b & ~fillFile(_shiftEast(b)) & ~fillFile(_shiftWest(b)); }
 
-template<Color C> [[nodiscard]] inline constexpr BitBoard pawnBackward(BitBoard own, BitBoard opp) {
+template<Color C> [[nodiscard]] inline constexpr BitBoard pawnBackward(const BitBoard own, const BitBoard opp) {
    return shiftN<~C>((shiftN<C>(own) & ~opp) & ~fillForward<C>(pawnAttacks<C>(own)) & (pawnAttacks<~C>(opp)));
 }
 
-template<Color C> [[nodiscard]] inline constexpr BitBoard pawnForwardCoverage(BitBoard bb) { 
+template<Color C> [[nodiscard]] inline constexpr BitBoard pawnForwardCoverage(const BitBoard bb) { 
     const BitBoard spans = frontSpan<C>(bb); 
     return spans | _shiftEast(spans) | _shiftWest(spans);
 }
 
-template<Color C> [[nodiscard]] inline constexpr BitBoard pawnPassed(BitBoard own, BitBoard opp) { return own & ~pawnForwardCoverage<~C>(opp); }
+template<Color C> [[nodiscard]] inline constexpr BitBoard pawnPassed(const BitBoard own, const BitBoard opp) { return own & ~pawnForwardCoverage<~C>(opp); }
 
-template<Color C> [[nodiscard]] inline constexpr BitBoard pawnCandidates(BitBoard own, BitBoard opp) { 
+template<Color C> [[nodiscard]] inline constexpr BitBoard pawnCandidates(const BitBoard own, const BitBoard opp) { 
    return pawnSemiOpen<C>(own, opp) &
           shiftN<~C>((pawnSingleAttacks<C>(own) & pawnSingleAttacks<~C>(opp)) | (pawnDoubleAttacks<C>(own) & pawnDoubleAttacks<~C>(opp)));
 }
 
-template<Color C> [[nodiscard]] inline constexpr BitBoard pawnUndefendable(BitBoard own, BitBoard other) {
+template<Color C> [[nodiscard]] inline constexpr BitBoard pawnUndefendable(const BitBoard own, const BitBoard other) {
     return own & ~pawnAttacks<C>(fillForwardOccluded<C>(own, ~other)) & BB::advancedRanks;
 }
 
-[[nodiscard]] inline constexpr BitBoard pawnAlone(BitBoard b) { return b & ~(adjacent(b) | pawnAttacks<Co_White>(b) | pawnAttacks<Co_Black>(b)); }
+[[nodiscard]] inline constexpr BitBoard pawnAlone(const BitBoard b) { return b & ~(adjacent(b) | pawnAttacks<Co_White>(b) | pawnAttacks<Co_Black>(b)); }
 
-template<Color C> [[nodiscard]] inline constexpr BitBoard pawnDetached(BitBoard own, BitBoard other) {
+template<Color C> [[nodiscard]] inline constexpr BitBoard pawnDetached(const BitBoard own, const BitBoard other) {
     return pawnUndefendable<C>(own, other) & pawnAlone(own);
 }
 
@@ -120,15 +120,15 @@ template<Color C> [[nodiscard]] inline constexpr BitBoard pawnDetached(BitBoard 
 [[nodiscard]] Square SquareFromBitBoard(const BitBoard& b);
 
 // Position relative helpers
-inline void unSetBit(Position& p, Square k) {
+inline void unSetBit(Position& p, const Square k) {
    assert(isValidSquare(k));
    BB::_unSetBit(p._pieces(p.board_const(k)), k);
 }
-inline void unSetBit(Position& p, Square k, Piece pp) {
+inline void unSetBit(Position& p, const Square k, const Piece pp) {
    assert(isValidSquare(k));
    BB::_unSetBit(p._pieces(pp), k);
 }
-inline void setBit(Position& p, Square k, Piece pp) {
+inline void setBit(Position& p, const Square k, const Piece pp) {
    assert(isValidSquare(k));
    BB::_setBit(p._pieces(pp), k);
 }

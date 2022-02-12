@@ -50,7 +50,7 @@ void Searcher::displayGUI(DepthType          depth,
           << " nps " << static_cast<Counter>(static_cast<double>(nodeCount) / msec2sec(ms)) // nps
           << " seldepth " << static_cast<int>(seldepth) << " tbhits "
           << ThreadPool::instance().counter(Stats::sid_tbHit1) + ThreadPool::instance().counter(Stats::sid_tbHit2);
-      static auto lastHashFull = Clock::now();
+      static auto lastHashFull = Clock::now(); ///@todo slow here because of guard variable
       if (getTimeDiff(now,lastHashFull) > 500 &&
           getTimeDiff(now,startTime)*2 < ThreadPool::instance().main().getCurrentMoveMs()) {
          lastHashFull = now;
@@ -155,8 +155,8 @@ void Searcher::searchDriver(bool postMove) {
 
    // forced bongcloud
    if (DynamicConfig::bongCloud && (p.castling & (p.c == Co_White ? C_w_all : C_b_all)) ){
-      static const Move wbc[5] = { ToMove(Sq_e1,Sq_e2,T_std), ToMove(Sq_e1,Sq_d1,T_std), ToMove(Sq_e1,Sq_f1,T_std), ToMove(Sq_e1,Sq_d2,T_std), ToMove(Sq_e1,Sq_f2,T_std)};
-      static const Move bbc[5] = { ToMove(Sq_e8,Sq_e7,T_std), ToMove(Sq_e8,Sq_d8,T_std), ToMove(Sq_e8,Sq_f8,T_std), ToMove(Sq_e8,Sq_d7,T_std), ToMove(Sq_e8,Sq_f7,T_std)};
+      constexpr Move wbc[5] = { ToMove(Sq_e1,Sq_e2,T_std), ToMove(Sq_e1,Sq_d1,T_std), ToMove(Sq_e1,Sq_f1,T_std), ToMove(Sq_e1,Sq_d2,T_std), ToMove(Sq_e1,Sq_f2,T_std)};
+      constexpr Move bbc[5] = { ToMove(Sq_e8,Sq_e7,T_std), ToMove(Sq_e8,Sq_d8,T_std), ToMove(Sq_e8,Sq_f8,T_std), ToMove(Sq_e8,Sq_d7,T_std), ToMove(Sq_e8,Sq_f7,T_std)};
       MoveList moves;
       MoveGen::generate(p,moves);
       for (int i = 0 ; i < 5; ++i){

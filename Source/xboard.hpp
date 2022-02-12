@@ -11,5 +11,5 @@ extern bool display; ///@todo use it !
 void        init();
 void        xboard();
 
-void moveApplied(bool success);
+void moveApplied(const bool success);
 } // namespace XBoard

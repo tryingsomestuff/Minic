@@ -180,7 +180,6 @@ void Searcher::prefetchPawn(Hash h) {
 }
 
 std::atomic<bool> Searcher::startLock;
-const uint64_t    Searcher::ttSizePawn = 1024 * 16 * 8;
 
 Searcher& Searcher::getCoSearcher(size_t id) {
    static std::map<size_t, std::unique_ptr<Searcher>> coSearchers;

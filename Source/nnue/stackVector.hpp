@@ -8,7 +8,7 @@ template<typename T, size_t dim> struct StackVector {
    alignas(NNUEALIGNMENT) T data[dim];
 #ifdef DEBUG_NNUE_UPDATE
    bool operator==(const StackVector<T, dim>& other) {
-      static const T eps = std::numeric_limits<T>::epsilon() * 100;
+      constexpr T eps = std::numeric_limits<T>::epsilon() * 100;
       for (size_t i = 0; i < dim; ++i) {
          if (std::fabs(data[i] - other.data[i]) > eps) {
             std::cout << data[i] << "!=" << other.data[i] << std::endl;
@@ -19,7 +19,7 @@ template<typename T, size_t dim> struct StackVector {
    }
 
    bool operator!=(const StackVector<T, dim>& other) {
-      static const T eps = std::numeric_limits<T>::epsilon() * 100;
+      constexpr T eps = std::numeric_limits<T>::epsilon() * 100;
       for (size_t i = 0; i < dim; ++i) {
          if (std::fabs(data[i] - other.data[i]) > eps) {
             std::cout << data[i] << "!=" << other.data[i] << std::endl;
