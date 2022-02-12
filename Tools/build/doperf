@@ -16,7 +16,7 @@ fi
 
 do_title "Building Minic for Linux perf"
 
-OPT="-g -O3 -DNDEBUG -ggdb -flto --std=c++17 -march=native"
+OPT="-g -O3 -DNDEBUG -ggdb -flto --std=c++17 -march=native -fno-exceptions -fno-omit-frame-pointer"
 
 if [ $FATHOM_PRESENT = "1" ]; then
    lib=fathom_dev_linux_x64.o
@@ -29,4 +29,4 @@ g++ $STANDARDSOURCE -ISource -ISource/nnue $OPT -lpthread -DDEBUG_TOOL -DEMBEDDE
 perf record -g -- ./minic.perf -analyze "r1bqkb1r/pp3ppp/1np1pn2/6N1/2BP4/8/PPP1QPPP/R1B1K1NR w KQkq - 1 1" 25 
 #perf record -g -- ./minic.perf -perft "start" 6 -minOutputLevel 0
 #perf record -g -- ./minic.perf -evalSpeed Book_and_Test/Tuning/lichess-new-labeled.epd
-perf report minic.perf
+perf report -g 'graph,0.5,caller' minic.perf
