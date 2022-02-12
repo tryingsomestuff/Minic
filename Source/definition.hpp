@@ -650,3 +650,15 @@ inline std::string toHexString(uint32_t i) {
   s << "0x" << std::hex << i;
   return s.str();
 }
+
+/*
+
+static void escape(void* p){
+    asm volatile("" : : "g"(p) : "memory");
+}
+
+static void clobber(){
+    asm volatile("" : : : "memory");
+}
+
+*/
