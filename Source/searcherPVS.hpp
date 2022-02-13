@@ -361,7 +361,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       // static null move
       if (SearchConfig::doStaticNullMove && !isMateScore(evalScore) && isNotEndGame && SearchConfig::staticNullMoveCoeff.isActive(depth, evalScoreIsHashScore) ) {
          const ScoreType margin = SearchConfig::staticNullMoveCoeff.threshold(marginDepth, data.gp, evalScoreIsHashScore, improving);
-         if (evalScore >= beta + margin) return stats.incr(Stats::sid_staticNullMove), evalScore;
+         if (evalScore >= beta + margin) return stats.incr(Stats::sid_staticNullMove), evalScore - margin;
       }
 
       // Threats pruning (idea origin from Koivisto)
