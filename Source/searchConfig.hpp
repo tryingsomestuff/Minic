@@ -40,23 +40,19 @@ template<size_t _N, size_t _M> struct Coeff {
    CONST_SEARCH_TUNING std::array<DepthType, N> minDepth;
    CONST_SEARCH_TUNING std::array<DepthType, N> maxDepth;
    const std::string name;
-   [[nodiscard]] inline CONSTEXPR_SEARCH_TUNING ScoreType threshold(DepthType d, float gp, size_t idx1 = 0, size_t idx2 = 0) const {
-      assert(idx1 >= 0);
+   [[nodiscard]] inline CONSTEXPR_SEARCH_TUNING ScoreType threshold(const DepthType d, const float gp, const size_t idx1 = 0, const size_t idx2 = 0) const {
       assert(idx1 < N);
-      assert(idx2 >= 0);
       assert(idx2 < M);
       const auto value = init[idx1] + d * slopeDepth[idx1] + bonus[idx2] + static_cast<double>(gp) * slopeGamePhase[idx1];
       assert(value > std::numeric_limits<ScoreType>::min());
       assert(value < std::numeric_limits<ScoreType>::max());
       return static_cast<ScoreType>(value); 
    }
-   [[nodiscard]] inline CONSTEXPR_SEARCH_TUNING bool isActive(DepthType d, size_t idx1 = 0) const {
-      assert(idx1 >= 0);
+   [[nodiscard]] inline CONSTEXPR_SEARCH_TUNING bool isActive(const DepthType d, const size_t idx1 = 0) const {
       assert(idx1 < N);
       return d >= minDepth[idx1] && d <= maxDepth[idx1]; 
    }
    [[nodiscard]] inline std::string getName(CoeffNameType t, size_t idx)const{
-      assert(idx >= 0);
       assert(t >= 0);
       assert(t <= CNT_maxdepth);
       static const std::string suffixes[] = { "Init", "Bonus", "SlopeDepth", "SlopeGP", "MinDepth", "MaxDepth" };
