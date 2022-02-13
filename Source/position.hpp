@@ -175,13 +175,16 @@ struct Position {
    mutable NNUEEvaluator* associatedEvaluator = nullptr;
    void                   associateEvaluator(NNUEEvaluator& evaluator) { associatedEvaluator = &evaluator; }
 
-   [[nodiscard]] NNUEEvaluator& Evaluator() {
+   [[nodiscard]] NNUEEvaluator& evaluator() {
       assert(associatedEvaluator);
       return *associatedEvaluator;
    }
-   [[nodiscard]] const NNUEEvaluator& Evaluator() const {
+   [[nodiscard]] const NNUEEvaluator& evaluator() const {
       assert(associatedEvaluator);
       return *associatedEvaluator;
+   }
+   [[nodiscard]] bool hasEvaluator() const {
+      return associatedEvaluator != nullptr;
    }
 
    // Vastly taken from Seer implementation.

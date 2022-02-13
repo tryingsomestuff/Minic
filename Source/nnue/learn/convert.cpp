@@ -111,7 +111,6 @@ bool convert_plain_to_bin(const std::vector<std::string>& filenames,
 #if defined(WITH_NNUE)
       NNUEEvaluator evaluator;
       pos.associateEvaluator(evaluator);
-      pos.resetNNUEEvaluator(pos.Evaluator());
 #endif
       data_size                     = 0;
       filtered_size                 = 0;

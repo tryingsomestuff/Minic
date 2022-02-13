@@ -116,7 +116,7 @@ void getPV(const Position &p, Searcher &context, PVList &pv) {
 #ifdef WITH_NNUE
    NNUEEvaluator evaluator;
    p2.associateEvaluator(evaluator);
-   p2.resetNNUEEvaluator(p2.Evaluator());
+   p2.resetNNUEEvaluator(p2.evaluator());
 #endif
    bool stop = false;
    for (int k = 0; k < MAX_PLY && !stop; ++k) {

@@ -203,7 +203,7 @@ Position Searcher::getQuiet(const Position& p, Searcher* searcher, ScoreType* qS
    Position      pQuiet = p; // because p is given const
    NNUEEvaluator evaluator;
    pQuiet.associateEvaluator(evaluator);
-   pQuiet.resetNNUEEvaluator(pQuiet.Evaluator());
+   pQuiet.resetNNUEEvaluator(pQuiet.evaluator());
 
    // go for a qsearch (no pruning, open bounds)
    cos.stopFlag  = false;

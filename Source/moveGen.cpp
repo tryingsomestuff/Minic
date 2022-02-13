@@ -172,8 +172,8 @@ bool applyMove(Position& p, const Move& m, const bool noValidation) {
    // if king is not moving, update nnue evaluator
    // this is based on initial position state (most notably ep square and the previously built moveInfo)
    if (DynamicConfig::useNNUE && std::abs(moveInfo.fromP) != P_wk) {
-      if (p.c == Co_White) p.updateNNUEEvaluator<Co_White>(p.Evaluator(), moveInfo);
-      else p.updateNNUEEvaluator<Co_Black>(p.Evaluator(), moveInfo);
+      if (p.c == Co_White) p.updateNNUEEvaluator<Co_White>(p.evaluator(), moveInfo);
+      else p.updateNNUEEvaluator<Co_Black>(p.evaluator(), moveInfo);
    }
 #endif
 
@@ -204,24 +204,24 @@ bool applyMove(Position& p, const Move& m, const bool noValidation) {
 #ifdef WITH_NNUE
    // if a king was moved (including castling), reset nnue evaluator
    // this is based on new position state !
-   if (DynamicConfig::useNNUE && std::abs(moveInfo.fromP) == P_wk) { p.resetNNUEEvaluator(p.Evaluator()); }
+   if (DynamicConfig::useNNUE && std::abs(moveInfo.fromP) == P_wk) { p.resetNNUEEvaluator(p.evaluator()); }
 #endif
 
 #ifdef DEBUG_NNUE_UPDATE
    Position      p2 = p;
    NNUEEvaluator evaluator;
    p2.associateEvaluator(evaluator);
-   p2.resetNNUEEvaluator(p2.Evaluator());
-   if (p2.Evaluator() != p.Evaluator()) {
-      Logging::LogIt(Logging::logWarn) << "Evaluator update error";
+   p2.resetNNUEEvaluator(p2.evaluator());
+   if (p2.evaluator() != p.evaluator()) {
+      Logging::LogIt(Logging::logWarn) << "evaluator update error";
       Logging::LogIt(Logging::logWarn) << ToString(p);
       Logging::LogIt(Logging::logWarn) << ToString(m);
       Logging::LogIt(Logging::logWarn) << ToString(p.lastMove);
-      Logging::LogIt(Logging::logWarn) << p2.Evaluator().white.active();
-      Logging::LogIt(Logging::logWarn) << p2.Evaluator().black.active();
+      Logging::LogIt(Logging::logWarn) << p2.evaluator().white.active();
+      Logging::LogIt(Logging::logWarn) << p2.evaluator().black.active();
       Logging::LogIt(Logging::logWarn) << "--------------------";
-      Logging::LogIt(Logging::logWarn) << p.Evaluator().white.active();
-      Logging::LogIt(Logging::logWarn) << p.Evaluator().black.active();
+      Logging::LogIt(Logging::logWarn) << p.evaluator().white.active();
+      Logging::LogIt(Logging::logWarn) << p.evaluator().black.active();
       Logging::LogIt(Logging::logWarn) << backtrace();
    }
 #endif
@@ -295,7 +295,7 @@ ScoreType randomMover(const Position& p, PVList& pv, const bool isInCheck) {
    for (auto it = moves.begin(); it != moves.end(); ++it) {
       Position p2 = p;
 #if defined(WITH_NNUE) && defined(DEBUG_NNUE_UPDATE)
-      NNUEEvaluator evaluator = p.Evaluator();
+      NNUEEvaluator evaluator = p.evaluator();
       p2.associateEvaluator(evaluator);
 #endif
       if (!applyMove(p2, *it)) continue;
