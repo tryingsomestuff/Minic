@@ -1,4 +1,15 @@
-/ssd/Minic/minic.perf -uci -minOutputLevel 0 <<EOF
+#!/bin/bash
+
+exe=/ssd/Minic/minic.perf
+
+if [ -n "$1" ]; then
+	exe=$1
+fi
+
+echo "***************************************************"
+echo Benching $exe  
+echo "***************************************************"
+$exe -uci -minOutputLevel 0 <<EOF
 uci
 ucinewgame
 setoption name Hash value 256

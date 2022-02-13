@@ -446,7 +446,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             if ((validTTmove && sameMove(e.m, *it)) || isBadCap(*it)) continue; // skip TT move if quiet or bad captures
             Position p2 = p;
 #ifdef WITH_NNUE
-            NNUEEvaluator newEvaluator = p.Evaluator();
+            NNUEEvaluator newEvaluator = p.evaluator();
             p2.associateEvaluator(newEvaluator);
 #endif
             if (!applyMove(p2, *it)) continue;
@@ -531,7 +531,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 #endif
       Position p2 = p;
 #ifdef WITH_NNUE
-      NNUEEvaluator newEvaluator = p.Evaluator();
+      NNUEEvaluator newEvaluator = p.evaluator();
       p2.associateEvaluator(newEvaluator);
 #endif
       if (applyMove(p2, e.m)) {
@@ -712,7 +712,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       if (validTTmove && sameMove(e.m, *it)) continue; // already tried
       Position p2 = p;
 #ifdef WITH_NNUE
-      NNUEEvaluator newEvaluator = p.Evaluator();
+      NNUEEvaluator newEvaluator = p.evaluator();
       p2.associateEvaluator(newEvaluator);
 #endif
       if (!applyMove(p2, *it)) continue;

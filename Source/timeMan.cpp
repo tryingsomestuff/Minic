@@ -176,7 +176,7 @@ void simulate(const TCType tcType, const TimeType initialTime, const TimeType in
 #ifdef WITH_NNUE
    NNUEEvaluator evaluator;
    p2.associateEvaluator(evaluator);
-   p2.resetNNUEEvaluator(p2.Evaluator());
+   p2.resetNNUEEvaluator(p2.evaluator());
 #endif
 
    TimeType remaining = msecUntilNextTC;

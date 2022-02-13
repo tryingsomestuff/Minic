@@ -64,7 +64,7 @@ Counter perft(const Position& p, DepthType depth, PerftAccumulator& acc) {
 #if defined(WITH_NNUE) && defined(DEBUG_NNUE_UPDATE)
       NNUEEvaluator evaluator;
       p2.associateEvaluator(evaluator);
-      p2.resetNNUEEvaluator(p2.Evaluator());
+      p2.resetNNUEEvaluator(p2.evaluator());
 #endif
       if (!applyMove(p2, m)) continue;
       ++accLoc.validNodes;
@@ -84,7 +84,6 @@ void perft_test(const std::string& fen, DepthType d, uint64_t expected) {
 #ifdef WITH_NNUE
    NNUEEvaluator evaluator;
    p.associateEvaluator(evaluator);
-   p.resetNNUEEvaluator(evaluator);
 #endif
    readFEN(fen, p);
    Logging::LogIt(Logging::logInfo) << ToString(p);
@@ -144,7 +143,7 @@ void selfPlay(DepthType depth) {
 #ifdef WITH_NNUE
    NNUEEvaluator evaluator;
    p.associateEvaluator(evaluator);
-   p.resetNNUEEvaluator(p.Evaluator());
+   p.resetNNUEEvaluator(p.evaluator()); // this is needed as the RootPosition CTOR with a fen hasn't fill the evaluator yet ///@todo a CTOR with evaluator given ...
 #endif
 
 #ifdef WITH_GENFILE
@@ -230,7 +229,6 @@ int bench(DepthType depth) {
 #ifdef WITH_NNUE
    NNUEEvaluator evaluator;
    p.associateEvaluator(evaluator);
-   p.resetNNUEEvaluator(evaluator);
 #endif
    readFEN(startPosition, p);
    analyze(p, depth, true);
@@ -399,7 +397,6 @@ int cliManagement(std::string cli, int argc, char** argv) {
          RootPosition p;
 #ifdef WITH_NNUE
          p.associateEvaluator(evaluator);
-         p.resetNNUEEvaluator(evaluator);
 #endif
          readFEN(t.fen, p, true);
          Logging::LogIt(Logging::logInfo) << "============================== " << t.fen << " ==";
@@ -440,7 +437,7 @@ int cliManagement(std::string cli, int argc, char** argv) {
             p.resetNNUEEvaluator(evaluator);
 #endif
             EvalData d;
-            DISCARD  eval(p, d, ThreadPool::instance().main(), true);
+            DISCARD eval(p, d, ThreadPool::instance().main(), true);
          }
       auto ms = getTimeDiff(startTime);
       Logging::LogIt(Logging::logInfo) << "Eval speed (with EG material hash): " << static_cast<double>(data.size()) * loops / (static_cast<double>(ms) * 1000) << " Meval/s";
@@ -454,7 +451,7 @@ int cliManagement(std::string cli, int argc, char** argv) {
             p.resetNNUEEvaluator(evaluator);
 #endif
             EvalData d;
-            DISCARD  eval(p, d, ThreadPool::instance().main(), false);
+            DISCARD eval(p, d, ThreadPool::instance().main(), false);
          }
       ms = getTimeDiff(startTime);
       Logging::LogIt(Logging::logInfo) << "Eval speed : " << static_cast<double>(data.size()) * 10. / (static_cast<double>(ms) * 1000) << " Meval/s";
@@ -496,7 +493,6 @@ int cliManagement(std::string cli, int argc, char** argv) {
 #ifdef WITH_NNUE
    NNUEEvaluator evaluator;
    p.associateEvaluator(evaluator);
-   p.resetNNUEEvaluator(evaluator);
 #endif
    if (!readFEN(fen, p, false, true)) {
       Logging::LogIt(Logging::logInfo) << "Error reading fen";
@@ -580,7 +576,7 @@ int cliManagement(std::string cli, int argc, char** argv) {
       Position       p2 = p;
 #if defined(WITH_NNUE) && defined(DEBUG_NNUE_UPDATE)
       p2.associateEvaluator(evaluator);
-      p2.resetNNUEEvaluator(p2.Evaluator());
+      p2.resetNNUEEvaluator(p2.evaluator());
 #endif
       if (!applyMove(p2, m)) { Logging::LogIt(Logging::logError) << "Cannot apply this move"; }
       Logging::LogIt(Logging::logInfo) << ToString(p2);

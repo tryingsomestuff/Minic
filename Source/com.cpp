@@ -79,7 +79,7 @@ bool receiveMoves(const Move move, Move ponderMove) {
 #ifdef WITH_NNUE
       NNUEEvaluator evaluator2;
       p2.associateEvaluator(evaluator2);
-      p2.resetNNUEEvaluator(p2.Evaluator());
+      p2.resetNNUEEvaluator(p2.evaluator());
 #endif
       // apply best move and verify ponder move is ok
       if (!(applyMove(p2, move) && isPseudoLegal(p2, ponderMove))) {
@@ -121,7 +121,7 @@ bool receiveMoves(const Move move, Move ponderMove) {
 
 bool makeMove(const Move m, const bool disp, const std::string & tag, const Move pMove) {
 #ifdef WITH_NNUE
-   position.resetNNUEEvaluator(position.Evaluator());
+   position.resetNNUEEvaluator(position.evaluator());
 #endif
    bool b = applyMove(position, m, true); // this update the COM::position position status
    if (disp && m != INVALIDMOVE) {

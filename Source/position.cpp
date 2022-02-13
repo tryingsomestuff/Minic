@@ -21,15 +21,8 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent, bool withMove
       return false;
    }
 
-#ifdef WITH_NNUE
-   // backup evaluator
-   NNUEEvaluator* evaluator = p.associatedEvaluator;
-#endif
    p.clear(); // "clear" position
-#ifdef WITH_NNUE
-   // restore initial evaluator ...
-   if (evaluator) p.associateEvaluator(*evaluator);
-#endif
+
    std::vector<std::string> strList;
    std::stringstream iss(fen);
    std::copy(std::istream_iterator<std::string>(iss), std::istream_iterator<std::string>(), back_inserter(strList));
@@ -228,7 +221,7 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent, bool withMove
 #ifdef WITH_NNUE
    // If position is associated with an NNUE evaluator,
    // we reset the evaluator using the new position state.
-   if (DynamicConfig::useNNUE && evaluator) p.resetNNUEEvaluator(p.Evaluator());
+   if (DynamicConfig::useNNUE && p.hasEvaluator()) p.resetNNUEEvaluator(p.evaluator());
 #endif
 
    p.rootInfo().initCaslingPermHashTable();

@@ -29,7 +29,7 @@ std::string showAlgAbr(const Move m, const Position &p) {
    bool     isNotLegal = false;
    Position p2         = p;
 #ifdef WITH_NNUE
-   NNUEEvaluator evaluator = p.Evaluator();
+   NNUEEvaluator evaluator = p.evaluator();
    p2.associateEvaluator(evaluator);
 #endif
    if (applyMove(p2, m)) {
@@ -256,7 +256,7 @@ void ExtendedPosition::test(const std::vector<std::string> &positions,
             ExtendedPosition extP(positions[k], withMoveCount);
             NNUEEvaluator    evaluator;
             extP.associateEvaluator(evaluator);
-            extP.resetNNUEEvaluator(extP.Evaluator());
+            extP.resetNNUEEvaluator(extP.evaluator());
             Logging::LogIt(Logging::logInfo) << "Current test time control " << timeControls[t];
 
             TimeMan::isDynamic                   = false;

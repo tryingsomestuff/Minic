@@ -101,7 +101,7 @@ double E(const std::vector<EvalTuning::InputData>& data, size_t miniBatchSize) {
          assert(p);
          if (DynamicConfig::useNNUE){
             p->associateEvaluator(evaluator);
-            p->resetNNUEEvaluator(p->Evaluator());
+            p->resetNNUEEvaluator(p->evaluator());
          }
          ee += std::pow((data[k].result + 1) * 0.5 - Sigmoid(*p), 2);
       }

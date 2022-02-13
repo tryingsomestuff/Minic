@@ -25,7 +25,7 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Posi
    for (auto it = moves.begin(); it != moves.end(); ++it) {
       Position p2 = p;
 #ifdef WITH_NNUE
-      NNUEEvaluator newEvaluator = p.Evaluator();
+      NNUEEvaluator newEvaluator = p.evaluator();
       p2.associateEvaluator(newEvaluator);
 #endif
       if (!applyMove(p2, *it)) continue;
@@ -190,7 +190,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    if (usableTTmove) {
       Position p2 = p;
 #ifdef WITH_NNUE
-      NNUEEvaluator newEvaluator = p.Evaluator();
+      NNUEEvaluator newEvaluator = p.evaluator();
       p2.associateEvaluator(newEvaluator);
 #endif
       if (applyMove(p2, e.m)) {
@@ -268,7 +268,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
       }
       Position p2 = p;
 #ifdef WITH_NNUE
-      NNUEEvaluator newEvaluator = p.Evaluator();
+      NNUEEvaluator newEvaluator = p.evaluator();
       p2.associateEvaluator(newEvaluator);
 #endif
       if (!applyMove(p2, *it)) continue;
