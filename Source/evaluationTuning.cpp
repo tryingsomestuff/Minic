@@ -359,16 +359,16 @@ void evaluationTuning(const std::string& filename) {
 
    std::map<std::string, std::vector<EvalTuning::TuningParam<ScoreType>>> guess;
 #ifdef WITH_PIECE_TUNING
-   guess["piecesValue"].push_back(EvaluationTuning::TuningParam<ScoreType>(Values[P_wp+PieceShift],    20,  200, "pawn",     [](const ScoreType& s){Values[P_bp+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
-   guess["piecesValue"].push_back(EvaluationTuning::TuningParam<ScoreType>(Values[P_wn+PieceShift],   150,  600, "knight",   [](const ScoreType& s){Values[P_bn+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
-   guess["piecesValue"].push_back(EvaluationTuning::TuningParam<ScoreType>(Values[P_wb+PieceShift],   150,  600, "bishop",   [](const ScoreType& s){Values[P_bb+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
-   guess["piecesValue"].push_back(EvaluationTuning::TuningParam<ScoreType>(Values[P_wr+PieceShift],   200,  800, "rook",     [](const ScoreType& s){Values[P_br+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
-   guess["piecesValue"].push_back(EvaluationTuning::TuningParam<ScoreType>(Values[P_wq+PieceShift],   600, 1800, "queen",    [](const ScoreType& s){Values[P_bq+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
-   guess["piecesValue"].push_back(EvaluationTuning::TuningParam<ScoreType>(ValuesEG[P_wp+PieceShift],  50,  200, "EGpawn",   [](const ScoreType& s){ValuesEG[P_bp+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
-   guess["piecesValue"].push_back(EvaluationTuning::TuningParam<ScoreType>(ValuesEG[P_wn+PieceShift], 150,  600, "EGknight", [](const ScoreType& s){ValuesEG[P_bn+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
-   guess["piecesValue"].push_back(EvaluationTuning::TuningParam<ScoreType>(ValuesEG[P_wb+PieceShift], 150,  600, "EGbishop", [](const ScoreType& s){ValuesEG[P_bb+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
-   guess["piecesValue"].push_back(EvaluationTuning::TuningParam<ScoreType>(ValuesEG[P_wr+PieceShift], 200,  800, "EGrook",   [](const ScoreType& s){ValuesEG[P_br+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
-   guess["piecesValue"].push_back(EvaluationTuning::TuningParam<ScoreType>(ValuesEG[P_wq+PieceShift], 600, 1800, "EGqueen",  [](const ScoreType& s){ValuesEG[P_bq+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
+   guess["piecesValue"].push_back(EvalTuning::TuningParam<ScoreType>(Values[P_wp+PieceShift],    20,  200, "pawn",     [](const ScoreType& s){Values[P_bp+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
+   guess["piecesValue"].push_back(EvalTuning::TuningParam<ScoreType>(Values[P_wn+PieceShift],   150,  600, "knight",   [](const ScoreType& s){Values[P_bn+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
+   guess["piecesValue"].push_back(EvalTuning::TuningParam<ScoreType>(Values[P_wb+PieceShift],   150,  600, "bishop",   [](const ScoreType& s){Values[P_bb+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
+   guess["piecesValue"].push_back(EvalTuning::TuningParam<ScoreType>(Values[P_wr+PieceShift],   200,  800, "rook",     [](const ScoreType& s){Values[P_br+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
+   guess["piecesValue"].push_back(EvalTuning::TuningParam<ScoreType>(Values[P_wq+PieceShift],   600, 1800, "queen",    [](const ScoreType& s){Values[P_bq+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
+   guess["piecesValue"].push_back(EvalTuning::TuningParam<ScoreType>(ValuesEG[P_wp+PieceShift],  50,  200, "EGpawn",   [](const ScoreType& s){ValuesEG[P_bp+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
+   guess["piecesValue"].push_back(EvalTuning::TuningParam<ScoreType>(ValuesEG[P_wn+PieceShift], 150,  600, "EGknight", [](const ScoreType& s){ValuesEG[P_bn+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
+   guess["piecesValue"].push_back(EvalTuning::TuningParam<ScoreType>(ValuesEG[P_wb+PieceShift], 150,  600, "EGbishop", [](const ScoreType& s){ValuesEG[P_bb+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
+   guess["piecesValue"].push_back(EvalTuning::TuningParam<ScoreType>(ValuesEG[P_wr+PieceShift], 200,  800, "EGrook",   [](const ScoreType& s){ValuesEG[P_br+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
+   guess["piecesValue"].push_back(EvalTuning::TuningParam<ScoreType>(ValuesEG[P_wq+PieceShift], 600, 1800, "EGqueen",  [](const ScoreType& s){ValuesEG[P_bq+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
 #endif 
    guess["safeChecks"].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::kingAttSafeCheck[0], -3000, 3000, "cp"));
    guess["safeChecks"].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::kingAttSafeCheck[1], -3000, 3000, "cn"));

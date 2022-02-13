@@ -248,11 +248,12 @@ void RootInformation::initCaslingPermHashTable() {
    if (rooksInit[Co_Black][CT_OO]  != INVALIDSQUARE) castlePermHashTable[rooksInit[Co_Black][CT_OO]]  = C_all_but_bks;
 }
 
-Position::~Position() {}
+Position::~Position() {
+   //I do not delete the root pointer, only a RootPosition can do that
+}
 
 Position::Position() {}
 
-RootPosition::RootPosition(const std::string& fen, bool withMoveCount) { 
-   root = new RootInformation;
+RootPosition::RootPosition(const std::string& fen, bool withMoveCount) : RootPosition() { 
    readFEN(fen, *this, true, withMoveCount); 
 }

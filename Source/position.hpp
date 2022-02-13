@@ -60,7 +60,11 @@ struct Position {
    std::array<Square, 2> king = {INVALIDSQUARE, INVALIDSQUARE};
 
    // shared by all "child" of a same "root" position
-   mutable RootInformation* root = nullptr; 
+   // Assumed rule of 3 disrespect
+   // the default copy CTOR and copy operator will copy that
+   // but only a RootPosition will delete it
+   // (this is way faster than a shared_ptr)
+   mutable RootInformation* root = nullptr;
 
    Square         ep       = INVALIDSQUARE;
    uint8_t        fifty    = 0;
@@ -264,14 +268,24 @@ struct Position {
  * allocate and delete root pointer
  */
 struct RootPosition : public Position {
-   RootPosition(){ root = new RootInformation; }
+   RootPosition(){ 
+      // a shared pointer here will be too slow
+      root = new RootInformation;
+   }
+
    RootPosition(const std::string& fen, bool withMoveCount = true);
+
+   RootPosition(const RootPosition& p): Position(p) {
+      assert(p.root);
+      // we take a copy of the RootInformation of the copied RootPosition
+      root = new RootInformation(*p.root);
+   };
+
+   // Root position cannot be copied
+   RootPosition & operator=(const RootPosition &) = delete;
+
    ~RootPosition() {
       delete root;
    }
-   RootPosition(const RootPosition& p): Position(p) {
-      if (p.root) root = new RootInformation(*p.root);
-      else root = new RootInformation;
-   };
-   RootPosition & operator=(const RootPosition &) = delete;
+
 };

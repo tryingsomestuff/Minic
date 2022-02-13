@@ -18,10 +18,10 @@ struct PGNGame {
    int                    blackElo = 0;
    std::string            resultStr;
    std::vector<Move>      moves;
-   int                    n           = 0;
-   constexpr int          minElo      = 1600;
-   constexpr ScoreType    equalMargin = 400;
-   constexpr ScoreType    quietMargin = 600;
+   int                    n = 0;
+   static constexpr int       minElo      = 1600;
+   static constexpr ScoreType equalMargin = 400;
+   static constexpr ScoreType quietMargin = 600;
 };
 
 [[nodiscard]] int PGNParse(const std::string& file);
