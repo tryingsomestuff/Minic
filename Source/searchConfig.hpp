@@ -63,6 +63,7 @@ template<size_t _N, size_t _M> struct Coeff {
 extern CONST_SEARCH_TUNING Coeff<2,2> staticNullMoveCoeff;
 extern CONST_SEARCH_TUNING Coeff<2,2> razoringCoeff;
 extern CONST_SEARCH_TUNING Coeff<2,2> threatCoeff;
+//extern CONST_SEARCH_TUNING Coeff<2,2> ownThreatCoeff;
 extern CONST_SEARCH_TUNING Coeff<2,2> historyPruningCoeff;
 extern CONST_SEARCH_TUNING Coeff<2,2> captureHistoryPruningCoeff;
 extern CONST_SEARCH_TUNING Coeff<2,2> futilityPruningCoeff;

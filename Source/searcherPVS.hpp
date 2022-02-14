@@ -313,13 +313,13 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       data.haveThreats[Co_Black] = (att[Co_Black] & p.allPieces[Co_White]) != emptyBitBoard;
 
       data.goodThreats[Co_White] = ((attFromPiece[Co_White][P_wp-1] & p.allPieces[Co_Black] & ~p.blackPawn())
-                                 | (attFromPiece[Co_White][P_wn-1] & (p.blackQueen() | p.blackRook()))
-                                 | (attFromPiece[Co_White][P_wb-1] & (p.blackQueen() | p.blackRook()))
-                                 | (attFromPiece[Co_White][P_wr-1] & p.blackQueen())) != emptyBitBoard;
+                                  | (attFromPiece[Co_White][P_wn-1] & (p.blackQueen() | p.blackRook()))
+                                  | (attFromPiece[Co_White][P_wb-1] & (p.blackQueen() | p.blackRook()))
+                                  | (attFromPiece[Co_White][P_wr-1] & p.blackQueen())) != emptyBitBoard;
       data.goodThreats[Co_Black] = ((attFromPiece[Co_Black][P_wp-1] & p.allPieces[Co_White] & ~p.whitePawn())
-                                 | (attFromPiece[Co_Black][P_wn-1] & (p.whiteQueen() | p.whiteRook()))
-                                 | (attFromPiece[Co_Black][P_wb-1] & (p.whiteQueen() | p.whiteRook()))
-                                 | (attFromPiece[Co_Black][P_wr-1] & p.whiteQueen())) != emptyBitBoard;      
+                                  | (attFromPiece[Co_Black][P_wn-1] & (p.whiteQueen() | p.whiteRook()))
+                                  | (attFromPiece[Co_Black][P_wb-1] & (p.whiteQueen() | p.whiteRook()))
+                                  | (attFromPiece[Co_Black][P_wr-1] & p.whiteQueen())) != emptyBitBoard;
    }
    const int dangerFactor          = (data.danger[Co_White] + data.danger[Co_Black]) / SearchConfig::dangerDivisor;
    const int dangerDiff            = (data.danger[~p.c] - data.danger[p.c]) / SearchConfig::dangerDivisor;
@@ -364,12 +364,19 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          if (evalScore >= beta + margin) return stats.incr(Stats::sid_staticNullMove), evalScore - margin;
       }
 
-      // Threats pruning (idea origin from Koivisto)
+      // (absence of) Opponent threats pruning (idea origin from Koivisto)
       if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && isNotEndGame && SearchConfig::threatCoeff.isActive(depth, evalScoreIsHashScore) && 
            !data.goodThreats[~p.c] && evalScore > beta + SearchConfig::threatCoeff.threshold(depth, data.gp, evalScoreIsHashScore, improving) ){
          return stats.incr(Stats::sid_threatsPruning), beta;
       }
 
+/*
+      // Own threats pruning
+      if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && isNotEndGame && SearchConfig::ownThreatCoeff.isActive(depth, evalScoreIsHashScore) && 
+           data.goodThreats[p.c] && !data.goodThreats[~p.c] && evalScore > beta + SearchConfig::ownThreatCoeff.threshold(depth, data.gp, evalScoreIsHashScore, improving) ){
+         return stats.incr(Stats::sid_threatsPruning), beta;
+      }
+*/
       // razoring
       const ScoreType rAlpha = alpha - SearchConfig::razoringCoeff.threshold(marginDepth, data.gp, evalScoreIsHashScore, improving); 
       if (SearchConfig::doRazoring && SearchConfig::razoringCoeff.isActive(depth, evalScoreIsHashScore) && evalScore <= rAlpha) {

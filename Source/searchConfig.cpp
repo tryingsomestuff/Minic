@@ -8,6 +8,7 @@ namespace SearchConfig {
 CONST_SEARCH_TUNING Coeff<2,2> staticNullMoveCoeff        = { {0, 0}, {0, 0}, {80, 80}, {0, 0}, {0, 0}, {6, 6}, "staticNullMove" };
 CONST_SEARCH_TUNING Coeff<2,2> razoringCoeff              = { {200, 200}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {3, 3}, "razoring" };
 CONST_SEARCH_TUNING Coeff<2,2> threatCoeff                = { {0, 0}, {30, 0}, {0, 0}, {0, 0}, {0, 0}, {2, 2}, "threat" };
+//CONST_SEARCH_TUNING Coeff<2,2> ownThreatCoeff             = { {0, 0}, {0, -30}, {0, 0}, {0, 0}, {0, 0}, {2, 2}, "ownThreat" };
 CONST_SEARCH_TUNING Coeff<2,2> historyPruningCoeff        = { {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {2, 1}, "historyPruning" };
 CONST_SEARCH_TUNING Coeff<2,2> captureHistoryPruningCoeff = { {0, 0}, {0, 0}, {-128, -128}, {0, 0}, {0, 0}, {4, 3}, "captureHistoryPruning" };
 CONST_SEARCH_TUNING Coeff<2,2> futilityPruningCoeff       = { {0, 0}, {0, 0}, {160, 160}, {0, 0}, {0, 0}, {10, 10}, "futilityPruning" };
