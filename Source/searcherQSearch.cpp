@@ -164,10 +164,11 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    // backup this score as the "static" one
    const ScoreType staticScore = evalScore;
 
-   if (!isInCheck && !ttHit)
+   if (!isInCheck && !ttHit){
       // Be carefull here, _data in Entry is always (INVALIDMOVE,B_none,-2) here, so that collisions are a lot more likely
       // depth -2 is used to ensure this will never be used directly (only evaluation score is of interest here...)
       TT::setEntry(*this, pHash, INVALIDMOVE, createHashScore(staticScore, height), createHashScore(staticScore, height), TT::B_none, -2);
+   }
 
    // early cut-off based on staticScore score
    if (staticScore >= beta) return staticScore;
@@ -205,12 +206,14 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
             if (score > alpha) {
                if (score >= beta) {
                   b = TT::B_beta;
+                  stats.incr(Stats::sid_qttbeta);
                   TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(evalScore, height),
                                TT::Bound(b | (ttPV ? TT::B_ttPVFlag : TT::B_none) | (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), hashDepth);
                   return bestScore;
                }
                b = TT::B_exact;
                alpha = score;
+               stats.incr(Stats::sid_qttalpha);
             }
          }
       }
@@ -283,13 +286,17 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
          if (score > alpha) {
             if (score >= beta) {
                b = TT::B_beta;
+               stats.incr(Stats::sid_qbeta);
                break;
             }
             b     = TT::B_exact;
             alpha = score;
+            stats.incr(Stats::sid_qalpha);
          }
       }
    }
+
+   if (alphaInit == alpha ) stats.incr(Stats::sid_qalphanoupdate);
 
    if (validMoveCount == 0 && isInCheck) bestScore = matedScore(height);
 
