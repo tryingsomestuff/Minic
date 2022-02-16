@@ -354,6 +354,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    DepthType  marginDepth  = std::max(1, depth - (evalScoreIsHashScore ? e.d : 0)); // a depth that take TT depth into account
    const bool isNotEndGame = p.mat[p.c][M_t] > 0;                                   ///@todo better ?
    const bool improving    = (!isInCheck && height > 1 && stack[p.halfmoves].eval >= stack[p.halfmoves - 2].eval);
+   const ScoreType alphaInit = alpha;
 
    // forward prunings
    if (!DynamicConfig::mateFinder && !rootnode && !isInCheck && !pvnode /*&& !isMateScore(beta)*/) { // removing the !isMateScore(beta) is not losing that much elo and allow for better check mate finding ...
@@ -947,6 +948,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             alpha = score;
             hashBound = TT::B_exact;
             if (score >= beta) {
+               stats.incr(Stats::sid_beta);
                if (!isInCheck){
                   const DepthType bonus = depth + (score > beta + SearchConfig::betaMarginDynamicHistory);
                   if(isQuiet /*&& depth > 1*/ /*&& !( depth == 1 && validQuietMoveCount == 1 )*/) { // quiet move history
@@ -969,12 +971,15 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                hashBound = TT::B_beta;
                break;
             }
+            stats.incr(Stats::sid_alpha);
          }
       }
       else if (rootnode && !isInCheck && firstMove && score < alpha - SearchConfig::failLowRootMargin) {
          return alpha - SearchConfig::failLowRootMargin;
       }
    }
+
+   if (alphaInit == alpha ) stats.incr(Stats::sid_alphanoupdate);
 
    // check for draw and check mate
    if (validMoveCount == 0) return (isInCheck || !withoutSkipMove) ? matedScore(height) : drawScore(p, height);
