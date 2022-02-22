@@ -361,7 +361,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       
       // static null move
       if (SearchConfig::doStaticNullMove && !isMateScore(evalScore) && isNotEndGame && SearchConfig::staticNullMoveCoeff.isActive(depth, evalScoreIsHashScore) ) {
-         const ScoreType margin = SearchConfig::staticNullMoveCoeff.threshold(marginDepth, data.gp, evalScoreIsHashScore, improving);
+         const ScoreType margin = SearchConfig::staticNullMoveCoeff.threshold(depth, data.gp, evalScoreIsHashScore, improving);
          if (evalScore >= beta + margin) return stats.incr(Stats::sid_staticNullMove), evalScore - margin;
       }
 
@@ -809,8 +809,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          const DepthType pruningDepthCorrection = 0;//DepthType(float(dangerFactor)/SearchConfig::dangerLimitPruning + (isEmergencyDefence||isEmergencyAttack) - 0.5);
 
          // LMP
-         const bool moveCountPruning = validMoveCount > SearchConfig::lmpLimit[improving][depth + pruningDepthCorrection];
-         if (lmp && isPrunableStdNoCheck && moveCountPruning) {
+         if (lmp && isPrunableStdNoCheck && validMoveCount > SearchConfig::lmpLimit[improving][depth + pruningDepthCorrection]) {
             stats.incr(Stats::sid_lmp);
             skipQuiet = true;
             continue;
