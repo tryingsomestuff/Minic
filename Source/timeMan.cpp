@@ -74,7 +74,7 @@ TimeType getNextMSecPerMove(const Position& p) {
          // we use the minimal margin
          // WARNING note that this might be a bit stupid when used with a book
          const TimeType totalIncr = nbMoveInTC * msecIncLoc;
-         ms = static_cast<TimeType>(static_cast<double>(msecInTC + totalIncr - msecMargin) / static_cast<double>(nbMoveInTC));
+         ms = static_cast<TimeType>(static_cast<float>(msecInTC + totalIncr - msecMargin) / static_cast<float>(nbMoveInTC));
       }
       else {
          assert(msecUntilNextTC > 0);
@@ -87,7 +87,7 @@ TimeType getNextMSecPerMove(const Position& p) {
          const int moveUntilNextTC = nbMoveInTC - ((p.moves - 1) % nbMoveInTC); // this modulus is a bit slow probably
          const TimeType remainingIncr = moveUntilNextTC * msecIncLoc;
          msecMargin = getMargin(msecUntilNextTC);
-         ms = static_cast<TimeType>(static_cast<double>(msecUntilNextTC + remainingIncr - msecMargin) / static_cast<double>(moveUntilNextTC));
+         ms = static_cast<TimeType>(static_cast<float>(msecUntilNextTC + remainingIncr - msecMargin) / static_cast<float>(moveUntilNextTC));
       }
    }
 
@@ -107,7 +107,7 @@ TimeType getNextMSecPerMove(const Position& p) {
          const TimeType remainingIncr = moveToGo * msecIncLoc;
          const float ponderingCorrection = (ThreadPool::instance().main().getData().isPondering ? 3 : 2) / 2;
          msecMargin = getMargin(msecUntilNextTC);
-         ms = static_cast<TimeType>((static_cast<double>(msecUntilNextTC + remainingIncr - msecMargin) / static_cast<double>(moveToGo) ) * ponderingCorrection);
+         ms = static_cast<TimeType>((static_cast<float>(msecUntilNextTC + remainingIncr - msecMargin) / static_cast<float>(moveToGo) ) * ponderingCorrection);
       }
    }
 
@@ -123,8 +123,15 @@ TimeType getNextMSecPerMove(const Position& p) {
       // a correction factor is applied for UCI pondering in order to search longer ///@todo why only 3/2 ...
       // be carefull here !, using xboard (for instance under cutechess), we won't receive an increment
       const bool riskySituation = msecInc < msecMinimal;
-      const int nmoves = (riskySituation ? 28 : 15 ) 
-                       - (riskySituation ? std::min(8, p.halfmoves / 20) : std::min(10, p.halfmoves / 12));
+      const float incrProp = riskySituation ? 0 
+                                            : static_cast<float>(msecUntilNextTC)/(msecInc*100);
+      ScoreType sw = 0, sb = 0;
+      const float gp = gamePhase(p, sw, sb);
+      const int nmoves = (riskySituation ? 28 
+                                         : (16 + incrProp) ) 
+                       - (riskySituation ? static_cast<int>(std::min(8, p.halfmoves / 20)*(1.f-gp)) 
+                                         : static_cast<int>(std::min(15.f + incrProp, p.halfmoves / 10.f)));
+      const int nmoves = 17 - std::min(12, p.halfmoves / 15); // always be able to play this more moves !
       Logging::LogIt(Logging::logInfo) << "nmoves      " << nmoves;
       Logging::LogIt(Logging::logInfo) << "p.moves     " << int(p.moves);
       Logging::LogIt(Logging::logInfo) << "p.halfmoves " << int(p.halfmoves);
@@ -133,7 +140,10 @@ TimeType getNextMSecPerMove(const Position& p) {
       }
       const float ponderingCorrection = (ThreadPool::instance().main().getData().isPondering ? 3 : 2) / 2;
       msecMargin = getMargin(msecUntilNextTC);
-      ms = static_cast<TimeType>( (static_cast<double>(msecUntilNextTC - msecMargin) / static_cast<double>(nmoves)) * ponderingCorrection);
+      const float frac = (static_cast<float>(msecUntilNextTC - msecMargin) / static_cast<float>(nmoves));
+      const float correction = msecInc < frac ? 0 
+                                              : std::min(static_cast<float>(msecInc), msecUntilNextTC-frac);
+      ms = static_cast<TimeType>( (frac + correction) * ponderingCorrection);
    }
 
    // take overhead into account
