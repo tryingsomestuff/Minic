@@ -1,7 +1,7 @@
 import chess.pgn
 import matplotlib.pyplot as plt
 
-incr = 0.
+incr = 0.1
 initialTC = 10
 
 def getData(engine,data):
@@ -75,7 +75,7 @@ def getData(engine,data):
    #print(counts)
 
    for n,t in enumerate(data[engine]['times']):
-      if counts[n]:
+      if counts[n] != 0:
          data[engine]['times'][n] /= counts[n]
 
    data[engine]['remaining'] = [0] * 1000
@@ -90,7 +90,8 @@ def getData(engine,data):
    return found
 
 data = {}
-engines = ["minic_dev_dev", "minic_3.18", "Genie", "berserk", "seer", "weiss", "xiphos", "BlackMarlin", "stash", "rofChade", "Drofa", "stockfish"]
+engines = ["minic_dev", "minic_dev_dev", "minic_3.18"]
+#"Halogen", "Genie", "berserk", "seer", "weiss", "xiphos", "BlackMarlin", "stash", "rofChade", "Drofa", "stockfish"
 cycler = plt.cycler(linestyle=['-', '--', ':', '-.']) * plt.cycler(color=['r', 'g', 'b'])
 plt.rc('axes', prop_cycle=cycler)
 engines_present = []
@@ -103,7 +104,7 @@ plt.savefig('time.png')
 plt.show()
 
 for e in engines_present:
-   plt.plot([x for x in data[e]['remaining'][:100] if x])
+   plt.plot([x for x in data[e]['remaining'][:200] if x])
 plt.legend(engines_present)   
 plt.savefig('rtime.png')
 plt.show()
