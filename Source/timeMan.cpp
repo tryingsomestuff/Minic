@@ -129,9 +129,10 @@ TimeType getNextMSecPerMove(const Position& p) {
       const float gp = gamePhase(p, sw, sb);
       const int nmoves = (riskySituation ? 28 
                                          : (16 + incrProp) ) 
-                       - (riskySituation ? static_cast<int>(std::min(8, p.halfmoves / 20)*(1.f-gp)) 
-                                         : static_cast<int>(std::min(15.f + incrProp, p.halfmoves / 10.f)));
-      const int nmoves = 17 - std::min(12, p.halfmoves / 15); // always be able to play this more moves !
+                       - (riskySituation ? static_cast<int>(std::min(8, p.halfmoves / 20)) 
+                                         : static_cast<int>(std::min(8.f + incrProp, p.halfmoves / 10.f)))
+                       - (riskySituation ? 0 
+                                         : static_cast<int>((1.f-gp)*7));
       Logging::LogIt(Logging::logInfo) << "nmoves      " << nmoves;
       Logging::LogIt(Logging::logInfo) << "p.moves     " << int(p.moves);
       Logging::LogIt(Logging::logInfo) << "p.halfmoves " << int(p.halfmoves);
