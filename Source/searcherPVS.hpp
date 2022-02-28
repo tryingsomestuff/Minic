@@ -84,7 +84,9 @@ inline void evalDanger(const Position & p,
 #pragma GCC diagnostic pop
 
 // this function shall be used on the initial position state before move is applied
-[[nodiscard]] inline bool isNoisy(const Position & p, const Move & m){
+[[nodiscard]] inline bool isNoisy(const Position & /*p*/, const Move & m){
+   return Move2Type(m) != T_std;
+   /*
    if ( Move2Type(m) != T_std ) return true;
    const Square from = Move2From(m);
    const Square to = Move2To(m);
@@ -99,6 +101,7 @@ inline void evalDanger(const Position & p,
       if ( BB::countBit(nAtt) > 1 ) return true; ///@todo verify if the knight is protected and/or not attacked ?
    }
    return false;
+   */
 }
 
 inline void Searcher::timeCheck(){
