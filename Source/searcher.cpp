@@ -26,12 +26,20 @@ TimeType Searcher::getCurrentMoveMs()const{
 }
 
 void Searcher::getCMHPtr(const unsigned int ply, CMHPtrArray& cmhPtr) {
-   cmhPtr.fill(0);
+   cmhPtr.fill(nullptr);
    for (unsigned int k = 0; k < MAX_CMH_PLY; ++k) {
-      assert(ply - k < MAX_PLY && int(ply) - int(k) >= 0);
-      if (ply > k && isValidMove(stack[ply - k].p.lastMove)) {
-         const Square to = correctedMove2ToKingDest(stack[ply - k].p.lastMove);
-         cmhPtr[k]       = historyT.counter_history[PieceIdx(stack[ply - k - 1].p.board_const(to))][to];
+      assert(int(ply) - int(2*k) < MAX_PLY && int(ply) - int(2*k) >= 0);
+      if (ply > 2*k && isValidMove(stack[ply - 2*k].p.lastMove)) {
+         const Position & pref = stack[ply - 2*k].p;
+         //std::cout << "*****************" << std::endl;
+         //std::cout << ToString(pref.lastMove) << std::endl;
+         //std::cout << ToString(pref) << std::endl;
+         //const Square from = Move2From(pref.lastMove);
+         const Square to = correctedMove2ToKingDest(pref.lastMove);
+         //std::cout << int(to) << std::endl;
+         //std::cout << int(from) << std::endl;
+         //std::cout << int(pref.board_const(to)) << std::endl;
+         cmhPtr[k] = historyT.counter_history[PieceIdx(pref.board_const(to))][to];
       }
    }
 }
@@ -41,7 +49,26 @@ ScoreType Searcher::getCMHScore(const Position& p, const Square from, const Squa
    for (int i = 0; i < MAX_CMH_PLY; i++) {
       if (cmhPtr[i]) { ret += cmhPtr[i][PieceIdx(p.board_const(from)) * NbSquare + to]; }
    }
-   return ret;
+   return ret/MAX_CMH_PLY;
+}
+
+bool Searcher::isCMHGood(const Position& p, const Square from, const Square to, const CMHPtrArray& cmhPtr, const ScoreType threshold) const {
+   for (int i = 0; i < MAX_CMH_PLY; i++) {
+      if (cmhPtr[i]) {
+         if (cmhPtr[i][PieceIdx(p.board_const(from)) * NbSquare + to] >= threshold) return true;
+      }
+   }
+   return false;
+}
+
+bool Searcher::isCMHBad(const Position& p, const Square from, const Square to, const CMHPtrArray& cmhPtr, const ScoreType threshold) const {
+   int nbBad = 0;
+   for (int i = 0; i < MAX_CMH_PLY; i++) {
+      if (cmhPtr[i]) {
+         if (cmhPtr[i][PieceIdx(p.board_const(from)) * NbSquare + to] < threshold) ++nbBad;
+      }
+   }
+   return nbBad == MAX_CMH_PLY;
 }
 
 ScoreType Searcher::drawScore(const Position& p, DepthType height) {

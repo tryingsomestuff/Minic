@@ -1,6 +1,7 @@
 from datetime import datetime
 import time
 import argparse
+import numpy
 
 class TargetBoundCheck(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
@@ -45,6 +46,10 @@ else:
 from matplotlib import rcParams
 
 rcParams['font.family'] = 'monospace'
+
+def movingaverage(interval, window_size):
+    window = numpy.ones(int(window_size))/float(window_size)
+    return numpy.convolve(interval, window, 'same')
 
 while True:
     try:
@@ -103,12 +108,16 @@ while True:
                 Xbest = Xbest[-3:]
                 Ybest = Ybest[-3:]
 
+                window = 40
+                Y_av = movingaverage(Y, window)
+
                 plt.subplot(121)
 
                 # error bar and dot color
                 if args.e:
                     plt.errorbar(X, Y, yerr=err, fmt='.', color='gray', marker=None, capsize=2)
                 plt.scatter(X, Y, c=['gold' if y-e>args.l else 'silver' if y-e>args.m else 'lime' if y-e>0 else 'cyan' if y>0 else 'black' if y+e > 0 else 'red' for y,e in zip(Y,err)], s=64, marker='o', label='Elo')
+                plt.plot(X[window:],Y_av[window:],linewidth=5)
 
                 # specific markers
                 if args.x:

@@ -10,11 +10,11 @@
  *  - History
  *     - Color/from/to
  *     - Piece/to
- *     - CMH history : previous moved piece/previous to/cureet moved piece & to
+ *     - CMH history : previous moved piece/previous to/current moved piece & to
  *  - Counter : from/to
  */
 
-static constexpr int MAX_CMH_PLY = 2;
+static constexpr int MAX_CMH_PLY = 1;
 typedef std::array<ScoreType*, MAX_CMH_PLY> CMHPtrArray;
 
 struct KillerT {

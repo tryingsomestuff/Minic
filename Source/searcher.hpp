@@ -75,6 +75,9 @@ struct Searcher {
    void                    getCMHPtr(const unsigned int ply, CMHPtrArray& cmhPtr);
    [[nodiscard]] ScoreType getCMHScore(const Position& p, const Square from, const Square to, const CMHPtrArray& cmhPtr) const;
 
+   [[nodiscard]] bool isCMHGood(const Position& p, const Square from, const Square to, const CMHPtrArray& cmhPtr, const ScoreType threshold) const;
+   [[nodiscard]] bool isCMHBad (const Position& p, const Square from, const Square to, const CMHPtrArray& cmhPtr, const ScoreType threshold) const;
+
    [[nodiscard]] ScoreType drawScore(const Position& p, DepthType height);
 
    void timeCheck();
