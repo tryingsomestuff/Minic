@@ -187,6 +187,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // if not at root we check for draws (3rep, fifty and material)
    if (!rootnode && interiorNodeRecognizer<true, pvnode, true>(p) == MaterialHash::Ter_Draw) return drawScore(p, height);
 
+   //std::cout << "=========================" << std::endl;
+   //std::cout << ToString(p) << std::endl;
    CMHPtrArray cmhPtr;
    getCMHPtr(p.halfmoves, cmhPtr);
 
@@ -587,7 +589,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             // CMH extension
             if (EXTENDMORE(extension) && isQuiet) {
                 const int pp = (p.board_const(Move2From(e.m)) + PieceShift) * NbSquare + to;
-                if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= HISTORY_MAX / 2 && cmhPtr[1][pp] >= HISTORY_MAX / 2) stats.incr(Stats::sid_CMHExtension), ++extension;
+                if (isCMHGood(p, Move2From(e.m), to, cmhPtr, HISTORY_MAX / 2) stats.incr(Stats::sid_CMHExtension), ++extension;
             }
             */
             // advanced pawn push extension
@@ -758,10 +760,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          //if (EXTENDMORE(extension) && isCheck && !isBadCap(*it)) stats.incr(Stats::sid_checkExtension2),++extension; // we give check with a non risky move
          // CMH extension
          /*
-           if (EXTENDMORE(extension) && isQuiet) {
-               const int pp = (p.board_const(Move2From(*it)) + PieceShift) * NbSquare + to;
-               if (cmhPtr[0] && cmhPtr[1] && cmhPtr[0][pp] >= HISTORY_MAX/2 && cmhPtr[1][pp] >= HISTORY_MAX/2) stats.incr(Stats::sid_CMHExtension), ++extension;
-           }
+         if (EXTENDMORE(extension) && isQuiet) {
+             if (isCMHGood(p, Move2From(*it), to, cmhPtr, HISTORY_MAX / 2)) stats.incr(Stats::sid_CMHExtension), ++extension;
+         }
          */
          // advanced pawn push extension
          /*
@@ -827,8 +828,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
          // CMH pruning alone
          if (CMHPruning && isPrunableStdNoCheck) {
-            const int pp = (p.board_const(Move2From(*it)) + PieceShift) * NbSquare + Move2To(*it);
-            if ((!cmhPtr[0] || cmhPtr[0][pp] < 0) && (!cmhPtr[1] || cmhPtr[1][pp] < 0)) {
+            if (isCMHBad(p, Move2From(*it), Move2To(*it), cmhPtr, -HISTORY_MAX/4)) {
                stats.incr(Stats::sid_CMHPruning);
                continue;
             }

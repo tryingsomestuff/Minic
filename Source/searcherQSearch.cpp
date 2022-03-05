@@ -228,6 +228,8 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    const Square recapture     = (isValidMove(p.lastMove) && isCapture(p.lastMove)) ? Move2To(p.lastMove) : INVALIDSQUARE;
    const bool   onlyRecapture = qply > 5 && recapture != INVALIDSQUARE;
 
+   //std::cout << "=========================" << std::endl;
+   //std::cout << ToString(p) << std::endl;
    CMHPtrArray cmhPtr;
    getCMHPtr(p.halfmoves, cmhPtr);
 
