@@ -204,15 +204,16 @@ TCEC hardware: Minic is at 3429 (https://tcec-chess.com/bayeselo.txt)
 
 ### TCEC
 
-Here are Minic results at TCEC
+Here are Minic results at TCEC (https://tcec-chess.com/)
 
-TCEC15: 8th/10 in Division 4a (https://en.wikipedia.org/wiki/TCEC_Season_15)    
-TCEC16: 13th/18 in Qualification League (https://en.wikipedia.org/wiki/TCEC_Season_16)   
-TCEC17: 7th/16 in Q League, 13th/16 in League 2 (https://en.wikipedia.org/wiki/TCEC_Season_17)  
-TCEC18: 4th/10 in League 3 (https://en.wikipedia.org/wiki/TCEC_Season_18)  
-TCEC19: 3rd/10 in League 3 (https://en.wikipedia.org/wiki/TCEC_Season_19)  
-TCEC20: 2nd/10 in League 3, 9th/10 in League 2 (https://en.wikipedia.org/wiki/TCEC_Season_20)  
-TCEC21: 1st/12 in League 3, 6th/10 in League 2 (https://en.wikipedia.org/wiki/TCEC_Season_21)  
+TCEC15: 8th/10 in Division 4a (https://www.chessprogramming.org/TCEC_Season_15)    
+TCEC16: 13th/18 in Qualification League (https://www.chessprogramming.org/TCEC_Season_16)   
+TCEC17: 7th/16 in Q League, 13th/16 in League 2 (https://www.chessprogramming.org/TCEC_Season_17)  
+TCEC18: 4th/10 in League 3 (https://www.chessprogramming.org/TCEC_Season_18)  
+TCEC19: 3rd/10 in League 3 (https://www.chessprogramming.org/TCEC_Season_19)  
+TCEC20: 2nd/10 in League 3, 9th/10 in League 2 (https://www.chessprogramming.org/TCEC_Season_20)  
+TCEC21: 1st/12 in League 3, 6th/10 in League 2 (https://www.chessprogramming.org/TCEC_Season_21)  
+TCEC22: 2nd/8 in League 2, 8th/8 in League 1 (well tried ;) )  (https://www.chessprogramming.org/TCEC_Season_22)  
 
 ## Release process
 WARNING : the former Dist directory as been REMOVED from the repository because it was starting to be too big. Unofficial releases are not available anymore here. All (unofficial) releases are available in a new repo, here : https://github.com/tryingsomestuff/Minic-Dist, also available as a git submodule.
