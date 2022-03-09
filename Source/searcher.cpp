@@ -31,14 +31,7 @@ void Searcher::getCMHPtr(const unsigned int ply, CMHPtrArray& cmhPtr) {
       assert(int(ply) - int(2*k) < MAX_PLY && int(ply) - int(2*k) >= 0);
       if (ply > 2*k && isValidMove(stack[ply - 2*k].p.lastMove)) {
          const Position & pref = stack[ply - 2*k].p;
-         //std::cout << "*****************" << std::endl;
-         //std::cout << ToString(pref.lastMove) << std::endl;
-         //std::cout << ToString(pref) << std::endl;
-         //const Square from = Move2From(pref.lastMove);
          const Square to = correctedMove2ToKingDest(pref.lastMove);
-         //std::cout << int(to) << std::endl;
-         //std::cout << int(from) << std::endl;
-         //std::cout << int(pref.board_const(to)) << std::endl;
          cmhPtr[k] = historyT.counter_history[PieceIdx(pref.board_const(to))][to];
       }
    }
