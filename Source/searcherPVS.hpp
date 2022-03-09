@@ -588,7 +588,6 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             /*
             // CMH extension
             if (EXTENDMORE(extension) && isQuiet) {
-                const int pp = (p.board_const(Move2From(e.m)) + PieceShift) * NbSquare + to;
                 if (isCMHGood(p, Move2From(e.m), to, cmhPtr, HISTORY_MAX / 2) stats.incr(Stats::sid_CMHExtension), ++extension;
             }
             */
