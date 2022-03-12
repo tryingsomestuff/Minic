@@ -479,7 +479,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    }
 
    // Ed style IIR
-   if ( SearchConfig::doIIR && pvnode && depth >= 6 && !validTTmove) depth -= 1;
+   if ( SearchConfig::doIIR && !pvnode && depth >= 6 && !validTTmove) depth -= 1;
 
    // Classic IID
    if (SearchConfig::doIID && !validTTmove /*|| e.d < depth-4*/) {
