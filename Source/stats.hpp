@@ -79,6 +79,7 @@ struct Stats {
       sid_mateThreatExtension,
       sid_endGameExtension,
       sid_goodHistoryExtension,
+      sid_EGExtension,
       sid_tbHit1,
       sid_tbHit2,
       sid_dangerPrune,

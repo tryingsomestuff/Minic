@@ -166,7 +166,7 @@ ScoreType helperKXK(const Position &p, Color winningSide, ScoreType s, DepthType
    }
    const Square    winningK = p.king[winningSide];
    const Square    losingK  = p.king[~winningSide];
-   const ScoreType sc       = pushToEdges[losingK] + pushClose[chebyshevDistance(winningK, losingK)];
+   const ScoreType sc       = 12 * pushToEdges[losingK] + pushClose[chebyshevDistance(winningK, losingK)];
    return clampScore(s + ((winningSide == Co_White) ? (sc + WIN - height + 1) : (-sc - WIN + height)));
 }
 
@@ -177,7 +177,7 @@ ScoreType helperKmmK(const Position &p, Color winningSide, ScoreType s, DepthTyp
       winningK = VFlip(winningK);
       losingK  = VFlip(losingK);
    }
-   const ScoreType sc = pushToCorners[losingK] + pushClose[chebyshevDistance(winningK, losingK)];
+   const ScoreType sc = 12 * pushToCorners[losingK] + pushClose[chebyshevDistance(winningK, losingK)];
    return clampScore(s + ((winningSide == Co_White) ? (sc + WIN - height + 1) : (-sc - WIN + height)));
 }
 

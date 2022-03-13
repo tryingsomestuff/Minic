@@ -194,6 +194,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    const bool withoutSkipMove = skipMoves == nullptr;
    Hash pHash = computeHash(p);
+   
    // consider skipmove(s) in position hash
    if (skipMoves)
       for (auto it = skipMoves->begin(); it != skipMoves->end(); ++it) { pHash ^= (*it); }
@@ -350,35 +351,35 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
      stats.incr(Stats::sid_staticScoreIsFromSearch);
    }
 
-   ScoreType  bestScore = matedScore(height);
-   MoveList   moves;
-   bool       moveGenerated    = false;
-   bool       capMoveGenerated = false;
-   bool       futility = false, lmp = false, /*mateThreat = false,*/ historyPruning = false, capHistoryPruning = false, CMHPruning = false;
-   MiniMove   refutation   = INVALIDMINIMOVE;
-   DepthType  marginDepth  = std::max(1, depth - (evalScoreIsHashScore ? e.d : 0)); // a depth that take TT depth into account
-   const bool isNotEndGame = p.mat[p.c][M_t] > 0;                                   ///@todo better ?
-   const bool improving    = (!isInCheck && height > 1 && stack[p.halfmoves].eval >= stack[p.halfmoves - 2].eval);
-   const ScoreType alphaInit = alpha;
+   ScoreType       bestScore = matedScore(height);
+   MoveList        moves;
+   bool            moveGenerated    = false;
+   bool            capMoveGenerated = false;
+   bool            futility = false, lmp = false, /*mateThreat = false,*/ historyPruning = false, capHistoryPruning = false, CMHPruning = false;
+   MiniMove        refutation       = INVALIDMINIMOVE;
+   DepthType       marginDepth      = std::max(1, depth - (evalScoreIsHashScore ? e.d : 0)); // a depth that take TT depth into account
+   const bool      isNotPawnEndGame = p.mat[p.c][M_t] > 0;
+   const bool      improving        = (!isInCheck && height > 1 && stack[p.halfmoves].eval >= stack[p.halfmoves - 2].eval);
+   const ScoreType alphaInit        = alpha;
 
    // forward prunings
    if (!DynamicConfig::mateFinder && !rootnode && !isInCheck && !pvnode /*&& !isMateScore(beta)*/) { // removing the !isMateScore(beta) is not losing that much elo and allow for better check mate finding ...
       
       // static null move
-      if (SearchConfig::doStaticNullMove && !isMateScore(evalScore) && isNotEndGame && SearchConfig::staticNullMoveCoeff.isActive(depth, evalScoreIsHashScore) ) {
+      if (SearchConfig::doStaticNullMove && !isMateScore(evalScore) && isNotPawnEndGame && SearchConfig::staticNullMoveCoeff.isActive(depth, evalScoreIsHashScore) ) {
          const ScoreType margin = SearchConfig::staticNullMoveCoeff.threshold(marginDepth, data.gp, evalScoreIsHashScore, improving);
          if (evalScore >= beta + margin) return stats.incr(Stats::sid_staticNullMove), evalScore - margin;
       }
 
       // (absence of) Opponent threats pruning (idea origin from Koivisto)
-      if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && isNotEndGame && SearchConfig::threatCoeff.isActive(depth, evalScoreIsHashScore) && 
+      if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && isNotPawnEndGame && SearchConfig::threatCoeff.isActive(depth, evalScoreIsHashScore) && 
            !data.goodThreats[~p.c] && evalScore > beta + SearchConfig::threatCoeff.threshold(depth, data.gp, evalScoreIsHashScore, improving) ){
          return stats.incr(Stats::sid_threatsPruning), beta;
       }
 
 /*
       // Own threats pruning
-      if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && isNotEndGame && SearchConfig::ownThreatCoeff.isActive(depth, evalScoreIsHashScore) && 
+      if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && isNotPawnEndGame && SearchConfig::ownThreatCoeff.isActive(depth, evalScoreIsHashScore) && 
            data.goodThreats[p.c] && !data.goodThreats[~p.c] && evalScore > beta + SearchConfig::ownThreatCoeff.threshold(depth, data.gp, evalScoreIsHashScore, improving) ){
          return stats.incr(Stats::sid_threatsPruning), beta;
       }
@@ -394,7 +395,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       }
 
       // null move (warning, mobility info is only available if no TT hit)
-      if (SearchConfig::doNullMove && !subSearch && (isNotEndGame || data.mobility[p.c] > 4) && withoutSkipMove &&
+      if (SearchConfig::doNullMove && !subSearch && (isNotPawnEndGame || data.mobility[p.c] > 4) && withoutSkipMove &&
           depth >= SearchConfig::nullMoveMinDepth && evalScore >= beta + SearchConfig::nullMoveMargin && evalScore >= stack[p.halfmoves].eval &&
           stack[p.halfmoves].p.lastMove != NULLMOVE && (height >= nullMoveMinPly || nullMoveMinPly != p.c)) {
          PVList nullPV;
@@ -422,7 +423,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                if (nullEThreat.h != nullHash && nullEThreat.m != INVALIDMINIMOVE) refutation = nullEThreat.m;
                //if (isMatedScore(nullscore)) mateThreat = true;
                if (nullscore >= beta) { // verification search
-                  if ( (!isNotEndGame || depth > SearchConfig::nullMoveVerifDepth) && nullMoveMinPly == 0){
+                  if ( (!isNotPawnEndGame || depth > SearchConfig::nullMoveVerifDepth) && nullMoveMinPly == 0){
                      stats.incr(Stats::sid_nullMoveTry3);
                      nullMoveMinPly = height + 3*nullDepth/4;
                      nullMoveVerifColor = p.c;
@@ -479,7 +480,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    }
 
    // Ed style IIR
-   if ( SearchConfig::doIIR && !pvnode && depth >= 6 && !validTTmove) depth -= 1;
+   if ( SearchConfig::doIIR && depth >= 4 && !validTTmove) depth -= 1;
 
    // Classic IID
    if (SearchConfig::doIID && !validTTmove /*|| e.d < depth-4*/) {
@@ -516,11 +517,11 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
           alpha - SearchConfig::futilityPruningCoeff.threshold(marginDepth, data.gp, evalScoreIsHashScore, improving);
       futility = SearchConfig::doFutility && SearchConfig::futilityPruningCoeff.isActive(depth,evalScoreIsHashScore) && evalScore <= futilityScore;
       // history pruning
-      historyPruning = SearchConfig::doHistoryPruning && isNotEndGame && SearchConfig::historyPruningCoeff.isActive(depth, improving);
+      historyPruning = SearchConfig::doHistoryPruning && isNotPawnEndGame && SearchConfig::historyPruningCoeff.isActive(depth, improving);
       // CMH pruning
-      CMHPruning = SearchConfig::doCMHPruning && isNotEndGame && depth < SearchConfig::CMHMaxDepth[improving];
+      CMHPruning = SearchConfig::doCMHPruning && isNotPawnEndGame && depth < SearchConfig::CMHMaxDepth[improving];
       // capture history pruning
-      capHistoryPruning = SearchConfig::doCapHistoryPruning && isNotEndGame && SearchConfig::captureHistoryPruningCoeff.isActive(depth, improving);
+      capHistoryPruning = SearchConfig::doCapHistoryPruning && isNotPawnEndGame && SearchConfig::captureHistoryPruningCoeff.isActive(depth, improving);
    }
 
    int       validMoveCount      = 0;
@@ -651,7 +652,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                      else if (isCapture(bestMove)) // capture history
                         historyT.updateCap<1>(depth + (ttScore > (beta + SearchConfig::betaMarginDynamicHistory)), bestMove, p);
                   }
-
+                  
                   TT::setEntry(*this, pHash, bestMove, createHashScore(ttScore, height), createHashScore(evalScore, height),
                                       TT::Bound(TT::B_beta | 
                                       (ttPV ? TT::B_ttPVFlag : TT::B_none) | 
@@ -775,7 +776,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          //if (EXTENDMORE(extension) && pvnode && firstMove && (p.pieces_const<P_wq>(p.c) && isQuiet && Move2Type(*it) == T_std && PieceTools::getPieceType(p, Move2From(*it)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, *it, 0)) stats.incr(Stats::sid_queenThreatExtension), ++extension;
          // move that lead to endgame
          /*
-           if ( EXTENDMORE(extension) && isNotEndGame && (p2.mat[p.c][M_t]+p2.mat[~p.c][M_t] == 0)){
+           if ( EXTENDMORE(extension) && isNotPawnEndGame && (p2.mat[p.c][M_t]+p2.mat[~p.c][M_t] == 0)){
               ++extension;
               stats.incr(Stats::sid_endGameExtension);
            }
@@ -795,8 +796,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       }
       else {
          // reductions & prunings
-         const bool isPrunable           = /*isNotEndGame &&*/ !DynamicConfig::mateFinder && !isAdvancedPawnPush && !isMateScore(alpha) && !killerT.isKiller(*it, height);
-         const bool isReductible         = /*isNotEndGame &&*/ !isAdvancedPawnPush && !DynamicConfig::mateFinder;
+         const bool isPrunable           = /*isNotPawnEndGame &&*/ !DynamicConfig::mateFinder && !isAdvancedPawnPush && !isMateScore(alpha) && !killerT.isKiller(*it, height);
+         const bool isReductible         = /*isNotPawnEndGame &&*/ !isAdvancedPawnPush && !DynamicConfig::mateFinder;
          const bool noCheck              = !isInCheck && !isCheck;
          const bool isPrunableStd        = isPrunable && isQuiet;
          const bool isPrunableStdNoCheck = isPrunableStd && noCheck;
