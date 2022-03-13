@@ -89,6 +89,15 @@ struct Position {
       c = Co_White;
    }
 
+#ifdef DEBUG_FIFTY_COLLISION
+   [[nodiscard]] bool operator== (const Position &p)const{
+      return _allB == p._allB && ep == p.ep && castling == p.castling && c == p.c;
+   }
+   [[nodiscard]] bool operator!= (const Position &p)const{
+      return _allB != p._allB || ep != p.ep || castling != p.castling || c != p.c;
+   }   
+#endif
+
    [[nodiscard]] inline RootInformation& rootInfo() {
       assert(root);
       return *root;

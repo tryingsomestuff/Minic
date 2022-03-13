@@ -109,6 +109,7 @@ const std::string MinicVersion = "3.18";
 //#define DEBUG_STATICEVAL
 //#define DEBUG_EVALSYM
 //#define DEBUG_TT_CHECK
+//#define DEBUG_FIFTY_COLLISION
 
 #ifdef WITH_EVAL_TUNING
 #define CONST_EVAL_TUNING
