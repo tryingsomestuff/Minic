@@ -184,8 +184,8 @@ const std::string MinicVersion = "3.18";
 #define HSCORE(depth)   static_cast<ScoreType>(SQR(std::min(static_cast<int>(depth), 32)) * 4)
 #define MAX_THREADS     256
 
-#define SQFILE(s)              ((s)&7)
-#define SQRANK(s)              ((s) >> 3)
+#define SQFILE(s)              static_cast<File>((s)&7)
+#define SQRANK(s)              static_cast<Rank>((s) >> 3)
 #define ISOUTERFILE(x)         (SQFILE(x) == 0 || SQFILE(x) == 7)
 #define ISNEIGHBOUR(x, y)      ((x) >= 0 && (x) < 64 && (y) >= 0 && (y) < 64 && Abs(SQRANK(x) - SQRANK(y)) <= 1 && Abs(SQFILE(x) - SQFILE(y)) <= 1)
 #define PROMOTION_RANK(x)      (SQRANK(x) == 0 || SQRANK(x) == 7)
