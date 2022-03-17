@@ -801,7 +801,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          const bool noCheck              = !isInCheck && !isCheck;
          const bool isPrunableStd        = isPrunable && isQuiet;
          const bool isPrunableStdNoCheck = isPrunableStd && noCheck;
-         const bool isPrunableCap        = isPrunable && Move2Type(*it) == T_capture && noCheck;
+         const bool isPrunableCap        = isPrunable && Move2Type(*it) == T_capture && !isInCheck;
          const bool isPrunableBadCap     = isPrunableCap && isBadCap(*it);
 
          // futility
