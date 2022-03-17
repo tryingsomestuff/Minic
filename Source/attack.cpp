@@ -243,29 +243,44 @@ bool isAttackedBB(const Position &p, const Square s, const Color c) { ///@todo t
    assert(isValidSquare(s));
    const BitBoard occupancy = p.occupancy();
    if (c == Co_White)
-      return attack<P_wb>(s, p.blackBishop() | p.blackQueen(), occupancy) || attack<P_wr>(s, p.blackRook() | p.blackQueen(), occupancy) ||
-             attack<P_wp>(s, p.blackPawn(), occupancy, Co_White) || attack<P_wn>(s, p.blackKnight()) || attack<P_wk>(s, p.blackKing());
+      return attack<P_wb>(s, p.blackBishop() | p.blackQueen(), occupancy) || 
+             attack<P_wr>(s, p.blackRook() | p.blackQueen(), occupancy) ||
+             attack<P_wp>(s, p.blackPawn(), occupancy, Co_White) || 
+             attack<P_wn>(s, p.blackKnight()) || 
+             attack<P_wk>(s, p.blackKing());
    else
-      return attack<P_wb>(s, p.whiteBishop() | p.whiteQueen(), occupancy) || attack<P_wr>(s, p.whiteRook() | p.whiteQueen(), occupancy) ||
-             attack<P_wp>(s, p.whitePawn(), occupancy, Co_Black) || attack<P_wn>(s, p.whiteKnight()) || attack<P_wk>(s, p.whiteKing());
+      return attack<P_wb>(s, p.whiteBishop() | p.whiteQueen(), occupancy) || 
+             attack<P_wr>(s, p.whiteRook() | p.whiteQueen(), occupancy) ||
+             attack<P_wp>(s, p.whitePawn(), occupancy, Co_Black) || 
+             attack<P_wn>(s, p.whiteKnight()) || 
+             attack<P_wk>(s, p.whiteKing());
 }
 
 BitBoard allAttackedBB(const Position &p, const Square s, const Color c) {
    assert(isValidSquare(s));
    const BitBoard occupancy = p.occupancy();
    if (c == Co_White)
-      return attack<P_wb>(s, p.blackBishop() | p.blackQueen(), occupancy) | attack<P_wr>(s, p.blackRook() | p.blackQueen(), occupancy) |
-             attack<P_wn>(s, p.blackKnight()) | attack<P_wp>(s, p.blackPawn(), occupancy, Co_White) | attack<P_wk>(s, p.blackKing());
+      return attack<P_wb>(s, p.blackBishop() | p.blackQueen(), occupancy) | 
+             attack<P_wr>(s, p.blackRook() | p.blackQueen(), occupancy) |
+             attack<P_wn>(s, p.blackKnight()) | 
+             attack<P_wp>(s, p.blackPawn(), occupancy, Co_White) | 
+             attack<P_wk>(s, p.blackKing());
    else
-      return attack<P_wb>(s, p.whiteBishop() | p.whiteQueen(), occupancy) | attack<P_wr>(s, p.whiteRook() | p.whiteQueen(), occupancy) |
-             attack<P_wn>(s, p.whiteKnight()) | attack<P_wp>(s, p.whitePawn(), occupancy, Co_Black) | attack<P_wk>(s, p.whiteKing());
+      return attack<P_wb>(s, p.whiteBishop() | p.whiteQueen(), occupancy) | 
+             attack<P_wr>(s, p.whiteRook() | p.whiteQueen(), occupancy) |
+             attack<P_wn>(s, p.whiteKnight()) | 
+             attack<P_wp>(s, p.whitePawn(), occupancy, Co_Black) | 
+             attack<P_wk>(s, p.whiteKing());
 }
 
 BitBoard allAttackedBB(const Position &p, const Square s) {
    assert(isValidSquare(s));
    const BitBoard occupancy = p.occupancy();
-   return attack<P_wb>(s, p.allBishop() | p.allQueen(), occupancy) | attack<P_wr>(s, p.allRook() | p.allQueen(), occupancy) |
-          attack<P_wn>(s, p.allKnight()) | attack<P_wp>(s, p.blackPawn(), occupancy, Co_White) | attack<P_wp>(s, p.whitePawn(), occupancy, Co_Black) |
+   return attack<P_wb>(s, p.allBishop() | p.allQueen(), occupancy) | 
+          attack<P_wr>(s, p.allRook() | p.allQueen(), occupancy) |
+          attack<P_wn>(s, p.allKnight()) | 
+          attack<P_wp>(s, p.blackPawn(), occupancy, Co_White) | 
+          attack<P_wp>(s, p.whitePawn(), occupancy, Co_Black) |
           attack<P_wk>(s, p.allKing());
 }
 
