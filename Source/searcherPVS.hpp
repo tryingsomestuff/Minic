@@ -755,9 +755,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          // mate threat extension (from null move)
          //if (EXTENDMORE(extension) && mateThreat && depth <= 4) stats.incr(Stats::sid_mateThreatExtension),++extension;
          // simple recapture extension
-         //if (EXTENDMORE(extension) && pvnode && isValidMove(p.lastMove) && !isBadCap(*it) && Move2Type(p.lastMove) == T_capture && to == Move2To(p.lastMove)) stats.incr(Stats::sid_recaptureExtension),++extension; //recapture
+         //if (EXTENDMORE(extension) && pvnode && isValidMove(p.lastMove) && Move2Type(p.lastMove) == T_capture && !isBadCap(*it) && to == Move2To(p.lastMove)) stats.incr(Stats::sid_recaptureExtension),++extension; //recapture
          // gives check extension
-         //if (EXTENDMORE(extension) && isCheck && !isBadCap(*it)) stats.incr(Stats::sid_checkExtension2),++extension; // we give check with a non risky move
+         //if (EXTENDMORE(extension) && isCheck ) stats.incr(Stats::sid_checkExtension2),++extension; // we give check
          // CMH extension
          /*
          if (EXTENDMORE(extension) && isQuiet) {

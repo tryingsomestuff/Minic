@@ -58,7 +58,7 @@ template<Color C> void MoveSorter::computeScore(Move& m) const {
             // recapture bonus
             if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == correctedMove2ToRookDest(p.lastMove)) s += 512;
             // too bad capture are ordered last (-7000)
-            if (see < -80) s -= 2 * MoveScoring[T_capture];
+            if (see < badCapLimit) s -= 2 * MoveScoring[T_capture];
          }
          else { // without SEE
             // recapture (> max MVVLVA value)
