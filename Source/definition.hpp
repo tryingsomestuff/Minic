@@ -559,8 +559,12 @@ constexpr ScoreType MoveScoring[16] = {   0,                   // standard
 }
 [[nodiscard]] inline constexpr bool isCaptureOrProm(const Move m) { return isCaptureOrProm(Move2Type(m)); }
 
-[[nodiscard]] inline constexpr bool      isBadCap(const Move m) { return Move2Score(m) < -MoveScoring[T_capture] + 800; }
+constexpr ScoreType badCapLimit = -80;
+
 [[nodiscard]] inline constexpr ScoreType badCapScore(const Move m) { return Move2Score(m) + MoveScoring[T_capture]; }
+// be carefull isBadCap shall only be used on moves already detected as capture !
+[[nodiscard]] inline constexpr bool      isBadCap(const Move m) { return badCapScore(m) < badCapLimit; }
+
 
 [[nodiscard]] inline constexpr Square chebyshevDistance(const Square sq1, const Square sq2) {
    return std::max(Abs(static_cast<Square>(SQRANK(sq2) - SQRANK(sq1))), Abs(static_cast<Square>(SQFILE(sq2) - SQFILE(sq1))));
