@@ -172,8 +172,8 @@ Minic random-mover stats are the following :
 <img src="https://raw.githubusercontent.com/tryingsomestuff/Minic/master/Doc/minic_progress.JPG" width="450">
 
 ### CCRL
-- 40/15: Minic 3.17 + Nucleated Neurulation is tested at 3310 on the [CCRL 40/15 scale, 4 cores](http://ccrl.chessdom.com/ccrl/4040/)  
-- Blitz: Minic 3.17 + Nucleated Neurulation is tested at 3472 on the [CCRL BLITZ scale, 8 cores](http://ccrl.chessdom.com/ccrl/404/)  
+- 40/15: Minic 3.18 + Nimble Nothingness is tested at 3366 on the [CCRL 40/15 scale, 4 cores](http://ccrl.chessdom.com/ccrl/4040/)  
+- Blitz: Minic 3.17 + Nucleated Neurulation is tested at 3458 on the [CCRL BLITZ scale, 8 cores](http://ccrl.chessdom.com/ccrl/404/)  
 - FRC: Minic 3.18 + Nimble Nothingness is tested at 3468 on the [CCRL FRC list](http://ccrl.chessdom.com/ccrl/404FRC/)  
 
 ### CEGT
