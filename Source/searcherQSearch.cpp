@@ -89,6 +89,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    EvalData data;
    // we cannot search deeper than MAX_DEPTH, is so just return static evaluation
    if (height >= MAX_DEPTH - 1) return eval(p, data, *this);
+   if (p.fifty >= 101) return drawScore(p, height);
 
    Move bestMove = INVALIDMOVE;
 
@@ -301,6 +302,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    if (alphaInit == alpha ) stats.incr(Stats::sid_qalphanoupdate);
 
    if (validMoveCount == 0 && isInCheck) bestScore = matedScore(height);
+   else if (p.fifty >= 100) return drawScore(p, height);
 
    TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(evalScore, height),
                 TT::Bound(b | (ttPV ? TT::B_ttPVFlag : TT::B_none) | (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), hashDepth);
