@@ -20,6 +20,7 @@ class SparseBatch(ctypes.Structure):
         ('is_white', ctypes.POINTER(ctypes.c_float)),
         ('outcome', ctypes.POINTER(ctypes.c_float)),
         ('score', ctypes.POINTER(ctypes.c_float)),
+        ('phase', ctypes.POINTER(ctypes.c_int)),
         ('num_active_white_features', ctypes.c_int),
         ('num_active_black_features', ctypes.c_int),
         ('white', ctypes.POINTER(ctypes.c_int)),
@@ -37,12 +38,13 @@ class SparseBatch(ctypes.Structure):
         them = 1.0 - us
         outcome = torch.from_numpy(np.ctypeslib.as_array(self.outcome, shape=(self.size, 1))).pin_memory().to(device=device, non_blocking=True)
         score = torch.from_numpy(np.ctypeslib.as_array(self.score, shape=(self.size, 1))).pin_memory().to(device=device, non_blocking=True)
+        phase = torch.from_numpy(np.ctypeslib.as_array(self.phase, shape=(self.size, 1))).pin_memory().to(device=device, non_blocking=True)
         white = torch._sparse_coo_tensor_unsafe(iw, white_values, (self.size, self.num_inputs))
         black = torch._sparse_coo_tensor_unsafe(ib, black_values, (self.size, self.num_inputs))
         white._coalesced_(True)
         black._coalesced_(True)
         #print("#####", us.size(), them.size(), white.size(), black.size())
-        return us, them, white, black, outcome, score
+        return us, them, white, black, outcome, score, phase
 
 SparseBatchPtr = ctypes.POINTER(SparseBatch)
 

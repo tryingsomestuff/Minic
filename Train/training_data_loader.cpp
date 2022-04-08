@@ -152,6 +152,7 @@ struct SparseBatch
         is_white = new float[size];
         outcome = new float[size];
         score = new float[size];
+        phase = new int[size];
         white = new int[size * FeatureSet<Ts...>::MAX_ACTIVE_FEATURES * 2];
         black = new int[size * FeatureSet<Ts...>::MAX_ACTIVE_FEATURES * 2];
         white_values = new float[size * FeatureSet<Ts...>::MAX_ACTIVE_FEATURES];
@@ -175,6 +176,7 @@ struct SparseBatch
     float* is_white;
     float* outcome;
     float* score;
+    int* phase;
     int num_active_white_features;
     int num_active_black_features;
     int* white;
@@ -187,6 +189,7 @@ struct SparseBatch
         delete[] is_white;
         delete[] outcome;
         delete[] score;
+        delete[] phase;
         delete[] white;
         delete[] black;
         delete[] white_values;
@@ -201,6 +204,7 @@ private:
         is_white[i] = static_cast<float>(e.pos.sideToMove() == Color::White);
         outcome[i] = (e.result + 1.0f) / 2.0f;
         score[i] = e.score;
+        phase[i] = std::min(3,e.pos.piecesBB().count()/8);
         fill_features(FeatureSet<Ts...>{}, i, e);
     }
 

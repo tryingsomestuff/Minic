@@ -9,12 +9,16 @@
 #include "weightReader.hpp"
 
 template<typename NT, bool Q> struct NNUEWeights {
+
+   static constexpr int nbuckets = 4;
+   static constexpr int bucketDivisor = 32/nbuckets;
+
    InputLayer<NT, inputLayerSize, firstInnerLayerSize, Q> w {};
    InputLayer<NT, inputLayerSize, firstInnerLayerSize, Q> b {};
-   Layer<NT, 2 * firstInnerLayerSize, 32, Q>       fc0 {};
-   Layer<NT, 32, 32, Q>                            fc1 {};
-   Layer<NT, 64, 32, Q>                            fc2 {};
-   Layer<NT, 96,  1, Q>                            fc3 {};
+   Layer<NT, 2 * firstInnerLayerSize, 32, Q>       fc0[nbuckets];
+   Layer<NT, 32, 32, Q>                            fc1[nbuckets];
+   Layer<NT, 64, 32, Q>                            fc2[nbuckets];
+   Layer<NT, 96,  1, Q>                            fc3[nbuckets];
 
    uint32_t version {0};
 
@@ -23,16 +27,16 @@ template<typename NT, bool Q> struct NNUEWeights {
       if (readVersion) ws.readVersion(version);
       w.load_(ws);
       b.load_(ws);
-      fc0.load_(ws);
-      fc1.load_(ws);
-      fc2.load_(ws);
-      fc3.load_(ws);
+      for(int k = 0 ; k < nbuckets; ++k) fc0[k].load_(ws);
+      for(int k = 0 ; k < nbuckets; ++k) fc1[k].load_(ws);
+      for(int k = 0 ; k < nbuckets; ++k) fc2[k].load_(ws);
+      for(int k = 0 ; k < nbuckets; ++k) fc3[k].load_(ws);
       return *this;
    }
 
    static bool load(const std::string& path, NNUEWeights<NT, Q>& loadedWeights) {
-      constexpr uint32_t expectedVersion {0xc0ffee00};
-      constexpr int      expectedSize    {50378504}; // net size + 4 for version
+      constexpr uint32_t expectedVersion {0xc0ffee01};
+      constexpr int      expectedSize    {50515988}; // net size + 4 for version
       constexpr bool     withVersion     {true}; // used for backward compatiblity and debug
 
       if (path != "embedded") { // read from disk

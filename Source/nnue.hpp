@@ -18,7 +18,7 @@
 namespace NNUEWrapper {
 
 typedef float nnueNType;            // type of data inside the binary net
-const bool    quantization = false; // not compatible with USE_SIMD_INTRIN and probably needs WITH_NNUE_CLIPPED_RELU to be true
+constexpr bool    quantization = false; // not compatible with USE_SIMD_INTRIN and probably needs WITH_NNUE_CLIPPED_RELU to be true
 
 inline void init() {
    bool       loadOk        = false;

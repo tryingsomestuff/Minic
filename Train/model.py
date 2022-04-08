@@ -11,6 +11,11 @@ netversion = struct.unpack('!f', bytes.fromhex('c0ffee01'))[0]
 
 withFactorizer = True
 
+nphase = 4
+L1 = 32
+L2 = 32
+L3 = 32
+
 def piece_position(i):
   return i % (12 * 64)
 
@@ -83,16 +88,27 @@ class NNUE(pl.LightningModule):
 
     # dropout seems necessary when using factorizer to avoid over-fitting
     self.d0 = nn.Dropout(p=0.05)
-    self.fc0 = nn.Linear(2*BASE, 32)
+    self.fc0 = nn.Linear(2*BASE, L1 * nphase)
+
     self.d1 = nn.Dropout(p=0.1)
-    self.fc1 = nn.Linear(32, 32)
+    self.fc1 = nn.Linear(L1, L2 * nphase)
+
     self.d2 = nn.Dropout(p=0.1)
-    self.fc2 = nn.Linear(64, 32)
+    self.fc2 = nn.Linear(L2 + L1, L3 * nphase)
+    
     self.d3 = nn.Dropout(p=0.1)
-    self.fc3 = nn.Linear(96,  1)
+    self.fc3 = nn.Linear(L3 + L2 + L1,  1 * nphase)
+
     self.lambda_ = lambda_
 
-  def forward(self, us, them, white, black):
+    self.idx_offset = None
+
+  def forward(self, us, them, white, black, phase):
+
+    if self.idx_offset == None or self.idx_offset.shape[0] != phase.shape[0]:
+        self.idx_offset = torch.arange(0, phase.shape[0] * nphase, nphase, device=phase.device)
+
+    indices = phase.flatten() + self.idx_offset
 
     if len(white.size()) > 2: # data are from pydataloader
       w__ = halfka.half_ka(white, black)
@@ -105,29 +121,40 @@ class NNUE(pl.LightningModule):
     
     # clipped relu
     base = torch.clamp(us * torch.cat([w_, b_], dim=1) + (1.0 - us) * torch.cat([b_, w_], dim=1),0,1)
+
     if withFactorizer:
       base = self.d0(base)
-    x = torch.clamp(self.fc0(base),0,1)
+    y0 = torch.clamp(self.fc0(base),0,1)
+    y0 = y0.view(-1, L1)[indices]
+
     if withFactorizer:
-      x = self.d1(x)
-    x = torch.cat([x, torch.clamp(self.fc1(x),0,1)], dim=1)
+      y0 = self.d1(y0)
+    y1 = torch.clamp(self.fc1(y0),0,1)
+    y1 = y1.view(-1, L2)[indices]
+    y1 = torch.cat([y0, y1], dim=1)
+
     if withFactorizer:
-      x = self.d2(x)
-    x = torch.cat([x, torch.clamp(self.fc2(x),0,1)], dim=1)
+      y1 = self.d2(y1)
+    y2 = torch.clamp(self.fc2(y1),0,1)
+    y2 = y2.view(-1, L3)[indices]
+    y2 = torch.cat([y1, y2], dim=1)
+
     if withFactorizer:
-      x = self.d3(x)
-    x = self.fc3(x)
-    return x
+      y2 = self.d3(y2)
+    y3 = self.fc3(y2)
+    y3 = y3.view(-1, 1)[indices]
+
+    return y3
 
   def step_(self, batch, batch_idx, loss_type):
-    us, them, white, black, outcome, score = batch
+    us, them, white, black, outcome, score , phase = batch
   
     #from SF values, shall be tuned
     net2score = 600
     in_scaling = 410
     out_scaling = 361
 
-    q = (self(us, them, white, black) * net2score / out_scaling).sigmoid()
+    q = (self(us, them, white, black, phase) * net2score / out_scaling).sigmoid()
     t = outcome
     p = (score / in_scaling).sigmoid()
 
@@ -164,7 +191,7 @@ class NNUE(pl.LightningModule):
 
   def configure_optimizers(self):
     optimizer = torch.optim.Adadelta(self.parameters(), lr=1, weight_decay=1e-10)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.9)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=75, gamma=0.3)
 
     return [optimizer], [scheduler]
 
@@ -191,17 +218,21 @@ class NNUE(pl.LightningModule):
       joined = join_param(joined, self.black_affine.bias.data)
 
     # fc0
-    joined = join_param(joined, self.fc0.weight.data.t())
-    joined = join_param(joined, self.fc0.bias.data)
+    for i in range(nphase):
+      joined = join_param(joined, self.fc0.weight[i*L1:(i+1)*L1, :].data.t())
+      joined = join_param(joined, self.fc0.bias[i*L1:(i+1)*L1].data)
     # fc1
-    joined = join_param(joined, self.fc1.weight.data.t())
-    joined = join_param(joined, self.fc1.bias.data)
+    for i in range(nphase):
+      joined = join_param(joined, self.fc1.weight[i*L2:(i+1)*L2, :].data.t())
+      joined = join_param(joined, self.fc1.bias[i*L2:(i+1)*L2].data)
     # fc2
-    joined = join_param(joined, self.fc2.weight.data.t())
-    joined = join_param(joined, self.fc2.bias.data)
+    for i in range(nphase):
+      joined = join_param(joined, self.fc2.weight[i*L3:(i+1)*L3, :].data.t())
+      joined = join_param(joined, self.fc2.bias[i*L3:(i+1)*L3].data)
     # fc3
-    joined = join_param(joined, self.fc3.weight.data.t())
-    joined = join_param(joined, self.fc3.bias.data)
+    for i in range(nphase):
+      joined = join_param(joined, self.fc3.weight[i:(i+1), :].data.t())
+      joined = join_param(joined, self.fc3.bias[i:(i+1)].data)
 
     print(joined.shape)
     return joined.astype(np.float32)
