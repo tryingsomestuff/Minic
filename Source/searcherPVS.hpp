@@ -152,6 +152,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // we cannot search deeper than MAX_DEPTH, is so just return static evaluation
    EvalData data;
    if (height >= MAX_DEPTH - 1 || depth >= MAX_DEPTH - 1) return eval(p, data, *this);
+   if (p.fifty >= 101) return drawScore(p, height);
 
    // on pvs leaf node, call a quiet search
    if (depth <= 0) {
@@ -985,6 +986,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // check for draw and check mate
    if (validMoveCount == 0) return (isInCheck || !withoutSkipMove) ? matedScore(height) : drawScore(p, height);
+   else if (p.fifty >= 100) return drawScore(p, height);
 
    // insert data in TT
    TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(evalScore, height),
