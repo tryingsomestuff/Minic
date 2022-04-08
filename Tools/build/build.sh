@@ -93,7 +93,7 @@ else
    echo "end of first compilation"
    if [ $ret = "0" ]; then
       echo "running Minic for profiling : $exe"
-      $exe bench $DEPTH -minOutputLevel 0 -NNUEFile Tourney/nn.bin
+      $exe bench $DEPTH -minOutputLevel 0
       #$exe bench $DEPTH -minOutputLevel 0 -NNUEFile none # force no NNUE
       echo "starting optimized compilation"
       $CXX -fprofile-use $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $exe $LIBS

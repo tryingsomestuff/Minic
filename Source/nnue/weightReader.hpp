@@ -19,7 +19,7 @@ template<typename NT> struct WeightsReader {
       Logging::LogIt(Logging::logInfo) << "Reading inner weight";
       // we will get min and max weight for display purpose
       NT minW = std::numeric_limits<NT>::max();
-      NT maxW = std::numeric_limits<NT>::min();
+      NT maxW = std::numeric_limits<NT>::lowest();
       std::array<char, sizeof(NT)> singleElement {};
       const NT Wscale = Quantization<Q>::weightFactor;
       
@@ -56,7 +56,7 @@ template<typename NT> struct WeightsReader {
       Logging::LogIt(Logging::logInfo) << "Reading input weight";
       // we will get min and max weight for display purpose
       NT minW = std::numeric_limits<NT>::max();
-      NT maxW = std::numeric_limits<NT>::min();
+      NT maxW = std::numeric_limits<NT>::lowest();
       std::array<char, sizeof(NT)> singleElement {};
       const NT Wscale = Quantization<Q>::weightScale;
       // read each weight one by one, and scale them if quantization is active
@@ -87,7 +87,7 @@ template<typename NT> struct WeightsReader {
       Logging::LogIt(Logging::logInfo) << "Reading inner bias";
       // we will get min and max bias for display purpose
       NT minB = std::numeric_limits<NT>::max();
-      NT maxB = std::numeric_limits<NT>::min();
+      NT maxB = std::numeric_limits<NT>::lowest();
       std::array<char, sizeof(NT)> singleElement {};
       const NT Bscale = Quantization<Q>::biasFactor;
       // read each bias one by one, and scale them if quantization is active
@@ -118,7 +118,7 @@ template<typename NT> struct WeightsReader {
       Logging::LogIt(Logging::logInfo) << "Reading input bias";
       // we will get min and max bias for display purpose
       NT minB = std::numeric_limits<NT>::max();
-      NT maxB = std::numeric_limits<NT>::min();
+      NT maxB = std::numeric_limits<NT>::lowest();
       std::array<char, sizeof(NT)> singleElement {};
       const NT Bscale = Quantization<Q>::weightScale;
       // read each bias one by one, and scale them if quantization is active

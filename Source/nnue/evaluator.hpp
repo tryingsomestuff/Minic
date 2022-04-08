@@ -16,6 +16,9 @@ template<typename NT, bool Q> struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTr
    FeatureTransformer<NT, Q> white;
    FeatureTransformer<NT, Q> black;
 
+   static constexpr int nbuckets {NNUEWeights<NT, Q>::nbuckets};
+   static constexpr int bucketDivisor {NNUEWeights<NT, Q>::bucketDivisor};
+
    void clear() {
       white.clear();
       black.clear();
@@ -23,15 +26,46 @@ template<typename NT, bool Q> struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTr
 
    typedef typename Quantization<Q>::BT BT;
 
-   constexpr float propagate(Color c) const {
+   constexpr float propagate(Color c, const int npiece) const {
       const auto w_x = white.active();
       const auto b_x = black.active();
       const auto x0  = c == Co_White ? splice(w_x, b_x).apply_(activationInput<BT, Q>) : splice(b_x, w_x).apply_(activationInput<BT, Q>);
-      const auto x1 = (weights.fc0).forward(x0).apply_(activation<BT, Q>);
-      const auto x2 = splice(x1, (weights.fc1).forward(x1).apply_(activation<BT, Q>));
-      const auto x3 = splice(x2, (weights.fc2).forward(x2).apply_(activation<BT, Q>));
-      const float val = (weights.fc3).forward(x3).item();
-      return val / Quantization<Q>::outFactor;
+      
+      const int phase = std::min(nbuckets-1, (npiece-1) / bucketDivisor);
+      int k1 = phase;
+      int k2 = phase;
+      if( npiece > phase * bucketDivisor + bucketDivisor/2 ){
+         k2 = std::min(nbuckets - 1, phase + 1);
+      }
+      else{
+         k1 = std::max(0, phase - 1);
+      }
+      if ( k1 == k2 ){
+         assert(phase == 0 || phase == nbuckets-1);
+         const auto x1 = (weights.fc0[phase]).forward(x0).apply_(activation<BT, Q>);
+         const auto x2 = splice(x1, (weights.fc1[phase]).forward(x1).apply_(activation<BT, Q>));
+         const auto x3 = splice(x2, (weights.fc2[phase]).forward(x2).apply_(activation<BT, Q>));
+         const float val = (weights.fc3[phase]).forward(x3).item();
+         return val / Quantization<Q>::outFactor;
+      }
+      else{
+         const int dsup = k2 * bucketDivisor + bucketDivisor/2 - npiece;          
+         assert(dsup>=0 && dsup<=8);
+         float val = 0;
+         {
+         const auto x1 = (weights.fc0[k1]).forward(x0).apply_(activation<BT, Q>);
+         const auto x2 = splice(x1, (weights.fc1[k1]).forward(x1).apply_(activation<BT, Q>));
+         const auto x3 = splice(x2, (weights.fc2[k1]).forward(x2).apply_(activation<BT, Q>));
+         val += (weights.fc3[k1]).forward(x3).item() * (8-dsup) / 8.f;
+         }
+         {
+         const auto x1 = (weights.fc0[k2]).forward(x0).apply_(activation<BT, Q>);
+         const auto x2 = splice(x1, (weights.fc1[k2]).forward(x1).apply_(activation<BT, Q>));
+         const auto x3 = splice(x2, (weights.fc2[k2]).forward(x2).apply_(activation<BT, Q>));
+         val += (weights.fc3[k2]).forward(x3).item() * dsup / 8.f;
+         }         
+         return val / Quantization<Q>::outFactor;
+      }
    }
 
 #ifdef DEBUG_NNUE_UPDATE

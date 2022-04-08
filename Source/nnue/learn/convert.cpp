@@ -491,7 +491,6 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
       std::fstream fs;
       fs.open(filename, std::ios::in | std::ios::binary);
       PackedSfenValue p;
-      ///@todo threading !!!!
       while (true) {
          if ((++count % 100000) == 0) { std::cout << count << std::endl; }
          if (fs.read((char*)&p, sizeof(PackedSfenValue))) {
@@ -507,8 +506,9 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
             float gp = 1;
             if (matHash != nullHash) {
                const MaterialHash::MaterialHashEntry& MEntry = MaterialHash::materialHashTable[matHash];
-               gp                                            = MEntry.gamePhase();
+               gp = MEntry.gamePhase();
             }
+            // don't worry about "else" here ...
             DepthType depth = static_cast<DepthType>(clampDepth(DynamicConfig::genFenDepth) * gp + clampDepth(DynamicConfig::genFenDepthEG) * (1.f - gp));
             DynamicConfig::randomPly = 0;
             data.p                   = tpos;

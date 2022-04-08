@@ -215,7 +215,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
           !isLazyHigh(static_cast<ScoreType>(DynamicConfig::NNUEThreshold), features, score)) { 
          if (DynamicConfig::armageddon) features.scalingFactor = 1.f;              ///@todo better
          // call the net
-         ScoreType nnueScore = static_cast<ScoreType>(p.evaluator().propagate(p.c));
+         ScoreType nnueScore = static_cast<ScoreType>(p.evaluator().propagate(p.c, std::min(32,static_cast<int>(BB::countBit(p.occupancy())))));
          // fuse MG and EG score applying the EG scaling factor ///@todo, doesn't the net already learned that ????
          nnueScore = static_cast<ScoreType>(data.gp * nnueScore + (1.f - data.gp) * nnueScore * features.scalingFactor); // use scaling factor
          // NNUE evaluation scaling
