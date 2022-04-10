@@ -15,10 +15,15 @@ template<typename NT, bool Q> struct NNUEWeights {
 
    InputLayer<NT, inputLayerSize, firstInnerLayerSize, Q> w {};
    InputLayer<NT, inputLayerSize, firstInnerLayerSize, Q> b {};
-   Layer<NT, 2 * firstInnerLayerSize, 32, Q>       fc0[nbuckets];
-   Layer<NT, 32, 32, Q>                            fc1[nbuckets];
-   Layer<NT, 64, 32, Q>                            fc2[nbuckets];
-   Layer<NT, 96,  1, Q>                            fc3[nbuckets];
+
+   struct InnerLayer{
+     Layer<NT, 2 * firstInnerLayerSize, 32, Q>       fc0;
+     Layer<NT, 32, 32, Q>                            fc1;
+     Layer<NT, 64, 32, Q>                            fc2;
+     Layer<NT, 96,  1, Q>                            fc3;       
+   };
+
+   InnerLayer innerLayer[nbuckets];
 
    uint32_t version {0};
 
@@ -27,10 +32,10 @@ template<typename NT, bool Q> struct NNUEWeights {
       if (readVersion) ws.readVersion(version);
       w.load_(ws);
       b.load_(ws);
-      for(int k = 0 ; k < nbuckets; ++k) fc0[k].load_(ws);
-      for(int k = 0 ; k < nbuckets; ++k) fc1[k].load_(ws);
-      for(int k = 0 ; k < nbuckets; ++k) fc2[k].load_(ws);
-      for(int k = 0 ; k < nbuckets; ++k) fc3[k].load_(ws);
+      for(int k = 0 ; k < nbuckets; ++k) innerLayer[k].fc0.load_(ws);
+      for(int k = 0 ; k < nbuckets; ++k) innerLayer[k].fc1.load_(ws);
+      for(int k = 0 ; k < nbuckets; ++k) innerLayer[k].fc2.load_(ws);
+      for(int k = 0 ; k < nbuckets; ++k) innerLayer[k].fc3.load_(ws);
       return *this;
    }
 
