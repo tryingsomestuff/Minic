@@ -36,7 +36,7 @@ template<typename NT, bool Q> struct FeatureTransformer {
 
    FeatureTransformer(const InputLayer<NT, inputLayerSize, firstInnerLayerSize, Q>* src): weights_ {src} { clear(); }
 
-   FeatureTransformer(): weights_(nullptr) {}
+   FeatureTransformer() = delete;
 
 #ifdef DEBUG_NNUE_UPDATE
    bool operator==(const FeatureTransformer<NT, Q>& other) { return active_ == other.active_; }

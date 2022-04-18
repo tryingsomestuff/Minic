@@ -20,7 +20,7 @@ template<typename NT, size_t dim0, size_t dim1, bool Q> struct Layer {
    alignas(NNUEALIGNMENT) BT b[nbB];
 
    CONSTEXPR StackVector<BT, dim1> forward(const StackVector<BT, dim0>& x) const {
-      alignas(NNUEALIGNMENT) auto result = StackVector<BT, dim1>::from(b);
+      auto result = StackVector<BT, dim1>::from(b);
 #ifdef USE_SIMD_INTRIN
       for (size_t i = 0; i < dim1; ++i) { result.data[i] += x.dot_(W + i * dim0); }
 #else
@@ -31,7 +31,7 @@ template<typename NT, size_t dim0, size_t dim1, bool Q> struct Layer {
    }
 
    template<typename T> CONSTEXPR StackVector<BT, dim1> forward(const StackVector<T, dim0>& x) const {
-      alignas(NNUEALIGNMENT) auto result = StackVector<BT, dim1>::from(b);
+      auto result = StackVector<BT, dim1>::from(b);
 #ifdef USE_SIMD_INTRIN
       for (size_t i = 0; i < dim1; ++i) { result.data[i] += x.dot_(W + i * dim0); }
 #else
@@ -45,6 +45,15 @@ template<typename NT, size_t dim0, size_t dim1, bool Q> struct Layer {
       ws.template streamW<WT, Q>(W, nbW, dim0, dim1).template streamB<BT, Q>(b, nbB);
       return *this;
    }
+
+   Layer<NT, dim0, dim1, Q>& operator=(const Layer<NT, dim0, dim1, Q>& other) = delete;
+   Layer<NT, dim0, dim1, Q>& operator=(Layer<NT, dim0, dim1, Q>&& other) = delete;
+   Layer(const Layer<NT, dim0, dim1, Q>& other) = delete;
+   Layer(Layer<NT, dim0, dim1, Q>&& other) = delete;
+
+   Layer(){}
+   ~Layer(){}
+
 };
 
 #endif // WITH_NNUE

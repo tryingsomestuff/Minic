@@ -37,37 +37,17 @@ template<typename NT, size_t dim0, size_t dim1, bool Q> struct InputLayer {
       return *this;
    }
 
-   InputLayer<NT, dim0, dim1, Q>& operator=(const InputLayer<NT, dim0, dim1, Q>& other) {
-#pragma omp simd
-      for (size_t i = 0; i < nbW; ++i) { W[i] = other.W[i]; }
-#pragma omp simd
-      for (size_t i = 0; i < nbB; ++i) { b[i] = other.b[i]; }
-      return *this;
-   }
+   InputLayer<NT, dim0, dim1, Q>& operator=(const InputLayer<NT, dim0, dim1, Q>& other) = delete;
+   InputLayer<NT, dim0, dim1, Q>& operator=(InputLayer<NT, dim0, dim1, Q>&& other) = delete;
+   InputLayer(const InputLayer<NT, dim0, dim1, Q>& other) = delete;
+   InputLayer(InputLayer<NT, dim0, dim1, Q>&& other) = delete;
 
-   InputLayer<NT, dim0, dim1, Q>& operator=(InputLayer<NT, dim0, dim1, Q>&& other) {
-      std::swap(W, other.W);
-      std::swap(b, other.b);
-      return *this;
-   }
-
-   InputLayer(const InputLayer<NT, dim0, dim1, Q>& other) {
-      W = new (NNUEALIGNMENT_STD) WIT[nbW];
-#pragma omp simd
-      for (size_t i = 0; i < nbW; ++i) { W[i] = other.W[i]; }
-#pragma omp simd
-      for (size_t i = 0; i < nbB; ++i) { b[i] = other.b[i]; }
-   }
-
-   InputLayer(InputLayer<NT, dim0, dim1, Q>&& other) {
-      std::swap(W, other.W);
-      std::swap(b, other.b);
-   }
-
-   InputLayer() { W = new (NNUEALIGNMENT_STD) WIT[nbW]; }
+   InputLayer() { 
+       W = new (NNUEALIGNMENT_STD) WIT[nbW]; 
+    }
 
    ~InputLayer() {
-      if (W != nullptr) { ::operator delete(W, NNUEALIGNMENT_STD); }
+      ::operator delete(W, NNUEALIGNMENT_STD);
    }
 };
 
