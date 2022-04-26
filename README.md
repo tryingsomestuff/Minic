@@ -54,7 +54,7 @@ Minic, since release 2.47 of August 8th 2020 (http://talkchess.com/forum3/viewto
 When using a NNUE network with this Stockfish implementation, it is important that Minic is called MinicNNUE (or Minnuec as introduced by Gekkehenker).
 MinicNNUE, won't be the official Minic, as this NNUE work to not reflect my own work and skills at all !
 
-Later on, since version 2.50, the NNUE learner from NodCHip repo has also been ported to Minic so that networks using Minic data and search can be done.
+Later on, since version 2.50, the NNUE learner from NodChip repo has also been ported to Minic so that networks using Minic data and search can be done.
 The genFen part was not ported and in internal process to produce training is used. This include both extracting position from fixed depth game and from random position.
 
 Nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets.
@@ -62,7 +62,7 @@ Nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets.
 ### Version "3" (November 2020)
 is released in november 2020 (during second covid-19 confinement) as a 2 years anniversary release and *is not using, nor compatible with, SF NNUE implementation anymore*. More about this just below...
 
-#### NNUE from release 3.00 (from Seer implementation)
+#### NNUE from release 3.00 (initially from Seer implementation)
 Starting from release 3.00, **Minic is not using Stockfish NNUE implementation anymore and is no more compatible with SF nets**. It was too much foreign code inside Minic to be fair, to be maintained, to be fun.
 Seer engine is offering a very well written implementation of NNUE that I borrowed and adapt to Minic (https://github.com/connormcmonigle/seer-nnue). The code is more or less 400 lines. I choose to keep Stockfish code for binary sfens format as everyone is using this for now. Training code is an external tool written in Python without any dependency to engine, also first adapted from Seer repository and then from Gary Linscott pytorch trainer (https://github.com/glinscott/nnue-pytorch).
 For now, generated nets are still quite weak, but that is a starting point, a new story to be written, in Minic 3.
