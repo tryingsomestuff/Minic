@@ -7,7 +7,7 @@ if [ ! -n "$VERSION" ];then
    exit 1
 fi
 
-NETNAME=nimble_nothingness.bin
+NETNAME=nylon_nonchalance.bin
 export EMBEDDEDNNUEPATH=$NETNAME
 
 # get minic

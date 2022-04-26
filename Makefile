@@ -9,7 +9,7 @@ ifdef EVALFILE
    export EMBEDDEDNNUEPATH=$(EVALFILE)
    export SKIPMD5CHECK=1
 else
-   export EMBEDDEDNNUENAME=nimble_nothingness.bin
+   export EMBEDDEDNNUENAME=nylon_nonchalance.bin
 endif
 
 .PHONY: config fathom build dist release
