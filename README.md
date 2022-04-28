@@ -9,7 +9,7 @@
 # Minic
 A chess engine I made to learn about chess programming.  
 It is compatible with both CECP (xboard) and UCI protocol.  
-It is currently rated >3200 on CCRL scale.
+It is currently inside top20 in major rating lists.
 
    * [Support Minic development](#support-minic-development)
    * [History &amp; the NNUE Minic story](#history--the-nnue-minic-story)
