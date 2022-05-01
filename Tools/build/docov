@@ -14,7 +14,7 @@ if [ -e Fathom/src/tbprobe.h ]; then
    $(dirname $0)/buildFathom.sh "$@"
 fi
 
-do_title "Building Minic for Linux prof"
+do_title "Building Minic for Linux coverage"
 
 OPT="$d --coverage -O3 --std=c++17"
 

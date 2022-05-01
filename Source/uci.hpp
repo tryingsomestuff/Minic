@@ -7,7 +7,8 @@
  * Some help here : https://www.shredderchess.com/download/div/uci.zip
  */
 namespace UCI {
-void        init();
-void        uci();
+void init();
+void uci();
+void processCommand(const std::string & command);
 [[nodiscard]] const std::string uciScore(const ScoreType score, const unsigned int ply);
 } // namespace UCI
