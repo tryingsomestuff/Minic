@@ -74,32 +74,48 @@ void finalize() {
       return ret;   \
    }
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+EMSCRIPTEN_KEEPALIVE void processCommand(const char *str){
+    const std::string command(str);
+    UCI::processCommand(command);
+}
+#ifdef __cplusplus
+}
+#endif
+#endif
+
 int main(int argc, char** argv) {
    START_TIMER
 
    init(argc, argv);
 
+#ifndef __EMSCRIPTEN__
+
 #ifdef WITH_TEST_SUITE
    if (argc > 1 && test(argv[1])) RETURN(EXIT_SUCCESS)
-#endif
+#endif // WITH_TEST_SUITE
 
 #ifdef WITH_EVAL_TUNING
    if (argc > 1 && std::string(argv[1]) == "-tuning") {
       evaluationTuning(argv[2]);
       RETURN(EXIT_SUCCESS)
    }
-#endif
+#endif // WITH_EVAL_TUNING
 
 #ifdef WITH_PGN_PARSER
    if (argc > 1 && std::string(argv[1]) == "-pgn") { RETURN(PGNParse(argv[2])) }
-#endif
+#endif // WITH_PGN_PARSER
 
 #ifdef WITH_DATA2BIN
    if (argc > 1 && std::string(argv[1]) == "-plain2bin") { RETURN(convert_plain_to_bin({argv[2]}, std::string(argv[2]) + ".bin", 1, 300)) }
    if (argc > 1 && std::string(argv[1]) == "-pgn2bin")   { RETURN(convert_bin_from_pgn_extract({argv[2]}, std::string(argv[2]) + ".bin", true, false)) }
    if (argc > 1 && std::string(argv[1]) == "-bin2plain") { RETURN(convert_bin_to_plain({argv[2]}, std::string(argv[2]) + ".plain")) }
    if (argc > 1 && std::string(argv[1]) == "-rescore")   { RETURN(rescore({argv[2]}, std::string(argv[2]) + ".rescored")) }
-#endif
+#endif // WITH_DATA2BIN
 
 #ifdef DEBUG_TOOL
    std::string firstOption;
@@ -113,30 +129,33 @@ int main(int argc, char** argv) {
    STOP_AND_SUM_TIMER(Total)
 #ifdef WITH_TIMER
    Timers::Display();
-#endif
+#endif // WITH_TIMER
    finalize();
    return ret;
-#else
+#else // DEBUG_TOOL
    // only init TimeMan if needed ...
    TimeMan::init();
 
 #ifdef WITH_UCI // UCI is prefered option
    UCI::init();
    UCI::uci();
-#else
+#else // WITH_UCI
 #ifdef WITH_XBOARD
    XBoard::init();
    XBoard::xboard();
-#endif
+#endif // WITH_XBOARD
 
-#endif
+#endif // WITH_UCI
 
    STOP_AND_SUM_TIMER(Total)
 
 #ifdef WITH_TIMER
    Timers::Display();
-#endif
+#endif // WITH_TIMER
 
    RETURN(EXIT_SUCCESS)
-#endif
+#endif // DEBUG_TOOL
+
+#endif // __EMSCRIPTEN__
+   return 0;
 }

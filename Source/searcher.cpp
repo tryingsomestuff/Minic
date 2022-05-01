@@ -76,7 +76,7 @@ ScoreType Searcher::drawScore(const Position& p, DepthType height) {
 void Searcher::idleLoop() {
    while (true) {
       std::unique_lock<std::mutex> lock(_mutex);
-      Logging::LogIt(Logging::logInfo) << "beging of idleloop " << id();
+      Logging::LogIt(Logging::logInfo) << "begin of idleloop " << id();
       _searching = false;
       _cv.notify_one(); // Wake up anyone waiting for search finished
       _cv.wait(lock, [&] { return _searching; });

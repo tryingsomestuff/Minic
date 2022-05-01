@@ -117,12 +117,44 @@ extern CONST_SEARCH_TUNING DepthType ttMaxFiftyValideDepth;
 const DepthType lmpMaxDepth = 10;
 const int       lmpLimit[][SearchConfig::lmpMaxDepth + 1] = {{0, 2, 3, 5, 9, 13, 18, 25, 34, 45, 55}, {0, 5, 6, 9, 14, 21, 30, 41, 55, 69, 84}};
 
+inline constexpr
+double my_log2(double x){
+   int N = 1;
+   while(x>=2){
+      ++N;
+      x/=2;
+   }
+   const double ln2 = 0.6931471805599453094172321214581765680755001343602552541206800094;
+   const double y = (x-1)/(x+1);
+   double v = 2*y;
+   for (int k = 1 ; k < 10; ++k){
+      double p = y;
+      const int n = 2*k+1;
+      for (int i = 1 ; i < n ; ++i){
+         p *= y;
+      }
+      v += 2*p/n;
+   }
+   return v + (N-1)*ln2;
+}
+
+/*
+inline void test_log(){
+   for (int d = 1; d < MAX_DEPTH; d++)
+      for (int m = 1; m < MAX_MOVE; m++){
+         std::cout << (my_log2(d * 1.6) * my_log2(m) * 0.4) << std::endl;
+         std::cout << (std::log(d * 1.6) * std::log(m) * 0.4) << std::endl;
+      }
+}
+*/
+
 ///@todo try lmr based on game phase
 constexpr Matrix<DepthType, MAX_DEPTH, MAX_MOVE> lmrReduction = [] {
    auto ret = decltype(lmrReduction){0};
    //Logging::LogIt(Logging::logInfo) << "Init lmr";
    for (int d = 1; d < MAX_DEPTH; d++)
-      for (int m = 1; m < MAX_MOVE; m++) ret[d][m] = DepthType(std::log(d * 1.6) * std::log(m) * 0.4);
+      for (int m = 1; m < MAX_MOVE; m++)
+         ret[d][m] = DepthType(my_log2(d * 1.6) * my_log2(m) * 0.4);
    return ret;
 }();
 

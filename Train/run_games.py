@@ -73,7 +73,7 @@ def parse_ordo(root_dir, nnues):
     ordo_file_name = os.path.join(root_dir, "ordo.out")
     ordo_scores = {}
     for name in nnues:
-        ordo_scores[name] = (-500, 1000)
+        ordo_scores[name] = (-1000, 3000)
 
     if os.path.exists(ordo_file_name):
         ordo_file = open(ordo_file_name, "r")
@@ -131,7 +131,7 @@ def run_ordo(root_dir, ordo_exe, concurrency):
     """ run an ordo calculation on an existing pgn file """
     pgn_file_name = os.path.join(root_dir, "out.pgn")
     ordo_file_name = os.path.join(root_dir, "ordo.out")
-    command = "{} -q -G -J -p {} -a 0.0 --anchor=master --draw-auto --white-auto -s 10 --cpus={} -o {}".format(
+    command = "{} -q -G -J -p {} -a 0.0 --anchor=master --draw-auto --white-auto -s 50 --cpus={} -o {}".format(
         ordo_exe, pgn_file_name, concurrency, ordo_file_name
     )
 
