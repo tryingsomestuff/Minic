@@ -12,9 +12,10 @@ netversion = struct.unpack('!f', bytes.fromhex('c0ffee01'))[0]
 withFactorizer = True
 
 nphase = 4
-L1 = 32
-L2 = 32
-L3 = 32
+BASE = 64
+L1 = 16
+L2 = 16
+L3 = 16
 
 def piece_position(i):
   return i % (12 * 64)
@@ -74,7 +75,6 @@ class NNUE(pl.LightningModule):
   """
   def __init__(self, lambda_=1.0):
     super(NNUE, self).__init__()
-    BASE = 128
     funcs = [piece_position,]
 
     if withFactorizer:
