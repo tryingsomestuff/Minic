@@ -132,6 +132,7 @@ while True:
                 plt.axhline(y=max(Yme), color='aqua'       , linestyle='dashdot', label='Current worst outcome')
 
                 # axis config
+                plt.grid()
                 axes = plt.gca()
                 axes.set_ylim([args.y,args.Y])
 
