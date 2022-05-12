@@ -4,6 +4,7 @@
 #include "evalConfig.hpp"
 #include "kpk.hpp"
 #include "logging.hpp"
+#include "positionTools.hpp"
 
 namespace MaterialHash { // idea from Gull
 
@@ -230,7 +231,6 @@ EvalScore Imbalance(const Position::Material &mat, Color c) {
 
 void InitMaterialScore(bool display) {
    if (display) Logging::LogIt(Logging::logInfo) << "Material hash init";
-   const float totalMatScore = 2.f * absValue(P_wq) + 4.f * absValue(P_wr) + 4.f * absValue(P_wb) + 4.f * absValue(P_wn) + 16.f * absValue(P_wp);
    for (int k = 0; k < TotalMat; ++k) {
       const Position::Material mat = indexToMat(k);
       // MG
@@ -258,7 +258,8 @@ void InitMaterialScore(bool display) {
       const EvalScore imbalanceW = Imbalance(mat, Co_White);
       const EvalScore imbalanceB = Imbalance(mat, Co_Black);
 #endif
-      materialHashTable[k].setGamePhase((matScoreW + matScoreB) / totalMatScore);
+      ScoreType dummyW = 0, dummyB = 0;
+      materialHashTable[k].setGamePhase(gamePhase(mat, dummyW, dummyB));
       materialHashTable[k].score =
       EvalScore(imbalanceW[MG] + matScoreW - (imbalanceB[MG] + matScoreB), imbalanceW[EG] + matScoreWEG - (imbalanceB[EG] + matScoreBEG));
    }

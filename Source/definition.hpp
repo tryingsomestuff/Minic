@@ -333,12 +333,14 @@ ENABLE_INCR_OPERATORS_ON(Mat);
 
 extern CONST_PIECE_TUNING ScoreType Values[NbPiece];
 extern CONST_PIECE_TUNING ScoreType ValuesEG[NbPiece];
+extern CONST_PIECE_TUNING ScoreType ValuesGP[NbPiece];
 
 #ifdef WITH_PIECE_TUNING
 inline void SymetrizeValue() {
    for (Piece pp = P_wp; pp <= P_wk; ++pp) {
       Values[-pp + PieceShift]   = Values[pp + PieceShift];
       ValuesEG[-pp + PieceShift] = ValuesEG[pp + PieceShift];
+      ValuesGP[-pp + PieceShift] = ValuesGP[pp + PieceShift];
     }
 }
 #endif
@@ -359,9 +361,18 @@ const ScoreType* const absValuesEG_[7] = {&dummyScore,
                                           &ValuesEG[P_wq + PieceShift],
                                           &ValuesEG[P_wk + PieceShift]};
 
+const ScoreType* const absValuesGP_[7] = {&dummyScore,
+                                          &ValuesGP[P_wp + PieceShift],
+                                          &ValuesGP[P_wn + PieceShift],
+                                          &ValuesGP[P_wb + PieceShift],
+                                          &ValuesGP[P_wr + PieceShift],
+                                          &ValuesGP[P_wq + PieceShift],
+                                          &ValuesGP[P_wk + PieceShift]};
+
 [[nodiscard]] inline ScoreType value(Piece pp)      { return Values[pp + PieceShift]; }
 [[nodiscard]] inline ScoreType absValue(Piece pp)   { return *absValues_[pp]; }
 [[nodiscard]] inline ScoreType absValueEG(Piece pp) { return *absValuesEG_[pp]; }
+[[nodiscard]] inline ScoreType absValueGP(Piece pp) { return *absValuesGP_[pp]; }
 
 template<typename T> [[nodiscard]] inline constexpr int sgn(T val) { return (T(0) < val) - (val < T(0)); }
 

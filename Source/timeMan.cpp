@@ -126,7 +126,7 @@ TimeType getNextMSecPerMove(const Position& p) {
       const float incrProp = riskySituation ? 0 
                                             : static_cast<float>(msecUntilNextTC)/(msecInc*100);
       ScoreType sw = 0, sb = 0;
-      const float gp = gamePhase(p, sw, sb);
+      const float gp = gamePhase(p.mat, sw, sb);
       const int nmoves = (riskySituation ? 28 
                                          : (16 + incrProp) ) 
                        - (riskySituation ? static_cast<int>(std::min(8, p.halfmoves / 20)) 

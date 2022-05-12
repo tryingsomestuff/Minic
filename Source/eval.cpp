@@ -188,7 +188,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       ///@todo we don't care about imbalance here ?
       ScoreType matScoreW = 0;
       ScoreType matScoreB = 0;
-      data.gp = gamePhase(p, matScoreW, matScoreB);
+      data.gp = gamePhase(p.mat, matScoreW, matScoreB);
       features.scores[F_material] += EvalScore(
           (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * absValueEG(P_wq) + 
           (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * absValueEG(P_wr) +

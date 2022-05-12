@@ -223,15 +223,15 @@ bool readMove(const Position &p, const std::string &ss, Square &from, Square &to
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
 
-float gamePhase(const Position &p, ScoreType &matScoreW, ScoreType &matScoreB) {
-   const float totalMatScore = 2.f * absValue(P_wq) + 4.f * absValue(P_wr) + 4.f * absValue(P_wb) + 4.f * absValue(P_wn) +
-                               16.f * absValue(P_wp); // cannot be static for tuning process ...
-   const ScoreType matPieceScoreW = p.mat[Co_White][M_q] * absValue(P_wq) + p.mat[Co_White][M_r] * absValue(P_wr) +
-                                    p.mat[Co_White][M_b] * absValue(P_wb) + p.mat[Co_White][M_n] * absValue(P_wn);
-   const ScoreType matPieceScoreB = p.mat[Co_Black][M_q] * absValue(P_wq) + p.mat[Co_Black][M_r] * absValue(P_wr) +
-                                    p.mat[Co_Black][M_b] * absValue(P_wb) + p.mat[Co_Black][M_n] * absValue(P_wn);
-   const ScoreType matPawnScoreW = p.mat[Co_White][M_p] * absValue(P_wp);
-   const ScoreType matPawnScoreB = p.mat[Co_Black][M_p] * absValue(P_wp);
+float gamePhase(const Position::Material &mat, ScoreType &matScoreW, ScoreType &matScoreB) {
+   const float totalMatScore = 2.f * absValueGP(P_wq) + 4.f * absValueGP(P_wr) + 4.f * absValueGP(P_wb) + 4.f * absValueGP(P_wn) +
+                               16.f * absValueGP(P_wp); // cannot be static for tuning process ...
+   const ScoreType matPieceScoreW = mat[Co_White][M_q] * absValueGP(P_wq) + mat[Co_White][M_r] * absValueGP(P_wr) +
+                                    mat[Co_White][M_b] * absValueGP(P_wb) + mat[Co_White][M_n] * absValueGP(P_wn);
+   const ScoreType matPieceScoreB = mat[Co_Black][M_q] * absValueGP(P_wq) + mat[Co_Black][M_r] * absValueGP(P_wr) +
+                                    mat[Co_Black][M_b] * absValueGP(P_wb) + mat[Co_Black][M_n] * absValueGP(P_wn);
+   const ScoreType matPawnScoreW = mat[Co_White][M_p] * absValueGP(P_wp);
+   const ScoreType matPawnScoreB = mat[Co_Black][M_p] * absValueGP(P_wp);
    matScoreW = matPieceScoreW + matPawnScoreW;
    matScoreB = matPieceScoreB + matPawnScoreB;
    return (matScoreW + matScoreB) / totalMatScore; // based on MG values
