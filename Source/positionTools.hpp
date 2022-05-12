@@ -16,7 +16,7 @@
 ///@todo std::optional to avoid output parameter
 bool readMove(const Position &p, const std::string &ss, Square &from, Square &to, MType &moveType, bool forbidCastling = false);
 
-[[nodiscard]] float gamePhase(const Position &p, ScoreType &matScoreW, ScoreType &matScoreB);
+[[nodiscard]] float gamePhase(const Position::Material &mat, ScoreType &matScoreW, ScoreType &matScoreB);
 
 [[nodiscard]] bool readEPDFile(const std::string &fileName, std::vector<std::string> &positions);
 

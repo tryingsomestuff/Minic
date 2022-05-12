@@ -284,7 +284,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          else { // if no match, compute game phase (this does not happend very often ...)
             ScoreType matScoreW = 0;
             ScoreType matScoreB = 0;
-            data.gp = gamePhase(p, matScoreW, matScoreB);
+            data.gp = gamePhase(p.mat, matScoreW, matScoreB);
             stats.incr(Stats::sid_materialTableMissSearch);
          }
 #ifdef DEBUG_STATICEVAL         
