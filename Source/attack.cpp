@@ -136,7 +136,7 @@ BitBoard attack(const BitBoard occupancy, const Square s, const BitBoard m) {
 
 BitBoard rankAttack(const BitBoard occupancy, const Square s) {
    assert(isValidSquare(s));
-   const int f = SQFILE(x);
+   const int f = SQFILE(s);
    const int r = s & 56;
    return static_cast<BitBoard>(_ranks[((occupancy >> r) & 126) * 4 + f]) << r;
 }
