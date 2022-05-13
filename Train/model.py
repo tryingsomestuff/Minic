@@ -12,10 +12,10 @@ netversion = struct.unpack('!f', bytes.fromhex('c0ffee01'))[0]
 withFactorizer = True
 
 nphase = 4
-BASE = 64
-L1 = 16
-L2 = 16
-L3 = 16
+BASE = 384
+L1 = 8
+L2 = 8
+L3 = 8
 
 def piece_position(i):
   return i % (12 * 64)
