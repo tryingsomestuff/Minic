@@ -338,8 +338,8 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
 
    }
 
-   if (data.best != INVALIDMOVE && 
-      //pLeaf.halfmoves >= DynamicConfig::randomPly && 
+   if (data.best != INVALIDMOVE &&
+      //pLeaf.halfmoves >= DynamicConfig::randomPly &&
       std::abs(data.score) < 1000) {
       buffer.push_back({GetFEN(pLeaf), data.best, data.score, pLeaf.halfmoves, pLeaf.c});
       sfensWritten++;
@@ -347,7 +347,7 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
    }
 
    if (result.has_value()){
-      Logging::LogIt(Logging::logInfoPrio) << "Game ended, result " << result.value(); 
+      Logging::LogIt(Logging::logInfoPrio) << "Game ended, result " << result.value();
       for(const auto & entry : buffer){
          entry.write(genStream,result.value());
       }

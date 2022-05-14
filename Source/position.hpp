@@ -49,7 +49,7 @@ struct Position {
    std::array<Piece, NbSquare> _b {{P_none}}; // works because P_none is in fact 0
    std::array<BitBoard, 6>     _allB {{emptyBitBoard}}; // works because emptyBitBoard is in fact 0
    std::array<BitBoard, 2>     allPieces {{emptyBitBoard}}; // works because emptyBitBoard is in fact 0
-   
+
    // t p n b r q k bl bd M n  (total is first so that pawn to king is same a Piece)
    typedef std::array<std::array<char, 11>, 2> Material;
    Material mat = {{{{0}}}}; // such a nice syntax ...
@@ -76,13 +76,13 @@ struct Position {
       _allB = {{emptyBitBoard}};
       allPieces = {{emptyBitBoard}};
       mat = {{{{0}}}};
-      h = nullHash; 
+      h = nullHash;
       ph = nullHash;
       lastMove = INVALIDMINIMOVE;
       moves = 0;
       halfmoves = 0;
       king = {INVALIDSQUARE, INVALIDSQUARE};
-      //root = nullptr; 
+      //root = nullptr;
       ep = INVALIDSQUARE;
       fifty = 0;
       castling = C_none;
@@ -95,7 +95,7 @@ struct Position {
    }
    [[nodiscard]] bool operator!= (const Position &p)const{
       return _allB != p._allB || ep != p.ep || castling != p.castling || c != p.c;
-   }   
+   }
 #endif
 
    [[nodiscard]] inline RootInformation& rootInfo() {
@@ -276,11 +276,11 @@ struct Position {
 };
 
 /*!
- * RootPosition only specific responsability is to 
+ * RootPosition only specific responsability is to
  * allocate and delete root pointer
  */
 struct RootPosition : public Position {
-   RootPosition(){ 
+   RootPosition(){
       // a shared pointer here will be too slow
       root = new RootInformation;
    }

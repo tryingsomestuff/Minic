@@ -255,7 +255,7 @@ void ExtendedPosition::test(const std::vector<std::string> &positions,
          results[k] = new Results[timeControls.size()];
          for (size_t t = 0; t < timeControls.size(); ++t) {
             ExtendedPosition extP(positions[k], withMoveCount);
-#ifdef WITH_NNUE            
+#ifdef WITH_NNUE
             NNUEEvaluator    evaluator;
             extP.associateEvaluator(evaluator);
             extP.resetNNUEEvaluator(extP.evaluator());

@@ -55,8 +55,8 @@ template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveLis
       BitBoard slider = BBTools::attack<P_wb>(kingSquare(p), p.pieces_const<P_wb>(~p.c) | p.pieces_const<P_wq>(~p.c), occupancy)|
                         BBTools::attack<P_wr>(kingSquare(p), p.pieces_const<P_wr>(~p.c) | p.pieces_const<P_wq>(~p.c), occupancy);
       attacker = slider;
-      while (slider) { 
-         sliderRay |= BBTools::mask[BB::popBit(slider)].between[kingSquare(p)]; 
+      while (slider) {
+         sliderRay |= BBTools::mask[BB::popBit(slider)].between[kingSquare(p)];
       }
       attacker |= BBTools::attack<P_wn>(kingSquare(p), p.pieces_const<P_wn>(~p.c));
       attacker |= BBTools::attack<P_wp>(kingSquare(p), p.pieces_const<P_wp>(~p.c), occupancy, p.c);
@@ -71,11 +71,11 @@ template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveLis
       BitBoard bb = BBTools::pfCoverage[ptype - 1](from, occupancy, p.c) & ~myPieceBB;
       if (phase == GP_cap){
          // only target opponent piece
-         bb &= oppPieceBB; 
+         bb &= oppPieceBB;
       }
       else if (phase == GP_quiet){
          // do not target opponent piece
-         bb &= ~oppPieceBB; 
+         bb &= ~oppPieceBB;
       }
       else if (phase == GP_evasion){
          // king don't want to stay in check
@@ -97,7 +97,7 @@ template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveLis
       if (phase != GP_cap && phase != GP_evasion && ptype == P_wk) { // add castling
          // Be carefull, here rooksInit are only accessed if the corresponding p.castling is set
          // This way rooksInit is not INVALIDSQUARE, and thus mask[] is not out of bound
-         // Moreover, king[] also is assumed to be not INVALIDSQUARE which is verified in readFen      
+         // Moreover, king[] also is assumed to be not INVALIDSQUARE which is verified in readFen
          if (side == Co_White) {
             if ((p.castling & C_wqs) &&
                 (((BBTools::mask[p.king[Co_White]].between[Sq_c1] | BB::BBSq_c1 | BBTools::mask[p.rootInfo().rooksInit[Co_White][CT_OOO]].between[Sq_d1] | BB::BBSq_d1) &

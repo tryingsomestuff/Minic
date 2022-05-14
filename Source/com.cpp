@@ -97,11 +97,11 @@ bool receiveMoves(const Move move, Move ponderMove) {
    if (state == st_searching || state == st_pondering) {
       const std::string tag = Logging::ct == Logging::CT_uci ? "bestmove" : "move";
       Logging::LogIt(Logging::logInfo) << "sending move to GUI " << ToString(move);
-      if (move == INVALIDMOVE) { 
+      if (move == INVALIDMOVE) {
          // game ends (check mated / stalemate) **or** stop at the very begining of pondering
-         ret = false; 
+         ret = false;
          Logging::LogIt(Logging::logGUI) << tag << " " << "0000";
-      } 
+      }
       else {
          if (!makeMove(move, true, tag, ponderMove)) {
             Logging::LogIt(Logging::logGUI) << "info string Bad move ! " << ToString(move);

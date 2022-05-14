@@ -46,11 +46,11 @@ template<size_t _N, size_t _M> struct Coeff {
       const auto value = init[idx1] + d * slopeDepth[idx1] + bonus[idx2] + static_cast<double>(gp) * slopeGamePhase[idx1];
       assert(value > std::numeric_limits<ScoreType>::min());
       assert(value < std::numeric_limits<ScoreType>::max());
-      return static_cast<ScoreType>(value); 
+      return static_cast<ScoreType>(value);
    }
    [[nodiscard]] inline CONSTEXPR_SEARCH_TUNING bool isActive(const DepthType d, const size_t idx1 = 0) const {
       assert(idx1 < N);
-      return d >= minDepth[idx1] && d <= maxDepth[idx1]; 
+      return d >= minDepth[idx1] && d <= maxDepth[idx1];
    }
    [[nodiscard]] inline std::string getName(CoeffNameType t, size_t idx)const{
       assert(t >= 0);

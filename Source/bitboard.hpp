@@ -4,7 +4,7 @@
 
 /*!
  * Main bitboard utilities
- * especially countBit (using POPCOUNT) and popBit (bsf) 
+ * especially countBit (using POPCOUNT) and popBit (bsf)
  * are optimized for the platform being used
  */
 
@@ -83,7 +83,7 @@ enum BBSq : BitBoard { BBSq_a1 = SquareToBitboard(Sq_a1),BBSq_b1 = SquareToBitbo
 
 constexpr BitBoard whiteSquare = 0x55AA55AA55AA55AA;
 constexpr BitBoard blackSquare = 0xAA55AA55AA55AA55;
-//constexpr BitBoard whiteSideSquare = 0x00000000FFFFFFFF; 
+//constexpr BitBoard whiteSideSquare = 0x00000000FFFFFFFF;
 //constexpr BitBoard blackSideSquare = 0xFFFFFFFF00000000;
 constexpr BitBoard fileA    = 0x0101010101010101;
 constexpr BitBoard fileB    = 0x0202020202020202;
@@ -108,9 +108,9 @@ constexpr BitBoard ranks[8] = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, 
 //constexpr BitBoard center = BBSq_d4 | BBSq_d5 | BBSq_e4 | BBSq_e5;
 constexpr BitBoard advancedRanks = 0x0000ffffffff0000;
 constexpr BitBoard rank1_or_rank8 = BB::rank1 | BB::rank8;
-constexpr BitBoard extendedCenter = BBSq_c3 | BBSq_c4 | BBSq_c5 | BBSq_c6 | 
-                                    BBSq_d3 | BBSq_d4 | BBSq_d5 | BBSq_d6 | 
-                                    BBSq_e3 | BBSq_e4 | BBSq_e5 | BBSq_e6 | 
+constexpr BitBoard extendedCenter = BBSq_c3 | BBSq_c4 | BBSq_c5 | BBSq_c6 |
+                                    BBSq_d3 | BBSq_d4 | BBSq_d5 | BBSq_d6 |
+                                    BBSq_e3 | BBSq_e4 | BBSq_e5 | BBSq_e6 |
                                     BBSq_f3 | BBSq_f4 | BBSq_f5 | BBSq_f6;
 
 constexpr BitBoard seventhRank[2] = {rank7, rank2};

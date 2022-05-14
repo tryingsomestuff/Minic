@@ -43,15 +43,15 @@ template<Color C> [[nodiscard]] inline constexpr BitBoard shiftNE(const BitBoard
 
 template<Color> [[nodiscard]] inline constexpr BitBoard fillForward(BitBoard b);
 template<> [[nodiscard]] inline constexpr BitBoard      fillForward<Co_White>(BitBoard b) {
-    b |= (b << 8u);    
-    b |= (b << 16u);    
-    b |= (b << 32u);    
+    b |= (b << 8u);
+    b |= (b << 16u);
+    b |= (b << 32u);
     return b;
 }
 template<> [[nodiscard]] inline constexpr BitBoard fillForward<Co_Black>(BitBoard b) {
-    b |= (b >> 8u);    
-    b |= (b >> 16u);    
-    b |= (b >> 32u);    
+    b |= (b >> 8u);
+    b |= (b >> 16u);
+    b |= (b >> 32u);
     return b;
 }
 
@@ -93,14 +93,14 @@ template<Color C> [[nodiscard]] inline constexpr BitBoard pawnBackward(const Bit
    return shiftN<~C>((shiftN<C>(own) & ~opp) & ~fillForward<C>(pawnAttacks<C>(own)) & (pawnAttacks<~C>(opp)));
 }
 
-template<Color C> [[nodiscard]] inline constexpr BitBoard pawnForwardCoverage(const BitBoard bb) { 
-    const BitBoard spans = frontSpan<C>(bb); 
+template<Color C> [[nodiscard]] inline constexpr BitBoard pawnForwardCoverage(const BitBoard bb) {
+    const BitBoard spans = frontSpan<C>(bb);
     return spans | _shiftEast(spans) | _shiftWest(spans);
 }
 
 template<Color C> [[nodiscard]] inline constexpr BitBoard pawnPassed(const BitBoard own, const BitBoard opp) { return own & ~pawnForwardCoverage<~C>(opp); }
 
-template<Color C> [[nodiscard]] inline constexpr BitBoard pawnCandidates(const BitBoard own, const BitBoard opp) { 
+template<Color C> [[nodiscard]] inline constexpr BitBoard pawnCandidates(const BitBoard own, const BitBoard opp) {
    return pawnSemiOpen<C>(own, opp) &
           shiftN<~C>((pawnSingleAttacks<C>(own) & pawnSingleAttacks<~C>(opp)) | (pawnDoubleAttacks<C>(own) & pawnDoubleAttacks<~C>(opp)));
 }

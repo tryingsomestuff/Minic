@@ -10,7 +10,7 @@ bool Searcher::isRep(const Position& p, bool isPV) const {
       if (stack[k].h == nullHash) break;
       if (stack[k].h == h){
          ++count;
-#ifdef DEBUG_FIFTY_COLLISION         
+#ifdef DEBUG_FIFTY_COLLISION
          if(stack[k].p != p){
             Logging::LogIt(Logging::logFatal) << "Collision in fifty hash comparation" << ToString(p) << ToString(stack[k].p);
          }

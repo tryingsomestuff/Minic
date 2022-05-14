@@ -23,9 +23,9 @@ void HistoryT::initHistory() {
    for (int i = 0; i < NbSquare; ++i)
       for (int k = 0; k < NbSquare; ++k)
          history[0][i][k] = history[1][i][k] = 0;
-         
+
    for (int i = 0; i < NbPiece; ++i)
-      for (int k = 0; k < NbSquare; ++k) 
+      for (int k = 0; k < NbSquare; ++k)
          historyP[i][k] = 0;
 
    for (int i = 0; i < 13; ++i)
@@ -35,7 +35,7 @@ void HistoryT::initHistory() {
 
    for (int i = 0; i < 13; ++i)
       for (int j = 0; j < NbSquare; ++j)
-         for (int k = 0; k < NbPiece * NbSquare; ++k) 
+         for (int k = 0; k < NbPiece * NbSquare; ++k)
             counter_history[i][j][k] = -1;
 }
 

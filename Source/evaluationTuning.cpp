@@ -369,7 +369,7 @@ void evaluationTuning(const std::string& filename) {
    guess["piecesValue"].push_back(EvalTuning::TuningParam<ScoreType>(ValuesEG[P_wb+PieceShift], 150,  600, "EGbishop", [](const ScoreType& s){ValuesEG[P_bb+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
    guess["piecesValue"].push_back(EvalTuning::TuningParam<ScoreType>(ValuesEG[P_wr+PieceShift], 200,  800, "EGrook",   [](const ScoreType& s){ValuesEG[P_br+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
    guess["piecesValue"].push_back(EvalTuning::TuningParam<ScoreType>(ValuesEG[P_wq+PieceShift], 600, 1800, "EGqueen",  [](const ScoreType& s){ValuesEG[P_bq+PieceShift] = -s; MaterialHash::InitMaterialScore(false);}));
-#endif 
+#endif
    guess["safeChecks"].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::kingAttSafeCheck[0], -3000, 3000, "cp"));
    guess["safeChecks"].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::kingAttSafeCheck[1], -3000, 3000, "cn"));
    guess["safeChecks"].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::kingAttSafeCheck[2], -3000, 3000, "cb"));
@@ -401,7 +401,7 @@ void evaluationTuning(const std::string& filename) {
 
    guess["pawnMob"].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::pawnMobility[MG] , -500,  500,"pmobility0"));
    guess["pawnMob"].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::pawnMobility[EG] , -500,  500,"pmobility1"));
-   
+
    guess["protectedPasser"].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::protectedPasserBonus[1][MG] , -150,  150,"protectedPasserFactor"));
    guess["protectedPasser"].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::protectedPasserBonus[1][EG] , -150,  150,"protectedPasserFactorEG"));
    guess["protectedPasser"].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::protectedPasserBonus[2][MG] , -150,  150,"protectedPasserFactor"));
@@ -467,7 +467,7 @@ void evaluationTuning(const std::string& filename) {
 
    guess["rookOpen"].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::rookOnOpenSemiFileOpp[MG] , -500,  500,"rookOnOpenSemiFileOpp"));
    guess["rookOpen"].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::rookOnOpenSemiFileOpp[EG] , -500,  500,"rookOnOpenSemiFileOppEG"));
-   
+
    guess["passer"].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::passerBonus[1][MG], -1500, 1500,"passer 1"));
    guess["passer"].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::passerBonus[1][EG], -1500, 1500,"passer 1"));
    guess["passer"].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::passerBonus[2][MG], -1500, 1500,"passer 2"));
@@ -643,7 +643,7 @@ void evaluationTuning(const std::string& filename) {
    guess["pinned"].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::pinnedKing [3][EG] , -100, 100, "rpinKEG"));
    guess["pinned"].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::pinnedKing [4][MG] , -100, 100, "qpinK"));
    guess["pinned"].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::pinnedKing [4][EG] , -100, 100, "qpinKEG"));
-   
+
    guess["pinned"].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::pinnedQueen[0][MG] , -100, 100, "ppinq"));
    guess["pinned"].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::pinnedQueen[0][EG] , -100, 100, "ppinqEG"));
    guess["pinned"].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::pinnedQueen[1][MG] , -100, 100, "npinq"));
@@ -715,7 +715,7 @@ void evaluationTuning(const std::string& filename) {
         "PST5",
 
         "mobility",
-        
+
         "passer",
         "freePasser",
         "protectedPasser",

@@ -74,8 +74,8 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    _height = height;
 
    // no time verification in qsearch, too slow
-   if (stopFlag) return STOPSCORE; 
-   
+   if (stopFlag) return STOPSCORE;
+
    // update nodes count as soon as we enter a node
    ++stats.counters[Stats::sid_qnodes];
    //std::cout << GetFEN(p) << std::endl;
@@ -108,9 +108,9 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    const bool      isInCheck      = isInCheckHint != -1 ? isInCheckHint : ttIsInCheck || isAttacked(p, kingSquare(p));
    const bool      specialQSearch = isInCheck || qRoot;
    const DepthType hashDepth      = specialQSearch ? 0 : -1;
-   
+
    // if depth of TT entry is enough
-   if (ttDepthOk && e.d >= hashDepth) { 
+   if (ttDepthOk && e.d >= hashDepth) {
       // if not at a pvnode, we verify bound and not shuffling with quiet moves
       // in this case we can "safely" return hash score
       if (!pvnode && p.fifty < SearchConfig::ttMaxFiftyValideDepth && ((bound == TT::B_alpha && e.s <= alpha) || (bound == TT::B_beta && e.s >= beta) || (bound == TT::B_exact))) {
@@ -120,7 +120,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
 
    // at qRoot (just coming from pvs) we check for draws (3rep, fifty and material)
    ///@todo is that gain elo ???
-   if (qRoot && interiorNodeRecognizer<true, false, true>(p) == MaterialHash::Ter_Draw) return drawScore(p, height); 
+   if (qRoot && interiorNodeRecognizer<true, false, true>(p) == MaterialHash::Ter_Draw) return drawScore(p, height);
 
    // set TT move as current best, this allows to re-insert it in pv in case there is no capture, or no move incrases alpha
    const bool usableTTmove = validTTmove && (isInCheck || isCapture(e.m));
@@ -137,7 +137,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    // But this may don't work well with (a too) asymetric HalfKA NNUE
    else if (!DynamicConfig::useNNUE && p.lastMove == NULLMOVE && height > 0){
       evalScore = 2 * EvalConfig::tempo - stack[p.halfmoves - 1].eval;
-#ifdef DEBUG_STATICEVAL      
+#ifdef DEBUG_STATICEVAL
       checkEval(p,evalScore,*this,"null move trick (qsearch)");
 #endif
       stats.incr(Stats::sid_qEvalNullMoveTrick);
@@ -147,18 +147,18 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
       if (ttHit) {
          stats.incr(Stats::sid_ttschits);
          evalScore = e.e;
-#ifdef DEBUG_STATICEVAL         
+#ifdef DEBUG_STATICEVAL
          checkEval(p,evalScore,*this,"from TT (qsearch)");
 #endif
-         // in this case we force mid game value in sorting ... 
+         // in this case we force mid game value in sorting ...
          // anyway, this affects only quiet move sorting, so here only for check evasion ...
-         data.gp = 0.5; 
+         data.gp = 0.5;
       }
       else {
          // we tried everthing ... now this position must be evaluated
          stats.incr(Stats::sid_ttscmiss);
          evalScore = eval(p, data, *this);
-#ifdef DEBUG_STATICEVAL         
+#ifdef DEBUG_STATICEVAL
          checkEval(p,evalScore,*this,"from eval (qsearch)");
 #endif
       }
@@ -178,12 +178,12 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
 
    // maybe we can use tt score (instead of static evaluation) as a better draft if possible and not in check ?
    bool evalScoreIsHashScore = false;
-   
+
    if (!isInCheck) {
       if (ttHit && ((bound == TT::B_alpha && e.s <= evalScore) || (bound == TT::B_beta && e.s >= evalScore) || (bound == TT::B_exact)))
          evalScore = e.s, evalScoreIsHashScore = true;
    }
-   
+
    TT::Bound       b              = TT::B_alpha;
    ScoreType       bestScore      = /*evalScore*/staticScore; ///@todo uses TT draft instead of static score
    const ScoreType alphaInit      = alpha;
@@ -261,13 +261,13 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
             continue;
          }
          // neutral captures are pruned if move can't raise alpha (idea origin from Seer)
-         if (SearchConfig::doQDeltaPruning && !ttPV 
+         if (SearchConfig::doQDeltaPruning && !ttPV
              && seeValue <= SearchConfig::deltaBadSEEThreshold && staticScore + SearchConfig::deltaBadMargin < alpha){
             stats.incr(Stats::sid_deltaAlpha);
             continue;
          }
          // return beta early if a good capture sequence is found and static eval was not far from beta (idea origin from Seer)
-         if (SearchConfig::doQDeltaPruning && !ttPV 
+         if (SearchConfig::doQDeltaPruning && !ttPV
              && seeValue >= SearchConfig::deltaGoodSEEThreshold && staticScore + SearchConfig::deltaGoodMargin > beta){
             stats.incr(Stats::sid_deltaBeta);
             return beta;
@@ -307,6 +307,6 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
 
    TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(evalScore, height),
                 TT::Bound(b | (ttPV ? TT::B_ttPVFlag : TT::B_none) | (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), hashDepth);
-                
+
    return bestScore;
 }
