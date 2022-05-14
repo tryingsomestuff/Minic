@@ -50,6 +50,8 @@ class ThreadPool : public std::vector<std::unique_ptr<Searcher>> {
    static ThreadPool& instance();
    ~ThreadPool();
 
+   static void initPawnTables();
+
    [[nodiscard]] Searcher& main();
    void setup();
    void distributeData(const ThreadData& data);

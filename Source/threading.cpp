@@ -20,6 +20,12 @@ ThreadPool::~ThreadPool() {
    Logging::LogIt(Logging::logInfo) << "... ok threadPool deleted";
 }
 
+void ThreadPool::initPawnTables(){
+   for (auto& s : instance()) {
+      (*s).initPawnTable();
+   }
+}
+
 void ThreadPool::setup() {
    assert(DynamicConfig::threads > 0);
    Logging::LogIt(Logging::logInfo) << "Using " << DynamicConfig::threads << " threads";

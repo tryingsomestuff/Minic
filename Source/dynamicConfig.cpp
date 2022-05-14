@@ -6,6 +6,7 @@ namespace DynamicConfig {
 bool         mateFinder       = false;
 bool         disableTT        = false;
 unsigned int ttSizeMb         = 128; // here in Mb, will be converted to real size next
+unsigned int ttPawnSizeMb     = 16;  // here in Mb, will be converted to real size next
 bool         fullXboardOutput = false;
 bool         debugMode        = false;
 int          minOutputLevel   = Logging::logGUI;

@@ -145,11 +145,16 @@ const SearchData& Searcher::getSearchData() const { return _data.datas; }
 
 bool Searcher::searching() const { return _searching; }
 
+namespace{
+    std::unique_ptr<Searcher::PawnEntry[]> tablePawn = 0;
+    uint64_t ttSizePawn = 0;
+}
+
 void Searcher::initPawnTable() {
-   assert(tablePawn == 0);
-   assert(ttSizePawn > 0);
-   Logging::LogIt(Logging::logInfo) << "Init Pawn TT : " << ttSizePawn;
+   Logging::LogIt(Logging::logInfo) << "Init Pawn TT";
    Logging::LogIt(Logging::logInfo) << "PawnEntry size " << sizeof(PawnEntry);
+   ttSizePawn = powerFloor((1024ull * 1024ull * DynamicConfig::ttPawnSizeMb) / (uint64_t)sizeof(PawnEntry));
+   assert(BB::countBit(ttSizePawn) == 1); // a power of 2
    tablePawn.reset(new PawnEntry[ttSizePawn]);
    Logging::LogIt(Logging::logInfo) << "Size of Pawn TT " << ttSizePawn * sizeof(PawnEntry) / 1024 << "Kb";
 }
