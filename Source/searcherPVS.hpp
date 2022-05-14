@@ -29,7 +29,7 @@ inline void evalDanger(const Position & p,
    const BitBoard nonPawnMat[2] = {p.allPieces[Co_White] & ~pawns[Co_White], p.allPieces[Co_Black] & ~pawns[Co_Black]};
    const BitBoard kingZone[2] = {BBTools::mask[p.king[Co_White]].kingZone, BBTools::mask[p.king[Co_Black]].kingZone};
    const BitBoard occupancy = p.occupancy();
-   
+
    for (Color c = Co_White ; c <= Co_Black ; ++c){
       for (Piece pp = P_wp ; pp <= P_wk ; ++pp){
          BitBoard pieceBBiterator = p.pieces_const(c,pp);
@@ -64,7 +64,7 @@ inline void evalDanger(const Position & p,
    kdanger[Co_White] += EvalConfig::kingAttSemiOpenfileOur * BB::countBit(BB::kingFlank[wkf] & semiOpenFiles[Co_Black]) / 8;
    kdanger[Co_Black] += EvalConfig::kingAttOpenfile * BB::countBit(BB::kingFlank[bkf] & openFiles) / 8;
    kdanger[Co_Black] += EvalConfig::kingAttSemiOpenfileOpp * BB::countBit(BB::kingFlank[bkf] & semiOpenFiles[Co_Black]) / 8;
-   kdanger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * BB::countBit(BB::kingFlank[bkf] & semiOpenFiles[Co_White]) / 8;   
+   kdanger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * BB::countBit(BB::kingFlank[bkf] & semiOpenFiles[Co_White]) / 8;
 
    const BitBoard weakSquare[2] = { att[Co_Black] & ~att2[Co_White] & (~att[Co_White] | attFromPiece[Co_White][P_wk - 1] | attFromPiece[Co_White][P_wq - 1]),
                                     att[Co_White] & ~att2[Co_Black] & (~att[Co_Black] | attFromPiece[Co_Black][P_wk - 1] | attFromPiece[Co_Black][P_wq - 1])};
@@ -78,7 +78,7 @@ inline void evalDanger(const Position & p,
    for (Piece pp = P_wn; pp < P_wk; ++pp) {
       kdanger[Co_White] += EvalConfig::kingAttSafeCheck[pp - 1] * BB::countBit(checkers[Co_Black][pp - 1] & safeSquare[Co_Black]);
       kdanger[Co_Black] += EvalConfig::kingAttSafeCheck[pp - 1] * BB::countBit(checkers[Co_White][pp - 1] & safeSquare[Co_White]);
-   }   
+   }
 }
 
 #pragma GCC diagnostic pop
@@ -119,9 +119,9 @@ inline void Searcher::timeCheck(){
       }
       Distributed::pollStat();
 
-      if (!Distributed::isMainProcess()) { 
+      if (!Distributed::isMainProcess()) {
          bool masterStopFlag;
-         Distributed::get(&masterStopFlag, 1, Distributed::_winStopFromR0, 0, Distributed::_requestStopFromR0); 
+         Distributed::get(&masterStopFlag, 1, Distributed::_winStopFromR0, 0, Distributed::_requestStopFromR0);
          Distributed::waitRequest(Distributed::_requestStopFromR0);
          ThreadPool::instance().main().stopFlag = masterStopFlag;
       }
@@ -141,7 +141,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                         bool                         isInCheck,
                         bool                         cutNode,
                         const std::vector<MiniMove>* skipMoves) {
-   
+
    // is updated recursively in pvs and qsearch calls but also affected to Searcher data in order to be available inside eval.
    _height = height;
 
@@ -172,7 +172,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    debug_king_cap(p);
 
    const bool rootnode = height == 0;
-   
+
    if (rootnode){
       // all threads clear rootScore, this is usefull for helper like in genfen or rescore.
       rootScores.clear();
@@ -195,7 +195,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    const bool withoutSkipMove = skipMoves == nullptr;
    Hash pHash = computeHash(p);
-   
+
    // consider skipmove(s) in position hash
    if (skipMoves)
       for (auto it = skipMoves->begin(); it != skipMoves->end(); ++it) { pHash ^= (*it); }
@@ -205,7 +205,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    const bool ttDepthOk = TT::getEntry(*this, p, pHash, depth, e);
    TT::Bound  bound     = TT::Bound(e.b & ~TT::B_allFlags);
    // if depth of TT entry is enough
-   if (ttDepthOk) { 
+   if (ttDepthOk) {
       if (!rootnode && ((bound == TT::B_alpha && e.s <= alpha) || (bound == TT::B_beta && e.s >= beta) || (bound == TT::B_exact))) {
          if (!pvnode) {
             // increase history bonus of this move
@@ -264,9 +264,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // skip eval if nullmove just applied we can hack
    // Won't work with asymetric HalfKA NNUE
    else if (!DynamicConfig::useNNUE && p.lastMove == NULLMOVE && height > 0){
-      evalScore = 2 * EvalConfig::tempo - stack[p.halfmoves - 1].eval; 
+      evalScore = 2 * EvalConfig::tempo - stack[p.halfmoves - 1].eval;
 #ifdef DEBUG_STATICEVAL
-      checkEval(p,evalScore,*this,"null move trick (pvs)");      
+      checkEval(p,evalScore,*this,"null move trick (pvs)");
 #endif
    }
    else {
@@ -287,14 +287,14 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             data.gp = gamePhase(p.mat, matScoreW, matScoreB);
             stats.incr(Stats::sid_materialTableMissSearch);
          }
-#ifdef DEBUG_STATICEVAL         
+#ifdef DEBUG_STATICEVAL
          checkEval(p,evalScore,*this,"from TT (pvs)");
 #endif
       }
       else { // if no TT hit call evaluation !
          stats.incr(Stats::sid_ttscmiss);
          evalScore = eval(p, data, *this);
-#ifdef DEBUG_STATICEVAL         
+#ifdef DEBUG_STATICEVAL
          checkEval(p,evalScore,*this,"from eval (pvs)");
  #endif
       }
@@ -342,7 +342,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // if no TT hit yet, we insert an eval without a move here in case of forward pruning (depth is negative, bound is none) ...
    // Be carefull here, _data2 in Entry is always (INVALIDMOVE,B_none,-2) here, so that collisions are a lot more likely
    if (!ttHit) TT::setEntry(*this, pHash, INVALIDMOVE, createHashScore(evalScore, height), createHashScore(staticScore, height), TT::B_none, -2);
-   
+
    // if TT hit, we can use its score as a best draft (but we set evalScoreIsHashScore to be aware of that !)
    // note that e.d >= -1 here is quite redondant with bound != TT::B_None, but anyway ...
    if (ttHit && !isInCheck && /*e.d >= -1 && */
@@ -365,7 +365,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // forward prunings
    if (!DynamicConfig::mateFinder && !rootnode && !isInCheck && !pvnode /*&& !isMateScore(beta)*/) { // removing the !isMateScore(beta) is not losing that much elo and allow for better check mate finding ...
-      
+
       // static null move
       if (SearchConfig::doStaticNullMove && !isMateScore(evalScore) && isNotPawnEndGame && SearchConfig::staticNullMoveCoeff.isActive(depth, evalScoreIsHashScore) ) {
          const ScoreType margin = SearchConfig::staticNullMoveCoeff.threshold(marginDepth, data.gp, evalScoreIsHashScore, improving);
@@ -373,20 +373,20 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       }
 
       // (absence of) Opponent threats pruning (idea origin from Koivisto)
-      if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && isNotPawnEndGame && SearchConfig::threatCoeff.isActive(depth, evalScoreIsHashScore) && 
+      if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && isNotPawnEndGame && SearchConfig::threatCoeff.isActive(depth, evalScoreIsHashScore) &&
            !data.goodThreats[~p.c] && evalScore > beta + SearchConfig::threatCoeff.threshold(depth, data.gp, evalScoreIsHashScore, improving) ){
          return stats.incr(Stats::sid_threatsPruning), beta;
       }
 
 /*
       // Own threats pruning
-      if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && isNotPawnEndGame && SearchConfig::ownThreatCoeff.isActive(depth, evalScoreIsHashScore) && 
+      if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && isNotPawnEndGame && SearchConfig::ownThreatCoeff.isActive(depth, evalScoreIsHashScore) &&
            data.goodThreats[p.c] && !data.goodThreats[~p.c] && evalScore > beta + SearchConfig::ownThreatCoeff.threshold(depth, data.gp, evalScoreIsHashScore, improving) ){
          return stats.incr(Stats::sid_threatsPruning), beta;
       }
 */
       // razoring
-      const ScoreType rAlpha = alpha - SearchConfig::razoringCoeff.threshold(marginDepth, data.gp, evalScoreIsHashScore, improving); 
+      const ScoreType rAlpha = alpha - SearchConfig::razoringCoeff.threshold(marginDepth, data.gp, evalScoreIsHashScore, improving);
       if (SearchConfig::doRazoring && SearchConfig::razoringCoeff.isActive(depth, evalScoreIsHashScore) && evalScore <= rAlpha) {
          stats.incr(Stats::sid_razoringTry);
          const ScoreType qScore = qsearch(alpha, beta, p, height, seldepth, 0, true, pvnode, isInCheck);
@@ -645,7 +645,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                if (pvnode) updatePV(pv, bestMove, childPV);
                if (ttScore >= beta) {
                   stats.incr(Stats::sid_ttbeta);
-                  
+
                   // increase history bonus of this move
                   if (!isInCheck){
                      if (isQuiet /*&& depth > 1*/) // quiet move history
@@ -653,10 +653,10 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                      else if (isCapture(bestMove)) // capture history
                         historyT.updateCap<1>(depth + (ttScore > (beta + SearchConfig::betaMarginDynamicHistory)), bestMove, p);
                   }
-                  
+
                   TT::setEntry(*this, pHash, bestMove, createHashScore(ttScore, height), createHashScore(evalScore, height),
-                                      TT::Bound(TT::B_beta | 
-                                      (ttPV ? TT::B_ttPVFlag : TT::B_none) | 
+                                      TT::Bound(TT::B_beta |
+                                      (ttPV ? TT::B_ttPVFlag : TT::B_none) |
                                       (bestMoveIsCheck ? TT::B_isCheckFlag : TT::B_none) |
                                       (isInCheck ? TT::B_isInCheckFlag : TT::B_none)),
                                       depth);
@@ -732,7 +732,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       if (!applyMove(p2, *it)) continue;
       TT::prefetch(computeHash(p2));
       const Square to = Move2To(*it);
-#ifdef DEBUG_KING_CAP      
+#ifdef DEBUG_KING_CAP
       if (p.c == Co_White && to == p.king[Co_Black]) return matingScore(height - 1);
       if (p.c == Co_Black && to == p.king[Co_White]) return matingScore(height - 1);
 #endif
@@ -785,7 +785,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          // extend if quiet with good history
          /*
            if ( EXTENDMORE(extension) && isQuiet && Move2Score(*it) > SearchConfig::historyExtensionThreshold){
-              ++extension; 
+              ++extension;
               stats.incr(Stats::sid_goodHistoryExtension);
            }
          */
@@ -836,7 +836,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          }
 
          // capture history pruning
-         if ( capHistoryPruning && isPrunableCap && 
+         if ( capHistoryPruning && isPrunableCap &&
               historyT.historyCap[PieceIdx(p.board_const(Move2From(*it)))][to][Abs(p.board_const(to))-1] < SearchConfig::captureHistoryPruningCoeff.threshold(depth + pruningDepthCorrection, data.gp, improving, cutNode)){
             stats.incr(Stats::sid_capHistPruning);
             continue;
@@ -860,7 +860,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          DepthType reduction = 0;
          if (SearchConfig::doLMR && depth >= SearchConfig::lmrMinDepth && validMoveCount > 1 + 2 * rootnode && isReductible) {
 
-            if (Move2Type(*it) == T_std){ 
+            if (Move2Type(*it) == T_std){
                stats.incr(Stats::sid_lmr);
                // base reduction
                reduction += SearchConfig::lmrReduction[std::min(static_cast<int>(depth), MAX_DEPTH - 1)][std::min(validMoveCount, MAX_MOVE - 1)];
@@ -880,10 +880,10 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                }
                */
 
-               // history reduction/extension 
+               // history reduction/extension
                // beware killers and counter are scored above history max
-               reduction -= std::min(3, HISTORY_DIV(2 * Move2Score(*it))); 
-               
+               reduction -= std::min(3, HISTORY_DIV(2 * Move2Score(*it)));
+
                // less reduction
                //reduction -= !noCheck;
                //reduction -= isCheck;
@@ -990,8 +990,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // insert data in TT
    TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(evalScore, height),
-                       TT::Bound(hashBound | 
-                       (ttPV ? TT::B_ttPVFlag : TT::B_none) | 
+                       TT::Bound(hashBound |
+                       (ttPV ? TT::B_ttPVFlag : TT::B_none) |
                        (bestMoveIsCheck ? TT::B_isCheckFlag : TT::B_none) |
                        (isInCheck ? TT::B_isInCheckFlag : TT::B_none)),
                        depth);

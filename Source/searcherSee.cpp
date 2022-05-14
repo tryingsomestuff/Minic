@@ -12,7 +12,7 @@ ScoreType Searcher::SEE(const Position& p, const Move& m) {
    assert(isValidSquare(from));
    const Square to = correctedMove2ToKingDest(m);
    assert(isValidSquare(to));
-   
+
    BitBoard   attackers          = BBTools::allAttackedBB(p, to);
    BitBoard   occupation_mask    = 0xFFFFFFFFFFFFFFFF;
    ScoreType  current_target_val = 0;
@@ -49,7 +49,7 @@ ScoreType Searcher::SEE(const Position& p, const Move& m) {
    c = ~c;
 
    while (attackers) {
-      if (!promPossible && attackers & p.pieces_const<P_wp>(c)) 
+      if (!promPossible && attackers & p.pieces_const<P_wp>(c))
          from = BBTools::SquareFromBitBoard(attackers & p.pieces_const<P_wp>(c)), pp = P_wp;
       else if (attackers & p.pieces_const<P_wn>(c))
          from = BBTools::SquareFromBitBoard(attackers & p.pieces_const<P_wn>(c)), pp = P_wn;

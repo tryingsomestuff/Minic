@@ -5,7 +5,7 @@
 
 /*!
  * Common tools for communication protocol (UCI and XBOARD)
- * Initialy made only for XBOARD 
+ * Initialy made only for XBOARD
  * UCI shall be state less but is not totally here
  */
 namespace COM {

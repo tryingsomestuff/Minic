@@ -103,7 +103,7 @@ ScoreType armageddonScore(ScoreType score, unsigned int ply, DepthType height, C
 ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowEGEvaluation, bool display) {
    START_TIMER
 
-   if ( (p.occupancy() & ~p.allKing()) == emptyBitBoard) 
+   if ( (p.occupancy() & ~p.allKing()) == emptyBitBoard)
       return context.drawScore(p, context._height); // drawScore take armageddon into account
 
    const bool white2Play = p.c == Co_White;
@@ -143,7 +143,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
          //MoveGen::generate<MoveGen::GP_cap>(p, moves);
 #endif
          // probe endgame knowledge only if position is quiet from stm pov
-         if (true/*moves.empty()*/) { 
+         if (true/*moves.empty()*/) {
             const Color winningSideEG = features.scores[F_material][EG] > 0 ? Co_White : Co_Black;
             // helpers for various endgame
             if (MEntry.t == MaterialHash::Ter_WhiteWinWithHelper || MEntry.t == MaterialHash::Ter_BlackWinWithHelper) {
@@ -190,10 +190,10 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       ScoreType matScoreB = 0;
       data.gp = gamePhase(p.mat, matScoreW, matScoreB);
       features.scores[F_material] += EvalScore(
-          (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * absValueEG(P_wq) + 
+          (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * absValueEG(P_wq) +
           (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * absValueEG(P_wr) +
           (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * absValueEG(P_wb) +
-          (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * absValueEG(P_wn) + 
+          (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * absValueEG(P_wn) +
           (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * absValueEG(P_wp), matScoreW - matScoreB);
       //std::cout << ToString(p,true) << std::endl;
       context.stats.incr(Stats::sid_materialTableMiss);
@@ -212,7 +212,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       // we will stay to classic eval when the game is already decided (to gain some nps)
       ///@todo use data.gp inside NNUE condition ?
       if (DynamicConfig::forceNNUE ||
-          !isLazyHigh(static_cast<ScoreType>(DynamicConfig::NNUEThreshold), features, score)) { 
+          !isLazyHigh(static_cast<ScoreType>(DynamicConfig::NNUEThreshold), features, score)) {
          if (DynamicConfig::armageddon) features.scalingFactor = 1.f;              ///@todo better
          // call the net
          ScoreType nnueScore = static_cast<ScoreType>(p.evaluator().propagate(p.c, std::min(32,static_cast<int>(BB::countBit(p.occupancy())))));
@@ -306,7 +306,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       pe.pawnTargets[Co_White]   = BBTools::pawnAttacks<Co_White>(pawns[Co_White]);
       pe.pawnTargets[Co_Black]   = BBTools::pawnAttacks<Co_Black>(pawns[Co_Black]);
       // semiOpen white means with white pawn, and without black pawn
-      pe.semiOpenFiles[Co_White] = BBTools::fillFile(pawns[Co_White]) & ~BBTools::fillFile(pawns[Co_Black]); 
+      pe.semiOpenFiles[Co_White] = BBTools::fillFile(pawns[Co_White]) & ~BBTools::fillFile(pawns[Co_Black]);
       pe.semiOpenFiles[Co_Black] = BBTools::fillFile(pawns[Co_Black]) & ~BBTools::fillFile(pawns[Co_White]);
       pe.passed[Co_White]        = BBTools::pawnPassed<Co_White>(pawns[Co_White], pawns[Co_Black]);
       pe.passed[Co_Black]        = BBTools::pawnPassed<Co_Black>(pawns[Co_Black], pawns[Co_White]);
@@ -346,13 +346,13 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       const BitBoard backwardCloseW  = backward[Co_White] & ~semiOpenPawn[Co_White];
       const BitBoard backwardOpenB   = backward[Co_Black] & semiOpenPawn[Co_Black];
       const BitBoard backwardCloseB  = backward[Co_Black] & ~semiOpenPawn[Co_Black];
-      const BitBoard doubled[2]      = {BBTools::pawnDoubled<Co_White>(pawns[Co_White]), 
+      const BitBoard doubled[2]      = {BBTools::pawnDoubled<Co_White>(pawns[Co_White]),
                                         BBTools::pawnDoubled<Co_Black>(pawns[Co_Black])};
       const BitBoard doubledOpenW    = doubled[Co_White] & semiOpenPawn[Co_White];
       const BitBoard doubledCloseW   = doubled[Co_White] & ~semiOpenPawn[Co_White];
       const BitBoard doubledOpenB    = doubled[Co_Black] & semiOpenPawn[Co_Black];
       const BitBoard doubledCloseB   = doubled[Co_Black] & ~semiOpenPawn[Co_Black];
-      const BitBoard isolated[2]     = {BBTools::pawnIsolated(pawns[Co_White]), 
+      const BitBoard isolated[2]     = {BBTools::pawnIsolated(pawns[Co_White]),
                                         BBTools::pawnIsolated(pawns[Co_Black])};
       const BitBoard isolatedOpenW   = isolated[Co_White] & semiOpenPawn[Co_White];
       const BitBoard isolatedCloseW  = isolated[Co_White] & ~semiOpenPawn[Co_White];
@@ -656,9 +656,9 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    // adjust piece pair score
    features.scores[F_material] += ((p.mat[Co_White][M_b] > 1 ? EvalConfig::bishopPairBonus[p.mat[Co_White][M_p]] : 0) -
                                    (p.mat[Co_Black][M_b] > 1 ? EvalConfig::bishopPairBonus[p.mat[Co_Black][M_p]] : 0));
-   features.scores[F_material] += ((p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0) - 
+   features.scores[F_material] += ((p.mat[Co_White][M_n] > 1 ? EvalConfig::knightPairMalus : 0) -
                                    (p.mat[Co_Black][M_n] > 1 ? EvalConfig::knightPairMalus : 0));
-   features.scores[F_material] += ((p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus : 0) - 
+   features.scores[F_material] += ((p.mat[Co_White][M_r] > 1 ? EvalConfig::rookPairMalus : 0) -
                                    (p.mat[Co_Black][M_r] > 1 ? EvalConfig::rookPairMalus : 0));
 
    // complexity
@@ -774,7 +774,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
 #endif
 
    // take side to move into account
-   ret = (white2Play ? +1 : -1) * ret; 
+   ret = (white2Play ? +1 : -1) * ret;
 
    if (display) { Logging::LogIt(Logging::logInfo) << "==> All (fully scaled) " << ret; }
 

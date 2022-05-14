@@ -30,12 +30,12 @@ void Searcher::displayGUI(DepthType          depth,
    std::stringstream str;
    const Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
    if (Logging::ct == Logging::CT_xboard) {
-      str << int(depth) << " " 
-          << bestScore << " " 
+      str << int(depth) << " "
+          << bestScore << " "
           << ms / 10 << " " // csec
           << nodeCount << " ";
       if (DynamicConfig::fullXboardOutput)
-         str << static_cast<int>(seldepth) << " " 
+         str << static_cast<int>(seldepth) << " "
              << static_cast<Counter>(nodeCount / ms) << " "  // knps
              << ThreadPool::instance().counter(Stats::sid_tbHit1) + ThreadPool::instance().counter(Stats::sid_tbHit2);
       str << "\t" << ToString(pv);
@@ -43,9 +43,9 @@ void Searcher::displayGUI(DepthType          depth,
    }
    else if (Logging::ct == Logging::CT_uci) {
       const std::string multiPVstr = DynamicConfig::multiPV > 1 ? (" multipv " + std::to_string(multipv)) : "";
-      str << "info" << multiPVstr 
-          << " depth " << static_cast<int>(depth) 
-          << " score " << UCI::uciScore(bestScore, ply) 
+      str << "info" << multiPVstr
+          << " depth " << static_cast<int>(depth)
+          << " score " << UCI::uciScore(bestScore, ply)
           << " time " << ms // msec
           << " nodes " << nodeCount
           << " nps " << static_cast<Counter>(static_cast<double>(nodeCount) / msec2sec(ms)) // nps
@@ -185,7 +185,7 @@ void Searcher::searchDriver(bool postMove) {
       _data.score = pvs<true>(matedScore(0), matingScore(0), p, 1, 0, _data.pv, _data.seldepth, isInCheck, false); // depth 1 search to get real valid moves
       // only one : check evasion or zugzwang
       if (rootScores.size() == 1) {
-         moveDifficulty = MoveDifficultyUtil::MD_forced; 
+         moveDifficulty = MoveDifficultyUtil::MD_forced;
       }
    }
 
@@ -321,7 +321,7 @@ void Searcher::searchDriver(bool postMove) {
                // update a "variability" measure to scale remaining time on it ///@todo tune this more
                if (depth > 12 && !pvLoc.empty()) {
                   if (getSearchData().moves[depth] != getSearchData().moves[depth - 1] &&
-                  std::fabs(getSearchData().scores[depth] - getSearchData().scores[depth-1]) > MoveDifficultyUtil::emergencyMargin/4 ) 
+                  std::fabs(getSearchData().scores[depth] - getSearchData().scores[depth-1]) > MoveDifficultyUtil::emergencyMargin/4 )
                      MoveDifficultyUtil::variability *= (1.f + float(depth) / 100);
                   else
                      MoveDifficultyUtil::variability *= 0.98f;
@@ -339,7 +339,7 @@ void Searcher::searchDriver(bool postMove) {
                // compute EBF
                if (depth > 1) {
                   Logging::LogIt(Logging::logInfo) << "EBF  "
-                                                   << getSearchData().nodes[depth] / 
+                                                   << getSearchData().nodes[depth] /
                                                       static_cast<double>(asLeastOne(getSearchData().nodes[depth - 1]));
                   Logging::LogIt(Logging::logInfo) << "EBF2 "
                                                    << ThreadPool::instance().counter(Stats::sid_qnodes) /
@@ -360,7 +360,7 @@ void Searcher::searchDriver(bool postMove) {
       // check for a node count stop
       if (isMainThread()) {
          // restore real value (only on main processus!), was discarded for depth 1 search
-         if (Distributed::isMainProcess()) TimeMan::maxNodes = maxNodes; 
+         if (Distributed::isMainProcess()) TimeMan::maxNodes = maxNodes;
          const Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
          if (TimeMan::maxNodes > 0 && nodeCount > TimeMan::maxNodes) {
             stopFlag = true;
@@ -374,7 +374,7 @@ pvsout:
 
    // for all thread, best move is set to first pv move (if there is one ...)
    // this will be changed later for main thread to take skill or best move into account
-   if (_data.pv.empty()) _data.best = INVALIDMOVE; 
+   if (_data.pv.empty()) _data.best = INVALIDMOVE;
    else                  _data.best = _data.pv[0];
 
    if (isMainThread()) {

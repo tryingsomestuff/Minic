@@ -230,7 +230,7 @@ void xboard() {
                std::this_thread::sleep_for(20ms);
             }
             std::this_thread::sleep_for(200ms);
-         }            
+         }
          else if (COM::command == "pause") {
             COM::stopPonder();
             COM::readLine();

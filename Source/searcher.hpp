@@ -83,7 +83,7 @@ struct Searcher {
    void timeCheck();
 
    template<bool pvnode>
-   [[nodiscard]] 
+   [[nodiscard]]
    ScoreType pvs(ScoreType                    alpha,
                  ScoreType                    beta,
                  const Position&              p,

@@ -49,7 +49,7 @@ class ThreadPool : public std::vector<std::unique_ptr<Searcher>> {
   public:
    static ThreadPool& instance();
    ~ThreadPool();
-   
+
    [[nodiscard]] Searcher& main();
    void setup();
    void distributeData(const ThreadData& data);

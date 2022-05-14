@@ -53,7 +53,7 @@ const std::string MinicVersion = "3.19";
 #define WITH_SYZYGY // include or not syzgy ETG support
 #endif
 
-//#define WITHOUT_FILESYSTEM              // some compiler don't support whole std:filesystem 
+//#define WITHOUT_FILESYSTEM              // some compiler don't support whole std:filesystem
 //#define LIMIT_THREADS_TO_PHYSICAL_CORES // in order to restrict thread to the number of physical core
 //#define REPRODUCTIBLE_RESULTS           // clear state table betwwen all new search (not only all new games)
 #define WITH_NNUE_CLIPPED_RELU            // use clipped relu instead of relu for NNUE
@@ -99,7 +99,7 @@ const std::string MinicVersion = "3.19";
 //#define DEBUG_PHASH
 //#define DEBUG_MATERIAL
 //#define DEBUG_APPLY
-//#define DEBUG_GENERATION 
+//#define DEBUG_GENERATION
 //#define DEBUG_GENERATION_LEGAL // not compatible with DEBUG_PSEUDO_LEGAL
 //#define DEBUG_BITBOARD
 //#define DEBUG_PSEUDO_LEGAL // not compatible with DEBUG_GENERATION_LEGAL
@@ -223,18 +223,18 @@ inline constexpr T& operator++(T& d) { return d = static_cast<T>(static_cast<int
 inline constexpr T& operator--(T& d) { return d = static_cast<T>(static_cast<int>(d) - 1); }
 
 template<typename T>
-[[nodiscard]] inline 
+[[nodiscard]] inline
 T asLeastOne(const T &t){
    return std::max(static_cast<std::remove_const_t<decltype(t)>>(1), t);
 }
 
-[[nodiscard]] inline 
+[[nodiscard]] inline
 TimeType getTimeDiff(const Clock::time_point & reference){
    const auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - reference).count();
    return static_cast<TimeType>(asLeastOne(diff));
 }
 
-[[nodiscard]] inline 
+[[nodiscard]] inline
 TimeType getTimeDiff(const Clock::time_point & current, const Clock::time_point & reference){
    const auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(current - reference).count();
    return static_cast<TimeType>(asLeastOne(diff));
@@ -247,13 +247,13 @@ TimeType getTimeDiff(const Clock::time_point & current, const Clock::time_point 
 }
 
 template<typename OT, typename IT>
-[[nodiscard]] inline 
+[[nodiscard]] inline
 OT clampInt(IT t){
    return static_cast<OT>(std::min(std::numeric_limits<IT>::max(), std::max(std::numeric_limits<IT>::min(), t)));
 }
 
 template<typename OT, typename IT>
-[[nodiscard]] inline 
+[[nodiscard]] inline
 OT clampIntU(IT t){
    return static_cast<OT>(std::min(std::numeric_limits<IT>::max(), std::max(0, t)));
 }
@@ -274,9 +274,9 @@ enum Color : int8_t { Co_None = -1, Co_White = 0, Co_Black = 1, Co_End };
 [[nodiscard]] constexpr Color operator~(Color c) { return static_cast<Color>(c ^ Co_Black); } // switch Color
 ENABLE_INCR_OPERATORS_ON(Color);
 
-template<typename T> 
-[[nodiscard]] constexpr ScoreType clampScore(T s) { 
-   return static_cast<ScoreType>(std::clamp(s, (T)(-MATE + 2 * MAX_DEPTH), (T)(MATE - 2 * MAX_DEPTH))); 
+template<typename T>
+[[nodiscard]] constexpr ScoreType clampScore(T s) {
+   return static_cast<ScoreType>(std::clamp(s, (T)(-MATE + 2 * MAX_DEPTH), (T)(MATE - 2 * MAX_DEPTH)));
 }
 
 enum GamePhase { MG = 0, EG = 1, GP_MAX = 2 };
@@ -422,7 +422,7 @@ enum CastlingRights : uint8_t {
    C_w_all       = 3,
    C_all_but_b   = 3,
    C_bks         = 4,
-   C_all_but_bqs = 7, 
+   C_all_but_bqs = 7,
    C_bqs         = 8,
    C_all_but_bks = 11,
    C_b_all       = 12,
@@ -483,7 +483,7 @@ const Square correctedRookDestSq[T_bqs+1] = { INVALIDSQUARE, INVALIDSQUARE, INVA
 } // awfull hack
 
 // previous best root 20000
-// ttmove 15000 
+// ttmove 15000
 // ~~king evasion 10000~~
 // good cap +7000 +SEE (or MVA and cap history)
 // killers 1900-1700-1500

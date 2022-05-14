@@ -2,7 +2,7 @@
 
 #include "definition.hpp"
 
-/*! 
+/*!
  * A simple, and partial, XBOARD implementation
  * Some help here : https://www.gnu.org/software/xboard/engine-intf.html
  */

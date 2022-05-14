@@ -264,7 +264,7 @@ void registerCOMOptions() { // options exposed to GUI
    _keys.push_back(KeyBase(k_score, w_spin, "nullMoveMargin"                    , &SearchConfig::nullMoveMargin                      , ScoreType(-500) , ScoreType(500)      ));
    _keys.push_back(KeyBase(k_score, w_spin, "nullMoveMargin2"                   , &SearchConfig::nullMoveMargin2                     , ScoreType(-500) , ScoreType(500)      ));
    _keys.push_back(KeyBase(k_score, w_spin, "nullMoveDynamicDivisor"            , &SearchConfig::nullMoveDynamicDivisor              , ScoreType(1)    , ScoreType(1500)     ));
-   
+
    _keys.push_back(KeyBase(k_depth, w_spin, "CMHMaxDepth0"                      , &SearchConfig::CMHMaxDepth[0]                      , DepthType(0)    , DepthType(30)       ));
    _keys.push_back(KeyBase(k_depth, w_spin, "CMHMaxDepth1"                      , &SearchConfig::CMHMaxDepth[1]                      , DepthType(0)    , DepthType(30)       ));
    //_keys.push_back(KeyBase(k_score, w_spin, "randomAggressiveReductionFactor"   , &SearchConfig::randomAggressiveReductionFactor     , ScoreType(-10)  , ScoreType(10)       ));
@@ -286,7 +286,7 @@ void registerCOMOptions() { // options exposed to GUI
    _keys.push_back(KeyBase(k_depth, w_spin, "lmrMinDepth"                       , &SearchConfig::lmrMinDepth                         , DepthType(0)    , DepthType(30)       ));
    _keys.push_back(KeyBase(k_depth, w_spin, "singularExtensionDepth"            , &SearchConfig::singularExtensionDepth              , DepthType(0)    , DepthType(30)       ));
    _keys.push_back(KeyBase(k_int  , w_spin, "lmrCapHistoryFactor"               , &SearchConfig::lmrCapHistoryFactor                 , 1               , 64                  ));
-   
+
    _keys.push_back(KeyBase(k_score, w_spin, "dangerLimitPruning"                , &SearchConfig::dangerLimitPruning                  , ScoreType(0)    , ScoreType(65)       ));
    _keys.push_back(KeyBase(k_score, w_spin, "dangerLimitForwardPruning"         , &SearchConfig::dangerLimitForwardPruning           , ScoreType(0)    , ScoreType(65)       ));
    _keys.push_back(KeyBase(k_score, w_spin, "dangerLimitReduction"              , &SearchConfig::dangerLimitReduction                , ScoreType(0)    , ScoreType(65)       ));

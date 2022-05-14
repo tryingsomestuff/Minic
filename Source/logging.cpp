@@ -30,7 +30,7 @@ LogIt::~LogIt() {
       if (_of) (*_of) << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
    }
    else { // those are direct GUI outputs (like bestmove, feature, option, ...)
-      if ( _level >= DynamicConfig::minOutputLevel ) { 
+      if ( _level >= DynamicConfig::minOutputLevel ) {
          std::cout << _buffer.str() << std::flush << std::endl;
       }
       // debug file output is *not* depending on DynamicConfig::minOutputLevel

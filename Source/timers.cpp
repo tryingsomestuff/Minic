@@ -25,11 +25,11 @@ const std::string TimerNames[TM_Max] = {"Total", "See",    "Apply",     "Eval1",
                                         "ResetNNUE", "UpdateNNUE", "Sum"};
 
 void Display() {
-   std::cout << std::left  << std::setw(15) << "Counter" 
+   std::cout << std::left  << std::setw(15) << "Counter"
              << std::right << std::setw(15) << "total tick"
              << std::right << std::setw(15) << "% of total"
              << std::right << std::setw(15) << "calls"
-             << std::right << std::setw(15) << "tick per call" 
+             << std::right << std::setw(15) << "tick per call"
              << std::endl;
    for (TimerType tm = TM_Total; tm < TM_Max; ++tm){
       if (callCounter[tm]){
@@ -38,11 +38,11 @@ void Display() {
             rdtscCounter[TM_Sum] += rdtscCounter[tm];
             callCounter[TM_Sum] += callCounter[tm];
          }
-         std::cout << std::left  << std::setw(15) << TimerNames[tm] 
+         std::cout << std::left  << std::setw(15) << TimerNames[tm]
                    << std::right << std::setw(15) << rdtscCounter[tm]
                    << std::right << std::setw(15) << percent
                    << std::right << std::setw(15) << callCounter[tm]
-                   << std::right << std::setw(15) << rdtscCounter[tm] / callCounter[tm] 
+                   << std::right << std::setw(15) << rdtscCounter[tm] / callCounter[tm]
                    << std::endl;
       }
    }

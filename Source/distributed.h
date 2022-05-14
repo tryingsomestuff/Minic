@@ -22,7 +22,7 @@
 #include "logging.hpp"
 
 /**
- * There is not much to do to use distributed memory the same way as we use 
+ * There is not much to do to use distributed memory the same way as we use
  * concurrent threads and the TT in the lazy SMP shared memory approach.
  * The TT being lock-free, it can be asynchronously updated by all process.
  *
@@ -138,10 +138,10 @@ template<typename T> inline void asyncAllGather(T* inptr, T* outptr, int n, MPI_
    checkError(MPI_Iallgather(inptr, n, TraitMpiType<T>::type, outptr, n, TraitMpiType<T>::type, com, &req));
 }
 
-inline void winFence(MPI_Win& window, const std::string & msg = "") { 
+inline void winFence(MPI_Win& window, const std::string & msg = "") {
    if (!moreThanOneProcess()) return;
    Logging::LogIt(Logging::logInfo) << "Window fence... " + msg;
-   checkError(MPI_Win_fence(0, window)); 
+   checkError(MPI_Win_fence(0, window));
    Logging::LogIt(Logging::logInfo) << "... ok";
 }
 

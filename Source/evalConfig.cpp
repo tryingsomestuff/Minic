@@ -11,8 +11,8 @@ CONST_EVAL_TUNING EvalScore imbalance_mines[5][5] = {
     { {  -19,  343}, { -121, -257} },
     { {  244,  236}, { -200, -240}, { -209, -281} },
     { {  178,  627}, { -186, -134}, { -204, -342}, { -166, -367} },
-    { {  478,  641}, { -531, -360}, { -792, -537}, {-1268,-1125}, { -447, -416} } 
-}; 
+    { {  478,  641}, { -531, -360}, { -792, -537}, {-1268,-1125}, { -447, -416} }
+};
 
 CONST_EVAL_TUNING EvalScore imbalance_theirs[5][5] = {
     // pawn knight bishop rook queen
@@ -157,7 +157,7 @@ CONST_EVAL_TUNING EvalScore   threatByMinor[6]        = { { -8,-19}, {-32,-32}, 
 CONST_EVAL_TUNING EvalScore   threatByRook[6]         = { {-15,-19}, {-44,-15}, {-44,-23}, {  2, -9}, {-41,-96}, {-17, -1} };
 CONST_EVAL_TUNING EvalScore   threatByQueen[6]        = { {  4,-14}, {  1,-28}, {  3,-41}, { 13,-19}, { 33, 27}, {-46,-65} };
 CONST_EVAL_TUNING EvalScore   threatByKing[6]         = { {-63,-29}, {-12,-39}, {-29,-47}, { 34,-48}, { -1,  0}, {  0,  0} };
-   
+
 // this depends on number of pawn
 CONST_EVAL_TUNING EvalScore   adjKnight[9]            = { {-26,-20}, {-10, -4}, { -1, -8}, {-16,  1}, { -9,  6}, {  3, 16}, { 12, 39}, { 22, 64}, { 33, 71} };
 CONST_EVAL_TUNING EvalScore   adjRook[9]              = { { 24, -8}, { 15, 25}, {-35, 52}, {-51, 59}, {-63, 54}, {-66, 54}, {-67, 52}, {-64, 51}, {-50, 36} };

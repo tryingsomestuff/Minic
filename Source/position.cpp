@@ -247,6 +247,6 @@ Position::~Position() {
 
 Position::Position() {}
 
-RootPosition::RootPosition(const std::string& fen, bool withMoveCount) : RootPosition() { 
-   readFEN(fen, *this, true, withMoveCount); 
+RootPosition::RootPosition(const std::string& fen, bool withMoveCount) : RootPosition() {
+   readFEN(fen, *this, true, withMoveCount);
 }

@@ -72,7 +72,7 @@ bool getEntry(Searcher &context, const Position &p, Hash h, DepthType d, Entry &
    assert((h & (ttSize - 1)) == (h % ttSize));
    if (DynamicConfig::disableTT) return false;
    // update entry immediatly to avoid further race condition and invalidate it later if needed
-   e = table[h & (ttSize - 1)]; 
+   e = table[h & (ttSize - 1)];
 #ifdef DEBUG_HASH_ENTRY
    e.d = randomInt<unsigned int, 666>(0, UINT32_MAX);
 #endif
@@ -82,10 +82,10 @@ bool getEntry(Searcher &context, const Position &p, Hash h, DepthType d, Entry &
        ((e.h ^ e._data1 ^ e._data2) != Hash64to32(h)) ||
 #endif
        (isValidMove(e.m) && !isPseudoLegal(p, e.m))) {
-      // move is filled, but wrong in this position, invalidate returned entry.          
+      // move is filled, but wrong in this position, invalidate returned entry.
       e.h = nullHash;
       return false;
-   } 
+   }
 
    if (e.d >= d) {
       // valid entry only if depth is ok
@@ -139,7 +139,7 @@ void getPV(const Position &p, Searcher &context, PVList &pv) {
 } // namespace TT
 
 ScoreType createHashScore(ScoreType score, DepthType height) {
-   if (isMatingScore(score)) 
+   if (isMatingScore(score))
       score += height;
    else if (isMatedScore(score))
       score -= height;
@@ -149,11 +149,11 @@ ScoreType createHashScore(ScoreType score, DepthType height) {
 }
 
 ScoreType adjustHashScore(ScoreType score, DepthType height) {
-   if (isMatingScore(score)) 
+   if (isMatingScore(score))
       score -= height;
    else if (isMatedScore(score))
       score += height;
    //else
-   //   score *= 0.999f;        
+   //   score *= 0.999f;
    return score;
 }

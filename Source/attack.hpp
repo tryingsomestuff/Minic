@@ -119,11 +119,11 @@ template <       > [[nodiscard]] inline BitBoard coverage<P_wk>(const Square s, 
 
 // Attack function is just coverage interseted with a target bitboard
 template<Piece pp>
-[[nodiscard]] inline BitBoard attack(const Square s, 
-                                     const BitBoard target, 
-                                     const BitBoard occupancy = 0, 
+[[nodiscard]] inline BitBoard attack(const Square s,
+                                     const BitBoard target,
+                                     const BitBoard occupancy = 0,
                                      const Color c = Co_White) { // color is only important/needed for pawns
-   return coverage<pp>(s, occupancy, c) & target; 
+   return coverage<pp>(s, occupancy, c) & target;
 }
 
 #endif // MAGIC
