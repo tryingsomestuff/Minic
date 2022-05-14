@@ -11,6 +11,7 @@
  */
 
 namespace MaterialHash {
+
 const int MatWQ    = 1;
 const int MatBQ    = 3;
 const int MatWR    = (3 * 3);
@@ -23,9 +24,23 @@ const int MatWN    = (3 * 3 * 3 * 3 * 3 * 3 * 3 * 3);
 const int MatBN    = (3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 3);
 const int MatWP    = (3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 3);
 const int MatBP    = (3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 9);
+#ifdef WITH_MATERIAL_TABLE
 const int TotalMat = ((2 * (MatWQ + MatBQ) + 2 * (MatWL + MatBL + MatWD + MatBD) + 2 * (MatWR + MatBR + MatWN + MatBN) + 8 * (MatWP + MatBP)) + 1);
+#else
+const int TotalMat = 1;
+#endif
 
 [[nodiscard]] Hash getMaterialHash(const Position::Material &mat);
+#ifndef WITH_MATERIAL_TABLE
+[[nodiscard]] Hash getMaterialHash2(const Position::Material &mat);
+#endif
+
+[[nodiscard]] Position::Material materialFromString(const std::string &strMat);
+
+ScoreType helperKXK(const Position &p, Color winningSide, ScoreType s, DepthType height);
+ScoreType helperKmmK(const Position &p, Color winningSide, ScoreType s, DepthType height);
+ScoreType helperKPK(const Position &p, Color winningSide, ScoreType, DepthType height);
+ScoreType helperKBPK(const Position &p, Color winningSide, ScoreType s, DepthType height);
 
 enum Terminaison : uint8_t {
    Ter_Unknown = 0,

@@ -15,7 +15,14 @@ ScoreType (*helperTable[TotalMat])(const Position &, Color, ScoreType, DepthType
 // the material cache
 MaterialHashEntry materialHashTable[TotalMat];
 
+#ifndef WITH_MATERIAL_TABLE
+[[nodiscard]] Hash getMaterialHash(const Position::Material &) {
+    return nullHash;
+}
+[[nodiscard]] Hash getMaterialHash2(const Position::Material &mat) {
+#else
 [[nodiscard]] Hash getMaterialHash(const Position::Material &mat) {
+#endif
    assert(mat[Co_White][M_q]  >= 0);
    assert(mat[Co_Black][M_q]  >= 0);
    assert(mat[Co_White][M_r]  >= 0);
@@ -272,6 +279,8 @@ void InitMaterialScore(bool display) {
 void MaterialHashInitializer::init() {
    Logging::LogIt(Logging::logInfo) << "Material hash total : " << TotalMat;
    Logging::LogIt(Logging::logInfo) << "Material hash size : " << TotalMat * sizeof(MaterialHashEntry) / 1024 / 1024 << "Mb";
+
+#ifdef WITH_MATERIAL_TABLE
    InitMaterialScore();
    for (size_t k = 0; k < TotalMat; ++k) helperTable[k] = &helperDummy;
 
@@ -434,6 +443,8 @@ void MaterialHashInitializer::init() {
    DEF_MAT_H(KDPK, Ter_WhiteWinWithHelper,&helperKBPK)    DEF_MAT_REV_H(KKDP,KDPK,&helperKBPK)
 
    ///@todo other (with more pawn ...)
+
+#endif
 }
 
 Terminaison probeMaterialHashTable(const Position::Material &mat) {

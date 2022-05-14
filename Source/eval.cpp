@@ -202,6 +202,44 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    //std::cout << "allow material eval? " << allowEGEvaluation << std::endl;
    //std::cout << GetFEN(p) << std::endl;
 
+#ifndef WITH_MATERIAL_TABLE
+   // in case we are not using a material table, we still need KPK, KRK and KBNK helper
+   // end game knowledge (helper or scaling)
+   if (allowEGEvaluation && (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] < 5)) {
+     static const auto matHashKPK = MaterialHash::getMaterialHash2(MaterialHash::materialFromString("KPK"));
+     static const auto matHashKKP = MaterialHash::getMaterialHash2(MaterialHash::materialFromString("KKP"));
+     static const auto matHashKQK = MaterialHash::getMaterialHash2(MaterialHash::materialFromString("KQK"));
+     static const auto matHashKKQ = MaterialHash::getMaterialHash2(MaterialHash::materialFromString("KKQ"));
+     static const auto matHashKRK = MaterialHash::getMaterialHash2(MaterialHash::materialFromString("KRK"));
+     static const auto matHashKKR = MaterialHash::getMaterialHash2(MaterialHash::materialFromString("KKR"));
+     static const auto matHashKLNK = MaterialHash::getMaterialHash2(MaterialHash::materialFromString("KLNK"));
+     static const auto matHashKKLN = MaterialHash::getMaterialHash2(MaterialHash::materialFromString("KKLN"));
+     static const auto matHashKDNK = MaterialHash::getMaterialHash2(MaterialHash::materialFromString("KDNK"));
+     static const auto matHashKKDN = MaterialHash::getMaterialHash2(MaterialHash::materialFromString("KKDN"));
+     STOP_AND_SUM_TIMER(Eval)
+     const Color winningSideEG = features.scores[F_material][EG] > 0 ? Co_White : Co_Black;
+     context.stats.incr(Stats::sid_materialTableHelper);
+     ScoreType materialTableScore = 0;
+     const Hash matHash2 = MaterialHash::getMaterialHash2(p.mat);
+     bool matHelperHit = false;
+     if(matHash2 == matHashKPK || matHash2 == matHashKKP){
+        materialTableScore = (white2Play ? +1 : -1) * (MaterialHash::helperKPK(p, winningSideEG, features.scores[F_material][EG], context._height));
+        matHelperHit = true;
+     }
+     if(matHash2 == matHashKQK || matHash2 == matHashKKQ || matHash2 == matHashKRK || matHash2 == matHashKKR){
+        materialTableScore = (white2Play ? +1 : -1) * (MaterialHash::helperKXK(p, winningSideEG, features.scores[F_material][EG], context._height));
+        matHelperHit = true;
+     }
+     if(matHash2 == matHashKLNK || matHash2 == matHashKKLN || matHash2 == matHashKDNK || matHash2 == matHashKKDN){
+        materialTableScore = (white2Play ? +1 : -1) * (MaterialHash::helperKmmK(p, winningSideEG, features.scores[F_material][EG], context._height));
+        matHelperHit = true;
+     }
+     if (matHelperHit ){
+         return armageddonScore(materialTableScore, p.halfmoves, context._height, p.c);
+     }
+   }
+#endif
+
 #ifdef WITH_EVAL_TUNING
    features.scores[F_material] += MaterialHash::Imbalance(p.mat, Co_White) - MaterialHash::Imbalance(p.mat, Co_Black);
 #endif
