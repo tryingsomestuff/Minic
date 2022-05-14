@@ -1,6 +1,7 @@
 #include "material.hpp"
 
 #include "attack.hpp"
+#include "dynamicConfig.hpp"
 #include "evalConfig.hpp"
 #include "kpk.hpp"
 #include "logging.hpp"

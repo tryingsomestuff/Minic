@@ -1,6 +1,7 @@
 #include "searcher.hpp"
 
 #include "com.hpp"
+#include "dynamicConfig.hpp"
 #include "logging.hpp"
 #include "xboard.hpp"
 

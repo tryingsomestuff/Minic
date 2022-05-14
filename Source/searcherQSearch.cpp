@@ -1,3 +1,4 @@
+#include "dynamicConfig.hpp"
 #include "searcher.hpp"
 
 ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position& p, DepthType height, DepthType& seldepth, PVList* pv) {

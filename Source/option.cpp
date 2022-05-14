@@ -1,6 +1,7 @@
 #include "option.hpp"
 
 #include "com.hpp"
+#include "dynamicConfig.hpp"
 #include "logging.hpp"
 #include "opponent.hpp"
 #include "searcher.hpp"

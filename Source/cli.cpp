@@ -1,9 +1,11 @@
 #include "cli.hpp"
 
 #include "com.hpp"
+#include "dynamicConfig.hpp"
 #include "evalDef.hpp"
 #include "logging.hpp"
 #include "moveGen.hpp"
+#include "position.hpp"
 #include "searcher.hpp"
 #include "tables.hpp"
 #include "timeMan.hpp"

@@ -1,5 +1,6 @@
 #include "skill.hpp"
 
+#include "dynamicConfig.hpp"
 #include "tools.hpp"
 
 Move Skill::pick(std::vector<RootScores>& multiPVMoves) {
