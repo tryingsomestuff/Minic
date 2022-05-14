@@ -11,6 +11,7 @@ namespace DynamicConfig {
 extern bool         mateFinder;
 extern bool         disableTT;
 extern unsigned int ttSizeMb;
+extern unsigned int ttPawnSizeMb;
 extern bool         fullXboardOutput;
 extern bool         debugMode; // activate output in a file (see debugFile)
 extern int          minOutputLevel; // minimum output level

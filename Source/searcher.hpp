@@ -177,9 +177,6 @@ struct Searcher {
    };
 #pragma pack(pop)
 
-   static constexpr uint64_t    ttSizePawn = 1024 * 16 * 8;
-   std::unique_ptr<PawnEntry[]> tablePawn = 0;
-
    void initPawnTable();
 
    void clearPawnTT();
