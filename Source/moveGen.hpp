@@ -3,6 +3,7 @@
 #include "attack.hpp"
 #include "bitboardTools.hpp"
 #include "definition.hpp"
+#include "dynamicConfig.hpp"
 #include "hash.hpp"
 #include "logging.hpp"
 #include "positionTools.hpp"

@@ -2,6 +2,7 @@
 
 #include "cli.hpp"
 #include "com.hpp"
+#include "dynamicConfig.hpp"
 #include "logging.hpp"
 #include "opponent.hpp"
 #include "option.hpp"

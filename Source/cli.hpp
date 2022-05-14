@@ -1,7 +1,6 @@
 #pragma once
 
 #include "definition.hpp"
-#include "position.hpp"
 
 /*!
  * This is making some tools available from command line

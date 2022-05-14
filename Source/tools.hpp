@@ -1,6 +1,7 @@
 #pragma once
 
 #include "definition.hpp"
+#include "logging.hpp"
 #include "position.hpp"
 
 struct Searcher;

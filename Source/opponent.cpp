@@ -187,4 +187,6 @@ void init() {
    Logging::LogIt(Logging::logInfo) << "Rating factor set to: " << DynamicConfig::ratingFactor;
 }
 
+void ratingReceived() { DynamicConfig::ratingAdvReceived = true; }
+
 } // namespace Opponent

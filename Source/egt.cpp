@@ -2,6 +2,7 @@
 
 #ifdef WITH_SYZYGY
 
+#include "dynamicConfig.hpp"
 #include "logging.hpp"
 #include "position.hpp"
 #include "searcher.hpp"

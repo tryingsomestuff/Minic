@@ -1,5 +1,6 @@
 #include "com.hpp"
 #include "distributed.h"
+#include "dynamicConfig.hpp"
 #include "logging.hpp"
 #include "searcher.hpp"
 #include "skill.hpp"

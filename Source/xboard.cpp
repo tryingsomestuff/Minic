@@ -1,6 +1,7 @@
 #include "xboard.hpp"
 
 #include "com.hpp"
+#include "dynamicConfig.hpp"
 #include "logging.hpp"
 #include "option.hpp"
 #include "position.hpp"

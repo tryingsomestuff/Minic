@@ -9,6 +9,7 @@
 #include <numeric>
 
 #include "com.hpp"
+#include "dynamicConfig.hpp"
 #include "logging.hpp"
 #include "moveGen.hpp"
 #include "positionTools.hpp"
@@ -254,9 +255,11 @@ void ExtendedPosition::test(const std::vector<std::string> &positions,
          results[k] = new Results[timeControls.size()];
          for (size_t t = 0; t < timeControls.size(); ++t) {
             ExtendedPosition extP(positions[k], withMoveCount);
+#ifdef WITH_NNUE            
             NNUEEvaluator    evaluator;
             extP.associateEvaluator(evaluator);
             extP.resetNNUEEvaluator(extP.evaluator());
+#endif
             Logging::LogIt(Logging::logInfo) << "Current test time control " << timeControls[t];
 
             TimeMan::isDynamic                   = false;

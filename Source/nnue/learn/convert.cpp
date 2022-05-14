@@ -1,5 +1,6 @@
 #include "com.hpp"
 #include "definition.hpp"
+#include "dynamicConfig.hpp"
 #include "learn_tools.hpp"
 #include "logging.hpp"
 #include "material.hpp"
