@@ -227,7 +227,7 @@ Position Searcher::getQuiet(const Position& p, Searcher* searcher, ScoreType* qS
    ScoreType s        = 0;
 
    Position      pQuiet = p; // because p is given const
-#ifdef WITH_NNUE   
+#ifdef WITH_NNUE
    NNUEEvaluator evaluator;
    pQuiet.associateEvaluator(evaluator);
    pQuiet.resetNNUEEvaluator(pQuiet.evaluator());

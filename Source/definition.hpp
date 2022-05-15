@@ -651,6 +651,8 @@ inline void* std_aligned_alloc(const size_t alignment, const size_t size) {
   return aligned_alloc(alignment, size);
 #elif defined(_WIN32)
   return _mm_malloc(size, alignment);
+#elif defined(ARDUINO) || defined(ESP32)
+  return malloc(size);
 #else
    void* ret = std::aligned_alloc(alignment, size);
 #ifdef MADV_HUGEPAGE
