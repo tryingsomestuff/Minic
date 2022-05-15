@@ -153,7 +153,7 @@ namespace{
 void Searcher::initPawnTable() {
    Logging::LogIt(Logging::logInfo) << "Init Pawn TT";
    Logging::LogIt(Logging::logInfo) << "PawnEntry size " << sizeof(PawnEntry);
-   ttSizePawn = powerFloor((1024ull * 1024ull * DynamicConfig::ttPawnSizeMb) / (uint64_t)sizeof(PawnEntry));
+   ttSizePawn = powerFloor((SIZE_MULTIPLIER * DynamicConfig::ttPawnSizeMb) / (uint64_t)sizeof(PawnEntry));
    assert(BB::countBit(ttSizePawn) == 1); // a power of 2
    tablePawn.reset(new PawnEntry[ttSizePawn]);
    Logging::LogIt(Logging::logInfo) << "Size of Pawn TT " << ttSizePawn * sizeof(PawnEntry) / 1024 << "Kb";
