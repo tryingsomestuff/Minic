@@ -57,12 +57,12 @@ void initMask();
 
 // Next functions define the user API for piece move
 template < Piece > [[nodiscard]] inline BitBoard coverage      (const Square x, const BitBoard occupancy = 0, const Color c = Co_White) { assert(false); return emptyBitBoard; }
-template <       > [[nodiscard]] inline BitBoard coverage<P_wp>(const Square x, const BitBoard occupancy, const Color c) { assert(isValidSquare(x)); return mask[x].pawnAttack[c]; }
-template <       > [[nodiscard]] inline BitBoard coverage<P_wn>(const Square x, const BitBoard occupancy, const Color c) { assert(isValidSquare(x)); return mask[x].knight; }
-template <       > [[nodiscard]] inline BitBoard coverage<P_wb>(const Square x, const BitBoard occupancy, const Color c) { assert(isValidSquare(x)); return diagonalAttack(occupancy, x) | antidiagonalAttack(occupancy, x); }
-template <       > [[nodiscard]] inline BitBoard coverage<P_wr>(const Square x, const BitBoard occupancy, const Color c) { assert(isValidSquare(x)); return fileAttack    (occupancy, x) | rankAttack        (occupancy, x); }
-template <       > [[nodiscard]] inline BitBoard coverage<P_wq>(const Square x, const BitBoard occupancy, const Color c) { assert(isValidSquare(x)); return diagonalAttack(occupancy, x) | antidiagonalAttack(occupancy, x) | fileAttack(occupancy, x) | rankAttack(occupancy, x); }
-template <       > [[nodiscard]] inline BitBoard coverage<P_wk>(const Square x, const BitBoard occupancy, const Color c) { assert(isValidSquare(x)); return mask[x].king; }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wp>(const Square x, const BitBoard          , const Color c) { assert(isValidSquare(x)); return mask[x].pawnAttack[c]; }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wn>(const Square x, const BitBoard          , const Color  ) { assert(isValidSquare(x)); return mask[x].knight; }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wb>(const Square x, const BitBoard occupancy, const Color  ) { assert(isValidSquare(x)); return diagonalAttack(occupancy, x) | antidiagonalAttack(occupancy, x); }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wr>(const Square x, const BitBoard occupancy, const Color  ) { assert(isValidSquare(x)); return fileAttack    (occupancy, x) | rankAttack        (occupancy, x); }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wq>(const Square x, const BitBoard occupancy, const Color  ) { assert(isValidSquare(x)); return diagonalAttack(occupancy, x) | antidiagonalAttack(occupancy, x) | fileAttack(occupancy, x) | rankAttack(occupancy, x); }
+template <       > [[nodiscard]] inline BitBoard coverage<P_wk>(const Square x, const BitBoard          , const Color  ) { assert(isValidSquare(x)); return mask[x].king; }
 
 // Attack function is just coverage interseted with a target bitboard
 template<Piece pp>
