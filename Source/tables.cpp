@@ -5,6 +5,7 @@
 
 void KillerT::initKillers() {
    Logging::LogIt(Logging::logInfo) << "Init killers";
+   Logging::LogIt(Logging::logInfo) << "Size of killer table " << sizeof(killers) << "b";
    for (int k = 0; k < MAX_DEPTH; ++k)
       for (int i = 0; i < 2; ++i) killers[k][i] = INVALIDMOVE;
 }
@@ -20,6 +21,10 @@ void KillerT::update(Move m, DepthType height) {
 
 void HistoryT::initHistory() {
    Logging::LogIt(Logging::logInfo) << "Init history";
+   Logging::LogIt(Logging::logInfo) << "Size of history table " << sizeof(history) / 1024 << "Kb";
+   Logging::LogIt(Logging::logInfo) << "Size of history piece table " << sizeof(historyP) << "b";
+   Logging::LogIt(Logging::logInfo) << "Size of history captude table " << sizeof(historyCap) / 1024 << "Kb";
+   Logging::LogIt(Logging::logInfo) << "Size of history counter table " << sizeof(counter_history) / 1024 << "Kb";
    for (int i = 0; i < NbSquare; ++i)
       for (int k = 0; k < NbSquare; ++k)
          history[0][i][k] = history[1][i][k] = 0;
@@ -28,12 +33,12 @@ void HistoryT::initHistory() {
       for (int k = 0; k < NbSquare; ++k)
          historyP[i][k] = 0;
 
-   for (int i = 0; i < 13; ++i)
+   for (int i = 0; i < NbPiece; ++i)
       for (int j = 0; j < NbSquare; ++j)
          for (int k = 0; k < 6; ++k)
             historyCap[i][j][k] = 0;
 
-   for (int i = 0; i < 13; ++i)
+   for (int i = 0; i < NbPiece; ++i)
       for (int j = 0; j < NbSquare; ++j)
          for (int k = 0; k < NbPiece * NbSquare; ++k)
             counter_history[i][j][k] = -1;
