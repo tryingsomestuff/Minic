@@ -30,9 +30,9 @@ enum CoeffNameType { CNT_init = 0, CNT_bonus, CNT_slopeD, CNT_slopeGP, CNT_minDe
 
 // Most often, N will be =2 for "evalScoreIsHashScore"
 //             M will be =2 for an "improving" bonus
-template<size_t _N, size_t _M> struct Coeff {
-   static constexpr size_t N {_N};
-   static constexpr size_t M {_M};
+template<size_t N_, size_t M_> struct Coeff {
+   static constexpr size_t N {N_};
+   static constexpr size_t M {M_};
    CONST_SEARCH_TUNING std::array<ScoreType, N> init;
    CONST_SEARCH_TUNING std::array<ScoreType, M> bonus;
    CONST_SEARCH_TUNING std::array<ScoreType, N> slopeDepth;
