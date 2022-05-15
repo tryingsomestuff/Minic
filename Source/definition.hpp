@@ -96,6 +96,8 @@ typedef uint64_t u_int64_t;
 #define __PRETTY_FUNCTION__ __FUNCSIG__
 #endif
 
+#define SIZE_MULTIPLIER 1024ull * 1024ull // Mb
+//#define SIZE_MULTIPLIER 1024ull // Kb
 #define INFINITETIME    static_cast<TimeType>(60ull * 60ull * 1000ull * 24ull * 30ull) // 1 month ...
 #define STOPSCORE       static_cast<ScoreType>(-20000)
 #define INFSCORE        static_cast<ScoreType>(15000)
