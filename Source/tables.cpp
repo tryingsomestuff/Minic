@@ -46,6 +46,7 @@ void HistoryT::initHistory() {
 
 void CounterT::initCounter() {
    Logging::LogIt(Logging::logInfo) << "Init counter";
+   Logging::LogIt(Logging::logInfo) << "Size of counter table " << sizeof(counter) / 1024 << "Kb";
    for (int i = 0; i < NbSquare; ++i)
       for (int k = 0; k < NbSquare; ++k) counter[i][k] = 0;
 }
