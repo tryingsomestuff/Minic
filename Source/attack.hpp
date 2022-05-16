@@ -19,9 +19,9 @@ namespace BBTools {
 // many of then will be usefull during evaluation and move generation
 // note that between to not include start and end square
 struct Mask {
-    BitBoard bbsquare, kingZone, pawnAttack[2], push[2], dpush[2], knight, king, frontSpan[2], between[NbSquare], diagonal, antidiagonal, file;
+    BitBoard bbsquare, kingZone, pawnAttack[2], push[2], dpush[2], knight, king, frontSpan[2], diagonal, antidiagonal, file;
 #if !defined(ARDUINO) && !defined(ESP32)
-    BitBoard enpassant, rearSpan[2], passerSpan[2], attackFrontSpan[2];
+    BitBoard enpassant, rearSpan[2], passerSpan[2], attackFrontSpan[2], between[NbSquare];
 #endif
    Mask():
        bbsquare(emptyBitBoard),
@@ -32,7 +32,6 @@ struct Mask {
        knight(emptyBitBoard),
        king(emptyBitBoard),
        frontSpan {emptyBitBoard},
-       between {emptyBitBoard},
        diagonal(emptyBitBoard),
        antidiagonal(emptyBitBoard),
        file(emptyBitBoard)
@@ -40,7 +39,8 @@ struct Mask {
        ,enpassant(emptyBitBoard),
        rearSpan {emptyBitBoard},
        passerSpan {emptyBitBoard},
-       attackFrontSpan {emptyBitBoard} 
+       attackFrontSpan {emptyBitBoard},
+       between {emptyBitBoard}
 #endif
        {}
 };
@@ -133,6 +133,8 @@ template<Piece pp>
 }
 
 #endif // MAGIC
+
+BitBoard between(const Square s1, const Square s2);
 
 // Those are convenient function pointers for coverage and attack
 constexpr BitBoard (*const pfCoverage[])(const Square, const BitBoard, const Color) = {&BBTools::coverage<P_wp>, &BBTools::coverage<P_wn>,

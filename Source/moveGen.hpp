@@ -56,7 +56,7 @@ template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveLis
                         BBTools::attack<P_wr>(kingSquare(p), p.pieces_const<P_wr>(~p.c) | p.pieces_const<P_wq>(~p.c), occupancy);
       attacker = slider;
       while (slider) {
-         sliderRay |= BBTools::mask[BB::popBit(slider)].between[kingSquare(p)];
+         sliderRay |= BBTools::between(BB::popBit(slider),kingSquare(p));
       }
       attacker |= BBTools::attack<P_wn>(kingSquare(p), p.pieces_const<P_wn>(~p.c));
       attacker |= BBTools::attack<P_wp>(kingSquare(p), p.pieces_const<P_wp>(~p.c), occupancy, p.c);
@@ -100,26 +100,26 @@ template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveLis
          // Moreover, king[] also is assumed to be not INVALIDSQUARE which is verified in readFen
          if (side == Co_White) {
             if ((p.castling & C_wqs) &&
-                (((BBTools::mask[p.king[Co_White]].between[Sq_c1] | BB::BBSq_c1 | BBTools::mask[p.rootInfo().rooksInit[Co_White][CT_OOO]].between[Sq_d1] | BB::BBSq_d1) &
+                (((BBTools::between(p.king[Co_White],Sq_c1) | BB::BBSq_c1 | BBTools::between(p.rootInfo().rooksInit[Co_White][CT_OOO],Sq_d1) | BB::BBSq_d1) &
                   ~BBTools::mask[p.rootInfo().rooksInit[Co_White][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) & occupancy) == emptyBitBoard &&
-                !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_c1] | SquareToBitboard(p.king[Co_White]) | BB::BBSq_c1))
+                !isAttacked(p, BBTools::between(p.king[Co_White],Sq_c1) | SquareToBitboard(p.king[Co_White]) | BB::BBSq_c1))
                addMove(from, p.rootInfo().rooksInit[Co_White][CT_OOO], T_wqs, moves); // wqs
             if ((p.castling & C_wks) &&
-                (((BBTools::mask[p.king[Co_White]].between[Sq_g1] | BB::BBSq_g1 | BBTools::mask[p.rootInfo().rooksInit[Co_White][CT_OO]].between[Sq_f1] | BB::BBSq_f1) &
+                (((BBTools::between(p.king[Co_White],Sq_g1) | BB::BBSq_g1 | BBTools::between(p.rootInfo().rooksInit[Co_White][CT_OO],Sq_f1) | BB::BBSq_f1) &
                   ~BBTools::mask[p.rootInfo().rooksInit[Co_White][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) & occupancy) == emptyBitBoard &&
-                !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_g1] | SquareToBitboard(p.king[Co_White]) | BB::BBSq_g1))
+                !isAttacked(p, BBTools::between(p.king[Co_White],Sq_g1) | SquareToBitboard(p.king[Co_White]) | BB::BBSq_g1))
                addMove(from, p.rootInfo().rooksInit[Co_White][CT_OO], T_wks, moves); // wks
          }
          else {
             if ((p.castling & C_bqs) &&
-                (((BBTools::mask[p.king[Co_Black]].between[Sq_c8] | BB::BBSq_c8 | BBTools::mask[p.rootInfo().rooksInit[Co_Black][CT_OOO]].between[Sq_d8] | BB::BBSq_d8) &
+                (((BBTools::between(p.king[Co_Black],Sq_c8) | BB::BBSq_c8 | BBTools::between(p.rootInfo().rooksInit[Co_Black][CT_OOO],Sq_d8) | BB::BBSq_d8) &
                   ~BBTools::mask[p.rootInfo().rooksInit[Co_Black][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) & occupancy) == emptyBitBoard &&
-                !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_c8] | SquareToBitboard(p.king[Co_Black]) | BB::BBSq_c8))
+                !isAttacked(p, BBTools::between(p.king[Co_Black],Sq_c8) | SquareToBitboard(p.king[Co_Black]) | BB::BBSq_c8))
                addMove(from, p.rootInfo().rooksInit[Co_Black][CT_OOO], T_bqs, moves); // wqs
             if ((p.castling & C_bks) &&
-                (((BBTools::mask[p.king[Co_Black]].between[Sq_g8] | BB::BBSq_g8 | BBTools::mask[p.rootInfo().rooksInit[Co_Black][CT_OO]].between[Sq_f8] | BB::BBSq_f8) &
+                (((BBTools::between(p.king[Co_Black],Sq_g8) | BB::BBSq_g8 | BBTools::between(p.rootInfo().rooksInit[Co_Black][CT_OO],Sq_f8) | BB::BBSq_f8) &
                   ~BBTools::mask[p.rootInfo().rooksInit[Co_Black][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) & occupancy) == emptyBitBoard &&
-                !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_g8] | SquareToBitboard(p.king[Co_Black]) | BB::BBSq_g8))
+                !isAttacked(p, BBTools::between(p.king[Co_Black],Sq_g8) | SquareToBitboard(p.king[Co_Black]) | BB::BBSq_g8))
                addMove(from, p.rootInfo().rooksInit[Co_Black][CT_OO], T_bks, moves); // wks
          }
       }

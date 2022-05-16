@@ -86,7 +86,7 @@ template<Color C> BitBoard getPinned(const Position &p, const Square s) {
    if (s == INVALIDSQUARE) return pinned;
    BitBoard pinner = BBTools::attack<P_wb>(s, p.pieces_const<P_wb>(~C) | p.pieces_const<P_wq>(~C), p.allPieces[~C]) |
                      BBTools::attack<P_wr>(s, p.pieces_const<P_wr>(~C) | p.pieces_const<P_wq>(~C), p.allPieces[~C]);
-   while (pinner) { pinned |= BBTools::mask[popBit(pinner)].between[p.king[C]] & p.allPieces[C]; }
+   while (pinner) { pinned |= BBTools::between(popBit(pinner),p.king[C]) & p.allPieces[C]; }
    return pinned;
 }
 
