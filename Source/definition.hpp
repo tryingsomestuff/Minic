@@ -279,28 +279,29 @@ inline void SymetrizeValue() {
 #endif
 
 const ScoreType        dummyScore     = 0;
-const ScoreType* const absValues_[7]   = {&dummyScore,
-                                          &Values[P_wp + PieceShift],
-                                          &Values[P_wn + PieceShift],
-                                          &Values[P_wb + PieceShift],
-                                          &Values[P_wr + PieceShift],
-                                          &Values[P_wq + PieceShift],
-                                          &Values[P_wk + PieceShift]};
-const ScoreType* const absValuesEG_[7] = {&dummyScore,
-                                          &ValuesEG[P_wp + PieceShift],
-                                          &ValuesEG[P_wn + PieceShift],
-                                          &ValuesEG[P_wb + PieceShift],
-                                          &ValuesEG[P_wr + PieceShift],
-                                          &ValuesEG[P_wq + PieceShift],
-                                          &ValuesEG[P_wk + PieceShift]};
+inline const ScoreType* const absValues_[7]   = {&dummyScore,
+                                                 &Values[P_wp + PieceShift],
+                                                 &Values[P_wn + PieceShift],
+                                                 &Values[P_wb + PieceShift],
+                                                 &Values[P_wr + PieceShift],
+                                                 &Values[P_wq + PieceShift],
+                                                 &Values[P_wk + PieceShift]};
+                                                 
+inline const ScoreType* const absValuesEG_[7] = {&dummyScore,
+                                                 &ValuesEG[P_wp + PieceShift],
+                                                 &ValuesEG[P_wn + PieceShift],
+                                                 &ValuesEG[P_wb + PieceShift],
+                                                 &ValuesEG[P_wr + PieceShift],
+                                                 &ValuesEG[P_wq + PieceShift],
+                                                 &ValuesEG[P_wk + PieceShift]};
 
-const ScoreType* const absValuesGP_[7] = {&dummyScore,
-                                          &ValuesGP[P_wp + PieceShift],
-                                          &ValuesGP[P_wn + PieceShift],
-                                          &ValuesGP[P_wb + PieceShift],
-                                          &ValuesGP[P_wr + PieceShift],
-                                          &ValuesGP[P_wq + PieceShift],
-                                          &ValuesGP[P_wk + PieceShift]};
+inline const ScoreType* const absValuesGP_[7] = {&dummyScore,
+                                                 &ValuesGP[P_wp + PieceShift],
+                                                 &ValuesGP[P_wn + PieceShift],
+                                                 &ValuesGP[P_wb + PieceShift],
+                                                 &ValuesGP[P_wr + PieceShift],
+                                                 &ValuesGP[P_wq + PieceShift],
+                                                 &ValuesGP[P_wk + PieceShift]};
 
 [[nodiscard]] inline ScoreType value(Piece pp)      { return Values[pp + PieceShift]; }
 [[nodiscard]] inline ScoreType absValue(Piece pp)   { return *absValues_[pp]; }
@@ -309,21 +310,21 @@ const ScoreType* const absValuesGP_[7] = {&dummyScore,
 
 template<typename T> [[nodiscard]] inline constexpr int sgn(T val) { return (T(0) < val) - (val < T(0)); }
 
-const std::string PieceNames[NbPiece] = {"k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K"};
+inline const std::string PieceNames[NbPiece] = {"k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K"};
 
 constexpr Square NbSquare = 64;
 
-const std::string SquareNames[NbSquare]   = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
-                                              "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
-                                              "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
-                                              "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
-                                              "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
-                                              "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
-                                              "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
-                                              "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" };
+inline const std::string SquareNames[NbSquare] = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
+                                                   "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
+                                                   "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
+                                                   "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
+                                                   "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
+                                                   "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
+                                                   "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
+                                                   "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" };
 
-const std::string FileNames[8] = {"a", "b", "c", "d", "e", "f", "g", "h"};
-const std::string RankNames[8] = {"1", "2", "3", "4", "5", "6", "7", "8"};
+inline const std::string FileNames[8] = {"a", "b", "c", "d", "e", "f", "g", "h"};
+inline const std::string RankNames[8] = {"1", "2", "3", "4", "5", "6", "7", "8"};
 
 enum Sq : uint8_t { Sq_a1  = 0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1,
                     Sq_a2,Sq_b2,Sq_c2,Sq_d2,Sq_e2,Sq_f2,Sq_g2,Sq_h2,
@@ -425,14 +426,14 @@ const Square correctedRookDestSq[T_bqs+1] = { INVALIDSQUARE, INVALIDSQUARE, INVA
 // leaving threat +512
 // MVV-LVA [0 400]
 // recapture +512
-constexpr ScoreType MoveScoring[16] = {   0,                   // standard
-                                       7000,                   // cap (bad cap will be *=-1)
-                                          0,                   // reserved
-                                       7000,                   // ep
-                                       3950, 3500, 3350, 3300, // prom
-                                       7950, 7500, 7350, 7300, // prom+cap
-                                        256,  256,  256,  256  // castling bonus
-                                      };
+inline constexpr ScoreType MoveScoring[16] = {   0,                   // standard
+                                              7000,                   // cap (bad cap will be *=-1)
+                                                 0,                   // reserved
+                                              7000,                   // ep
+                                              3950, 3500, 3350, 3300, // prom
+                                              7950, 7500, 7350, 7300, // prom+cap
+                                               256,  256,  256,  256  // castling bonus
+                                             };
 
 [[nodiscard]] inline bool isSkipMove(const Move& a, const std::vector<MiniMove>* skipMoves) {
    return skipMoves && std::find(skipMoves->begin(), skipMoves->end(), Move2MiniMove(a)) != skipMoves->end();
