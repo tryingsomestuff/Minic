@@ -24,11 +24,13 @@ void initMask() {
       for (int i = -1; i <= 1; ++i) {
          for (int j = -1; j <= 1; ++j) {
             if (i == 0 && j == 0) continue;
+#if !defined(ARDUINO) && !defined(ESP32)      
             for (int r = SQRANK(x) + i, f = SQFILE(x) + j; 0 <= r && r < 8 && 0 <= f && f < 8; r += i, f += j) {
                const int y = 8 * r + f;
                d[x][y]     = (8 * i + j);
                for (int z = x + d[x][y]; z != y; z += d[x][y]) mask[x].between[y] |= SquareToBitboard(z);
             }
+#endif
             const int r = SQRANK(x);
             const int f = SQFILE(x);
             if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) mask[x].kingZone |= SquareToBitboard((SQRANK(x) + i) * 8 + SQFILE(x) + j);
@@ -290,6 +292,26 @@ BitBoard allAttackedBB(const Position &p, const Square s) {
           attack<P_wp>(s, p.blackPawn(), occupancy, Co_White) |
           attack<P_wp>(s, p.whitePawn(), occupancy, Co_Black) |
           attack<P_wk>(s, p.allKing());
+}
+
+BitBoard between(const Square sq1, const Square sq2){
+#if !defined(ARDUINO) && !defined(ESP32)
+   return mask[sq1].between[sq2];
+#else
+   constexpr BitBoard m1   {static_cast<BitBoard>(-1)};
+   constexpr BitBoard a2a7 {0x0001010101010100};
+   constexpr BitBoard b2g7 {0x0040201008040200};
+   constexpr BitBoard h1b7 {0x0002040810204080};
+   const BitBoard btwn = (m1 << sq1) ^ (m1 << sq2);
+   const BitBoard file = (sq2 & 7) - (sq1   & 7);
+   const BitBoard rank = ((sq2 | 7) -  sq1) >> 3 ;
+   BitBoard line  = ((file  &  7) - 1) & a2a7; /* a2a7 if same file */
+   line += 2 * (((rank  &  7) - 1) >> 58); /* b1g1 if same rank */
+   line += (((rank - file) & 15) - 1) & b2g7; /* b2g7 if same diagonal */
+   line += (((rank + file) & 15) - 1) & h1b7; /* h1b7 if same antidiag */
+   line *= btwn & -btwn; /* mul acts like shift by smaller square */
+   return line & btwn;   /* return the bits on that line in-between */
+#endif
 }
 
 } // namespace BBTools

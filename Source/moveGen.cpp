@@ -375,35 +375,35 @@ bool isPseudoLegal(const Position& p, const Move m) { // validate TT move
       // Moreover, king[] also is assumed to be not INVALIDSQUARE which is verified in readFen
       if (p.c == Co_White) {
          if (t == T_wqs && (p.castling & C_wqs) && from == p.rootInfo().kingInit[Co_White] && fromP == P_wk && to == Sq_c1 && toP == P_none &&
-             (((BBTools::mask[p.king[Co_White]].between[Sq_c1] | BB::BBSq_c1 | BBTools::mask[p.rootInfo().rooksInit[Co_White][CT_OOO]].between[Sq_d1] |
+             (((BBTools::between(p.king[Co_White],Sq_c1) | BB::BBSq_c1 | BBTools::between(p.rootInfo().rooksInit[Co_White][CT_OOO],Sq_d1) |
                 BB::BBSq_d1) &
                ~BBTools::mask[p.rootInfo().rooksInit[Co_White][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) &
               occupancy) == emptyBitBoard &&
-             !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_c1] | SquareToBitboard(p.king[Co_White]) | BB::BBSq_c1))
+             !isAttacked(p, BBTools::between(p.king[Co_White],Sq_c1) | SquareToBitboard(p.king[Co_White]) | BB::BBSq_c1))
             PSEUDO_LEGAL_RETURN(true, 9)
          if (t == T_wks && (p.castling & C_wks) && from == p.rootInfo().kingInit[Co_White] && fromP == P_wk && to == Sq_g1 && toP == P_none &&
-             (((BBTools::mask[p.king[Co_White]].between[Sq_g1] | BB::BBSq_g1 | BBTools::mask[p.rootInfo().rooksInit[Co_White][CT_OO]].between[Sq_f1] |
+             (((BBTools::between(p.king[Co_White],Sq_g1) | BB::BBSq_g1 | BBTools::between(p.rootInfo().rooksInit[Co_White][CT_OO],Sq_f1) |
                 BB::BBSq_f1) &
                ~BBTools::mask[p.rootInfo().rooksInit[Co_White][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) &
               occupancy) == emptyBitBoard &&
-             !isAttacked(p, BBTools::mask[p.king[Co_White]].between[Sq_g1] | SquareToBitboard(p.king[Co_White]) | BB::BBSq_g1))
+             !isAttacked(p, BBTools::between(p.king[Co_White],Sq_g1) | SquareToBitboard(p.king[Co_White]) | BB::BBSq_g1))
             PSEUDO_LEGAL_RETURN(true, 10)
          PSEUDO_LEGAL_RETURN(false, 11)
       }
       else {
          if (t == T_bqs && (p.castling & C_bqs) && from == p.rootInfo().kingInit[Co_Black] && fromP == P_bk && to == Sq_c8 && toP == P_none &&
-             (((BBTools::mask[p.king[Co_Black]].between[Sq_c8] | BB::BBSq_c8 | BBTools::mask[p.rootInfo().rooksInit[Co_Black][CT_OOO]].between[Sq_d8] |
+             (((BBTools::between(p.king[Co_Black],Sq_c8) | BB::BBSq_c8 | BBTools::between(p.rootInfo().rooksInit[Co_Black][CT_OOO],Sq_d8) |
                 BB::BBSq_d8) &
                ~BBTools::mask[p.rootInfo().rooksInit[Co_Black][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) &
               occupancy) == emptyBitBoard &&
-             !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_c8] | SquareToBitboard(p.king[Co_Black]) | BB::BBSq_c8))
+             !isAttacked(p, BBTools::between(p.king[Co_Black],Sq_c8) | SquareToBitboard(p.king[Co_Black]) | BB::BBSq_c8))
             PSEUDO_LEGAL_RETURN(true, 12)
          if (t == T_bks && (p.castling & C_bks) && from == p.rootInfo().kingInit[Co_Black] && fromP == P_bk && to == Sq_g8 && toP == P_none &&
-             (((BBTools::mask[p.king[Co_Black]].between[Sq_g8] | BB::BBSq_g8 | BBTools::mask[p.rootInfo().rooksInit[Co_Black][CT_OO]].between[Sq_f8] |
+             (((BBTools::between(p.king[Co_Black],Sq_g8) | BB::BBSq_g8 | BBTools::between(p.rootInfo().rooksInit[Co_Black][CT_OO],Sq_f8) |
                 BB::BBSq_f8) &
                ~BBTools::mask[p.rootInfo().rooksInit[Co_Black][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) &
               occupancy) == emptyBitBoard &&
-             !isAttacked(p, BBTools::mask[p.king[Co_Black]].between[Sq_g8] | SquareToBitboard(p.king[Co_Black]) | BB::BBSq_g8))
+             !isAttacked(p, BBTools::between(p.king[Co_Black],Sq_g8) | SquareToBitboard(p.king[Co_Black]) | BB::BBSq_g8))
             PSEUDO_LEGAL_RETURN(true, 13)
          PSEUDO_LEGAL_RETURN(false, 14)
       }
