@@ -15,9 +15,9 @@ struct Searcher;
  */
 namespace SyzygyTb {
 
-const ScoreType TB_CURSED_SCORE = 1;
-const ScoreType TB_WIN_SCORE    = 2000;
-extern int      MAX_TB_MEN;
+inline const ScoreType TB_CURSED_SCORE = 1;
+inline const ScoreType TB_WIN_SCORE    = 2000;
+extern int MAX_TB_MEN;
 
 bool initTB();
 

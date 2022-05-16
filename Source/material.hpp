@@ -12,22 +12,22 @@
 
 namespace MaterialHash {
 
-const int MatWQ    = 1;
-const int MatBQ    = 3;
-const int MatWR    = (3 * 3);
-const int MatBR    = (3 * 3 * 3);
-const int MatWL    = (3 * 3 * 3 * 3);
-const int MatBL    = (3 * 3 * 3 * 3 * 3);
-const int MatWD    = (3 * 3 * 3 * 3 * 3 * 3);
-const int MatBD    = (3 * 3 * 3 * 3 * 3 * 3 * 3);
-const int MatWN    = (3 * 3 * 3 * 3 * 3 * 3 * 3 * 3);
-const int MatBN    = (3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 3);
-const int MatWP    = (3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 3);
-const int MatBP    = (3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 9);
+inline const int MatWQ    = 1;
+inline const int MatBQ    = 3;
+inline const int MatWR    = (3 * 3);
+inline const int MatBR    = (3 * 3 * 3);
+inline const int MatWL    = (3 * 3 * 3 * 3);
+inline const int MatBL    = (3 * 3 * 3 * 3 * 3);
+inline const int MatWD    = (3 * 3 * 3 * 3 * 3 * 3);
+inline const int MatBD    = (3 * 3 * 3 * 3 * 3 * 3 * 3);
+inline const int MatWN    = (3 * 3 * 3 * 3 * 3 * 3 * 3 * 3);
+inline const int MatBN    = (3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 3);
+inline const int MatWP    = (3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 3);
+inline const int MatBP    = (3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 9);
 #ifdef WITH_MATERIAL_TABLE
-const int TotalMat = ((2 * (MatWQ + MatBQ) + 2 * (MatWL + MatBL + MatWD + MatBD) + 2 * (MatWR + MatBR + MatWN + MatBN) + 8 * (MatWP + MatBP)) + 1);
+inline const int TotalMat = ((2 * (MatWQ + MatBQ) + 2 * (MatWL + MatBL + MatWD + MatBD) + 2 * (MatWR + MatBR + MatWN + MatBN) + 8 * (MatWP + MatBP)) + 1);
 #else
-const int TotalMat = 1;
+inline const int TotalMat = 1;
 #endif
 
 [[nodiscard]] Hash getMaterialHash(const Position::Material &mat);

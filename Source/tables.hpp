@@ -14,7 +14,7 @@
  *  - Counter : from/to
  */
 
-static constexpr int MAX_CMH_PLY = 1;
+inline constexpr int MAX_CMH_PLY = 1;
 typedef std::array<ScoreType*, MAX_CMH_PLY> CMHPtrArray;
 
 struct KillerT {

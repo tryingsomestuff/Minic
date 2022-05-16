@@ -200,8 +200,8 @@ DepthType clampDepth(const T & d){
 template<typename T, int N, int M>
 using Matrix = std::array<std::array<T,M>,N>;
 
-const Hash     nullHash      = 0ull; //std::numeric_limits<MiniHash>::max(); // use MiniHash to allow same "null" value for Hash(64) and MiniHash(32)
-const BitBoard emptyBitBoard = 0ull;
+inline const Hash     nullHash      = 0ull; //std::numeric_limits<MiniHash>::max(); // use MiniHash to allow same "null" value for Hash(64) and MiniHash(32)
+inline const BitBoard emptyBitBoard = 0ull;
 
 enum Color : int8_t { Co_None = -1, Co_White = 0, Co_Black = 1, Co_End };
 [[nodiscard]] constexpr Color operator~(Color c) { return static_cast<Color>(c ^ Co_Black); } // switch Color
@@ -233,9 +233,9 @@ typedef std::vector<Move>           PVList;
 [[nodiscard]] inline constexpr bool isValidMove(const Move& m) { return !sameMove(m, NULLMOVE) && !sameMove(m, INVALIDMOVE); }
 [[nodiscard]] inline constexpr bool isValidMove(const MiniMove& m) { return m != INVALIDMINIMOVE && m != NULLMOVE; }
 
-const std::string startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-const std::string fine70        = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1";
-const std::string shirov        = "6r1/2rp1kpp/2qQp3/p3Pp1P/1pP2P2/1P2KP2/P5R1/6R1 w - - 0 1";
+inline const std::string startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+inline const std::string fine70        = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1";
+inline const std::string shirov        = "6r1/2rp1kpp/2qQp3/p3Pp1P/1pP2P2/1P2KP2/P5R1/6R1 w - - 0 1";
 
 enum Piece : signed char {
    P_bk   = -6,
@@ -312,7 +312,7 @@ template<typename T> [[nodiscard]] inline constexpr int sgn(T val) { return (T(0
 
 inline const std::string PieceNames[NbPiece] = {"k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K"};
 
-constexpr Square NbSquare = 64;
+inline constexpr Square NbSquare = 64;
 
 inline const std::string SquareNames[NbSquare] = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
                                                    "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
@@ -341,8 +341,8 @@ ENABLE_INCR_OPERATORS_ON(File);
 enum Rank : uint8_t { Rank_1 = 0, Rank_2, Rank_3, Rank_4, Rank_5, Rank_6, Rank_7, Rank_8 };
 ENABLE_INCR_OPERATORS_ON(Rank);
 
-constexpr Rank PromRank[2] = {Rank_8, Rank_1};
-constexpr Rank EPRank[2]   = {Rank_6, Rank_3};
+inline constexpr Rank PromRank[2] = {Rank_8, Rank_1};
+inline constexpr Rank EPRank[2]   = {Rank_6, Rank_3};
 
 template<Color C> [[nodiscard]] inline constexpr ScoreType ColorSignHelper() { return C == Co_White ? +1 : -1; }
 template<Color C> [[nodiscard]] inline constexpr Square    PromotionSquare(const Square k) { return C == Co_White ? (SQFILE(k) + 56) : SQFILE(k); }
