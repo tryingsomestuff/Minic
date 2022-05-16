@@ -253,6 +253,7 @@ bool readEPDFile(const std::string &fileName, std::vector<std::string> &position
    }
 }
 
+#if !defined(ARDUINO) && !defined(ESP32)
 std::string chess960::getDFRCXFEN(){
    const std::string fenB = positions[std::rand() % 960];
    const std::string fenW = positions[std::rand() % 960];
@@ -745,3 +746,5 @@ const std::string chess960::positions[960] = {
     "rkrnbbnq/pppppppp/8/8/8/8/PPPPPPPP/RKRNBBNQ w CAca - 0 1", "rkrnbnqb/pppppppp/8/8/8/8/PPPPPPPP/RKRNBNQB w CAca - 0 1",
     "rbkrnnbq/pppppppp/8/8/8/8/PPPPPPPP/RBKRNNBQ w DAda - 0 1", "rkrbnnbq/pppppppp/8/8/8/8/PPPPPPPP/RKRBNNBQ w CAca - 0 1",
     "rkrnnbbq/pppppppp/8/8/8/8/PPPPPPPP/RKRNNBBQ w CAca - 0 1", "rkrnnqbb/pppppppp/8/8/8/8/PPPPPPPP/RKRNNQBB w CAca - 0 1"};
+
+#endif
