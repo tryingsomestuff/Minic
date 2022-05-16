@@ -17,6 +17,7 @@ Mask mask[NbSquare];
 // This initialisation function is taken from Dumb chess engine by Richard Delorme
 void initMask() {
    Logging::LogIt(Logging::logInfo) << "Init mask";
+   Logging::LogIt(Logging::logInfo) << "Size of masks : " << sizeof(mask) / 1024 << "Kb";
    int d[NbSquare][NbSquare] = {{0}};
    for (Square x = 0; x < NbSquare; ++x) {
       mask[x].bbsquare = SquareToBitboard(x);
@@ -53,10 +54,12 @@ void initMask() {
             if (r == dp) mask[x].dpush[c] = SquareToBitboard((r + 2 * i) * 8 + f); // double push
          }
       }
+#if !defined(ARDUINO) && !defined(ESP32)      
       if (r == 3 || r == 4) {
          if (f > 0) mask[x].enpassant |= SquareToBitboard(x - 1);
          if (f < 7) mask[x].enpassant |= SquareToBitboard(x + 1);
       }
+#endif
 
       for (int i = -2; i <= 2; i = (i == -1 ? 1 : i + 1)) {
          for (int j = -2; j <= 2; ++j) {
@@ -83,8 +86,12 @@ void initMask() {
       bspan |= bspan >> 32;
       bspan = _shiftSouth(bspan);
 
-      mask[x].frontSpan[Co_White] = mask[x].rearSpan[Co_Black] = wspan;
-      mask[x].frontSpan[Co_Black] = mask[x].rearSpan[Co_White] = bspan;
+      mask[x].frontSpan[Co_White] = wspan;
+      mask[x].frontSpan[Co_Black] = bspan;
+
+#if !defined(ARDUINO) && !defined(ESP32)
+      mask[x].rearSpan[Co_Black] = wspan;
+      mask[x].rearSpan[Co_White] = bspan;
 
       mask[x].passerSpan[Co_White] = wspan;
       mask[x].passerSpan[Co_White] |= _shiftWest(wspan);
@@ -97,6 +104,7 @@ void initMask() {
       mask[x].attackFrontSpan[Co_White] |= _shiftEast(wspan);
       mask[x].attackFrontSpan[Co_Black] = _shiftWest(bspan);
       mask[x].attackFrontSpan[Co_Black] |= _shiftEast(bspan);
+#endif      
    }
 
 #ifndef WITH_MAGIC
