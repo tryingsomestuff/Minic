@@ -20,7 +20,9 @@ bool readMove(const Position &p, const std::string &ss, Square &from, Square &to
 
 [[nodiscard]] bool readEPDFile(const std::string &fileName, std::vector<std::string> &positions);
 
+#if !defined(ARDUINO) && !defined(ESP32)
 namespace chess960 {
 extern const std::string positions[960];
 std::string getDFRCXFEN();
 }
+#endif

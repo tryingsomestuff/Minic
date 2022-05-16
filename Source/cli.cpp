@@ -138,9 +138,12 @@ void analyze(const Position& p, DepthType depth, bool openBenchOutput = false) {
 void selfPlay(DepthType depth) {
    DynamicConfig::genFen = true; ///@todo this is forced here but shall be set by CLI option in fact.
 
-   const std::string startfen = DynamicConfig::DFRC  ? chess960::getDFRCXFEN()
-                                : DynamicConfig::FRC ? chess960::positions[std::rand() % 960]
-                                                     : startPosition;
+   const std::string startfen = 
+#if !defined(ARDUINO) && !defined(ESP32)
+                                  DynamicConfig::DFRC ? chess960::getDFRCXFEN() : 
+                                  DynamicConfig::FRC ? chess960::positions[std::rand() % 960] : 
+#endif
+                                  startPosition;
    RootPosition      p(startfen);
 #ifdef WITH_NNUE
    NNUEEvaluator evaluator;
