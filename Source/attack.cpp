@@ -88,10 +88,10 @@ void initMask() {
       bspan |= bspan >> 32;
       bspan = _shiftSouth(bspan);
 
+#if !defined(ARDUINO) && !defined(ESP32)
       mask[x].frontSpan[Co_White] = wspan;
       mask[x].frontSpan[Co_Black] = bspan;
 
-#if !defined(ARDUINO) && !defined(ESP32)
       mask[x].rearSpan[Co_Black] = wspan;
       mask[x].rearSpan[Co_White] = bspan;
 
