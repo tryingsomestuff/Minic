@@ -89,6 +89,7 @@ void initMask() {
       bspan = _shiftSouth(bspan);
 
 #if !defined(ARDUINO) && !defined(ESP32)
+      ///@todo try to use them in bitboardTools to see if its faster than on the fly computations ...
       mask[x].frontSpan[Co_White] = wspan;
       mask[x].frontSpan[Co_Black] = bspan;
 
