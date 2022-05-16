@@ -8,23 +8,23 @@
  * There are const when no CLOP tuning is use and of course need to be mutable when begin tuned
  */
 namespace SearchConfig {
-const bool doWindow            = true;
-const bool doPVS               = true;
-const bool doNullMove          = true;
-const bool doFutility          = true;
-const bool doLMR               = true;
-const bool doLMP               = true;
-const bool doStaticNullMove    = true;
-const bool doThreatsPruning    = true;
-const bool doRazoring          = true;
-const bool doQFutility         = false;
-const bool doQDeltaPruning     = true;
-const bool doProbcut           = true;
-const bool doHistoryPruning    = true;
-const bool doCapHistoryPruning = true;
-const bool doCMHPruning        = true;
-const bool doIID               = false;
-const bool doIIR               = true;
+inline const bool doWindow            = true;
+inline const bool doPVS               = true;
+inline const bool doNullMove          = true;
+inline const bool doFutility          = true;
+inline const bool doLMR               = true;
+inline const bool doLMP               = true;
+inline const bool doStaticNullMove    = true;
+inline const bool doThreatsPruning    = true;
+inline const bool doRazoring          = true;
+inline const bool doQFutility         = false;
+inline const bool doQDeltaPruning     = true;
+inline const bool doProbcut           = true;
+inline const bool doHistoryPruning    = true;
+inline const bool doCapHistoryPruning = true;
+inline const bool doCMHPruning        = true;
+inline const bool doIID               = false;
+inline const bool doIIR               = true;
 
 enum CoeffNameType { CNT_init = 0, CNT_bonus, CNT_slopeD, CNT_slopeGP, CNT_minDepth, CNT_maxdepth };
 
@@ -114,8 +114,8 @@ extern CONST_SEARCH_TUNING ScoreType aspirationDepthInit;
 
 extern CONST_SEARCH_TUNING DepthType ttMaxFiftyValideDepth;
 
-const DepthType lmpMaxDepth = 10;
-const int       lmpLimit[][SearchConfig::lmpMaxDepth + 1] = {{0, 2, 3, 5, 9, 13, 18, 25, 34, 45, 55}, {0, 5, 6, 9, 14, 21, 30, 41, 55, 69, 84}};
+inline const DepthType lmpMaxDepth = 10;
+inline const int       lmpLimit[][SearchConfig::lmpMaxDepth + 1] = {{0, 2, 3, 5, 9, 13, 18, 25, 34, 45, 55}, {0, 5, 6, 9, 14, 21, 30, 41, 55, 69, 84}};
 
 inline constexpr
 double my_log2(double x){

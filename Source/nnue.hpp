@@ -18,7 +18,7 @@
 namespace NNUEWrapper {
 
 typedef float nnueNType;            // type of data inside the binary net
-constexpr bool    quantization = false; // not compatible with USE_SIMD_INTRIN and probably needs WITH_NNUE_CLIPPED_RELU to be true
+inline constexpr bool quantization = false; // not compatible with USE_SIMD_INTRIN and probably needs WITH_NNUE_CLIPPED_RELU to be true
 
 inline void init() {
    bool       loadOk        = false;
@@ -48,22 +48,22 @@ using NNUEEvaluator = nnue::NNUEEval<NNUEWrapper::nnueNType, NNUEWrapper::quanti
 
 namespace FeatureIdx {
 
-constexpr size_t major = 64 * 12;
-constexpr size_t minor = 64;
+inline constexpr size_t major = 64 * 12;
+inline constexpr size_t minor = 64;
 
-constexpr size_t usPawnOffset   = 0;
-constexpr size_t usKnightOffset = usPawnOffset + minor;
-constexpr size_t usBishopOffset = usKnightOffset + minor;
-constexpr size_t usRookOffset   = usBishopOffset + minor;
-constexpr size_t usQueenOffset  = usRookOffset + minor;
-constexpr size_t usKingOffset   = usQueenOffset + minor;
+inline constexpr size_t usPawnOffset   = 0;
+inline constexpr size_t usKnightOffset = usPawnOffset + minor;
+inline constexpr size_t usBishopOffset = usKnightOffset + minor;
+inline constexpr size_t usRookOffset   = usBishopOffset + minor;
+inline constexpr size_t usQueenOffset  = usRookOffset + minor;
+inline constexpr size_t usKingOffset   = usQueenOffset + minor;
 
-constexpr size_t themPawnOffset   = usKingOffset + minor;
-constexpr size_t themKnightOffset = themPawnOffset + minor;
-constexpr size_t themBishopOffset = themKnightOffset + minor;
-constexpr size_t themRookOffset   = themBishopOffset + minor;
-constexpr size_t themQueenOffset  = themRookOffset + minor;
-constexpr size_t themKingOffset   = themQueenOffset + minor;
+inline constexpr size_t themPawnOffset   = usKingOffset + minor;
+inline constexpr size_t themKnightOffset = themPawnOffset + minor;
+inline constexpr size_t themBishopOffset = themKnightOffset + minor;
+inline constexpr size_t themRookOffset   = themBishopOffset + minor;
+inline constexpr size_t themQueenOffset  = themRookOffset + minor;
+inline constexpr size_t themKingOffset   = themQueenOffset + minor;
 
 [[nodiscard]] constexpr size_t usOffset(const Piece pt) {
    switch (pt) {
