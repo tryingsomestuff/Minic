@@ -68,7 +68,7 @@ template<Color C> inline void evalPawn(BitBoard pieceBBiterator, EvalScore &scor
 template<Color C> inline void evalPawnFreePasser(const Position &p, BitBoard pieceBBiterator, EvalScore &score) {
    while (pieceBBiterator) {
       const Square k = popBit(pieceBBiterator);
-      score += EvalConfig::freePasserBonus[ColorRank<C>(k)] * ScoreType((BBTools::mask[k].frontSpan[C] & p.allPieces[~C]) == emptyBitBoard) *
+      score += EvalConfig::freePasserBonus[ColorRank<C>(k)] * ScoreType((BBTools::frontSpan<C>(k) & p.allPieces[~C]) == emptyBitBoard) *
                ColorSignHelper<C>();
    }
 }

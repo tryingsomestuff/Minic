@@ -19,9 +19,9 @@ namespace BBTools {
 // many of then will be usefull during evaluation and move generation
 // note that between to not include start and end square
 struct Mask {
-    BitBoard bbsquare, kingZone, pawnAttack[2], push[2], dpush[2], knight, king, frontSpan[2], diagonal, antidiagonal, file;
+    BitBoard bbsquare, kingZone, pawnAttack[2], push[2], dpush[2], knight, king, diagonal, antidiagonal, file;
 #if !defined(ARDUINO) && !defined(ESP32)
-    BitBoard enpassant, rearSpan[2], passerSpan[2], attackFrontSpan[2], between[NbSquare];
+    BitBoard enpassant, frontSpan[2], rearSpan[2], passerSpan[2], attackFrontSpan[2], between[NbSquare];
 #endif
    Mask():
        bbsquare(emptyBitBoard),
@@ -31,12 +31,12 @@ struct Mask {
        dpush {emptyBitBoard, emptyBitBoard},
        knight(emptyBitBoard),
        king(emptyBitBoard),
-       frontSpan {emptyBitBoard},
        diagonal(emptyBitBoard),
        antidiagonal(emptyBitBoard),
        file(emptyBitBoard)
 #if !defined(ARDUINO) && !defined(ESP32)       
        ,enpassant(emptyBitBoard),
+       frontSpan {emptyBitBoard},
        rearSpan {emptyBitBoard},
        passerSpan {emptyBitBoard},
        attackFrontSpan {emptyBitBoard},
