@@ -9,6 +9,10 @@ class TargetBoundCheck(argparse.Action):
             raise argparse.ArgumentError(self, "target must be between 0 and 1000")
         setattr(namespace, self.dest, values)
 
+def moving_avg(x, n):
+    cumsum = numpy.cumsum(numpy.insert(x, 0, 0)) 
+    return (cumsum[n:] - cumsum[:-n]) / float(n)
+
 def str2bool(v):
     if isinstance(v, bool):
        return v
@@ -109,7 +113,7 @@ while True:
                 Ybest = Ybest[-3:]
 
                 window = 40
-                Y_av = movingaverage(Y, window)
+                Y_av = moving_avg(Y, window)
 
                 plt.subplot(121)
 
@@ -117,7 +121,7 @@ while True:
                 if args.e:
                     plt.errorbar(X, Y, yerr=err, fmt='.', color='gray', marker=None, capsize=2)
                 plt.scatter(X, Y, c=['gold' if y-e>args.l else 'silver' if y-e>args.m else 'lime' if y-e>0 else 'cyan' if y>0 else 'black' if y+e > 0 else 'red' for y,e in zip(Y,err)], s=64, marker='o', label='Elo')
-                plt.plot(X[window:],Y_av[window:],linewidth=5)
+                plt.plot(X[window//2:][:-window//2+1],Y_av,linewidth=5)
 
                 # specific markers
                 if args.x:
@@ -132,7 +136,7 @@ while True:
                 plt.axhline(y=max(Yme), color='aqua'       , linestyle='dashdot', label='Current worst outcome')
 
                 # axis config
-                plt.grid()
+                plt.grid(which='both')
                 axes = plt.gca()
                 axes.set_ylim([args.y,args.Y])
 
