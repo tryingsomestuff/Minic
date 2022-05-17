@@ -5,8 +5,7 @@
 #include "position.hpp"
 
 namespace {
-constexpr unsigned KPKmaxIndex = 2 * 24 * NbSquare * NbSquare; // Color x pawn x wk x bk
-uint32_t           KPKBitbase[KPKmaxIndex / 32];               // force 32bit uint
+uint32_t           KPKBitbase[KPK::KPKmaxIndex / 32];               // force 32bit uint
 inline unsigned    KPKindex(Color us, Square bksq, Square wksq, Square psq) {
    return wksq | (bksq << 6) | (us << 12) | (SQFILE(psq) << 13) | ((6 - SQRANK(psq)) << 15);
 }
@@ -37,11 +36,11 @@ KPKPosition::KPKPosition(const unsigned idx) { // first init
       result = kpk_unknown; // done later
 }
 
-kpk_result KPKPosition::preCompute(const std::vector<KPKPosition>& db) {
+kpk_result KPKPosition::preCompute(const std::array<KPKPosition, KPKmaxIndex>& db) {
    return us == Co_White ? preCompute<Co_White>(db) : preCompute<Co_Black>(db);
 }
 
-template<Color Us> kpk_result KPKPosition::preCompute(const std::vector<KPKPosition>& db) {
+template<Color Us> kpk_result KPKPosition::preCompute(const std::array<KPKPosition, KPKmaxIndex>& db) {
    constexpr Color      Them = (Us == Co_White ? Co_Black : Co_White);
    constexpr kpk_result good = (Us == Co_White ? kpk_win : kpk_draw);
    constexpr kpk_result bad  = (Us == Co_White ? kpk_draw : kpk_win);
@@ -68,7 +67,7 @@ bool probe(Square wksq, const Square wpsq, const Square bksq, const Color us) {
 void init() {
    Logging::LogIt(Logging::logInfo) << "KPK init";
    Logging::LogIt(Logging::logInfo) << "KPK table size : " << KPKmaxIndex / 32 * sizeof(uint32_t) / 1024 << "Kb";
-   std::vector<KPKPosition> db(KPKmaxIndex);
+   std::array<KPKPosition, KPKmaxIndex> db;
    unsigned idx, repeat = 1;
    for (idx = 0; idx < KPKmaxIndex; ++idx) db[idx] = KPKPosition(idx); // init
    while (repeat)
