@@ -135,6 +135,11 @@ while True:
                 plt.axhline(y=args.l  , color='springgreen', linestyle='dashed' , label='Master + {}Elo'.format(args.l))
                 plt.axhline(y=max(Yme), color='aqua'       , linestyle='dashdot', label='Current worst outcome')
 
+                # v lines
+                plt.axvline(x=75)
+                plt.axvline(x=150)
+                plt.axvline(x=150)
+
                 # axis config
                 plt.grid(which='both')
                 axes = plt.gca()
