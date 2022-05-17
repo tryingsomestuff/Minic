@@ -96,8 +96,12 @@ typedef uint64_t u_int64_t;
 #define __PRETTY_FUNCTION__ __FUNCSIG__
 #endif
 
+#if defined(ARDUINO) || defined(ESP32)
+#define SIZE_MULTIPLIER 1024ull // Kb
+#else
 #define SIZE_MULTIPLIER 1024ull * 1024ull // Mb
-//#define SIZE_MULTIPLIER 1024ull // Kb
+#endif
+
 #define INFINITETIME    static_cast<TimeType>(60ull * 60ull * 1000ull * 24ull * 30ull) // 1 month ...
 #define STOPSCORE       static_cast<ScoreType>(-20000)
 #define INFSCORE        static_cast<ScoreType>(15000)
@@ -286,7 +290,7 @@ inline const ScoreType* const absValues_[7]   = {&dummyScore,
                                                  &Values[P_wr + PieceShift],
                                                  &Values[P_wq + PieceShift],
                                                  &Values[P_wk + PieceShift]};
-                                                 
+
 inline const ScoreType* const absValuesEG_[7] = {&dummyScore,
                                                  &ValuesEG[P_wp + PieceShift],
                                                  &ValuesEG[P_wn + PieceShift],

@@ -3,6 +3,7 @@ const std::string MinicVersion = "3.19";
 // *** options
 #define WITH_UCI    // include or not UCI protocol support
 #define WITH_XBOARD // include or not XBOARB protocol support
+#if !defined(ARDUINO) && !defined(ESP32)
 #define WITH_MAGIC  // use magic bitboard or HB ones
 #define WITH_NNUE   // include or not NNUE support
 #define WITH_STATS  // produce or not search statitics
@@ -10,7 +11,8 @@ const std::string MinicVersion = "3.19";
 //#define WITH_MPI    // support "distributed" version or not
 #ifndef _MSC_VER
 #define WITH_SYZYGY // include or not syzgy ETG support
-#endif
+#endif // _MSC_VER
+#endif // ARDUINO
 
 //#define WITHOUT_FILESYSTEM              // some compiler don't support whole std:filesystem
 //#define LIMIT_THREADS_TO_PHYSICAL_CORES // in order to restrict thread to the number of physical core
@@ -25,11 +27,13 @@ const std::string MinicVersion = "3.19";
 //#define WITH_EVALSCORE_AS_INT // in fact just as slow as my basic impl ...
 
 // *** Add-ons
+#if !defined(ARDUINO) && !defined(ESP32)
 #ifndef DEBUG_TOOL
 #define DEBUG_TOOL // forced
 #endif
 #define WITH_TEST_SUITE
 //#define WITH_PGN_PARSER
+#endif // ARDUINO
 
 // *** NNUE learning things
 #ifndef WITHOUT_FILESYSTEM
