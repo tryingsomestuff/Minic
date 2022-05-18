@@ -3,6 +3,7 @@ import time
 import argparse
 import numpy
 
+LRDropFreq = 75
 class TargetBoundCheck(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         if not 0 < values < 1000:
@@ -136,9 +137,8 @@ while True:
                 plt.axhline(y=max(Yme), color='aqua'       , linestyle='dashdot', label='Current worst outcome')
 
                 # v lines
-                plt.axvline(x=75)
-                plt.axvline(x=150)
-                plt.axvline(x=150)
+                for xv in range(1,len(X)//LRDropFreq+1):
+                   plt.axvline(x=LRDropFreq*xv)
 
                 # axis config
                 plt.grid(which='both')
