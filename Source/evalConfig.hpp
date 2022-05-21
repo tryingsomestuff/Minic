@@ -109,7 +109,7 @@ extern ScoreType                   kingAttTable[64];
 extern CONST_EVAL_TUNING ScoreType tempo;
 
 // from 0 to m with offset, translation and scale
-[[nodiscard]] inline constexpr double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f, double offset = 0.f) {
+[[nodiscard]] inline double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f, double offset = 0.f) {
    return m / (1 + std::exp((trans - x) / scale)) - offset;
 }
 
