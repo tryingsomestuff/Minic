@@ -9,7 +9,7 @@ ifdef EVALFILE
    export EMBEDDEDNNUEPATH=$(EVALFILE)
    export SKIPMD5CHECK=1
 else
-   export EMBEDDEDNNUENAME=nylon_nonchalance.bin
+   export EMBEDDEDNNUENAME=nylon_nonchalance
 endif
 
 .PHONY: config fathom build dist release
@@ -23,13 +23,21 @@ config:
 	mkdir -p Tourney
 	if [ ! -e $(ROOT_DIR)/Tourney/nn.bin ]; then \
 	   echo "No net, downloading..." \
-	   && wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/$$EMBEDDEDNNUENAME -O Tourney/nn.bin --no-check-certificate;\
+	   && wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/$${EMBEDDEDNNUENAME}_partaa -O Tourney/nn_aa.bin --no-check-certificate \
+	   && wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/$${EMBEDDEDNNUENAME}_partab -O Tourney/nn_ab.bin --no-check-certificate \
+	   && wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/$${EMBEDDEDNNUENAME}_partac -O Tourney/nn_ac.bin --no-check-certificate \
+	   && wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/$${EMBEDDEDNNUENAME}_partad -O Tourney/nn_ad.bin --no-check-certificate \
+	   && cat Tourney/nn_*.bin > Tourney/nn.bin; \
 	fi
 	NETMD5=$$(md5sum $(ROOT_DIR)/Tourney/nn.bin | awk '{print $$1}') \
 	&& echo "Net md5: $${NETMD5}" \
-	&& if [ "$${SKIPMD5CHECK}" != "1" ] && [ "$${NETMD5}" != "62bb42d62c61fe5fb03d70202e4fd54f" ]; then \
+	&& if [ "$${SKIPMD5CHECK}" != "1" ] && [ "$${NETMD5}" != "e56523f1a126197a84eed2731969b3b8" ]; then \
 	   echo "Bad net (md5: $${NETMD5}), downloading..." \
-	   && wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/$$EMBEDDEDNNUENAME -O Tourney/nn.bin --no-check-certificate ;\
+	   && wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/$${EMBEDDEDNNUENAME}_partaa -O Tourney/nn_aa.bin --no-check-certificate \
+	   && wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/$${EMBEDDEDNNUENAME}_partab -O Tourney/nn_ab.bin --no-check-certificate \
+	   && wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/$${EMBEDDEDNNUENAME}_partac -O Tourney/nn_ac.bin --no-check-certificate \
+	   && wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/$${EMBEDDEDNNUENAME}_partad -O Tourney/nn_ad.bin --no-check-certificate \
+	   && cat Tourney/nn_*.bin > Tourney/nn.bin; \
 	fi
 
 fathom:
