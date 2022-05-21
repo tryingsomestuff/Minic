@@ -7,7 +7,7 @@ if [ ! -n "$VERSION" ];then
    exit 1
 fi
 
-NETNAME=nylon_nonchalance.bin
+NETNAME=nylon_nonchalance
 export EMBEDDEDNNUEPATH=$NETNAME
 
 # get minic
@@ -15,9 +15,13 @@ git clone --branch=$VERSION https://github.com/tryingsomestuff/Minic
 cd Minic
 
 # get net
-wget https://raw.githubusercontent.com/tryingsomestuff/NNUE-Nets/master/$NETNAME
+echo "No net, downloading..."
 mkdir -p Tourney
-cp $NETNAME Tourney/nn.bin
+wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/${NETNAME}_partaa -O Tourney/nn_aa.bin --no-check-certificate
+wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/${NETNAME}_partab -O Tourney/nn_ab.bin --no-check-certificate
+wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/${NETNAME}_partac -O Tourney/nn_ac.bin --no-check-certificate
+wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/${NETNAME}_partad -O Tourney/nn_ad.bin --no-check-certificate
+cat Tourney/nn_*.bin > Tourney/nn.bin
 
 # get fathom
 git clone https://github.com/jdart1/Fathom.git
