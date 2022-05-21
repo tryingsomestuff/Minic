@@ -7,7 +7,7 @@ if [ ! -n "$VERSION" ];then
    exit 1
 fi
 
-NETNAME=nylon_nonchalance
+NETNAME=nylon_nonchalance.bin
 
 # get minic
 git clone --branch=$VERSION https://github.com/tryingsomestuff/Minic
@@ -16,11 +16,7 @@ cd Minic
 # get net
 echo "No net, downloading..."
 mkdir -p Tourney
-wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/${NETNAME}_partaa -O Tourney/nn_aa.bin --no-check-certificate
-wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/${NETNAME}_partab -O Tourney/nn_ab.bin --no-check-certificate
-wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/${NETNAME}_partac -O Tourney/nn_ac.bin --no-check-certificate
-wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/${NETNAME}_partad -O Tourney/nn_ad.bin --no-check-certificate
-cat Tourney/nn_*.bin > Tourney/nn.bin
+wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/${NETNAME} -O Tourney/nn.bin --no-check-certificate
 
 # get fathom
 git clone https://github.com/jdart1/Fathom.git
