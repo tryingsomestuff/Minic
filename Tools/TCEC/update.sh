@@ -8,7 +8,6 @@ if [ ! -n "$VERSION" ];then
 fi
 
 NETNAME=nylon_nonchalance
-export EMBEDDEDNNUEPATH=$NETNAME
 
 # get minic
 git clone --branch=$VERSION https://github.com/tryingsomestuff/Minic
