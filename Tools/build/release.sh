@@ -2,7 +2,7 @@
 dir=$(readlink -f $(dirname $0)/)
 
 e=minic
-v=$(cat Source/definition.hpp | grep "MinicVersion =" | awk '{print $NF}' | sed 's/;//' | sed 's/"//g')
+v=$(cat Source/config.hpp | grep "MinicVersion =" | awk '{print $NF}' | sed 's/;//' | sed 's/"//g')
 #t=... => inlined
 n=""
 d=""
