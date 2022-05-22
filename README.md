@@ -184,6 +184,7 @@ Minic random-mover stats are the following :
 - 40/4: Minic 3.18 + Nimble Nothingness is tested at 3303 on the [CEGT 40/4 list](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
 - 40/20: Minic 3.18 + Nimble Nothingness is tested at 3259 on the [CEGT 40/20 list](http://www.cegt.net/40_40%20Rating%20List/40_40%20All%20Versions/rangliste.html)  
 - 5+3 pb=on: Minic 3.18 + Nimble Nothingness is tested at 3341 on the [CEGT 5+3 PB=ON list](http://www.cegt.net/5Plus3Rating/BestVersionsNEW/rangliste.html)  
+- 25+8: Minic 3.18 + Nimble Nothingness is tested at 3360 on the [CEGT 25+8 list]([http://www.cegt.net/5Plus3Rating/BestVersionsNEW/rangliste.html](http://www.cegt.net/25plus8Rating/BestVersions/rangliste.html))  
 
 ### FGRL
 - Minic Minic 3.18 + Nimble Nothingness is tested at 3143 on the [fastgm 60sec+0.6sec rating list](http://www.fastgm.de/60-0.60.html)  
