@@ -116,13 +116,15 @@ More details about those nets I built are available at https://github.com/trying
 
 ### A word on NNUE and vectorization
 
-In this table, Minic 3.18 is used to compare NNUE performances on various CPU architecture (effect of vectorisation).
+In this table, Minic 3.19 is used to compare NNUE performances on various CPU architecture (effect of vectorisation).
 ```
 Rank Name                          Elo     +/-   Games   Score    Draw 
-   1 minic_3.18_skylake             53      13    1074   57.6%   61.6% 
-   2 minic_3.18_sandybridge         -6      13    1073   49.2%   62.3% 
-   3 minic_3.18_nehalem            -21      13    1073   46.9%   61.8% 
-   4 minic_3.18_core2              -26      13    1072   46.2%   60.4% 
+   1 minic_3.19_slylake             68      23     422   59.7%   50.7% 
+   2 minic_3.19_sandybridge         14      23     423   52.0%   53.4% 
+   3 minic_3.19_nehalem            -27      23     421   46.1%   52.3% 
+   4 minic_3.19_core2              -55      24     422   42.2%   49.3% 
+
+844 of 5999994 games finished.
 ```
 What does this say ?
 Well ... for NNUE, using AVX2 is very important. This can explain some strange results during some testing process and in rating list where I sometimes see my nets underperform a lot. So please, use AVX2 hardware (and the corresponding Minic binary, i.e. the "skylake" one for Intel or at least the "znver1" for AMD) for NNUE testing if possible.
