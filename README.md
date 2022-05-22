@@ -129,13 +129,15 @@ Well ... for NNUE, using AVX2 is very important. This can explain some strange r
 
 ### Threading performances
 
-I'd love to own a big enough hardware to test with more than 8 threads ... Here are 10s+0.1 TC results to illustrate threading capabilities.
+I'd love to own a big enough hardware to test with more than 8 threads ... Here are 3s+0.1 TC results to illustrate threading capabilities.
 ```
 Rank Name                          Elo     +/-   Games   Score    Draw 
-   1 minic_dev_8_threads           125      36     125   67.2%   60.8% 
-   2 minic_dev_4_threads            42      39     125   56.0%   59.2% 
-   3 minic_dev_2_threads           -28      37     126   46.0%   63.5% 
-   4 minic_dev                    -139      42     126   31.0%   50.8% 
+   1 minic_3.19_8                   123      34     156   67.0%   58.3% 
+   2 minic_3.19_6                    94      36     156   63.1%   54.5% 
+   3 minic_3.19_4                    20      33     156   52.9%   63.5% 
+   4 minic_3.19_2                   -45      35     156   43.6%   59.0% 
+   5 minic_3.19_1                  -206      41     156   23.4%   42.9% 
+
 ```
 
 ### Home test
