@@ -123,8 +123,6 @@ Rank Name                          Elo     +/-   Games   Score    Draw
    2 minic_3.19_sandybridge         14      23     423   52.0%   53.4% 
    3 minic_3.19_nehalem            -27      23     421   46.1%   52.3% 
    4 minic_3.19_core2              -55      24     422   42.2%   49.3% 
-
-844 of 5999994 games finished.
 ```
 What does this say ?
 Well ... for NNUE, using AVX2 is very important. This can explain some strange results during some testing process and in rating list where I sometimes see my nets underperform a lot. So please, use AVX2 hardware (and the corresponding Minic binary, i.e. the "skylake" one for Intel or at least the "znver1" for AMD) for NNUE testing if possible.
@@ -139,7 +137,6 @@ Rank Name                          Elo     +/-   Games   Score    Draw
    3 minic_3.19_4                    20      33     156   52.9%   63.5% 
    4 minic_3.19_2                   -45      35     156   43.6%   59.0% 
    5 minic_3.19_1                  -206      41     156   23.4%   42.9% 
-
 ```
 
 ### Home test
