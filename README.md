@@ -143,20 +143,40 @@ Rank Name                          Elo     +/-   Games   Score    Draw
 ```
 
 ### Home test
-Here are some fast TC results of a gauntlet tournament (STC 10s+0.1) for Minic (dev version of various engine october 24 2021).
+Here are some fast TC results of a gauntlet tournament (STC 10s+0.1) for Minic 3.19 (dev version of various engine mai 22 2022).
 ```
-Rank Name                          Elo     +/-   Games   Score    Draw 
-   1 seer                          103      13    1684   64.4%   37.0% 
-   2 xiphos                         80      13    1683   61.3%   39.6% 
-   3 Halogen                        45      13    1684   56.5%   37.5% 
-   4 weiss                          41      13    1684   55.8%   37.6% 
-   5 minic_3.17_linux_x64           32      13    1684   54.6%   40.1% 
-   6 rofChade_bmi2                  24      13    1683   53.5%   37.6% 
-   7 minic_3.16                      4      13    1684   50.5%   38.5% 
-   8 Defenchess_2.2                -22      13    1684   46.9%   35.0% 
-   9 Clover.3.0-dev41              -51      13    1683   42.7%   35.2% 
-  10 stash-bot                    -118      14    1683   33.6%   32.4% 
-  11 Winter                       -146      15    1684   30.2%   29.6% 
+   # PLAYER                        :  RATING  ERROR   POINTS  PLAYED   (%)  CFS(%)
+   1 berserk-x64-pext              :   328.7   23.5    555.0     642    86      99
+   2 Koivisto                      :   285.4   29.6    534.0     641    83     100
+   3 RubiChess                     :   189.1   22.1    476.5     641    74     100
+   4 seer                          :   146.5   24.3    445.5     641    70     100
+   5 stockfish.8                   :    68.1   19.8    381.0     641    59      61
+   6 Igel                          :    62.9   24.2    376.5     641    59      67
+   7 Ethereal                      :    54.9   21.7    369.5     641    58      85
+   8 Pedone_linux_bmi2             :    40.8   20.8    357.0     641    56      96
+   9 Clover.3.1                    :    14.5   19.0    333.5     641    52      54
+  10 Halogen                       :    12.8   21.6    332.0     641    52      73
+  11 arasanx-64-avx2-bmi2          :     4.4   22.3    325.0     642    51      65
+  12 minic_3.19                    :     0.0   ----  10486.0   19233    55      89
+  13 tucano_avx2                   :   -13.3   21.6    308.5     641    48      52
+  14 nemorino_nnue                 :   -13.8   17.9    308.0     641    48      78
+  15 stockfish.7                   :   -23.8   18.9    299.0     641    47      58
+  16 komodo-10                     :   -26.6   20.0    296.5     641    46      50
+  17 Wasp550-linux-avx             :   -26.6   20.0    296.5     641    46      73
+  18 xiphos                        :   -35.0   18.9    289.0     641    45      80
+  19 BlackMarlin                   :   -46.8   18.3    278.5     641    43      66
+  20 minic_3.18                    :   -51.9   19.4    274.0     641    43      75
+  21 zahak-linux-amd64-10.0-avx    :   -61.6   21.0    265.5     641    41      70
+  22 rofChade_bmi2                 :   -68.5   17.0    259.5     641    40      95
+  23 weiss                         :   -91.3   20.3    240.0     641    37     100
+  24 stash-bot                     :  -161.0   22.7    184.5     641    29      65
+  25 Defenchess_2.2                :  -167.1   22.4    180.0     641    28      83
+  26 marvin                        :  -183.9   24.7    168.0     641    26      98
+  27 Drofa_dev                     :  -215.3   20.1    147.0     641    23      92
+  28 Winter                        :  -241.3   27.2    131.0     641    20      94
+  29 combusken                     :  -268.0   24.3    116.0     641    18      52
+  30 Vajolet2_2.8                  :  -268.9   22.7    115.5     641    18      88
+  31 Bit-Genie                     :  -290.6   26.3    104.5     642    16     ---
 ```
 
 ### Random mover
