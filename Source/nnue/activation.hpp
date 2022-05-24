@@ -8,11 +8,11 @@
 
 #ifdef WITH_NNUE_CLIPPED_RELU
 template<typename T, bool Q> inline constexpr T activationInput(const T& x) {
-   return std::min(std::max(T(x), T {0}), T {Quantization<Q>::weightScale});
+   return std::min(std::max(T{x}, T{0}), T{Quantization<Q>::scale});
 }
 
 template<typename T, bool Q> inline constexpr T activation(const T& x) {
-   return std::min(std::max(T(x / Quantization<Q>::weightFactor), T {0}), T {Quantization<Q>::weightScale});
+   return std::min(std::max(T{x}, T{0}), T{1});
 }
 
 #else // standard relu (not clipped)

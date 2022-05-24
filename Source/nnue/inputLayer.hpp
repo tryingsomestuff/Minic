@@ -18,7 +18,6 @@ template<typename NT, size_t dim0, size_t dim1, bool Q> struct InputLayer {
    typedef typename Quantization<Q>::BIT BIT;
    typedef typename Quantization<Q>::WIT WIT;
 
-   // InputLayer is alway for input layer, so we use WIT and BIT
    typename Quantization<Q>::WIT* W {nullptr};
    alignas(NNUEALIGNMENT) typename Quantization<Q>::BIT b[nbB];
 

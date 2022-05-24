@@ -1,4 +1,4 @@
-const std::string MinicVersion = "3.19";
+const std::string MinicVersion = "3.20";
 
 // *** options
 #define WITH_UCI    // include or not UCI protocol support
