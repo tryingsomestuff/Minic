@@ -42,7 +42,7 @@ template<typename NT, size_t dim0, size_t dim1, bool Q> struct Layer {
    }
 
    Layer<NT, dim0, dim1, Q>& load_(WeightsReader<NT>& ws) {
-      ws.template streamW<WT, Q>(W, nbW, dim0, dim1).template streamB<BT, Q>(b, nbB);
+      ws.template streamW<WT>(W, nbW, dim0, dim1).template streamB<BT>(b, nbB);
       return *this;
    }
 

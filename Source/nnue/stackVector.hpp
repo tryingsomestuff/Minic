@@ -36,11 +36,19 @@ template<typename T, size_t dim> struct StackVector {
 #endif
 
    template<typename T2> static CONSTEXPR StackVector<T, dim> from(const T2* data) {
-      StackVector<T, dim> result {};
+      StackVector<T, dim> result;
 #pragma omp simd
       for (size_t i = 0; i < dim; ++i) { result.data[i] = T(data[i]); }
       return result; //RVO
    }
+
+  template <typename U> inline CONSTEXPR StackVector<U, dim> dequantize(const U& scale) const {
+    static_assert(std::is_integral_v<T> && std::is_floating_point_v<U>);
+    StackVector<U, dim> result;
+#pragma omp simd
+    for (size_t i = 0; i < dim; ++i) { result.data[i] = scale * static_cast<U>(data[i]); }
+    return result; //RVO
+  }
 
 #ifdef DEBUG_NNUE_UPDATE
    bool operator==(const StackVector<T, dim>& other) {

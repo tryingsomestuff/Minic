@@ -14,14 +14,13 @@ template<typename NT> struct WeightsReader {
       return *this;
    }
 
-   template<typename T, bool Q> WeightsReader<NT>& streamW(T* dst, const size_t request, [[maybe_unused]] size_t dim0, [[maybe_unused]] size_t dim1) {
+   template<typename T> WeightsReader<NT>& streamW(T* dst, const size_t request, [[maybe_unused]] size_t dim0, [[maybe_unused]] size_t dim1) {
       assert(file);
       Logging::LogIt(Logging::logInfo) << "Reading inner weight";
       // we will get min and max weight for display purpose
       NT minW = std::numeric_limits<NT>::max();
       NT maxW = std::numeric_limits<NT>::lowest();
       std::array<char, sizeof(NT)> singleElement {};
-      const NT Wscale = Quantization<Q>::weightFactor;
       
       for (size_t i(0); i < request; ++i) {
          file->read(singleElement.data(), singleElement.size());
@@ -30,22 +29,13 @@ template<typename NT> struct WeightsReader {
          // update min/max
          minW = std::min(minW, tmp);
          maxW = std::max(maxW, tmp);
-         // if quantization is active and we overflow, just clamp and warn
-         if (Q && std::abs(tmp * Wscale) > (NT)std::numeric_limits<T>::max()) {
-            NT tmp2 = tmp;
-            tmp = std::clamp(tmp2 * Wscale, (NT)std::numeric_limits<T>::min(), (NT)std::numeric_limits<T>::max());
-            Logging::LogIt(Logging::logWarn) << "Overflow weight " << tmp2 << " -> " << tmp;
-         }
-         else {
-            tmp = tmp * Wscale;
-         }
 #if (defined USE_SIMD_INTRIN)
          // transpose data ///@todo as this is default now, do this in trainer ...
          const size_t j = (i % dim1) * dim0 + i / dim1;
 #else
          const size_t j = i;
 #endif
-         dst[j] = T(Quantization<Q>::round(tmp));
+         dst[j] = static_cast<T>(tmp);
       }
       Logging::LogIt(Logging::logInfo) << "Weight in [" << minW << ", " << maxW << "]";
       return *this;
@@ -58,7 +48,7 @@ template<typename NT> struct WeightsReader {
       NT minW = std::numeric_limits<NT>::max();
       NT maxW = std::numeric_limits<NT>::lowest();
       std::array<char, sizeof(NT)> singleElement {};
-      const NT Wscale = Quantization<Q>::weightScale;
+      const NT Wscale = Quantization<Q>::scale;
       // read each weight one by one, and scale them if quantization is active
       for (size_t i(0); i < request; ++i) {
          file->read(singleElement.data(), singleElement.size());
@@ -76,20 +66,19 @@ template<typename NT> struct WeightsReader {
          else {
             tmp = tmp * Wscale;
          }
-         dst[i] = T(Quantization<Q>::round(tmp));
+         dst[i] = static_cast<T>(Quantization<Q>::round(tmp));
       }
       Logging::LogIt(Logging::logInfo) << "Weight in [" << minW << ", " << maxW << "]";
       return *this;
    }
 
-   template<typename T, bool Q> WeightsReader<NT>& streamB(T* dst, const size_t request) {
+   template<typename T> WeightsReader<NT>& streamB(T* dst, const size_t request) {
       assert(file);
       Logging::LogIt(Logging::logInfo) << "Reading inner bias";
       // we will get min and max bias for display purpose
       NT minB = std::numeric_limits<NT>::max();
       NT maxB = std::numeric_limits<NT>::lowest();
       std::array<char, sizeof(NT)> singleElement {};
-      const NT Bscale = Quantization<Q>::biasFactor;
       // read each bias one by one, and scale them if quantization is active
       for (size_t i(0); i < request; ++i) {
          file->read(singleElement.data(), singleElement.size());
@@ -98,16 +87,7 @@ template<typename NT> struct WeightsReader {
          // update min/max
          minB = std::min(minB, tmp);
          maxB = std::max(maxB, tmp);
-         // if quantization is active and we overflow, just clamp and warn
-         if (Q && std::abs(tmp * Bscale) > (NT)std::numeric_limits<T>::max()) {
-            NT tmp2 = tmp;
-            tmp = std::clamp(tmp2 * Bscale, (NT)std::numeric_limits<T>::min(), (NT)std::numeric_limits<T>::max());
-            Logging::LogIt(Logging::logWarn) << "Overflow bias " << tmp2 << " -> " << tmp;
-         }
-         else {
-            tmp = tmp * Bscale;
-         }
-         dst[i] = T(Quantization<Q>::round(tmp));
+         dst[i] = static_cast<T>(tmp);
       }
       Logging::LogIt(Logging::logInfo) << "Bias in [" << minB << ", " << maxB << "]";
       return *this;
@@ -120,7 +100,7 @@ template<typename NT> struct WeightsReader {
       NT minB = std::numeric_limits<NT>::max();
       NT maxB = std::numeric_limits<NT>::lowest();
       std::array<char, sizeof(NT)> singleElement {};
-      const NT Bscale = Quantization<Q>::weightScale;
+      const NT Bscale = Quantization<Q>::scale;
       // read each bias one by one, and scale them if quantization is active
       for (size_t i(0); i < request; ++i) {
          file->read(singleElement.data(), singleElement.size());
@@ -138,7 +118,7 @@ template<typename NT> struct WeightsReader {
          else {
             tmp = tmp * Bscale;
          }
-         dst[i] = T(Quantization<Q>::round(tmp));
+         dst[i] = static_cast<T>(Quantization<Q>::round(tmp));
       }
       Logging::LogIt(Logging::logInfo) << "Bias in [" << minB << ", " << maxB << "]";
       return *this;

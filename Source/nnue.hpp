@@ -17,8 +17,8 @@
 // Internal wrapper to the NNUE things
 namespace NNUEWrapper {
 
-typedef float nnueNType;            // type of data inside the binary net
-inline constexpr bool quantization = false; // not compatible with USE_SIMD_INTRIN and probably needs WITH_NNUE_CLIPPED_RELU to be true
+typedef float nnueNType; // type of data inside the binary net (currently floats)
+inline constexpr bool quantization = true; // only for input layer
 
 inline void init() {
    bool       loadOk        = false;

@@ -12,7 +12,6 @@ template<typename NT, bool Q> struct FeatureTransformer {
    const InputLayer<NT, inputLayerSize, firstInnerLayerSize, Q>* weights_;
 
    typedef typename Quantization<Q>::BIT BIT;
-   typedef typename Quantization<Q>::WIT WIT;
 
    // active_ is always for input layer, so BIT shall be used
    StackVector<BIT, firstInnerLayerSize> active_;
