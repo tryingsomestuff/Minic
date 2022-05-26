@@ -214,7 +214,7 @@ BitBoard occupiedFromIndex(const int j, BitBoard mask) {
    while (mask) {
       const int k = BB::popBit(mask);
       if (j & SquareToBitboard(i)) occ |= (1ULL << k);
-      i++;
+      ++i;
    }
    return occ;
 }

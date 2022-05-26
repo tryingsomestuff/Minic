@@ -176,11 +176,11 @@ void selfPlay(DepthType depth) {
       ThreadPool::instance().main().subSearch = false;
       ThreadData d                            = ThreadPool::instance().main().getData();
 
-      if (std::abs(d.score) < minDrawScore) drawCount++;
+      if (std::abs(d.score) < minDrawScore) ++drawCount;
       else
          drawCount = 0;
 
-      if (std::abs(d.score) > minWinScore) winCount++;
+      if (std::abs(d.score) > minWinScore) ++winCount;
       else
          winCount = 0;
 

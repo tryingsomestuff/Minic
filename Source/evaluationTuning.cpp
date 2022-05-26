@@ -252,7 +252,7 @@ std::vector<TuningParam<ScoreType>> OptimizeNaive(const std::vector<TuningParam<
          double curE  = -1;
          step         = 0;
          while (step < stepMax) {
-            step++;
+            ++step;
             ScoreType oldValue = bestParam[k];
             bestParam[k]       = ScoreType(oldValue - 1);
             if (bestParam[k] == oldValue) break;
@@ -270,7 +270,7 @@ std::vector<TuningParam<ScoreType>> OptimizeNaive(const std::vector<TuningParam<
          }
          step = 0;
          while (step < stepMax) {
-            step++;
+            ++step;
             ScoreType oldValue = bestParam[k];
             bestParam[k]       = ScoreType(oldValue + 1);
             if (bestParam[k] == oldValue) break;

@@ -126,7 +126,7 @@ bool convert_plain_to_bin(const std::vector<std::string>& filenames,
       bool         hasPos           = false;
       unsigned int count            = 0;
       while (std::getline(ifs, line)) {
-         count++;
+         ++count;
          if ((count % 1000000 == 0)) { std::cout << "lines " << count << ", skipped pos " << filtered_size << std::endl; }
          std::stringstream ss(line);
          std::string       token;
@@ -185,7 +185,7 @@ bool convert_plain_to_bin(const std::vector<std::string>& filenames,
             ss >> temp;
             if (temp < ply_minimum || temp > ply_maximum) {
                ignore_flag_ply = true;
-               filtered_size_ply++;
+               ++filtered_size_ply;
             }
             p.gamePly = uint16_t(temp); // No cast here?
          }
@@ -201,7 +201,7 @@ bool convert_plain_to_bin(const std::vector<std::string>& filenames,
                data_size += 1;
             }
             else {
-               filtered_size++;
+               ++filtered_size;
             }
             ignore_flag_fen  = false;
             ignore_flag_move = false;
@@ -261,7 +261,7 @@ bool convert_bin_from_pgn_extract(const std::vector<std::string>& filenames,
             // example: [Result "1-0"]
             if (std::regex_search(line, match, pattern_result)) {
                game_result = parse_game_result_from_pgn_extract(match.str(1));
-               game_count++;
+               ++game_count;
                if (game_count % 10000 == 0) { std::cout << " game_count=" << game_count << ", fen_count=" << fen_count << std::endl; }
             }
 
@@ -273,7 +273,7 @@ bool convert_bin_from_pgn_extract(const std::vector<std::string>& filenames,
             auto itr     = line.cbegin();
 
             while (true) {
-               gamePly++;
+               ++gamePly;
 
                PackedSfenValue psv;
                memset((char*)&psv, 0, sizeof(PackedSfenValue));
@@ -393,7 +393,7 @@ bool convert_bin_from_pgn_extract(const std::vector<std::string>& filenames,
 
                   ofs.write((char*)&psv, sizeof(PackedSfenValue));
 
-                  fen_count++;
+                  ++fen_count;
                }
             }
 
