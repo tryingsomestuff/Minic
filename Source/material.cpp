@@ -476,9 +476,9 @@ void initMaterial(Position &p) { // M_p .. M_k is the same as P_wp .. P_wk
 }
 
 void updateMaterialProm(Position &p, const Square toBeCaptured, const MType mt) {
-   p.mat[~p.c][PieceTools::getPieceType(p, toBeCaptured)]--; // capture if to square is not empty
-   p.mat[p.c][M_p]--;                                        // pawn
-   p.mat[p.c][promShift(mt)]++;                              // prom piece
+   --p.mat[~p.c][PieceTools::getPieceType(p, toBeCaptured)]; // capture if to square is not empty
+   --p.mat[p.c][M_p];                                        // pawn
+   ++p.mat[p.c][promShift(mt)];                              // prom piece
 }
 
 } // namespace MaterialHash

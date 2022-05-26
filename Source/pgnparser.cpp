@@ -211,10 +211,10 @@ void pgnparse__(std::ifstream& is, std::ofstream& os) {
          if (s.back() == '!' || s.back() == '?') {
             size_t len    = s.length();
             auto   backIt = s.end();
-            backIt--;
+            --backIt;
             while (*backIt == '!' || *backIt == '?') {
-               backIt--;
-               len--;
+               --backIt;
+               --len;
             }
             s = s.substr(0, len);
          }
@@ -231,7 +231,7 @@ void pgnparse__(std::ifstream& is, std::ofstream& os) {
             break;
          }
          ++i;
-         game.n++;
+         ++game.n;
          game.p.push_back(game.p[i - 1]);
          if (!applyMove(game.p[i], game.moves[i - 1])) {
             read = false;

@@ -37,7 +37,7 @@ ScoreType Searcher::SEE(const Position& p, const Move& m) {
       else
          current_target_val = value(pp);
    }
-   nCapt++;
+   ++nCapt;
 
    attackers &= ~SquareToBitboard(from);
    occupation_mask &= ~SquareToBitboard(from);
@@ -74,7 +74,7 @@ ScoreType Searcher::SEE(const Position& p, const Move& m) {
       else
          current_target_val = value(pp);
 
-      nCapt++;
+      ++nCapt;
       attackers &= ~SquareToBitboard(from);
       occupation_mask &= ~SquareToBitboard(from);
 

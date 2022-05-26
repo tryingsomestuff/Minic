@@ -552,9 +552,10 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       if (applyMove(p2, e.m)) {
          TT::prefetch(computeHash(p2));
          //const Square to = Move2To(e.m);
-         validMoveCount++;
+         ++validMoveCount;
+         ++validNonPrunedCount;
          const bool isQuiet = Move2Type(e.m) == T_std && !isNoisy(p,e.m);
-         if (isQuiet) validQuietMoveCount++;
+         if (isQuiet) ++validQuietMoveCount;
          PVList childPV;
          assert(p2.halfmoves < MAX_PLY && p2.halfmoves >= 0);
          stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
@@ -736,8 +737,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       if (p.c == Co_White && to == p.king[Co_Black]) return matingScore(height - 1);
       if (p.c == Co_Black && to == p.king[Co_White]) return matingScore(height - 1);
 #endif
-      validMoveCount++;
-      if (isQuiet) validQuietMoveCount++;
+      ++validMoveCount;
+      if (isQuiet) ++validQuietMoveCount;
       const bool firstMove = validMoveCount == 1;
       PVList     childPV;
       stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!

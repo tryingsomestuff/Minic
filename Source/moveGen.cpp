@@ -106,7 +106,7 @@ bool applyMove(Position& p, const Move& m, const bool noValidation) {
       case T_capture:
       case T_reserved:
          // update material
-         if (moveInfo.isCapNoEP) { p.mat[~p.c][std::abs(moveInfo.toP)]--; }
+         if (moveInfo.isCapNoEP) { --p.mat[~p.c][std::abs(moveInfo.toP)]; }
          // update hash, BB, board and castling rights
          movePiece(p, moveInfo.from, moveInfo.to, moveInfo.fromP, moveInfo.toP, moveInfo.type == T_capture);
          break;
@@ -134,7 +134,7 @@ bool applyMove(Position& p, const Move& m, const bool noValidation) {
             p.ph ^= Zobrist::ZT[epCapSq][PieceIdx(p.c == Co_White ? P_bp : P_wp)];  // remove captured pawn
             p.ph ^= Zobrist::ZT[moveInfo.to][moveInfo.fromId];                      // add fromP at to
 
-            p.mat[~p.c][M_p]--;
+            --p.mat[~p.c][M_p];
          }
          break;
       case T_promq:

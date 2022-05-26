@@ -58,9 +58,9 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent, bool withMove
             p.board(k) = P_wk;
             p.king[Co_White] = k;
             break;
-         case '/': j--; break;
+         case '/': --j; break;
          case '1': break;
-         case '2': j++; break;
+         case '2': ++j; break;
          case '3': j += 2; break;
          case '4': j += 3; break;
          case '5': j += 4; break;
@@ -69,7 +69,7 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent, bool withMove
          case '8': j += 7; break;
          default: Logging::LogIt(Logging::logError) << "FEN ERROR -1 : invalid character in fen string :" << letter << "\n" << fen; return false;
       }
-      j++;
+      ++j;
    }
 
    if (p.king[Co_White] == INVALIDSQUARE || p.king[Co_Black] == INVALIDSQUARE) {

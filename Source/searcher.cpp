@@ -349,7 +349,7 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
       //pLeaf.halfmoves >= DynamicConfig::randomPly &&
       std::abs(data.score) < 1000) {
       buffer.push_back({GetFEN(pLeaf), data.best, data.score, pLeaf.halfmoves, pLeaf.c});
-      sfensWritten++;
+      ++sfensWritten;
       if (sfensWritten % 100'000 == 0) Logging::LogIt(Logging::logInfoPrio) << "Sfens written " << sfensWritten;
    }
 
