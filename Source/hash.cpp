@@ -8,12 +8,16 @@
 namespace Zobrist {
 Hash ZT[NbSquare][14];
 Hash ZTCastling[16];
+Hash ZTMove[std::numeric_limits<uint16_t>::max()];
+
 void initHash() {
    Logging::LogIt(Logging::logInfo) << "Init hash";
-   Logging::LogIt(Logging::logInfo) << "Size of zobrist table " << sizeof(ZT)+sizeof(ZTCastling) / 1024 << "Kb";
+   Logging::LogIt(Logging::logInfo) << "Size of zobrist table " << (sizeof(ZT)+sizeof(ZTCastling)) / 1024 << "Kb";
+   Logging::LogIt(Logging::logInfo) << "Size of zobrist table for moves " << sizeof(ZTMove) / 1024 << "Kb";
    for (int k = 0; k < NbSquare; ++k)
       for (int j = 0; j < 14; ++j) ZT[k][j] = randomInt<Hash, 42>(std::numeric_limits<Hash>::min(), std::numeric_limits<Hash>::max());
    for (int k = 0; k < 16; ++k) ZTCastling[k] = randomInt<Hash, 42>(std::numeric_limits<Hash>::min(), std::numeric_limits<Hash>::max());
+   for (int k = 0; k < std::numeric_limits<uint16_t>::max(); ++k) ZTMove[k] = randomInt<Hash, 42>(std::numeric_limits<Hash>::min(), std::numeric_limits<Hash>::max());
 }
 } // namespace Zobrist
 
