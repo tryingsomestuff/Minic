@@ -198,7 +198,10 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // consider skipmove(s) in position hash
    if (skipMoves)
-      for (auto it = skipMoves->begin(); it != skipMoves->end(); ++it) { pHash ^= (*it); }
+      for (auto it = skipMoves->begin(); it != skipMoves->end(); ++it) { 
+          assert( isValidMove(*it) );
+          pHash ^= Zobrist::ZTMove[static_cast<uint32_t>(*it) + std::abs(std::numeric_limits<int16_t>::min())]; 
+      }
 
    // probe TT
    TT::Entry  e;
