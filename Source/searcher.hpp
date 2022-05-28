@@ -91,6 +91,7 @@ struct Searcher {
                  DepthType                    height,
                  PVList&                      pv,
                  DepthType&                   seldepth,
+                 DepthType                    extensions,
                  bool                         isInCheck,
                  bool                         cutNode,
                  const std::vector<MiniMove>* skipMoves = nullptr);
