@@ -182,7 +182,7 @@ void Searcher::searchDriver(bool postMove) {
    // forced move detection
    // only main thread here (stopflag will be triggered anyway for other threads if needed)
    if (isMainThread() && DynamicConfig::multiPV == 1 && isFiniteTimeSearch && currentMoveMs > 100) { ///@todo should work with nps here
-      _data.score = pvs<true>(matedScore(0), matingScore(0), p, 1, 0, _data.pv, _data.seldepth, isInCheck, false); // depth 1 search to get real valid moves
+      _data.score = pvs<true>(matedScore(0), matingScore(0), p, 1, 0, _data.pv, _data.seldepth, 0, isInCheck, false); // depth 1 search to get real valid moves
       // only one : check evasion or zugzwang
       if (rootScores.size() == 1) {
          moveDifficulty = MoveDifficultyUtil::MD_forced;
@@ -240,7 +240,7 @@ void Searcher::searchDriver(bool postMove) {
          // Aspiration loop
          while (!stopFlag) {
             pvLoc.clear();
-            score = pvs<true>(alpha, beta, p, windowDepth, 0, pvLoc, _data.seldepth, isInCheck, false, skipMoves.empty() ? nullptr : &skipMoves);
+            score = pvs<true>(alpha, beta, p, windowDepth, 0, pvLoc, _data.seldepth, 0, isInCheck, false, skipMoves.empty() ? nullptr : &skipMoves);
             if (stopFlag) break;
             ScoreType matW =0, matB = 0;
             delta += ScoreType((2 + delta / 2) * exp(1.f - gamePhase(p.mat,matW,matB))); // in end-game, open window faster
