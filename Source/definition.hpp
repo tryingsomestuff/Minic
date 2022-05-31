@@ -129,7 +129,7 @@ typedef uint64_t u_int64_t;
 #define PROMOTION_RANK_C(x, c) ((c == Co_Black && SQRANK(x) == 0) || (c == Co_White && SQRANK(x) == 7))
 #define MakeSquare(f, r)       static_cast<Square>(((r) << 3) + (f))
 #define VFlip(s)               static_cast<Square>((s) ^ Sq_a8)
-#define HFlip(s)               static_cast<Square>((s) ^ 7)
+#define HFlip(s)               static_cast<Square>((s) ^ Sq_h1)
 #define MFlip(s)               static_cast<Square>((s) ^ Sq_h8)
 
 #define TO_STR2(x)                 #x
