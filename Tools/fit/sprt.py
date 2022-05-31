@@ -20,11 +20,11 @@ def LLR(W,D,L,elo0,elo1):
 
 def SPRT(W,D,L,elo0,elo1,alpha,beta):
     LR=LLR(W,D,L,elo0,elo1)
-    print "LR", LR
+    print("LR", LR)
     LA=math.log(beta/(1-alpha))
-    print "LA", LA
+    print("LA", LA)
     LB=math.log((1-beta)/alpha)
-    print "LB", LB
+    print("LB", LB)
     if LR>LB:
         return 'H1'
     elif LR<LA:
@@ -33,5 +33,5 @@ def SPRT(W,D,L,elo0,elo1,alpha,beta):
         return 'not sure'
 
 if __name__ == "__main__":
-    print SPRT(int(sys.argv[1]),int(sys.argv[2]),int(sys.argv[3]),int(sys.argv[4]),int(sys.argv[5]),float(sys.argv[6]),float(sys.argv[7]))
+    print (SPRT(int(sys.argv[1]),int(sys.argv[2]),int(sys.argv[3]),int(sys.argv[4]),int(sys.argv[5]),float(sys.argv[6]),float(sys.argv[7])))
 
