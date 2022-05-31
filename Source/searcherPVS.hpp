@@ -547,6 +547,12 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    bool bestMoveIsCheck = false;
 
+   const bool BMextension = DynamicConfig::useNNUE && height > 1 && 
+                            isValidMove(stack[p.halfmoves].threat) &&
+                            isValidMove(stack[p.halfmoves - 2].threat) &&
+                            (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) ||
+                             (correctedMove2ToKingDest(stack[p.halfmoves].threat) == correctedMove2ToKingDest(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat)));
+
    // try the tt move before move generation (if not skipped move)
    if (validTTmove && !isSkipMove(e.m, skipMoves)) { // should be the case thanks to iid at pvnode
       bestMove = e.m;                                // in order to preserve tt move for alpha bound entry
@@ -608,17 +614,13 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                   const ScoreType score2 = pvs<false>(beta - 1, beta, p, depth - 4, height, sePV, seSeldetph, extensions, isInCheck, cutNode, &skip);
                   if (score2 > beta) return stats.incr(Stats::sid_singularExtension4), beta; // fail-hard
                }
-            }             
+            }
             // is in check extension if pvnode
             //if (EXTENDMORE && pvnode && isInCheck && depth < 8) stats.incr(Stats::sid_checkExtension),++extension;
             // castling extension
             //if (EXTENDMORE && isCastling(e.m) ) stats.incr(Stats::sid_castlingExtension),++extension;
             // Botvinnik-Markoff Extension
-            if (EXTENDMORE && DynamicConfig::useNNUE && height > 1 && isValidMove(stack[p.halfmoves].threat) &&
-                isValidMove(stack[p.halfmoves - 2].threat) &&
-                (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) ||
-                 (correctedMove2ToKingDest(stack[p.halfmoves].threat) == correctedMove2ToKingDest(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat))))
-               stats.incr(Stats::sid_BMExtension), ++extension;
+            if (EXTENDMORE && BMextension) stats.incr(Stats::sid_BMExtension), ++extension;
             // mate threat extension (from null move)
             //if (EXTENDMORE && mateThreat) stats.incr(Stats::sid_mateThreatExtension),++extension;
             // simple recapture extension
@@ -633,11 +635,11 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             */
             // advanced pawn push extension
             /*
-               if (EXTENDMORE && isAdvancedPawnPush ) {
-                   const BitBoard pawns[2] = { p2.pieces_const<P_wp>(Co_White), p2.pieces_const<P_wp>(Co_Black) };
-                   const BitBoard passed[2] = { BBTools::pawnPassed<Co_White>(pawns[Co_White], pawns[Co_Black]), BBTools::pawnPassed<Co_Black>(pawns[Co_Black], pawns[Co_White]) };
-                   if ( SquareToBitboard(to) & passed[p.c] ) stats.incr(Stats::sid_pawnPushExtension), ++extension;
-               }
+            if (EXTENDMORE && isAdvancedPawnPush ) {
+                const BitBoard pawns[2] = { p2.pieces_const<P_wp>(Co_White), p2.pieces_const<P_wp>(Co_Black) };
+                const BitBoard passed[2] = { BBTools::pawnPassed<Co_White>(pawns[Co_White], pawns[Co_Black]), BBTools::pawnPassed<Co_Black>(pawns[Co_Black], pawns[Co_White]) };
+                if ( SquareToBitboard(to) & passed[p.c] ) stats.incr(Stats::sid_pawnPushExtension), ++extension;
+            }
             */
             // threat on queen extension
             //if (EXTENDMORE && pvnode && (p.pieces_const<P_wq>(p.c) && isQuiet && PieceTools::getPieceType(p, Move2From(e.m)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, e.m, 0)) stats.incr(Stats::sid_queenThreatExtension), ++extension;
@@ -762,7 +764,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          // castling extension
          //if (EXTENDMORE && isCastling(*it) ) stats.incr(Stats::sid_castlingExtension),++extension;
          // Botvinnik-Markoff Extension
-         //if (EXTENDMORE && height > 1 && stack[p.halfmoves].threat != INVALIDMOVE && stack[p.halfmoves - 2].threat != INVALIDMOVE && (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) || (correctedMove2ToKingDest(stack[p.halfmoves].threat) == correctedMove2ToKingDest(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat)))) stats.incr(Stats::sid_BMExtension), ++extension;
+         //if (EXTENDMORE && BMextension) stats.incr(Stats::sid_BMExtension), ++extension;
          // mate threat extension (from null move)
          //if (EXTENDMORE && mateThreat && depth <= 4) stats.incr(Stats::sid_mateThreatExtension),++extension;
          // simple recapture extension
@@ -777,27 +779,27 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          */
          // advanced pawn push extension
          /*
-           if (EXTENDMORE && isAdvancedPawnPush && killerT.isKiller(*it, height) ){
-               const BitBoard pawns[2] = { p2.pieces_const<P_wp>(Co_White), p2.pieces_const<P_wp>(Co_Black) };
-               const BitBoard passed[2] = { BBTools::pawnPassed<Co_White>(pawns[Co_White], pawns[Co_Black]), BBTools::pawnPassed<Co_Black>(pawns[Co_Black], pawns[Co_White]) };
-               if ( (SquareToBitboard(to) & passed[p.c]) ) stats.incr(Stats::sid_pawnPushExtension), ++extension;
-           }
+         if (EXTENDMORE && isAdvancedPawnPush && killerT.isKiller(*it, height) ){
+            const BitBoard pawns[2] = { p2.pieces_const<P_wp>(Co_White), p2.pieces_const<P_wp>(Co_Black) };
+            const BitBoard passed[2] = { BBTools::pawnPassed<Co_White>(pawns[Co_White], pawns[Co_Black]), BBTools::pawnPassed<Co_Black>(pawns[Co_Black], pawns[Co_White]) };
+            if ( (SquareToBitboard(to) & passed[p.c]) ) stats.incr(Stats::sid_pawnPushExtension), ++extension;
+         }
          */
          // threat on queen extension
          //if (EXTENDMORE && pvnode && firstMove && (p.pieces_const<P_wq>(p.c) && isQuiet && Move2Type(*it) == T_std && PieceTools::getPieceType(p, Move2From(*it)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, *it, 0)) stats.incr(Stats::sid_queenThreatExtension), ++extension;
          // move that lead to endgame
          /*
-           if ( EXTENDMORE && isNotPawnEndGame && (p2.mat[p.c][M_t]+p2.mat[~p.c][M_t] == 0)){
-              ++extension;
-              stats.incr(Stats::sid_endGameExtension);
-           }
+         if ( EXTENDMORE && isNotPawnEndGame && (p2.mat[p.c][M_t]+p2.mat[~p.c][M_t] == 0)){
+            ++extension;
+            stats.incr(Stats::sid_endGameExtension);
+         }
          */
          // extend if quiet with good history
          /*
-           if ( EXTENDMORE && isQuiet && Move2Score(*it) > SearchConfig::historyExtensionThreshold){
-              ++extension;
-              stats.incr(Stats::sid_goodHistoryExtension);
-           }
+         if ( EXTENDMORE && isQuiet && Move2Score(*it) > SearchConfig::historyExtensionThreshold){
+            ++extension;
+            stats.incr(Stats::sid_goodHistoryExtension);
+         }
          */
       }
       // pvs
