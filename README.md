@@ -142,38 +142,24 @@ Rank Name                          Elo     +/-   Games   Score    Draw
 ### Home test
 Here are some fast TC results of a gauntlet tournament (STC 10s+0.1) for Minic 3.19 (dev version of various engine mai 22 2022).
 ```
-   # PLAYER                        :  RATING  ERROR   POINTS  PLAYED   (%)  CFS(%)
-   1 berserk-x64-pext              :   328.7   23.5    555.0     642    86      99
-   2 Koivisto                      :   285.4   29.6    534.0     641    83     100
-   3 RubiChess                     :   189.1   22.1    476.5     641    74     100
-   4 seer                          :   146.5   24.3    445.5     641    70     100
-   5 stockfish.8                   :    68.1   19.8    381.0     641    59      61
-   6 Igel                          :    62.9   24.2    376.5     641    59      67
-   7 Ethereal                      :    54.9   21.7    369.5     641    58      85
-   8 Pedone_linux_bmi2             :    40.8   20.8    357.0     641    56      96
-   9 Clover.3.1                    :    14.5   19.0    333.5     641    52      54
-  10 Halogen                       :    12.8   21.6    332.0     641    52      73
-  11 arasanx-64-avx2-bmi2          :     4.4   22.3    325.0     642    51      65
-  12 minic_3.19                    :     0.0   ----  10486.0   19233    55      89
-  13 tucano_avx2                   :   -13.3   21.6    308.5     641    48      52
-  14 nemorino_nnue                 :   -13.8   17.9    308.0     641    48      78
-  15 stockfish.7                   :   -23.8   18.9    299.0     641    47      58
-  16 komodo-10                     :   -26.6   20.0    296.5     641    46      50
-  17 Wasp550-linux-avx             :   -26.6   20.0    296.5     641    46      73
-  18 xiphos                        :   -35.0   18.9    289.0     641    45      80
-  19 BlackMarlin                   :   -46.8   18.3    278.5     641    43      66
-  20 minic_3.18                    :   -51.9   19.4    274.0     641    43      75
-  21 zahak-linux-amd64-10.0-avx    :   -61.6   21.0    265.5     641    41      70
-  22 rofChade_bmi2                 :   -68.5   17.0    259.5     641    40      95
-  23 weiss                         :   -91.3   20.3    240.0     641    37     100
-  24 stash-bot                     :  -161.0   22.7    184.5     641    29      65
-  25 Defenchess_2.2                :  -167.1   22.4    180.0     641    28      83
-  26 marvin                        :  -183.9   24.7    168.0     641    26      98
-  27 Drofa_dev                     :  -215.3   20.1    147.0     641    23      92
-  28 Winter                        :  -241.3   27.2    131.0     641    20      94
-  29 combusken                     :  -268.0   24.3    116.0     641    18      52
-  30 Vajolet2_2.8                  :  -268.9   22.7    115.5     641    18      88
-  31 Bit-Genie                     :  -290.6   26.3    104.5     642    16     ---
+   # PLAYER                        :  RATING  ERROR  POINTS  PLAYED   (%)  CFS(%)
+   1 rofChade3                     :   144.7   20.4   391.5     565    69      52
+   2 seer                          :   144.0   24.0   391.0     565    69     100
+   3 stockfish.8                   :    35.5   18.2   310.5     565    55      90
+   4 komodo-13.02                  :    15.8   20.1   295.0     565    52      50
+   5 Ethereal                      :    15.7   21.8   295.5     566    52      61
+   6 Igel                          :    12.0   18.8   292.0     565    52      81
+   7 komodo-12.1.1                 :     0.1   17.3   282.5     565    50      50
+   8 minic_3.22                    :     0.0   ----  4612.0    9043    51      91
+   9 komodo-11.01-linux            :   -15.0   21.9   270.5     565    48      86
+  10 Halogen                       :   -34.7   23.5   255.0     565    45      58
+  11 nemorino_nnue                 :   -37.2   16.8   253.0     565    45      60
+  12 Clover.3.1                    :   -41.0   24.0   250.5     566    44      58
+  13 arasanx-64-avx2-bmi2          :   -44.2   15.5   248.0     566    44      74
+  14 tucano_avx2                   :   -52.6   21.1   241.0     565    43      57
+  15 Wasp550-linux-avx             :   -55.1   20.4   239.0     565    42      69
+  16 stockfish.7                   :   -62.9   20.5   233.0     565    41     100
+  17 zahak-linux-amd64-10.0-avx    :  -130.7   21.8   183.0     565    32     ---
 ```
 
 ### Random mover
