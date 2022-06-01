@@ -11,4 +11,5 @@ void init();
 void uci();
 void processCommand(const std::string & command);
 [[nodiscard]] const std::string uciScore(const ScoreType score, const unsigned int ply);
+void handleVariant();
 } // namespace UCI

@@ -47,7 +47,7 @@ int hashFull() {
    const unsigned int samples = 1023 * 64;
    for (unsigned int k = 0; k < samples; ++k)
       if (table[(k * 67) % ttSize].h != nullHash) ++count;
-   return int((count * 1000) / samples);
+   return static_cast<int>((count * 1000) / samples);
 }
 
 void age() {

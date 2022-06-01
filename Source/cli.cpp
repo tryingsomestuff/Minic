@@ -138,6 +138,9 @@ void analyze(const Position& p, DepthType depth, bool openBenchOutput = false) {
 void selfPlay(DepthType depth) {
    DynamicConfig::genFen = true; ///@todo this is forced here but shall be set by CLI option in fact.
 
+   assert(!DynamicConfig::armageddon);
+   assert(!DynamicConfig::antichess);
+
    const std::string startfen = 
 #if !defined(ARDUINO) && !defined(ESP32)
                                   DynamicConfig::DFRC ? chess960::getDFRCXFEN() : 
@@ -197,6 +200,7 @@ void selfPlay(DepthType depth) {
       else if (d.best == INVALIDMOVE) {
          Logging::LogIt(Logging::logInfoPrio) << "End of game " << GetFEN(p2);
          ended = true;
+         ///@todo this is only working in classic chess (no armageddon or antichess)
          if (isAttacked(p2, p2.king[p2.c])) result = p2.c == Co_Black ? 1 : -1; // checkmated (cannot move and attaked)
          else
             result = 0; // pat (cannot move)
@@ -597,7 +601,7 @@ int cliManagement(std::string cli, int argc, char** argv) {
       auto elapsed = getTimeDiff(start);
       Logging::LogIt(Logging::logInfo) << "Perft done in " << elapsed << "ms";
       acc.Display();
-      Logging::LogIt(Logging::logInfo) << "Speed " << int(acc.validNodes / elapsed) << "KNPS";
+      Logging::LogIt(Logging::logInfo) << "Speed " << static_cast<int>(acc.validNodes / elapsed) << "KNPS";
       return 0;
    }
 

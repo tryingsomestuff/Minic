@@ -172,6 +172,7 @@ template<GenPhase phase = GP_all> void generate(const Position& p, MoveList& mov
       }
    }
 #endif
+   // in anarchy chess, EP is mandatory
    if ( DynamicConfig::anarchy && p.ep != INVALIDSQUARE ){ // will be slow ... ///@todo better
       bool foundEP = false;
       MoveList eps;
@@ -184,6 +185,20 @@ template<GenPhase phase = GP_all> void generate(const Position& p, MoveList& mov
       if ( foundEP ){
          moves = eps;
       }
+   }
+   // in antichess, capture is mandatory
+   if ( DynamicConfig::antichess ){
+     bool foundCap = false;
+      MoveList caps;
+      for(auto & m : moves){
+         if ( isCapture(m) ){
+            foundCap = true;
+            caps.push_back(m);
+         }
+      }
+      if ( foundCap ){
+         moves = caps;
+      }     
    }
    STOP_AND_SUM_TIMER(Generate)
 }

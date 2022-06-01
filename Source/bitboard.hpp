@@ -9,7 +9,7 @@
  */
 
 #ifdef __MINGW32__
-#define POPCOUNT(x) int(__builtin_popcountll(x))
+#define POPCOUNT(x) static_cast<int>(__builtin_popcountll(x))
 inline int bitScanForward(BitBoard bb) {
    assert(isNotEmpty(bb));
    return __builtin_ctzll(bb);
@@ -55,7 +55,7 @@ inline int bitScanForward(int64_t bb) {
 #define swapbits32(x) (_byteswap_ulong(x))
 #endif // _WIN64
 #else  // _WIN32 (thus linux)
-#define POPCOUNT(x)   int(__builtin_popcountll(x))
+#define POPCOUNT(x)   static_cast<int>(__builtin_popcountll(x))
 inline int bitScanForward(BitBoard bb) {
    assert(isNotEmpty(bb));
    return __builtin_ctzll(bb);

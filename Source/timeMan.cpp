@@ -43,8 +43,8 @@ TimeType getNextMSecPerMove(const Position& p) {
    Logging::LogIt(Logging::logInfo) << "msecInc         " << msecInc;
    Logging::LogIt(Logging::logInfo) << "nbMoveInTC      " << nbMoveInTC;
    Logging::LogIt(Logging::logInfo) << "msecUntilNextTC " << msecUntilNextTC;
-   Logging::LogIt(Logging::logInfo) << "currentNbMoves  " << int(p.moves);
-   Logging::LogIt(Logging::logInfo) << "moveToGo        " << int(moveToGo);
+   Logging::LogIt(Logging::logInfo) << "currentNbMoves  " << static_cast<int>(p.moves);
+   Logging::LogIt(Logging::logInfo) << "moveToGo        " << static_cast<int>(moveToGo);
    Logging::LogIt(Logging::logInfo) << "maxNodes        " << maxNodes;
 
    const TimeType msecIncLoc = (msecInc > 0) ? msecInc : 0;
@@ -135,8 +135,8 @@ TimeType getNextMSecPerMove(const Position& p) {
                        - (riskySituation ? 0
                                          : static_cast<int>((1.f-gp)*7));
       Logging::LogIt(Logging::logInfo) << "nmoves      " << nmoves;
-      Logging::LogIt(Logging::logInfo) << "p.moves     " << int(p.moves);
-      Logging::LogIt(Logging::logInfo) << "p.halfmoves " << int(p.halfmoves);
+      Logging::LogIt(Logging::logInfo) << "p.moves     " << static_cast<int>(p.moves);
+      Logging::LogIt(Logging::logInfo) << "p.halfmoves " << static_cast<int>(p.halfmoves);
       if (nmoves * msecMinimal > msecUntilNextTC){
          Logging::LogIt(Logging::logGUI) << Logging::_protocolComment[Logging::ct] << "Minic is in time trouble ...";
       }
