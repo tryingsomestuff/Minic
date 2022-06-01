@@ -93,8 +93,8 @@ bool receiveMoves(const Move move, Move ponderMove) {
 
    Logging::LogIt(Logging::logInfo) << "search async done (state " << static_cast<int>(state) << ")";
    // in searching only mode we have to return a move to GUI
-   // but curiously uci protocol also expect a bestMove when pondering to wake up the GUI
-   if (state == st_searching || state == st_pondering) {
+   // but curiously uci protocol also expect a bestMove when pondering or analysing to wake up the GUI
+   if (state == st_searching || state == st_pondering || state == st_analyzing) {
       const std::string tag = Logging::ct == Logging::CT_uci ? "bestmove" : "move";
       Logging::LogIt(Logging::logInfo) << "sending move to GUI " << ToString(move);
       if (move == INVALIDMOVE) {
