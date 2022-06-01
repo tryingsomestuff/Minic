@@ -72,7 +72,7 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent, bool withMove
       ++j;
    }
 
-   if (p.king[Co_White] == INVALIDSQUARE || p.king[Co_Black] == INVALIDSQUARE) {
+   if (DynamicConfig::isKingMandatory() && (p.king[Co_White] == INVALIDSQUARE || p.king[Co_Black] == INVALIDSQUARE)) {
       Logging::LogIt(Logging::logError) << "FEN ERROR 0 : missing king";
       return false;
    }
@@ -232,13 +232,16 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent, bool withMove
 void RootInformation::initCaslingPermHashTable() {
    // works also for FRC !
    castlePermHashTable.fill(C_all);
-   castlePermHashTable[kingInit[Co_White]] = C_all_but_w;
-   castlePermHashTable[kingInit[Co_Black]] = C_all_but_b;
-
-   if (rooksInit[Co_White][CT_OOO] != INVALIDSQUARE) castlePermHashTable[rooksInit[Co_White][CT_OOO]] = C_all_but_wqs;
-   if (rooksInit[Co_White][CT_OO]  != INVALIDSQUARE) castlePermHashTable[rooksInit[Co_White][CT_OO]]  = C_all_but_wks;
-   if (rooksInit[Co_Black][CT_OOO] != INVALIDSQUARE) castlePermHashTable[rooksInit[Co_Black][CT_OOO]] = C_all_but_bqs;
-   if (rooksInit[Co_Black][CT_OO]  != INVALIDSQUARE) castlePermHashTable[rooksInit[Co_Black][CT_OO]]  = C_all_but_bks;
+   if (isValidSquare(kingInit[Co_White])){
+       castlePermHashTable[kingInit[Co_White]] = C_all_but_w;
+       if (isValidSquare(rooksInit[Co_White][CT_OOO])) castlePermHashTable[rooksInit[Co_White][CT_OOO]] = C_all_but_wqs;
+       if (isValidSquare(rooksInit[Co_White][CT_OO] )) castlePermHashTable[rooksInit[Co_White][CT_OO]]  = C_all_but_wks;
+   }
+   if (isValidSquare(kingInit[Co_Black])){
+       castlePermHashTable[kingInit[Co_Black]] = C_all_but_b;
+       if (isValidSquare(rooksInit[Co_Black][CT_OOO])) castlePermHashTable[rooksInit[Co_Black][CT_OOO]] = C_all_but_bqs;
+       if (isValidSquare(rooksInit[Co_Black][CT_OO] )) castlePermHashTable[rooksInit[Co_Black][CT_OO]]  = C_all_but_bks;
+   }
 }
 
 Position::~Position() {

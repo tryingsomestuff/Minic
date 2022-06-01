@@ -19,7 +19,7 @@ template<typename NT> struct WeightsReader {
       Logging::LogIt(Logging::logInfo) << "Reading inner weight";
       // we will get min and max weight for display purpose
       NT minW = std::numeric_limits<NT>::max();
-      NT maxW = std::numeric_limits<NT>::min();
+      NT maxW = std::numeric_limits<NT>::lowest();
       std::array<char, sizeof(NT)> singleElement {};
       
       for (size_t i(0); i < request; ++i) {
@@ -46,7 +46,7 @@ template<typename NT> struct WeightsReader {
       Logging::LogIt(Logging::logInfo) << "Reading input weight";
       // we will get min and max weight for display purpose
       NT minW = std::numeric_limits<NT>::max();
-      NT maxW = std::numeric_limits<NT>::min();
+      NT maxW = std::numeric_limits<NT>::lowest();
       std::array<char, sizeof(NT)> singleElement {};
       const NT Wscale = Quantization<Q>::scale;
       // read each weight one by one, and scale them if quantization is active
@@ -60,7 +60,7 @@ template<typename NT> struct WeightsReader {
          // if quantization is active and we overflow, just clamp and warn
          if (Q && std::abs(tmp * Wscale) > (NT)std::numeric_limits<T>::max()) {
             NT tmp2 = tmp;
-            tmp = std::clamp(tmp2 * Wscale, (NT)std::numeric_limits<T>::min(), (NT)std::numeric_limits<T>::max());
+            tmp = std::clamp(tmp2 * Wscale, (NT)std::numeric_limits<T>::lowest(), (NT)std::numeric_limits<T>::max());
             Logging::LogIt(Logging::logWarn) << "Overflow weight " << tmp2 << " -> " << tmp;
          }
          else {
@@ -77,7 +77,7 @@ template<typename NT> struct WeightsReader {
       Logging::LogIt(Logging::logInfo) << "Reading inner bias";
       // we will get min and max bias for display purpose
       NT minB = std::numeric_limits<NT>::max();
-      NT maxB = std::numeric_limits<NT>::min();
+      NT maxB = std::numeric_limits<NT>::lowest();
       std::array<char, sizeof(NT)> singleElement {};
       // read each bias one by one, and scale them if quantization is active
       for (size_t i(0); i < request; ++i) {
@@ -98,7 +98,7 @@ template<typename NT> struct WeightsReader {
       Logging::LogIt(Logging::logInfo) << "Reading input bias";
       // we will get min and max bias for display purpose
       NT minB = std::numeric_limits<NT>::max();
-      NT maxB = std::numeric_limits<NT>::min();
+      NT maxB = std::numeric_limits<NT>::lowest();
       std::array<char, sizeof(NT)> singleElement {};
       const NT Bscale = Quantization<Q>::scale;
       // read each bias one by one, and scale them if quantization is active
@@ -112,7 +112,7 @@ template<typename NT> struct WeightsReader {
          // if quantization is active and we overflow, just clamp and warn
          if (Q && std::abs(tmp * Bscale) > (NT)std::numeric_limits<T>::max()) {
             NT tmp2 = tmp;
-            tmp = std::clamp(tmp2 * Bscale, (NT)std::numeric_limits<T>::min(), (NT)std::numeric_limits<T>::max());
+            tmp = std::clamp(tmp2 * Bscale, (NT)std::numeric_limits<T>::lowest(), (NT)std::numeric_limits<T>::max());
             Logging::LogIt(Logging::logWarn) << "Overflow bias " << tmp2 << " -> " << tmp;
          }
          else {

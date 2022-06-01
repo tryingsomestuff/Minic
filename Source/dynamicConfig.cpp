@@ -34,6 +34,8 @@ bool         forceNNUE        = false;
 bool         bongCloud        = false;
 bool         anarchy          = false;
 
+std::string  chessvariant     = "chess";
+
 // this is used to scale NNUE score to classic eval score.
 // This way search params can remain the same ... more or less ...
 // from 32 to 256      x_scaled = x * NNUEscaling / 64
@@ -51,6 +53,7 @@ unsigned int genFenDepthEG = 16;
 unsigned int randomPly     = 0;
 unsigned int moveOverHead  = 50;
 bool         armageddon    = false;
+bool         antichess     = false;
 bool         withWDL       = false;
 
 std::string opponent          = "";

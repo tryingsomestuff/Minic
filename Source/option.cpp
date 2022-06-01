@@ -7,6 +7,7 @@
 #include "searcher.hpp"
 #include "searchConfig.hpp"
 #include "threading.hpp"
+#include "uci.hpp"
 
 #ifdef WITH_NNUE
 #include "nnue.hpp"
@@ -39,12 +40,23 @@ struct KeyBase {
        type(t), wtype(w), key(k), value((void*)v), vmin(_vmin), vmax(_vmax) {
       callBack = cb;
    }
-
+   template<typename T>
+   KeyBase(
+       KeyType            t,
+       WidgetType         w,
+       const std::string& k,
+       T*                 v,
+       std::vector<std::string> vals,
+       const std::function<void(void)>& cb = [] {}):
+       type(t), wtype(w), key(k), value((void*)v), values(vals) {
+      callBack = cb;
+   }
    KeyType     type;
    WidgetType  wtype;
    std::string key;
    void*       value;
    int         vmin = 0, vmax = 0; // assume int type is covering all the case (string excluded ...)
+   std::vector<std::string> values; // only use for combo
    bool        hotPlug = false;
    std::function<void(void)> callBack;
 };
@@ -86,8 +98,32 @@ int GetValue(const std::string& key) { // assume we can convert to int safely (n
 
 std::string GetValueString(const std::string& key) { // the one for string
    const KeyBase& k = GetKey(key);
-   if (k.type != k_string) Logging::LogIt(Logging::logError) << "Bad key type";
+   if (k.type != k_string) Logging::LogIt(Logging::logError) << "Bad key type (string expected)";
    return *static_cast<std::string*>(k.value);
+}
+
+template <typename Range, typename Value = typename Range::value_type>
+std::string join(Range const& elements, const char *const delimiter) {
+    std::ostringstream os;
+    auto b = begin(elements), e = end(elements);
+
+    os << delimiter;
+
+    if (b != e) {
+        std::copy(b, prev(e), std::ostream_iterator<Value>(os, delimiter));
+        b = prev(e);
+    }
+    if (b != e) {
+        os << *b;
+    }
+
+    return os.str();
+}
+
+std::string GetComboVar(const std::string& key) { // the one for string with combo
+   const KeyBase& k = GetKey(key);
+   if (k.wtype != w_combo) Logging::LogIt(Logging::logError) << "Bad key wtype (combo expected)";
+   return join(k.values, " var ");
 }
 
 void displayOptionsDebug() {
@@ -104,9 +140,15 @@ void displayOptionsDebug() {
 
 void displayOptionsXBoard() {
    for (auto it = _keys.begin(); it != _keys.end(); ++it)
-      if (it->type == k_string)
-         Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << GetValueString(it->key)
-                                         << "\"";
+      if (it->type == k_string){
+         if ( it->wtype == w_combo){
+             ///@todo
+         }
+         else{
+             Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << GetValueString(it->key)
+                                             << "\"";
+         }
+      }
       else if (it->type == k_bool)
          Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << bool(GetValue(it->key))
                                          << "\"";
@@ -117,9 +159,16 @@ void displayOptionsXBoard() {
 
 void displayOptionsUCI() {
    for (auto it = _keys.begin(); it != _keys.end(); ++it)
-      if (it->type == k_string)
-         Logging::LogIt(Logging::logGUI) << "option name " << it->key << " type " << widgetXboardNames[it->wtype] << " default "
-                                         << GetValueString(it->key);
+      if (it->type == k_string){
+         if ( it->wtype == w_combo){
+            Logging::LogIt(Logging::logGUI) << "option name " << it->key << " type " << widgetXboardNames[it->wtype] << " default "
+                                            << GetValueString(it->key) << GetComboVar(it->key);
+         }
+         else{
+            Logging::LogIt(Logging::logGUI) << "option name " << it->key << " type " << widgetXboardNames[it->wtype] << " default "
+                                            << GetValueString(it->key);
+         }
+      }
       else if (it->type == k_bool)
          Logging::LogIt(Logging::logGUI) << "option name " << it->key << " type " << widgetXboardNames[it->wtype] << " default "
                                          << (GetValue(it->key) ? "true" : "false");
@@ -217,6 +266,7 @@ void registerCOMOptions() { // options exposed to GUI
    _keys.push_back(KeyBase(k_score, w_spin,  "Contempt"                    , &DynamicConfig::contempt                       , (ScoreType)-50   , (ScoreType)50));
    _keys.push_back(KeyBase(k_score, w_spin,  "ContemptMG"                  , &DynamicConfig::contemptMG                     , (ScoreType)-50   , (ScoreType)50));
    _keys.push_back(KeyBase(k_bool,  w_check, "Armageddon"                  , &DynamicConfig::armageddon                     , false            , true ));
+   _keys.push_back(KeyBase(k_bool,  w_check, "AntiChess"                   , &DynamicConfig::antichess                      , false            , true ));
    _keys.push_back(KeyBase(k_bool,  w_check, "WDL_display"                 , &DynamicConfig::withWDL                        , false            , true ));
    _keys.push_back(KeyBase(k_bool,  w_check, "bongCloud"                   , &DynamicConfig::bongCloud                      , false            , true ));
    _keys.push_back(KeyBase(k_bool,  w_check, "anarchy"                     , &DynamicConfig::anarchy                        , false            , true ));
@@ -249,6 +299,8 @@ void registerCOMOptions() { // options exposed to GUI
 
    _keys.push_back(KeyBase(k_string, w_string,"UCI_Opponent"               , &DynamicConfig::opponent                                                                                /*, &Opponent::init*/));
    _keys.push_back(KeyBase(k_int,    w_spin,  "UCI_RatingAdv"              , &DynamicConfig::ratingAdv                      , (int)-10000, (int)10000                                , &Opponent::ratingReceived));
+
+   _keys.push_back(KeyBase(k_string, w_combo, "UCI_Variant"                , &DynamicConfig::chessvariant                   , { "chess", "antichess", "armageddon", "fischerandom"}  , &UCI::handleVariant));
 
 #ifdef WITH_SEARCH_TUNING
 
@@ -360,6 +412,7 @@ void initOptions(int argc, char** argv) {
    GETOPT(strength, int)
    GETOPT(moveOverHead, unsigned int)
    GETOPT(armageddon, bool)
+   GETOPT(antichess, bool)
    GETOPT(withWDL, bool)
    GETOPT(bongCloud, bool)
    GETOPT(anarchy, bool)

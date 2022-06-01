@@ -425,8 +425,8 @@ bool convert_bin_to_plain(const std::vector<std::string>& filenames, const std::
             ofs << "fen " << GetFEN(tpos) << std::endl;
             ofs << "move " << ToString(FromSFMove(tpos, p.move)) << std::endl;
             ofs << "score " << p.score << std::endl;
-            ofs << "ply " << int(p.gamePly) << std::endl;
-            ofs << "result " << int(p.game_result) << std::endl;
+            ofs << "ply " << static_cast<int>(p.gamePly) << std::endl;
+            ofs << "result " << static_cast<int>(p.game_result) << std::endl;
             ofs << "e" << std::endl;
          }
          else {

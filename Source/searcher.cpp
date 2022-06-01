@@ -29,7 +29,7 @@ TimeType Searcher::getCurrentMoveMs()const{
 void Searcher::getCMHPtr(const unsigned int ply, CMHPtrArray& cmhPtr) {
    cmhPtr.fill(nullptr);
    for (unsigned int k = 0; k < MAX_CMH_PLY; ++k) {
-      assert(int(ply) - int(2*k) < MAX_PLY && int(ply) - int(2*k) >= 0);
+      assert(static_cast<int>(ply) - static_cast<int>(2*k) < MAX_PLY && static_cast<int>(ply) - static_cast<int>(2*k) >= 0);
       if (ply > 2*k && isValidMove(stack[ply - 2*k].p.lastMove)) {
          const Position & pref = stack[ply - 2*k].p;
          const Square to = correctedMove2ToKingDest(pref.lastMove);
@@ -66,10 +66,10 @@ bool Searcher::isCMHBad(const Position& p, const Square from, const Square to, c
 }
 
 ScoreType Searcher::drawScore(const Position& p, DepthType height) {
+   ///@todo other chess variants
    if (DynamicConfig::armageddon) {
       if (p.c == Co_White) return matedScore(height);
-      else
-         return matingScore(height-1);
+      else return matingScore(height-1);
    }
    return static_cast<ScoreType>(-1 + 2 * ((stats.counters[Stats::sid_nodes] + stats.counters[Stats::sid_qnodes]) % 2));
 }

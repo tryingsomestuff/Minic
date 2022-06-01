@@ -40,9 +40,14 @@ extern unsigned int genFenDepthEG;
 extern unsigned int randomPly;
 extern unsigned int moveOverHead;
 extern bool         armageddon;
+extern bool         antichess; ///@todo not yet fully implemented due to king capture
 extern bool         withWDL;
 extern bool         bongCloud;
 extern bool         anarchy;
+
+inline bool isKingMandatory(){ return !antichess;}
+
+extern std::string  chessvariant;
 
 extern std::string opponent;
 extern int         ratingAdv;

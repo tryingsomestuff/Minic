@@ -25,9 +25,12 @@ inline void evalDanger(const Position & p,
                        BitBoard         (&checkers)[2][6],
                        ScoreType        (&kdanger)[2]){
 
+   const bool kingIsMandatory = DynamicConfig::isKingMandatory();
    const BitBoard pawns[2] = {p.whitePawn(), p.blackPawn()};
-   const BitBoard nonPawnMat[2] = {p.allPieces[Co_White] & ~pawns[Co_White], p.allPieces[Co_Black] & ~pawns[Co_Black]};
-   const BitBoard kingZone[2] = {BBTools::mask[p.king[Co_White]].kingZone, BBTools::mask[p.king[Co_Black]].kingZone};
+   const BitBoard nonPawnMat[2] = {p.allPieces[Co_White] & ~pawns[Co_White], 
+                                   p.allPieces[Co_Black] & ~pawns[Co_Black]};
+   const BitBoard kingZone[2]   = {isValidSquare(p.king[Co_White]) ? BBTools::mask[p.king[Co_White]].kingZone : emptyBitBoard, 
+                                   isValidSquare(p.king[Co_Black]) ? BBTools::mask[p.king[Co_Black]].kingZone : emptyBitBoard};
    const BitBoard occupancy = p.occupancy();
 
    for (Color c = Co_White ; c <= Co_Black ; ++c){
@@ -52,19 +55,21 @@ inline void evalDanger(const Position & p,
       }
    }
 
-   const File wkf = (File)SQFILE(p.king[Co_White]);
-   const File bkf = (File)SQFILE(p.king[Co_Black]);
-
-   const BitBoard semiOpenFiles[2] = {BBTools::fillFile(pawns[Co_White]) & ~BBTools::fillFile(pawns[Co_Black]),
-                                      BBTools::fillFile(pawns[Co_Black]) & ~BBTools::fillFile(pawns[Co_White])};
-   const BitBoard openFiles        = BBTools::openFiles(pawns[Co_White], pawns[Co_Black]);
-
-   kdanger[Co_White] += EvalConfig::kingAttOpenfile * BB::countBit(BB::kingFlank[wkf] & openFiles) / 8;
-   kdanger[Co_White] += EvalConfig::kingAttSemiOpenfileOpp * BB::countBit(BB::kingFlank[wkf] & semiOpenFiles[Co_White]) / 8;
-   kdanger[Co_White] += EvalConfig::kingAttSemiOpenfileOur * BB::countBit(BB::kingFlank[wkf] & semiOpenFiles[Co_Black]) / 8;
-   kdanger[Co_Black] += EvalConfig::kingAttOpenfile * BB::countBit(BB::kingFlank[bkf] & openFiles) / 8;
-   kdanger[Co_Black] += EvalConfig::kingAttSemiOpenfileOpp * BB::countBit(BB::kingFlank[bkf] & semiOpenFiles[Co_Black]) / 8;
-   kdanger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * BB::countBit(BB::kingFlank[bkf] & semiOpenFiles[Co_White]) / 8;
+   if(kingIsMandatory){
+     const File wkf = (File)SQFILE(p.king[Co_White]);
+     const File bkf = (File)SQFILE(p.king[Co_Black]);
+ 
+     const BitBoard semiOpenFiles[2] = {BBTools::fillFile(pawns[Co_White]) & ~BBTools::fillFile(pawns[Co_Black]),
+                                        BBTools::fillFile(pawns[Co_Black]) & ~BBTools::fillFile(pawns[Co_White])};
+     const BitBoard openFiles        = BBTools::openFiles(pawns[Co_White], pawns[Co_Black]);
+ 
+     kdanger[Co_White] += EvalConfig::kingAttOpenfile * BB::countBit(BB::kingFlank[wkf] & openFiles) / 8;
+     kdanger[Co_White] += EvalConfig::kingAttSemiOpenfileOpp * BB::countBit(BB::kingFlank[wkf] & semiOpenFiles[Co_White]) / 8;
+     kdanger[Co_White] += EvalConfig::kingAttSemiOpenfileOur * BB::countBit(BB::kingFlank[wkf] & semiOpenFiles[Co_Black]) / 8;
+     kdanger[Co_Black] += EvalConfig::kingAttOpenfile * BB::countBit(BB::kingFlank[bkf] & openFiles) / 8;
+     kdanger[Co_Black] += EvalConfig::kingAttSemiOpenfileOpp * BB::countBit(BB::kingFlank[bkf] & semiOpenFiles[Co_Black]) / 8;
+     kdanger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * BB::countBit(BB::kingFlank[bkf] & semiOpenFiles[Co_White]) / 8;
+   }
 
    const BitBoard weakSquare[2] = { att[Co_Black] & ~att2[Co_White] & (~att[Co_White] | attFromPiece[Co_White][P_wk - 1] | attFromPiece[Co_White][P_wq - 1]),
                                     att[Co_White] & ~att2[Co_Black] & (~att[Co_Black] | attFromPiece[Co_Black][P_wk - 1] | attFromPiece[Co_Black][P_wq - 1])};

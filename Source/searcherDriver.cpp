@@ -30,7 +30,7 @@ void Searcher::displayGUI(DepthType          depth,
    std::stringstream str;
    const Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
    if (Logging::ct == Logging::CT_xboard) {
-      str << int(depth) << " "
+      str << static_cast<int>(depth) << " "
           << bestScore << " "
           << ms / 10 << " " // csec
           << nodeCount << " ";

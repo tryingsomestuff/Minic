@@ -66,7 +66,7 @@ void movePiece(Position& p, const Square from, const Square to, const Piece from
    else if (fromP == P_bk)
       p.king[Co_Black] = to;
 
-   // king capture : is that necessary ???
+   // king capture : this can append in some chess variants
    if (toP == P_wk) p.king[Co_White] = INVALIDSQUARE;
    else if (toP == P_bk) p.king[Co_Black] = INVALIDSQUARE;
 
@@ -102,9 +102,12 @@ bool applyMove(Position& p, const Move& m, const bool noValidation) {
 #endif
 
    switch (moveInfo.type) {
+      case T_reserved:
+         Logging::LogIt(Logging::logError) << ToString(m) << " " << static_cast<int>(moveInfo.type);
+         Logging::LogIt(Logging::logFatal) << "Apply error, move is not legal (reserved). " << ToString(p);
+         break; 
       case T_std:
       case T_capture:
-      case T_reserved:
          // update material
          if (moveInfo.isCapNoEP) { --p.mat[~p.c][std::abs(moveInfo.toP)]; }
          // update hash, BB, board and castling rights
@@ -301,6 +304,7 @@ ScoreType randomMover(const Position& p, PVList& pv, const bool isInCheck) {
       if (!applyMove(p2, *it)) continue;
       pv.push_back(*it); // updatePV
       const Square to = Move2To(*it);
+      // king capture (works only for most standard chess variants)
       if (p.c == Co_White && to == p.king[Co_Black]) return matingScore(0);
       if (p.c == Co_Black && to == p.king[Co_White]) return matingScore(0);
       return 0; // found one valid move
@@ -325,7 +329,7 @@ bool isPseudoLegal(const Position& p, Move m) {
          std::cout << SquareNames[Move2To(m)] << std::endl;
          std::cout << static_cast<int>(Move2Type(m)) << std::endl;
          std::cout << Move2Score(m) << std::endl;
-         std::cout << int(m & 0x0000FFFF) << std::endl;
+         std::cout << static_cast<int>(m & 0x0000FFFF) << std::endl;
          for (auto it = moves.begin(); it != moves.end(); ++it) std::cout << ToString(*it) << "\t" << *it << "\t";
          std::cout << std::endl;
          std::cout << "Not a generated move !" << std::endl;
@@ -425,6 +429,6 @@ bool isPseudoLegal(const Position& p, const Move m) { // validate TT move
       if ((BBTools::pfCoverage[fromPieceType - 1](from, occupancy, p.c) & SquareToBitboard(to)) != emptyBitBoard) PSEUDO_LEGAL_RETURN(true, 22)
       PSEUDO_LEGAL_RETURN(false, 23)
    }
-   if ((BBTools::mask[p.king[p.c]].kingZone & SquareToBitboard(to)) != emptyBitBoard) PSEUDO_LEGAL_RETURN(true, 24) // only king is not verified yet
+   if ((BBTools::mask[p.king[p.c]].kingZone & SquareToBitboard(to)) != emptyBitBoard) PSEUDO_LEGAL_RETURN(true, 24) // only king moving is not verified yet
    PSEUDO_LEGAL_RETURN(false, 25)
 }

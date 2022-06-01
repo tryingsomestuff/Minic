@@ -265,4 +265,33 @@ const std::string uciScore(const ScoreType score, const unsigned int ply) {
    return "cp " + std::to_string(score) + (DynamicConfig::withWDL ? wdlStat(score, ply) : "");
 }
 
+void handleVariant(){
+    if (DynamicConfig::chessvariant == "chess"){
+        DynamicConfig::FRC = false;
+        DynamicConfig::armageddon = false;
+        DynamicConfig::antichess = false;
+    }
+    else if (DynamicConfig::chessvariant == "antichess"){
+        DynamicConfig::FRC = false;
+        DynamicConfig::armageddon = false;
+        DynamicConfig::antichess = true;
+        DynamicConfig::useNNUE = false;
+    }
+    else if (DynamicConfig::chessvariant == "armageddon"){
+        DynamicConfig::FRC = false;
+        DynamicConfig::armageddon = true;
+        DynamicConfig::antichess = false;
+        DynamicConfig::useNNUE = false;
+    }
+    else if (DynamicConfig::chessvariant == "fischerandom"){
+        DynamicConfig::FRC = true;
+        DynamicConfig::armageddon = false;
+        DynamicConfig::antichess = false;
+        DynamicConfig::useNNUE = false;
+    }
+    else{
+        Logging::LogIt(Logging::logGUI) << "info string unhandled variant : "  << DynamicConfig::chessvariant;
+    }
+}
+
 } // namespace UCI

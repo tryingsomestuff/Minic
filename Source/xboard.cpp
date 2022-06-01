@@ -168,6 +168,7 @@ void xboard() {
             const size_t v = COM::command.find("variant");
             const std::string var = trim(COM::command.substr(v + 7));
             if (var == "fischerandom") DynamicConfig::FRC = true;
+            ///@todo other variants
             else {
                Logging::LogIt(Logging::logWarn) << "Unsupported variant : " << var;
             }

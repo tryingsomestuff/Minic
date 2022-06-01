@@ -199,11 +199,10 @@ ScoreType helperKPK(const Position &p, Color winningSide, ScoreType, DepthType h
                    winningSide == p.c ? Co_White : Co_Black)) {
       if (DynamicConfig::armageddon) {
          if (p.c == Co_White) return matedScore(height);
-         else
-            return matingScore(height-1);
-         }
-         return 0; // shall be drawScore but we don't care, this is not 3rep
-       }
+         else return matingScore(height-1);
+      }
+      return 0; // shall be drawScore but we don't care, this is not 3rep
+   }
    return clampScore(((winningSide == Co_White) ? +1 : -1) * (WIN + ValuesEG[P_wp + PieceShift] + 10 * SQRANK(psq)));
 }
 

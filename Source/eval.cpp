@@ -47,9 +47,9 @@ inline void evalMobK(const Position &p, BitBoard pieceBBiterator, EvalScore &sco
 template<Color C> inline void evalPawnPasser(const Position &p, BitBoard pieceBBiterator, EvalScore &score) {
    while (pieceBBiterator) {
       const Square    k             = popBit(pieceBBiterator);
-      const EvalScore kingNearBonus = EvalConfig::kingNearPassedPawnSupport[chebyshevDistance(p.king[C], k)][ColorRank<C>(k)] +
-                                      EvalConfig::kingNearPassedPawnDefend[chebyshevDistance(p.king[~C], k)][ColorRank<~C>(k)];
-      const bool unstoppable = (p.mat[~C][M_t] == 0) && ((chebyshevDistance(p.king[~C], PromotionSquare<C>(k)) - int(p.c != C)) >
+      const EvalScore kingNearBonus = (isValidSquare(p.king[C])  ? EvalConfig::kingNearPassedPawnSupport[chebyshevDistance(p.king[C], k)][ColorRank<C>(k)]  : 0) +
+                                      (isValidSquare(p.king[~C]) ? EvalConfig::kingNearPassedPawnDefend[chebyshevDistance(p.king[~C], k)][ColorRank<~C>(k)] : 0);
+      const bool unstoppable = (p.mat[~C][M_t] == 0) && ((chebyshevDistance(p.king[~C], PromotionSquare<C>(k)) - static_cast<int>(p.c != C)) >
                                                          std::min(static_cast<Square>(5), chebyshevDistance(PromotionSquare<C>(k), k)));
       if (unstoppable)
          score += ColorSignHelper<C>() * (value(P_wr) - value(P_wp)); // yes rook not queen to force promotion asap
@@ -83,7 +83,7 @@ template<Color C> inline void evalPawnCandidate(BitBoard pieceBBiterator, EvalSc
 
 template<Color C> BitBoard getPinned(const Position &p, const Square s) {
    BitBoard pinned = emptyBitBoard;
-   if (s == INVALIDSQUARE) return pinned;
+   if (!isValidSquare(s)) return pinned;
    BitBoard pinner = BBTools::attack<P_wb>(s, p.pieces_const<P_wb>(~C) | p.pieces_const<P_wq>(~C), p.allPieces[~C]) |
                      BBTools::attack<P_wr>(s, p.pieces_const<P_wr>(~C) | p.pieces_const<P_wq>(~C), p.allPieces[~C]);
    while (pinner) { pinned |= BBTools::between(popBit(pinner),p.king[C]) & p.allPieces[C]; }
@@ -96,28 +96,74 @@ bool isLazyHigh(ScoreType lazyThreshold, const EvalFeatures &features, EvalScore
 }
 
 ScoreType armageddonScore(ScoreType score, unsigned int ply, DepthType height, Color c) {
-   if (!DynamicConfig::armageddon) return score;
    return std::clamp(shiftArmageddon(score, ply, c), matedScore(height), matingScore(height-1));
+}
+
+ScoreType variantScore(ScoreType score, unsigned int ply, DepthType height, Color c) {
+   if (DynamicConfig::armageddon) return armageddonScore(score, ply, height, c);
+   return score;
+}
+
+ScoreType evalAntiChess(const Position &p, EvalData &data, [[maybe_unused]] Searcher &context, [[maybe_unused]] bool allowEGEvaluation, [[maybe_unused]] bool display) {
+    const bool white2Play = p.c == Co_White;
+
+    //@todo some special case : opposite color bishop => draw
+
+    ScoreType matScoreW = 0;
+    ScoreType matScoreB = 0;
+    data.gp = gamePhase(p.mat, matScoreW, matScoreB);
+    EvalScore score = EvalScore(
+        (- p.mat[Co_White][M_k] + p.mat[Co_Black][M_k]) * absValue(P_wk) +
+        (- p.mat[Co_White][M_q] + p.mat[Co_Black][M_q]) * absValue(P_wq) +
+        (- p.mat[Co_White][M_r] + p.mat[Co_Black][M_r]) * absValue(P_wr) +
+        (- p.mat[Co_White][M_b] + p.mat[Co_Black][M_b]) * absValue(P_wb) +
+        (- p.mat[Co_White][M_n] + p.mat[Co_Black][M_n]) * absValue(P_wn) +
+        (- p.mat[Co_White][M_p] + p.mat[Co_Black][M_p]) * absValue(P_wp) ,
+        (- p.mat[Co_White][M_k] + p.mat[Co_Black][M_k]) * absValueEG(P_wk) +
+        (- p.mat[Co_White][M_q] + p.mat[Co_Black][M_q]) * absValueEG(P_wq) +
+        (- p.mat[Co_White][M_r] + p.mat[Co_Black][M_r]) * absValueEG(P_wr) +
+        (- p.mat[Co_White][M_b] + p.mat[Co_Black][M_b]) * absValueEG(P_wb) +
+        (- p.mat[Co_White][M_n] + p.mat[Co_Black][M_n]) * absValueEG(P_wn) +
+        (- p.mat[Co_White][M_p] + p.mat[Co_Black][M_p]) * absValueEG(P_wp) );
+
+    const ScoreType ret = ScaleScore(score, data.gp, 1.f);
+    return (white2Play ? +1 : -1) * ret;
 }
 
 ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowEGEvaluation, bool display) {
    START_TIMER
 
-   if ( (p.occupancy() & ~p.allKing()) == emptyBitBoard)
-      return context.drawScore(p, context._height); // drawScore take armageddon into account
+   if (DynamicConfig::antichess) return evalAntiChess(p, data, context, allowEGEvaluation, display);
+   ///@todo other variants
+
+   const bool kingIsMandatory = DynamicConfig::isKingMandatory();
+
+   ///@todo shall it be replaced by interiorNodeRecognizer for factorization ?
+   // if no more pieces except maybe kings, end of game as draw in most standard variants
+   if ( (p.occupancy() & ~p.allKing()) == emptyBitBoard ){
+      if (kingIsMandatory ){ 
+         // drawScore take some variants into account
+         return context.drawScore(p, context._height);
+      }
+      else{
+         ///@todo implements things for some variants ?
+      }
+   }
 
    const bool white2Play = p.c == Co_White;
 
 #ifdef DEBUG_KING_CAP
-   if (p.king[Co_White] == INVALIDSQUARE) {
-      STOP_AND_SUM_TIMER(Eval)
-      context.stats.incr(Stats::sid_evalNoKing);
-      return data.gp = 0, (white2Play ? -1 : +1) * matingScore(0);
-   }
-   if (p.king[Co_Black] == INVALIDSQUARE) {
-      STOP_AND_SUM_TIMER(Eval)
-      context.stats.incr(Stats::sid_evalNoKing);
-      return data.gp = 0, (white2Play ? +1 : -1) * matingScore(0);
+   if (kingIsMandatory) {
+      if (p.king[Co_White] == INVALIDSQUARE) {
+         STOP_AND_SUM_TIMER(Eval)
+         context.stats.incr(Stats::sid_evalNoKing);
+         return data.gp = 0, (white2Play ? -1 : +1) * matingScore(0);
+      }
+      if (p.king[Co_Black] == INVALIDSQUARE) {
+         STOP_AND_SUM_TIMER(Eval)
+         context.stats.incr(Stats::sid_evalNoKing);
+         return data.gp = 0, (white2Play ? +1 : -1) * matingScore(0);
+      }
    }
 #endif
 
@@ -136,8 +182,8 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       data.gp = MEntry.gamePhase();
       features.scores[F_material] += MEntry.score;
 
-      // end game knowledge (helper or scaling)
-      if (allowEGEvaluation && (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] < 5)) {
+      // end game knowledge (helper or scaling), only for most standard chess variants with kings on the board
+      if (allowEGEvaluation && kingIsMandatory && (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] < 5) ) {
          //MoveList moves;
 #ifndef DEBUG_GENERATION
          //MoveGen::generate<MoveGen::GP_cap>(p, moves);
@@ -151,7 +197,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
                context.stats.incr(Stats::sid_materialTableHelper);
                const ScoreType materialTableScore =
                    (white2Play ? +1 : -1) * (MaterialHash::helperTable[matHash](p, winningSideEG, features.scores[F_material][EG], context._height));
-               return armageddonScore(materialTableScore, p.halfmoves, context._height, p.c);
+               return variantScore(materialTableScore, p.halfmoves, context._height, p.c);
             }
             // real FIDE draws (shall not happens for now in fact ///@todo !!!)
             else if (MEntry.t == MaterialHash::Ter_Draw) {
@@ -190,11 +236,16 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       ScoreType matScoreB = 0;
       data.gp = gamePhase(p.mat, matScoreW, matScoreB);
       features.scores[F_material] += EvalScore(
+          (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * absValue(P_wq) +
+          (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * absValue(P_wr) +
+          (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * absValue(P_wb) +
+          (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * absValue(P_wn) +
+          (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * absValue(P_wp) ,
           (p.mat[Co_White][M_q] - p.mat[Co_Black][M_q]) * absValueEG(P_wq) +
           (p.mat[Co_White][M_r] - p.mat[Co_Black][M_r]) * absValueEG(P_wr) +
           (p.mat[Co_White][M_b] - p.mat[Co_Black][M_b]) * absValueEG(P_wb) +
           (p.mat[Co_White][M_n] - p.mat[Co_Black][M_n]) * absValueEG(P_wn) +
-          (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * absValueEG(P_wp), matScoreW - matScoreB);
+          (p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) * absValueEG(P_wp) );
       //std::cout << ToString(p,true) << std::endl;
       context.stats.incr(Stats::sid_materialTableMiss);
    }
@@ -204,8 +255,9 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
 
 #ifndef WITH_MATERIAL_TABLE
    // in case we are not using a material table, we still need KPK, KRK and KBNK helper
+   // but only for most standard chess variants with kings on the board
    // end game knowledge (helper or scaling)
-   if (allowEGEvaluation && (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] < 5)) {
+   if (allowEGEvaluation && kingIsMandatory && (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] < 5)) {
      static const auto matHashKPK = MaterialHash::getMaterialHash2(MaterialHash::materialFromString("KPK"));
      static const auto matHashKKP = MaterialHash::getMaterialHash2(MaterialHash::materialFromString("KKP"));
      static const auto matHashKQK = MaterialHash::getMaterialHash2(MaterialHash::materialFromString("KQK"));
@@ -235,7 +287,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
         matHelperHit = true;
      }
      if (matHelperHit ){
-         return armageddonScore(materialTableScore, p.halfmoves, context._height, p.c);
+         return variantScore(materialTableScore, p.halfmoves, context._height, p.c);
      }
    }
 #endif
@@ -264,8 +316,8 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
          nnueScore = clampScore(nnueScore);
          context.stats.incr(Stats::sid_evalNNUE);
          STOP_AND_SUM_TIMER(Eval)
-         // apply armageddon scoring if requiered
-         return armageddonScore(nnueScore, p.halfmoves, context._height, p.c);
+         // apply variants scoring if requiered
+         return variantScore(nnueScore, p.halfmoves, context._height, p.c);
       }
       // fall back to classic eval
       context.stats.incr(Stats::sid_evalStd);
@@ -284,8 +336,10 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    const BitBoard rooks[2]      = {p.whiteRook(), p.blackRook()};
    const BitBoard queens[2]     = {p.whiteQueen(), p.blackQueen()};
    const BitBoard kings[2]      = {p.whiteKing(), p.blackKing()};
-   const BitBoard nonPawnMat[2] = {p.allPieces[Co_White] & ~pawns[Co_White], p.allPieces[Co_Black] & ~pawns[Co_Black]};
-   const BitBoard kingZone[2]   = {BBTools::mask[p.king[Co_White]].kingZone, BBTools::mask[p.king[Co_Black]].kingZone};
+   const BitBoard nonPawnMat[2] = {p.allPieces[Co_White] & ~pawns[Co_White], 
+                                   p.allPieces[Co_Black] & ~pawns[Co_Black]};
+   const BitBoard kingZone[2]   = {isValidSquare(p.king[Co_White]) ? BBTools::mask[p.king[Co_White]].kingZone : emptyBitBoard, 
+                                   isValidSquare(p.king[Co_Black]) ? BBTools::mask[p.king[Co_Black]].kingZone : emptyBitBoard};
    const BitBoard occupancy     = p.occupancy();
 
    // helpers that will be filled by evalPiece calls
@@ -365,6 +419,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       // pawn passer
       evalPawnPasser<Co_White>(p, pe.passed[Co_White], pe.score);
       evalPawnPasser<Co_Black>(p, pe.passed[Co_Black], pe.score);
+
       // pawn protected
       evalPawnProtected<Co_White>(pe.passed[Co_White] & pe.pawnTargets[Co_White], pe.score);
       evalPawnProtected<Co_Black>(pe.passed[Co_Black] & pe.pawnTargets[Co_Black], pe.score);
@@ -431,36 +486,38 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       }
 
       // pawn shield (PST and king troppism alone is not enough)
-      const BitBoard kingShield[2] = {kingZone[Co_White] & ~BBTools::shiftS<Co_White>(ranks[SQRANK(p.king[Co_White])]),
-                                      kingZone[Co_Black] & ~BBTools::shiftS<Co_Black>(ranks[SQRANK(p.king[Co_Black])])};
-      const int      pawnShieldW   = countBit(kingShield[Co_White] & pawns[Co_White]);
-      const int      pawnShieldB   = countBit(kingShield[Co_Black] & pawns[Co_Black]);
-      pe.score += EvalConfig::pawnShieldBonus * std::min(pawnShieldW * pawnShieldW, 9);
-      pe.score -= EvalConfig::pawnShieldBonus * std::min(pawnShieldB * pawnShieldB, 9);
-      // malus for king on a pawnless flank
-      const File wkf = (File)SQFILE(p.king[Co_White]);
-      const File bkf = (File)SQFILE(p.king[Co_Black]);
-      if (!(pawns[Co_White] & kingFlank[wkf])) pe.score += EvalConfig::pawnlessFlank;
-      if (!(pawns[Co_Black] & kingFlank[bkf])) pe.score -= EvalConfig::pawnlessFlank;
-      // pawn storm
-      pe.score -= EvalConfig::pawnStormMalus * countBit(kingFlank[wkf] & (rank3 | rank4) & pawns[Co_Black]);
-      pe.score += EvalConfig::pawnStormMalus * countBit(kingFlank[bkf] & (rank5 | rank6) & pawns[Co_White]);
-      // open file near king
-      pe.danger[Co_White] += EvalConfig::kingAttOpenfile * countBit(kingFlank[wkf] & pe.openFiles) / 8;
-      pe.danger[Co_White] += EvalConfig::kingAttSemiOpenfileOpp * countBit(kingFlank[wkf] & pe.semiOpenFiles[Co_White]) / 8;
-      pe.danger[Co_White] += EvalConfig::kingAttSemiOpenfileOur * countBit(kingFlank[wkf] & pe.semiOpenFiles[Co_Black]) / 8;
-      pe.danger[Co_Black] += EvalConfig::kingAttOpenfile * countBit(kingFlank[bkf] & pe.openFiles) / 8;
-      pe.danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOpp * countBit(kingFlank[bkf] & pe.semiOpenFiles[Co_Black]) / 8;
-      pe.danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * countBit(kingFlank[bkf] & pe.semiOpenFiles[Co_White]) / 8;
-      // Fawn
-      pe.score -= EvalConfig::pawnFawnMalusKS *
-                  (countBit((pawns[Co_White] & (BBSq_h2 | BBSq_g3)) | (pawns[Co_Black] & BBSq_h3) | (kings[Co_White] & kingSide)) / 4);
-      pe.score += EvalConfig::pawnFawnMalusKS *
-                  (countBit((pawns[Co_Black] & (BBSq_h7 | BBSq_g6)) | (pawns[Co_White] & BBSq_h6) | (kings[Co_Black] & kingSide)) / 4);
-      pe.score -= EvalConfig::pawnFawnMalusQS *
-                  (countBit((pawns[Co_White] & (BBSq_a2 | BBSq_b3)) | (pawns[Co_Black] & BBSq_a3) | (kings[Co_White] & queenSide)) / 4);
-      pe.score += EvalConfig::pawnFawnMalusQS *
-                  (countBit((pawns[Co_Black] & (BBSq_a7 | BBSq_b6)) | (pawns[Co_White] & BBSq_a6) | (kings[Co_Black] & queenSide)) / 4);
+      if (kingIsMandatory){
+        const BitBoard kingShield[2] = {kingZone[Co_White] & ~BBTools::shiftS<Co_White>(ranks[SQRANK(p.king[Co_White])]),
+                                        kingZone[Co_Black] & ~BBTools::shiftS<Co_Black>(ranks[SQRANK(p.king[Co_Black])])};
+        const int      pawnShieldW   = countBit(kingShield[Co_White] & pawns[Co_White]);
+        const int      pawnShieldB   = countBit(kingShield[Co_Black] & pawns[Co_Black]);
+        pe.score += EvalConfig::pawnShieldBonus * std::min(pawnShieldW * pawnShieldW, 9);
+        pe.score -= EvalConfig::pawnShieldBonus * std::min(pawnShieldB * pawnShieldB, 9);
+        // malus for king on a pawnless flank
+        const File wkf = (File)SQFILE(p.king[Co_White]);
+        const File bkf = (File)SQFILE(p.king[Co_Black]);
+        if (!(pawns[Co_White] & kingFlank[wkf])) pe.score += EvalConfig::pawnlessFlank;
+        if (!(pawns[Co_Black] & kingFlank[bkf])) pe.score -= EvalConfig::pawnlessFlank;
+        // pawn storm
+        pe.score -= EvalConfig::pawnStormMalus * countBit(kingFlank[wkf] & (rank3 | rank4) & pawns[Co_Black]);
+        pe.score += EvalConfig::pawnStormMalus * countBit(kingFlank[bkf] & (rank5 | rank6) & pawns[Co_White]);
+        // open file near king
+        pe.danger[Co_White] += EvalConfig::kingAttOpenfile * countBit(kingFlank[wkf] & pe.openFiles) / 8;
+        pe.danger[Co_White] += EvalConfig::kingAttSemiOpenfileOpp * countBit(kingFlank[wkf] & pe.semiOpenFiles[Co_White]) / 8;
+        pe.danger[Co_White] += EvalConfig::kingAttSemiOpenfileOur * countBit(kingFlank[wkf] & pe.semiOpenFiles[Co_Black]) / 8;
+        pe.danger[Co_Black] += EvalConfig::kingAttOpenfile * countBit(kingFlank[bkf] & pe.openFiles) / 8;
+        pe.danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOpp * countBit(kingFlank[bkf] & pe.semiOpenFiles[Co_Black]) / 8;
+        pe.danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * countBit(kingFlank[bkf] & pe.semiOpenFiles[Co_White]) / 8;
+        // Fawn
+        pe.score -= EvalConfig::pawnFawnMalusKS *
+                    (countBit((pawns[Co_White] & (BBSq_h2 | BBSq_g3)) | (pawns[Co_Black] & BBSq_h3) | (kings[Co_White] & kingSide)) / 4);
+        pe.score += EvalConfig::pawnFawnMalusKS *
+                    (countBit((pawns[Co_Black] & (BBSq_h7 | BBSq_g6)) | (pawns[Co_White] & BBSq_h6) | (kings[Co_Black] & kingSide)) / 4);
+        pe.score -= EvalConfig::pawnFawnMalusQS *
+                    (countBit((pawns[Co_White] & (BBSq_a2 | BBSq_b3)) | (pawns[Co_Black] & BBSq_a3) | (kings[Co_White] & queenSide)) / 4);
+        pe.score += EvalConfig::pawnFawnMalusQS *
+                    (countBit((pawns[Co_Black] & (BBSq_a7 | BBSq_b6)) | (pawns[Co_White] & BBSq_a6) | (kings[Co_Black] & queenSide)) / 4);
+      }
 
       context.stats.incr(Stats::sid_ttPawnInsert);
       pe.h = Hash64to32(computePHash(p)); // set the pawn entry
@@ -568,17 +625,19 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    features.scores[F_positional] -= EvalConfig::outpostB * countBit(pe.holes[Co_White] & bishops[Co_Black] & pe.pawnTargets[Co_Black]);
 
    // knight far from both kings gets a penalty
-   BitBoard knight = knights[Co_White];
-   while (knight) {
-      const Square knighSq = popBit(knight);
-      features.scores[F_positional] +=
-          EvalConfig::knightTooFar[std::min(chebyshevDistance(p.king[Co_White], knighSq), chebyshevDistance(p.king[Co_Black], knighSq))];
-   }
-   knight = knights[Co_Black];
-   while (knight) {
-      const Square knighSq = popBit(knight);
-      features.scores[F_positional] -=
-          EvalConfig::knightTooFar[std::min(chebyshevDistance(p.king[Co_White], knighSq), chebyshevDistance(p.king[Co_Black], knighSq))];
+   if (kingIsMandatory){
+    BitBoard knight = knights[Co_White];
+    while (knight) {
+        const Square knighSq = popBit(knight);
+        features.scores[F_positional] +=
+            EvalConfig::knightTooFar[std::min(chebyshevDistance(p.king[Co_White], knighSq), chebyshevDistance(p.king[Co_Black], knighSq))];
+    }
+    knight = knights[Co_Black];
+    while (knight) {
+        const Square knighSq = popBit(knight);
+        features.scores[F_positional] -=
+            EvalConfig::knightTooFar[std::min(chebyshevDistance(p.king[Co_White], knighSq), chebyshevDistance(p.king[Co_Black], knighSq))];
+    }
    }
 
    // number of hanging pieces
@@ -674,9 +733,9 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    }
 
    // attack : queen distance to opponent king (wrong if multiple queens ...)
-   if (blackQueenSquare != INVALIDSQUARE)
+   if (kingIsMandatory && blackQueenSquare != INVALIDSQUARE)
       features.scores[F_positional] -= EvalConfig::queenNearKing * (7 - chebyshevDistance(p.king[Co_White], blackQueenSquare));
-   if (whiteQueenSquare != INVALIDSQUARE)
+   if (kingIsMandatory && whiteQueenSquare != INVALIDSQUARE)
       features.scores[F_positional] += EvalConfig::queenNearKing * (7 - chebyshevDistance(p.king[Co_Black], whiteQueenSquare));
 
    // number of pawn and piece type value  ///@todo closedness instead ?
@@ -819,8 +878,8 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    STOP_AND_SUM_TIMER(Eval)
 
    data.evalDone = true;
-   // apply armageddon scoring if requiered
-   return armageddonScore(ret, p.halfmoves, context._height, p.c);
+   // apply variante scoring if requiered
+   return variantScore(ret, p.halfmoves, context._height, p.c);
 }
 
 #pragma GCC diagnostic pop

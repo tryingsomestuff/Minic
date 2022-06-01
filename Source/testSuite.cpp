@@ -31,7 +31,7 @@ bool test(const std::string& option) {
       std::vector<int> scores       = {1};
 
       ExtendedPosition::test(
-          positions, timeControls, true, true, scores, [&](int score) { return int((100 * score) / (30 * positions.size())); },
+          positions, timeControls, true, true, scores, [&](int score) { return static_cast<int>((100 * score) / (30 * positions.size())); },
           false); // % of "success"
       return true;
    }
@@ -576,7 +576,7 @@ bool test(const std::string& option) {
       std::vector<int> scores       = {1};
 
       ExtendedPosition::test(
-          positions, timeControls, false, false, scores, [=](int score) { return int(25.212 * 100.f * float(score) / positions.size() + 1439.4); },
+          positions, timeControls, false, false, scores, [=](int score) { return static_cast<int>(25.212 * 100.f * float(score) / positions.size() + 1439.4); },
           false);
       return true;
    }
