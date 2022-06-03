@@ -65,7 +65,7 @@ bool Searcher::isCMHBad(const Position& p, const Square from, const Square to, c
    return nbBad == MAX_CMH_PLY;
 }
 
-ScoreType Searcher::drawScore(const Position& p, DepthType height) {
+ScoreType Searcher::drawScore(const Position& p, DepthType height) const {
    ///@todo other chess variants
    if (DynamicConfig::armageddon) {
       if (p.c == Co_White) return matedScore(height);

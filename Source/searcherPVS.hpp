@@ -158,7 +158,13 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // we cannot search deeper than MAX_DEPTH, is so just return static evaluation
    EvalData data;
    if (height >= MAX_DEPTH - 1 || depth >= MAX_DEPTH - 1) return eval(p, data, *this);
-   if (p.fifty >= 101) return drawScore(p, height);
+
+   const bool rootnode = height == 0;
+
+   // if not at root we check for draws (3rep, fifty and material)
+   if (!rootnode){
+      if (auto INRscore = interiorNodeRecognizer<pvnode>(p, height)) return INRscore.value();
+   }
 
    // on pvs leaf node, call a quiet search
    if (depth <= 0) {
@@ -177,8 +183,6 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    debug_king_cap(p);
 
-   const bool rootnode = height == 0;
-
    if (rootnode){
       // all threads clear rootScore, this is usefull for helper like in genfen or rescore.
       rootScores.clear();
@@ -190,9 +194,6 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       beta  = std::min(beta, matingScore(height + 1));
       if (alpha >= beta) return alpha;
    }
-
-   // if not at root we check for draws (3rep, fifty and material)
-   if (!rootnode && interiorNodeRecognizer<true, pvnode, true>(p) == MaterialHash::Ter_Draw) return drawScore(p, height);
 
    //std::cout << "=========================" << std::endl;
    //std::cout << ToString(p) << std::endl;
@@ -1003,7 +1004,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // check for draw and check mate
    if (validMoveCount == 0) return (isInCheck || !withoutSkipMove) ? matedScore(height) : drawScore(p, height);
-   else if (p.fifty >= 100) return drawScore(p, height);
+   else if (is50moves(p,false)) return drawScore(p, height); // post move loop version
 
    // insert data in TT
    TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(evalScore, height),

@@ -34,7 +34,7 @@ struct Searcher {
    };
    std::array<StackData, MAX_PLY> stack;
 
-   Stats stats;
+   mutable Stats stats;
 
    inline void updatePV(PVList& pv, const Move& m, const PVList& childPV) {
       stats.incr(Stats::sid_PVupdate);
@@ -78,7 +78,7 @@ struct Searcher {
    [[nodiscard]] bool isCMHGood(const Position& p, const Square from, const Square to, const CMHPtrArray& cmhPtr, const ScoreType threshold) const;
    [[nodiscard]] bool isCMHBad (const Position& p, const Square from, const Square to, const CMHPtrArray& cmhPtr, const ScoreType threshold) const;
 
-   [[nodiscard]] ScoreType drawScore(const Position& p, DepthType height);
+   [[nodiscard]] ScoreType drawScore(const Position& p, DepthType height) const;
 
    void timeCheck();
 
@@ -120,10 +120,12 @@ struct Searcher {
 
    void searchDriver(bool postMove = true);
 
-   template<bool withRep = true, bool isPv = true, bool INR = true>
-   [[nodiscard]] MaterialHash::Terminaison interiorNodeRecognizer(const Position& p) const;
+   template<bool isPv = true>
+   [[nodiscard]] std::optional<ScoreType> interiorNodeRecognizer(const Position& p, DepthType height) const;
 
    [[nodiscard]] bool isRep(const Position& p, bool isPv) const;
+   [[nodiscard]] bool isMaterialDraw(const Position& p) const;
+   [[nodiscard]] bool is50moves(const Position& p, bool afterMoveLoop) const;
 
    void displayGUI(DepthType          depth,
                    DepthType          seldepth,

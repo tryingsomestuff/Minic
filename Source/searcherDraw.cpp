@@ -20,3 +20,14 @@ bool Searcher::isRep(const Position& p, bool isPV) const {
    }
    return false;
 }
+
+bool Searcher::isMaterialDraw(const Position& p) const{
+   if ( (p.occupancy() & ~p.allKing()) == emptyBitBoard) return true;
+   const auto ter = ( (p.mat[Co_White][M_p] + p.mat[Co_Black][M_p]) < 2) ? MaterialHash::probeMaterialHashTable(p.mat) : MaterialHash::Terminaison::Ter_Unknown;
+   return ter == MaterialHash::Terminaison::Ter_Draw || ter == MaterialHash::Terminaison::Ter_MaterialDraw;
+}
+
+bool Searcher::is50moves(const Position& p, bool afterMoveLoop) const{
+   // checking 50MR at 100 or 101 depending on being before or after move loop because it might be reset by checkmate
+   return p.fifty >= 100 + afterMoveLoop;
+}
