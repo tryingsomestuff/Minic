@@ -90,7 +90,12 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    EvalData data;
    // we cannot search deeper than MAX_DEPTH, is so just return static evaluation
    if (height >= MAX_DEPTH - 1) return eval(p, data, *this);
-   if (p.fifty >= 101) return drawScore(p, height);
+
+   // at qRoot (just coming from pvs) we check for draws (3rep, fifty and material)
+   ///@todo is that gain elo ???
+   if (qRoot){
+      if (auto INRscore = interiorNodeRecognizer<false>(p, height)) return INRscore.value();
+   }
 
    Move bestMove = INVALIDMOVE;
 
@@ -117,10 +122,6 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
          return adjustHashScore(e.s, height);
       }
    }
-
-   // at qRoot (just coming from pvs) we check for draws (3rep, fifty and material)
-   ///@todo is that gain elo ???
-   if (qRoot && interiorNodeRecognizer<true, false, true>(p) == MaterialHash::Ter_Draw) return drawScore(p, height);
 
    // set TT move as current best, this allows to re-insert it in pv in case there is no capture, or no move incrases alpha
    const bool usableTTmove = validTTmove && (isInCheck || isCapture(e.m));
@@ -303,7 +304,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    if (alphaInit == alpha ) stats.incr(Stats::sid_qalphanoupdate);
 
    if (validMoveCount == 0 && isInCheck) bestScore = matedScore(height);
-   else if (p.fifty >= 100) return drawScore(p, height);
+   else if (is50moves(p,false)) return drawScore(p, height); // post move loop version
 
    TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(evalScore, height),
                 TT::Bound(b | (ttPV ? TT::B_ttPVFlag : TT::B_none) | (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), hashDepth);
