@@ -570,6 +570,14 @@ int cliManagement(std::string cli, int argc, char** argv) {
       return 0;
    }
 
+   if (cli == "-evalHCE") {
+      EvalData data;
+      if (DynamicConfig::useNNUE) DynamicConfig::useNNUE = false;
+      const ScoreType score = eval(p, data, ThreadPool::instance().main(), true, true);
+      Logging::LogIt(Logging::logInfo) << "eval " << score << " phase " << data.gp;
+      return 0;
+   }
+
    if (cli == "-gen") {
       MoveList moves;
       MoveGen::generate<MoveGen::GP_all>(p, moves);

@@ -15,7 +15,8 @@ namespace KPK {
 
 Square normalizeSquare(const Position& p, const Color strongSide, const Square sq) {
    assert(BB::countBit(p.pieces_const<P_wp>(strongSide)) == 1); // only for KPK !
-   return strongSide == Co_White ? (SQFILE(BBTools::SquareFromBitBoard(p.pieces_const<P_wp>(strongSide))) >= File_e ? HFlip(sq) : sq) : VFlip(sq);
+   const Square nsq = SQFILE(BBTools::SquareFromBitBoard(p.pieces_const<P_wp>(strongSide))) >= File_e ? HFlip(sq) : sq;
+   return strongSide == Co_White ? nsq : VFlip(nsq);
 }
 
 KPKPosition::KPKPosition(const unsigned idx) { // first init
