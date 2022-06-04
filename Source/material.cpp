@@ -6,6 +6,7 @@
 #include "kpk.hpp"
 #include "logging.hpp"
 #include "positionTools.hpp"
+#include "tools.hpp"
 
 namespace MaterialHash { // idea from Gull
 
@@ -194,9 +195,9 @@ ScoreType helperDummy(const Position &, Color, ScoreType, DepthType) { return 0;
 
 ScoreType helperKPK(const Position &p, Color winningSide, ScoreType, DepthType height) {
    const Square psq = KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const<P_wp>(winningSide))); // we know there is at least one pawn
-   if (!KPK::probe(KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const<P_wk>(winningSide))), psq,
-                   KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const<P_wk>(~winningSide))),
-                   winningSide == p.c ? Co_White : Co_Black)) {
+   const Square wksq = KPK::normalizeSquare(p, winningSide, p.king[winningSide]);
+   const Square lksq = KPK::normalizeSquare(p, winningSide, p.king[~winningSide]);
+   if (!KPK::probe(wksq, psq, lksq, winningSide == p.c ? Co_White : Co_Black)) {
       if (DynamicConfig::armageddon) {
          if (p.c == Co_White) return matedScore(height);
          else return matingScore(height-1);
