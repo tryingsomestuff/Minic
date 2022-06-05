@@ -210,7 +210,7 @@ void simulate(const TCType tcType, const TimeType initialTime, const TimeType in
          case TC_fixed:
          break;
       }
-      const bool isInCheck = isAttacked(p2, kingSquare(p2));
+      const bool isInCheck = isPosInCheck(p2);
       ThreadData _data;
       _data.score = randomMover(p2, _data.pv, isInCheck);
       if ( _data.pv.empty() || ! applyMove(p2,_data.pv[0])) break;

@@ -12,7 +12,7 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Posi
    if (evalScore >= beta) return evalScore;
    if (evalScore > alpha) alpha = evalScore;
 
-   const bool isInCheck = isAttacked(p, kingSquare(p));
+   const bool isInCheck = isPosInCheck(p);
    ScoreType  bestScore = isInCheck ? matedScore(height) : evalScore;
 
    CMHPtrArray cmhPtr;
@@ -110,7 +110,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    const bool      validTTmove    = ttHit && e.m != INVALIDMINIMOVE;
    const bool      ttPV           = pvnode || (validTTmove && (e.b & TT::B_ttPVFlag));
    const bool      ttIsInCheck    = validTTmove && (e.b & TT::B_isInCheckFlag);
-   const bool      isInCheck      = isInCheckHint != -1 ? isInCheckHint : ttIsInCheck || isAttacked(p, kingSquare(p));
+   const bool      isInCheck      = isInCheckHint != -1 ? isInCheckHint : ttIsInCheck || isPosInCheck(p);
    const bool      specialQSearch = isInCheck || qRoot;
    const DepthType hashDepth      = specialQSearch ? 0 : -1;
 

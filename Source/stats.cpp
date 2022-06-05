@@ -84,4 +84,5 @@ const std::array<std::string, Stats::sid_maxid> Stats::Names = {"nodes",
                                                                 "evalNoKing",
                                                                 "evalStd",
                                                                 "evalNNUE",
+                                                                "evalNNUE2",
                                                                 "PVupdate"};

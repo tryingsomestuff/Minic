@@ -166,7 +166,7 @@ bool applyMove(Position& p, const Move& m, const bool noValidation) {
       case T_bqs: movePieceCastle<Co_Black>(p, CT_OOO, Sq_c8, Sq_d8); break;
    }
 
-   if (!noValidation && isAttacked(p, kingSquare(p))) {
+   if (!noValidation && isPosInCheck(p)) {
       STOP_AND_SUM_TIMER(Apply)
       return false; // this is the only legal move validation needed
    }

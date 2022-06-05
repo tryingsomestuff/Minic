@@ -4,6 +4,7 @@
 
 template<bool isPV>
 [[nodiscard]] inline std::optional<ScoreType> Searcher::interiorNodeRecognizer(const Position& p, DepthType height) const{
+   // handles chess variants
    ///@todo other chess variants
    if (isRep(p,isPV))     return std::optional<ScoreType>(drawScore(p, height));
    if (isMaterialDraw(p)) return std::optional<ScoreType>(drawScore(p, height));

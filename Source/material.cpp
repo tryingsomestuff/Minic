@@ -193,7 +193,7 @@ ScoreType helperKmmK(const Position &p, Color winningSide, ScoreType s, DepthTyp
 
 ScoreType helperDummy(const Position &, Color, ScoreType, DepthType) { return 0; } ///@todo not 0 for debug purpose ??
 
-ScoreType helperKPK(const Position &p, Color winningSide, ScoreType, DepthType height) {
+ScoreType helperKPK(const Position &p, Color winningSide, [[maybe_unused]] ScoreType s, DepthType height) {
    const Square psq = KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const<P_wp>(winningSide))); // we know there is at least one pawn
    const Square wksq = KPK::normalizeSquare(p, winningSide, p.king[winningSide]);
    const Square lksq = KPK::normalizeSquare(p, winningSide, p.king[~winningSide]);
@@ -294,8 +294,8 @@ void MaterialHashInitializer::init() {
    ///@todo some Ter_MaterialDraw are Ter_Draw (FIDE)
 
    // other FIDE draw
-   //DEF_MAT(KLKL,   Ter_MaterialDraw)
-   //DEF_MAT(KDKD,   Ter_MaterialDraw)
+   //DEF_MAT(KLKL,   Ter_MaterialDraw)  // useless
+   //DEF_MAT(KDKD,   Ter_MaterialDraw)  // useless
 
    // sym (and pseudo sym) : all should be draw (or very nearly)
    //DEF_MAT(KK,     Ter_MaterialDraw)  // this is invalid hash

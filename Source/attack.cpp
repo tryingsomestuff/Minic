@@ -2,6 +2,7 @@
 
 #include "bitboard.hpp"
 #include "logging.hpp"
+#include "positionTools.hpp"
 #include "timers.hpp"
 
 #ifndef WITH_MAGIC
@@ -325,7 +326,13 @@ bool isAttacked(const Position &p, const Square s) {
    return b;
 }
 
-bool isAttacked(const Position &p, BitBoard bb) { // copy ///@todo should be done without iterate over Square !
+bool isPosInCheck(const Position& p){
+   // handles chess variants
+   ///@todo some chess variant will always return false here, there is no such things as check
+   return isAttacked(p, kingSquare(p));
+}
+
+bool isAttacked(const Position &p, BitBoard bb) { // copy ///@todo should be done without iterating over Square !
    while (bb)
       if (isAttacked(p, Square(BB::popBit(bb)))) return true;
    return false;

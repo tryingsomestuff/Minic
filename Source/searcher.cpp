@@ -66,6 +66,7 @@ bool Searcher::isCMHBad(const Position& p, const Square from, const Square to, c
 }
 
 ScoreType Searcher::drawScore(const Position& p, DepthType height) const {
+   // handles chess variants
    ///@todo other chess variants
    if (DynamicConfig::armageddon) {
       if (p.c == Co_White) return matedScore(height);

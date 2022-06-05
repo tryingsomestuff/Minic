@@ -488,7 +488,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             if (scorePC >= betaPC) {
                stats.incr(Stats::sid_probcutTry2);
                scorePC = -pvs<false>(-betaPC, -betaPC + 1, p2, depth - SearchConfig::probCutMinDepth + 1, height + 1, pcPV, seldepth, extensions, 
-                                     isAttacked(p2, kingSquare(p2)), !cutNode);
+                                     isPosInCheck(p2), !cutNode);
             }
             if (stopFlag) return STOPSCORE;
             if (scorePC >= betaPC) return stats.incr(Stats::sid_probcut), scorePC;
@@ -582,9 +582,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          assert(p2.halfmoves < MAX_PLY && p2.halfmoves >= 0);
          stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
          stack[p2.halfmoves].h = p2.h;
-         const bool isCheck    = ttIsCheck || isAttacked(p2, kingSquare(p2));
+         const bool isCheck    = ttIsCheck || isPosInCheck(p2);
 #ifdef DEBUG_TT_CHECK
-         if (ttIsCheck && !isAttacked(p2, kingSquare(p2))){
+         if (ttIsCheck && !isPosInCheck(p2)){
             std::cout << "Error ttIsCheck" << std::endl;
             std::cout << ToString(p2) << std::endl;
          }
@@ -760,7 +760,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       PVList     childPV;
       stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
       stack[p2.halfmoves].h = p2.h;
-      const bool isCheck    = isAttacked(p2, kingSquare(p2));
+      const bool isCheck    = isPosInCheck(p2);
       bool       isAdvancedPawnPush = PieceTools::getPieceType(p, Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
       // extensions
       DepthType extension = 0;
