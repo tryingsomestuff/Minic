@@ -34,7 +34,7 @@ std::string showAlgAbr(const Move m, const Position &p) {
    p2.associateEvaluator(evaluator);
 #endif
    if (applyMove(p2, m)) {
-      if (isAttacked(p2, kingSquare(p2))) isCheck = true;
+      if (isPosInCheck(p2)) isCheck = true;
    }
    else {
       isNotLegal = true;

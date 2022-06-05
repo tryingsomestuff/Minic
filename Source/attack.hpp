@@ -154,3 +154,4 @@ constexpr BitBoard (*const pfCoverage[])(const Square, const BitBoard, const Col
 // Those are wrapper functions around isAttackedBB
 [[nodiscard]] bool isAttacked(const Position &p, const Square s);
 [[nodiscard]] bool isAttacked(const Position &p, BitBoard bb);
+[[nodiscard]] bool isPosInCheck(const Position& p);

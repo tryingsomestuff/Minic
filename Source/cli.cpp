@@ -51,7 +51,7 @@ Counter perft(const Position& p, DepthType depth, PerftAccumulator& acc) {
    MoveList         moves;
    PerftAccumulator accLoc;
 #ifndef DEBUG_PERFT
-   if (isAttacked(p, kingSquare(p))) MoveGen::generate<MoveGen::GP_evasion>(p, moves);
+   if (isPosInCheck(p)) MoveGen::generate<MoveGen::GP_evasion>(p, moves);
    else
       MoveGen::generate<MoveGen::GP_all>(p, moves);
    const size_t n = moves.size();
@@ -201,7 +201,7 @@ void selfPlay(DepthType depth) {
          Logging::LogIt(Logging::logInfoPrio) << "End of game " << GetFEN(p2);
          ended = true;
          ///@todo this is only working in classic chess (no armageddon or antichess)
-         if (isAttacked(p2, p2.king[p2.c])) result = p2.c == Co_Black ? 1 : -1; // checkmated (cannot move and attaked)
+         if (isPosInCheck(p2)) result = p2.c == Co_Black ? 1 : -1; // checkmated (cannot move and attaked)
          else
             result = 0; // pat (cannot move)
       }

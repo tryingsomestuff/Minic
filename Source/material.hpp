@@ -37,9 +37,9 @@ inline const int TotalMat = 1;
 
 [[nodiscard]] Position::Material materialFromString(const std::string &strMat);
 
-ScoreType helperKXK(const Position &p, Color winningSide, ScoreType s, DepthType height);
+ScoreType helperKXK (const Position &p, Color winningSide, ScoreType s, DepthType height);
 ScoreType helperKmmK(const Position &p, Color winningSide, ScoreType s, DepthType height);
-ScoreType helperKPK(const Position &p, Color winningSide, ScoreType, DepthType height);
+ScoreType helperKPK (const Position &p, Color winningSide, ScoreType s, DepthType height);
 ScoreType helperKBPK(const Position &p, Color winningSide, ScoreType s, DepthType height);
 
 enum Terminaison : uint8_t {
@@ -48,7 +48,9 @@ enum Terminaison : uint8_t {
    Ter_WhiteWin,
    Ter_BlackWinWithHelper,
    Ter_BlackWin,
-   Ter_Draw,
+   Ter_Draw, // real FIDE draw KK, KBK, KNK, KLKD
+   Ter_Draw3rep,
+   Ter_Draw50,
    Ter_MaterialDraw,
    Ter_LikelyDraw,
    Ter_HardToWin

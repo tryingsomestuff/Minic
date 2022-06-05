@@ -133,7 +133,7 @@ void Searcher::searchDriver(bool postMove) {
    // reset output search results
    _data.reset();
 
-   const bool isInCheck = isAttacked(p, kingSquare(p));
+   const bool isInCheck = isPosInCheck(p);
 
    // initialize multiPV stuff
    DynamicConfig::multiPV = (Logging::ct == Logging::CT_uci ? DynamicConfig::multiPV : 1);

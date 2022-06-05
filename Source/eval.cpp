@@ -130,6 +130,23 @@ ScoreType evalAntiChess(const Position &p, EvalData &data, [[maybe_unused]] Sear
     return (white2Play ? +1 : -1) * ret;
 }
 
+ScoreType NNUEEVal(const Position & p, EvalData &data, Searcher &context, EvalFeatures &features, bool secondTime = false){
+   if (DynamicConfig::armageddon) features.scalingFactor = 1.f;              ///@todo better
+   // call the net
+   ScoreType nnueScore = static_cast<ScoreType>(p.evaluator().propagate(p.c, std::min(32,static_cast<int>(BB::countBit(p.occupancy())))));
+   // fuse MG and EG score applying the EG scaling factor ///@todo, doesn't the net already learned that ????
+   nnueScore = static_cast<ScoreType>(data.gp * nnueScore + (1.f - data.gp) * nnueScore * features.scalingFactor); // use scaling factor
+   // NNUE evaluation scaling
+   nnueScore = static_cast<ScoreType>((nnueScore * DynamicConfig::NNUEScaling) / 64);
+   // take contempt into account (no tempo with NNUE, the HalfKA net already take it into account)
+   nnueScore += ScaleScore(context.contempt, data.gp);
+   // clamp score
+   nnueScore = clampScore(nnueScore);
+   context.stats.incr(secondTime ? Stats::sid_evalNNUE2 : Stats::sid_evalNNUE);
+   // apply variants scoring if requiered
+   return variantScore(nnueScore, p.halfmoves, context._height, p.c);   
+}
+
 ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowEGEvaluation, bool display) {
    START_TIMER
 
@@ -184,12 +201,10 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
 
       // end game knowledge (helper or scaling), only for most standard chess variants with kings on the board
       if (allowEGEvaluation && kingIsMandatory && (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] < 5) ) {
-         //MoveList moves;
-#ifndef DEBUG_GENERATION
-         //MoveGen::generate<MoveGen::GP_cap>(p, moves);
-#endif
+         MoveList moves;
+         MoveGen::generate<MoveGen::GP_cap>(p, moves); // this is an approximation as a capture may be illegal
          // probe endgame knowledge only if position is quiet from stm pov
-         if (true/*moves.empty()*/) {
+         if (moves.empty()) {
             const Color winningSideEG = features.scores[F_material][EG] > 0 ? Co_White : Co_Black;
             // helpers for various endgame
             if (MEntry.t == MaterialHash::Ter_WhiteWinWithHelper || MEntry.t == MaterialHash::Ter_BlackWinWithHelper) {
@@ -201,7 +216,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
             }
             // real FIDE draws (shall not happens for now in fact ///@todo !!!)
             else if (MEntry.t == MaterialHash::Ter_Draw) {
-               if (!isAttacked(p, kingSquare(p))) {
+               if (!isPosInCheck(p)) {
                   STOP_AND_SUM_TIMER(Eval)
                   context.stats.incr(Stats::sid_materialTableDraw);
                   return context.drawScore(p, context._height); // drawScore take armageddon into account
@@ -209,7 +224,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
             }
             // non FIDE draws
             else if (MEntry.t == MaterialHash::Ter_MaterialDraw) {
-               if (!isAttacked(p, kingSquare(p))) {
+               if (!isPosInCheck(p)) {
                   STOP_AND_SUM_TIMER(Eval)
                   context.stats.incr(Stats::sid_materialTableDraw2);
                   return context.drawScore(p, context._height); // drawScore take armageddon into account
@@ -303,21 +318,8 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       ///@todo use data.gp inside NNUE condition ?
       if (DynamicConfig::forceNNUE ||
           !isLazyHigh(static_cast<ScoreType>(DynamicConfig::NNUEThreshold), features, score)) {
-         if (DynamicConfig::armageddon) features.scalingFactor = 1.f;              ///@todo better
-         // call the net
-         ScoreType nnueScore = static_cast<ScoreType>(p.evaluator().propagate(p.c, std::min(32,static_cast<int>(BB::countBit(p.occupancy())))));
-         // fuse MG and EG score applying the EG scaling factor ///@todo, doesn't the net already learned that ????
-         nnueScore = static_cast<ScoreType>(data.gp * nnueScore + (1.f - data.gp) * nnueScore * features.scalingFactor); // use scaling factor
-         // NNUE evaluation scaling
-         nnueScore = static_cast<ScoreType>((nnueScore * DynamicConfig::NNUEScaling) / 64);
-         // take contempt into account (no tempo with NNUE, the HalfKA net already take it into account)
-         nnueScore += ScaleScore(context.contempt, data.gp);
-         // clamp score
-         nnueScore = clampScore(nnueScore);
-         context.stats.incr(Stats::sid_evalNNUE);
          STOP_AND_SUM_TIMER(Eval)
-         // apply variants scoring if requiered
-         return variantScore(nnueScore, p.halfmoves, context._height, p.c);
+         return NNUEEVal(p, data, context, features);
       }
       // fall back to classic eval
       context.stats.incr(Stats::sid_evalStd);
@@ -875,11 +877,18 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
 
    if (display) { Logging::LogIt(Logging::logInfo) << "==> All (fully scaled) " << ret; }
 
-   STOP_AND_SUM_TIMER(Eval)
-
    data.evalDone = true;
    // apply variante scoring if requiered
-   return variantScore(ret, p.halfmoves, context._height, p.c);
+   const ScoreType hceScore = variantScore(ret, p.halfmoves, context._height, p.c);
+   if ( std::abs(hceScore) <= DynamicConfig::NNUEThreshold/2 ){
+      // if HCE is small (there is something more than just material value going on ...), fall back to NNUE;
+      const ScoreType nnueScore = NNUEEVal(p, data, context, features, true);
+      STOP_AND_SUM_TIMER(Eval)
+      return nnueScore;
+   }
+
+   STOP_AND_SUM_TIMER(Eval)
+   return hceScore;
 }
 
 #pragma GCC diagnostic pop

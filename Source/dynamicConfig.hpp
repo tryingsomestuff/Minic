@@ -45,6 +45,7 @@ extern bool         withWDL;
 extern bool         bongCloud;
 extern bool         anarchy;
 
+// handles chess variants
 inline bool isKingMandatory(){ return !antichess;}
 
 extern std::string  chessvariant;
