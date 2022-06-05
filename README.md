@@ -185,8 +185,8 @@ Minic random-mover stats are the following :
 
 ### CEGT
 - 40/4: Minic 3.19 + Nylon Nonchalance is tested at 3333 on the [CEGT 40/4 list](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
-- 40/20: Minic 3.18 + Nimble Nothingness is tested at 3259 on the [CEGT 40/20 list](http://www.cegt.net/40_40%20Rating%20List/40_40%20All%20Versions/rangliste.html)  
-- 5+3 pb=on: Minic 3.18 + Nimble Nothingness is tested at 3341 on the [CEGT 5+3 PB=ON list](http://www.cegt.net/5Plus3Rating/BestVersionsNEW/rangliste.html)  
+- 40/20: Minic 3.19 + Nylon Nonchalance is tested at 3303 on the [CEGT 40/20 list](http://www.cegt.net/40_40%20Rating%20List/40_40%20All%20Versions/rangliste.html)  
+- 5+3 pb=on: Minic 3.19 + Nylon Nonchalance is tested at 3393 on the [CEGT 5+3 PB=ON list](http://www.cegt.net/5Plus3Rating/BestVersionsNEW/rangliste.html)  
 - 25+8: Minic 3.18 + Nimble Nothingness is tested at 3360 on the [CEGT 25+8 list](http://www.cegt.net/25plus8Rating/BestVersions/rangliste.html)  
 
 ### FGRL
@@ -196,7 +196,7 @@ Minic random-mover stats are the following :
 - Minic 3.18 + Nimble Nothingness is tested at 3276 on the [fastgm 60sec+0.6sec 16 cores rating list](http://www.fastgm.de/16-60-0.6.html)
 
 ### SP-CC
-- Minic 3.19 + Nylon Nonchalance is tested at 3427 on the [SP-CC 3min+1s rating list](https://www.sp-cc.de/)  
+- Minic 3.22 + Nylon Nonchalance is tested at 3456 on the [SP-CC 3min+1s rating list](https://www.sp-cc.de/)  
 
 ### GRL
 - Minic 3.17 + Nucleated Neurulation is tested at 3229 on the [GRL 40/2 rating list](http://rebel13.nl/grl-best-40-2.html)
