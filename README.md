@@ -176,7 +176,9 @@ Minic random-mover stats are the following :
 ## Rating Lists & competitions
 
 ### Progress
-<img src="https://raw.githubusercontent.com/tryingsomestuff/Minic/master/Doc/minic_progress.JPG" width="450">
+Here is 4 years of CCRL progress (single thread)
+![image](https://user-images.githubusercontent.com/5878710/172205840-b4bce912-7497-4bfd-9a82-ab08d19265b6.png)
+
 
 ### CCRL
 - 40/15: Minic 3.18 + Nimble Nothingness is tested at 3366 on the [CCRL 40/15 scale, 4 cores](http://ccrl.chessdom.com/ccrl/4040/)  
