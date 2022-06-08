@@ -432,7 +432,7 @@ Zurichess by Alexandru Moșoi
 
 Many thanks also to all testers for all those long time control tests, they really are valuable inputs in the chess engine development process. 
 
-Also thanks to TCEC for letting Minic participate to all event since 2018, it is fun to see Minic on such a great hardware.
+Also thanks to [TCEC](https://tcec-chess.com/) and [CCC](https://www.chess.com/computer-chess-championship) for letting Minic participate to many event, it is fun to see Minic on such a great hardware.
 
 Thanks to Karlson Pfannschmidt for the bayesian optimization [chess-tuning-tools](https://github.com/kiudee/chess-tuning-tools) 
   
