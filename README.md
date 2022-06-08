@@ -7,9 +7,10 @@
 </p>
 
 # Minic
-A chess engine I made to learn about chess programming.  
-It is compatible with both CECP (xboard) and UCI protocol.  
-It is currently inside top20 in major rating lists.
+A chess engine I'm developing to learn about chess programming (see this lovely [wiki](https://www.chessprogramming.org/Main_Page) for more details on chess programming).  
+
+Minic has no graphic interface (GUI) but is compatible with both [CECP](https://www.gnu.org/software/xboard/engine-intf.html) (xboard) and [UCI](http://wbec-ridderkerk.nl/html/UCIProtocol.html) protocol so you can use it in your favorite software ([cutechess](https://github.com/cutechess/cutechess), [arena](http://www.playwitharena.de/), [Banksia](https://banksiagui.com/), [winboard](https://www.gnu.org/software/xboard/), [c-chess-cli](https://github.com/lucasart/c-chess-cli), ...).  
+It is currently one of the 20 best engines in major [rating](https://ccrl.chessdom.com/ccrl/4040/) lists and the strongest french one.
 
    * [Support Minic development](#support-minic-development)
    * [History &amp; the NNUE Minic story](#history--the-nnue-minic-story)
@@ -428,8 +429,10 @@ Zurichess by Alexandru Moșoi
 
 Many thanks also to all testers for all those long time control tests, they really are valuable inputs in the chess engine development process. 
 
-Also thanks to TCEC for letting Minic participate to the Season 15 to 20, it is fun to see Minic on such a great hardware.
+Also thanks to TCEC for letting Minic participate to all event since 2018, it is fun to see Minic on such a great hardware.
 
+Thanks to Karlson Pfannschmidt for the bayesian optimization [chess-tuning-tools](https://github.com/kiudee/chess-tuning-tools) 
+  
 And of course thanks to all the members of the talkchess forum and CPW, and to H.G. Muller and Joost Buijs for hosting the well-known friendly monthly tourney.
 
 ## Info
