@@ -880,7 +880,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    data.evalDone = true;
    // apply variante scoring if requiered
    const ScoreType hceScore = variantScore(ret, p.halfmoves, context._height, p.c);
-   if ( std::abs(hceScore) <= DynamicConfig::NNUEThreshold/2 ){
+   if ( std::abs(hceScore) <= DynamicConfig::NNUEThreshold/4 ){
       // if HCE is small (there is something more than just material value going on ...), fall back to NNUE;
       const ScoreType nnueScore = NNUEEVal(p, data, context, features, true);
       STOP_AND_SUM_TIMER(Eval)

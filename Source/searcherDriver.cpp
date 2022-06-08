@@ -244,7 +244,7 @@ void Searcher::searchDriver(bool postMove) {
             if (stopFlag) break;
             ScoreType matW =0, matB = 0;
             delta += ScoreType((2 + delta / 2) * exp(1.f - gamePhase(p.mat,matW,matB))); // in end-game, open window faster
-            if (delta > 600 ) delta = matingScore(0);
+            if (delta > 1000 ) delta = matingScore(0);
             if (alpha > matedScore(0) && score <= alpha) {
                beta  = std::min(matingScore(0), ScoreType((alpha + beta) / 2));
                alpha = std::max(ScoreType(score - delta), matedScore(0));
