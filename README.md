@@ -144,7 +144,7 @@ Rank Name                          Elo     +/-   Games   Score    Draw
 ```
 
 ### Home test
-Here are some fast TC results of a gauntlet tournament (STC 10s+0.1) for Minic 3.19 (dev version of various engine mai 22 2022).
+Here are some fast TC results of a gauntlet tournament (STC 10s+0.1) for Minic 3.19 (dev version of various engine may 22th 2022).
 ```
    # PLAYER                        :  RATING  ERROR  POINTS  PLAYED   (%)  CFS(%)
    1 rofChade3                     :   144.7   20.4   391.5     565    69      52
