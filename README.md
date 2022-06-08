@@ -12,10 +12,12 @@ A chess engine I'm developing to learn about chess programming (see this lovely 
 Minic has no graphic interface (GUI) but is compatible with both [CECP](https://www.gnu.org/software/xboard/engine-intf.html) (xboard) and [UCI](http://wbec-ridderkerk.nl/html/UCIProtocol.html) protocol so you can use it in your favorite software ([cutechess](https://github.com/cutechess/cutechess), [arena](http://www.playwitharena.de/), [Banksia](https://banksiagui.com/), [winboard](https://www.gnu.org/software/xboard/), [c-chess-cli](https://github.com/lucasart/c-chess-cli), ...).  
 It is currently one of the 20 best engines in major [rating](https://ccrl.chessdom.com/ccrl/4040/) lists and the strongest french one.
 
+Here are some shortcuts to navigate in this document :
+
    * [Support Minic development](#support-minic-development)
    * [History &amp; the NNUE Minic story](#history--the-nnue-minic-story)
    * [Minic NNUE "originality" status](#minic-nnue-originality-status)
-   * [Strength](#strength)
+   * [Testing and strength](#strength)
    * [Rating Lists &amp; competitions](#rating-lists--competitions)
    * [Release process](#release-process)
    * [How to compile](#how-to-compile)
@@ -27,7 +29,7 @@ It is currently one of the 20 best engines in major [rating](https://ccrl.chessd
 
 ## Support Minic development
 
-Generating data, learning process, tuning and testing of a chess engine is quite hardware intensive ! I have an i7-9700K at home and I'm renting an E5-2650v2 on the cloud but this is far from enough. This is why I opened a [Patreon](https://www.patreon.com/minicchess) account for Minic ; if you want to support Minic development, it is the place to be ;-)
+Generating data, learning process, tuning, optimization and testing of a chess engine is quite hardware intensive ! I have some good hardware at home but this is far from enough. This is why I opened a [Patreon](https://www.patreon.com/minicchess) account for Minic ; if you want to support Minic development, it is the place to be ;-)
 
 ## History & the NNUE Minic story
 
@@ -89,7 +91,7 @@ Nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets.
 
 In brief, Minic NNUE world is vastly inspired from what others are doing and is using pure Minic data.
 
-## Strength
+## Testing and strength
 
 Minic is currently near the top20 with a Elo rating around 3350 at [CCRL scale](https://ccrl.chessdom.com/ccrl/404/cgi/compare_engines.cgi?class=Open+source+single-CPU+engines&only_best_in_class=on&num_best_in_class=1&print=Rating+list&profile_step=50&profile_numbers=1&print=Results+table&print=LOS+table&table_size=100&ct_from_elo=0&ct_to_elo=10000&match_length=30&cross_tables_for_best_versions_only=1&sort_tables=by+rating&diag=0&reference_list=None&recalibrate=no).
 
