@@ -34,11 +34,11 @@ Generating data, learning process, tuning, optimization and testing of a chess e
 ## History & the NNUE Minic story
 
 ### Code style
-For a year and a half Minic was (mainly) a one-file-code with very dense lines. This is of course very wrong in terms of software design... So why is it so? First reason is that Minic was first developped as a week-end project (in mid-october 2018), the quick-and-dirty way, and since then I was having fun going on this way ; being a "small" code size engine was part of the stakes in developing it. Second reason is that it helps the compilers optimize the whole code (at least that is what I though...)
+For a year and a half Minic was (mainly) a one-file-code with very dense lines. This is of course very wrong in terms of software design... So why is it so? First reason is that Minic was first developped as a week-end project (in mid-october 2018), the quick-and-dirty way, and since then I was having fun going on this way ; being a "small" code size engine was part of the stakes in developing it. 
 
 Until version 2 of Minic, some optional features such as evaluation and searchs tuning, perft, tests, uci support, book generation ... were available in the Add-Ons directory ; they are now fused with the source code.
 
-Nowadays, since the release of version "2" Minic is written in a more classic c++ style, although very dense lines are still present and recall Minic past compacity...
+Nowadays, since the release of version "2", Minic is written in a more classic C++ style, although some very dense lines are still present and recall Minic past compacity...
 
 More details about Minic history in the next paragraphs...
 
@@ -52,13 +52,13 @@ was released as a one year anniversary release in october 2019. At this point Mi
 is released for April 1st 2020 (during covid-19 confinement). For this version, the one file Minic was splitted into many header and source files, and commented a lot more, without negative impact on speed and strength. 
 
 #### NNUE from release 2.47 to release 2.53 (from Stockfish implementation)
-Minic, since release 2.47 of August 8th 2020 (http://talkchess.com/forum3/viewtopic.php?f=2&t=73521&hilit=minic2&start=50#p855313), has the possibility to be build using a shameless copy of the NNUE framework of Stockfish. Integration of NNUE was done easily and I hope this can be done for any engine, especially if NNUE is release as a standalone library (update: see https://github.com/dshawul/nncpu-probe for instance). New UCI parameter NNUEFile is added and shall be the full path to the network file you want to use. To build such Minic you need to activate WITH_NNUE in definition.hpp and use the build script (or make your own, but do not forget to pass -DUSE_AVX2 or whatever your hardware supports to the NNUE part ...). First test shows that MinicNNUE is around 200Elo stronger than Minic, around the level of Xiphos or Ethereal currently at short TC and maybe something like 50Elo higher at longer TC (around Komodo11). This says that a lot more can (and will!) be done inside Minic standard evaluation function !
+Minic2, since release 2.47 of August 8th 2020 (http://talkchess.com/forum3/viewtopic.php?f=2&t=73521&hilit=minic2&start=50#p855313), has the possibility to be build using a shameless copy of the NNUE framework of Stockfish. Integration of NNUE was done easily and I hope this can be done for any engines, especially if NNUE is release as a standalone library (see https://github.com/dshawul/nncpu-probe for instance). New UCI parameter NNUEFile is added and shall be the full path to the network file you want to use. To build such Minic you need to activate WITH_NNUE in definition.hpp and use the build script (or make your own, but do not forget to pass -DUSE_AVX2 or whatever your hardware supports to the NNUE part ...). First test shows that MinicNNUE is around 200Elo stronger than Minic, around the level of Xiphos or Ethereal at this date at short TC and maybe something like 50Elo higher at longer TC (around Komodo11). This says that a lot more can (and will!) be done inside Minic standard evaluation function !
 
 When using a NNUE network with this Stockfish implementation, it is important that Minic is called MinicNNUE (or Minnuec as introduced by Gekkehenker).
-MinicNNUE, won't be the official Minic, as this NNUE work to not reflect my own work and skills at all !
+MinicNNUE, won't be the official Minic, as this NNUE work do not reflect my own work and skills at all !
 
 Later on, since version 2.50, the NNUE learner from NodChip repo has also been ported to Minic so that networks using Minic data and search can be done.
-The genFen part was not ported and in internal process to produce training is used. This include both extracting position from fixed depth game and from random position.
+The genFen part was not ported and an internal process to produce training is used. This include both extracting position from fixed depth game and from random positions.
 
 Nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets.
 
@@ -67,33 +67,34 @@ is released in november 2020 (during second covid-19 confinement) as a 2 years a
 
 #### NNUE from release 3.00 (initially from Seer implementation)
 Starting from release 3.00, **Minic is not using Stockfish NNUE implementation anymore and is no more compatible with SF nets**. It was too much foreign code inside Minic to be fair, to be maintained, to be fun.
-Seer engine is offering a very well written implementation of NNUE that I borrowed and adapt to Minic (https://github.com/connormcmonigle/seer-nnue). The code is more or less 400 lines. I choose to keep Stockfish code for binary sfens format as everyone is using this for now. Training code is an external tool written in Python without any dependency to engine, also first adapted from Seer repository and then from Gary Linscott pytorch trainer (https://github.com/glinscott/nnue-pytorch).
-For now, generated nets are still quite weak, but that is a starting point, a new story to be written, in Minic 3.
+Seer engine is offering a very well written implementation of NNUE that I borrowed and adapt to Minic (https://github.com/connormcmonigle/seer-nnue). The code is more or less 400 lines. I choose to keep Stockfish code only for binary sfens format as everyone is using this for now. Training code is an external tool written in Python without any dependency to engine, also first adapted from Seer repository and then from Gary Linscott pytorch trainer (https://github.com/glinscott/nnue-pytorch).
+A new story to be written, in Minic 3.
 
 Nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets.
 
-### Some stuff that were maybe introduced in Minic
+### Some original stuff that were maybe introduced in Minic
 
 - use of PST score in move sorter to compensate near 0 history of quiet move
 - aggregate history score for move sorter and history heuristic (cmh + history[piece and color][tosquare] + history[color][square][square])
 - danger (from evaluation) based pruning and reductions in search
 - contempt opponent model taking opponent name or opponent rating into account
-- "features" based evaluation parameter available to the user to tune game play
+- "features" based evaluation parameter available to the user to tune game play (HCE evaluation only, not for NNUE)
 - using a depth factor for pruning and reduction that takes TT entry depth into account
+- training NNUE on DFRC data
 
 ### Minic NNUE "originality" status
 
 - Inference code : originally based on Seer one (Connor McMonigle), many refactoring and experiements inside (clipped ReLU, quantization on read, vectorization, ...).
-- Network topology : currently same at a previous Seer release. Many many others have been tested (with or without skip connections, bigger or smaller input layer, number of layers, ...) mainly without success except the small "Nibbled Nutshell" net. Still trying to find a better idea ...
+- Network topology : Many many have been tested (with or without skip connections, bigger or smaller input layer, number of layers, ...) mainly without success except the small "Nibbled Nutshell" net. Still trying to find a better idea ... Currently a multi-bucket (based on the number of pieces) net with a common input layer and 4 inner nets.
 - Training code : mainly based on the Gary Linscott and Tomasz Sobczyk (@Sopel) pytorch trainer (https://github.com/glinscott/nnue-pytorch), adapted and tuned to Minic.
 - Data generation code : fully original, pure Minic data. Many ideas has been tried (generate inside search tree, self-play, multi-pv, random, ...). 
-- Other tools : many little tools around training process, borrowed here and there or developed by myself.
+- Other tools : many little tools around training process, borrowed here and there and adapated or developed by myself.
 
 In brief, Minic NNUE world is vastly inspired from what others are doing and is using pure Minic data.
 
 ## Testing and strength
 
-Minic is currently near the top20 with a Elo rating around 3350 at [CCRL scale](https://ccrl.chessdom.com/ccrl/404/cgi/compare_engines.cgi?class=Open+source+single-CPU+engines&only_best_in_class=on&num_best_in_class=1&print=Rating+list&profile_step=50&profile_numbers=1&print=Results+table&print=LOS+table&table_size=100&ct_from_elo=0&ct_to_elo=10000&match_length=30&cross_tables_for_best_versions_only=1&sort_tables=by+rating&diag=0&reference_list=None&recalibrate=no).
+Minic is currently in the 20 best engines with a Elo rating around 3400 at [CCRL scale](https://ccrl.chessdom.com/ccrl/404/cgi/compare_engines.cgi?class=Open+source+single-CPU+engines&only_best_in_class=on&num_best_in_class=1&print=Rating+list&profile_step=50&profile_numbers=1&print=Results+table&print=LOS+table&table_size=100&ct_from_elo=0&ct_to_elo=10000&match_length=30&cross_tables_for_best_versions_only=1&sort_tables=by+rating&diag=0&reference_list=None&recalibrate=no).
 
 ### Various NNUE nets strenght 
 
