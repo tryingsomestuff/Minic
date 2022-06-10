@@ -497,8 +497,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    }
 
    // Ed style IIR
-   if ( SearchConfig::doIIR && !validTTmove) depth -= 1;
-   if ( depth <= 0 ) return qsearch(alpha, beta, p, height, seldepth, 0, true, pvnode, isInCheck);
+   if ( SearchConfig::doIIR && depth >= SearchConfig::iirMinDepth && !ttHit) depth -= SearchConfig::iirReduction;
 
    // Classic IID
    if (SearchConfig::doIID && !validTTmove /*|| e.d < depth-4*/) {
