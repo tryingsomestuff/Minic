@@ -352,6 +352,9 @@ void registerCOMOptions() { // options exposed to GUI
    _keys.push_back(KeyBase(k_score, w_spin, "deltaGoodMargin"                   , &SearchConfig::deltaGoodMargin                     , ScoreType(0)    , ScoreType(500)      ));
    _keys.push_back(KeyBase(k_score, w_spin, "deltaGoodSEEThreshold"             , &SearchConfig::deltaGoodSEEThreshold               , ScoreType(0)    , ScoreType(1000)     ));
 
+   _keys.push_back(KeyBase(k_int  , w_spin, "iirMinDepth"                       , &SearchConfig::iirMinDepth                         , 1               , 32                  ));
+   _keys.push_back(KeyBase(k_int  , w_spin, "iirReduction"                      , &SearchConfig::iirReduction                        , 0               , 3                   ));
+
    ///@todo more ...
 #endif
 
