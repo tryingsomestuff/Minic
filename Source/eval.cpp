@@ -130,6 +130,7 @@ ScoreType evalAntiChess(const Position &p, EvalData &data, [[maybe_unused]] Sear
     return (white2Play ? +1 : -1) * ret;
 }
 
+#ifdef WITH_NNUE
 ScoreType NNUEEVal(const Position & p, EvalData &data, Searcher &context, EvalFeatures &features, bool secondTime = false){
    if (DynamicConfig::armageddon) features.scalingFactor = 1.f;              ///@todo better
    // call the net
@@ -146,6 +147,7 @@ ScoreType NNUEEVal(const Position & p, EvalData &data, Searcher &context, EvalFe
    // apply variants scoring if requiered
    return variantScore(nnueScore, p.halfmoves, context._height, p.c);   
 }
+#endif
 
 ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowEGEvaluation, bool display) {
    START_TIMER
@@ -880,12 +882,15 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    data.evalDone = true;
    // apply variante scoring if requiered
    const ScoreType hceScore = variantScore(ret, p.halfmoves, context._height, p.c);
+
+#ifdef WITH_NNUE
    if ( std::abs(hceScore) <= DynamicConfig::NNUEThreshold/4 ){
       // if HCE is small (there is something more than just material value going on ...), fall back to NNUE;
       const ScoreType nnueScore = NNUEEVal(p, data, context, features, true);
       STOP_AND_SUM_TIMER(Eval)
       return nnueScore;
    }
+#endif
 
    STOP_AND_SUM_TIMER(Eval)
    return hceScore;
