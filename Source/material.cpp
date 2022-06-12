@@ -193,6 +193,7 @@ ScoreType helperKmmK(const Position &p, Color winningSide, ScoreType s, DepthTyp
 
 ScoreType helperDummy(const Position &, Color, ScoreType, DepthType) { return 0; } ///@todo not 0 for debug purpose ??
 
+#if !defined(ARDUINO) && !defined(ESP32)  
 ScoreType helperKPK(const Position &p, Color winningSide, [[maybe_unused]] ScoreType s, DepthType height) {
    const Square psq = KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const<P_wp>(winningSide))); // we know there is at least one pawn
    const Square wksq = KPK::normalizeSquare(p, winningSide, p.king[winningSide]);
@@ -206,6 +207,7 @@ ScoreType helperKPK(const Position &p, Color winningSide, [[maybe_unused]] Score
    }
    return clampScore(((winningSide == Co_White) ? +1 : -1) * (WIN + ValuesEG[P_wp + PieceShift] + 10 * SQRANK(psq)));
 }
+#endif
 
 ScoreType helperKBPK(const Position & p, Color winningSide, ScoreType s, DepthType height) {
    const Square winningPawn = BBTools::SquareFromBitBoard(p.allPawn()); // assume only one pawn
