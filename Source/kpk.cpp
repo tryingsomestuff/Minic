@@ -4,14 +4,15 @@
 #include "logging.hpp"
 #include "position.hpp"
 
+namespace KPK {
+
+#if !defined(ARDUINO) && !defined(ESP32)  
 namespace {
 uint32_t           KPKBitbase[KPK::KPKmaxIndex / 32];               // force 32bit uint
 inline unsigned    KPKindex(Color us, Square bksq, Square wksq, Square psq) {
    return wksq | (bksq << 6) | (us << 12) | (SQFILE(psq) << 13) | ((6 - SQRANK(psq)) << 15);
 }
 } // namespace
-
-namespace KPK {
 
 Square normalizeSquare(const Position& p, const Color strongSide, const Square sq) {
    assert(BB::countBit(p.pieces_const<P_wp>(strongSide)) == 1); // only for KPK !
@@ -64,8 +65,10 @@ bool probe(Square wksq, const Square wpsq, const Square bksq, const Color us) {
    assert(idx < KPKmaxIndex);
    return KPKBitbase[idx / 32] & (1 << (idx & 0x1F));
 }
+#endif
 
 void init() {
+#if !defined(ARDUINO) && !defined(ESP32)  
    Logging::LogIt(Logging::logInfo) << "KPK init";
    Logging::LogIt(Logging::logInfo) << "KPK table size : " << KPKmaxIndex / 32 * sizeof(uint32_t) / 1024 << "Kb";
    std::array<KPKPosition, KPKmaxIndex> db;
@@ -76,6 +79,7 @@ void init() {
    for (idx = 0; idx < KPKmaxIndex; ++idx) {
       if (db[idx] == kpk_win) { KPKBitbase[idx / 32] |= 1 << (idx & 0x1F); }
    } // compress
+#endif
 }
 
 } // namespace KPK

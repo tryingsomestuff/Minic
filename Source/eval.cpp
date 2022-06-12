@@ -291,10 +291,12 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
      ScoreType materialTableScore = 0;
      const Hash matHash2 = MaterialHash::getMaterialHash2(p.mat);
      bool matHelperHit = false;
+#if !defined(ARDUINO) && !defined(ESP32)     
      if(matHash2 == matHashKPK || matHash2 == matHashKKP){
         materialTableScore = (white2Play ? +1 : -1) * (MaterialHash::helperKPK(p, winningSideEG, features.scores[F_material][EG], context._height));
         matHelperHit = true;
      }
+#endif
      if(matHash2 == matHashKQK || matHash2 == matHashKKQ || matHash2 == matHashKRK || matHash2 == matHashKKR){
         materialTableScore = (white2Play ? +1 : -1) * (MaterialHash::helperKXK(p, winningSideEG, features.scores[F_material][EG], context._height));
         matHelperHit = true;
@@ -303,7 +305,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
         materialTableScore = (white2Play ? +1 : -1) * (MaterialHash::helperKmmK(p, winningSideEG, features.scores[F_material][EG], context._height));
         matHelperHit = true;
      }
-     if (matHelperHit ){
+     if (matHelperHit){
          return variantScore(materialTableScore, p.halfmoves, context._height, p.c);
      }
    }
