@@ -172,16 +172,16 @@ CONST_EVAL_TUNING EvalScore   queenNearKing           = { 7, 15};
 // scaling (/128 inside eval)
 CONST_EVAL_TUNING ScoreType   scalingFactorWin                 = 384;
 CONST_EVAL_TUNING ScoreType   scalingFactorHardWin             = 64;
-CONST_EVAL_TUNING ScoreType   scalingFactorLikelyDraw          = 38;
-CONST_EVAL_TUNING ScoreType   scalingFactorOppBishopAlone      = 42;
-CONST_EVAL_TUNING ScoreType   scalingFactorOppBishopAloneSlope = 7;
-CONST_EVAL_TUNING ScoreType   scalingFactorOppBishop           = 64;
-CONST_EVAL_TUNING ScoreType   scalingFactorOppBishopSlope      = 4;
-CONST_EVAL_TUNING ScoreType   scalingFactorQueenNoQueen        = 66;
-CONST_EVAL_TUNING ScoreType   scalingFactorQueenNoQueenSlope   = 8;
-CONST_EVAL_TUNING ScoreType   scalingFactorPawns               = 86;
-CONST_EVAL_TUNING ScoreType   scalingFactorPawnsSlope          = 14;
-CONST_EVAL_TUNING ScoreType   scalingFactorPawnsOneSide        = -14; // a curious tuned value ...
+CONST_EVAL_TUNING ScoreType   scalingFactorLikelyDraw          = 39;
+CONST_EVAL_TUNING ScoreType   scalingFactorOppBishopAlone      = 34;
+CONST_EVAL_TUNING ScoreType   scalingFactorOppBishopAloneSlope = 20;
+CONST_EVAL_TUNING ScoreType   scalingFactorOppBishop           = 80;
+CONST_EVAL_TUNING ScoreType   scalingFactorOppBishopSlope      = 1;
+CONST_EVAL_TUNING ScoreType   scalingFactorQueenNoQueen        = 79;
+CONST_EVAL_TUNING ScoreType   scalingFactorQueenNoQueenSlope   = 0;
+CONST_EVAL_TUNING ScoreType   scalingFactorPawns               = 75;
+CONST_EVAL_TUNING ScoreType   scalingFactorPawnsSlope          = 25;
+CONST_EVAL_TUNING ScoreType   scalingFactorPawnsOneSide        = -20; // a curious tuned value ...
 
 //N B R QB QR K
 CONST_EVAL_TUNING EvalScore MOB[6][15] = { { { -1,-15},{  7, 20},{ 12, 40},{ 19, 43},{ 26, 40},{ 30, 44},{ 40, 33},{ 35, 46},{ 29, 47},{  0,  0},{  0,  0},{  0,  0},{  0,  0},{  0,  0},{  0,  0} },

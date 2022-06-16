@@ -95,6 +95,17 @@ bool isLazyHigh(ScoreType lazyThreshold, const EvalFeatures &features, EvalScore
    return std::abs(score[MG] + score[EG]) / 2 > lazyThreshold;
 }
 
+bool forbidNNUE(const Position &p){
+   // for opposite colored bishop alone (with pawns)
+   if (p.mat[Co_White][M_t] == 1 && 
+       p.mat[Co_Black][M_t] == 1 &&
+       p.mat[Co_White][M_b] == 1 && 
+       p.mat[Co_Black][M_b] == 1 && 
+       countBit(p.allBishop() & whiteSquare) == 1 &&
+       std::abs(p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) < 4 ) return true;
+   return false;
+}
+
 ScoreType armageddonScore(ScoreType score, unsigned int ply, DepthType height, Color c) {
    return std::clamp(shiftArmageddon(score, ply, c), matedScore(height), matingScore(height-1));
 }
@@ -316,7 +327,8 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
 #endif
 
 #ifdef WITH_NNUE
-   if (DynamicConfig::useNNUE) {
+   const bool forbiddenNNUE = forbidNNUE(p);
+   if (DynamicConfig::useNNUE && !forbiddenNNUE) {
       EvalScore score;
       // we will stay to classic eval when the game is already decided (to gain some nps)
       ///@todo use data.gp inside NNUE condition ?
@@ -818,7 +830,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    if (features.scalingFactor == 1.f && !DynamicConfig::armageddon) {
       const Color strongSide = score[EG] > 0 ? Co_White : Co_Black;
       // opposite colored bishops (scale based on passed pawn of strong side)
-      if (countBit(p.whiteBishop()) == 1 && countBit(p.blackBishop()) == 1 && countBit(p.allBishop() | whiteSquare) == 1) {
+      if (p.mat[Co_White][M_b] == 1 && p.mat[Co_Black][M_b] == 1 && countBit(p.allBishop() & whiteSquare) == 1) {
          if (p.mat[Co_White][M_t] == 1 && p.mat[Co_Black][M_t] == 1) // only bishops and pawn
             features.scalingFactor =
                 (EvalConfig::scalingFactorOppBishopAlone + EvalConfig::scalingFactorOppBishopAloneSlope * countBit(pe.passed[strongSide])) / 128.f;
@@ -834,7 +846,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       // scale based on the number of pawn of strong side
       else
          features.scalingFactor =
-             std::min(1.f, (EvalConfig::scalingFactorPawns + EvalConfig::scalingFactorPawnsSlope * countBit(pawns[strongSide])) / 128.f);
+             std::min(1.f, (EvalConfig::scalingFactorPawns + EvalConfig::scalingFactorPawnsSlope * p.mat[strongSide][M_p]) / 128.f);
 
       // moreover scaledown if pawn on only one side
       if (allPawns && !((allPawns & queenSide) && (allPawns & kingSide))) { features.scalingFactor -= EvalConfig::scalingFactorPawnsOneSide / 128.f; }
@@ -886,7 +898,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    const ScoreType hceScore = variantScore(ret, p.halfmoves, context._height, p.c);
 
 #ifdef WITH_NNUE
-   if ( std::abs(hceScore) <= DynamicConfig::NNUEThreshold/4 ){
+   if ( DynamicConfig::useNNUE && !forbiddenNNUE && std::abs(hceScore) <= DynamicConfig::NNUEThreshold/4 ){
       // if HCE is small (there is something more than just material value going on ...), fall back to NNUE;
       const ScoreType nnueScore = NNUEEVal(p, data, context, features, true);
       STOP_AND_SUM_TIMER(Eval)

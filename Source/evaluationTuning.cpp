@@ -700,7 +700,7 @@ void evaluationTuning(const std::string& filename) {
    std::cout << "NNUE : " << NNUEerr << std::endl;
    std::cout << "HCE  : " << HCEerr << std::endl;
 
-   return;
+   //return;
 
    std::vector<std::string> todo = {
        //"piecesValue",
