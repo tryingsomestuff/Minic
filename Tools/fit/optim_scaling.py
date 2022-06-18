@@ -68,7 +68,7 @@ def run_match(best, c_chess_exe, concurrency, book_file_name, engine):
             book_file_name
         )
     )
-    command = command + " -engine cmd=/ssd/Minic/Dist/Minic3/minic_dev_linux_x64 name=master"
+    command = command + " -engine cmd=/ssd2/Minic/Dist/Minic3/minic_dev_linux_x64 name=master"
     #command = command + " -engine cmd=/ssd/engines/seer-nnue/build/seer name=master option.Hash=128"
     #command = command + " -engine cmd=/ssd/engines/Halogen/Halogen/src/Halogen name=master option.Hash=128"
 
@@ -180,25 +180,25 @@ def main():
     parser.add_argument(
         "--ordo_exe",
         type=str,
-        default="/ssd/Ordo/ordo",
+        default="/ssd2/Ordo/ordo",
         help="Path to ordo, see https://github.com/michiguel/Ordo",
     )
     parser.add_argument(
         "--c_chess_exe",
         type=str,
-        default="/ssd/c-chess-cli/c-chess-cli",
+        default="/ssd2/c-chess-cli/c-chess-cli",
         help="Path to c-chess-cli, see https://github.com/lucasart/c-chess-cli",
     )
     parser.add_argument(
         "--engine",
         type=str,
-        default="/ssd/Minic/Dist/Minic3/minic_dev_linux_x64",
+        default="/ssd2/Minic/Dist/Minic3/minic_dev_linux_x64",
         help="Path to engine, see https://github.com/tryingsomestuff/Minic",
     )
     parser.add_argument(
         "--book_file_name",
         type=str,
-        default="/ssd/Minic/Book_and_Test/OpeningBook/Pohl_AntiDraw_Openings_V1.5/Unbalanced_Human_Openings_V3/UHO_V3_+150_+159/UHO_V3_8mvs_big_+140_+169.epd",
+        default="/ssd2/Minic/Book_and_Test/OpeningBook/Pohl_AntiDraw_Openings_V1.5/Unbalanced_Human_Openings_V3/UHO_V3_+150_+159/UHO_V3_8mvs_big_+140_+169.epd",
         help="Path to a suitable book, see https://github.com/tryingsomestuff/Minic-Book_and_Test/tree/HEAD/OpeningBook",
     )
     args = parser.parse_args()
