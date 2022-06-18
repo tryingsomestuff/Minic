@@ -362,22 +362,27 @@ void registerCOMOptions() { // options exposed to GUI
    _keys.push_back(KeyBase(k_score, w_spin, "PawnValueMG"   , &Values  [P_wp+PieceShift]  , ScoreType(0)    , ScoreType(2000)     ,  [](){SymetrizeValue(); MaterialHash::InitMaterialScore(false);}));
    _keys.push_back(KeyBase(k_score, w_spin, "PawnValueEG"   , &ValuesEG[P_wp+PieceShift]  , ScoreType(0)    , ScoreType(2000)     ,  [](){SymetrizeValue(); MaterialHash::InitMaterialScore(false);}));
    _keys.push_back(KeyBase(k_score, w_spin, "PawnValueGP"   , &ValuesGP[P_wp+PieceShift]  , ScoreType(0)    , ScoreType(2000)     ,  [](){SymetrizeValue(); MaterialHash::InitMaterialScore(false);}));
+   _keys.push_back(KeyBase(k_score, w_spin, "PawnValueSEE"  , &ValuesSEE[P_wp+PieceShift] , ScoreType(0)    , ScoreType(2000)     ,  [](){SymetrizeValue(); MaterialHash::InitMaterialScore(false);}));
 
    _keys.push_back(KeyBase(k_score, w_spin, "KnightValueMG" , &Values  [P_wn+PieceShift]  , ScoreType(0)    , ScoreType(2000)     ,  [](){SymetrizeValue(); MaterialHash::InitMaterialScore(false);}));
    _keys.push_back(KeyBase(k_score, w_spin, "KnightValueEG" , &ValuesEG[P_wn+PieceShift]  , ScoreType(0)    , ScoreType(2000)     ,  [](){SymetrizeValue(); MaterialHash::InitMaterialScore(false);}));
    _keys.push_back(KeyBase(k_score, w_spin, "KnightValueGP" , &ValuesGP[P_wn+PieceShift]  , ScoreType(0)    , ScoreType(2000)     ,  [](){SymetrizeValue(); MaterialHash::InitMaterialScore(false);}));
+   _keys.push_back(KeyBase(k_score, w_spin, "KnightValueSEE", &ValuesSEE[P_wn+PieceShift] , ScoreType(0)    , ScoreType(2000)     ,  [](){SymetrizeValue(); MaterialHash::InitMaterialScore(false);}));
 
    _keys.push_back(KeyBase(k_score, w_spin, "BishopValueMG" , &Values  [P_wb+PieceShift]  , ScoreType(0)    , ScoreType(2000)     ,  [](){SymetrizeValue(); MaterialHash::InitMaterialScore(false);}));
    _keys.push_back(KeyBase(k_score, w_spin, "BishopValueEG" , &ValuesEG[P_wb+PieceShift]  , ScoreType(0)    , ScoreType(2000)     ,  [](){SymetrizeValue(); MaterialHash::InitMaterialScore(false);}));
    _keys.push_back(KeyBase(k_score, w_spin, "BishopValueGP" , &ValuesGP[P_wb+PieceShift]  , ScoreType(0)    , ScoreType(2000)     ,  [](){SymetrizeValue(); MaterialHash::InitMaterialScore(false);}));
+   _keys.push_back(KeyBase(k_score, w_spin, "BishopValueSEE", &ValuesSEE[P_wb+PieceShift] , ScoreType(0)    , ScoreType(2000)     ,  [](){SymetrizeValue(); MaterialHash::InitMaterialScore(false);}));
 
    _keys.push_back(KeyBase(k_score, w_spin, "RookValueMG"   , &Values  [P_wr+PieceShift]  , ScoreType(0)    , ScoreType(2000)     ,  [](){SymetrizeValue(); MaterialHash::InitMaterialScore(false);}));
    _keys.push_back(KeyBase(k_score, w_spin, "RookValueEG"   , &ValuesEG[P_wr+PieceShift]  , ScoreType(0)    , ScoreType(2000)     ,  [](){SymetrizeValue(); MaterialHash::InitMaterialScore(false);}));
    _keys.push_back(KeyBase(k_score, w_spin, "RookValueGP"   , &ValuesGP[P_wr+PieceShift]  , ScoreType(0)    , ScoreType(2000)     ,  [](){SymetrizeValue(); MaterialHash::InitMaterialScore(false);}));
+   _keys.push_back(KeyBase(k_score, w_spin, "RookValueSEE"  , &ValuesSEE[P_wr+PieceShift] , ScoreType(0)    , ScoreType(2000)     ,  [](){SymetrizeValue(); MaterialHash::InitMaterialScore(false);}));
 
    _keys.push_back(KeyBase(k_score, w_spin, "QueenValueMG"  , &Values  [P_wq+PieceShift]  , ScoreType(0)    , ScoreType(2000)     ,  [](){SymetrizeValue(); MaterialHash::InitMaterialScore(false);}));
    _keys.push_back(KeyBase(k_score, w_spin, "QueenValueEG"  , &ValuesEG[P_wq+PieceShift]  , ScoreType(0)    , ScoreType(2000)     ,  [](){SymetrizeValue(); MaterialHash::InitMaterialScore(false);}));
    _keys.push_back(KeyBase(k_score, w_spin, "QueenValueGP"  , &ValuesGP[P_wq+PieceShift]  , ScoreType(0)    , ScoreType(2000)     ,  [](){SymetrizeValue(); MaterialHash::InitMaterialScore(false);}));
+   _keys.push_back(KeyBase(k_score, w_spin, "QueenValueSEE" , &ValuesSEE[P_wq+PieceShift] , ScoreType(0)    , ScoreType(2000)     ,  [](){SymetrizeValue(); MaterialHash::InitMaterialScore(false);}));
 #endif
 
 }

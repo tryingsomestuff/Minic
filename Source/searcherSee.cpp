@@ -24,18 +24,19 @@ ScoreType Searcher::SEE(const Position& p, const Move& m) {
 
    Piece pp = PieceTools::getPieceType(p, from);
    if (mtype == T_ep) {
-      swapList[nCapt]    = value(P_wp);
-      current_target_val = value(pp);
+      swapList[nCapt]    = valueSEE(P_wp);
+      current_target_val = valueSEE(pp);
       occupation_mask &= ~SquareToBitboard(p.ep);
    }
    else {
-      swapList[nCapt] = PieceTools::getAbsValue(p, to);
+      const Piece ppTo = PieceTools::getPieceType(p, to);
+      swapList[nCapt] = valueSEE(ppTo);
       if (promPossible && pp == P_wp) {
-         swapList[nCapt] += value(promShift(mtype)) - value(P_wp);
-         current_target_val = value(promShift(mtype));
+         swapList[nCapt] += valueSEE(promShift(mtype)) - value(P_wp);
+         current_target_val = valueSEE(promShift(mtype));
       }
       else
-         current_target_val = value(pp);
+         current_target_val = valueSEE(pp);
    }
    ++nCapt;
 
@@ -68,11 +69,11 @@ ScoreType Searcher::SEE(const Position& p, const Move& m) {
 
       swapList[nCapt] = -swapList[nCapt - 1] + current_target_val;
       if (promPossible && pp == P_wp) {
-         swapList[nCapt] += value(P_wq) - value(P_wp);
-         current_target_val = value(P_wq);
+         swapList[nCapt] += valueSEE(P_wq) - valueSEE(P_wp);
+         current_target_val = valueSEE(P_wq);
       }
       else
-         current_target_val = value(pp);
+         current_target_val = valueSEE(pp);
 
       ++nCapt;
       attackers &= ~SquareToBitboard(from);

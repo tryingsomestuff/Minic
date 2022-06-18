@@ -205,7 +205,7 @@ ScoreType helperKPK(const Position &p, Color winningSide, [[maybe_unused]] Score
       }
       return 0; // shall be drawScore but we don't care, this is not 3rep
    }
-   return clampScore(((winningSide == Co_White) ? +1 : -1) * (WIN + ValuesEG[P_wp + PieceShift] + 10 * SQRANK(psq)));
+   return clampScore(((winningSide == Co_White) ? +1 : -1) * (WIN + valueEG(P_wp) + 10 * SQRANK(psq)));
 }
 #endif
 

@@ -271,6 +271,12 @@ ENABLE_INCR_OPERATORS_ON(Mat);
 extern CONST_PIECE_TUNING ScoreType Values[NbPiece];
 extern CONST_PIECE_TUNING ScoreType ValuesEG[NbPiece];
 extern CONST_PIECE_TUNING ScoreType ValuesGP[NbPiece];
+extern CONST_PIECE_TUNING ScoreType ValuesSEE[NbPiece];
+
+[[nodiscard]] inline ScoreType value(Piece pp)      { return Values[pp + PieceShift]; }
+[[nodiscard]] inline ScoreType valueEG(Piece pp)    { return ValuesEG[pp + PieceShift]; }
+[[nodiscard]] inline ScoreType valueGP(Piece pp)    { return ValuesGP[pp + PieceShift]; }
+[[nodiscard]] inline ScoreType valueSEE(Piece pp)   { return ValuesSEE[pp + PieceShift]; }
 
 #ifdef WITH_PIECE_TUNING
 inline void SymetrizeValue() {
@@ -278,11 +284,13 @@ inline void SymetrizeValue() {
       Values[-pp + PieceShift]   = Values[pp + PieceShift];
       ValuesEG[-pp + PieceShift] = ValuesEG[pp + PieceShift];
       ValuesGP[-pp + PieceShift] = ValuesGP[pp + PieceShift];
+      ValuesSEE[-pp + PieceShift] = ValuesSEE[pp + PieceShift];
     }
 }
 #endif
 
-const ScoreType        dummyScore     = 0;
+const ScoreType dummyScore = 0;
+
 inline const ScoreType* const absValues_[7]   = {&dummyScore,
                                                  &Values[P_wp + PieceShift],
                                                  &Values[P_wn + PieceShift],
@@ -307,10 +315,18 @@ inline const ScoreType* const absValuesGP_[7] = {&dummyScore,
                                                  &ValuesGP[P_wq + PieceShift],
                                                  &ValuesGP[P_wk + PieceShift]};
 
-[[nodiscard]] inline ScoreType value(Piece pp)      { return Values[pp + PieceShift]; }
+inline const ScoreType* const absValuesSEE_[7] = {&dummyScore,
+                                                 &ValuesSEE[P_wp + PieceShift],
+                                                 &ValuesSEE[P_wn + PieceShift],
+                                                 &ValuesSEE[P_wb + PieceShift],
+                                                 &ValuesSEE[P_wr + PieceShift],
+                                                 &ValuesSEE[P_wq + PieceShift],
+                                                 &ValuesSEE[P_wk + PieceShift]};
+
 [[nodiscard]] inline ScoreType absValue(Piece pp)   { return *absValues_[pp]; }
 [[nodiscard]] inline ScoreType absValueEG(Piece pp) { return *absValuesEG_[pp]; }
 [[nodiscard]] inline ScoreType absValueGP(Piece pp) { return *absValuesGP_[pp]; }
+[[nodiscard]] inline ScoreType absValueSEE(Piece pp){ return *absValuesSEE_[pp]; }
 
 template<typename T> [[nodiscard]] inline constexpr int sgn(T val) { return (T(0) < val) - (val < T(0)); }
 
