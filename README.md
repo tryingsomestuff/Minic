@@ -396,10 +396,11 @@ Minic on youtube, most often loosing to stronger engines ;-) :
   - https://www.youtube.com/watch?v=mrY4tTujC4g
   - https://www.youtube.com/watch?v=_6vbzpCTFyM
   - https://www.youtube.com/watch?v=EmWN79hHpZo
-  - https://www.youtube.com/watch?v=yV1Z69oAOvA
   - https://www.youtube.com/watch?v=Ub3ug-TYJz0
   - https://www.youtube.com/watch?v=w1RtRFXlf9E
   - https://www.youtube.com/watch?v=wlzKxeHtKBo
+  
+GM Matthew Sadler (Silicon Road youtube channel) game analysis
   - https://www.youtube.com/watch?v=9p_jaqHA3QM
   - https://www.youtube.com/watch?v=yTZuNEV40X4
   - https://www.youtube.com/watch?v=3ttQaGKMAy4
