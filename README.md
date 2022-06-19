@@ -426,7 +426,7 @@ RubiChess by Andreas Matthies
 Seer by Connor McMonigle  
 Stockfish by the stockfish contributors (https://github.com/official-stockfish/Stockfish/blob/master/AUTHORS)  
 Texel by Peter Österlund   
-Topple by Vincent Konsolas  
+Topple by Vincent Tang  
 TSCP by Tom Kerrigan  
 Vajolet by Marco Belli  
 Vice by BlueFeverSoft  
