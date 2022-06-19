@@ -408,9 +408,10 @@ Minic on youtube, most often loosing to stronger engines ;-) :
 ## Thanks
 
 Of course many/most idea in Minic are taken from the beautifull chess developer community.
-Here's a very incomplete list of inspiring open-source engines :
+Here's a very incomplete list of open-source engines that were inspiring for me:
 
 Arasan by Jon Dart  
+Berserk by Jay Honnold  
 CPW by Pawel Koziol and Edmund Moshammer  
 Deepov by Romain Goussault  
 Defenchess by Can Cetin and Dogac Eldenk  
@@ -418,16 +419,19 @@ Demolito by Lucas Braesch
 Dorpsgek by Dan Ravensloft  
 Ethereal by Andrew Grant  
 Galjoen by Werner Taelemans  
+Koivisto by Kim Kåhre and Finn Eggers  
 Madchess by Erik Madsen  
 Rodent by Pawel Koziol  
 RubiChess by Andreas Matthies  
 Seer by Connor McMonigle  
-Stockfish by Tord Romstad, Marco Costalba, Joona Kiiski and Gary Linscott  
+Stockfish by the stockfish contributors (https://github.com/official-stockfish/Stockfish/blob/master/AUTHORS)  
 Texel by Peter Österlund   
 Topple by Vincent Konsolas  
 TSCP by Tom Kerrigan  
 Vajolet by Marco Belli  
 Vice by BlueFeverSoft  
+Weiss by Terje Kirstihagen  
+Winter by Jonathan Rosenthal  
 Xiphos by Milos Tatarevic  
 Zurichess by Alexandru Moșoi   
 
