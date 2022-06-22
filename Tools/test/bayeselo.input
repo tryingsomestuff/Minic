@@ -1,4 +1,4 @@
-readpgn /ssd/Minic/test.pgn
+readpgn /ssd2/Minic/test.pgn
 elo
  mm
  exactdist
