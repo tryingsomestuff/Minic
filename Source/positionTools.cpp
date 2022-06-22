@@ -224,8 +224,11 @@ bool readMove(const Position &p, const std::string &ss, Square &from, Square &to
 #pragma GCC diagnostic ignored "-Wconversion"
 
 float gamePhase(const Position::Material &mat, ScoreType &matScoreW, ScoreType &matScoreB) {
-   const float totalMatScore = 2.f * absValueGP(P_wq) + 4.f * absValueGP(P_wr) + 4.f * absValueGP(P_wb) + 4.f * absValueGP(P_wn) +
-                               16.f * absValueGP(P_wp); // cannot be static for tuning process ...
+   const float totalMatScore = 2.f * absValueGP(P_wq) + 
+                               4.f * absValueGP(P_wr) + 
+                               4.f * absValueGP(P_wb) + 
+                               4.f * absValueGP(P_wn) +
+                               16.f * absValueGP(P_wp); 
    const ScoreType matPieceScoreW = mat[Co_White][M_q] * absValueGP(P_wq) + mat[Co_White][M_r] * absValueGP(P_wr) +
                                     mat[Co_White][M_b] * absValueGP(P_wb) + mat[Co_White][M_n] * absValueGP(P_wn);
    const ScoreType matPieceScoreB = mat[Co_Black][M_q] * absValueGP(P_wq) + mat[Co_Black][M_r] * absValueGP(P_wr) +
@@ -234,7 +237,7 @@ float gamePhase(const Position::Material &mat, ScoreType &matScoreW, ScoreType &
    const ScoreType matPawnScoreB = mat[Co_Black][M_p] * absValueGP(P_wp);
    matScoreW = matPieceScoreW + matPawnScoreW;
    matScoreB = matPieceScoreB + matPawnScoreB;
-   return (matScoreW + matScoreB) / totalMatScore; // based on MG values
+   return std::min(1.f,(matScoreW + matScoreB) / totalMatScore);
 }
 
 #pragma GCC diagnostic pop
