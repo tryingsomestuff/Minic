@@ -573,7 +573,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 #endif
       if (applyMove(p2, e.m)) {
          TT::prefetch(computeHash(p2));
-         //const Square to = Move2To(e.m);
+         const Square to = Move2To(e.m);
          ++validMoveCount;
          ++validNonPrunedCount;
          const bool isQuiet = Move2Type(e.m) == T_std && !isNoisy(p,e.m);
@@ -630,7 +630,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             // mate threat extension (from null move)
             //if (EXTENDMORE && mateThreat) stats.incr(Stats::sid_mateThreatExtension),++extension;
             // simple recapture extension
-            //if (EXTENDMORE && pvnode && isValidMove(p.lastMove) && Move2Type(p.lastMove) == T_capture && to == Move2To(p.lastMove)) stats.incr(Stats::sid_recaptureExtension),++extension; // recapture
+            if (EXTENDMORE && pvnode && isValidMove(p.lastMove) && Move2Type(p.lastMove) == T_capture && to == Move2To(p.lastMove)) stats.incr(Stats::sid_recaptureExtension),++extension; // recapture
             // gives check extension
             //if (EXTENDMORE && isCheck ) stats.incr(Stats::sid_checkExtension2),++extension; // we give check with a non risky move
             /*
@@ -867,7 +867,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                skipCap = true;
                continue;
             }
-            else if (!rootnode && badCapScore(*it) < - 1 * SearchConfig::seeCaptureFactor * (depth + pruningDepthCorrection + dangerDiff/SearchConfig::seeCapDangerDivisor)) {
+            else if ( badCapScore(*it) < - 1 * SearchConfig::seeCaptureFactor * (depth + pruningDepthCorrection + dangerDiff/SearchConfig::seeCapDangerDivisor)) {
                stats.incr(Stats::sid_see2);
                skipCap = true;
                continue;
@@ -876,7 +876,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
          // LMR
          DepthType reduction = 0;
-         if (SearchConfig::doLMR && depth >= SearchConfig::lmrMinDepth && validMoveCount > 1 + 2 * rootnode && isReductible) {
+         if (SearchConfig::doLMR && depth >= SearchConfig::lmrMinDepth && isReductible) {
 
             if (Move2Type(*it) == T_std){
                stats.incr(Stats::sid_lmr);
@@ -929,7 +929,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
          // SEE (quiet)
          ScoreType seeValue = 0;
-         if (isPrunableStdNoCheck /* && !rootnode*/) {
+         if (isPrunableStdNoCheck) {
             seeValue = SEE(p, *it);
             if (seeValue < -SearchConfig::seeQuietFactor * (nextDepth + isEmergencyDefence + isEmergencyAttack + dangerDiff/SearchConfig::seeQuietDangerDivisor) * nextDepth ){
                stats.incr(Stats::sid_seeQuiet);
