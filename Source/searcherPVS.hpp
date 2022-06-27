@@ -573,7 +573,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 #endif
       if (applyMove(p2, e.m)) {
          TT::prefetch(computeHash(p2));
-         const Square to = Move2To(e.m);
+         //const Square to = Move2To(e.m);
          ++validMoveCount;
          ++validNonPrunedCount;
          const bool isQuiet = Move2Type(e.m) == T_std && !isNoisy(p,e.m);
@@ -630,7 +630,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             // mate threat extension (from null move)
             //if (EXTENDMORE && mateThreat) stats.incr(Stats::sid_mateThreatExtension),++extension;
             // simple recapture extension
-            if (EXTENDMORE && pvnode && isValidMove(p.lastMove) && Move2Type(p.lastMove) == T_capture && to == Move2To(p.lastMove)) stats.incr(Stats::sid_recaptureExtension),++extension; // recapture
+            //if (EXTENDMORE && pvnode && isValidMove(p.lastMove) && Move2Type(p.lastMove) == T_capture && to == Move2To(p.lastMove)) stats.incr(Stats::sid_recaptureExtension),++extension; // recapture
             // gives check extension
             //if (EXTENDMORE && isCheck ) stats.incr(Stats::sid_checkExtension2),++extension; // we give check with a non risky move
             /*
@@ -861,7 +861,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          }
 
          // SEE (capture)
-         if (isPrunableBadCap) {
+         if (!rootnode && isPrunableBadCap) {
             if (futility) {
                stats.incr(Stats::sid_see);
                skipCap = true;
@@ -931,7 +931,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          ScoreType seeValue = 0;
          if (isPrunableStdNoCheck) {
             seeValue = SEE(p, *it);
-            if (seeValue < -SearchConfig::seeQuietFactor * (nextDepth + isEmergencyDefence + isEmergencyAttack + dangerDiff/SearchConfig::seeQuietDangerDivisor) * nextDepth ){
+            if (!rootnode && seeValue < -SearchConfig::seeQuietFactor * (nextDepth + isEmergencyDefence + isEmergencyAttack + dangerDiff/SearchConfig::seeQuietDangerDivisor) * nextDepth ){
                stats.incr(Stats::sid_seeQuiet);
                continue;
             }
