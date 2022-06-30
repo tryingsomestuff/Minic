@@ -14,7 +14,7 @@ echo "====================================="
 #   exe_name version arch_target special_options special_definitions
 
 # Intel main arch
-for m in -march=core2 -march=nehalem -march=sandybridge -march=skylake -march=skylake-avx512; do
+for m in -march=core2 -march=nehalem -march=sandybridge -march=skylake; do
    $dir/build.sh $e $v $m $n $d
    $dir/buildGW.sh $e $v $m $n $d
 done

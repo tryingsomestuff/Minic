@@ -1,7 +1,7 @@
 #!/bin/bash
 
-export CXX=/ssd/android/bin/arm-linux-androideabi-clang++
-export CC=/ssd/android/bin/arm-linux-androideabi-clang++
+export CXX=/ssd2/android/bin/arm-linux-androideabi-clang++
+export CC=/ssd2/android/bin/arm-linux-androideabi-clang++
 
 source $(dirname $0)/common
 cd_root
