@@ -277,7 +277,7 @@ void registerCOMOptions() { // options exposed to GUI
 
 #ifdef WITH_NNUE
    _keys.push_back(KeyBase(k_string,w_string,"NNUEFile"                    , &DynamicConfig::NNUEFile                                                                                , &NNUEWrapper::init));
-   _keys.push_back(KeyBase(k_bool,  w_check, "forceNNUE"                   , &DynamicConfig::forceNNUE                      , false            , true                              ));
+   _keys.push_back(KeyBase(k_bool,  w_check, "forceNNUE"                   , &DynamicConfig::forceNNUE                      , false            , true ));
    _keys.push_back(KeyBase(k_int,   w_spin,  "NNUEScaling"                 , &DynamicConfig::NNUEScaling                    , (int)32          , (int)256 ));
    _keys.push_back(KeyBase(k_int,   w_spin,  "NNUEThreshold"               , &DynamicConfig::NNUEThreshold                  , (int)-1500       , (int)1500 ));
 #endif
@@ -316,6 +316,8 @@ void registerCOMOptions() { // options exposed to GUI
    _keys.push_back(KeyBase(k_depth, w_spin, "nullMoveVerifDepth"                , &SearchConfig::nullMoveVerifDepth                  , DepthType(0)    , DepthType(30)       ));
    _keys.push_back(KeyBase(k_score, w_spin, "nullMoveMargin"                    , &SearchConfig::nullMoveMargin                      , ScoreType(-500) , ScoreType(500)      ));
    _keys.push_back(KeyBase(k_score, w_spin, "nullMoveMargin2"                   , &SearchConfig::nullMoveMargin2                     , ScoreType(-500) , ScoreType(500)      ));
+   _keys.push_back(KeyBase(k_score, w_spin, "nullMoveReductionInit"             , &SearchConfig::nullMoveReductionInit               , ScoreType(1)    , ScoreType(10)       ));
+   _keys.push_back(KeyBase(k_score, w_spin, "nullMoveReductionDepthDivisor"     , &SearchConfig::nullMoveReductionDepthDivisor       , ScoreType(1)    , ScoreType(10)       ));
    _keys.push_back(KeyBase(k_score, w_spin, "nullMoveDynamicDivisor"            , &SearchConfig::nullMoveDynamicDivisor              , ScoreType(1)    , ScoreType(1500)     ));
 
    _keys.push_back(KeyBase(k_score, w_spin, "historyExtensionThreshold"         , &SearchConfig::historyExtensionThreshold           , ScoreType(1)    , ScoreType(1500)     ));

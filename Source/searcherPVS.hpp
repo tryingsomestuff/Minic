@@ -417,7 +417,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
           (height >= nullMoveMinPly || nullMoveMinPly != p.c)) {
          PVList nullPV;
          stats.incr(Stats::sid_nullMoveTry);
-         const DepthType R = depth / 4 + 3 + std::min((evalScore - beta) / SearchConfig::nullMoveDynamicDivisor, 5); // adaptative
+         const DepthType R = SearchConfig::nullMoveReductionInit +
+                             depth / SearchConfig::nullMoveReductionDepthDivisor + 
+                             std::min((evalScore - beta) / SearchConfig::nullMoveDynamicDivisor, 5); // adaptative
          ///@todo try to minimize sid_nullMoveTry2 versus sid_nullMove
          const ScoreType nullIIDScore =
              evalScore; // pvs<false, false>(beta - 1, beta, p, std::max(depth/4,1), evaluator, height, nullPV, seldepth, isInCheck, !cutNode);

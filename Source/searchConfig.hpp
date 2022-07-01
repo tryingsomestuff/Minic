@@ -75,6 +75,8 @@ extern CONST_SEARCH_TUNING DepthType nullMoveMinDepth;
 extern CONST_SEARCH_TUNING DepthType nullMoveVerifDepth;
 extern CONST_SEARCH_TUNING ScoreType nullMoveMargin;
 extern CONST_SEARCH_TUNING ScoreType nullMoveMargin2;
+extern CONST_SEARCH_TUNING ScoreType nullMoveReductionDepthDivisor;
+extern CONST_SEARCH_TUNING ScoreType nullMoveReductionInit;
 extern CONST_SEARCH_TUNING ScoreType nullMoveDynamicDivisor;
 extern CONST_SEARCH_TUNING ScoreType historyExtensionThreshold;
 extern CONST_SEARCH_TUNING DepthType CMHMaxDepth[2];
