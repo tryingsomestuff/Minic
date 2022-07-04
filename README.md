@@ -400,6 +400,7 @@ Minic on youtube, most often loosing to stronger engines ;-) :
   - https://www.youtube.com/watch?v=w1RtRFXlf9E
   - https://www.youtube.com/watch?v=wlzKxeHtKBo
   - https://www.youtube.com/watch?v=04A9Qb6D-Xs
+  - https://www.youtube.com/watch?v=9qvs7paQRtw
   
 GM Matthew Sadler ([Silicon Road youtube channel](https://www.youtube.com/c/SiliconRoadChess)) game analysis
   - https://www.youtube.com/watch?v=9p_jaqHA3QM
