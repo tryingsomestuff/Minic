@@ -32,10 +32,10 @@ class Command(object):
 
 def convert_ckpt(root_dir):
     """ Find the list of checkpoints that are available, and convert those that have no matching .nnue """
-    # default/version_0/checkpoints/epoch=3.ckpt
+    # lightning_logs/version_0/checkpoints/epoch=3.ckpt
     p = re.compile("epoch=[0-9]*.*.ckpt")
     ckpts = []
-    for path, subdirs, files in os.walk(root_dir + '/default/', followlinks=False):
+    for path, subdirs, files in os.walk(root_dir + '/lightning_logs/', followlinks=False):
         for filename in files:
             #print(filename)
             m = p.match(filename)
@@ -43,9 +43,9 @@ def convert_ckpt(root_dir):
                 ckpts.append(os.path.join(path, filename))
 
     # lets move the .nnue files a bit up in the tree, and get rid of the = sign.
-    # default/version_0/checkpoints/epoch=3.ckpt -> nn-epoch3.nnue
+    # lightning_logs/version_0/checkpoints/epoch=3.ckpt -> nn-epoch3.nnue
     for ckpt in ckpts:
-        nnue_file_name = re.sub("default/version_[0-9]+/checkpoints/", "", ckpt)
+        nnue_file_name = re.sub("lightning_logs/version_[0-9]+/checkpoints/", "", ckpt)
         nnue_file_name = re.sub("epoch=", "nn-epoch", nnue_file_name)
         nnue_file_name = re.sub("-step=[0-9]*", "", nnue_file_name)
         nnue_file_name = re.sub(".ckpt", ".nnue", nnue_file_name)
@@ -102,7 +102,7 @@ def run_match(best, root_dir, c_chess_exe, concurrency, book_file_name, engine):
             book_file_name
         )
     )
-    command = command + " -engine cmd=/ssd/Minic/Dist/Minic3/minic_3.18_linux_x64_skylake name=master"
+    command = command + " -engine cmd=/ssd2/Minic/Dist/Minic3/minic_3.24_linux_x64_skylake name=master"
 
     count = 0
     for net in best:
