@@ -55,6 +55,8 @@ void threadedWork(F&& worker, const size_t nbthreads, const uint64_t size, Argum
 
 bool checkEval(const Position & p, ScoreType e, Searcher & context, const std::string & txt);
 
+[[nodiscard]] std::string showAlgAbr(const Move m, const Position& p);
+
 /*
 #include <cassert>
 #include <list>
