@@ -136,7 +136,7 @@ void analyze(const Position& p, DepthType depth, bool openBenchOutput = false) {
 }
 
 void selfPlay(DepthType depth) {
-   DynamicConfig::genFen = true; ///@todo this is forced here but shall be set by CLI option in fact.
+   //DynamicConfig::genFen = true; // this can be forced here but shall be set by CLI option in fact.
 
    assert(!DynamicConfig::armageddon);
    assert(!DynamicConfig::antichess);
@@ -154,6 +154,8 @@ void selfPlay(DepthType depth) {
    p.resetNNUEEvaluator(p.evaluator()); // this is needed as the RootPosition CTOR with a fen hasn't fill the evaluator yet ///@todo a CTOR with evaluator given ...
 #endif
 
+std::ofstream pgnOut("out.pgn", std::ofstream::app);
+
 #ifdef WITH_GENFILE
    if (DynamicConfig::genFen && !ThreadPool::instance().main().genStream.is_open()) {
 #ifdef _WIN32
@@ -166,6 +168,7 @@ void selfPlay(DepthType depth) {
 #endif
    Position  p2           = p;
    bool      ended        = false;
+   bool      justBegin    = true;
    int       result       = 0;
    int       drawCount    = 0;
    int       winCount     = 0;
@@ -177,7 +180,12 @@ void selfPlay(DepthType depth) {
       ThreadPool::instance().main().subSearch = true;
       analyze(p2, depth); // search using a specific depth
       ThreadPool::instance().main().subSearch = false;
-      ThreadData d                            = ThreadPool::instance().main().getData();
+      ThreadData d = ThreadPool::instance().main().getData();
+
+      if(justBegin){
+         pgnOut << "[Event \"Minic self play\"]\n";
+         justBegin = false;
+      }
 
       if (std::abs(d.score) < minDrawScore) ++drawCount;
       else
@@ -211,6 +219,14 @@ void selfPlay(DepthType depth) {
          result = 0; // draw
       }
 
+      if (ended){
+         pgnOut << (result == 0 ? "1/2-1/2" : result > 0 ? "1-0" : "0-1") << "\n";
+         justBegin = true;
+      }
+      else{
+         pgnOut << (p2.halfmoves%2?(std::to_string(p2.moves)+". ") : "") << showAlgAbr(d.best,p2) << " ";
+      }
+
 #ifdef WITH_GENFILE
       const bool getQuietPos = true;
       if (DynamicConfig::genFen) {
@@ -218,7 +234,6 @@ void selfPlay(DepthType depth) {
          if (!ended) ThreadPool::instance().main().writeToGenFile(p2, getQuietPos, d, {}); // bufferized
          else {
             ThreadPool::instance().main().writeToGenFile(p2, getQuietPos, d, result); // write to file using result
-            break;
          }
       }
 #else
@@ -226,9 +241,11 @@ void selfPlay(DepthType depth) {
       DISCARD result;
 #endif
 
+      if (ended) break;
+
       // update position using best move
       Position p3 = p2;
-      applyMove(p3, d.best, true);
+      if (!applyMove(p3, d.best, true)) break;
       p2 = p3;
    }
 }
@@ -273,7 +290,7 @@ int cliManagement(std::string cli, int argc, char** argv) {
    if (cli == "-selfplay") {
       DepthType d = 15; // this is "search depth", not genFenDepth !
       if (argc > 2) d = clampDepth(atoi(argv[2]));
-      uint64_t n = 1;
+      int64_t n = 1;
       if (argc > 3) n = atoll(argv[3]);
       Logging::LogIt(Logging::logInfo) << "Let's go for " << n << " selfplay games ...";
       while (n-- > 0) {
