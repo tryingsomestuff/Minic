@@ -204,7 +204,7 @@ private:
         is_white[i] = static_cast<float>(e.pos.sideToMove() == Color::White);
         outcome[i] = (e.result + 1.0f) / 2.0f;
         score[i] = e.score;
-        phase[i] = std::min(3,e.pos.piecesBB().count()/8);
+        phase[i] = std::min(1,e.pos.piecesBB().count()/16);
         fill_features(FeatureSet<Ts...>{}, i, e);
     }
 
