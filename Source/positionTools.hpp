@@ -20,6 +20,23 @@ bool readMove(const Position &p, const std::string &ss, Square &from, Square &to
 
 [[nodiscard]] bool readEPDFile(const std::string &fileName, std::vector<std::string> &positions);
 
+struct PerftAccumulator {
+   PerftAccumulator(): pseudoNodes(0), validNodes(0), captureNodes(0), epNodes(0), checkNode(0), checkMateNode(0), castling(0), promotion(0) {}
+   Counter           pseudoNodes, validNodes, captureNodes, epNodes, checkNode, checkMateNode, castling, promotion;
+   void              Display();
+   PerftAccumulator& operator+=(const PerftAccumulator& acc) {
+      pseudoNodes += acc.pseudoNodes;
+      validNodes += acc.validNodes;
+      captureNodes += acc.captureNodes;
+      epNodes += acc.epNodes;
+      checkNode += acc.checkNode;
+      checkMateNode += acc.checkMateNode;
+      castling += acc.castling;
+      promotion += acc.promotion;
+      return *this;
+   }
+};
+
 #if !defined(ARDUINO) && !defined(ESP32)
 namespace chess960 {
 extern const std::string positions[960];
