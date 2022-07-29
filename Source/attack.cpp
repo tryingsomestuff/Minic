@@ -28,7 +28,7 @@ void initMask() {
 #if !defined(ARDUINO) && !defined(ESP32)      
             for (int r = SQRANK(x) + i, f = SQFILE(x) + j; 0 <= r && r < 8 && 0 <= f && f < 8; r += i, f += j) {
                const int y = 8 * r + f;
-               d[x][y]     = (8 * i + j);
+               d[x][y]     = 8 * i + j;
                for (int z = x + d[x][y]; z != y; z += d[x][y]) mask[x].between[y] |= SquareToBitboard(z);
             }
 #endif
@@ -321,7 +321,7 @@ BitBoard between(const Square sq1, const Square sq2){
 bool isAttacked(const Position &p, const Square s) {
    //assert(isValidSquare(s)); ///@todo ?
    START_TIMER
-   const bool b = s != INVALIDSQUARE && BBTools::isAttackedBB(p, s, p.c);
+   const bool b = isValidSquare(s) && BBTools::isAttackedBB(p, s, p.c);
    STOP_AND_SUM_TIMER(IsAttacked);
    return b;
 }
