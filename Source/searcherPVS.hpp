@@ -499,7 +499,10 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    }
 
    // Ed style IIR
-   if ( SearchConfig::doIIR && depth >= SearchConfig::iirMinDepth && !ttHit) depth -= SearchConfig::iirReduction;
+   if ( SearchConfig::doIIR && depth >= SearchConfig::iirMinDepth && !ttHit){
+      stats.incr(Stats::sid_iid);
+      depth -= SearchConfig::iirReduction;
+   }
 
    // Classic IID
    if (SearchConfig::doIID && !validTTmove /*|| e.d < depth-4*/) {
