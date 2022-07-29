@@ -10,7 +10,7 @@
 namespace BBTools {
 
 /*!
- * Two bitboard attack generation tools can be used here (controlled by WITH_MAGIC define from definition.hpp):
+ * Two bitboard attack generation tools can be used here (controlled by WITH_MAGIC define from config.hpp):
  * - hyperbola quintessence (https://www.chessprogramming.org/Hyperbola_Quintessence)
  * - or magic (https://www.chessprogramming.org/Magic_Bitboards) with BMI2 extension if available
  */
