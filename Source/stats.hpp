@@ -54,6 +54,7 @@ struct Stats {
       sid_see2,
       sid_seeQuiet,
       sid_iid,
+      sid_iir,
       sid_ttalpha,
       sid_ttbeta,
       sid_alpha,
