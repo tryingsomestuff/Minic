@@ -7,11 +7,11 @@ import torch.nn.functional as F
 import pytorch_lightning as pl
 import struct
 
-netversion = struct.unpack('!f', bytes.fromhex('c0ffee01'))[0]
+netversion = struct.unpack('!f', bytes.fromhex('c0ffee02'))[0]
 
 withFactorizer = True
 
-nphase = 4
+nphase = 2
 BASE = 384
 L1 = 8
 L2 = 8
@@ -147,7 +147,7 @@ class NNUE(pl.LightningModule):
     return y3
 
   def step_(self, batch, batch_idx, loss_type):
-    us, them, white, black, outcome, score , phase = batch
+    us, them, white, black, outcome, score, phase = batch
   
     #from SF values, shall be tuned
     net2score = 600
@@ -173,8 +173,10 @@ class NNUE(pl.LightningModule):
     #loss_result = (q - t).square().mean()
     #loss = self.lambda_ * loss_eval + (1.0 - self.lambda_) * loss_result
 
-    # from current SF trainer
-    pt = p * self.lambda_ + t * (1.0 - self.lambda_)
+    # in end-game take outcome into account
+    phase_scaling = phase * 1.0 / (nphase - 1)
+    phased_lambda_outcome = phase_scaling * (1.0 - self.lambda_)
+    pt = p * (1.0 - phased_lambda_outcome) + t * phased_lambda_outcome
     loss = torch.pow(torch.abs(pt - q), 2.6).mean()
 
     self.log(loss_type, loss)

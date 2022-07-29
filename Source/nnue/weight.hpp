@@ -10,7 +10,7 @@
 
 template<typename NT, bool Q> struct NNUEWeights {
 
-   static constexpr int nbuckets = 4;
+   static constexpr int nbuckets = 2;
    static constexpr int bucketDivisor = 32/nbuckets;
 
    InputLayer<NT, inputLayerSize, firstInnerLayerSize, Q> w {};
@@ -40,8 +40,8 @@ template<typename NT, bool Q> struct NNUEWeights {
    }
 
    static bool load(const std::string& path, NNUEWeights<NT, Q>& loadedWeights) {
-      [[maybe_unused]] constexpr uint32_t expectedVersion {0xc0ffee01};
-      [[maybe_unused]] constexpr int      expectedSize    {151100180}; // net size + 4 for version
+      [[maybe_unused]] constexpr uint32_t expectedVersion {0xc0ffee02};
+      [[maybe_unused]] constexpr int      expectedSize    {151049100}; // net size + 4 for version
       [[maybe_unused]] constexpr bool     withVersion     {true}; // used for backward compatiblity and debug
 
       if (path != "embedded") { // read from disk
