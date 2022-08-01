@@ -48,6 +48,7 @@ std::string NNUEFile;
 std::string NNUEFile = "embedded";
 #endif
 bool         genFen        = false;
+bool         pgnOut        = false;
 unsigned int genFenDepth   = 8;
 unsigned int genFenDepthEG = 16;
 unsigned int randomPly     = 0;

@@ -284,9 +284,11 @@ void registerCOMOptions() { // options exposed to GUI
 
 #ifdef WITH_GENFILE
    _keys.push_back(KeyBase(k_bool,  w_check, "GenFen"                      , &DynamicConfig::genFen                         , false            , true ));
+   _keys.push_back(KeyBase(k_bool,  w_check, "PgnOut"                      , &DynamicConfig::pgnOut                         , false            , true ));
    _keys.push_back(KeyBase(k_int,   w_spin,  "GenFenDepth"                 , &DynamicConfig::genFenDepth                    , (unsigned int)2  , (unsigned int)40 ));
    _keys.push_back(KeyBase(k_int,   w_spin,  "GenFenDepthEG"               , &DynamicConfig::genFenDepthEG                  , (unsigned int)2  , (unsigned int)40 ));
    _keys.push_back(KeyBase(k_int,   w_spin,  "RandomPly"                   , &DynamicConfig::randomPly                      , (unsigned int)0  , (unsigned int)40 ));
+   //_keys.push_back(KeyBase(k_ull,   w_spin,  "MaxNodes"                    , &TimeMan::maxNodes                             , (uint64_t)0      , (uint64_t)100000000 ));
 #endif
 
    _keys.push_back(KeyBase(k_int,   w_spin,  "StyleAttack"                 , &DynamicConfig::styleAttack                    , (int)0   , (int)100                                    , &EvalFeatures::callBack));
@@ -429,6 +431,7 @@ void initOptions(int argc, char** argv) {
    GETOPT(withWDL, bool)
    GETOPT(bongCloud, bool)
    GETOPT(anarchy, bool)
+   Options::getOption<uint64_t>(TimeMan::maxNodes, "maxNodes");
 
 #ifdef WITH_SYZYGY
    GETOPT(syzygyPath, std::string)
@@ -443,6 +446,7 @@ void initOptions(int argc, char** argv) {
 
 #ifdef WITH_GENFILE
    GETOPT(genFen, bool)
+   GETOPT(pgnOut, bool)
    GETOPT(genFenDepth, unsigned int)
    GETOPT(genFenDepthEG, unsigned int)
    GETOPT(randomPly, unsigned int)

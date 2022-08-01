@@ -35,6 +35,7 @@ extern std::string  NNUEFile;
 extern int          NNUEScaling;
 extern int          NNUEThreshold;
 extern bool         genFen;
+extern bool         pgnOut;
 extern unsigned int genFenDepth;
 extern unsigned int genFenDepthEG;
 extern unsigned int randomPly;

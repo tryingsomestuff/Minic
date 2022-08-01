@@ -263,16 +263,16 @@ struct GenFENEntry{
    ScoreType s;
    uint16_t ply;
    Color stm;
-   void write(std::ofstream & genStream, int result) const {
-      genStream << "fen " << fen << "\n"
-                << "move " << ToString(m) << "\n"
-                << "score " << s
-                << "\n"
-                //<< "eval "   << e << "\n"
-                << "ply " << ply << "\n"
-                << "result " << (stm == Co_White ? result : -result) << "\n"
-                << "e"
-                << "\n";
+   void write(std::ofstream & stream, int result) const {
+      stream << "fen " << fen << "\n"
+             << "move " << ToString(m) << "\n"
+             << "score " << s
+             << "\n"
+             //<< "eval "   << e << "\n"
+             << "ply " << ply << "\n"
+             << "result " << (stm == Co_White ? result : -result) << "\n"
+             << "e"
+             << "\n";
    }
 };
 
