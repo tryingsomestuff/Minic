@@ -27,15 +27,18 @@ void selfPlay(DepthType depth) {
    p.resetNNUEEvaluator(p.evaluator()); // this is needed as the RootPosition CTOR with a fen hasn't fill the evaluator yet ///@todo a CTOR with evaluator given ...
 #endif
 
-std::ofstream pgnOut("out.pgn", std::ofstream::app);
-
-#ifdef WITH_GENFILE
-   if (DynamicConfig::genFen && !ThreadPool::instance().main().genStream.is_open()) {
 #ifdef _WIN32
 #define GETPID _getpid
 #else
 #define GETPID ::getpid
 #endif
+
+   if (DynamicConfig::pgnOut && !ThreadPool::instance().main().genStream.is_open()) {
+      ThreadPool::instance().main().pgnStream.open("games_" + std::to_string(GETPID()) + "_" + std::to_string(0) + ".pgn", std::ofstream::app);
+   }
+
+#ifdef WITH_GENFILE
+   if (DynamicConfig::genFen && !ThreadPool::instance().main().genStream.is_open()) {
       ThreadPool::instance().main().genStream.open("genfen_" + std::to_string(GETPID()) + "_" + std::to_string(0) + ".epd", std::ofstream::app);
    }
 #endif
@@ -56,7 +59,10 @@ std::ofstream pgnOut("out.pgn", std::ofstream::app);
       ThreadData d = ThreadPool::instance().main().getData();
 
       if(justBegin){
-         pgnOut << "[Event \"Minic self play\"]\n";
+         if (DynamicConfig::pgnOut){
+            ThreadPool::instance().main().pgnStream << "[Event \"Minic self play\"]\n";
+            ThreadPool::instance().main().pgnStream << "[FEN \"" + GetFEN(p) + "\"]\n";
+         }
          justBegin = false;
       }
 
@@ -93,11 +99,11 @@ std::ofstream pgnOut("out.pgn", std::ofstream::app);
       }
 
       if (ended){
-         pgnOut << (result == 0 ? "1/2-1/2" : result > 0 ? "1-0" : "0-1") << "\n";
+         if (DynamicConfig::pgnOut) ThreadPool::instance().main().pgnStream << (result == 0 ? "1/2-1/2" : result > 0 ? "1-0" : "0-1") << "\n";
          justBegin = true;
       }
       else{
-         pgnOut << (p2.halfmoves%2?(std::to_string(p2.moves)+". ") : "") << showAlgAbr(d.best,p2) << " ";
+         if (DynamicConfig::pgnOut) ThreadPool::instance().main().pgnStream << (p2.halfmoves%2?(std::to_string(p2.moves)+". ") : "") << showAlgAbr(d.best,p2) << " ";
       }
 
 #ifdef WITH_GENFILE
