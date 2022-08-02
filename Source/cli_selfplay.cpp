@@ -33,7 +33,7 @@ void selfPlay(DepthType depth, uint64_t & nbPos) {
 #define GETPID ::getpid
 #endif
 
-   if (DynamicConfig::pgnOut && !ThreadPool::instance().main().genStream.is_open()) {
+   if (DynamicConfig::pgnOut && !ThreadPool::instance().main().pgnStream.is_open()) {
       ThreadPool::instance().main().pgnStream.open("games_" + std::to_string(GETPID()) + "_" + std::to_string(0) + ".pgn", std::ofstream::app);
    }
 
