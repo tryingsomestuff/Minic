@@ -359,7 +359,7 @@ void Searcher::searchDriver(bool postMove) {
       } // multiPV loop end
 
       // check for a node count stop
-      if (isMainThread()) {
+      if (isMainThread() || isStoppable) {
          // restore real value (only on main processus!), was discarded for depth 1 search
          if (Distributed::isMainProcess()) TimeMan::maxNodes = maxNodes;
          const Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
