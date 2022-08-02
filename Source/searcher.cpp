@@ -296,6 +296,7 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
 
       // init sub search
       cos.subSearch                 = true;
+      cos.isStoppable               = true;
       DynamicConfig::minOutputLevel = Logging::logMax;
       DynamicConfig::disableTT      = true; // do not use TT in order to get qsearch leaf node
       DynamicConfig::level          = 100;

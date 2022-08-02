@@ -8,7 +8,7 @@
 // see cli.cpp
 void analyze(const Position& p, DepthType depth, bool openBenchOutput = false);
 
-void selfPlay(DepthType depth) {
+void selfPlay(DepthType depth, uint64_t & nbPos) {
    //DynamicConfig::genFen = true; // this can be forced here but shall be set by CLI option in fact.
 
    assert(!DynamicConfig::armageddon);
@@ -52,11 +52,17 @@ void selfPlay(DepthType depth) {
    const int minAdjCount  = 10;
    const int minDrawScore = 8;
    const int minWinScore  = 800;
+
+   nbPos = 0;
+
    while (true) {
       ThreadPool::instance().main().subSearch = true;
+      const uint64_t maxNodes = TimeMan::maxNodes;
+      TimeMan::maxNodes = 0;
       analyze(p2, depth); // search using a specific depth
       ThreadPool::instance().main().subSearch = false;
       ThreadData d = ThreadPool::instance().main().getData();
+      TimeMan::maxNodes = maxNodes;
 
       if(justBegin){
          if (DynamicConfig::pgnOut){
@@ -104,6 +110,7 @@ void selfPlay(DepthType depth) {
       }
       else{
          if (DynamicConfig::pgnOut) ThreadPool::instance().main().pgnStream << (p2.halfmoves%2?(std::to_string(p2.moves)+". ") : "") << showAlgAbr(d.best,p2) << " ";
+         ++nbPos;
       }
 
 #ifdef WITH_GENFILE

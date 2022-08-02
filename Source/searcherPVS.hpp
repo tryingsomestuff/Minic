@@ -152,7 +152,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    _height = height;
 
    // stopFlag management and time check. Only on main thread and not at each node (see PERIODICCHECK)
-   if (isMainThread()) timeCheck();
+   if (isMainThread() || isStoppable) timeCheck();
    if (stopFlag) return STOPSCORE;
 
    // we cannot search deeper than MAX_DEPTH, is so just return static evaluation

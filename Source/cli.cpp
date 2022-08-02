@@ -19,7 +19,7 @@ void perft_test(const std::string& fen, DepthType d, uint64_t expected);
 Counter perft(const Position& p, DepthType depth, PerftAccumulator& acc);
 
 // see cli_selfplay.cpp
-void selfPlay(DepthType depth);
+void selfPlay(DepthType depth, uint64_t & nbPos);
 
 // see cli_SEETest.cpp
 bool TestSEE();
@@ -110,9 +110,19 @@ int cliManagement(std::string cli, int argc, char** argv) {
       int64_t n = 1;
       if (argc > 3) n = atoll(argv[3]);
       Logging::LogIt(Logging::logInfo) << "Let's go for " << n << " selfplay games ...";
+      const auto startTime = Clock::now();
+      uint64_t nbGames = 0;
+      uint64_t nbPos = 0;
       while (n-- > 0) {
          if (n % 1000 == 0) Logging::LogIt(Logging::logInfo) << "Remaining games " << n;
-         selfPlay(d);
+         uint64_t nbPosLoc = 0;
+         selfPlay(d, nbPosLoc);
+         nbPos += nbPosLoc;
+         auto ms = getTimeDiff(startTime);
+         ++nbGames;
+         Logging::LogIt(Logging::logInfo) << "Nb games : " << nbGames << ", Nb Pos : " << nbPos << ", elapsed s : " << ms/1000;
+         Logging::LogIt(Logging::logInfo) << "Game speed : " << static_cast<double>(nbGames) / (static_cast<double>(ms) / 1000 / 60) << " games/min";
+         Logging::LogIt(Logging::logInfo) << "Pos speed : " << static_cast<double>(nbPos) / (static_cast<double>(ms) / 1000) << " pos/s";         
       }
       return 0;
    }
