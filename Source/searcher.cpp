@@ -295,8 +295,6 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
       const unsigned int oldRandomPly  = DynamicConfig::randomPly;
 
       // init sub search
-      cos.subSearch                 = true;
-      cos.isStoppable               = true;
       DynamicConfig::minOutputLevel = Logging::logMax;
       DynamicConfig::disableTT      = true; // do not use TT in order to get qsearch leaf node
       DynamicConfig::level          = 100;
@@ -324,12 +322,14 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
             }
             DepthType depth = static_cast<DepthType>(clampDepth(DynamicConfig::genFenDepth) * gp + clampDepth(DynamicConfig::genFenDepthEG) * (1.f - gp));
             DynamicConfig::randomPly = 0;
-            data.p                   = pLeaf;
-            data.depth               = depth;
+            data.p     = pLeaf;
+            data.depth = depth;
             cos.setData(data);
             cos.stopFlag = false;
             cos.currentMoveMs = INFINITETIME;
             // do not update COM::position here
+            cos.subSearch = true;
+            cos.isStoppableCoSearcher = true;
             cos.searchDriver(false);
             data = cos.getData();
             // std::cout << data << std::endl; // debug

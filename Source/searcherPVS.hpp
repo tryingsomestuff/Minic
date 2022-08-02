@@ -113,7 +113,8 @@ inline void Searcher::timeCheck(){
    static uint64_t periodicCheck = 0ull; ///@todo this is slow because of guard variable
    if (periodicCheck == 0ull) {
       periodicCheck = (TimeMan::maxNodes > 0) ? std::min(TimeMan::maxNodes, PERIODICCHECK) : PERIODICCHECK;
-      const Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
+      const Counter nodeCount = isStoppableCoSearcher ? stats.counters[Stats::sid_nodes] + stats.counters[Stats::sid_qnodes]
+                                : ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
       if (TimeMan::maxNodes > 0 && nodeCount > TimeMan::maxNodes) {
          stopFlag = true;
          Logging::LogIt(Logging::logInfo) << "stopFlag triggered (nodes limits) in thread " << id();
@@ -152,7 +153,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    _height = height;
 
    // stopFlag management and time check. Only on main thread and not at each node (see PERIODICCHECK)
-   if (isMainThread() || isStoppable) timeCheck();
+   if (isMainThread() || isStoppableCoSearcher) timeCheck();
    if (stopFlag) return STOPSCORE;
 
    // we cannot search deeper than MAX_DEPTH, is so just return static evaluation

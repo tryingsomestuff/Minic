@@ -61,7 +61,7 @@ struct Searcher {
    Color     nullMoveVerifColor = Co_None;
    EvalScore contempt       = 0;
    bool      subSearch      = false;
-   bool      isStoppable    = false; 
+   bool      isStoppableCoSearcher = false; 
    DepthType _height        = 0; ///@todo use this everywhere, instead of passing height in pvs and qsearch call ?
 
 #ifdef WITH_GENFILE

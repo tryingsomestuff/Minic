@@ -210,7 +210,10 @@ void Searcher::searchDriver(bool postMove) {
          // stockfish like thread management (not for co-searcher)
          else if (!subSearch) {
             const auto i = (id() - 1) % threadSkipSize;
-            if (((depth + skipPhase[i]) / skipSize[i]) % 2) continue; // next depth
+            if (((depth + skipPhase[i]) / skipSize[i]) % 2){
+               Logging::LogIt(Logging::logInfo) << "Thread " << id() << " skipping depth " << static_cast<int>(depth);
+               continue; // next depth
+            }
          }
 
          Logging::LogIt(Logging::logInfo) << "Thread " << id() << " searching depth " << static_cast<int>(depth);
@@ -359,17 +362,18 @@ void Searcher::searchDriver(bool postMove) {
       } // multiPV loop end
 
       // check for a node count stop
-      if (isMainThread() || isStoppable) {
+      if (isMainThread() || isStoppableCoSearcher) {
          // restore real value (only on main processus!), was discarded for depth 1 search
          if (Distributed::isMainProcess()) TimeMan::maxNodes = maxNodes;
-         const Counter nodeCount = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
+         const Counter nodeCount = isStoppableCoSearcher ? stats.counters[Stats::sid_nodes] + stats.counters[Stats::sid_qnodes]
+                                 : ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
          if (TimeMan::maxNodes > 0 && nodeCount > TimeMan::maxNodes) {
             stopFlag = true;
             Logging::LogIt(Logging::logInfo) << "stopFlag triggered in search driver (nodes limits) in thread " << id();
          }
       }
 
-   }    // iterative deepening loop end
+   } // iterative deepening loop end
 
 pvsout:
 
