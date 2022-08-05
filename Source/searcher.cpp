@@ -31,9 +31,9 @@ void Searcher::getCMHPtr(const unsigned int ply, CMHPtrArray& cmhPtr) {
    for (unsigned int k = 0; k < MAX_CMH_PLY; ++k) {
       assert(static_cast<int>(ply) - static_cast<int>(2*k) < MAX_PLY && static_cast<int>(ply) - static_cast<int>(2*k) >= 0);
       if (ply > 2*k && isValidMove(stack[ply - 2*k].p.lastMove)) {
-         const Position & pref = stack[ply - 2*k].p;
-         const Square to = correctedMove2ToKingDest(pref.lastMove);
-         cmhPtr[k] = historyT.counter_history[PieceIdx(pref.board_const(to))][to];
+         const Position & pRef = stack[ply - 2*k].p;
+         const Square to = correctedMove2ToKingDest(pRef.lastMove);
+         cmhPtr[k] = historyT.counter_history[PieceIdx(pRef.board_const(to))][to];
       }
    }
 }
@@ -171,6 +171,11 @@ void Searcher::clearGame() {
    historyT.initHistory();
    counterT.initCounter();
    previousBest = INVALIDMOVE;
+
+   // clear stack data
+   for(auto & d : stack){
+      d = StackData();
+   }
 }
 
 void Searcher::clearSearch(bool forceHistoryClear) {
