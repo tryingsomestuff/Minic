@@ -104,6 +104,7 @@ void ThreadPool::stop() {
 }
 
 void ThreadPool::displayStats() const {
+   if (DynamicConfig::minOutputLevel > Logging::logInfo) return;
    for (size_t k = 0; k < Stats::sid_maxid; ++k) { Logging::LogIt(Logging::logInfo) << Stats::Names[k] << " " << counter((Stats::StatId)k); }
 }
 
