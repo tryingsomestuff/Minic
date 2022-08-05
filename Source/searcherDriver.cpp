@@ -95,7 +95,7 @@ void Searcher::searchDriver(bool postMove) {
 
    // when limiting skill by nodes only, only apply that to main process
    // this doesn't make much sense to apply limited nodes on a multi-process run anyway ...
-   if (Distributed::isMainProcess() && DynamicConfig::nodesBasedLevel && Skill::enabled()) {
+   if (Distributed::isMainProcess() && Skill::enabled() && DynamicConfig::nodesBasedLevel) {
       TimeMan::maxNodes = Skill::limitedNodes();
       Logging::LogIt(Logging::logDebug) << "Limited nodes to fit level: " << TimeMan::maxNodes;
    }
@@ -393,7 +393,7 @@ pvsout:
          if (!subSearch) Logging::LogIt(Logging::logWarn) << "Empty pv";
       }
       else {
-         // !!! warning: when skill uses multiPV returned move shall be used and not first move of pv in receiveMoves !!!
+         // !!! warning: when skill uses multiPV, returned move shall be used and not first move of pv in receiveMoves !!!
          if (Skill::enabled() && !DynamicConfig::nodesBasedLevel) { _data.best = Skill::pick(multiPVMoves); }
          else {
             // get pv from best (deepest) threads
@@ -438,10 +438,10 @@ pvsout:
 
       if (postMove) {
          // send move and ponder move to GUI
-         const bool success = COM::receiveMoves(_data.best, _data.pv.size() > 1 ? _data.pv[1] : INVALIDMOVE);
+         const bool success = COM::receiveMoves(_data.best, _data.pv.size() > 1 && !(Skill::enabled() && !DynamicConfig::nodesBasedLevel) ? _data.pv[1] : INVALIDMOVE);
          if ( COM::protocol == COM::p_xboard){
-            // update position state
-            XBoard::moveApplied(success);
+            // update position state and history (this is only a xboard need)
+            XBoard::moveApplied(success, _data.best);
          }
       }
 
