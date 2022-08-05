@@ -16,10 +16,34 @@ extern Protocol protocol;
 enum State : uint8_t { st_pondering = 0, st_analyzing, st_searching, st_none };
 extern State state;
 
-extern std::string       command; // see readLine
-extern RootPosition      position;
+extern std::string       command; // see readLine, filled in COM, used in uci & xboard impl
+extern RootPosition      position; // current analyzed position
 extern DepthType         depth;
-extern std::vector<Move> moves;
+
+struct GameInfo {
+    struct GameStateInfo {
+       Position p;
+       Move m; // the move "m" that will be done starting at pos "p"
+       ScoreType e;
+       ScoreType s;
+    };
+    
+    std::vector<GameStateInfo> _gameStates;
+    
+    Position initialPos; ///@todo shall be RootPosition ??? This is the first position after a new game
+
+    void clear(const Position & initial);
+
+    void append(const GameStateInfo & stateInfo);
+
+    size_t size() const;
+
+    [[nodiscard]] std::vector<Move> getMoves() const;
+
+    void write(std::ostream & os) const;
+};
+
+[[nodiscard]] GameInfo & GetGameInfo();
 
 void init(const Protocol pr);
 

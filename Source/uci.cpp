@@ -28,6 +28,13 @@ void uci() {
       processCommand(COM::command);
    }
    Logging::LogIt(Logging::logInfo) << "Leaving UCI loop";
+   
+   // write last game
+   if (DynamicConfig::pgnOut){
+      std::ofstream os("games_" + std::to_string(GETPID()) + "_" + std::to_string(0) + ".pgn", std::ofstream::app);
+      COM::GetGameInfo().write(os);
+      os.close();
+   }
 }
 
 void processCommand(const std::string & command) {
@@ -76,8 +83,13 @@ void processCommand(const std::string & command) {
       auto startTimePos = Clock::now();
       COM::position.h   = nullHash; // invalidate position
       std::string type;
+
       while (iss >> type) {
-         if (type == "startpos") { readFEN(startPosition, COM::position, false, true); }
+         if (type == "startpos") { 
+            readFEN(startPosition, COM::position, false, true); 
+            // let's start by resetting history
+            COM::GetGameInfo().clear(COM::position);              
+         }
          else if (type == "fen") {
             std::string fen;
             for (int i = 0; i < 6; i++) { // suppose always full fen ... ///@todo better?
@@ -86,6 +98,8 @@ void processCommand(const std::string & command) {
                fen += component + " ";
             }
             if (!readFEN(fen, COM::position, false, true)) Logging::LogIt(Logging::logFatal) << "Illegal FEN " << fen;
+            // let's start by resetting history
+            COM::GetGameInfo().clear(COM::position);              
          }
          else if (type == "moves") {
             if (COM::position.h != nullHash) {
@@ -96,6 +110,12 @@ void processCommand(const std::string & command) {
                   if (!COM::makeMove(m, false, "")) { // make move
                      Logging::LogIt(Logging::logInfo) << "Bad move ! : " << mstr;
                      Logging::LogIt(Logging::logInfo) << ToString(COM::position);
+                  }
+                  else{
+                     // in UCI mode, we expect current position to always being sent 
+                     // using a initial position and a serie of moves
+                     // append all game moves again
+                     COM::GetGameInfo().append({COM::position, m, 0, 0});                     
                   }
                }
             }
@@ -223,7 +243,9 @@ void processCommand(const std::string & command) {
       if (ThreadPool::instance().main().searching()) {
          Logging::LogIt(Logging::logGUI) << "info string " << uciCommand << " received but search in progress ...";
       }
-      else { COM::init(COM::p_uci); }
+      else {
+         COM::init(COM::p_uci); 
+      }
    }
    else if (uciCommand == "eval") { Logging::LogIt(Logging::logGUI) << "info string " << uciCommand << " not implemented yet"; }
    else if (uciCommand == "tbprobe") {

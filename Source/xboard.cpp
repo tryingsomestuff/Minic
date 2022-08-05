@@ -22,8 +22,6 @@ Mode mode;
 enum SideToMove : uint8_t { stm_white = 0, stm_black = 1 };
 SideToMove stm; ///@todo isn't this redundant with position.c ??
 
-Position initialPos;
-
 SideToMove opponent(SideToMove& s) { return s == stm_white ? stm_black : stm_white; }
 
 bool sideToMoveFromFEN(const std::string& fen) {
@@ -59,6 +57,7 @@ void setFeature() {
    Logging::LogIt(Logging::logGUI) << "feature done=1";
 }
 
+// here we apply a move from the opponent
 bool receiveOppMove(const std::string& command) {
    std::string mstr(command);
    COM::stop();
@@ -73,14 +72,19 @@ bool receiveOppMove(const std::string& command) {
       return false;
    }
    else {
+      // backup game history
+      COM::GetGameInfo().append({COM::position, m, 0, 0});      
+      // switch stm
       stm = opponent(stm);
-      COM::moves.push_back(m);
    }
    return true;
 }
 
-void moveApplied(const bool success) {
+// here we apply an own move
+void moveApplied(const bool success, const Move & m) {
    if (success) {
+      // backup game history
+      COM::GetGameInfo().append({COM::position, m, 0, 0});      
       // switch stm
       stm = opponent(stm);
    }
@@ -90,14 +94,17 @@ void moveApplied(const bool success) {
 }
 
 bool replay(size_t nbmoves) {
-   assert(nbmoves < COM::moves.size());
+   // backup moves
+   std::vector<Move> vm = COM::GetGameInfo().getMoves();
+   assert(nbmoves < vm.size());
    COM::State previousState = COM::state;
    COM::stop();
    mode = m_force;
-   std::vector<Move> vm = COM::moves;
-   if (!sideToMoveFromFEN(GetFEN(initialPos))) return false;
-   initialPos = COM::position;
-   COM::moves.clear();
+   // verify initial position
+   if (!sideToMoveFromFEN(GetFEN(COM::GetGameInfo().initialPos))) return false;
+   // reset game information
+   COM::GetGameInfo().clear(COM::position);
+   // replay 
    for (size_t k = 0; k < nbmoves; ++k) {
       if (!COM::makeMove(vm[k], false, "")) { // make move
          Logging::LogIt(Logging::logInfo) << "Bad move ! " << ToString(vm[k]);
@@ -107,7 +114,7 @@ bool replay(size_t nbmoves) {
       }
       else {
          stm = opponent(stm);
-         COM::moves.push_back(vm[k]);
+         COM::GetGameInfo().append({COM::position, vm[k], 0, 0});
       }
    }
    if (previousState == COM::st_analyzing) { mode = m_analyze; }
@@ -155,9 +162,8 @@ void xboard() {
             COM::init(COM::p_xboard);
             newGame();
             if (!sideToMoveFromFEN(startPosition)) { commandOK = false; }
-            initialPos = COM::position;
+            COM::GetGameInfo().clear(COM::position);
             DynamicConfig::FRC = false;
-            COM::moves.clear();
             mode = static_cast<Mode>(static_cast<int>(stm)); ///@todo this is so wrong !
             if (mode != m_analyze) {
                mode = m_play_black;
@@ -200,8 +206,7 @@ void xboard() {
             const size_t p = COM::command.find("setboard");
             fen = fen.substr(p + 8);
             if (!sideToMoveFromFEN(fen)) { commandOK = false; }
-            initialPos = COM::position;
-            COM::moves.clear();
+            COM::GetGameInfo().clear(COM::position);
          }
          else if (strncmp(COM::command.c_str(), "result", 6) == 0) {
             COM::stop();
@@ -299,10 +304,10 @@ void xboard() {
          else if (COM::command == "draw") {
          }
          else if (COM::command == "undo") {
-            replay(COM::moves.size() - 1);
+            replay(COM::GetGameInfo().size() - 1);
          }
          else if (COM::command == "remove") {
-            replay(COM::moves.size() - 2);
+            replay(COM::GetGameInfo().size() - 2);
          }
          else if (COM::command == "hint") {
          }
@@ -365,5 +370,12 @@ void xboard() {
 
    } // while true
    Logging::LogIt(Logging::logInfo) << "Leaving Xboard loop";
+
+   // write last game
+   if (DynamicConfig::pgnOut){
+      std::ofstream os("games_" + std::to_string(GETPID()) + "_" + std::to_string(0) + ".pgn", std::ofstream::app);
+      COM::GetGameInfo().write(os);
+      os.close();
+   }   
 }
 } // namespace XBoard
