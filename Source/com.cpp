@@ -7,19 +7,72 @@
 #include "transposition.hpp"
 
 namespace COM {
+
 Protocol          protocol;
 State             state;
 std::string       command;
 RootPosition      position;
 DepthType         depth;
-std::vector<Move> moves;
+
+GameInfo gameInfo;
+
+GameInfo & GetGameInfo(){ return gameInfo; }
+
 #ifdef WITH_NNUE
-NNUEEvaluator evaluator;
+NNUEEvaluator     evaluator;
 #endif
 
 std::mutex mutex;
 
+void GameInfo::write(std::ostream & os) const{
+   if(_gameStates.empty()) return;
+   Logging::LogIt(Logging::logInfo) << "Writing game states (" + std::to_string(size()) + ")";
+
+   os << "[Event \"Minic game\"]" << std::endl;
+   os << "[FEN \"" + GetFEN(initialPos) + "\"]" << std::endl;
+
+   uint16_t halfmoves = initialPos.halfmoves;
+   uint16_t moves = initialPos.moves;
+   auto prev = initialPos;
+   for(auto & gs : _gameStates){
+      os << ((halfmoves++)%2?(std::to_string((moves++))+". ") : "") << showAlgAbr(gs.m,prev) << " ";
+      prev = gs.p;
+   }
+   os << std::endl;
+   os << std::endl;
+}
+
+void GameInfo::clear(const Position & initial){
+   Logging::LogIt(Logging::logInfo) << "Clearing game states";
+   _gameStates.clear();
+   initialPos = initial;
+}
+
+void GameInfo::append(const GameStateInfo & stateInfo){
+   _gameStates.push_back(stateInfo);
+}
+
+size_t GameInfo::size() const {
+   return _gameStates.size();
+}
+
+std::vector<Move> GameInfo::getMoves() const{
+   std::vector<Move> moves;
+   for(auto & gs : _gameStates){
+      moves.push_back(gs.m);
+   }
+   return moves;
+}
+
 void newGame() {
+
+   // write previous game
+   if (DynamicConfig::pgnOut){
+      std::ofstream os("games_" + std::to_string(GETPID()) + "_" + std::to_string(0) + ".pgn", std::ofstream::app);
+      GetGameInfo().write(os);
+      os.close();
+   }
+
 #ifdef WITH_NNUE
    position.associateEvaluator(evaluator);
 #endif
@@ -92,8 +145,9 @@ bool receiveMoves(const Move move, Move ponderMove) {
    bool ret = true;
 
    Logging::LogIt(Logging::logInfo) << "search async done (state " << static_cast<int>(state) << ")";
+   
    // in searching only mode we have to return a move to GUI
-   // but curiously uci protocol also expect a bestMove when pondering or analysing to wake up the GUI
+   // but uci protocol also expect a bestMove when pondering or analysing to wake up the GUI
    if (state == st_searching || state == st_pondering || state == st_analyzing) {
       const std::string tag = Logging::ct == Logging::CT_uci ? "bestmove" : "move";
       Logging::LogIt(Logging::logInfo) << "sending move to GUI " << ToString(move);
@@ -103,14 +157,11 @@ bool receiveMoves(const Move move, Move ponderMove) {
          Logging::LogIt(Logging::logGUI) << tag << " " << "0000";
       }
       else {
+         // update current position with given move
          if (!makeMove(move, true, tag, ponderMove)) {
             Logging::LogIt(Logging::logGUI) << "info string Bad move ! " << ToString(move);
             Logging::LogIt(Logging::logInfo) << ToString(position);
             ret = false;
-         }
-         else {
-            // backup move (mainly for takeback feature)
-            moves.push_back(move);
          }
       }
    }
