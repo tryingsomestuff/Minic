@@ -142,6 +142,12 @@ typedef uint64_t u_int64_t;
 
 #define DISCARD [[maybe_unused]] auto LINE_NAME(_tmp,_) =
 
+#ifdef _WIN32
+#define GETPID _getpid
+#else
+#define GETPID ::getpid
+#endif
+
 typedef std::chrono::system_clock Clock;
 typedef int8_t   DepthType;
 typedef int32_t  Move;         // invalid if < 0

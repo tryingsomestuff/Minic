@@ -27,14 +27,8 @@ void selfPlay(DepthType depth, uint64_t & nbPos) {
    p.resetNNUEEvaluator(p.evaluator()); // this is needed as the RootPosition CTOR with a fen hasn't fill the evaluator yet ///@todo a CTOR with evaluator given ...
 #endif
 
-#ifdef _WIN32
-#define GETPID _getpid
-#else
-#define GETPID ::getpid
-#endif
-
    if (DynamicConfig::pgnOut && !ThreadPool::instance().main().pgnStream.is_open()) {
-      ThreadPool::instance().main().pgnStream.open("games_" + std::to_string(GETPID()) + "_" + std::to_string(0) + ".pgn", std::ofstream::app);
+      ThreadPool::instance().main().pgnStream.open("selfplay_" + std::to_string(GETPID()) + "_" + std::to_string(0) + ".pgn", std::ofstream::app);
    }
 
 #ifdef WITH_GENFILE
