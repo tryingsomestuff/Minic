@@ -115,7 +115,7 @@ void processCommand(const std::string & command) {
                      // in UCI mode, we expect current position to always being sent 
                      // using a initial position and a serie of moves
                      // append all game moves again
-                     COM::GetGameInfo().append({COM::position, m, 0, 0});                     
+                     COM::GetGameInfo().append({COM::position, m});                     
                   }
                }
             }
