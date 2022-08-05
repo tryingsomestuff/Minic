@@ -73,7 +73,7 @@ bool receiveOppMove(const std::string& command) {
    }
    else {
       // backup game history
-      COM::GetGameInfo().append({COM::position, m, 0, 0});      
+      COM::GetGameInfo().append({COM::position, m});      
       // switch stm
       stm = opponent(stm);
    }
@@ -84,7 +84,7 @@ bool receiveOppMove(const std::string& command) {
 void moveApplied(const bool success, const Move & m) {
    if (success) {
       // backup game history
-      COM::GetGameInfo().append({COM::position, m, 0, 0});      
+      COM::GetGameInfo().append({COM::position, m});      
       // switch stm
       stm = opponent(stm);
    }
@@ -114,7 +114,7 @@ bool replay(size_t nbmoves) {
       }
       else {
          stm = opponent(stm);
-         COM::GetGameInfo().append({COM::position, vm[k], 0, 0});
+         COM::GetGameInfo().append({COM::position, vm[k]});
       }
    }
    if (previousState == COM::st_analyzing) { mode = m_analyze; }

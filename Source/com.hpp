@@ -23,9 +23,7 @@ extern DepthType         depth;
 struct GameInfo {
     struct GameStateInfo {
        Position p;
-       Move m; // the move "m" that will be done starting at pos "p"
-       ScoreType e;
-       ScoreType s;
+       Move lastMove; // the move "m" that has been played to reach this position
     };
     
     std::vector<GameStateInfo> _gameStates;
