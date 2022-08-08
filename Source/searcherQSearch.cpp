@@ -119,7 +119,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
       // if not at a pvnode, we verify bound and not shuffling with quiet moves
       // in this case we can "safely" return hash score
       if (!pvnode && p.fifty < SearchConfig::ttMaxFiftyValideDepth && ((bound == TT::B_alpha && e.s <= alpha) || (bound == TT::B_beta && e.s >= beta) || (bound == TT::B_exact))) {
-         return adjustHashScore(e.s, height);
+         return TT::adjustHashScore(e.s, height);
       }
    }
 
@@ -170,7 +170,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    if (!isInCheck && !ttHit){
       // Be carefull here, _data in Entry is always (INVALIDMOVE,B_none,-2) here, so that collisions are a lot more likely
       // depth -2 is used to ensure this will never be used directly (only evaluation score is of interest here...)
-      TT::setEntry(*this, pHash, INVALIDMOVE, createHashScore(staticScore, height), createHashScore(staticScore, height), TT::B_none, -2);
+      TT::setEntry(*this, pHash, INVALIDMOVE, TT::createHashScore(staticScore, height), TT::createHashScore(staticScore, height), TT::B_none, -2);
    }
 
    // early cut-off based on staticScore score
@@ -210,7 +210,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
                if (score >= beta) {
                   b = TT::B_beta;
                   stats.incr(Stats::sid_qttbeta);
-                  TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(evalScore, height),
+                  TT::setEntry(*this, pHash, bestMove, TT::createHashScore(bestScore, height), TT::createHashScore(evalScore, height),
                                TT::Bound(b | (ttPV ? TT::B_ttPVFlag : TT::B_none) | (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), hashDepth);
                   return bestScore;
                }
@@ -306,7 +306,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    if (validMoveCount == 0 && isInCheck) bestScore = matedScore(height);
    else if (is50moves(p,false)) return drawScore(p, height); // post move loop version
 
-   TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(evalScore, height),
+   TT::setEntry(*this, pHash, bestMove, TT::createHashScore(bestScore, height), TT::createHashScore(evalScore, height),
                 TT::Bound(b | (ttPV ? TT::B_ttPVFlag : TT::B_none) | (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), hashDepth);
 
    return bestScore;

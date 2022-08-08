@@ -313,7 +313,7 @@ void Searcher::searchDriver(bool postMove) {
                getSearchData().nodes[depth]  = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
                if (!pvLoc.empty()) getSearchData().moves[depth] = Move2MiniMove(pvLoc[0]);
 
-               // check for an emergency
+               // check for an emergency : if IID reports decreasing score, we have to take action (like search for longer)
                if (TimeMan::isDynamic && depth > MoveDifficultyUtil::emergencyMinDepth &&
                    _data.score < getSearchData().scores[depth - 1] - MoveDifficultyUtil::emergencyMargin) {
                   moveDifficulty = _data.score > MoveDifficultyUtil::emergencyAttackThreashold ? MoveDifficultyUtil::MD_hardAttack
@@ -411,6 +411,8 @@ pvsout:
             _data      = ThreadPool::instance()[bestThreadId]->getData();
             _data.best = _data.pv[0];
          }
+         // update stack data with "real" score
+         stack[p.halfmoves].eval = _data.score;
       }
 
       // wait for "ponderhit" or "stop" in case search returned too soon

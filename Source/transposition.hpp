@@ -4,6 +4,7 @@
 
 struct Position;
 struct Searcher;
+struct StackData;
 
 /*!
  * TT in Minic is a very classic 1 entry per bucket cache,
@@ -16,6 +17,7 @@ namespace TT {
 
 // curGen is coded inside Bound using only 3bits, shifted by 5 (224 = 0x111)
 extern GenerationType curGen;
+
 enum Bound : uint8_t {
    B_none          = 0,
    B_alpha         = 1,
@@ -25,8 +27,9 @@ enum Bound : uint8_t {
    B_isCheckFlag   = 8,
    B_isInCheckFlag = 16,
    B_gen           = 224,
-   B_allFlags      = B_ttPVFlag | B_isCheckFlag | B_isInCheckFlag | B_gen
+   B_allFlags      = B_ttPVFlag | B_isCheckFlag | B_isInCheckFlag | B_gen,
 };
+
 #if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -67,6 +70,14 @@ struct Entry {
 #pragma GCC diagnostic pop
 #endif // defined(__GNUC__)
 
+[[nodiscard]] ScoreType createHashScore(ScoreType score, DepthType height);
+
+[[nodiscard]] ScoreType adjustHashScore(ScoreType score, DepthType height);
+
+void getPV(const Position& p, Searcher& context, PVList& pv);
+
+// TT
+
 void initTable();
 
 void clearTT();
@@ -83,10 +94,4 @@ void setEntry(Searcher& context, Hash h, Move m, ScoreType s, ScoreType eval, Bo
 
 void _setEntry(Hash h, const Entry& e);
 
-void getPV(const Position& p, Searcher& context, PVList& pv);
-
 } // namespace TT
-
-[[nodiscard]] ScoreType createHashScore(ScoreType score, DepthType height);
-
-[[nodiscard]] ScoreType adjustHashScore(ScoreType score, DepthType height);

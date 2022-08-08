@@ -8,13 +8,16 @@
 #include "tools.hpp"
 
 namespace {
+
 template<class T> struct DeleteAligned {
    void operator()(T *ptr) const {
       if (ptr) std_aligned_free(ptr);
    }
 };
+
 uint64_t ttSize = 0;
 std::unique_ptr<TT::Entry[], DeleteAligned<TT::Entry>> table(nullptr);
+
 } // namespace
 namespace TT {
 
@@ -36,7 +39,7 @@ void initTable() {
 
 void clearTT() {
    TT::curGen = 0;
-   Logging::LogIt(Logging::logInfo) << "Now zeroing memory using " << DynamicConfig::threads << " threads";
+   Logging::LogIt(Logging::logInfo) << "Now zeroing TT memory using " << DynamicConfig::threads << " threads";
    auto worker = [&](size_t begin, size_t end) { std::fill(&table[0] + begin, &table[0] + end, Entry()); };
    threadedWork(worker, DynamicConfig::threads, ttSize);
    Logging::LogIt(Logging::logInfo) << "... done ";
@@ -136,8 +139,6 @@ void getPV(const Position &p, Searcher &context, PVList &pv) {
    }
 }
 
-} // namespace TT
-
 ScoreType createHashScore(ScoreType score, DepthType height) {
    if (isMatingScore(score))
       score += height;
@@ -157,3 +158,5 @@ ScoreType adjustHashScore(ScoreType score, DepthType height) {
    //   score *= 0.999f;
    return score;
 }
+
+} // namespace TT
