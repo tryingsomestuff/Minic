@@ -1,7 +1,7 @@
 [
     {
         "command": "./minic_linux_x64 -uci -syzygyPath /home/syzygy/",
-        "name": "Minic 3.25",
+        "name": "Minic 3.26",
         "restart": "on",
         "rating": "3293",
         "options": [
