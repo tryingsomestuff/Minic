@@ -558,13 +558,16 @@ constexpr ScoreType badCapLimit = -80;
 }
 
 namespace MoveDifficultyUtil {
-    enum MoveDifficulty { MD_forced = 0, MD_easy, MD_std, MD_hardDefense, MD_hardAttack };
-    const DepthType emergencyMinDepth         = 14;
-    const ScoreType emergencyMargin           = 90;
-    const ScoreType emergencyAttackThreashold = 150;
-    const ScoreType easyMoveMargin            = 180;
-    const int       emergencyFactor           = 5;
-    const int       maxStealDivisor           = 5; // 1/maxStealDivisor of remaining time
+    enum MoveDifficulty { MD_forced = 0, MD_easy, MD_std, MD_hardDefenseIID, MD_hardAttackIID, MD_hardDefenseHistory, MD_hardAttackHistory };
+    const DepthType emergencyMinDepth          = 14;
+    const ScoreType emergencyMargin            = 90;
+    const ScoreType emergencyAttackThreashold  = 150;
+    const ScoreType easyMoveMargin             = 180;
+    const int       emergencyFactorIID         = 5;
+    const int       emergencyFactorIIDGood     = 3;
+    const int       emergencyFactorHistory     = 7;
+    const int       emergencyFactorHistoryGood = 5;
+    const int       maxStealDivisor            = 5; // 1/maxStealDivisor of remaining time
 
 extern float variability;
 [[nodiscard]] inline float variabilityFactor() { return 2.f / (1.f + std::exp(1.f - MoveDifficultyUtil::variability)); } // inside [0.5 .. 2]

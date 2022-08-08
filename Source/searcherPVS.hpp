@@ -311,14 +311,20 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
  #endif
       }
    }
-   stack[p.halfmoves].eval = evalScore; // insert only static eval in stack data, never hash score for consistancy!
-   //stack[p.halfmoves].data = data;
+   
+   // insert only static eval in stack data, never hash score for consistancy!
+   stack[p.halfmoves].eval = evalScore; 
 
-   // take **initial** position situation into account ///@todo use this
-   const bool isEmergencyDefence = false; //moveDifficulty == MoveDifficultyUtil::MD_hardDefense;
-   const bool isEmergencyAttack  = false; //moveDifficulty == MoveDifficultyUtil::MD_hardAttack;
+   // take **initial** position situation (from game history) into account for pruning ? 
+   ///@todo try this
 
-   // take **current** position danger level into account
+   // take **initial** position situation (from IID variability) into account for pruning ? 
+   ///@todo try this
+   const bool isEmergencyDefence = false; //moveDifficulty == MoveDifficultyUtil::MD_hardDefenseIID;
+   const bool isEmergencyAttack  = false; //moveDifficulty == MoveDifficultyUtil::MD_hardAttackIID;
+
+   // take **current** position danger level into account for purning
+   ///@todo retry this
    BitBoard attFromPiece[2][6] = {{emptyBitBoard}};
    BitBoard att[2] = {emptyBitBoard,emptyBitBoard};
    BitBoard att2[2] = {emptyBitBoard,emptyBitBoard};

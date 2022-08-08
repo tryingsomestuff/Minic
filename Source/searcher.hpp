@@ -34,6 +34,8 @@ struct Searcher {
    TimeType getCurrentMoveMs()const; // use this (and not the variable) to take emergency time into account !
 
    std::array<StackData, MAX_PLY> stack;
+   [[nodiscard]] bool isBooming(uint16_t halfmove); // from stack
+   [[nodiscard]] bool isMoobing(uint16_t halfmove); // from stack
 
    mutable Stats stats;
 
