@@ -22,22 +22,30 @@ TimeType Searcher::getCurrentMoveMs()const{
          case MoveDifficultyUtil::MD_std: 
             // nothing special
             break;
-         case MoveDifficultyUtil::MD_hardAttackIID:
+         case MoveDifficultyUtil::MD_moobAttackIID:
             // score is decreasing during IID but still quite high (IID moob, sharp position)
             ret = static_cast<TimeType>(std::min(TimeMan::msecUntilNextTC / MoveDifficultyUtil::maxStealDivisor, ret * MoveDifficultyUtil::emergencyFactorIIDGood));
             break; 
-         case MoveDifficultyUtil::MD_hardDefenseIID:
+         case MoveDifficultyUtil::MD_moobDefenceIID:
             // score is decreasing during IID and it's not smelling good (sharp position)
             ret = static_cast<TimeType>(std::min(TimeMan::msecUntilNextTC / MoveDifficultyUtil::maxStealDivisor, ret * MoveDifficultyUtil::emergencyFactorIID));
             break; 
-         case MoveDifficultyUtil::MD_hardAttackHistory:
+         case MoveDifficultyUtil::MD_moobAttackHistory:
             // we were better but starts to moob
-            ret = static_cast<TimeType>(std::min(TimeMan::msecUntilNextTC / MoveDifficultyUtil::maxStealDivisor, ret * MoveDifficultyUtil::emergencyFactorHistoryGood));
+            ret = static_cast<TimeType>(std::min(TimeMan::msecUntilNextTC / MoveDifficultyUtil::maxStealDivisor, ret * MoveDifficultyUtil::emergencyFactorMoobHistory));
             break; 
-         case MoveDifficultyUtil::MD_hardDefenseHistory:
+         case MoveDifficultyUtil::MD_moobDefenceHistory:
             // we are starting to lose this game ...
-            ret = static_cast<TimeType>(std::min(TimeMan::msecUntilNextTC / MoveDifficultyUtil::maxStealDivisor, ret * MoveDifficultyUtil::emergencyFactorHistory));
+            ret = static_cast<TimeType>(std::min(TimeMan::msecUntilNextTC / MoveDifficultyUtil::maxStealDivisor, ret * MoveDifficultyUtil::emergencyFactorMoobHistory));
             break; 
+         case MoveDifficultyUtil::MD_boomAttackHistory:
+            // we were better but starts to boom now
+            ret = static_cast<TimeType>(std::min(TimeMan::msecUntilNextTC / MoveDifficultyUtil::maxStealDivisor, ret * MoveDifficultyUtil::emergencyFactorBoomHistory));
+            break; 
+         case MoveDifficultyUtil::MD_boomDefenceHistory:
+            // we are starting to lose this game ...
+            ret = static_cast<TimeType>(std::min(TimeMan::msecUntilNextTC / MoveDifficultyUtil::maxStealDivisor, ret * MoveDifficultyUtil::emergencyFactorBoomHistory));
+            break;             
       }
    }
    // take variability into account
@@ -71,7 +79,7 @@ bool Searcher::isMoobing(uint16_t halfmove){
    if (halfmove < 4) { return false; }  // no moobing at the beginning of the game of course
    if (stack[halfmove-2].h == nullHash) { return false; } // no record in previous state
    if (stack[halfmove-4].h == nullHash) { return false; } // no record in former state
-   constexpr ScoreType moobMargin = 80;
+   constexpr ScoreType moobMargin = 130;
    return stack[halfmove-4].eval >= stack[halfmove-2].eval + moobMargin;
 }
 
