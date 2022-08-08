@@ -320,8 +320,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // take **initial** position situation (from IID variability) into account for pruning ? 
    ///@todo try this
-   const bool isEmergencyDefence = false; //moveDifficulty == MoveDifficultyUtil::MD_hardDefenseIID;
-   const bool isEmergencyAttack  = false; //moveDifficulty == MoveDifficultyUtil::MD_hardAttackIID;
+   const bool isEmergencyDefence = false; //moveDifficulty == MoveDifficultyUtil::MD_moobDefenceIID;
+   const bool isEmergencyAttack  = false; //moveDifficulty == MoveDifficultyUtil::MD_moobAttackIID;
 
    // take **current** position danger level into account for purning
    ///@todo retry this

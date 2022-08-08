@@ -558,15 +558,25 @@ constexpr ScoreType badCapLimit = -80;
 }
 
 namespace MoveDifficultyUtil {
-    enum MoveDifficulty { MD_forced = 0, MD_easy, MD_std, MD_hardDefenseIID, MD_hardAttackIID, MD_hardDefenseHistory, MD_hardAttackHistory };
+    enum MoveDifficulty { 
+      MD_forced = 0, 
+      MD_easy, 
+      MD_std, 
+      MD_moobDefenceIID, 
+      MD_moobAttackIID, 
+      MD_moobDefenceHistory, 
+      MD_moobAttackHistory,
+      MD_boomDefenceHistory, 
+      MD_boomAttackHistory,
+    };
     const DepthType emergencyMinDepth          = 14;
     const ScoreType emergencyMargin            = 90;
-    const ScoreType emergencyAttackThreashold  = 150;
+    const ScoreType emergencyAttackThreashold  = 130;
     const ScoreType easyMoveMargin             = 180;
-    const int       emergencyFactorIID         = 5;
+    const int       emergencyFactorIID         = 3;
     const int       emergencyFactorIIDGood     = 3;
-    const int       emergencyFactorHistory     = 7;
-    const int       emergencyFactorHistoryGood = 5;
+    const int       emergencyFactorMoobHistory = 3;
+    const int       emergencyFactorBoomHistory = 3;
     const int       maxStealDivisor            = 5; // 1/maxStealDivisor of remaining time
 
 extern float variability;
