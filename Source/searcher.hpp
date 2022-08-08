@@ -10,6 +10,14 @@
 
 #include <optional>
 
+struct StackData {
+   Position  p;
+   Hash      h      = nullHash;
+   //EvalData  data;
+   ScoreType eval   = 0;
+   MiniMove  threat = INVALIDMINIMOVE;
+};
+
 /*!
  * Searcher struct store all the information needed by a search thread
  * Implements main search function (driver, pvs, qsearch, see, display to GUI, ...)
@@ -25,13 +33,6 @@ struct Searcher {
 
    TimeType getCurrentMoveMs()const; // use this (and not the variable) to take emergency time into account !
 
-   struct StackData {
-      Position  p;
-      Hash      h      = nullHash;
-      //EvalData  data;
-      ScoreType eval   = 0;
-      MiniMove  threat = INVALIDMINIMOVE;
-   };
    std::array<StackData, MAX_PLY> stack;
 
    mutable Stats stats;

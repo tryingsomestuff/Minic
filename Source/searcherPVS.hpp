@@ -227,12 +227,12 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                else if ( isCapture(e.m) ) // capture history
                   historyT.updateCap<1>(depth, e.m, p);
             }
-            if (p.fifty < SearchConfig::ttMaxFiftyValideDepth) return adjustHashScore(e.s, height);
+            if (p.fifty < SearchConfig::ttMaxFiftyValideDepth) return TT::adjustHashScore(e.s, height);
          }
          ///@todo try returning also at pv node (this cuts pv ...)
          /*
             else{ // in "good" condition, also return a score at pvnode
-               if ( bound == TT::B_exact && e.d > 3*depth/2 && p.fifty < SearchConfig::ttMaxFiftyValideDepth) return adjustHashScore(e.s, height);
+               if ( bound == TT::B_exact && e.d > 3*depth/2 && p.fifty < SearchConfig::ttMaxFiftyValideDepth) return TT::adjustHashScore(e.s, height);
             }
          */
       }
@@ -262,7 +262,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       }
 
       // store TB hits into TT (without associated move, but with max depth)
-      TT::setEntry(*this, pHash, INVALIDMOVE, createHashScore(tbScore, height), createHashScore(tbScore, height), TT::B_none, DepthType(MAX_DEPTH));
+      TT::setEntry(*this, pHash, INVALIDMOVE, TT::createHashScore(tbScore, height), TT::createHashScore(tbScore, height), TT::B_none, DepthType(MAX_DEPTH));
       return tbScore;
    }
 #endif
@@ -311,7 +311,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
  #endif
       }
    }
-   stack[p.halfmoves].eval = evalScore; // insert only static eval, never hash score !
+   stack[p.halfmoves].eval = evalScore; // insert only static eval in stack data, never hash score for consistancy!
    //stack[p.halfmoves].data = data;
 
    // take **initial** position situation into account ///@todo use this
@@ -353,13 +353,13 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    const ScoreType staticScore = evalScore;
    // if no TT hit yet, we insert an eval without a move here in case of forward pruning (depth is negative, bound is none) ...
    // Be carefull here, _data2 in Entry is always (INVALIDMOVE,B_none,-2) here, so that collisions are a lot more likely
-   if (!ttHit) TT::setEntry(*this, pHash, INVALIDMOVE, createHashScore(evalScore, height), createHashScore(staticScore, height), TT::B_none, -2);
+   if (!ttHit) TT::setEntry(*this, pHash, INVALIDMOVE, TT::createHashScore(evalScore, height), TT::createHashScore(staticScore, height), TT::B_none, -2);
 
    // if TT hit, we can use its score as a best draft (but we set evalScoreIsHashScore to be aware of that !)
    // note that e.d >= -1 here is quite redondant with bound != TT::B_None, but anyway ...
    if (ttHit && !isInCheck && /*e.d >= -1 && */
       ((bound == TT::B_alpha && e.s < evalScore) || (bound == TT::B_beta && e.s > evalScore) || (bound == TT::B_exact))){
-     evalScore = adjustHashScore(e.s, height);
+     evalScore = TT::adjustHashScore(e.s, height);
      evalScoreIsHashScore = true;
      stats.incr(Stats::sid_staticScoreIsFromSearch);
    }
@@ -372,8 +372,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    MiniMove        refutation       = INVALIDMINIMOVE;
    DepthType       marginDepth      = std::max(1, depth - (evalScoreIsHashScore ? e.d : 0)); // a depth that take TT depth into account
    const bool      isNotPawnEndGame = p.mat[p.c][M_t] > 0;
-   const bool      improving        = (!isInCheck && height > 1 && stack[p.halfmoves].eval >= stack[p.halfmoves - 2].eval);
    const ScoreType alphaInit        = alpha;
+   // Is the reported static eval better than a move before in the search tree ?
+   const bool      improving        = (!isInCheck && height > 1 && stack[p.halfmoves].eval >= stack[p.halfmoves - 2].eval);
 
    // forward prunings
    if (!DynamicConfig::mateFinder && !rootnode && !isInCheck && !pvnode /*&& !isMateScore(beta)*/) { // removing the !isMateScore(beta) is not losing that much elo and allow for better check mate finding ...
@@ -522,7 +523,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          // note that e.d >= -1 here is quite redondant with bound != TT::B_None, but anyway ...
          if (ttHit && !isInCheck && /*e.d >= -1 &&*/
              ((bound == TT::B_alpha && e.s < evalScore) || (bound == TT::B_beta && e.s > evalScore) || (bound == TT::B_exact))) {
-            evalScore            = adjustHashScore(e.s, height);
+            evalScore            = TT::adjustHashScore(e.s, height);
             evalScoreIsHashScore = true;
             marginDepth          = std::max(1, depth - (evalScoreIsHashScore ? e.d : 0)); // a depth that take TT depth into account
          }
@@ -658,7 +659,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          }
          ScoreType ttScore = -pvs<pvnode>(-beta, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, static_cast<DepthType>(extensions + extension), isCheck, !cutNode);
          if (stopFlag) return STOPSCORE;
-         if (rootnode) { rootScores.push_back({e.m, ttScore}); }
+         if (rootnode) { 
+            rootScores.push_back({e.m, ttScore}); 
+         }
          if (ttScore > bestScore) {
             if (rootnode) previousBest = e.m;
             bestScore = ttScore;
@@ -678,7 +681,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                         historyT.updateCap<1>(depth + (ttScore > (beta + SearchConfig::betaMarginDynamicHistory)), bestMove, p);
                   }
 
-                  TT::setEntry(*this, pHash, bestMove, createHashScore(ttScore, height), createHashScore(evalScore, height),
+                  TT::setEntry(*this, pHash, bestMove, TT::createHashScore(ttScore, height), TT::createHashScore(evalScore, height),
                                       TT::Bound(TT::B_beta |
                                       (ttPV ? TT::B_ttPVFlag : TT::B_none) |
                                       (bestMoveIsCheck ? TT::B_isCheckFlag : TT::B_none) |
@@ -962,7 +965,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          }
       }
       if (stopFlag) return STOPSCORE;
-      if (rootnode) { rootScores.push_back({*it, score}); }
+      if (rootnode) { 
+         rootScores.push_back({*it, score}); 
+      }
       if (score > bestScore) {
          if (rootnode) previousBest = *it;
          bestScore = score;
@@ -1013,7 +1018,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    else if (is50moves(p,false)) return drawScore(p, height); // post move loop version
 
    // insert data in TT
-   TT::setEntry(*this, pHash, bestMove, createHashScore(bestScore, height), createHashScore(evalScore, height),
+   TT::setEntry(*this, pHash, bestMove, TT::createHashScore(bestScore, height), TT::createHashScore(evalScore, height),
                        TT::Bound(hashBound |
                        (ttPV ? TT::B_ttPVFlag : TT::B_none) |
                        (bestMoveIsCheck ? TT::B_isCheckFlag : TT::B_none) |

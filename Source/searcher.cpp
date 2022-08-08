@@ -174,7 +174,7 @@ void Searcher::clearGame() {
 
    // clear stack data
    for(auto & d : stack){
-      d = StackData();
+      d = {Position(), nullHash, 0, INVALIDMINIMOVE};
    }
 }
 
