@@ -104,6 +104,15 @@ void Searcher::searchDriver(bool postMove) {
    moveDifficulty = MoveDifficultyUtil::MD_std;
    startTime      = Clock::now();
 
+   // check game history for potential situations (boom/moob)
+   if (isMainThread()) {
+      if (isBooming(p.halfmoves)) 
+         moveDifficulty = MoveDifficultyUtil::MD_std; ///@todo something ???
+      if (isMoobing(p.halfmoves))
+         moveDifficulty = stack[p.halfmoves-2].eval > MoveDifficultyUtil::emergencyAttackThreashold ? MoveDifficultyUtil::MD_hardAttackHistory
+                                                                                                    : MoveDifficultyUtil::MD_hardDefenseHistory;
+   }
+
    // Main thread only will reset tables
    if (isMainThread()) {
       TT::age();
@@ -313,11 +322,14 @@ void Searcher::searchDriver(bool postMove) {
                getSearchData().nodes[depth]  = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);
                if (!pvLoc.empty()) getSearchData().moves[depth] = Move2MiniMove(pvLoc[0]);
 
-               // check for an emergency : if IID reports decreasing score, we have to take action (like search for longer)
-               if (TimeMan::isDynamic && depth > MoveDifficultyUtil::emergencyMinDepth &&
+               // check for an emergency : 
+               // if IID reports decreasing score, we have to take action (like search for longer)
+               if (TimeMan::isDynamic && 
+                   depth > MoveDifficultyUtil::emergencyMinDepth && 
+                   moveDifficulty == MoveDifficultyUtil::MD_std &&
                    _data.score < getSearchData().scores[depth - 1] - MoveDifficultyUtil::emergencyMargin) {
-                  moveDifficulty = _data.score > MoveDifficultyUtil::emergencyAttackThreashold ? MoveDifficultyUtil::MD_hardAttack
-                                                                                               : MoveDifficultyUtil::MD_hardDefense;
+                  moveDifficulty = _data.score > MoveDifficultyUtil::emergencyAttackThreashold ? MoveDifficultyUtil::MD_hardAttackIID
+                                                                                               : MoveDifficultyUtil::MD_hardDefenseIID;
                   Logging::LogIt(Logging::logInfo) << "Emergency mode activated : " << _data.score << " < "
                                                    << getSearchData().scores[depth - 1] - MoveDifficultyUtil::emergencyMargin;
                }
@@ -411,8 +423,11 @@ pvsout:
             _data      = ThreadPool::instance()[bestThreadId]->getData();
             _data.best = _data.pv[0];
          }
-         // update stack data with "real" score
-         stack[p.halfmoves].eval = _data.score;
+         // update stack data on all searcher with "real" score
+         // this way all stack[k (with k < p.halfmove)] will be "history" of the game accessible to searcher
+         for (auto& s : ThreadPool::instance()) {
+            s->stack[p.halfmoves].eval = _data.score;
+         }
       }
 
       // wait for "ponderhit" or "stop" in case search returned too soon
