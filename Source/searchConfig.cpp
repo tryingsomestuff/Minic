@@ -46,6 +46,7 @@ CONST_SEARCH_TUNING ScoreType dangerLimitPruning        = 64; //off
 CONST_SEARCH_TUNING ScoreType dangerLimitForwardPruning = 64; //off
 CONST_SEARCH_TUNING ScoreType dangerLimitReduction      = 64; //off
 CONST_SEARCH_TUNING ScoreType dangerDivisor             = 180;
+
 CONST_SEARCH_TUNING ScoreType failLowRootMargin         = 100;
 
 CONST_SEARCH_TUNING ScoreType deltaBadMargin            = 150;
