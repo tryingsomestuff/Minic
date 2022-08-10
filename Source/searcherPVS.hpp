@@ -345,8 +345,10 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                                   | (attFromPiece[Co_Black][P_wb-1] & (p.whiteQueen() | p.whiteRook()))
                                   | (attFromPiece[Co_Black][P_wr-1] & p.whiteQueen())) != emptyBitBoard;
    }
+
+   // if the position is really intense, eventually for both side (thus very sharp), will try to prune/reduce a little less
+   ///@todo this is not activated for now
    const int dangerFactor          = (data.danger[Co_White] + data.danger[Co_Black]) / SearchConfig::dangerDivisor;
-   const int dangerDiff            = (data.danger[~p.c] - data.danger[p.c]) / SearchConfig::dangerDivisor;
    const bool isDangerPrune        = dangerFactor >= SearchConfig::dangerLimitPruning;
    const bool isDangerForwardPrune = dangerFactor >= SearchConfig::dangerLimitForwardPruning;
    const bool isDangerRed          = dangerFactor >= SearchConfig::dangerLimitReduction;
@@ -354,7 +356,16 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    if (isDangerForwardPrune) stats.incr(Stats::sid_dangerPrune);
    if (isDangerRed)          stats.incr(Stats::sid_dangerReduce);
 
-   if(std::abs(dangerDiff) > 7) std::cout << GetFEN(p) << " " << dangerDiff << std::endl;
+   // if we are doing a big attack, we will look for tactics involving sacrifices
+   const int dangerGoodAttack      = data.danger[~p.c] / SearchConfig::dangerDivisor;
+   // unless if we are ourself under attack
+   const int dangerUnderAttack     = data.danger[p.c] / SearchConfig::dangerDivisor;
+
+/*
+   if(dangerFactor > 7) std::cout << GetFEN(p) << " " << dangerFactor << std::endl;
+   if(dangerGoodAttack > 7) std::cout << GetFEN(p) << " " << dangerGoodAttack << std::endl;
+   if(dangerUnderAttack > 7) std::cout << GetFEN(p) << " " << dangerUnderAttack << std::endl;
+*/
 
    bool evalScoreIsHashScore = false;
    const ScoreType staticScore = evalScore;
@@ -845,7 +856,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             continue;
          }
 
-         const DepthType pruningDepthCorrection = (isEmergencyDefence||isEmergencyAttack);//DepthType(float(dangerFactor)/SearchConfig::dangerLimitPruning);
+         const DepthType pruningDepthCorrection = (isEmergencyDefence||isEmergencyAttack);
 
          // LMP
          if (lmp && isPrunableStdNoCheck && validMoveCount > SearchConfig::lmpLimit[improving][depth + pruningDepthCorrection]) {
@@ -883,7 +894,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                skipCap = true;
                continue;
             }
-            else if ( badCapScore(*it) < - 1 * SearchConfig::seeCaptureFactor * (depth + pruningDepthCorrection + dangerDiff/SearchConfig::seeCapDangerDivisor)) {
+            else if ( badCapScore(*it) < - 1 * SearchConfig::seeCaptureFactor * (depth + pruningDepthCorrection + (dangerGoodAttack - dangerUnderAttack)/SearchConfig::seeCapDangerDivisor)) {
                stats.incr(Stats::sid_see2);
                skipCap = true;
                continue;
@@ -947,7 +958,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          ScoreType seeValue = 0;
          if (isPrunableStdNoCheck) {
             seeValue = SEE(p, *it);
-            if (!rootnode && seeValue < -SearchConfig::seeQuietFactor * (nextDepth + pruningDepthCorrection + dangerDiff/SearchConfig::seeQuietDangerDivisor) * nextDepth ){
+            if (!rootnode && seeValue < -SearchConfig::seeQuietFactor * (nextDepth + pruningDepthCorrection + (dangerGoodAttack - dangerUnderAttack)/SearchConfig::seeQuietDangerDivisor) * nextDepth ){
                stats.incr(Stats::sid_seeQuiet);
                continue;
             }
