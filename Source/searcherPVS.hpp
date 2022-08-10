@@ -319,9 +319,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    ///@todo try this
 
    // take **initial** position situation (from IID variability) into account for pruning ? 
-   ///@todo try this
-   const bool isEmergencyDefence = false; //moveDifficulty == MoveDifficultyUtil::MD_moobDefenceIID;
-   const bool isEmergencyAttack  = false; //moveDifficulty == MoveDifficultyUtil::MD_moobAttackIID;
+   const bool isEmergencyDefence = moveDifficulty == MoveDifficultyUtil::MD_moobDefenceIID;
+   const bool isEmergencyAttack  = moveDifficulty == MoveDifficultyUtil::MD_moobAttackIID;
 
    // take **current** position danger level into account for purning
    ///@todo retry this
@@ -354,6 +353,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    if (isDangerPrune)        stats.incr(Stats::sid_dangerPrune);
    if (isDangerForwardPrune) stats.incr(Stats::sid_dangerPrune);
    if (isDangerRed)          stats.incr(Stats::sid_dangerReduce);
+
+   if(std::abs(dangerDiff) > 7) std::cout << GetFEN(p) << " " << dangerDiff << std::endl;
 
    bool evalScoreIsHashScore = false;
    const ScoreType staticScore = evalScore;
@@ -844,7 +845,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             continue;
          }
 
-         const DepthType pruningDepthCorrection = 0;//DepthType(float(dangerFactor)/SearchConfig::dangerLimitPruning + (isEmergencyDefence||isEmergencyAttack) - 0.5);
+         const DepthType pruningDepthCorrection = (isEmergencyDefence||isEmergencyAttack);//DepthType(float(dangerFactor)/SearchConfig::dangerLimitPruning);
 
          // LMP
          if (lmp && isPrunableStdNoCheck && validMoveCount > SearchConfig::lmpLimit[improving][depth + pruningDepthCorrection]) {
@@ -855,7 +856,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
          // History pruning (including CMH)
          if (historyPruning && isPrunableStdNoCheck &&
-             Move2Score(*it) < SearchConfig::historyPruningCoeff.threshold(depth + pruningDepthCorrection, data.gp, improving, cutNode)) {
+             Move2Score(*it) < SearchConfig::historyPruningCoeff.threshold(depth, data.gp, improving, cutNode)) {
             stats.incr(Stats::sid_historyPruning);
             continue;
          }
@@ -870,7 +871,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
          // capture history pruning
          if ( capHistoryPruning && isPrunableCap &&
-              historyT.historyCap[PieceIdx(p.board_const(Move2From(*it)))][to][Abs(p.board_const(to))-1] < SearchConfig::captureHistoryPruningCoeff.threshold(depth + pruningDepthCorrection, data.gp, improving, cutNode)){
+              historyT.historyCap[PieceIdx(p.board_const(Move2From(*it)))][to][Abs(p.board_const(to))-1] < SearchConfig::captureHistoryPruningCoeff.threshold(depth, data.gp, improving, cutNode)){
             stats.incr(Stats::sid_capHistPruning);
             continue;
          }
@@ -946,7 +947,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          ScoreType seeValue = 0;
          if (isPrunableStdNoCheck) {
             seeValue = SEE(p, *it);
-            if (!rootnode && seeValue < -SearchConfig::seeQuietFactor * (nextDepth + isEmergencyDefence + isEmergencyAttack + dangerDiff/SearchConfig::seeQuietDangerDivisor) * nextDepth ){
+            if (!rootnode && seeValue < -SearchConfig::seeQuietFactor * (nextDepth + pruningDepthCorrection + dangerDiff/SearchConfig::seeQuietDangerDivisor) * nextDepth ){
                stats.incr(Stats::sid_seeQuiet);
                continue;
             }
