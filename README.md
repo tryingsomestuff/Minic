@@ -87,7 +87,7 @@ Nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets.
 - Inference code : originally based on Seer one (Connor McMonigle), many refactoring and experiements inside (clipped ReLU, quantization on read, vectorization, ...).
 - Network topology : Many many have been tested (with or without skip connections, bigger or smaller input layer, number of layers, ...) mainly without success except the small "Nibbled Nutshell" net. Still trying to find a better idea ... Currently a multi-bucket (based on the number of pieces) net with a common input layer and 4 inner nets.
 - Training code : mainly based on the Gary Linscott and Tomasz Sobczyk (@Sopel) pytorch trainer (https://github.com/glinscott/nnue-pytorch), adapted and tuned to Minic.
-- Data generation code : fully original, pure Minic data. Many ideas has been tried (generate inside search tree, self-play, multi-pv, random, ...). 
+- Data generation code : fully original, pure Minic data. Many ideas has been tried (generate inside search tree, self-play, multi-pv, random, with or without syzygy, ...). Some rescored LC0 data are also used.
 - Other tools : many little tools around training process, borrowed here and there and adapated or developed by myself.
 
 In brief, Minic NNUE world is vastly inspired from what others are doing and is using pure Minic data.
