@@ -7,10 +7,10 @@
 </p>
 
 # Minic
-A chess engine I'm developing to learn about chess programming (see this lovely [wiki](https://www.chessprogramming.org/Main_Page) for more details on chess programming).  
+Minic is a chess engine I'm developing to learn about chess programming (see this lovely [wiki](https://www.chessprogramming.org/Main_Page) for more details on chess programming).  
 
-Minic has no graphic interface (GUI) but is compatible with both [CECP](https://www.gnu.org/software/xboard/engine-intf.html) (xboard) and [UCI](http://wbec-ridderkerk.nl/html/UCIProtocol.html) protocol so you can use it in your favorite software ([cutechess](https://github.com/cutechess/cutechess), [arena](http://www.playwitharena.de/), [Banksia](https://banksiagui.com/), [winboard](https://www.gnu.org/software/xboard/), [c-chess-cli](https://github.com/lucasart/c-chess-cli), ...).  
-It is currently one of the 20 best engines in major [rating](https://ccrl.chessdom.com/ccrl/4040/) lists and the strongest french one.
+Minic has no graphic interface (GUI) but is compatible with both [CECP](https://www.gnu.org/software/xboard/engine-intf.html) (xboard) and [UCI](http://wbec-ridderkerk.nl/html/UCIProtocol.html) protocol so you can use it in your favorite software (for instance [Cutechess](https://github.com/cutechess/cutechess), [Arena](http://www.playwitharena.de/), [Banksia](https://banksiagui.com/), [Winboard/Xboard](https://www.gnu.org/software/xboard/), [c-chess-cli](https://github.com/lucasart/c-chess-cli), ...).  
+Minic is currently one of the 20 best engines in major [rating](https://ccrl.chessdom.com/ccrl/4040/) lists and the strongest french one.
 
 Here are some shortcuts to navigate in this document :
 
@@ -34,49 +34,50 @@ Generating data, learning process, tuning, optimization and testing of a chess e
 ## History & the NNUE Minic story
 
 ### Code style
-For a year and a half Minic was (mainly) a one-file-code with very dense lines. This is of course very wrong in terms of software design... So why is it so? First reason is that Minic was first developped as a week-end project (in mid-october 2018), the quick-and-dirty way, and since then I was having fun going on this way ; being a "small" code size engine was part of the stakes in developing it. 
+For a year and a half Minic was (mainly) a one-file-code with very dense lines. This is of course very wrong in terms of software design... So why is it so? First reason is that Minic was first developped as a week-end project (in mid-october 2018), the quick-and-dirty way, and since then I was having fun going on the way of minimal lines of code direction ; being a "small" code size engine was part of the stakes in developing it at first. 
 
-Until version 2 of Minic, some optional features such as evaluation and searchs tuning, perft, tests, uci support, book generation ... were available in the Add-Ons directory ; they are now fused with the source code.
+Until version 2 of Minic, some optional features such as evaluation and searchs tuning, perft, tests, uci support, book generation ... were available in the Add-Ons directory ; they are now fused with the source code for a while.
 
-Nowadays, since the release of version "2", Minic is written in a more classic C++ style, although some very dense lines are still present and recall Minic past compacity...
+Nowadays, in fact since the release of version "2", the engine is written in a more classic C++ style, although some very dense lines may still present and recall Minic past compacity...
 
 More details about Minic history in the next paragraphs...
 
 ### Week-end project (October 2018)
-Initially, the code size of Minic was supposed not to go above 2000sloc. It started as a week-end project in october 2018 (http://talkchess.com/forum3/viewtopic.php?f=2&t=68701). But, as soon as more features (especially SMP, material tables and bitboard) came up, I tried to keep it under 4000sloc and then 5000sloc, ... This is why this engine was named Minic, this stands for "Minimal Chess" (and is not related to the GM Dragoljub Minić) but it has not much to do with minimalism anymore...  
+Initially, the code size of Minic was supposed not to go above 2000sloc. It started as a week-end project in october 2018 (http://talkchess.com/forum3/viewtopic.php?f=2&t=68701). But, as soon as more features (especially SMP, material tables and bitboard) came up, I tried to keep it under 4000sloc and then 5000sloc, ... This is why this engine was named Minic, this stands for "Minimal Chess" (and is not related to the GM Dragoljub Minić) but it has not much to do with minimalism anymore nowadays...  
 
 ### Version "1" (October 2019)
-was released as a one year anniversary release in october 2019. At this point Minic has already go from a 1800 Elo 2-days-of-work engine, to a 2800 Elo engine being invited at TCEC qualification league.
+Version "1" was released as a one year anniversary release in october 2019. At this point Minic has already go from a 1800 Elo 2-days-of-work engine, to a 2800 Elo engine being invited at TCEC qualification league !
 
 ### Version "2" (April 2020)
-is released for April 1st 2020 (during covid-19 confinement). For this version, the one file Minic was splitted into many header and source files, and commented a lot more, without negative impact on speed and strength. 
+Ver sion "2" was released for April 1st 2020 (during covid-19 confinement). For this version, the one file Minic was splitted into many header and source files, and commented a lot more, without negative impact on speed and strength. 
 
 #### NNUE from release 2.47 to release 2.53 (from Stockfish implementation)
-Minic2, since release 2.47 of August 8th 2020 (http://talkchess.com/forum3/viewtopic.php?f=2&t=73521&hilit=minic2&start=50#p855313), has the possibility to be build using a shameless copy of the NNUE framework of Stockfish. Integration of NNUE was done easily and I hope this can be done for any engines, especially if NNUE is release as a standalone library (see https://github.com/dshawul/nncpu-probe for instance). New UCI parameter NNUEFile is added and shall be the full path to the network file you want to use. To build such Minic you need to activate WITH_NNUE in definition.hpp and use the build script (or make your own, but do not forget to pass -DUSE_AVX2 or whatever your hardware supports to the NNUE part ...). First test shows that MinicNNUE is around 200Elo stronger than Minic, around the level of Xiphos or Ethereal at this date at short TC and maybe something like 50Elo higher at longer TC (around Komodo11). This says that a lot more can (and will!) be done inside Minic standard evaluation function !
+Minic2, since release 2.47 of August 8th 2020 (http://talkchess.com/forum3/viewtopic.php?f=2&t=73521&hilit=minic2&start=50#p855313), has the possibility to be build using a shameless copy of the NNUE framework of Stockfish. Integration of NNUE was done easily and I hoped this can be done for any engines, especially if NNUE is released as a standalone library (see https://github.com/dshawul/nncpu-probe for instance). First tests shown that "MinicNNUE" is around 200Elo stronger than Minic, around the level of Xiphos or Ethereal at this date at short TC and maybe something like 50Elo higher at longer TC (so around Komodo11). 
 
-When using a NNUE network with this Stockfish implementation, it is important that Minic is called MinicNNUE (or Minnuec as introduced by Gekkehenker).
-MinicNNUE, won't be the official Minic, as this NNUE work do not reflect my own work and skills at all !
+When using a NNUE network with this Stockfish implementation, it is important that Minic is called "MinicNNUE".
+Indeed, MinicNNUE (with copy/pasted SF NNUE implementation), won't be the official Minic, as this is not my own work at all.
 
-Later on, since version 2.50, the NNUE learner from NodChip repo has also been ported to Minic so that networks using Minic data and search can be done.
-The genFen part was not ported and an internal process to produce training is used. This include both extracting position from fixed depth game and from random positions.
+Later on, starting from version 2.50, the NNUE learner from NodChip repository has also been ported to Minic so that networks can be built using Minic data and search can be done.
+The genFen part of Nodchip was not ported and instead replaced by an internal process to produce training data. This included both extracting position from fixed depth game and from random positions.
 
-Nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets.
+Nets I built are still available at https://github.com/tryingsomestuff/NNUE-Nets.
 
 ### Version "3" (November 2020)
-is released in november 2020 (during second covid-19 confinement) as a 2 years anniversary release and *is not using, nor compatible with, SF NNUE implementation anymore*. More about this just below...
+Version "3" of Minic is released in november 2020 (during second covid-19 confinement) as a 2 years anniversary release and *is not using, nor compatible with, SF NNUE implementation anymore*. More about this just below...
 
 #### NNUE from release 3.00 (initially from Seer implementation)
 Starting from release 3.00, **Minic is not using Stockfish NNUE implementation anymore and is no more compatible with SF nets**. It was too much foreign code inside Minic to be fair, to be maintained, to be fun.
-Seer engine is offering a very well written implementation of NNUE that I borrowed and adapt to Minic (https://github.com/connormcmonigle/seer-nnue). The code is more or less 400 lines. I choose to keep Stockfish code only for binary sfens format as everyone is using this for now. Training code is an external tool written in Python without any dependency to engine, also first adapted from Seer repository and then from Gary Linscott pytorch trainer (https://github.com/glinscott/nnue-pytorch).
-A new story to be written, in Minic 3.
+Seer chess engine author is offering a very well written implementation of NNUE that I borrowed and adapt to Minic (https://github.com/connormcmonigle/seer-nnue). The code was more or less 400 lines. I choose to keep some Stockfish code just for binary sfens format conversion as everyone (or at least many many) is using this data format for now. Training code is an external tool written in Python without any dependency to engine, also first adapted from Seer repository and then taking ideas from Gary Linscott pytorch trainer (https://github.com/glinscott/nnue-pytorch). A new story to be written, in Minic 3.
 
-Nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets.
+Nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets. Beware there is no retrocompatibility of the net from version to version. 
 
 ### Some original stuff that were maybe introduced in Minic
 
 - use of PST score in move sorter to compensate near 0 history of quiet move
 - aggregate history score for move sorter and history heuristic (cmh + history[piece and color][tosquare] + history[color][square][square])
 - danger (from evaluation) based pruning and reductions in search
+- emergency (from IID loop instabilities) based pruning and reductions in search
+- history aware (boom / moob) based pruning and reductions in search
 - contempt opponent model taking opponent name or opponent rating into account
 - "features" based evaluation parameter available to the user to tune game play (HCE evaluation only, not for NNUE)
 - using a depth factor for pruning and reduction that takes TT entry depth into account
@@ -84,13 +85,13 @@ Nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets.
 
 ### Minic NNUE "originality" status
 
-- Inference code : originally based on Seer one (Connor McMonigle), many refactoring and experiements inside (clipped ReLU, quantization on read, vectorization, ...).
-- Network topology : Many many have been tested (with or without skip connections, bigger or smaller input layer, number of layers, ...) mainly without success except the small "Nibbled Nutshell" net. Still trying to find a better idea ... Currently a multi-bucket (based on the number of pieces) net with a common input layer and 4 inner nets.
+- Inference code : originally based on Seer one (Connor McMonigle), many refactoring and experiements inside (clipped ReLU, quantization on read, vectorization, sub-net depending on pieces number, ...).
+- Network topology : Many many have been tested (with or without skip connections, bigger or smaller input layer, number of layers, pieces buckets, ...) mainly without success. Always trying to find a better idea ... Currently a multi-bucket (based on the number of pieces) net with a common input layer and 2 inner nets.
 - Training code : mainly based on the Gary Linscott and Tomasz Sobczyk (@Sopel) pytorch trainer (https://github.com/glinscott/nnue-pytorch), adapted and tuned to Minic.
-- Data generation code : fully original, pure Minic data. Many ideas has been tried (generate inside search tree, self-play, multi-pv, random, with or without syzygy, ...). Some rescored LC0 data are also used.
+- Data generation code : fully original, pure Minic data. Many ideas has been tried (generate inside search tree, self-play, multi-pv, random, with or without syzygy, ...). Some LC0 data are also used after being rescored using previous Minic version.
 - Other tools : many little tools around training process, borrowed here and there and adapated or developed by myself.
 
-In brief, Minic NNUE world is vastly inspired from what others are doing and is using pure Minic data.
+In brief, Minic NNUE world is vastly inspired from what others are doing and is using pure Minic data (Minic generated or otherwise rescored).
 
 ## Testing and strength
 
@@ -98,7 +99,7 @@ Minic is currently in the 20 best engines with a Elo rating around 3400 at [CCRL
 
 ### Various NNUE nets strenght 
 
-This table shows nets strength of various Minic nets on an AVX2 hardware at short TC (10s+0.1). Results will be a lot different on older hardware where NNUE evaluation is much slower. I thus encourage users to only use Minic with NNUE nets on recent hardware.
+This table shows the evolution of nets strength of various Minic nets on an AVX2 hardware at short TC (10s+0.1). Results will be a lot different on older hardware where NNUE evaluation is much slower. I thus encourage users to only use Minic with NNUE nets on recent hardware. As we see, nets strenght is increasing version after version, this is due to better data, new net topologies but also of course to the fact that I rescore (or regenerate) data with previous version of Minic before training a new net. Moreover, the decision to revert SF implementation and start my own work based on Seer initial implementation led to a 2 years net training journey to fill the performance gap ...
 
 ```
 
@@ -129,11 +130,11 @@ Rank Name                          Elo     +/-   Games   Score    Draw
    4 minic_3.19_core2              -55      24     422   42.2%   49.3% 
 ```
 What does this say ?
-Well ... for NNUE, using AVX2 is very important. This can explain some strange results during some testing process and in rating list where I sometimes see my nets underperform a lot. So please, use AVX2 hardware (and the corresponding Minic binary, i.e. the "skylake" one for Intel or at least the "znver1" for AMD) for NNUE testing if possible.
+Well ... for NNUE, using AVX2 is very important. This can explain some strange results during some testing process and in rating list where I sometimes see my nets underperforming a lot. So please, use AVX2 hardware (and the corresponding Minic binary, i.e. the "skylake" one for Intel or at least the "znver1" for AMD) for NNUE testing if possible.
 
 ### Threading performances
 
-I'd love to own a big enough hardware to test with more than 8 threads ... Here are 3s+0.1 TC results to illustrate threading capabilities.
+I'd love to own a big enough hardware to test with more than 8 threads ... Here are 3s+0.1 TC results to illustrate threading capabilities. Minic is thus scaling very well.
 ```
 Rank Name                          Elo     +/-   Games   Score    Draw 
    1 minic_3.19_8                   123      34     156   67.0%   58.3% 
@@ -143,8 +144,8 @@ Rank Name                          Elo     +/-   Games   Score    Draw
    5 minic_3.19_1                  -206      41     156   23.4%   42.9% 
 ```
 
-### Home test
-Here are some fast TC results of a gauntlet tournament (STC 10s+0.1) for Minic 3.19 (dev version of various engine may 22th 2022).
+### Home testing 
+Here are some fast TC results of a gauntlet tournament (STC 10s+0.1) for Minic 3.19 (dev version of various engine as of may 22th 2022).
 ```
    # PLAYER                        :  RATING  ERROR  POINTS  PLAYED   (%)  CFS(%)
    1 rofChade3                     :   144.7   20.4   391.5     565    69      52
@@ -167,7 +168,7 @@ Here are some fast TC results of a gauntlet tournament (STC 10s+0.1) for Minic 3
 ```
 
 ### Random mover
-Minic random-mover stats are the following :
+Minic random-mover (level = 0) stats are the following :
 ```
    7.73%  0-1 {Black mates}
    7.50%  1-0 {White mates}
@@ -185,9 +186,9 @@ Here is 4 years of CCRL progress (single thread)
 
 
 ### CCRL
-- 40/15: Minic 3.19 + Nylon Nonchalance is tested at 3399 on the [CCRL 40/15 scale, 4 cores](http://ccrl.chessdom.com/ccrl/4040/)  
-- Blitz: Minic 3.18 + Nimble Nothingness is tested at 3494 on the [CCRL BLITZ scale, 8 cores](http://ccrl.chessdom.com/ccrl/404/)  
-- FRC: Minic 3.22 + Nylon Nonchalance is tested at 3519 on the [CCRL FRC list](http://ccrl.chessdom.com/ccrl/404FRC/)  
+- 40/15: Minic 3.24 + Nylon Nonchalance is tested at 3405 on the [CCRL 40/15 scale, 4 cores](http://ccrl.chessdom.com/ccrl/4040/)  
+- Blitz: Minic 3.18 + Nimble Nothingness is tested at 3490 on the [CCRL BLITZ scale, 8 cores](http://ccrl.chessdom.com/ccrl/404/)  
+- FRC: Minic 3.22 + Nylon Nonchalance is tested at 3512 on the [CCRL FRC list](http://ccrl.chessdom.com/ccrl/404FRC/)  
 
 ### CEGT
 - 40/4: Minic 3.22 + Nylon Nonchalance is tested at 3366 on the [CEGT 40/4 list](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
@@ -214,17 +215,17 @@ Here is 4 years of CCRL progress (single thread)
 ### Ipman Chess
 - Minic 3.22 + Nylon Nonchalance is tested at 3281 on the [IpmanChess rating list](http://ipmanchess.yolasite.com/i7-11800h.php)
 
-### Test Suite
+### Test Suite (quite old results here)
 - STS : 1191/1500 @10sec per position (single thread on an i7-9700K)  
 - WAC : 291/300 @10sec per position (single thread on an i7-9700K)  
 
 ### TCEC stats
 
-TCEC hardware: Minic is at 3429 (https://tcec-chess.com/bayeselo.txt)
+TCEC hardware: Minic is at 3400 (https://tcec-chess.com/bayeselo.txt)
 
 ### TCEC
 
-Here are Minic results at TCEC (https://tcec-chess.com/)
+Here are Minic results at TCEC main event (https://tcec-chess.com/)
 
 TCEC15: 8th/10 in Division 4a (https://www.chessprogramming.org/TCEC_Season_15)    
 TCEC16: 13th/18 in Qualification League (https://www.chessprogramming.org/TCEC_Season_16)   
@@ -236,7 +237,7 @@ TCEC21: 1st/12 in League 3, 6th/10 in League 2 (https://www.chessprogramming.org
 TCEC22: 2nd/8 in League 2, 8th/8 in League 1 (well tried ;) )  (https://www.chessprogramming.org/TCEC_Season_22)  
 
 ## Release process
-WARNING : the former Dist directory as been REMOVED from the repository because it was starting to be too big. Unofficial releases are not available anymore here. All (unofficial) releases are available in a new repo, here : https://github.com/tryingsomestuff/Minic-Dist, also available as a git submodule.
+WARNING : the former Dist directory as been REMOVED from the repository because it was starting to be too big. Unofficial releases are not available anymore here. All (including unofficial) releases are available in a new repo, here : https://github.com/tryingsomestuff/Minic-Dist, also available as a git submodule.
 
 Some stable/official ones will still be made available as github release (https://github.com/tryingsomestuff/Minic/releases). I "officially release" (create a github version) as soon as I have some validated elo (at least +10) or an important bug fix.
 
@@ -270,17 +271,17 @@ Others:
 * minic_X.YY_linux_x64_armv8           : RPi armv8
 ```   
 
-Please note that for Linux binaries to work you will need a recent libc (>=2.33, likely an ubuntu21.04 for instance) installed on your system.  
+Please note that for Linux binaries to work you will need a recent libc installed on your system.  
 Please note that Win32 binaries are very slow so please use Win64 one if possible.  
-Please note that Minic has always been a little weaker under Windows OS (probably due to cross-compilation).
+Please note that Minic has always been a little weaker under Windows OS (probably due to cross-compilation lacking PGO).
      
 ## How to compile
 * Linux (Gcc>9.2 requiered): just type "make", or use the given build script Tools/tools/build.sh (or make your own ...), or try to have a look at Tools/TCEC/update.sh for some hints. The executable will be available in Dist/Minic3 subdirectory.
 * Windows : use the Linux cross-compilation script given or make your own. From time to time I also check that recent VisualStudio versions can compile Minic without warnings but I don't distribute any VS project.
-* Android/RPi : use the given cross-compilation script or make your own.
+* Android/RPi/... : use the given cross-compilation script or make your own.
 
 ## Syzygy EGT
-To compile with SYZYGY support you'll need to clone https://github.com/jdart1/Fathom as Fathom directory and activate WITH_SYZYGY definition at compile time.
+To compile with SYZYGY support you'll need to clone https://github.com/jdart1/Fathom as Fathom directory and activate WITH_SYZYGY definition at compile time (this is default behaviour).
 This can be done using the given git submodule or by hand. To use EGT just specify syzygyPath in the command line or using the GUI option.
 
 ## How to run
@@ -333,10 +334,10 @@ Minic comes with some command line options :
 
 ```cutechess-cli.exe -engine name="Minic3.06NoNa" cmd="C:/Engines/Minic/minic_3.06_mingw_x64_nehalem.exe" dir="C:/Engines/Minic" option.NNUEFile=C:/Engines/Minic/nocturnal_nadir.bin option.Hash=256 option.Threads=1 proto=uci```
 
-Starting from Minic 3.07, no need to worry about this, the corresponding net is embeded inside the binary using the *INCBIN* technology.
+Starting from Minic 3.07, no need to worry about this, the official corresponding net is embeded inside the binary using the *INCBIN* technology.
 
 #### Adjust strength
-Minic strength can be ajdusted using the level option (from command line or using protocol option support, using value from 0 to 100). Level 0 is a random mover, 1 to 30 very weak, ..., level 100 is full strength. For now it uses multipv, maximum depth adjustment and randomness to make Minic play weaker moves.
+Minic strength can be ajdusted using the level option (from command line or using protocol option support, using value from 0 to 100). Level 0 is a random mover, 1 to 30 very weak, ..., level 100 is full strength. For now it uses multipv, maximum depth adjustment and randomness to make Minic play weaker moves (also a fixed node option is available to avoid randomness if needed).
 
 Current level Elo are more or less so that even a beginner can beat low levels Minic. From level 50 or 60, you will start to struggle more! You can also use the UCI_Elo parameter if UCI_LimitStrenght is activated but the Elo fit is not good especially at low level. Level functionnaly will be enhanced in a near future.
 
