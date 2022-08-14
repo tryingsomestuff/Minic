@@ -119,6 +119,9 @@ extern CONST_SEARCH_TUNING DepthType ttMaxFiftyValideDepth;
 extern CONST_SEARCH_TUNING int       iirMinDepth;
 extern CONST_SEARCH_TUNING int       iirReduction;
 
+extern CONST_SEARCH_TUNING DepthType ttAlphaCutDepth;
+extern CONST_SEARCH_TUNING ScoreType ttAlphaCutMargin;
+
 inline const DepthType lmpMaxDepth = 10;
 inline const int       lmpLimit[][SearchConfig::lmpMaxDepth + 1] = {{0, 2, 3, 5, 9, 13, 18, 25, 34, 45, 55}, {0, 5, 6, 9, 14, 21, 30, 41, 55, 69, 84}};
 

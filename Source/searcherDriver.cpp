@@ -100,21 +100,20 @@ void Searcher::searchDriver(bool postMove) {
       Logging::LogIt(Logging::logDebug) << "Limited nodes to fit level: " << TimeMan::maxNodes;
    }
 
-   // initialize basic search variable
+   // initialize some search variable
    moveDifficulty = MoveDifficultyUtil::MD_std;
+   positionEvolution = MoveDifficultyUtil::PE_std;
    startTime      = Clock::now();
 
    // check game history for potential situations (boom/moob)
-   /*
    if (isMainThread()) {
       if (isBooming(p.halfmoves)) 
-         moveDifficulty = stack[p.halfmoves-2].eval > MoveDifficultyUtil::emergencyAttackThreashold ? MoveDifficultyUtil::MD_boomAttackHistory
-                                                                                                    : MoveDifficultyUtil::MD_boomDefenceHistory;
-      if (isMoobing(p.halfmoves))
-         moveDifficulty = stack[p.halfmoves-2].eval > MoveDifficultyUtil::emergencyAttackThreashold ? MoveDifficultyUtil::MD_moobAttackHistory
-                                                                                                    : MoveDifficultyUtil::MD_moobDefenceHistory;
+         positionEvolution = stack[p.halfmoves-2].eval > MoveDifficultyUtil::emergencyAttackThreashold ? MoveDifficultyUtil::PE_boomingAttack : 
+                                                                                                         MoveDifficultyUtil::PE_boomingDefence;
+      else if (isMoobing(p.halfmoves))
+         positionEvolution = stack[p.halfmoves-2].eval > MoveDifficultyUtil::emergencyAttackThreashold ? MoveDifficultyUtil::PE_moobingAttack : 
+                                                                                                         MoveDifficultyUtil::PE_moobingDefence;
    }
-   */
 
    // Main thread only will reset tables
    if (isMainThread()) {

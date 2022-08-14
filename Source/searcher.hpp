@@ -29,8 +29,9 @@ struct Searcher {
    bool stopFlag = true;
 
    MoveDifficultyUtil::MoveDifficulty moveDifficulty = MoveDifficultyUtil::MD_std;
-   TimeType                           currentMoveMs  = 777;
+   MoveDifficultyUtil::PositionEvolution positionEvolution = MoveDifficultyUtil::PE_std;
 
+   TimeType currentMoveMs  = 777;
    TimeType getCurrentMoveMs()const; // use this (and not the variable) to take emergency time into account !
 
    std::array<StackData, MAX_PLY> stack;

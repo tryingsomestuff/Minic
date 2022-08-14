@@ -65,6 +65,9 @@ CONST_SEARCH_TUNING DepthType ttMaxFiftyValideDepth = 92;
 CONST_SEARCH_TUNING int       iirMinDepth           = 2;
 CONST_SEARCH_TUNING int       iirReduction          = 1;
 
+CONST_SEARCH_TUNING DepthType ttAlphaCutDepth       = 1;
+CONST_SEARCH_TUNING ScoreType ttAlphaCutMargin      = 32;
+
 //CONST_SEARCH_TUNING ScoreType randomAggressiveReductionFactor = 2;
 
 } // namespace SearchConfig

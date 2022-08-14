@@ -569,6 +569,16 @@ namespace MoveDifficultyUtil {
       MD_boomDefenceHistory, 
       MD_boomAttackHistory,
     };
+
+    enum PositionEvolution{
+      PE_none = 0,
+      PE_std,
+      PE_moobingAttack,
+      PE_moobingDefence,
+      PE_boomingAttack,
+      PE_boomingDefence,
+    };
+
     const DepthType emergencyMinDepth          = 14;
     const ScoreType emergencyMargin            = 90;
     const ScoreType emergencyAttackThreashold  = 130;
@@ -579,8 +589,9 @@ namespace MoveDifficultyUtil {
     const int       emergencyFactorBoomHistory = 3;
     const int       maxStealDivisor            = 5; // 1/maxStealDivisor of remaining time
 
-extern float variability;
-[[nodiscard]] inline float variabilityFactor() { return 2.f / (1.f + std::exp(1.f - MoveDifficultyUtil::variability)); } // inside [0.5 .. 2]
+   extern float variability;
+   [[nodiscard]] inline float variabilityFactor() { return 2.f / (1.f + std::exp(1.f - MoveDifficultyUtil::variability)); } // inside [0.5 .. 2]
+
 } // namespace MoveDifficultyUtil
 
 template<typename T, int seed> [[nodiscard]] inline T randomInt(T m, T M) {

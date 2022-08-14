@@ -362,6 +362,9 @@ void registerCOMOptions() { // options exposed to GUI
    _keys.push_back(KeyBase(k_int  , w_spin, "iirMinDepth"                       , &SearchConfig::iirMinDepth                         , 1               , 32                  ));
    _keys.push_back(KeyBase(k_int  , w_spin, "iirReduction"                      , &SearchConfig::iirReduction                        , 0               , 3                   ));
 
+   _keys.push_back(KeyBase(k_depth, w_spin, "ttAlphaCutDepth"                   , &SearchConfig::ttAlphaCutDepth                     , DepthType(1)    , DepthType(8)        ));
+   _keys.push_back(KeyBase(k_score, w_spin, "ttAlphaCutMargin"                  , &SearchConfig::ttAlphaCutMargin                    , ScoreType(0)    , ScoreType(1000)     ));
+
    ///@todo more ...
 #endif
 
