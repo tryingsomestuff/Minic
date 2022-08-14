@@ -202,7 +202,7 @@ Here is 4 years of CCRL progress (single thread)
 - Minic 3.18 + Nimble Nothingness is tested at 3276 on the [fastgm 60sec+0.6sec 16 cores rating list](http://www.fastgm.de/16-60-0.6.html)
 
 ### SP-CC
-- Minic 3.22 + Nylon Nonchalance is tested at 3456 on the [SP-CC 3min+1s rating list](https://www.sp-cc.de/)  
+- Minic 3.26 + Natural ?aughtiness is tested at 3520 on the [SP-CC 3min+1s rating list](https://www.sp-cc.de/)  
 
 ### GRL
 - Minic 3.17 + Nucleated Neurulation is tested at 3229 on the [GRL 40/2 rating list](http://rebel13.nl/grl-best-40-2.html)
