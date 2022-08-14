@@ -245,6 +245,13 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    bool ttIsCheck   = validTTmove && (e.b & TT::B_isCheckFlag);
    bool formerPV    = ttPV && !pvnode;
 
+   // idea from Ethereal
+   if ( !rootnode && !pvnode && ttHit
+      && (e.b == TT::B_alpha)
+      &&  e.d >= depth - SearchConfig::ttAlphaCutDepth
+      &&  e.s + SearchConfig::ttAlphaCutMargin <= alpha)
+      return alpha;
+
 #ifdef WITH_SYZYGY
    // probe TB
    ScoreType tbScore = 0;
@@ -316,7 +323,10 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    stack[p.halfmoves].eval = evalScore; 
 
    // take **initial** position situation (from game history) into account for pruning ? 
-   ///@todo try this
+   //const bool isBoomingAttack = positionEvolution == MoveDifficultyUtil::PE_boomingAttack;
+   //const bool isBoomingDefend = positionEvolution == MoveDifficultyUtil::PE_boomingDefence;
+   //const bool isMoobingAttack = positionEvolution == MoveDifficultyUtil::PE_moobingAttack;
+   //const bool isMoobingDefend = positionEvolution == MoveDifficultyUtil::PE_moobingDefence;
 
    // take **initial** position situation (from IID variability) into account for pruning ? 
    const bool isEmergencyDefence = moveDifficulty == MoveDifficultyUtil::MD_moobDefenceIID;
@@ -894,7 +904,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                skipCap = true;
                continue;
             }
-            else if ( badCapScore(*it) < - 1 * SearchConfig::seeCaptureFactor * (depth + pruningDepthCorrection + (dangerGoodAttack - dangerUnderAttack)/SearchConfig::seeCapDangerDivisor)) {
+            else if ( badCapScore(*it) < - 1 * SearchConfig::seeCaptureFactor * (depth + pruningDepthCorrection + /*isBoomingAttack + isMoobingAttack +*/ (dangerGoodAttack - dangerUnderAttack)/SearchConfig::seeCapDangerDivisor)) {
                stats.incr(Stats::sid_see2);
                skipCap = true;
                continue;
