@@ -335,7 +335,13 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       if (DynamicConfig::forceNNUE ||
           !isLazyHigh(static_cast<ScoreType>(DynamicConfig::NNUEThreshold), features, score)) {
          STOP_AND_SUM_TIMER(Eval)
-         return NNUEEVal(p, data, context, features);
+         ScoreType nnueEval = NNUEEVal(p, data, context, features);
+
+         // random factor in opening if requiered
+         if (p.halfmoves < 10 && DynamicConfig::randomOpen != 0){
+            nnueEval += static_cast<ScoreType>(randomInt<int /*NO SEED USE => random device*/>(-1*DynamicConfig::randomOpen, DynamicConfig::randomOpen));
+         }
+         return nnueEval;
       }
       // fall back to classic eval
       context.stats.incr(Stats::sid_evalStd);
@@ -397,8 +403,9 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    }
 
    // random factor in opening if requiered
-   if (p.halfmoves < 10 && DynamicConfig::randomOpen != 0)
-      features.scores[F_positional] += static_cast<ScoreType>(randomInt<decltype(DynamicConfig::randomOpen) /*NO SEED USE => random device*/>(-1*DynamicConfig::randomOpen, DynamicConfig::randomOpen));
+   if (p.halfmoves < 10 && DynamicConfig::randomOpen != 0){
+      features.scores[F_positional] += static_cast<ScoreType>(randomInt<int /*NO SEED USE => random device*/>(-1*DynamicConfig::randomOpen, DynamicConfig::randomOpen));
+   }
 
    STOP_AND_SUM_TIMER(Eval2)
 
