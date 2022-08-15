@@ -50,7 +50,11 @@ template<typename T> std::ostream& operator<<(std::ostream& os, const TuningPara
    return os;
 }
 
-double K = 0.23;
+double K = 3;
+
+inline double Sigmoid(double x) {
+   return 1. / (1. + std::pow(10, -K * x / 400.));
+}
 
 double Sigmoid(Position& p) {
    // /////////////////////////////////////////
@@ -82,7 +86,7 @@ double Sigmoid(Position& p) {
    double   s = eval(p, data, ThreadPool::instance().main());
    s *= (p.c == Co_White ? +1 : -1);
 
-   return 1. / (1. + std::pow(10, -K * s / 400.));
+   return Sigmoid(s);
 }
 
 double E(const std::vector<EvalTuning::InputData>& data, size_t miniBatchSize) {
@@ -103,7 +107,9 @@ double E(const std::vector<EvalTuning::InputData>& data, size_t miniBatchSize) {
             p->associateEvaluator(evaluator);
             p->resetNNUEEvaluator(p->evaluator());
          }
-         ee += std::pow((data[k].result + 1) * 0.5 - Sigmoid(*p), 2);
+         //ee += std::pow((data[k].result + 1) * 0.5 - Sigmoid(*p), 2);
+         //std::cout << "result " << data[k].result << " " << Sigmoid(data[k].result) << " sigmoid " << Sigmoid(*p) << std::endl;
+         ee += std::pow(Sigmoid(data[k].result) - Sigmoid(*p), 2);
       }
       {
          const std::lock_guard<std::mutex> lock(m);
@@ -193,10 +199,10 @@ void displayTuning(const std::string prefixe, const std::vector<TuningParam<Scor
 }
 
 std::vector<TuningParam<ScoreType>> OptimizeGD(const std::vector<TuningParam<ScoreType>>& initialGuess,
-                                               std::vector<EvalTuning::InputData>&           data,
-                                               const size_t                              batchSize,
-                                               const int                                 loops,
-                                               const std::string&                        prefix) {
+                                               std::vector<EvalTuning::InputData>&        data,
+                                               const size_t                               batchSize,
+                                               const int                                  loops,
+                                               const std::string&                         prefix) {
    DynamicConfig::disableTT = true;
    int it                   = 0;
    Randomize(data);
@@ -303,7 +309,7 @@ float getResult(const std::string& s) {
    if (s == "\"1/2-1/2\"") return 0;
    Logging::LogIt(Logging::logError) << "Bad position result \"" << s << "\" " << s.size();
    for (char c : s) Logging::LogIt(Logging::logError) << static_cast<int>(c);
-   return -2;
+   return -99999;
 }
 
 float getResult2(const std::string& s) {
@@ -311,7 +317,7 @@ float getResult2(const std::string& s) {
    if (s == "\"0.000\"") return -1;
    if (s == "\"0.500\"") return 0;
    Logging::LogIt(Logging::logError) << "Bad position result \"" << s << "\"";
-   return -2;
+   return -99999;
 }
 
 float getResult3(const std::string& s) {
@@ -320,7 +326,13 @@ float getResult3(const std::string& s) {
    if (s == "1/2-1/2") return 0;
    Logging::LogIt(Logging::logError) << "Bad position result \"" << s << "\" " << s.size();
    for (char c : s) Logging::LogIt(Logging::logError) << static_cast<int>(c);
-   return -2;
+   return -99999;
+}
+
+float getResult4(const std::string& s){
+   std::string ss{s};
+   ss.erase(std::remove(ss.begin(), ss.end(), '"'), ss.end());
+   return atoi(ss.c_str());
 }
 
 void evaluationTuning(const std::string& filename) {
@@ -334,7 +346,7 @@ void evaluationTuning(const std::string& filename) {
 //#define TEST_TUNING
 #ifndef TEST_TUNING
       std::shared_ptr<ExtendedPosition> p(new ExtendedPosition(positions[k], false));
-      data.push_back({p, getResult2(p->_extendedParams["c2"][0])});
+      data.push_back({p, (p->c == Co_White ? 1 : -1) * getResult4(p->_extendedParams["c2"][0])});
       //data.push_back({p, getResult(p->_extendedParams["c9"][0])});
 #else // TEST_TUNING
       const ExtendedPosition            pp(positions[k], false);
@@ -346,7 +358,7 @@ void evaluationTuning(const std::string& filename) {
       //std::cout << p->epdString() << std::endl;
       data.push_back({p, getResult3(p->_extendedParams["c1"][0])}); // fastGM converted
 #endif // TEST_TUNING
-      if (data.back().result == -2) { Logging::LogIt(Logging::logFatal) << ToString(*reinterpret_cast<Position*>(p.get())); }
+      if (data.back().result == -99999) { Logging::LogIt(Logging::logFatal) << ToString(*reinterpret_cast<Position*>(p.get())); }
       // +1 white win, -1 black wins, 0 draw
    }
    Logging::LogIt(Logging::logInfo) << "Data size : " << data.size();
@@ -700,7 +712,7 @@ void evaluationTuning(const std::string& filename) {
    // HCE MSE eval
    DynamicConfig::useNNUE = false;
    DynamicConfig::forceNNUE = false;
-   computeOptimalK(data);
+   //computeOptimalK(data);
    Logging::LogIt(Logging::logInfo) << "Optimal K " << EvalTuning::K;
    const auto HCEerr = E(data, data.size());
    std::cout << "HCE  : " << HCEerr << std::endl;
