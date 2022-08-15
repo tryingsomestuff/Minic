@@ -19,7 +19,7 @@ namespace EvalTuning {
 
 struct InputData {
    std::shared_ptr<Position> p;
-   int                       result;
+   float                     result;
 };
 
 template<typename T> struct TuningParam {
@@ -297,7 +297,7 @@ std::vector<TuningParam<ScoreType>> OptimizeNaive(const std::vector<TuningParam<
 
 } // namespace EvaluationTuning
 
-int getResult(const std::string& s) {
+float getResult(const std::string& s) {
    if (s == "\"1-0\"") return 1;
    if (s == "\"0-1\"") return -1;
    if (s == "\"1/2-1/2\"") return 0;
@@ -306,7 +306,7 @@ int getResult(const std::string& s) {
    return -2;
 }
 
-int getResult2(const std::string& s) {
+float getResult2(const std::string& s) {
    if (s == "\"1.000\"") return 1;
    if (s == "\"0.000\"") return -1;
    if (s == "\"0.500\"") return 0;
@@ -314,7 +314,7 @@ int getResult2(const std::string& s) {
    return -2;
 }
 
-int getResult3(const std::string& s) {
+float getResult3(const std::string& s) {
    if (s == "1-0") return 1;
    if (s == "0-1") return -1;
    if (s == "1/2-1/2") return 0;
@@ -325,6 +325,7 @@ int getResult3(const std::string& s) {
 
 void evaluationTuning(const std::string& filename) {
    std::vector<EvalTuning::InputData> data;
+   
    Logging::LogIt(Logging::logInfo) << "Running evaluation tuning with file " << filename;
    std::vector<std::string> positions;
    DISCARD readEPDFile(filename, positions);
@@ -686,27 +687,29 @@ void evaluationTuning(const std::string& filename) {
 
    for (auto it = guess.begin(); it != guess.end(); ++it) { std::cout << "\"" << it->first << "\","; }
 
+/*
    // NNUE MSE eval
    DynamicConfig::useNNUE = true;
    DynamicConfig::forceNNUE = true;
    computeOptimalK(data);
    Logging::LogIt(Logging::logInfo) << "Optimal K " << EvalTuning::K;
-   auto NNUEerr = E(data, data.size());
+   const auto NNUEerr = E(data, data.size());
+   std::cout << "NNUE : " << NNUEerr << std::endl;
+*/
+
+   // HCE MSE eval
    DynamicConfig::useNNUE = false;
    DynamicConfig::forceNNUE = false;
    computeOptimalK(data);
    Logging::LogIt(Logging::logInfo) << "Optimal K " << EvalTuning::K;
-   auto HCEerr = E(data, data.size());
-   std::cout << "NNUE : " << NNUEerr << std::endl;
+   const auto HCEerr = E(data, data.size());
    std::cout << "HCE  : " << HCEerr << std::endl;
 
    //return;
 
    std::vector<std::string> todo = {
-       //"piecesValue",
+        "piecesValue",
 
-       "scaling",
-       /*
         "PST0",
         "PST1",
         "PST2",
@@ -772,11 +775,8 @@ void evaluationTuning(const std::string& filename) {
         "minorThreat",
         "queenThreat",
         "rookThreat",
-        //"secondorder",
-        //"safeChecks",
-        //"tempo",
-*/
-
+        "safeChecks",
+        "tempo",
    };
 
    for (auto loops = 0; loops < 1000; ++loops) {
