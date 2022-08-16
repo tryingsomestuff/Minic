@@ -150,7 +150,7 @@ void Searcher::searchDriver(bool postMove) {
    DynamicConfig::multiPV = (Logging::ct == Logging::CT_uci ? DynamicConfig::multiPV : 1);
    if (Skill::enabled() && !DynamicConfig::nodesBasedLevel) { DynamicConfig::multiPV = std::max(DynamicConfig::multiPV, 4u); }
    Logging::LogIt(Logging::logInfo) << "MultiPV " << DynamicConfig::multiPV;
-   std::vector<RootScores> multiPVMoves(DynamicConfig::multiPV, {INVALIDMOVE, matedScore(0)});
+   std::vector<MultiPVScores> multiPVMoves(DynamicConfig::multiPV, {INVALIDMOVE, matedScore(0), {}, 0});
    // in multipv mode _data.score cannot be use a the aspiration loop score
    std::vector<ScoreType> currentScore(DynamicConfig::multiPV, 0);
 
@@ -288,9 +288,7 @@ void Searcher::searchDriver(bool postMove) {
          if (stopFlag) {
             if (multi != 0 && isMainThread()) {
                // handle multiPV display only based on previous ID iteration data
-               PVList pvMulti;
-               pvMulti.push_back(multiPVMoves[multi].m);
-               displayGUI(depth - 1, 0, multiPVMoves[multi].s, p.halfmoves, pvMulti, multi + 1); ///@todo store pv and seldepth in multiPVMoves ?
+               displayGUI(depth - 1, multiPVMoves[multi].seldepth, multiPVMoves[multi].s, p.halfmoves, multiPVMoves[multi].pv, multi + 1);
             }
          }
          else {
@@ -298,12 +296,16 @@ void Searcher::searchDriver(bool postMove) {
             _data.depth         = depth;
             currentScore[multi] = score;
 
-            // In multiPV mode, fill skipmove for next multiPV iteration, and backup multiPV info
+            // In multiPV mode, fill skipmove for next multiPV iteration
             if (!pvLoc.empty() && DynamicConfig::multiPV > 1) {
                skipMoves.push_back(Move2MiniMove(pvLoc[0]));
-               multiPVMoves[multi].m = pvLoc[0];
-               multiPVMoves[multi].s = score;
             }
+
+            // backup multiPV info
+            multiPVMoves[multi].m = pvLoc[0];
+            multiPVMoves[multi].s = score;
+            multiPVMoves[multi].pv = pvLoc;
+            multiPVMoves[multi].seldepth = _data.seldepth;
 
             // update the outputed pv only with the best move line
             if (multi == 0) {
@@ -315,7 +317,7 @@ void Searcher::searchDriver(bool postMove) {
 
             if (isMainThread()) {
                // output to GUI
-               displayGUI(depth, _data.seldepth, _data.score, p.halfmoves, pvLoc, multi + 1);
+               displayGUI(depth, _data.seldepth, multiPVMoves[multi].s, p.halfmoves, pvLoc, multi + 1);
             }
 
             if (isMainThread() && multi == 0) {

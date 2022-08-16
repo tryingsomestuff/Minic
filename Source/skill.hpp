@@ -20,5 +20,5 @@ namespace Skill {
    return DepthType(1 + 2 * std::sqrt(std::max(0, static_cast<int>(DynamicConfig::level - 20))));
 } ///@todo to be tuned
 [[nodiscard]] inline uint64_t limitedNodes() { return static_cast<uint64_t>(std::exp((convertLevel2Elo() + 840.) / 240.)); } ///@todo to be tuned
-[[nodiscard]] Move            pick(std::vector<RootScores>& multiPVMoves);
+[[nodiscard]] Move            pick(std::vector<MultiPVScores>& multiPVMoves);
 } // namespace Skill
