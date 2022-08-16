@@ -23,23 +23,23 @@ for f in features:
             ll = ff.readlines()[-1]
             ff.close()
             if "PST" in f:
-                os.system("python ./Tools/PST.py \"" + ll + "\"")
+                os.system("python ./Tools/fit/PST.py \"" + ll + "\"")
             elif "imbalance" in f:
-                os.system("python ./Tools/imbalance.py \"" + ll + "\"")
+                os.system("python ./Tools/fit/imbalance.py \"" + ll + "\"")
             elif "secondorder" in f:
-                os.system("python ./Tools/secondOrder.py \"" + ll + "\"")
+                os.system("python ./Tools/fit/secondOrder.py \"" + ll + "\"")
             elif "mobility" in f:
-                os.system("python ./Tools/MOB.py \"" + ll + "\"")
+                os.system("python ./Tools/fit/MOB.py \"" + ll + "\"")
             elif "pawnStructure1" in f:
-                os.system("python ./Tools/PawnStr1.py \"" + ll + "\"")
+                os.system("python ./Tools/fit/PawnStr1.py \"" + ll + "\"")
             elif "pawnStructure2" in f:
-                os.system("python ./Tools/PawnStr1.py \"" + ll + "\"")
+                os.system("python ./Tools/fit/PawnStr1.py \"" + ll + "\"")
             elif "pawnStructure3" in f:
-                os.system("python ./Tools/PawnStr1.py \"" + ll + "\"")
+                os.system("python ./Tools/fit/PawnStr1.py \"" + ll + "\"")
             elif "pawnStructure4" in f:
-                os.system("python ./Tools/PawnStr1.py \"" + ll + "\"")
+                os.system("python ./Tools/fit/PawnStr1.py \"" + ll + "\"")
             elif "kingNearPassed" in f:
-                os.system("python ./Tools/rank_file.py \"" + ll + "\"")
+                os.system("python ./Tools/fit/rank_file.py \"" + ll + "\"")
             elif "attDefKing" in f:
                 o = ""
                 v = ll.split(';')[1:-1]

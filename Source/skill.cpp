@@ -3,7 +3,7 @@
 #include "dynamicConfig.hpp"
 #include "tools.hpp"
 
-Move Skill::pick(std::vector<RootScores>& multiPVMoves) {
+Move Skill::pick(std::vector<MultiPVScores>& multiPVMoves) {
    const size_t    multiPV    = multiPVMoves.size();
    const ScoreType topScore   = multiPVMoves[0].s;
    const ScoreType worstScore = multiPVMoves[multiPV - 1].s;

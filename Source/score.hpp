@@ -226,6 +226,14 @@ struct RootScores {
    ScoreType s;
 };
 
+// used for multiPV stiff
+struct MultiPVScores {
+   Move      m;
+   ScoreType s;
+   PVList    pv;
+   DepthType seldepth;
+};
+
 inline void displayEval(const EvalData& data, const EvalFeatures& features) {
    Logging::LogIt(Logging::logInfo) << "Game phase    " << data.gp;
    Logging::LogIt(Logging::logInfo) << "ScalingFactor " << features.scalingFactor;
