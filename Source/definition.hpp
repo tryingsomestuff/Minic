@@ -563,11 +563,7 @@ namespace MoveDifficultyUtil {
       MD_easy, 
       MD_std, 
       MD_moobDefenceIID, 
-      MD_moobAttackIID, 
-      MD_moobDefenceHistory, 
-      MD_moobAttackHistory,
-      MD_boomDefenceHistory, 
-      MD_boomAttackHistory,
+      MD_moobAttackIID
     };
 
     enum PositionEvolution{
@@ -585,8 +581,8 @@ namespace MoveDifficultyUtil {
     const ScoreType easyMoveMargin             = 180;
     const int       emergencyFactorIID         = 3;
     const int       emergencyFactorIIDGood     = 3;
-    const int       emergencyFactorMoobHistory = 3;
-    const int       emergencyFactorBoomHistory = 3;
+    const int       emergencyFactorMoobHistory = 1;
+    const int       emergencyFactorBoomHistory = 1;
     const int       maxStealDivisor            = 5; // 1/maxStealDivisor of remaining time
 
    extern float variability;

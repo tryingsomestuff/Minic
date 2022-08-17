@@ -95,7 +95,8 @@ bool isLazyHigh(ScoreType lazyThreshold, const EvalFeatures &features, EvalScore
    return std::abs(score[MG] + score[EG]) / 2 > lazyThreshold;
 }
 
-bool forbidNNUE(const Position &p){
+bool forbidNNUE([[maybe_unused]] const Position &p){
+   /*
    // for opposite colored bishop alone (with pawns)
    if (p.mat[Co_White][M_t] == 1 && 
        p.mat[Co_Black][M_t] == 1 &&
@@ -103,6 +104,7 @@ bool forbidNNUE(const Position &p){
        p.mat[Co_Black][M_b] == 1 && 
        countBit(p.allBishop() & whiteSquare) == 1 &&
        std::abs(p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) < 4 ) return true;
+   */
    return false;
 }
 
