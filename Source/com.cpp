@@ -157,7 +157,7 @@ bool receiveMoves(const Move move, Move ponderMove) {
          Logging::LogIt(Logging::logGUI) << tag << " " << "0000";
       }
       else {
-         // update current position with given move
+         // update current position with given move (in fact this is not good for UCI protocol)
          if (!makeMove(move, true, tag, ponderMove)) {
             Logging::LogIt(Logging::logGUI) << "info string Bad move ! " << ToString(move);
             Logging::LogIt(Logging::logInfo) << ToString(position);
