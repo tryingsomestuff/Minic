@@ -10,6 +10,7 @@ TimeType Searcher::getCurrentMoveMs()const{
 
    TimeType ret = currentMoveMs;
    if (TimeMan::msecUntilNextTC > 0) {
+      bool extented = false;
       switch (moveDifficulty) {
          case MoveDifficultyUtil::MD_forced: 
             // only one move in movelist !
@@ -25,27 +26,37 @@ TimeType Searcher::getCurrentMoveMs()const{
          case MoveDifficultyUtil::MD_moobAttackIID:
             // score is decreasing during IID but still quite high (IID moob, sharp position)
             ret = static_cast<TimeType>(std::min(TimeMan::msecUntilNextTC / MoveDifficultyUtil::maxStealDivisor, ret * MoveDifficultyUtil::emergencyFactorIIDGood));
+            extented = true;
             break; 
          case MoveDifficultyUtil::MD_moobDefenceIID:
             // score is decreasing during IID and it's not smelling good (sharp position)
+            extented = true;
             ret = static_cast<TimeType>(std::min(TimeMan::msecUntilNextTC / MoveDifficultyUtil::maxStealDivisor, ret * MoveDifficultyUtil::emergencyFactorIID));
             break; 
-         case MoveDifficultyUtil::MD_moobAttackHistory:
-            // we were better but starts to moob
-            ret = static_cast<TimeType>(std::min(TimeMan::msecUntilNextTC / MoveDifficultyUtil::maxStealDivisor, ret * MoveDifficultyUtil::emergencyFactorMoobHistory));
-            break; 
-         case MoveDifficultyUtil::MD_moobDefenceHistory:
-            // we are starting to lose this game ...
-            ret = static_cast<TimeType>(std::min(TimeMan::msecUntilNextTC / MoveDifficultyUtil::maxStealDivisor, ret * MoveDifficultyUtil::emergencyFactorMoobHistory));
-            break; 
-         case MoveDifficultyUtil::MD_boomAttackHistory:
-            // we were better but starts to boom now
-            ret = static_cast<TimeType>(std::min(TimeMan::msecUntilNextTC / MoveDifficultyUtil::maxStealDivisor, ret * MoveDifficultyUtil::emergencyFactorBoomHistory));
-            break; 
-         case MoveDifficultyUtil::MD_boomDefenceHistory:
-            // we are starting to lose this game ...
-            ret = static_cast<TimeType>(std::min(TimeMan::msecUntilNextTC / MoveDifficultyUtil::maxStealDivisor, ret * MoveDifficultyUtil::emergencyFactorBoomHistory));
-            break;             
+      }
+      if (!extented) {
+         switch (positionEvolution) {
+            case MoveDifficultyUtil::PE_none:
+            case MoveDifficultyUtil::PE_std: 
+               // nothing special
+               break;
+            case MoveDifficultyUtil::PE_boomingAttack:
+               // let's validate this a little more
+               ret = static_cast<TimeType>(std::min(TimeMan::msecUntilNextTC / MoveDifficultyUtil::maxStealDivisor, ret * MoveDifficultyUtil::emergencyFactorBoomHistory));
+               break; 
+            case MoveDifficultyUtil::PE_boomingDefence:
+               // let's validate this a little more
+               ret = static_cast<TimeType>(std::min(TimeMan::msecUntilNextTC / MoveDifficultyUtil::maxStealDivisor, ret * MoveDifficultyUtil::emergencyFactorBoomHistory));
+               break; 
+            case MoveDifficultyUtil::PE_moobingAttack:
+               // let's try to understand better
+               ret = static_cast<TimeType>(std::min(TimeMan::msecUntilNextTC / MoveDifficultyUtil::maxStealDivisor, ret * MoveDifficultyUtil::emergencyFactorMoobHistory));
+               break; 
+            case MoveDifficultyUtil::PE_moobingDefence:
+               // let's try to defend
+               ret = static_cast<TimeType>(std::min(TimeMan::msecUntilNextTC / MoveDifficultyUtil::maxStealDivisor, ret * MoveDifficultyUtil::emergencyFactorMoobHistory));
+               break; 
+         }
       }
    }
    // take variability into account
