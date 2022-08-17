@@ -789,6 +789,7 @@ void evaluationTuning(const std::string& filename) {
         "rookThreat",
         "safeChecks",
         "tempo",
+        "scaling"
    };
 
    for (auto loops = 0; loops < 1000; ++loops) {
