@@ -90,7 +90,7 @@ bool getEntry(Searcher &context, const Position &p, Hash h, DepthType d, Entry &
       return false;
    }
 
-   if (e.d >= d) {
+   if (e.d >= d /*+ (e.b != B_exact)*/) {
       // valid entry only if depth is ok
       context.stats.incr(Stats::sid_tthits);
       return true;

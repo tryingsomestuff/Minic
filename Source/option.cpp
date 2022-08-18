@@ -364,6 +364,8 @@ void registerCOMOptions() { // options exposed to GUI
 
    _keys.push_back(KeyBase(k_depth, w_spin, "ttAlphaCutDepth"                   , &SearchConfig::ttAlphaCutDepth                     , DepthType(1)    , DepthType(8)        ));
    _keys.push_back(KeyBase(k_score, w_spin, "ttAlphaCutMargin"                  , &SearchConfig::ttAlphaCutMargin                    , ScoreType(0)    , ScoreType(1000)     ));
+   _keys.push_back(KeyBase(k_depth, w_spin, "ttBetaCutDepth"                    , &SearchConfig::ttBetaCutDepth                      , DepthType(1)    , DepthType(8)        ));
+   _keys.push_back(KeyBase(k_score, w_spin, "ttBetaCutMargin"                   , &SearchConfig::ttBetaCutMargin                     , ScoreType(0)    , ScoreType(1000)     ));
 
    ///@todo more ...
 #endif
