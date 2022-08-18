@@ -221,11 +221,13 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       if (!rootnode && ((bound == TT::B_alpha && e.s <= alpha) || (bound == TT::B_beta && e.s >= beta) || (bound == TT::B_exact))) {
          if (!pvnode) {
             // increase history bonus of this move
-            if (/*!isInCheck &&*/ e.m != INVALIDMINIMOVE){
+            if (e.m != INVALIDMINIMOVE){
                if (Move2Type(e.m) == T_std) // quiet move history
                   updateTables(*this, p, depth, height, e.m, bound, cmhPtr);
-               else if ( isCapture(e.m) ) // capture history
-                  historyT.updateCap<1>(depth, e.m, p);
+               else if ( isCapture(e.m) ){ // capture history
+                  if (bound == TT::B_beta) historyT.updateCap<1>(depth, e.m, p);
+                  //else if (bound == TT::B_alpha) historyT.updateCap<-1>(depth, e.m, p);
+               }
             }
             if (p.fifty < SearchConfig::ttMaxFiftyValideDepth) return TT::adjustHashScore(e.s, height);
          }
@@ -245,12 +247,19 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    bool ttIsCheck   = validTTmove && (e.b & TT::B_isCheckFlag);
    bool formerPV    = ttPV && !pvnode;
 
-   // idea from Ethereal
+   // an idea from Ethereal
    if ( !rootnode && !pvnode && ttHit
       && (e.b == TT::B_alpha)
       &&  e.d >= depth - SearchConfig::ttAlphaCutDepth
       &&  e.s + SearchConfig::ttAlphaCutMargin <= alpha)
       return alpha;
+
+   // and it seems we can do the same with beta 
+   if ( !rootnode && !pvnode && ttHit
+      && (e.b == TT::B_beta)
+      &&  e.d >= depth - SearchConfig::ttBetaCutDepth
+      &&  e.s - SearchConfig::ttBetaCutMargin >= beta)
+      return beta;
 
 #ifdef WITH_SYZYGY
    // probe TB
