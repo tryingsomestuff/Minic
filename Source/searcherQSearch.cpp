@@ -104,7 +104,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    // probe TT
    TT::Entry       e;
    const Hash      pHash          = computeHash(p);
-   const bool      ttDepthOk      = TT::getEntry(*this, p, pHash, 0, e);
+   const bool      ttDepthOk      = TT::getEntry(*this, p, pHash, -2, e);
    const TT::Bound bound          = TT::Bound(e.b & ~TT::B_allFlags);
    const bool      ttHit          = e.h != nullHash;
    const bool      validTTmove    = ttHit && e.m != INVALIDMINIMOVE;
@@ -186,7 +186,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    }
 
    TT::Bound       b              = TT::B_alpha;
-   ScoreType       bestScore      = /*evalScore*/staticScore; ///@todo uses TT draft instead of static score
+   ScoreType       bestScore      = evalScore;
    const ScoreType alphaInit      = alpha;
    int             validMoveCount = 0;
 
