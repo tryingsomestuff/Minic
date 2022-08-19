@@ -18,6 +18,9 @@ bool Searcher::isRep(const Position& p, bool isPV) const {
 #endif
       }
       if (count >= limit) return true;
+      // irreversible moves 
+      if (isValidMove(stack[k].p.lastMove) && 
+          (isCapture(stack[k].p.lastMove) || PieceTools::getPieceType(stack[k].p, Move2To(stack[k].p.lastMove)) == P_wp)) break;
    }
    return false;
 }
