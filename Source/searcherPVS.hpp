@@ -453,7 +453,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
           evalScore >= beta + SearchConfig::nullMoveMargin && 
           evalScore >= stack[p.halfmoves].eval &&
           stack[p.halfmoves].p.lastMove != NULLMOVE && 
-          (height >= nullMoveMinPly || nullMoveMinPly != p.c)) {
+          (height >= nullMoveMinPly || nullMoveVerifColor != p.c)) {
          PVList nullPV;
          stats.incr(Stats::sid_nullMoveTry);
          const DepthType R = SearchConfig::nullMoveReductionInit +
