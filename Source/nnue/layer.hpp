@@ -22,6 +22,7 @@ template<typename NT, size_t dim0, size_t dim1, bool Q> struct Layer {
    CONSTEXPR StackVector<BT, dim1> forward(const StackVector<BT, dim0>& x) const {
       auto result = StackVector<BT, dim1>::from(b);
 #ifdef USE_SIMD_INTRIN
+#pragma omp simd
       for (size_t i = 0; i < dim1; ++i) { result.data[i] += x.dot_(W + i * dim0); }
 #else
 #pragma omp simd
@@ -33,6 +34,7 @@ template<typename NT, size_t dim0, size_t dim1, bool Q> struct Layer {
    template<typename T> CONSTEXPR StackVector<BT, dim1> forward(const StackVector<T, dim0>& x) const {
       auto result = StackVector<BT, dim1>::from(b);
 #ifdef USE_SIMD_INTRIN
+#pragma omp simd
       for (size_t i = 0; i < dim1; ++i) { result.data[i] += x.dot_(W + i * dim0); }
 #else
 #pragma omp simd

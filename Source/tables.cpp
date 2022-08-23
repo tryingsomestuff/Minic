@@ -23,7 +23,7 @@ void HistoryT::initHistory() {
    Logging::LogIt(Logging::logInfo) << "Init history";
    Logging::LogIt(Logging::logInfo) << "Size of history table " << sizeof(history) / 1024 << "Kb";
    Logging::LogIt(Logging::logInfo) << "Size of history piece table " << sizeof(historyP) << "b";
-   Logging::LogIt(Logging::logInfo) << "Size of history captude table " << sizeof(historyCap) / 1024 << "Kb";
+   Logging::LogIt(Logging::logInfo) << "Size of history capture table " << sizeof(historyCap) / 1024 << "Kb";
    Logging::LogIt(Logging::logInfo) << "Size of history counter table " << sizeof(counter_history) / 1024 << "Kb";
    for (int i = 0; i < NbSquare; ++i)
       for (int k = 0; k < NbSquare; ++k)
