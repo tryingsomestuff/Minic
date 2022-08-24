@@ -73,7 +73,7 @@ My gcc (and clang) gives those macros for simd extension :
 //----------------------------------
 // AVX512
 //----------------------------------
-#if defined(__AVX512VL__)
+#if defined(__AVX512VL__NONONONO)
 #define V_SIMD_512 512
 typedef __m512 v_f32_512;
 #define v_nlanes_f32_512 16
@@ -278,3 +278,6 @@ template<size_t N> [[nodiscard]] float dotProductFma(const float* x, const float
    }
    return dot;
 }
+
+
+
