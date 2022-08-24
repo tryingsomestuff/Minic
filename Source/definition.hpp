@@ -215,7 +215,7 @@ inline const BitBoard emptyBitBoard = 0ull;
 
 enum Color : int8_t { Co_None = -1, Co_White = 0, Co_Black = 1, Co_End };
 [[nodiscard]] constexpr Color operator~(Color c) { return static_cast<Color>(c ^ Co_Black); } // switch Color
-ENABLE_INCR_OPERATORS_ON(Color);
+ENABLE_INCR_OPERATORS_ON(Color)
 
 template<typename T>
 [[nodiscard]] constexpr ScoreType clampScore(T s) {
@@ -223,7 +223,7 @@ template<typename T>
 }
 
 enum GamePhase { MG = 0, EG = 1, GP_MAX = 2 };
-ENABLE_INCR_OPERATORS_ON(GamePhase);
+ENABLE_INCR_OPERATORS_ON(GamePhase)
 
 template<typename T> [[nodiscard]] inline constexpr T Abs(const T& s) { return s > T(0) ? s : T(-s); }
 
@@ -263,7 +263,7 @@ enum Piece : signed char {
    P_wk   = 6,
    P_end
 };
-ENABLE_INCR_OPERATORS_ON(Piece);
+ENABLE_INCR_OPERATORS_ON(Piece)
 
 constexpr Piece operator~(Piece pp) { return static_cast<Piece>(-pp); } // switch piece Color
 const int       PieceShift = 6;
@@ -272,7 +272,7 @@ const int       NbPiece    = 2 * PieceShift + 1;
 [[nodiscard]] constexpr int PieceIdx(Piece p) { return p + PieceShift; } ///@todo use it everywhere !
 
 enum Mat : uint8_t { M_t = 0, M_p, M_n, M_b, M_r, M_q, M_k, M_bl, M_bd, M_M, M_m };
-ENABLE_INCR_OPERATORS_ON(Mat);
+ENABLE_INCR_OPERATORS_ON(Mat)
 
 extern CONST_PIECE_TUNING ScoreType Values[NbPiece];
 extern CONST_PIECE_TUNING ScoreType ValuesEG[NbPiece];
@@ -362,10 +362,10 @@ enum Sq : uint8_t { Sq_a1  = 0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1,
                     Sq_a8,Sq_b8,Sq_c8,Sq_d8,Sq_e8,Sq_f8,Sq_g8,Sq_h8};
 
 enum File : uint8_t { File_a = 0, File_b, File_c, File_d, File_e, File_f, File_g, File_h };
-ENABLE_INCR_OPERATORS_ON(File);
+ENABLE_INCR_OPERATORS_ON(File)
 
 enum Rank : uint8_t { Rank_1 = 0, Rank_2, Rank_3, Rank_4, Rank_5, Rank_6, Rank_7, Rank_8 };
-ENABLE_INCR_OPERATORS_ON(Rank);
+ENABLE_INCR_OPERATORS_ON(Rank)
 
 inline constexpr Rank PromRank[2] = {Rank_8, Rank_1};
 inline constexpr Rank EPRank[2]   = {Rank_6, Rank_3};
