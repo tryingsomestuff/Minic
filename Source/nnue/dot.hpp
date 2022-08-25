@@ -73,7 +73,7 @@ My gcc (and clang) gives those macros for simd extension :
 //----------------------------------
 // AVX512
 //----------------------------------
-#if defined(__AVX512VL__NONONONO)
+#if defined(__AVX512VL__NONONO)
 #define V_SIMD_512 512
 typedef __m512 v_f32_512;
 #define v_nlanes_f32_512 16
@@ -81,31 +81,43 @@ typedef __m512 v_f32_512;
 #define v_mul_f32_512    _mm512_mul_ps
 #define v_muladd_f32_512 _mm512_fmadd_ps
 
+DOT_FINLINE float v_sum_f32_256(__m256 a) {
+   __m256 sum_halves = _mm256_hadd_ps(a, a);
+   sum_halves        = _mm256_hadd_ps(sum_halves, sum_halves);
+   const __m128 lo   = _mm256_castps256_ps128(sum_halves);
+   const __m128 hi   = _mm256_extractf128_ps(sum_halves, 1);
+   const __m128 sum  = _mm_add_ps(lo, hi);
+   return _mm_cvtss_f32(sum);
+}
+
 DOT_FINLINE float v_sum_f32_512(__m512 a) {
-    __m512 h64 = _mm512_shuffle_f32x4(a, a, _MM_SHUFFLE(3, 2, 3, 2));
-    __m512 sum32 = _mm512_add_ps(a, h64);
-    __m512 h32 = _mm512_shuffle_f32x4(sum32, sum32, _MM_SHUFFLE(1, 0, 3, 2));
-    __m512 sum16 = _mm512_add_ps(sum32, h32);
-    __m512 h16 = _mm512_permute_ps(sum16, _MM_SHUFFLE(1, 0, 3, 2));
-    __m512 sum8 = _mm512_add_ps(sum16, h16);
-    __m512 h4 = _mm512_permute_ps(sum8, _MM_SHUFFLE(2, 3, 0, 1));
-    __m512 sum4 = _mm512_add_ps(sum8, h4);
-    return _mm_cvtss_f32(_mm512_castps512_ps128(sum4));
+   const __m256 low  = _mm512_castps512_ps256(a);
+   const __m256 high = _mm512_extractf32x8_ps(a,1);
+   return v_sum_f32_256(low+high);
 }
 
 #define v_load_f32_512(PTR) _mm512_load_ps((const __m512*)(PTR))
 #define v_zero_f32_512      _mm512_setzero_ps
 
+inline void Log512(const __m512 & value){
+    constexpr size_t n = sizeof(__m512) / sizeof(float);
+    float buffer[n];
+    _mm512_store_ps((void*)buffer, value);
+    for (size_t i = 0; i < n; i++)
+        std::cout << buffer[i] << " ";
+    std::cout << std::endl;
+}
+
 template<size_t N> [[nodiscard]] float dotProductFma512(const float* x, const float* y) {
    constexpr int vstep    = v_nlanes_f32_512;
    constexpr int unrollx4 = N & (-vstep * 4);
    constexpr int unrollx  = N & -vstep;
-   v_f32_512 vsum0 = v_zero_f32_512();
-   v_f32_512 vsum1 = v_zero_f32_512();
-   v_f32_512 vsum2 = v_zero_f32_512();
-   v_f32_512 vsum3 = v_zero_f32_512();
    int i = 0;
+   v_f32_512 vsum0 = v_zero_f32_512();
    if constexpr(unrollx4){
+      v_f32_512 vsum1 = v_zero_f32_512();
+      v_f32_512 vsum2 = v_zero_f32_512();
+      v_f32_512 vsum3 = v_zero_f32_512();
       while (i < unrollx4) {
          vsum0 = v_muladd_f32_512(v_load_f32_512(x + i), v_load_f32_512(y + i), vsum0);
          vsum1 = v_muladd_f32_512(v_load_f32_512(x + i + vstep), v_load_f32_512(y + i + vstep), vsum1);
@@ -119,6 +131,7 @@ template<size_t N> [[nodiscard]] float dotProductFma512(const float* x, const fl
       vsum0 = v_muladd_f32_512(v_load_f32_512(x + i), v_load_f32_512(y + i), vsum0);
       i += vstep;
    }
+   //Log512(vsum0);
    return v_sum_f32_512(vsum0);
 }
 #endif
@@ -137,27 +150,38 @@ typedef __m256 v_f32_256;
 #else
 DOT_FINLINE __m256 v_muladd_f32_256(__m256 a, __m256 b, __m256 c) { return v_add_f32_256(v_mul_f32_256(a, b), c); }
 #endif
+#ifndef V_SIMD_512
 DOT_FINLINE float v_sum_f32_256(__m256 a) {
    __m256 sum_halves = _mm256_hadd_ps(a, a);
    sum_halves        = _mm256_hadd_ps(sum_halves, sum_halves);
-   __m128 lo         = _mm256_castps256_ps128(sum_halves);
-   __m128 hi         = _mm256_extractf128_ps(sum_halves, 1);
-   __m128 sum        = _mm_add_ps(lo, hi);
+   const __m128 lo   = _mm256_castps256_ps128(sum_halves);
+   const __m128 hi   = _mm256_extractf128_ps(sum_halves, 1);
+   const __m128 sum  = _mm_add_ps(lo, hi);
    return _mm_cvtss_f32(sum);
 }
+#endif
 #define v_load_f32_256 _mm256_load_ps
 #define v_zero_f32_256 _mm256_setzero_ps
+
+inline void Log256(const __m256 & value){
+    constexpr size_t n = sizeof(__m256) / sizeof(float);
+    float buffer[n];
+    _mm256_store_ps(buffer, value);
+    for (size_t i = 0; i < n; i++)
+        std::cout << buffer[i] << " ";
+    std::cout << std::endl;
+}
 
 template<size_t N> [[nodiscard]] float dotProductFma256(const float* x, const float* y) {
    constexpr int vstep    = v_nlanes_f32_256;
    constexpr int unrollx4 = N & (-vstep * 4);
    constexpr int unrollx  = N & -vstep;
-   v_f32_256 vsum0 = v_zero_f32_256();
-   v_f32_256 vsum1 = v_zero_f32_256();
-   v_f32_256 vsum2 = v_zero_f32_256();
-   v_f32_256 vsum3 = v_zero_f32_256();
    int i = 0;
+   v_f32_256 vsum0 = v_zero_f32_256();
    if constexpr(unrollx4){
+      v_f32_256 vsum1 = v_zero_f32_256();
+      v_f32_256 vsum2 = v_zero_f32_256();
+      v_f32_256 vsum3 = v_zero_f32_256();
       while (i < unrollx4) {
          vsum0 = v_muladd_f32_256(v_load_f32_256(x + i), v_load_f32_256(y + i), vsum0);
          vsum1 = v_muladd_f32_256(v_load_f32_256(x + i + vstep), v_load_f32_256(y + i + vstep), vsum1);
@@ -171,6 +195,7 @@ template<size_t N> [[nodiscard]] float dotProductFma256(const float* x, const fl
       vsum0 = v_muladd_f32_256(v_load_f32_256(x + i), v_load_f32_256(y + i), vsum0);
       i += vstep;
    }
+   //Log256(vsum0);
    return v_sum_f32_256(vsum0);
 }
 #endif
@@ -193,29 +218,38 @@ DOT_FINLINE __m128 v_muladd_f32_128(__m128 a, __m128 b, __m128 c) { return v_add
 #endif
 DOT_FINLINE float v_sum_f32_128(__m128 a) {
 #ifdef __SSE3__
-   __m128 sum_halves = _mm_hadd_ps(a, a);
+   const __m128 sum_halves = _mm_hadd_ps(a, a);
    return _mm_cvtss_f32(_mm_hadd_ps(sum_halves, sum_halves));
 #else
-   __m128 t1 = _mm_movehl_ps(a, a);
-   __m128 t2 = _mm_add_ps(a, t1);
-   __m128 t3 = _mm_shuffle_ps(t2, t2, 1);
-   __m128 t4 = _mm_add_ss(t2, t3);
+   const __m128 t1 = _mm_movehl_ps(a, a);
+   const __m128 t2 = _mm_add_ps(a, t1);
+   const __m128 t3 = _mm_shuffle_ps(t2, t2, 1);
+   const __m128 t4 = _mm_add_ss(t2, t3);
    return _mm_cvtss_f32(t4);
 #endif
 }
 #define v_load_f32_128 _mm_load_ps
 #define v_zero_f32_128 _mm_setzero_ps
 
+inline void Log128(const __m128 & value){
+    constexpr size_t n = sizeof(__m128) / sizeof(float);
+    float buffer[n];
+    _mm_store_ps(buffer, value);
+    for (size_t i = 0; i < n; i++)
+        std::cout << buffer[i] << " ";
+    std::cout << std::endl;
+}
+
 template<size_t N> [[nodiscard]] float dotProductFma128(const float* x, const float* y) {
    constexpr int vstep    = v_nlanes_f32_128;
    constexpr int unrollx4 = N & (-vstep * 4);
    constexpr int unrollx  = N & -vstep;
-   v_f32_128 vsum0 = v_zero_f32_128();
-   v_f32_128 vsum1 = v_zero_f32_128();
-   v_f32_128 vsum2 = v_zero_f32_128();
-   v_f32_128 vsum3 = v_zero_f32_128();
    int i = 0;
+   v_f32_128 vsum0 = v_zero_f32_128();
    if constexpr(unrollx4){
+      v_f32_128 vsum1 = v_zero_f32_128();
+      v_f32_128 vsum2 = v_zero_f32_128();
+      v_f32_128 vsum3 = v_zero_f32_128();
       while (i < unrollx4) {
          vsum0 = v_muladd_f32_128(v_load_f32_128(x + i), v_load_f32_128(y + i), vsum0);
          vsum1 = v_muladd_f32_128(v_load_f32_128(x + i + vstep), v_load_f32_128(y + i + vstep), vsum1);
@@ -229,6 +263,7 @@ template<size_t N> [[nodiscard]] float dotProductFma128(const float* x, const fl
       vsum0 = v_muladd_f32_128(v_load_f32_128(x + i), v_load_f32_128(y + i), vsum0);
       i += vstep;
    }
+   //Log128(vsum0);
    return v_sum_f32_128(vsum0);
 }
 
@@ -279,5 +314,19 @@ template<size_t N> [[nodiscard]] float dotProductFma(const float* x, const float
    return dot;
 }
 
-
-
+/*
+int main(int, char**){
+   constexpr int n = 768;
+   alignas(64) float a[n];
+   alignas(64) float b[n];
+   for (int i = 0; i < n; ++i){
+      a[i] = i/1000.f/(n-1);
+      b[i] = 1000.f/(n-1)*i;
+   }
+   std::cout << dotProductFma512<n>(a,b) << std::endl;
+   std::cout << dotProductFma256<n>(a,b) << std::endl;
+   std::cout << dotProductFma128<n>(a,b) << std::endl;
+   std::cout << dotProductFmaDefault<n>(a,b) << std::endl;
+   return 0;
+}
+*/
