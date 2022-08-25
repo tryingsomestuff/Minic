@@ -197,7 +197,7 @@ Here is 4 years of CCRL progress (single thread)
 - 25+8: Minic 3.18 + Nimble Nothingness is tested at 3360 on the [CEGT 25+8 list](http://www.cegt.net/25plus8Rating/BestVersions/rangliste.html)  
 
 ### FGRL
-- Minic 3.18 + Nimble Nothingness is tested at 3143 on the [fastgm 60sec+0.6sec rating list](http://www.fastgm.de/60-0.60.html)  
+- Minic 3.24 + Nylon Nonchalance is tested at 3225 on the [fastgm 60sec+0.6sec rating list](http://www.fastgm.de/60-0.60.html)  
 - Minic 3.17 + Nucleated Neurulation is tested at 3159 on the [fastgm 10min+6sec rating list](http://www.fastgm.de/10min.html)  
 - Minic 3.17 + Nucleated Neurulation is tested at 3172 on the [fastgm 60min+15sec rating list](http://www.fastgm.de/60min.html)  
 - Minic 3.18 + Nimble Nothingness is tested at 3276 on the [fastgm 60sec+0.6sec 16 cores rating list](http://www.fastgm.de/16-60-0.6.html)
