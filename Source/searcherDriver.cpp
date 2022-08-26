@@ -302,7 +302,9 @@ void Searcher::searchDriver(bool postMove) {
             }
 
             // backup multiPV info
-            multiPVMoves[multi].m = pvLoc[0];
+            if (!pvLoc.empty()){
+               multiPVMoves[multi].m = pvLoc[0];
+            }
             multiPVMoves[multi].s = score;
             multiPVMoves[multi].pv = pvLoc;
             multiPVMoves[multi].seldepth = _data.seldepth;
