@@ -219,7 +219,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // if depth of TT entry is enough
    if (ttDepthOk) {
       if (!rootnode && ((bound == TT::B_alpha && e.s <= alpha) || (bound == TT::B_beta && e.s >= beta) || (bound == TT::B_exact))) {
-         if (!pvnode) {
+         if constexpr(!pvnode) {
             // increase history bonus of this move
             if (e.m != INVALIDMINIMOVE){
                if (Move2Type(e.m) == T_std) // quiet move history
@@ -248,18 +248,20 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    bool formerPV    = ttPV && !pvnode;
 
    // an idea from Ethereal
-   if ( !rootnode && !pvnode && ttHit
-      && (e.b == TT::B_alpha)
-      &&  e.d >= depth - SearchConfig::ttAlphaCutDepth
-      &&  e.s + SearchConfig::ttAlphaCutMargin <= alpha)
-      return alpha;
+   if constexpr(!pvnode){
+      if ( !rootnode && ttHit
+         && (e.b == TT::B_alpha)
+         &&  e.d >= depth - SearchConfig::ttAlphaCutDepth
+         &&  e.s + SearchConfig::ttAlphaCutMargin <= alpha)
+         return alpha;
 
-   // and it seems we can do the same with beta 
-   if ( !rootnode && !pvnode && ttHit
-      && (e.b == TT::B_beta)
-      &&  e.d >= depth - SearchConfig::ttBetaCutDepth
-      &&  e.s - SearchConfig::ttBetaCutMargin >= beta)
-      return beta;
+      // and it seems we can do the same with beta 
+      if ( !rootnode && ttHit
+         && (e.b == TT::B_beta)
+         &&  e.d >= depth - SearchConfig::ttBetaCutDepth
+         &&  e.s - SearchConfig::ttBetaCutMargin >= beta)
+         return beta;
+   }
 
 #ifdef WITH_SYZYGY
    // probe TB
@@ -414,7 +416,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    const bool      improving        = (!isInCheck && height > 1 && stack[p.halfmoves].eval >= stack[p.halfmoves - 2].eval);
 
    // forward prunings
-   if (!DynamicConfig::mateFinder && !rootnode && !isInCheck && !pvnode /*&& !isMateScore(beta)*/) { // removing the !isMateScore(beta) is not losing that much elo and allow for better check mate finding ...
+   if constexpr(!pvnode)
+   if (!DynamicConfig::mateFinder && !rootnode && !isInCheck /*&& !isMateScore(beta)*/) { // removing the !isMateScore(beta) is not losing that much elo and allow for better check mate finding ...
 
       // static null move
       if (SearchConfig::doStaticNullMove && !isMateScore(evalScore) && isNotPawnEndGame && SearchConfig::staticNullMoveCoeff.isActive(depth, evalScoreIsHashScore) ) {
@@ -706,7 +709,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             bestMoveIsCheck = isCheck;
             if (ttScore > alpha) {
                hashBound = TT::B_exact;
-               if (pvnode) updatePV(pv, bestMove, childPV);
+               if constexpr(pvnode) updatePV(pv, bestMove, childPV);
                if (ttScore >= beta) {
                   stats.incr(Stats::sid_ttbeta);
 
@@ -994,7 +997,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             childPV.clear();
             score = -pvs<false>(-alpha - 1, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, static_cast<DepthType>(extensions + extension), isCheck, !cutNode);
          }
-         if (pvnode && score > alpha && (rootnode || score < beta)) {
+         if constexpr (pvnode)
+         if ( score > alpha && (rootnode || score < beta)) {
             stats.incr(Stats::sid_pvsFail);
             childPV.clear();
             // potential new pv node
@@ -1012,7 +1016,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          bestMoveIsCheck = isCheck;
          //bestScoreUpdated = true;
          if (score > alpha) {
-            if (pvnode) updatePV(pv, bestMove, childPV);
+            if constexpr(pvnode) updatePV(pv, bestMove, childPV);
             //alphaUpdated = true;
             alpha = score;
             hashBound = TT::B_exact;
