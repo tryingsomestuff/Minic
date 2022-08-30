@@ -430,7 +430,6 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
            !data.goodThreats[~p.c] && evalScore > beta + SearchConfig::threatCoeff.threshold(depth, data.gp, evalScoreIsHashScore, improving) ){
          return stats.incr(Stats::sid_threatsPruning), beta;
       }
-
 /*
       // Own threats pruning
       if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && isNotPawnEndGame && SearchConfig::ownThreatCoeff.isActive(depth, evalScoreIsHashScore) &&
@@ -869,7 +868,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          const bool noCheck              = !isInCheck && !isCheck;
          const bool isPrunableStd        = isPrunable && isQuiet;
          const bool isPrunableStdNoCheck = isPrunableStd && noCheck;
-         const bool isPrunableCap        = isPrunable && Move2Type(*it) == T_capture && !isInCheck;
+         const bool isPrunableCap        = isPrunable && Move2Type(*it) == T_capture && noCheck;
          const bool isPrunableBadCap     = isPrunableCap && isBadCap(*it);
 
          // futility
@@ -956,12 +955,12 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                //reduction -= isCheck;
                reduction -= formerPV || ttPV;
                //reduction -= isDangerRed /*|| ttMoveSingularExt*/ /*|| isEmergencyDefence*/);
-
             }
             else if (Move2Type(*it) == T_capture){
                stats.incr(Stats::sid_lmrcap);
                // base reduction
                reduction += SearchConfig::lmrReduction[std::min(static_cast<int>(depth), MAX_DEPTH - 1)][std::min(validMoveCount, MAX_MOVE - 1)];
+               //reduction += isBadCap(*it);
                reduction -= improving;
                reduction -= pvnode;
                // capture history reduction
