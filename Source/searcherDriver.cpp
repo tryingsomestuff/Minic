@@ -427,7 +427,7 @@ pvsout:
             }
             // update data with best data available
             _data      = ThreadPool::instance()[bestThreadId]->getData();
-            _data.best = _data.pv[0];
+            _data.best = _data.pv[0]; ///@todo this can lead to best move not being coherent with last reported PV
          }
          // update stack data on all searcher with "real" score
          // this way all stack[k (with k < p.halfmove)] will be "history" of the game accessible to searcher
