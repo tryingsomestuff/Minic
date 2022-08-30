@@ -20,9 +20,9 @@ namespace Timers {
 uint64_t rdtscCounter[TM_Max] = {0ull};
 uint64_t callCounter[TM_Max]  = {0ull};
 
-const std::string TimerNames[TM_Max] = {"Total", "See",    "Apply",     "Eval1",    "Eval2",       "Eval3",      "Eval4",       "Eval5",
-                                        "Eval",  "Attack", "MovePiece", "Generate", "PseudoLegal", "IsAttacked", "MoveScoring", "MoveSorting",
-                                        "ResetNNUE", "UpdateNNUE", "Sum"};
+const std::string TimerNames[TM_Max] = {"Total",      "See",         "Apply",       "Eval1",     "Eval2",      "Eval3",    "Eval4",
+                                        "Eval5",      "Eval",        "NNUE",        "Attack",    "MovePiece",  "Generate", "PseudoLegal",
+                                        "IsAttacked", "MoveScoring", "MoveSorting", "ResetNNUE", "UpdateNNUE", "Sum"};
 
 void Display() {
    std::cout << std::left  << std::setw(15) << "Counter"

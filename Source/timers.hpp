@@ -23,6 +23,7 @@ enum TimerType : uint8_t {
    TM_Eval4,
    TM_Eval5,
    TM_Eval,
+   TM_NNUE,
    TM_Attack,
    TM_MovePiece,
    TM_Generate,
