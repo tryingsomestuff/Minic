@@ -405,7 +405,7 @@ pvsout:
       Logging::LogIt(Logging::logInfo) << "Unlocking other threads (end of search)";
       startLock.store(false);
 
-      // all threads are updating there output values but main one is looking for the longest pv
+      // all threads are updating their output values but main one is looking for the longest pv
       // note that depth, score, seldepth and pv are already updated on-the-fly
       if (_data.pv.empty()) {
          if (!subSearch) Logging::LogIt(Logging::logWarn) << "Empty pv";

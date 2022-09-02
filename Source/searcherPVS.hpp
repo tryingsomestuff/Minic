@@ -152,6 +152,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // is updated recursively in pvs and qsearch calls but also affected to Searcher data in order to be available inside eval.
    _height = height;
 
+   // used for asymetric pruning
+   //const bool theirTurn = height%2;
+
    // stopFlag management and time check. Only on main thread and not at each node (see PERIODICCHECK)
    if (isMainThread() || isStoppableCoSearcher) timeCheck();
    if (stopFlag) return STOPSCORE;
@@ -381,6 +384,16 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    const int dangerGoodAttack      = data.danger[~p.c] / SearchConfig::dangerDivisor;
    // unless if we are ourself under attack
    const int dangerUnderAttack     = data.danger[p.c] / SearchConfig::dangerDivisor;
+
+   // when score is fluctuating a lot in the main ID search, let's prune a bit less
+   const DepthType emergencyDepthCorrection = (isEmergencyDefence||isEmergencyAttack); 
+   // take asymetry into account, prune less when it is not our turn
+   const DepthType asymetryDepthCorrection = 0; //theirTurn; ///@todo
+   // when score is fluctuating a lot in the current game, let's prune a bit less
+   //const DepthType situationDepthCorrection = isBoomingAttack + isMoobingAttack;
+   
+   // take current situation and asymetry into account.
+   const DepthType depthCorrection = emergencyDepthCorrection + asymetryDepthCorrection;
 
 /*
    if(dangerFactor > 7) std::cout << GetFEN(p) << " " << dangerFactor << std::endl;
@@ -877,10 +890,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             continue;
          }
 
-         const DepthType pruningDepthCorrection = (isEmergencyDefence||isEmergencyAttack);
-
          // LMP
-         if (lmp && isPrunableStdNoCheck && validMoveCount > SearchConfig::lmpLimit[improving][depth + pruningDepthCorrection]) {
+         if (lmp && isPrunableStdNoCheck && validMoveCount > SearchConfig::lmpLimit[improving][depth + depthCorrection]) {
             stats.incr(Stats::sid_lmp);
             skipQuiet = true;
             continue;
@@ -915,7 +926,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                skipCap = true;
                continue;
             }
-            else if ( badCapScore(*it) < - 1 * SearchConfig::seeCaptureFactor * (depth + pruningDepthCorrection + /*isBoomingAttack + isMoobingAttack +*/ (dangerGoodAttack - dangerUnderAttack)/SearchConfig::seeCapDangerDivisor)) {
+            else if ( badCapScore(*it) < - 1 * SearchConfig::seeCaptureFactor * (depth + depthCorrection + std::max(0, dangerGoodAttack - dangerUnderAttack)/SearchConfig::seeCapDangerDivisor)) {
                stats.incr(Stats::sid_see2);
                skipCap = true;
                continue;
@@ -938,13 +949,14 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                //reduction += moveCountPruning && !formerPV;
                //if (!isInCheck) reduction += std::min(2,(data.mobility[p.c]-data.mobility[~p.c])/8);
 
-               /*
-               // aggressive random reduction (too expensive for multi-threading)
-               if (randomInt<int,2909>(0,100) > 100 + SearchConfig::lmpLimit[improving][depth + pruningDepthCorrection] - SearchConfig::randomAggressiveReductionFactor * validQuietMoveCount) {
+/*
+               // aggressive random reduction
+               const ScoreType randomShot = (stats.counters[Stats::sid_nodes] + stats.counters[Stats::sid_qnodes]) % 128;
+               if ( randomShot > 128 + SearchConfig::lmpLimit[improving][depth + depthCorrection] - SearchConfig::randomAggressiveReductionFactor * validQuietMoveCount) {
                   stats.incr(Stats::sid_lmrAR);
                   ++reduction;
                }
-               */
+*/
 
                // history reduction/extension
                // beware killers and counter are scored above history max
@@ -954,6 +966,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                //reduction -= !noCheck;
                //reduction -= isCheck;
                reduction -= formerPV || ttPV;
+               //reduction -= theirTurn; ///@todo use in capture also ?
                //reduction -= isDangerRed /*|| ttMoveSingularExt*/ /*|| isEmergencyDefence*/);
             }
             else if (Move2Type(*it) == T_capture){
@@ -979,7 +992,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          ScoreType seeValue = 0;
          if (isPrunableStdNoCheck) {
             seeValue = SEE(p, *it);
-            if (!rootnode && seeValue < -SearchConfig::seeQuietFactor * (nextDepth + pruningDepthCorrection + (dangerGoodAttack - dangerUnderAttack)/SearchConfig::seeQuietDangerDivisor) * nextDepth ){
+            if (!rootnode && seeValue < -SearchConfig::seeQuietFactor * (nextDepth + depthCorrection) * (nextDepth + std::max(0, dangerGoodAttack - dangerUnderAttack)/SearchConfig::seeQuietDangerDivisor)){
                stats.incr(Stats::sid_seeQuiet);
                continue;
             }
