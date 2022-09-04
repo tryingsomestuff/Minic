@@ -16,10 +16,13 @@ template<typename NT, bool Q> struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTr
    FeatureTransformer<NT, Q> white;
    FeatureTransformer<NT, Q> black;
 
+   bool dirty = true;
+
    static constexpr int nbuckets {NNUEWeights<NT, Q>::nbuckets};
    static constexpr int bucketDivisor {NNUEWeights<NT, Q>::bucketDivisor};
 
    void clear() {
+      dirty = true;
       white.clear();
       black.clear();
    }
@@ -27,6 +30,7 @@ template<typename NT, bool Q> struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTr
    typedef typename Quantization<Q>::BT BT;
 
    constexpr float propagate(Color c, const int npiece) const {
+      assert(!dirty);
       const auto & w_x {white.active()};
       const auto & b_x {black.active()};
       const auto x0 = c == Co_White ? splice(w_x, b_x).apply_(activationInput<BT, Q>) : splice(b_x, w_x).apply_(activationInput<BT, Q>);

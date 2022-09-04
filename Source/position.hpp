@@ -6,7 +6,15 @@
 
 #ifdef WITH_NNUE
 #include "nnue.hpp"
-#endif
+
+[[nodiscard]] static inline constexpr size_t NNUEIndiceUs(const Square ksq, const Square s, const Piece p) {
+   return FeatureIdx::major * HFlip(ksq) + HFlip(s) + FeatureIdx::usOffset(p);
+}
+
+[[nodiscard]] static inline constexpr size_t NNUEIndiceThem(const Square ksq, const Square s, const Piece p) {
+   return FeatureIdx::major * HFlip(ksq) + HFlip(s) + FeatureIdx::themOffset(p);
+}
+#endif // WITH_NNUE
 
 struct Position; // forward decl
 struct RootPosition; // forward decl
@@ -158,10 +166,13 @@ struct Position {
    }
 
    struct MoveInfo {
-      MoveInfo(const Position& p, const Move m):
-          from(Move2From(m)),
-          to(correctedMove2ToKingDest(m)),
-          type(Move2Type(m)),
+      MoveInfo(const Position& p, const Move _m):
+          m(_m),
+          from(Move2From(_m)),
+          to(correctedMove2ToKingDest(_m)),
+          king{p.king[Co_White], p.king[Co_Black]},
+          ep(p.ep),
+          type(Move2Type(_m)),
           fromP(p.board_const(from)),
           toP(p.board_const(to)),
           fromId(PieceIdx(fromP)),
@@ -170,8 +181,11 @@ struct Position {
          assert(isValidSquare(to));
          assert(isValidMoveType(type));
       }
+      const Move   m         = INVALIDMOVE;
       const Square from      = INVALIDSQUARE;
       const Square to        = INVALIDSQUARE;
+      const Square king[2]   = {INVALIDSQUARE, INVALIDSQUARE};
+      const Square ep        = INVALIDSQUARE;
       const MType  type      = T_std;
       const Piece  fromP     = P_none;
       const Piece  toP       = P_none;
@@ -182,7 +196,10 @@ struct Position {
 #ifdef WITH_NNUE
 
    mutable NNUEEvaluator* associatedEvaluator = nullptr;
-   void                   associateEvaluator(NNUEEvaluator& evaluator) { associatedEvaluator = &evaluator; }
+   void                   associateEvaluator(NNUEEvaluator& evaluator, bool dirty = true) { 
+      associatedEvaluator = &evaluator; 
+      evaluator.dirty = dirty;
+   }
 
    [[nodiscard]] NNUEEvaluator& evaluator() {
       assert(associatedEvaluator);
@@ -198,14 +215,6 @@ struct Position {
 
    // Vastly taken from Seer implementation.
    // see https://github.com/connormcmonigle/seer-nnue
-
-   [[nodiscard]] static inline constexpr size_t NNUEIndiceUs(const Square ksq, const Square s, const Piece p) {
-      return FeatureIdx::major * HFlip(ksq) + HFlip(s) + FeatureIdx::usOffset(p);
-   }
-
-   [[nodiscard]] static inline constexpr size_t NNUEIndiceThem(const Square ksq, const Square s, const Piece p) {
-      return FeatureIdx::major * HFlip(ksq) + HFlip(s) + FeatureIdx::themOffset(p);
-   }
 
    template<Color c> void resetNNUEIndices_(NNUEEvaluator& nnueEvaluator) const {
       using namespace FeatureIdx;
@@ -242,34 +251,8 @@ struct Position {
       nnueEvaluator.clear();
       resetNNUEIndices_<Co_White>(nnueEvaluator);
       resetNNUEIndices_<Co_Black>(nnueEvaluator);
+      nnueEvaluator.dirty = false;
       STOP_AND_SUM_TIMER(ResetNNUE)
-   }
-
-   template<Color c> void updateNNUEEvaluator(NNUEEvaluator& nnueEvaluator, const MoveInfo& moveInfo) const {
-      START_TIMER
-      const Piece fromType = (Piece)std::abs(moveInfo.fromP);
-      const Piece toType = (Piece)std::abs(moveInfo.toP);
-      nnueEvaluator.template us<c>().erase(NNUEIndiceUs(king[c], moveInfo.from, fromType));
-      nnueEvaluator.template them<c>().erase(NNUEIndiceThem(king[~c], moveInfo.from, fromType));
-      if (isPromotion(moveInfo.type)) {
-         const Piece promPieceType = promShift(moveInfo.type);
-         nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c], moveInfo.to, promPieceType));
-         nnueEvaluator.template them<c>().insert(NNUEIndiceThem(king[~c], moveInfo.to, promPieceType));
-      }
-      else {
-         nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c], moveInfo.to, fromType));
-         nnueEvaluator.template them<c>().insert(NNUEIndiceThem(king[~c], moveInfo.to, fromType));
-      }
-      if (moveInfo.type == T_ep) {
-         const Square epSq = ep + (c == Co_White ? -8 : +8);
-         nnueEvaluator.template them<c>().erase(NNUEIndiceUs(king[~c], epSq, P_wp));
-         nnueEvaluator.template us<c>().erase(NNUEIndiceThem(king[c], epSq, P_wp));
-      }
-      else if (toType != P_none) {
-         nnueEvaluator.template them<c>().erase(NNUEIndiceUs(king[~c], moveInfo.to, toType));
-         nnueEvaluator.template us<c>().erase(NNUEIndiceThem(king[c], moveInfo.to, toType));
-      }
-      STOP_AND_SUM_TIMER(UpdateNNUE)
    }
 
 #endif
@@ -301,3 +284,33 @@ struct RootPosition : public Position {
    }
 
 };
+
+#ifdef WITH_NNUE
+   template<Color c> void updateNNUEEvaluator(NNUEEvaluator& nnueEvaluator, const Position::MoveInfo& moveInfo) {
+      START_TIMER
+      const Piece fromType = (Piece)std::abs(moveInfo.fromP);
+      const Piece toType = (Piece)std::abs(moveInfo.toP);
+      nnueEvaluator.template us<c>().erase(NNUEIndiceUs(moveInfo.king[c], moveInfo.from, fromType));
+      nnueEvaluator.template them<c>().erase(NNUEIndiceThem(moveInfo.king[~c], moveInfo.from, fromType));
+      if (isPromotion(moveInfo.type)) {
+         const Piece promPieceType = promShift(moveInfo.type);
+         nnueEvaluator.template us<c>().insert(NNUEIndiceUs(moveInfo.king[c], moveInfo.to, promPieceType));
+         nnueEvaluator.template them<c>().insert(NNUEIndiceThem(moveInfo.king[~c], moveInfo.to, promPieceType));
+      }
+      else {
+         nnueEvaluator.template us<c>().insert(NNUEIndiceUs(moveInfo.king[c], moveInfo.to, fromType));
+         nnueEvaluator.template them<c>().insert(NNUEIndiceThem(moveInfo.king[~c], moveInfo.to, fromType));
+      }
+      if (moveInfo.type == T_ep) {
+         const Square epSq = moveInfo.ep + (c == Co_White ? -8 : +8);
+         nnueEvaluator.template them<c>().erase(NNUEIndiceUs(moveInfo.king[~c], epSq, P_wp));
+         nnueEvaluator.template us<c>().erase(NNUEIndiceThem(moveInfo.king[c], epSq, P_wp));
+      }
+      else if (toType != P_none) {
+         nnueEvaluator.template them<c>().erase(NNUEIndiceUs(moveInfo.king[~c], moveInfo.to, toType));
+         nnueEvaluator.template us<c>().erase(NNUEIndiceThem(moveInfo.king[c], moveInfo.to, toType));
+      }
+      nnueEvaluator.dirty = false;
+      STOP_AND_SUM_TIMER(UpdateNNUE)
+   }
+#endif

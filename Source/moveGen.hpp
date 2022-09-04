@@ -14,7 +14,9 @@ struct Searcher;
 
 void applyNull(Searcher& context, Position& pN);
 
-bool applyMove(Position& p, const Move& m, const bool noValidation = false);
+bool applyMove(Position& p, const Position::MoveInfo & moveInfo, const bool noNNUEUpdate = false);
+
+void applyMoveNNUEUpdate(Position & p, const Position::MoveInfo & moveInfo);
 
 [[nodiscard]] ScoreType randomMover(const Position& p, PVList& pv, const bool isInCheck);
 
