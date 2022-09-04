@@ -352,7 +352,8 @@ int cliManagement(std::string cli, int argc, char** argv) {
       p2.associateEvaluator(evaluator);
       p2.resetNNUEEvaluator(p2.evaluator());
 #endif
-      if (!applyMove(p2, m)) { Logging::LogIt(Logging::logError) << "Cannot apply this move"; }
+      const Position::MoveInfo moveInfo(p2, m);
+      if (!applyMove(p2, moveInfo)) { Logging::LogIt(Logging::logError) << "Cannot apply this move"; }
       Logging::LogIt(Logging::logInfo) << ToString(p2);
       return 0;
    }

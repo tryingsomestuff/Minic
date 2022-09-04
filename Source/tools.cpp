@@ -207,7 +207,8 @@ std::string showAlgAbr(const Move m, const Position &p) {
    NNUEEvaluator evaluator = p.evaluator();
    p2.associateEvaluator(evaluator);
 #endif
-   if (applyMove(p2, m)) {
+   const Position::MoveInfo moveInfo(p2,m);
+   if (applyMove(p2, moveInfo)) {
       if (isPosInCheck(p2)) isCheck = true;
    }
    else {
@@ -239,7 +240,8 @@ std::string showAlgAbr(const Move m, const Position &p) {
          for (auto mit = l.begin(); mit != l.end(); ++mit) {
             if (*mit == m) continue; // to not compare to myself ... should no happend thanks to previous verification
             Position p3 = p;
-            if (applyMove(p3, *mit)) { // only if move is legal
+            const Position::MoveInfo moveInfo2(p3,*mit);
+            if (applyMove(p3, moveInfo2)) { // only if move is legal
                if (Move2To(*mit) == to &&
                    (t == p.board_const(Move2From(*mit)))) { // another move is landing on the same square with the same piece type
                   isSamePiece = true;

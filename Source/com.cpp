@@ -136,7 +136,8 @@ bool receiveMoves(const Move move, Move ponderMove) {
       p2.resetNNUEEvaluator(p2.evaluator());
 #endif
       // apply best move and verify ponder move is ok
-      if (!(applyMove(p2, move) && isPseudoLegal(p2, ponderMove))) {
+      const Position::MoveInfo moveInfo(p2, move);
+      if (!(applyMove(p2, moveInfo) && isPseudoLegal(p2, ponderMove))) {
          Logging::LogIt(Logging::logInfo) << "Illegal ponder move " << ToString(ponderMove) << " " << ToString(p2);
          ponderMove = INVALIDMOVE; // do be sure ...
       }
@@ -175,7 +176,8 @@ bool makeMove(const Move m, const bool disp, const std::string & tag, const Move
 #ifdef WITH_NNUE
    position.resetNNUEEvaluator(position.evaluator());
 #endif
-   bool b = applyMove(position, m, true); // this update the COM::position position status
+   const Position::MoveInfo moveInfo(position, m);
+   const bool b = applyMove(position, moveInfo); // this update the COM::position position status
    if (disp && m != INVALIDMOVE) {
       Logging::LogIt(Logging::logGUI) << tag << " " << ToString(m)
                                       << (Logging::ct == Logging::CT_uci && isValidMove(pMove) ? (" ponder " + ToString(pMove)) : "");

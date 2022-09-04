@@ -25,11 +25,13 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Posi
 
    for (auto it = moves.begin(); it != moves.end(); ++it) {
       Position p2 = p;
+      const Position::MoveInfo moveInfo(p2,*it);
+      if (!applyMove(p2, moveInfo, true)) continue;
 #ifdef WITH_NNUE
       NNUEEvaluator newEvaluator = p.evaluator();
       p2.associateEvaluator(newEvaluator);
-#endif
-      if (!applyMove(p2, *it)) continue;
+      applyMoveNNUEUpdate(p2, moveInfo);
+#endif      
       PVList childPV;
       const ScoreType score = -qsearchNoPruning(-beta, -alpha, p2, height + 1, seldepth, pv ? &childPV : nullptr);
       if (score > bestScore) {
@@ -193,11 +195,13 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    // we try the tt move before move generation
    if (usableTTmove) {
       Position p2 = p;
+      const Position::MoveInfo moveInfo(p2,e.m);
+      if (applyMove(p2, moveInfo, true)) {
 #ifdef WITH_NNUE
-      NNUEEvaluator newEvaluator = p.evaluator();
-      p2.associateEvaluator(newEvaluator);
-#endif
-      if (applyMove(p2, e.m)) {
+         NNUEEvaluator newEvaluator = p.evaluator();
+         p2.associateEvaluator(newEvaluator);
+         applyMoveNNUEUpdate(p2, moveInfo);
+#endif         
          ++validMoveCount;
          //stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
          //stack[p2.halfmoves].h = p2.h;
@@ -275,15 +279,18 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
          }
       }
       Position p2 = p;
+      const Position::MoveInfo moveInfo(p2,*it);
+      if (!applyMove(p2, moveInfo, true)) continue;
+      // prefetch as soon as possible
+      TT::prefetch(computeHash(p2));
+      ++validMoveCount;
 #ifdef WITH_NNUE
       NNUEEvaluator newEvaluator = p.evaluator();
       p2.associateEvaluator(newEvaluator);
-#endif
-      if (!applyMove(p2, *it)) continue;
-      ++validMoveCount;
-      //stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
+      applyMoveNNUEUpdate(p2, moveInfo);
+#endif      
+      //stack[p2.halfmoves].p = p2;
       //stack[p2.halfmoves].h = p2.h;
-      TT::prefetch(computeHash(p2));
       const ScoreType score = -qsearch(-beta, -alpha, p2, height + 1, seldepth, isInCheck ? 0 : qply + 1, false, false);
       if (score > bestScore) {
          bestMove  = *it;

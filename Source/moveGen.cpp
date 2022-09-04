@@ -86,16 +86,15 @@ void applyNull(Searcher&, Position& pN) {
    STOP_AND_SUM_TIMER(Apply)
 }
 
-bool applyMove(Position& p, const Move& m, const bool noValidation) {
-   assert(isValidMove(m));
+bool applyMove(Position& p, const Position::MoveInfo & moveInfo, const bool noNNUEUpdate) {
+   assert(isValidMove(moveInfo.m));
    START_TIMER
 #ifdef DEBUG_MATERIAL
    Position previous = p;
 #endif
-   const Position::MoveInfo moveInfo(p,m);
 #ifdef DEBUG_APPLY
-   if (!isPseudoLegal(p, m)) {
-      Logging::LogIt(Logging::logError) << ToString(m) << " " << moveInfo.type;
+   if (!isPseudoLegal(p, moveInfo.m)) {
+      Logging::LogIt(Logging::logError) << ToString(moveInfo.m) << " " << moveInfo.type;
       Logging::LogIt(Logging::logFatal) << "Apply error, not legal " << ToString(p);
       assert(false);
    }
@@ -103,7 +102,7 @@ bool applyMove(Position& p, const Move& m, const bool noValidation) {
 
    switch (moveInfo.type) {
       case T_reserved:
-         Logging::LogIt(Logging::logError) << ToString(m) << " " << static_cast<int>(moveInfo.type);
+         Logging::LogIt(Logging::logError) << ToString(moveInfo.m) << " " << static_cast<int>(moveInfo.type);
          Logging::LogIt(Logging::logFatal) << "Apply error, move is not legal (reserved). " << ToString(p);
          break; 
       case T_std:
@@ -166,19 +165,10 @@ bool applyMove(Position& p, const Move& m, const bool noValidation) {
       case T_bqs: movePieceCastle<Co_Black>(p, CT_OOO, Sq_c8, Sq_d8); break;
    }
 
-   if (!noValidation && isPosInCheck(p)) {
+   if (/*!noValidation &&*/ isPosInCheck(p)) {
       STOP_AND_SUM_TIMER(Apply)
       return false; // this is the only legal move validation needed
    }
-
-#ifdef WITH_NNUE
-   // if king is not moving, update nnue evaluator
-   // this is based on initial position state (most notably ep square and the previously built moveInfo)
-   if (DynamicConfig::useNNUE && std::abs(moveInfo.fromP) != P_wk) {
-      if (p.c == Co_White) p.updateNNUEEvaluator<Co_White>(p.evaluator(), moveInfo);
-      else p.updateNNUEEvaluator<Co_Black>(p.evaluator(), moveInfo);
-   }
-#endif
 
    const bool pawnMove = abs(moveInfo.fromP) == P_wp;
    // update EP
@@ -205,27 +195,8 @@ bool applyMove(Position& p, const Move& m, const bool noValidation) {
    if (isCaptureOrProm(moveInfo.type)) MaterialHash::updateMaterialOther(p);
 
 #ifdef WITH_NNUE
-   // if a king was moved (including castling), reset nnue evaluator
-   // this is based on new position state !
-   if (DynamicConfig::useNNUE && std::abs(moveInfo.fromP) == P_wk) { p.resetNNUEEvaluator(p.evaluator()); }
-#endif
-
-#ifdef DEBUG_NNUE_UPDATE
-   Position      p2 = p;
-   NNUEEvaluator evaluator;
-   p2.associateEvaluator(evaluator);
-   p2.resetNNUEEvaluator(p2.evaluator());
-   if (p2.evaluator() != p.evaluator()) {
-      Logging::LogIt(Logging::logWarn) << "evaluator update error";
-      Logging::LogIt(Logging::logWarn) << ToString(p);
-      Logging::LogIt(Logging::logWarn) << ToString(m);
-      Logging::LogIt(Logging::logWarn) << ToString(p.lastMove);
-      Logging::LogIt(Logging::logWarn) << p2.evaluator().white.active();
-      Logging::LogIt(Logging::logWarn) << p2.evaluator().black.active();
-      Logging::LogIt(Logging::logWarn) << "--------------------";
-      Logging::LogIt(Logging::logWarn) << p.evaluator().white.active();
-      Logging::LogIt(Logging::logWarn) << p.evaluator().black.active();
-      Logging::LogIt(Logging::logWarn) << backtrace();
+   if (!noNNUEUpdate){
+      applyMoveNNUEUpdate(p, moveInfo);
    }
 #endif
 
@@ -237,7 +208,7 @@ bool applyMove(Position& p, const Move& m, const bool noValidation) {
       Logging::LogIt(Logging::logWarn) << "Material previous " << ToString(previous) << ToString(previous.mat);
       Logging::LogIt(Logging::logWarn) << "Material computed " << ToString(p) << ToString(p.mat);
       Logging::LogIt(Logging::logWarn) << "Material incrementally updated " << ToString(mat);
-      Logging::LogIt(Logging::logFatal) << "Last move " << ToString(p.lastMove) << " current move " << ToString(m);
+      Logging::LogIt(Logging::logFatal) << "Last move " << ToString(p.lastMove) << " current move " << ToString(moveInfo.m);
    }
 #endif
 
@@ -262,7 +233,7 @@ bool applyMove(Position& p, const Move& m, const bool noValidation) {
             Logging::LogIt(Logging::logWarn) << static_cast<int>(pp);
             Logging::LogIt(Logging::logWarn) << static_cast<int>(p.board_const(s));
             Logging::LogIt(Logging::logWarn) << "last move " << ToString(p.lastMove);
-            Logging::LogIt(Logging::logWarn) << " current move " << ToString(m);
+            Logging::LogIt(Logging::logWarn) << " current move " << ToString(moveInfo.m);
             Logging::LogIt(Logging::logFatal) << "Wrong bitboard ";
          }
       }
@@ -282,9 +253,47 @@ bool applyMove(Position& p, const Move& m, const bool noValidation) {
       Logging::LogIt(Logging::logWarn) << ToString(p.occupancy());
    }
 #endif
-   p.lastMove = Move2MiniMove(m);
+   p.lastMove = Move2MiniMove(moveInfo.m);
    STOP_AND_SUM_TIMER(Apply)
    return true;
+}
+
+void applyMoveNNUEUpdate(Position & p, const Position::MoveInfo & moveInfo){
+#ifdef WITH_NNUE
+   if (!DynamicConfig::useNNUE) return;
+   // if king is not moving, update nnue evaluator
+   // this is based on initial position state (most notably ep square), 
+   // all is available in the previously built moveInfo)
+   if (std::abs(moveInfo.fromP) != P_wk) {
+      // ***be carefull here***, p.c has already been updated !!!
+      if (p.c == Co_Black) updateNNUEEvaluator<Co_White>(p.evaluator(), moveInfo);
+      else updateNNUEEvaluator<Co_Black>(p.evaluator(), moveInfo);
+   }
+   // if a king was moved (including castling), reset nnue evaluator
+   // this is based on new position state !
+   else { 
+      p.resetNNUEEvaluator(p.evaluator()); 
+   }
+#endif
+
+#ifdef DEBUG_NNUE_UPDATE
+   Position      p2 = p;
+   NNUEEvaluator evaluator;
+   p2.associateEvaluator(evaluator);
+   p2.resetNNUEEvaluator(p2.evaluator());
+   if (p2.evaluator() != p.evaluator()) {
+      Logging::LogIt(Logging::logWarn) << "evaluator update error";
+      Logging::LogIt(Logging::logWarn) << ToString(p);
+      Logging::LogIt(Logging::logWarn) << ToString(moveInfo.m);
+      Logging::LogIt(Logging::logWarn) << ToString(p.lastMove);
+      Logging::LogIt(Logging::logWarn) << p2.evaluator().white.active();
+      Logging::LogIt(Logging::logWarn) << p2.evaluator().black.active();
+      Logging::LogIt(Logging::logWarn) << "--------------------";
+      Logging::LogIt(Logging::logWarn) << p.evaluator().white.active();
+      Logging::LogIt(Logging::logWarn) << p.evaluator().black.active();
+      Logging::LogIt(Logging::logWarn) << backtrace();
+   }
+#endif   
 }
 
 ScoreType randomMover(const Position& p, PVList& pv, const bool isInCheck) {
@@ -301,7 +310,8 @@ ScoreType randomMover(const Position& p, PVList& pv, const bool isInCheck) {
       NNUEEvaluator evaluator = p.evaluator();
       p2.associateEvaluator(evaluator);
 #endif
-      if (!applyMove(p2, *it)) continue;
+      const Position::MoveInfo moveInfo(p2, *it);
+      if (!applyMove(p2, moveInfo)) continue;
       pv.push_back(*it); // updatePV
       const Square to = Move2To(*it);
       // king capture (works only for most standard chess variants)

@@ -532,11 +532,13 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 #endif
             if ((validTTmove && sameMove(e.m, *it)) || isBadCap(*it)) continue; // skip TT move if quiet or bad captures
             Position p2 = p;
+            const Position::MoveInfo moveInfo(p2,*it);
+            if (!applyMove(p2, moveInfo, true)) continue;
 #ifdef WITH_NNUE
             NNUEEvaluator newEvaluator = p.evaluator();
             p2.associateEvaluator(newEvaluator);
-#endif
-            if (!applyMove(p2, *it)) continue;
+            applyMoveNNUEUpdate(p2, moveInfo);
+#endif            
             ++probCutCount;
             ScoreType scorePC = -qsearch(-betaPC, -betaPC + 1, p2, height + 1, seldepth, 0, true, pvnode);
             PVList pcPV;
@@ -612,11 +614,11 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    bool bestMoveIsCheck = false;
 
+   const MiniMove formerRefutation = height > 1 ? stack[p.halfmoves - 2].threat : INVALIDMINIMOVE;
    const bool BMextension = DynamicConfig::useNNUE && height > 1 && 
-                            isValidMove(stack[p.halfmoves].threat) &&
-                            isValidMove(stack[p.halfmoves - 2].threat) &&
-                            (sameMove(stack[p.halfmoves].threat, stack[p.halfmoves - 2].threat) ||
-                             (correctedMove2ToKingDest(stack[p.halfmoves].threat) == correctedMove2ToKingDest(stack[p.halfmoves - 2].threat) && isCapture(stack[p.halfmoves].threat)));
+                            isValidMove(refutation) && isValidMove(formerRefutation) &&
+                            (sameMove(refutation, formerRefutation) ||
+                             (correctedMove2ToKingDest(refutation) == correctedMove2ToKingDest(formerRefutation) && isCapture(refutation)));
 
    // try the tt move before move generation (if not skipped move)
    if (validTTmove && !isSkipMove(e.m, skipMoves)) { // should be the case thanks to iid at pvnode
@@ -626,12 +628,15 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       if (!isPseudoLegal(p, e.m)) { Logging::LogIt(Logging::logFatal) << "invalide TT move !"; }
 #endif
       Position p2 = p;
-#ifdef WITH_NNUE
-      NNUEEvaluator newEvaluator = p.evaluator();
-      p2.associateEvaluator(newEvaluator);
-#endif
-      if (applyMove(p2, e.m)) {
+      const Position::MoveInfo moveInfo(p2,e.m);
+      if (applyMove(p2, moveInfo, true)) {
+         // prefetch as soon as possible
          TT::prefetch(computeHash(p2));
+#ifdef WITH_NNUE
+         NNUEEvaluator newEvaluator = p.evaluator();
+         p2.associateEvaluator(newEvaluator);
+         applyMoveNNUEUpdate(p2, moveInfo);
+#endif
          //const Square to = Move2To(e.m);
          ++validMoveCount;
          ++validNonPrunedCount;
@@ -803,12 +808,12 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       }
       if (isSkipMove(*it, skipMoves)) continue;        // skipmoves
       if (validTTmove && sameMove(e.m, *it)) continue; // already tried
+
       Position p2 = p;
-#ifdef WITH_NNUE
-      NNUEEvaluator newEvaluator = p.evaluator();
-      p2.associateEvaluator(newEvaluator);
-#endif
-      if (!applyMove(p2, *it)) continue;
+      const Position::MoveInfo moveInfo(p2,*it);
+      // do not apply NNUE update here, but later after prunning, right before next call to pvs
+      if (!applyMove(p2, moveInfo, true)) continue;
+      // prefetch as soon as possible
       TT::prefetch(computeHash(p2));
       const Square to = Move2To(*it);
 #ifdef DEBUG_KING_CAP
@@ -818,9 +823,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       ++validMoveCount;
       if (isQuiet) ++validQuietMoveCount;
       const bool firstMove = validMoveCount == 1;
-      PVList     childPV;
-      stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
-      stack[p2.halfmoves].h = p2.h;
+      //stack[p2.halfmoves].p = p2;
+      //stack[p2.halfmoves].h = p2.h;
       const bool isCheck    = isPosInCheck(p2);
       bool       isAdvancedPawnPush = PieceTools::getPieceType(p, Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
       // extensions
@@ -869,8 +873,16 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          }
          */
       }
-      // pvs
+      PVList childPV;
+      // PVS
       if (validMoveCount < (2 /*+2*rootnode*/) || !SearchConfig::doPVS){
+         stack[p2.halfmoves].p = p2;
+         stack[p2.halfmoves].h = p2.h;         
+#ifdef WITH_NNUE
+         NNUEEvaluator newEvaluator = p.evaluator();
+         p2.associateEvaluator(newEvaluator);
+         applyMoveNNUEUpdate(p2, moveInfo);
+#endif
          score = -pvs<pvnode>(-beta, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, static_cast<DepthType>(extensions + extension), isCheck, false);
          ++validNonPrunedCount;
       }
@@ -1003,6 +1015,13 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          ++validNonPrunedCount;
 
          // PVS
+         stack[p2.halfmoves].p = p2;
+         stack[p2.halfmoves].h = p2.h;         
+#ifdef WITH_NNUE
+         NNUEEvaluator newEvaluator = p.evaluator();
+         p2.associateEvaluator(newEvaluator);
+         applyMoveNNUEUpdate(p2, moveInfo);
+#endif
          score = -pvs<false>(-alpha - 1, -alpha, p2, nextDepth, height + 1, childPV, seldepth, static_cast<DepthType>(extensions + extension), isCheck, true);
          if (reduction > 0 && score > alpha) {
             stats.incr(Stats::sid_lmrFail);
