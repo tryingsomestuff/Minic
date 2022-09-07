@@ -34,9 +34,23 @@ else
    }
    export -f cd_root
 
+   unameOut="$(uname -s)"
+   case "${unameOut}" in
+      Linux*)     machine=Linux;;
+      Darwin*)    machine=Mac;;
+#      CYGWIN*)    machine=Cygwin;;
+#      MINGW*)     machine=MinGw;;
+      *)          machine="UNKNOWN:${unameOut}"
+   esac
+   echo "Running on ${machine}"
+
    e=minic
    v="dev"
-   t="-march=native"
+   if [ "$machine" == "Mac" ]; then
+      t="-march=apple-latest"
+   else
+      t="-march=native"
+   fi
    n="-fopenmp-simd"
    d="-DDEBUG_TOOL"
    if [ -n "$EMBEDDEDNNUEPATH" ]; then
