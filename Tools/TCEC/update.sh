@@ -25,7 +25,7 @@ read -p "Download done, press enter to continue"
 # build
 sed -i.bak 's/OPT="-s /OPT="-g /' ./Tools/build/build.sh
 ./Tools/build/build.sh minic $VERSION "-march=native"
-cd Dist/Minic3
+cd Dist/Minic3/${VERSION}
 ln -s minic_${VERSION}_linux_x64 minic_linux_x64
 
 EXE=$PWD/minic_linux_x64
