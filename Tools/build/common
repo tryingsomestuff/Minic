@@ -83,6 +83,11 @@ else
    export CXX
    export CC
 
+   if [ "$v" != "dev" ]; then
+      buildDir=${buildDir}/$v
+      mkdir -p ${buildDir}
+   fi
+
    do_sep
    which $CXX
    which $CC

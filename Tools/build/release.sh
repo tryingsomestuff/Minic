@@ -37,8 +37,10 @@ $dir/buildRPi64.sh $e $v $n $d
 
 #TODO WASM
 
+#TODO M1
+
 rootdir=$(readlink -f $dir/../../)
-buildDir=$rootdir/Dist/Minic3
+buildDir=$rootdir/Dist/Minic3/$v
 net=$rootdir/Tourney/nn.bin
 
 $buildDir/minic_${v}_linux_x64_core2 bench 16 -NNUEFile $net 2>&1 | grep NODES
