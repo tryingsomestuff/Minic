@@ -191,9 +191,9 @@ Here is 4 years of CCRL progress (single thread)
 - FRC: Minic 3.22 + Nylon Nonchalance is tested at 3512 on the [CCRL FRC list](http://ccrl.chessdom.com/ccrl/404FRC/)  
 
 ### CEGT
-- 40/4: Minic 3.22 + Nylon Nonchalance is tested at 3366 on the [CEGT 40/4 list](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
+- 40/4: Minic 3.27 + Natural Naughtiness is tested at 3409 on the [CEGT 40/4 list](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
 - 40/20: Minic 3.22 + Nylon Nonchalance is tested at 3312 on the [CEGT 40/20 list](http://www.cegt.net/40_40%20Rating%20List/40_40%20SingleVersion/rangliste.html)  
-- 5+3 pb=on: 3.22 + Nylon Nonchalance is tested at 3389 on the [CEGT 5+3 PB=ON list](http://www.cegt.net/5Plus3Rating/BestVersionsNEW/rangliste.html)  
+- 5+3 pb=on: 3.27 + Natural Naughtiness is tested at 3445 on the [CEGT 5+3 PB=ON list](http://www.cegt.net/5Plus3Rating/BestVersionsNEW/rangliste.html)  
 - 25+8: Minic 3.18 + Nimble Nothingness is tested at 3360 on the [CEGT 25+8 list](http://www.cegt.net/25plus8Rating/BestVersions/rangliste.html)  
 
 ### FGRL
