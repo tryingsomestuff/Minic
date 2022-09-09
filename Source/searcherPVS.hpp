@@ -5,6 +5,7 @@
 #include "dynamicConfig.hpp"
 #include "egt.hpp"
 #include "evalConfig.hpp"
+#include "evalTools.hpp"
 #include "moveGen.hpp"
 #include "moveSort.hpp"
 #include "positionTools.hpp"
@@ -23,7 +24,9 @@ inline void evalDanger(const Position & p,
                        BitBoard         (&att)[2],
                        BitBoard         (&att2)[2],
                        BitBoard         (&checkers)[2][6],
-                       ScoreType        (&kdanger)[2]){
+                       ScoreType        (&kdanger)[2],
+                       EvalScore        &mobilityScore,
+                       uint16_t         (&mobility)[2]){
 
    const bool kingIsMandatory = DynamicConfig::isKingMandatory();
    const BitBoard pawns[2] = {p.whitePawn(), p.blackPawn()};
@@ -84,6 +87,24 @@ inline void evalDanger(const Position & p,
       kdanger[Co_White] += EvalConfig::kingAttSafeCheck[pp - 1] * BB::countBit(checkers[Co_Black][pp - 1] & safeSquare[Co_Black]);
       kdanger[Co_Black] += EvalConfig::kingAttSafeCheck[pp - 1] * BB::countBit(checkers[Co_White][pp - 1] & safeSquare[Co_White]);
    }
+
+   // pieces mobility (second attack loop needed, knowing safeSquare ...)
+   const BitBoard knights[2] = {p.whiteKnight(), p.blackKnight()};
+   const BitBoard bishops[2] = {p.whiteBishop(), p.blackBishop()};
+   const BitBoard rooks[2]   = {p.whiteRook(), p.blackRook()};
+   const BitBoard queens[2]  = {p.whiteQueen(), p.blackQueen()};
+   const BitBoard kings[2]   = {p.whiteKing(), p.blackKing()};
+
+   evalMob<P_wn, Co_White>(p, knights[Co_White], mobilityScore, safeSquare[Co_White], occupancy, mobility[Co_White]);
+   evalMob<P_wb, Co_White>(p, bishops[Co_White], mobilityScore, safeSquare[Co_White], occupancy, mobility[Co_White]);
+   evalMob<P_wr, Co_White>(p, rooks  [Co_White], mobilityScore, safeSquare[Co_White], occupancy, mobility[Co_White]);
+   evalMobQ<     Co_White>(p, queens [Co_White], mobilityScore, safeSquare[Co_White], occupancy, mobility[Co_White]);
+   evalMobK<     Co_White>(p, kings  [Co_White], mobilityScore, ~att[Co_Black]      , occupancy, mobility[Co_White]);
+   evalMob<P_wn, Co_Black>(p, knights[Co_Black], mobilityScore, safeSquare[Co_Black], occupancy, mobility[Co_Black]);
+   evalMob<P_wb, Co_Black>(p, bishops[Co_Black], mobilityScore, safeSquare[Co_Black], occupancy, mobility[Co_Black]);
+   evalMob<P_wr, Co_Black>(p, rooks  [Co_Black], mobilityScore, safeSquare[Co_Black], occupancy, mobility[Co_Black]);
+   evalMobQ<     Co_Black>(p, queens [Co_Black], mobilityScore, safeSquare[Co_Black], occupancy, mobility[Co_Black]);
+   evalMobK<     Co_Black>(p, kings  [Co_Black], mobilityScore, ~att[Co_White]      , occupancy, mobility[Co_Black]);   
 }
 
 #pragma GCC diagnostic pop
@@ -349,25 +370,26 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // take **current** position danger level into account for purning
    ///@todo retry this
    BitBoard attFromPiece[2][6] = {{emptyBitBoard}};
-   BitBoard att[2] = {emptyBitBoard,emptyBitBoard};
-   BitBoard att2[2] = {emptyBitBoard,emptyBitBoard};
-   BitBoard checkers[2][6] = {{emptyBitBoard}};
-   if (!data.evalDone){
+   BitBoard att[2]             = {emptyBitBoard, emptyBitBoard};
+   BitBoard att2[2]            = {emptyBitBoard, emptyBitBoard};
+   BitBoard checkers[2][6]     = {{emptyBitBoard}};
+   EvalScore mobilityScore = {0, 0};
+   
+   if (!data.evalDone) {
       // no eval has been done, we need to work a little to get danger data
-      evalDanger(p,attFromPiece,att,att2,checkers,data.danger);
-      ///@todo mobility ?
+      evalDanger(p, attFromPiece, att, att2, checkers, data.danger, mobilityScore, data.mobility);
 
       data.haveThreats[Co_White] = (att[Co_White] & p.allPieces[Co_Black]) != emptyBitBoard;
       data.haveThreats[Co_Black] = (att[Co_Black] & p.allPieces[Co_White]) != emptyBitBoard;
 
-      data.goodThreats[Co_White] = ((attFromPiece[Co_White][P_wp-1] & p.allPieces[Co_Black] & ~p.blackPawn())
-                                  | (attFromPiece[Co_White][P_wn-1] & (p.blackQueen() | p.blackRook()))
-                                  | (attFromPiece[Co_White][P_wb-1] & (p.blackQueen() | p.blackRook()))
-                                  | (attFromPiece[Co_White][P_wr-1] & p.blackQueen())) != emptyBitBoard;
-      data.goodThreats[Co_Black] = ((attFromPiece[Co_Black][P_wp-1] & p.allPieces[Co_White] & ~p.whitePawn())
-                                  | (attFromPiece[Co_Black][P_wn-1] & (p.whiteQueen() | p.whiteRook()))
-                                  | (attFromPiece[Co_Black][P_wb-1] & (p.whiteQueen() | p.whiteRook()))
-                                  | (attFromPiece[Co_Black][P_wr-1] & p.whiteQueen())) != emptyBitBoard;
+      data.goodThreats[Co_White] = ((attFromPiece[Co_White][P_wp - 1] & p.allPieces[Co_Black] & ~p.blackPawn()) |
+                                    (attFromPiece[Co_White][P_wn - 1] & (p.blackQueen() | p.blackRook())) |
+                                    (attFromPiece[Co_White][P_wb - 1] & (p.blackQueen() | p.blackRook())) |
+                                    (attFromPiece[Co_White][P_wr - 1] & p.blackQueen())) != emptyBitBoard;
+      data.goodThreats[Co_Black] = ((attFromPiece[Co_Black][P_wp - 1] & p.allPieces[Co_White] & ~p.whitePawn()) |
+                                    (attFromPiece[Co_Black][P_wn - 1] & (p.whiteQueen() | p.whiteRook())) |
+                                    (attFromPiece[Co_Black][P_wb - 1] & (p.whiteQueen() | p.whiteRook())) |
+                                    (attFromPiece[Co_Black][P_wr - 1] & p.whiteQueen())) != emptyBitBoard;
    }
 
    // if the position is really intense, eventually for both side (thus very sharp), will try to prune/reduce a little less
@@ -427,25 +449,26 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    const ScoreType alphaInit        = alpha;
    // Is the reported static eval better than a move before in the search tree ?
    const bool      improving        = (!isInCheck && height > 1 && stack[p.halfmoves].eval >= stack[p.halfmoves - 2].eval);
+   const bool      noZugzwangRisk    = isNotPawnEndGame || data.mobility[p.c] > 4;
 
    // forward prunings
    if constexpr(!pvnode)
    if (!DynamicConfig::mateFinder && !rootnode && !isInCheck /*&& !isMateScore(beta)*/) { // removing the !isMateScore(beta) is not losing that much elo and allow for better check mate finding ...
 
       // static null move
-      if (SearchConfig::doStaticNullMove && !isMateScore(evalScore) && isNotPawnEndGame && SearchConfig::staticNullMoveCoeff.isActive(depth, evalScoreIsHashScore) ) {
+      if (SearchConfig::doStaticNullMove && !isMateScore(evalScore) && noZugzwangRisk && SearchConfig::staticNullMoveCoeff.isActive(depth, evalScoreIsHashScore) ) {
          const ScoreType margin = SearchConfig::staticNullMoveCoeff.threshold(depth, data.gp, evalScoreIsHashScore, improving);
          if (evalScore >= beta + margin) return stats.incr(Stats::sid_staticNullMove), evalScore - margin;
       }
 
       // (absence of) Opponent threats pruning (idea origin from Koivisto)
-      if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && isNotPawnEndGame && SearchConfig::threatCoeff.isActive(depth, evalScoreIsHashScore) &&
+      if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && noZugzwangRisk && SearchConfig::threatCoeff.isActive(depth, evalScoreIsHashScore) &&
            !data.goodThreats[~p.c] && evalScore > beta + SearchConfig::threatCoeff.threshold(depth, data.gp, evalScoreIsHashScore, improving) ){
          return stats.incr(Stats::sid_threatsPruning), beta;
       }
 /*
       // Own threats pruning
-      if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && isNotPawnEndGame && SearchConfig::ownThreatCoeff.isActive(depth, evalScoreIsHashScore) &&
+      if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && noZugzwangRisk && SearchConfig::ownThreatCoeff.isActive(depth, evalScoreIsHashScore) &&
            data.goodThreats[p.c] && !data.goodThreats[~p.c] && evalScore > beta + SearchConfig::ownThreatCoeff.threshold(depth, data.gp, evalScoreIsHashScore, improving) ){
          return stats.incr(Stats::sid_threatsPruning), beta;
       }
@@ -463,7 +486,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       // null move (warning, mobility info is only available if no TT hit)
       if (SearchConfig::doNullMove && !subSearch && 
           depth >= SearchConfig::nullMoveMinDepth &&
-          (isNotPawnEndGame || data.mobility[p.c] > 4) && 
+          noZugzwangRisk && 
           withoutSkipMove &&
           evalScore >= beta + SearchConfig::nullMoveMargin && 
           evalScore >= stack[p.halfmoves].eval &&
@@ -496,7 +519,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                if (nullEThreat.h != nullHash && nullEThreat.m != INVALIDMINIMOVE) refutation = nullEThreat.m;
                //if (isMatedScore(nullscore)) mateThreat = true;
                if (nullscore >= beta) { // verification search
-                  if ( (!isNotPawnEndGame || depth > SearchConfig::nullMoveVerifDepth) && nullMoveMinPly == 0){
+                  if ( (!noZugzwangRisk || depth > SearchConfig::nullMoveVerifDepth) && nullMoveMinPly == 0){
                      stats.incr(Stats::sid_nullMoveTry3);
                      nullMoveMinPly = height + 3*nullDepth/4;
                      nullMoveVerifColor = p.c;
@@ -860,7 +883,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          //if (EXTENDMORE && pvnode && firstMove && (p.pieces_const<P_wq>(p.c) && isQuiet && Move2Type(*it) == T_std && PieceTools::getPieceType(p, Move2From(*it)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, *it, 0)) stats.incr(Stats::sid_queenThreatExtension), ++extension;
          // move that lead to endgame
          /*
-         if ( EXTENDMORE && isNotPawnEndGame && (p2.mat[p.c][M_t]+p2.mat[~p.c][M_t] == 0)){
+         if ( EXTENDMORE && noZugzwangRisk && (p2.mat[p.c][M_t]+p2.mat[~p.c][M_t] == 0)){
             ++extension;
             stats.incr(Stats::sid_endGameExtension);
          }

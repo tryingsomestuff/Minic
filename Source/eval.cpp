@@ -2,6 +2,7 @@
 #include "bitboardTools.hpp"
 #include "dynamicConfig.hpp"
 #include "evalConfig.hpp"
+#include "evalTools.hpp"
 #include "hash.hpp"
 #include "positionTools.hpp"
 #include "score.hpp"
@@ -12,37 +13,6 @@ using namespace BB;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
-
-template<Piece T, Color C>
-inline void evalMob(const Position &p, BitBoard pieceBBiterator, EvalScore &score, const BitBoard safe, const BitBoard occupancy, EvalData &data) {
-   while (pieceBBiterator) {
-      const uint16_t mob = countBit(BBTools::pfCoverage[T - 1](popBit(pieceBBiterator), occupancy, C) & ~p.allPieces[C] & safe);
-      data.mobility[C] += mob;
-      score += EvalConfig::MOB[T - 2][mob] * ColorSignHelper<C>();
-   }
-}
-
-template<Color C>
-inline void evalMobQ(const Position &p, BitBoard pieceBBiterator, EvalScore &score, const BitBoard safe, const BitBoard occupancy, EvalData &data) {
-   while (pieceBBiterator) {
-      const Square s   = popBit(pieceBBiterator);
-      uint16_t     mob = countBit(BBTools::pfCoverage[P_wb - 1](s, occupancy, C) & ~p.allPieces[C] & safe);
-      data.mobility[C] += mob;
-      score += EvalConfig::MOB[3][mob] * ColorSignHelper<C>();
-      mob = countBit(BBTools::pfCoverage[P_wr - 1](s, occupancy, C) & ~p.allPieces[C] & safe);
-      data.mobility[C] += mob;
-      score += EvalConfig::MOB[4][mob] * ColorSignHelper<C>();
-   }
-}
-
-template<Color C>
-inline void evalMobK(const Position &p, BitBoard pieceBBiterator, EvalScore &score, const BitBoard safe, const BitBoard occupancy, EvalData &data) {
-   while (pieceBBiterator) {
-      const uint16_t mob = countBit(BBTools::pfCoverage[P_wk - 1](popBit(pieceBBiterator), occupancy, C) & ~p.allPieces[C] & safe);
-      data.mobility[C] += mob;
-      score += EvalConfig::MOB[5][mob] * ColorSignHelper<C>();
-   }
-}
 
 template<Color C> inline void evalPawnPasser(const Position &p, BitBoard pieceBBiterator, EvalScore &score) {
    while (pieceBBiterator) {
@@ -712,16 +682,16 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    STOP_AND_SUM_TIMER(Eval4)
 
    // pieces mobility (second attack loop needed, knowing safeSquare ...)
-   evalMob<P_wn, Co_White>(p, knights[Co_White], features.scores[F_mobility], safeSquare[Co_White], occupancy, data);
-   evalMob<P_wb, Co_White>(p, bishops[Co_White], features.scores[F_mobility], safeSquare[Co_White], occupancy, data);
-   evalMob<P_wr, Co_White>(p, rooks  [Co_White], features.scores[F_mobility], safeSquare[Co_White], occupancy, data);
-   evalMobQ<     Co_White>(p, queens [Co_White], features.scores[F_mobility], safeSquare[Co_White], occupancy, data);
-   evalMobK<     Co_White>(p, kings  [Co_White], features.scores[F_mobility], ~att[Co_Black]      , occupancy, data);
-   evalMob<P_wn, Co_Black>(p, knights[Co_Black], features.scores[F_mobility], safeSquare[Co_Black], occupancy, data);
-   evalMob<P_wb, Co_Black>(p, bishops[Co_Black], features.scores[F_mobility], safeSquare[Co_Black], occupancy, data);
-   evalMob<P_wr, Co_Black>(p, rooks  [Co_Black], features.scores[F_mobility], safeSquare[Co_Black], occupancy, data);
-   evalMobQ<     Co_Black>(p, queens [Co_Black], features.scores[F_mobility], safeSquare[Co_Black], occupancy, data);
-   evalMobK<     Co_Black>(p, kings  [Co_Black], features.scores[F_mobility], ~att[Co_White]      , occupancy, data);
+   evalMob<P_wn, Co_White>(p, knights[Co_White], features.scores[F_mobility], safeSquare[Co_White], occupancy, data.mobility[Co_White]);
+   evalMob<P_wb, Co_White>(p, bishops[Co_White], features.scores[F_mobility], safeSquare[Co_White], occupancy, data.mobility[Co_White]);
+   evalMob<P_wr, Co_White>(p, rooks  [Co_White], features.scores[F_mobility], safeSquare[Co_White], occupancy, data.mobility[Co_White]);
+   evalMobQ<     Co_White>(p, queens [Co_White], features.scores[F_mobility], safeSquare[Co_White], occupancy, data.mobility[Co_White]);
+   evalMobK<     Co_White>(p, kings  [Co_White], features.scores[F_mobility], ~att[Co_Black]      , occupancy, data.mobility[Co_White]);
+   evalMob<P_wn, Co_Black>(p, knights[Co_Black], features.scores[F_mobility], safeSquare[Co_Black], occupancy, data.mobility[Co_Black]);
+   evalMob<P_wb, Co_Black>(p, bishops[Co_Black], features.scores[F_mobility], safeSquare[Co_Black], occupancy, data.mobility[Co_Black]);
+   evalMob<P_wr, Co_Black>(p, rooks  [Co_Black], features.scores[F_mobility], safeSquare[Co_Black], occupancy, data.mobility[Co_Black]);
+   evalMobQ<     Co_Black>(p, queens [Co_Black], features.scores[F_mobility], safeSquare[Co_Black], occupancy, data.mobility[Co_Black]);
+   evalMobK<     Co_Black>(p, kings  [Co_Black], features.scores[F_mobility], ~att[Co_White]      , occupancy, data.mobility[Co_Black]);
 
    STOP_AND_SUM_TIMER(Eval5)
 
