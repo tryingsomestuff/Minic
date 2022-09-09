@@ -331,7 +331,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
 #endif
 
 #ifdef WITH_NNUE
-   const bool forbiddenNNUE = forbidNNUE(p);
+   const bool forbiddenNNUE = forbidNNUE(p) && !DynamicConfig::forceNNUE;
    if (DynamicConfig::useNNUE && !forbiddenNNUE) {
       EvalScore score;
       // we will stay to classic eval when the game is already decided (to gain some nps)
