@@ -30,6 +30,6 @@
  *
  */
 
-int cliManagement(std::string cli, int argc, char** argv);
+int cliManagement(const std::string & cli, int argc, char** argv);
 
 int bench(DepthType depth);

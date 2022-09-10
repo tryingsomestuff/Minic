@@ -61,7 +61,7 @@ TimeType Searcher::getCurrentMoveMs()const{
    }
    // take variability into account
    ret = std::min(TimeMan::maxTime, static_cast<TimeType>(static_cast<float>(ret) * MoveDifficultyUtil::variabilityFactor())); // inside [0.5 .. 2]
-   return std::max(ret, TimeType(20)); // if not much time left, let's try something ...;
+   return std::max(ret, static_cast<TimeType>(20)); // if not much time left, let's try something ...;
 }
 
 void Searcher::getCMHPtr(const unsigned int ply, CMHPtrArray& cmhPtr) {

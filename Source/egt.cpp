@@ -16,8 +16,8 @@ namespace SyzygyTb {
 
 int MAX_TB_MEN = -1;
 
-const ScoreType valueMap[5]     = {-TB_WIN_SCORE, -TB_CURSED_SCORE, 0, TB_CURSED_SCORE, TB_WIN_SCORE};
-const ScoreType valueMapNo50[5] = {-TB_WIN_SCORE, -TB_WIN_SCORE, 0, TB_WIN_SCORE, TB_WIN_SCORE};
+const std::array<ScoreType,5> valueMap     = {-TB_WIN_SCORE, -TB_CURSED_SCORE, 0, TB_CURSED_SCORE, TB_WIN_SCORE};
+const std::array<ScoreType,5> valueMapNo50 = {-TB_WIN_SCORE, -TB_WIN_SCORE, 0, TB_WIN_SCORE, TB_WIN_SCORE};
 
 MType getMoveType(const Position &p, unsigned res) {
     const bool isCap = (p.board_const(TB_GET_TO(res)) != P_none);

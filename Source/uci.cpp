@@ -272,7 +272,7 @@ void processCommand(const std::string & command) {
    else if (!uciCommand.empty()) { Logging::LogIt(Logging::logGUI) << "info string unrecognised command " << uciCommand; }
 }
 
-const std::string wdlStat(const ScoreType score, const unsigned int ply) {
+std::string wdlStat(const ScoreType score, const unsigned int ply) {
    std::stringstream ss;
    const int wdlW = static_cast<int>(toWDLModel(score, ply));
    const int wdlL = static_cast<int>(toWDLModel(-score, ply));
@@ -281,7 +281,7 @@ const std::string wdlStat(const ScoreType score, const unsigned int ply) {
    return ss.str();
 }
 
-const std::string uciScore(const ScoreType score, const unsigned int ply) {
+std::string uciScore(const ScoreType score, const unsigned int ply) {
    if (isMatedScore(score)) return "mate " + std::to_string((-MATE - score) / 2);
    if (isMateScore(score)) return "mate " + std::to_string((MATE - score + 1) / 2);
    return "cp " + std::to_string(score) + (DynamicConfig::withWDL ? wdlStat(score, ply) : "");

@@ -134,7 +134,7 @@ template<Piece pp>
 
 #endif // MAGIC
 
-BitBoard between(const Square s1, const Square s2);
+BitBoard between(const Square sq1, const Square sq2);
 
 // Those are convenient function pointers for coverage and attack
 constexpr BitBoard (*const pfCoverage[])(const Square, const BitBoard, const Color) = {&BBTools::coverage<P_wp>, &BBTools::coverage<P_wn>,
