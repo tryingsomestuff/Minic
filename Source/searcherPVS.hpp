@@ -19,14 +19,14 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
 
-inline void evalDanger(const Position & p,
-                       BitBoard         (&attFromPiece)[2][6],
-                       BitBoard         (&att)[2],
-                       BitBoard         (&att2)[2],
-                       BitBoard         (&checkers)[2][6],
-                       ScoreType        (&kdanger)[2],
-                       EvalScore        &mobilityScore,
-                       uint16_t         (&mobility)[2]){
+inline void evalFeatures(const Position & p,
+                         BitBoard         (&attFromPiece)[2][6],
+                         BitBoard         (&att)[2],
+                         BitBoard         (&att2)[2],
+                         BitBoard         (&checkers)[2][6],
+                         ScoreType        (&kdanger)[2],
+                         EvalScore        &mobilityScore,
+                         uint16_t         (&mobility)[2]){
 
    const bool kingIsMandatory = DynamicConfig::isKingMandatory();
    const BitBoard pawns[2] = {p.whitePawn(), p.blackPawn()};
@@ -376,8 +376,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    EvalScore mobilityScore = {0, 0};
    
    if (!data.evalDone) {
-      // no eval has been done, we need to work a little to get danger data
-      evalDanger(p, attFromPiece, att, att2, checkers, data.danger, mobilityScore, data.mobility);
+      // no eval has been done, we need to work a little to get data from evaluation of the position
+      evalFeatures(p, attFromPiece, att, att2, checkers, data.danger, mobilityScore, data.mobility);
 
       data.haveThreats[Co_White] = (att[Co_White] & p.allPieces[Co_Black]) != emptyBitBoard;
       data.haveThreats[Co_Black] = (att[Co_Black] & p.allPieces[Co_White]) != emptyBitBoard;
@@ -449,26 +449,27 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    const ScoreType alphaInit        = alpha;
    // Is the reported static eval better than a move before in the search tree ?
    const bool      improving        = (!isInCheck && height > 1 && stack[p.halfmoves].eval >= stack[p.halfmoves - 2].eval);
-   const bool      noZugzwangRisk    = isNotPawnEndGame || data.mobility[p.c] > 4;
+   const bool      lessZugzwangRisk = isNotPawnEndGame || data.mobility[p.c] > 4;
+   const uint16_t  mobilityBalance  = data.mobility[p.c]-data.mobility[~p.c];
 
    // forward prunings
    if constexpr(!pvnode)
    if (!DynamicConfig::mateFinder && !rootnode && !isInCheck /*&& !isMateScore(beta)*/) { // removing the !isMateScore(beta) is not losing that much elo and allow for better check mate finding ...
 
       // static null move
-      if (SearchConfig::doStaticNullMove && !isMateScore(evalScore) && noZugzwangRisk && SearchConfig::staticNullMoveCoeff.isActive(depth, evalScoreIsHashScore) ) {
+      if (SearchConfig::doStaticNullMove && !isMateScore(evalScore) && lessZugzwangRisk && SearchConfig::staticNullMoveCoeff.isActive(depth, evalScoreIsHashScore) ) {
          const ScoreType margin = SearchConfig::staticNullMoveCoeff.threshold(depth, data.gp, evalScoreIsHashScore, improving);
          if (evalScore >= beta + margin) return stats.incr(Stats::sid_staticNullMove), evalScore - margin;
       }
 
       // (absence of) Opponent threats pruning (idea origin from Koivisto)
-      if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && noZugzwangRisk && SearchConfig::threatCoeff.isActive(depth, evalScoreIsHashScore) &&
+      if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && lessZugzwangRisk && SearchConfig::threatCoeff.isActive(depth, evalScoreIsHashScore) &&
            !data.goodThreats[~p.c] && evalScore > beta + SearchConfig::threatCoeff.threshold(depth, data.gp, evalScoreIsHashScore, improving) ){
          return stats.incr(Stats::sid_threatsPruning), beta;
       }
 /*
       // Own threats pruning
-      if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && noZugzwangRisk && SearchConfig::ownThreatCoeff.isActive(depth, evalScoreIsHashScore) &&
+      if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && lessZugzwangRisk && SearchConfig::ownThreatCoeff.isActive(depth, evalScoreIsHashScore) &&
            data.goodThreats[p.c] && !data.goodThreats[~p.c] && evalScore > beta + SearchConfig::ownThreatCoeff.threshold(depth, data.gp, evalScoreIsHashScore, improving) ){
          return stats.incr(Stats::sid_threatsPruning), beta;
       }
@@ -483,10 +484,10 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          if (qScore <= alpha) return stats.incr(Stats::sid_razoring), qScore;
       }
 
-      // null move (warning, mobility info is only available if no TT hit)
+      // null move
       if (SearchConfig::doNullMove && !subSearch && 
           depth >= SearchConfig::nullMoveMinDepth &&
-          noZugzwangRisk && 
+          lessZugzwangRisk && 
           withoutSkipMove &&
           evalScore >= beta + SearchConfig::nullMoveMargin && 
           evalScore >= stack[p.halfmoves].eval &&
@@ -519,7 +520,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                if (nullEThreat.h != nullHash && nullEThreat.m != INVALIDMINIMOVE) refutation = nullEThreat.m;
                //if (isMatedScore(nullscore)) mateThreat = true;
                if (nullscore >= beta) { // verification search
-                  if ( (!noZugzwangRisk || depth > SearchConfig::nullMoveVerifDepth) && nullMoveMinPly == 0){
+                  if ( (!lessZugzwangRisk || depth > SearchConfig::nullMoveVerifDepth) && nullMoveMinPly == 0){
                      stats.incr(Stats::sid_nullMoveTry3);
                      nullMoveMinPly = height + 3*nullDepth/4;
                      nullMoveVerifColor = p.c;
@@ -614,8 +615,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       // LMP
       lmp = SearchConfig::doLMP && depth <= SearchConfig::lmpMaxDepth;
       // futility
-      const ScoreType futilityScore =
-          alpha - SearchConfig::futilityPruningCoeff.threshold(marginDepth, data.gp, evalScoreIsHashScore, improving);
+      const ScoreType futilityScore = alpha - SearchConfig::futilityPruningCoeff.threshold(marginDepth, data.gp, evalScoreIsHashScore, improving);
       futility = SearchConfig::doFutility && SearchConfig::futilityPruningCoeff.isActive(depth,evalScoreIsHashScore) && evalScore <= futilityScore;
       // history pruning
       historyPruning = SearchConfig::doHistoryPruning && isNotPawnEndGame && SearchConfig::historyPruningCoeff.isActive(depth, improving);
@@ -883,7 +883,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          //if (EXTENDMORE && pvnode && firstMove && (p.pieces_const<P_wq>(p.c) && isQuiet && Move2Type(*it) == T_std && PieceTools::getPieceType(p, Move2From(*it)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, *it, 0)) stats.incr(Stats::sid_queenThreatExtension), ++extension;
          // move that lead to endgame
          /*
-         if ( EXTENDMORE && noZugzwangRisk && (p2.mat[p.c][M_t]+p2.mat[~p.c][M_t] == 0)){
+         if ( EXTENDMORE && lessZugzwangRisk && (p2.mat[p.c][M_t]+p2.mat[~p.c][M_t] == 0)){
             ++extension;
             stats.incr(Stats::sid_endGameExtension);
          }
@@ -982,7 +982,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                reduction += ttMoveIsCapture;
                reduction += (cutNode && evalScore - SearchConfig::failHighReductionCoeff.threshold(marginDepth, data.gp, evalScoreIsHashScore, improving) > beta);
                //reduction += moveCountPruning && !formerPV;
-               //if (!isInCheck) reduction += std::min(2,(data.mobility[p.c]-data.mobility[~p.c])/8);
+               if (!isInCheck) reduction += std::max(-1, std::min(1, mobilityBalance/8));
 
 /*
                // aggressive random reduction
