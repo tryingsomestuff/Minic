@@ -83,7 +83,7 @@ fi
 
 echo $OPT $LIBS
 
-rm -f *.gcda Dist/Minic3/*.gcda
+rm -f *.gcda ${buildDir}/*.gcda
 
 if [ -n "$NOPROFILE" ]; then
    echo "compilation without profiling"
@@ -104,4 +104,4 @@ else
    fi
 fi
 
-rm -f *.gcda Dist/Minic3/*.gcda
+rm -f *.gcda ${buildDir}/*.gcda
