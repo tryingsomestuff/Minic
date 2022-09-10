@@ -280,6 +280,15 @@ Please note that Minic has always been a little weaker under Windows OS (probabl
 * Windows : use the Linux cross-compilation script given or make your own. From time to time I also check that recent VisualStudio versions can compile Minic without warnings but I don't distribute any VS project.
 * Android/RPi/... : use the given cross-compilation script or make your own.
 
+A minimal working example on Linux would be
+```
+git clone --branch=3.30 https://github.com/tryingsomestuff/Minic.git
+cd Minic
+git submodule update --init Fathom
+make
+# done exe in Dist/Minic3
+```
+
 ## Syzygy EGT
 To compile with SYZYGY support you'll need to clone https://github.com/jdart1/Fathom as Fathom directory and activate WITH_SYZYGY definition at compile time (this is default behaviour).
 This can be done using the given git submodule or by hand. To use EGT just specify syzygyPath in the command line or using the GUI option.
