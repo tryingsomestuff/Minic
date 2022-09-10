@@ -280,9 +280,9 @@ Please note that Minic has always been a little weaker under Windows OS (probabl
 * Windows : use the Linux cross-compilation script given or make your own. From time to time I also check that recent VisualStudio versions can compile Minic without warnings but I don't distribute any VS project.
 * Android/RPi/... : use the given cross-compilation script or make your own.
 
-A minimal working example on Linux would be
+A minimal working example on Linux for dev version would be
 ```
-git clone --branch=3.30 https://github.com/tryingsomestuff/Minic.git
+git clone https://github.com/tryingsomestuff/Minic.git
 cd Minic
 git submodule update --init Fathom
 make
