@@ -144,6 +144,18 @@ Rank Name                          Elo     +/-   Games   Score    Draw
    5 minic_3.19_1                  -206      41     156   23.4%   42.9% 
 ```
 
+Moreover, speed test on CCC hardware, 2x AMD EPYC 7H12 (128 physical cores) : 
+```
+250 threads : 101,008,415 NPS
+125 threads :  73,460,779 NPS
+```
+and speed test on a 2x Intel(R) Xeon(R) Platinum 8269CY CPU @ 2.50GHz (52 physical cores) :
+```
+104 threads :  46,291,408 NPS
+52 threads  :  25,175,817 NPS
+```
+suggest Minic is reacting quite well to hyperthreading.
+
 ### Home testing 
 Here are some fast TC results of a gauntlet tournament (STC 10s+0.1) for Minic 3.19 (dev version of various engine as of may 22th 2022).
 ```
