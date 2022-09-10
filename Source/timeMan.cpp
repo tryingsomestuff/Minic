@@ -106,7 +106,7 @@ TimeType getNextMSecPerMove(const Position& p) {
          // a margin will be used
          // a correction factor is applied for UCI pondering in order to search longer ///@todo why only 3/2 ...
          const TimeType remainingIncr = moveToGo * msecIncLoc;
-         const float ponderingCorrection = (ThreadPool::instance().main().getData().isPondering ? 3 : 2) / 2;
+         const float ponderingCorrection = (ThreadPool::instance().main().getData().isPondering ? 3 : 2) / 2.f;
          msecMargin = getMargin(msecUntilNextTC);
          ms = static_cast<TimeType>((static_cast<float>(msecUntilNextTC + remainingIncr - msecMargin) / static_cast<float>(moveToGo) ) * ponderingCorrection);
       }
@@ -126,7 +126,8 @@ TimeType getNextMSecPerMove(const Position& p) {
       const bool riskySituation = msecInc < msecMinimal;
       const float incrProp = riskySituation ? 0
                                             : static_cast<float>(msecUntilNextTC)/(msecInc*100);
-      ScoreType sw = 0, sb = 0;
+      ScoreType sw = 0;
+      ScoreType sb = 0;
       const float gp = gamePhase(p.mat, sw, sb);
       const int nmoves = (riskySituation ? 28
                                          : (16 + incrProp) )

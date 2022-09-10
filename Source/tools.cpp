@@ -49,7 +49,7 @@ void debug_king_cap(const Position& p) {
 void debug_king_cap(const Position&) { ; }
 #endif
 
-std::string ToString(const MiniMove& m) { return ToString(Move(m), false); }
+std::string ToString(const MiniMove& m) { return ToString(static_cast<Move>(m), false); }
 
 std::string ToString(const Move& m, bool withScore) {
    if (sameMove(m, INVALIDMOVE)) return "invalid move"; ///@todo 0000 ?

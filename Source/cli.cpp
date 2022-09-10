@@ -82,7 +82,7 @@ int bench(DepthType depth) {
    return 0;
 }
 
-int cliManagement(std::string cli, int argc, char** argv) {
+int cliManagement(const std::string & cli, int argc, char** argv) {
    // first we parse options that do not need extra parameters
 
 #ifdef WITH_UCI
@@ -118,7 +118,7 @@ int cliManagement(std::string cli, int argc, char** argv) {
          uint64_t nbPosLoc = 0;
          selfPlay(d, nbPosLoc);
          nbPos += nbPosLoc;
-         auto ms = getTimeDiff(startTime);
+         const auto ms = getTimeDiff(startTime);
          ++nbGames;
          Logging::LogIt(Logging::logInfo) << "Nb games : " << nbGames << ", Nb Pos : " << nbPos << ", elapsed s : " << ms/1000;
          Logging::LogIt(Logging::logInfo) << "Game speed : " << static_cast<double>(nbGames) / (static_cast<double>(ms) / 1000 / 60) << " games/min";

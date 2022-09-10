@@ -7,7 +7,7 @@ Move Skill::pick(std::vector<MultiPVScores>& multiPVMoves) {
    const size_t    multiPV    = multiPVMoves.size();
    const ScoreType topScore   = multiPVMoves[0].s;
    const ScoreType worstScore = multiPVMoves[multiPV - 1].s;
-   const ScoreType delta      = std::min(ScoreType(topScore - worstScore), absValue(P_wp));
+   const ScoreType delta      = std::min(static_cast<ScoreType>(topScore - worstScore), absValue(P_wp));
    const ScoreType weakness   = 128 - DynamicConfig::level; // so from 28 (minimum) to 128 (maximum)
    ScoreType       maxScore   = matedScore(0);
 

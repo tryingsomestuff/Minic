@@ -10,9 +10,9 @@
 
 namespace {
 // Sizes and phases of the skip-blocks, used for distributing search depths across the threads, from stockfish
-const unsigned int threadSkipSize            = 20;
-const int          skipSize[threadSkipSize]  = {1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4};
-const int          skipPhase[threadSkipSize] = {0, 1, 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 6, 7};
+constexpr unsigned int threadSkipSize              = 20;
+constexpr std::array<int,threadSkipSize> skipSize  = {1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4};
+constexpr std::array<int,threadSkipSize> skipPhase = {0, 1, 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 6, 7};
 } // namespace
 
 // Output following chosen protocol
@@ -161,14 +161,14 @@ void Searcher::searchDriver(bool postMove) {
    TimeMan::maxNodes = 0;
 
    // using MAX_DEPTH-6 so that draw can be found for sure ///@todo I don't understand this -6 anymore ..
-   const DepthType targetMaxDepth = std::min(maxDepth, DepthType(MAX_DEPTH - 6));
+   const DepthType targetMaxDepth = std::min(maxDepth, static_cast<DepthType>(MAX_DEPTH - 6));
 
    const bool isFiniteTimeSearch = maxNodes == 0 && !depthLimitedSearch && currentMoveMs < INFINITETIME && TimeMan::msecUntilNextTC > 0 && !getData().isPondering && !getData().isAnalysis;
 
    // forced bongcloud
    if (DynamicConfig::bongCloud && (p.castling & (p.c == Co_White ? C_w_all : C_b_all)) ){
-      constexpr Move wbc[5] = { ToMove(Sq_e1,Sq_e2,T_std), ToMove(Sq_e1,Sq_d1,T_std), ToMove(Sq_e1,Sq_f1,T_std), ToMove(Sq_e1,Sq_d2,T_std), ToMove(Sq_e1,Sq_f2,T_std)};
-      constexpr Move bbc[5] = { ToMove(Sq_e8,Sq_e7,T_std), ToMove(Sq_e8,Sq_d8,T_std), ToMove(Sq_e8,Sq_f8,T_std), ToMove(Sq_e8,Sq_d7,T_std), ToMove(Sq_e8,Sq_f7,T_std)};
+      constexpr std::array<Move,5> wbc = { ToMove(Sq_e1,Sq_e2,T_std), ToMove(Sq_e1,Sq_d1,T_std), ToMove(Sq_e1,Sq_f1,T_std), ToMove(Sq_e1,Sq_d2,T_std), ToMove(Sq_e1,Sq_f2,T_std)};
+      constexpr std::array<Move,5> bbc = { ToMove(Sq_e8,Sq_e7,T_std), ToMove(Sq_e8,Sq_d8,T_std), ToMove(Sq_e8,Sq_f8,T_std), ToMove(Sq_e8,Sq_d7,T_std), ToMove(Sq_e8,Sq_f7,T_std)};
       MoveList moves;
       MoveGen::generate(p,moves);
       for (int i = 0 ; i < 5; ++i){
@@ -256,12 +256,13 @@ void Searcher::searchDriver(bool postMove) {
             pvLoc.clear();
             score = pvs<true>(alpha, beta, p, windowDepth, 0, pvLoc, _data.seldepth, 0, isInCheck, false, skipMoves.empty() ? nullptr : &skipMoves);
             if (stopFlag) break;
-            ScoreType matW =0, matB = 0;
+            ScoreType matW = 0;
+            ScoreType matB = 0;
             delta += ScoreType((2 + delta / 2) * exp(1.f - gamePhase(p.mat,matW,matB))); // in end-game, open window faster
             if (delta > 1000 ) delta = matingScore(0);
             if (alpha > matedScore(0) && score <= alpha) {
-               beta  = std::min(matingScore(0), ScoreType((alpha + beta) / 2));
-               alpha = std::max(ScoreType(score - delta), matedScore(0));
+               beta  = std::min(matingScore(0), static_cast<ScoreType>((alpha + beta) / 2));
+               alpha = std::max(static_cast<ScoreType>(score - delta), matedScore(0));
                Logging::LogIt(Logging::logInfo) << "Increase window alpha " << alpha << ".." << beta;
                if (isMainThread() && DynamicConfig::multiPV == 1) {
                   PVList pv2;
@@ -272,7 +273,7 @@ void Searcher::searchDriver(bool postMove) {
             }
             else if (beta < matingScore(0) && score >= beta) {
                --windowDepth; // from Ethereal
-               beta = std::min(ScoreType(score + delta), matingScore(0));
+               beta = std::min(static_cast<ScoreType>(score + delta), matingScore(0));
                Logging::LogIt(Logging::logInfo) << "Increase window beta " << alpha << ".." << beta;
                if (isMainThread() && DynamicConfig::multiPV == 1) {
                   PVList pv2;
@@ -344,7 +345,7 @@ void Searcher::searchDriver(bool postMove) {
                if (depth > 12 && !pvLoc.empty()) {
                   if (getSearchData().moves[depth] != getSearchData().moves[depth - 1] &&
                   std::fabs(getSearchData().scores[depth] - getSearchData().scores[depth-1]) > MoveDifficultyUtil::emergencyMargin/4 )
-                     MoveDifficultyUtil::variability *= (1.f + float(depth) / 100);
+                     MoveDifficultyUtil::variability *= (1.f + depth/100.f);
                   else
                      MoveDifficultyUtil::variability *= 0.98f;
                   Logging::LogIt(Logging::logInfo) << "Variability :" << MoveDifficultyUtil::variability;
