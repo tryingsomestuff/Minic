@@ -127,6 +127,10 @@ ScoreType NNUEEVal(const Position & p, EvalData &data, Searcher &context, EvalFe
    nnueScore += ScaleScore(context.contempt, data.gp);
    // clamp score
    nnueScore = clampScore(nnueScore);
+   if (!DynamicConfig::armageddon){
+      // apply scaling factor based on fifty move rule
+      nnueScore = ScoreType(nnueScore*fiftyMoveRuleScaling(p.fifty));
+   }
    context.stats.incr(secondTime ? Stats::sid_evalNNUE2 : Stats::sid_evalNNUE);
    // apply variants scoring if requiered
    STOP_AND_SUM_TIMER(NNUE)
