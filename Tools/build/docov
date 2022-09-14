@@ -29,6 +29,7 @@ rm -f *.gcda
 $CXX $STANDARDSOURCE -ISource -ISource/nnue $OPT -lpthread -DDEBUG_TOOL -o minic.cov
 
 ./minic.cov -analyze "shirov" 25 -minOutputLevel 0
+./minic.cov -analyze "fine70" 25 -minOutputLevel 0 -syzygyPath /mnt/BK1/tablebase.sesse.net/syzygy/6/
 ./minic.cov -perft "start" 6 -minOutputLevel 0
 #./minic.cov -evalSpeed Book_and_Test/Tuning/lichess-new-labeled.epd
 ./minic.cov bench 10 -minOutputLevel 0
