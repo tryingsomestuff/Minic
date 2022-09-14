@@ -129,7 +129,7 @@ ScoreType NNUEEVal(const Position & p, EvalData &data, Searcher &context, EvalFe
    nnueScore = clampScore(nnueScore);
    if (!DynamicConfig::armageddon){
       // apply scaling factor based on fifty move rule
-      nnueScore = ScoreType(nnueScore*fiftyMoveRuleScaling(p.fifty));
+      nnueScore = fiftyScale(nnueScore, p.fifty);
    }
    context.stats.incr(secondTime ? Stats::sid_evalNNUE2 : Stats::sid_evalNNUE);
    // apply variants scoring if requiered
@@ -852,7 +852,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
 
    if (!DynamicConfig::armageddon){
       // apply scaling factor based on fifty move rule
-      ret = ScoreType(ret*fiftyMoveRuleScaling(p.fifty));
+      ret = fiftyScale(ret, p.fifty);
    }
 
 #ifdef VERBOSE_EVAL

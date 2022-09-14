@@ -6,14 +6,28 @@
 struct Position;
 
 #ifdef DEBUG_EVALSYM
-[[nodiscard]] inline float fiftyMoveRuleScaling(const DepthType ){
+[[nodiscard]] inline float fiftyMoveRuleScaling(const uint8_t ){
+   return 1;
+}
+[[nodiscard]] inline float fiftyMoveRuleUnScaling(const uint8_t ){
    return 1;
 }
 #else
-[[nodiscard]] inline constexpr float fiftyMoveRuleScaling(const DepthType fifty){
-   return 1 - fifty / 100.f;
+[[nodiscard]] inline constexpr float fiftyMoveRuleScaling(const uint8_t fifty){
+   return 1.f - fifty / 100.f;
+}
+[[nodiscard]] inline constexpr float fiftyMoveRuleUnScaling(const uint8_t fifty){
+   return 1.f / fiftyMoveRuleScaling(fifty);
 }
 #endif
+
+[[nodiscard]] inline ScoreType fiftyScale(const ScoreType s, uint8_t fifty){
+   return static_cast<ScoreType>(s * fiftyMoveRuleScaling(fifty));
+}
+
+[[nodiscard]] inline ScoreType fiftyUnScale(const ScoreType s, uint8_t fifty){
+   return static_cast<ScoreType>(s * fiftyMoveRuleUnScaling(fifty));
+}
 
 // Stockfish trick (two short in one int) is not compatible with evaluation tuning !
 #ifndef WITH_EVALSCORE_AS_INT
