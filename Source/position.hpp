@@ -148,20 +148,28 @@ struct Position {
    [[nodiscard]] inline BitBoard blackDarkBishop()  const { return blackBishop() & BB::blackSquare; }
 
    template<Piece pp> [[nodiscard]] inline BitBoard pieces_const(const Color cc) const {
-      assert(pp != P_none);
+      assert(pp > P_none);
+      assert(pp < P_end);
+      assert(cc == Co_White || cc == Co_Black);
       return _allB[pp - 1] & allPieces[cc];
    }
    [[nodiscard]] inline BitBoard pieces_const(const Color cc, const Piece pp) const {
-      assert(pp != P_none);
+      assert(pp > P_none);
+      assert(pp < P_end);
+      assert(cc == Co_White || cc == Co_Black);
       return _allB[pp - 1] & allPieces[cc];
    }
    [[nodiscard]] inline BitBoard pieces_const(const Piece pp) const {
       assert(pp != P_none);
+      assert(pp < P_end);
+      assert(pp >= P_bk);
       return _allB[std::abs(pp) - 1] & allPieces[pp > 0 ? Co_White : Co_Black];
    }
    // next one is kinda "private"
    [[nodiscard]] inline BitBoard& _pieces(const Piece pp) {
       assert(pp != P_none);
+      assert(pp < P_end);
+      assert(pp >= P_bk);
       return _allB[std::abs(pp) - 1];
    }
 
