@@ -23,7 +23,7 @@ extern DepthType         depth;
 struct GameInfo {
     struct GameStateInfo {
        Position p;
-       Move lastMove; // the move "m" that has been played to reach this position
+       Move lastMove; // the move that has been played to reach this position
     };
     
     std::vector<GameStateInfo> _gameStates;
@@ -37,6 +37,8 @@ struct GameInfo {
     size_t size() const;
 
     [[nodiscard]] std::vector<Move> getMoves() const;
+
+    [[nodiscard]] std::optional<Hash> getHash(uint16_t halfmove) const;
 
     void write(std::ostream & os) const;
 };

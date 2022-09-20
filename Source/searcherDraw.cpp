@@ -1,3 +1,4 @@
+#include "com.hpp"
 #include "position.hpp"
 #include "searcher.hpp"
 
@@ -7,8 +8,11 @@ bool Searcher::isRep(const Position& p, bool isPV) const {
    if (p.fifty < (2 * limit - 1)) return false;
    int count = 0;
    const Hash h = computeHash(p);
-   for (int k = p.halfmoves - 1; k >= 0; --k) {
-      if (stack[k].h == nullHash) break;
+   int k = p.halfmoves - 2;
+   bool irreversible = false;
+   // look in stack first
+   for ( ; k >= 0; k-=2) {
+      if (stack[k].h == nullHash) break; // no more "history" in stack (will look at game state later)
       if (stack[k].h == h){
          ++count;
 #ifdef DEBUG_FIFTY_COLLISION
@@ -16,11 +20,34 @@ bool Searcher::isRep(const Position& p, bool isPV) const {
             Logging::LogIt(Logging::logFatal) << "Collision in fifty hash comparation" << ToString(p) << ToString(stack[k].p);
          }
 #endif
+         if (count >= limit) return true;
       }
-      if (count >= limit) return true;
+      // irreversible moves 
+      if (isValidMove(stack[k].p.lastMove) && 
+          (isCapture(stack[k].p.lastMove) || PieceTools::getPieceType(stack[k].p, Move2To(stack[k].p.lastMove)) == P_wp)){
+            irreversible=true;
+            break;
+      }
+      if (isValidMove(stack[k+1].p.lastMove) && 
+          (isCapture(stack[k+1].p.lastMove) || PieceTools::getPieceType(stack[k+1].p, Move2To(stack[k+1].p.lastMove)) == P_wp)){
+            irreversible=true;
+            break;
+      }
+   }
+   // then double check in game history
+   while(!irreversible && k>=0){
+      const std::optional<Hash> curh = COM::GetGameInfo().getHash(k);
+      if (!curh.has_value()) break;
+      if (curh == h){
+         ++count;
+         if (count >= limit) return true;
+      }
       // irreversible moves 
       if (isValidMove(stack[k].p.lastMove) && 
           (isCapture(stack[k].p.lastMove) || PieceTools::getPieceType(stack[k].p, Move2To(stack[k].p.lastMove)) == P_wp)) break;
+      if (isValidMove(stack[k+1].p.lastMove) && 
+          (isCapture(stack[k+1].p.lastMove) || PieceTools::getPieceType(stack[k+1].p, Move2To(stack[k+1].p.lastMove)) == P_wp)) break;      
+      k-=2;
    }
    return false;
 }

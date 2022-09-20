@@ -290,22 +290,25 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 #ifdef WITH_SYZYGY
    // probe TB
    ScoreType tbScore = 0;
-   if (!rootnode && withoutSkipMove && (BB::countBit(p.allPieces[Co_White] | p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN &&
-       SyzygyTb::probe_wdl(p, tbScore, false) > 0) {
-      ++stats.counters[Stats::sid_tbHit1];
-      // if this is a winning/losing EGT position, we add up static evaluation
-      // this allow to go for mate better or to defend longer
-      if (abs(tbScore) == SyzygyTb::TB_WIN_SCORE) {
-         tbScore += eval(p, data, *this);
-         tbScore = clampScore(tbScore);
+   if (!rootnode && withoutSkipMove && (BB::countBit(p.allPieces[Co_White] | p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN){
+      if (SyzygyTb::probe_wdl(p, tbScore, false) > 0) {
+         ++stats.counters[Stats::sid_tbHit1];
+         // if this is a winning/losing EGT position, we add up static evaluation
+         // this allow to go for mate better or to defend longer
+         if (abs(tbScore) == SyzygyTb::TB_WIN_SCORE) {
+            tbScore += eval(p, data, *this);
+            tbScore = clampScore(tbScore);
+         }
+         else if (abs(tbScore) == SyzygyTb::TB_CURSED_SCORE) {
+            tbScore = drawScore(p, height);
+         }
+         // store TB hits into TT (without associated move, but with max depth)
+         TT::setEntry(*this, pHash, INVALIDMOVE, TT::createHashScore(tbScore, height), TT::createHashScore(tbScore, height), TT::B_none, DepthType(MAX_DEPTH));
+         return tbScore;
       }
-      else if (abs(tbScore) == SyzygyTb::TB_CURSED_SCORE) {
-         tbScore = drawScore(p, height);
+      else{
+         ++stats.counters[Stats::sid_tbFail];
       }
-
-      // store TB hits into TT (without associated move, but with max depth)
-      TT::setEntry(*this, pHash, INVALIDMOVE, TT::createHashScore(tbScore, height), TT::createHashScore(tbScore, height), TT::B_none, DepthType(MAX_DEPTH));
-      return tbScore;
    }
 #endif
 
@@ -625,6 +628,25 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       capHistoryPruning = SearchConfig::doCapHistoryPruning && isNotPawnEndGame && SearchConfig::captureHistoryPruningCoeff.isActive(depth, improving);
    }
 
+#ifdef WITH_SYZYGY
+   if (rootnode && withoutSkipMove && (BB::countBit(p.allPieces[Co_White] | p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN) {
+      tbScore = 0;
+      MoveList movesTB;
+      if (SyzygyTb::probe_root(*this, p, tbScore, movesTB) < 0) { // only good moves if TB success
+         ++stats.counters[Stats::sid_tbFail];
+         if (capMoveGenerated) MoveGen::generate<MoveGen::GP_quiet>(p, moves, true);
+         else
+            if ( isInCheck ) MoveGen::generate<MoveGen::GP_evasion>(p, moves, false);
+            else MoveGen::generate<MoveGen::GP_all>(p, moves, false);
+      }
+      else{
+         moves = movesTB;
+         ++stats.counters[Stats::sid_tbHit2];
+      }
+      moveGenerated = true;
+   }
+#endif
+
    int       validMoveCount      = 0;
    int       validQuietMoveCount = 0;
    int       validNonPrunedCount = 0;
@@ -644,8 +666,10 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                              (correctedMove2ToKingDest(refutation) == correctedMove2ToKingDest(formerRefutation) && isCapture(refutation)));
 
    // try the tt move before move generation (if not skipped move)
-   if (validTTmove && !isSkipMove(e.m, skipMoves)) { // should be the case thanks to iid at pvnode
-      bestMove = e.m;                                // in order to preserve tt move for alpha bound entry
+   bool ttMoveTried = false;
+   if (validTTmove && (moves.empty() || !rootnode) && !isSkipMove(e.m, skipMoves)) {
+      ttMoveTried = true;
+      bestMove = e.m; // in order to preserve tt move for alpha bound entry
 #ifdef DEBUG_APPLY
       // to debug race condition in entry affectation !
       if (!isPseudoLegal(p, e.m)) { Logging::LogIt(Logging::logFatal) << "invalide TT move !"; }
@@ -779,21 +803,6 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       }
    }
 
-#ifdef WITH_SYZYGY
-   if (rootnode && withoutSkipMove && (BB::countBit(p.allPieces[Co_White] | p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN) {
-      tbScore = 0;
-      if (SyzygyTb::probe_root(*this, p, tbScore, moves) < 0) { // only good moves if TB success
-         if (capMoveGenerated) MoveGen::generate<MoveGen::GP_quiet>(p, moves, true);
-         else
-            if ( isInCheck ) MoveGen::generate<MoveGen::GP_evasion>(p, moves, false);
-            else MoveGen::generate<MoveGen::GP_all>(p, moves, false);
-      }
-      else
-         ++stats.counters[Stats::sid_tbHit2];
-      moveGenerated = true;
-   }
-#endif
-
    ScoreType score = matedScore(height);
    bool skipQuiet = false;
    bool skipCap = false;
@@ -830,7 +839,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          continue;
       }
       if (isSkipMove(*it, skipMoves)) continue;        // skipmoves
-      if (validTTmove && sameMove(e.m, *it)) continue; // already tried
+      if (validTTmove && ttMoveTried && sameMove(e.m, *it)) continue; // already tried
 
       Position p2 = p;
       const Position::MoveInfo moveInfo(p2,*it);

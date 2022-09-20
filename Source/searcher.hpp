@@ -8,8 +8,6 @@
 #include "tables.hpp"
 #include "threading.hpp"
 
-#include <optional>
-
 struct StackData {
    Position  p;
    Hash      h      = nullHash;

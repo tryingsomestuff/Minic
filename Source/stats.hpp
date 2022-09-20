@@ -83,6 +83,7 @@ struct Stats {
       sid_EGExtension,
       sid_tbHit1,
       sid_tbHit2,
+      sid_tbFail,
       sid_dangerPrune,
       sid_dangerForwardPrune,
       sid_dangerReduce,
