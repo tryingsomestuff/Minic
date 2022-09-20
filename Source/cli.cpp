@@ -262,7 +262,7 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
 #endif
    if (!readFEN(fen, p, false, true)) {
       Logging::LogIt(Logging::logInfo) << "Error reading fen";
-      return 1;
+      return 0;
    }
 
    Logging::LogIt(Logging::logInfo) << ToString(p);
@@ -271,7 +271,36 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
       DepthType seldepth = 0;
       ScoreType s        = ThreadPool::instance().main().qsearchNoPruning(-10000, 10000, p, 1, seldepth);
       Logging::LogIt(Logging::logInfo) << "Score " << s;
-      return 1;
+      return 0;
+   }
+
+   if (cli == "-probe"){
+      Logging::LogIt(Logging::logInfo) << "Probing TB";
+      if ((BB::countBit(p.allPieces[Co_White] | p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN) {
+         ScoreType tbScore = 0;
+         MoveList movesTB;
+         Logging::LogIt(Logging::logInfo) << "Probing root";
+         if (SyzygyTb::probe_root(ThreadPool::instance().main(), p, tbScore, movesTB) >= 0) { // only good moves if TB success
+            for(const auto & m : movesTB ){
+               Logging::LogIt(Logging::logInfo) << "TB move " << ToString(m);
+            }
+            Logging::LogIt(Logging::logInfo) << "Score " << tbScore;
+         }
+         else{
+            Logging::LogIt(Logging::logInfo) << "TB failed";
+         }
+         Logging::LogIt(Logging::logInfo) << "Probing wdl";
+         if (SyzygyTb::probe_wdl(p, tbScore, false) > 0) {
+            Logging::LogIt(Logging::logInfo) << "Score " << tbScore;
+         }
+         else{
+            Logging::LogIt(Logging::logInfo) << "TB failed";
+         }
+      }
+      else{
+         Logging::LogIt(Logging::logInfo) << "No TB hit";
+      }
+      return 0;
    }
 
    if (cli == "-see") {
@@ -284,7 +313,7 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
       ScoreType t = clampInt<ScoreType>(atoi(argv[4]));
       bool      b = Searcher::SEE_GE(p, m, t);
       Logging::LogIt(Logging::logInfo) << "SEE ? " << (b ? "ok" : "not");
-      return 1;
+      return 0;
    }
 
    if (cli == "-attacked") {

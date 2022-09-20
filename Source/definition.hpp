@@ -22,6 +22,7 @@
 #include <list>
 #include <map>
 #include <mutex>
+#include <optional>
 #include <random>
 #include <regex>
 #include <set>

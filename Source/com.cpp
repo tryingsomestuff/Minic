@@ -50,6 +50,7 @@ void GameInfo::clear(const Position & initial){
 
 void GameInfo::append(const GameStateInfo & stateInfo){
    _gameStates.push_back(stateInfo);
+   _gameStates.back().p.h = computeHash(_gameStates.back().p); // be sure to have an updated hash
 }
 
 size_t GameInfo::size() const {
@@ -62,6 +63,13 @@ std::vector<Move> GameInfo::getMoves() const{
       moves.push_back(gs.lastMove);
    }
    return moves;
+}
+
+std::optional<Hash> GameInfo::getHash(uint16_t halfmove) const{
+   const uint16_t startingPly = initialPos.halfmoves;
+   const uint16_t offset = halfmove - startingPly;
+   if( offset >= size()) return {};
+   else return _gameStates[offset-1].p.h; // halfmove starts at 1, not 0 ...
 }
 
 void newGame() {
