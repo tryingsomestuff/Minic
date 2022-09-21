@@ -24,14 +24,14 @@ bool Searcher::isRep(const Position& p, bool isPV) const {
 #endif
          if (count >= limit) return true;
       }
-      // irreversible moves 
-      if (isValidMove(stack[k].p.lastMove) && 
-          (isCapture(stack[k].p.lastMove) || PieceTools::getPieceType(stack[k].p, Move2To(stack[k].p.lastMove)) == P_wp)){
+      // irreversible moves ?
+      if (k > 0 && isValidMove(stack[k-1].p.lastMove) && 
+          (isCapture(stack[k-1].p.lastMove) || PieceTools::getPieceType(stack[k-1].p, Move2To(stack[k-1].p.lastMove)) == P_wp)){
             irreversible=true;
             break;
-      }
-      if (isValidMove(stack[k+1].p.lastMove) && 
-          (isCapture(stack[k+1].p.lastMove) || PieceTools::getPieceType(stack[k+1].p, Move2To(stack[k+1].p.lastMove)) == P_wp)){
+      }       
+      if (isValidMove(stack[k].p.lastMove) && 
+          (isCapture(stack[k].p.lastMove) || PieceTools::getPieceType(stack[k].p, Move2To(stack[k].p.lastMove)) == P_wp)){
             irreversible=true;
             break;
       }
@@ -45,7 +45,23 @@ bool Searcher::isRep(const Position& p, bool isPV) const {
          ++count;
          if (count >= limit) return true;
       }
-      // todo check for irreversible moves and break
+      // irreversible moves ?
+      if(k>0){
+         const auto m = COM::GetGameInfo().getMove(k-1);
+         const auto pp = COM::GetGameInfo().getPosition(k-1);
+         if ( m.has_value() &&
+            (isCapture(m.value()) || PieceTools::getPieceType(pp.value(), Move2To(m.value())) == P_wp)){
+               irreversible=true;
+               break;
+         }
+      }
+      const auto m = COM::GetGameInfo().getMove(k);
+      const auto pp = COM::GetGameInfo().getPosition(k);
+      if ( m.has_value() &&
+          (isCapture(m.value()) || PieceTools::getPieceType(pp.value(), Move2To(m.value())) == P_wp)){
+            irreversible=true;
+            break;
+      }
       k-=2;
    }
    return false;
