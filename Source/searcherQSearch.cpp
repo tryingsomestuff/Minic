@@ -96,7 +96,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    // at qRoot (just coming from pvs) we check for draws (3rep, fifty and material)
    ///@todo is that gain elo ???
    if (qRoot){
-      if (auto INRscore = interiorNodeRecognizer<false>(p, height)) return INRscore.value();
+      if (auto INRscore = interiorNodeRecognizer<false>(p, height); INRscore.has_value()) return INRscore.value();
    }
 
    Move bestMove = INVALIDMOVE;

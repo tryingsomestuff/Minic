@@ -40,6 +40,10 @@ struct GameInfo {
 
     [[nodiscard]] std::optional<Hash> getHash(uint16_t halfmove) const;
 
+    [[nodiscard]] std::optional<Move> getMove(uint16_t halfmove) const;
+
+    [[nodiscard]] std::optional<Position> getPosition(uint16_t halfmove) const;
+
     void write(std::ostream & os) const;
 };
 

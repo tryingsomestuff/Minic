@@ -69,7 +69,21 @@ std::optional<Hash> GameInfo::getHash(uint16_t halfmove) const{
    const uint16_t startingPly = initialPos.halfmoves;
    const uint16_t offset = halfmove - startingPly;
    if( offset >= size()) return {};
-   else return _gameStates[offset-1].p.h; // halfmove starts at 1, not 0 ...
+   return offset == 0 ? computeHash(initialPos) : _gameStates[offset-1].p.h; // halfmove starts at 1, not 0 ...
+}
+
+std::optional<Move> GameInfo::getMove(uint16_t halfmove) const{
+   const uint16_t startingPly = initialPos.halfmoves;
+   const uint16_t offset = halfmove - startingPly;
+   if( offset >= size()) return {};
+   return offset == 0 ? INVALIDMOVE : _gameStates[offset-1].lastMove; // halfmove starts at 1, not 0 ...
+}
+
+std::optional<Position> GameInfo::getPosition(uint16_t halfmove) const{
+   const uint16_t startingPly = initialPos.halfmoves;
+   const uint16_t offset = halfmove - startingPly;
+   if( offset >= size()) return {};
+   return offset == 0 ? initialPos : _gameStates[offset-1].p; // halfmove starts at 1, not 0 ...
 }
 
 void newGame() {

@@ -79,7 +79,7 @@ void applyNull(Searcher&, Position& pN) {
    pN.h ^= Zobrist::ZT[3][13];
    pN.h ^= Zobrist::ZT[4][13];
    if (pN.ep != INVALIDSQUARE) pN.h ^= Zobrist::ZT[pN.ep][13];
-   pN.ep       = INVALIDSQUARE;
+   pN.ep = INVALIDSQUARE;
    pN.lastMove = NULLMOVE;
    if (pN.c == Co_White) ++pN.moves;
    ++pN.halfmoves;
@@ -174,7 +174,7 @@ bool applyMove(Position& p, const Position::MoveInfo & moveInfo, const bool noNN
    // update EP
    if (p.ep != INVALIDSQUARE) p.h ^= Zobrist::ZT[p.ep][13];
    p.ep = INVALIDSQUARE;
-   if (pawnMove && abs(moveInfo.to - moveInfo.from) == 16) {
+   if (pawnMove && abs(moveInfo.to - moveInfo.from) == 16 && (BBTools::adjacent(SquareToBitboard(moveInfo.to)) & p.pieces_const(~p.c,P_wp)) != emptyBitBoard) {
       p.ep = static_cast<Square>((moveInfo.from + moveInfo.to) / 2);
       p.h ^= Zobrist::ZT[p.ep][13];
    }
