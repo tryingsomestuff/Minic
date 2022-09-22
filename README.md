@@ -233,7 +233,7 @@ Here is 4 years of CCRL progress (single thread)
 
 ### TCEC stats
 
-TCEC hardware: Minic is at 3400 (https://tcec-chess.com/bayeselo.txt)
+TCEC hardware: Minic is at 3440 (https://tcec-chess.com/bayeselo.txt)
 
 ### TCEC
 
