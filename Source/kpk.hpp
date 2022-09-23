@@ -23,9 +23,10 @@ struct KPKPosition {
    KPKPosition() = default;
    explicit KPKPosition(const unsigned idx);
    inline operator kpk_result() const { return result; }
-   [[nodiscard]] inline kpk_result preCompute(const std::array<KPKPosition, KPKmaxIndex>& db);
-   template<Color Us> [[nodiscard]] kpk_result preCompute(const std::array<KPKPosition, KPKmaxIndex>& db);
-   Square ksq[2], psq;
+   [[nodiscard]] inline kpk_result preCompute(const array1d<KPKPosition, KPKmaxIndex>& db);
+   template<Color Us> [[nodiscard]] kpk_result preCompute(const array1d<KPKPosition, KPKmaxIndex>& db);
+   colored<Square> ksq;
+   Square psq;
    kpk_result result;
    Color us;
 };

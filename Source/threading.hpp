@@ -13,10 +13,10 @@ struct SearchData {
       nodes.fill(0ull);
       times.fill(0ull);
    }
-   std::array<ScoreType, MAX_DEPTH> scores;
-   std::array<MiniMove, MAX_DEPTH>  moves;
-   std::array<Counter, MAX_DEPTH>   nodes;
-   std::array<TimeType, MAX_DEPTH>  times;
+   array1d<ScoreType, MAX_DEPTH> scores;
+   array1d<MiniMove, MAX_DEPTH>  moves;
+   array1d<Counter, MAX_DEPTH>   nodes;
+   array1d<TimeType, MAX_DEPTH>  times;
 };
 
 // an little input/output structure for each thread

@@ -332,24 +332,24 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    context.prefetchPawn(computeHash(p));
 
    // pre compute some usefull bitboards (///@todo maybe this is not efficient ...)
-   const BitBoard pawns[2]      = {p.whitePawn(), p.blackPawn()};
-   const BitBoard knights[2]    = {p.whiteKnight(), p.blackKnight()};
-   const BitBoard bishops[2]    = {p.whiteBishop(), p.blackBishop()};
-   const BitBoard rooks[2]      = {p.whiteRook(), p.blackRook()};
-   const BitBoard queens[2]     = {p.whiteQueen(), p.blackQueen()};
-   const BitBoard kings[2]      = {p.whiteKing(), p.blackKing()};
-   const BitBoard nonPawnMat[2] = {p.allPieces[Co_White] & ~pawns[Co_White], 
-                                   p.allPieces[Co_Black] & ~pawns[Co_Black]};
-   const BitBoard kingZone[2]   = {isValidSquare(p.king[Co_White]) ? BBTools::mask[p.king[Co_White]].kingZone : emptyBitBoard, 
+   const colored<BitBoard> pawns      = {p.whitePawn(), p.blackPawn()};
+   const colored<BitBoard> knights    = {p.whiteKnight(), p.blackKnight()};
+   const colored<BitBoard> bishops    = {p.whiteBishop(), p.blackBishop()};
+   const colored<BitBoard> rooks      = {p.whiteRook(), p.blackRook()};
+   const colored<BitBoard> queens     = {p.whiteQueen(), p.blackQueen()};
+   const colored<BitBoard> kings      = {p.whiteKing(), p.blackKing()};
+   const colored<BitBoard> nonPawnMat = {p.allPieces[Co_White] & ~pawns[Co_White], 
+                                          p.allPieces[Co_Black] & ~pawns[Co_Black]};
+   const colored<BitBoard> kingZone   = {isValidSquare(p.king[Co_White]) ? BBTools::mask[p.king[Co_White]].kingZone : emptyBitBoard, 
                                    isValidSquare(p.king[Co_Black]) ? BBTools::mask[p.king[Co_Black]].kingZone : emptyBitBoard};
    const BitBoard occupancy     = p.occupancy();
 
    // helpers that will be filled by evalPiece calls
-   ScoreType kdanger[2]         = {0, 0};
-   BitBoard  att[2]             = {emptyBitBoard, emptyBitBoard}; // bitboard of squares attacked by Color
-   BitBoard  att2[2]            = {emptyBitBoard, emptyBitBoard}; // bitboard of squares attacked twice by Color
-   BitBoard  attFromPiece[2][6] = {{emptyBitBoard}};              // bitboard of squares attacked by specific piece of Color
-   BitBoard  checkers[2][6]     = {{emptyBitBoard}};              // bitboard of Color pieces squares attacking king
+   colored<ScoreType> kdanger         = {0, 0};
+   colored<BitBoard>  att             = {emptyBitBoard, emptyBitBoard}; // bitboard of squares attacked by Color
+   colored<BitBoard>  att2            = {emptyBitBoard, emptyBitBoard}; // bitboard of squares attacked twice by Color
+   array2d<BitBoard,2,6>  attFromPiece = {{emptyBitBoard}};              // bitboard of squares attacked by specific piece of Color
+   array2d<BitBoard,2,6>  checkers     = {{emptyBitBoard}};              // bitboard of Color pieces squares attacking king
 
    // PST, attack, danger
    const bool withForwadness = DynamicConfig::styleForwardness != 50;

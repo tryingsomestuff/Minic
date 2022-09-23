@@ -20,7 +20,7 @@ ScoreType Searcher::SEE(const Position& p, const Move& m) {
    Color c = p.c;
 
    int nCapt = 0;
-   std::array<ScoreType,32> swapList; // max 32 caps ... shall be ok
+   array1d<ScoreType,32> swapList; // max 32 caps ... shall be ok
 
    Piece pp = PieceTools::getPieceType(p, from);
    if (mtype == T_ep) {

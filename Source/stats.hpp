@@ -100,8 +100,8 @@ struct Stats {
       sid_maxid
    };
 
-   static const std::array<std::string, sid_maxid> Names;
-   std::array<Counter, sid_maxid>                  counters;
+   static const array1d<std::string, sid_maxid> Names;
+   array1d<Counter, sid_maxid>                  counters;
 
 #ifdef WITH_STATS
    inline void incr(StatId id) { ++counters[id]; }

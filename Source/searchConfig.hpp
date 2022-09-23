@@ -33,12 +33,12 @@ enum CoeffNameType { CNT_init = 0, CNT_bonus, CNT_slopeD, CNT_slopeGP, CNT_minDe
 template<size_t N_, size_t M_> struct Coeff {
    static constexpr size_t N {N_};
    static constexpr size_t M {M_};
-   CONST_SEARCH_TUNING std::array<ScoreType, N> init;
-   CONST_SEARCH_TUNING std::array<ScoreType, M> bonus;
-   CONST_SEARCH_TUNING std::array<ScoreType, N> slopeDepth;
-   CONST_SEARCH_TUNING std::array<ScoreType, N> slopeGamePhase;
-   CONST_SEARCH_TUNING std::array<DepthType, N> minDepth;
-   CONST_SEARCH_TUNING std::array<DepthType, N> maxDepth;
+   CONST_SEARCH_TUNING array1d<ScoreType, N> init;
+   CONST_SEARCH_TUNING array1d<ScoreType, M> bonus;
+   CONST_SEARCH_TUNING array1d<ScoreType, N> slopeDepth;
+   CONST_SEARCH_TUNING array1d<ScoreType, N> slopeGamePhase;
+   CONST_SEARCH_TUNING array1d<DepthType, N> minDepth;
+   CONST_SEARCH_TUNING array1d<DepthType, N> maxDepth;
    const std::string name;
    [[nodiscard]] inline CONSTEXPR_SEARCH_TUNING ScoreType threshold(const DepthType d, const float gp, const size_t idx1 = 0, const size_t idx2 = 0) const {
       assert(idx1 < N);
@@ -70,7 +70,7 @@ extern CONST_SEARCH_TUNING Coeff<2,2> futilityPruningCoeff;
 extern CONST_SEARCH_TUNING Coeff<2,2> failHighReductionCoeff;
 
 // first value if eval score is used, second if hash score is used
-extern CONST_SEARCH_TUNING ScoreType qfutilityMargin[2];
+extern CONST_SEARCH_TUNING colored<ScoreType> qfutilityMargin;
 extern CONST_SEARCH_TUNING DepthType nullMoveMinDepth;
 extern CONST_SEARCH_TUNING DepthType nullMoveVerifDepth;
 extern CONST_SEARCH_TUNING ScoreType nullMoveMargin;
@@ -79,7 +79,7 @@ extern CONST_SEARCH_TUNING ScoreType nullMoveReductionDepthDivisor;
 extern CONST_SEARCH_TUNING ScoreType nullMoveReductionInit;
 extern CONST_SEARCH_TUNING ScoreType nullMoveDynamicDivisor;
 extern CONST_SEARCH_TUNING ScoreType historyExtensionThreshold;
-extern CONST_SEARCH_TUNING DepthType CMHMaxDepth[2];
+extern CONST_SEARCH_TUNING colored<DepthType> CMHMaxDepth;
 //extern CONST_SEARCH_TUNING ScoreType randomAggressiveReductionFactor;
 extern CONST_SEARCH_TUNING DepthType iidMinDepth;
 extern CONST_SEARCH_TUNING DepthType iidMinDepth2;
@@ -126,7 +126,7 @@ extern CONST_SEARCH_TUNING ScoreType ttBetaCutMargin;
 
 
 inline const DepthType lmpMaxDepth = 10;
-inline const int       lmpLimit[][SearchConfig::lmpMaxDepth + 1] = {{0, 2, 3, 5, 9, 13, 18, 25, 34, 45, 55}, {0, 5, 6, 9, 14, 21, 30, 41, 55, 69, 84}};
+inline const array2d<int,2,SearchConfig::lmpMaxDepth+1> lmpLimit = {{{0, 2, 3, 5, 9, 13, 18, 25, 34, 45, 55}, {0, 5, 6, 9, 14, 21, 30, 41, 55, 69, 84}}};
 
 inline constexpr
 double my_log2(double x){
@@ -160,7 +160,7 @@ inline void test_log(){
 */
 
 ///@todo try lmr based on game phase
-constexpr Matrix<DepthType, MAX_DEPTH, MAX_MOVE> lmrReduction = [] {
+constexpr array2d<DepthType, MAX_DEPTH, MAX_MOVE> lmrReduction = [] {
    auto ret = decltype(lmrReduction){0};
    //Logging::LogIt(Logging::logInfo) << "Init lmr";
    for (int d = 1; d < MAX_DEPTH; d++)
@@ -169,7 +169,7 @@ constexpr Matrix<DepthType, MAX_DEPTH, MAX_MOVE> lmrReduction = [] {
    return ret;
 }();
 
-constexpr Matrix<ScoreType, 6, 6> MvvLvaScores = [] {
+constexpr array2d<ScoreType, 6, 6> MvvLvaScores = [] {
    auto ret = decltype(MvvLvaScores){};
    //Logging::LogIt(Logging::logInfo) << "Init mvv-lva";
    constexpr ScoreType IValues[6] = {1, 2, 3, 5, 9, 20}; ///@todo try N=B=3 ??

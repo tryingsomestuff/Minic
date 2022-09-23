@@ -26,7 +26,7 @@ void debug_king_cap(const Position& p);
 [[nodiscard]] std::string ToString(const BitBoard& b);
 
 template < typename T >
-[[nodiscard]] std::string ToString(const std::array<T,64>& a){
+[[nodiscard]] std::string ToString(const array1d<T,NbSquare>& a){
    std::stringstream ss;
    for (int j = 7; j >= 0; --j) {
       ss << "\n";

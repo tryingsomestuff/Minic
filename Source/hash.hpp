@@ -8,9 +8,9 @@ struct Position;
  * A simple Zobrist hash implementation
  */
 namespace Zobrist {
-extern Hash ZT[NbSquare][14]; // should be 13 but last ray is for castling[0 7 56 63][13] and ep [k][13] and Color [3 4][13]
-extern Hash ZTCastling[16];   // castling
-extern Hash ZTMove[std::numeric_limits<uint16_t>::max()];   // MiniMove
+extern array2d<Hash,NbSquare,14> ZT; // should be 13 but last ray is for castling[0 7 56 63][13] and ep [k][13] and Color [3 4][13]
+extern array1d<Hash,16> ZTCastling; // castling
+extern array1d<Hash,std::numeric_limits<uint16_t>::max()> ZTMove; // MiniMove
 
 void initHash();
 } // namespace Zobrist

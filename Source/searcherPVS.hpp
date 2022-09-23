@@ -20,19 +20,19 @@
 #pragma GCC diagnostic ignored "-Wconversion"
 
 inline void evalFeatures(const Position & p,
-                         BitBoard         (&attFromPiece)[2][6],
-                         BitBoard         (&att)[2],
-                         BitBoard         (&att2)[2],
-                         BitBoard         (&checkers)[2][6],
-                         ScoreType        (&kdanger)[2],
-                         EvalScore        &mobilityScore,
-                         uint16_t         (&mobility)[2]){
+                         array2d<BitBoard,2,6> & attFromPiece,
+                         colored<BitBoard>    & att,
+                         colored<BitBoard>    & att2,
+                         array2d<BitBoard,2,6> &checkers,
+                         colored<ScoreType>   &kdanger,
+                         EvalScore             &mobilityScore,
+                         colored<uint16_t>    &mobility){
 
    const bool kingIsMandatory = DynamicConfig::isKingMandatory();
-   const BitBoard pawns[2] = {p.whitePawn(), p.blackPawn()};
-   const BitBoard nonPawnMat[2] = {p.allPieces[Co_White] & ~pawns[Co_White], 
-                                   p.allPieces[Co_Black] & ~pawns[Co_Black]};
-   const BitBoard kingZone[2]   = {isValidSquare(p.king[Co_White]) ? BBTools::mask[p.king[Co_White]].kingZone : emptyBitBoard, 
+   const colored<BitBoard> pawns = {p.whitePawn(), p.blackPawn()};
+   const colored<BitBoard> nonPawnMat = {p.allPieces[Co_White] & ~pawns[Co_White], 
+                                          p.allPieces[Co_Black] & ~pawns[Co_Black]};
+   const colored<BitBoard> kingZone = {isValidSquare(p.king[Co_White]) ? BBTools::mask[p.king[Co_White]].kingZone : emptyBitBoard, 
                                    isValidSquare(p.king[Co_Black]) ? BBTools::mask[p.king[Co_Black]].kingZone : emptyBitBoard};
    const BitBoard occupancy = p.occupancy();
 
@@ -62,9 +62,9 @@ inline void evalFeatures(const Position & p,
      const File wkf = (File)SQFILE(p.king[Co_White]);
      const File bkf = (File)SQFILE(p.king[Co_Black]);
  
-     const BitBoard semiOpenFiles[2] = {BBTools::fillFile(pawns[Co_White]) & ~BBTools::fillFile(pawns[Co_Black]),
-                                        BBTools::fillFile(pawns[Co_Black]) & ~BBTools::fillFile(pawns[Co_White])};
-     const BitBoard openFiles        = BBTools::openFiles(pawns[Co_White], pawns[Co_Black]);
+     const colored<BitBoard> semiOpenFiles = {BBTools::fillFile(pawns[Co_White]) & ~BBTools::fillFile(pawns[Co_Black]),
+                                               BBTools::fillFile(pawns[Co_Black]) & ~BBTools::fillFile(pawns[Co_White])};
+     const BitBoard openFiles = BBTools::openFiles(pawns[Co_White], pawns[Co_Black]);
  
      kdanger[Co_White] += EvalConfig::kingAttOpenfile * BB::countBit(BB::kingFlank[wkf] & openFiles) / 8;
      kdanger[Co_White] += EvalConfig::kingAttSemiOpenfileOpp * BB::countBit(BB::kingFlank[wkf] & semiOpenFiles[Co_White]) / 8;
@@ -74,11 +74,11 @@ inline void evalFeatures(const Position & p,
      kdanger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * BB::countBit(BB::kingFlank[bkf] & semiOpenFiles[Co_White]) / 8;
    }
 
-   const BitBoard weakSquare[2] = { att[Co_Black] & ~att2[Co_White] & (~att[Co_White] | attFromPiece[Co_White][P_wk - 1] | attFromPiece[Co_White][P_wq - 1]),
-                                    att[Co_White] & ~att2[Co_Black] & (~att[Co_Black] | attFromPiece[Co_Black][P_wk - 1] | attFromPiece[Co_Black][P_wq - 1])};
+   const colored<BitBoard> weakSquare = { att[Co_Black] & ~att2[Co_White] & (~att[Co_White] | attFromPiece[Co_White][P_wk - 1] | attFromPiece[Co_White][P_wq - 1]),
+                                           att[Co_White] & ~att2[Co_Black] & (~att[Co_Black] | attFromPiece[Co_Black][P_wk - 1] | attFromPiece[Co_Black][P_wq - 1])};
 
-   const BitBoard safeSquare[2] = { ~att[Co_Black] | (weakSquare[Co_Black] & att2[Co_White]),
-                                    ~att[Co_White] | (weakSquare[Co_White] & att2[Co_Black])};
+   const colored<BitBoard> safeSquare = { ~att[Co_Black] | (weakSquare[Co_Black] & att2[Co_White]),
+                                           ~att[Co_White] | (weakSquare[Co_White] & att2[Co_Black])};
 
    // reward safe checks
    kdanger[Co_White] += EvalConfig::kingAttSafeCheck[0] * BB::countBit(checkers[Co_Black][0] & att[Co_Black]);
@@ -89,11 +89,11 @@ inline void evalFeatures(const Position & p,
    }
 
    // pieces mobility (second attack loop needed, knowing safeSquare ...)
-   const BitBoard knights[2] = {p.whiteKnight(), p.blackKnight()};
-   const BitBoard bishops[2] = {p.whiteBishop(), p.blackBishop()};
-   const BitBoard rooks[2]   = {p.whiteRook(), p.blackRook()};
-   const BitBoard queens[2]  = {p.whiteQueen(), p.blackQueen()};
-   const BitBoard kings[2]   = {p.whiteKing(), p.blackKing()};
+   const colored<BitBoard> knights = {p.whiteKnight(), p.blackKnight()};
+   const colored<BitBoard> bishops = {p.whiteBishop(), p.blackBishop()};
+   const colored<BitBoard> rooks   = {p.whiteRook(), p.blackRook()};
+   const colored<BitBoard> queens  = {p.whiteQueen(), p.blackQueen()};
+   const colored<BitBoard> kings   = {p.whiteKing(), p.blackKing()};
 
    evalMob<P_wn, Co_White>(p, knights[Co_White], mobilityScore, safeSquare[Co_White], occupancy, mobility[Co_White]);
    evalMob<P_wb, Co_White>(p, bishops[Co_White], mobilityScore, safeSquare[Co_White], occupancy, mobility[Co_White]);
@@ -374,10 +374,10 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // take **current** position danger level into account for purning
    ///@todo retry this
-   BitBoard attFromPiece[2][6] = {{emptyBitBoard}};
-   BitBoard att[2]             = {emptyBitBoard, emptyBitBoard};
-   BitBoard att2[2]            = {emptyBitBoard, emptyBitBoard};
-   BitBoard checkers[2][6]     = {{emptyBitBoard}};
+   array2d<BitBoard,2,6> attFromPiece = {{emptyBitBoard}};
+   colored<BitBoard> att             = {emptyBitBoard, emptyBitBoard};
+   colored<BitBoard> att2            = {emptyBitBoard, emptyBitBoard};
+   array2d<BitBoard,2,6> checkers     = {{emptyBitBoard}};
    EvalScore mobilityScore = {0, 0};
    
    if (!data.evalDone) {
@@ -755,8 +755,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             // advanced pawn push extension
             /*
             if (EXTENDMORE && isAdvancedPawnPush ) {
-                const BitBoard pawns[2] = { p2.pieces_const<P_wp>(Co_White), p2.pieces_const<P_wp>(Co_Black) };
-                const BitBoard passed[2] = { BBTools::pawnPassed<Co_White>(pawns[Co_White], pawns[Co_Black]), BBTools::pawnPassed<Co_Black>(pawns[Co_Black], pawns[Co_White]) };
+                const colored<BitBoard> pawns = { p2.pieces_const<P_wp>(Co_White), p2.pieces_const<P_wp>(Co_Black) };
+                const colored<BitBoard> passed = { BBTools::pawnPassed<Co_White>(pawns[Co_White], pawns[Co_Black]), BBTools::pawnPassed<Co_Black>(pawns[Co_Black], pawns[Co_White]) };
                 if ( SquareToBitboard(to) & passed[p.c] ) stats.incr(Stats::sid_pawnPushExtension), ++extension;
             }
             */
@@ -885,8 +885,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          // advanced pawn push extension
          /*
          if (EXTENDMORE && isAdvancedPawnPush && killerT.isKiller(*it, height) ){
-            const BitBoard pawns[2] = { p2.pieces_const<P_wp>(Co_White), p2.pieces_const<P_wp>(Co_Black) };
-            const BitBoard passed[2] = { BBTools::pawnPassed<Co_White>(pawns[Co_White], pawns[Co_Black]), BBTools::pawnPassed<Co_Black>(pawns[Co_Black], pawns[Co_White]) };
+            const colored<BitBoard> pawns = { p2.pieces_const<P_wp>(Co_White), p2.pieces_const<P_wp>(Co_Black) };
+            const colored<BitBoard> passed = { BBTools::pawnPassed<Co_White>(pawns[Co_White], pawns[Co_Black]), BBTools::pawnPassed<Co_Black>(pawns[Co_Black], pawns[Co_White]) };
             if ( (SquareToBitboard(to) & passed[p.c]) ) stats.incr(Stats::sid_pawnPushExtension), ++extension;
          }
          */

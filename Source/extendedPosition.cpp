@@ -226,10 +226,10 @@ void ExtendedPosition::test(const std::vector<std::string> &positions,
                }
                results[k][t].score = 0;
                bool success = false;
-               constexpr std::array<int, 23>   ms = {10,  20,  30,  40,  50,  60,  70,  80,  90,  100, 125,  150,
-                                                    175, 200, 250, 300, 400, 500, 600, 700, 800, 900, 10000};
-               constexpr std::array<double, 23> bonus = {3.0, 2.9, 2.8, 2.7, 2.6, 2.5, 2.4, 2.3, 2.2, 2.1, 2.0, 1.9,
-                                                         1.8, 1.7, 1.6, 1.5, 1.4, 1.3, 1.2, 1.1, 1.0, 1.0, 0.0};
+               constexpr array1d<int, 23>   ms = {10,  20,  30,  40,  50,  60,  70,  80,  90,  100, 125,  150,
+                                                 175, 200, 250, 300, 400, 500, 600, 700, 800, 900, 10000};
+               constexpr array1d<double, 23> bonus = {3.0, 2.9, 2.8, 2.7, 2.6, 2.5, 2.4, 2.3, 2.2, 2.1, 2.0, 1.9,
+                                                      1.8, 1.7, 1.6, 1.5, 1.4, 1.3, 1.2, 1.1, 1.0, 1.0, 0.0};
                for (size_t i = 0; i < results[k][t].mea.size(); ++i) {
                   if (results[k][t].computerMove == results[k][t].mea[i].first) {
                      results[k][t].score     = results[k][t].mea[i].second;

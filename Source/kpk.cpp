@@ -38,11 +38,11 @@ KPKPosition::KPKPosition(const unsigned idx) { // first init
       result = kpk_unknown; // done later
 }
 
-kpk_result KPKPosition::preCompute(const std::array<KPKPosition, KPKmaxIndex>& db) {
+kpk_result KPKPosition::preCompute(const array1d<KPKPosition, KPKmaxIndex>& db) {
    return us == Co_White ? preCompute<Co_White>(db) : preCompute<Co_Black>(db);
 }
 
-template<Color Us> kpk_result KPKPosition::preCompute(const std::array<KPKPosition, KPKmaxIndex>& db) {
+template<Color Us> kpk_result KPKPosition::preCompute(const array1d<KPKPosition, KPKmaxIndex>& db) {
    constexpr Color      Them = (Us == Co_White ? Co_Black : Co_White);
    constexpr kpk_result good = (Us == Co_White ? kpk_win : kpk_draw);
    constexpr kpk_result bad  = (Us == Co_White ? kpk_draw : kpk_win);
@@ -71,7 +71,7 @@ void init() {
 #if !defined(ARDUINO) && !defined(ESP32)  
    Logging::LogIt(Logging::logInfo) << "KPK init";
    Logging::LogIt(Logging::logInfo) << "KPK table size : " << KPKmaxIndex / 32 * sizeof(uint32_t) / 1024 << "Kb";
-   std::array<KPKPosition, KPKmaxIndex> db;
+   array1d<KPKPosition, KPKmaxIndex> db;
    unsigned idx, repeat = 1;
    for (idx = 0; idx < KPKmaxIndex; ++idx) db[idx] = KPKPosition(idx); // init
    while (repeat)

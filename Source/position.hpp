@@ -31,9 +31,9 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent = false, bool 
  * There will not change inside the search tree
  */
 struct RootInformation {
-   std::array<CastlingRights, NbSquare> castlePermHashTable = {CastlingRights::C_none}; // C_none is 0 so ok
-   std::array<std::array<Square, 2>, 2> rooksInit = {{{INVALIDSQUARE, INVALIDSQUARE}, {INVALIDSQUARE, INVALIDSQUARE}}};
-   std::array<Square, 2>                kingInit  = {INVALIDSQUARE, INVALIDSQUARE};
+   array1d<CastlingRights, NbSquare> castlePermHashTable = {CastlingRights::C_none}; // C_none is 0 so ok
+   array2d<Square, 2, 2> rooksInit = {{{INVALIDSQUARE, INVALIDSQUARE}, {INVALIDSQUARE, INVALIDSQUARE}}};
+   colored<Square> kingInit  = {INVALIDSQUARE, INVALIDSQUARE};
    void initCaslingPermHashTable();
 };
 
@@ -54,18 +54,18 @@ struct Position {
    Position();
    virtual ~Position();
 
-   std::array<Piece, NbSquare> _b {{P_none}}; // works because P_none is in fact 0
-   std::array<BitBoard, 6>     _allB {{emptyBitBoard}}; // works because emptyBitBoard is in fact 0
-   std::array<BitBoard, 2>     allPieces {{emptyBitBoard}}; // works because emptyBitBoard is in fact 0
+   array1d<Piece, NbSquare> _b {{P_none}}; // works because P_none is in fact 0
+   array1d<BitBoard, 6>     _allB {{emptyBitBoard}}; // works because emptyBitBoard is in fact 0
+   array1d<BitBoard, 2>     allPieces {{emptyBitBoard}}; // works because emptyBitBoard is in fact 0
 
    // t p n b r q k bl bd M n  (total is first so that pawn to king is same a Piece)
-   typedef std::array<std::array<char, 11>, 2> Material;
+   typedef array1d<array1d<char, 11>, 2> Material;
    Material mat = {{{{0}}}}; // such a nice syntax ...
 
    mutable Hash h = nullHash, ph = nullHash;
    MiniMove lastMove = INVALIDMINIMOVE;
    uint16_t moves = 0, halfmoves = 0;
-   std::array<Square, 2> king = {INVALIDSQUARE, INVALIDSQUARE};
+   colored<Square> king = {INVALIDSQUARE, INVALIDSQUARE};
 
    // shared by all "child" of a same "root" position
    // Assumed rule of 3 disrespect

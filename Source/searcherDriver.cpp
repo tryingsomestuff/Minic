@@ -10,9 +10,9 @@
 
 namespace {
 // Sizes and phases of the skip-blocks, used for distributing search depths across the threads, from stockfish
-constexpr unsigned int threadSkipSize              = 20;
-constexpr std::array<int,threadSkipSize> skipSize  = {1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4};
-constexpr std::array<int,threadSkipSize> skipPhase = {0, 1, 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 6, 7};
+constexpr unsigned int threadSkipSize = 20;
+constexpr array1d<int,threadSkipSize> skipSize  = {1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4};
+constexpr array1d<int,threadSkipSize> skipPhase = {0, 1, 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 6, 7};
 } // namespace
 
 // Output following chosen protocol
@@ -167,8 +167,8 @@ void Searcher::searchDriver(bool postMove) {
 
    // forced bongcloud
    if (DynamicConfig::bongCloud && (p.castling & (p.c == Co_White ? C_w_all : C_b_all)) ){
-      constexpr std::array<Move,5> wbc = { ToMove(Sq_e1,Sq_e2,T_std), ToMove(Sq_e1,Sq_d1,T_std), ToMove(Sq_e1,Sq_f1,T_std), ToMove(Sq_e1,Sq_d2,T_std), ToMove(Sq_e1,Sq_f2,T_std)};
-      constexpr std::array<Move,5> bbc = { ToMove(Sq_e8,Sq_e7,T_std), ToMove(Sq_e8,Sq_d8,T_std), ToMove(Sq_e8,Sq_f8,T_std), ToMove(Sq_e8,Sq_d7,T_std), ToMove(Sq_e8,Sq_f7,T_std)};
+      constexpr array1d<Move,5> wbc = { ToMove(Sq_e1,Sq_e2,T_std), ToMove(Sq_e1,Sq_d1,T_std), ToMove(Sq_e1,Sq_f1,T_std), ToMove(Sq_e1,Sq_d2,T_std), ToMove(Sq_e1,Sq_f2,T_std)};
+      constexpr array1d<Move,5> bbc = { ToMove(Sq_e8,Sq_e7,T_std), ToMove(Sq_e8,Sq_d8,T_std), ToMove(Sq_e8,Sq_f8,T_std), ToMove(Sq_e8,Sq_d7,T_std), ToMove(Sq_e8,Sq_f7,T_std)};
       MoveList moves;
       MoveGen::generate(p,moves);
       for (int i = 0 ; i < 5; ++i){
