@@ -232,7 +232,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    if (skipMoves)
       for (auto it = skipMoves->begin(); it != skipMoves->end(); ++it) { 
           assert( isValidMove(*it) );
-          pHash ^= Zobrist::ZTMove[static_cast<uint32_t>(*it) + std::abs(std::numeric_limits<int16_t>::min())]; 
+          const auto moveHashIndex = static_cast<int32_t>(*it) + std::abs(std::numeric_limits<int16_t>::min());
+          assert(moveHashIndex >= 0 && moveHashIndex < std::numeric_limits<uint16_t>::max());
+          pHash ^= Zobrist::ZTMove[moveHashIndex];
       }
 
    // probe TT
