@@ -71,7 +71,7 @@ void Searcher::getCMHPtr(const unsigned int ply, CMHPtrArray& cmhPtr) {
       if (ply > 2*k && isValidMove(stack[ply - 2*k].p.lastMove)) {
          const Position & pRef = stack[ply - 2*k].p;
          const Square to = correctedMove2ToKingDest(pRef.lastMove);
-         cmhPtr[k] = historyT.counter_history[PieceIdx(pRef.board_const(to))][to];
+         cmhPtr[k] = &historyT.counter_history[PieceIdx(pRef.board_const(to))][to];
       }
    }
 }
@@ -97,7 +97,7 @@ bool Searcher::isMoobing(uint16_t halfmove){
 ScoreType Searcher::getCMHScore(const Position& p, const Square from, const Square to, const CMHPtrArray& cmhPtr) const {
    ScoreType ret = 0;
    for (int i = 0; i < MAX_CMH_PLY; i++) {
-      if (cmhPtr[i]) { ret += cmhPtr[i][PieceIdx(p.board_const(from)) * NbSquare + to]; }
+      if (cmhPtr[i]) { ret += (*cmhPtr[i])[PieceIdx(p.board_const(from)) * NbSquare + to]; }
    }
    return ret/MAX_CMH_PLY;
 }
@@ -105,7 +105,7 @@ ScoreType Searcher::getCMHScore(const Position& p, const Square from, const Squa
 bool Searcher::isCMHGood(const Position& p, const Square from, const Square to, const CMHPtrArray& cmhPtr, const ScoreType threshold) const {
    for (int i = 0; i < MAX_CMH_PLY; i++) {
       if (cmhPtr[i]) {
-         if (cmhPtr[i][PieceIdx(p.board_const(from)) * NbSquare + to] >= threshold) return true;
+         if ((*cmhPtr[i])[PieceIdx(p.board_const(from)) * NbSquare + to] >= threshold) return true;
       }
    }
    return false;
@@ -115,7 +115,7 @@ bool Searcher::isCMHBad(const Position& p, const Square from, const Square to, c
    int nbBad = 0;
    for (int i = 0; i < MAX_CMH_PLY; i++) {
       if (cmhPtr[i]) {
-         if (cmhPtr[i][PieceIdx(p.board_const(from)) * NbSquare + to] < threshold) ++nbBad;
+         if ((*cmhPtr[i])[PieceIdx(p.board_const(from)) * NbSquare + to] < threshold) ++nbBad;
       }
    }
    return nbBad == MAX_CMH_PLY;

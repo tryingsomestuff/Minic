@@ -1,6 +1,6 @@
 #include "stats.hpp"
 
-const std::array<std::string, Stats::sid_maxid> Stats::Names = {"nodes",
+const array1d<std::string, Stats::sid_maxid> Stats::Names    = {"nodes",
                                                                 "qnodes",
                                                                 "tthits",
                                                                 "ttInsert",

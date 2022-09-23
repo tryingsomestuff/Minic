@@ -32,7 +32,7 @@ struct Position;
 // Stockfish trick (two short in one int) is not compatible with evaluation tuning !
 #ifndef WITH_EVALSCORE_AS_INT
 struct EvalScore {
-   std::array<ScoreType, GP_MAX> sc = {0};
+   array1d<ScoreType, GP_MAX> sc = {0};
    EvalScore(const ScoreType mg, const ScoreType eg): sc {mg, eg} {}
    EvalScore(const ScoreType s): sc {s, s} {}
    EvalScore(): sc {0, 0} {}
@@ -226,12 +226,12 @@ inline std::ostream & operator<<(std::ostream & of, const EvalFeatures & feature
  * possibly used in search later.
  */
 struct EvalData {
-   float     gp          = 0;
-   ScoreType danger[2]   = {0, 0};
-   uint16_t  mobility[2] = {0, 0};
-   bool      haveThreats[2] = {false, false};
-   bool      goodThreats[2] = {false, false};
-   bool      evalDone    = false; // will tell if phase, danger and mobility are filleds or not
+   float gp = 0;
+   colored<ScoreType> danger   = {0, 0};
+   colored<uint16_t>  mobility = {0, 0};
+   colored<bool>      haveThreats = {false, false};
+   colored<bool>      goodThreats = {false, false};
+   bool evalDone = false; // will tell if phase, danger and mobility are filleds or not
 };
 
 // used for easy move detection

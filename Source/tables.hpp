@@ -15,10 +15,10 @@
  */
 
 inline constexpr int MAX_CMH_PLY = 1;
-typedef std::array<ScoreType*, MAX_CMH_PLY> CMHPtrArray;
+typedef array1d<array1d<ScoreType, NbPiece*NbSquare> *, MAX_CMH_PLY> CMHPtrArray;
 
 struct KillerT {
-   Move killers[MAX_DEPTH][2];
+   array2d<Move,MAX_DEPTH,2> killers;
 
    void initKillers();
    void update(Move m, DepthType height);
@@ -26,10 +26,10 @@ struct KillerT {
 };
 
 struct HistoryT {
-   ScoreType history[2][NbSquare][NbSquare];                         // Color, from, to
-   ScoreType historyCap[NbPiece][NbSquare][PieceShift];              // Piece moved (+color), to, piece taken
-   ScoreType historyP[NbPiece][NbSquare];                            // Piece, to
-   ScoreType counter_history[NbPiece][NbSquare][NbPiece * NbSquare]; // Previous moved piece, previous to, current moved piece * boardsize + current to
+   array3d<ScoreType,2,NbSquare,NbSquare> history;                       // Color, from, to
+   array3d<ScoreType,NbPiece,NbSquare,PieceShift> historyCap;            // Piece moved (+color), to, piece taken
+   array2d<ScoreType,NbPiece,NbSquare> historyP;                         // Piece, to
+   array3d<ScoreType,NbPiece,NbSquare,NbPiece*NbSquare> counter_history; // Previous moved piece, previous to, current moved piece * boardsize + current to
 
    void initHistory();
 
@@ -46,7 +46,7 @@ struct HistoryT {
          historyP[PieceIdx(pp)][to] += static_cast<ScoreType>(s - HISTORY_DIV(historyP[PieceIdx(pp)][to] * std::abs(s)));
          for (int i = 0; i < MAX_CMH_PLY; ++i) {
             if (cmhPtr[i]) {
-               ScoreType& item = cmhPtr[i][PieceIdx(p.board_const(from)) * NbSquare + to];
+               ScoreType& item = (*cmhPtr[i])[PieceIdx(p.board_const(from)) * NbSquare + to];
                item += static_cast<ScoreType>(s - HISTORY_DIV(item * std::abs(s)));
             }
          }

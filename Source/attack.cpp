@@ -7,19 +7,19 @@
 
 #ifndef WITH_MAGIC
 namespace {
-int _ranks[512] = {0};
+array1d<int,512> _ranks = {0};
 }
 #endif
 
 namespace BBTools {
 
-Mask mask[NbSquare];
+array1d<Mask,NbSquare> mask;
 
 // This initialisation function is taken from Dumb chess engine by Richard Delorme
 void initMask() {
    Logging::LogIt(Logging::logInfo) << "Init mask";
    Logging::LogIt(Logging::logInfo) << "Size of masks : " << sizeof(mask) / 1024 << "Kb";
-   int d[NbSquare][NbSquare] = {{0}};
+   array2d<int,NbSquare,NbSquare> d = {{0}};
    for (Square x = 0; x < NbSquare; ++x) {
       mask[x].bbsquare = SquareToBitboard(x);
       for (int i = -1; i <= 1; ++i) {
@@ -172,13 +172,13 @@ BitBoard antidiagonalAttack(const BitBoard occupancy, const Square s) {
 
 namespace MagicBB {
 
-SMagic bishopMagic[NbSquare];
-SMagic rookMagic[NbSquare];
+array1d<SMagic,NbSquare> bishopMagic;
+array1d<SMagic,NbSquare> rookMagic;
 
-BitBoard bishopAttacks[NbSquare][1 << BISHOP_INDEX_BITS];
-BitBoard rookAttacks[NbSquare][1 << ROOK_INDEX_BITS];
+array2d<BitBoard,NbSquare,1 << BISHOP_INDEX_BITS> bishopAttacks;
+array2d<BitBoard,NbSquare,1 << ROOK_INDEX_BITS> rookAttacks;
 
-const BitBoard bishopMagics[] = {
+const array1d<BitBoard,NbSquare> bishopMagics = {
     0x1002004102008200, 0x1002004102008200, 0x4310002248214800, 0x402010c110014208, 0xa000a06240114001, 0xa000a06240114001, 0x402010c110014208, 0xa000a06240114001,
     0x1002004102008200, 0x1002004102008200, 0x1002004102008200, 0x1002004102008200, 0x100c009840001000, 0x4310002248214800, 0xa000a06240114001, 0x4310002248214800,
     0x4310002248214800, 0x822143005020a148, 0x0001901c00420040, 0x0880504024308060, 0x0100201004200002, 0xa000a06240114001, 0x822143005020a148, 0x1002004102008200,
@@ -189,7 +189,7 @@ const BitBoard bishopMagics[] = {
     0xa000a06240114001, 0x4310002248214800, 0x1002004102008200, 0x1002004102008200, 0x1002004102008200, 0x1002004102008200, 0x1002004102008200, 0x1002004102008200
 };
 
-const BitBoard rookMagics[] = {
+const array1d<BitBoard,NbSquare> rookMagics = {
     0x8200108041020020, 0x8200108041020020, 0xc880221002060081, 0x0009100804021000, 0x0500010004107800, 0x0024010008800a00, 0x0400110410804810, 0x8300038100004222,
     0x004a800182c00020, 0x0009100804021000, 0x3002200010c40021, 0x0020100104000208, 0x01021001a0080020, 0x0884020010082100, 0x1000820800c00060, 0x8020480110020020,
     0x0002052000100024, 0x0200190040088100, 0x0030802001a00800, 0x8010002004000202, 0x0040010100080010, 0x2200608200100080, 0x0001901c00420040, 0x0001400a24008010,

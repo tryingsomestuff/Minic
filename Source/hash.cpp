@@ -6,9 +6,9 @@
 #include "tools.hpp"
 
 namespace Zobrist {
-Hash ZT[NbSquare][14];
-Hash ZTCastling[16];
-Hash ZTMove[std::numeric_limits<uint16_t>::max()];
+array2d<Hash,NbSquare,14> ZT;
+array1d<Hash,16> ZTCastling;
+array1d<Hash,std::numeric_limits<uint16_t>::max()> ZTMove;
 
 void initHash() {
    Logging::LogIt(Logging::logInfo) << "Init hash";

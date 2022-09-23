@@ -36,8 +36,8 @@ MPI_Request _requestStopToR0   = MPI_REQUEST_NULL;
 MPI_Win _winStopFromR0;
 MPI_Win _winStopToR0;
 
-std::array<Counter, Stats::sid_maxid> _countersBufSend;
-std::array<Counter, Stats::sid_maxid> _countersBufRecv[2];
+array1d<Counter, Stats::sid_maxid> _countersBufSend;
+array1d<Counter, Stats::sid_maxid> _countersBufRecv[2];
 uint8_t _doubleBufferStatParity;
 uint64_t _nbStatPoll;
 

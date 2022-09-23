@@ -44,7 +44,8 @@ struct Mask {
 #endif
        {}
 };
-extern Mask mask[NbSquare];
+
+extern array1d<Mask,NbSquare> mask;
 void initMask();
 
 #ifndef WITH_MAGIC
@@ -87,17 +88,17 @@ namespace MagicBB {
  */
 
 #define BISHOP_INDEX_BITS 9
-#define ROOK_INDEX_BITS   12
+#define ROOK_INDEX_BITS 12
 
 struct SMagic {
   BitBoard mask, magic;
 };
 
-extern SMagic bishopMagic[NbSquare];
-extern SMagic rookMagic[NbSquare];
+extern array1d<SMagic,NbSquare> bishopMagic;
+extern array1d<SMagic,NbSquare> rookMagic;
 
-extern BitBoard bishopAttacks[NbSquare][1 << BISHOP_INDEX_BITS];
-extern BitBoard rookAttacks[NbSquare][1 << ROOK_INDEX_BITS];
+extern array2d<BitBoard,NbSquare,1 << BISHOP_INDEX_BITS> bishopAttacks;
+extern array2d<BitBoard,NbSquare,1 << ROOK_INDEX_BITS> rookAttacks;
 
 #if defined(__BMI2__) && !defined(__znver1) && !defined(__znver2) && !defined(__bdver4) && defined(ENV64BIT)
 #define MAGICBISHOPINDEX(m, x) (_pext_u64(m, MagicBB::bishopMagic[x].mask))

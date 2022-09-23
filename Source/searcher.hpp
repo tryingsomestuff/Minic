@@ -32,7 +32,7 @@ struct Searcher {
    TimeType currentMoveMs  = 777;
    TimeType getCurrentMoveMs()const; // use this (and not the variable) to take emergency time into account !
 
-   std::array<StackData, MAX_PLY> stack;
+   array1d<StackData, MAX_PLY> stack;
    [[nodiscard]] bool isBooming(uint16_t halfmove); // from stack
    [[nodiscard]] bool isMoobing(uint16_t halfmove); // from stack
 
@@ -168,14 +168,14 @@ struct Searcher {
 
 #pragma pack(push, 1)
    struct PawnEntry {
-      BitBoard    pawnTargets[2]   = {emptyBitBoard, emptyBitBoard};
-      BitBoard    holes[2]         = {emptyBitBoard, emptyBitBoard};
-      BitBoard    semiOpenFiles[2] = {emptyBitBoard, emptyBitBoard};
-      BitBoard    passed[2]        = {emptyBitBoard, emptyBitBoard};
-      BitBoard    openFiles        = emptyBitBoard;
-      EvalScore   score            = {0, 0};
-      ScoreType   danger[2]        = {0, 0};
-      MiniHash    h                = nullHash;
+      colored<BitBoard>    pawnTargets   = {emptyBitBoard, emptyBitBoard};
+      colored<BitBoard>    holes         = {emptyBitBoard, emptyBitBoard};
+      colored<BitBoard>    semiOpenFiles = {emptyBitBoard, emptyBitBoard};
+      colored<BitBoard>    passed        = {emptyBitBoard, emptyBitBoard};
+      BitBoard    openFiles               = emptyBitBoard;
+      EvalScore   score                   = {0, 0};
+      colored<BitBoard>   danger         = {0, 0};
+      MiniHash    h                       = nullHash;
       inline void reset() {
          score            = {0, 0};
          danger[Co_White] = 0;
