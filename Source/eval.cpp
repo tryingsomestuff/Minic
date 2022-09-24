@@ -339,15 +339,15 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    const colored<BitBoard> queens     = {p.whiteQueen(), p.blackQueen()};
    const colored<BitBoard> kings      = {p.whiteKing(), p.blackKing()};
    const colored<BitBoard> nonPawnMat = {p.allPieces[Co_White] & ~pawns[Co_White], 
-                                          p.allPieces[Co_Black] & ~pawns[Co_Black]};
+                                         p.allPieces[Co_Black] & ~pawns[Co_Black]};
    const colored<BitBoard> kingZone   = {isValidSquare(p.king[Co_White]) ? BBTools::mask[p.king[Co_White]].kingZone : emptyBitBoard, 
-                                   isValidSquare(p.king[Co_Black]) ? BBTools::mask[p.king[Co_Black]].kingZone : emptyBitBoard};
-   const BitBoard occupancy     = p.occupancy();
+                                         isValidSquare(p.king[Co_Black]) ? BBTools::mask[p.king[Co_Black]].kingZone : emptyBitBoard};
+   const BitBoard occupancy = p.occupancy();
 
    // helpers that will be filled by evalPiece calls
-   colored<ScoreType> kdanger         = {0, 0};
-   colored<BitBoard>  att             = {emptyBitBoard, emptyBitBoard}; // bitboard of squares attacked by Color
-   colored<BitBoard>  att2            = {emptyBitBoard, emptyBitBoard}; // bitboard of squares attacked twice by Color
+   colored<ScoreType> kdanger = {0, 0};
+   colored<BitBoard>  att     = {emptyBitBoard, emptyBitBoard}; // bitboard of squares attacked by Color
+   colored<BitBoard>  att2    = {emptyBitBoard, emptyBitBoard}; // bitboard of squares attacked twice by Color
    array2d<BitBoard,2,6>  attFromPiece = {{emptyBitBoard}};              // bitboard of squares attacked by specific piece of Color
    array2d<BitBoard,2,6>  checkers     = {{emptyBitBoard}};              // bitboard of Color pieces squares attacking king
 
