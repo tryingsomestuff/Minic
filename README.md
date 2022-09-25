@@ -198,7 +198,7 @@ Here is 4 years of CCRL progress (single thread)
 
 
 ### CCRL
-- 40/15: Minic 3.24 + Nylon Nonchalance is tested at 3405 on the [CCRL 40/15 scale, 4 cores](http://ccrl.chessdom.com/ccrl/4040/)  
+- 40/15: Minic 3.30 + Natural Naughtiness is tested at 3437 on the [CCRL 40/15 scale, 4 cores](http://ccrl.chessdom.com/ccrl/4040/)  
 - Blitz: Minic 3.18 + Nimble Nothingness is tested at 3490 on the [CCRL BLITZ scale, 8 cores](http://ccrl.chessdom.com/ccrl/404/)  
 - FRC: Minic 3.22 + Nylon Nonchalance is tested at 3512 on the [CCRL FRC list](http://ccrl.chessdom.com/ccrl/404FRC/)  
 
