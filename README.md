@@ -225,7 +225,7 @@ Here is 4 years of CCRL progress (single thread)
 - Minic 3.18 + Nimble Nothingness is tested at 3305 on the [BRUCE rating list](https://e4e6.com/)
 
 ### Ipman Chess
-- Minic 3.22 + Nylon Nonchalance is tested at 3281 on the [IpmanChess rating list](http://ipmanchess.yolasite.com/i7-11800h.php)
+- Minic 3.27 + Natural Naughtiness is tested at 3347 on the [IpmanChess rating list](http://ipmanchess.yolasite.com/i7-11800h.php)
 
 ### Test Suite (quite old results here)
 - STS : 1191/1500 @10sec per position (single thread on an i7-9700K)  
