@@ -81,6 +81,7 @@ struct Stats {
       sid_endGameExtension,
       sid_goodHistoryExtension,
       sid_EGExtension,
+      sid_dangerExt,
       sid_tbHit1,
       sid_tbHit2,
       sid_tbFail,

@@ -398,13 +398,13 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    }
 
    // if the position is really intense, eventually for both side (thus very sharp), will try to prune/reduce a little less
-   ///@todo this is not activated for now
    const int dangerFactor          = (data.danger[Co_White] + data.danger[Co_Black]) / SearchConfig::dangerDivisor;
    const bool isDangerPrune        = dangerFactor >= SearchConfig::dangerLimitPruning;
    const bool isDangerForwardPrune = dangerFactor >= SearchConfig::dangerLimitForwardPruning;
    const bool isDangerRed          = dangerFactor >= SearchConfig::dangerLimitReduction;
+   ///@todo this is not used for now
    if (isDangerPrune)        stats.incr(Stats::sid_dangerPrune);
-   if (isDangerForwardPrune) stats.incr(Stats::sid_dangerPrune);
+   if (isDangerForwardPrune) stats.incr(Stats::sid_dangerForwardPrune);
    if (isDangerRed)          stats.incr(Stats::sid_dangerReduce);
 
    // if we are doing a big attack, we will look for tactics involving sacrifices
@@ -447,7 +447,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    MoveList        moves;
    bool            moveGenerated    = false;
    bool            capMoveGenerated = false;
-   bool            futility = false, lmp = false, /*mateThreat = false,*/ historyPruning = false, capHistoryPruning = false, CMHPruning = false;
+   bool            futility = false, lmp = false, mateThreat = false, historyPruning = false, capHistoryPruning = false, CMHPruning = false;
    MiniMove        refutation       = INVALIDMINIMOVE;
    DepthType       marginDepth      = std::max(1, depth - (evalScoreIsHashScore ? e.d : 0)); // a depth that take TT depth into account
    const bool      isNotPawnEndGame = p.mat[p.c][M_t] > 0;
@@ -523,7 +523,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                TT::Entry nullEThreat;
                TT::getEntry(*this, pN, computeHash(pN), 0, nullEThreat);
                if (nullEThreat.h != nullHash && nullEThreat.m != INVALIDMINIMOVE) refutation = nullEThreat.m;
-               //if (isMatedScore(nullscore)) mateThreat = true;
+               if (isMatedScore(nullscore)) mateThreat = true;
                if (nullscore >= beta) { // verification search
                   if ( (!lessZugzwangRisk || depth > SearchConfig::nullMoveVerifDepth) && nullMoveMinPly == 0){
                      stats.incr(Stats::sid_nullMoveTry3);
@@ -861,6 +861,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       //stack[p2.halfmoves].h = p2.h;
       const bool isCheck    = isPosInCheck(p2);
       bool       isAdvancedPawnPush = PieceTools::getPieceType(p, Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
+      const bool earlyMove = validMoveCount < (2 /*+2*rootnode*/);
       // extensions
       DepthType extension = 0;
       if (DynamicConfig::level > 80) {
@@ -869,9 +870,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          // castling extension
          //if (EXTENDMORE && isCastling(*it) ) stats.incr(Stats::sid_castlingExtension),++extension;
          // Botvinnik-Markoff Extension
-         //if (EXTENDMORE && BMextension) stats.incr(Stats::sid_BMExtension), ++extension;
+         //if (EXTENDMORE && BMextension && earlyMove) stats.incr(Stats::sid_BMExtension), ++extension;
          // mate threat extension (from null move)
-         //if (EXTENDMORE && mateThreat && depth <= 4) stats.incr(Stats::sid_mateThreatExtension),++extension;
+         if (EXTENDMORE && mateThreat && earlyMove) stats.incr(Stats::sid_mateThreatExtension),++extension;
          // simple recapture extension
          //if (EXTENDMORE && pvnode && isValidMove(p.lastMove) && Move2Type(p.lastMove) == T_capture && !isBadCap(*it) && to == Move2To(p.lastMove)) stats.incr(Stats::sid_recaptureExtension),++extension; //recapture
          // gives check extension
@@ -909,7 +910,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       }
       PVList childPV;
       // PVS
-      if (validMoveCount < (2 /*+2*rootnode*/) || !SearchConfig::doPVS){
+      if (earlyMove || !SearchConfig::doPVS){
          stack[p2.halfmoves].p = p2;
          stack[p2.halfmoves].h = p2.h;         
 #ifdef WITH_NNUE
