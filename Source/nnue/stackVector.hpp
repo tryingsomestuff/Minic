@@ -42,6 +42,7 @@ template<typename T, size_t dim> struct StackVector {
       return result; //RVO
    }
 
+  // note that quantization is done on read if needed (see weightReader)
   template <typename U> inline CONSTEXPR StackVector<U, dim> dequantize(const U& scale) const {
     static_assert(std::is_integral_v<T> && std::is_floating_point_v<U>);
     StackVector<U, dim> result;
