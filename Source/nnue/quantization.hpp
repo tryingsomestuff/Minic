@@ -40,8 +40,4 @@ template<bool Q> inline void quantizationInfo() {
    }
 }
 
-template<bool Q> inline void quantize(){
-
-}
-
 #endif // WITH_NNUE
