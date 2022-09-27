@@ -172,10 +172,10 @@ struct Searcher {
       colored<BitBoard>    holes         = {emptyBitBoard, emptyBitBoard};
       colored<BitBoard>    semiOpenFiles = {emptyBitBoard, emptyBitBoard};
       colored<BitBoard>    passed        = {emptyBitBoard, emptyBitBoard};
-      BitBoard    openFiles               = emptyBitBoard;
-      EvalScore   score                   = {0, 0};
+      BitBoard    openFiles              = emptyBitBoard;
+      EvalScore   score                  = {0, 0};
       colored<BitBoard>   danger         = {0, 0};
-      MiniHash    h                       = nullHash;
+      MiniHash    h                      = nullHash;
       inline void reset() {
          score            = {0, 0};
          danger[Co_White] = 0;

@@ -21,19 +21,19 @@
 
 inline void evalFeatures(const Position & p,
                          array2d<BitBoard,2,6> & attFromPiece,
-                         colored<BitBoard>    & att,
-                         colored<BitBoard>    & att2,
-                         array2d<BitBoard,2,6> &checkers,
-                         colored<ScoreType>   &kdanger,
-                         EvalScore             &mobilityScore,
-                         colored<uint16_t>    &mobility){
+                         colored<BitBoard>     & att,
+                         colored<BitBoard>     & att2,
+                         array2d<BitBoard,2,6> & checkers,
+                         colored<ScoreType>    & kdanger,
+                         EvalScore             & mobilityScore,
+                         colored<uint16_t>     & mobility){
 
    const bool kingIsMandatory = DynamicConfig::isKingMandatory();
    const colored<BitBoard> pawns = {p.whitePawn(), p.blackPawn()};
    const colored<BitBoard> nonPawnMat = {p.allPieces[Co_White] & ~pawns[Co_White], 
-                                          p.allPieces[Co_Black] & ~pawns[Co_Black]};
+                                         p.allPieces[Co_Black] & ~pawns[Co_Black]};
    const colored<BitBoard> kingZone = {isValidSquare(p.king[Co_White]) ? BBTools::mask[p.king[Co_White]].kingZone : emptyBitBoard, 
-                                   isValidSquare(p.king[Co_Black]) ? BBTools::mask[p.king[Co_Black]].kingZone : emptyBitBoard};
+                                       isValidSquare(p.king[Co_Black]) ? BBTools::mask[p.king[Co_Black]].kingZone : emptyBitBoard};
    const BitBoard occupancy = p.occupancy();
 
    for (Color c = Co_White ; c <= Co_Black ; ++c){
