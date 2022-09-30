@@ -75,10 +75,10 @@ inline void evalFeatures(const Position & p,
    }
 
    const colored<BitBoard> weakSquare = { att[Co_Black] & ~att2[Co_White] & (~att[Co_White] | attFromPiece[Co_White][P_wk - 1] | attFromPiece[Co_White][P_wq - 1]),
-                                           att[Co_White] & ~att2[Co_Black] & (~att[Co_Black] | attFromPiece[Co_Black][P_wk - 1] | attFromPiece[Co_Black][P_wq - 1])};
+                                          att[Co_White] & ~att2[Co_Black] & (~att[Co_Black] | attFromPiece[Co_Black][P_wk - 1] | attFromPiece[Co_Black][P_wq - 1])};
 
    const colored<BitBoard> safeSquare = { ~att[Co_Black] | (weakSquare[Co_Black] & att2[Co_White]),
-                                           ~att[Co_White] | (weakSquare[Co_White] & att2[Co_Black])};
+                                          ~att[Co_White] | (weakSquare[Co_White] & att2[Co_Black])};
 
    // reward safe checks
    kdanger[Co_White] += EvalConfig::kingAttSafeCheck[0] * BB::countBit(checkers[Co_Black][0] & att[Co_Black]);
@@ -708,7 +708,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          DepthType extension = 0;
          if (DynamicConfig::level > 80) {
             // singular move extension
-            if (EXTENDMORE && withoutSkipMove && depth >= SearchConfig::singularExtensionDepth && !rootnode && !isMateScore(e.s) &&
+            if (withoutSkipMove && depth >= SearchConfig::singularExtensionDepth && !rootnode && !isMateScore(e.s) &&
                 (bound == TT::B_exact || bound == TT::B_beta) && e.d >= depth - 3) {
                const ScoreType betaC = e.s - 2 * depth;
                PVList          sePV;
@@ -734,16 +734,16 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                   if (score2 > beta) return stats.incr(Stats::sid_singularExtension4), beta; // fail-hard
                }
             }
-            // is in check extension if pvnode
-            //if (EXTENDMORE && pvnode && isInCheck && depth < 8) stats.incr(Stats::sid_checkExtension),++extension;
+            // is in check extension
+            //if (EXTENDMORE && isInCheck) stats.incr(Stats::sid_checkExtension), ++extension;
             // castling extension
-            //if (EXTENDMORE && isCastling(e.m) ) stats.incr(Stats::sid_castlingExtension),++extension;
+            //if (EXTENDMORE && isCastling(e.m)) stats.incr(Stats::sid_castlingExtension), ++extension;
             // Botvinnik-Markoff Extension
             if (EXTENDMORE && BMextension) stats.incr(Stats::sid_BMExtension), ++extension;
             // mate threat extension (from null move)
-            //if (EXTENDMORE && mateThreat) stats.incr(Stats::sid_mateThreatExtension),++extension;
+            //if (EXTENDMORE && mateThreat) stats.incr(Stats::sid_mateThreatExtension), ++extension;
             // simple recapture extension
-            //if (EXTENDMORE && pvnode && isValidMove(p.lastMove) && Move2Type(p.lastMove) == T_capture && to == Move2To(p.lastMove)) stats.incr(Stats::sid_recaptureExtension),++extension; // recapture
+            //if (EXTENDMORE && isValidMove(p.lastMove) && Move2Type(p.lastMove) == T_capture && to == Move2To(p.lastMove)) stats.incr(Stats::sid_recaptureExtension), ++extension; // recapture
             // gives check extension
             //if (EXTENDMORE && isCheck ) stats.incr(Stats::sid_checkExtension2),++extension; // we give check with a non risky move
             /*
@@ -761,7 +761,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             }
             */
             // threat on queen extension
-            //if (EXTENDMORE && pvnode && (p.pieces_const<P_wq>(p.c) && isQuiet && PieceTools::getPieceType(p, Move2From(e.m)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, e.m, 0)) stats.incr(Stats::sid_queenThreatExtension), ++extension;
+            //if (EXTENDMORE && (p.pieces_const<P_wq>(p.c) && isQuiet && PieceTools::getPieceType(p, Move2From(e.m)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, e.m, 0)) stats.incr(Stats::sid_queenThreatExtension), ++extension;
          }
          ScoreType ttScore = -pvs<pvnode>(-beta, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, static_cast<DepthType>(extensions + extension), isCheck, !cutNode);
          if (stopFlag) return STOPSCORE;
@@ -865,18 +865,18 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       // extensions
       DepthType extension = 0;
       if (DynamicConfig::level > 80) {
-         // is in check extension if pvnode
-         //if (EXTENDMORE && pvnode && isInCheck && depth < 8) stats.incr(Stats::sid_checkExtension),++extension; // we are in check (extension)
+         // is in check extension
+         //if (EXTENDMORE && isInCheck) stats.incr(Stats::sid_checkExtension),++extension; // we are in check (extension)
          // castling extension
-         //if (EXTENDMORE && isCastling(*it) ) stats.incr(Stats::sid_castlingExtension),++extension;
+         //if (EXTENDMORE && isCastling(*it)) stats.incr(Stats::sid_castlingExtension), ++extension;
          // Botvinnik-Markoff Extension
-         //if (EXTENDMORE && BMextension && earlyMove) stats.incr(Stats::sid_BMExtension), ++extension;
+         if (EXTENDMORE && earlyMove && BMextension) stats.incr(Stats::sid_BMExtension), ++extension;
          // mate threat extension (from null move)
-         if (EXTENDMORE && mateThreat && earlyMove) stats.incr(Stats::sid_mateThreatExtension),++extension;
+         //if (EXTENDMORE && mateThreat) stats.incr(Stats::sid_mateThreatExtension), ++extension;
          // simple recapture extension
-         //if (EXTENDMORE && pvnode && isValidMove(p.lastMove) && Move2Type(p.lastMove) == T_capture && !isBadCap(*it) && to == Move2To(p.lastMove)) stats.incr(Stats::sid_recaptureExtension),++extension; //recapture
+         //if (EXTENDMORE && isValidMove(p.lastMove) && Move2Type(p.lastMove) == T_capture && !isBadCap(*it) && to == Move2To(p.lastMove)) stats.incr(Stats::sid_recaptureExtension), ++extension; //recapture
          // gives check extension
-         //if (EXTENDMORE && isCheck ) stats.incr(Stats::sid_checkExtension2),++extension; // we give check
+         //if (EXTENDMORE && isCheck ) stats.incr(Stats::sid_checkExtension2), ++extension; // we give check
          // CMH extension
          /*
          if (EXTENDMORE && isQuiet) {
@@ -892,7 +892,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          }
          */
          // threat on queen extension
-         //if (EXTENDMORE && pvnode && firstMove && (p.pieces_const<P_wq>(p.c) && isQuiet && Move2Type(*it) == T_std && PieceTools::getPieceType(p, Move2From(*it)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, *it, 0)) stats.incr(Stats::sid_queenThreatExtension), ++extension;
+         //if (EXTENDMORE && firstMove && (p.pieces_const<P_wq>(p.c) && isQuiet && Move2Type(*it) == T_std && PieceTools::getPieceType(p, Move2From(*it)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, *it, 0)) stats.incr(Stats::sid_queenThreatExtension), ++extension;
          // move that lead to endgame
          /*
          if ( EXTENDMORE && lessZugzwangRisk && (p2.mat[p.c][M_t]+p2.mat[~p.c][M_t] == 0)){
