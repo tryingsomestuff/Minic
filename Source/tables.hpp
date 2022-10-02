@@ -68,7 +68,7 @@ struct HistoryT {
 };
 
 struct CounterT {
-   ScoreType counter[NbSquare][NbSquare];
+   array2d<ScoreType,NbSquare,NbSquare> counter;
 
    void initCounter();
    void update(Move m, const Position& p);
