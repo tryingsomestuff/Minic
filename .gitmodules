@@ -10,3 +10,6 @@
 [submodule "NNUE-Nets"]
 	path = NNUE-Nets
 	url = https://github.com/tryingsomestuff/NNUE-Nets.git
+[submodule "Illustrations"]
+	path = Illustrations
+	url = git@github.com:tryingsomestuff/Illustrations.git
