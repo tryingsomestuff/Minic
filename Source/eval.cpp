@@ -280,7 +280,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
      ScoreType materialTableScore = 0;
      const Hash matHash2 = MaterialHash::getMaterialHash2(p.mat);
      bool matHelperHit = false;
-#if !defined(ARDUINO) && !defined(ESP32)     
+#if !defined(WITH_SMALL_MEMORY)
      if(matHash2 == matHashKPK || matHash2 == matHashKKP){
         materialTableScore = (white2Play ? +1 : -1) * (MaterialHash::helperKPK(p, winningSideEG, features.scores[F_material][EG], context._height));
         matHelperHit = true;

@@ -7,7 +7,8 @@
 #include "stackVector.hpp"
 #include "inputLayer.hpp"
 
-template<typename NT, bool Q> struct FeatureTransformer {
+template<typename NT, bool Q> 
+struct FeatureTransformer {
 
    const InputLayer<NT, inputLayerSize, firstInnerLayerSize, Q>* weights_;
 

@@ -97,7 +97,7 @@ typedef uint64_t u_int64_t;
 #define __PRETTY_FUNCTION__ __FUNCSIG__
 #endif
 
-#if defined(ARDUINO) || defined(ESP32)
+#if defined(WITH_SMALL_MEMORY)
 #define SIZE_MULTIPLIER 1024ull // Kb
 #else
 #define SIZE_MULTIPLIER 1024ull * 1024ull // Mb

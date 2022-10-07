@@ -15,7 +15,7 @@ void selfPlay(DepthType depth, uint64_t & nbPos) {
    assert(!DynamicConfig::antichess);
 
    const std::string startfen = 
-#if !defined(ARDUINO) && !defined(ESP32)
+#if !defined(WITH_SMALL_MEMORY)
                                   DynamicConfig::DFRC ? chess960::getDFRCXFEN() : 
                                   DynamicConfig::FRC ? chess960::positions[std::rand() % 960] : 
 #endif

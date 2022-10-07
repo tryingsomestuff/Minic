@@ -5,7 +5,7 @@
 namespace DynamicConfig {
 bool         mateFinder       = false;
 bool         disableTT        = false;
-#if defined(ARDUINO) || defined(ESP32)
+#if defined(WITH_SMALL_MEMORY)
 unsigned int ttSizeMb         = 2; // here in Kb in fact (SIZE_MULTIPLIER), will be converted to real size next
 unsigned int ttPawnSizeMb     = 1;  // here in Kb in fact (SIZE_MULTIPLIER), will be converted to real size next
 #else

@@ -6,7 +6,7 @@
 
 namespace KPK {
 
-#if !defined(ARDUINO) && !defined(ESP32)  
+#if !defined(WITH_SMALL_MEMORY)
 namespace {
 uint32_t           KPKBitbase[KPK::KPKmaxIndex / 32];               // force 32bit uint
 inline unsigned    KPKindex(Color us, Square bksq, Square wksq, Square psq) {
@@ -68,7 +68,7 @@ bool probe(Square wksq, const Square wpsq, const Square bksq, const Color us) {
 #endif
 
 void init() {
-#if !defined(ARDUINO) && !defined(ESP32)  
+#if !defined(WITH_SMALL_MEMORY)
    Logging::LogIt(Logging::logInfo) << "KPK init";
    Logging::LogIt(Logging::logInfo) << "KPK table size : " << KPKmaxIndex / 32 * sizeof(uint32_t) / 1024 << "Kb";
    array1d<KPKPosition, KPKmaxIndex> db;

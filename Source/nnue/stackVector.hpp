@@ -4,38 +4,44 @@
 
 #ifdef WITH_NNUE
 
-template<typename T, size_t dim> struct StackVector {
+template<typename T, size_t dim> 
+struct StackVector {
    alignas(NNUEALIGNMENT) T data[dim];
 
-   template<typename F> CONSTEXPR StackVector<T, dim>& apply_(F&& f) {
+   template<typename F> 
+   CONSTEXPR StackVector<T, dim>& apply_(F&& f) {
 #pragma omp simd
       for (size_t i = 0; i < dim; ++i) { data[i] = f(data[i]); }
       return *this;
    }
 
-   template<typename T2> CONSTEXPR StackVector<T, dim>& add_(const T2* other) {
+   template<typename T2> 
+   CONSTEXPR StackVector<T, dim>& add_(const T2* other) {
 #pragma omp simd
       for (size_t i = 0; i < dim; ++i) { data[i] += other[i]; }
       return *this;
    }
 
-   template<typename T2> CONSTEXPR StackVector<T, dim>& sub_(const T2* other) {
+   template<typename T2> 
+   CONSTEXPR StackVector<T, dim>& sub_(const T2* other) {
 #pragma omp simd
       for (size_t i = 0; i < dim; ++i) { data[i] -= other[i]; }
       return *this;
    }
 
 #ifndef USE_SIMD_INTRIN
-   template<typename T2, typename T3> CONSTEXPR StackVector<T, dim>& fma_(const T2 c, const T3* other) {
+   template<typename T2, typename T3> 
+   CONSTEXPR StackVector<T, dim>& fma_(const T2 c, const T3* other) {
 #pragma omp simd
       for (size_t i = 0; i < dim; ++i) { data[i] += c * other[i]; }
       return *this;
    }
 #else
-   inline T dot_(const T* other) const { return dotProductFma<dim>(data, other); }
+   T dot_(const T* other) const { return dotProductFma<dim>(data, other); }
 #endif
 
-   template<typename T2> static CONSTEXPR StackVector<T, dim> from(const T2* data) {
+   template<typename T2> 
+   static CONSTEXPR StackVector<T, dim> from(const T2* data) {
       StackVector<T, dim> result;
 #pragma omp simd
       for (size_t i = 0; i < dim; ++i) { result.data[i] = T(data[i]); }
@@ -43,7 +49,8 @@ template<typename T, size_t dim> struct StackVector {
    }
 
   // note that quantization is done on read if needed (see weightReader)
-  template <typename U> inline CONSTEXPR StackVector<U, dim> dequantize(const U& scale) const {
+  template <typename U> 
+  CONSTEXPR StackVector<U, dim> dequantize(const U& scale) const {
     static_assert(std::is_integral_v<T> && std::is_floating_point_v<U>);
     StackVector<U, dim> result;
 #pragma omp simd
@@ -86,7 +93,8 @@ CONSTEXPR StackVector<T, dim0 + dim1> splice(const StackVector<T, dim0>& a, cons
    return c; // RVO
 }
 
-template<typename T, size_t dim> std::ostream& operator<<(std::ostream& ostr, const StackVector<T, dim>& vec) {
+template<typename T, size_t dim> 
+std::ostream& operator<<(std::ostream& ostr, const StackVector<T, dim>& vec) {
    static_assert(dim != 0, "can't stream empty vector.");
    ostr << "StackVector<T, " << dim << ">([";
    for (size_t i = 0; i < (dim - 1); ++i) { ostr << vec.data[i] << ", "; }

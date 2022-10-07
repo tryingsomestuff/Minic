@@ -11,14 +11,18 @@
 constexpr size_t inputLayerSize      = 12 * 64 * 64;
 constexpr size_t firstInnerLayerSize = 384;
 
-template<typename NT, size_t dim0, size_t dim1, bool Q> struct InputLayer {
+template<typename NT, size_t dim0, size_t dim1, bool Q> 
+struct InputLayer {
    static constexpr size_t nbW = dim0 * dim1;
    static constexpr size_t nbB = dim1;
 
    typedef typename Quantization<Q>::BIT BIT;
    typedef typename Quantization<Q>::WIT WIT;
 
+   // often too big to be statically allocated (see CTOR/DTOR for dynamic alloc)
    typename Quantization<Q>::WIT* W {nullptr};
+
+   // bias can be statically allocated 
    alignas(NNUEALIGNMENT) typename Quantization<Q>::BIT b[nbB];
 
    void insertIdx(const size_t idx, StackVector<BIT, nbB>& x) const {
@@ -36,6 +40,7 @@ template<typename NT, size_t dim0, size_t dim1, bool Q> struct InputLayer {
       return *this;
    }
 
+   // non copyable
    InputLayer<NT, dim0, dim1, Q>& operator=(const InputLayer<NT, dim0, dim1, Q>& other) = delete;
    InputLayer<NT, dim0, dim1, Q>& operator=(InputLayer<NT, dim0, dim1, Q>&& other) = delete;
    InputLayer(const InputLayer<NT, dim0, dim1, Q>& other) = delete;

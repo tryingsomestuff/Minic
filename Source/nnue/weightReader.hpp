@@ -5,7 +5,8 @@
 #ifdef WITH_NNUE
 
 // NT is the network type as written inside the binary file
-template<typename NT> struct WeightsReader {
+template<typename NT> 
+struct WeightsReader {
    std::istream* file = nullptr;
 
    WeightsReader<NT>& readVersion(uint32_t& version) {
@@ -14,7 +15,8 @@ template<typename NT> struct WeightsReader {
       return *this;
    }
 
-   template<typename T> WeightsReader<NT>& streamW(T* dst, const size_t request, [[maybe_unused]] size_t dim0, [[maybe_unused]] size_t dim1) {
+   template<typename T> 
+   WeightsReader<NT>& streamW(T* dst, const size_t request, [[maybe_unused]] size_t dim0, [[maybe_unused]] size_t dim1) {
       assert(file);
       Logging::LogIt(Logging::logInfo) << "Reading inner weight";
       // we will get min and max weight for display purpose
@@ -41,7 +43,8 @@ template<typename NT> struct WeightsReader {
       return *this;
    }
 
-   template<typename T, bool Q> WeightsReader<NT>& streamWI(T* dst, const size_t request) {
+   template<typename T, bool Q> 
+   WeightsReader<NT>& streamWI(T* dst, const size_t request) {
       assert(file);
       Logging::LogIt(Logging::logInfo) << "Reading input weight";
       // we will get min and max weight for display purpose
@@ -72,7 +75,8 @@ template<typename NT> struct WeightsReader {
       return *this;
    }
 
-   template<typename T> WeightsReader<NT>& streamB(T* dst, const size_t request) {
+   template<typename T> 
+   WeightsReader<NT>& streamB(T* dst, const size_t request) {
       assert(file);
       Logging::LogIt(Logging::logInfo) << "Reading inner bias";
       // we will get min and max bias for display purpose
@@ -93,7 +97,8 @@ template<typename NT> struct WeightsReader {
       return *this;
    }
 
-   template<typename T, bool Q> WeightsReader<NT>& streamBI(T* dst, const size_t request) {
+   template<typename T, bool Q> 
+   WeightsReader<NT>& streamBI(T* dst, const size_t request) {
       assert(file);
       Logging::LogIt(Logging::logInfo) << "Reading input bias";
       // we will get min and max bias for display purpose
