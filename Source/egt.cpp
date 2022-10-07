@@ -47,7 +47,7 @@ bool initTB() {
    return true;
 }
 
-int probe_root(Searcher &context, const Position &p, ScoreType &score, MoveList &rootMoves) {
+int probe_root(Searcher &/*context*/, const Position &p, ScoreType &score, MoveList &rootMoves) {
    if (MAX_TB_MEN <= 0) return -1;
    score = 0;
    unsigned results[TB_MAX_MOVES];

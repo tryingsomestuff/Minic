@@ -256,7 +256,7 @@ bool readEPDFile(const std::string &fileName, std::vector<std::string> &position
    }
 }
 
-#if !defined(ARDUINO) && !defined(ESP32)
+#if !defined(WITH_SMALL_MEMORY)
 std::string chess960::getDFRCXFEN(){
    const std::string fenB = positions[std::rand() % 960];
    const std::string fenW = positions[std::rand() % 960];

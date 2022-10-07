@@ -11,7 +11,7 @@ namespace nnue {
 #ifdef EMBEDDEDNNUEPATH
 namespace embedded {
 INCBIN(weightsFile, INCBIN_STRINGIZE(EMBEDDEDNNUEPATH));
-// We now have these three symbols
+// We now have these symbols
 // const unsigned char weightsFileData[];
 // const unsigned int weightsFileSize;
 } // namespace embedded

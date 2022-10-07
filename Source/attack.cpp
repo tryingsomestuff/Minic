@@ -25,7 +25,7 @@ void initMask() {
       for (int i = -1; i <= 1; ++i) {
          for (int j = -1; j <= 1; ++j) {
             if (i == 0 && j == 0) continue;
-#if !defined(ARDUINO) && !defined(ESP32)      
+#if !defined(WITH_SMALL_MEMORY)
             for (int r = SQRANK(x) + i, f = SQFILE(x) + j; 0 <= r && r < 8 && 0 <= f && f < 8; r += i, f += j) {
                const int y = 8 * r + f;
                d[x][y]     = 8 * i + j;
@@ -57,7 +57,7 @@ void initMask() {
             if (r == dp) mask[x].dpush[c] = SquareToBitboard((r + 2 * i) * 8 + f); // double push
          }
       }
-#if !defined(ARDUINO) && !defined(ESP32)      
+#if !defined(WITH_SMALL_MEMORY)
       if (r == 3 || r == 4) {
          if (f > 0) mask[x].enpassant |= SquareToBitboard(x - 1);
          if (f < 7) mask[x].enpassant |= SquareToBitboard(x + 1);
@@ -89,7 +89,7 @@ void initMask() {
       bspan |= bspan >> 32;
       bspan = _shiftSouth(bspan);
 
-#if !defined(ARDUINO) && !defined(ESP32)
+#if !defined(WITH_SMALL_MEMORY)
       ///@todo try to use them in bitboardTools to see if its faster than on the fly computations ...
       mask[x].frontSpan[Co_White] = wspan;
       mask[x].frontSpan[Co_Black] = bspan;
@@ -297,7 +297,7 @@ BitBoard allAttackedBB(const Position &p, const Square s) {
 }
 
 BitBoard between(const Square sq1, const Square sq2){
-#if !defined(ARDUINO) && !defined(ESP32)
+#if !defined(WITH_SMALL_MEMORY)
    return mask[sq1].between[sq2];
 #else
    constexpr BitBoard m1   {static_cast<BitBoard>(-1)};

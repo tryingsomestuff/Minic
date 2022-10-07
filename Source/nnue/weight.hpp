@@ -48,7 +48,7 @@ template<typename NT, bool Q> struct NNUEWeights {
 #ifndef __ANDROID__
 #ifndef WITHOUT_FILESYSTEM
          std::error_code ec;
-         auto            fsize = std::filesystem::file_size(path, ec);
+         auto fsize = std::filesystem::file_size(path, ec);
          if (ec) {
             Logging::LogIt(Logging::logError) << "File " << path << " is not accessible";
             return false;
@@ -60,7 +60,7 @@ template<typename NT, bool Q> struct NNUEWeights {
 #endif
 #endif
          std::fstream stream(path, std::ios_base::in | std::ios_base::binary);
-         auto         ws = WeightsReader<NT>(stream);
+         auto ws = WeightsReader<NT>(stream);
          loadedWeights.load(ws, withVersion);
       }
 #ifdef EMBEDDEDNNUEPATH

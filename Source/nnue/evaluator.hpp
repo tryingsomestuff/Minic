@@ -9,13 +9,17 @@
 #include "sided.hpp"
 #include "weight.hpp"
 
-template<typename NT, bool Q> struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTransformer<NT, Q>> {
+template<typename NT, bool Q> 
+struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTransformer<NT, Q>> {
    // common data (weights and bias)
    static NNUEWeights<NT, Q> weights;
+
    // instance data (active index)
    FeatureTransformer<NT, Q> white;
    FeatureTransformer<NT, Q> black;
 
+   // status of the FeatureTransformers
+   // if dirty, then un update/reset is necessary
    bool dirty = true;
 
    static constexpr int nbuckets {NNUEWeights<NT, Q>::nbuckets};
@@ -64,12 +68,14 @@ template<typename NT, bool Q> struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTr
    }
 #endif
 
-   // default CTOR always use loaded weights
+   // default CTOR always use loaded weights in FeatureTransformer 
+   // (as pointer of course, not a copy)
    NNUEEval():
       white(&weights.w),
       black(&weights.b){}
 };
 
-template<typename NT, bool Q> NNUEWeights<NT, Q> NNUEEval<NT, Q>::weights;
+template<typename NT, bool Q> 
+NNUEWeights<NT, Q> NNUEEval<NT, Q>::weights;
 
 #endif // WITH_NNUE 

@@ -10,7 +10,7 @@ struct Position;
  */
 namespace KPK {
 
-#if !defined(ARDUINO) && !defined(ESP32)  
+#if !defined(WITH_SMALL_MEMORY)
 [[nodiscard]] Square normalizeSquare(const Position& p, const Color strongSide, const Square sq);
 
 enum kpk_result : uint8_t { kpk_invalid = 0, kpk_unknown = 1, kpk_draw = 2, kpk_win = 4 };

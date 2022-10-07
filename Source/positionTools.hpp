@@ -37,7 +37,7 @@ struct PerftAccumulator {
    }
 };
 
-#if !defined(ARDUINO) && !defined(ESP32)
+#if !defined(WITH_SMALL_MEMORY)
 namespace chess960 {
 extern const std::string positions[960];
 std::string getDFRCXFEN();

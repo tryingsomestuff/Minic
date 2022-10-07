@@ -16,16 +16,12 @@ template<typename T, typename U> struct Sided {
 
    template<Color c> returnType& us() {
       if constexpr (c == Co_White) { return cast().white; }
-      else {
-         return cast().black;
-      }
+      else { return cast().black; }
    }
 
    template<Color c> const returnType& us() const {
       if constexpr (c == Co_White) { return cast().white; }
-      else {
-         return cast().black;
-      }
+      else { return cast().black; }
    }
 
    template<Color c> returnType& them() { return us<them_<c>::value>(); }
