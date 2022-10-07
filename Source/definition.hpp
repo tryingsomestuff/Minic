@@ -346,21 +346,21 @@ inline array1d<const ScoreType* const,7> absValuesSEE_    = {&dummyScore,
 
 template<typename T> [[nodiscard]] inline constexpr int sgn(T val) { return (T(0) < val) - (val < T(0)); }
 
-inline const array1d<std::string,NbPiece> PieceNames = {"k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K"};
+inline constexpr array1d<std::string_view,NbPiece> PieceNames = {"k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K"};
 
 inline constexpr Square NbSquare = 64;
 
-inline const array1d<std::string,NbSquare> SquareNames = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
-                                                           "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
-                                                           "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
-                                                           "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
-                                                           "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
-                                                           "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
-                                                           "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
-                                                           "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" };
+inline constexpr array1d<std::string_view,NbSquare> SquareNames = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
+                                                                    "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
+                                                                    "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
+                                                                    "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
+                                                                    "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
+                                                                    "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
+                                                                    "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
+                                                                    "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" };
 
-inline const array1d<std::string,8> FileNames = {"a", "b", "c", "d", "e", "f", "g", "h"};
-inline const array1d<std::string,8> RankNames = {"1", "2", "3", "4", "5", "6", "7", "8"};
+inline constexpr array1d<std::string_view,8> FileNames = {"a", "b", "c", "d", "e", "f", "g", "h"};
+inline constexpr array1d<std::string_view,8> RankNames = {"1", "2", "3", "4", "5", "6", "7", "8"};
 
 enum Sq : uint8_t { Sq_a1  = 0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1,
                     Sq_a2,Sq_b2,Sq_c2,Sq_d2,Sq_e2,Sq_f2,Sq_g2,Sq_h2,
@@ -670,15 +670,3 @@ inline std::string toHexString(const uint32_t i) {
   s << "0x" << std::hex << i;
   return s.str();
 }
-
-/*
-
-static void escape(void* p){
-    asm volatile("" : : "g"(p) : "memory");
-}
-
-static void clobber(){
-    asm volatile("" : : : "memory");
-}
-
-*/

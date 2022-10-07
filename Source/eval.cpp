@@ -16,7 +16,7 @@ using namespace BB;
 
 template<Color C> inline void evalPawnPasser(const Position &p, BitBoard pieceBBiterator, EvalScore &score) {
    while (pieceBBiterator) {
-      const Square    k             = popBit(pieceBBiterator);
+      const Square    k = popBit(pieceBBiterator);
       const EvalScore kingNearBonus = (isValidSquare(p.king[C])  ? EvalConfig::kingNearPassedPawnSupport[chebyshevDistance(p.king[C], k)][ColorRank<C>(k)]  : 0) +
                                       (isValidSquare(p.king[~C]) ? EvalConfig::kingNearPassedPawnDefend[chebyshevDistance(p.king[~C], k)][ColorRank<~C>(k)] : 0);
       const bool unstoppable = (p.mat[~C][M_t] == 0) && ((chebyshevDistance(p.king[~C], PromotionSquare<C>(k)) - static_cast<int>(p.c != C)) >

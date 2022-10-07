@@ -294,31 +294,31 @@ struct RootPosition : public Position {
 };
 
 #ifdef WITH_NNUE
-   template<Color c> void updateNNUEEvaluator(NNUEEvaluator& nnueEvaluator, const Position::MoveInfo& moveInfo) {
-      START_TIMER
-      const Piece fromType = (Piece)std::abs(moveInfo.fromP);
-      const Piece toType = (Piece)std::abs(moveInfo.toP);
-      nnueEvaluator.template us<c>().erase(NNUEIndiceUs(moveInfo.king[c], moveInfo.from, fromType));
-      nnueEvaluator.template them<c>().erase(NNUEIndiceThem(moveInfo.king[~c], moveInfo.from, fromType));
-      if (isPromotion(moveInfo.type)) {
-         const Piece promPieceType = promShift(moveInfo.type);
-         nnueEvaluator.template us<c>().insert(NNUEIndiceUs(moveInfo.king[c], moveInfo.to, promPieceType));
-         nnueEvaluator.template them<c>().insert(NNUEIndiceThem(moveInfo.king[~c], moveInfo.to, promPieceType));
-      }
-      else {
-         nnueEvaluator.template us<c>().insert(NNUEIndiceUs(moveInfo.king[c], moveInfo.to, fromType));
-         nnueEvaluator.template them<c>().insert(NNUEIndiceThem(moveInfo.king[~c], moveInfo.to, fromType));
-      }
-      if (moveInfo.type == T_ep) {
-         const Square epSq = moveInfo.ep + (c == Co_White ? -8 : +8);
-         nnueEvaluator.template them<c>().erase(NNUEIndiceUs(moveInfo.king[~c], epSq, P_wp));
-         nnueEvaluator.template us<c>().erase(NNUEIndiceThem(moveInfo.king[c], epSq, P_wp));
-      }
-      else if (toType != P_none) {
-         nnueEvaluator.template them<c>().erase(NNUEIndiceUs(moveInfo.king[~c], moveInfo.to, toType));
-         nnueEvaluator.template us<c>().erase(NNUEIndiceThem(moveInfo.king[c], moveInfo.to, toType));
-      }
-      nnueEvaluator.dirty = false;
-      STOP_AND_SUM_TIMER(UpdateNNUE)
+template<Color c> void updateNNUEEvaluator(NNUEEvaluator& nnueEvaluator, const Position::MoveInfo& moveInfo) {
+   START_TIMER
+   const Piece fromType = (Piece)std::abs(moveInfo.fromP);
+   const Piece toType = (Piece)std::abs(moveInfo.toP);
+   nnueEvaluator.template us<c>().erase(NNUEIndiceUs(moveInfo.king[c], moveInfo.from, fromType));
+   nnueEvaluator.template them<c>().erase(NNUEIndiceThem(moveInfo.king[~c], moveInfo.from, fromType));
+   if (isPromotion(moveInfo.type)) {
+      const Piece promPieceType = promShift(moveInfo.type);
+      nnueEvaluator.template us<c>().insert(NNUEIndiceUs(moveInfo.king[c], moveInfo.to, promPieceType));
+      nnueEvaluator.template them<c>().insert(NNUEIndiceThem(moveInfo.king[~c], moveInfo.to, promPieceType));
    }
+   else {
+      nnueEvaluator.template us<c>().insert(NNUEIndiceUs(moveInfo.king[c], moveInfo.to, fromType));
+      nnueEvaluator.template them<c>().insert(NNUEIndiceThem(moveInfo.king[~c], moveInfo.to, fromType));
+   }
+   if (moveInfo.type == T_ep) {
+      const Square epSq = moveInfo.ep + (c == Co_White ? -8 : +8);
+      nnueEvaluator.template them<c>().erase(NNUEIndiceUs(moveInfo.king[~c], epSq, P_wp));
+      nnueEvaluator.template us<c>().erase(NNUEIndiceThem(moveInfo.king[c], epSq, P_wp));
+   }
+   else if (toType != P_none) {
+      nnueEvaluator.template them<c>().erase(NNUEIndiceUs(moveInfo.king[~c], moveInfo.to, toType));
+      nnueEvaluator.template us<c>().erase(NNUEIndiceThem(moveInfo.king[c], moveInfo.to, toType));
+   }
+   nnueEvaluator.dirty = false;
+   STOP_AND_SUM_TIMER(UpdateNNUE)
+}
 #endif

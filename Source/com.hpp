@@ -63,6 +63,6 @@ void stopPonder();
 
 void thinkAsync(const State givenState);
 
-[[nodiscard]] Move moveFromCOM(std::string mstr);
+[[nodiscard]] Move moveFromCOM(const std::string & mstr);
 
 } // namespace COM

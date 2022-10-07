@@ -63,7 +63,7 @@ bool receiveOppMove(const std::string& command) {
    COM::stop();
    const size_t p = command.find("usermove");
    if (p != std::string::npos) mstr = mstr.substr(p + 8);
-   Move m = COM::moveFromCOM(mstr);
+   const Move m = COM::moveFromCOM(mstr);
    if (m == INVALIDMOVE) return false;
    Logging::LogIt(Logging::logInfo) << "XBOARD applying move " << ToString(m);
    if (!COM::makeMove(m, false, "")) { // make move

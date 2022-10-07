@@ -15,7 +15,7 @@ namespace PieceTools {
    assert(isValidPiece(pp));
    return (Piece)std::abs(pp);
 }
-[[nodiscard]] inline std::string getName(const Position &p, const Square k) {
+[[nodiscard]] inline std::string_view getName(const Position &p, const Square k) {
    assert(isValidSquare(k));
    return PieceNames[getPieceIndex_(p, k)];
 }

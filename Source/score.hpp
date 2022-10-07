@@ -271,7 +271,7 @@ constexpr double bs[] = {-10.78187987, 77.22626799, -132.72201029, 122.54185402}
    // limit input ply and rescale
    const double m = std::min(256u, ply) / 64.0; // care! here ply not move
    const double a = (((WDL::as[0] * m + WDL::as[1]) * m + WDL::as[2]) * m) + WDL::as[3];
-   if (c == Co_White) return ScoreType(v - 2 * a);
+   if (c == Co_White) return static_cast<ScoreType>(v - 2 * a);
    else
       return static_cast<ScoreType>(v + 2 * a);
 }
