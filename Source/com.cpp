@@ -8,18 +8,18 @@
 
 namespace COM {
 
-Protocol          protocol;
-State             state;
-std::string       command;
-RootPosition      position;
-DepthType         depth;
+Protocol     protocol;
+State        state;
+std::string  command;
+RootPosition position;
+DepthType    depth;
 
 GameInfo gameInfo;
 
 GameInfo & GetGameInfo(){ return gameInfo; }
 
 #ifdef WITH_NNUE
-NNUEEvaluator     evaluator;
+NNUEEvaluator evaluator;
 #endif
 
 std::mutex mutex;
@@ -238,7 +238,7 @@ void thinkAsync(const COM::State givenState) {
    ThreadPool::instance().startSearch(d); // data is copied !
 }
 
-Move moveFromCOM(std::string mstr) { // copy string on purpose
+Move moveFromCOM(const std::string & mstr) {
    Square from  = INVALIDSQUARE;
    Square to    = INVALIDSQUARE;
    MType  mtype = T_std;

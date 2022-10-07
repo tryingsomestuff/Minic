@@ -64,7 +64,7 @@ struct KeyBase {
 std::vector<std::string> args;
 std::vector<KeyBase>     _keys;
 
-const std::string widgetXboardNames[w_max] = {"check", "string", "spin", "combo", "button"};
+constexpr array1d<std::string_view, w_max> widgetXboardNames = {"check", "string", "spin", "combo", "button"};
 
 KeyBase& GetKey(const std::string& key) {
    bool           keyFound = false;

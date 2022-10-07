@@ -68,7 +68,8 @@ std::string ToString(const Move& m, bool withScore) {
    }
    constexpr std::string_view promSuffixe[] = {"", "", "", "", "q", "r", "b", "n", "q", "r", "b", "n", "", "", "", ""};
    const std::string_view & prom = promSuffixe[Move2Type(m)];
-   return SquareNames[Move2From(m)] + SquareNames[Move2To(m)] + std::string(prom) + score;
+   ///@todo remove string CTOR here in C++26 ;-)
+   return std::string(SquareNames[Move2From(m)]) + std::string(SquareNames[Move2To(m)]) + std::string(prom) + score; 
 }
 
 std::string ToString(const PVList& moves) {

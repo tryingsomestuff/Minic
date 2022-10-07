@@ -364,7 +364,7 @@ bool isPseudoLegal(const Position& p, const Move m) { // validate TT move
 #endif
    START_TIMER
    if (!isValidMove(m)) PSEUDO_LEGAL_RETURN(false, -1)
-   const MType t             = Move2Type(m);
+   const MType t = Move2Type(m);
    if (!isValidMoveType(t)) PSEUDO_LEGAL_RETURN(false, -4)
    if (t == T_reserved) PSEUDO_LEGAL_RETURN(false, 3)
    const Square from = Move2From(m);
@@ -376,7 +376,7 @@ bool isPseudoLegal(const Position& p, const Move m) { // validate TT move
    const Piece toP = p.board_const(to);
    if ((toP > 0 && p.c == Co_White) || (toP < 0 && p.c == Co_Black)) PSEUDO_LEGAL_RETURN(false, 1)
    if ((Piece)std::abs(toP) == P_wk) PSEUDO_LEGAL_RETURN(false, 2)
-   const Piece fromPieceType = (Piece)std::abs(fromP);
+   const Piece fromPieceType = static_cast<Piece>(std::abs(fromP));
    if (toP == P_none && (isCapture(t) && t != T_ep)) PSEUDO_LEGAL_RETURN(false, 4)
    if (toP != P_none && !isCapture(t)) PSEUDO_LEGAL_RETURN(false, 5)
    if (t == T_ep && (p.ep == INVALIDSQUARE || fromPieceType != P_wp)) PSEUDO_LEGAL_RETURN(false, 6)

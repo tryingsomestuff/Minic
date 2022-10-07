@@ -127,7 +127,7 @@ template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveLis
       }
    }
    else {
-      BitBoard              pawnmoves      = emptyBitBoard;
+      BitBoard pawnmoves = emptyBitBoard;
       if (phase != GP_quiet) pawnmoves = BBTools::mask[from].pawnAttack[p.c] & ~myPieceBB & oppPieceBB;
       if (phase == GP_evasion) pawnmoves &= attacker;
       while (pawnmoves) {
