@@ -212,11 +212,10 @@ BitBoard computeAttacks(const int index, const BitBoard occ, const int delta) {
 BitBoard occupiedFromIndex(const int j, BitBoard mask) {
    BitBoard occ = emptyBitBoard;
    int      i   = 0;
-   while (mask) {
-      const int k = BB::popBit(mask);
+   BB::applyOn(mask, [&](const Square & k){
       if (j & SquareToBitboard(i)) occ |= (1ULL << k);
       ++i;
-   }
+   });
    return occ;
 }
 

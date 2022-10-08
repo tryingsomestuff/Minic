@@ -109,15 +109,10 @@ extern ScoreType                   kingAttTable[64];
 extern CONST_EVAL_TUNING ScoreType tempo;
 
 // from 0 to m with offset, translation and scale
-[[nodiscard]] inline double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f, double offset = 0.f) {
+[[nodiscard]] FORCE_FINLINE double sigmoid(double x, double m = 1.f, double trans = 0.f, double scale = 1.f, double offset = 0.f) {
    return m / (1 + std::exp((trans - x) / scale)) - offset;
 }
 
-inline void initEval() {
-   for (Square i = 0; i < NbSquare; i++) {
-      EvalConfig::kingAttTable[i] =
-          static_cast<ScoreType>(sigmoid(i, EvalConfig::kingAttMax, EvalConfig::kingAttTrans, EvalConfig::kingAttScale, EvalConfig::kingAttOffset));
-   }
-} // idea taken from Topple
+void initEval();
 
 } // namespace EvalConfig

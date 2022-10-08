@@ -10,7 +10,7 @@
 
 #ifdef __MINGW32__
 #define POPCOUNT(x) static_cast<int>(__builtin_popcountll(x))
-inline int bitScanForward(BitBoard bb) {
+FORCE_FINLINE int bitScanForward(BitBoard bb) {
    assert(isNotEmpty(bb));
    return __builtin_ctzll(bb);
 }
@@ -25,7 +25,7 @@ inline int bitScanForward(BitBoard bb) {
 #define swapbits(x)   (_byteswap_uint64(x))
 #define swapbits32(x) (_byteswap_ulong(x))
 #else // we are _WIN32 but not _WIN64
-inline int popcount(uint64_t b) {
+FORCE_FINLINE int popcount(uint64_t b) {
    b = (b & 0x5555555555555555LU) + (b >> 1 & 0x5555555555555555LU);
    b = (b & 0x3333333333333333LU) + (b >> 2 & 0x3333333333333333LU);
    b = b + (b >> 4) & 0x0F0F0F0F0F0F0F0FLU;
@@ -34,7 +34,7 @@ inline int popcount(uint64_t b) {
    b = b + (b >> 32) & 0x0000007F;
    return static_cast<int>(b);
 }
-inline const int index64[NbSquare] = {
+FORCE_FINLINE const int index64[NbSquare] = {
    0,  1, 48,  2, 57, 49, 28,  3,
    61, 58, 50, 42, 38, 29, 17,  4,
    62, 55, 59, 36, 53, 51, 43, 22,
@@ -44,7 +44,7 @@ inline const int index64[NbSquare] = {
    46, 26, 40, 15, 34, 20, 31, 10,
    25, 14, 19,  9, 13,  8,  7,  6
 };
-inline int bitScanForward(int64_t bb) {
+FORCE_FINLINE int bitScanForward(int64_t bb) {
    const uint64_t debruijn64 = 0x03f79d71b4cb0a89;
    assert(isNotEmpty(bb));
    return index64[((bb & -bb) * debruijn64) >> 58];
@@ -56,7 +56,7 @@ inline int bitScanForward(int64_t bb) {
 #endif // _WIN64
 #else  // _WIN32 (thus linux)
 #define POPCOUNT(x)   static_cast<int>(__builtin_popcountll(x))
-inline int bitScanForward(BitBoard bb) {
+FORCE_FINLINE int bitScanForward(BitBoard bb) {
    assert(isNotEmpty(bb));
    return __builtin_ctzll(bb);
 }
@@ -121,12 +121,12 @@ inline constexpr BitBoard centerFiles  = fileC | fileD | fileE | fileF;
 inline constexpr BitBoard kingSide     = fileE | fileF | fileG | fileH;
 inline constexpr BitBoard kingFlank[8] = {queenSide ^ fileD, queenSide, queenSide, centerFiles, centerFiles, kingSide, kingSide, kingSide ^ fileE};
 
-inline void _setBit  (BitBoard& b, const Square k) { b |= SquareToBitboard(k); }
-inline void _unSetBit(BitBoard& b, const Square k) { b &= ~SquareToBitboard(k); }
+FORCE_FINLINE void _setBit  (BitBoard& b, const Square k) { b |= SquareToBitboard(k); }
+FORCE_FINLINE void _unSetBit(BitBoard& b, const Square k) { b &= ~SquareToBitboard(k); }
 
-[[nodiscard]] inline ScoreType countBit(const BitBoard& b) { return ScoreType(POPCOUNT(b)); }
+[[nodiscard]] FORCE_FINLINE ScoreType countBit(const BitBoard& b) { return ScoreType(POPCOUNT(b)); }
 
-[[nodiscard]] inline Square popBit(BitBoard& b) {
+[[nodiscard]] FORCE_FINLINE Square popBit(BitBoard& b) {
    assert(isNotEmpty(b));
 #ifdef _WIN64
     unsigned long i = 0ull;
@@ -136,6 +136,14 @@ inline void _unSetBit(BitBoard& b, const Square k) { b &= ~SquareToBitboard(k); 
     bsf(b, i);
     b &= b - 1;
     return static_cast<Square>(i);
+}
+
+// This function **won't** consume the given bitboard as it is passed by copy !
+template<typename F>
+FORCE_FINLINE void applyOn(BitBoard b, const F f){
+   while(b){
+      f(popBit(b));
+   }
 }
 
 /*

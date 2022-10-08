@@ -25,26 +25,6 @@ My gcc (and clang) gives those macros for simd extension :
 #define __SSSE3__ 1
 */
 
-#if defined(_MSC_VER)
-#define DOT_INLINE __inline
-#elif defined(__GNUC__)
-#if defined(__STRICT_ANSI__)
-#define DOT_INLINE __inline__
-#else
-#define DOT_INLINE inline
-#endif
-#else
-#define DOT_INLINE
-#endif
-
-#ifdef _MSC_VER
-#define DOT_FINLINE static __forceinline
-#elif defined(__GNUC__)
-#define DOT_FINLINE static DOT_INLINE __attribute__((always_inline))
-#else
-#define DOT_FINLINE static
-#endif
-
 /** SSE **/
 #ifdef __SSE__
 #include <xmmintrin.h>
@@ -81,7 +61,7 @@ typedef __m512 v_f32_512;
 #define v_mul_f32_512    _mm512_mul_ps
 #define v_muladd_f32_512 _mm512_fmadd_ps
 
-DOT_FINLINE float v_sum_f32_256(__m256 a) {
+FORCE_FINLINE float v_sum_f32_256(__m256 a) {
    __m256 sum_halves = _mm256_hadd_ps(a, a);
    sum_halves        = _mm256_hadd_ps(sum_halves, sum_halves);
    const __m128 lo   = _mm256_castps256_ps128(sum_halves);
@@ -90,7 +70,7 @@ DOT_FINLINE float v_sum_f32_256(__m256 a) {
    return _mm_cvtss_f32(sum);
 }
 
-DOT_FINLINE float v_sum_f32_512(__m512 a) {
+FORCE_FINLINE float v_sum_f32_512(__m512 a) {
    const __m256 low  = _mm512_castps512_ps256(a);
    const __m256 high = _mm512_extractf32x8_ps(a,1);
    return v_sum_f32_256(low+high);
@@ -99,7 +79,7 @@ DOT_FINLINE float v_sum_f32_512(__m512 a) {
 #define v_load_f32_512(PTR) _mm512_load_ps((const __m512*)(PTR))
 #define v_zero_f32_512      _mm512_setzero_ps
 
-inline void Log512(const __m512 & value){
+FORCE_FINLINE void Log512(const __m512 & value){
     constexpr size_t n = sizeof(__m512) / sizeof(float);
     float buffer[n];
     _mm512_store_ps((void*)buffer, value);
@@ -148,10 +128,10 @@ typedef __m256 v_f32_256;
 #ifdef __FMA__
 #define v_muladd_f32_256 _mm256_fmadd_ps
 #else
-DOT_FINLINE __m256 v_muladd_f32_256(__m256 a, __m256 b, __m256 c) { return v_add_f32_256(v_mul_f32_256(a, b), c); }
+FORCE_FINLINE __m256 v_muladd_f32_256(__m256 a, __m256 b, __m256 c) { return v_add_f32_256(v_mul_f32_256(a, b), c); }
 #endif
 #ifndef V_SIMD_512
-DOT_FINLINE float v_sum_f32_256(__m256 a) {
+FORCE_FINLINE float v_sum_f32_256(__m256 a) {
    __m256 sum_halves = _mm256_hadd_ps(a, a);
    sum_halves        = _mm256_hadd_ps(sum_halves, sum_halves);
    const __m128 lo   = _mm256_castps256_ps128(sum_halves);
@@ -163,7 +143,7 @@ DOT_FINLINE float v_sum_f32_256(__m256 a) {
 #define v_load_f32_256 _mm256_load_ps
 #define v_zero_f32_256 _mm256_setzero_ps
 
-inline void Log256(const __m256 & value){
+FORCE_FINLINE void Log256(const __m256 & value){
     constexpr size_t n = sizeof(__m256) / sizeof(float);
     float buffer[n];
     _mm256_store_ps(buffer, value);
@@ -214,9 +194,9 @@ typedef __m128 v_f32_128;
 //#elif defined(__FMA4__)
 //#define v_muladd_f32_128 _mm_macc_ps
 #else
-DOT_FINLINE __m128 v_muladd_f32_128(__m128 a, __m128 b, __m128 c) { return v_add_f32_128(v_mul_f32_128(a, b), c); }
+FORCE_FINLINE __m128 v_muladd_f32_128(__m128 a, __m128 b, __m128 c) { return v_add_f32_128(v_mul_f32_128(a, b), c); }
 #endif
-DOT_FINLINE float v_sum_f32_128(__m128 a) {
+FORCE_FINLINE float v_sum_f32_128(__m128 a) {
 #ifdef __SSE3__
    const __m128 sum_halves = _mm_hadd_ps(a, a);
    return _mm_cvtss_f32(_mm_hadd_ps(sum_halves, sum_halves));
@@ -231,7 +211,7 @@ DOT_FINLINE float v_sum_f32_128(__m128 a) {
 #define v_load_f32_128 _mm_load_ps
 #define v_zero_f32_128 _mm_setzero_ps
 
-inline void Log128(const __m128 & value){
+FORCE_FINLINE void Log128(const __m128 & value){
     constexpr size_t n = sizeof(__m128) / sizeof(float);
     float buffer[n];
     _mm_store_ps(buffer, value);

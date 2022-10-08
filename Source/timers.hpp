@@ -47,6 +47,6 @@ void            Display();
 #define START_TIMER
 #define STOP_AND_SUM_TIMER(name)
 namespace Timers {
-inline void Display(){}
+FORCE_FINLINE void Display(){}
 }
 #endif

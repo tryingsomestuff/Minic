@@ -52,7 +52,7 @@ template<typename T> std::ostream& operator<<(std::ostream& os, const TuningPara
 
 double K = 3;
 
-inline double Sigmoid(double x) {
+FORCE_FINLINE double Sigmoid(double x) {
    return 1. / (1. + std::pow(10, -K * x / 400.));
 }
 

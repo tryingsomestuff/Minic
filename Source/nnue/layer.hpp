@@ -21,7 +21,8 @@ struct Layer {
    alignas(NNUEALIGNMENT) WT W[nbW];
    alignas(NNUEALIGNMENT) BT b[nbB];
 
-   template<typename T> CONSTEXPR StackVector<BT, dim1> forward(const StackVector<T, dim0>& x) const {
+   template<typename T> 
+   FORCE_FINLINE CONSTEXPR StackVector<BT, dim1> forward(const StackVector<T, dim0>& x) const {
       auto result = StackVector<BT, dim1>::from(b);
 #ifdef USE_SIMD_INTRIN
 #pragma omp simd

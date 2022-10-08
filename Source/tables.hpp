@@ -33,7 +33,7 @@ struct HistoryT {
 
    void initHistory();
 
-   template<int S> inline void update(DepthType depth, Move m, const Position& p, CMHPtrArray& cmhPtr) {
+   template<int S> FORCE_FINLINE void update(DepthType depth, Move m, const Position& p, CMHPtrArray& cmhPtr) {
       if (Move2Type(m) == T_std) {
          const Color  c    = p.c;
          const Square from = Move2From(m);
@@ -53,7 +53,7 @@ struct HistoryT {
       }
    }
 
-   template<int S> inline void updateCap(DepthType depth, Move m, const Position& p) {
+   template<int S> FORCE_FINLINE void updateCap(DepthType depth, Move m, const Position& p) {
       if (isCapture(m)) {
          const Square from = Move2From(m);
          assert(isValidSquare(from));

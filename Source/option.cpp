@@ -225,7 +225,7 @@ bool SetValue(const std::string& key, const std::string& val) {
 }
 
 template<typename C>
-inline void addOptions(C & coeff){
+void addOptions(C & coeff){
    for(size_t k = 0; k < coeff.N; ++k){
       _keys.push_back(KeyBase(k_depth, w_spin, coeff.getName(SearchConfig::CNT_minDepth,k), &coeff.minDepth[k]       , DepthType(0)     , DepthType(MAX_DEPTH)   ));
       _keys.push_back(KeyBase(k_depth, w_spin, coeff.getName(SearchConfig::CNT_maxdepth,k), &coeff.maxDepth[k]       , DepthType(0)     , DepthType(MAX_DEPTH)   ));

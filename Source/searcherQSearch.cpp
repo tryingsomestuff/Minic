@@ -46,7 +46,7 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Posi
    return bestScore;
 }
 
-inline ScoreType bestCapture(const Position &p){
+FORCE_FINLINE ScoreType bestCapture(const Position &p){
    return p.pieces_const(~p.c,P_wq) ? value(P_wq) : value(P_wr);
           /*p.pieces_const(~p.c,P_wr) ? value(P_wr) :
           p.pieces_const(~p.c,P_wb) ? value(P_wb) :
@@ -54,7 +54,7 @@ inline ScoreType bestCapture(const Position &p){
           p.pieces_const(~p.c,P_wp) ? value(P_wp) : 0;*/
 }
 
-inline ScoreType qDeltaMargin(const Position& p) {
+FORCE_FINLINE ScoreType qDeltaMargin(const Position& p) {
    const ScoreType delta = (p.pieces_const(p.c, P_wp) & BB::seventhRank[p.c]) ? value(P_wq) : value(P_wp);
    return delta + bestCapture(p);
 }

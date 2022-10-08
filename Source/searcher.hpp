@@ -38,14 +38,14 @@ struct Searcher {
 
    mutable Stats stats;
 
-   inline void updatePV(PVList& pv, const Move& m, const PVList& childPV) {
+   FORCE_FINLINE void updatePV(PVList& pv, const Move& m, const PVList& childPV) {
       stats.incr(Stats::sid_PVupdate);
       pv.clear();
       pv.push_back(m);
       std::copy(childPV.begin(), childPV.end(), std::back_inserter(pv));
    }
 
-   inline void displayStats() const {
+   void displayStats() const {
       for (size_t k = 0; k < Stats::sid_maxid; ++k) {
          Logging::LogIt(Logging::logInfo) << Stats::Names[k] << " " << stats.counters[(Stats::StatId)k];
       }
@@ -176,7 +176,7 @@ struct Searcher {
       EvalScore   score                  = {0, 0};
       colored<BitBoard>   danger         = {0, 0};
       MiniHash    h                      = nullHash;
-      inline void reset() {
+      FORCE_FINLINE void reset() {
          score            = {0, 0};
          danger[Co_White] = 0;
          danger[Co_Black] = 0;

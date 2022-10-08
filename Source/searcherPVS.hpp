@@ -19,7 +19,7 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
 
-inline void evalFeatures(const Position & p,
+FORCE_FINLINE void evalFeatures(const Position & p,
                          array2d<BitBoard,2,6> & attFromPiece,
                          colored<BitBoard>     & att,
                          colored<BitBoard>     & att2,
@@ -38,9 +38,7 @@ inline void evalFeatures(const Position & p,
 
    for (Color c = Co_White ; c <= Co_Black ; ++c){
       for (Piece pp = P_wp ; pp <= P_wk ; ++pp){
-         BitBoard pieceBBiterator = p.pieces_const(c,pp);
-         while (pieceBBiterator) {
-            const Square k  = BB::popBit(pieceBBiterator);
+         BB::applyOn(p.pieces_const(c,pp), [&](const Square & k) {
             // aligned threats removing own piece (not pawn) in occupancy
             const BitBoard shadowTarget = BBTools::pfCoverage[pp - 1](k, occupancy ^ nonPawnMat[c], c);
             if (shadowTarget) {
@@ -54,7 +52,7 @@ inline void evalFeatures(const Position & p,
                   kdanger[c] -= BB::countBit(target & kingZone[c]) * EvalConfig::kingAttWeight[EvalConfig::katt_defence][pp - 1];
                }
             }
-         }
+         });
       }
    }
 
@@ -110,7 +108,7 @@ inline void evalFeatures(const Position & p,
 #pragma GCC diagnostic pop
 
 // this function shall be used on the initial position state before move is applied
-[[nodiscard]] inline bool isNoisy(const Position & /*p*/, const Move & m){
+[[nodiscard]] FORCE_FINLINE bool isNoisy(const Position & /*p*/, const Move & m){
    return Move2Type(m) != T_std;
    /*
    if ( Move2Type(m) != T_std ) return true;
@@ -130,7 +128,7 @@ inline void evalFeatures(const Position & p,
    */
 }
 
-inline void Searcher::timeCheck(){
+FORCE_FINLINE void Searcher::timeCheck(){
    static uint64_t periodicCheck = 0ull; ///@todo this is slow because of guard variable
    if (periodicCheck == 0ull) {
       periodicCheck = (TimeMan::maxNodes > 0) ? std::min(TimeMan::maxNodes, PERIODICCHECK) : PERIODICCHECK;
