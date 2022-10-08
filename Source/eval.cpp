@@ -14,7 +14,8 @@ using namespace BB; // to mouch of it ...
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
 
-template<Color C> FORCE_FINLINE void evalPawnPasser(const Position &p, BitBoard pieceBBiterator, EvalScore &score) {
+template<Color C>
+FORCE_FINLINE void evalPawnPasser(const Position &p, BitBoard pieceBBiterator, EvalScore &score) {
    applyOn(pieceBBiterator, [&](const Square & k){
       const EvalScore kingNearBonus = (isValidSquare(p.king[C])  ? EvalConfig::kingNearPassedPawnSupport[chebyshevDistance(p.king[C], k)][ColorRank<C>(k)]  : 0) +
                                       (isValidSquare(p.king[~C]) ? EvalConfig::kingNearPassedPawnDefend[chebyshevDistance(p.king[~C], k)][ColorRank<~C>(k)] : 0);
@@ -27,31 +28,36 @@ template<Color C> FORCE_FINLINE void evalPawnPasser(const Position &p, BitBoard 
    });
 }
 
-template<Color C> FORCE_FINLINE void evalPawn(BitBoard pieceBBiterator, EvalScore &score) {
+template<Color C>
+FORCE_FINLINE void evalPawn(BitBoard pieceBBiterator, EvalScore &score) {
    applyOn(pieceBBiterator, [&](const Square & k){
       score += EvalConfig::PST[0][k] * ColorSignHelper<C>();
    });
 }
 
-template<Color C> FORCE_FINLINE void evalPawnFreePasser(const Position &p, BitBoard pieceBBiterator, EvalScore &score) {
+template<Color C>
+FORCE_FINLINE void evalPawnFreePasser(const Position &p, BitBoard pieceBBiterator, EvalScore &score) {
    applyOn(pieceBBiterator, [&](const Square & k){
       score += EvalConfig::freePasserBonus[ColorRank<C>(k)] * ScoreType((BBTools::frontSpan<C>(k) & p.allPieces[~C]) == emptyBitBoard) * ColorSignHelper<C>();
    });
 }
 
-template<Color C> FORCE_FINLINE void evalPawnProtected(BitBoard pieceBBiterator, EvalScore &score) {
+template<Color C>
+FORCE_FINLINE void evalPawnProtected(BitBoard pieceBBiterator, EvalScore &score) {
    applyOn(pieceBBiterator, [&](const Square & k){
       score += EvalConfig::protectedPasserBonus[ColorRank<C>(k)] * ColorSignHelper<C>(); 
    });
 }
 
-template<Color C> FORCE_FINLINE void evalPawnCandidate(BitBoard pieceBBiterator, EvalScore &score) {
+template<Color C>
+FORCE_FINLINE void evalPawnCandidate(BitBoard pieceBBiterator, EvalScore &score) {
    applyOn(pieceBBiterator, [&](const Square & k){
       score += EvalConfig::candidate[ColorRank<C>(k)] * ColorSignHelper<C>(); 
    });
 }
 
-template<Color C> BitBoard getPinned(const Position &p, const Square s) {
+template<Color C> 
+BitBoard getPinned(const Position &p, const Square s) {
    BitBoard pinned = emptyBitBoard;
    if (!isValidSquare(s)) return pinned;
    const BitBoard pinner = BBTools::attack<P_wb>(s, p.pieces_const<P_wb>(~C) | p.pieces_const<P_wq>(~C), p.allPieces[~C]) |
@@ -89,6 +95,7 @@ ScoreType variantScore(ScoreType score, unsigned int ply, DepthType height, Colo
    return score;
 }
 
+// if antichess, we'll just try to minimize material for now
 ScoreType evalAntiChess(const Position &p, EvalData &data, [[maybe_unused]] Searcher &context, [[maybe_unused]] bool allowEGEvaluation, [[maybe_unused]] bool display) {
     const bool white2Play = p.c == Co_White;
 
@@ -146,13 +153,13 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    if (DynamicConfig::antichess) return evalAntiChess(p, data, context, allowEGEvaluation, display);
    ///@todo other variants
 
+   // in some variant (like antichess) king is not mandatory
    const bool kingIsMandatory = DynamicConfig::isKingMandatory();
 
-   ///@todo shall it be replaced by interiorNodeRecognizer for factorization ?
    // if no more pieces except maybe kings, end of game as draw in most standard variants
    if ( (p.occupancy() & ~p.allKing()) == emptyBitBoard ){
       if (kingIsMandatory ){ 
-         // drawScore take some variants into account
+         // drawScore take some variants into account like armageddon
          return context.drawScore(p, context._height);
       }
       else{
@@ -160,6 +167,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       }
    }
 
+   // is it player with the white pieces turn ?
    const bool white2Play = p.c == Co_White;
 
 #ifdef DEBUG_KING_CAP
@@ -177,9 +185,9 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    }
 #endif
 
-   ///@todo activate (or modulate!) features based on skill level
+   ///@todo activate (or modulate) some features based on skill level
 
-   // main features (feature won't survive Eval scope), EvalData will !
+   // main features (feature won't survive Eval scope), but EvalData will !
    EvalFeatures features;
 
    // Material evaluation (most often from Material table)
@@ -350,13 +358,14 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    colored<ScoreType> kdanger = {0, 0};
    colored<BitBoard>  att     = {emptyBitBoard, emptyBitBoard}; // bitboard of squares attacked by Color
    colored<BitBoard>  att2    = {emptyBitBoard, emptyBitBoard}; // bitboard of squares attacked twice by Color
-   array2d<BitBoard,2,6>  attFromPiece = {{emptyBitBoard}};              // bitboard of squares attacked by specific piece of Color
-   array2d<BitBoard,2,6>  checkers     = {{emptyBitBoard}};              // bitboard of Color pieces squares attacking king
+   array2d<BitBoard,2,6>  attFromPiece = {{emptyBitBoard}};     // bitboard of squares attacked by specific piece of Color
+   array2d<BitBoard,2,6>  checkers     = {{emptyBitBoard}};     // bitboard of Color pieces squares attacking king
 
    // PST, attack, danger
    const bool withForwadness = DynamicConfig::styleForwardness != 50;
    const ScoreType staticColorSignHelper[2] = { +1, -1};
    for (Color c = Co_White ; c <= Co_Black ; ++c){
+      // will do pawns later
       for (Piece pp = P_wn ; pp <= P_wk ; ++pp){
          applyOn(p.pieces_const(c,pp), [&](const Square & k){
             const Square kk = relative_square(~c,k);
@@ -409,11 +418,11 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       pe.holes[Co_Black]         = BBTools::pawnHoles<Co_Black>(pawns[Co_Black]) & holesZone[Co_White];
       pe.openFiles               = BBTools::openFiles(pawns[Co_White], pawns[Co_Black]);
 
-      // PST, attack
+      // PST
       evalPawn<Co_White>(pawns[Co_White], pe.score);
       evalPawn<Co_Black>(pawns[Co_Black], pe.score);
 
-      // danger in king zone
+      // danger in king zone (from pawns attacking or defending)
       pe.danger[Co_White] -= countBit(pe.pawnTargets[Co_White] & kingZone[Co_White]) * EvalConfig::kingAttWeight[EvalConfig::katt_defence][0];
       pe.danger[Co_White] += countBit(pe.pawnTargets[Co_Black] & kingZone[Co_White]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][0];
       pe.danger[Co_Black] -= countBit(pe.pawnTargets[Co_Black] & kingZone[Co_Black]) * EvalConfig::kingAttWeight[EvalConfig::katt_defence][0];
@@ -426,11 +435,11 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       // pawn protected
       evalPawnProtected<Co_White>(pe.passed[Co_White] & pe.pawnTargets[Co_White], pe.score);
       evalPawnProtected<Co_Black>(pe.passed[Co_Black] & pe.pawnTargets[Co_Black], pe.score);
+
       // pawn candidate
-      const BitBoard candidates[2] = {BBTools::pawnCandidates<Co_White>(pawns[Co_White], pawns[Co_Black]),
-                                      BBTools::pawnCandidates<Co_Black>(pawns[Co_Black], pawns[Co_White])};
-      evalPawnCandidate<Co_White>(candidates[Co_White], pe.score);
-      evalPawnCandidate<Co_Black>(candidates[Co_Black], pe.score);
+      evalPawnCandidate<Co_White>(BBTools::pawnCandidates<Co_White>(pawns[Co_White], pawns[Co_Black]), pe.score);
+      evalPawnCandidate<Co_Black>(BBTools::pawnCandidates<Co_Black>(pawns[Co_Black], pawns[Co_White]), pe.score);
+      
       ///@todo hidden passed
 
       // bad pawns
@@ -488,22 +497,26 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
          pe.score += EvalConfig::detachedPawn[7 - r][EvalConfig::SemiOpen] * countBit(detachedOpenB & ranks[r]);
       }
 
-      // pawn shield (PST and king troppism alone is not enough)
+      // pawn impact on king safety (PST and king troppism alone is not enough)
       if (kingIsMandatory){
+        // pawn shield
         const BitBoard kingShield[2] = {kingZone[Co_White] & ~BBTools::shiftS<Co_White>(ranks[SQRANK(p.king[Co_White])]),
                                         kingZone[Co_Black] & ~BBTools::shiftS<Co_Black>(ranks[SQRANK(p.king[Co_Black])])};
-        const int      pawnShieldW   = countBit(kingShield[Co_White] & pawns[Co_White]);
-        const int      pawnShieldB   = countBit(kingShield[Co_Black] & pawns[Co_Black]);
+        const int pawnShieldW = countBit(kingShield[Co_White] & pawns[Co_White]);
+        const int pawnShieldB = countBit(kingShield[Co_Black] & pawns[Co_Black]);
         pe.score += EvalConfig::pawnShieldBonus * std::min(pawnShieldW * pawnShieldW, 9);
         pe.score -= EvalConfig::pawnShieldBonus * std::min(pawnShieldB * pawnShieldB, 9);
+        
         // malus for king on a pawnless flank
         const File wkf = (File)SQFILE(p.king[Co_White]);
         const File bkf = (File)SQFILE(p.king[Co_Black]);
         if (!(pawns[Co_White] & kingFlank[wkf])) pe.score += EvalConfig::pawnlessFlank;
         if (!(pawns[Co_Black] & kingFlank[bkf])) pe.score -= EvalConfig::pawnlessFlank;
+        
         // pawn storm
         pe.score -= EvalConfig::pawnStormMalus * countBit(kingFlank[wkf] & (rank3 | rank4) & pawns[Co_Black]);
         pe.score += EvalConfig::pawnStormMalus * countBit(kingFlank[bkf] & (rank5 | rank6) & pawns[Co_White]);
+        
         // open file near king
         pe.danger[Co_White] += EvalConfig::kingAttOpenfile * countBit(kingFlank[wkf] & pe.openFiles) / 8;
         pe.danger[Co_White] += EvalConfig::kingAttSemiOpenfileOpp * countBit(kingFlank[wkf] & pe.semiOpenFiles[Co_White]) / 8;
@@ -511,7 +524,8 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
         pe.danger[Co_Black] += EvalConfig::kingAttOpenfile * countBit(kingFlank[bkf] & pe.openFiles) / 8;
         pe.danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOpp * countBit(kingFlank[bkf] & pe.semiOpenFiles[Co_Black]) / 8;
         pe.danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * countBit(kingFlank[bkf] & pe.semiOpenFiles[Co_White]) / 8;
-        // Fawn
+        
+        // fawn (mostly for fun ...)
         pe.score -= EvalConfig::pawnFawnMalusKS *
                     (countBit((pawns[Co_White] & (BBSq_h2 | BBSq_g3)) | (pawns[Co_Black] & BBSq_h3) | (kings[Co_White] & kingSide)) / 4);
         pe.score += EvalConfig::pawnFawnMalusKS *
@@ -523,13 +537,14 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       }
 
       context.stats.incr(Stats::sid_ttPawnInsert);
-      pe.h = Hash64to32(computePHash(p)); // set the pawn entry
+      pe.h = Hash64to32(computePHash(p)); // this associate the pawn entry to the current K&P positions
    }
    assert(pePtr);
-   const Searcher::PawnEntry &pe = *pePtr;
+   const Searcher::PawnEntry &pe = *pePtr; // let's use a ref instead of a pointer
+   // add computed or hash score for pawn structure
    features.scores[F_pawnStruct] += pe.score;
 
-   // update global things with pawn entry stuff
+   // update global things with freshy gotten pawn entry stuff
    kdanger[Co_White] += pe.danger[Co_White];
    kdanger[Co_Black] += pe.danger[Co_Black];
    checkers[Co_White][0] = BBTools::pawnAttacks<Co_Black>(kings[Co_Black]) & pawns[Co_White];
@@ -654,6 +669,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    applyOn(targetThreat, [&](const Square & k){
       features.scores[F_attack] -= EvalConfig::threatByMinor[PieceTools::getPieceType(p, k) - 1];
    });
+
    // threats by rook
    targetThreat = p.allPieces[Co_White] & weakSquare[Co_White] & attFromPiece[Co_Black][P_wr - 1];
    applyOn(targetThreat, [&](const Square & k){
@@ -663,6 +679,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    applyOn(targetThreat, [&](const Square & k){
       features.scores[F_attack] -= EvalConfig::threatByRook[PieceTools::getPieceType(p, k) - 1];
    });
+
    // threats by queen
    targetThreat = p.allPieces[Co_White] & weakSquare[Co_White] & attFromPiece[Co_Black][P_wq - 1];
    applyOn(targetThreat, [&](const Square & k){
@@ -672,6 +689,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    applyOn(targetThreat, [&](const Square & k){
       features.scores[F_attack] -= EvalConfig::threatByQueen[PieceTools::getPieceType(p, k) - 1];
    });
+
    // threats by king
    targetThreat = p.allPieces[Co_White] & weakSquare[Co_White] & attFromPiece[Co_Black][P_wk - 1];
    applyOn(targetThreat, [&](const Square & k){
@@ -777,19 +795,19 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
 
    // complexity
    // an "anti human" trick : winning side wants to keep the position more complex
-   features.scores[F_complexity] +=
-       EvalScore {1, 0} * (white2Play ? +1 : -1) * (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] + (p.mat[Co_White][M_p] + p.mat[Co_Black][M_p]) / 2);
+   features.scores[F_complexity] += EvalScore {1, 0} * (white2Play ? +1 : -1) * 
+                                    (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] + (p.mat[Co_White][M_p] + p.mat[Co_Black][M_p]) / 2);
 
    if (display) displayEval(data, features);
 
    // taking Style into account, giving each score a [0..2] factor
-   features.scores[F_material]    = features.scores[F_material]   .scale(1 + (DynamicConfig::styleMaterial - 50) / 50.f, 1.f);
-   features.scores[F_positional]  = features.scores[F_positional] .scale(1 + (DynamicConfig::stylePositional - 50) / 50.f, 1.f);
+   features.scores[F_material]    = features.scores[F_material]   .scale(1 + (DynamicConfig::styleMaterial    - 50) / 50.f, 1.f);
+   features.scores[F_positional]  = features.scores[F_positional] .scale(1 + (DynamicConfig::stylePositional  - 50) / 50.f, 1.f);
    features.scores[F_development] = features.scores[F_development].scale(1 + (DynamicConfig::styleDevelopment - 50) / 50.f, 1.f);
-   features.scores[F_mobility]    = features.scores[F_mobility]   .scale(1 + (DynamicConfig::styleMobility - 50) / 50.f, 1.f);
-   features.scores[F_pawnStruct]  = features.scores[F_pawnStruct] .scale(1 + (DynamicConfig::stylePawnStruct - 50) / 50.f, 1.f);
-   features.scores[F_attack]      = features.scores[F_attack]     .scale(1 + (DynamicConfig::styleAttack - 50) / 50.f, 1.f);
-   features.scores[F_complexity]  = features.scores[F_complexity] .scale((DynamicConfig::styleComplexity - 50) / 50.f, 0.f);
+   features.scores[F_mobility]    = features.scores[F_mobility]   .scale(1 + (DynamicConfig::styleMobility    - 50) / 50.f, 1.f);
+   features.scores[F_pawnStruct]  = features.scores[F_pawnStruct] .scale(1 + (DynamicConfig::stylePawnStruct  - 50) / 50.f, 1.f);
+   features.scores[F_attack]      = features.scores[F_attack]     .scale(1 + (DynamicConfig::styleAttack      - 50) / 50.f, 1.f);
+   features.scores[F_complexity]  = features.scores[F_complexity] .scale((DynamicConfig::styleComplexity      - 50) / 50.f, 0.f);
 
    // sum every score contribution
    EvalScore score = features.SumUp();
@@ -828,6 +846,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    // compute a scale factor in some other end-game cases that are not using the material table:
    if (features.scalingFactor == 1.f && !DynamicConfig::armageddon) {
       const Color strongSide = score[EG] > 0 ? Co_White : Co_Black;
+      
       // opposite colored bishops (scale based on passed pawn of strong side)
       if (p.mat[Co_White][M_b] == 1 && p.mat[Co_Black][M_b] == 1 && countBit(p.allBishop() & whiteSquare) == 1) {
          if (p.mat[Co_White][M_t] == 1 && p.mat[Co_Black][M_t] == 1) // only bishops and pawn
@@ -837,11 +856,13 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
             features.scalingFactor =
                 (EvalConfig::scalingFactorOppBishop + EvalConfig::scalingFactorOppBishopSlope * countBit(p.allPieces[strongSide])) / 128.f;
       }
+      
       // queen versus no queen (scale on number of minor of no queen side)
       else if (countBit(p.allQueen()) == 1) {
          features.scalingFactor =
              (EvalConfig::scalingFactorQueenNoQueen + EvalConfig::scalingFactorQueenNoQueenSlope * p.mat[p.whiteQueen() ? Co_Black : Co_White][M_m]) / 128.f;
       }
+      
       // scale based on the number of pawn of strong side
       else
          features.scalingFactor =
