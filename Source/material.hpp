@@ -63,8 +63,8 @@ struct MaterialHashEntry {
    EvalScore    score = {0, 0};
    uint8_t      gp    = 255;
    Terminaison  t     = Ter_Unknown;
-   inline float gamePhase() const { return gp / 255.f; }
-   inline void  setGamePhase(float gpf) { gp = (uint8_t)(255 * gpf); }
+   FORCE_FINLINE float gamePhase() const { return gp / 255.f; }
+   FORCE_FINLINE void  setGamePhase(float gpf) { gp = (uint8_t)(255 * gpf); }
 };
 #pragma pack(pop)
 

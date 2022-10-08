@@ -195,9 +195,9 @@ struct Stats {
    array1d<Counter, sid_maxid> counters;
 
 #ifdef WITH_STATS
-   inline void incr(StatId id) { ++counters[id]; }
+   FORCE_FINLINE void incr(StatId id) { ++counters[id]; }
 #else
-   inline void incr(StatId) {}
+   FORCE_FINLINE void incr(StatId) {}
 #endif
 
    void init() {

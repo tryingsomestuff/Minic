@@ -208,4 +208,11 @@ ScoreType kingAttTable[64] = {0};
 
 CONST_EVAL_TUNING ScoreType tempo = {15};
 
+void initEval() {
+   for (Square i = 0; i < NbSquare; i++) {
+      EvalConfig::kingAttTable[i] =
+          static_cast<ScoreType>(sigmoid(i, EvalConfig::kingAttMax, EvalConfig::kingAttTrans, EvalConfig::kingAttScale, EvalConfig::kingAttOffset));
+   }
+} // idea taken from Topple
+
 } // EvalConfig

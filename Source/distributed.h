@@ -86,46 +86,46 @@ template<> struct TraitMpiType<Move>      { static constexpr MPI_Datatype type =
 
 void checkError(int err);
 
-template<typename T> inline void bcast(T* v, int n, MPI_Comm& com) {
+template<typename T> FORCE_FINLINE void bcast(T* v, int n, MPI_Comm& com) {
    if (!moreThanOneProcess()) return;
    checkError(MPI_Bcast(v, n, TraitMpiType<T>::type, 0, com));
 }
 
-template<typename T> inline void asyncBcast(T* v, int n, MPI_Request& req, MPI_Comm& com) {
+template<typename T> FORCE_FINLINE void asyncBcast(T* v, int n, MPI_Request& req, MPI_Comm& com) {
    if (!moreThanOneProcess()) return;
    checkError(MPI_Ibcast(v, n, TraitMpiType<T>::type, 0, com, &req));
 }
 
-template<typename T> inline void allReduceSum(T* local, T* global, int n, MPI_Comm& com) {
+template<typename T> FORCE_FINLINE void allReduceSum(T* local, T* global, int n, MPI_Comm& com) {
    if (!moreThanOneProcess()) return;
    checkError(MPI_Allreduce(local, global, n, TraitMpiType<T>::type, MPI_SUM, com));
 }
 
-template<typename T> inline void allReduceMax(T* local, T* global, int n, MPI_Comm& com) {
+template<typename T> FORCE_FINLINE void allReduceMax(T* local, T* global, int n, MPI_Comm& com) {
    if (!moreThanOneProcess()) return;
    checkError(MPI_Allreduce(local, global, n, TraitMpiType<T>::type, MPI_MAX, com));
 }
 
-template<typename T> inline void asyncAllReduceSum(T* local, T* global, int n, MPI_Request& req, MPI_Comm& com) {
+template<typename T> FORCE_FINLINE void asyncAllReduceSum(T* local, T* global, int n, MPI_Request& req, MPI_Comm& com) {
    if (!moreThanOneProcess()) return;
    checkError(MPI_Iallreduce(local, global, n, TraitMpiType<T>::type, MPI_SUM, com, &req));
 }
 
-template<typename T> inline void put(T* ptr, int n, MPI_Win& window, int target, MPI_Request & req) {
+template<typename T> FORCE_FINLINE void put(T* ptr, int n, MPI_Win& window, int target, MPI_Request & req) {
    if (!moreThanOneProcess()) return;
    Logging::LogIt(Logging::logInfo) << "Window put... ";
    checkError(MPI_Rput(ptr, n, TraitMpiType<T>::type, target, MPI_Aint(0), n, TraitMpiType<T>::type, window, &req));
    Logging::LogIt(Logging::logInfo) << "... ok";
 }
 
-template<typename T> inline void get(T* ptr, int n, MPI_Win& window, int source, MPI_Request & req) {
+template<typename T> FORCE_FINLINE void get(T* ptr, int n, MPI_Win& window, int source, MPI_Request & req) {
    if (!moreThanOneProcess()) return;
    Logging::LogIt(Logging::logInfo) << "Window get... ";
    checkError(MPI_Rget(ptr, n, TraitMpiType<T>::type, source, MPI_Aint(0), n, TraitMpiType<T>::type, window, &req));
    Logging::LogIt(Logging::logInfo) << "... ok";
 }
 
-template<typename T> inline void putMainToAll(T* ptr, int n, MPI_Win& window) {
+template<typename T> FORCE_FINLINE void putMainToAll(T* ptr, int n, MPI_Win& window) {
    if (!moreThanOneProcess()) return;
    checkError(MPI_Win_lock_all(0, window));
    for (int r = 1; r < worldSize; ++r) { put(ptr, n, window, r); }
@@ -133,12 +133,12 @@ template<typename T> inline void putMainToAll(T* ptr, int n, MPI_Win& window) {
    checkError(MPI_Win_unlock_all(window));
 }
 
-template<typename T> inline void asyncAllGather(T* inptr, T* outptr, int n, MPI_Request& req, MPI_Comm& com) {
+template<typename T> FORCE_FINLINE void asyncAllGather(T* inptr, T* outptr, int n, MPI_Request& req, MPI_Comm& com) {
    if (!moreThanOneProcess()) return;
    checkError(MPI_Iallgather(inptr, n, TraitMpiType<T>::type, outptr, n, TraitMpiType<T>::type, com, &req));
 }
 
-inline void winFence(MPI_Win& window, const std::string & msg = "") {
+FORCE_FINLINE void winFence(MPI_Win& window, const std::string & msg = "") {
    if (!moreThanOneProcess()) return;
    Logging::LogIt(Logging::logInfo) << "Window fence... " + msg;
    checkError(MPI_Win_fence(0, window));
@@ -185,38 +185,38 @@ extern DummyType _requestStopToR0;
 extern DummyType _winStopFromR0;
 extern DummyType _winStopToR0;
 
-inline void checkError(int) {}
+FORCE_FINLINE void checkError(int) {}
 
-inline void init() {}
-inline void lateInit() {}
-inline void finalize() {}
+FORCE_FINLINE void init() {}
+FORCE_FINLINE void lateInit() {}
+FORCE_FINLINE void finalize() {}
 
-[[nodiscard]] inline bool isMainProcess() { return true; }
-[[nodiscard]] inline bool moreThanOneProcess() { return false; }
+[[nodiscard]] FORCE_FINLINE bool isMainProcess() { return true; }
+[[nodiscard]] FORCE_FINLINE bool moreThanOneProcess() { return false; }
 
-inline void sync(DummyType &, const std::string &) {}
+FORCE_FINLINE void sync(DummyType &, const std::string &) {}
 
-template<typename T> inline void asyncBcast(T *, int, DummyType &, DummyType &) {}
+template<typename T> FORCE_FINLINE void asyncBcast(T *, int, DummyType &, DummyType &) {}
 
-template<typename T> inline void putMainToAll(T *, int, DummyType &) {}
+template<typename T> FORCE_FINLINE void putMainToAll(T *, int, DummyType &) {}
 
-template<typename T> inline void get(T *, int, DummyType &, int, DummyType &) {}
-template<typename T> inline void put(T *, int, DummyType &, int, DummyType &) {}
+template<typename T> FORCE_FINLINE void get(T *, int, DummyType &, int, DummyType &) {}
+template<typename T> FORCE_FINLINE void put(T *, int, DummyType &, int, DummyType &) {}
 
-inline void waitRequest(DummyType &) {}
+FORCE_FINLINE void waitRequest(DummyType &) {}
 
-inline void winFence(DummyType &, const std::string & ) {}
+FORCE_FINLINE void winFence(DummyType &, const std::string & ) {}
 
-inline void initStat() {}
-inline void sendStat() {}
-inline void pollStat() {}
-inline void syncStat() {}
-inline void showStat() {}
+FORCE_FINLINE void initStat() {}
+FORCE_FINLINE void sendStat() {}
+FORCE_FINLINE void pollStat() {}
+FORCE_FINLINE void syncStat() {}
+FORCE_FINLINE void showStat() {}
 
 [[nodiscard]] Counter counter(Stats::StatId id);
 
-inline void setEntry(const Hash, const TT::Entry &) {}
-inline void syncTT() {}
+FORCE_FINLINE void setEntry(const Hash, const TT::Entry &) {}
+FORCE_FINLINE void syncTT() {}
 
 } // namespace Distributed
 #endif

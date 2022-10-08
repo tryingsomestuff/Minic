@@ -223,20 +223,19 @@ bool applyMove(Position& p, const Position::MoveInfo & moveInfo, const bool noNN
       if (pp == P_none) continue;
       BitBoard       b  = p.pieces_const(pp);
       const BitBoard bb = b;
-      while (b) {
+      applyOn(b, [&](const Square & k){ {
          ++count_bb2;
-         const Square s = BB::popBit(b);
-         if (p.board_const(s) != pp) {
-            Logging::LogIt(Logging::logWarn) << SquareNames[s];
+         if (p.board_const(k) != pp) {
+            Logging::LogIt(Logging::logWarn) << SquareNames[k];
             Logging::LogIt(Logging::logWarn) << ToString(p);
             Logging::LogIt(Logging::logWarn) << ToString(bb);
             Logging::LogIt(Logging::logWarn) << static_cast<int>(pp);
-            Logging::LogIt(Logging::logWarn) << static_cast<int>(p.board_const(s));
+            Logging::LogIt(Logging::logWarn) << static_cast<int>(p.board_const(k));
             Logging::LogIt(Logging::logWarn) << "last move " << ToString(p.lastMove);
             Logging::LogIt(Logging::logWarn) << " current move " << ToString(moveInfo.m);
             Logging::LogIt(Logging::logFatal) << "Wrong bitboard ";
          }
-      }
+      });
    }
    if (count_bb1 != count_bb2) {
       Logging::LogIt(Logging::logFatal) << "Wrong bitboard count (all/piece)" << count_bb1 << " " << count_bb2;

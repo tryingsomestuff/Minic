@@ -19,17 +19,17 @@ struct FeatureTransformer {
 
    constexpr StackVector<BIT, firstInnerLayerSize> active() const { return active_; }
 
-   void clear() {
+   FORCE_FINLINE void clear() {
       assert(weights_);
       active_ = StackVector<BIT, firstInnerLayerSize>::from(weights_->b);
    }
 
-   void insert(const size_t idx) {
+   FORCE_FINLINE void insert(const size_t idx) {
       assert(weights_);
       weights_->insertIdx(idx, active_);
    }
 
-   void erase(const size_t idx) {
+   FORCE_FINLINE void erase(const size_t idx) {
       assert(weights_);
       weights_->eraseIdx(idx, active_);
    }

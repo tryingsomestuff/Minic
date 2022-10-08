@@ -25,12 +25,12 @@ struct InputLayer {
    // bias can be statically allocated 
    alignas(NNUEALIGNMENT) typename Quantization<Q>::BIT b[nbB];
 
-   void insertIdx(const size_t idx, StackVector<BIT, nbB>& x) const {
+   FORCE_FINLINE void insertIdx(const size_t idx, StackVector<BIT, nbB>& x) const {
       const WIT* wPtr = W + idx * dim1;
       x.add_(wPtr);
    }
 
-   void eraseIdx(const size_t idx, StackVector<BIT, nbB>& x) const {
+   FORCE_FINLINE void eraseIdx(const size_t idx, StackVector<BIT, nbB>& x) const {
       const WIT* wPtr = W + idx * dim1;
       x.sub_(wPtr);
    }

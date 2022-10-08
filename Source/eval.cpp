@@ -9,14 +9,13 @@
 #include "searcher.hpp"
 #include "timers.hpp"
 
-using namespace BB;
+using namespace BB; // to mouch of it ...
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
 
-template<Color C> inline void evalPawnPasser(const Position &p, BitBoard pieceBBiterator, EvalScore &score) {
-   while (pieceBBiterator) {
-      const Square    k = popBit(pieceBBiterator);
+template<Color C> FORCE_FINLINE void evalPawnPasser(const Position &p, BitBoard pieceBBiterator, EvalScore &score) {
+   applyOn(pieceBBiterator, [&](const Square & k){
       const EvalScore kingNearBonus = (isValidSquare(p.king[C])  ? EvalConfig::kingNearPassedPawnSupport[chebyshevDistance(p.king[C], k)][ColorRank<C>(k)]  : 0) +
                                       (isValidSquare(p.king[~C]) ? EvalConfig::kingNearPassedPawnDefend[chebyshevDistance(p.king[~C], k)][ColorRank<~C>(k)] : 0);
       const bool unstoppable = (p.mat[~C][M_t] == 0) && ((chebyshevDistance(p.king[~C], PromotionSquare<C>(k)) - static_cast<int>(p.c != C)) >
@@ -25,38 +24,41 @@ template<Color C> inline void evalPawnPasser(const Position &p, BitBoard pieceBB
          score += ColorSignHelper<C>() * (value(P_wr) - value(P_wp)); // yes rook not queen to force promotion asap
       else
          score += (EvalConfig::passerBonus[ColorRank<C>(k)] + kingNearBonus) * ColorSignHelper<C>();
-   }
+   });
 }
 
-template<Color C> inline void evalPawn(BitBoard pieceBBiterator, EvalScore &score) {
-   while (pieceBBiterator) {
-      const Square kk = ColorSquarePstHelper<C>(popBit(pieceBBiterator));
-      score += EvalConfig::PST[0][kk] * ColorSignHelper<C>();
-   }
+template<Color C> FORCE_FINLINE void evalPawn(BitBoard pieceBBiterator, EvalScore &score) {
+   applyOn(pieceBBiterator, [&](const Square & k){
+      score += EvalConfig::PST[0][k] * ColorSignHelper<C>();
+   });
 }
 
-template<Color C> inline void evalPawnFreePasser(const Position &p, BitBoard pieceBBiterator, EvalScore &score) {
-   while (pieceBBiterator) {
-      const Square k = popBit(pieceBBiterator);
-      score += EvalConfig::freePasserBonus[ColorRank<C>(k)] * ScoreType((BBTools::frontSpan<C>(k) & p.allPieces[~C]) == emptyBitBoard) *
-               ColorSignHelper<C>();
-   }
+template<Color C> FORCE_FINLINE void evalPawnFreePasser(const Position &p, BitBoard pieceBBiterator, EvalScore &score) {
+   applyOn(pieceBBiterator, [&](const Square & k){
+      score += EvalConfig::freePasserBonus[ColorRank<C>(k)] * ScoreType((BBTools::frontSpan<C>(k) & p.allPieces[~C]) == emptyBitBoard) * ColorSignHelper<C>();
+   });
 }
 
-template<Color C> inline void evalPawnProtected(BitBoard pieceBBiterator, EvalScore &score) {
-   while (pieceBBiterator) { score += EvalConfig::protectedPasserBonus[ColorRank<C>(popBit(pieceBBiterator))] * ColorSignHelper<C>(); }
+template<Color C> FORCE_FINLINE void evalPawnProtected(BitBoard pieceBBiterator, EvalScore &score) {
+   applyOn(pieceBBiterator, [&](const Square & k){
+      score += EvalConfig::protectedPasserBonus[ColorRank<C>(k)] * ColorSignHelper<C>(); 
+   });
 }
 
-template<Color C> inline void evalPawnCandidate(BitBoard pieceBBiterator, EvalScore &score) {
-   while (pieceBBiterator) { score += EvalConfig::candidate[ColorRank<C>(popBit(pieceBBiterator))] * ColorSignHelper<C>(); }
+template<Color C> FORCE_FINLINE void evalPawnCandidate(BitBoard pieceBBiterator, EvalScore &score) {
+   applyOn(pieceBBiterator, [&](const Square & k){
+      score += EvalConfig::candidate[ColorRank<C>(k)] * ColorSignHelper<C>(); 
+   });
 }
 
 template<Color C> BitBoard getPinned(const Position &p, const Square s) {
    BitBoard pinned = emptyBitBoard;
    if (!isValidSquare(s)) return pinned;
-   BitBoard pinner = BBTools::attack<P_wb>(s, p.pieces_const<P_wb>(~C) | p.pieces_const<P_wq>(~C), p.allPieces[~C]) |
-                     BBTools::attack<P_wr>(s, p.pieces_const<P_wr>(~C) | p.pieces_const<P_wq>(~C), p.allPieces[~C]);
-   while (pinner) { pinned |= BBTools::between(popBit(pinner),p.king[C]) & p.allPieces[C]; }
+   const BitBoard pinner = BBTools::attack<P_wb>(s, p.pieces_const<P_wb>(~C) | p.pieces_const<P_wq>(~C), p.allPieces[~C]) |
+                           BBTools::attack<P_wr>(s, p.pieces_const<P_wr>(~C) | p.pieces_const<P_wq>(~C), p.allPieces[~C]);
+   applyOn(pinner, [&](const Square & k){
+      pinned |= BBTools::between(k,p.king[C]) & p.allPieces[C]; 
+   });
    return pinned;
 }
 
@@ -356,9 +358,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    const ScoreType staticColorSignHelper[2] = { +1, -1};
    for (Color c = Co_White ; c <= Co_Black ; ++c){
       for (Piece pp = P_wn ; pp <= P_wk ; ++pp){
-         BitBoard pieceBBiterator = p.pieces_const(c,pp);
-         while (pieceBBiterator) {
-            const Square k  = popBit(pieceBBiterator);
+         applyOn(p.pieces_const(c,pp), [&](const Square & k){
             const Square kk = relative_square(~c,k);
             features.scores[F_positional] += EvalConfig::PST[pp - 1][kk] * staticColorSignHelper[c];
             if (withForwadness)
@@ -376,7 +376,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
                   kdanger[c] -= countBit(target & kingZone[c]) * EvalConfig::kingAttWeight[EvalConfig::katt_defence][pp - 1];
                }
             }
-         }
+         });
       }
    }
 
@@ -592,10 +592,12 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
 
    // pawn in front of own minor
    const BitBoard minor[2] = {knights[Co_White] | bishops[Co_White], knights[Co_Black] | bishops[Co_Black]};
-   BitBoard       wpminor  = BBTools::shiftS<Co_White>(pawns[Co_White]) & minor[Co_White];
-   while (wpminor) { features.scores[F_development] += EvalConfig::pawnFrontMinor[ColorRank<Co_White>(popBit(wpminor))]; }
-   BitBoard bpminor = BBTools::shiftS<Co_Black>(pawns[Co_Black]) & minor[Co_Black];
-   while (bpminor) { features.scores[F_development] -= EvalConfig::pawnFrontMinor[ColorRank<Co_Black>(popBit(bpminor))]; }
+   applyOn(BBTools::shiftS<Co_White>(pawns[Co_White]) & minor[Co_White], [&](const Square & k){ 
+      features.scores[F_development] += EvalConfig::pawnFrontMinor[ColorRank<Co_White>(k)]; 
+   });
+   applyOn(BBTools::shiftS<Co_Black>(pawns[Co_Black]) & minor[Co_Black], [&](const Square & k){
+      features.scores[F_development] -= EvalConfig::pawnFrontMinor[ColorRank<Co_Black>(k)]; 
+   });
 
    // center control
    features.scores[F_development] += EvalConfig::centerControl * countBit(protectedSquare[Co_White] & extendedCenter);
@@ -629,18 +631,14 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
 
    // knight far from both kings gets a penalty
    if (kingIsMandatory){
-    BitBoard knight = knights[Co_White];
-    while (knight) {
-        const Square knighSq = popBit(knight);
+    applyOn(knights[Co_White], [&](const Square & knighSq){
         features.scores[F_positional] +=
             EvalConfig::knightTooFar[std::min(chebyshevDistance(p.king[Co_White], knighSq), chebyshevDistance(p.king[Co_Black], knighSq))];
-    }
-    knight = knights[Co_Black];
-    while (knight) {
-        const Square knighSq = popBit(knight);
+    });
+    applyOn(knights[Co_Black], [&](const Square & knighSq){
         features.scores[F_positional] -=
             EvalConfig::knightTooFar[std::min(chebyshevDistance(p.king[Co_White], knighSq), chebyshevDistance(p.king[Co_Black], knighSq))];
-    }
+    });
    }
 
    // number of hanging pieces
@@ -649,24 +647,40 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
 
    // threats by minor
    BitBoard targetThreat = (nonPawnMat[Co_White] | (pawns[Co_White] & weakSquare[Co_White])) & (attFromPiece[Co_Black][P_wn - 1] | attFromPiece[Co_Black][P_wb - 1]);
-   while (targetThreat) features.scores[F_attack] += EvalConfig::threatByMinor[PieceTools::getPieceType(p, popBit(targetThreat)) - 1];
+   applyOn(targetThreat, [&](const Square & k){
+      features.scores[F_attack] += EvalConfig::threatByMinor[PieceTools::getPieceType(p, k) - 1];
+   });
    targetThreat = (nonPawnMat[Co_Black] | (pawns[Co_Black] & weakSquare[Co_Black])) & (attFromPiece[Co_White][P_wn - 1] | attFromPiece[Co_White][P_wb - 1]);
-   while (targetThreat) features.scores[F_attack] -= EvalConfig::threatByMinor[PieceTools::getPieceType(p, popBit(targetThreat)) - 1];
+   applyOn(targetThreat, [&](const Square & k){
+      features.scores[F_attack] -= EvalConfig::threatByMinor[PieceTools::getPieceType(p, k) - 1];
+   });
    // threats by rook
    targetThreat = p.allPieces[Co_White] & weakSquare[Co_White] & attFromPiece[Co_Black][P_wr - 1];
-   while (targetThreat) features.scores[F_attack] += EvalConfig::threatByRook[PieceTools::getPieceType(p, popBit(targetThreat)) - 1];
+   applyOn(targetThreat, [&](const Square & k){
+      features.scores[F_attack] += EvalConfig::threatByRook[PieceTools::getPieceType(p, k) - 1];
+   });
    targetThreat = p.allPieces[Co_Black] & weakSquare[Co_Black] & attFromPiece[Co_White][P_wr - 1];
-   while (targetThreat) features.scores[F_attack] -= EvalConfig::threatByRook[PieceTools::getPieceType(p, popBit(targetThreat)) - 1];
+   applyOn(targetThreat, [&](const Square & k){
+      features.scores[F_attack] -= EvalConfig::threatByRook[PieceTools::getPieceType(p, k) - 1];
+   });
    // threats by queen
    targetThreat = p.allPieces[Co_White] & weakSquare[Co_White] & attFromPiece[Co_Black][P_wq - 1];
-   while (targetThreat) features.scores[F_attack] += EvalConfig::threatByQueen[PieceTools::getPieceType(p, popBit(targetThreat)) - 1];
+   applyOn(targetThreat, [&](const Square & k){
+      features.scores[F_attack] += EvalConfig::threatByQueen[PieceTools::getPieceType(p, k) - 1];
+   });
    targetThreat = p.allPieces[Co_Black] & weakSquare[Co_Black] & attFromPiece[Co_White][P_wq - 1];
-   while (targetThreat) features.scores[F_attack] -= EvalConfig::threatByQueen[PieceTools::getPieceType(p, popBit(targetThreat)) - 1];
+   applyOn(targetThreat, [&](const Square & k){
+      features.scores[F_attack] -= EvalConfig::threatByQueen[PieceTools::getPieceType(p, k) - 1];
+   });
    // threats by king
    targetThreat = p.allPieces[Co_White] & weakSquare[Co_White] & attFromPiece[Co_Black][P_wk - 1];
-   while (targetThreat) features.scores[F_attack] += EvalConfig::threatByKing[PieceTools::getPieceType(p, popBit(targetThreat)) - 1];
+   applyOn(targetThreat, [&](const Square & k){
+      features.scores[F_attack] += EvalConfig::threatByKing[PieceTools::getPieceType(p, k) - 1];
+   });
    targetThreat = p.allPieces[Co_Black] & weakSquare[Co_Black] & attFromPiece[Co_White][P_wk - 1];
-   while (targetThreat) features.scores[F_attack] -= EvalConfig::threatByKing[PieceTools::getPieceType(p, popBit(targetThreat)) - 1];
+   applyOn(targetThreat, [&](const Square & k){
+      features.scores[F_attack] -= EvalConfig::threatByKing[PieceTools::getPieceType(p, k) - 1];
+   });
 
    // threat by safe pawn
    const BitBoard safePawnAtt[2] = {nonPawnMat[Co_Black] & BBTools::pawnAttacks<Co_White>(pawns[Co_White] & safeSquare[Co_White]),

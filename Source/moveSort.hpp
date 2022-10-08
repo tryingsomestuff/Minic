@@ -12,7 +12,7 @@
  * */
 
 struct MoveSortOperator {
-   inline constexpr bool operator()(const Move& a, const Move& b) const {
+   FORCE_FINLINE constexpr bool operator()(const Move& a, const Move& b) const {
       assert(a != INVALIDMOVE);
       assert(b != INVALIDMOVE);
       return Move2Score(a) > Move2Score(b);

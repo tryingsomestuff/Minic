@@ -25,7 +25,7 @@ struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTransformer<NT, Q>> {
    static constexpr int nbuckets {NNUEWeights<NT, Q>::nbuckets};
    static constexpr int bucketDivisor {NNUEWeights<NT, Q>::bucketDivisor};
 
-   void clear() {
+   FORCE_FINLINE void clear() {
       dirty = true;
       white.clear();
       black.clear();
@@ -33,7 +33,7 @@ struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTransformer<NT, Q>> {
 
    typedef typename Quantization<Q>::BT BT;
 
-   constexpr float propagate(Color c, const int npiece) const {
+   FORCE_FINLINE constexpr float propagate(Color c, const int npiece) const {
       assert(!dirty);
       const auto & w_x {white.active()};
       const auto & b_x {black.active()};

@@ -26,3 +26,15 @@ void EvalFeatures::callBack() {
    DynamicConfig::stylized |= DynamicConfig::stylePawnStruct  != 50;
    DynamicConfig::stylized |= DynamicConfig::styleForwardness != 50;
 }
+
+void displayEval(const EvalData& data, const EvalFeatures& features) {
+   Logging::LogIt(Logging::logInfo) << "Game phase    " << data.gp;
+   Logging::LogIt(Logging::logInfo) << "ScalingFactor " << features.scalingFactor;
+   Logging::LogIt(Logging::logInfo) << "Material      " << features.scores[F_material];
+   Logging::LogIt(Logging::logInfo) << "Positional    " << features.scores[F_positional];
+   Logging::LogIt(Logging::logInfo) << "Development   " << features.scores[F_development];
+   Logging::LogIt(Logging::logInfo) << "Mobility      " << features.scores[F_mobility];
+   Logging::LogIt(Logging::logInfo) << "Pawn          " << features.scores[F_pawnStruct];
+   Logging::LogIt(Logging::logInfo) << "Attack        " << features.scores[F_attack];
+   Logging::LogIt(Logging::logInfo) << "Complexity    " << features.scores[F_complexity];
+}

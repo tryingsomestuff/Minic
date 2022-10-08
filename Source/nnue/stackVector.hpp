@@ -9,21 +9,21 @@ struct StackVector {
    alignas(NNUEALIGNMENT) T data[dim];
 
    template<typename F> 
-   CONSTEXPR StackVector<T, dim>& apply_(F&& f) {
+   FORCE_FINLINE CONSTEXPR StackVector<T, dim>& apply_(F&& f) {
 #pragma omp simd
       for (size_t i = 0; i < dim; ++i) { data[i] = f(data[i]); }
       return *this;
    }
 
    template<typename T2> 
-   CONSTEXPR StackVector<T, dim>& add_(const T2* other) {
+   FORCE_FINLINE CONSTEXPR StackVector<T, dim>& add_(const T2* other) {
 #pragma omp simd
       for (size_t i = 0; i < dim; ++i) { data[i] += other[i]; }
       return *this;
    }
 
    template<typename T2> 
-   CONSTEXPR StackVector<T, dim>& sub_(const T2* other) {
+   FORCE_FINLINE CONSTEXPR StackVector<T, dim>& sub_(const T2* other) {
 #pragma omp simd
       for (size_t i = 0; i < dim; ++i) { data[i] -= other[i]; }
       return *this;
@@ -41,7 +41,7 @@ struct StackVector {
 #endif
 
    template<typename T2> 
-   static CONSTEXPR StackVector<T, dim> from(const T2* data) {
+   FORCE_FINLINE static CONSTEXPR StackVector<T, dim> from(const T2* data) {
       StackVector<T, dim> result;
 #pragma omp simd
       for (size_t i = 0; i < dim; ++i) { result.data[i] = T(data[i]); }
@@ -50,7 +50,7 @@ struct StackVector {
 
   // note that quantization is done on read if needed (see weightReader)
   template <typename U> 
-  CONSTEXPR StackVector<U, dim> dequantize(const U& scale) const {
+  FORCE_FINLINE CONSTEXPR StackVector<U, dim> dequantize(const U& scale) const {
     static_assert(std::is_integral_v<T> && std::is_floating_point_v<U>);
     StackVector<U, dim> result;
 #pragma omp simd
@@ -84,7 +84,7 @@ struct StackVector {
 };
 
 template<typename T, size_t dim0, size_t dim1>
-CONSTEXPR StackVector<T, dim0 + dim1> splice(const StackVector<T, dim0>& a, const StackVector<T, dim1>& b) {
+FORCE_FINLINE CONSTEXPR StackVector<T, dim0 + dim1> splice(const StackVector<T, dim0>& a, const StackVector<T, dim1>& b) {
    StackVector<T, dim0 + dim1> c;
 #pragma omp simd
    for (size_t i = 0; i < dim0; ++i) { c.data[i] = a.data[i]; }
@@ -94,7 +94,7 @@ CONSTEXPR StackVector<T, dim0 + dim1> splice(const StackVector<T, dim0>& a, cons
 }
 
 template<typename T, size_t dim> 
-std::ostream& operator<<(std::ostream& ostr, const StackVector<T, dim>& vec) {
+inline std::ostream& operator<<(std::ostream& ostr, const StackVector<T, dim>& vec) {
    static_assert(dim != 0, "can't stream empty vector.");
    ostr << "StackVector<T, " << dim << ">([";
    for (size_t i = 0; i < (dim - 1); ++i) { ostr << vec.data[i] << ", "; }

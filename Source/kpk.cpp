@@ -8,8 +8,8 @@ namespace KPK {
 
 #if !defined(WITH_SMALL_MEMORY)
 namespace {
-uint32_t           KPKBitbase[KPK::KPKmaxIndex / 32];               // force 32bit uint
-inline unsigned    KPKindex(Color us, Square bksq, Square wksq, Square psq) {
+uint32_t KPKBitbase[KPK::KPKmaxIndex / 32];               // force 32bit uint
+FORCE_FINLINE unsigned KPKindex(Color us, Square bksq, Square wksq, Square psq) {
    return wksq | (bksq << 6) | (us << 12) | (SQFILE(psq) << 13) | ((6 - SQRANK(psq)) << 15);
 }
 } // namespace
@@ -47,8 +47,7 @@ template<Color Us> kpk_result KPKPosition::preCompute(const array1d<KPKPosition,
    constexpr kpk_result good = (Us == Co_White ? kpk_win : kpk_draw);
    constexpr kpk_result bad  = (Us == Co_White ? kpk_draw : kpk_win);
    kpk_result r = kpk_invalid;
-   BitBoard b = BBTools::mask[ksq[us]].king;
-   while (b) { r |= (Us == Co_White ? db[KPKindex(Them, ksq[Them], BB::popBit(b), psq)] : db[KPKindex(Them, BB::popBit(b), ksq[Them], psq)]); }
+   BB::applyOn(BBTools::mask[ksq[us]].king, [&](const Square & k){ r |= (Us == Co_White ? db[KPKindex(Them, ksq[Them], k, psq)] : db[KPKindex(Them, k, ksq[Them], psq)]); });
    if (Us == Co_White) {
       if (SQRANK(psq) < 6) r |= db[KPKindex(Them, ksq[Them], ksq[Us], psq + 8)];
       if (SQRANK(psq) == 1 && psq + 8 != ksq[Us] && psq + 8 != ksq[Them]) r |= db[KPKindex(Them, ksq[Them], ksq[Us], psq + 8 + 8)];

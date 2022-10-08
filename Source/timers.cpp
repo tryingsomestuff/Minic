@@ -6,7 +6,7 @@
 
 #ifdef _WIN32
 #include <intrin.h>
-inline uint64_t rdtsc() { return __rdtsc(); }
+FORCE_FINLINE uint64_t rdtsc() { return __rdtsc(); }
 #else
 uint64_t rdtsc() {
    unsigned int lo, hi;

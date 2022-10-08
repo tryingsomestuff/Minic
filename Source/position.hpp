@@ -7,11 +7,11 @@
 #ifdef WITH_NNUE
 #include "nnue.hpp"
 
-[[nodiscard]] static inline constexpr size_t NNUEIndiceUs(const Square ksq, const Square s, const Piece p) {
+[[nodiscard]] static FORCE_FINLINE constexpr size_t NNUEIndiceUs(const Square ksq, const Square s, const Piece p) {
    return FeatureIdx::major * HFlip(ksq) + HFlip(s) + FeatureIdx::usOffset(p);
 }
 
-[[nodiscard]] static inline constexpr size_t NNUEIndiceThem(const Square ksq, const Square s, const Piece p) {
+[[nodiscard]] static FORCE_FINLINE constexpr size_t NNUEIndiceThem(const Square ksq, const Square s, const Piece p) {
    return FeatureIdx::major * HFlip(ksq) + HFlip(s) + FeatureIdx::themOffset(p);
 }
 #endif // WITH_NNUE
@@ -106,67 +106,67 @@ struct Position {
    }
 #endif
 
-   [[nodiscard]] inline RootInformation& rootInfo() {
+   [[nodiscard]] FORCE_FINLINE RootInformation& rootInfo() {
       assert(root);
       return *root;
    }
 
-   [[nodiscard]] inline const RootInformation& rootInfo() const {
+   [[nodiscard]] FORCE_FINLINE const RootInformation& rootInfo() const {
       assert(root);
       return *root;
    }
 
-   [[nodiscard]] inline const Piece& board_const(const Square k) const { return _b[k]; }
-   [[nodiscard]] inline Piece&       board      (const Square k)       { return _b[k]; }
+   [[nodiscard]] FORCE_FINLINE const Piece& board_const(const Square k) const { return _b[k]; }
+   [[nodiscard]] FORCE_FINLINE Piece&       board      (const Square k)       { return _b[k]; }
 
-   [[nodiscard]] inline BitBoard occupancy() const { return allPieces[Co_White] | allPieces[Co_Black]; }
+   [[nodiscard]] FORCE_FINLINE BitBoard occupancy() const { return allPieces[Co_White] | allPieces[Co_Black]; }
 
-   [[nodiscard]] inline BitBoard allKing()   const { return _allB[5]; }
-   [[nodiscard]] inline BitBoard allQueen()  const { return _allB[4]; }
-   [[nodiscard]] inline BitBoard allRook()   const { return _allB[3]; }
-   [[nodiscard]] inline BitBoard allBishop() const { return _allB[2]; }
-   [[nodiscard]] inline BitBoard allKnight() const { return _allB[1]; }
-   [[nodiscard]] inline BitBoard allPawn()   const { return _allB[0]; }
+   [[nodiscard]] FORCE_FINLINE BitBoard allKing()   const { return _allB[5]; }
+   [[nodiscard]] FORCE_FINLINE BitBoard allQueen()  const { return _allB[4]; }
+   [[nodiscard]] FORCE_FINLINE BitBoard allRook()   const { return _allB[3]; }
+   [[nodiscard]] FORCE_FINLINE BitBoard allBishop() const { return _allB[2]; }
+   [[nodiscard]] FORCE_FINLINE BitBoard allKnight() const { return _allB[1]; }
+   [[nodiscard]] FORCE_FINLINE BitBoard allPawn()   const { return _allB[0]; }
 
-   [[nodiscard]] inline BitBoard blackKing()   const { return _allB[5] & allPieces[Co_Black]; }
-   [[nodiscard]] inline BitBoard blackQueen()  const { return _allB[4] & allPieces[Co_Black]; }
-   [[nodiscard]] inline BitBoard blackRook()   const { return _allB[3] & allPieces[Co_Black]; }
-   [[nodiscard]] inline BitBoard blackBishop() const { return _allB[2] & allPieces[Co_Black]; }
-   [[nodiscard]] inline BitBoard blackKnight() const { return _allB[1] & allPieces[Co_Black]; }
-   [[nodiscard]] inline BitBoard blackPawn()   const { return _allB[0] & allPieces[Co_Black]; }
+   [[nodiscard]] FORCE_FINLINE BitBoard blackKing()   const { return _allB[5] & allPieces[Co_Black]; }
+   [[nodiscard]] FORCE_FINLINE BitBoard blackQueen()  const { return _allB[4] & allPieces[Co_Black]; }
+   [[nodiscard]] FORCE_FINLINE BitBoard blackRook()   const { return _allB[3] & allPieces[Co_Black]; }
+   [[nodiscard]] FORCE_FINLINE BitBoard blackBishop() const { return _allB[2] & allPieces[Co_Black]; }
+   [[nodiscard]] FORCE_FINLINE BitBoard blackKnight() const { return _allB[1] & allPieces[Co_Black]; }
+   [[nodiscard]] FORCE_FINLINE BitBoard blackPawn()   const { return _allB[0] & allPieces[Co_Black]; }
 
-   [[nodiscard]] inline BitBoard whitePawn()   const { return _allB[0] & allPieces[Co_White]; }
-   [[nodiscard]] inline BitBoard whiteKnight() const { return _allB[1] & allPieces[Co_White]; }
-   [[nodiscard]] inline BitBoard whiteBishop() const { return _allB[2] & allPieces[Co_White]; }
-   [[nodiscard]] inline BitBoard whiteRook()   const { return _allB[3] & allPieces[Co_White]; }
-   [[nodiscard]] inline BitBoard whiteQueen()  const { return _allB[4] & allPieces[Co_White]; }
-   [[nodiscard]] inline BitBoard whiteKing()   const { return _allB[5] & allPieces[Co_White]; }
+   [[nodiscard]] FORCE_FINLINE BitBoard whitePawn()   const { return _allB[0] & allPieces[Co_White]; }
+   [[nodiscard]] FORCE_FINLINE BitBoard whiteKnight() const { return _allB[1] & allPieces[Co_White]; }
+   [[nodiscard]] FORCE_FINLINE BitBoard whiteBishop() const { return _allB[2] & allPieces[Co_White]; }
+   [[nodiscard]] FORCE_FINLINE BitBoard whiteRook()   const { return _allB[3] & allPieces[Co_White]; }
+   [[nodiscard]] FORCE_FINLINE BitBoard whiteQueen()  const { return _allB[4] & allPieces[Co_White]; }
+   [[nodiscard]] FORCE_FINLINE BitBoard whiteKing()   const { return _allB[5] & allPieces[Co_White]; }
 
-   [[nodiscard]] inline BitBoard whiteLightBishop() const { return whiteBishop() & BB::whiteSquare; }
-   [[nodiscard]] inline BitBoard whiteDarkBishop()  const { return whiteBishop() & BB::blackSquare; }
-   [[nodiscard]] inline BitBoard blackLightBishop() const { return blackBishop() & BB::whiteSquare; }
-   [[nodiscard]] inline BitBoard blackDarkBishop()  const { return blackBishop() & BB::blackSquare; }
+   [[nodiscard]] FORCE_FINLINE BitBoard whiteLightBishop() const { return whiteBishop() & BB::whiteSquare; }
+   [[nodiscard]] FORCE_FINLINE BitBoard whiteDarkBishop()  const { return whiteBishop() & BB::blackSquare; }
+   [[nodiscard]] FORCE_FINLINE BitBoard blackLightBishop() const { return blackBishop() & BB::whiteSquare; }
+   [[nodiscard]] FORCE_FINLINE BitBoard blackDarkBishop()  const { return blackBishop() & BB::blackSquare; }
 
-   template<Piece pp> [[nodiscard]] inline BitBoard pieces_const(const Color cc) const {
+   template<Piece pp> [[nodiscard]] FORCE_FINLINE BitBoard pieces_const(const Color cc) const {
       assert(pp > P_none);
       assert(pp < P_end);
       assert(cc == Co_White || cc == Co_Black);
       return _allB[pp - 1] & allPieces[cc];
    }
-   [[nodiscard]] inline BitBoard pieces_const(const Color cc, const Piece pp) const {
+   [[nodiscard]] FORCE_FINLINE BitBoard pieces_const(const Color cc, const Piece pp) const {
       assert(pp > P_none);
       assert(pp < P_end);
       assert(cc == Co_White || cc == Co_Black);
       return _allB[pp - 1] & allPieces[cc];
    }
-   [[nodiscard]] inline BitBoard pieces_const(const Piece pp) const {
+   [[nodiscard]] FORCE_FINLINE BitBoard pieces_const(const Piece pp) const {
       assert(pp != P_none);
       assert(pp < P_end);
       assert(pp >= P_bk);
       return _allB[std::abs(pp) - 1] & allPieces[pp > 0 ? Co_White : Co_Black];
    }
    // next one is kinda "private"
-   [[nodiscard]] inline BitBoard& _pieces(const Piece pp) {
+   [[nodiscard]] FORCE_FINLINE BitBoard& _pieces(const Piece pp) {
       assert(pp != P_none);
       assert(pp < P_end);
       assert(pp >= P_bk);
@@ -227,31 +227,43 @@ struct Position {
    template<Color c> void resetNNUEIndices_(NNUEEvaluator& nnueEvaluator) const {
       using namespace FeatureIdx;
       //us
-      BitBoard usPawn = pieces_const<P_wp>(c);
-      while (usPawn) { nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c], BB::popBit(usPawn), P_wp)); }
-      BitBoard usKnight = pieces_const<P_wn>(c);
-      while (usKnight) { nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c], BB::popBit(usKnight), P_wn)); }
-      BitBoard usBishop = pieces_const<P_wb>(c);
-      while (usBishop) { nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c], BB::popBit(usBishop), P_wb)); }
-      BitBoard usRook = pieces_const<P_wr>(c);
-      while (usRook) { nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c], BB::popBit(usRook), P_wr)); }
-      BitBoard usQueen = pieces_const<P_wq>(c);
-      while (usQueen) { nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c], BB::popBit(usQueen), P_wq)); }
-      BitBoard usKing = pieces_const<P_wk>(c);
-      while (usKing) { nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c], BB::popBit(usKing), P_wk)); }
+      BB::applyOn(pieces_const<P_wp>(c), [&](const Square & k) {
+         nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c], k, P_wp)); 
+      });
+      BB::applyOn(pieces_const<P_wn>(c), [&](const Square & k) {
+         nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c], k, P_wn)); 
+      });
+      BB::applyOn(pieces_const<P_wb>(c), [&](const Square & k) {
+         nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c], k, P_wb)); 
+      });
+      BB::applyOn(pieces_const<P_wr>(c), [&](const Square & k) {
+         nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c], k, P_wr));
+      });
+      BB::applyOn(pieces_const<P_wq>(c), [&](const Square & k) {
+         nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c], k, P_wq)); 
+      });
+      BB::applyOn(pieces_const<P_wk>(c), [&](const Square & k) {
+         nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c], k, P_wk));
+      });
       //them
-      BitBoard themPawn = pieces_const<P_wp>(~c);
-      while (themPawn) { nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c], BB::popBit(themPawn), P_wp)); }
-      BitBoard themKnight = pieces_const<P_wn>(~c);
-      while (themKnight) { nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c], BB::popBit(themKnight), P_wn)); }
-      BitBoard themBishop = pieces_const<P_wb>(~c);
-      while (themBishop) { nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c], BB::popBit(themBishop), P_wb)); }
-      BitBoard themRook = pieces_const<P_wr>(~c);
-      while (themRook) { nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c], BB::popBit(themRook), P_wr)); }
-      BitBoard themQueen = pieces_const<P_wq>(~c);
-      while (themQueen) { nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c], BB::popBit(themQueen), P_wq)); }
-      BitBoard themKing = pieces_const<P_wk>(~c);
-      while (themKing) { nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c], BB::popBit(themKing), P_wk)); }
+      BB::applyOn(pieces_const<P_wp>(~c), [&](const Square & k) {
+         nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c], k, P_wp)); 
+      });
+      BB::applyOn(pieces_const<P_wn>(~c), [&](const Square & k) {
+         nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c], k, P_wn)); 
+      });
+      BB::applyOn(pieces_const<P_wb>(~c), [&](const Square & k) {
+         nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c], k, P_wb)); 
+      });
+      BB::applyOn(pieces_const<P_wr>(~c), [&](const Square & k) {
+         nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c], k, P_wr));
+      });
+      BB::applyOn(pieces_const<P_wq>(~c), [&](const Square & k) {
+         nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c], k, P_wq)); 
+      });
+      BB::applyOn(pieces_const<P_wk>(~c), [&](const Square & k) {
+         nnueEvaluator.template us<c>().insert(NNUEIndiceThem(king[c], k, P_wk));
+      });
    }
 
    void resetNNUEEvaluator(NNUEEvaluator& nnueEvaluator) const {

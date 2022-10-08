@@ -6,26 +6,26 @@
 struct Position;
 
 #ifdef DEBUG_EVALSYM
-[[nodiscard]] inline float fiftyMoveRuleScaling(const uint8_t ){
+[[nodiscard]] FORCE_FINLINE float fiftyMoveRuleScaling(const uint8_t ){
    return 1;
 }
-[[nodiscard]] inline float fiftyMoveRuleUnScaling(const uint8_t ){
+[[nodiscard]] FORCE_FINLINE float fiftyMoveRuleUnScaling(const uint8_t ){
    return 1;
 }
 #else
-[[nodiscard]] inline constexpr float fiftyMoveRuleScaling(const uint8_t fifty){
+[[nodiscard]] FORCE_FINLINE constexpr float fiftyMoveRuleScaling(const uint8_t fifty){
    return 1.f - fifty / 100.f;
 }
-[[nodiscard]] inline constexpr float fiftyMoveRuleUnScaling(const uint8_t fifty){
+[[nodiscard]] FORCE_FINLINE constexpr float fiftyMoveRuleUnScaling(const uint8_t fifty){
    return 1.f / fiftyMoveRuleScaling(fifty);
 }
 #endif
 
-[[nodiscard]] inline ScoreType fiftyScale(const ScoreType s, uint8_t fifty){
+[[nodiscard]] FORCE_FINLINE ScoreType fiftyScale(const ScoreType s, uint8_t fifty){
    return static_cast<ScoreType>(s * fiftyMoveRuleScaling(fifty));
 }
 
-[[nodiscard]] inline ScoreType fiftyUnScale(const ScoreType s, uint8_t fifty){
+[[nodiscard]] FORCE_FINLINE ScoreType fiftyUnScale(const ScoreType s, uint8_t fifty){
    return static_cast<ScoreType>(s * fiftyMoveRuleUnScaling(fifty));
 }
 
@@ -38,8 +38,8 @@ struct EvalScore {
    EvalScore(): sc {0, 0} {}
    EvalScore(const EvalScore& e): sc {e.sc[MG], e.sc[EG]} {}
 
-   inline ScoreType&       operator[](const GamePhase g) { return sc[g]; }
-   inline const ScoreType& operator[](const GamePhase g) const { return sc[g]; }
+   FORCE_FINLINE ScoreType&       operator[](const GamePhase g) { return sc[g]; }
+   FORCE_FINLINE const ScoreType& operator[](const GamePhase g) const { return sc[g]; }
 
    EvalScore& operator*=(const EvalScore& s) {
       for (GamePhase g = MG; g < GP_MAX; ++g) sc[g] *= s[g];
@@ -142,7 +142,7 @@ struct EvalScore {
    EvalScore(): sc {0} {}
    EvalScore(const EvalScore& s): sc {s.sc} {}
 
-   inline ScoreType operator[](GamePhase g) const { return g == MG ? MGScore(sc) : EGScore(sc); }
+   FORCE_FINLINE ScoreType operator[](GamePhase g) const { return g == MG ? MGScore(sc) : EGScore(sc); }
 
    EvalScore& operator*=(const EvalScore& s) {
       sc = MakeScore(MGScore(sc) * MGScore(s.sc), EGScore(sc) * EGScore(s.sc));
@@ -198,7 +198,7 @@ inline std::ostream& operator<<(std::ostream& of, const EvalScore& s) {
 }
 
 enum Feature : uint8_t { F_material = 0, F_positional, F_development, F_mobility, F_attack, F_pawnStruct, F_complexity, F_max };
-inline Feature operator++(Feature& f) {
+FORCE_FINLINE Feature operator++(Feature& f) {
    f = Feature(f + 1);
    return f;
 }
@@ -217,7 +217,7 @@ inline std::ostream & operator<<(std::ostream & of, const EvalFeatures & feature
 }
 */
 
-[[nodiscard]] inline ScoreType ScaleScore(const EvalScore s, const float gp, const float scalingFactorEG = 1.f) {
+[[nodiscard]] FORCE_FINLINE ScoreType ScaleScore(const EvalScore s, const float gp, const float scalingFactorEG = 1.f) {
    return static_cast<ScoreType>(gp * s[MG] + (1.f - gp) * scalingFactorEG * s[EG]);
 }
 
@@ -248,17 +248,7 @@ struct MultiPVScores {
    DepthType seldepth;
 };
 
-inline void displayEval(const EvalData& data, const EvalFeatures& features) {
-   Logging::LogIt(Logging::logInfo) << "Game phase    " << data.gp;
-   Logging::LogIt(Logging::logInfo) << "ScalingFactor " << features.scalingFactor;
-   Logging::LogIt(Logging::logInfo) << "Material      " << features.scores[F_material];
-   Logging::LogIt(Logging::logInfo) << "Positional    " << features.scores[F_positional];
-   Logging::LogIt(Logging::logInfo) << "Development   " << features.scores[F_development];
-   Logging::LogIt(Logging::logInfo) << "Mobility      " << features.scores[F_mobility];
-   Logging::LogIt(Logging::logInfo) << "Pawn          " << features.scores[F_pawnStruct];
-   Logging::LogIt(Logging::logInfo) << "Attack        " << features.scores[F_attack];
-   Logging::LogIt(Logging::logInfo) << "Complexity    " << features.scores[F_complexity];
-}
+void displayEval(const EvalData& data, const EvalFeatures& features);
 
 // idea from Stockfish
 namespace WDL {
@@ -267,7 +257,7 @@ constexpr double as[] = {-13.65744616, 94.04894005, -95.05180396, 84.853482690};
 constexpr double bs[] = {-10.78187987, 77.22626799, -132.72201029, 122.54185402};
 } // namespace WDL
 
-[[nodiscard]] inline ScoreType shiftArmageddon(const ScoreType v, const unsigned int ply, const Color c) {
+[[nodiscard]] FORCE_FINLINE ScoreType shiftArmageddon(const ScoreType v, const unsigned int ply, const Color c) {
    // limit input ply and rescale
    const double m = std::min(256u, ply) / 64.0; // care! here ply not move
    const double a = (((WDL::as[0] * m + WDL::as[1]) * m + WDL::as[2]) * m) + WDL::as[3];
@@ -276,7 +266,7 @@ constexpr double bs[] = {-10.78187987, 77.22626799, -132.72201029, 122.54185402}
       return static_cast<ScoreType>(v + 2 * a);
 }
 
-[[nodiscard]] inline double toWDLModel(const ScoreType v, const unsigned int ply) {
+[[nodiscard]] FORCE_FINLINE double toWDLModel(const ScoreType v, const unsigned int ply) {
    // limit input ply and rescale
    const double m = std::min(256u, ply) / 64.0; // care! here ply not move
    const double a = (((WDL::as[0] * m + WDL::as[1]) * m + WDL::as[2]) * m) + WDL::as[3];
@@ -288,7 +278,7 @@ constexpr double bs[] = {-10.78187987, 77.22626799, -132.72201029, 122.54185402}
 }
 
 /*
-inline ScoreType fromWDLModel(const double w, const unsigned int ply) {
+FORCE_FINLINE ScoreType fromWDLModel(const double w, const unsigned int ply) {
     // limit input ply and rescale
     const double m = std::min(256u, ply) / 32.0;
     const double a = (((WDL::as[0] * m + WDL::as[1]) * m + WDL::as[2]) * m) + WDL::as[3];
