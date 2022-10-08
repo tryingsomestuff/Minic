@@ -78,6 +78,7 @@ Nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets. Bewa
 - danger (from evaluation) based pruning and reductions in search
 - emergency (from IID loop instabilities) based pruning and reductions in search
 - history aware (boom / moob) based pruning and reductions in search
+- use mobility data in search
 - contempt opponent model taking opponent name or opponent rating into account
 - "features" based evaluation parameter available to the user to tune game play (HCE evaluation only, not for NNUE)
 - using a depth factor for pruning and reduction that takes TT entry depth into account

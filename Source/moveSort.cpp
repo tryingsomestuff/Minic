@@ -18,7 +18,8 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
 
-template<Color C> void MoveSorter::computeScore(Move& m) const {
+template<Color C>
+void MoveSorter::computeScore(Move& m) const {
    assert(isValidMove(m));
    if (Move2Score(m) != 0) return; // prob cut already computed captures score
    const MType t = Move2Type(m);
