@@ -612,7 +612,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    }
 
    // reset killer
-   killerT.killers[height + 1][0] = killerT.killers[height + 1][1] = 0; ///@todo just use INVALIDMOVE
+   killerT.killers[height + 1][0] = killerT.killers[height + 1][1] = INVALIDMOVE;
 
    if (!rootnode) {
       // LMP
@@ -993,6 +993,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                reduction += (cutNode && evalScore - SearchConfig::failHighReductionCoeff.threshold(marginDepth, data.gp, evalScoreIsHashScore, improving) > beta);
                //reduction += moveCountPruning && !formerPV;
                if (!isInCheck) reduction += std::max(-1, std::min(1, mobilityBalance/8));
+               reduction += !BMextension;
 
 /*
                // aggressive random reduction
