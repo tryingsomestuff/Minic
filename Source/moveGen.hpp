@@ -26,9 +26,14 @@ namespace MoveGen {
 
 enum GenPhase { GP_all = 0, GP_cap = 1, GP_quiet = 2, GP_evasion = 3 };
 
-void addMove(Square from, Square to, MType type, MoveList& moves);
+FORCE_FINLINE void addMove(Square from, Square to, MType type, MoveList& moves) {
+   assert(isValidSquare(from));
+   assert(isValidSquare(to));
+   moves.push_back(ToMove(from, to, type, 0));
+}
 
-template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveList& moves, const Square from) {
+template<GenPhase phase = GP_all> 
+void generateSquare(const Position& p, MoveList& moves, const Square from) {
    assert(isValidSquare(from));
 #ifdef DEBUG_GENERATION
    if (from == INVALIDSQUARE) Logging::LogIt(Logging::logFatal) << "invalid square";
@@ -162,7 +167,8 @@ template<GenPhase phase = GP_all> void generateSquare(const Position& p, MoveLis
    }
 }
 
-template<GenPhase phase = GP_all> void generate(const Position& p, MoveList& moves, const bool doNotClear = false) {
+template<GenPhase phase = GP_all> 
+void generate(const Position& p, MoveList& moves, const bool doNotClear = false) {
    START_TIMER
    if (!doNotClear) moves.clear();
    BitBoard myPieceBBiterator = p.allPieces[p.c];
@@ -212,7 +218,8 @@ template<GenPhase phase = GP_all> void generate(const Position& p, MoveList& mov
 
 void movePiece(Position& p, const Square from, const Square to, const Piece fromP, const Piece toP, const bool isCapture = false, const Piece prom = P_none);
 
-template<Color c> FORCE_FINLINE void movePieceCastle(Position& p, const CastlingTypes ct, const Square kingDest, const Square rookDest) {
+template<Color c> 
+FORCE_FINLINE void movePieceCastle(Position& p, const CastlingTypes ct, const Square kingDest, const Square rookDest) {
    START_TIMER
    constexpr Piece          pk = c == Co_White ? P_wk  : P_bk;
    constexpr Piece          pr = c == Co_White ? P_wr  : P_br;

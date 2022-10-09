@@ -7,21 +7,6 @@
 #include "searcher.hpp"
 #include "tools.hpp"
 
-namespace MoveGen {
-
-void addMove(Square from, Square to, MType type, MoveList& moves) {
-   assert(isValidSquare(from));
-   assert(isValidSquare(to));
-   moves.push_back(ToMove(from, to, type, 0));
-}
-
-} // namespace MoveGen
-
-namespace {
-// piece that have influence on pawn hash
-const bool _helperPawnHash[NbPiece] = {true, false, false, false, false, true, false, true, false, false, false, false, true};
-} // namespace
-
 void movePiece(Position& p, const Square from, const Square to, const Piece fromP, const Piece toP, const bool isCapture, const Piece prom) {
    assert(isValidSquare(from));
    assert(isValidSquare(to));
@@ -46,7 +31,9 @@ void movePiece(Position& p, const Square from, const Square to, const Piece from
    // update Zobrist hash
    p.h ^= Zobrist::ZT[from][fromId]; // remove fromP at from
    p.h ^= Zobrist::ZT[to][toIdnew];  // add fromP (or prom) at to
-   if (_helperPawnHash[fromId]) {
+   // piece that have influence on pawn hash
+   static constexpr std::array<bool,NbPiece> helperPawnHash_ = {true, false, false, false, false, true, false, true, false, false, false, false, true};
+   if (helperPawnHash_[fromId]) {
       p.ph ^= Zobrist::ZT[from][fromId];                    // remove fromP at from
       if (prom == P_none) p.ph ^= Zobrist::ZT[to][toIdnew]; // add fromP (if not prom) at to
    }

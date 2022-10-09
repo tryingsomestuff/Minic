@@ -522,11 +522,12 @@ inline constexpr array1d<ScoreType,16> MoveScoring    = {   0,                  
    return static_cast<Move>((score << 16) | (from << 10) | (to << 4) | type);
 }
 
-[[nodiscard]] FORCE_FINLINE constexpr ScoreType matingScore(const DepthType in) { return static_cast<ScoreType>(MATE - in); }
-[[nodiscard]] FORCE_FINLINE constexpr ScoreType matedScore(const DepthType in) { return static_cast<ScoreType>(-MATE + in); }
+[[nodiscard]] FORCE_FINLINE constexpr ScoreType matingScore  (const DepthType in) { return static_cast<ScoreType>(MATE - in); }
+[[nodiscard]] FORCE_FINLINE constexpr ScoreType matedScore   (const DepthType in) { return static_cast<ScoreType>(-MATE + in); }
+
 [[nodiscard]] FORCE_FINLINE constexpr bool isMatingScore(const ScoreType s) { return (s >= MATE - MAX_DEPTH); }
-[[nodiscard]] FORCE_FINLINE constexpr bool isMatedScore(const ScoreType s) { return (s <= matedScore(MAX_DEPTH)); }
-[[nodiscard]] FORCE_FINLINE constexpr bool isMateScore(const ScoreType s) { return (Abs(s) >= MATE - MAX_DEPTH); }
+[[nodiscard]] FORCE_FINLINE constexpr bool isMatedScore (const ScoreType s) { return (s <= matedScore(MAX_DEPTH)); }
+[[nodiscard]] FORCE_FINLINE constexpr bool isMateScore  (const ScoreType s) { return (Abs(s) >= MATE - MAX_DEPTH); }
 
 [[nodiscard]] FORCE_FINLINE constexpr bool isPromotionStd(const MType mt) {
    assert(isValidMoveType(mt));
