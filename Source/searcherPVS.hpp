@@ -868,7 +868,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          // castling extension
          //if (EXTENDMORE && isCastling(*it)) stats.incr(Stats::sid_castlingExtension), ++extension;
          // Botvinnik-Markoff Extension
-         if (EXTENDMORE && earlyMove && BMextension) stats.incr(Stats::sid_BMExtension), ++extension;
+         //if (EXTENDMORE && earlyMove && BMextension) stats.incr(Stats::sid_BMExtension), ++extension;
          // mate threat extension (from null move)
          //if (EXTENDMORE && mateThreat) stats.incr(Stats::sid_mateThreatExtension), ++extension;
          // simple recapture extension
