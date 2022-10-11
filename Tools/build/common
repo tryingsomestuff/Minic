@@ -47,7 +47,7 @@ else
    e=minic
    v="dev"
    if [ "$machine" == "Mac" ]; then
-      t="-march=apple-latest"
+      t="-march=apple-silicon"
    else
       t="-march=native"
    fi
