@@ -47,7 +47,7 @@ struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTransformer<NT, Q>> {
          const float val = (weights.innerLayer[phase].fc3).forward(x3).data[0];
          return val / Quantization<Q>::outFactor;
       }
-      else{
+      else {
          const auto x1 = (weights.innerLayer[phase].fc0).forward(x0).apply_(activation<BT, Q>);
          const auto x2 = splice(x1, (weights.innerLayer[phase].fc1).forward(x1).apply_(activation<BT, Q>));
          const auto x3 = splice(x2, (weights.innerLayer[phase].fc2).forward(x2).apply_(activation<BT, Q>));

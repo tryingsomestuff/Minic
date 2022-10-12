@@ -3,7 +3,7 @@
 
 ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position& p, DepthType height, DepthType& seldepth, PVList* pv) {
    // is updated recursively in pvs and qsearch calls but also affected to Searcher data in order to be available inside eval.
-   _height = height;
+   height_ = height;
 
    EvalData data;
    ++stats.counters[Stats::sid_qnodes];
@@ -73,7 +73,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    assert(p.halfmoves - 1 < MAX_PLY && p.halfmoves - 1 >= 0);
 
    // is updated recursively in pvs and qsearch calls but also affected to Searcher data in order to be available inside eval.
-   _height = height;
+   height_ = height;
 
    // no time verification in qsearch, too slow
    if (stopFlag) return STOPSCORE;

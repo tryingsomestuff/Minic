@@ -286,18 +286,18 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
             }
             Logging::LogIt(Logging::logInfo) << "Score " << tbScore;
          }
-         else{
+         else {
             Logging::LogIt(Logging::logInfo) << "TB failed";
          }
          Logging::LogIt(Logging::logInfo) << "Probing wdl";
          if (SyzygyTb::probe_wdl(p, tbScore, false) > 0) {
             Logging::LogIt(Logging::logInfo) << "Score " << tbScore;
          }
-         else{
+         else {
             Logging::LogIt(Logging::logInfo) << "TB failed";
          }
       }
-      else{
+      else {
          Logging::LogIt(Logging::logInfo) << "No TB hit";
       }
       return 0;

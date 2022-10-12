@@ -111,7 +111,7 @@ void processCommand(const std::string & command) {
                      Logging::LogIt(Logging::logInfo) << "Bad move ! : " << mstr;
                      Logging::LogIt(Logging::logInfo) << ToString(COM::position);
                   }
-                  else{
+                  else {
                      // in UCI mode, we expect current position to always being sent 
                      // using an initial position and a serie of moves
                      // Here, we append all game moves again
@@ -311,7 +311,7 @@ void handleVariant(){
         DynamicConfig::antichess = false;
         DynamicConfig::useNNUE = false;
     }
-    else{
+    else {
         Logging::LogIt(Logging::logGUI) << "info string unhandled variant : "  << DynamicConfig::chessvariant;
     }
 }
