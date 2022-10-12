@@ -143,7 +143,7 @@ ScoreType NNUEEVal(const Position & p, EvalData &data, Searcher &context, EvalFe
    context.stats.incr(secondTime ? Stats::sid_evalNNUE2 : Stats::sid_evalNNUE);
    // apply variants scoring if requiered
    STOP_AND_SUM_TIMER(NNUE)
-   return variantScore(nnueScore, p.halfmoves, context._height, p.c);   
+   return variantScore(nnueScore, p.halfmoves, context.height_, p.c);   
 }
 #endif
 
@@ -160,9 +160,9 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    if ( (p.occupancy() & ~p.allKing()) == emptyBitBoard ){
       if (kingIsMandatory ){ 
          // drawScore take some variants into account like armageddon
-         return context.drawScore(p, context._height);
+         return context.drawScore(p, context.height_);
       }
-      else{
+      else {
          ///@todo implements things for some variants ?
       }
    }
@@ -212,15 +212,15 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
                STOP_AND_SUM_TIMER(Eval)
                context.stats.incr(Stats::sid_materialTableHelper);
                const ScoreType materialTableScore =
-                   (white2Play ? +1 : -1) * (MaterialHash::helperTable[matHash](p, winningSideEG, features.scores[F_material][EG], context._height));
-               return variantScore(materialTableScore, p.halfmoves, context._height, p.c);
+                   (white2Play ? +1 : -1) * (MaterialHash::helperTable[matHash](p, winningSideEG, features.scores[F_material][EG], context.height_));
+               return variantScore(materialTableScore, p.halfmoves, context.height_, p.c);
             }
             // real FIDE draws (shall not happens for now in fact ///@todo !!!)
             else if (MEntry.t == MaterialHash::Ter_Draw) {
                if (!isPosInCheck(p)) {
                   STOP_AND_SUM_TIMER(Eval)
                   context.stats.incr(Stats::sid_materialTableDraw);
-                  return context.drawScore(p, context._height); // drawScore take armageddon into account
+                  return context.drawScore(p, context.height_); // drawScore take armageddon into account
                }
             }
             // non FIDE draws
@@ -228,7 +228,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
                if (!isPosInCheck(p)) {
                   STOP_AND_SUM_TIMER(Eval)
                   context.stats.incr(Stats::sid_materialTableDraw2);
-                  return context.drawScore(p, context._height); // drawScore take armageddon into account
+                  return context.drawScore(p, context.height_); // drawScore take armageddon into account
                }
             }
             // apply some scaling (more later...)
@@ -240,7 +240,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
                features.scalingFactor = EvalConfig::scalingFactorLikelyDraw / 128.f;
          }
          /*
-         else{
+         else {
             std::cout << "posible cap" << std::endl;
          }
          */
@@ -292,20 +292,20 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
      bool matHelperHit = false;
 #if !defined(WITH_SMALL_MEMORY)
      if(matHash2 == matHashKPK || matHash2 == matHashKKP){
-        materialTableScore = (white2Play ? +1 : -1) * (MaterialHash::helperKPK(p, winningSideEG, features.scores[F_material][EG], context._height));
+        materialTableScore = (white2Play ? +1 : -1) * (MaterialHash::helperKPK(p, winningSideEG, features.scores[F_material][EG], context.height_));
         matHelperHit = true;
      }
 #endif
      if(matHash2 == matHashKQK || matHash2 == matHashKKQ || matHash2 == matHashKRK || matHash2 == matHashKKR){
-        materialTableScore = (white2Play ? +1 : -1) * (MaterialHash::helperKXK(p, winningSideEG, features.scores[F_material][EG], context._height));
+        materialTableScore = (white2Play ? +1 : -1) * (MaterialHash::helperKXK(p, winningSideEG, features.scores[F_material][EG], context.height_));
         matHelperHit = true;
      }
      if(matHash2 == matHashKLNK || matHash2 == matHashKKLN || matHash2 == matHashKDNK || matHash2 == matHashKKDN){
-        materialTableScore = (white2Play ? +1 : -1) * (MaterialHash::helperKmmK(p, winningSideEG, features.scores[F_material][EG], context._height));
+        materialTableScore = (white2Play ? +1 : -1) * (MaterialHash::helperKmmK(p, winningSideEG, features.scores[F_material][EG], context.height_));
         matHelperHit = true;
      }
      if (matHelperHit){
-         return variantScore(materialTableScore, p.halfmoves, context._height, p.c);
+         return variantScore(materialTableScore, p.halfmoves, context.height_, p.c);
      }
    }
 #endif
@@ -915,7 +915,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
 
    data.evalDone = true;
    // apply variante scoring if requiered
-   const ScoreType hceScore = variantScore(ret, p.halfmoves, context._height, p.c);
+   const ScoreType hceScore = variantScore(ret, p.halfmoves, context.height_, p.c);
 
 #ifdef WITH_NNUE
    if ( DynamicConfig::useNNUE && !forbiddenNNUE && std::abs(hceScore) <= DynamicConfig::NNUEThreshold/4 ){

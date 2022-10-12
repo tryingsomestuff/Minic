@@ -64,7 +64,7 @@ void Searcher::displayGUI(DepthType          depth,
 
 void Searcher::searchDriver(bool postMove) {
    //stopFlag = false; // shall be only done outside to avoid race condition
-   _height = 0;
+   height_ = 0;
 
    if (isMainThread()) Distributed::sync(Distributed::_commStat2, __PRETTY_FUNCTION__);
 

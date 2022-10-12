@@ -185,7 +185,7 @@ bool checkEval(const Position & p, ScoreType e, Searcher & context, const std::s
       std::cout << "EVALERROR : " << txt << std::endl;
       return false;
    }
-   else{
+   else {
       std::cout << "EVALOK : " << txt << std::endl;
       return true;
    }

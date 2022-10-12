@@ -102,7 +102,7 @@ void selfPlay(DepthType depth, uint64_t & nbPos) {
          if (DynamicConfig::pgnOut) ThreadPool::instance().main().pgnStream << (result == 0 ? "1/2-1/2" : result > 0 ? "1-0" : "0-1") << "\n";
          justBegin = true;
       }
-      else{
+      else {
          if (DynamicConfig::pgnOut) ThreadPool::instance().main().pgnStream << (p2.halfmoves%2?(std::to_string(p2.moves)+". ") : "") << showAlgAbr(d.best,p2) << " ";
          ++nbPos;
       }

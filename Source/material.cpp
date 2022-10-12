@@ -218,7 +218,7 @@ ScoreType helperKBPK(const Position & p, Color winningSide, ScoreType s, DepthTy
       // let's approximate score by the KPK one ...
       return helperKPK(p,winningSide,0,height);
    }
-   else{
+   else {
       return s;
    }
 }

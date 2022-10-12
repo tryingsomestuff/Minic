@@ -144,7 +144,7 @@ void displayOptionsXBoard() {
          if ( it->wtype == w_combo){
              ///@todo
          }
-         else{
+         else {
              Logging::LogIt(Logging::logGUI) << "feature option=\"" << it->key << " -" << widgetXboardNames[it->wtype] << " " << GetValueString(it->key)
                                              << "\"";
          }
@@ -164,7 +164,7 @@ void displayOptionsUCI() {
             Logging::LogIt(Logging::logGUI) << "option name " << it->key << " type " << widgetXboardNames[it->wtype] << " default "
                                             << GetValueString(it->key) << GetComboVar(it->key);
          }
-         else{
+         else {
             Logging::LogIt(Logging::logGUI) << "option name " << it->key << " type " << widgetXboardNames[it->wtype] << " default "
                                             << GetValueString(it->key);
          }

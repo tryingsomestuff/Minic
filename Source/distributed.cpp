@@ -96,7 +96,7 @@ void lateInit() {
          checkError(MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, _commStopToR0, &_winStopToR0));
          checkError(MPI_Win_create(&ThreadPool::instance().main().stopFlag, sizeof(bool), sizeof(bool), MPI_INFO_NULL, _commStopFromR0, &_winStopFromR0));
       }
-      else{
+      else {
          checkError(MPI_Win_create(&ThreadPool::instance().main().stopFlag, sizeof(bool), sizeof(bool), MPI_INFO_NULL, _commStopToR0, &_winStopToR0));
          checkError(MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, _commStopFromR0, &_winStopFromR0));
       }
@@ -251,7 +251,7 @@ void setEntry(const Hash h, const TT::Entry& e) {
                ++_nbTTTransfert;
             }
             // else we reuse the same buffer and loosing current data
-            /*else{
+            /*else {
                   DEBUGCOUT("previous comm not done, skipping")
             }*/
          }
