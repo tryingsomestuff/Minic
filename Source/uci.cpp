@@ -132,7 +132,7 @@ void processCommand(const std::string & command) {
       }
       else {
          if (COM::position.h != nullHash) {
-            //MoveList root_moves;
+            ///@todo MoveList root_moves;
 
             TimeMan::isDynamic       = false;
             TimeMan::nbMoveInTC      = -1;
