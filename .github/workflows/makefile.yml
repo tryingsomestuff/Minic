@@ -16,4 +16,8 @@ jobs:
     
     - name: build
       run: make
+      shell: bash
+      env:
+       CC:   gcc-10
+       CXX:  g++-10
   
