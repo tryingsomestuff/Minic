@@ -26,6 +26,68 @@ struct StackData {
 struct Searcher {
    bool stopFlag = true;
 
+   struct PVSData{
+      CMHPtrArray cmhPtr;
+
+      // move counting
+      int validMoveCount      {0};
+      int validQuietMoveCount {0};
+      int validNonPrunedCount {0};
+
+      // context
+      bool rootnode               {false};
+      bool theirTurn              {false};
+      bool withoutSkipMove        {true};
+      bool improving              {false};
+      bool previousMoveIsNullMove {false};
+      bool isEmergencyDefence     {false};
+      bool isEmergencyAttack      {false};
+      bool isBoomingAttack        {false};
+      bool isBoomingDefend        {false};
+      bool isMoobingAttack        {false};
+      bool isMoobingDefend        {false};
+      bool isNotPawnEndGame       {false};
+      bool lessZugzwangRisk       {false};
+
+      // call
+      bool isInCheck              {false};
+      bool cutNode                {false};
+      bool pvnode                 {false};
+      ScoreType alpha {0};
+      ScoreType beta  {0};
+
+      // situation
+      bool bestMoveIsCheck        {false};
+      bool mateThreat             {false};
+
+      // current move
+      bool isCheck                {false};
+      bool isQuiet                {false};
+      bool isAdvancedPawnPush     {false};
+      bool earlyMove              {false};
+
+      // tt related stuff
+      TT::Bound bound             {TT::B_none};
+      bool ttMoveIsCapture        {false};
+      bool ttMoveSingularExt      {false};
+      bool ttMoveTried            {false};
+      bool validTTmove            {false};
+      bool ttHit                  {false};
+      bool ttPV                   {false};
+      bool ttIsCheck              {false};
+      bool formerPV               {false};
+      bool evalScoreIsHashScore   {false};
+      DepthType marginDepth       {0};
+
+      // pruning and extension triggers
+      bool futility               {false};
+      bool lmp                    {false};
+      bool historyPruning         {false};
+      bool capHistoryPruning      {false};
+      bool CMHPruning             {false};
+      bool BMextension            {false};
+   };
+
    MoveDifficultyUtil::MoveDifficulty moveDifficulty = MoveDifficultyUtil::MD_std;
    MoveDifficultyUtil::PositionEvolution positionEvolution = MoveDifficultyUtil::PE_std;
 
@@ -83,6 +145,10 @@ struct Searcher {
    [[nodiscard]] bool isCMHBad (const Position& p, const Square from, const Square to, const CMHPtrArray& cmhPtr, const ScoreType threshold) const;
 
    [[nodiscard]] ScoreType drawScore(const Position& p, DepthType height) const;
+
+   DepthType getReduction(const Position & p, DepthType depth, Move m, const PVSData & pvsData, const EvalData & evalData, ScoreType evalScore, DepthType extension) const;
+
+   DepthType getExtension(const Position & p, DepthType depth, Move m, const PVSData & pvsData, const EvalData & evalData, ScoreType evalScore, DepthType extension) const;
 
    void timeCheck();
 

@@ -39,8 +39,9 @@ CONST_SEARCH_TUNING ScoreType seeQThreshold                   = -50;
 CONST_SEARCH_TUNING ScoreType betaMarginDynamicHistory        = 180;
 //CONST_SEARCH_TUNING ScoreType probCutThreshold              = 450;
 CONST_SEARCH_TUNING DepthType lmrMinDepth            = 2;
-CONST_SEARCH_TUNING DepthType singularExtensionDepth = 8;
 CONST_SEARCH_TUNING int       lmrCapHistoryFactor    = 8;
+CONST_SEARCH_TUNING ScoreType lmrLateExtensionMargin = 64;
+CONST_SEARCH_TUNING DepthType singularExtensionDepth = 8;
 ///@todo on move / opponent
 CONST_SEARCH_TUNING ScoreType dangerLimitPruning        = 16;
 CONST_SEARCH_TUNING ScoreType dangerLimitForwardPruning = 16;

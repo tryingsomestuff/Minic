@@ -7,7 +7,6 @@ engines=""
 
 engines="$engines -engine conf=minic_$1"
 engines="$engines -engine conf=minic_$2"
-engines="$engines -engine conf=seer"
 
 echo $engines
 
