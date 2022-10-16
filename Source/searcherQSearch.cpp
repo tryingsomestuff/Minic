@@ -93,12 +93,6 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    // we cannot search deeper than MAX_DEPTH, is so just return static evaluation
    if (height >= MAX_DEPTH - 1) return eval(p, data, *this);
 
-   // at qRoot (just coming from pvs) we check for draws (3rep, fifty and material)
-   ///@todo is that gain elo ???
-   if (qRoot){
-      if (auto INRscore = interiorNodeRecognizer<false>(p, height); INRscore.has_value()) return INRscore.value();
-   }
-
    Move bestMove = INVALIDMOVE;
 
    debug_king_cap(p);
@@ -107,7 +101,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    TT::Entry       e;
    const Hash      pHash          = computeHash(p);
    const bool      ttDepthOk      = TT::getEntry(*this, p, pHash, -2, e);
-   const TT::Bound bound          = TT::Bound(e.b & ~TT::B_allFlags);
+   const TT::Bound bound          = static_cast<TT::Bound>(e.b & ~TT::B_allFlags);
    const bool      ttHit          = e.h != nullHash;
    const bool      validTTmove    = ttHit && e.m != INVALIDMINIMOVE;
    const bool      ttPV           = pvnode || (validTTmove && (e.b & TT::B_ttPVFlag));
@@ -215,7 +209,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
                   b = TT::B_beta;
                   stats.incr(Stats::sid_qttbeta);
                   TT::setEntry(*this, pHash, bestMove, TT::createHashScore(bestScore, height), TT::createHashScore(evalScore, height),
-                               TT::Bound(b | (ttPV ? TT::B_ttPVFlag : TT::B_none) | (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), hashDepth);
+                               static_cast<TT::Bound>(b | (ttPV ? TT::B_ttPVFlag : TT::B_none) | (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), hashDepth);
                   return bestScore;
                }
                b = TT::B_exact;
@@ -314,7 +308,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    else if (is50moves(p,false)) return drawScore(p, height); // post move loop version
 
    TT::setEntry(*this, pHash, bestMove, TT::createHashScore(bestScore, height), TT::createHashScore(evalScore, height),
-                TT::Bound(b | (ttPV ? TT::B_ttPVFlag : TT::B_none) | (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), hashDepth);
+                static_cast<TT::Bound>(b | (ttPV ? TT::B_ttPVFlag : TT::B_none) | (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), hashDepth);
 
    return bestScore;
 }

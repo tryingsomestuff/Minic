@@ -96,6 +96,7 @@ extern CONST_SEARCH_TUNING ScoreType betaMarginDynamicHistory;
 //extern CONST_SEARCH_TUNING ScoreType probCutThreshold;
 extern CONST_SEARCH_TUNING DepthType lmrMinDepth;
 extern CONST_SEARCH_TUNING int       lmrCapHistoryFactor;
+extern CONST_SEARCH_TUNING ScoreType lmrLateExtensionMargin;
 extern CONST_SEARCH_TUNING DepthType singularExtensionDepth;
 ///@todo on move / opponent
 extern CONST_SEARCH_TUNING ScoreType dangerLimitPruning;
