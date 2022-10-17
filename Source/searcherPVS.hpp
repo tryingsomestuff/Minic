@@ -914,26 +914,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
          PVList childPV;
          ScoreType ttScore;
-         if (true /*pvnode || !SearchConfig::doPVS*/) {
-             ttScore = -pvs<pvnode>(-beta, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, static_cast<DepthType>(extensions + extension), pvsData.isCheck, !pvsData.cutNode);
-         }
-         else{
-            const bool isReductible = /*pvsData.isNotPawnEndGame &&*/ !pvsData.isAdvancedPawnPush && !DynamicConfig::mateFinder;
-            // LMR
-            DepthType reduction = 0;
-            if (SearchConfig::doLMR && depth >= SearchConfig::lmrMinDepth && isReductible) {
-               reduction = getReduction(p, depth, e.m, pvsData, evalData, evalScore, extension);
-            }
-            const DepthType nextDepth = depth - 1 - reduction + extension;
-            ttScore = -pvs<false>(-alpha - 1, -alpha, p2, nextDepth, height + 1, childPV, seldepth, static_cast<DepthType>(extensions + extension), pvsData.isCheck, true);
-            if (reduction > 0 && ttScore > alpha) {
-               const bool lateExtension = false; ///@todo score > alpha + SearchConfig::lmrLateExtensionMargin;
-               stats.incr(Stats::sid_lmrFail);
-               childPV.clear();
-               ttScore = -pvs<false>(-alpha - 1, -alpha, p2, depth - 1 + extension + lateExtension, height + 1, childPV, seldepth, static_cast<DepthType>(extensions + extension), pvsData.isCheck, !pvsData.cutNode);
-            }
-         }
-         
+         ttScore = -pvs<pvnode>(-beta, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, static_cast<DepthType>(extensions + extension), pvsData.isCheck, !pvsData.cutNode);
          if (stopFlag) return STOPSCORE;
 
          if (pvsData.rootnode) { 
