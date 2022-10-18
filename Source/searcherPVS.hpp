@@ -387,6 +387,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                }
             }
             if (p.fifty < SearchConfig::ttMaxFiftyValideDepth){
+               if(pvsData.bound == TT::B_alpha) stats.incr(Stats::sid_ttAlphaCut);
+               if(pvsData.bound == TT::B_exact) stats.incr(Stats::sid_ttExactCut);
+               if(pvsData.bound == TT::B_beta)  stats.incr(Stats::sid_ttBetaCut);
                return TT::adjustHashScore(e.s, height);
             }
          }
@@ -416,18 +419,23 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    if constexpr(!pvnode){
       if ( !pvsData.rootnode 
          && pvsData.ttHit
-         && (e.b == TT::B_alpha)
+         && (pvsData.bound == TT::B_alpha)
          &&  e.d >= depth - SearchConfig::ttAlphaCutDepth
-         &&  e.s + SearchConfig::ttAlphaCutMargin <= alpha)
-         return alpha;
-
+         &&  e.s + SearchConfig::ttAlphaCutMargin * (depth - SearchConfig::ttAlphaCutDepth) <= alpha){
+            stats.incr(Stats::sid_ttAlphaLateCut);
+            return alpha;
+      }
+/*
       // and it seems we can do the same with beta bound
       if ( !pvsData.rootnode 
          && pvsData.ttHit
-         && (e.b == TT::B_beta)
+         && (pvsData.bound == TT::B_beta)
          &&  e.d >= depth - SearchConfig::ttBetaCutDepth
-         &&  e.s - SearchConfig::ttBetaCutMargin >= beta)
-         return beta;
+         &&  e.s - SearchConfig::ttBetaCutMargin * (depth - SearchConfig::ttBetaCutDepth) >= beta){
+            stats.incr(Stats::sid_ttBetaLateCut);
+            return beta;
+      }
+*/
    }
 
 #ifdef WITH_SYZYGY
@@ -915,6 +923,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          PVList childPV;
          ScoreType ttScore;
          ttScore = -pvs<pvnode>(-beta, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, static_cast<DepthType>(extensions + extension), pvsData.isCheck, !pvsData.cutNode);
+
          if (stopFlag) return STOPSCORE;
 
          if (pvsData.rootnode) { 
