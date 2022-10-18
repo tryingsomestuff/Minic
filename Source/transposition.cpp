@@ -95,8 +95,9 @@ bool getEntry(Searcher &context, const Position &p, Hash h, DepthType d, Entry &
       context.stats.incr(Stats::sid_tthits);
       return true;
    }
-   else
+   else{
       return false;
+   }
 }
 
 // always replace
