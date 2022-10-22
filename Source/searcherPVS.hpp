@@ -91,10 +91,12 @@ FORCE_FINLINE DepthType Searcher::getReduction( const Position & p,
       reduction += pvsData.ttMoveIsCapture;
       reduction += (pvsData.cutNode && evalScore - SearchConfig::failHighReductionCoeff.threshold(pvsData.marginDepth, evalData.gp, pvsData.evalScoreIsHashScore, pvsData.improving) > pvsData.beta);
       //reduction += moveCountPruning && !formerPV;
+      /*
       if (!pvsData.isInCheck){
          const uint16_t mobilityBalance = evalData.mobility[p.c]-evalData.mobility[~p.c];
          reduction += std::max(-1, std::min(1, mobilityBalance/8));
       }
+      */
 
 /*
       // aggressive random reduction
@@ -416,6 +418,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // an idea from Ethereal : 
    // near TT hits in terms of depth can trigger early returns
    // if cutoff is validated by a margin
+
    if constexpr(!pvnode){
       if ( !pvsData.rootnode 
          && pvsData.ttHit
@@ -425,7 +428,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             stats.incr(Stats::sid_ttAlphaLateCut);
             return alpha;
       }
-/*
+
       // and it seems we can do the same with beta bound
       if ( !pvsData.rootnode 
          && pvsData.ttHit
@@ -435,7 +438,6 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             stats.incr(Stats::sid_ttBetaLateCut);
             return beta;
       }
-*/
    }
 
 #ifdef WITH_SYZYGY
@@ -1047,7 +1049,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       }
       else {
          // reductions & prunings
-         const bool isPrunable           = !pvsData.earlyMove && /*pvsData.isNotPawnEndGame &&*/ !DynamicConfig::mateFinder && !pvsData.isAdvancedPawnPush && !isMateScore(alpha) && !killerT.isKiller(*it, height);
+         const bool isPrunable           = /*pvsData.isNotPawnEndGame &&*/ !pvsData.isAdvancedPawnPush && !isMateScore(alpha) && !killerT.isKiller(*it, height) && !DynamicConfig::mateFinder;
          const bool isReductible         = /*pvsData.isNotPawnEndGame &&*/ !pvsData.isAdvancedPawnPush && !DynamicConfig::mateFinder;
          const bool noCheck              = !pvsData.isInCheck && !pvsData.isCheck;
          const bool isPrunableStd        = isPrunable && pvsData.isQuiet;
