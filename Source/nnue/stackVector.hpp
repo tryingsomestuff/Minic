@@ -44,7 +44,7 @@ struct StackVector {
    FORCE_FINLINE static CONSTEXPR StackVector<T, dim> from(const T2* data) {
       StackVector<T, dim> result;
 #pragma omp simd
-      for (size_t i = 0; i < dim; ++i) { result.data[i] = T(data[i]); }
+      for (size_t i = 0; i < dim; ++i) { result.data[i] = static_cast<T>(data[i]); }
       return result; //RVO
    }
 
