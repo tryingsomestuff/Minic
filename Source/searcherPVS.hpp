@@ -19,30 +19,40 @@
 FORCE_FINLINE DepthType Searcher::getExtension(const Position & /*p*/,
                                                DepthType /*depth*/,
                                                Move /*m*/,
-                                               const PVSData & pvsData,
+                                               const PVSData & /*pvsData*/,
                                                const EvalData & /*evalData*/,
                                                ScoreType /*evalScore*/,
                                                DepthType extension) const{
-   ///@todo use pvsData.earlyMove more !
 
+   // -----------------------
+   // win seeking (I think there might be something good here if I look a little further.)
+   // -----------------------
+
+   // gives check extension
+   //if (EXTENDMORE && pvsData.isCheck ) stats.incr(Stats::sid_checkExtension2),++extension;
+
+   // -----------------------
+   // loss seeking (I think I'm in trouble.)
+   // -----------------------
+   
    // is in check extension
-   //if (EXTENDMORE && pvsData.isInCheck) stats.incr(Stats::sid_checkExtension), ++extension;
-   // castling extension
-   //if (EXTENDMORE && isCastling(m)) stats.incr(Stats::sid_castlingExtension), ++extension;
+   //if (EXTENDMORE && pvsData.isTTMove && pvsData.pvnode && pvsData.isInCheck) stats.incr(Stats::sid_checkExtension), ++extension;
    // Botvinnik-Markoff Extension
-   if (EXTENDMORE && pvsData.BMextension) stats.incr(Stats::sid_BMExtension), ++extension;
+   //if (EXTENDMORE && !pvsData.earlyMove && pvsData.BMextension) stats.incr(Stats::sid_BMExtension), ++extension;
    // mate threat extension (from null move)
    //if (EXTENDMORE && pvsData.mateThreat) stats.incr(Stats::sid_mateThreatExtension), ++extension;
+   // threat on queen extension
+   //if (EXTENDMORE && (p.pieces_const<P_wq>(p.c) && pvsData.isQuiet && PieceTools::getPieceType(p, Move2From(m)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, m, 0)) stats.incr(Stats::sid_queenThreatExtension), ++extension;   
+
+
+   // -----------------------
+   // horizon (This is a forcing sequence, and if I stop searching now I won't know how it ends.)
+   // -----------------------
+
+   // castling extension
+   //if (EXTENDMORE && isCastling(m)) stats.incr(Stats::sid_castlingExtension), ++extension;
    // simple recapture extension
    //if (EXTENDMORE && isValidMove(p.lastMove) && Move2Type(p.lastMove) == T_capture && !isBadCap(m) && to == Move2To(p.lastMove)) stats.incr(Stats::sid_recaptureExtension), ++extension; // recapture
-   // gives check extension
-   //if (EXTENDMORE && pvsData.isCheck ) stats.incr(Stats::sid_checkExtension2),++extension; // we give check with a non risky move
-   // CMH extension
-   /*
-   if (EXTENDMORE && pvsData.isQuiet) {
-         if (isCMHGood(p, Move2From(m), to, pvsData.cmhPtr, HISTORY_MAX / 2)) stats.incr(Stats::sid_CMHExtension), ++extension;
-   }
-   */
    // advanced pawn push extension
    /*
    if (EXTENDMORE && pvsData.isAdvancedPawnPush ) {
@@ -51,8 +61,6 @@ FORCE_FINLINE DepthType Searcher::getExtension(const Position & /*p*/,
          if ( SquareToBitboard(to) & passed[p.c] ) stats.incr(Stats::sid_pawnPushExtension), ++extension;
    }
    */
-   // threat on queen extension
-   //if (EXTENDMORE && (p.pieces_const<P_wq>(p.c) && pvsData.isQuiet && PieceTools::getPieceType(p, Move2From(m)) == P_wq && isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)))) && SEE_GE(p, m, 0)) stats.incr(Stats::sid_queenThreatExtension), ++extension;   
    // move that lead to endgame
    /*
    if ( EXTENDMORE && lessZugzwangRisk && (p2.mat[p.c][M_t]+p2.mat[~p.c][M_t] == 0)){
@@ -60,6 +68,7 @@ FORCE_FINLINE DepthType Searcher::getExtension(const Position & /*p*/,
       stats.incr(Stats::sid_endGameExtension);
    }
    */
+
    // extend if quiet with good history
    /*
    if ( EXTENDMORE && pvsData.isQuiet && Move2Score(m) > SearchConfig::historyExtensionThreshold){
@@ -67,6 +76,12 @@ FORCE_FINLINE DepthType Searcher::getExtension(const Position & /*p*/,
       stats.incr(Stats::sid_goodHistoryExtension);
    }
    */
+   // CMH extension
+   /*
+   if (EXTENDMORE && pvsData.isQuiet) {
+         if (isCMHGood(p, Move2From(m), to, pvsData.cmhPtr, HISTORY_MAX / 2)) stats.incr(Stats::sid_CMHExtension), ++extension;
+   }
+   */  
 
    return extension;
 }
@@ -844,6 +859,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 #endif
 
       pvsData.ttMoveTried = true;
+      pvsData.isTTMove = true;
       bestMove = e.m; // in order to preserve tt move for alpha bound entry
 
       Position p2 = p;
@@ -994,6 +1010,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    for (auto it = moves.begin(); it != moves.end() && !stopFlag; ++it) {
 #endif
 
+      pvsData.isTTMove = false;
       pvsData.isQuiet = Move2Type(*it) == T_std && !isNoisy(p,*it);
       // skip quiet if LMP was triggered (!!even if move gives check now!!)
       if (skipQuiet && pvsData.isQuiet && !pvsData.isInCheck){

@@ -65,6 +65,7 @@ struct Searcher {
       bool isQuiet                {false};
       bool isAdvancedPawnPush     {false};
       bool earlyMove              {false};
+      bool isTTMove               {false};
 
       // tt related stuff
       TT::Bound bound             {TT::B_none};
