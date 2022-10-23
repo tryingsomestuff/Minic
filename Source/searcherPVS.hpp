@@ -99,7 +99,8 @@ FORCE_FINLINE DepthType Searcher::getReduction( const Position & p,
    if (Move2Type(m) == T_std){
       stats.incr(Stats::sid_lmr);
       // base reduction
-      reduction += SearchConfig::lmrReduction[std::min(static_cast<int>(depth), MAX_DEPTH - 1)][std::min(pvsData.validMoveCount, MAX_MOVE - 1)];
+      const int threadReductionIdx = 0; //static_cast<int>(id()) / std::max(1,static_cast<int>(ThreadPool::instance().size()/8));
+      reduction += SearchConfig::lmrReduction[std::min(static_cast<int>(depth), MAX_DEPTH - 1)][std::min(pvsData.validMoveCount + threadReductionIdx, MAX_MOVE - 1)];
 
       // more reduction
       reduction += !pvsData.improving;
@@ -112,6 +113,8 @@ FORCE_FINLINE DepthType Searcher::getReduction( const Position & p,
          reduction += std::max(-1, std::min(1, mobilityBalance/8));
       }
       */
+
+      //reduction += (id()%2);
 
 /*
       // aggressive random reduction
@@ -129,9 +132,10 @@ FORCE_FINLINE DepthType Searcher::getReduction( const Position & p,
       // less reduction
       //reduction -= !noCheck;
       //reduction -= isCheck;
-      reduction -= pvsData.formerPV || pvsData.ttPV;
+      reduction -= pvsData.formerPV || pvsData.ttPV || pvsData.pvnode;
+      //reduction -= pvsData.ttMoveSingularExt;
       //reduction -= pvsData.theirTurn; ///@todo use in capture also ?
-      //reduction -= isDangerRed /*|| pvsData.ttMoveSingularExt*/ /*|| pvsData.isEmergencyDefence*/);
+      //reduction -= isDangerRed || pvsData.isEmergencyDefence;
    }
    else if (Move2Type(m) == T_capture){
       stats.incr(Stats::sid_lmrcap);
@@ -916,7 +920,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                const ScoreType       score = pvs<false>(betaC - 1, betaC, p, depth / 2, height, sePV, seSeldetph, extensions, pvsData.isInCheck, pvsData.cutNode, &skip);
                if (stopFlag) return STOPSCORE;
                if (score < betaC) { // TT move is singular
-                  stats.incr(Stats::sid_singularExtension), /*pvsData.ttMoveSingularExt=!pvsData.ttMoveIsCapture,*/ ++extension;
+                  stats.incr(Stats::sid_singularExtension), pvsData.ttMoveSingularExt=!pvsData.ttMoveIsCapture, ++extension;
                   // TT move is "very singular" : kind of single reply extension
                   if (score < betaC - 4 * depth) {
                      stats.incr(Stats::sid_singularExtension2);
