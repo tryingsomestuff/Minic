@@ -9,7 +9,7 @@
 #include "searcher.hpp"
 #include "timers.hpp"
 
-using namespace BB; // to mouch of it ...
+using namespace BB; // to much of it ...
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
