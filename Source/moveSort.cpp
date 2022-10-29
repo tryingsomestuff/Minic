@@ -72,10 +72,12 @@ void MoveSorter::computeScore(Move& m) const {
       // standard moves and castling
       else if (t == T_std || isCastling(m)) {
          if (sameMove(m, context.killerT.killers[height][0])) s += 1900; // quiet killer
-         else if (sameMove(m, context.killerT.killers[height][1]))
-            s += 1700; // quiet killer
+         //else if (sameMove(m, context.killerT.killers[height][1]))
+         //   s += 1700; // quiet killer
          else if (height > 1 && sameMove(m, context.killerT.killers[height - 2][0]))
             s += 1500; // quiet killer
+         //else if (height > 1 && sameMove(m, context.killerT.killers[height - 2][1]))
+         //   s += 1400; // quiet killer
          else if (isValidMove(p.lastMove) && sameMove(context.counterT.counter[Move2From(p.lastMove)][correctedMove2ToKingDest(p.lastMove)], m)) // in sync with CounterT::update()
             s += 1300; // quiet counter
          else {
