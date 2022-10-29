@@ -15,7 +15,7 @@
 #include <utility>
 
 #ifdef USE_SIMD_INTRIN
-#include "dot.hpp" // dot product simd implementation
+#include "simd.hpp" // manual simd implementations
 #endif
 
 // NNUE implementation was initially taken from Seer implementation in October 2020.

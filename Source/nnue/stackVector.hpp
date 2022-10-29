@@ -37,7 +37,7 @@ struct StackVector {
       return *this;
    }
 #else
-   T dot_(const T* other) const { return dotProductFma<dim>(data, other); }
+   T dot_(const T* other) const { return simdDotProduct<dim>(data, other); }
 #endif
 
    template<typename T2> 

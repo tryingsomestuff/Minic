@@ -88,7 +88,7 @@ FORCE_FINLINE void Log512(const __m512 & value){
     std::cout << std::endl;
 }
 
-template<size_t N> [[nodiscard]] float dotProductFma512(const float* x, const float* y) {
+template<size_t N> [[nodiscard]] float simdDotProduct512(const float* x, const float* y) {
    constexpr int vstep    = v_nlanes_f32_512;
    constexpr int unrollx4 = N & (-vstep * 4);
    constexpr int unrollx  = N & -vstep;
@@ -122,7 +122,9 @@ template<size_t N> [[nodiscard]] float dotProductFma512(const float* x, const fl
 #if defined(__AVX2__)
 #define V_SIMD_256 256
 typedef __m256 v_f32_256;
+typedef __m256i v_i32_256;
 #define v_nlanes_f32_256 8
+#define v_nlanes_i16_256 16
 #define v_add_f32_256    _mm256_add_ps
 #define v_mul_f32_256    _mm256_mul_ps
 #ifdef __FMA__
@@ -152,7 +154,7 @@ FORCE_FINLINE void Log256(const __m256 & value){
     std::cout << std::endl;
 }
 
-template<size_t N> [[nodiscard]] float dotProductFma256(const float* x, const float* y) {
+template<size_t N> [[nodiscard]] float simdDotProduct256(const float* x, const float* y) {
    constexpr int vstep    = v_nlanes_f32_256;
    constexpr int unrollx4 = N & (-vstep * 4);
    constexpr int unrollx  = N & -vstep;
@@ -220,7 +222,7 @@ FORCE_FINLINE void Log128(const __m128 & value){
     std::cout << std::endl;
 }
 
-template<size_t N> [[nodiscard]] float dotProductFma128(const float* x, const float* y) {
+template<size_t N> [[nodiscard]] float simdDotProduct128(const float* x, const float* y) {
    constexpr int vstep    = v_nlanes_f32_128;
    constexpr int unrollx4 = N & (-vstep * 4);
    constexpr int unrollx  = N & -vstep;
@@ -249,41 +251,41 @@ template<size_t N> [[nodiscard]] float dotProductFma128(const float* x, const fl
 
 #endif
 
-template<size_t N> [[nodiscard]] float dotProductFmaDefault(const float* x, const float* y) {
+template<size_t N> [[nodiscard]] float simdDotProductDefault(const float* x, const float* y) {
    constexpr int n1 = N & -4;
    float dot = 0.f;
    for (int i = 0; i < n1; i += 4) { dot += y[i] * x[i] + y[i + 1] * x[i + 1] + y[i + 2] * x[i + 2] + y[i + 3] * x[i + 3]; }
    return dot;
 }
 
-template<size_t N> [[nodiscard]] float dotProductFma(const float* x, const float* y) {
+template<size_t N> [[nodiscard]] float simdDotProduct(const float* x, const float* y) {
    size_t i  = 0;
    float dot = 0.0f;
    if constexpr (N <= 0) return dot;
 
 #if V_SIMD_512
    if (N-i >= 16){
-      dot += dotProductFma512<N>(x+i,y+i);
+      dot += simdDotProduct512<N>(x+i,y+i);
       i += ((N-i) & -16);
    }
 #endif
 
 #if V_SIMD_256
    if (N-i >= 8){
-      dot += dotProductFma256<N>(x+i,y+i);
+      dot += simdDotProduct256<N>(x+i,y+i);
       i += ((N-i) & -8);
    }
 #endif
 
 #if V_SIMD_128
    if (N-i >= 4){
-      dot += dotProductFma128<N>(x+i,y+i);
+      dot += simdDotProduct128<N>(x+i,y+i);
       i += ((N-i) & -4);
    }
 #endif
 
    if (N-i >= 4){
-      dot += dotProductFmaDefault<N>(x+i,y+i);
+      dot += simdDotProductDefault<N>(x+i,y+i);
       i += ((N-i) & -4);
    }
 
@@ -303,10 +305,10 @@ int main(int, char**){
       a[i] = i/1000.f/(n-1);
       b[i] = 1000.f/(n-1)*i;
    }
-   std::cout << dotProductFma512<n>(a,b) << std::endl;
-   std::cout << dotProductFma256<n>(a,b) << std::endl;
-   std::cout << dotProductFma128<n>(a,b) << std::endl;
-   std::cout << dotProductFmaDefault<n>(a,b) << std::endl;
+   std::cout << simdDotProduct512<n>(a,b) << std::endl;
+   std::cout << simdDotProduct256<n>(a,b) << std::endl;
+   std::cout << simdDotProduct128<n>(a,b) << std::endl;
+   std::cout << simdDotProductDefault<n>(a,b) << std::endl;
    return 0;
 }
 */
