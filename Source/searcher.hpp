@@ -27,6 +27,7 @@ struct Searcher {
    bool stopFlag = true;
 
    struct PVSData{
+      // CMH
       CMHPtrArray cmhPtr;
 
       // move counting
@@ -49,7 +50,7 @@ struct Searcher {
       bool isNotPawnEndGame       {false};
       bool lessZugzwangRisk       {false};
 
-      // call
+      // from call
       bool isInCheck              {false};
       bool cutNode                {false};
       bool pvnode                 {false};
@@ -59,6 +60,7 @@ struct Searcher {
       // situation
       bool bestMoveIsCheck        {false};
       bool mateThreat             {false};
+      bool alphaUpdated           {false};
 
       // current move
       bool isCheck                {false};
@@ -147,9 +149,7 @@ struct Searcher {
 
    [[nodiscard]] ScoreType drawScore(const Position& p, DepthType height) const;
 
-   DepthType getReduction(const Position & p, DepthType depth, Move m, const PVSData & pvsData, const EvalData & evalData, ScoreType evalScore, DepthType extension) const;
-
-   DepthType getExtension(const Position & p, DepthType depth, Move m, const PVSData & pvsData, const EvalData & evalData, ScoreType evalScore, DepthType extension) const;
+   std::tuple<DepthType, DepthType, DepthType> depthPolicy(const Position & p, DepthType depth, DepthType height, Move m, const PVSData & pvsData, const EvalData & evalData, ScoreType evalScore, DepthType extensions, bool isReductible) const;
 
    void timeCheck();
 

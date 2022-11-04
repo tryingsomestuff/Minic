@@ -85,6 +85,7 @@ extern CONST_SEARCH_TUNING DepthType iidMinDepth;
 extern CONST_SEARCH_TUNING DepthType iidMinDepth2;
 extern CONST_SEARCH_TUNING DepthType iidMinDepth3;
 extern CONST_SEARCH_TUNING DepthType probCutMinDepth;
+extern CONST_SEARCH_TUNING DepthType probCutSearchDepthMinus;
 extern CONST_SEARCH_TUNING int       probCutMaxMoves;
 extern CONST_SEARCH_TUNING ScoreType probCutMargin;
 extern CONST_SEARCH_TUNING ScoreType seeCaptureFactor;
@@ -98,6 +99,7 @@ extern CONST_SEARCH_TUNING DepthType lmrMinDepth;
 extern CONST_SEARCH_TUNING int       lmrCapHistoryFactor;
 extern CONST_SEARCH_TUNING ScoreType lmrLateExtensionMargin;
 extern CONST_SEARCH_TUNING DepthType singularExtensionDepth;
+extern CONST_SEARCH_TUNING DepthType singularExtensionDepthMinus;
 ///@todo on move / opponent
 extern CONST_SEARCH_TUNING ScoreType dangerLimitPruning;
 extern CONST_SEARCH_TUNING ScoreType dangerLimitForwardPruning;
@@ -166,7 +168,7 @@ constexpr array2d<DepthType, MAX_DEPTH, MAX_MOVE> lmrReduction = [] {
    //Logging::LogIt(Logging::logInfo) << "Init lmr";
    for (int d = 1; d < MAX_DEPTH; d++)
       for (int m = 1; m < MAX_MOVE; m++)
-         ret[d][m] = DepthType(my_log2(d * 1.6) * my_log2(m) * 0.4);
+         ret[d][m] = DepthType(my_log2(d * 1.6) * my_log2(m * 1) * 0.4);
    return ret;
 }();
 

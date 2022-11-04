@@ -333,6 +333,7 @@ void registerCOMOptions() { // options exposed to GUI
    _keys.push_back(KeyBase(k_depth, w_spin, "iidMinDepth2"                      , &SearchConfig::iidMinDepth2                        , DepthType(0)    , DepthType(30)       ));
    _keys.push_back(KeyBase(k_depth, w_spin, "iidMinDepth3"                      , &SearchConfig::iidMinDepth3                        , DepthType(0)    , DepthType(30)       ));
    _keys.push_back(KeyBase(k_depth, w_spin, "probCutMinDepth"                   , &SearchConfig::probCutMinDepth                     , DepthType(0)    , DepthType(30)       ));
+   _keys.push_back(KeyBase(k_depth, w_spin, "probCutSearchDepthMinus"           , &SearchConfig::probCutSearchDepthMinus             , DepthType(0)    , DepthType(30)       ));
    _keys.push_back(KeyBase(k_int  , w_spin, "probCutMaxMoves"                   , &SearchConfig::probCutMaxMoves                     , 0               , 30                  ));
    _keys.push_back(KeyBase(k_score, w_spin, "probCutMargin"                     , &SearchConfig::probCutMargin                       , ScoreType(-500) , ScoreType(1500)     ));
 
@@ -345,6 +346,8 @@ void registerCOMOptions() { // options exposed to GUI
 
    _keys.push_back(KeyBase(k_depth, w_spin, "lmrMinDepth"                       , &SearchConfig::lmrMinDepth                         , DepthType(0)    , DepthType(30)       ));
    _keys.push_back(KeyBase(k_depth, w_spin, "singularExtensionDepth"            , &SearchConfig::singularExtensionDepth              , DepthType(0)    , DepthType(30)       ));
+   _keys.push_back(KeyBase(k_depth, w_spin, "singularExtensionDepthMinus"       , &SearchConfig::singularExtensionDepthMinus         , DepthType(1)    , DepthType(30)       ));
+   
    _keys.push_back(KeyBase(k_int  , w_spin, "lmrCapHistoryFactor"               , &SearchConfig::lmrCapHistoryFactor                 , 1               , 64                  ));
 
    _keys.push_back(KeyBase(k_score, w_spin, "dangerLimitPruning"                , &SearchConfig::dangerLimitPruning                  , ScoreType(0)    , ScoreType(65)       ));

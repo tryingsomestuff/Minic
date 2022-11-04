@@ -10,9 +10,17 @@ void KillerT::initKillers() {
       for (int i = 0; i < 2; ++i) killers[k][i] = INVALIDMOVE;
 }
 
-bool KillerT::isKiller(const Move m, const DepthType height) { return sameMove(m, killers[height][0]) || sameMove(m, killers[height][1]); }
+bool KillerT::isKiller(const Move m, const DepthType height) { 
+   assert(height >= 0);
+   assert(height < MAX_DEPTH);
+   const bool isKiller = sameMove(m, killers[height][0]) || sameMove(m, killers[height][1]);
+   //const bool isFormerKiller = height > 1 && sameMove(m, killers[height - 2][0]);// || sameMove(m, killers[height - 2][1]));
+   return isKiller /*|| isFormerKiller*/;
+}
 
 void KillerT::update(Move m, DepthType height) {
+   assert(height >= 0);
+   assert(height < MAX_DEPTH);
    if (!sameMove(killers[height][0], m)) {
       killers[height][1] = killers[height][0];
       killers[height][0] = m;
@@ -56,6 +64,8 @@ void CounterT::update(Move m, const Position& p) {
 }
 
 void updateTables(Searcher& context, const Position& p, DepthType depth, DepthType height, const Move m, TT::Bound bound, CMHPtrArray& cmhPtr) {
+   assert(height >= 0);
+   assert(height < MAX_DEPTH);   
    if (bound == TT::B_beta) {
       context.killerT.update(m, height);
       context.counterT.update(m, p);
