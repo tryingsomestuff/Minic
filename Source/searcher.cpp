@@ -105,7 +105,16 @@ ScoreType Searcher::getCMHScore(const Position& p, const Square from, const Squa
 bool Searcher::isCMHGood(const Position& p, const Square from, const Square to, const CMHPtrArray& cmhPtr, const ScoreType threshold) const {
    for (int i = 0; i < MAX_CMH_PLY; i++) {
       if (cmhPtr[i]) {
-         if ((*cmhPtr[i])[PieceIdx(p.board_const(from)) * NbSquare + to] >= threshold) return true;
+         const auto cmhScore = (*cmhPtr[i])[PieceIdx(p.board_const(from)) * NbSquare + to];
+         if (cmhScore >= threshold){
+               /*
+               std::cout << ToString(p) << std::endl;
+               std::cout << SquareNames[from] << std::endl;
+               std::cout << SquareNames[to] << std::endl;
+               std::cout << cmhScore << std::endl;
+               */
+               return true;
+         }
       }
    }
    return false;

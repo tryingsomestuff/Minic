@@ -26,7 +26,7 @@ void MoveSorter::computeScore(Move& m) const {
    assert(isValidMoveType(t));
    const Square from = Move2From(m);
    assert(isValidSquare(from));
-   const Square to = Move2To(m);
+   const Square to = correctedMove2ToKingDest(m);
    assert(isValidSquare(to));
 
    // apply default score based on type
@@ -72,8 +72,8 @@ void MoveSorter::computeScore(Move& m) const {
       // standard moves and castling
       else if (t == T_std || isCastling(m)) {
          if (sameMove(m, context.killerT.killers[height][0])) s += 1900; // quiet killer
-         //else if (sameMove(m, context.killerT.killers[height][1]))
-         //   s += 1700; // quiet killer
+         else if (sameMove(m, context.killerT.killers[height][1]))
+            s += 1700; // quiet killer
          else if (height > 1 && sameMove(m, context.killerT.killers[height - 2][0]))
             s += 1500; // quiet killer
          //else if (height > 1 && sameMove(m, context.killerT.killers[height - 2][1]))
