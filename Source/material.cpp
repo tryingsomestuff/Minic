@@ -195,7 +195,7 @@ ScoreType helperDummy(const Position &, Color, ScoreType, DepthType) { return 0;
 
 #if !defined(WITH_SMALL_MEMORY)
 ScoreType helperKPK(const Position &p, Color winningSide, [[maybe_unused]] ScoreType s, DepthType height) {
-   const Square psq = KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const<P_wp>(winningSide))); // we know there is at least one pawn
+   const Square psq  = KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const<P_wp>(winningSide))); // we know there is at least one pawn
    const Square wksq = KPK::normalizeSquare(p, winningSide, p.king[winningSide]);
    const Square lksq = KPK::normalizeSquare(p, winningSide, p.king[~winningSide]);
    if (!KPK::probe(wksq, psq, lksq, winningSide == p.c ? Co_White : Co_Black)) {

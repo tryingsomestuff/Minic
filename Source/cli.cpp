@@ -4,6 +4,7 @@
 #include "dynamicConfig.hpp"
 #include "evalDef.hpp"
 #include "logging.hpp"
+#include "material.hpp"
 #include "moveGen.hpp"
 #include "position.hpp"
 #include "searcher.hpp"
@@ -300,6 +301,13 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
       else {
          Logging::LogIt(Logging::logInfo) << "No TB hit";
       }
+      return 0;
+   }
+
+   if ( cli == "-kpk"){
+      Logging::LogIt(Logging::logInfo) << "Probing KPK";
+      const Color winningSide = p.pieces_const<P_wp>(Co_White) == emptyBitBoard ? Co_Black : Co_White;
+      std::cout << "KPK score : " << MaterialHash::helperKPK(p, winningSide, 0, 1) << std::endl;
       return 0;
    }
 
