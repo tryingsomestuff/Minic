@@ -882,11 +882,11 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                if (stopFlag) return STOPSCORE;
                if (scorePC >= betaPC){
                   /*
-                  const DepthType bonus = probCutSearchDepth - 1 + (scorePC > (beta + SearchConfig::betaMarginDynamicHistory));
-                  historyT.updateCap<1>(bonus, *it, p);
+                  const DepthType bonusDepth = probCutSearchDepth - 1 + (scorePC > (beta + SearchConfig::betaMarginDynamicHistory));
+                  historyT.updateCap<1>(bonusDepth, *it, p);
                   for (auto it2 = moves.begin(); it2 != moves.end() && !sameMove(*it2, *it); ++it2) {
                      if (isCapture(*it2))
-                        historyT.updateCap<-1>(bonus, *it2, p);
+                        historyT.updateCap<-1>(bonusDepth, *it2, p);
                   }
                   */
                   /*
@@ -1296,6 +1296,16 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             stats.incr(Stats::sid_lmrFail);
             childPV.clear();
             score = -pvs<false>(-alpha - 1, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, static_cast<DepthType>(extensions + extension), pvsData.isCheck, !pvsData.cutNode);
+/*
+            if (pvsData.isQuiet){
+               if(score > alpha) historyT.update<1>(nextDepth, *it, p, pvsData.cmhPtr);
+               else historyT.update<-1>(nextDepth, *it, p, pvsData.cmhPtr);
+            }
+            else{
+               if(score > alpha) historyT.updateCap<1>(nextDepth, *it, p);
+               else historyT.updateCap<-1>(nextDepth, *it, p);
+            }
+*/
          }
          if ( score > alpha && (pvsData.rootnode || score < beta)) {
             stats.incr(Stats::sid_pvsFail);
@@ -1324,21 +1334,21 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             if (score >= beta) {
                stats.incr(Stats::sid_beta);
                if (!pvsData.isInCheck){
-                  const DepthType bonus = depth + (score > beta + SearchConfig::betaMarginDynamicHistory);
+                  const DepthType bonusDepth = depth + (score > beta + SearchConfig::betaMarginDynamicHistory);
                   if(pvsData.isQuiet /*&& depth > 1*/ /*&& !( depth == 1 && validQuietMoveCount == 1 )*/) { // quiet move history
-                     // increase history bonus of this move
-                     updateTables(*this, p, bonus, height, bestMove, TT::B_beta, pvsData.cmhPtr);
-                     // reduce history bonus of all previous
+                     // increase history of this move
+                     updateTables(*this, p, bonusDepth, height, bestMove, TT::B_beta, pvsData.cmhPtr);
+                     // reduce history of all previous
                      for (auto it2 = moves.begin(); it2 != moves.end() && !sameMove(*it2, bestMove); ++it2) {
                         if (Move2Type(*it2) == T_std)
-                           historyT.update<-1>(bonus, *it2, p, pvsData.cmhPtr);
+                           historyT.update<-1>(bonusDepth, *it2, p, pvsData.cmhPtr);
                      }
                   }
                   else if( isCapture(bestMove)){ // capture history
-                     historyT.updateCap<1>(bonus, bestMove, p);
+                     historyT.updateCap<1>(bonusDepth, bestMove, p);
                      for (auto it2 = moves.begin(); it2 != moves.end() && !sameMove(*it2, bestMove); ++it2) {
                         if (isCapture(*it2))
-                           historyT.updateCap<-1>(bonus, *it2, p);
+                           historyT.updateCap<-1>(bonusDepth, *it2, p);
                      }
                   }
                }
