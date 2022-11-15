@@ -202,10 +202,20 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
 
       // end game knowledge (helper or scaling), only for most standard chess variants with kings on the board
       if (allowEGEvaluation && kingIsMandatory && (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] < 5) ) {
+         // let's verify that the is no naive capture before using end-game knowledge
          MoveList moves;
-         MoveGen::generate<MoveGen::GP_cap>(p, moves); // this is an approximation as a capture may be illegal
+         MoveGen::generate<MoveGen::GP_cap>(p, moves);
+         bool hasCapture = false;
+         for (const auto & m : moves){
+            Position p2 = p;
+            const Position::MoveInfo moveInfo(p2, m);
+            if (applyMove(p2,moveInfo, true)){
+               hasCapture = true;
+               break;
+            }
+         }
          // probe endgame knowledge only if position is quiet from stm pov
-         if (moves.empty()) {
+         if (!hasCapture) {
             const Color winningSideEG = features.scores[F_material][EG] > 0 ? Co_White : Co_Black;
             // helpers for various endgame
             if (MEntry.t == MaterialHash::Ter_WhiteWinWithHelper || MEntry.t == MaterialHash::Ter_BlackWinWithHelper) {
