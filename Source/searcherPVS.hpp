@@ -510,6 +510,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                // quiet move history
                if (Move2Type(e.m) == T_std){ 
                   updateTables(*this, p, depth, height, e.m, pvsData.bound, pvsData.cmhPtr);
+                  //if(pvsData.bound == TT::B_beta) historyT.update<1>(depth, e.m, p, pvsData.cmhPtr);
+                  //else if (pvsData.bound == TT::B_alpha) historyT.update<-1>(depth, e.m, p, pvsData.cmhPtr);
                }
                // capture history
                else if ( isCapture(e.m) ){ 
@@ -844,9 +846,11 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          // ProbCut
          const ScoreType betaPC = beta + SearchConfig::probCutMargin;
          if (SearchConfig::doProbcut && depth >= SearchConfig::probCutMinDepth && !isMateScore(beta) && evalData.haveThreats[p.c]
-               /*&& !( pvsData.validTTmove && 
+         /*
+               && !( pvsData.validTTmove && 
                      e.d >= depth - SearchConfig::probCutSearchDepthMinus - 1 &&
-                     e.s < betaPC)*/) {
+                     e.s < betaPC)
+         */) {
             stats.incr(Stats::sid_probcutTry);
             int probCutCount = 0;
             capMoveGenerated = true;
@@ -1301,6 +1305,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                if(score > alpha) historyT.update<1>(nextDepth, *it, p, pvsData.cmhPtr);
                else historyT.update<-1>(nextDepth, *it, p, pvsData.cmhPtr);
             }
+*/
+/*
             else{
                if(score > alpha) historyT.updateCap<1>(nextDepth, *it, p);
                else historyT.updateCap<-1>(nextDepth, *it, p);
