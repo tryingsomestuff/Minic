@@ -90,7 +90,7 @@ def getData(engine,data):
    return found
 
 data = {}
-engines = ["minic_dev", "minic_dev_dev", "minic_3.21"]
+engines = ["minic_dev", "minic_3.30"]
 #"Halogen", "Genie", "berserk", "seer", "weiss", "xiphos", "BlackMarlin", "stash", "rofChade", "Drofa", "stockfish"
 cycler = plt.cycler(linestyle=['-', '--', ':', '-.']) * plt.cycler(color=['r', 'g', 'b'])
 plt.rc('axes', prop_cycle=cycler)

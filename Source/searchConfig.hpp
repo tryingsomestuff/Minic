@@ -89,6 +89,7 @@ extern CONST_SEARCH_TUNING DepthType probCutSearchDepthMinus;
 extern CONST_SEARCH_TUNING int       probCutMaxMoves;
 extern CONST_SEARCH_TUNING ScoreType probCutMargin;
 extern CONST_SEARCH_TUNING ScoreType seeCaptureFactor;
+extern CONST_SEARCH_TUNING ScoreType seeCaptureInit;
 extern CONST_SEARCH_TUNING ScoreType seeCapDangerDivisor;
 extern CONST_SEARCH_TUNING ScoreType seeQuietFactor;
 extern CONST_SEARCH_TUNING ScoreType seeQuietDangerDivisor;

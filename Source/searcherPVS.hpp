@@ -17,15 +17,15 @@
 #define PERIODICCHECK uint64_t(1024)
 
 FORCE_FINLINE std::tuple<DepthType, DepthType, DepthType>
-Searcher::depthPolicy( const Position & p,
-                       DepthType depth,
+Searcher::depthPolicy( [[maybe_unused]] const Position & p,
+                       [[maybe_unused]] DepthType depth,
                        [[maybe_unused]] DepthType height,
-                       Move m,
-                       const PVSData & pvsData,
-                       const EvalData & evalData,
-                       ScoreType evalScore,
+                       [[maybe_unused]] Move m,
+                       [[maybe_unused]] const PVSData & pvsData,
+                       [[maybe_unused]] const EvalData & evalData,
+                       [[maybe_unused]] ScoreType evalScore,
                        [[maybe_unused]] DepthType extensions,
-                       bool isReductible) const{
+                       [[maybe_unused]] bool isReductible) const{
 
    // ####################
    // Extensions
@@ -184,7 +184,8 @@ Searcher::depthPolicy( const Position & p,
          // the TT move is a capture, probably a quiet move won't help much more
          reduction += pvsData.ttMoveIsCapture;
          // we are at an expected cutnode with a quite high static evaluation. We will probably beta cut.
-         reduction += (pvsData.cutNode && evalScore - SearchConfig::failHighReductionCoeff.threshold(pvsData.marginDepth, evalData.gp, pvsData.evalScoreIsHashScore, pvsData.improving) > pvsData.beta);
+         reduction += pvsData.cutNode && evalScore - SearchConfig::failHighReductionCoeff.threshold(pvsData.marginDepth, evalData.gp, pvsData.evalScoreIsHashScore, pvsData.improving) > pvsData.beta;
+         //reduction += pvsData.cutNode || evalScore - SearchConfig::failHighReductionCoeff.threshold(pvsData.marginDepth, evalData.gp, pvsData.evalScoreIsHashScore, pvsData.improving) > pvsData.beta;
 
          // thread base reduction (another one ...)
          //reduction += (id()%2);
@@ -214,7 +215,7 @@ Searcher::depthPolicy( const Position & p,
          /*
          if (!pvsData.isInCheck){
             const uint16_t mobilityBalance = evalData.mobility[~p.c]-evalData.mobility[p.c];
-            reduction -= std::min(1, std::max(0, mobilityBalance/8));
+            reduction -= std::min(1, std::max(-1, mobilityBalance/8));
          }
          */
 
@@ -222,11 +223,13 @@ Searcher::depthPolicy( const Position & p,
          //reduction -= pvsData.isInCheck;
          // be more prudent at pvnode or if move was in pv before
          reduction -= pvsData.formerPV || pvsData.ttPV;
+         //reduction -= pvsData.pvnode;
          // at an allnode and some previous move (maybe a capture), already updated alpha
          //reduction -= !pvsData.cutNode && pvsData.alphaUpdated;
          //reduction -= pvsData.ttMoveSingularExt;
          //reduction -= pvsData.theirTurn; ///@todo use in capture also ?
          //reduction -= isDangerRed || pvsData.isEmergencyDefence;
+         reduction -= pvsData.isKnownEndGame;
       }
       else if (Move2Type(m) == T_capture){
          stats.incr(Stats::sid_lmrcap);
@@ -495,6 +498,18 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       }
    }
 
+   // Check for end-game knowledge
+   Hash matHash = nullHash;
+   MaterialHash::Terminaison terminaison = MaterialHash::Ter_Unknown;   
+   if (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] < 5) {
+      matHash = MaterialHash::getMaterialHash(p.mat);
+      if ( matHash != nullHash ){
+         const MaterialHash::MaterialHashEntry& MEntry = MaterialHash::materialHashTable[matHash];
+         terminaison = MEntry.t;
+      }
+   }
+   pvsData.isKnownEndGame = terminaison != MaterialHash::Ter_Unknown;
+
    // probe TT
    TT::Entry e;
    const bool ttDepthOk = TT::getEntry(*this, p, pHash, depth, e);
@@ -519,7 +534,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                   else if (pvsData.bound == TT::B_alpha) historyT.updateCap<-1>(depth, e.m, p);
                }
             }
-            if (p.fifty < SearchConfig::ttMaxFiftyValideDepth){
+            if (p.fifty < SearchConfig::ttMaxFiftyValideDepth && !pvsData.isKnownEndGame){
                if(pvsData.bound == TT::B_alpha) stats.incr(Stats::sid_ttAlphaCut);
                if(pvsData.bound == TT::B_exact) stats.incr(Stats::sid_ttExactCut);
                if(pvsData.bound == TT::B_beta)  stats.incr(Stats::sid_ttBetaCut);
@@ -606,6 +621,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // now, let's get a static score for the position.
    ScoreType evalScore;
+
    // do not eval position when in check, we won't use it (as we won't forward prune)
    if (pvsData.isInCheck){
       evalScore = matedScore(height);
@@ -626,15 +642,14 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          evalScore = e.e;
          // but we are missing game phase in this case
          // so let's look for a material match
-         const Hash matHash = MaterialHash::getMaterialHash(p.mat);
+         matHash = matHash != nullHash ? matHash : MaterialHash::getMaterialHash(p.mat);
          if (matHash != nullHash) {
             stats.incr(Stats::sid_materialTableHitsSearch);
             const MaterialHash::MaterialHashEntry& MEntry = MaterialHash::materialHashTable[matHash];
             evalData.gp = MEntry.gamePhase();
          }
          else { 
-            // if no match, compute game phase 
-            // this does not happend very often ...
+            // if no match yet, compute game phase now
             ScoreType matScoreW = 0;
             ScoreType matScoreB = 0;
             evalData.gp = gamePhase(p.mat, matScoreW, matScoreB);
@@ -666,7 +681,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // if TT hit, we can use entry score as a best draft 
    // but we set evalScoreIsHashScore to be aware of that !
-   if (pvsData.ttHit && !pvsData.isInCheck 
+   if (pvsData.ttHit && !pvsData.isInCheck && !pvsData.isKnownEndGame
      && ((pvsData.bound == TT::B_alpha && e.s < evalScore) || (pvsData.bound == TT::B_beta && e.s > evalScore) || (pvsData.bound == TT::B_exact))){
      evalScore = TT::adjustHashScore(e.s, height);
      pvsData.evalScoreIsHashScore = true;
@@ -682,8 +697,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // take **initial** position situation (from IID variability) into account for pruning ? 
    ///@todo retry this
-   pvsData.isEmergencyDefence = moveDifficulty == MoveDifficultyUtil::MD_moobDefenceIID;
-   pvsData.isEmergencyAttack  = moveDifficulty == MoveDifficultyUtil::MD_moobAttackIID;
+   pvsData.isEmergencyDefence = false;//moveDifficulty == MoveDifficultyUtil::MD_moobDefenceIID;
+   pvsData.isEmergencyAttack  = false;//moveDifficulty == MoveDifficultyUtil::MD_moobAttackIID;
 
    // take **current** position danger level into account for purning
    // no HCE has been done, we need to work a little to get data from evaluation of the position
@@ -729,10 +744,10 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // take asymetry into account, prune less when it is not our turn
    const DepthType asymetryDepthCorrection = 0; //theirTurn; ///@todo
    // when score is fluctuating a lot in the current game, let's prune a bit less
-   //const DepthType situationDepthCorrection = isBoomingAttack + isMoobingAttack;
+   const DepthType situationDepthCorrection = 0; //pvsData.isBoomingAttack || pvsData.isMoobingAttack || pvsData.isBoomingDefend || pvsData.isMoobingDefend;
    
    // take current situation and asymetry into account.
-   const DepthType depthCorrection = emergencyDepthCorrection + asymetryDepthCorrection;
+   const DepthType depthCorrection = emergencyDepthCorrection + asymetryDepthCorrection + situationDepthCorrection;
 
    // some heuristic will depend on not-updated initial alpha
    const ScoreType alphaInit = alpha;
@@ -794,6 +809,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          if (SearchConfig::doNullMove && !subSearch && 
             depth >= SearchConfig::nullMoveMinDepth &&
             pvsData.lessZugzwangRisk && 
+            //!pvsData.isKnownEndGame &&
             pvsData.withoutSkipMove &&
             evalScore >= beta + SearchConfig::nullMoveMargin && 
             evalScore >= stack[p.halfmoves].eval &&
@@ -845,7 +861,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
          // ProbCut
          const ScoreType betaPC = beta + SearchConfig::probCutMargin;
-         if (SearchConfig::doProbcut && depth >= SearchConfig::probCutMinDepth && !isMateScore(beta) && evalData.haveThreats[p.c]
+         if (SearchConfig::doProbcut && depth >= SearchConfig::probCutMinDepth && !isMateScore(beta) && 
+             evalData.haveThreats[p.c]
+             //&& !pvsData.isKnownEndGame 
          /*
                && !( pvsData.validTTmove && 
                      e.d >= depth - SearchConfig::probCutSearchDepthMinus - 1 &&
@@ -1262,7 +1280,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                skipCap = true;
                continue;
             }
-            else if ( badCapScore(*it) < -SearchConfig::seeCaptureFactor * (depth + depthCorrection + std::max(0, dangerGoodAttack - dangerUnderAttack)/SearchConfig::seeCapDangerDivisor)) {
+            else if ( badCapScore(*it) < - (SearchConfig::seeCaptureInit + SearchConfig::seeCaptureFactor * (depth - 1 + std::max(0, dangerGoodAttack - dangerUnderAttack)/SearchConfig::seeCapDangerDivisor))) {
                stats.incr(Stats::sid_see2);
                skipCap = true;
                continue;
@@ -1277,7 +1295,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          ScoreType seeValue = 0;
          if (isPrunableStdNoCheck) {
             seeValue = SEE(p, *it);
-            if (!pvsData.rootnode && seeValue < -SearchConfig::seeQuietFactor * (nextDepth + depthCorrection) * (nextDepth + std::max(0, dangerGoodAttack - dangerUnderAttack)/SearchConfig::seeQuietDangerDivisor)){
+            if (!pvsData.rootnode && seeValue < -SearchConfig::seeQuietFactor * (nextDepth - 1) * (nextDepth + std::max(0, dangerGoodAttack - dangerUnderAttack)/SearchConfig::seeQuietDangerDivisor)){
                stats.incr(Stats::sid_seeQuiet);
                continue;
             }
