@@ -334,17 +334,17 @@ void Searcher::searchDriver(bool postMove) {
                if (TimeMan::isDynamic && 
                    depth > MoveDifficultyUtil::emergencyMinDepth && 
                    moveDifficulty == MoveDifficultyUtil::MD_std &&
-                   _data.score < getSearchData().scores[depth - 1] - MoveDifficultyUtil::emergencyMargin) {
+                   _data.score < getSearchData().scores[depth - 2] - MoveDifficultyUtil::emergencyMargin) {
                   moveDifficulty = _data.score > MoveDifficultyUtil::emergencyAttackThreashold ? MoveDifficultyUtil::MD_moobAttackIID
                                                                                                : MoveDifficultyUtil::MD_moobDefenceIID;
                   Logging::LogIt(Logging::logInfo) << "Emergency mode activated : " << _data.score << " < "
-                                                   << getSearchData().scores[depth - 1] - MoveDifficultyUtil::emergencyMargin;
+                                                   << getSearchData().scores[depth - 2] - MoveDifficultyUtil::emergencyMargin;
                }
 
                // update a "variability" measure to scale remaining time on it ///@todo tune this more
                if (depth > 12 && !pvLoc.empty()) {
-                  if (getSearchData().moves[depth] != getSearchData().moves[depth - 1] &&
-                  std::fabs(getSearchData().scores[depth] - getSearchData().scores[depth-1]) > MoveDifficultyUtil::emergencyMargin/4 )
+                  if (getSearchData().moves[depth] != getSearchData().moves[depth - 2] &&
+                  std::fabs(getSearchData().scores[depth] - getSearchData().scores[depth - 2]) > MoveDifficultyUtil::emergencyMargin/4 )
                      MoveDifficultyUtil::variability *= (1.f + depth/100.f);
                   else
                      MoveDifficultyUtil::variability *= 0.98f;

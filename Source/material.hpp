@@ -53,7 +53,8 @@ enum Terminaison : uint8_t {
    Ter_Draw50,
    Ter_MaterialDraw,
    Ter_LikelyDraw,
-   Ter_HardToWin
+   Ter_HardToWin,
+   Ter_None
 };
 
 extern ScoreType (*helperTable[TotalMat])(const Position &, Color, ScoreType, DepthType);

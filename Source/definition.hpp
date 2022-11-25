@@ -605,7 +605,7 @@ namespace MoveDifficultyUtil {
     };
 
     const DepthType emergencyMinDepth          = 14;
-    const ScoreType emergencyMargin            = 90;
+    const ScoreType emergencyMargin            = 64;
     const ScoreType emergencyAttackThreashold  = 130;
     const ScoreType easyMoveMargin             = 180;
     const int       emergencyFactorIID         = 3;

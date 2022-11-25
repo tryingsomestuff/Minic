@@ -49,6 +49,7 @@ struct Searcher {
       bool isMoobingDefend        {false};
       bool isNotPawnEndGame       {false};
       bool lessZugzwangRisk       {false};
+      bool isKnownEndGame         {false};
 
       // from call
       bool isInCheck              {false};
