@@ -58,8 +58,8 @@ struct Position {
    array1d<BitBoard, 6>     _allB {{emptyBitBoard}}; // works because emptyBitBoard is in fact 0
    array1d<BitBoard, 2>     allPieces {{emptyBitBoard}}; // works because emptyBitBoard is in fact 0
 
-   // t p n b r q k bl bd M n  (total is first so that pawn to king is same a Piece)
-   typedef array1d<array1d<char, 11>, 2> Material;
+   // t p n b r q k bl bd M n x x x x x (total is first so that pawn to king is same index as Piece type)
+   typedef array1d<array1d<char, 16>, 2> Material;
    Material mat = {{{{0}}}}; // such a nice syntax ...
 
    mutable Hash h = nullHash, ph = nullHash;
