@@ -197,7 +197,7 @@ bool readMove(const Position &p, const std::string &ss, Square &from, Square &to
          }
          else {
             to        = stringToSquare(strList[1]);
-            isCapture = p.board_const(to) != P_none;
+            isCapture = p.board_const(to) != P_none; // see below for ep
             if (isCapture) moveType = T_capture;
          }
       }

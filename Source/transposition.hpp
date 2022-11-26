@@ -40,7 +40,6 @@ enum Bound : uint8_t {
 #pragma clang diagnostic ignored "-Wpedantic"
 #pragma clang diagnostic ignored "-Wignored-qualifiers"
 #endif // defined(__clang__)
-#pragma pack(push, 1)
 struct Entry {
    Entry(): m(INVALIDMINIMOVE), h(nullHash), s(0), e(0), b(B_none), d(-2) {}
    Entry(Hash _h, Move _m, ScoreType _s, ScoreType _e, Bound _b, DepthType _d):
@@ -62,7 +61,6 @@ struct Entry {
       };
    };
 };
-#pragma pack(pop)
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif // defined(__clang__)

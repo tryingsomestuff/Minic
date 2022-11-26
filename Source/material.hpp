@@ -59,7 +59,6 @@ enum Terminaison : uint8_t {
 
 extern ScoreType (*helperTable[TotalMat])(const Position &, Color, ScoreType, DepthType);
 
-#pragma pack(push, 1)
 struct MaterialHashEntry {
    EvalScore    score = {0, 0};
    uint8_t      gp    = 255;
@@ -67,7 +66,6 @@ struct MaterialHashEntry {
    FORCE_FINLINE float gamePhase() const { return gp / 255.f; }
    FORCE_FINLINE void  setGamePhase(float gpf) { gp = (uint8_t)(255 * gpf); }
 };
-#pragma pack(pop)
 
 extern MaterialHashEntry materialHashTable[TotalMat];
 

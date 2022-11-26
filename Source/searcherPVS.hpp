@@ -245,7 +245,7 @@ Searcher::depthPolicy( [[maybe_unused]] const Position & p,
          //reduction += isBadCap(m);
 
          // capture history reduction
-         const Square to = correctedMove2ToKingDest(m);
+         const Square to = Move2To(m); // ok this is a std capture
          const int hScore = HISTORY_DIV(SearchConfig::lmrCapHistoryFactor * historyT.historyCap[PieceIdx(p.board_const(Move2From(m)))][to][Abs(p.board_const(to))-1]);
          reduction -= std::max(-2,std::min(2, hScore));
 
