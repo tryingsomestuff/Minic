@@ -234,23 +234,22 @@ struct Searcher {
 
    [[nodiscard]] bool searching() const;
 
-#pragma pack(push, 1)
    struct PawnEntry {
-      colored<BitBoard>    pawnTargets   = {emptyBitBoard, emptyBitBoard};
-      colored<BitBoard>    holes         = {emptyBitBoard, emptyBitBoard};
-      colored<BitBoard>    semiOpenFiles = {emptyBitBoard, emptyBitBoard};
-      colored<BitBoard>    passed        = {emptyBitBoard, emptyBitBoard};
-      BitBoard    openFiles              = emptyBitBoard;
-      EvalScore   score                  = {0, 0};
-      colored<BitBoard>   danger         = {0, 0};
-      MiniHash    h                      = nullHash;
+      colored<BitBoard>  pawnTargets   = {emptyBitBoard, emptyBitBoard};
+      colored<BitBoard>  holes         = {emptyBitBoard, emptyBitBoard};
+      colored<BitBoard>  semiOpenFiles = {emptyBitBoard, emptyBitBoard};
+      colored<BitBoard>  passed        = {emptyBitBoard, emptyBitBoard};
+      BitBoard           openFiles     = emptyBitBoard;
+      EvalScore          score         = {0, 0};
+      MiniHash           h             = nullHash;
+      colored<ScoreType> danger        = {0, 0};
+
       FORCE_FINLINE void reset() {
          score            = {0, 0};
          danger[Co_White] = 0;
          danger[Co_Black] = 0;
       }
    };
-#pragma pack(pop)
 
    void initPawnTable();
 

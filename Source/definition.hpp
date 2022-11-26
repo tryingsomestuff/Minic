@@ -537,27 +537,44 @@ inline constexpr array1d<ScoreType,16> MoveScoring    = {   0,                  
    return (mt >> 2 == 0x2);
 }
 [[nodiscard]] FORCE_FINLINE constexpr bool isPromotionCap(const Move m) { return isPromotionCap(Move2Type(m)); }
+
 [[nodiscard]] FORCE_FINLINE constexpr bool isPromotion(const MType mt) {
    assert(isValidMoveType(mt));
    return isPromotionStd(mt) || isPromotionCap(mt);
 }
 [[nodiscard]] FORCE_FINLINE constexpr bool isPromotion(const Move m) { return isPromotion(Move2Type(m)); }
+
 [[nodiscard]] FORCE_FINLINE constexpr bool isCastling(const MType mt) {
    assert(isValidMoveType(mt));
    return (mt >> 2) == 0x3;
 }
 [[nodiscard]] FORCE_FINLINE constexpr bool isCastling(const Move m) { return isCastling(Move2Type(m)); }
+
 [[nodiscard]] FORCE_FINLINE constexpr bool isCapture(const MType mt) {
    assert(isValidMoveType(mt));
    return mt == T_capture || mt == T_ep || isPromotionCap(mt);
 }
 [[nodiscard]] FORCE_FINLINE constexpr bool isCapture(const Move m) { return isCapture(Move2Type(m)); }
 
+[[nodiscard]] FORCE_FINLINE constexpr bool isCaptureNoEP(const MType mt) {
+   assert(isValidMoveType(mt));
+   return mt == T_capture || isPromotionCap(mt);
+}
+[[nodiscard]] FORCE_FINLINE constexpr bool isCaptureNoEP(const Move m) { return isCaptureNoEP(Move2Type(m)); }
+
+
 [[nodiscard]] FORCE_FINLINE constexpr bool isCaptureOrProm(const MType mt) {
    assert(isValidMoveType(mt));
    return mt == T_capture || mt == T_ep || isPromotion(mt);
 }
 [[nodiscard]] FORCE_FINLINE constexpr bool isCaptureOrProm(const Move m) { return isCaptureOrProm(Move2Type(m)); }
+
+[[nodiscard]] FORCE_FINLINE constexpr bool isEnPassant(const MType mt) {
+   assert(isValidMoveType(mt));
+   return mt == T_ep;
+}
+[[nodiscard]] FORCE_FINLINE constexpr bool isEnPassant(const Move m) { return isEnPassant(Move2Type(m)); }
+
 
 constexpr ScoreType badCapLimit = -80;
 

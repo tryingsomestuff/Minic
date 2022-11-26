@@ -38,7 +38,7 @@ struct HistoryT {
          const Color  c    = p.c;
          const Square from = Move2From(m);
          assert(isValidSquare(from));
-         const Square to = correctedMove2ToKingDest(m);
+         const Square to = Move2To(m); // no need for correctedMove2ToKingDest here (std)
          assert(isValidSquare(to));
          const ScoreType s  = S * HSCORE(depth);
          const Piece     pp = p.board_const(from);
@@ -54,10 +54,10 @@ struct HistoryT {
    }
 
    template<int S> FORCE_FINLINE void updateCap(DepthType depth, Move m, const Position& p) {
-      if (isCapture(m)) {
+      if (isCaptureNoEP(m)) {
          const Square from = Move2From(m);
          assert(isValidSquare(from));
-         const Square to = correctedMove2ToKingDest(m);
+         const Square to = Move2To(m); // no need for correctedMove2ToKingDest here (capture)
          assert(isValidSquare(to));
          const Piece pf = p.board_const(from);
          const Piece pt = p.board_const(to);

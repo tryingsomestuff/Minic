@@ -18,7 +18,6 @@ FORCE_FINLINE constexpr kpk_result& operator|=(kpk_result& r, kpk_result v) { re
 
 constexpr unsigned KPKmaxIndex = 2 * 24 * NbSquare * NbSquare; // Color x pawn x wk x bk
 
-#pragma pack(push, 1)
 struct KPKPosition {
    KPKPosition() = default;
    explicit KPKPosition(const unsigned idx);
@@ -30,7 +29,6 @@ struct KPKPosition {
    kpk_result result;
    Color us;
 };
-#pragma pack(pop)
 
 [[nodiscard]] bool probe(const Square wksq, const Square wpsq, const Square bksq, const Color us);
 #endif
