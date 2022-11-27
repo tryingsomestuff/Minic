@@ -71,7 +71,8 @@ void Searcher::getCMHPtr(const unsigned int ply, CMHPtrArray& cmhPtr) {
       if (ply > 2*k && isValidMove(stack[ply - 2*k].p.lastMove)) {
          const Position & pRef = stack[ply - 2*k].p;
          const Square to = correctedMove2ToKingDest(pRef.lastMove);
-         cmhPtr[k] = &historyT.counter_history[PieceIdx(pRef.board_const(to))][to];
+         const int ptIdx = isEnPassant(pRef.lastMove) ? PieceIdx(P_wp) : PieceIdx(pRef.board_const(to));
+         cmhPtr[k] = &historyT.counter_history[ptIdx][to];
       }
    }
 }
