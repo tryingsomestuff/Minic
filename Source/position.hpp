@@ -182,7 +182,7 @@ struct Position {
           ep(p.ep),
           type(Move2Type(_m)),
           fromP(p.board_const(from)),
-          toP(p.board_const(to)),
+          toP(p.board_const(to)), // won't be used for EP
           fromId(PieceIdx(fromP)),
           isCapNoEP(toP != P_none) {
          assert(isValidSquare(from));

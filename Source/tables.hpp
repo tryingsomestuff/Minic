@@ -57,10 +57,10 @@ struct HistoryT {
       if (isCaptureNoEP(m)) {
          const Square from = Move2From(m);
          assert(isValidSquare(from));
-         const Square to = Move2To(m); // no need for correctedMove2ToKingDest here (capture)
+         const Square to = Move2To(m); // no need for correctedMove2ToKingDest here (std capture)
          assert(isValidSquare(to));
          const Piece pf = p.board_const(from);
-         const Piece pt = p.board_const(to);
+         const Piece pt = p.board_const(to); // std capture, no ep
          const ScoreType s  = S * HSCORE(depth);
          historyCap[PieceIdx(pf)][to][Abs(pt)-1] += static_cast<ScoreType>(s - HISTORY_DIV(historyCap[PieceIdx(pf)][to][Abs(pt)-1] * std::abs(s)));
       }
