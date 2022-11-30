@@ -801,7 +801,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             stats.incr(Stats::sid_razoringTry);
             const ScoreType qScore = qsearch(alpha, beta, p, height, seldepth, 0, true, pvnode, pvsData.isInCheck);
             if (stopFlag) return STOPSCORE;
-            if (depth < 2 && pvsData.evalScoreIsHashScore) return stats.incr(Stats::sid_razoringNoQ), qScore;
+            if (depth < 3 && pvsData.evalScoreIsHashScore) return stats.incr(Stats::sid_razoringNoQ), qScore;
             if (qScore <= alpha) return stats.incr(Stats::sid_razoring), qScore;
          }
 
@@ -1295,12 +1295,12 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          ScoreType seeValue = 0;
          if (isPrunableStdNoCheck) {
             seeValue = SEE(p, *it);
-            if (!pvsData.rootnode && seeValue < -SearchConfig::seeQuietFactor * (nextDepth - 1) * (nextDepth + std::max(0, dangerGoodAttack - dangerUnderAttack)/SearchConfig::seeQuietDangerDivisor)){
+            if (!pvsData.rootnode && seeValue < - (SearchConfig::seeQuietInit + SearchConfig::seeQuietFactor * (nextDepth - 1) * (nextDepth + std::max(0, dangerGoodAttack - dangerUnderAttack)/SearchConfig::seeQuietDangerDivisor))){
                stats.incr(Stats::sid_seeQuiet);
                continue;
             }
             // reduce bad quiet more
-            else if (seeValue < 0 && nextDepth > 1) --nextDepth;
+            else if (seeValue < 0 && nextDepth > 1) --nextDepth;            
          }
 
          ++pvsData.validNonPrunedCount;
