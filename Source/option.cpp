@@ -341,6 +341,7 @@ void registerCOMOptions() { // options exposed to GUI
    _keys.push_back(KeyBase(k_score, w_spin, "seeCaptureInit"                    , &SearchConfig::seeCaptureInit                      , ScoreType(-500) , ScoreType(500)      ));
    _keys.push_back(KeyBase(k_score, w_spin, "seeCapDangerDivisor"               , &SearchConfig::seeCapDangerDivisor                 , ScoreType(1)    , ScoreType(32)       ));
    _keys.push_back(KeyBase(k_score, w_spin, "seeQuietFactor"                    , &SearchConfig::seeQuietFactor                      , ScoreType(0)    , ScoreType(1500)     ));
+   _keys.push_back(KeyBase(k_score, w_spin, "seeQuietInit"                      , &SearchConfig::seeQuietInit                        , ScoreType(-500) , ScoreType(500)      ));
    _keys.push_back(KeyBase(k_score, w_spin, "seeQuietDangerDivisor"             , &SearchConfig::seeQuietDangerDivisor               , ScoreType(1)    , ScoreType(32)       ));
    _keys.push_back(KeyBase(k_score, w_spin, "seeQThreshold"                     , &SearchConfig::seeQThreshold                       , ScoreType(-200) , ScoreType(200)      ));
    _keys.push_back(KeyBase(k_score, w_spin, "betaMarginDynamicHistory"          , &SearchConfig::betaMarginDynamicHistory            , ScoreType(0)    , ScoreType(1500)     ));

@@ -36,6 +36,7 @@ CONST_SEARCH_TUNING ScoreType seeCaptureFactor                = 160;
 CONST_SEARCH_TUNING ScoreType seeCaptureInit                  = 64;
 CONST_SEARCH_TUNING ScoreType seeCapDangerDivisor             = 8;
 CONST_SEARCH_TUNING ScoreType seeQuietFactor                  = 64;
+CONST_SEARCH_TUNING ScoreType seeQuietInit                    = 0;
 CONST_SEARCH_TUNING ScoreType seeQuietDangerDivisor           = 11;
 CONST_SEARCH_TUNING ScoreType seeQThreshold                   = -50;
 CONST_SEARCH_TUNING ScoreType betaMarginDynamicHistory        = 180;

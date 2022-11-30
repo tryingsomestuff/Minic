@@ -92,6 +92,7 @@ extern CONST_SEARCH_TUNING ScoreType seeCaptureFactor;
 extern CONST_SEARCH_TUNING ScoreType seeCaptureInit;
 extern CONST_SEARCH_TUNING ScoreType seeCapDangerDivisor;
 extern CONST_SEARCH_TUNING ScoreType seeQuietFactor;
+extern CONST_SEARCH_TUNING ScoreType seeQuietInit;
 extern CONST_SEARCH_TUNING ScoreType seeQuietDangerDivisor;
 extern CONST_SEARCH_TUNING ScoreType seeQThreshold;
 extern CONST_SEARCH_TUNING ScoreType betaMarginDynamicHistory;
