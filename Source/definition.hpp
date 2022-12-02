@@ -181,8 +181,8 @@ typedef int64_t  TimeType;
 typedef uint8_t  GenerationType;
 
 #define ENABLE_INCR_OPERATORS_ON(T) \
-FORCE_FINLINE constexpr T& operator++(T& d) { return d = static_cast<T>(static_cast<int>(d) + 1); } \
-FORCE_FINLINE constexpr T& operator--(T& d) { return d = static_cast<T>(static_cast<int>(d) - 1); }
+FORCE_FINLINE constexpr T& operator++(T& d) { return d = static_cast<T>(static_cast<std::underlying_type_t<T>>(d) + 1); } \
+FORCE_FINLINE constexpr T& operator--(T& d) { return d = static_cast<T>(static_cast<std::underlying_type_t<T>>(d) - 1); }
 
 template<typename T>
 [[nodiscard]] FORCE_FINLINE
@@ -241,7 +241,7 @@ using colored = array1d<T,2>;
 inline const Hash     nullHash      = 0ull; //std::numeric_limits<MiniHash>::max(); // use MiniHash to allow same "null" value for Hash(64) and MiniHash(32)
 inline const BitBoard emptyBitBoard = 0ull;
 
-enum Color : int8_t { Co_None = -1, Co_White = 0, Co_Black = 1, Co_End };
+enum Color : uint8_t { Co_White = 0, Co_Black = 1, Co_None = 2, Co_End };
 [[nodiscard]] constexpr Color operator~(Color c) { return static_cast<Color>(c ^ Co_Black); } // switch Color
 ENABLE_INCR_OPERATORS_ON(Color)
 

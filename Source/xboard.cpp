@@ -271,7 +271,6 @@ void xboard() {
             int d = 0;
             sscanf(COM::command.c_str(), "sd %d", &d);
             COM::depth = clampDepth(d);
-            if (COM::depth < 0) COM::depth = 8;
             // forced move depth
             TimeMan::isDynamic       = false;
             TimeMan::nbMoveInTC      = -1;
