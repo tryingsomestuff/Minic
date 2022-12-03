@@ -780,7 +780,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          // static null move
          if (SearchConfig::doStaticNullMove && !isMateScore(evalScore) && pvsData.lessZugzwangRisk && SearchConfig::staticNullMoveCoeff.isActive(depth, pvsData.evalScoreIsHashScore) ) {
             const ScoreType margin = SearchConfig::staticNullMoveCoeff.threshold(depth, evalData.gp, pvsData.evalScoreIsHashScore, pvsData.improving);
-            if (evalScore >= beta + margin) return stats.incr(Stats::sid_staticNullMove), evalScore - margin;
+            if (evalScore > beta + margin) return stats.incr(Stats::sid_staticNullMove), evalScore - margin;
          }
 
          // (absence of) opponent threats pruning (idea origin from Koivisto)
@@ -799,9 +799,10 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          const ScoreType rAlpha = alpha - SearchConfig::razoringCoeff.threshold(pvsData.marginDepth, evalData.gp, pvsData.evalScoreIsHashScore, pvsData.improving);
          if (SearchConfig::doRazoring && SearchConfig::razoringCoeff.isActive(depth, pvsData.evalScoreIsHashScore) && evalScore <= rAlpha) {
             stats.incr(Stats::sid_razoringTry);
+            if (!evalData.haveThreats[p.c]) return stats.incr(Stats::sid_razoringNoThreat), rAlpha;
             const ScoreType qScore = qsearch(alpha, beta, p, height, seldepth, 0, true, pvnode, pvsData.isInCheck);
             if (stopFlag) return STOPSCORE;
-            if (pvsData.evalScoreIsHashScore) return stats.incr(Stats::sid_razoringNoQ), qScore; // won't happen often as depth limit is small...
+            //if (pvsData.evalScoreIsHashScore) return stats.incr(Stats::sid_razoringNoQ), qScore; // won't happen often as depth limit is small...
             if (qScore <= alpha) return stats.incr(Stats::sid_razoring), qScore;
          }
 
@@ -872,6 +873,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             int probCutCount = 0;
             capMoveGenerated = true;
             MoveGen::generate<MoveGen::GP_cap>(p, moves);
+            //if(moves.empty()) stats.incr(Stats::sid_probcutNoCap); // should be 0 as there is threats ...
    #ifdef USE_PARTIAL_SORT
             MoveSorter::score(*this, moves, p, evalData.gp, height, pvsData.cmhPtr, true, pvsData.isInCheck, pvsData.validTTmove ? &e : NULL);
             size_t offset = 0;
@@ -881,6 +883,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             MoveSorter::scoreAndSort(*this, moves, p, evalData.gp, height, pvsData.cmhPtr, true, pvsData.isInCheck, pvsData.validTTmove ? &e : NULL);
             for (auto it = moves.begin(); it != moves.end() && probCutCount < SearchConfig::probCutMaxMoves /*+ 2*pvsData.cutNode*/; ++it) {
    #endif
+               stats.incr(Stats::sid_probcutMoves);
                if ((pvsData.validTTmove && sameMove(e.m, *it)) || isBadCap(*it)) continue; // skip TT move if quiet or bad captures
                Position p2 = p;
                const Position::MoveInfo moveInfo(p2,*it);
