@@ -801,7 +801,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             stats.incr(Stats::sid_razoringTry);
             const ScoreType qScore = qsearch(alpha, beta, p, height, seldepth, 0, true, pvnode, pvsData.isInCheck);
             if (stopFlag) return STOPSCORE;
-            if (pvsData.evalScoreIsHashScore) return stats.incr(Stats::sid_razoringNoQ), qScore;
+            if (pvsData.evalScoreIsHashScore) return stats.incr(Stats::sid_razoringNoQ), qScore; // won't happen often as depth limit is small...
             if (qScore <= alpha) return stats.incr(Stats::sid_razoring), qScore;
          }
 
@@ -863,12 +863,11 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          const ScoreType betaPC = beta + SearchConfig::probCutMargin;
          if (SearchConfig::doProbcut && depth >= SearchConfig::probCutMinDepth && !isMateScore(beta) && 
              evalData.haveThreats[p.c]
-             //&& !pvsData.isKnownEndGame 
-         /*
+               //&& !pvsData.isKnownEndGame 
                && !( pvsData.validTTmove && 
                      e.d >= depth - SearchConfig::probCutSearchDepthMinus - 1 &&
-                     e.s < betaPC)
-         */) {
+                     e.s < beta + 1) // interestingly, just beta bound here is not enought
+         ) {
             stats.incr(Stats::sid_probcutTry);
             int probCutCount = 0;
             capMoveGenerated = true;
