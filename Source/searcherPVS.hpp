@@ -801,7 +801,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             stats.incr(Stats::sid_razoringTry);
             const ScoreType qScore = qsearch(alpha, beta, p, height, seldepth, 0, true, pvnode, pvsData.isInCheck);
             if (stopFlag) return STOPSCORE;
-            if (depth < 3 && pvsData.evalScoreIsHashScore) return stats.incr(Stats::sid_razoringNoQ), qScore;
+            if (pvsData.evalScoreIsHashScore) return stats.incr(Stats::sid_razoringNoQ), qScore;
             if (qScore <= alpha) return stats.incr(Stats::sid_razoring), qScore;
          }
 
