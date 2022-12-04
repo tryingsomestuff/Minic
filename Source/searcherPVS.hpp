@@ -808,54 +808,44 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
          // null move
          if (SearchConfig::doNullMove && !subSearch && 
-            depth >= SearchConfig::nullMoveMinDepth &&
-            pvsData.lessZugzwangRisk && 
-            //!pvsData.isKnownEndGame &&
-            pvsData.withoutSkipMove &&
-            evalScore >= beta + SearchConfig::nullMoveMargin && 
-            evalScore >= stack[p.halfmoves].eval &&
-            stack[p.halfmoves].p.lastMove != NULLMOVE && 
-            (height >= nullMoveMinPly || nullMoveVerifColor != p.c)) {
+             depth >= SearchConfig::nullMoveMinDepth &&
+             pvsData.lessZugzwangRisk && 
+             //!pvsData.isKnownEndGame &&
+             pvsData.withoutSkipMove &&
+             (evalScore == beta || evalScore >= beta + SearchConfig::nullMoveMargin) && 
+             evalScore >= stack[p.halfmoves].eval &&
+             stack[p.halfmoves].p.lastMove != NULLMOVE && 
+             (height >= nullMoveMinPly || nullMoveVerifColor != p.c)) {
             PVList nullPV;
             stats.incr(Stats::sid_nullMoveTry);
             const DepthType R = SearchConfig::nullMoveReductionInit +
                               depth / SearchConfig::nullMoveReductionDepthDivisor + 
                               std::min((evalScore - beta) / SearchConfig::nullMoveDynamicDivisor, 5); // adaptative
-            ///@todo try to minimize sid_nullMoveTry2 versus sid_nullMove
-            const ScoreType nullIIDScore = evalScore; // pvs<false, false>(beta - 1, beta, p, std::max(depth/4,1), evaluator, height, nullPV, seldepth, isInCheck, !pvsData.cutNode);
-            if (nullIIDScore >= beta + SearchConfig::nullMoveMargin2) {
-               TT::Entry nullE;
-               const DepthType nullDepth = depth - R;
-               TT::getEntry(*this, p, pHash, nullDepth, nullE);
-               if (nullE.h == nullHash ||
-                  nullE.s >= beta) { // avoid null move search if TT gives a score < beta for the same depth ///@todo check this again !
-                  stats.incr(Stats::sid_nullMoveTry2);
-                  Position pN = p;
-                  applyNull(*this, pN);
-                  assert(pN.halfmoves < MAX_PLY && pN.halfmoves >= 0);
-                  stack[pN.halfmoves].p = pN; ///@todo another expensive copy !!!!
-                  stack[pN.halfmoves].h = pN.h;
-                  ScoreType nullscore   = -pvs<false>(-beta, -beta + 1, pN, nullDepth, height + 1, nullPV, seldepth, extensions, pvsData.isInCheck, !pvsData.cutNode);
+            const DepthType nullDepth = std::max(0, depth - R);
+            Position pN = p;
+            applyNull(*this, pN);
+            assert(pN.halfmoves < MAX_PLY && pN.halfmoves >= 0);
+            stack[pN.halfmoves].p = pN; ///@todo another expensive copy !!!!
+            stack[pN.halfmoves].h = pN.h;
+            ScoreType nullscore   = -pvs<false>(-beta, -beta + 1, pN, nullDepth, height + 1, nullPV, seldepth, extensions, pvsData.isInCheck, !pvsData.cutNode);
+            if (stopFlag) return STOPSCORE;
+            TT::Entry nullEThreat;
+            TT::getEntry(*this, pN, computeHash(pN), 0, nullEThreat);
+            if (nullEThreat.h != nullHash && nullEThreat.m != INVALIDMINIMOVE) refutation = nullEThreat.m;
+            if (isMatedScore(nullscore)) pvsData.mateThreat = true;
+            if (nullscore >= beta) { // verification search
+               if ( (!pvsData.lessZugzwangRisk || depth > SearchConfig::nullMoveVerifDepth) && nullMoveMinPly == 0){
+                  stats.incr(Stats::sid_nullMoveTry3);
+                  nullMoveMinPly = height + 3*nullDepth/4;
+                  nullMoveVerifColor = p.c;
+                  nullscore = pvs<false>(beta - 1, beta, p, nullDepth, height+1, nullPV, seldepth, extensions, pvsData.isInCheck, false);
+                  nullMoveMinPly = 0;
+                  nullMoveVerifColor = Co_None;
                   if (stopFlag) return STOPSCORE;
-                  TT::Entry nullEThreat;
-                  TT::getEntry(*this, pN, computeHash(pN), 0, nullEThreat);
-                  if (nullEThreat.h != nullHash && nullEThreat.m != INVALIDMINIMOVE) refutation = nullEThreat.m;
-                  if (isMatedScore(nullscore)) pvsData.mateThreat = true;
-                  if (nullscore >= beta) { // verification search
-                     if ( (!pvsData.lessZugzwangRisk || depth > SearchConfig::nullMoveVerifDepth) && nullMoveMinPly == 0){
-                        stats.incr(Stats::sid_nullMoveTry3);
-                        nullMoveMinPly = height + 3*nullDepth/4;
-                        nullMoveVerifColor = p.c;
-                        nullscore = pvs<false>(beta - 1, beta, p, nullDepth, height+1, nullPV, seldepth, extensions, pvsData.isInCheck, false);
-                        nullMoveMinPly = 0;
-                        nullMoveVerifColor = Co_None;
-                        if (stopFlag) return STOPSCORE;
-                        if (nullscore >= beta ) return stats.incr(Stats::sid_nullMove2), nullscore;
-                     }
-                     else {
-                        return stats.incr(Stats::sid_nullMove), (isMateScore(nullscore) ? beta : nullscore);
-                     }
-                  }
+                  if (nullscore >= beta ) return stats.incr(Stats::sid_nullMove2), nullscore;
+               }
+               else {
+                  return stats.incr(Stats::sid_nullMove), (isMateScore(nullscore) ? beta : nullscore);
                }
             }
          }
