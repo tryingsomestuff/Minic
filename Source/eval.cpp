@@ -206,7 +206,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
          MoveList moves;
          MoveGen::generate<MoveGen::GP_cap>(p, moves);
          bool hasCapture = false;
-         for (const auto & m : moves){
+         for (auto m : moves){
             Position p2 = p;
             const Position::MoveInfo moveInfo(p2, m);
             if (applyMove(p2,moveInfo, true)){

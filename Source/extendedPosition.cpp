@@ -104,9 +104,9 @@ template<typename T> std::ostream &operator<<(std::ostream &os, const std::vecto
 
 std::string ExtendedPosition::epdString() const {
    std::string epd = GetFENShort2(*this) + " ";
-   for (auto &p : _extendedParams) {
+   for (const auto &p : _extendedParams) {
       epd += p.first + " ";
-      for (auto &cc : p.second) { epd += cc + " "; }
+      for (const auto &cc : p.second) { epd += cc + " "; }
       epd += ";";
    }
    return epd;

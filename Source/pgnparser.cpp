@@ -143,7 +143,7 @@ void pgnparse__(std::ifstream& is, std::ofstream& os) {
       }
       if (!read) break;
 
-      auto gameResult = parseResult(result);
+      const auto gameResult = parseResult(result);
       if (gameResult != -2) {
          game.result    = gameResult;
          game.resultStr = result;

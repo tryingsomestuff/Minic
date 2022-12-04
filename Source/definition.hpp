@@ -160,7 +160,7 @@ typedef uint64_t u_int64_t;
 #define JOIN(symbol1, symbol2)     _DO_JOIN(symbol1, symbol2)
 #define _DO_JOIN(symbol1, symbol2) symbol1##symbol2
 
-#define DISCARD [[maybe_unused]] auto LINE_NAME(_tmp,_) =
+#define DISCARD [[maybe_unused]] const auto LINE_NAME(_tmp,_) =
 
 #ifdef _WIN32
 #define GETPID _getpid

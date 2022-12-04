@@ -284,7 +284,7 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
          MoveList movesTB;
          Logging::LogIt(Logging::logInfo) << "Probing root";
          if (SyzygyTb::probe_root(ThreadPool::instance().main(), p, tbScore, movesTB) >= 0) { // only good moves if TB success
-            for(const auto & m : movesTB ){
+            for(auto m : movesTB ){
                Logging::LogIt(Logging::logInfo) << "TB move " << ToString(m);
             }
             Logging::LogIt(Logging::logInfo) << "Score " << tbScore;

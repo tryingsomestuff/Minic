@@ -452,7 +452,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // if not at root we check for draws (3rep, fifty and material)
    if (!pvsData.rootnode){
-      if (auto INRscore = interiorNodeRecognizer<pvnode>(p, height); INRscore.has_value()){
+      if (const auto INRscore = interiorNodeRecognizer<pvnode>(p, height); INRscore.has_value()){
          return INRscore.value();
       }
    }

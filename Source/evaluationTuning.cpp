@@ -100,7 +100,7 @@ double E(const std::vector<EvalTuning::InputData>& data, size_t miniBatchSize) {
    auto worker = [&](size_t begin, size_t end, std::atomic<double>& acc) {
       double ee = 0;
       NNUEEvaluator evaluator;
-      for (auto k = begin; k != end; ++k) {
+      for (size_t k = begin; k != end; ++k) {
          Position* p = data[k].p.get();
          assert(p);
          if (DynamicConfig::useNNUE){

@@ -82,7 +82,7 @@ void processCommand(const std::string & command) {
       COM::stop();
    }
    else if (uciCommand == "position") {
-      auto startTimePos = Clock::now();
+      const auto startTimePos = Clock::now();
       COM::position.h   = nullHash; // invalidate position
       std::string type;
 

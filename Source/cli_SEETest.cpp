@@ -81,7 +81,7 @@ bool TestSEE() {
    NNUEEvaluator evaluator;
 #endif
 
-   for (auto& t : posList) {
+   for (const auto& t : posList) {
       RootPosition p;
 #ifdef WITH_NNUE
       p.associateEvaluator(evaluator);
