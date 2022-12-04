@@ -90,10 +90,10 @@ struct HalfKA {
         assert(p.type()!=chess::PieceType::None);
         if ( p.color() == us )
            return feature_idx::major * HFlip(int(ksq)) + HFlip(int(sq)) 
-                + feature_idx::us_offset(MinicPiece(static_cast<int>(p.type()) + 1));
+                + feature_idx::us_offset(static_cast<MinicPiece>(static_cast<int>(p.type()) + 1));
         else
            return feature_idx::major * HFlip(int(ksq)) + HFlip(int(sq)) 
-                + feature_idx::them_offset(MinicPiece(static_cast<int>(p.type()) + 1));
+                + feature_idx::them_offset(static_cast<MinicPiece>(static_cast<int>(p.type()) + 1));
     }
 
     static int fill_features_sparse(int i, const TrainingDataEntry& e, int* features, float* values, int& counter, Color color)

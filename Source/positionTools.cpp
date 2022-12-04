@@ -268,7 +268,7 @@ std::string chess960::getDFRCXFEN(){
    return fenBP + middle + fenWP + " w " + fenWC + fenBC + " - 0 1";
 }
 
-const std::string chess960::positions[960] = {
+const array1d<std::string,960> chess960::positions = {
     "bbqnnrkr/pppppppp/8/8/8/8/PPPPPPPP/BBQNNRKR w HFhf - 0 1", "bqnbnrkr/pppppppp/8/8/8/8/PPPPPPPP/BQNBNRKR w HFhf - 0 1",
     "bqnnrbkr/pppppppp/8/8/8/8/PPPPPPPP/BQNNRBKR w HEhe - 0 1", "bqnnrkrb/pppppppp/8/8/8/8/PPPPPPPP/BQNNRKRB w GEge - 0 1",
     "qbbnnrkr/pppppppp/8/8/8/8/PPPPPPPP/QBBNNRKR w HFhf - 0 1", "qnbbnrkr/pppppppp/8/8/8/8/PPPPPPPP/QNBBNRKR w HFhf - 0 1",

@@ -53,7 +53,7 @@ void init(const Protocol pr);
 
 void readLine();
 
-[[nodiscard]] bool makeMove(const Move m, const bool disp, const std::string & tag, const Move ponder = INVALIDMOVE);
+[[nodiscard]] bool makeMove(const Move m, const bool disp, const std::string & tag, const Move pondermove = INVALIDMOVE);
 
 void stop();
 

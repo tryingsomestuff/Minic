@@ -17,9 +17,11 @@
 
 namespace {
 
-int parse_game_result_from_pgn_extract(std::string result) {
+int parse_game_result_from_pgn_extract(const std::string & result) {
    // White Win
-   if (result == "\"1-0\"") { return 1; }
+   if (result == "\"1-0\"") { 
+      return 1;
+   }
    // Black Win&
    else if (result == "\"0-1\"") {
       return -1;
@@ -35,7 +37,7 @@ int parse_game_result_from_pgn_extract(std::string result) {
 // #3   -->  mate_in(3)
 // -M4  --> -mate_in(4)
 // +M3  -->  mate_in(3)
-ScoreType parse_score_from_pgn_extract(std::string eval, bool& success) {
+ScoreType parse_score_from_pgn_extract(const std::string & eval, bool& success) {
    success = true;
 
    if (eval.substr(0, 1) == "#") {
@@ -60,7 +62,7 @@ ScoreType parse_score_from_pgn_extract(std::string eval, bool& success) {
          return 0;
       }
       else {
-         return ScoreType(value * 100);
+         return static_cast<ScoreType>(value * 100);
       }
    }
 }
@@ -78,7 +80,7 @@ inline void trim(std::string& s) {
    rtrim(s);
 }
 
-inline bool is_like_fen(std::string fen) {
+inline bool is_like_fen(const std::string & fen) {
    auto count_space = std::count(fen.cbegin(), fen.cend(), ' ');
    auto count_slash = std::count(fen.cbegin(), fen.cend(), '/');
    return count_space == 5 && count_slash == 7;

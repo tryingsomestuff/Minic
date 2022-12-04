@@ -194,7 +194,7 @@ bool receiveMoves(const Move move, Move ponderMove) {
    return ret;
 }
 
-bool makeMove(const Move m, const bool disp, const std::string & tag, const Move pMove) {
+bool makeMove(const Move m, const bool disp, const std::string & tag, const Move pondermove) {
 #ifdef WITH_NNUE
    position.resetNNUEEvaluator(position.evaluator());
 #endif
@@ -202,7 +202,7 @@ bool makeMove(const Move m, const bool disp, const std::string & tag, const Move
    const bool b = applyMove(position, moveInfo); // this update the COM::position position status
    if (disp && m != INVALIDMOVE) {
       Logging::LogIt(Logging::logGUI) << tag << " " << ToString(m)
-                                      << (Logging::ct == Logging::CT_uci && isValidMove(pMove) ? (" ponder " + ToString(pMove)) : "");
+                                      << (Logging::ct == Logging::CT_uci && isValidMove(pondermove) ? (" ponder " + ToString(pondermove)) : "");
    }
    Logging::LogIt(Logging::logInfo) << ToString(position);
    return b;

@@ -23,7 +23,7 @@ fi
 exe=${exe}.exe
 
 echo "Building $exe"
-OPT="-Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto $t --std=c++17 $n -Wno-unknown-pragmas"
+OPT="-Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto $t $STDVERSION $n -Wno-unknown-pragmas"
 echo $OPT
 
 if [ $FATHOM_PRESENT = "1" ]; then

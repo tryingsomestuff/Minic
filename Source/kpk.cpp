@@ -8,7 +8,7 @@ namespace KPK {
 
 #if !defined(WITH_SMALL_MEMORY)
 namespace {
-uint32_t KPKBitbase[KPK::KPKmaxIndex / 32];               // force 32bit uint
+array1d<uint32_t,KPK::KPKmaxIndex / 32> KPKBitbase;               // force 32bit uint
 FORCE_FINLINE unsigned KPKindex(Color us, Square bksq, Square wksq, Square psq) {
    return wksq | (bksq << 6) | (us << 12) | (SQFILE(psq) << 13) | ((6 - SQRANK(psq)) << 15);
 }
@@ -20,11 +20,10 @@ Square normalizeSquare(const Position& p, const Color strongSide, const Square s
    return strongSide == Co_White ? nsq : VFlip(nsq);
 }
 
-KPKPosition::KPKPosition(const unsigned idx) { // first init
-   ksq[Co_White] = static_cast<Square>(idx & 0x3F);
-   ksq[Co_Black] = static_cast<Square>((idx >> 6) & 0x3F);
-   us            = static_cast<Color>((idx >> 12) & 0x01);
-   psq           = MakeSquare(File((idx >> 13) & 0x3), Rank(6 - ((idx >> 15) & 0x7)));
+KPKPosition::KPKPosition(const unsigned idx) :
+      ksq ({ static_cast<Square>(idx & 0x3F), static_cast<Square>((idx >> 6) & 0x3F) }),
+      us  (static_cast<Color>((idx >> 12) & 0x01)),
+      psq (MakeSquare(File((idx >> 13) & 0x3), Rank(6 - ((idx >> 15) & 0x7)))){ // first init
    if (chebyshevDistance(ksq[Co_White], ksq[Co_Black]) <= 1 || ksq[Co_White] == psq || ksq[Co_Black] == psq ||
        (us == Co_White && (BBTools::mask[psq].pawnAttack[Co_White] & SquareToBitboard(ksq[Co_Black]))))
       result = kpk_invalid;
@@ -71,7 +70,8 @@ void init() {
    Logging::LogIt(Logging::logInfo) << "KPK init";
    Logging::LogIt(Logging::logInfo) << "KPK table size : " << KPKmaxIndex / 32 * sizeof(uint32_t) / 1024 << "Kb";
    array1d<KPKPosition, KPKmaxIndex> db;
-   unsigned idx, repeat = 1;
+   unsigned idx = 0;
+   unsigned repeat = 1;
    for (idx = 0; idx < KPKmaxIndex; ++idx) db[idx] = KPKPosition(idx); // init
    while (repeat)
       for (repeat = idx = 0; idx < KPKmaxIndex; ++idx) repeat |= (db[idx] == kpk_unknown && db[idx].preCompute(db) != kpk_unknown); // loop

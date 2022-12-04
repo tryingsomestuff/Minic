@@ -11,7 +11,7 @@
  * Those things are used for test suite to work when reading edp file
  */
 struct ExtendedPosition : RootPosition {
-   ExtendedPosition(const std::string& s, bool withMoveCount = true);
+   ExtendedPosition(const std::string& extFEN, bool withMoveCount = true);
    [[nodiscard]] bool       shallFindBest();
    [[nodiscard]] bool       shallAvoidBad();
    [[nodiscard]] std::vector<std::string> bestMoves();

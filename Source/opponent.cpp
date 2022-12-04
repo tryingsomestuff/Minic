@@ -60,7 +60,7 @@ void init() {
    if (DynamicConfig::ratingAdvReceived) {
       Logging::LogIt(Logging::logInfo) << "Using ratingAdv...";
       // ratingFactor will go from -2 to 2
-      const double x = 1. / (1 - DynamicConfig::ratingAdv / double(myRating));
+      const double x = 1. / (1 - DynamicConfig::ratingAdv / static_cast<double>(myRating));
       DynamicConfig::ratingFactor = 2 * std::tanh((x - 1) * 20.);
    }
    // else rely on the UCI_Opponent string
@@ -109,7 +109,7 @@ void init() {
 
             if (ratingFound) {
                // ratingFactor will go from -2 to 2
-               DynamicConfig::ratingFactor = 2 * std::tanh((myRating / double(oppRating) - 1) * 20.);
+               DynamicConfig::ratingFactor = 2 * std::tanh((myRating / static_cast<double>(oppRating) - 1) * 20.);
             }
          }
          else {

@@ -26,6 +26,7 @@
 #include <random>
 #include <regex>
 #include <set>
+#include <span>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -302,10 +303,10 @@ constexpr int NbPiece    = 2 * PieceShift + 1;
 enum Mat : uint8_t { M_t = 0, M_p, M_n, M_b, M_r, M_q, M_k, M_bl, M_bd, M_M, M_m };
 ENABLE_INCR_OPERATORS_ON(Mat)
 
-extern CONST_PIECE_TUNING ScoreType Values[NbPiece];
-extern CONST_PIECE_TUNING ScoreType ValuesEG[NbPiece];
-extern CONST_PIECE_TUNING ScoreType ValuesGP[NbPiece];
-extern CONST_PIECE_TUNING ScoreType ValuesSEE[NbPiece];
+extern CONST_PIECE_TUNING array1d<ScoreType,NbPiece> Values;
+extern CONST_PIECE_TUNING array1d<ScoreType,NbPiece> ValuesEG;
+extern CONST_PIECE_TUNING array1d<ScoreType,NbPiece> ValuesGP;
+extern CONST_PIECE_TUNING array1d<ScoreType,NbPiece> ValuesSEE;
 
 [[nodiscard]] FORCE_FINLINE ScoreType value(Piece pp)      { return Values[pp + PieceShift]; }
 [[nodiscard]] FORCE_FINLINE ScoreType valueEG(Piece pp)    { return ValuesEG[pp + PieceShift]; }
@@ -443,7 +444,8 @@ enum MType : uint8_t {
    T_wks      = 12,
    T_wqs      = 13,
    T_bks      = 14,
-   T_bqs      = 15 // binary 1100 to 1111
+   T_bqs      = 15, // binary 1100 to 1111
+   T_max      = 16
 };
 
 // castling are encoded with to Square being initial rook position

@@ -13,6 +13,8 @@ else
 
    export STANDARDSOURCE="Source/*.cpp Source/nnue/*.cpp Source/nnue/learn/*.cpp"
 
+   export STDVERSION="--std=c++20"
+
    export COMMON_BUILD=1
 
    do_sep(){

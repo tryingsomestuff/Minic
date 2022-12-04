@@ -66,7 +66,7 @@ std::string ToString(const Move& m, bool withScore) {
          break;
       }
    }
-   constexpr std::string_view promSuffixe[] = {"", "", "", "", "q", "r", "b", "n", "q", "r", "b", "n", "", "", "", ""};
+   static constexpr array1d<std::string_view,T_max> promSuffixe = {"", "", "", "", "q", "r", "b", "n", "q", "r", "b", "n", "", "", "", ""};
    const std::string_view & prom = promSuffixe[Move2Type(m)];
    ///@todo remove string CTOR here in C++26 ;-)
    return std::string(SquareNames[Move2From(m)]) + std::string(SquareNames[Move2To(m)]) + std::string(prom) + score; 
@@ -223,7 +223,7 @@ std::string showAlgAbr(const Move m, const Position &p) {
    Piece t = p.board_const(from);
 
    // add piece type if not pawn
-   s += PieceNames[PieceIdx((Piece)std::abs(t))];
+   s += PieceNames[PieceIdx(static_cast<Piece>(std::abs(t)))];
    if (t == P_wp || t == P_bp) s.clear(); // no piece symbol for pawn
 
    // ensure move is not ambiguous

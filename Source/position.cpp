@@ -34,7 +34,8 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent, bool withMove
    p.ph = nullHash;
    for (Square k = 0; k < NbSquare; ++k) p.board(k) = P_none;
 
-   Square j = 1, i = 0;
+   Square j = 1;
+   Square i = 0;
    while ((j <= NbSquare) && (i < (char)strList[0].length())) {
       char letter = strList[0].at(i);
       ++i;

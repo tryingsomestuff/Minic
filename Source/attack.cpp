@@ -201,7 +201,8 @@ constexpr array1d<BitBoard,NbSquare> rookMagics = {
 };
 
 BitBoard computeAttacks(const int index, const BitBoard occ, const int delta) {
-   BitBoard attacks = emptyBitBoard, blocked = emptyBitBoard;
+   BitBoard attacks = emptyBitBoard;
+   BitBoard blocked = emptyBitBoard;
    for (int shift = index + delta; ISNEIGHBOUR(shift, shift - delta); shift += delta) {
       if (!blocked) attacks |= SquareToBitboard(shift);
       blocked |= ((1ULL << shift) & occ);
