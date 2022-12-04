@@ -243,11 +243,11 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
             }
             // apply some scaling (more later...)
             else if (MEntry.t == MaterialHash::Ter_WhiteWin || MEntry.t == MaterialHash::Ter_BlackWin)
-               features.scalingFactor = EvalConfig::scalingFactorWin / 128.f;
+               features.scalingFactor = static_cast<float>(EvalConfig::scalingFactorWin) / 128.f;
             else if (MEntry.t == MaterialHash::Ter_HardToWin)
-               features.scalingFactor = EvalConfig::scalingFactorHardWin / 128.f;
+               features.scalingFactor = static_cast<float>(EvalConfig::scalingFactorHardWin) / 128.f;
             else if (MEntry.t == MaterialHash::Ter_LikelyDraw)
-               features.scalingFactor = EvalConfig::scalingFactorLikelyDraw / 128.f;
+               features.scalingFactor = static_cast<float>(EvalConfig::scalingFactorLikelyDraw) / 128.f;
          }
          /*
          else {
@@ -373,7 +373,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
 
    // PST, attack, danger
    const bool withForwadness = DynamicConfig::styleForwardness != 50;
-   const ScoreType staticColorSignHelper[2] = { +1, -1};
+   const array1d<ScoreType,2> staticColorSignHelper = { +1, -1};
    for (Color c = Co_White ; c <= Co_Black ; ++c){
       // will do pawns later
       for (Piece pp = P_wn ; pp <= P_wk ; ++pp){
@@ -518,8 +518,8 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
         pe.score -= EvalConfig::pawnShieldBonus * std::min(pawnShieldB * pawnShieldB, 9);
         
         // malus for king on a pawnless flank
-        const File wkf = (File)SQFILE(p.king[Co_White]);
-        const File bkf = (File)SQFILE(p.king[Co_Black]);
+        const File wkf = SQFILE(p.king[Co_White]);
+        const File bkf = SQFILE(p.king[Co_Black]);
         if (!(pawns[Co_White] & kingFlank[wkf])) pe.score += EvalConfig::pawnlessFlank;
         if (!(pawns[Co_Black] & kingFlank[bkf])) pe.score -= EvalConfig::pawnlessFlank;
         
@@ -835,8 +835,8 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    EvalScore initiativeBonus = EvalConfig::initiative[0] * countBit(allPawns) +
                                EvalConfig::initiative[1] * ((allPawns & queenSide) && (allPawns & kingSide)) +
                                EvalConfig::initiative[2] * (countBit(occupancy & ~allPawns) == 2) - EvalConfig::initiative[3];
-   initiativeBonus = EvalScore(sgn(score[MG]) * std::max(initiativeBonus[MG], ScoreType(-std::abs(score[MG]))),
-                               sgn(score[EG]) * std::max(initiativeBonus[EG], ScoreType(-std::abs(score[EG]))));
+   initiativeBonus = EvalScore(sgn(score[MG]) * std::max(initiativeBonus[MG], static_cast<ScoreType>(-std::abs(score[MG]))),
+                               sgn(score[EG]) * std::max(initiativeBonus[EG], static_cast<ScoreType>(-std::abs(score[EG]))));
    score += initiativeBonus;
 
 #ifdef VERBOSE_EVAL

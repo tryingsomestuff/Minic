@@ -14,7 +14,7 @@ namespace MaterialHash { // idea from Gull
 ScoreType (*helperTable[TotalMat])(const Position &, Color, ScoreType, DepthType);
 
 // the material cache
-MaterialHashEntry materialHashTable[TotalMat];
+array1d<MaterialHashEntry,TotalMat> materialHashTable;
 
 #ifndef WITH_MATERIAL_TABLE
 [[nodiscard]] Hash getMaterialHash(const Position::Material &) {
@@ -145,7 +145,7 @@ MaterialHashEntry materialHashTable[TotalMat];
    }
 }
 
-const ScoreType pushToEdges[NbSquare] = {
+const array1d<ScoreType,NbSquare> pushToEdges = {
    100, 90, 80, 70, 70, 80, 90, 100,
    90, 70, 60, 50, 50, 60, 70,  90,
    80, 60, 40, 30, 30, 40, 60,  80,
@@ -156,7 +156,7 @@ const ScoreType pushToEdges[NbSquare] = {
    100, 90, 80, 70, 70, 80, 90, 100
 };
 
-const ScoreType pushToCorners[NbSquare] = {
+const array1d<ScoreType,NbSquare> pushToCorners = {
    200, 190, 180, 170, 160, 150, 140, 130,
    190, 180, 170, 160, 150, 140, 130, 140,
    180, 170, 155, 140, 140, 125, 140, 150,
@@ -167,8 +167,8 @@ const ScoreType pushToCorners[NbSquare] = {
    130, 140, 150, 160, 170, 180, 190, 200
 };
 
-const ScoreType pushClose[8] = {0, 0, 100, 80, 60, 40, 20, 10};
-//const ScoreType pushAway [8] = { 0, 5, 20, 40, 60, 80, 90, 100 };
+const array1d<ScoreType,8> pushClose = {0, 0, 100, 80, 60, 40, 20, 10};
+//const array1d<ScoreType,8> pushAway = { 0, 5, 20, 40, 60, 80, 90, 100 };
 
 ScoreType helperKXK(const Position &p, Color winningSide, ScoreType s, DepthType height) {
    if (p.c != winningSide) {
@@ -268,7 +268,8 @@ void InitMaterialScore(bool display) {
       const EvalScore imbalanceW = Imbalance(mat, Co_White);
       const EvalScore imbalanceB = Imbalance(mat, Co_Black);
 #endif
-      ScoreType dummyW = 0, dummyB = 0;
+      ScoreType dummyW = 0;
+      ScoreType dummyB = 0;
       materialHashTable[k].setGamePhase(gamePhase(mat, dummyW, dummyB));
       materialHashTable[k].score =
       EvalScore(imbalanceW[MG] + matScoreW - (imbalanceB[MG] + matScoreB), imbalanceW[EG] + matScoreWEG - (imbalanceB[EG] + matScoreBEG));

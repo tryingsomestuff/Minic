@@ -61,7 +61,7 @@ fi
 LIBS="-lpthread -ldl"
 # -lopenblas"
 
-OPT="$WARN $d $OPT $t --std=c++17 -fno-exceptions"
+OPT="$WARN $d $OPT $t $STDVERSION -fno-exceptions"
 if [ -n "$FORCEDNAME" ]; then
    OPT="$OPT -ffp-contract=off" # to ensure reproductible result in AVX2 (FMA)
 fi

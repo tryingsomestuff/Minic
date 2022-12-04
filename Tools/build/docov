@@ -16,7 +16,7 @@ fi
 
 do_title "Building Minic for Linux coverage"
 
-OPT="$d --coverage -O3 --std=c++17"
+OPT="$d --coverage -O3 $STDVERSION"
 
 if [ $FATHOM_PRESENT = "1" ]; then
    lib=fathom_dev_linux_x64.o

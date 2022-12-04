@@ -18,7 +18,7 @@ fi
 
 do_title "Building Minic for WASM"
 
-OPT="-fconstexpr-steps=100000000 -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto --std=c++17 $n -Wno-unknown-pragmas -DWITHOUT_FILESYSTEM -fconstexpr-depth=1000000"
+OPT="-fconstexpr-steps=100000000 -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto$STDVERSION $n -Wno-unknown-pragmas -DWITHOUT_FILESYSTEM -fconstexpr-depth=1000000"
 OPT="$OPT -s MODULARIZE=1 -s EXPORT_NAME="Minic" -s ENVIRONMENT=web,worker"
 OPT="$OPT -s USE_PTHREADS=1"
 #OPT="$OPT -s PTHREAD_POOL_SIZE=1"

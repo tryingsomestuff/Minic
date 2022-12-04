@@ -79,10 +79,10 @@ struct BitStream {
 
   private:
    // Next bit position to read/write.
-   int bit_cursor;
+   int bit_cursor = 0;
 
    // data entity
-   mutable uint8_t* data;
+   mutable uint8_t* data = nullptr;
 };
 
 struct HuffmanedPiece {
@@ -145,7 +145,7 @@ struct SfenPacker {
 
    // sfen packed by pack() (256bit = 32bytes)
    // Or sfen to decode with unpack()
-   uint8_t* data; // uint8_t[32];
+   uint8_t* data = nullptr; // uint8_t[32];
 
    BitStream stream;
 
@@ -161,7 +161,8 @@ struct SfenPacker {
    // Read one board piece from stream
    Piece read_board_piece_from_stream() {
       Piece pr   = P_none;
-      int   code = 0, bits = 0;
+      int code = 0;
+      int bits = 0;
       while (true) {
          code |= stream.read_one_bit() << bits;
          ++bits;
@@ -174,7 +175,7 @@ struct SfenPacker {
       assert(pr != P_wk);
       if (pr == P_none) return P_none;
 
-      const Color c = (Color)stream.read_one_bit();
+      const Color c = static_cast<Color>(stream.read_one_bit());
       return c == Co_White ? pr : ~pr;
    }
 
@@ -252,7 +253,7 @@ MiniMove FromSFMove(const Position& p, const MiniMove sfmove) {
 
 void sfen_pack(const Position& p, PackedSfen& sfen) {
    SfenPacker sp;
-   sp.data = (uint8_t*)&sfen;
+   sp.data = reinterpret_cast<uint8_t*>(&sfen);
    sp.pack(p);
 }
 
@@ -260,10 +261,10 @@ void sfen_pack(const Position& p, PackedSfen& sfen) {
 int set_from_packed_sfen(Position& p, PackedSfen& sfen) {
    SfenPacker packer;
    auto&      stream = packer.stream;
-   stream.set_data((uint8_t*)&sfen);
+   stream.set_data(reinterpret_cast<uint8_t*>(&sfen));
 
    // Active color
-   p.c = (Color)stream.read_one_bit();
+   p.c = static_cast<Color>(stream.read_one_bit());
 
    for (auto c : {Co_White, Co_Black}) {
       const Square sq = static_cast<Square>(stream.read_n_bit(6));

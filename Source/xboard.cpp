@@ -281,7 +281,10 @@ void xboard() {
             TimeMan::moveToGo        = -1;
          }
          else if (strncmp(COM::command.c_str(), "level", 5) == 0) {
-            int timeTC = 0, secTC = 0, inc = 0, mps = 0;
+            int timeTC = 0;
+            int secTC = 0;
+            int inc = 0;
+            int mps = 0;
             // WARNING here, level command only supports integer ! timeTC is in minutes, and secTC and inc in secondes
             if (sscanf(COM::command.c_str(), "level %d %d %d", &mps, &timeTC, &inc) != 3)
                sscanf(COM::command.c_str(), "level %d %d:%d %d", &mps, &timeTC, &secTC, &inc);

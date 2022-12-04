@@ -53,7 +53,9 @@ void processCommand(const std::string & command) {
       Logging::LogIt(Logging::logGUI) << "uciok";
    }
    else if (uciCommand == "setoption") {
-      std::string tmpstr, key, val;
+      std::string tmpstr;
+      std::string key;
+      std::string val;
       iss >> tmpstr; //"name"
       iss >> key;
       iss >> tmpstr;     //"value"

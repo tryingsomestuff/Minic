@@ -33,10 +33,13 @@ void MoveSorter::computeScore(Move& m) const {
    ScoreType s = MoveScoring[t];
 
    // previous root best at root
-   if (height == 0 && sameMove(context.previousBest, m)) s += 15000;
+   if (height == 0 && sameMove(context.previousBest, m)){
+      s += 15000;
+   }
    // TT move
-   else if (e && sameMove(e->m, m)) s += 15000;
-
+   else if (e && sameMove(e->m, m)){
+      s += 14000;
+   }
    else {
       // king evasion ///@todo try again ??
       //if (isInCheck && from == p.king[C]) s += 10000;
@@ -48,8 +51,8 @@ void MoveSorter::computeScore(Move& m) const {
          assert(pp > 0);
          assert(ppOpp > 0);
 
-         const EvalScore* const pst    = EvalConfig::PST[pp - 1];
-         const EvalScore* const pstOpp = EvalConfig::PST[ppOpp - 1];
+         const std::span<const EvalScore> pst    = EvalConfig::PST[pp - 1];
+         const std::span<const EvalScore> pstOpp = EvalConfig::PST[ppOpp - 1];
          // always use PST as a hint
          s += (ScaleScore(pst[ColorSquarePstHelper<C>(to)] - pst[ColorSquarePstHelper<C>(from)] + pstOpp[ColorSquarePstHelper<~C>(to)], gp))/2;
 
@@ -91,7 +94,7 @@ void MoveSorter::computeScore(Move& m) const {
                // move (safely) leaving threat square from null move search
                if (refutation != INVALIDMINIMOVE && from == correctedMove2ToKingDest(refutation) && Searcher::SEE_GE(p, m, -80)) s += 512;
                // always use PST to compensate low value history
-               const EvalScore* const pst = EvalConfig::PST[std::abs(pp) - 1];
+               const std::span<const EvalScore> pst = EvalConfig::PST[std::abs(pp) - 1];
                s += (ScaleScore(pst[ColorSquarePstHelper<C>(to)] - pst[ColorSquarePstHelper<C>(from)], gp))/2;
             }
          }

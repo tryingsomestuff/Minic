@@ -15,7 +15,7 @@ fi
 
 do_title "Building Minic for Android"
 
-OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto --std=c++17 $n -Wno-unknown-pragmas -fconstexpr-steps=1000000000"
+OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto $STDVERSION $n -Wno-unknown-pragmas -fconstexpr-steps=1000000000"
 
 if [ $FATHOM_PRESENT = "1" ]; then
    lib=fathom_${v}_android.o

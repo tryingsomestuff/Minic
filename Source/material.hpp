@@ -67,7 +67,7 @@ struct MaterialHashEntry {
    FORCE_FINLINE void  setGamePhase(float gpf) { gp = (uint8_t)(255 * gpf); }
 };
 
-extern MaterialHashEntry materialHashTable[TotalMat];
+extern array1d<MaterialHashEntry,TotalMat> materialHashTable;
 
 [[nodiscard]] EvalScore Imbalance(const Position::Material &mat, Color c);
 

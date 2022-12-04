@@ -32,7 +32,7 @@ void movePiece(Position& p, const Square from, const Square to, const Piece from
    p.h ^= Zobrist::ZT[from][fromId]; // remove fromP at from
    p.h ^= Zobrist::ZT[to][toIdnew];  // add fromP (or prom) at to
    // piece that have influence on pawn hash
-   static constexpr std::array<bool,NbPiece> helperPawnHash_ = {true, false, false, false, false, true, false, true, false, false, false, false, true};
+   static constexpr array1d<bool,NbPiece> helperPawnHash_ = {true, false, false, false, false, true, false, true, false, false, false, false, true};
    if (helperPawnHash_[fromId]) {
       p.ph ^= Zobrist::ZT[from][fromId];                    // remove fromP at from
       if (prom == P_none) p.ph ^= Zobrist::ZT[to][toIdnew]; // add fromP (if not prom) at to
@@ -150,6 +150,7 @@ bool applyMove(Position& p, const Position::MoveInfo & moveInfo, const bool noNN
       case T_wqs: movePieceCastle<Co_White>(p, CT_OOO, Sq_c1, Sq_d1); break;
       case T_bks: movePieceCastle<Co_Black>(p, CT_OO,  Sq_g8, Sq_f8); break;
       case T_bqs: movePieceCastle<Co_Black>(p, CT_OOO, Sq_c8, Sq_d8); break;
+      case T_max: break;
    }
 
    if (/*!noValidation &&*/ isPosInCheck(p)) {
@@ -361,7 +362,7 @@ bool isPseudoLegal(const Position& p, const Move m) { // validate TT move
    if (!isValidSquare(to)) PSEUDO_LEGAL_RETURN(false, -3)
    const Piece toP = p.board_const(to);
    if ((toP > 0 && p.c == Co_White) || (toP < 0 && p.c == Co_Black)) PSEUDO_LEGAL_RETURN(false, 1)
-   if ((Piece)std::abs(toP) == P_wk) PSEUDO_LEGAL_RETURN(false, 2)
+   if (static_cast<Piece>(std::abs(toP)) == P_wk) PSEUDO_LEGAL_RETURN(false, 2)
    const Piece fromPieceType = static_cast<Piece>(std::abs(fromP));
    if (toP == P_none && (isCapture(t) && t != T_ep)) PSEUDO_LEGAL_RETURN(false, 4)
    if (toP != P_none && !isCapture(t)) PSEUDO_LEGAL_RETURN(false, 5)

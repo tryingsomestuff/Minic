@@ -15,7 +15,7 @@ fi
 
 do_title "Building Minic for RPi32"
 
-OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto --std=c++17 $n -Wno-unknown-pragmas -DWITHOUT_FILESYSTEM"
+OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto $STDVERSION $n -Wno-unknown-pragmas -DWITHOUT_FILESYSTEM"
 
 if [ $FATHOM_PRESENT = "1" ]; then
    lib=fathom_${v}_linux_x32_armv7.o

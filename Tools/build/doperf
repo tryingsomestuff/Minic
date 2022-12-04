@@ -16,7 +16,7 @@ fi
 
 do_title "Building Minic for Linux perf"
 
-OPT="-g -O3 -DNDEBUG -ggdb -flto --std=c++17 -march=native -fno-exceptions -fno-omit-frame-pointer"
+OPT="-g -O3 -DNDEBUG -ggdb -flto $STDVERSION -march=native -fno-exceptions -fno-omit-frame-pointer"
 
 if [ $FATHOM_PRESENT = "1" ]; then
    lib=fathom_dev_linux_x64.o

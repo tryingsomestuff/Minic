@@ -105,11 +105,13 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
    Logging::LogIt(Logging::logInfo) << "You can use -xboard command line option to enter xboard mode";
 #endif
 
+   const auto args {std::span(argv, size_t(argc))};
+
    if (cli == "-selfplay") {
       DepthType d = 15; // this is "search depth", not genFenDepth !
-      if (argc > 2) d = clampDepth(atoi(argv[2]));
+      if (argc > 2) d = clampDepth(atoi(args[2]));
       int64_t n = 1;
-      if (argc > 3) n = atoll(argv[3]);
+      if (argc > 3) n = atoll(args[3]);
       Logging::LogIt(Logging::logInfo) << "Let's go for " << n << " selfplay games ...";
       const auto startTime = Clock::now();
       uint64_t nbGames = 0;
@@ -145,7 +147,7 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
          const std::string fen   = line.substr(0, found);
          while (found != std::string::npos) {
             const std::size_t start = found + 1;
-            found                   = line.find_first_of(",", found + 1);
+            found                   = line.find_first_of(',', found + 1);
             const uint64_t ull      = std::stoull(line.substr(start, found - start));
             perft_test(fen, 6, ull);
          }
@@ -162,7 +164,7 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
          DepthType         i     = 0;
          while (found != std::string::npos) {
             const std::size_t start = found + 1;
-            found                   = line.find_first_of(",", found + 1);
+            found                   = line.find_first_of(',', found + 1);
             const uint64_t ull      = std::stoull(line.substr(start, found - start));
             perft_test(fen, ++i, ull);
          }
@@ -176,14 +178,14 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
 
    if (cli == "bench") {
       DepthType d = 16;
-      if (argc > 2) d = clampDepth(atoi(argv[2]));
+      if (argc > 2) d = clampDepth(atoi(args[2]));
       return bench(d);
    }
 
    if (cli == "-evalSpeed") {
       DynamicConfig::disableTT = true;
       std::string filename     = "Book_and_Test/TestSuite/evalSpeed.epd";
-      if (argc > 2) filename = argv[2];
+      if (argc > 2) filename = args[2];
       std::vector<RootPosition> data;
       Logging::LogIt(Logging::logInfo) << "Running eval speed with file " << filename;
       std::vector<std::string> positions;
@@ -233,10 +235,10 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
       TimeType        increment   = 0;
       int             movesInTC   = -1;
       TimeType        guiLag      = 0;
-      if (argc > 2) initialTime = atoi(argv[2]);
-      if (argc > 3) increment   = atoi(argv[3]);
-      if (argc > 4) movesInTC   = atoi(argv[4]);
-      if (argc > 5) guiLag      = atoi(argv[5]);
+      if (argc > 2) initialTime = atoi(args[2]);
+      if (argc > 3) increment   = atoi(args[3]);
+      if (argc > 4) movesInTC   = atoi(args[4]);
+      if (argc > 5) guiLag      = atoi(args[5]);
       TimeMan::simulate(tcType, initialTime, increment, movesInTC, guiLag);
       return 0;
    }
@@ -247,8 +249,8 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
       return 1;
    }
 
-   // in all other cases, argv[2] is always the fen string
-   std::string fen = argv[2];
+   // in all other cases, args[2] is always the fen string
+   std::string fen = args[2];
 
    // some "short cuts" !
    if (fen == "start") fen = startPosition;
@@ -315,10 +317,10 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
       Square from  = INVALIDSQUARE;
       Square to    = INVALIDSQUARE;
       MType  mtype = T_std;
-      const std::string move  = argc > 3 ? argv[3] : "e2e4";
+      const std::string move  = argc > 3 ? args[3] : "e2e4";
       readMove(p, move, from, to, mtype);
       Move      m = ToMove(from, to, mtype);
-      ScoreType t = clampInt<ScoreType>(atoi(argv[4]));
+      ScoreType t = clampInt<ScoreType>(atoi(args[4]));
       bool      b = Searcher::SEE_GE(p, m, t);
       Logging::LogIt(Logging::logInfo) << "SEE ? " << (b ? "ok" : "not");
       return 0;
@@ -326,7 +328,7 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
 
    if (cli == "-attacked") {
       Square k = Sq_e4;
-      if (argc > 3) k = clampIntU<Square>(atoi(argv[3]));
+      if (argc > 3) k = clampIntU<Square>(atoi(args[3]));
       Logging::LogIt(Logging::logInfo) << SquareNames[k];
       Logging::LogIt(Logging::logInfo) << ToString(BBTools::allAttackedBB(p, k, p.c));
       return 0;
@@ -334,7 +336,7 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
 
    if (cli == "-cov") {
       Square k = Sq_e4;
-      if (argc > 3) k = clampIntU<Square>(atoi(argv[3]));
+      if (argc > 3) k = clampIntU<Square>(atoi(args[3]));
       switch (p.board_const(k)) {
          case P_wp: Logging::LogIt(Logging::logInfo) << ToString((BBTools::coverage<P_wp>(k, p.occupancy(), p.c) + BBTools::mask[k].push[p.c]) &~p.allPieces[Co_White]); break;
          case P_wn: Logging::LogIt(Logging::logInfo) << ToString(BBTools::coverage<P_wn>(k, p.occupancy(), p.c) & ~p.allPieces[Co_White]); break;
@@ -397,7 +399,7 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
 
    if (cli == "-perft") {
       DepthType d = 5;
-      if (argc > 3) d = clampIntU<DepthType>(atoi(argv[3]));
+      if (argc > 3) d = clampIntU<DepthType>(atoi(args[3]));
       PerftAccumulator acc;
       auto start = Clock::now();
       perft(p, d, acc);
@@ -410,7 +412,7 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
 
    if (cli == "-analyze") {
       DepthType depth = 15;
-      if (argc > 3) depth = clampIntU<DepthType>(atoi(argv[3]));
+      if (argc > 3) depth = clampIntU<DepthType>(atoi(args[3]));
       auto start = Clock::now();
       analyze(p, depth);
       auto elapsed = getTimeDiff(start);
@@ -421,7 +423,7 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
    if (cli == "-mateFinder") {
       DynamicConfig::mateFinder = true;
       DepthType depth           = 10;
-      if (argc > 3) depth = clampIntU<DepthType>(atoi(argv[3]));
+      if (argc > 3) depth = clampIntU<DepthType>(atoi(args[3]));
       auto start = Clock::now();
       analyze(p, depth);
       auto elapsed = getTimeDiff(start);

@@ -25,7 +25,7 @@ struct KeyBase {
        const std::string& k,
        T*                 v,
        const std::function<void(void)>& cb = [] {}):
-       type(t), wtype(w), key(k), value((void*)v) {
+       type(t), wtype(w), key(k), value(static_cast<void*>(v)) {
       callBack = cb;
    }
    template<typename T>
@@ -37,7 +37,7 @@ struct KeyBase {
        const T&            _vmin,
        const T&            _vmax,
        const std::function<void(void)>& cb = [] {}):
-       type(t), wtype(w), key(k), value((void*)v), vmin(_vmin), vmax(_vmax) {
+       type(t), wtype(w), key(k), value(static_cast<void*>(v)), vmin(_vmin), vmax(_vmax) {
       callBack = cb;
    }
    template<typename T>
@@ -48,7 +48,7 @@ struct KeyBase {
        T*                 v,
        std::vector<std::string> vals,
        const std::function<void(void)>& cb = [] {}):
-       type(t), wtype(w), key(k), value((void*)v), values(vals) {
+       type(t), wtype(w), key(k), value(static_cast<void*>(v)), values(vals) {
       callBack = cb;
    }
    KeyType     type;
@@ -105,7 +105,8 @@ std::string GetValueString(const std::string& key) { // the one for string
 template <typename Range, typename Value = typename Range::value_type>
 std::string join(Range const& elements, const char *const delimiter) {
     std::ostringstream os;
-    auto b = begin(elements), e = end(elements);
+    auto b = begin(elements);
+    auto e = end(elements);
 
     os << delimiter;
 

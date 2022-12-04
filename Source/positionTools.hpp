@@ -39,7 +39,7 @@ struct PerftAccumulator {
 
 #if !defined(WITH_SMALL_MEMORY)
 namespace chess960 {
-extern const std::string positions[960];
+extern const array1d<std::string,960> positions;
 std::string getDFRCXFEN();
 }
 #endif
