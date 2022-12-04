@@ -34,7 +34,7 @@ void GameInfo::write(std::ostream & os) const{
    uint16_t halfmoves = initialPos.halfmoves;
    uint16_t moves = initialPos.moves;
    auto prev = initialPos;
-   for(auto & gs : _gameStates){
+   for(const auto & gs : _gameStates){
       os << ((halfmoves++)%2?(std::to_string((moves++))+". ") : "") << showAlgAbr(gs.lastMove,prev) << " ";
       prev = gs.p;
    }
@@ -59,7 +59,7 @@ size_t GameInfo::size() const {
 
 std::vector<Move> GameInfo::getMoves() const{
    std::vector<Move> moves;
-   for(auto & gs : _gameStates){
+   for(const auto & gs : _gameStates){
       moves.push_back(gs.lastMove);
    }
    return moves;

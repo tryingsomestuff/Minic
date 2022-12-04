@@ -96,7 +96,7 @@ void init() {
                while (i < tokens.size()) oppName += " " + tokens[i++];
                oppName = strToLower(oppName);
                Logging::LogIt(Logging::logInfo) << "Looking for Elo rating of " << oppName;
-               for (auto const& it : ratings) {
+               for (const auto & it : ratings) {
                   if ((oppName.find(strToLower(it.first)) != std::string::npos) || (strToLower(it.first).find(oppName) != std::string::npos)) {
                      oppRating = it.second;
                      Logging::LogIt(Logging::logInfo) << "Opponent is " << it.first << ", Elo " << oppRating;

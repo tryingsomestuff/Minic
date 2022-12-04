@@ -175,7 +175,7 @@ void pollStat() { // only called from main thread
       // gather stats from all local threads
       for (size_t k = 0; k < Stats::sid_maxid; ++k) {
          _countersBufSend[k] = 0ull;
-         for (auto& it : ThreadPool::instance()) { _countersBufSend[k] += it->stats.counters[k]; }
+         for (const auto& it : ThreadPool::instance()) { _countersBufSend[k] += it->stats.counters[k]; }
       }
       sendStat();
    }

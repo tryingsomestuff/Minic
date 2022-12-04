@@ -103,7 +103,7 @@ bool convert_plain_to_bin(const std::vector<std::string>& filenames,
    // convert plain to bin
    fs.open(output_file_name, std::ios::app | std::ios::binary);
 
-   for (auto filename : filenames) {
+   for (const auto & filename : filenames) {
       std::cout << "converting " << filename << " from plain to binary format... " << std::endl;
       std::string   line;
       std::string   line2;
@@ -243,7 +243,7 @@ bool convert_bin_from_pgn_extract(const std::vector<std::string>& filenames,
    int game_count = 0;
    int fen_count  = 0;
 
-   for (auto filename : filenames) {
+   for (const auto & filename : filenames) {
       //std::cout << " convert " << filename << std::endl;
       std::ifstream ifs;
       ifs.open(filename);
@@ -413,7 +413,7 @@ bool convert_bin_from_pgn_extract(const std::vector<std::string>& filenames,
 bool convert_bin_to_plain(const std::vector<std::string>& filenames, const std::string& output_file_name) {
    std::ofstream ofs;
    ofs.open(output_file_name, std::ios::app);
-   for (auto filename : filenames) {
+   for (const auto & filename : filenames) {
       std::cout << "convert " << filename << " ... " << std::endl;
       // Just convert packedsfenvalue to text
       std::fstream fs;
@@ -488,7 +488,7 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
    tpos.associateEvaluator(evaluator);
 #endif
 
-   for (auto filename : filenames) {
+   for (const auto & filename : filenames) {
       std::cout << "rescoring " << filename << " ... " << std::endl;
       // Just convert packedsfenvalue to text
       std::fstream fs;
