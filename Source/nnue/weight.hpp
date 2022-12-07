@@ -32,10 +32,10 @@ template<typename NT, bool Q> struct NNUEWeights {
       if (readVersion) ws.readVersion(version);
       w.load_(ws);
       b.load_(ws);
-      for(int k = 0 ; k < nbuckets; ++k) innerLayer[k].fc0.load_(ws);
-      for(int k = 0 ; k < nbuckets; ++k) innerLayer[k].fc1.load_(ws);
-      for(int k = 0 ; k < nbuckets; ++k) innerLayer[k].fc2.load_(ws);
-      for(int k = 0 ; k < nbuckets; ++k) innerLayer[k].fc3.load_(ws);
+      for (int k = 0 ; k < nbuckets; ++k) innerLayer[k].fc0.load_(ws);
+      for (int k = 0 ; k < nbuckets; ++k) innerLayer[k].fc1.load_(ws);
+      for (int k = 0 ; k < nbuckets; ++k) innerLayer[k].fc2.load_(ws);
+      for (int k = 0 ; k < nbuckets; ++k) innerLayer[k].fc3.load_(ws);
       return *this;
    }
 

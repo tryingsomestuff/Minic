@@ -85,7 +85,7 @@ class Destroyer : public AbstractDestroyer {
 public:
     Destroyer(DOOMED * d):_doomed(d){ assert(d); }
     ~Destroyer(){ destroy(); }
-    void destroy(){ if(_doomed) delete _doomed; _doomed = 0;}
+    void destroy(){ if (_doomed) delete _doomed; _doomed = 0;}
 private:
     DOOMED * _doomed;
     Destroyer(const Destroyer &){}

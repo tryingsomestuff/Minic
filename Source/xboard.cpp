@@ -353,7 +353,7 @@ void xboard() {
       /*
       ///@todo Ponder won't work here because after this, as searchDriver() is async, we are probably stuck in readLine() ...
       // if not our turn, and ponder is on, let's think ...
-      if(static_cast<int>(COM::mode) == static_cast<int>(COM::opponent(COM::stm)) && COM::ponder == COM::p_on && COM::state == COM::st_none) {
+      if (static_cast<int>(COM::mode) == static_cast<int>(COM::opponent(COM::stm)) && COM::ponder == COM::p_on && COM::state == COM::st_none) {
           Logging::LogIt(Logging::logInfo) << "xboard search launched (pondering)";
           COM::thinkAsync(COM::st_pondering);
           Logging::LogIt(Logging::logInfo) << "xboard async started (pondering)";

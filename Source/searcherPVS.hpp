@@ -310,7 +310,7 @@ FORCE_FINLINE void evalFeatures(const Position & p,
       }
    }
 
-   if(kingIsMandatory){
+   if (kingIsMandatory){
      const File wkf = (File)SQFILE(p.king[Co_White]);
      const File bkf = (File)SQFILE(p.king[Co_Black]);
  
@@ -476,7 +476,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       rootScores.clear();
    }
 
-   if(!pvsData.rootnode){
+   if (!pvsData.rootnode){
       // mate distance pruning
       alpha = std::max(alpha, matedScore(height));
       beta  = std::min(beta, matingScore(height + 1));
@@ -525,7 +525,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                // quiet move history
                if (Move2Type(e.m) == T_std){ 
                   updateTables(*this, p, depth, height, e.m, pvsData.bound, pvsData.cmhPtr);
-                  //if(pvsData.bound == TT::B_beta) historyT.update<1>(depth, e.m, p, pvsData.cmhPtr);
+                  //if (pvsData.bound == TT::B_beta) historyT.update<1>(depth, e.m, p, pvsData.cmhPtr);
                   //else if (pvsData.bound == TT::B_alpha) historyT.update<-1>(depth, e.m, p, pvsData.cmhPtr);
                }
                // capture history
@@ -535,9 +535,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                }
             }
             if (p.fifty < SearchConfig::ttMaxFiftyValideDepth && !pvsData.isKnownEndGame){
-               if(pvsData.bound == TT::B_alpha) stats.incr(Stats::sid_ttAlphaCut);
-               if(pvsData.bound == TT::B_exact) stats.incr(Stats::sid_ttExactCut);
-               if(pvsData.bound == TT::B_beta)  stats.incr(Stats::sid_ttBetaCut);
+               if (pvsData.bound == TT::B_alpha) stats.incr(Stats::sid_ttAlphaCut);
+               if (pvsData.bound == TT::B_exact) stats.incr(Stats::sid_ttExactCut);
+               if (pvsData.bound == TT::B_beta)  stats.incr(Stats::sid_ttBetaCut);
                return TT::adjustHashScore(e.s, height);
             }
          }
@@ -863,7 +863,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             int probCutCount = 0;
             capMoveGenerated = true;
             MoveGen::generate<MoveGen::GP_cap>(p, moves);
-            //if(moves.empty()) stats.incr(Stats::sid_probcutNoCap); // should be 0 as there is threats ...
+            //if (moves.empty()) stats.incr(Stats::sid_probcutNoCap); // should be 0 as there is threats ...
    #ifdef USE_PARTIAL_SORT
             MoveSorter::score(*this, moves, p, evalData.gp, height, pvsData.cmhPtr, true, pvsData.isInCheck, pvsData.validTTmove ? &e : NULL);
             size_t offset = 0;
@@ -1312,13 +1312,13 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             score = -pvs<false>(-alpha - 1, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, static_cast<DepthType>(extensions + extension), pvsData.isCheck, !pvsData.cutNode);
 /*
             if (pvsData.isQuiet){
-               if(score > alpha) historyT.update<1>(nextDepth, *it, p, pvsData.cmhPtr);
+               if (score > alpha) historyT.update<1>(nextDepth, *it, p, pvsData.cmhPtr);
                else historyT.update<-1>(nextDepth, *it, p, pvsData.cmhPtr);
             }
 */
 /*
             else{
-               if(score > alpha) historyT.updateCap<1>(nextDepth, *it, p);
+               if (score > alpha) historyT.updateCap<1>(nextDepth, *it, p);
                else historyT.updateCap<-1>(nextDepth, *it, p);
             }
 */
@@ -1351,7 +1351,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                stats.incr(Stats::sid_beta);
                if (!pvsData.isInCheck){
                   const DepthType bonusDepth = depth + (score > beta + SearchConfig::betaMarginDynamicHistory);
-                  if(pvsData.isQuiet /*&& depth > 1*/ /*&& !( depth == 1 && validQuietMoveCount == 1 )*/) { // quiet move history
+                  if (pvsData.isQuiet /*&& depth > 1*/ /*&& !( depth == 1 && validQuietMoveCount == 1 )*/) { // quiet move history
                      // increase history of this move
                      updateTables(*this, p, bonusDepth, height, bestMove, TT::B_beta, pvsData.cmhPtr);
                      // reduce history of all previous
@@ -1360,7 +1360,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                            historyT.update<-1>(bonusDepth, *it2, p, pvsData.cmhPtr);
                      }
                   }
-                  else if( isCapture(bestMove)){ // capture history
+                  else if ( isCapture(bestMove)){ // capture history
                      historyT.updateCap<1>(bonusDepth, bestMove, p);
                      for (auto it2 = moves.begin(); it2 != moves.end() && !sameMove(*it2, bestMove); ++it2) {
                         if (isCapture(*it2))

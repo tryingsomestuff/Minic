@@ -239,7 +239,7 @@ void Searcher::clearGame() {
    previousBest = INVALIDMOVE;
 
    // clear stack data
-   for(auto & d : stack){
+   for (auto & d : stack){
       d = {Position(), nullHash, 0, INVALIDMINIMOVE};
    }
 }
@@ -251,7 +251,7 @@ void Searcher::clearSearch(bool forceHistoryClear) {
 #endif
    stats.init();
    killerT.initKillers();
-   if(forceHistoryClear) historyT.initHistory();
+   if (forceHistoryClear) historyT.initHistory();
    counterT.initCounter();
    previousBest = INVALIDMOVE;
 }
@@ -356,7 +356,7 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
    ThreadData data = d; // copy data from PV
    Position pLeaf = p; // copy current pos
 
-   if(getQuietPos){
+   if (getQuietPos){
 
       Searcher& cos = getCoSearcher(id());
 
@@ -429,7 +429,7 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
 
    if (result.has_value()){
       Logging::LogIt(Logging::logInfoPrio) << "Game ended, result " << result.value();
-      for(const auto & entry : buffer){
+      for (const auto & entry : buffer){
          entry.write(genStream,result.value());
       }
       buffer.clear();

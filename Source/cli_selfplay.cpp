@@ -58,7 +58,7 @@ void selfPlay(DepthType depth, uint64_t & nbPos) {
       ThreadData d = ThreadPool::instance().main().getData();
       TimeMan::maxNodes = maxNodes;
 
-      if(justBegin){
+      if (justBegin){
          if (DynamicConfig::pgnOut){
             ThreadPool::instance().main().pgnStream << "[Event \"Minic self play\"]\n";
             ThreadPool::instance().main().pgnStream << "[FEN \"" + GetFEN(p) + "\"]\n";

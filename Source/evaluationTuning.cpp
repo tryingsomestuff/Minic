@@ -587,23 +587,23 @@ void evaluationTuning(const std::string& filename) {
    }
 
    for (int k = 0 ; k < 6 ; ++k ){
-      for(int i = 0 ; i < 15 ; ++i){
+      for (int i = 0 ; i < 15 ; ++i){
          guess["mobility"].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::MOB[k][i][MG],-200,200,"mob"+std::to_string(k)+"_"+std::to_string(i)));
       }
    }
    for (int k = 0 ; k < 6 ; ++k ){
-      for(int i = 0 ; i < 15 ; ++i){
+      for (int i = 0 ; i < 15 ; ++i){
          guess["mobility"].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::MOB[k][i][EG],-200,200,"mobeg"+std::to_string(k)+"_"+std::to_string(i)));
       }
    }
 
    for (int k = 0 ; k < 6 ; ++k ){
-      for(int i = 0 ; i < NbSquare ; ++i){
+      for (int i = 0 ; i < NbSquare ; ++i){
          guess["PST"+std::to_string(k)].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::PST[k][i][MG],-200,200,"pst"+std::to_string(k)+"_"+std::to_string(i)));
       }
    }
    for (int k = 0 ; k < 6 ; ++k ){
-      for(int i = 0 ; i < NbSquare ; ++i){
+      for (int i = 0 ; i < NbSquare ; ++i){
          guess["PST"+std::to_string(k)].push_back(EvalTuning::TuningParam<ScoreType>(EvalConfig::PST[k][i][EG],-200,200,"psteg"+std::to_string(k)+"_"+std::to_string(i)));
       }
    }
