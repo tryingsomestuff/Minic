@@ -386,7 +386,7 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
 
    if (cli == "-testmove") {
       constexpr Move m  = ToMove(8, 16, T_std);
-      Position       p2 = p;
+      Position p2 = p;
 #if defined(WITH_NNUE) && defined(DEBUG_NNUE_UPDATE)
       p2.associateEvaluator(evaluator);
       p2.resetNNUEEvaluator(p2.evaluator());
@@ -422,7 +422,7 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
 
    if (cli == "-mateFinder") {
       DynamicConfig::mateFinder = true;
-      DepthType depth           = 10;
+      DepthType depth = 10;
       if (argc > 3) depth = clampIntU<DepthType>(atoi(args[3]));
       auto start = Clock::now();
       analyze(p, depth);
