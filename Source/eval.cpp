@@ -453,32 +453,33 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       ///@todo hidden passed
 
       // bad pawns
-      const BitBoard semiOpenPawn[2] = {BBTools::pawnSemiOpen<Co_White>(pawns[Co_White], pawns[Co_Black]),
-                                        BBTools::pawnSemiOpen<Co_Black>(pawns[Co_Black], pawns[Co_White])};
-      const BitBoard backward[2]     = {BBTools::pawnBackward<Co_White>(pawns[Co_White], pawns[Co_Black]),
-                                        BBTools::pawnBackward<Co_Black>(pawns[Co_Black], pawns[Co_White])};
-      const BitBoard backwardOpenW   = backward[Co_White] & semiOpenPawn[Co_White];
-      const BitBoard backwardCloseW  = backward[Co_White] & ~semiOpenPawn[Co_White];
-      const BitBoard backwardOpenB   = backward[Co_Black] & semiOpenPawn[Co_Black];
-      const BitBoard backwardCloseB  = backward[Co_Black] & ~semiOpenPawn[Co_Black];
-      const BitBoard doubled[2]      = {BBTools::pawnDoubled<Co_White>(pawns[Co_White]),
-                                        BBTools::pawnDoubled<Co_Black>(pawns[Co_Black])};
-      const BitBoard doubledOpenW    = doubled[Co_White] & semiOpenPawn[Co_White];
-      const BitBoard doubledCloseW   = doubled[Co_White] & ~semiOpenPawn[Co_White];
-      const BitBoard doubledOpenB    = doubled[Co_Black] & semiOpenPawn[Co_Black];
-      const BitBoard doubledCloseB   = doubled[Co_Black] & ~semiOpenPawn[Co_Black];
-      const BitBoard isolated[2]     = {BBTools::pawnIsolated(pawns[Co_White]),
-                                        BBTools::pawnIsolated(pawns[Co_Black])};
-      const BitBoard isolatedOpenW   = isolated[Co_White] & semiOpenPawn[Co_White];
-      const BitBoard isolatedCloseW  = isolated[Co_White] & ~semiOpenPawn[Co_White];
-      const BitBoard isolatedOpenB   = isolated[Co_Black] & semiOpenPawn[Co_Black];
-      const BitBoard isolatedCloseB  = isolated[Co_Black] & ~semiOpenPawn[Co_Black];
-      const BitBoard detached[2]     = {BBTools::pawnDetached<Co_White>(pawns[Co_White], pawns[Co_Black]),
-                                        BBTools::pawnDetached<Co_Black>(pawns[Co_Black], pawns[Co_White])};
-      const BitBoard detachedOpenW   = detached[Co_White] & semiOpenPawn[Co_White] & ~backward[Co_White];
-      const BitBoard detachedCloseW  = detached[Co_White] & ~semiOpenPawn[Co_White] & ~backward[Co_White];
-      const BitBoard detachedOpenB   = detached[Co_Black] & semiOpenPawn[Co_Black] & ~backward[Co_Black];
-      const BitBoard detachedCloseB  = detached[Co_Black] & ~semiOpenPawn[Co_Black] & ~backward[Co_Black];
+      const colored<BitBoard> semiOpenPawn = {BBTools::pawnSemiOpen<Co_White>(pawns[Co_White], pawns[Co_Black]),
+                                              BBTools::pawnSemiOpen<Co_Black>(pawns[Co_Black], pawns[Co_White])};
+      const colored<BitBoard> backward     = {BBTools::pawnBackward<Co_White>(pawns[Co_White], pawns[Co_Black]),
+                                              BBTools::pawnBackward<Co_Black>(pawns[Co_Black], pawns[Co_White])};
+      const BitBoard backwardOpenW     = backward[Co_White] & semiOpenPawn[Co_White];
+      const BitBoard backwardCloseW    = backward[Co_White] & ~semiOpenPawn[Co_White];
+      const BitBoard backwardOpenB     = backward[Co_Black] & semiOpenPawn[Co_Black];
+      const BitBoard backwardCloseB    = backward[Co_Black] & ~semiOpenPawn[Co_Black];
+      const colored<BitBoard> doubled  = {BBTools::pawnDoubled<Co_White>(pawns[Co_White]),
+                                         BBTools::pawnDoubled<Co_Black>(pawns[Co_Black])};
+      const BitBoard doubledOpenW      = doubled[Co_White] & semiOpenPawn[Co_White];
+      const BitBoard doubledCloseW     = doubled[Co_White] & ~semiOpenPawn[Co_White];
+      const BitBoard doubledOpenB      = doubled[Co_Black] & semiOpenPawn[Co_Black];
+      const BitBoard doubledCloseB     = doubled[Co_Black] & ~semiOpenPawn[Co_Black];
+      const colored<BitBoard> isolated = {BBTools::pawnIsolated(pawns[Co_White]),
+                                          BBTools::pawnIsolated(pawns[Co_Black])};
+      const BitBoard isolatedOpenW     = isolated[Co_White] & semiOpenPawn[Co_White];
+      const BitBoard isolatedCloseW    = isolated[Co_White] & ~semiOpenPawn[Co_White];
+      const BitBoard isolatedOpenB     = isolated[Co_Black] & semiOpenPawn[Co_Black];
+      const BitBoard isolatedCloseB    = isolated[Co_Black] & ~semiOpenPawn[Co_Black];
+      const colored<BitBoard> detached = {BBTools::pawnDetached<Co_White>(pawns[Co_White], pawns[Co_Black]),
+                                          BBTools::pawnDetached<Co_Black>(pawns[Co_Black], pawns[Co_White])};
+      const BitBoard detachedOpenW     = detached[Co_White] & semiOpenPawn[Co_White] & ~backward[Co_White];
+      const BitBoard detachedCloseW    = detached[Co_White] & ~semiOpenPawn[Co_White] & ~backward[Co_White];
+      const BitBoard detachedOpenB     = detached[Co_Black] & semiOpenPawn[Co_Black] & ~backward[Co_Black];
+      const BitBoard detachedCloseB    = detached[Co_Black] & ~semiOpenPawn[Co_Black] & ~backward[Co_Black];
+
       for (Rank r = Rank_2; r <= Rank_7; ++r) { // simply r2..r7 for classic chess works
          // pawn backward
          pe.score -= EvalConfig::backwardPawn[r][EvalConfig::Close] * countBit(backwardCloseW & ranks[r]);
@@ -510,8 +511,8 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       // pawn impact on king safety (PST and king troppism alone is not enough)
       if (kingIsMandatory){
         // pawn shield
-        const BitBoard kingShield[2] = {kingZone[Co_White] & ~BBTools::shiftS<Co_White>(ranks[SQRANK(p.king[Co_White])]),
-                                        kingZone[Co_Black] & ~BBTools::shiftS<Co_Black>(ranks[SQRANK(p.king[Co_Black])])};
+        const colored<BitBoard> kingShield = {kingZone[Co_White] & ~BBTools::shiftS<Co_White>(ranks[SQRANK(p.king[Co_White])]),
+                                              kingZone[Co_Black] & ~BBTools::shiftS<Co_Black>(ranks[SQRANK(p.king[Co_Black])])};
         const int pawnShieldW = countBit(kingShield[Co_White] & pawns[Co_White]);
         const int pawnShieldB = countBit(kingShield[Co_Black] & pawns[Co_Black]);
         pe.score += EvalConfig::pawnShieldBonus * std::min(pawnShieldW * pawnShieldW, 9);
@@ -567,15 +568,15 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    STOP_AND_SUM_TIMER(Eval3)
 
    //const BitBoard attackedOrNotDefended[2]    = {att[Co_White]  | ~att[Co_Black]  , att[Co_Black]  | ~att[Co_White] };
-   const BitBoard attackedAndNotDefended[2]   = {att[Co_White] & ~att[Co_Black], att[Co_Black] & ~att[Co_White]};
-   const BitBoard attacked2AndNotDefended2[2] = {att2[Co_White] & ~att2[Co_Black], att2[Co_Black] & ~att2[Co_White]};
+   const colored<BitBoard> attackedAndNotDefended   = {att[Co_White] & ~att[Co_Black], att[Co_Black] & ~att[Co_White]};
+   const colored<BitBoard> attacked2AndNotDefended2 = {att2[Co_White] & ~att2[Co_Black], att2[Co_Black] & ~att2[Co_White]};
 
-   const BitBoard weakSquare[2] = { att[Co_Black] & ~att2[Co_White] & (~att[Co_White] | attFromPiece[Co_White][P_wk - 1] | attFromPiece[Co_White][P_wq - 1]),
-                                    att[Co_White] & ~att2[Co_Black] & (~att[Co_Black] | attFromPiece[Co_Black][P_wk - 1] | attFromPiece[Co_Black][P_wq - 1])};
-   const BitBoard safeSquare[2] = { ~att[Co_Black] | (weakSquare[Co_Black] & att2[Co_White]),
-                                    ~att[Co_White] | (weakSquare[Co_White] & att2[Co_Black])};
-   const BitBoard protectedSquare[2] = {pe.pawnTargets[Co_White] | attackedAndNotDefended[Co_White] | attacked2AndNotDefended2[Co_White],
-                                        pe.pawnTargets[Co_Black] | attackedAndNotDefended[Co_Black] | attacked2AndNotDefended2[Co_Black]};
+   const colored<BitBoard> weakSquare = { att[Co_Black] & ~att2[Co_White] & (~att[Co_White] | attFromPiece[Co_White][P_wk - 1] | attFromPiece[Co_White][P_wq - 1]),
+                                          att[Co_White] & ~att2[Co_Black] & (~att[Co_Black] | attFromPiece[Co_Black][P_wk - 1] | attFromPiece[Co_Black][P_wq - 1])};
+   const colored<BitBoard> safeSquare = { ~att[Co_Black] | (weakSquare[Co_Black] & att2[Co_White]),
+                                          ~att[Co_White] | (weakSquare[Co_White] & att2[Co_Black])};
+   const colored<BitBoard> protectedSquare = {pe.pawnTargets[Co_White] | attackedAndNotDefended[Co_White] | attacked2AndNotDefended2[Co_White],
+                                              pe.pawnTargets[Co_Black] | attackedAndNotDefended[Co_Black] | attacked2AndNotDefended2[Co_Black]};
 
    data.haveThreats[Co_White] = (att[Co_White] & p.allPieces[Co_Black]) != emptyBitBoard;
    data.haveThreats[Co_Black] = (att[Co_Black] & p.allPieces[Co_White]) != emptyBitBoard;
@@ -616,7 +617,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    features.scores[F_development] -= EvalConfig::pieceFrontPawn * countBit(BBTools::shiftN<Co_Black>(pawns[Co_Black]) & nonPawnMat[Co_Black]);
 
    // pawn in front of own minor
-   const BitBoard minor[2] = {knights[Co_White] | bishops[Co_White], knights[Co_Black] | bishops[Co_Black]};
+   const colored<BitBoard> minor = {knights[Co_White] | bishops[Co_White], knights[Co_Black] | bishops[Co_Black]};
    applyOn(BBTools::shiftS<Co_White>(pawns[Co_White]) & minor[Co_White], [&](const Square & k){ 
       features.scores[F_development] += EvalConfig::pawnFrontMinor[ColorRank<Co_White>(k)]; 
    });
@@ -667,7 +668,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    }
 
    // number of hanging pieces
-   const BitBoard hanging[2] = {nonPawnMat[Co_White] & weakSquare[Co_White], nonPawnMat[Co_Black] & weakSquare[Co_Black]};
+   const colored<BitBoard> hanging = {nonPawnMat[Co_White] & weakSquare[Co_White], nonPawnMat[Co_Black] & weakSquare[Co_Black]};
    features.scores[F_attack] += EvalConfig::hangingPieceMalus * (countBit(hanging[Co_White]) - countBit(hanging[Co_Black]));
 
    // threats by minor
@@ -711,13 +712,13 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    });
 
    // threat by safe pawn
-   const BitBoard safePawnAtt[2] = {nonPawnMat[Co_Black] & BBTools::pawnAttacks<Co_White>(pawns[Co_White] & safeSquare[Co_White]),
-                                    nonPawnMat[Co_White] & BBTools::pawnAttacks<Co_Black>(pawns[Co_Black] & safeSquare[Co_Black])};
+   const colored<BitBoard> safePawnAtt = {nonPawnMat[Co_Black] & BBTools::pawnAttacks<Co_White>(pawns[Co_White] & safeSquare[Co_White]),
+                                          nonPawnMat[Co_White] & BBTools::pawnAttacks<Co_Black>(pawns[Co_Black] & safeSquare[Co_Black])};
    features.scores[F_attack] += EvalConfig::pawnSafeAtt * (countBit(safePawnAtt[Co_White]) - countBit(safePawnAtt[Co_Black]));
 
    // safe pawn push (protected once or not attacked)
-   const BitBoard safePawnPush[2] = {BBTools::shiftN<Co_White>(pawns[Co_White]) & ~occupancy & safeSquare[Co_White],
-                                     BBTools::shiftN<Co_Black>(pawns[Co_Black]) & ~occupancy & safeSquare[Co_Black]};
+   const colored<BitBoard> safePawnPush = {BBTools::shiftN<Co_White>(pawns[Co_White]) & ~occupancy & safeSquare[Co_White],
+                                           BBTools::shiftN<Co_Black>(pawns[Co_Black]) & ~occupancy & safeSquare[Co_Black]};
    features.scores[F_mobility] += EvalConfig::pawnMobility * (countBit(safePawnPush[Co_White]) - countBit(safePawnPush[Co_Black]));
 
    // threat by safe pawn push
@@ -762,8 +763,8 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    features.scores[F_positional] -= EvalConfig::rookQueenSameFile * countBit(BBTools::fillFile(queens[Co_Black]) & rooks[Co_Black]);
 
    // pins on king and queen
-   const BitBoard pinnedK[2] = {getPinned<Co_White>(p, p.king[Co_White]), getPinned<Co_Black>(p, p.king[Co_Black])};
-   const BitBoard pinnedQ[2] = {getPinned<Co_White>(p, whiteQueenSquare), getPinned<Co_Black>(p, blackQueenSquare)};
+   const colored<BitBoard> pinnedK = {getPinned<Co_White>(p, p.king[Co_White]), getPinned<Co_Black>(p, p.king[Co_Black])};
+   const colored<BitBoard> pinnedQ = {getPinned<Co_White>(p, whiteQueenSquare), getPinned<Co_Black>(p, blackQueenSquare)};
    for (Piece pp = P_wp; pp < P_wk; ++pp) {
       const BitBoard bw = p.pieces_const(Co_White, pp);
       if (bw) {
