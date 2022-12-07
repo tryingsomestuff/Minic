@@ -18,7 +18,7 @@ bool Searcher::isRep(const Position& p, bool isPV) const {
       if (stack[k].h == h){
          ++count;
 #ifdef DEBUG_FIFTY_COLLISION
-         if(stack[k].p != p){
+         if (stack[k].p != p){
             Logging::LogIt(Logging::logFatal) << "Collision in fifty hash comparation" << ToString(p) << ToString(stack[k].p);
          }
 #endif
@@ -46,7 +46,7 @@ bool Searcher::isRep(const Position& p, bool isPV) const {
          if (count >= limit) return true;
       }
       // irreversible moves ?
-      if(k>0){
+      if (k>0){
          const auto m = COM::GetGameInfo().getMove(k-1);
          const auto pp = COM::GetGameInfo().getPosition(k-1);
          if ( m.has_value() &&

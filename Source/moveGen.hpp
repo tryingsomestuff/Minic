@@ -187,7 +187,7 @@ void generate(const Position& p, MoveList& moves, const bool doNotClear = false)
    if ( DynamicConfig::anarchy && p.ep != INVALIDSQUARE ){ // will be slow ... ///@todo better
       bool foundEP = false;
       MoveList eps;
-      for(auto m : moves){
+      for (auto m : moves){
          if ( Move2Type(m) == T_ep ){
             foundEP = true;
             eps.push_back(m);
@@ -201,7 +201,7 @@ void generate(const Position& p, MoveList& moves, const bool doNotClear = false)
    if ( DynamicConfig::antichess ){
      bool foundCap = false;
       MoveList caps;
-      for(auto m : moves){
+      for (auto m : moves){
          if ( isCapture(m) ){
             foundCap = true;
             caps.push_back(m);

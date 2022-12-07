@@ -174,7 +174,7 @@ void Searcher::searchDriver(bool postMove) {
       for (int i = 0 ; i < 5; ++i){
          const Move m = p.c == Co_White ? wbc[i] : bbc[i];
          for (const auto & it : moves){
-            if(sameMove(m,it)){
+            if (sameMove(m,it)){
                _data.score = 0;
                _data.pv.push_back(m);
                goto pvsout;

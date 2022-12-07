@@ -59,7 +59,7 @@ FORCE_FINLINE void evalPawnCandidate(BitBoard pieceBBiterator, EvalScore &score)
 template<Color C> 
 BitBoard getPinned(const Position &p, const Square s) {
    BitBoard pinned = emptyBitBoard;
-   if (!isValidSquare(s)) return pinned;
+   if (!isValidSquare(s)) return pinned; // this allows for pinned to queen detection more easily
    const BitBoard pinner = BBTools::attack<P_wb>(s, p.pieces_const<P_wb>(~C) | p.pieces_const<P_wq>(~C), p.allPieces[~C]) |
                            BBTools::attack<P_wr>(s, p.pieces_const<P_wr>(~C) | p.pieces_const<P_wq>(~C), p.allPieces[~C]);
    applyOn(pinner, [&](const Square & k){
@@ -301,16 +301,16 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
      const Hash matHash2 = MaterialHash::getMaterialHash2(p.mat);
      bool matHelperHit = false;
 #if !defined(WITH_SMALL_MEMORY)
-     if(matHash2 == matHashKPK || matHash2 == matHashKKP){
+     if (matHash2 == matHashKPK || matHash2 == matHashKKP){
         materialTableScore = (white2Play ? +1 : -1) * (MaterialHash::helperKPK(p, winningSideEG, features.scores[F_material][EG], context.height_));
         matHelperHit = true;
      }
 #endif
-     if(matHash2 == matHashKQK || matHash2 == matHashKKQ || matHash2 == matHashKRK || matHash2 == matHashKKR){
+     if (matHash2 == matHashKQK || matHash2 == matHashKKQ || matHash2 == matHashKRK || matHash2 == matHashKKR){
         materialTableScore = (white2Play ? +1 : -1) * (MaterialHash::helperKXK(p, winningSideEG, features.scores[F_material][EG], context.height_));
         matHelperHit = true;
      }
-     if(matHash2 == matHashKLNK || matHash2 == matHashKKLN || matHash2 == matHashKDNK || matHash2 == matHashKKDN){
+     if (matHash2 == matHashKLNK || matHash2 == matHashKKLN || matHash2 == matHashKDNK || matHash2 == matHashKKDN){
         materialTableScore = (white2Play ? +1 : -1) * (MaterialHash::helperKmmK(p, winningSideEG, features.scores[F_material][EG], context.height_));
         matHelperHit = true;
      }

@@ -34,7 +34,7 @@ void Display() {
    for (TimerType tm = TM_Total; tm < TM_Max; ++tm){
       if (callCounter[tm]){
          const float percent =  100.f * rdtscCounter[tm] / rdtscCounter[TM_Total];
-         if( tm != TM_Total && tm != TM_Sum ){
+         if ( tm != TM_Total && tm != TM_Sum ){
             rdtscCounter[TM_Sum] += rdtscCounter[tm];
             callCounter[TM_Sum] += callCounter[tm];
          }
