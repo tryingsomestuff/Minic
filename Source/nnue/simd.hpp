@@ -78,6 +78,18 @@ FORCE_FINLINE float v_sum_f32_512(__m512 a) {
 
 #define v_load_f32_512(PTR) _mm512_load_ps((const __m512*)(PTR))
 #define v_zero_f32_512      _mm512_setzero_ps
+#define v_un_f32_512        _mm512_set1_ps
+#define v_max_f32_512       _mm512_max_ps
+#define v_min_f32_512       _mm512_min_ps
+
+template<bool Q>
+__m256 reluLoad(const float * x, const __m256 & zero, const __m256 & un){
+   if constexpr(Q)
+      return v_max_f32_512(zero, v_min_f32_512(un ,v_load_f32_512(x)));
+   else
+      return v_max_f32_512(zero, v_load_f32_512(x));
+}
+
 
 FORCE_FINLINE void Log512(const __m512 & value){
     constexpr size_t n = sizeof(__m512) / sizeof(float);
@@ -88,27 +100,29 @@ FORCE_FINLINE void Log512(const __m512 & value){
     std::cout << std::endl;
 }
 
-template<size_t N> [[nodiscard]] float simdDotProduct512(const float* x, const float* y) {
+template<size_t N, bool Q> [[nodiscard]] float simdDotProduct512(const float* x, const float* y) {
    constexpr int vstep    = v_nlanes_f32_512;
    constexpr int unrollx4 = N & (-vstep * 4);
    constexpr int unrollx  = N & -vstep;
    int i = 0;
+   const v_f32_512 zero = v_zero_f32_512();
+   const v_f32_512 un = v_un_f32_512(1.f);
    v_f32_512 vsum0 = v_zero_f32_512();
    if constexpr(unrollx4){
       v_f32_512 vsum1 = v_zero_f32_512();
       v_f32_512 vsum2 = v_zero_f32_512();
       v_f32_512 vsum3 = v_zero_f32_512();
       while (i < unrollx4) {
-         vsum0 = v_muladd_f32_512(v_load_f32_512(x + i), v_load_f32_512(y + i), vsum0);
-         vsum1 = v_muladd_f32_512(v_load_f32_512(x + i + vstep), v_load_f32_512(y + i + vstep), vsum1);
-         vsum2 = v_muladd_f32_512(v_load_f32_512(x + i + vstep * 2), v_load_f32_512(y + i + vstep * 2), vsum2);
-         vsum3 = v_muladd_f32_512(v_load_f32_512(x + i + vstep * 3), v_load_f32_512(y + i + vstep * 3), vsum3);
+         vsum0 = v_muladd_f32_512(reluLoad<Q>(x + i, zero, un), v_load_f32_512(y + i), vsum0);
+         vsum1 = v_muladd_f32_512(reluLoad<Q>(x + i + vstep, zero, un), v_load_f32_512(y + i + vstep), vsum1);
+         vsum2 = v_muladd_f32_512(reluLoad<Q>(x + i + vstep * 2, zero, un), v_load_f32_512(y + i + vstep * 2), vsum2);
+         vsum3 = v_muladd_f32_512(reluLoad<Q>(x + i + vstep * 3, zero, un), v_load_f32_512(y + i + vstep * 3), vsum3);
          i += vstep * 4;
       }
       vsum0 = v_add_f32_512(v_add_f32_512(vsum0, vsum1), v_add_f32_512(vsum2, vsum3));
    }
    while (i < unrollx) {
-      vsum0 = v_muladd_f32_512(v_load_f32_512(x + i), v_load_f32_512(y + i), vsum0);
+      vsum0 = v_muladd_f32_512(reluLoad<Q>(x + i, zero, un), v_load_f32_512(y + i), vsum0);
       i += vstep;
    }
    //Log512(vsum0);
@@ -144,6 +158,17 @@ FORCE_FINLINE float v_sum_f32_256(__m256 a) {
 #endif
 #define v_load_f32_256 _mm256_load_ps
 #define v_zero_f32_256 _mm256_setzero_ps
+#define v_un_f32_256   _mm256_set1_ps
+#define v_max_f32_256  _mm256_max_ps
+#define v_min_f32_256  _mm256_min_ps
+
+template<bool Q>
+__m256 reluLoad(const float * x, const __m256 & zero, const __m256 & un){
+   if constexpr(Q)
+      return v_max_f32_256(zero, v_min_f32_256(un ,v_load_f32_256(x)));
+   else
+      return v_max_f32_256(zero, v_load_f32_256(x));
+}
 
 FORCE_FINLINE void Log256(const __m256 & value){
     constexpr size_t n = sizeof(__m256) / sizeof(float);
@@ -154,10 +179,12 @@ FORCE_FINLINE void Log256(const __m256 & value){
     std::cout << std::endl;
 }
 
-template<size_t N> [[nodiscard]] float simdDotProduct256(const float* x, const float* y) {
+template<size_t N, bool Q> [[nodiscard]] float simdDotProduct256(const float* x, const float* y) {
    constexpr int vstep    = v_nlanes_f32_256;
    constexpr int unrollx4 = N & (-vstep * 4);
    constexpr int unrollx  = N & -vstep;
+   const v_f32_256 zero = v_zero_f32_256();
+   const v_f32_256 un = v_un_f32_256(1.f);
    int i = 0;
    v_f32_256 vsum0 = v_zero_f32_256();
    if constexpr(unrollx4){
@@ -165,16 +192,16 @@ template<size_t N> [[nodiscard]] float simdDotProduct256(const float* x, const f
       v_f32_256 vsum2 = v_zero_f32_256();
       v_f32_256 vsum3 = v_zero_f32_256();
       while (i < unrollx4) {
-         vsum0 = v_muladd_f32_256(v_load_f32_256(x + i), v_load_f32_256(y + i), vsum0);
-         vsum1 = v_muladd_f32_256(v_load_f32_256(x + i + vstep), v_load_f32_256(y + i + vstep), vsum1);
-         vsum2 = v_muladd_f32_256(v_load_f32_256(x + i + vstep * 2), v_load_f32_256(y + i + vstep * 2), vsum2);
-         vsum3 = v_muladd_f32_256(v_load_f32_256(x + i + vstep * 3), v_load_f32_256(y + i + vstep * 3), vsum3);
+         vsum0 = v_muladd_f32_256(reluLoad<Q>(x + i, zero, un), v_load_f32_256(y + i), vsum0);
+         vsum1 = v_muladd_f32_256(reluLoad<Q>(x + i + vstep, zero, un), v_load_f32_256(y + i + vstep), vsum1);
+         vsum2 = v_muladd_f32_256(reluLoad<Q>(x + i + vstep * 2, zero, un), v_load_f32_256(y + i + vstep * 2), vsum2);
+         vsum3 = v_muladd_f32_256(reluLoad<Q>(x + i + vstep * 3, zero, un), v_load_f32_256(y + i + vstep * 3), vsum3);
          i += vstep * 4;
       }
       vsum0 = v_add_f32_256(v_add_f32_256(vsum0, vsum1), v_add_f32_256(vsum2, vsum3));
    }
    while (i < unrollx) {
-      vsum0 = v_muladd_f32_256(v_load_f32_256(x + i), v_load_f32_256(y + i), vsum0);
+      vsum0 = v_muladd_f32_256(reluLoad<Q>(x + i, zero, un), v_load_f32_256(y + i), vsum0);
       i += vstep;
    }
    //Log256(vsum0);
@@ -212,6 +239,17 @@ FORCE_FINLINE float v_sum_f32_128(__m128 a) {
 }
 #define v_load_f32_128 _mm_load_ps
 #define v_zero_f32_128 _mm_setzero_ps
+#define v_un_f32_128   _mm_set1_ps
+#define v_max_f32_128  _mm_max_ps
+#define v_min_f32_128  _mm_min_ps
+
+template<bool Q>
+__m128 reluLoad(const float * x, const __m128 & zero, const __m128 & un){
+   if constexpr(Q)
+      return v_max_f32_128(zero, v_min_f32_128(un ,v_load_f32_128(x)));
+   else
+      return v_max_f32_128(zero, v_load_f32_128(x));
+}
 
 FORCE_FINLINE void Log128(const __m128 & value){
     constexpr size_t n = sizeof(__m128) / sizeof(float);
@@ -222,27 +260,29 @@ FORCE_FINLINE void Log128(const __m128 & value){
     std::cout << std::endl;
 }
 
-template<size_t N> [[nodiscard]] float simdDotProduct128(const float* x, const float* y) {
+template<size_t N, bool Q> [[nodiscard]] float simdDotProduct128(const float* x, const float* y) {
    constexpr int vstep    = v_nlanes_f32_128;
    constexpr int unrollx4 = N & (-vstep * 4);
    constexpr int unrollx  = N & -vstep;
    int i = 0;
+   const v_f32_128 zero = v_zero_f32_128();
+   const v_f32_128 un = v_un_f32_128(1.f);
    v_f32_128 vsum0 = v_zero_f32_128();
    if constexpr(unrollx4){
       v_f32_128 vsum1 = v_zero_f32_128();
       v_f32_128 vsum2 = v_zero_f32_128();
       v_f32_128 vsum3 = v_zero_f32_128();
       while (i < unrollx4) {
-         vsum0 = v_muladd_f32_128(v_load_f32_128(x + i), v_load_f32_128(y + i), vsum0);
-         vsum1 = v_muladd_f32_128(v_load_f32_128(x + i + vstep), v_load_f32_128(y + i + vstep), vsum1);
-         vsum2 = v_muladd_f32_128(v_load_f32_128(x + i + vstep * 2), v_load_f32_128(y + i + vstep * 2), vsum2);
-         vsum3 = v_muladd_f32_128(v_load_f32_128(x + i + vstep * 3), v_load_f32_128(y + i + vstep * 3), vsum3);
+         vsum0 = v_muladd_f32_128(reluLoad<Q>(x + i, zero, un), v_load_f32_128(y + i), vsum0);
+         vsum1 = v_muladd_f32_128(reluLoad<Q>(x + i + vstep, zero, un), v_load_f32_128(y + i + vstep), vsum1);
+         vsum2 = v_muladd_f32_128(reluLoad<Q>(x + i + vstep * 2, zero, un), v_load_f32_128(y + i + vstep * 2), vsum2);
+         vsum3 = v_muladd_f32_128(reluLoad<Q>(x + i + vstep * 3, zero, un), v_load_f32_128(y + i + vstep * 3), vsum3);
          i += vstep * 4;
       }
       vsum0 = v_add_f32_128(v_add_f32_128(vsum0, vsum1), v_add_f32_128(vsum2, vsum3));
    }
    while (i < unrollx) {
-      vsum0 = v_muladd_f32_128(v_load_f32_128(x + i), v_load_f32_128(y + i), vsum0);
+      vsum0 = v_muladd_f32_128(reluLoad<Q>(x + i, zero, un), v_load_f32_128(y + i), vsum0);
       i += vstep;
    }
    //Log128(vsum0);
@@ -251,46 +291,59 @@ template<size_t N> [[nodiscard]] float simdDotProduct128(const float* x, const f
 
 #endif
 
-template<size_t N> [[nodiscard]] float simdDotProductDefault(const float* x, const float* y) {
+template<bool Q>
+float activation(const float & f){
+   if constexpr(Q)
+      return std::min(std::max(f, 0.f), 1.f);
+   else
+      return std::max(f, 0.f);
+}
+
+template<size_t N, bool Q> [[nodiscard]] float simdDotProductDefault(const float* x, const float* y) {
    constexpr int n1 = N & -4;
    float dot = 0.f;
-   for (int i = 0; i < n1; i += 4) { dot += y[i] * x[i] + y[i + 1] * x[i + 1] + y[i + 2] * x[i + 2] + y[i + 3] * x[i + 3]; }
+   for (int i = 0; i < n1; i += 4) { 
+      dot += y[i] * activation<Q>(x[i]) 
+           + y[i + 1] * activation<Q>(x[i + 1]) 
+           + y[i + 2] * activation<Q>(x[i + 2]) 
+           + y[i + 3] * activation<Q>(x[i + 3]); 
+   }
    return dot;
 }
 
-template<size_t N> [[nodiscard]] float simdDotProduct(const float* x, const float* y) {
+template<size_t N, bool Q> [[nodiscard]] float simdDotProduct(const float* x, const float* y) {
    size_t i  = 0;
    float dot = 0.0f;
    if constexpr (N <= 0) return dot;
 
 #if V_SIMD_512
    if (N-i >= 16){
-      dot += simdDotProduct512<N>(x+i,y+i);
+      dot += simdDotProduct512<N,Q>(x+i,y+i);
       i += ((N-i) & -16);
    }
 #endif
 
 #if V_SIMD_256
    if (N-i >= 8){
-      dot += simdDotProduct256<N>(x+i,y+i);
+      dot += simdDotProduct256<N,Q>(x+i,y+i);
       i += ((N-i) & -8);
    }
 #endif
 
 #if V_SIMD_128
    if (N-i >= 4){
-      dot += simdDotProduct128<N>(x+i,y+i);
+      dot += simdDotProduct128<N,Q>(x+i,y+i);
       i += ((N-i) & -4);
    }
 #endif
 
    if (N-i >= 4){
-      dot += simdDotProductDefault<N>(x+i,y+i);
+      dot += simdDotProductDefault<N,Q>(x+i,y+i);
       i += ((N-i) & -4);
    }
 
    while (i < N) {
-      dot += y[i] * x[i];
+      dot += y[i] * activation<Q>(x[i]);
       ++i;
    }
    return dot;

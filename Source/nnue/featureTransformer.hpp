@@ -15,13 +15,13 @@ struct FeatureTransformer {
    typedef typename Quantization<Q>::BIT BIT;
 
    // active_ is always for input layer, so BIT shall be used
-   StackVector<BIT, firstInnerLayerSize> active_;
+   StackVector<BIT, firstInnerLayerSize, Q> active_;
 
-   constexpr StackVector<BIT, firstInnerLayerSize> active() const { return active_; }
+   constexpr StackVector<BIT, firstInnerLayerSize, Q> active() const { return active_; }
 
    FORCE_FINLINE void clear() {
       assert(weights_);
-      active_ = StackVector<BIT, firstInnerLayerSize>::from(weights_->b);
+      active_ = StackVector<BIT, firstInnerLayerSize, Q>::from(weights_->b);
    }
 
    FORCE_FINLINE void insert(const size_t idx) {
