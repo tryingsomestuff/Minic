@@ -41,11 +41,9 @@ struct StackVector {
 #endif
 
    template<typename T2> 
-   FORCE_FINLINE static CONSTEXPR StackVector<T, dim, Q> from(const T2* data) {
-      StackVector<T, dim, Q> result;
+   FORCE_FINLINE void from(const T2* other) {
 #pragma omp simd
-      for (size_t i = 0; i < dim; ++i) { result.data[i] = static_cast<T>(data[i]); }
-      return result; //RVO
+      for (size_t i = 0; i < dim; ++i) { data[i] = static_cast<T>(other[i]); }
    }
 
   // note that quantization is done on read if needed (see weightReader)
