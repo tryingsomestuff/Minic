@@ -597,12 +597,14 @@ constexpr ScoreType badCapLimit = -80;
 
 [[nodiscard]] FORCE_FINLINE Square correctedMove2ToKingDest(const Move m) {
    assert(isValidMove(m));
-   return (!isCastling(m)) ? Move2To(m) : correctedKingDestSq[Move2Type(m)];
+   const MType mtype = Move2Type(m);
+   return (!isCastling(mtype)) ? Move2To(m) : correctedKingDestSq[mtype];
 }
 
 [[nodiscard]] FORCE_FINLINE Square correctedMove2ToRookDest(const Move m) {
    assert(isValidMove(m));
-   return (!isCastling(m)) ? Move2To(m) : correctedRookDestSq[Move2Type(m)];
+   const MType mtype = Move2Type(m);
+   return (!isCastling(mtype)) ? Move2To(m) : correctedRookDestSq[mtype];
 }
 
 namespace MoveDifficultyUtil {
