@@ -1,7 +1,7 @@
 #!/bin/bash
 
-export CXX=/ssd2/android/bin/arm-linux-androideabi-clang++
-export CC=/ssd2/android/bin/arm-linux-androideabi-clang++
+export CXX=/ssd2/android/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi33-clang++
+export CC=/ssd2/android/toolchains/llvm/prebuilt/linux-x86_64/bin//armv7a-linux-androideabi33-clang++
 
 source $(dirname $0)/common
 cd_root
