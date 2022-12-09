@@ -474,7 +474,8 @@ void updateMaterialOther(Position &p) {
 
 void initMaterial(Position &p) { // M_p .. M_k is the same as P_wp .. P_wk
    for (Color c = Co_White; c < Co_End; ++c)
-      for (Piece pp = P_wp; pp <= P_wk; ++pp) p.mat[c][pp] = (uint8_t)BB::countBit(p.pieces_const(c, pp));
+      for (Piece pp = P_wp; pp <= P_wk; ++pp) 
+         p.mat[c][pp] = static_cast<uint8_t>(BB::countBit(p.pieces_const(c, pp)));
    updateMaterialOther(p);
 }
 

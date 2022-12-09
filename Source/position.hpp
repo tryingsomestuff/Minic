@@ -59,13 +59,8 @@ struct Position {
    array1d<BitBoard, 2>     allPieces {{emptyBitBoard}}; // works because emptyBitBoard is in fact 0
 
    // t p n b r q k bl bd M n x x x x x (total is first so that pawn to king is same index as Piece type)
-   typedef array1d<array1d<char, 16>, 2> Material;
+   typedef colored<array1d<char, 16>> Material;
    Material mat = {{{{0}}}}; // such a nice syntax ...
-
-   mutable Hash h = nullHash, ph = nullHash;
-   MiniMove lastMove = INVALIDMINIMOVE;
-   uint16_t moves = 0, halfmoves = 0;
-   colored<Square> king = {INVALIDSQUARE, INVALIDSQUARE};
 
    // shared by all "child" of a same "root" position
    // Assumed rule of 3 disrespect
@@ -74,10 +69,20 @@ struct Position {
    // (this is way faster than a shared_ptr)
    mutable RootInformation* root = nullptr;
 
-   Square         ep       = INVALIDSQUARE;
-   uint8_t        fifty    = 0;
-   CastlingRights castling = C_none;
-   Color          c        = Co_White;
+#ifdef WITH_NNUE
+   mutable NNUEEvaluator* associatedEvaluator = nullptr;
+#endif
+
+   mutable Hash    h         = nullHash;
+   mutable Hash    ph        = nullHash;
+   MiniMove        lastMove  = INVALIDMINIMOVE;
+   uint16_t        moves     = 0;
+   uint16_t        halfmoves = 0;
+   colored<Square> king      = {INVALIDSQUARE, INVALIDSQUARE};
+   Square          ep        = INVALIDSQUARE;
+   uint8_t         fifty     = 0;
+   CastlingRights  castling  = C_none;
+   Color           c         = Co_White;
 
    inline void clear(){
       _b = {{P_none}};
@@ -202,9 +207,7 @@ struct Position {
    };
 
 #ifdef WITH_NNUE
-
-   mutable NNUEEvaluator* associatedEvaluator = nullptr;
-   void                   associateEvaluator(NNUEEvaluator& evaluator, bool dirty = true) { 
+   void associateEvaluator(NNUEEvaluator& evaluator, bool dirty = true) { 
       associatedEvaluator = &evaluator; 
       evaluator.dirty = dirty;
    }
