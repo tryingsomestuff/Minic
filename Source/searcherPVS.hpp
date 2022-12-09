@@ -1230,52 +1230,56 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          const bool isPrunableCap        = isPrunable && Move2Type(*it) == T_capture && noCheck;
          const bool isPrunableBadCap     = isPrunableCap && isBadCap(*it);
 
-         // futility
-         if (pvsData.futility && isPrunableStdNoCheck) {
-            stats.incr(Stats::sid_futility);
-            continue;
-         }
-
-         // LMP
-         if (pvsData.lmp && isPrunableStdNoCheck && pvsData.validMoveCount > SearchConfig::lmpLimit[pvsData.improving][depth + depthCorrection]) {
-            stats.incr(Stats::sid_lmp);
-            skipQuiet = true;
-            continue;
-         }
-
-         // History pruning (including CMH)
-         if (pvsData.historyPruning && isPrunableStdNoCheck &&
-             Move2Score(*it) < SearchConfig::historyPruningCoeff.threshold(depth, evalData.gp, pvsData.improving, pvsData.cutNode)) {
-            stats.incr(Stats::sid_historyPruning);
-            continue;
-         }
-
-         // CMH pruning alone
-         if (pvsData.CMHPruning && isPrunableStdNoCheck) {
-            if (isCMHBad(p, Move2From(*it), Move2To(*it), pvsData.cmhPtr, -HISTORY_MAX/4)) {
-               stats.incr(Stats::sid_CMHPruning);
-               continue;
-            }
-         }
-
-         // capture history pruning (only std cap)
-         if (pvsData.capHistoryPruning && isPrunableCap &&
-              historyT.historyCap[PieceIdx(p.board_const(Move2From(*it)))][to][Abs(p.board_const(to))-1] < SearchConfig::captureHistoryPruningCoeff.threshold(depth, evalData.gp, pvsData.improving, pvsData.cutNode)){
-            stats.incr(Stats::sid_capHistPruning);
-            continue;
-         }
-
-         // SEE (capture)
-         if (!pvsData.rootnode && isPrunableBadCap) {
+         // forward pruning heuristic for quiet moves
+         if (isPrunableStdNoCheck){
+            // futility
             if (pvsData.futility) {
-               stats.incr(Stats::sid_see);
-               skipCap = true;
+               stats.incr(Stats::sid_futility);
                continue;
             }
-            else if ( badCapScore(*it) < - (SearchConfig::seeCaptureInit + SearchConfig::seeCaptureFactor * (depth - 1 + std::max(0, dangerGoodAttack - dangerUnderAttack)/SearchConfig::seeCapDangerDivisor))) {
-               stats.incr(Stats::sid_see2);
-               skipCap = true;
+
+            // LMP
+            if (pvsData.lmp && pvsData.validMoveCount > SearchConfig::lmpLimit[pvsData.improving][depth + depthCorrection]) {
+               stats.incr(Stats::sid_lmp);
+               skipQuiet = true;
                continue;
+            }
+
+            // History pruning (including CMH)
+            if (pvsData.historyPruning && 
+               Move2Score(*it) < SearchConfig::historyPruningCoeff.threshold(depth, evalData.gp, pvsData.improving, pvsData.cutNode)) {
+               stats.incr(Stats::sid_historyPruning);
+               continue;
+            }
+
+            // CMH pruning alone
+            if (pvsData.CMHPruning ) {
+               if (isCMHBad(p, Move2From(*it), Move2To(*it), pvsData.cmhPtr, -HISTORY_MAX/4)) {
+                  stats.incr(Stats::sid_CMHPruning);
+                  continue;
+               }
+            }
+         }
+         else{
+            // capture history pruning (only std cap)
+            if (pvsData.capHistoryPruning && isPrunableCap &&
+               historyT.historyCap[PieceIdx(p.board_const(Move2From(*it)))][to][Abs(p.board_const(to))-1] < SearchConfig::captureHistoryPruningCoeff.threshold(depth, evalData.gp, pvsData.improving, pvsData.cutNode)){
+               stats.incr(Stats::sid_capHistPruning);
+               continue;
+            }
+
+            // SEE (capture)
+            if (!pvsData.rootnode && isPrunableBadCap) {
+               if (pvsData.futility) {
+                  stats.incr(Stats::sid_see);
+                  skipCap = true;
+                  continue;
+               }
+               else if ( badCapScore(*it) < - (SearchConfig::seeCaptureInit + SearchConfig::seeCaptureFactor * (depth - 1 + std::max(0, dangerGoodAttack - dangerUnderAttack)/SearchConfig::seeCapDangerDivisor))) {
+                  stats.incr(Stats::sid_see2);
+                  skipCap = true;
+                  continue;
+               }
             }
          }
 
