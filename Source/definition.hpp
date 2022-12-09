@@ -242,7 +242,7 @@ using colored = array1d<T,2>;
 inline const Hash     nullHash      = 0ull; //std::numeric_limits<MiniHash>::max(); // use MiniHash to allow same "null" value for Hash(64) and MiniHash(32)
 inline const BitBoard emptyBitBoard = 0ull;
 
-enum Color : uint8_t { Co_White = 0, Co_Black = 1, Co_None = 2, Co_End };
+enum Color : uint8_t { Co_White = 0, Co_Black = 1, Co_None = 2, Co_End = Co_None };
 [[nodiscard]] constexpr Color operator~(Color c) { return static_cast<Color>(c ^ Co_Black); } // switch Color
 ENABLE_INCR_OPERATORS_ON(Color)
 
