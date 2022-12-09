@@ -610,7 +610,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          return tbScore;
       }
       else {
-         ++stats.counters[Stats::sid_tbFail];
+         stats.incr(Stats::sid_tbFail);
       }
    }
 #endif
@@ -983,7 +983,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       tbScore = 0;
       MoveList movesTB;
       if (SyzygyTb::probe_root(*this, p, tbScore, movesTB) < 0) { // only good moves if TB success
-         ++stats.counters[Stats::sid_tbFail];
+         stats.incr(Stats::sid_tbFail);
          if (capMoveGenerated) MoveGen::generate<MoveGen::GP_quiet>(p, moves, true);
          else
             if ( pvsData.isInCheck ) MoveGen::generate<MoveGen::GP_evasion>(p, moves, false);
