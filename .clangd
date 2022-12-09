@@ -1,0 +1,6 @@
+CompileFlags: # Tweak the parse settings
+  Add: 
+    - "-I=Source"
+    - "-I=Source/nnue"
+    - "-I=Source/nnue/learn"
+    - "--std=c++20"
