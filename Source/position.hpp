@@ -72,7 +72,7 @@ struct Position {
 #ifdef WITH_NNUE
    mutable NNUEEvaluator* associatedEvaluator = nullptr;
 #endif
-
+   
    mutable Hash    h         = nullHash;
    mutable Hash    ph        = nullHash;
    MiniMove        lastMove  = INVALIDMINIMOVE;
@@ -85,21 +85,21 @@ struct Position {
    Color           c         = Co_White;
 
    inline void clear(){
-      _b = {{P_none}};
-      _allB = {{emptyBitBoard}};
+      _b        = {{P_none}};
+      _allB     = {{emptyBitBoard}};
       allPieces = {{emptyBitBoard}};
-      mat = {{{{0}}}};
-      h = nullHash;
-      ph = nullHash;
-      lastMove = INVALIDMINIMOVE;
-      moves = 0;
+      mat       = {{{{0}}}};
+      h         = nullHash;
+      ph        = nullHash;
+      lastMove  = INVALIDMINIMOVE;
+      moves     = 0;
       halfmoves = 0;
-      king = {INVALIDSQUARE, INVALIDSQUARE};
-      //root = nullptr;
-      ep = INVALIDSQUARE;
-      fifty = 0;
-      castling = C_none;
-      c = Co_White;
+      king      = {INVALIDSQUARE, INVALIDSQUARE};
+      //root     = nullptr;
+      ep        = INVALIDSQUARE;
+      fifty     = 0;
+      castling  = C_none;
+      c         = Co_White;
    }
 
 #ifdef DEBUG_FIFTY_COLLISION

@@ -31,8 +31,8 @@ void GameInfo::write(std::ostream & os) const{
    os << "[Event \"Minic game\"]" << std::endl;
    os << "[FEN \"" + GetFEN(initialPos) + "\"]" << std::endl;
 
-   uint16_t halfmoves = initialPos.halfmoves;
-   uint16_t moves = initialPos.moves;
+   auto halfmoves = initialPos.halfmoves;
+   auto moves = initialPos.moves;
    auto prev = initialPos;
    for (const auto & gs : _gameStates){
       os << ((halfmoves++)%2?(std::to_string((moves++))+". ") : "") << showAlgAbr(gs.lastMove,prev) << " ";
@@ -66,22 +66,22 @@ std::vector<Move> GameInfo::getMoves() const{
 }
 
 std::optional<Hash> GameInfo::getHash(uint16_t halfmove) const{
-   const uint16_t startingPly = initialPos.halfmoves;
-   const uint16_t offset = halfmove - startingPly;
+   const size_t startingPly = initialPos.halfmoves;
+   const size_t offset = halfmove - startingPly;
    if ( offset >= size()) return {};
    return offset == 0 ? computeHash(initialPos) : _gameStates[offset-1].p.h; // halfmove starts at 1, not 0 ...
 }
 
 std::optional<Move> GameInfo::getMove(uint16_t halfmove) const{
-   const uint16_t startingPly = initialPos.halfmoves;
-   const uint16_t offset = halfmove - startingPly;
+   const size_t startingPly = initialPos.halfmoves;
+   const size_t offset = halfmove - startingPly;
    if ( offset >= size()) return {};
    return offset == 0 ? INVALIDMOVE : _gameStates[offset-1].lastMove; // halfmove starts at 1, not 0 ...
 }
 
 std::optional<Position> GameInfo::getPosition(uint16_t halfmove) const{
-   const uint16_t startingPly = initialPos.halfmoves;
-   const uint16_t offset = halfmove - startingPly;
+   const size_t startingPly = initialPos.halfmoves;
+   const size_t offset = halfmove - startingPly;
    if ( offset >= size()) return {};
    return offset == 0 ? initialPos : _gameStates[offset-1].p; // halfmove starts at 1, not 0 ...
 }
