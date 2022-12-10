@@ -1050,10 +1050,6 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          }
 #endif
 
-         // used for extensions heuristics
-         const Square to = correctedMove2ToKingDest(e.m);
-         pvsData.isAdvancedPawnPush = PieceTools::getPieceType(p,Move2From(e.m)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
-
          // We have a TT move.
          // The TT move can trigger singular extension
          // And it won't be reduced by any mean

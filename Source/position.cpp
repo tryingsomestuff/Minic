@@ -251,6 +251,30 @@ Position::~Position() {
 
 Position::Position() {}
 
+/*
+#include <immintrin.h>
+
+Position & Position::operator=(const Position & p){
+   if(&p != this){
+      constexpr size_t n = 7; // => sizeof(Position) == 224b
+      static_assert(sizeof(Position) == n*sizeof(__m256i));
+      __m256i * me_256 = reinterpret_cast<__m256i *>(this);
+      const __m256i * other_256 = reinterpret_cast<const __m256i *>(&p);
+      for(size_t i = 0; i < n; ++i, ++me_256, ++other_256){
+         _mm256_store_si256(me_256, _mm256_load_si256(other_256));
+      }
+   }
+   return *this;
+}
+
+Position::Position(const Position& p) {
+   if(&p != this){
+      this->operator=(p);     
+   }
+}
+*/
+
 RootPosition::RootPosition(const std::string& fen, bool withMoveCount) : RootPosition() {
    readFEN(fen, *this, true, withMoveCount);
 }
+
