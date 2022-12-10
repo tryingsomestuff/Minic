@@ -50,7 +50,7 @@ struct RootInformation {
  *
  * Minic is a copy/make engine, so that this structure is copied a lot !
  */
-struct Position {
+struct alignas(32) Position {
    Position();
    virtual ~Position();
 
@@ -101,6 +101,9 @@ struct Position {
       castling  = C_none;
       c         = Co_White;
    }
+
+   //Position & operator=(const Position & p2);
+   //Position(const Position& p);
 
 #ifdef DEBUG_FIFTY_COLLISION
    [[nodiscard]] bool operator== (const Position &p)const{
