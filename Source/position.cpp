@@ -198,12 +198,12 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent, bool withMove
    assert(p.ep == INVALIDSQUARE || (SQRANK(p.ep) == 2 || SQRANK(p.ep) == 5));
 
    // read 50 moves rules
-   if (withMoveCount && strList.size() >= 5) p.fifty = (uint8_t)readFromString<int>(strList[4]);
+   if (withMoveCount && strList.size() >= 5) p.fifty = static_cast<decltype(p.fifty)>(readFromString<int>(strList[4]));
    else
       p.fifty = 0;
 
    // read number of move
-   if (withMoveCount && strList.size() >= 6) p.moves = (uint16_t)readFromString<int>(strList[5]);
+   if (withMoveCount && strList.size() >= 6) p.moves = static_cast<decltype(p.moves)>(readFromString<int>(strList[5]));
    else
       p.moves = 1;
 
