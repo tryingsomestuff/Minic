@@ -26,7 +26,7 @@ void MoveSorter::computeScore(Move& m) const {
    assert(isValidMoveType(t));
    const Square from = Move2From(m);
    assert(isValidSquare(from));
-   const Square to = correctedMove2ToKingDest(m);
+   const Square to = Move2To(m);
    assert(isValidSquare(to));
 
    // apply default score based on type
@@ -86,16 +86,17 @@ void MoveSorter::computeScore(Move& m) const {
          else {
             ///@todo give another try to tune those ratio!
             // History
+            const Square correctedTo = correctedMove2ToKingDest(m);
             const Piece pp = p.board_const(from);
-            s += context.historyT.history[p.c][from][to] / 3;     // +/- HISTORY_MAX = 1024
-            s += context.historyT.historyP[PieceIdx(pp)][to] / 3; // +/- HISTORY_MAX = 1024
-            s += context.getCMHScore(p, from, to, cmhPtr) / 3;    // +/- HISTORY_MAX = 1024
+            s += context.historyT.history[p.c][from][correctedTo] / 3;     // +/- HISTORY_MAX = 1024
+            s += context.historyT.historyP[PieceIdx(pp)][correctedTo] / 3; // +/- HISTORY_MAX = 1024
+            s += context.getCMHScore(p, from, correctedTo, cmhPtr) / 3;    // +/- HISTORY_MAX = 1024
             if (!isInCheck && !isCastling(m)) {
                // move (safely) leaving threat square from null move search
                if (refutation != INVALIDMINIMOVE && from == correctedMove2ToKingDest(refutation) && Searcher::SEE_GE(p, m, -80)) s += 512;
                // always use PST to compensate low value history
                const std::span<const EvalScore> pst = EvalConfig::PST[std::abs(pp) - 1];
-               s += (ScaleScore(pst[ColorSquarePstHelper<C>(to)] - pst[ColorSquarePstHelper<C>(from)], gp))/2;
+               s += (ScaleScore(pst[ColorSquarePstHelper<C>(correctedTo)] - pst[ColorSquarePstHelper<C>(from)], gp))/2;
             }
          }
       }
