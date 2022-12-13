@@ -377,7 +377,7 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
    if (cli == "-gen") {
       MoveList moves;
       MoveGen::generate<MoveGen::GP_all>(p, moves);
-      CMHPtrArray cmhPtr = {0};
+      CMHPtrArray cmhPtr = {nullptr};
       MoveSorter::scoreAndSort(ThreadPool::instance().main(), moves, p, 0.f, 0, cmhPtr);
       Logging::LogIt(Logging::logInfo) << "nb moves : " << moves.size();
       for (auto it = moves.begin(); it != moves.end(); ++it) { Logging::LogIt(Logging::logInfo) << ToString(*it, true); }
