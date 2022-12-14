@@ -8,14 +8,6 @@
 #include "tables.hpp"
 #include "threading.hpp"
 
-struct StackData {
-   Position  p;
-   Hash      h      = nullHash;
-   //EvalData  data;
-   ScoreType eval   = 0;
-   MiniMove  threat = INVALIDMINIMOVE;
-};
-
 /*!
  * Searcher struct store all the information needed by a search thread
  * Implements main search function (driver, pvs, qsearch, see, display to GUI, ...)
@@ -26,6 +18,14 @@ struct StackData {
 struct Searcher {
    bool stopFlag = true;
 
+   struct StackData {
+      Position  p;
+      Hash      h      = nullHash;
+      //EvalData  data;
+      ScoreType eval   = 0;
+      MiniMove  threat = INVALIDMINIMOVE;
+   };
+
    struct PVSData{
       // CMH
       CMHPtrArray cmhPtr;
@@ -35,12 +35,32 @@ struct Searcher {
       int validQuietMoveCount {0};
       int validNonPrunedCount {0};
 
-      // context
+      // from call
+      ScoreType alpha {0};
+      ScoreType beta  {0};
+      bool isInCheck              {false};
+      bool cutNode                {false};
+      bool pvnode                 {false};
       bool rootnode               {false};
       bool theirTurn              {false};
       bool withoutSkipMove        {true};
-      bool improving              {false};
       bool previousMoveIsNullMove {false};
+
+      // tt related stuff
+      DepthType marginDepth       {0};
+      TT::Bound bound             {TT::B_none};
+      bool ttMoveIsCapture        {false};
+      bool ttMoveSingularExt      {false};
+      bool ttMoveTried            {false};
+      bool validTTmove            {false};
+      bool ttHit                  {false};
+      bool ttPV                   {false};
+      bool ttIsCheck              {false};
+      bool formerPV               {false};
+      bool evalScoreIsHashScore   {false};
+
+      // context
+      bool improving              {false};
       bool isEmergencyDefence     {false};
       bool isEmergencyAttack      {false};
       bool isBoomingAttack        {false};
@@ -50,13 +70,6 @@ struct Searcher {
       bool isNotPawnEndGame       {false};
       bool lessZugzwangRisk       {false};
       bool isKnownEndGame         {false};
-
-      // from call
-      bool isInCheck              {false};
-      bool cutNode                {false};
-      bool pvnode                 {false};
-      ScoreType alpha {0};
-      ScoreType beta  {0};
 
       // situation
       bool bestMoveIsCheck        {false};
@@ -69,19 +82,6 @@ struct Searcher {
       bool isAdvancedPawnPush     {false};
       bool earlyMove              {false};
       bool isTTMove               {false};
-
-      // tt related stuff
-      TT::Bound bound             {TT::B_none};
-      bool ttMoveIsCapture        {false};
-      bool ttMoveSingularExt      {false};
-      bool ttMoveTried            {false};
-      bool validTTmove            {false};
-      bool ttHit                  {false};
-      bool ttPV                   {false};
-      bool ttIsCheck              {false};
-      bool formerPV               {false};
-      bool evalScoreIsHashScore   {false};
-      DepthType marginDepth       {0};
 
       // pruning and extension triggers
       bool futility               {false};

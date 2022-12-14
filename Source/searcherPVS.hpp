@@ -436,7 +436,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    pvsData.beta = beta;
    pvsData.pvnode = pvnode;
    pvsData.withoutSkipMove = skipMoves == nullptr;
-
+   pvsData.previousMoveIsNullMove = p.lastMove == NULLMOVE;
+   
    // some evaluation are used inside search
    EvalData evalData;
 
@@ -616,8 +617,6 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 #endif
 
    assert(p.halfmoves - 1 < MAX_PLY && p.halfmoves - 1 >= 0);
-
-   pvsData.previousMoveIsNullMove = p.lastMove == NULLMOVE;
 
    // now, let's get a static score for the position.
    ScoreType evalScore;

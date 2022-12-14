@@ -4,7 +4,6 @@
 
 struct Position;
 struct Searcher;
-struct StackData;
 
 /*!
  * TT in Minic is a very classic 1 entry per bucket cache,
