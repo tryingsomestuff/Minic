@@ -83,7 +83,7 @@ FORCE_FINLINE float v_sum_f32_512(__m512 a) {
 #define v_min_f32_512       _mm512_min_ps
 
 template<bool Q>
-__m256 reluLoad(const float * x, const __m256 & zero, const __m256 & un){
+__m256 reluLoad(const float * RESTRICT x, const __m256 & zero, const __m256 & un){
    if constexpr(Q)
       return v_max_f32_512(zero, v_min_f32_512(un ,v_load_f32_512(x)));
    else
@@ -100,7 +100,7 @@ FORCE_FINLINE void Log512(const __m512 & value){
     std::cout << std::endl;
 }
 
-template<size_t N, bool Q> [[nodiscard]] float simdDotProduct512(const float* x, const float* y) {
+template<size_t N, bool Q> [[nodiscard]] float simdDotProduct512(const float* RESTRICT x, const float* RESTRICT y) {
    constexpr int vstep    = v_nlanes_f32_512;
    constexpr int unrollx4 = N & (-vstep * 4);
    constexpr int unrollx  = N & -vstep;
@@ -163,7 +163,7 @@ FORCE_FINLINE float v_sum_f32_256(__m256 a) {
 #define v_min_f32_256  _mm256_min_ps
 
 template<bool Q>
-__m256 reluLoad(const float * x, const __m256 & zero, const __m256 & un){
+__m256 reluLoad(const float * RESTRICT x, const __m256 & zero, const __m256 & un){
    if constexpr(Q)
       return v_max_f32_256(zero, v_min_f32_256(un ,v_load_f32_256(x)));
    else
@@ -179,7 +179,7 @@ FORCE_FINLINE void Log256(const __m256 & value){
     std::cout << std::endl;
 }
 
-template<size_t N, bool Q> [[nodiscard]] float simdDotProduct256(const float* x, const float* y) {
+template<size_t N, bool Q> [[nodiscard]] float simdDotProduct256(const float* RESTRICT x, const float* RESTRICT y) {
    constexpr int vstep    = v_nlanes_f32_256;
    constexpr int unrollx4 = N & (-vstep * 4);
    constexpr int unrollx  = N & -vstep;
@@ -244,7 +244,7 @@ FORCE_FINLINE float v_sum_f32_128(__m128 a) {
 #define v_min_f32_128  _mm_min_ps
 
 template<bool Q>
-__m128 reluLoad(const float * x, const __m128 & zero, const __m128 & un){
+__m128 reluLoad(const float * RESTRICT x, const __m128 & zero, const __m128 & un){
    if constexpr(Q)
       return v_max_f32_128(zero, v_min_f32_128(un ,v_load_f32_128(x)));
    else
@@ -260,7 +260,7 @@ FORCE_FINLINE void Log128(const __m128 & value){
     std::cout << std::endl;
 }
 
-template<size_t N, bool Q> [[nodiscard]] float simdDotProduct128(const float* x, const float* y) {
+template<size_t N, bool Q> [[nodiscard]] float simdDotProduct128(const float* RESTRICT x, const float* RESTRICT y) {
    constexpr int vstep    = v_nlanes_f32_128;
    constexpr int unrollx4 = N & (-vstep * 4);
    constexpr int unrollx  = N & -vstep;
@@ -299,7 +299,7 @@ float activation(const float & f){
       return std::max(f, 0.f);
 }
 
-template<size_t N, bool Q> [[nodiscard]] float simdDotProductDefault(const float* x, const float* y) {
+template<size_t N, bool Q> [[nodiscard]] float simdDotProductDefault(const float* RESTRICT x, const float* RESTRICT y) {
    constexpr int n1 = N & -4;
    float dot = 0.f;
    for (int i = 0; i < n1; i += 4) { 
@@ -311,7 +311,7 @@ template<size_t N, bool Q> [[nodiscard]] float simdDotProductDefault(const float
    return dot;
 }
 
-template<size_t N, bool Q> [[nodiscard]] float simdDotProduct(const float* x, const float* y) {
+template<size_t N, bool Q> [[nodiscard]] float simdDotProduct(const float* RESTRICT x, const float* RESTRICT y) {
    size_t i  = 0;
    float dot = 0.0f;
    if constexpr (N <= 0) return dot;

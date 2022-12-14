@@ -118,8 +118,10 @@ typedef uint64_t u_int64_t;
 
 #ifdef _MSC_VER
 #define FORCE_FINLINE __forceinline
+#define RESTRICT __restrict
 #elif defined(__GNUC__)
 #define FORCE_FINLINE FORCE_INLINE __attribute__((always_inline))
+#define RESTRICT __restrict__
 #else
 #define FORCE_FINLINE 
 #endif
