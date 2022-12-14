@@ -856,7 +856,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
              evalData.haveThreats[p.c]
                //&& !pvsData.isKnownEndGame 
                && !( pvsData.validTTmove && 
-                     e.d >= depth - SearchConfig::probCutSearchDepthMinus - 1 &&
+                     e.d >= depth / SearchConfig::probCutSearchDepthFactor - 1 &&
                      e.s < beta + 1) // interestingly, just beta bound here is not enought
          ) {
             stats.incr(Stats::sid_probcutTry);
@@ -887,7 +887,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                ScoreType scorePC = -qsearch(-betaPC, -betaPC + 1, p2, height + 1, seldepth, 0, true, pvnode);
                PVList pcPV;
                if (stopFlag) return STOPSCORE;
-               const DepthType probCutSearchDepth = depth - SearchConfig::probCutSearchDepthMinus;
+               const DepthType probCutSearchDepth = depth / SearchConfig::probCutSearchDepthFactor;
                if (scorePC >= betaPC) {
                   stats.incr(Stats::sid_probcutTry2);
                   scorePC = -pvs<false>(-betaPC, -betaPC + 1, p2, probCutSearchDepth, height + 1, pcPV, seldepth, extensions, 
