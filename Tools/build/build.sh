@@ -47,12 +47,14 @@ WARN="-Wall -Wcast-qual -Wno-char-subscripts -Wno-reorder -Wmaybe-uninitialized 
 
 if [ ! -n "$DEBUGMINIC" ]; then
   echo "******* RELEASE BUILD *******"
+  OPT="-DNDEBUG -fno-math-errno -O3 $n"
+  #-ffast-math ?
   if [ -n "$VTUNEMINIC" ]; then
      echo "***** with VTUNE params *****"
      # for VTUNE and other analyzer
-     OPT="-DNDEBUG -fno-math-errno -O3 $n -g" ; DEPTH=16
+     OPT="$OPT -g" ; DEPTH=16
   else
-     OPT="-s -DNDEBUG -fno-math-errno -O3 $n" ; DEPTH=16
+     OPT="$OPT -s" ; DEPTH=16
   fi
 else
   echo "******* DEBUG BUILD *******"
