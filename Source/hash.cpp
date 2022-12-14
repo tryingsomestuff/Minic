@@ -14,7 +14,6 @@ void initHash() {
    Logging::LogIt(Logging::logInfo) << "Init hash";
    Logging::LogIt(Logging::logInfo) << "Size of zobrist table " << (sizeof(ZT)+sizeof(ZTCastling)) / 1024 << "Kb";
    Logging::LogIt(Logging::logInfo) << "Size of zobrist table for moves " << sizeof(ZTMove) / 1024 << "Kb";
-   Logging::LogIt(Logging::logInfo) << "Size of Position " << sizeof(Position) << "b";
    for (int k = 0; k < NbSquare; ++k)
       for (int j = 0; j < 14; ++j) ZT[k][j] = randomInt<Hash, 42>(std::numeric_limits<Hash>::min(), std::numeric_limits<Hash>::max());
    for (int k = 0; k < 16; ++k) ZTCastling[k] = randomInt<Hash, 42>(std::numeric_limits<Hash>::min(), std::numeric_limits<Hash>::max());

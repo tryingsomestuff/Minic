@@ -26,6 +26,11 @@
 #include "uci.hpp"
 #include "xboard.hpp"
 
+void sizeOf(){
+   Logging::LogIt(Logging::logInfo) << "Size of Position " << sizeof(Position) << "b";
+   Logging::LogIt(Logging::logInfo) << "Size of PVSData  " << sizeof(Searcher::PVSData) << "b";
+}
+
 // Initialize all the things that should be ...
 void init(int argc, char** argv) {
    Distributed::init();
@@ -50,6 +55,7 @@ void init(int argc, char** argv) {
    NNUEWrapper::init();
 #endif
    COM::init(COM::p_uci); // let's do this ... (usefull to reset position in case of NNUE)
+   sizeOf();
 }
 
 void finalize() {
