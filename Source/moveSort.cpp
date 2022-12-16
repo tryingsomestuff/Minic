@@ -60,13 +60,13 @@ void MoveSorter::computeScore(Move& m) const {
             const ScoreType see = Searcher::SEE(p, m);
             s += see;
             // recapture bonus
-            if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == correctedMove2ToRookDest(p.lastMove)) s += 512;
+            if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == Move2To(p.lastMove)) s += 512;
             // too bad capture are ordered last (-7000)
             if (see < badCapLimit) s -= 2 * MoveScoring[T_capture];
          }
          else { // without SEE
             // recapture (> max MVVLVA value)
-            if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == correctedMove2ToRookDest(p.lastMove)) s += 512;
+            if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == Move2To(p.lastMove)) s += 512;
             // MVVLVA [0 400] + cap history (HISTORY_MAX = 1024)
             s += (8 * SearchConfig::MvvLvaScores[ppOpp - 1][pp - 1] + context.historyT.historyCap[PieceIdx(p.board_const(from))][to][ppOpp-1]) / 4;
          }
