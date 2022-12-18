@@ -173,37 +173,24 @@ void generateSquare(const Position& p, MoveList& moves, const Square from) {
          std::cout << int(p.rootInfo().rooksInit[Co_Black][CT_OO]) << std::endl;         
          */
          
+         auto addIfCastlingOk = [&]<MType mt>() mutable {
+            const Color c = CastlingTraits<mt>::c;
+            const Square to = p.rootInfo().rooksInit[c][CastlingTraits<mt>::ct];
+            if ((p.castling & CastlingTraits<mt>::cr) &&
+               (((BBTools::between(p.king[c], CastlingTraits<mt>::kingLanding) | CastlingTraits<mt>::kingLandingBB | BBTools::between(to, CastlingTraits<mt>::rookLanding) | CastlingTraits<mt>::rookLandingBB) 
+                   & ~BBTools::mask[to].bbsquare & ~BBTools::mask[p.king[c]].bbsquare) & occupancy) == emptyBitBoard &&
+               !isAttacked(p, BBTools::between(p.king[c], CastlingTraits<mt>::kingLanding) | SquareToBitboard(p.king[c]) | CastlingTraits<mt>::kingLandingBB)){
+              addMove(from, to, mt, moves);
+            }
+         };
+
          if (side == Co_White) {
-            if ((p.castling & C_wqs) &&
-                (((BBTools::between(p.king[Co_White],Sq_c1) | BB::BBSq_c1 | BBTools::between(p.rootInfo().rooksInit[Co_White][CT_OOO],Sq_d1) | BB::BBSq_d1) &
-                  ~BBTools::mask[p.rootInfo().rooksInit[Co_White][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) & occupancy) == emptyBitBoard &&
-                !isAttacked(p, BBTools::between(p.king[Co_White],Sq_c1) | SquareToBitboard(p.king[Co_White]) | BB::BBSq_c1)){
-                  //std::cout << "wqs" << std::endl;
-                  addMove(from, p.rootInfo().rooksInit[Co_White][CT_OOO], T_wqs, moves); // wqs
-            }
-            if ((p.castling & C_wks) &&
-                (((BBTools::between(p.king[Co_White],Sq_g1) | BB::BBSq_g1 | BBTools::between(p.rootInfo().rooksInit[Co_White][CT_OO],Sq_f1) | BB::BBSq_f1) &
-                  ~BBTools::mask[p.rootInfo().rooksInit[Co_White][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) & occupancy) == emptyBitBoard &&
-                !isAttacked(p, BBTools::between(p.king[Co_White],Sq_g1) | SquareToBitboard(p.king[Co_White]) | BB::BBSq_g1)){
-                  //std::cout << "wks" << std::endl;
-                  addMove(from, p.rootInfo().rooksInit[Co_White][CT_OO], T_wks, moves); // wks
-            }
+            addIfCastlingOk.template operator()<T_wqs>();
+            addIfCastlingOk.template operator()<T_wks>();
          }
          else {
-            if ((p.castling & C_bqs) &&
-                (((BBTools::between(p.king[Co_Black],Sq_c8) | BB::BBSq_c8 | BBTools::between(p.rootInfo().rooksInit[Co_Black][CT_OOO],Sq_d8) | BB::BBSq_d8) &
-                  ~BBTools::mask[p.rootInfo().rooksInit[Co_Black][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) & occupancy) == emptyBitBoard &&
-                !isAttacked(p, BBTools::between(p.king[Co_Black],Sq_c8) | SquareToBitboard(p.king[Co_Black]) | BB::BBSq_c8)){
-                  //std::cout << "kqs" << std::endl;
-                  addMove(from, p.rootInfo().rooksInit[Co_Black][CT_OOO], T_bqs, moves); // wqs
-            }
-            if ((p.castling & C_bks) &&
-                (((BBTools::between(p.king[Co_Black],Sq_g8) | BB::BBSq_g8 | BBTools::between(p.rootInfo().rooksInit[Co_Black][CT_OO],Sq_f8) | BB::BBSq_f8) &
-                  ~BBTools::mask[p.rootInfo().rooksInit[Co_Black][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) & occupancy) == emptyBitBoard &&
-                !isAttacked(p, BBTools::between(p.king[Co_Black],Sq_g8) | SquareToBitboard(p.king[Co_Black]) | BB::BBSq_g8)){
-                  //std::cout << "bks" << std::endl;
-                  addMove(from, p.rootInfo().rooksInit[Co_Black][CT_OO], T_bks, moves); // wks
-            }
+            addIfCastlingOk.template operator()<T_bqs>();
+            addIfCastlingOk.template operator()<T_bks>();
          }
       }
    }
