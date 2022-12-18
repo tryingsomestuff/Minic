@@ -122,7 +122,7 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent, bool withMove
                   p.castling |= (c == Co_White ? C_wqs : C_bqs);
                }
                if (found && !DynamicConfig::FRC) {
-                  Logging::LogIt(Logging::logInfo) << "FRC position found, activating FRC";
+                  Logging::LogIt(Logging::logInfo) << "FRC position found (castling letters), activating FRC";
                   DynamicConfig::FRC = true; // force FRC !
                }
                found = true;
@@ -137,12 +137,16 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent, bool withMove
          if (!silent) Logging::LogIt(Logging::logWarn) << "No castling right given";
       }
       else { ///@todo detect illegal stuff in here
+         bool possibleFRC = false;
          p.rootInfo().kingInit[Co_White] = p.king[Co_White];
          p.rootInfo().kingInit[Co_Black] = p.king[Co_Black];
+         if (p.king[Co_White] != Sq_e1) possibleFRC = true;
+         if (p.king[Co_Black] != Sq_e8) possibleFRC = true;
          if (p.castling & C_wqs) {
             for (Square s = Sq_a1; s <= Sq_h1; ++s) {
                if (s < p.king[Co_White] && p.board_const(s) == P_wr) {
                   p.rootInfo().rooksInit[Co_White][CT_OOO] = s;
+                  if (s != Sq_a1) possibleFRC = true;
                   break;
                }
             }
@@ -151,6 +155,7 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent, bool withMove
             for (Square s = Sq_a1; s <= Sq_h1; ++s) {
                if (s > p.king[Co_White] && p.board_const(s) == P_wr) {
                   p.rootInfo().rooksInit[Co_White][CT_OO] = s;
+                  if (s != Sq_h1) possibleFRC = true;
                   break;
                }
             }
@@ -159,6 +164,7 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent, bool withMove
             for (Square s = Sq_a8; s <= Sq_h8; ++s) {
                if (s < p.king[Co_Black] && p.board_const(s) == P_br) {
                   p.rootInfo().rooksInit[Co_Black][CT_OOO] = s;
+                  if (s != Sq_a8) possibleFRC = true;
                   break;
                }
             }
@@ -167,14 +173,28 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent, bool withMove
             for (Square s = Sq_a8; s <= Sq_h8; ++s) {
                if (s > p.king[Co_Black] && p.board_const(s) == P_br) {
                   p.rootInfo().rooksInit[Co_Black][CT_OO] = s;
+                  if (s != Sq_h8) possibleFRC = true;
                   break;
                }
             }
+         }
+         if (possibleFRC && !DynamicConfig::FRC) {
+            Logging::LogIt(Logging::logInfo) << "FRC position found (pieces position), activating FRC";
+            DynamicConfig::FRC = true; // force FRC !
          }
       }
    }
    else if (!silent)
       Logging::LogIt(Logging::logInfo) << "No castling right given";
+
+   /*
+   std::cout << SquareNames[p.rootInfo().kingInit[Co_White]] << std::endl;
+   std::cout << SquareNames[p.rootInfo().kingInit[Co_Black]] << std::endl;
+   std::cout << SquareNames[p.rootInfo().rooksInit[Co_White][CT_OOO]] << std::endl;
+   std::cout << SquareNames[p.rootInfo().rooksInit[Co_White][CT_OO]] << std::endl;
+   std::cout << SquareNames[p.rootInfo().rooksInit[Co_Black][CT_OOO]] << std::endl;
+   std::cout << SquareNames[p.rootInfo().rooksInit[Co_Black][CT_OO]] << std::endl;
+   */
 
    // read en passant and save it (default is invalid)
    p.ep = INVALIDSQUARE;

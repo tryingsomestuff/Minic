@@ -56,7 +56,9 @@ std::string ToString(const Move& m, bool withScore) {
    if (sameMove(m, NULLMOVE)) return "null move"; ///@todo 0000 ?
 
    const std::string score = (withScore ? " (" + std::to_string(Move2Score(m)) + ")" : "");
-   if (!DynamicConfig::FRC) { // FRC castling is encoded king takes rook
+   // FRC castling is encoded king takes rook
+   // standard chess castling is encoded with Smith notation
+   if (!DynamicConfig::FRC) { 
       switch (Move2Type(m)) {
          case T_bks: return "e8g8" + score;
          case T_wks: return "e1g1" + score;

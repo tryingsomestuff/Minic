@@ -350,23 +350,55 @@ bool isPseudoLegal(const Position& p, const Move m) { // validate TT move
    { STOP_AND_SUM_TIMER(PseudoLegal) return b; }
 #endif
    START_TIMER
+
    if (!isValidMove(m)) PSEUDO_LEGAL_RETURN(false, -1)
    const MType t = Move2Type(m);
+   
    if (!isValidMoveType(t)) PSEUDO_LEGAL_RETURN(false, -4)
    if (t == T_reserved) PSEUDO_LEGAL_RETURN(false, 3)
+   
    const Square from = Move2From(m);
    if (!isValidSquare(from)) PSEUDO_LEGAL_RETURN(false, -2)
+   
    const Piece fromP = p.board_const(from);
    if (fromP == P_none || (fromP > 0 && p.c == Co_Black) || (fromP < 0 && p.c == Co_White)) PSEUDO_LEGAL_RETURN(false, 0)
-   const Square to = correctedMove2ToKingDest(m);
+   
+   const Square to = Move2To(m);
    if (!isValidSquare(to)) PSEUDO_LEGAL_RETURN(false, -3)
+   
+   // cannot capture own piece, except for castling where it is checked later
    const Piece toP = p.board_const(to);
-   if ((toP > 0 && p.c == Co_White) || (toP < 0 && p.c == Co_Black)) PSEUDO_LEGAL_RETURN(false, 1)
-   if (static_cast<Piece>(std::abs(toP)) == P_wk) PSEUDO_LEGAL_RETURN(false, 2)
-   const Piece fromPieceType = static_cast<Piece>(std::abs(fromP));
-   if (toP == P_none && (isCapture(t) && t != T_ep)) PSEUDO_LEGAL_RETURN(false, 4)
+   if ((toP > 0 && p.c == Co_White) || (toP < 0 && p.c == Co_Black)){
+      if(!DynamicConfig::FRC){
+         if (!isCastling(t)) PSEUDO_LEGAL_RETURN(false, 1)
+         else{
+            ;// see castling
+         }
+      }
+      else{
+         if (!isCastling(t)) PSEUDO_LEGAL_RETURN(false, 1)
+         else{
+            ;// see castling
+         }
+      }
+   }
+
+   // opponent king cannot be captured
+   ///@todo variant were king can be captured   
+   if (toP == (p.c == Co_White ? P_bk : P_wk)) PSEUDO_LEGAL_RETURN(false, 2)
+   
+   // empty destination square cannot be a capture (except EP)
+   if (toP == P_none && isCaptureNoEP(t)) PSEUDO_LEGAL_RETURN(false, 4)
+
+   // none empty destination square must be capture, except for castling where it is checked later
+   ///@todo variant ?
    if (toP != P_none && !isCapture(t)){
-      if (!DynamicConfig::FRC) PSEUDO_LEGAL_RETURN(false, 5)
+      if (!DynamicConfig::FRC){
+         if (!isCastling(t)) PSEUDO_LEGAL_RETURN(false, 5)
+         else{
+            ;// see castling
+         }
+      }
       else{
          if (!isCastling(t)) PSEUDO_LEGAL_RETURN(false, 5)
          else{
@@ -374,70 +406,80 @@ bool isPseudoLegal(const Position& p, const Move m) { // validate TT move
          }
       }
    }
+
+   const Piece fromPieceType = static_cast<Piece>(std::abs(fromP));
+
+   // EP comes from a pawn
    if (t == T_ep && (p.ep == INVALIDSQUARE || fromPieceType != P_wp)) PSEUDO_LEGAL_RETURN(false, 6)
+   // EP geometry checks
    if (t == T_ep && p.board_const(static_cast<Square>(p.ep + (p.c == Co_White ? -8 : +8))) != (p.c == Co_White ? P_bp : P_wp)) PSEUDO_LEGAL_RETURN(false, 7)
+
+   // Promotion comes from a pawn
    if (isPromotion(m) && fromPieceType != P_wp) PSEUDO_LEGAL_RETURN(false, 8)
+
    const BitBoard occupancy = p.occupancy();
-   if (isCastling(t)) {
+
+   auto isCastlingOk = [&]<MType mt>(){
       // Be carefull, here rooksInit are only accessed if the corresponding p.castling is set
       // This way rooksInit is not INVALIDSQUARE, and thus mask[] is not out of bound
       // Moreover, king[] also is assumed to be not INVALIDSQUARE which is verified in readFen
+      constexpr Color c = CastlingTraits<mt>::c;
+      return t == mt && 
+             (p.castling & CastlingTraits<mt>::cr) && 
+             from == p.rootInfo().kingInit[c] && 
+             to == p.rootInfo().rooksInit[c][CastlingTraits<mt>::ct] &&
+             fromP == CastlingTraits<mt>::fromP && 
+             (((BBTools::between(p.king[c], CastlingTraits<mt>::kingLanding) | CastlingTraits<mt>::kingLandingBB | BBTools::between(to, CastlingTraits<mt>::rookLanding) | CastlingTraits<mt>::rookLandingBB) &
+               ~BBTools::mask[to].bbsquare & ~BBTools::mask[p.king[c]].bbsquare) &
+              occupancy) == emptyBitBoard &&
+             !isAttacked(p, BBTools::between(p.king[c], CastlingTraits<mt>::kingLanding) | SquareToBitboard(p.king[c]) | CastlingTraits<mt>::kingLandingBB);
+   };
+
+   if (isCastling(t)) {
       if (p.c == Co_White) {
-         if (t == T_wqs && (p.castling & C_wqs) && from == p.rootInfo().kingInit[Co_White] && fromP == P_wk && to == Sq_c1 
-             && ((!DynamicConfig::FRC && toP == P_none) || (DynamicConfig::FRC && (toP == P_none || toP == P_wk || toP == P_wr))) &&
-             (((BBTools::between(p.king[Co_White],Sq_c1) | BB::BBSq_c1 | BBTools::between(p.rootInfo().rooksInit[Co_White][CT_OOO],Sq_d1) |
-                BB::BBSq_d1) &
-               ~BBTools::mask[p.rootInfo().rooksInit[Co_White][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) &
-              occupancy) == emptyBitBoard &&
-             !isAttacked(p, BBTools::between(p.king[Co_White],Sq_c1) | SquareToBitboard(p.king[Co_White]) | BB::BBSq_c1))
-            PSEUDO_LEGAL_RETURN(true, 9)
-         if (t == T_wks && (p.castling & C_wks) && from == p.rootInfo().kingInit[Co_White] && fromP == P_wk && to == Sq_g1 
-             && ((!DynamicConfig::FRC && toP == P_none) || (DynamicConfig::FRC && (toP == P_none || toP == P_wk || toP == P_wr))) &&
-             (((BBTools::between(p.king[Co_White],Sq_g1) | BB::BBSq_g1 | BBTools::between(p.rootInfo().rooksInit[Co_White][CT_OO],Sq_f1) |
-                BB::BBSq_f1) &
-               ~BBTools::mask[p.rootInfo().rooksInit[Co_White][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_White]].bbsquare) &
-              occupancy) == emptyBitBoard &&
-             !isAttacked(p, BBTools::between(p.king[Co_White],Sq_g1) | SquareToBitboard(p.king[Co_White]) | BB::BBSq_g1))
-            PSEUDO_LEGAL_RETURN(true, 10)
+         if (isCastlingOk.operator()<T_wqs>()) PSEUDO_LEGAL_RETURN(true, 9)
+         if (isCastlingOk.operator()<T_wks>()) PSEUDO_LEGAL_RETURN(true, 10)
          PSEUDO_LEGAL_RETURN(false, 11)
       }
       else {
-         if (t == T_bqs && (p.castling & C_bqs) && from == p.rootInfo().kingInit[Co_Black] && fromP == P_bk && to == Sq_c8 
-             && ((!DynamicConfig::FRC && toP == P_none) || (DynamicConfig::FRC && (toP == P_none || toP == P_bk || toP == P_br))) &&
-             (((BBTools::between(p.king[Co_Black],Sq_c8) | BB::BBSq_c8 | BBTools::between(p.rootInfo().rooksInit[Co_Black][CT_OOO],Sq_d8) |
-                BB::BBSq_d8) &
-               ~BBTools::mask[p.rootInfo().rooksInit[Co_Black][CT_OOO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) &
-              occupancy) == emptyBitBoard &&
-             !isAttacked(p, BBTools::between(p.king[Co_Black],Sq_c8) | SquareToBitboard(p.king[Co_Black]) | BB::BBSq_c8))
-            PSEUDO_LEGAL_RETURN(true, 12)
-         if (t == T_bks && (p.castling & C_bks) && from == p.rootInfo().kingInit[Co_Black] && fromP == P_bk && to == Sq_g8 
-             && ((!DynamicConfig::FRC && toP == P_none) || (DynamicConfig::FRC && (toP == P_none || toP == P_bk || toP == P_br))) &&
-             (((BBTools::between(p.king[Co_Black],Sq_g8) | BB::BBSq_g8 | BBTools::between(p.rootInfo().rooksInit[Co_Black][CT_OO],Sq_f8) |
-                BB::BBSq_f8) &
-               ~BBTools::mask[p.rootInfo().rooksInit[Co_Black][CT_OO]].bbsquare & ~BBTools::mask[p.king[Co_Black]].bbsquare) &
-              occupancy) == emptyBitBoard &&
-             !isAttacked(p, BBTools::between(p.king[Co_Black],Sq_g8) | SquareToBitboard(p.king[Co_Black]) | BB::BBSq_g8))
-            PSEUDO_LEGAL_RETURN(true, 13)
+         if (isCastlingOk.operator()<T_bqs>()) PSEUDO_LEGAL_RETURN(true, 12)
+         if (isCastlingOk.operator()<T_bks>()) PSEUDO_LEGAL_RETURN(true, 13)
          PSEUDO_LEGAL_RETURN(false, 14)
       }
    }
+
    if (fromPieceType == P_wp) {
+      // ep must land on good square
       if (t == T_ep && to != p.ep) PSEUDO_LEGAL_RETURN(false, 15)
+
       if (t != T_ep && p.ep != INVALIDSQUARE && to == p.ep) PSEUDO_LEGAL_RETURN(false, 16)
+      // non promotion pawn move cannot reach 8th rank
       if (!isPromotion(m) && SQRANK(to) == PromRank[p.c]) PSEUDO_LEGAL_RETURN(false, 17)
+      // promotion must be 8th rank
       if (isPromotion(m) && SQRANK(to) != PromRank[p.c]) PSEUDO_LEGAL_RETURN(false, 18)
+
+      // (double)pawn push must be legal
       BitBoard validPush = BBTools::mask[from].push[p.c] & ~occupancy;
       if ((BBTools::mask[from].push[p.c] & occupancy) == emptyBitBoard) validPush |= BBTools::mask[from].dpush[p.c] & ~occupancy;
       if (validPush & SquareToBitboard(to)) PSEUDO_LEGAL_RETURN(true, 19)
+
+      // pawn capture (including ep)
       const BitBoard validCap = BBTools::mask[from].pawnAttack[p.c] & ~p.allPieces[p.c];
       if ((validCap & SquareToBitboard(to)) && ((t != T_ep && toP != P_none) || (t == T_ep && to == p.ep && toP == P_none)))
          PSEUDO_LEGAL_RETURN(true, 20)
+
       PSEUDO_LEGAL_RETURN(false, 21)
    }
+
+   // possible piece move (excluding king)
    if (fromPieceType != P_wk) {
       if ((BBTools::pfCoverage[fromPieceType - 1](from, occupancy, p.c) & SquareToBitboard(to)) != emptyBitBoard) PSEUDO_LEGAL_RETURN(true, 22)
+
       PSEUDO_LEGAL_RETURN(false, 23)
    }
-   if ((BBTools::mask[p.king[p.c]].kingZone & SquareToBitboard(to)) != emptyBitBoard) PSEUDO_LEGAL_RETURN(true, 24) // only king moving is not verified yet
+
+   // only king moving is not verified yet
+   if ((BBTools::mask[p.king[p.c]].kingZone & SquareToBitboard(to)) != emptyBitBoard) PSEUDO_LEGAL_RETURN(true, 24)
+
    PSEUDO_LEGAL_RETURN(false, 25)
 }
