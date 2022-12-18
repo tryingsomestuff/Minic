@@ -960,7 +960,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    pvsData.BMextension = DynamicConfig::useNNUE && height > 1 && 
                          isValidMove(refutation) && isValidMove(formerRefutation) &&
                          (sameMove(refutation, formerRefutation) ||
-                          (correctedMove2ToKingDest(refutation) == correctedMove2ToKingDest(formerRefutation) && isCapture(refutation)));
+                          (isCapture(refutation) && Move2To(refutation) == correctedMove2ToKingDest(formerRefutation)));
 
    // verify situation for various pruning heuristics
    if (!pvsData.rootnode) {
@@ -1186,7 +1186,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
       // prefetch as soon as possible
       TT::prefetch(computeHash(p2));
-      const Square to = correctedMove2ToKingDest(*it);
+      const Square to = Move2To(*it);
 #ifdef DEBUG_KING_CAP
       if (p.c == Co_White && to == p.king[Co_Black]) return matingScore(height - 1);
       if (p.c == Co_Black && to == p.king[Co_White]) return matingScore(height - 1);
