@@ -31,7 +31,8 @@ FORCE_FINLINE void evalPawnPasser(const Position &p, BitBoard pieceBBiterator, E
 template<Color C>
 FORCE_FINLINE void evalPawn(BitBoard pieceBBiterator, EvalScore &score) {
    applyOn(pieceBBiterator, [&](const Square & k){
-      score += EvalConfig::PST[0][k] * ColorSignHelper<C>();
+      const Square kk = ColorSquarePstHelper<C>(k);
+      score += EvalConfig::PST[0][kk] * ColorSignHelper<C>();
    });
 }
 
@@ -69,6 +70,7 @@ BitBoard getPinned(const Position &p, const Square s) {
 }
 
 bool isLazyHigh(ScoreType lazyThreshold, const EvalFeatures &features, EvalScore &score) {
+   //if (DynamicConfig::FRC) return false;
    score = features.SumUp();
    return std::abs(score[MG] + score[EG]) / 2 > lazyThreshold;
 }
@@ -425,7 +427,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       pe.passed[Co_White]        = BBTools::pawnPassed<Co_White>(pawns[Co_White], pawns[Co_Black]);
       pe.passed[Co_Black]        = BBTools::pawnPassed<Co_Black>(pawns[Co_Black], pawns[Co_White]);
       pe.holes[Co_White]         = BBTools::pawnHoles<Co_White>(pawns[Co_White]) & holesZone[Co_White];
-      pe.holes[Co_Black]         = BBTools::pawnHoles<Co_Black>(pawns[Co_Black]) & holesZone[Co_White];
+      pe.holes[Co_Black]         = BBTools::pawnHoles<Co_Black>(pawns[Co_Black]) & holesZone[Co_Black];
       pe.openFiles               = BBTools::openFiles(pawns[Co_White], pawns[Co_Black]);
 
       // PST
@@ -449,7 +451,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       // pawn candidate
       evalPawnCandidate<Co_White>(BBTools::pawnCandidates<Co_White>(pawns[Co_White], pawns[Co_Black]), pe.score);
       evalPawnCandidate<Co_Black>(BBTools::pawnCandidates<Co_Black>(pawns[Co_Black], pawns[Co_White]), pe.score);
-      
+
       ///@todo hidden passed
 
       // bad pawns
