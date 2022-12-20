@@ -129,8 +129,10 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent, bool withMove
             }
          }
       }
+      bool noCastling = false;
       if (strList[2].find('-') != std::string::npos) {
          found = true;
+         noCastling = true;
          /*Logging::LogIt(Logging::logInfo) << "No castling right given" ;*/
       }
       if (!found) {
@@ -140,8 +142,8 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent, bool withMove
          bool possibleFRC = false;
          p.rootInfo().kingInit[Co_White] = p.king[Co_White];
          p.rootInfo().kingInit[Co_Black] = p.king[Co_Black];
-         if (p.king[Co_White] != Sq_e1) possibleFRC = true;
-         if (p.king[Co_Black] != Sq_e8) possibleFRC = true;
+         if (p.king[Co_White] != Sq_e1 && p.castling & C_w_all) possibleFRC = true;
+         if (p.king[Co_Black] != Sq_e8 && p.castling & C_b_all) possibleFRC = true;
          if (p.castling & C_wqs) {
             for (Square s = Sq_a1; s <= Sq_h1; ++s) {
                if (s < p.king[Co_White] && p.board_const(s) == P_wr) {
@@ -178,7 +180,7 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent, bool withMove
                }
             }
          }
-         if (possibleFRC && !DynamicConfig::FRC) {
+         if (possibleFRC && !noCastling && !DynamicConfig::FRC) {
             Logging::LogIt(Logging::logInfo) << "FRC position found (pieces position), activating FRC";
             DynamicConfig::FRC = true; // force FRC !
          }
