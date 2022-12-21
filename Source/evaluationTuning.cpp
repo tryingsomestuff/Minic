@@ -50,7 +50,7 @@ template<typename T> std::ostream& operator<<(std::ostream& os, const TuningPara
    return os;
 }
 
-double K = 3;
+double K = 0.23;
 
 FORCE_FINLINE double Sigmoid(double x) {
    return 1. / (1. + std::pow(10, -K * x / 400.));
@@ -83,7 +83,7 @@ double Sigmoid(Position& p) {
 
    // eval
    EvalData data;
-   double   s = eval(p, data, ThreadPool::instance().main());
+   double s = eval(p, data, ThreadPool::instance().main());
    s *= (p.c == Co_White ? +1 : -1);
 
    return Sigmoid(s);
@@ -107,9 +107,9 @@ double E(const std::vector<EvalTuning::InputData>& data, size_t miniBatchSize) {
             p->associateEvaluator(evaluator);
             p->resetNNUEEvaluator(p->evaluator());
          }
-         //ee += std::pow((data[k].result + 1) * 0.5 - Sigmoid(*p), 2);
+         ee += std::pow((data[k].result + 1) * 0.5 - Sigmoid(*p), 2);
          //std::cout << "result " << data[k].result << " " << Sigmoid(data[k].result) << " sigmoid " << Sigmoid(*p) << std::endl;
-         ee += std::pow(Sigmoid(data[k].result) - Sigmoid(*p), 2);
+         //ee += std::pow(Sigmoid(data[k].result) - Sigmoid(*p), 2);
       }
       {
          const std::lock_guard<std::mutex> lock(m);
@@ -346,8 +346,9 @@ void evaluationTuning(const std::string& filename) {
 //#define TEST_TUNING
 #ifndef TEST_TUNING
       std::shared_ptr<ExtendedPosition> p(new ExtendedPosition(positions[k], false));
-      data.push_back({p, (p->c == Co_White ? 1 : -1) * getResult4(p->_extendedParams["c2"][0])});
-      //data.push_back({p, getResult(p->_extendedParams["c9"][0])});
+      //data.push_back({p, (p->c == Co_White ? 1 : -1) * getResult4(p->_extendedParams["c2"][0])});
+      //data.push_back({p, getResult2(p->_extendedParams["c2"][0])});
+      data.push_back({p, getResult(p->_extendedParams["c9"][0])});
 #else // TEST_TUNING
       const ExtendedPosition            pp(positions[k], false);
       const Position                    pQuiet = Searcher::getQuiet(pp);
@@ -712,7 +713,7 @@ void evaluationTuning(const std::string& filename) {
    // HCE MSE eval
    DynamicConfig::useNNUE = false;
    DynamicConfig::forceNNUE = false;
-   //computeOptimalK(data);
+   computeOptimalK(data);
    Logging::LogIt(Logging::logInfo) << "Optimal K " << EvalTuning::K;
    const auto HCEerr = E(data, data.size());
    std::cout << "HCE  : " << HCEerr << std::endl;
@@ -720,8 +721,9 @@ void evaluationTuning(const std::string& filename) {
    //return;
 
    std::vector<std::string> todo = {
+      /*
         "piecesValue",
-
+      */
         "PST0",
         "PST1",
         "PST2",

@@ -1,4 +1,8 @@
-import sys,os,glob
+import sys,os,glob,time
+
+ts = time.time()/3600
+
+#print(ts)
 
 files = glob.glob('TuningOutput/tuning*.csv')
 files.sort();
@@ -18,10 +22,16 @@ if len(sys.argv) > 1:
 
 for f in features:
     try:
-        with open("TuningOutput/tuning_"+f+".csv", "r") as ff:
+        filename = "TuningOutput/tuning_"+f+".csv"
+        with open(filename, "r") as ff:
             print(f)
+            ft = os.path.getmtime(filename)/3600
+            #print(ft)
             ll = ff.readlines()[-1]
             ff.close()
+            if ts-ft > 96:
+                print("Too old, skipping")
+                continue
             if "PST" in f:
                 os.system("python ./Tools/fit/PST.py \"" + ll + "\"")
             elif "imbalance" in f:
@@ -44,11 +54,17 @@ for f in features:
                 o = ""
                 v = ll.split(';')[1:-1]
                 for i in range(6):
-                    o += '{0:>3}, '.format(v[i])
+                    if i != 5:
+                        o += '{0:>3}, '.format(v[i])
+                    else:
+                        o += '{0:>3} '.format(v[i])
                 o = "{ " + o + "},"
                 o2 = ""
                 for i in range(5):
-                    o2 += '{0:>3}, '.format(v[6+i])
+                    if i != 4:
+                        o2 += '{0:>3}, '.format(v[6+i])
+                    else:
+                        o2 += '{0:>3} '.format(v[6+i])
                 o2 = "{ " + o2 + " 0 }"
                 print("{ " + o + o2 + " }")
             elif "att" in f:
@@ -58,7 +74,10 @@ for f in features:
                 s = int(len(v)/2)
                 p = ""
                 for i in range(s):
-                    p += '{{{0:>3},{1:>3}}}, '.format(v[2*i],v[2*i+1])
+                    if i != s-1:
+                        p += '{{{0:>3},{1:>3}}}, '.format(v[2*i],v[2*i+1])
+                    else:
+                        p += '{{{0:>3},{1:>3}}} '.format(v[2*i],v[2*i+1])
                 print(p)
     except:
         print("In file {}".format(f))
