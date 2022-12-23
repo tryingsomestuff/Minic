@@ -277,6 +277,7 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
       return 0;
    }
 
+#ifdef WITH_SYZYGY
    if (cli == "-probe"){
       Logging::LogIt(Logging::logInfo) << "Probing TB";
       if ((BB::countBit(p.allPieces[Co_White] | p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN) {
@@ -305,6 +306,7 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
       }
       return 0;
    }
+#endif
 
    if ( cli == "-kpk"){
       Logging::LogIt(Logging::logInfo) << "Probing KPK";
