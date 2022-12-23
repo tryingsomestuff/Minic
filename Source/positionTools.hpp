@@ -23,7 +23,7 @@ bool readMove(const Position &p, const std::string &ss, Square &from, Square &to
 struct PerftAccumulator {
    PerftAccumulator(): pseudoNodes(0), validNodes(0), captureNodes(0), epNodes(0), checkNode(0), checkMateNode(0), castling(0), promotion(0) {}
    Counter           pseudoNodes, validNodes, captureNodes, epNodes, checkNode, checkMateNode, castling, promotion;
-   void              Display();
+   void              Display() const;
    PerftAccumulator& operator+=(const PerftAccumulator& acc) {
       pseudoNodes += acc.pseudoNodes;
       validNodes += acc.validNodes;
