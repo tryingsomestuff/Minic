@@ -119,18 +119,20 @@ void init(const Protocol pr) {
 }
 
 void readLine() {
-   char buffer[4096]; // only usefull if WITH_MPI
+   const size_t bufSize = 4096;
+   char buffer[bufSize]; // only usefull if WITH_MPI
    // only main process read stdin
    if (Distributed::isMainProcess()) {
       Logging::LogIt(Logging::logInfo) << "Waiting for input ...";
       command.clear();
       std::getline(std::cin, command);
       Logging::LogIt(Logging::logInfo) << "Received command : \"" << command << "\"";
+      assert(command.size() < bufSize);
       strcpy(buffer, command.c_str()); // only usefull if WITH_MPI
    }
    if (Distributed::moreThanOneProcess()) {
       // don't rely on Bcast to do a "passive wait", most implementation is doing a busy-wait, so use 100% cpu
-      Distributed::asyncBcast(buffer, 4096, Distributed::_requestInput, Distributed::_commInput);
+      Distributed::asyncBcast(buffer, bufSize, Distributed::_requestInput, Distributed::_commInput);
       Distributed::waitRequest(Distributed::_requestInput);
    }
    // other slave rank event loop

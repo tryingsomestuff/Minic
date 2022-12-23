@@ -90,7 +90,8 @@ COMType ct = CT_uci;
    const auto msecEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch());
    char buffer[64];
    const auto tt = Clock::to_time_t(Clock::time_point(msecEpoch));
-   std::strftime(buffer, 63, "%Y-%m-%d %H:%M:%S", localtime(&tt));
+   struct tm localTime;
+   std::strftime(buffer, 63, "%Y-%m-%d %H:%M:%S", localtime_r(&tt, &localTime));
    str << buffer << "-" << std::setw(3) << std::setfill('0') << msecEpoch.count() % 1000;
    return str.str();
 }
