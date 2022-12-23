@@ -62,6 +62,10 @@ wait
 quit
 EOF
 
+for file in *.gcno; do
+   gcov -p $file
+done
+
 lcov -d $(readlink -f ../) -c -o rapport.info --no-external
 genhtml -o rapport -t "coverage" rapport.info
 
