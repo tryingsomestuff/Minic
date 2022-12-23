@@ -42,6 +42,7 @@ cd coverage-dir
 ./minic.cov -uci -minOutputLevel 0 <<EOF
 uci
 ucinewgame
+isready
 setoption name Hash value 16
 setoption name Threads value 4
 setoption name UCI_Opponent value berserk
@@ -50,6 +51,11 @@ setoption name StyleAttack value 55
 setoption name Level value 55
 position fen r1bqkb1r/pp3ppp/1np1pn2/6N1/2BP4/8/PPP1QPPP/R1B1K1NR w KQkq - 1 1
 go depth 20
+wait
+stop
+debug
+position startpos moves e2e4
+go nodes 300
 wait
 quit
 EOF
