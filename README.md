@@ -7,10 +7,10 @@
 </p>
 
 # Minic
-Minic is a chess engine I'm developing to learn about chess programming (see this lovely [wiki](https://www.chessprogramming.org/Main_Page) for more details on chess programming).  
+Minic is a chess engine I'm developing to learn about chess programming and modern C++ (please see this lovely [wiki](https://www.chessprogramming.org/Main_Page) for more details on chess programming).  
 
 Minic has no graphic interface (GUI) but is compatible with both [CECP](https://www.gnu.org/software/xboard/engine-intf.html) (xboard) and [UCI](http://wbec-ridderkerk.nl/html/UCIProtocol.html) protocol so you can use it in your favorite software (for instance [Cutechess](https://github.com/cutechess/cutechess), [Arena](http://www.playwitharena.de/), [Banksia](https://banksiagui.com/), [Winboard/Xboard](https://www.gnu.org/software/xboard/), [c-chess-cli](https://github.com/lucasart/c-chess-cli), ...).  
-Minic is currently one of the 20 best engines in major [rating](https://ccrl.chessdom.com/ccrl/4040/) lists and the strongest french one.
+Minic is currently one of the 15 best engines in major [rating](https://ccrl.chessdom.com/ccrl/4040/) lists and the strongest french one.
 
 Here are some shortcuts to navigate in this document :
 
@@ -34,22 +34,22 @@ Generating data, learning process, tuning, optimization and testing of a chess e
 ## History & the NNUE Minic story
 
 ### Code style
-For a year and a half Minic was (mainly) a one-file-code with very dense lines. This is of course very wrong in terms of software design... So why is it so? First reason is that Minic was first developped as a week-end project (in mid-october 2018), the quick-and-dirty way, and since then I was having fun going on the way of minimal lines of code direction ; being a "small" code size engine was part of the stakes in developing it at first. 
+For a year and a half Minic was (mainly) a one-file-code with very dense lines. This is of course very wrong in terms of software design... So why is it so? First reason is that Minic was first developped as a week-end project (in mid-october 2018), the quick-and-dirty way, and since then I was having fun going on the way of minimal lines of code direction ; being a "small" code size engine was part of the stakes in developing it the first few months. 
 
 Until version 2 of Minic, some optional features such as evaluation and searchs tuning, perft, tests, uci support, book generation ... were available in the Add-Ons directory ; they are now fused with the source code for a while.
 
-Nowadays, in fact since the release of version "2", the engine is written in a more classic C++ style, although some very dense lines may still present and recall Minic past compacity...
+Nowadays, in fact since the release of version "2", the engine is written in a more classic C++ style, although some very dense lines may still be present and recall Minic past compacity...
 
 More details about Minic history in the next paragraphs...
 
 ### Week-end project (October 2018)
-Initially, the code size of Minic was supposed not to go above 2000sloc. It started as a week-end project in october 2018 (http://talkchess.com/forum3/viewtopic.php?f=2&t=68701). But, as soon as more features (especially SMP, material tables and bitboard) came up, I tried to keep it under 4000sloc and then 5000sloc, ... This is why this engine was named Minic, this stands for "Minimal Chess" (and is not related to the GM Dragoljub Minić) but it has not much to do with minimalism anymore nowadays...  
+Initially, the code size of Minic was supposed not to go above 2000sloc. It started as a week-end project in october 2018 (http://talkchess.com/forum3/viewtopic.php?f=2&t=68701). But, as soon as more features (especially SMP, material tables and bitboard) came up, I tried to keep it under 4000sloc and then 5000sloc, ... This is why this engine was named Minic, this stands for "Minimal Chess" (and is not related to the GM Dragoljub Minić) but it has not much to do with minimalism anymore nowadays... For the record, here is a link to the very first published version of Minic (https://github.com/tryingsomestuff/Minic/blob/dbb2fc7f026d5cacbd35bc379d8a1cdc1cad5674/minic.cc).
 
 ### Version "1" (October 2019)
-Version "1" was released as a one year anniversary release in october 2019. At this point Minic has already go from a 1800 Elo 2-days-of-work engine, to a 2800 Elo engine being invited at TCEC qualification league !
+Version "1" was published as a one year anniversary release in october 2019. At this point Minic has already gone from a 1800 Elo 2-days-of-work engine, to a 2800 Elo engine being invited at TCEC qualification league !
 
 ### Version "2" (April 2020)
-Ver sion "2" was released for April 1st 2020 (during covid-19 confinement). For this version, the one file Minic was splitted into many header and source files, and commented a lot more, without negative impact on speed and strength. 
+Version "2" was released for April 1st 2020 (during covid-19 confinement in France). For this version, the one file Minic was splitted into many header and source files, and commented a lot more, without negative impact on speed and strength. 
 
 #### NNUE from release 2.47 to release 2.53 (from Stockfish implementation)
 Minic2, since release 2.47 of August 8th 2020 (http://talkchess.com/forum3/viewtopic.php?f=2&t=73521&hilit=minic2&start=50#p855313), has the possibility to be build using a shameless copy of the NNUE framework of Stockfish. Integration of NNUE was done easily and I hoped this can be done for any engines, especially if NNUE is released as a standalone library (see https://github.com/dshawul/nncpu-probe for instance). First tests shown that "MinicNNUE" is around 200Elo stronger than Minic, around the level of Xiphos or Ethereal at this date at short TC and maybe something like 50Elo higher at longer TC (so around Komodo11). 
@@ -67,7 +67,7 @@ Version "3" of Minic is released in november 2020 (during second covid-19 confin
 
 #### NNUE from release 3.00 (initially from Seer implementation)
 Starting from release 3.00, **Minic is not using Stockfish NNUE implementation anymore and is no more compatible with SF nets**. It was too much foreign code inside Minic to be fair, to be maintained, to be fun.
-Seer chess engine author is offering a very well written implementation of NNUE that I borrowed and adapt to Minic (https://github.com/connormcmonigle/seer-nnue). The code was more or less 400 lines. I choose to keep some Stockfish code just for binary sfens format conversion as everyone (or at least many many) is using this data format for now. Training code is an external tool written in Python without any dependency to engine, also first adapted from Seer repository and then taking ideas from Gary Linscott pytorch trainer (https://github.com/glinscott/nnue-pytorch). A new story to be written, in Minic 3.
+Seer chess engine author is offering a very well written implementation of NNUE that I borrowed and adapt to Minic (https://github.com/connormcmonigle/seer-nnue). The code was more or less 400 lines. I choose to keep some Stockfish code just for binary sfens format conversion as everyone (or at least many many) is using this data format for now. Training code is an external tool written in Python without any dependency to engine, also first adapted from Seer repository and then taking ideas from Gary Linscott pytorch trainer (https://github.com/glinscott/nnue-pytorch). A new story was written in Minic 3 and the code has diverged quite a lot from the initial one.
 
 Nets I built are available at https://github.com/tryingsomestuff/NNUE-Nets. Beware there is no retrocompatibility of the net from version to version. 
 
