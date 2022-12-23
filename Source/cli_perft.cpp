@@ -5,7 +5,7 @@
 #include "position.hpp"
 #include "positionTools.hpp"
 
-void PerftAccumulator::Display() {
+void PerftAccumulator::Display() const{
    Logging::LogIt(Logging::logInfo) << "pseudoNodes   " << pseudoNodes;
    Logging::LogIt(Logging::logInfo) << "validNodes    " << validNodes;
    Logging::LogIt(Logging::logInfo) << "captureNodes  " << captureNodes;

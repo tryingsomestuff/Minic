@@ -163,7 +163,7 @@ void ExtendedPosition::test(const std::vector<std::string> &positions,
             ///@todo support threading here by using ThinkAsync ?
 
             ThreadData d;
-            d.p = extP;
+            d.p = extP; // assumed slicing
             ThreadPool::instance().distributeData(d);
             ThreadPool::instance().main().stopFlag = false;
             //COM::position = extP; // only need for display purpose
