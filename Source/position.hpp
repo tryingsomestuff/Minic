@@ -215,6 +215,10 @@ struct alignas(32) Position {
       evaluator.dirty = dirty;
    }
 
+   void dissociateEvaluator() { 
+      associatedEvaluator = nullptr; 
+   }
+
    [[nodiscard]] NNUEEvaluator& evaluator() {
       assert(associatedEvaluator);
       return *associatedEvaluator;

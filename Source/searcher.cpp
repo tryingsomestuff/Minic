@@ -324,6 +324,7 @@ Position Searcher::getQuiet(const Position& p, Searcher* searcher, ScoreType* qS
       pQuiet = p2;
    }
 
+   pQuiet.dissociateEvaluator();
    return pQuiet;
 }
 
@@ -374,12 +375,19 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
       DynamicConfig::randomPly      = 0;
       cos.clearSearch(true);
 
+      ///@todo in the following code the evaluator will be reset 3 times ! (getQuiet, before eval, at the beginning of searchDriver) ...
+
       // look for a quiet position using qsearch
       ScoreType qScore = 0;
       pLeaf = getQuiet(p, this, &qScore);
 
       ScoreType  e = 0;
       if (std::abs(qScore) < 1000) {
+#ifdef WITH_NNUE
+         NNUEEvaluator evaluator;
+         pLeaf.associateEvaluator(evaluator);
+         pLeaf.resetNNUEEvaluator(pLeaf.evaluator());
+#endif
          // evaluate quiet leaf position
          EvalData eData;
          e = eval(pLeaf, eData, cos, true, false);
