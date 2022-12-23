@@ -16,17 +16,21 @@ fi
 
 do_title "Building Minic for Linux coverage"
 
-OPT="$d --coverage -O3 $STDVERSION"
+OPT="$d --coverage -fprofile-abs-path -O3 $STDVERSION"
 
 if [ $FATHOM_PRESENT = "1" ]; then
    lib=fathom_dev_linux_x64.o
    OPT="$OPT $dir/Fathom/src/$lib -I$dir/Fathom/src"
 fi
 
+mkdir -p coverage-dir
+
 rm -f *.gcno
 rm -f *.gcda
 
-$CXX $STANDARDSOURCE -ISource -ISource/nnue $OPT -lpthread -DDEBUG_TOOL -o minic.cov
+$CXX $STANDARDSOURCE -ISource -ISource/nnue $OPT -lpthread -DDEBUG_TOOL -o coverage-dir/minic.cov
+
+cd coverage-dir
 
 ./minic.cov -analyze "shirov" 25 -minOutputLevel 0
 ./minic.cov -analyze "fine70" 25 -minOutputLevel 0 -syzygyPath /mnt/BK1/tablebase.sesse.net/syzygy/6/
@@ -58,8 +62,10 @@ wait
 quit
 EOF
 
-lcov --directory . -c -o rapport.info --no-external
+lcov -d $(readlink -f ../) -c -o rapport.info --no-external
 genhtml -o rapport -t "coverage" rapport.info
 
-rm -f *.gcno
-rm -f *.gcda
+#rm -f *.gcno
+#rm -f *.gcda
+
+cd ..
