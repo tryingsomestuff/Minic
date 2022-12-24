@@ -50,7 +50,7 @@ inline std::vector<StackFrame> stack_trace() {
    HANDLE process = GetCurrentProcess();
    HANDLE thread  = GetCurrentThread();
 
-   if (SymInitialize(process, NULL, TRUE) == FALSE) { return std::vector<StackFrame>(); }
+   if (SymInitialize(process, nullptr, TRUE) == FALSE) { return std::vector<StackFrame>(); }
 
    SymSetOptions(SYMOPT_LOAD_LINES);
 
@@ -79,7 +79,7 @@ inline std::vector<StackFrame> stack_trace() {
    bool first = true;
 
    std::vector<StackFrame> frames;
-   while (StackWalk(machine, process, thread, &frame, &context, NULL, SymFunctionTableAccess, SymGetModuleBase, NULL)) {
+   while (StackWalk(machine, process, thread, &frame, &context, nullptr, SymFunctionTableAccess, SymGetModuleBase, nullptr)) {
       StackFrame f = {};
       f.address = frame.AddrPC.Offset;
 

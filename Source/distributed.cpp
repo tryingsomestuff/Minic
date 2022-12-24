@@ -55,9 +55,9 @@ void checkError(int err) {
 }
 
 void init() {
-   //MPI_Init(NULL, NULL);
+   //MPI_Init(nullptr, nullptr);
    int provided;
-   checkError(MPI_Init_thread(NULL, NULL, MPI_THREAD_MULTIPLE, &provided));
+   checkError(MPI_Init_thread(nullptr, nullptr, MPI_THREAD_MULTIPLE, &provided));
    checkError(MPI_Comm_size(MPI_COMM_WORLD, &worldSize));
    checkError(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
    char processor_name[MPI_MAX_PROCESSOR_NAME];
@@ -93,12 +93,12 @@ void init() {
 void lateInit() {
    if (moreThanOneProcess()) {
       if (isMainProcess()) {
-         checkError(MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, _commStopToR0, &_winStopToR0));
+         checkError(MPI_Win_create(nullptr, 0, 1, MPI_INFO_NULL, _commStopToR0, &_winStopToR0));
          checkError(MPI_Win_create(&ThreadPool::instance().main().stopFlag, sizeof(bool), sizeof(bool), MPI_INFO_NULL, _commStopFromR0, &_winStopFromR0));
       }
       else {
          checkError(MPI_Win_create(&ThreadPool::instance().main().stopFlag, sizeof(bool), sizeof(bool), MPI_INFO_NULL, _commStopToR0, &_winStopToR0));
-         checkError(MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, _commStopFromR0, &_winStopFromR0));
+         checkError(MPI_Win_create(nullptr, 0, 1, MPI_INFO_NULL, _commStopFromR0, &_winStopFromR0));
       }
       checkError(MPI_Win_fence(0, _winStopFromR0));
       checkError(MPI_Win_fence(0, _winStopToR0));
