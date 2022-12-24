@@ -125,8 +125,7 @@ void selfPlay(DepthType depth, uint64_t & nbPos) {
 
       // update position using best move
       Position p3 = p2;
-      const Position::MoveInfo moveInfo(p3, d.best);
-      if (!applyMove(p3, moveInfo)) break;
+      if (const Position::MoveInfo moveInfo(p3, d.best); !applyMove(p3, moveInfo)) break;
       p2 = p3;
    }
 }

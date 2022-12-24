@@ -418,7 +418,7 @@ pvsout:
             // get pv from best (deepest) threads
             DepthType bestDepth    = _data.depth;
             size_t    bestThreadId = 0;
-            for (auto& s : ThreadPool::instance()) {
+            for (const auto& s : ThreadPool::instance()) {
                std::unique_lock<std::mutex> lock(_mutexPV);
                if (s->getData().depth > bestDepth) {
                   bestThreadId = s->id();

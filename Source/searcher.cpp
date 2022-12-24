@@ -316,7 +316,7 @@ Position Searcher::getQuiet(const Position& p, Searcher* searcher, ScoreType* qS
    //std::cout << "pv : " << ToString(pv) << std::endl;
 
    // goto qsearch leaf
-   for (auto& m : pv) {
+   for (const auto& m : pv) {
       Position p2 = pQuiet;
       //std::cout << "Applying move " << ToString(m) << std::endl;
       if (const Position::MoveInfo moveInfo(p2,m); !applyMove(p2, moveInfo)) break;

@@ -491,9 +491,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    Hash pHash = computeHash(p);
    // let's consider skipmove(s) in position hashing
    if (skipMoves){
-      for (auto it = skipMoves->begin(); it != skipMoves->end(); ++it) { 
-          assert( isValidMove(*it) );
-          const auto moveHashIndex = static_cast<int32_t>(*it) + std::abs(std::numeric_limits<int16_t>::min());
+      for (const auto & it : *skipMoves) { 
+          assert( isValidMove(it) );
+          const auto moveHashIndex = static_cast<int32_t>(it) + std::abs(std::numeric_limits<int16_t>::min());
           assert(moveHashIndex >= 0 && moveHashIndex < std::numeric_limits<uint16_t>::max());
           pHash ^= Zobrist::ZTMove[moveHashIndex];
       }
