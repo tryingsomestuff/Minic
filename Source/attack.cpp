@@ -200,10 +200,10 @@ constexpr array1d<BitBoard,NbSquare> rookMagics = {
     0x2000804026001102, 0x2000804026001102, 0x800040a010040901, 0x80001802002c0422, 0x0010b018200c0122, 0x200204802a080401, 0x8880604201100844, 0x80000cc281092402
 };
 
-BitBoard computeAttacks(const int index, const BitBoard occ, const int delta) {
+BitBoard computeAttacks(const Square index, const BitBoard occ, const Square delta) {
    BitBoard attacks = emptyBitBoard;
    BitBoard blocked = emptyBitBoard;
-   for (int shift = index + delta; ISNEIGHBOUR(shift, shift - delta); shift += delta) {
+   for (Square shift = index + delta; ISNEIGHBOUR(shift, shift - delta); shift += delta) {
       if (!blocked) attacks |= SquareToBitboard(shift);
       blocked |= ((1ULL << shift) & occ);
    }
@@ -212,7 +212,7 @@ BitBoard computeAttacks(const int index, const BitBoard occ, const int delta) {
 
 BitBoard occupiedFromIndex(const int j, BitBoard mask) {
    BitBoard occ = emptyBitBoard;
-   int      i   = 0;
+   Square i = 0;
    BB::applyOn(mask, [&](const Square & k){
       if (j & SquareToBitboard(i)) occ |= (1ULL << k);
       ++i;

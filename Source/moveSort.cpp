@@ -102,7 +102,7 @@ void MoveSorter::computeScore(Move& m) const {
          }
       }
    }
-   m = ToMove(from, to, t, s);
+   m = ToMove(from, to, t, (ScoreType)s);
 }
 
 #pragma GCC diagnostic pop
