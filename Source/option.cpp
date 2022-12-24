@@ -71,9 +71,9 @@ KeyBase& GetKey(const std::string& key) {
    static int     dummy    = 0;
    static KeyBase badKey(k_bad, w_button, "bad_default_key", &dummy, 0, 0);
    KeyBase*       keyRef = &badKey;
-   for (size_t k = 0; k < _keys.size(); ++k) {
-      if (key == _keys[k].key) {
-         keyRef   = &_keys[k];
+   for (auto & e : _keys) {
+      if (key == e.key) {
+         keyRef   = &e;
          keyFound = true;
          break;
       }

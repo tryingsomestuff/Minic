@@ -76,9 +76,9 @@ std::string ToString(const Move& m, bool withScore) {
 
 std::string ToString(const PVList& moves) {
    std::stringstream ss;
-   for (size_t k = 0; k < moves.size(); ++k) {
-      if (moves[k] == INVALIDMOVE) break;
-      ss << ToString(moves[k]) << " ";
+   for (const auto &m : moves) {
+      if (m == INVALIDMOVE) break;
+      ss << ToString(m) << " ";
    }
    return ss.str();
 }
@@ -235,20 +235,20 @@ std::string showAlgAbr(const Move m, const Position &p) {
       std::vector<Square> v;
       BitBoard b = p.pieces_const(t);
       while (b) v.emplace_back(BB::popBit(b));
-      for (auto it = v.begin(); it != v.end(); ++it) {
-         if (*it == from) continue; // to not compare to myself ...
+      for (const auto & sq : v) {
+         if (sq == from) continue; // to not compare to myself ...
          MoveList l;
-         MoveGen::generateSquare<MoveGen::GP_all>(p, l, *it);
-         for (auto mit = l.begin(); mit != l.end(); ++mit) {
-            if (*mit == m) continue; // to not compare to myself ... should no happend thanks to previous verification
+         MoveGen::generateSquare<MoveGen::GP_all>(p, l, sq);
+         for (const auto & m2 : l) {
+            if (m2 == m) continue; // to not compare to myself ... should no happend thanks to previous verification
             Position p3 = p;
-            const Position::MoveInfo moveInfo2(p3,*mit);
+            const Position::MoveInfo moveInfo2(p3, m2);
             if (applyMove(p3, moveInfo2)) { // only if move is legal
-               if (Move2To(*mit) == to &&
-                   (t == p.board_const(Move2From(*mit)))) { // another move is landing on the same square with the same piece type
+               if (Move2To(m2) == to &&
+                   (t == p.board_const(Move2From(m2)))) { // another move is landing on the same square with the same piece type
                   isSamePiece = true;
-                  if (SQFILE(Move2From(*mit)) == SQFILE(from)) { isSameFile = true; }
-                  if (SQRANK(Move2From(*mit)) == SQRANK(from)) { isSameRank = true; }
+                  if (SQFILE(Move2From(m2)) == SQFILE(from)) { isSameFile = true; }
+                  if (SQRANK(Move2From(m2)) == SQRANK(from)) { isSameRank = true; }
                }
             }
          }

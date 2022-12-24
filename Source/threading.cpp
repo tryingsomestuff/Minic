@@ -21,7 +21,7 @@ ThreadPool::~ThreadPool() {
 }
 
 void ThreadPool::initPawnTables(){
-   for (auto& s : instance()) {
+   for (const auto& s : instance()) {
       (*s).initPawnTable();
    }
 }
@@ -48,19 +48,19 @@ void ThreadPool::setup() {
 
 Searcher& ThreadPool::main() { return *(front()); }
 
-void ThreadPool::wait(bool otherOnly) {
+void ThreadPool::wait(bool otherOnly) const {
    Logging::LogIt(Logging::logInfo) << "Wait for workers to be ready";
-   for (auto& s : *this) {
+   for (const auto& s : *this) {
       if (!otherOnly || !(*s).isMainThread()) (*s).wait();
    }
    Logging::LogIt(Logging::logInfo) << "...ok";
 }
 
-void ThreadPool::distributeData(const ThreadData& data) {
+void ThreadPool::distributeData(const ThreadData& data) const {
    // send input data and time control to all threads
    ThreadData dataOther = data;
    dataOther.depth      = MAX_DEPTH; // helper threads go for infinite search (need to receive stopFlag to stop)
-   for (auto& s : *this) {
+   for (const auto& s : *this) {
       (*s).setData((*s).isMainThread() ? data : dataOther); // this is a copy
       (*s).currentMoveMs = currentMoveMs;                   // propagate time control from Threadpool to each Searcher
    }
@@ -80,27 +80,27 @@ void ThreadPool::startSearch(const ThreadData& data) {
    main().startThread(); // non blocking call
 }
 
-void ThreadPool::startOthers() {
-   for (auto& s : *this)
+void ThreadPool::startOthers() const {
+   for (const auto& s : *this)
       if (!(*s).isMainThread()) (*s).startThread();
 }
 
-void ThreadPool::clearGame() {
+void ThreadPool::clearGame() const {
    TT::clearTT();
-   for (auto& s : *this) (*s).clearGame();
+   for (const auto& s : *this) (*s).clearGame();
 }
 
-void ThreadPool::clearSearch() {
+void ThreadPool::clearSearch() const {
 #ifdef REPRODUCTIBLE_RESULTS
    TT::clearTT();
 #endif
-   for (auto& s : *this) (*s).clearSearch();
+   for (const auto& s : *this) (*s).clearSearch();
    Distributed::initStat();
 }
 
-void ThreadPool::stop() {
+void ThreadPool::stop() const {
    Logging::LogIt(Logging::logInfo) << "Setting stopflag to true on every threads";
-   for (auto& s : *this) (*s).stopFlag = true;
+   for (const auto& s : *this) (*s).stopFlag = true;
 }
 
 void ThreadPool::displayStats() const {
@@ -112,7 +112,7 @@ Counter ThreadPool::counter(Stats::StatId id, bool forceLocal) const {
    if (!forceLocal && Distributed::moreThanOneProcess()) { return Distributed::counter(id); }
    else {
       Counter n = 0;
-      for (auto& it : *this) { n += it->stats.counters[id]; }
+      for (const auto& it : *this) { n += it->stats.counters[id]; }
       return n;
    }
 }
