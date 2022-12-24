@@ -94,8 +94,8 @@ array1d<MaterialHashEntry,TotalMat> materialHashTable;
 [[nodiscard]] Position::Material materialFromString(const std::string &strMat) {
    Position::Material mat = {{{{0}}}};
    Color c = Co_Black;
-   for (auto it = strMat.begin(); it != strMat.end(); ++it) {
-      switch (*it) {
+   for (const auto & it : strMat) {
+      switch (it) {
          case 'K':
             c = ~c;
             mat[c][M_k] += 1;
