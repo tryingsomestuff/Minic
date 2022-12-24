@@ -235,13 +235,13 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    getCMHPtr(p.halfmoves, cmhPtr);
 
 #ifdef USE_PARTIAL_SORT
-   MoveSorter::score(*this, moves, p, data.gp, height, cmhPtr, false, isInCheck, validTTmove ? &e : NULL); ///@todo warning gp is often = 0.5 here !
+   MoveSorter::score(*this, moves, p, data.gp, height, cmhPtr, false, isInCheck, validTTmove ? &e : nullptr); ///@todo warning gp is often = 0.5 here !
    size_t offset = 0;
    const Move* it = nullptr;
    while ((it = MoveSorter::pickNext(moves, offset))) {
 #else
    MoveSorter::scoreAndSort(*this, moves, p, data.gp, height, cmhPtr, false, isInCheck,
-                            validTTmove ? &e : NULL); ///@todo warning gp is often = 0.5 here !
+                            validTTmove ? &e : nullptr); ///@todo warning gp is often = 0.5 here !
    for (auto it = moves.begin(); it != moves.end(); ++it) {
 #endif
       if (validTTmove && sameMove(e.m, *it)) continue; // already tried

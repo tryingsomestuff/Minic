@@ -15,7 +15,7 @@
  */
 
 inline constexpr int MAX_CMH_PLY = 1;
-typedef array1d<array1d<ScoreType, NbPiece*NbSquare> *, MAX_CMH_PLY> CMHPtrArray;
+using CMHPtrArray = array1d<array1d<ScoreType, NbPiece*NbSquare> *, MAX_CMH_PLY>;
 
 struct KillerT {
    array2d<Move,MAX_DEPTH,2> killers;

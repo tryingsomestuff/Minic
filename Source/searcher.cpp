@@ -213,7 +213,7 @@ const SearchData& Searcher::getSearchData() const { return _data.datas; }
 bool Searcher::searching() const { return _searching; }
 
 namespace{
-    std::unique_ptr<Searcher::PawnEntry[]> tablePawn = 0;
+    std::unique_ptr<Searcher::PawnEntry[]> tablePawn = nullptr;
     uint64_t ttSizePawn = 0;
 }
 

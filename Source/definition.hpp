@@ -65,8 +65,8 @@ typedef uint64_t u_int64_t;
 #define CONST_PIECE_TUNING const
 #endif
 
-#define NNUEALIGNMENT 64 // AVX512 compatible ...
-#define NNUEALIGNMENT_STD std::align_val_t{ NNUEALIGNMENT }
+inline constexpr size_t NNUEALIGNMENT = 64; // AVX512 compatible ...
+inline constexpr auto NNUEALIGNMENT_STD = std::align_val_t{ NNUEALIGNMENT };
 
 #ifdef __clang__
 #define CONSTEXPR
@@ -99,9 +99,9 @@ typedef uint64_t u_int64_t;
 #endif
 
 #if defined(WITH_SMALL_MEMORY)
-#define SIZE_MULTIPLIER 1024ull // Kb
+constexpr size_t SIZE_MULTIPLIER = 1024ull; // Kb
 #else
-#define SIZE_MULTIPLIER 1024ull * 1024ull // Mb
+constexpr size_t SIZE_MULTIPLIER = 1024ull * 1024ull; // Mb
 #endif
 
 #if defined(_MSC_VER)
@@ -126,14 +126,65 @@ typedef uint64_t u_int64_t;
 #define FORCE_FINLINE 
 #endif
 
-#define INFINITETIME    static_cast<TimeType>(60ull * 60ull * 1000ull * 24ull * 30ull) // 1 month ...
-#define STOPSCORE       static_cast<ScoreType>(-20000)
-#define INFSCORE        static_cast<ScoreType>(15000)
-#define MATE            static_cast<ScoreType>(10000)
-#define WIN             static_cast<ScoreType>(3000)
-#define INVALIDMOVE     static_cast<int32_t>(0xFFFF0002)
-#define INVALIDMINIMOVE static_cast<int16_t>(0x0002)
-#define NULLMOVE        static_cast<int16_t>(0x1112)
+template<typename T> [[nodiscard]] FORCE_FINLINE constexpr T Abs(const T& s) { return s > T(0) ? s : T(-s); }
+
+#define ENABLE_INCR_OPERATORS_ON(T) \
+FORCE_FINLINE constexpr T& operator++(T& d) { return d = static_cast<T>(static_cast<std::underlying_type_t<T>>(d) + 1); } \
+FORCE_FINLINE constexpr T& operator--(T& d) { return d = static_cast<T>(static_cast<std::underlying_type_t<T>>(d) - 1); }
+
+using Clock          = std::chrono::system_clock;
+using DepthType      = int8_t;
+using Move           = int32_t;  // invalid if < 0
+using MiniMove       = int16_t;  // invalid if < 0
+using Square         = int8_t;   // invalid if < 0
+using Hash           = uint64_t; // invalid if == nullHash
+using MiniHash       = uint32_t; // invalid if == 0
+using Counter        = uint64_t;
+using BitBoard       = uint64_t;
+using ScoreType      = int16_t;
+using TimeType       = int64_t;
+using GenerationType = uint8_t;
+
+enum File : uint8_t { File_a = 0, File_b, File_c, File_d, File_e, File_f, File_g, File_h };
+ENABLE_INCR_OPERATORS_ON(File)
+
+enum Rank : uint8_t { Rank_1 = 0, Rank_2, Rank_3, Rank_4, Rank_5, Rank_6, Rank_7, Rank_8 };
+ENABLE_INCR_OPERATORS_ON(Rank)
+
+enum Sq : uint8_t { Sq_a1  = 0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1,
+                    Sq_a2,Sq_b2,Sq_c2,Sq_d2,Sq_e2,Sq_f2,Sq_g2,Sq_h2,
+                    Sq_a3,Sq_b3,Sq_c3,Sq_d3,Sq_e3,Sq_f3,Sq_g3,Sq_h3,
+                    Sq_a4,Sq_b4,Sq_c4,Sq_d4,Sq_e4,Sq_f4,Sq_g4,Sq_h4,
+                    Sq_a5,Sq_b5,Sq_c5,Sq_d5,Sq_e5,Sq_f5,Sq_g5,Sq_h5,
+                    Sq_a6,Sq_b6,Sq_c6,Sq_d6,Sq_e6,Sq_f6,Sq_g6,Sq_h6,
+                    Sq_a7,Sq_b7,Sq_c7,Sq_d7,Sq_e7,Sq_f7,Sq_g7,Sq_h7,
+                    Sq_a8,Sq_b8,Sq_c8,Sq_d8,Sq_e8,Sq_f8,Sq_g8,Sq_h8};
+
+template<typename T, int N>
+using array1d = std::array<T,N>;
+
+template<typename T, int N, int M>
+using array2d = array1d<array1d<T,M>,N>;
+
+template<typename T, int N, int M, int L>
+using array3d = array1d<array1d<array1d<T,L>,M>,N>;
+
+template<typename T>
+using colored = array1d<T,2>;
+
+inline constexpr array1d<Rank,2> PromRank = {Rank_8, Rank_1};
+inline constexpr array1d<Rank,2> EPRank   = {Rank_6, Rank_3};
+
+inline constexpr Hash nullHash          = 0ull; //std::numeric_limits<MiniHash>::max(); // use MiniHash to allow same "null" value for Hash(64) and MiniHash(32)
+inline constexpr BitBoard emptyBitBoard = 0ull;
+inline constexpr auto INFINITETIME      = static_cast<TimeType>(60ull * 60ull * 1000ull * 24ull * 30ull); // 1 month ...
+inline constexpr auto STOPSCORE         = static_cast<ScoreType>(-20000);
+inline constexpr auto INFSCORE          = static_cast<ScoreType>(15000);
+inline constexpr auto MATE              = static_cast<ScoreType>(10000);
+inline constexpr auto WIN               = static_cast<ScoreType>(3000);
+inline constexpr auto INVALIDMOVE       = static_cast<int32_t>(0xFFFF0002);
+inline constexpr auto INVALIDMINIMOVE   = static_cast<int16_t>(0x0002);
+inline constexpr auto NULLMOVE          = static_cast<int16_t>(0x1112);
 #define INVALIDSQUARE   -1
 #define MAX_PLY         1024
 #define MAX_MOVE        256 // 256 is enough I guess/hope ...
@@ -145,16 +196,20 @@ typedef uint64_t u_int64_t;
 #define HSCORE(depth)   static_cast<ScoreType>(SQR(std::min(static_cast<int>(depth), 32)) * 4)
 #define MAX_THREADS     256
 
-#define SQFILE(s)              static_cast<File>((s)&7)
-#define SQRANK(s)              static_cast<Rank>((s) >> 3)
-#define ISOUTERFILE(x)         (SQFILE(x) == 0 || SQFILE(x) == 7)
-#define ISNEIGHBOUR(x, y)      ((x) >= 0 && (x) < 64 && (y) >= 0 && (y) < 64 && Abs(SQRANK(x) - SQRANK(y)) <= 1 && Abs(SQFILE(x) - SQFILE(y)) <= 1)
-#define PROMOTION_RANK(x)      (SQRANK(x) == 0 || SQRANK(x) == 7)
-#define PROMOTION_RANK_C(x, c) ((c == Co_Black && SQRANK(x) == 0) || (c == Co_White && SQRANK(x) == 7))
-#define MakeSquare(f, r)       static_cast<Square>(((r) << 3) + (f))
-#define VFlip(s)               static_cast<Square>((s) ^ Sq_a8)
-#define HFlip(s)               static_cast<Square>((s) ^ Sq_h1)
-#define MFlip(s)               static_cast<Square>((s) ^ Sq_h8)
+enum Color : uint8_t { Co_White = 0, Co_Black = 1, Co_None = 2, Co_End = Co_None };
+[[nodiscard]] constexpr Color operator~(Color c) { return static_cast<Color>(c ^ Co_Black); } // switch Color
+ENABLE_INCR_OPERATORS_ON(Color)
+
+constexpr auto SQFILE(const Square s)                          { return static_cast<File>((s)&7);}
+constexpr auto SQRANK(const Square s)                          { return static_cast<Rank>((s) >> 3);}
+constexpr auto ISOUTERFILE(const Square x)                     { return (SQFILE(x) == 0 || SQFILE(x) == 7);}
+constexpr auto ISNEIGHBOUR(const Square x, const Square y)     { return ((x) >= 0 && (x) < 64 && (y) >= 0 && (y) < 64 && Abs(SQRANK(x) - SQRANK(y)) <= 1 && Abs(SQFILE(x) - SQFILE(y)) <= 1);}
+constexpr auto PROMOTION_RANK(const Square x)                  { return (SQRANK(x) == 0 || SQRANK(x) == 7);}
+constexpr auto PROMOTION_RANK_C(const Square x, const Square c){ return ((c == Co_Black && SQRANK(x) == 0) || (c == Co_White && SQRANK(x) == 7));}
+constexpr auto MakeSquare(const File f, const Rank r)          { return static_cast<Square>(((r) << 3) + (f));}
+constexpr auto VFlip(const Square s)                           { return static_cast<Square>((s) ^ Sq_a8);}
+constexpr auto HFlip(const Square s)                           { return static_cast<Square>((s) ^ Sq_h1);}
+constexpr auto MFlip(const Square s)                           { return static_cast<Square>((s) ^ Sq_h8);}
 
 #define TO_STR2(x)                 #x
 #define TO_STR(x)                  TO_STR2(x)
@@ -169,23 +224,6 @@ typedef uint64_t u_int64_t;
 #else
 #define GETPID ::getpid
 #endif
-
-typedef std::chrono::system_clock Clock;
-typedef int8_t   DepthType;
-typedef int32_t  Move;         // invalid if < 0
-typedef int16_t  MiniMove;     // invalid if < 0
-typedef int8_t   Square;       // invalid if < 0
-typedef uint64_t Hash;         // invalid if == nullHash
-typedef uint32_t MiniHash;     // invalid if == 0
-typedef uint64_t Counter;
-typedef uint64_t BitBoard;
-typedef int16_t  ScoreType;
-typedef int64_t  TimeType;
-typedef uint8_t  GenerationType;
-
-#define ENABLE_INCR_OPERATORS_ON(T) \
-FORCE_FINLINE constexpr T& operator++(T& d) { return d = static_cast<T>(static_cast<std::underlying_type_t<T>>(d) + 1); } \
-FORCE_FINLINE constexpr T& operator--(T& d) { return d = static_cast<T>(static_cast<std::underlying_type_t<T>>(d) - 1); }
 
 template<typename T>
 [[nodiscard]] FORCE_FINLINE
@@ -229,25 +267,6 @@ DepthType clampDepth(const T & d){
    return static_cast<DepthType>(std::max(static_cast<T>(0), std::min(static_cast<T>(MAX_DEPTH),d)));
 }
 
-template<typename T, int N>
-using array1d = std::array<T,N>;
-
-template<typename T, int N, int M>
-using array2d = array1d<array1d<T,M>,N>;
-
-template<typename T, int N, int M, int L>
-using array3d = array1d<array1d<array1d<T,L>,M>,N>;
-
-template<typename T>
-using colored = array1d<T,2>;
-
-inline const Hash     nullHash      = 0ull; //std::numeric_limits<MiniHash>::max(); // use MiniHash to allow same "null" value for Hash(64) and MiniHash(32)
-inline const BitBoard emptyBitBoard = 0ull;
-
-enum Color : uint8_t { Co_White = 0, Co_Black = 1, Co_None = 2, Co_End = Co_None };
-[[nodiscard]] constexpr Color operator~(Color c) { return static_cast<Color>(c ^ Co_Black); } // switch Color
-ENABLE_INCR_OPERATORS_ON(Color)
-
 template<typename T>
 [[nodiscard]] constexpr ScoreType clampScore(T s) {
    return static_cast<ScoreType>(std::clamp(s, (T)(-MATE + 2 * MAX_DEPTH), (T)(MATE - 2 * MAX_DEPTH)));
@@ -256,13 +275,11 @@ template<typename T>
 enum GamePhase { MG = 0, EG = 1, GP_MAX = 2 };
 ENABLE_INCR_OPERATORS_ON(GamePhase)
 
-template<typename T> [[nodiscard]] FORCE_FINLINE constexpr T Abs(const T& s) { return s > T(0) ? s : T(-s); }
-
 template<typename T, int SIZE> struct OptList : public std::vector<T> {
    OptList(): std::vector<T>() { std::vector<T>::reserve(SIZE); }
 };
-typedef OptList<Move, MAX_MOVE / 4> MoveList; ///@todo tune this ?
-typedef std::vector<Move>           PVList;
+using MoveList = OptList<Move, MAX_MOVE / 4>; ///@todo tune this ?
+using PVList = std::vector<Move>;
 
 [[nodiscard]] FORCE_FINLINE constexpr MiniHash Hash64to32(Hash h) { return static_cast<MiniHash>((h >> 32) & 0xFFFFFFFF); }
 [[nodiscard]] FORCE_FINLINE constexpr MiniMove Move2MiniMove(Move m) { return static_cast<MiniMove>(m & 0xFFFF); } // skip score
@@ -382,24 +399,6 @@ inline constexpr array1d<std::string_view,NbSquare> SquareNames = { "a1", "b1", 
 
 inline constexpr array1d<std::string_view,8> FileNames = {"a", "b", "c", "d", "e", "f", "g", "h"};
 inline constexpr array1d<std::string_view,8> RankNames = {"1", "2", "3", "4", "5", "6", "7", "8"};
-
-enum Sq : uint8_t { Sq_a1  = 0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1,
-                    Sq_a2,Sq_b2,Sq_c2,Sq_d2,Sq_e2,Sq_f2,Sq_g2,Sq_h2,
-                    Sq_a3,Sq_b3,Sq_c3,Sq_d3,Sq_e3,Sq_f3,Sq_g3,Sq_h3,
-                    Sq_a4,Sq_b4,Sq_c4,Sq_d4,Sq_e4,Sq_f4,Sq_g4,Sq_h4,
-                    Sq_a5,Sq_b5,Sq_c5,Sq_d5,Sq_e5,Sq_f5,Sq_g5,Sq_h5,
-                    Sq_a6,Sq_b6,Sq_c6,Sq_d6,Sq_e6,Sq_f6,Sq_g6,Sq_h6,
-                    Sq_a7,Sq_b7,Sq_c7,Sq_d7,Sq_e7,Sq_f7,Sq_g7,Sq_h7,
-                    Sq_a8,Sq_b8,Sq_c8,Sq_d8,Sq_e8,Sq_f8,Sq_g8,Sq_h8};
-
-enum File : uint8_t { File_a = 0, File_b, File_c, File_d, File_e, File_f, File_g, File_h };
-ENABLE_INCR_OPERATORS_ON(File)
-
-enum Rank : uint8_t { Rank_1 = 0, Rank_2, Rank_3, Rank_4, Rank_5, Rank_6, Rank_7, Rank_8 };
-ENABLE_INCR_OPERATORS_ON(Rank)
-
-inline constexpr array1d<Rank,2> PromRank = {Rank_8, Rank_1};
-inline constexpr array1d<Rank,2> EPRank   = {Rank_6, Rank_3};
 
 template<Color C> [[nodiscard]] FORCE_FINLINE constexpr ScoreType ColorSignHelper() { return C == Co_White ? +1 : -1; }
 template<Color C> [[nodiscard]] FORCE_FINLINE constexpr Square    PromotionSquare(const Square k) { return C == Co_White ? (SQFILE(k) + 56) : SQFILE(k); }

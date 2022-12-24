@@ -66,9 +66,8 @@ FORCE_FINLINE int bitScanForward(BitBoard bb) {
 #endif // linux
 #endif // __MINGW32__
 
-// Hard to say which one is better, bit shifting or precalculated access to mask data ...
-#define SquareToBitboard(k)      static_cast<BitBoard>(1ull << (k))
-#define SquareToBitboardTable(k) BBTools::mask[k].bbsquare
+// Hard to say which one is better (SquareToBitboardTable or SquareToBitboard), bit shifting or precalculated access to mask data ...
+constexpr auto SquareToBitboard(const Square k) { return static_cast<BitBoard>(1ull << (k));}
 
 namespace BB {
 

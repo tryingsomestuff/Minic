@@ -13,8 +13,8 @@ struct Layer {
    static constexpr size_t nbW = dim0 * dim1;
    static constexpr size_t nbB = dim1;
 
-   typedef typename Quantization<Q>::BT BT;
-   typedef typename Quantization<Q>::WT WT;
+   using BT = typename Quantization<Q>::BT;
+   using WT = typename Quantization<Q>::WT;
 
    // Layer is always for inner layer, so we can safely use WT and BT
    // Always small enough to be statically allocated

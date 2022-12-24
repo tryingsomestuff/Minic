@@ -16,8 +16,8 @@ struct InputLayer {
    static constexpr size_t nbW = dim0 * dim1;
    static constexpr size_t nbB = dim1;
 
-   typedef typename Quantization<Q>::BIT BIT;
-   typedef typename Quantization<Q>::WIT WIT;
+   using BIT = typename Quantization<Q>::BIT;
+   using WIT = typename Quantization<Q>::WIT;
 
    // often too big to be statically allocated (see CTOR/DTOR for dynamic alloc)
    typename Quantization<Q>::WIT* W {nullptr};

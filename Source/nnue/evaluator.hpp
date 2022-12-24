@@ -31,7 +31,7 @@ struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTransformer<NT, Q>> {
       black.clear();
    }
 
-   typedef typename Quantization<Q>::BT BT;
+   using BT = typename Quantization<Q>::BT;
 
    FORCE_FINLINE constexpr float propagate(Color c, const int npiece) const {
       assert(!dirty);

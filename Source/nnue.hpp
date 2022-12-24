@@ -8,16 +8,10 @@
 #include "logging.hpp"
 #include "nnueImpl.hpp"
 
-#ifndef NDEBUG
-#define SCALINGCOUNT 5000
-#else
-#define SCALINGCOUNT 50000
-#endif
-
 // Internal wrapper to the NNUE things
 namespace NNUEWrapper {
 
-typedef float nnueNType; // type of data inside the binary net (currently floats)
+using nnueNType = float; // type of data inside the binary net (currently floats)
 inline constexpr bool quantization = true; // only for input layer
 
 inline void init() {
