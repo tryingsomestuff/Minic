@@ -67,12 +67,12 @@ ExtendedPosition::ExtendedPosition(const std::string &extFEN, bool withMoveCount
    //Logging::LogIt(Logging::logInfo) << "extended parameters : " << extendedParamsStr;
    std::vector<std::string> strParamList;
    split(strParamList, extendedParamsStr, ";");
-   for (size_t k = 0; k < strParamList.size(); ++k) {
-      //Logging::LogIt(Logging::logInfo) << "extended parameters : " << k << " " << strParamList[k];
-      strParamList[k] = ltrim(strParamList[k]);
-      if (strParamList[k].empty()) continue;
+   for (auto e : strParamList) {
+      //Logging::LogIt(Logging::logInfo) << "extended parameters : " << k << " " << e;
+      e = ltrim(e);
+      if (e.empty()) continue;
       std::vector<std::string> pair;
-      split(pair, strParamList[k], " ");
+      split(pair, e, " ");
       if (pair.size() < 2) Logging::LogIt(Logging::logFatal) << "Not un extended parameter pair";
       std::vector<std::string> values = pair;
       values.erase(values.begin());
