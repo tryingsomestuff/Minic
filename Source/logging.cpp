@@ -29,9 +29,9 @@ std::string backtrace(int skip) {
    for (int i = skip; i < nFrames; i++) {
       Dl_info info;
       if (dladdr(callstack[i], &info)) {
-         char *demangled = NULL;
+         char *demangled = nullptr;
          int   status;
-         demangled = abi::__cxa_demangle(info.dli_sname, NULL, 0, &status);
+         demangled = abi::__cxa_demangle(info.dli_sname, nullptr, 0, &status);
          std::snprintf(buf, sizeof(buf), "%-3d %*p %s + %zd\n", i, static_cast<int>(2 + sizeof(void *) * 2), callstack[i],
                        status == 0 ? demangled : info.dli_sname, (char *)callstack[i] - (char *)info.dli_saddr);
          free(demangled);
