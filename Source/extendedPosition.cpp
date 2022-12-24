@@ -46,7 +46,7 @@ std::vector<std::string> split2(const std::string &line, char sep, char delim) {
 }
 
 std::string ltrim(std::string &s) {
-   s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !std::isspace(ch); }));
+   s.erase(s.begin(), std::ranges::find_if(s, [](int ch) { return !std::isspace(ch); }));
    return s;
 }
 
@@ -274,7 +274,7 @@ void ExtendedPosition::test(const std::vector<std::string> &positions,
       std::stringstream str;
       const std::vector<std::string> v = results[k][0].bm.empty() ? results[k][0].am : results[k][0].bm;
       std::ostream_iterator<std::string> strIt(str, " ");
-      std::copy(v.begin(), v.end(), strIt);
+      std::ranges::copy(v, strIt);
       std::cout << std::setw(25) << results[k][0].name << std::setw(14) << (results[k][0].bm.empty() ? std::string("!") + str.str() : str.str());
       for (size_t j = 0; j < timeControls.size(); ++j) { std::cout << std::setw(8) << results[k][j].computerMove; }
       std::cout << std::setw(6) << score << std::endl;

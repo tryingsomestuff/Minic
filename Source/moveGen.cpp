@@ -290,7 +290,7 @@ ScoreType randomMover(const Position& p, PVList& pv, const bool isInCheck) {
    ///@todo this is slow because the static here implies a guard variable !!
    static std::random_device rd;
    static std::mt19937       g(rd()); // here really random
-   std::shuffle(moves.begin(), moves.end(), g);
+   std::ranges::shuffle(moves, g);
    for (const auto & it : moves) {
       Position p2 = p;
 #if defined(WITH_NNUE) && defined(DEBUG_NNUE_UPDATE)

@@ -145,7 +145,7 @@ void MoveSorter::scoreAndSort(const Searcher&    context,
 
 void MoveSorter::sort(MoveList& moves) {
    START_TIMER
-   std::sort(moves.begin(), moves.end(), MoveSortOperator());
+   std::ranges::sort(moves, MoveSortOperator());
    STOP_AND_SUM_TIMER(MoveSorting)
 }
 

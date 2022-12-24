@@ -19,7 +19,7 @@ void displayOptionsUCI();
 
 // from argv
 template<typename T> inline bool getOption(T& value, const std::string& key) {
-   auto it = std::find(args.begin(), args.end(), std::string("-") + key);
+   auto it = std::ranges::find(args, std::string("-") + key);
    if (it == args.end()) { /*Logging::LogIt(Logging::logWarn) << "ARG key not given, " << key;*/
       return false;
    }

@@ -108,7 +108,7 @@ struct Searcher {
       stats.incr(Stats::sid_PVupdate);
       pv.clear();
       pv.emplace_back(m);
-      std::copy(childPV.begin(), childPV.end(), std::back_inserter(pv));
+      std::ranges::copy(childPV, std::back_inserter(pv));
    }
 
    void displayStats() const {
