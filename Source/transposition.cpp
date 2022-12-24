@@ -131,7 +131,7 @@ void getPV(const Position &p, Searcher &context, PVList &pv) {
          if (!isValidMove(e.m)) break;
          const Position::MoveInfo moveInfo(p2,e.m);
          if (!applyMove(p2, moveInfo)) break;
-         pv.push_back(e.m);
+         pv.emplace_back(e.m);
          const Hash h = computeHash(p2);
          for (int i = k - 1; i >= 0; --i)
             if (hashStack[i] == h) {

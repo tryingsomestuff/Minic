@@ -299,7 +299,7 @@ ScoreType randomMover(const Position& p, PVList& pv, const bool isInCheck) {
 #endif
       const Position::MoveInfo moveInfo(p2, *it);
       if (!applyMove(p2, moveInfo)) continue;
-      pv.push_back(*it); // updatePV
+      pv.emplace_back(*it); // updatePV
       const Square to = Move2To(*it);
       // king capture (works only for most standard chess variants)
       if (p.c == Co_White && to == p.king[Co_Black]) return matingScore(0);

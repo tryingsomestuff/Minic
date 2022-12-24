@@ -89,7 +89,7 @@ enum GenPhase { GP_all = 0, GP_cap = 1, GP_quiet = 2, GP_evasion = 3 };
 FORCE_FINLINE void addMove(Square from, Square to, MType type, MoveList& moves) {
    assert(isValidSquare(from));
    assert(isValidSquare(to));
-   moves.push_back(ToMove(from, to, type, 0));
+   moves.emplace_back(ToMove(from, to, type, 0));
 }
 
 template<GenPhase phase = GP_all> 
@@ -254,7 +254,7 @@ void generate(const Position& p, MoveList& moves, const bool doNotClear = false)
       for (auto m : moves){
          if ( Move2Type(m) == T_ep ){
             foundEP = true;
-            eps.push_back(m);
+            eps.emplace_back(m);
          }
       }
       if ( foundEP ){
@@ -268,7 +268,7 @@ void generate(const Position& p, MoveList& moves, const bool doNotClear = false)
       for (auto m : moves){
          if ( isCapture(m) ){
             foundCap = true;
-            caps.push_back(m);
+            caps.emplace_back(m);
          }
       }
       if ( foundCap ){
