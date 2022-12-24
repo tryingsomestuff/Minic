@@ -136,7 +136,7 @@ using Clock          = std::chrono::system_clock;
 using DepthType      = int8_t;
 using Move           = int32_t;  // invalid if < 0
 using MiniMove       = int16_t;  // invalid if < 0
-using Square         = int8_t;   // invalid if < 0
+using Square         = int8_t;   // invalid if < 0, MUST be signed because also used as negative delta sometimes (like in computeAttacks)
 using Hash           = uint64_t; // invalid if == nullHash
 using MiniHash       = uint32_t; // invalid if == 0
 using Counter        = uint64_t;
@@ -185,16 +185,22 @@ inline constexpr auto WIN               = static_cast<ScoreType>(3000);
 inline constexpr auto INVALIDMOVE       = static_cast<int32_t>(0xFFFF0002);
 inline constexpr auto INVALIDMINIMOVE   = static_cast<int16_t>(0x0002);
 inline constexpr auto NULLMOVE          = static_cast<int16_t>(0x1112);
-#define INVALIDSQUARE   -1
-#define MAX_PLY         1024
-#define MAX_MOVE        256 // 256 is enough I guess/hope ...
-#define MAX_DEPTH       static_cast<DepthType>(127) // if DepthType is a char, !!!do not go above 127!!!
-#define HISTORY_POWER   10
-#define HISTORY_MAX     (1 << HISTORY_POWER)
-#define HISTORY_DIV(x)  ((x) >> HISTORY_POWER)
-#define SQR(x)          ((x) * (x))
-#define HSCORE(depth)   static_cast<ScoreType>(SQR(std::min(static_cast<int>(depth), 32)) * 4)
-#define MAX_THREADS     256
+
+inline constexpr Square INVALIDSQUARE   = -1;
+inline constexpr uint16_t MAX_PLY       = 1024; // same type as Position::halfmoves
+inline constexpr int MAX_MOVE           = 256; // 256 is enough I guess/hope ...
+inline constexpr auto MAX_DEPTH         = static_cast<DepthType>(127); // if DepthType is a char, !!!do not go above 127!!!
+inline constexpr auto HISTORY_POWER     = 10;
+inline constexpr ScoreType HISTORY_MAX  = (1 << HISTORY_POWER);
+inline constexpr size_t MAX_THREADS     = 256; // same type as Searcher::id()
+
+constexpr ScoreType HISTORY_DIV(const int x) {
+   const int ret = x >> HISTORY_POWER;
+   assert (Abs(ret) < std::numeric_limits<ScoreType>::max());
+   return ret;
+}
+constexpr ScoreType SQR(const ScoreType x)         { return x * x;}
+constexpr ScoreType HSCORE(const DepthType depth)  { return static_cast<ScoreType>(SQR(std::min(static_cast<int>(depth), 32)) * 4);}
 
 enum Color : uint8_t { Co_White = 0, Co_Black = 1, Co_None = 2, Co_End = Co_None };
 [[nodiscard]] constexpr Color operator~(Color c) { return static_cast<Color>(c ^ Co_Black); } // switch Color

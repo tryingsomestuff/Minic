@@ -67,7 +67,7 @@ FORCE_FINLINE int bitScanForward(BitBoard bb) {
 #endif // __MINGW32__
 
 // Hard to say which one is better (SquareToBitboardTable or SquareToBitboard), bit shifting or precalculated access to mask data ...
-constexpr auto SquareToBitboard(const Square k) { return static_cast<BitBoard>(1ull << (k));}
+constexpr auto SquareToBitboard(const Square k) { return static_cast<BitBoard>(1ull << k);}
 
 namespace BB {
 
