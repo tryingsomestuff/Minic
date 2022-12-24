@@ -121,10 +121,10 @@ void MoveSorter::score(const Searcher&    context,
    if (moves.size() < 2) return;
    const MoveSorter ms(context, p, gp, height, cmhPtr, useSEE, isInCheck, e, refutation);
    if (p.c == Co_White) {
-      for (auto it = moves.begin(); it != moves.end(); ++it) { ms.computeScore<Co_White>(*it); }
+      for (auto & it : moves) { ms.computeScore<Co_White>(it); }
    }
    else {
-      for (auto it = moves.begin(); it != moves.end(); ++it) { ms.computeScore<Co_Black>(*it); }
+      for (auto & it : moves) { ms.computeScore<Co_Black>(it); }
    }
    STOP_AND_SUM_TIMER(MoveScoring)
 }

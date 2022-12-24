@@ -291,16 +291,16 @@ ScoreType randomMover(const Position& p, PVList& pv, const bool isInCheck) {
    static std::random_device rd;
    static std::mt19937       g(rd()); // here really random
    std::shuffle(moves.begin(), moves.end(), g);
-   for (auto it = moves.begin(); it != moves.end(); ++it) {
+   for (const auto & it : moves) {
       Position p2 = p;
 #if defined(WITH_NNUE) && defined(DEBUG_NNUE_UPDATE)
       NNUEEvaluator evaluator = p.evaluator();
       p2.associateEvaluator(evaluator);
 #endif
-      const Position::MoveInfo moveInfo(p2, *it);
+      const Position::MoveInfo moveInfo(p2, it);
       if (!applyMove(p2, moveInfo)) continue;
-      pv.emplace_back(*it); // updatePV
-      const Square to = Move2To(*it);
+      pv.emplace_back(it); // updatePV
+      const Square to = Move2To(it);
       // king capture (works only for most standard chess variants)
       if (p.c == Co_White && to == p.king[Co_Black]) return matingScore(0);
       if (p.c == Co_Black && to == p.king[Co_White]) return matingScore(0);
@@ -327,7 +327,7 @@ bool isPseudoLegal(const Position& p, Move m) {
          std::cout << static_cast<int>(Move2Type(m)) << std::endl;
          std::cout << Move2Score(m) << std::endl;
          std::cout << static_cast<int>(m & 0x0000FFFF) << std::endl;
-         for (auto it = moves.begin(); it != moves.end(); ++it) std::cout << ToString(*it) << "\t" << *it << "\t";
+         for (const auto & it : moves) std::cout << ToString(it) << "\t" << *it << "\t";
          std::cout << std::endl;
          std::cout << "Not a generated move !" << std::endl;
       }

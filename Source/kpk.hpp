@@ -14,7 +14,7 @@ namespace KPK {
 [[nodiscard]] Square normalizeSquare(const Position& p, const Color strongSide, const Square sq);
 
 enum kpk_result : uint8_t { kpk_invalid = 0, kpk_unknown = 1, kpk_draw = 2, kpk_win = 4 };
-FORCE_FINLINE constexpr kpk_result& operator|=(kpk_result& r, kpk_result v) { return r = kpk_result(r | v); }
+constexpr kpk_result& operator|=(kpk_result& r, kpk_result v) { return r = kpk_result(r | v); }
 
 constexpr unsigned KPKmaxIndex = 2 * 24 * NbSquare * NbSquare; // Color x pawn x wk x bk
 

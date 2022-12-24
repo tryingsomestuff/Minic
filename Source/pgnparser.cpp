@@ -25,14 +25,14 @@ Move SANToMove(const std::string& s, const Position& p) {
    MoveGen::generate<MoveGen::GP_all>(p, moves);
    //std::cout << ToString(p) << std::endl;
    //std::cout << moves.size() << std::endl;
-   for (auto it = moves.begin(); it != moves.end(); ++it) {
-      std::string san = showAlgAbr(*it, p);
+   for (const auto & it : moves) {
+      std::string san = showAlgAbr(it, p);
       if (san == "0-0") san = "O-O";
       if (san == "0-0-0") san = "O-O-O";
       if (san == "0-0+") san = "O-O+";
       if (san == "0-0-0+") san = "O-O-O+";
-      //std::cout << ToString(*it) << " : " << san << "\t";
-      if (san == s) return *it;
+      //std::cout << ToString(it) << " : " << san << "\t";
+      if (san == s) return it;
    }
    //std::cout << std::endl;
    return INVALIDMOVE;

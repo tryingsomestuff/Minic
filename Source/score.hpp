@@ -13,10 +13,10 @@ struct Position;
    return 1;
 }
 #else
-[[nodiscard]] FORCE_FINLINE constexpr float fiftyMoveRuleScaling(const uint8_t fifty){
+[[nodiscard]] constexpr float fiftyMoveRuleScaling(const uint8_t fifty){
    return 1.f - fifty / 100.f;
 }
-[[nodiscard]] FORCE_FINLINE constexpr float fiftyMoveRuleUnScaling(const uint8_t fifty){
+[[nodiscard]] constexpr float fiftyMoveRuleUnScaling(const uint8_t fifty){
    return 1.f / fiftyMoveRuleScaling(fifty);
 }
 #endif

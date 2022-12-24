@@ -21,8 +21,14 @@ bool readMove(const Position &p, const std::string &ss, Square &from, Square &to
 [[nodiscard]] bool readEPDFile(const std::string &fileName, std::vector<std::string> &positions);
 
 struct PerftAccumulator {
-   PerftAccumulator(): pseudoNodes(0), validNodes(0), captureNodes(0), epNodes(0), checkNode(0), checkMateNode(0), castling(0), promotion(0) {}
-   Counter           pseudoNodes, validNodes, captureNodes, epNodes, checkNode, checkMateNode, castling, promotion;
+   Counter pseudoNodes {0};
+   Counter validNodes {0};
+   Counter captureNodes {0};
+   Counter epNodes {0};
+   Counter checkNode {0};
+   Counter checkMateNode {0};
+   Counter castling {0};
+   Counter promotion {0};
    void              Display() const;
    PerftAccumulator& operator+=(const PerftAccumulator& acc) {
       pseudoNodes += acc.pseudoNodes;

@@ -9,21 +9,21 @@ struct StackVector {
    alignas(NNUEALIGNMENT) T data[dim];
 
    template<typename F> 
-   FORCE_FINLINE CONSTEXPR StackVector<T, dim, Q>& apply_(F&& f) {
+   constexpr StackVector<T, dim, Q>& apply_(F&& f) {
 #pragma omp simd
       for (size_t i = 0; i < dim; ++i) { data[i] = f(data[i]); }
       return *this;
    }
 
    template<typename T2> 
-   FORCE_FINLINE CONSTEXPR StackVector<T, dim, Q>& add_(const T2* other) {
+   constexpr StackVector<T, dim, Q>& add_(const T2* other) {
 #pragma omp simd
       for (size_t i = 0; i < dim; ++i) { data[i] += other[i]; }
       return *this;
    }
 
    template<typename T2> 
-   FORCE_FINLINE CONSTEXPR StackVector<T, dim, Q>& sub_(const T2* other) {
+   constexpr StackVector<T, dim, Q>& sub_(const T2* other) {
 #pragma omp simd
       for (size_t i = 0; i < dim; ++i) { data[i] -= other[i]; }
       return *this;
@@ -48,7 +48,7 @@ struct StackVector {
 
   // note that quantization is done on read if needed (see weightReader)
   template <typename U> 
-  [[nodiscard]] FORCE_FINLINE CONSTEXPR StackVector<U, dim, Q> dequantize(const U& scale) const {
+  [[nodiscard]] constexpr StackVector<U, dim, Q> dequantize(const U& scale) const {
     static_assert(std::is_integral_v<T> && std::is_floating_point_v<U>);
     StackVector<U, dim, Q> result;
 #pragma omp simd
@@ -82,7 +82,7 @@ struct StackVector {
 };
 
 template<typename T, size_t dim0, size_t dim1, bool Q>
-FORCE_FINLINE CONSTEXPR StackVector<T, dim0 + dim1, Q> splice(const StackVector<T, dim0, Q>& a, const StackVector<T, dim1, Q>& b) {
+constexpr StackVector<T, dim0 + dim1, Q> splice(const StackVector<T, dim0, Q>& a, const StackVector<T, dim1, Q>& b) {
    StackVector<T, dim0 + dim1, Q> c;
 #pragma omp simd
    for (size_t i = 0; i < dim0; ++i) { c.data[i] = a.data[i]; }

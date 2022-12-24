@@ -7,7 +7,7 @@
 #include "searcher.hpp"
 
 namespace {
-std::unique_ptr<ThreadPool> _pool = 0;
+std::unique_ptr<ThreadPool> _pool = nullptr;
 }
 
 ThreadPool& ThreadPool::instance() {

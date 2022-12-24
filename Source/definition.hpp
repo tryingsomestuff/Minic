@@ -126,11 +126,11 @@ constexpr size_t SIZE_MULTIPLIER = 1024ull * 1024ull; // Mb
 #define FORCE_FINLINE 
 #endif
 
-template<typename T> [[nodiscard]] FORCE_FINLINE constexpr T Abs(const T& s) { return s > T(0) ? s : T(-s); }
+template<typename T> [[nodiscard]] constexpr T Abs(const T& s) { return s > T(0) ? s : T(-s); }
 
 #define ENABLE_INCR_OPERATORS_ON(T) \
-FORCE_FINLINE constexpr T& operator++(T& d) { return d = static_cast<T>(static_cast<std::underlying_type_t<T>>(d) + 1); } \
-FORCE_FINLINE constexpr T& operator--(T& d) { return d = static_cast<T>(static_cast<std::underlying_type_t<T>>(d) - 1); }
+constexpr T& operator++(T& d) { return d = static_cast<T>(static_cast<std::underlying_type_t<T>>(d) + 1); } \
+constexpr T& operator--(T& d) { return d = static_cast<T>(static_cast<std::underlying_type_t<T>>(d) - 1); }
 
 using Clock          = std::chrono::system_clock;
 using DepthType      = int8_t;
@@ -287,15 +287,15 @@ template<typename T, int SIZE> struct OptList : public std::vector<T> {
 using MoveList = OptList<Move, MAX_MOVE / 4>; ///@todo tune this ?
 using PVList = std::vector<Move>;
 
-[[nodiscard]] FORCE_FINLINE constexpr MiniHash Hash64to32(Hash h) { return static_cast<MiniHash>((h >> 32) & 0xFFFFFFFF); }
-[[nodiscard]] FORCE_FINLINE constexpr MiniMove Move2MiniMove(Move m) { return static_cast<MiniMove>(m & 0xFFFF); } // skip score
+[[nodiscard]] constexpr MiniHash Hash64to32(Hash h) { return static_cast<MiniHash>((h >> 32) & 0xFFFFFFFF); }
+[[nodiscard]] constexpr MiniMove Move2MiniMove(Move m) { return static_cast<MiniMove>(m & 0xFFFF); } // skip score
 
 // sameMove is not comparing score part of the Move, only the MiniMove part !
-[[nodiscard]] FORCE_FINLINE constexpr bool sameMove(const Move& a, const Move& b) { return Move2MiniMove(a) == Move2MiniMove(b); }
-[[nodiscard]] FORCE_FINLINE constexpr bool sameMove(const Move& a, const MiniMove& b) { return Move2MiniMove(a) == b; }
+[[nodiscard]] constexpr bool sameMove(const Move& a, const Move& b) { return Move2MiniMove(a) == Move2MiniMove(b); }
+[[nodiscard]] constexpr bool sameMove(const Move& a, const MiniMove& b) { return Move2MiniMove(a) == b; }
 
-[[nodiscard]] FORCE_FINLINE constexpr bool isValidMove(const Move& m) { return !sameMove(m, NULLMOVE) && !sameMove(m, INVALIDMOVE); }
-[[nodiscard]] FORCE_FINLINE constexpr bool isValidMove(const MiniMove& m) { return m != INVALIDMINIMOVE && m != NULLMOVE; }
+[[nodiscard]] constexpr bool isValidMove(const Move& m) { return !sameMove(m, NULLMOVE) && !sameMove(m, INVALIDMOVE); }
+[[nodiscard]] constexpr bool isValidMove(const MiniMove& m) { return m != INVALIDMINIMOVE && m != NULLMOVE; }
 
 inline const std::string startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 inline const std::string fine70        = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1";
@@ -388,7 +388,7 @@ inline array1d<const ScoreType* const,7> absValuesSEE_    = {&dummyScore,
 [[nodiscard]] FORCE_FINLINE ScoreType absValueGP(Piece pp) { return *absValuesGP_[pp]; }
 [[nodiscard]] FORCE_FINLINE ScoreType absValueSEE(Piece pp){ return *absValuesSEE_[pp]; }
 
-template<typename T> [[nodiscard]] FORCE_FINLINE constexpr int sgn(T val) { return (T(0) < val) - (val < T(0)); }
+template<typename T> [[nodiscard]] constexpr int sgn(T val) { return (T(0) < val) - (val < T(0)); }
 
 inline constexpr array1d<std::string_view,NbPiece> PieceNames = {"k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K"};
 
@@ -406,9 +406,9 @@ inline constexpr array1d<std::string_view,NbSquare> SquareNames = { "a1", "b1", 
 inline constexpr array1d<std::string_view,8> FileNames = {"a", "b", "c", "d", "e", "f", "g", "h"};
 inline constexpr array1d<std::string_view,8> RankNames = {"1", "2", "3", "4", "5", "6", "7", "8"};
 
-template<Color C> [[nodiscard]] FORCE_FINLINE constexpr ScoreType ColorSignHelper() { return C == Co_White ? +1 : -1; }
-template<Color C> [[nodiscard]] FORCE_FINLINE constexpr Square    PromotionSquare(const Square k) { return C == Co_White ? (SQFILE(k) + 56) : SQFILE(k); }
-template<Color C> [[nodiscard]] FORCE_FINLINE constexpr Rank      ColorRank(const Square k) { return Rank(C == Co_White ? SQRANK(k) : (7 - SQRANK(k))); }
+template<Color C> [[nodiscard]] constexpr ScoreType ColorSignHelper() { return C == Co_White ? +1 : -1; }
+template<Color C> [[nodiscard]] constexpr Square    PromotionSquare(const Square k) { return C == Co_White ? (SQFILE(k) + 56) : SQFILE(k); }
+template<Color C> [[nodiscard]] constexpr Rank      ColorRank(const Square k) { return Rank(C == Co_White ? SQRANK(k) : (7 - SQRANK(k))); }
 
 enum CastlingTypes : uint8_t { CT_OOO = 0, CT_OO = 1 };
 enum CastlingRights : uint8_t {
@@ -427,11 +427,11 @@ enum CastlingRights : uint8_t {
    C_all_but_wks = 14,
    C_all         = 15
 };
-FORCE_FINLINE constexpr CastlingRights operator&(const CastlingRights& a, const CastlingRights& b) { return CastlingRights(char(a) & char(b)); }
-FORCE_FINLINE constexpr CastlingRights operator|(const CastlingRights& a, const CastlingRights& b) { return CastlingRights(char(a) | char(b)); }
-FORCE_FINLINE constexpr CastlingRights operator~(const CastlingRights& a) { return CastlingRights(~char(a)); }
-FORCE_FINLINE constexpr void           operator&=(CastlingRights& a, const CastlingRights& b) { a = a & b; }
-FORCE_FINLINE constexpr void           operator|=(CastlingRights& a, const CastlingRights& b) { a = a | b; }
+constexpr CastlingRights operator&(const CastlingRights& a, const CastlingRights& b) { return CastlingRights(char(a) & char(b)); }
+constexpr CastlingRights operator|(const CastlingRights& a, const CastlingRights& b) { return CastlingRights(char(a) | char(b)); }
+constexpr CastlingRights operator~(const CastlingRights& a) { return CastlingRights(~char(a)); }
+constexpr void           operator&=(CastlingRights& a, const CastlingRights& b) { a = a & b; }
+constexpr void           operator|=(CastlingRights& a, const CastlingRights& b) { a = a | b; }
 
 [[nodiscard]] FORCE_FINLINE Square stringToSquare(const std::string& str) { return static_cast<Square>((str.at(1) - 49) * 8 + (str.at(0) - 97)); }
 
@@ -467,13 +467,13 @@ const array1d<Square,T_bqs+1> correctedRookDestSq = { INVALIDSQUARE, INVALIDSQUA
                                                       INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE, INVALIDSQUARE,
                                                       Sq_f1, Sq_d1, Sq_f8, Sq_d8};
 
-[[nodiscard]] FORCE_FINLINE constexpr bool isValidMoveType(const MType m)      { return m <= T_bqs; }
-[[nodiscard]] FORCE_FINLINE constexpr bool isValidSquare(const Square s)       { return s >= 0 && s < NbSquare; }
-[[nodiscard]] FORCE_FINLINE constexpr bool isValidPiece(const Piece pp)        { return pp >= P_bk && pp <= P_wk; }
-[[nodiscard]] FORCE_FINLINE constexpr bool isValidPieceNotNone(const Piece pp) { return isValidPiece(pp) && pp != P_none; }
-[[nodiscard]] FORCE_FINLINE constexpr bool isNotEmpty(const BitBoard bb)       { return bb != emptyBitBoard; }
+[[nodiscard]] constexpr bool isValidMoveType(const MType m)      { return m <= T_bqs; }
+[[nodiscard]] constexpr bool isValidSquare(const Square s)       { return s >= 0 && s < NbSquare; }
+[[nodiscard]] constexpr bool isValidPiece(const Piece pp)        { return pp >= P_bk && pp <= P_wk; }
+[[nodiscard]] constexpr bool isValidPieceNotNone(const Piece pp) { return isValidPiece(pp) && pp != P_none; }
+[[nodiscard]] constexpr bool isNotEmpty(const BitBoard bb)       { return bb != emptyBitBoard; }
 
-[[nodiscard]] FORCE_FINLINE constexpr Piece promShift(const MType mt) {
+[[nodiscard]] constexpr Piece promShift(const MType mt) {
    assert(mt >= T_promq);
    assert(mt <= T_cappromn);
    return static_cast<Piece>(P_wq - (mt % 4));
@@ -502,103 +502,103 @@ inline constexpr array1d<ScoreType,16> MoveScoring    = {   0,                  
    return skipMoves && std::find(skipMoves->begin(), skipMoves->end(), Move2MiniMove(a)) != skipMoves->end();
 }
 
-[[nodiscard]] FORCE_FINLINE constexpr ScoreType Move2Score(const Move m) {
+[[nodiscard]] constexpr ScoreType Move2Score(const Move m) {
    assert(isValidMove(m));
    return static_cast<ScoreType>((m >> 16) & 0xFFFF);
 }
-[[nodiscard]] FORCE_FINLINE constexpr Square Move2From(const Move m) {
+[[nodiscard]] constexpr Square Move2From(const Move m) {
    assert(isValidMove(m));
    return static_cast<Square>((m >> 10) & 0x3F);
 }
-[[nodiscard]] FORCE_FINLINE constexpr Square Move2To(const Move m) {
+[[nodiscard]] constexpr Square Move2To(const Move m) {
    assert(isValidMove(m));
    return static_cast<Square>((m >> 4) & 0x3F);
 }
-[[nodiscard]] FORCE_FINLINE constexpr MType Move2Type(const Move m) {
+[[nodiscard]] constexpr MType Move2Type(const Move m) {
    assert(isValidMove(m));
    return static_cast<MType>(m & 0xF);
 }
-[[nodiscard]] FORCE_FINLINE constexpr MiniMove ToMove(const Square from, const Square to, const MType type) {
+[[nodiscard]] constexpr MiniMove ToMove(const Square from, const Square to, const MType type) {
    assert(isValidSquare(from));
    assert(isValidSquare(to));
    return static_cast<MiniMove>((from << 10) | (to << 4) | type);
 }
-[[nodiscard]] FORCE_FINLINE constexpr Move ToMove(const Square from, const Square to, const MType type, const ScoreType score) {
+[[nodiscard]] constexpr Move ToMove(const Square from, const Square to, const MType type, const ScoreType score) {
    assert(isValidSquare(from));
    assert(isValidSquare(to));
    return static_cast<Move>((score << 16) | (from << 10) | (to << 4) | type);
 }
 
-[[nodiscard]] FORCE_FINLINE constexpr ScoreType matingScore  (const DepthType in) { return static_cast<ScoreType>(MATE - in); }
-[[nodiscard]] FORCE_FINLINE constexpr ScoreType matedScore   (const DepthType in) { return static_cast<ScoreType>(-MATE + in); }
+[[nodiscard]] constexpr ScoreType matingScore  (const DepthType in) { return static_cast<ScoreType>(MATE - in); }
+[[nodiscard]] constexpr ScoreType matedScore   (const DepthType in) { return static_cast<ScoreType>(-MATE + in); }
 
-[[nodiscard]] FORCE_FINLINE constexpr bool isMatingScore(const ScoreType s) { return (s >= MATE - MAX_DEPTH); }
-[[nodiscard]] FORCE_FINLINE constexpr bool isMatedScore (const ScoreType s) { return (s <= matedScore(MAX_DEPTH)); }
-[[nodiscard]] FORCE_FINLINE constexpr bool isMateScore  (const ScoreType s) { return (Abs(s) >= MATE - MAX_DEPTH); }
+[[nodiscard]] constexpr bool isMatingScore(const ScoreType s) { return (s >= MATE - MAX_DEPTH); }
+[[nodiscard]] constexpr bool isMatedScore (const ScoreType s) { return (s <= matedScore(MAX_DEPTH)); }
+[[nodiscard]] constexpr bool isMateScore  (const ScoreType s) { return (Abs(s) >= MATE - MAX_DEPTH); }
 
-[[nodiscard]] FORCE_FINLINE constexpr bool isPromotionStd(const MType mt) {
+[[nodiscard]] constexpr bool isPromotionStd(const MType mt) {
    assert(isValidMoveType(mt));
    return (mt >> 2 == 0x1);
 }
-[[nodiscard]] FORCE_FINLINE constexpr bool isPromotionStd(const Move m) { return isPromotionStd(Move2Type(m)); }
-[[nodiscard]] FORCE_FINLINE constexpr bool isPromotionCap(const MType mt) {
+[[nodiscard]] constexpr bool isPromotionStd(const Move m) { return isPromotionStd(Move2Type(m)); }
+[[nodiscard]] constexpr bool isPromotionCap(const MType mt) {
    assert(isValidMoveType(mt));
    return (mt >> 2 == 0x2);
 }
-[[nodiscard]] FORCE_FINLINE constexpr bool isPromotionCap(const Move m) { return isPromotionCap(Move2Type(m)); }
+[[nodiscard]] constexpr bool isPromotionCap(const Move m) { return isPromotionCap(Move2Type(m)); }
 
-[[nodiscard]] FORCE_FINLINE constexpr bool isPromotion(const MType mt) {
+[[nodiscard]] constexpr bool isPromotion(const MType mt) {
    assert(isValidMoveType(mt));
    return isPromotionStd(mt) || isPromotionCap(mt);
 }
-[[nodiscard]] FORCE_FINLINE constexpr bool isPromotion(const Move m) { return isPromotion(Move2Type(m)); }
+[[nodiscard]] constexpr bool isPromotion(const Move m) { return isPromotion(Move2Type(m)); }
 
-[[nodiscard]] FORCE_FINLINE constexpr bool isCastling(const MType mt) {
+[[nodiscard]] constexpr bool isCastling(const MType mt) {
    assert(isValidMoveType(mt));
    return (mt >> 2) == 0x3;
 }
-[[nodiscard]] FORCE_FINLINE constexpr bool isCastling(const Move m) { return isCastling(Move2Type(m)); }
+[[nodiscard]] constexpr bool isCastling(const Move m) { return isCastling(Move2Type(m)); }
 
-[[nodiscard]] FORCE_FINLINE constexpr bool isCapture(const MType mt) {
+[[nodiscard]] constexpr bool isCapture(const MType mt) {
    assert(isValidMoveType(mt));
    return mt == T_capture || mt == T_ep || isPromotionCap(mt);
 }
-[[nodiscard]] FORCE_FINLINE constexpr bool isCapture(const Move m) { return isCapture(Move2Type(m)); }
+[[nodiscard]] constexpr bool isCapture(const Move m) { return isCapture(Move2Type(m)); }
 
-[[nodiscard]] FORCE_FINLINE constexpr bool isCaptureNoEP(const MType mt) {
+[[nodiscard]] constexpr bool isCaptureNoEP(const MType mt) {
    assert(isValidMoveType(mt));
    return mt == T_capture || isPromotionCap(mt);
 }
-[[nodiscard]] FORCE_FINLINE constexpr bool isCaptureNoEP(const Move m) { return isCaptureNoEP(Move2Type(m)); }
+[[nodiscard]] constexpr bool isCaptureNoEP(const Move m) { return isCaptureNoEP(Move2Type(m)); }
 
 
-[[nodiscard]] FORCE_FINLINE constexpr bool isCaptureOrProm(const MType mt) {
+[[nodiscard]] constexpr bool isCaptureOrProm(const MType mt) {
    assert(isValidMoveType(mt));
    return mt == T_capture || mt == T_ep || isPromotion(mt);
 }
-[[nodiscard]] FORCE_FINLINE constexpr bool isCaptureOrProm(const Move m) { return isCaptureOrProm(Move2Type(m)); }
+[[nodiscard]] constexpr bool isCaptureOrProm(const Move m) { return isCaptureOrProm(Move2Type(m)); }
 
-[[nodiscard]] FORCE_FINLINE constexpr bool isEnPassant(const MType mt) {
+[[nodiscard]] constexpr bool isEnPassant(const MType mt) {
    assert(isValidMoveType(mt));
    return mt == T_ep;
 }
-[[nodiscard]] FORCE_FINLINE constexpr bool isEnPassant(const Move m) { return isEnPassant(Move2Type(m)); }
+[[nodiscard]] constexpr bool isEnPassant(const Move m) { return isEnPassant(Move2Type(m)); }
 
 
 constexpr ScoreType badCapLimit = -80;
 
-[[nodiscard]] FORCE_FINLINE constexpr ScoreType badCapScore(const Move m) { return Move2Score(m) + MoveScoring[T_capture]; }
+[[nodiscard]] constexpr ScoreType badCapScore(const Move m) { return Move2Score(m) + MoveScoring[T_capture]; }
 // be carefull isBadCap shall only be used on moves already detected as capture !
-[[nodiscard]] FORCE_FINLINE constexpr bool      isBadCap(const Move m) { return badCapScore(m) < badCapLimit; }
+[[nodiscard]] constexpr bool      isBadCap(const Move m) { return badCapScore(m) < badCapLimit; }
 
 
-[[nodiscard]] FORCE_FINLINE constexpr Square chebyshevDistance(const Square sq1, const Square sq2) {
+[[nodiscard]] constexpr Square chebyshevDistance(const Square sq1, const Square sq2) {
    return std::max(Abs(static_cast<Square>(SQRANK(sq2) - SQRANK(sq1))), Abs(static_cast<Square>(SQFILE(sq2) - SQFILE(sq1))));
 }
-[[nodiscard]] FORCE_FINLINE constexpr Square manatthanDistance(const Square sq1, const Square sq2) {
+[[nodiscard]] constexpr Square manatthanDistance(const Square sq1, const Square sq2) {
    return Abs(static_cast<Square>(SQRANK(sq2) - SQRANK(sq1))) + Abs(static_cast<Square>(SQFILE(sq2) - SQFILE(sq1)));
 }
-[[nodiscard]] FORCE_FINLINE constexpr Square minDistance(const Square sq1, const Square sq2) {
+[[nodiscard]] constexpr Square minDistance(const Square sq1, const Square sq2) {
    return std::min(Abs(static_cast<Square>(SQRANK(sq2) - SQRANK(sq1))), Abs(static_cast<Square>(SQFILE(sq2) - SQFILE(sq1))));
 }
 
@@ -663,16 +663,16 @@ template<typename T> [[nodiscard]] FORCE_FINLINE T randomInt(T m, T M) {
    return dist(mt);
 }
 
-template<class T> [[nodiscard]] FORCE_FINLINE constexpr const T& clamp(const T& v, const T& lo, const T& hi) {
+template<class T> [[nodiscard]] constexpr const T& clamp(const T& v, const T& lo, const T& hi) {
    assert(!(hi < lo));
     return (v < lo) ? lo : (hi < v) ? hi : v;
 }
 
 [[nodiscard]] constexpr Square relative_square(const Color c, const Square s) { return static_cast<Square>(s ^ (c * 56)); }
 
-template<Color C> [[nodiscard]] FORCE_FINLINE constexpr Square ColorSquarePstHelper(const Square k) { return relative_square(~C, k); }
+template<Color C> [[nodiscard]] constexpr Square ColorSquarePstHelper(const Square k) { return relative_square(~C, k); }
 
-[[nodiscard]] FORCE_FINLINE constexpr uint64_t powerFloor(const uint64_t x) {
+[[nodiscard]] constexpr uint64_t powerFloor(const uint64_t x) {
    uint64_t power = 1;
    while (power <= x) power *= 2;
    return power / 2;
