@@ -7,11 +7,11 @@
 #ifdef WITH_NNUE
 #include "nnue.hpp"
 
-[[nodiscard]] static FORCE_FINLINE constexpr size_t NNUEIndiceUs(const Square ksq, const Square s, const Piece p) {
+[[nodiscard]] static constexpr size_t NNUEIndiceUs(const Square ksq, const Square s, const Piece p) {
    return FeatureIdx::major * HFlip(ksq) + HFlip(s) + FeatureIdx::usOffset(p);
 }
 
-[[nodiscard]] static FORCE_FINLINE constexpr size_t NNUEIndiceThem(const Square ksq, const Square s, const Piece p) {
+[[nodiscard]] static constexpr size_t NNUEIndiceThem(const Square ksq, const Square s, const Piece p) {
    return FeatureIdx::major * HFlip(ksq) + HFlip(s) + FeatureIdx::themOffset(p);
 }
 #endif // WITH_NNUE

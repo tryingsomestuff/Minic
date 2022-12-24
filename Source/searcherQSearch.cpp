@@ -23,9 +23,9 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Posi
    /*else*/ MoveGen::generate<MoveGen::GP_cap>(p, moves);
    MoveSorter::scoreAndSort(*this, moves, p, data.gp, height, cmhPtr, false, isInCheck);
 
-   for (auto it = moves.begin(); it != moves.end(); ++it) {
+   for (const auto & it : moves) {
       Position p2 = p;
-      const Position::MoveInfo moveInfo(p2,*it);
+      const Position::MoveInfo moveInfo(p2,it);
       if (!applyMove(p2, moveInfo, true)) continue;
 #ifdef WITH_NNUE
       NNUEEvaluator newEvaluator = p.evaluator();
@@ -37,7 +37,7 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Posi
       if (score > bestScore) {
          bestScore = score;
          if (score > alpha) {
-            if (pv) updatePV(*pv, *it, childPV);
+            if (pv) updatePV(*pv, it, childPV);
             if (score >= beta) return score;
             alpha = score;
          }

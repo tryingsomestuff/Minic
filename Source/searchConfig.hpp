@@ -40,7 +40,7 @@ template<size_t N_, size_t M_> struct Coeff {
    CONST_SEARCH_TUNING array1d<DepthType, N> minDepth;
    CONST_SEARCH_TUNING array1d<DepthType, N> maxDepth;
    const std::string name;
-   [[nodiscard]] FORCE_FINLINE CONSTEXPR_SEARCH_TUNING ScoreType threshold(const DepthType d, const float gp, const size_t idx1 = 0, const size_t idx2 = 0) const {
+   [[nodiscard]] CONSTEXPR_SEARCH_TUNING ScoreType threshold(const DepthType d, const float gp, const size_t idx1 = 0, const size_t idx2 = 0) const {
       assert(idx1 < N);
       assert(idx2 < M);
       const auto value = init[idx1] + d * slopeDepth[idx1] + bonus[idx2] + static_cast<double>(gp) * slopeGamePhase[idx1];
@@ -48,7 +48,7 @@ template<size_t N_, size_t M_> struct Coeff {
       assert(value < std::numeric_limits<ScoreType>::max());
       return static_cast<ScoreType>(value);
    }
-   [[nodiscard]] FORCE_FINLINE CONSTEXPR_SEARCH_TUNING bool isActive(const DepthType d, const size_t idx1 = 0) const {
+   [[nodiscard]] CONSTEXPR_SEARCH_TUNING bool isActive(const DepthType d, const size_t idx1 = 0) const {
       assert(idx1 < N);
       return d >= minDepth[idx1] && d <= maxDepth[idx1];
    }
@@ -133,7 +133,7 @@ extern CONST_SEARCH_TUNING ScoreType ttBetaCutMargin;
 inline const DepthType lmpMaxDepth = 10;
 inline const array2d<int,2,SearchConfig::lmpMaxDepth+1> lmpLimit = {{{0, 2, 3, 5, 9, 13, 18, 25, 34, 45, 55}, {0, 5, 6, 9, 14, 21, 30, 41, 55, 69, 84}}};
 
-FORCE_FINLINE constexpr
+constexpr
 double my_log2(double x){
    int N = 1;
    while(x>=2){

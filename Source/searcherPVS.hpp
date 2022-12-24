@@ -311,8 +311,8 @@ FORCE_FINLINE void evalFeatures(const Position & p,
    }
 
    if (kingIsMandatory){
-     const File wkf = (File)SQFILE(p.king[Co_White]);
-     const File bkf = (File)SQFILE(p.king[Co_Black]);
+     const File wkf = SQFILE(p.king[Co_White]);
+     const File bkf = SQFILE(p.king[Co_Black]);
  
      const colored<BitBoard> semiOpenFiles = {BBTools::fillFile(pawns[Co_White]) & ~BBTools::fillFile(pawns[Co_Black]),
                                                BBTools::fillFile(pawns[Co_Black]) & ~BBTools::fillFile(pawns[Co_White])};

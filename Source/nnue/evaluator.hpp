@@ -33,7 +33,7 @@ struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTransformer<NT, Q>> {
 
    using BT = typename Quantization<Q>::BT;
 
-   FORCE_FINLINE constexpr float propagate(Color c, const int npiece) const {
+   constexpr float propagate(Color c, const int npiece) const {
       assert(!dirty);
       const auto & w_x {white.active()};
       const auto & b_x {black.active()};
