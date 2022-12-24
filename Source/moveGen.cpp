@@ -39,7 +39,7 @@ void movePiece(Position& p, const Square from, const Square to, const Piece from
    }
    if (isCapture) { // if capture remove toP at to
       p.h ^= Zobrist::ZT[to][toId];
-      if ((abs(toP) == P_wp || abs(toP) == P_wk)) p.ph ^= Zobrist::ZT[to][toId];
+      if (abs(toP) == P_wp || abs(toP) == P_wk) p.ph ^= Zobrist::ZT[to][toId];
    }
    // consequences on castling
    if (p.castling && (p.rootInfo().castlePermHashTable[from] ^ p.rootInfo().castlePermHashTable[to])) {
@@ -297,8 +297,7 @@ ScoreType randomMover(const Position& p, PVList& pv, const bool isInCheck) {
       NNUEEvaluator evaluator = p.evaluator();
       p2.associateEvaluator(evaluator);
 #endif
-      const Position::MoveInfo moveInfo(p2, it);
-      if (!applyMove(p2, moveInfo)) continue;
+      if (const Position::MoveInfo moveInfo(p2, it); !applyMove(p2, moveInfo)) continue;
       pv.emplace_back(it); // updatePV
       const Square to = Move2To(it);
       // king capture (works only for most standard chess variants)

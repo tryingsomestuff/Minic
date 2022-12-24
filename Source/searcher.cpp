@@ -319,8 +319,7 @@ Position Searcher::getQuiet(const Position& p, Searcher* searcher, ScoreType* qS
    for (auto& m : pv) {
       Position p2 = pQuiet;
       //std::cout << "Applying move " << ToString(m) << std::endl;
-      const Position::MoveInfo moveInfo(p2,m);
-      if (!applyMove(p2, moveInfo)) break;
+      if (const Position::MoveInfo moveInfo(p2,m); !applyMove(p2, moveInfo)) break;
       pQuiet = p2;
    }
 

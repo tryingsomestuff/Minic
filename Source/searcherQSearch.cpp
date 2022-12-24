@@ -189,8 +189,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    // we try the tt move before move generation
    if (usableTTmove) {
       Position p2 = p;
-      const Position::MoveInfo moveInfo(p2,e.m);
-      if (applyMove(p2, moveInfo, true)) {
+      if (const Position::MoveInfo moveInfo(p2,e.m); applyMove(p2, moveInfo, true)) {
 #ifdef WITH_NNUE
          NNUEEvaluator newEvaluator = p.evaluator();
          p2.associateEvaluator(newEvaluator);

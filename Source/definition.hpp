@@ -206,16 +206,16 @@ enum Color : uint8_t { Co_White = 0, Co_Black = 1, Co_None = 2, Co_End = Co_None
 [[nodiscard]] constexpr Color operator~(Color c) { return static_cast<Color>(c ^ Co_Black); } // switch Color
 ENABLE_INCR_OPERATORS_ON(Color)
 
-constexpr auto SQFILE(const Square s)                          { return static_cast<File>((s)&7);}
-constexpr auto SQRANK(const Square s)                          { return static_cast<Rank>((s) >> 3);}
+constexpr auto SQFILE(const Square s)                          { return static_cast<File>(s & 7);}
+constexpr auto SQRANK(const Square s)                          { return static_cast<Rank>(s >> 3);}
 constexpr auto ISOUTERFILE(const Square x)                     { return (SQFILE(x) == 0 || SQFILE(x) == 7);}
-constexpr auto ISNEIGHBOUR(const Square x, const Square y)     { return ((x) >= 0 && (x) < 64 && (y) >= 0 && (y) < 64 && Abs(SQRANK(x) - SQRANK(y)) <= 1 && Abs(SQFILE(x) - SQFILE(y)) <= 1);}
+constexpr auto ISNEIGHBOUR(const Square x, const Square y)     { return (x >= 0 && x < 64 && y >= 0 && y < 64 && Abs(SQRANK(x) - SQRANK(y)) <= 1 && Abs(SQFILE(x) - SQFILE(y)) <= 1);}
 constexpr auto PROMOTION_RANK(const Square x)                  { return (SQRANK(x) == 0 || SQRANK(x) == 7);}
 constexpr auto PROMOTION_RANK_C(const Square x, const Square c){ return ((c == Co_Black && SQRANK(x) == 0) || (c == Co_White && SQRANK(x) == 7));}
-constexpr auto MakeSquare(const File f, const Rank r)          { return static_cast<Square>(((r) << 3) + (f));}
-constexpr auto VFlip(const Square s)                           { return static_cast<Square>((s) ^ Sq_a8);}
-constexpr auto HFlip(const Square s)                           { return static_cast<Square>((s) ^ Sq_h1);}
-constexpr auto MFlip(const Square s)                           { return static_cast<Square>((s) ^ Sq_h8);}
+constexpr auto MakeSquare(const File f, const Rank r)          { return static_cast<Square>((r << 3) + f);}
+constexpr auto VFlip(const Square s)                           { return static_cast<Square>(s ^ Sq_a8);}
+constexpr auto HFlip(const Square s)                           { return static_cast<Square>(s ^ Sq_h1);}
+constexpr auto MFlip(const Square s)                           { return static_cast<Square>(s ^ Sq_h8);}
 
 #define TO_STR2(x)                 #x
 #define TO_STR(x)                  TO_STR2(x)
