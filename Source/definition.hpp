@@ -499,7 +499,7 @@ inline constexpr array1d<ScoreType,16> MoveScoring    = {   0,                  
                                                         };
 
 [[nodiscard]] FORCE_FINLINE bool isSkipMove(const Move& a, const std::vector<MiniMove>* skipMoves) {
-   return skipMoves && std::find(skipMoves->begin(), skipMoves->end(), Move2MiniMove(a)) != skipMoves->end();
+   return skipMoves && std::ranges::find(*skipMoves, Move2MiniMove(a)) != skipMoves->end();
 }
 
 [[nodiscard]] constexpr ScoreType Move2Score(const Move m) {
