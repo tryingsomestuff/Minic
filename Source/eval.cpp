@@ -193,8 +193,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    EvalFeatures features;
 
    // Material evaluation (most often from Material table)
-   const Hash matHash = MaterialHash::getMaterialHash(p.mat);
-   if (matHash != nullHash) {
+   if (const Hash matHash = MaterialHash::getMaterialHash(p.mat); matHash != nullHash) {
       context.stats.incr(Stats::sid_materialTableHits);
       // Get material hash data
       const MaterialHash::MaterialHashEntry &MEntry = MaterialHash::materialHashTable[matHash];
@@ -210,8 +209,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
          bool hasCapture = false;
          for (auto m : moves){
             Position p2 = p;
-            const Position::MoveInfo moveInfo(p2, m);
-            if (applyMove(p2,moveInfo, true)){
+            if (const Position::MoveInfo moveInfo(p2, m); applyMove(p2,moveInfo, true)){
                hasCapture = true;
                break;
             }
@@ -329,10 +327,9 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
 #ifdef WITH_NNUE
    const bool forbiddenNNUE = forbidNNUE(p) && !DynamicConfig::forceNNUE;
    if (DynamicConfig::useNNUE && !forbiddenNNUE) {
-      EvalScore score;
       // we will stay to classic eval when the game is already decided (to gain some nps)
       ///@todo use data.gp inside NNUE condition ?
-      if (DynamicConfig::forceNNUE ||
+      if (EvalScore score; DynamicConfig::forceNNUE ||
           !isLazyHigh(static_cast<ScoreType>(DynamicConfig::NNUEThreshold), features, score)) {
          STOP_AND_SUM_TIMER(Eval)
          ScoreType nnueEval = NNUEEVal(p, data, context, features);
@@ -768,13 +765,11 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    const colored<BitBoard> pinnedK = {getPinned<Co_White>(p, p.king[Co_White]), getPinned<Co_Black>(p, p.king[Co_Black])};
    const colored<BitBoard> pinnedQ = {getPinned<Co_White>(p, whiteQueenSquare), getPinned<Co_Black>(p, blackQueenSquare)};
    for (Piece pp = P_wp; pp < P_wk; ++pp) {
-      const BitBoard bw = p.pieces_const(Co_White, pp);
-      if (bw) {
+      if (const BitBoard bw = p.pieces_const(Co_White, pp); bw) {
          if (pinnedK[Co_White] & bw) features.scores[F_attack] -= EvalConfig::pinnedKing[pp - 1] * countBit(pinnedK[Co_White] & bw);
          if (pinnedQ[Co_White] & bw) features.scores[F_attack] -= EvalConfig::pinnedQueen[pp - 1] * countBit(pinnedQ[Co_White] & bw);
       }
-      const BitBoard bb = p.pieces_const(Co_Black, pp);
-      if (bb) {
+      if (const BitBoard bb = p.pieces_const(Co_Black, pp); bb) {
          if (pinnedK[Co_Black] & bb) features.scores[F_attack] += EvalConfig::pinnedKing[pp - 1] * countBit(pinnedK[Co_Black] & bb);
          if (pinnedQ[Co_Black] & bb) features.scores[F_attack] += EvalConfig::pinnedQueen[pp - 1] * countBit(pinnedQ[Co_Black] & bb);
       }

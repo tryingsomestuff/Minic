@@ -795,8 +795,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          }
 */
          // razoring
-         const ScoreType rAlpha = alpha - SearchConfig::razoringCoeff.threshold(pvsData.marginDepth, evalData.gp, pvsData.evalScoreIsHashScore, pvsData.improving);
-         if (SearchConfig::doRazoring && SearchConfig::razoringCoeff.isActive(depth, pvsData.evalScoreIsHashScore) && evalScore <= rAlpha) {
+         if (const ScoreType rAlpha = alpha - SearchConfig::razoringCoeff.threshold(pvsData.marginDepth, evalData.gp, pvsData.evalScoreIsHashScore, pvsData.improving);
+            SearchConfig::doRazoring && SearchConfig::razoringCoeff.isActive(depth, pvsData.evalScoreIsHashScore) && evalScore <= rAlpha) {
             stats.incr(Stats::sid_razoringTry);
             if (!evalData.haveThreats[p.c]) return stats.incr(Stats::sid_razoringNoThreat), rAlpha;
             const ScoreType qScore = qsearch(alpha, beta, p, height, seldepth, 0, true, pvnode, pvsData.isInCheck);
@@ -925,7 +925,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // Classic IID
    if (SearchConfig::doIID && !pvsData.validTTmove /*|| e.d < depth-4*/) {
-      if (((pvnode && depth >= SearchConfig::iidMinDepth) || (pvsData.cutNode && depth >= SearchConfig::iidMinDepth2))) { ///@todo try with cutNode only ?
+      if ((pvnode && depth >= SearchConfig::iidMinDepth) || (pvsData.cutNode && depth >= SearchConfig::iidMinDepth2)) { ///@todo try with cutNode only ?
          stats.incr(Stats::sid_iid);
          PVList iidPV;
          DISCARD pvs<pvnode>(alpha, beta, p, depth / 2, height, iidPV, seldepth, extensions, pvsData.isInCheck, pvsData.cutNode, skipMoves);
@@ -980,8 +980,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 #ifdef WITH_SYZYGY
    if (pvsData.rootnode && pvsData.withoutSkipMove && (BB::countBit(p.allPieces[Co_White] | p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN) {
       tbScore = 0;
-      MoveList movesTB;
-      if (SyzygyTb::probe_root(*this, p, tbScore, movesTB) < 0) { // only good moves if TB success
+      if (MoveList movesTB; SyzygyTb::probe_root(*this, p, tbScore, movesTB) < 0) { // only good moves if TB success
          stats.incr(Stats::sid_tbFail);
          if (capMoveGenerated) MoveGen::generate<MoveGen::GP_quiet>(p, moves, true);
          else
@@ -1017,8 +1016,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       bestMove = e.m; // in order to preserve tt move for alpha bound entry
 
       Position p2 = p;
-      const Position::MoveInfo moveInfo(p2,e.m);
-      if (applyMove(p2, moveInfo, true)) {
+      if (const Position::MoveInfo moveInfo(p2,e.m); applyMove(p2, moveInfo, true)) {
          // prefetch as soon as possible
          TT::prefetch(computeHash(p2));
 

@@ -61,8 +61,7 @@ void setFeature() {
 bool receiveOppMove(const std::string& command) {
    std::string mstr(command);
    COM::stop();
-   const size_t p = command.find("usermove");
-   if (p != std::string::npos) mstr = mstr.substr(p + 8);
+   if (const size_t p = command.find("usermove"); p != std::string::npos) mstr = mstr.substr(p + 8);
    const Move m = COM::moveFromCOM(mstr);
    if (m == INVALIDMOVE) return false;
    Logging::LogIt(Logging::logInfo) << "XBOARD applying move " << ToString(m);

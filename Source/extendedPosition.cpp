@@ -272,7 +272,7 @@ void ExtendedPosition::test(const std::vector<std::string> &positions,
       for (size_t t = 0; t < timeControls.size(); ++t) { score += results[k][t].score; }
       totalScore += score;
       std::stringstream str;
-      const std::vector<std::string> v = (results[k][0].bm.empty() ? results[k][0].am : results[k][0].bm);
+      const std::vector<std::string> v = results[k][0].bm.empty() ? results[k][0].am : results[k][0].bm;
       std::ostream_iterator<std::string> strIt(str, " ");
       std::copy(v.begin(), v.end(), strIt);
       std::cout << std::setw(25) << results[k][0].name << std::setw(14) << (results[k][0].bm.empty() ? std::string("!") + str.str() : str.str());

@@ -210,8 +210,7 @@ std::string showAlgAbr(const Move m, const Position &p) {
    NNUEEvaluator evaluator = p.evaluator();
    p2.associateEvaluator(evaluator);
 #endif
-   const Position::MoveInfo moveInfo(p2,m);
-   if (applyMove(p2, moveInfo)) {
+   if (const Position::MoveInfo moveInfo(p2,m); applyMove(p2, moveInfo)) {
       if (isPosInCheck(p2)) isCheck = true;
    }
    else {
@@ -256,7 +255,7 @@ std::string showAlgAbr(const Move m, const Position &p) {
       }
    }
 
-   if (((t == P_wp || t == P_bp) && isCapture(m))) s += FileNames[SQFILE(from)];
+   if ((t == P_wp || t == P_bp) && isCapture(m)) s += FileNames[SQFILE(from)];
    else if (isSamePiece) {
       if (!isSameFile) s += FileNames[SQFILE(from)];
       else if (isSameFile && !isSameRank)

@@ -282,9 +282,8 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
       Logging::LogIt(Logging::logInfo) << "Probing TB";
       if ((BB::countBit(p.allPieces[Co_White] | p.allPieces[Co_Black])) <= SyzygyTb::MAX_TB_MEN) {
          ScoreType tbScore = 0;
-         MoveList movesTB;
          Logging::LogIt(Logging::logInfo) << "Probing root";
-         if (SyzygyTb::probe_root(ThreadPool::instance().main(), p, tbScore, movesTB) >= 0) { // only good moves if TB success
+         if (MoveList movesTB; SyzygyTb::probe_root(ThreadPool::instance().main(), p, tbScore, movesTB) >= 0) { // only good moves if TB success
             for (auto m : movesTB ){
                Logging::LogIt(Logging::logInfo) << "TB move " << ToString(m);
             }
@@ -393,8 +392,9 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
       p2.associateEvaluator(evaluator);
       p2.resetNNUEEvaluator(p2.evaluator());
 #endif
-      const Position::MoveInfo moveInfo(p2, m);
-      if (!applyMove(p2, moveInfo)) { Logging::LogIt(Logging::logError) << "Cannot apply this move"; }
+      if (const Position::MoveInfo moveInfo(p2, m); !applyMove(p2, moveInfo)) { 
+         Logging::LogIt(Logging::logError) << "Cannot apply this move";
+      }
       Logging::LogIt(Logging::logInfo) << ToString(p2);
       return 0;
    }

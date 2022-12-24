@@ -38,8 +38,7 @@ Counter perft(const Position& p, DepthType depth, PerftAccumulator& acc) {
       p2.associateEvaluator(evaluator);
       p2.resetNNUEEvaluator(p2.evaluator());
 #endif
-      const Position::MoveInfo moveInfo(p2, m);
-      if (!applyMove(p2, moveInfo)) continue;
+      if (const Position::MoveInfo moveInfo(p2, m); !applyMove(p2, moveInfo)) continue;
       ++accLoc.validNodes;
       MType t = Move2Type(m);
       if (t == T_ep) ++accLoc.epNodes;

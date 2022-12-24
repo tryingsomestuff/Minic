@@ -215,8 +215,7 @@ void simulate(const TCType tcType, const TimeType initialTime, const TimeType in
       ThreadData _data;
       _data.score = randomMover(p2, _data.pv, isInCheck);
       if ( _data.pv.empty() ) break;
-      const Position::MoveInfo moveInfo(p2,_data.pv[0]);
-      if (! applyMove(p2, moveInfo)) break;
+      if (const Position::MoveInfo moveInfo(p2,_data.pv[0]); ! applyMove(p2, moveInfo)) break;
       std::cout << GetFEN(p2) << std::endl;
    }
    Logging::LogIt(Logging::logInfo) << "End of TC simulation : " << (remaining > 0 ? "success" : "failed");
