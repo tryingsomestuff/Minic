@@ -59,7 +59,7 @@ struct alignas(32) Position {
    array1d<BitBoard, 2>     allPieces {{emptyBitBoard}}; // works because emptyBitBoard is in fact 0
 
    // t p n b r q k bl bd M n x x x x x (total is first so that pawn to king is same index as Piece type)
-   typedef colored<array1d<char, 16>> Material;
+   using Material = colored<array1d<char, 16>>;
    Material mat = {{{{0}}}}; // such a nice syntax ...
 
    // shared by all "child" of a same "root" position

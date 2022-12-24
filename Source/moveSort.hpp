@@ -27,10 +27,10 @@ struct MoveSorter {
               const CMHPtrArray& _cmhPtr,
               bool               _useSEE     = true,
               bool               _isInCheck  = false,
-              const TT::Entry*   _e          = NULL,
+              const TT::Entry*   _e          = nullptr,
               const MiniMove     _refutation = INVALIDMINIMOVE):
        context(_context), p(_p), gp(_gp), height(_height), cmhPtr(_cmhPtr), useSEE(_useSEE), isInCheck(_isInCheck), e(_e), refutation(_refutation) {
-      assert(e == NULL || e->h != nullHash);
+      assert(e == nullptr || e->h != nullHash);
    }
 
    template<Color C> void computeScore(Move& m) const;
@@ -53,7 +53,7 @@ struct MoveSorter {
                      const CMHPtrArray& cmhPtr,
                      const bool         useSEE     = true,
                      const bool         isInCheck  = false,
-                     const TT::Entry*   e          = NULL,
+                     const TT::Entry*   e          = nullptr,
                      const MiniMove     refutation = INVALIDMINIMOVE);
 
    static void scoreAndSort(const Searcher&    context,
@@ -64,7 +64,7 @@ struct MoveSorter {
                             const CMHPtrArray& cmhPtr,
                             const bool         useSEE     = true,
                             const bool         isInCheck  = false,
-                            const TT::Entry*   e          = NULL,
+                            const TT::Entry*   e          = nullptr,
                             const MiniMove     refutation = INVALIDMINIMOVE);
 
    static void sort(MoveList& moves);

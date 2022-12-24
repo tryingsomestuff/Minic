@@ -165,7 +165,7 @@ namespace Distributed {
 extern int worldSize;
 extern int rank;
 
-typedef int      DummyType;
+using DummyType = int;
 extern DummyType _commTT;
 extern DummyType _commTT2;
 extern DummyType _commStat;

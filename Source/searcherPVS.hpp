@@ -864,12 +864,12 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             MoveGen::generate<MoveGen::GP_cap>(p, moves);
             //if (moves.empty()) stats.incr(Stats::sid_probcutNoCap); // should be 0 as there is threats ...
    #ifdef USE_PARTIAL_SORT
-            MoveSorter::score(*this, moves, p, evalData.gp, height, pvsData.cmhPtr, true, pvsData.isInCheck, pvsData.validTTmove ? &e : NULL);
+            MoveSorter::score(*this, moves, p, evalData.gp, height, pvsData.cmhPtr, true, pvsData.isInCheck, pvsData.validTTmove ? &e : nullptr);
             size_t offset = 0;
             const Move* it = nullptr;
             while ((it = MoveSorter::pickNext(moves, offset)) && probCutCount < SearchConfig::probCutMaxMoves /*+ 2*pvsData.cutNode*/) {
    #else
-            MoveSorter::scoreAndSort(*this, moves, p, evalData.gp, height, pvsData.cmhPtr, true, pvsData.isInCheck, pvsData.validTTmove ? &e : NULL);
+            MoveSorter::scoreAndSort(*this, moves, p, evalData.gp, height, pvsData.cmhPtr, true, pvsData.isInCheck, pvsData.validTTmove ? &e : nullptr);
             for (auto it = moves.begin(); it != moves.end() && probCutCount < SearchConfig::probCutMaxMoves /*+ 2*pvsData.cutNode*/; ++it) {
    #endif
                stats.incr(Stats::sid_probcutMoves);
@@ -1152,13 +1152,13 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    if (moves.empty()) return pvsData.isInCheck ? matedScore(height) : drawScore(p, height);
 
 #ifdef USE_PARTIAL_SORT
-   MoveSorter::score(*this, moves, p, evalData.gp, height, pvsData.cmhPtr, true, pvsData.isInCheck, pvsData.validTTmove ? &e : NULL,
+   MoveSorter::score(*this, moves, p, evalData.gp, height, pvsData.cmhPtr, true, pvsData.isInCheck, pvsData.validTTmove ? &e : nullptr,
                      refutation != INVALIDMINIMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMINIMOVE);
    size_t offset = 0;
    const Move* it = nullptr;
    while ((it = MoveSorter::pickNext(moves, offset)) && !stopFlag) {
 #else
-   MoveSorter::scoreAndSort(*this, moves, p, evalData.gp, height, pvsData.cmhPtr, true, pvsData.isInCheck, pvsData.validTTmove ? &e : NULL,
+   MoveSorter::scoreAndSort(*this, moves, p, evalData.gp, height, pvsData.cmhPtr, true, pvsData.isInCheck, pvsData.validTTmove ? &e : nullptr,
                             refutation != INVALIDMINIMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMINIMOVE);
    for (auto it = moves.begin(); it != moves.end() && !stopFlag; ++it) {
 #endif

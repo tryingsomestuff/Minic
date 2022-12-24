@@ -131,9 +131,9 @@ struct EvalScore {
 
 #else
 
-#define MakeScore(mg, eg) ((int)((unsigned int)(eg) << 16) + (mg))
-#define MGScore(s)        ((int16_t)((uint16_t)((unsigned)((s)))))
-#define EGScore(s)        ((int16_t)((uint16_t)((unsigned)((s) + 0x8000) >> 16)))
+constexpr auto MakeScore(mg, eg) { return (int)((unsigned int)(eg) << 16) + (mg);}
+constexpr auto MGScore(s)        { return (int16_t)((uint16_t)((unsigned)((s))));}
+constexpr auto EGScore(s)        { return (int16_t)((uint16_t)((unsigned)((s) + 0x8000) >> 16));}
 
 struct EvalScore {
    int sc = 0;

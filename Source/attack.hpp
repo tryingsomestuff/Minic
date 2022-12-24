@@ -48,6 +48,8 @@ struct Mask {
 extern array1d<Mask,NbSquare> mask;
 void initMask();
 
+constexpr auto SquareToBitboardTable(const Square k) { return BBTools::mask[k].bbsquare;}
+
 #ifndef WITH_MAGIC
 
 /*!
@@ -87,8 +89,8 @@ namespace MagicBB {
  * It is not really much faster than HQ BB, maybe around +10%
  */
 
-#define BISHOP_INDEX_BITS 9
-#define ROOK_INDEX_BITS 12
+inline constexpr size_t BISHOP_INDEX_BITS = 9;
+inline constexpr size_t ROOK_INDEX_BITS = 12;
 
 struct SMagic {
   BitBoard mask, magic;
@@ -101,15 +103,15 @@ extern array2d<BitBoard,NbSquare,1 << BISHOP_INDEX_BITS> bishopAttacks;
 extern array2d<BitBoard,NbSquare,1 << ROOK_INDEX_BITS> rookAttacks;
 
 #if defined(__BMI2__) && !defined(__znver1) && !defined(__znver2) && !defined(__bdver4) && defined(ENV64BIT)
-#define MAGICBISHOPINDEX(m, x) (_pext_u64(m, MagicBB::bishopMagic[x].mask))
-#define MAGICROOKINDEX(m, x)   (_pext_u64(m, MagicBB::rookMagic[x].mask))
+inline auto MAGICBISHOPINDEX(const BitBoard m, const Square x) { return _pext_u64(m, MagicBB::bishopMagic[x].mask);}
+inline auto MAGICROOKINDEX(const BitBoard m, const Square x)    { return _pext_u64(m, MagicBB::rookMagic[x].mask);}
 #else
-#define MAGICBISHOPINDEX(m, x) static_cast<int>((((m)&MagicBB::bishopMagic[x].mask) * MagicBB::bishopMagic[x].magic) >> (NbSquare - BISHOP_INDEX_BITS))
-#define MAGICROOKINDEX(m, x)   static_cast<int>((((m)&MagicBB::rookMagic[x].mask) * MagicBB::rookMagic[x].magic) >> (NbSquare - ROOK_INDEX_BITS))
+inline auto MAGICBISHOPINDEX(const BitBoard m, const Square x) { return static_cast<int>((((m)&MagicBB::bishopMagic[x].mask) * MagicBB::bishopMagic[x].magic) >> (NbSquare - BISHOP_INDEX_BITS));}
+inline auto MAGICROOKINDEX(const BitBoard m, const Square x)   { return static_cast<int>((((m)&MagicBB::rookMagic[x].mask) * MagicBB::rookMagic[x].magic) >> (NbSquare - ROOK_INDEX_BITS));}
 #endif
 
-#define MAGICBISHOPATTACKS(m, x) (MagicBB::bishopAttacks[x][MAGICBISHOPINDEX(m, x)])
-#define MAGICROOKATTACKS(m, x)   (MagicBB::rookAttacks  [x][MAGICROOKINDEX(m, x)])
+inline auto MAGICBISHOPATTACKS(const BitBoard m, const Square x) { return MagicBB::bishopAttacks[x][MAGICBISHOPINDEX(m, x)];}
+inline auto MAGICROOKATTACKS(const BitBoard m, const Square x)   { return MagicBB::rookAttacks  [x][MAGICROOKINDEX(m, x)];}
 
 void initMagic();
 
@@ -119,9 +121,9 @@ void initMagic();
 template < Piece > [[nodiscard]] FORCE_FINLINE BitBoard coverage      (const Square  , const BitBoard          , const Color  ) { assert(false); return emptyBitBoard; }
 template <       > [[nodiscard]] FORCE_FINLINE BitBoard coverage<P_wp>(const Square s, const BitBoard          , const Color c) { assert(isValidSquare(s)); return mask[s].pawnAttack[c]; }
 template <       > [[nodiscard]] FORCE_FINLINE BitBoard coverage<P_wn>(const Square s, const BitBoard          , const Color  ) { assert(isValidSquare(s)); return mask[s].knight; }
-template <       > [[nodiscard]] FORCE_FINLINE BitBoard coverage<P_wb>(const Square s, const BitBoard occupancy, const Color  ) { assert(isValidSquare(s)); return MAGICBISHOPATTACKS(occupancy, s); }
-template <       > [[nodiscard]] FORCE_FINLINE BitBoard coverage<P_wr>(const Square s, const BitBoard occupancy, const Color  ) { assert(isValidSquare(s)); return MAGICROOKATTACKS  (occupancy, s); }
-template <       > [[nodiscard]] FORCE_FINLINE BitBoard coverage<P_wq>(const Square s, const BitBoard occupancy, const Color  ) { assert(isValidSquare(s)); return MAGICBISHOPATTACKS(occupancy, s) | MAGICROOKATTACKS(occupancy, s); }
+template <       > [[nodiscard]] FORCE_FINLINE BitBoard coverage<P_wb>(const Square s, const BitBoard occupancy, const Color  ) { assert(isValidSquare(s)); return MagicBB::MAGICBISHOPATTACKS(occupancy, s); }
+template <       > [[nodiscard]] FORCE_FINLINE BitBoard coverage<P_wr>(const Square s, const BitBoard occupancy, const Color  ) { assert(isValidSquare(s)); return MagicBB::MAGICROOKATTACKS  (occupancy, s); }
+template <       > [[nodiscard]] FORCE_FINLINE BitBoard coverage<P_wq>(const Square s, const BitBoard occupancy, const Color  ) { assert(isValidSquare(s)); return MagicBB::MAGICBISHOPATTACKS(occupancy, s) | MagicBB::MAGICROOKATTACKS(occupancy, s); }
 template <       > [[nodiscard]] FORCE_FINLINE BitBoard coverage<P_wk>(const Square s, const BitBoard          , const Color  ) { assert(isValidSquare(s)); return mask[s].king; }
 
 // Attack function is just coverage interseted with a target bitboard
