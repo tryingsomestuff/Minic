@@ -1097,7 +1097,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          if (stopFlag) return STOPSCORE;
 
          if (pvsData.rootnode) { 
-            rootScores.push_back({e.m, ttScore}); 
+            rootScores.emplace_back(e.m, ttScore);
          }
 
          if (ttScore > bestScore) {
@@ -1333,7 +1333,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       if (stopFlag) return STOPSCORE;
 
       if (pvsData.rootnode) { 
-         rootScores.push_back({*it, score}); 
+         rootScores.emplace_back(*it, score);
       }
       if (score > bestScore) {
          if (pvsData.rootnode) previousBest = *it;

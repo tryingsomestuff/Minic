@@ -19,30 +19,24 @@ namespace BBTools {
 // many of then will be usefull during evaluation and move generation
 // note that between to not include start and end square
 struct Mask {
-    BitBoard bbsquare, kingZone, pawnAttack[2], push[2], dpush[2], knight, king, diagonal, antidiagonal, file;
+    BitBoard bbsquare {emptyBitBoard};
+    BitBoard kingZone {emptyBitBoard};
+    BitBoard knight {emptyBitBoard};
+    BitBoard king {emptyBitBoard};
+    BitBoard diagonal {emptyBitBoard};
+    BitBoard antidiagonal {emptyBitBoard};
+    BitBoard file {emptyBitBoard};
+    colored<BitBoard> pawnAttack {{emptyBitBoard, emptyBitBoard}};
+    colored<BitBoard> push {{emptyBitBoard, emptyBitBoard}};
+    colored<BitBoard> dpush {{emptyBitBoard, emptyBitBoard}};
 #if !defined(WITH_SMALL_MEMORY)
-    BitBoard enpassant, frontSpan[2], rearSpan[2], passerSpan[2], attackFrontSpan[2], between[NbSquare];
+    BitBoard enpassant {emptyBitBoard};
+    colored<BitBoard> frontSpan {{emptyBitBoard, emptyBitBoard}};
+    colored<BitBoard> rearSpan {{emptyBitBoard, emptyBitBoard}};
+    colored<BitBoard> passerSpan {{emptyBitBoard, emptyBitBoard}};
+    colored<BitBoard> attackFrontSpan {{emptyBitBoard, emptyBitBoard}};
+    array1d<BitBoard, NbSquare> between {emptyBitBoard};
 #endif
-   Mask():
-       bbsquare(emptyBitBoard),
-       kingZone(emptyBitBoard),
-       pawnAttack {emptyBitBoard, emptyBitBoard},
-       push {emptyBitBoard, emptyBitBoard},
-       dpush {emptyBitBoard, emptyBitBoard},
-       knight(emptyBitBoard),
-       king(emptyBitBoard),
-       diagonal(emptyBitBoard),
-       antidiagonal(emptyBitBoard),
-       file(emptyBitBoard)
-#if !defined(WITH_SMALL_MEMORY)
-       ,enpassant(emptyBitBoard),
-       frontSpan {emptyBitBoard},
-       rearSpan {emptyBitBoard},
-       passerSpan {emptyBitBoard},
-       attackFrontSpan {emptyBitBoard},
-       between {emptyBitBoard}
-#endif
-       {}
 };
 
 extern array1d<Mask,NbSquare> mask;
@@ -93,21 +87,22 @@ inline constexpr size_t BISHOP_INDEX_BITS = 9;
 inline constexpr size_t ROOK_INDEX_BITS = 12;
 
 struct SMagic {
-  BitBoard mask, magic;
+  BitBoard mask {emptyBitBoard};
+  BitBoard magic {emptyBitBoard};
 };
 
-extern array1d<SMagic,NbSquare> bishopMagic;
-extern array1d<SMagic,NbSquare> rookMagic;
+extern array1d<SMagic, NbSquare> bishopMagic;
+extern array1d<SMagic, NbSquare> rookMagic;
 
-extern array2d<BitBoard,NbSquare,1 << BISHOP_INDEX_BITS> bishopAttacks;
-extern array2d<BitBoard,NbSquare,1 << ROOK_INDEX_BITS> rookAttacks;
+extern array2d<BitBoard, NbSquare, 1 << BISHOP_INDEX_BITS> bishopAttacks;
+extern array2d<BitBoard, NbSquare, 1 << ROOK_INDEX_BITS> rookAttacks;
 
 #if defined(__BMI2__) && !defined(__znver1) && !defined(__znver2) && !defined(__bdver4) && defined(ENV64BIT)
 inline auto MAGICBISHOPINDEX(const BitBoard m, const Square x) { return _pext_u64(m, MagicBB::bishopMagic[x].mask);}
 inline auto MAGICROOKINDEX(const BitBoard m, const Square x)    { return _pext_u64(m, MagicBB::rookMagic[x].mask);}
 #else
-inline auto MAGICBISHOPINDEX(const BitBoard m, const Square x) { return static_cast<int>((((m)&MagicBB::bishopMagic[x].mask) * MagicBB::bishopMagic[x].magic) >> (NbSquare - BISHOP_INDEX_BITS));}
-inline auto MAGICROOKINDEX(const BitBoard m, const Square x)   { return static_cast<int>((((m)&MagicBB::rookMagic[x].mask) * MagicBB::rookMagic[x].magic) >> (NbSquare - ROOK_INDEX_BITS));}
+inline auto MAGICBISHOPINDEX(const BitBoard m, const Square x) { return static_cast<int>(((m & MagicBB::bishopMagic[x].mask) * MagicBB::bishopMagic[x].magic) >> (NbSquare - BISHOP_INDEX_BITS));}
+inline auto MAGICROOKINDEX(const BitBoard m, const Square x)   { return static_cast<int>(((m & MagicBB::rookMagic[x].mask) * MagicBB::rookMagic[x].magic) >> (NbSquare - ROOK_INDEX_BITS));}
 #endif
 
 inline auto MAGICBISHOPATTACKS(const BitBoard m, const Square x) { return MagicBB::bishopAttacks[x][MAGICBISHOPINDEX(m, x)];}

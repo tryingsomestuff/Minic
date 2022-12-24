@@ -234,8 +234,8 @@ std::string showAlgAbr(const Move m, const Position &p) {
    bool isSameRank  = false;
    if (numberOf(p, t) > 1) {
       std::vector<Square> v;
-      BitBoard            b = p.pieces_const(t);
-      while (b) v.push_back(BB::popBit(b));
+      BitBoard b = p.pieces_const(t);
+      while (b) v.emplace_back(BB::popBit(b));
       for (auto it = v.begin(); it != v.end(); ++it) {
          if (*it == from) continue; // to not compare to myself ...
          MoveList l;

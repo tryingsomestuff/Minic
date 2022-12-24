@@ -191,7 +191,7 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
       std::vector<std::string> positions;
       DISCARD                  readEPDFile(filename, positions);
       for (size_t k = 0; k < positions.size(); ++k) {
-         data.push_back(RootPosition(positions[k], false));
+         data.emplace_back(positions[k], false);
          if (k % 50000 == 0) Logging::LogIt(Logging::logInfo) << k << " position read";
       }
       Logging::LogIt(Logging::logInfo) << "Data size : " << data.size();

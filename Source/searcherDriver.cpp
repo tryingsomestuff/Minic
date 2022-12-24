@@ -176,7 +176,7 @@ void Searcher::searchDriver(bool postMove) {
          for (const auto & it : moves){
             if (sameMove(m,it)){
                _data.score = 0;
-               _data.pv.push_back(m);
+               _data.pv.emplace_back(m);
                goto pvsout;
             }
          }
@@ -299,7 +299,7 @@ void Searcher::searchDriver(bool postMove) {
 
             // In multiPV mode, fill skipmove for next multiPV iteration
             if (!pvLoc.empty() && DynamicConfig::multiPV > 1) {
-               skipMoves.push_back(Move2MiniMove(pvLoc[0]));
+               skipMoves.emplace_back(Move2MiniMove(pvLoc[0]));
             }
 
             // backup multiPV info

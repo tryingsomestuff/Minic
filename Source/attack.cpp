@@ -19,38 +19,38 @@ array1d<Mask,NbSquare> mask;
 void initMask() {
    Logging::LogIt(Logging::logInfo) << "Init mask";
    Logging::LogIt(Logging::logInfo) << "Size of masks : " << sizeof(mask) / 1024 << "Kb";
-   array2d<int,NbSquare,NbSquare> d = {{0}};
+   array2d<Square,NbSquare,NbSquare> d = {{0}};
    for (Square x = 0; x < NbSquare; ++x) {
       mask[x].bbsquare = SquareToBitboard(x);
-      for (int i = -1; i <= 1; ++i) {
-         for (int j = -1; j <= 1; ++j) {
+      for (Square i = -1; i <= 1; ++i) {
+         for (Square j = -1; j <= 1; ++j) {
             if (i == 0 && j == 0) continue;
 #if !defined(WITH_SMALL_MEMORY)
-            for (int r = SQRANK(x) + i, f = SQFILE(x) + j; 0 <= r && r < 8 && 0 <= f && f < 8; r += i, f += j) {
+            for (Square r = SQRANK(x) + i, f = SQFILE(x) + j; 0 <= r && r < 8 && 0 <= f && f < 8; r += i, f += j) {
                const int y = 8 * r + f;
                d[x][y]     = 8 * i + j;
-               for (int z = x + d[x][y]; z != y; z += d[x][y]) mask[x].between[y] |= SquareToBitboard(z);
+               for (Square z = x + d[x][y]; z != y; z += d[x][y]) mask[x].between[y] |= SquareToBitboard(z);
             }
 #endif
-            const int r = SQRANK(x);
-            const int f = SQFILE(x);
+            const auto r = SQRANK(x);
+            const auto f = SQFILE(x);
             if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) mask[x].kingZone |= SquareToBitboard((SQRANK(x) + i) * 8 + SQFILE(x) + j);
          }
       }
 
-      for (int y = x - 9; y >= 0 && d[x][y] == -9; y -= 9) mask[x].diagonal |= SquareToBitboard(y);
-      for (int y = x + 9; y < NbSquare && d[x][y] == 9; y += 9) mask[x].diagonal |= SquareToBitboard(y);
+      for (Square y = x - 9; y >= 0 && d[x][y] == -9; y -= 9) mask[x].diagonal |= SquareToBitboard(y);
+      for (Square y = x + 9; y < NbSquare && d[x][y] == 9; y += 9) mask[x].diagonal |= SquareToBitboard(y);
 
-      for (int y = x - 7; y >= 0 && d[x][y] == -7; y -= 7) mask[x].antidiagonal |= SquareToBitboard(y);
-      for (int y = x + 7; y < NbSquare && d[x][y] == 7; y += 7) mask[x].antidiagonal |= SquareToBitboard(y);
+      for (Square y = x - 7; y >= 0 && d[x][y] == -7; y -= 7) mask[x].antidiagonal |= SquareToBitboard(y);
+      for (Square y = x + 7; y < NbSquare && d[x][y] == 7; y += 7) mask[x].antidiagonal |= SquareToBitboard(y);
 
-      for (int y = x - 8; y >= 0; y -= 8) mask[x].file |= SquareToBitboard(y);
-      for (int y = x + 8; y < NbSquare; y += 8) mask[x].file |= SquareToBitboard(y);
+      for (Square y = x - 8; y >= 0; y -= 8) mask[x].file |= SquareToBitboard(y);
+      for (Square y = x + 8; y < NbSquare; y += 8) mask[x].file |= SquareToBitboard(y);
 
-      int f = SQFILE(x);
-      int r = SQRANK(x);
-      for (int i = -1, c = 1, dp = 6; i <= 1; i += 2, c = 0, dp = 1) {
-         for (int j = -1; j <= 1; j += 2)
+      auto f = SQFILE(x);
+      auto r = SQRANK(x);
+      for (Square i = -1, c = 1, dp = 6; i <= 1; i += 2, c = 0, dp = 1) {
+         for (Square j = -1; j <= 1; j += 2)
             if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) { mask[x].pawnAttack[c] |= SquareToBitboard((r + i) * 8 + (f + j)); }
          if (0 <= r + i && r + i < 8) {
             mask[x].push[c] = SquareToBitboard((r + i) * 8 + f);
@@ -64,15 +64,15 @@ void initMask() {
       }
 #endif
 
-      for (int i = -2; i <= 2; i = (i == -1 ? 1 : i + 1)) {
-         for (int j = -2; j <= 2; ++j) {
+      for (Square i = -2; i <= 2; i = (i == -1 ? 1 : i + 1)) {
+         for (Square j = -2; j <= 2; ++j) {
             if (i == j || i == -j || j == 0) continue;
             if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) { mask[x].knight |= SquareToBitboard(8 * (r + i) + (f + j)); }
          }
       }
 
-      for (int i = -1; i <= 1; ++i) {
-         for (int j = -1; j <= 1; ++j) {
+      for (Square i = -1; i <= 1; ++i) {
+         for (Square j = -1; j <= 1; ++j) {
             if (i == 0 && j == 0) continue;
             if (0 <= r + i && r + i < 8 && 0 <= f + j && f + j < 8) { mask[x].king |= SquareToBitboard(8 * (r + i) + (f + j)); }
          }
@@ -113,14 +113,14 @@ void initMask() {
 
 #ifndef WITH_MAGIC
    for (Square o = 0; o < 64; ++o) {
-      for (int k = 0; k < 8; ++k) {
+      for (Square k = 0; k < 8; ++k) {
          int y = 0;
-         for (int x = k - 1; x >= 0; --x) {
+         for (Square x = k - 1; x >= 0; --x) {
             const BitBoard b = SquareToBitboard(x);
             y |= b;
             if (((o << 1) & b) == b) break;
          }
-         for (int x = k + 1; x < 8; ++x) {
+         for (Square x = k + 1; x < 8; ++x) {
             const BitBoard b = SquareToBitboard(x);
             y |= b;
             if (((o << 1) & b) == b) break;

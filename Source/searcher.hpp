@@ -107,7 +107,7 @@ struct Searcher {
    FORCE_FINLINE void updatePV(PVList& pv, const Move& m, const PVList& childPV) {
       stats.incr(Stats::sid_PVupdate);
       pv.clear();
-      pv.push_back(m);
+      pv.emplace_back(m);
       std::copy(childPV.begin(), childPV.end(), std::back_inserter(pv));
    }
 
