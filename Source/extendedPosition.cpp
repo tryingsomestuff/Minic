@@ -120,15 +120,14 @@ void ExtendedPosition::test(const std::vector<std::string> &positions,
                             std::function<int(int)>         eloF,
                             bool                            withMoveCount) {
    struct Results {
-      Results(): k(0), t(0), score(0) {}
-      int                                      k;
-      int                                      t;
+      int                                      k = 0;
+      int                                      t = 0;
       std::string                              name;
       std::vector<std::string>                 bm;
       std::vector<std::string>                 am;
       std::vector<std::pair<std::string, int>> mea;
       std::string                              computerMove;
-      int                                      score;
+      int                                      score = 0;
    };
 
    if (scores.size() != timeControls.size()) { Logging::LogIt(Logging::logFatal) << "Wrong timeControl versus score vector size"; }
@@ -289,10 +288,9 @@ void ExtendedPosition::test(const std::vector<std::string> &positions,
 
 void ExtendedPosition::testStatic(const std::vector<std::string> &positions, bool withMoveCount) {
    struct Results {
-      Results(): k(0), t(0), score(0) {}
-      int         k;
-      int         t;
-      ScoreType   score;
+      int         k = 0;
+      int         t = 0;
+      ScoreType   score = 0;
       std::string name;
    };
 
