@@ -95,7 +95,7 @@ inline constexpr BitBoard fileE    = 0x1010101010101010;
 inline constexpr BitBoard fileF    = 0x2020202020202020;
 inline constexpr BitBoard fileG    = 0x4040404040404040;
 inline constexpr BitBoard fileH    = 0x8080808080808080;
-inline constexpr BitBoard files[8] = {fileA, fileB, fileC, fileD, fileE, fileF, fileG, fileH};
+inline constexpr array1d<BitBoard,8> files = {fileA, fileB, fileC, fileD, fileE, fileF, fileG, fileH};
 inline constexpr BitBoard rank1    = 0x00000000000000ff;
 inline constexpr BitBoard rank2    = 0x000000000000ff00;
 inline constexpr BitBoard rank3    = 0x0000000000ff0000;
@@ -104,7 +104,7 @@ inline constexpr BitBoard rank5    = 0x000000ff00000000;
 inline constexpr BitBoard rank6    = 0x0000ff0000000000;
 inline constexpr BitBoard rank7    = 0x00ff000000000000;
 inline constexpr BitBoard rank8    = 0xff00000000000000;
-inline constexpr BitBoard ranks[8] = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+inline constexpr array1d<BitBoard,8> ranks = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
 //inline constexpr BitBoard diagA1H8 = 0x8040201008040201;
 //inline constexpr BitBoard diagA8H1 = 0x0102040810204080;
 //inline constexpr BitBoard center = BBSq_d4 | BBSq_d5 | BBSq_e4 | BBSq_e5;
@@ -115,13 +115,13 @@ inline constexpr BitBoard extendedCenter = BBSq_c3 | BBSq_c4 | BBSq_c5 | BBSq_c6
                                            BBSq_e3 | BBSq_e4 | BBSq_e5 | BBSq_e6 |
                                            BBSq_f3 | BBSq_f4 | BBSq_f5 | BBSq_f6;
 
-inline constexpr BitBoard seventhRank[2] = {rank7, rank2};
+inline constexpr colored<BitBoard> seventhRank = {rank7, rank2};
 
-inline constexpr BitBoard holesZone[2] = {rank2 | rank3 | rank4 | rank5, rank4 | rank5 | rank6 | rank7};
+inline constexpr colored<BitBoard> holesZone = {rank2 | rank3 | rank4 | rank5, rank4 | rank5 | rank6 | rank7};
 inline constexpr BitBoard queenSide    = fileA | fileB | fileC | fileD;
 inline constexpr BitBoard centerFiles  = fileC | fileD | fileE | fileF;
 inline constexpr BitBoard kingSide     = fileE | fileF | fileG | fileH;
-inline constexpr BitBoard kingFlank[8] = {queenSide ^ fileD, queenSide, queenSide, centerFiles, centerFiles, kingSide, kingSide, kingSide ^ fileE};
+inline constexpr array1d<BitBoard,8> kingFlank = {queenSide ^ fileD, queenSide, queenSide, centerFiles, centerFiles, kingSide, kingSide, kingSide ^ fileE};
 
 FORCE_FINLINE void _setBit  (BitBoard& b, const Square k) { b |= SquareToBitboard(k); }
 FORCE_FINLINE void _unSetBit(BitBoard& b, const Square k) { b &= ~SquareToBitboard(k); }

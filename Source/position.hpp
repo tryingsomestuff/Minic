@@ -200,7 +200,7 @@ struct alignas(32) Position {
       const Move   m         = INVALIDMOVE;
       const Square from      = INVALIDSQUARE;
       const Square to        = INVALIDSQUARE;
-      const Square king[2]   = {INVALIDSQUARE, INVALIDSQUARE};
+      const colored<Square> king = {INVALIDSQUARE, INVALIDSQUARE};
       const Square ep        = INVALIDSQUARE;
       const MType  type      = T_std;
       const Piece  fromP     = P_none;

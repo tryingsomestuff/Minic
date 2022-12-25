@@ -55,7 +55,7 @@ template<size_t N_, size_t M_> struct Coeff {
    [[nodiscard]] FORCE_FINLINE std::string getName(CoeffNameType t, size_t idx)const{
       assert(t >= 0);
       assert(t <= CNT_maxdepth);
-      static const std::string suffixes[] = { "Init", "Bonus", "SlopeDepth", "SlopeGP", "MinDepth", "MaxDepth" };
+      static const array1d<std::string, 6> suffixes { "Init", "Bonus", "SlopeDepth", "SlopeGP", "MinDepth", "MaxDepth" };
       return name + suffixes[t] + std::to_string(idx);
    }
 };
@@ -177,7 +177,7 @@ constexpr array2d<DepthType, MAX_DEPTH, MAX_MOVE> lmrReduction = [] {
 constexpr array2d<ScoreType, 6, 6> MvvLvaScores = [] {
    auto ret = decltype(MvvLvaScores){};
    //Logging::LogIt(Logging::logInfo) << "Init mvv-lva";
-   constexpr ScoreType IValues[6] = {1, 2, 3, 5, 9, 20}; ///@todo try N=B=3 ??
+   constexpr array1d<ScoreType, 6> IValues = {1, 2, 3, 5, 9, 20}; ///@todo try N=B=3 ??
    for (int v = 0; v < 6; ++v)
       for (int a = 0; a < 6; ++a) ret[v][a] = static_cast<ScoreType>(IValues[v] * 20 - IValues[a]);
    return ret;

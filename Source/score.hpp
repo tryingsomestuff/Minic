@@ -203,7 +203,7 @@ FORCE_FINLINE Feature operator++(Feature& f) {
    return f;
 }
 struct EvalFeatures {
-   EvalScore   scores[F_max] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
+   array1d<EvalScore, F_max> scores; // EvalScore is 0 initialized
    float       scalingFactor = 1.f; // only used in end-game !
    EvalScore   SumUp() const;
    static void callBack();
@@ -253,8 +253,8 @@ void displayEval(const EvalData& data, const EvalFeatures& features);
 // idea from Stockfish
 namespace WDL {
 // Coefficients of a 3rd order polynomial fit based on Minic test data (from CCRL, CEGT, FGRL)
-constexpr double as[] = {-13.65744616, 94.04894005, -95.05180396, 84.853482690};
-constexpr double bs[] = {-10.78187987, 77.22626799, -132.72201029, 122.54185402};
+constexpr array1d<double, 4> as {-13.65744616, 94.04894005, -95.05180396, 84.853482690};
+constexpr array1d<double, 4> bs {-10.78187987, 77.22626799, -132.72201029, 122.54185402};
 } // namespace WDL
 
 [[nodiscard]] FORCE_FINLINE ScoreType shiftArmageddon(const ScoreType v, const unsigned int ply, const Color c) {

@@ -56,7 +56,7 @@ My gcc (and clang) gives those macros for simd extension :
 #if defined(__AVX512VL__NONONO)
 #define V_SIMD_512 512
 using v_f32_512 = __m512;
-#define v_nlanes_f32_512 16
+inline constexpr auto v_nlanes_f32_512 = 16;
 #define v_add_f32_512    _mm512_add_ps
 #define v_mul_f32_512    _mm512_mul_ps
 #define v_muladd_f32_512 _mm512_fmadd_ps
@@ -136,9 +136,7 @@ template<size_t N, bool Q> [[nodiscard]] float simdDotProduct512(const float* RE
 #if defined(__AVX2__)
 #define V_SIMD_256 256
 using v_f32_256 = __m256;
-using v_i32_256 = __m256i;
-#define v_nlanes_f32_256 8
-#define v_nlanes_i16_256 16
+inline constexpr auto v_nlanes_f32_256 = 8;
 #define v_add_f32_256    _mm256_add_ps
 #define v_mul_f32_256    _mm256_mul_ps
 #ifdef __FMA__
@@ -215,7 +213,7 @@ template<size_t N, bool Q> [[nodiscard]] float simdDotProduct256(const float* RE
 #if defined(__SSE2__)
 #define V_SIMD_128 128
 using v_f32_128 = __m128;
-#define v_nlanes_f32_128 4
+inline constexpr auto v_nlanes_f32_128 = 4;
 #define v_add_f32_128    _mm_add_ps
 #define v_mul_f32_128    _mm_mul_ps
 #ifdef __FMA__
