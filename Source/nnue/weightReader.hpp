@@ -129,7 +129,7 @@ struct WeightsReader {
       return *this;
    }
 
-   WeightsReader(std::istream& stream): file(&stream) {}
+   explicit WeightsReader(std::istream& stream): file(&stream) {}
 };
 
 #endif // WITH_NNUE

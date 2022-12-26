@@ -19,7 +19,7 @@ class LogIt {
    friend void finalize();
 
   public:
-   LogIt(LogLevel loglevel): _level(loglevel) {}
+   explicit LogIt(LogLevel loglevel): _level(loglevel) {}
    template<typename T> FORCE_FINLINE Logging::LogIt& operator<<(T const& value) {
       _buffer << value;
       return *this;

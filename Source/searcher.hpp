@@ -218,7 +218,7 @@ struct Searcher {
    [[nodiscard]] size_t id() const;
    [[nodiscard]] bool   isMainThread() const;
 
-   Searcher(size_t n);
+   explicit Searcher(size_t n);
 
    ~Searcher();
 
