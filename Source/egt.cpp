@@ -40,7 +40,10 @@ bool initTB() {
       return false;
    }
    Logging::LogIt(Logging::logInfo) << "Init tb from path " << DynamicConfig::syzygyPath;
-   if (!tb_init(DynamicConfig::syzygyPath.c_str())) return MAX_TB_MEN = 0, false;
+   if (!tb_init(DynamicConfig::syzygyPath.c_str())){
+      MAX_TB_MEN = 0;
+      return false;
+   }
    else
       MAX_TB_MEN = static_cast<int>(TB_LARGEST);
    Logging::LogIt(Logging::logInfo) << "MAX_TB_MEN: " << MAX_TB_MEN;
