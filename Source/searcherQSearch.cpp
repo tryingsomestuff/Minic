@@ -177,8 +177,10 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    bool evalScoreIsHashScore = false;
 
    if (!isInCheck) {
-      if (ttHit && ((bound == TT::B_alpha && e.s <= evalScore) || (bound == TT::B_beta && e.s >= evalScore) || (bound == TT::B_exact)))
-         evalScore = e.s, evalScoreIsHashScore = true;
+      if (ttHit && ((bound == TT::B_alpha && e.s <= evalScore) || (bound == TT::B_beta && e.s >= evalScore) || (bound == TT::B_exact))){
+         evalScore = e.s;
+         evalScoreIsHashScore = true;
+      }
    }
 
    TT::Bound       b              = TT::B_alpha;
