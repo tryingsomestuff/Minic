@@ -117,36 +117,49 @@ TimeType getNextMSecPerMove(const Position& p) {
       Logging::LogIt(Logging::logInfo) << "Suddendeath style";
       if (!isDynamic) Logging::LogIt(Logging::logFatal) << "bad timing configuration ... (missing dynamic time info for sudden death style TC)";
       // we have only remaining time available
-      // we will do "has if" nmoves still need to be played
+      // we will do "as if" nmoves still need to be played
       // we will take into account the time needed to parse input and get current position (overhead)
       // in situation where increment is smaller than minimum margin we will be a lot more conservative
       // a margin will be used
       // a correction factor is applied for UCI pondering in order to search longer ///@todo why only 3/2 ...
       // be carefull here !, using xboard (for instance under cutechess), we won't receive an increment
+      // moreover, we won't assume that receiving an increment once is enough to be sure we will receive it next time
+      // so we won't try to live on increment too soon. This will only happens when the game goes one and "nmoves" get smaller...
+
+      // if increment is smaller than the minimal lost by move, this is a "risky TC situation"
       const bool riskySituation = msecInc < msecMinimal;
-      const float incrProp = riskySituation ? 0
-                                            : static_cast<float>(msecUntilNextTC)/(msecInc*100);
+      // in case of a non risky situation, we can make some correction
+      // if game is long we will hope the end is near (between 0 and 15)
+      const int gameLengthContrib = riskySituation ? static_cast<int>(std::min(15.f, p.halfmoves / 20.f))
+                                                   : static_cast<int>(std::min(15.f, p.halfmoves / 10.f));
+      // if material is low we will hope the end is near (between 0 and 15)
       ScoreType sw = 0;
       ScoreType sb = 0;
       const float gp = gamePhase(p.mat, sw, sb);
-      const int nmoves = (riskySituation ? 28
-                                         : (16 + incrProp) )
-                       - (riskySituation ? static_cast<int>(std::min(8, p.halfmoves / 20))
-                                         : static_cast<int>(std::min(8.f + incrProp, p.halfmoves / 10.f)))
-                       - (riskySituation ? 0
-                                         : static_cast<int>((1.f-gp)*7));
-      Logging::LogIt(Logging::logInfo) << "nmoves      " << nmoves;
-      Logging::LogIt(Logging::logInfo) << "p.moves     " << static_cast<int>(p.moves);
-      Logging::LogIt(Logging::logInfo) << "p.halfmoves " << static_cast<int>(p.halfmoves);
+      const int gamePhaseContrib  = riskySituation ? 0
+                                                   : static_cast<int>((1.f-gp)*15);
+      // the applied correction will be the bigger one
+      const int nmovesCorrection = std::max(gameLengthContrib, gamePhaseContrib);                                                    
+      const int nmoves = riskySituation ? 28 : (16 - nmovesCorrection); 
+
+      Logging::LogIt(Logging::logInfo) << "risky ?           " << riskySituation;
+      Logging::LogIt(Logging::logInfo) << "msecIncLoc        " << msecIncLoc;
+      Logging::LogIt(Logging::logInfo) << "msecUntilNextTC   " << msecUntilNextTC;
+      Logging::LogIt(Logging::logInfo) << "gameLengthContrib " << gameLengthContrib;
+      Logging::LogIt(Logging::logInfo) << "gamePhaseContrib  " << gamePhaseContrib;
+      Logging::LogIt(Logging::logInfo) << "nmoves            " << nmoves;
+      Logging::LogIt(Logging::logInfo) << "p.moves           " << static_cast<int>(p.moves);
+      Logging::LogIt(Logging::logInfo) << "p.halfmoves       " << static_cast<int>(p.halfmoves);
+
       if (nmoves * msecMinimal > msecUntilNextTC){
          Logging::LogIt(Logging::logGUI) << Logging::_protocolComment[Logging::ct] << "Minic is in time trouble ...";
       }
-      const float ponderingCorrection = (ThreadPool::instance().main().getData().isPondering ? 3 : 2) / 2.f;
+
       msecMargin = getMargin(msecUntilNextTC);
       const float frac = (static_cast<float>(msecUntilNextTC - msecMargin) / static_cast<float>(nmoves));
-      const float correction = msecInc < frac ? 0
-                                              : std::min(static_cast<float>(msecInc), msecUntilNextTC-frac);
-      ms = static_cast<TimeType>( (frac + correction) * ponderingCorrection);
+
+      const float ponderingCorrection = (ThreadPool::instance().main().getData().isPondering ? 3 : 2) / 2.f;
+      ms = static_cast<TimeType>( frac * ponderingCorrection);
    }
 
    // take overhead into account

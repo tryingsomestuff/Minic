@@ -19,7 +19,7 @@ extern int      moveToGo, nbMoveInTC;
 extern uint64_t maxNodes;
 extern bool     isDynamic;
 
-const TimeType msecMinimal = 20;
+const TimeType msecMinimal = 20; // the minimum time "lost" by move (for instance when parsing input)
 
 void init();
 
