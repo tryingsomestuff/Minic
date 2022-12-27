@@ -141,7 +141,7 @@ TimeType getNextMSecPerMove(const Position& p) {
       if (nmoves * msecMinimal > msecUntilNextTC){
          Logging::LogIt(Logging::logGUI) << Logging::_protocolComment[Logging::ct] << "Minic is in time trouble ...";
       }
-      const float ponderingCorrection = (ThreadPool::instance().main().getData().isPondering ? 3.f : 2.f) / 2;
+      const float ponderingCorrection = (ThreadPool::instance().main().getData().isPondering ? 3 : 2) / 2.f;
       msecMargin = getMargin(msecUntilNextTC);
       const float frac = (static_cast<float>(msecUntilNextTC - msecMargin) / static_cast<float>(nmoves));
       const float correction = msecInc < frac ? 0
