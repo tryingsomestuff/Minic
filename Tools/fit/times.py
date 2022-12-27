@@ -1,14 +1,17 @@
 import chess.pgn
 import matplotlib.pyplot as plt
+import sys
 
-incr = 0.1
+incr = 1
 initialTC = 10
+
+filename = sys.argv[1] if len(sys.argv) > 1 else "test.pgn"
 
 def getData(engine,data):
 
    print("Engine : " + engine)
 
-   pgn = open("test.pgn")
+   pgn = open(filename)
    f = chess.pgn.read_game(pgn)
    a=[]
    c = 0
@@ -90,7 +93,7 @@ def getData(engine,data):
    return found
 
 data = {}
-engines = ["minic_dev", "minic_3.30"]
+engines = ["minic_dev", "minic_3.32"]
 #"Halogen", "Genie", "berserk", "seer", "weiss", "xiphos", "BlackMarlin", "stash", "rofChade", "Drofa", "stockfish"
 cycler = plt.cycler(linestyle=['-', '--', ':', '-.']) * plt.cycler(color=['r', 'g', 'b'])
 plt.rc('axes', prop_cycle=cycler)
@@ -101,10 +104,10 @@ for e in engines:
       engines_present.append(e)
 plt.legend(engines_present)   
 plt.savefig('time.png')
-plt.show()
+#plt.show()
 
 for e in engines_present:
    plt.plot([x for x in data[e]['remaining'][:200] if x])
 plt.legend(engines_present)   
 plt.savefig('rtime.png')
-plt.show()
+#plt.show()

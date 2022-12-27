@@ -124,7 +124,7 @@ TimeType getNextMSecPerMove(const Position& p) {
       // a correction factor is applied for UCI pondering in order to search longer ///@todo why only 3/2 ...
       // be carefull here !, using xboard (for instance under cutechess), we won't receive an increment
       // moreover, we won't assume that receiving an increment once is enough to be sure we will receive it next time
-      // so we won't try to live on increment too soon. This will only happens when the game goes one and "nmoves" get smaller...
+      // so we won't try to live on increment too soon. This will only happens when the game goes on and "nmoves" gets smaller...
 
       // if increment is smaller than the minimal lost by move, this is a "risky TC situation"
       const bool riskySituation = msecInc < msecMinimal;
@@ -142,6 +142,16 @@ TimeType getNextMSecPerMove(const Position& p) {
       const int nmovesCorrection = std::max(gameLengthContrib, gamePhaseContrib);                                                    
       const int nmoves = riskySituation ? 28 : (16 - nmovesCorrection); 
 
+      if (nmoves * msecMinimal > msecUntilNextTC){
+         Logging::LogIt(Logging::logGUI) << Logging::_protocolComment[Logging::ct] << "Minic is in time trouble ...";
+      }
+
+      msecMargin = getMargin(msecUntilNextTC);
+      const float frac = (static_cast<float>(msecUntilNextTC - msecMargin) / static_cast<float>(nmoves));
+      const float incrBonus = riskySituation ? 0 : std::min(0.9f * msecIncLoc, msecUntilNextTC - msecMargin - frac);
+      const float ponderingCorrection = (ThreadPool::instance().main().getData().isPondering ? 3 : 2) / 2.f;
+      ms = static_cast<TimeType>( (frac + incrBonus) * ponderingCorrection);
+
       Logging::LogIt(Logging::logInfo) << "risky ?           " << riskySituation;
       Logging::LogIt(Logging::logInfo) << "msecIncLoc        " << msecIncLoc;
       Logging::LogIt(Logging::logInfo) << "msecUntilNextTC   " << msecUntilNextTC;
@@ -150,16 +160,9 @@ TimeType getNextMSecPerMove(const Position& p) {
       Logging::LogIt(Logging::logInfo) << "nmoves            " << nmoves;
       Logging::LogIt(Logging::logInfo) << "p.moves           " << static_cast<int>(p.moves);
       Logging::LogIt(Logging::logInfo) << "p.halfmoves       " << static_cast<int>(p.halfmoves);
-
-      if (nmoves * msecMinimal > msecUntilNextTC){
-         Logging::LogIt(Logging::logGUI) << Logging::_protocolComment[Logging::ct] << "Minic is in time trouble ...";
-      }
-
-      msecMargin = getMargin(msecUntilNextTC);
-      const float frac = (static_cast<float>(msecUntilNextTC - msecMargin) / static_cast<float>(nmoves));
-
-      const float ponderingCorrection = (ThreadPool::instance().main().getData().isPondering ? 3 : 2) / 2.f;
-      ms = static_cast<TimeType>( frac * ponderingCorrection);
+      Logging::LogIt(Logging::logInfo) << "frac              " << frac;
+      Logging::LogIt(Logging::logInfo) << "incrBonus         " << incrBonus;
+      Logging::LogIt(Logging::logInfo) << "ms                " << ms;
    }
 
    // take overhead into account
