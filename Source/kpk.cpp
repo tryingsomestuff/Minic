@@ -70,15 +70,21 @@ void init() {
    Logging::LogIt(Logging::logInfo) << "KPK init";
    Logging::LogIt(Logging::logInfo) << "KPK table size : " << KPKmaxIndex / 32 * sizeof(uint32_t) / 1024 << "Kb";
    array1d<KPKPosition, KPKmaxIndex> db;
-   unsigned idx = 0;
    bool repeat = true;
-   for (idx = 0; idx < KPKmaxIndex; ++idx) db[idx] = KPKPosition(idx); // init
+   for (unsigned idx = 0; idx < KPKmaxIndex; ++idx) db[idx] = KPKPosition(idx); // init
    // loop until all the dababase is filled
-   while (repeat)
-      for (repeat = false, idx = 0; idx < KPKmaxIndex; ++idx) repeat |= (db[idx] == kpk_unknown && db[idx].preCompute(db) != kpk_unknown);
-   for (idx = 0; idx < KPKmaxIndex; ++idx) {
+   //int count = 0;
+   while (repeat){
+      repeat = false;
+      //std::cout << count++ << std::endl;
+      for (unsigned idx = 0; idx < KPKmaxIndex; ++idx){
+         repeat |= (db[idx] == kpk_unknown && db[idx].preCompute(db) != kpk_unknown);
+      }
+   }
+   // compress
+   for (unsigned idx = 0; idx < KPKmaxIndex; ++idx) {
       if (db[idx] == kpk_win) { KPKBitbase[idx / 32] |= 1 << (idx & 0x1F); }
-   } // compress
+   }
 #endif
 }
 
