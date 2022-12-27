@@ -92,6 +92,7 @@ void Searcher::searchDriver(bool postMove) {
       maxDepth      = MAX_DEPTH;
       currentMoveMs = INFINITETIME; // overrides currentMoveMs
    }
+   _data.depth = 0; // reset depth as it will be used to return searched depth later
 
    // when limiting skill by nodes only, only apply that to main process
    // this doesn't make much sense to apply limited nodes on a multi-process run anyway ...
