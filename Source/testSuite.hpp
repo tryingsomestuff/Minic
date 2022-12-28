@@ -5,26 +5,7 @@
 /*!
  * Some classic test suites available here
  *
- * help_test : display available test suite
- * MEA
- * opening200
- * opening1000
- * middle200
- * middle1000
- * hard2020
- * BT2630
- * WAC
- * arasan
- * arasan_sym
- * CCROHT
- * BKTest
- * EETest
- * KMTest
- * LCTest
- * sbdTest
- * STS
- * ERET
- * MATE
+ * help_test : displays available test suite
  *
  */
 
