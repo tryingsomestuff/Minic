@@ -1,4 +1,4 @@
-const std::string MinicVersion = "3.32";
+const std::string MinicVersion = "3.33";
 
 #if defined(ARDUINO) || defined(ESP32)
 #   define WITH_SMALL_MEMORY
