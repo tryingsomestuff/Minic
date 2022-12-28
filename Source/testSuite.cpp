@@ -6,23 +6,6 @@
 #include "positionTools.hpp"
 
 bool test(const std::string& option) {
-   if (option == "help_test") {
-      Logging::LogIt(Logging::logInfo) << "Available analysis tests";
-      Logging::LogIt(Logging::logInfo) << " BT2630";
-      Logging::LogIt(Logging::logInfo) << " arasan";
-      Logging::LogIt(Logging::logInfo) << " arasan_sym";
-      Logging::LogIt(Logging::logInfo) << " CCROHT";
-      Logging::LogIt(Logging::logInfo) << " BKTest";
-      Logging::LogIt(Logging::logInfo) << " EETest";
-      Logging::LogIt(Logging::logInfo) << " KMTest";
-      Logging::LogIt(Logging::logInfo) << " LCTest";
-      Logging::LogIt(Logging::logInfo) << " sbdTest";
-      Logging::LogIt(Logging::logInfo) << " STS";
-      Logging::LogIt(Logging::logInfo) << " MEA";
-      Logging::LogIt(Logging::logInfo) << " TTT";
-      return 0;
-   }
-
    if (option == "MEA") {
       std::vector<std::string> positions;
       if (!readEPDFile("Book_and_Test/TestSuite/allsets_nodupes.epd", positions)) return 1;

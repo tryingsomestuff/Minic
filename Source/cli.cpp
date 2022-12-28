@@ -25,8 +25,67 @@ void selfPlay(DepthType depth, uint64_t & nbPos);
 // see cli_SEETest.cpp
 bool TestSEE();
 
-void help() {
-   ///@todo
+bool help() {
+   const std::string h = 
+R"(
+ Available options are :
+ * -uci : starts in UCI mode (this is also default)
+ * -xboard : starts in XBOARD move
+ * -selfplay [depth=15] [games=1] : run self play matches. Usefull to generate training data
+ * -perft_test : run small perf test on 4 well-known positions
+ * -perft_test_long_fischer : run a long perf test for FRC
+ * -perft_test_long : run a long perf test
+ * -see_test : run a SEE test (most positions taken from Vajolet by Marco Belli a.k.a elcabesa)
+ * -evalSpeed [filename] : run an evaluation performance test
+ * -timeTest [initial=50000] [incr=0] [moveInTC=-1] [guiLag=0] : run a TC simulation
+ * bench [depth=16] : used for OpenBench output
+ Next commands needs at least a position
+ * -qsearch [pos]: run a qsearch
+ * -see [pos] [move=\"e2e4\"] : run a SEE_GE on the given square
+ * -attacked [pos] [square=0..63] : print BB attack
+ * -cov [pos] [square=0..63] : print each piece type attack
+ * -eval [pos] : run an evaluation (NNUE)
+ * -evalHCE [pos] : run an evaluation (HCE)
+ * -gen [pos] : generate available moves
+ * -testmove [TODO] : test move application
+ * -perft [pos] [depth=5] : run a perft on the given position for the given depth
+ * -analyze [pos] [depth=15] : run an analysis for the given position to the given depth
+ * -mateFinder [pos] [depth=10] : run an analysis in mate finder mode for the given position to the given depth
+ * -probe [pos] : TB probe
+ * -kpk [pos] : KPK probe
+ Use --help_test do display available test suites
+)";
+   Logging::LogIt(Logging::logGUI) << h;
+   return true;
+}
+
+bool helpTest(){
+   const std::string h =
+R"(
+Available analysis tests
+ * MEA
+ * TTT
+ * opening200
+ * opening1000
+ * middle200
+ * middle1000
+ * hard2020
+ * BT2630
+ * WAC
+ * arasan
+ * arasan_sym
+ * CCROHT
+ * BKTest
+ * EETest
+ * KMTest
+ * LCTest
+ * sbdTest
+ * STS
+ * ERET
+ * MATE
+)";
+   Logging::LogIt(Logging::logGUI) << h;
+   return 0;
 }
 
 void analyze(const Position& p, DepthType depth, bool openBenchOutput = false) {
@@ -176,7 +235,7 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
       return TestSEE();
    }
 
-   if (cli == "bench") {
+   if (cli == "bench" || cli == "-bench") {
       DepthType d = 16;
       if (argc > 2) d = clampDepth(atoi(args[2]));
       return bench(d);
@@ -187,7 +246,7 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
       std::string filename     = "Book_and_Test/TestSuite/evalSpeed.epd";
       if (argc > 2) filename = args[2];
       std::vector<RootPosition> data;
-      Logging::LogIt(Logging::logInfo) << "Running eval speed with file " << filename;
+      Logging::LogIt(Logging::logInfo) << "Running eval speed with file (including NNUE evaluator reset)" << filename;
       std::vector<std::string> positions;
       DISCARD                  readEPDFile(filename, positions);
       for (size_t k = 0; k < positions.size(); ++k) {
@@ -212,7 +271,7 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
       Logging::LogIt(Logging::logInfo) << "Eval speed (with EG material hash): " << static_cast<double>(data.size()) * loops / (static_cast<double>(ms) * 1000) << " Meval/s";
 
       startTime = Clock::now();
-      for (int k = 0; k < 10; ++k)
+      for (int k = 0; k < loops; ++k)
          for (auto& p : data) {
 #ifdef WITH_NNUE
             NNUEEvaluator evaluator;
@@ -223,7 +282,7 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
             DISCARD eval(p, d, ThreadPool::instance().main(), false);
          }
       ms = getTimeDiff(startTime);
-      Logging::LogIt(Logging::logInfo) << "Eval speed : " << static_cast<double>(data.size()) * 10. / (static_cast<double>(ms) * 1000) << " Meval/s";
+      Logging::LogIt(Logging::logInfo) << "Eval speed : " << static_cast<double>(data.size()) * loops / (static_cast<double>(ms) * 1000) << " Meval/s";
 
       ThreadPool::instance().displayStats();
       return 0;
@@ -243,10 +302,13 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
       return 0;
    }
 
-   // next options need at least one argument more
-   if (argc < 3) {
-      help();
-      return 1;
+   if (cli == "help_test" || cli == "--help_test" || cli == "-help_test") {
+      return helpTest();
+   }
+
+   // next options need at least one argument more (the position)
+   if (argc < 3 || cli == "-h" || cli == "-help" || cli == "--help" || cli == "help") {
+      return help();
    }
 
    // in all other cases, args[2] is always the fen string
@@ -273,7 +335,7 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
    if (cli == "-qsearch") {
       DepthType seldepth = 0;
       ScoreType s        = ThreadPool::instance().main().qsearchNoPruning(-10000, 10000, p, 1, seldepth);
-      Logging::LogIt(Logging::logInfo) << "Score " << s;
+      Logging::LogIt(Logging::logInfo) << "QScore " << s;
       return 0;
    }
 
@@ -386,6 +448,7 @@ int cliManagement(const std::string & cli, int argc, char** argv) {
    }
 
    if (cli == "-testmove") {
+      ///@todo
       constexpr Move m  = ToMove(8, 16, T_std);
       Position p2 = p;
 #if defined(WITH_NNUE) && defined(DEBUG_NNUE_UPDATE)
