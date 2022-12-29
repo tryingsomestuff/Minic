@@ -85,6 +85,10 @@ std::unique_ptr<std::ofstream> LogIt::_of;
 
 COMType ct = CT_uci;
 
+#if defined(__MINGW32__) || defined(__MINGW64__)
+#   define localtime_r(T,Tm) (localtime_s(Tm,T) ? NULL : Tm)
+#endif
+
 [[nodiscard]] std::string showDate() {
    std::stringstream str;
    const auto msecEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch());
