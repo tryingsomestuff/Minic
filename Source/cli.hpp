@@ -9,6 +9,6 @@
  * See help() for more detail
  */
 
-int cliManagement(const std::string & cli, int argc, char** argv);
+bool cliManagement(const std::string & cli, int argc, char** argv);
 
-int bench(DepthType depth);
+bool bench(DepthType depth);

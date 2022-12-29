@@ -274,11 +274,11 @@ void pgnparse__(std::ifstream& is, std::ofstream& os) {
    std::cout << "...done" << std::endl;
 }
 
-int PGNParse(const std::string& file) {
+bool PGNParse(const std::string& file) {
    std::ifstream is(file);
    std::ofstream os(file + ".edp");
    pgnparse__(is, os);
-   return 0;
+   return true;
 }
 
 #endif

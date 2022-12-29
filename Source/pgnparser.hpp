@@ -24,6 +24,6 @@ struct PGNGame {
    static constexpr ScoreType quietMargin = 600;
 };
 
-[[nodiscard]] int PGNParse(const std::string& file);
+[[nodiscard]] bool PGNParse(const std::string& file);
 
 #endif
