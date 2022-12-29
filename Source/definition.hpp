@@ -128,6 +128,12 @@ constexpr size_t SIZE_MULTIPLIER = 1024ull * 1024ull; // Mb
 
 template<typename T> [[nodiscard]] constexpr T Abs(const T& s) { 
    static_assert(T(-1) < T(0));
+   if constexpr (std::is_enum_v<T>){
+      assert(s != std::numeric_limits<std::underlying_type_t<T>>::min());
+   }
+   else{
+      assert(s != std::numeric_limits<T>::min());
+   }
    const T ret = s >= T(0) ? s : T(-s);
    assert(ret == std::abs(s));
    return ret;
