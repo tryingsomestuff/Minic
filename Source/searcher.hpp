@@ -219,8 +219,12 @@ struct Searcher {
    [[nodiscard]] bool   isMainThread() const;
 
    explicit Searcher(size_t n);
-
    ~Searcher();
+   // non copyable
+   Searcher(const Searcher&) = delete;
+   Searcher(const Searcher&&) = delete;
+   Searcher& operator=(const Searcher&) = delete;
+   Searcher& operator=(const Searcher&&) = delete;
 
    void                            setData(const ThreadData& d);
    [[nodiscard]] const ThreadData& getData() const;

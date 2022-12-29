@@ -33,7 +33,6 @@ template<typename T, typename U> struct Sided {
    FORCE_FINLINE const returnType& them() const { return us<them_<c>::value>(); }
 
   private:
-   Sided() {};
    friend T;
 };
 

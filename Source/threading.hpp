@@ -49,6 +49,12 @@ class ThreadPool : public std::vector<std::unique_ptr<Searcher>> {
   public:
    static ThreadPool& instance();
    ~ThreadPool();
+   ThreadPool() = default;
+   // non copyable
+   ThreadPool(const ThreadPool&) = delete;
+   ThreadPool(const ThreadPool&&) = delete;
+   ThreadPool& operator=(const ThreadPool&) = delete;
+   ThreadPool& operator=(const ThreadPool&&) = delete;
 
    static void initPawnTables();
 
