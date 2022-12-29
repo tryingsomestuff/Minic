@@ -96,7 +96,7 @@ void MoveSorter::computeScore(Move& m) const {
                // move (safely) leaving threat square from null move search
                if (refutation != INVALIDMINIMOVE && from == correctedMove2ToKingDest(refutation) && Searcher::SEE_GE(p, m, -80)) s += 512;
                // always use PST to compensate low value history
-               const std::span<const EvalScore> pst = EvalConfig::PST[std::abs(pp) - 1];
+               const std::span<const EvalScore> pst = EvalConfig::PST[Abs(pp) - 1];
                s += (ScaleScore(pst[ColorSquarePstHelper<C>(correctedTo)] - pst[ColorSquarePstHelper<C>(from)], gp))/2;
             }
          }

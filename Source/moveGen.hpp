@@ -102,7 +102,7 @@ void generateSquare(const Position& p, MoveList& moves, const Square from) {
    const BitBoard& myPieceBB  = p.allPieces[side];
    const BitBoard& oppPieceBB = p.allPieces[~side];
    const Piece     piece      = p.board_const(from);
-   const Piece     ptype      = (Piece)std::abs(piece);
+   const Piece     ptype      = Abs(piece);
    assert(isValidPieceNotNone(ptype));
 #ifdef DEBUG_GENERATION
    if (!isValidPieceNotNone(ptype)) {

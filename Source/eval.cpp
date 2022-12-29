@@ -72,7 +72,7 @@ BitBoard getPinned(const Position &p, const Square s) {
 bool isLazyHigh(ScoreType lazyThreshold, const EvalFeatures &features, EvalScore &score) {
    //if (DynamicConfig::FRC) return false;
    score = features.SumUp();
-   return std::abs(score[MG] + score[EG]) / 2 > lazyThreshold;
+   return Abs(score[MG] + score[EG]) / 2 > lazyThreshold;
 }
 
 bool forbidNNUE([[maybe_unused]] const Position &p){
@@ -83,7 +83,7 @@ bool forbidNNUE([[maybe_unused]] const Position &p){
        p.mat[Co_White][M_b] == 1 && 
        p.mat[Co_Black][M_b] == 1 && 
        countBit(p.allBishop() & whiteSquare) == 1 &&
-       std::abs(p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) < 4 ) return true;
+       Abs(p.mat[Co_White][M_p] - p.mat[Co_Black][M_p]) < 4 ) return true;
    */
    return false;
 }
@@ -833,8 +833,8 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    EvalScore initiativeBonus = EvalConfig::initiative[0] * countBit(allPawns) +
                                EvalConfig::initiative[1] * ((allPawns & queenSide) && (allPawns & kingSide)) +
                                EvalConfig::initiative[2] * (countBit(occupancy & ~allPawns) == 2) - EvalConfig::initiative[3];
-   initiativeBonus = EvalScore(sgn(score[MG]) * std::max(initiativeBonus[MG], static_cast<ScoreType>(-std::abs(score[MG]))),
-                               sgn(score[EG]) * std::max(initiativeBonus[EG], static_cast<ScoreType>(-std::abs(score[EG]))));
+   initiativeBonus = EvalScore(sgn(score[MG]) * std::max(initiativeBonus[MG], static_cast<ScoreType>(-Abs(score[MG]))),
+                               sgn(score[EG]) * std::max(initiativeBonus[EG], static_cast<ScoreType>(-Abs(score[EG]))));
    score += initiativeBonus;
 
 #ifdef VERBOSE_EVAL
@@ -926,7 +926,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    const ScoreType hceScore = variantScore(ret, p.halfmoves, context.height_, p.c);
 
 #ifdef WITH_NNUE
-   if ( DynamicConfig::useNNUE && !forbiddenNNUE && std::abs(hceScore) <= DynamicConfig::NNUEThreshold/4 ){
+   if ( DynamicConfig::useNNUE && !forbiddenNNUE && Abs(hceScore) <= DynamicConfig::NNUEThreshold/4 ){
       // if HCE is small (there is something more than just material value going on ...), fall back to NNUE;
       const ScoreType nnueScore = NNUEEVal(p, data, context, features, true);
       STOP_AND_SUM_TIMER(Eval)

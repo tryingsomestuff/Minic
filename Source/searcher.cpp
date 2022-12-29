@@ -381,7 +381,7 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
       pLeaf = getQuiet(p, this, &qScore);
 
       ScoreType  e = 0;
-      if (std::abs(qScore) < 1000) {
+      if (Abs(qScore) < 1000) {
 #ifdef WITH_NNUE
          NNUEEvaluator evaluator;
          pLeaf.associateEvaluator(evaluator);
@@ -392,7 +392,7 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
          e = eval(pLeaf, eData, cos, true, false);
 
          DynamicConfig::disableTT = false; // use TT here
-         if (std::abs(e) < 1000) {
+         if (Abs(e) < 1000) {
             const Hash matHash = MaterialHash::getMaterialHash(p.mat);
             float gp = 1;
             if (matHash != nullHash) {
@@ -428,7 +428,7 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
 
    if (data.best != INVALIDMOVE &&
       //pLeaf.halfmoves >= DynamicConfig::randomPly &&
-      std::abs(data.score) < 1000) {
+      Abs(data.score) < 1000) {
       buffer.emplace_back(GetFEN(pLeaf), data.best, data.score, pLeaf.halfmoves, pLeaf.c);
       ++sfensWritten;
       if (sfensWritten % 100'000 == 0) Logging::LogIt(Logging::logInfoPrio) << "Sfens written " << sfensWritten;

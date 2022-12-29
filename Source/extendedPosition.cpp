@@ -317,10 +317,10 @@ void ExtendedPosition::testStatic(const std::vector<std::string> &positions, boo
    for (size_t k = 0; k < positions.size() - 2; k += 4) {
       std::cout << std::setw(25) << results[k].name << std::setw(14) << results[k].score << std::endl;
       // only compare unsigned score ...
-      if (std::abs(std::abs(results[k].score) - std::abs(results[k + 2].score)) > 0) { Logging::LogIt(Logging::logWarn) << "Score differ !"; }
+      if (Abs(Abs(results[k].score) - Abs(results[k + 2].score)) > 0) { Logging::LogIt(Logging::logWarn) << "Score differ !"; }
       std::cout << std::setw(25) << results[k + 1].name << std::setw(14) << results[k + 1].score << std::endl;
       // only compare unsigned score ...
-      if (std::abs(std::abs(results[k + 1].score) - std::abs(results[k + 3].score)) > 0) { Logging::LogIt(Logging::logWarn) << "Score differ !"; }
+      if (Abs(Abs(results[k + 1].score) - Abs(results[k + 3].score)) > 0) { Logging::LogIt(Logging::logWarn) << "Score differ !"; }
    }
 
    // clear results table

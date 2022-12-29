@@ -13,7 +13,7 @@ namespace PieceTools {
    assert(isValidSquare(k));
    const Piece pp = p.board_const(k);
    assert(isValidPiece(pp));
-   return (Piece)std::abs(pp);
+   return Abs(pp);
 }
 [[nodiscard]] FORCE_FINLINE std::string_view getName(const Position &p, const Square k) {
    assert(isValidSquare(k));
@@ -27,6 +27,6 @@ namespace PieceTools {
 */
 [[nodiscard]] FORCE_FINLINE ScoreType getAbsValue(const Position &p, const Square k) {
    assert(isValidSquare(k));
-   return std::abs(Values[getPieceIndex_(p, k)]);
+   return Abs(Values[getPieceIndex_(p, k)]);
 }
 } // namespace PieceTools
