@@ -18,58 +18,58 @@ struct CastlingTraits{
 
 template<>
 struct CastlingTraits<T_wqs>{
-   static const CastlingTypes ct = CT_OOO;
-   static const MType mt = T_wqs;
-   static const CastlingRights cr = C_wqs;
-   static const Color c = Co_White;
-   static const Square kingLanding = Sq_c1;
-   static const Square rookLanding = Sq_d1;
-   static const BitBoard kingLandingBB = BB::BBSq_c1;
-   static const BitBoard rookLandingBB = BB::BBSq_d1;
-   static const Piece fromP = P_wk;
-   static const Piece toP = P_wr;
+   static constexpr CastlingTypes ct = CT_OOO;
+   static constexpr MType mt = T_wqs;
+   static constexpr CastlingRights cr = C_wqs;
+   static constexpr Color c = Co_White;
+   static constexpr Square kingLanding = Sq_c1;
+   static constexpr Square rookLanding = Sq_d1;
+   static constexpr BitBoard kingLandingBB = BB::BBSq_c1;
+   static constexpr BitBoard rookLandingBB = BB::BBSq_d1;
+   static constexpr Piece fromP = P_wk;
+   static constexpr Piece toP = P_wr;
 };
 
 template<>
 struct CastlingTraits<T_wks>{
-   static const CastlingTypes ct = CT_OO;
-   static const MType mt = T_wks;
-   static const CastlingRights cr = C_wks;
-   static const Color c = Co_White;
-   static const Square kingLanding = Sq_g1;
-   static const Square rookLanding = Sq_f1;
-   static const BitBoard kingLandingBB = BB::BBSq_g1;
-   static const BitBoard rookLandingBB = BB::BBSq_f1;
-   static const Piece fromP = P_wk;
-   static const Piece toP = P_wr;
+   static constexpr CastlingTypes ct = CT_OO;
+   static constexpr MType mt = T_wks;
+   static constexpr CastlingRights cr = C_wks;
+   static constexpr Color c = Co_White;
+   static constexpr Square kingLanding = Sq_g1;
+   static constexpr Square rookLanding = Sq_f1;
+   static constexpr BitBoard kingLandingBB = BB::BBSq_g1;
+   static constexpr BitBoard rookLandingBB = BB::BBSq_f1;
+   static constexpr Piece fromP = P_wk;
+   static constexpr Piece toP = P_wr;
 };
 
 template<>
 struct CastlingTraits<T_bqs>{
-   static const CastlingTypes ct = CT_OOO;
-   static const MType mt = T_bqs;
-   static const CastlingRights cr = C_bqs;
-   static const Color c = Co_Black;
-   static const Square kingLanding = Sq_c8;
-   static const Square rookLanding = Sq_d8;
-   static const BitBoard kingLandingBB = BB::BBSq_c8;
-   static const BitBoard rookLandingBB = BB::BBSq_d8;
-   static const Piece fromP = P_bk;
-   static const Piece toP = P_br;
+   static constexpr CastlingTypes ct = CT_OOO;
+   static constexpr MType mt = T_bqs;
+   static constexpr CastlingRights cr = C_bqs;
+   static constexpr Color c = Co_Black;
+   static constexpr Square kingLanding = Sq_c8;
+   static constexpr Square rookLanding = Sq_d8;
+   static constexpr BitBoard kingLandingBB = BB::BBSq_c8;
+   static constexpr BitBoard rookLandingBB = BB::BBSq_d8;
+   static constexpr Piece fromP = P_bk;
+   static constexpr Piece toP = P_br;
 };
 
 template<>
 struct CastlingTraits<T_bks>{
-   static const CastlingTypes ct = CT_OO;
-   static const MType mt = T_bks;
-   static const CastlingRights cr = C_bks;
-   static const Color c = Co_Black;
-   static const Square kingLanding = Sq_g8;
-   static const Square rookLanding = Sq_f8;
-   static const BitBoard kingLandingBB = BB::BBSq_g8;
-   static const BitBoard rookLandingBB = BB::BBSq_f8;
-   static const Piece fromP = P_bk;
-   static const Piece toP = P_br;
+   static constexpr CastlingTypes ct = CT_OO;
+   static constexpr MType mt = T_bks;
+   static constexpr CastlingRights cr = C_bks;
+   static constexpr Color c = Co_Black;
+   static constexpr Square kingLanding = Sq_g8;
+   static constexpr Square rookLanding = Sq_f8;
+   static constexpr BitBoard kingLandingBB = BB::BBSq_g8;
+   static constexpr BitBoard rookLandingBB = BB::BBSq_f8;
+   static constexpr Piece fromP = P_bk;
+   static constexpr Piece toP = P_br;
 };
 
 void applyNull(Searcher& context, Position& pN);
