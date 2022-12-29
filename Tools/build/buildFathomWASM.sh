@@ -16,6 +16,6 @@ lib=fathom_${v}_linux_x64_wasm.o
 echo "Building $lib"
 
 OPT="-Wall -Wno-char-subscripts $d -DNDEBUG -O3 -flto -I."
-$CC -c $OPT tbprobe.c -o $lib 
+$CC -c -std=gnu99 $OPT tbprobe.c -o $lib 
 
 cd -

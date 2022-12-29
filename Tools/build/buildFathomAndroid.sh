@@ -14,6 +14,6 @@ lib=fathom_${v}_android.o
 echo "Building $lib"
 
 OPT="-Wall -Wno-char-subscripts -Wno-unused-function -Wno-deprecated $d -DNDEBUG -O3 -flto -I."
-$CC -c $OPT tbprobe.c -o $lib
+$CC -c -std=gnu99 $OPT tbprobe.c -o $lib
 
 cd -
