@@ -19,6 +19,6 @@ lib=${lib}.o
 echo "Building $lib"
 
 OPT="-s -Wall -Wno-char-subscripts $d -DNDEBUG -O3 -flto $t -I."
-$CC -c $OPT tbprobe.c -o $lib
+$CC -c -std=gnu99 $OPT tbprobe.c -o $lib
 
 cd -
