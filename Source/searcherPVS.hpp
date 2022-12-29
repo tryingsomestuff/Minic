@@ -493,6 +493,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    if (skipMoves){
       for (const auto & it : *skipMoves) { 
           assert( isValidMove(it) );
+          // carefull here  std::abs(std::numeric_limits<int16_t>::min()) is of type int 
+          // and is bigger than std::numeric_limits<int16_t>::max()
           const auto moveHashIndex = static_cast<int32_t>(it) + std::abs(std::numeric_limits<int16_t>::min());
           assert(moveHashIndex >= 0 && moveHashIndex < std::numeric_limits<uint16_t>::max());
           pHash ^= Zobrist::ZTMove[moveHashIndex];
