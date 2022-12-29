@@ -81,9 +81,9 @@ ExtendedPosition::ExtendedPosition(const std::string &extFEN, bool withMoveCount
    }
 }
 
-bool ExtendedPosition::shallFindBest() { return _extendedParams.find("bm") != _extendedParams.end(); }
+bool ExtendedPosition::shallFindBest() { return _extendedParams.contains("bm"); }
 
-bool ExtendedPosition::shallAvoidBad() { return _extendedParams.find("am") != _extendedParams.end(); }
+bool ExtendedPosition::shallAvoidBad() { return _extendedParams.contains("am"); }
 
 std::vector<std::string> ExtendedPosition::bestMoves() { return _extendedParams["bm"]; }
 
@@ -92,7 +92,8 @@ std::vector<std::string> ExtendedPosition::badMoves() { return _extendedParams["
 std::vector<std::string> ExtendedPosition::comment0() { return _extendedParams["c0"]; }
 
 std::string ExtendedPosition::id() {
-   if (_extendedParams.find("id") != _extendedParams.end()) return _extendedParams["id"][0];
+   if (_extendedParams.contains("id")) 
+      return _extendedParams["id"][0];
    else
       return "";
 }

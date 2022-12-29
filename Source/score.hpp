@@ -117,8 +117,9 @@ struct EvalScore {
       for (GamePhase g = MG; g < GP_MAX; ++g) e[g] -= s;
       return e;
    }
-   void operator=(const ScoreType& s) {
+   EvalScore & operator=(const ScoreType& s) {
       for (GamePhase g = MG; g < GP_MAX; ++g) { sc[g] = s; }
+      return *this;
    }
 
    [[nodiscard]] EvalScore scale(float s_mg, float s_eg) const {
@@ -186,7 +187,7 @@ struct EvalScore {
    EvalScore operator/(const ScoreType& s) const { return MakeScore(MGScore(sc) / s, EGScore(sc) / s); }
    EvalScore operator+(const ScoreType& s) const { return MakeScore(MGScore(sc) + s, EGScore(sc) + s); }
    EvalScore operator-(const ScoreType& s) const { return MakeScore(MGScore(sc) - s, EGScore(sc) - s); }
-   void      operator=(const ScoreType& s) { sc = MakeScore(s, s); }
+   EvalScore& operator=(const ScoreType& s) { sc = MakeScore(s, s); return *this; }
 
    [[nodiscard]] EvalScore scale(float s_mg, float s_eg) const { return EvalScore(ScoreType(MGScore(sc) * s_mg), ScoreType(EGScore(sc) * s_eg)); }
 };

@@ -126,7 +126,12 @@ constexpr size_t SIZE_MULTIPLIER = 1024ull * 1024ull; // Mb
 #define FORCE_FINLINE 
 #endif
 
-template<typename T> [[nodiscard]] constexpr T Abs(const T& s) { return s > T(0) ? s : T(-s); }
+template<typename T> [[nodiscard]] constexpr T Abs(const T& s) { 
+   static_assert(T(-1) < T(0));
+   const T ret = s >= T(0) ? s : T(-s);
+   assert(ret == std::abs(s));
+   return ret;
+}
 
 #define ENABLE_INCR_OPERATORS_ON(T) \
 constexpr T& operator++(T& d) { return d = static_cast<T>(static_cast<std::underlying_type_t<T>>(d) + 1); } \
@@ -199,8 +204,11 @@ constexpr ScoreType HISTORY_DIV(const int x) {
    assert (Abs(ret) < std::numeric_limits<ScoreType>::max());
    return ret;
 }
-constexpr ScoreType SQR(const ScoreType x)         { return x * x;}
-constexpr ScoreType HSCORE(const DepthType depth)  { return static_cast<ScoreType>(SQR(std::min(static_cast<int>(depth), 32)) * 4);}
+constexpr ScoreType SQR(const ScoreType x)        { return x * x;}
+constexpr ScoreType HSCORE(const DepthType depth) {
+   const int ret = SQR(std::min(static_cast<int>(depth), 32)) * 4;
+   assert (ret < std::numeric_limits<ScoreType>::max());
+   return static_cast<ScoreType>(ret);}
 
 enum Color : uint8_t { Co_White = 0, Co_Black = 1, Co_None = 2, Co_End = Co_None };
 [[nodiscard]] constexpr Color operator~(Color c) { return static_cast<Color>(c ^ Co_Black); } // switch Color

@@ -282,7 +282,7 @@ std::atomic<bool> Searcher::startLock;
 Searcher& Searcher::getCoSearcher(size_t id) {
    static std::map<size_t, std::unique_ptr<Searcher>> coSearchers;
    // init new co-searcher if not already present
-   if (coSearchers.find(id) == coSearchers.end()) {
+   if (coSearchers.contains(id)) {
       coSearchers[id] = std::unique_ptr<Searcher>(new Searcher(id + MAX_THREADS));
       coSearchers[id]->initPawnTable();
    }

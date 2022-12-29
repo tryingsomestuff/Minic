@@ -46,8 +46,8 @@ struct Layer {
    Layer(const Layer<NT, dim0, dim1, Q>& other) = delete;
    Layer(Layer<NT, dim0, dim1, Q>&& other) = delete;
 
-   Layer(){}
-   ~Layer(){}
+   Layer() = default;
+   ~Layer() = default;
 
 };
 
