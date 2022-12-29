@@ -95,7 +95,7 @@ bool applyMove(Position& p, const Position::MoveInfo & moveInfo, const bool noNN
       case T_std:
       case T_capture:
          // update material
-         if (moveInfo.isCapNoEP) { --p.mat[~p.c][std::abs(moveInfo.toP)]; }
+         if (moveInfo.isCapNoEP) { --p.mat[~p.c][Abs(moveInfo.toP)]; }
          // update hash, BB, board and castling rights
          movePiece(p, moveInfo.from, moveInfo.to, moveInfo.fromP, moveInfo.toP, moveInfo.type == T_capture);
          break;
@@ -251,7 +251,7 @@ void applyMoveNNUEUpdate(Position & p, const Position::MoveInfo & moveInfo){
    // if king is not moving, update nnue evaluator
    // this is based on initial position state (most notably ep square), 
    // all is available in the previously built moveInfo)
-   if (std::abs(moveInfo.fromP) != P_wk) {
+   if (Abs(moveInfo.fromP) != P_wk) {
       // ***be carefull here***, p.c has already been updated !!!
       if (p.c == Co_Black) updateNNUEEvaluator<Co_White>(p.evaluator(), moveInfo);
       else updateNNUEEvaluator<Co_Black>(p.evaluator(), moveInfo);
@@ -406,7 +406,7 @@ bool isPseudoLegal(const Position& p, const Move m) { // validate TT move
       }
    }
 
-   const Piece fromPieceType = static_cast<Piece>(std::abs(fromP));
+   const Piece fromPieceType = Abs(fromP);
 
    // EP comes from a pawn
    if (t == T_ep && (p.ep == INVALIDSQUARE || fromPieceType != P_wp)) PSEUDO_LEGAL_RETURN(false, 6)

@@ -61,7 +61,7 @@ struct WeightsReader {
          minW = std::min(minW, tmp);
          maxW = std::max(maxW, tmp);
          // if quantization is active and we overflow, just clamp and warn
-         if (Q && std::abs(tmp * Wscale) > (NT)std::numeric_limits<T>::max()) {
+         if (Q && Abs(tmp * Wscale) > (NT)std::numeric_limits<T>::max()) {
             NT tmp2 = tmp;
             tmp = std::clamp(tmp2 * Wscale, (NT)std::numeric_limits<T>::lowest(), (NT)std::numeric_limits<T>::max());
             Logging::LogIt(Logging::logWarn) << "Overflow weight " << tmp2 << " -> " << tmp;
@@ -115,7 +115,7 @@ struct WeightsReader {
          minB = std::min(minB, tmp);
          maxB = std::max(maxB, tmp);
          // if quantization is active and we overflow, just clamp and warn
-         if (Q && std::abs(tmp * Bscale) > (NT)std::numeric_limits<T>::max()) {
+         if (Q && Abs(tmp * Bscale) > (NT)std::numeric_limits<T>::max()) {
             NT tmp2 = tmp;
             tmp = std::clamp(tmp2 * Bscale, (NT)std::numeric_limits<T>::lowest(), (NT)std::numeric_limits<T>::max());
             Logging::LogIt(Logging::logWarn) << "Overflow bias " << tmp2 << " -> " << tmp;

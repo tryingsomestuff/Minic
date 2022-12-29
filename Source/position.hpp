@@ -171,14 +171,14 @@ struct alignas(32) Position {
       assert(pp != P_none);
       assert(pp < P_end);
       assert(pp >= P_bk);
-      return _allB[std::abs(pp) - 1] & allPieces[pp > 0 ? Co_White : Co_Black];
+      return _allB[Abs(pp) - 1] & allPieces[pp > 0 ? Co_White : Co_Black];
    }
    // next one is kinda "private"
    [[nodiscard]] FORCE_FINLINE BitBoard& _pieces(const Piece pp) {
       assert(pp != P_none);
       assert(pp < P_end);
       assert(pp >= P_bk);
-      return _allB[std::abs(pp) - 1];
+      return _allB[Abs(pp) - 1];
    }
 
    struct MoveInfo {
@@ -318,8 +318,8 @@ struct RootPosition : public Position {
 #ifdef WITH_NNUE
 template<Color c> void updateNNUEEvaluator(NNUEEvaluator& nnueEvaluator, const Position::MoveInfo& moveInfo) {
    START_TIMER
-   const Piece fromType = (Piece)std::abs(moveInfo.fromP);
-   const Piece toType = (Piece)std::abs(moveInfo.toP);
+   const Piece fromType = Abs(moveInfo.fromP);
+   const Piece toType = Abs(moveInfo.toP);
    nnueEvaluator.template us<c>().erase(NNUEIndiceUs(moveInfo.king[c], moveInfo.from, fromType));
    nnueEvaluator.template them<c>().erase(NNUEIndiceThem(moveInfo.king[~c], moveInfo.from, fromType));
    if (isPromotion(moveInfo.type)) {

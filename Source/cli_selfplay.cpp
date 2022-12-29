@@ -66,11 +66,11 @@ void selfPlay(DepthType depth, uint64_t & nbPos) {
          justBegin = false;
       }
 
-      if (std::abs(d.score) < minDrawScore) ++drawCount;
+      if (Abs(d.score) < minDrawScore) ++drawCount;
       else
          drawCount = 0;
 
-      if (std::abs(d.score) > minWinScore) ++winCount;
+      if (Abs(d.score) > minWinScore) ++winCount;
       else
          winCount = 0;
 

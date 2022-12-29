@@ -42,12 +42,12 @@ struct HistoryT {
          assert(isValidSquare(to));
          const ScoreType s  = S * HSCORE(depth);
          const Piece     pp = p.board_const(from);
-         history[c][from][to] += static_cast<ScoreType>(s - HISTORY_DIV(history[c][from][to] * std::abs(s)));
-         historyP[PieceIdx(pp)][to] += static_cast<ScoreType>(s - HISTORY_DIV(historyP[PieceIdx(pp)][to] * std::abs(s)));
+         history[c][from][to] += static_cast<ScoreType>(s - HISTORY_DIV(history[c][from][to] * Abs(s)));
+         historyP[PieceIdx(pp)][to] += static_cast<ScoreType>(s - HISTORY_DIV(historyP[PieceIdx(pp)][to] * Abs(s)));
          for (int i = 0; i < MAX_CMH_PLY; ++i) {
             if (cmhPtr[i]) {
                ScoreType& item = (*cmhPtr[i])[PieceIdx(p.board_const(from)) * NbSquare + to];
-               item += static_cast<ScoreType>(s - HISTORY_DIV(item * std::abs(s)));
+               item += static_cast<ScoreType>(s - HISTORY_DIV(item * Abs(s)));
             }
          }
       }
@@ -62,7 +62,7 @@ struct HistoryT {
          const Piece pf = p.board_const(from);
          const Piece pt = p.board_const(to); // std capture, no ep
          const ScoreType s  = S * HSCORE(depth);
-         historyCap[PieceIdx(pf)][to][Abs(pt)-1] += static_cast<ScoreType>(s - HISTORY_DIV(historyCap[PieceIdx(pf)][to][Abs(pt)-1] * std::abs(s)));
+         historyCap[PieceIdx(pf)][to][Abs(pt)-1] += static_cast<ScoreType>(s - HISTORY_DIV(historyCap[PieceIdx(pf)][to][Abs(pt)-1] * Abs(s)));
       }
    }
 };

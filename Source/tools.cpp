@@ -171,7 +171,7 @@ bool checkEval(const Position & p, ScoreType e, Searcher & context, const std::s
    Position p2 = p;
    p2.c = ~p2.c;
    const ScoreType g = eval(p2, data, context, true, false);
-   if ( std::abs(f + g - 2*EvalConfig::tempo) > 2){
+   if ( Abs(f + g - 2*EvalConfig::tempo) > 2){
       std::cout << "*********************" << std::endl;
       std::cout << ToString(p) << std::endl;
       std::cout << f << std::endl;
@@ -179,7 +179,7 @@ bool checkEval(const Position & p, ScoreType e, Searcher & context, const std::s
       std::cout << "EVALSYMERROR" << std::endl;
    }
 #endif
-   if ( std::abs(e - f) > std::max(std::abs(e)/20,10)){
+   if ( Abs(e - f) > std::max(Abs(e)/20,10)){
       std::cout << "*********************" << std::endl;
       std::cout << ToString(p) << std::endl;
       std::cout << e << std::endl;
@@ -224,7 +224,7 @@ std::string showAlgAbr(const Move m, const Position &p) {
    Piece t = p.board_const(from);
 
    // add piece type if not pawn
-   s += PieceNames[PieceIdx(static_cast<Piece>(std::abs(t)))];
+   s += PieceNames[PieceIdx(static_cast<Piece>(Abs(t)))];
    if (t == P_wp || t == P_bp) s.clear(); // no piece symbol for pawn
 
    // ensure move is not ambiguous

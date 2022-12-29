@@ -251,14 +251,14 @@ void pgnparse__(std::ifstream& is, std::ofstream& os) {
          Position  p  = game.p[i];
          ScoreType ss = Move2Score(game.moves[i]);
          //std::cout << score << std::endl;
-         if (ss == -INFSCORE || hashes.find(computeHash(p) || std::abs(ss) > 350) != hashes.end()) continue; // do not insert same position twice ...
+         if (ss == -INFSCORE || hashes.find(computeHash(p) || Abs(ss) > 350) != hashes.end()) continue; // do not insert same position twice ...
          hashes.insert(computeHash(p));
          const ScoreType seval = eval(p, data, ThreadPool::instance().main());
          //if (e%100==0) std::cout << "eval " << seval << std::endl;
-         if (std::abs(seval) < PGNGame::equalMargin) {
+         if (Abs(seval) < PGNGame::equalMargin) {
             ++e;
             const ScoreType squiet = ThreadPool::instance().main().qsearchNoPruning(-10000, 10000, p, 1, seldepth);
-            if (std::abs(seval - squiet) < PGNGame::quietMargin) {
+            if (Abs(seval - squiet) < PGNGame::quietMargin) {
                os << GetFENShort2(p) << " c9 \"" << game.resultStr << "\";"
                   << " c31 \"" << ss << "\";" << std::endl;
                ++c;
