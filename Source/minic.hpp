@@ -197,7 +197,7 @@ inline bool minic(int argc, char** argv) {
    }
 #endif
 
-   if (firstArg.empty() || firstArg == "-h" || firstArg == "-help" || firstArg == "--help" || firstArg == "help") {
+   if (firstArg == "-h" || firstArg == "-help" || firstArg == "--help" || firstArg == "help") {
       return help();
    }
 
