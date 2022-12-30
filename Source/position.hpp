@@ -285,6 +285,17 @@ struct alignas(32) Position {
       STOP_AND_SUM_TIMER(ResetNNUE)
    }
 
+   void resetNNUEEvaluator(NNUEEvaluator& nnueEvaluator, Color color) const {
+      START_TIMER
+      nnueEvaluator.clear(color);
+      if (color == Co_White)
+         resetNNUEIndices_<Co_White>(nnueEvaluator);
+      else
+         resetNNUEIndices_<Co_Black>(nnueEvaluator);
+      nnueEvaluator.dirty = false;
+      STOP_AND_SUM_TIMER(ResetNNUE)
+   }
+
 #endif
 };
 
@@ -333,12 +344,35 @@ template<Color c> void updateNNUEEvaluator(NNUEEvaluator& nnueEvaluator, const P
    }
    if (moveInfo.type == T_ep) {
       const Square epSq = moveInfo.ep + (c == Co_White ? -8 : +8);
-      nnueEvaluator.template them<c>().erase(NNUEIndiceUs(moveInfo.king[~c], epSq, P_wp));
       nnueEvaluator.template us<c>().erase(NNUEIndiceThem(moveInfo.king[c], epSq, P_wp));
+      nnueEvaluator.template them<c>().erase(NNUEIndiceUs(moveInfo.king[~c], epSq, P_wp));
+   }
+   else if (toType != P_none) {
+      nnueEvaluator.template us<c>().erase(NNUEIndiceThem(moveInfo.king[c], moveInfo.to, toType));
+      nnueEvaluator.template them<c>().erase(NNUEIndiceUs(moveInfo.king[~c], moveInfo.to, toType));
+   }
+   nnueEvaluator.dirty = false;
+   STOP_AND_SUM_TIMER(UpdateNNUE)
+}
+
+template<Color c> void updateNNUEEvaluatorThemOnly(NNUEEvaluator& nnueEvaluator, const Position::MoveInfo& moveInfo) {
+   START_TIMER
+   const Piece fromType = Abs(moveInfo.fromP);
+   const Piece toType = Abs(moveInfo.toP);
+   nnueEvaluator.template them<c>().erase(NNUEIndiceThem(moveInfo.king[~c], moveInfo.from, fromType));
+   if (isPromotion(moveInfo.type)) {
+      const Piece promPieceType = promShift(moveInfo.type);
+      nnueEvaluator.template them<c>().insert(NNUEIndiceThem(moveInfo.king[~c], moveInfo.to, promPieceType));
+   }
+   else {
+      nnueEvaluator.template them<c>().insert(NNUEIndiceThem(moveInfo.king[~c], moveInfo.to, fromType));
+   }
+   if (moveInfo.type == T_ep) {
+      const Square epSq = moveInfo.ep + (c == Co_White ? -8 : +8);
+      nnueEvaluator.template them<c>().erase(NNUEIndiceUs(moveInfo.king[~c], epSq, P_wp));
    }
    else if (toType != P_none) {
       nnueEvaluator.template them<c>().erase(NNUEIndiceUs(moveInfo.king[~c], moveInfo.to, toType));
-      nnueEvaluator.template us<c>().erase(NNUEIndiceThem(moveInfo.king[c], moveInfo.to, toType));
    }
    nnueEvaluator.dirty = false;
    STOP_AND_SUM_TIMER(UpdateNNUE)
