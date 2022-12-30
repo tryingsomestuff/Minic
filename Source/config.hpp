@@ -10,7 +10,8 @@ const std::string MinicVersion = "3.33";
 #if !defined(WITH_SMALL_MEMORY)
 #define WITH_MAGIC  // use magic bitboard or HB ones
 #define WITH_NNUE   // include or not NNUE support
-#define WITH_STATS  // produce or not search statitics
+#define WITH_STATS  // produce or not search statistics
+//#define WITH_BETACUTSTATS // activate beta cutoff statistics
 #define WITH_MATERIAL_TABLE // use (and build ! cost 27Mb) or not the material table
 //#define WITH_MPI    // support "distributed" version or not
 #ifndef _MSC_VER

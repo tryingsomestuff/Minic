@@ -104,6 +104,9 @@ struct Searcher {
 
    mutable Stats stats;
 
+   // beta cut more refined statistics are possible and gather using this function
+   void updateStatBetaCut(const Position & p, const Move m, const DepthType height);
+
    FORCE_FINLINE void updatePV(PVList& pv, const Move& m, const PVList& childPV) {
       stats.incr(Stats::sid_PVupdate);
       pv.clear();

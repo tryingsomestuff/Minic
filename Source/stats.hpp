@@ -66,9 +66,18 @@ struct Stats {
       sid_iid,
       sid_iir,
       sid_ttalpha,
-      sid_ttbeta,
+      sid_ttbeta, // beta cut from the tt move
       sid_alpha,
       sid_beta,
+      sid_beta_gc, // beta cut from good cap
+      sid_beta_p, // beta cut from prom
+      sid_beta_k1, // beta cut from killer
+      sid_beta_k2,
+      sid_beta_k3,
+      sid_beta_k4,
+      sid_beta_c, // beta cut from counter
+      sid_beta_q, // beta cut other quiet
+      sid_beta_bc, // beta cut bad cap
       sid_alphanoupdate,
       sid_qttalpha,
       sid_qttbeta,
@@ -172,6 +181,15 @@ struct Stats {
       "ttbeta",
       "alpha",
       "beta",
+      "beta_gc",
+      "beta_p",
+      "beta_k1",
+      "beta_k2",
+      "beta_k3",
+      "beta_k4",
+      "beta_c",
+      "beta_q",
+      "beta_bc",
       "alphanoupdate",
       "qttalpha",
       "qttbeta",
