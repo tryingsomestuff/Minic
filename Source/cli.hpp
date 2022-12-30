@@ -12,3 +12,5 @@
 bool cliManagement(const std::string & cli, int argc, char** argv);
 
 bool bench(DepthType depth);
+
+bool benchBig(DepthType depth);

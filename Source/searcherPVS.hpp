@@ -16,6 +16,30 @@
 
 #define PERIODICCHECK uint64_t(1024)
 
+FORCE_FINLINE void Searcher::updateStatBetaCut(const Position & p, const Move m, const DepthType height){
+   const MType t = Move2Type(m);
+   assert(isValidMoveType(t));
+
+   if (isCapture(t) && !isPromotion(t)) {
+      if(isBadCap(m)) stats.incr(Stats::sid_beta_bc);
+      else stats.incr(Stats::sid_beta_gc);
+   }
+   else if (isPromotion(t)){
+      stats.incr(Stats::sid_beta_p);
+   }
+   else if (t == T_std || isCastling(m)) {
+      if (sameMove(m, killerT.killers[height][0])) stats.incr(Stats::sid_beta_k1);
+      else if (sameMove(m, killerT.killers[height][1])) stats.incr(Stats::sid_beta_k2);
+      else if (height > 1 && sameMove(m, killerT.killers[height - 2][0])) stats.incr(Stats::sid_beta_k3);
+      else if (height > 1 && sameMove(m, killerT.killers[height - 2][1])) stats.incr(Stats::sid_beta_k4);
+      else if (isValidMove(p.lastMove) && sameMove(counterT.counter[Move2From(p.lastMove)][correctedMove2ToKingDest(p.lastMove)], m)) stats.incr(Stats::sid_beta_c);
+      else stats.incr(Stats::sid_beta_q);
+   }
+   else{
+      assert(false);
+   }
+}
+
 FORCE_FINLINE std::tuple<DepthType, DepthType, DepthType>
 Searcher::depthPolicy( [[maybe_unused]] const Position & p,
                        [[maybe_unused]] DepthType depth,
@@ -1348,6 +1372,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             hashBound = TT::B_exact;
             if (score >= beta) {
                stats.incr(Stats::sid_beta);
+#ifdef WITH_BETACUTSTATS
+               updateStatBetaCut(p, *it, height);
+#endif
                if (!pvsData.isInCheck){
                   const DepthType bonusDepth = depth + (score > beta + SearchConfig::betaMarginDynamicHistory);
                   if (pvsData.isQuiet /*&& depth > 1*/ /*&& !( depth == 1 && validQuietMoveCount == 1 )*/) { // quiet move history

@@ -271,6 +271,11 @@ void processCommand(const std::string & command) {
       iss >> bd;
       bench(clampDepth(bd));
    }
+   else if (uciCommand == "benchBig") {
+      int bd = 10;
+      iss >> bd;
+      benchBig(clampDepth(bd));
+   }   
    else if (!uciCommand.empty()) { Logging::LogIt(Logging::logGUI) << "info string unrecognised command " << uciCommand; }
 }
 
