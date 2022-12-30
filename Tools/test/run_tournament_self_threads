@@ -6,24 +6,24 @@ CUTECHESS=cutechess-cli
 engines=""
 
 engines="$engines -engine conf=minic_dev"
-engines="$engines -engine conf=minic_dev_2_threads"
-engines="$engines -engine conf=minic_dev_3_threads"
+#engines="$engines -engine conf=minic_dev_2_threads"
+#engines="$engines -engine conf=minic_dev_3_threads"
 engines="$engines -engine conf=minic_dev_4_threads"
-engines="$engines -engine conf=minic_dev_5_threads"
-engines="$engines -engine conf=minic_dev_6_threads"
-engines="$engines -engine conf=minic_dev_7_threads"
-engines="$engines -engine conf=minic_dev_8_threads"
+#engines="$engines -engine conf=minic_dev_5_threads"
+#engines="$engines -engine conf=minic_dev_6_threads"
+#engines="$engines -engine conf=minic_dev_7_threads"
+#engines="$engines -engine conf=minic_dev_8_threads"
 engines="$engines -engine conf=minic_3.32"
-engines="$engines -engine conf=minic_3.32_2_threads"
-engines="$engines -engine conf=minic_3.32_3_threads"
+#engines="$engines -engine conf=minic_3.32_2_threads"
+#engines="$engines -engine conf=minic_3.32_3_threads"
 engines="$engines -engine conf=minic_3.32_4_threads"
-engines="$engines -engine conf=minic_3.32_5_threads"
-engines="$engines -engine conf=minic_3.32_6_threads"
-engines="$engines -engine conf=minic_3.32_7_threads"
-engines="$engines -engine conf=minic_3.32_8_threads"
+#engines="$engines -engine conf=minic_3.32_5_threads"
+#engines="$engines -engine conf=minic_3.32_6_threads"
+#engines="$engines -engine conf=minic_3.32_7_threads"
+#engines="$engines -engine conf=minic_3.32_8_threads"
 
 echo $engines
 
-$CUTECHESS $engines -each proto=uci tc=10+0.1 timemargin=50 -rounds 1000 -pgnout pgn_$(date +"%Y_%m_%d"_%H%M%S).out -ratinginterval 1 -repeat -openings file=$dir/Book_and_Test/OpeningBook/Hert500.pgn format=pgn order=random plies=24 -recover -concurrency 1 > tournament_self_threads.log 2>&1 &
+$CUTECHESS $engines -each proto=uci tc=10+0.1 timemargin=50 -rounds 1000 -pgnout pgn_$(date +"%Y_%m_%d"_%H%M%S).out -ratinginterval 1 -repeat -openings file=$dir/Book_and_Test/OpeningBook/Hert500.pgn format=pgn order=random plies=24 -recover -concurrency 1 > tournament_self_threads2.log 2>&1 &
 
 
