@@ -31,6 +31,14 @@ struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTransformer<NT, Q>> {
       black.clear();
    }
 
+   FORCE_FINLINE void clear(Color color) {
+      dirty = true;
+      if (color == Co_White)
+         white.clear();
+      else
+         black.clear();
+   }
+
    using BT = typename Quantization<Q>::BT;
 
    constexpr float propagate(Color c, const int npiece) const {

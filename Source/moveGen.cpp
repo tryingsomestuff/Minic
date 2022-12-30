@@ -256,10 +256,18 @@ void applyMoveNNUEUpdate(Position & p, const Position::MoveInfo & moveInfo){
       if (p.c == Co_Black) updateNNUEEvaluator<Co_White>(p.evaluator(), moveInfo);
       else updateNNUEEvaluator<Co_Black>(p.evaluator(), moveInfo);
    }
-   // if a king was moved (including castling), reset nnue evaluator
+   // if a king was moved (including castling!!), reset nnue evaluator
    // this is based on new position state !
    else { 
-      p.resetNNUEEvaluator(p.evaluator()); 
+      p.resetNNUEEvaluator(p.evaluator(), ~p.c);
+      if (isCastling(moveInfo.type)){
+         p.resetNNUEEvaluator(p.evaluator(), p.c);
+      }
+      else{
+         // ***be carefull here***, p.c has already been updated !!!
+         if (p.c == Co_Black) updateNNUEEvaluatorThemOnly<Co_White>(p.evaluator(), moveInfo);
+         else updateNNUEEvaluatorThemOnly<Co_Black>(p.evaluator(), moveInfo);
+      }
    }
 #endif
 
