@@ -320,7 +320,7 @@ struct RootPosition : public Position {
    // Root position cannot be copied
    RootPosition & operator=(const RootPosition &) = delete;
 
-   ~RootPosition() {
+   ~RootPosition() override {
       delete root;
    }
 

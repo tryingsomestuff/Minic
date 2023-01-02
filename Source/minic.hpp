@@ -175,7 +175,7 @@ Available analysis tests
  * MATE
 )";
    Logging::LogIt(Logging::logGUI) << h;
-   return 0;
+   return true;
 }
 #endif
 
