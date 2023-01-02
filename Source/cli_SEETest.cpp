@@ -92,5 +92,5 @@ bool TestSEE() {
       if (s != t.threshold)
          Logging::LogIt(Logging::logError) << "wrong SEE value == " << ToString(p) << "\n" << ToString(t.m) << " " << s << " " << t.threshold;
    }
-   return 0;
+   return true;
 }

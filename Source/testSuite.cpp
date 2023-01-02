@@ -8,7 +8,7 @@
 bool test(const std::string& option) {
    if (option == "MEA") {
       std::vector<std::string> positions;
-      if (!readEPDFile("Book_and_Test/TestSuite/allsets_nodupes.epd", positions)) return 1;
+      if (!readEPDFile("Book_and_Test/TestSuite/allsets_nodupes.epd", positions)) { return false; }
 
       std::vector<int> timeControls = {300}; //mseconds
       std::vector<int> scores       = {1};
@@ -21,7 +21,7 @@ bool test(const std::string& option) {
 
    if (option == "TTT") {
       std::vector<std::string> positions;
-      if (!readEPDFile("Book_and_Test/TestSuite/TTT1.epd", positions)) return 1;
+      if (!readEPDFile("Book_and_Test/TestSuite/TTT1.epd", positions)) { return false; }
 
       std::vector<int> timeControls = {1000}; //mseconds
       std::vector<int> scores       = {1};
@@ -33,7 +33,7 @@ bool test(const std::string& option) {
 
    if (option == "opening200") {
       std::vector<std::string> positions;
-      if (!readEPDFile("Book_and_Test/TestSuite/Openings200.epd", positions)) return 1;
+      if (!readEPDFile("Book_and_Test/TestSuite/Openings200.epd", positions)) { return false; }
 
       std::vector<int> timeControls = {1000}; //mseconds
       std::vector<int> scores       = {1};
@@ -45,7 +45,7 @@ bool test(const std::string& option) {
 
    if (option == "opening1000") {
       std::vector<std::string> positions;
-      if (!readEPDFile("Book_and_Test/TestSuite/Openings1000.epd", positions)) return 1;
+      if (!readEPDFile("Book_and_Test/TestSuite/Openings1000.epd", positions)) { return false; }
 
       std::vector<int> timeControls = {1000}; //mseconds
       std::vector<int> scores       = {1};
@@ -57,7 +57,7 @@ bool test(const std::string& option) {
 
    if (option == "middle200") {
       std::vector<std::string> positions;
-      if (!readEPDFile("Book_and_Test/TestSuite/Midgames250.epd", positions)) return 1;
+      if (!readEPDFile("Book_and_Test/TestSuite/Midgames250.epd", positions)) { return false; }
 
       std::vector<int> timeControls = {1000}; //mseconds
       std::vector<int> scores       = {1};
@@ -69,7 +69,7 @@ bool test(const std::string& option) {
 
    if (option == "middle1000") {
       std::vector<std::string> positions;
-      if (!readEPDFile("Book_and_Test/TestSuite/Midgames1000.epd", positions)) return 1;
+      if (!readEPDFile("Book_and_Test/TestSuite/Midgames1000.epd", positions)) { return false; }
 
       std::vector<int> timeControls = {1000}; //mseconds
       std::vector<int> scores       = {1};
@@ -81,7 +81,7 @@ bool test(const std::string& option) {
 
    if (option == "hard2020") {
       std::vector<std::string> positions;
-      if (!readEPDFile("Book_and_Test/TestSuite/hard2020.epd", positions)) return 1;
+      if (!readEPDFile("Book_and_Test/TestSuite/hard2020.epd", positions)) { return false; }
 
       std::vector<int> timeControls = {30 * 60 * 1000}; //mseconds
       std::vector<int> scores       = {1};
@@ -94,7 +94,7 @@ bool test(const std::string& option) {
    if (option == "BT2630") {
       std::vector<std::string> positions;
 
-      if (!readEPDFile("Book_and_Test/TestSuite/bt2630.epd", positions)) { return 1; }
+      if (!readEPDFile("Book_and_Test/TestSuite/bt2630.epd", positions)) { return false; }
 
       std::vector<int> timeControls = {15000 * 60}; //mseconds
       std::vector<int> scores       = {1};
@@ -107,7 +107,7 @@ bool test(const std::string& option) {
    if (option == "WAC") {
       std::vector<std::string> positions;
 
-      if (!readEPDFile("Book_and_Test/TestSuite/WinAtChess.epd", positions)) { return 1; }
+      if (!readEPDFile("Book_and_Test/TestSuite/WinAtChess.epd", positions)) { return false; }
 
       std::vector<int> timeControls = {10000}; //mseconds
       std::vector<int> scores       = {1};
@@ -120,7 +120,7 @@ bool test(const std::string& option) {
    if (option == "arasan") {
       std::vector<std::string> positions;
 
-      if (!readEPDFile("Book_and_Test/TestSuite/arasan19a.epd", positions)) { return 1; }
+      if (!readEPDFile("Book_and_Test/TestSuite/arasan19a.epd", positions)) { return false; }
 
       std::vector<int> timeControls = {1000 * 60}; //mseconds
       std::vector<int> scores       = {1};
@@ -133,7 +133,7 @@ bool test(const std::string& option) {
    if (option == "arasan_sym") {
       std::vector<std::string> positions;
 
-      if (!readEPDFile("Book_and_Test/TestSuite/arasan_sym_eval.epd", positions)) { return 1; }
+      if (!readEPDFile("Book_and_Test/TestSuite/arasan_sym_eval.epd", positions)) { return false; }
 
       ExtendedPosition::testStatic(positions);
       return true;
@@ -566,7 +566,7 @@ bool test(const std::string& option) {
 
    if (option == "ERET") {
       std::vector<std::string> positions;
-      if (!readEPDFile("Book_and_Test/TestSuite/eret.epd", positions)) return 1;
+      if (!readEPDFile("Book_and_Test/TestSuite/eret.epd", positions)) { return false; }
 
       std::vector<int> timeControls = {15000}; //mseconds
       std::vector<int> scores       = {1};
@@ -578,7 +578,7 @@ bool test(const std::string& option) {
 
    if (option == "MATE") {
       std::vector<std::string> positions;
-      if (!readEPDFile("Book_and_Test/TestSuite/dmzx.edp", positions)) return 1;
+      if (!readEPDFile("Book_and_Test/TestSuite/dmzx.edp", positions)) { return false; }
 
       std::vector<int> timeControls = {15000}; //mseconds
       std::vector<int> scores       = {1};
