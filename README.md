@@ -199,24 +199,24 @@ Here is 4 years of CCRL progress (single thread)
 
 
 ### CCRL
-- 40/15: Minic 3.30 + Natural Naughtiness is tested at 3437 on the [CCRL 40/15 scale, 4 cores](http://ccrl.chessdom.com/ccrl/4040/)  
+- 40/15: Minic 3.31 + Natural Naughtiness is tested at 3447 on the [CCRL 40/15 scale, 4 cores](http://ccrl.chessdom.com/ccrl/4040/)  
 - Blitz: Minic 3.18 + Nimble Nothingness is tested at 3490 on the [CCRL BLITZ scale, 8 cores](http://ccrl.chessdom.com/ccrl/404/)  
-- FRC: Minic 3.30 + Natural Naughtiness is tested at 3567 on the [CCRL FRC list](http://ccrl.chessdom.com/ccrl/404FRC/)  
+- FRC: Minic 3.32 + Natural Naughtiness is tested at 3591 on the [CCRL FRC list](http://ccrl.chessdom.com/ccrl/404FRC/)  
 
 ### CEGT
 - 40/4: Minic 3.27 + Natural Naughtiness is tested at 3409 on the [CEGT 40/4 list](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
-- 40/20: Minic 3.22 + Nylon Nonchalance is tested at 3312 on the [CEGT 40/20 list](http://www.cegt.net/40_40%20Rating%20List/40_40%20SingleVersion/rangliste.html)  
+- 40/20: Minic Minic 3.32 + Natural Naughtiness is tested at 3388 on the [CEGT 40/20 list](http://www.cegt.net/40_40%20Rating%20List/40_40%20SingleVersion/rangliste.html)  
 - 5+3 pb=on: 3.27 + Natural Naughtiness is tested at 3445 on the [CEGT 5+3 PB=ON list](http://www.cegt.net/5Plus3Rating/BestVersionsNEW/rangliste.html)  
-- 25+8: Minic 3.18 + Nimble Nothingness is tested at 3360 on the [CEGT 25+8 list](http://www.cegt.net/25plus8Rating/BestVersions/rangliste.html)  
+- 25+8: Minic 3.22 + Nylon Nonchalance is tested at 3430 on the [CEGT 25+8 list](http://www.cegt.net/25plus8Rating/BestVersions/rangliste.html)  
 
 ### FGRL
-- Minic 3.24 + Nylon Nonchalance is tested at 3225 on the [fastgm 60sec+0.6sec rating list](http://www.fastgm.de/60-0.60.html)  
-- Minic 3.17 + Nucleated Neurulation is tested at 3159 on the [fastgm 10min+6sec rating list](http://www.fastgm.de/10min.html)  
-- Minic 3.17 + Nucleated Neurulation is tested at 3172 on the [fastgm 60min+15sec rating list](http://www.fastgm.de/60min.html)  
+- Minic 3.30 + Natural Naughtiness is tested at 3285 on the [fastgm 60sec+0.6sec rating list](http://www.fastgm.de/60-0.60.html)  
+- Minic 3.30 + Natural Naughtiness is tested at 3347 on the [fastgm 10min+6sec rating list](http://www.fastgm.de/10min.html)  
+- Minic 3.24 + Nylon Nonchalance is tested at 3303 on the [fastgm 60min+15sec rating list](http://www.fastgm.de/60min.html)  
 - Minic 3.18 + Nimble Nothingness is tested at 3276 on the [fastgm 60sec+0.6sec 16 cores rating list](http://www.fastgm.de/16-60-0.6.html)
 
 ### SP-CC
-- Minic 3.26 + Natural Naughtiness is tested at 3520 on the [SP-CC 3min+1s rating list](https://www.sp-cc.de/)  
+- Minic 3.31 + Natural Naughtiness is tested at 3528 on the [SP-CC 3min+1s rating list](https://www.sp-cc.de/)  
 
 ### GRL
 - Minic 3.17 + Nucleated Neurulation is tested at 3229 on the [GRL 40/2 rating list](http://rebel13.nl/grl-best-40-2.html)
