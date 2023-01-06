@@ -51,7 +51,7 @@ Counter perft(const Position& p, DepthType depth, PerftAccumulator& acc) {
    return acc.validNodes;
 }
 
-void perft_test(const std::string& fen, DepthType d, uint64_t expected) {
+[[nodiscard]] bool perft_test(const std::string& fen, DepthType d, uint64_t expected) {
    RootPosition p;
 #ifdef WITH_NNUE
    NNUEEvaluator evaluator;
@@ -60,8 +60,11 @@ void perft_test(const std::string& fen, DepthType d, uint64_t expected) {
    readFEN(fen, p);
    Logging::LogIt(Logging::logInfo) << ToString(p);
    PerftAccumulator acc;
-   uint64_t         n = perft(p, d, acc);
+   const uint64_t n = perft(p, d, acc);
    acc.Display();
-   if (n != expected) Logging::LogIt(Logging::logFatal) << "Error !! " << fen << " " << expected;
-   Logging::LogIt(Logging::logInfo) << "#########################";
+   if (n != expected){
+      Logging::LogIt(Logging::logError) << "Error !! " << fen << " " << expected;
+      return false;
+   }
+   return true;
 }

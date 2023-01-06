@@ -3,7 +3,7 @@ import os
 import sys
 import pytest
 
-DIR = os.getcwd()
+DIR = os.path.dirname(os.path.realpath(__file__))
 EXE = DIR + '/../Tourney/minic_dev_linux_x64'
 
 def run_program(input, *args):
@@ -13,6 +13,8 @@ def run_program(input, *args):
         input=input,
         capture_output=True,
     )
+
+# TODO : TBprobe, KPKprobe eval/evalHCE 
 
 @pytest.mark.parametrize("input,args,want", [
     pytest.param(
@@ -42,7 +44,6 @@ def run_program(input, *args):
            "stderr": "",
         }, 
         id="uci_test")
-    
 ])
 def test_program(input, args, want):
     completed_process = run_program(input, args)
@@ -51,6 +52,6 @@ def test_program(input, args, want):
         "stdout": completed_process.stdout,
         "stderr": completed_process.stderr,
     }
-    #print(got["stdout"])
-    #print(got["stderr"])
+    print(got["stdout"].decode('utf-8'))
+    #print(got["stderr"].decode('utf-8'))
     assert got["returncode"] == want["returncode"]

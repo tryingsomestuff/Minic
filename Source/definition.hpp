@@ -678,7 +678,7 @@ template<typename T> [[nodiscard]] FORCE_FINLINE T randomInt(T m, T M) {
 }
 
 template<class T> [[nodiscard]] constexpr const T& clamp(const T& v, const T& lo, const T& hi) {
-   assert(!(hi < lo));
+    assert(!(hi < lo));
     return (v < lo) ? lo : (hi < v) ? hi : v;
 }
 

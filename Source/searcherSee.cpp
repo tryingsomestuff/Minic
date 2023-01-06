@@ -20,7 +20,7 @@ ScoreType Searcher::SEE(const Position& p, const Move& m) {
    Color c = p.c;
 
    int nCapt = 0;
-   array1d<ScoreType,32> swapList; // max 32 caps ... shall be ok
+   array1d<int,64> swapList; // max 64 caps ... shall be ok (1B2R2B/2BnRnB1/2nBRBn1/RRRRBrrr/2NbrbN1/2bNrNb1/1b2r2b/b3r3 w - - 0 1)
 
    Piece pp = PieceTools::getPieceType(p, from);
    if (mtype == T_ep) {
@@ -32,13 +32,14 @@ ScoreType Searcher::SEE(const Position& p, const Move& m) {
       const Piece ppTo = PieceTools::getPieceType(p, to);
       swapList[nCapt] = valueSEE(ppTo);
       if (promPossible && pp == P_wp) {
-         swapList[nCapt] += valueSEE(promShift(mtype)) - value(P_wp);
+         swapList[nCapt] += valueSEE(promShift(mtype)) - valueSEE(P_wp);
          currentTargetVal = valueSEE(promShift(mtype));
       }
       else
          currentTargetVal = valueSEE(pp);
    }
    ++nCapt;
+   assert(nCapt < 64);
 
    attackers &= ~SquareToBitboard(from);
    occupationMask &= ~SquareToBitboard(from);
@@ -68,6 +69,8 @@ ScoreType Searcher::SEE(const Position& p, const Move& m) {
          break;
 
       swapList[nCapt] = -swapList[nCapt - 1] + currentTargetVal;
+      // pruning here does not influence the result
+      //if (std::max(-swapList[nCapt-1], swapList[nCapt]) < 0) break; ///@todo ??
       if (promPossible && pp == P_wp) {
          swapList[nCapt] += valueSEE(P_wq) - valueSEE(P_wp);
          currentTargetVal = valueSEE(P_wq);
@@ -89,56 +92,8 @@ ScoreType Searcher::SEE(const Position& p, const Move& m) {
    while (--nCapt)
       if (swapList[nCapt] > -swapList[nCapt - 1]) swapList[nCapt - 1] = -swapList[nCapt];
    STOP_AND_SUM_TIMER(See)
+   ///@todo assert fit in ScoreType
    return swapList[0];
 }
 
 bool Searcher::SEE_GE(const Position& p, const Move& m, ScoreType threshold) { return SEE(p, m) >= threshold; }
-
-/*
-// Static Exchange Evaluation (cutoff version algorithm from Stockfish)
-bool Searcher::SEE_GE(const Position & p, const Move & m, ScoreType threshold) const{
-    assert(isValidMove(m));
-    START_TIMER
-    const Square from = Move2From(m);
-    const Square to   = correctedMove2ToKingDest(m);
-    const MType type  = Move2Type(m);
-    if (PieceTools::getPieceType(p, to) == P_wk) return true; // capture king !
-    const bool promPossible = PROMOTION_RANK_C(to,p.c);
-    if (promPossible) return true; // never treat possible prom case !
-    Piece pp = PieceTools::getPieceType(p,from);
-    bool prom = promPossible && pp == P_wp;
-    Piece nextVictim  = prom ? P_wq : pp; ///@todo other prom
-    const Color us    = p.c;
-    ScoreType balance = (type==T_ep ? value(P_wp) : PieceTools::getAbsValue(p,to)) - threshold + (prom?(value(P_wq)-value(P_wp)):0); // The opponent may be able to recapture so this is the best result we can hope for.
-    if (balance < 0) return false;
-    balance -= value(nextVictim); // Now assume the worst possible result: that the opponent can capture our piece for free.
-    if (balance >= 0) return true;
-    Position p2 = p;
-    if (!applyMove(p2, m, true)) return false;
-    bool endOfSEE = false;
-    while (!endOfSEE){
-        bool validThreatFound = false;
-        for ( pp = P_wp ; pp <= P_wk && !validThreatFound ; ++pp){
-           BitBoard att = BBTools::pfAttack[pp-1](to, p2.pieces_const(p2.c,pp), p2.occupancy(), ~p2.c);
-           if ( !att ) continue; // next piece type
-           Square sqAtt = INVALIDSQUARE;
-           while (!validThreatFound && att && (sqAtt = BB::popBit(att))) {
-              if (PieceTools::getPieceType(p2,to) == P_wk) return us == p2.c; // capture king !
-              Position p3 = p2;
-              prom = promPossible && pp == P_wp;
-              const Move mm = ToMove(sqAtt, to, prom ? T_cappromq : T_capture);
-              if (!applyMove(p3,mm,true)) continue;
-              validThreatFound = true;
-              nextVictim = prom ? P_wq : pp; // CAREFULL here :: we don't care black or white, always use abs(value) next !!!
-              if (prom) balance -= value(P_wp);
-              balance = -balance - 1 - value(nextVictim); ///@todo other prom ?
-              if (balance >= 0 && nextVictim != P_wk) endOfSEE = true;
-              p2 = p3;
-           }
-        }
-        if (!validThreatFound) endOfSEE = true;
-    }
-    STOP_AND_SUM_TIMER(See)
-    return us != p2.c; // we break the above loop when stm loses
-}
-*/
