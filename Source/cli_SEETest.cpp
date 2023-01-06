@@ -11,19 +11,21 @@ struct SEETest {
 };
 
 bool TestSEE() {
-   const ScoreType P = value(P_wp);
-   const ScoreType N = value(P_wn);
-   const ScoreType B = value(P_wb);
-   const ScoreType R = value(P_wr);
-   const ScoreType Q = value(P_wq);
+   const ScoreType P = valueSEE(P_wp);
+   const ScoreType N = valueSEE(P_wn);
+   const ScoreType B = valueSEE(P_wb);
+   const ScoreType R = valueSEE(P_wr);
+   const ScoreType Q = valueSEE(P_wq);
+
+   int errors = 0;
 
    std::cout << "Piece values " << P << "\t" << N << "\t" << B << "\t" << R << "\t" << Q << "\t" << std::endl;
 
    // from Vajolet
    std::list<SEETest> posList;
    /* capture initial move */
-   posList.emplace_back("3r3k/3r4/2n1n3/8/3p4/2PR4/1B1Q4/3R3K w - - 0 1", ToMove(Sq_d3, Sq_d4, T_capture), ScoreType(P - R + N - P));
-   posList.emplace_back("1k1r4/1ppn3p/p4b2/4n3/8/P2N2P1/1PP1R1BP/2K1Q3 w - - 0 1", ToMove(Sq_d3, Sq_e5, T_capture), ScoreType(N - N + B - R + N));
+   posList.emplace_back("3r3k/3r4/2n1n3/8/3p4/2PR4/1B1Q4/3R3K w - - 0 1", ToMove(Sq_d3, Sq_d4, T_capture), ScoreType(P - P + N - B + N - R + R - Q + R));
+   posList.emplace_back("1k1r4/1ppn3p/p4b2/4n3/8/P2N2P1/1PP1R1BP/2K1Q3 w - - 0 1", ToMove(Sq_d3, Sq_e5, T_capture), ScoreType(N - N)); // R > B + N here so we stop here
    posList.emplace_back("1k1r3q/1ppn3p/p4b2/4p3/8/P2N2P1/1PP1R1BP/2K1Q3 w - - 0 1", ToMove(Sq_d3, Sq_e5, T_capture), ScoreType(P - N));
    posList.emplace_back("rnb2b1r/ppp2kpp/5n2/4P3/q2P3B/5R2/PPP2PPP/RN1QKB2 w Q - 1 1", ToMove(Sq_h4, Sq_f6, T_capture), ScoreType(N - B + P));
    posList.emplace_back("r2q1rk1/2p1bppp/p2p1n2/1p2P3/4P1b1/1nP1BN2/PP3PPP/RN1QR1K1 b - - 1 1", ToMove(Sq_g4, Sq_f3, T_capture), ScoreType(N - B));
@@ -89,8 +91,14 @@ bool TestSEE() {
       readFEN(t.fen, p, true);
       Logging::LogIt(Logging::logInfo) << "============================== " << t.fen << " ==";
       const ScoreType s = ThreadPool::instance().main().SEE(p, t.m);
-      if (s != t.threshold)
+      if (s != t.threshold){
          Logging::LogIt(Logging::logError) << "wrong SEE value == " << ToString(p) << "\n" << ToString(t.m) << " " << s << " " << t.threshold;
+         ++errors;
+      }
+   }
+   if (errors){
+      Logging::LogIt(Logging::logError) << "Some errors in SEE testing " << posList.size()-errors << "/" << posList.size() << " success";
+      return false;
    }
    return true;
 }

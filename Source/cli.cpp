@@ -16,7 +16,7 @@
 #include "xboard.hpp"
 
 // see cli_perft.cpp
-void perft_test(const std::string& fen, DepthType d, uint64_t expected);
+[[nodiscard]] bool perft_test(const std::string& fen, DepthType d, uint64_t expected);
 Counter perft(const Position& p, DepthType depth, PerftAccumulator& acc);
 
 // see cli_selfplay.cpp
@@ -258,14 +258,16 @@ bool cliManagement(const std::string & firstArg, int argc, char** argv) {
    }
 
    if (firstArg == "-perft_test") {
-      perft_test(startPosition, 5, 4865609);
-      perft_test("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ", 4, 4085603);
-      perft_test("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ", 6, 11030083);
-      perft_test("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", 5, 15833292);
-      return true;
+      bool ok = true;
+      ok |= perft_test(startPosition, 5, 4865609);
+      ok |= perft_test("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ", 4, 4085603);
+      ok |= perft_test("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ", 6, 11030083);
+      ok |= perft_test("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", 5, 15833292);
+      return ok;
    }
 
    if (firstArg == "-perft_test_long_fischer") {
+      bool ok = true;
       DynamicConfig::FRC = true;
       std::ifstream infile("Book_and_Test/TestSuite/fischer.txt");
       std::string   line;
@@ -276,13 +278,14 @@ bool cliManagement(const std::string & firstArg, int argc, char** argv) {
             const std::size_t start = found + 1;
             found                   = line.find_first_of(',', found + 1);
             const uint64_t ull      = std::stoull(line.substr(start, found - start));
-            perft_test(fen, 6, ull);
+            ok |= perft_test(fen, 6, ull);
          }
       }
-      return true;
+      return ok;
    }
 
    if (firstArg == "-perft_test_long") {
+      bool ok = true;
       std::ifstream infile("Book_and_Test/TestSuite/perft.txt");
       std::string   line;
       while (std::getline(infile, line)) {
@@ -293,10 +296,10 @@ bool cliManagement(const std::string & firstArg, int argc, char** argv) {
             const std::size_t start = found + 1;
             found                   = line.find_first_of(',', found + 1);
             const uint64_t ull      = std::stoull(line.substr(start, found - start));
-            perft_test(fen, ++i, ull);
+            ok |= perft_test(fen, ++i, ull);
          }
       }
-      return true;
+      return ok;
    }
 
    if (firstArg == "-see_test") {
