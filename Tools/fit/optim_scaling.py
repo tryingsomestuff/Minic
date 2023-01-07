@@ -12,8 +12,8 @@ nb_best_test = 15
 nb_tested_config = 3
 
 time_control='3+0.03'
-to_be_tuned='seeQuietInit'
-test_range = range(-128,128,16)
+to_be_tuned='NNUEThreshold2'
+test_range = range(0,512,16)
 
 class Command(object):
     def __init__(self, cmd):
@@ -192,7 +192,7 @@ def main():
     parser.add_argument(
         "--engine",
         type=str,
-        default="/ssd2/Minic/Dist/Minic3/minic_dev_linux_x64",
+        default="/ssd2/Minic/Tourney/minic_dev_linux_x64",
         help="Path to engine, see https://github.com/tryingsomestuff/Minic",
     )
     parser.add_argument(

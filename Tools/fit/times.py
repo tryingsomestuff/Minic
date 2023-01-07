@@ -2,8 +2,8 @@ import chess.pgn
 import matplotlib.pyplot as plt
 import sys
 
-incr = 0.1
-initialTC = 10
+incr = 0
+initialTC = 1
 
 filename = sys.argv[1] if len(sys.argv) > 1 else "test.pgn"
 
@@ -93,7 +93,7 @@ def getData(engine,data):
    return found
 
 data = {}
-engines = ["minic_dev", "minic_3.32"]
+engines = ["minic_dev", "minic_3.35", "weiss"]
 #"Halogen", "Genie", "berserk", "seer", "weiss", "xiphos", "BlackMarlin", "stash", "rofChade", "Drofa", "stockfish"
 cycler = plt.cycler(linestyle=['-', '--', ':', '-.']) * plt.cycler(color=['r', 'g', 'b'])
 plt.rc('axes', prop_cycle=cycler)

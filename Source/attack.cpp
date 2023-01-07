@@ -318,7 +318,7 @@ BitBoard between(const Square sq1, const Square sq2){
 
 } // namespace BBTools
 
-bool isAttacked(const Position &p, const Square s) {
+bool isAttacked(const Position &p, const Square s){
    //assert(isValidSquare(s)); ///@todo ?
    START_TIMER
    const bool b = isValidSquare(s) && BBTools::isAttackedBB(p, s, p.c);
