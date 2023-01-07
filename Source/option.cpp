@@ -280,7 +280,8 @@ void registerCOMOptions() { // options exposed to GUI
    _keys.emplace_back(k_string,w_string,"NNUEFile"                    , &DynamicConfig::NNUEFile                                                                                , &NNUEWrapper::init);
    _keys.emplace_back(k_bool,  w_check, "forceNNUE"                   , &DynamicConfig::forceNNUE                      , false            , true);
    _keys.emplace_back(k_int,   w_spin,  "NNUEScaling"                 , &DynamicConfig::NNUEScaling                    , (int)32          , (int)256);
-   _keys.emplace_back(k_int,   w_spin,  "NNUEThreshold"               , &DynamicConfig::NNUEThreshold                  , (int)-1500       , (int)1500);
+   _keys.emplace_back(k_int,   w_spin,  "NNUEThreshold"               , &DynamicConfig::NNUEThreshold                  , (int)0           , (int)1500);
+   _keys.emplace_back(k_int,   w_spin,  "NNUEThreshold2"              , &DynamicConfig::NNUEThreshold2                 , (int)0           , (int)1500);
 #endif
 
 #ifdef WITH_GENFILE
@@ -453,6 +454,7 @@ void initOptions(int argc, char** argv) {
    GETOPT(forceNNUE, bool)
    GETOPT(NNUEScaling, int)
    GETOPT(NNUEThreshold, int)
+   GETOPT(NNUEThreshold2, int)
 #endif
 
 #ifdef WITH_GENFILE

@@ -926,7 +926,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    const ScoreType hceScore = variantScore(ret, p.halfmoves, context.height_, p.c);
 
 #ifdef WITH_NNUE
-   if ( DynamicConfig::useNNUE && !forbiddenNNUE && Abs(hceScore) <= DynamicConfig::NNUEThreshold/4 ){
+   if ( DynamicConfig::useNNUE && !forbiddenNNUE && Abs(hceScore) <= DynamicConfig::NNUEThreshold2 ){
       // if HCE is small (there is something more than just material value going on ...), fall back to NNUE;
       const ScoreType nnueScore = NNUEEVal(p, data, context, features, true);
       STOP_AND_SUM_TIMER(Eval)

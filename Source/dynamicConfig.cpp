@@ -41,6 +41,7 @@ std::string  chessvariant     = "chess";
 // from 32 to 256      x_scaled = x * NNUEscaling / 64
 int NNUEScaling   = 80; // hand tuned
 int NNUEThreshold = 600;
+int NNUEThreshold2 = 300;
 
 #ifndef FORCEEMBEDDEDNNUE
 std::string NNUEFile;
