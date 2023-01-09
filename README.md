@@ -200,7 +200,7 @@ Here is 4 years of CCRL progress (single thread)
 
 ### CCRL
 - 40/15: Minic 3.31 + Natural Naughtiness is tested at 3447 on the [CCRL 40/15 scale, 4 cores](http://ccrl.chessdom.com/ccrl/4040/)  
-- Blitz: Minic 3.18 + Nimble Nothingness is tested at 3490 on the [CCRL BLITZ scale, 8 cores](http://ccrl.chessdom.com/ccrl/404/)  
+- Blitz: Minic 3.31 + Natural Naughtiness is tested at 3609 on the [CCRL BLITZ scale, 8 cores](http://ccrl.chessdom.com/ccrl/404/)  
 - FRC: Minic 3.32 + Natural Naughtiness is tested at 3591 on the [CCRL FRC list](http://ccrl.chessdom.com/ccrl/404FRC/)  
 
 ### CEGT
