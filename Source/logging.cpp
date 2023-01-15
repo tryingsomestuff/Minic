@@ -4,7 +4,7 @@
 #include "dynamicConfig.hpp"
 
 #ifdef __ANDROID__
-std::string backtrace(int skip) {
+std::string backtrace([[maybe_unused]] int skip) {
    ////@todo backtrace for android
    return "";
 }
@@ -18,7 +18,7 @@ std::string backtrace(int skip) {
 #include <stdlib.h>
 #include <unistd.h>
 
-std::string backtrace(int skip) {
+std::string backtrace([[maybe_unused]] int skip) {
    void *    callstack[128];
    const int nMaxFrames = sizeof(callstack) / sizeof(callstack[0]);
    char      buf[1024];
@@ -49,7 +49,7 @@ std::string backtrace(int skip) {
 }
 
 #elif defined __MINGW32__
-std::string backtrace(int skip) {
+std::string backtrace([[maybe_unused]] int skip) {
    ////@todo backtrace for mingw
    return "";
 }
@@ -57,7 +57,7 @@ std::string backtrace(int skip) {
 #elif defined _WIN32
 //#include "dbg_win.h"
 
-std::string backtrace(int skip) {
+std::string backtrace([[maybe_unused]] int skip) {
 /*
    std::stringstream               buff;
    std::vector<windbg::StackFrame> stack = windbg::stack_trace();
@@ -71,7 +71,7 @@ std::string backtrace(int skip) {
 }
 
 #elif defined __CYGWIN__
-std::string backtrace(int skip) {
+std::string backtrace([[maybe_unused]] int skip) {
    ///@todo backtrace for cygwin
    return "";
 }
