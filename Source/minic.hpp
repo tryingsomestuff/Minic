@@ -239,7 +239,6 @@ inline bool minic(int argc, char** argv) {
       Logging::LogIt(Logging::logInfo) << "Hint: You can use -xboard command line option to enter xboard mode (default is uci)";
       firstArg = "-uci"; // default is uci
    }
-
    const bool ret = cliManagement(firstArg, argc, argv);
    STOP_AND_SUM_TIMER(Total)
    Timers::Display();

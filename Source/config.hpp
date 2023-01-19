@@ -18,6 +18,7 @@ const std::string MinicVersion = "3.35";
 #define WITH_SYZYGY // include or not syzgy ETG support
 #endif // _MSC_VER
 #endif // WITH_SMALL_MEMORY
+//#define WITH_FMTLIB
 
 //#define WITHOUT_FILESYSTEM              // some compiler don't support whole std:filesystem
 //#define LIMIT_THREADS_TO_PHYSICAL_CORES // in order to restrict thread to the number of physical core

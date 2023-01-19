@@ -1,7 +1,7 @@
 #!/bin/bash
 ulimit -s unlimited
 
-if grep "^#define WITH_MPI" Source/definition.hpp ; then
+if grep "^#define WITH_MPI" Source/config.hpp ; then
    echo "Build with mpi"
    if (mpirun --version | grep Open); then
       export CXX=mpicxx
@@ -66,6 +66,10 @@ fi
 
 LIBS="-lpthread -ldl"
 # -lopenblas"
+
+if grep "^#define WITH_FMTLIB" Source/config.hpp ; then
+   LIBS="$LIBS -lfmt"
+fi
 
 OPT="$WARN $d $OPT $t $STDVERSION -fno-exceptions"
 if [ -n "$FORCEDNAME" ]; then

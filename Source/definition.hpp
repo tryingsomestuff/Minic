@@ -44,6 +44,10 @@ typedef uint64_t u_int64_t;
 
 #include "config.hpp"
 
+#ifdef WITH_FMTLIB
+#include <fmt/color.h>
+#endif
+
 #ifdef WITH_EVAL_TUNING
 #define CONST_EVAL_TUNING
 #undef WITH_EVALSCORE_AS_INT

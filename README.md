@@ -311,7 +311,7 @@ This can be done using the given git submodule or by hand. To use EGT just speci
 add the command line option "-xboard" to go to xboard/winboard mode or -uci for UCI. If not option is given Minic will **default to use UCI protocol**.
 Please note that if you want to force specific option from command line instead of using protocol option, you **have** to first specific protocol as the first command line argument. For instance `minic -uci -minOutputLevel 0` will give a very verbose Minic using uci. 
 
-Other available options (depending on compilation option, see definition.hpp) are mainly for development or debug purpose. They do not start the protocol loop. Here is an incompleted list :
+Other available options (depending on compilation option, see config.hpp) are mainly for development or debug purpose. They do not start the protocol loop. Here is an incompleted list :
 * -perft_test : run the inner perft test
 * -eval <"fen"> : static evaluation of the given position
 * -gen <"fen"> : move generation on the given position
