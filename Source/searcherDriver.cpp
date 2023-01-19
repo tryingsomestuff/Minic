@@ -59,6 +59,22 @@ void Searcher::displayGUI(DepthType          depth,
       }
       str << " pv " << ToString(pv); //only add pv at the end (c-chess-cli doesn't like to read something after pv...)
    }
+#ifdef WITH_FMTLIB
+   else if (Logging::ct == Logging::CT_pretty){
+      str << fmt::format(fmt::fg(fmt::color::steel_blue) | fmt::emphasis::italic, "{:>3}/{:<3} ", depth, seldepth);
+      if(bestScore > 100){
+         str << fmt::format(fmt::fg(fmt::color::forest_green) | fmt::emphasis::bold, "{:>6} ", UCI::uciScore(bestScore, ply));
+      }
+      else if (bestScore < -100){
+         str << fmt::format(fmt::fg(fmt::color::fuchsia) | fmt::emphasis::bold, "{:>6} ", UCI::uciScore(bestScore, ply));
+      }
+      else str << fmt::format(fmt::fg(fmt::color::light_gray) | fmt::emphasis::bold, "{:>6} ", UCI::uciScore(bestScore, ply));
+      str << fmt::format(fmt::fg(fmt::color::steel_blue) , "{:>6}.{:0>3}s ", ms/1000, ms-(ms/1000)*1000);
+      str << fmt::format(fmt::fg(fmt::color::steel_blue) | fmt::emphasis::faint, "{:>6} knps ", static_cast<Counter>(static_cast<double>(nodeCount)/ 1000 / msec2sec(ms)));
+      str << fmt::format(fmt::fg(fmt::color::steel_blue) | fmt::emphasis::faint, "{:>12} nodes ", nodeCount);
+      str << fmt::format(fmt::fg(fmt::color::floral_white) | fmt::emphasis::faint, ToString(pv));
+   }
+#endif   
    Logging::LogIt(Logging::logGUI) << str.str();
 }
 

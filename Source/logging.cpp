@@ -104,6 +104,13 @@ LogIt::~LogIt() {
    std::lock_guard<std::mutex> lock(_mutex);
    if (_level != logGUI) { // those are "comments" and are prefixed with _protocolComment[ct] ("info string" for UCI)
       if ( _level >= DynamicConfig::minOutputLevel ) {
+#ifdef WITH_FMTLIB 
+         if ( ct == CT_pretty ){
+            const std::string str = std::string(_levelNames[_level]) + showDate() + ": " + _buffer.str();
+            std::cout << fmt::format(_levelStyles[_level], str) << std::endl;
+         }
+         else
+#endif
          std::cout << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
       }
       // debug file output is *not* depending on DynamicConfig::minOutputLevel

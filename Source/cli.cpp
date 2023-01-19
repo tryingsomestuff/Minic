@@ -232,6 +232,11 @@ bool cliManagement(const std::string & firstArg, int argc, char** argv) {
    Logging::LogIt(Logging::logInfo) << "You can use -xboard command line option to enter xboard mode";
 #endif
 
+#ifdef WITH_FMTLIB   
+   // let's switch to "pretty mode"
+   Pretty::init();
+#endif
+
    const auto args {std::span(argv, size_t(argc))};
 
    if (firstArg == "-selfplay") {
@@ -380,12 +385,31 @@ bool cliManagement(const std::string & firstArg, int argc, char** argv) {
    }
 
    // in all other cases, args[2] is always the fen string
+   if(argc < 3){
+      Logging::LogIt(Logging::logError) << "your command is either wrong or needs a fen string";
+      return true;
+   }
    std::string fen = args[2];
 
    // some "short cuts" !
    if (fen == "start") fen = startPosition;
    if (fen == "fine70") fen = fine70;
    if (fen == "shirov") fen = shirov;
+
+   // validate the supposed fen string ...
+   const std::regex lookLikeFen(
+    "^"
+    "([rnbqkpRNBQKP1-8]+\\/){7}([rnbqkpRNBQKP1-8]+)\\s"
+    "[bw]\\s"
+    "((-|(K|[A-H])?(Q|[A-H])?(k|[a-h])?(q|[a-h])?)\\s)"
+    "((-|[a-h][36])\\s)"
+    "((\\d+)\\s(\\d+)\\s?|(\\d+)\\s?)?"
+    "$"
+   );
+   if( ! std::regex_match(fen, lookLikeFen)){
+      Logging::LogIt(Logging::logError) << "fen does not look good... : " << fen;
+      return true;
+   }
 
    // instantiate the position
    RootPosition p;
@@ -394,7 +418,7 @@ bool cliManagement(const std::string & firstArg, int argc, char** argv) {
    p.associateEvaluator(evaluator);
 #endif
    if (!readFEN(fen, p, false, true)) {
-      Logging::LogIt(Logging::logInfo) << "Error reading fen";
+      Logging::LogIt(Logging::logError) << "when reading fen";
       return true;
    }
 
@@ -564,6 +588,6 @@ bool cliManagement(const std::string & firstArg, int argc, char** argv) {
       return true;
    }
 
-   Logging::LogIt(Logging::logInfo) << "Error : unknown command line";
+   Logging::LogIt(Logging::logError) << "unknown command line : " << firstArg;
    return false;
 }

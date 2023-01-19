@@ -10,7 +10,7 @@
  */
 namespace COM {
 
-enum Protocol : uint8_t { p_uci = 0, p_xboard };
+enum Protocol : uint8_t { p_uci = 0, p_xboard, p_pretty };
 extern Protocol protocol;
 
 enum State : uint8_t { st_pondering = 0, st_analyzing, st_searching, st_none };
@@ -66,3 +66,11 @@ void thinkAsync(const State givenState);
 [[nodiscard]] Move moveFromCOM(const std::string & mstr);
 
 } // namespace COM
+
+namespace Pretty{
+inline void init() {
+   Logging::ct = Logging::CT_pretty;
+   Logging::LogIt(Logging::logInfo) << "Init pretty mode";
+   COM::init(COM::p_pretty);
+} 
+}
