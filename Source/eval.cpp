@@ -131,10 +131,11 @@ ScoreType NNUEEVal(const Position & p, EvalData &data, Searcher &context, EvalFe
    // call the net
    ScoreType nnueScore = static_cast<ScoreType>(p.evaluator().propagate(p.c, std::min(32,static_cast<int>(BB::countBit(p.occupancy())))));
    // fuse MG and EG score applying the EG scaling factor ///@todo, doesn't the net already learned that ????
-   nnueScore = static_cast<ScoreType>(data.gp * nnueScore + (1.f - data.gp) * nnueScore * features.scalingFactor); // use scaling factor
+   nnueScore = ScaleScore({nnueScore, nnueScore}, data.gp, features.scalingFactor);
    // NNUE evaluation scaling
    nnueScore = static_cast<ScoreType>((nnueScore * DynamicConfig::NNUEScaling) / 64);
-   // take contempt into account (no tempo with NNUE, the HalfKA net already take it into account)
+   // take contempt into account (no tempo with NNUE, 
+   // the HalfKA net already take it into account but this is necessary for "dynamic" contempt from opponent)
    nnueScore += ScaleScore(context.contempt, data.gp);
    // clamp score
    nnueScore = clampScore(nnueScore);
