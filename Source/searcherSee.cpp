@@ -69,7 +69,7 @@ ScoreType Searcher::SEE(const Position& p, const Move& m) {
          break;
 
       swapList[nCapt] = -swapList[nCapt - 1] + currentTargetVal;
-      // pruning here does not influence the result
+      //// pruning here does not influence the result
       //if (std::max(-swapList[nCapt-1], swapList[nCapt]) < 0) break; ///@todo ??
       if (promPossible && pp == P_wp) {
          swapList[nCapt] += valueSEE(P_wq) - valueSEE(P_wp);
