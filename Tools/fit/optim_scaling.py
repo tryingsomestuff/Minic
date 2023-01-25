@@ -12,8 +12,8 @@ nb_best_test = 15
 nb_tested_config = 3
 
 time_control='3+0.03'
-to_be_tuned='NNUEThreshold2'
-test_range = range(0,512,16)
+to_be_tuned='PhaseScaling'
+test_range = range(-128,128,16)
 
 class Command(object):
     def __init__(self, cmd):
