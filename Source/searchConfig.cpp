@@ -75,6 +75,9 @@ CONST_SEARCH_TUNING ScoreType ttAlphaCutMargin      = 64;
 CONST_SEARCH_TUNING DepthType ttBetaCutDepth        = 1;
 CONST_SEARCH_TUNING ScoreType ttBetaCutMargin       = 64;
 
+CONST_SEARCH_TUNING ScoreType lazySortThreshold     = -512;
+CONST_SEARCH_TUNING ScoreType lazySortThresholdQS   = -512;
+
 //CONST_SEARCH_TUNING ScoreType randomAggressiveReductionFactor = 2;
 
 } // namespace SearchConfig

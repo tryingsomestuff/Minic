@@ -877,7 +877,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
          // ProbCut
          const ScoreType betaPC = beta + SearchConfig::probCutMargin;
-         if (SearchConfig::doProbcut && depth >= SearchConfig::probCutMinDepth && !isMateScore(beta) && 
+         if (SearchConfig::doProbcut && depth >= SearchConfig::probCutMinDepth && !isMateScore(beta) && /*pvsData.cutNode &&*/
              evalData.haveThreats[p.c]
                //&& !pvsData.isKnownEndGame 
                && !( pvsData.validTTmove && 
@@ -893,10 +893,11 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             MoveSorter::score(*this, moves, p, evalData.gp, height, pvsData.cmhPtr, true, pvsData.isInCheck, pvsData.validTTmove ? &e : nullptr);
             size_t offset = 0;
             const Move* it = nullptr;
-            while ((it = MoveSorter::pickNext(moves, offset)) && probCutCount < SearchConfig::probCutMaxMoves /*+ 2*pvsData.cutNode*/) {
+            //if(!pvsData.cutNode) MoveSorter::sort(moves); // we expect one of the first best move to fail high on cutNode
+            while ((it = MoveSorter::pickNext(moves, offset/*, !pvsData.cutNode)*/)) && probCutCount < SearchConfig::probCutMaxMoves) {
    #else
             MoveSorter::scoreAndSort(*this, moves, p, evalData.gp, height, pvsData.cmhPtr, true, pvsData.isInCheck, pvsData.validTTmove ? &e : nullptr);
-            for (auto it = moves.begin(); it != moves.end() && probCutCount < SearchConfig::probCutMaxMoves /*+ 2*pvsData.cutNode*/; ++it) {
+            for (auto it = moves.begin(); it != moves.end() && probCutCount < SearchConfig::probCutMaxMoves; ++it) {
    #endif
                stats.incr(Stats::sid_probcutMoves);
                if ((pvsData.validTTmove && sameMove(e.m, *it)) || isBadCap(*it)) continue; // skip TT move if quiet or bad captures
@@ -1176,14 +1177,15 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    if (moves.empty()) return pvsData.isInCheck ? matedScore(height) : drawScore(p, height);
 
 #ifdef USE_PARTIAL_SORT
-   MoveSorter::score(*this, moves, p, evalData.gp, height, pvsData.cmhPtr, true, pvsData.isInCheck, pvsData.validTTmove ? &e : nullptr,
-                     refutation != INVALIDMINIMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMINIMOVE);
+   MoveSorter ms(*this, p, evalData.gp, height, pvsData.cmhPtr, true, pvsData.isInCheck, pvsData.validTTmove ? &e : nullptr,
+                 refutation != INVALIDMINIMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMINIMOVE);
+   ms.score(moves);
    size_t offset = 0;
    const Move* it = nullptr;
-   while ((it = MoveSorter::pickNext(moves, offset)) && !stopFlag) {
+   //if(!pvsData.cutNode) ms.sort(moves); // we expect one of the first best move to fail high on cutNode
+   while ((it = ms.pickNextLazy(moves, offset/*, !pvsData.cutNode*/)) && !stopFlag) {
 #else
-   MoveSorter::scoreAndSort(*this, moves, p, evalData.gp, height, pvsData.cmhPtr, true, pvsData.isInCheck, pvsData.validTTmove ? &e : nullptr,
-                            refutation != INVALIDMINIMOVE && isCapture(Move2Type(refutation)) ? refutation : INVALIDMINIMOVE);
+   MoveSorter::scoreAndSort(moves);
    for (auto it = moves.begin(); it != moves.end() && !stopFlag; ++it) {
 #endif
 

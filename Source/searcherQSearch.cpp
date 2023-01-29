@@ -236,10 +236,11 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    getCMHPtr(p.halfmoves, cmhPtr);
 
 #ifdef USE_PARTIAL_SORT
-   MoveSorter::score(*this, moves, p, data.gp, height, cmhPtr, false, isInCheck, validTTmove ? &e : nullptr); ///@todo warning gp is often = 0.5 here !
+   MoveSorter ms(*this, p, data.gp, height, cmhPtr, false, isInCheck, validTTmove ? &e : nullptr); ///@todo warning gp is often = 0.5 here !
+   ms.score(moves);
    size_t offset = 0;
    const Move* it = nullptr;
-   while ((it = MoveSorter::pickNext(moves, offset))) {
+   while ((it = ms.pickNext/*Lazy*/(moves, offset, false/*, SearchConfig::lazySortThresholdQS*/))) {
 #else
    MoveSorter::scoreAndSort(*this, moves, p, data.gp, height, cmhPtr, false, isInCheck,
                             validTTmove ? &e : nullptr); ///@todo warning gp is often = 0.5 here !
