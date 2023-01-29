@@ -149,11 +149,13 @@ void MoveSorter::sort(MoveList& moves) {
    STOP_AND_SUM_TIMER(MoveSorting)
 }
 
-const Move* MoveSorter::pickNext(MoveList& moves, size_t& begin) {
+const Move* MoveSorter::pickNext(MoveList& moves, size_t& begin, bool skipSort) {
    if (moves.begin() + begin == moves.end()) return nullptr;
    START_TIMER
-   const auto it = std::min_element(moves.begin() + begin, moves.end(), MoveSortOperator());
-   std::iter_swap(moves.begin() + begin, it);
+   if(!skipSort){
+      const auto it = std::min_element(moves.begin() + begin, moves.end(), MoveSortOperator());
+      std::iter_swap(moves.begin() + begin, it);
+   }
    STOP_AND_SUM_TIMER(MoveSorting)
    return &*(moves.begin() + (begin++)); // increment begin !
 }

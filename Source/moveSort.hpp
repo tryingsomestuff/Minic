@@ -1,6 +1,7 @@
 #pragma once
 
 #include "definition.hpp"
+#include "searchConfig.hpp"
 #include "tables.hpp"
 #include "timers.hpp"
 #include "transposition.hpp"
@@ -44,6 +45,12 @@ struct MoveSorter {
    const DepthType    height;
    const CMHPtrArray& cmhPtr;
    const float        gp;
+   
+   bool skipSort = false;
+
+   inline void score(MoveList & moves){
+      score(context, moves, p, gp, height, cmhPtr, useSEE, isInCheck, e, refutation);
+   }
 
    static void score(const Searcher&    context,
                      MoveList&          moves,
@@ -55,6 +62,10 @@ struct MoveSorter {
                      const bool         isInCheck  = false,
                      const TT::Entry*   e          = nullptr,
                      const MiniMove     refutation = INVALIDMINIMOVE);
+
+   inline void scoreAndSort(MoveList & moves){
+      scoreAndSort(context, moves, p, gp, height, cmhPtr, useSEE, isInCheck, e, refutation);
+   }
 
    static void scoreAndSort(const Searcher&    context,
                             MoveList&          moves,
@@ -69,5 +80,14 @@ struct MoveSorter {
 
    static void sort(MoveList& moves);
 
-   [[nodiscard]] static const Move* pickNext(MoveList& moves, size_t& begin);
+   [[nodiscard]] inline const Move* pickNextLazy(MoveList& moves, 
+                                                 size_t& begin, 
+                                                 bool sorted = false, 
+                                                 ScoreType threshold = SearchConfig::lazySortThreshold){
+      // if move has very low chance of raising alpha, no need to sort anymore ...
+      skipSort = skipSort || sorted || (begin != 0 && Move2Score(*(moves.begin() + begin - 1)) < threshold);
+      return pickNext(moves, begin, skipSort);
+   }
+
+   [[nodiscard]] static const Move* pickNext(MoveList& moves, size_t& begin, bool skipSort = false);
 };
