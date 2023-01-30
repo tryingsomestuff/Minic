@@ -876,13 +876,13 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          }
 
          // ProbCut
-         const ScoreType betaPC = beta + SearchConfig::probCutMargin;
+         const ScoreType betaPC = beta + SearchConfig::probCutMargin + SearchConfig::probCutMarginSlope * pvsData.improving;
          if (SearchConfig::doProbcut && depth >= SearchConfig::probCutMinDepth && !isMateScore(beta) && /*pvsData.cutNode &&*/
              evalData.haveThreats[p.c]
                //&& !pvsData.isKnownEndGame 
                && !( pvsData.validTTmove && 
-                     e.d >= depth / SearchConfig::probCutSearchDepthFactor - 1 &&
-                     e.s < beta + 1) // interestingly, just beta bound here is not enought
+                     e.d >= depth / SearchConfig::probCutSearchDepthFactor + 1 &&
+                     e.s < beta + SearchConfig::probCutMargin)
          ) {
             stats.incr(Stats::sid_probcutTry);
             int probCutCount = 0;
