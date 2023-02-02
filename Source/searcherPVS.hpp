@@ -877,12 +877,13 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
          // ProbCut
          const ScoreType betaPC = beta + SearchConfig::probCutMargin + SearchConfig::probCutMarginSlope * pvsData.improving;
-         if (SearchConfig::doProbcut && depth >= SearchConfig::probCutMinDepth && !isMateScore(beta) && /*pvsData.cutNode &&*/
+         if (SearchConfig::doProbcut && depth >= SearchConfig::probCutMinDepth && !isMateScore(beta) && 
              evalData.haveThreats[p.c]
                //&& !pvsData.isKnownEndGame 
+               && (pvsData.cutNode || staticScore >= betaPC)
                && !( pvsData.validTTmove && 
                      e.d >= depth / SearchConfig::probCutSearchDepthFactor + 1 &&
-                     e.s < beta + SearchConfig::probCutMargin)
+                     e.s < betaPC)
          ) {
             stats.incr(Stats::sid_probcutTry);
             int probCutCount = 0;
