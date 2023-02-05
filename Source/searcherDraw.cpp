@@ -10,19 +10,22 @@ bool Searcher::isRep(const Position& p, bool isPV) const {
    const Hash h = computeHash(p);
    int k = p.halfmoves - 2;
    bool irreversible = false;
-   //std::cout << "***************** " << h << " " << GetFEN(p) << std::endl;
+   //std::cout << "***************** " << k << " " << h << " " << GetFEN(p) << std::endl;
    // look in stack first
    for ( ; k >= 0; k-=2) {
-      //std::cout << "stack " << stack[k].h << " " << count << " " << ToString(stack[k].p.lastMove) << " " << GetFEN(stack[k].p) << std::endl;
+      //std::cout << "stack " << k << " " << stack[k].h << " " << count << " " << ToString(stack[k].p.lastMove) << " " << GetFEN(stack[k].p) << std::endl;
       if (stack[k].h == nullHash) break; // no more "history" in stack (will look at game state later)
       if (stack[k].h == h){
-         ++count;
 #ifdef DEBUG_FIFTY_COLLISION
          if (stack[k].p != p){
             Logging::LogIt(Logging::logFatal) << "Collision in fifty hash comparation" << ToString(p) << ToString(stack[k].p);
          }
 #endif
-         if (count >= limit) return true;
+         ++count;
+         if (count >= limit){
+            //std::cout << "draw" << std::endl;
+            return true;
+         }
       }
       // irreversible moves ?
       if (k > 0 && isValidMove(stack[k-1].p.lastMove) && 
@@ -40,10 +43,13 @@ bool Searcher::isRep(const Position& p, bool isPV) const {
    while(!irreversible && k>=0){
       const std::optional<Hash> curh = COM::GetGameInfo().getHash(k);
       if (!curh.has_value()) break;
-      //std::cout << "history " << curh.value() << " " << count << " " << ToString(COM::GetGameInfo().getMove(k).value()) << " " << GetFEN(COM::GetGameInfo().getPosition(k).value()) << std::endl;
+      //std::cout << "history " << k << " " << curh.value() << " " << count << " " << ToString(COM::GetGameInfo().getMove(k).value()) << " " << GetFEN(COM::GetGameInfo().getPosition(k).value()) << std::endl;
       if (curh.value() == h){
          ++count;
-         if (count >= limit) return true;
+         if (count >= limit){
+            //std::cout << "draw" << std::endl;
+            return true;
+         }
       }
       // irreversible moves ?
       if (k>0){
