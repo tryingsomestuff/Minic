@@ -158,26 +158,16 @@ and speed test on a 2x Intel(R) Xeon(R) Platinum 8269CY CPU @ 2.50GHz (52 physic
 suggest Minic is reacting quite well to hyperthreading.
 
 ### Home testing 
-Here are some fast TC results of a gauntlet tournament (STC 10s+0.1) for Minic 3.19 (dev version of various engine as of may 22th 2022).
+Here are some fast TC results of a gauntlet tournament (STC 10s+0.1) for Minic 3.36.
 ```
-   # PLAYER                        :  RATING  ERROR  POINTS  PLAYED   (%)  CFS(%)
-   1 rofChade3                     :   144.7   20.4   391.5     565    69      52
-   2 seer                          :   144.0   24.0   391.0     565    69     100
-   3 stockfish.8                   :    35.5   18.2   310.5     565    55      90
-   4 komodo-13.02                  :    15.8   20.1   295.0     565    52      50
-   5 Ethereal                      :    15.7   21.8   295.5     566    52      61
-   6 Igel                          :    12.0   18.8   292.0     565    52      81
-   7 komodo-12.1.1                 :     0.1   17.3   282.5     565    50      50
-   8 minic_3.22                    :     0.0   ----  4612.0    9043    51      91
-   9 komodo-11.01-linux            :   -15.0   21.9   270.5     565    48      86
-  10 Halogen                       :   -34.7   23.5   255.0     565    45      58
-  11 nemorino_nnue                 :   -37.2   16.8   253.0     565    45      60
-  12 Clover.3.1                    :   -41.0   24.0   250.5     566    44      58
-  13 arasanx-64-avx2-bmi2          :   -44.2   15.5   248.0     566    44      74
-  14 tucano_avx2                   :   -52.6   21.1   241.0     565    43      57
-  15 Wasp550-linux-avx             :   -55.1   20.4   239.0     565    42      69
-  16 stockfish.7                   :   -62.9   20.5   233.0     565    41     100
-  17 zahak-linux-amd64-10.0-avx    :  -130.7   21.8   183.0     565    32     ---
+Rank Name                          Elo     +/-   Games   Score    Draw 
+   0 minic_3.36                     22       5    9852   53.1%   50.6% 
+   1 seer                          103      11    1642   64.4%   57.9% 
+   2 rofChade3                      52      11    1642   57.4%   55.8% 
+   3 Uralochka3.39e-avx2           -47      11    1642   43.3%   57.3% 
+   4 komodo-13.02                  -78      13    1642   39.0%   41.7% 
+   5 Wasp600-linux-avx             -80      12    1642   38.7%   49.2% 
+   6 stockfish.8                   -81      13    1642   38.6%   41.9% 
 ```
 
 ### Random mover
