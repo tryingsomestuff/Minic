@@ -241,6 +241,10 @@ struct Searcher {
 
    [[nodiscard]] bool searching() const;
 
+   void clearGame();
+   
+   void clearSearch(bool forceHistoryClear = false);
+
    struct PawnEntry {
       colored<BitBoard>  pawnTargets   = {emptyBitBoard, emptyBitBoard};
       colored<BitBoard>  holes         = {emptyBitBoard, emptyBitBoard};
@@ -258,12 +262,12 @@ struct Searcher {
       }
    };
 
+   std::unique_ptr<Searcher::PawnEntry[]> tablePawn = nullptr;
+   uint64_t ttSizePawn = 0;
+
    void initPawnTable();
 
    void clearPawnTT();
-
-   void clearGame();
-   void clearSearch(bool forceHistoryClear = false);
 
    [[nodiscard]] bool getPawnEntry(Hash h, PawnEntry*& pe);
 
