@@ -22,7 +22,7 @@ template<Color C>
 void MoveSorter::computeScore(Move& m) const {
    assert(isValidMove(m));
    //std::cout << ToString(m) << std::endl;
-   if (Move2Score(m) != 0) return; // prob cut already computed captures score
+   if (Move2Score(m) != 0) return; // prob cut may have already computed captures score
    const MType t = Move2Type(m);
    assert(isValidMoveType(t));
    const Square from = Move2From(m);

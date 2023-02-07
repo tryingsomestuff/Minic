@@ -212,24 +212,6 @@ const SearchData& Searcher::getSearchData() const { return _data.datas; }
 
 bool Searcher::searching() const { return _searching; }
 
-namespace{
-    std::unique_ptr<Searcher::PawnEntry[]> tablePawn = nullptr;
-    uint64_t ttSizePawn = 0;
-}
-
-void Searcher::initPawnTable() {
-   Logging::LogIt(Logging::logInfo) << "Init Pawn TT";
-   Logging::LogIt(Logging::logInfo) << "PawnEntry size " << sizeof(PawnEntry);
-   ttSizePawn = powerFloor((SIZE_MULTIPLIER * DynamicConfig::ttPawnSizeMb) / sizeof(PawnEntry));
-   assert(BB::countBit(ttSizePawn) == 1); // a power of 2
-   tablePawn.reset(new PawnEntry[ttSizePawn]);
-   Logging::LogIt(Logging::logInfo) << "Size of Pawn TT " << ttSizePawn * sizeof(PawnEntry) / 1024 << "Kb";
-}
-
-void Searcher::clearPawnTT() {
-   for (unsigned int k = 0; k < ttSizePawn; ++k) tablePawn[k].h = nullHash;
-}
-
 void Searcher::clearGame() {
    clearPawnTT();
    stats.init();
@@ -254,6 +236,19 @@ void Searcher::clearSearch(bool forceHistoryClear) {
    if (forceHistoryClear) historyT.initHistory();
    counterT.initCounter();
    previousBest = INVALIDMOVE;
+}
+
+void Searcher::initPawnTable() {
+   Logging::LogIt(Logging::logInfo) << "Init Pawn TT (one per thread)";
+   Logging::LogIt(Logging::logInfo) << "PawnEntry size " << sizeof(PawnEntry);
+   ttSizePawn = powerFloor((SIZE_MULTIPLIER * DynamicConfig::ttPawnSizeMb / DynamicConfig::threads) / sizeof(PawnEntry));
+   assert(BB::countBit(ttSizePawn) == 1); // a power of 2 and not 0 ...
+   tablePawn.reset(new PawnEntry[ttSizePawn]);
+   Logging::LogIt(Logging::logInfo) << "Size of Pawn TT " << ttSizePawn * sizeof(PawnEntry) / 1024 << "Kb";
+}
+
+void Searcher::clearPawnTT() {
+   for (unsigned int k = 0; k < ttSizePawn; ++k) tablePawn[k].h = nullHash;
 }
 
 bool Searcher::getPawnEntry(Hash h, PawnEntry*& pe) {

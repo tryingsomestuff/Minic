@@ -44,6 +44,8 @@ void ThreadPool::setup() {
       back()->initPawnTable();
       back()->clearGame();
    }
+   // the size of pawn TT in each thread depends on the number of threads ...
+   ThreadPool::initPawnTables();
 }
 
 Searcher& ThreadPool::main() { return *(front()); }
