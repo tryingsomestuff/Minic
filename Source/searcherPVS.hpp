@@ -946,7 +946,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    }
 
    // Ed Schroder style IIR
-   if ( SearchConfig::doIIR && depth >= SearchConfig::iirMinDepth && !pvsData.ttHit){
+   if (SearchConfig::doIIR && depth >= SearchConfig::iirMinDepth && !pvsData.ttHit){
       stats.incr(Stats::sid_iid);
       depth -= SearchConfig::iirReduction;
    }
