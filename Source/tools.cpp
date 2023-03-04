@@ -4,6 +4,7 @@
 #include "evalDef.hpp"
 #include "hash.hpp"
 #include "logging.hpp"
+#include "moveApply.hpp"
 #include "pieceTools.hpp"
 #include "position.hpp"
 #include "positionTools.hpp"
@@ -210,7 +211,7 @@ std::string showAlgAbr(const Move m, const Position &p) {
    NNUEEvaluator evaluator = p.evaluator();
    p2.associateEvaluator(evaluator);
 #endif
-   if (const Position::MoveInfo moveInfo(p2,m); applyMove(p2, moveInfo)) {
+   if (const MoveInfo moveInfo(p2,m); applyMove(p2, moveInfo)) {
       if (isPosInCheck(p2)) isCheck = true;
    }
    else {
@@ -242,7 +243,7 @@ std::string showAlgAbr(const Move m, const Position &p) {
          for (const auto & m2 : l) {
             if (m2 == m) continue; // to not compare to myself ... should no happend thanks to previous verification
             Position p3 = p;
-            const Position::MoveInfo moveInfo2(p3, m2);
+            const MoveInfo moveInfo2(p3, m2);
             if (applyMove(p3, moveInfo2)) { // only if move is legal
                if (Move2To(m2) == to &&
                    (t == p.board_const(Move2From(m2)))) { // another move is landing on the same square with the same piece type

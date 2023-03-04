@@ -2,6 +2,7 @@
 
 #ifdef WITH_TEST_SUITE
 
+#include "extendedPosition.hpp"
 #include "logging.hpp"
 #include "positionTools.hpp"
 

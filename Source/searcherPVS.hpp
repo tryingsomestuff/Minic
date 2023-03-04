@@ -6,7 +6,9 @@
 #include "egt.hpp"
 #include "evalConfig.hpp"
 #include "evalTools.hpp"
+#include "moveApply.hpp"
 #include "moveGen.hpp"
+#include "movePseudoLegal.hpp"
 #include "moveSort.hpp"
 #include "positionTools.hpp"
 #include "searchConfig.hpp"
@@ -577,6 +579,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          }
          */
       }
+      else{
+         stats.incr(Stats::sid_ttWrongBound);
+      }
    }
 
    // if entry hash is not null and entry move is valid, 
@@ -903,7 +908,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                stats.incr(Stats::sid_probcutMoves);
                if ((pvsData.validTTmove && sameMove(e.m, *it)) || isBadCap(*it)) continue; // skip TT move if quiet or bad captures
                Position p2 = p;
-               const Position::MoveInfo moveInfo(p2,*it);
+               const MoveInfo moveInfo(p2,*it);
                if (!applyMove(p2, moveInfo, true)) continue;
    #ifdef WITH_NNUE
                NNUEEvaluator newEvaluator = p.evaluator();
@@ -1044,7 +1049,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       bestMove = e.m; // in order to preserve tt move for alpha bound entry
 
       Position p2 = p;
-      if (const Position::MoveInfo moveInfo(p2,e.m); applyMove(p2, moveInfo, true)) {
+      if (const MoveInfo moveInfo(p2,e.m); applyMove(p2, moveInfo, true)) {
          // prefetch as soon as possible
          TT::prefetch(computeHash(p2));
 
@@ -1206,7 +1211,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       if (pvsData.validTTmove && pvsData.ttMoveTried && sameMove(e.m, *it)) continue; // already tried
 
       Position p2 = p;
-      const Position::MoveInfo moveInfo(p2,*it);
+      const MoveInfo moveInfo(p2,*it);
 
       // do not apply NNUE update here, but later after prunning, right before next call to pvs
       if (!applyMove(p2, moveInfo, true)) continue;

@@ -6,6 +6,7 @@
 #include "dynamicConfig.hpp"
 #include "hash.hpp"
 #include "logging.hpp"
+#include "movePseudoLegal.hpp"
 #include "positionTools.hpp"
 #include "timers.hpp"
 #include "tools.hpp"
@@ -72,15 +73,7 @@ struct CastlingTraits<T_bks>{
    static constexpr Piece toP = P_br;
 };
 
-void applyNull(Searcher& context, Position& pN);
-
-bool applyMove(Position& p, const Position::MoveInfo & moveInfo, const bool noNNUEUpdate = false);
-
-void applyMoveNNUEUpdate(Position & p, const Position::MoveInfo & moveInfo);
-
 [[nodiscard]] ScoreType randomMover(const Position& p, PVList& pv, const bool isInCheck);
-
-[[nodiscard]] bool isPseudoLegal(const Position& p, const Move m);
 
 namespace MoveGen {
 
@@ -279,37 +272,3 @@ void generate(const Position& p, MoveList& moves, const bool doNotClear = false)
 }
 
 } // namespace MoveGen
-
-void movePiece(Position& p, const Square from, const Square to, const Piece fromP, const Piece toP, const bool isCapture = false, const Piece prom = P_none);
-
-template<Color c> 
-FORCE_FINLINE void movePieceCastle(Position& p, const CastlingTypes ct, const Square kingDest, const Square rookDest) {
-   START_TIMER
-   constexpr Piece          pk = c == Co_White ? P_wk  : P_bk;
-   constexpr Piece          pr = c == Co_White ? P_wr  : P_br;
-   constexpr CastlingRights ks = c == Co_White ? C_wks : C_bks;
-   constexpr CastlingRights qs = c == Co_White ? C_wqs : C_bqs;
-   BBTools::unSetBit(p, p.king[c]);
-   BB::_unSetBit(p.allPieces[c], p.king[c]);
-   BBTools::unSetBit(p, p.rootInfo().rooksInit[c][ct]);
-   BB::_unSetBit(p.allPieces[c], p.rootInfo().rooksInit[c][ct]);
-   BBTools::setBit(p, kingDest, pk);
-   BB::_setBit(p.allPieces[c], kingDest);
-   BBTools::setBit(p, rookDest, pr);
-   BB::_setBit(p.allPieces[c], rookDest);
-   p.board(p.king[c]) = P_none;
-   p.board(p.rootInfo().rooksInit[c][ct]) = P_none;
-   p.board(kingDest) = pk;
-   p.board(rookDest) = pr;
-   p.h  ^= Zobrist::ZT[p.king[c]][pk + PieceShift];
-   p.ph ^= Zobrist::ZT[p.king[c]][pk + PieceShift];
-   p.h  ^= Zobrist::ZT[p.rootInfo().rooksInit[c][ct]][pr + PieceShift];
-   p.h  ^= Zobrist::ZT[kingDest][pk + PieceShift];
-   p.ph ^= Zobrist::ZT[kingDest][pk + PieceShift];
-   p.h  ^= Zobrist::ZT[rookDest][pr + PieceShift];
-   p.king[c] = kingDest;
-   p.h  ^= Zobrist::ZTCastling[p.castling];
-   p.castling &= ~(ks | qs);
-   p.h  ^= Zobrist::ZTCastling[p.castling];
-   STOP_AND_SUM_TIMER(MovePiece)
-}

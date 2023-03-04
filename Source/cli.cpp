@@ -5,6 +5,7 @@
 #include "evalDef.hpp"
 #include "logging.hpp"
 #include "material.hpp"
+#include "moveApply.hpp"
 #include "moveGen.hpp"
 #include "position.hpp"
 #include "searcher.hpp"
@@ -547,7 +548,7 @@ bool cliManagement(const std::string & firstArg, int argc, char** argv) {
       p2.associateEvaluator(evaluator);
       p2.resetNNUEEvaluator(p2.evaluator());
 #endif
-      if (const Position::MoveInfo moveInfo(p2, m); !applyMove(p2, moveInfo)) { 
+      if (const MoveInfo moveInfo(p2, m); !applyMove(p2, moveInfo)) { 
          Logging::LogIt(Logging::logError) << "Cannot apply this move";
       }
       Logging::LogIt(Logging::logInfo) << ToString(p2);

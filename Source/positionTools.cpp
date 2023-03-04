@@ -5,6 +5,7 @@
 #include "dynamicConfig.hpp"
 #include "logging.hpp"
 #include "moveGen.hpp"
+#include "movePseudoLegal.hpp"
 #include "pieceTools.hpp"
 #include "tools.hpp"
 

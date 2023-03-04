@@ -3,6 +3,8 @@
 #include "distributed.h"
 #include "dynamicConfig.hpp"
 #include "logging.hpp"
+#include "moveApply.hpp"
+#include "movePseudoLegal.hpp"
 #include "searcher.hpp"
 #include "transposition.hpp"
 
@@ -160,7 +162,7 @@ bool receiveMoves(const Move move, Move ponderMove) {
       p2.resetNNUEEvaluator(p2.evaluator());
 #endif
       // apply best move and verify ponder move is ok
-      const Position::MoveInfo moveInfo(p2, move);
+      const MoveInfo moveInfo(p2, move);
       if (!(applyMove(p2, moveInfo) && isPseudoLegal(p2, ponderMove))) {
          Logging::LogIt(Logging::logInfo) << "Illegal ponder move " << ToString(ponderMove) << " " << ToString(p2);
          ponderMove = INVALIDMOVE; // do be sure ...
@@ -200,7 +202,7 @@ bool makeMove(const Move m, const bool disp, const std::string & tag, const Move
 #ifdef WITH_NNUE
    position.resetNNUEEvaluator(position.evaluator());
 #endif
-   const Position::MoveInfo moveInfo(position, m);
+   const MoveInfo moveInfo(position, m);
    const bool b = applyMove(position, moveInfo); // this update the COM::position position status
    if (disp && m != INVALIDMOVE) {
       Logging::LogIt(Logging::logGUI) << tag << " " << ToString(m)

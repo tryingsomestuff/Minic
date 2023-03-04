@@ -1,5 +1,6 @@
 #include "definition.hpp"
 #include "dynamicConfig.hpp"
+#include "moveApply.hpp"
 #include "position.hpp"
 #include "positionTools.hpp"
 #include "searcher.hpp"
@@ -108,10 +109,15 @@ void selfPlay(DepthType depth, uint64_t & nbPos) {
       }
 
 #ifdef WITH_GENFILE
-      const bool getQuietPos = true;
       if (DynamicConfig::genFen) {
+         // if true, will skip position if bestmove if capture, 
+         // if false, will search for a quiet position from here and rescore (a lot slower of course)
+         const bool getQuietPos = true;
+
          // writeToGenFile using genFenDepth from this root position
-         if (!ended) ThreadPool::instance().main().writeToGenFile(p2, getQuietPos, d, {}); // bufferized
+         if (!ended){
+            ThreadPool::instance().main().writeToGenFile(p2, getQuietPos, d, {}); // bufferized
+         }
          else {
             ThreadPool::instance().main().writeToGenFile(p2, getQuietPos, d, result); // write to file using result
          }
@@ -125,7 +131,7 @@ void selfPlay(DepthType depth, uint64_t & nbPos) {
 
       // update position using best move
       Position p3 = p2;
-      if (const Position::MoveInfo moveInfo(p3, d.best); !applyMove(p3, moveInfo)) break;
+      if (const MoveInfo moveInfo(p3, d.best); !applyMove(p3, moveInfo)) break;
       p2 = p3;
    }
 }

@@ -45,7 +45,7 @@ std::vector<std::string> split2(const std::string &line, char sep, char delim) {
    return v;
 }
 
-std::string ltrim(std::string &s) {
+inline std::string ltrim(std::string &s) {
    s.erase(s.begin(), std::ranges::find_if(s, [](int ch) { return !std::isspace(ch); }));
    return s;
 }

@@ -3,6 +3,7 @@
 #include "com.hpp"
 #include "dynamicConfig.hpp"
 #include "logging.hpp"
+#include "moveApply.hpp"
 #include "xboard.hpp"
 
 TimeType Searcher::getCurrentMoveMs()const{
@@ -314,7 +315,7 @@ Position Searcher::getQuiet(const Position& p, Searcher* searcher, ScoreType* qS
    for (const auto& m : pv) {
       Position p2 = pQuiet;
       //std::cout << "Applying move " << ToString(m) << std::endl;
-      if (const Position::MoveInfo moveInfo(p2,m); !applyMove(p2, moveInfo)) break;
+      if (const MoveInfo moveInfo(p2,m); !applyMove(p2, moveInfo)) break;
       pQuiet = p2;
    }
 
@@ -333,14 +334,13 @@ struct GenFENEntry{
    void write(std::ofstream & stream, int result) const {
       stream << "fen " << fen << "\n"
              << "move " << ToString(m) << "\n"
-             << "score " << s
-             << "\n"
+             << "score " << s << "\n"
              //<< "eval "   << e << "\n"
              << "ply " << ply << "\n"
              << "result " << (stm == Co_White ? result : -result) << "\n"
-             << "e"
-             << "\n";
+             << "e" << "\n";
    }
+   ///@todo writeBinary
 };
 
 void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadData & d, const std::optional<int> result) {
@@ -420,10 +420,14 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
       // end of sub search
 
    }
+   // skip when bestmove is capture or when you have not reached randomPly limit yet
+   else{
+      if(isCapture(data.best) || pLeaf.halfmoves >= DynamicConfig::randomPly){
+         data.best = INVALIDMOVE;
+      }
+   }
 
-   if (data.best != INVALIDMOVE &&
-      //pLeaf.halfmoves >= DynamicConfig::randomPly &&
-      Abs(data.score) < 1000) {
+   if (data.best != INVALIDMOVE && Abs(data.score) < 1500) {
       buffer.emplace_back(GetFEN(pLeaf), data.best, data.score, pLeaf.halfmoves, pLeaf.c);
       ++sfensWritten;
       if (sfensWritten % 100'000 == 0) Logging::LogIt(Logging::logInfoPrio) << "Sfens written " << sfensWritten;

@@ -11,8 +11,6 @@
 
 #ifdef WITH_TEST_SUITE
 
-#include "extendedPosition.hpp"
-
 bool test(const std::string& option);
 
 #endif

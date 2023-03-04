@@ -1,4 +1,5 @@
 #include "dynamicConfig.hpp"
+#include "moveApply.hpp"
 #include "searcher.hpp"
 
 ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position& p, DepthType height, DepthType& seldepth, PVList* pv) {
@@ -25,7 +26,7 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Posi
 
    for (const auto & it : moves) {
       Position p2 = p;
-      const Position::MoveInfo moveInfo(p2,it);
+      const MoveInfo moveInfo(p2,it);
       if (!applyMove(p2, moveInfo, true)) continue;
 #ifdef WITH_NNUE
       NNUEEvaluator newEvaluator = p.evaluator();
@@ -191,7 +192,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    // we try the tt move before move generation
    if (usableTTmove) {
       Position p2 = p;
-      if (const Position::MoveInfo moveInfo(p2,e.m); applyMove(p2, moveInfo, true)) {
+      if (const MoveInfo moveInfo(p2,e.m); applyMove(p2, moveInfo, true)) {
 #ifdef WITH_NNUE
          NNUEEvaluator newEvaluator = p.evaluator();
          p2.associateEvaluator(newEvaluator);
@@ -275,7 +276,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
          }
       }
       Position p2 = p;
-      const Position::MoveInfo moveInfo(p2,*it);
+      const MoveInfo moveInfo(p2,*it);
       if (!applyMove(p2, moveInfo, true)) continue;
       // prefetch as soon as possible
       TT::prefetch(computeHash(p2));

@@ -3,6 +3,8 @@
 #include "distributed.h"
 #include "dynamicConfig.hpp"
 #include "logging.hpp"
+#include "moveApply.hpp"
+#include "movePseudoLegal.hpp"
 #include "position.hpp"
 #include "searcher.hpp"
 #include "tools.hpp"
@@ -129,9 +131,10 @@ void getPV(const Position &p, Searcher &context, PVList &pv) {
       if (e.h != nullHash) {
          hashStack[k] = computeHash(p2);
          if (!isValidMove(e.m)) break;
-         if (const Position::MoveInfo moveInfo(p2,e.m); !applyMove(p2, moveInfo)) break;
+         if (const MoveInfo moveInfo(p2,e.m); !applyMove(p2, moveInfo)) break;
          pv.emplace_back(e.m);
          const Hash h = computeHash(p2);
+         // stop at first repetition
          for (int i = k - 1; i >= 0; --i)
             if (hashStack[i] == h) {
                stop = true;
