@@ -2,6 +2,7 @@
 
 #include "bitboard.hpp"
 #include "definition.hpp"
+#include "moveApply.hpp"
 #include "timers.hpp"
 
 #ifdef WITH_NNUE
@@ -181,34 +182,6 @@ struct alignas(32) Position {
       return _allB[Abs(pp) - 1];
    }
 
-   struct MoveInfo {
-      MoveInfo(const Position& p, const Move _m):
-          m(_m),
-          from(Move2From(_m)),
-          to(correctedMove2ToKingDest(_m)),
-          king{p.king[Co_White], p.king[Co_Black]},
-          ep(p.ep),
-          type(Move2Type(_m)),
-          fromP(p.board_const(from)),
-          toP(p.board_const(to)), // won't be used for EP
-          fromId(PieceIdx(fromP)),
-          isCapNoEP(toP != P_none) {
-         assert(isValidSquare(from));
-         assert(isValidSquare(to));
-         assert(isValidMoveType(type));
-      }
-      const Move   m         = INVALIDMOVE;
-      const Square from      = INVALIDSQUARE;
-      const Square to        = INVALIDSQUARE;
-      const colored<Square> king = {INVALIDSQUARE, INVALIDSQUARE};
-      const Square ep        = INVALIDSQUARE;
-      const MType  type      = T_std;
-      const Piece  fromP     = P_none;
-      const Piece  toP       = P_none;
-      const int    fromId    = 0;
-      const bool   isCapNoEP = false;
-   };
-
 #ifdef WITH_NNUE
    void associateEvaluator(NNUEEvaluator& evaluator, bool dirty = true) { 
       associatedEvaluator = &evaluator; 
@@ -327,7 +300,7 @@ struct RootPosition : public Position {
 };
 
 #ifdef WITH_NNUE
-template<Color c> void updateNNUEEvaluator(NNUEEvaluator& nnueEvaluator, const Position::MoveInfo& moveInfo) {
+template<Color c> void updateNNUEEvaluator(NNUEEvaluator& nnueEvaluator, const MoveInfo& moveInfo) {
    START_TIMER
    const Piece fromType = Abs(moveInfo.fromP);
    const Piece toType = Abs(moveInfo.toP);
@@ -355,7 +328,7 @@ template<Color c> void updateNNUEEvaluator(NNUEEvaluator& nnueEvaluator, const P
    STOP_AND_SUM_TIMER(UpdateNNUE)
 }
 
-template<Color c> void updateNNUEEvaluatorThemOnly(NNUEEvaluator& nnueEvaluator, const Position::MoveInfo& moveInfo) {
+template<Color c> void updateNNUEEvaluatorThemOnly(NNUEEvaluator& nnueEvaluator, const MoveInfo& moveInfo) {
    START_TIMER
    const Piece fromType = Abs(moveInfo.fromP);
    const Piece toType = Abs(moveInfo.toP);

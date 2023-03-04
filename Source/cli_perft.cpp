@@ -1,7 +1,9 @@
 #include "definition.hpp"
 
 #include "logging.hpp"
+#include "moveApply.hpp"
 #include "moveGen.hpp"
+#include "movePseudoLegal.hpp"
 #include "position.hpp"
 #include "positionTools.hpp"
 
@@ -38,7 +40,7 @@ Counter perft(const Position& p, DepthType depth, PerftAccumulator& acc) {
       p2.associateEvaluator(evaluator);
       p2.resetNNUEEvaluator(p2.evaluator());
 #endif
-      if (const Position::MoveInfo moveInfo(p2, m); !applyMove(p2, moveInfo)) continue;
+      if (const MoveInfo moveInfo(p2, m); !applyMove(p2, moveInfo)) continue;
       ++accLoc.validNodes;
       MType t = Move2Type(m);
       if (t == T_ep) ++accLoc.epNodes;

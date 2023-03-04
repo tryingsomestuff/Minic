@@ -4,6 +4,7 @@
 #include "evalConfig.hpp"
 #include "evalTools.hpp"
 #include "hash.hpp"
+#include "moveApply.hpp"
 #include "positionTools.hpp"
 #include "score.hpp"
 #include "searcher.hpp"
@@ -210,7 +211,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
          bool hasCapture = false;
          for (auto m : moves){
             Position p2 = p;
-            if (const Position::MoveInfo moveInfo(p2, m); applyMove(p2,moveInfo, true)){
+            if (const MoveInfo moveInfo(p2, m); applyMove(p2,moveInfo, true)){
                hasCapture = true;
                break;
             }

@@ -58,7 +58,7 @@ void processCommand(const std::string & command) {
       std::string val;
       iss >> tmpstr; //"name"
       iss >> key;
-      iss >> tmpstr;     //"value"
+      iss >> tmpstr; //"value"
       getline(iss, val); // get all the remaining stuff on the line
       //iss >> val;
       val = trim(val);
@@ -249,7 +249,9 @@ void processCommand(const std::string & command) {
          COM::init(COM::p_uci); 
       }
    }
-   else if (uciCommand == "eval") { Logging::LogIt(Logging::logGUI) << "info string " << uciCommand << " not implemented yet"; }
+   else if (uciCommand == "eval") { 
+      Logging::LogIt(Logging::logGUI) << "info string " << uciCommand << " not implemented yet";
+   }
    else if (uciCommand == "tbprobe") {
       std::string type;
       iss >> type;

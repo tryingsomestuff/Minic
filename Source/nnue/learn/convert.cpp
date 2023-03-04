@@ -22,7 +22,7 @@ int parse_game_result_from_pgn_extract(const std::string & result) {
    if (result == "\"1-0\"") { 
       return 1;
    }
-   // Black Win&
+   // Black Win
    else if (result == "\"0-1\"") {
       return -1;
    }
@@ -32,26 +32,26 @@ int parse_game_result_from_pgn_extract(const std::string & result) {
    }
 }
 
-// 0.25 -->  0.25 * PawnValueEg
-// #-4  --> -mate_in(4)
-// #3   -->  mate_in(3)
-// -M4  --> -mate_in(4)
-// +M3  -->  mate_in(3)
+// Here
+// #-4  --> mated in 4
+// #3   --> mating in 3
+// -M4  --> mated in 4
+// +M3  --> mating in 3
 ScoreType parse_score_from_pgn_extract(const std::string & eval, bool& success) {
    success = true;
 
    if (eval.substr(0, 1) == "#") {
-      if (eval.substr(1, 1) == "-") { return matedScore(static_cast<DepthType>(stoi(eval.substr(2, eval.length() - 2)))); }
+      if (eval.substr(1, 1) == "-") { 
+         return matedScore(static_cast<DepthType>(stoi(eval.substr(2, eval.length() - 2)))); 
+      }
       else {
          return matingScore(static_cast<DepthType>(stoi(eval.substr(1, eval.length() - 1))));
       }
    }
    else if (eval.substr(0, 2) == "-M") {
-      //std::cout << "eval=" << eval << std::endl;
       return matedScore(static_cast<DepthType>(stoi(eval.substr(2, eval.length() - 2))));
    }
    else if (eval.substr(0, 2) == "+M") {
-      //std::cout << "eval=" << eval << std::endl;
       return matingScore(static_cast<DepthType>(stoi(eval.substr(2, eval.length() - 2))));
    }
    else {
@@ -100,7 +100,6 @@ bool convert_plain_to_bin(const std::vector<std::string>& filenames,
    uint64_t     filtered_size_move = 0;
    uint64_t     filtered_size_ply  = 0;
 
-   // convert plain to bin
    fs.open(output_file_name, std::ios::app | std::ios::binary);
 
    for (const auto & filename : filenames) {
@@ -167,8 +166,9 @@ bool convert_plain_to_bin(const std::vector<std::string>& filenames,
             Square from = INVALIDSQUARE;
             Square to   = INVALIDSQUARE;
             MType  type = T_std;
-            // forbid castling moves
-            // this will create a "discontinuity" in binpack interpretation of the move sequence
+            // Here we forbid castling moves
+            // beware this will create a "discontinuity" in binpack 
+            // interpretation of the move sequence
             if (hasPos && readMove(pos, value, from, to, type, true)) { 
                p.move = ToSFMove(pos, from, to, type); // use SF style move encoding
                //p.move = ToMove(from,to,type); // use Minic style move encoding
@@ -236,6 +236,10 @@ bool convert_bin_from_pgn_extract(const std::vector<std::string>& filenames,
    std::cout << "convert_no_eval_fens_as_score_zero=" << convert_no_eval_fens_as_score_zero << std::endl;
 
    RootPosition pos;
+#if defined(WITH_NNUE)
+   NNUEEvaluator evaluator;
+   pos.associateEvaluator(evaluator);
+#endif 
 
    std::fstream ofs;
    ofs.open(output_file_name, std::ios::out | std::ios::binary);
