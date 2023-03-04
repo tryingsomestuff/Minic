@@ -8,7 +8,18 @@ import torch
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
-def to_binary_file(model, path):
+import matplotlib.pyplot as plt
+
+def to_binary_file(model, path, with_stat=False):
+  if with_stat:
+    all = model.flattened_parameters(only_weight=True)
+    print(min(all))
+    print(max(all))
+    plt.hist(all, bins=30, log=True)
+    plt.show()
+    smalls = [ x for x in all if abs(x) < 0.001 ]
+    plt.hist(smalls, bins=30, log=True)
+    plt.show()
   model.flattened_parameters().tofile(path)
 
 def main():

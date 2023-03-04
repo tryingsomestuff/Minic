@@ -46,7 +46,7 @@ struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTransformer<NT, Q>> {
       const auto & w_x {white.active()};
       const auto & b_x {black.active()};
       const auto x0 = (c == Co_White ? splice(w_x, b_x) : splice(b_x, w_x));//.apply_(activationInput<BT, Q>);
-      const int phase = std::min(nbuckets-1, (npiece-1) / bucketDivisor);
+      const int phase = std::max(0, std::min(nbuckets-1, (npiece-1) / bucketDivisor));
       if constexpr (Q){
          const auto x0d = x0.dequantize(1.f/Quantization<Q>::scale);
          const auto x1 = weights.innerLayer[phase].fc0.forward(x0d);//.apply_(activation<BT, Q>);

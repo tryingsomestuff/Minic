@@ -118,11 +118,13 @@ while True:
 
                 plt.subplot(121)
 
+                # moving average
+                #plt.plot(X[window//2:][:-window//2+1],Y_av,linewidth=5)
+
                 # error bar and dot color
                 if args.e:
                     plt.errorbar(X, Y, yerr=err, fmt='.', color='gray', marker=None, capsize=2)
                 plt.scatter(X, Y, c=['gold' if y-e>args.l else 'silver' if y-e>args.m else 'lime' if y-e>0 else 'cyan' if y>0 else 'black' if y+e > 0 else 'red' for y,e in zip(Y,err)], s=64, marker='o', label='Elo')
-                plt.plot(X[window//2:][:-window//2+1],Y_av,linewidth=5)
 
                 # specific markers
                 if args.x:
