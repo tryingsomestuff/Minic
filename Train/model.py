@@ -7,12 +7,12 @@ import torch.nn.functional as F
 import pytorch_lightning as pl
 import struct
 
-netversion = struct.unpack('!f', bytes.fromhex('c0ffee02'))[0]
+netversion = struct.unpack('!f', bytes.fromhex('c0ffee03'))[0]
 
 withFactorizer = True
 
 nphase = 2
-BASE = 384
+BASE = 768
 L1 = 8
 L2 = 8
 L3 = 8
@@ -193,48 +193,59 @@ class NNUE(pl.LightningModule):
 
   def configure_optimizers(self):
     optimizer = torch.optim.Adadelta(self.parameters(), lr=1, weight_decay=1e-10)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=75, gamma=0.3)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.3)
 
     return [optimizer], [scheduler]
 
-  def flattened_parameters(self, log=True):
+  def flattened_parameters(self, log=True, only_weight=False):
     def join_param(joined, param):
       if log:
         print(param.size())
       joined = np.concatenate((joined, param.cpu().flatten().numpy()))
       return joined
     
-    joined = np.array([netversion]) # netversion
+    joined = np.array([])
+    if not only_weight:
+      joined = np.array([netversion]) # netversion
+
 
     if withFactorizer:
       # with factorizer
       joined = join_param(joined, self.white_affine.virtual_weight().t())
-      joined = join_param(joined, self.white_affine.virtual_bias())
+      if not only_weight:
+        joined = join_param(joined, self.white_affine.virtual_bias())
       joined = join_param(joined, self.black_affine.virtual_weight().t())
-      joined = join_param(joined, self.black_affine.virtual_bias())
+      if not only_weight:
+        joined = join_param(joined, self.black_affine.virtual_bias())
     else:
       # without factorizer
       joined = join_param(joined, self.white_affine.weight.data.t())
-      joined = join_param(joined, self.white_affine.bias.data)
+      if not only_weight:
+        joined = join_param(joined, self.white_affine.bias.data)
       joined = join_param(joined, self.black_affine.weight.data.t())
-      joined = join_param(joined, self.black_affine.bias.data)
+      if not only_weight:
+        joined = join_param(joined, self.black_affine.bias.data)
 
     # fc0
     for i in range(nphase):
       joined = join_param(joined, self.fc0.weight[i*L1:(i+1)*L1, :].data.t())
-      joined = join_param(joined, self.fc0.bias[i*L1:(i+1)*L1].data)
+      if not only_weight:
+        joined = join_param(joined, self.fc0.bias[i*L1:(i+1)*L1].data)
     # fc1
     for i in range(nphase):
       joined = join_param(joined, self.fc1.weight[i*L2:(i+1)*L2, :].data.t())
-      joined = join_param(joined, self.fc1.bias[i*L2:(i+1)*L2].data)
+      if not only_weight:
+        joined = join_param(joined, self.fc1.bias[i*L2:(i+1)*L2].data)
     # fc2
     for i in range(nphase):
       joined = join_param(joined, self.fc2.weight[i*L3:(i+1)*L3, :].data.t())
-      joined = join_param(joined, self.fc2.bias[i*L3:(i+1)*L3].data)
+      if not only_weight:
+        joined = join_param(joined, self.fc2.bias[i*L3:(i+1)*L3].data)
     # fc3
     for i in range(nphase):
       joined = join_param(joined, self.fc3.weight[i:(i+1), :].data.t())
-      joined = join_param(joined, self.fc3.bias[i:(i+1)].data)
+      if not only_weight:
+        joined = join_param(joined, self.fc3.bias[i:(i+1)].data)
 
     print(joined.shape)
     return joined.astype(np.float32)
