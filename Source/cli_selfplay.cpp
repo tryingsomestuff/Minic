@@ -52,12 +52,12 @@ void selfPlay(DepthType depth, uint64_t & nbPos) {
 
    while (true) {
       ThreadPool::instance().main().subSearch = true;
-      const uint64_t maxNodes = TimeMan::maxNodes;
-      TimeMan::maxNodes = 0;
+      //const uint64_t maxNodes = TimeMan::maxNodes;
+      //TimeMan::maxNodes = 0;
       analyze(p2, depth); // search using a specific depth
       ThreadPool::instance().main().subSearch = false;
       ThreadData d = ThreadPool::instance().main().getData();
-      TimeMan::maxNodes = maxNodes;
+      //TimeMan::maxNodes = maxNodes;
 
       if (justBegin){
          if (DynamicConfig::pgnOut){
@@ -110,9 +110,9 @@ void selfPlay(DepthType depth, uint64_t & nbPos) {
 
 #ifdef WITH_GENFILE
       if (DynamicConfig::genFen) {
-         // if true, will skip position if bestmove if capture, 
-         // if false, will search for a quiet position from here and rescore (a lot slower of course)
-         const bool getQuietPos = true;
+         // if false, will skip position if bestmove if capture, 
+         // if true, will search for a quiet position from here and rescore (a lot slower of course)
+         const bool getQuietPos = false;
 
          // writeToGenFile using genFenDepth from this root position
          if (!ended){

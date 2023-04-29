@@ -9,23 +9,15 @@
 
 namespace TimeMan {
 
-TimeType msecPerMove, msecInTC, msecInc, msecUntilNextTC, overHead;
-TimeType targetTime, maxTime;
-int      moveToGo, nbMoveInTC;
-uint64_t maxNodes;
-bool     isDynamic;
+TimeType msecPerMove = 777, msecInTC = -1, msecInc = -1, msecUntilNextTC = -1, overHead = 0;
+TimeType targetTime = 0, maxTime = 0;
+int      moveToGo = -1, nbMoveInTC = -1;
+uint64_t maxNodes = 0;
+bool     isDynamic = false;
 
 void init() {
    Logging::LogIt(Logging::logInfo) << "Init timeman";
-   msecPerMove = 777;
-   msecInTC = msecInc = msecUntilNextTC = -1;
-   nbMoveInTC = -1;
-   moveToGo   = -1;
-   maxNodes   = 0;
-   isDynamic  = false;
-   overHead   = 0;
-   targetTime = 0;
-   maxTime    = 0;
+   ///@todo shall be reset some stuff here ?
 }
 
 TimeType getNextMSecPerMove(const Position& p) {
