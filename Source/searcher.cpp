@@ -245,7 +245,7 @@ void Searcher::initPawnTable() {
    ttSizePawn = powerFloor((SIZE_MULTIPLIER * DynamicConfig::ttPawnSizeMb / DynamicConfig::threads) / sizeof(PawnEntry));
    assert(BB::countBit(ttSizePawn) == 1); // a power of 2 and not 0 ...
    tablePawn.reset(new PawnEntry[ttSizePawn]);
-   Logging::LogIt(Logging::logInfo) << "Size of Pawn TT " << ttSizePawn * sizeof(PawnEntry) / 1024 << "Kb";
+   Logging::LogIt(Logging::logInfo) << "Size of Pawn TT " << ttSizePawn * sizeof(PawnEntry) / 1024 << "Kb (" << ttSizePawn << " entries)";
 }
 
 void Searcher::clearPawnTT() {

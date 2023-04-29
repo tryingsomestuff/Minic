@@ -44,8 +44,7 @@ void ThreadPool::setup() {
       back()->initPawnTable();
       back()->clearGame();
    }
-   // the size of pawn TT in each thread depends on the number of threads ...
-   ThreadPool::initPawnTables();
+   Logging::LogIt(Logging::logInfo) << "Total size of Pawn TTs " << back()->ttSizePawn * DynamicConfig::threads * sizeof(Searcher::PawnEntry) / 1024 << "Kb";
 }
 
 Searcher& ThreadPool::main() { return *(front()); }
