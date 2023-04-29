@@ -35,7 +35,7 @@ void initTable() {
    ttSize = powerFloor((SIZE_MULTIPLIER * DynamicConfig::ttSizeMb) / sizeof(Entry));
    assert(BB::countBit(ttSize) == 1); // a power of 2
    table.reset((Entry *)std_aligned_alloc(1024, ttSize * sizeof(Entry)));
-   Logging::LogIt(Logging::logInfo) << "Size of TT " << ttSize * sizeof(Entry) / 1024 / 1024 << "Mb";
+   Logging::LogIt(Logging::logInfo) << "Size of TT " << ttSize * sizeof(Entry) / 1024 / 1024 << "Mb (" << ttSize << " entries)";
    clearTT();
 }
 
