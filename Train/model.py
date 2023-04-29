@@ -7,12 +7,16 @@ import torch.nn.functional as F
 import pytorch_lightning as pl
 import struct
 
-netversion = struct.unpack('!f', bytes.fromhex('c0ffee03'))[0]
+netversion = struct.unpack('!f', bytes.fromhex('c0ffee02'))[0]
 
 withFactorizer = True
 
+# CARE !! 
+# change requiered in
+# void fill_entry(FeatureSet<Ts...>, int i, const TrainingDataEntry& e)
+# if this is changed
 nphase = 2
-BASE = 768
+BASE = 384
 L1 = 8
 L2 = 8
 L3 = 8
@@ -174,7 +178,10 @@ class NNUE(pl.LightningModule):
     #loss = self.lambda_ * loss_eval + (1.0 - self.lambda_) * loss_result
 
     # in end-game take outcome into account
-    phase_scaling = phase * 1.0 / (nphase - 1)
+    if nphase > 1:
+      phase_scaling = phase * 1.0 / (nphase - 1)
+    else:
+      phase_scaling = 1.0
     phased_lambda_outcome = phase_scaling * (1.0 - self.lambda_)
     pt = p * (1.0 - phased_lambda_outcome) + t * phased_lambda_outcome
     loss = torch.pow(torch.abs(pt - q), 2.6).mean()

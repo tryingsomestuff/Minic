@@ -17,7 +17,7 @@ template<typename NT, bool Q> struct NNUEWeights {
    InputLayer<NT, inputLayerSize, firstInnerLayerSize, Q> b {};
 
    struct InnerLayer{
-     Layer<NT, 2 * firstInnerLayerSize,  8, Q> fc0;
+     Layer<NT,  2 * firstInnerLayerSize, 8, Q> fc0;
      Layer<NT,  8,  8, Q>                      fc1;
      Layer<NT, 16,  8, Q>                      fc2;
      Layer<NT, 24,  1, Q>                      fc3;
@@ -40,8 +40,8 @@ template<typename NT, bool Q> struct NNUEWeights {
    }
 
    static bool load(const std::string& path, NNUEWeights<NT, Q>& loadedWeights) {
-      [[maybe_unused]] constexpr uint32_t expectedVersion {0xc0ffee03};
-      [[maybe_unused]] constexpr int      expectedSize    {302096268}; // net size + 4 for version
+      [[maybe_unused]] constexpr uint32_t expectedVersion {0xc0ffee02};
+      [[maybe_unused]] constexpr int      expectedSize    {151049100}; // net size + 4 for version
       [[maybe_unused]] constexpr bool     withVersion     {true}; // used for backward compatiblity and debug
 
       if (path != "embedded") { // read from disk

@@ -2,7 +2,7 @@ import chess.pgn
 import matplotlib.pyplot as plt
 from random import sample
 
-pgn = open("/home/vivien/Téléchargements/test.pgn")
+pgn = open("/ssd2/Minic/pgn_2023_04_22_175336.out")
 f = chess.pgn.read_game(pgn)
 moobs=[]
 c = 0
@@ -36,6 +36,8 @@ type_b2d = []
 type_a2d = []
 type_w2b = []
 type_b2w = []
+type_d2w = []
+type_d2b = []
 
 for sl in moobs:
    maxi = 0
@@ -57,9 +59,13 @@ for sl in moobs:
       if last > 3:
          if mini < -3:
             type_b2w.append(sl)
+         else:
+            type_d2w.append(sl)
       if last < -3:
          if maxi > 3:
             type_w2b.append(sl)
+         else:
+            type_d2b.append(sl)
 
 n = len(moobs)
 missedw = len(type_w2d)
@@ -67,12 +73,16 @@ missedb = len(type_b2d)
 doublemissed = len(type_a2d)
 blunderw = len(type_w2b)
 blunderb = len(type_b2w)
+giveawayw = len(type_d2b)
+giveawayb = len(type_d2w)
 
 print("missed  w   {:.2f} percent ({}/{})".format((100*missedw/n),missedw,n))
 print("missed  b   {:.2f} percent ({}/{})".format((100*missedb/n),missedb,n))
 print("both missed {:.2f} percent ({}/{})".format((100*doublemissed/n),doublemissed,n))
 print("blunder w   {:.2f} percent ({}/{})".format((100*blunderw/n),blunderw,n))
 print("blunder b   {:.2f} percent ({}/{})".format((100*blunderb/n),blunderb,n))
+print("giveaway w  {:.2f} percent ({}/{})".format((100*giveawayw/n),giveawayw,n))
+print("giveaway b  {:.2f} percent ({}/{})".format((100*giveawayb/n),giveawayb,n))
 
 #print("w2d")
 #print(type_w2d)
@@ -84,21 +94,21 @@ print("blunder b   {:.2f} percent ({}/{})".format((100*blunderb/n),blunderb,n))
 #print(type_b2w)
 
 plt.title("moobs w2d")
-for y in sample(type_w2d,10):
+for y in sample(type_w2d,min(len(type_w2d),10)):
     plt.plot(y)
 plt.legend()
 plt.savefig("w2d.png")
 plt.clf()
 
 plt.title("moobs b2d")
-for y in sample(type_b2d,10):
+for y in sample(type_b2d,min(len(type_b2d),10)):
     plt.plot(y)
 plt.legend()
 plt.savefig("b2d.png")
 plt.clf()
 
 plt.title("moobs both")
-for y in sample(type_a2d,10):
+for y in sample(type_a2d,min(len(type_a2d),10)):
     plt.plot(y)
 plt.legend()
 plt.savefig("a2d.png")
@@ -106,15 +116,29 @@ plt.clf()
 
 
 plt.title("moobs w2b")
-for y in sample(type_w2b,10):
+for y in sample(type_w2b,min(len(type_w2b),10)):
     plt.plot(y)
 plt.legend()
 plt.savefig("w2b.png")
 plt.clf()
 
 plt.title("moobs b2w")
-for y in sample(type_b2w,10):
+for y in sample(type_b2w,min(len(type_b2w),10)):
     plt.plot(y)
 plt.legend()
 plt.savefig("b2w.png")
+plt.clf()
+
+plt.title("giveaway d2w")
+for y in sample(type_d2w,min(len(type_d2w),10)):
+    plt.plot(y)
+plt.legend()
+plt.savefig("d2w.png")
+plt.clf()
+
+plt.title("giveaway d2w")
+for y in sample(type_d2b,min(len(type_d2b),10)):
+    plt.plot(y)
+plt.legend()
+plt.savefig("d2b.png")
 plt.clf()

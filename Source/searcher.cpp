@@ -422,7 +422,7 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
    }
    // skip when bestmove is capture or when you have not reached randomPly limit yet
    else{
-      if(isCapture(data.best) || pLeaf.halfmoves >= DynamicConfig::randomPly){
+      if(isCapture(data.best) || pLeaf.halfmoves <= DynamicConfig::randomPly){
          data.best = INVALIDMOVE;
       }
    }
