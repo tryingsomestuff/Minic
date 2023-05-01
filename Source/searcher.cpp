@@ -430,11 +430,11 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
    if (data.best != INVALIDMOVE && Abs(data.score) < 1500) {
       buffer.emplace_back(GetFEN(pLeaf), data.best, data.score, pLeaf.halfmoves, pLeaf.c);
       ++sfensWritten;
-      if (sfensWritten % 100'000 == 0) Logging::LogIt(Logging::logInfoPrio) << "Sfens written " << sfensWritten;
+      if (sfensWritten % 10'000 == 0) Logging::LogIt(Logging::logInfoPrio) << "Sfens written " << sfensWritten;
    }
 
    if (result.has_value()){
-      Logging::LogIt(Logging::logInfoPrio) << "Game ended, result " << result.value();
+      Logging::LogIt(Logging::logInfo) << "Game ended, result " << result.value();
       for (const auto & entry : buffer){
          entry.write(genStream,result.value());
       }
