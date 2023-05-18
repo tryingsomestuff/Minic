@@ -30,10 +30,8 @@ import traceback
 import zipfile
 import shutil
 import multiprocessing
-import psutil
 
-from subprocess import PIPE, Popen, call
-
+from subprocess import PIPE, Popen, call, STDOUT
 from itertools import combinations_with_replacement
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -50,21 +48,22 @@ from itertools import combinations_with_replacement
 TIMEOUT_HTTP        = 30    # Timeout in seconds for HTTP requests
 TIMEOUT_ERROR       = 10    # Timeout in seconds when any errors are thrown
 TIMEOUT_WORKLOAD    = 30    # Timeout in seconds between workload requests
-CLIENT_VERSION      = '2'   # Client version to send to the Server
+CLIENT_VERSION      = '4'   # Client version to send to the Server
 
 SYZYGY_WDL_PATH     = None  # Pathway to WDL Syzygy Tables
-BASE_GAMES_PER_CORE = 16    # Typical games played per-thread
+BASE_GAMES_PER_CORE = 32    # Typical games played per-thread
 FLEET_MODE          = False # Exit when there are no workloads
 
 CUSTOM_SETTINGS = {
-    'Ethereal'  : [], 'Laser'     : [],
-    'Weiss'     : [], 'Demolito'  : [],
-    'Rubichess' : [], 'FabChess'  : [],
-    'Igel'      : [], 'Winter'    : [],
-    'Halogen'   : [], 'Stash'     : [],
-    'Seer'      : [], 'Koivisto'  : [],
-    'Drofa'     : [], 'Bit-Genie' : [],
-    'Berserk'   : [], 'Zahak'     : [],
+    'Ethereal'    : [], 'Laser'     : [],
+    'Weiss'       : [], 'Demolito'  : [],
+    'Rubichess'   : [], 'FabChess'  : [],
+    'Igel'        : [], 'Winter'    : [],
+    'Halogen'     : [], 'Stash'     : [],
+    'Seer'        : [], 'Koivisto'  : [],
+    'Drofa'       : [], 'Bit-Genie' : [],
+    'Berserk'     : [], 'Zahak'     : [],
+    'BlackMarlin' : [],
 };
 
 ERRORS = {
@@ -146,10 +145,6 @@ def cleanup_client():
         if file_age(os.path.join('Networks', file)) > SECONDS_PER_MONTH:
             os.remove(os.path.join('Networks', file))
 
-    for proc in psutil.process_iter():
-        if "Minic-" in proc.name():
-            proc.kill()            
-
 def validate_syzygy_exists():
 
     global SYZYGY_WDL_PATH
@@ -214,7 +209,7 @@ def try_until_success(mesg):
 
 def download_file(source, outname, post_data=None):
 
-    arguments = { 'stream' : True, 'timeout' : TIMEOUT_ERROR, 'verify' : False }
+    arguments = { 'stream' : True, 'timeout' : TIMEOUT_ERROR }
     function  = [requests.get, requests.post][post_data != None]
     if post_data: arguments['data'] = post_data
 
@@ -232,8 +227,8 @@ def unzip_delete_file(source, outdir):
 
 def make_command(arguments, engine, src_path, network_path):
 
-    command = 'make CC=%s EXE=%s -j%s' % (
-        COMPILERS[engine], engine, arguments.threads)
+    command = 'make %s=%s EXE=%s -j%s' % (
+        ['CC', 'CXX']['++' in COMPILERS[engine]], COMPILERS[engine], engine, arguments.threads)
 
     if engine in CUSTOM_SETTINGS:
         command += ' '.join(CUSTOM_SETTINGS[engine])
@@ -276,7 +271,25 @@ def run_bench(engine, outqueue):
 
 def scale_time_control(workload, nps):
 
-    # Searching for X/Y+Z time controls
+    # Searching for Nodes or Depth time controls ("N=", "D=")
+    pattern = '(?P<mode>((N))|(D))=(?P<value>(\d+))'
+    results = re.search(pattern, workload['test']['timecontrol'].upper())
+
+    # No scaling is needed for fixed nodes or fixed depth games
+    if results:
+        mode, value = results.group('mode', 'value')
+        return 'tc=inf %s=%s' % ({'N' : 'nodes', 'D' : 'depth'}[mode], value)
+
+    # Searching for MoveTime or Fixed Time Controls ("MT=")
+    pattern = '(?P<mode>(MT))=(?P<value>(\d+))'
+    results = re.search(pattern, workload['test']['timecontrol'].upper())
+
+    # Scale the time based on this machine's NPS. Add a time Margin to avoid time losses.
+    if results:
+        mode, value = results.group('mode', 'value')
+        return 'st=%.2f timemargin=100' % (float(value) * int(workload['test']['nps']) / (1000 * nps))
+
+    # Searching for "X/Y+Z" time controls
     pattern = '(?P<moves>(\d+/)?)(?P<base>\d*(\.\d+)?)(?P<inc>\+(\d+\.)?\d+)?'
     results = re.search(pattern, workload['test']['timecontrol'])
     moves, base, inc = results.group('moves', 'base', 'inc')
@@ -285,19 +298,17 @@ def scale_time_control(workload, nps):
     moves = None if moves == '' else moves.rstrip('/')
     inc   = 0.0  if inc   is None else inc.lstrip('+')
 
-    # Scale the time based on this machines NPS
+    # Scale the time based on this machine's NPS
     base = float(base) * int(workload['test']['nps']) / nps
     inc  = float(inc ) * int(workload['test']['nps']) / nps
 
     # Format the time control for cutechess
-    if moves is None: return '%.2f+%.2f' % (base, inc)
-    return '%d/%.2f+%.2f' % (int(moves), base, inc)
+    if moves is None: return 'tc=%.2f+%.2f' % (base, inc)
+    return 'tc=%d/%.2f+%.2f' % (int(moves), base, inc)
 
 def kill_cutechess(cutechess):
 
     try:
-        parent = psutil.Process(cutechess.pid)
-        childs = parent.children(recursive=True)
 
         if IS_WINDOWS:
             call(['taskkill', '/F', '/T', '/PID', str(cutechess.pid)])
@@ -307,16 +318,26 @@ def kill_cutechess(cutechess):
 
         cutechess.wait()
         cutechess.stdout.close()
-        
-        for child in childs:
-            child.kill()
-
-        for proc in psutil.process_iter():
-            if "Minic-" in proc.name():
-                proc.kill()
 
     except Exception:
         pass
+
+def find_pgn_error(reason, command):
+
+    pgn_file = command.split('-pgnout ')[1].split()[0]
+    with open(pgn_file, 'r') as fin:
+        data = fin.readlines()
+
+    reason = reason.split('{')[1]
+    for ii in range(len(data) - 1, -1, -1):
+        if reason in data[ii]:
+            break
+
+    pgn = ""
+    while "[Event " not in data[ii]:
+        pgn = data[ii] + pgn
+        ii = ii - 1
+    return data[ii] + pgn
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #                                                                           #
@@ -404,14 +425,14 @@ def server_configure_worker(arguments):
 
             # Compiler version was sufficient
             if tuple(map(int, match.split('.'))) >= version:
-                print('%10s | %s (%s)' % (engine, compiler, match))
+                print('%14s | %s (%s)' % (engine, compiler, match))
                 COMPILERS[engine] = compiler
                 break
 
     # Report missing engines in case the User is not expecting it
     for engine in filter(lambda x: x not in COMPILERS, data):
         compiler = data[engine]['compilers']
-        print('%10s | Missing %s' % (engine, compiler))
+        print('%14s | Missing %s' % (engine, compiler))
 
     print('\nScanning for CPU Flags...')
 
@@ -457,14 +478,15 @@ def server_request_workload(arguments):
     target = url_join(arguments.server, 'clientGetWorkload')
     return requests.post(target, data=payload, timeout=TIMEOUT_HTTP)
 
-def server_report_build_fail(arguments, workload, branch):
+def server_report_build_fail(arguments, workload, branch, compiler_output):
 
     payload = {
         'username'  : arguments.username,
         'password'  : arguments.password,
         'testid'    : workload['test']['id'],
         'machineid' : workload['machine']['id'],
-        'error'     : '%s build failed' % (workload['test'][branch]['name'])
+        'error'     : '%s build failed' % (workload['test'][branch]['name']),
+        'logs'      : compiler_output,
     }
 
     target = url_join(arguments.server, 'clientSubmitError')
@@ -496,7 +518,7 @@ def server_report_nps(arguments, workload, dev_nps, base_nps):
     target = url_join(arguments.server, 'clientSubmitNPS')
     requests.post(target, data=data, timeout=TIMEOUT_ERROR)
 
-def server_report_engine_error(arguments, workload, cutechess_str):
+def server_report_engine_error(arguments, workload, cutechess_str, pgn):
 
     pairing = cutechess_str.split('(')[1].split(')')[0]
     white, black = pairing.split(' vs ')
@@ -506,11 +528,12 @@ def server_report_engine_error(arguments, workload, cutechess_str):
     error = error.replace('Black', '-'.join(black.split('-')[1:]).rstrip())
 
     payload = {
-        'username' : arguments.username,
-        'password' : arguments.password,
+        'username'  : arguments.username,
+        'password'  : arguments.password,
         'testid'    : workload['test']['id'],
         'machineid' : workload['machine']['id'],
-        'error'    : error,
+        'error'     : error,
+        'logs'      : pgn,
     }
 
     target = url_join(arguments.server, 'clientSubmitError')
@@ -597,10 +620,10 @@ def complete_workload(arguments, workload):
     download_opening_book(arguments, workload)
 
     avg_nps = (dev_nps + base_nps) // 2
-    concurrency, command = build_cutechess_command(
+    concurrency, update_interval, command = build_cutechess_command(
         arguments, workload, dev_name, base_name, avg_nps)
 
-    run_and_parse_cutechess(arguments,  workload, concurrency, command)
+    run_and_parse_cutechess(arguments, workload, concurrency, update_interval, command)
 
 def download_opening_book(arguments, workload):
 
@@ -698,9 +721,11 @@ def download_engine(arguments, workload, branch, network):
 
     # Build the engine and drop it into src_path
     print('\nBuilding [%s]' % (final_path))
-    command = make_command(arguments, engine, src_path, network)
-    Popen(command, cwd=src_path).wait()
     output_name = os.path.join(src_path, engine)
+    command = make_command(arguments, engine, src_path, network)
+    process = Popen(command, cwd=src_path, stdout=PIPE, stderr=STDOUT)
+    compiler_output = process.communicate()[0].decode('utf-8')
+    print (compiler_output)
 
     # Move the file to the final location ( Linux )
     if os.path.isfile(output_name):
@@ -715,7 +740,7 @@ def download_engine(arguments, workload, branch, network):
         return final_name + '.exe'
 
     # Notify the server if the build failed
-    server_report_build_fail(arguments, workload, branch)
+    server_report_build_fail(arguments, workload, branch, compiler_output)
     return None
 
 def run_benchmarks(arguments, workload, branch, engine):
@@ -739,9 +764,11 @@ def run_benchmarks(arguments, workload, branch, engine):
 
 def verify_benchmarks(arguments, workload, branch, bench):
     target = int(workload['test'][branch]['bench'])
-    if bench != target and target != 0:
-        server_report_bad_bench(arguments, workload, branch, bench)
-    return bench == target or target == 0
+    if target is not 0:
+        if bench != int(workload['test'][branch]['bench']):
+            server_report_bad_bench(arguments, workload, branch, bench)
+        return bench == int(workload['test'][branch]['bench'])
+    return True
 
 def build_cutechess_command(arguments, workload, dev_name, base_name, nps):
 
@@ -764,18 +791,18 @@ def build_cutechess_command(arguments, workload, dev_name, base_name, nps):
 
     flags  = '-repeat -recover -resign %s -draw %s '
     flags += '-srand %d -variant %s -concurrency %d -games %d '
-    flags += '-engine dir=Engines/ cmd=./%s proto=uci tc=%s%s name=%s '
-    flags += '-engine dir=Engines/ cmd=./%s proto=uci tc=%s%s name=%s '
+    flags += '-engine dir=Engines/ cmd=./%s proto=uci %s%s name=%s '
+    flags += '-engine dir=Engines/ cmd=./%s proto=uci %s%s name=%s '
     flags += '-openings file=Books/%s format=%s order=random plies=16 '
     flags += '-pgnout PGNs/%s_vs_%s '
 
     if SYZYGY_WDL_PATH and workload['test']['syzygy_adj'] != 'DISABLED':
         flags += '-tb %s' % (SYZYGY_WDL_PATH.replace('\\', '\\\\'))
 
-    throughput = int(workload['test']['throughput'])
     concurrency = int(arguments.threads) // max(dev_threads, base_threads)
+    update_interval = 8 if max(dev_threads, base_threads) == 1 else 1
 
-    games = int(concurrency * BASE_GAMES_PER_CORE * throughput / 1000)
+    games = int(concurrency * BASE_GAMES_PER_CORE)
     games = max(8, concurrency * 2, games - (games % (2 * concurrency)))
 
     time_control = scale_time_control(workload, nps)
@@ -790,10 +817,10 @@ def build_cutechess_command(arguments, workload, dev_name, base_name, nps):
     )
 
     if IS_LINUX:
-        return concurrency, './cutechess-ob ' + flags % (args)
-    return concurrency, 'cutechess-ob.exe ' + flags % (args)
+        return concurrency, update_interval, './cutechess-ob ' + flags % (args)
+    return concurrency, update_interval, 'cutechess-ob.exe ' + flags % (args)
 
-def run_and_parse_cutechess(arguments,  workload, concurrency, command):
+def run_and_parse_cutechess(arguments, workload, concurrency, update_interval, command):
 
     print('\nLaunching Cutechess...\n%s\n' % (command))
     cutechess = Popen(command.split(), stdout=PIPE)
@@ -821,7 +848,8 @@ def run_and_parse_cutechess(arguments,  workload, concurrency, command):
         # Forcefully report any engine failures to the server
         for error in errors:
             if error in score_reason:
-                server_report_engine_error(arguments, workload, line)
+                pgn = find_pgn_error(score_reason, command)
+                server_report_engine_error(arguments, workload, line, pgn)
 
         # All remaining processing is for score updates only
         if not line.startswith('Score of'):
@@ -829,7 +857,7 @@ def run_and_parse_cutechess(arguments,  workload, concurrency, command):
 
         # Only report scores after every eight games
         score = list(map(int, score_reason.split()[0:5:2]))
-        if ((sum(score) - sum(sent)) % 8 != 0): continue
+        if ((sum(score) - sum(sent)) % update_interval != 0): continue
 
         # Report to the server but allow failed reports to delay
         wld = [score[ii] - sent[ii] for ii in range(3)]
@@ -854,9 +882,14 @@ def run_and_parse_cutechess(arguments,  workload, concurrency, command):
 
 if __name__ == '__main__':
 
+    req_user  = required=('OPENBENCH_USERNAME' not in os.environ)
+    req_pass  = required=('OPENBENCH_PASSWORD' not in os.environ)
+    help_user = 'Username. May also be passed as OPENBENCH_USERNAME environment variable'
+    help_pass = 'Password. May also be passed as OPENBENCH_PASSWORD environment variable'
+
     p = argparse.ArgumentParser()
-    p.add_argument('-U', '--username', help='Username' , required=True)
-    p.add_argument('-P', '--password', help='Password' , required=True)
+    p.add_argument('-U', '--username', help=help_user  , required=req_user)
+    p.add_argument('-P', '--password', help=help_pass  , required=req_pass)
     p.add_argument('-S', '--server'  , help='Webserver', required=True)
     p.add_argument('-T', '--threads' , help='Threads'  , required=True)
     p.add_argument('--syzygy', help='Syzygy WDL'  , required=False)
@@ -864,10 +897,17 @@ if __name__ == '__main__':
     p.add_argument('--proxy' , help='Github Proxy', action='store_true')
     arguments = p.parse_args()
 
+    if arguments.username is None:
+        arguments.username = os.environ['OPENBENCH_USERNAME']
+
+    if arguments.password is None:
+        arguments.password = os.environ['OPENBENCH_PASSWORD']
+
     if arguments.syzygy is not None:
         SYZYGY_WDL_PATH = arguments.syzygy
 
-    if arguments.fleet: FLEET_MODE = True
+    if arguments.fleet:
+        FLEET_MODE = True
 
     check_for_utilities()
     init_client(arguments)
@@ -875,6 +915,7 @@ if __name__ == '__main__':
     server_configure_worker(arguments)
 
     while True:
+
         try:
             # Request a new workload
             cleanup_client()
