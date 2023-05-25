@@ -26,6 +26,9 @@ int main(int argc, char ** argv){
     else if (option == "plain2binpack"){
         binpack::convertPlainToBinpack(input,output,std::ios::trunc,false);
     }
+    else if (option == "count"){
+        binpack::countCat(input);
+    }
 
     return 0;
 }

@@ -509,14 +509,18 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
             tpos.resetNNUEEvaluator(evaluator);
 #endif
             ThreadData data;
-            const Hash matHash = MaterialHash::getMaterialHash(tpos.mat);
-            float gp = 1;
-            if (matHash != nullHash) {
-               const MaterialHash::MaterialHashEntry& MEntry = MaterialHash::materialHashTable[matHash];
-               gp = MEntry.gamePhase();
+            DepthType depth = MAX_DEPTH;
+            // only if not constrainted by maxnodes we compute a max depth depending on gamephase
+            if (TimeMan::maxNodes == 0 ){
+               const Hash matHash = MaterialHash::getMaterialHash(tpos.mat);
+               float gp = 1;
+               if (matHash != nullHash) {
+                  const MaterialHash::MaterialHashEntry& MEntry = MaterialHash::materialHashTable[matHash];
+                  gp = MEntry.gamePhase();
+               }
+               // don't worry about "else" here ...
+               depth = static_cast<DepthType>(clampDepth(DynamicConfig::genFenDepth) * gp + clampDepth(DynamicConfig::genFenDepthEG) * (1.f - gp));
             }
-            // don't worry about "else" here ...
-            DepthType depth = static_cast<DepthType>(clampDepth(DynamicConfig::genFenDepth) * gp + clampDepth(DynamicConfig::genFenDepthEG) * (1.f - gp));
             DynamicConfig::randomPly = 0;
             data.p                   = tpos;
             data.depth               = depth;
@@ -526,9 +530,12 @@ bool rescore(const std::vector<std::string>& filenames, const std::string& outpu
             // do not update COM::position here
             cos.searchDriver(false);
             data = cos.getData();
-            p.score = data.score;
             //std::cout << data.score << std::endl;
-            ofs.write((char*)&p, sizeof(PackedSfenValue));
+            // only write quiet moves
+            if (!isCapture(data.best)){
+               p.score = data.score;
+               ofs.write((char*)&p, sizeof(PackedSfenValue));
+            }
          }
          else {
             std::cout << "read error" << std::endl;
