@@ -35,7 +35,7 @@ def convert_ckpt(root_dir):
     # lightning_logs/version_0/checkpoints/epoch=3.ckpt
     p = re.compile("epoch=[0-9]*.*.ckpt")
     ckpts = []
-    for path, subdirs, files in os.walk(root_dir + '/lightning_logs/', followlinks=False):
+    for path, subdirs, files in os.walk(root_dir, followlinks=False):
         for filename in files:
             #print(filename)
             m = p.match(filename)
@@ -93,7 +93,7 @@ def run_match(best, root_dir, c_chess_exe, concurrency, book_file_name, engine):
     """ Run a match using c-chess-cli adding pgns to a file to be analysed with ordo """
     pgn_file_name = os.path.join(root_dir, "out.pgn")
     c_chess_out_file_name = os.path.join(root_dir, "c_chess.out")
-    command = "{} -each tc=3+0.03 -games 10 -rounds 2 -concurrency {}".format(
+    command = "{} -each tc=3+0.1 -games 10 -rounds 2 -concurrency {}".format(
         c_chess_exe, concurrency
     )
     command = (
@@ -131,12 +131,12 @@ def run_ordo(root_dir, ordo_exe, concurrency):
     """ run an ordo calculation on an existing pgn file """
     pgn_file_name = os.path.join(root_dir, "out.pgn")
     ordo_file_name = os.path.join(root_dir, "ordo.out")
-    command = "{} -q -G -J -p {} -a 0.0 --anchor=master --draw-auto --white-auto -s 50 --cpus={} -o {}".format(
+    command = "{} -q -G -J -p {} -a 0.0 --anchor=master --draw-auto --white-auto -s 10 --cpus={} -o {}".format(
         ordo_exe, pgn_file_name, concurrency, ordo_file_name
     )
 
     print("Running ordo ranking ... {}".format(ordo_file_name), flush=True)
-    ret = Command(command).run(timeout=10)
+    ret = Command(command).run(timeout=20)
     if ret != 0:
         #raise ValueError("Error running ordo!")
         print("Error running ordo!")

@@ -202,6 +202,9 @@ class NNUE(pl.LightningModule):
     optimizer = torch.optim.Adadelta(self.parameters(), lr=1, weight_decay=1e-10)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.3)
 
+    #optimizer = ranger.Ranger(self.parameters(), betas=(.9, 0.999), eps=1.0e-7, gc_loc=False, use_gc=False)
+    #scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.3)
+
     return [optimizer], [scheduler]
 
   def flattened_parameters(self, log=True, only_weight=False):
