@@ -5639,13 +5639,12 @@ namespace chess
                     king ^= CastlingTraits::kingDestination[attackerColor][castleType];
                     rooks ^= move.to;
                     rooks ^= CastlingTraits::rookDestination[attackerColor][castleType];
-
-                    break;
                 }
                 else
                 {
                     king ^= occupiedChange;
                 }
+                break;
             }
             case PieceType::None:
                 assert(false);
@@ -6730,7 +6729,7 @@ namespace binpack
 
             // Halfmove clock
             std::uint8_t rule50 = stream.read_n_bit(6);
-            
+
             // Fullmove number
             std::uint16_t fullmove = stream.read_n_bit(8);
             
@@ -7586,7 +7585,7 @@ namespace binpack
 
                 while(!isEnd && !m_stopFlag.load())
                 {
-                    for (std::size_t i = 0; i < threadBufferSize; ++i)
+                    while (m_localBuffer.size() < threadBufferSize)
                     {
                         if (m_movelistReader.has_value())
                         {
@@ -8140,5 +8139,33 @@ namespace binpack
         }
 
         std::cout << "Finished. Converted " << numProcessedPositions << " positions.\n";
+    }
+
+    inline void countCat(std::string inputPath)
+    {
+        constexpr std::size_t bufferSize = MiB;
+
+        std::cout << "Couting ...  " << inputPath << '\n';
+
+        CompressedTrainingDataEntryReader reader(inputPath);
+
+        uint64_t n[4] = {0,0,0,0};
+        int np = 1000000;
+
+        while(reader.hasNext())
+        {
+            auto e = reader.next();
+            if (!e.isValid())
+            {
+                std::cerr << "Illegal move " << chess::uci::moveToUci(e.pos, e.move) << " for position " << e.pos.fen() << '\n';
+                return;
+            }
+            const int idx = std::min(3,e.pos.piecesBB().count()/8);
+            n[idx]++;
+            if(! (np--)){
+                std::cout << n[0] << " " << n[1] << " " << n[2] << " " << n[3] << std::endl;
+                np = 1000000;
+            }
+        }
     }
 }
