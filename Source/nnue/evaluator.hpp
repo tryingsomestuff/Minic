@@ -45,24 +45,24 @@ struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTransformer<NT, Q>> {
       assert(!dirty);
       const auto & w_x {white.active()};
       const auto & b_x {black.active()};
-      // ReLU is now apply on load (see reluLoad)
-      const auto x0 = [&](){
-         const auto x0_ = (c == Co_White ? splice(w_x, b_x) : splice(b_x, w_x));//.apply_(activationInput<BT, Q>);
-         if constexpr (Q) return x0_.dequantize(1.f/Quantization<Q>::scale);
-         else return x0_;
-      }();
       
-      const int phase = std::max(0, std::min(nbuckets-1, npiece / bucketDivisor));
-
-      auto propagateInner = [&](int n){
-            const auto x1 = weights.innerLayer[n].fc0.forward(x0);//.apply_(activation<BT, Q>);
-            const auto x2 = splice(x1, (weights.innerLayer[n].fc1).forward(x1));//.apply_(activation<BT, Q>));
-            const auto x3 = splice(x2, (weights.innerLayer[n].fc2).forward(x2));//.apply_(activation<BT, Q>));
-            const float val = (weights.innerLayer[n].fc3).forward(x3).data[0];
-            return val / Quantization<Q>::outFactor;
-      };
-
-      return propagateInner(phase);
+      const auto x0 = (c == Co_White ? splice(w_x, b_x) : splice(b_x, w_x));//.apply_(activationInput<BT, Q>);
+      const int phase = std::max(0, std::min(nbuckets-1, (npiece-1) / bucketDivisor));
+      if constexpr (Q){
+         const auto x0d = x0.dequantize(1.f/Quantization<Q>::scale);
+         const auto x1 = weights.innerLayer[phase].fc0.forward(x0d);//.apply_(activation<BT, Q>);
+         const auto x2 = splice(x1, (weights.innerLayer[phase].fc1).forward(x1));//.apply_(activation<BT, Q>));
+         const auto x3 = splice(x2, (weights.innerLayer[phase].fc2).forward(x2));//.apply_(activation<BT, Q>));
+         const float val = (weights.innerLayer[phase].fc3).forward(x3).data[0];
+         return val / Quantization<Q>::outFactor;
+      }
+      else {
+         const auto x1 = weights.innerLayer[phase].fc0.forward(x0);//.apply_(activation<BT, Q>);
+         const auto x2 = splice(x1, (weights.innerLayer[phase].fc1).forward(x1));//.apply_(activation<BT, Q>));
+         const auto x3 = splice(x2, (weights.innerLayer[phase].fc2).forward(x2));//.apply_(activation<BT, Q>));
+         const float val = (weights.innerLayer[phase].fc3).forward(x3).data[0];
+         return val / Quantization<Q>::outFactor;
+      }
    }
 
 #ifdef DEBUG_NNUE_UPDATE
