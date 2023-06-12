@@ -1,7 +1,7 @@
 [
     {
         "command": "./minic_linux_x64 -uci -syzygyPath /home/syzygy7/",
-        "name": "Minic 3.36",
+        "name": "Minic 3.37",
         "restart": "on",
         "rating": "3419",
         "options": [
@@ -12,6 +12,10 @@
             {
                 "name": "Hash",
                 "value": "65536"
+            },
+            {
+                "name": "PawnHash",
+                "value": "2048"
             },
             {
                 "name": "NNUEFile",
