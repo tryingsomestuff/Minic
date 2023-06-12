@@ -6926,6 +6926,13 @@ namespace binpack
 
     [[nodiscard]] inline bool isContinuation(const TrainingDataEntry& lhs, const TrainingDataEntry& rhs)
     {
+        //std::cout << "==================" << std::endl;
+        //std::cout << lhs.pos.afterMove(lhs.move).fen() << std::endl;
+        //std::cout << rhs.pos.fen() << std::endl;
+        //std::cout << toString(lhs.move.from) << " " << toString(lhs.move.to) << " " << toString(lhs.move.promotedPiece) << " " << ordinal(lhs.move.type) << std::endl;
+
+        if (lhs.move.type == chess::MoveType::Castle) return false;
+
         return
             lhs.result == -rhs.result
             && lhs.ply + 1 == rhs.ply
