@@ -256,7 +256,7 @@ void registerCOMOptions() { // options exposed to GUI
    _keys.emplace_back(k_bool,  w_check, "UCI_LimitStrength"           , &DynamicConfig::limitStrength                  , false            , true);
    _keys.emplace_back(k_int,   w_spin,  "UCI_Elo"                     , &DynamicConfig::strength                       , (int)500         , (int)2800);
    _keys.emplace_back(k_int,   w_spin,  "Hash"                        , &DynamicConfig::ttSizeMb                       , (unsigned int)1  , (unsigned int)256000                , &TT::initTable);
-   _keys.emplace_back(k_int,   w_spin,  "PawnHash"                    , &DynamicConfig::ttPawnSizeMb                   , (unsigned int)1  , (unsigned int)256                   , &ThreadPool::initPawnTables);
+   _keys.emplace_back(k_int,   w_spin,  "PawnHash"                    , &DynamicConfig::ttPawnSizeMb                   , (unsigned int)1  , (unsigned int)4096                  , &ThreadPool::initPawnTables);
    _keys.emplace_back(k_int,   w_spin,  "Threads"                     , &DynamicConfig::threads                        , (unsigned int)1  , (unsigned int)(MAX_THREADS-1)       , std::bind(&ThreadPool::setup, &ThreadPool::instance()));
    _keys.emplace_back(k_bool,  w_check, "UCI_Chess960"                , &DynamicConfig::FRC                            , false            , true);
    _keys.emplace_back(k_bool,  w_check, "Ponder"                      , &DynamicConfig::UCIPonder                      , false            , true);
