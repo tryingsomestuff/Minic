@@ -338,7 +338,8 @@ void registerCOMOptions() { // options exposed to GUI
    _keys.emplace_back(k_depth, w_spin, "probCutSearchDepthFactor"          , &SearchConfig::probCutSearchDepthFactor            , DepthType(0)    , DepthType(30)      );
    _keys.emplace_back(k_int  , w_spin, "probCutMaxMoves"                   , &SearchConfig::probCutMaxMoves                     , 0               , 30                 );
    _keys.emplace_back(k_score, w_spin, "probCutMargin"                     , &SearchConfig::probCutMargin                       , ScoreType(-500) , ScoreType(1500)    );
-
+   _keys.emplace_back(k_score, w_spin, "probCutMarginSlope"                , &SearchConfig::probCutMarginSlope                  , ScoreType(-500) , ScoreType(1500)    );
+   
    _keys.emplace_back(k_score, w_spin, "seeCaptureFactor"                  , &SearchConfig::seeCaptureFactor                    , ScoreType(0)    , ScoreType(1500)    );
    _keys.emplace_back(k_score, w_spin, "seeCaptureInit"                    , &SearchConfig::seeCaptureInit                      , ScoreType(-500) , ScoreType(500)     );
    _keys.emplace_back(k_score, w_spin, "seeCapDangerDivisor"               , &SearchConfig::seeCapDangerDivisor                 , ScoreType(1)    , ScoreType(32)      );
