@@ -63,8 +63,8 @@ CONST_SEARCH_TUNING ScoreType deltaGoodSEEThreshold     = 160;
 ///@todo probably should be tuned with/without a net
 CONST_SEARCH_TUNING DepthType aspirationMinDepth  = 4;
 CONST_SEARCH_TUNING ScoreType aspirationInit      = 6;
-CONST_SEARCH_TUNING ScoreType aspirationDepthCoef = 0;
-CONST_SEARCH_TUNING ScoreType aspirationDepthInit = 0;
+CONST_SEARCH_TUNING ScoreType aspirationDepthCoef = 3;
+CONST_SEARCH_TUNING ScoreType aspirationDepthInit = 40;
 
 CONST_SEARCH_TUNING DepthType ttMaxFiftyValideDepth = 92;
 
