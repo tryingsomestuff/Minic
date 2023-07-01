@@ -17,12 +17,12 @@ CONST_SEARCH_TUNING Coeff<2,2> failHighReductionCoeff     = { {130, 130}, {0, 0}
 // first value if eval score is used, second if hash score is used
 CONST_SEARCH_TUNING colored<ScoreType> qfutilityMargin        = {132, 132};
 CONST_SEARCH_TUNING DepthType nullMoveMinDepth                = 2;
-CONST_SEARCH_TUNING DepthType nullMoveVerifDepth              = 12;
+CONST_SEARCH_TUNING DepthType nullMoveVerifDepth              = 6;
 CONST_SEARCH_TUNING ScoreType nullMoveMargin                  = 20;
 CONST_SEARCH_TUNING ScoreType nullMoveMargin2                 = 0;
 CONST_SEARCH_TUNING ScoreType nullMoveReductionDepthDivisor   = 6;
 CONST_SEARCH_TUNING ScoreType nullMoveReductionInit           = 5;
-CONST_SEARCH_TUNING ScoreType nullMoveDynamicDivisor          = 330;
+CONST_SEARCH_TUNING ScoreType nullMoveDynamicDivisor          = 150;
 CONST_SEARCH_TUNING ScoreType historyExtensionThreshold       = 512;
 CONST_SEARCH_TUNING colored<DepthType> CMHMaxDepth            = {3,3};
 CONST_SEARCH_TUNING DepthType iidMinDepth                     = 7;
