@@ -19,7 +19,7 @@ struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTransformer<NT, Q>> {
    FeatureTransformer<NT, Q> black;
 
    // status of the FeatureTransformers
-   // if dirty, then un update/reset is necessary
+   // if dirty, then an update/reset is necessary
    bool dirty = true;
 
    static constexpr int nbuckets {NNUEWeights<NT, Q>::nbuckets};
