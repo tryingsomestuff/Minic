@@ -43,10 +43,12 @@ template<size_t N_, size_t M_> struct Coeff {
    [[nodiscard]] CONSTEXPR_SEARCH_TUNING ScoreType threshold(const DepthType d, const float gp, const size_t idx1 = 0, const size_t idx2 = 0) const {
       assert(idx1 < N);
       assert(idx2 < M);
-      const auto value = init[idx1] + d * slopeDepth[idx1] + bonus[idx2] + static_cast<double>(gp) * slopeGamePhase[idx1];
+      const auto value = init[idx1]
+                       + d * slopeDepth[idx1] 
+                       + static_cast<double>(gp) * slopeGamePhase[idx1];
       assert(value > std::numeric_limits<ScoreType>::min());
       assert(value < std::numeric_limits<ScoreType>::max());
-      return static_cast<ScoreType>(value);
+      return static_cast<ScoreType>(value * bonus[idx2] / 256.0);
    }
    [[nodiscard]] CONSTEXPR_SEARCH_TUNING bool isActive(const DepthType d, const size_t idx1 = 0) const {
       assert(idx1 < N);

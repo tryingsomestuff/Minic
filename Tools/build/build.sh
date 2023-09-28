@@ -79,7 +79,7 @@ fi
 # -flto is making g++ 9.3.0 under cygwin segfault
 uname -a | grep CYGWIN
 if [ $? == 1 ]; then
-   OPT="$OPT -flto"
+   OPT="$OPT -flto=auto"
 fi
 
 if [ $FATHOM_PRESENT = "1" ]; then

@@ -5,15 +5,16 @@ import argparse
 import threading
 import subprocess
 import signal
-
+import json
 
 nb_best_print = 15
 nb_best_test = 15
 nb_tested_config = 3
 
-time_control='1+0.03'
-to_be_tuned='NNUEScaling'
-test_range = range(24,128,8)
+time_control='3+0.1'
+to_be_tuned='probCutMaxMoves'
+test_range = range(1,10,1)
+fixed_options = {}
 
 class Command(object):
     def __init__(self, cmd):
@@ -57,9 +58,9 @@ def parse_ordo(configs):
 
 def run_match(best, c_chess_exe, concurrency, book_file_name, engine):
     """ Run a match using c-chess-cli adding pgns to a file to be analysed with ordo """
-    pgn_file_name = os.path.join("out.pgn")
-    c_chess_out_file_name = os.path.join("c_chess.out")
-    command = "{} -each tc={} -games 10 -rounds 2 -concurrency {}".format(
+   
+    # game option
+    command = "{} -each tc={} -games 72 -rounds 2 -concurrency {}".format(
         c_chess_exe, time_control, concurrency
     )
     command = (
@@ -68,20 +69,29 @@ def run_match(best, c_chess_exe, concurrency, book_file_name, engine):
             book_file_name
         )
     )
-    command = command + " -engine cmd=/ssd2/Minic/Dist/Minic3/minic_dev_linux_x64 name=master"
-    #command = command + " -engine cmd=/ssd/engines/seer-nnue/build/seer name=master option.Hash=128"
-    #command = command + " -engine cmd=/ssd/engines/Halogen/Halogen/src/Halogen name=master option.Hash=128"
 
+    # reference engine options
+    command = command + " -engine cmd=/home/vivien/Minic/Dist/Minic3/minic_dev_linux_x64 name=master"
+    #for param,value in fixed_options.items():
+    #    command = (command + " option.{}={}").format(param, value)
+
+    # tuned engines options
     count = 0
     for config in best:
         print(config)
         command = command + " -engine cmd={} name={} option.{}={}".format(
             engine, config, to_be_tuned, config.split('-',1)[1]
         )
+        for param,value in fixed_options.items():
+            command = (command + " option.{}={}").format(param, value)        
+
         count +=1
         if count >= nb_tested_config:
             break
 
+    # output option
+    pgn_file_name = os.path.join("out.pgn")
+    c_chess_out_file_name = os.path.join("c_chess.out")
     command = command + " -pgn {} 0 > {} 2>&1".format(
         pgn_file_name, c_chess_out_file_name
     )
@@ -180,29 +190,78 @@ def main():
     parser.add_argument(
         "--ordo_exe",
         type=str,
-        default="/ssd2/Ordo/ordo",
+        default="/home/vivien/Ordo/ordo",
         help="Path to ordo, see https://github.com/michiguel/Ordo",
     )
     parser.add_argument(
         "--c_chess_exe",
         type=str,
-        default="/ssd2/c-chess-cli/c-chess-cli",
+        default="/home/vivien/c-chess-cli/c-chess-cli",
         help="Path to c-chess-cli, see https://github.com/lucasart/c-chess-cli",
     )
     parser.add_argument(
         "--engine",
         type=str,
-        default="/ssd2/Minic/Tourney/minic_dev_linux_x64",
+        default="/home/vivien/Minic/Tourney/minic_dev_linux_x64",
         help="Path to engine, see https://github.com/tryingsomestuff/Minic",
     )
     parser.add_argument(
         "--book_file_name",
         type=str,
-        default="/ssd2/Minic/Book_and_Test/OpeningBook/Pohl_AntiDraw_Openings_V1.5/Unbalanced_Human_Openings_V3/UHO_V3_+150_+159/UHO_V3_8mvs_big_+140_+169.epd",
+        default="/home/vivien/Minic/Book_and_Test/OpeningBook/8moves_last.epd",
         help="Path to a suitable book, see https://github.com/tryingsomestuff/Minic-Book_and_Test/tree/HEAD/OpeningBook",
     )
+    parser.add_argument(
+        "--time_control",
+        type=str,
+        default="3+0.1",
+        help="time control used, in the for XX+YY in secondes",
+    )
+    parser.add_argument(
+        "--parameter",
+        type=str,
+        default="probCutMaxMoves",
+        help="parameter to be optimized",
+    )
+    parser.add_argument(
+        "--range_min",
+        default=-500,
+        type=int,
+        help="range min",
+    )
+    parser.add_argument(
+        "--range_max",
+        default=500,
+        type=int,
+        help="range max",
+    )
+    parser.add_argument(
+        "--range_step",
+        default=10,
+        type=int,
+        help="range step",
+    )
+    parser.add_argument(
+        "--json_config",
+        default="tuning.json",
+        type=str,
+        help="tuning json file in the format of chess tuning tool, only ['engines'][0]['fixed_parameters'] object matters",
+    )
+
     args = parser.parse_args()
 
+    global test_range
+    global to_be_tuned
+    global time_control
+    global fixed_options
+    
+    test_range = range(args.range_min,args.range_max,args.range_step)
+    to_be_tuned = args.parameter
+    time_control = args.time_control
+    with open(args.json_config) as jsonf:
+        jsondata = json.load(jsonf)
+        fixed_options = jsondata['engines'][0]['fixed_parameters']
+    
     while True:
         run_round(
             args.explore_factor,
