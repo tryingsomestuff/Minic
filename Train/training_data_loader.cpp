@@ -412,7 +412,7 @@ extern "C" {
 
                 auto do_filter = [&]() {
                     sfens_count.fetch_add(1);
-                    return (e.isCapturingMove() || e.isInCheck() || e.ply < 10 );
+                    return (e.isCapturingMove() || e.isInCheck() || e.ply < 10 || std::abs(e.score) > 1500);
                 };
 
                 static thread_local std::mt19937 gen(std::random_device{}());

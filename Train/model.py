@@ -91,16 +91,16 @@ class NNUE(pl.LightningModule):
       self.black_affine = nn.Linear(halfka.half_ka_numel(), BASE)
 
     # dropout seems necessary when using factorizer to avoid over-fitting
-    self.d0 = nn.Dropout(p=0.05)
+    #self.d0 = nn.Dropout(p=0.01)
     self.fc0 = nn.Linear(2*BASE, L1 * nphase)
 
-    self.d1 = nn.Dropout(p=0.1)
+    #self.d1 = nn.Dropout(p=0.02)
     self.fc1 = nn.Linear(L1, L2 * nphase)
 
-    self.d2 = nn.Dropout(p=0.1)
+    #self.d2 = nn.Dropout(p=0.02)
     self.fc2 = nn.Linear(L2 + L1, L3 * nphase)
     
-    self.d3 = nn.Dropout(p=0.1)
+    #self.d3 = nn.Dropout(p=0.02)
     self.fc3 = nn.Linear(L3 + L2 + L1,  1 * nphase)
 
     self.lambda_ = lambda_
@@ -126,25 +126,25 @@ class NNUE(pl.LightningModule):
     # clipped relu
     base = torch.clamp(us * torch.cat([w_, b_], dim=1) + (1.0 - us) * torch.cat([b_, w_], dim=1),0,1)
 
-    if withFactorizer:
-      base = self.d0(base)
+    #if withFactorizer:
+      #base = self.d0(base)
     y0 = torch.clamp(self.fc0(base),0,1)
     y0 = y0.view(-1, L1)[indices]
 
-    if withFactorizer:
-      y0 = self.d1(y0)
+    #if withFactorizer:
+      #y0 = self.d1(y0)
     y1 = torch.clamp(self.fc1(y0),0,1)
     y1 = y1.view(-1, L2)[indices]
     y1 = torch.cat([y0, y1], dim=1)
 
-    if withFactorizer:
-      y1 = self.d2(y1)
+    #if withFactorizer:
+      #y1 = self.d2(y1)
     y2 = torch.clamp(self.fc2(y1),0,1)
     y2 = y2.view(-1, L3)[indices]
     y2 = torch.cat([y1, y2], dim=1)
 
-    if withFactorizer:
-      y2 = self.d3(y2)
+    #if withFactorizer:
+      #y2 = self.d3(y2)
     y3 = self.fc3(y2)
     y3 = y3.view(-1, 1)[indices]
 
@@ -199,7 +199,7 @@ class NNUE(pl.LightningModule):
     self.step_(batch, batch_idx, 'test_loss')
 
   def configure_optimizers(self):
-    optimizer = torch.optim.Adadelta(self.parameters(), lr=1, weight_decay=1e-10)
+    optimizer = torch.optim.Adadelta(self.parameters(), lr=1, weight_decay=1e-13)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.3)
 
     #optimizer = ranger.Ranger(self.parameters(), betas=(.9, 0.999), eps=1.0e-7, gc_loc=False, use_gc=False)
