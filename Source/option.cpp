@@ -326,6 +326,8 @@ void registerCOMOptions() { // options exposed to GUI
 
    _keys.emplace_back(k_score, w_spin, "historyExtensionThreshold"         , &SearchConfig::historyExtensionThreshold           , ScoreType(1)    , ScoreType(1500)    );
 
+   _keys.emplace_back(k_score, w_spin, "lazySortThreshold"                 , &SearchConfig::lazySortThreshold                   , ScoreType(-1500), ScoreType(1500)    );
+   _keys.emplace_back(k_score, w_spin, "lazySortThresholdQS"               , &SearchConfig::lazySortThresholdQS                 , ScoreType(-1500), ScoreType(1500)    );
 
    _keys.emplace_back(k_depth, w_spin, "CMHMaxDepth0"                      , &SearchConfig::CMHMaxDepth[0]                      , DepthType(0)    , DepthType(30)      );
    _keys.emplace_back(k_depth, w_spin, "CMHMaxDepth1"                      , &SearchConfig::CMHMaxDepth[1]                      , DepthType(0)    , DepthType(30)      );
