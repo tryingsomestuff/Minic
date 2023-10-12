@@ -125,11 +125,11 @@ void Searcher::searchDriver(bool postMove) {
    // check game history for potential situations (boom/moob)
    if (isMainThread()) {
       if (isBooming(p.halfmoves)) 
-         positionEvolution = stack[p.halfmoves-2].eval > MoveDifficultyUtil::emergencyAttackThreashold ? MoveDifficultyUtil::PE_boomingAttack : 
-                                                                                                         MoveDifficultyUtil::PE_boomingDefence;
+         positionEvolution = stack[p.halfmoves-2].eval > MoveDifficultyUtil::emergencyAttackThreshold ? MoveDifficultyUtil::PE_boomingAttack : 
+                                                                                                        MoveDifficultyUtil::PE_boomingDefence;
       else if (isMoobing(p.halfmoves))
-         positionEvolution = stack[p.halfmoves-2].eval > MoveDifficultyUtil::emergencyAttackThreashold ? MoveDifficultyUtil::PE_moobingAttack : 
-                                                                                                         MoveDifficultyUtil::PE_moobingDefence;
+         positionEvolution = stack[p.halfmoves-2].eval > MoveDifficultyUtil::emergencyAttackThreshold ? MoveDifficultyUtil::PE_moobingAttack : 
+                                                                                                        MoveDifficultyUtil::PE_moobingDefence;
    }
 
    // Main thread only will reset tables
@@ -352,8 +352,8 @@ void Searcher::searchDriver(bool postMove) {
                    depth > MoveDifficultyUtil::emergencyMinDepth && 
                    moveDifficulty == MoveDifficultyUtil::MD_std &&
                    _data.score < getSearchData().scores[depth - 2] - MoveDifficultyUtil::emergencyMargin) {
-                  moveDifficulty = _data.score > MoveDifficultyUtil::emergencyAttackThreashold ? MoveDifficultyUtil::MD_moobAttackIID
-                                                                                               : MoveDifficultyUtil::MD_moobDefenceIID;
+                  moveDifficulty = _data.score > MoveDifficultyUtil::emergencyAttackThreshold ? MoveDifficultyUtil::MD_moobAttackIID
+                                                                                              : MoveDifficultyUtil::MD_moobDefenceIID;
                   Logging::LogIt(Logging::logInfo) << "Emergency mode activated : " << _data.score << " < "
                                                    << getSearchData().scores[depth - 2] - MoveDifficultyUtil::emergencyMargin;
                }

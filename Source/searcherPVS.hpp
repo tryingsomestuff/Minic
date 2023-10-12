@@ -774,7 +774,10 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // take asymetry into account, prune less when it is not our turn
    const DepthType asymetryDepthCorrection = 0; //theirTurn; ///@todo
    // when score is fluctuating a lot in the current game, let's prune a bit less
-   const DepthType situationDepthCorrection = 0; //pvsData.isBoomingAttack || pvsData.isMoobingAttack || pvsData.isBoomingDefend || pvsData.isMoobingDefend;
+   const DepthType situationDepthCorrection = 0; /*pvsData.isBoomingAttack
+                                            || pvsData.isMoobingAttack
+                                            || pvsData.isBoomingDefend
+                                            || pvsData.isMoobingDefend;*/
    
    // take current situation and asymetry into account.
    const DepthType depthCorrection = emergencyDepthCorrection + asymetryDepthCorrection + situationDepthCorrection;

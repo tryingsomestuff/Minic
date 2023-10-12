@@ -652,11 +652,11 @@ namespace MoveDifficultyUtil {
 
     const DepthType emergencyMinDepth          = 14;
     const ScoreType emergencyMargin            = 64;
-    const ScoreType emergencyAttackThreashold  = 130;
+    const ScoreType emergencyAttackThreshold   = 130;
     const ScoreType easyMoveMargin             = 180;
     const int       emergencyFactorIID         = 3;
     const int       emergencyFactorIIDGood     = 3;
-    const int       emergencyFactorMoobHistory = 1;
+    const int       emergencyFactorMoobHistory = 2;
     const int       emergencyFactorBoomHistory = 1;
     const int       maxStealDivisor            = 5; // 1/maxStealDivisor of remaining time
 
