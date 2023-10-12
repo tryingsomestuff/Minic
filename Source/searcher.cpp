@@ -83,7 +83,7 @@ bool Searcher::isBooming(uint16_t halfmove){
    if (halfmove < 4) { return false; }  // no booming at the beginning of the game of course
    if (stack[halfmove-2].h == nullHash) { return false; } // no record in previous state
    if (stack[halfmove-4].h == nullHash) { return false; } // no record in former state
-   constexpr ScoreType boomMargin = 150;
+   constexpr ScoreType boomMargin = 80;
    return stack[halfmove-4].eval <= stack[halfmove-2].eval + boomMargin;
 }
 
@@ -92,7 +92,7 @@ bool Searcher::isMoobing(uint16_t halfmove){
    if (halfmove < 4) { return false; }  // no moobing at the beginning of the game of course
    if (stack[halfmove-2].h == nullHash) { return false; } // no record in previous state
    if (stack[halfmove-4].h == nullHash) { return false; } // no record in former state
-   constexpr ScoreType moobMargin = 130;
+   constexpr ScoreType moobMargin = 80;
    return stack[halfmove-4].eval >= stack[halfmove-2].eval + moobMargin;
 }
 
