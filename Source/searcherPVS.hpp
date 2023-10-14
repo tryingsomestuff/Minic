@@ -824,8 +824,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 /*
          // own threats pruning
          if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && pvsData.lessZugzwangRisk && SearchConfig::ownThreatCoeff.isActive(depth, pvsData.evalScoreIsHashScore) &&
-            evalData.goodThreats[p.c] && !evalData.goodThreats[~p.c] && evalScore > beta + SearchConfig::ownThreatCoeff.threshold(depth, evalData.gp, pvsData.evalScoreIsHashScore, pvsData.improving) ){
-            return stats.incr(Stats::sid_threatsPruning), beta;
+            !evalData.goodThreats[p.c] && evalScore < alpha - SearchConfig::ownThreatCoeff.threshold(depth, evalData.gp, pvsData.evalScoreIsHashScore, pvsData.improving) ){
+            return stats.incr(Stats::sid_threatsPruning), alpha;
          }
 */
          // razoring
@@ -1200,12 +1200,12 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
       pvsData.isTTMove = false;
       pvsData.isQuiet = Move2Type(*it) == T_std && !isNoisy(p,*it);
-      // skip quiet if LMP was triggered (!!even if move gives check now!!)
+      // skip quiet if LMP was triggered
       if (skipQuiet && pvsData.isQuiet && !pvsData.isInCheck){
          stats.incr(Stats::sid_lmp);
          continue;
       }
-      // skip other bad capture (!!even if move gives check now!!)
+      // skip other bad capture
       if (skipCap && Move2Type(*it) == T_capture && !pvsData.isInCheck){
          stats.incr(Stats::sid_see2);
          continue;
