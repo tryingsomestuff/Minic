@@ -228,9 +228,6 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    else
       MoveGen::generate<MoveGen::GP_cap>(p, moves); ///@todo generate only recapture if qly > 5
 
-   const Square recapture     = (isValidMove(p.lastMove) && isCapture(p.lastMove)) ? Move2To(p.lastMove) : INVALIDSQUARE;
-   const bool   onlyRecapture = qply > 5 && recapture != INVALIDSQUARE;
-
    //std::cout << "=========================" << std::endl;
    //std::cout << ToString(p) << std::endl;
    CMHPtrArray cmhPtr;
@@ -249,7 +246,10 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
 #endif
       if (validTTmove && sameMove(e.m, *it)) continue; // already tried
       if (!isInCheck) {
-         if (onlyRecapture && Move2To(*it) != recapture) continue; // only recapture now ...
+         if (qply > 5){
+            const Square recapture = (isValidMove(p.lastMove) && isCapture(p.lastMove)) ? Move2To(p.lastMove) : INVALIDSQUARE;
+            if (recapture != INVALIDSQUARE && Move2To(*it) != recapture) continue; // only recapture now ...
+         }
          if (SearchConfig::doQFutility && validMoveCount &&
              staticScore + SearchConfig::qfutilityMargin[evalScoreIsHashScore] + (isPromotionCap(*it) ? (value(P_wq) - value(P_wp)) : 0) +
                      (Move2Type(*it) == T_ep ? value(P_wp) : PieceTools::getAbsValue(p, Move2To(*it))) <= alphaInit) {
