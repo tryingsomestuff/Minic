@@ -745,13 +745,13 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       evalData.haveThreats[Co_Black] = (att[Co_Black] & p.allPieces[Co_White]) != emptyBitBoard;
 
       evalData.goodThreats[Co_White] = ((attFromPiece[Co_White][P_wp - 1] & p.allPieces[Co_Black] & ~p.blackPawn()) |
-                                    (attFromPiece[Co_White][P_wn - 1] & (p.blackQueen() | p.blackRook())) |
-                                    (attFromPiece[Co_White][P_wb - 1] & (p.blackQueen() | p.blackRook())) |
-                                    (attFromPiece[Co_White][P_wr - 1] & p.blackQueen())) != emptyBitBoard;
+                                        (attFromPiece[Co_White][P_wn - 1] & (p.blackQueen() | p.blackRook())) |
+                                        (attFromPiece[Co_White][P_wb - 1] & (p.blackQueen() | p.blackRook())) |
+                                        (attFromPiece[Co_White][P_wr - 1] & p.blackQueen())) != emptyBitBoard;
       evalData.goodThreats[Co_Black] = ((attFromPiece[Co_Black][P_wp - 1] & p.allPieces[Co_White] & ~p.whitePawn()) |
-                                    (attFromPiece[Co_Black][P_wn - 1] & (p.whiteQueen() | p.whiteRook())) |
-                                    (attFromPiece[Co_Black][P_wb - 1] & (p.whiteQueen() | p.whiteRook())) |
-                                    (attFromPiece[Co_Black][P_wr - 1] & p.whiteQueen())) != emptyBitBoard;
+                                        (attFromPiece[Co_Black][P_wn - 1] & (p.whiteQueen() | p.whiteRook())) |
+                                        (attFromPiece[Co_Black][P_wb - 1] & (p.whiteQueen() | p.whiteRook())) |
+                                        (attFromPiece[Co_Black][P_wr - 1] & p.whiteQueen())) != emptyBitBoard;
    }
 
    // if the position is really intense, eventually for both side (thus very sharp), will try to prune/reduce a little less
