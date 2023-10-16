@@ -166,7 +166,9 @@ Searcher::depthPolicy( [[maybe_unused]] const Position & p,
 
       // extend if quiet with good history
       /*
-      if ( extendMore() && pvsData.isQuiet && Move2Score(m) > SearchConfig::historyExtensionThreshold){
+      if ( extendMore() && pvsData.isQuiet 
+                        && Move2Score(m) <= HISTORY_MAX 
+                        && Move2Score(m) > SearchConfig::historyExtensionThreshold){
          ++extension;
          stats.incr(Stats::sid_goodHistoryExtension);
       }
@@ -236,12 +238,12 @@ Searcher::depthPolicy( [[maybe_unused]] const Position & p,
          // -----------------------
          // less reduction
          // -----------------------
-
-         // Mobility based reduction
          /*
+         // Mobility based reduction
          if (!pvsData.isInCheck){
-            const uint16_t mobilityBalance = evalData.mobility[~p.c]-evalData.mobility[p.c];
-            reduction -= std::min(1, std::max(-1, mobilityBalance/8));
+            const int16_t mobilityBalance = evalData.mobility[~p.c]-evalData.mobility[p.c];
+            //reduction -= (mobilityBalance/16 > 0);
+            reduction += (mobilityBalance/16 < 0);
          }
          */
 
@@ -278,7 +280,8 @@ Searcher::depthPolicy( [[maybe_unused]] const Position & p,
          // -----------------------
          // less reduction
          // -----------------------
-         reduction -= pvsData.pvnode; //pvsData.formerPV || pvsData.ttPV;
+         reduction -= pvsData.pvnode; 
+         //reduction -= pvsData.formerPV || pvsData.ttPV;
          reduction -= pvsData.improving;
          //reduction -= pvsData.ttMoveIsCapture;
       }
