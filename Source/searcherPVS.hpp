@@ -601,9 +601,10 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // if cutoff is validated by a margin
 
    if constexpr(!pvnode){
-      if ( !pvsData.rootnode 
+      if ( !pvsData.rootnode
          //&& !pvsData.isInCheck
          && pvsData.ttHit
+         && e.d > 0 // not from QS
          && (pvsData.bound == TT::B_alpha)
          &&  e.d >= depth - SearchConfig::ttAlphaCutDepth
          &&  e.s + SearchConfig::ttAlphaCutMargin * (depth - SearchConfig::ttAlphaCutDepth) <= alpha){
@@ -612,9 +613,10 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       }
 
       // and it seems we can do the same with beta bound
-      if ( !pvsData.rootnode 
+      if ( !pvsData.rootnode
          //&& !pvsData.isInCheck
          && pvsData.ttHit
+         && e.d > 0 // not from QS
          && (pvsData.bound == TT::B_beta)
          &&  e.d >= depth - SearchConfig::ttBetaCutDepth
          &&  e.s - SearchConfig::ttBetaCutMargin * (depth - SearchConfig::ttBetaCutDepth) >= beta){
@@ -714,7 +716,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // if TT hit, we can use entry score as a best draft 
    // but we set evalScoreIsHashScore to be aware of that !
-   if (pvsData.ttHit && !pvsData.isInCheck && !pvsData.isKnownEndGame
+   if (pvsData.ttHit && e.d > 0 && !pvsData.isInCheck && !pvsData.isKnownEndGame
      && ((pvsData.bound == TT::B_alpha && e.s < evalScore) || (pvsData.bound == TT::B_beta && e.s > evalScore) || (pvsData.bound == TT::B_exact))){
      evalScore = TT::adjustHashScore(e.s, height);
      pvsData.evalScoreIsHashScore = true;
@@ -976,8 +978,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          pvsData.ttPV        = pvnode || (pvsData.ttHit && (e.b & TT::B_ttPVFlag));
          pvsData.ttIsCheck   = pvsData.validTTmove && (e.b & TT::B_isCheckFlag);
          pvsData.formerPV    = pvsData.ttPV && !pvnode;
-         // note that e.d >= -1 here is quite redondant with bound != TT::B_None, but anyway ...
-         if (pvsData.ttHit && !pvsData.isInCheck && /*e.d >= -1 &&*/
+         if (pvsData.ttHit && e.d > 0 && !pvsData.isInCheck &&
              ((pvsData.bound == TT::B_alpha && e.s < evalScore) || (pvsData.bound == TT::B_beta && e.s > evalScore) || (pvsData.bound == TT::B_exact))) {
             evalScore = TT::adjustHashScore(e.s, height);
             pvsData.evalScoreIsHashScore = true;
