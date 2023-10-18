@@ -987,7 +987,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       }
    }
 
-   // reset killers (///@todo try not to reset on "research")
+   // reset killers
    if (height <= MAX_DEPTH - 2){
       killerT.killers[height + 1][0] = killerT.killers[height + 1][1] = INVALIDMOVE;
    }
