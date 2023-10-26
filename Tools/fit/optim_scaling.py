@@ -12,8 +12,8 @@ nb_best_test = 15
 nb_tested_config = 3
 
 time_control='3+0.1'
-to_be_tuned='probCutMaxMoves'
-test_range = range(1,10,1)
+to_be_tuned='NNUEScaling'
+test_range = range(32,256,16)
 fixed_options = {}
 
 class Command(object):
@@ -60,7 +60,7 @@ def run_match(best, c_chess_exe, concurrency, book_file_name, engine):
     """ Run a match using c-chess-cli adding pgns to a file to be analysed with ordo """
    
     # game option
-    command = "{} -each tc={} -games 72 -rounds 2 -concurrency {}".format(
+    command = "{} -each tc={} -games 10 -rounds 2 -concurrency {}".format(
         c_chess_exe, time_control, concurrency
     )
     command = (
@@ -71,7 +71,7 @@ def run_match(best, c_chess_exe, concurrency, book_file_name, engine):
     )
 
     # reference engine options
-    command = command + " -engine cmd=/home/vivien/Minic/Dist/Minic3/minic_dev_linux_x64 name=master"
+    command = command + " -engine cmd=/ssd2/Minic/Dist/Minic3/minic_dev_linux_x64 name=master"
     #for param,value in fixed_options.items():
     #    command = (command + " option.{}={}").format(param, value)
 
@@ -170,6 +170,12 @@ def run_round(
 
 
 def main():
+
+    global test_range
+    global to_be_tuned
+    global time_control
+    global fixed_options
+
     # basic setup
     parser = argparse.ArgumentParser(
         description="Finds the strongest configs, playing games.",
@@ -190,37 +196,37 @@ def main():
     parser.add_argument(
         "--ordo_exe",
         type=str,
-        default="/home/vivien/Ordo/ordo",
+        default="/ssd2/Ordo/ordo",
         help="Path to ordo, see https://github.com/michiguel/Ordo",
     )
     parser.add_argument(
         "--c_chess_exe",
         type=str,
-        default="/home/vivien/c-chess-cli/c-chess-cli",
+        default="/ssd2/c-chess-cli/c-chess-cli",
         help="Path to c-chess-cli, see https://github.com/lucasart/c-chess-cli",
     )
     parser.add_argument(
         "--engine",
         type=str,
-        default="/home/vivien/Minic/Tourney/minic_dev_linux_x64",
+        default="/ssd2/Minic/Tourney/minic_dev_linux_x64",
         help="Path to engine, see https://github.com/tryingsomestuff/Minic",
     )
     parser.add_argument(
         "--book_file_name",
         type=str,
-        default="/home/vivien/Minic/Book_and_Test/OpeningBook/8moves_last.epd",
+        default="/ssd2/Minic/Book_and_Test/OpeningBook/Pohl_AntiDraw_Openings_V1.5/Unbalanced_Human_Openings_V3/UHO_V3_+150_+159/UHO_V3_8mvs_+150_+159.epd",
         help="Path to a suitable book, see https://github.com/tryingsomestuff/Minic-Book_and_Test/tree/HEAD/OpeningBook",
     )
     parser.add_argument(
         "--time_control",
         type=str,
-        default="3+0.1",
+        default=time_control,
         help="time control used, in the for XX+YY in secondes",
     )
     parser.add_argument(
         "--parameter",
         type=str,
-        default="probCutMaxMoves",
+        default=to_be_tuned,
         help="parameter to be optimized",
     )
     parser.add_argument(
@@ -243,24 +249,21 @@ def main():
     )
     parser.add_argument(
         "--json_config",
-        default="tuning.json",
+        default="",
         type=str,
         help="tuning json file in the format of chess tuning tool, only ['engines'][0]['fixed_parameters'] object matters",
     )
 
     args = parser.parse_args()
 
-    global test_range
-    global to_be_tuned
-    global time_control
-    global fixed_options
-    
     test_range = range(args.range_min,args.range_max,args.range_step)
     to_be_tuned = args.parameter
     time_control = args.time_control
-    with open(args.json_config) as jsonf:
-        jsondata = json.load(jsonf)
-        fixed_options = jsondata['engines'][0]['fixed_parameters']
+    fixed_options = {}
+    if args.json_config :
+        with open(args.json_config) as jsonf:
+            jsondata = json.load(jsonf)
+            fixed_options = jsondata['engines'][0]['fixed_parameters']
     
     while True:
         run_round(
