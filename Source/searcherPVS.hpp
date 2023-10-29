@@ -233,7 +233,7 @@ Searcher::depthPolicy( [[maybe_unused]] const Position & p,
          
          // beware killers and counter are scored above history max
          const int hScore = HISTORY_DIV(2 * Move2Score(m));
-         reduction -= std::max(-2,std::min(2, hScore));
+         reduction -= std::min(3, hScore);
 
          // -----------------------
          // less reduction
