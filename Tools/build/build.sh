@@ -52,9 +52,9 @@ if [ ! -n "$DEBUGMINIC" ]; then
   if [ -n "$VTUNEMINIC" ]; then
      echo "***** with VTUNE params *****"
      # for VTUNE and other analyzer
-     OPT="$OPT -g" ; DEPTH=16
+     OPT="$OPT -g" ; DEPTH=20
   else
-     OPT="$OPT -s" ; DEPTH=16
+     OPT="$OPT -s" ; DEPTH=20
   fi
 else
   echo "******* DEBUG BUILD *******"
