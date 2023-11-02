@@ -1,7 +1,9 @@
 #!/bin/bash
 
-export CXX=/ssd2/android/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi33-clang++
-export CC=/ssd2/android/toolchains/llvm/prebuilt/linux-x86_64/bin//armv7a-linux-androideabi33-clang++
+ANDROID_NDK_PATH=/data/vivien/SRC/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/
+
+export CXX=$ANDROID_NDK_PATH/armv7a-linux-androideabi34-clang++
+export CC=$ANDROID_NDK_PATH/armv7a-linux-androideabi34-clang
 
 source $(dirname $0)/common
 cd_root
@@ -26,4 +28,4 @@ exe=${e}_${v}_android
 echo "Building $exe"
 echo $OPT
 
-$CXX $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $buildDir/$exe -static-libgcc -static-libstdc++ 
+$CXX $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $buildDir/$exe -static -static-libgcc -static-libstdc++ 
