@@ -1,7 +1,9 @@
 #!/bin/bash
 
-export CXX=/ssd2/android/bin/arm-linux-androideabi-clang++
-export CC=/ssd2/android/bin/arm-linux-androideabi-clang++
+ANDROID_NDK_PATH=/data/vivien/SRC/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/
+
+export CXX=$ANDROID_NDK_PATH/armv7a-linux-androideabi34-clang++
+export CC=$ANDROID_NDK_PATH/armv7a-linux-androideabi34-clang
 
 source $(dirname $0)/common
 cd_root
