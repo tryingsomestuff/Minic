@@ -160,7 +160,7 @@ void xboard() {
             COM::stop();
             COM::init(COM::p_xboard);
             newGame();
-            if (!sideToMoveFromFEN(startPosition)) { commandOK = false; }
+            if (!sideToMoveFromFEN(std::string(startPosition))) { commandOK = false; }
             COM::GetGameInfo().clear(COM::position);
             DynamicConfig::FRC = false;
             mode = static_cast<Mode>(static_cast<int>(stm)); ///@todo this is so wrong !

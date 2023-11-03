@@ -47,10 +47,8 @@ const std::string MinicVersion = "3.39";
 #endif
 
 #ifdef WITH_NNUE
-#ifndef __ANDROID__
 #ifndef WITHOUT_FILESYSTEM
 #define WITH_DATA2BIN
-#endif
 #endif
 #endif
 

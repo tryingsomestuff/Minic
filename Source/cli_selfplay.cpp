@@ -20,7 +20,7 @@ void selfPlay(DepthType depth, uint64_t & nbPos) {
                                   DynamicConfig::DFRC ? chess960::getDFRCXFEN() : 
                                   DynamicConfig::FRC ? chess960::positions[std::rand() % 960] : 
 #endif
-                                  startPosition;
+                                  std::string(startPosition);
    RootPosition      p(startfen);
 #ifdef WITH_NNUE
    NNUEEvaluator evaluator;
