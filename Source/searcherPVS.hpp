@@ -427,12 +427,14 @@ FORCE_FINLINE void Searcher::timeCheck(){
       }
       Distributed::pollStat();
 
+      Distributed::winFence(Distributed::_winStopFromR0);
       if (!Distributed::isMainProcess()) {
          bool masterStopFlag;
          Distributed::get(&masterStopFlag, 1, Distributed::_winStopFromR0, 0, Distributed::_requestStopFromR0);
          Distributed::waitRequest(Distributed::_requestStopFromR0);
          ThreadPool::instance().main().stopFlag = masterStopFlag;
       }
+      Distributed::winFence(Distributed::_winStopFromR0);
    }
    --periodicCheck;
 }

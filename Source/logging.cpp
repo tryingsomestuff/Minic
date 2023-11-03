@@ -103,18 +103,19 @@ COMType ct = CT_uci;
 LogIt::~LogIt() {
    std::lock_guard<std::mutex> lock(_mutex);
    if (_level != logGUI) { // those are "comments" and are prefixed with _protocolComment[ct] ("info string" for UCI)
+      const std::string rankStr = Distributed::moreThanOneProcess() ? (std::string("(") + std::to_string(Distributed::rank) + ") ") : "";
+      const std::string str = std::string(_protocolComment[ct]) + std::string(_levelNames[_level]) + showDate() + ": " + rankStr + _buffer.str();
       if ( _level >= DynamicConfig::minOutputLevel ) {
-#ifdef WITH_FMTLIB 
+#ifdef WITH_FMTLIB
          if ( ct == CT_pretty ){
-            const std::string str = std::string(_levelNames[_level]) + showDate() + ": " + _buffer.str();
             std::cout << fmt::format(_levelStyles[_level], str) << std::endl;
          }
          else
 #endif
-         std::cout << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
+         std::cout << str << std::endl;
       }
       // debug file output is *not* depending on DynamicConfig::minOutputLevel
-      if (_of) (*_of) << _protocolComment[ct] << _levelNames[_level] << showDate() << ": " << _buffer.str() << std::endl;
+      if (_of) (*_of) << str << std::endl;
    }
    else { // those are direct GUI outputs (like bestmove, feature, option, ...)
       if ( _level >= DynamicConfig::minOutputLevel ) {
