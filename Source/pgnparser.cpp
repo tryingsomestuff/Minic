@@ -55,7 +55,7 @@ void pgnparse__(std::ifstream& is, std::ofstream& os) {
       if (!is.good()) { read = false; }
 
       PGNGame game;
-      game.p.push_back(RootPosition(startPosition)); ///@todo allow starting from another position
+      game.p.push_back(RootPosition{std::string(startPosition)}); ///@todo allow starting from another position
 
       int currentStreamPos = is.tellg();
 

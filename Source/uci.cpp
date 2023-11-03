@@ -88,7 +88,7 @@ void processCommand(const std::string & command) {
 
       while (iss >> type) {
          if (type == "startpos") { 
-            readFEN(startPosition, COM::position, false, true); 
+            readFEN(std::string(startPosition), COM::position, false, true); 
             // let's start by resetting history
             COM::GetGameInfo().clear(COM::position);              
          }

@@ -100,7 +100,7 @@ void newGame() {
 #ifdef WITH_NNUE
    position.associateEvaluator(evaluator);
 #endif
-   readFEN(startPosition, position); // this set the COM::position position status
+   readFEN(std::string(startPosition), position); // this set the COM::position position status
 
    // reset dynamic state depending on opponent
    DynamicConfig::ratingFactor      = 1.;

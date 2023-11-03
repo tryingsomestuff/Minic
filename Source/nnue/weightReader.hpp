@@ -31,7 +31,7 @@ struct WeightsReader {
          // update min/max
          minW = std::min(minW, tmp);
          maxW = std::max(maxW, tmp);
-#if (defined USE_SIMD_INTRIN)
+#ifdef USE_SIMD_INTRIN
          // transpose data ///@todo as this is default now, do this in trainer ...
          const size_t j = (i % dim1) * dim0 + i / dim1;
 #else

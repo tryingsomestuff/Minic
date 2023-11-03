@@ -17,7 +17,9 @@ fi
 
 do_title "Building Minic for Android"
 
-OPT="-s -Wall -Wno-char-subscripts -Wno-reorder $d -DNDEBUG -O3 -flto $STDVERSION $n -Wno-unknown-pragmas -fconstexpr-steps=1000000000"
+# -flto is leading to some bugs ...
+OPT="-s -Wall -Wno-char-subscripts -Wno-reorder -Wno-missing-braces $d -DNDEBUG -O3 $STDVERSION $n -Wno-unknown-pragmas -fconstexpr-steps=1000000000"
+#OPT="-s -Wall -Wno-char-subscripts -Wno-reorder -Wno-missing-braces $d -ggdb3 $STDVERSION $n -Wno-unknown-pragmas -fconstexpr-steps=1000000000"
 
 if [ $FATHOM_PRESENT = "1" ]; then
    lib=fathom_${v}_android.o

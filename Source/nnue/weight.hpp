@@ -45,7 +45,6 @@ template<typename NT, bool Q> struct NNUEWeights {
       [[maybe_unused]] constexpr bool     withVersion     {true}; // used for backward compatiblity and debug
 
       if (path != "embedded") { // read from disk
-#ifndef __ANDROID__
 #ifndef WITHOUT_FILESYSTEM
          std::error_code ec;
          const auto fsize = std::filesystem::file_size(path, ec);
@@ -57,7 +56,6 @@ template<typename NT, bool Q> struct NNUEWeights {
             Logging::LogIt(Logging::logError) << "File " << path << " does not look like a compatible net";
             return false;
          }
-#endif
 #endif
          std::fstream stream(path, std::ios_base::in | std::ios_base::binary);
          auto ws = WeightsReader<NT>(stream);

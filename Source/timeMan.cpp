@@ -193,7 +193,7 @@ void simulate(const TCType tcType, const TimeType initialTime, const TimeType in
          break;
    }
 
-   RootPosition p(startPosition);
+   RootPosition p{std::string(startPosition)};
    Position p2 = p;
 #ifdef WITH_NNUE
    NNUEEvaluator evaluator;
