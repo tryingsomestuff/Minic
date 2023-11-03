@@ -52,17 +52,14 @@ extern MPI_Comm _commStat2;
 extern MPI_Comm _commInput;
 extern MPI_Comm _commMove;
 extern MPI_Comm _commStopFromR0;
-extern MPI_Comm _commStopToR0;
 
 extern MPI_Request _requestTT;
 extern MPI_Request _requestStat;
 extern MPI_Request _requestInput;
 extern MPI_Request _requestMove;
 extern MPI_Request _requestStopFromR0;
-extern MPI_Request _requestStopToR0;
 
 extern MPI_Win _winStopFromR0;
-extern MPI_Win _winStopToR0;
 
 void init();
 void lateInit();
@@ -111,6 +108,13 @@ template<typename T> FORCE_FINLINE void asyncAllReduceSum(T* local, T* global, i
    checkError(MPI_Iallreduce(local, global, n, TraitMpiType<T>::type, MPI_SUM, com, &req));
 }
 
+FORCE_FINLINE void winFence(MPI_Win& window, const std::string & msg = "") {
+   if (!moreThanOneProcess()) return;
+   Logging::LogIt(Logging::logInfo) << "Window fence... " + msg;
+   checkError(MPI_Win_fence(0, window));
+   Logging::LogIt(Logging::logInfo) << "... ok";
+}
+
 template<typename T> FORCE_FINLINE void put(T* ptr, int n, MPI_Win& window, int target, MPI_Request & req) {
    if (!moreThanOneProcess()) return;
    Logging::LogIt(Logging::logInfo) << "Window put... ";
@@ -136,13 +140,6 @@ template<typename T> FORCE_FINLINE void putMainToAll(T* ptr, int n, MPI_Win& win
 template<typename T> FORCE_FINLINE void asyncAllGather(T* inptr, T* outptr, int n, MPI_Request& req, MPI_Comm& com) {
    if (!moreThanOneProcess()) return;
    checkError(MPI_Iallgather(inptr, n, TraitMpiType<T>::type, outptr, n, TraitMpiType<T>::type, com, &req));
-}
-
-FORCE_FINLINE void winFence(MPI_Win& window, const std::string & msg = "") {
-   if (!moreThanOneProcess()) return;
-   Logging::LogIt(Logging::logInfo) << "Window fence... " + msg;
-   checkError(MPI_Win_fence(0, window));
-   Logging::LogIt(Logging::logInfo) << "... ok";
 }
 
 void waitRequest(MPI_Request& req);
@@ -180,10 +177,8 @@ extern DummyType _requestStat;
 extern DummyType _requestInput;
 extern DummyType _requestMove;
 extern DummyType _requestStopFromR0;
-extern DummyType _requestStopToR0;
 
 extern DummyType _winStopFromR0;
-extern DummyType _winStopToR0;
 
 FORCE_FINLINE void checkError(int) {}
 
@@ -206,6 +201,7 @@ template<typename T> FORCE_FINLINE void put(T *, int, DummyType &, int, DummyTyp
 FORCE_FINLINE void waitRequest(DummyType &) {}
 
 FORCE_FINLINE void winFence(DummyType &, const std::string & ) {}
+FORCE_FINLINE void winFence(DummyType & ) {}
 
 FORCE_FINLINE void initStat() {}
 FORCE_FINLINE void sendStat() {}

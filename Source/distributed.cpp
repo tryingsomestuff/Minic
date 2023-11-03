@@ -24,17 +24,14 @@ MPI_Comm _commStat2      = MPI_COMM_NULL;
 MPI_Comm _commInput      = MPI_COMM_NULL;
 MPI_Comm _commMove       = MPI_COMM_NULL;
 MPI_Comm _commStopFromR0 = MPI_COMM_NULL;
-MPI_Comm _commStopToR0   = MPI_COMM_NULL;
 
 MPI_Request _requestTT         = MPI_REQUEST_NULL;
 MPI_Request _requestStat       = MPI_REQUEST_NULL;
 MPI_Request _requestInput      = MPI_REQUEST_NULL;
 MPI_Request _requestMove       = MPI_REQUEST_NULL;
 MPI_Request _requestStopFromR0 = MPI_REQUEST_NULL;
-MPI_Request _requestStopToR0   = MPI_REQUEST_NULL;
 
 MPI_Win _winStopFromR0;
-MPI_Win _winStopToR0;
 
 array1d<Counter, Stats::sid_maxid> _countersBufSend;
 array1d<Counter, Stats::sid_maxid> _countersBufRecv[2];
@@ -76,7 +73,6 @@ void init() {
    checkError(MPI_Comm_dup(MPI_COMM_WORLD, &_commInput));
    checkError(MPI_Comm_dup(MPI_COMM_WORLD, &_commMove));
    checkError(MPI_Comm_dup(MPI_COMM_WORLD, &_commStopFromR0));
-   checkError(MPI_Comm_dup(MPI_COMM_WORLD, &_commStopToR0));
 
    _nbStatPoll             = 0ull;
    _doubleBufferStatParity = 0;
@@ -92,16 +88,8 @@ void init() {
 
 void lateInit() {
    if (moreThanOneProcess()) {
-      if (isMainProcess()) {
-         checkError(MPI_Win_create(nullptr, 0, 1, MPI_INFO_NULL, _commStopToR0, &_winStopToR0));
-         checkError(MPI_Win_create(&ThreadPool::instance().main().stopFlag, sizeof(bool), sizeof(bool), MPI_INFO_NULL, _commStopFromR0, &_winStopFromR0));
-      }
-      else {
-         checkError(MPI_Win_create(&ThreadPool::instance().main().stopFlag, sizeof(bool), sizeof(bool), MPI_INFO_NULL, _commStopToR0, &_winStopToR0));
-         checkError(MPI_Win_create(nullptr, 0, 1, MPI_INFO_NULL, _commStopFromR0, &_winStopFromR0));
-      }
+      checkError(MPI_Win_create(&ThreadPool::instance().main().stopFlag, sizeof(bool), sizeof(bool), MPI_INFO_NULL, _commStopFromR0, &_winStopFromR0));
       checkError(MPI_Win_fence(0, _winStopFromR0));
-      checkError(MPI_Win_fence(0, _winStopToR0));
    }
 }
 
@@ -113,10 +101,8 @@ void finalize() {
    checkError(MPI_Comm_free(&_commInput));
    checkError(MPI_Comm_free(&_commMove));
    checkError(MPI_Comm_free(&_commStopFromR0));
-   checkError(MPI_Comm_free(&_commStopToR0));
 
    if (moreThanOneProcess()) checkError(MPI_Win_free(&_winStopFromR0));
-   if (moreThanOneProcess()) checkError(MPI_Win_free(&_winStopToR0));
 
    checkError(MPI_Finalize());
 }
@@ -299,17 +285,14 @@ DummyType _commStat2      = 0;
 DummyType _commInput      = 0;
 DummyType _commMove       = 0;
 DummyType _commStopFromR0 = 0;
-DummyType _commStopToR0   = 0;
 
 DummyType _requestTT         = 0;
 DummyType _requestStat       = 0;
 DummyType _requestInput      = 0;
 DummyType _requestMove       = 0;
 DummyType _requestStopFromR0 = 0;
-DummyType _requestStopToR0   = 0;
 
 DummyType _winStopFromR0 = 0;
-DummyType _winStopToR0   = 0;
 
 Counter counter(Stats::StatId id) { return ThreadPool::instance().counter(id, true); }
 

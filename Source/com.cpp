@@ -141,7 +141,7 @@ void readLine() {
    if (!Distributed::isMainProcess()) { command = buffer; }
 }
 
-bool receiveMoves(const Move move, Move ponderMove) {
+bool receiveMoves(Move move, Move ponderMove) {
    Logging::LogIt(Logging::logInfo) << "...done returning move " << ToString(move) << " (state " << static_cast<int>(state) << ")";
    Logging::LogIt(Logging::logInfo) << "ponder move " << ToString(ponderMove);
 

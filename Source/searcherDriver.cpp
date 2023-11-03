@@ -209,7 +209,7 @@ void Searcher::searchDriver(bool postMove) {
 
    // forced move detection
    // only main thread here (stopflag will be triggered anyway for other threads if needed)
-   if (isMainThread() && DynamicConfig::multiPV == 1 && isFiniteTimeSearch && currentMoveMs > 100) { ///@todo should work with nps here
+   if (!Distributed::moreThanOneProcess() && isMainThread() && DynamicConfig::multiPV == 1 && isFiniteTimeSearch && currentMoveMs > 100) { ///@todo should work with nps here
       _data.score = pvs<true>(matedScore(0), matingScore(0), p, 1, 0, _data.pv, _data.seldepth, 0, isInCheck, false); // depth 1 search to get real valid moves
       // only one : check evasion or zugzwang
       if (rootScores.size() == 1) {
@@ -387,12 +387,14 @@ void Searcher::searchDriver(bool postMove) {
                }
 
                // sync (pull) stopflag in other process
+               Distributed::winFence(Distributed::_winStopFromR0);
                if (!Distributed::isMainProcess()) {
                   bool masterStopFlag;
                   Distributed::get(&masterStopFlag, 1, Distributed::_winStopFromR0, 0, Distributed::_requestStopFromR0);
 	               Distributed::waitRequest(Distributed::_requestStopFromR0);
                   ThreadPool::instance().main().stopFlag = masterStopFlag;
                }
+               Distributed::winFence(Distributed::_winStopFromR0);
             }
          }
       } // multiPV loop end
