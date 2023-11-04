@@ -42,6 +42,9 @@ release: config fathom
 build: config fathom
 	$(ROOT_DIR)/Tools/build/build.sh
 
+android: config fathom
+	$(ROOT_DIR)/Tools/build/buildAndroid.sh
+
 dist: build
 	mkdir -p Tourney
 	cp Dist/Minic3/minic_dev_linux_x64 Tourney/

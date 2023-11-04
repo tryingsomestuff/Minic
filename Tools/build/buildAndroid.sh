@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ANDROID_NDK_PATH=/data/vivien/SRC/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/
+ANDROID_NDK_PATH=$(dirname $0)/../../../android/toolchains/llvm/prebuilt/linux-x86_64/bin/
 
 export CXX=$ANDROID_NDK_PATH/armv7a-linux-androideabi34-clang++
 export CC=$ANDROID_NDK_PATH/armv7a-linux-androideabi34-clang
