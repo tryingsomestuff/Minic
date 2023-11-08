@@ -121,7 +121,7 @@ void init(const Protocol pr) {
 }
 
 void readLine() {
-   const size_t bufSize = 4096;
+   const size_t bufSize = 4096*10;
    char buffer[bufSize]; // only usefull if WITH_MPI
    // only main process read stdin
    if (Distributed::isMainProcess()) {
@@ -147,11 +147,9 @@ bool receiveMoves(Move move, Move ponderMove) {
 
    // share the same move with all process
    if (Distributed::moreThanOneProcess()) {
-      Distributed::sync(Distributed::_commMove, __PRETTY_FUNCTION__);
       // don't rely on Bcast to do a "passive wait", most implementation is doing a busy-wait, so use 100% cpu
       Distributed::asyncBcast(&move, 1, Distributed::_requestMove, Distributed::_commMove);
-      Distributed::waitRequest(Distributed::_requestMove);
-   }
+      Distributed::waitRequest(Distributed::_requestMove);   }
 
    // if possible, get a ponder move
    if (ponderMove != INVALIDMOVE) {

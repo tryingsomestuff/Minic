@@ -29,7 +29,7 @@ MPI_Request _requestTT         = MPI_REQUEST_NULL;
 MPI_Request _requestStat       = MPI_REQUEST_NULL;
 MPI_Request _requestInput      = MPI_REQUEST_NULL;
 MPI_Request _requestMove       = MPI_REQUEST_NULL;
-MPI_Request _requestStopFromR0 = MPI_REQUEST_NULL;
+//MPI_Request _requestStopFromR0 = MPI_REQUEST_NULL;
 
 MPI_Win _winStopFromR0;
 
@@ -52,7 +52,7 @@ void checkError(int err) {
 }
 
 void init() {
-   //MPI_Init(nullptr, nullptr);
+   std::cout << Logging::_protocolComment[Logging::ct] << "Initializing MPI ..." << std::endl;
    int provided;
    checkError(MPI_Init_thread(nullptr, nullptr, MPI_THREAD_MULTIPLE, &provided));
    checkError(MPI_Comm_size(MPI_COMM_WORLD, &worldSize));
@@ -132,7 +132,7 @@ void waitRequest(MPI_Request& req) {
          checkError(MPI_Test(&req, &flag, MPI_STATUS_IGNORE));
          if (flag) break;
          else
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
       }
    }
 }
@@ -290,7 +290,7 @@ DummyType _requestTT         = 0;
 DummyType _requestStat       = 0;
 DummyType _requestInput      = 0;
 DummyType _requestMove       = 0;
-DummyType _requestStopFromR0 = 0;
+//DummyType _requestStopFromR0 = 0;
 
 DummyType _winStopFromR0 = 0;
 
