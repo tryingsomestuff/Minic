@@ -387,14 +387,11 @@ void Searcher::searchDriver(bool postMove) {
                }
 
                // sync (pull) stopflag in other process
-               Distributed::winFence(Distributed::_winStopFromR0);
                if (!Distributed::isMainProcess()) {
                   bool masterStopFlag;
-                  Distributed::get(&masterStopFlag, 1, Distributed::_winStopFromR0, 0, Distributed::_requestStopFromR0);
-	               Distributed::waitRequest(Distributed::_requestStopFromR0);
+                  Distributed::get(&masterStopFlag, 1, Distributed::_winStopFromR0, 0);
                   ThreadPool::instance().main().stopFlag = masterStopFlag;
                }
-               Distributed::winFence(Distributed::_winStopFromR0);
             }
          }
       } // multiPV loop end
@@ -459,7 +456,7 @@ pvsout:
       // wait for "ponderhit" or "stop" in case search returned too soon
       if (!stopFlag && (getData().isPondering || getData().isAnalysis)) {
          Logging::LogIt(Logging::logInfo) << "Waiting for ponderhit or stop ...";
-         while (!stopFlag && (getData().isPondering || getData().isAnalysis)) { std::this_thread::sleep_for(std::chrono::milliseconds(10)); }
+         while (!stopFlag && (getData().isPondering || getData().isAnalysis)) { std::this_thread::sleep_for(std::chrono::milliseconds(1)); }
          Logging::LogIt(Logging::logInfo) << "... ok";
       }
 

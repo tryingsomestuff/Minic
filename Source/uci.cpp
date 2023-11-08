@@ -263,9 +263,11 @@ void processCommand(const std::string & command) {
       COM::stop();
       iterate = false;
    }
-   else if (uciCommand == "wait") {
+   else if (uciCommand == "wait") { // only used for testing purpose
       using namespace std::chrono_literals;
-      while (!ThreadPool::instance().main().stopFlag) { std::this_thread::sleep_for(20ms); }
+      while (!ThreadPool::instance().main().stopFlag) { 
+         std::this_thread::sleep_for(10ms);
+      }
       std::this_thread::sleep_for(200ms);
    }
    else if (uciCommand == "bench") {

@@ -229,10 +229,10 @@ void xboard() {
          else if (COM::command == "quit") {
             iterate = false;
          }
-         else if (COM::command == "wait") {
+         else if (COM::command == "wait") { // only used for testing purpose
             using namespace std::chrono_literals;
             while(!ThreadPool::instance().main().stopFlag){
-               std::this_thread::sleep_for(20ms);
+               std::this_thread::sleep_for(10ms);
             }
             std::this_thread::sleep_for(200ms);
          }

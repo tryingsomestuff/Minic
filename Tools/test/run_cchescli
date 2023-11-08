@@ -1,5 +1,5 @@
 #!/bin/bash
 
-ccc=/ssd/c-chess-cli/c-chess-cli
+ccc=/ssd2/c-chess-cli/c-chess-cli
 
-$ccc -each depth=8 -engine "cmd=/ssd/Minic/Dist/Minic3/minic_dev_linux_x64 -uci -randomPly 5" -engine "cmd=/ssd/Minic/Dist/Minic3/minic_dev_linux_x64 -uci -randomPly 5" -games 9999999 -concurrency 7 -resign 3,700 -pgn out.pgn &
+$ccc -each tc=5+0.1 -engine "cmd=/ssd2/Minic/Tourney/minic_dev_linux_x64" -engine "cmd=/ssd2/Minic/runmpi.sh" -games 9999999 -concurrency 1 -pgn out.pgn -openings file=/ssd2/Minic/Book_and_Test/OpeningBook/Pohl_AntiDraw_Openings_V1.5/Unbalanced_Human_Openings_V3/UHO_V3_+150_+159/UHO_V3_8mvs_big_+140_+169.epd order=random &
