@@ -132,9 +132,9 @@ void readLine() {
       assert(command.size() < bufSize);
       strcpy(buffer, command.c_str()); // only usefull if WITH_MPI
    }
-   if (Distributed::moreThanOneProcess()) {
+   if (Distributed::moreThanOneProcess() && !command.empty()) {
       // don't rely on Bcast to do a "passive wait", most implementation is doing a busy-wait, so use 100% cpu
-      Distributed::asyncBcast(buffer, command.size(), Distributed::_requestInput, Distributed::_commInput);
+      Distributed::asyncBcast(buffer, bufSize, Distributed::_requestInput, Distributed::_commInput);
       Distributed::waitRequest(Distributed::_requestInput);
    }
    // other slave rank event loop
