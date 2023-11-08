@@ -134,7 +134,7 @@ void readLine() {
    }
    if (Distributed::moreThanOneProcess()) {
       // don't rely on Bcast to do a "passive wait", most implementation is doing a busy-wait, so use 100% cpu
-      Distributed::asyncBcast(buffer, bufSize, Distributed::_requestInput, Distributed::_commInput);
+      Distributed::asyncBcast(buffer, command.size(), Distributed::_requestInput, Distributed::_commInput);
       Distributed::waitRequest(Distributed::_requestInput);
    }
    // other slave rank event loop

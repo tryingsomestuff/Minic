@@ -232,7 +232,9 @@ template<typename T> FORCE_FINLINE void asyncBcast(T *, int, DummyType &, DummyT
 template<typename T> FORCE_FINLINE void putMainToAll(T *, int, DummyType &) {}
 
 template<typename T> FORCE_FINLINE void get(T *, int, DummyType &, int, DummyType &) {}
-template<typename T> FORCE_FINLINE void put(T *, int, DummyType &, int, DummyType &) {}
+template<typename T> FORCE_FINLINE void get(T *, int, DummyType &, int) {}
+
+//template<typename T> FORCE_FINLINE void put(T *, int, DummyType &, int, DummyType &) {}
 
 FORCE_FINLINE void waitRequest(DummyType &) {}
 
