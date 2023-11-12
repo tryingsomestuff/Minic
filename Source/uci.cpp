@@ -25,6 +25,7 @@ void uci() {
    iterate = true;
    while (iterate) {
       COM::readLine();
+      std::lock_guard<std::mutex> lock(COM::mutexGUI); // cannot treat GUI bestmove while receiving new position
       processCommand(COM::command);
    }
    Logging::LogIt(Logging::logInfo) << "Leaving UCI loop";

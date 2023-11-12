@@ -187,7 +187,7 @@ void syncStat() { // only called from main thread
    _countersBufRecv[(_doubleBufferStatParity + 1) % 2] = _countersBufRecv[(_doubleBufferStatParity) % 2];
 
    //showStat(); // debug
-   sync(_commStat, __PRETTY_FUNCTION__);
+   //sync(_commStat, __PRETTY_FUNCTION__);
    Logging::LogIt(Logging::logInfo) << "...ok";
    _nbStatPoll = 0;
 }
@@ -265,7 +265,7 @@ void syncTT() { // only called from main thread
    DEBUGCOUT("sync TT final wait")
    checkError(MPI_Wait(&_requestTT, MPI_STATUS_IGNORE));
    DEBUGCOUT("sync TT final wait done 1")
-   sync(_commTT, __PRETTY_FUNCTION__);
+   //sync(_commTT, __PRETTY_FUNCTION__);
    DEBUGCOUT("sync TT final wait done 2")
    Logging::LogIt(Logging::logInfo) << "... ok";
    _nbTTTransfert = 0;

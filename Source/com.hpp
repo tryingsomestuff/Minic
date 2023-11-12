@@ -20,6 +20,8 @@ extern std::string       command; // see readLine, filled in COM, used in uci & 
 extern RootPosition      position; // current analyzed position
 extern DepthType         depth;
 
+extern std::mutex mutexGUI;
+
 struct GameInfo {
     struct GameStateInfo {
        Position p;

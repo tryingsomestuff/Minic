@@ -60,9 +60,9 @@ if [ ! -n "$DEBUGMINIC" ]; then
 else
   echo "******* DEBUG BUILD *******"
   #OPT="-s -ffunction-sections -fdata-sections -Os -s -DNDEBUG -Wl,--gc-sections" ; DEPTH=16
-  #OPT="-DNDEBUG -O3 -g -ggdb -fno-omit-frame-pointer" ; DEPTH=10
+  OPT="-DNDEBUG -O3 -g -ggdb -fno-omit-frame-pointer" ; DEPTH=10
   #OPT="-DNDEBUG -g" ; DEPTH=10
-  OPT="-g -rdynamic" ; DEPTH=10
+  #OPT="-g -rdynamic" ; DEPTH=10
 fi
 
 LIBS="-lpthread -ldl"
