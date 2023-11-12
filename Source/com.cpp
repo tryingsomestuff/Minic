@@ -25,6 +25,7 @@ NNUEEvaluator evaluator;
 #endif
 
 std::mutex mutex;
+std::mutex mutexGUI;
 
 void GameInfo::write(std::ostream & os) const{
    if (_gameStates.empty()) return;
@@ -142,6 +143,7 @@ void readLine() {
 }
 
 bool receiveMoves(Move move, Move ponderMove) {
+   std::lock_guard<std::mutex> lock(mutexGUI); // cannot treat GUI bestmove while receiving new position
    Logging::LogIt(Logging::logInfo) << "...done returning move " << ToString(move) << " (state " << static_cast<int>(state) << ")";
    Logging::LogIt(Logging::logInfo) << "ponder move " << ToString(ponderMove);
 
@@ -149,7 +151,8 @@ bool receiveMoves(Move move, Move ponderMove) {
    if (Distributed::moreThanOneProcess()) {
       // don't rely on Bcast to do a "passive wait", most implementation is doing a busy-wait, so use 100% cpu
       Distributed::asyncBcast(&move, 1, Distributed::_requestMove, Distributed::_commMove);
-      Distributed::waitRequest(Distributed::_requestMove);   }
+      Distributed::waitRequest(Distributed::_requestMove);
+   }
 
    // if possible, get a ponder move
    if (ponderMove != INVALIDMOVE) {
@@ -190,6 +193,7 @@ bool receiveMoves(Move move, Move ponderMove) {
          }
       }
    }
+   Distributed::sync(Distributed::_commMove, "after sending move to GUI");
    Logging::LogIt(Logging::logInfo) << "Putting state to none (state was " << static_cast<int>(state) << ")";
    state = st_none;
 
@@ -197,6 +201,9 @@ bool receiveMoves(Move move, Move ponderMove) {
 }
 
 bool makeMove(const Move m, const bool disp, const std::string & tag, const Move pondermove) {
+   // there is a possible race condition here, as position can be changed from UCI or XBOARD command line
+   // while it is still in use here. For instance in a multi-process context where the move has already been send to GUI by rank 0
+   // and other ranks are still using the previous position. Thus mutexGUI...
 #ifdef WITH_NNUE
    position.resetNNUEEvaluator(position.evaluator());
 #endif

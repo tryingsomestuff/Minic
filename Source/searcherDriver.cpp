@@ -82,7 +82,7 @@ void Searcher::searchDriver(bool postMove) {
    //stopFlag = false; // shall be only done outside to avoid race condition
    height_ = 0;
 
-   if (isMainThread()) Distributed::sync(Distributed::_commStat2, __PRETTY_FUNCTION__);
+   if (isMainThread()) Distributed::sync(Distributed::_commStat2, "start of search driver");
 
    // we start by a copy, because position object must be mutable here.
    Position p(_data.p);
@@ -485,5 +485,6 @@ pvsout:
          }
       }
 
+      Distributed::sync(Distributed::_commMove, "end of search driver");
    } // isMainThread()
 }

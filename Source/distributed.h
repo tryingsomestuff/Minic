@@ -90,6 +90,7 @@ template<typename T> FORCE_FINLINE void bcast(T* v, int n, MPI_Comm& com) {
 }
 */
 
+// from rank 0 to others
 template<typename T> FORCE_FINLINE void asyncBcast(T* v, int n, MPI_Request& req, MPI_Comm& com) {
    if (!moreThanOneProcess()) return;
    checkError(MPI_Ibcast(v, n, TraitMpiType<T>::type, 0, com, &req));
