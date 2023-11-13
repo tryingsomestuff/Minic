@@ -124,7 +124,7 @@ void applyNull(Searcher&, Position& pN) {
    STOP_AND_SUM_TIMER(Apply)
 }
 
-bool applyMove(Position& p, const MoveInfo & moveInfo, const bool noNNUEUpdate) {
+bool applyMove(Position& p, const MoveInfo & moveInfo, [[maybe_unused]] const bool noNNUEUpdate) {
    assert(isValidMove(moveInfo.m));
    START_TIMER
 #ifdef DEBUG_MATERIAL
@@ -296,7 +296,7 @@ bool applyMove(Position& p, const MoveInfo & moveInfo, const bool noNNUEUpdate) 
    return true;
 }
 
-void applyMoveNNUEUpdate(Position & p, const MoveInfo & moveInfo){
+void applyMoveNNUEUpdate([[maybe_unused]] Position & p, [[maybe_unused]] const MoveInfo & moveInfo){
 #ifdef WITH_NNUE
    if (!DynamicConfig::useNNUE) return;
    // if king is not moving, update nnue evaluator
@@ -320,7 +320,6 @@ void applyMoveNNUEUpdate(Position & p, const MoveInfo & moveInfo){
          else updateNNUEEvaluatorThemOnly<Co_Black>(p.evaluator(), moveInfo);
       }
    }
-#endif
 
 #ifdef DEBUG_NNUE_UPDATE
    Position      p2 = p;
@@ -339,5 +338,9 @@ void applyMoveNNUEUpdate(Position & p, const MoveInfo & moveInfo){
       Logging::LogIt(Logging::logWarn) << p.evaluator().black.active();
       Logging::LogIt(Logging::logWarn) << backtrace();
    }
-#endif   
+#endif // DEBUG_NNUE_UPDATE
+
+#endif // WITH_NNUE
+
+
 }

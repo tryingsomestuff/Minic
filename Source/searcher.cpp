@@ -319,7 +319,9 @@ Position Searcher::getQuiet(const Position& p, Searcher* searcher, ScoreType* qS
       pQuiet = p2;
    }
 
+#ifdef WITH_NNUE
    pQuiet.dissociateEvaluator();
+#endif
    return pQuiet;
 }
 
