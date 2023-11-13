@@ -17,6 +17,13 @@ int         worldSize;
 int         rank;
 std::string name;
 
+const MPI_Datatype TraitMpiType<bool>     ::type = MPI_CXX_BOOL;
+const MPI_Datatype TraitMpiType<char>     ::type = MPI_CHAR;
+const MPI_Datatype TraitMpiType<Counter>  ::type = MPI_LONG_LONG_INT;
+const MPI_Datatype TraitMpiType<EntryHash>::type = MPI_CHAR; // WARNING : size must be adapted *sizeof(EntryHash)
+const MPI_Datatype TraitMpiType<Move>     ::type = MPI_INT;
+
+
 MPI_Comm _commTT         = MPI_COMM_NULL;
 MPI_Comm _commTT2        = MPI_COMM_NULL;
 MPI_Comm _commStat       = MPI_COMM_NULL;

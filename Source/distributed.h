@@ -74,12 +74,12 @@ struct EntryHash {
 };
 
 template<typename T> struct TraitMpiType {};
-
-template<> struct TraitMpiType<bool>      { static constexpr MPI_Datatype type = MPI_CXX_BOOL; };
-template<> struct TraitMpiType<char>      { static constexpr MPI_Datatype type = MPI_CHAR; };
-template<> struct TraitMpiType<Counter>   { static constexpr MPI_Datatype type = MPI_LONG_LONG_INT; };
-template<> struct TraitMpiType<EntryHash> { static constexpr MPI_Datatype type = MPI_CHAR; }; // WARNING : size must be adapted *sizeof(EntryHash)
-template<> struct TraitMpiType<Move>      { static constexpr MPI_Datatype type = MPI_INT; };
+// cannot be constexpr because involves static_cast in MPI types
+template<> struct TraitMpiType<bool>      { static const MPI_Datatype type;};
+template<> struct TraitMpiType<char>      { static const MPI_Datatype type;};
+template<> struct TraitMpiType<Counter>   { static const MPI_Datatype type;};
+template<> struct TraitMpiType<EntryHash> { static const MPI_Datatype type;}; // WARNING : size must be adapted *sizeof(EntryHash)
+template<> struct TraitMpiType<Move>      { static const MPI_Datatype type;};
 
 void checkError(int err);
 
