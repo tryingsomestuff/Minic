@@ -53,7 +53,7 @@ position fen r1bqkb1r/pp3ppp/1np1pn2/6N1/2BP4/8/PPP1QPPP/R1B1K1NR w KQkq - 1 1
 go depth 20
 wait
 stop
-debug
+debug on
 position startpos moves e2e4
 go nodes 300
 wait
