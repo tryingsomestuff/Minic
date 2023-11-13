@@ -244,7 +244,7 @@ struct RootScores {
    ScoreType s;
 };
 
-// used for multiPV stiff
+// used for multiPV stuff
 struct MultiPVScores {
    Move      m;
    ScoreType s;
