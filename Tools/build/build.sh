@@ -6,7 +6,7 @@ if grep "^#define WITH_MPI" Source/config.hpp ; then
    if (mpirun --version | grep Open); then
       export CXX=mpicxx
       export CC=mpicc
-      export NOPROFILE=1
+      #export NOPROFILE=1
       which mpirun
    else
       echo "Please use OpenMPI, only validated MPI distribution with Minic"
