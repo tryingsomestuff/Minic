@@ -45,7 +45,7 @@ array1d<Counter, Stats::sid_maxid> _countersBufRecv[2];
 uint8_t _doubleBufferStatParity;
 uint64_t _nbStatPoll;
 
-const uint64_t  _ttBufSize = 32;
+const uint64_t  _ttBufSize = 16;
 uint64_t        _ttCurPos;
 const DepthType _ttMinDepth = 3;
 std::vector<EntryHash> _ttBufSend[2];
