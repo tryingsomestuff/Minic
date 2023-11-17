@@ -1,6 +1,7 @@
 #include "distributed.h"
 
 #include "searcher.hpp"
+#include "searchConfig.hpp"
 #include "threading.hpp"
 
 #ifdef WITH_MPI
@@ -45,9 +46,9 @@ array1d<Counter, Stats::sid_maxid> _countersBufRecv[2];
 uint8_t _doubleBufferStatParity;
 uint64_t _nbStatPoll;
 
-const uint64_t  _ttBufSize = 16;
-uint64_t        _ttCurPos;
-const DepthType _ttMinDepth = 3;
+const uint64_t & _ttBufSize = SearchConfig::distributedTTBufSize;
+uint64_t         _ttCurPos;
+const DepthType  _ttMinDepth = 3;
 std::vector<EntryHash> _ttBufSend[2];
 std::vector<EntryHash> _ttBufRecv;
 uint8_t     _doubleBufferTTParity;
