@@ -410,6 +410,7 @@ inline array1d<const ScoreType* const,7> absValuesSEE_    = {&dummyScore,
 template<typename T> [[nodiscard]] constexpr int sgn(T val) { return (T(0) < val) - (val < T(0)); }
 
 inline constexpr array1d<std::string_view,NbPiece> PieceNames = {"k", "q", "r", "b", "n", "p", " ", "P", "N", "B", "R", "Q", "K"};
+inline constexpr array1d<std::string_view,NbPiece> PieceNamesUTF = {"♔", "♕", "♖", "♗", "♘", "♙", " ", "♟︎", "♞", "♝", "♜", "♛", "♚" };
 
 inline constexpr Square NbSquare = 64;
 
