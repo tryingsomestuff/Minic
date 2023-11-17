@@ -19,6 +19,10 @@ namespace PieceTools {
    assert(isValidSquare(k));
    return PieceNames[getPieceIndex_(p, k)];
 }
+[[nodiscard]] FORCE_FINLINE std::string_view getNameUTF(const Position &p, const Square k) {
+   assert(isValidSquare(k));
+   return PieceNamesUTF[getPieceIndex_(p, k)];
+}
 /*
 [[nodiscard]] FORCE_FINLINE ScoreType getValue(const Position &p, Square k) {
    assert(isValidSquare(k));

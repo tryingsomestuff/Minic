@@ -119,7 +119,7 @@ std::string ToString(const Position& p, bool noEval) {
    for (Square j = 7; j >= 0; --j) {
       ss << Logging::_protocolComment[Logging::ct] << " +-+-+-+-+-+-+-+-+" << std::endl;
       ss << Logging::_protocolComment[Logging::ct] << " |";
-      for (Square i = 0; i < 8; ++i) ss << PieceTools::getName(p, static_cast<Square>(i + j * 8)) << '|';
+      for (Square i = 0; i < 8; ++i) ss << PieceTools::getName/*UTF*/(p, static_cast<Square>(i + j * 8)) << '|';
       ss << std::endl;
    }
    ss << Logging::_protocolComment[Logging::ct] << " +-+-+-+-+-+-+-+-+" << std::endl;
