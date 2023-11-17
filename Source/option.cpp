@@ -375,6 +375,11 @@ void registerCOMOptions() { // options exposed to GUI
    _keys.emplace_back(k_depth, w_spin, "ttBetaCutDepth"                    , &SearchConfig::ttBetaCutDepth                      , DepthType(1)    , DepthType(8)       );
    _keys.emplace_back(k_score, w_spin, "ttBetaCutMargin"                   , &SearchConfig::ttBetaCutMargin                     , ScoreType(0)    , ScoreType(1000)    );
 
+   _keys.emplace_back(k_score, w_spin, "lazySortThreshold"                 , &SearchConfig::lazySortThreshold                   , ScoreType(-2048), ScoreType(2048)    );
+   _keys.emplace_back(k_score, w_spin, "lazySortThresholdQS"               , &SearchConfig::lazySortThresholdQS                 , ScoreType(-2048), ScoreType(2048)    );
+
+   _keys.emplace_back(k_int  , w_spin, "distributedTTBufSize"              , &SearchConfig::distributedTTBufSize                , 4               , 8192               );
+
    ///@todo more ...
 #endif
 
