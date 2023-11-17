@@ -1,6 +1,7 @@
 #include "xboard.hpp"
 
 #include "com.hpp"
+#include "distributed.h"
 #include "dynamicConfig.hpp"
 #include "logging.hpp"
 #include "option.hpp"
@@ -133,6 +134,10 @@ void xboard() {
       while (once++ == 0 || !commandOK) { // loop until a good command is found
          commandOK = true;
          COM::readLine(); // read next command !
+         if(COM::command.empty()){
+            Logging::LogIt(Logging::logFatal) << "Empty command";
+         }
+         std::lock_guard<std::mutex> lock(COM::mutexGUI); // cannot treat GUI bestmove while receiving new position
          if (COM::command == "force") mode = m_force;
          else if (COM::command == "xboard")
             Logging::LogIt(Logging::logInfo) << "This is minic!";
