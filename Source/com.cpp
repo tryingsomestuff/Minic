@@ -144,7 +144,7 @@ void readLine() {
 
 bool receiveMoves(Move move, Move ponderMove) {
    std::lock_guard<std::mutex> lock(mutexGUI); // cannot treat GUI bestmove while receiving new position
-   Logging::LogIt(Logging::logInfo) << "...done returning move " << ToString(move) << " (state " << static_cast<int>(state) << ")";
+   Logging::LogIt(Logging::logInfo) << "move " << ToString(move) << " (state " << static_cast<int>(state) << ")";
    Logging::LogIt(Logging::logInfo) << "ponder move " << ToString(ponderMove);
 
    // share the same move with all process
