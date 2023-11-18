@@ -642,7 +642,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             tbScore = drawScore(p, height);
          }
          // store TB hits into TT (without associated move, but with max depth)
-         //TT::setEntry(*this, pHash, INVALIDMOVE, TT::createHashScore(tbScore, height), TT::createHashScore(tbScore, height), TT::B_none, DepthType(MAX_DEPTH));
+         //TT::setEntry(*this, pHash, INVALIDMOVE, TT::createHashScore(tbScore, height), TT::createHashScore(tbScore, height), TT::B_none, DepthType(MAX_DEPTH), isMainThread());
          return tbScore;
       }
       else {
@@ -711,7 +711,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // if no TT hit yet, we insert an eval without a move here in case of forward pruning (depth is negative, bound is none) ...
    // Be carefull here, _data2 in Entry is always (INVALIDMOVE,B_none,-2) here, so that collisions are a lot more likely
-   if (!pvsData.ttHit) TT::setEntry(*this, pHash, INVALIDMOVE, TT::createHashScore(evalScore, height), TT::createHashScore(staticScore, height), TT::B_none, -2);
+   if (!pvsData.ttHit) TT::setEntry(*this, pHash, INVALIDMOVE, TT::createHashScore(evalScore, height), TT::createHashScore(staticScore, height), TT::B_none, -2, isMainThread());
 
    // if TT hit, we can use entry score as a best draft 
    // but we set evalScoreIsHashScore to be aware of that !
@@ -948,7 +948,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                                (pvsData.ttPV            ? TT::B_ttPVFlag      : TT::B_none) |
                                (pvsData.bestMoveIsCheck ? TT::B_isCheckFlag   : TT::B_none) |
                                (pvsData.isInCheck       ? TT::B_isInCheckFlag : TT::B_none)),
-                               probCutSearchDepth-1); // we applied one move
+                               probCutSearchDepth-1,
+                               isMainThread()); // we applied one move
                   */
                   return stats.incr(Stats::sid_probcut), scorePC;
                }
@@ -1162,7 +1163,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                                       (pvsData.ttPV            ? TT::B_ttPVFlag      : TT::B_none) |
                                       (pvsData.bestMoveIsCheck ? TT::B_isCheckFlag   : TT::B_none) |
                                       (pvsData.isInCheck       ? TT::B_isInCheckFlag : TT::B_none)),
-                                      depth);
+                                      depth,
+                                      isMainThread());
                   return ttScore;
                }
                stats.incr(Stats::sid_ttalpha);
@@ -1436,7 +1438,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                        (pvsData.ttPV            ? TT::B_ttPVFlag      : TT::B_none) |
                        (pvsData.bestMoveIsCheck ? TT::B_isCheckFlag   : TT::B_none) |
                        (pvsData.isInCheck       ? TT::B_isInCheckFlag : TT::B_none)),
-                       depth);
+                       depth,
+                       isMainThread());
 
    return bestScore;
 }
