@@ -87,7 +87,7 @@ void prefetch(Hash h);
 
 bool getEntry(Searcher& context, const Position& p, Hash h, DepthType d, Entry& e);
 
-void setEntry(Searcher& context, Hash h, Move m, ScoreType s, ScoreType eval, Bound b, DepthType d);
+void setEntry(Searcher& context, Hash h, Move m, ScoreType s, ScoreType eval, Bound b, DepthType d, bool distribute = false);
 
 void _setEntry(Hash h, const Entry& e);
 

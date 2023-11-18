@@ -167,7 +167,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    if (!isInCheck && !ttHit){
       // Be carefull here, _data in Entry is always (INVALIDMOVE,B_none,-2) here, so that collisions are a lot more likely
       // depth -2 is used to ensure this will never be used directly (only evaluation score is of interest here...)
-      TT::setEntry(*this, pHash, INVALIDMOVE, TT::createHashScore(staticScore, height), TT::createHashScore(staticScore, height), TT::B_none, -2);
+      TT::setEntry(*this, pHash, INVALIDMOVE, TT::createHashScore(staticScore, height), TT::createHashScore(staticScore, height), TT::B_none, -2, isMainThread());
    }
 
    // early cut-off based on staticScore score
@@ -211,7 +211,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
                   b = TT::B_beta;
                   stats.incr(Stats::sid_qttbeta);
                   TT::setEntry(*this, pHash, bestMove, TT::createHashScore(bestScore, height), TT::createHashScore(evalScore, height),
-                               static_cast<TT::Bound>(b | (ttPV ? TT::B_ttPVFlag : TT::B_none) | (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), hashDepth);
+                               static_cast<TT::Bound>(b | (ttPV ? TT::B_ttPVFlag : TT::B_none) | (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), hashDepth, isMainThread());
                   return bestScore;
                }
                b = TT::B_exact;
@@ -311,7 +311,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    else if (is50moves(p,false)) return drawScore(p, height); // post move loop version
 
    TT::setEntry(*this, pHash, bestMove, TT::createHashScore(bestScore, height), TT::createHashScore(evalScore, height),
-                static_cast<TT::Bound>(b | (ttPV ? TT::B_ttPVFlag : TT::B_none) | (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), hashDepth);
+                static_cast<TT::Bound>(b | (ttPV ? TT::B_ttPVFlag : TT::B_none) | (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), hashDepth, isMainThread());
 
    return bestScore;
 }

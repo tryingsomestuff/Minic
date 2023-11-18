@@ -103,7 +103,7 @@ bool getEntry(Searcher &context, const Position &p, Hash h, DepthType d, Entry &
 }
 
 // always replace
-void setEntry(Searcher &context, Hash h, Move m, ScoreType s, ScoreType eval, Bound b, DepthType d) {
+void setEntry(Searcher &context, Hash h, Move m, ScoreType s, ScoreType eval, Bound b, DepthType d, bool distribute) {
    assert(h != nullHash); // can really happen in fact ... but rarely
    if (DynamicConfig::disableTT) return;
    Entry e(h, m, s, eval, b, d);
@@ -111,7 +111,8 @@ void setEntry(Searcher &context, Hash h, Move m, ScoreType s, ScoreType eval, Bo
    e.h ^= e._data2;
    context.stats.incr(Stats::sid_ttInsert);
    table[h & (ttSize - 1)] = e; // always replace (favour leaf)
-   Distributed::setEntry(h, e);
+   // only update buffer for other process on main thread
+   if (distribute) Distributed::setEntry(h, e);
 }
 
 void _setEntry(Hash h, const Entry &e) { table[h & (ttSize - 1)] = e; }
