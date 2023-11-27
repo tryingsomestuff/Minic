@@ -211,7 +211,11 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
                   b = TT::B_beta;
                   stats.incr(Stats::sid_qttbeta);
                   TT::setEntry(*this, pHash, bestMove, TT::createHashScore(bestScore, height), TT::createHashScore(evalScore, height),
-                               static_cast<TT::Bound>(b | (ttPV ? TT::B_ttPVFlag : TT::B_none) | (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), hashDepth, isMainThread());
+                               static_cast<TT::Bound>(b | 
+                               (ttPV ? TT::B_ttPVFlag : TT::B_none) | 
+                               (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), 
+                               hashDepth, 
+                               isMainThread());
                   return bestScore;
                }
                b = TT::B_exact;
@@ -311,7 +315,11 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    else if (is50moves(p,false)) return drawScore(p, height); // post move loop version
 
    TT::setEntry(*this, pHash, bestMove, TT::createHashScore(bestScore, height), TT::createHashScore(evalScore, height),
-                static_cast<TT::Bound>(b | (ttPV ? TT::B_ttPVFlag : TT::B_none) | (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), hashDepth, isMainThread());
+                static_cast<TT::Bound>(b | 
+                (ttPV ? TT::B_ttPVFlag : TT::B_none) | 
+                (isInCheck ? TT::B_isInCheckFlag : TT::B_none)), 
+                hashDepth, 
+                isMainThread());
 
    return bestScore;
 }

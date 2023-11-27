@@ -147,11 +147,11 @@ template<typename T> FORCE_FINLINE void rput(T* ptr, int n, MPI_Win& window, int
 
 template<typename T> FORCE_FINLINE void get(T* ptr, int n, MPI_Win& window, int source) {
    if (!moreThanOneProcess()) return;
-   Logging::LogIt(Logging::logInfo) << "Window get... ";
+   //Logging::LogIt(Logging::logInfo) << "Window get... ";
    checkError(MPI_Win_lock(MPI_LOCK_SHARED, source, 0, window));
    checkError(MPI_Get(ptr, n, TraitMpiType<T>::type, source, MPI_Aint(0), n, TraitMpiType<T>::type, window));
    checkError(MPI_Win_unlock(source, window));
-   Logging::LogIt(Logging::logInfo) << "... ok";
+   //Logging::LogIt(Logging::logInfo) << "... ok";
 }
 
 /*
