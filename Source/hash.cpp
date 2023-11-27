@@ -10,14 +10,16 @@ array2d<Hash,NbSquare,14> ZT;
 array1d<Hash,16> ZTCastling;
 array1d<Hash,std::numeric_limits<uint16_t>::max()> ZTMove;
 
+inline constexpr int hash_seed = 42;
+
 void initHash() {
    Logging::LogIt(Logging::logInfo) << "Init hash";
    Logging::LogIt(Logging::logInfo) << "Size of zobrist table " << (sizeof(ZT)+sizeof(ZTCastling)) / 1024 << "Kb";
    Logging::LogIt(Logging::logInfo) << "Size of zobrist table for moves " << sizeof(ZTMove) / 1024 << "Kb";
    for (int k = 0; k < NbSquare; ++k)
-      for (int j = 0; j < 14; ++j) ZT[k][j] = randomInt<Hash, 42>(std::numeric_limits<Hash>::min(), std::numeric_limits<Hash>::max());
-   for (int k = 0; k < 16; ++k) ZTCastling[k] = randomInt<Hash, 42>(std::numeric_limits<Hash>::min(), std::numeric_limits<Hash>::max());
-   for (int k = 0; k < std::numeric_limits<uint16_t>::max(); ++k) ZTMove[k] = randomInt<Hash, 42>(std::numeric_limits<Hash>::min(), std::numeric_limits<Hash>::max());
+      for (int j = 0; j < 14; ++j) ZT[k][j] = randomInt<Hash, hash_seed>(std::numeric_limits<Hash>::min(), std::numeric_limits<Hash>::max());
+   for (int k = 0; k < 16; ++k) ZTCastling[k] = randomInt<Hash, hash_seed>(std::numeric_limits<Hash>::min(), std::numeric_limits<Hash>::max());
+   for (int k = 0; k < std::numeric_limits<uint16_t>::max(); ++k) ZTMove[k] = randomInt<Hash, hash_seed>(std::numeric_limits<Hash>::min(), std::numeric_limits<Hash>::max());
 }
 } // namespace Zobrist
 

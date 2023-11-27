@@ -79,7 +79,8 @@ bool getEntry(Searcher &context, const Position &p, Hash h, DepthType d, Entry &
    // update entry immediatly to avoid further race condition and invalidate it later if needed
    e = table[h & (ttSize - 1)];
 #ifdef DEBUG_HASH_ENTRY
-   e.d = randomInt<unsigned int, 666>(0, UINT32_MAX);
+   e._data1 = randomInt<uint32_t, 666>(0, UINT32_MAX);
+   e._data2 = randomInt<uint32_t, 666>(0, UINT32_MAX);
 #endif
    if (e.h == nullHash) return false; //early exit
    if (

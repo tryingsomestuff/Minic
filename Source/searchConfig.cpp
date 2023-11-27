@@ -56,7 +56,7 @@ CONST_SEARCH_TUNING ScoreType dangerDivisor             = 180;
 CONST_SEARCH_TUNING ScoreType failLowRootMargin         = 100;
 
 CONST_SEARCH_TUNING ScoreType deltaBadMargin            = 150;
-CONST_SEARCH_TUNING ScoreType deltaBadSEEThreshold      = 25;
+CONST_SEARCH_TUNING ScoreType deltaBadSEEThreshold      = 0;
 CONST_SEARCH_TUNING ScoreType deltaGoodMargin           = 135;
 CONST_SEARCH_TUNING ScoreType deltaGoodSEEThreshold     = 160;
 
