@@ -57,7 +57,7 @@ CONST_SEARCH_TUNING ScoreType failLowRootMargin         = 100;
 
 CONST_SEARCH_TUNING ScoreType deltaBadMargin            = 150;
 CONST_SEARCH_TUNING ScoreType deltaBadSEEThreshold      = 0;
-CONST_SEARCH_TUNING ScoreType deltaGoodMargin           = 135;
+CONST_SEARCH_TUNING ScoreType deltaGoodMargin           = 50;
 CONST_SEARCH_TUNING ScoreType deltaGoodSEEThreshold     = 160;
 
 ///@todo probably should be tuned with/without a net
