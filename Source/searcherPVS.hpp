@@ -857,7 +857,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             stats.incr(Stats::sid_nullMoveTry);
             const DepthType R = SearchConfig::nullMoveReductionInit +
                               depth / SearchConfig::nullMoveReductionDepthDivisor + 
-                              std::min((evalScore - beta) / SearchConfig::nullMoveDynamicDivisor, 5); // adaptative
+                              std::min((evalScore - beta) / SearchConfig::nullMoveDynamicDivisor, 7); // adaptative
             const DepthType nullDepth = std::max(0, depth - R);
             Position pN = p;
             applyNull(*this, pN);
