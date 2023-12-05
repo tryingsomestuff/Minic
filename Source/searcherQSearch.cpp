@@ -255,8 +255,9 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
             if (recapture != INVALIDSQUARE && Move2To(*it) != recapture) continue; // only recapture now ...
          }
          if (SearchConfig::doQFutility && validMoveCount &&
-             staticScore + SearchConfig::qfutilityMargin[evalScoreIsHashScore] + (isPromotionCap(*it) ? (value(P_wq) - value(P_wp)) : 0) +
-                     (Move2Type(*it) == T_ep ? value(P_wp) : PieceTools::getAbsValue(p, Move2To(*it))) <= alphaInit) {
+             staticScore + SearchConfig::qfutilityMargin[evalScoreIsHashScore] 
+                         + (isPromotionCap(*it) ? (value(P_wq) - value(P_wp)) : 0) 
+                         + (Move2Type(*it) == T_ep ? value(P_wp) : PieceTools::getAbsValue(p, Move2To(*it))) <= alphaInit) {
             stats.incr(Stats::sid_qfutility);
             continue;
          }
