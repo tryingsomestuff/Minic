@@ -249,6 +249,7 @@ Searcher::depthPolicy( [[maybe_unused]] const Position & p,
 
          // being in check is forcing move
          //reduction -= pvsData.isInCheck;
+         //reduction -= pvsData.isCheck;
          // be more prudent at pvnode or if move was in pv before
          reduction -= pvsData.formerPV || pvsData.ttPV;
          //reduction -= pvsData.pvnode;
@@ -776,15 +777,16 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // when score is fluctuating a lot in the main ID search, let's prune a bit less
    const DepthType emergencyDepthCorrection = pvsData.isEmergencyDefence || pvsData.isEmergencyAttack; 
    // take asymetry into account, prune less when it is not our turn
-   const DepthType asymetryDepthCorrection = 0; //theirTurn; ///@todo
+   const DepthType asymetryDepthCorrection = 0; //pvsData.theirTurn; ///@todo
    // when score is fluctuating a lot in the current game, let's prune a bit less
    const DepthType situationDepthCorrection = 0; /*pvsData.isBoomingAttack
                                             || pvsData.isMoobingAttack
                                             || pvsData.isBoomingDefend
                                             || pvsData.isMoobingDefend;*/
    
+   ///@todo this is not used for now (==0)
    // take current situation and asymetry into account.
-   const DepthType depthCorrection = emergencyDepthCorrection + asymetryDepthCorrection + situationDepthCorrection;
+   const DepthType depthCorrection = emergencyDepthCorrection || asymetryDepthCorrection || situationDepthCorrection;
 
    // some heuristic will depend on not-updated initial alpha
    const ScoreType alphaInit = alpha;
@@ -821,9 +823,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          }
 
          // (absence of) opponent threats pruning (idea origin from Koivisto)
-         if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && pvsData.lessZugzwangRisk && SearchConfig::threatCoeff.isActive(depth, pvsData.evalScoreIsHashScore) &&
-            !evalData.goodThreats[~p.c] && evalScore > beta + SearchConfig::threatCoeff.threshold(depth, evalData.gp, pvsData.evalScoreIsHashScore, pvsData.improving) ){
-            return stats.incr(Stats::sid_threatsPruning), beta;
+         if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && pvsData.lessZugzwangRisk && !evalData.goodThreats[~p.c] && SearchConfig::threatCoeff.isActive(depth, pvsData.evalScoreIsHashScore) ) {
+            const ScoreType margin = SearchConfig::threatCoeff.threshold(depth, evalData.gp, pvsData.evalScoreIsHashScore, pvsData.improving);
+            if (evalScore > beta + margin) return stats.incr(Stats::sid_threatsPruning), evalScore - margin;
          }
 /*
          // own threats pruning
