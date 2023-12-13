@@ -684,10 +684,6 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             evalData.gp = MEntry.gamePhase();
          }
          else { 
-            // if no match yet, compute game phase now
-            ScoreType matScoreW = 0;
-            ScoreType matScoreB = 0;
-            evalData.gp = gamePhase(p.mat, matScoreW, matScoreB);
             stats.incr(Stats::sid_materialTableMissSearch);
          }
 #ifdef DEBUG_STATICEVAL
@@ -703,7 +699,14 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
  #endif
       }
    }
-   
+
+   if (evalData.gp == 0){
+      // if no match yet, compute game phase now
+      ScoreType matScoreW = 0;
+      ScoreType matScoreB = 0;
+      evalData.gp = gamePhase(p.mat, matScoreW, matScoreB);
+   }
+
    // insert only static eval in stack data, never hash score for consistancy!
    stack[p.halfmoves].eval = evalScore; 
 
