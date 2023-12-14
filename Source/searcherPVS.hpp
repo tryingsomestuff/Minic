@@ -1115,8 +1115,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                   stats.incr(Stats::sid_singularExtension);
                   pvsData.ttMoveSingularExt=!pvsData.ttMoveIsCapture;
                   ++extension;
-                  // TT move is "very singular" : kind of single reply extension
-                  if (score < betaC - 4 * depth) {
+                  // TT move is "very singular" and depth is small : kind of single reply extension
+                  if (score < betaC - 4 * depth && extensions <= 6) {
                      stats.incr(Stats::sid_singularExtension2);
                      ++extension;
                   }
@@ -1127,8 +1127,14 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                }
                // if TT move is above beta, we try a reduce search early to see if another move is above beta (from SF)
                else if (e.s >= beta) {
-                  const ScoreType score2 = pvs<false>(beta - 1, beta, p, depth - 4, height, sePV, seSeldepth, extensions, pvsData.isInCheck, pvsData.cutNode, &skip);
-                  if (score2 > beta) return stats.incr(Stats::sid_singularExtension4), beta; // fail-hard
+                  //const ScoreType score2 = pvs<false>(beta - 1, beta, p, depth - 4, height, sePV, seSeldepth, extensions, pvsData.isInCheck, pvsData.cutNode, &skip);
+                  //if (score2 > beta) return stats.incr(Stats::sid_singularExtension4), beta; // fail-hard
+                  extension = -2 + pvsData.pvnode;
+                  stats.incr(Stats::sid_singularExtension4);
+               }
+               else if (e.s <= alpha){
+                  extension = -1;
+                  stats.incr(Stats::sid_singularExtension5);
                }
             }
          }
