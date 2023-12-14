@@ -95,6 +95,7 @@ struct Stats {
       sid_singularExtension2,
       sid_singularExtension3,
       sid_singularExtension4,
+      sid_singularExtension5,
       sid_queenThreatExtension,
       sid_BMExtension,
       sid_mateThreatExtension,
@@ -208,6 +209,7 @@ struct Stats {
       "singularExtension2",
       "singularExtension3",
       "singularExtension4",
+      "singularExtension5",
       "queenThreatExtension",
       "BMExtension",
       "mateThreatExtension",
@@ -245,3 +247,4 @@ struct Stats {
       counters.fill(0ull);
    }
 };
+
