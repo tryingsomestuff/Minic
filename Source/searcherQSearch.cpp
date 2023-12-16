@@ -6,9 +6,9 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Posi
    // is updated recursively in pvs and qsearch calls but also affected to Searcher data in order to be available inside eval.
    height_ = height;
 
-   EvalData data;
+   EvalData evalData;
    ++stats.counters[Stats::sid_qnodes];
-   const ScoreType evalScore = eval(p, data, *this);
+   const ScoreType evalScore = eval(p, evalData, *this);
 
    if (evalScore >= beta) return evalScore;
    if (evalScore > alpha) alpha = evalScore;
@@ -22,7 +22,7 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Posi
    MoveList moves;
    //if ( isInCheck ) MoveGen::generate<MoveGen::GP_all>(p,moves); ///@todo generate only evasion !
    /*else*/ MoveGen::generate<MoveGen::GP_cap>(p, moves);
-   MoveSorter::scoreAndSort(*this, moves, p, data.gp, height, cmhPtr, false, isInCheck);
+   MoveSorter::scoreAndSort(*this, moves, p, evalData.gp, height, cmhPtr, false, isInCheck);
 
    for (const auto & it : moves) {
       Position p2 = p;
@@ -76,6 +76,12 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    // is updated recursively in pvs and qsearch calls but also affected to Searcher data in order to be available inside eval.
    height_ = height;
 
+   // some evaluation are used inside search
+   EvalData evalData;
+
+   // we cannot search deeper than MAX_DEPTH, if so just return static evaluation in this case
+   if (height >= MAX_DEPTH - 1 ) return eval(p, evalData, *this);
+
    // no time verification in qsearch, too slow
    if (stopFlag) return STOPSCORE;
 
@@ -89,10 +95,6 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
 
    // update selective depth
    seldepth = std::max(seldepth,height);
-
-   EvalData data;
-   // we cannot search deeper than MAX_DEPTH, is so just return static evaluation
-   if (height >= MAX_DEPTH - 1) return eval(p, data, *this);
 
    Move bestMove = INVALIDMOVE;
 
@@ -150,12 +152,12 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
 #endif
          // in this case we force mid game value in sorting ...
          // anyway, this affects only quiet move sorting, so here only for check evasion ...
-         data.gp = 0.5;
+         evalData.gp = 0.5;
       }
       else {
          // we tried everthing ... now this position must be evaluated
          stats.incr(Stats::sid_ttscmiss);
-         evalScore = eval(p, data, *this);
+         evalScore = eval(p, evalData, *this);
 #ifdef DEBUG_STATICEVAL
          checkEval(p,evalScore,*this,"from eval (qsearch)");
 #endif
@@ -238,13 +240,13 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    getCMHPtr(p.halfmoves, cmhPtr);
 
 #ifdef USE_PARTIAL_SORT
-   MoveSorter ms(*this, p, data.gp, height, cmhPtr, false, isInCheck, validTTmove ? &e : nullptr); ///@todo warning gp is often = 0.5 here !
+   MoveSorter ms(*this, p, evalData.gp, height, cmhPtr, false, isInCheck, validTTmove ? &e : nullptr); ///@todo warning gp is often = 0.5 here !
    ms.score(moves);
    size_t offset = 0;
    const Move* it = nullptr;
    while ((it = ms.pickNext/*Lazy*/(moves, offset, false/*, SearchConfig::lazySortThresholdQS*/))) {
 #else
-   MoveSorter::scoreAndSort(*this, moves, p, data.gp, height, cmhPtr, false, isInCheck,
+   MoveSorter::scoreAndSort(*this, moves, p, evalData.gp, height, cmhPtr, false, isInCheck,
                             validTTmove ? &e : nullptr); ///@todo warning gp is often = 0.5 here !
    for (auto it = moves.begin(); it != moves.end(); ++it) {
 #endif
