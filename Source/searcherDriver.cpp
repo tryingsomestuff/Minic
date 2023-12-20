@@ -280,6 +280,7 @@ void Searcher::searchDriver(bool postMove) {
             delta += static_cast<ScoreType>((delta / 4) * std::exp(1.f - gamePhase(p.mat,matW,matB))); // in end-game, open window faster
             if (delta > std::max(128, 1024*4/depth) ) delta = matingScore(0);
             if (alpha > matedScore(0) && score <= alpha) {
+               windowDepth = depth;
                beta  = std::min(matingScore(0), static_cast<ScoreType>((alpha + beta) / 2));
                alpha = std::max(static_cast<ScoreType>(score - delta), matedScore(0));
                Logging::LogIt(Logging::logInfo) << "Increase window alpha " << alpha << ".." << beta;
@@ -287,7 +288,6 @@ void Searcher::searchDriver(bool postMove) {
                   PVList pv2;
                   TT::getPV(p, *this, pv2);
                   displayGUI(depth, _data.seldepth, score, p.halfmoves, pv2, multi + 1, "?");
-                  windowDepth = depth;
                }
             }
             else if (beta < matingScore(0) && score >= beta) {
