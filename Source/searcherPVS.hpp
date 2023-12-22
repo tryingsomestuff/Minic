@@ -631,7 +631,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    if (!pvsData.rootnode 
      && pvsData.withoutSkipMove 
      && BB::countBit(p.allPieces[Co_White] | p.allPieces[Co_Black]) <= SyzygyTb::MAX_TB_MEN){
-      if (SyzygyTb::probe_wdl(p, tbScore, false) > 0) {
+      if (SyzygyTb::probe_wdl(p, tbScore, true) > 0) {
          ++stats.counters[Stats::sid_tbHit1];
          // if this is a winning/losing EGT position, we add up static evaluation
          // this allow to go for mate better or to defend longer
@@ -640,6 +640,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             tbScore = clampScore(tbScore);
          }
          else if (abs(tbScore) == SyzygyTb::TB_CURSED_SCORE) {
+            Logging::LogIt(Logging::logInfo) << "cursed position " << GetFEN(p);
             tbScore = drawScore(p, height);
          }
          // store TB hits into TT (without associated move, but with max depth)
