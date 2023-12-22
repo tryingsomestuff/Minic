@@ -177,6 +177,8 @@ void Searcher::searchDriver(bool postMove) {
    // on main process, requested value will be restored, but not on other process
    TimeMan::maxNodes = 0;
 
+   float EBF = 1.7f;
+
    // using MAX_DEPTH-6 so that draw can be found for sure ///@todo I don't understand this -6 anymore ..
    const DepthType targetMaxDepth = std::min(maxDepth, static_cast<DepthType>(MAX_DEPTH - 6));
 
@@ -372,17 +374,16 @@ void Searcher::searchDriver(bool postMove) {
                }
 
                // check for remaining time
-               if (TimeMan::isDynamic && static_cast<TimeType>(static_cast<double>(getTimeDiff(startTime))*1.8) > getCurrentMoveMs()) {
+               if (TimeMan::isDynamic && static_cast<TimeType>(static_cast<double>(getTimeDiff(startTime))*1.2*EBF) > getCurrentMoveMs()) {
                   stopFlag = true;
                   Logging::LogIt(Logging::logInfo) << "stopflag triggered, not enough time for next depth";
                   break;
                }
 
                // compute EBF
-               if (depth > 1) {
-                  Logging::LogIt(Logging::logInfo) << "EBF  "
-                                                   << getSearchData().nodes[depth] /
-                                                      static_cast<double>(asLeastOne(getSearchData().nodes[depth - 1]));
+               if (depth > 12) {
+                  EBF = getSearchData().nodes[depth] / static_cast<double>(asLeastOne(getSearchData().nodes[depth - 1]));
+                  Logging::LogIt(Logging::logInfo) << "EBF  " << EBF;
                   Logging::LogIt(Logging::logInfo) << "EBF2 "
                                                    << ThreadPool::instance().counter(Stats::sid_qnodes) /
                                                       static_cast<double>(asLeastOne(ThreadPool::instance().counter(Stats::sid_nodes)));
