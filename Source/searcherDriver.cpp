@@ -364,7 +364,7 @@ void Searcher::searchDriver(bool postMove) {
 
                // update a "variability" measure to scale remaining time on it ///@todo tune this more
                if (depth > 12 && !pvLoc.empty()) {
-                  if (getSearchData().moves[depth] != getSearchData().moves[depth - 2] &&
+                  if (/*getSearchData().moves[depth] != getSearchData().moves[depth - 2] &&*/
                   std::fabs(getSearchData().scores[depth] - getSearchData().scores[depth - 2]) > MoveDifficultyUtil::emergencyMargin/4 )
                      MoveDifficultyUtil::variability *= (1.f + depth/100.f);
                   else
