@@ -178,6 +178,21 @@ void displayOptionsUCI() {
                                          << (int)GetValue(it.key) << " min " << it.vmin << " max " << it.vmax;
 }
 
+void displayOptionsSPSA() {
+   for (const auto & it : _keys)
+      if (it.type == k_string){
+         Logging::LogIt(Logging::logGUI) << "Skipping string option " << it.key;
+      }
+      else if (it.type == k_bool)
+         Logging::LogIt(Logging::logGUI) << "Skipping bool option " << it.key;      
+      else
+         Logging::LogIt(Logging::logGUI) << it.key << ", int, " << (int)GetValue(it.key) << ", "
+                                         << it.vmin << ", " 
+                                         << it.vmax << ", " 
+                                         << std::min(16, std::max(1, int(it.vmax-it.vmin)/20)) << ", "
+                                         << "0.02";
+}
+
 #define SETVALUE(TYPEIN, TYPEOUT)                        \
    {                                                     \
       TYPEIN v;                                          \

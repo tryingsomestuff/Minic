@@ -7,6 +7,7 @@
 #include "material.hpp"
 #include "moveApply.hpp"
 #include "moveGen.hpp"
+#include "option.hpp"
 #include "position.hpp"
 #include "searcher.hpp"
 #include "tables.hpp"
@@ -133,6 +134,11 @@ bool bench(DepthType depth) {
    
    betaStats.show();
    
+   return true;
+}
+
+bool spsaInputs(){
+   Options::displayOptionsSPSA();
    return true;
 }
 
@@ -316,6 +322,10 @@ bool cliManagement(const std::string & firstArg, int argc, char** argv) {
       DepthType d = 16;
       if (argc > 2) d = clampDepth(atoi(args[2]));
       return bench(d);
+   }
+
+   if (firstArg == "spsa" || firstArg == "-spsa") {
+      return spsaInputs();
    }
 
    if (firstArg == "benchBig" || firstArg == "-benchBig") {

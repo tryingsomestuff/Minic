@@ -17,6 +17,8 @@ void displayOptionsXBoard();
 
 void displayOptionsUCI();
 
+void displayOptionsSPSA();
+
 // from argv
 template<typename T> inline bool getOption(T& value, const std::string& key) {
    auto it = std::ranges::find(args, std::string("-") + key);
