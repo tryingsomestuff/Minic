@@ -74,7 +74,7 @@ fi
 
 OPT="$WARN $d $OPT $t $STDVERSION -fno-exceptions"
 if [ -n "$FORCEDNAME" ]; then
-   OPT="$OPT -ffp-contract=off" # to ensure reproductible result in AVX2 (FMA)
+   OPT="$OPT -ffp-contract=off" # to ensure reproductible result in AVX2 (FMA) for OpenBench
 fi
 
 # -flto is making g++ 9.3.0 under cygwin segfault

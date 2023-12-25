@@ -32,7 +32,7 @@ config:
 	   && wget https://github.com/tryingsomestuff/NNUE-Nets/raw/master/$${EMBEDDEDNNUENAME} -O Tourney/nn.bin --no-check-certificate; \
 	fi
 
-fathom:
+fathom: config
 	git rev-parse --is-inside-work-tree > /dev/null 2>&1 \
 	    && git submodule update --init -- Fathom > /dev/null 2>&1 || (rm -rf Fathom && git clone https://github.com/jdart1/Fathom.git)
 
