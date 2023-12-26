@@ -2,11 +2,15 @@ FROM python:3
 
 WORKDIR /
 
-ADD Client.py /
+ADD client.py /
+ADD pgn_util.py /
+ADD utils.py /
+ADD worker.py /
 ADD entry.sh /
+ADD requirements.txt /
+ADD cutechess-ob /
 
-RUN pip3 install requests
-RUN apt-get update && apt-get install -y --no-install-recommends libqtcore4 libqtgui4
+RUN pip3 install -r requirements.txt
 
 ENTRYPOINT [ "./entry.sh" ]
 
