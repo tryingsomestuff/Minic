@@ -10,8 +10,5 @@ if [ "$#" -ne 4 ]; then
 fi
 
 echo "HELLO ! this is Minic OpenBench client docker"
-echo 42 > machine.txt
-echo "*************************************"
-ls
 echo "*************************************"
 python3 client.py -U $1 -P $2 -N 1 -T $3 -I $4 -S http://canada.x-ray.fr:8000
