@@ -11,4 +11,4 @@ fi
 
 echo "HELLO ! this is Minic OpenBench client docker"
 echo "*************************************"
-python3 client.py -U $1 -P $2 -N 1 -T $3 -I $4 -S http://canada.x-ray.fr:8000
+python3 client.py -U $1 -P $2 -N 1 -T $3 -I $4 -S http://home.x-ray.fr:8000
