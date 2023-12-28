@@ -124,8 +124,8 @@ extern CONST_SEARCH_TUNING ScoreType aspirationDepthInit;
 
 extern CONST_SEARCH_TUNING DepthType ttMaxFiftyValideDepth;
 
-extern CONST_SEARCH_TUNING int       iirMinDepth;
-extern CONST_SEARCH_TUNING int       iirReduction;
+extern CONST_SEARCH_TUNING DepthType iirMinDepth;
+extern CONST_SEARCH_TUNING DepthType iirReduction;
 
 extern CONST_SEARCH_TUNING DepthType ttAlphaCutDepth;
 extern CONST_SEARCH_TUNING ScoreType ttAlphaCutMargin;

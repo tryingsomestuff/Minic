@@ -135,7 +135,7 @@ void displayOptionsDebug() {
          Logging::LogIt(Logging::logInfo) << "option=\"" << it.key << " -" << widgetXboardNames[it.wtype] << " "
                                           << (GetValue(it.key) ? "true" : "false") << "\"";
       else
-         Logging::LogIt(Logging::logInfo) << "option=\"" << it.key << " -" << widgetXboardNames[it.wtype] << " " << static_cast<int>(GetValue(it.key)) << " "
+         Logging::LogIt(Logging::logInfo) << "option=\"" << it.key << " -" << widgetXboardNames[it.wtype] << " " << GetValue(it.key) << " "
                                           << it.vmin << " " << it.vmax << "\"";
 }
 
@@ -154,7 +154,7 @@ void displayOptionsXBoard() {
          Logging::LogIt(Logging::logGUI) << "feature option=\"" << it.key << " -" << widgetXboardNames[it.wtype] << " " << bool(GetValue(it.key))
                                          << "\"";
       else
-         Logging::LogIt(Logging::logGUI) << "feature option=\"" << it.key << " -" << widgetXboardNames[it.wtype] << " " << static_cast<int>(GetValue(it.key))
+         Logging::LogIt(Logging::logGUI) << "feature option=\"" << it.key << " -" << widgetXboardNames[it.wtype] << " " << GetValue(it.key)
                                          << " " << it.vmin << " " << it.vmax << "\"";
 }
 
@@ -175,7 +175,7 @@ void displayOptionsUCI() {
                                          << (GetValue(it.key) ? "true" : "false");
       else
          Logging::LogIt(Logging::logGUI) << "option name " << it.key << " type " << widgetXboardNames[it.wtype] << " default "
-                                         << (int)GetValue(it.key) << " min " << it.vmin << " max " << it.vmax;
+                                         << GetValue(it.key) << " min " << it.vmin << " max " << it.vmax;
 }
 
 void displayOptionsSPSA() {
@@ -185,12 +185,28 @@ void displayOptionsSPSA() {
       }
       else if (it.type == k_bool)
          Logging::LogIt(Logging::logGUI) << "Skipping bool option " << it.key;      
-      else
-         Logging::LogIt(Logging::logGUI) << it.key << ", int, " << (int)GetValue(it.key) << ", "
-                                         << it.vmin << ", " 
-                                         << it.vmax << ", " 
-                                         << std::min(16, std::max(1, int(it.vmax-it.vmin)/20)) << ", "
+      else{
+         const KeyBase& k = GetKey(it.key);
+         int curBest = GetValue(it.key);
+         int spsaMin = std::max(it.vmin, static_cast<int>(curBest/2));
+         int spsaMax = std::min(it.vmax, static_cast<int>(curBest*1.5));
+         switch (k.type) {
+            case k_depth: spsaMin = std::max(it.vmin, 0); spsaMax = std::min(it.vmax, 20); break;
+            case k_int:   if(curBest==0) spsaMin = std::max(it.vmin, -500), spsaMax = std::min(it.vmax, 500); break;
+            case k_score: if(curBest==0) spsaMin = std::max(it.vmin, -500), spsaMax = std::min(it.vmax, 500); break;
+            case k_ull:   if(curBest==0) spsaMin = std::max(it.vmin, -500), spsaMax = std::min(it.vmax, 500); break;
+            case k_string:
+            case k_bool:
+            case k_bad:
+            default:      Logging::LogIt(Logging::logError) << "Bad key type";
+         }
+         if (curBest < 0) std::swap(spsaMin, spsaMax);
+         Logging::LogIt(Logging::logGUI) << it.key << ", int, " << curBest << ", "
+                                         << spsaMin << ", " 
+                                         << spsaMax << ", " 
+                                         << std::min(16, std::max(1, int(spsaMax-spsaMin)/20)) << ", "
                                          << "0.02";
+      }
 }
 
 #define SETVALUE(TYPEIN, TYPEOUT)                        \
@@ -382,8 +398,8 @@ void registerCOMOptions() { // options exposed to GUI
    _keys.emplace_back(k_score, w_spin, "deltaGoodMargin"                   , &SearchConfig::deltaGoodMargin                     , ScoreType(0)    , ScoreType(500)     );
    _keys.emplace_back(k_score, w_spin, "deltaGoodSEEThreshold"             , &SearchConfig::deltaGoodSEEThreshold               , ScoreType(0)    , ScoreType(1000)    );
 
-   _keys.emplace_back(k_int  , w_spin, "iirMinDepth"                       , &SearchConfig::iirMinDepth                         , 1               , 32                 );
-   _keys.emplace_back(k_int  , w_spin, "iirReduction"                      , &SearchConfig::iirReduction                        , 0               , 3                  );
+   _keys.emplace_back(k_depth, w_spin, "iirMinDepth"                       , &SearchConfig::iirMinDepth                         , DepthType(1)    , DepthType(32)      );
+   _keys.emplace_back(k_depth, w_spin, "iirReduction"                      , &SearchConfig::iirReduction                        , DepthType(0)    , DepthType(5)       );
 
    _keys.emplace_back(k_depth, w_spin, "ttAlphaCutDepth"                   , &SearchConfig::ttAlphaCutDepth                     , DepthType(1)    , DepthType(8)       );
    _keys.emplace_back(k_score, w_spin, "ttAlphaCutMargin"                  , &SearchConfig::ttAlphaCutMargin                    , ScoreType(0)    , ScoreType(1000)    );
