@@ -68,8 +68,8 @@ CONST_SEARCH_TUNING ScoreType aspirationDepthInit = 40;
 
 CONST_SEARCH_TUNING DepthType ttMaxFiftyValideDepth = 92;
 
-CONST_SEARCH_TUNING int       iirMinDepth           = 2;
-CONST_SEARCH_TUNING int       iirReduction          = 1;
+CONST_SEARCH_TUNING DepthType iirMinDepth           = 2;
+CONST_SEARCH_TUNING DepthType iirReduction          = 1;
 
 CONST_SEARCH_TUNING DepthType ttAlphaCutDepth       = 1;
 CONST_SEARCH_TUNING ScoreType ttAlphaCutMargin      = 64;
