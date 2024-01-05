@@ -205,7 +205,7 @@ void displayOptionsSPSA() {
                                          << spsaMin << ", " 
                                          << spsaMax << ", " 
                                          << std::min(16, std::max(1, int(spsaMax-spsaMin)/20)) << ", "
-                                         << "0.02";
+                                         << "0.002";
       }
 }
 
