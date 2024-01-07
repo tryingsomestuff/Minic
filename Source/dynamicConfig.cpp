@@ -24,8 +24,8 @@ bool         FRC              = false;
 bool         DFRC             = false;
 bool         UCIPonder        = false;
 unsigned int multiPV          = 1;
-ScoreType    contempt         = 12;
-ScoreType    contemptMG       = 12;
+ScoreType    contempt         = 15;
+ScoreType    contemptMG       = 11;
 bool         limitStrength    = false;
 int          strength         = 1500;
 bool         nodesBasedLevel  = false;
@@ -39,9 +39,9 @@ std::string  chessvariant     = "chess";
 // this is used to scale NNUE score to classic eval score.
 // This way search params can remain the same ... more or less ...
 // from 32 to 256      x_scaled = x * NNUEscaling / 64
-int NNUEScaling   = 48; // hand tuned
-int NNUEThreshold = 600;
-int NNUEThreshold2 = 300;
+int NNUEScaling   = 41; // hand tuned
+int NNUEThreshold = 646;
+int NNUEThreshold2 = 315;
 
 #ifndef FORCEEMBEDDEDNNUE
 std::string NNUEFile;
