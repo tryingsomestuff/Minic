@@ -18,47 +18,47 @@ CONST_SEARCH_TUNING Coeff<2,2> failHighReductionCoeff     = { {130, 130}, {256, 
 CONST_SEARCH_TUNING colored<ScoreType> qfutilityMargin        = {1024, 1024};
 CONST_SEARCH_TUNING DepthType nullMoveMinDepth                = 2;
 CONST_SEARCH_TUNING DepthType nullMoveVerifDepth              = 6;
-CONST_SEARCH_TUNING ScoreType nullMoveMargin                  = 20;
+CONST_SEARCH_TUNING ScoreType nullMoveMargin                  = 19;
 CONST_SEARCH_TUNING ScoreType nullMoveMargin2                 = 0;
 CONST_SEARCH_TUNING ScoreType nullMoveReductionDepthDivisor   = 6;
 CONST_SEARCH_TUNING ScoreType nullMoveReductionInit           = 5;
-CONST_SEARCH_TUNING ScoreType nullMoveDynamicDivisor          = 150;
+CONST_SEARCH_TUNING ScoreType nullMoveDynamicDivisor          = 141;
 CONST_SEARCH_TUNING ScoreType historyExtensionThreshold       = 512;
-CONST_SEARCH_TUNING colored<DepthType> CMHMaxDepth            = {3,3};
+CONST_SEARCH_TUNING colored<DepthType> CMHMaxDepth            = {3,4};
 CONST_SEARCH_TUNING DepthType iidMinDepth                     = 7;
 CONST_SEARCH_TUNING DepthType iidMinDepth2                    = 10;
 CONST_SEARCH_TUNING DepthType iidMinDepth3                    = 3;
 CONST_SEARCH_TUNING DepthType probCutMinDepth                 = 10;
-CONST_SEARCH_TUNING DepthType probCutSearchDepthFactor        = 4;
+CONST_SEARCH_TUNING DepthType probCutSearchDepthFactor        = 3;
 CONST_SEARCH_TUNING int       probCutMaxMoves                 = 6;
-CONST_SEARCH_TUNING ScoreType probCutMargin                   = 128;
-CONST_SEARCH_TUNING ScoreType probCutMarginSlope              = -64;
-CONST_SEARCH_TUNING ScoreType seeCaptureFactor                = 160;
-CONST_SEARCH_TUNING ScoreType seeCaptureInit                  = 64;
+CONST_SEARCH_TUNING ScoreType probCutMargin                   = 130;
+CONST_SEARCH_TUNING ScoreType probCutMarginSlope              = -56;
+CONST_SEARCH_TUNING ScoreType seeCaptureFactor                = 161;
+CONST_SEARCH_TUNING ScoreType seeCaptureInit                  = 61;
 CONST_SEARCH_TUNING ScoreType seeCapDangerDivisor             = 8;
 CONST_SEARCH_TUNING ScoreType seeQuietFactor                  = 64;
-CONST_SEARCH_TUNING ScoreType seeQuietInit                    = 0;
+CONST_SEARCH_TUNING ScoreType seeQuietInit                    = 32;
 CONST_SEARCH_TUNING ScoreType seeQuietDangerDivisor           = 11;
 CONST_SEARCH_TUNING ScoreType seeQThreshold                   = -50;
-CONST_SEARCH_TUNING ScoreType betaMarginDynamicHistory        = 180;
+CONST_SEARCH_TUNING ScoreType betaMarginDynamicHistory        = 175;
 //CONST_SEARCH_TUNING ScoreType probCutThreshold              = 450;
 CONST_SEARCH_TUNING DepthType lmrMinDepth                 = 2;
-CONST_SEARCH_TUNING int       lmrCapHistoryFactor         = 8;
+CONST_SEARCH_TUNING int       lmrCapHistoryFactor         = 9;
 CONST_SEARCH_TUNING ScoreType lmrLateExtensionMargin      = 64;
 CONST_SEARCH_TUNING DepthType singularExtensionDepth      = 8;
-CONST_SEARCH_TUNING DepthType singularExtensionDepthMinus = 3;
+CONST_SEARCH_TUNING DepthType singularExtensionDepthMinus = 5;
 ///@todo on move / opponent
 CONST_SEARCH_TUNING ScoreType dangerLimitPruning        = 16;
 CONST_SEARCH_TUNING ScoreType dangerLimitForwardPruning = 16;
 CONST_SEARCH_TUNING ScoreType dangerLimitReduction      = 16;
 CONST_SEARCH_TUNING ScoreType dangerDivisor             = 180;
 
-CONST_SEARCH_TUNING ScoreType failLowRootMargin         = 100;
+CONST_SEARCH_TUNING ScoreType failLowRootMargin         = 106;
 
-CONST_SEARCH_TUNING ScoreType deltaBadMargin            = 150;
-CONST_SEARCH_TUNING ScoreType deltaBadSEEThreshold      = 0;
+CONST_SEARCH_TUNING ScoreType deltaBadMargin            = 167;
+CONST_SEARCH_TUNING ScoreType deltaBadSEEThreshold      = 21;
 CONST_SEARCH_TUNING ScoreType deltaGoodMargin           = 50;
-CONST_SEARCH_TUNING ScoreType deltaGoodSEEThreshold     = 160;
+CONST_SEARCH_TUNING ScoreType deltaGoodSEEThreshold     = 183;
 
 ///@todo probably should be tuned with/without a net
 CONST_SEARCH_TUNING DepthType aspirationMinDepth  = 4;
@@ -72,9 +72,9 @@ CONST_SEARCH_TUNING DepthType iirMinDepth           = 2;
 CONST_SEARCH_TUNING DepthType iirReduction          = 1;
 
 CONST_SEARCH_TUNING DepthType ttAlphaCutDepth       = 1;
-CONST_SEARCH_TUNING ScoreType ttAlphaCutMargin      = 64;
+CONST_SEARCH_TUNING ScoreType ttAlphaCutMargin      = 63;
 CONST_SEARCH_TUNING DepthType ttBetaCutDepth        = 1;
-CONST_SEARCH_TUNING ScoreType ttBetaCutMargin       = 64;
+CONST_SEARCH_TUNING ScoreType ttBetaCutMargin       = 65;
 
 CONST_SEARCH_TUNING ScoreType lazySortThreshold     = -512;
 CONST_SEARCH_TUNING ScoreType lazySortThresholdQS   = -512;
