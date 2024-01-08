@@ -4,15 +4,15 @@ namespace SearchConfig {
 
 ///@todo try parity pruning, prune less when ply is odd
 ///@todo tune everything when evalScore is from TT score
-
-CONST_SEARCH_TUNING Coeff<2,2> staticNullMoveCoeff        = { {0, 0}, {381, 137}, {80, 80}, {158, 20}, {0, 0}, {6, 6}, "staticNullMove" };
-CONST_SEARCH_TUNING Coeff<2,2> razoringCoeff              = { {120, 120}, {256, 631}, {80, 80}, {0, 0}, {0, 0}, {2, 2}, "razoring" };
-CONST_SEARCH_TUNING Coeff<2,2> threatCoeff                = { {0, 0}, {256, 256}, {0, 0}, {0, 0}, {0, 0}, {2, 2}, "threat" };
+// "Init", "Bonus", "SlopeDepth", "SlopeGP", "MinDepth", "MaxDepth"
+CONST_SEARCH_TUNING Coeff<2,2> staticNullMoveCoeff        = { {  -16,  -31}, {  389,  112}, {  82,  71}, {  144,  20}, {0, 0}, {6, 6}, "staticNullMove" };
+CONST_SEARCH_TUNING Coeff<2,2> razoringCoeff              = { {  117,  122}, {  275,  613}, {  72,  69}, {  -20,  17}, {0, 0}, {2, 2}, "razoring" };
+CONST_SEARCH_TUNING Coeff<2,2> threatCoeff                = { {  31,  8}, {  275,  235}, {  24,  17}, {  -15,  39}, {0, 0}, {2, 2}, "threat" };
 //CONST_SEARCH_TUNING Coeff<2,2> ownThreatCoeff             = { {0, 0}, {256, 256}, {64, 64}, {0, 0}, {0, 0}, {2, 2}, "ownThreat" };
-CONST_SEARCH_TUNING Coeff<2,2> historyPruningCoeff        = { {0, 0}, {256, 256}, {0, 0}, {0, 0}, {0, 0}, {2, 1}, "historyPruning" };
-CONST_SEARCH_TUNING Coeff<2,2> captureHistoryPruningCoeff = { {0, 0}, {256, 256}, {-128, -128}, {0, 0}, {0, 0}, {4, 3}, "captureHistoryPruning" };
-CONST_SEARCH_TUNING Coeff<2,2> futilityPruningCoeff       = { {0, 0}, {172, 546}, {160, 160}, {0, 0}, {0, 0}, {10, 10}, "futilityPruning" };
-CONST_SEARCH_TUNING Coeff<2,2> failHighReductionCoeff     = { {130, 130}, {256, 256}, {0, 0}, {0, 0}, {0, 0}, {MAX_DEPTH, MAX_DEPTH}, "failHighReduction" };
+CONST_SEARCH_TUNING Coeff<2,2> historyPruningCoeff        = { {  8,  -11}, {  237,  279}, {  -14,  8}, {  16,  -36}, {0, 0}, {2, 1}, "historyPruning" };
+CONST_SEARCH_TUNING Coeff<2,2> captureHistoryPruningCoeff = { {  5,  10}, {  271,  285}, {  -125,  -126}, {  -9,  21}, {0, 0}, {4, 3}, "captureHistoryPruning" };
+CONST_SEARCH_TUNING Coeff<2,2> futilityPruningCoeff       = { {  7,  11}, {  164,  595}, {  175,  161}, {  -1,  -4}, {0, 0}, {10, 10}, "futilityPruning" };
+CONST_SEARCH_TUNING Coeff<2,2> failHighReductionCoeff     = { {  123,  141}, {  261,  251}, {  -51,  6}, {  -26,  12}, {0, 0}, {MAX_DEPTH, MAX_DEPTH}, "failHighReduction" };
 
 // first value if eval score is used, second if hash score is used
 CONST_SEARCH_TUNING colored<ScoreType> qfutilityMargin        = {1024, 1024};
