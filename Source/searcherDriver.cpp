@@ -333,7 +333,7 @@ void Searcher::searchDriver(bool postMove) {
 
             // update the outputed pv only with the best move line
             if (multi == 0) {
-               std::unique_lock<std::mutex> lock(_mutexPV);
+               std::unique_lock lock(_mutexPV);
                _data.pv    = pvLoc;
                _data.depth = depth;
                _data.score = score;
@@ -438,7 +438,7 @@ pvsout:
             DepthType bestDepth    = _data.depth;
             size_t    bestThreadId = 0;
             for (const auto& s : ThreadPool::instance()) {
-               std::unique_lock<std::mutex> lock(_mutexPV);
+               std::unique_lock lock(_mutexPV);
                if (s->getData().depth > bestDepth) {
                   bestThreadId = s->id();
                   bestDepth    = s->getData().depth;

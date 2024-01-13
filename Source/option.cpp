@@ -188,13 +188,13 @@ void displayOptionsSPSA() {
       else{
          const KeyBase& k = GetKey(it.key);
          int curBest = GetValue(it.key);
-         int spsaMin = std::max(it.vmin, static_cast<int>(curBest/2));
+         int spsaMin = std::max(it.vmin, static_cast<int>(curBest*0.5));
          int spsaMax = std::min(it.vmax, static_cast<int>(curBest*1.5));
          switch (k.type) {
             case k_depth: spsaMin = std::max(it.vmin, 0); spsaMax = std::min(it.vmax, 20); break;
-            case k_int:   if(curBest==0) spsaMin = std::max(it.vmin, -500), spsaMax = std::min(it.vmax, 500); break;
-            case k_score: if(curBest==0) spsaMin = std::max(it.vmin, -500), spsaMax = std::min(it.vmax, 500); break;
-            case k_ull:   if(curBest==0) spsaMin = std::max(it.vmin, -500), spsaMax = std::min(it.vmax, 500); break;
+            case k_int:   if(curBest==0) {spsaMin = std::max(it.vmin, -500); spsaMax = std::min(it.vmax, 500);} break;
+            case k_score: if(curBest==0) {spsaMin = std::max(it.vmin, -500); spsaMax = std::min(it.vmax, 500);} break;
+            case k_ull:   if(curBest==0) {spsaMin = std::max(it.vmin, -500); spsaMax = std::min(it.vmax, 500);} break;
             case k_string:
             case k_bool:
             case k_bad:

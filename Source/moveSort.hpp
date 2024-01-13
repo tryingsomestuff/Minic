@@ -48,7 +48,7 @@ struct MoveSorter {
    
    bool skipSort = false;
 
-   inline void score(MoveList & moves){
+   inline void score(MoveList & moves) const{
       score(context, moves, p, gp, height, cmhPtr, useSEE, isInCheck, e, refutation);
    }
 
@@ -63,7 +63,7 @@ struct MoveSorter {
                      const TT::Entry*   e          = nullptr,
                      const MiniMove     refutation = INVALIDMINIMOVE);
 
-   inline void scoreAndSort(MoveList & moves){
+   inline void scoreAndSort(MoveList & moves) const {
       scoreAndSort(context, moves, p, gp, height, cmhPtr, useSEE, isInCheck, e, refutation);
    }
 

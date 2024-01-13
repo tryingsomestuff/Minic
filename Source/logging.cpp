@@ -101,7 +101,7 @@ COMType ct = CT_uci;
 }
 
 LogIt::~LogIt() {
-   std::lock_guard<std::mutex> lock(_mutex);
+   std::lock_guard lock(_mutex);
    if (_level != logGUI) { // those are "comments" and are prefixed with _protocolComment[ct] ("info string" for UCI)
       const std::string rankStr = Distributed::moreThanOneProcess() ? (std::string("(") + std::to_string(Distributed::rank) + ") ") : "";
       const std::string str = std::string(_protocolComment[ct]) + std::string(_levelNames[_level]) + showDate() + ": " + rankStr + _buffer.str();
