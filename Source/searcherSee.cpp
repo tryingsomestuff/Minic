@@ -20,7 +20,7 @@ ScoreType Searcher::SEE(const Position& p, const Move& m) {
    Color c = p.c;
 
    int nCapt = 0;
-   array1d<int,64> swapList; // max 64 caps ... shall be ok (1B2R2B/2BnRnB1/2nBRBn1/RRRRBrrr/2NbrbN1/2bNrNb1/1b2r2b/b3r3 w - - 0 1)
+   array1d<ScoreType,64> swapList; // max 64 caps ... shall be ok (1B2R2B/2BnRnB1/2nBRBn1/RRRRBrrr/2NbrbN1/2bNrNb1/1b2r2b/b3r3 w - - 0 1)
 
    Piece pp = PieceTools::getPieceType(p, from);
    if (mtype == T_ep) {

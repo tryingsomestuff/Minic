@@ -143,7 +143,7 @@ void readLine() {
 }
 
 bool receiveMoves(Move move, Move ponderMove) {
-   std::lock_guard<std::mutex> lock(mutexGUI); // cannot treat GUI bestmove while receiving new position
+   std::lock_guard lock(mutexGUI); // cannot treat GUI bestmove while receiving new position
    Logging::LogIt(Logging::logInfo) << "move " << ToString(move) << " (state " << static_cast<int>(state) << ")";
    Logging::LogIt(Logging::logInfo) << "ponder move " << ToString(ponderMove);
 
@@ -218,7 +218,7 @@ bool makeMove(const Move m, const bool disp, const std::string & tag, const Move
 }
 
 void stop() {
-   std::lock_guard<std::mutex> lock(mutex); // cannot stop and start at the same time
+   std::lock_guard lock(mutex); // cannot stop and start at the same time
    Logging::LogIt(Logging::logInfo) << "Stopping previous search";
    ThreadPool::instance().stop();
 }
@@ -229,7 +229,7 @@ void stopPonder() {
 
 // this is a non-blocking call (search wise)
 void thinkAsync(const COM::State givenState) {
-   std::lock_guard<std::mutex> lock(mutex); // cannot stop and start at the same time
+   std::lock_guard lock(mutex); // cannot stop and start at the same time
    Logging::LogIt(Logging::logInfo) << "Thinking... (state was " << static_cast<int>(state) << " going for " << static_cast<int>(givenState) << ")";
    if (depth < 0) depth = MAX_DEPTH;
    Logging::LogIt(Logging::logInfo) << "depth          " << static_cast<int>(depth);

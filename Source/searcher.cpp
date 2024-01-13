@@ -144,7 +144,7 @@ ScoreType Searcher::drawScore(const Position& p, DepthType height) const {
 
 void Searcher::idleLoop() {
    while (true) {
-      std::unique_lock<std::mutex> lock(_mutex);
+      std::unique_lock lock(_mutex);
       Logging::LogIt(Logging::logInfo) << "begin of idleloop " << id();
       _searching = false;
       _cv.notify_one(); // Wake up anyone waiting for search finished
@@ -160,7 +160,7 @@ void Searcher::idleLoop() {
 }
 
 void Searcher::startThread() {
-   std::lock_guard<std::mutex> lock(_mutex);
+   std::lock_guard lock(_mutex);
    Logging::LogIt(Logging::logInfo) << "Starting worker " << id();
    _searching = true;
    Logging::LogIt(Logging::logInfo) << "Setting stopflag to false on worker " << id();
@@ -169,7 +169,7 @@ void Searcher::startThread() {
 }
 
 void Searcher::wait() {
-   std::unique_lock<std::mutex> lock(_mutex);
+   std::unique_lock lock(_mutex);
    Logging::LogIt(Logging::logInfo) << "Thread waiting " << id();
    _cv.wait(lock, [&] { return !_searching; });
 }

@@ -137,7 +137,7 @@ void xboard() {
          if(COM::command.empty()){
             Logging::LogIt(Logging::logFatal) << "Empty command";
          }
-         std::lock_guard<std::mutex> lock(COM::mutexGUI); // cannot treat GUI bestmove while receiving new position
+         std::lock_guard lock(COM::mutexGUI); // cannot treat GUI bestmove while receiving new position
          if (COM::command == "force") mode = m_force;
          else if (COM::command == "xboard")
             Logging::LogIt(Logging::logInfo) << "This is minic!";

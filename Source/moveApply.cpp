@@ -154,7 +154,7 @@ bool applyMove(Position& p, const MoveInfo & moveInfo, [[maybe_unused]] const bo
          {
             assert(p.ep != INVALIDSQUARE);
             assert(SQRANK(p.ep) == EPRank[p.c]);
-            const Square epCapSq = static_cast<Square>(p.ep + (p.c == Co_White ? -8 : +8));
+            const auto epCapSq = static_cast<Square>(p.ep + (p.c == Co_White ? -8 : +8));
             assert(isValidSquare(epCapSq));
             BBTools::unSetBit(p, epCapSq, ~moveInfo.fromP); // BEFORE setting p.b new shape !!!
             BB::_unSetBit(p.allPieces[~p.c], epCapSq);
