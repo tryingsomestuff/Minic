@@ -5,24 +5,24 @@ namespace SearchConfig {
 ///@todo try parity pruning, prune less when ply is odd
 ///@todo tune everything when evalScore is from TT score
 // "Init", "Bonus", "SlopeDepth", "SlopeGP", "MinDepth", "MaxDepth"
-CONST_SEARCH_TUNING Coeff<2,2> staticNullMoveCoeff        = { {  -16,  -31}, {  389,  112}, {  82,  71}, {  144,  20}, {0, 0}, {6, 6}, "staticNullMove" };
-CONST_SEARCH_TUNING Coeff<2,2> razoringCoeff              = { {  117,  122}, {  275,  613}, {  72,  69}, {  -20,  17}, {0, 0}, {2, 2}, "razoring" };
-CONST_SEARCH_TUNING Coeff<2,2> threatCoeff                = { {  31,  8}, {  275,  235}, {  24,  17}, {  -15,  39}, {0, 0}, {2, 2}, "threat" };
+CONST_SEARCH_TUNING Coeff<2,2> staticNullMoveCoeff        = { {  -15,  -31}, {  376,  109}, {  88,  76}, {  143,  21}, {0, 0}, {6, 6}, "staticNullMove" };
+CONST_SEARCH_TUNING Coeff<2,2> razoringCoeff              = { {  114,  126}, {  269,  633}, {  71,  68}, {  -22,  16}, {0, 0}, {2, 2}, "razoring" };
+CONST_SEARCH_TUNING Coeff<2,2> threatCoeff                = { {  32,  8}, {  258,  243}, {  24,  18}, {  -15,  39}, {0, 0}, {2, 2}, "threat" };
 //CONST_SEARCH_TUNING Coeff<2,2> ownThreatCoeff             = { {0, 0}, {256, 256}, {64, 64}, {0, 0}, {0, 0}, {2, 2}, "ownThreat" };
-CONST_SEARCH_TUNING Coeff<2,2> historyPruningCoeff        = { {  8,  -11}, {  237,  279}, {  -14,  8}, {  16,  -36}, {0, 0}, {2, 1}, "historyPruning" };
-CONST_SEARCH_TUNING Coeff<2,2> captureHistoryPruningCoeff = { {  5,  10}, {  271,  285}, {  -125,  -126}, {  -9,  21}, {0, 0}, {4, 3}, "captureHistoryPruning" };
-CONST_SEARCH_TUNING Coeff<2,2> futilityPruningCoeff       = { {  7,  11}, {  164,  595}, {  175,  161}, {  -1,  -4}, {0, 0}, {10, 10}, "futilityPruning" };
-CONST_SEARCH_TUNING Coeff<2,2> failHighReductionCoeff     = { {  123,  141}, {  261,  251}, {  -51,  6}, {  -26,  12}, {0, 0}, {MAX_DEPTH, MAX_DEPTH}, "failHighReduction" };
+CONST_SEARCH_TUNING Coeff<2,2> historyPruningCoeff        = { {  8,  -12}, {  248,  291}, {  -13,  8}, {  16,  -37}, {0, 0}, {2, 1}, "historyPruning" };
+CONST_SEARCH_TUNING Coeff<2,2> captureHistoryPruningCoeff = { {  5,  10}, {  261,  298}, {  -123,  -122}, {  -9,  22}, {0, 0}, {4, 3}, "captureHistoryPruning" };
+CONST_SEARCH_TUNING Coeff<2,2> futilityPruningCoeff       = { {  7,  13}, {  167,  617}, {  170,  168}, {  -1,  -6}, {0, 0}, {10, 10}, "futilityPruning" };
+CONST_SEARCH_TUNING Coeff<2,2> failHighReductionCoeff     = { {  123,  141}, {  290,  232}, {  -51,  6}, {  -25,  12}, {0, 0}, {MAX_DEPTH, MAX_DEPTH}, "failHighReduction" };
 
 // first value if eval score is used, second if hash score is used
 CONST_SEARCH_TUNING colored<ScoreType> qfutilityMargin        = {1024, 1024};
 CONST_SEARCH_TUNING DepthType nullMoveMinDepth                = 2;
-CONST_SEARCH_TUNING DepthType nullMoveVerifDepth              = 6;
+CONST_SEARCH_TUNING DepthType nullMoveVerifDepth              = 5;
 CONST_SEARCH_TUNING ScoreType nullMoveMargin                  = 19;
 CONST_SEARCH_TUNING ScoreType nullMoveMargin2                 = 0;
 CONST_SEARCH_TUNING ScoreType nullMoveReductionDepthDivisor   = 6;
 CONST_SEARCH_TUNING ScoreType nullMoveReductionInit           = 5;
-CONST_SEARCH_TUNING ScoreType nullMoveDynamicDivisor          = 141;
+CONST_SEARCH_TUNING ScoreType nullMoveDynamicDivisor          = 144;
 CONST_SEARCH_TUNING ScoreType historyExtensionThreshold       = 512;
 CONST_SEARCH_TUNING colored<DepthType> CMHMaxDepth            = {3,4};
 CONST_SEARCH_TUNING DepthType iidMinDepth                     = 7;
@@ -31,16 +31,16 @@ CONST_SEARCH_TUNING DepthType iidMinDepth3                    = 3;
 CONST_SEARCH_TUNING DepthType probCutMinDepth                 = 10;
 CONST_SEARCH_TUNING DepthType probCutSearchDepthFactor        = 3;
 CONST_SEARCH_TUNING int       probCutMaxMoves                 = 6;
-CONST_SEARCH_TUNING ScoreType probCutMargin                   = 130;
-CONST_SEARCH_TUNING ScoreType probCutMarginSlope              = -56;
-CONST_SEARCH_TUNING ScoreType seeCaptureFactor                = 161;
-CONST_SEARCH_TUNING ScoreType seeCaptureInit                  = 61;
-CONST_SEARCH_TUNING ScoreType seeCapDangerDivisor             = 8;
-CONST_SEARCH_TUNING ScoreType seeQuietFactor                  = 64;
+CONST_SEARCH_TUNING ScoreType probCutMargin                   = 124;
+CONST_SEARCH_TUNING ScoreType probCutMarginSlope              = -58;
+CONST_SEARCH_TUNING ScoreType seeCaptureFactor                = 175;
+CONST_SEARCH_TUNING ScoreType seeCaptureInit                  = 60;
+CONST_SEARCH_TUNING ScoreType seeCapDangerDivisor             = 7;
+CONST_SEARCH_TUNING ScoreType seeQuietFactor                  = 65;
 CONST_SEARCH_TUNING ScoreType seeQuietInit                    = 32;
 CONST_SEARCH_TUNING ScoreType seeQuietDangerDivisor           = 11;
 CONST_SEARCH_TUNING ScoreType seeQThreshold                   = -50;
-CONST_SEARCH_TUNING ScoreType betaMarginDynamicHistory        = 175;
+CONST_SEARCH_TUNING ScoreType betaMarginDynamicHistory        = 173;
 //CONST_SEARCH_TUNING ScoreType probCutThreshold              = 450;
 CONST_SEARCH_TUNING DepthType lmrMinDepth                 = 2;
 CONST_SEARCH_TUNING int       lmrCapHistoryFactor         = 9;
@@ -51,14 +51,14 @@ CONST_SEARCH_TUNING DepthType singularExtensionDepthMinus = 5;
 CONST_SEARCH_TUNING ScoreType dangerLimitPruning        = 16;
 CONST_SEARCH_TUNING ScoreType dangerLimitForwardPruning = 16;
 CONST_SEARCH_TUNING ScoreType dangerLimitReduction      = 16;
-CONST_SEARCH_TUNING ScoreType dangerDivisor             = 180;
+CONST_SEARCH_TUNING ScoreType dangerDivisor             = 176;
 
-CONST_SEARCH_TUNING ScoreType failLowRootMargin         = 106;
+CONST_SEARCH_TUNING ScoreType failLowRootMargin         = 113;
 
-CONST_SEARCH_TUNING ScoreType deltaBadMargin            = 167;
+CONST_SEARCH_TUNING ScoreType deltaBadMargin            = 165;
 CONST_SEARCH_TUNING ScoreType deltaBadSEEThreshold      = 21;
-CONST_SEARCH_TUNING ScoreType deltaGoodMargin           = 50;
-CONST_SEARCH_TUNING ScoreType deltaGoodSEEThreshold     = 183;
+CONST_SEARCH_TUNING ScoreType deltaGoodMargin           = 48;
+CONST_SEARCH_TUNING ScoreType deltaGoodSEEThreshold     = 177;
 
 ///@todo probably should be tuned with/without a net
 CONST_SEARCH_TUNING DepthType aspirationMinDepth  = 4;
@@ -68,15 +68,15 @@ CONST_SEARCH_TUNING ScoreType aspirationDepthInit = 40;
 
 CONST_SEARCH_TUNING DepthType ttMaxFiftyValideDepth = 92;
 
-CONST_SEARCH_TUNING DepthType iirMinDepth           = 2;
+CONST_SEARCH_TUNING DepthType iirMinDepth           = 3;
 CONST_SEARCH_TUNING DepthType iirReduction          = 1;
 
 CONST_SEARCH_TUNING DepthType ttAlphaCutDepth       = 1;
 CONST_SEARCH_TUNING ScoreType ttAlphaCutMargin      = 63;
 CONST_SEARCH_TUNING DepthType ttBetaCutDepth        = 1;
-CONST_SEARCH_TUNING ScoreType ttBetaCutMargin       = 65;
+CONST_SEARCH_TUNING ScoreType ttBetaCutMargin       = 64;
 
-CONST_SEARCH_TUNING ScoreType lazySortThreshold     = -512;
+CONST_SEARCH_TUNING ScoreType lazySortThreshold     = -488;
 CONST_SEARCH_TUNING ScoreType lazySortThresholdQS   = -512;
 
 CONST_SEARCH_TUNING int       distributedTTBufSize  = 16;
