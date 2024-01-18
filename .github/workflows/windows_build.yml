@@ -14,7 +14,7 @@ jobs:
 
     - name: Add clang path to $PATH env
       shell: bash
-      run: echo "C:\directory\to\add\to\path" >> $GITHUB_PATH
+      run: echo "C:\msys64\mingw64\bin" >> $GITHUB_PATH
 
     - name: Build
       shell: bash
