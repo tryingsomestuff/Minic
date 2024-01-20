@@ -90,10 +90,14 @@ COMType ct = CT_uci;
 #endif
 
 [[nodiscard]] std::string showDate() {
-   std::stringstream str;
-   const auto n = std::chrono::system_clock::now();
-   str << n;
-   return str.str();
+   auto currentTime = std::chrono::system_clock::now();
+   auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+       std::chrono::high_resolution_clock::now().time_since_epoch()).count() % 1000;
+   std::time_t tt = std::chrono::system_clock::to_time_t(currentTime);
+   char buffer[128];
+   strftime(buffer, 128, "%F %H:%M:%S", localtime(&tt));
+   sprintf(buffer, "%s:%03d", buffer, (int)ms);
+   return std::string(buffer);
 }
 
 LogIt::~LogIt() {
