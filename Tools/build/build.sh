@@ -13,8 +13,10 @@ if grep "^#define WITH_MPI" Source/config.hpp ; then
       exit 1
    fi
 else
-   export CXX=g++
-   export CC=gcc
+   if [ -z $CXX ]; then
+      export CXX=g++
+      export CC=gcc
+   fi
 fi
 
 source $(dirname $0)/common
@@ -23,7 +25,7 @@ cd_root
 FATHOM_PRESENT=0
 if [ -e Fathom/src/tbprobe.h ]; then
    FATHOM_PRESENT=1
-   echo "found Fathom lib, trying to build"
+   echo "Found Fathom lib, trying to build"
    $(dirname $0)/buildFathom.sh "$@"
 fi
 
@@ -40,9 +42,23 @@ else
    fi
    exe=${buildDir}/${exe}
 fi
-echo "Building $exe"
 
-WARN="-Wall -Wcast-qual -Wno-char-subscripts -Wno-reorder -Wmaybe-uninitialized -Wuninitialized -pedantic -Wextra -Wshadow -Wno-unknown-pragmas"
+echo "Building $exe"
+do_sep
+
+WARN="-Wall -Wcast-qual -Wno-char-subscripts -Wno-reorder -Wmaybe-uninitialized -Wuninitialized -pedantic -Wextra -Wshadow -Wno-unknown-pragmas -Wno-unknown-warning-option -Wno-missing-braces -Wno-constant-logical-operand"
+if [[ $CXX == *"clang"* ]]; then
+   echo "Using clang ... will be slowwwww"
+   WARN="$WARN -fconstexpr-steps=1000000000"
+   PROF_GEN="-fprofile-generate=${buildDir}/"
+   PROF_MERGE="llvm-profdata-18 merge -output=${buildDir}/code.profdata ${buildDir}/*.profraw"
+   PROF_USE="-fprofile-use=${buildDir}/code.profdata"
+else
+   WARN="$WARN -fconstexpr-loop-limit=1000000000"
+   PROF_GEN="-fprofile-generate"
+   PROF_MERGE=""
+   PROF_USE="-fprofile-use"
+fi
 #-fopt-info
 #-Wconversion
 
@@ -93,27 +109,34 @@ if [ $FATHOM_PRESENT = "1" ]; then
    OPT="$OPT $dir/Fathom/src/$lib -I$dir/Fathom/src"
 fi
 
-echo $OPT $LIBS
+#echo $OPT $LIBS
 
-rm -f *.gcda ${buildDir}/*.gcda
+rm -f *.gcda ${buildDir}/*.gcda *.profraw ${buildDir}/*.profraw *.profdata ${buildDir}/*.profdata
 
 if [ -n "$NOPROFILE" ]; then
    echo "compilation without profiling"
-   $CXX $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $exe $LIBS 
+   CMD="$CXX $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $exe $LIBS"
+   echo "Build command : $CMD"
+   $CMD
 else
-   $CXX -fprofile-generate $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $exe $LIBS 
+   CMD="$CXX $PROF_GEN $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $exe $LIBS"
+   echo "Build command : $CMD"
+   $CMD
    ret=$?
    echo "end of first compilation"
    if [ $ret = "0" ]; then
       echo "running Minic for profiling : $exe"
       $exe bench $DEPTH -minOutputLevel 0
+      $PROF_MERGE
       #$exe bench $DEPTH -minOutputLevel 0 -NNUEFile none # force no NNUE
       echo "starting optimized compilation"
-      $CXX -fprofile-use $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $exe $LIBS
-      echo "done "
+      CMD="$CXX $PROF_USE $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $exe $LIBS"
+      echo "Build command : $CMD"
+      $CMD
+      do_title "Done "
    else
-      echo "some error"
+      do_title "Some error"
    fi
 fi
 
-rm -f *.gcda ${buildDir}/*.gcda
+rm -f *.gcda ${buildDir}/*.gcda *.profraw ${buildDir}/*.profraw *.profdata ${buildDir}/*.profdata
