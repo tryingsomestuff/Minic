@@ -44,6 +44,7 @@ else
 #      MINGW*)     machine=MinGw;;
       *)          machine="UNKNOWN:${unameOut}"
    esac
+   do_sep
    echo "Running on ${machine}"
 
    e=minic
@@ -57,13 +58,13 @@ else
    d="-DDEBUG_TOOL"
    if [ -n "$EMBEDDEDNNUEPATH" ]; then
       if [ "$EMBEDDEDNNUEPATH" != "none" ]; then
-         echo "Forced embedded net $EMBEDDEDNNUEPATH"
+         echo "With forced embedded net $EMBEDDEDNNUEPATH"
          d="$d -DEMBEDDEDNNUEPATH=$EMBEDDEDNNUEPATH -DFORCEEMBEDDEDNNUE"
       else
-         echo "Forced build without embedded net"
+         echo "Forced to build without embedded net"
       fi
    else
-      echo "Default embedded net"
+      echo "With default embedded net"
       d="$d -DEMBEDDEDNNUEPATH=$dir/Tourney/nn.bin -DFORCEEMBEDDEDNNUE"
    fi
 
@@ -105,15 +106,17 @@ else
    fi
 
    do_sep
+   echo "Compiler info"
    which $CXX
    which $CC
-   do_sep
    $CXX --version
    do_sep
+   echo "Building info"
    echo "output name: $e"
    echo "version: $v"
    echo "definition: $d"
    echo "target: $t"
+   echo
    do_sep
 
 fi

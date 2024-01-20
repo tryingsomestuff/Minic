@@ -173,7 +173,7 @@ void test_log(){
 
 ///@todo try lmr based on game phase
 constexpr array2d<DepthType, MAX_DEPTH, MAX_MOVE> lmrReduction = [] {
-   auto ret = decltype(lmrReduction){0};
+   auto ret = decltype(lmrReduction){};
    //Logging::LogIt(Logging::logInfo) << "Init lmr";
    for (int d = 1; d < MAX_DEPTH; d++)
       for (int m = 1; m < MAX_MOVE; m++)

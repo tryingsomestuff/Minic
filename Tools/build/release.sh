@@ -27,10 +27,10 @@ for m in -march=athlon64-sse3 -march=barcelona -march=bdver1 -march=znver1 -marc
 done
 export NOPROFILE
 
-# an old win32 build
+# an old win32 build (super slow engine)
 $dir/buildGW32.sh $e $v "-march=pentium2" $n $d
 
-# some fun stuff
+# some fun stuff (experimental)
 $dir/buildAndroid.sh $e $v $n $d
 $dir/buildRPi32.sh $e $v $n $d
 $dir/buildRPi64.sh $e $v $n $d

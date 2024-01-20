@@ -1,7 +1,9 @@
 #!/bin/bash
 
-export CXX=g++
-export CC=gcc
+if [ -z $CXX ]; then
+   export CXX=g++
+   export CC=gcc
+fi
 
 source $(dirname $0)/common
 cd_root
@@ -21,4 +23,4 @@ echo "Building $lib"
 OPT="-Wall -Wno-char-subscripts $d -DNDEBUG -O3 -flto $t -I."
 $CC -c -std=gnu99 $OPT tbprobe.c -o $lib
 
-cd -
+cd - > /dev/null
