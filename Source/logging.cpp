@@ -91,12 +91,8 @@ COMType ct = CT_uci;
 
 [[nodiscard]] std::string showDate() {
    std::stringstream str;
-   const auto msecEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch());
-   char buffer[64];
-   const auto tt = Clock::to_time_t(Clock::time_point(msecEpoch));
-   struct tm localTime;
-   std::strftime(buffer, 63, "%Y-%m-%d %H:%M:%S", localtime_r(&tt, &localTime));
-   str << buffer << "-" << std::setw(3) << std::setfill('0') << msecEpoch.count() % 1000;
+   const auto n = std::chrono::system_clock::now();
+   str << n;
    return str.str();
 }
 

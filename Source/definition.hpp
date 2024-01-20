@@ -97,6 +97,7 @@ inline constexpr auto NNUEALIGNMENT_STD = std::align_val_t{ NNUEALIGNMENT };
 
 #ifdef _MSC_VER
 #pragma warning(disable:4996)
+#pragma warning(disable:4068)
 #endif
 
 #if !defined(__PRETTY_FUNCTION__) && !defined(__GNUC__)
