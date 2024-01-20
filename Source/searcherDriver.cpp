@@ -177,7 +177,7 @@ void Searcher::searchDriver(bool postMove) {
    // on main process, requested value will be restored, but not on other process
    TimeMan::maxNodes = 0;
 
-   float EBF = 1.7f;
+   double EBF = 1.7;
 
    // using MAX_DEPTH-6 so that draw can be found for sure ///@todo I don't understand this -6 anymore ..
    const DepthType targetMaxDepth = std::min(maxDepth, static_cast<DepthType>(MAX_DEPTH - 6));

@@ -172,7 +172,7 @@ void test_log(){
 */
 
 ///@todo try lmr based on game phase
-constexpr array2d<DepthType, MAX_DEPTH, MAX_MOVE> lmrReduction = [] {
+inline const array2d<DepthType, MAX_DEPTH, MAX_MOVE> lmrReduction = [] {
    auto ret = decltype(lmrReduction){};
    //Logging::LogIt(Logging::logInfo) << "Init lmr";
    for (int d = 1; d < MAX_DEPTH; d++)
@@ -181,7 +181,7 @@ constexpr array2d<DepthType, MAX_DEPTH, MAX_MOVE> lmrReduction = [] {
    return ret;
 }();
 
-constexpr array2d<ScoreType, 6, 6> MvvLvaScores = [] {
+inline const array2d<ScoreType, 6, 6> MvvLvaScores = [] {
    auto ret = decltype(MvvLvaScores){};
    //Logging::LogIt(Logging::logInfo) << "Init mvv-lva";
    constexpr array1d<ScoreType, 6> IValues = {1, 2, 3, 5, 9, 20}; ///@todo try N=B=3 ??
