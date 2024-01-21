@@ -15,6 +15,8 @@ if grep "^#define WITH_MPI" Source/config.hpp ; then
 else
    if [ -z $CXX ]; then
       export CXX=g++
+   fi
+   if [ -z $CC ]; then
       export CC=gcc
    fi
 fi

@@ -2,6 +2,9 @@
 
 if [ -z $CXX ]; then
    export CXX=g++
+fi
+
+if [ -z $CC ]; then
    export CC=gcc
 fi
 
