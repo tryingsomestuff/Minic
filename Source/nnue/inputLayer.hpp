@@ -47,11 +47,11 @@ struct InputLayer {
    InputLayer(InputLayer<NT, dim0, dim1, Q>&& other) = delete;
 
    InputLayer() { 
-       W = new WIT[nbW]; 
+       W = new (NNUEALIGNMENT_STD) WIT[nbW]; 
     }
 
    ~InputLayer() {
-       delete(W);
+       ::operator delete(W, NNUEALIGNMENT_STD);
    }
 };
 
