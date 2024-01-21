@@ -47,7 +47,7 @@ struct InputLayer {
    InputLayer(InputLayer<NT, dim0, dim1, Q>&& other) = delete;
 
    InputLayer() { 
-       W = new (NNUEALIGNMENT_STD) WIT[nbW]; 
+       W = static_cast<WIT*>(operator new[](sizeof(WIT) * nbW, NNUEALIGNMENT_STD));
     }
 
    ~InputLayer() {
