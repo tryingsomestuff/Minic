@@ -122,16 +122,15 @@ bool bench(DepthType depth) {
 
    BetaCutStat betaStats;
 
-   readFEN(std::string(startPosition), p);
-   analyze(p, depth, true);
-   betaStats.update(ThreadPool::instance().main().stats);
-   readFEN(std::string(fine70), p);
-   analyze(p, depth, true);
-   betaStats.update(ThreadPool::instance().main().stats);
-   readFEN(std::string(shirov), p);
-   analyze(p, depth, true);
-   betaStats.update(ThreadPool::instance().main().stats);
-   
+   //auto pos = {startPosition, fine70, shirov, shirov2, mate4};
+   auto pos = {startPosition, fine70, mate4};
+
+   for(const auto & fen : pos){
+      readFEN(std::string{fen}, p);
+      analyze(p, depth, true);
+      betaStats.update(ThreadPool::instance().main().stats);
+   }
+
    betaStats.show();
    
    return true;
@@ -406,6 +405,8 @@ bool cliManagement(const std::string & firstArg, int argc, char** argv) {
    if (fen == "start") fen = startPosition;
    if (fen == "fine70") fen = fine70;
    if (fen == "shirov") fen = shirov;
+   if (fen == "shirov2") fen = shirov2;
+   if (fen == "mate4") fen = mate4;
 
    // validate the supposed fen string ...
    const std::regex lookLikeFen(

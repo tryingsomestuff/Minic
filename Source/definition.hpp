@@ -320,6 +320,8 @@ using PVList = std::vector<Move>;
 inline constexpr std::string_view startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 inline constexpr std::string_view fine70        = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1";
 inline constexpr std::string_view shirov        = "6r1/2rp1kpp/2qQp3/p3Pp1P/1pP2P2/1P2KP2/P5R1/6R1 w - - 0 1";
+inline constexpr std::string_view shirov2       = "8/2rp1krp/2qQp3/p3Pp1P/1pP2P2/1P2KP2/P7/6R1 w - - 0 2";
+inline constexpr std::string_view mate4         = "r1bnk2r/pppp1ppp/1b4q1/4P3/2B1N3/Q1Pp1N2/P4PPP/R3R1K1 w - - 1 1";
 
 enum Piece : signed char {
    P_bk   = -6,
