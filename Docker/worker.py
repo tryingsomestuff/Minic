@@ -1298,7 +1298,8 @@ def run_benchmarks(config, branch, engine, network):
     print('Speed for %s is %d' % (name, nps))
 
     # Flag the test to abort if we have a bench mismatch
-    error = (bench != int(config.workload['test'][branch]['bench']))
+    targetted_bench = int(config.workload['test'][branch]['bench'])
+    error = (targetted_bench != 0 and bench != targetted_bench )
     if error:
         ServerReporter.report_bad_bench(config, branch, bench)
 
