@@ -122,8 +122,7 @@ bool bench(DepthType depth) {
 
    BetaCutStat betaStats;
 
-   //auto pos = {startPosition, fine70, shirov, shirov2, mate4};
-   auto pos = {startPosition, fine70, mate4};
+   auto pos = {startPosition, fine70, shirov, shirov2, mate4};
 
    for(const auto & fen : pos){
       readFEN(std::string{fen}, p);
