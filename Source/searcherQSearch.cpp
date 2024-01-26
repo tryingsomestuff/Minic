@@ -181,7 +181,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
 
    if (!isInCheck) {
       if (ttHit && ((bound == TT::B_alpha && e.s <= evalScore) || (bound == TT::B_beta && e.s >= evalScore) || (bound == TT::B_exact))){
-         evalScore = e.s;
+         evalScore = TT::adjustHashScore(e.s, height);
          evalScoreIsHashScore = true;
       }
    }
