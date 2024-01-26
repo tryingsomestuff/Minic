@@ -127,7 +127,7 @@ template<Piece pp>
                                             const BitBoard target,
                                             const BitBoard occupancy = 0,
                                             const Color c = Co_White) { // color is only important/needed for pawns
-   return coverage<pp>(s, occupancy, c) & target;
+   return target ? target & coverage<pp>(s, occupancy, c) : emptyBitBoard;
 }
 
 #endif // MAGIC
