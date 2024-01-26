@@ -71,7 +71,7 @@ void prefetch(Hash h) {
 }
 
 // will return true only if depth is enough
-// e.h is nullHash is the TT entry is not usable
+// e.h is nullHash if the TT entry is not usable
 bool getEntry(Searcher &context, const Position &p, Hash h, DepthType d, Entry &e) {
    assert(h != nullHash);
    assert((h & (ttSize - 1)) == (h % ttSize));
