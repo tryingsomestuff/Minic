@@ -143,10 +143,10 @@ ScoreType Searcher::drawScore(const Position& p, DepthType height) const {
 }
 
 void Searcher::idleLoop() {
+   _searching = false;
    while (true) {
       std::unique_lock lock(_mutex);
       Logging::LogIt(Logging::logInfo) << "begin of idleloop " << id();
-      _searching = false;
       _cv.notify_one(); // Wake up anyone waiting for search finished
       _cv.wait(lock, [&] { return _searching; });
       if (_exit) {

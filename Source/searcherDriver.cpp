@@ -490,4 +490,6 @@ pvsout:
 
       Distributed::sync(Distributed::_commMove, "end of search driver");
    } // isMainThread()
+
+   _searching = false;
 }

@@ -155,13 +155,16 @@ void initStat() {
 void sendStat() {
    if (!moreThanOneProcess()) return;
    // launch an async reduce
+   Logging::LogIt(Logging::logDebug) << Logging::_protocolComment[Logging::ct] << rank << " sendstat";
    asyncAllReduceSum(_countersBufSend.data(), _countersBufRecv[_doubleBufferStatParity % 2].data(), Stats::sid_maxid, _requestStat, _commStat);
+   Logging::LogIt(Logging::logDebug) << Logging::_protocolComment[Logging::ct] << rank << " sendstat done";
    ++_nbStatPoll;
 }
 
 void pollStat() { // only called from main thread
    if (!moreThanOneProcess()) return;
-   int flag;
+   int flag = 1;
+   Logging::LogIt(Logging::logDebug) << Logging::_protocolComment[Logging::ct] << rank << " pollstat";
    checkError(MPI_Test(&_requestStat, &flag, MPI_STATUS_IGNORE));
    // if previous comm is done, launch another one
    if (flag) {
@@ -173,16 +176,18 @@ void pollStat() { // only called from main thread
       }
       sendStat();
    }
+   Logging::LogIt(Logging::logDebug) << Logging::_protocolComment[Logging::ct] << rank << " pollstat done";
 }
 
 // get all rank to a common synchronous state at the end of search
 void syncStat() { // only called from main thread
    if (!moreThanOneProcess()) return;
    Logging::LogIt(Logging::logInfo) << "Syncing stat";
+   Logging::LogIt(Logging::logDebug) << Logging::_protocolComment[Logging::ct] << rank << " syncstat";
    // wait for equilibrium
    uint64_t globalNbPoll = 0ull;
    allReduceMax(&_nbStatPoll, &globalNbPoll, 1, _commStat2);
-   if (_nbStatPoll < globalNbPoll) {
+   while (_nbStatPoll < globalNbPoll) {
       checkError(MPI_Wait(&_requestStat, MPI_STATUS_IGNORE));
       sendStat();
    }
@@ -198,6 +203,7 @@ void syncStat() { // only called from main thread
    //sync(_commStat, __PRETTY_FUNCTION__);
    Logging::LogIt(Logging::logInfo) << "...ok";
    _nbStatPoll = 0;
+   Logging::LogIt(Logging::logDebug) << Logging::_protocolComment[Logging::ct] << rank << " syncstat done";
 }
 
 void showStat() {

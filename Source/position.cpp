@@ -215,7 +215,7 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent, bool withMove
       }
    }
    else if (!silent)
-      Logging::LogIt(Logging::logInfo) << "No en passant square given";
+      Logging::LogIt(Logging::logDebug) << "No en passant square given";
 
    assert(p.ep == INVALIDSQUARE || (SQRANK(p.ep) == 2 || SQRANK(p.ep) == 5));
 

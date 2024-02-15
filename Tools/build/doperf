@@ -1,6 +1,9 @@
 #!/bin/bash
 ulimit -s unlimited
 
+sudo echo 0 | sudo tee /proc/sys/kernel/perf_event_paranoid
+sudo echo 0 | sudo tee /proc/sys/kernel/kptr_restrict
+
 export CXX=g++
 export CC=gcc
 
@@ -29,4 +32,4 @@ $CXX $STANDARDSOURCE -ISource -ISource/nnue $OPT -lpthread -DDEBUG_TOOL -DEMBEDD
 perf record -g -- ./minic.perf -analyze "r1bqkb1r/pp3ppp/1np1pn2/6N1/2BP4/8/PPP1QPPP/R1B1K1NR w KQkq - 1 1" 25 
 #perf record -g -- ./minic.perf -perft "start" 6 -minOutputLevel 0
 #perf record -g -- ./minic.perf -evalSpeed Book_and_Test/Tuning/lichess-new-labeled.epd
-perf report -g 'graph,0.5,caller' minic.perf
+perf report -g 'graph,0.5,caller'

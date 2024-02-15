@@ -25,6 +25,10 @@ void uci() {
    iterate = true;
    while (iterate) {
       COM::readLine();
+      if(COM::command.empty()){
+         Logging::LogIt(Logging::logWarn) << "Empty command";
+         continue;
+      }      
       std::lock_guard lock(COM::mutexGUI); // cannot treat GUI bestmove while receiving new position
       processCommand(COM::command);
    }

@@ -291,6 +291,8 @@ struct RootPosition : public Position {
    };
 
    // Root position cannot be copied
+   // use this kind of thing instead
+   // const bool b = readFEN(fen, rootPos, false, true);
    RootPosition & operator=(const RootPosition &) = delete;
 
    ~RootPosition() override {
