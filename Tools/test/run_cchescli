@@ -3,11 +3,13 @@
 ccc=/ssd2/c-chess-cli/c-chess-cli
 
 $ccc -each tc=5+0.1 \
-	-engine "cmd=/ssd2/Minic/runmpi.sh 2" option.Threads=2 name="Minic 2procs 2threads" \
-	-engine "cmd=/ssd2/Minic/runmpi.sh 2" option.Threads=3 name="Minic 2procs 3threads" \
-	-games 2 -rounds 1500 -concurrency 1 -pgn out.pgn \
-	-openings file=/ssd2/Minic/Book_and_Test/OpeningBook/Pohl_AntiDraw_Openings_V1.5/Unbalanced_Human_Openings_V3/UHO_V3_+150_+159/UHO_V3_8mvs_big_+140_+169.epd order=random &
-	#-engine "cmd=/home/vivien/Minic/Tourney/minic_dev_linux_x64" option.Threads=1 name="Minic 1threads" \
-	#-engine "cmd=/home/vivien/Minic/Tourney/minic_dev_linux_x64" option.Threads=2 name="Minic 2threads" \
-	#-engine "cmd=/home/vivien/Minic/Tourney/minic_dev_linux_x64" option.Threads=4 name="Minic 4threads" \
-	#-engine "cmd=/home/vivien/Minic/Tourney/minic_dev_linux_x64" option.Threads=8 name="Minic 8threads" \
+	-engine "cmd=/ssd2/Minic/runmpi.sh 1" option.Threads=1 name="Minic-1procs-1threads" \
+	-engine "cmd=/ssd2/Minic/runmpi.sh 2" option.Threads=1 name="Minic-2procs-1threads" \
+	-games 2 -rounds 10 -concurrency 1 -pgn out.pgn \
+	-openings file=/ssd2/Minic/Book_and_Test/OpeningBook/Pohl_AntiDraw_Openings_V1.5/Unbalanced_Human_Openings_V3/UHO_V3_+150_+159/UHO_V3_8mvs_big_+140_+169.epd order=random 
+	#-engine "cmd=/ssd2/Minic/Tourney/minic_dev_linux_x64" option.Threads=1 name="Minic 1threads" \
+	#-engine "cmd=/ssd2/Minic/Tourney/minic_dev_linux_x64" option.Threads=2 name="Minic 2threads" \
+	#-engine "cmd=/ssd2/Minic/Tourney/minic_dev_linux_x64" option.Threads=1 name="Minic 1threads" \
+	#-engine "cmd=/ssd2/Minic/Tourney/minic_dev_linux_x64" option.Threads=2 name="Minic 2threads" \
+	#-engine "cmd=/ssd2/Minic/Tourney/minic_dev_linux_x64" option.Threads=4 name="Minic 4threads" \
+	#-engine "cmd=/ssd2/Minic/Tourney/minic_dev_linux_x64" option.Threads=8 name="Minic 8threads" \

@@ -42,14 +42,24 @@ void analyze(const Position& p, DepthType depth, bool openBenchOutput = false) {
    TimeMan::msecUntilNextTC             = -1;
    ThreadPool::instance().currentMoveMs = TimeMan::getNextMSecPerMove(p);
 
-   ///@todo support threading here by using ThinkAsync ?
    ThreadData d;
+#ifdef WITH_ASYNC_ANALYZE
+   COM::depth = depth;
+   const std::string fen = GetFEN(p);
+   const bool b = readFEN(fen, COM::position, true, true);
+   if (!b) Logging::LogIt(Logging::logFatal) << "Illegal FEN " << fen;
+   COM::thinkAsync(COM::st_searching);
+   while(ThreadPool::instance().main().searching()){
+      using namespace std::chrono_literals;
+      std::this_thread::sleep_for(10ms);
+   }
+#else
    d.p     = p;
    d.depth = depth;
    ThreadPool::instance().distributeData(d);
-   //COM::position = p; // only need for display purpose
    ThreadPool::instance().main().stopFlag = false;
    ThreadPool::instance().main().searchDriver(false);
+#endif
    d = ThreadPool::instance().main().getData();
    Logging::LogIt(Logging::logInfo) << "Best move is " << ToString(d.best) << " " << static_cast<int>(d.depth) << " " << d.score << " pv : " << ToString(d.pv);
 

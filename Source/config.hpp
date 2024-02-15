@@ -14,6 +14,7 @@ const std::string MinicVersion = "3.41";
 //#define WITH_BETACUTSTATS // activate beta cutoff statistics
 #define WITH_MATERIAL_TABLE // use (and build ! cost 27Mb) or not the material table
 //#define WITH_MPI    // support "distributed" version or not
+#define WITH_ASYNC_ANALYZE // support ASYNC call for CLI analysis
 #ifndef _MSC_VER
 #define WITH_SYZYGY // include or not syzgy ETG support
 #endif // _MSC_VER
@@ -54,7 +55,7 @@ const std::string MinicVersion = "3.41";
 
 // *** Tuning
 //#define WITH_TIMER
-#define WITH_SEARCH_TUNING
+//#define WITH_SEARCH_TUNING
 //#define WITH_EVAL_TUNING
 //#define WITH_PIECE_TUNING
 
