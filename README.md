@@ -239,6 +239,8 @@ TCEC20: 2nd/10 in League 3, 9th/10 in League 2 (https://www.chessprogramming.org
 TCEC21: 1st/12 in League 3, 6th/10 in League 2 (https://www.chessprogramming.org/TCEC_Season_21)  
 TCEC22: 2nd/8 in League 2, 8th/8 in League 1 (well tried ;) )  (https://www.chessprogramming.org/TCEC_Season_22)  
 TCEC23: 3rd/12 in League 1 ! (https://tcec-chess.com/#div=l1&game=1&season=23)  
+TCEC24: 9rd/12 in League 1 ! (https://tcec-chess.com/#div=l1&game=1&season=24)  
+TCEC25: 8rd/12 in League 1 ! (https://tcec-chess.com/#div=l1&game=1&season=25)
 
 ## Release process
 WARNING : the former Dist directory as been REMOVED from the repository because it was starting to be too big. Unofficial releases are not available anymore here. All (including unofficial) releases are available in a new repo, here : https://github.com/tryingsomestuff/Minic-Dist, also available as a git submodule.
