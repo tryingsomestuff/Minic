@@ -4,7 +4,7 @@ import os
 import random
 from pathlib import Path
 
-# adapted for a script of SF community
+# adapted from a script of SF community
 
 def copy_next_chunk(in_file, out_file):
     size = 40*128
@@ -12,10 +12,20 @@ def copy_next_chunk(in_file, out_file):
     out_file.write(data)
     return size
 
+def copy_next_chunk_packed(in_file, out_file):
+    chunk_header = in_file.read(8)
+    assert chunk_header[0:4] == b"BINP"
+    size = struct.unpack("<I", chunk_header[4:])[0]
+
+    out_file.write(chunk_header)
+    data = in_file.read(size)
+    out_file.write(data)
+
+    return size + 8
 
 def main():
     if len(sys.argv) < 4:
-        print("Usage: python interleave_binpacks.py infile1 ... infileN outfile")
+        print("Usage: python fusebin.py infile1 ... infileN outfile")
         print("       The output bin, will contain all data from the input files.")
         print("       Data is read sequentially from the input, randomly alternating between files.")
         return
@@ -33,6 +43,10 @@ def main():
         return
 
     out_file = open(out_filename, "wb")
+
+    ext = out_filename.split('.')[-1]
+    if ext == "binpack":
+        print("Using binpack decoding and encoding")
 
     # open other args as input file names, and get their sizes
     in_filenames = []
@@ -63,7 +77,10 @@ def main():
         while where >= in_files_remaining[i]:
             where -= in_files_remaining[i]
             i += 1
-        size = copy_next_chunk(in_files[i], out_file)
+        if ext == "binpack":
+            size = copy_next_chunk_packed(in_files[i], out_file)
+        else:
+            size = copy_next_chunk(in_files[i], out_file)
         in_files_remaining[i] -= size
         total_remaining -= size
         total_size += size
