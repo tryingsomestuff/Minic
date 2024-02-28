@@ -1066,33 +1066,6 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          // prefetch as soon as possible
          TT::prefetch(computeHash(p2));
 
-#ifdef WITH_NNUE
-         NNUEEvaluator newEvaluator = p.evaluator();
-         p2.associateEvaluator(newEvaluator);
-         applyMoveNNUEUpdate(p2, moveInfo);
-#endif
-
-         ++pvsData.validMoveCount;
-         ++pvsData.validNonPrunedCount;
-
-         pvsData.earlyMove = true;
-         pvsData.isQuiet = Move2Type(e.m) == T_std && !isNoisy(p,e.m);
-         if (pvsData.isQuiet) ++pvsData.validQuietMoveCount;
-
-         if (isCapture(e.m)) pvsData.ttMoveIsCapture = true;
-         pvsData.isCheck = pvsData.ttIsCheck || isPosInCheck(p2);
-
-         assert(p2.halfmoves < MAX_PLY && p2.halfmoves >= 0);
-         stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
-         stack[p2.halfmoves].h = p2.h;
-         
-#ifdef DEBUG_TT_CHECK
-         if (pvsData.ttIsCheck && !isPosInCheck(p2)){
-            std::cout << "Error ttIsCheck" << std::endl;
-            std::cout << ToString(p2) << std::endl;
-         }
-#endif
-
          // We have a TT move.
          // The TT move can trigger singular extension
          // And it won't be reduced by any mean
@@ -1139,6 +1112,33 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                }
             }
          }
+
+#ifdef WITH_NNUE
+         NNUEEvaluator newEvaluator = p.evaluator();
+         p2.associateEvaluator(newEvaluator);
+         applyMoveNNUEUpdate(p2, moveInfo);
+#endif
+
+         ++pvsData.validMoveCount;
+         ++pvsData.validNonPrunedCount;
+
+         pvsData.earlyMove = true;
+         pvsData.isQuiet   = Move2Type(e.m) == T_std && !isNoisy(p, e.m);
+         if (pvsData.isQuiet) ++pvsData.validQuietMoveCount;
+
+         if (isCapture(e.m)) pvsData.ttMoveIsCapture = true;
+         pvsData.isCheck = pvsData.ttIsCheck || isPosInCheck(p2);
+
+         assert(p2.halfmoves < MAX_PLY && p2.halfmoves >= 0);
+         stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!
+         stack[p2.halfmoves].h = p2.h;
+
+#ifdef DEBUG_TT_CHECK
+         if (pvsData.ttIsCheck && !isPosInCheck(p2)) {
+            std::cout << "Error ttIsCheck" << std::endl;
+            std::cout << ToString(p2) << std::endl;
+         }
+#endif
 
          PVList childPV;
          ScoreType ttScore;
