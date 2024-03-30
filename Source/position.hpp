@@ -208,7 +208,6 @@ struct alignas(32) Position {
    // see https://github.com/connormcmonigle/seer-nnue
 
    template<Color c> void resetNNUEIndices_(NNUEEvaluator& nnueEvaluator) const {
-      using namespace FeatureIdx;
       //us
       BB::applyOn(pieces_const<P_wp>(c), [&](const Square & k) {
          nnueEvaluator.template us<c>().insert(NNUEIndiceUs(king[c], k, P_wp)); 
