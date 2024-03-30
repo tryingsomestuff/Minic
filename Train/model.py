@@ -7,7 +7,7 @@ import torch.nn.functional as F
 import pytorch_lightning as pl
 import struct
 
-netversion = struct.unpack('!f', bytes.fromhex('c0ffee02'))[0]
+netversion = struct.unpack('!f', bytes.fromhex('c0ffee03'))[0]
 
 withFactorizer = True
 
@@ -22,27 +22,27 @@ L2 = 8
 L3 = 8
 
 def piece_position(i):
-  return i % (12 * 64)
+  return i % halfka.state_numel()
 
 class FactoredBlock(nn.Module):
   def __init__(self, func, output_dim):
     super(FactoredBlock, self).__init__()
-    self.f = torch.tensor([func(i) for i in range(halfka.half_ka_numel())], dtype=torch.long)
+    self.f = torch.tensor([func(i) for i in range(halfka.numel())], dtype=torch.long)
     self.inter_dim = 1 + self.f.max()
     self.weights = nn.Parameter(torch.zeros(self.inter_dim, output_dim))
 
   def virtual(self):
     with torch.no_grad():
-      identity = torch.tensor([i for i in range(halfka.half_ka_numel())], dtype=torch.long)
+      identity = torch.tensor([i for i in range(halfka.numel())], dtype=torch.long)
       conversion = torch.sparse.FloatTensor(
         torch.stack([identity, self.f], dim=0),
-        torch.ones(halfka.half_ka_numel()),
-        size=torch.Size([halfka.half_ka_numel(), self.inter_dim])).to(self.weights.device)
+        torch.ones(halfka.numel()),
+        size=torch.Size([halfka.numel(), self.inter_dim])).to(self.weights.device)
       return (conversion.matmul(self.weights)).t()
 
   def factored(self, x):
     N, D = x.size()
-    assert D == halfka.half_ka_numel()
+    assert D == halfka.numel()
 
     batch, active = x._indices()
     factored = torch.gather(self.f.to(x.device), dim=0, index=active)
@@ -61,7 +61,7 @@ class FeatureTransformer(nn.Module):
   def __init__(self, funcs, base_dim):
     super(FeatureTransformer, self).__init__()
     self.factored_blocks = nn.ModuleList([FactoredBlock(f, base_dim) for f in funcs])
-    self.affine = nn.Linear(halfka.half_ka_numel(), base_dim)
+    self.affine = nn.Linear(halfka.numel(), base_dim)
 
   def virtual_bias(self):
     return self.affine.bias.data
@@ -87,11 +87,11 @@ class NNUE(pl.LightningModule):
       self.black_affine = FeatureTransformer(funcs, BASE)
     else:
       # without factorization
-      self.white_affine = nn.Linear(halfka.half_ka_numel(), BASE)
-      self.black_affine = nn.Linear(halfka.half_ka_numel(), BASE)
+      self.white_affine = nn.Linear(halfka.numel(), BASE)
+      self.black_affine = nn.Linear(halfka.numel(), BASE)
 
     # dropout seems necessary when using factorizer to avoid over-fitting
-    #self.d0 = nn.Dropout(p=0.01)
+    self.d0 = nn.Dropout(p=0.05)
     self.fc0 = nn.Linear(2*BASE, L1 * nphase)
 
     #self.d1 = nn.Dropout(p=0.02)
@@ -126,8 +126,8 @@ class NNUE(pl.LightningModule):
     # clipped relu
     base = torch.clamp(us * torch.cat([w_, b_], dim=1) + (1.0 - us) * torch.cat([b_, w_], dim=1),0,1)
 
-    #if withFactorizer:
-      #base = self.d0(base)
+    if withFactorizer:
+      base = self.d0(base)
     y0 = torch.clamp(self.fc0(base),0,1)
     y0 = y0.view(-1, L1)[indices]
 

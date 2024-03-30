@@ -1063,8 +1063,6 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
       Position p2 = p;
       if (const MoveInfo moveInfo(p2,e.m); applyMove(p2, moveInfo, true)) {
-         // prefetch as soon as possible
-         TT::prefetch(computeHash(p2));
 
          // We have a TT move.
          // The TT move can trigger singular extension
@@ -1112,6 +1110,9 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                }
             }
          }
+
+         // prefetch as soon as possible
+         TT::prefetch(computeHash(p2));
 
 #ifdef WITH_NNUE
          NNUEEvaluator newEvaluator = p.evaluator();
