@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ANDROID_NDK_PATH=$(dirname $0)/../../../android/toolchains/llvm/prebuilt/linux-x86_64/bin/
+ANDROID_NDK_PATH=$(readlink -f $(dirname $0))/../../../android/toolchains/llvm/prebuilt/linux-x86_64/bin/
 
 export CXX=$ANDROID_NDK_PATH/armv7a-linux-androideabi34-clang++
 export CC=$ANDROID_NDK_PATH/armv7a-linux-androideabi34-clang
@@ -18,7 +18,7 @@ fi
 do_title "Building Minic for Android"
 
 # -flto is leading to some bugs ...
-OPT="-s -Wall -Wno-char-subscripts -Wno-reorder -Wno-missing-braces $d -DNDEBUG -O3 $STDVERSION $n -Wno-unknown-pragmas -fconstexpr-steps=1000000000"
+OPT="-s -Wall -Wno-char-subscripts -Wno-reorder -Wno-missing-braces -Wno-constant-logical-operand $d -DNDEBUG -O3 $STDVERSION $n -Wno-unknown-pragmas -fconstexpr-steps=1000000000"
 #OPT="-s -Wall -Wno-char-subscripts -Wno-reorder -Wno-missing-braces $d -ggdb3 $STDVERSION $n -Wno-unknown-pragmas -fconstexpr-steps=1000000000"
 
 if [ $FATHOM_PRESENT = "1" ]; then
