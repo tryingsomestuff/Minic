@@ -111,6 +111,7 @@ extern CONST_SEARCH_TUNING ScoreType dangerLimitForwardPruning;
 extern CONST_SEARCH_TUNING ScoreType dangerLimitReduction;
 extern CONST_SEARCH_TUNING ScoreType dangerDivisor;
 extern CONST_SEARCH_TUNING ScoreType failLowRootMargin;
+extern CONST_SEARCH_TUNING ScoreType CMHMargin;
 
 extern CONST_SEARCH_TUNING ScoreType deltaBadMargin;
 extern CONST_SEARCH_TUNING ScoreType deltaBadSEEThreshold;

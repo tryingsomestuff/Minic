@@ -392,7 +392,7 @@ void registerCOMOptions() { // options exposed to GUI
    _keys.emplace_back(k_score, w_spin, "dangerDivisor"                     , &SearchConfig::dangerDivisor                       , ScoreType(-50)  , ScoreType(256)     );
 
    _keys.emplace_back(k_score, w_spin, "failLowRootMargin"                 , &SearchConfig::failLowRootMargin                   , ScoreType(-200) , ScoreType(1500)    );
-
+   _keys.emplace_back(k_score, w_spin, "CMHMargin"                         , &SearchConfig::CMHMargin                           , ScoreType(-2024), ScoreType(2048)    );
    _keys.emplace_back(k_score, w_spin, "deltaBadMargin"                    , &SearchConfig::deltaBadMargin                      , ScoreType(0)    , ScoreType(500)     );
    _keys.emplace_back(k_score, w_spin, "deltaBadSEEThreshold"              , &SearchConfig::deltaBadSEEThreshold                , ScoreType(-200) , ScoreType(200)     );
    _keys.emplace_back(k_score, w_spin, "deltaGoodMargin"                   , &SearchConfig::deltaGoodMargin                     , ScoreType(0)    , ScoreType(500)     );
