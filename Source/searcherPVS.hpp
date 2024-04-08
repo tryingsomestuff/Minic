@@ -1302,7 +1302,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
             // CMH pruning alone
             if (pvsData.CMHPruning ) {
-               if (isCMHBad(p, Move2From(*it), Move2To(*it), pvsData.cmhPtr, -HISTORY_MAX/4)) {
+               if (isCMHBad(p, Move2From(*it), Move2To(*it), pvsData.cmhPtr, SearchConfig::CMHMargin)) {
                   stats.incr(Stats::sid_CMHPruning);
                   continue;
                }
