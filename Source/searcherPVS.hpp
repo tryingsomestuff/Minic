@@ -1218,16 +1218,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
       pvsData.isTTMove = false;
       pvsData.isQuiet = Move2Type(*it) == T_std && !isNoisy(p,*it);
-      // skip quiet if LMP was triggered
-      if (skipQuiet && pvsData.isQuiet && !pvsData.isInCheck){
-         stats.incr(Stats::sid_lmp);
-         continue;
-      }
-      // skip other bad capture
-      if (skipCap && Move2Type(*it) == T_capture && !pvsData.isInCheck){
-         stats.incr(Stats::sid_see2);
-         continue;
-      }
+
       if (isSkipMove(*it, skipMoves)) continue;        // skipmoves
       if (pvsData.validTTmove && pvsData.ttMoveTried && sameMove(e.m, *it)) continue; // already tried
 
@@ -1249,6 +1240,18 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       if (pvsData.isQuiet) ++pvsData.validQuietMoveCount;
 
       pvsData.isCheck = isPosInCheck(p2);
+
+      // skip quiet if LMP was triggered
+      if (skipQuiet && pvsData.isQuiet && !pvsData.isInCheck && !pvsData.isCheck){
+         stats.incr(Stats::sid_lmp);
+         continue;
+      }
+      // skip other bad capture
+      if (skipCap && Move2Type(*it) == T_capture && !pvsData.isInCheck && !pvsData.isCheck){
+         stats.incr(Stats::sid_see2);
+         continue;
+      }
+
       pvsData.isAdvancedPawnPush = PieceTools::getPieceType(p, Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
       pvsData.earlyMove = pvsData.validMoveCount < (2 /*+2*pvsData.rootnode*/);
 
@@ -1282,6 +1285,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          if (isPrunableStdNoCheck){
             // futility
             if (pvsData.futility) {
+               skipQuiet = true;
                stats.incr(Stats::sid_futility);
                continue;
             }
