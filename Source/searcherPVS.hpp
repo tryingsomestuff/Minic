@@ -1300,6 +1300,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             // History pruning (including CMH)
             if (pvsData.historyPruning && 
                Move2Score(*it) < SearchConfig::historyPruningCoeff.threshold(depth, evalData.gp, pvsData.improving, pvsData.cutNode)) {
+               skipQuiet = true;
                stats.incr(Stats::sid_historyPruning);
                continue;
             }
