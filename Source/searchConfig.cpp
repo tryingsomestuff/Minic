@@ -82,6 +82,12 @@ CONST_SEARCH_TUNING ScoreType lazySortThresholdQS   = -512;
 
 CONST_SEARCH_TUNING int       distributedTTBufSize  = 16;
 
+CONST_SEARCH_TUNING int       capPSTScoreDivisor    = 2;
+CONST_SEARCH_TUNING int       capMMLVAMultiplicator = 2;
+CONST_SEARCH_TUNING int       capHistoryDivisor     = 4;
+
+
 //CONST_SEARCH_TUNING ScoreType randomAggressiveReductionFactor = 2;
 
 } // namespace SearchConfig
+

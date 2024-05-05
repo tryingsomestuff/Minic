@@ -18,6 +18,9 @@
 
 #define PERIODICCHECK uint64_t(1024)
 
+// be carefull isBadCap shall only be used on moves already detected as capture !
+[[nodiscard]] inline bool isBadCap(const Move m) { return badCapScore(m) < DynamicConfig::badCapLimit; }
+
 FORCE_FINLINE void Searcher::updateStatBetaCut(const Position & p, const Move m, const DepthType height){
    const MType t = Move2Type(m);
    assert(isValidMoveType(t));
@@ -59,7 +62,7 @@ Searcher::depthPolicy( [[maybe_unused]] const Position & p,
    DepthType extension = 0;
 
    // Possible extension will be cap by this
-   [[maybe_unused]] const auto extendMore = [&](){ return !extension /*&& extensions < std::max(10,height/3)*/;};
+   [[maybe_unused]] const auto extendMore = [&](){ return !extension && extensions < std::max(10,height/3);};
 
    // correspond to first move (not being the TT one) or quiet with very good score (like killers)
    [[maybe_unused]] const bool weakEarlyMove = pvsData.earlyMove || (pvsData.isQuiet && Move2Score(m) >= HISTORY_MAX);
@@ -1285,8 +1288,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          if (isPrunableStdNoCheck){
             // futility
             if (pvsData.futility) {
-               skipQuiet = true;
                stats.incr(Stats::sid_futility);
+               skipQuiet = true;
                continue;
             }
 
@@ -1300,8 +1303,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             // History pruning (including CMH)
             if (pvsData.historyPruning && 
                Move2Score(*it) < SearchConfig::historyPruningCoeff.threshold(depth, evalData.gp, pvsData.improving, pvsData.cutNode)) {
-               skipQuiet = true;
                stats.incr(Stats::sid_historyPruning);
+               skipQuiet = true;
                continue;
             }
 
@@ -1349,7 +1352,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                continue;
             }
             // reduce bad quiet more
-            else if (seeValue < 0 && nextDepth > 1) --nextDepth;            
+            //else if (seeValue < 0 && nextDepth > 1) --nextDepth;
          }
 
          ++pvsData.validNonPrunedCount;

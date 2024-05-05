@@ -46,7 +46,7 @@ extern bool         antichess; ///@todo not yet fully implemented due to king ca
 extern bool         withWDL;
 extern bool         bongCloud;
 extern bool         anarchy;
-
+extern ScoreType    badCapLimit;
 // handles chess variants
 inline bool isKingMandatory(){ return !antichess;}
 

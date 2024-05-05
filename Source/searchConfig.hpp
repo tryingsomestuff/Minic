@@ -138,6 +138,11 @@ extern CONST_SEARCH_TUNING ScoreType lazySortThresholdQS;
 
 extern CONST_SEARCH_TUNING int       distributedTTBufSize;
 
+extern CONST_SEARCH_TUNING int       capPSTScoreDivisor;
+extern CONST_SEARCH_TUNING int       capMMLVAMultiplicator;
+extern CONST_SEARCH_TUNING int       capHistoryDivisor;
+
+
 inline const DepthType lmpMaxDepth = 10;
 inline const array2d<int,2,SearchConfig::lmpMaxDepth+1> lmpLimit = {{{0, 2, 3, 5, 9, 13, 18, 25, 34, 45, 55}, {0, 5, 6, 9, 14, 21, 30, 41, 55, 69, 84}}};
 

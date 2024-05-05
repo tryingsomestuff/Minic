@@ -33,7 +33,7 @@ bool         useNNUE          = false;
 bool         forceNNUE        = false;
 bool         bongCloud        = false;
 bool         anarchy          = false;
-
+ScoreType    badCapLimit      = -80;
 std::string  chessvariant     = "chess";
 
 // this is used to scale NNUE score to classic eval score.
