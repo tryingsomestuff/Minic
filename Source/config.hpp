@@ -55,7 +55,7 @@ const std::string MinicVersion = "3.42";
 
 // *** Tuning
 //#define WITH_TIMER
-//#define WITH_SEARCH_TUNING
+#define WITH_SEARCH_TUNING
 //#define WITH_EVAL_TUNING
 //#define WITH_PIECE_TUNING
 
