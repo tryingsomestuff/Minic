@@ -2,6 +2,7 @@
 
 #include "logging.hpp"
 #include "searcher.hpp"
+#include "searchConfig.hpp"
 
 /* Moves are sorted this way
  * 1°) previous best (from current thread previousBest)
@@ -55,7 +56,8 @@ void MoveSorter::computeScore(Move& m) const {
          const std::span<const EvalScore> pst    = EvalConfig::PST[pp - 1];
          const std::span<const EvalScore> pstOpp = EvalConfig::PST[ppOpp - 1];
          // always use PST as a hint
-         s += (ScaleScore(pst[ColorSquarePstHelper<C>(to)] - pst[ColorSquarePstHelper<C>(from)] + pstOpp[ColorSquarePstHelper<~C>(to)], gp))/2;
+         const ScoreType pstScore = (ScaleScore(pst[ColorSquarePstHelper<C>(to)] - pst[ColorSquarePstHelper<C>(from)] + pstOpp[ColorSquarePstHelper<~C>(to)], gp));
+         s += pstScore/SearchConfig::capPSTScoreDivisor;
 
          if (useSEE && !isInCheck) {
             const ScoreType see = Searcher::SEE(p, m);
@@ -63,13 +65,15 @@ void MoveSorter::computeScore(Move& m) const {
             // recapture bonus
             if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == Move2To(p.lastMove)) s += 512;
             // too bad capture are ordered last (-7000)
-            if (see < badCapLimit) s -= 2 * MoveScoring[T_capture];
+            if (see + pstScore < 0 && see < DynamicConfig::badCapLimit) s -= 2 * MoveScoring[T_capture];
          }
          else { // without SEE
             // recapture (> max MVVLVA value)
             if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == Move2To(p.lastMove)) s += 512;
-            // MVVLVA [0 400] + cap history (HISTORY_MAX = 1024)
-            s += (8 * SearchConfig::MvvLvaScores[ppOpp - 1][pp - 1] + context.historyT.historyCap[PieceIdx(p.board_const(from))][to][ppOpp-1]) / 4;
+            // MVVLVA [0 400] 
+            s += SearchConfig::capMMLVAMultiplicator * SearchConfig::MvvLvaScores[ppOpp - 1][pp - 1];
+            // cap history (HISTORY_MAX = 1024)
+            s += context.historyT.historyCap[PieceIdx(p.board_const(from))][to][ppOpp-1] / SearchConfig::capHistoryDivisor;
          }
       }
 

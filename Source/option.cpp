@@ -302,6 +302,7 @@ void registerCOMOptions() { // options exposed to GUI
    _keys.emplace_back(k_bool,  w_check, "WDL_display"                 , &DynamicConfig::withWDL                        , false            , true);
    _keys.emplace_back(k_bool,  w_check, "bongCloud"                   , &DynamicConfig::bongCloud                      , false            , true);
    _keys.emplace_back(k_bool,  w_check, "anarchy"                     , &DynamicConfig::anarchy                        , false            , true);
+   _keys.emplace_back(k_score, w_spin,  "badCapLimit"                 , &DynamicConfig::badCapLimit                    , (ScoreType)-1500 , (ScoreType)1500);
 
 #ifdef WITH_SYZYGY
    _keys.emplace_back(k_string,w_string,"SyzygyPath"                  , &DynamicConfig::syzygyPath                                                                              , &SyzygyTb::initTB);
@@ -410,6 +411,10 @@ void registerCOMOptions() { // options exposed to GUI
    _keys.emplace_back(k_score, w_spin, "lazySortThresholdQS"               , &SearchConfig::lazySortThresholdQS                 , ScoreType(-2048), ScoreType(2048)    );
 
    _keys.emplace_back(k_int  , w_spin, "distributedTTBufSize"              , &SearchConfig::distributedTTBufSize                , 4               , 8192               );
+
+   _keys.emplace_back(k_int  , w_spin, "capPSTScoreDivisor"                , &SearchConfig::capPSTScoreDivisor                  , 1               , 16                 );
+   _keys.emplace_back(k_int  , w_spin, "capMMLVAMultiplicator"             , &SearchConfig::capMMLVAMultiplicator               , 1               , 16                 );
+   _keys.emplace_back(k_int  , w_spin, "capHistoryDivisor"                 , &SearchConfig::capHistoryDivisor                   , 1               , 16                 );
 
    ///@todo more ...
 #endif

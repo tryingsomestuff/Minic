@@ -607,13 +607,7 @@ inline constexpr array1d<ScoreType,16> MoveScoring    = {   0,                  
 }
 [[nodiscard]] constexpr bool isEnPassant(const Move m) { return isEnPassant(Move2Type(m)); }
 
-
-constexpr ScoreType badCapLimit = -80;
-
 [[nodiscard]] constexpr ScoreType badCapScore(const Move m) { return Move2Score(m) + MoveScoring[T_capture]; }
-// be carefull isBadCap shall only be used on moves already detected as capture !
-[[nodiscard]] constexpr bool      isBadCap(const Move m) { return badCapScore(m) < badCapLimit; }
-
 
 [[nodiscard]] constexpr Square chebyshevDistance(const Square sq1, const Square sq2) {
    return std::max(Abs(static_cast<Square>(SQRANK(sq2) - SQRANK(sq1))), Abs(static_cast<Square>(SQFILE(sq2) - SQFILE(sq1))));
