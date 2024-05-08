@@ -86,6 +86,10 @@ CONST_SEARCH_TUNING int       capPSTScoreDivisor    = 2;
 CONST_SEARCH_TUNING int       capMMLVAMultiplicator = 2;
 CONST_SEARCH_TUNING int       capHistoryDivisor     = 4;
 
+CONST_SEARCH_TUNING int       quietHistoryDivisor1  = 3;
+CONST_SEARCH_TUNING int       quietHistoryDivisor2  = 3;
+CONST_SEARCH_TUNING int       quietHistoryDivisor3  = 3;
+
 
 //CONST_SEARCH_TUNING ScoreType randomAggressiveReductionFactor = 2;
 
