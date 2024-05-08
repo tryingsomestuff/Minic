@@ -416,6 +416,12 @@ void registerCOMOptions() { // options exposed to GUI
    _keys.emplace_back(k_int  , w_spin, "capMMLVAMultiplicator"             , &SearchConfig::capMMLVAMultiplicator               , 1               , 16                 );
    _keys.emplace_back(k_int  , w_spin, "capHistoryDivisor"                 , &SearchConfig::capHistoryDivisor                   , 1               , 16                 );
 
+   _keys.emplace_back(k_int  , w_spin, "quietHistoryDivisor1"              , &SearchConfig::quietHistoryDivisor1                , 1               , 16                 );
+   _keys.emplace_back(k_int  , w_spin, "quietHistoryDivisor2"              , &SearchConfig::quietHistoryDivisor2                , 1               , 16                 );
+   _keys.emplace_back(k_int  , w_spin, "quietHistoryDivisor3"              , &SearchConfig::quietHistoryDivisor3                , 1               , 16                 );
+
+
+
    ///@todo more ...
 #endif
 

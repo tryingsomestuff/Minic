@@ -93,9 +93,9 @@ void MoveSorter::computeScore(Move& m) const {
             // History
             const Square correctedTo = correctedMove2ToKingDest(m);
             const Piece pp = p.board_const(from);
-            s += context.historyT.history[p.c][from][correctedTo] / 3;     // +/- HISTORY_MAX = 1024
-            s += context.historyT.historyP[PieceIdx(pp)][correctedTo] / 3; // +/- HISTORY_MAX = 1024
-            s += context.getCMHScore(p, from, correctedTo, cmhPtr) / 3;    // +/- HISTORY_MAX = 1024
+            s += context.historyT.history[p.c][from][correctedTo] / SearchConfig::quietHistoryDivisor1;     // +/- HISTORY_MAX = 1024
+            s += context.historyT.historyP[PieceIdx(pp)][correctedTo] / SearchConfig::quietHistoryDivisor2; // +/- HISTORY_MAX = 1024
+            s += context.getCMHScore(p, from, correctedTo, cmhPtr) / SearchConfig::quietHistoryDivisor3;    // +/- HISTORY_MAX = 1024
             if (!isCastling(m)) {
                // move (safely) leaving threat square from null move search
                if (!isInCheck && refutation != INVALIDMINIMOVE && from == correctedMove2ToKingDest(refutation) && Searcher::SEE_GE(p, m, -80)) s += 512;
