@@ -40,49 +40,46 @@ struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTransformer<NT, Q>> {
    }
 
    using BT = typename Quantization<Q>::BT;
-
-   constexpr float propagate(Color c, const int npiece) const {
+   
+   float propagate(Color c, const int npiece) const {
       assert(!dirty);
-      const auto & w_x {white.active()};
-      const auto & b_x {black.active()};
-
+      const auto w_x {white.active().dequantize(1.f/Quantization<Q>::scale)
 #ifdef USE_SIMD_INTRIN
-      const auto x0 = (c == Co_White ? splice(w_x, b_x) : splice(b_x, w_x));
-      const int phase = std::max(0, std::min(nbuckets-1, (npiece-1) / bucketDivisor));
-      if constexpr (Q){
-         const auto x0d = x0.dequantize(1.f/Quantization<Q>::scale);
-         const auto x1 = weights.innerLayer[phase].fc0.forward(x0d);
-         const auto x2 = splice(x1, (weights.innerLayer[phase].fc1).forward(x1));
-         const auto x3 = splice(x2, (weights.innerLayer[phase].fc2).forward(x2));
-         const float val = (weights.innerLayer[phase].fc3).forward(x3).data[0];
-         return val * Quantization<Q>::outFactor;
-      }
-      else {
-         const auto x1 = weights.innerLayer[phase].fc0.forward(x0);
-         const auto x2 = splice(x1, (weights.innerLayer[phase].fc1).forward(x1));
-         const auto x3 = splice(x2, (weights.innerLayer[phase].fc2).forward(x2));
-         const float val = (weights.innerLayer[phase].fc3).forward(x3).data[0];
-         return val * Quantization<Q>::outFactor;
-      }
+                                    .activation_(white.slopes())
 #else
-      const auto x0 = (c == Co_White ? splice(w_x, b_x) : splice(b_x, w_x)).apply_(activationInput<BT, Q>);
-      const int phase = std::max(0, std::min(nbuckets-1, (npiece-1) / bucketDivisor));
-      if constexpr (Q){
-         const auto x0d = x0.dequantize(1.f/Quantization<Q>::scale);
-         const auto x1 = weights.innerLayer[phase].fc0.forward(x0d).apply_(activation<BT, Q>);
-         const auto x2 = splice(x1, (weights.innerLayer[phase].fc1).forward(x1)).apply_(activation<BT, Q>);
-         const auto x3 = splice(x2, (weights.innerLayer[phase].fc2).forward(x2)).apply_(activation<BT, Q>);
-         const float val = (weights.innerLayer[phase].fc3).forward(x3).data[0];
-         return val * Quantization<Q>::outFactor;
-      }
-      else {
-         const auto x1 = weights.innerLayer[phase].fc0.forward(x0).apply_(activation<BT, Q>);
-         const auto x2 = splice(x1, (weights.innerLayer[phase].fc1).forward(x1)).apply_(activation<BT, Q>);
-         const auto x3 = splice(x2, (weights.innerLayer[phase].fc2).forward(x2)).apply_(activation<BT, Q>);
-         const float val = (weights.innerLayer[phase].fc3).forward(x3).data[0];
-         return val * Quantization<Q>::outFactor;
-      }
+                                    .apply_(activationInput<BT, Q>, white.slopes())
 #endif
+                     };
+      const auto b_x {black.active().dequantize(1.f/Quantization<Q>::scale)
+#ifdef USE_SIMD_INTRIN
+                                    .activation_(black.slopes())
+#else
+                                    .apply_(activationInput<BT, Q>, black.slopes())
+#endif
+                     };
+
+      const int phase = std::max(0, std::min(nbuckets-1, (npiece-1) / bucketDivisor));
+      const auto x0 = c == Co_White ? splice(w_x, b_x) : splice(b_x, w_x);
+      const auto x1 = weights.innerLayer[phase].fc0.forward(x0)
+#ifdef USE_SIMD_INTRIN
+                                                .activation_(weights.innerLayer[phase].fc0.slopes);
+#else
+                                                .apply_(activation<BT, Q>, weights.innerLayer[phase].fc0.slopes);
+#endif
+      const auto x2 = splice(x1, (weights.innerLayer[phase].fc1).forward(x1)
+#ifdef USE_SIMD_INTRIN
+                                                                .activation_(weights.innerLayer[phase].fc1.slopes));
+#else
+                                                                .apply_(activation<BT, Q>, weights.innerLayer[phase].fc1.slopes));
+#endif
+      const auto x3 = splice(x2, (weights.innerLayer[phase].fc2).forward(x2)
+#ifdef USE_SIMD_INTRIN
+                                                                .activation_(weights.innerLayer[phase].fc2.slopes));
+#else
+                                                                .apply_(activation<BT, Q>, weights.innerLayer[phase].fc2.slopes));
+#endif
+      const float val = weights.innerLayer[phase].fc3.forward(x3).data[0];
+      return val * Quantization<Q>::outFactor;
    }
 
 #ifdef DEBUG_NNUE_UPDATE

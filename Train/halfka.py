@@ -14,7 +14,7 @@ def state_size():
 def state_numel():
   return functools.reduce(lambda a, b: a*b, state_size())
 
-def half_ka_numel():
+def numel():
   return 64 * state_numel()
 
 def king_idx():

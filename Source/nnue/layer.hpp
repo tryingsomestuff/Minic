@@ -15,11 +15,13 @@ struct Layer {
 
    using BT = typename Quantization<Q>::BT;
    using WT = typename Quantization<Q>::WT;
+   using ST = typename Quantization<Q>::ST;
 
    // Layer is always for inner layer, so we can safely use WT and BT
    // Always small enough to be statically allocated
    alignas(NNUEALIGNMENT) WT W[nbW];
    alignas(NNUEALIGNMENT) BT b[nbB];
+   alignas(NNUEALIGNMENT) ST slopes[nbB];
 
    template<typename T> 
    CONSTEXPR StackVector<BT, dim1, Q> forward(const StackVector<T, dim0, Q>& x) const {
@@ -36,7 +38,9 @@ struct Layer {
    }
 
    Layer<NT, dim0, dim1, Q>& load_(WeightsReader<NT>& ws) {
-      ws.template streamW<WT>(W, nbW, dim0, dim1).template streamB<BT>(b, nbB);
+      ws.template streamW<WT>(W, nbW, dim0, dim1)
+        .template streamB<BT>(b, nbB)
+        .template streamS<ST>(slopes, nbB);
       return *this;
    }
 
@@ -46,7 +50,11 @@ struct Layer {
    Layer(const Layer<NT, dim0, dim1, Q>& other) = delete;
    Layer(Layer<NT, dim0, dim1, Q>&& other) = delete;
 
-   Layer() = default;
+   Layer(){
+      for (size_t i = 0; i < nbB; ++i){
+         slopes[i] = 1;
+       }
+   };
    ~Layer() = default;
 
 };

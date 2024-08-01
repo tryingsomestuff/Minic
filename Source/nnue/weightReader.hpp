@@ -129,6 +129,28 @@ struct WeightsReader {
       return *this;
    }
 
+   template<typename T> 
+   WeightsReader<NT>& streamS(T* dst, const size_t request) {
+      assert(file);
+      Logging::LogIt(Logging::logInfo) << "Reading slopes";
+      // we will get min and max slopes for display purpose
+      NT minS = std::numeric_limits<NT>::max();
+      NT maxS = std::numeric_limits<NT>::lowest();
+      array1d<char, sizeof(NT)> singleElement {};
+      // read each slopes one by one
+      for (size_t i(0); i < request; ++i) {
+         file->read(singleElement.data(), singleElement.size());
+         NT tmp {0};
+         std::memcpy(&tmp, singleElement.data(), singleElement.size());
+         // update min/max
+         minS = std::min(minS, tmp);
+         maxS = std::max(maxS, tmp);
+         dst[i] = static_cast<T>(tmp);
+      }
+      Logging::LogIt(Logging::logInfo) << "Slopes in [" << minS << ", " << maxS << "]";
+      return *this;
+   }
+
    explicit WeightsReader(std::istream& stream): file(&stream) {}
 };
 
