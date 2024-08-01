@@ -18,12 +18,14 @@ struct InputLayer {
 
    using BIT = typename Quantization<Q>::BIT;
    using WIT = typename Quantization<Q>::WIT;
+   using SIT = typename Quantization<Q>::SIT;
 
    // often too big to be statically allocated (see CTOR/DTOR for dynamic alloc)
    typename Quantization<Q>::WIT* W {nullptr};
 
    // bias can be statically allocated 
    alignas(NNUEALIGNMENT) BIT b[nbB];
+   alignas(NNUEALIGNMENT) SIT slopes[nbB];
 
    FORCE_FINLINE void insertIdx(const size_t idx, StackVector<BIT, nbB, Q>& x) const {
       const WIT* wPtr = W + idx * dim1;
@@ -36,7 +38,9 @@ struct InputLayer {
    }
 
    InputLayer<NT, dim0, dim1, Q>& load_(WeightsReader<NT>& ws) {
-      ws.template streamWI<WIT, Q>(W, nbW).template streamBI<BIT, Q>(b, nbB);
+      ws.template streamWI<WIT, Q>(W, nbW)
+        .template streamBI<BIT, Q>(b, nbB)
+        .template streamS<SIT>(slopes, nbB);
       return *this;
    }
 
@@ -48,6 +52,9 @@ struct InputLayer {
 
    InputLayer() { 
        W = static_cast<WIT*>(operator new[](sizeof(WIT) * nbW, NNUEALIGNMENT_STD));
+       for (size_t i = 0; i < nbB; ++i){
+         slopes[i] = 1;
+       }
     }
 
    ~InputLayer() {

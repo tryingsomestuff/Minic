@@ -8,13 +8,6 @@ template<typename T, size_t dim, bool Q>
 struct StackVector {
    alignas(NNUEALIGNMENT) T data[dim];
 
-   template<typename F> 
-   CONSTEXPR StackVector<T, dim, Q>& apply_(F&& f) {
-#pragma omp simd
-      for (size_t i = 0; i < dim; ++i) { data[i] = f(data[i]); }
-      return *this;
-   }
-
    template<typename T2> 
    CONSTEXPR StackVector<T, dim, Q>& add_(const T2* other) {
 #pragma omp simd
@@ -36,8 +29,16 @@ struct StackVector {
       for (size_t i = 0; i < dim; ++i) { data[i] += c * other[i]; }
       return *this;
    }
+
+   template<typename F, typename T2> 
+   CONSTEXPR StackVector<T, dim, Q>& apply_(F&& f, const T2 * param) {
+#pragma omp simd
+      for (size_t i = 0; i < dim; ++i) { data[i] = f(data[i], param[i]); }
+      return *this;
+   }   
 #else
    T dot_(const T* other) const { return simdDotProduct<dim,Q>(data, other); }
+   CONSTEXPR StackVector<T, dim, Q>& activation_(const T* slopes) { simdActivation<dim,Q>(data, slopes); return *this;}
 #endif
 
    template<typename T2> 

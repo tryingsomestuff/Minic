@@ -12,6 +12,11 @@ struct FeatureTransformer {
 
    const InputLayer<NT, inputLayerSize, firstInnerLayerSize, Q>* weights_;
 
+   FORCE_FINLINE const NT * slopes() const {
+      assert(weights_);
+      return weights_->slopes;
+   }
+
    using BIT = typename Quantization<Q>::BIT;
 
    // active_ is always for input layer, so BIT shall be used
