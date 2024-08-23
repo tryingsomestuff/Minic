@@ -504,16 +504,15 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // update nodes count as soon as we "really enter" a node
    ++stats.counters[Stats::sid_nodes];
 
-   if (pvsData.rootnode){
-      // all threads clear rootScore, this is usefull for helper like in genfen or rescore.
-      rootScores.clear();
-   }
-
    if (!pvsData.rootnode){
       // mate distance pruning
       alpha = std::max(alpha, matedScore(height));
       beta  = std::min(beta, matingScore(height + 1));
       if (alpha >= beta) return alpha;
+   }
+   else{
+      // all threads clear rootScore, this is usefull for helper like in genfen or rescore.
+      rootScores.clear();      
    }
 
    // get the CMH pointer, can be needed to update tables
@@ -1062,6 +1061,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
       pvsData.ttMoveTried = true;
       pvsData.isTTMove = true;
+      if (isCapture(e.m)) pvsData.ttMoveIsCapture = true;
       bestMove = e.m; // in order to preserve tt move for alpha bound entry
 
       Position p2 = p;
@@ -1086,14 +1086,20 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                std::vector<MiniMove> skip{e.m};
                const ScoreType score = pvs<false>(betaC - 1, betaC, p, depth / 2, height, sePV, seSeldepth, extensions, pvsData.isInCheck, pvsData.cutNode, &skip);
                if (stopFlag) return STOPSCORE;
-               if (score < betaC) { // TT move is singular
+               if (score < betaC && extensions <= 6) { // TT move is singular
                   stats.incr(Stats::sid_singularExtension);
-                  pvsData.ttMoveSingularExt=!pvsData.ttMoveIsCapture;
+                  pvsData.ttMoveSingularExt=true;
                   ++extension;
                   // TT move is "very singular" and depth is small : kind of single reply extension
-                  if (score < betaC - 4 * depth && extensions <= 6) {
+                  if (!pvsData.pvnode && score < betaC - 4 * depth) {
                      stats.incr(Stats::sid_singularExtension2);
                      ++extension;
+                     /*
+                     if (score < betaC - 8 * depth && !pvsData.ttMoveIsCapture){
+                        stats.incr(Stats::sid_singularExtension6);
+                        ++extension;
+                     }
+                     */
                   }
                }
                // multi cut (at least the TT move and another move are above beta)
@@ -1107,6 +1113,12 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                   extension = -2 + pvsData.pvnode;
                   stats.incr(Stats::sid_singularExtension4);
                }
+               /*
+               else if (pvsData.cutNode){
+                  extension = -1;
+                  stats.incr(Stats::sid_singularExtension7);
+               }
+               */
                else if (e.s <= alpha){
                   extension = -1;
                   stats.incr(Stats::sid_singularExtension5);
@@ -1130,7 +1142,6 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          pvsData.isQuiet   = Move2Type(e.m) == T_std && !isNoisy(p, e.m);
          if (pvsData.isQuiet) ++pvsData.validQuietMoveCount;
 
-         if (isCapture(e.m)) pvsData.ttMoveIsCapture = true;
          pvsData.isCheck = pvsData.ttIsCheck || isPosInCheck(p2);
 
          assert(p2.halfmoves < MAX_PLY && p2.halfmoves >= 0);
@@ -1244,13 +1255,15 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
       pvsData.isCheck = isPosInCheck(p2);
 
+      const bool noCheck = !pvsData.isInCheck && !pvsData.isCheck;
+
       // skip quiet if LMP was triggered
-      if (skipQuiet && pvsData.isQuiet && !pvsData.isInCheck && !pvsData.isCheck){
+      if (skipQuiet && pvsData.isQuiet && noCheck){
          stats.incr(Stats::sid_lmp);
          continue;
       }
       // skip other bad capture
-      if (skipCap && Move2Type(*it) == T_capture && !pvsData.isInCheck && !pvsData.isCheck){
+      if (skipCap && Move2Type(*it) == T_capture && noCheck){
          stats.incr(Stats::sid_see2);
          continue;
       }
@@ -1278,7 +1291,6 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          // reductions & prunings
          const bool isPrunable           = /*pvsData.isNotPawnEndGame &&*/ !pvsData.isAdvancedPawnPush && !isMateScore(alpha) && !killerT.isKiller(*it, height) && !DynamicConfig::mateFinder;
          const bool isReductible         = SearchConfig::doLMR && depth >= SearchConfig::lmrMinDepth && /*pvsData.isNotPawnEndGame &&*/ !pvsData.isAdvancedPawnPush && !DynamicConfig::mateFinder;
-         const bool noCheck              = !pvsData.isInCheck && !pvsData.isCheck;
          const bool isPrunableStd        = isPrunable && pvsData.isQuiet;
          const bool isPrunableStdNoCheck = isPrunableStd && noCheck;
          const bool isPrunableCap        = isPrunable && Move2Type(*it) == T_capture && noCheck;
@@ -1446,7 +1458,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // check for draw and check mate
    if (pvsData.validMoveCount == 0){
-      return (pvsData.isInCheck || !pvsData.withoutSkipMove) ? matedScore(height) : drawScore(p, height);
+      return !pvsData.withoutSkipMove ? alpha : pvsData.isInCheck ? matedScore(height) : drawScore(p, height);
    }
    // post move loop version
    else if (is50moves(p,false)){
