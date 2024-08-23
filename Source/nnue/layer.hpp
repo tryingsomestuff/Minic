@@ -39,8 +39,10 @@ struct Layer {
 
    Layer<NT, dim0, dim1, Q>& load_(WeightsReader<NT>& ws) {
       ws.template streamW<WT>(W, nbW, dim0, dim1)
-        .template streamB<BT>(b, nbB)
-        .template streamS<ST>(slopes, nbB);
+        .template streamB<BT>(b, nbB);
+#ifdef NNUE_WITH_SLOPES
+      ws.template streamS<ST>(slopes, nbB);
+#endif
       return *this;
    }
 
