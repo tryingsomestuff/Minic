@@ -278,7 +278,7 @@ std::atomic<bool> Searcher::startLock;
 Searcher& Searcher::getCoSearcher(size_t id) {
    static std::map<size_t, std::unique_ptr<Searcher>> coSearchers;
    // init new co-searcher if not already present
-   if (coSearchers.contains(id)) {
+   if (!coSearchers.contains(id)) {
       coSearchers[id] = std::unique_ptr<Searcher>(new Searcher(id + MAX_THREADS));
       coSearchers[id]->initPawnTable();
    }
@@ -288,13 +288,14 @@ Searcher& Searcher::getCoSearcher(size_t id) {
 Position Searcher::getQuiet(const Position& p, Searcher* searcher, ScoreType* qScore) {
    // fixed co-searcher if not given
    Searcher& cos = getCoSearcher(searcher ? searcher->id() : 2 * MAX_THREADS);
+   cos.clearSearch(true);
 
    PVList    pv;
    DepthType height   = 1;
    DepthType seldepth = 0;
    ScoreType s        = 0;
 
-   Position      pQuiet = p; // because p is given const
+   Position pQuiet = p; // because p is given const
 #ifdef WITH_NNUE
    NNUEEvaluator evaluator;
    pQuiet.associateEvaluator(evaluator);
@@ -302,11 +303,15 @@ Position Searcher::getQuiet(const Position& p, Searcher* searcher, ScoreType* qS
 #endif
 
    // go for a qsearch (no pruning, open bounds)
-   cos.stopFlag  = false;
-   cos.subSearch = true;
+   cos.stopFlag = false;
    cos.currentMoveMs = INFINITETIME;
+   cos.isStoppableCoSearcher = true;
+   cos.subSearch = true;
+
    s = cos.qsearchNoPruning(-10000, 10000, pQuiet, height, seldepth, &pv);
+
    cos.subSearch = false;
+
    if (qScore) *qScore = s;
 
    //std::cout << "pv : " << ToString(pv) << std::endl;
@@ -333,6 +338,9 @@ struct GenFENEntry{
    ScoreType s;
    uint16_t ply;
    Color stm;
+   bool operator<(const GenFENEntry& other) const {
+      return fen < other.fen;
+   }
    void write(std::ofstream & stream, int result) const {
       stream << "fen " << fen << "\n"
              << "move " << ToString(m) << "\n"
@@ -348,7 +356,7 @@ struct GenFENEntry{
 void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadData & d, const std::optional<int> result) {
    static uint64_t sfensWritten = 0;
 
-   static std::vector<GenFENEntry> buffer;
+   static std::set<GenFENEntry> buffer;
 
    ThreadData data = d; // copy data from PV
    Position pLeaf = p; // copy current pos
@@ -356,6 +364,7 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
    if (getQuietPos){
 
       Searcher& cos = getCoSearcher(id());
+      Logging::LogIt(Logging::logDebug) << "Looking for quiet position";
 
       const int          oldMinOutLvl  = DynamicConfig::minOutputLevel;
       const bool         oldDisableTT  = DynamicConfig::disableTT;
@@ -364,18 +373,19 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
       const unsigned int oldRandomPly  = DynamicConfig::randomPly;
 
       // init sub search
-      DynamicConfig::minOutputLevel = Logging::logMax;
+      //DynamicConfig::minOutputLevel = Logging::logMax;
       DynamicConfig::disableTT      = true; // do not use TT in order to get qsearch leaf node
       DynamicConfig::level          = 100;
       DynamicConfig::randomOpen     = 0;
       DynamicConfig::randomPly      = 0;
-      cos.clearSearch(true);
 
       ///@todo in the following code the evaluator will be reset 3 times ! (getQuiet, before eval, at the beginning of searchDriver) ...
 
       // look for a quiet position using qsearch
       ScoreType qScore = 0;
       pLeaf = getQuiet(p, this, &qScore);
+
+      Logging::LogIt(Logging::logDebug) << "quiet position is " << GetFEN(pLeaf); 
 
       ScoreType  e = 0;
       if (Abs(qScore) < 1000) {
@@ -396,17 +406,23 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
                const MaterialHash::MaterialHashEntry& MEntry = MaterialHash::materialHashTable[matHash];
                gp                                            = MEntry.gamePhase();
             }
-            DepthType depth = static_cast<DepthType>(clampDepth(DynamicConfig::genFenDepth) * gp + clampDepth(DynamicConfig::genFenDepthEG) * (1.f - gp));
-            DynamicConfig::randomPly = 0;
+            const DepthType depth = static_cast<DepthType>(clampDepth(DynamicConfig::genFenDepth) * gp + clampDepth(DynamicConfig::genFenDepthEG) * (1.f - gp));
+
             data.p     = pLeaf;
             data.depth = depth;
             cos.setData(data);
+
             cos.stopFlag = false;
-            cos.currentMoveMs = INFINITETIME;
-            // do not update COM::position here
             cos.subSearch = true;
+            cos.currentMoveMs = INFINITETIME;
             cos.isStoppableCoSearcher = true;
+            cos.clearSearch(true); // reset node count
+            cos.subSearch = true;
+
             cos.searchDriver(false);
+
+            cos.subSearch = false;
+
             data = cos.getData();
             // std::cout << data << std::endl; // debug
          }
@@ -417,7 +433,6 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
       DynamicConfig::level          = oldLevel;
       DynamicConfig::randomOpen     = oldRandomOpen;
       DynamicConfig::randomPly      = oldRandomPly;
-      cos.subSearch                 = false;
 
       // end of sub search
 
@@ -425,13 +440,12 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
    // skip when bestmove is capture or when you have not reached randomPly limit yet
    else{
       if(isCapture(data.best) || pLeaf.halfmoves <= DynamicConfig::randomPly || pLeaf.halfmoves <= 10){
-         ///@todo research for early move impacted with randomOpen ?
          data.best = INVALIDMOVE;
       }
    }
 
    if (data.best != INVALIDMOVE && Abs(data.score) < 1500) {
-      buffer.emplace_back(GetFEN(pLeaf), data.best, data.score, pLeaf.halfmoves, pLeaf.c);
+      buffer.emplace(GetFEN(pLeaf), data.best, data.score, pLeaf.halfmoves, pLeaf.c);
       ++sfensWritten;
       if (sfensWritten % 10'000 == 0) Logging::LogIt(Logging::logInfoPrio) << "Sfens written " << sfensWritten;
    }

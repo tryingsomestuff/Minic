@@ -52,12 +52,9 @@ void selfPlay(DepthType depth, uint64_t & nbPos) {
 
    while (true) {
       ThreadPool::instance().main().subSearch = true;
-      //const uint64_t maxNodes = TimeMan::maxNodes;
-      //TimeMan::maxNodes = 0;
       analyze(p2, depth); // search using a specific depth
       ThreadPool::instance().main().subSearch = false;
       ThreadData d = ThreadPool::instance().main().getData();
-      //TimeMan::maxNodes = maxNodes;
 
       if (justBegin){
          if (DynamicConfig::pgnOut){
@@ -93,7 +90,7 @@ void selfPlay(DepthType depth, uint64_t & nbPos) {
          else
             result = 0; // pat (cannot move)
       }
-      else if (p2.halfmoves > MAX_PLY / 4) {
+      else if (p2.halfmoves > MAX_PLY / 2) {
          Logging::LogIt(Logging::logInfoPrio) << "Too long game " << GetFEN(p2);
          ended  = true;
          result = 0; // draw
@@ -112,7 +109,7 @@ void selfPlay(DepthType depth, uint64_t & nbPos) {
       if (DynamicConfig::genFen) {
          // if false, will skip position if bestmove if capture, 
          // if true, will search for a quiet position from here and rescore (a lot slower of course)
-         const bool getQuietPos = false;
+         const bool getQuietPos = true;
 
          // writeToGenFile using genFenDepth from this root position
          if (!ended){

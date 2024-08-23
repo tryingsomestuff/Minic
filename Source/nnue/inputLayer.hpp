@@ -39,8 +39,10 @@ struct InputLayer {
 
    InputLayer<NT, dim0, dim1, Q>& load_(WeightsReader<NT>& ws) {
       ws.template streamWI<WIT, Q>(W, nbW)
-        .template streamBI<BIT, Q>(b, nbB)
-        .template streamS<SIT>(slopes, nbB);
+        .template streamBI<BIT, Q>(b, nbB);
+#ifdef NNUE_WITH_SLOPES
+      ws.template streamS<SIT>(slopes, nbB);
+#endif
       return *this;
    }
 

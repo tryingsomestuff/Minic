@@ -14,10 +14,7 @@ struct Position;
 }
 #else
 [[nodiscard]] constexpr float fiftyMoveRuleScaling(const uint8_t fifty){
-   return 1.f - fifty / 100.f;
-}
-[[nodiscard]] constexpr float fiftyMoveRuleUnScaling(const uint8_t fifty){
-   return 1.f / fiftyMoveRuleScaling(fifty);
+   return 1.f - std::max(0, fifty-30) / 100.f;
 }
 #endif
 
@@ -25,8 +22,9 @@ struct Position;
    return static_cast<ScoreType>(s * fiftyMoveRuleScaling(fifty));
 }
 
+///@todo use that to store TT entry independant of fifty scaling
 [[nodiscard]] FORCE_FINLINE ScoreType fiftyUnScale(const ScoreType s, uint8_t fifty){
-   return static_cast<ScoreType>(s * fiftyMoveRuleUnScaling(fifty));
+   return static_cast<ScoreType>(s / fiftyMoveRuleScaling(fifty));
 }
 
 // Stockfish trick (two short in one int) is not compatible with evaluation tuning !

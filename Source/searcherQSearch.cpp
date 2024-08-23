@@ -108,8 +108,8 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    const bool      ttHit          = e.h != nullHash;
    const bool      validTTmove    = ttHit && e.m != INVALIDMINIMOVE;
    const bool      ttPV           = pvnode || (validTTmove && (e.b & TT::B_ttPVFlag));
-   const bool      ttIsInCheck    = validTTmove && (e.b & TT::B_isInCheckFlag);
-   const bool      isInCheck      = isInCheckHint != -1 ? isInCheckHint : ttIsInCheck || isPosInCheck(p);
+   //const bool      ttIsInCheck    = validTTmove && (e.b & TT::B_isInCheckFlag);
+   const bool      isInCheck      = isInCheckHint != -1 ? isInCheckHint : isPosInCheck(p);
    const bool      specialQSearch = isInCheck || qRoot;
    const DepthType hashDepth      = specialQSearch ? 0 : -1;
 

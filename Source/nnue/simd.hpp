@@ -50,18 +50,6 @@ My gcc (and clang) gives those macros for simd extension :
 #include <immintrin.h>
 #endif
 
-namespace{
-   enum ActivationType{
-      eReLU = 0,
-      eClippedReLU,
-      ePReLU,
-      eClippedPReLU,
-      eApproxSigmoid
-   };
-
-   constexpr auto activationType = eClippedPReLU;
-}
-
 //----------------------------------
 // AVX512
 //----------------------------------
