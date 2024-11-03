@@ -113,23 +113,23 @@ class NNUE(pl.LightningModule):
       # without factorization
       self.white_affine = nn.Linear(halfka.numel(), BASE)
       self.black_affine = nn.Linear(halfka.numel(), BASE)
-    self.activationIW = ClippedPReLU(BASE)
-    self.activationIB = ClippedPReLU(BASE)
+    #self.activationIW = ClippedPReLU(BASE)
+    #self.activationIB = ClippedPReLU(BASE)
 
     # dropout seems necessary when using factorizer to avoid over-fitting
     self.d0 = nn.Dropout(p=0.05)
     self.fc0 = nn.Linear(2*BASE, L1 * nphase)
-    self.activation0 = ClippedPReLU(L1 * nphase)
+    #self.activation0 = ClippedPReLU(L1 * nphase)
 
-    self.d1 = nn.Dropout(p=0.02)
+    self.d1 = nn.Dropout(p=0.1)
     self.fc1 = nn.Linear(L1, L2 * nphase)
-    self.activation1 = ClippedPReLU(L2 * nphase)
+    #self.activation1 = ClippedPReLU(L2 * nphase)
 
-    self.d2 = nn.Dropout(p=0.02)
+    self.d2 = nn.Dropout(p=0.1)
     self.fc2 = nn.Linear(L2 + L1, L3 * nphase)
-    self.activation2 = ClippedPReLU(L3 * nphase)
+    #self.activation2 = ClippedPReLU(L3 * nphase)
     
-    self.d3 = nn.Dropout(p=0.02)
+    self.d3 = nn.Dropout(p=0.1)
     self.fc3 = nn.Linear(L3 + L2 + L1,  1 * nphase)
 
     self.lambda_ = lambda_
@@ -153,27 +153,31 @@ class NNUE(pl.LightningModule):
       b_ = self.black_affine(black)
     
     # input layer
-    w_ = self.activationIW(w_)
-    b_ = self.activationIB(b_)
-    base = us * torch.cat([w_, b_], dim=1) + (1.0 - us) * torch.cat([b_, w_], dim=1)
+    #w_ = self.activationIW(w_)
+    #b_ = self.activationIB(b_)
+    #base = us * torch.cat([w_, b_], dim=1) + (1.0 - us) * torch.cat([b_, w_], dim=1)
+    base = torch.clamp(us * torch.cat([w_, b_], dim=1) + (1.0 - us) * torch.cat([b_, w_], dim=1),0,1)
     
     if withFactorizer:
       base = self.d0(base)
-    y0 = self.fc0(base)
-    y0 = self.activation0(y0)
+    y0 = torch.clamp(self.fc0(base),0,1)
+    #y0 = self.fc0(base)
+    #y0 = self.activation0(y0)
     y0 = y0.view(-1, L1)[indices]
 
     if withFactorizer:
       y0 = self.d1(y0)
-    y1 = self.fc1(y0)
-    y1 = self.activation1(y1)
+    y1 = torch.clamp(self.fc1(y0),0,1)
+    #y1 = self.fc1(y0)
+    #y1 = self.activation1(y1)
     y1 = y1.view(-1, L2)[indices]
     y1 = torch.cat([y0, y1], dim=1)
 
     if withFactorizer:
       y1 = self.d2(y1)
-    y2 = self.fc2(y1)
-    y2 = self.activation2(y2)
+    y2 = torch.clamp(self.fc2(y1),0,1)
+    #y2 = self.fc2(y1)
+    #y2 = self.activation2(y2)
     y2 = y2.view(-1, L3)[indices]
     y2 = torch.cat([y1, y2], dim=1)
 
@@ -189,8 +193,8 @@ class NNUE(pl.LightningModule):
   
     #from SF values, shall be tuned
     net2score = 600
-    in_scaling = 340
-    out_scaling = 380
+    in_scaling = 410
+    out_scaling = 361
     offset = 270
 
     t = outcome
@@ -202,26 +206,26 @@ class NNUE(pl.LightningModule):
       phase_scaling = 1.0
     phased_lambda_outcome = phase_scaling * (1.0 - self.lambda_)
 
-    # simple Minic stuff
-    #q = (self(us, them, white, black, phase) * net2score / out_scaling).sigmoid()
-    #p = (score / in_scaling).sigmoid()
-    #pt = p * (1.0 - phased_lambda_outcome) + t * phased_lambda_outcome
-    #loss = torch.pow(torch.abs(pt - q), 2.6).mean()
-
-    # From SF
     scorenet = self(us, them, white, black, phase) * net2score
 
-    q  = ( scorenet - offset) / in_scaling  # used to compute the chance of a win
-    qm = (-scorenet - offset) / in_scaling  # used to compute the chance of a loss
-    qf = 0.5 * (1.0 + q.sigmoid() - qm.sigmoid())  # estimated match result (using win, loss and draw probs).
+    # simple Minic stuff
+    q = (self(us, them, white, black, phase) * net2score / out_scaling).sigmoid()
+    p = (score / in_scaling).sigmoid()
+    pt = p * (1.0 - phased_lambda_outcome) + t * phased_lambda_outcome
+    loss = torch.pow(torch.abs(pt - q), 2.6).mean()
 
-    p  = ( score - offset) / out_scaling
-    pm = (-score - offset) / out_scaling
-    pf = 0.5 * (1.0 + p.sigmoid() - pm.sigmoid())
+    # From SF
+    #q  = ( scorenet - offset) / in_scaling  # used to compute the chance of a win
+    #qm = (-scorenet - offset) / in_scaling  # used to compute the chance of a loss
+    #qf = 0.5 * (1.0 + q.sigmoid() - qm.sigmoid())  # estimated match result (using win, loss and draw probs).
 
-    pt = pf * (1.0 - phased_lambda_outcome) + t * phased_lambda_outcome
+    #p  = ( score - offset) / out_scaling
+    #pm = (-score - offset) / out_scaling
+    #pf = 0.5 * (1.0 + p.sigmoid() - pm.sigmoid())
 
-    loss = torch.pow(torch.abs(pt - qf), 2.5).mean()
+    #pt = pf * (1.0 - phased_lambda_outcome) + t * phased_lambda_outcome
+
+    #loss = torch.pow(torch.abs(pt - qf), 2.5).mean()
 
     self.log(loss_type, loss)
     return loss
@@ -236,7 +240,7 @@ class NNUE(pl.LightningModule):
     self.step_(batch, batch_idx, 'test_loss')
 
   def configure_optimizers(self):
-    optimizer = torch.optim.Adadelta(self.parameters(), lr=1, weight_decay=1e-13)
+    optimizer = torch.optim.Adadelta(self.parameters(), lr=1, weight_decay=1e-10)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.3)
 
     #optimizer = ranger.Ranger(self.parameters(), betas=(.9, 0.999), eps=1.0e-7, gc_loc=False, use_gc=False)
@@ -265,16 +269,16 @@ class NNUE(pl.LightningModule):
       if not only_weight:
         joined = join_param(joined, self.white_affine.virtual_bias())
         print("Nb bias W: ", len(self.white_affine.virtual_bias()))
-        joined = join_param(joined, self.activationIW.weight.data.t())
-        print("Nb slopes: ", len(self.activationIW.weight.data.t()))
+        #joined = join_param(joined, self.activationIW.weight.data.t())
+        #print("Nb slopes: ", len(self.activationIW.weight.data.t()))
 
       joined = join_param(joined, self.black_affine.virtual_weight().t())
       print("Nb weight B: ", len(self.black_affine.virtual_weight().t()))
       if not only_weight:
         joined = join_param(joined, self.black_affine.virtual_bias())
         print("Nb bias B: ", len(self.black_affine.virtual_bias()))
-        joined = join_param(joined, self.activationIB.weight.data.t())
-        print("Nb slopes: ", len(self.activationIB.weight.data.t()))
+        #joined = join_param(joined, self.activationIB.weight.data.t())
+        #print("Nb slopes: ", len(self.activationIB.weight.data.t()))
     else:
       # without factorizer
       joined = join_param(joined, self.white_affine.weight.data.t())
@@ -282,16 +286,16 @@ class NNUE(pl.LightningModule):
       if not only_weight:
         joined = join_param(joined, self.white_affine.bias.data)
         print("Nb bias W: ", len(self.white_affine.bias.data))
-        joined = join_param(joined, self.activationIW.weight.data.t())
-        print("Nb slopes: ", len(self.activationIW.weight.data.t()))
+        #joined = join_param(joined, self.activationIW.weight.data.t())
+        #print("Nb slopes: ", len(self.activationIW.weight.data.t()))
 
       joined = join_param(joined, self.black_affine.weight.data.t())
       print("Nb weight B: ", len(self.black_affine.weight.data.t()))
       if not only_weight:
         joined = join_param(joined, self.black_affine.bias.data)
         print("Nb bias B: ", len(self.black_affine.bias.data))
-        joined = join_param(joined, self.activationIB.weight.data.t())
-        print("Nb slopes: ", len(self.activationIB.weight.data.t()))
+        #joined = join_param(joined, self.activationIB.weight.data.t())
+        #print("Nb slopes: ", len(self.activationIB.weight.data.t()))
 
     # fc0
     print("=================")
@@ -303,9 +307,9 @@ class NNUE(pl.LightningModule):
       print("Nb weight: ", len(self.fc0.weight[i*L1:(i+1)*L1, :].data.t()))
       if not only_weight:
         joined = join_param(joined, self.fc0.bias[i*L1:(i+1)*L1].data)
-        joined = join_param(joined, self.activation0.weight[i*L1:(i+1)*L1].data.t())
+        #joined = join_param(joined, self.activation0.weight[i*L1:(i+1)*L1].data.t())
         print("Nb bias: ", len(self.fc0.bias[i*L1:(i+1)*L1].data))
-        print("Nb slopes: ", len(self.activation0.weight[i*L1:(i+1)*L1].data.t()))
+        #print("Nb slopes: ", len(self.activation0.weight[i*L1:(i+1)*L1].data.t()))
 
     # fc1
     print("=================")
@@ -317,9 +321,9 @@ class NNUE(pl.LightningModule):
       print("Nb weight: ", len(self.fc1.weight[i*L2:(i+1)*L2, :].data.t()))
       if not only_weight:
         joined = join_param(joined, self.fc1.bias[i*L2:(i+1)*L2].data)
-        joined = join_param(joined, self.activation1.weight[i*L2:(i+1)*L2].data.t())
+        #joined = join_param(joined, self.activation1.weight[i*L2:(i+1)*L2].data.t())
         print("Nb bias: ", len(self.fc1.bias[i*L2:(i+1)*L2].data))
-        print("Nb slopes: ", len(self.activation1.weight[i*L2:(i+1)*L2].data.t()))
+        #print("Nb slopes: ", len(self.activation1.weight[i*L2:(i+1)*L2].data.t()))
 
     # fc2
     print("=================")
@@ -331,9 +335,9 @@ class NNUE(pl.LightningModule):
       print("Nb weight: ", len(self.fc2.weight[i*L3:(i+1)*L3, :].data.t()))
       if not only_weight:
         joined = join_param(joined, self.fc2.bias[i*L3:(i+1)*L3].data)
-        joined = join_param(joined, self.activation2.weight[i*L3:(i+1)*L3].data.t())
+        #joined = join_param(joined, self.activation2.weight[i*L3:(i+1)*L3].data.t())
         print("Nb bias: ", len(self.fc2.bias[i*L3:(i+1)*L3].data))
-        print("Nb slopes: ", len(self.activation2.weight[i*L3:(i+1)*L3].data.t()))
+        #print("Nb slopes: ", len(self.activation2.weight[i*L3:(i+1)*L3].data.t()))
 
     # fc3
     print("=================")
@@ -345,7 +349,7 @@ class NNUE(pl.LightningModule):
       print("Nb weight: ", len(self.fc3.weight[i:(i+1), :].data.t()))
       if not only_weight:
         joined = join_param(joined, self.fc3.bias[i:(i+1)].data)
-        joined = join_param(joined, torch.tensor(-1))
+        #joined = join_param(joined, torch.tensor(-1))
         print("Nb bias: ", len(self.fc3.bias[i:(i+1)].data))
 
     print("=================")
