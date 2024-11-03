@@ -8,11 +8,12 @@ import model
 def to_image(x):
   print(x.size())
   # encoding ---- king square ---- piece type ---- piece square
-  x = x.reshape(8,16,  8,8,  2,6,  8,8)
+  #              0  1   2 3   4   5 6
+  x = x.reshape(24,32,  8,8,  6,  8,8)
 
   # height ---- width
-  x = x.permute(0,5,6,2,  1,4,7,3)
-  x = (x.reshape(8*6*8*8, 16*2*8*8) * 3.0).abs().sigmoid()
+  x = x.permute(0,2,3,4, 1,5,6)
+  x = (x.reshape(24*8*8*6, 32*8*8) * 3.0).abs().sigmoid()
   return x
 
 
@@ -25,14 +26,14 @@ def plot_input_weights_image(x, name, dst):
   dst.matshow(x, cmap=cmap)
   
   line_options = {'color': 'white', 'linewidth': 1}
-  for i in range(1, 16):
-    dst.axvline(x=2*8*8*i-1, **line_options)
+  for i in range(1, 32):
+    dst.axvline(x=8*8*i-1, **line_options)
 
-  for j in range(1, 8):
+  for j in range(1, 24):
     dst.axhline(y=6*8*8*j-1, **line_options)
 
 def main():
-  DPI = 100
+  DPI = 300
 
   if len(sys.argv) < 2:
     print("Usage : python visualize.py net")
