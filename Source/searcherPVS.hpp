@@ -1086,12 +1086,12 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                std::vector<MiniMove> skip{e.m};
                const ScoreType score = pvs<false>(betaC - 1, betaC, p, depth / 2, height, sePV, seSeldepth, extensions, pvsData.isInCheck, pvsData.cutNode, &skip);
                if (stopFlag) return STOPSCORE;
-               if (score < betaC && extensions <= 6) { // TT move is singular
+               if (score < betaC /*&& extensions <= 6*/) { // TT move is singular
                   stats.incr(Stats::sid_singularExtension);
                   pvsData.ttMoveSingularExt=true;
                   ++extension;
                   // TT move is "very singular" and depth is small : kind of single reply extension
-                  if (!pvsData.pvnode && score < betaC - 4 * depth) {
+                  if (/*!pvsData.pvnode &&*/ score < betaC - 4 * depth && extensions <= 6) {
                      stats.incr(Stats::sid_singularExtension2);
                      ++extension;
                      /*
@@ -1459,6 +1459,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // check for draw and check mate
    if (pvsData.validMoveCount == 0){
       return !pvsData.withoutSkipMove ? alpha : pvsData.isInCheck ? matedScore(height) : drawScore(p, height);
+      //return (pvsData.isInCheck || !pvsData.withoutSkipMove) ? matedScore(height) : drawScore(p, height);
    }
    // post move loop version
    else if (is50moves(p,false)){
