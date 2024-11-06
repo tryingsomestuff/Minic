@@ -8,7 +8,7 @@ bool Searcher::isRep(const Position& p, bool isPV) const {
    if (p.fifty < (2 * limit - 1)) return false;
    int count = 0;
    const Hash h = computeHash(p);
-   int k = p.halfmoves - 2;
+   int k = p.halfmoves - 4;
    bool irreversible = false;
    //std::cout << "***************** " << k << " " << h << " " << GetFEN(p) << std::endl;
    // look in stack first
