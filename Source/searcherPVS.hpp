@@ -262,6 +262,7 @@ Searcher::depthPolicy( [[maybe_unused]] const Position & p,
          //reduction -= pvsData.theirTurn; ///@todo use in capture also ?
          //reduction -= isDangerRed || pvsData.isEmergencyDefence;
          reduction -= pvsData.isKnownEndGame;
+         reduction -= 2*pvsData.isAdvancedPawnPush;
       }
       else if (Move2Type(m) == T_capture){
          stats.incr(Stats::sid_lmrcap);
@@ -280,14 +281,14 @@ Searcher::depthPolicy( [[maybe_unused]] const Position & p,
          const Square to = Move2To(m); // ok this is a std capture (no ep)
          const int hScore = HISTORY_DIV(SearchConfig::lmrCapHistoryFactor * historyT.historyCap[PieceIdx(p.board_const(Move2From(m)))][to][Abs(p.board_const(to))-1]);
          reduction -= std::max(-2,std::min(2, hScore));
-
          // -----------------------
          // less reduction
          // -----------------------
          reduction -= pvsData.pvnode; 
+         //reduction -= pvsData.ttMoveIsCapture;
          //reduction -= pvsData.formerPV || pvsData.ttPV;
          reduction -= pvsData.improving;
-         //reduction -= pvsData.ttMoveIsCapture;
+         reduction -= 2*pvsData.isAdvancedPawnPush;
       }
 
       // never extend more than reduce (to avoid search explosion)
@@ -807,7 +808,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    MiniMove refutation = INVALIDMINIMOVE;
 
    // a depth that take TT depth into account
-   pvsData.marginDepth = std::max(1, depth - (pvsData.evalScoreIsHashScore ? e.d : 0)); 
+   pvsData.marginDepth = std::max(0, depth - (pvsData.evalScoreIsHashScore ? e.d : 0)); 
 
    // is the reported static eval better than a move before in the search tree ?
    // ! be carefull pvsData.improving implies not being in check !
@@ -990,7 +991,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
              ((pvsData.bound == TT::B_alpha && e.s < evalScore) || (pvsData.bound == TT::B_beta && e.s > evalScore) || (pvsData.bound == TT::B_exact))) {
             evalScore = TT::adjustHashScore(e.s, height);
             pvsData.evalScoreIsHashScore = true;
-            pvsData.marginDepth = std::max(1, depth - (pvsData.evalScoreIsHashScore ? e.d : 0)); // a depth that take TT depth into account
+            pvsData.marginDepth = std::max(0, depth - (pvsData.evalScoreIsHashScore ? e.d : 0)); // a depth that take TT depth into account
          }
       }
    }
@@ -1095,7 +1096,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                      stats.incr(Stats::sid_singularExtension2);
                      ++extension;
                      /*
-                     if (score < betaC - 8 * depth && !pvsData.ttMoveIsCapture){
+                     if (score < betaC - 8 * depth && !pvsData.ttMoveIsCapture && extensions <= 6){
                         stats.incr(Stats::sid_singularExtension6);
                         ++extension;
                      }
@@ -1290,7 +1291,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       else {
          // reductions & prunings
          const bool isPrunable           = /*pvsData.isNotPawnEndGame &&*/ !pvsData.isAdvancedPawnPush && !isMateScore(alpha) && !killerT.isKiller(*it, height) && !DynamicConfig::mateFinder;
-         const bool isReductible         = SearchConfig::doLMR && depth >= SearchConfig::lmrMinDepth && /*pvsData.isNotPawnEndGame &&*/ !pvsData.isAdvancedPawnPush && !DynamicConfig::mateFinder;
+         const bool isReductible         = SearchConfig::doLMR && depth >= SearchConfig::lmrMinDepth && /*pvsData.isNotPawnEndGame &&*/ /*!pvsData.isAdvancedPawnPush &&*/ !DynamicConfig::mateFinder;
          const bool isPrunableStd        = isPrunable && pvsData.isQuiet;
          const bool isPrunableStdNoCheck = isPrunableStd && noCheck;
          const bool isPrunableCap        = isPrunable && Move2Type(*it) == T_capture && noCheck;
