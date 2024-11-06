@@ -1084,7 +1084,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                PVList sePV;
                DepthType seSeldepth = 0;
                std::vector<MiniMove> skip{e.m};
-               const ScoreType score = pvs<false>(betaC - 1, betaC, p, depth / 2, height, sePV, seSeldepth, extensions, pvsData.isInCheck, pvsData.cutNode, &skip);
+               const ScoreType score = pvs<false>(betaC - 1, betaC, p, depth / 3, height, sePV, seSeldepth, extensions, pvsData.isInCheck, pvsData.cutNode, &skip);
                if (stopFlag) return STOPSCORE;
                if (score < betaC /*&& extensions <= 6*/) { // TT move is singular
                   stats.incr(Stats::sid_singularExtension);
@@ -1095,7 +1095,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                      stats.incr(Stats::sid_singularExtension2);
                      ++extension;
                      /*
-                     if (score < betaC - 8 * depth && !pvsData.ttMoveIsCapture){
+                     if (score < betaC - 8 * depth && !pvsData.ttMoveIsCapture && extensions <= 6){
                         stats.incr(Stats::sid_singularExtension6);
                         ++extension;
                      }
