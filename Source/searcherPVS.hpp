@@ -262,7 +262,7 @@ Searcher::depthPolicy( [[maybe_unused]] const Position & p,
          //reduction -= pvsData.theirTurn; ///@todo use in capture also ?
          //reduction -= isDangerRed || pvsData.isEmergencyDefence;
          reduction -= pvsData.isKnownEndGame;
-         reduction -= 2*pvsData.isAdvancedPawnPush;
+         //reduction -= 2*pvsData.isAdvancedPawnPush;
       }
       else if (Move2Type(m) == T_capture){
          stats.incr(Stats::sid_lmrcap);
@@ -288,7 +288,7 @@ Searcher::depthPolicy( [[maybe_unused]] const Position & p,
          //reduction -= pvsData.ttMoveIsCapture;
          //reduction -= pvsData.formerPV || pvsData.ttPV;
          reduction -= pvsData.improving;
-         reduction -= 2*pvsData.isAdvancedPawnPush;
+         //reduction -= 2*pvsData.isAdvancedPawnPush;
       }
 
       // never extend more than reduce (to avoid search explosion)
@@ -1291,7 +1291,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       else {
          // reductions & prunings
          const bool isPrunable           = /*pvsData.isNotPawnEndGame &&*/ !pvsData.isAdvancedPawnPush && !isMateScore(alpha) && !killerT.isKiller(*it, height) && !DynamicConfig::mateFinder;
-         const bool isReductible         = SearchConfig::doLMR && depth >= SearchConfig::lmrMinDepth && /*pvsData.isNotPawnEndGame &&*/ /*!pvsData.isAdvancedPawnPush &&*/ !DynamicConfig::mateFinder;
+         const bool isReductible         = SearchConfig::doLMR && depth >= SearchConfig::lmrMinDepth && /*pvsData.isNotPawnEndGame &&*/ !pvsData.isAdvancedPawnPush && !DynamicConfig::mateFinder;
          const bool isPrunableStd        = isPrunable && pvsData.isQuiet;
          const bool isPrunableStdNoCheck = isPrunableStd && noCheck;
          const bool isPrunableCap        = isPrunable && Move2Type(*it) == T_capture && noCheck;

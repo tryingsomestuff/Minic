@@ -14,7 +14,7 @@ struct Position;
 }
 #else
 [[nodiscard]] constexpr float fiftyMoveRuleScaling(const uint8_t fifty){
-   return 1.f - std::max(0, fifty-30) / 100.f;
+   return 1.f - std::max(0, fifty-10) / 100.f;
 }
 #endif
 
