@@ -65,7 +65,7 @@ void MoveSorter::computeScore(Move& m) const {
             // recapture bonus
             if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == Move2To(p.lastMove)) s += 512;
             // too bad capture are ordered last (-7000)
-            if (see + pstScore < 0 && see < DynamicConfig::badCapLimit) s -= 2 * MoveScoring[T_capture];
+            if (/*see + pstScore < 0 &&*/ see < DynamicConfig::badCapLimit) s -= 2 * MoveScoring[T_capture];
          }
          else { // without SEE
             // recapture (> max MVVLVA value)
