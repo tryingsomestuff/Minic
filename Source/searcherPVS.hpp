@@ -62,7 +62,7 @@ Searcher::depthPolicy( [[maybe_unused]] const Position & p,
    DepthType extension = 0;
 
    // Possible extension will be cap by this
-   [[maybe_unused]] const auto extendMore = [&](){ return !extension && extensions < std::max(10,height/3);};
+   [[maybe_unused]] const auto extendMore = [&](){ return !extension /*&& extensions < std::max(10,height/3)*/;};
 
    // correspond to first move (not being the TT one) or quiet with very good score (like killers)
    [[maybe_unused]] const bool weakEarlyMove = pvsData.earlyMove || (pvsData.isQuiet && Move2Score(m) >= HISTORY_MAX);
@@ -1258,17 +1258,6 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
       const bool noCheck = !pvsData.isInCheck && !pvsData.isCheck;
 
-      // skip quiet if LMP was triggered
-      if (skipQuiet && pvsData.isQuiet && noCheck){
-         stats.incr(Stats::sid_lmp);
-         continue;
-      }
-      // skip other bad capture
-      if (skipCap && Move2Type(*it) == T_capture && noCheck){
-         stats.incr(Stats::sid_see2);
-         continue;
-      }
-
       pvsData.isAdvancedPawnPush = PieceTools::getPieceType(p, Move2From(*it)) == P_wp && (SQRANK(to) > 5 || SQRANK(to) < 2);
       pvsData.earlyMove = pvsData.validMoveCount < (2 /*+2*pvsData.rootnode*/);
 
@@ -1296,6 +1285,17 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          const bool isPrunableStdNoCheck = isPrunableStd && noCheck;
          const bool isPrunableCap        = isPrunable && Move2Type(*it) == T_capture && noCheck;
          const bool isPrunableBadCap     = isPrunableCap && isBadCap(*it);
+
+         // skip quiet if LMP was triggered
+         if (skipQuiet && pvsData.isQuiet && noCheck && isPrunableStdNoCheck){
+            stats.incr(Stats::sid_lmp);
+            continue;
+         }
+         // skip other bad capture
+         if (skipCap && Move2Type(*it) == T_capture && isPrunableBadCap){
+            stats.incr(Stats::sid_see2);
+            continue;
+         }
 
          // forward pruning heuristic for quiet moves
          if (isPrunableStdNoCheck){
