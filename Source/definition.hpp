@@ -209,7 +209,7 @@ inline constexpr int MAX_MOVE           = 256; // 256 is enough I guess/hope ...
 inline constexpr auto MAX_DEPTH         = static_cast<DepthType>(127); // if DepthType is a char, !!!do not go above 127!!!
 inline constexpr auto HISTORY_POWER     = 10;
 inline constexpr ScoreType HISTORY_MAX  = (1 << HISTORY_POWER);
-inline constexpr size_t MAX_THREADS     = 256; // same type as Searcher::id()
+inline constexpr size_t MAX_THREADS     = 1024; // same type as Searcher::id()
 
 constexpr ScoreType HISTORY_DIV(const int x) {
    const int ret = x >> HISTORY_POWER;
