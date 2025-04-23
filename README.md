@@ -10,7 +10,7 @@
 Minic is a chess engine I'm developing to learn about chess programming and modern C++ (please see this lovely [wiki](https://www.chessprogramming.org/Main_Page) for more details on chess programming).  
 
 Minic has no graphic interface (GUI) but is compatible with both [CECP](https://www.gnu.org/software/xboard/engine-intf.html) (xboard) and [UCI](http://wbec-ridderkerk.nl/html/UCIProtocol.html) protocol so you can use it in your favorite software (for instance [Cutechess](https://github.com/cutechess/cutechess), [Arena](http://www.playwitharena.de/), [Banksia](https://banksiagui.com/), [Winboard/Xboard](https://www.gnu.org/software/xboard/), [c-chess-cli](https://github.com/lucasart/c-chess-cli), ...).  
-Minic is currently one of the 15 best engines in major [rating](https://ccrl.chessdom.com/ccrl/4040/) lists and the strongest french one.
+Minic is currently one of the 15 best engines in major [rating](https://www.computerchess.org.uk/ccrl/4040/index.html) lists and the strongest french one.
 
 Here are some shortcuts to navigate in this document :
 
@@ -96,7 +96,7 @@ In brief, Minic NNUE world is vastly inspired from what others are doing and is 
 
 ## Testing and strength
 
-Minic is currently in the 20 best engines with a Elo rating around 3400 at [CCRL scale](https://ccrl.chessdom.com/ccrl/404/cgi/compare_engines.cgi?class=Open+source+single-CPU+engines&only_best_in_class=on&num_best_in_class=1&print=Rating+list&profile_step=50&profile_numbers=1&print=Results+table&print=LOS+table&table_size=100&ct_from_elo=0&ct_to_elo=10000&match_length=30&cross_tables_for_best_versions_only=1&sort_tables=by+rating&diag=0&reference_list=None&recalibrate=no).
+Minic is currently in the 20 best engines with a Elo rating around 3400 at [CCRL scale](https://www.computerchess.org.uk/ccrl/404/cgi/compare_engines.cgi?class=Open+source+single-CPU+engines&print=Rating+list&print=Results+table&print=LOS+table&table_size=12&cross_tables_for_best_versions_only=1).
 
 ### Various NNUE nets strenght 
 
@@ -189,9 +189,9 @@ Here is 4 years of CCRL progress (single thread)
 
 
 ### CCRL
-- 40/15: Minic 3.31 + Natural Naughtiness is tested at 3447 on the [CCRL 40/15 scale, 4 cores](http://ccrl.chessdom.com/ccrl/4040/)  
-- Blitz: Minic 3.31 + Natural Naughtiness is tested at 3609 on the [CCRL BLITZ scale, 8 cores](http://ccrl.chessdom.com/ccrl/404/)  
-- FRC: Minic 3.32 + Natural Naughtiness is tested at 3591 on the [CCRL FRC list](http://ccrl.chessdom.com/ccrl/404FRC/)  
+- 40/15: Minic 3.31 + Natural Naughtiness is tested at 3447 on the [CCRL 40/15 scale, 4 cores](https://www.computerchess.org.uk/ccrl/4040/)  
+- Blitz: Minic 3.31 + Natural Naughtiness is tested at 3609 on the [CCRL BLITZ scale, 8 cores](https://www.computerchess.org.uk/ccrl/404/)  
+- FRC: Minic 3.32 + Natural Naughtiness is tested at 3591 on the [CCRL FRC list](https://www.computerchess.org.uk/ccrl/404FRC/)  
 
 ### CEGT
 - 40/4: Minic 3.27 + Natural Naughtiness is tested at 3409 on the [CEGT 40/4 list](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
