@@ -204,7 +204,7 @@ inline constexpr auto INVALIDMINIMOVE   = static_cast<int16_t>(0x0002);
 inline constexpr auto NULLMOVE          = static_cast<int16_t>(0x1112);
 
 inline constexpr Square INVALIDSQUARE   = -1;
-inline constexpr uint16_t MAX_PLY       = 1024; // same type as Position::halfmoves
+inline constexpr uint16_t MAX_PLY       = 2048; // same type as Position::halfmoves
 inline constexpr int MAX_MOVE           = 256; // 256 is enough I guess/hope ...
 inline constexpr auto MAX_DEPTH         = static_cast<DepthType>(127); // if DepthType is a char, !!!do not go above 127!!!
 inline constexpr auto HISTORY_POWER     = 10;
