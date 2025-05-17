@@ -3,7 +3,7 @@
 if [ ! -n "$VERSION" ];then
    echo "You must first set VERSION variable please, see example below"
    echo "> export VERSION=master && ./update.sh"
-   echo "> export VERSION=3.43 && ./update.sh"
+   echo "> export VERSION=3.44 && ./update.sh"
    exit 1
 fi
 
