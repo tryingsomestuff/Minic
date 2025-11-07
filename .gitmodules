@@ -1,15 +1,20 @@
-[submodule "Fathom"]
-	path = Fathom
-	url = https://github.com/jdart1/Fathom.git
 [submodule "Book_and_Test"]
-	path = Book_and_Test
-	url = https://github.com/tryingsomestuff/Minic-Book_and_Test
+  active = true
+  url = git@github.com:tryingsomestuff/Minic-Book_and_Test.git
+
 [submodule "Dist"]
-	path = Dist
-	url = https://github.com/tryingsomestuff/Minic-Dist
-[submodule "NNUE-Nets"]
-	path = NNUE-Nets
-	url = https://github.com/tryingsomestuff/NNUE-Nets.git
+  active = true
+  url = git@github.com:tryingsomestuff/Minic-Dist.git
+
+[submodule "Fathom"]
+  active = true
+  url = git@github.com:jdart1/Fathom.git
+
 [submodule "Illustrations"]
-	path = Illustrations
-	url = git@github.com:tryingsomestuff/Illustrations.git
+  active = true
+  url = git@github.com:tryingsomestuff/Illustrations.git
+
+[submodule "NNUE-Nets"]
+  active = true
+  url = git@github.com:tryingsomestuff/NNUE-Nets.git
+
