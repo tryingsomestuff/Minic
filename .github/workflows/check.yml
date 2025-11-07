@@ -7,7 +7,7 @@ on:
     branches: [ "master" ]
 
 permissions:
-  contents: write   # nécessaire pour Github Pages
+  contents: write
 
 jobs:
   build:
@@ -28,7 +28,7 @@ jobs:
       run: Tools/build/docov
 
     - name: Upload coverage result as artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: coverage-report
         path: coverage-dir/rapport
