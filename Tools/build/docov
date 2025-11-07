@@ -16,7 +16,7 @@ fi
 
 do_title "Building Minic for Linux coverage"
 
-OPT="$d --coverage -fprofile-abs-path -O3 $STDVERSION"
+OPT="$d --coverage -fprofile-abs-path -fprofile-update=atomic -O3 $STDVERSION"
 
 if [ $FATHOM_PRESENT = "1" ]; then
    lib=fathom_dev_linux_x64.o
@@ -74,8 +74,11 @@ done
 
 lcov -d $(readlink -f ../) -c -o rapport.info --no-external
 genhtml -o rapport -t "coverage" rapport.info
+lcov -l rapport.info
 
 #rm -f *.gcno
 #rm -f *.gcda
+
+ls
 
 cd ..
