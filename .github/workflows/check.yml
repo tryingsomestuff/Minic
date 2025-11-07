@@ -33,6 +33,9 @@ jobs:
         name: coverage-report
         path: coverage-dir/rapport
 
+    - name: Debug coverage output
+      run: ls -R coverage-dir/rapport
+
     - name: Deploy coverage to GitHub Pages
       if: github.ref == 'refs/heads/master'
       uses: peaceiris/actions-gh-pages@v3
