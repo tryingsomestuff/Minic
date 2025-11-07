@@ -1,0 +1,1 @@
+genhtml -o rapport -t coverage rapport.info
