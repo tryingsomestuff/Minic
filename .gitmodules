@@ -1,6 +1,7 @@
 [submodule "Book_and_Test"]
   active = true
-  url = git@github.com:tryingsomestuff/Minic-Book_and_Test.git
+	url = git@github.com:tryingsomestuff/Minic-Book_and_Test.git
+	path = Book_and_Test
 
 [submodule "Dist"]
   active = true
