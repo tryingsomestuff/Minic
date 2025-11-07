@@ -1,0 +1,15 @@
+[submodule "Dist"]
+	path = Dist
+	url = git@github.com:tryingsomestuff/Minic-Dist.git
+[submodule "Fathom"]
+	path = Fathom
+	url = git@github.com:jdart1/Fathom.git
+[submodule "Illustrations"]
+	path = Illustrations
+	url = git@github.com:tryingsomestuff/Illustrations.git
+[submodule "NNUE-Nets"]
+	path = NNUE-Nets
+	url = git@github.com:tryingsomestuff/NNUE-Nets.git
+[submodule "Book_and_Test"]
+	path = Book_and_Test
+	url = git@github.com:tryingsomestuff/Minic-Book_and_Test.git
