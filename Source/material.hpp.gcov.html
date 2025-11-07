@@ -1,0 +1,169 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage - Source/material.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">Source</a> - material.hpp<span style="font-size: 80%;"> (source / <a href="material.hpp.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">7</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+          </tr>
+                  <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : #pragma once</span>
+<span id="L2"><span class="lineNum">       2</span>              : </span>
+<span id="L3"><span class="lineNum">       3</span>              : #include &quot;bitboardTools.hpp&quot;</span>
+<span id="L4"><span class="lineNum">       4</span>              : #include &quot;score.hpp&quot;</span>
+<span id="L5"><span class="lineNum">       5</span>              : </span>
+<span id="L6"><span class="lineNum">       6</span>              : /*!</span>
+<span id="L7"><span class="lineNum">       7</span>              :  * A material table implementation</span>
+<span id="L8"><span class="lineNum">       8</span>              :  * Mostly inspired by Gull by Vadim Demichev</span>
+<span id="L9"><span class="lineNum">       9</span>              :  * after a discussion on talkchess (http://talkchess.com/forum3/viewtopic.php?f=7&amp;t=67558&amp;p=763426)</span>
+<span id="L10"><span class="lineNum">      10</span>              :  * but we allow 2 bishops of the same color</span>
+<span id="L11"><span class="lineNum">      11</span>              :  */</span>
+<span id="L12"><span class="lineNum">      12</span>              : </span>
+<span id="L13"><span class="lineNum">      13</span>              : namespace MaterialHash {</span>
+<span id="L14"><span class="lineNum">      14</span>              : </span>
+<span id="L15"><span class="lineNum">      15</span>              : inline const int MatWQ    = 1;</span>
+<span id="L16"><span class="lineNum">      16</span>              : inline const int MatBQ    = 3;</span>
+<span id="L17"><span class="lineNum">      17</span>              : inline const int MatWR    = (3 * 3);</span>
+<span id="L18"><span class="lineNum">      18</span>              : inline const int MatBR    = (3 * 3 * 3);</span>
+<span id="L19"><span class="lineNum">      19</span>              : inline const int MatWL    = (3 * 3 * 3 * 3);</span>
+<span id="L20"><span class="lineNum">      20</span>              : inline const int MatBL    = (3 * 3 * 3 * 3 * 3);</span>
+<span id="L21"><span class="lineNum">      21</span>              : inline const int MatWD    = (3 * 3 * 3 * 3 * 3 * 3);</span>
+<span id="L22"><span class="lineNum">      22</span>              : inline const int MatBD    = (3 * 3 * 3 * 3 * 3 * 3 * 3);</span>
+<span id="L23"><span class="lineNum">      23</span>              : inline const int MatWN    = (3 * 3 * 3 * 3 * 3 * 3 * 3 * 3);</span>
+<span id="L24"><span class="lineNum">      24</span>              : inline const int MatBN    = (3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 3);</span>
+<span id="L25"><span class="lineNum">      25</span>              : inline const int MatWP    = (3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 3);</span>
+<span id="L26"><span class="lineNum">      26</span>              : inline const int MatBP    = (3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 9);</span>
+<span id="L27"><span class="lineNum">      27</span>              : #ifdef WITH_MATERIAL_TABLE</span>
+<span id="L28"><span class="lineNum">      28</span>              : inline const int TotalMat = ((2 * (MatWQ + MatBQ) + 2 * (MatWL + MatBL + MatWD + MatBD) + 2 * (MatWR + MatBR + MatWN + MatBN) + 8 * (MatWP + MatBP)) + 1);</span>
+<span id="L29"><span class="lineNum">      29</span>              : #else</span>
+<span id="L30"><span class="lineNum">      30</span>              : inline const int TotalMat = 1;</span>
+<span id="L31"><span class="lineNum">      31</span>              : #endif</span>
+<span id="L32"><span class="lineNum">      32</span>              : </span>
+<span id="L33"><span class="lineNum">      33</span>              : [[nodiscard]] Hash getMaterialHash(const Position::Material &amp;mat);</span>
+<span id="L34"><span class="lineNum">      34</span>              : #ifndef WITH_MATERIAL_TABLE</span>
+<span id="L35"><span class="lineNum">      35</span>              : [[nodiscard]] Hash getMaterialHash2(const Position::Material &amp;mat);</span>
+<span id="L36"><span class="lineNum">      36</span>              : #endif</span>
+<span id="L37"><span class="lineNum">      37</span>              : </span>
+<span id="L38"><span class="lineNum">      38</span>              : [[nodiscard]] Position::Material materialFromString(const std::string &amp;strMat);</span>
+<span id="L39"><span class="lineNum">      39</span>              : </span>
+<span id="L40"><span class="lineNum">      40</span>              : ScoreType helperKXK (const Position &amp;p, Color winningSide, ScoreType s, DepthType height);</span>
+<span id="L41"><span class="lineNum">      41</span>              : ScoreType helperKmmK(const Position &amp;p, Color winningSide, ScoreType s, DepthType height);</span>
+<span id="L42"><span class="lineNum">      42</span>              : ScoreType helperKPK (const Position &amp;p, Color winningSide, ScoreType s, DepthType height);</span>
+<span id="L43"><span class="lineNum">      43</span>              : ScoreType helperKBPK(const Position &amp;p, Color winningSide, ScoreType s, DepthType height);</span>
+<span id="L44"><span class="lineNum">      44</span>              : </span>
+<span id="L45"><span class="lineNum">      45</span>              : enum Terminaison : uint8_t {</span>
+<span id="L46"><span class="lineNum">      46</span>              :    Ter_Unknown = 0,</span>
+<span id="L47"><span class="lineNum">      47</span>              :    Ter_WhiteWinWithHelper,</span>
+<span id="L48"><span class="lineNum">      48</span>              :    Ter_WhiteWin,</span>
+<span id="L49"><span class="lineNum">      49</span>              :    Ter_BlackWinWithHelper,</span>
+<span id="L50"><span class="lineNum">      50</span>              :    Ter_BlackWin,</span>
+<span id="L51"><span class="lineNum">      51</span>              :    Ter_Draw, // real FIDE draw KK, KBK, KNK, KLKD</span>
+<span id="L52"><span class="lineNum">      52</span>              :    Ter_Draw3rep,</span>
+<span id="L53"><span class="lineNum">      53</span>              :    Ter_Draw50,</span>
+<span id="L54"><span class="lineNum">      54</span>              :    Ter_MaterialDraw,</span>
+<span id="L55"><span class="lineNum">      55</span>              :    Ter_LikelyDraw,</span>
+<span id="L56"><span class="lineNum">      56</span>              :    Ter_HardToWin,</span>
+<span id="L57"><span class="lineNum">      57</span>              :    Ter_None</span>
+<span id="L58"><span class="lineNum">      58</span>              : };</span>
+<span id="L59"><span class="lineNum">      59</span>              : </span>
+<span id="L60"><span class="lineNum">      60</span>              : extern ScoreType (*helperTable[TotalMat])(const Position &amp;, Color, ScoreType, DepthType);</span>
+<span id="L61"><span class="lineNum">      61</span>              : </span>
+<span id="L62"><span class="lineNum">      62</span>              : struct MaterialHashEntry {</span>
+<span id="L63"><span class="lineNum">      63</span>              :    EvalScore    score = {0, 0};</span>
+<span id="L64"><span class="lineNum">      64</span>              :    uint8_t      gp    = 255;</span>
+<span id="L65"><span class="lineNum">      65</span>              :    Terminaison  t     = Ter_Unknown;</span>
+<span id="L66"><span class="lineNum">      66</span> <span class="tlaGNC tlaBgGNC">     3145104 :    FORCE_FINLINE float gamePhase() const { return gp / 255.f; }</span></span>
+<span id="L67"><span class="lineNum">      67</span> <span class="tlaGNC">    38263752 :    FORCE_FINLINE void  setGamePhase(float gpf) { gp = (uint8_t)(255 * gpf); }</span></span>
+<span id="L68"><span class="lineNum">      68</span>              : };</span>
+<span id="L69"><span class="lineNum">      69</span>              : </span>
+<span id="L70"><span class="lineNum">      70</span>              : extern array1d&lt;MaterialHashEntry,TotalMat&gt; materialHashTable;</span>
+<span id="L71"><span class="lineNum">      71</span>              : </span>
+<span id="L72"><span class="lineNum">      72</span>              : [[nodiscard]] EvalScore Imbalance(const Position::Material &amp;mat, Color c);</span>
+<span id="L73"><span class="lineNum">      73</span>              : </span>
+<span id="L74"><span class="lineNum">      74</span>              : void InitMaterialScore(bool display = true);</span>
+<span id="L75"><span class="lineNum">      75</span>              : </span>
+<span id="L76"><span class="lineNum">      76</span>              : struct MaterialHashInitializer {</span>
+<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">        1280 :    MaterialHashInitializer(const Position::Material &amp;mat, Terminaison t) { materialHashTable[getMaterialHash(mat)].t = t; }</span></span>
+<span id="L78"><span class="lineNum">      78</span> <span class="tlaGNC">         240 :    MaterialHashInitializer(const Position::Material &amp;mat, Terminaison t, ScoreType (*helper)(const Position &amp;, Color, ScoreType, DepthType)) {</span></span>
+<span id="L79"><span class="lineNum">      79</span> <span class="tlaGNC">         240 :       materialHashTable[getMaterialHash(mat)].t = t;</span></span>
+<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">         240 :       helperTable[getMaterialHash(mat)]         = helper;</span></span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">         240 :    }</span></span>
+<span id="L82"><span class="lineNum">      82</span>              :    static void init();</span>
+<span id="L83"><span class="lineNum">      83</span>              : };</span>
+<span id="L84"><span class="lineNum">      84</span>              : </span>
+<span id="L85"><span class="lineNum">      85</span>              : [[nodiscard]] Terminaison probeMaterialHashTable(const Position::Material &amp;mat);</span>
+<span id="L86"><span class="lineNum">      86</span>              : </span>
+<span id="L87"><span class="lineNum">      87</span>              : void updateMaterialOther(Position &amp;p);</span>
+<span id="L88"><span class="lineNum">      88</span>              : </span>
+<span id="L89"><span class="lineNum">      89</span>              : void initMaterial(Position &amp;p);</span>
+<span id="L90"><span class="lineNum">      90</span>              : </span>
+<span id="L91"><span class="lineNum">      91</span>              : void updateMaterialProm(Position &amp;p, const Square toBeCaptured, const MType mt);</span>
+<span id="L92"><span class="lineNum">      92</span>              : </span>
+<span id="L93"><span class="lineNum">      93</span>              : } // namespace MaterialHash</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

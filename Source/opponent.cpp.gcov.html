@@ -1,0 +1,226 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage - Source/opponent.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">Source</a> - opponent.cpp<span style="font-size: 80%;"> (source / <a href="opponent.cpp.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryLo">29.0&nbsp;%</td>
+            <td class="headerCovTableEntry">31</td>
+            <td class="headerCovTableEntry">9</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryLo">66.7&nbsp;%</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">2</td>
+          </tr>
+                  <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : #include &quot;opponent.hpp&quot;</span>
+<span id="L2"><span class="lineNum">       2</span>              : </span>
+<span id="L3"><span class="lineNum">       3</span>              : #include &quot;definition.hpp&quot;</span>
+<span id="L4"><span class="lineNum">       4</span>              : #include &quot;dynamicConfig.hpp&quot;</span>
+<span id="L5"><span class="lineNum">       5</span>              : #include &quot;tools.hpp&quot;</span>
+<span id="L6"><span class="lineNum">       6</span>              : </span>
+<span id="L7"><span class="lineNum">       7</span>              : namespace Opponent {</span>
+<span id="L8"><span class="lineNum">       8</span>              : </span>
+<span id="L9"><span class="lineNum">       9</span>              : static std::map&lt;std::string, uint16_t&gt; ratings = {</span>
+<span id="L10"><span class="lineNum">      10</span>              : {&quot;Stockfish&quot;, 3550 }, </span>
+<span id="L11"><span class="lineNum">      11</span>              : {&quot;Dragon&quot;, 3528 }, </span>
+<span id="L12"><span class="lineNum">      12</span>              : {&quot;Berserk&quot;, 3491 }, </span>
+<span id="L13"><span class="lineNum">      13</span>              : {&quot;Chess&quot;, 3488 }, </span>
+<span id="L14"><span class="lineNum">      14</span>              : {&quot;Ethereal&quot;, 3487 }, </span>
+<span id="L15"><span class="lineNum">      15</span>              : {&quot;Igel&quot;, 3487 }, </span>
+<span id="L16"><span class="lineNum">      16</span>              : {&quot;RubiChess&quot;, 3474 }, </span>
+<span id="L17"><span class="lineNum">      17</span>              : {&quot;Koivisto&quot;, 3470 }, </span>
+<span id="L18"><span class="lineNum">      18</span>              : {&quot;Revenge&quot;, 3470 }, </span>
+<span id="L19"><span class="lineNum">      19</span>              : {&quot;Sjeng&quot;, 3461 }, </span>
+<span id="L20"><span class="lineNum">      20</span>              : {&quot;SlowChess&quot;, 3460 }, </span>
+<span id="L21"><span class="lineNum">      21</span>              : {&quot;Clover&quot;, 3458 }, </span>
+<span id="L22"><span class="lineNum">      22</span>              : {&quot;Rebel&quot;, 3457 }, </span>
+<span id="L23"><span class="lineNum">      23</span>              : {&quot;Seer&quot;, 3450 }, </span>
+<span id="L24"><span class="lineNum">      24</span>              : {&quot;RofChade&quot;, 3443 }, </span>
+<span id="L25"><span class="lineNum">      25</span>              : {&quot;Caissa&quot;, 3442 }, </span>
+<span id="L26"><span class="lineNum">      26</span>              : {&quot;Minic&quot;, 3441 }, </span>
+<span id="L27"><span class="lineNum">      27</span>              : {&quot;Viridithas&quot;, 3440 }, </span>
+<span id="L28"><span class="lineNum">      28</span>              : {&quot;Uralochka&quot;, 3431 }, </span>
+<span id="L29"><span class="lineNum">      29</span>              : {&quot;Arasan&quot;, 3419 }, </span>
+<span id="L30"><span class="lineNum">      30</span>              : {&quot;Fire&quot;, 3419 }, </span>
+<span id="L31"><span class="lineNum">      31</span>              : {&quot;Ginkgo&quot;, 3403 }, </span>
+<span id="L32"><span class="lineNum">      32</span>              : {&quot;Wasp&quot;, 3402 }, </span>
+<span id="L33"><span class="lineNum">      33</span>              : {&quot;Velvet&quot;, 3399 }, </span>
+<span id="L34"><span class="lineNum">      34</span>              : {&quot;Booot&quot;, 3396 }, </span>
+<span id="L35"><span class="lineNum">      35</span>              : {&quot;Marlin&quot;, 3389 }, </span>
+<span id="L36"><span class="lineNum">      36</span>              : {&quot;Halogen&quot;, 3382 }, </span>
+<span id="L37"><span class="lineNum">      37</span>              : {&quot;Houdini&quot;, 3382 }, </span>
+<span id="L38"><span class="lineNum">      38</span>              : {&quot;Nemorino&quot;, 3380 }, </span>
+<span id="L39"><span class="lineNum">      39</span>              : {&quot;Marvin&quot;, 3374 }, </span>
+<span id="L40"><span class="lineNum">      40</span>              : {&quot;Smallbrain&quot;, 3374 }, </span>
+<span id="L41"><span class="lineNum">      41</span>              : {&quot;Lc0&quot;, 3370 }, </span>
+<span id="L42"><span class="lineNum">      42</span>              : {&quot;BlackCore&quot;, 3365 }, </span>
+<span id="L43"><span class="lineNum">      43</span>              : {&quot;Superultra&quot;, 3361 }, </span>
+<span id="L44"><span class="lineNum">      44</span>              : {&quot;Tucano&quot;, 3356 }, </span>
+<span id="L45"><span class="lineNum">      45</span>              : {&quot;Rice&quot;, 3333 }, </span>
+<span id="L46"><span class="lineNum">      46</span>              : {&quot;Fritz&quot;, 3328 }, </span>
+<span id="L47"><span class="lineNum">      47</span>              : {&quot;Xiphos&quot;, 3318 }, </span>
+<span id="L48"><span class="lineNum">      48</span>              : {&quot;Alexandria&quot;, 3317 }, </span>
+<span id="L49"><span class="lineNum">      49</span>              : {&quot;Devre&quot;, 3315 }, </span>
+<span id="L50"><span class="lineNum">      50</span>              : {&quot;Mantissa&quot;, 3314 }, </span>
+<span id="L51"><span class="lineNum">      51</span>              : {&quot;Weiss&quot;, 3314 }, </span>
+<span id="L52"><span class="lineNum">      52</span>              : {&quot;Zahak&quot;, 3311 }, </span>
+<span id="L53"><span class="lineNum">      53</span>              : {&quot;Expositor&quot;, 3310 }, </span>
+<span id="L54"><span class="lineNum">      54</span>              : {&quot;Combusken&quot;, 3305 }, </span>
+<span id="L55"><span class="lineNum">      55</span>              : {&quot;Counter&quot;, 3305 }, </span>
+<span id="L56"><span class="lineNum">      56</span>              : {&quot;Stash&quot;, 3296 }, </span>
+<span id="L57"><span class="lineNum">      57</span>              : {&quot;HIARCS&quot;, 3289 }, </span>
+<span id="L58"><span class="lineNum">      58</span>              : {&quot;Frozenight&quot;, 3275 }, </span>
+<span id="L59"><span class="lineNum">      59</span>              : {&quot;Laser&quot;, 3274 }, </span>
+<span id="L60"><span class="lineNum">      60</span>              : {&quot;Winter&quot;, 3272 }, </span>
+<span id="L61"><span class="lineNum">      61</span>              : {&quot;Defenchess&quot;, 3268 }, </span>
+<span id="L62"><span class="lineNum">      62</span>              : {&quot;Shredder&quot;, 3267 }, </span>
+<span id="L63"><span class="lineNum">      63</span>              : {&quot;Pawn&quot;, 3264 }, </span>
+<span id="L64"><span class="lineNum">      64</span>              : {&quot;Fizbo&quot;, 3259 }, </span>
+<span id="L65"><span class="lineNum">      65</span>              : {&quot;Drofa&quot;, 3257 }, </span>
+<span id="L66"><span class="lineNum">      66</span>              : {&quot;Andscacs&quot;, 3251 }, </span>
+<span id="L67"><span class="lineNum">      67</span>              : {&quot;StockDory&quot;, 3250 }</span>
+<span id="L68"><span class="lineNum">      68</span>              : };</span>
+<span id="L69"><span class="lineNum">      69</span>              : </span>
+<span id="L70"><span class="lineNum">      70</span> <span class="tlaUNC tlaBgUNC">           0 : std::string strToLower(std::string s) {</span></span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaUNC">           0 :    std::transform(s.begin(), s.end(), s.begin(), [](uint8_t c) { return std::tolower(c); });</span></span>
+<span id="L72"><span class="lineNum">      72</span> <span class="tlaUNC">           0 :    return s;</span></span>
+<span id="L73"><span class="lineNum">      73</span>              : }</span>
+<span id="L74"><span class="lineNum">      74</span>              : </span>
+<span id="L75"><span class="lineNum">      75</span> <span class="tlaGNC tlaBgGNC">           1 : void init() {</span></span>
+<span id="L76"><span class="lineNum">      76</span>              :    // restore default parameter</span>
+<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">           1 :    DynamicConfig::ratingFactor = 1.; // this means &quot;full&quot; contempt given by user</span></span>
+<span id="L78"><span class="lineNum">      78</span>              : </span>
+<span id="L79"><span class="lineNum">      79</span> <span class="tlaGNC">           1 :    const int myRating = ratings[&quot;Minic&quot;];</span></span>
+<span id="L80"><span class="lineNum">      80</span>              : </span>
+<span id="L81"><span class="lineNum">      81</span>              :    // this TCEC specific option is prefered when present</span>
+<span id="L82"><span class="lineNum">      82</span> <span class="tlaGNC">           1 :    if (DynamicConfig::ratingAdvReceived) {</span></span>
+<span id="L83"><span class="lineNum">      83</span> <span class="tlaUNC tlaBgUNC">           0 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Using ratingAdv...&quot;;</span></span>
+<span id="L84"><span class="lineNum">      84</span>              :       // ratingFactor will go from -2 to 2</span>
+<span id="L85"><span class="lineNum">      85</span> <span class="tlaUNC">           0 :       const double x = 1. / (1 - DynamicConfig::ratingAdv / static_cast&lt;double&gt;(myRating));</span></span>
+<span id="L86"><span class="lineNum">      86</span> <span class="tlaUNC">           0 :       DynamicConfig::ratingFactor = 2 * std::tanh((x - 1) * 20.);</span></span>
+<span id="L87"><span class="lineNum">      87</span>              :    }</span>
+<span id="L88"><span class="lineNum">      88</span>              :    // else rely on the UCI_Opponent string</span>
+<span id="L89"><span class="lineNum">      89</span>              :    else {</span>
+<span id="L90"><span class="lineNum">      90</span> <span class="tlaGNC tlaBgGNC">           1 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;No ratingAdv given (TCEC specific option)...&quot;;</span></span>
+<span id="L91"><span class="lineNum">      91</span>              : </span>
+<span id="L92"><span class="lineNum">      92</span> <span class="tlaGNC">           2 :       if (DynamicConfig::opponent.empty()) { Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;No opponent string given ...&quot;; }</span></span>
+<span id="L93"><span class="lineNum">      93</span>              :       else {</span>
+<span id="L94"><span class="lineNum">      94</span> <span class="tlaUNC tlaBgUNC">           0 :          Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Opponent string received: \&quot;&quot; &lt;&lt; DynamicConfig::opponent &lt;&lt; &quot;\&quot;&quot;;</span></span>
+<span id="L95"><span class="lineNum">      95</span> <span class="tlaUNC">           0 :          std::vector&lt;std::string&gt; tokens;</span></span>
+<span id="L96"><span class="lineNum">      96</span> <span class="tlaUNC">           0 :          tokenize(DynamicConfig::opponent, tokens);</span></span>
+<span id="L97"><span class="lineNum">      97</span>              :          //Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;nb token &quot; &lt;&lt; tokens.size();</span>
+<span id="L98"><span class="lineNum">      98</span> <span class="tlaUNC">           0 :          if (tokens.size() &gt;= 4) {</span></span>
+<span id="L99"><span class="lineNum">      99</span>              :             std::string       oppName      = tokens[3];</span>
+<span id="L100"><span class="lineNum">     100</span>              :             const std::string oppRatingStr = tokens[1];</span>
+<span id="L101"><span class="lineNum">     101</span>              :             int               oppRating    = 0;</span>
+<span id="L102"><span class="lineNum">     102</span>              :             bool              ratingFound  = false;</span>
+<span id="L103"><span class="lineNum">     103</span>              : </span>
+<span id="L104"><span class="lineNum">     104</span>              : /*</span>
+<span id="L105"><span class="lineNum">     105</span>              :             if ( oppRatingStr != &quot;none&quot; ){</span>
+<span id="L106"><span class="lineNum">     106</span>              :                const int oppRatingRead = std::atoi(oppRatingStr.c_str());</span>
+<span id="L107"><span class="lineNum">     107</span>              :                if ( oppRatingRead ){</span>
+<span id="L108"><span class="lineNum">     108</span>              :                      oppRating = oppRatingRead;</span>
+<span id="L109"><span class="lineNum">     109</span>              :                      Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Opponent rating is &quot; &lt;&lt; oppRating;</span>
+<span id="L110"><span class="lineNum">     110</span>              :                      ratingFound = true;</span>
+<span id="L111"><span class="lineNum">     111</span>              :                }</span>
+<span id="L112"><span class="lineNum">     112</span>              :             }</span>
+<span id="L113"><span class="lineNum">     113</span>              : */</span>
+<span id="L114"><span class="lineNum">     114</span>              : </span>
+<span id="L115"><span class="lineNum">     115</span>              :             if (!ratingFound) {</span>
+<span id="L116"><span class="lineNum">     116</span>              :                //Logging::LogIt(Logging::logWarn) &lt;&lt; &quot;No rating given&quot;;</span>
+<span id="L117"><span class="lineNum">     117</span>              :                unsigned int i = 4;</span>
+<span id="L118"><span class="lineNum">     118</span> <span class="tlaUNC">           0 :                while (i &lt; tokens.size()) oppName += &quot; &quot; + tokens[i++];</span></span>
+<span id="L119"><span class="lineNum">     119</span> <span class="tlaUNC">           0 :                oppName = strToLower(oppName);</span></span>
+<span id="L120"><span class="lineNum">     120</span> <span class="tlaUNC">           0 :                Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Looking for Elo rating of &quot; &lt;&lt; oppName;</span></span>
+<span id="L121"><span class="lineNum">     121</span> <span class="tlaUNC">           0 :                for (const auto &amp; it : ratings) {</span></span>
+<span id="L122"><span class="lineNum">     122</span> <span class="tlaUNC">           0 :                   if ((oppName.find(strToLower(it.first)) != std::string::npos) || (strToLower(it.first).find(oppName) != std::string::npos)) {</span></span>
+<span id="L123"><span class="lineNum">     123</span> <span class="tlaUNC">           0 :                      oppRating = it.second;</span></span>
+<span id="L124"><span class="lineNum">     124</span> <span class="tlaUNC">           0 :                      Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Opponent is &quot; &lt;&lt; it.first &lt;&lt; &quot;, Elo &quot; &lt;&lt; oppRating;</span></span>
+<span id="L125"><span class="lineNum">     125</span>              :                      ratingFound = true;</span>
+<span id="L126"><span class="lineNum">     126</span> <span class="tlaUNC">           0 :                      break;</span></span>
+<span id="L127"><span class="lineNum">     127</span>              :                   }</span>
+<span id="L128"><span class="lineNum">     128</span>              :                }</span>
+<span id="L129"><span class="lineNum">     129</span> <span class="tlaUNC">           0 :                if (!ratingFound) Logging::LogIt(Logging::logWarn) &lt;&lt; &quot;Unknown opponent&quot;;</span></span>
+<span id="L130"><span class="lineNum">     130</span>              :             }</span>
+<span id="L131"><span class="lineNum">     131</span>              : </span>
+<span id="L132"><span class="lineNum">     132</span>              :             if (ratingFound) {</span>
+<span id="L133"><span class="lineNum">     133</span>              :                // ratingFactor will go from -2 to 2</span>
+<span id="L134"><span class="lineNum">     134</span> <span class="tlaUNC">           0 :                DynamicConfig::ratingFactor = 2 * std::tanh((myRating / static_cast&lt;double&gt;(oppRating) - 1) * 20.);</span></span>
+<span id="L135"><span class="lineNum">     135</span>              :             }</span>
+<span id="L136"><span class="lineNum">     136</span>              :          }</span>
+<span id="L137"><span class="lineNum">     137</span>              :          else {</span>
+<span id="L138"><span class="lineNum">     138</span> <span class="tlaUNC">           0 :             Logging::LogIt(Logging::logWarn) &lt;&lt; &quot;Invalid opponent string&quot;;</span></span>
+<span id="L139"><span class="lineNum">     139</span>              :          }</span>
+<span id="L140"><span class="lineNum">     140</span>              : </span>
+<span id="L141"><span class="lineNum">     141</span>              :          ///@todo play with style also ?</span>
+<span id="L142"><span class="lineNum">     142</span> <span class="tlaUNC">           0 :       }</span></span>
+<span id="L143"><span class="lineNum">     143</span>              :    }</span>
+<span id="L144"><span class="lineNum">     144</span>              : </span>
+<span id="L145"><span class="lineNum">     145</span> <span class="tlaGNC tlaBgGNC">           1 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Rating factor set to: &quot; &lt;&lt; DynamicConfig::ratingFactor;</span></span>
+<span id="L146"><span class="lineNum">     146</span> <span class="tlaGNC">           1 : }</span></span>
+<span id="L147"><span class="lineNum">     147</span>              : </span>
+<span id="L148"><span class="lineNum">     148</span> <span class="tlaGNC">           1 : void ratingReceived() { DynamicConfig::ratingAdvReceived = true; }</span></span>
+<span id="L149"><span class="lineNum">     149</span>              : </span>
+<span id="L150"><span class="lineNum">     150</span>              : } // namespace Opponent</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

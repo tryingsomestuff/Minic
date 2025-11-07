@@ -1,0 +1,422 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage - Source/nnue/learn/learn_tools.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="index.html">Source/nnue/learn</a> - learn_tools.cpp<span style="font-size: 80%;"> (source / <a href="learn_tools.cpp.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntry">134</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+                  <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : #include &quot;learn_tools.hpp&quot;</span>
+<span id="L2"><span class="lineNum">       2</span>              : </span>
+<span id="L3"><span class="lineNum">       3</span>              : #include &lt;algorithm&gt;</span>
+<span id="L4"><span class="lineNum">       4</span>              : #include &lt;cstring&gt;</span>
+<span id="L5"><span class="lineNum">       5</span>              : #include &lt;fstream&gt;</span>
+<span id="L6"><span class="lineNum">       6</span>              : #include &lt;iostream&gt;</span>
+<span id="L7"><span class="lineNum">       7</span>              : #include &lt;regex&gt;</span>
+<span id="L8"><span class="lineNum">       8</span>              : #include &lt;sstream&gt;</span>
+<span id="L9"><span class="lineNum">       9</span>              : #include &lt;string&gt;</span>
+<span id="L10"><span class="lineNum">      10</span>              : #include &lt;vector&gt;</span>
+<span id="L11"><span class="lineNum">      11</span>              : </span>
+<span id="L12"><span class="lineNum">      12</span>              : #include &quot;definition.hpp&quot;</span>
+<span id="L13"><span class="lineNum">      13</span>              : #include &quot;logging.hpp&quot;</span>
+<span id="L14"><span class="lineNum">      14</span>              : #include &quot;material.hpp&quot;</span>
+<span id="L15"><span class="lineNum">      15</span>              : #include &quot;moveGen.hpp&quot;</span>
+<span id="L16"><span class="lineNum">      16</span>              : #include &quot;pieceTools.hpp&quot;</span>
+<span id="L17"><span class="lineNum">      17</span>              : #include &quot;position.hpp&quot;</span>
+<span id="L18"><span class="lineNum">      18</span>              : #include &quot;positionTools.hpp&quot;</span>
+<span id="L19"><span class="lineNum">      19</span>              : </span>
+<span id="L20"><span class="lineNum">      20</span>              : #if defined(WITH_DATA2BIN)</span>
+<span id="L21"><span class="lineNum">      21</span>              : </span>
+<span id="L22"><span class="lineNum">      22</span>              : // Mostly copy/paste from nodchip Stockfish repository and adapted to Minic</span>
+<span id="L23"><span class="lineNum">      23</span>              : // Tools for handling various learning data format</span>
+<span id="L24"><span class="lineNum">      24</span>              : </span>
+<span id="L25"><span class="lineNum">      25</span>              : namespace { // anonymous</span>
+<span id="L26"><span class="lineNum">      26</span>              : </span>
+<span id="L27"><span class="lineNum">      27</span>              : // Class that handles bitstream</span>
+<span id="L28"><span class="lineNum">      28</span>              : // useful when doing aspect encoding</span>
+<span id="L29"><span class="lineNum">      29</span>              : struct BitStream {</span>
+<span id="L30"><span class="lineNum">      30</span>              :    // Set the memory to store the data in advance.</span>
+<span id="L31"><span class="lineNum">      31</span>              :    // Assume that memory is cleared to 0.</span>
+<span id="L32"><span class="lineNum">      32</span>              :    void set_data(uint8_t* data_) {</span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaUNC tlaBgUNC">           0 :       data = data_;</span></span>
+<span id="L34"><span class="lineNum">      34</span>              :       reset();</span>
+<span id="L35"><span class="lineNum">      35</span>              :    }</span>
+<span id="L36"><span class="lineNum">      36</span>              : </span>
+<span id="L37"><span class="lineNum">      37</span>              :    // Get the pointer passed in set_data().</span>
+<span id="L38"><span class="lineNum">      38</span>              :    uint8_t* get_data() const { return data; }</span>
+<span id="L39"><span class="lineNum">      39</span>              : </span>
+<span id="L40"><span class="lineNum">      40</span>              :    // Get the cursor.</span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaUNC">           0 :    int get_cursor() const { return bit_cursor; }</span></span>
+<span id="L42"><span class="lineNum">      42</span>              : </span>
+<span id="L43"><span class="lineNum">      43</span>              :    // reset the cursor</span>
+<span id="L44"><span class="lineNum">      44</span> <span class="tlaUNC">           0 :    void reset() { bit_cursor = 0; }</span></span>
+<span id="L45"><span class="lineNum">      45</span>              : </span>
+<span id="L46"><span class="lineNum">      46</span>              :    // Write 1bit to the stream.</span>
+<span id="L47"><span class="lineNum">      47</span>              :    // If b is non-zero, write out 1. If 0, write 0.</span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaUNC">           0 :    void write_one_bit(int b) {</span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaUNC">           0 :       if (b) {</span></span>
+<span id="L50"><span class="lineNum">      50</span>              :          //std::cout &lt;&lt; bit_cursor &lt;&lt; std::endl;</span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaUNC">           0 :          data[bit_cursor / 8] |= static_cast&lt;uint8_t&gt;(1 &lt;&lt; (bit_cursor &amp; 7));</span></span>
+<span id="L52"><span class="lineNum">      52</span>              :       }</span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaUNC">           0 :       ++bit_cursor;</span></span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaUNC">           0 :       assert(bit_cursor &lt;= 256);</span></span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaUNC">           0 :    }</span></span>
+<span id="L56"><span class="lineNum">      56</span>              : </span>
+<span id="L57"><span class="lineNum">      57</span>              :    // Get 1 bit from the stream.</span>
+<span id="L58"><span class="lineNum">      58</span> <span class="tlaUNC">           0 :    int read_one_bit() {</span></span>
+<span id="L59"><span class="lineNum">      59</span> <span class="tlaUNC">           0 :       int b = (data[bit_cursor / 8] &gt;&gt; (bit_cursor &amp; 7)) &amp; 1;</span></span>
+<span id="L60"><span class="lineNum">      60</span> <span class="tlaUNC">           0 :       ++bit_cursor;</span></span>
+<span id="L61"><span class="lineNum">      61</span> <span class="tlaUNC">           0 :       assert(bit_cursor &lt;= 256);</span></span>
+<span id="L62"><span class="lineNum">      62</span> <span class="tlaUNC">           0 :       return b;</span></span>
+<span id="L63"><span class="lineNum">      63</span>              :    }</span>
+<span id="L64"><span class="lineNum">      64</span>              : </span>
+<span id="L65"><span class="lineNum">      65</span>              :    // write n bits of data</span>
+<span id="L66"><span class="lineNum">      66</span>              :    // Data shall be written out from the lower order of d.</span>
+<span id="L67"><span class="lineNum">      67</span>              :    void write_n_bit(int d, int n) {</span>
+<span id="L68"><span class="lineNum">      68</span> <span class="tlaUNC">           0 :       for (int i = 0; i &lt; n; ++i) write_one_bit(d &amp; (1 &lt;&lt; i));</span></span>
+<span id="L69"><span class="lineNum">      69</span>              :    }</span>
+<span id="L70"><span class="lineNum">      70</span>              : </span>
+<span id="L71"><span class="lineNum">      71</span>              :    // read n bits of data</span>
+<span id="L72"><span class="lineNum">      72</span>              :    // Reverse conversion of write_n_bit().</span>
+<span id="L73"><span class="lineNum">      73</span>              :    int read_n_bit(int n) {</span>
+<span id="L74"><span class="lineNum">      74</span>              :       int result = 0;</span>
+<span id="L75"><span class="lineNum">      75</span> <span class="tlaUNC">           0 :       for (int i = 0; i &lt; n; ++i) result |= read_one_bit() ? (1 &lt;&lt; i) : 0;</span></span>
+<span id="L76"><span class="lineNum">      76</span>              : </span>
+<span id="L77"><span class="lineNum">      77</span>              :       return result;</span>
+<span id="L78"><span class="lineNum">      78</span>              :    }</span>
+<span id="L79"><span class="lineNum">      79</span>              : </span>
+<span id="L80"><span class="lineNum">      80</span>              :   private:</span>
+<span id="L81"><span class="lineNum">      81</span>              :    // Next bit position to read/write.</span>
+<span id="L82"><span class="lineNum">      82</span>              :    int bit_cursor = 0;</span>
+<span id="L83"><span class="lineNum">      83</span>              : </span>
+<span id="L84"><span class="lineNum">      84</span>              :    // data entity</span>
+<span id="L85"><span class="lineNum">      85</span>              :    mutable uint8_t* data = nullptr;</span>
+<span id="L86"><span class="lineNum">      86</span>              : };</span>
+<span id="L87"><span class="lineNum">      87</span>              : </span>
+<span id="L88"><span class="lineNum">      88</span>              : struct HuffmanedPiece {</span>
+<span id="L89"><span class="lineNum">      89</span>              :    int code; // how it will be coded</span>
+<span id="L90"><span class="lineNum">      90</span>              :    int bits; // How many bits do you have</span>
+<span id="L91"><span class="lineNum">      91</span>              : };</span>
+<span id="L92"><span class="lineNum">      92</span>              : </span>
+<span id="L93"><span class="lineNum">      93</span>              : HuffmanedPiece huffman_table[] = {</span>
+<span id="L94"><span class="lineNum">      94</span>              :     {0b0000, 1}, // NO_PIECE</span>
+<span id="L95"><span class="lineNum">      95</span>              :     {0b0001, 4}, // PAWN</span>
+<span id="L96"><span class="lineNum">      96</span>              :     {0b0011, 4}, // KNIGHT</span>
+<span id="L97"><span class="lineNum">      97</span>              :     {0b0101, 4}, // BISHOP</span>
+<span id="L98"><span class="lineNum">      98</span>              :     {0b0111, 4}, // ROOK</span>
+<span id="L99"><span class="lineNum">      99</span>              :     {0b1001, 4}, // QUEEN</span>
+<span id="L100"><span class="lineNum">     100</span>              : };</span>
+<span id="L101"><span class="lineNum">     101</span>              : </span>
+<span id="L102"><span class="lineNum">     102</span>              : // Class for compressing/decompressing sfen</span>
+<span id="L103"><span class="lineNum">     103</span>              : struct SfenPacker {</span>
+<span id="L104"><span class="lineNum">     104</span>              :    // Pack sfen and store in data[32].</span>
+<span id="L105"><span class="lineNum">     105</span> <span class="tlaUNC">           0 :    void pack(const Position&amp; pos) {</span></span>
+<span id="L106"><span class="lineNum">     106</span>              :       //std::cout &lt;&lt; GetFEN(pos) &lt;&lt; std::endl;</span>
+<span id="L107"><span class="lineNum">     107</span>              : </span>
+<span id="L108"><span class="lineNum">     108</span> <span class="tlaUNC">           0 :       memset(data, 0, 32 /* 256bit */);</span></span>
+<span id="L109"><span class="lineNum">     109</span> <span class="tlaUNC">           0 :       stream.set_data(data);</span></span>
+<span id="L110"><span class="lineNum">     110</span>              : </span>
+<span id="L111"><span class="lineNum">     111</span>              :       // Side to move.</span>
+<span id="L112"><span class="lineNum">     112</span> <span class="tlaUNC">           0 :       stream.write_one_bit(static_cast&lt;int&gt;(pos.c));</span></span>
+<span id="L113"><span class="lineNum">     113</span>              : </span>
+<span id="L114"><span class="lineNum">     114</span>              :       // 7-bit positions for leading and trailing balls</span>
+<span id="L115"><span class="lineNum">     115</span>              :       // White king and black king, 6 bits for each.</span>
+<span id="L116"><span class="lineNum">     116</span> <span class="tlaUNC">           0 :       for (auto c : {Co_White, Co_Black}) stream.write_n_bit(pos.king[c], 6);</span></span>
+<span id="L117"><span class="lineNum">     117</span>              : </span>
+<span id="L118"><span class="lineNum">     118</span>              :       // Write the pieces on the board other than the kings.</span>
+<span id="L119"><span class="lineNum">     119</span>              :       for (Rank r = Rank_8;; --r) {</span>
+<span id="L120"><span class="lineNum">     120</span> <span class="tlaUNC">           0 :          for (File f = File_a; f &lt;= File_h; ++f) {</span></span>
+<span id="L121"><span class="lineNum">     121</span> <span class="tlaUNC">           0 :             Piece pc = pos.board_const(MakeSquare(f, r));</span></span>
+<span id="L122"><span class="lineNum">     122</span>              :             //std::cout &lt;&lt; static_cast&lt;int&gt;(pc) &lt;&lt; std::endl;</span>
+<span id="L123"><span class="lineNum">     123</span> <span class="tlaUNC">           0 :             if (std::abs(pc) == P_wk) continue;</span></span>
+<span id="L124"><span class="lineNum">     124</span> <span class="tlaUNC">           0 :             write_board_piece_to_stream(pc);</span></span>
+<span id="L125"><span class="lineNum">     125</span>              :          }</span>
+<span id="L126"><span class="lineNum">     126</span> <span class="tlaUNC">           0 :          if (r == Rank_1) break; // because rank is unsigned !!</span></span>
+<span id="L127"><span class="lineNum">     127</span>              :       }</span>
+<span id="L128"><span class="lineNum">     128</span>              : </span>
+<span id="L129"><span class="lineNum">     129</span>              :       ///@todo: Support chess960.</span>
+<span id="L130"><span class="lineNum">     130</span> <span class="tlaUNC">           0 :       stream.write_one_bit(pos.castling &amp; C_wks);</span></span>
+<span id="L131"><span class="lineNum">     131</span> <span class="tlaUNC">           0 :       stream.write_one_bit(pos.castling &amp; C_wqs);</span></span>
+<span id="L132"><span class="lineNum">     132</span> <span class="tlaUNC">           0 :       stream.write_one_bit(pos.castling &amp; C_bks);</span></span>
+<span id="L133"><span class="lineNum">     133</span> <span class="tlaUNC">           0 :       stream.write_one_bit(pos.castling &amp; C_bqs);</span></span>
+<span id="L134"><span class="lineNum">     134</span>              : </span>
+<span id="L135"><span class="lineNum">     135</span> <span class="tlaUNC">           0 :       if (pos.ep == INVALIDSQUARE) { stream.write_one_bit(0); }</span></span>
+<span id="L136"><span class="lineNum">     136</span>              :       else {</span>
+<span id="L137"><span class="lineNum">     137</span> <span class="tlaUNC">           0 :          stream.write_one_bit(1);</span></span>
+<span id="L138"><span class="lineNum">     138</span> <span class="tlaUNC">           0 :          stream.write_n_bit(static_cast&lt;int&gt;(pos.ep), 6);</span></span>
+<span id="L139"><span class="lineNum">     139</span>              :       }</span>
+<span id="L140"><span class="lineNum">     140</span>              : </span>
+<span id="L141"><span class="lineNum">     141</span> <span class="tlaUNC">           0 :       stream.write_n_bit(pos.fifty, 6);</span></span>
+<span id="L142"><span class="lineNum">     142</span> <span class="tlaUNC">           0 :       stream.write_n_bit(pos.moves, 8);</span></span>
+<span id="L143"><span class="lineNum">     143</span> <span class="tlaUNC">           0 :       assert(stream.get_cursor() &lt;= 256);</span></span>
+<span id="L144"><span class="lineNum">     144</span> <span class="tlaUNC">           0 :    }</span></span>
+<span id="L145"><span class="lineNum">     145</span>              : </span>
+<span id="L146"><span class="lineNum">     146</span>              :    // sfen packed by pack() (256bit = 32bytes)</span>
+<span id="L147"><span class="lineNum">     147</span>              :    // Or sfen to decode with unpack()</span>
+<span id="L148"><span class="lineNum">     148</span>              :    uint8_t* data = nullptr; // uint8_t[32];</span>
+<span id="L149"><span class="lineNum">     149</span>              : </span>
+<span id="L150"><span class="lineNum">     150</span>              :    BitStream stream;</span>
+<span id="L151"><span class="lineNum">     151</span>              : </span>
+<span id="L152"><span class="lineNum">     152</span>              :    // Output the board pieces to stream.</span>
+<span id="L153"><span class="lineNum">     153</span> <span class="tlaUNC">           0 :    void write_board_piece_to_stream(Piece pc) {</span></span>
+<span id="L154"><span class="lineNum">     154</span>              :       // piece type</span>
+<span id="L155"><span class="lineNum">     155</span> <span class="tlaUNC">           0 :       auto c = huffman_table[std::abs(pc)];</span></span>
+<span id="L156"><span class="lineNum">     156</span> <span class="tlaUNC">           0 :       stream.write_n_bit(c.code, c.bits);</span></span>
+<span id="L157"><span class="lineNum">     157</span> <span class="tlaUNC">           0 :       if (pc == P_none) return;</span></span>
+<span id="L158"><span class="lineNum">     158</span> <span class="tlaUNC">           0 :       stream.write_one_bit(pc &gt; 0 ? Co_White : Co_Black);</span></span>
+<span id="L159"><span class="lineNum">     159</span>              :    }</span>
+<span id="L160"><span class="lineNum">     160</span>              : </span>
+<span id="L161"><span class="lineNum">     161</span>              :    // Read one board piece from stream</span>
+<span id="L162"><span class="lineNum">     162</span> <span class="tlaUNC">           0 :    Piece read_board_piece_from_stream() {</span></span>
+<span id="L163"><span class="lineNum">     163</span>              :       Piece pr   = P_none;</span>
+<span id="L164"><span class="lineNum">     164</span>              :       int code = 0;</span>
+<span id="L165"><span class="lineNum">     165</span>              :       int bits = 0;</span>
+<span id="L166"><span class="lineNum">     166</span>              :       while (true) {</span>
+<span id="L167"><span class="lineNum">     167</span> <span class="tlaUNC">           0 :          code |= stream.read_one_bit() &lt;&lt; bits;</span></span>
+<span id="L168"><span class="lineNum">     168</span> <span class="tlaUNC">           0 :          ++bits;</span></span>
+<span id="L169"><span class="lineNum">     169</span> <span class="tlaUNC">           0 :          assert(bits &lt;= 6);</span></span>
+<span id="L170"><span class="lineNum">     170</span> <span class="tlaUNC">           0 :          for (pr = P_none; pr &lt; P_wk; ++pr) {</span></span>
+<span id="L171"><span class="lineNum">     171</span> <span class="tlaUNC">           0 :             if (huffman_table[pr].code == code &amp;&amp; huffman_table[pr].bits == bits) goto Found;</span></span>
+<span id="L172"><span class="lineNum">     172</span>              :          }</span>
+<span id="L173"><span class="lineNum">     173</span>              :       }</span>
+<span id="L174"><span class="lineNum">     174</span>              :    Found:;</span>
+<span id="L175"><span class="lineNum">     175</span>              :       assert(pr != P_wk);</span>
+<span id="L176"><span class="lineNum">     176</span> <span class="tlaUNC">           0 :       if (pr == P_none) return P_none;</span></span>
+<span id="L177"><span class="lineNum">     177</span>              : </span>
+<span id="L178"><span class="lineNum">     178</span> <span class="tlaUNC">           0 :       const Color c = static_cast&lt;Color&gt;(stream.read_one_bit());</span></span>
+<span id="L179"><span class="lineNum">     179</span> <span class="tlaUNC">           0 :       return c == Co_White ? pr : ~pr;</span></span>
+<span id="L180"><span class="lineNum">     180</span>              :    }</span>
+<span id="L181"><span class="lineNum">     181</span>              : </span>
+<span id="L182"><span class="lineNum">     182</span>              : }; // SfenPacker</span>
+<span id="L183"><span class="lineNum">     183</span>              : </span>
+<span id="L184"><span class="lineNum">     184</span>              : } // namespace</span>
+<span id="L185"><span class="lineNum">     185</span>              : </span>
+<span id="L186"><span class="lineNum">     186</span> <span class="tlaUNC">           0 : MiniMove ToSFMove(const Position&amp; p, const Square from, const Square to, const MType type) {</span></span>
+<span id="L187"><span class="lineNum">     187</span> <span class="tlaUNC">           0 :    assert(from &gt;= 0 &amp;&amp; from &lt; 64);</span></span>
+<span id="L188"><span class="lineNum">     188</span> <span class="tlaUNC">           0 :    assert(to &gt;= 0 &amp;&amp; to &lt; 64);</span></span>
+<span id="L189"><span class="lineNum">     189</span> <span class="tlaUNC">           0 :    if (isPromotion(type)) return FromSF::MakeMove&lt;FromSF::PROMOTION&gt;(from, to, promShift(type));</span></span>
+<span id="L190"><span class="lineNum">     190</span> <span class="tlaUNC">           0 :    else if (type == T_ep)</span></span>
+<span id="L191"><span class="lineNum">     191</span> <span class="tlaUNC">           0 :       return FromSF::MakeMove&lt;FromSF::ENPASSANT&gt;(from, p.ep);</span></span>
+<span id="L192"><span class="lineNum">     192</span> <span class="tlaUNC">           0 :    else if (isCastling(type)) {</span></span>
+<span id="L193"><span class="lineNum">     193</span> <span class="tlaUNC">           0 :       switch (type) {</span></span>
+<span id="L194"><span class="lineNum">     194</span> <span class="tlaUNC">           0 :          case T_wks: return FromSF::MakeMove&lt;FromSF::CASTLING&gt;(from, p.rootInfo().rooksInit[Co_White][CT_OO]);</span></span>
+<span id="L195"><span class="lineNum">     195</span> <span class="tlaUNC">           0 :          case T_wqs: return FromSF::MakeMove&lt;FromSF::CASTLING&gt;(from, p.rootInfo().rooksInit[Co_White][CT_OOO]);</span></span>
+<span id="L196"><span class="lineNum">     196</span> <span class="tlaUNC">           0 :          case T_bks: return FromSF::MakeMove&lt;FromSF::CASTLING&gt;(from, p.rootInfo().rooksInit[Co_Black][CT_OO]);</span></span>
+<span id="L197"><span class="lineNum">     197</span> <span class="tlaUNC">           0 :          case T_bqs: return FromSF::MakeMove&lt;FromSF::CASTLING&gt;(from, p.rootInfo().rooksInit[Co_Black][CT_OOO]);</span></span>
+<span id="L198"><span class="lineNum">     198</span>              :          default: return INVALIDMINIMOVE;</span>
+<span id="L199"><span class="lineNum">     199</span>              :       }</span>
+<span id="L200"><span class="lineNum">     200</span>              :    }</span>
+<span id="L201"><span class="lineNum">     201</span>              :    else</span>
+<span id="L202"><span class="lineNum">     202</span> <span class="tlaUNC">           0 :       return FromSF::MakeMoveStd(from, to);</span></span>
+<span id="L203"><span class="lineNum">     203</span>              : }</span>
+<span id="L204"><span class="lineNum">     204</span>              : </span>
+<span id="L205"><span class="lineNum">     205</span> <span class="tlaUNC">           0 : MiniMove FromSFMove(const Position&amp; p, const MiniMove sfmove) {</span></span>
+<span id="L206"><span class="lineNum">     206</span> <span class="tlaUNC">           0 :    const Square           from   = FromSF::from_sq(sfmove);</span></span>
+<span id="L207"><span class="lineNum">     207</span>              :    const Square           to     = FromSF::to_sq(sfmove);</span>
+<span id="L208"><span class="lineNum">     208</span>              :    const FromSF::MoveType SFtype = FromSF::type_of(sfmove);</span>
+<span id="L209"><span class="lineNum">     209</span>              :    MType                  type   = T_std;</span>
+<span id="L210"><span class="lineNum">     210</span> <span class="tlaUNC">           0 :    switch (SFtype) {</span></span>
+<span id="L211"><span class="lineNum">     211</span> <span class="tlaUNC">           0 :       case FromSF::NORMAL:</span></span>
+<span id="L212"><span class="lineNum">     212</span> <span class="tlaUNC">           0 :          if (p.board_const(to) != P_none) type = T_capture;</span></span>
+<span id="L213"><span class="lineNum">     213</span>              :          break;</span>
+<span id="L214"><span class="lineNum">     214</span> <span class="tlaUNC">           0 :       case FromSF::PROMOTION:</span></span>
+<span id="L215"><span class="lineNum">     215</span>              :          {</span>
+<span id="L216"><span class="lineNum">     216</span>              :             const Piece pp = FromSF::promotion_type(sfmove);</span>
+<span id="L217"><span class="lineNum">     217</span> <span class="tlaUNC">           0 :             if (pp == P_wq) { type = p.board_const(to) == P_none ? T_promq : T_cappromq; }</span></span>
+<span id="L218"><span class="lineNum">     218</span> <span class="tlaUNC">           0 :             else if (pp == P_wr) {</span></span>
+<span id="L219"><span class="lineNum">     219</span> <span class="tlaUNC">           0 :                type = p.board_const(to) == P_none ? T_promr : T_cappromr;</span></span>
+<span id="L220"><span class="lineNum">     220</span>              :             }</span>
+<span id="L221"><span class="lineNum">     221</span> <span class="tlaUNC">           0 :             else if (pp == P_wb) {</span></span>
+<span id="L222"><span class="lineNum">     222</span> <span class="tlaUNC">           0 :                type = p.board_const(to) == P_none ? T_promb : T_cappromb;</span></span>
+<span id="L223"><span class="lineNum">     223</span>              :             }</span>
+<span id="L224"><span class="lineNum">     224</span>              :             else if (pp == P_wn) {</span>
+<span id="L225"><span class="lineNum">     225</span> <span class="tlaUNC">           0 :                type = p.board_const(to) == P_none ? T_promn : T_cappromn;</span></span>
+<span id="L226"><span class="lineNum">     226</span>              :             }</span>
+<span id="L227"><span class="lineNum">     227</span>              :          }</span>
+<span id="L228"><span class="lineNum">     228</span>              :          break;</span>
+<span id="L229"><span class="lineNum">     229</span>              :       case FromSF::ENPASSANT: type = T_ep; break;</span>
+<span id="L230"><span class="lineNum">     230</span>              :       case FromSF::CASTLING:</span>
+<span id="L231"><span class="lineNum">     231</span> <span class="tlaUNC">           0 :          if (to == p.rootInfo().rooksInit[Co_White][CT_OO]) type = T_wks;</span></span>
+<span id="L232"><span class="lineNum">     232</span> <span class="tlaUNC">           0 :          if (to == p.rootInfo().rooksInit[Co_White][CT_OOO]) type = T_wqs;</span></span>
+<span id="L233"><span class="lineNum">     233</span> <span class="tlaUNC">           0 :          if (to == p.rootInfo().rooksInit[Co_Black][CT_OO]) type = T_bks;</span></span>
+<span id="L234"><span class="lineNum">     234</span> <span class="tlaUNC">           0 :          if (to == p.rootInfo().rooksInit[Co_Black][CT_OOO]) type = T_bqs;</span></span>
+<span id="L235"><span class="lineNum">     235</span>              :          break;</span>
+<span id="L236"><span class="lineNum">     236</span> <span class="tlaUNC">           0 :       default: assert(false);</span></span>
+<span id="L237"><span class="lineNum">     237</span>              :    }</span>
+<span id="L238"><span class="lineNum">     238</span> <span class="tlaUNC">           0 :    return ToMove(from, to, type);</span></span>
+<span id="L239"><span class="lineNum">     239</span>              : }</span>
+<span id="L240"><span class="lineNum">     240</span>              : </span>
+<span id="L241"><span class="lineNum">     241</span> <span class="tlaUNC">           0 : void sfen_pack(const Position&amp; p, PackedSfen&amp; sfen) {</span></span>
+<span id="L242"><span class="lineNum">     242</span> <span class="tlaUNC">           0 :    SfenPacker sp;</span></span>
+<span id="L243"><span class="lineNum">     243</span> <span class="tlaUNC">           0 :    sp.data = reinterpret_cast&lt;uint8_t*&gt;(&amp;sfen);</span></span>
+<span id="L244"><span class="lineNum">     244</span> <span class="tlaUNC">           0 :    sp.pack(p);</span></span>
+<span id="L245"><span class="lineNum">     245</span> <span class="tlaUNC">           0 : }</span></span>
+<span id="L246"><span class="lineNum">     246</span>              : </span>
+<span id="L247"><span class="lineNum">     247</span>              : // If there is a problem with the passed phase and there is an error, non-zero is returned.</span>
+<span id="L248"><span class="lineNum">     248</span> <span class="tlaUNC">           0 : int set_from_packed_sfen(Position&amp; p, PackedSfen&amp; sfen) {</span></span>
+<span id="L249"><span class="lineNum">     249</span> <span class="tlaUNC">           0 :    SfenPacker packer;</span></span>
+<span id="L250"><span class="lineNum">     250</span>              :    auto&amp;      stream = packer.stream;</span>
+<span id="L251"><span class="lineNum">     251</span>              :    stream.set_data(reinterpret_cast&lt;uint8_t*&gt;(&amp;sfen));</span>
+<span id="L252"><span class="lineNum">     252</span>              : </span>
+<span id="L253"><span class="lineNum">     253</span>              :    // Active color</span>
+<span id="L254"><span class="lineNum">     254</span> <span class="tlaUNC">           0 :    p.c = static_cast&lt;Color&gt;(stream.read_one_bit());</span></span>
+<span id="L255"><span class="lineNum">     255</span>              : </span>
+<span id="L256"><span class="lineNum">     256</span> <span class="tlaUNC">           0 :    for (auto c : {Co_White, Co_Black}) {</span></span>
+<span id="L257"><span class="lineNum">     257</span> <span class="tlaUNC">           0 :       const Square sq = static_cast&lt;Square&gt;(stream.read_n_bit(6));</span></span>
+<span id="L258"><span class="lineNum">     258</span> <span class="tlaUNC">           0 :       p.board(sq)     = (c == Co_White ? P_wk : P_bk);</span></span>
+<span id="L259"><span class="lineNum">     259</span> <span class="tlaUNC">           0 :       p.king[c]       = sq;</span></span>
+<span id="L260"><span class="lineNum">     260</span>              :    }</span>
+<span id="L261"><span class="lineNum">     261</span>              : </span>
+<span id="L262"><span class="lineNum">     262</span> <span class="tlaUNC">           0 :    p.rootInfo().kingInit[Co_White] = p.king[Co_White];</span></span>
+<span id="L263"><span class="lineNum">     263</span> <span class="tlaUNC">           0 :    p.rootInfo().kingInit[Co_Black] = p.king[Co_Black];</span></span>
+<span id="L264"><span class="lineNum">     264</span>              : </span>
+<span id="L265"><span class="lineNum">     265</span>              :    // Piece placement</span>
+<span id="L266"><span class="lineNum">     266</span>              :    for (Rank r = Rank_8;; --r) {</span>
+<span id="L267"><span class="lineNum">     267</span> <span class="tlaUNC">           0 :       for (File f = File_a; f &lt;= File_h; ++f) {</span></span>
+<span id="L268"><span class="lineNum">     268</span>              :          auto  sq = MakeSquare(f, r);</span>
+<span id="L269"><span class="lineNum">     269</span>              :          Piece pc = P_none;</span>
+<span id="L270"><span class="lineNum">     270</span>              : </span>
+<span id="L271"><span class="lineNum">     271</span>              :          // skip already given kings</span>
+<span id="L272"><span class="lineNum">     272</span> <span class="tlaUNC">           0 :          if (PieceTools::getPieceType(p, sq) != P_wk) {</span></span>
+<span id="L273"><span class="lineNum">     273</span> <span class="tlaUNC">           0 :             assert(p.board_const(sq) == P_none);</span></span>
+<span id="L274"><span class="lineNum">     274</span> <span class="tlaUNC">           0 :             pc = packer.read_board_piece_from_stream();</span></span>
+<span id="L275"><span class="lineNum">     275</span>              :          }</span>
+<span id="L276"><span class="lineNum">     276</span>              : </span>
+<span id="L277"><span class="lineNum">     277</span>              :          // There may be no pieces, so skip in that case (also cover king case).</span>
+<span id="L278"><span class="lineNum">     278</span> <span class="tlaUNC">           0 :          if (pc == P_none) continue;</span></span>
+<span id="L279"><span class="lineNum">     279</span>              : </span>
+<span id="L280"><span class="lineNum">     280</span> <span class="tlaUNC">           0 :          p.board(sq) = pc;</span></span>
+<span id="L281"><span class="lineNum">     281</span>              : </span>
+<span id="L282"><span class="lineNum">     282</span> <span class="tlaUNC">           0 :          if (stream.get_cursor() &gt; 256) return 1;</span></span>
+<span id="L283"><span class="lineNum">     283</span>              :       }</span>
+<span id="L284"><span class="lineNum">     284</span> <span class="tlaUNC">           0 :       if (r == Rank_1) break; // because rank is unsigned !!</span></span>
+<span id="L285"><span class="lineNum">     285</span>              :    }</span>
+<span id="L286"><span class="lineNum">     286</span>              : </span>
+<span id="L287"><span class="lineNum">     287</span>              :    // Castling availability.</span>
+<span id="L288"><span class="lineNum">     288</span> <span class="tlaUNC">           0 :    p.castling = C_none;</span></span>
+<span id="L289"><span class="lineNum">     289</span> <span class="tlaUNC">           0 :    if (stream.read_one_bit()) {</span></span>
+<span id="L290"><span class="lineNum">     290</span>              :       Square rsq;</span>
+<span id="L291"><span class="lineNum">     291</span> <span class="tlaUNC">           0 :       for (rsq = relative_square(Co_White, Sq_h1); p.board_const(rsq) != P_wr; --rsq) {}</span></span>
+<span id="L292"><span class="lineNum">     292</span> <span class="tlaUNC">           0 :       p.rootInfo().rooksInit[Co_White][CT_OO] = rsq;</span></span>
+<span id="L293"><span class="lineNum">     293</span>              :       p.castling |= C_wks;</span>
+<span id="L294"><span class="lineNum">     294</span>              :    }</span>
+<span id="L295"><span class="lineNum">     295</span> <span class="tlaUNC">           0 :    if (stream.read_one_bit()) {</span></span>
+<span id="L296"><span class="lineNum">     296</span>              :       Square rsq;</span>
+<span id="L297"><span class="lineNum">     297</span> <span class="tlaUNC">           0 :       for (rsq = relative_square(Co_White, Sq_a1); p.board_const(rsq) != P_wr; ++rsq) {}</span></span>
+<span id="L298"><span class="lineNum">     298</span> <span class="tlaUNC">           0 :       p.rootInfo().rooksInit[Co_White][CT_OOO] = rsq;</span></span>
+<span id="L299"><span class="lineNum">     299</span>              :       p.castling |= C_wqs;</span>
+<span id="L300"><span class="lineNum">     300</span>              :    }</span>
+<span id="L301"><span class="lineNum">     301</span> <span class="tlaUNC">           0 :    if (stream.read_one_bit()) {</span></span>
+<span id="L302"><span class="lineNum">     302</span>              :       Square rsq;</span>
+<span id="L303"><span class="lineNum">     303</span> <span class="tlaUNC">           0 :       for (rsq = relative_square(Co_Black, Sq_h1); p.board_const(rsq) != P_br; --rsq) {}</span></span>
+<span id="L304"><span class="lineNum">     304</span> <span class="tlaUNC">           0 :       p.rootInfo().rooksInit[Co_Black][CT_OO] = rsq;</span></span>
+<span id="L305"><span class="lineNum">     305</span>              :       p.castling |= C_bks;</span>
+<span id="L306"><span class="lineNum">     306</span>              :    }</span>
+<span id="L307"><span class="lineNum">     307</span> <span class="tlaUNC">           0 :    if (stream.read_one_bit()) {</span></span>
+<span id="L308"><span class="lineNum">     308</span>              :       Square rsq;</span>
+<span id="L309"><span class="lineNum">     309</span> <span class="tlaUNC">           0 :       for (rsq = relative_square(Co_Black, Sq_a1); p.board_const(rsq) != P_br; ++rsq) {}</span></span>
+<span id="L310"><span class="lineNum">     310</span> <span class="tlaUNC">           0 :       p.rootInfo().rooksInit[Co_Black][CT_OOO] = rsq;</span></span>
+<span id="L311"><span class="lineNum">     311</span>              :       p.castling |= C_bqs;</span>
+<span id="L312"><span class="lineNum">     312</span>              :    }</span>
+<span id="L313"><span class="lineNum">     313</span>              : </span>
+<span id="L314"><span class="lineNum">     314</span>              :    // En passant square.</span>
+<span id="L315"><span class="lineNum">     315</span> <span class="tlaUNC">           0 :    if (stream.read_one_bit()) {</span></span>
+<span id="L316"><span class="lineNum">     316</span> <span class="tlaUNC">           0 :       Square ep_square = static_cast&lt;Square&gt;(stream.read_n_bit(6));</span></span>
+<span id="L317"><span class="lineNum">     317</span> <span class="tlaUNC">           0 :       p.ep             = ep_square;</span></span>
+<span id="L318"><span class="lineNum">     318</span>              :       ///@todo verify en passant square</span>
+<span id="L319"><span class="lineNum">     319</span>              :    }</span>
+<span id="L320"><span class="lineNum">     320</span>              :    else</span>
+<span id="L321"><span class="lineNum">     321</span> <span class="tlaUNC">           0 :       p.ep = INVALIDSQUARE;</span></span>
+<span id="L322"><span class="lineNum">     322</span>              : </span>
+<span id="L323"><span class="lineNum">     323</span>              :    // Halfmove clock</span>
+<span id="L324"><span class="lineNum">     324</span> <span class="tlaUNC">           0 :    p.fifty = static_cast&lt;decltype(p.fifty)&gt;(stream.read_n_bit(6));</span></span>
+<span id="L325"><span class="lineNum">     325</span>              : </span>
+<span id="L326"><span class="lineNum">     326</span>              :    // Fullmove number</span>
+<span id="L327"><span class="lineNum">     327</span> <span class="tlaUNC">           0 :    p.moves = static_cast&lt;decltype(p.moves)&gt;(stream.read_n_bit(8));</span></span>
+<span id="L328"><span class="lineNum">     328</span> <span class="tlaUNC">           0 :    if (p.moves &lt; 1) { // fix a LittleBlitzer bug here ...</span></span>
+<span id="L329"><span class="lineNum">     329</span> <span class="tlaUNC">           0 :       Logging::LogIt(Logging::logDebug) &lt;&lt; &quot;Wrong move counter &quot; &lt;&lt; static_cast&lt;int&gt;(p.moves) &lt;&lt; &quot; using 1 instead&quot;;</span></span>
+<span id="L330"><span class="lineNum">     330</span> <span class="tlaUNC">           0 :       p.moves = 1;</span></span>
+<span id="L331"><span class="lineNum">     331</span>              :    }</span>
+<span id="L332"><span class="lineNum">     332</span> <span class="tlaUNC">           0 :    assert(stream.get_cursor() &lt;= 256);</span></span>
+<span id="L333"><span class="lineNum">     333</span>              : </span>
+<span id="L334"><span class="lineNum">     334</span> <span class="tlaUNC">           0 :    p.halfmoves = static_cast&lt;decltype(p.halfmoves)&gt;((p.moves - 1) * 2 + 1 + (p.c == Co_Black ? 1 : 0));</span></span>
+<span id="L335"><span class="lineNum">     335</span>              : </span>
+<span id="L336"><span class="lineNum">     336</span> <span class="tlaUNC">           0 :    p.rootInfo().initCaslingPermHashTable();</span></span>
+<span id="L337"><span class="lineNum">     337</span>              : </span>
+<span id="L338"><span class="lineNum">     338</span> <span class="tlaUNC">           0 :    BBTools::setBitBoards(p);</span></span>
+<span id="L339"><span class="lineNum">     339</span> <span class="tlaUNC">           0 :    MaterialHash::initMaterial(p);</span></span>
+<span id="L340"><span class="lineNum">     340</span> <span class="tlaUNC">           0 :    p.h  = computeHash(p);</span></span>
+<span id="L341"><span class="lineNum">     341</span> <span class="tlaUNC">           0 :    p.ph = computePHash(p);</span></span>
+<span id="L342"><span class="lineNum">     342</span>              : </span>
+<span id="L343"><span class="lineNum">     343</span> <span class="tlaUNC">           0 :    return 0;</span></span>
+<span id="L344"><span class="lineNum">     344</span>              : }</span>
+<span id="L345"><span class="lineNum">     345</span>              : </span>
+<span id="L346"><span class="lineNum">     346</span>              : #endif // WITH_DATA2BIN</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

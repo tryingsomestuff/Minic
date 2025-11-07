@@ -1,0 +1,309 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage - Source/timeMan.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">Source</a> - timeMan.cpp<span style="font-size: 80%;"> (source / <a href="timeMan.cpp.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryLo">21.5&nbsp;%</td>
+            <td class="headerCovTableEntry">121</td>
+            <td class="headerCovTableEntry">26</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryLo">66.7&nbsp;%</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">2</td>
+          </tr>
+                  <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : #include &quot;timeMan.hpp&quot;</span>
+<span id="L2"><span class="lineNum">       2</span>              : </span>
+<span id="L3"><span class="lineNum">       3</span>              : #include &quot;dynamicConfig.hpp&quot;</span>
+<span id="L4"><span class="lineNum">       4</span>              : #include &quot;logging.hpp&quot;</span>
+<span id="L5"><span class="lineNum">       5</span>              : #include &quot;moveApply.hpp&quot;</span>
+<span id="L6"><span class="lineNum">       6</span>              : #include &quot;position.hpp&quot;</span>
+<span id="L7"><span class="lineNum">       7</span>              : #include &quot;searcher.hpp&quot;</span>
+<span id="L8"><span class="lineNum">       8</span>              : #include &quot;threading.hpp&quot;</span>
+<span id="L9"><span class="lineNum">       9</span>              : </span>
+<span id="L10"><span class="lineNum">      10</span>              : namespace TimeMan {</span>
+<span id="L11"><span class="lineNum">      11</span>              : </span>
+<span id="L12"><span class="lineNum">      12</span>              : TimeType msecPerMove = 777, msecInTC = -1, msecInc = -1, msecUntilNextTC = -1, overHead = 0;</span>
+<span id="L13"><span class="lineNum">      13</span>              : TimeType targetTime = 0, maxTime = 0;</span>
+<span id="L14"><span class="lineNum">      14</span>              : int      moveToGo = -1, nbMoveInTC = -1;</span>
+<span id="L15"><span class="lineNum">      15</span>              : uint64_t maxNodes = 0;</span>
+<span id="L16"><span class="lineNum">      16</span>              : bool     isDynamic = false;</span>
+<span id="L17"><span class="lineNum">      17</span>              : </span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC tlaBgGNC">           2 : void init() {</span></span>
+<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">           2 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Init timeman&quot;;</span></span>
+<span id="L20"><span class="lineNum">      20</span>              :    ///@todo shall be reset some stuff here ?</span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">           2 : }</span></span>
+<span id="L22"><span class="lineNum">      22</span>              : </span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">         351 : TimeType getNextMSecPerMove(const Position&amp; p) {</span></span>
+<span id="L24"><span class="lineNum">      24</span>              : </span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">         351 :    const TimeType msecMarginMin  = DynamicConfig::moveOverHead; // minimum margin</span></span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">         351 :    const TimeType msecMarginMax  = 3000; // maximum margin</span></span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">         351 :    const float    msecMarginCoef = 0.01f; // part of the remaining time use as margin</span></span>
+<span id="L28"><span class="lineNum">      28</span>              :    auto getMargin = [&amp;](TimeType remainingTime){</span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaUNC tlaBgUNC">           0 :       return std::max(std::min(msecMarginMax, static_cast&lt;TimeType&gt;(msecMarginCoef * static_cast&lt;float&gt;(remainingTime))), msecMarginMin);</span></span>
+<span id="L30"><span class="lineNum">      30</span>              :    };</span>
+<span id="L31"><span class="lineNum">      31</span>              : </span>
+<span id="L32"><span class="lineNum">      32</span>              :    TimeType ms = -1; // this is what we will compute here</span>
+<span id="L33"><span class="lineNum">      33</span>              : </span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC tlaBgGNC">         351 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;msecPerMove     &quot; &lt;&lt; msecPerMove;</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">         351 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;msecInTC        &quot; &lt;&lt; msecInTC;</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">         351 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;msecInc         &quot; &lt;&lt; msecInc;</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">         351 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;nbMoveInTC      &quot; &lt;&lt; nbMoveInTC;</span></span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">         351 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;msecUntilNextTC &quot; &lt;&lt; msecUntilNextTC;</span></span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">         702 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;currentNbMoves  &quot; &lt;&lt; static_cast&lt;int&gt;(p.moves);</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">         702 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;moveToGo        &quot; &lt;&lt; static_cast&lt;int&gt;(moveToGo);</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">         351 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;maxNodes        &quot; &lt;&lt; maxNodes;</span></span>
+<span id="L42"><span class="lineNum">      42</span>              : </span>
+<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC">         351 :    const TimeType msecIncLoc = (msecInc &gt; 0) ? msecInc : 0;</span></span>
+<span id="L44"><span class="lineNum">      44</span>              : </span>
+<span id="L45"><span class="lineNum">      45</span>              :    TimeType msecMargin = msecMarginMin;</span>
+<span id="L46"><span class="lineNum">      46</span>              : </span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">         351 :    if (maxNodes &gt; 0) {</span></span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">           1 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Fixed nodes per move&quot;;</span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">           1 :       targetTime = INFINITETIME;</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">           1 :       maxTime    = INFINITETIME;</span></span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">           1 :       return targetTime;</span></span>
+<span id="L52"><span class="lineNum">      52</span>              :    }</span>
+<span id="L53"><span class="lineNum">      53</span>              : </span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">         350 :    else if (msecPerMove &gt; 0) {</span></span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">         350 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Fixed time per move&quot;;</span></span>
+<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">         350 :       targetTime = msecPerMove;</span></span>
+<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">         350 :       maxTime    = msecPerMove;</span></span>
+<span id="L58"><span class="lineNum">      58</span> <span class="tlaGNC">         350 :       return targetTime;</span></span>
+<span id="L59"><span class="lineNum">      59</span>              :    }</span>
+<span id="L60"><span class="lineNum">      60</span>              : </span>
+<span id="L61"><span class="lineNum">      61</span> <span class="tlaUNC tlaBgUNC">           0 :    else if (nbMoveInTC &gt; 0) { // mps is given (xboard style)</span></span>
+<span id="L62"><span class="lineNum">      62</span>              :       assert(nbMoveInTC &gt; 0);</span>
+<span id="L63"><span class="lineNum">      63</span> <span class="tlaUNC">           0 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Xboard style TC&quot;;</span></span>
+<span id="L64"><span class="lineNum">      64</span> <span class="tlaUNC">           0 :       if (!isDynamic){</span></span>
+<span id="L65"><span class="lineNum">      65</span> <span class="tlaUNC">           0 :          assert(msecInTC &gt; 0);</span></span>
+<span id="L66"><span class="lineNum">      66</span>              :          // we have all static information here : nbMoveInTC in a nbMoveInTC TC with msecIncLoc of increment at each move.</span>
+<span id="L67"><span class="lineNum">      67</span>              :          // so we simply split time in equal parts</span>
+<span id="L68"><span class="lineNum">      68</span>              :          // we use the minimal margin</span>
+<span id="L69"><span class="lineNum">      69</span>              :          // WARNING note that this might be a bit stupid when used with a book</span>
+<span id="L70"><span class="lineNum">      70</span> <span class="tlaUNC">           0 :          const TimeType totalIncr = nbMoveInTC * msecIncLoc;</span></span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaUNC">           0 :          ms = static_cast&lt;TimeType&gt;(static_cast&lt;float&gt;(msecInTC + totalIncr - msecMargin) / static_cast&lt;float&gt;(nbMoveInTC));</span></span>
+<span id="L72"><span class="lineNum">      72</span>              :       }</span>
+<span id="L73"><span class="lineNum">      73</span>              :       else {</span>
+<span id="L74"><span class="lineNum">      74</span> <span class="tlaUNC">           0 :          assert(msecUntilNextTC &gt; 0);</span></span>
+<span id="L75"><span class="lineNum">      75</span>              :          // we have some dynamic information here :</span>
+<span id="L76"><span class="lineNum">      76</span>              :          // - the next TC will be in : (nbMoveInTC - ((p.moves - 1) % nbMoveInTC)) moves</span>
+<span id="L77"><span class="lineNum">      77</span>              :          // - current remaining time is msecUntilNextTC</span>
+<span id="L78"><span class="lineNum">      78</span>              :          // remainings increment sum is computed</span>
+<span id="L79"><span class="lineNum">      79</span>              :          // a margin will be used</span>
+<span id="L80"><span class="lineNum">      80</span>              :          // WARNING using this late moves in current TC can be a little longer depending on the margin used</span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaUNC">           0 :          const int moveUntilNextTC = nbMoveInTC - ((p.moves - 1) % nbMoveInTC); // this modulus is a bit slow probably</span></span>
+<span id="L82"><span class="lineNum">      82</span> <span class="tlaUNC">           0 :          const TimeType remainingIncr = moveUntilNextTC * msecIncLoc;</span></span>
+<span id="L83"><span class="lineNum">      83</span>              :          msecMargin = getMargin(msecUntilNextTC);</span>
+<span id="L84"><span class="lineNum">      84</span> <span class="tlaUNC">           0 :          ms = static_cast&lt;TimeType&gt;(static_cast&lt;float&gt;(msecUntilNextTC + remainingIncr - msecMargin) / static_cast&lt;float&gt;(moveUntilNextTC));</span></span>
+<span id="L85"><span class="lineNum">      85</span>              :       }</span>
+<span id="L86"><span class="lineNum">      86</span>              :    }</span>
+<span id="L87"><span class="lineNum">      87</span>              : </span>
+<span id="L88"><span class="lineNum">      88</span> <span class="tlaUNC">           0 :    else if (moveToGo &gt; 0) { // moveToGo is given (uci style)</span></span>
+<span id="L89"><span class="lineNum">      89</span> <span class="tlaUNC">           0 :       assert(msecUntilNextTC &gt; 0);</span></span>
+<span id="L90"><span class="lineNum">      90</span> <span class="tlaUNC">           0 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;UCI style TC&quot;;</span></span>
+<span id="L91"><span class="lineNum">      91</span> <span class="tlaUNC">           0 :       if (!isDynamic){</span></span>
+<span id="L92"><span class="lineNum">      92</span> <span class="tlaUNC">           0 :          Logging::LogIt(Logging::logFatal) &lt;&lt; &quot;bad timing configuration ... (missing dynamic UCI time info)&quot;;</span></span>
+<span id="L93"><span class="lineNum">      93</span>              :       }</span>
+<span id="L94"><span class="lineNum">      94</span>              :       else {</span>
+<span id="L95"><span class="lineNum">      95</span>              :          // we have dynamic information here :</span>
+<span id="L96"><span class="lineNum">      96</span>              :          // - move to go before next TC</span>
+<span id="L97"><span class="lineNum">      97</span>              :          // - current remaining time</span>
+<span id="L98"><span class="lineNum">      98</span>              :          // remainings increment sum is computed</span>
+<span id="L99"><span class="lineNum">      99</span>              :          // a margin will be used</span>
+<span id="L100"><span class="lineNum">     100</span>              :          // a correction factor is applied for UCI pondering in order to search longer ///@todo why only 3/2 ...</span>
+<span id="L101"><span class="lineNum">     101</span> <span class="tlaUNC">           0 :          const TimeType remainingIncr = moveToGo * msecIncLoc;</span></span>
+<span id="L102"><span class="lineNum">     102</span> <span class="tlaUNC">           0 :          const float ponderingCorrection = (ThreadPool::instance().main().getData().isPondering ? 3 : 2) / 2.f;</span></span>
+<span id="L103"><span class="lineNum">     103</span> <span class="tlaUNC">           0 :          msecMargin = getMargin(msecUntilNextTC);</span></span>
+<span id="L104"><span class="lineNum">     104</span> <span class="tlaUNC">           0 :          ms = static_cast&lt;TimeType&gt;((static_cast&lt;float&gt;(msecUntilNextTC + remainingIncr - msecMargin) / static_cast&lt;float&gt;(moveToGo) ) * ponderingCorrection);</span></span>
+<span id="L105"><span class="lineNum">     105</span>              :       }</span>
+<span id="L106"><span class="lineNum">     106</span>              :    }</span>
+<span id="L107"><span class="lineNum">     107</span>              : </span>
+<span id="L108"><span class="lineNum">     108</span>              :    else { // sudden death style</span>
+<span id="L109"><span class="lineNum">     109</span> <span class="tlaUNC">           0 :       assert(msecUntilNextTC &gt;= 0);</span></span>
+<span id="L110"><span class="lineNum">     110</span> <span class="tlaUNC">           0 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Suddendeath style&quot;;</span></span>
+<span id="L111"><span class="lineNum">     111</span> <span class="tlaUNC">           0 :       if (!isDynamic) Logging::LogIt(Logging::logFatal) &lt;&lt; &quot;bad timing configuration ... (missing dynamic time info for sudden death style TC)&quot;;</span></span>
+<span id="L112"><span class="lineNum">     112</span>              :       // we have only remaining time available</span>
+<span id="L113"><span class="lineNum">     113</span>              :       // we will do &quot;as if&quot; nmoves still need to be played</span>
+<span id="L114"><span class="lineNum">     114</span>              :       // we will take into account the time needed to parse input and get current position (overhead)</span>
+<span id="L115"><span class="lineNum">     115</span>              :       // in situation where increment is smaller than minimum margin we will be a lot more conservative</span>
+<span id="L116"><span class="lineNum">     116</span>              :       // a margin will be used</span>
+<span id="L117"><span class="lineNum">     117</span>              :       // a correction factor is applied for UCI pondering in order to search longer ///@todo why only 3/2 ...</span>
+<span id="L118"><span class="lineNum">     118</span>              :       // be carefull here !, using xboard (for instance under cutechess), we won't receive an increment</span>
+<span id="L119"><span class="lineNum">     119</span>              :       // moreover, we won't assume that receiving an increment once is enough to be sure we will receive it next time</span>
+<span id="L120"><span class="lineNum">     120</span>              :       // so we won't try to live on increment too soon. This will only happens when the game goes on and &quot;nmoves&quot; gets smaller...</span>
+<span id="L121"><span class="lineNum">     121</span>              : </span>
+<span id="L122"><span class="lineNum">     122</span>              :       // if increment is smaller than the minimal lost by move, this is a &quot;risky TC situation&quot;</span>
+<span id="L123"><span class="lineNum">     123</span> <span class="tlaUNC">           0 :       const bool riskySituation = msecInc &lt; msecMinimal;</span></span>
+<span id="L124"><span class="lineNum">     124</span>              :       // in case of a non risky situation, we can make some correction</span>
+<span id="L125"><span class="lineNum">     125</span>              :       // if game is long we will hope the end is near (between 0 and 15)</span>
+<span id="L126"><span class="lineNum">     126</span> <span class="tlaUNC">           0 :       const int gameLengthContrib = riskySituation ? static_cast&lt;int&gt;(std::min(15.f, p.halfmoves / 20.f))</span></span>
+<span id="L127"><span class="lineNum">     127</span> <span class="tlaUNC">           0 :                                                    : static_cast&lt;int&gt;(std::min(15.f, p.halfmoves / 10.f));</span></span>
+<span id="L128"><span class="lineNum">     128</span>              :       // if material is low we will hope the end is near (between 0 and 15)</span>
+<span id="L129"><span class="lineNum">     129</span> <span class="tlaUNC">           0 :       ScoreType sw = 0;</span></span>
+<span id="L130"><span class="lineNum">     130</span> <span class="tlaUNC">           0 :       ScoreType sb = 0;</span></span>
+<span id="L131"><span class="lineNum">     131</span> <span class="tlaUNC">           0 :       const float gp = gamePhase(p.mat, sw, sb);</span></span>
+<span id="L132"><span class="lineNum">     132</span> <span class="tlaUNC">           0 :       const int gamePhaseContrib  = riskySituation ? 0</span></span>
+<span id="L133"><span class="lineNum">     133</span> <span class="tlaUNC">           0 :                                                    : static_cast&lt;int&gt;((1.f-gp)*15);</span></span>
+<span id="L134"><span class="lineNum">     134</span>              :       // the applied correction will be the bigger one</span>
+<span id="L135"><span class="lineNum">     135</span> <span class="tlaUNC">           0 :       const int nmovesCorrection = std::max(gameLengthContrib, gamePhaseContrib);                                                    </span></span>
+<span id="L136"><span class="lineNum">     136</span> <span class="tlaUNC">           0 :       const int nmoves = riskySituation ? 28 : (16 - nmovesCorrection); </span></span>
+<span id="L137"><span class="lineNum">     137</span>              : </span>
+<span id="L138"><span class="lineNum">     138</span> <span class="tlaUNC">           0 :       if (nmoves * msecMinimal &gt; msecUntilNextTC){</span></span>
+<span id="L139"><span class="lineNum">     139</span> <span class="tlaUNC">           0 :          Logging::LogIt(Logging::logGUI) &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot;Minic is in time trouble ...&quot;;</span></span>
+<span id="L140"><span class="lineNum">     140</span>              :       }</span>
+<span id="L141"><span class="lineNum">     141</span>              : </span>
+<span id="L142"><span class="lineNum">     142</span> <span class="tlaUNC">           0 :       msecMargin = getMargin(msecUntilNextTC);</span></span>
+<span id="L143"><span class="lineNum">     143</span> <span class="tlaUNC">           0 :       const float frac = (static_cast&lt;float&gt;(msecUntilNextTC - msecMargin) / static_cast&lt;float&gt;(nmoves));</span></span>
+<span id="L144"><span class="lineNum">     144</span> <span class="tlaUNC">           0 :       const float incrBonus = riskySituation ? 0 : std::min(0.9f * msecIncLoc, msecUntilNextTC - msecMargin - frac);</span></span>
+<span id="L145"><span class="lineNum">     145</span> <span class="tlaUNC">           0 :       const float ponderingCorrection = (ThreadPool::instance().main().getData().isPondering ? 3 : 2) / 2.f;</span></span>
+<span id="L146"><span class="lineNum">     146</span> <span class="tlaUNC">           0 :       ms = static_cast&lt;TimeType&gt;( (frac + incrBonus) * ponderingCorrection);</span></span>
+<span id="L147"><span class="lineNum">     147</span>              : </span>
+<span id="L148"><span class="lineNum">     148</span> <span class="tlaUNC">           0 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;risky ?           &quot; &lt;&lt; riskySituation;</span></span>
+<span id="L149"><span class="lineNum">     149</span> <span class="tlaUNC">           0 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;msecIncLoc        &quot; &lt;&lt; msecIncLoc;</span></span>
+<span id="L150"><span class="lineNum">     150</span> <span class="tlaUNC">           0 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;msecUntilNextTC   &quot; &lt;&lt; msecUntilNextTC;</span></span>
+<span id="L151"><span class="lineNum">     151</span> <span class="tlaUNC">           0 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;gameLengthContrib &quot; &lt;&lt; gameLengthContrib;</span></span>
+<span id="L152"><span class="lineNum">     152</span> <span class="tlaUNC">           0 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;gamePhaseContrib  &quot; &lt;&lt; gamePhaseContrib;</span></span>
+<span id="L153"><span class="lineNum">     153</span> <span class="tlaUNC">           0 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;nmoves            &quot; &lt;&lt; nmoves;</span></span>
+<span id="L154"><span class="lineNum">     154</span> <span class="tlaUNC">           0 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;p.moves           &quot; &lt;&lt; static_cast&lt;int&gt;(p.moves);</span></span>
+<span id="L155"><span class="lineNum">     155</span> <span class="tlaUNC">           0 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;p.halfmoves       &quot; &lt;&lt; static_cast&lt;int&gt;(p.halfmoves);</span></span>
+<span id="L156"><span class="lineNum">     156</span> <span class="tlaUNC">           0 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;frac              &quot; &lt;&lt; frac;</span></span>
+<span id="L157"><span class="lineNum">     157</span> <span class="tlaUNC">           0 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;incrBonus         &quot; &lt;&lt; incrBonus;</span></span>
+<span id="L158"><span class="lineNum">     158</span> <span class="tlaUNC">           0 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;ms                &quot; &lt;&lt; ms;</span></span>
+<span id="L159"><span class="lineNum">     159</span>              :    }</span>
+<span id="L160"><span class="lineNum">     160</span>              : </span>
+<span id="L161"><span class="lineNum">     161</span>              :    // take overhead into account</span>
+<span id="L162"><span class="lineNum">     162</span>              :    // and if not much time left, let's try to return msecMinimal and hope for a friendly GUI...</span>
+<span id="L163"><span class="lineNum">     163</span> <span class="tlaUNC">           0 :    targetTime = std::max(ms - overHead, msecMinimal);</span></span>
+<span id="L164"><span class="lineNum">     164</span>              :    // maxTime will be our limit even in case of trouble</span>
+<span id="L165"><span class="lineNum">     165</span> <span class="tlaUNC">           0 :    maxTime = std::min(msecUntilNextTC - msecMargin, targetTime * 7);</span></span>
+<span id="L166"><span class="lineNum">     166</span> <span class="tlaUNC">           0 :    return targetTime;</span></span>
+<span id="L167"><span class="lineNum">     167</span>              : }</span>
+<span id="L168"><span class="lineNum">     168</span>              : </span>
+<span id="L169"><span class="lineNum">     169</span> <span class="tlaUNC">           0 : void simulate(const TCType tcType, const TimeType initialTime, const TimeType increment, const int movesInTC, const TimeType guiLag){</span></span>
+<span id="L170"><span class="lineNum">     170</span>              : </span>
+<span id="L171"><span class="lineNum">     171</span> <span class="tlaUNC">           0 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Start of TC simulation&quot;;</span></span>
+<span id="L172"><span class="lineNum">     172</span>              : </span>
+<span id="L173"><span class="lineNum">     173</span>              :    // init TC parameter</span>
+<span id="L174"><span class="lineNum">     174</span> <span class="tlaUNC">           0 :    isDynamic       = tcType == TC_suddendeath;</span></span>
+<span id="L175"><span class="lineNum">     175</span> <span class="tlaUNC">           0 :    nbMoveInTC      = tcType == TC_repeating ? movesInTC : -1;</span></span>
+<span id="L176"><span class="lineNum">     176</span> <span class="tlaUNC">           0 :    msecPerMove     = -1;</span></span>
+<span id="L177"><span class="lineNum">     177</span> <span class="tlaUNC">           0 :    msecInTC        = tcType == TC_repeating ? initialTime : static_cast&lt;TimeType&gt;(-1);</span></span>
+<span id="L178"><span class="lineNum">     178</span> <span class="tlaUNC">           0 :    msecInc         = increment;</span></span>
+<span id="L179"><span class="lineNum">     179</span> <span class="tlaUNC">           0 :    msecUntilNextTC = tcType == TC_suddendeath ? initialTime : static_cast&lt;TimeType&gt;(-1);</span></span>
+<span id="L180"><span class="lineNum">     180</span> <span class="tlaUNC">           0 :    moveToGo        = -1;</span></span>
+<span id="L181"><span class="lineNum">     181</span>              : </span>
+<span id="L182"><span class="lineNum">     182</span>              :    // and check configuration</span>
+<span id="L183"><span class="lineNum">     183</span> <span class="tlaUNC">           0 :    switch(tcType){</span></span>
+<span id="L184"><span class="lineNum">     184</span> <span class="tlaUNC">           0 :       case TC_suddendeath:</span></span>
+<span id="L185"><span class="lineNum">     185</span> <span class="tlaUNC">           0 :          assert(msecUntilNextTC &gt;= 0);</span></span>
+<span id="L186"><span class="lineNum">     186</span>              :          break;</span>
+<span id="L187"><span class="lineNum">     187</span> <span class="tlaUNC">           0 :       case TC_repeating:</span></span>
+<span id="L188"><span class="lineNum">     188</span> <span class="tlaUNC">           0 :          assert(msecInTC &gt; 0);</span></span>
+<span id="L189"><span class="lineNum">     189</span> <span class="tlaUNC">           0 :          assert(nbMoveInTC &gt; 0);</span></span>
+<span id="L190"><span class="lineNum">     190</span>              :          break;</span>
+<span id="L191"><span class="lineNum">     191</span> <span class="tlaUNC">           0 :       case TC_fixed:</span></span>
+<span id="L192"><span class="lineNum">     192</span> <span class="tlaUNC">           0 :          assert(false); // not used here</span></span>
+<span id="L193"><span class="lineNum">     193</span>              :          break;</span>
+<span id="L194"><span class="lineNum">     194</span>              :    }</span>
+<span id="L195"><span class="lineNum">     195</span>              : </span>
+<span id="L196"><span class="lineNum">     196</span> <span class="tlaUNC">           0 :    RootPosition p{std::string(startPosition)};</span></span>
+<span id="L197"><span class="lineNum">     197</span> <span class="tlaUNC">           0 :    Position p2 = p;</span></span>
+<span id="L198"><span class="lineNum">     198</span>              : #ifdef WITH_NNUE</span>
+<span id="L199"><span class="lineNum">     199</span> <span class="tlaUNC">           0 :    NNUEEvaluator evaluator;</span></span>
+<span id="L200"><span class="lineNum">     200</span>              :    p2.associateEvaluator(evaluator);</span>
+<span id="L201"><span class="lineNum">     201</span> <span class="tlaUNC">           0 :    p2.resetNNUEEvaluator(p2.evaluator());</span></span>
+<span id="L202"><span class="lineNum">     202</span>              : #endif</span>
+<span id="L203"><span class="lineNum">     203</span>              : </span>
+<span id="L204"><span class="lineNum">     204</span> <span class="tlaUNC">           0 :    TimeType remaining = msecUntilNextTC;</span></span>
+<span id="L205"><span class="lineNum">     205</span>              :    TimeType currentMoveMs = 0;</span>
+<span id="L206"><span class="lineNum">     206</span>              : </span>
+<span id="L207"><span class="lineNum">     207</span> <span class="tlaUNC">           0 :    while( remaining &gt; 0 &amp;&amp; p2.moves &lt; 300){</span></span>
+<span id="L208"><span class="lineNum">     208</span> <span class="tlaUNC">           0 :       currentMoveMs = getNextMSecPerMove(p2);</span></span>
+<span id="L209"><span class="lineNum">     209</span> <span class="tlaUNC">           0 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;currentMoveMs &quot; &lt;&lt; currentMoveMs;</span></span>
+<span id="L210"><span class="lineNum">     210</span> <span class="tlaUNC">           0 :       remaining -= currentMoveMs;</span></span>
+<span id="L211"><span class="lineNum">     211</span> <span class="tlaUNC">           0 :       remaining += msecInc;</span></span>
+<span id="L212"><span class="lineNum">     212</span> <span class="tlaUNC">           0 :       remaining -= guiLag;</span></span>
+<span id="L213"><span class="lineNum">     213</span> <span class="tlaUNC">           0 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;remaining &quot; &lt;&lt; remaining;</span></span>
+<span id="L214"><span class="lineNum">     214</span> <span class="tlaUNC">           0 :       switch(tcType){</span></span>
+<span id="L215"><span class="lineNum">     215</span> <span class="tlaUNC">           0 :          case TC_suddendeath:</span></span>
+<span id="L216"><span class="lineNum">     216</span> <span class="tlaUNC">           0 :             msecUntilNextTC = remaining;</span></span>
+<span id="L217"><span class="lineNum">     217</span> <span class="tlaUNC">           0 :          break;</span></span>
+<span id="L218"><span class="lineNum">     218</span>              :          case TC_repeating:</span>
+<span id="L219"><span class="lineNum">     219</span>              :          break;</span>
+<span id="L220"><span class="lineNum">     220</span>              :          case TC_fixed:</span>
+<span id="L221"><span class="lineNum">     221</span>              :          break;</span>
+<span id="L222"><span class="lineNum">     222</span>              :       }</span>
+<span id="L223"><span class="lineNum">     223</span> <span class="tlaUNC">           0 :       const bool isInCheck = isPosInCheck(p2);</span></span>
+<span id="L224"><span class="lineNum">     224</span> <span class="tlaUNC">           0 :       ThreadData _data;</span></span>
+<span id="L225"><span class="lineNum">     225</span> <span class="tlaUNC">           0 :       _data.score = randomMover(p2, _data.pv, isInCheck);</span></span>
+<span id="L226"><span class="lineNum">     226</span> <span class="tlaUNC">           0 :       if ( _data.pv.empty() ) break;</span></span>
+<span id="L227"><span class="lineNum">     227</span> <span class="tlaUNC">           0 :       if (const MoveInfo moveInfo(p2,_data.pv[0]); ! applyMove(p2, moveInfo)) break;</span></span>
+<span id="L228"><span class="lineNum">     228</span> <span class="tlaUNC">           0 :       std::cout &lt;&lt; GetFEN(p2) &lt;&lt; std::endl;</span></span>
+<span id="L229"><span class="lineNum">     229</span>              :    }</span>
+<span id="L230"><span class="lineNum">     230</span> <span class="tlaUNC">           0 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;End of TC simulation : &quot; &lt;&lt; (remaining &gt; 0 ? &quot;success&quot; : &quot;failed&quot;);</span></span>
+<span id="L231"><span class="lineNum">     231</span> <span class="tlaUNC">           0 : }</span></span>
+<span id="L232"><span class="lineNum">     232</span>              : </span>
+<span id="L233"><span class="lineNum">     233</span>              : } // namespace TimeMan</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

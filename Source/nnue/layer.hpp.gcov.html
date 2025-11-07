@@ -1,0 +1,140 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage - Source/nnue/layer.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">Source/nnue</a> - layer.hpp<span style="font-size: 80%;"> (source / <a href="layer.hpp.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntry">8</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">7</td>
+          </tr>
+                  <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : #pragma once</span>
+<span id="L2"><span class="lineNum">       2</span>              : </span>
+<span id="L3"><span class="lineNum">       3</span>              : #include &quot;definition.hpp&quot;</span>
+<span id="L4"><span class="lineNum">       4</span>              : </span>
+<span id="L5"><span class="lineNum">       5</span>              : #ifdef WITH_NNUE</span>
+<span id="L6"><span class="lineNum">       6</span>              : </span>
+<span id="L7"><span class="lineNum">       7</span>              : #include &quot;quantization.hpp&quot;</span>
+<span id="L8"><span class="lineNum">       8</span>              : #include &quot;stackVector.hpp&quot;</span>
+<span id="L9"><span class="lineNum">       9</span>              : #include &quot;weightReader.hpp&quot;</span>
+<span id="L10"><span class="lineNum">      10</span>              : </span>
+<span id="L11"><span class="lineNum">      11</span>              : template&lt;typename NT, size_t dim0, size_t dim1, bool Q&gt; </span>
+<span id="L12"><span class="lineNum">      12</span>              : struct Layer {</span>
+<span id="L13"><span class="lineNum">      13</span>              :    static constexpr size_t nbW = dim0 * dim1;</span>
+<span id="L14"><span class="lineNum">      14</span>              :    static constexpr size_t nbB = dim1;</span>
+<span id="L15"><span class="lineNum">      15</span>              : </span>
+<span id="L16"><span class="lineNum">      16</span>              :    using BT = typename Quantization&lt;Q&gt;::BT;</span>
+<span id="L17"><span class="lineNum">      17</span>              :    using WT = typename Quantization&lt;Q&gt;::WT;</span>
+<span id="L18"><span class="lineNum">      18</span>              :    using ST = typename Quantization&lt;Q&gt;::ST;</span>
+<span id="L19"><span class="lineNum">      19</span>              : </span>
+<span id="L20"><span class="lineNum">      20</span>              :    // Layer is always for inner layer, so we can safely use WT and BT</span>
+<span id="L21"><span class="lineNum">      21</span>              :    // Always small enough to be statically allocated</span>
+<span id="L22"><span class="lineNum">      22</span>              :    alignas(NNUEALIGNMENT) WT W[nbW];</span>
+<span id="L23"><span class="lineNum">      23</span>              :    alignas(NNUEALIGNMENT) BT b[nbB];</span>
+<span id="L24"><span class="lineNum">      24</span>              :    alignas(NNUEALIGNMENT) ST slopes[nbB];</span>
+<span id="L25"><span class="lineNum">      25</span>              : </span>
+<span id="L26"><span class="lineNum">      26</span>              :    template&lt;typename T&gt; </span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC tlaBgGNC">     5565429 :    CONSTEXPR StackVector&lt;BT, dim1, Q&gt; forward(const StackVector&lt;T, dim0, Q&gt;&amp; x) const {</span></span>
+<span id="L28"><span class="lineNum">      28</span>              :       StackVector&lt;BT, dim1, Q&gt; result;</span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">     5565429 :       result.from(b);</span></span>
+<span id="L30"><span class="lineNum">      30</span>              : #ifdef USE_SIMD_INTRIN</span>
+<span id="L31"><span class="lineNum">      31</span>              : #pragma omp simd</span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">    51944004 :       for (size_t i = 0; i &lt; dim1; ++i) { result.data[i] += x.dot_(W + i * dim0); }</span></span>
+<span id="L33"><span class="lineNum">      33</span>              : #else</span>
+<span id="L34"><span class="lineNum">      34</span>              : #pragma omp simd</span>
+<span id="L35"><span class="lineNum">      35</span>              :       for (size_t i = 0; i &lt; dim0; ++i) { result.fma_(x.data[i], W + i * dim1); }</span>
+<span id="L36"><span class="lineNum">      36</span>              : #endif // USE_SIMD_INTRIN</span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">     5565429 :       return result; // RVO</span></span>
+<span id="L38"><span class="lineNum">      38</span>              :    }</span>
+<span id="L39"><span class="lineNum">      39</span>              : </span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">          64 :    Layer&lt;NT, dim0, dim1, Q&gt;&amp; load_(WeightsReader&lt;NT&gt;&amp; ws) {</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">          64 :       ws.template streamW&lt;WT&gt;(W, nbW, dim0, dim1)</span></span>
+<span id="L42"><span class="lineNum">      42</span> <span class="tlaGNC">          64 :         .template streamB&lt;BT&gt;(b, nbB);</span></span>
+<span id="L43"><span class="lineNum">      43</span>              : #ifdef NNUE_WITH_SLOPES</span>
+<span id="L44"><span class="lineNum">      44</span>              :       ws.template streamS&lt;ST&gt;(slopes, nbB);</span>
+<span id="L45"><span class="lineNum">      45</span>              : #endif</span>
+<span id="L46"><span class="lineNum">      46</span> <span class="tlaGNC">          64 :       return *this;</span></span>
+<span id="L47"><span class="lineNum">      47</span>              :    }</span>
+<span id="L48"><span class="lineNum">      48</span>              : </span>
+<span id="L49"><span class="lineNum">      49</span>              :    // non copyable</span>
+<span id="L50"><span class="lineNum">      50</span>              :    Layer&lt;NT, dim0, dim1, Q&gt;&amp; operator=(const Layer&lt;NT, dim0, dim1, Q&gt;&amp; other) = delete;</span>
+<span id="L51"><span class="lineNum">      51</span>              :    Layer&lt;NT, dim0, dim1, Q&gt;&amp; operator=(Layer&lt;NT, dim0, dim1, Q&gt;&amp;&amp; other) = delete;</span>
+<span id="L52"><span class="lineNum">      52</span>              :    Layer(const Layer&lt;NT, dim0, dim1, Q&gt;&amp; other) = delete;</span>
+<span id="L53"><span class="lineNum">      53</span>              :    Layer(Layer&lt;NT, dim0, dim1, Q&gt;&amp;&amp; other) = delete;</span>
+<span id="L54"><span class="lineNum">      54</span>              : </span>
+<span id="L55"><span class="lineNum">      55</span>              :    Layer(){</span>
+<span id="L56"><span class="lineNum">      56</span>              :       for (size_t i = 0; i &lt; nbB; ++i){</span>
+<span id="L57"><span class="lineNum">      57</span>              :          slopes[i] = 1;</span>
+<span id="L58"><span class="lineNum">      58</span>              :        }</span>
+<span id="L59"><span class="lineNum">      59</span>              :    };</span>
+<span id="L60"><span class="lineNum">      60</span>              :    ~Layer() = default;</span>
+<span id="L61"><span class="lineNum">      61</span>              : </span>
+<span id="L62"><span class="lineNum">      62</span>              : };</span>
+<span id="L63"><span class="lineNum">      63</span>              : </span>
+<span id="L64"><span class="lineNum">      64</span>              : #endif // WITH_NNUE</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

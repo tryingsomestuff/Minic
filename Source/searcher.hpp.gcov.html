@@ -1,0 +1,365 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage - Source/searcher.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">Source</a> - searcher.hpp<span style="font-size: 80%;"> (source / <a href="searcher.hpp.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntry">8</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">-</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+                  <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : #pragma once</span>
+<span id="L2"><span class="lineNum">       2</span>              : </span>
+<span id="L3"><span class="lineNum">       3</span>              : #include &quot;definition.hpp&quot;</span>
+<span id="L4"><span class="lineNum">       4</span>              : #include &quot;evalDef.hpp&quot;</span>
+<span id="L5"><span class="lineNum">       5</span>              : #include &quot;material.hpp&quot;</span>
+<span id="L6"><span class="lineNum">       6</span>              : #include &quot;score.hpp&quot;</span>
+<span id="L7"><span class="lineNum">       7</span>              : #include &quot;stats.hpp&quot;</span>
+<span id="L8"><span class="lineNum">       8</span>              : #include &quot;tables.hpp&quot;</span>
+<span id="L9"><span class="lineNum">       9</span>              : #include &quot;threading.hpp&quot;</span>
+<span id="L10"><span class="lineNum">      10</span>              : </span>
+<span id="L11"><span class="lineNum">      11</span>              : /*!</span>
+<span id="L12"><span class="lineNum">      12</span>              :  * Searcher struct store all the information needed by a search thread</span>
+<span id="L13"><span class="lineNum">      13</span>              :  * Implements main search function (driver, pvs, qsearch, see, display to GUI, ...)</span>
+<span id="L14"><span class="lineNum">      14</span>              :  * This was inspired from the former thread Stockfish style management</span>
+<span id="L15"><span class="lineNum">      15</span>              :  *</span>
+<span id="L16"><span class="lineNum">      16</span>              :  * Many things are templates here, so other hpp file are included at the bottom of this one.</span>
+<span id="L17"><span class="lineNum">      17</span>              :  */</span>
+<span id="L18"><span class="lineNum">      18</span>              : struct Searcher {</span>
+<span id="L19"><span class="lineNum">      19</span>              :    bool stopFlag = true;</span>
+<span id="L20"><span class="lineNum">      20</span>              : </span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC tlaBgGNC">       71863 :    struct StackData {</span></span>
+<span id="L22"><span class="lineNum">      22</span>              :       Position  p;</span>
+<span id="L23"><span class="lineNum">      23</span>              :       Hash      h      = nullHash;</span>
+<span id="L24"><span class="lineNum">      24</span>              :       //EvalData  data;</span>
+<span id="L25"><span class="lineNum">      25</span>              :       ScoreType eval   = 0;</span>
+<span id="L26"><span class="lineNum">      26</span>              :       MiniMove  threat = INVALIDMINIMOVE;</span>
+<span id="L27"><span class="lineNum">      27</span>              :    };</span>
+<span id="L28"><span class="lineNum">      28</span>              : </span>
+<span id="L29"><span class="lineNum">      29</span>              :    struct PVSData{</span>
+<span id="L30"><span class="lineNum">      30</span>              :       // CMH</span>
+<span id="L31"><span class="lineNum">      31</span>              :       CMHPtrArray cmhPtr;</span>
+<span id="L32"><span class="lineNum">      32</span>              : </span>
+<span id="L33"><span class="lineNum">      33</span>              :       // move counting</span>
+<span id="L34"><span class="lineNum">      34</span>              :       int validMoveCount      {0};</span>
+<span id="L35"><span class="lineNum">      35</span>              :       int validQuietMoveCount {0};</span>
+<span id="L36"><span class="lineNum">      36</span>              :       int validNonPrunedCount {0};</span>
+<span id="L37"><span class="lineNum">      37</span>              : </span>
+<span id="L38"><span class="lineNum">      38</span>              :       // from call</span>
+<span id="L39"><span class="lineNum">      39</span>              :       ScoreType alpha {0};</span>
+<span id="L40"><span class="lineNum">      40</span>              :       ScoreType beta  {0};</span>
+<span id="L41"><span class="lineNum">      41</span>              :       bool isInCheck              {false};</span>
+<span id="L42"><span class="lineNum">      42</span>              :       bool cutNode                {false};</span>
+<span id="L43"><span class="lineNum">      43</span>              :       bool pvnode                 {false};</span>
+<span id="L44"><span class="lineNum">      44</span>              :       bool rootnode               {false};</span>
+<span id="L45"><span class="lineNum">      45</span>              :       bool theirTurn              {false};</span>
+<span id="L46"><span class="lineNum">      46</span>              :       bool withoutSkipMove        {true};</span>
+<span id="L47"><span class="lineNum">      47</span>              :       bool previousMoveIsNullMove {false};</span>
+<span id="L48"><span class="lineNum">      48</span>              : </span>
+<span id="L49"><span class="lineNum">      49</span>              :       // tt related stuff</span>
+<span id="L50"><span class="lineNum">      50</span>              :       DepthType marginDepth       {0};</span>
+<span id="L51"><span class="lineNum">      51</span>              :       TT::Bound bound             {TT::B_none};</span>
+<span id="L52"><span class="lineNum">      52</span>              :       bool ttMoveIsCapture        {false};</span>
+<span id="L53"><span class="lineNum">      53</span>              :       bool ttMoveSingularExt      {false};</span>
+<span id="L54"><span class="lineNum">      54</span>              :       bool ttMoveTried            {false};</span>
+<span id="L55"><span class="lineNum">      55</span>              :       bool validTTmove            {false};</span>
+<span id="L56"><span class="lineNum">      56</span>              :       bool ttHit                  {false};</span>
+<span id="L57"><span class="lineNum">      57</span>              :       bool ttPV                   {false};</span>
+<span id="L58"><span class="lineNum">      58</span>              :       bool ttIsCheck              {false};</span>
+<span id="L59"><span class="lineNum">      59</span>              :       bool formerPV               {false};</span>
+<span id="L60"><span class="lineNum">      60</span>              :       bool evalScoreIsHashScore   {false};</span>
+<span id="L61"><span class="lineNum">      61</span>              : </span>
+<span id="L62"><span class="lineNum">      62</span>              :       // context</span>
+<span id="L63"><span class="lineNum">      63</span>              :       bool improving              {false};</span>
+<span id="L64"><span class="lineNum">      64</span>              :       bool isEmergencyDefence     {false};</span>
+<span id="L65"><span class="lineNum">      65</span>              :       bool isEmergencyAttack      {false};</span>
+<span id="L66"><span class="lineNum">      66</span>              :       bool isBoomingAttack        {false};</span>
+<span id="L67"><span class="lineNum">      67</span>              :       bool isBoomingDefend        {false};</span>
+<span id="L68"><span class="lineNum">      68</span>              :       bool isMoobingAttack        {false};</span>
+<span id="L69"><span class="lineNum">      69</span>              :       bool isMoobingDefend        {false};</span>
+<span id="L70"><span class="lineNum">      70</span>              :       bool isNotPawnEndGame       {false};</span>
+<span id="L71"><span class="lineNum">      71</span>              :       bool lessZugzwangRisk       {false};</span>
+<span id="L72"><span class="lineNum">      72</span>              :       bool isKnownEndGame         {false};</span>
+<span id="L73"><span class="lineNum">      73</span>              : </span>
+<span id="L74"><span class="lineNum">      74</span>              :       // situation</span>
+<span id="L75"><span class="lineNum">      75</span>              :       bool bestMoveIsCheck        {false};</span>
+<span id="L76"><span class="lineNum">      76</span>              :       bool mateThreat             {false};</span>
+<span id="L77"><span class="lineNum">      77</span>              :       bool alphaUpdated           {false};</span>
+<span id="L78"><span class="lineNum">      78</span>              : </span>
+<span id="L79"><span class="lineNum">      79</span>              :       // current move</span>
+<span id="L80"><span class="lineNum">      80</span>              :       bool isCheck                {false};</span>
+<span id="L81"><span class="lineNum">      81</span>              :       bool isQuiet                {false};</span>
+<span id="L82"><span class="lineNum">      82</span>              :       bool isAdvancedPawnPush     {false};</span>
+<span id="L83"><span class="lineNum">      83</span>              :       bool earlyMove              {false};</span>
+<span id="L84"><span class="lineNum">      84</span>              :       bool isTTMove               {false};</span>
+<span id="L85"><span class="lineNum">      85</span>              : </span>
+<span id="L86"><span class="lineNum">      86</span>              :       // pruning and extension triggers</span>
+<span id="L87"><span class="lineNum">      87</span>              :       bool futility               {false};</span>
+<span id="L88"><span class="lineNum">      88</span>              :       bool lmp                    {false};</span>
+<span id="L89"><span class="lineNum">      89</span>              :       bool historyPruning         {false};</span>
+<span id="L90"><span class="lineNum">      90</span>              :       bool capHistoryPruning      {false};</span>
+<span id="L91"><span class="lineNum">      91</span>              :       bool CMHPruning             {false};</span>
+<span id="L92"><span class="lineNum">      92</span>              :       bool BMextension            {false};</span>
+<span id="L93"><span class="lineNum">      93</span>              :    };</span>
+<span id="L94"><span class="lineNum">      94</span>              : </span>
+<span id="L95"><span class="lineNum">      95</span>              :    MoveDifficultyUtil::MoveDifficulty moveDifficulty = MoveDifficultyUtil::MD_std;</span>
+<span id="L96"><span class="lineNum">      96</span>              :    MoveDifficultyUtil::PositionEvolution positionEvolution = MoveDifficultyUtil::PE_std;</span>
+<span id="L97"><span class="lineNum">      97</span>              : </span>
+<span id="L98"><span class="lineNum">      98</span>              :    TimeType currentMoveMs  = 777;</span>
+<span id="L99"><span class="lineNum">      99</span>              :    TimeType getCurrentMoveMs()const; // use this (and not the variable) to take emergency time into account !</span>
+<span id="L100"><span class="lineNum">     100</span>              : </span>
+<span id="L101"><span class="lineNum">     101</span>              :    array1d&lt;StackData, MAX_PLY&gt; stack;</span>
+<span id="L102"><span class="lineNum">     102</span>              :    [[nodiscard]] bool isBooming(uint16_t halfmove); // from stack</span>
+<span id="L103"><span class="lineNum">     103</span>              :    [[nodiscard]] bool isMoobing(uint16_t halfmove); // from stack</span>
+<span id="L104"><span class="lineNum">     104</span>              : </span>
+<span id="L105"><span class="lineNum">     105</span>              :    mutable Stats stats;</span>
+<span id="L106"><span class="lineNum">     106</span>              : </span>
+<span id="L107"><span class="lineNum">     107</span>              :    // beta cut more refined statistics are possible and gather using this function</span>
+<span id="L108"><span class="lineNum">     108</span>              :    void updateStatBetaCut(const Position &amp; p, const Move m, const DepthType height);</span>
+<span id="L109"><span class="lineNum">     109</span>              : </span>
+<span id="L110"><span class="lineNum">     110</span>              :    FORCE_FINLINE void updatePV(PVList&amp; pv, const Move&amp; m, const PVList&amp; childPV) {</span>
+<span id="L111"><span class="lineNum">     111</span>              :       stats.incr(Stats::sid_PVupdate);</span>
+<span id="L112"><span class="lineNum">     112</span>              :       pv.clear();</span>
+<span id="L113"><span class="lineNum">     113</span> <span class="tlaGNC">       14337 :       pv.emplace_back(m);</span></span>
+<span id="L114"><span class="lineNum">     114</span> <span class="tlaGNC">       14337 :       std::ranges::copy(childPV, std::back_inserter(pv));</span></span>
+<span id="L115"><span class="lineNum">     115</span> <span class="tlaGNC">       14337 :    }</span></span>
+<span id="L116"><span class="lineNum">     116</span>              : </span>
+<span id="L117"><span class="lineNum">     117</span>              :    void displayStats() const {</span>
+<span id="L118"><span class="lineNum">     118</span>              :       for (size_t k = 0; k &lt; Stats::sid_maxid; ++k) {</span>
+<span id="L119"><span class="lineNum">     119</span>              :          Logging::LogIt(Logging::logInfo) &lt;&lt; Stats::Names[k] &lt;&lt; &quot; &quot; &lt;&lt; stats.counters[(Stats::StatId)k];</span>
+<span id="L120"><span class="lineNum">     120</span>              :       }</span>
+<span id="L121"><span class="lineNum">     121</span>              :    }</span>
+<span id="L122"><span class="lineNum">     122</span>              : </span>
+<span id="L123"><span class="lineNum">     123</span>              :    std::vector&lt;RootScores&gt; rootScores;</span>
+<span id="L124"><span class="lineNum">     124</span>              : </span>
+<span id="L125"><span class="lineNum">     125</span>              :    // used for move ordering</span>
+<span id="L126"><span class="lineNum">     126</span>              :    Move previousBest = INVALIDMOVE;</span>
+<span id="L127"><span class="lineNum">     127</span>              : </span>
+<span id="L128"><span class="lineNum">     128</span>              :    KillerT   killerT;</span>
+<span id="L129"><span class="lineNum">     129</span>              :    HistoryT  historyT;</span>
+<span id="L130"><span class="lineNum">     130</span>              :    CounterT  counterT;</span>
+<span id="L131"><span class="lineNum">     131</span>              :    DepthType nullMoveMinPly = 0;</span>
+<span id="L132"><span class="lineNum">     132</span>              :    Color     nullMoveVerifColor = Co_None;</span>
+<span id="L133"><span class="lineNum">     133</span>              :    EvalScore contempt       = 0;</span>
+<span id="L134"><span class="lineNum">     134</span>              :    bool      subSearch      = false;</span>
+<span id="L135"><span class="lineNum">     135</span>              :    bool      isStoppableCoSearcher = false; </span>
+<span id="L136"><span class="lineNum">     136</span>              :    DepthType height_        = 0; ///@todo use this everywhere, instead of passing height in pvs and qsearch call ?</span>
+<span id="L137"><span class="lineNum">     137</span>              : </span>
+<span id="L138"><span class="lineNum">     138</span>              : #ifdef WITH_GENFILE</span>
+<span id="L139"><span class="lineNum">     139</span>              :    std::ofstream genStream;</span>
+<span id="L140"><span class="lineNum">     140</span>              :    void          writeToGenFile(const Position&amp; p, bool getQuietPos, const ThreadData &amp; d, const std::optional&lt;int&gt; result);</span>
+<span id="L141"><span class="lineNum">     141</span>              : #endif</span>
+<span id="L142"><span class="lineNum">     142</span>              :    std::ofstream pgnStream;</span>
+<span id="L143"><span class="lineNum">     143</span>              : </span>
+<span id="L144"><span class="lineNum">     144</span>              :    static Position getQuiet(const Position&amp; p, Searcher* searcher = nullptr, ScoreType* qScore = nullptr);</span>
+<span id="L145"><span class="lineNum">     145</span>              : </span>
+<span id="L146"><span class="lineNum">     146</span>              :    static Searcher&amp; getCoSearcher(size_t id);</span>
+<span id="L147"><span class="lineNum">     147</span>              : </span>
+<span id="L148"><span class="lineNum">     148</span>              :    void                    getCMHPtr(const unsigned int ply, CMHPtrArray&amp; cmhPtr);</span>
+<span id="L149"><span class="lineNum">     149</span>              :    [[nodiscard]] ScoreType getCMHScore(const Position&amp; p, const Square from, const Square to, const CMHPtrArray&amp; cmhPtr) const;</span>
+<span id="L150"><span class="lineNum">     150</span>              : </span>
+<span id="L151"><span class="lineNum">     151</span>              :    [[nodiscard]] bool isCMHGood(const Position&amp; p, const Square from, const Square to, const CMHPtrArray&amp; cmhPtr, const ScoreType threshold) const;</span>
+<span id="L152"><span class="lineNum">     152</span>              :    [[nodiscard]] bool isCMHBad (const Position&amp; p, const Square from, const Square to, const CMHPtrArray&amp; cmhPtr, const ScoreType threshold) const;</span>
+<span id="L153"><span class="lineNum">     153</span>              : </span>
+<span id="L154"><span class="lineNum">     154</span>              :    [[nodiscard]] ScoreType drawScore(const Position&amp; p, DepthType height) const;</span>
+<span id="L155"><span class="lineNum">     155</span>              : </span>
+<span id="L156"><span class="lineNum">     156</span>              :    std::tuple&lt;DepthType, DepthType, DepthType&gt; depthPolicy(const Position &amp; p, DepthType depth, DepthType height, Move m, const PVSData &amp; pvsData, const EvalData &amp; evalData, ScoreType evalScore, DepthType extensions, bool isReductible) const;</span>
+<span id="L157"><span class="lineNum">     157</span>              : </span>
+<span id="L158"><span class="lineNum">     158</span>              :    void timeCheck();</span>
+<span id="L159"><span class="lineNum">     159</span>              : </span>
+<span id="L160"><span class="lineNum">     160</span>              :    template&lt;bool pvnode&gt;</span>
+<span id="L161"><span class="lineNum">     161</span>              :    [[nodiscard]]</span>
+<span id="L162"><span class="lineNum">     162</span>              :    ScoreType pvs(ScoreType                    alpha,</span>
+<span id="L163"><span class="lineNum">     163</span>              :                  ScoreType                    beta,</span>
+<span id="L164"><span class="lineNum">     164</span>              :                  const Position&amp;              p,</span>
+<span id="L165"><span class="lineNum">     165</span>              :                  DepthType                    depth,</span>
+<span id="L166"><span class="lineNum">     166</span>              :                  DepthType                    height,</span>
+<span id="L167"><span class="lineNum">     167</span>              :                  PVList&amp;                      pv,</span>
+<span id="L168"><span class="lineNum">     168</span>              :                  DepthType&amp;                   seldepth,</span>
+<span id="L169"><span class="lineNum">     169</span>              :                  DepthType                    extensions,</span>
+<span id="L170"><span class="lineNum">     170</span>              :                  bool                         isInCheck,</span>
+<span id="L171"><span class="lineNum">     171</span>              :                  bool                         cutNode,</span>
+<span id="L172"><span class="lineNum">     172</span>              :                  const std::vector&lt;MiniMove&gt;* skipMoves = nullptr);</span>
+<span id="L173"><span class="lineNum">     173</span>              : </span>
+<span id="L174"><span class="lineNum">     174</span>              :    [[nodiscard]] ScoreType qsearch(ScoreType       alpha,</span>
+<span id="L175"><span class="lineNum">     175</span>              :                                    ScoreType       beta,</span>
+<span id="L176"><span class="lineNum">     176</span>              :                                    const Position&amp; p,</span>
+<span id="L177"><span class="lineNum">     177</span>              :                                    DepthType       height,</span>
+<span id="L178"><span class="lineNum">     178</span>              :                                    DepthType&amp;      seldepth,</span>
+<span id="L179"><span class="lineNum">     179</span>              :                                    DepthType       qply,</span>
+<span id="L180"><span class="lineNum">     180</span>              :                                    bool            qRoot,</span>
+<span id="L181"><span class="lineNum">     181</span>              :                                    bool            pvnode,</span>
+<span id="L182"><span class="lineNum">     182</span>              :                                    int8_t          isInCheckHint = -1);</span>
+<span id="L183"><span class="lineNum">     183</span>              : </span>
+<span id="L184"><span class="lineNum">     184</span>              :    // used for tuning not search !</span>
+<span id="L185"><span class="lineNum">     185</span>              :    [[nodiscard]] ScoreType qsearchNoPruning(ScoreType       alpha,</span>
+<span id="L186"><span class="lineNum">     186</span>              :                                             ScoreType       beta,</span>
+<span id="L187"><span class="lineNum">     187</span>              :                                             const Position&amp; p,</span>
+<span id="L188"><span class="lineNum">     188</span>              :                                             DepthType       height,</span>
+<span id="L189"><span class="lineNum">     189</span>              :                                             DepthType&amp;      seldepth,</span>
+<span id="L190"><span class="lineNum">     190</span>              :                                             PVList*         pv = nullptr);</span>
+<span id="L191"><span class="lineNum">     191</span>              : </span>
+<span id="L192"><span class="lineNum">     192</span>              :    [[nodiscard]] static bool SEE_GE(const Position&amp; p, const Move&amp; m, ScoreType threshold);</span>
+<span id="L193"><span class="lineNum">     193</span>              : </span>
+<span id="L194"><span class="lineNum">     194</span>              :    [[nodiscard]] static ScoreType SEE(const Position&amp; p, const Move&amp; m);</span>
+<span id="L195"><span class="lineNum">     195</span>              : </span>
+<span id="L196"><span class="lineNum">     196</span>              :    void searchDriver(bool postMove = true);</span>
+<span id="L197"><span class="lineNum">     197</span>              : </span>
+<span id="L198"><span class="lineNum">     198</span>              :    template&lt;bool isPv = true&gt;</span>
+<span id="L199"><span class="lineNum">     199</span>              :    [[nodiscard]] std::optional&lt;ScoreType&gt; interiorNodeRecognizer(const Position&amp; p, DepthType height) const;</span>
+<span id="L200"><span class="lineNum">     200</span>              : </span>
+<span id="L201"><span class="lineNum">     201</span>              :    [[nodiscard]] bool isRep(const Position&amp; p, bool isPv) const;</span>
+<span id="L202"><span class="lineNum">     202</span>              :    [[nodiscard]] bool isMaterialDraw(const Position&amp; p) const;</span>
+<span id="L203"><span class="lineNum">     203</span>              :    [[nodiscard]] bool is50moves(const Position&amp; p, bool afterMoveLoop) const;</span>
+<span id="L204"><span class="lineNum">     204</span>              : </span>
+<span id="L205"><span class="lineNum">     205</span>              :    void displayGUI(DepthType          depth,</span>
+<span id="L206"><span class="lineNum">     206</span>              :                    DepthType          seldepth,</span>
+<span id="L207"><span class="lineNum">     207</span>              :                    ScoreType          bestScore,</span>
+<span id="L208"><span class="lineNum">     208</span>              :                    unsigned int       ply,</span>
+<span id="L209"><span class="lineNum">     209</span>              :                    const PVList&amp;      pv,</span>
+<span id="L210"><span class="lineNum">     210</span>              :                    int                multipv,</span>
+<span id="L211"><span class="lineNum">     211</span>              :                    const std::string&amp; mark = &quot;&quot;);</span>
+<span id="L212"><span class="lineNum">     212</span>              : </span>
+<span id="L213"><span class="lineNum">     213</span>              :    void idleLoop();</span>
+<span id="L214"><span class="lineNum">     214</span>              : </span>
+<span id="L215"><span class="lineNum">     215</span>              :    void startThread();</span>
+<span id="L216"><span class="lineNum">     216</span>              : </span>
+<span id="L217"><span class="lineNum">     217</span>              :    void wait();</span>
+<span id="L218"><span class="lineNum">     218</span>              : </span>
+<span id="L219"><span class="lineNum">     219</span>              :    void searchLauncher();</span>
+<span id="L220"><span class="lineNum">     220</span>              : </span>
+<span id="L221"><span class="lineNum">     221</span>              :    [[nodiscard]] size_t id() const;</span>
+<span id="L222"><span class="lineNum">     222</span>              :    [[nodiscard]] bool   isMainThread() const;</span>
+<span id="L223"><span class="lineNum">     223</span>              : </span>
+<span id="L224"><span class="lineNum">     224</span>              :    explicit Searcher(size_t n);</span>
+<span id="L225"><span class="lineNum">     225</span>              :    ~Searcher();</span>
+<span id="L226"><span class="lineNum">     226</span>              :    // non copyable</span>
+<span id="L227"><span class="lineNum">     227</span>              :    Searcher(const Searcher&amp;) = delete;</span>
+<span id="L228"><span class="lineNum">     228</span>              :    Searcher(const Searcher&amp;&amp;) = delete;</span>
+<span id="L229"><span class="lineNum">     229</span>              :    Searcher&amp; operator=(const Searcher&amp;) = delete;</span>
+<span id="L230"><span class="lineNum">     230</span>              :    Searcher&amp; operator=(const Searcher&amp;&amp;) = delete;</span>
+<span id="L231"><span class="lineNum">     231</span>              : </span>
+<span id="L232"><span class="lineNum">     232</span>              :    void                            setData(const ThreadData&amp; d);</span>
+<span id="L233"><span class="lineNum">     233</span>              :    [[nodiscard]] const ThreadData&amp; getData() const;</span>
+<span id="L234"><span class="lineNum">     234</span>              :    [[nodiscard]] ThreadData&amp;       getData();</span>
+<span id="L235"><span class="lineNum">     235</span>              :    [[nodiscard]] const SearchData&amp; getSearchData() const;</span>
+<span id="L236"><span class="lineNum">     236</span>              :    [[nodiscard]] SearchData&amp;       getSearchData();</span>
+<span id="L237"><span class="lineNum">     237</span>              : </span>
+<span id="L238"><span class="lineNum">     238</span>              :    static std::atomic&lt;bool&gt; startLock;</span>
+<span id="L239"><span class="lineNum">     239</span>              : </span>
+<span id="L240"><span class="lineNum">     240</span>              :    std::chrono::time_point&lt;Clock&gt; startTime;</span>
+<span id="L241"><span class="lineNum">     241</span>              : </span>
+<span id="L242"><span class="lineNum">     242</span>              :    [[nodiscard]] bool searching() const;</span>
+<span id="L243"><span class="lineNum">     243</span>              : </span>
+<span id="L244"><span class="lineNum">     244</span>              :    void clearGame();</span>
+<span id="L245"><span class="lineNum">     245</span>              :    </span>
+<span id="L246"><span class="lineNum">     246</span>              :    void clearSearch(bool forceHistoryClear = false);</span>
+<span id="L247"><span class="lineNum">     247</span>              : </span>
+<span id="L248"><span class="lineNum">     248</span> <span class="tlaGNC">     1179648 :    struct PawnEntry {</span></span>
+<span id="L249"><span class="lineNum">     249</span>              :       colored&lt;BitBoard&gt;  pawnTargets   = {emptyBitBoard, emptyBitBoard};</span>
+<span id="L250"><span class="lineNum">     250</span>              :       colored&lt;BitBoard&gt;  holes         = {emptyBitBoard, emptyBitBoard};</span>
+<span id="L251"><span class="lineNum">     251</span>              :       colored&lt;BitBoard&gt;  semiOpenFiles = {emptyBitBoard, emptyBitBoard};</span>
+<span id="L252"><span class="lineNum">     252</span>              :       colored&lt;BitBoard&gt;  passed        = {emptyBitBoard, emptyBitBoard};</span>
+<span id="L253"><span class="lineNum">     253</span>              :       BitBoard           openFiles     = emptyBitBoard;</span>
+<span id="L254"><span class="lineNum">     254</span>              :       EvalScore          score         = {0, 0};</span>
+<span id="L255"><span class="lineNum">     255</span>              :       MiniHash           h             = nullHash;</span>
+<span id="L256"><span class="lineNum">     256</span>              :       colored&lt;ScoreType&gt; danger        = {0, 0};</span>
+<span id="L257"><span class="lineNum">     257</span>              : </span>
+<span id="L258"><span class="lineNum">     258</span>              :       FORCE_FINLINE void reset() {</span>
+<span id="L259"><span class="lineNum">     259</span> <span class="tlaGNC">       94412 :          score            = {0, 0};</span></span>
+<span id="L260"><span class="lineNum">     260</span> <span class="tlaGNC">       94412 :          danger[Co_White] = 0;</span></span>
+<span id="L261"><span class="lineNum">     261</span> <span class="tlaGNC">       94412 :          danger[Co_Black] = 0;</span></span>
+<span id="L262"><span class="lineNum">     262</span>              :       }</span>
+<span id="L263"><span class="lineNum">     263</span>              :    };</span>
+<span id="L264"><span class="lineNum">     264</span>              : </span>
+<span id="L265"><span class="lineNum">     265</span>              :    std::unique_ptr&lt;Searcher::PawnEntry[]&gt; tablePawn = nullptr;</span>
+<span id="L266"><span class="lineNum">     266</span>              :    uint64_t ttSizePawn = 0;</span>
+<span id="L267"><span class="lineNum">     267</span>              : </span>
+<span id="L268"><span class="lineNum">     268</span>              :    void initPawnTable();</span>
+<span id="L269"><span class="lineNum">     269</span>              : </span>
+<span id="L270"><span class="lineNum">     270</span>              :    void clearPawnTT();</span>
+<span id="L271"><span class="lineNum">     271</span>              : </span>
+<span id="L272"><span class="lineNum">     272</span>              :    [[nodiscard]] bool getPawnEntry(Hash h, PawnEntry*&amp; pe);</span>
+<span id="L273"><span class="lineNum">     273</span>              : </span>
+<span id="L274"><span class="lineNum">     274</span>              :    void prefetchPawn(Hash h);</span>
+<span id="L275"><span class="lineNum">     275</span>              : </span>
+<span id="L276"><span class="lineNum">     276</span>              :   private:</span>
+<span id="L277"><span class="lineNum">     277</span>              :    ThreadData              _data;</span>
+<span id="L278"><span class="lineNum">     278</span>              :    std::mutex              _mutexPV;</span>
+<span id="L279"><span class="lineNum">     279</span>              :    size_t                  _index;</span>
+<span id="L280"><span class="lineNum">     280</span>              :    std::mutex              _mutex;</span>
+<span id="L281"><span class="lineNum">     281</span>              :    std::condition_variable _cv;</span>
+<span id="L282"><span class="lineNum">     282</span>              :    // next two MUST be initialized BEFORE _stdThread</span>
+<span id="L283"><span class="lineNum">     283</span>              :    bool        _exit;</span>
+<span id="L284"><span class="lineNum">     284</span>              :    bool        _searching;</span>
+<span id="L285"><span class="lineNum">     285</span>              :    std::thread _stdThread;</span>
+<span id="L286"><span class="lineNum">     286</span>              : };</span>
+<span id="L287"><span class="lineNum">     287</span>              : </span>
+<span id="L288"><span class="lineNum">     288</span>              : #include &quot;searcherDraw.hpp&quot;</span>
+<span id="L289"><span class="lineNum">     289</span>              : #include &quot;searcherPVS.hpp&quot;</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

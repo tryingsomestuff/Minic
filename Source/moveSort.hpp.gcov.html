@@ -1,0 +1,169 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage - Source/moveSort.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">Source</a> - moveSort.hpp<span style="font-size: 80%;"> (source / <a href="moveSort.hpp.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntry">13</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">3</td>
+          </tr>
+                  <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : #pragma once</span>
+<span id="L2"><span class="lineNum">       2</span>              : </span>
+<span id="L3"><span class="lineNum">       3</span>              : #include &quot;definition.hpp&quot;</span>
+<span id="L4"><span class="lineNum">       4</span>              : #include &quot;searchConfig.hpp&quot;</span>
+<span id="L5"><span class="lineNum">       5</span>              : #include &quot;tables.hpp&quot;</span>
+<span id="L6"><span class="lineNum">       6</span>              : #include &quot;timers.hpp&quot;</span>
+<span id="L7"><span class="lineNum">       7</span>              : #include &quot;transposition.hpp&quot;</span>
+<span id="L8"><span class="lineNum">       8</span>              : </span>
+<span id="L9"><span class="lineNum">       9</span>              : /*!</span>
+<span id="L10"><span class="lineNum">      10</span>              :  * Minic is not sorting move on the fly, but once and for all</span>
+<span id="L11"><span class="lineNum">      11</span>              :  * MoveSorter is storing needed information and computeScore function</span>
+<span id="L12"><span class="lineNum">      12</span>              :  * will give each move a score. After that, sort is called on the MoveList</span>
+<span id="L13"><span class="lineNum">      13</span>              :  * */</span>
+<span id="L14"><span class="lineNum">      14</span>              : </span>
+<span id="L15"><span class="lineNum">      15</span>              : struct MoveSortOperator {</span>
+<span id="L16"><span class="lineNum">      16</span> <span class="tlaGNC tlaBgGNC">   152611381 :    constexpr bool operator()(const Move&amp; a, const Move&amp; b) const {</span></span>
+<span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC">   152611381 :       assert(a != INVALIDMOVE);</span></span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">   152611381 :       assert(b != INVALIDMOVE);</span></span>
+<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">   152611381 :       return Move2Score(a) &gt; Move2Score(b);</span></span>
+<span id="L20"><span class="lineNum">      20</span>              :    }</span>
+<span id="L21"><span class="lineNum">      21</span>              : };</span>
+<span id="L22"><span class="lineNum">      22</span>              : </span>
+<span id="L23"><span class="lineNum">      23</span>              : struct MoveSorter {</span>
+<span id="L24"><span class="lineNum">      24</span>              :    MoveSorter(const Searcher&amp;    _context,</span>
+<span id="L25"><span class="lineNum">      25</span>              :               const Position&amp;    _p,</span>
+<span id="L26"><span class="lineNum">      26</span>              :               float              _gp,</span>
+<span id="L27"><span class="lineNum">      27</span>              :               DepthType          _height,</span>
+<span id="L28"><span class="lineNum">      28</span>              :               const CMHPtrArray&amp; _cmhPtr,</span>
+<span id="L29"><span class="lineNum">      29</span>              :               bool               _useSEE     = true,</span>
+<span id="L30"><span class="lineNum">      30</span>              :               bool               _isInCheck  = false,</span>
+<span id="L31"><span class="lineNum">      31</span>              :               const TT::Entry*   _e          = nullptr,</span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">     2672973 :               const MiniMove     _refutation = INVALIDMINIMOVE):</span></span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">     2672973 :        context(_context), p(_p), gp(_gp), height(_height), cmhPtr(_cmhPtr), useSEE(_useSEE), isInCheck(_isInCheck), e(_e), refutation(_refutation) {</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">     2672973 :       assert(e == nullptr || e-&gt;h != nullHash);</span></span>
+<span id="L35"><span class="lineNum">      35</span>              :    }</span>
+<span id="L36"><span class="lineNum">      36</span>              : </span>
+<span id="L37"><span class="lineNum">      37</span>              :    template&lt;Color C&gt; void computeScore(Move&amp; m) const;</span>
+<span id="L38"><span class="lineNum">      38</span>              : </span>
+<span id="L39"><span class="lineNum">      39</span>              :    const Position&amp;    p;</span>
+<span id="L40"><span class="lineNum">      40</span>              :    const TT::Entry*   e;</span>
+<span id="L41"><span class="lineNum">      41</span>              :    const Searcher&amp;    context;</span>
+<span id="L42"><span class="lineNum">      42</span>              :    const bool         useSEE;</span>
+<span id="L43"><span class="lineNum">      43</span>              :    const bool         isInCheck;</span>
+<span id="L44"><span class="lineNum">      44</span>              :    const MiniMove     refutation;</span>
+<span id="L45"><span class="lineNum">      45</span>              :    const DepthType    height;</span>
+<span id="L46"><span class="lineNum">      46</span>              :    const CMHPtrArray&amp; cmhPtr;</span>
+<span id="L47"><span class="lineNum">      47</span>              :    const float        gp;</span>
+<span id="L48"><span class="lineNum">      48</span>              :    </span>
+<span id="L49"><span class="lineNum">      49</span>              :    bool skipSort = false;</span>
+<span id="L50"><span class="lineNum">      50</span>              : </span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">     1460247 :    inline void score(MoveList &amp; moves) const{</span></span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">     1460247 :       score(context, moves, p, gp, height, cmhPtr, useSEE, isInCheck, e, refutation);</span></span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">     1460247 :    }</span></span>
+<span id="L54"><span class="lineNum">      54</span>              : </span>
+<span id="L55"><span class="lineNum">      55</span>              :    static void score(const Searcher&amp;    context,</span>
+<span id="L56"><span class="lineNum">      56</span>              :                      MoveList&amp;          moves,</span>
+<span id="L57"><span class="lineNum">      57</span>              :                      const Position&amp;    p,</span>
+<span id="L58"><span class="lineNum">      58</span>              :                      const float        gp,</span>
+<span id="L59"><span class="lineNum">      59</span>              :                      const DepthType    height,</span>
+<span id="L60"><span class="lineNum">      60</span>              :                      const CMHPtrArray&amp; cmhPtr,</span>
+<span id="L61"><span class="lineNum">      61</span>              :                      const bool         useSEE     = true,</span>
+<span id="L62"><span class="lineNum">      62</span>              :                      const bool         isInCheck  = false,</span>
+<span id="L63"><span class="lineNum">      63</span>              :                      const TT::Entry*   e          = nullptr,</span>
+<span id="L64"><span class="lineNum">      64</span>              :                      const MiniMove     refutation = INVALIDMINIMOVE);</span>
+<span id="L65"><span class="lineNum">      65</span>              : </span>
+<span id="L66"><span class="lineNum">      66</span>              :    inline void scoreAndSort(MoveList &amp; moves) const {</span>
+<span id="L67"><span class="lineNum">      67</span>              :       scoreAndSort(context, moves, p, gp, height, cmhPtr, useSEE, isInCheck, e, refutation);</span>
+<span id="L68"><span class="lineNum">      68</span>              :    }</span>
+<span id="L69"><span class="lineNum">      69</span>              : </span>
+<span id="L70"><span class="lineNum">      70</span>              :    static void scoreAndSort(const Searcher&amp;    context,</span>
+<span id="L71"><span class="lineNum">      71</span>              :                             MoveList&amp;          moves,</span>
+<span id="L72"><span class="lineNum">      72</span>              :                             const Position&amp;    p,</span>
+<span id="L73"><span class="lineNum">      73</span>              :                             const float        gp,</span>
+<span id="L74"><span class="lineNum">      74</span>              :                             const DepthType    height,</span>
+<span id="L75"><span class="lineNum">      75</span>              :                             const CMHPtrArray&amp; cmhPtr,</span>
+<span id="L76"><span class="lineNum">      76</span>              :                             const bool         useSEE     = true,</span>
+<span id="L77"><span class="lineNum">      77</span>              :                             const bool         isInCheck  = false,</span>
+<span id="L78"><span class="lineNum">      78</span>              :                             const TT::Entry*   e          = nullptr,</span>
+<span id="L79"><span class="lineNum">      79</span>              :                             const MiniMove     refutation = INVALIDMINIMOVE);</span>
+<span id="L80"><span class="lineNum">      80</span>              : </span>
+<span id="L81"><span class="lineNum">      81</span>              :    static void sort(MoveList&amp; moves);</span>
+<span id="L82"><span class="lineNum">      82</span>              : </span>
+<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC">    11502560 :    [[nodiscard]] inline const Move* pickNextLazy(MoveList&amp; moves, </span></span>
+<span id="L84"><span class="lineNum">      84</span>              :                                                  size_t&amp; begin, </span>
+<span id="L85"><span class="lineNum">      85</span>              :                                                  bool sorted = false, </span>
+<span id="L86"><span class="lineNum">      86</span>              :                                                  ScoreType threshold = SearchConfig::lazySortThreshold){</span>
+<span id="L87"><span class="lineNum">      87</span>              :       // if move has very low chance of raising alpha, no need to sort anymore ...</span>
+<span id="L88"><span class="lineNum">      88</span> <span class="tlaGNC">    19342005 :       skipSort = skipSort || sorted || (begin != 0 &amp;&amp; Move2Score(*(moves.begin() + begin - 1)) &lt; threshold);</span></span>
+<span id="L89"><span class="lineNum">      89</span> <span class="tlaGNC">    11502560 :       return pickNext(moves, begin, skipSort);</span></span>
+<span id="L90"><span class="lineNum">      90</span>              :    }</span>
+<span id="L91"><span class="lineNum">      91</span>              : </span>
+<span id="L92"><span class="lineNum">      92</span>              :    [[nodiscard]] static const Move* pickNext(MoveList&amp; moves, size_t&amp; begin, bool skipSort = false);</span>
+<span id="L93"><span class="lineNum">      93</span>              : };</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

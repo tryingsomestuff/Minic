@@ -1,0 +1,672 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage - Source/testSuite.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">Source</a> - testSuite.cpp<span style="font-size: 80%;"> (source / <a href="testSuite.cpp.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryLo">4.7&nbsp;%</td>
+            <td class="headerCovTableEntry">487</td>
+            <td class="headerCovTableEntry">23</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+          </tr>
+                  <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : #include &quot;testSuite.hpp&quot;</span>
+<span id="L2"><span class="lineNum">       2</span>              : </span>
+<span id="L3"><span class="lineNum">       3</span>              : #ifdef WITH_TEST_SUITE</span>
+<span id="L4"><span class="lineNum">       4</span>              : </span>
+<span id="L5"><span class="lineNum">       5</span>              : #include &quot;extendedPosition.hpp&quot;</span>
+<span id="L6"><span class="lineNum">       6</span>              : #include &quot;logging.hpp&quot;</span>
+<span id="L7"><span class="lineNum">       7</span>              : #include &quot;positionTools.hpp&quot;</span>
+<span id="L8"><span class="lineNum">       8</span>              : </span>
+<span id="L9"><span class="lineNum">       9</span> <span class="tlaGNC tlaBgGNC">           8 : bool test(const std::string&amp; option) {</span></span>
+<span id="L10"><span class="lineNum">      10</span> <span class="tlaGNC">           8 :    if (option == &quot;MEA&quot;) {</span></span>
+<span id="L11"><span class="lineNum">      11</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
+<span id="L12"><span class="lineNum">      12</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/allsets_nodupes.epd&quot;, positions)) { return false; }</span></span>
+<span id="L13"><span class="lineNum">      13</span>              : </span>
+<span id="L14"><span class="lineNum">      14</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; timeControls = {300}; //mseconds</span></span>
+<span id="L15"><span class="lineNum">      15</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; scores       = {1};</span></span>
+<span id="L16"><span class="lineNum">      16</span>              : </span>
+<span id="L17"><span class="lineNum">      17</span> <span class="tlaUNC">           0 :       ExtendedPosition::test(</span></span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaUNC">           0 :           positions, timeControls, true, true, scores, [&amp;](int score) { return static_cast&lt;int&gt;((100 * score) / (30 * positions.size())); },</span></span>
+<span id="L19"><span class="lineNum">      19</span>              :           false); // % of &quot;success&quot;</span>
+<span id="L20"><span class="lineNum">      20</span>              :       return true;</span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaUNC">           0 :    }</span></span>
+<span id="L22"><span class="lineNum">      22</span>              : </span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC tlaBgGNC">           8 :    if (option == &quot;TTT&quot;) {</span></span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/TTT1.epd&quot;, positions)) { return false; }</span></span>
+<span id="L26"><span class="lineNum">      26</span>              : </span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; timeControls = {1000}; //mseconds</span></span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; scores       = {1};</span></span>
+<span id="L29"><span class="lineNum">      29</span>              : </span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaUNC">           0 :       ExtendedPosition::test(</span></span>
+<span id="L31"><span class="lineNum">      31</span>              :           positions, timeControls, true, false, scores, [](int score) { return score; }, false);</span>
+<span id="L32"><span class="lineNum">      32</span>              :       return true;</span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaUNC">           0 :    }</span></span>
+<span id="L34"><span class="lineNum">      34</span>              : </span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC tlaBgGNC">           8 :    if (option == &quot;opening200&quot;) {</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/Openings200.epd&quot;, positions)) { return false; }</span></span>
+<span id="L38"><span class="lineNum">      38</span>              : </span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; timeControls = {1000}; //mseconds</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; scores       = {1};</span></span>
+<span id="L41"><span class="lineNum">      41</span>              : </span>
+<span id="L42"><span class="lineNum">      42</span> <span class="tlaUNC">           0 :       ExtendedPosition::test(</span></span>
+<span id="L43"><span class="lineNum">      43</span>              :           positions, timeControls, true, false, scores, [](int score) { return score; }, false);</span>
+<span id="L44"><span class="lineNum">      44</span>              :       return true;</span>
+<span id="L45"><span class="lineNum">      45</span> <span class="tlaUNC">           0 :    }</span></span>
+<span id="L46"><span class="lineNum">      46</span>              : </span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC tlaBgGNC">           8 :    if (option == &quot;opening1000&quot;) {</span></span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/Openings1000.epd&quot;, positions)) { return false; }</span></span>
+<span id="L50"><span class="lineNum">      50</span>              : </span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; timeControls = {1000}; //mseconds</span></span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; scores       = {1};</span></span>
+<span id="L53"><span class="lineNum">      53</span>              : </span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaUNC">           0 :       ExtendedPosition::test(</span></span>
+<span id="L55"><span class="lineNum">      55</span>              :           positions, timeControls, true, false, scores, [](int score) { return score; }, false);</span>
+<span id="L56"><span class="lineNum">      56</span>              :       return true;</span>
+<span id="L57"><span class="lineNum">      57</span> <span class="tlaUNC">           0 :    }</span></span>
+<span id="L58"><span class="lineNum">      58</span>              : </span>
+<span id="L59"><span class="lineNum">      59</span> <span class="tlaGNC tlaBgGNC">           8 :    if (option == &quot;middle200&quot;) {</span></span>
+<span id="L60"><span class="lineNum">      60</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
+<span id="L61"><span class="lineNum">      61</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/Midgames250.epd&quot;, positions)) { return false; }</span></span>
+<span id="L62"><span class="lineNum">      62</span>              : </span>
+<span id="L63"><span class="lineNum">      63</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; timeControls = {1000}; //mseconds</span></span>
+<span id="L64"><span class="lineNum">      64</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; scores       = {1};</span></span>
+<span id="L65"><span class="lineNum">      65</span>              : </span>
+<span id="L66"><span class="lineNum">      66</span> <span class="tlaUNC">           0 :       ExtendedPosition::test(</span></span>
+<span id="L67"><span class="lineNum">      67</span>              :           positions, timeControls, true, false, scores, [](int score) { return score; }, false);</span>
+<span id="L68"><span class="lineNum">      68</span>              :       return true;</span>
+<span id="L69"><span class="lineNum">      69</span> <span class="tlaUNC">           0 :    }</span></span>
+<span id="L70"><span class="lineNum">      70</span>              : </span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC tlaBgGNC">           8 :    if (option == &quot;middle1000&quot;) {</span></span>
+<span id="L72"><span class="lineNum">      72</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
+<span id="L73"><span class="lineNum">      73</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/Midgames1000.epd&quot;, positions)) { return false; }</span></span>
+<span id="L74"><span class="lineNum">      74</span>              : </span>
+<span id="L75"><span class="lineNum">      75</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; timeControls = {1000}; //mseconds</span></span>
+<span id="L76"><span class="lineNum">      76</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; scores       = {1};</span></span>
+<span id="L77"><span class="lineNum">      77</span>              : </span>
+<span id="L78"><span class="lineNum">      78</span> <span class="tlaUNC">           0 :       ExtendedPosition::test(</span></span>
+<span id="L79"><span class="lineNum">      79</span>              :           positions, timeControls, true, false, scores, [](int score) { return score; }, false);</span>
+<span id="L80"><span class="lineNum">      80</span>              :       return true;</span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaUNC">           0 :    }</span></span>
+<span id="L82"><span class="lineNum">      82</span>              : </span>
+<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC tlaBgGNC">           8 :    if (option == &quot;hard2020&quot;) {</span></span>
+<span id="L84"><span class="lineNum">      84</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
+<span id="L85"><span class="lineNum">      85</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/hard2020.epd&quot;, positions)) { return false; }</span></span>
+<span id="L86"><span class="lineNum">      86</span>              : </span>
+<span id="L87"><span class="lineNum">      87</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; timeControls = {30 * 60 * 1000}; //mseconds</span></span>
+<span id="L88"><span class="lineNum">      88</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; scores       = {1};</span></span>
+<span id="L89"><span class="lineNum">      89</span>              : </span>
+<span id="L90"><span class="lineNum">      90</span> <span class="tlaUNC">           0 :       ExtendedPosition::test(</span></span>
+<span id="L91"><span class="lineNum">      91</span>              :           positions, timeControls, true, false, scores, [](int score) { return score; }, false);</span>
+<span id="L92"><span class="lineNum">      92</span>              :       return true;</span>
+<span id="L93"><span class="lineNum">      93</span> <span class="tlaUNC">           0 :    }</span></span>
+<span id="L94"><span class="lineNum">      94</span>              : </span>
+<span id="L95"><span class="lineNum">      95</span> <span class="tlaGNC tlaBgGNC">           8 :    if (option == &quot;BT2630&quot;) {</span></span>
+<span id="L96"><span class="lineNum">      96</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
+<span id="L97"><span class="lineNum">      97</span>              : </span>
+<span id="L98"><span class="lineNum">      98</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/bt2630.epd&quot;, positions)) { return false; }</span></span>
+<span id="L99"><span class="lineNum">      99</span>              : </span>
+<span id="L100"><span class="lineNum">     100</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; timeControls = {15000 * 60}; //mseconds</span></span>
+<span id="L101"><span class="lineNum">     101</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; scores       = {1};</span></span>
+<span id="L102"><span class="lineNum">     102</span>              : </span>
+<span id="L103"><span class="lineNum">     103</span> <span class="tlaUNC">           0 :       ExtendedPosition::test(</span></span>
+<span id="L104"><span class="lineNum">     104</span> <span class="tlaUNC">           0 :           positions, timeControls, true, false, scores, [](int score) { return 2630 - 35 * (30 - score); }, false);</span></span>
+<span id="L105"><span class="lineNum">     105</span>              :       return true;</span>
+<span id="L106"><span class="lineNum">     106</span> <span class="tlaUNC">           0 :    }</span></span>
+<span id="L107"><span class="lineNum">     107</span>              : </span>
+<span id="L108"><span class="lineNum">     108</span> <span class="tlaGNC tlaBgGNC">           8 :    if (option == &quot;WAC&quot;) {</span></span>
+<span id="L109"><span class="lineNum">     109</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
+<span id="L110"><span class="lineNum">     110</span>              : </span>
+<span id="L111"><span class="lineNum">     111</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/WinAtChess.epd&quot;, positions)) { return false; }</span></span>
+<span id="L112"><span class="lineNum">     112</span>              : </span>
+<span id="L113"><span class="lineNum">     113</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; timeControls = {10000}; //mseconds</span></span>
+<span id="L114"><span class="lineNum">     114</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; scores       = {1};</span></span>
+<span id="L115"><span class="lineNum">     115</span>              : </span>
+<span id="L116"><span class="lineNum">     116</span> <span class="tlaUNC">           0 :       ExtendedPosition::test(</span></span>
+<span id="L117"><span class="lineNum">     117</span>              :           positions, timeControls, true, false, scores, [](int score) { return score; }, false);</span>
+<span id="L118"><span class="lineNum">     118</span>              :       return true;</span>
+<span id="L119"><span class="lineNum">     119</span> <span class="tlaUNC">           0 :    }</span></span>
+<span id="L120"><span class="lineNum">     120</span>              : </span>
+<span id="L121"><span class="lineNum">     121</span> <span class="tlaGNC tlaBgGNC">           8 :    if (option == &quot;arasan&quot;) {</span></span>
+<span id="L122"><span class="lineNum">     122</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
+<span id="L123"><span class="lineNum">     123</span>              : </span>
+<span id="L124"><span class="lineNum">     124</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/arasan19a.epd&quot;, positions)) { return false; }</span></span>
+<span id="L125"><span class="lineNum">     125</span>              : </span>
+<span id="L126"><span class="lineNum">     126</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; timeControls = {1000 * 60}; //mseconds</span></span>
+<span id="L127"><span class="lineNum">     127</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; scores       = {1};</span></span>
+<span id="L128"><span class="lineNum">     128</span>              : </span>
+<span id="L129"><span class="lineNum">     129</span> <span class="tlaUNC">           0 :       ExtendedPosition::test(</span></span>
+<span id="L130"><span class="lineNum">     130</span>              :           positions, timeControls, true, false, scores, [](int score) { return score; }, false);</span>
+<span id="L131"><span class="lineNum">     131</span>              :       return true;</span>
+<span id="L132"><span class="lineNum">     132</span> <span class="tlaUNC">           0 :    }</span></span>
+<span id="L133"><span class="lineNum">     133</span>              : </span>
+<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC tlaBgGNC">           8 :    if (option == &quot;arasan_sym&quot;) {</span></span>
+<span id="L135"><span class="lineNum">     135</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
+<span id="L136"><span class="lineNum">     136</span>              : </span>
+<span id="L137"><span class="lineNum">     137</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/arasan_sym_eval.epd&quot;, positions)) { return false; }</span></span>
+<span id="L138"><span class="lineNum">     138</span>              : </span>
+<span id="L139"><span class="lineNum">     139</span> <span class="tlaUNC">           0 :       ExtendedPosition::testStatic(positions);</span></span>
+<span id="L140"><span class="lineNum">     140</span>              :       return true;</span>
+<span id="L141"><span class="lineNum">     141</span> <span class="tlaUNC">           0 :    }</span></span>
+<span id="L142"><span class="lineNum">     142</span>              : </span>
+<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC tlaBgGNC">           8 :    if (option == &quot;CCROHT&quot;) {</span></span>
+<span id="L144"><span class="lineNum">     144</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
+<span id="L145"><span class="lineNum">     145</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rn1qkb1r/pp2pppp/5n2/3p1b2/3P4/2N1P3/PP3PPP/R1BQKBNR w KQkq - 0 1 id \&quot;CCR01\&quot;; bm Qb3;&quot;);</span></span>
+<span id="L146"><span class="lineNum">     146</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rn1qkb1r/pp2pppp/5n2/3p1b2/3P4/1QN1P3/PP3PPP/R1B1KBNR b KQkq - 1 1 id \&quot;CCR02\&quot;;bm Bc8;&quot;);</span></span>
+<span id="L147"><span class="lineNum">     147</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqk2r/ppp2ppp/2n5/4P3/2Bp2n1/5N1P/PP1N1PP1/R2Q1RK1 b kq - 1 10 id \&quot;CCR03\&quot;; bm Nh6; am Ne5;&quot;);</span></span>
+<span id="L148"><span class="lineNum">     148</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqrnk1/pp2bp1p/2p2np1/3p2B1/3P4/2NBPN2/PPQ2PPP/1R3RK1 w - - 1 12 id \&quot;CCR04\&quot;; bm b4;&quot;);</span></span>
+<span id="L149"><span class="lineNum">     149</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rnbqkb1r/ppp1pppp/5n2/8/3PP3/2N5/PP3PPP/R1BQKBNR b KQkq - 3 5 id \&quot;CCR05\&quot;; bm e5;&quot;);</span></span>
+<span id="L150"><span class="lineNum">     150</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rnbq1rk1/pppp1ppp/4pn2/8/1bPP4/P1N5/1PQ1PPPP/R1B1KBNR b KQ - 1 5 id \&quot;CCR06\&quot;; bm Bcx3+;&quot;);</span></span>
+<span id="L151"><span class="lineNum">     151</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r4rk1/3nppbp/bq1p1np1/2pP4/8/2N2NPP/PP2PPB1/R1BQR1K1 b - - 1 12 id \&quot;CCR07\&quot;; bm Rfb8;&quot;);</span></span>
+<span id="L152"><span class="lineNum">     152</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rn1qkb1r/pb1p1ppp/1p2pn2/2p5/2PP4/5NP1/PP2PPBP/RNBQK2R w KQkq c6 1 6 id \&quot;CCR08\&quot;; bm d5;&quot;);</span></span>
+<span id="L153"><span class="lineNum">     153</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bq1rk1/1pp2pbp/p1np1np1/3Pp3/2P1P3/2N1BP2/PP4PP/R1NQKB1R b KQ - 1 9 id \&quot;CCR09\&quot;; bm Nd4;&quot;);</span></span>
+<span id="L154"><span class="lineNum">     154</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rnbqr1k1/1p3pbp/p2p1np1/2pP4/4P3/2N5/PP1NBPPP/R1BQ1RK1 w - - 1 11 id \&quot;CCR10\&quot;; bm a4;&quot;);</span></span>
+<span id="L155"><span class="lineNum">     155</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rnbqkb1r/pppp1ppp/5n2/4p3/4PP2/2N5/PPPP2PP/R1BQKBNR b KQkq f3 1 3 id \&quot;CCR11\&quot;; bm d5;&quot;);</span></span>
+<span id="L156"><span class="lineNum">     156</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqk1nr/pppnbppp/3p4/8/2BNP3/8/PPP2PPP/RNBQK2R w KQkq - 2 6 id \&quot;CCR12\&quot;; bm Bxf7+;&quot;);</span></span>
+<span id="L157"><span class="lineNum">     157</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rnbq1b1r/ppp2kpp/3p1n2/8/3PP3/8/PPP2PPP/RNBQKB1R b KQ d6 1 5 id \&quot;CCR13\&quot;; am Ne4;&quot;);</span></span>
+<span id="L158"><span class="lineNum">     158</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rnbqkb1r/pppp1ppp/3n4/8/2BQ4/5N2/PPP2PPP/RNB2RK1 b kq - 1 6 id \&quot;CCR14\&quot;; am Nxc4;&quot;);</span></span>
+<span id="L159"><span class="lineNum">     159</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2q1rk1/2p1bppp/p2p1n2/1p2P3/4P1b1/1nP1BN2/PP3PPP/RN1QR1K1 w - - 1 12 id \&quot;CCR15\&quot;; bm exf6;&quot;);</span></span>
+<span id="L160"><span class="lineNum">     160</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqkb1r/2pp1ppp/p1n5/1p2p3/3Pn3/1B3N2/PPP2PPP/RNBQ1RK1 b kq - 2 7 id \&quot;CCR16\&quot;; bm d5;&quot;);</span></span>
+<span id="L161"><span class="lineNum">     161</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2qkbnr/2p2pp1/p1pp4/4p2p/4P1b1/5N1P/PPPP1PP1/RNBQ1RK1 w kq - 1 8 id \&quot;CCR17\&quot;; am hxg4;&quot;);</span></span>
+<span id="L162"><span class="lineNum">     162</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqkb1r/pp3ppp/2np1n2/4p1B1/3NP3/2N5/PPP2PPP/R2QKB1R w KQkq e6 1 7 id \&quot;CCR18\&quot;; bm Bxf6+;&quot;);</span></span>
+<span id="L163"><span class="lineNum">     163</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rn1qk2r/1b2bppp/p2ppn2/1p6/3NP3/1BN5/PPP2PPP/R1BQR1K1 w kq - 5 10 id \&quot;CCR19\&quot;; am Bxe6;&quot;);</span></span>
+<span id="L164"><span class="lineNum">     164</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1b1kb1r/1pqpnppp/p1n1p3/8/3NP3/2N1B3/PPP1BPPP/R2QK2R w KQkq - 3 8 id \&quot;CCR20\&quot;; am Ndb5;&quot;);</span></span>
+<span id="L165"><span class="lineNum">     165</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqnr2/pp1ppkbp/4N1p1/n3P3/8/2N1B3/PPP2PPP/R2QK2R b KQ - 2 11 id \&quot;CCR21\&quot;; am Kxe6;&quot;);</span></span>
+<span id="L166"><span class="lineNum">     166</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r3kb1r/pp1n1ppp/1q2p3/n2p4/3P1Bb1/2PB1N2/PPQ2PPP/RN2K2R w KQkq - 3 11 id \&quot;CCR22\&quot;; bm a4;&quot;);</span></span>
+<span id="L167"><span class="lineNum">     167</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bq1rk1/pppnnppp/4p3/3pP3/1b1P4/2NB3N/PPP2PPP/R1BQK2R w KQ - 3 7 id \&quot;CCR23\&quot;; bm Bxh7+;&quot;);</span></span>
+<span id="L168"><span class="lineNum">     168</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2qkbnr/ppp1pp1p/3p2p1/3Pn3/4P1b1/2N2N2/PPP2PPP/R1BQKB1R w KQkq - 2 6 id \&quot;CCR24\&quot;; bm Nxe5;&quot;);</span></span>
+<span id="L169"><span class="lineNum">     169</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rn2kb1r/pp2pppp/1qP2n2/8/6b1/1Q6/PP1PPPBP/RNB1K1NR b KQkq - 1 6 id \&quot;CCR25\&quot;; am Qxb3;&quot;);</span></span>
+<span id="L170"><span class="lineNum">     170</span>              : </span>
+<span id="L171"><span class="lineNum">     171</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; timeControls = {15000, 30000, 60000, 120000}; //mseconds</span></span>
+<span id="L172"><span class="lineNum">     172</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; scores       = {1, 1, 1, 1};</span></span>
+<span id="L173"><span class="lineNum">     173</span>              : </span>
+<span id="L174"><span class="lineNum">     174</span> <span class="tlaUNC">           0 :       ExtendedPosition::test(positions, timeControls, false, false, scores, [](int score) { return 2000 + 8 * score; });</span></span>
+<span id="L175"><span class="lineNum">     175</span>              :       return true;</span>
+<span id="L176"><span class="lineNum">     176</span> <span class="tlaUNC">           0 :    }</span></span>
+<span id="L177"><span class="lineNum">     177</span>              : </span>
+<span id="L178"><span class="lineNum">     178</span> <span class="tlaGNC tlaBgGNC">           8 :    if (option == &quot;BKTest&quot;) {</span></span>
+<span id="L179"><span class="lineNum">     179</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
+<span id="L180"><span class="lineNum">     180</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;1k1r4/pp1b1R2/3q2pp/4p3/2B5/4Q3/PPP2B2/2K5 b - - 0 0 bm Qd1+; id \&quot;BK.01\&quot;;&quot;);</span></span>
+<span id="L181"><span class="lineNum">     181</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3r1k2/4npp1/1ppr3p/p6P/P2PPPP1/1NR5/5K2/2R5 w - - 0 0 bm d5; id \&quot;BK.02\&quot;;&quot;);</span></span>
+<span id="L182"><span class="lineNum">     182</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2q1rr1k/3bbnnp/p2p1pp1/2pPp3/PpP1P1P1/1P2BNNP/2BQ1PRK/7R b - - 0 0 bm f5; id \&quot;BK.03\&quot;;&quot;);</span></span>
+<span id="L183"><span class="lineNum">     183</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rnbqkb1r/p3pppp/1p6/2ppP3/3N4/2P5/PPP1QPPP/R1B1KB1R w KQkq - - 0 0 bm e6; id \&quot;BK.04\&quot;;&quot;);</span></span>
+<span id="L184"><span class="lineNum">     184</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1b2rk1/2q1b1pp/p2ppn2/1p6/3QP3/1BN1B3/PPP3PP/R4RK1 w - - 0 0 bm Nd5 a4; id \&quot;BK.05\&quot;;&quot;);</span></span>
+<span id="L185"><span class="lineNum">     185</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2r3k1/pppR1pp1/4p3/4P1P1/5P2/1P4K1/P1P5/8 w - - 0 0 bm g6; id \&quot;BK.06\&quot;;&quot;);</span></span>
+<span id="L186"><span class="lineNum">     186</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;1nk1r1r1/pp2n1pp/4p3/q2pPp1N/b1pP1P2/B1P2R2/2P1B1PP/R2Q2K1 w - - 0 0 bm Nf6; id \&quot;BK.07\&quot;;&quot;);</span></span>
+<span id="L187"><span class="lineNum">     187</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;4b3/p3kp2/6p1/3pP2p/2pP1P2/4K1P1/P3N2P/8 w - - 0 0 bm f5; id \&quot;BK.08\&quot;;&quot;);</span></span>
+<span id="L188"><span class="lineNum">     188</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2kr1bnr/pbpq4/2n1pp2/3p3p/3P1P1B/2N2N1Q/PPP3PP/2KR1B1R w - - 0 0 bm f5; id \&quot;BK.09\&quot;;&quot;);</span></span>
+<span id="L189"><span class="lineNum">     189</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3rr1k1/pp3pp1/1qn2np1/8/3p4/PP1R1P2/2P1NQPP/R1B3K1 b - - 0 0 bm Ne5; id \&quot;BK.10\&quot;;&quot;);</span></span>
+<span id="L190"><span class="lineNum">     190</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2r1nrk1/p2q1ppp/bp1p4/n1pPp3/P1P1P3/2PBB1N1/4QPPP/R4RK1 w - - 0 0 bm f4; id \&quot;BK.11\&quot;;&quot;);</span></span>
+<span id="L191"><span class="lineNum">     191</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r3r1k1/ppqb1ppp/8/4p1NQ/8/2P5/PP3PPP/R3R1K1 b - - 0 0 bm Bf5; id \&quot;BK.12\&quot;;&quot;);</span></span>
+<span id="L192"><span class="lineNum">     192</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2q1rk1/4bppp/p2p4/2pP4/3pP3/3Q4/PP1B1PPP/R3R1K1 w - - 0 0 bm b4; id \&quot;BK.13\&quot;;&quot;);</span></span>
+<span id="L193"><span class="lineNum">     193</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rnb2r1k/pp2p2p/2pp2p1/q2P1p2/8/1Pb2NP1/PB2PPBP/R2Q1RK1 w - - 0 0 bm Qd2 Qe1; id \&quot;BK.14\&quot;;&quot;);</span></span>
+<span id="L194"><span class="lineNum">     194</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2r3k1/1p2q1pp/2b1pr2/p1pp4/6Q1/1P1PP1R1/P1PN2PP/5RK1 w - - 0 0 bm Qxg7+; id \&quot;BK.15\&quot;;&quot;);</span></span>
+<span id="L195"><span class="lineNum">     195</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqkb1r/4npp1/p1p4p/1p1pP1B1/8/1B6/PPPN1PPP/R2Q1RK1 w kq - 0 0 bm Ne4; id \&quot;BK.16\&quot;;&quot;);</span></span>
+<span id="L196"><span class="lineNum">     196</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2q1rk1/1ppnbppp/p2p1nb1/3Pp3/2P1P1P1/2N2N1P/PPB1QP2/R1B2RK1 b - - 0 0 bm h5; id \&quot;BK.17\&quot;;&quot;);</span></span>
+<span id="L197"><span class="lineNum">     197</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bq1rk1/pp2ppbp/2np2p1/2n5/P3PP2/N1P2N2/1PB3PP/R1B1QRK1 b - - 0 0 bm Nb3; id \&quot;BK.18\&quot;;&quot;);</span></span>
+<span id="L198"><span class="lineNum">     198</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3rr3/2pq2pk/p2p1pnp/8/2QBPP2/1P6/P5PP/4RRK1 b - - 0 0 bm Rxe4; id \&quot;BK.19\&quot;;&quot;);</span></span>
+<span id="L199"><span class="lineNum">     199</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r4k2/pb2bp1r/1p1qp2p/3pNp2/3P1P2/2N3P1/PPP1Q2P/2KRR3 w - - 0 0 bm g4; id \&quot;BK.20\&quot;;&quot;);</span></span>
+<span id="L200"><span class="lineNum">     200</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3rn2k/ppb2rpp/2ppqp2/5N2/2P1P3/1P5Q/PB3PPP/3RR1K1 w - - 0 0 bm Nh6; id \&quot;BK.21\&quot;;&quot;);</span></span>
+<span id="L201"><span class="lineNum">     201</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2r2rk1/1bqnbpp1/1p1ppn1p/pP6/N1P1P3/P2B1N1P/1B2QPP1/R2R2K1 b - - 0 0 bm Bxe4; id \&quot;BK.22\&quot;;&quot;);</span></span>
+<span id="L202"><span class="lineNum">     202</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqk2r/pp2bppp/2p5/3pP3/P2Q1P2/2N1B3/1PP3PP/R4RK1 b kq - 0 0 bm f6; id \&quot;BK.23\&quot;;&quot;);</span></span>
+<span id="L203"><span class="lineNum">     203</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2qnrnk/p2b2b1/1p1p2pp/2pPpp2/1PP1P3/PRNBB3/3QNPPP/5RK1 w - - 0 0 bm f4; id \&quot;BK.24\&quot;;&quot;);</span></span>
+<span id="L204"><span class="lineNum">     204</span>              : </span>
+<span id="L205"><span class="lineNum">     205</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; timeControls = {10000, 30000, 60000, 120000}; //mseconds</span></span>
+<span id="L206"><span class="lineNum">     206</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; scores       = {1, 1, 1, 1};</span></span>
+<span id="L207"><span class="lineNum">     207</span>              : </span>
+<span id="L208"><span class="lineNum">     208</span> <span class="tlaUNC">           0 :       ExtendedPosition::test(positions, timeControls, false, false, scores, [](int score) { return score; });</span></span>
+<span id="L209"><span class="lineNum">     209</span>              :       return true;</span>
+<span id="L210"><span class="lineNum">     210</span> <span class="tlaUNC">           0 :    }</span></span>
+<span id="L211"><span class="lineNum">     211</span>              : </span>
+<span id="L212"><span class="lineNum">     212</span> <span class="tlaGNC tlaBgGNC">           8 :    if (option == &quot;EETest&quot;) {</span></span>
+<span id="L213"><span class="lineNum">     213</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
+<span id="L214"><span class="lineNum">     214</span>              : </span>
+<span id="L215"><span class="lineNum">     215</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/8/p2p3p/3k2p1/PP6/3K1P1P/8/8 b - - 0 0 bm Kc6; id \&quot;E_E_T 001 - B vs B\&quot;&quot;);</span></span>
+<span id="L216"><span class="lineNum">     216</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/p5pp/3k1p2/3p4/1P3P2/P1K5/5P1P/8 b - - 0 0 bm g5; id \&quot;E_E_T 002 - B vs B\&quot;&quot;);</span></span>
+<span id="L217"><span class="lineNum">     217</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/1p3p2/p7/8/2k5/4P1pP/2P1K1P1/8 w - - 0 0 bm h4; id \&quot;E_E_T 003 - B vs B\&quot;&quot;);</span></span>
+<span id="L218"><span class="lineNum">     218</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/pp5p/3k2p1/8/4Kp2/2P1P2P/P7/8 w - - 0 0 bm exf4; id \&quot;E_E_T 004 - B vs B\&quot;&quot;);</span></span>
+<span id="L219"><span class="lineNum">     219</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/7p/1p3pp1/p2K4/Pk3PPP/8/1P6/8 b - - 0 0 bm Kb3 f5; id \&quot;E_E_T 005 - B vs B\&quot;&quot;);</span></span>
+<span id="L220"><span class="lineNum">     220</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2k5/3b4/PP3K2/7p/4P3/1P6/8/8 w - - 0 0 bm Ke7; id \&quot;E_E_T 006 - B vs L\&quot;&quot;);</span></span>
+<span id="L221"><span class="lineNum">     221</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/3Pb1p1/8/3P2P1/5P2/7k/4K3/8 w - - 0 0 bm Kd3; id \&quot;E_E_T 007 - B vs L\&quot;&quot;);</span></span>
+<span id="L222"><span class="lineNum">     222</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/1Pk2Kpp/8/8/4nPP1/7P/8/8 b - - 0 0 bm Nf2; id \&quot;E_E_T 008 - B vs S\&quot;&quot;);</span></span>
+<span id="L223"><span class="lineNum">     223</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2n5/4k1p1/P6p/3PK3/7P/8/6P1/8 b - - 0 0 bm g6; id \&quot;E_E_T 009 - B vs S\&quot;&quot;);</span></span>
+<span id="L224"><span class="lineNum">     224</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;4k3/8/3PP1p1/8/3K3p/8/3n2PP/8 b - - 0 0 am Nf1; id \&quot;E_E_T 010 - B vs S\&quot;&quot;);</span></span>
+<span id="L225"><span class="lineNum">     225</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;6k1/5p2/P3p1p1/2Qp4/5q2/2K5/8/8 b - - 0 0 am Qc1+ Qe5+; id \&quot;E_E_T 011 - D vs D\&quot;&quot;);</span></span>
+<span id="L226"><span class="lineNum">     226</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/6pk/8/2p2P1p/6qP/5QP1/8/6K1 w - - 0 0 bm Qd3 Qf2; id \&quot;E_E_T 012 - D vs D\&quot;&quot;);</span></span>
+<span id="L227"><span class="lineNum">     227</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;5q1k/5P1p/Q7/5n1p/6P1/7K/8/8 w - - 0 0 bm Qa1+; id \&quot;E_E_T 013 - D vs D&amp;S\&quot;&quot;);</span></span>
+<span id="L228"><span class="lineNum">     228</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;4qr2/4p2k/1p2P1pP/5P2/1P3P2/6Q1/8/3B1K2 w - - 0 0 bm Ba4; id \&quot;E_E_T 014 - D&amp;L vs D&amp;T\&quot;&quot;);</span></span>
+<span id="L229"><span class="lineNum">     229</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/kn4b1/P2B4/8/1Q6/6pP/1q4pP/5BK1 w - - 0 0 bm Bc5+; id \&quot;E_E_T 015 - D&amp;L&amp;L vs D&amp;L&amp;S\&quot;&quot;);</span></span>
+<span id="L230"><span class="lineNum">     230</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;6k1/1p2p1bp/p5p1/4pb2/1q6/4Q3/1P2BPPP/2R3K1 w - - 0 0 bm Qa3; id \&quot;E_E_T 017 - D&amp;T&amp;L vs D&amp;L&amp;L\&quot;&quot;);</span></span>
+<span id="L231"><span class="lineNum">     231</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;1rr2k2/p1q5/3p2Q1/3Pp2p/8/1P3P2/1KPRN3/8 w - - 0 0 e6 bm Rd1; id \&quot;E_E_T 018 - D&amp;T&amp;S vs D&amp;T&amp;T\&quot;&quot;);</span></span>
+<span id="L232"><span class="lineNum">     232</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r5k1/3R2p1/p1r1q2p/P4p2/5P2/2p1P3/5P1P/1R1Q2K1 w - - 0 0 am Rbb7; id \&quot;E_E_T 019 - D&amp;T&amp;T vs D&amp;T&amp;T\&quot;&quot;);</span></span>
+<span id="L233"><span class="lineNum">     233</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/1p4k1/pK5p/2B5/P4pp1/8/7P/8 b - - 0 0 am g3; id \&quot;E_E_T 020 - L vs B\&quot;&quot;);</span></span>
+<span id="L234"><span class="lineNum">     234</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/6p1/6P1/6Pp/B1p1p2K/6PP/3k2P1/8 w - - 0 0 bm Bd1; id \&quot;E_E_T 021 - L vs B\&quot;&quot;);</span></span>
+<span id="L235"><span class="lineNum">     235</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/4k3/8/2Kp3p/B3bp1P/P7/1P6/8 b - - 0 0 bm Bg2; id \&quot;E_E_T 022 - L vs L\&quot;&quot;);</span></span>
+<span id="L236"><span class="lineNum">     236</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/8/2p1K1p1/2k5/p7/P4BpP/1Pb3P1/8 w - - 0 0 am Kd7; id \&quot;E_E_T 023 - L vs L\&quot;&quot;);</span></span>
+<span id="L237"><span class="lineNum">     237</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/3p3B/5p2/5P2/p7/PP5b/k7/6K1 w - - 0 0 bm b4; id \&quot;E_E_T 024 - L vs L\&quot;&quot;);</span></span>
+<span id="L238"><span class="lineNum">     238</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/p4p2/1p2k2p/6p1/P4b1P/1P6/3B1PP1/6K1 w - - 0 0 am Bxf4; id \&quot;E_E_T 025 - L vs L\&quot;&quot;);</span></span>
+<span id="L239"><span class="lineNum">     239</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3b3k/1p4p1/p5p1/4B3/8/7P/1P3PP1/5K2 b - - 0 0 am Bf6; id \&quot;E_E_T 027 - L vs L\&quot;&quot;);</span></span>
+<span id="L240"><span class="lineNum">     240</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;4b1k1/1p3p2/4pPp1/p2pP1P1/P2P4/1P1B4/8/2K5 w - - 0 0 bm b4; id \&quot;E_E_T 028 - L vs L\&quot;&quot;);</span></span>
+<span id="L241"><span class="lineNum">     241</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/3k1p2/n3pP2/1p2P2p/5K2/1PB5/7P/8 b - - 0 0 am Kc6 b4; id \&quot;E_E_T 029 - L vs S\&quot;&quot;);</span></span>
+<span id="L242"><span class="lineNum">     242</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/8/4p1p1/1P1kP3/4n1PK/2B4P/8/8 b - - 0 0 bm Kc5; id \&quot;E_E_T 030 - L vs S\&quot;&quot;);</span></span>
+<span id="L243"><span class="lineNum">     243</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/5k2/4p3/B2p2P1/3K2n1/1P6/8/8 b - - 0 0 bm Kg6; id \&quot;E_E_T 031 - L vs S\&quot;&quot;);</span></span>
+<span id="L244"><span class="lineNum">     244</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;5b2/p4B2/5B2/1bN5/8/P3r3/4k1K1/8 w - - 0 0 bm Bh5+; id \&quot;E_E_T 032 - L&amp;L&amp;S vs T&amp;L&amp;L\&quot;&quot;);</span></span>
+<span id="L245"><span class="lineNum">     245</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/p5pq/8/p2N3p/k2P3P/8/KP3PB1/8 w - - 0 0 bm Be4; id \&quot;E_E_T 033 - L&amp;S vs D\&quot;&quot;);</span></span>
+<span id="L246"><span class="lineNum">     246</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;1b6/1P6/8/2KB4/6pk/3N3p/8/8 b - - 0 0 bm Kg3; id \&quot;E_E_T 034 - L&amp;S vs L&amp;B\&quot;&quot;);</span></span>
+<span id="L247"><span class="lineNum">     247</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/p7/7k/1P1K3P/8/1n6/4Bp2/5Nb1 b - - 0 0 bm Na5; id \&quot;E_E_T 035 - L&amp;S vs L&amp;S\&quot;&quot;);</span></span>
+<span id="L248"><span class="lineNum">     248</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/8/8/3K4/2N5/p2B4/p7/k4r2 w - - 0 0 bm Kc5; id \&quot;E_E_T 036 - L&amp;S vs T&amp;B\&quot;&quot;);</span></span>
+<span id="L249"><span class="lineNum">     249</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/8/2kp4/5Bp1/8/5K2/3N4/2rN4 w - - 0 0 bm Nb3; id \&quot;E_E_T 037 - L&amp;S&amp;S vs T&amp;B\&quot;&quot;);</span></span>
+<span id="L250"><span class="lineNum">     250</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;k2K4/1p4pN/P7/1p3P2/pP6/8/8/8 w - - 0 0 bm f6 Kc7; id \&quot;E_E_T 038 - S vs B\&quot;&quot;);</span></span>
+<span id="L251"><span class="lineNum">     251</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;k2N4/1qpK1p2/1p6/1P4p1/1P4P1/8/8/8 w - - 0 0 bm Nc6; id \&quot;E_E_T 039 - S vs D\&quot;&quot;);</span></span>
+<span id="L252"><span class="lineNum">     252</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;6k1/4b3/4p1p1/8/6pP/4PN2/5K2/8 w - - 0 0 bm Ne5 Nh2; id \&quot;E_E_T 040 - S vs L\&quot;&quot;);</span></span>
+<span id="L253"><span class="lineNum">     253</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/8/6Np/2p3kP/1pPbP3/1P3K2/8/8 w - - 0 0 bm e5; id \&quot;E_E_T 041 - S vs L\&quot;&quot;);</span></span>
+<span id="L254"><span class="lineNum">     254</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/3P4/1p3b1p/p7/P7/1P3NPP/4p1K1/3k4 w - - 0 0 bm g4; id \&quot;E_E_T 042 - S vs L\&quot;&quot;);</span></span>
+<span id="L255"><span class="lineNum">     255</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/8/1p2p3/p3p2b/P1PpP2P/kP6/2K5/7N w - - 0 0 bm Nf2; id \&quot;E_E_T 043 - S vs L\&quot;&quot;);</span></span>
+<span id="L256"><span class="lineNum">     256</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;4N3/8/3P3p/1k2P3/7p/1n1K4/8/8 w - - 0 0 bm d7; id \&quot;E_E_T 044 - S vs S\&quot;&quot;);</span></span>
+<span id="L257"><span class="lineNum">     257</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;N5n1/2p1kp2/2P3p1/p4PP1/K4P2/8/8/8 w - - 0 0 bm f6 Kb5; id \&quot;E_E_T 045 - S vs S\&quot;&quot;);</span></span>
+<span id="L258"><span class="lineNum">     258</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/8/2pn4/p4p1p/P4N2/1Pk2KPP/8/8 w - - 0 0 bm Ne2 Ne6; id \&quot;E_E_T 046 - S vs S\&quot;&quot;);</span></span>
+<span id="L259"><span class="lineNum">     259</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/7k/2P5/2p4p/P3N2K/8/8/5r2 w - - 0 0 bm Ng5+; id \&quot;E_E_T 047 - S vs T\&quot;&quot;);</span></span>
+<span id="L260"><span class="lineNum">     260</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2k1r3/p7/K7/1P6/P2N4/8/P7/8 w - - 0 0 bm Nc6; id \&quot;E_E_T 048 - S vs T\&quot;&quot;);</span></span>
+<span id="L261"><span class="lineNum">     261</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;1k6/8/8/1K6/5pp1/8/4Pp1p/R7 w - - 0 0 bm Kb6; id \&quot;E_E_T 049 - T vs B\&quot;&quot;);</span></span>
+<span id="L262"><span class="lineNum">     262</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;6k1/8/8/1K4p1/3p2P1/2pp4/8/1R6 w - - 0 0 bm Kc6; id \&quot;E_E_T 050 - T vs B\&quot;&quot;);</span></span>
+<span id="L263"><span class="lineNum">     263</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/5p2/3pp2p/p5p1/4Pk2/2p2P1P/P1Kb2P1/1R6 w - - 0 0 bm a4 Rb5; id \&quot;E_E_T 051 - T vs L\&quot;&quot;);</span></span>
+<span id="L264"><span class="lineNum">     264</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/8/4pR2/3pP2p/6P1/2p4k/P1Kb4/8 b - - 0 0 bm hxg4; id \&quot;E_E_T 052 - T vs L\&quot;&quot;);</span></span>
+<span id="L265"><span class="lineNum">     265</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3k3K/p5P1/P3r3/8/1N6/8/8/8 w - - 0 0 bm Kh7; id \&quot;E_E_T 053 - T vs S\&quot;&quot;);</span></span>
+<span id="L266"><span class="lineNum">     266</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/8/5p2/5k2/p4r2/PpKR4/1P5P/8 w - - 0 0 am Rd4; id \&quot;E_E_T 054 - T vs T\&quot;&quot;);</span></span>
+<span id="L267"><span class="lineNum">     267</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;5k2/7R/8/4Kp2/5Pp1/P5rp/1P6/8 w - - 0 0 bm Kf6; id \&quot;E_E_T 055 - T vs T\&quot;&quot;);</span></span>
+<span id="L268"><span class="lineNum">     268</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2K5/p7/7P/5pR1/8/5k2/r7/8 w - - 0 0 bm Rxf5+; id \&quot;E_E_T 056 - T vs T\&quot;&quot;);</span></span>
+<span id="L269"><span class="lineNum">     269</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/2R4p/4k3/1p2P3/pP3PK1/r7/8/8 b - - 0 0 bm h5 Ra1; id \&quot;E_E_T 057 - T vs T\&quot;&quot;);</span></span>
+<span id="L270"><span class="lineNum">     270</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2k1r3/5R2/3KP3/8/1pP3p1/1P5p/8/8 w - - 0 0 bm Rc7+; id \&quot;E_E_T 058 - T vs T\&quot;&quot;);</span></span>
+<span id="L271"><span class="lineNum">     271</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/6p1/1p5p/1R2k3/4p3/1P2P3/1K4PP/3r4 b - - 0 0 am Rd5; id \&quot;E_E_T 059 - T vs T\&quot;&quot;);</span></span>
+<span id="L272"><span class="lineNum">     272</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;5K2/kp3P2/2p5/2Pp4/3P4/r7/p7/6R1 w - - 0 0 bm Ke7; id \&quot;E_E_T 060 - T vs T\&quot;&quot;);</span></span>
+<span id="L273"><span class="lineNum">     273</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/pp3K2/2P4k/5p2/8/6P1/R7/6r1 w - - 0 0 bm Kf6; id \&quot;E_E_T 061 - T vs T\&quot;&quot;);</span></span>
+<span id="L274"><span class="lineNum">     274</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2r3k1/6pp/3pp1P1/1pP5/1P6/P4R2/5K2/8 w - - 0 0 bm c6; id \&quot;E_E_T 062 - T vs T\&quot;&quot;);</span></span>
+<span id="L275"><span class="lineNum">     275</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2k4/8/8/1P4p1/8/p5P1/6P1/1R3K2 w - - 0 0 bm b6; id \&quot;E_E_T 063 - T vs T\&quot;&quot;);</span></span>
+<span id="L276"><span class="lineNum">     276</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/4k3/1p4p1/p7/P1r1P3/1R4Pp/5P1P/4K3 w - - 0 0 bm Ke2; id \&quot;E_E_T 064 - T vs T\&quot;&quot;);</span></span>
+<span id="L277"><span class="lineNum">     277</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;R7/4kp2/P3p1p1/3pP1P1/3P1P2/p6r/3K4/8 w - - 0 0 bm Kc2; id \&quot;E_E_T 065 - T vs T\&quot;&quot;);</span></span>
+<span id="L278"><span class="lineNum">     278</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/1pp1r3/p1p2k2/6p1/P5P1/1P3P2/2P1RK2/8 b - - 0 0 am Rxe2+ Re5; id \&quot;E_E_T 066 - T vs T\&quot;&quot;);</span></span>
+<span id="L279"><span class="lineNum">     279</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/1p2R3/8/p5P1/3k4/P2p2K1/1P6/5r2 w - - 0 0 bm Kg2; id \&quot;E_E_T 067 - T vs T\&quot;&quot;);</span></span>
+<span id="L280"><span class="lineNum">     280</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;R7/P5Kp/2P5/k3r2P/8/5p2/p4P2/8 w - - 0 0 bm Rb8; id \&quot;E_E_T 068 - T vs T\&quot;&quot;);</span></span>
+<span id="L281"><span class="lineNum">     281</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/2p4K/4k1p1/p1p1P3/PpP2P2/5R1P/8/6r1 b - - 0 0 bm Kf7; id \&quot;E_E_T 069 - T vs T\&quot;&quot;);</span></span>
+<span id="L282"><span class="lineNum">     282</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/B7/1R6/q3k2p/8/6p1/5P2/5K2 w - - 0 0 bm Rb3; id \&quot;E_E_T 071 - T&amp;L vs D\&quot;&quot;);</span></span>
+<span id="L283"><span class="lineNum">     283</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;5k2/8/2Pb1B2/8/6RK/7p/5p1P/8 w - - 0 0 bm Be5; id \&quot;E_E_T 072 - T&amp;L vs L&amp;B\&quot;&quot;);</span></span>
+<span id="L284"><span class="lineNum">     284</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3kB3/R4P2/8/8/1p6/pp6/5r2/1K6 w - - 0 0 bm f8=Q f8=R; id \&quot;E_E_T 073 - T&amp;L vs T&amp;B\&quot;&quot;);</span></span>
+<span id="L285"><span class="lineNum">     285</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;5k2/1p6/1P1p4/1K1p2p1/PB1P2P1/3pR2p/1P2p1pr/8 w - - 0 0 bm Ba5; id \&quot;E_E_T 074 - T&amp;L vs T&amp;B\&quot;&quot;);</span></span>
+<span id="L286"><span class="lineNum">     286</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;6k1/p6p/1p1p2p1/2bP4/P1P5/2B3P1/4r2P/1R5K w - - 0 0 bm a5; id \&quot;E_E_T 075 - T&amp;L vs T&amp;L\&quot;&quot;);</span></span>
+<span id="L287"><span class="lineNum">     287</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3R3B/8/1r4b1/8/4pP2/7k/8/7K w - - 0 0 bm Bd4; id \&quot;E_E_T 076 - T&amp;L vs T&amp;L\&quot;&quot;);</span></span>
+<span id="L288"><span class="lineNum">     288</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rk1b4/p2p2p1/1P6/2R2P2/8/2K5/8/5B2 w - - 0 0 bm Rc8+; id \&quot;E_E_T 077 - T&amp;L vs T&amp;L\&quot;&quot;);</span></span>
+<span id="L289"><span class="lineNum">     289</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3r1k2/8/7R/8/8/pp1B4/P7/n1K5 w - - 0 0 bm Rf6+; id \&quot;E_E_T 078 - T&amp;L vs T&amp;S\&quot;&quot;);</span></span>
+<span id="L290"><span class="lineNum">     290</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r5k1/5ppp/1p6/2b1R3/1p3P2/2nP2P1/1B3PKP/5B2 w - - 0 0 bm d4; id \&quot;E_E_T 079 - T&amp;L&amp;L vs T&amp;L&amp;S\&quot;&quot;);</span></span>
+<span id="L291"><span class="lineNum">     291</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;5k2/3p1b2/4pN2/3PPpp1/6R1/6PK/1B1q1P2/8 w - - 0 0 bm Ba3+; id \&quot;E_E_T 080 - T&amp;L&amp;S vs D&amp;L\&quot;&quot;);</span></span>
+<span id="L292"><span class="lineNum">     292</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/1p5p/6p1/1p4Pp/1PpR4/2P1K1kB/6Np/7b w - - 0 0 bm Rd1; id \&quot;E_E_T 081 - T&amp;L&amp;S vs L&amp;B\&quot;&quot;);</span></span>
+<span id="L293"><span class="lineNum">     293</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;7k/1p1Nr2P/3Rb3/8/3K4/6b1/8/5B2 w - - 0 0 bm Ne5; id \&quot;E_E_T 082 - T&amp;L&amp;S vs T&amp;L&amp;L\&quot;&quot;);</span></span>
+<span id="L294"><span class="lineNum">     294</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/1B4k1/5pn1/6N1/1P3rb1/P1K4p/3R4/8 w - - 0 0 bm Nxh3; id \&quot;E_E_T 083 - T&amp;L&amp;S vs T&amp;L&amp;S\&quot;&quot;);</span></span>
+<span id="L295"><span class="lineNum">     295</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/7p/6p1/3Np1bk/4Pp2/1R3PPK/5r1P/8 w - - 0 0 bm Nc7; id \&quot;E_E_T 084 - T&amp;S vs T&amp;L\&quot;&quot;);</span></span>
+<span id="L296"><span class="lineNum">     296</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;1r6/3b1p2/2k4P/1N3p1P/5P2/8/3R4/2K5 w - - 0 0 bm Na7+; id \&quot;E_E_T 085 - T&amp;S vs T&amp;L\&quot;&quot;);</span></span>
+<span id="L297"><span class="lineNum">     297</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;k6r/8/1R6/8/1pK2p2/8/7N/3b4 w - - 0 0 bm Nf1; id \&quot;E_E_T 086 - T&amp;S vs T&amp;L\&quot;&quot;);</span></span>
+<span id="L298"><span class="lineNum">     298</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/8/8/p1p5/2P1k3/1Pn5/1N1R2K1/1r6 w - - 0 0 bm Kg3; id \&quot;E_E_T 087 - T&amp;S vs T&amp;S\&quot;&quot;);</span></span>
+<span id="L299"><span class="lineNum">     299</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;5n1k/1r3P1p/p2p3P/P7/8/1N6/5R2/4K3 b - - 0 0 bm Re7+; id \&quot;E_E_T 088 - T&amp;S vs T&amp;S\&quot;&quot;);</span></span>
+<span id="L300"><span class="lineNum">     300</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;6R1/P2k1N2/r7/7P/r7/p7/7K/8 w - - 0 0 bm Nh6; id \&quot;E_E_T 089 - T&amp;S vs T&amp;T\&quot;&quot;);</span></span>
+<span id="L301"><span class="lineNum">     301</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/1rk1P3/7p/P7/1N2r3/5RKb/8/8 w - - 0 0 bm Na6+; id \&quot;E_E_T 090 - T&amp;S&amp;B vs T&amp;T&amp;L\&quot;&quot;);</span></span>
+<span id="L302"><span class="lineNum">     302</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2K5/k3q3/6pR/6p1/6Pp/7P/8/3R4 w - - 0 0 bm Rh7; id \&quot;E_E_T 090 - T&amp;T vs D\&quot;&quot;);</span></span>
+<span id="L303"><span class="lineNum">     303</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;R5bk/5r2/P7/1P1pR3/3P4/7p/5p1K/8 w - - 0 0 bm Rh5+; id \&quot;E_E_T 092 - T&amp;T vs T&amp;L\&quot;&quot;);</span></span>
+<span id="L304"><span class="lineNum">     304</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;4k3/7r/3nb3/2R5/8/6n1/1R3K2/8 w - - 0 0 bm Re5; id \&quot;E_E_T 093 - T&amp;T vs T&amp;L&amp;S\&quot;&quot;);</span></span>
+<span id="L305"><span class="lineNum">     305</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;1r6/1r6/1P1KP3/6k1/1R4p1/7p/7R/8 w - - 0 0 bm Kc6 Rb5; id \&quot;E_E_T 094 - T&amp;T vs T&amp;T\&quot;&quot;);</span></span>
+<span id="L306"><span class="lineNum">     306</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;1k1K4/1p6/P4P2/2R5/4p2R/r2p4/8/3r4 w - - 0 0 bm Rf4; id \&quot;E_E_T 095 - T&amp;T vs T&amp;T\&quot;&quot;);</span></span>
+<span id="L307"><span class="lineNum">     307</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;5k2/R1p5/p1R3Pb/2K5/2B5/2q2b2/8/8 w - - 0 0 bm g7+; id \&quot;E_E_T 096 - T&amp;T&amp;L vs D&amp;L&amp;L\&quot;&quot;);</span></span>
+<span id="L308"><span class="lineNum">     308</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/8/k7/n7/p1R5/p7/4r1p1/KB3R2 w - - 0 0 bm Rc3; id \&quot;E_E_T 097 - T&amp;T&amp;L vs T&amp;S&amp;B\&quot;&quot;);</span></span>
+<span id="L309"><span class="lineNum">     309</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3r2k1/p1R2ppp/1p6/P1b1PP2/3p4/3R2B1/5PKP/1r6 w - - 0 0 bm f6; id \&quot;E_E_T 098 - T&amp;T&amp;L vs T&amp;T&amp;L\&quot;&quot;);</span></span>
+<span id="L310"><span class="lineNum">     310</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/5p2/5rp1/p2k1r1p/P1pNp2P/RP1bP1P1/5P1R/4K3 b - - 0 0 bm c3; id \&quot;E_E_T 099 - T&amp;T&amp;S vs T&amp;T&amp;L\&quot;&quot;);</span></span>
+<span id="L311"><span class="lineNum">     311</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;1r4k1/6pp/3Np1b1/p1R1P3/6P1/P2pr2P/1P1R2K1/8 b - - 0 0 bm Rf8; id \&quot;E_E_T 100 - T&amp;T&amp;S vs T&amp;T&amp;L\&quot;&quot;);</span></span>
+<span id="L312"><span class="lineNum">     312</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;4k1r1/pp2p2p/3pN1n1/2pP4/2P3P1/PP5P/8/5RK1 b - - 0 0 am Nf8; id \&quot;E_E_T 16b -  T&amp;S vs T&amp;S\&quot;&quot;);</span></span>
+<span id="L313"><span class="lineNum">     313</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/3k3p/1p2p3/p4p2/Pb1Pp3/2B3PP/1P3P2/5K2 w - - 0 0 am Bxb4; id \&quot;E_E_T 26b -  L vs L\&quot;&quot;);</span></span>
+<span id="L314"><span class="lineNum">     314</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/1k6/8/Q7/7p/6p1/6pr/6Kb w - - 0 0 bm Qc5; id \&quot;E_E_T 70b - D vs T&amp;L&amp;B\&quot;&quot;);</span></span>
+<span id="L315"><span class="lineNum">     315</span>              : </span>
+<span id="L316"><span class="lineNum">     316</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; timeControls = {1000, 3000, 6000, 12000}; //mseconds</span></span>
+<span id="L317"><span class="lineNum">     317</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; scores       = {1, 1, 1, 1};</span></span>
+<span id="L318"><span class="lineNum">     318</span>              : </span>
+<span id="L319"><span class="lineNum">     319</span> <span class="tlaUNC">           0 :       ExtendedPosition::test(positions, timeControls, false, false, scores, [](int score) { return score; });</span></span>
+<span id="L320"><span class="lineNum">     320</span>              :       return true;</span>
+<span id="L321"><span class="lineNum">     321</span> <span class="tlaUNC">           0 :    }</span></span>
+<span id="L322"><span class="lineNum">     322</span>              : </span>
+<span id="L323"><span class="lineNum">     323</span> <span class="tlaGNC tlaBgGNC">           8 :    if (option == &quot;KMTest&quot;) {</span></span>
+<span id="L324"><span class="lineNum">     324</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
+<span id="L325"><span class="lineNum">     325</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;1rbq1rk1/p1b1nppp/1p2p3/8/1B1pN3/P2B4/1P3PPP/2RQ1R1K w - - 0 0 bm Nf6+; id \&quot;position 01\&quot;;&quot;);</span></span>
+<span id="L326"><span class="lineNum">     326</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3r2k1/p2r1p1p/1p2p1p1/q4n2/3P4/PQ5P/1P1RNPP1/3R2K1 b - - 0 0 bm Nxd4 id \&quot;position 02\&quot;;&quot;);</span></span>
+<span id="L327"><span class="lineNum">     327</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3r2k1/1p3ppp/2pq4/p1n5/P6P/1P6/1PB2QP1/1K2R3 w - - 0 0 am Rd1; id \&quot;position 03\&quot;;&quot;);</span></span>
+<span id="L328"><span class="lineNum">     328</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1b1r1k1/1ppn1p1p/3pnqp1/8/p1P1P3/5P2/PbNQNBPP/1R2RB1K w - - 0 0 bm Rxb2; id \&quot;position 04\&quot;;&quot;);</span></span>
+<span id="L329"><span class="lineNum">     329</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2r4k/pB4bp/1p4p1/6q1/1P1n4/2N5/P4PPP/2R1Q1K1 b - - 0 0 bm Qxc1; id \&quot;position 05\&quot;;&quot;);</span></span>
+<span id="L330"><span class="lineNum">     330</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r5k1/3n1ppp/1p6/3p1p2/3P1B2/r3P2P/PR3PP1/2R3K1 b - - 0 0 am Rxa2; id \&quot;position 06\&quot;;&quot;);</span></span>
+<span id="L331"><span class="lineNum">     331</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2r2rk1/1bqnbpp1/1p1ppn1p/pP6/N1P1P3/P2B1N1P/1B2QPP1/R2R2K1 b - - 0 0 bm Bxe4 id \&quot;position 07\&quot;;&quot;);</span></span>
+<span id="L332"><span class="lineNum">     332</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;5r1k/6pp/1n2Q3/4p3/8/7P/PP4PK/R1B1q3 b - - 0 0 bm h6; id \&quot;position 08\&quot;;&quot;);</span></span>
+<span id="L333"><span class="lineNum">     333</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r3k2r/pbn2ppp/8/1P1pP3/P1qP4/5B2/3Q1PPP/R3K2R w KQkq - 0 0 bm Be2; id \&quot;position 09\&quot;;&quot;);</span></span>
+<span id="L334"><span class="lineNum">     334</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3r2k1/ppq2pp1/4p2p/3n3P/3N2P1/2P5/PP2QP2/K2R4 b - - 0 0 bm Nxc3; id \&quot;position 10\&quot;;&quot;);</span></span>
+<span id="L335"><span class="lineNum">     335</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;q3rn1k/2QR4/pp2pp2/8/P1P5/1P4N1/6n1/6K1 w - - 0 0 bm Nf5; id \&quot;position 11\&quot;;&quot;);</span></span>
+<span id="L336"><span class="lineNum">     336</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;6k1/p3q2p/1nr3pB/8/3Q1P2/6P1/PP5P/3R2K1 b - - 0 0 bm Rd6; id \&quot;position 12\&quot;;&quot;);</span></span>
+<span id="L337"><span class="lineNum">     337</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;1r4k1/7p/5np1/3p3n/8/2NB4/7P/3N1RK1 w - - 0 0 bm Nxd5; id \&quot;position 13\&quot;;&quot;);</span></span>
+<span id="L338"><span class="lineNum">     338</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;1r2r1k1/p4p1p/6pB/q7/8/3Q2P1/PbP2PKP/1R3R2 w - - 0 0 bm Rxb2; id \&quot;position 14\&quot;;&quot;);</span></span>
+<span id="L339"><span class="lineNum">     339</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2q1r1k/pb3p1p/2n1p2Q/5p2/8/3B2N1/PP3PPP/R3R1K1 w - - 0 0 bm Bxf5; id \&quot;position 15\&quot;;&quot;);</span></span>
+<span id="L340"><span class="lineNum">     340</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/4p3/p2p4/2pP4/2P1P3/1P4k1/1P1K4/8 w - - 0 0 bm b4; id \&quot;position 16\&quot;;&quot;);</span></span>
+<span id="L341"><span class="lineNum">     341</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;1r1q1rk1/p1p2pbp/2pp1np1/6B1/4P3/2NQ4/PPP2PPP/3R1RK1 w - - 0 0 bm e5; id \&quot;position 17\&quot;;&quot;);</span></span>
+<span id="L342"><span class="lineNum">     342</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;q4rk1/1n1Qbppp/2p5/1p2p3/1P2P3/2P4P/6P1/2B1NRK1 b - - 0 0 bm Qc8; id \&quot;position 18\&quot;;&quot;);</span></span>
+<span id="L343"><span class="lineNum">     343</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2q1r1k/1b1nN2p/pp3pp1/8/Q7/PP5P/1BP2RPN/7K w - - 0 0 bm Qxd7; id \&quot;position 19\&quot;;&quot;);</span></span>
+<span id="L344"><span class="lineNum">     344</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/5p2/pk2p3/4P2p/2b1pP1P/P3P2B/8/7K w - - 0 0 bm Bg4; id \&quot;position 20\&quot;;&quot;);</span></span>
+<span id="L345"><span class="lineNum">     345</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/2k5/4p3/1nb2p2/2K5/8/6B1/8 w - - 0 0 bm Kxb5; id \&quot;position 21\&quot;;&quot;);</span></span>
+<span id="L346"><span class="lineNum">     346</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;1B1b4/7K/1p6/1k6/8/8/8/8 w - - 0 0 bm Ba7; id \&quot;position 22\&quot;;&quot;);</span></span>
+<span id="L347"><span class="lineNum">     347</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rn1q1rk1/1b2bppp/1pn1p3/p2pP3/3P4/P2BBN1P/1P1N1PP1/R2Q1RK1 b - - 0 0 bm Ba6; id \&quot;position 23\&quot;;&quot;);</span></span>
+<span id="L348"><span class="lineNum">     348</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/p1ppk1p1/2n2p2/8/4B3/2P1KPP1/1P5P/8 w - - 0 0 bm Bxc6; id \&quot;position 24\&quot;;&quot;);</span></span>
+<span id="L349"><span class="lineNum">     349</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/3nk3/3pp3/1B6/8/3PPP2/4K3/8 w - - 0 0 bm Bxd7; id \&quot;position 25\&quot;;&quot;);</span></span>
+<span id="L350"><span class="lineNum">     350</span>              : </span>
+<span id="L351"><span class="lineNum">     351</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; timeControls = {1000, 3000, 6000, 12000}; //mseconds</span></span>
+<span id="L352"><span class="lineNum">     352</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; scores       = {1, 1, 1, 1};</span></span>
+<span id="L353"><span class="lineNum">     353</span>              : </span>
+<span id="L354"><span class="lineNum">     354</span> <span class="tlaUNC">           0 :       ExtendedPosition::test(positions, timeControls, false, false, scores, [](int score) { return score; });</span></span>
+<span id="L355"><span class="lineNum">     355</span>              :       return true;</span>
+<span id="L356"><span class="lineNum">     356</span> <span class="tlaUNC">           0 :    }</span></span>
+<span id="L357"><span class="lineNum">     357</span>              : </span>
+<span id="L358"><span class="lineNum">     358</span> <span class="tlaGNC tlaBgGNC">           8 :    if (option == &quot;LCTest&quot;) {</span></span>
+<span id="L359"><span class="lineNum">     359</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
+<span id="L360"><span class="lineNum">     360</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r3kb1r/3n1pp1/p6p/2pPp2q/Pp2N3/3B2PP/1PQ2P2/R3K2R w KQkq - bm d6; id \&quot;LCTII.POS.01\&quot;;c0 \&quot;Chernin - Miles, Tunis 1985\&quot;;&quot;);</span></span>
+<span id="L361"><span class="lineNum">     361</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;1k1r3r/pp2qpp1/3b1n1p/3pNQ2/2pP1P2/2N1P3/PP4PP/1K1RR3 b - - bm Bb4; id \&quot;LCTII.POS.02\&quot;;c0 \&quot;Lilienthal - Botvinnik, Moskau 1945\&quot;;&quot;);</span></span>
+<span id="L362"><span class="lineNum">     362</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r6k/pp4p1/2p1b3/3pP3/7q/P2B3r/1PP2Q1P/2K1R1R1 w - - bm Qc5; id \&quot;LCTII.POS.03\&quot;;c0 \&quot;Boissel - Boulard, corr. 1994\&quot;;&quot;);</span></span>
+<span id="L363"><span class="lineNum">     363</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;1nr5/2rbkppp/p3p3/Np6/2PRPP2/8/PKP1B1PP/3R4 b - - bm e5; id \&quot;LCTII.POS.04\&quot;;c0 \&quot;Kaplan - Kopec, USA 1975\&quot;;&quot;);</span></span>
+<span id="L364"><span class="lineNum">     364</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2r2rk1/1p1bq3/p3p2p/3pPpp1/1P1Q4/P7/2P2PPP/2R1RBK1 b - - bm Bb5; id \&quot;LCTII.POS.05\&quot;;c0 \&quot;Estrin - Pytel, Albena 1973\&quot;;&quot;);</span></span>
+<span id="L365"><span class="lineNum">     365</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3r1bk1/p4ppp/Qp2p3/8/1P1B4/Pq2P1P1/2r2P1P/R3R1K1 b - - bm e5; id \&quot;LCTII.POS.06\&quot;;c0 \&quot;Nimzowitsch - Capablanca, New York 1927\&quot;;&quot;);</span></span>
+<span id="L366"><span class="lineNum">     366</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1b2r1k/pp2q1pp/2p2p2/2p1n2N/4P3/1PNP2QP/1PP2RP1/5RK1 w - - bm Nd1; id \&quot;LCTII.POS.07\&quot;;c0 \&quot;Tartakower - Rubinstein, Moskau 1925\&quot;;&quot;);</span></span>
+<span id="L367"><span class="lineNum">     367</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2qrnk1/pp3ppb/3b1n1p/1Pp1p3/2P1P2N/P5P1/1B1NQPBP/R4RK1 w - - bm Bh3; id \&quot;LCTII.POS.08\&quot;;c0 \&quot;Polugaevsky - Unzicker, Kislovodsk &quot;&quot;1972\&quot;;&quot;);</span></span>
+<span id="L368"><span class="lineNum">     368</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;5nk1/Q4bpp/5p2/8/P1n1PN2/q4P2/6PP/1R4K1 w - - bm Qd4; id \&quot;LCTII.POS.09\&quot;;c0 \&quot;Boissel - Del Gobbo, corr. 1994\&quot;;&quot;);</span></span>
+<span id="L369"><span class="lineNum">     369</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r3k2r/3bbp1p/p1nppp2/5P2/1p1NP3/5NP1/PPPK3P/3R1B1R b kq - bm Bf8; id \&quot;LCTII.POS.10\&quot;;c0 \&quot;Cucka - Jansa, Brno 1960\&quot;;&quot;);</span></span>
+<span id="L370"><span class="lineNum">     370</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;bn6/1q4n1/1p1p1kp1/2pPp1pp/1PP1P1P1/3N1P1P/4B1K1/2Q2N2 w - - bm h4; id \&quot;LCTII.POS.11\&quot;;c0 \&quot;Landau - Schmidt, Noordwijk 1938\&quot;;&quot;);</span></span>
+<span id="L371"><span class="lineNum">     371</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3r2k1/pp2npp1/2rqp2p/8/3PQ3/1BR3P1/PP3P1P/3R2K1 b - - bm Rb6; id \&quot;LCTII.POS.12\&quot;;c0 \&quot;Korchnoi - Karpov, Meran 1981\&quot;;&quot;);</span></span>
+<span id="L372"><span class="lineNum">     372</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;1r2r1k1/4ppbp/B5p1/3P4/pp1qPB2/2n2Q1P/P4PP1/4RRK1 b - - bm Nxa2; id \&quot;LCTII.POS.13\&quot;;c0 \&quot;Barbero - Kouatly, Budapest 1987\&quot;;&quot;);</span></span>
+<span id="L373"><span class="lineNum">     373</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2qkb1r/1b3ppp/p3pn2/1p6/1n1P4/1BN2N2/PP2QPPP/R1BR2K1 w kq - bm d5; id \&quot;LCTII.POS.14\&quot;;c0 \&quot;Spasski - Aftonomov, Leningrad 1949\&quot;;&quot;);</span></span>
+<span id="L374"><span class="lineNum">     374</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;1r4k1/1q2bp2/3p2p1/2pP4/p1N4R/2P2QP1/1P3PK1/8 w - - bm Nxd6; id \&quot;LCTII.CMB.01\&quot;;c0 \&quot;Romanishin - Gdansky, Polonica Zdroj 1992\&quot;;&quot;);</span></span>
+<span id="L375"><span class="lineNum">     375</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rn3rk1/pbppq1pp/1p2pb2/4N2Q/3PN3/3B4/PPP2PPP/R3K2R w KQ - bm Qxh7+; id \&quot;LCTII.CMB.02\&quot;;c0 \&quot;Lasker,Ed - Thomas, London 1911\&quot;;&quot;);</span></span>
+<span id="L376"><span class="lineNum">     376</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;4r1k1/3b1p2/5qp1/1BPpn2p/7n/r3P1N1/2Q1RPPP/1R3NK1 b - - bm Qf3; id \&quot;LCTII.CMB.03\&quot;;c0 \&quot;Andruet - Spassky, BL 1988\&quot;;&quot;);</span></span>
+<span id="L377"><span class="lineNum">     377</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2k2b1r/1pq3p1/2p1pp2/p1n1PnNp/2P2B2/2N4P/PP2QPP1/3R2K1 w - - bm exf6; id \&quot;LCTII.CMB.04\&quot;;c0 \&quot;Vanka - Jansa, Prag 1957\&quot;;&quot;);</span></span>
+<span id="L378"><span class="lineNum">     378</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2r2r2/3qbpkp/p3n1p1/2ppP3/6Q1/1P1B3R/PBP3PP/5R1K w - - bm Rxh7+; id \&quot;LCTII.CMB.05\&quot;;c0 \&quot;Boros - Szabo, Budapest 1937\&quot;;&quot;);</span></span>
+<span id="L379"><span class="lineNum">     379</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2r1k2r/2pn1pp1/1p3n1p/p3PP2/4q2B/P1P5/2Q1N1PP/R4RK1 w q - bm exf6; id \&quot;LCTII.CMB.06\&quot;;c0 \&quot;Lilienthal - Capablanca, Hastings 1934\&quot;;&quot;);</span></span>
+<span id="L380"><span class="lineNum">     380</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2rr2k1/1b3ppp/pb2p3/1p2P3/1P2BPnq/P1N3P1/1B2Q2P/R4R1K b - - bm Rxc3; id \&quot;LCTII.CMB.07\&quot;;c0 \&quot;Rotlewi - Rubinstein, Lodz 1907\&quot;;&quot;);</span></span>
+<span id="L381"><span class="lineNum">     381</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2b1r1k1/r4ppp/p7/2pNP3/4Q3/q6P/2P2PP1/3RR1K1 w - - bm Nf6+; id \&quot;LCTII.CMB.08\&quot;;c0 \&quot;Zarkov - Mephisto, Albuquerque 1991\&quot;;&quot;);</span></span>
+<span id="L382"><span class="lineNum">     382</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;6k1/5p2/3P2p1/7n/3QPP2/7q/r2N3P/6RK b - - bm Rxd2; id \&quot;LCTII.CMB.09\&quot;;c0 \&quot;Portisch - Kasparov, Moskau 1981\&quot;;&quot;);</span></span>
+<span id="L383"><span class="lineNum">     383</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rq2rbk1/6p1/p2p2Pp/1p1Rn3/4PB2/6Q1/PPP1B3/2K3R1 w - - bm Bxh6; id \&quot;LCTII.CMB.10\&quot;;c0 \&quot;Tchoudinovskikh - Merchiev, UdSSR 1987\&quot;;&quot;);</span></span>
+<span id="L384"><span class="lineNum">     384</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rnbq2k1/p1r2p1p/1p1p1Pp1/1BpPn1N1/P7/2P5/6PP/R1B1QRK1 w - - bm Nxh7; id \&quot;LCTII.CMB.11\&quot;;c0 \&quot;Vaisser - Genius 2, Aubervilliers, 1994\&quot;;&quot;);</span></span>
+<span id="L385"><span class="lineNum">     385</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2qrb1k/1p1b2p1/p2ppn1p/8/3NP3/1BN5/PPP3QP/1K3RR1 w - - bm e5; id \&quot;LCTII.CMB.12\&quot;;c0 \&quot;Spassky - Petrosian, Moskau 1969\&quot;;&quot;);</span></span>
+<span id="L386"><span class="lineNum">     386</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/1p3pp1/7p/5P1P/2k3P1/8/2K2P2/8 w - - bm f6; id \&quot;LCTII.FIN.01\&quot;;c0 \&quot;NN - Lasker,Ed\&quot;;&quot;);</span></span>
+<span id="L387"><span class="lineNum">     387</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/pp2r1k1/2p1p3/3pP2p/1P1P1P1P/P5KR/8/8 w - - bm f5; id \&quot;LCTII.FIN.02\&quot;;c0 \&quot;Capablanca - Eliskases, Moskau 1936\&quot;;&quot;);</span></span>
+<span id="L388"><span class="lineNum">     388</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/3p4/p1bk3p/Pp6/1Kp1PpPp/2P2P1P/2P5/5B2 b - - bm Bxe4; id \&quot;LCTII.FIN.03\&quot;;c0 \&quot;Studie 1994\&quot;;&quot;);</span></span>
+<span id="L389"><span class="lineNum">     389</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;5k2/7R/4P2p/5K2/p1r2P1p/8/8/8 b - - bm h3; am h5; id \&quot;LCTII.FIN.04\&quot;;c0 \&quot;Karpov - Deep Thought, Analyse 1990\&quot;;&quot;);</span></span>
+<span id="L390"><span class="lineNum">     390</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;6k1/6p1/7p/P1N5/1r3p2/7P/1b3PP1/3bR1K1 w - - bm a6; id \&quot;LCTII.FIN.05\&quot;;c0 \&quot;Karpov - Kasparov, Moskau 1985 [Analyse]\&quot;;&quot;);</span></span>
+<span id="L391"><span class="lineNum">     391</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/3b4/5k2/2pPnp2/1pP4N/pP1B2P1/P3K3/8 b - - bm f4; id \&quot;LCTII.FIN.06\&quot;;c0 \&quot;Minev - Portisch, Halle 1967\&quot;;&quot;);</span></span>
+<span id="L392"><span class="lineNum">     392</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;6k1/4pp1p/3p2p1/P1pPb3/R7/1r2P1PP/3B1P2/6K1 w - - bm Bb4; id \&quot;LCTII.FIN.07\&quot;;c0 \&quot;Lengyel - Kaufman, Los Angeles 1974\&quot;;&quot;);</span></span>
+<span id="L393"><span class="lineNum">     393</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2k5/p7/Pp1p1b2/1P1P1p2/2P2P1p/3K3P/5B2/8 w - - bm c5; id \&quot;LCTII.FIN.08\&quot;;c0 \&quot;Spassky - Byrne, 1974\&quot;;&quot;);</span></span>
+<span id="L394"><span class="lineNum">     394</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/5Bp1/4P3/6pP/1b1k1P2/5K2/8/8 w - - bm Kg4; id \&quot;LCTII.FIN.09\&quot;;c0 \&quot;Klimenok - Kabanov, UdSSR 1969\&quot;;&quot;);</span></span>
+<span id="L395"><span class="lineNum">     395</span>              : </span>
+<span id="L396"><span class="lineNum">     396</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; timeControls = {9000, 29000, 89000, 209000, 389000, 600000}; //mseconds</span></span>
+<span id="L397"><span class="lineNum">     397</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; scores       = {30, 25, 20, 15, 10, 5};</span></span>
+<span id="L398"><span class="lineNum">     398</span>              : </span>
+<span id="L399"><span class="lineNum">     399</span> <span class="tlaUNC">           0 :       ExtendedPosition::test(</span></span>
+<span id="L400"><span class="lineNum">     400</span> <span class="tlaUNC">           0 :           positions, timeControls, true, false, scores, [](int score) { return 1900 + score; }, false);</span></span>
+<span id="L401"><span class="lineNum">     401</span>              :       return true;</span>
+<span id="L402"><span class="lineNum">     402</span> <span class="tlaUNC">           0 :    }</span></span>
+<span id="L403"><span class="lineNum">     403</span>              : </span>
+<span id="L404"><span class="lineNum">     404</span> <span class="tlaGNC tlaBgGNC">           8 :    if (option == &quot;sbdTest&quot;) {</span></span>
+<span id="L405"><span class="lineNum">     405</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
+<span id="L406"><span class="lineNum">     406</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;1qr3k1/p2nbppp/bp2p3/3p4/3P4/1P2PNP1/P2Q1PBP/1N2R1K1 b - - bm Qc7; id \&quot;sbd.001\&quot;;&quot;);</span></span>
+<span id="L407"><span class="lineNum">     407</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;1r2r1k1/3bnppp/p2q4/2RPp3/4P3/6P1/2Q1NPBP/2R3K1 w - - bm Rc7; id \&quot;sbd.002\&quot;;&quot;);</span></span>
+<span id="L408"><span class="lineNum">     408</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2b1k2r/2p2ppp/1qp4n/7B/1p2P3/5Q2/PPPr2PP/R2N1R1K b k - bm 0-0; id \&quot;sbd.003\&quot;;&quot;);</span></span>
+<span id="L409"><span class="lineNum">     409</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2b5/1p4k1/p2R2P1/4Np2/1P3Pp1/1r6/5K2/8 w - - bm Rd8; id \&quot;sbd.004\&quot;;&quot;);</span></span>
+<span id="L410"><span class="lineNum">     410</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2brr1k1/ppq2ppp/2pb1n2/8/3NP3/2P2P2/P1Q2BPP/1R1R1BK1 w - - bm g3; id \&quot;sbd.005\&quot;;&quot;);</span></span>
+<span id="L411"><span class="lineNum">     411</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2kr2nr/1pp3pp/p1pb4/4p2b/4P1P1/5N1P/PPPN1P2/R1B1R1K1 b - - bm Bf7; id \&quot;sbd.006\&quot;;&quot;);</span></span>
+<span id="L412"><span class="lineNum">     412</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2r1k2r/1p1qbppp/p3pn2/3pBb2/3P4/1QN1P3/PP2BPPP/2R2RK1 b k - bm 0-0; id \&quot;sbd.007\&quot;;&quot;);</span></span>
+<span id="L413"><span class="lineNum">     413</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2r1r1k1/pbpp1npp/1p1b3q/3P4/4RN1P/1P4P1/PB1Q1PB1/2R3K1 w - - bm Rce1; id \&quot;sbd.008\&quot;;&quot;);</span></span>
+<span id="L414"><span class="lineNum">     414</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2r2k2/r4p2/2b1p1p1/1p1p2Pp/3R1P1P/P1P5/1PB5/2K1R3 w - - bm Kd2; id \&quot;sbd.009\&quot;;&quot;);</span></span>
+<span id="L415"><span class="lineNum">     415</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2r3k1/5pp1/1p2p1np/p1q5/P1P4P/1P1Q1NP1/5PK1/R7 w - - bm Rd1; id \&quot;sbd.010\&quot;;&quot;);</span></span>
+<span id="L416"><span class="lineNum">     416</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;2r3qk/p5p1/1n3p1p/4PQ2/8/3B4/5P1P/3R2K1 w - - bm e6; id \&quot;sbd.011\&quot;;&quot;);</span></span>
+<span id="L417"><span class="lineNum">     417</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3b4/3k1pp1/p1pP2q1/1p2B2p/1P2P1P1/P2Q3P/4K3/8 w - - bm Qf3; id \&quot;sbd.012\&quot;;&quot;);</span></span>
+<span id="L418"><span class="lineNum">     418</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3n1r1k/2p1p1bp/Rn4p1/6N1/3P3P/2N1B3/2r2PP1/5RK1 w - - bm Na4 Nce4; id \&quot;sbd.013\&quot;;&quot;);</span></span>
+<span id="L419"><span class="lineNum">     419</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3q1rk1/3rbppp/ppbppn2/1N6/2P1P3/BP6/P1B1QPPP/R3R1K1 w - - bm Nd4; id \&quot;sbd.014\&quot;;&quot;);</span></span>
+<span id="L420"><span class="lineNum">     420</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3r1rk1/p1q4p/1pP1ppp1/2n1b1B1/2P5/6P1/P1Q2PBP/1R3RK1 w - - bm Bh6; id \&quot;sbd.015\&quot;;&quot;);</span></span>
+<span id="L421"><span class="lineNum">     421</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3r2k1/2q2p1p/5bp1/p1pP4/PpQ5/1P3NP1/5PKP/3R4 b - - bm Qd6; id \&quot;sbd.016\&quot;;&quot;);</span></span>
+<span id="L422"><span class="lineNum">     422</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3r2k1/p1q1npp1/3r1n1p/2p1p3/4P2B/P1P2Q1P/B4PP1/1R2R1K1 w - - bm Bc4; id \&quot;sbd.017\&quot;;&quot;);</span></span>
+<span id="L423"><span class="lineNum">     423</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3r4/2k5/p3N3/4p3/1p1p4/4r3/PPP3P1/1K1R4 b - - bm Kd7; id \&quot;sbd.018\&quot;;&quot;);</span></span>
+<span id="L424"><span class="lineNum">     424</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3r4/2R1np1p/1p1rpk2/p2b1p2/8/PP2P3/4BPPP/2R1NK2 w - - bm b4; id \&quot;sbd.019\&quot;;&quot;);</span></span>
+<span id="L425"><span class="lineNum">     425</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3rk2r/1b2bppp/p1qppn2/1p6/4P3/PBN2PQ1/1PP3PP/R1B1R1K1 b k - bm 0-0; id \&quot;sbd.020\&quot;;&quot;);</span></span>
+<span id="L426"><span class="lineNum">     426</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3rk2r/1bq2pp1/2pb1n1p/p3pP2/P1B1P3/8/1P2QBPP/2RN1R1K b k - bm Be7 0-0; id \&quot;sbd.021\&quot;;&quot;);</span></span>
+<span id="L427"><span class="lineNum">     427</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3rkb1r/pppb1pp1/4n2p/2p5/3NN3/1P5P/PBP2PP1/3RR1K1 w - - bm Nf5; id \&quot;sbd.022\&quot;;&quot;);</span></span>
+<span id="L428"><span class="lineNum">     428</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;3rr1k1/1pq2ppp/p1n5/3p4/6b1/2P2N2/PP1QBPPP/3R1RK1 w - - bm Rfe1; id \&quot;sbd.023\&quot;;&quot;);</span></span>
+<span id="L429"><span class="lineNum">     429</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;4r1k1/1q1n1ppp/3pp3/rp6/p2PP3/N5P1/PPQ2P1P/3RR1K1 w - - bm Rc1; id \&quot;sbd.024\&quot;;&quot;);</span></span>
+<span id="L430"><span class="lineNum">     430</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;4rb1k/1bqn1pp1/p3rn1p/1p2pN2/1PP1p1N1/P1P2Q1P/1BB2PP1/3RR1K1 w - - bm Qe2; id \&quot;sbd.025\&quot;;&quot;);</span></span>
+<span id="L431"><span class="lineNum">     431</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;4rr2/2p5/1p1p1kp1/p6p/P1P4P/6P1/1P3PK1/3R1R2 w - - bm Rfe1; id \&quot;sbd.026\&quot;;&quot;);</span></span>
+<span id="L432"><span class="lineNum">     432</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;5r2/pp1b1kpp/8/2pPp3/2P1p2P/4P1r1/PPRKB1P1/6R1 b - - bm Ke7; id \&quot;sbd.027\&quot;;&quot;);</span></span>
+<span id="L433"><span class="lineNum">     433</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;6k1/1R5p/r2p2p1/2pN2B1/2bb4/P7/1P1K2PP/8 w - - bm Nf6+; id \&quot;sbd.028\&quot;;&quot;);</span></span>
+<span id="L434"><span class="lineNum">     434</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;6k1/pp1q1pp1/2nBp1bp/P2pP3/3P4/8/1P2BPPP/2Q3K1 w - - bm Qc5; id \&quot;sbd.029\&quot;;&quot;);</span></span>
+<span id="L435"><span class="lineNum">     435</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;6k1/pp2rp1p/2p2bp1/1n1n4/1PN3P1/P2rP2P/R3NPK1/2B2R2 w - - bm Rd2; id \&quot;sbd.030\&quot;;&quot;);</span></span>
+<span id="L436"><span class="lineNum">     436</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;8/2p2kpp/p6r/4Pp2/1P2pPb1/2P3P1/P2B1K1P/4R3 w - - bm h4; id \&quot;sbd.031\&quot;;&quot;);</span></span>
+<span id="L437"><span class="lineNum">     437</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;Q5k1/5pp1/5n1p/2b2P2/8/5N1P/5PP1/2q1B1K1 b - - bm Kh7; id \&quot;sbd.032\&quot;;&quot;);</span></span>
+<span id="L438"><span class="lineNum">     438</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1b1k1nr/1p3ppp/p1np4/4p1q1/2P1P3/N1NB4/PP3PPP/2RQK2R w Kkq - bm 0-0; id \&quot;sbd.033\&quot;;&quot;);</span></span>
+<span id="L439"><span class="lineNum">     439</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1b1k2r/p1pp1ppp/1np1q3/4P3/1bP5/1P6/PB1NQPPP/R3KB1R b KQkq - bm 0-0; id \&quot;sbd.034\&quot;;&quot;);</span></span>
+<span id="L440"><span class="lineNum">     440</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1b1k2r/ppppqppp/8/2bP4/3p4/6P1/PPQPPPBP/R1B2RK1 b kq - bm 0-0; id \&quot;sbd.035\&quot;;&quot;);</span></span>
+<span id="L441"><span class="lineNum">     441</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1b1k2r/ppq1bppp/2n5/2N1p3/8/2P1B1P1/P3PPBP/R2Q1RK1 b kq - bm 0-0; id \&quot;sbd.036\&quot;;&quot;);</span></span>
+<span id="L442"><span class="lineNum">     442</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1b1kb1r/pp2qppp/2pp4/8/4nP2/2N2N2/PPPP2PP/R1BQK2R w KQkq - bm 0-0; id \&quot;sbd.037\&quot;;&quot;);</span></span>
+<span id="L443"><span class="lineNum">     443</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1b1qrk1/pp4b1/2pRn1pp/5p2/2n2B2/2N2NPP/PPQ1PPB1/5RK1 w - - bm Rd3; id \&quot;sbd.038\&quot;;&quot;);</span></span>
+<span id="L444"><span class="lineNum">     444</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1b2rk1/1pqn1pp1/p2bpn1p/8/3P4/2NB1N2/PPQB1PPP/3R1RK1 w - - bm Rc1; id \&quot;sbd.039\&quot;;&quot;);</span></span>
+<span id="L445"><span class="lineNum">     445</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1b2rk1/2qnbp1p/p1npp1p1/1p4PQ/4PP2/1NNBB3/PPP4P/R4RK1 w - - bm Qh6; id \&quot;sbd.040\&quot;;&quot;);</span></span>
+<span id="L446"><span class="lineNum">     446</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1b2rk1/pp2ppbp/2n2np1/2q5/5B2/1BN1PN2/PP3PPP/2RQK2R w K - bm 0-0; id \&quot;sbd.041\&quot;;&quot;);</span></span>
+<span id="L447"><span class="lineNum">     447</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1b2rk1/pp4pp/1q1Nppn1/2n4B/1P3P2/2B2RP1/P6P/R2Q3K b - - bm Na6; id \&quot;sbd.042\&quot;;&quot;);</span></span>
+<span id="L448"><span class="lineNum">     448</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1b2rk1/ppp1qppp/1b1n4/8/B2n4/3NN3/PPPP1PPP/R1BQK2R w KQ - bm 0-0; id \&quot;sbd.043\&quot;;&quot;);</span></span>
+<span id="L449"><span class="lineNum">     449</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1b2rk1/ppq1bppp/2p1pn2/8/2NP4/2N1P3/PP2BPPP/2RQK2R w K - bm 0-0; id \&quot;sbd.044\&quot;;&quot;);</span></span>
+<span id="L450"><span class="lineNum">     450</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bq1rk1/1p1n1pp1/p4n1p/2bp4/8/2NBPN2/PPQB1PPP/R3K2R w KQ - bm 0-0; id \&quot;sbd.045\&quot;;&quot;);</span></span>
+<span id="L451"><span class="lineNum">     451</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bq1rk1/1p2ppbp/p2p1np1/6B1/2P1P3/2N5/PP1QBPPP/R3K2R w KQ - bm 0-0; id \&quot;sbd.046\&quot;;&quot;);</span></span>
+<span id="L452"><span class="lineNum">     452</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bq1rk1/1p3ppp/p1np4/3Np1b1/2B1P3/P7/1PP2PPP/RN1QK2R w KQ - bm 0-0; id \&quot;sbd.047\&quot;;&quot;);</span></span>
+<span id="L453"><span class="lineNum">     453</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bq1rk1/4bppp/ppnppn2/8/2P1P3/2N5/PPN1BPPP/R1BQK2R w KQ - bm 0-0; id \&quot;sbd.048\&quot;;&quot;);</span></span>
+<span id="L454"><span class="lineNum">     454</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bq1rk1/pp1n1pbp/2n1p1p1/2ppP3/8/2PP1NP1/PP1N1PBP/R1BQ1RK1 w - - bm d4; id \&quot;sbd.049\&quot;;&quot;);</span></span>
+<span id="L455"><span class="lineNum">     455</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bq1rk1/pp1pppbp/2n2np1/8/4P3/1NN5/PPP1BPPP/R1BQK2R w KQ - bm 0-0; id \&quot;sbd.050\&quot;;&quot;);</span></span>
+<span id="L456"><span class="lineNum">     456</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bq1rk1/pp2ppbp/2n2np1/2p3B1/4P3/2P2N2/PP1NBPPP/R2QK2R w KQ - bm 0-0; id \&quot;sbd.051\&quot;;&quot;);</span></span>
+<span id="L457"><span class="lineNum">     457</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bq1rk1/pp2ppbp/2n3p1/2p5/2BPP3/2P1B3/P3NPPP/R2QK2R w KQ - bm 0-0; id \&quot;sbd.052\&quot;;&quot;);</span></span>
+<span id="L458"><span class="lineNum">     458</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bq1rk1/pp3ppp/2n1pn2/2p5/1bBP4/2N1PN2/PP3PPP/R1BQ1RK1 w - - bm a3; id \&quot;sbd.053\&quot;;&quot;);</span></span>
+<span id="L459"><span class="lineNum">     459</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bq1rk1/pp3ppp/2n2n2/3p4/8/P1NB4/1PP2PPP/R1BQK2R w KQ - bm 0-0; id \&quot;sbd.054\&quot;;&quot;);</span></span>
+<span id="L460"><span class="lineNum">     460</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bq1rk1/ppp1npb1/3p2pp/3Pp2n/1PP1P3/2N5/P2NBPPP/R1BQR1K1 b - - bm Nf4; id \&quot;sbd.055\&quot;;&quot;);</span></span>
+<span id="L461"><span class="lineNum">     461</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bq1rk1/ppp2ppp/2n1pn2/3p4/1bPP4/2NBPN2/PP3PPP/R1BQK2R w KQ - bm 0-0; id \&quot;sbd.056\&quot;;&quot;);</span></span>
+<span id="L462"><span class="lineNum">     462</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bq1rk1/pppp1pbp/2n2np1/4p3/2P5/P1N2NP1/1P1PPPBP/R1BQK2R w KQ - bm 0-0; id \&quot;sbd.057\&quot;;&quot;);</span></span>
+<span id="L463"><span class="lineNum">     463</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqk2r/2ppbppp/p1n2n2/1p2p3/4P3/1B3N2/PPPPQPPP/RNB2RK1 b kq - bm 0-0; id \&quot;sbd.058\&quot;;&quot;);</span></span>
+<span id="L464"><span class="lineNum">     464</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqk2r/5ppp/p1np4/1p1Np1b1/4P3/2P5/PPN2PPP/R2QKB1R b KQkq - bm 0-0; id \&quot;sbd.059\&quot;;&quot;);</span></span>
+<span id="L465"><span class="lineNum">     465</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqk2r/bp3ppp/p1n1pn2/3p4/1PP5/P1N1PN2/1B3PPP/R2QKB1R b KQkq - bm 0-0; id \&quot;sbd.060\&quot;;&quot;);</span></span>
+<span id="L466"><span class="lineNum">     466</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqk2r/p2pppbp/2p3pn/2p5/4P3/2P2N2/PP1P1PPP/RNBQR1K1 b kq - bm 0-0; id \&quot;sbd.061\&quot;;&quot;);</span></span>
+<span id="L467"><span class="lineNum">     467</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqk2r/pp2bppp/2n1p3/1B1n4/3P4/2N2N2/PP3PPP/R1BQ1RK1 b kq - bm 0-0; id \&quot;sbd.062\&quot;;&quot;);</span></span>
+<span id="L468"><span class="lineNum">     468</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqk2r/pp2bppp/2n1p3/3n4/3P4/2NB1N2/PP3PPP/R1BQ1RK1 b kq - bm 0-0; id \&quot;sbd.063\&quot;;&quot;);</span></span>
+<span id="L469"><span class="lineNum">     469</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqk2r/pp2ppbp/2np1np1/2p5/4P3/1B1P1N1P/PPP2PP1/RNBQK2R w KQkq - bm 0-0; id \&quot;sbd.064\&quot;;&quot;);</span></span>
+<span id="L470"><span class="lineNum">     470</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqk2r/ppn1bppp/2n5/2p1p3/8/2NP1NP1/PP1BPPBP/R2Q1RK1 b kq - bm 0-0; id \&quot;sbd.065\&quot;;&quot;);</span></span>
+<span id="L471"><span class="lineNum">     471</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqk2r/ppp1bppp/2n5/3p4/3P4/2PB1N2/P1P2PPP/R1BQ1RK1 b kq - bm 0-0; id \&quot;sbd.066\&quot;;&quot;);</span></span>
+<span id="L472"><span class="lineNum">     472</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqk2r/ppp2ppp/2nb4/3np3/8/PP2P3/1BQP1PPP/RN2KBNR b KQkq - bm 0-0; id \&quot;sbd.067\&quot;;&quot;);</span></span>
+<span id="L473"><span class="lineNum">     473</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqk2r/ppp2ppp/3b4/4p3/8/1PPP1N2/2PB1PPP/R2Q1RK1 b kq - bm 0-0; id \&quot;sbd.068\&quot;;&quot;);</span></span>
+<span id="L474"><span class="lineNum">     474</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqk2r/pppp1ppp/5n2/4p3/Bb2P3/5Q2/PPPPNPPP/R1B1K2R b KQkq - bm 0-0; id \&quot;sbd.069\&quot;;&quot;);</span></span>
+<span id="L475"><span class="lineNum">     475</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqkb1r/pp3ppp/2n5/2pp4/3Pn3/2N2N2/PPP1BPPP/R1BQK2R w KQkq - bm 0-0; id \&quot;sbd.070\&quot;;&quot;);</span></span>
+<span id="L476"><span class="lineNum">     476</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqkb1r/pp3ppp/2npp3/3nP3/2BP4/5N2/PP3PPP/RNBQK2R w KQkq - bm 0-0; id \&quot;sbd.071\&quot;;&quot;);</span></span>
+<span id="L477"><span class="lineNum">     477</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqkbnr/3p1ppp/p1p1p3/8/4P3/3B4/PPP2PPP/RNBQK2R w KQkq - bm 0-0; id \&quot;sbd.072\&quot;;&quot;);</span></span>
+<span id="L478"><span class="lineNum">     478</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqkbnr/ppp2ppp/2n5/8/2BpP3/5N2/PP3PPP/RNBQK2R w KQkq - bm 0-0; id \&quot;sbd.073\&quot;;&quot;);</span></span>
+<span id="L479"><span class="lineNum">     479</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1bqrbk1/1pp3pp/2n2p2/p2np3/8/PP1PPN2/1BQNBPPP/R3K2R w KQ - bm 0-0; id \&quot;sbd.074\&quot;;&quot;);</span></span>
+<span id="L480"><span class="lineNum">     480</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1br2k1/1p2qppp/pN2pn2/P7/2pn4/4N1P1/1P2PPBP/R3QRK1 b - - bm Rb8; id \&quot;sbd.075\&quot;;&quot;);</span></span>
+<span id="L481"><span class="lineNum">     481</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1q1k2r/1b1nbppp/pp1ppn2/8/2PQP3/1PN2NP1/PB3PBP/R2R2K1 b kq - bm 0-0; id \&quot;sbd.076\&quot;;&quot;);</span></span>
+<span id="L482"><span class="lineNum">     482</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1q1k2r/pb1nbppp/1p2pn2/8/P1PNP3/2B3P1/2QN1PBP/R4RK1 b kq - bm 0-0; id \&quot;sbd.077\&quot;;&quot;);</span></span>
+<span id="L483"><span class="lineNum">     483</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1r3k1/1bq2pbp/pp1pp1p1/2n5/P3PP2/R2B4/1PPBQ1PP/3N1R1K w - - bm Bc3; id \&quot;sbd.078\&quot;;&quot;);</span></span>
+<span id="L484"><span class="lineNum">     484</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r1rn2k1/pp1qppbp/6p1/3pP3/3P4/1P3N1P/PB1Q1PP1/R3R1K1 w - - bm Rac1; id \&quot;sbd.079\&quot;;&quot;);</span></span>
+<span id="L485"><span class="lineNum">     485</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2q1rk1/1b1nbpp1/pp2pn1p/8/2BN3B/2N1P3/PP2QPPP/2R2RK1 w - - bm Rfd1; id \&quot;sbd.080\&quot;;&quot;);</span></span>
+<span id="L486"><span class="lineNum">     486</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2q1rk1/1b3ppp/4pn2/1pP5/1b6/2NBPN2/1PQ2PPP/R3K2R w KQ - bm 0-0; id \&quot;sbd.081\&quot;;&quot;);</span></span>
+<span id="L487"><span class="lineNum">     487</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2q1rk1/pb1nppbp/6p1/1p6/3PP3/3QBN1P/P3BPP1/R3K2R w KQ - bm 0-0; id \&quot;sbd.082\&quot;;&quot;);</span></span>
+<span id="L488"><span class="lineNum">     488</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2q1rk1/pb2bppp/npp1pn2/3pN3/2PP4/1PB3P1/P2NPPBP/R2Q1RK1 w - - bm e4; id \&quot;sbd.083\&quot;;&quot;);</span></span>
+<span id="L489"><span class="lineNum">     489</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2q1rk1/pppb1pbp/2np1np1/4p3/2P5/P1NPPNP1/1P3PBP/R1BQK2R w KQ - bm 0-0; id \&quot;sbd.084\&quot;;&quot;);</span></span>
+<span id="L490"><span class="lineNum">     490</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2qk2r/1b1n1ppp/4pn2/p7/1pPP4/3BPN2/1B3PPP/R2QK2R w KQkq - bm 0-0; id \&quot;sbd.085\&quot;;&quot;);</span></span>
+<span id="L491"><span class="lineNum">     491</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2qk2r/1b2bppp/p1n1pn2/1p6/1P6/P2BPN2/1B2QPPP/RN3RK1 b kq - bm 0-0; id \&quot;sbd.086\&quot;;&quot;);</span></span>
+<span id="L492"><span class="lineNum">     492</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2qk2r/2p2ppp/p1n1b3/1pbpP3/4n3/1BP2N2/PP1N1PPP/R1BQ1RK1 b kq - bm 0-0; id \&quot;sbd.087\&quot;;&quot;);</span></span>
+<span id="L493"><span class="lineNum">     493</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2qk2r/3n1ppp/p3p3/3nP3/3R4/5N2/1P1N1PPP/3QR1K1 b kq - bm 0-0; id \&quot;sbd.088\&quot;;&quot;);</span></span>
+<span id="L494"><span class="lineNum">     494</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2qk2r/p1pn1ppp/b3pn2/3p4/Nb1P4/1P3NP1/P3PPBP/1RBQ1RK1 b kq - bm 0-0 Qe7; id \&quot;sbd.089\&quot;;&quot;);</span></span>
+<span id="L495"><span class="lineNum">     495</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2qk2r/ppp1bppp/2n2n2/8/2BP2b1/2N2N2/PP3PPP/R1BQR1K1 b kq - bm 0-0; id \&quot;sbd.090\&quot;;&quot;);</span></span>
+<span id="L496"><span class="lineNum">     496</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2qkb1r/pb1n1p2/2p1p2p/4P1pn/PppP4/2N2NB1/1P2BPPP/R2Q1RK1 w kq - bm Ne4; id \&quot;sbd.091\&quot;;&quot;);</span></span>
+<span id="L497"><span class="lineNum">     497</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2qkb1r/pp2nppp/1np1p3/4Pb2/3P4/PB3N2/1P3PPP/RNBQ1RK1 b kq - bm Ned5; id \&quot;sbd.092\&quot;;&quot;);</span></span>
+<span id="L498"><span class="lineNum">     498</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2qkb1r/pp3ppp/2bppn2/8/2PQP3/2N2N2/PP3PPP/R1B1K2R w KQkq - bm 0-0; id \&quot;sbd.093\&quot;;&quot;);</span></span>
+<span id="L499"><span class="lineNum">     499</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2qr1k1/p3bppp/1p2n3/3Q1N2/5P2/4B1P1/PP3R1P/R5K1 w - - bm Rd1; id \&quot;sbd.094\&quot;;&quot;);</span></span>
+<span id="L500"><span class="lineNum">     500</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2r2k1/p1pnqpp1/1p2p2p/3b4/3P4/3BPN2/PP3PPP/2RQR1K1 b - - bm c5; id \&quot;sbd.095\&quot;;&quot;);</span></span>
+<span id="L501"><span class="lineNum">     501</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r2r2k1/pp1b1ppp/8/3p2P1/3N4/P3P3/1P3P1P/3RK2R b K - bm Rac8; id \&quot;sbd.096\&quot;;&quot;);</span></span>
+<span id="L502"><span class="lineNum">     502</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r3k2r/1b1nb1p1/p1q1pn1p/1pp3N1/4PP2/2N5/PPB3PP/R1BQ1RK1 w kq - bm Nf3; id \&quot;sbd.097\&quot;;&quot;);</span></span>
+<span id="L503"><span class="lineNum">     503</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r3k2r/1pqnnppp/p5b1/1PPp1p2/3P4/2N5/P2NB1PP/2RQ1RK1 b kq - bm 0-0; id \&quot;sbd.098\&quot;;&quot;);</span></span>
+<span id="L504"><span class="lineNum">     504</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r3k2r/p1q1nppp/1pn5/2P1p3/4P1Q1/P1P2P2/4N1PP/R1B2K1R b kq - bm 0-0; id \&quot;sbd.099\&quot;;&quot;);</span></span>
+<span id="L505"><span class="lineNum">     505</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r3k2r/pp2pp1p/6p1/2nP4/1R2PB2/4PK2/P5PP/5bNR w kq - bm Ne2; id \&quot;sbd.100\&quot;;&quot;);</span></span>
+<span id="L506"><span class="lineNum">     506</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r3k2r/ppp1bppp/2n5/3n4/3PB3/8/PP3PPP/RNB1R1K1 b kq - bm 0-0-O; id \&quot;sbd.101\&quot;;&quot;);</span></span>
+<span id="L507"><span class="lineNum">     507</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r3kb1r/pp3ppp/4bn2/3p4/P7/4N1P1/1P2PPBP/R1B1K2R w KQkq - bm 0-0; id \&quot;sbd.102\&quot;;&quot;);</span></span>
+<span id="L508"><span class="lineNum">     508</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r3kbnr/1pp3pp/p1p2p2/8/3qP3/5Q1P/PP3PP1/RNB2RK1 w kq - bm Rd1; id \&quot;sbd.103\&quot;;&quot;);</span></span>
+<span id="L509"><span class="lineNum">     509</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r3kr2/pppb1p2/2n3p1/3Bp2p/4P2N/2P5/PP3PPP/2KR3R b q - bm 0-0-O; id \&quot;sbd.104\&quot;;&quot;);</span></span>
+<span id="L510"><span class="lineNum">     510</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r3nrk1/pp2qpb1/3p1npp/2pPp3/2P1P2N/2N3Pb/PP1BBP1P/R2Q1RK1 w - - bm Re1; id \&quot;sbd.105\&quot;;&quot;);</span></span>
+<span id="L511"><span class="lineNum">     511</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r3r1k1/1pqn1pbp/p2p2p1/2nP2B1/P1P1P3/2NB3P/5PP1/R2QR1K1 w - - bm Rc1; id \&quot;sbd.106\&quot;;&quot;);</span></span>
+<span id="L512"><span class="lineNum">     512</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r3r1k1/pp1q1ppp/2p5/P2n1p2/1b1P4/1B2PP2/1PQ3PP/R1B2RK1 w - - bm e4; id \&quot;sbd.107\&quot;;&quot;);</span></span>
+<span id="L513"><span class="lineNum">     513</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r3r1k1/pp3ppp/2ppqn2/5R2/2P5/2PQP1P1/P2P2BP/5RK1 w - - bm Qd4; id \&quot;sbd.108\&quot;;&quot;);</span></span>
+<span id="L514"><span class="lineNum">     514</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r3rbk1/p2b1p2/5p1p/1q1p4/N7/6P1/PP1BPPBP/3Q1RK1 w - - bm Nc3; id \&quot;sbd.109\&quot;;&quot;);</span></span>
+<span id="L515"><span class="lineNum">     515</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r4r1k/pp1bq1b1/n2p2p1/2pPp1Np/2P4P/P1N1BP2/1P1Q2P1/2KR3R w - - bm Ne6; id \&quot;sbd.110\&quot;;&quot;);</span></span>
+<span id="L516"><span class="lineNum">     516</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r4rk1/1bqp1ppp/pp2pn2/4b3/P1P1P3/2N2BP1/1PQB1P1P/2R2RK1 w - - bm b3; id \&quot;sbd.111\&quot;;&quot;);</span></span>
+<span id="L517"><span class="lineNum">     517</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r4rk1/1q2bppp/p1bppn2/8/3BPP2/3B2Q1/1PP1N1PP/4RR1K w - - bm e5; id \&quot;sbd.112\&quot;;&quot;);</span></span>
+<span id="L518"><span class="lineNum">     518</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r4rk1/pp2qpp1/2pRb2p/4P3/2p5/2Q1PN2/PP3PPP/4K2R w K - bm 0-0; id \&quot;sbd.113\&quot;;&quot;);</span></span>
+<span id="L519"><span class="lineNum">     519</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r7/3rq1kp/2p1bpp1/p1Pnp3/2B4P/PP4P1/1B1RQP2/2R3K1 b - - bm Rad8; id \&quot;sbd.114\&quot;;&quot;);</span></span>
+<span id="L520"><span class="lineNum">     520</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;r7/pp1bpp2/1n1p2pk/1B3P2/4P1P1/2N5/PPP5/1K5R b - - bm Kg5; id \&quot;sbd.115\&quot;;&quot;);</span></span>
+<span id="L521"><span class="lineNum">     521</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rn1q1rk1/p4pbp/bp1p1np1/2pP4/8/P1N2NP1/1PQ1PPBP/R1B1K2R w KQ - bm 0-0; id \&quot;sbd.116\&quot;;&quot;);</span></span>
+<span id="L522"><span class="lineNum">     522</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rn1q1rk1/pb3p2/1p5p/3n2P1/3p4/P4P2/1P1Q1BP1/R3KBNR b KQ - bm Re8+; id \&quot;sbd.117\&quot;;&quot;);</span></span>
+<span id="L523"><span class="lineNum">     523</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rn1q1rk1/pp2bppp/1n2p1b1/8/2pPP3/1BN1BP2/PP2N1PP/R2Q1RK1 w - - bm Bc2; id \&quot;sbd.118\&quot;;&quot;);</span></span>
+<span id="L524"><span class="lineNum">     524</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rn1q1rk1/pp3ppp/4bn2/2bp4/5B2/2NBP1N1/PP3PPP/R2QK2R w KQ - bm 0-0; id \&quot;sbd.119\&quot;;&quot;);</span></span>
+<span id="L525"><span class="lineNum">     525</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rn1qkbnr/pp1b1ppp/8/1Bpp4/3P4/8/PPPNQPPP/R1B1K1NR b KQkq - bm Qe7; id \&quot;sbd.120\&quot;;&quot;);</span></span>
+<span id="L526"><span class="lineNum">     526</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rn1qr1k1/pb3p2/1p5p/3n2P1/3p4/P4P2/1P1QNBP1/R3KB1R b KQ - bm d3; id \&quot;sbd.121\&quot;;&quot;);</span></span>
+<span id="L527"><span class="lineNum">     527</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rn2kb1r/pp2nppp/1q2p3/3pP3/3P4/5N2/PP2NPPP/R1BQK2R w KQkq - bm 0-0; id \&quot;sbd.122\&quot;;&quot;);</span></span>
+<span id="L528"><span class="lineNum">     528</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rn3rk1/1bqp1ppp/p3pn2/8/Nb1NP3/4B3/PP2BPPP/R2Q1RK1 w - - bm Rc1; id \&quot;sbd.123\&quot;;&quot;);</span></span>
+<span id="L529"><span class="lineNum">     529</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rn3rk1/pbp1qppp/1p1ppn2/8/2PP4/P1Q2NP1/1P2PPBP/R1B1K2R w KQ - bm 0-0; id \&quot;sbd.124\&quot;;&quot;);</span></span>
+<span id="L530"><span class="lineNum">     530</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rnb1k2r/1pq2ppp/p2ppn2/2b5/3NPP2/2P2B2/PP4PP/RNBQ1R1K b kq - bm 0-0; id \&quot;sbd.125\&quot;;&quot;);</span></span>
+<span id="L531"><span class="lineNum">     531</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rnb2rk1/ppq1ppbp/6p1/2p5/3PP3/2P2N2/P3BPPP/1RBQK2R w K - bm 0-0; id \&quot;sbd.126\&quot;;&quot;);</span></span>
+<span id="L532"><span class="lineNum">     532</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rnbq1rk1/5ppp/p3pn2/1p6/2BP4/P1P2N2/5PPP/R1BQ1RK1 w - - bm Bd3; id \&quot;sbd.127\&quot;;&quot;);</span></span>
+<span id="L533"><span class="lineNum">     533</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rnbq1rk1/pp2ppbp/2pp1np1/8/P2PP3/2N2N2/1PP1BPPP/R1BQK2R w KQ - bm 0-0; id \&quot;sbd.128\&quot;;&quot;);</span></span>
+<span id="L534"><span class="lineNum">     534</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rnbq1rk1/ppp1ppbp/6p1/8/8/2P2NP1/P2PPPBP/R1BQK2R w KQ - bm 0-0; id \&quot;sbd.129\&quot;;&quot;);</span></span>
+<span id="L535"><span class="lineNum">     535</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rnbqk1nr/pp3pbp/2ppp1p1/8/2BPP3/2N2Q2/PPP2PPP/R1B1K1NR w KQkq - bm Nge2; id \&quot;sbd.130\&quot;;&quot;);</span></span>
+<span id="L536"><span class="lineNum">     536</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rnbqk2r/ppp2ppp/1b1p1n2/4p3/2B1P3/2PP1N2/PP1N1PPP/R1BQK2R b KQkq - bm 0-0; id \&quot;sbd.131\&quot;;&quot;);</span></span>
+<span id="L537"><span class="lineNum">     537</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rnbqk2r/pppp2pp/4pn2/5p2/1b1P4/2P2NP1/PP2PPBP/RNBQK2R b KQkq - bm Be7; id \&quot;sbd.132\&quot;;&quot;);</span></span>
+<span id="L538"><span class="lineNum">     538</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rnbqr1k1/pp1p1ppp/5n2/3Pb3/1P6/P1N3P1/4NPBP/R1BQK2R w KQ - bm 0-0; id \&quot;sbd.133\&quot;;&quot;);</span></span>
+<span id="L539"><span class="lineNum">     539</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rnq1nrk1/pp3pbp/6p1/3p4/3P4/5N2/PP2BPPP/R1BQK2R w KQ - bm 0-0; id \&quot;sbd.134\&quot;;&quot;);</span></span>
+<span id="L540"><span class="lineNum">     540</span>              : </span>
+<span id="L541"><span class="lineNum">     541</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; timeControls = {100, 300, 600, 1200}; //mseconds</span></span>
+<span id="L542"><span class="lineNum">     542</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; scores       = {1, 1, 1, 1};</span></span>
+<span id="L543"><span class="lineNum">     543</span>              : </span>
+<span id="L544"><span class="lineNum">     544</span> <span class="tlaUNC">           0 :       ExtendedPosition::test(</span></span>
+<span id="L545"><span class="lineNum">     545</span>              :           positions, timeControls, false, false, scores, [](int score) { return score; }, false);</span>
+<span id="L546"><span class="lineNum">     546</span>              :       return true;</span>
+<span id="L547"><span class="lineNum">     547</span> <span class="tlaUNC">           0 :    }</span></span>
+<span id="L548"><span class="lineNum">     548</span>              : </span>
+<span id="L549"><span class="lineNum">     549</span> <span class="tlaGNC tlaBgGNC">           8 :    if (option == &quot;STS&quot;) {</span></span>
+<span id="L550"><span class="lineNum">     550</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
+<span id="L551"><span class="lineNum">     551</span>              :       bool                     b = true;</span>
+<span id="L552"><span class="lineNum">     552</span> <span class="tlaUNC">           0 :       for (int k = 1; k &lt; 16; ++k) {</span></span>
+<span id="L553"><span class="lineNum">     553</span> <span class="tlaUNC">           0 :          std::stringstream str;</span></span>
+<span id="L554"><span class="lineNum">     554</span> <span class="tlaUNC">           0 :          str &lt;&lt; &quot;Book_and_Test/TestSuite/STS&quot; &lt;&lt; k &lt;&lt; &quot;.epd&quot;;</span></span>
+<span id="L555"><span class="lineNum">     555</span> <span class="tlaUNC">           0 :          b &amp;= readEPDFile(str.str(), positions);</span></span>
+<span id="L556"><span class="lineNum">     556</span> <span class="tlaUNC">           0 :       }</span></span>
+<span id="L557"><span class="lineNum">     557</span> <span class="tlaUNC">           0 :       if (!b) { return 1; }</span></span>
+<span id="L558"><span class="lineNum">     558</span>              : </span>
+<span id="L559"><span class="lineNum">     559</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; timeControls = {10000}; //mseconds</span></span>
+<span id="L560"><span class="lineNum">     560</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; scores       = {1};</span></span>
+<span id="L561"><span class="lineNum">     561</span>              : </span>
+<span id="L562"><span class="lineNum">     562</span> <span class="tlaUNC">           0 :       ExtendedPosition::test(</span></span>
+<span id="L563"><span class="lineNum">     563</span> <span class="tlaUNC">           0 :           positions, timeControls, false, false, scores, [=](int score) { return static_cast&lt;int&gt;(25.212 * 100.f * float(score) / positions.size() + 1439.4); },</span></span>
+<span id="L564"><span class="lineNum">     564</span>              :           false);</span>
+<span id="L565"><span class="lineNum">     565</span>              :       return true;</span>
+<span id="L566"><span class="lineNum">     566</span> <span class="tlaUNC">           0 :    }</span></span>
+<span id="L567"><span class="lineNum">     567</span>              : </span>
+<span id="L568"><span class="lineNum">     568</span> <span class="tlaGNC tlaBgGNC">           8 :    if (option == &quot;ERET&quot;) {</span></span>
+<span id="L569"><span class="lineNum">     569</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
+<span id="L570"><span class="lineNum">     570</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/eret.epd&quot;, positions)) { return false; }</span></span>
+<span id="L571"><span class="lineNum">     571</span>              : </span>
+<span id="L572"><span class="lineNum">     572</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; timeControls = {15000}; //mseconds</span></span>
+<span id="L573"><span class="lineNum">     573</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; scores       = {1};</span></span>
+<span id="L574"><span class="lineNum">     574</span>              : </span>
+<span id="L575"><span class="lineNum">     575</span> <span class="tlaUNC">           0 :       ExtendedPosition::test(</span></span>
+<span id="L576"><span class="lineNum">     576</span>              :           positions, timeControls, false, false, scores, [=](int) { return 0; }, false);</span>
+<span id="L577"><span class="lineNum">     577</span>              :       return true;</span>
+<span id="L578"><span class="lineNum">     578</span> <span class="tlaUNC">           0 :    }</span></span>
+<span id="L579"><span class="lineNum">     579</span>              : </span>
+<span id="L580"><span class="lineNum">     580</span> <span class="tlaGNC tlaBgGNC">           8 :    if (option == &quot;MATE&quot;) {</span></span>
+<span id="L581"><span class="lineNum">     581</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
+<span id="L582"><span class="lineNum">     582</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/dmzx.edp&quot;, positions)) { return false; }</span></span>
+<span id="L583"><span class="lineNum">     583</span>              : </span>
+<span id="L584"><span class="lineNum">     584</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; timeControls = {15000}; //mseconds</span></span>
+<span id="L585"><span class="lineNum">     585</span> <span class="tlaUNC">           0 :       std::vector&lt;int&gt; scores       = {1};</span></span>
+<span id="L586"><span class="lineNum">     586</span>              : </span>
+<span id="L587"><span class="lineNum">     587</span> <span class="tlaUNC">           0 :       ExtendedPosition::test(</span></span>
+<span id="L588"><span class="lineNum">     588</span>              :           positions, timeControls, false, false, scores, [=](int) { return 0; }, false);</span>
+<span id="L589"><span class="lineNum">     589</span>              :       return true;</span>
+<span id="L590"><span class="lineNum">     590</span> <span class="tlaUNC">           0 :    }</span></span>
+<span id="L591"><span class="lineNum">     591</span>              : </span>
+<span id="L592"><span class="lineNum">     592</span> <span class="tlaGNC tlaBgGNC">           8 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;No test requested ...&quot;;</span></span>
+<span id="L593"><span class="lineNum">     593</span> <span class="tlaGNC">           8 :    return false;</span></span>
+<span id="L594"><span class="lineNum">     594</span>              : }</span>
+<span id="L595"><span class="lineNum">     595</span>              : </span>
+<span id="L596"><span class="lineNum">     596</span>              : #endif</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

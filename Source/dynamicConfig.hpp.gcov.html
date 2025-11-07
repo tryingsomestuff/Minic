@@ -1,0 +1,146 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage - Source/dynamicConfig.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">Source</a> - dynamicConfig.hpp<span style="font-size: 80%;"> (source / <a href="dynamicConfig.hpp.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">-</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+                  <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : #pragma once</span>
+<span id="L2"><span class="lineNum">       2</span>              : </span>
+<span id="L3"><span class="lineNum">       3</span>              : #include &quot;definition.hpp&quot;</span>
+<span id="L4"><span class="lineNum">       4</span>              : </span>
+<span id="L5"><span class="lineNum">       5</span>              : /*!</span>
+<span id="L6"><span class="lineNum">       6</span>              :  * Things that are widely used</span>
+<span id="L7"><span class="lineNum">       7</span>              :  * with values that can be varying due to</span>
+<span id="L8"><span class="lineNum">       8</span>              :  * GUI or CLI interaction</span>
+<span id="L9"><span class="lineNum">       9</span>              :  */</span>
+<span id="L10"><span class="lineNum">      10</span>              : namespace DynamicConfig {</span>
+<span id="L11"><span class="lineNum">      11</span>              : extern bool         mateFinder;</span>
+<span id="L12"><span class="lineNum">      12</span>              : extern bool         disableTT;</span>
+<span id="L13"><span class="lineNum">      13</span>              : extern unsigned int ttSizeMb;</span>
+<span id="L14"><span class="lineNum">      14</span>              : extern unsigned int ttPawnSizeMb;</span>
+<span id="L15"><span class="lineNum">      15</span>              : extern bool         fullXboardOutput;</span>
+<span id="L16"><span class="lineNum">      16</span>              : extern bool         debugMode; // activate output in a file (see debugFile)</span>
+<span id="L17"><span class="lineNum">      17</span>              : extern int          minOutputLevel; // minimum output level</span>
+<span id="L18"><span class="lineNum">      18</span>              : extern std::string  debugFile;</span>
+<span id="L19"><span class="lineNum">      19</span>              : extern unsigned int level;</span>
+<span id="L20"><span class="lineNum">      20</span>              : extern unsigned int randomOpen;</span>
+<span id="L21"><span class="lineNum">      21</span>              : extern unsigned int threads;</span>
+<span id="L22"><span class="lineNum">      22</span>              : extern std::string  syzygyPath;</span>
+<span id="L23"><span class="lineNum">      23</span>              : extern bool         FRC;</span>
+<span id="L24"><span class="lineNum">      24</span>              : extern bool         DFRC;</span>
+<span id="L25"><span class="lineNum">      25</span>              : extern bool         UCIPonder;</span>
+<span id="L26"><span class="lineNum">      26</span>              : extern unsigned int multiPV;</span>
+<span id="L27"><span class="lineNum">      27</span>              : extern ScoreType    contempt;</span>
+<span id="L28"><span class="lineNum">      28</span>              : extern ScoreType    contemptMG;</span>
+<span id="L29"><span class="lineNum">      29</span>              : extern bool         limitStrength;</span>
+<span id="L30"><span class="lineNum">      30</span>              : extern int          strength;</span>
+<span id="L31"><span class="lineNum">      31</span>              : extern bool         nodesBasedLevel;</span>
+<span id="L32"><span class="lineNum">      32</span>              : extern bool         useNNUE;</span>
+<span id="L33"><span class="lineNum">      33</span>              : extern bool         forceNNUE;</span>
+<span id="L34"><span class="lineNum">      34</span>              : extern std::string  NNUEFile;</span>
+<span id="L35"><span class="lineNum">      35</span>              : extern int          NNUEScaling;</span>
+<span id="L36"><span class="lineNum">      36</span>              : extern int          NNUEThreshold;</span>
+<span id="L37"><span class="lineNum">      37</span>              : extern int          NNUEThreshold2;</span>
+<span id="L38"><span class="lineNum">      38</span>              : extern bool         genFen;</span>
+<span id="L39"><span class="lineNum">      39</span>              : extern bool         pgnOut;</span>
+<span id="L40"><span class="lineNum">      40</span>              : extern unsigned int genFenDepth;</span>
+<span id="L41"><span class="lineNum">      41</span>              : extern unsigned int genFenDepthEG;</span>
+<span id="L42"><span class="lineNum">      42</span>              : extern unsigned int randomPly;</span>
+<span id="L43"><span class="lineNum">      43</span>              : extern unsigned int moveOverHead;</span>
+<span id="L44"><span class="lineNum">      44</span>              : extern bool         armageddon;</span>
+<span id="L45"><span class="lineNum">      45</span>              : extern bool         antichess; ///@todo not yet fully implemented due to king capture</span>
+<span id="L46"><span class="lineNum">      46</span>              : extern bool         withWDL;</span>
+<span id="L47"><span class="lineNum">      47</span>              : extern bool         bongCloud;</span>
+<span id="L48"><span class="lineNum">      48</span>              : extern bool         anarchy;</span>
+<span id="L49"><span class="lineNum">      49</span>              : extern ScoreType    badCapLimit;</span>
+<span id="L50"><span class="lineNum">      50</span>              : // handles chess variants</span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC tlaBgGNC">     1848974 : inline bool isKingMandatory(){ return !antichess;}</span></span>
+<span id="L52"><span class="lineNum">      52</span>              : </span>
+<span id="L53"><span class="lineNum">      53</span>              : extern std::string  chessvariant;</span>
+<span id="L54"><span class="lineNum">      54</span>              : </span>
+<span id="L55"><span class="lineNum">      55</span>              : extern std::string opponent;</span>
+<span id="L56"><span class="lineNum">      56</span>              : extern int         ratingAdv;</span>
+<span id="L57"><span class="lineNum">      57</span>              : extern bool        ratingAdvReceived;</span>
+<span id="L58"><span class="lineNum">      58</span>              : extern double      ratingFactor;</span>
+<span id="L59"><span class="lineNum">      59</span>              : </span>
+<span id="L60"><span class="lineNum">      60</span>              : extern int styleComplexity;</span>
+<span id="L61"><span class="lineNum">      61</span>              : extern int styleMaterial;</span>
+<span id="L62"><span class="lineNum">      62</span>              : extern int stylePositional;</span>
+<span id="L63"><span class="lineNum">      63</span>              : extern int styleDevelopment;</span>
+<span id="L64"><span class="lineNum">      64</span>              : extern int styleMobility;</span>
+<span id="L65"><span class="lineNum">      65</span>              : extern int styleAttack;</span>
+<span id="L66"><span class="lineNum">      66</span>              : extern int stylePawnStruct;</span>
+<span id="L67"><span class="lineNum">      67</span>              : extern int styleForwardness;</span>
+<span id="L68"><span class="lineNum">      68</span>              : </span>
+<span id="L69"><span class="lineNum">      69</span>              : extern bool stylized;</span>
+<span id="L70"><span class="lineNum">      70</span>              : } // namespace DynamicConfig</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

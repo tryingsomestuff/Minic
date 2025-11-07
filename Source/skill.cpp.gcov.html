@@ -1,0 +1,108 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage - Source/skill.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">Source</a> - skill.cpp<span style="font-size: 80%;"> (source / <a href="skill.cpp.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryHi">94.1&nbsp;%</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntry">16</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+          </tr>
+                  <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : #include &quot;skill.hpp&quot;</span>
+<span id="L2"><span class="lineNum">       2</span>              : </span>
+<span id="L3"><span class="lineNum">       3</span>              : #include &quot;dynamicConfig.hpp&quot;</span>
+<span id="L4"><span class="lineNum">       4</span>              : #include &quot;tools.hpp&quot;</span>
+<span id="L5"><span class="lineNum">       5</span>              : </span>
+<span id="L6"><span class="lineNum">       6</span> <span class="tlaGNC tlaBgGNC">           2 : Move Skill::pick(std::vector&lt;MultiPVScores&gt;&amp; multiPVMoves) {</span></span>
+<span id="L7"><span class="lineNum">       7</span>              :    const size_t    multiPV    = multiPVMoves.size();</span>
+<span id="L8"><span class="lineNum">       8</span> <span class="tlaGNC">           2 :    const ScoreType topScore   = multiPVMoves[0].s;</span></span>
+<span id="L9"><span class="lineNum">       9</span> <span class="tlaGNC">           2 :    const ScoreType worstScore = multiPVMoves[multiPV - 1].s;</span></span>
+<span id="L10"><span class="lineNum">      10</span> <span class="tlaGNC">           2 :    const ScoreType delta      = std::min(static_cast&lt;ScoreType&gt;(topScore - worstScore), absValue(P_wp));</span></span>
+<span id="L11"><span class="lineNum">      11</span> <span class="tlaGNC">           2 :    const ScoreType weakness   = 128 - DynamicConfig::level; // so from 28 (minimum) to 128 (maximum)</span></span>
+<span id="L12"><span class="lineNum">      12</span>              :    ScoreType       maxScore   = matedScore(0);</span>
+<span id="L13"><span class="lineNum">      13</span>              : </span>
+<span id="L14"><span class="lineNum">      14</span> <span class="tlaGNC">           2 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Picking suboptimal move from &quot; &lt;&lt; multiPV &lt;&lt; &quot; best move(s)&quot;;</span></span>
+<span id="L15"><span class="lineNum">      15</span>              : </span>
+<span id="L16"><span class="lineNum">      16</span>              :    // shuffling of available moves thanks to both a deterministic value and a random one</span>
+<span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC">           2 :    Move m = INVALIDMOVE;</span></span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">          10 :    for (size_t i = 0; i &lt; multiPV; ++i) {</span></span>
+<span id="L19"><span class="lineNum">      19</span> <span class="tlaUNC tlaBgUNC">           0 :       if (!isValidMove(multiPVMoves[i].m)) continue;</span></span>
+<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC tlaBgGNC">           8 :       const ScoreType currentMoveScore = multiPVMoves[i].s;</span></span>
+<span id="L21"><span class="lineNum">      21</span>              :       // magic formula from Stockfish</span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">          16 :       const ScoreType add = (weakness * (topScore - currentMoveScore) + randomInt&lt;int, 1234&gt;(0, weakness) * delta) / 128;</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">          16 :       Logging::LogIt(Logging::logInfo) &lt;&lt; ToString(multiPVMoves[i].m) &lt;&lt; &quot; &quot; &lt;&lt; currentMoveScore &lt;&lt; &quot; &quot; &lt;&lt; add &lt;&lt; &quot; &quot; &lt;&lt; maxScore;</span></span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">           8 :       const ScoreType score = currentMoveScore + (isMateScore(currentMoveScore) ? 0 : add);</span></span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">           8 :       if (score &gt;= maxScore) {</span></span>
+<span id="L26"><span class="lineNum">      26</span>              :          maxScore = score;</span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">           3 :          m        = multiPVMoves[i].m;</span></span>
+<span id="L28"><span class="lineNum">      28</span>              :       }</span>
+<span id="L29"><span class="lineNum">      29</span>              :    }</span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">           4 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Picked move &quot; &lt;&lt; ToString(m) &lt;&lt; &quot; &quot; &lt;&lt; maxScore;</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">           2 :    return m;</span></span>
+<span id="L32"><span class="lineNum">      32</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>
