@@ -1,10 +1,13 @@
-name: Makefile CI
+name: Build + Coverage
 
 on:
   push:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
+
+permissions:
+  contents: write   # nécessaire pour Github Pages
 
 jobs:
   build:
@@ -13,11 +16,26 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install GCC11
+    - name: Install GCC and coverage tools
       run: |
         sudo apt update
-        sudo apt install gcc-11 g++-11
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 110 --slave /usr/bin/g++ g++ /usr/bin/g++-11
+        sudo apt install gcc g++ lcov
 
     - name: Build with Make
       run: make
+
+    - name: Run coverage script
+      run: Tools/build/docov
+
+    - name: Upload coverage result as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: coverage-dir/rapport
+
+    - name: Deploy coverage to GitHub Pages
+      if: github.ref == 'refs/heads/master'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: coverage-dir/rapport
