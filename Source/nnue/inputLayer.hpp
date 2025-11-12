@@ -8,7 +8,7 @@
 #include "stackVector.hpp"
 #include "weightReader.hpp"
 
-constexpr size_t inputLayerSize      = 12 * 64 * 64;
+constexpr size_t inputLayerSize      = FeatureIdx::major * FeatureIdx::minor;
 constexpr size_t firstInnerLayerSize = 384;
 
 template<typename NT, size_t dim0, size_t dim1, bool Q> 

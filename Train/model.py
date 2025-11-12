@@ -6,6 +6,7 @@ from torch import nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
 import struct
+from collections import Counter
 
 netversion = struct.unpack('!f', bytes.fromhex('c0ffee03'))[0]
 
@@ -15,7 +16,7 @@ withFactorizer = True
 # change requiered in
 # void fill_entry(FeatureSet<Ts...>, int i, const TrainingDataEntry& e)
 # if this is changed
-nphase = 2
+nbucket = 8
 BASE = 384
 L1 = 8
 L2 = 8
@@ -56,30 +57,6 @@ class FactoredBlock(nn.Module):
     x = self.factored(x)
     return x.matmul(self.weights)
 
-class ClippedPReLU(nn.Module):
-
-    __constants__ = ['num_parameters']
-    num_parameters: int
-
-    def __init__(self, num_parameters: int = 1, init: float = 0.25,
-                 device=None, dtype=None) -> None:
-        factory_kwargs = {'device': device, 'dtype': dtype}
-        self.num_parameters = num_parameters
-        super().__init__()
-        self.init = init
-        self.weight = nn.Parameter(torch.empty(num_parameters, **factory_kwargs))
-        self.reset_parameters()
-
-    def reset_parameters(self):
-        torch.nn.init.constant_(self.weight, self.init)
-
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        return torch.min(F.prelu(input, self.weight), torch.ones(self.num_parameters).to(input.device))
-
-    def extra_repr(self) -> str:
-        return f'num_parameters={self.num_parameters}'
-
-
 class FeatureTransformer(nn.Module):
   def __init__(self, funcs, base_dim):
     super(FeatureTransformer, self).__init__()
@@ -113,35 +90,48 @@ class NNUE(pl.LightningModule):
       # without factorization
       self.white_affine = nn.Linear(halfka.numel(), BASE)
       self.black_affine = nn.Linear(halfka.numel(), BASE)
-    #self.activationIW = ClippedPReLU(BASE)
-    #self.activationIB = ClippedPReLU(BASE)
 
     # dropout seems necessary when using factorizer to avoid over-fitting
-    self.d0 = nn.Dropout(p=0.05)
-    self.fc0 = nn.Linear(2*BASE, L1 * nphase)
-    #self.activation0 = ClippedPReLU(L1 * nphase)
+    #self.d0 = nn.Dropout(p=0.05)
+    self.fc0 = nn.Linear(2*BASE, L1 * nbucket)
 
-    self.d1 = nn.Dropout(p=0.1)
-    self.fc1 = nn.Linear(L1, L2 * nphase)
-    #self.activation1 = ClippedPReLU(L2 * nphase)
+    #self.d1 = nn.Dropout(p=0.1)
+    self.fc1 = nn.Linear(L1, L2 * nbucket)
 
-    self.d2 = nn.Dropout(p=0.1)
-    self.fc2 = nn.Linear(L2 + L1, L3 * nphase)
-    #self.activation2 = ClippedPReLU(L3 * nphase)
+    #self.d2 = nn.Dropout(p=0.1)
+    #self.fc2 = nn.Linear(L2, L3 * nbucket)
+    self.fc2 = nn.Linear(L2 + L1,  L3 * nbucket)
     
-    self.d3 = nn.Dropout(p=0.1)
-    self.fc3 = nn.Linear(L3 + L2 + L1,  1 * nphase)
+    #self.d3 = nn.Dropout(p=0.1)
+    self.fc3 = nn.Linear(L3 + L2 + L1,  1 * nbucket)
 
     self.lambda_ = lambda_
 
     self.idx_offset = None
 
-  def forward(self, us, them, white, black, phase):
+    #self.init_weights()
 
-    if self.idx_offset == None or self.idx_offset.shape[0] != phase.shape[0]:
-        self.idx_offset = torch.arange(0, phase.shape[0] * nphase, nphase, device=phase.device)
+  def init_weights(self):
+      def init_fn(m):
+          if isinstance(m, nn.Linear):
+              nn.init.uniform_(m.weight, -0.1, 0.1)
+              if m.bias is not None:
+                  nn.init.uniform_(m.bias, -0.1, 0.1)
+          elif isinstance(m, FactoredBlock):
+              nn.init.uniform_(m.weights, -0.1, 0.1)
+          elif isinstance(m, FeatureTransformer):
+              for block in m.factored_blocks:
+                  init_fn(block)
+              init_fn(m.affine)
+      self.apply(init_fn)
 
-    indices = phase.flatten() + self.idx_offset
+  def forward(self, us, them, white, black, bucket):
+
+    if self.idx_offset == None or self.idx_offset.shape[0] != bucket.shape[0]:
+        self.idx_offset = torch.arange(0, bucket.shape[0] * nbucket, nbucket, device=bucket.device)
+
+    indices = bucket.flatten() + self.idx_offset
+    #print(torch.bincount(bucket.flatten()))
 
     if len(white.size()) > 2: # data are from pydataloader
       w__ = halfka.half_ka(white, black)
@@ -153,79 +143,49 @@ class NNUE(pl.LightningModule):
       b_ = self.black_affine(black)
     
     # input layer
-    #w_ = self.activationIW(w_)
-    #b_ = self.activationIB(b_)
-    #base = us * torch.cat([w_, b_], dim=1) + (1.0 - us) * torch.cat([b_, w_], dim=1)
     base = torch.clamp(us * torch.cat([w_, b_], dim=1) + (1.0 - us) * torch.cat([b_, w_], dim=1),0,1)
     
-    if withFactorizer:
-      base = self.d0(base)
+    #if withFactorizer:
+    #  base = self.d0(base)
     y0 = torch.clamp(self.fc0(base),0,1)
-    #y0 = self.fc0(base)
-    #y0 = self.activation0(y0)
     y0 = y0.view(-1, L1)[indices]
 
-    if withFactorizer:
-      y0 = self.d1(y0)
+    #if withFactorizer:
+    #  y0 = self.d1(y0)
     y1 = torch.clamp(self.fc1(y0),0,1)
-    #y1 = self.fc1(y0)
-    #y1 = self.activation1(y1)
     y1 = y1.view(-1, L2)[indices]
     y1 = torch.cat([y0, y1], dim=1)
 
-    if withFactorizer:
-      y1 = self.d2(y1)
+    #if withFactorizer:
+    #  y1 = self.d2(y1)
     y2 = torch.clamp(self.fc2(y1),0,1)
-    #y2 = self.fc2(y1)
-    #y2 = self.activation2(y2)
     y2 = y2.view(-1, L3)[indices]
     y2 = torch.cat([y1, y2], dim=1)
-
-    if withFactorizer:
-      y2 = self.d3(y2)
+    
+    #if withFactorizer:
+    #  y2 = self.d3(y2)
     y3 = self.fc3(y2)
     y3 = y3.view(-1, 1)[indices]
 
     return y3
 
   def step_(self, batch, batch_idx, loss_type):
-    us, them, white, black, outcome, score, phase = batch
+    us, them, white, black, outcome, score, bucket = batch
   
     #from SF values, shall be tuned
-    net2score = 600
+    net2score = 600 # outFactor in the C++ code
     in_scaling = 410
-    out_scaling = 361
-    offset = 270
+    out_scaling = 360
 
     t = outcome
 
-    # in end-game take outcome into account
-    if nphase > 1:
-      phase_scaling = phase * 1.0 / (nphase - 1)
-    else:
-      phase_scaling = 1.0
-    phased_lambda_outcome = phase_scaling * (1.0 - self.lambda_)
-
-    scorenet = self(us, them, white, black, phase) * net2score
+    scorenet = self(us, them, white, black, bucket) * net2score
 
     # simple Minic stuff
-    q = (self(us, them, white, black, phase) * net2score / out_scaling).sigmoid()
+    q = (scorenet / out_scaling).sigmoid()
     p = (score / in_scaling).sigmoid()
-    pt = p * (1.0 - phased_lambda_outcome) + t * phased_lambda_outcome
+    pt = p * self.lambda_ + t * (1.0 - self.lambda_)
     loss = torch.pow(torch.abs(pt - q), 2.6).mean()
-
-    # From SF
-    #q  = ( scorenet - offset) / in_scaling  # used to compute the chance of a win
-    #qm = (-scorenet - offset) / in_scaling  # used to compute the chance of a loss
-    #qf = 0.5 * (1.0 + q.sigmoid() - qm.sigmoid())  # estimated match result (using win, loss and draw probs).
-
-    #p  = ( score - offset) / out_scaling
-    #pm = (-score - offset) / out_scaling
-    #pf = 0.5 * (1.0 + p.sigmoid() - pm.sigmoid())
-
-    #pt = pf * (1.0 - phased_lambda_outcome) + t * phased_lambda_outcome
-
-    #loss = torch.pow(torch.abs(pt - qf), 2.5).mean()
 
     self.log(loss_type, loss)
     return loss
@@ -240,12 +200,8 @@ class NNUE(pl.LightningModule):
     self.step_(batch, batch_idx, 'test_loss')
 
   def configure_optimizers(self):
-    optimizer = torch.optim.Adadelta(self.parameters(), lr=1, weight_decay=1e-10)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.3)
-
-    #optimizer = ranger.Ranger(self.parameters(), betas=(.9, 0.999), eps=1.0e-7, gc_loc=False, use_gc=False)
-    #scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.3)
-
+    optimizer = torch.optim.Adadelta(self.parameters(), lr=1, weight_decay=1e-13)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=75, gamma=0.1)
     return [optimizer], [scheduler]
 
   def flattened_parameters(self, log=False, only_weight=False):
@@ -269,16 +225,12 @@ class NNUE(pl.LightningModule):
       if not only_weight:
         joined = join_param(joined, self.white_affine.virtual_bias())
         print("Nb bias W: ", len(self.white_affine.virtual_bias()))
-        #joined = join_param(joined, self.activationIW.weight.data.t())
-        #print("Nb slopes: ", len(self.activationIW.weight.data.t()))
 
       joined = join_param(joined, self.black_affine.virtual_weight().t())
       print("Nb weight B: ", len(self.black_affine.virtual_weight().t()))
       if not only_weight:
         joined = join_param(joined, self.black_affine.virtual_bias())
         print("Nb bias B: ", len(self.black_affine.virtual_bias()))
-        #joined = join_param(joined, self.activationIB.weight.data.t())
-        #print("Nb slopes: ", len(self.activationIB.weight.data.t()))
     else:
       # without factorizer
       joined = join_param(joined, self.white_affine.weight.data.t())
@@ -286,70 +238,59 @@ class NNUE(pl.LightningModule):
       if not only_weight:
         joined = join_param(joined, self.white_affine.bias.data)
         print("Nb bias W: ", len(self.white_affine.bias.data))
-        #joined = join_param(joined, self.activationIW.weight.data.t())
-        #print("Nb slopes: ", len(self.activationIW.weight.data.t()))
 
       joined = join_param(joined, self.black_affine.weight.data.t())
       print("Nb weight B: ", len(self.black_affine.weight.data.t()))
       if not only_weight:
         joined = join_param(joined, self.black_affine.bias.data)
         print("Nb bias B: ", len(self.black_affine.bias.data))
-        #joined = join_param(joined, self.activationIB.weight.data.t())
-        #print("Nb slopes: ", len(self.activationIB.weight.data.t()))
 
     # fc0
     print("=================")
     print("Inner layer 1")
     print("In :", 2*BASE)
     print("Out :", L1)
-    for i in range(nphase):
+    for i in range(nbucket):
       joined = join_param(joined, self.fc0.weight[i*L1:(i+1)*L1, :].data.t())
       print("Nb weight: ", len(self.fc0.weight[i*L1:(i+1)*L1, :].data.t()))
       if not only_weight:
         joined = join_param(joined, self.fc0.bias[i*L1:(i+1)*L1].data)
-        #joined = join_param(joined, self.activation0.weight[i*L1:(i+1)*L1].data.t())
         print("Nb bias: ", len(self.fc0.bias[i*L1:(i+1)*L1].data))
-        #print("Nb slopes: ", len(self.activation0.weight[i*L1:(i+1)*L1].data.t()))
 
     # fc1
     print("=================")
     print("Inner layer 2")
     print("In :", L1)
     print("Out :", L2)
-    for i in range(nphase):
+    for i in range(nbucket):
       joined = join_param(joined, self.fc1.weight[i*L2:(i+1)*L2, :].data.t())
       print("Nb weight: ", len(self.fc1.weight[i*L2:(i+1)*L2, :].data.t()))
       if not only_weight:
         joined = join_param(joined, self.fc1.bias[i*L2:(i+1)*L2].data)
-        #joined = join_param(joined, self.activation1.weight[i*L2:(i+1)*L2].data.t())
         print("Nb bias: ", len(self.fc1.bias[i*L2:(i+1)*L2].data))
-        #print("Nb slopes: ", len(self.activation1.weight[i*L2:(i+1)*L2].data.t()))
 
     # fc2
     print("=================")
     print("Inner layer 3")
     print("In :", L2 + L1)
     print("Out :", L3)
-    for i in range(nphase):
+    for i in range(nbucket):
       joined = join_param(joined, self.fc2.weight[i*L3:(i+1)*L3, :].data.t())
       print("Nb weight: ", len(self.fc2.weight[i*L3:(i+1)*L3, :].data.t()))
       if not only_weight:
         joined = join_param(joined, self.fc2.bias[i*L3:(i+1)*L3].data)
-        #joined = join_param(joined, self.activation2.weight[i*L3:(i+1)*L3].data.t())
         print("Nb bias: ", len(self.fc2.bias[i*L3:(i+1)*L3].data))
-        #print("Nb slopes: ", len(self.activation2.weight[i*L3:(i+1)*L3].data.t()))
 
     # fc3
     print("=================")
     print("Output layer")
     print("In :", L3 + L2 + L1)
     print("Out :", 1)
-    for i in range(nphase):
+    for i in range(nbucket):
       joined = join_param(joined, self.fc3.weight[i:(i+1), :].data.t())
       print("Nb weight: ", len(self.fc3.weight[i:(i+1), :].data.t()))
       if not only_weight:
         joined = join_param(joined, self.fc3.bias[i:(i+1)].data)
-        #joined = join_param(joined, torch.tensor(-1))
         print("Nb bias: ", len(self.fc3.bias[i:(i+1)].data))
 
     print("=================")

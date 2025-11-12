@@ -1,17 +1,17 @@
 [
     {
-        "command": "./minic_linux_x64 -uci -syzygyPath /home/syzygy7/",
+        "command": "./minic_linux_x64 -uci -syzygyPath /home/syzygy7",
         "name": "Minic 3.44",
         "restart": "on",
-        "rating": "3419",
+        "rating": "3452",
         "options": [
             {
                 "name": "Threads",
-                "value": "104"
+                "value": "256"
             },
             {
                 "name": "Hash",
-                "value": "65536"
+                "value": "256000"
             },
             {
                 "name": "PawnHash",
@@ -23,7 +23,7 @@
             },
             {
                 "name": "CommandLineOptions",
-                "value": "-uci -syzygyPath /home/syzygy7/"
+                "value": "-uci -syzygyPath /home/syzygy7"
             }
         ],
         "protocol": "uci",

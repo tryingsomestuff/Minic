@@ -85,14 +85,19 @@ struct HalfKA {
 
     static constexpr int MAX_ACTIVE_FEATURES = 32;
 
+    static int getBlock(const int ksq) {
+       return ksq;
+       //return (ksq / 16) * 4 + ((ksq % 8) / 2);
+    }
+
     static int feature_index(Color us, Square ksq, Square sq, Piece p)
     {
         assert(p.type()!=chess::PieceType::None);
         if ( p.color() == us )
-           return feature_idx::major * HFlip(int(ksq)) + HFlip(int(sq)) 
+           return feature_idx::major * getBlock(HFlip(int(ksq))) + HFlip(int(sq)) 
                 + feature_idx::us_offset(static_cast<MinicPiece>(static_cast<int>(p.type()) + 1));
         else
-           return feature_idx::major * HFlip(int(ksq)) + HFlip(int(sq)) 
+           return feature_idx::major * getBlock(HFlip(int(ksq))) + HFlip(int(sq)) 
                 + feature_idx::them_offset(static_cast<MinicPiece>(static_cast<int>(p.type()) + 1));
     }
 
@@ -152,7 +157,7 @@ struct SparseBatch
         is_white = new float[size];
         outcome = new float[size];
         score = new float[size];
-        phase = new int[size];
+        bucket = new int[size];
         white = new int[size * FeatureSet<Ts...>::MAX_ACTIVE_FEATURES * 2];
         black = new int[size * FeatureSet<Ts...>::MAX_ACTIVE_FEATURES * 2];
         white_values = new float[size * FeatureSet<Ts...>::MAX_ACTIVE_FEATURES];
@@ -176,7 +181,7 @@ struct SparseBatch
     float* is_white;
     float* outcome;
     float* score;
-    int* phase;
+    int* bucket;
     int num_active_white_features;
     int num_active_black_features;
     int* white;
@@ -189,7 +194,7 @@ struct SparseBatch
         delete[] is_white;
         delete[] outcome;
         delete[] score;
-        delete[] phase;
+        delete[] bucket;
         delete[] white;
         delete[] black;
         delete[] white_values;
@@ -201,10 +206,24 @@ private:
     template <typename... Ts>
     void fill_entry(FeatureSet<Ts...>, int i, const TrainingDataEntry& e)
     {
-        is_white[i] = static_cast<float>(e.pos.sideToMove() == Color::White);
+        const auto color = e.pos.sideToMove();
+        is_white[i] = static_cast<float>(color == Color::White);
         outcome[i] = (e.result + 1.0f) / 2.0f;
         score[i] = e.score;
-        phase[i] = std::min(1,e.pos.piecesBB().count()/16);
+        // king bucket
+        constexpr int kingBucket[64] = {
+            0,  0,  0,  1,  1,  1,  2,  2,
+            0,  0,  3,  1,  1,  4,  5,  5,
+            3,  3,  3,  4,  4,  4,  5,  5,
+            3,  3,  3,  4,  4,  5,  5,  5,
+            3,  3,  3,  4,  4,  7,  7,  5,
+            3,  3,  6,  6,  6,  7,  7,  7, 
+            6,  6,  6,  6,  6,  7,  7,  7, 
+            6,  6,  6,  6,  7,  7,  7,  7, 
+        };
+        bucket[i] = kingBucket[ static_cast<int>(e.pos.kingSquare(color)) ^ (56 * static_cast<int>(color != Color::White))];
+        // game phase
+        //bucket[i] = std::min(3,e.pos.piecesBB().count()/8);
         fill_features(FeatureSet<Ts...>{}, i, e);
     }
 
@@ -387,10 +406,6 @@ private:
     std::vector<std::thread> m_workers;
 };
 
-namespace{
-   std::atomic<uint64_t> sfens_count = 0;
-}
-
 extern "C" {
 
     EXPORT Stream<SparseBatch>* CDECL create_sparse_batch_stream(int concurrency, const char* filename, int batch_size, bool cyclic, bool filtered, int random_fen_skipping)
@@ -411,8 +426,11 @@ extern "C" {
                 };
 
                 auto do_filter = [&]() {
-                    sfens_count.fetch_add(1);
-                    return (e.isCapturingMove() || e.isInCheck() || e.ply < 10 || std::abs(e.score) > 1500);
+                    return (//e.pos.castlingRights() != CastlingRights::None || 
+                            e.isCapturingMove() || 
+                            e.isInCheck() || 
+                            e.ply < 10 || 
+                            std::abs(e.score) > 1500);
                 };
 
                 static thread_local std::mt19937 gen(std::random_device{}());
