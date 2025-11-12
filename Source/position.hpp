@@ -8,12 +8,17 @@
 #ifdef WITH_NNUE
 #include "nnue.hpp"
 
+[[nodiscard]] static constexpr size_t getBlock(const Square ksq) {
+   return ksq;
+   //return (ksq / 16) * 4 + ((ksq % 8) / 2);
+}
+
 [[nodiscard]] static constexpr size_t NNUEIndiceUs(const Square ksq, const Square s, const Piece p) {
-   return FeatureIdx::major * HFlip(ksq) + HFlip(s) + FeatureIdx::usOffset(p);
+   return nnue::FeatureIdx::major * getBlock(HFlip(ksq)) + HFlip(s) + nnue::FeatureIdx::usOffset(p);
 }
 
 [[nodiscard]] static constexpr size_t NNUEIndiceThem(const Square ksq, const Square s, const Piece p) {
-   return FeatureIdx::major * HFlip(ksq) + HFlip(s) + FeatureIdx::themOffset(p);
+   return nnue::FeatureIdx::major * getBlock(HFlip(ksq)) + HFlip(s) + nnue::FeatureIdx::themOffset(p);
 }
 #endif // WITH_NNUE
 

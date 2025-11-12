@@ -40,51 +40,6 @@ inline void init() {
 
 using NNUEEvaluator = nnue::NNUEEval<NNUEWrapper::nnueNType, NNUEWrapper::quantization>;
 
-namespace FeatureIdx {
-
-inline constexpr size_t major = 64 * 12;
-inline constexpr size_t minor = 64;
-
-inline constexpr size_t usPawnOffset   = 0;
-inline constexpr size_t usKnightOffset = usPawnOffset + minor;
-inline constexpr size_t usBishopOffset = usKnightOffset + minor;
-inline constexpr size_t usRookOffset   = usBishopOffset + minor;
-inline constexpr size_t usQueenOffset  = usRookOffset + minor;
-inline constexpr size_t usKingOffset   = usQueenOffset + minor;
-
-inline constexpr size_t themPawnOffset   = usKingOffset + minor;
-inline constexpr size_t themKnightOffset = themPawnOffset + minor;
-inline constexpr size_t themBishopOffset = themKnightOffset + minor;
-inline constexpr size_t themRookOffset   = themBishopOffset + minor;
-inline constexpr size_t themQueenOffset  = themRookOffset + minor;
-inline constexpr size_t themKingOffset   = themQueenOffset + minor;
-
-[[nodiscard]] constexpr size_t usOffset(const Piece pt) {
-   switch (pt) {
-      case P_wp: return usPawnOffset;
-      case P_wn: return usKnightOffset;
-      case P_wb: return usBishopOffset;
-      case P_wr: return usRookOffset;
-      case P_wq: return usQueenOffset;
-      case P_wk: return usKingOffset;
-      default: return usPawnOffset;
-   }
-}
-
-[[nodiscard]] constexpr size_t themOffset(const Piece pt) {
-   switch (pt) {
-      case P_wp: return themPawnOffset;
-      case P_wn: return themKnightOffset;
-      case P_wb: return themBishopOffset;
-      case P_wr: return themRookOffset;
-      case P_wq: return themQueenOffset;
-      case P_wk: return themKingOffset;
-      default: return themPawnOffset;
-   }
-}
-
-} // namespace FeatureIdx
-
 #ifdef WITH_DATA2BIN
 #include "learn/convert.hpp"
 #endif

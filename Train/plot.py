@@ -3,7 +3,7 @@ import time
 import argparse
 import numpy
 
-LRDropFreq = 75
+LRDropFreq = 50
 class TargetBoundCheck(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         if not 0 < values < 1000:
@@ -146,6 +146,8 @@ while True:
                 plt.grid(which='both')
                 axes = plt.gca()
                 axes.set_ylim([args.y,args.Y])
+                axes.set_xlabel("number of epoch")
+                axes.set_ylabel("Elo performance")
 
                 plt.legend()
 

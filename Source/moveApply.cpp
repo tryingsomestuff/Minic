@@ -302,7 +302,7 @@ void applyMoveNNUEUpdate([[maybe_unused]] Position & p, [[maybe_unused]] const M
    // if king is not moving, update nnue evaluator
    // this is based on initial position state (most notably ep square), 
    // all is available in the previously built moveInfo)
-   if (Abs(moveInfo.fromP) != P_wk) {
+   if (Abs(moveInfo.fromP) != P_wk || (getBlock(moveInfo.from) == getBlock(moveInfo.to))) {
       // ***be carefull here***, p.c has already been updated !!!
       if (p.c == Co_Black) updateNNUEEvaluator<Co_White>(p.evaluator(), moveInfo);
       else updateNNUEEvaluator<Co_Black>(p.evaluator(), moveInfo);

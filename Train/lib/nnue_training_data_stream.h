@@ -24,18 +24,6 @@ namespace training_data {
         return ends_with(filename, "." + extension);
     }
 
-    static std::string filename_with_extension(const std::string& filename, const std::string& ext)
-    {
-        if (ends_with(filename, ext))
-        {
-            return filename;
-        }
-        else
-        {
-            return filename + "." + ext;
-        }
-    }
-
     struct BasicSfenInputStream
     {
         virtual std::optional<TrainingDataEntry> next() = 0;
