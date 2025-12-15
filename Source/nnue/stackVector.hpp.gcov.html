@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td class="headerValue">2025-12-15 11:28:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -71,17 +71,17 @@
 <span id="L9"><span class="lineNum">       9</span>              :    alignas(NNUEALIGNMENT) T data[dim];</span>
 <span id="L10"><span class="lineNum">      10</span>              : </span>
 <span id="L11"><span class="lineNum">      11</span>              :    template&lt;typename T2&gt; </span>
-<span id="L12"><span class="lineNum">      12</span> <span class="tlaGNC tlaBgGNC">   508951629 :    CONSTEXPR StackVector&lt;T, dim, Q&gt;&amp; add_(const T2* other) {</span></span>
+<span id="L12"><span class="lineNum">      12</span> <span class="tlaGNC tlaBgGNC">   509383408 :    CONSTEXPR StackVector&lt;T, dim, Q&gt;&amp; add_(const T2* other) {</span></span>
 <span id="L13"><span class="lineNum">      13</span>              : #pragma omp simd</span>
-<span id="L14"><span class="lineNum">      14</span> <span class="tlaGNC"> >19594*10^7 :       for (size_t i = 0; i &lt; dim; ++i) { data[i] += other[i]; }</span></span>
-<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">   508951629 :       return *this;</span></span>
+<span id="L14"><span class="lineNum">      14</span> <span class="tlaGNC"> >19611*10^7 :       for (size_t i = 0; i &lt; dim; ++i) { data[i] += other[i]; }</span></span>
+<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">   509383408 :       return *this;</span></span>
 <span id="L16"><span class="lineNum">      16</span>              :    }</span>
 <span id="L17"><span class="lineNum">      17</span>              : </span>
 <span id="L18"><span class="lineNum">      18</span>              :    template&lt;typename T2&gt; </span>
-<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">   338447819 :    CONSTEXPR StackVector&lt;T, dim, Q&gt;&amp; sub_(const T2* other) {</span></span>
+<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">   338616997 :    CONSTEXPR StackVector&lt;T, dim, Q&gt;&amp; sub_(const T2* other) {</span></span>
 <span id="L20"><span class="lineNum">      20</span>              : #pragma omp simd</span>
-<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC"> >13030*10^7 :       for (size_t i = 0; i &lt; dim; ++i) { data[i] -= other[i]; }</span></span>
-<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">   338447819 :       return *this;</span></span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC"> >13036*10^7 :       for (size_t i = 0; i &lt; dim; ++i) { data[i] -= other[i]; }</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">   338616997 :       return *this;</span></span>
 <span id="L23"><span class="lineNum">      23</span>              :    }</span>
 <span id="L24"><span class="lineNum">      24</span>              : </span>
 <span id="L25"><span class="lineNum">      25</span>              : #ifndef USE_SIMD_INTRIN</span>
@@ -99,14 +99,14 @@
 <span id="L37"><span class="lineNum">      37</span>              :       return *this;</span>
 <span id="L38"><span class="lineNum">      38</span>              :    }   </span>
 <span id="L39"><span class="lineNum">      39</span>              : #else</span>
-<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">    44523432 :    T dot_(const T* other) const { return simdDotProduct&lt;dim,Q&gt;(data, other); }</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">    45377136 :    T dot_(const T* other) const { return simdDotProduct&lt;dim,Q&gt;(data, other); }</span></span>
 <span id="L41"><span class="lineNum">      41</span>              :    CONSTEXPR StackVector&lt;T, dim, Q&gt;&amp; activation_(const T* slopes) { simdActivation&lt;dim,Q&gt;(data, slopes); return *this;}</span>
 <span id="L42"><span class="lineNum">      42</span>              : #endif</span>
 <span id="L43"><span class="lineNum">      43</span>              : </span>
 <span id="L44"><span class="lineNum">      44</span>              :    template&lt;typename T2&gt; </span>
 <span id="L45"><span class="lineNum">      45</span>              :    FORCE_FINLINE void from(const T2* other) {</span>
 <span id="L46"><span class="lineNum">      46</span>              : #pragma omp simd</span>
-<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">  3208572435 :       for (size_t i = 0; i &lt; dim; ++i) { data[i] = static_cast&lt;T&gt;(other[i]); }</span></span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">  3213974514 :       for (size_t i = 0; i &lt; dim; ++i) { data[i] = static_cast&lt;T&gt;(other[i]); }</span></span>
 <span id="L48"><span class="lineNum">      48</span>              :    }</span>
 <span id="L49"><span class="lineNum">      49</span>              : </span>
 <span id="L50"><span class="lineNum">      50</span>              :   // note that quantization is done on read if needed (see weightReader)</span>
@@ -115,7 +115,7 @@
 <span id="L53"><span class="lineNum">      53</span>              :     static_assert(std::is_integral_v&lt;T&gt; &amp;&amp; std::is_floating_point_v&lt;U&gt;);</span>
 <span id="L54"><span class="lineNum">      54</span>              :     StackVector&lt;U, dim, Q&gt; result;</span>
 <span id="L55"><span class="lineNum">      55</span>              : #pragma omp simd</span>
-<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">  1428460110 :     for (size_t i = 0; i &lt; dim; ++i) { result.data[i] = scale * static_cast&lt;U&gt;(data[i]); }</span></span>
+<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">  1455849780 :     for (size_t i = 0; i &lt; dim; ++i) { result.data[i] = scale * static_cast&lt;U&gt;(data[i]); }</span></span>
 <span id="L57"><span class="lineNum">      57</span>              :     return result; //RVO</span>
 <span id="L58"><span class="lineNum">      58</span>              :   }</span>
 <span id="L59"><span class="lineNum">      59</span>              : </span>
@@ -148,9 +148,9 @@
 <span id="L86"><span class="lineNum">      86</span>              : CONSTEXPR StackVector&lt;T, dim0 + dim1, Q&gt; splice(const StackVector&lt;T, dim0, Q&gt;&amp; a, const StackVector&lt;T, dim1, Q&gt;&amp; b) {</span>
 <span id="L87"><span class="lineNum">      87</span>              :    StackVector&lt;T, dim0 + dim1, Q&gt; c;</span>
 <span id="L88"><span class="lineNum">      88</span>              : #pragma omp simd</span>
-<span id="L89"><span class="lineNum">      89</span> <span class="tlaGNC">   762463773 :    for (size_t i = 0; i &lt; dim0; ++i) { c.data[i] = a.data[i]; }</span></span>
+<span id="L89"><span class="lineNum">      89</span> <span class="tlaGNC">   777083454 :    for (size_t i = 0; i &lt; dim0; ++i) { c.data[i] = a.data[i]; }</span></span>
 <span id="L90"><span class="lineNum">      90</span>              : #pragma omp simd</span>
-<span id="L91"><span class="lineNum">      91</span> <span class="tlaGNC">   747622629 :    for (size_t i = 0; i &lt; dim1; ++i) { c.data[dim0 + i] = b.data[i]; }</span></span>
+<span id="L91"><span class="lineNum">      91</span> <span class="tlaGNC">   761957742 :    for (size_t i = 0; i &lt; dim1; ++i) { c.data[dim0 + i] = b.data[i]; }</span></span>
 <span id="L92"><span class="lineNum">      92</span>              :    return c; // RVO</span>
 <span id="L93"><span class="lineNum">      93</span>              : }</span>
 <span id="L94"><span class="lineNum">      94</span>              : </span>

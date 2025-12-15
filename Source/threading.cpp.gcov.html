@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td class="headerValue">2025-12-15 11:28:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryMed">86.7&nbsp;%</td>
@@ -72,9 +72,9 @@
 <span id="L10"><span class="lineNum">      10</span>              : std::unique_ptr&lt;ThreadPool&gt; _pool = nullptr;</span>
 <span id="L11"><span class="lineNum">      11</span>              : }</span>
 <span id="L12"><span class="lineNum">      12</span>              : </span>
-<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC tlaBgGNC">       29934 : ThreadPool&amp; ThreadPool::instance() {</span></span>
-<span id="L14"><span class="lineNum">      14</span> <span class="tlaGNC">       29934 :    if (!_pool) _pool.reset(new ThreadPool);</span></span>
-<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">       29934 :    return *_pool;</span></span>
+<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC tlaBgGNC">       37064 : ThreadPool&amp; ThreadPool::instance() {</span></span>
+<span id="L14"><span class="lineNum">      14</span> <span class="tlaGNC">       37064 :    if (!_pool) _pool.reset(new ThreadPool);</span></span>
+<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">       37064 :    return *_pool;</span></span>
 <span id="L16"><span class="lineNum">      16</span>              : }</span>
 <span id="L17"><span class="lineNum">      17</span>              : </span>
 <span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">           8 : ThreadPool::~ThreadPool() {</span></span>
@@ -109,7 +109,7 @@
 <span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">          18 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Total size of Pawn TTs &quot; &lt;&lt; back()-&gt;ttSizePawn * DynamicConfig::threads * sizeof(Searcher::PawnEntry) / 1024 &lt;&lt; &quot;Kb&quot;;</span></span>
 <span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">           9 : }</span></span>
 <span id="L49"><span class="lineNum">      49</span>              : </span>
-<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">       15105 : Searcher&amp; ThreadPool::main() { return *(front()); }</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">       22173 : Searcher&amp; ThreadPool::main() { return *(front()); }</span></span>
 <span id="L51"><span class="lineNum">      51</span>              : </span>
 <span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">         185 : void ThreadPool::wait(bool otherOnly) const {</span></span>
 <span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">         185 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Wait for workers to be ready&quot;;</span></span>
@@ -171,11 +171,11 @@
 <span id="L109"><span class="lineNum">     109</span> <span class="tlaGNC">       19436 :    for (size_t k = 0; k &lt; Stats::sid_maxid; ++k) { Logging::LogIt(Logging::logInfo) &lt;&lt; Stats::Names[k] &lt;&lt; &quot; &quot; &lt;&lt; counter((Stats::StatId)k); }</span></span>
 <span id="L110"><span class="lineNum">     110</span>              : }</span>
 <span id="L111"><span class="lineNum">     111</span>              : </span>
-<span id="L112"><span class="lineNum">     112</span> <span class="tlaGNC">       12658 : Counter ThreadPool::counter(Stats::StatId id, bool forceLocal) const {</span></span>
+<span id="L112"><span class="lineNum">     112</span> <span class="tlaGNC">       12720 : Counter ThreadPool::counter(Stats::StatId id, bool forceLocal) const {</span></span>
 <span id="L113"><span class="lineNum">     113</span>              :    if (!forceLocal &amp;&amp; Distributed::moreThanOneProcess()) { return Distributed::counter(id); }</span>
 <span id="L114"><span class="lineNum">     114</span>              :    else {</span>
 <span id="L115"><span class="lineNum">     115</span>              :       Counter n = 0;</span>
-<span id="L116"><span class="lineNum">     116</span> <span class="tlaGNC">       65680 :       for (const auto&amp; it : *this) { n += it-&gt;stats.counters[id]; }</span></span>
+<span id="L116"><span class="lineNum">     116</span> <span class="tlaGNC">       65990 :       for (const auto&amp; it : *this) { n += it-&gt;stats.counters[id]; }</span></span>
 <span id="L117"><span class="lineNum">     117</span>              :       return n;</span>
 <span id="L118"><span class="lineNum">     118</span>              :    }</span>
 <span id="L119"><span class="lineNum">     119</span>              : }</span>

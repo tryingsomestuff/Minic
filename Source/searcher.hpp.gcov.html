@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td class="headerValue">2025-12-15 11:28:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">-</td>
@@ -172,9 +172,9 @@
 <span id="L110"><span class="lineNum">     110</span>              :    FORCE_FINLINE void updatePV(PVList&amp; pv, const Move&amp; m, const PVList&amp; childPV) {</span>
 <span id="L111"><span class="lineNum">     111</span>              :       stats.incr(Stats::sid_PVupdate);</span>
 <span id="L112"><span class="lineNum">     112</span>              :       pv.clear();</span>
-<span id="L113"><span class="lineNum">     113</span> <span class="tlaGNC">       14337 :       pv.emplace_back(m);</span></span>
-<span id="L114"><span class="lineNum">     114</span> <span class="tlaGNC">       14337 :       std::ranges::copy(childPV, std::back_inserter(pv));</span></span>
-<span id="L115"><span class="lineNum">     115</span> <span class="tlaGNC">       14337 :    }</span></span>
+<span id="L113"><span class="lineNum">     113</span> <span class="tlaGNC">       14606 :       pv.emplace_back(m);</span></span>
+<span id="L114"><span class="lineNum">     114</span> <span class="tlaGNC">       14606 :       std::ranges::copy(childPV, std::back_inserter(pv));</span></span>
+<span id="L115"><span class="lineNum">     115</span> <span class="tlaGNC">       14606 :    }</span></span>
 <span id="L116"><span class="lineNum">     116</span>              : </span>
 <span id="L117"><span class="lineNum">     117</span>              :    void displayStats() const {</span>
 <span id="L118"><span class="lineNum">     118</span>              :       for (size_t k = 0; k &lt; Stats::sid_maxid; ++k) {</span>
@@ -318,9 +318,9 @@
 <span id="L256"><span class="lineNum">     256</span>              :       colored&lt;ScoreType&gt; danger        = {0, 0};</span>
 <span id="L257"><span class="lineNum">     257</span>              : </span>
 <span id="L258"><span class="lineNum">     258</span>              :       FORCE_FINLINE void reset() {</span>
-<span id="L259"><span class="lineNum">     259</span> <span class="tlaGNC">       94412 :          score            = {0, 0};</span></span>
-<span id="L260"><span class="lineNum">     260</span> <span class="tlaGNC">       94412 :          danger[Co_White] = 0;</span></span>
-<span id="L261"><span class="lineNum">     261</span> <span class="tlaGNC">       94412 :          danger[Co_Black] = 0;</span></span>
+<span id="L259"><span class="lineNum">     259</span> <span class="tlaGNC">       96311 :          score            = {0, 0};</span></span>
+<span id="L260"><span class="lineNum">     260</span> <span class="tlaGNC">       96311 :          danger[Co_White] = 0;</span></span>
+<span id="L261"><span class="lineNum">     261</span> <span class="tlaGNC">       96311 :          danger[Co_Black] = 0;</span></span>
 <span id="L262"><span class="lineNum">     262</span>              :       }</span>
 <span id="L263"><span class="lineNum">     263</span>              :    };</span>
 <span id="L264"><span class="lineNum">     264</span>              : </span>

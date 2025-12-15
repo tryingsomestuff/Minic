@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td class="headerValue">2025-12-15 11:28:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">66.7&nbsp;%</td>
@@ -66,15 +66,15 @@
 <span id="L4"><span class="lineNum">       4</span>              : </span>
 <span id="L5"><span class="lineNum">       5</span>              : namespace BBTools {</span>
 <span id="L6"><span class="lineNum">       6</span>              : </span>
-<span id="L7"><span class="lineNum">       7</span> <span class="tlaGNC tlaBgGNC">     3465572 : Square SquareFromBitBoard(const BitBoard&amp; b) {</span></span>
-<span id="L8"><span class="lineNum">       8</span> <span class="tlaGNC">     3465572 :    assert(isNotEmpty(b));</span></span>
+<span id="L7"><span class="lineNum">       7</span> <span class="tlaGNC tlaBgGNC">     3564254 : Square SquareFromBitBoard(const BitBoard&amp; b) {</span></span>
+<span id="L8"><span class="lineNum">       8</span> <span class="tlaGNC">     3564254 :    assert(isNotEmpty(b));</span></span>
 <span id="L9"><span class="lineNum">       9</span>              : #ifdef _WIN64</span>
 <span id="L10"><span class="lineNum">      10</span>              :    unsigned long i = 0ull;</span>
 <span id="L11"><span class="lineNum">      11</span>              : #else</span>
 <span id="L12"><span class="lineNum">      12</span>              :    int i = 0;</span>
 <span id="L13"><span class="lineNum">      13</span>              : #endif</span>
 <span id="L14"><span class="lineNum">      14</span>              :    bsf(b, i);</span>
-<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">     3465572 :    return static_cast&lt;Square&gt;(i);</span></span>
+<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">     3564254 :    return static_cast&lt;Square&gt;(i);</span></span>
 <span id="L16"><span class="lineNum">      16</span>              : }</span>
 <span id="L17"><span class="lineNum">      17</span>              : </span>
 <span id="L18"><span class="lineNum">      18</span> <span class="tlaUNC tlaBgUNC">           0 : void clearBitBoards(Position&amp; p) {</span></span>

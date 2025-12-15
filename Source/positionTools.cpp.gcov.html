@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td class="headerValue">2025-12-15 11:28:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryMed">77.8&nbsp;%</td>
@@ -175,7 +175,7 @@
 <span id="L113"><span class="lineNum">     113</span>              :    return str;</span>
 <span id="L114"><span class="lineNum">     114</span>              : }</span>
 <span id="L115"><span class="lineNum">     115</span>              : </span>
-<span id="L116"><span class="lineNum">     116</span> <span class="tlaGNC">   213249043 : Square kingSquare(const Position &amp;p) { return p.king[p.c]; }</span></span>
+<span id="L116"><span class="lineNum">     116</span> <span class="tlaGNC">   214052254 : Square kingSquare(const Position &amp;p) { return p.king[p.c]; }</span></span>
 <span id="L117"><span class="lineNum">     117</span>              : </span>
 <span id="L118"><span class="lineNum">     118</span> <span class="tlaGNC">           1 : bool readMove(const Position &amp;p, const std::string &amp;ss, Square &amp;from, Square &amp;to, MType &amp;moveType, bool forbidCastling) {</span></span>
 <span id="L119"><span class="lineNum">     119</span> <span class="tlaGNC">           1 :    if (ss.empty()) {</span></span>
@@ -286,21 +286,21 @@
 <span id="L224"><span class="lineNum">     224</span>              : #pragma GCC diagnostic push</span>
 <span id="L225"><span class="lineNum">     225</span>              : #pragma GCC diagnostic ignored &quot;-Wconversion&quot;</span>
 <span id="L226"><span class="lineNum">     226</span>              : </span>
-<span id="L227"><span class="lineNum">     227</span> <span class="tlaGNC">    38413389 : float gamePhase(const Position::Material &amp;mat, ScoreType &amp;matScoreW, ScoreType &amp;matScoreB) {</span></span>
-<span id="L228"><span class="lineNum">     228</span> <span class="tlaGNC">    38413389 :    const float totalMatScore = 2.f * absValueGP(P_wq) + </span></span>
-<span id="L229"><span class="lineNum">     229</span> <span class="tlaGNC">    38413389 :                                4.f * absValueGP(P_wr) + </span></span>
-<span id="L230"><span class="lineNum">     230</span> <span class="tlaGNC">    38413389 :                                4.f * absValueGP(P_wb) + </span></span>
-<span id="L231"><span class="lineNum">     231</span> <span class="tlaGNC">    38413389 :                                4.f * absValueGP(P_wn) +</span></span>
-<span id="L232"><span class="lineNum">     232</span> <span class="tlaGNC">    38413389 :                                16.f * absValueGP(P_wp); </span></span>
-<span id="L233"><span class="lineNum">     233</span> <span class="tlaGNC">    38413389 :    const ScoreType matPieceScoreW = mat[Co_White][M_q] * absValueGP(P_wq) + mat[Co_White][M_r] * absValueGP(P_wr) +</span></span>
-<span id="L234"><span class="lineNum">     234</span> <span class="tlaGNC">    38413389 :                                     mat[Co_White][M_b] * absValueGP(P_wb) + mat[Co_White][M_n] * absValueGP(P_wn);</span></span>
-<span id="L235"><span class="lineNum">     235</span> <span class="tlaGNC">    38413389 :    const ScoreType matPieceScoreB = mat[Co_Black][M_q] * absValueGP(P_wq) + mat[Co_Black][M_r] * absValueGP(P_wr) +</span></span>
-<span id="L236"><span class="lineNum">     236</span> <span class="tlaGNC">    38413389 :                                     mat[Co_Black][M_b] * absValueGP(P_wb) + mat[Co_Black][M_n] * absValueGP(P_wn);</span></span>
-<span id="L237"><span class="lineNum">     237</span> <span class="tlaGNC">    38413389 :    const ScoreType matPawnScoreW = mat[Co_White][M_p] * absValueGP(P_wp);</span></span>
-<span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC">    38413389 :    const ScoreType matPawnScoreB = mat[Co_Black][M_p] * absValueGP(P_wp);</span></span>
-<span id="L239"><span class="lineNum">     239</span> <span class="tlaGNC">    38413389 :    matScoreW = matPieceScoreW + matPawnScoreW;</span></span>
-<span id="L240"><span class="lineNum">     240</span> <span class="tlaGNC">    38413389 :    matScoreB = matPieceScoreB + matPawnScoreB;</span></span>
-<span id="L241"><span class="lineNum">     241</span> <span class="tlaGNC">    38413389 :    return std::min(1.f,(matScoreW + matScoreB) / totalMatScore);</span></span>
+<span id="L227"><span class="lineNum">     227</span> <span class="tlaGNC">    38414806 : float gamePhase(const Position::Material &amp;mat, ScoreType &amp;matScoreW, ScoreType &amp;matScoreB) {</span></span>
+<span id="L228"><span class="lineNum">     228</span> <span class="tlaGNC">    38414806 :    const float totalMatScore = 2.f * absValueGP(P_wq) + </span></span>
+<span id="L229"><span class="lineNum">     229</span> <span class="tlaGNC">    38414806 :                                4.f * absValueGP(P_wr) + </span></span>
+<span id="L230"><span class="lineNum">     230</span> <span class="tlaGNC">    38414806 :                                4.f * absValueGP(P_wb) + </span></span>
+<span id="L231"><span class="lineNum">     231</span> <span class="tlaGNC">    38414806 :                                4.f * absValueGP(P_wn) +</span></span>
+<span id="L232"><span class="lineNum">     232</span> <span class="tlaGNC">    38414806 :                                16.f * absValueGP(P_wp); </span></span>
+<span id="L233"><span class="lineNum">     233</span> <span class="tlaGNC">    38414806 :    const ScoreType matPieceScoreW = mat[Co_White][M_q] * absValueGP(P_wq) + mat[Co_White][M_r] * absValueGP(P_wr) +</span></span>
+<span id="L234"><span class="lineNum">     234</span> <span class="tlaGNC">    38414806 :                                     mat[Co_White][M_b] * absValueGP(P_wb) + mat[Co_White][M_n] * absValueGP(P_wn);</span></span>
+<span id="L235"><span class="lineNum">     235</span> <span class="tlaGNC">    38414806 :    const ScoreType matPieceScoreB = mat[Co_Black][M_q] * absValueGP(P_wq) + mat[Co_Black][M_r] * absValueGP(P_wr) +</span></span>
+<span id="L236"><span class="lineNum">     236</span> <span class="tlaGNC">    38414806 :                                     mat[Co_Black][M_b] * absValueGP(P_wb) + mat[Co_Black][M_n] * absValueGP(P_wn);</span></span>
+<span id="L237"><span class="lineNum">     237</span> <span class="tlaGNC">    38414806 :    const ScoreType matPawnScoreW = mat[Co_White][M_p] * absValueGP(P_wp);</span></span>
+<span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC">    38414806 :    const ScoreType matPawnScoreB = mat[Co_Black][M_p] * absValueGP(P_wp);</span></span>
+<span id="L239"><span class="lineNum">     239</span> <span class="tlaGNC">    38414806 :    matScoreW = matPieceScoreW + matPawnScoreW;</span></span>
+<span id="L240"><span class="lineNum">     240</span> <span class="tlaGNC">    38414806 :    matScoreB = matPieceScoreB + matPawnScoreB;</span></span>
+<span id="L241"><span class="lineNum">     241</span> <span class="tlaGNC">    38414806 :    return std::min(1.f,(matScoreW + matScoreB) / totalMatScore);</span></span>
 <span id="L242"><span class="lineNum">     242</span>              : }</span>
 <span id="L243"><span class="lineNum">     243</span>              : </span>
 <span id="L244"><span class="lineNum">     244</span>              : #pragma GCC diagnostic pop</span>

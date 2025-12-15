@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td class="headerValue">2025-12-15 11:28:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">58.8&nbsp;%</td>
@@ -84,34 +84,34 @@
 <span id="L22"><span class="lineNum">      22</span>              : }</span>
 <span id="L23"><span class="lineNum">      23</span>              : [[nodiscard]] Hash getMaterialHash2(const Position::Material &amp;mat) {</span>
 <span id="L24"><span class="lineNum">      24</span>              : #else</span>
-<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC tlaBgGNC">     3829779 : [[nodiscard]] Hash getMaterialHash(const Position::Material &amp;mat) {</span></span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC tlaBgGNC">     3882659 : [[nodiscard]] Hash getMaterialHash(const Position::Material &amp;mat) {</span></span>
 <span id="L26"><span class="lineNum">      26</span>              : #endif</span>
-<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">     3829779 :    assert(mat[Co_White][M_q]  &gt;= 0);</span></span>
-<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">     3829779 :    assert(mat[Co_Black][M_q]  &gt;= 0);</span></span>
-<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">     3829779 :    assert(mat[Co_White][M_r]  &gt;= 0);</span></span>
-<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">     3829779 :    assert(mat[Co_Black][M_r]  &gt;= 0);</span></span>
-<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">     3829779 :    assert(mat[Co_White][M_bl] &gt;= 0);</span></span>
-<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">     3829779 :    assert(mat[Co_Black][M_bl] &gt;= 0);</span></span>
-<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">     3829779 :    assert(mat[Co_White][M_bd] &gt;= 0);</span></span>
-<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">     3829779 :    assert(mat[Co_Black][M_bd] &gt;= 0);</span></span>
-<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">     3829779 :    assert(mat[Co_White][M_n]  &gt;= 0);</span></span>
-<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">     3829779 :    assert(mat[Co_Black][M_n]  &gt;= 0);</span></span>
-<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">     3829779 :    assert(mat[Co_White][M_p]  &gt;= 0);</span></span>
-<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">     3829779 :    assert(mat[Co_Black][M_p]  &gt;= 0);</span></span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">     3882659 :    assert(mat[Co_White][M_q]  &gt;= 0);</span></span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">     3882659 :    assert(mat[Co_Black][M_q]  &gt;= 0);</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">     3882659 :    assert(mat[Co_White][M_r]  &gt;= 0);</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">     3882659 :    assert(mat[Co_Black][M_r]  &gt;= 0);</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">     3882659 :    assert(mat[Co_White][M_bl] &gt;= 0);</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">     3882659 :    assert(mat[Co_Black][M_bl] &gt;= 0);</span></span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">     3882659 :    assert(mat[Co_White][M_bd] &gt;= 0);</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">     3882659 :    assert(mat[Co_Black][M_bd] &gt;= 0);</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">     3882659 :    assert(mat[Co_White][M_n]  &gt;= 0);</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">     3882659 :    assert(mat[Co_Black][M_n]  &gt;= 0);</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">     3882659 :    assert(mat[Co_White][M_p]  &gt;= 0);</span></span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">     3882659 :    assert(mat[Co_Black][M_p]  &gt;= 0);</span></span>
 <span id="L39"><span class="lineNum">      39</span>              : </span>
-<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">     3829779 :    if (mat[Co_White][M_q] &gt; 2  || mat[Co_Black][M_q] &gt; 2</span></span>
-<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">     3829779 :     || mat[Co_White][M_r] &gt; 2  || mat[Co_Black][M_r] &gt; 2</span></span>
-<span id="L42"><span class="lineNum">      42</span> <span class="tlaGNC">     3829377 :     || mat[Co_White][M_bl] &gt; 2 || mat[Co_Black][M_bl] &gt; 2</span></span>
-<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC">     3829377 :     || mat[Co_White][M_bd] &gt; 2 || mat[Co_Black][M_bd] &gt; 2</span></span>
-<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC">     3829377 :     || mat[Co_White][M_n] &gt; 2  || mat[Co_Black][M_n] &gt; 2</span></span>
-<span id="L45"><span class="lineNum">      45</span> <span class="tlaGNC">     7659145 :     || mat[Co_White][M_p] &gt; 8  || mat[Co_Black][M_p] &gt; 8) return nullHash;</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">     3882659 :    if (mat[Co_White][M_q] &gt; 2  || mat[Co_Black][M_q] &gt; 2</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">     3882659 :     || mat[Co_White][M_r] &gt; 2  || mat[Co_Black][M_r] &gt; 2</span></span>
+<span id="L42"><span class="lineNum">      42</span> <span class="tlaGNC">     3882257 :     || mat[Co_White][M_bl] &gt; 2 || mat[Co_Black][M_bl] &gt; 2</span></span>
+<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC">     3882257 :     || mat[Co_White][M_bd] &gt; 2 || mat[Co_Black][M_bd] &gt; 2</span></span>
+<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC">     3882257 :     || mat[Co_White][M_n] &gt; 2  || mat[Co_Black][M_n] &gt; 2</span></span>
+<span id="L45"><span class="lineNum">      45</span> <span class="tlaGNC">     7764905 :     || mat[Co_White][M_p] &gt; 8  || mat[Co_Black][M_p] &gt; 8) return nullHash;</span></span>
 <span id="L46"><span class="lineNum">      46</span>              : </span>
-<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">     3829366 :    return mat[Co_White][M_p]  * MatWP + mat[Co_Black][M_p]  * MatBP</span></span>
-<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">     3829366 :         + mat[Co_White][M_n]  * MatWN + mat[Co_Black][M_n]  * MatBN</span></span>
-<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">     3829366 :         + mat[Co_White][M_bl] * MatWL + mat[Co_Black][M_bl] * MatBL</span></span>
-<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">     3829366 :         + mat[Co_White][M_bd] * MatWD + mat[Co_Black][M_bd] * MatBD</span></span>
-<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">     3829366 :         + mat[Co_White][M_r]  * MatWR + mat[Co_Black][M_r]  * MatBR</span></span>
-<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">     3829366 :         + mat[Co_White][M_q]  * MatWQ + mat[Co_Black][M_q]  * MatBQ;</span></span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">     3882246 :    return mat[Co_White][M_p]  * MatWP + mat[Co_Black][M_p]  * MatBP</span></span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">     3882246 :         + mat[Co_White][M_n]  * MatWN + mat[Co_Black][M_n]  * MatBN</span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">     3882246 :         + mat[Co_White][M_bl] * MatWL + mat[Co_Black][M_bl] * MatBL</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">     3882246 :         + mat[Co_White][M_bd] * MatWD + mat[Co_Black][M_bd] * MatBD</span></span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">     3882246 :         + mat[Co_White][M_r]  * MatWR + mat[Co_Black][M_r]  * MatBR</span></span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">     3882246 :         + mat[Co_White][M_q]  * MatWQ + mat[Co_Black][M_q]  * MatBQ;</span></span>
 <span id="L53"><span class="lineNum">      53</span>              : }</span>
 <span id="L54"><span class="lineNum">      54</span>              : </span>
 <span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">    38263752 : [[nodiscard]] Position::Material indexToMat(int index) {</span></span>
@@ -518,21 +518,21 @@
 <span id="L456"><span class="lineNum">     456</span> <span class="tlaUNC">           0 :    return materialHashTable[h].t;</span></span>
 <span id="L457"><span class="lineNum">     457</span>              : }</span>
 <span id="L458"><span class="lineNum">     458</span>              : </span>
-<span id="L459"><span class="lineNum">     459</span> <span class="tlaGNC tlaBgGNC">     9347763 : void updateMaterialOther(Position &amp;p) {</span></span>
-<span id="L460"><span class="lineNum">     460</span> <span class="tlaGNC">     9347763 :    p.mat[Co_White][M_M]  = p.mat[Co_White][M_q] + p.mat[Co_White][M_r];</span></span>
-<span id="L461"><span class="lineNum">     461</span> <span class="tlaGNC">     9347763 :    p.mat[Co_White][M_m]  = p.mat[Co_White][M_b] + p.mat[Co_White][M_n];</span></span>
-<span id="L462"><span class="lineNum">     462</span> <span class="tlaGNC">     9347763 :    p.mat[Co_White][M_t]  = p.mat[Co_White][M_M] + p.mat[Co_White][M_m];</span></span>
+<span id="L459"><span class="lineNum">     459</span> <span class="tlaGNC tlaBgGNC">     9378715 : void updateMaterialOther(Position &amp;p) {</span></span>
+<span id="L460"><span class="lineNum">     460</span> <span class="tlaGNC">     9378715 :    p.mat[Co_White][M_M]  = p.mat[Co_White][M_q] + p.mat[Co_White][M_r];</span></span>
+<span id="L461"><span class="lineNum">     461</span> <span class="tlaGNC">     9378715 :    p.mat[Co_White][M_m]  = p.mat[Co_White][M_b] + p.mat[Co_White][M_n];</span></span>
+<span id="L462"><span class="lineNum">     462</span> <span class="tlaGNC">     9378715 :    p.mat[Co_White][M_t]  = p.mat[Co_White][M_M] + p.mat[Co_White][M_m];</span></span>
 <span id="L463"><span class="lineNum">     463</span>              :    const BitBoard wb     = p.whiteBishop();</span>
-<span id="L464"><span class="lineNum">     464</span> <span class="tlaGNC">     9347763 :    p.mat[Co_White][M_bl] = (uint8_t)BB::countBit(wb &amp; BB::whiteSquare);</span></span>
-<span id="L465"><span class="lineNum">     465</span> <span class="tlaGNC">     9347763 :    p.mat[Co_White][M_bd] = (uint8_t)BB::countBit(wb &amp; BB::blackSquare);</span></span>
+<span id="L464"><span class="lineNum">     464</span> <span class="tlaGNC">     9378715 :    p.mat[Co_White][M_bl] = (uint8_t)BB::countBit(wb &amp; BB::whiteSquare);</span></span>
+<span id="L465"><span class="lineNum">     465</span> <span class="tlaGNC">     9378715 :    p.mat[Co_White][M_bd] = (uint8_t)BB::countBit(wb &amp; BB::blackSquare);</span></span>
 <span id="L466"><span class="lineNum">     466</span>              : </span>
-<span id="L467"><span class="lineNum">     467</span> <span class="tlaGNC">     9347763 :    p.mat[Co_Black][M_M]  = p.mat[Co_Black][M_q] + p.mat[Co_Black][M_r];</span></span>
-<span id="L468"><span class="lineNum">     468</span> <span class="tlaGNC">     9347763 :    p.mat[Co_Black][M_m]  = p.mat[Co_Black][M_b] + p.mat[Co_Black][M_n];</span></span>
-<span id="L469"><span class="lineNum">     469</span> <span class="tlaGNC">     9347763 :    p.mat[Co_Black][M_t]  = p.mat[Co_Black][M_M] + p.mat[Co_Black][M_m];</span></span>
+<span id="L467"><span class="lineNum">     467</span> <span class="tlaGNC">     9378715 :    p.mat[Co_Black][M_M]  = p.mat[Co_Black][M_q] + p.mat[Co_Black][M_r];</span></span>
+<span id="L468"><span class="lineNum">     468</span> <span class="tlaGNC">     9378715 :    p.mat[Co_Black][M_m]  = p.mat[Co_Black][M_b] + p.mat[Co_Black][M_n];</span></span>
+<span id="L469"><span class="lineNum">     469</span> <span class="tlaGNC">     9378715 :    p.mat[Co_Black][M_t]  = p.mat[Co_Black][M_M] + p.mat[Co_Black][M_m];</span></span>
 <span id="L470"><span class="lineNum">     470</span>              :    const BitBoard bb     = p.blackBishop();</span>
-<span id="L471"><span class="lineNum">     471</span> <span class="tlaGNC">     9347763 :    p.mat[Co_Black][M_bl] = (uint8_t)BB::countBit(bb &amp; BB::whiteSquare);</span></span>
-<span id="L472"><span class="lineNum">     472</span> <span class="tlaGNC">     9347763 :    p.mat[Co_Black][M_bd] = (uint8_t)BB::countBit(bb &amp; BB::blackSquare);</span></span>
-<span id="L473"><span class="lineNum">     473</span> <span class="tlaGNC">     9347763 : }</span></span>
+<span id="L471"><span class="lineNum">     471</span> <span class="tlaGNC">     9378715 :    p.mat[Co_Black][M_bl] = (uint8_t)BB::countBit(bb &amp; BB::whiteSquare);</span></span>
+<span id="L472"><span class="lineNum">     472</span> <span class="tlaGNC">     9378715 :    p.mat[Co_Black][M_bd] = (uint8_t)BB::countBit(bb &amp; BB::blackSquare);</span></span>
+<span id="L473"><span class="lineNum">     473</span> <span class="tlaGNC">     9378715 : }</span></span>
 <span id="L474"><span class="lineNum">     474</span>              : </span>
 <span id="L475"><span class="lineNum">     475</span> <span class="tlaGNC">         200 : void initMaterial(Position &amp;p) { // M_p .. M_k is the same as P_wp .. P_wk</span></span>
 <span id="L476"><span class="lineNum">     476</span> <span class="tlaGNC">         600 :    for (Color c = Co_White; c &lt; Co_End; ++c)</span></span>
@@ -541,11 +541,11 @@
 <span id="L479"><span class="lineNum">     479</span> <span class="tlaGNC">         200 :    updateMaterialOther(p);</span></span>
 <span id="L480"><span class="lineNum">     480</span> <span class="tlaGNC">         200 : }</span></span>
 <span id="L481"><span class="lineNum">     481</span>              : </span>
-<span id="L482"><span class="lineNum">     482</span> <span class="tlaGNC">      416018 : void updateMaterialProm(Position &amp;p, const Square toBeCaptured, const MType mt) {</span></span>
-<span id="L483"><span class="lineNum">     483</span> <span class="tlaGNC">      416018 :    --p.mat[~p.c][PieceTools::getPieceType(p, toBeCaptured)]; // capture if to square is not empty</span></span>
-<span id="L484"><span class="lineNum">     484</span> <span class="tlaGNC">      416018 :    --p.mat[p.c][M_p];                                        // pawn</span></span>
-<span id="L485"><span class="lineNum">     485</span> <span class="tlaGNC">      416018 :    ++p.mat[p.c][promShift(mt)];                              // prom piece</span></span>
-<span id="L486"><span class="lineNum">     486</span> <span class="tlaGNC">      416018 : }</span></span>
+<span id="L482"><span class="lineNum">     482</span> <span class="tlaGNC">      416023 : void updateMaterialProm(Position &amp;p, const Square toBeCaptured, const MType mt) {</span></span>
+<span id="L483"><span class="lineNum">     483</span> <span class="tlaGNC">      416023 :    --p.mat[~p.c][PieceTools::getPieceType(p, toBeCaptured)]; // capture if to square is not empty</span></span>
+<span id="L484"><span class="lineNum">     484</span> <span class="tlaGNC">      416023 :    --p.mat[p.c][M_p];                                        // pawn</span></span>
+<span id="L485"><span class="lineNum">     485</span> <span class="tlaGNC">      416023 :    ++p.mat[p.c][promShift(mt)];                              // prom piece</span></span>
+<span id="L486"><span class="lineNum">     486</span> <span class="tlaGNC">      416023 : }</span></span>
 <span id="L487"><span class="lineNum">     487</span>              : </span>
 <span id="L488"><span class="lineNum">     488</span>              : } // namespace MaterialHash</span>
         </pre>

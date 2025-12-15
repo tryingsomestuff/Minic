@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td class="headerValue">2025-12-15 11:28:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryMed">86.2&nbsp;%</td>
@@ -79,63 +79,63 @@
 <span id="L17"><span class="lineNum">      17</span>              : </span>
 <span id="L18"><span class="lineNum">      18</span>              : template&lt;Color C&gt;</span>
 <span id="L19"><span class="lineNum">      19</span>              : FORCE_FINLINE void evalPawnPasser(const Position &amp;p, BitBoard pieceBBiterator, EvalScore &amp;score) {</span>
-<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC tlaBgGNC">      301902 :    applyOn(pieceBBiterator, [&amp;](const Square &amp; k){</span></span>
-<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">       56539 :       const EvalScore kingNearBonus = (isValidSquare(p.king[C])  ? EvalConfig::kingNearPassedPawnSupport[chebyshevDistance(p.king[C], k)][ColorRank&lt;C&gt;(k)]  : 0) +</span></span>
-<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">       56539 :                                       (isValidSquare(p.king[~C]) ? EvalConfig::kingNearPassedPawnDefend[chebyshevDistance(p.king[~C], k)][ColorRank&lt;~C&gt;(k)] : 0);</span></span>
-<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">       66194 :       const bool unstoppable = (p.mat[~C][M_t] == 0) &amp;&amp; ((chebyshevDistance(p.king[~C], PromotionSquare&lt;C&gt;(k)) - static_cast&lt;int&gt;(p.c != C)) &gt;</span></span>
+<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC tlaBgGNC">      306274 :    applyOn(pieceBBiterator, [&amp;](const Square &amp; k){</span></span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">       56826 :       const EvalScore kingNearBonus = (isValidSquare(p.king[C])  ? EvalConfig::kingNearPassedPawnSupport[chebyshevDistance(p.king[C], k)][ColorRank&lt;C&gt;(k)]  : 0) +</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">       56826 :                                       (isValidSquare(p.king[~C]) ? EvalConfig::kingNearPassedPawnDefend[chebyshevDistance(p.king[~C], k)][ColorRank&lt;~C&gt;(k)] : 0);</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">       66481 :       const bool unstoppable = (p.mat[~C][M_t] == 0) &amp;&amp; ((chebyshevDistance(p.king[~C], PromotionSquare&lt;C&gt;(k)) - static_cast&lt;int&gt;(p.c != C)) &gt;</span></span>
 <span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">       11010 :                                                          std::min(static_cast&lt;Square&gt;(5), chebyshevDistance(PromotionSquare&lt;C&gt;(k), k)));</span></span>
 <span id="L25"><span class="lineNum">      25</span>              :       if (unstoppable)</span>
 <span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">        1355 :          score += ColorSignHelper&lt;C&gt;() * (value(P_wr) - value(P_wp)); // yes rook not queen to force promotion asap</span></span>
 <span id="L27"><span class="lineNum">      27</span>              :       else</span>
-<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">      110368 :          score += (EvalConfig::passerBonus[ColorRank&lt;C&gt;(k)] + kingNearBonus) * ColorSignHelper&lt;C&gt;();</span></span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">      110942 :          score += (EvalConfig::passerBonus[ColorRank&lt;C&gt;(k)] + kingNearBonus) * ColorSignHelper&lt;C&gt;();</span></span>
 <span id="L29"><span class="lineNum">      29</span>              :    });</span>
 <span id="L30"><span class="lineNum">      30</span>              : }</span>
 <span id="L31"><span class="lineNum">      31</span>              : </span>
 <span id="L32"><span class="lineNum">      32</span>              : template&lt;Color C&gt;</span>
 <span id="L33"><span class="lineNum">      33</span>              : FORCE_FINLINE void evalPawn(BitBoard pieceBBiterator, EvalScore &amp;score) {</span>
-<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">     1288924 :    applyOn(pieceBBiterator, [&amp;](const Square &amp; k){</span></span>
-<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">      597256 :       const Square kk = ColorSquarePstHelper&lt;C&gt;(k);</span></span>
-<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">     1804897 :       score += EvalConfig::PST[0][kk] * ColorSignHelper&lt;C&gt;();</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">     1313699 :    applyOn(pieceBBiterator, [&amp;](const Square &amp; k){</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">      608694 :       const Square kk = ColorSquarePstHelper&lt;C&gt;(k);</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">     1839909 :       score += EvalConfig::PST[0][kk] * ColorSignHelper&lt;C&gt;();</span></span>
 <span id="L37"><span class="lineNum">      37</span>              :    });</span>
 <span id="L38"><span class="lineNum">      38</span>              : }</span>
 <span id="L39"><span class="lineNum">      39</span>              : </span>
 <span id="L40"><span class="lineNum">      40</span>              : template&lt;Color C&gt;</span>
 <span id="L41"><span class="lineNum">      41</span>              : FORCE_FINLINE void evalPawnFreePasser(const Position &amp;p, BitBoard pieceBBiterator, EvalScore &amp;score) {</span>
-<span id="L42"><span class="lineNum">      42</span> <span class="tlaGNC">     1164902 :    applyOn(pieceBBiterator, [&amp;](const Square &amp; k){</span></span>
-<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC">      343088 :       score += EvalConfig::freePasserBonus[ColorRank&lt;C&gt;(k)] * ScoreType((BBTools::frontSpan&lt;C&gt;(k) &amp; p.allPieces[~C]) == emptyBitBoard) * ColorSignHelper&lt;C&gt;();</span></span>
+<span id="L42"><span class="lineNum">      42</span> <span class="tlaGNC">     1176382 :    applyOn(pieceBBiterator, [&amp;](const Square &amp; k){</span></span>
+<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC">      344244 :       score += EvalConfig::freePasserBonus[ColorRank&lt;C&gt;(k)] * ScoreType((BBTools::frontSpan&lt;C&gt;(k) &amp; p.allPieces[~C]) == emptyBitBoard) * ColorSignHelper&lt;C&gt;();</span></span>
 <span id="L44"><span class="lineNum">      44</span>              :    });</span>
 <span id="L45"><span class="lineNum">      45</span>              : }</span>
 <span id="L46"><span class="lineNum">      46</span>              : </span>
 <span id="L47"><span class="lineNum">      47</span>              : template&lt;Color C&gt;</span>
 <span id="L48"><span class="lineNum">      48</span>              : FORCE_FINLINE void evalPawnProtected(BitBoard pieceBBiterator, EvalScore &amp;score) {</span>
-<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">       99320 :    applyOn(pieceBBiterator, [&amp;](const Square &amp; k){</span></span>
-<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">       15075 :       score += EvalConfig::protectedPasserBonus[ColorRank&lt;C&gt;(k)] * ColorSignHelper&lt;C&gt;(); </span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">      101303 :    applyOn(pieceBBiterator, [&amp;](const Square &amp; k){</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">       15167 :       score += EvalConfig::protectedPasserBonus[ColorRank&lt;C&gt;(k)] * ColorSignHelper&lt;C&gt;(); </span></span>
 <span id="L51"><span class="lineNum">      51</span>              :    });</span>
 <span id="L52"><span class="lineNum">      52</span>              : }</span>
 <span id="L53"><span class="lineNum">      53</span>              : </span>
 <span id="L54"><span class="lineNum">      54</span>              : template&lt;Color C&gt;</span>
 <span id="L55"><span class="lineNum">      55</span>              : FORCE_FINLINE void evalPawnCandidate(BitBoard pieceBBiterator, EvalScore &amp;score) {</span>
-<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">       94412 :    applyOn(pieceBBiterator, [&amp;](const Square &amp; k){</span></span>
-<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">       27159 :       score += EvalConfig::candidate[ColorRank&lt;C&gt;(k)] * ColorSignHelper&lt;C&gt;(); </span></span>
+<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">       96311 :    applyOn(pieceBBiterator, [&amp;](const Square &amp; k){</span></span>
+<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">       27521 :       score += EvalConfig::candidate[ColorRank&lt;C&gt;(k)] * ColorSignHelper&lt;C&gt;(); </span></span>
 <span id="L58"><span class="lineNum">      58</span>              :    });</span>
 <span id="L59"><span class="lineNum">      59</span>              : }</span>
 <span id="L60"><span class="lineNum">      60</span>              : </span>
 <span id="L61"><span class="lineNum">      61</span>              : template&lt;Color C&gt; </span>
-<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">     1643628 : BitBoard getPinned(const Position &amp;p, const Square s) {</span></span>
-<span id="L63"><span class="lineNum">      63</span> <span class="tlaGNC">     1643628 :    BitBoard pinned = emptyBitBoard;</span></span>
-<span id="L64"><span class="lineNum">      64</span> <span class="tlaGNC">     1643628 :    if (!isValidSquare(s)) return pinned; // this allows for pinned to queen detection more easily</span></span>
-<span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC">     2504764 :    const BitBoard pinner = BBTools::attack&lt;P_wb&gt;(s, p.pieces_const&lt;P_wb&gt;(~C) | p.pieces_const&lt;P_wq&gt;(~C), p.allPieces[~C]) |</span></span>
-<span id="L66"><span class="lineNum">      66</span> <span class="tlaGNC">     1252382 :                            BBTools::attack&lt;P_wr&gt;(s, p.pieces_const&lt;P_wr&gt;(~C) | p.pieces_const&lt;P_wq&gt;(~C), p.allPieces[~C]);</span></span>
-<span id="L67"><span class="lineNum">      67</span> <span class="tlaGNC">     1604632 :    applyOn(pinner, [&amp;](const Square &amp; k){</span></span>
-<span id="L68"><span class="lineNum">      68</span> <span class="tlaGNC">      176125 :       pinned |= BBTools::between(k,p.king[C]) &amp; p.allPieces[C]; </span></span>
+<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">     1664276 : BitBoard getPinned(const Position &amp;p, const Square s) {</span></span>
+<span id="L63"><span class="lineNum">      63</span> <span class="tlaGNC">     1664276 :    BitBoard pinned = emptyBitBoard;</span></span>
+<span id="L64"><span class="lineNum">      64</span> <span class="tlaGNC">     1664276 :    if (!isValidSquare(s)) return pinned; // this allows for pinned to queen detection more easily</span></span>
+<span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC">     2536472 :    const BitBoard pinner = BBTools::attack&lt;P_wb&gt;(s, p.pieces_const&lt;P_wb&gt;(~C) | p.pieces_const&lt;P_wq&gt;(~C), p.allPieces[~C]) |</span></span>
+<span id="L66"><span class="lineNum">      66</span> <span class="tlaGNC">     1268236 :                            BBTools::attack&lt;P_wr&gt;(s, p.pieces_const&lt;P_wr&gt;(~C) | p.pieces_const&lt;P_wq&gt;(~C), p.allPieces[~C]);</span></span>
+<span id="L67"><span class="lineNum">      67</span> <span class="tlaGNC">     1623868 :    applyOn(pinner, [&amp;](const Square &amp; k){</span></span>
+<span id="L68"><span class="lineNum">      68</span> <span class="tlaGNC">      177816 :       pinned |= BBTools::between(k,p.king[C]) &amp; p.allPieces[C]; </span></span>
 <span id="L69"><span class="lineNum">      69</span>              :    });</span>
-<span id="L70"><span class="lineNum">      70</span> <span class="tlaGNC">     1252382 :    return pinned;</span></span>
+<span id="L70"><span class="lineNum">      70</span> <span class="tlaGNC">     1268236 :    return pinned;</span></span>
 <span id="L71"><span class="lineNum">      71</span>              : }</span>
 <span id="L72"><span class="lineNum">      72</span>              : </span>
-<span id="L73"><span class="lineNum">      73</span> <span class="tlaGNC">     2142611 : bool isLazyHigh(ScoreType lazyThreshold, const EvalFeatures &amp;features, EvalScore &amp;score) {</span></span>
+<span id="L73"><span class="lineNum">      73</span> <span class="tlaGNC">     2183342 : bool isLazyHigh(ScoreType lazyThreshold, const EvalFeatures &amp;features, EvalScore &amp;score) {</span></span>
 <span id="L74"><span class="lineNum">      74</span>              :    //if (DynamicConfig::FRC) return false;</span>
-<span id="L75"><span class="lineNum">      75</span> <span class="tlaGNC">     2142611 :    score = features.SumUp();</span></span>
-<span id="L76"><span class="lineNum">      76</span> <span class="tlaGNC">     2142611 :    return Abs(score[MG] + score[EG]) / 2 &gt; lazyThreshold;</span></span>
+<span id="L75"><span class="lineNum">      75</span> <span class="tlaGNC">     2183342 :    score = features.SumUp();</span></span>
+<span id="L76"><span class="lineNum">      76</span> <span class="tlaGNC">     2183342 :    return Abs(score[MG] + score[EG]) / 2 &gt; lazyThreshold;</span></span>
 <span id="L77"><span class="lineNum">      77</span>              : }</span>
 <span id="L78"><span class="lineNum">      78</span>              : </span>
 <span id="L79"><span class="lineNum">      79</span> <span class="tlaUNC tlaBgUNC">           0 : bool forbidNNUE([[maybe_unused]] const Position &amp;p){</span></span>
@@ -188,42 +188,42 @@
 <span id="L126"><span class="lineNum">     126</span>              : }</span>
 <span id="L127"><span class="lineNum">     127</span>              : </span>
 <span id="L128"><span class="lineNum">     128</span>              : #ifdef WITH_NNUE</span>
-<span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC tlaBgGNC">     1855143 : ScoreType NNUEEVal(const Position &amp; p, EvalData &amp;data, Searcher &amp;context, EvalFeatures &amp;features, bool secondTime = false){</span></span>
+<span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC tlaBgGNC">     1890714 : ScoreType NNUEEVal(const Position &amp; p, EvalData &amp;data, Searcher &amp;context, EvalFeatures &amp;features, bool secondTime = false){</span></span>
 <span id="L130"><span class="lineNum">     130</span>              :    START_TIMER</span>
-<span id="L131"><span class="lineNum">     131</span> <span class="tlaGNC">     1855143 :    if (DynamicConfig::armageddon) features.scalingFactor = 1.f;              ///@todo better</span></span>
+<span id="L131"><span class="lineNum">     131</span> <span class="tlaGNC">     1890714 :    if (DynamicConfig::armageddon) features.scalingFactor = 1.f;              ///@todo better</span></span>
 <span id="L132"><span class="lineNum">     132</span>              :    // call the net</span>
-<span id="L133"><span class="lineNum">     133</span> <span class="tlaGNC">     3549120 :    ScoreType nnueScore = static_cast&lt;ScoreType&gt;(p.evaluator().propagate(p.c, std::min(32,static_cast&lt;int&gt;(BB::countBit(p.occupancy())))));</span></span>
+<span id="L133"><span class="lineNum">     133</span> <span class="tlaGNC">     3620274 :    ScoreType nnueScore = static_cast&lt;ScoreType&gt;(p.evaluator().propagate(p.c, std::min(32,static_cast&lt;int&gt;(BB::countBit(p.occupancy())))));</span></span>
 <span id="L134"><span class="lineNum">     134</span>              :    // fuse MG and EG score applying the EG scaling factor ///@todo, doesn't the net already learned that ????</span>
-<span id="L135"><span class="lineNum">     135</span> <span class="tlaGNC">     1855143 :    nnueScore = ScaleScore({nnueScore, nnueScore}, data.gp, features.scalingFactor);</span></span>
+<span id="L135"><span class="lineNum">     135</span> <span class="tlaGNC">     1890714 :    nnueScore = ScaleScore({nnueScore, nnueScore}, data.gp, features.scalingFactor);</span></span>
 <span id="L136"><span class="lineNum">     136</span>              :    // NNUE evaluation scaling</span>
-<span id="L137"><span class="lineNum">     137</span> <span class="tlaGNC">     1855143 :    nnueScore = static_cast&lt;ScoreType&gt;((nnueScore * DynamicConfig::NNUEScaling) / 64);</span></span>
+<span id="L137"><span class="lineNum">     137</span> <span class="tlaGNC">     1890714 :    nnueScore = static_cast&lt;ScoreType&gt;((nnueScore * DynamicConfig::NNUEScaling) / 64);</span></span>
 <span id="L138"><span class="lineNum">     138</span>              :    // take contempt into account (no tempo with NNUE, </span>
 <span id="L139"><span class="lineNum">     139</span>              :    // the HalfKA net already take it into account but this is necessary for &quot;dynamic&quot; contempt from opponent)</span>
-<span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC">     1855143 :    nnueScore += ScaleScore(context.contempt, data.gp);</span></span>
+<span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC">     1890714 :    nnueScore += ScaleScore(context.contempt, data.gp);</span></span>
 <span id="L141"><span class="lineNum">     141</span>              :    // clamp score</span>
-<span id="L142"><span class="lineNum">     142</span> <span class="tlaGNC">     1855143 :    nnueScore = clampScore(nnueScore);</span></span>
-<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC">     1855143 :    if (!DynamicConfig::armageddon){</span></span>
+<span id="L142"><span class="lineNum">     142</span> <span class="tlaGNC">     1890714 :    nnueScore = clampScore(nnueScore);</span></span>
+<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC">     1890714 :    if (!DynamicConfig::armageddon){</span></span>
 <span id="L144"><span class="lineNum">     144</span>              :       // apply scaling factor based on fifty move rule</span>
-<span id="L145"><span class="lineNum">     145</span> <span class="tlaGNC">     1855143 :       nnueScore = fiftyScale(nnueScore, p.fifty);</span></span>
+<span id="L145"><span class="lineNum">     145</span> <span class="tlaGNC">     1890714 :       nnueScore = fiftyScale(nnueScore, p.fifty);</span></span>
 <span id="L146"><span class="lineNum">     146</span>              :    }</span>
-<span id="L147"><span class="lineNum">     147</span> <span class="tlaGNC">     1855143 :    context.stats.incr(secondTime ? Stats::sid_evalNNUE2 : Stats::sid_evalNNUE);</span></span>
+<span id="L147"><span class="lineNum">     147</span> <span class="tlaGNC">     1890714 :    context.stats.incr(secondTime ? Stats::sid_evalNNUE2 : Stats::sid_evalNNUE);</span></span>
 <span id="L148"><span class="lineNum">     148</span>              :    // apply variants scoring if requiered</span>
 <span id="L149"><span class="lineNum">     149</span>              :    STOP_AND_SUM_TIMER(NNUE)</span>
-<span id="L150"><span class="lineNum">     150</span> <span class="tlaGNC">     1855143 :    return variantScore(nnueScore, p.halfmoves, context.height_, p.c);   </span></span>
+<span id="L150"><span class="lineNum">     150</span> <span class="tlaGNC">     1890714 :    return variantScore(nnueScore, p.halfmoves, context.height_, p.c);   </span></span>
 <span id="L151"><span class="lineNum">     151</span>              : }</span>
 <span id="L152"><span class="lineNum">     152</span>              : #endif</span>
 <span id="L153"><span class="lineNum">     153</span>              : </span>
-<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">     2142973 : ScoreType eval(const Position &amp;p, EvalData &amp;data, Searcher &amp;context, bool allowEGEvaluation, bool display) {</span></span>
+<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">     2183704 : ScoreType eval(const Position &amp;p, EvalData &amp;data, Searcher &amp;context, bool allowEGEvaluation, bool display) {</span></span>
 <span id="L155"><span class="lineNum">     155</span>              :    START_TIMER</span>
 <span id="L156"><span class="lineNum">     156</span>              : </span>
-<span id="L157"><span class="lineNum">     157</span> <span class="tlaGNC">     2142973 :    if (DynamicConfig::antichess) return evalAntiChess(p, data, context, allowEGEvaluation, display);</span></span>
+<span id="L157"><span class="lineNum">     157</span> <span class="tlaGNC">     2183704 :    if (DynamicConfig::antichess) return evalAntiChess(p, data, context, allowEGEvaluation, display);</span></span>
 <span id="L158"><span class="lineNum">     158</span>              :    ///@todo other variants</span>
 <span id="L159"><span class="lineNum">     159</span>              : </span>
 <span id="L160"><span class="lineNum">     160</span>              :    // in some variant (like antichess) king is not mandatory</span>
 <span id="L161"><span class="lineNum">     161</span>              :    const bool kingIsMandatory = DynamicConfig::isKingMandatory();</span>
 <span id="L162"><span class="lineNum">     162</span>              : </span>
 <span id="L163"><span class="lineNum">     163</span>              :    // if no more pieces except maybe kings, end of game as draw in most standard variants</span>
-<span id="L164"><span class="lineNum">     164</span> <span class="tlaGNC">     2142973 :    if ( (p.occupancy() &amp; ~p.allKing()) == emptyBitBoard ){</span></span>
+<span id="L164"><span class="lineNum">     164</span> <span class="tlaGNC">     2183704 :    if ( (p.occupancy() &amp; ~p.allKing()) == emptyBitBoard ){</span></span>
 <span id="L165"><span class="lineNum">     165</span>              :       if (kingIsMandatory ){ </span>
 <span id="L166"><span class="lineNum">     166</span>              :          // drawScore take some variants into account like armageddon</span>
 <span id="L167"><span class="lineNum">     167</span> <span class="tlaUNC tlaBgUNC">           0 :          return context.drawScore(p, context.height_);</span></span>
@@ -234,7 +234,7 @@
 <span id="L172"><span class="lineNum">     172</span>              :    }</span>
 <span id="L173"><span class="lineNum">     173</span>              : </span>
 <span id="L174"><span class="lineNum">     174</span>              :    // is it player with the white pieces turn ?</span>
-<span id="L175"><span class="lineNum">     175</span> <span class="tlaGNC tlaBgGNC">     2142973 :    const bool white2Play = p.c == Co_White;</span></span>
+<span id="L175"><span class="lineNum">     175</span> <span class="tlaGNC tlaBgGNC">     2183704 :    const bool white2Play = p.c == Co_White;</span></span>
 <span id="L176"><span class="lineNum">     176</span>              : </span>
 <span id="L177"><span class="lineNum">     177</span>              : #ifdef DEBUG_KING_CAP</span>
 <span id="L178"><span class="lineNum">     178</span>              :    if (kingIsMandatory) {</span>
@@ -257,16 +257,16 @@
 <span id="L195"><span class="lineNum">     195</span>              :    EvalFeatures features;</span>
 <span id="L196"><span class="lineNum">     196</span>              : </span>
 <span id="L197"><span class="lineNum">     197</span>              :    // Material evaluation (most often from Material table)</span>
-<span id="L198"><span class="lineNum">     198</span> <span class="tlaGNC">     2142973 :    if (const Hash matHash = MaterialHash::getMaterialHash(p.mat); matHash != nullHash) {</span></span>
+<span id="L198"><span class="lineNum">     198</span> <span class="tlaGNC">     2183704 :    if (const Hash matHash = MaterialHash::getMaterialHash(p.mat); matHash != nullHash) {</span></span>
 <span id="L199"><span class="lineNum">     199</span>              :       context.stats.incr(Stats::sid_materialTableHits);</span>
 <span id="L200"><span class="lineNum">     200</span>              :       // Get material hash data</span>
 <span id="L201"><span class="lineNum">     201</span>              :       const MaterialHash::MaterialHashEntry &amp;MEntry = MaterialHash::materialHashTable[matHash];</span>
 <span id="L202"><span class="lineNum">     202</span>              :       // update EvalData and EvalFeatures</span>
-<span id="L203"><span class="lineNum">     203</span> <span class="tlaGNC">     2142606 :       data.gp = MEntry.gamePhase();</span></span>
-<span id="L204"><span class="lineNum">     204</span> <span class="tlaGNC">     2142606 :       features.scores[F_material] += MEntry.score;</span></span>
+<span id="L203"><span class="lineNum">     203</span> <span class="tlaGNC">     2183337 :       data.gp = MEntry.gamePhase();</span></span>
+<span id="L204"><span class="lineNum">     204</span> <span class="tlaGNC">     2183337 :       features.scores[F_material] += MEntry.score;</span></span>
 <span id="L205"><span class="lineNum">     205</span>              : </span>
 <span id="L206"><span class="lineNum">     206</span>              :       // end game knowledge (helper or scaling), only for most standard chess variants with kings on the board</span>
-<span id="L207"><span class="lineNum">     207</span> <span class="tlaGNC">     2142606 :       if (allowEGEvaluation &amp;&amp; kingIsMandatory &amp;&amp; (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] &lt; 5) ) {</span></span>
+<span id="L207"><span class="lineNum">     207</span> <span class="tlaGNC">     2183337 :       if (allowEGEvaluation &amp;&amp; kingIsMandatory &amp;&amp; (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] &lt; 5) ) {</span></span>
 <span id="L208"><span class="lineNum">     208</span>              :          // let's verify that the is no naive capture before using end-game knowledge</span>
 <span id="L209"><span class="lineNum">     209</span> <span class="tlaGNC">      917991 :          MoveList moves;</span></span>
 <span id="L210"><span class="lineNum">     210</span> <span class="tlaGNC">      917991 :          MoveGen::generate&lt;MoveGen::GP_cap&gt;(p, moves);</span></span>
@@ -390,19 +390,19 @@
 <span id="L328"><span class="lineNum">     328</span>              : </span>
 <span id="L329"><span class="lineNum">     329</span>              : #ifdef WITH_NNUE</span>
 <span id="L330"><span class="lineNum">     330</span>              :    const bool forbiddenNNUE = forbidNNUE(p) &amp;&amp; !DynamicConfig::forceNNUE;</span>
-<span id="L331"><span class="lineNum">     331</span> <span class="tlaGNC">     2142973 :    if (DynamicConfig::useNNUE &amp;&amp; !forbiddenNNUE) {</span></span>
+<span id="L331"><span class="lineNum">     331</span> <span class="tlaGNC">     2183704 :    if (DynamicConfig::useNNUE &amp;&amp; !forbiddenNNUE) {</span></span>
 <span id="L332"><span class="lineNum">     332</span>              :       // we will stay to classic eval when the game is already decided (to gain some nps)</span>
 <span id="L333"><span class="lineNum">     333</span>              :       ///@todo use data.gp inside NNUE condition ?</span>
-<span id="L334"><span class="lineNum">     334</span> <span class="tlaGNC">     4285584 :       if (EvalScore score; DynamicConfig::forceNNUE ||</span></span>
-<span id="L335"><span class="lineNum">     335</span> <span class="tlaGNC">     2142611 :           !isLazyHigh(static_cast&lt;ScoreType&gt;(DynamicConfig::NNUEThreshold), features, score)) {</span></span>
+<span id="L334"><span class="lineNum">     334</span> <span class="tlaGNC">     4367046 :       if (EvalScore score; DynamicConfig::forceNNUE ||</span></span>
+<span id="L335"><span class="lineNum">     335</span> <span class="tlaGNC">     2183342 :           !isLazyHigh(static_cast&lt;ScoreType&gt;(DynamicConfig::NNUEThreshold), features, score)) {</span></span>
 <span id="L336"><span class="lineNum">     336</span>              :          STOP_AND_SUM_TIMER(Eval)</span>
-<span id="L337"><span class="lineNum">     337</span> <span class="tlaGNC">     1732066 :          ScoreType nnueEval = NNUEEVal(p, data, context, features);</span></span>
+<span id="L337"><span class="lineNum">     337</span> <span class="tlaGNC">     1767635 :          ScoreType nnueEval = NNUEEVal(p, data, context, features);</span></span>
 <span id="L338"><span class="lineNum">     338</span>              : </span>
 <span id="L339"><span class="lineNum">     339</span>              :          // random factor in opening if requiered</span>
-<span id="L340"><span class="lineNum">     340</span> <span class="tlaGNC">     1732066 :          if (p.halfmoves &lt; 10 &amp;&amp; DynamicConfig::randomOpen != 0){</span></span>
+<span id="L340"><span class="lineNum">     340</span> <span class="tlaGNC">     1767635 :          if (p.halfmoves &lt; 10 &amp;&amp; DynamicConfig::randomOpen != 0){</span></span>
 <span id="L341"><span class="lineNum">     341</span> <span class="tlaUNC tlaBgUNC">           0 :             nnueEval += static_cast&lt;ScoreType&gt;(randomInt&lt;int /*NO SEED USE =&gt; random device*/&gt;(-1*DynamicConfig::randomOpen, DynamicConfig::randomOpen));</span></span>
 <span id="L342"><span class="lineNum">     342</span>              :          }</span>
-<span id="L343"><span class="lineNum">     343</span> <span class="tlaGNC tlaBgGNC">     1732066 :          return nnueEval;</span></span>
+<span id="L343"><span class="lineNum">     343</span> <span class="tlaGNC tlaBgGNC">     1767635 :          return nnueEval;</span></span>
 <span id="L344"><span class="lineNum">     344</span>              :       }</span>
 <span id="L345"><span class="lineNum">     345</span>              :       // fall back to classic eval</span>
 <span id="L346"><span class="lineNum">     346</span>              :       context.stats.incr(Stats::sid_evalStd);</span>
@@ -412,477 +412,477 @@
 <span id="L350"><span class="lineNum">     350</span>              :    STOP_AND_SUM_TIMER(Eval1)</span>
 <span id="L351"><span class="lineNum">     351</span>              : </span>
 <span id="L352"><span class="lineNum">     352</span>              :    // prefetch pawn evaluation table as soon as possible</span>
-<span id="L353"><span class="lineNum">     353</span> <span class="tlaGNC">      410907 :    context.prefetchPawn(computeHash(p));</span></span>
+<span id="L353"><span class="lineNum">     353</span> <span class="tlaGNC">      416069 :    context.prefetchPawn(computeHash(p));</span></span>
 <span id="L354"><span class="lineNum">     354</span>              : </span>
 <span id="L355"><span class="lineNum">     355</span>              :    // pre compute some usefull bitboards (///@todo maybe this is not efficient ...)</span>
 <span id="L356"><span class="lineNum">     356</span>              :    const colored&lt;BitBoard&gt; pawns      = {p.whitePawn(), p.blackPawn()};</span>
 <span id="L357"><span class="lineNum">     357</span>              :    const colored&lt;BitBoard&gt; knights    = {p.whiteKnight(), p.blackKnight()};</span>
 <span id="L358"><span class="lineNum">     358</span>              :    const colored&lt;BitBoard&gt; bishops    = {p.whiteBishop(), p.blackBishop()};</span>
 <span id="L359"><span class="lineNum">     359</span>              :    const colored&lt;BitBoard&gt; rooks      = {p.whiteRook(), p.blackRook()};</span>
-<span id="L360"><span class="lineNum">     360</span> <span class="tlaGNC">      410907 :    const colored&lt;BitBoard&gt; queens     = {p.whiteQueen(), p.blackQueen()};</span></span>
+<span id="L360"><span class="lineNum">     360</span> <span class="tlaGNC">      416069 :    const colored&lt;BitBoard&gt; queens     = {p.whiteQueen(), p.blackQueen()};</span></span>
 <span id="L361"><span class="lineNum">     361</span>              :    const colored&lt;BitBoard&gt; kings      = {p.whiteKing(), p.blackKing()};</span>
-<span id="L362"><span class="lineNum">     362</span> <span class="tlaGNC">      410907 :    const colored&lt;BitBoard&gt; nonPawnMat = {p.allPieces[Co_White] &amp; ~pawns[Co_White], </span></span>
-<span id="L363"><span class="lineNum">     363</span> <span class="tlaGNC">      410907 :                                          p.allPieces[Co_Black] &amp; ~pawns[Co_Black]};</span></span>
-<span id="L364"><span class="lineNum">     364</span> <span class="tlaGNC">      410907 :    const colored&lt;BitBoard&gt; kingZone   = {isValidSquare(p.king[Co_White]) ? BBTools::mask[p.king[Co_White]].kingZone : emptyBitBoard, </span></span>
-<span id="L365"><span class="lineNum">     365</span> <span class="tlaGNC">      410907 :                                          isValidSquare(p.king[Co_Black]) ? BBTools::mask[p.king[Co_Black]].kingZone : emptyBitBoard};</span></span>
-<span id="L366"><span class="lineNum">     366</span> <span class="tlaGNC">      410907 :    const BitBoard occupancy = p.occupancy();</span></span>
+<span id="L362"><span class="lineNum">     362</span> <span class="tlaGNC">      416069 :    const colored&lt;BitBoard&gt; nonPawnMat = {p.allPieces[Co_White] &amp; ~pawns[Co_White], </span></span>
+<span id="L363"><span class="lineNum">     363</span> <span class="tlaGNC">      416069 :                                          p.allPieces[Co_Black] &amp; ~pawns[Co_Black]};</span></span>
+<span id="L364"><span class="lineNum">     364</span> <span class="tlaGNC">      416069 :    const colored&lt;BitBoard&gt; kingZone   = {isValidSquare(p.king[Co_White]) ? BBTools::mask[p.king[Co_White]].kingZone : emptyBitBoard, </span></span>
+<span id="L365"><span class="lineNum">     365</span> <span class="tlaGNC">      416069 :                                          isValidSquare(p.king[Co_Black]) ? BBTools::mask[p.king[Co_Black]].kingZone : emptyBitBoard};</span></span>
+<span id="L366"><span class="lineNum">     366</span> <span class="tlaGNC">      416069 :    const BitBoard occupancy = p.occupancy();</span></span>
 <span id="L367"><span class="lineNum">     367</span>              : </span>
 <span id="L368"><span class="lineNum">     368</span>              :    // helpers that will be filled by evalPiece calls</span>
-<span id="L369"><span class="lineNum">     369</span> <span class="tlaGNC">      410907 :    colored&lt;ScoreType&gt; kdanger = {0, 0};</span></span>
-<span id="L370"><span class="lineNum">     370</span> <span class="tlaGNC">      410907 :    colored&lt;BitBoard&gt;  att     = {emptyBitBoard, emptyBitBoard}; // bitboard of squares attacked by Color</span></span>
-<span id="L371"><span class="lineNum">     371</span> <span class="tlaGNC">      410907 :    colored&lt;BitBoard&gt;  att2    = {emptyBitBoard, emptyBitBoard}; // bitboard of squares attacked twice by Color</span></span>
-<span id="L372"><span class="lineNum">     372</span> <span class="tlaGNC">      410907 :    array2d&lt;BitBoard,2,6&gt;  attFromPiece = {{emptyBitBoard}};     // bitboard of squares attacked by specific piece of Color</span></span>
-<span id="L373"><span class="lineNum">     373</span> <span class="tlaGNC">      410907 :    array2d&lt;BitBoard,2,6&gt;  checkers     = {{emptyBitBoard}};     // bitboard of Color pieces squares attacking king</span></span>
+<span id="L369"><span class="lineNum">     369</span> <span class="tlaGNC">      416069 :    colored&lt;ScoreType&gt; kdanger = {0, 0};</span></span>
+<span id="L370"><span class="lineNum">     370</span> <span class="tlaGNC">      416069 :    colored&lt;BitBoard&gt;  att     = {emptyBitBoard, emptyBitBoard}; // bitboard of squares attacked by Color</span></span>
+<span id="L371"><span class="lineNum">     371</span> <span class="tlaGNC">      416069 :    colored&lt;BitBoard&gt;  att2    = {emptyBitBoard, emptyBitBoard}; // bitboard of squares attacked twice by Color</span></span>
+<span id="L372"><span class="lineNum">     372</span> <span class="tlaGNC">      416069 :    array2d&lt;BitBoard,2,6&gt;  attFromPiece = {{emptyBitBoard}};     // bitboard of squares attacked by specific piece of Color</span></span>
+<span id="L373"><span class="lineNum">     373</span> <span class="tlaGNC">      416069 :    array2d&lt;BitBoard,2,6&gt;  checkers     = {{emptyBitBoard}};     // bitboard of Color pieces squares attacking king</span></span>
 <span id="L374"><span class="lineNum">     374</span>              : </span>
 <span id="L375"><span class="lineNum">     375</span>              :    // PST, attack, danger</span>
-<span id="L376"><span class="lineNum">     376</span> <span class="tlaGNC">      410907 :    const bool withForwadness = DynamicConfig::styleForwardness != 50;</span></span>
-<span id="L377"><span class="lineNum">     377</span> <span class="tlaGNC">      410907 :    const array1d&lt;ScoreType,2&gt; staticColorSignHelper = { +1, -1};</span></span>
-<span id="L378"><span class="lineNum">     378</span> <span class="tlaGNC">     1232721 :    for (Color c = Co_White ; c &lt;= Co_Black ; ++c){</span></span>
+<span id="L376"><span class="lineNum">     376</span> <span class="tlaGNC">      416069 :    const bool withForwadness = DynamicConfig::styleForwardness != 50;</span></span>
+<span id="L377"><span class="lineNum">     377</span> <span class="tlaGNC">      416069 :    const array1d&lt;ScoreType,2&gt; staticColorSignHelper = { +1, -1};</span></span>
+<span id="L378"><span class="lineNum">     378</span> <span class="tlaGNC">     1248207 :    for (Color c = Co_White ; c &lt;= Co_Black ; ++c){</span></span>
 <span id="L379"><span class="lineNum">     379</span>              :       // will do pawns later</span>
-<span id="L380"><span class="lineNum">     380</span> <span class="tlaGNC">     4930884 :       for (Piece pp = P_wn ; pp &lt;= P_wk ; ++pp){</span></span>
-<span id="L381"><span class="lineNum">     381</span> <span class="tlaGNC">     8218140 :          applyOn(p.pieces_const(c,pp), [&amp;](const Square &amp; k){</span></span>
-<span id="L382"><span class="lineNum">     382</span> <span class="tlaGNC">     4075522 :             const Square kk = relative_square(~c,k);</span></span>
-<span id="L383"><span class="lineNum">     383</span> <span class="tlaGNC">     8151044 :             features.scores[F_positional] += EvalConfig::PST[pp - 1][kk] * staticColorSignHelper[c];</span></span>
-<span id="L384"><span class="lineNum">     384</span> <span class="tlaGNC">     4075522 :             if (withForwadness)</span></span>
+<span id="L380"><span class="lineNum">     380</span> <span class="tlaGNC">     4992828 :       for (Piece pp = P_wn ; pp &lt;= P_wk ; ++pp){</span></span>
+<span id="L381"><span class="lineNum">     381</span> <span class="tlaGNC">     8321380 :          applyOn(p.pieces_const(c,pp), [&amp;](const Square &amp; k){</span></span>
+<span id="L382"><span class="lineNum">     382</span> <span class="tlaGNC">     4145228 :             const Square kk = relative_square(~c,k);</span></span>
+<span id="L383"><span class="lineNum">     383</span> <span class="tlaGNC">     8290456 :             features.scores[F_positional] += EvalConfig::PST[pp - 1][kk] * staticColorSignHelper[c];</span></span>
+<span id="L384"><span class="lineNum">     384</span> <span class="tlaGNC">     4145228 :             if (withForwadness)</span></span>
 <span id="L385"><span class="lineNum">     385</span> <span class="tlaUNC tlaBgUNC">           0 :                features.scores[F_positional] += EvalScore {ScoreType(((DynamicConfig::styleForwardness - 50) * SQRANK(kk)) / 8), 0} * staticColorSignHelper[c];</span></span>
 <span id="L386"><span class="lineNum">     386</span>              :             // aligned threats removing own piece (not pawn) in occupancy</span>
-<span id="L387"><span class="lineNum">     387</span> <span class="tlaGNC tlaBgGNC">     4075522 :             const BitBoard shadowTarget = BBTools::pfCoverage[pp - 1](k, occupancy ^ nonPawnMat[c], c);</span></span>
-<span id="L388"><span class="lineNum">     388</span> <span class="tlaGNC">     4075522 :             if (shadowTarget) {</span></span>
-<span id="L389"><span class="lineNum">     389</span> <span class="tlaGNC">     4075522 :                kdanger[~c] += countBit(shadowTarget &amp; kingZone[~c]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][pp - 1];</span></span>
-<span id="L390"><span class="lineNum">     390</span> <span class="tlaGNC">     4075522 :                const BitBoard target = BBTools::pfCoverage[pp - 1](k, occupancy, c); // real targets</span></span>
-<span id="L391"><span class="lineNum">     391</span> <span class="tlaGNC">     4075522 :                if (target) {</span></span>
-<span id="L392"><span class="lineNum">     392</span> <span class="tlaGNC">     4075522 :                   attFromPiece[c][pp - 1] |= target;</span></span>
-<span id="L393"><span class="lineNum">     393</span> <span class="tlaGNC">     4075522 :                   att2[c] |= att[c] &amp; target;</span></span>
-<span id="L394"><span class="lineNum">     394</span> <span class="tlaGNC">     4075522 :                   att[c] |= target;</span></span>
-<span id="L395"><span class="lineNum">     395</span> <span class="tlaGNC">     4075522 :                   if (target &amp; p.pieces_const&lt;P_wk&gt;(~c)) checkers[c][pp - 1] |= SquareToBitboard(k);</span></span>
-<span id="L396"><span class="lineNum">     396</span> <span class="tlaGNC">     4075522 :                   kdanger[c] -= countBit(target &amp; kingZone[c]) * EvalConfig::kingAttWeight[EvalConfig::katt_defence][pp - 1];</span></span>
+<span id="L387"><span class="lineNum">     387</span> <span class="tlaGNC tlaBgGNC">     4145228 :             const BitBoard shadowTarget = BBTools::pfCoverage[pp - 1](k, occupancy ^ nonPawnMat[c], c);</span></span>
+<span id="L388"><span class="lineNum">     388</span> <span class="tlaGNC">     4145228 :             if (shadowTarget) {</span></span>
+<span id="L389"><span class="lineNum">     389</span> <span class="tlaGNC">     4145228 :                kdanger[~c] += countBit(shadowTarget &amp; kingZone[~c]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][pp - 1];</span></span>
+<span id="L390"><span class="lineNum">     390</span> <span class="tlaGNC">     4145228 :                const BitBoard target = BBTools::pfCoverage[pp - 1](k, occupancy, c); // real targets</span></span>
+<span id="L391"><span class="lineNum">     391</span> <span class="tlaGNC">     4145228 :                if (target) {</span></span>
+<span id="L392"><span class="lineNum">     392</span> <span class="tlaGNC">     4145228 :                   attFromPiece[c][pp - 1] |= target;</span></span>
+<span id="L393"><span class="lineNum">     393</span> <span class="tlaGNC">     4145228 :                   att2[c] |= att[c] &amp; target;</span></span>
+<span id="L394"><span class="lineNum">     394</span> <span class="tlaGNC">     4145228 :                   att[c] |= target;</span></span>
+<span id="L395"><span class="lineNum">     395</span> <span class="tlaGNC">     4145228 :                   if (target &amp; p.pieces_const&lt;P_wk&gt;(~c)) checkers[c][pp - 1] |= SquareToBitboard(k);</span></span>
+<span id="L396"><span class="lineNum">     396</span> <span class="tlaGNC">     4145228 :                   kdanger[c] -= countBit(target &amp; kingZone[c]) * EvalConfig::kingAttWeight[EvalConfig::katt_defence][pp - 1];</span></span>
 <span id="L397"><span class="lineNum">     397</span>              :                }</span>
 <span id="L398"><span class="lineNum">     398</span>              :             }</span>
-<span id="L399"><span class="lineNum">     399</span> <span class="tlaGNC">     4075522 :          });</span></span>
+<span id="L399"><span class="lineNum">     399</span> <span class="tlaGNC">     4145228 :          });</span></span>
 <span id="L400"><span class="lineNum">     400</span>              :       }</span>
 <span id="L401"><span class="lineNum">     401</span>              :    }</span>
 <span id="L402"><span class="lineNum">     402</span>              : </span>
 <span id="L403"><span class="lineNum">     403</span>              :    // random factor in opening if requiered</span>
-<span id="L404"><span class="lineNum">     404</span> <span class="tlaGNC">      410907 :    if (p.halfmoves &lt; 10 &amp;&amp; DynamicConfig::randomOpen != 0){</span></span>
+<span id="L404"><span class="lineNum">     404</span> <span class="tlaGNC">      416069 :    if (p.halfmoves &lt; 10 &amp;&amp; DynamicConfig::randomOpen != 0){</span></span>
 <span id="L405"><span class="lineNum">     405</span> <span class="tlaUNC tlaBgUNC">           0 :       features.scores[F_positional] += static_cast&lt;ScoreType&gt;(randomInt&lt;int /*NO SEED USE =&gt; random device*/&gt;(-1*DynamicConfig::randomOpen, DynamicConfig::randomOpen));</span></span>
 <span id="L406"><span class="lineNum">     406</span>              :    }</span>
 <span id="L407"><span class="lineNum">     407</span>              : </span>
 <span id="L408"><span class="lineNum">     408</span>              :    STOP_AND_SUM_TIMER(Eval2)</span>
 <span id="L409"><span class="lineNum">     409</span>              : </span>
-<span id="L410"><span class="lineNum">     410</span> <span class="tlaGNC tlaBgGNC">      410907 :    Searcher::PawnEntry *pePtr = nullptr;</span></span>
+<span id="L410"><span class="lineNum">     410</span> <span class="tlaGNC tlaBgGNC">      416069 :    Searcher::PawnEntry *pePtr = nullptr;</span></span>
 <span id="L411"><span class="lineNum">     411</span>              : #ifdef WITH_EVAL_TUNING</span>
 <span id="L412"><span class="lineNum">     412</span>              :    Searcher::PawnEntry dummy; // used for evaluations tuning</span>
 <span id="L413"><span class="lineNum">     413</span>              :    pePtr = &amp;dummy;</span>
 <span id="L414"><span class="lineNum">     414</span>              :    {</span>
 <span id="L415"><span class="lineNum">     415</span>              : #else</span>
-<span id="L416"><span class="lineNum">     416</span> <span class="tlaGNC">      410907 :    if (!context.getPawnEntry(computePHash(p), pePtr)) {</span></span>
+<span id="L416"><span class="lineNum">     416</span> <span class="tlaGNC">      416069 :    if (!context.getPawnEntry(computePHash(p), pePtr)) {</span></span>
 <span id="L417"><span class="lineNum">     417</span>              : #endif</span>
-<span id="L418"><span class="lineNum">     418</span> <span class="tlaGNC">       94412 :       assert(pePtr);</span></span>
+<span id="L418"><span class="lineNum">     418</span> <span class="tlaGNC">       96311 :       assert(pePtr);</span></span>
 <span id="L419"><span class="lineNum">     419</span>              :       Searcher::PawnEntry &amp;pe = *pePtr;</span>
 <span id="L420"><span class="lineNum">     420</span>              :       pe.reset();</span>
-<span id="L421"><span class="lineNum">     421</span> <span class="tlaGNC">       94412 :       pe.pawnTargets[Co_White]   = BBTools::pawnAttacks&lt;Co_White&gt;(pawns[Co_White]);</span></span>
-<span id="L422"><span class="lineNum">     422</span> <span class="tlaGNC">       94412 :       pe.pawnTargets[Co_Black]   = BBTools::pawnAttacks&lt;Co_Black&gt;(pawns[Co_Black]);</span></span>
+<span id="L421"><span class="lineNum">     421</span> <span class="tlaGNC">       96311 :       pe.pawnTargets[Co_White]   = BBTools::pawnAttacks&lt;Co_White&gt;(pawns[Co_White]);</span></span>
+<span id="L422"><span class="lineNum">     422</span> <span class="tlaGNC">       96311 :       pe.pawnTargets[Co_Black]   = BBTools::pawnAttacks&lt;Co_Black&gt;(pawns[Co_Black]);</span></span>
 <span id="L423"><span class="lineNum">     423</span>              :       // semiOpen white means with white pawn, and without black pawn</span>
-<span id="L424"><span class="lineNum">     424</span> <span class="tlaGNC">       94412 :       pe.semiOpenFiles[Co_White] = BBTools::fillFile(pawns[Co_White]) &amp; ~BBTools::fillFile(pawns[Co_Black]);</span></span>
-<span id="L425"><span class="lineNum">     425</span> <span class="tlaGNC">       94412 :       pe.semiOpenFiles[Co_Black] = BBTools::fillFile(pawns[Co_Black]) &amp; ~BBTools::fillFile(pawns[Co_White]);</span></span>
-<span id="L426"><span class="lineNum">     426</span> <span class="tlaGNC">       94412 :       pe.passed[Co_White]        = BBTools::pawnPassed&lt;Co_White&gt;(pawns[Co_White], pawns[Co_Black]);</span></span>
-<span id="L427"><span class="lineNum">     427</span> <span class="tlaGNC">       94412 :       pe.passed[Co_Black]        = BBTools::pawnPassed&lt;Co_Black&gt;(pawns[Co_Black], pawns[Co_White]);</span></span>
-<span id="L428"><span class="lineNum">     428</span> <span class="tlaGNC">       94412 :       pe.holes[Co_White]         = BBTools::pawnHoles&lt;Co_White&gt;(pawns[Co_White]) &amp; holesZone[Co_White];</span></span>
-<span id="L429"><span class="lineNum">     429</span> <span class="tlaGNC">       94412 :       pe.holes[Co_Black]         = BBTools::pawnHoles&lt;Co_Black&gt;(pawns[Co_Black]) &amp; holesZone[Co_Black];</span></span>
-<span id="L430"><span class="lineNum">     430</span> <span class="tlaGNC">       94412 :       pe.openFiles               = BBTools::openFiles(pawns[Co_White], pawns[Co_Black]);</span></span>
+<span id="L424"><span class="lineNum">     424</span> <span class="tlaGNC">       96311 :       pe.semiOpenFiles[Co_White] = BBTools::fillFile(pawns[Co_White]) &amp; ~BBTools::fillFile(pawns[Co_Black]);</span></span>
+<span id="L425"><span class="lineNum">     425</span> <span class="tlaGNC">       96311 :       pe.semiOpenFiles[Co_Black] = BBTools::fillFile(pawns[Co_Black]) &amp; ~BBTools::fillFile(pawns[Co_White]);</span></span>
+<span id="L426"><span class="lineNum">     426</span> <span class="tlaGNC">       96311 :       pe.passed[Co_White]        = BBTools::pawnPassed&lt;Co_White&gt;(pawns[Co_White], pawns[Co_Black]);</span></span>
+<span id="L427"><span class="lineNum">     427</span> <span class="tlaGNC">       96311 :       pe.passed[Co_Black]        = BBTools::pawnPassed&lt;Co_Black&gt;(pawns[Co_Black], pawns[Co_White]);</span></span>
+<span id="L428"><span class="lineNum">     428</span> <span class="tlaGNC">       96311 :       pe.holes[Co_White]         = BBTools::pawnHoles&lt;Co_White&gt;(pawns[Co_White]) &amp; holesZone[Co_White];</span></span>
+<span id="L429"><span class="lineNum">     429</span> <span class="tlaGNC">       96311 :       pe.holes[Co_Black]         = BBTools::pawnHoles&lt;Co_Black&gt;(pawns[Co_Black]) &amp; holesZone[Co_Black];</span></span>
+<span id="L430"><span class="lineNum">     430</span> <span class="tlaGNC">       96311 :       pe.openFiles               = BBTools::openFiles(pawns[Co_White], pawns[Co_Black]);</span></span>
 <span id="L431"><span class="lineNum">     431</span>              : </span>
 <span id="L432"><span class="lineNum">     432</span>              :       // PST</span>
-<span id="L433"><span class="lineNum">     433</span> <span class="tlaGNC">       94412 :       evalPawn&lt;Co_White&gt;(pawns[Co_White], pe.score);</span></span>
+<span id="L433"><span class="lineNum">     433</span> <span class="tlaGNC">       96311 :       evalPawn&lt;Co_White&gt;(pawns[Co_White], pe.score);</span></span>
 <span id="L434"><span class="lineNum">     434</span>              :       evalPawn&lt;Co_Black&gt;(pawns[Co_Black], pe.score);</span>
 <span id="L435"><span class="lineNum">     435</span>              : </span>
 <span id="L436"><span class="lineNum">     436</span>              :       // danger in king zone (from pawns attacking or defending)</span>
-<span id="L437"><span class="lineNum">     437</span> <span class="tlaGNC">       94412 :       pe.danger[Co_White] -= countBit(pe.pawnTargets[Co_White] &amp; kingZone[Co_White]) * EvalConfig::kingAttWeight[EvalConfig::katt_defence][0];</span></span>
-<span id="L438"><span class="lineNum">     438</span> <span class="tlaGNC">       94412 :       pe.danger[Co_White] += countBit(pe.pawnTargets[Co_Black] &amp; kingZone[Co_White]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][0];</span></span>
-<span id="L439"><span class="lineNum">     439</span> <span class="tlaGNC">       94412 :       pe.danger[Co_Black] -= countBit(pe.pawnTargets[Co_Black] &amp; kingZone[Co_Black]) * EvalConfig::kingAttWeight[EvalConfig::katt_defence][0];</span></span>
-<span id="L440"><span class="lineNum">     440</span> <span class="tlaGNC">       94412 :       pe.danger[Co_Black] += countBit(pe.pawnTargets[Co_White] &amp; kingZone[Co_Black]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][0];</span></span>
+<span id="L437"><span class="lineNum">     437</span> <span class="tlaGNC">       96311 :       pe.danger[Co_White] -= countBit(pe.pawnTargets[Co_White] &amp; kingZone[Co_White]) * EvalConfig::kingAttWeight[EvalConfig::katt_defence][0];</span></span>
+<span id="L438"><span class="lineNum">     438</span> <span class="tlaGNC">       96311 :       pe.danger[Co_White] += countBit(pe.pawnTargets[Co_Black] &amp; kingZone[Co_White]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][0];</span></span>
+<span id="L439"><span class="lineNum">     439</span> <span class="tlaGNC">       96311 :       pe.danger[Co_Black] -= countBit(pe.pawnTargets[Co_Black] &amp; kingZone[Co_Black]) * EvalConfig::kingAttWeight[EvalConfig::katt_defence][0];</span></span>
+<span id="L440"><span class="lineNum">     440</span> <span class="tlaGNC">       96311 :       pe.danger[Co_Black] += countBit(pe.pawnTargets[Co_White] &amp; kingZone[Co_Black]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][0];</span></span>
 <span id="L441"><span class="lineNum">     441</span>              : </span>
 <span id="L442"><span class="lineNum">     442</span>              :       // pawn passer</span>
-<span id="L443"><span class="lineNum">     443</span> <span class="tlaGNC">       94412 :       evalPawnPasser&lt;Co_White&gt;(p, pe.passed[Co_White], pe.score);</span></span>
-<span id="L444"><span class="lineNum">     444</span> <span class="tlaGNC">       94412 :       evalPawnPasser&lt;Co_Black&gt;(p, pe.passed[Co_Black], pe.score);</span></span>
+<span id="L443"><span class="lineNum">     443</span> <span class="tlaGNC">       96311 :       evalPawnPasser&lt;Co_White&gt;(p, pe.passed[Co_White], pe.score);</span></span>
+<span id="L444"><span class="lineNum">     444</span> <span class="tlaGNC">       96311 :       evalPawnPasser&lt;Co_Black&gt;(p, pe.passed[Co_Black], pe.score);</span></span>
 <span id="L445"><span class="lineNum">     445</span>              : </span>
 <span id="L446"><span class="lineNum">     446</span>              :       // pawn protected</span>
-<span id="L447"><span class="lineNum">     447</span> <span class="tlaGNC">       94412 :       evalPawnProtected&lt;Co_White&gt;(pe.passed[Co_White] &amp; pe.pawnTargets[Co_White], pe.score);</span></span>
-<span id="L448"><span class="lineNum">     448</span> <span class="tlaGNC">       94412 :       evalPawnProtected&lt;Co_Black&gt;(pe.passed[Co_Black] &amp; pe.pawnTargets[Co_Black], pe.score);</span></span>
+<span id="L447"><span class="lineNum">     447</span> <span class="tlaGNC">       96311 :       evalPawnProtected&lt;Co_White&gt;(pe.passed[Co_White] &amp; pe.pawnTargets[Co_White], pe.score);</span></span>
+<span id="L448"><span class="lineNum">     448</span> <span class="tlaGNC">       96311 :       evalPawnProtected&lt;Co_Black&gt;(pe.passed[Co_Black] &amp; pe.pawnTargets[Co_Black], pe.score);</span></span>
 <span id="L449"><span class="lineNum">     449</span>              : </span>
 <span id="L450"><span class="lineNum">     450</span>              :       // pawn candidate</span>
-<span id="L451"><span class="lineNum">     451</span> <span class="tlaGNC">       94412 :       evalPawnCandidate&lt;Co_White&gt;(BBTools::pawnCandidates&lt;Co_White&gt;(pawns[Co_White], pawns[Co_Black]), pe.score);</span></span>
-<span id="L452"><span class="lineNum">     452</span> <span class="tlaGNC">       94412 :       evalPawnCandidate&lt;Co_Black&gt;(BBTools::pawnCandidates&lt;Co_Black&gt;(pawns[Co_Black], pawns[Co_White]), pe.score);</span></span>
+<span id="L451"><span class="lineNum">     451</span> <span class="tlaGNC">       96311 :       evalPawnCandidate&lt;Co_White&gt;(BBTools::pawnCandidates&lt;Co_White&gt;(pawns[Co_White], pawns[Co_Black]), pe.score);</span></span>
+<span id="L452"><span class="lineNum">     452</span> <span class="tlaGNC">       96311 :       evalPawnCandidate&lt;Co_Black&gt;(BBTools::pawnCandidates&lt;Co_Black&gt;(pawns[Co_Black], pawns[Co_White]), pe.score);</span></span>
 <span id="L453"><span class="lineNum">     453</span>              : </span>
 <span id="L454"><span class="lineNum">     454</span>              :       ///@todo hidden passed</span>
 <span id="L455"><span class="lineNum">     455</span>              : </span>
 <span id="L456"><span class="lineNum">     456</span>              :       // bad pawns</span>
 <span id="L457"><span class="lineNum">     457</span>              :       const colored&lt;BitBoard&gt; semiOpenPawn = {BBTools::pawnSemiOpen&lt;Co_White&gt;(pawns[Co_White], pawns[Co_Black]),</span>
 <span id="L458"><span class="lineNum">     458</span>              :                                               BBTools::pawnSemiOpen&lt;Co_Black&gt;(pawns[Co_Black], pawns[Co_White])};</span>
-<span id="L459"><span class="lineNum">     459</span> <span class="tlaGNC">       94412 :       const colored&lt;BitBoard&gt; backward     = {BBTools::pawnBackward&lt;Co_White&gt;(pawns[Co_White], pawns[Co_Black]),</span></span>
-<span id="L460"><span class="lineNum">     460</span> <span class="tlaGNC">       94412 :                                               BBTools::pawnBackward&lt;Co_Black&gt;(pawns[Co_Black], pawns[Co_White])};</span></span>
-<span id="L461"><span class="lineNum">     461</span> <span class="tlaGNC">       94412 :       const BitBoard backwardOpenW     = backward[Co_White] &amp; semiOpenPawn[Co_White];</span></span>
-<span id="L462"><span class="lineNum">     462</span> <span class="tlaGNC">       94412 :       const BitBoard backwardCloseW    = backward[Co_White] &amp; ~semiOpenPawn[Co_White];</span></span>
-<span id="L463"><span class="lineNum">     463</span> <span class="tlaGNC">       94412 :       const BitBoard backwardOpenB     = backward[Co_Black] &amp; semiOpenPawn[Co_Black];</span></span>
-<span id="L464"><span class="lineNum">     464</span> <span class="tlaGNC">       94412 :       const BitBoard backwardCloseB    = backward[Co_Black] &amp; ~semiOpenPawn[Co_Black];</span></span>
+<span id="L459"><span class="lineNum">     459</span> <span class="tlaGNC">       96311 :       const colored&lt;BitBoard&gt; backward     = {BBTools::pawnBackward&lt;Co_White&gt;(pawns[Co_White], pawns[Co_Black]),</span></span>
+<span id="L460"><span class="lineNum">     460</span> <span class="tlaGNC">       96311 :                                               BBTools::pawnBackward&lt;Co_Black&gt;(pawns[Co_Black], pawns[Co_White])};</span></span>
+<span id="L461"><span class="lineNum">     461</span> <span class="tlaGNC">       96311 :       const BitBoard backwardOpenW     = backward[Co_White] &amp; semiOpenPawn[Co_White];</span></span>
+<span id="L462"><span class="lineNum">     462</span> <span class="tlaGNC">       96311 :       const BitBoard backwardCloseW    = backward[Co_White] &amp; ~semiOpenPawn[Co_White];</span></span>
+<span id="L463"><span class="lineNum">     463</span> <span class="tlaGNC">       96311 :       const BitBoard backwardOpenB     = backward[Co_Black] &amp; semiOpenPawn[Co_Black];</span></span>
+<span id="L464"><span class="lineNum">     464</span> <span class="tlaGNC">       96311 :       const BitBoard backwardCloseB    = backward[Co_Black] &amp; ~semiOpenPawn[Co_Black];</span></span>
 <span id="L465"><span class="lineNum">     465</span>              :       const colored&lt;BitBoard&gt; doubled  = {BBTools::pawnDoubled&lt;Co_White&gt;(pawns[Co_White]),</span>
 <span id="L466"><span class="lineNum">     466</span>              :                                          BBTools::pawnDoubled&lt;Co_Black&gt;(pawns[Co_Black])};</span>
-<span id="L467"><span class="lineNum">     467</span> <span class="tlaGNC">       94412 :       const BitBoard doubledOpenW      = doubled[Co_White] &amp; semiOpenPawn[Co_White];</span></span>
-<span id="L468"><span class="lineNum">     468</span> <span class="tlaGNC">       94412 :       const BitBoard doubledCloseW     = doubled[Co_White] &amp; ~semiOpenPawn[Co_White];</span></span>
-<span id="L469"><span class="lineNum">     469</span> <span class="tlaGNC">       94412 :       const BitBoard doubledOpenB      = doubled[Co_Black] &amp; semiOpenPawn[Co_Black];</span></span>
-<span id="L470"><span class="lineNum">     470</span> <span class="tlaGNC">       94412 :       const BitBoard doubledCloseB     = doubled[Co_Black] &amp; ~semiOpenPawn[Co_Black];</span></span>
-<span id="L471"><span class="lineNum">     471</span> <span class="tlaGNC">       94412 :       const colored&lt;BitBoard&gt; isolated = {BBTools::pawnIsolated(pawns[Co_White]),</span></span>
-<span id="L472"><span class="lineNum">     472</span> <span class="tlaGNC">       94412 :                                           BBTools::pawnIsolated(pawns[Co_Black])};</span></span>
-<span id="L473"><span class="lineNum">     473</span> <span class="tlaGNC">       94412 :       const BitBoard isolatedOpenW     = isolated[Co_White] &amp; semiOpenPawn[Co_White];</span></span>
-<span id="L474"><span class="lineNum">     474</span> <span class="tlaGNC">       94412 :       const BitBoard isolatedCloseW    = isolated[Co_White] &amp; ~semiOpenPawn[Co_White];</span></span>
-<span id="L475"><span class="lineNum">     475</span> <span class="tlaGNC">       94412 :       const BitBoard isolatedOpenB     = isolated[Co_Black] &amp; semiOpenPawn[Co_Black];</span></span>
-<span id="L476"><span class="lineNum">     476</span> <span class="tlaGNC">       94412 :       const BitBoard isolatedCloseB    = isolated[Co_Black] &amp; ~semiOpenPawn[Co_Black];</span></span>
+<span id="L467"><span class="lineNum">     467</span> <span class="tlaGNC">       96311 :       const BitBoard doubledOpenW      = doubled[Co_White] &amp; semiOpenPawn[Co_White];</span></span>
+<span id="L468"><span class="lineNum">     468</span> <span class="tlaGNC">       96311 :       const BitBoard doubledCloseW     = doubled[Co_White] &amp; ~semiOpenPawn[Co_White];</span></span>
+<span id="L469"><span class="lineNum">     469</span> <span class="tlaGNC">       96311 :       const BitBoard doubledOpenB      = doubled[Co_Black] &amp; semiOpenPawn[Co_Black];</span></span>
+<span id="L470"><span class="lineNum">     470</span> <span class="tlaGNC">       96311 :       const BitBoard doubledCloseB     = doubled[Co_Black] &amp; ~semiOpenPawn[Co_Black];</span></span>
+<span id="L471"><span class="lineNum">     471</span> <span class="tlaGNC">       96311 :       const colored&lt;BitBoard&gt; isolated = {BBTools::pawnIsolated(pawns[Co_White]),</span></span>
+<span id="L472"><span class="lineNum">     472</span> <span class="tlaGNC">       96311 :                                           BBTools::pawnIsolated(pawns[Co_Black])};</span></span>
+<span id="L473"><span class="lineNum">     473</span> <span class="tlaGNC">       96311 :       const BitBoard isolatedOpenW     = isolated[Co_White] &amp; semiOpenPawn[Co_White];</span></span>
+<span id="L474"><span class="lineNum">     474</span> <span class="tlaGNC">       96311 :       const BitBoard isolatedCloseW    = isolated[Co_White] &amp; ~semiOpenPawn[Co_White];</span></span>
+<span id="L475"><span class="lineNum">     475</span> <span class="tlaGNC">       96311 :       const BitBoard isolatedOpenB     = isolated[Co_Black] &amp; semiOpenPawn[Co_Black];</span></span>
+<span id="L476"><span class="lineNum">     476</span> <span class="tlaGNC">       96311 :       const BitBoard isolatedCloseB    = isolated[Co_Black] &amp; ~semiOpenPawn[Co_Black];</span></span>
 <span id="L477"><span class="lineNum">     477</span>              :       const colored&lt;BitBoard&gt; detached = {BBTools::pawnDetached&lt;Co_White&gt;(pawns[Co_White], pawns[Co_Black]),</span>
 <span id="L478"><span class="lineNum">     478</span>              :                                           BBTools::pawnDetached&lt;Co_Black&gt;(pawns[Co_Black], pawns[Co_White])};</span>
-<span id="L479"><span class="lineNum">     479</span> <span class="tlaGNC">       94412 :       const BitBoard detachedOpenW     = detached[Co_White] &amp; semiOpenPawn[Co_White] &amp; ~backward[Co_White];</span></span>
-<span id="L480"><span class="lineNum">     480</span> <span class="tlaGNC">       94412 :       const BitBoard detachedCloseW    = detached[Co_White] &amp; ~semiOpenPawn[Co_White] &amp; ~backward[Co_White];</span></span>
-<span id="L481"><span class="lineNum">     481</span> <span class="tlaGNC">       94412 :       const BitBoard detachedOpenB     = detached[Co_Black] &amp; semiOpenPawn[Co_Black] &amp; ~backward[Co_Black];</span></span>
-<span id="L482"><span class="lineNum">     482</span> <span class="tlaGNC">       94412 :       const BitBoard detachedCloseB    = detached[Co_Black] &amp; ~semiOpenPawn[Co_Black] &amp; ~backward[Co_Black];</span></span>
+<span id="L479"><span class="lineNum">     479</span> <span class="tlaGNC">       96311 :       const BitBoard detachedOpenW     = detached[Co_White] &amp; semiOpenPawn[Co_White] &amp; ~backward[Co_White];</span></span>
+<span id="L480"><span class="lineNum">     480</span> <span class="tlaGNC">       96311 :       const BitBoard detachedCloseW    = detached[Co_White] &amp; ~semiOpenPawn[Co_White] &amp; ~backward[Co_White];</span></span>
+<span id="L481"><span class="lineNum">     481</span> <span class="tlaGNC">       96311 :       const BitBoard detachedOpenB     = detached[Co_Black] &amp; semiOpenPawn[Co_Black] &amp; ~backward[Co_Black];</span></span>
+<span id="L482"><span class="lineNum">     482</span> <span class="tlaGNC">       96311 :       const BitBoard detachedCloseB    = detached[Co_Black] &amp; ~semiOpenPawn[Co_Black] &amp; ~backward[Co_Black];</span></span>
 <span id="L483"><span class="lineNum">     483</span>              : </span>
-<span id="L484"><span class="lineNum">     484</span> <span class="tlaGNC">      660884 :       for (Rank r = Rank_2; r &lt;= Rank_7; ++r) { // simply r2..r7 for classic chess works</span></span>
+<span id="L484"><span class="lineNum">     484</span> <span class="tlaGNC">      674177 :       for (Rank r = Rank_2; r &lt;= Rank_7; ++r) { // simply r2..r7 for classic chess works</span></span>
 <span id="L485"><span class="lineNum">     485</span>              :          // pawn backward</span>
-<span id="L486"><span class="lineNum">     486</span> <span class="tlaGNC">     1132944 :          pe.score -= EvalConfig::backwardPawn[r][EvalConfig::Close] * countBit(backwardCloseW &amp; ranks[r]);</span></span>
-<span id="L487"><span class="lineNum">     487</span> <span class="tlaGNC">     1132944 :          pe.score -= EvalConfig::backwardPawn[r][EvalConfig::SemiOpen] * countBit(backwardOpenW &amp; ranks[r]);</span></span>
+<span id="L486"><span class="lineNum">     486</span> <span class="tlaGNC">     1155732 :          pe.score -= EvalConfig::backwardPawn[r][EvalConfig::Close] * countBit(backwardCloseW &amp; ranks[r]);</span></span>
+<span id="L487"><span class="lineNum">     487</span> <span class="tlaGNC">     1155732 :          pe.score -= EvalConfig::backwardPawn[r][EvalConfig::SemiOpen] * countBit(backwardOpenW &amp; ranks[r]);</span></span>
 <span id="L488"><span class="lineNum">     488</span>              :          // double pawn malus</span>
-<span id="L489"><span class="lineNum">     489</span> <span class="tlaGNC">     1132944 :          pe.score -= EvalConfig::doublePawn[r][EvalConfig::Close] * countBit(doubledCloseW &amp; ranks[r]);</span></span>
-<span id="L490"><span class="lineNum">     490</span> <span class="tlaGNC">     1132944 :          pe.score -= EvalConfig::doublePawn[r][EvalConfig::SemiOpen] * countBit(doubledOpenW &amp; ranks[r]);</span></span>
+<span id="L489"><span class="lineNum">     489</span> <span class="tlaGNC">     1155732 :          pe.score -= EvalConfig::doublePawn[r][EvalConfig::Close] * countBit(doubledCloseW &amp; ranks[r]);</span></span>
+<span id="L490"><span class="lineNum">     490</span> <span class="tlaGNC">     1155732 :          pe.score -= EvalConfig::doublePawn[r][EvalConfig::SemiOpen] * countBit(doubledOpenW &amp; ranks[r]);</span></span>
 <span id="L491"><span class="lineNum">     491</span>              :          // isolated pawn malus</span>
-<span id="L492"><span class="lineNum">     492</span> <span class="tlaGNC">     1132944 :          pe.score -= EvalConfig::isolatedPawn[r][EvalConfig::Close] * countBit(isolatedCloseW &amp; ranks[r]);</span></span>
-<span id="L493"><span class="lineNum">     493</span> <span class="tlaGNC">     1132944 :          pe.score -= EvalConfig::isolatedPawn[r][EvalConfig::SemiOpen] * countBit(isolatedOpenW &amp; ranks[r]);</span></span>
+<span id="L492"><span class="lineNum">     492</span> <span class="tlaGNC">     1155732 :          pe.score -= EvalConfig::isolatedPawn[r][EvalConfig::Close] * countBit(isolatedCloseW &amp; ranks[r]);</span></span>
+<span id="L493"><span class="lineNum">     493</span> <span class="tlaGNC">     1155732 :          pe.score -= EvalConfig::isolatedPawn[r][EvalConfig::SemiOpen] * countBit(isolatedOpenW &amp; ranks[r]);</span></span>
 <span id="L494"><span class="lineNum">     494</span>              :          // detached pawn (not backward)</span>
-<span id="L495"><span class="lineNum">     495</span> <span class="tlaGNC">     1132944 :          pe.score -= EvalConfig::detachedPawn[r][EvalConfig::Close] * countBit(detachedCloseW &amp; ranks[r]);</span></span>
-<span id="L496"><span class="lineNum">     496</span> <span class="tlaGNC">     1132944 :          pe.score -= EvalConfig::detachedPawn[r][EvalConfig::SemiOpen] * countBit(detachedOpenW &amp; ranks[r]);</span></span>
+<span id="L495"><span class="lineNum">     495</span> <span class="tlaGNC">     1155732 :          pe.score -= EvalConfig::detachedPawn[r][EvalConfig::Close] * countBit(detachedCloseW &amp; ranks[r]);</span></span>
+<span id="L496"><span class="lineNum">     496</span> <span class="tlaGNC">     1155732 :          pe.score -= EvalConfig::detachedPawn[r][EvalConfig::SemiOpen] * countBit(detachedOpenW &amp; ranks[r]);</span></span>
 <span id="L497"><span class="lineNum">     497</span>              : </span>
 <span id="L498"><span class="lineNum">     498</span>              :          // pawn backward</span>
-<span id="L499"><span class="lineNum">     499</span> <span class="tlaGNC">     1132944 :          pe.score += EvalConfig::backwardPawn[7 - r][EvalConfig::Close] * countBit(backwardCloseB &amp; ranks[r]);</span></span>
-<span id="L500"><span class="lineNum">     500</span> <span class="tlaGNC">     1132944 :          pe.score += EvalConfig::backwardPawn[7 - r][EvalConfig::SemiOpen] * countBit(backwardOpenB &amp; ranks[r]);</span></span>
+<span id="L499"><span class="lineNum">     499</span> <span class="tlaGNC">     1155732 :          pe.score += EvalConfig::backwardPawn[7 - r][EvalConfig::Close] * countBit(backwardCloseB &amp; ranks[r]);</span></span>
+<span id="L500"><span class="lineNum">     500</span> <span class="tlaGNC">     1155732 :          pe.score += EvalConfig::backwardPawn[7 - r][EvalConfig::SemiOpen] * countBit(backwardOpenB &amp; ranks[r]);</span></span>
 <span id="L501"><span class="lineNum">     501</span>              :          // double pawn malus</span>
-<span id="L502"><span class="lineNum">     502</span> <span class="tlaGNC">     1132944 :          pe.score += EvalConfig::doublePawn[7 - r][EvalConfig::Close] * countBit(doubledCloseB &amp; ranks[r]);</span></span>
-<span id="L503"><span class="lineNum">     503</span> <span class="tlaGNC">     1132944 :          pe.score += EvalConfig::doublePawn[7 - r][EvalConfig::SemiOpen] * countBit(doubledOpenB &amp; ranks[r]);</span></span>
+<span id="L502"><span class="lineNum">     502</span> <span class="tlaGNC">     1155732 :          pe.score += EvalConfig::doublePawn[7 - r][EvalConfig::Close] * countBit(doubledCloseB &amp; ranks[r]);</span></span>
+<span id="L503"><span class="lineNum">     503</span> <span class="tlaGNC">     1155732 :          pe.score += EvalConfig::doublePawn[7 - r][EvalConfig::SemiOpen] * countBit(doubledOpenB &amp; ranks[r]);</span></span>
 <span id="L504"><span class="lineNum">     504</span>              :          // isolated pawn malus</span>
-<span id="L505"><span class="lineNum">     505</span> <span class="tlaGNC">     1132944 :          pe.score += EvalConfig::isolatedPawn[7 - r][EvalConfig::Close] * countBit(isolatedCloseB &amp; ranks[r]);</span></span>
-<span id="L506"><span class="lineNum">     506</span> <span class="tlaGNC">     1132944 :          pe.score += EvalConfig::isolatedPawn[7 - r][EvalConfig::SemiOpen] * countBit(isolatedOpenB &amp; ranks[r]);</span></span>
+<span id="L505"><span class="lineNum">     505</span> <span class="tlaGNC">     1155732 :          pe.score += EvalConfig::isolatedPawn[7 - r][EvalConfig::Close] * countBit(isolatedCloseB &amp; ranks[r]);</span></span>
+<span id="L506"><span class="lineNum">     506</span> <span class="tlaGNC">     1155732 :          pe.score += EvalConfig::isolatedPawn[7 - r][EvalConfig::SemiOpen] * countBit(isolatedOpenB &amp; ranks[r]);</span></span>
 <span id="L507"><span class="lineNum">     507</span>              :          // detached pawn (not backward)</span>
-<span id="L508"><span class="lineNum">     508</span> <span class="tlaGNC">     1132944 :          pe.score += EvalConfig::detachedPawn[7 - r][EvalConfig::Close] * countBit(detachedCloseB &amp; ranks[r]);</span></span>
-<span id="L509"><span class="lineNum">     509</span> <span class="tlaGNC">     1132944 :          pe.score += EvalConfig::detachedPawn[7 - r][EvalConfig::SemiOpen] * countBit(detachedOpenB &amp; ranks[r]);</span></span>
+<span id="L508"><span class="lineNum">     508</span> <span class="tlaGNC">     1155732 :          pe.score += EvalConfig::detachedPawn[7 - r][EvalConfig::Close] * countBit(detachedCloseB &amp; ranks[r]);</span></span>
+<span id="L509"><span class="lineNum">     509</span> <span class="tlaGNC">     1155732 :          pe.score += EvalConfig::detachedPawn[7 - r][EvalConfig::SemiOpen] * countBit(detachedOpenB &amp; ranks[r]);</span></span>
 <span id="L510"><span class="lineNum">     510</span>              :       }</span>
 <span id="L511"><span class="lineNum">     511</span>              : </span>
 <span id="L512"><span class="lineNum">     512</span>              :       // pawn impact on king safety (PST and king troppism alone is not enough)</span>
 <span id="L513"><span class="lineNum">     513</span>              :       if (kingIsMandatory){</span>
 <span id="L514"><span class="lineNum">     514</span>              :         // pawn shield</span>
-<span id="L515"><span class="lineNum">     515</span> <span class="tlaGNC">       94412 :         const colored&lt;BitBoard&gt; kingShield = {kingZone[Co_White] &amp; ~BBTools::shiftS&lt;Co_White&gt;(ranks[SQRANK(p.king[Co_White])]),</span></span>
-<span id="L516"><span class="lineNum">     516</span> <span class="tlaGNC">       94412 :                                               kingZone[Co_Black] &amp; ~BBTools::shiftS&lt;Co_Black&gt;(ranks[SQRANK(p.king[Co_Black])])};</span></span>
-<span id="L517"><span class="lineNum">     517</span> <span class="tlaGNC">       94412 :         const int pawnShieldW = countBit(kingShield[Co_White] &amp; pawns[Co_White]);</span></span>
-<span id="L518"><span class="lineNum">     518</span> <span class="tlaGNC">       94412 :         const int pawnShieldB = countBit(kingShield[Co_Black] &amp; pawns[Co_Black]);</span></span>
-<span id="L519"><span class="lineNum">     519</span> <span class="tlaGNC">      188824 :         pe.score += EvalConfig::pawnShieldBonus * std::min(pawnShieldW * pawnShieldW, 9);</span></span>
-<span id="L520"><span class="lineNum">     520</span> <span class="tlaGNC">      188826 :         pe.score -= EvalConfig::pawnShieldBonus * std::min(pawnShieldB * pawnShieldB, 9);</span></span>
+<span id="L515"><span class="lineNum">     515</span> <span class="tlaGNC">       96311 :         const colored&lt;BitBoard&gt; kingShield = {kingZone[Co_White] &amp; ~BBTools::shiftS&lt;Co_White&gt;(ranks[SQRANK(p.king[Co_White])]),</span></span>
+<span id="L516"><span class="lineNum">     516</span> <span class="tlaGNC">       96311 :                                               kingZone[Co_Black] &amp; ~BBTools::shiftS&lt;Co_Black&gt;(ranks[SQRANK(p.king[Co_Black])])};</span></span>
+<span id="L517"><span class="lineNum">     517</span> <span class="tlaGNC">       96311 :         const int pawnShieldW = countBit(kingShield[Co_White] &amp; pawns[Co_White]);</span></span>
+<span id="L518"><span class="lineNum">     518</span> <span class="tlaGNC">       96311 :         const int pawnShieldB = countBit(kingShield[Co_Black] &amp; pawns[Co_Black]);</span></span>
+<span id="L519"><span class="lineNum">     519</span> <span class="tlaGNC">      192622 :         pe.score += EvalConfig::pawnShieldBonus * std::min(pawnShieldW * pawnShieldW, 9);</span></span>
+<span id="L520"><span class="lineNum">     520</span> <span class="tlaGNC">      192624 :         pe.score -= EvalConfig::pawnShieldBonus * std::min(pawnShieldB * pawnShieldB, 9);</span></span>
 <span id="L521"><span class="lineNum">     521</span>              :         </span>
 <span id="L522"><span class="lineNum">     522</span>              :         // malus for king on a pawnless flank</span>
-<span id="L523"><span class="lineNum">     523</span> <span class="tlaGNC">       94412 :         const File wkf = SQFILE(p.king[Co_White]);</span></span>
-<span id="L524"><span class="lineNum">     524</span> <span class="tlaGNC">       94412 :         const File bkf = SQFILE(p.king[Co_Black]);</span></span>
-<span id="L525"><span class="lineNum">     525</span> <span class="tlaGNC">       94412 :         if (!(pawns[Co_White] &amp; kingFlank[wkf])) pe.score += EvalConfig::pawnlessFlank;</span></span>
-<span id="L526"><span class="lineNum">     526</span> <span class="tlaGNC">       94412 :         if (!(pawns[Co_Black] &amp; kingFlank[bkf])) pe.score -= EvalConfig::pawnlessFlank;</span></span>
+<span id="L523"><span class="lineNum">     523</span> <span class="tlaGNC">       96311 :         const File wkf = SQFILE(p.king[Co_White]);</span></span>
+<span id="L524"><span class="lineNum">     524</span> <span class="tlaGNC">       96311 :         const File bkf = SQFILE(p.king[Co_Black]);</span></span>
+<span id="L525"><span class="lineNum">     525</span> <span class="tlaGNC">       96311 :         if (!(pawns[Co_White] &amp; kingFlank[wkf])) pe.score += EvalConfig::pawnlessFlank;</span></span>
+<span id="L526"><span class="lineNum">     526</span> <span class="tlaGNC">       96311 :         if (!(pawns[Co_Black] &amp; kingFlank[bkf])) pe.score -= EvalConfig::pawnlessFlank;</span></span>
 <span id="L527"><span class="lineNum">     527</span>              :         </span>
 <span id="L528"><span class="lineNum">     528</span>              :         // pawn storm</span>
-<span id="L529"><span class="lineNum">     529</span> <span class="tlaGNC">      188824 :         pe.score -= EvalConfig::pawnStormMalus * countBit(kingFlank[wkf] &amp; (rank3 | rank4) &amp; pawns[Co_Black]);</span></span>
-<span id="L530"><span class="lineNum">     530</span> <span class="tlaGNC">      188824 :         pe.score += EvalConfig::pawnStormMalus * countBit(kingFlank[bkf] &amp; (rank5 | rank6) &amp; pawns[Co_White]);</span></span>
+<span id="L529"><span class="lineNum">     529</span> <span class="tlaGNC">      192622 :         pe.score -= EvalConfig::pawnStormMalus * countBit(kingFlank[wkf] &amp; (rank3 | rank4) &amp; pawns[Co_Black]);</span></span>
+<span id="L530"><span class="lineNum">     530</span> <span class="tlaGNC">      192622 :         pe.score += EvalConfig::pawnStormMalus * countBit(kingFlank[bkf] &amp; (rank5 | rank6) &amp; pawns[Co_White]);</span></span>
 <span id="L531"><span class="lineNum">     531</span>              :         </span>
 <span id="L532"><span class="lineNum">     532</span>              :         // open file near king</span>
-<span id="L533"><span class="lineNum">     533</span> <span class="tlaGNC">       94412 :         pe.danger[Co_White] += EvalConfig::kingAttOpenfile * countBit(kingFlank[wkf] &amp; pe.openFiles) / 8;</span></span>
-<span id="L534"><span class="lineNum">     534</span> <span class="tlaGNC">       94412 :         pe.danger[Co_White] += EvalConfig::kingAttSemiOpenfileOpp * countBit(kingFlank[wkf] &amp; pe.semiOpenFiles[Co_White]) / 8;</span></span>
-<span id="L535"><span class="lineNum">     535</span> <span class="tlaGNC">       94412 :         pe.danger[Co_White] += EvalConfig::kingAttSemiOpenfileOur * countBit(kingFlank[wkf] &amp; pe.semiOpenFiles[Co_Black]) / 8;</span></span>
-<span id="L536"><span class="lineNum">     536</span> <span class="tlaGNC">       94412 :         pe.danger[Co_Black] += EvalConfig::kingAttOpenfile * countBit(kingFlank[bkf] &amp; pe.openFiles) / 8;</span></span>
-<span id="L537"><span class="lineNum">     537</span> <span class="tlaGNC">       94412 :         pe.danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOpp * countBit(kingFlank[bkf] &amp; pe.semiOpenFiles[Co_Black]) / 8;</span></span>
-<span id="L538"><span class="lineNum">     538</span> <span class="tlaGNC">       94412 :         pe.danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * countBit(kingFlank[bkf] &amp; pe.semiOpenFiles[Co_White]) / 8;</span></span>
+<span id="L533"><span class="lineNum">     533</span> <span class="tlaGNC">       96311 :         pe.danger[Co_White] += EvalConfig::kingAttOpenfile * countBit(kingFlank[wkf] &amp; pe.openFiles) / 8;</span></span>
+<span id="L534"><span class="lineNum">     534</span> <span class="tlaGNC">       96311 :         pe.danger[Co_White] += EvalConfig::kingAttSemiOpenfileOpp * countBit(kingFlank[wkf] &amp; pe.semiOpenFiles[Co_White]) / 8;</span></span>
+<span id="L535"><span class="lineNum">     535</span> <span class="tlaGNC">       96311 :         pe.danger[Co_White] += EvalConfig::kingAttSemiOpenfileOur * countBit(kingFlank[wkf] &amp; pe.semiOpenFiles[Co_Black]) / 8;</span></span>
+<span id="L536"><span class="lineNum">     536</span> <span class="tlaGNC">       96311 :         pe.danger[Co_Black] += EvalConfig::kingAttOpenfile * countBit(kingFlank[bkf] &amp; pe.openFiles) / 8;</span></span>
+<span id="L537"><span class="lineNum">     537</span> <span class="tlaGNC">       96311 :         pe.danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOpp * countBit(kingFlank[bkf] &amp; pe.semiOpenFiles[Co_Black]) / 8;</span></span>
+<span id="L538"><span class="lineNum">     538</span> <span class="tlaGNC">       96311 :         pe.danger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * countBit(kingFlank[bkf] &amp; pe.semiOpenFiles[Co_White]) / 8;</span></span>
 <span id="L539"><span class="lineNum">     539</span>              :         </span>
 <span id="L540"><span class="lineNum">     540</span>              :         // fawn (mostly for fun ...)</span>
-<span id="L541"><span class="lineNum">     541</span> <span class="tlaGNC">       94412 :         pe.score -= EvalConfig::pawnFawnMalusKS *</span></span>
-<span id="L542"><span class="lineNum">     542</span> <span class="tlaGNC">      188824 :                     (countBit((pawns[Co_White] &amp; (BBSq_h2 | BBSq_g3)) | (pawns[Co_Black] &amp; BBSq_h3) | (kings[Co_White] &amp; kingSide)) / 4);</span></span>
-<span id="L543"><span class="lineNum">     543</span> <span class="tlaGNC">       94412 :         pe.score += EvalConfig::pawnFawnMalusKS *</span></span>
-<span id="L544"><span class="lineNum">     544</span> <span class="tlaGNC">      188824 :                     (countBit((pawns[Co_Black] &amp; (BBSq_h7 | BBSq_g6)) | (pawns[Co_White] &amp; BBSq_h6) | (kings[Co_Black] &amp; kingSide)) / 4);</span></span>
-<span id="L545"><span class="lineNum">     545</span> <span class="tlaGNC">       94412 :         pe.score -= EvalConfig::pawnFawnMalusQS *</span></span>
-<span id="L546"><span class="lineNum">     546</span> <span class="tlaGNC">      188824 :                     (countBit((pawns[Co_White] &amp; (BBSq_a2 | BBSq_b3)) | (pawns[Co_Black] &amp; BBSq_a3) | (kings[Co_White] &amp; queenSide)) / 4);</span></span>
-<span id="L547"><span class="lineNum">     547</span> <span class="tlaGNC">       94412 :         pe.score += EvalConfig::pawnFawnMalusQS *</span></span>
-<span id="L548"><span class="lineNum">     548</span> <span class="tlaGNC">      188824 :                     (countBit((pawns[Co_Black] &amp; (BBSq_a7 | BBSq_b6)) | (pawns[Co_White] &amp; BBSq_a6) | (kings[Co_Black] &amp; queenSide)) / 4);</span></span>
+<span id="L541"><span class="lineNum">     541</span> <span class="tlaGNC">       96311 :         pe.score -= EvalConfig::pawnFawnMalusKS *</span></span>
+<span id="L542"><span class="lineNum">     542</span> <span class="tlaGNC">      192622 :                     (countBit((pawns[Co_White] &amp; (BBSq_h2 | BBSq_g3)) | (pawns[Co_Black] &amp; BBSq_h3) | (kings[Co_White] &amp; kingSide)) / 4);</span></span>
+<span id="L543"><span class="lineNum">     543</span> <span class="tlaGNC">       96311 :         pe.score += EvalConfig::pawnFawnMalusKS *</span></span>
+<span id="L544"><span class="lineNum">     544</span> <span class="tlaGNC">      192622 :                     (countBit((pawns[Co_Black] &amp; (BBSq_h7 | BBSq_g6)) | (pawns[Co_White] &amp; BBSq_h6) | (kings[Co_Black] &amp; kingSide)) / 4);</span></span>
+<span id="L545"><span class="lineNum">     545</span> <span class="tlaGNC">       96311 :         pe.score -= EvalConfig::pawnFawnMalusQS *</span></span>
+<span id="L546"><span class="lineNum">     546</span> <span class="tlaGNC">      192622 :                     (countBit((pawns[Co_White] &amp; (BBSq_a2 | BBSq_b3)) | (pawns[Co_Black] &amp; BBSq_a3) | (kings[Co_White] &amp; queenSide)) / 4);</span></span>
+<span id="L547"><span class="lineNum">     547</span> <span class="tlaGNC">       96311 :         pe.score += EvalConfig::pawnFawnMalusQS *</span></span>
+<span id="L548"><span class="lineNum">     548</span> <span class="tlaGNC">      192622 :                     (countBit((pawns[Co_Black] &amp; (BBSq_a7 | BBSq_b6)) | (pawns[Co_White] &amp; BBSq_a6) | (kings[Co_Black] &amp; queenSide)) / 4);</span></span>
 <span id="L549"><span class="lineNum">     549</span>              :       }</span>
 <span id="L550"><span class="lineNum">     550</span>              : </span>
 <span id="L551"><span class="lineNum">     551</span>              :       context.stats.incr(Stats::sid_ttPawnInsert);</span>
-<span id="L552"><span class="lineNum">     552</span> <span class="tlaGNC">       94412 :       pe.h = Hash64to32(computePHash(p)); // this associate the pawn entry to the current K&amp;P positions</span></span>
+<span id="L552"><span class="lineNum">     552</span> <span class="tlaGNC">       96311 :       pe.h = Hash64to32(computePHash(p)); // this associate the pawn entry to the current K&amp;P positions</span></span>
 <span id="L553"><span class="lineNum">     553</span>              :    }</span>
-<span id="L554"><span class="lineNum">     554</span> <span class="tlaGNC">      410907 :    assert(pePtr);</span></span>
+<span id="L554"><span class="lineNum">     554</span> <span class="tlaGNC">      416069 :    assert(pePtr);</span></span>
 <span id="L555"><span class="lineNum">     555</span>              :    const Searcher::PawnEntry &amp;pe = *pePtr; // let's use a ref instead of a pointer</span>
 <span id="L556"><span class="lineNum">     556</span>              :    // add computed or hash score for pawn structure</span>
-<span id="L557"><span class="lineNum">     557</span> <span class="tlaGNC">      410907 :    features.scores[F_pawnStruct] += pe.score;</span></span>
+<span id="L557"><span class="lineNum">     557</span> <span class="tlaGNC">      416069 :    features.scores[F_pawnStruct] += pe.score;</span></span>
 <span id="L558"><span class="lineNum">     558</span>              : </span>
 <span id="L559"><span class="lineNum">     559</span>              :    // update global things with freshy gotten pawn entry stuff</span>
-<span id="L560"><span class="lineNum">     560</span> <span class="tlaGNC">      410907 :    kdanger[Co_White] += pe.danger[Co_White];</span></span>
-<span id="L561"><span class="lineNum">     561</span> <span class="tlaGNC">      410907 :    kdanger[Co_Black] += pe.danger[Co_Black];</span></span>
-<span id="L562"><span class="lineNum">     562</span> <span class="tlaGNC">      410907 :    checkers[Co_White][0] = BBTools::pawnAttacks&lt;Co_Black&gt;(kings[Co_Black]) &amp; pawns[Co_White];</span></span>
-<span id="L563"><span class="lineNum">     563</span> <span class="tlaGNC">      410907 :    checkers[Co_Black][0] = BBTools::pawnAttacks&lt;Co_White&gt;(kings[Co_White]) &amp; pawns[Co_Black];</span></span>
-<span id="L564"><span class="lineNum">     564</span> <span class="tlaGNC">      410907 :    att2[Co_White] |= att[Co_White] &amp; pe.pawnTargets[Co_White];</span></span>
-<span id="L565"><span class="lineNum">     565</span> <span class="tlaGNC">      410907 :    att2[Co_Black] |= att[Co_Black] &amp; pe.pawnTargets[Co_Black];</span></span>
-<span id="L566"><span class="lineNum">     566</span> <span class="tlaGNC">      410907 :    att[Co_White] |= pe.pawnTargets[Co_White];</span></span>
-<span id="L567"><span class="lineNum">     567</span> <span class="tlaGNC">      410907 :    att[Co_Black] |= pe.pawnTargets[Co_Black];</span></span>
+<span id="L560"><span class="lineNum">     560</span> <span class="tlaGNC">      416069 :    kdanger[Co_White] += pe.danger[Co_White];</span></span>
+<span id="L561"><span class="lineNum">     561</span> <span class="tlaGNC">      416069 :    kdanger[Co_Black] += pe.danger[Co_Black];</span></span>
+<span id="L562"><span class="lineNum">     562</span> <span class="tlaGNC">      416069 :    checkers[Co_White][0] = BBTools::pawnAttacks&lt;Co_Black&gt;(kings[Co_Black]) &amp; pawns[Co_White];</span></span>
+<span id="L563"><span class="lineNum">     563</span> <span class="tlaGNC">      416069 :    checkers[Co_Black][0] = BBTools::pawnAttacks&lt;Co_White&gt;(kings[Co_White]) &amp; pawns[Co_Black];</span></span>
+<span id="L564"><span class="lineNum">     564</span> <span class="tlaGNC">      416069 :    att2[Co_White] |= att[Co_White] &amp; pe.pawnTargets[Co_White];</span></span>
+<span id="L565"><span class="lineNum">     565</span> <span class="tlaGNC">      416069 :    att2[Co_Black] |= att[Co_Black] &amp; pe.pawnTargets[Co_Black];</span></span>
+<span id="L566"><span class="lineNum">     566</span> <span class="tlaGNC">      416069 :    att[Co_White] |= pe.pawnTargets[Co_White];</span></span>
+<span id="L567"><span class="lineNum">     567</span> <span class="tlaGNC">      416069 :    att[Co_Black] |= pe.pawnTargets[Co_Black];</span></span>
 <span id="L568"><span class="lineNum">     568</span>              : </span>
 <span id="L569"><span class="lineNum">     569</span>              :    STOP_AND_SUM_TIMER(Eval3)</span>
 <span id="L570"><span class="lineNum">     570</span>              : </span>
 <span id="L571"><span class="lineNum">     571</span>              :    //const BitBoard attackedOrNotDefended[2]    = {att[Co_White]  | ~att[Co_Black]  , att[Co_Black]  | ~att[Co_White] };</span>
-<span id="L572"><span class="lineNum">     572</span> <span class="tlaGNC">      410907 :    const colored&lt;BitBoard&gt; attackedAndNotDefended   = {att[Co_White] &amp; ~att[Co_Black], att[Co_Black] &amp; ~att[Co_White]};</span></span>
-<span id="L573"><span class="lineNum">     573</span> <span class="tlaGNC">      410907 :    const colored&lt;BitBoard&gt; attacked2AndNotDefended2 = {att2[Co_White] &amp; ~att2[Co_Black], att2[Co_Black] &amp; ~att2[Co_White]};</span></span>
+<span id="L572"><span class="lineNum">     572</span> <span class="tlaGNC">      416069 :    const colored&lt;BitBoard&gt; attackedAndNotDefended   = {att[Co_White] &amp; ~att[Co_Black], att[Co_Black] &amp; ~att[Co_White]};</span></span>
+<span id="L573"><span class="lineNum">     573</span> <span class="tlaGNC">      416069 :    const colored&lt;BitBoard&gt; attacked2AndNotDefended2 = {att2[Co_White] &amp; ~att2[Co_Black], att2[Co_Black] &amp; ~att2[Co_White]};</span></span>
 <span id="L574"><span class="lineNum">     574</span>              : </span>
-<span id="L575"><span class="lineNum">     575</span> <span class="tlaGNC">      410907 :    const colored&lt;BitBoard&gt; weakSquare = { att[Co_Black] &amp; ~att2[Co_White] &amp; (~att[Co_White] | attFromPiece[Co_White][P_wk - 1] | attFromPiece[Co_White][P_wq - 1]),</span></span>
-<span id="L576"><span class="lineNum">     576</span> <span class="tlaGNC">      410907 :                                           att[Co_White] &amp; ~att2[Co_Black] &amp; (~att[Co_Black] | attFromPiece[Co_Black][P_wk - 1] | attFromPiece[Co_Black][P_wq - 1])};</span></span>
-<span id="L577"><span class="lineNum">     577</span> <span class="tlaGNC">      410907 :    const colored&lt;BitBoard&gt; safeSquare = { ~att[Co_Black] | (weakSquare[Co_Black] &amp; att2[Co_White]),</span></span>
-<span id="L578"><span class="lineNum">     578</span> <span class="tlaGNC">      410907 :                                           ~att[Co_White] | (weakSquare[Co_White] &amp; att2[Co_Black])};</span></span>
-<span id="L579"><span class="lineNum">     579</span> <span class="tlaGNC">      410907 :    const colored&lt;BitBoard&gt; protectedSquare = {pe.pawnTargets[Co_White] | attackedAndNotDefended[Co_White] | attacked2AndNotDefended2[Co_White],</span></span>
-<span id="L580"><span class="lineNum">     580</span> <span class="tlaGNC">      410907 :                                               pe.pawnTargets[Co_Black] | attackedAndNotDefended[Co_Black] | attacked2AndNotDefended2[Co_Black]};</span></span>
+<span id="L575"><span class="lineNum">     575</span> <span class="tlaGNC">      416069 :    const colored&lt;BitBoard&gt; weakSquare = { att[Co_Black] &amp; ~att2[Co_White] &amp; (~att[Co_White] | attFromPiece[Co_White][P_wk - 1] | attFromPiece[Co_White][P_wq - 1]),</span></span>
+<span id="L576"><span class="lineNum">     576</span> <span class="tlaGNC">      416069 :                                           att[Co_White] &amp; ~att2[Co_Black] &amp; (~att[Co_Black] | attFromPiece[Co_Black][P_wk - 1] | attFromPiece[Co_Black][P_wq - 1])};</span></span>
+<span id="L577"><span class="lineNum">     577</span> <span class="tlaGNC">      416069 :    const colored&lt;BitBoard&gt; safeSquare = { ~att[Co_Black] | (weakSquare[Co_Black] &amp; att2[Co_White]),</span></span>
+<span id="L578"><span class="lineNum">     578</span> <span class="tlaGNC">      416069 :                                           ~att[Co_White] | (weakSquare[Co_White] &amp; att2[Co_Black])};</span></span>
+<span id="L579"><span class="lineNum">     579</span> <span class="tlaGNC">      416069 :    const colored&lt;BitBoard&gt; protectedSquare = {pe.pawnTargets[Co_White] | attackedAndNotDefended[Co_White] | attacked2AndNotDefended2[Co_White],</span></span>
+<span id="L580"><span class="lineNum">     580</span> <span class="tlaGNC">      416069 :                                               pe.pawnTargets[Co_Black] | attackedAndNotDefended[Co_Black] | attacked2AndNotDefended2[Co_Black]};</span></span>
 <span id="L581"><span class="lineNum">     581</span>              : </span>
-<span id="L582"><span class="lineNum">     582</span> <span class="tlaGNC">      410907 :    data.haveThreats[Co_White] = (att[Co_White] &amp; p.allPieces[Co_Black]) != emptyBitBoard;</span></span>
-<span id="L583"><span class="lineNum">     583</span> <span class="tlaGNC">      410907 :    data.haveThreats[Co_Black] = (att[Co_Black] &amp; p.allPieces[Co_White]) != emptyBitBoard;</span></span>
+<span id="L582"><span class="lineNum">     582</span> <span class="tlaGNC">      416069 :    data.haveThreats[Co_White] = (att[Co_White] &amp; p.allPieces[Co_Black]) != emptyBitBoard;</span></span>
+<span id="L583"><span class="lineNum">     583</span> <span class="tlaGNC">      416069 :    data.haveThreats[Co_Black] = (att[Co_Black] &amp; p.allPieces[Co_White]) != emptyBitBoard;</span></span>
 <span id="L584"><span class="lineNum">     584</span>              : </span>
-<span id="L585"><span class="lineNum">     585</span> <span class="tlaGNC">      410907 :    data.goodThreats[Co_White] = ((attFromPiece[Co_White][P_wp-1] &amp; p.allPieces[Co_Black] &amp; ~p.blackPawn())</span></span>
-<span id="L586"><span class="lineNum">     586</span> <span class="tlaGNC">      410907 :                                 | (attFromPiece[Co_White][P_wn-1] &amp; (p.blackQueen() | p.blackRook()))</span></span>
-<span id="L587"><span class="lineNum">     587</span> <span class="tlaGNC">      410907 :                                 | (attFromPiece[Co_White][P_wb-1] &amp; (p.blackQueen() | p.blackRook()))</span></span>
-<span id="L588"><span class="lineNum">     588</span> <span class="tlaGNC">      410907 :                                 | (attFromPiece[Co_White][P_wr-1] &amp; p.blackQueen())) != emptyBitBoard;</span></span>
-<span id="L589"><span class="lineNum">     589</span> <span class="tlaGNC">      410907 :    data.goodThreats[Co_Black] = ((attFromPiece[Co_Black][P_wp-1] &amp; p.allPieces[Co_White] &amp; ~p.whitePawn())</span></span>
-<span id="L590"><span class="lineNum">     590</span> <span class="tlaGNC">      410907 :                                 | (attFromPiece[Co_Black][P_wn-1] &amp; (p.whiteQueen() | p.whiteRook()))</span></span>
-<span id="L591"><span class="lineNum">     591</span> <span class="tlaGNC">      410907 :                                 | (attFromPiece[Co_Black][P_wb-1] &amp; (p.whiteQueen() | p.whiteRook()))</span></span>
-<span id="L592"><span class="lineNum">     592</span> <span class="tlaGNC">      410907 :                                 | (attFromPiece[Co_Black][P_wr-1] &amp; p.whiteQueen())) != emptyBitBoard;</span></span>
+<span id="L585"><span class="lineNum">     585</span> <span class="tlaGNC">      416069 :    data.goodThreats[Co_White] = ((attFromPiece[Co_White][P_wp-1] &amp; p.allPieces[Co_Black] &amp; ~p.blackPawn())</span></span>
+<span id="L586"><span class="lineNum">     586</span> <span class="tlaGNC">      416069 :                                 | (attFromPiece[Co_White][P_wn-1] &amp; (p.blackQueen() | p.blackRook()))</span></span>
+<span id="L587"><span class="lineNum">     587</span> <span class="tlaGNC">      416069 :                                 | (attFromPiece[Co_White][P_wb-1] &amp; (p.blackQueen() | p.blackRook()))</span></span>
+<span id="L588"><span class="lineNum">     588</span> <span class="tlaGNC">      416069 :                                 | (attFromPiece[Co_White][P_wr-1] &amp; p.blackQueen())) != emptyBitBoard;</span></span>
+<span id="L589"><span class="lineNum">     589</span> <span class="tlaGNC">      416069 :    data.goodThreats[Co_Black] = ((attFromPiece[Co_Black][P_wp-1] &amp; p.allPieces[Co_White] &amp; ~p.whitePawn())</span></span>
+<span id="L590"><span class="lineNum">     590</span> <span class="tlaGNC">      416069 :                                 | (attFromPiece[Co_Black][P_wn-1] &amp; (p.whiteQueen() | p.whiteRook()))</span></span>
+<span id="L591"><span class="lineNum">     591</span> <span class="tlaGNC">      416069 :                                 | (attFromPiece[Co_Black][P_wb-1] &amp; (p.whiteQueen() | p.whiteRook()))</span></span>
+<span id="L592"><span class="lineNum">     592</span> <span class="tlaGNC">      416069 :                                 | (attFromPiece[Co_Black][P_wr-1] &amp; p.whiteQueen())) != emptyBitBoard;</span></span>
 <span id="L593"><span class="lineNum">     593</span>              : </span>
 <span id="L594"><span class="lineNum">     594</span>              :    // reward safe checks</span>
-<span id="L595"><span class="lineNum">     595</span> <span class="tlaGNC">      410907 :    kdanger[Co_White] += EvalConfig::kingAttSafeCheck[0] * countBit(checkers[Co_Black][0] &amp; att[Co_Black]);</span></span>
-<span id="L596"><span class="lineNum">     596</span> <span class="tlaGNC">      410907 :    kdanger[Co_Black] += EvalConfig::kingAttSafeCheck[0] * countBit(checkers[Co_White][0] &amp; att[Co_White]);</span></span>
-<span id="L597"><span class="lineNum">     597</span> <span class="tlaGNC">     2054535 :    for (Piece pp = P_wn; pp &lt; P_wk; ++pp) {</span></span>
-<span id="L598"><span class="lineNum">     598</span> <span class="tlaGNC">     1643628 :       kdanger[Co_White] += EvalConfig::kingAttSafeCheck[pp - 1] * countBit(checkers[Co_Black][pp - 1] &amp; safeSquare[Co_Black]);</span></span>
-<span id="L599"><span class="lineNum">     599</span> <span class="tlaGNC">     1643628 :       kdanger[Co_Black] += EvalConfig::kingAttSafeCheck[pp - 1] * countBit(checkers[Co_White][pp - 1] &amp; safeSquare[Co_White]);</span></span>
+<span id="L595"><span class="lineNum">     595</span> <span class="tlaGNC">      416069 :    kdanger[Co_White] += EvalConfig::kingAttSafeCheck[0] * countBit(checkers[Co_Black][0] &amp; att[Co_Black]);</span></span>
+<span id="L596"><span class="lineNum">     596</span> <span class="tlaGNC">      416069 :    kdanger[Co_Black] += EvalConfig::kingAttSafeCheck[0] * countBit(checkers[Co_White][0] &amp; att[Co_White]);</span></span>
+<span id="L597"><span class="lineNum">     597</span> <span class="tlaGNC">     2080345 :    for (Piece pp = P_wn; pp &lt; P_wk; ++pp) {</span></span>
+<span id="L598"><span class="lineNum">     598</span> <span class="tlaGNC">     1664276 :       kdanger[Co_White] += EvalConfig::kingAttSafeCheck[pp - 1] * countBit(checkers[Co_Black][pp - 1] &amp; safeSquare[Co_Black]);</span></span>
+<span id="L599"><span class="lineNum">     599</span> <span class="tlaGNC">     1664276 :       kdanger[Co_Black] += EvalConfig::kingAttSafeCheck[pp - 1] * countBit(checkers[Co_White][pp - 1] &amp; safeSquare[Co_White]);</span></span>
 <span id="L600"><span class="lineNum">     600</span>              :    }</span>
 <span id="L601"><span class="lineNum">     601</span>              : </span>
 <span id="L602"><span class="lineNum">     602</span>              :    // less danger if no enemy queen</span>
-<span id="L603"><span class="lineNum">     603</span> <span class="tlaGNC">      410907 :    const Square whiteQueenSquare = queens[Co_White] ? BBTools::SquareFromBitBoard(queens[Co_White]) : INVALIDSQUARE;</span></span>
-<span id="L604"><span class="lineNum">     604</span> <span class="tlaGNC">      410907 :    const Square blackQueenSquare = queens[Co_Black] ? BBTools::SquareFromBitBoard(queens[Co_Black]) : INVALIDSQUARE;</span></span>
-<span id="L605"><span class="lineNum">     605</span> <span class="tlaGNC">      410907 :    kdanger[Co_White] -= blackQueenSquare == INVALIDSQUARE ? EvalConfig::kingAttNoQueen : 0;</span></span>
-<span id="L606"><span class="lineNum">     606</span> <span class="tlaGNC">      410907 :    kdanger[Co_Black] -= whiteQueenSquare == INVALIDSQUARE ? EvalConfig::kingAttNoQueen : 0;</span></span>
+<span id="L603"><span class="lineNum">     603</span> <span class="tlaGNC">      416069 :    const Square whiteQueenSquare = queens[Co_White] ? BBTools::SquareFromBitBoard(queens[Co_White]) : INVALIDSQUARE;</span></span>
+<span id="L604"><span class="lineNum">     604</span> <span class="tlaGNC">      416069 :    const Square blackQueenSquare = queens[Co_Black] ? BBTools::SquareFromBitBoard(queens[Co_Black]) : INVALIDSQUARE;</span></span>
+<span id="L605"><span class="lineNum">     605</span> <span class="tlaGNC">      416069 :    kdanger[Co_White] -= blackQueenSquare == INVALIDSQUARE ? EvalConfig::kingAttNoQueen : 0;</span></span>
+<span id="L606"><span class="lineNum">     606</span> <span class="tlaGNC">      416069 :    kdanger[Co_Black] -= whiteQueenSquare == INVALIDSQUARE ? EvalConfig::kingAttNoQueen : 0;</span></span>
 <span id="L607"><span class="lineNum">     607</span>              : </span>
 <span id="L608"><span class="lineNum">     608</span>              :    // danger : use king danger score. **DO NOT** apply this in end-game</span>
-<span id="L609"><span class="lineNum">     609</span> <span class="tlaGNC">      410907 :    const ScoreType dw = EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_White] / 32), ScoreType(0)), ScoreType(63))];</span></span>
-<span id="L610"><span class="lineNum">     610</span> <span class="tlaGNC">      821814 :    const ScoreType db = EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_Black] / 32), ScoreType(0)), ScoreType(63))];</span></span>
-<span id="L611"><span class="lineNum">     611</span> <span class="tlaGNC">      410907 :    features.scores[F_attack] -= EvalScore(dw, 0);</span></span>
-<span id="L612"><span class="lineNum">     612</span> <span class="tlaGNC">      410907 :    features.scores[F_attack] += EvalScore(db, 0);</span></span>
-<span id="L613"><span class="lineNum">     613</span> <span class="tlaGNC">      410907 :    data.danger[Co_White] = kdanger[Co_White];</span></span>
-<span id="L614"><span class="lineNum">     614</span> <span class="tlaGNC">      410907 :    data.danger[Co_Black] = kdanger[Co_Black];</span></span>
+<span id="L609"><span class="lineNum">     609</span> <span class="tlaGNC">      416069 :    const ScoreType dw = EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_White] / 32), ScoreType(0)), ScoreType(63))];</span></span>
+<span id="L610"><span class="lineNum">     610</span> <span class="tlaGNC">      832138 :    const ScoreType db = EvalConfig::kingAttTable[std::min(std::max(ScoreType(kdanger[Co_Black] / 32), ScoreType(0)), ScoreType(63))];</span></span>
+<span id="L611"><span class="lineNum">     611</span> <span class="tlaGNC">      416069 :    features.scores[F_attack] -= EvalScore(dw, 0);</span></span>
+<span id="L612"><span class="lineNum">     612</span> <span class="tlaGNC">      416069 :    features.scores[F_attack] += EvalScore(db, 0);</span></span>
+<span id="L613"><span class="lineNum">     613</span> <span class="tlaGNC">      416069 :    data.danger[Co_White] = kdanger[Co_White];</span></span>
+<span id="L614"><span class="lineNum">     614</span> <span class="tlaGNC">      416069 :    data.danger[Co_Black] = kdanger[Co_Black];</span></span>
 <span id="L615"><span class="lineNum">     615</span>              : </span>
 <span id="L616"><span class="lineNum">     616</span>              :    // own piece in front of pawn</span>
-<span id="L617"><span class="lineNum">     617</span> <span class="tlaGNC">      821814 :    features.scores[F_development] += EvalConfig::pieceFrontPawn * countBit(BBTools::shiftN&lt;Co_White&gt;(pawns[Co_White]) &amp; nonPawnMat[Co_White]);</span></span>
-<span id="L618"><span class="lineNum">     618</span> <span class="tlaGNC">      821814 :    features.scores[F_development] -= EvalConfig::pieceFrontPawn * countBit(BBTools::shiftN&lt;Co_Black&gt;(pawns[Co_Black]) &amp; nonPawnMat[Co_Black]);</span></span>
+<span id="L617"><span class="lineNum">     617</span> <span class="tlaGNC">      832138 :    features.scores[F_development] += EvalConfig::pieceFrontPawn * countBit(BBTools::shiftN&lt;Co_White&gt;(pawns[Co_White]) &amp; nonPawnMat[Co_White]);</span></span>
+<span id="L618"><span class="lineNum">     618</span> <span class="tlaGNC">      832138 :    features.scores[F_development] -= EvalConfig::pieceFrontPawn * countBit(BBTools::shiftN&lt;Co_Black&gt;(pawns[Co_Black]) &amp; nonPawnMat[Co_Black]);</span></span>
 <span id="L619"><span class="lineNum">     619</span>              : </span>
 <span id="L620"><span class="lineNum">     620</span>              :    // pawn in front of own minor</span>
-<span id="L621"><span class="lineNum">     621</span> <span class="tlaGNC">      410907 :    const colored&lt;BitBoard&gt; minor = {knights[Co_White] | bishops[Co_White], knights[Co_Black] | bishops[Co_Black]};</span></span>
-<span id="L622"><span class="lineNum">     622</span> <span class="tlaGNC">      410907 :    applyOn(BBTools::shiftS&lt;Co_White&gt;(pawns[Co_White]) &amp; minor[Co_White], [&amp;](const Square &amp; k){ </span></span>
-<span id="L623"><span class="lineNum">     623</span> <span class="tlaGNC">      337413 :       features.scores[F_development] += EvalConfig::pawnFrontMinor[ColorRank&lt;Co_White&gt;(k)]; </span></span>
+<span id="L621"><span class="lineNum">     621</span> <span class="tlaGNC">      416069 :    const colored&lt;BitBoard&gt; minor = {knights[Co_White] | bishops[Co_White], knights[Co_Black] | bishops[Co_Black]};</span></span>
+<span id="L622"><span class="lineNum">     622</span> <span class="tlaGNC">      416069 :    applyOn(BBTools::shiftS&lt;Co_White&gt;(pawns[Co_White]) &amp; minor[Co_White], [&amp;](const Square &amp; k){ </span></span>
+<span id="L623"><span class="lineNum">     623</span> <span class="tlaGNC">      343734 :       features.scores[F_development] += EvalConfig::pawnFrontMinor[ColorRank&lt;Co_White&gt;(k)]; </span></span>
 <span id="L624"><span class="lineNum">     624</span>              :    });</span>
-<span id="L625"><span class="lineNum">     625</span> <span class="tlaGNC">      410907 :    applyOn(BBTools::shiftS&lt;Co_Black&gt;(pawns[Co_Black]) &amp; minor[Co_Black], [&amp;](const Square &amp; k){</span></span>
-<span id="L626"><span class="lineNum">     626</span> <span class="tlaGNC">      345636 :       features.scores[F_development] -= EvalConfig::pawnFrontMinor[ColorRank&lt;Co_Black&gt;(k)]; </span></span>
+<span id="L625"><span class="lineNum">     625</span> <span class="tlaGNC">      416069 :    applyOn(BBTools::shiftS&lt;Co_Black&gt;(pawns[Co_Black]) &amp; minor[Co_Black], [&amp;](const Square &amp; k){</span></span>
+<span id="L626"><span class="lineNum">     626</span> <span class="tlaGNC">      348058 :       features.scores[F_development] -= EvalConfig::pawnFrontMinor[ColorRank&lt;Co_Black&gt;(k)]; </span></span>
 <span id="L627"><span class="lineNum">     627</span>              :    });</span>
 <span id="L628"><span class="lineNum">     628</span>              : </span>
 <span id="L629"><span class="lineNum">     629</span>              :    // center control</span>
-<span id="L630"><span class="lineNum">     630</span> <span class="tlaGNC">      821814 :    features.scores[F_development] += EvalConfig::centerControl * countBit(protectedSquare[Co_White] &amp; extendedCenter);</span></span>
-<span id="L631"><span class="lineNum">     631</span> <span class="tlaGNC">      821814 :    features.scores[F_development] -= EvalConfig::centerControl * countBit(protectedSquare[Co_Black] &amp; extendedCenter);</span></span>
+<span id="L630"><span class="lineNum">     630</span> <span class="tlaGNC">      832138 :    features.scores[F_development] += EvalConfig::centerControl * countBit(protectedSquare[Co_White] &amp; extendedCenter);</span></span>
+<span id="L631"><span class="lineNum">     631</span> <span class="tlaGNC">      832138 :    features.scores[F_development] -= EvalConfig::centerControl * countBit(protectedSquare[Co_Black] &amp; extendedCenter);</span></span>
 <span id="L632"><span class="lineNum">     632</span>              : </span>
 <span id="L633"><span class="lineNum">     633</span>              :    // pawn hole, unprotected</span>
-<span id="L634"><span class="lineNum">     634</span> <span class="tlaGNC">      821814 :    features.scores[F_positional] += EvalConfig::holesMalus * countBit(pe.holes[Co_White] &amp; ~protectedSquare[Co_White]) / 4;</span></span>
-<span id="L635"><span class="lineNum">     635</span> <span class="tlaGNC">      821814 :    features.scores[F_positional] -= EvalConfig::holesMalus * countBit(pe.holes[Co_Black] &amp; ~protectedSquare[Co_Black]) / 4;</span></span>
+<span id="L634"><span class="lineNum">     634</span> <span class="tlaGNC">      832138 :    features.scores[F_positional] += EvalConfig::holesMalus * countBit(pe.holes[Co_White] &amp; ~protectedSquare[Co_White]) / 4;</span></span>
+<span id="L635"><span class="lineNum">     635</span> <span class="tlaGNC">      832138 :    features.scores[F_positional] -= EvalConfig::holesMalus * countBit(pe.holes[Co_Black] &amp; ~protectedSquare[Co_Black]) / 4;</span></span>
 <span id="L636"><span class="lineNum">     636</span>              : </span>
 <span id="L637"><span class="lineNum">     637</span>              :    // free passer bonus</span>
-<span id="L638"><span class="lineNum">     638</span> <span class="tlaGNC">      410907 :    evalPawnFreePasser&lt;Co_White&gt;(p, pe.passed[Co_White], features.scores[F_pawnStruct]);</span></span>
-<span id="L639"><span class="lineNum">     639</span> <span class="tlaGNC">      410907 :    evalPawnFreePasser&lt;Co_Black&gt;(p, pe.passed[Co_Black], features.scores[F_pawnStruct]);</span></span>
+<span id="L638"><span class="lineNum">     638</span> <span class="tlaGNC">      416069 :    evalPawnFreePasser&lt;Co_White&gt;(p, pe.passed[Co_White], features.scores[F_pawnStruct]);</span></span>
+<span id="L639"><span class="lineNum">     639</span> <span class="tlaGNC">      416069 :    evalPawnFreePasser&lt;Co_Black&gt;(p, pe.passed[Co_Black], features.scores[F_pawnStruct]);</span></span>
 <span id="L640"><span class="lineNum">     640</span>              : </span>
 <span id="L641"><span class="lineNum">     641</span>              :    // rook behind passed</span>
-<span id="L642"><span class="lineNum">     642</span> <span class="tlaGNC">      410907 :    features.scores[F_pawnStruct] += EvalConfig::rookBehindPassed * (countBit(rooks[Co_White] &amp; BBTools::rearSpan&lt;Co_White&gt;(pe.passed[Co_White])) -</span></span>
-<span id="L643"><span class="lineNum">     643</span> <span class="tlaGNC">      821814 :                                                                     countBit(rooks[Co_Black] &amp; BBTools::rearSpan&lt;Co_White&gt;(pe.passed[Co_White])));</span></span>
-<span id="L644"><span class="lineNum">     644</span> <span class="tlaGNC">      410907 :    features.scores[F_pawnStruct] -= EvalConfig::rookBehindPassed * (countBit(rooks[Co_Black] &amp; BBTools::rearSpan&lt;Co_Black&gt;(pe.passed[Co_Black])) -</span></span>
-<span id="L645"><span class="lineNum">     645</span> <span class="tlaGNC">      821814 :                                                                     countBit(rooks[Co_White] &amp; BBTools::rearSpan&lt;Co_Black&gt;(pe.passed[Co_Black])));</span></span>
+<span id="L642"><span class="lineNum">     642</span> <span class="tlaGNC">      416069 :    features.scores[F_pawnStruct] += EvalConfig::rookBehindPassed * (countBit(rooks[Co_White] &amp; BBTools::rearSpan&lt;Co_White&gt;(pe.passed[Co_White])) -</span></span>
+<span id="L643"><span class="lineNum">     643</span> <span class="tlaGNC">      832138 :                                                                     countBit(rooks[Co_Black] &amp; BBTools::rearSpan&lt;Co_White&gt;(pe.passed[Co_White])));</span></span>
+<span id="L644"><span class="lineNum">     644</span> <span class="tlaGNC">      416069 :    features.scores[F_pawnStruct] -= EvalConfig::rookBehindPassed * (countBit(rooks[Co_Black] &amp; BBTools::rearSpan&lt;Co_Black&gt;(pe.passed[Co_Black])) -</span></span>
+<span id="L645"><span class="lineNum">     645</span> <span class="tlaGNC">      832138 :                                                                     countBit(rooks[Co_White] &amp; BBTools::rearSpan&lt;Co_Black&gt;(pe.passed[Co_Black])));</span></span>
 <span id="L646"><span class="lineNum">     646</span>              : </span>
 <span id="L647"><span class="lineNum">     647</span>              :    // protected minor blocking openfile</span>
-<span id="L648"><span class="lineNum">     648</span> <span class="tlaGNC">      821814 :    features.scores[F_positional] += EvalConfig::minorOnOpenFile * countBit(pe.openFiles &amp; (minor[Co_White]) &amp; pe.pawnTargets[Co_White]);</span></span>
-<span id="L649"><span class="lineNum">     649</span> <span class="tlaGNC">      821814 :    features.scores[F_positional] -= EvalConfig::minorOnOpenFile * countBit(pe.openFiles &amp; (minor[Co_Black]) &amp; pe.pawnTargets[Co_Black]);</span></span>
+<span id="L648"><span class="lineNum">     648</span> <span class="tlaGNC">      832138 :    features.scores[F_positional] += EvalConfig::minorOnOpenFile * countBit(pe.openFiles &amp; (minor[Co_White]) &amp; pe.pawnTargets[Co_White]);</span></span>
+<span id="L649"><span class="lineNum">     649</span> <span class="tlaGNC">      832138 :    features.scores[F_positional] -= EvalConfig::minorOnOpenFile * countBit(pe.openFiles &amp; (minor[Co_Black]) &amp; pe.pawnTargets[Co_Black]);</span></span>
 <span id="L650"><span class="lineNum">     650</span>              : </span>
 <span id="L651"><span class="lineNum">     651</span>              :    // knight on opponent hole, protected by pawn</span>
-<span id="L652"><span class="lineNum">     652</span> <span class="tlaGNC">      821814 :    features.scores[F_positional] += EvalConfig::outpostN * countBit(pe.holes[Co_Black] &amp; knights[Co_White] &amp; pe.pawnTargets[Co_White]);</span></span>
-<span id="L653"><span class="lineNum">     653</span> <span class="tlaGNC">      821814 :    features.scores[F_positional] -= EvalConfig::outpostN * countBit(pe.holes[Co_White] &amp; knights[Co_Black] &amp; pe.pawnTargets[Co_Black]);</span></span>
+<span id="L652"><span class="lineNum">     652</span> <span class="tlaGNC">      832138 :    features.scores[F_positional] += EvalConfig::outpostN * countBit(pe.holes[Co_Black] &amp; knights[Co_White] &amp; pe.pawnTargets[Co_White]);</span></span>
+<span id="L653"><span class="lineNum">     653</span> <span class="tlaGNC">      832138 :    features.scores[F_positional] -= EvalConfig::outpostN * countBit(pe.holes[Co_White] &amp; knights[Co_Black] &amp; pe.pawnTargets[Co_Black]);</span></span>
 <span id="L654"><span class="lineNum">     654</span>              : </span>
 <span id="L655"><span class="lineNum">     655</span>              :    // bishop on opponent hole, protected by pawn</span>
-<span id="L656"><span class="lineNum">     656</span> <span class="tlaGNC">      821814 :    features.scores[F_positional] += EvalConfig::outpostB * countBit(pe.holes[Co_Black] &amp; bishops[Co_White] &amp; pe.pawnTargets[Co_White]);</span></span>
-<span id="L657"><span class="lineNum">     657</span> <span class="tlaGNC">      821814 :    features.scores[F_positional] -= EvalConfig::outpostB * countBit(pe.holes[Co_White] &amp; bishops[Co_Black] &amp; pe.pawnTargets[Co_Black]);</span></span>
+<span id="L656"><span class="lineNum">     656</span> <span class="tlaGNC">      832138 :    features.scores[F_positional] += EvalConfig::outpostB * countBit(pe.holes[Co_Black] &amp; bishops[Co_White] &amp; pe.pawnTargets[Co_White]);</span></span>
+<span id="L657"><span class="lineNum">     657</span> <span class="tlaGNC">      832138 :    features.scores[F_positional] -= EvalConfig::outpostB * countBit(pe.holes[Co_White] &amp; bishops[Co_Black] &amp; pe.pawnTargets[Co_Black]);</span></span>
 <span id="L658"><span class="lineNum">     658</span>              : </span>
 <span id="L659"><span class="lineNum">     659</span>              :    // knight far from both kings gets a penalty</span>
 <span id="L660"><span class="lineNum">     660</span>              :    if (kingIsMandatory){</span>
-<span id="L661"><span class="lineNum">     661</span> <span class="tlaGNC">      410907 :     applyOn(knights[Co_White], [&amp;](const Square &amp; knighSq){</span></span>
-<span id="L662"><span class="lineNum">     662</span> <span class="tlaGNC">      351781 :         features.scores[F_positional] +=</span></span>
-<span id="L663"><span class="lineNum">     663</span> <span class="tlaGNC">      393000 :             EvalConfig::knightTooFar[std::min(chebyshevDistance(p.king[Co_White], knighSq), chebyshevDistance(p.king[Co_Black], knighSq))];</span></span>
-<span id="L664"><span class="lineNum">     664</span> <span class="tlaGNC">      351781 :     });</span></span>
-<span id="L665"><span class="lineNum">     665</span> <span class="tlaGNC">      741748 :     applyOn(knights[Co_Black], [&amp;](const Square &amp; knighSq){</span></span>
-<span id="L666"><span class="lineNum">     666</span> <span class="tlaGNC">      330841 :         features.scores[F_positional] -=</span></span>
-<span id="L667"><span class="lineNum">     667</span> <span class="tlaGNC">      622432 :             EvalConfig::knightTooFar[std::min(chebyshevDistance(p.king[Co_White], knighSq), chebyshevDistance(p.king[Co_Black], knighSq))];</span></span>
-<span id="L668"><span class="lineNum">     668</span> <span class="tlaGNC">      330841 :     });</span></span>
+<span id="L661"><span class="lineNum">     661</span> <span class="tlaGNC">      416069 :     applyOn(knights[Co_White], [&amp;](const Square &amp; knighSq){</span></span>
+<span id="L662"><span class="lineNum">     662</span> <span class="tlaGNC">      360536 :         features.scores[F_positional] +=</span></span>
+<span id="L663"><span class="lineNum">     663</span> <span class="tlaGNC">      403760 :             EvalConfig::knightTooFar[std::min(chebyshevDistance(p.king[Co_White], knighSq), chebyshevDistance(p.king[Co_Black], knighSq))];</span></span>
+<span id="L664"><span class="lineNum">     664</span> <span class="tlaGNC">      360536 :     });</span></span>
+<span id="L665"><span class="lineNum">     665</span> <span class="tlaGNC">      754855 :     applyOn(knights[Co_Black], [&amp;](const Square &amp; knighSq){</span></span>
+<span id="L666"><span class="lineNum">     666</span> <span class="tlaGNC">      338786 :         features.scores[F_positional] -=</span></span>
+<span id="L667"><span class="lineNum">     667</span> <span class="tlaGNC">      637745 :             EvalConfig::knightTooFar[std::min(chebyshevDistance(p.king[Co_White], knighSq), chebyshevDistance(p.king[Co_Black], knighSq))];</span></span>
+<span id="L668"><span class="lineNum">     668</span> <span class="tlaGNC">      338786 :     });</span></span>
 <span id="L669"><span class="lineNum">     669</span>              :    }</span>
 <span id="L670"><span class="lineNum">     670</span>              : </span>
 <span id="L671"><span class="lineNum">     671</span>              :    // number of hanging pieces</span>
-<span id="L672"><span class="lineNum">     672</span> <span class="tlaGNC">      410907 :    const colored&lt;BitBoard&gt; hanging = {nonPawnMat[Co_White] &amp; weakSquare[Co_White], nonPawnMat[Co_Black] &amp; weakSquare[Co_Black]};</span></span>
-<span id="L673"><span class="lineNum">     673</span> <span class="tlaGNC">      821814 :    features.scores[F_attack] += EvalConfig::hangingPieceMalus * (countBit(hanging[Co_White]) - countBit(hanging[Co_Black]));</span></span>
+<span id="L672"><span class="lineNum">     672</span> <span class="tlaGNC">      416069 :    const colored&lt;BitBoard&gt; hanging = {nonPawnMat[Co_White] &amp; weakSquare[Co_White], nonPawnMat[Co_Black] &amp; weakSquare[Co_Black]};</span></span>
+<span id="L673"><span class="lineNum">     673</span> <span class="tlaGNC">      832138 :    features.scores[F_attack] += EvalConfig::hangingPieceMalus * (countBit(hanging[Co_White]) - countBit(hanging[Co_Black]));</span></span>
 <span id="L674"><span class="lineNum">     674</span>              : </span>
 <span id="L675"><span class="lineNum">     675</span>              :    // threats by minor</span>
-<span id="L676"><span class="lineNum">     676</span> <span class="tlaGNC">      410907 :    BitBoard targetThreat = (nonPawnMat[Co_White] | (pawns[Co_White] &amp; weakSquare[Co_White])) &amp; (attFromPiece[Co_Black][P_wn - 1] | attFromPiece[Co_Black][P_wb - 1]);</span></span>
-<span id="L677"><span class="lineNum">     677</span> <span class="tlaGNC">      529453 :    applyOn(targetThreat, [&amp;](const Square &amp; k){</span></span>
-<span id="L678"><span class="lineNum">     678</span> <span class="tlaGNC">      237092 :       features.scores[F_attack] += EvalConfig::threatByMinor[PieceTools::getPieceType(p, k) - 1];</span></span>
-<span id="L679"><span class="lineNum">     679</span> <span class="tlaGNC">      118546 :    });</span></span>
-<span id="L680"><span class="lineNum">     680</span> <span class="tlaGNC">      410907 :    targetThreat = (nonPawnMat[Co_Black] | (pawns[Co_Black] &amp; weakSquare[Co_Black])) &amp; (attFromPiece[Co_White][P_wn - 1] | attFromPiece[Co_White][P_wb - 1]);</span></span>
-<span id="L681"><span class="lineNum">     681</span> <span class="tlaGNC">      540316 :    applyOn(targetThreat, [&amp;](const Square &amp; k){</span></span>
-<span id="L682"><span class="lineNum">     682</span> <span class="tlaGNC">      258818 :       features.scores[F_attack] -= EvalConfig::threatByMinor[PieceTools::getPieceType(p, k) - 1];</span></span>
-<span id="L683"><span class="lineNum">     683</span> <span class="tlaGNC">      129409 :    });</span></span>
+<span id="L676"><span class="lineNum">     676</span> <span class="tlaGNC">      416069 :    BitBoard targetThreat = (nonPawnMat[Co_White] | (pawns[Co_White] &amp; weakSquare[Co_White])) &amp; (attFromPiece[Co_Black][P_wn - 1] | attFromPiece[Co_Black][P_wb - 1]);</span></span>
+<span id="L677"><span class="lineNum">     677</span> <span class="tlaGNC">      536714 :    applyOn(targetThreat, [&amp;](const Square &amp; k){</span></span>
+<span id="L678"><span class="lineNum">     678</span> <span class="tlaGNC">      241290 :       features.scores[F_attack] += EvalConfig::threatByMinor[PieceTools::getPieceType(p, k) - 1];</span></span>
+<span id="L679"><span class="lineNum">     679</span> <span class="tlaGNC">      120645 :    });</span></span>
+<span id="L680"><span class="lineNum">     680</span> <span class="tlaGNC">      416069 :    targetThreat = (nonPawnMat[Co_Black] | (pawns[Co_Black] &amp; weakSquare[Co_Black])) &amp; (attFromPiece[Co_White][P_wn - 1] | attFromPiece[Co_White][P_wb - 1]);</span></span>
+<span id="L681"><span class="lineNum">     681</span> <span class="tlaGNC">      549558 :    applyOn(targetThreat, [&amp;](const Square &amp; k){</span></span>
+<span id="L682"><span class="lineNum">     682</span> <span class="tlaGNC">      266978 :       features.scores[F_attack] -= EvalConfig::threatByMinor[PieceTools::getPieceType(p, k) - 1];</span></span>
+<span id="L683"><span class="lineNum">     683</span> <span class="tlaGNC">      133489 :    });</span></span>
 <span id="L684"><span class="lineNum">     684</span>              : </span>
 <span id="L685"><span class="lineNum">     685</span>              :    // threats by rook</span>
-<span id="L686"><span class="lineNum">     686</span> <span class="tlaGNC">      410907 :    targetThreat = p.allPieces[Co_White] &amp; weakSquare[Co_White] &amp; attFromPiece[Co_Black][P_wr - 1];</span></span>
-<span id="L687"><span class="lineNum">     687</span> <span class="tlaGNC">      491222 :    applyOn(targetThreat, [&amp;](const Square &amp; k){</span></span>
-<span id="L688"><span class="lineNum">     688</span> <span class="tlaGNC">      160630 :       features.scores[F_attack] += EvalConfig::threatByRook[PieceTools::getPieceType(p, k) - 1];</span></span>
-<span id="L689"><span class="lineNum">     689</span> <span class="tlaGNC">       80315 :    });</span></span>
-<span id="L690"><span class="lineNum">     690</span> <span class="tlaGNC">      410907 :    targetThreat = p.allPieces[Co_Black] &amp; weakSquare[Co_Black] &amp; attFromPiece[Co_White][P_wr - 1];</span></span>
-<span id="L691"><span class="lineNum">     691</span> <span class="tlaGNC">      526578 :    applyOn(targetThreat, [&amp;](const Square &amp; k){</span></span>
-<span id="L692"><span class="lineNum">     692</span> <span class="tlaGNC">      231342 :       features.scores[F_attack] -= EvalConfig::threatByRook[PieceTools::getPieceType(p, k) - 1];</span></span>
-<span id="L693"><span class="lineNum">     693</span> <span class="tlaGNC">      115671 :    });</span></span>
+<span id="L686"><span class="lineNum">     686</span> <span class="tlaGNC">      416069 :    targetThreat = p.allPieces[Co_White] &amp; weakSquare[Co_White] &amp; attFromPiece[Co_Black][P_wr - 1];</span></span>
+<span id="L687"><span class="lineNum">     687</span> <span class="tlaGNC">      496431 :    applyOn(targetThreat, [&amp;](const Square &amp; k){</span></span>
+<span id="L688"><span class="lineNum">     688</span> <span class="tlaGNC">      160724 :       features.scores[F_attack] += EvalConfig::threatByRook[PieceTools::getPieceType(p, k) - 1];</span></span>
+<span id="L689"><span class="lineNum">     689</span> <span class="tlaGNC">       80362 :    });</span></span>
+<span id="L690"><span class="lineNum">     690</span> <span class="tlaGNC">      416069 :    targetThreat = p.allPieces[Co_Black] &amp; weakSquare[Co_Black] &amp; attFromPiece[Co_White][P_wr - 1];</span></span>
+<span id="L691"><span class="lineNum">     691</span> <span class="tlaGNC">      531772 :    applyOn(targetThreat, [&amp;](const Square &amp; k){</span></span>
+<span id="L692"><span class="lineNum">     692</span> <span class="tlaGNC">      231406 :       features.scores[F_attack] -= EvalConfig::threatByRook[PieceTools::getPieceType(p, k) - 1];</span></span>
+<span id="L693"><span class="lineNum">     693</span> <span class="tlaGNC">      115703 :    });</span></span>
 <span id="L694"><span class="lineNum">     694</span>              : </span>
 <span id="L695"><span class="lineNum">     695</span>              :    // threats by queen</span>
-<span id="L696"><span class="lineNum">     696</span> <span class="tlaGNC">      410907 :    targetThreat = p.allPieces[Co_White] &amp; weakSquare[Co_White] &amp; attFromPiece[Co_Black][P_wq - 1];</span></span>
-<span id="L697"><span class="lineNum">     697</span> <span class="tlaGNC">      485597 :    applyOn(targetThreat, [&amp;](const Square &amp; k){</span></span>
-<span id="L698"><span class="lineNum">     698</span> <span class="tlaGNC">      149380 :       features.scores[F_attack] += EvalConfig::threatByQueen[PieceTools::getPieceType(p, k) - 1];</span></span>
-<span id="L699"><span class="lineNum">     699</span> <span class="tlaGNC">       74690 :    });</span></span>
-<span id="L700"><span class="lineNum">     700</span> <span class="tlaGNC">      410907 :    targetThreat = p.allPieces[Co_Black] &amp; weakSquare[Co_Black] &amp; attFromPiece[Co_White][P_wq - 1];</span></span>
-<span id="L701"><span class="lineNum">     701</span> <span class="tlaGNC">      471507 :    applyOn(targetThreat, [&amp;](const Square &amp; k){</span></span>
-<span id="L702"><span class="lineNum">     702</span> <span class="tlaGNC">      121200 :       features.scores[F_attack] -= EvalConfig::threatByQueen[PieceTools::getPieceType(p, k) - 1];</span></span>
-<span id="L703"><span class="lineNum">     703</span> <span class="tlaGNC">       60600 :    });</span></span>
+<span id="L696"><span class="lineNum">     696</span> <span class="tlaGNC">      416069 :    targetThreat = p.allPieces[Co_White] &amp; weakSquare[Co_White] &amp; attFromPiece[Co_Black][P_wq - 1];</span></span>
+<span id="L697"><span class="lineNum">     697</span> <span class="tlaGNC">      492479 :    applyOn(targetThreat, [&amp;](const Square &amp; k){</span></span>
+<span id="L698"><span class="lineNum">     698</span> <span class="tlaGNC">      152820 :       features.scores[F_attack] += EvalConfig::threatByQueen[PieceTools::getPieceType(p, k) - 1];</span></span>
+<span id="L699"><span class="lineNum">     699</span> <span class="tlaGNC">       76410 :    });</span></span>
+<span id="L700"><span class="lineNum">     700</span> <span class="tlaGNC">      416069 :    targetThreat = p.allPieces[Co_Black] &amp; weakSquare[Co_Black] &amp; attFromPiece[Co_White][P_wq - 1];</span></span>
+<span id="L701"><span class="lineNum">     701</span> <span class="tlaGNC">      477096 :    applyOn(targetThreat, [&amp;](const Square &amp; k){</span></span>
+<span id="L702"><span class="lineNum">     702</span> <span class="tlaGNC">      122054 :       features.scores[F_attack] -= EvalConfig::threatByQueen[PieceTools::getPieceType(p, k) - 1];</span></span>
+<span id="L703"><span class="lineNum">     703</span> <span class="tlaGNC">       61027 :    });</span></span>
 <span id="L704"><span class="lineNum">     704</span>              : </span>
 <span id="L705"><span class="lineNum">     705</span>              :    // threats by king</span>
-<span id="L706"><span class="lineNum">     706</span> <span class="tlaGNC">      410907 :    targetThreat = p.allPieces[Co_White] &amp; weakSquare[Co_White] &amp; attFromPiece[Co_Black][P_wk - 1];</span></span>
-<span id="L707"><span class="lineNum">     707</span> <span class="tlaGNC">      424798 :    applyOn(targetThreat, [&amp;](const Square &amp; k){</span></span>
-<span id="L708"><span class="lineNum">     708</span> <span class="tlaGNC">       27782 :       features.scores[F_attack] += EvalConfig::threatByKing[PieceTools::getPieceType(p, k) - 1];</span></span>
-<span id="L709"><span class="lineNum">     709</span> <span class="tlaGNC">       13891 :    });</span></span>
-<span id="L710"><span class="lineNum">     710</span> <span class="tlaGNC">      410907 :    targetThreat = p.allPieces[Co_Black] &amp; weakSquare[Co_Black] &amp; attFromPiece[Co_White][P_wk - 1];</span></span>
-<span id="L711"><span class="lineNum">     711</span> <span class="tlaGNC">      422949 :    applyOn(targetThreat, [&amp;](const Square &amp; k){</span></span>
-<span id="L712"><span class="lineNum">     712</span> <span class="tlaGNC">       24084 :       features.scores[F_attack] -= EvalConfig::threatByKing[PieceTools::getPieceType(p, k) - 1];</span></span>
-<span id="L713"><span class="lineNum">     713</span> <span class="tlaGNC">       12042 :    });</span></span>
+<span id="L706"><span class="lineNum">     706</span> <span class="tlaGNC">      416069 :    targetThreat = p.allPieces[Co_White] &amp; weakSquare[Co_White] &amp; attFromPiece[Co_Black][P_wk - 1];</span></span>
+<span id="L707"><span class="lineNum">     707</span> <span class="tlaGNC">      430064 :    applyOn(targetThreat, [&amp;](const Square &amp; k){</span></span>
+<span id="L708"><span class="lineNum">     708</span> <span class="tlaGNC">       27990 :       features.scores[F_attack] += EvalConfig::threatByKing[PieceTools::getPieceType(p, k) - 1];</span></span>
+<span id="L709"><span class="lineNum">     709</span> <span class="tlaGNC">       13995 :    });</span></span>
+<span id="L710"><span class="lineNum">     710</span> <span class="tlaGNC">      416069 :    targetThreat = p.allPieces[Co_Black] &amp; weakSquare[Co_Black] &amp; attFromPiece[Co_White][P_wk - 1];</span></span>
+<span id="L711"><span class="lineNum">     711</span> <span class="tlaGNC">      428163 :    applyOn(targetThreat, [&amp;](const Square &amp; k){</span></span>
+<span id="L712"><span class="lineNum">     712</span> <span class="tlaGNC">       24188 :       features.scores[F_attack] -= EvalConfig::threatByKing[PieceTools::getPieceType(p, k) - 1];</span></span>
+<span id="L713"><span class="lineNum">     713</span> <span class="tlaGNC">       12094 :    });</span></span>
 <span id="L714"><span class="lineNum">     714</span>              : </span>
 <span id="L715"><span class="lineNum">     715</span>              :    // threat by safe pawn</span>
-<span id="L716"><span class="lineNum">     716</span> <span class="tlaGNC">      410907 :    const colored&lt;BitBoard&gt; safePawnAtt = {nonPawnMat[Co_Black] &amp; BBTools::pawnAttacks&lt;Co_White&gt;(pawns[Co_White] &amp; safeSquare[Co_White]),</span></span>
-<span id="L717"><span class="lineNum">     717</span> <span class="tlaGNC">      410907 :                                           nonPawnMat[Co_White] &amp; BBTools::pawnAttacks&lt;Co_Black&gt;(pawns[Co_Black] &amp; safeSquare[Co_Black])};</span></span>
-<span id="L718"><span class="lineNum">     718</span> <span class="tlaGNC">      821814 :    features.scores[F_attack] += EvalConfig::pawnSafeAtt * (countBit(safePawnAtt[Co_White]) - countBit(safePawnAtt[Co_Black]));</span></span>
+<span id="L716"><span class="lineNum">     716</span> <span class="tlaGNC">      416069 :    const colored&lt;BitBoard&gt; safePawnAtt = {nonPawnMat[Co_Black] &amp; BBTools::pawnAttacks&lt;Co_White&gt;(pawns[Co_White] &amp; safeSquare[Co_White]),</span></span>
+<span id="L717"><span class="lineNum">     717</span> <span class="tlaGNC">      416069 :                                           nonPawnMat[Co_White] &amp; BBTools::pawnAttacks&lt;Co_Black&gt;(pawns[Co_Black] &amp; safeSquare[Co_Black])};</span></span>
+<span id="L718"><span class="lineNum">     718</span> <span class="tlaGNC">      832138 :    features.scores[F_attack] += EvalConfig::pawnSafeAtt * (countBit(safePawnAtt[Co_White]) - countBit(safePawnAtt[Co_Black]));</span></span>
 <span id="L719"><span class="lineNum">     719</span>              : </span>
 <span id="L720"><span class="lineNum">     720</span>              :    // safe pawn push (protected once or not attacked)</span>
-<span id="L721"><span class="lineNum">     721</span> <span class="tlaGNC">      410907 :    const colored&lt;BitBoard&gt; safePawnPush = {BBTools::shiftN&lt;Co_White&gt;(pawns[Co_White]) &amp; ~occupancy &amp; safeSquare[Co_White],</span></span>
-<span id="L722"><span class="lineNum">     722</span> <span class="tlaGNC">      410907 :                                            BBTools::shiftN&lt;Co_Black&gt;(pawns[Co_Black]) &amp; ~occupancy &amp; safeSquare[Co_Black]};</span></span>
-<span id="L723"><span class="lineNum">     723</span> <span class="tlaGNC">      821814 :    features.scores[F_mobility] += EvalConfig::pawnMobility * (countBit(safePawnPush[Co_White]) - countBit(safePawnPush[Co_Black]));</span></span>
+<span id="L721"><span class="lineNum">     721</span> <span class="tlaGNC">      416069 :    const colored&lt;BitBoard&gt; safePawnPush = {BBTools::shiftN&lt;Co_White&gt;(pawns[Co_White]) &amp; ~occupancy &amp; safeSquare[Co_White],</span></span>
+<span id="L722"><span class="lineNum">     722</span> <span class="tlaGNC">      416069 :                                            BBTools::shiftN&lt;Co_Black&gt;(pawns[Co_Black]) &amp; ~occupancy &amp; safeSquare[Co_Black]};</span></span>
+<span id="L723"><span class="lineNum">     723</span> <span class="tlaGNC">      832138 :    features.scores[F_mobility] += EvalConfig::pawnMobility * (countBit(safePawnPush[Co_White]) - countBit(safePawnPush[Co_Black]));</span></span>
 <span id="L724"><span class="lineNum">     724</span>              : </span>
 <span id="L725"><span class="lineNum">     725</span>              :    // threat by safe pawn push</span>
 <span id="L726"><span class="lineNum">     726</span>              :    features.scores[F_attack] +=</span>
-<span id="L727"><span class="lineNum">     727</span> <span class="tlaGNC">      821814 :        EvalConfig::pawnSafePushAtt * (countBit(nonPawnMat[Co_Black] &amp; BBTools::pawnAttacks&lt;Co_White&gt;(safePawnPush[Co_White])) -</span></span>
-<span id="L728"><span class="lineNum">     728</span> <span class="tlaGNC">      821814 :                                       countBit(nonPawnMat[Co_White] &amp; BBTools::pawnAttacks&lt;Co_Black&gt;(safePawnPush[Co_Black])));</span></span>
+<span id="L727"><span class="lineNum">     727</span> <span class="tlaGNC">      832138 :        EvalConfig::pawnSafePushAtt * (countBit(nonPawnMat[Co_Black] &amp; BBTools::pawnAttacks&lt;Co_White&gt;(safePawnPush[Co_White])) -</span></span>
+<span id="L728"><span class="lineNum">     728</span> <span class="tlaGNC">      832138 :                                       countBit(nonPawnMat[Co_White] &amp; BBTools::pawnAttacks&lt;Co_Black&gt;(safePawnPush[Co_Black])));</span></span>
 <span id="L729"><span class="lineNum">     729</span>              : </span>
 <span id="L730"><span class="lineNum">     730</span>              :    STOP_AND_SUM_TIMER(Eval4)</span>
 <span id="L731"><span class="lineNum">     731</span>              : </span>
 <span id="L732"><span class="lineNum">     732</span>              :    // pieces mobility (second attack loop needed, knowing safeSquare ...)</span>
-<span id="L733"><span class="lineNum">     733</span> <span class="tlaGNC">      410907 :    evalMob&lt;P_wn, Co_White&gt;(p, knights[Co_White], features.scores[F_mobility], safeSquare[Co_White], occupancy, data.mobility[Co_White]);</span></span>
-<span id="L734"><span class="lineNum">     734</span> <span class="tlaGNC">      410907 :    evalMob&lt;P_wb, Co_White&gt;(p, bishops[Co_White], features.scores[F_mobility], safeSquare[Co_White], occupancy, data.mobility[Co_White]);</span></span>
-<span id="L735"><span class="lineNum">     735</span> <span class="tlaGNC">      410907 :    evalMob&lt;P_wr, Co_White&gt;(p, rooks  [Co_White], features.scores[F_mobility], safeSquare[Co_White], occupancy, data.mobility[Co_White]);</span></span>
-<span id="L736"><span class="lineNum">     736</span> <span class="tlaGNC">      410907 :    evalMobQ&lt;     Co_White&gt;(p, queens [Co_White], features.scores[F_mobility], safeSquare[Co_White], occupancy, data.mobility[Co_White]);</span></span>
-<span id="L737"><span class="lineNum">     737</span> <span class="tlaGNC">      821814 :    evalMobK&lt;     Co_White&gt;(p, kings  [Co_White], features.scores[F_mobility], ~att[Co_Black]      , occupancy, data.mobility[Co_White]);</span></span>
-<span id="L738"><span class="lineNum">     738</span> <span class="tlaGNC">      410907 :    evalMob&lt;P_wn, Co_Black&gt;(p, knights[Co_Black], features.scores[F_mobility], safeSquare[Co_Black], occupancy, data.mobility[Co_Black]);</span></span>
-<span id="L739"><span class="lineNum">     739</span> <span class="tlaGNC">      410907 :    evalMob&lt;P_wb, Co_Black&gt;(p, bishops[Co_Black], features.scores[F_mobility], safeSquare[Co_Black], occupancy, data.mobility[Co_Black]);</span></span>
-<span id="L740"><span class="lineNum">     740</span> <span class="tlaGNC">      410907 :    evalMob&lt;P_wr, Co_Black&gt;(p, rooks  [Co_Black], features.scores[F_mobility], safeSquare[Co_Black], occupancy, data.mobility[Co_Black]);</span></span>
-<span id="L741"><span class="lineNum">     741</span> <span class="tlaGNC">      410907 :    evalMobQ&lt;     Co_Black&gt;(p, queens [Co_Black], features.scores[F_mobility], safeSquare[Co_Black], occupancy, data.mobility[Co_Black]);</span></span>
-<span id="L742"><span class="lineNum">     742</span> <span class="tlaGNC">      410907 :    evalMobK&lt;     Co_Black&gt;(p, kings  [Co_Black], features.scores[F_mobility], ~att[Co_White]      , occupancy, data.mobility[Co_Black]);</span></span>
+<span id="L733"><span class="lineNum">     733</span> <span class="tlaGNC">      416069 :    evalMob&lt;P_wn, Co_White&gt;(p, knights[Co_White], features.scores[F_mobility], safeSquare[Co_White], occupancy, data.mobility[Co_White]);</span></span>
+<span id="L734"><span class="lineNum">     734</span> <span class="tlaGNC">      416069 :    evalMob&lt;P_wb, Co_White&gt;(p, bishops[Co_White], features.scores[F_mobility], safeSquare[Co_White], occupancy, data.mobility[Co_White]);</span></span>
+<span id="L735"><span class="lineNum">     735</span> <span class="tlaGNC">      416069 :    evalMob&lt;P_wr, Co_White&gt;(p, rooks  [Co_White], features.scores[F_mobility], safeSquare[Co_White], occupancy, data.mobility[Co_White]);</span></span>
+<span id="L736"><span class="lineNum">     736</span> <span class="tlaGNC">      416069 :    evalMobQ&lt;     Co_White&gt;(p, queens [Co_White], features.scores[F_mobility], safeSquare[Co_White], occupancy, data.mobility[Co_White]);</span></span>
+<span id="L737"><span class="lineNum">     737</span> <span class="tlaGNC">      832138 :    evalMobK&lt;     Co_White&gt;(p, kings  [Co_White], features.scores[F_mobility], ~att[Co_Black]      , occupancy, data.mobility[Co_White]);</span></span>
+<span id="L738"><span class="lineNum">     738</span> <span class="tlaGNC">      416069 :    evalMob&lt;P_wn, Co_Black&gt;(p, knights[Co_Black], features.scores[F_mobility], safeSquare[Co_Black], occupancy, data.mobility[Co_Black]);</span></span>
+<span id="L739"><span class="lineNum">     739</span> <span class="tlaGNC">      416069 :    evalMob&lt;P_wb, Co_Black&gt;(p, bishops[Co_Black], features.scores[F_mobility], safeSquare[Co_Black], occupancy, data.mobility[Co_Black]);</span></span>
+<span id="L740"><span class="lineNum">     740</span> <span class="tlaGNC">      416069 :    evalMob&lt;P_wr, Co_Black&gt;(p, rooks  [Co_Black], features.scores[F_mobility], safeSquare[Co_Black], occupancy, data.mobility[Co_Black]);</span></span>
+<span id="L741"><span class="lineNum">     741</span> <span class="tlaGNC">      416069 :    evalMobQ&lt;     Co_Black&gt;(p, queens [Co_Black], features.scores[F_mobility], safeSquare[Co_Black], occupancy, data.mobility[Co_Black]);</span></span>
+<span id="L742"><span class="lineNum">     742</span> <span class="tlaGNC">      416069 :    evalMobK&lt;     Co_Black&gt;(p, kings  [Co_Black], features.scores[F_mobility], ~att[Co_White]      , occupancy, data.mobility[Co_Black]);</span></span>
 <span id="L743"><span class="lineNum">     743</span>              : </span>
 <span id="L744"><span class="lineNum">     744</span>              :    STOP_AND_SUM_TIMER(Eval5)</span>
 <span id="L745"><span class="lineNum">     745</span>              : </span>
 <span id="L746"><span class="lineNum">     746</span>              :    // rook on open file</span>
-<span id="L747"><span class="lineNum">     747</span> <span class="tlaGNC">      821814 :    features.scores[F_positional] += EvalConfig::rookOnOpenFile * countBit(rooks[Co_White] &amp; pe.openFiles);</span></span>
-<span id="L748"><span class="lineNum">     748</span> <span class="tlaGNC">      821814 :    features.scores[F_positional] += EvalConfig::rookOnOpenSemiFileOur * countBit(rooks[Co_White] &amp; pe.semiOpenFiles[Co_White]);</span></span>
-<span id="L749"><span class="lineNum">     749</span> <span class="tlaGNC">      821814 :    features.scores[F_positional] += EvalConfig::rookOnOpenSemiFileOpp * countBit(rooks[Co_White] &amp; pe.semiOpenFiles[Co_Black]);</span></span>
-<span id="L750"><span class="lineNum">     750</span> <span class="tlaGNC">      821814 :    features.scores[F_positional] -= EvalConfig::rookOnOpenFile * countBit(rooks[Co_Black] &amp; pe.openFiles);</span></span>
-<span id="L751"><span class="lineNum">     751</span> <span class="tlaGNC">      821814 :    features.scores[F_positional] -= EvalConfig::rookOnOpenSemiFileOur * countBit(rooks[Co_Black] &amp; pe.semiOpenFiles[Co_Black]);</span></span>
-<span id="L752"><span class="lineNum">     752</span> <span class="tlaGNC">      821814 :    features.scores[F_positional] -= EvalConfig::rookOnOpenSemiFileOpp * countBit(rooks[Co_Black] &amp; pe.semiOpenFiles[Co_White]);</span></span>
+<span id="L747"><span class="lineNum">     747</span> <span class="tlaGNC">      832138 :    features.scores[F_positional] += EvalConfig::rookOnOpenFile * countBit(rooks[Co_White] &amp; pe.openFiles);</span></span>
+<span id="L748"><span class="lineNum">     748</span> <span class="tlaGNC">      832138 :    features.scores[F_positional] += EvalConfig::rookOnOpenSemiFileOur * countBit(rooks[Co_White] &amp; pe.semiOpenFiles[Co_White]);</span></span>
+<span id="L749"><span class="lineNum">     749</span> <span class="tlaGNC">      832138 :    features.scores[F_positional] += EvalConfig::rookOnOpenSemiFileOpp * countBit(rooks[Co_White] &amp; pe.semiOpenFiles[Co_Black]);</span></span>
+<span id="L750"><span class="lineNum">     750</span> <span class="tlaGNC">      832138 :    features.scores[F_positional] -= EvalConfig::rookOnOpenFile * countBit(rooks[Co_Black] &amp; pe.openFiles);</span></span>
+<span id="L751"><span class="lineNum">     751</span> <span class="tlaGNC">      832138 :    features.scores[F_positional] -= EvalConfig::rookOnOpenSemiFileOur * countBit(rooks[Co_Black] &amp; pe.semiOpenFiles[Co_Black]);</span></span>
+<span id="L752"><span class="lineNum">     752</span> <span class="tlaGNC">      832138 :    features.scores[F_positional] -= EvalConfig::rookOnOpenSemiFileOpp * countBit(rooks[Co_Black] &amp; pe.semiOpenFiles[Co_White]);</span></span>
 <span id="L753"><span class="lineNum">     753</span>              : </span>
 <span id="L754"><span class="lineNum">     754</span>              :    // enemy rook facing king</span>
-<span id="L755"><span class="lineNum">     755</span> <span class="tlaGNC">      821814 :    features.scores[F_positional] += EvalConfig::rookFrontKingMalus * countBit(BBTools::frontSpan&lt;Co_White&gt;(kings[Co_White]) &amp; rooks[Co_Black]);</span></span>
-<span id="L756"><span class="lineNum">     756</span> <span class="tlaGNC">      821814 :    features.scores[F_positional] -= EvalConfig::rookFrontKingMalus * countBit(BBTools::frontSpan&lt;Co_Black&gt;(kings[Co_Black]) &amp; rooks[Co_White]);</span></span>
+<span id="L755"><span class="lineNum">     755</span> <span class="tlaGNC">      832138 :    features.scores[F_positional] += EvalConfig::rookFrontKingMalus * countBit(BBTools::frontSpan&lt;Co_White&gt;(kings[Co_White]) &amp; rooks[Co_Black]);</span></span>
+<span id="L756"><span class="lineNum">     756</span> <span class="tlaGNC">      832138 :    features.scores[F_positional] -= EvalConfig::rookFrontKingMalus * countBit(BBTools::frontSpan&lt;Co_Black&gt;(kings[Co_Black]) &amp; rooks[Co_White]);</span></span>
 <span id="L757"><span class="lineNum">     757</span>              : </span>
 <span id="L758"><span class="lineNum">     758</span>              :    // enemy rook facing queen</span>
-<span id="L759"><span class="lineNum">     759</span> <span class="tlaGNC">      821814 :    features.scores[F_positional] += EvalConfig::rookFrontQueenMalus * countBit(BBTools::frontSpan&lt;Co_White&gt;(queens[Co_White]) &amp; rooks[Co_Black]);</span></span>
-<span id="L760"><span class="lineNum">     760</span> <span class="tlaGNC">      821814 :    features.scores[F_positional] -= EvalConfig::rookFrontQueenMalus * countBit(BBTools::frontSpan&lt;Co_Black&gt;(queens[Co_Black]) &amp; rooks[Co_White]);</span></span>
+<span id="L759"><span class="lineNum">     759</span> <span class="tlaGNC">      832138 :    features.scores[F_positional] += EvalConfig::rookFrontQueenMalus * countBit(BBTools::frontSpan&lt;Co_White&gt;(queens[Co_White]) &amp; rooks[Co_Black]);</span></span>
+<span id="L760"><span class="lineNum">     760</span> <span class="tlaGNC">      832138 :    features.scores[F_positional] -= EvalConfig::rookFrontQueenMalus * countBit(BBTools::frontSpan&lt;Co_Black&gt;(queens[Co_Black]) &amp; rooks[Co_White]);</span></span>
 <span id="L761"><span class="lineNum">     761</span>              : </span>
 <span id="L762"><span class="lineNum">     762</span>              :    // queen aligned with own rook</span>
-<span id="L763"><span class="lineNum">     763</span> <span class="tlaGNC">      821814 :    features.scores[F_positional] += EvalConfig::rookQueenSameFile * countBit(BBTools::fillFile(queens[Co_White]) &amp; rooks[Co_White]);</span></span>
-<span id="L764"><span class="lineNum">     764</span> <span class="tlaGNC">      821814 :    features.scores[F_positional] -= EvalConfig::rookQueenSameFile * countBit(BBTools::fillFile(queens[Co_Black]) &amp; rooks[Co_Black]);</span></span>
+<span id="L763"><span class="lineNum">     763</span> <span class="tlaGNC">      832138 :    features.scores[F_positional] += EvalConfig::rookQueenSameFile * countBit(BBTools::fillFile(queens[Co_White]) &amp; rooks[Co_White]);</span></span>
+<span id="L764"><span class="lineNum">     764</span> <span class="tlaGNC">      832138 :    features.scores[F_positional] -= EvalConfig::rookQueenSameFile * countBit(BBTools::fillFile(queens[Co_Black]) &amp; rooks[Co_Black]);</span></span>
 <span id="L765"><span class="lineNum">     765</span>              : </span>
 <span id="L766"><span class="lineNum">     766</span>              :    // pins on king and queen</span>
-<span id="L767"><span class="lineNum">     767</span> <span class="tlaGNC">      410907 :    const colored&lt;BitBoard&gt; pinnedK = {getPinned&lt;Co_White&gt;(p, p.king[Co_White]), getPinned&lt;Co_Black&gt;(p, p.king[Co_Black])};</span></span>
-<span id="L768"><span class="lineNum">     768</span> <span class="tlaGNC">      410907 :    const colored&lt;BitBoard&gt; pinnedQ = {getPinned&lt;Co_White&gt;(p, whiteQueenSquare), getPinned&lt;Co_Black&gt;(p, blackQueenSquare)};</span></span>
-<span id="L769"><span class="lineNum">     769</span> <span class="tlaGNC">     2465442 :    for (Piece pp = P_wp; pp &lt; P_wk; ++pp) {</span></span>
-<span id="L770"><span class="lineNum">     770</span> <span class="tlaGNC">     2054535 :       if (const BitBoard bw = p.pieces_const(Co_White, pp); bw) {</span></span>
-<span id="L771"><span class="lineNum">     771</span> <span class="tlaGNC">     1420173 :          if (pinnedK[Co_White] &amp; bw) features.scores[F_attack] -= EvalConfig::pinnedKing[pp - 1] * countBit(pinnedK[Co_White] &amp; bw);</span></span>
-<span id="L772"><span class="lineNum">     772</span> <span class="tlaGNC">     1382470 :          if (pinnedQ[Co_White] &amp; bw) features.scores[F_attack] -= EvalConfig::pinnedQueen[pp - 1] * countBit(pinnedQ[Co_White] &amp; bw);</span></span>
+<span id="L767"><span class="lineNum">     767</span> <span class="tlaGNC">      416069 :    const colored&lt;BitBoard&gt; pinnedK = {getPinned&lt;Co_White&gt;(p, p.king[Co_White]), getPinned&lt;Co_Black&gt;(p, p.king[Co_Black])};</span></span>
+<span id="L768"><span class="lineNum">     768</span> <span class="tlaGNC">      416069 :    const colored&lt;BitBoard&gt; pinnedQ = {getPinned&lt;Co_White&gt;(p, whiteQueenSquare), getPinned&lt;Co_Black&gt;(p, blackQueenSquare)};</span></span>
+<span id="L769"><span class="lineNum">     769</span> <span class="tlaGNC">     2496414 :    for (Piece pp = P_wp; pp &lt; P_wk; ++pp) {</span></span>
+<span id="L770"><span class="lineNum">     770</span> <span class="tlaGNC">     2080345 :       if (const BitBoard bw = p.pieces_const(Co_White, pp); bw) {</span></span>
+<span id="L771"><span class="lineNum">     771</span> <span class="tlaGNC">     1443002 :          if (pinnedK[Co_White] &amp; bw) features.scores[F_attack] -= EvalConfig::pinnedKing[pp - 1] * countBit(pinnedK[Co_White] &amp; bw);</span></span>
+<span id="L772"><span class="lineNum">     772</span> <span class="tlaGNC">     1405095 :          if (pinnedQ[Co_White] &amp; bw) features.scores[F_attack] -= EvalConfig::pinnedQueen[pp - 1] * countBit(pinnedQ[Co_White] &amp; bw);</span></span>
 <span id="L773"><span class="lineNum">     773</span>              :       }</span>
-<span id="L774"><span class="lineNum">     774</span> <span class="tlaGNC">     2054535 :       if (const BitBoard bb = p.pieces_const(Co_Black, pp); bb) {</span></span>
-<span id="L775"><span class="lineNum">     775</span> <span class="tlaGNC">     1490343 :          if (pinnedK[Co_Black] &amp; bb) features.scores[F_attack] += EvalConfig::pinnedKing[pp - 1] * countBit(pinnedK[Co_Black] &amp; bb);</span></span>
-<span id="L776"><span class="lineNum">     776</span> <span class="tlaGNC">     1428297 :          if (pinnedQ[Co_Black] &amp; bb) features.scores[F_attack] += EvalConfig::pinnedQueen[pp - 1] * countBit(pinnedQ[Co_Black] &amp; bb);</span></span>
+<span id="L774"><span class="lineNum">     774</span> <span class="tlaGNC">     2080345 :       if (const BitBoard bb = p.pieces_const(Co_Black, pp); bb) {</span></span>
+<span id="L775"><span class="lineNum">     775</span> <span class="tlaGNC">     1515561 :          if (pinnedK[Co_Black] &amp; bb) features.scores[F_attack] += EvalConfig::pinnedKing[pp - 1] * countBit(pinnedK[Co_Black] &amp; bb);</span></span>
+<span id="L776"><span class="lineNum">     776</span> <span class="tlaGNC">     1452209 :          if (pinnedQ[Co_Black] &amp; bb) features.scores[F_attack] += EvalConfig::pinnedQueen[pp - 1] * countBit(pinnedQ[Co_Black] &amp; bb);</span></span>
 <span id="L777"><span class="lineNum">     777</span>              :       }</span>
 <span id="L778"><span class="lineNum">     778</span>              :    }</span>
 <span id="L779"><span class="lineNum">     779</span>              : </span>
 <span id="L780"><span class="lineNum">     780</span>              :    // attack : queen distance to opponent king (wrong if multiple queens ...)</span>
-<span id="L781"><span class="lineNum">     781</span> <span class="tlaGNC">      410907 :    if (kingIsMandatory &amp;&amp; blackQueenSquare != INVALIDSQUARE)</span></span>
-<span id="L782"><span class="lineNum">     782</span> <span class="tlaGNC">      466718 :       features.scores[F_positional] -= EvalConfig::queenNearKing * (7 - chebyshevDistance(p.king[Co_White], blackQueenSquare));</span></span>
-<span id="L783"><span class="lineNum">     783</span> <span class="tlaGNC">      410907 :    if (kingIsMandatory &amp;&amp; whiteQueenSquare != INVALIDSQUARE)</span></span>
-<span id="L784"><span class="lineNum">     784</span> <span class="tlaGNC">      394418 :       features.scores[F_positional] += EvalConfig::queenNearKing * (7 - chebyshevDistance(p.king[Co_Black], whiteQueenSquare));</span></span>
+<span id="L781"><span class="lineNum">     781</span> <span class="tlaGNC">      416069 :    if (kingIsMandatory &amp;&amp; blackQueenSquare != INVALIDSQUARE)</span></span>
+<span id="L782"><span class="lineNum">     782</span> <span class="tlaGNC">      473432 :       features.scores[F_positional] -= EvalConfig::queenNearKing * (7 - chebyshevDistance(p.king[Co_White], blackQueenSquare));</span></span>
+<span id="L783"><span class="lineNum">     783</span> <span class="tlaGNC">      416069 :    if (kingIsMandatory &amp;&amp; whiteQueenSquare != INVALIDSQUARE)</span></span>
+<span id="L784"><span class="lineNum">     784</span> <span class="tlaGNC">      398764 :       features.scores[F_positional] += EvalConfig::queenNearKing * (7 - chebyshevDistance(p.king[Co_Black], whiteQueenSquare));</span></span>
 <span id="L785"><span class="lineNum">     785</span>              : </span>
 <span id="L786"><span class="lineNum">     786</span>              :    // number of pawn and piece type value  ///@todo closedness instead ?</span>
-<span id="L787"><span class="lineNum">     787</span> <span class="tlaGNC">      821814 :    features.scores[F_material] += EvalConfig::adjRook[p.mat[Co_White][M_p]] * ScoreType(p.mat[Co_White][M_r]);</span></span>
-<span id="L788"><span class="lineNum">     788</span> <span class="tlaGNC">      821814 :    features.scores[F_material] -= EvalConfig::adjRook[p.mat[Co_Black][M_p]] * ScoreType(p.mat[Co_Black][M_r]);</span></span>
-<span id="L789"><span class="lineNum">     789</span> <span class="tlaGNC">      821814 :    features.scores[F_material] += EvalConfig::adjKnight[p.mat[Co_White][M_p]] * ScoreType(p.mat[Co_White][M_n]);</span></span>
-<span id="L790"><span class="lineNum">     790</span> <span class="tlaGNC">      821814 :    features.scores[F_material] -= EvalConfig::adjKnight[p.mat[Co_Black][M_p]] * ScoreType(p.mat[Co_Black][M_n]);</span></span>
+<span id="L787"><span class="lineNum">     787</span> <span class="tlaGNC">      832138 :    features.scores[F_material] += EvalConfig::adjRook[p.mat[Co_White][M_p]] * ScoreType(p.mat[Co_White][M_r]);</span></span>
+<span id="L788"><span class="lineNum">     788</span> <span class="tlaGNC">      832138 :    features.scores[F_material] -= EvalConfig::adjRook[p.mat[Co_Black][M_p]] * ScoreType(p.mat[Co_Black][M_r]);</span></span>
+<span id="L789"><span class="lineNum">     789</span> <span class="tlaGNC">      832138 :    features.scores[F_material] += EvalConfig::adjKnight[p.mat[Co_White][M_p]] * ScoreType(p.mat[Co_White][M_n]);</span></span>
+<span id="L790"><span class="lineNum">     790</span> <span class="tlaGNC">      832138 :    features.scores[F_material] -= EvalConfig::adjKnight[p.mat[Co_Black][M_p]] * ScoreType(p.mat[Co_Black][M_n]);</span></span>
 <span id="L791"><span class="lineNum">     791</span>              : </span>
 <span id="L792"><span class="lineNum">     792</span>              :    // bad bishop</span>
-<span id="L793"><span class="lineNum">     793</span> <span class="tlaGNC">      410907 :    if (p.whiteLightBishop()) features.scores[F_material] -= EvalConfig::badBishop[countBit(pawns[Co_White] &amp; whiteSquare)];</span></span>
-<span id="L794"><span class="lineNum">     794</span> <span class="tlaGNC">      410907 :    if (p.whiteDarkBishop()) features.scores[F_material] -= EvalConfig::badBishop[countBit(pawns[Co_White] &amp; blackSquare)];</span></span>
-<span id="L795"><span class="lineNum">     795</span> <span class="tlaGNC">      410907 :    if (p.blackLightBishop()) features.scores[F_material] += EvalConfig::badBishop[countBit(pawns[Co_Black] &amp; whiteSquare)];</span></span>
-<span id="L796"><span class="lineNum">     796</span> <span class="tlaGNC">      410907 :    if (p.blackDarkBishop()) features.scores[F_material] += EvalConfig::badBishop[countBit(pawns[Co_Black] &amp; blackSquare)];</span></span>
+<span id="L793"><span class="lineNum">     793</span> <span class="tlaGNC">      416069 :    if (p.whiteLightBishop()) features.scores[F_material] -= EvalConfig::badBishop[countBit(pawns[Co_White] &amp; whiteSquare)];</span></span>
+<span id="L794"><span class="lineNum">     794</span> <span class="tlaGNC">      416069 :    if (p.whiteDarkBishop()) features.scores[F_material] -= EvalConfig::badBishop[countBit(pawns[Co_White] &amp; blackSquare)];</span></span>
+<span id="L795"><span class="lineNum">     795</span> <span class="tlaGNC">      416069 :    if (p.blackLightBishop()) features.scores[F_material] += EvalConfig::badBishop[countBit(pawns[Co_Black] &amp; whiteSquare)];</span></span>
+<span id="L796"><span class="lineNum">     796</span> <span class="tlaGNC">      416069 :    if (p.blackDarkBishop()) features.scores[F_material] += EvalConfig::badBishop[countBit(pawns[Co_Black] &amp; blackSquare)];</span></span>
 <span id="L797"><span class="lineNum">     797</span>              : </span>
 <span id="L798"><span class="lineNum">     798</span>              :    // adjust piece pair score</span>
-<span id="L799"><span class="lineNum">     799</span> <span class="tlaGNC">      410907 :    features.scores[F_material] += ((p.mat[Co_White][M_b] &gt; 1 ? EvalConfig::bishopPairBonus[p.mat[Co_White][M_p]] : 0) -</span></span>
-<span id="L800"><span class="lineNum">     800</span> <span class="tlaGNC">      821814 :                                    (p.mat[Co_Black][M_b] &gt; 1 ? EvalConfig::bishopPairBonus[p.mat[Co_Black][M_p]] : 0));</span></span>
-<span id="L801"><span class="lineNum">     801</span> <span class="tlaGNC">      410907 :    features.scores[F_material] += ((p.mat[Co_White][M_n] &gt; 1 ? EvalConfig::knightPairMalus : 0) -</span></span>
-<span id="L802"><span class="lineNum">     802</span> <span class="tlaGNC">      821814 :                                    (p.mat[Co_Black][M_n] &gt; 1 ? EvalConfig::knightPairMalus : 0));</span></span>
-<span id="L803"><span class="lineNum">     803</span> <span class="tlaGNC">      410907 :    features.scores[F_material] += ((p.mat[Co_White][M_r] &gt; 1 ? EvalConfig::rookPairMalus : 0) -</span></span>
-<span id="L804"><span class="lineNum">     804</span> <span class="tlaGNC">      821814 :                                    (p.mat[Co_Black][M_r] &gt; 1 ? EvalConfig::rookPairMalus : 0));</span></span>
+<span id="L799"><span class="lineNum">     799</span> <span class="tlaGNC">      416069 :    features.scores[F_material] += ((p.mat[Co_White][M_b] &gt; 1 ? EvalConfig::bishopPairBonus[p.mat[Co_White][M_p]] : 0) -</span></span>
+<span id="L800"><span class="lineNum">     800</span> <span class="tlaGNC">      832138 :                                    (p.mat[Co_Black][M_b] &gt; 1 ? EvalConfig::bishopPairBonus[p.mat[Co_Black][M_p]] : 0));</span></span>
+<span id="L801"><span class="lineNum">     801</span> <span class="tlaGNC">      416069 :    features.scores[F_material] += ((p.mat[Co_White][M_n] &gt; 1 ? EvalConfig::knightPairMalus : 0) -</span></span>
+<span id="L802"><span class="lineNum">     802</span> <span class="tlaGNC">      832138 :                                    (p.mat[Co_Black][M_n] &gt; 1 ? EvalConfig::knightPairMalus : 0));</span></span>
+<span id="L803"><span class="lineNum">     803</span> <span class="tlaGNC">      416069 :    features.scores[F_material] += ((p.mat[Co_White][M_r] &gt; 1 ? EvalConfig::rookPairMalus : 0) -</span></span>
+<span id="L804"><span class="lineNum">     804</span> <span class="tlaGNC">      832138 :                                    (p.mat[Co_Black][M_r] &gt; 1 ? EvalConfig::rookPairMalus : 0));</span></span>
 <span id="L805"><span class="lineNum">     805</span>              : </span>
 <span id="L806"><span class="lineNum">     806</span>              :    // complexity</span>
 <span id="L807"><span class="lineNum">     807</span>              :    // an &quot;anti human&quot; trick : winning side wants to keep the position more complex</span>
-<span id="L808"><span class="lineNum">     808</span> <span class="tlaGNC">      821814 :    features.scores[F_complexity] += EvalScore {1, 0} * (white2Play ? +1 : -1) * </span></span>
-<span id="L809"><span class="lineNum">     809</span> <span class="tlaGNC">      821814 :                                     (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] + (p.mat[Co_White][M_p] + p.mat[Co_Black][M_p]) / 2);</span></span>
+<span id="L808"><span class="lineNum">     808</span> <span class="tlaGNC">      832138 :    features.scores[F_complexity] += EvalScore {1, 0} * (white2Play ? +1 : -1) * </span></span>
+<span id="L809"><span class="lineNum">     809</span> <span class="tlaGNC">      832138 :                                     (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] + (p.mat[Co_White][M_p] + p.mat[Co_Black][M_p]) / 2);</span></span>
 <span id="L810"><span class="lineNum">     810</span>              : </span>
-<span id="L811"><span class="lineNum">     811</span> <span class="tlaGNC">      410907 :    if (display) displayEval(data, features);</span></span>
+<span id="L811"><span class="lineNum">     811</span> <span class="tlaGNC">      416069 :    if (display) displayEval(data, features);</span></span>
 <span id="L812"><span class="lineNum">     812</span>              : </span>
 <span id="L813"><span class="lineNum">     813</span>              :    // taking Style into account, giving each score a [0..2] factor</span>
-<span id="L814"><span class="lineNum">     814</span> <span class="tlaGNC">      410907 :    features.scores[F_material]    = features.scores[F_material]   .scale(1 + (DynamicConfig::styleMaterial    - 50) / 50.f, 1.f);</span></span>
-<span id="L815"><span class="lineNum">     815</span> <span class="tlaGNC">      410907 :    features.scores[F_positional]  = features.scores[F_positional] .scale(1 + (DynamicConfig::stylePositional  - 50) / 50.f, 1.f);</span></span>
-<span id="L816"><span class="lineNum">     816</span> <span class="tlaGNC">      410907 :    features.scores[F_development] = features.scores[F_development].scale(1 + (DynamicConfig::styleDevelopment - 50) / 50.f, 1.f);</span></span>
-<span id="L817"><span class="lineNum">     817</span> <span class="tlaGNC">      410907 :    features.scores[F_mobility]    = features.scores[F_mobility]   .scale(1 + (DynamicConfig::styleMobility    - 50) / 50.f, 1.f);</span></span>
-<span id="L818"><span class="lineNum">     818</span> <span class="tlaGNC">      410907 :    features.scores[F_pawnStruct]  = features.scores[F_pawnStruct] .scale(1 + (DynamicConfig::stylePawnStruct  - 50) / 50.f, 1.f);</span></span>
-<span id="L819"><span class="lineNum">     819</span> <span class="tlaGNC">      410907 :    features.scores[F_attack]      = features.scores[F_attack]     .scale(1 + (DynamicConfig::styleAttack      - 50) / 50.f, 1.f);</span></span>
-<span id="L820"><span class="lineNum">     820</span> <span class="tlaGNC">      410907 :    features.scores[F_complexity]  = features.scores[F_complexity] .scale((DynamicConfig::styleComplexity      - 50) / 50.f, 0.f);</span></span>
+<span id="L814"><span class="lineNum">     814</span> <span class="tlaGNC">      416069 :    features.scores[F_material]    = features.scores[F_material]   .scale(1 + (DynamicConfig::styleMaterial    - 50) / 50.f, 1.f);</span></span>
+<span id="L815"><span class="lineNum">     815</span> <span class="tlaGNC">      416069 :    features.scores[F_positional]  = features.scores[F_positional] .scale(1 + (DynamicConfig::stylePositional  - 50) / 50.f, 1.f);</span></span>
+<span id="L816"><span class="lineNum">     816</span> <span class="tlaGNC">      416069 :    features.scores[F_development] = features.scores[F_development].scale(1 + (DynamicConfig::styleDevelopment - 50) / 50.f, 1.f);</span></span>
+<span id="L817"><span class="lineNum">     817</span> <span class="tlaGNC">      416069 :    features.scores[F_mobility]    = features.scores[F_mobility]   .scale(1 + (DynamicConfig::styleMobility    - 50) / 50.f, 1.f);</span></span>
+<span id="L818"><span class="lineNum">     818</span> <span class="tlaGNC">      416069 :    features.scores[F_pawnStruct]  = features.scores[F_pawnStruct] .scale(1 + (DynamicConfig::stylePawnStruct  - 50) / 50.f, 1.f);</span></span>
+<span id="L819"><span class="lineNum">     819</span> <span class="tlaGNC">      416069 :    features.scores[F_attack]      = features.scores[F_attack]     .scale(1 + (DynamicConfig::styleAttack      - 50) / 50.f, 1.f);</span></span>
+<span id="L820"><span class="lineNum">     820</span> <span class="tlaGNC">      416069 :    features.scores[F_complexity]  = features.scores[F_complexity] .scale((DynamicConfig::styleComplexity      - 50) / 50.f, 0.f);</span></span>
 <span id="L821"><span class="lineNum">     821</span>              : </span>
 <span id="L822"><span class="lineNum">     822</span>              :    // sum every score contribution</span>
-<span id="L823"><span class="lineNum">     823</span> <span class="tlaGNC">      410907 :    EvalScore score = features.SumUp();</span></span>
+<span id="L823"><span class="lineNum">     823</span> <span class="tlaGNC">      416069 :    EvalScore score = features.SumUp();</span></span>
 <span id="L824"><span class="lineNum">     824</span>              : </span>
 <span id="L825"><span class="lineNum">     825</span>              : #ifdef VERBOSE_EVAL</span>
 <span id="L826"><span class="lineNum">     826</span>              :    if (display) {</span>
@@ -894,12 +894,12 @@
 <span id="L832"><span class="lineNum">     832</span>              : </span>
 <span id="L833"><span class="lineNum">     833</span>              :    // initiative (kind of second order pawn structure stuff for end-games)</span>
 <span id="L834"><span class="lineNum">     834</span>              :    const BitBoard &amp;allPawns = p.allPawn();</span>
-<span id="L835"><span class="lineNum">     835</span> <span class="tlaGNC">      410907 :    EvalScore initiativeBonus = EvalConfig::initiative[0] * countBit(allPawns) +</span></span>
-<span id="L836"><span class="lineNum">     836</span> <span class="tlaGNC">      410907 :                                EvalConfig::initiative[1] * ((allPawns &amp; queenSide) &amp;&amp; (allPawns &amp; kingSide)) +</span></span>
-<span id="L837"><span class="lineNum">     837</span> <span class="tlaGNC">      410907 :                                EvalConfig::initiative[2] * (countBit(occupancy &amp; ~allPawns) == 2) - EvalConfig::initiative[3];</span></span>
-<span id="L838"><span class="lineNum">     838</span> <span class="tlaGNC">      822640 :    initiativeBonus = EvalScore(sgn(score[MG]) * std::max(initiativeBonus[MG], static_cast&lt;ScoreType&gt;(-Abs(score[MG]))),</span></span>
-<span id="L839"><span class="lineNum">     839</span> <span class="tlaGNC">      410907 :                                sgn(score[EG]) * std::max(initiativeBonus[EG], static_cast&lt;ScoreType&gt;(-Abs(score[EG]))));</span></span>
-<span id="L840"><span class="lineNum">     840</span> <span class="tlaGNC">      410907 :    score += initiativeBonus;</span></span>
+<span id="L835"><span class="lineNum">     835</span> <span class="tlaGNC">      416069 :    EvalScore initiativeBonus = EvalConfig::initiative[0] * countBit(allPawns) +</span></span>
+<span id="L836"><span class="lineNum">     836</span> <span class="tlaGNC">      416069 :                                EvalConfig::initiative[1] * ((allPawns &amp; queenSide) &amp;&amp; (allPawns &amp; kingSide)) +</span></span>
+<span id="L837"><span class="lineNum">     837</span> <span class="tlaGNC">      416069 :                                EvalConfig::initiative[2] * (countBit(occupancy &amp; ~allPawns) == 2) - EvalConfig::initiative[3];</span></span>
+<span id="L838"><span class="lineNum">     838</span> <span class="tlaGNC">      832964 :    initiativeBonus = EvalScore(sgn(score[MG]) * std::max(initiativeBonus[MG], static_cast&lt;ScoreType&gt;(-Abs(score[MG]))),</span></span>
+<span id="L839"><span class="lineNum">     839</span> <span class="tlaGNC">      416069 :                                sgn(score[EG]) * std::max(initiativeBonus[EG], static_cast&lt;ScoreType&gt;(-Abs(score[EG]))));</span></span>
+<span id="L840"><span class="lineNum">     840</span> <span class="tlaGNC">      416069 :    score += initiativeBonus;</span></span>
 <span id="L841"><span class="lineNum">     841</span>              : </span>
 <span id="L842"><span class="lineNum">     842</span>              : #ifdef VERBOSE_EVAL</span>
 <span id="L843"><span class="lineNum">     843</span>              :    if (display) {</span>
@@ -909,41 +909,41 @@
 <span id="L847"><span class="lineNum">     847</span>              : #endif</span>
 <span id="L848"><span class="lineNum">     848</span>              : </span>
 <span id="L849"><span class="lineNum">     849</span>              :    // add contempt</span>
-<span id="L850"><span class="lineNum">     850</span> <span class="tlaGNC">      410907 :    score += context.contempt;</span></span>
+<span id="L850"><span class="lineNum">     850</span> <span class="tlaGNC">      416069 :    score += context.contempt;</span></span>
 <span id="L851"><span class="lineNum">     851</span>              : </span>
 <span id="L852"><span class="lineNum">     852</span>              : #ifdef VERBOSE_EVAL</span>
 <span id="L853"><span class="lineNum">     853</span>              :    if (display) { Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;&gt; All (with contempt) &quot; &lt;&lt; score; }</span>
 <span id="L854"><span class="lineNum">     854</span>              : #endif</span>
 <span id="L855"><span class="lineNum">     855</span>              : </span>
 <span id="L856"><span class="lineNum">     856</span>              :    // compute a scale factor in some other end-game cases that are not using the material table:</span>
-<span id="L857"><span class="lineNum">     857</span> <span class="tlaGNC">      410907 :    if (features.scalingFactor == 1.f &amp;&amp; !DynamicConfig::armageddon) {</span></span>
-<span id="L858"><span class="lineNum">     858</span> <span class="tlaGNC">      410907 :       const Color strongSide = score[EG] &gt; 0 ? Co_White : Co_Black;</span></span>
+<span id="L857"><span class="lineNum">     857</span> <span class="tlaGNC">      416069 :    if (features.scalingFactor == 1.f &amp;&amp; !DynamicConfig::armageddon) {</span></span>
+<span id="L858"><span class="lineNum">     858</span> <span class="tlaGNC">      416069 :       const Color strongSide = score[EG] &gt; 0 ? Co_White : Co_Black;</span></span>
 <span id="L859"><span class="lineNum">     859</span>              :       </span>
 <span id="L860"><span class="lineNum">     860</span>              :       // opposite colored bishops (scale based on passed pawn of strong side)</span>
-<span id="L861"><span class="lineNum">     861</span> <span class="tlaGNC">      410907 :       if (p.mat[Co_White][M_b] == 1 &amp;&amp; p.mat[Co_Black][M_b] == 1 &amp;&amp; countBit(p.allBishop() &amp; whiteSquare) == 1) {</span></span>
-<span id="L862"><span class="lineNum">     862</span> <span class="tlaGNC">        2633 :          if (p.mat[Co_White][M_t] == 1 &amp;&amp; p.mat[Co_Black][M_t] == 1) // only bishops and pawn</span></span>
+<span id="L861"><span class="lineNum">     861</span> <span class="tlaGNC">      416069 :       if (p.mat[Co_White][M_b] == 1 &amp;&amp; p.mat[Co_Black][M_b] == 1 &amp;&amp; countBit(p.allBishop() &amp; whiteSquare) == 1) {</span></span>
+<span id="L862"><span class="lineNum">     862</span> <span class="tlaGNC">        2888 :          if (p.mat[Co_White][M_t] == 1 &amp;&amp; p.mat[Co_Black][M_t] == 1) // only bishops and pawn</span></span>
 <span id="L863"><span class="lineNum">     863</span> <span class="tlaUNC tlaBgUNC">           0 :             features.scalingFactor =</span></span>
 <span id="L864"><span class="lineNum">     864</span> <span class="tlaUNC">           0 :                 (EvalConfig::scalingFactorOppBishopAlone + EvalConfig::scalingFactorOppBishopAloneSlope * countBit(pe.passed[strongSide])) / 128.f;</span></span>
 <span id="L865"><span class="lineNum">     865</span>              :          else // more pieces present</span>
-<span id="L866"><span class="lineNum">     866</span> <span class="tlaGNC tlaBgGNC">        2633 :             features.scalingFactor =</span></span>
-<span id="L867"><span class="lineNum">     867</span> <span class="tlaGNC">        2633 :                 (EvalConfig::scalingFactorOppBishop + EvalConfig::scalingFactorOppBishopSlope * countBit(p.allPieces[strongSide])) / 128.f;</span></span>
+<span id="L866"><span class="lineNum">     866</span> <span class="tlaGNC tlaBgGNC">        2888 :             features.scalingFactor =</span></span>
+<span id="L867"><span class="lineNum">     867</span> <span class="tlaGNC">        2888 :                 (EvalConfig::scalingFactorOppBishop + EvalConfig::scalingFactorOppBishopSlope * countBit(p.allPieces[strongSide])) / 128.f;</span></span>
 <span id="L868"><span class="lineNum">     868</span>              :       }</span>
 <span id="L869"><span class="lineNum">     869</span>              :       </span>
 <span id="L870"><span class="lineNum">     870</span>              :       // queen versus no queen (scale on number of minor of no queen side)</span>
-<span id="L871"><span class="lineNum">     871</span> <span class="tlaGNC">      408274 :       else if (countBit(p.allQueen()) == 1) {</span></span>
-<span id="L872"><span class="lineNum">     872</span> <span class="tlaGNC">      133712 :          features.scalingFactor =</span></span>
-<span id="L873"><span class="lineNum">     873</span> <span class="tlaGNC">      218666 :              (EvalConfig::scalingFactorQueenNoQueen + EvalConfig::scalingFactorQueenNoQueenSlope * p.mat[p.whiteQueen() ? Co_Black : Co_White][M_m]) / 128.f;</span></span>
+<span id="L871"><span class="lineNum">     871</span> <span class="tlaGNC">      413181 :       else if (countBit(p.allQueen()) == 1) {</span></span>
+<span id="L872"><span class="lineNum">     872</span> <span class="tlaGNC">      138204 :          features.scalingFactor =</span></span>
+<span id="L873"><span class="lineNum">     873</span> <span class="tlaGNC">      226007 :              (EvalConfig::scalingFactorQueenNoQueen + EvalConfig::scalingFactorQueenNoQueenSlope * p.mat[p.whiteQueen() ? Co_Black : Co_White][M_m]) / 128.f;</span></span>
 <span id="L874"><span class="lineNum">     874</span>              :       }</span>
 <span id="L875"><span class="lineNum">     875</span>              :       </span>
 <span id="L876"><span class="lineNum">     876</span>              :       // scale based on the number of pawn of strong side</span>
 <span id="L877"><span class="lineNum">     877</span>              :       else</span>
-<span id="L878"><span class="lineNum">     878</span> <span class="tlaGNC">      274562 :          features.scalingFactor =</span></span>
-<span id="L879"><span class="lineNum">     879</span> <span class="tlaGNC">      274968 :              std::min(1.f, (EvalConfig::scalingFactorPawns + EvalConfig::scalingFactorPawnsSlope * p.mat[strongSide][M_p]) / 128.f);</span></span>
+<span id="L878"><span class="lineNum">     878</span> <span class="tlaGNC">      274977 :          features.scalingFactor =</span></span>
+<span id="L879"><span class="lineNum">     879</span> <span class="tlaGNC">      275383 :              std::min(1.f, (EvalConfig::scalingFactorPawns + EvalConfig::scalingFactorPawnsSlope * p.mat[strongSide][M_p]) / 128.f);</span></span>
 <span id="L880"><span class="lineNum">     880</span>              : </span>
 <span id="L881"><span class="lineNum">     881</span>              :       // moreover scaledown if pawn on only one side</span>
-<span id="L882"><span class="lineNum">     882</span> <span class="tlaGNC">      410907 :       if (allPawns &amp;&amp; !((allPawns &amp; queenSide) &amp;&amp; (allPawns &amp; kingSide))) { features.scalingFactor -= EvalConfig::scalingFactorPawnsOneSide / 128.f; }</span></span>
+<span id="L882"><span class="lineNum">     882</span> <span class="tlaGNC">      416069 :       if (allPawns &amp;&amp; !((allPawns &amp; queenSide) &amp;&amp; (allPawns &amp; kingSide))) { features.scalingFactor -= EvalConfig::scalingFactorPawnsOneSide / 128.f; }</span></span>
 <span id="L883"><span class="lineNum">     883</span>              :    }</span>
-<span id="L884"><span class="lineNum">     884</span> <span class="tlaGNC">      410907 :    if (DynamicConfig::armageddon) features.scalingFactor = 1.f; ///@todo better</span></span>
+<span id="L884"><span class="lineNum">     884</span> <span class="tlaGNC">      416069 :    if (DynamicConfig::armageddon) features.scalingFactor = 1.f; ///@todo better</span></span>
 <span id="L885"><span class="lineNum">     885</span>              : </span>
 <span id="L886"><span class="lineNum">     886</span>              : #ifdef VERBOSE_EVAL</span>
 <span id="L887"><span class="lineNum">     887</span>              :    if (display) { Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Scaling factor (corrected) &quot; &lt;&lt; features.scalingFactor; }</span>
@@ -951,15 +951,15 @@
 <span id="L889"><span class="lineNum">     889</span>              : </span>
 <span id="L890"><span class="lineNum">     890</span>              :    // fuse MG and EG score</span>
 <span id="L891"><span class="lineNum">     891</span>              :    // scale both game phase and end-game scaling factor</span>
-<span id="L892"><span class="lineNum">     892</span> <span class="tlaGNC">      410907 :    ScoreType ret = ScaleScore(score, data.gp, features.scalingFactor);</span></span>
+<span id="L892"><span class="lineNum">     892</span> <span class="tlaGNC">      416069 :    ScoreType ret = ScaleScore(score, data.gp, features.scalingFactor);</span></span>
 <span id="L893"><span class="lineNum">     893</span>              : </span>
 <span id="L894"><span class="lineNum">     894</span>              : #ifdef VERBOSE_EVAL</span>
 <span id="L895"><span class="lineNum">     895</span>              :    if (display) { Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;&gt; All (with game phase scaling) &quot; &lt;&lt; ret; }</span>
 <span id="L896"><span class="lineNum">     896</span>              : #endif</span>
 <span id="L897"><span class="lineNum">     897</span>              : </span>
-<span id="L898"><span class="lineNum">     898</span> <span class="tlaGNC">      410907 :    if (!DynamicConfig::armageddon){</span></span>
+<span id="L898"><span class="lineNum">     898</span> <span class="tlaGNC">      416069 :    if (!DynamicConfig::armageddon){</span></span>
 <span id="L899"><span class="lineNum">     899</span>              :       // apply scaling factor based on fifty move rule</span>
-<span id="L900"><span class="lineNum">     900</span> <span class="tlaGNC">      410907 :       ret = fiftyScale(ret, p.fifty);</span></span>
+<span id="L900"><span class="lineNum">     900</span> <span class="tlaGNC">      416069 :       ret = fiftyScale(ret, p.fifty);</span></span>
 <span id="L901"><span class="lineNum">     901</span>              :    }</span>
 <span id="L902"><span class="lineNum">     902</span>              : </span>
 <span id="L903"><span class="lineNum">     903</span>              : #ifdef VERBOSE_EVAL</span>
@@ -967,34 +967,34 @@
 <span id="L905"><span class="lineNum">     905</span>              : #endif</span>
 <span id="L906"><span class="lineNum">     906</span>              : </span>
 <span id="L907"><span class="lineNum">     907</span>              :    // apply tempo</span>
-<span id="L908"><span class="lineNum">     908</span> <span class="tlaGNC">      604093 :    ret += EvalConfig::tempo * (white2Play ? +1 : -1);</span></span>
+<span id="L908"><span class="lineNum">     908</span> <span class="tlaGNC">      611737 :    ret += EvalConfig::tempo * (white2Play ? +1 : -1);</span></span>
 <span id="L909"><span class="lineNum">     909</span>              : </span>
 <span id="L910"><span class="lineNum">     910</span>              : #ifdef VERBOSE_EVAL</span>
 <span id="L911"><span class="lineNum">     911</span>              :    if (display) { Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;&gt; All (with tempo) &quot; &lt;&lt; ret; }</span>
 <span id="L912"><span class="lineNum">     912</span>              : #endif</span>
 <span id="L913"><span class="lineNum">     913</span>              : </span>
 <span id="L914"><span class="lineNum">     914</span>              :    // clamp score</span>
-<span id="L915"><span class="lineNum">     915</span> <span class="tlaGNC">      410907 :    ret = clampScore(ret);</span></span>
+<span id="L915"><span class="lineNum">     915</span> <span class="tlaGNC">      416069 :    ret = clampScore(ret);</span></span>
 <span id="L916"><span class="lineNum">     916</span>              : </span>
 <span id="L917"><span class="lineNum">     917</span>              : #ifdef VERBOSE_EVAL</span>
 <span id="L918"><span class="lineNum">     918</span>              :    if (display) { Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;&gt; All (clamped) &quot; &lt;&lt; ret; }</span>
 <span id="L919"><span class="lineNum">     919</span>              : #endif</span>
 <span id="L920"><span class="lineNum">     920</span>              : </span>
 <span id="L921"><span class="lineNum">     921</span>              :    // take side to move into account</span>
-<span id="L922"><span class="lineNum">     922</span> <span class="tlaGNC">      410907 :    ret = (white2Play ? +1 : -1) * ret;</span></span>
+<span id="L922"><span class="lineNum">     922</span> <span class="tlaGNC">      416069 :    ret = (white2Play ? +1 : -1) * ret;</span></span>
 <span id="L923"><span class="lineNum">     923</span>              : </span>
-<span id="L924"><span class="lineNum">     924</span> <span class="tlaGNC">      410907 :    if (display) { Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;==&gt; All (fully scaled) &quot; &lt;&lt; ret; }</span></span>
+<span id="L924"><span class="lineNum">     924</span> <span class="tlaGNC">      416069 :    if (display) { Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;==&gt; All (fully scaled) &quot; &lt;&lt; ret; }</span></span>
 <span id="L925"><span class="lineNum">     925</span>              : </span>
-<span id="L926"><span class="lineNum">     926</span> <span class="tlaGNC">      410907 :    data.evalDone = true;</span></span>
+<span id="L926"><span class="lineNum">     926</span> <span class="tlaGNC">      416069 :    data.evalDone = true;</span></span>
 <span id="L927"><span class="lineNum">     927</span>              :    // apply variante scoring if requiered</span>
-<span id="L928"><span class="lineNum">     928</span> <span class="tlaGNC">      410907 :    const ScoreType hceScore = variantScore(ret, p.halfmoves, context.height_, p.c);</span></span>
+<span id="L928"><span class="lineNum">     928</span> <span class="tlaGNC">      416069 :    const ScoreType hceScore = variantScore(ret, p.halfmoves, context.height_, p.c);</span></span>
 <span id="L929"><span class="lineNum">     929</span>              : </span>
 <span id="L930"><span class="lineNum">     930</span>              : #ifdef WITH_NNUE</span>
-<span id="L931"><span class="lineNum">     931</span> <span class="tlaGNC">      410907 :    if ( DynamicConfig::useNNUE &amp;&amp; !forbiddenNNUE &amp;&amp; Abs(hceScore) &lt;= DynamicConfig::NNUEThreshold2 ){</span></span>
+<span id="L931"><span class="lineNum">     931</span> <span class="tlaGNC">      416069 :    if ( DynamicConfig::useNNUE &amp;&amp; !forbiddenNNUE &amp;&amp; Abs(hceScore) &lt;= DynamicConfig::NNUEThreshold2 ){</span></span>
 <span id="L932"><span class="lineNum">     932</span>              :       // if HCE is small (there is something more than just material value going on ...), fall back to NNUE;</span>
-<span id="L933"><span class="lineNum">     933</span> <span class="tlaGNC">      123077 :       const ScoreType nnueScore = NNUEEVal(p, data, context, features, true);</span></span>
+<span id="L933"><span class="lineNum">     933</span> <span class="tlaGNC">      123079 :       const ScoreType nnueScore = NNUEEVal(p, data, context, features, true);</span></span>
 <span id="L934"><span class="lineNum">     934</span>              :       STOP_AND_SUM_TIMER(Eval)</span>
-<span id="L935"><span class="lineNum">     935</span> <span class="tlaGNC">      123077 :       return nnueScore;</span></span>
+<span id="L935"><span class="lineNum">     935</span> <span class="tlaGNC">      123079 :       return nnueScore;</span></span>
 <span id="L936"><span class="lineNum">     936</span>              :    }</span>
 <span id="L937"><span class="lineNum">     937</span>              : #endif</span>
 <span id="L938"><span class="lineNum">     938</span>              : </span>

@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td class="headerValue">2025-12-15 11:28:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -114,10 +114,10 @@
 <span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">         310 :           &lt;&lt; &quot; seldepth &quot; &lt;&lt; static_cast&lt;int&gt;(seldepth) &lt;&lt; &quot; tbhits &quot;</span></span>
 <span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">         310 :           &lt;&lt; ThreadPool::instance().counter(Stats::sid_tbHit1) + ThreadPool::instance().counter(Stats::sid_tbHit2);</span></span>
 <span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">         310 :       static auto lastHashFull = Clock::now(); ///@todo slow here because of guard variable</span></span>
-<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">         347 :       if (getTimeDiff(now,lastHashFull) &gt; 500 &amp;&amp;</span></span>
-<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">          37 :           getTimeDiff(now,startTime)*2 &lt; ThreadPool::instance().main().getCurrentMoveMs()) {</span></span>
-<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">          37 :          lastHashFull = now;</span></span>
-<span id="L58"><span class="lineNum">      58</span> <span class="tlaGNC">          37 :          str &lt;&lt; &quot; hashfull &quot; &lt;&lt; TT::hashFull();</span></span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">         368 :       if (getTimeDiff(now,lastHashFull) &gt; 500 &amp;&amp;</span></span>
+<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">          58 :           getTimeDiff(now,startTime)*2 &lt; ThreadPool::instance().main().getCurrentMoveMs()) {</span></span>
+<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">          58 :          lastHashFull = now;</span></span>
+<span id="L58"><span class="lineNum">      58</span> <span class="tlaGNC">          58 :          str &lt;&lt; &quot; hashfull &quot; &lt;&lt; TT::hashFull();</span></span>
 <span id="L59"><span class="lineNum">      59</span>              :       }</span>
 <span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">         620 :       str &lt;&lt; &quot; pv &quot; &lt;&lt; ToString(pv); //only add pv at the end (c-chess-cli doesn't like to read something after pv...)</span></span>
 <span id="L61"><span class="lineNum">      61</span>              :    }</span>
@@ -208,7 +208,7 @@
 <span id="L146"><span class="lineNum">     146</span>              :    // other threads will wait here for start signal</span>
 <span id="L147"><span class="lineNum">     147</span>              :    else {</span>
 <span id="L148"><span class="lineNum">     148</span> <span class="tlaGNC">          12 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;helper thread waiting ... &quot; &lt;&lt; id();</span></span>
-<span id="L149"><span class="lineNum">     149</span> <span class="tlaGNC">      586096 :       while (startLock.load()) { ; }</span></span>
+<span id="L149"><span class="lineNum">     149</span> <span class="tlaGNC">     3516974 :       while (startLock.load()) { ; }</span></span>
 <span id="L150"><span class="lineNum">     150</span> <span class="tlaGNC">          12 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;... go for id &quot; &lt;&lt; id();</span></span>
 <span id="L151"><span class="lineNum">     151</span>              :    }</span>
 <span id="L152"><span class="lineNum">     152</span>              : </span>
@@ -286,11 +286,11 @@
 <span id="L224"><span class="lineNum">     224</span>              : </span>
 <span id="L225"><span class="lineNum">     225</span>              :       // MultiPV loop</span>
 <span id="L226"><span class="lineNum">     226</span> <span class="tlaGNC">        1016 :       std::vector&lt;MiniMove&gt; skipMoves;</span></span>
-<span id="L227"><span class="lineNum">     227</span> <span class="tlaGNC">        2209 :       for (unsigned int multi = 0; multi &lt; DynamicConfig::multiPV &amp;&amp; !stopFlag; ++multi) {</span></span>
+<span id="L227"><span class="lineNum">     227</span> <span class="tlaGNC">        2208 :       for (unsigned int multi = 0; multi &lt; DynamicConfig::multiPV &amp;&amp; !stopFlag; ++multi) {</span></span>
 <span id="L228"><span class="lineNum">     228</span>              :          // No need to continue multiPV loop if a mate is found</span>
-<span id="L229"><span class="lineNum">     229</span> <span class="tlaGNC">        1193 :          if (!skipMoves.empty() &amp;&amp; isMatedScore(currentScore[multi])) break;</span></span>
+<span id="L229"><span class="lineNum">     229</span> <span class="tlaGNC">        1192 :          if (!skipMoves.empty() &amp;&amp; isMatedScore(currentScore[multi])) break;</span></span>
 <span id="L230"><span class="lineNum">     230</span>              : </span>
-<span id="L231"><span class="lineNum">     231</span> <span class="tlaGNC">        1193 :          if (isMainThread()) {</span></span>
+<span id="L231"><span class="lineNum">     231</span> <span class="tlaGNC">        1192 :          if (isMainThread()) {</span></span>
 <span id="L232"><span class="lineNum">     232</span> <span class="tlaGNC">        1011 :             if (depth &gt; 1) {</span></span>
 <span id="L233"><span class="lineNum">     233</span>              :                // delayed other thread start (can use a depth condition...)</span>
 <span id="L234"><span class="lineNum">     234</span> <span class="tlaGNC">         828 :                if (startLock.load()) {</span></span>
@@ -300,65 +300,65 @@
 <span id="L238"><span class="lineNum">     238</span>              :             }</span>
 <span id="L239"><span class="lineNum">     239</span>              :          }</span>
 <span id="L240"><span class="lineNum">     240</span>              :          // stockfish like thread management (not for co-searcher)</span>
-<span id="L241"><span class="lineNum">     241</span> <span class="tlaGNC">         182 :          else if (!subSearch) {</span></span>
-<span id="L242"><span class="lineNum">     242</span> <span class="tlaGNC">         182 :             const auto i = (id() - 1) % threadSkipSize;</span></span>
-<span id="L243"><span class="lineNum">     243</span> <span class="tlaGNC">         182 :             if (((depth + skipPhase[i]) / skipSize[i]) % 2){</span></span>
+<span id="L241"><span class="lineNum">     241</span> <span class="tlaGNC">         181 :          else if (!subSearch) {</span></span>
+<span id="L242"><span class="lineNum">     242</span> <span class="tlaGNC">         181 :             const auto i = (id() - 1) % threadSkipSize;</span></span>
+<span id="L243"><span class="lineNum">     243</span> <span class="tlaGNC">         181 :             if (((depth + skipPhase[i]) / skipSize[i]) % 2){</span></span>
 <span id="L244"><span class="lineNum">     244</span> <span class="tlaGNC">         184 :                Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Thread &quot; &lt;&lt; id() &lt;&lt; &quot; skipping depth &quot; &lt;&lt; static_cast&lt;int&gt;(depth);</span></span>
 <span id="L245"><span class="lineNum">     245</span> <span class="tlaGNC">          92 :                continue; // next depth</span></span>
 <span id="L246"><span class="lineNum">     246</span>              :             }</span>
 <span id="L247"><span class="lineNum">     247</span>              :          }</span>
 <span id="L248"><span class="lineNum">     248</span>              : </span>
-<span id="L249"><span class="lineNum">     249</span> <span class="tlaGNC">        3303 :          Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Thread &quot; &lt;&lt; id() &lt;&lt; &quot; searching depth &quot; &lt;&lt; static_cast&lt;int&gt;(depth);</span></span>
+<span id="L249"><span class="lineNum">     249</span> <span class="tlaGNC">        3300 :          Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Thread &quot; &lt;&lt; id() &lt;&lt; &quot; searching depth &quot; &lt;&lt; static_cast&lt;int&gt;(depth);</span></span>
 <span id="L250"><span class="lineNum">     250</span>              : </span>
 <span id="L251"><span class="lineNum">     251</span>              : #ifndef WITH_EVAL_TUNING</span>
-<span id="L252"><span class="lineNum">     252</span> <span class="tlaGNC">        1101 :          contempt = {ScoreType((p.c == Co_White ? +1 : -1) * (DynamicConfig::contempt + DynamicConfig::contemptMG) * DynamicConfig::ratingFactor),</span></span>
-<span id="L253"><span class="lineNum">     253</span> <span class="tlaGNC">        1101 :                      ScoreType((p.c == Co_White ? +1 : -1) * DynamicConfig::contempt * DynamicConfig::ratingFactor)};</span></span>
+<span id="L252"><span class="lineNum">     252</span> <span class="tlaGNC">        1100 :          contempt = {ScoreType((p.c == Co_White ? +1 : -1) * (DynamicConfig::contempt + DynamicConfig::contemptMG) * DynamicConfig::ratingFactor),</span></span>
+<span id="L253"><span class="lineNum">     253</span> <span class="tlaGNC">        1100 :                      ScoreType((p.c == Co_White ? +1 : -1) * DynamicConfig::contempt * DynamicConfig::ratingFactor)};</span></span>
 <span id="L254"><span class="lineNum">     254</span>              : #else</span>
 <span id="L255"><span class="lineNum">     255</span>              :          contempt = 0;</span>
 <span id="L256"><span class="lineNum">     256</span>              : #endif</span>
 <span id="L257"><span class="lineNum">     257</span>              :          // dynamic contempt ///@todo tune this</span>
-<span id="L258"><span class="lineNum">     258</span> <span class="tlaGNC">        1101 :          if (contempt[EG] &gt;= 0){</span></span>
+<span id="L258"><span class="lineNum">     258</span> <span class="tlaGNC">        1100 :          if (contempt[EG] &gt;= 0){</span></span>
 <span id="L259"><span class="lineNum">     259</span> <span class="tlaGNC">         660 :             contempt += static_cast&lt;ScoreType&gt;(std::round(25 * std::tanh(currentScore[multi] / 400.f))); // slow but ok here</span></span>
 <span id="L260"><span class="lineNum">     260</span>              :          }</span>
-<span id="L261"><span class="lineNum">     261</span> <span class="tlaGNC">        2202 :          Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Dynamic contempt &quot; &lt;&lt; contempt;</span></span>
+<span id="L261"><span class="lineNum">     261</span> <span class="tlaGNC">        2200 :          Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Dynamic contempt &quot; &lt;&lt; contempt;</span></span>
 <span id="L262"><span class="lineNum">     262</span>              : </span>
 <span id="L263"><span class="lineNum">     263</span>              :          // initialize aspiration window loop variables</span>
-<span id="L264"><span class="lineNum">     264</span> <span class="tlaGNC">        1101 :          PVList    pvLoc;</span></span>
+<span id="L264"><span class="lineNum">     264</span> <span class="tlaGNC">        1100 :          PVList    pvLoc;</span></span>
 <span id="L265"><span class="lineNum">     265</span>              :          ScoreType delta =</span>
-<span id="L266"><span class="lineNum">     266</span> <span class="tlaGNC">        1101 :              (SearchConfig::doWindow &amp;&amp; depth &gt; SearchConfig::aspirationMinDepth)</span></span>
+<span id="L266"><span class="lineNum">     266</span> <span class="tlaGNC">        1100 :              (SearchConfig::doWindow &amp;&amp; depth &gt; SearchConfig::aspirationMinDepth)</span></span>
 <span id="L267"><span class="lineNum">     267</span> <span class="tlaGNC">         335 :                  ? SearchConfig::aspirationInit + std::max(0, SearchConfig::aspirationDepthInit - SearchConfig::aspirationDepthCoef * depth)</span></span>
-<span id="L268"><span class="lineNum">     268</span> <span class="tlaGNC">        1436 :                  : matingScore(0); // MATE not INFSCORE in order to enter the loop below once</span></span>
-<span id="L269"><span class="lineNum">     269</span> <span class="tlaGNC">        1101 :          ScoreType alpha       = std::max(static_cast&lt;ScoreType&gt;(currentScore[multi] - delta), matedScore(0));</span></span>
+<span id="L268"><span class="lineNum">     268</span> <span class="tlaGNC">        1435 :                  : matingScore(0); // MATE not INFSCORE in order to enter the loop below once</span></span>
+<span id="L269"><span class="lineNum">     269</span> <span class="tlaGNC">        1100 :          ScoreType alpha       = std::max(static_cast&lt;ScoreType&gt;(currentScore[multi] - delta), matedScore(0));</span></span>
 <span id="L270"><span class="lineNum">     270</span> <span class="tlaGNC">        1389 :          ScoreType beta        = std::min(static_cast&lt;ScoreType&gt;(currentScore[multi] + delta), matingScore(0));</span></span>
 <span id="L271"><span class="lineNum">     271</span>              :          ScoreType score       = 0;</span>
 <span id="L272"><span class="lineNum">     272</span>              :          DepthType windowDepth = depth;</span>
-<span id="L273"><span class="lineNum">     273</span> <span class="tlaGNC">        1101 :          Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Inital window: &quot; &lt;&lt; alpha &lt;&lt; &quot;..&quot; &lt;&lt; beta;</span></span>
+<span id="L273"><span class="lineNum">     273</span> <span class="tlaGNC">        1100 :          Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Inital window: &quot; &lt;&lt; alpha &lt;&lt; &quot;..&quot; &lt;&lt; beta;</span></span>
 <span id="L274"><span class="lineNum">     274</span>              : </span>
 <span id="L275"><span class="lineNum">     275</span>              :          // Aspiration loop</span>
-<span id="L276"><span class="lineNum">     276</span> <span class="tlaGNC">        1478 :          while (!stopFlag) {</span></span>
+<span id="L276"><span class="lineNum">     276</span> <span class="tlaGNC">        1519 :          while (!stopFlag) {</span></span>
 <span id="L277"><span class="lineNum">     277</span>              :             pvLoc.clear();</span>
-<span id="L278"><span class="lineNum">     278</span> <span class="tlaGNC">        1644 :             score = pvs&lt;true&gt;(alpha, beta, p, windowDepth, 0, pvLoc, _data.seldepth, 0, isInCheck, false, skipMoves.empty() ? nullptr : &amp;skipMoves);</span></span>
-<span id="L279"><span class="lineNum">     279</span> <span class="tlaGNC">        1478 :             if (stopFlag) break;</span></span>
-<span id="L280"><span class="lineNum">     280</span> <span class="tlaGNC">        1475 :             ScoreType matW = 0;</span></span>
-<span id="L281"><span class="lineNum">     281</span> <span class="tlaGNC">        1475 :             ScoreType matB = 0;</span></span>
-<span id="L282"><span class="lineNum">     282</span> <span class="tlaGNC">        1475 :             delta += static_cast&lt;ScoreType&gt;((delta / 4) * std::exp(1.f - gamePhase(p.mat,matW,matB))); // in end-game, open window faster</span></span>
-<span id="L283"><span class="lineNum">     283</span> <span class="tlaGNC">        2950 :             if (delta &gt; std::max(128, 1024*4/depth) ) delta = matingScore(0);</span></span>
-<span id="L284"><span class="lineNum">     284</span> <span class="tlaGNC">        1475 :             if (alpha &gt; matedScore(0) &amp;&amp; score &lt;= alpha) {</span></span>
+<span id="L278"><span class="lineNum">     278</span> <span class="tlaGNC">        1718 :             score = pvs&lt;true&gt;(alpha, beta, p, windowDepth, 0, pvLoc, _data.seldepth, 0, isInCheck, false, skipMoves.empty() ? nullptr : &amp;skipMoves);</span></span>
+<span id="L279"><span class="lineNum">     279</span> <span class="tlaGNC">        1518 :             if (stopFlag) break;</span></span>
+<span id="L280"><span class="lineNum">     280</span> <span class="tlaGNC">        1516 :             ScoreType matW = 0;</span></span>
+<span id="L281"><span class="lineNum">     281</span> <span class="tlaGNC">        1516 :             ScoreType matB = 0;</span></span>
+<span id="L282"><span class="lineNum">     282</span> <span class="tlaGNC">        1516 :             delta += static_cast&lt;ScoreType&gt;((delta / 4) * std::exp(1.f - gamePhase(p.mat,matW,matB))); // in end-game, open window faster</span></span>
+<span id="L283"><span class="lineNum">     283</span> <span class="tlaGNC">        3032 :             if (delta &gt; std::max(128, 1024*4/depth) ) delta = matingScore(0);</span></span>
+<span id="L284"><span class="lineNum">     284</span> <span class="tlaGNC">        1516 :             if (alpha &gt; matedScore(0) &amp;&amp; score &lt;= alpha) {</span></span>
 <span id="L285"><span class="lineNum">     285</span>              :                windowDepth = depth;</span>
-<span id="L286"><span class="lineNum">     286</span> <span class="tlaGNC">         172 :                beta  = std::min(matingScore(0), static_cast&lt;ScoreType&gt;((alpha + beta) / 2));</span></span>
-<span id="L287"><span class="lineNum">     287</span> <span class="tlaGNC">         172 :                alpha = std::max(static_cast&lt;ScoreType&gt;(score - delta), matedScore(0));</span></span>
-<span id="L288"><span class="lineNum">     288</span> <span class="tlaGNC">         172 :                Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Increase window alpha &quot; &lt;&lt; alpha &lt;&lt; &quot;..&quot; &lt;&lt; beta;</span></span>
-<span id="L289"><span class="lineNum">     289</span> <span class="tlaGNC">         172 :                if (isMainThread() &amp;&amp; DynamicConfig::multiPV == 1) {</span></span>
+<span id="L286"><span class="lineNum">     286</span> <span class="tlaGNC">         195 :                beta  = std::min(matingScore(0), static_cast&lt;ScoreType&gt;((alpha + beta) / 2));</span></span>
+<span id="L287"><span class="lineNum">     287</span> <span class="tlaGNC">         195 :                alpha = std::max(static_cast&lt;ScoreType&gt;(score - delta), matedScore(0));</span></span>
+<span id="L288"><span class="lineNum">     288</span> <span class="tlaGNC">         195 :                Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Increase window alpha &quot; &lt;&lt; alpha &lt;&lt; &quot;..&quot; &lt;&lt; beta;</span></span>
+<span id="L289"><span class="lineNum">     289</span> <span class="tlaGNC">         195 :                if (isMainThread() &amp;&amp; DynamicConfig::multiPV == 1) {</span></span>
 <span id="L290"><span class="lineNum">     290</span> <span class="tlaGNC">         134 :                   PVList pv2;</span></span>
 <span id="L291"><span class="lineNum">     291</span> <span class="tlaGNC">         134 :                   TT::getPV(p, *this, pv2);</span></span>
 <span id="L292"><span class="lineNum">     292</span> <span class="tlaGNC">         134 :                   displayGUI(depth, _data.seldepth, score, p.halfmoves, pv2, multi + 1, &quot;?&quot;);</span></span>
 <span id="L293"><span class="lineNum">     293</span> <span class="tlaGNC">         134 :                }</span></span>
 <span id="L294"><span class="lineNum">     294</span>              :             }</span>
-<span id="L295"><span class="lineNum">     295</span> <span class="tlaGNC">        1303 :             else if (beta &lt; matingScore(0) &amp;&amp; score &gt;= beta) {</span></span>
-<span id="L296"><span class="lineNum">     296</span> <span class="tlaGNC">         205 :                --windowDepth; // from Ethereal</span></span>
-<span id="L297"><span class="lineNum">     297</span> <span class="tlaGNC">         205 :                beta = std::min(static_cast&lt;ScoreType&gt;(score + delta), matingScore(0));</span></span>
-<span id="L298"><span class="lineNum">     298</span> <span class="tlaGNC">         205 :                Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Increase window beta &quot; &lt;&lt; alpha &lt;&lt; &quot;..&quot; &lt;&lt; beta;</span></span>
-<span id="L299"><span class="lineNum">     299</span> <span class="tlaGNC">         205 :                if (isMainThread() &amp;&amp; DynamicConfig::multiPV == 1) {</span></span>
+<span id="L295"><span class="lineNum">     295</span> <span class="tlaGNC">        1321 :             else if (beta &lt; matingScore(0) &amp;&amp; score &gt;= beta) {</span></span>
+<span id="L296"><span class="lineNum">     296</span> <span class="tlaGNC">         224 :                --windowDepth; // from Ethereal</span></span>
+<span id="L297"><span class="lineNum">     297</span> <span class="tlaGNC">         224 :                beta = std::min(static_cast&lt;ScoreType&gt;(score + delta), matingScore(0));</span></span>
+<span id="L298"><span class="lineNum">     298</span> <span class="tlaGNC">         224 :                Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Increase window beta &quot; &lt;&lt; alpha &lt;&lt; &quot;..&quot; &lt;&lt; beta;</span></span>
+<span id="L299"><span class="lineNum">     299</span> <span class="tlaGNC">         224 :                if (isMainThread() &amp;&amp; DynamicConfig::multiPV == 1) {</span></span>
 <span id="L300"><span class="lineNum">     300</span> <span class="tlaGNC">         157 :                   PVList pv2;</span></span>
 <span id="L301"><span class="lineNum">     301</span> <span class="tlaGNC">         157 :                   TT::getPV(p, *this, pv2);</span></span>
 <span id="L302"><span class="lineNum">     302</span> <span class="tlaGNC">         157 :                   displayGUI(depth, _data.seldepth, score, p.halfmoves, pv2, multi + 1, &quot;!&quot;);</span></span>
@@ -369,7 +369,7 @@
 <span id="L307"><span class="lineNum">     307</span>              : </span>
 <span id="L308"><span class="lineNum">     308</span>              :          } // Aspiration loop end</span>
 <span id="L309"><span class="lineNum">     309</span>              : </span>
-<span id="L310"><span class="lineNum">     310</span> <span class="tlaGNC">        1101 :          if (stopFlag) {</span></span>
+<span id="L310"><span class="lineNum">     310</span> <span class="tlaGNC">        1100 :          if (stopFlag) {</span></span>
 <span id="L311"><span class="lineNum">     311</span> <span class="tlaGNC">           3 :             if (multi != 0 &amp;&amp; isMainThread()) {</span></span>
 <span id="L312"><span class="lineNum">     312</span>              :                // handle multiPV display only based on previous ID iteration data</span>
 <span id="L313"><span class="lineNum">     313</span> <span class="tlaUNC tlaBgUNC">           0 :                displayGUI(depth - 1, multiPVMoves[multi].seldepth, multiPVMoves[multi].s, p.halfmoves, multiPVMoves[multi].pv, multi + 1);</span></span>
@@ -377,36 +377,36 @@
 <span id="L315"><span class="lineNum">     315</span>              :          }</span>
 <span id="L316"><span class="lineNum">     316</span>              :          else {</span>
 <span id="L317"><span class="lineNum">     317</span>              :             // this aspiration multipv loop was fully done, let's update results</span>
-<span id="L318"><span class="lineNum">     318</span> <span class="tlaGNC tlaBgGNC">        1098 :             _data.depth         = depth;</span></span>
-<span id="L319"><span class="lineNum">     319</span> <span class="tlaGNC">        1098 :             currentScore[multi] = score;</span></span>
+<span id="L318"><span class="lineNum">     318</span> <span class="tlaGNC tlaBgGNC">        1097 :             _data.depth         = depth;</span></span>
+<span id="L319"><span class="lineNum">     319</span> <span class="tlaGNC">        1097 :             currentScore[multi] = score;</span></span>
 <span id="L320"><span class="lineNum">     320</span>              : </span>
 <span id="L321"><span class="lineNum">     321</span>              :             // In multiPV mode, fill skipmove for next multiPV iteration</span>
-<span id="L322"><span class="lineNum">     322</span> <span class="tlaGNC">        1098 :             if (!pvLoc.empty() &amp;&amp; DynamicConfig::multiPV &gt; 1) {</span></span>
-<span id="L323"><span class="lineNum">     323</span> <span class="tlaGNC">         143 :                skipMoves.emplace_back(Move2MiniMove(pvLoc[0]));</span></span>
+<span id="L322"><span class="lineNum">     322</span> <span class="tlaGNC">        1097 :             if (!pvLoc.empty() &amp;&amp; DynamicConfig::multiPV &gt; 1) {</span></span>
+<span id="L323"><span class="lineNum">     323</span> <span class="tlaGNC">         142 :                skipMoves.emplace_back(Move2MiniMove(pvLoc[0]));</span></span>
 <span id="L324"><span class="lineNum">     324</span>              :             }</span>
 <span id="L325"><span class="lineNum">     325</span>              : </span>
 <span id="L326"><span class="lineNum">     326</span>              :             // backup multiPV info</span>
-<span id="L327"><span class="lineNum">     327</span> <span class="tlaGNC">        1098 :             if (!pvLoc.empty()){</span></span>
-<span id="L328"><span class="lineNum">     328</span> <span class="tlaGNC">        1098 :                multiPVMoves[multi].m = pvLoc[0];</span></span>
+<span id="L327"><span class="lineNum">     327</span> <span class="tlaGNC">        1097 :             if (!pvLoc.empty()){</span></span>
+<span id="L328"><span class="lineNum">     328</span> <span class="tlaGNC">        1097 :                multiPVMoves[multi].m = pvLoc[0];</span></span>
 <span id="L329"><span class="lineNum">     329</span>              :             }</span>
-<span id="L330"><span class="lineNum">     330</span> <span class="tlaGNC">        1098 :             multiPVMoves[multi].s = score;</span></span>
-<span id="L331"><span class="lineNum">     331</span> <span class="tlaGNC">        1098 :             multiPVMoves[multi].pv = pvLoc;</span></span>
-<span id="L332"><span class="lineNum">     332</span> <span class="tlaGNC">        1098 :             multiPVMoves[multi].seldepth = _data.seldepth;</span></span>
+<span id="L330"><span class="lineNum">     330</span> <span class="tlaGNC">        1097 :             multiPVMoves[multi].s = score;</span></span>
+<span id="L331"><span class="lineNum">     331</span> <span class="tlaGNC">        1097 :             multiPVMoves[multi].pv = pvLoc;</span></span>
+<span id="L332"><span class="lineNum">     332</span> <span class="tlaGNC">        1097 :             multiPVMoves[multi].seldepth = _data.seldepth;</span></span>
 <span id="L333"><span class="lineNum">     333</span>              : </span>
 <span id="L334"><span class="lineNum">     334</span>              :             // update the outputed pv only with the best move line</span>
-<span id="L335"><span class="lineNum">     335</span> <span class="tlaGNC">        1098 :             if (multi == 0) {</span></span>
-<span id="L336"><span class="lineNum">     336</span> <span class="tlaGNC">         992 :                std::unique_lock lock(_mutexPV);</span></span>
-<span id="L337"><span class="lineNum">     337</span> <span class="tlaGNC">         992 :                _data.pv    = pvLoc;</span></span>
-<span id="L338"><span class="lineNum">     338</span> <span class="tlaGNC">         992 :                _data.depth = depth;</span></span>
-<span id="L339"><span class="lineNum">     339</span> <span class="tlaGNC">         992 :                _data.score = score;</span></span>
+<span id="L335"><span class="lineNum">     335</span> <span class="tlaGNC">        1097 :             if (multi == 0) {</span></span>
+<span id="L336"><span class="lineNum">     336</span> <span class="tlaGNC">         991 :                std::unique_lock lock(_mutexPV);</span></span>
+<span id="L337"><span class="lineNum">     337</span> <span class="tlaGNC">         991 :                _data.pv    = pvLoc;</span></span>
+<span id="L338"><span class="lineNum">     338</span> <span class="tlaGNC">         991 :                _data.depth = depth;</span></span>
+<span id="L339"><span class="lineNum">     339</span> <span class="tlaGNC">         991 :                _data.score = score;</span></span>
 <span id="L340"><span class="lineNum">     340</span>              :             }</span>
 <span id="L341"><span class="lineNum">     341</span>              : </span>
-<span id="L342"><span class="lineNum">     342</span> <span class="tlaGNC">        1098 :             if (isMainThread()) {</span></span>
+<span id="L342"><span class="lineNum">     342</span> <span class="tlaGNC">        1097 :             if (isMainThread()) {</span></span>
 <span id="L343"><span class="lineNum">     343</span>              :                // output to GUI</span>
 <span id="L344"><span class="lineNum">     344</span> <span class="tlaGNC">        2022 :                displayGUI(depth, _data.seldepth, multiPVMoves[multi].s, p.halfmoves, pvLoc, multi + 1);</span></span>
 <span id="L345"><span class="lineNum">     345</span>              :             }</span>
 <span id="L346"><span class="lineNum">     346</span>              : </span>
-<span id="L347"><span class="lineNum">     347</span> <span class="tlaGNC">        1098 :             if (isMainThread() &amp;&amp; multi == 0) {</span></span>
+<span id="L347"><span class="lineNum">     347</span> <span class="tlaGNC">        1097 :             if (isMainThread() &amp;&amp; multi == 0) {</span></span>
 <span id="L348"><span class="lineNum">     348</span>              :                // store current depth info</span>
 <span id="L349"><span class="lineNum">     349</span> <span class="tlaGNC">         969 :                getSearchData().scores[depth] = _data.score;</span></span>
 <span id="L350"><span class="lineNum">     350</span> <span class="tlaGNC">         969 :                getSearchData().nodes[depth]  = ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);</span></span>
@@ -459,7 +459,7 @@
 <span id="L397"><span class="lineNum">     397</span>              :                }</span>
 <span id="L398"><span class="lineNum">     398</span>              :             }</span>
 <span id="L399"><span class="lineNum">     399</span>              :          }</span>
-<span id="L400"><span class="lineNum">     400</span> <span class="tlaGNC">        1101 :       } // multiPV loop end</span></span>
+<span id="L400"><span class="lineNum">     400</span> <span class="tlaGNC">        1100 :       } // multiPV loop end</span></span>
 <span id="L401"><span class="lineNum">     401</span>              : </span>
 <span id="L402"><span class="lineNum">     402</span>              :       // check for a node count stop</span>
 <span id="L403"><span class="lineNum">     403</span> <span class="tlaGNC">        1016 :       if (isMainThread() || isStoppableCoSearcher) {</span></span>

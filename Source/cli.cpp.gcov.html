@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td class="headerValue">2025-12-15 11:28:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">66.7&nbsp;%</td>
@@ -111,9 +111,9 @@
 <span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">         174 :    const bool b = readFEN(fen, COM::position, true, true);</span></span>
 <span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">         174 :    if (!b) Logging::LogIt(Logging::logFatal) &lt;&lt; &quot;Illegal FEN &quot; &lt;&lt; fen;</span></span>
 <span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">         174 :    COM::thinkAsync(COM::st_searching);</span></span>
-<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">        3578 :    while(ThreadPool::instance().main().searching()){</span></span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">        7487 :    while(ThreadPool::instance().main().searching()){</span></span>
 <span id="L53"><span class="lineNum">      53</span>              :       using namespace std::chrono_literals;</span>
-<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">        3404 :       std::this_thread::sleep_for(10ms);</span></span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">        7313 :       std::this_thread::sleep_for(10ms);</span></span>
 <span id="L55"><span class="lineNum">      55</span>              :    }</span>
 <span id="L56"><span class="lineNum">      56</span>              : #else</span>
 <span id="L57"><span class="lineNum">      57</span>              :    d.p     = p;</span>
@@ -332,9 +332,9 @@
 <span id="L270"><span class="lineNum">     270</span> <span class="tlaGNC">           1 :          nbPos += nbPosLoc;</span></span>
 <span id="L271"><span class="lineNum">     271</span>              :          const auto ms = getTimeDiff(startTime);</span>
 <span id="L272"><span class="lineNum">     272</span> <span class="tlaGNC">           1 :          ++nbGames;</span></span>
-<span id="L273"><span class="lineNum">     273</span> <span class="tlaGNC">           1 :          Logging::LogIt(Logging::logInfoPrio) &lt;&lt; &quot;Nb games : &quot; &lt;&lt; nbGames &lt;&lt; &quot;, Nb Pos : &quot; &lt;&lt; nbPos &lt;&lt; &quot;, elapsed s : &quot; &lt;&lt; ms/1000;</span></span>
-<span id="L274"><span class="lineNum">     274</span> <span class="tlaGNC">           2 :          Logging::LogIt(Logging::logInfoPrio) &lt;&lt; &quot;Game speed : &quot; &lt;&lt; static_cast&lt;double&gt;(nbGames) / (static_cast&lt;double&gt;(ms) / 1000 / 60) &lt;&lt; &quot; games/min&quot;;</span></span>
-<span id="L275"><span class="lineNum">     275</span> <span class="tlaGNC">           2 :          Logging::LogIt(Logging::logInfoPrio) &lt;&lt; &quot;Pos speed : &quot; &lt;&lt; static_cast&lt;double&gt;(nbPos) / (static_cast&lt;double&gt;(ms) / 1000) &lt;&lt; &quot; pos/s&quot;;         </span></span>
+<span id="L273"><span class="lineNum">     273</span> <span class="tlaGNC">           1 :          Logging::LogIt(Logging::logError) &lt;&lt; &quot;Nb games : &quot; &lt;&lt; nbGames &lt;&lt; &quot;, Nb Pos : &quot; &lt;&lt; nbPos &lt;&lt; &quot;, elapsed s : &quot; &lt;&lt; ms/1000;</span></span>
+<span id="L274"><span class="lineNum">     274</span> <span class="tlaGNC">           2 :          Logging::LogIt(Logging::logError) &lt;&lt; &quot;Game speed : &quot; &lt;&lt; static_cast&lt;double&gt;(nbGames) / (static_cast&lt;double&gt;(ms) / 1000 / 60) &lt;&lt; &quot; games/min&quot;;</span></span>
+<span id="L275"><span class="lineNum">     275</span> <span class="tlaGNC">           2 :          Logging::LogIt(Logging::logError) &lt;&lt; &quot;Pos speed : &quot; &lt;&lt; static_cast&lt;double&gt;(nbPos) / (static_cast&lt;double&gt;(ms) / 1000) &lt;&lt; &quot; pos/s&quot;;         </span></span>
 <span id="L276"><span class="lineNum">     276</span>              :       }</span>
 <span id="L277"><span class="lineNum">     277</span>              :       return true;</span>
 <span id="L278"><span class="lineNum">     278</span>              :    }</span>

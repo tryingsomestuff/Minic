@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td class="headerValue">2025-12-15 11:28:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">-</td>
@@ -75,8 +75,8 @@
 <span id="L13"><span class="lineNum">      13</span>              :    const InputLayer&lt;NT, inputLayerSize, firstInnerLayerSize, Q&gt;* weights_;</span>
 <span id="L14"><span class="lineNum">      14</span>              : </span>
 <span id="L15"><span class="lineNum">      15</span>              :    FORCE_FINLINE const NT * slopes() const {</span>
-<span id="L16"><span class="lineNum">      16</span> <span class="tlaGNC tlaBgGNC">     3710286 :       assert(weights_);</span></span>
-<span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC">     3710286 :       return weights_-&gt;slopes;</span></span>
+<span id="L16"><span class="lineNum">      16</span> <span class="tlaGNC tlaBgGNC">     3781428 :       assert(weights_);</span></span>
+<span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC">     3781428 :       return weights_-&gt;slopes;</span></span>
 <span id="L18"><span class="lineNum">      18</span>              :    }</span>
 <span id="L19"><span class="lineNum">      19</span>              : </span>
 <span id="L20"><span class="lineNum">      20</span>              :    using BIT = typename Quantization&lt;Q&gt;::BIT;</span>
@@ -87,19 +87,19 @@
 <span id="L25"><span class="lineNum">      25</span>              :    const StackVector&lt;BIT, firstInnerLayerSize, Q&gt; &amp; active() const { return active_; }</span>
 <span id="L26"><span class="lineNum">      26</span>              : </span>
 <span id="L27"><span class="lineNum">      27</span>              :    FORCE_FINLINE void clear() {</span>
-<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">     8192165 :       assert(weights_);</span></span>
-<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">     8192165 :       active_.from(weights_-&gt;b);</span></span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">     8203517 :       assert(weights_);</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">     8203517 :       active_.from(weights_-&gt;b);</span></span>
 <span id="L30"><span class="lineNum">      30</span>              :    }</span>
 <span id="L31"><span class="lineNum">      31</span>              : </span>
 <span id="L32"><span class="lineNum">      32</span>              :    FORCE_FINLINE void insert(const size_t idx) {</span>
-<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">   508951629 :       assert(weights_);</span></span>
-<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">   186531890 :       weights_-&gt;insertIdx(idx, active_);</span></span>
-<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">   165115197 :    }</span></span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">   509383408 :       assert(weights_);</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">   186844293 :       weights_-&gt;insertIdx(idx, active_);</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">   165177500 :    }</span></span>
 <span id="L36"><span class="lineNum">      36</span>              : </span>
 <span id="L37"><span class="lineNum">      37</span>              :    FORCE_FINLINE void erase(const size_t idx) {</span>
-<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">   338447819 :       assert(weights_);</span></span>
-<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">   322419739 :       weights_-&gt;eraseIdx(idx, active_);</span></span>
-<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">     8180078 :    }</span></span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">   338616997 :       assert(weights_);</span></span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">   322539115 :       weights_-&gt;eraseIdx(idx, active_);</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">     8205753 :    }</span></span>
 <span id="L41"><span class="lineNum">      41</span>              : </span>
 <span id="L42"><span class="lineNum">      42</span> <span class="tlaGNC">        2054 :    FeatureTransformer(const InputLayer&lt;NT, inputLayerSize, firstInnerLayerSize, Q&gt;* src): weights_ {src} { clear(); }</span></span>
 <span id="L43"><span class="lineNum">      43</span>              : </span>

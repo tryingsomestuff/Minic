@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td class="headerValue">2025-12-15 11:28:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">-</td>
@@ -120,7 +120,7 @@
 <span id="L58"><span class="lineNum">      58</span>              : #define POPCOUNT(x)   static_cast&lt;int&gt;(__builtin_popcountll(x))</span>
 <span id="L59"><span class="lineNum">      59</span>              : FORCE_FINLINE int bitScanForward(BitBoard bb) {</span>
 <span id="L60"><span class="lineNum">      60</span>              :    assert(isNotEmpty(bb));</span>
-<span id="L61"><span class="lineNum">      61</span> <span class="tlaGNC tlaBgGNC">   622690376 :    return __builtin_ctzll(bb);</span></span>
+<span id="L61"><span class="lineNum">      61</span> <span class="tlaGNC tlaBgGNC">   625307924 :    return __builtin_ctzll(bb);</span></span>
 <span id="L62"><span class="lineNum">      62</span>              : }</span>
 <span id="L63"><span class="lineNum">      63</span>              : #define bsf(x, i)     (i = bitScanForward(x))</span>
 <span id="L64"><span class="lineNum">      64</span>              : #define swapbits(x)   (__builtin_bswap64(x))</span>
@@ -130,8 +130,8 @@
 <span id="L68"><span class="lineNum">      68</span>              : </span>
 <span id="L69"><span class="lineNum">      69</span>              : // Hard to say which one is better (SquareToBitboardTable or SquareToBitboard), bit shifting or precalculated access to mask data ...</span>
 <span id="L70"><span class="lineNum">      70</span>              : constexpr auto SquareToBitboard(const Square k) { </span>
-<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC">   262532874 :    assert(isValidSquare(k));</span></span>
-<span id="L72"><span class="lineNum">      72</span> <span class="tlaGNC">   267348632 :    return static_cast&lt;BitBoard&gt;(1ull &lt;&lt; k);</span></span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC">   263105561 :    assert(isValidSquare(k));</span></span>
+<span id="L72"><span class="lineNum">      72</span> <span class="tlaGNC">   267999943 :    return static_cast&lt;BitBoard&gt;(1ull &lt;&lt; k);</span></span>
 <span id="L73"><span class="lineNum">      73</span>              : }</span>
 <span id="L74"><span class="lineNum">      74</span>              : </span>
 <span id="L75"><span class="lineNum">      75</span>              : namespace BB {</span>
@@ -185,10 +185,10 @@
 <span id="L123"><span class="lineNum">     123</span>              : inline constexpr BitBoard kingSide     = fileE | fileF | fileG | fileH;</span>
 <span id="L124"><span class="lineNum">     124</span>              : inline constexpr array1d&lt;BitBoard,8&gt; kingFlank = {queenSide ^ fileD, queenSide, queenSide, centerFiles, centerFiles, kingSide, kingSide, kingSide ^ fileE};</span>
 <span id="L125"><span class="lineNum">     125</span>              : </span>
-<span id="L126"><span class="lineNum">     126</span> <span class="tlaGNC">   176648258 : FORCE_FINLINE void _setBit  (BitBoard&amp; b, const Square k) { b |= SquareToBitboard(k); }</span></span>
-<span id="L127"><span class="lineNum">     127</span> <span class="tlaGNC">   186123740 : FORCE_FINLINE void _unSetBit(BitBoard&amp; b, const Square k) { b &amp;= ~SquareToBitboard(k); }</span></span>
+<span id="L126"><span class="lineNum">     126</span> <span class="tlaGNC">   176872989 : FORCE_FINLINE void _setBit  (BitBoard&amp; b, const Square k) { b |= SquareToBitboard(k); }</span></span>
+<span id="L127"><span class="lineNum">     127</span> <span class="tlaGNC">   186382677 : FORCE_FINLINE void _unSetBit(BitBoard&amp; b, const Square k) { b &amp;= ~SquareToBitboard(k); }</span></span>
 <span id="L128"><span class="lineNum">     128</span>              : </span>
-<span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC">   164742631 : [[nodiscard]] FORCE_FINLINE ScoreType countBit(const BitBoard&amp; b) { return ScoreType(POPCOUNT(b)); }</span></span>
+<span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC">   167443270 : [[nodiscard]] FORCE_FINLINE ScoreType countBit(const BitBoard&amp; b) { return ScoreType(POPCOUNT(b)); }</span></span>
 <span id="L130"><span class="lineNum">     130</span>              : </span>
 <span id="L131"><span class="lineNum">     131</span>              : [[nodiscard]] FORCE_FINLINE Square popBit(BitBoard&amp; b) {</span>
 <span id="L132"><span class="lineNum">     132</span>              :    assert(isNotEmpty(b));</span>
@@ -198,15 +198,15 @@
 <span id="L136"><span class="lineNum">     136</span>              :     int i = 0;</span>
 <span id="L137"><span class="lineNum">     137</span>              : #endif</span>
 <span id="L138"><span class="lineNum">     138</span>              :     bsf(b, i);</span>
-<span id="L139"><span class="lineNum">     139</span> <span class="tlaGNC">   147449918 :     b &amp;= b - 1;</span></span>
-<span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC">   485784344 :     return static_cast&lt;Square&gt;(i);</span></span>
+<span id="L139"><span class="lineNum">     139</span> <span class="tlaGNC">   147830794 :     b &amp;= b - 1;</span></span>
+<span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC">   487715320 :     return static_cast&lt;Square&gt;(i);</span></span>
 <span id="L141"><span class="lineNum">     141</span>              : }</span>
 <span id="L142"><span class="lineNum">     142</span>              : </span>
 <span id="L143"><span class="lineNum">     143</span>              : // This function **won't** consume the given bitboard as it is passed by copy !</span>
 <span id="L144"><span class="lineNum">     144</span>              : template&lt;typename F&gt;</span>
 <span id="L145"><span class="lineNum">     145</span>              : FORCE_FINLINE void applyOn(BitBoard b, const F f){</span>
-<span id="L146"><span class="lineNum">     146</span> <span class="tlaGNC">  1008895551 :    while(b){</span></span>
-<span id="L147"><span class="lineNum">     147</span> <span class="tlaGNC">   497132476 :       f(popBit(b));</span></span>
+<span id="L146"><span class="lineNum">     146</span> <span class="tlaGNC">  1012741506 :    while(b){</span></span>
+<span id="L147"><span class="lineNum">     147</span> <span class="tlaGNC">   499249323 :       f(popBit(b));</span></span>
 <span id="L148"><span class="lineNum">     148</span>              :    }</span>
 <span id="L149"><span class="lineNum">     149</span>              : }</span>
 <span id="L150"><span class="lineNum">     150</span>              : </span>

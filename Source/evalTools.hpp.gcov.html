@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td class="headerValue">2025-12-15 11:28:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -69,31 +69,31 @@
 <span id="L7"><span class="lineNum">       7</span>              : </span>
 <span id="L8"><span class="lineNum">       8</span>              : template&lt;Piece T, Color C&gt;</span>
 <span id="L9"><span class="lineNum">       9</span>              : FORCE_FINLINE void evalMob(const Position &amp;p, BitBoard pieceBBiterator, EvalScore &amp;score, const BitBoard safe, const BitBoard occupancy, uint16_t &amp; mobility) {</span>
-<span id="L10"><span class="lineNum">      10</span> <span class="tlaGNC tlaBgGNC">    43219610 :    BB::applyOn(pieceBBiterator, [&amp;](const Square &amp; k){</span></span>
-<span id="L11"><span class="lineNum">      11</span> <span class="tlaGNC">    14830762 :       const uint16_t mob = BB::countBit(BBTools::pfCoverage[T - 1](k, occupancy, C) &amp; ~p.allPieces[C] &amp; safe);</span></span>
-<span id="L12"><span class="lineNum">      12</span> <span class="tlaGNC">    14830762 :       mobility += mob;</span></span>
-<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC">    16244667 :       score += EvalConfig::MOB[T - 2][mob] * ColorSignHelper&lt;C&gt;();</span></span>
+<span id="L10"><span class="lineNum">      10</span> <span class="tlaGNC tlaBgGNC">    44076292 :    BB::applyOn(pieceBBiterator, [&amp;](const Square &amp; k){</span></span>
+<span id="L11"><span class="lineNum">      11</span> <span class="tlaGNC">    15167228 :       const uint16_t mob = BB::countBit(BBTools::pfCoverage[T - 1](k, occupancy, C) &amp; ~p.allPieces[C] &amp; safe);</span></span>
+<span id="L12"><span class="lineNum">      12</span> <span class="tlaGNC">    15167228 :       mobility += mob;</span></span>
+<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC">    16608568 :       score += EvalConfig::MOB[T - 2][mob] * ColorSignHelper&lt;C&gt;();</span></span>
 <span id="L14"><span class="lineNum">      14</span>              :    });</span>
 <span id="L15"><span class="lineNum">      15</span>              : }</span>
 <span id="L16"><span class="lineNum">      16</span>              : </span>
 <span id="L17"><span class="lineNum">      17</span>              : template&lt;Color C&gt;</span>
 <span id="L18"><span class="lineNum">      18</span>              : FORCE_FINLINE void evalMobQ(const Position &amp;p, BitBoard pieceBBiterator, EvalScore &amp;score, const BitBoard safe, const BitBoard occupancy, uint16_t &amp; mobility) {</span>
-<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">     9082094 :    BB::applyOn(pieceBBiterator, [&amp;](const Square &amp; k){</span></span>
-<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">     2281366 :       uint16_t mob = BB::countBit(BBTools::coverage&lt;P_wb&gt;(k, occupancy, C) &amp; ~p.allPieces[C] &amp; safe);</span></span>
-<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">     2281366 :       mobility += mob;</span></span>
-<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">     2514801 :       score += EvalConfig::MOB[3][mob] * ColorSignHelper&lt;C&gt;();</span></span>
-<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">     2281366 :       mob = BB::countBit(BBTools::coverage&lt;P_wr&gt;(k, occupancy, C) &amp; ~p.allPieces[C] &amp; safe);</span></span>
-<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">     2281366 :       mobility += mob;</span></span>
-<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">     2514801 :       score += EvalConfig::MOB[4][mob] * ColorSignHelper&lt;C&gt;();</span></span>
+<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">     9246370 :    BB::applyOn(pieceBBiterator, [&amp;](const Square &amp; k){</span></span>
+<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">     2332879 :       uint16_t mob = BB::countBit(BBTools::coverage&lt;P_wb&gt;(k, occupancy, C) &amp; ~p.allPieces[C] &amp; safe);</span></span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">     2332879 :       mobility += mob;</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">     2569683 :       score += EvalConfig::MOB[3][mob] * ColorSignHelper&lt;C&gt;();</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">     2332879 :       mob = BB::countBit(BBTools::coverage&lt;P_wr&gt;(k, occupancy, C) &amp; ~p.allPieces[C] &amp; safe);</span></span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">     2332879 :       mobility += mob;</span></span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">     2569683 :       score += EvalConfig::MOB[4][mob] * ColorSignHelper&lt;C&gt;();</span></span>
 <span id="L26"><span class="lineNum">      26</span>              :    });</span>
 <span id="L27"><span class="lineNum">      27</span>              : }</span>
 <span id="L28"><span class="lineNum">      28</span>              : </span>
 <span id="L29"><span class="lineNum">      29</span>              : template&lt;Color C&gt;</span>
 <span id="L30"><span class="lineNum">      30</span>              : FORCE_FINLINE void evalMobK(const Position &amp;p, BitBoard pieceBBiterator, EvalScore &amp;score, const BitBoard safe, const BitBoard occupancy, uint16_t &amp; mobility) {</span>
-<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">    13558086 :    BB::applyOn(pieceBBiterator, [&amp;](const Square &amp; k){</span></span>
-<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">     4519362 :       const uint16_t mob = BB::countBit(BBTools::coverage&lt;P_wk&gt;(k, occupancy, C) &amp; ~p.allPieces[C] &amp; safe);</span></span>
-<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">     4519362 :       mobility += mob;</span></span>
-<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">     4930269 :       score += EvalConfig::MOB[5][mob] * ColorSignHelper&lt;C&gt;();</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">    13741836 :    BB::applyOn(pieceBBiterator, [&amp;](const Square &amp; k){</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">     4580612 :       const uint16_t mob = BB::countBit(BBTools::coverage&lt;P_wk&gt;(k, occupancy, C) &amp; ~p.allPieces[C] &amp; safe);</span></span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">     4580612 :       mobility += mob;</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">     4996681 :       score += EvalConfig::MOB[5][mob] * ColorSignHelper&lt;C&gt;();</span></span>
 <span id="L35"><span class="lineNum">      35</span>              :    });</span>
 <span id="L36"><span class="lineNum">      36</span>              : }</span>
         </pre>

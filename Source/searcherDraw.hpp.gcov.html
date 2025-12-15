@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td class="headerValue">2025-12-15 11:28:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">-</td>
@@ -68,10 +68,10 @@
 <span id="L6"><span class="lineNum">       6</span>              : [[nodiscard]] FORCE_FINLINE std::optional&lt;ScoreType&gt; Searcher::interiorNodeRecognizer(const Position&amp; p, DepthType height) const{</span>
 <span id="L7"><span class="lineNum">       7</span>              :    // handles chess variants</span>
 <span id="L8"><span class="lineNum">       8</span>              :    ///@todo other chess variants</span>
-<span id="L9"><span class="lineNum">       9</span> <span class="tlaGNC tlaBgGNC">     3886045 :    if (isRep(p,isPV))     return std::optional&lt;ScoreType&gt;(drawScore(p, height));</span></span>
-<span id="L10"><span class="lineNum">      10</span> <span class="tlaGNC">     3881451 :    if (isMaterialDraw(p)) return std::optional&lt;ScoreType&gt;(drawScore(p, height));</span></span>
-<span id="L11"><span class="lineNum">      11</span> <span class="tlaGNC">     3881451 :    if (is50moves(p,true)) return std::optional&lt;ScoreType&gt;(drawScore(p, height)); // pre move loop version at 101 not 100</span></span>
-<span id="L12"><span class="lineNum">      12</span> <span class="tlaGNC">     3881451 :    return std::nullopt;</span></span>
+<span id="L9"><span class="lineNum">       9</span> <span class="tlaGNC tlaBgGNC">     3942250 :    if (isRep(p,isPV))     return std::optional&lt;ScoreType&gt;(drawScore(p, height));</span></span>
+<span id="L10"><span class="lineNum">      10</span> <span class="tlaGNC">     3937656 :    if (isMaterialDraw(p)) return std::optional&lt;ScoreType&gt;(drawScore(p, height));</span></span>
+<span id="L11"><span class="lineNum">      11</span> <span class="tlaGNC">     3937656 :    if (is50moves(p,true)) return std::optional&lt;ScoreType&gt;(drawScore(p, height)); // pre move loop version at 101 not 100</span></span>
+<span id="L12"><span class="lineNum">      12</span> <span class="tlaGNC">     3937656 :    return std::nullopt;</span></span>
 <span id="L13"><span class="lineNum">      13</span>              : }</span>
         </pre>
               </td>

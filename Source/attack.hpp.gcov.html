@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td class="headerValue">2025-12-15 11:28:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -163,12 +163,12 @@
 <span id="L101"><span class="lineNum">     101</span>              : inline auto MAGICBISHOPINDEX(const BitBoard m, const Square x) { return _pext_u64(m, MagicBB::bishopMagic[x].mask);}</span>
 <span id="L102"><span class="lineNum">     102</span>              : inline auto MAGICROOKINDEX(const BitBoard m, const Square x)    { return _pext_u64(m, MagicBB::rookMagic[x].mask);}</span>
 <span id="L103"><span class="lineNum">     103</span>              : #else</span>
-<span id="L104"><span class="lineNum">     104</span> <span class="tlaGNC tlaBgGNC">    44385387 : inline auto MAGICBISHOPINDEX(const BitBoard m, const Square x) { return static_cast&lt;int&gt;(((m &amp; MagicBB::bishopMagic[x].mask) * MagicBB::bishopMagic[x].magic) &gt;&gt; (NbSquare - BISHOP_INDEX_BITS));}</span></span>
-<span id="L105"><span class="lineNum">     105</span> <span class="tlaGNC">    69115267 : inline auto MAGICROOKINDEX(const BitBoard m, const Square x)   { return static_cast&lt;int&gt;(((m &amp; MagicBB::rookMagic[x].mask) * MagicBB::rookMagic[x].magic) &gt;&gt; (NbSquare - ROOK_INDEX_BITS));}</span></span>
+<span id="L104"><span class="lineNum">     104</span> <span class="tlaGNC tlaBgGNC">    45193646 : inline auto MAGICBISHOPINDEX(const BitBoard m, const Square x) { return static_cast&lt;int&gt;(((m &amp; MagicBB::bishopMagic[x].mask) * MagicBB::bishopMagic[x].magic) &gt;&gt; (NbSquare - BISHOP_INDEX_BITS));}</span></span>
+<span id="L105"><span class="lineNum">     105</span> <span class="tlaGNC">    69973787 : inline auto MAGICROOKINDEX(const BitBoard m, const Square x)   { return static_cast&lt;int&gt;(((m &amp; MagicBB::rookMagic[x].mask) * MagicBB::rookMagic[x].magic) &gt;&gt; (NbSquare - ROOK_INDEX_BITS));}</span></span>
 <span id="L106"><span class="lineNum">     106</span>              : #endif</span>
 <span id="L107"><span class="lineNum">     107</span>              : </span>
-<span id="L108"><span class="lineNum">     108</span> <span class="tlaGNC">   183547030 : inline auto MAGICBISHOPATTACKS(const BitBoard m, const Square x) { return MagicBB::bishopAttacks[x][MAGICBISHOPINDEX(m, x)];}</span></span>
-<span id="L109"><span class="lineNum">     109</span> <span class="tlaGNC">   210221015 : inline auto MAGICROOKATTACKS(const BitBoard m, const Square x)   { return MagicBB::rookAttacks  [x][MAGICROOKINDEX(m, x)];}</span></span>
+<span id="L108"><span class="lineNum">     108</span> <span class="tlaGNC">   184388127 : inline auto MAGICBISHOPATTACKS(const BitBoard m, const Square x) { return MagicBB::bishopAttacks[x][MAGICBISHOPINDEX(m, x)];}</span></span>
+<span id="L109"><span class="lineNum">     109</span> <span class="tlaGNC">   211056835 : inline auto MAGICROOKATTACKS(const BitBoard m, const Square x)   { return MagicBB::rookAttacks  [x][MAGICROOKINDEX(m, x)];}</span></span>
 <span id="L110"><span class="lineNum">     110</span>              : </span>
 <span id="L111"><span class="lineNum">     111</span>              : void initMagic();</span>
 <span id="L112"><span class="lineNum">     112</span>              : </span>
@@ -176,12 +176,12 @@
 <span id="L114"><span class="lineNum">     114</span>              : </span>
 <span id="L115"><span class="lineNum">     115</span>              : // Next functions define the user API for piece move</span>
 <span id="L116"><span class="lineNum">     116</span>              : template &lt; Piece &gt; [[nodiscard]] FORCE_FINLINE BitBoard coverage      (const Square  , const BitBoard          , const Color  ) { assert(false); return emptyBitBoard; }</span>
-<span id="L117"><span class="lineNum">     117</span> <span class="tlaGNC">   253097659 : template &lt;       &gt; [[nodiscard]] FORCE_FINLINE BitBoard coverage&lt;P_wp&gt;(const Square s, const BitBoard          , const Color c) { assert(isValidSquare(s)); return mask[s].pawnAttack[c]; }</span></span>
-<span id="L118"><span class="lineNum">     118</span> <span class="tlaGNC">   193631754 : template &lt;       &gt; [[nodiscard]] FORCE_FINLINE BitBoard coverage&lt;P_wn&gt;(const Square s, const BitBoard          , const Color  ) { assert(isValidSquare(s)); return mask[s].knight; }</span></span>
-<span id="L119"><span class="lineNum">     119</span> <span class="tlaGNC">    27652099 : template &lt;       &gt; [[nodiscard]] FORCE_FINLINE BitBoard coverage&lt;P_wb&gt;(const Square s, const BitBoard occupancy, const Color  ) { assert(isValidSquare(s)); return MagicBB::MAGICBISHOPATTACKS(occupancy, s); }</span></span>
-<span id="L120"><span class="lineNum">     120</span> <span class="tlaGNC">    47663563 : template &lt;       &gt; [[nodiscard]] FORCE_FINLINE BitBoard coverage&lt;P_wr&gt;(const Square s, const BitBoard occupancy, const Color  ) { assert(isValidSquare(s)); return MagicBB::MAGICROOKATTACKS  (occupancy, s); }</span></span>
-<span id="L121"><span class="lineNum">     121</span> <span class="tlaGNC">    11180004 : template &lt;       &gt; [[nodiscard]] FORCE_FINLINE BitBoard coverage&lt;P_wq&gt;(const Square s, const BitBoard occupancy, const Color  ) { assert(isValidSquare(s)); return MagicBB::MAGICBISHOPATTACKS(occupancy, s) | MagicBB::MAGICROOKATTACKS(occupancy, s); }</span></span>
-<span id="L122"><span class="lineNum">     122</span> <span class="tlaGNC">   217767928 : template &lt;       &gt; [[nodiscard]] FORCE_FINLINE BitBoard coverage&lt;P_wk&gt;(const Square s, const BitBoard          , const Color  ) { assert(isValidSquare(s)); return mask[s].king; }</span></span>
+<span id="L117"><span class="lineNum">     117</span> <span class="tlaGNC">   254455288 : template &lt;       &gt; [[nodiscard]] FORCE_FINLINE BitBoard coverage&lt;P_wp&gt;(const Square s, const BitBoard          , const Color c) { assert(isValidSquare(s)); return mask[s].pawnAttack[c]; }</span></span>
+<span id="L118"><span class="lineNum">     118</span> <span class="tlaGNC">   194600595 : template &lt;       &gt; [[nodiscard]] FORCE_FINLINE BitBoard coverage&lt;P_wn&gt;(const Square s, const BitBoard          , const Color  ) { assert(isValidSquare(s)); return mask[s].knight; }</span></span>
+<span id="L119"><span class="lineNum">     119</span> <span class="tlaGNC">    28146455 : template &lt;       &gt; [[nodiscard]] FORCE_FINLINE BitBoard coverage&lt;P_wb&gt;(const Square s, const BitBoard occupancy, const Color  ) { assert(isValidSquare(s)); return MagicBB::MAGICBISHOPATTACKS(occupancy, s); }</span></span>
+<span id="L120"><span class="lineNum">     120</span> <span class="tlaGNC">    48208110 : template &lt;       &gt; [[nodiscard]] FORCE_FINLINE BitBoard coverage&lt;P_wr&gt;(const Square s, const BitBoard occupancy, const Color  ) { assert(isValidSquare(s)); return MagicBB::MAGICROOKATTACKS  (occupancy, s); }</span></span>
+<span id="L121"><span class="lineNum">     121</span> <span class="tlaGNC">    11305550 : template &lt;       &gt; [[nodiscard]] FORCE_FINLINE BitBoard coverage&lt;P_wq&gt;(const Square s, const BitBoard occupancy, const Color  ) { assert(isValidSquare(s)); return MagicBB::MAGICBISHOPATTACKS(occupancy, s) | MagicBB::MAGICROOKATTACKS(occupancy, s); }</span></span>
+<span id="L122"><span class="lineNum">     122</span> <span class="tlaGNC">   218515362 : template &lt;       &gt; [[nodiscard]] FORCE_FINLINE BitBoard coverage&lt;P_wk&gt;(const Square s, const BitBoard          , const Color  ) { assert(isValidSquare(s)); return mask[s].king; }</span></span>
 <span id="L123"><span class="lineNum">     123</span>              : </span>
 <span id="L124"><span class="lineNum">     124</span>              : // Attack function is just coverage interseted with a target bitboard</span>
 <span id="L125"><span class="lineNum">     125</span>              : template&lt;Piece pp&gt;</span>
@@ -189,7 +189,7 @@
 <span id="L127"><span class="lineNum">     127</span>              :                                             const BitBoard target,</span>
 <span id="L128"><span class="lineNum">     128</span>              :                                             const BitBoard occupancy = 0,</span>
 <span id="L129"><span class="lineNum">     129</span>              :                                             const Color c = Co_White) { // color is only important/needed for pawns</span>
-<span id="L130"><span class="lineNum">     130</span> <span class="tlaGNC">   235054054 :    return target ? target &amp; coverage&lt;pp&gt;(s, occupancy, c) : emptyBitBoard;</span></span>
+<span id="L130"><span class="lineNum">     130</span> <span class="tlaGNC">   236362370 :    return target ? target &amp; coverage&lt;pp&gt;(s, occupancy, c) : emptyBitBoard;</span></span>
 <span id="L131"><span class="lineNum">     131</span>              : }</span>
 <span id="L132"><span class="lineNum">     132</span>              : </span>
 <span id="L133"><span class="lineNum">     133</span>              : #endif // MAGIC</span>

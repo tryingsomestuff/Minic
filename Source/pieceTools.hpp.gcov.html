@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td class="headerValue">2025-12-15 11:28:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">-</td>
@@ -72,10 +72,10 @@
 <span id="L10"><span class="lineNum">      10</span>              :    return (Piece)PieceIdx(pp);</span>
 <span id="L11"><span class="lineNum">      11</span>              : }</span>
 <span id="L12"><span class="lineNum">      12</span>              : [[nodiscard]] FORCE_FINLINE Piece getPieceType(const Position &amp;p, const Square k) {</span>
-<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC">    15488270 :    assert(isValidSquare(k));</span></span>
-<span id="L14"><span class="lineNum">      14</span> <span class="tlaGNC">    27726270 :    const Piece pp = p.board_const(k);</span></span>
-<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">    27726270 :    assert(isValidPiece(pp));</span></span>
-<span id="L16"><span class="lineNum">      16</span> <span class="tlaGNC">    27726270 :    return Abs(pp);</span></span>
+<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC">    15730343 :    assert(isValidSquare(k));</span></span>
+<span id="L14"><span class="lineNum">      14</span> <span class="tlaGNC">    28251268 :    const Piece pp = p.board_const(k);</span></span>
+<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">    28251268 :    assert(isValidPiece(pp));</span></span>
+<span id="L16"><span class="lineNum">      16</span> <span class="tlaGNC">    28251268 :    return Abs(pp);</span></span>
 <span id="L17"><span class="lineNum">      17</span>              : }</span>
 <span id="L18"><span class="lineNum">      18</span>              : [[nodiscard]] FORCE_FINLINE std::string_view getName(const Position &amp;p, const Square k) {</span>
 <span id="L19"><span class="lineNum">      19</span>              :    assert(isValidSquare(k));</span>

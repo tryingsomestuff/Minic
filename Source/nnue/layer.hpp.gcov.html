@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td class="headerValue">2025-12-15 11:28:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -86,17 +86,17 @@
 <span id="L24"><span class="lineNum">      24</span>              :    alignas(NNUEALIGNMENT) ST slopes[nbB];</span>
 <span id="L25"><span class="lineNum">      25</span>              : </span>
 <span id="L26"><span class="lineNum">      26</span>              :    template&lt;typename T&gt; </span>
-<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC tlaBgGNC">     5565429 :    CONSTEXPR StackVector&lt;BT, dim1, Q&gt; forward(const StackVector&lt;T, dim0, Q&gt;&amp; x) const {</span></span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC tlaBgGNC">     5672142 :    CONSTEXPR StackVector&lt;BT, dim1, Q&gt; forward(const StackVector&lt;T, dim0, Q&gt;&amp; x) const {</span></span>
 <span id="L28"><span class="lineNum">      28</span>              :       StackVector&lt;BT, dim1, Q&gt; result;</span>
-<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">     5565429 :       result.from(b);</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">     5672142 :       result.from(b);</span></span>
 <span id="L30"><span class="lineNum">      30</span>              : #ifdef USE_SIMD_INTRIN</span>
 <span id="L31"><span class="lineNum">      31</span>              : #pragma omp simd</span>
-<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">    51944004 :       for (size_t i = 0; i &lt; dim1; ++i) { result.data[i] += x.dot_(W + i * dim0); }</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">    52939992 :       for (size_t i = 0; i &lt; dim1; ++i) { result.data[i] += x.dot_(W + i * dim0); }</span></span>
 <span id="L33"><span class="lineNum">      33</span>              : #else</span>
 <span id="L34"><span class="lineNum">      34</span>              : #pragma omp simd</span>
 <span id="L35"><span class="lineNum">      35</span>              :       for (size_t i = 0; i &lt; dim0; ++i) { result.fma_(x.data[i], W + i * dim1); }</span>
 <span id="L36"><span class="lineNum">      36</span>              : #endif // USE_SIMD_INTRIN</span>
-<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">     5565429 :       return result; // RVO</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">     5672142 :       return result; // RVO</span></span>
 <span id="L38"><span class="lineNum">      38</span>              :    }</span>
 <span id="L39"><span class="lineNum">      39</span>              : </span>
 <span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">          64 :    Layer&lt;NT, dim0, dim1, Q&gt;&amp; load_(WeightsReader&lt;NT&gt;&amp; ws) {</span></span>

@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td class="headerValue">2025-12-15 11:28:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -460,7 +460,7 @@
 <span id="L398"><span class="lineNum">     398</span>              : </span>
 <span id="L399"><span class="lineNum">     399</span>              : template&lt;bool Q&gt;</span>
 <span id="L400"><span class="lineNum">     400</span>              : FORCE_FINLINE void simdClippedReLU128Helper(float * RESTRICT x, const float * RESTRICT a, const v_f32_128 &amp; zero, const v_f32_128 &amp; un){</span>
-<span id="L401"><span class="lineNum">     401</span> <span class="tlaGNC tlaBgGNC">    89046864 :    v_store_f32_128(x, v_max_f32_128(zero, v_min_f32_128(un, v_mul_f32_128(v_load_f32_128(x),v_load_f32_128(a)))));</span></span>
+<span id="L401"><span class="lineNum">     401</span> <span class="tlaGNC tlaBgGNC">    90754272 :    v_store_f32_128(x, v_max_f32_128(zero, v_min_f32_128(un, v_mul_f32_128(v_load_f32_128(x),v_load_f32_128(a)))));</span></span>
 <span id="L402"><span class="lineNum">     402</span>              : }</span>
 <span id="L403"><span class="lineNum">     403</span>              : </span>
 <span id="L404"><span class="lineNum">     404</span>              : template&lt;bool Q&gt;</span>
@@ -487,13 +487,13 @@
 <span id="L425"><span class="lineNum">     425</span>              : }</span>
 <span id="L426"><span class="lineNum">     426</span>              : </span>
 <span id="L427"><span class="lineNum">     427</span>              : template&lt;size_t N, bool Q&gt;</span>
-<span id="L428"><span class="lineNum">     428</span> <span class="tlaGNC">     3710286 : void simdActivation128(float * RESTRICT x, const float * RESTRICT a, [[maybe_unused]] const v_f32_128 &amp; zero, [[maybe_unused]] const v_f32_128 &amp; un){</span></span>
+<span id="L428"><span class="lineNum">     428</span> <span class="tlaGNC">     3781428 : void simdActivation128(float * RESTRICT x, const float * RESTRICT a, [[maybe_unused]] const v_f32_128 &amp; zero, [[maybe_unused]] const v_f32_128 &amp; un){</span></span>
 <span id="L429"><span class="lineNum">     429</span>              :    constexpr int vstep    = v_nlanes_f32_128;</span>
 <span id="L430"><span class="lineNum">     430</span>              :    constexpr int unrollx4 = N &amp; (-vstep * 4);</span>
 <span id="L431"><span class="lineNum">     431</span>              :    constexpr int unrollx  = N &amp; -vstep;   </span>
 <span id="L432"><span class="lineNum">     432</span>              :    int i = 0;</span>
 <span id="L433"><span class="lineNum">     433</span>              :    if constexpr(unrollx4){</span>
-<span id="L434"><span class="lineNum">     434</span> <span class="tlaGNC">    92757150 :       while (i &lt; unrollx4) {</span></span>
+<span id="L434"><span class="lineNum">     434</span> <span class="tlaGNC">    94535700 :       while (i &lt; unrollx4) {</span></span>
 <span id="L435"><span class="lineNum">     435</span>              :          if constexpr (activationType == eReLU){</span>
 <span id="L436"><span class="lineNum">     436</span>              :             simdReLU128Helper&lt;Q&gt;(x + i            , a + i            , zero);</span>
 <span id="L437"><span class="lineNum">     437</span>              :             simdReLU128Helper&lt;Q&gt;(x + i + vstep    , a + i + vstep    , zero);</span>
@@ -501,10 +501,10 @@
 <span id="L439"><span class="lineNum">     439</span>              :             simdReLU128Helper&lt;Q&gt;(x + i + vstep * 3, a + i + vstep * 3, zero);</span>
 <span id="L440"><span class="lineNum">     440</span>              :          }</span>
 <span id="L441"><span class="lineNum">     441</span>              :          if constexpr (activationType == eClippedReLU){</span>
-<span id="L442"><span class="lineNum">     442</span> <span class="tlaGNC">    89046864 :             simdClippedReLU128Helper&lt;Q&gt;(x + i            , a + i            , zero, un);</span></span>
-<span id="L443"><span class="lineNum">     443</span> <span class="tlaGNC">    89046864 :             simdClippedReLU128Helper&lt;Q&gt;(x + i + vstep    , a + i + vstep    , zero, un);</span></span>
-<span id="L444"><span class="lineNum">     444</span> <span class="tlaGNC">    89046864 :             simdClippedReLU128Helper&lt;Q&gt;(x + i + vstep * 2, a + i + vstep * 2, zero, un);</span></span>
-<span id="L445"><span class="lineNum">     445</span> <span class="tlaGNC">    89046864 :             simdClippedReLU128Helper&lt;Q&gt;(x + i + vstep * 3, a + i + vstep * 3, zero, un);</span></span>
+<span id="L442"><span class="lineNum">     442</span> <span class="tlaGNC">    90754272 :             simdClippedReLU128Helper&lt;Q&gt;(x + i            , a + i            , zero, un);</span></span>
+<span id="L443"><span class="lineNum">     443</span> <span class="tlaGNC">    90754272 :             simdClippedReLU128Helper&lt;Q&gt;(x + i + vstep    , a + i + vstep    , zero, un);</span></span>
+<span id="L444"><span class="lineNum">     444</span> <span class="tlaGNC">    90754272 :             simdClippedReLU128Helper&lt;Q&gt;(x + i + vstep * 2, a + i + vstep * 2, zero, un);</span></span>
+<span id="L445"><span class="lineNum">     445</span> <span class="tlaGNC">    90754272 :             simdClippedReLU128Helper&lt;Q&gt;(x + i + vstep * 3, a + i + vstep * 3, zero, un);</span></span>
 <span id="L446"><span class="lineNum">     446</span>              :          }</span>
 <span id="L447"><span class="lineNum">     447</span>              :          if constexpr (activationType == ePReLU){</span>
 <span id="L448"><span class="lineNum">     448</span>              :             simdPReLU128Helper&lt;Q&gt;(x + i            , a + i            , zero);</span>
@@ -524,15 +524,15 @@
 <span id="L462"><span class="lineNum">     462</span>              :             simdSigmoid128Helper(x + i + vstep * 2, a + i + vstep * 2);</span>
 <span id="L463"><span class="lineNum">     463</span>              :             simdSigmoid128Helper(x + i + vstep * 3, a + i + vstep * 3);</span>
 <span id="L464"><span class="lineNum">     464</span>              :          }</span>
-<span id="L465"><span class="lineNum">     465</span> <span class="tlaGNC">    89046864 :          i += vstep * 4;</span></span>
+<span id="L465"><span class="lineNum">     465</span> <span class="tlaGNC">    90754272 :          i += vstep * 4;</span></span>
 <span id="L466"><span class="lineNum">     466</span>              :       }</span>
 <span id="L467"><span class="lineNum">     467</span>              :    }</span>
-<span id="L468"><span class="lineNum">     468</span> <span class="tlaGNC">    16696287 :    while (i &lt; unrollx) {</span></span>
+<span id="L468"><span class="lineNum">     468</span> <span class="tlaGNC">    17016426 :    while (i &lt; unrollx) {</span></span>
 <span id="L469"><span class="lineNum">     469</span>              :       if constexpr (activationType == eReLU){</span>
 <span id="L470"><span class="lineNum">     470</span>              :          simdReLU128Helper&lt;Q&gt;(x + i, a + i, zero);</span>
 <span id="L471"><span class="lineNum">     471</span>              :       }</span>
 <span id="L472"><span class="lineNum">     472</span>              :       if constexpr (activationType == eClippedReLU){</span>
-<span id="L473"><span class="lineNum">     473</span> <span class="tlaGNC">    11130858 :          simdClippedReLU128Helper&lt;Q&gt;(x + i, a + i, zero, un);</span></span>
+<span id="L473"><span class="lineNum">     473</span> <span class="tlaGNC">    11344284 :          simdClippedReLU128Helper&lt;Q&gt;(x + i, a + i, zero, un);</span></span>
 <span id="L474"><span class="lineNum">     474</span>              :       }</span>
 <span id="L475"><span class="lineNum">     475</span>              :       if constexpr (activationType == ePReLU){</span>
 <span id="L476"><span class="lineNum">     476</span>              :          simdPReLU128Helper&lt;Q&gt;(x + i, a + i, zero);</span>
@@ -543,12 +543,12 @@
 <span id="L481"><span class="lineNum">     481</span>              :       if constexpr (activationType == eApproxSigmoid){</span>
 <span id="L482"><span class="lineNum">     482</span>              :          simdSigmoid128Helper(x + i, a + i);</span>
 <span id="L483"><span class="lineNum">     483</span>              :       }</span>
-<span id="L484"><span class="lineNum">     484</span> <span class="tlaGNC">    11130858 :       i += vstep;</span></span>
+<span id="L484"><span class="lineNum">     484</span> <span class="tlaGNC">    11344284 :       i += vstep;</span></span>
 <span id="L485"><span class="lineNum">     485</span>              :    }</span>
-<span id="L486"><span class="lineNum">     486</span> <span class="tlaGNC">     3710286 : }</span></span>
+<span id="L486"><span class="lineNum">     486</span> <span class="tlaGNC">     3781428 : }</span></span>
 <span id="L487"><span class="lineNum">     487</span>              : </span>
 <span id="L488"><span class="lineNum">     488</span>              : template&lt;size_t N, bool Q&gt; </span>
-<span id="L489"><span class="lineNum">     489</span> <span class="tlaGNC">    31537431 : [[nodiscard]] float simdDotProduct128(const float* RESTRICT x, const float* RESTRICT y) {</span></span>
+<span id="L489"><span class="lineNum">     489</span> <span class="tlaGNC">    32142138 : [[nodiscard]] float simdDotProduct128(const float* RESTRICT x, const float* RESTRICT y) {</span></span>
 <span id="L490"><span class="lineNum">     490</span>              :    constexpr int vstep    = v_nlanes_f32_128;</span>
 <span id="L491"><span class="lineNum">     491</span>              :    constexpr int unrollx4 = N &amp; (-vstep * 4);</span>
 <span id="L492"><span class="lineNum">     492</span>              :    constexpr int unrollx  = N &amp; -vstep;</span>
@@ -558,20 +558,20 @@
 <span id="L496"><span class="lineNum">     496</span>              :       v_f32_128 vsum1 = v_zero_f32_128();</span>
 <span id="L497"><span class="lineNum">     497</span>              :       v_f32_128 vsum2 = v_zero_f32_128();</span>
 <span id="L498"><span class="lineNum">     498</span>              :       v_f32_128 vsum3 = v_zero_f32_128();</span>
-<span id="L499"><span class="lineNum">     499</span> <span class="tlaGNC">   760608630 :       while (i &lt; unrollx4) {</span></span>
-<span id="L500"><span class="lineNum">     500</span> <span class="tlaGNC">   729071199 :          vsum0 = v_muladd_f32_128(v_load_f32_128(x + i            ), v_load_f32_128(y + i            ), vsum0);</span></span>
-<span id="L501"><span class="lineNum">     501</span> <span class="tlaGNC">   729071199 :          vsum1 = v_muladd_f32_128(v_load_f32_128(x + i + vstep    ), v_load_f32_128(y + i + vstep    ), vsum1);</span></span>
-<span id="L502"><span class="lineNum">     502</span> <span class="tlaGNC">   729071199 :          vsum2 = v_muladd_f32_128(v_load_f32_128(x + i + vstep * 2), v_load_f32_128(y + i + vstep * 2), vsum2);</span></span>
-<span id="L503"><span class="lineNum">     503</span> <span class="tlaGNC">   729071199 :          vsum3 = v_muladd_f32_128(v_load_f32_128(x + i + vstep * 3), v_load_f32_128(y + i + vstep * 3), vsum3);</span></span>
-<span id="L504"><span class="lineNum">     504</span> <span class="tlaGNC">   712374912 :          i += vstep * 4;</span></span>
+<span id="L499"><span class="lineNum">     499</span> <span class="tlaGNC">   775192740 :       while (i &lt; unrollx4) {</span></span>
+<span id="L500"><span class="lineNum">     500</span> <span class="tlaGNC">   743050602 :          vsum0 = v_muladd_f32_128(v_load_f32_128(x + i            ), v_load_f32_128(y + i            ), vsum0);</span></span>
+<span id="L501"><span class="lineNum">     501</span> <span class="tlaGNC">   743050602 :          vsum1 = v_muladd_f32_128(v_load_f32_128(x + i + vstep    ), v_load_f32_128(y + i + vstep    ), vsum1);</span></span>
+<span id="L502"><span class="lineNum">     502</span> <span class="tlaGNC">   743050602 :          vsum2 = v_muladd_f32_128(v_load_f32_128(x + i + vstep * 2), v_load_f32_128(y + i + vstep * 2), vsum2);</span></span>
+<span id="L503"><span class="lineNum">     503</span> <span class="tlaGNC">   743050602 :          vsum3 = v_muladd_f32_128(v_load_f32_128(x + i + vstep * 3), v_load_f32_128(y + i + vstep * 3), vsum3);</span></span>
+<span id="L504"><span class="lineNum">     504</span> <span class="tlaGNC">   726034176 :          i += vstep * 4;</span></span>
 <span id="L505"><span class="lineNum">     505</span>              :       }</span>
 <span id="L506"><span class="lineNum">     506</span>              :       vsum0 = v_add_f32_128(v_add_f32_128(vsum0, vsum1), v_add_f32_128(vsum2, vsum3));</span>
 <span id="L507"><span class="lineNum">     507</span>              :    }</span>
-<span id="L508"><span class="lineNum">     508</span> <span class="tlaGNC">    50088861 :    while (i &lt; unrollx) {</span></span>
-<span id="L509"><span class="lineNum">     509</span> <span class="tlaGNC">    33392574 :       vsum0 = v_muladd_f32_128(v_load_f32_128(x + i), v_load_f32_128(y + i), vsum0);</span></span>
-<span id="L510"><span class="lineNum">     510</span> <span class="tlaGNC">    33392574 :       i += vstep;</span></span>
+<span id="L508"><span class="lineNum">     508</span> <span class="tlaGNC">    51049278 :    while (i &lt; unrollx) {</span></span>
+<span id="L509"><span class="lineNum">     509</span> <span class="tlaGNC">    34032852 :       vsum0 = v_muladd_f32_128(v_load_f32_128(x + i), v_load_f32_128(y + i), vsum0);</span></span>
+<span id="L510"><span class="lineNum">     510</span> <span class="tlaGNC">    34032852 :       i += vstep;</span></span>
 <span id="L511"><span class="lineNum">     511</span>              :    }</span>
-<span id="L512"><span class="lineNum">     512</span> <span class="tlaGNC">    31537431 :    return v_sum_f32_128(vsum0);</span></span>
+<span id="L512"><span class="lineNum">     512</span> <span class="tlaGNC">    32142138 :    return v_sum_f32_128(vsum0);</span></span>
 <span id="L513"><span class="lineNum">     513</span>              : }</span>
 <span id="L514"><span class="lineNum">     514</span>              : </span>
 <span id="L515"><span class="lineNum">     515</span>              : #endif</span>
@@ -651,9 +651,9 @@
 <span id="L589"><span class="lineNum">     589</span>              : </span>
 <span id="L590"><span class="lineNum">     590</span>              : #if V_SIMD_128</span>
 <span id="L591"><span class="lineNum">     591</span>              :    if (N-i &gt;= 4){</span>
-<span id="L592"><span class="lineNum">     592</span> <span class="tlaGNC">     3710286 :       const v_f32_128 zero = v_zero_f32_128();</span></span>
-<span id="L593"><span class="lineNum">     593</span> <span class="tlaGNC">     3710286 :       const v_f32_128 un   = v_set_f32_128(1.f);      </span></span>
-<span id="L594"><span class="lineNum">     594</span> <span class="tlaGNC">     3710286 :       simdActivation128&lt;N,Q&gt;(x+i, a+i, zero, un);</span></span>
+<span id="L592"><span class="lineNum">     592</span> <span class="tlaGNC">     3781428 :       const v_f32_128 zero = v_zero_f32_128();</span></span>
+<span id="L593"><span class="lineNum">     593</span> <span class="tlaGNC">     3781428 :       const v_f32_128 un   = v_set_f32_128(1.f);      </span></span>
+<span id="L594"><span class="lineNum">     594</span> <span class="tlaGNC">     3781428 :       simdActivation128&lt;N,Q&gt;(x+i, a+i, zero, un);</span></span>
 <span id="L595"><span class="lineNum">     595</span>              :       i += ((N-i) &amp; -4);</span>
 <span id="L596"><span class="lineNum">     596</span>              :    }</span>
 <span id="L597"><span class="lineNum">     597</span>              : #endif</span>
@@ -705,7 +705,7 @@
 <span id="L643"><span class="lineNum">     643</span>              : </span>
 <span id="L644"><span class="lineNum">     644</span>              : #if V_SIMD_128</span>
 <span id="L645"><span class="lineNum">     645</span>              :    if (N-i &gt;= 4){</span>
-<span id="L646"><span class="lineNum">     646</span> <span class="tlaGNC">    46378575 :       dot += simdDotProduct128&lt;N,Q&gt;(x+i,y+i);</span></span>
+<span id="L646"><span class="lineNum">     646</span> <span class="tlaGNC">    47267850 :       dot += simdDotProduct128&lt;N,Q&gt;(x+i,y+i);</span></span>
 <span id="L647"><span class="lineNum">     647</span>              :       i += ((N-i) &amp; -4);</span>
 <span id="L648"><span class="lineNum">     648</span>              :    }</span>
 <span id="L649"><span class="lineNum">     649</span>              : #endif</span>

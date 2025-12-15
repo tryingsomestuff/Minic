@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td class="headerValue">2025-12-15 11:28:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -102,19 +102,19 @@
 <span id="L40"><span class="lineNum">      40</span>              :    CONST_SEARCH_TUNING array1d&lt;DepthType, N&gt; minDepth;</span>
 <span id="L41"><span class="lineNum">      41</span>              :    CONST_SEARCH_TUNING array1d&lt;DepthType, N&gt; maxDepth;</span>
 <span id="L42"><span class="lineNum">      42</span>              :    const std::string name;</span>
-<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC tlaBgGNC">     5247321 :    [[nodiscard]] CONSTEXPR_SEARCH_TUNING ScoreType threshold(const DepthType d, const float gp, const size_t idx1 = 0, const size_t idx2 = 0) const {</span></span>
-<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC">     5247321 :       assert(idx1 &lt; N);</span></span>
-<span id="L45"><span class="lineNum">      45</span> <span class="tlaGNC">     5247321 :       assert(idx2 &lt; M);</span></span>
-<span id="L46"><span class="lineNum">      46</span> <span class="tlaGNC">     5247321 :       const auto value = init[idx1]</span></span>
-<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">     5247321 :                        + d * slopeDepth[idx1] </span></span>
-<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">     5247321 :                        + static_cast&lt;double&gt;(gp) * slopeGamePhase[idx1];</span></span>
-<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">     5247321 :       assert(value &gt; std::numeric_limits&lt;ScoreType&gt;::min());</span></span>
-<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">     5247321 :       assert(value &lt; std::numeric_limits&lt;ScoreType&gt;::max());</span></span>
-<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">     5247321 :       return static_cast&lt;ScoreType&gt;(value * bonus[idx2] / 256.0);</span></span>
+<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC tlaBgGNC">     5326313 :    [[nodiscard]] CONSTEXPR_SEARCH_TUNING ScoreType threshold(const DepthType d, const float gp, const size_t idx1 = 0, const size_t idx2 = 0) const {</span></span>
+<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC">     5326313 :       assert(idx1 &lt; N);</span></span>
+<span id="L45"><span class="lineNum">      45</span> <span class="tlaGNC">     5326313 :       assert(idx2 &lt; M);</span></span>
+<span id="L46"><span class="lineNum">      46</span> <span class="tlaGNC">     5326313 :       const auto value = init[idx1]</span></span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">     5326313 :                        + d * slopeDepth[idx1] </span></span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">     5326313 :                        + static_cast&lt;double&gt;(gp) * slopeGamePhase[idx1];</span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">     5326313 :       assert(value &gt; std::numeric_limits&lt;ScoreType&gt;::min());</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">     5326313 :       assert(value &lt; std::numeric_limits&lt;ScoreType&gt;::max());</span></span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">     5326313 :       return static_cast&lt;ScoreType&gt;(value * bonus[idx2] / 256.0);</span></span>
 <span id="L52"><span class="lineNum">      52</span>              :    }</span>
-<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">     6961763 :    [[nodiscard]] CONSTEXPR_SEARCH_TUNING bool isActive(const DepthType d, const size_t idx1 = 0) const {</span></span>
-<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">     6961763 :       assert(idx1 &lt; N);</span></span>
-<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">     6961763 :       return d &gt;= minDepth[idx1] &amp;&amp; d &lt;= maxDepth[idx1];</span></span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">     7055497 :    [[nodiscard]] CONSTEXPR_SEARCH_TUNING bool isActive(const DepthType d, const size_t idx1 = 0) const {</span></span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">     7055497 :       assert(idx1 &lt; N);</span></span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">     7055497 :       return d &gt;= minDepth[idx1] &amp;&amp; d &lt;= maxDepth[idx1];</span></span>
 <span id="L56"><span class="lineNum">      56</span>              :    }</span>
 <span id="L57"><span class="lineNum">      57</span>              :    [[nodiscard]] FORCE_FINLINE std::string getName(CoeffNameType t, size_t idx)const{</span>
 <span id="L58"><span class="lineNum">      58</span>              :       assert(t &gt;= 0);</span>

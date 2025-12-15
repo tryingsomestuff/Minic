@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td class="headerValue">2025-12-15 11:28:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryMed">83.3&nbsp;%</td>
@@ -313,20 +313,20 @@
 <span id="L251"><span class="lineNum">     251</span>              : </span>
 <span id="L252"><span class="lineNum">     252</span>              : #endif // MAGIC</span>
 <span id="L253"><span class="lineNum">     253</span>              : </span>
-<span id="L254"><span class="lineNum">     254</span> <span class="tlaGNC">   195134560 : bool isAttackedBB(const Position &amp;p, const Square s, const Color c) { ///@todo try to optimize order better ?</span></span>
-<span id="L255"><span class="lineNum">     255</span> <span class="tlaGNC">   195134560 :    assert(isValidSquare(s));</span></span>
+<span id="L254"><span class="lineNum">     254</span> <span class="tlaGNC">   195601108 : bool isAttackedBB(const Position &amp;p, const Square s, const Color c) { ///@todo try to optimize order better ?</span></span>
+<span id="L255"><span class="lineNum">     255</span> <span class="tlaGNC">   195601108 :    assert(isValidSquare(s));</span></span>
 <span id="L256"><span class="lineNum">     256</span>              :    const BitBoard occupancy = p.occupancy();</span>
-<span id="L257"><span class="lineNum">     257</span> <span class="tlaGNC">   195134560 :    if (c == Co_White)</span></span>
-<span id="L258"><span class="lineNum">     258</span> <span class="tlaGNC">    79730459 :       return attack&lt;P_wb&gt;(s, p.blackBishop() | p.blackQueen(), occupancy) ||</span></span>
-<span id="L259"><span class="lineNum">     259</span> <span class="tlaGNC">    78508372 :              attack&lt;P_wr&gt;(s, p.blackRook() | p.blackQueen(), occupancy) ||</span></span>
-<span id="L260"><span class="lineNum">     260</span> <span class="tlaGNC">    32430500 :              attack&lt;P_wp&gt;(s, p.blackPawn(), occupancy, Co_White) ||</span></span>
-<span id="L261"><span class="lineNum">     261</span> <span class="tlaGNC">    73878703 :              attack&lt;P_wn&gt;(s, p.blackKnight()) ||</span></span>
+<span id="L257"><span class="lineNum">     257</span> <span class="tlaGNC">   195601108 :    if (c == Co_White)</span></span>
+<span id="L258"><span class="lineNum">     258</span> <span class="tlaGNC">    80191817 :       return attack&lt;P_wb&gt;(s, p.blackBishop() | p.blackQueen(), occupancy) ||</span></span>
+<span id="L259"><span class="lineNum">     259</span> <span class="tlaGNC">    78965390 :              attack&lt;P_wr&gt;(s, p.blackRook() | p.blackQueen(), occupancy) ||</span></span>
+<span id="L260"><span class="lineNum">     260</span> <span class="tlaGNC">    32655904 :              attack&lt;P_wp&gt;(s, p.blackPawn(), occupancy, Co_White) ||</span></span>
+<span id="L261"><span class="lineNum">     261</span> <span class="tlaGNC">    74338662 :              attack&lt;P_wn&gt;(s, p.blackKnight()) ||</span></span>
 <span id="L262"><span class="lineNum">     262</span>              :              attack&lt;P_wk&gt;(s, p.blackKing());</span>
 <span id="L263"><span class="lineNum">     263</span>              :    else</span>
-<span id="L264"><span class="lineNum">     264</span> <span class="tlaGNC">   308597584 :       return attack&lt;P_wb&gt;(s, p.whiteBishop() | p.whiteQueen(), occupancy) ||</span></span>
-<span id="L265"><span class="lineNum">     265</span> <span class="tlaGNC">   307563986 :              attack&lt;P_wr&gt;(s, p.whiteRook() | p.whiteQueen(), occupancy) ||</span></span>
-<span id="L266"><span class="lineNum">     266</span> <span class="tlaGNC">   135313792 :              attack&lt;P_wp&gt;(s, p.whitePawn(), occupancy, Co_Black) ||</span></span>
-<span id="L267"><span class="lineNum">     267</span> <span class="tlaGNC">   289439495 :              attack&lt;P_wn&gt;(s, p.whiteKnight()) ||</span></span>
+<span id="L264"><span class="lineNum">     264</span> <span class="tlaGNC">   309063222 :       return attack&lt;P_wb&gt;(s, p.whiteBishop() | p.whiteQueen(), occupancy) ||</span></span>
+<span id="L265"><span class="lineNum">     265</span> <span class="tlaGNC">   308025074 :              attack&lt;P_wr&gt;(s, p.whiteRook() | p.whiteQueen(), occupancy) ||</span></span>
+<span id="L266"><span class="lineNum">     266</span> <span class="tlaGNC">   135542960 :              attack&lt;P_wp&gt;(s, p.whitePawn(), occupancy, Co_Black) ||</span></span>
+<span id="L267"><span class="lineNum">     267</span> <span class="tlaGNC">   289902641 :              attack&lt;P_wn&gt;(s, p.whiteKnight()) ||</span></span>
 <span id="L268"><span class="lineNum">     268</span>              :              attack&lt;P_wk&gt;(s, p.whiteKing());</span>
 <span id="L269"><span class="lineNum">     269</span>              : }</span>
 <span id="L270"><span class="lineNum">     270</span>              : </span>
@@ -347,20 +347,20 @@
 <span id="L285"><span class="lineNum">     285</span> <span class="tlaUNC">           0 :              attack&lt;P_wk&gt;(s, p.whiteKing());</span></span>
 <span id="L286"><span class="lineNum">     286</span>              : }</span>
 <span id="L287"><span class="lineNum">     287</span>              : </span>
-<span id="L288"><span class="lineNum">     288</span> <span class="tlaGNC tlaBgGNC">     3954673 : BitBoard allAttackedBB(const Position &amp;p, const Square s) {</span></span>
-<span id="L289"><span class="lineNum">     289</span> <span class="tlaGNC">     3954673 :    assert(isValidSquare(s));</span></span>
+<span id="L288"><span class="lineNum">     288</span> <span class="tlaGNC tlaBgGNC">     4034094 : BitBoard allAttackedBB(const Position &amp;p, const Square s) {</span></span>
+<span id="L289"><span class="lineNum">     289</span> <span class="tlaGNC">     4034094 :    assert(isValidSquare(s));</span></span>
 <span id="L290"><span class="lineNum">     290</span>              :    const BitBoard occupancy = p.occupancy();</span>
-<span id="L291"><span class="lineNum">     291</span> <span class="tlaGNC">     7909346 :    return attack&lt;P_wb&gt;(s, p.allBishop() | p.allQueen(), occupancy) |</span></span>
-<span id="L292"><span class="lineNum">     292</span> <span class="tlaGNC">     7909346 :           attack&lt;P_wr&gt;(s, p.allRook() | p.allQueen(), occupancy) |</span></span>
-<span id="L293"><span class="lineNum">     293</span> <span class="tlaGNC">     3954673 :           attack&lt;P_wn&gt;(s, p.allKnight()) |</span></span>
-<span id="L294"><span class="lineNum">     294</span> <span class="tlaGNC">     3954673 :           attack&lt;P_wp&gt;(s, p.blackPawn(), occupancy, Co_White) |</span></span>
+<span id="L291"><span class="lineNum">     291</span> <span class="tlaGNC">     8068188 :    return attack&lt;P_wb&gt;(s, p.allBishop() | p.allQueen(), occupancy) |</span></span>
+<span id="L292"><span class="lineNum">     292</span> <span class="tlaGNC">     8068188 :           attack&lt;P_wr&gt;(s, p.allRook() | p.allQueen(), occupancy) |</span></span>
+<span id="L293"><span class="lineNum">     293</span> <span class="tlaGNC">     4034094 :           attack&lt;P_wn&gt;(s, p.allKnight()) |</span></span>
+<span id="L294"><span class="lineNum">     294</span> <span class="tlaGNC">     4034094 :           attack&lt;P_wp&gt;(s, p.blackPawn(), occupancy, Co_White) |</span></span>
 <span id="L295"><span class="lineNum">     295</span>              :           attack&lt;P_wp&gt;(s, p.whitePawn(), occupancy, Co_Black) |</span>
-<span id="L296"><span class="lineNum">     296</span> <span class="tlaGNC">     3954673 :           attack&lt;P_wk&gt;(s, p.allKing());</span></span>
+<span id="L296"><span class="lineNum">     296</span> <span class="tlaGNC">     4034094 :           attack&lt;P_wk&gt;(s, p.allKing());</span></span>
 <span id="L297"><span class="lineNum">     297</span>              : }</span>
 <span id="L298"><span class="lineNum">     298</span>              : </span>
-<span id="L299"><span class="lineNum">     299</span> <span class="tlaGNC">    25708001 : BitBoard between(const Square sq1, const Square sq2){</span></span>
+<span id="L299"><span class="lineNum">     299</span> <span class="tlaGNC">    25820870 : BitBoard between(const Square sq1, const Square sq2){</span></span>
 <span id="L300"><span class="lineNum">     300</span>              : #if !defined(WITH_SMALL_MEMORY)</span>
-<span id="L301"><span class="lineNum">     301</span> <span class="tlaGNC">    25708001 :    return mask[sq1].between[sq2];</span></span>
+<span id="L301"><span class="lineNum">     301</span> <span class="tlaGNC">    25820870 :    return mask[sq1].between[sq2];</span></span>
 <span id="L302"><span class="lineNum">     302</span>              : #else</span>
 <span id="L303"><span class="lineNum">     303</span>              :    constexpr BitBoard m1   {static_cast&lt;BitBoard&gt;(-1)};</span>
 <span id="L304"><span class="lineNum">     304</span>              :    constexpr BitBoard a2a7 {0x0001010101010100};</span>
@@ -383,20 +383,20 @@
 <span id="L321"><span class="lineNum">     321</span> <span class="tlaUNC tlaBgUNC">           0 : bool isAttacked(const Position &amp;p, const Square s){</span></span>
 <span id="L322"><span class="lineNum">     322</span>              :    //assert(isValidSquare(s)); ///@todo ?</span>
 <span id="L323"><span class="lineNum">     323</span>              :    START_TIMER</span>
-<span id="L324"><span class="lineNum">     324</span> <span class="tlaGNC tlaBgGNC">   195134560 :    const bool b = isValidSquare(s) &amp;&amp; BBTools::isAttackedBB(p, s, p.c);</span></span>
+<span id="L324"><span class="lineNum">     324</span> <span class="tlaGNC tlaBgGNC">   195601108 :    const bool b = isValidSquare(s) &amp;&amp; BBTools::isAttackedBB(p, s, p.c);</span></span>
 <span id="L325"><span class="lineNum">     325</span>              :    STOP_AND_SUM_TIMER(IsAttacked);</span>
 <span id="L326"><span class="lineNum">     326</span> <span class="tlaUNC tlaBgUNC">           0 :    return b;</span></span>
 <span id="L327"><span class="lineNum">     327</span>              : }</span>
 <span id="L328"><span class="lineNum">     328</span>              : </span>
-<span id="L329"><span class="lineNum">     329</span> <span class="tlaGNC tlaBgGNC">   194371695 : bool isPosInCheck(const Position&amp; p){</span></span>
+<span id="L329"><span class="lineNum">     329</span> <span class="tlaGNC tlaBgGNC">   194819412 : bool isPosInCheck(const Position&amp; p){</span></span>
 <span id="L330"><span class="lineNum">     330</span>              :    // handles chess variants</span>
 <span id="L331"><span class="lineNum">     331</span>              :    ///@todo some chess variant will always return false here, there is no such things as check</span>
-<span id="L332"><span class="lineNum">     332</span> <span class="tlaGNC">   194371695 :    return isAttacked(p, kingSquare(p));</span></span>
+<span id="L332"><span class="lineNum">     332</span> <span class="tlaGNC">   194819412 :    return isAttacked(p, kingSquare(p));</span></span>
 <span id="L333"><span class="lineNum">     333</span>              : }</span>
 <span id="L334"><span class="lineNum">     334</span>              : </span>
-<span id="L335"><span class="lineNum">     335</span> <span class="tlaGNC">      262332 : bool isAttacked(const Position &amp;p, BitBoard bb) { // copy ///@todo should be done without iterating over Square !</span></span>
-<span id="L336"><span class="lineNum">     336</span> <span class="tlaGNC">     1001383 :    while (bb)</span></span>
-<span id="L337"><span class="lineNum">     337</span> <span class="tlaGNC">      762865 :       if (isAttacked(p, BB::popBit(bb))) return true;</span></span>
+<span id="L335"><span class="lineNum">     335</span> <span class="tlaGNC">      268696 : bool isAttacked(const Position &amp;p, BitBoard bb) { // copy ///@todo should be done without iterating over Square !</span></span>
+<span id="L336"><span class="lineNum">     336</span> <span class="tlaGNC">     1026328 :    while (bb)</span></span>
+<span id="L337"><span class="lineNum">     337</span> <span class="tlaGNC">      781696 :       if (isAttacked(p, BB::popBit(bb))) return true;</span></span>
 <span id="L338"><span class="lineNum">     338</span>              :    return false;</span>
 <span id="L339"><span class="lineNum">     339</span>              : }</span>
         </pre>

@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td class="headerValue">2025-12-15 11:28:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -75,10 +75,10 @@
 <span id="L13"><span class="lineNum">      13</span>              :  * */</span>
 <span id="L14"><span class="lineNum">      14</span>              : </span>
 <span id="L15"><span class="lineNum">      15</span>              : struct MoveSortOperator {</span>
-<span id="L16"><span class="lineNum">      16</span> <span class="tlaGNC tlaBgGNC">   152611381 :    constexpr bool operator()(const Move&amp; a, const Move&amp; b) const {</span></span>
-<span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC">   152611381 :       assert(a != INVALIDMOVE);</span></span>
-<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">   152611381 :       assert(b != INVALIDMOVE);</span></span>
-<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">   152611381 :       return Move2Score(a) &gt; Move2Score(b);</span></span>
+<span id="L16"><span class="lineNum">      16</span> <span class="tlaGNC tlaBgGNC">   156832467 :    constexpr bool operator()(const Move&amp; a, const Move&amp; b) const {</span></span>
+<span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC">   156832467 :       assert(a != INVALIDMOVE);</span></span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">   156832467 :       assert(b != INVALIDMOVE);</span></span>
+<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">   156832467 :       return Move2Score(a) &gt; Move2Score(b);</span></span>
 <span id="L20"><span class="lineNum">      20</span>              :    }</span>
 <span id="L21"><span class="lineNum">      21</span>              : };</span>
 <span id="L22"><span class="lineNum">      22</span>              : </span>
@@ -91,9 +91,9 @@
 <span id="L29"><span class="lineNum">      29</span>              :               bool               _useSEE     = true,</span>
 <span id="L30"><span class="lineNum">      30</span>              :               bool               _isInCheck  = false,</span>
 <span id="L31"><span class="lineNum">      31</span>              :               const TT::Entry*   _e          = nullptr,</span>
-<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">     2672973 :               const MiniMove     _refutation = INVALIDMINIMOVE):</span></span>
-<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">     2672973 :        context(_context), p(_p), gp(_gp), height(_height), cmhPtr(_cmhPtr), useSEE(_useSEE), isInCheck(_isInCheck), e(_e), refutation(_refutation) {</span></span>
-<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">     2672973 :       assert(e == nullptr || e-&gt;h != nullHash);</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">     2723831 :               const MiniMove     _refutation = INVALIDMINIMOVE):</span></span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">     2723831 :        context(_context), p(_p), gp(_gp), height(_height), cmhPtr(_cmhPtr), useSEE(_useSEE), isInCheck(_isInCheck), e(_e), refutation(_refutation) {</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">     2723831 :       assert(e == nullptr || e-&gt;h != nullHash);</span></span>
 <span id="L35"><span class="lineNum">      35</span>              :    }</span>
 <span id="L36"><span class="lineNum">      36</span>              : </span>
 <span id="L37"><span class="lineNum">      37</span>              :    template&lt;Color C&gt; void computeScore(Move&amp; m) const;</span>
@@ -110,9 +110,9 @@
 <span id="L48"><span class="lineNum">      48</span>              :    </span>
 <span id="L49"><span class="lineNum">      49</span>              :    bool skipSort = false;</span>
 <span id="L50"><span class="lineNum">      50</span>              : </span>
-<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">     1460247 :    inline void score(MoveList &amp; moves) const{</span></span>
-<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">     1460247 :       score(context, moves, p, gp, height, cmhPtr, useSEE, isInCheck, e, refutation);</span></span>
-<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">     1460247 :    }</span></span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">     1487193 :    inline void score(MoveList &amp; moves) const{</span></span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">     1487193 :       score(context, moves, p, gp, height, cmhPtr, useSEE, isInCheck, e, refutation);</span></span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">     1487193 :    }</span></span>
 <span id="L54"><span class="lineNum">      54</span>              : </span>
 <span id="L55"><span class="lineNum">      55</span>              :    static void score(const Searcher&amp;    context,</span>
 <span id="L56"><span class="lineNum">      56</span>              :                      MoveList&amp;          moves,</span>
@@ -142,13 +142,13 @@
 <span id="L80"><span class="lineNum">      80</span>              : </span>
 <span id="L81"><span class="lineNum">      81</span>              :    static void sort(MoveList&amp; moves);</span>
 <span id="L82"><span class="lineNum">      82</span>              : </span>
-<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC">    11502560 :    [[nodiscard]] inline const Move* pickNextLazy(MoveList&amp; moves, </span></span>
+<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC">    11715112 :    [[nodiscard]] inline const Move* pickNextLazy(MoveList&amp; moves, </span></span>
 <span id="L84"><span class="lineNum">      84</span>              :                                                  size_t&amp; begin, </span>
 <span id="L85"><span class="lineNum">      85</span>              :                                                  bool sorted = false, </span>
 <span id="L86"><span class="lineNum">      86</span>              :                                                  ScoreType threshold = SearchConfig::lazySortThreshold){</span>
 <span id="L87"><span class="lineNum">      87</span>              :       // if move has very low chance of raising alpha, no need to sort anymore ...</span>
-<span id="L88"><span class="lineNum">      88</span> <span class="tlaGNC">    19342005 :       skipSort = skipSort || sorted || (begin != 0 &amp;&amp; Move2Score(*(moves.begin() + begin - 1)) &lt; threshold);</span></span>
-<span id="L89"><span class="lineNum">      89</span> <span class="tlaGNC">    11502560 :       return pickNext(moves, begin, skipSort);</span></span>
+<span id="L88"><span class="lineNum">      88</span> <span class="tlaGNC">    19748956 :       skipSort = skipSort || sorted || (begin != 0 &amp;&amp; Move2Score(*(moves.begin() + begin - 1)) &lt; threshold);</span></span>
+<span id="L89"><span class="lineNum">      89</span> <span class="tlaGNC">    11715112 :       return pickNext(moves, begin, skipSort);</span></span>
 <span id="L90"><span class="lineNum">      90</span>              :    }</span>
 <span id="L91"><span class="lineNum">      91</span>              : </span>
 <span id="L92"><span class="lineNum">      92</span>              :    [[nodiscard]] static const Move* pickNext(MoveList&amp; moves, size_t&amp; begin, bool skipSort = false);</span>

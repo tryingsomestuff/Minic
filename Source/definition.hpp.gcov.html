@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-11-07 16:13:15</td>
+            <td class="headerValue">2025-12-15 11:28:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -194,17 +194,17 @@
 <span id="L132"><span class="lineNum">     132</span>              : #define FORCE_FINLINE </span>
 <span id="L133"><span class="lineNum">     133</span>              : #endif</span>
 <span id="L134"><span class="lineNum">     134</span>              : </span>
-<span id="L135"><span class="lineNum">     135</span> <span class="tlaGNC tlaBgGNC">  1361878186 : template&lt;typename T&gt; [[nodiscard]] constexpr T Abs(const T&amp; s) { </span></span>
+<span id="L135"><span class="lineNum">     135</span> <span class="tlaGNC tlaBgGNC">  1364252179 : template&lt;typename T&gt; [[nodiscard]] constexpr T Abs(const T&amp; s) { </span></span>
 <span id="L136"><span class="lineNum">     136</span>              :    static_assert(T(-1) &lt; T(0));</span>
 <span id="L137"><span class="lineNum">     137</span>              :    if constexpr (std::is_enum_v&lt;T&gt;){</span>
-<span id="L138"><span class="lineNum">     138</span> <span class="tlaGNC">  1036708336 :       assert(s != std::numeric_limits&lt;std::underlying_type_t&lt;T&gt;&gt;::min());</span></span>
+<span id="L138"><span class="lineNum">     138</span> <span class="tlaGNC">  1038723734 :       assert(s != std::numeric_limits&lt;std::underlying_type_t&lt;T&gt;&gt;::min());</span></span>
 <span id="L139"><span class="lineNum">     139</span>              :    }</span>
 <span id="L140"><span class="lineNum">     140</span>              :    else{</span>
-<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">   325169850 :       assert(s != std::numeric_limits&lt;T&gt;::min());</span></span>
+<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">   325528445 :       assert(s != std::numeric_limits&lt;T&gt;::min());</span></span>
 <span id="L142"><span class="lineNum">     142</span>              :    }</span>
-<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC">  1436460859 :    const T ret = s &gt;= T(0) ? s : T(-s);</span></span>
-<span id="L144"><span class="lineNum">     144</span> <span class="tlaGNC">  1361878186 :    assert(ret == std::abs(s));</span></span>
-<span id="L145"><span class="lineNum">     145</span> <span class="tlaGNC">  1361878186 :    return ret;</span></span>
+<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC">  1438898807 :    const T ret = s &gt;= T(0) ? s : T(-s);</span></span>
+<span id="L144"><span class="lineNum">     144</span> <span class="tlaGNC">  1364252179 :    assert(ret == std::abs(s));</span></span>
+<span id="L145"><span class="lineNum">     145</span> <span class="tlaGNC">  1364252179 :    return ret;</span></span>
 <span id="L146"><span class="lineNum">     146</span>              : }</span>
 <span id="L147"><span class="lineNum">     147</span>              : </span>
 <span id="L148"><span class="lineNum">     148</span>              : #define ENABLE_INCR_OPERATORS_ON(T) \</span>
@@ -228,7 +228,7 @@
 <span id="L166"><span class="lineNum">     166</span> <span class="tlaUNC tlaBgUNC">           0 : ENABLE_INCR_OPERATORS_ON(File)</span></span>
 <span id="L167"><span class="lineNum">     167</span>              : </span>
 <span id="L168"><span class="lineNum">     168</span>              : enum Rank : uint8_t { Rank_1 = 0, Rank_2, Rank_3, Rank_4, Rank_5, Rank_6, Rank_7, Rank_8 };</span>
-<span id="L169"><span class="lineNum">     169</span> <span class="tlaGNC tlaBgGNC">      566472 : ENABLE_INCR_OPERATORS_ON(Rank)</span></span>
+<span id="L169"><span class="lineNum">     169</span> <span class="tlaGNC tlaBgGNC">      577866 : ENABLE_INCR_OPERATORS_ON(Rank)</span></span>
 <span id="L170"><span class="lineNum">     170</span>              : </span>
 <span id="L171"><span class="lineNum">     171</span>              : enum Sq : uint8_t { Sq_a1  = 0,Sq_b1,Sq_c1,Sq_d1,Sq_e1,Sq_f1,Sq_g1,Sq_h1,</span>
 <span id="L172"><span class="lineNum">     172</span>              :                     Sq_a2,Sq_b2,Sq_c2,Sq_d2,Sq_e2,Sq_f2,Sq_g2,Sq_h2,</span>
@@ -274,29 +274,29 @@
 <span id="L212"><span class="lineNum">     212</span>              : inline constexpr size_t MAX_THREADS     = 1024; // same type as Searcher::id()</span>
 <span id="L213"><span class="lineNum">     213</span>              : </span>
 <span id="L214"><span class="lineNum">     214</span>              : constexpr ScoreType HISTORY_DIV(const int x) {</span>
-<span id="L215"><span class="lineNum">     215</span> <span class="tlaGNC">     3098934 :    const int ret = x &gt;&gt; HISTORY_POWER;</span></span>
-<span id="L216"><span class="lineNum">     216</span> <span class="tlaGNC">     2054869 :    assert (Abs(ret) &lt; std::numeric_limits&lt;ScoreType&gt;::max());</span></span>
+<span id="L215"><span class="lineNum">     215</span> <span class="tlaGNC">     3136322 :    const int ret = x &gt;&gt; HISTORY_POWER;</span></span>
+<span id="L216"><span class="lineNum">     216</span> <span class="tlaGNC">     2088448 :    assert (Abs(ret) &lt; std::numeric_limits&lt;ScoreType&gt;::max());</span></span>
 <span id="L217"><span class="lineNum">     217</span>              :    return ret;</span>
 <span id="L218"><span class="lineNum">     218</span>              : }</span>
-<span id="L219"><span class="lineNum">     219</span> <span class="tlaGNC">      945525 : constexpr ScoreType SQR(const ScoreType x)        { return x * x;}</span></span>
-<span id="L220"><span class="lineNum">     220</span> <span class="tlaGNC">      945525 : constexpr ScoreType HSCORE(const DepthType depth) {</span></span>
-<span id="L221"><span class="lineNum">     221</span> <span class="tlaGNC">      945525 :    const int ret = SQR(std::min(static_cast&lt;int&gt;(depth), 32)) * 4;</span></span>
-<span id="L222"><span class="lineNum">     222</span> <span class="tlaGNC">      945525 :    assert (ret &lt; std::numeric_limits&lt;ScoreType&gt;::max());</span></span>
-<span id="L223"><span class="lineNum">     223</span> <span class="tlaGNC">      945525 :    return static_cast&lt;ScoreType&gt;(ret);}</span></span>
+<span id="L219"><span class="lineNum">     219</span> <span class="tlaGNC">      959521 : constexpr ScoreType SQR(const ScoreType x)        { return x * x;}</span></span>
+<span id="L220"><span class="lineNum">     220</span> <span class="tlaGNC">      959521 : constexpr ScoreType HSCORE(const DepthType depth) {</span></span>
+<span id="L221"><span class="lineNum">     221</span> <span class="tlaGNC">      959521 :    const int ret = SQR(std::min(static_cast&lt;int&gt;(depth), 32)) * 4;</span></span>
+<span id="L222"><span class="lineNum">     222</span> <span class="tlaGNC">      959521 :    assert (ret &lt; std::numeric_limits&lt;ScoreType&gt;::max());</span></span>
+<span id="L223"><span class="lineNum">     223</span> <span class="tlaGNC">      959521 :    return static_cast&lt;ScoreType&gt;(ret);}</span></span>
 <span id="L224"><span class="lineNum">     224</span>              : </span>
 <span id="L225"><span class="lineNum">     225</span>              : enum Color : uint8_t { Co_White = 0, Co_Black = 1, Co_None = 2, Co_End = Co_None };</span>
-<span id="L226"><span class="lineNum">     226</span> <span class="tlaGNC">  1302131600 : [[nodiscard]] constexpr Color operator~(Color c) { return static_cast&lt;Color&gt;(c ^ Co_Black); } // switch Color</span></span>
-<span id="L227"><span class="lineNum">     227</span> <span class="tlaGNC">     4519762 : ENABLE_INCR_OPERATORS_ON(Color)</span></span>
+<span id="L226"><span class="lineNum">     226</span> <span class="tlaGNC">  1304814568 : [[nodiscard]] constexpr Color operator~(Color c) { return static_cast&lt;Color&gt;(c ^ Co_Black); } // switch Color</span></span>
+<span id="L227"><span class="lineNum">     227</span> <span class="tlaGNC">     4581012 : ENABLE_INCR_OPERATORS_ON(Color)</span></span>
 <span id="L228"><span class="lineNum">     228</span>              : </span>
-<span id="L229"><span class="lineNum">     229</span> <span class="tlaGNC">     3648593 : constexpr auto SQFILE(const Square s)                          { return static_cast&lt;File&gt;(s &amp; 7);}</span></span>
-<span id="L230"><span class="lineNum">     230</span> <span class="tlaGNC">    11075240 : constexpr auto SQRANK(const Square s)                          { return static_cast&lt;Rank&gt;(s &gt;&gt; 3);}</span></span>
+<span id="L229"><span class="lineNum">     229</span> <span class="tlaGNC">     3688097 : constexpr auto SQFILE(const Square s)                          { return static_cast&lt;File&gt;(s &amp; 7);}</span></span>
+<span id="L230"><span class="lineNum">     230</span> <span class="tlaGNC">    11217093 : constexpr auto SQRANK(const Square s)                          { return static_cast&lt;Rank&gt;(s &gt;&gt; 3);}</span></span>
 <span id="L231"><span class="lineNum">     231</span> <span class="tlaGNC">        8064 : constexpr auto ISOUTERFILE(const Square x)                     { return (SQFILE(x) == 0 || SQFILE(x) == 7);}</span></span>
 <span id="L232"><span class="lineNum">     232</span> <span class="tlaGNC">    41091072 : constexpr auto ISNEIGHBOUR(const Square x, const Square y)     { return (x &gt;= 0 &amp;&amp; x &lt; 64 &amp;&amp; y &gt;= 0 &amp;&amp; y &lt; 64 &amp;&amp; Abs(SQRANK(x) - SQRANK(y)) &lt;= 1 &amp;&amp; Abs(SQFILE(x) - SQFILE(y)) &lt;= 1);}</span></span>
-<span id="L233"><span class="lineNum">     233</span> <span class="tlaGNC">     3961841 : constexpr auto PROMOTION_RANK(const Square x)                  { return (SQRANK(x) == 0 || SQRANK(x) == 7);}</span></span>
+<span id="L233"><span class="lineNum">     233</span> <span class="tlaGNC">     4041262 : constexpr auto PROMOTION_RANK(const Square x)                  { return (SQRANK(x) == 0 || SQRANK(x) == 7);}</span></span>
 <span id="L234"><span class="lineNum">     234</span>              : constexpr auto PROMOTION_RANK_C(const Square x, const Square c){ return ((c == Co_Black &amp;&amp; SQRANK(x) == 0) || (c == Co_White &amp;&amp; SQRANK(x) == 7));}</span>
 <span id="L235"><span class="lineNum">     235</span> <span class="tlaGNC">     1572864 : constexpr auto MakeSquare(const File f, const Rank r)          { return static_cast&lt;Square&gt;((r &lt;&lt; 3) + f);}</span></span>
 <span id="L236"><span class="lineNum">     236</span> <span class="tlaUNC tlaBgUNC">           0 : constexpr auto VFlip(const Square s)                           { return static_cast&lt;Square&gt;(s ^ Sq_a8);}</span></span>
-<span id="L237"><span class="lineNum">     237</span> <span class="tlaGNC tlaBgGNC">   847399448 : constexpr auto HFlip(const Square s)                           { return static_cast&lt;Square&gt;(s ^ Sq_h1);}</span></span>
+<span id="L237"><span class="lineNum">     237</span> <span class="tlaGNC tlaBgGNC">   848000405 : constexpr auto HFlip(const Square s)                           { return static_cast&lt;Square&gt;(s ^ Sq_h1);}</span></span>
 <span id="L238"><span class="lineNum">     238</span>              : constexpr auto MFlip(const Square s)                           { return static_cast&lt;Square&gt;(s ^ Sq_h8);}</span>
 <span id="L239"><span class="lineNum">     239</span>              : </span>
 <span id="L240"><span class="lineNum">     240</span>              : #define TO_STR2(x)                 #x</span>
@@ -316,18 +316,18 @@
 <span id="L254"><span class="lineNum">     254</span>              : template&lt;typename T&gt;</span>
 <span id="L255"><span class="lineNum">     255</span>              : [[nodiscard]] FORCE_FINLINE</span>
 <span id="L256"><span class="lineNum">     256</span>              : T asLeastOne(const T &amp;t){</span>
-<span id="L257"><span class="lineNum">     257</span> <span class="tlaGNC">        5844 :    return std::max(static_cast&lt;std::remove_const_t&lt;decltype(t)&gt;&gt;(1), t);</span></span>
+<span id="L257"><span class="lineNum">     257</span> <span class="tlaGNC">        5896 :    return std::max(static_cast&lt;std::remove_const_t&lt;decltype(t)&gt;&gt;(1), t);</span></span>
 <span id="L258"><span class="lineNum">     258</span>              : }</span>
 <span id="L259"><span class="lineNum">     259</span>              : </span>
 <span id="L260"><span class="lineNum">     260</span>              : [[nodiscard]] FORCE_FINLINE</span>
 <span id="L261"><span class="lineNum">     261</span>              : TimeType getTimeDiff(const Clock::time_point &amp; reference){</span>
-<span id="L262"><span class="lineNum">     262</span> <span class="tlaGNC">        4995 :    const auto diff = std::chrono::duration_cast&lt;std::chrono::milliseconds&gt;(Clock::now() - reference).count();</span></span>
+<span id="L262"><span class="lineNum">     262</span> <span class="tlaGNC">        5026 :    const auto diff = std::chrono::duration_cast&lt;std::chrono::milliseconds&gt;(Clock::now() - reference).count();</span></span>
 <span id="L263"><span class="lineNum">     263</span>              :    return static_cast&lt;TimeType&gt;(asLeastOne(diff));</span>
 <span id="L264"><span class="lineNum">     264</span>              : }</span>
 <span id="L265"><span class="lineNum">     265</span>              : </span>
 <span id="L266"><span class="lineNum">     266</span>              : [[nodiscard]] FORCE_FINLINE</span>
 <span id="L267"><span class="lineNum">     267</span>              : TimeType getTimeDiff(const Clock::time_point &amp; current, const Clock::time_point &amp; reference){</span>
-<span id="L268"><span class="lineNum">     268</span> <span class="tlaGNC">         347 :    const auto diff = std::chrono::duration_cast&lt;std::chrono::milliseconds&gt;(current - reference).count();</span></span>
+<span id="L268"><span class="lineNum">     268</span> <span class="tlaGNC">         368 :    const auto diff = std::chrono::duration_cast&lt;std::chrono::milliseconds&gt;(current - reference).count();</span></span>
 <span id="L269"><span class="lineNum">     269</span>              :    return static_cast&lt;TimeType&gt;(asLeastOne(diff));</span>
 <span id="L270"><span class="lineNum">     270</span>              : }</span>
 <span id="L271"><span class="lineNum">     271</span>              : </span>
@@ -357,27 +357,27 @@
 <span id="L295"><span class="lineNum">     295</span>              : </span>
 <span id="L296"><span class="lineNum">     296</span>              : template&lt;typename T&gt;</span>
 <span id="L297"><span class="lineNum">     297</span>              : [[nodiscard]] constexpr ScoreType clampScore(T s) {</span>
-<span id="L298"><span class="lineNum">     298</span> <span class="tlaGNC">     4532100 :    return static_cast&lt;ScoreType&gt;(std::clamp(s, (T)(-MATE + 2 * MAX_DEPTH), (T)(MATE - 2 * MAX_DEPTH)));</span></span>
+<span id="L298"><span class="lineNum">     298</span> <span class="tlaGNC">     4613566 :    return static_cast&lt;ScoreType&gt;(std::clamp(s, (T)(-MATE + 2 * MAX_DEPTH), (T)(MATE - 2 * MAX_DEPTH)));</span></span>
 <span id="L299"><span class="lineNum">     299</span>              : }</span>
 <span id="L300"><span class="lineNum">     300</span>              : </span>
 <span id="L301"><span class="lineNum">     301</span>              : enum GamePhase { MG = 0, EG = 1, GP_MAX = 2 };</span>
-<span id="L302"><span class="lineNum">     302</span> <span class="tlaGNC"> 10560538890 : ENABLE_INCR_OPERATORS_ON(GamePhase)</span></span>
+<span id="L302"><span class="lineNum">     302</span> <span class="tlaGNC"> 10566589878 : ENABLE_INCR_OPERATORS_ON(GamePhase)</span></span>
 <span id="L303"><span class="lineNum">     303</span>              : </span>
-<span id="L304"><span class="lineNum">     304</span> <span class="tlaGNC">    10132298 : template&lt;typename T, int SIZE&gt; struct OptList : public std::vector&lt;T&gt; {</span></span>
-<span id="L305"><span class="lineNum">     305</span> <span class="tlaGNC">    10132298 :    OptList(): std::vector&lt;T&gt;() { std::vector&lt;T&gt;::reserve(SIZE); }</span></span>
+<span id="L304"><span class="lineNum">     304</span> <span class="tlaGNC">    10174124 : template&lt;typename T, int SIZE&gt; struct OptList : public std::vector&lt;T&gt; {</span></span>
+<span id="L305"><span class="lineNum">     305</span> <span class="tlaGNC">    10174124 :    OptList(): std::vector&lt;T&gt;() { std::vector&lt;T&gt;::reserve(SIZE); }</span></span>
 <span id="L306"><span class="lineNum">     306</span>              : };</span>
 <span id="L307"><span class="lineNum">     307</span>              : using MoveList = OptList&lt;Move, MAX_MOVE / 4&gt;; ///@todo tune this ?</span>
 <span id="L308"><span class="lineNum">     308</span>              : using PVList = std::vector&lt;Move&gt;;</span>
 <span id="L309"><span class="lineNum">     309</span>              : </span>
-<span id="L310"><span class="lineNum">     310</span> <span class="tlaGNC">     7094111 : [[nodiscard]] constexpr MiniHash Hash64to32(Hash h) { return static_cast&lt;MiniHash&gt;((h &gt;&gt; 32) &amp; 0xFFFFFFFF); }</span></span>
-<span id="L311"><span class="lineNum">     311</span> <span class="tlaGNC">   873310984 : [[nodiscard]] constexpr MiniMove Move2MiniMove(Move m) { return static_cast&lt;MiniMove&gt;(m &amp; 0xFFFF); } // skip score</span></span>
+<span id="L310"><span class="lineNum">     310</span> <span class="tlaGNC">     7207827 : [[nodiscard]] constexpr MiniHash Hash64to32(Hash h) { return static_cast&lt;MiniHash&gt;((h &gt;&gt; 32) &amp; 0xFFFFFFFF); }</span></span>
+<span id="L311"><span class="lineNum">     311</span> <span class="tlaGNC">   886587107 : [[nodiscard]] constexpr MiniMove Move2MiniMove(Move m) { return static_cast&lt;MiniMove&gt;(m &amp; 0xFFFF); } // skip score</span></span>
 <span id="L312"><span class="lineNum">     312</span>              : </span>
 <span id="L313"><span class="lineNum">     313</span>              : // sameMove is not comparing score part of the Move, only the MiniMove part !</span>
-<span id="L314"><span class="lineNum">     314</span> <span class="tlaGNC">    49837029 : [[nodiscard]] constexpr bool sameMove(const Move&amp; a, const Move&amp; b) { return Move2MiniMove(a) == Move2MiniMove(b); }</span></span>
-<span id="L315"><span class="lineNum">     315</span> <span class="tlaGNC">   202742846 : [[nodiscard]] constexpr bool sameMove(const Move&amp; a, const MiniMove&amp; b) { return Move2MiniMove(a) == b; }</span></span>
+<span id="L314"><span class="lineNum">     314</span> <span class="tlaGNC">    50848338 : [[nodiscard]] constexpr bool sameMove(const Move&amp; a, const Move&amp; b) { return Move2MiniMove(a) == Move2MiniMove(b); }</span></span>
+<span id="L315"><span class="lineNum">     315</span> <span class="tlaGNC">   203514105 : [[nodiscard]] constexpr bool sameMove(const Move&amp; a, const MiniMove&amp; b) { return Move2MiniMove(a) == b; }</span></span>
 <span id="L316"><span class="lineNum">     316</span>              : </span>
-<span id="L317"><span class="lineNum">     317</span> <span class="tlaGNC">  1393502140 : [[nodiscard]] constexpr bool isValidMove(const Move&amp; m) { return !sameMove(m, NULLMOVE) &amp;&amp; !sameMove(m, INVALIDMOVE); }</span></span>
-<span id="L318"><span class="lineNum">     318</span> <span class="tlaGNC">    35327419 : [[nodiscard]] constexpr bool isValidMove(const MiniMove&amp; m) { return m != INVALIDMINIMOVE &amp;&amp; m != NULLMOVE; }</span></span>
+<span id="L317"><span class="lineNum">     317</span> <span class="tlaGNC">  1407149449 : [[nodiscard]] constexpr bool isValidMove(const Move&amp; m) { return !sameMove(m, NULLMOVE) &amp;&amp; !sameMove(m, INVALIDMOVE); }</span></span>
+<span id="L318"><span class="lineNum">     318</span> <span class="tlaGNC">    35923507 : [[nodiscard]] constexpr bool isValidMove(const MiniMove&amp; m) { return m != INVALIDMINIMOVE &amp;&amp; m != NULLMOVE; }</span></span>
 <span id="L319"><span class="lineNum">     319</span>              : </span>
 <span id="L320"><span class="lineNum">     320</span>              : inline constexpr std::string_view startPosition = &quot;rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1&quot;;</span>
 <span id="L321"><span class="lineNum">     321</span>              : inline constexpr std::string_view fine70        = &quot;8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1&quot;;</span>
@@ -401,13 +401,13 @@
 <span id="L339"><span class="lineNum">     339</span>              :    P_wk   = 6,</span>
 <span id="L340"><span class="lineNum">     340</span>              :    P_end</span>
 <span id="L341"><span class="lineNum">     341</span>              : };</span>
-<span id="L342"><span class="lineNum">     342</span> <span class="tlaGNC">    37390017 : ENABLE_INCR_OPERATORS_ON(Piece)</span></span>
+<span id="L342"><span class="lineNum">     342</span> <span class="tlaGNC">    37895503 : ENABLE_INCR_OPERATORS_ON(Piece)</span></span>
 <span id="L343"><span class="lineNum">     343</span>              : </span>
-<span id="L344"><span class="lineNum">     344</span> <span class="tlaGNC">       71029 : constexpr Piece operator~(Piece pp) { return static_cast&lt;Piece&gt;(-pp); } // switch piece Color</span></span>
+<span id="L344"><span class="lineNum">     344</span> <span class="tlaGNC">       71040 : constexpr Piece operator~(Piece pp) { return static_cast&lt;Piece&gt;(-pp); } // switch piece Color</span></span>
 <span id="L345"><span class="lineNum">     345</span>              : constexpr int PieceShift = 6;</span>
 <span id="L346"><span class="lineNum">     346</span>              : constexpr int NbPiece    = 2 * PieceShift + 1;</span>
 <span id="L347"><span class="lineNum">     347</span>              : </span>
-<span id="L348"><span class="lineNum">     348</span> <span class="tlaGNC">   572837633 : [[nodiscard]] constexpr int PieceIdx(Piece p) { return p + PieceShift; } ///@todo use it everywhere !</span></span>
+<span id="L348"><span class="lineNum">     348</span> <span class="tlaGNC">   574402659 : [[nodiscard]] constexpr int PieceIdx(Piece p) { return p + PieceShift; } ///@todo use it everywhere !</span></span>
 <span id="L349"><span class="lineNum">     349</span>              : </span>
 <span id="L350"><span class="lineNum">     350</span>              : enum Mat : uint8_t { M_t = 0, M_p, M_n, M_b, M_r, M_q, M_k, M_bl, M_bd, M_M, M_m };</span>
 <span id="L351"><span class="lineNum">     351</span> <span class="tlaGNC">  1215937008 : ENABLE_INCR_OPERATORS_ON(Mat)</span></span>
@@ -420,7 +420,7 @@
 <span id="L358"><span class="lineNum">     358</span> <span class="tlaGNC">        1355 : [[nodiscard]] FORCE_FINLINE ScoreType value(Piece pp)      { return Values[pp + PieceShift]; }</span></span>
 <span id="L359"><span class="lineNum">     359</span> <span class="tlaUNC tlaBgUNC">           0 : [[nodiscard]] FORCE_FINLINE ScoreType valueEG(Piece pp)    { return ValuesEG[pp + PieceShift]; }</span></span>
 <span id="L360"><span class="lineNum">     360</span>              : [[nodiscard]] FORCE_FINLINE ScoreType valueGP(Piece pp)    { return ValuesGP[pp + PieceShift]; }</span>
-<span id="L361"><span class="lineNum">     361</span> <span class="tlaGNC tlaBgGNC">     6990073 : [[nodiscard]] FORCE_FINLINE ScoreType valueSEE(Piece pp)   { return ValuesSEE[pp + PieceShift]; }</span></span>
+<span id="L361"><span class="lineNum">     361</span> <span class="tlaGNC tlaBgGNC">     7162648 : [[nodiscard]] FORCE_FINLINE ScoreType valueSEE(Piece pp)   { return ValuesSEE[pp + PieceShift]; }</span></span>
 <span id="L362"><span class="lineNum">     362</span>              : </span>
 <span id="L363"><span class="lineNum">     363</span>              : #ifdef WITH_PIECE_TUNING</span>
 <span id="L364"><span class="lineNum">     364</span>              : FORCE_FINLINE void SymetrizeValue() {</span>
@@ -469,10 +469,10 @@
 <span id="L407"><span class="lineNum">     407</span>              : </span>
 <span id="L408"><span class="lineNum">     408</span> <span class="tlaGNC">    38264121 : [[nodiscard]] FORCE_FINLINE ScoreType absValue(Piece pp)   { return *absValues_[pp]; }</span></span>
 <span id="L409"><span class="lineNum">     409</span> <span class="tlaGNC">    38264119 : [[nodiscard]] FORCE_FINLINE ScoreType absValueEG(Piece pp) { return *absValuesEG_[pp]; }</span></span>
-<span id="L410"><span class="lineNum">     410</span> <span class="tlaGNC">    38413389 : [[nodiscard]] FORCE_FINLINE ScoreType absValueGP(Piece pp) { return *absValuesGP_[pp]; }</span></span>
+<span id="L410"><span class="lineNum">     410</span> <span class="tlaGNC">    38414806 : [[nodiscard]] FORCE_FINLINE ScoreType absValueGP(Piece pp) { return *absValuesGP_[pp]; }</span></span>
 <span id="L411"><span class="lineNum">     411</span>              : [[nodiscard]] FORCE_FINLINE ScoreType absValueSEE(Piece pp){ return *absValuesSEE_[pp]; }</span>
 <span id="L412"><span class="lineNum">     412</span>              : </span>
-<span id="L413"><span class="lineNum">     413</span> <span class="tlaGNC">     3375332 : template&lt;typename T&gt; [[nodiscard]] constexpr int sgn(T val) { return (T(0) &lt; val) - (val &lt; T(0)); }</span></span>
+<span id="L413"><span class="lineNum">     413</span> <span class="tlaGNC">     3431549 : template&lt;typename T&gt; [[nodiscard]] constexpr int sgn(T val) { return (T(0) &lt; val) - (val &lt; T(0)); }</span></span>
 <span id="L414"><span class="lineNum">     414</span>              : </span>
 <span id="L415"><span class="lineNum">     415</span>              : inline constexpr array1d&lt;std::string_view,NbPiece&gt; PieceNames = {&quot;k&quot;, &quot;q&quot;, &quot;r&quot;, &quot;b&quot;, &quot;n&quot;, &quot;p&quot;, &quot; &quot;, &quot;P&quot;, &quot;N&quot;, &quot;B&quot;, &quot;R&quot;, &quot;Q&quot;, &quot;K&quot;};</span>
 <span id="L416"><span class="lineNum">     416</span>              : inline constexpr array1d&lt;std::string_view,NbPiece&gt; PieceNamesUTF = {&quot;♔&quot;, &quot;♕&quot;, &quot;♖&quot;, &quot;♗&quot;, &quot;♘&quot;, &quot;♙&quot;, &quot; &quot;, &quot;♟︎&quot;, &quot;♞&quot;, &quot;♝&quot;, &quot;♜&quot;, &quot;♛&quot;, &quot;♚&quot; };</span>
@@ -493,7 +493,7 @@
 <span id="L431"><span class="lineNum">     431</span>              : </span>
 <span id="L432"><span class="lineNum">     432</span>              : template&lt;Color C&gt; [[nodiscard]] constexpr ScoreType ColorSignHelper() { return C == Co_White ? +1 : -1; }</span>
 <span id="L433"><span class="lineNum">     433</span> <span class="tlaGNC">        4297 : template&lt;Color C&gt; [[nodiscard]] constexpr Square    PromotionSquare(const Square k) { return C == Co_White ? (SQFILE(k) + 56) : SQFILE(k); }</span></span>
-<span id="L434"><span class="lineNum">     434</span> <span class="tlaGNC">      516936 : template&lt;Color C&gt; [[nodiscard]] constexpr Rank      ColorRank(const Square k) { return Rank(C == Co_White ? SQRANK(k) : (7 - SQRANK(k))); }</span></span>
+<span id="L434"><span class="lineNum">     434</span> <span class="tlaGNC">      520167 : template&lt;Color C&gt; [[nodiscard]] constexpr Rank      ColorRank(const Square k) { return Rank(C == Co_White ? SQRANK(k) : (7 - SQRANK(k))); }</span></span>
 <span id="L435"><span class="lineNum">     435</span>              : </span>
 <span id="L436"><span class="lineNum">     436</span>              : enum CastlingTypes : uint8_t { CT_OOO = 0, CT_OO = 1 };</span>
 <span id="L437"><span class="lineNum">     437</span>              : enum CastlingRights : uint8_t {</span>
@@ -512,10 +512,10 @@
 <span id="L450"><span class="lineNum">     450</span>              :    C_all_but_wks = 14,</span>
 <span id="L451"><span class="lineNum">     451</span>              :    C_all         = 15</span>
 <span id="L452"><span class="lineNum">     452</span>              : };</span>
-<span id="L453"><span class="lineNum">     453</span> <span class="tlaGNC">    14246918 : constexpr CastlingRights operator&amp;(const CastlingRights&amp; a, const CastlingRights&amp; b) { return CastlingRights(char(a) &amp; char(b)); }</span></span>
+<span id="L453"><span class="lineNum">     453</span> <span class="tlaGNC">    14269257 : constexpr CastlingRights operator&amp;(const CastlingRights&amp; a, const CastlingRights&amp; b) { return CastlingRights(char(a) &amp; char(b)); }</span></span>
 <span id="L454"><span class="lineNum">     454</span> <span class="tlaGNC">         150 : constexpr CastlingRights operator|(const CastlingRights&amp; a, const CastlingRights&amp; b) { return CastlingRights(char(a) | char(b)); }</span></span>
 <span id="L455"><span class="lineNum">     455</span>              : constexpr CastlingRights operator~(const CastlingRights&amp; a) { return CastlingRights(~char(a)); }</span>
-<span id="L456"><span class="lineNum">     456</span> <span class="tlaGNC">    10734840 : constexpr void           operator&amp;=(CastlingRights&amp; a, const CastlingRights&amp; b) { a = a &amp; b; }</span></span>
+<span id="L456"><span class="lineNum">     456</span> <span class="tlaGNC">    10769529 : constexpr void           operator&amp;=(CastlingRights&amp; a, const CastlingRights&amp; b) { a = a &amp; b; }</span></span>
 <span id="L457"><span class="lineNum">     457</span> <span class="tlaGNC">         208 : constexpr void           operator|=(CastlingRights&amp; a, const CastlingRights&amp; b) { a = a | b; }</span></span>
 <span id="L458"><span class="lineNum">     458</span>              : </span>
 <span id="L459"><span class="lineNum">     459</span> <span class="tlaGNC">           2 : [[nodiscard]] FORCE_FINLINE Square stringToSquare(const std::string&amp; str) { return static_cast&lt;Square&gt;((str.at(1) - 49) * 8 + (str.at(0) - 97)); }</span></span>
@@ -553,15 +553,15 @@
 <span id="L491"><span class="lineNum">     491</span>              :                                                       Sq_f1, Sq_d1, Sq_f8, Sq_d8};</span>
 <span id="L492"><span class="lineNum">     492</span>              : </span>
 <span id="L493"><span class="lineNum">     493</span>              : [[nodiscard]] constexpr bool isValidMoveType(const MType m)      { return m &lt;= T_bqs; }</span>
-<span id="L494"><span class="lineNum">     494</span> <span class="tlaGNC">  1402305825 : [[nodiscard]] constexpr bool isValidSquare(const Square s)       { return s &gt;= 0 &amp;&amp; s &lt; NbSquare; }</span></span>
-<span id="L495"><span class="lineNum">     495</span> <span class="tlaGNC">   311054485 : [[nodiscard]] constexpr bool isValidPiece(const Piece pp)        { return pp &gt;= P_bk &amp;&amp; pp &lt;= P_wk; }</span></span>
-<span id="L496"><span class="lineNum">     496</span> <span class="tlaGNC">   296404707 : [[nodiscard]] constexpr bool isValidPieceNotNone(const Piece pp) { return isValidPiece(pp) &amp;&amp; pp != P_none; }</span></span>
+<span id="L494"><span class="lineNum">     494</span> <span class="tlaGNC">  1407079466 : [[nodiscard]] constexpr bool isValidSquare(const Square s)       { return s &gt;= 0 &amp;&amp; s &lt; NbSquare; }</span></span>
+<span id="L495"><span class="lineNum">     495</span> <span class="tlaGNC">   312021133 : [[nodiscard]] constexpr bool isValidPiece(const Piece pp)        { return pp &gt;= P_bk &amp;&amp; pp &lt;= P_wk; }</span></span>
+<span id="L496"><span class="lineNum">     496</span> <span class="tlaGNC">   296988411 : [[nodiscard]] constexpr bool isValidPieceNotNone(const Piece pp) { return isValidPiece(pp) &amp;&amp; pp != P_none; }</span></span>
 <span id="L497"><span class="lineNum">     497</span>              : [[nodiscard]] constexpr bool isNotEmpty(const BitBoard bb)       { return bb != emptyBitBoard; }</span>
 <span id="L498"><span class="lineNum">     498</span>              : </span>
-<span id="L499"><span class="lineNum">     499</span> <span class="tlaGNC">      832527 : [[nodiscard]] constexpr Piece promShift(const MType mt) {</span></span>
-<span id="L500"><span class="lineNum">     500</span> <span class="tlaGNC">      832527 :    assert(mt &gt;= T_promq);</span></span>
-<span id="L501"><span class="lineNum">     501</span> <span class="tlaGNC">      832527 :    assert(mt &lt;= T_cappromn);</span></span>
-<span id="L502"><span class="lineNum">     502</span> <span class="tlaGNC">      832527 :    return static_cast&lt;Piece&gt;(P_wq - (mt % 4));</span></span>
+<span id="L499"><span class="lineNum">     499</span> <span class="tlaGNC">      832541 : [[nodiscard]] constexpr Piece promShift(const MType mt) {</span></span>
+<span id="L500"><span class="lineNum">     500</span> <span class="tlaGNC">      832541 :    assert(mt &gt;= T_promq);</span></span>
+<span id="L501"><span class="lineNum">     501</span> <span class="tlaGNC">      832541 :    assert(mt &lt;= T_cappromn);</span></span>
+<span id="L502"><span class="lineNum">     502</span> <span class="tlaGNC">      832541 :    return static_cast&lt;Piece&gt;(P_wq - (mt % 4));</span></span>
 <span id="L503"><span class="lineNum">     503</span>              : } // awfull hack</span>
 <span id="L504"><span class="lineNum">     504</span>              : </span>
 <span id="L505"><span class="lineNum">     505</span>              : // previous best root 20000</span>
@@ -584,95 +584,95 @@
 <span id="L522"><span class="lineNum">     522</span>              :                                                         };</span>
 <span id="L523"><span class="lineNum">     523</span>              : </span>
 <span id="L524"><span class="lineNum">     524</span>              : [[nodiscard]] FORCE_FINLINE bool isSkipMove(const Move&amp; a, const std::vector&lt;MiniMove&gt;* skipMoves) {</span>
-<span id="L525"><span class="lineNum">     525</span> <span class="tlaGNC">    11740597 :    return skipMoves &amp;&amp; std::ranges::find(*skipMoves, Move2MiniMove(a)) != skipMoves-&gt;end();</span></span>
+<span id="L525"><span class="lineNum">     525</span> <span class="tlaGNC">    11953995 :    return skipMoves &amp;&amp; std::ranges::find(*skipMoves, Move2MiniMove(a)) != skipMoves-&gt;end();</span></span>
 <span id="L526"><span class="lineNum">     526</span>              : }</span>
 <span id="L527"><span class="lineNum">     527</span>              : </span>
-<span id="L528"><span class="lineNum">     528</span> <span class="tlaGNC">     2309912 : [[nodiscard]] constexpr ScoreType Move2Score(const Move m) {</span></span>
+<span id="L528"><span class="lineNum">     528</span> <span class="tlaGNC">     2341288 : [[nodiscard]] constexpr ScoreType Move2Score(const Move m) {</span></span>
 <span id="L529"><span class="lineNum">     529</span> <span class="tlaUNC tlaBgUNC">           0 :    assert(isValidMove(m));</span></span>
-<span id="L530"><span class="lineNum">     530</span> <span class="tlaGNC tlaBgGNC">   339825890 :    return static_cast&lt;ScoreType&gt;((m &gt;&gt; 16) &amp; 0xFFFF);</span></span>
+<span id="L530"><span class="lineNum">     530</span> <span class="tlaGNC tlaBgGNC">   348992306 :    return static_cast&lt;ScoreType&gt;((m &gt;&gt; 16) &amp; 0xFFFF);</span></span>
 <span id="L531"><span class="lineNum">     531</span>              : }</span>
-<span id="L532"><span class="lineNum">     532</span> <span class="tlaGNC">   235167222 : [[nodiscard]] constexpr Square Move2From(const Move m) {</span></span>
+<span id="L532"><span class="lineNum">     532</span> <span class="tlaGNC">   236588440 : [[nodiscard]] constexpr Square Move2From(const Move m) {</span></span>
 <span id="L533"><span class="lineNum">     533</span> <span class="tlaUNC tlaBgUNC">           0 :    assert(isValidMove(m));</span></span>
-<span id="L534"><span class="lineNum">     534</span> <span class="tlaGNC tlaBgGNC">   235167222 :    return static_cast&lt;Square&gt;((m &gt;&gt; 10) &amp; 0x3F);</span></span>
+<span id="L534"><span class="lineNum">     534</span> <span class="tlaGNC tlaBgGNC">   236588440 :    return static_cast&lt;Square&gt;((m &gt;&gt; 10) &amp; 0x3F);</span></span>
 <span id="L535"><span class="lineNum">     535</span>              : }</span>
-<span id="L536"><span class="lineNum">     536</span> <span class="tlaGNC">   242944727 : [[nodiscard]] constexpr Square Move2To(const Move m) {</span></span>
+<span id="L536"><span class="lineNum">     536</span> <span class="tlaGNC">   244429958 : [[nodiscard]] constexpr Square Move2To(const Move m) {</span></span>
 <span id="L537"><span class="lineNum">     537</span> <span class="tlaUNC tlaBgUNC">           0 :    assert(isValidMove(m));</span></span>
-<span id="L538"><span class="lineNum">     538</span> <span class="tlaGNC tlaBgGNC">   242944727 :    return static_cast&lt;Square&gt;((m &gt;&gt; 4) &amp; 0x3F);</span></span>
+<span id="L538"><span class="lineNum">     538</span> <span class="tlaGNC tlaBgGNC">   244429958 :    return static_cast&lt;Square&gt;((m &gt;&gt; 4) &amp; 0x3F);</span></span>
 <span id="L539"><span class="lineNum">     539</span>              : }</span>
 <span id="L540"><span class="lineNum">     540</span>              : [[nodiscard]] constexpr MType Move2Type(const Move m) {</span>
 <span id="L541"><span class="lineNum">     541</span> <span class="tlaUNC tlaBgUNC">           0 :    assert(isValidMove(m));</span></span>
-<span id="L542"><span class="lineNum">     542</span> <span class="tlaGNC tlaBgGNC">   400671065 :    return static_cast&lt;MType&gt;(m &amp; 0xF);</span></span>
+<span id="L542"><span class="lineNum">     542</span> <span class="tlaGNC tlaBgGNC">   402040802 :    return static_cast&lt;MType&gt;(m &amp; 0xF);</span></span>
 <span id="L543"><span class="lineNum">     543</span>              : }</span>
 <span id="L544"><span class="lineNum">     544</span> <span class="tlaGNC">           2 : [[nodiscard]] constexpr MiniMove ToMove(const Square from, const Square to, const MType type) {</span></span>
 <span id="L545"><span class="lineNum">     545</span> <span class="tlaGNC">           2 :    assert(isValidSquare(from));</span></span>
 <span id="L546"><span class="lineNum">     546</span> <span class="tlaGNC">           2 :    assert(isValidSquare(to));</span></span>
 <span id="L547"><span class="lineNum">     547</span> <span class="tlaGNC">           2 :    return static_cast&lt;MiniMove&gt;((from &lt;&lt; 10) | (to &lt;&lt; 4) | type);</span></span>
 <span id="L548"><span class="lineNum">     548</span>              : }</span>
-<span id="L549"><span class="lineNum">     549</span> <span class="tlaGNC">   209760111 : [[nodiscard]] constexpr Move ToMove(const Square from, const Square to, const MType type, const ScoreType score) {</span></span>
-<span id="L550"><span class="lineNum">     550</span> <span class="tlaGNC">   209760111 :    assert(isValidSquare(from));</span></span>
-<span id="L551"><span class="lineNum">     551</span> <span class="tlaGNC">   209760111 :    assert(isValidSquare(to));</span></span>
-<span id="L552"><span class="lineNum">     552</span> <span class="tlaGNC">   209760111 :    return static_cast&lt;Move&gt;((score &lt;&lt; 16) | (from &lt;&lt; 10) | (to &lt;&lt; 4) | type);</span></span>
+<span id="L549"><span class="lineNum">     549</span> <span class="tlaGNC">   210696387 : [[nodiscard]] constexpr Move ToMove(const Square from, const Square to, const MType type, const ScoreType score) {</span></span>
+<span id="L550"><span class="lineNum">     550</span> <span class="tlaGNC">   210696387 :    assert(isValidSquare(from));</span></span>
+<span id="L551"><span class="lineNum">     551</span> <span class="tlaGNC">   210696387 :    assert(isValidSquare(to));</span></span>
+<span id="L552"><span class="lineNum">     552</span> <span class="tlaGNC">   210696387 :    return static_cast&lt;Move&gt;((score &lt;&lt; 16) | (from &lt;&lt; 10) | (to &lt;&lt; 4) | type);</span></span>
 <span id="L553"><span class="lineNum">     553</span>              : }</span>
 <span id="L554"><span class="lineNum">     554</span>              : </span>
-<span id="L555"><span class="lineNum">     555</span> <span class="tlaGNC">     4507430 : [[nodiscard]] constexpr ScoreType matingScore  (const DepthType in) { return static_cast&lt;ScoreType&gt;(MATE - in); }</span></span>
-<span id="L556"><span class="lineNum">     556</span> <span class="tlaGNC">     5653214 : [[nodiscard]] constexpr ScoreType matedScore   (const DepthType in) { return static_cast&lt;ScoreType&gt;(-MATE + in); }</span></span>
+<span id="L555"><span class="lineNum">     555</span> <span class="tlaGNC">     4579343 : [[nodiscard]] constexpr ScoreType matingScore  (const DepthType in) { return static_cast&lt;ScoreType&gt;(MATE - in); }</span></span>
+<span id="L556"><span class="lineNum">     556</span> <span class="tlaGNC">     5740567 : [[nodiscard]] constexpr ScoreType matedScore   (const DepthType in) { return static_cast&lt;ScoreType&gt;(-MATE + in); }</span></span>
 <span id="L557"><span class="lineNum">     557</span>              : </span>
 <span id="L558"><span class="lineNum">     558</span>              : [[nodiscard]] constexpr bool isMatingScore(const ScoreType s) { return (s &gt;= MATE - MAX_DEPTH); }</span>
 <span id="L559"><span class="lineNum">     559</span>              : [[nodiscard]] constexpr bool isMatedScore (const ScoreType s) { return (s &lt;= matedScore(MAX_DEPTH)); }</span>
-<span id="L560"><span class="lineNum">     560</span> <span class="tlaGNC">    12897084 : [[nodiscard]] constexpr bool isMateScore  (const ScoreType s) { return (Abs(s) &gt;= MATE - MAX_DEPTH); }</span></span>
+<span id="L560"><span class="lineNum">     560</span> <span class="tlaGNC">    13133572 : [[nodiscard]] constexpr bool isMateScore  (const ScoreType s) { return (Abs(s) &gt;= MATE - MAX_DEPTH); }</span></span>
 <span id="L561"><span class="lineNum">     561</span>              : </span>
 <span id="L562"><span class="lineNum">     562</span>              : [[nodiscard]] constexpr bool isPromotionStd(const MType mt) {</span>
 <span id="L563"><span class="lineNum">     563</span>              :    assert(isValidMoveType(mt));</span>
-<span id="L564"><span class="lineNum">     564</span> <span class="tlaGNC">   494710031 :    return (mt &gt;&gt; 2 == 0x1);</span></span>
+<span id="L564"><span class="lineNum">     564</span> <span class="tlaGNC">   495044863 :    return (mt &gt;&gt; 2 == 0x1);</span></span>
 <span id="L565"><span class="lineNum">     565</span>              : }</span>
 <span id="L566"><span class="lineNum">     566</span>              : [[nodiscard]] constexpr bool isPromotionStd(const Move m) { return isPromotionStd(Move2Type(m)); }</span>
 <span id="L567"><span class="lineNum">     567</span>              : [[nodiscard]] constexpr bool isPromotionCap(const MType mt) {</span>
 <span id="L568"><span class="lineNum">     568</span>              :    assert(isValidMoveType(mt));</span>
-<span id="L569"><span class="lineNum">     569</span> <span class="tlaGNC">   180446987 :    return (mt &gt;&gt; 2 == 0x2);</span></span>
+<span id="L569"><span class="lineNum">     569</span> <span class="tlaGNC">   180918523 :    return (mt &gt;&gt; 2 == 0x2);</span></span>
 <span id="L570"><span class="lineNum">     570</span>              : }</span>
 <span id="L571"><span class="lineNum">     571</span>              : [[nodiscard]] constexpr bool isPromotionCap(const Move m) { return isPromotionCap(Move2Type(m)); }</span>
 <span id="L572"><span class="lineNum">     572</span>              : </span>
-<span id="L573"><span class="lineNum">     573</span> <span class="tlaGNC">   494710031 : [[nodiscard]] constexpr bool isPromotion(const MType mt) {</span></span>
-<span id="L574"><span class="lineNum">     574</span> <span class="tlaGNC">   494710031 :    assert(isValidMoveType(mt));</span></span>
-<span id="L575"><span class="lineNum">     575</span> <span class="tlaGNC">   494710031 :    return isPromotionStd(mt) || isPromotionCap(mt);</span></span>
+<span id="L573"><span class="lineNum">     573</span> <span class="tlaGNC">   495044863 : [[nodiscard]] constexpr bool isPromotion(const MType mt) {</span></span>
+<span id="L574"><span class="lineNum">     574</span> <span class="tlaGNC">   495044863 :    assert(isValidMoveType(mt));</span></span>
+<span id="L575"><span class="lineNum">     575</span> <span class="tlaGNC">   495044863 :    return isPromotionStd(mt) || isPromotionCap(mt);</span></span>
 <span id="L576"><span class="lineNum">     576</span>              : }</span>
-<span id="L577"><span class="lineNum">     577</span> <span class="tlaGNC">     3191124 : [[nodiscard]] constexpr bool isPromotion(const Move m) { return isPromotion(Move2Type(m)); }</span></span>
+<span id="L577"><span class="lineNum">     577</span> <span class="tlaGNC">     3227102 : [[nodiscard]] constexpr bool isPromotion(const Move m) { return isPromotion(Move2Type(m)); }</span></span>
 <span id="L578"><span class="lineNum">     578</span>              : </span>
 <span id="L579"><span class="lineNum">     579</span>              : [[nodiscard]] constexpr bool isCastling(const MType mt) {</span>
-<span id="L580"><span class="lineNum">     580</span> <span class="tlaGNC">     8000384 :    assert(isValidMoveType(mt));</span></span>
-<span id="L581"><span class="lineNum">     581</span> <span class="tlaGNC">   235542905 :    return (mt &gt;&gt; 2) == 0x3;</span></span>
+<span id="L580"><span class="lineNum">     580</span> <span class="tlaGNC">     8008675 :    assert(isValidMoveType(mt));</span></span>
+<span id="L581"><span class="lineNum">     581</span> <span class="tlaGNC">   236883765 :    return (mt &gt;&gt; 2) == 0x3;</span></span>
 <span id="L582"><span class="lineNum">     582</span>              : }</span>
-<span id="L583"><span class="lineNum">     583</span> <span class="tlaGNC">    38714470 : [[nodiscard]] constexpr bool isCastling(const Move m) { return isCastling(Move2Type(m)); }</span></span>
+<span id="L583"><span class="lineNum">     583</span> <span class="tlaGNC">    39510470 : [[nodiscard]] constexpr bool isCastling(const Move m) { return isCastling(Move2Type(m)); }</span></span>
 <span id="L584"><span class="lineNum">     584</span>              : </span>
-<span id="L585"><span class="lineNum">     585</span> <span class="tlaGNC">   192102391 : [[nodiscard]] constexpr bool isCapture(const MType mt) {</span></span>
-<span id="L586"><span class="lineNum">     586</span> <span class="tlaGNC">   192102391 :    assert(isValidMoveType(mt));</span></span>
-<span id="L587"><span class="lineNum">     587</span> <span class="tlaGNC">   192102391 :    return mt == T_capture || mt == T_ep || isPromotionCap(mt);</span></span>
+<span id="L585"><span class="lineNum">     585</span> <span class="tlaGNC">   192693281 : [[nodiscard]] constexpr bool isCapture(const MType mt) {</span></span>
+<span id="L586"><span class="lineNum">     586</span> <span class="tlaGNC">   192693281 :    assert(isValidMoveType(mt));</span></span>
+<span id="L587"><span class="lineNum">     587</span> <span class="tlaGNC">   192693281 :    return mt == T_capture || mt == T_ep || isPromotionCap(mt);</span></span>
 <span id="L588"><span class="lineNum">     588</span>              : }</span>
-<span id="L589"><span class="lineNum">     589</span> <span class="tlaGNC">    16169448 : [[nodiscard]] constexpr bool isCapture(const Move m) { return isCapture(Move2Type(m)); }</span></span>
+<span id="L589"><span class="lineNum">     589</span> <span class="tlaGNC">    16403298 : [[nodiscard]] constexpr bool isCapture(const Move m) { return isCapture(Move2Type(m)); }</span></span>
 <span id="L590"><span class="lineNum">     590</span>              : </span>
-<span id="L591"><span class="lineNum">     591</span> <span class="tlaGNC">     1098346 : [[nodiscard]] constexpr bool isCaptureNoEP(const MType mt) {</span></span>
-<span id="L592"><span class="lineNum">     592</span> <span class="tlaGNC">     1098346 :    assert(isValidMoveType(mt));</span></span>
-<span id="L593"><span class="lineNum">     593</span> <span class="tlaGNC">     1098346 :    return mt == T_capture || isPromotionCap(mt);</span></span>
+<span id="L591"><span class="lineNum">     591</span> <span class="tlaGNC">     1109743 : [[nodiscard]] constexpr bool isCaptureNoEP(const MType mt) {</span></span>
+<span id="L592"><span class="lineNum">     592</span> <span class="tlaGNC">     1109743 :    assert(isValidMoveType(mt));</span></span>
+<span id="L593"><span class="lineNum">     593</span> <span class="tlaGNC">     1109743 :    return mt == T_capture || isPromotionCap(mt);</span></span>
 <span id="L594"><span class="lineNum">     594</span>              : }</span>
-<span id="L595"><span class="lineNum">     595</span> <span class="tlaGNC">      981112 : [[nodiscard]] constexpr bool isCaptureNoEP(const Move m) { return isCaptureNoEP(Move2Type(m)); }</span></span>
+<span id="L595"><span class="lineNum">     595</span> <span class="tlaGNC">      995404 : [[nodiscard]] constexpr bool isCaptureNoEP(const Move m) { return isCaptureNoEP(Move2Type(m)); }</span></span>
 <span id="L596"><span class="lineNum">     596</span>              : </span>
 <span id="L597"><span class="lineNum">     597</span>              : </span>
-<span id="L598"><span class="lineNum">     598</span> <span class="tlaGNC">   173353220 : [[nodiscard]] constexpr bool isCaptureOrProm(const MType mt) {</span></span>
-<span id="L599"><span class="lineNum">     599</span> <span class="tlaGNC">   173353220 :    assert(isValidMoveType(mt));</span></span>
-<span id="L600"><span class="lineNum">     600</span> <span class="tlaGNC">   173353220 :    return mt == T_capture || mt == T_ep || isPromotion(mt);</span></span>
+<span id="L598"><span class="lineNum">     598</span> <span class="tlaGNC">   173576609 : [[nodiscard]] constexpr bool isCaptureOrProm(const MType mt) {</span></span>
+<span id="L599"><span class="lineNum">     599</span> <span class="tlaGNC">   173576609 :    assert(isValidMoveType(mt));</span></span>
+<span id="L600"><span class="lineNum">     600</span> <span class="tlaGNC">   173576609 :    return mt == T_capture || mt == T_ep || isPromotion(mt);</span></span>
 <span id="L601"><span class="lineNum">     601</span>              : }</span>
 <span id="L602"><span class="lineNum">     602</span>              : [[nodiscard]] constexpr bool isCaptureOrProm(const Move m) { return isCaptureOrProm(Move2Type(m)); }</span>
 <span id="L603"><span class="lineNum">     603</span>              : </span>
 <span id="L604"><span class="lineNum">     604</span>              : [[nodiscard]] constexpr bool isEnPassant(const MType mt) {</span>
 <span id="L605"><span class="lineNum">     605</span>              :    assert(isValidMoveType(mt));</span>
-<span id="L606"><span class="lineNum">     606</span> <span class="tlaGNC">     2909905 :    return mt == T_ep;</span></span>
+<span id="L606"><span class="lineNum">     606</span> <span class="tlaGNC">     2953862 :    return mt == T_ep;</span></span>
 <span id="L607"><span class="lineNum">     607</span>              : }</span>
-<span id="L608"><span class="lineNum">     608</span> <span class="tlaGNC">     5819810 : [[nodiscard]] constexpr bool isEnPassant(const Move m) { return isEnPassant(Move2Type(m)); }</span></span>
+<span id="L608"><span class="lineNum">     608</span> <span class="tlaGNC">     5907724 : [[nodiscard]] constexpr bool isEnPassant(const Move m) { return isEnPassant(Move2Type(m)); }</span></span>
 <span id="L609"><span class="lineNum">     609</span>              : </span>
-<span id="L610"><span class="lineNum">     610</span> <span class="tlaGNC">      942114 : [[nodiscard]] constexpr ScoreType badCapScore(const Move m) { return Move2Score(m) + MoveScoring[T_capture]; }</span></span>
+<span id="L610"><span class="lineNum">     610</span> <span class="tlaGNC">      972856 : [[nodiscard]] constexpr ScoreType badCapScore(const Move m) { return Move2Score(m) + MoveScoring[T_capture]; }</span></span>
 <span id="L611"><span class="lineNum">     611</span>              : </span>
-<span id="L612"><span class="lineNum">     612</span> <span class="tlaGNC">     3607944 : [[nodiscard]] constexpr Square chebyshevDistance(const Square sq1, const Square sq2) {</span></span>
-<span id="L613"><span class="lineNum">     613</span> <span class="tlaGNC">     3607944 :    return std::max(Abs(static_cast&lt;Square&gt;(SQRANK(sq2) - SQRANK(sq1))), Abs(static_cast&lt;Square&gt;(SQFILE(sq2) - SQFILE(sq1))));</span></span>
+<span id="L612"><span class="lineNum">     612</span> <span class="tlaGNC">     3647448 : [[nodiscard]] constexpr Square chebyshevDistance(const Square sq1, const Square sq2) {</span></span>
+<span id="L613"><span class="lineNum">     613</span> <span class="tlaGNC">     3647448 :    return std::max(Abs(static_cast&lt;Square&gt;(SQRANK(sq2) - SQRANK(sq1))), Abs(static_cast&lt;Square&gt;(SQFILE(sq2) - SQFILE(sq1))));</span></span>
 <span id="L614"><span class="lineNum">     614</span>              : }</span>
 <span id="L615"><span class="lineNum">     615</span>              : [[nodiscard]] constexpr Square manatthanDistance(const Square sq1, const Square sq2) {</span>
 <span id="L616"><span class="lineNum">     616</span>              :    return Abs(static_cast&lt;Square&gt;(SQRANK(sq2) - SQRANK(sq1))) + Abs(static_cast&lt;Square&gt;(SQFILE(sq2) - SQFILE(sq1)));</span>
@@ -684,7 +684,7 @@
 <span id="L622"><span class="lineNum">     622</span>              : [[nodiscard]] FORCE_FINLINE Square correctedMove2ToKingDest(const Move m) {</span>
 <span id="L623"><span class="lineNum">     623</span> <span class="tlaUNC tlaBgUNC">           0 :    assert(isValidMove(m));</span></span>
 <span id="L624"><span class="lineNum">     624</span>              :    const MType mtype = Move2Type(m);</span>
-<span id="L625"><span class="lineNum">     625</span> <span class="tlaGNC tlaBgGNC">   222149325 :    return (!isCastling(mtype)) ? Move2To(m) : correctedKingDestSq[mtype];</span></span>
+<span id="L625"><span class="lineNum">     625</span> <span class="tlaGNC tlaBgGNC">   223293120 :    return (!isCastling(mtype)) ? Move2To(m) : correctedKingDestSq[mtype];</span></span>
 <span id="L626"><span class="lineNum">     626</span>              : }</span>
 <span id="L627"><span class="lineNum">     627</span>              : </span>
 <span id="L628"><span class="lineNum">     628</span>              : [[nodiscard]] FORCE_FINLINE Square correctedMove2ToRookDest(const Move m) {</span>
@@ -722,7 +722,7 @@
 <span id="L660"><span class="lineNum">     660</span>              :     const int       maxStealDivisor            = 5; // 1/maxStealDivisor of remaining time</span>
 <span id="L661"><span class="lineNum">     661</span>              : </span>
 <span id="L662"><span class="lineNum">     662</span>              :    extern float variability;</span>
-<span id="L663"><span class="lineNum">     663</span> <span class="tlaGNC">        3930 :    [[nodiscard]] FORCE_FINLINE float variabilityFactor() { return 2.f / (1.f + std::exp(1.f - MoveDifficultyUtil::variability)); } // inside [0.5 .. 2]</span></span>
+<span id="L663"><span class="lineNum">     663</span> <span class="tlaGNC">        3982 :    [[nodiscard]] FORCE_FINLINE float variabilityFactor() { return 2.f / (1.f + std::exp(1.f - MoveDifficultyUtil::variability)); } // inside [0.5 .. 2]</span></span>
 <span id="L664"><span class="lineNum">     664</span>              : </span>
 <span id="L665"><span class="lineNum">     665</span>              : } // namespace MoveDifficultyUtil</span>
 <span id="L666"><span class="lineNum">     666</span>              : </span>
@@ -747,7 +747,7 @@
 <span id="L685"><span class="lineNum">     685</span>              :     return (v &lt; lo) ? lo : (hi &lt; v) ? hi : v;</span>
 <span id="L686"><span class="lineNum">     686</span>              : }</span>
 <span id="L687"><span class="lineNum">     687</span>              : </span>
-<span id="L688"><span class="lineNum">     688</span> <span class="tlaGNC tlaBgGNC">    17077737 : [[nodiscard]] constexpr Square relative_square(const Color c, const Square s) { return static_cast&lt;Square&gt;(s ^ (c * 56)); }</span></span>
+<span id="L688"><span class="lineNum">     688</span> <span class="tlaGNC tlaBgGNC">    17410176 : [[nodiscard]] constexpr Square relative_square(const Color c, const Square s) { return static_cast&lt;Square&gt;(s ^ (c * 56)); }</span></span>
 <span id="L689"><span class="lineNum">     689</span>              : </span>
 <span id="L690"><span class="lineNum">     690</span>              : template&lt;Color C&gt; [[nodiscard]] constexpr Square ColorSquarePstHelper(const Square k) { return relative_square(~C, k); }</span>
 <span id="L691"><span class="lineNum">     691</span>              : </span>
